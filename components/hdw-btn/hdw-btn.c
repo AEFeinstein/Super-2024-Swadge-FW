@@ -1,3 +1,8 @@
+/*! \file hdw-btn.c
+ *
+ * TODO Explain how to use buttons!
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -18,10 +23,7 @@
 // Defines
 //==============================================================================
 
-#define TIMER_DIVIDER (16)  //  Hardware timer clock divider
-#define TIMER_SCALE   (TIMER_BASE_CLK / TIMER_DIVIDER)  // convert counter value to seconds
-
-#define ISR_PERIOD_MS 1
+/// The number of samples kept in history to debounce buttons
 #define DEBOUNCE_HIST_LEN 5
 
 //==============================================================================
@@ -34,13 +36,13 @@ static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_d
 // Variables
 //==============================================================================
 
-// A bundle of GPIOs to read as button input
-dedic_gpio_bundle_handle_t bundle = NULL;
+/// A bundle of GPIOs to read as button input
+static dedic_gpio_bundle_handle_t bundle = NULL;
 
-// A queue to move button reads from the ISR to the main loop
+/// A queue to move button reads from the ISR to the main loop
 static QueueHandle_t gpio_evt_queue = NULL;
 
-// The current state of the buttons
+/// The current state of the buttons
 static uint32_t buttonStates = 0;
 
 //==============================================================================
@@ -51,8 +53,6 @@ static uint32_t buttonStates = 0;
  * @brief Initialize the given GPIOs as inputs for buttons
  * The GPIOs are polled on a hardware timer
  *
- * @param group_num The timer group number to poll GPIOs with
- * @param timer_num The timer number to poll GPIOs with
  * @param numButtons The number of GPIOs to initialize as buttons
  * @param ... A list of GPIOs to initialize as buttons
  */

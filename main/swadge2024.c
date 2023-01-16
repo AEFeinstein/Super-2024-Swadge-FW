@@ -1,7 +1,30 @@
-/*
- * SPDX-FileCopyrightText: 2010-2022 Espressif Systems (Shanghai) CO LTD
+/*! \mainpage Swadge 2024
  *
- * SPDX-License-Identifier: CC0-1.0
+ * \section intro_sec Introduction
+ *
+ * So you're here to write some Swadge code, eh?
+ *
+ * \section install_sec Installation
+ *
+ * \subsection linux_env Linux Environment
+ * 
+ * Penguins
+ * 
+ * \subsection win_env Windows Environment
+ * 
+ * DEVELOPERS! DEVELOPERS! DEVELOPERS!
+ * 
+ * \section hw_api Hardware APIs
+ * 
+ * - hdw-btn.c: Learn how to use button input!
+ * - hdw-tft.c: Learn how to use the TFT!
+ *
+ * \section example Example Swadge Mode
+ * 
+ *     int main(void)
+ *     {
+ *         return 0;
+ *     }
  */
 
 #include <stdio.h>
@@ -15,6 +38,10 @@
 // #include "tinyusb.h"
 // #include "advanced_usb_control.h"
 
+/**
+ * @brief TODO doxygen something
+ * 
+ */
 void app_main(void)
 {
     ESP_LOGE("MAIN", "boot");
