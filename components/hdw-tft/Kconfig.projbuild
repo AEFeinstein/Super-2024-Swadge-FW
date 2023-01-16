@@ -1,0 +1,42 @@
+menu "TFT Configuration"
+	choice TFT_TYPE
+		prompt "Select TFT"
+		default ST7735_160x80
+		help
+			Select Display Driver.
+		config ST7735_160x80
+			bool "ST7735_160x80"
+			help
+				Display Driver is ST7735_160x80.
+		config ST7789_240x135
+			bool "ST7789_240x135"
+			help
+				Display Driver is ST7789_240x135.
+		config ST7789_240x240
+			bool "ST7789_240x240"
+			help
+				Display Driver is ST7789_240x240.
+		config GC9307_240x280
+			bool "GC9307_240x280"
+			help
+				Display Driver is GC9307_240x280.
+	endchoice
+
+	config TFT_DEFAULT_BRIGHTNESS
+		int
+		range 0 255
+		default 200
+		prompt "Select TFT Default Brigthness (0..255)"
+
+	config TFT_MIN_BRIGHTNESS
+		int
+		prompt "Selects the minimum brigthness for this paticular swadge"
+		default 10
+
+	config TFT_MAX_BRIGHTNESS
+		int
+		prompt "Selects the maximum safe brigthness for this paticular swadge"
+		default 200
+
+endmenu
+
