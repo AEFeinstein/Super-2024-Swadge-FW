@@ -27,11 +27,15 @@
  * 
  * \section btn_example Example
  *
- *     buttonEvt_t evt;
- *     while(checkButtonQueue(&evt))
- *     {
- *         // Do something with evt!
- *     }
+ * \code{.c}
+ * buttonEvt_t evt;
+ * while(checkButtonQueue(&evt))
+ * {
+ *     // Print the current event
+ *     printf("state: %04X, button: %d, down: %s\n",
+ *         evt.state, evt.button, evt.down ? "down" : "up");
+ * }
+ * \endcode
  */
 
 //==============================================================================

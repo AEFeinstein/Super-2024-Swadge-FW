@@ -5,6 +5,7 @@
 
 #include "hal/gpio_types.h"
 #include "hal/spi_types.h"
+#include "driver/ledc.h"
 
 #include "palette.h"
 
@@ -27,18 +28,31 @@
     #error "Please pick a screen size"
 #endif
 
+/**
+ * @brief This is a typedef for a function pointer passed to drawDisplayTft()
+ * which will be called to draw a background image while the SPI transfer is
+ * occurring. This will be called multiple times to draw multiple areas for
+ * the current frame.
+ * 
+ * @param x The X coordinate to start filling in
+ * @param y The Y coordinate to start filling in
+ * @param w The width of the background area to draw
+ * @param h The height of the background area to draw
+ * @param up The number of times this function has been called for the current frame (an incrementing number)
+ * @param upNum The total number of times this will be called for the current frame
+ */
 typedef void (*fnBackgroundDrawCallback_t)(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk,
              gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
-             gpio_num_t backlight, bool isPwmBacklight);
-int setTFTBacklight(uint8_t intensity);
+             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel);
+int setTFTBacklightBrightness(uint8_t intensity);
 void disableTFTBacklight(void);
 void enableTFTBacklight(void);
 
 void setPxTft(int16_t x, int16_t y, paletteColor_t px);
 paletteColor_t getPxTft(int16_t x, int16_t y);
 void clearPxTft(void);
-void drawDisplayTft(bool drawDiff, fnBackgroundDrawCallback_t cb);
+void drawDisplayTft(fnBackgroundDrawCallback_t cb);
 
 #endif

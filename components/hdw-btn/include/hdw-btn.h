@@ -6,33 +6,23 @@
 
 #include "driver/gpio.h"
 
-typedef enum
+typedef enum __attribute__((packed))
 {
-    UP     = 0x01,
-    DOWN   = 0x02,
-    LEFT   = 0x04,
-    RIGHT  = 0x08,
-    BTN_A  = 0x10,
-    BTN_B  = 0x20,
-    START  = 0x40,
-    SELECT = 0x80,
-#if defined(EMU)
-    EMU_P2_UP     = 0x0100,
-    EMU_P2_DOWN   = 0x0200,
-    EMU_P2_LEFT   = 0x0400,
-    EMU_P2_RIGHT  = 0x0800,
-    EMU_P2_BTN_A  = 0x1000,
-    EMU_P2_BTN_B  = 0x2000,
-    EMU_P2_START  = 0x4000,
-    EMU_P2_SELECT = 0x8000,
-#endif
+    UP     = 0x01, //!< The up button's bit
+    DOWN   = 0x02, //!< The down button's bit
+    LEFT   = 0x04, //!< The left button's bit
+    RIGHT  = 0x08, //!< The right button's bit
+    BTN_A  = 0x10, //!< The A button's bit
+    BTN_B  = 0x20, //!< The B button's bit
+    START  = 0x40, //!< The start button's bit
+    SELECT = 0x80  //!< The select button's bit
 } buttonBit_t;
 
 typedef struct
 {
-    uint16_t state;
-    buttonBit_t button;
-    bool down;
+    uint16_t state;     //!< A bitmask for the state of all buttons
+    buttonBit_t button; //!< The button that caused this event
+    bool down;          //!< True if the button was pressed, false if it was released
 } buttonEvt_t;
 
 void initButtons(uint8_t numButtons, ...);

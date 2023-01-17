@@ -1,6 +1,63 @@
 /*! \file hdw-tft.c
  *
- * TODO Explain how to use TFT screen!
+ * \section tft_design Design Philosophy
+ * 
+ * TFT code is based on the example found at https://github.com/espressif/esp-idf/tree/master/examples/peripherals/lcd/tjpgd
+ * 
+ * \section tft_usage Usage
+ * 
+ * You don't need to call initTFT(). The system does so at the appropriate time.
+ * You don't need to call drawDisplayTft() as it is called automatically after each main loop to draw the current framebuffer to the TFT.
+ * 
+ * clearPxTft() is used to clear the current framebuffer.
+ * This must be called before drawing a new frame, unless you want to draw over the prior one.
+ * 
+ * setPxTft() and getPxTft() are used to set and get individual pixels in the framebuffer, respectively.
+ * These are not often used directly as there are helper functions to draw text, shapes, and sprites.
+ * 
+ * disableTFTBacklight() and enableTFTBacklight() may be called to disable and enable the backlight, respectively.
+ * This may be useful if the Swadge Mode is trying to save power, or the TFT is not necessary.
+ * setTFTBacklightBrightness() is used to set the TFT's brightness. This is usually handled globally by a persistent setting.
+ * 
+ * \section tft_example Example
+ * 
+ * Setting pixels:
+ * \code{.c}
+ * // Clear the display
+ * clearPxTft();
+ * 
+ * // Draw red, green, and blue vertical bars
+ * for(uint16_t y = 0; y < TFT_HEIGHT; y++)
+ * {
+ *     for(uint16_t x = 0; x < TFT_WIDTH; x++)
+ *     {
+ *         if(x < TFT_WIDTH / 3)
+ *         {
+ *             setPxTft(x, y, c500);
+ *         }
+ *         else if (x < (2 * TFT_WIDTH) / 3)
+ *         {
+ *             setPxTft(x, y, c050);
+ *         }
+ *         else
+ *         {
+ *             setPxTft(x, y, c005);
+ *         }
+ *     }
+ * }
+ * \endcode
+ * 
+ * Setting the backlight:
+ * \code{.c}
+ * // Disable the backlight
+ * disableTFTBacklight();
+ * 
+ * // Enable the backlight
+ * enableTFTBacklight();
+ * 
+ * // Set the backlight to half brightness
+ * setTFTBacklightBrightness(128);
+ * \endcode
  */
 
 //==============================================================================
@@ -21,10 +78,8 @@
 
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
-#include "driver/ledc.h"
 
 #include "hdw-tft.h"
-
 
 //#define PROCPROFILE
 
@@ -42,23 +97,26 @@ static inline uint32_t get_ccount()
 // Defines
 //==============================================================================
 
-// The channel for LED PWM
-#define TFT_LEDC_CHANNEL LEDC_CHANNEL_1
-
+/// Swap the upper and lower bytes in a 16-bit word
 #define SWAP(x) ((x>>8)|(x<<8))
 
-/* To speed up transfers, every SPI transfer sends a bunch of lines. This define
+/**
+ * @brief The number of parallel lines used in a SPI transfer
+ * 
+ * To speed up transfers, every SPI transfer sends a bunch of lines. This define
  * specifies how many. More means more memory use, but less overhead for setting
  * up and finishing transfers. Make sure TFT_HEIGHT is dividable by this.
  */
 #define PARALLEL_LINES 16
 
-/* Binary backlight levels */
+/// The GPIO level to turn the backlight on
 #define LCD_BK_LIGHT_ON_LEVEL  1
-#define LCD_BK_LIGHT_OFF_LEVEL !LCD_BK_LIGHT_ON_LEVEL
+/// The GPIO level to turn the backlight off
+#define LCD_BK_LIGHT_OFF_LEVEL 0
 
-/* Bit number used to represent command and parameter */
+/// The number of bits in an LCD control command
 #define LCD_CMD_BITS           8
+/// The number of bits for an LCD control command's parameter
 #define LCD_PARAM_BITS         8
 
 /* Screen-specific configurations */
@@ -108,18 +166,17 @@ static inline uint32_t get_ccount()
 // Variables
 //==============================================================================
 
-esp_lcd_panel_handle_t panel_handle = NULL;
+static esp_lcd_panel_handle_t panel_handle = NULL;
 static paletteColor_t * pixels = NULL;
 static uint16_t *s_lines[2] = {0};
+
+static ledc_channel_t tftLedcChannel;
 static gpio_num_t tftBacklightPin;
 static bool tftBacklightIsPwm;
 
 #if defined(CONFIG_GC9307_240x280) || defined(CONFIG_ST7735_128x160)
-esp_lcd_panel_io_handle_t io;
+    static esp_lcd_panel_io_handle_t io;
 #endif
-
-// static uint64_t tFpsStart = 0;
-// static int framesDrawn = 0;
 
 //==============================================================================
 // Functions
@@ -132,19 +189,19 @@ esp_lcd_panel_io_handle_t io;
  *
  * @return value is 0 if OK nonzero if error.
  */
-int setTFTBacklight(uint8_t intensity)
+int setTFTBacklightBrightness(uint8_t intensity)
 {
     esp_err_t e;
     if(intensity > CONFIG_TFT_MAX_BRIGHTNESS)
     {
         return ESP_ERR_INVALID_ARG;
     }
-    e = ledc_set_duty(LEDC_LOW_SPEED_MODE, TFT_LEDC_CHANNEL, 255 - intensity);
+    e = ledc_set_duty(LEDC_LOW_SPEED_MODE, tftLedcChannel, 255 - intensity);
     if(e)
     {
         return e;
     }
-    return ledc_update_duty(LEDC_LOW_SPEED_MODE, TFT_LEDC_CHANNEL);
+    return ledc_update_duty(LEDC_LOW_SPEED_MODE, tftLedcChannel);
 }
 
 
@@ -159,13 +216,15 @@ int setTFTBacklight(uint8_t intensity)
  * @param rst     The GPIO for the RESET pin
  * @param backlight The GPIO used to PWM control the backlight
  * @param isPwmBacklight true to set up the backlight as PWM, false to have it be on/off
+ * @param ledcChannel The LEDC channel to use for the PWM backlight
  */
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk,
              gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
-             gpio_num_t backlight, bool isPwmBacklight)
+             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel)
 {
     tftBacklightPin = backlight;
     tftBacklightIsPwm = isPwmBacklight;
+    tftLedcChannel = ledcChannel;
 
     spi_bus_config_t buscfg =
     {
@@ -317,7 +376,7 @@ void disableTFTBacklight(void)
     esp_lcd_panel_io_tx_param(io, 0x10, NULL, 0);
 #endif
 
-    ledc_stop(LEDC_LOW_SPEED_MODE, TFT_LEDC_CHANNEL, 0);
+    ledc_stop(LEDC_LOW_SPEED_MODE, tftLedcChannel, 0);
     gpio_reset_pin( tftBacklightPin );
     gpio_set_level( tftBacklightPin, 0 );
 }
@@ -363,19 +422,17 @@ void enableTFTBacklight(void)
         {
             .gpio_num = tftBacklightPin,
             .speed_mode = LEDC_LOW_SPEED_MODE,
-            .channel = TFT_LEDC_CHANNEL,  //Not sure if 0 is used.
+            .channel = tftLedcChannel,
             .timer_sel = 0,
             .duty = 255, //Disable to start.
         };
         ESP_ERROR_CHECK(ledc_channel_config(&ledc_config_backlight));
-        setTFTBacklight(CONFIG_TFT_DEFAULT_BRIGHTNESS);
+        setTFTBacklightBrightness(CONFIG_TFT_DEFAULT_BRIGHTNESS);
 	}
 }
 
 /**
  * @brief Set a single pixel in the display, with bounds check
- *
- * TODO handle transparency
  *
  * @param x The x coordinate of the pixel to set
  * @param y The y coordinate of the pixel to set
@@ -410,22 +467,20 @@ paletteColor_t getPxTft(int16_t x, int16_t y)
  */
 void clearPxTft(void)
 {
-    memset(pixels, 0, sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
+    memset(pixels, c000, sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
 }
 
 /**
  * @brief Send the current framebuffer to the TFT display over the SPI bus.
  *
- * This function can be called as quickly as possible and will limit frames to
- * 30fps max
+ * This function can be called as quickly as possible
  *
  * Because the SPI driver handles transactions in the background, we can
  * calculate the next line while the previous one is being sent.
  *
- * @param drawDiff unused
+ * @param fnBackgroundDrawCallback A function pointer to draw backgrounds while the transmission is occurring
  */
-
-void drawDisplayTft(bool drawDiff __attribute__((unused)), fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
+void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 {
     // Indexes of the line currently being sent to the LCD and the line we're calculating
     uint8_t sending_line = 0;
@@ -476,7 +531,7 @@ void drawDisplayTft(bool drawDiff __attribute__((unused)), fnBackgroundDrawCallb
         // (When operating @ 160 MHz)
         // This code takes 35k cycles when y == 0, but
         // this code takes ~~100k~~ 125k cycles when y != 0...
-        // TODO NOTE:
+        // NOTE:
         //  *** You have 780us here, to do whatever you want.  For free. ***
         //  You should avoid when y == 0, but that means you get 14 chunks
         //  every frame.
@@ -504,15 +559,4 @@ void drawDisplayTft(bool drawDiff __attribute__((unused)), fnBackgroundDrawCallb
     uart_tx_one_char('i');
     //ESP_LOGI( "tft", "%d/%d", mid - start, final - mid );
 #endif
-
-    // Debug printing for frames-per-second
-    // framesDrawn++;
-    // if (framesDrawn == 120)
-    // {
-    //     uint64_t tFpsEnd = esp_timer_get_time();
-    //     ESP_LOGD("TFT", "%f FPS", 120 / ((tFpsEnd - tFpsStart) / 1000000.0f));
-    //     tFpsStart = tFpsEnd;
-    //     framesDrawn = 0;
-    // }
 }
-

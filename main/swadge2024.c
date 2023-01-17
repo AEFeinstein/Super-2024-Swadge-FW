@@ -18,13 +18,6 @@
  * 
  * - hdw-btn.c: Learn how to use button input!
  * - hdw-tft.c: Learn how to use the TFT!
- *
- * \section example Example Swadge Mode
- * 
- *     int main(void)
- *     {
- *         return 0;
- *     }
  */
 
 #include <stdio.h>
@@ -34,9 +27,6 @@
 
 #include "hdw-btn.h"
 #include "hdw-tft.h"
-
-// #include "tinyusb.h"
-// #include "advanced_usb_control.h"
 
 /**
  * @brief TODO doxygen something
@@ -48,14 +38,6 @@ void app_main(void)
 
     // Init timers
     esp_timer_init();
-
-    // const tinyusb_config_t tusb_cfg = {
-    //     .device_descriptor = NULL,
-    //     .string_descriptor = NULL,
-    //     .external_phy = false,
-    //     .configuration_descriptor = hid_configuration_descriptor,
-    // };
-    // tinyusb_driver_install(&tusb_cfg);
 
     // Init buttons
     initButtons(8,
@@ -76,27 +58,39 @@ void app_main(void)
             GPIO_NUM_34, // cs
             GPIO_NUM_38, // rst
             GPIO_NUM_35, // backlight
-            true);       // PWM backlight
+            true,        // PWM backlight
+            LEDC_CHANNEL_1); // Channel to use for PWM backlight
 
     bool drawScreen = false;
     while(1)
     {
-        paletteColor_t color = c000;
-
         buttonEvt_t evt;
         if(checkButtonQueue(&evt))
         {
+            printf("state: %04X, button: %d, down: %s\n",
+                evt.state, evt.button, evt.down ? "down" : "up");
             drawScreen = evt.down;
         }
 
         if(drawScreen)
         {
+            clearPxTft();
             for(uint16_t y = 0; y < TFT_HEIGHT; y++)
             {
                 for(uint16_t x = 0; x < TFT_WIDTH; x++)
                 {
-                    setPxTft(x, y, color);
-                    color = (color + 1) % cTransparent;
+                    if(x < TFT_WIDTH / 3)
+                    {
+                        setPxTft(x, y, c500);
+                    }
+                    else if (x < (2 * TFT_WIDTH) / 3)
+                    {
+                        setPxTft(x, y, c050);
+                    }
+                    else
+                    {
+                        setPxTft(x, y, c005);
+                    }
                 }
             }
         }
@@ -105,6 +99,6 @@ void app_main(void)
             clearPxTft();
         }
 
-        drawDisplayTft(false, NULL);
+        drawDisplayTft(NULL);
     }
 }
