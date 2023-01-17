@@ -1,6 +1,37 @@
 /*! \file hdw-btn.c
  *
- * TODO Explain how to use buttons!
+ * \section btn_design Design Philosophy
+ * 
+ * The buttons are polled continuously at 1ms intervals in an interrupt, but these readinds are not reported to the Swadge modes.
+ * The interrupt saves the prior ::DEBOUNCE_HIST_LEN polled button states and the last reported button state.
+ * When all ::DEBOUNCE_HIST_LEN button states are identical, the interrupt accepts the current state and checks if it different than the last reported state.
+ * If there is a difference, the button event is queued in the interrupt to be received by the Swadge Mode.
+ * 
+ * The Swadge Mode needs to call checkButtonQueue() to receive the queued button event.
+ * The event contains which button caused the event, whether it was pressed or released, and the current state of all buttons.
+ * This way the Swadge Mode is not responsible for high frequency button polling, but can still receive all button inputs.
+ *
+ * Originally the buttons would trigger an interrupt, but we found that to have glitchier and less reliable results than polling.
+ * 
+ * Button events used to be delivered to the Swadge Mode via a callback.
+ * This led to cases where multiple callbacks would occur between a single invocation of that mode's main function.
+ * Because the Swadge Mode didn't have a separate queue for button events, this caused events to be dropped.
+ * Instead of forcing each mode to queue button events, now each mode must dequeue them rather than having a callback called.
+ * 
+ * \section btn_usage Usage
+ * 
+ * You don't need to call initButtons() or deinitButtons(). The system does at the appropriate times.
+ * 
+ * You do need to call checkButtonQueue() and should do so in a while-loop to receive all events since the last check.
+ * This should be done in the Swadge Mode's main function.
+ * 
+ * \section btn_example Example
+ *
+ *     buttonEvt_t evt;
+ *     while(checkButtonQueue(&evt))
+ *     {
+ *         // Do something with evt!
+ *     }
  */
 
 //==============================================================================
@@ -120,7 +151,7 @@ void initButtons(uint8_t numButtons, ...)
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
 
     gptimer_alarm_config_t config = {
-        .alarm_count = 1000,
+        .alarm_count = 1000, // Check every 1000 ticks of a 1MHz clock, i.e. every 1ms
         .reload_count = 0,
         .flags.auto_reload_on_alarm = true
     };
