@@ -18,6 +18,7 @@
  * 
  * - hdw-btn.c: Learn how to use button input!
  * - hdw-tft.c: Learn how to use the TFT!
+ * - hdw-bzr.c: Learn how to use the buzzer!
  */
 
 #include <stdio.h>
@@ -27,6 +28,7 @@
 
 #include "hdw-btn.h"
 #include "hdw-tft.h"
+#include "hdw-bzr.h"
 
 /**
  * @brief TODO doxygen something
@@ -50,6 +52,10 @@ void app_main(void)
                 GPIO_NUM_8,
                 GPIO_NUM_5);
 
+    // Make sure to use a different timer than initButtons()
+    initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0,
+        false, false);
+
     // Init TFT
     initTFT(SPI2_HOST,
             GPIO_NUM_36, // sclk
@@ -60,6 +66,44 @@ void app_main(void)
             GPIO_NUM_35, // backlight
             true,        // PWM backlight
             LEDC_CHANNEL_1); // Channel to use for PWM backlight
+
+    static const song_t BlackDog =
+    {
+        .numNotes = 28,
+        .shouldLoop = false,
+        .loopStartNote = 0,
+        .notes = {
+            {.note = E_5, .timeMs = 188},
+            {.note = G_5, .timeMs = 188},
+            {.note = G_SHARP_5, .timeMs = 188},
+            {.note = A_5, .timeMs = 188},
+            {.note = E_5, .timeMs = 188},
+            {.note = C_6, .timeMs = 375},
+            {.note = A_5, .timeMs = 375},
+            {.note = D_6, .timeMs = 188},
+            {.note = E_6, .timeMs = 188},
+            {.note = C_6, .timeMs = 94},
+            {.note = D_6, .timeMs = 94},
+            {.note = C_6, .timeMs = 188},
+            {.note = A_5, .timeMs = 183},
+            {.note = SILENCE, .timeMs = 10},
+            {.note = A_5, .timeMs = 183},
+            {.note = C_6, .timeMs = 375},
+            {.note = A_5, .timeMs = 375},
+            {.note = G_5, .timeMs = 188},
+            {.note = A_5, .timeMs = 183},
+            {.note = SILENCE, .timeMs = 10},
+            {.note = A_5, .timeMs = 183},
+            {.note = D_5, .timeMs = 188},
+            {.note = E_5, .timeMs = 188},
+            {.note = C_5, .timeMs = 188},
+            {.note = D_5, .timeMs = 188},
+            {.note = A_4, .timeMs = 370},
+            {.note = SILENCE, .timeMs = 10},
+            {.note = A_4, .timeMs = 745},
+        }
+    };
+    bzrPlayBgm(&BlackDog);
 
     bool drawScreen = false;
     while(1)
