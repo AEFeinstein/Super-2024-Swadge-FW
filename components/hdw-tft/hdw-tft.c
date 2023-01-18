@@ -4,6 +4,13 @@
  * 
  * TFT code is based on the example found at https://github.com/espressif/esp-idf/tree/master/examples/peripherals/lcd/tjpgd
  * 
+ * Each pixel in the framebuffer is of type ::paletteColor_t.
+ * Even though the TFT supports 16 bit color, a 16 bit framebuffer is too big to have in RAM alongside games and such.
+ * Instead, the 8 bit Web Safe palette is used, where each RGB channel has six options for a total of 216 colors (https://www.rapidtables.com/web/color/Web_Safe.html)
+ * The ::paletteColor_t enum has values for all colors in the form of cRGB, where R, G, and B each range from 0 to 5.
+ * For example, ::c500 is full red.
+ * ::cTransparent is a special value for a transparent pixel.
+ * 
  * \section tft_usage Usage
  * 
  * You don't need to call initTFT(). The system does so at the appropriate time.
