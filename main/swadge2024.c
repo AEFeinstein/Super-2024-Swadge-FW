@@ -19,6 +19,7 @@
  * - hdw-btn.c: Learn how to use button input!
  * - hdw-tft.c: Learn how to use the TFT!
  * - hdw-bzr.c: Learn how to use the buzzer!
+ * - hdw-accel.c: Learn how to use the accelerometer!
  */
 
 #include <stdio.h>
@@ -29,6 +30,7 @@
 #include "hdw-btn.h"
 #include "hdw-tft.h"
 #include "hdw-bzr.h"
+#include "hdw-accel.h"
 
 /**
  * @brief TODO doxygen something
@@ -66,6 +68,13 @@ void app_main(void)
             GPIO_NUM_35, // backlight
             true,        // PWM backlight
             LEDC_CHANNEL_1); // Channel to use for PWM backlight
+
+    // Init accelerometer
+    qma7981_init(I2C_NUM_0,
+        GPIO_NUM_3,  // SDA
+        GPIO_NUM_41, // SCL
+        GPIO_PULLUP_DISABLE, 1000000,
+        QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
 
     static const song_t BlackDog =
     {
@@ -116,6 +125,9 @@ void app_main(void)
             drawScreen = evt.down;
         }
 
+        int16_t a_x, a_y, a_z;
+        qma7981_get_accel(&a_x, &a_y, &a_z);
+
         if(drawScreen)
         {
             clearPxTft();
@@ -125,15 +137,15 @@ void app_main(void)
                 {
                     if(x < TFT_WIDTH / 3)
                     {
-                        setPxTft(x, y, c500);
+                        setPxTft(x, y, (a_x >> 6) % cTransparent);
                     }
                     else if (x < (2 * TFT_WIDTH) / 3)
                     {
-                        setPxTft(x, y, c050);
+                        setPxTft(x, y, (a_y >> 6) % cTransparent);
                     }
                     else
                     {
-                        setPxTft(x, y, c005);
+                        setPxTft(x, y, (a_z >> 6) % cTransparent);
                     }
                 }
             }
