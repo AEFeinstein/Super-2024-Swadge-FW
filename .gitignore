@@ -54,3 +54,6 @@ dkms.conf
 build
 sdkconfig.old
 docs/html
+
+.vscode/c_cpp_properties.json
+.vscode/settings.json
