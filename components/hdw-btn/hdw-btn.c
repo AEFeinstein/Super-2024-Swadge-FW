@@ -29,7 +29,7 @@
  *
  * \code{.c}
  * #include "hdw-btn.c"
-
+ * 
  * buttonEvt_t evt;
  * while(checkButtonQueue(&evt))
  * {
