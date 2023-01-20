@@ -1,39 +1,41 @@
 /*! \file hdw-bzr.c
  *
  * \section bzr_design Design Philosophy
- * 
- * The buzzer is driven by the <a href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/ledc.html">LEDC periphral</a>.
- * This is usually used to generate a PWM signal to control the intensity of an LED, but here it generates frequencies for the buzzer.
- * 
+ *
+ * The buzzer is driven by the <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/ledc.html">LEDC
+ * periphral</a>. This is usually used to generate a PWM signal to control the intensity of an LED, but here it
+ * generates frequencies for the buzzer.
+ *
  * A hardware timer is started which calls an interrupt every 5ms to check if the song should play the next note.
- * 
+ *
  * This component manages two tracks, background music (bgm) and sound effects (sfx).
  * When bgm is playing, it may be interrupted by sfx.
- * If bgm and sfx are playing at the same time, both will progress through their respective notes, but only sfx will be heard.
- * This way, bgm keeps accurate time even with sfx.
- * 
+ * If bgm and sfx are playing at the same time, both will progress through their respective notes, but only sfx will be
+ * heard. This way, bgm keeps accurate time even with sfx.
+ *
  * \section bzr_usage Usage
- * 
+ *
  * You don't need to call initBuzzer(). The system does at the appropriate time.
- * 
+ *
  * A ::musicalNote_t is a ::noteFrequency_t and a duration.
  * A ::song_t is a list of ::musicalNote_t that may be looped.
- * 
+ *
  * The individual tracks may be muted with bzrSetBgmIsMuted() and bzrGetBgmIsMuted().
- * 
+ *
  * A song can be played on a given track with either bzrPlayBgm() or bzrPlaySfx().
  * All tracks can be stopped at the same time with bzrStop().
- * 
+ *
  * An individual note can be played with bzrPlayNote() or stopped with bzrStopNote().
  * This note is not on a specific track. It is useful for instrument modes, not for songs.
- * 
+ *
  * TODO Asset loading comes later.
- * 
+ *
  * \section bzr_example Example
  *
  * \code{.c}
  * #include "hdw-bzr.c"
- * 
+ *
  * static const song_t BlackDog =
  * {
  *     .numNotes = 28,
@@ -91,7 +93,7 @@
 
 // For LEDC
 #define LEDC_MODE LEDC_LOW_SPEED_MODE //!< Low speed mode is sufficient
-#define LEDC_DUTY 4095 //!< Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
+#define LEDC_DUTY 4095                //!< Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
 
 //==============================================================================
 // Enums
@@ -132,7 +134,7 @@ static ledc_channel_t ledcChannel;
 // Functions Prototypes
 //==============================================================================
 
-static bool buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
+static bool buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 static bool buzzer_track_check_next_note(buzzerTrack_t* track, bool isActive, int64_t cTime);
 
 //==============================================================================
@@ -148,36 +150,35 @@ static bool buzzer_track_check_next_note(buzzerTrack_t* track, bool isActive, in
  * @param _isBgmMuted True if background music is muted, false otherwise
  * @param _isSfxMuted True if sound effects are muted, false otherwise
  */
-void initBuzzer(gpio_num_t bzrGpio,
-    ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel,
-    bool _isBgmMuted, bool _isSfxMuted)
+void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, bool _isBgmMuted,
+                bool _isSfxMuted)
 {
     isBgmMuted = _isBgmMuted;
     isSfxMuted = _isSfxMuted;
 
     // Save the LEDC timer and channel
-    ledcTimer = _ledcTimer;
+    ledcTimer   = _ledcTimer;
     ledcChannel = _ledcChannel;
 
     // Prepare and then apply the LEDC PWM timer configuration
     ledc_timer_config_t ledc_timer = {
-        .speed_mode       = LEDC_MODE,
-        .timer_num        = ledcTimer,
-        .duty_resolution  = LEDC_TIMER_13_BIT,
-        .freq_hz          = C_4, // Gotta start somewhere, might as well be middle C
-        .clk_cfg          = LEDC_USE_APB_CLK
+        .speed_mode      = LEDC_MODE,
+        .timer_num       = ledcTimer,
+        .duty_resolution = LEDC_TIMER_13_BIT,
+        .freq_hz         = C_4, // Gotta start somewhere, might as well be middle C
+        .clk_cfg         = LEDC_USE_APB_CLK,
     };
     ESP_ERROR_CHECK(ledc_timer_config(&ledc_timer));
 
     // Prepare and then apply the LEDC PWM channel configuration
     ledc_channel_config_t ledc_channel = {
-        .speed_mode     = LEDC_MODE,
-        .channel        = ledcChannel,
-        .timer_sel      = ledcTimer,
-        .intr_type      = LEDC_INTR_DISABLE,
-        .gpio_num       = bzrGpio,
-        .duty           = LEDC_DUTY, // Set duty to 50%
-        .hpoint         = 0
+        .speed_mode = LEDC_MODE,
+        .channel    = ledcChannel,
+        .timer_sel  = ledcTimer,
+        .intr_type  = LEDC_INTR_DISABLE,
+        .gpio_num   = bzrGpio,
+        .duty       = LEDC_DUTY, // Set duty to 50%
+        .hpoint     = 0,
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 
@@ -188,23 +189,23 @@ void initBuzzer(gpio_num_t bzrGpio,
 
     // Initialize the timer
     gptimer_config_t timer_config = {
-        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
-        .direction = GPTIMER_COUNT_UP,
+        .clk_src       = GPTIMER_CLK_SRC_DEFAULT,
+        .direction     = GPTIMER_COUNT_UP,
         .resolution_hz = 1000 * 1000, // 1MHz
     };
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
 
     // Configure the hardware timer to check for note transitions
     gptimer_alarm_config_t config = {
-        .alarm_count = 5000, // Check every 5000 ticks of a 1MHz clock, i.e. every 5ms
-        .reload_count = 0,
-        .flags.auto_reload_on_alarm = true
+        .alarm_count                = 5000, // Check every 5000 ticks of a 1MHz clock, i.e. every 5ms
+        .reload_count               = 0,
+        .flags.auto_reload_on_alarm = true,
     };
     ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &config));
 
     // Configure the ISR
     gptimer_event_callbacks_t callbacks = {
-        .on_alarm = buzzer_check_next_note_isr
+        .on_alarm = buzzer_check_next_note_isr,
     };
     ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &callbacks, NULL));
 
@@ -242,17 +243,17 @@ void bzrGetBgmIsMuted(bool _isSfxMuted)
 void bzrPlayBgm(const song_t* song)
 {
     // Don't play if muted
-    if(isBgmMuted)
+    if (isBgmMuted)
     {
         return;
     }
 
-    bgm.song = song;
+    bgm.song       = song;
     bgm.note_index = 0;
     bgm.start_time = esp_timer_get_time();
 
     // If there is no current SFX
-    if(NULL == sfx.song)
+    if (NULL == sfx.song)
     {
         // Start playing BGM
         bzrPlayNote(bgm.song->notes[0].note);
@@ -269,12 +270,12 @@ void bzrPlayBgm(const song_t* song)
 void bzrPlaySfx(const song_t* song)
 {
     // Don't play if muted
-    if(isSfxMuted)
+    if (isSfxMuted)
     {
         return;
     }
 
-    sfx.song = song;
+    sfx.song       = song;
     sfx.note_index = 0;
     sfx.start_time = esp_timer_get_time();
 
@@ -296,11 +297,11 @@ void bzrStop(void)
 
     // Clear internal variables
     bgm.note_index = 0;
-    bgm.song = NULL;
+    bgm.song       = NULL;
     bgm.start_time = 0;
 
     sfx.note_index = 0;
-    sfx.song = NULL;
+    sfx.song       = NULL;
     sfx.start_time = 0;
 }
 
@@ -315,14 +316,14 @@ void bzrStop(void)
  */
 void IRAM_ATTR bzrPlayNote(noteFrequency_t freq)
 {
-    if(SILENCE == freq)
+    if (SILENCE == freq)
     {
         bzrStopNote();
         return;
     }
     else
     {
-        if(cFreq != freq)
+        if (cFreq != freq)
         {
             cFreq = freq;
             // Set the frequency
@@ -359,10 +360,11 @@ void IRAM_ATTR bzrStopNote(void)
  * @return true
  * @return false
  */
-static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
+static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata,
+                                                 void* user_ctx)
 {
     // Don't do much if muted
-    if(isBgmMuted && isSfxMuted)
+    if (isBgmMuted && isSfxMuted)
     {
         return false;
     }
@@ -376,7 +378,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
     bool bgmIsActive = buzzer_track_check_next_note(&bgm, !sfxIsActive, cTime);
 
     // If nothing is playing, but there is BGM (i.e. SFX finished)
-    if((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bgm.song))
+    if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bgm.song))
     {
         // Immediately start playing BGM to get back on track faster
         bzrPlayNote(bgm.song->notes[bgm.note_index].note);
@@ -399,7 +401,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
 static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool isActive, int64_t cTime)
 {
     // Check if there is a song and there are still notes
-    if((NULL != track->song) && (track->note_index < track->song->numNotes))
+    if ((NULL != track->song) && (track->note_index < track->song->numNotes))
     {
         // Check if it's time to play the next note
         if (cTime - track->start_time >= (1000 * track->song->notes[track->note_index].timeMs))
@@ -409,15 +411,15 @@ static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool is
             track->start_time = cTime;
 
             // Loop if we should
-            if(track->song->shouldLoop && (track->note_index == track->song->numNotes))
+            if (track->song->shouldLoop && (track->note_index == track->song->numNotes))
             {
                 track->note_index = track->song->loopStartNote;
             }
 
             // If there is a note
-            if(track->note_index < track->song->numNotes)
+            if (track->note_index < track->song->numNotes)
             {
-                if(isActive)
+                if (isActive)
                 {
                     // Set the note to be played
                     bzrPlayNote(track->song->notes[track->note_index].note);
@@ -425,7 +427,7 @@ static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool is
             }
             else
             {
-                if(isActive)
+                if (isActive)
                 {
                     // Set the song to stop
                     bzrStopNote();
@@ -434,7 +436,7 @@ static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool is
                 // Clear track data
                 track->start_time = 0;
                 track->note_index = 0;
-                track->song = NULL;
+                track->song       = NULL;
                 // Track isn't active
                 return false;
             }

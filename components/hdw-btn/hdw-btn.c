@@ -1,35 +1,39 @@
 /*! \file hdw-btn.c
  *
  * \section btn_design Design Philosophy
- * 
- * The buttons are polled continuously at 1ms intervals in an interrupt, but these readinds are not reported to the Swadge modes.
- * The interrupt saves the prior ::DEBOUNCE_HIST_LEN polled button states and the last reported button state.
- * When all ::DEBOUNCE_HIST_LEN button states are identical, the interrupt accepts the current state and checks if it different than the last reported state.
- * If there is a difference, the button event is queued in the interrupt to be received by the Swadge Mode.
- * 
- * The Swadge Mode needs to call checkButtonQueue() to receive the queued button event.
- * The event contains which button caused the event, whether it was pressed or released, and the current state of all buttons.
- * This way the Swadge Mode is not responsible for high frequency button polling, but can still receive all button inputs.
  *
- * Originally the buttons would trigger an interrupt, but we found that to have glitchier and less reliable results than polling.
- * 
+ * The buttons are polled continuously at 1ms intervals in an interrupt, but these readinds are not reported to the
+ * Swadge modes. The interrupt saves the prior ::DEBOUNCE_HIST_LEN polled button states and the last reported button
+ * state. When all ::DEBOUNCE_HIST_LEN button states are identical, the interrupt accepts the current state and checks
+ * if it different than the last reported state. If there is a difference, the button event is queued in the interrupt
+ * to be received by the Swadge Mode.
+ *
+ * The Swadge Mode needs to call checkButtonQueue() to receive the queued button event.
+ * The event contains which button caused the event, whether it was pressed or released, and the current state of all
+ * buttons. This way the Swadge Mode is not responsible for high frequency button polling, but can still receive all
+ * button inputs.
+ *
+ * Originally the buttons would trigger an interrupt, but we found that to have glitchier and less reliable results than
+ * polling.
+ *
  * Button events used to be delivered to the Swadge Mode via a callback.
  * This led to cases where multiple callbacks would occur between a single invocation of that mode's main function.
  * Because the Swadge Mode didn't have a separate queue for button events, this caused events to be dropped.
- * Instead of forcing each mode to queue button events, now each mode must dequeue them rather than having a callback called.
- * 
+ * Instead of forcing each mode to queue button events, now each mode must dequeue them rather than having a callback
+ * called.
+ *
  * \section btn_usage Usage
- * 
+ *
  * You don't need to call initButtons() or deinitButtons(). The system does at the appropriate times.
- * 
+ *
  * You do need to call checkButtonQueue() and should do so in a while-loop to receive all events since the last check.
  * This should be done in the Swadge Mode's main function.
- * 
+ *
  * \section btn_example Example
  *
  * \code{.c}
  * #include "hdw-btn.c"
- * 
+ *
  * buttonEvt_t evt;
  * while(checkButtonQueue(&evt))
  * {
@@ -67,7 +71,7 @@
 // Prototypes
 //==============================================================================
 
-static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
+static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
 //==============================================================================
 // Variables
@@ -98,7 +102,7 @@ void initButtons(uint8_t numButtons, ...)
     ESP_LOGD("BTN", "initializing buttons");
 
     // Make sure there aren't too many
-    if(numButtons > 31)
+    if (numButtons > 31)
     {
         ESP_LOGE("BTN", "Too many buttons initialized (%d), max 31", numButtons);
         return;
@@ -110,16 +114,15 @@ void initButtons(uint8_t numButtons, ...)
     // For each GPIO
     va_list ap;
     va_start(ap, numButtons);
-    for(uint8_t i = 0; i < numButtons; i++)
+    for (uint8_t i = 0; i < numButtons; i++)
     {
         // Get the GPIO, put it in a bundle
         bundle_gpios[i] = va_arg(ap, gpio_num_t);
 
         // Configure the GPIO
-        gpio_config_t io_conf =
-        {
-            .mode = GPIO_MODE_INPUT,
-            .pull_up_en = true,
+        gpio_config_t io_conf = {
+            .mode         = GPIO_MODE_INPUT,
+            .pull_up_en   = true,
             .pull_down_en = false,
         };
         io_conf.pin_bit_mask = 1ULL << bundle_gpios[i];
@@ -136,8 +139,8 @@ void initButtons(uint8_t numButtons, ...)
             .in_en = 1,
             .in_invert = 1,
             .out_en = 0,
-            .out_invert = 0
-        }
+            .out_invert = 0,
+        },
     };
     ESP_ERROR_CHECK(dedic_gpio_new_bundle(&bundle_config, &bundle));
 
@@ -148,24 +151,24 @@ void initButtons(uint8_t numButtons, ...)
     gpio_evt_queue = xQueueCreate(64, sizeof(uint32_t));
 
     // Initialize the timer
-    gptimer_handle_t gptimer = NULL;
+    gptimer_handle_t gptimer      = NULL;
     gptimer_config_t timer_config = {
-        .clk_src = GPTIMER_CLK_SRC_DEFAULT,
-        .direction = GPTIMER_COUNT_UP,
+        .clk_src       = GPTIMER_CLK_SRC_DEFAULT,
+        .direction     = GPTIMER_COUNT_UP,
         .resolution_hz = 1000 * 1000, // 1MHz
     };
     ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
 
     gptimer_alarm_config_t config = {
-        .alarm_count = 1000, // Check every 1000 ticks of a 1MHz clock, i.e. every 1ms
-        .reload_count = 0,
-        .flags.auto_reload_on_alarm = true
+        .alarm_count                = 1000, // Check every 1000 ticks of a 1MHz clock, i.e. every 1ms
+        .reload_count               = 0,
+        .flags.auto_reload_on_alarm = true,
     };
     ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &config));
 
     // Configure the ISR
     gptimer_event_callbacks_t callbacks = {
-        .on_alarm = btn_timer_isr_cb
+        .on_alarm = btn_timer_isr_cb,
     };
     ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &callbacks, NULL));
 
@@ -190,12 +193,12 @@ void deinitButtons(void)
  * @param[in] user_ctx User data, passed from `gptimer_register_event_callbacks()`
  * @return Whether a high priority task has been waken up by this function
  */
-static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
+static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx)
 {
     // Static variable lives forever!
-    static uint32_t lastEvt = 0;
+    static uint32_t lastEvt                    = 0;
     static uint32_t evtHist[DEBOUNCE_HIST_LEN] = {0};
-    static uint32_t evtIdx = 0;
+    static uint32_t evtIdx                     = 0;
 
     BaseType_t high_task_awoken = pdFALSE;
 
@@ -204,13 +207,13 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
 
     // Store the event in a ring
     evtHist[evtIdx] = evt;
-    evtIdx = (evtIdx + 1) % DEBOUNCE_HIST_LEN;
+    evtIdx          = (evtIdx + 1) % DEBOUNCE_HIST_LEN;
 
     // Look for any difference in the debounce history
-    for(int32_t ei = 0; ei < (DEBOUNCE_HIST_LEN - 1); ei++)
+    for (int32_t ei = 0; ei < (DEBOUNCE_HIST_LEN - 1); ei++)
     {
         // Exclusive OR
-        if(evtHist[ei] ^ evtHist[ei + 1])
+        if (evtHist[ei] ^ evtHist[ei + 1])
         {
             // There is a difference, so return.
             // this is still debouncing
@@ -220,7 +223,7 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
     // No difference in the history, accept this input
 
     // Only queue changes
-    if(lastEvt != evt)
+    if (lastEvt != evt)
     {
         xQueueSendFromISR(gpio_evt_queue, &evt, &high_task_awoken);
         // save the event
@@ -246,14 +249,14 @@ bool checkButtonQueue(buttonEvt_t* evt)
     {
         // Save the old state, set the new state
         uint32_t oldButtonStates = buttonStates;
-        buttonStates = gpio_evt;
+        buttonStates             = gpio_evt;
         // If there was a change
-        if(oldButtonStates != buttonStates)
+        if (oldButtonStates != buttonStates)
         {
             // Figure out what the change was
             evt->button = oldButtonStates ^ buttonStates;
-            evt->down = (buttonStates > oldButtonStates);
-            evt->state = buttonStates;
+            evt->down   = (buttonStates > oldButtonStates);
+            evt->state  = buttonStates;
 
             // Debug print
             // ESP_LOGE("BTN", "Bit 0x%02x was %s, buttonStates is %02x",

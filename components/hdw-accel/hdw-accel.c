@@ -1,28 +1,31 @@
 /*! \file hdw-accel.c
  *
  * \section accel_design Design Philosophy
- * 
+ *
  * The accelerometer used is a QMA7981.
- * The datasheet can be found here: <a href="https://datasheet.lcsc.com/lcsc/2004281102_QST-QMA7981_C457290.pdf">QMA7981 Datasheet</a>.
- * 
+ * The datasheet can be found here: <a href="https://datasheet.lcsc.com/lcsc/2004281102_QST-QMA7981_C457290.pdf">QMA7981
+ * Datasheet</a>.
+ *
  * The accelerometer component does not automatically poll the accelerometer.
- * All it does is set up and configure the accelerometer, then it is up to the Swadge Mode to query for acceleration as appropriate.
- * 
+ * All it does is set up and configure the accelerometer, then it is up to the Swadge Mode to query for acceleration as
+ * appropriate.
+ *
  * This component requires the I2C bus to be initialized, so it does that as well.
- * If other I2C peripherals are added in the future, common I2C bus initialization should be moved to a more common location.
- * 
+ * If other I2C peripherals are added in the future, common I2C bus initialization should be moved to a more common
+ * location.
+ *
  * \section accel_usage Usage
- * 
+ *
  * You don't need to call qma7981_init(). The system does this the appropriate time.
- * 
+ *
  * You do need to call qma7981_get_accel() to get the current acceleration vector.
  * If you want to poll this from your Swadge Mode's main function, you may.
- * 
+ *
  * You may call qma7981_set_range() if you want to adjust the measurement range.
- * 
+ *
  * qma7981_get_step() exists, but it has not been tested, so use it with caution.
  * You may need to configure parameters related to step counting.
- * 
+ *
  * \section accel_example Example
  *
  * \code{.c}
@@ -48,33 +51,33 @@
 
 typedef enum __attribute__((packed))
 {
-    QMA7981_REG_CHIP_ID = 0x00,
-    QMA7981_REG_DX_L = 0x01,
-    QMA7981_REG_DX_H = 0x02,
-    QMA7981_REG_DY_L = 0x03,
-    QMA7981_REG_DY_H = 0x04,
-    QMA7981_REG_DZ_L = 0x05,
-    QMA7981_REG_DZ_H = 0x06,
-    QMA7981_REG_STEP_L = 0x07,
-    QMA7981_REG_STEP_H = 0x08,
-    QMA7981_REG_INT_STAT_0 = 0x0A,
-    QMA7981_REG_INT_STAT_1 = 0x0B,
-    QMA7981_REG_INT_STAT_4 = 0x0D,
-    QMA7981_REG_RANGE = 0x0F,
-    QMA7981_REG_BAND_WIDTH = 0x10,
-    QMA7981_REG_PWR_MANAGE = 0x11,
+    QMA7981_REG_CHIP_ID     = 0x00,
+    QMA7981_REG_DX_L        = 0x01,
+    QMA7981_REG_DX_H        = 0x02,
+    QMA7981_REG_DY_L        = 0x03,
+    QMA7981_REG_DY_H        = 0x04,
+    QMA7981_REG_DZ_L        = 0x05,
+    QMA7981_REG_DZ_H        = 0x06,
+    QMA7981_REG_STEP_L      = 0x07,
+    QMA7981_REG_STEP_H      = 0x08,
+    QMA7981_REG_INT_STAT_0  = 0x0A,
+    QMA7981_REG_INT_STAT_1  = 0x0B,
+    QMA7981_REG_INT_STAT_4  = 0x0D,
+    QMA7981_REG_RANGE       = 0x0F,
+    QMA7981_REG_BAND_WIDTH  = 0x10,
+    QMA7981_REG_PWR_MANAGE  = 0x11,
     QMA7981_REG_STEP_CONF_0 = 0x12,
     QMA7981_REG_STEP_CONF_1 = 0x13,
     QMA7981_REG_STEP_CONF_2 = 0x14,
     QMA7981_REG_STEP_CONF_3 = 0x15,
-    QMA7981_REG_INT_EN_0 = 0x16,
-    QMA7981_REG_INT_EN_1 = 0x17,
-    QMA7981_REG_INT_MAP_0 = 0x19,
-    QMA7981_REG_INT_MAP_1 = 0x1A,
-    QMA7981_REG_INT_MAP_2 = 0x1B,
-    QMA7981_REG_INT_MAP_3 = 0x1C,
+    QMA7981_REG_INT_EN_0    = 0x16,
+    QMA7981_REG_INT_EN_1    = 0x17,
+    QMA7981_REG_INT_MAP_0   = 0x19,
+    QMA7981_REG_INT_MAP_1   = 0x1A,
+    QMA7981_REG_INT_MAP_2   = 0x1B,
+    QMA7981_REG_INT_MAP_3   = 0x1C,
     QMA7981_REG_SIG_STEP_TH = 0x1D,
-    QMA7981_REG_STEP = 0x1F
+    QMA7981_REG_STEP        = 0x1F
 } qmaReg_t;
 
 //==============================================================================
@@ -105,28 +108,27 @@ static int16_t signExtend10bit(uint16_t in);
 
 /**
  * @brief Initialize the accelerometer
- * 
+ *
  * @param _i2c_port The i2c port to use for the accelerometer
  * @param range The range to measure, between ::QMA_RANGE_2G and ::QMA_RANGE_32G
  * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t qma7981_init(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl,
-    gpio_pullup_t pullup, uint32_t clkHz, qma_range_t range, qma_bandwidth_t bandwidth)
+esp_err_t qma7981_init(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
+                       qma_range_t range, qma_bandwidth_t bandwidth)
 {
-    i2c_port = _i2c_port;
+    i2c_port          = _i2c_port;
     esp_err_t ret_val = ESP_OK;
 
     /* Install i2c driver */
-    i2c_config_t conf =
-    {
-        .mode = I2C_MODE_MASTER,
-        .sda_io_num = sda,
-        .sda_pullup_en = pullup,
-        .scl_io_num = scl,
-        .scl_pullup_en = pullup,
+    i2c_config_t conf = {
+        .mode             = I2C_MODE_MASTER,
+        .sda_io_num       = sda,
+        .sda_pullup_en    = pullup,
+        .scl_io_num       = scl,
+        .scl_pullup_en    = pullup,
         .master.clk_speed = clkHz,
-        .clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
+        .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
     };
     ret_val |= i2c_param_config(i2c_port, &conf);
     ret_val |= i2c_driver_install(i2c_port, conf.mode, 0, 0, 0);
@@ -134,18 +136,18 @@ esp_err_t qma7981_init(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl,
     /* Exit sleep mode*/
     ret_val |= qma7981_write_byte(QMA7981_REG_PWR_MANAGE, 0xC0);
     vTaskDelay(pdMS_TO_TICKS(20));
-    
+
     /* Set range */
     ret_val |= qma7981_write_byte(QMA7981_REG_RANGE, range);
     /* Set bandwidth */
     ret_val |= qma7981_write_byte(QMA7981_REG_BAND_WIDTH, bandwidth);
-    
+
     return ret_val;
 }
 
 /**
  * @brief Read a single byte from the accelerometer
- * 
+ *
  * @param reg_addr The register to read from
  * @param data The byte which was read is written here
  * @return ESP_OK if the byte was read, or a non-zero value if it was not
@@ -157,7 +159,7 @@ static esp_err_t qma7981_read_byte(qmaReg_t reg_addr, uint8_t* data)
 
 /**
  * @brief Read multiple bytes from the accelerometer
- * 
+ *
  * @param reg_addr The register to read from
  * @param data_len The number of bytes to read
  * @param data The bytes which were read are written here
@@ -174,7 +176,7 @@ static esp_err_t qma7981_read_bytes(qmaReg_t reg_addr, size_t data_len, uint8_t*
     esp_err_t err = i2c_master_cmd_begin(i2c_port, cmdHandle, 100);
     i2c_cmd_link_delete(cmdHandle);
 
-    if(ESP_OK != err)
+    if (ESP_OK != err)
     {
         return err;
     }
@@ -193,7 +195,7 @@ static esp_err_t qma7981_read_bytes(qmaReg_t reg_addr, size_t data_len, uint8_t*
 
 /**
  * @brief Write a single byte to the accelerometer
- * 
+ *
  * @param reg_addr The register address to write to
  * @param data The byte to write
  * @return ESP_OK if the byte was written, or a non-zero value if it was not
@@ -215,9 +217,9 @@ static esp_err_t qma7981_write_byte(qmaReg_t reg_addr, uint8_t data)
 
 /**
  * @brief Read and return the 16-bit step counter
- * 
+ *
  * Note that this can be configured with ::QMA7981_REG_STEP_CONF_0 through ::QMA7981_REG_STEP_CONF_3
- * 
+ *
  * @param data The step counter value is written here
  * @return ESP_OK if the step count was read, or a non-zero value if it was not
  */
@@ -241,14 +243,14 @@ esp_err_t qma7981_get_step(uint16_t* data)
 
 /**
  * @brief Set the accelerometer's measurement range
- * 
+ *
  * @param range The range to measure, from ::QMA_RANGE_2G to ::QMA_RANGE_32G
  * @return ESP_OK if the range was set, or a non-zero value if it was not
  */
 esp_err_t qma7981_set_range(qma_range_t range)
 {
     esp_err_t ret_val = qma7981_write_byte(QMA7981_REG_RANGE, range);
-    qma_range = range;
+    qma_range         = range;
 
     return ret_val;
 }
@@ -256,8 +258,8 @@ esp_err_t qma7981_set_range(qma_range_t range)
 /**
  * @brief Read the current acceleration vector from the accelerometer and return
  * the vector through arguments. If the read fails, the last known values are
- * returned instead. 
- * 
+ * returned instead.
+ *
  * @param x The X component of the acceleration vector is written here
  * @param y The Y component of the acceleration vector is written here
  * @param z The Z component of the acceleration vector is written here
@@ -275,13 +277,13 @@ esp_err_t qma7981_get_accel(int16_t* x, int16_t* y, int16_t* z)
     esp_err_t ret_val = qma7981_read_bytes(QMA7981_REG_DX_L, 6, raw_data);
 
     // If the read was successsful
-    if(ESP_OK == ret_val)
+    if (ESP_OK == ret_val)
     {
         // Sign extend the 10 bit value to 16 bits and save it as the last known value
         // TODO The datasheet mentions this is a 14 bit reading, not a 10 bit one?
-        lastX =  signExtend10bit(((raw_data[0] >> 6 ) | (raw_data[1]) << 2) & 0x03FF);
-        lastY = -signExtend10bit(((raw_data[2] >> 6 ) | (raw_data[3]) << 2) & 0x03FF);
-        lastZ = -signExtend10bit(((raw_data[4] >> 6 ) | (raw_data[5]) << 2) & 0x03FF);
+        lastX = signExtend10bit(((raw_data[0] >> 6) | (raw_data[1]) << 2) & 0x03FF);
+        lastY = -signExtend10bit(((raw_data[2] >> 6) | (raw_data[3]) << 2) & 0x03FF);
+        lastZ = -signExtend10bit(((raw_data[4] >> 6) | (raw_data[5]) << 2) & 0x03FF);
     }
 
     // Copy out the acceleration value
@@ -300,7 +302,7 @@ esp_err_t qma7981_get_accel(int16_t* x, int16_t* y, int16_t* z)
  */
 static int16_t signExtend10bit(uint16_t in)
 {
-    if(in & 0x200)
+    if (in & 0x200)
     {
         return (in | 0xFC00); // extend the sign bit all the way out
     }
