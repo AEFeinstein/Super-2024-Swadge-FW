@@ -1,0 +1,8 @@
+menu "LED Configuration"
+	config NUM_LEDS
+		int
+		range 0 255
+		default 8
+		prompt "Select the number of RGB LEDs"
+endmenu
+

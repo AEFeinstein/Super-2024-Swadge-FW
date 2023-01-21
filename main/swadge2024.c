@@ -20,6 +20,7 @@
  * - hdw-tft.c: Learn how to use the TFT!
  * - hdw-bzr.c: Learn how to use the buzzer!
  * - hdw-accel.c: Learn how to use the accelerometer!
+ * - hdw-led.c: Learn how to use the LEDs!
  */
 
 #include <stdio.h>
@@ -31,6 +32,7 @@
 #include "hdw-tft.h"
 #include "hdw-bzr.h"
 #include "hdw-accel.h"
+#include "hdw-led.h"
 
 /**
  * @brief TODO doxygen something
@@ -67,6 +69,9 @@ void app_main(void)
             GPIO_NUM_35,     // backlight
             true,            // PWM backlight
             LEDC_CHANNEL_1); // Channel to use for PWM backlight
+
+    // Initialize the RGB LEDs
+    initLeds(GPIO_NUM_39);
 
     // Init accelerometer
     qma7981_init(I2C_NUM_0,
@@ -132,5 +137,14 @@ void app_main(void)
         }
 
         drawDisplayTft(NULL);
+
+        led_t leds[CONFIG_NUM_LEDS] = {0};
+        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            leds[i].r = (255 * ((i + 0) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
+            leds[i].g = (255 * ((i + 3) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
+            leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
+        }
+        setLeds(leds, CONFIG_NUM_LEDS);
     }
 }

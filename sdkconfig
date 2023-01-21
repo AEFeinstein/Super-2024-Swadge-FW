@@ -360,6 +360,12 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# LED Configuration
+#
+CONFIG_NUM_LEDS=8
+# end of LED Configuration
+
+#
 # TFT Configuration
 #
 # CONFIG_ST7735_160x80 is not set
