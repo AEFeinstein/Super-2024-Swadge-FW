@@ -21,6 +21,7 @@
  * - hdw-bzr.c: Learn how to use the buzzer!
  * - hdw-accel.c: Learn how to use the accelerometer!
  * - hdw-led.c: Learn how to use the LEDs!
+ * - hdw-mic.c: Learn how to use the microphone!
  */
 
 #include <stdio.h>
@@ -33,6 +34,7 @@
 #include "hdw-bzr.h"
 #include "hdw-accel.h"
 #include "hdw-led.h"
+#include "hdw-mic.h"
 
 /**
  * @brief TODO doxygen something
@@ -56,8 +58,12 @@ void app_main(void)
                 GPIO_NUM_8,  // Start
                 GPIO_NUM_5); // Select
 
-    // Initi buzzer
+    // Init buzzer
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
+
+    // Init mic
+    initMic(GPIO_NUM_7);
+    startMic();
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
@@ -79,62 +85,71 @@ void app_main(void)
                  GPIO_NUM_41, // SCL
                  GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
 
-    static const song_t BlackDog = {
-        .numNotes      = 28,
-        .shouldLoop    = false,
-        .loopStartNote = 0,
-        .notes = {{.note = E_5, .timeMs = 188}, {.note = G_5, .timeMs = 188},    {.note = G_SHARP_5, .timeMs = 188},
-                  {.note = A_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_6, .timeMs = 375},
-                  {.note = A_5, .timeMs = 375}, {.note = D_6, .timeMs = 188},    {.note = E_6, .timeMs = 188},
-                  {.note = C_6, .timeMs = 94},  {.note = D_6, .timeMs = 94},     {.note = C_6, .timeMs = 188},
-                  {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
-                  {.note = C_6, .timeMs = 375}, {.note = A_5, .timeMs = 375},    {.note = G_5, .timeMs = 188},
-                  {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
-                  {.note = D_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_5, .timeMs = 188},
-                  {.note = D_5, .timeMs = 188}, {.note = A_4, .timeMs = 370},    {.note = SILENCE, .timeMs = 10},
-                  {.note = A_4, .timeMs = 745}},
-    };
-    bzrPlayBgm(&BlackDog);
+    // static const song_t BlackDog = {
+    //     .numNotes      = 28,
+    //     .shouldLoop    = false,
+    //     .loopStartNote = 0,
+    //     .notes = {{.note = E_5, .timeMs = 188}, {.note = G_5, .timeMs = 188},    {.note = G_SHARP_5, .timeMs = 188},
+    //               {.note = A_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_6, .timeMs = 375},
+    //               {.note = A_5, .timeMs = 375}, {.note = D_6, .timeMs = 188},    {.note = E_6, .timeMs = 188},
+    //               {.note = C_6, .timeMs = 94},  {.note = D_6, .timeMs = 94},     {.note = C_6, .timeMs = 188},
+    //               {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
+    //               {.note = C_6, .timeMs = 375}, {.note = A_5, .timeMs = 375},    {.note = G_5, .timeMs = 188},
+    //               {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
+    //               {.note = D_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_5, .timeMs = 188},
+    //               {.note = D_5, .timeMs = 188}, {.note = A_4, .timeMs = 370},    {.note = SILENCE, .timeMs = 10},
+    //               {.note = A_4, .timeMs = 745}},
+    // };
+    // bzrPlayBgm(&BlackDog);
 
-    bool drawScreen = false;
+    // bool drawScreen = false;
     while (1)
     {
         buttonEvt_t evt;
         if (checkButtonQueue(&evt))
         {
             printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
-            drawScreen = evt.down;
+            // drawScreen = evt.down;
         }
 
         int16_t a_x, a_y, a_z;
         qma7981_get_accel(&a_x, &a_y, &a_z);
 
-        if (drawScreen)
+        uint16_t outSamps[ADC_READ_LEN / 2];
+        uint32_t sampsRead = loopMic(outSamps, (ADC_READ_LEN / 2));
+
+        clearPxTft();
+        for (int i = 0; i < sampsRead; i++)
         {
-            clearPxTft();
-            for (uint16_t y = 0; y < TFT_HEIGHT; y++)
-            {
-                for (uint16_t x = 0; x < TFT_WIDTH; x++)
-                {
-                    if (x < TFT_WIDTH / 3)
-                    {
-                        setPxTft(x, y, (a_x >> 6) % cTransparent);
-                    }
-                    else if (x < (2 * TFT_WIDTH) / 3)
-                    {
-                        setPxTft(x, y, (a_y >> 6) % cTransparent);
-                    }
-                    else
-                    {
-                        setPxTft(x, y, (a_z >> 6) % cTransparent);
-                    }
-                }
-            }
+            setPxTft(i, (TFT_HEIGHT - (outSamps[i] >> 4) - 1) % TFT_HEIGHT, c555);
         }
-        else
-        {
-            clearPxTft();
-        }
+
+        // if (drawScreen)
+        // {
+        //     clearPxTft();
+        //     for (uint16_t y = 0; y < TFT_HEIGHT; y++)
+        //     {
+        //         for (uint16_t x = 0; x < TFT_WIDTH; x++)
+        //         {
+        //             if (x < TFT_WIDTH / 3)
+        //             {
+        //                 setPxTft(x, y, (a_x >> 6) % cTransparent);
+        //             }
+        //             else if (x < (2 * TFT_WIDTH) / 3)
+        //             {
+        //                 setPxTft(x, y, (a_y >> 6) % cTransparent);
+        //             }
+        //             else
+        //             {
+        //                 setPxTft(x, y, (a_z >> 6) % cTransparent);
+        //             }
+        //         }
+        //     }
+        // }
+        // else
+        // {
+        //     clearPxTft();
+        // }
 
         drawDisplayTft(NULL);
 
