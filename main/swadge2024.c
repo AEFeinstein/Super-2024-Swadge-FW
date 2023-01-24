@@ -22,6 +22,7 @@
  * - hdw-accel.c: Learn how to use the accelerometer!
  * - hdw-led.c: Learn how to use the LEDs!
  * - hdw-mic.c: Learn how to use the microphone!
+ * - hdw-temperature.c: Learn how to use the temperature sensor!
  */
 
 #include <stdio.h>
@@ -35,6 +36,7 @@
 #include "hdw-accel.h"
 #include "hdw-led.h"
 #include "hdw-mic.h"
+#include "hdw-temperature.h"
 
 /**
  * @brief TODO doxygen something
@@ -85,6 +87,9 @@ void app_main(void)
                  GPIO_NUM_41, // SCL
                  GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
 
+    // Init the temperature sensor
+    initTemperatureSensor();
+
     // static const song_t BlackDog = {
     //     .numNotes      = 28,
     //     .shouldLoop    = false,
@@ -111,6 +116,8 @@ void app_main(void)
             printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
             // drawScreen = evt.down;
         }
+
+        printf("%f\n", readTemperatureSensor());
 
         int16_t a_x, a_y, a_z;
         qma7981_get_accel(&a_x, &a_y, &a_z);
