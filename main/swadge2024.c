@@ -16,7 +16,7 @@
  *
  * \section hw_api Hardware APIs
  *
- * - hdw-btn.c: Learn how to use button input!
+ * - hdw-btn.c: Learn how to use both push and touch button input!
  * - hdw-tft.c: Learn how to use the TFT!
  * - hdw-bzr.c: Learn how to use the buzzer!
  * - hdw-accel.c: Learn how to use the accelerometer!
@@ -50,15 +50,25 @@ void app_main(void)
     esp_timer_init();
 
     // Init buttons
-    initButtons(8,
-                GPIO_NUM_0,  // Up
-                GPIO_NUM_4,  // Down
-                GPIO_NUM_2,  // Left
-                GPIO_NUM_1,  // Right
-                GPIO_NUM_16, // A
-                GPIO_NUM_15, // B
-                GPIO_NUM_8,  // Start
-                GPIO_NUM_5); // Select
+    gpio_num_t pushButtons[] = {
+        GPIO_NUM_0,  // Up
+        GPIO_NUM_4,  // Down
+        GPIO_NUM_2,  // Left
+        GPIO_NUM_1,  // Right
+        GPIO_NUM_16, // A
+        GPIO_NUM_15, // B
+        GPIO_NUM_8,  // Start
+        GPIO_NUM_5   // Select
+    };
+    touch_pad_t touchPads[] = {
+        TOUCH_PAD_NUM9,  // GPIO_NUM_9
+        TOUCH_PAD_NUM10, // GPIO_NUM_10
+        TOUCH_PAD_NUM11, // GPIO_NUM_11
+        TOUCH_PAD_NUM12, // GPIO_NUM_12
+        TOUCH_PAD_NUM13  // GPIO_NUM_13
+    };
+    initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
+                sizeof(touchPads) / sizeof(touchPads[0]));
 
     // Init buzzer
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
@@ -110,11 +120,30 @@ void app_main(void)
     // bool drawScreen = false;
     while (1)
     {
-        buttonEvt_t evt;
+        buttonEvt_t evt              = {0};
+        static uint32_t lastBtnState = 0;
         if (checkButtonQueue(&evt))
         {
             printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
+            lastBtnState = evt.state;
             // drawScreen = evt.down;
+        }
+
+        clearPxTft();
+        int numBtns   = 13;
+        int drawWidth = TFT_WIDTH / numBtns;
+        for (int i = 0; i < numBtns; i++)
+        {
+            if (lastBtnState & (1 << i))
+            {
+                for (int w = drawWidth * i; w < drawWidth * (i + 1); w++)
+                {
+                    for (int h = 0; h < TFT_HEIGHT; h++)
+                    {
+                        setPxTft(w, h, (i + 5) * 5);
+                    }
+                }
+            }
         }
 
         printf("%f\n", readTemperatureSensor());
@@ -125,11 +154,11 @@ void app_main(void)
         uint16_t outSamps[ADC_READ_LEN / 2];
         uint32_t sampsRead = loopMic(outSamps, (ADC_READ_LEN / 2));
 
-        clearPxTft();
-        for (int i = 0; i < sampsRead; i++)
-        {
-            setPxTft(i, (TFT_HEIGHT - (outSamps[i] >> 4) - 1) % TFT_HEIGHT, c555);
-        }
+        // clearPxTft();
+        // for (int i = 0; i < sampsRead; i++)
+        // {
+        //     setPxTft(i, (TFT_HEIGHT - (outSamps[i] >> 4) - 1) % TFT_HEIGHT, c555);
+        // }
 
         // if (drawScreen)
         // {
