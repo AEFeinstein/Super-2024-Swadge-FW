@@ -8,9 +8,9 @@
 1. This is the fun part, write your feature!
     1. Please comment your code. This makes it easier for everyone to understand.
     1. [Doxygen comments](http://www.doxygen.nl/manual/docblocks.html) will be especially appreciated. You can [set up VSCode](https://marketplace.visualstudio.com/items?itemName=cschlosser.doxdocgen) to automatically add empty Doxygen templates to functions
-    1. You should [run astyle](http://astyle.sourceforge.net/) with [this projects .astylerc file](/.astylerc) to beautify the code. Everyone loves pretty code. There's a [VSCode Extension](https://marketplace.visualstudio.com/items?itemName=chiehyu.vscode-astyle) for this too.
+    1. You should [run clang-format](https://clang.llvm.org/docs/ClangFormat.html) with [this projects .clang-format file](/.clang-format) to beautify the code. Everyone loves pretty code. There's a [VSCode Extension](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) for this too.
     1. The code should compile without any warnings.
-    1. Try to write small, useful messages in each commit.
+    1. Please write small, useful messages in each commit.
 1. Test your feature. Try everything, mash buttons, whatever. Get creative. Users certainly will. Write your test plan and steps in the ticket you opened.
 1. Once your feature is written and tested, [create a pull request](https://help.github.com/en/articles/creating-a-pull-request) to merge the feature back to the master project. Please reference the ticket from step 1 in the pull request.
 1. The new code will be reviewed and either merge it or have changes requested. The better the spec and conversation in step 1, the better the chances it gets merged quickly.
