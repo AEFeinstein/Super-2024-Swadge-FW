@@ -122,11 +122,21 @@ void app_main(void)
     {
         buttonEvt_t evt              = {0};
         static uint32_t lastBtnState = 0;
-        if (checkButtonQueue(&evt))
+        while (checkButtonQueue(&evt))
         {
             printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
             lastBtnState = evt.state;
             // drawScreen = evt.down;
+        }
+
+        int32_t centerVal, intensityVal;
+        if (getTouchCentroid(&centerVal, &intensityVal))
+        {
+            printf("touch center: %lu, intensity: %lu\n", centerVal, intensityVal);
+        }
+        else
+        {
+            printf("no touch\n");
         }
 
         clearPxTft();

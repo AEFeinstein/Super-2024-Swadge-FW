@@ -2,19 +2,32 @@
  *
  * \section btn_design Design Philosophy
  *
- * The buttons are polled continuously at 1ms intervals in an interrupt, but these readinds are not reported to the
+ * This component handles both pushbuttons and touchpads. Pushbuttons are physical, tactile buttons while touchpads are
+ * touch-sensitive areas on the PCB. Events from pushbuttons and touchpads are processed different ways, but queued in
+ * the same queue.
+ *
+ * The Swadge Mode needs to call checkButtonQueue() to receive queued button events.
+ * The event contains which button caused the event, whether it was pressed or released, and the current state of all
+ * buttons. This way the Swadge Mode is not responsible for high frequency button polling, and can still receive all
+ * button inputs.
+ *
+ * In addition to acting as binary buttons, the touchpads may act as a single, analog, touch sensitive strip. These two
+ * ways of reporting are not mutually exclusive.
+ *
+ * \section pbtn_design Pushbutton Design Philosophy
+ *
+ * The pushbuttons are polled continuously at 1ms intervals in an interrupt, but these readings are not reported to the
  * Swadge modes. The interrupt saves the prior ::DEBOUNCE_HIST_LEN polled button states and the last reported button
  * state. When all ::DEBOUNCE_HIST_LEN button states are identical, the interrupt accepts the current state and checks
  * if it different than the last reported state. If there is a difference, the button event is queued in the interrupt
  * to be received by the Swadge Mode.
  *
- * The Swadge Mode needs to call checkButtonQueue() to receive the queued button event.
- * The event contains which button caused the event, whether it was pressed or released, and the current state of all
- * buttons. This way the Swadge Mode is not responsible for high frequency button polling, but can still receive all
- * button inputs.
+ * The pushbutton GPIOs are all read at the same time using <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
+ * GPIO</a>.
  *
- * Originally the buttons would trigger an interrupt, but we found that to have glitchier and less reliable results than
- * polling.
+ * Originally the pushbuttons would trigger an interrupt, but we found that to have glitchier and less reliable results
+ * than polling.
  *
  * Button events used to be delivered to the Swadge Mode via a callback.
  * This led to cases where multiple callbacks would occur between a single invocation of that mode's main function.
@@ -22,7 +35,19 @@
  * Instead of forcing each mode to queue button events, now each mode must dequeue them rather than having a callback
  * called.
  *
- * TODO talk about touchpad ISR, centroid
+ * \section tpad_design Touchpad Design Philosophy
+ *
+ * Unlike pushbutton polling, touchpads use interrupts to detect events. When a touchpad event is detected, an interrupt
+ * will fire and the new event will be queued in the same queue used for pushbuttons.
+ *
+ * In addition to acting as binary buttons, the touchpad can act as a single analog touch strip. getTouchCentroid() may
+ * be called to get the current analog touch value. Changes in the analog position are not reported checkButtonQueue(),
+ * so getTouchCentroid() must be called as frequently as desired to get values. Do not assume that changes in the analog
+ * position are correlated with events reported in checkButtonQueue().
+ *
+ * Touchpad interrupts are set up and touchpad values are read with <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/peripherals/touch_pad.html">Touch
+ * Sensor</a>.
  *
  * \section btn_usage Usage
  *
@@ -31,13 +56,14 @@
  * You do need to call checkButtonQueue() and should do so in a while-loop to receive all events since the last check.
  * This should be done in the Swadge Mode's main function.
  *
- * TODO centroid usage
+ * You may call getTouchCentroid() to get the analog touch position. This is independent of checkButtonQueue().
  *
  * \section btn_example Example
  *
  * \code{.c}
  * #include "hdw-btn.c"
  *
+ * // Check all queued button events
  * buttonEvt_t evt;
  * while(checkButtonQueue(&evt))
  * {
@@ -46,7 +72,16 @@
  *         evt.state, evt.button, evt.down ? "down" : "up");
  * }
  *
- * TODO centroid
+ * // Check if the touch area is touched, and print values if it is
+ * int32_t centerVal, intensityVal;
+ * if (getTouchCentroid(&centerVal, &intensityVal))
+ * {
+ *     printf("touch center: %lu, intensity: %lu\n", centerVal, intensityVal);
+ * }
+ * else
+ * {
+ *     printf("no touch\n");
+ * }
  * \endcode
  */
 
@@ -119,20 +154,32 @@ static int getTouchRawValues(uint32_t* rawvalues, int maxPads);
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Initialize both pushbuttons and touch buttons
  *
- * @param pushButtons
- * @param numPushButtons
- * @param touchButtons
- * @param numTouchButtons
+ * @param pushButtons A list of GPIOs with pushbuttons to initialize. The list should be in the same order as
+ * ::buttonBit_t, starting at ::PB_UP
+ * @param numPushButtons The number of pushbuttons to initialize
+ * @param touchPads A list of touch buttons to initialize. The list should be in the same order as ::buttonBit_t,
+ * starting at ::TB_0
+ * @param numTouchPads The number of touch buttons to initialize
  */
-void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchButtons, uint8_t numTouchButtons)
+void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
 {
     // create a queue to handle polling GPIO from ISR
-    btn_evt_queue = xQueueCreate(3 * (numPushButtons + numTouchButtons), sizeof(uint32_t));
+    btn_evt_queue = xQueueCreate(3 * (numPushButtons + numTouchPads), sizeof(uint32_t));
 
     initPushButtons(pushButtons, numPushButtons);
-    initTouchSensor(touchButtons, numTouchButtons, 0.6, true);
+    initTouchSensor(touchPads, numTouchPads, 0.2f, true);
+}
+
+/**
+ * @brief Free memory used by the buttons
+ */
+void deinitButtons(void)
+{
+    vQueueDelete(btn_evt_queue);
+    free(touchPads);
+    free(baseOffsets);
 }
 
 /**
@@ -185,7 +232,7 @@ bool checkButtonQueue(buttonEvt_t* evt)
  * @param pushButtons A list of GPIOs to initialize as buttons
  * @param numPushButtons The number of GPIOs to initialize as buttons
  */
-void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons)
+static void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons)
 {
     ESP_LOGD("BTN", "initializing buttons");
 
@@ -250,16 +297,6 @@ void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons)
     // Start the timer
     ESP_ERROR_CHECK(gptimer_enable(gptimer));
     ESP_ERROR_CHECK(gptimer_start(gptimer));
-}
-
-/**
- * @brief Free memory used by the buttons
- */
-void deinitButtons(void)
-{
-    vQueueDelete(btn_evt_queue);
-    free(touchPads);
-    free(baseOffsets);
 }
 
 /**
@@ -344,7 +381,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     {
         ESP_ERROR_CHECK(touch_pad_config(touchPads[i]));
         /* Create a mapping from touch pad to button bit */
-        touchPadMap[touchPads[i]] = (TP_0 << i);
+        touchPadMap[touchPads[i]] = (TB_0 << i);
     }
 
     /* Initialize denoise if requested */
@@ -456,7 +493,7 @@ static void touchsensor_interrupt_cb(void* arg)
         return;
     }
 
-    /* If there is a state change, queue it from the ISR*/
+    /* If there is a state change, queue it from the ISR */
     if (touchIsrState != newTpState)
     {
         // save the event
@@ -474,7 +511,8 @@ static void touchsensor_interrupt_cb(void* arg)
 }
 
 /**
- * @brief Get totally raw touch sensor values from buffer. NOTE: You must have touch callbacks enabled to use this.
+ * @brief Get totally raw touch sensor values from buffer.
+ * NOTE: You must have touch callbacks enabled to use this.
  *
  * @param data is a pointer to an array of int32_t's to receive the raw touch data.
  * @param count is the number of ints in your array.
@@ -498,7 +536,8 @@ static int getTouchRawValues(uint32_t* rawvalues, int maxPads)
 }
 
 /**
- * @brief Get "zeroed" touch sensor values. NOTE: You must have touch callbacks enabled to use this.
+ * @brief Get "zeroed" touch sensor values.
+ * NOTE: You must have touch callbacks enabled to use this.
  *
  * @param data is a pointer to an array of int32_t's to receive the zeroed touch data.
  * @param count is the number of ints in your array.
@@ -561,18 +600,19 @@ static int getBaseTouchVals(int32_t* data, int count)
 }
 
 /**
- * @brief Get totally raw touch sensor values from buffer.  NOTE: You must have touch callbacks enabled to use this.
+ * @brief Get totally raw touch sensor values from buffer.
+ * NOTE: You must have touch callbacks enabled to use this.
  *
- * @param centerVal = pointer to centroid of touch locaiton from 0..1024 inclusive.  Cannot be NULL.
- * @param intensityVal = intensity of touch press.  Cannot be NULL.
- * @return 1 if touched (centroid), 0 if not touched (no centroid)
+ * @param[out] centerVal pointer to centroid of touch locaiton from 0..1024 inclusive. Cannot be NULL.
+ * @param[out] intensityVal intensity of touch press. Cannot be NULL.
+ * @return true if touched (centroid), false if not touched (no centroid)
  */
-int getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
+bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 {
     int32_t baseVals[numTouchPads];
     if (!centerVal || !intensityVal || getBaseTouchVals(baseVals, numTouchPads) == 0)
     {
-        return 0;
+        return false;
     }
 
     int peak    = -1;
@@ -589,12 +629,12 @@ int getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 
     if (peakBin < 0)
     {
-        return 0;
+        return false;
     }
     // Arbitrary, but we use 1200 as the minimum peak value.
     if (peak < 1200)
     {
-        return 0;
+        return false;
     }
     // We know our peak bin, now we need to know the average and differential of the adjacent bins.
     int leftOfPeak  = (peakBin > 0) ? baseVals[peakBin - 1] : 0;
@@ -622,5 +662,5 @@ int getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
         *intensityVal = opeak + leftOfPeak;
     }
     *centerVal = center;
-    return 1;
+    return true;
 }
