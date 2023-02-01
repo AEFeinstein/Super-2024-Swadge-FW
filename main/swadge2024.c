@@ -23,6 +23,7 @@
  * - hdw-led.c: Learn how to use the LEDs!
  * - hdw-mic.c: Learn how to use the microphone!
  * - hdw-temperature.c: Learn how to use the temperature sensor!
+ * - hdw-spiffs.c: Learn how to load and use assets from the SPIFFS partition!
  */
 
 #include <stdio.h>
@@ -37,6 +38,7 @@
 #include "hdw-led.h"
 #include "hdw-mic.h"
 #include "hdw-temperature.h"
+#include "hdw-spiffs.h"
 
 /**
  * @brief TODO doxygen something
@@ -48,6 +50,13 @@ void app_main(void)
 
     // Init timers
     esp_timer_init();
+
+    // Init SPIFFS file system
+    initSpiffs();
+
+    font_t ibm;
+    loadFont("ibm_vga8.font", &ibm);
+    freeFont(&ibm);
 
     // Init buttons
     gpio_num_t pushButtons[] = {
