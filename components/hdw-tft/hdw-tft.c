@@ -351,6 +351,18 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
 }
 
 /**
+ * @brief Return the pixel framebuffer, which is (TFT_WIDTH * TFT_HEIGHT) pixels
+ * in row order, starting from the top left. This can be used t directly modify
+ * individual pixels without calling ::setPxTft()
+ * 
+ * @return The pixel framebuffer
+ */
+paletteColor_t* getPxTftFramebuffer(void)
+{
+    return pixels;
+}
+
+/**
  * @brief Disable the backlight (for powerdown)
  *
  */

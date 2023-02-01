@@ -51,6 +51,7 @@ void enableTFTBacklight(void);
 
 void setPxTft(int16_t x, int16_t y, paletteColor_t px);
 paletteColor_t getPxTft(int16_t x, int16_t y);
+paletteColor_t* getPxTftFramebuffer(void);
 void clearPxTft(void);
 void drawDisplayTft(fnBackgroundDrawCallback_t cb);
 
