@@ -15,7 +15,7 @@
  * DEVELOPERS! DEVELOPERS! DEVELOPERS!
  *
  * \section hw_api Hardware APIs
- * 
+ *
  * Physical things you interact with
  *
  * - hdw-btn.c: Learn how to use both push and touch button input!
@@ -25,11 +25,11 @@
  * - hdw-led.c: Learn how to use the LEDs!
  * - hdw-mic.c: Learn how to use the microphone!
  * - hdw-temperature.c: Learn how to use the temperature sensor!
- * 
+ *
  * \section sw_api Software APIs
- * 
+ *
  * Digital things you interact with
- * 
+ *
  * - hdw-spiffs.c: Learn how to load and use assets from the SPIFFS partition!
  * - font.c: Learn how to draw text to the screen!
  */

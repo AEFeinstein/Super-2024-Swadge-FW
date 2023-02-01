@@ -38,22 +38,23 @@
  */
 void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff)
 {
-    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG esp-2021r2-patch3)
-    int bitIdx = 0;
+    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
+    //  esp-2021r2-patch3)
+    int bitIdx            = 0;
     const uint8_t* bitmap = ch->bitmap;
-    int wch = ch->w;
+    int wch               = ch->w;
 
     // Get a pointer to the end of the bitmap
     const uint8_t* endOfBitmap = &bitmap[((wch * h) + 7) >> 3] - 1;
 
     // Don't draw off the bottom of the screen.
-    if( yOff + h > TFT_HEIGHT )
+    if (yOff + h > TFT_HEIGHT)
     {
         h = TFT_HEIGHT - yOff;
     }
 
     // Check Y bounds
-    if(yOff < 0)
+    if (yOff < 0)
     {
         // Above the display, do wacky math with -yOff
         bitIdx -= yOff * wch;
@@ -71,7 +72,7 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
         int truncate = 0;
 
         int startX = xOff;
-        if( xOff < 0 )
+        if (xOff < 0)
         {
             // Track how many groups of pixels we are skipping over
             // that weren't displayed on the left of the screen.
@@ -81,12 +82,12 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
             bitIdx &= 7;
         }
         int endX = xOff + wch;
-        if( endX > TFT_WIDTH )
+        if (endX > TFT_WIDTH)
         {
             // Track how many groups of pixels we are skipping over,
             // if the letter falls off the end of the screen.
             truncate = endX - TFT_WIDTH;
-            endX = TFT_WIDTH;
+            endX     = TFT_WIDTH;
         }
 
         uint8_t thisByte = *bitmap;
@@ -94,18 +95,18 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
         {
             // Figure out where to draw
             // Check X bounds
-            if(thisByte & (1 << bitIdx))
+            if (thisByte & (1 << bitIdx))
             {
                 // Draw the pixel
                 pxOutput[drawX] = color;
             }
 
             // Iterate over the bit data
-            if( 8 == ++bitIdx )
+            if (8 == ++bitIdx)
             {
                 bitIdx = 0;
                 // Make sure not to read past the bitmap
-                if(bitmap < endOfBitmap)
+                if (bitmap < endOfBitmap)
                 {
                     thisByte = *(++bitmap);
                 }
@@ -137,7 +138,7 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
  */
 int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff)
 {
-    while(*text >= ' ')
+    while (*text >= ' ')
     {
         // Only draw if the char is on the screen
         if (xOff + font->chars[(*text) - ' '].w >= 0)
@@ -151,7 +152,7 @@ int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int
         text++;
 
         // If this char is offscreen, finish drawing
-        if(xOff >= TFT_WIDTH)
+        if (xOff >= TFT_WIDTH)
         {
             return xOff;
         }
@@ -169,16 +170,16 @@ int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int
 uint16_t textWidth(const font_t* font, const char* text)
 {
     uint16_t width = 0;
-    while(*text != 0)
+    while (*text != 0)
     {
-        if((*text) >= ' ')
+        if ((*text) >= ' ')
         {
             width += (font->chars[(*text) - ' '].w + 1);
         }
         text++;
     }
     // Delete trailing space
-    if(0 < width)
+    if (0 < width)
     {
         width--;
     }
@@ -187,18 +188,18 @@ uint16_t textWidth(const font_t* font, const char* text)
 
 /**
  * @brief TODO
- * 
- * @param font 
- * @param color 
- * @param text 
- * @param xOff 
- * @param yOff 
- * @param xMax 
- * @param yMax 
- * @return const char* 
+ *
+ * @param font
+ * @param color
+ * @param text
+ * @param xOff
+ * @param yOff
+ * @param xMax
+ * @param yMax
+ * @return const char*
  */
-static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t color, const char* text,
-                             int16_t *xOff, int16_t *yOff, int16_t xMax, int16_t yMax)
+static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
+                                         int16_t* yOff, int16_t xMax, int16_t yMax)
 {
     const char* textPtr = text;
     int16_t textX = *xOff, textY = *yOff;
@@ -218,7 +219,10 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
         *yOff = textY;
 
         // skip leading spaces if we're at the start of the line
-        for (; textX == *xOff && *textPtr == ' '; textPtr++);
+        for (; textX == *xOff && *textPtr == ' '; textPtr++)
+        {
+            ;
+        }
 
         // handle newlines
         if (*textPtr == '\n')
@@ -232,8 +236,8 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
         // if strchr() returns NULL, this will be negative...
         // otherwise, nextSpace will be the index of the next space of textPtr
         nextSpace = strchr(textPtr, ' ') - textPtr;
-        nextDash = strchr(textPtr, '-') - textPtr;
-        nextNl = strchr(textPtr, '\n') - textPtr;
+        nextDash  = strchr(textPtr, '-') - textPtr;
+        nextNl    = strchr(textPtr, '\n') - textPtr;
 
         // copy as much text as will fit into the buffer
         // leaving room for a null-terminator in case the string is longer
@@ -315,7 +319,7 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
  * tabs ('\\r', '\\t') are not supported. When the bottom of the next character would exceed `yMax`, no more
  * text is drawn and a pointer to the next undrawn character within `text` is returned. If all text has
  * been written, NULL is returned.
- * 
+ *
  * @param font The font to use when drawing the text
  * @param color The color of the text to be drawn
  * @param text The text to be pointed, as a null-terminated string
@@ -325,20 +329,20 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
  * @param yMax The maximum y-coordinate at which text may be drawn
  * @return A pointer to the first unprinted character within `text`, or NULL if all text has been written
  */
-const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text,
-                             int16_t *xOff, int16_t *yOff, int16_t xMax, int16_t yMax)
+const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
+                             int16_t xMax, int16_t yMax)
 {
     return drawTextWordWrapInner(font, color, text, xOff, yOff, xMax, yMax);
 }
 
 /**
  * @brief TODO document
- * 
- * @param font 
- * @param text 
- * @param width 
- * @param maxHeight 
- * @return uint16_t 
+ *
+ * @param font
+ * @param text
+ * @param width
+ * @param maxHeight
+ * @return uint16_t
  */
 uint16_t textHeight(const font_t* font, const char* text, int16_t width, int16_t maxHeight)
 {
