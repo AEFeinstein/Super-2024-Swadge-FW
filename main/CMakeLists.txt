@@ -1,4 +1,5 @@
 idf_component_register(SRCS "swadge2024.c"
+                            "display/font.c"
                     PRIV_REQUIRES hdw-accel
                     PRIV_REQUIRES hdw-btn
                     PRIV_REQUIRES hdw-bzr
@@ -8,7 +9,8 @@ idf_component_register(SRCS "swadge2024.c"
                     PRIV_REQUIRES hdw-tft
                     PRIV_REQUIRES hdw-temperature
                     REQUIRES esp_timer spi_flash
-                    INCLUDE_DIRS ".")
+                    INCLUDE_DIRS "."
+                                 "./display")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL

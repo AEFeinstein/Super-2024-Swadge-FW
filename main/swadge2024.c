@@ -15,6 +15,8 @@
  * DEVELOPERS! DEVELOPERS! DEVELOPERS!
  *
  * \section hw_api Hardware APIs
+ * 
+ * Physical things you interact with
  *
  * - hdw-btn.c: Learn how to use both push and touch button input!
  * - hdw-tft.c: Learn how to use the TFT!
@@ -23,7 +25,13 @@
  * - hdw-led.c: Learn how to use the LEDs!
  * - hdw-mic.c: Learn how to use the microphone!
  * - hdw-temperature.c: Learn how to use the temperature sensor!
+ * 
+ * \section sw_api Software APIs
+ * 
+ * Digital things you interact with
+ * 
  * - hdw-spiffs.c: Learn how to load and use assets from the SPIFFS partition!
+ * - font.c: Learn how to draw text to the screen!
  */
 
 #include <stdio.h>
@@ -39,6 +47,8 @@
 #include "hdw-mic.h"
 #include "hdw-temperature.h"
 #include "hdw-spiffs.h"
+
+#include "font.h"
 
 /**
  * @brief TODO doxygen something
@@ -56,7 +66,6 @@ void app_main(void)
 
     font_t ibm;
     loadFont("ibm_vga8.font", &ibm);
-    freeFont(&ibm);
 
     // Init buttons
     gpio_num_t pushButtons[] = {
@@ -165,6 +174,8 @@ void app_main(void)
             }
         }
 
+        drawText(&ibm, c555, "Hello world", 64, 64);
+
         printf("%f\n", readTemperatureSensor());
 
         int16_t a_x, a_y, a_z;
@@ -217,4 +228,5 @@ void app_main(void)
         }
         setLeds(leds, CONFIG_NUM_LEDS);
     }
+    freeFont(&ibm);
 }
