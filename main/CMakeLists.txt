@@ -1,5 +1,8 @@
 idf_component_register(SRCS "swadge2024.c"
+                            "display/fill.c"
                             "display/font.c"
+                            "display/bresenham.c"
+                            "display/cndraw.c"
                     PRIV_REQUIRES hdw-accel
                     PRIV_REQUIRES hdw-btn
                     PRIV_REQUIRES hdw-bzr

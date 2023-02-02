@@ -31,7 +31,15 @@
  * Digital things you interact with
  *
  * - hdw-spiffs.c: Learn how to load and use assets from the SPIFFS partition!
+ *
+ * \section gr_api Graphics APIs
+ *
+ * Be an artist!
+ *
  * - font.c: Learn how to draw text to the screen!
+ * - bresenham.c: Learn how to draw shapes to the screen!
+ * - cndraw.c: Learn how to draw differenter shapes to the screen!
+ * - fill.c: Learn how to fill areas on the screen!
  */
 
 #include <stdio.h>
@@ -49,6 +57,9 @@
 #include "hdw-spiffs.h"
 
 #include "font.h"
+#include "bresenham.h"
+#include "cndraw.h"
+#include "fill.h"
 
 /**
  * @brief TODO doxygen something
@@ -175,6 +186,9 @@ void app_main(void)
         }
 
         drawText(&ibm, c555, "Hello world", 64, 64);
+
+        plotLine(92, 92, 200, 200, c500, 0);
+        speedyLine(102, 92, 210, 200, c050);
 
         printf("%f\n", readTemperatureSensor());
 

@@ -55,4 +55,25 @@ paletteColor_t* getPxTftFramebuffer(void);
 void clearPxTft(void);
 void drawDisplayTft(fnBackgroundDrawCallback_t cb);
 
+// A technique to turbo time set pixels (not yet in use)
+#define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)getPxTftFramebuffer();
+
+// 5/4 cycles -- note you can do better if you don't need arbitrary X/Y's.
+#define TURBO_SET_PIXEL(opxc, opy, colorVal)                                                                    \
+    asm volatile("mul16u a4, %[width], %[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0"           \
+                 :                                                                                              \
+                 : [opx] "a"(opxc), [y] "a"(opy), [px] "a"(dispPx), [val] "a"(colorVal), [width] "a"(TFT_WIDTH) \
+                 : "a4");
+
+// Very tricky:
+//   We do bgeui which checks to make sure 0 <= x < MAX
+//   Other than that, it's basically the same as above.
+#define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal)                                                                 \
+    asm volatile("bgeu %[opx], %[width], failthrough%=\nbgeu %[y], %[height], failthrough%=\nmul16u a4, %[width], " \
+                 "%[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0\nfailthrough%=:\n"                  \
+                 :                                                                                                  \
+                 : [opx] "a"(opxc), [y] "a"(opy), [px] "a"(dispPx), [val] "a"(colorVal), [width] "a"(TFT_WIDTH),    \
+                   [height] "a"(TFT_HEIGHT)                                                                         \
+                 : "a4");
+
 #endif
