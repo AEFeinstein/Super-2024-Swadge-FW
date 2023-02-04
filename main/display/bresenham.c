@@ -60,6 +60,20 @@ static void plotCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
 
 // #define assert(x) if(false == (x)) {  return;  }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param dashWidth
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr,
                           int xScale, int yScale)
 {
@@ -111,11 +125,35 @@ static void plotLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param dashWidth
+ */
 void plotLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
 {
     plotLineInner(x0, y0, x1, y1, col, dashWidth, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param dashWidth
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr, int xScale,
                     int yScale)
 {
@@ -125,6 +163,19 @@ void plotLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dash
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
@@ -144,11 +195,33 @@ static void plotRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ */
 void plotRect(int x0, int y0, int x1, int y1, paletteColor_t col)
 {
     plotRectInner(x0, y0, x1, y1, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
@@ -157,6 +230,19 @@ void plotRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr,
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param a
+ * @param b
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
@@ -188,11 +274,33 @@ static void plotEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, i
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param a
+ * @param b
+ * @param col
+ */
 void plotEllipse(int xm, int ym, int a, int b, paletteColor_t col)
 {
     plotEllipseInner(xm, ym, a, b, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param a
+ * @param b
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
@@ -201,6 +309,15 @@ void plotEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xTr
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param a
+ * @param b
+ * @param col
+ */
 void plotOptimizedEllipse(int xm, int ym, int a, int b, paletteColor_t col)
 {
     SETUP_FOR_TURBO();
@@ -235,6 +352,18 @@ void plotOptimizedEllipse(int xm, int ym, int a, int b, paletteColor_t col)
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotCircleInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
@@ -258,11 +387,31 @@ static void plotCircleInner(int xm, int ym, int r, paletteColor_t col, int xTr, 
     } while (x < 0);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
+ */
 void plotCircle(int xm, int ym, int r, paletteColor_t col)
 {
     plotCircleInner(xm, ym, r, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotCircleScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
@@ -271,6 +420,18 @@ void plotCircleScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yT
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param q1
+ * @param q2
+ * @param q3
+ * @param q4
+ * @param col
+ */
 void plotCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col)
 {
     SETUP_FOR_TURBO();
@@ -306,6 +467,18 @@ void plotCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool 
     } while (x < 0);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
@@ -331,11 +504,31 @@ static void plotCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int
     } while (x < 0);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
+ */
 void plotCircleFilled(int xm, int ym, int r, paletteColor_t col)
 {
     plotCircleFilledInner(xm, ym, r, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
@@ -344,6 +537,19 @@ void plotCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xTr, 
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale,
                                  int yScale) /* rectangular parameter enclosing the ellipse */
 {
@@ -397,12 +603,34 @@ static void plotEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ */
 void plotEllipseRect(int x0, int y0, int x1, int y1,
                      paletteColor_t col) /* rectangular parameter enclosing the ellipse */
 {
     plotEllipseRectInner(x0, y0, x1, y1, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
@@ -411,6 +639,21 @@ void plotEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, i
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
                                    int xScale, int yScale) /* plot a limited quadratic Bezier segment */
 {
@@ -476,12 +719,38 @@ static void plotQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
     plotLineScaled(x0, y0, x2, y2, col, 0, xTr, yTr, xScale, yScale); /* plot remaining part to end */
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ */
 void plotQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2,
                        paletteColor_t col) /* plot a limited quadratic Bezier segment */
 {
     plotQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
                              int xScale, int yScale)
 {
@@ -491,6 +760,21 @@ void plotQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, pal
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
                                 int xScale, int yScale) /* plot any quadratic Bezier curve */
 {
@@ -537,12 +821,38 @@ static void plotQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
     plotQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xTr, yTr, xScale, yScale); /* remaining part */
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ */
 void plotQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2,
                     paletteColor_t col) /* plot any quadratic Bezier curve */
 {
     plotQuadBezierInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotQuadBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
                           int xScale, int yScale) /* plot any quadratic Bezier curve */
 {
@@ -552,6 +862,18 @@ void plotQuadBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, palett
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param w
+ * @param col
+ */
 void plotQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, float w,
                                paletteColor_t col) /* plot a limited rational Bezier segment, squared weight */
 {
@@ -631,6 +953,18 @@ void plotQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
     plotLine(x0, y0, x2, y2, col, 0); /* plot remaining needle to end */
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param w
+ * @param col
+ */
 void plotQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, float w,
                             paletteColor_t col) /* plot any quadratic rational Bezier curve */
 {
@@ -710,6 +1044,16 @@ void plotQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, floa
     plotQuadRationalBezierSeg(x0, y0, x1, y1, x2, y2, w * w, col); /* remaining */
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x
+ * @param y
+ * @param a
+ * @param b
+ * @param angle
+ * @param col
+ */
 void plotRotatedEllipse(int x, int y, int a, int b, float angle,
                         paletteColor_t col) /* plot ellipse rotated by angle (radian) */
 {
@@ -722,6 +1066,16 @@ void plotRotatedEllipse(int x, int y, int a, int b, float angle,
     plotRotatedEllipseRect(x - a, y - b, x + a, y + b, (long)(4 * zd * cos(angle)), col);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param zd
+ * @param col
+ */
 void plotRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd,
                             paletteColor_t col) /* rectangle enclosing the ellipse, integer rotation angle */
 {
@@ -744,6 +1098,23 @@ void plotRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd,
     plotQuadRationalBezierSeg(x1, y1 - yd, x1, y0, x0 + xd, y0, w, col);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param x3
+ * @param y3
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
                                     paletteColor_t col, int xTr, int yTr, int xScale,
                                     int yScale) /* plot limited cubic Bezier segment */
@@ -868,12 +1239,42 @@ static void plotCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
     plotLineInner(x0, y0, x3, y3, col, 0, xTr, yTr, xScale, yScale); /* remaining part in case of cusp or crunode */
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param x3
+ * @param y3
+ * @param col
+ */
 void plotCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
                         paletteColor_t col) /* plot limited cubic Bezier segment */
 {
     plotCubicBezierSegInner(x0, y0, x1, y1, x2, y2, x3, y3, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param x3
+ * @param y3
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 static void plotCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
                                  int xTr, int yTr, int xScale, int yScale) /* plot any cubic Bezier curve */
 {
@@ -972,11 +1373,41 @@ static void plotCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param x3
+ * @param y3
+ * @param col
+ */
 void plotCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col)
 {
     plotCubicBezierInner(x0, y0, x1, y1, x2, y2, x3, y3, col, 0, 0, 1, 1);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param x3
+ * @param y3
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
 void plotCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col, int xTr,
                            int yTr, int xScale, int yScale)
 {
@@ -986,6 +1417,14 @@ void plotCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x
     }
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param n
+ * @param x
+ * @param y
+ * @param col
+ */
 void plotQuadSpline(int n, int x[], int y[], paletteColor_t col) /* plot quadratic spline, destroys input arrays x,y */
 {
 #define M_MAX 6
@@ -1026,6 +1465,14 @@ void plotQuadSpline(int n, int x[], int y[], paletteColor_t col) /* plot quadrat
     plotQuadBezier(x[0], y[0], x1, y1, x2, y2, col);
 }
 
+/**
+ * @brief TODO doxy
+ *
+ * @param n
+ * @param x
+ * @param y
+ * @param col
+ */
 void plotCubicSpline(int n, int x[], int y[], paletteColor_t col) /* plot cubic spline, destroys input arrays x,y */
 {
 #define M_MAX 6

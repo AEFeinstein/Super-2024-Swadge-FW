@@ -154,11 +154,13 @@ void shadeDisplayArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t sh
 }
 
 /**
- * @brief Optimized method to quickly draw a black line.
+ * @brief Optimized method to quickly draw a line.
  *
- * @param x1, x0 Column of display, 0 is at the left
- * @param y1, y0 Row of the display, 0 is at the top
- *
+ * @param x0 The X coordinate to start the line at
+ * @param y0 The Y coordinate to start the line at
+ * @param x1 The X coordinate to end the line at
+ * @param y1 The Y coordinate to end the line at
+ * @param color The color to draw the line
  */
 void speedyLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t color)
 {
@@ -417,11 +419,14 @@ void speedyLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t c
 /**
  * @brief Optimized method to draw a triangle with outline.
  *
- * @param x2, x1, x0 Column of display, 0 is at the left
- * @param y2, y1, y0 Row of the display, 0 is at the top
+ * @param v0x Vertex 0's X coordinate
+ * @param v0y Vertex 0's Y coordinate
+ * @param v1x Vertex 1's X coordinate
+ * @param v1y Vertex 1's Y coordinate
+ * @param v2x Vertex 2's X coordinate
+ * @param v2y Vertex 2's Y coordinate
  * @param colorA filled area color
  * @param colorB outline color
- *
  */
 void outlineTriangle(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
                      paletteColor_t colorA, paletteColor_t colorB)

@@ -25,7 +25,8 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
 
 /**
  * @brief Attempt to fill a convex shape bounded by a border of a given color using
- * the even-odd rule:
+ * the even-odd rule
+ *
  * https://en.wikipedia.org/wiki/Even%E2%80%93odd_rule
  *
  * WARNING!!! This is very finicky and is not guaranteed to work in all cases.
@@ -124,7 +125,19 @@ void oddEvenFill(int x0, int y0, int x1, int y1, paletteColor_t boundaryColor, p
     }
 }
 
-// adapted from http://www.adammil.net/blog/v126_A_More_Efficient_Flood_Fill.html
+/**
+ * @brief TODO
+ *
+ * adapted from http://www.adammil.net/blog/v126_A_More_Efficient_Flood_Fill.html
+ *
+ * @param x
+ * @param y
+ * @param col
+ * @param xMin
+ * @param yMin
+ * @param xMax
+ * @param yMax
+ */
 void floodFill(uint16_t x, uint16_t y, paletteColor_t col, uint16_t xMin, uint16_t yMin, uint16_t xMax, uint16_t yMax)
 {
     if (getPxTft(x, y) == col)
@@ -136,6 +149,18 @@ void floodFill(uint16_t x, uint16_t y, paletteColor_t col, uint16_t xMin, uint16
     _floodFill(x, y, getPxTft(x, y), col, xMin, yMin, xMax, yMax);
 }
 
+/**
+ * @brief TODO
+ *
+ * @param x
+ * @param y
+ * @param search
+ * @param fill
+ * @param xMin
+ * @param yMin
+ * @param xMax
+ * @param yMax
+ */
 void _floodFill(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fill, uint16_t xMin, uint16_t yMin,
                 uint16_t xMax, uint16_t yMax)
 {
@@ -155,6 +180,18 @@ void _floodFill(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fi
     _floodFillInner(x, y, search, fill, xMin, yMin, xMax, yMax);
 }
 
+/**
+ * @brief TODO
+ *
+ * @param x
+ * @param y
+ * @param search
+ * @param fill
+ * @param xMin
+ * @param yMin
+ * @param xMax
+ * @param yMax
+ */
 static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fill, uint16_t xMin,
                             uint16_t yMin, uint16_t xMax, uint16_t yMax)
 {
