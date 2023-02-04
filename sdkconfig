@@ -1467,6 +1467,55 @@ CONFIG_WIFI_PROV_BLE_FORCE_ENCRYPTION=y
 # CONFIG_WPA_DPP_SUPPORT is not set
 # CONFIG_WPA_11R_SUPPORT is not set
 # end of Supplicant
+
+#
+# TinyUSB Stack
+#
+CONFIG_TINYUSB_DEBUG_LEVEL=0
+
+#
+# TinyUSB task configuration
+#
+# CONFIG_TINYUSB_NO_DEFAULT_TASK is not set
+CONFIG_TINYUSB_TASK_PRIORITY=5
+CONFIG_TINYUSB_TASK_STACK_SIZE=4096
+# end of TinyUSB task configuration
+
+#
+# Descriptor configuration
+#
+CONFIG_TINYUSB_DESC_USE_ESPRESSIF_VID=y
+CONFIG_TINYUSB_DESC_USE_DEFAULT_PID=y
+CONFIG_TINYUSB_DESC_BCD_DEVICE=0x0100
+CONFIG_TINYUSB_DESC_MANUFACTURER_STRING="Espressif Systems"
+CONFIG_TINYUSB_DESC_PRODUCT_STRING="Espressif Device"
+CONFIG_TINYUSB_DESC_SERIAL_STRING="123456"
+# end of Descriptor configuration
+
+#
+# Massive Storage Class (MSC)
+#
+# CONFIG_TINYUSB_MSC_ENABLED is not set
+# end of Massive Storage Class (MSC)
+
+#
+# Communication Device Class (CDC)
+#
+# CONFIG_TINYUSB_CDC_ENABLED is not set
+# end of Communication Device Class (CDC)
+
+#
+# Musical Instrument Digital Interface (MIDI)
+#
+CONFIG_TINYUSB_MIDI_COUNT=0
+# end of Musical Instrument Digital Interface (MIDI)
+
+#
+# Human Interface Device Class (HID)
+#
+CONFIG_TINYUSB_HID_COUNT=1
+# end of Human Interface Device Class (HID)
+# end of TinyUSB Stack
 # end of Component config
 
 # Deprecated options for backward compatibility
