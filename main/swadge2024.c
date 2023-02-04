@@ -25,6 +25,7 @@
  * - hdw-led.c: Learn how to use the LEDs!
  * - hdw-mic.c: Learn how to use the microphone!
  * - hdw-temperature.c: Learn how to use the temperature sensor!
+ * - hdw-usb.c: Learn how to be a USB HID Gamepad!
  *
  * \section sw_api Software APIs
  *
@@ -55,6 +56,7 @@
 #include "hdw-mic.h"
 #include "hdw-temperature.h"
 #include "hdw-spiffs.h"
+#include "hdw-usb.h"
 
 #include "font.h"
 #include "bresenham.h"
@@ -72,6 +74,9 @@ void app_main(void)
 
     // Init timers
     esp_timer_init();
+
+    // Init USB
+    initUsb();
 
     // Init SPIFFS file system
     initSpiffs();
@@ -160,6 +165,10 @@ void app_main(void)
             printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
             lastBtnState = evt.state;
             // drawScreen = evt.down;
+
+            static hid_gamepad_report_t report;
+            report.buttons = lastBtnState;
+            sendUsbGamepadReport(&report);
         }
 
         int32_t centerVal, intensityVal;
