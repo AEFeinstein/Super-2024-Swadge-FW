@@ -15,13 +15,61 @@
  * \endcode
  */
 
+//==============================================================================
+// Includes
+//==============================================================================
+
+#include <string.h>
+
 #include "hdw-tft.h"
+#include "macros.h"
 #include "fill.h"
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
 
 static void _floodFill(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fill, uint16_t xMin, uint16_t yMin,
                        uint16_t xMax, uint16_t yMax);
 static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fill, uint16_t xMin,
                             uint16_t yMin, uint16_t xMax, uint16_t yMax);
+
+//==============================================================================
+// Functions
+//==============================================================================
+
+/**
+ * @brief Fill a rectangular area on a display with a single color
+ *
+ * @param x1 The x coordinate to start the fill (top left)
+ * @param y1 The y coordinate to start the fill (top left)
+ * @param x2 The x coordinate to stop the fill (bottom right)
+ * @param y2 The y coordinate to stop the fill (bottom right)
+ * @param c  The color to fill
+ */
+void fillDisplayArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, paletteColor_t c)
+{
+    // Note: int16_t vs int data types tested for speed.
+    // This function has been micro optimized by cnlohr on 2022-09-07,
+    // using gcc version 8.4.0 (crosstool-NG esp-2021r2-patch3)
+
+    // Only draw on the display
+    int xMin = CLAMP(x1, 0, TFT_WIDTH);
+    int xMax = CLAMP(x2, 0, TFT_WIDTH);
+    int yMin = CLAMP(y1, 0, TFT_HEIGHT);
+    int yMax = CLAMP(y2, 0, TFT_HEIGHT);
+
+    uint32_t dw         = TFT_WIDTH;
+    paletteColor_t* pxs = getPxTftFramebuffer() + yMin * dw + xMin;
+    int copyLen         = xMax - xMin;
+
+    // Set each pixel
+    for (int y = yMin; y < yMax; y++)
+    {
+        memset(pxs, c, copyLen);
+        pxs += dw;
+    }
+}
 
 /**
  * @brief Attempt to fill a convex shape bounded by a border of a given color using

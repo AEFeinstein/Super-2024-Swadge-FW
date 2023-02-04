@@ -60,6 +60,7 @@
 #include "bresenham.h"
 #include "cndraw.h"
 #include "fill.h"
+#include "wsg.h"
 
 /**
  * @brief TODO doxygen something
@@ -77,6 +78,9 @@ void app_main(void)
 
     font_t ibm;
     loadFont("ibm_vga8.font", &ibm);
+
+    wsg_t king_donut;
+    loadWsgSpiRam("kid0.wsg", &king_donut, true);
 
     // Init buttons
     gpio_num_t pushButtons[] = {
@@ -190,6 +194,8 @@ void app_main(void)
         plotLine(92, 92, 200, 200, c500, 0);
         speedyLine(102, 92, 210, 200, c050);
 
+        drawWsg(&king_donut, 100, 10, false, false, 0);
+
         printf("%f\n", readTemperatureSensor());
 
         int16_t a_x, a_y, a_z;
@@ -243,4 +249,5 @@ void app_main(void)
         setLeds(leds, CONFIG_NUM_LEDS);
     }
     freeFont(&ibm);
+    freeWsg(&king_donut);
 }

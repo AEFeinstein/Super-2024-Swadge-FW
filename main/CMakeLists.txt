@@ -3,6 +3,8 @@ idf_component_register(SRCS "swadge2024.c"
                             "display/font.c"
                             "display/bresenham.c"
                             "display/cndraw.c"
+                            "display/wsg.c"
+                            "utils/trigonometry.c"
                     PRIV_REQUIRES hdw-accel
                     PRIV_REQUIRES hdw-btn
                     PRIV_REQUIRES hdw-bzr
@@ -13,6 +15,7 @@ idf_component_register(SRCS "swadge2024.c"
                     PRIV_REQUIRES hdw-temperature
                     REQUIRES esp_timer spi_flash
                     INCLUDE_DIRS "."
+                                 "./utils"
                                  "./display")
 
 function(spiffs_file_preprocessor)
