@@ -126,7 +126,7 @@ void process_image(const char* infile, const char* outdir)
 
     if (doesFileExist(outFilePath))
     {
-        printf("Output for %s already exists\n", infile);
+        // printf("Output for %s already exists\n", infile);
         return;
     }
 
