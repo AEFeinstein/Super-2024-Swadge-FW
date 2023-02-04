@@ -191,7 +191,7 @@ void app_main(void)
 
         drawText(&ibm, c555, "Hello world", 64, 64);
 
-        plotLine(92, 92, 200, 200, c500, 0);
+        drawLine(92, 92, 200, 200, c500, 0);
         speedyLine(102, 92, 210, 200, c050);
 
         drawWsg(&king_donut, 100, 10, false, false, 0);
