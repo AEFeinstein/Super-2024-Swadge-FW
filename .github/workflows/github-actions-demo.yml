@@ -9,21 +9,21 @@ jobs:
       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
 
-      - name: Setup MSYS2
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          path-type: minimal
-          release: false
-          update: false
-          install: >-
-            base-devel
-            mingw-w64-x86_64-toolchain
-            git
-            make
-            zip
-            mingw-w64-x86_64-python-pip
-            python-pip
+#      - name: Setup MSYS2
+#        uses: msys2/setup-msys2@v2
+#        with:
+#          msystem: MINGW64
+#          path-type: minimal
+#          release: false
+#          update: false
+#          install: >-
+#            base-devel
+#            mingw-w64-x86_64-toolchain
+#            git
+#            make
+#            zip
+#            mingw-w64-x86_64-python-pip
+#            python-pip
 
       - name: Set up the IDF
         run: |
