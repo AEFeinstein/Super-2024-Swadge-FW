@@ -3,12 +3,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
 
-#include <esp_timer.h>
-#include <esp_now.h>
-
-#define P2P_MAX_DATA_LEN 247
+#define P2P_MAX_DATA_LEN 245
 
 typedef enum
 {
@@ -67,7 +63,6 @@ typedef struct
     uint8_t seqNum;
     uint8_t macAddr[6];
 } p2pCommonHeader_t;
-int b = sizeof(p2pCommonHeader_t);
 
 typedef struct
 {
@@ -139,7 +134,6 @@ typedef struct
     uint8_t len;
     p2pDataMsg_t data;
 } p2pPacket_t;
-int a = sizeof(p2pDataMsg_t);
 
 void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbFn msgRxCbFn, int8_t connectionRssi);
 void p2pSetAsymmetric(p2pInfo* p2p, uint8_t incomingModeId);

@@ -61,12 +61,15 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
-#include <esp_wifi.h>
+#include <esp_timer.h>
 #include <esp_random.h>
 #include <esp_log.h>
+#include <esp_now.h>
+#include <esp_wifi.h>
 
-#include "p2pConnection.h"
+#include "hdw-esp-now.h"
 #include "p2pConnection.h"
 
 //==============================================================================
