@@ -26,6 +26,7 @@
  * - hdw-mic.c: Learn how to use the microphone!
  * - hdw-temperature.c: Learn how to use the temperature sensor!
  * - hdw-usb.c: Learn how to be a USB HID Gamepad!
+ * - hdw-esp-now.c, p2pconnection.c: Learn how to communicate with other Swadges!
  *
  * \section sw_api Software APIs
  *
@@ -57,12 +58,16 @@
 #include "hdw-temperature.h"
 #include "hdw-spiffs.h"
 #include "hdw-usb.h"
+#include "hdw-esp-now.h"
 
 #include "font.h"
 #include "bresenham.h"
 #include "cndraw.h"
 #include "fill.h"
 #include "wsg.h"
+
+static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi);
+static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
 /**
  * @brief TODO doxygen something
@@ -77,6 +82,9 @@ void app_main(void)
 
     // Init USB
     initUsb();
+
+    // Init esp-now
+    espNowInit(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
 
     // Init SPIFFS file system
     initSpiffs();
@@ -259,4 +267,36 @@ void app_main(void)
     }
     freeFont(&ibm);
     freeWsg(&king_donut);
+}
+
+/**
+ * Callback from ESP NOW to the current Swadge mode whenever a packet is
+ * received. It routes through user_main.c, which knows what the current mode is
+ *
+ * @param mac_addr
+ * @param data
+ * @param len
+ * @param rssi
+ */
+static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi)
+{
+    // if(NULL != cSwadgeMode->fnEspNowRecvCb)
+    // {
+    //     cSwadgeMode->fnEspNowRecvCb(mac_addr, data, len, rssi);
+    // }
+}
+
+/**
+ * Callback from ESP NOW to the current Swadge mode whenever a packet is sent
+ * It routes through user_main.c, which knows what the current mode is
+ *
+ * @param mac_addr
+ * @param status
+ */
+static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
+{
+    // if(NULL != cSwadgeMode->fnEspNowSendCb)
+    // {
+    //     cSwadgeMode->fnEspNowSendCb(mac_addr, status);
+    // }
 }

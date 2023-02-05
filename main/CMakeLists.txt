@@ -4,17 +4,20 @@ idf_component_register(SRCS "swadge2024.c"
                             "display/bresenham.c"
                             "display/cndraw.c"
                             "display/wsg.c"
+                            "utils/p2pConnection.c"
                             "utils/trigonometry.c"
                     PRIV_REQUIRES hdw-accel
-                    PRIV_REQUIRES hdw-btn
-                    PRIV_REQUIRES hdw-bzr
-                    PRIV_REQUIRES hdw-led
-                    PRIV_REQUIRES hdw-mic
-                    PRIV_REQUIRES hdw-spiffs
-                    PRIV_REQUIRES hdw-tft
-                    PRIV_REQUIRES hdw-temperature
-                    PRIV_REQUIRES hdw-usb
-                    REQUIRES esp_timer spi_flash
+                                  hdw-btn
+                                  hdw-bzr
+                                  hdw-esp-now
+                                  hdw-led
+                                  hdw-mic
+                                  hdw-spiffs
+                                  hdw-tft
+                                  hdw-temperature
+                                  hdw-usb
+                    REQUIRES esp_timer
+                             spi_flash
                     INCLUDE_DIRS "."
                                  "./utils"
                                  "./display")
@@ -33,11 +36,10 @@ endfunction()
 spiffs_file_preprocessor()
 spiffs_create_partition_image(storage ../spiffs_image FLASH_IN_PROJECT)
 
+# Save the git hash in a variable
 execute_process(
     COMMAND git rev-parse --short=7 HEAD
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     OUTPUT_VARIABLE VERSION_SHA1 )
-
 string(STRIP ${VERSION_SHA1} VERSION_SHA1)
-
 add_definitions( -DGIT_SHA1="${VERSION_SHA1}" )
