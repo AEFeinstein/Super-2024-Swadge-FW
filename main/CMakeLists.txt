@@ -12,6 +12,7 @@ idf_component_register(SRCS "swadge2024.c"
                                   hdw-esp-now
                                   hdw-led
                                   hdw-mic
+                                  hdw-nvs
                                   hdw-spiffs
                                   hdw-tft
                                   hdw-temperature

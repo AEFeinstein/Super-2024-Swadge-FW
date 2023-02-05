@@ -33,6 +33,7 @@
  * Digital things you interact with
  *
  * - hdw-spiffs.c: Learn how to load and use assets from the SPIFFS partition!
+ * - hdw-nvs.c: Learn how to save and load persistent runtime data!
  *
  * \section gr_api Graphics APIs
  *
@@ -59,6 +60,7 @@
 #include "hdw-spiffs.h"
 #include "hdw-usb.h"
 #include "hdw-esp-now.h"
+#include "hdw-nvs.h"
 
 #include "font.h"
 #include "bresenham.h"
@@ -88,6 +90,9 @@ void app_main(void)
 
     // Init SPIFFS file system
     initSpiffs();
+
+    // Init NVS
+    initNvs(true);
 
     font_t ibm;
     loadFont("ibm_vga8.font", &ibm);
