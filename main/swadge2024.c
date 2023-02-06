@@ -63,6 +63,7 @@
  * Maybe I should organize these better
  *
  * - color_utils.c: Do stuff with color, both LED and TFT
+ * - linked_list.c: A basic data structure
  */
 
 #include <stdio.h>
