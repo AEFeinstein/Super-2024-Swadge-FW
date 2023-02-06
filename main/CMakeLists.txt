@@ -4,6 +4,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "display/bresenham.c"
                             "display/cndraw.c"
                             "display/wsg.c"
+                            "utils/color_utils.c"
                             "utils/p2pConnection.c"
                             "utils/trigonometry.c"
                     PRIV_REQUIRES hdw-accel

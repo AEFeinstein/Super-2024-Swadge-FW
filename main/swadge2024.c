@@ -4,6 +4,20 @@
  *
  * So you're here to write some Swadge code, eh?
  *
+ * \section espressif_doc Espressif Documentation
+ *
+ * The Swadge uses an ESP32-S2 microcontroller with firmware built on IDF 5.0. The goal of this project is to enable
+ * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
+ * doing system development or writing a mdoe that requires a specific hardware peripheral, this Espressif documentation
+ * is useful:
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/index.html">ESP-IDF API
+ * Reference</a>
+ * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
+ * Datasheet</a>
+ * - <a
+ * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
+ * Technical Reference Manual</a>
+ *
  * \section install_sec Installation
  *
  * \subsection linux_env Linux Environment
@@ -43,6 +57,12 @@
  * - bresenham.c: Learn how to draw shapes to the screen!
  * - cndraw.c: Learn how to draw differenter shapes to the screen!
  * - fill.c: Learn how to fill areas on the screen!
+ *
+ * \section oth_api Other Useful APIs
+ *
+ * Maybe I should organize these better
+ *
+ * - color_utils.c: Do stuff with color, both LED and TFT
  */
 
 #include <stdio.h>
