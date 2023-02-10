@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
 #include "heatshrink_common.h"
 #include "heatshrink_config.h"
 

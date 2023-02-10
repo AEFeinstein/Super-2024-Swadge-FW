@@ -2,6 +2,7 @@
 #define _FONT_H_
 
 #include <stdint.h>
+
 #include "palette.h"
 #include "spiffs_font.h"
 

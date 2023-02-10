@@ -92,14 +92,13 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "esp_log.h"
-#include "driver/gptimer.h"
-#include "driver/dedic_gpio.h"
-#include "driver/touch_sensor.h"
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/queue.h"
+#include <esp_log.h>
+#include <driver/gptimer.h>
+#include <driver/dedic_gpio.h>
+#include <driver/touch_sensor.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/queue.h>
 
 #include "hdw-btn.h"
 

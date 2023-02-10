@@ -3,8 +3,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "hal/gpio_types.h"
-#include "driver/ledc.h"
+#include <hal/gpio_types.h>
+#include <driver/ledc.h>
 
 // Frequencies of notes
 typedef enum

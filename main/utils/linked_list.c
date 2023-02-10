@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "inttypes.h"
+#include <inttypes.h>
 
 #include <esp_log.h>
 #include <esp_random.h>

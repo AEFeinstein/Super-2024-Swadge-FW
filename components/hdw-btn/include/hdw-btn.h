@@ -4,8 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "driver/gpio.h"
-#include "driver/touch_pad.h"
+#include <driver/gpio.h>
+#include <driver/touch_pad.h>
 
 typedef enum __attribute__((packed))
 {

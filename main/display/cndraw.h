@@ -9,6 +9,7 @@
 #define CNDRAW_H_
 
 #include <stdint.h>
+
 #include "palette.h"
 
 #ifdef EMU

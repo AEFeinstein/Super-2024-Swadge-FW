@@ -5,11 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "esp_log.h"
-#include "esp_heap_caps.h"
+#include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include "heatshrink_decoder.h"
-
 #include "hdw-spiffs.h"
 #include "spiffs_wsg.h"
 

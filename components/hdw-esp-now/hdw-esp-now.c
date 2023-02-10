@@ -79,11 +79,9 @@
 // Includes
 //==============================================================================
 
-#include <stdint.h>
 #include <string.h>
 
 #include <esp_wifi.h>
-#include <esp_now.h>
 #include <esp_err.h>
 #include <esp_log.h>
 #include <esp_private/wifi.h>
@@ -196,9 +194,9 @@ static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
  *
  * @param recvCb A callback to call when data is sent
  * @param sendCb A callback to call when data is received
- * @param rx The receive pin when using serial communication instead of wifi
- * @param tx The transmit pin when using serial communication instead of wifi
- * @param uart The UART to use for serial communication
+ * @param rx The receive pin when using serial communication instead of wifi. Use GPIO_NUM_NC for no GPIO
+ * @param tx The transmit pin when using serial communication instead of wifi. Use GPIO_NUM_NC for no GPIO
+ * @param uart The UART to use for serial communication. Use UART_NUM_MAX for no UART
  * @param wifiMode The WiFi mode. If ESP_NOW_IMMEDIATE, then recvCb is called directly from the interrupt. If ESP_NOW,
  * then recvCb is called from checkEspNowRxQueue()
  */

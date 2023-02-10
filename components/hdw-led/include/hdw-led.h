@@ -2,8 +2,9 @@
 #define _HDW_LED_H_
 
 #include <stdint.h>
-#include "esp_err.h"
-#include "hal/gpio_types.h"
+
+#include <esp_err.h>
+#include <hal/gpio_types.h>
 
 typedef struct __attribute__((packed))
 {

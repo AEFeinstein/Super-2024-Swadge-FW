@@ -42,7 +42,8 @@
 // Includes
 //==============================================================================
 
-#include "driver/rmt_tx.h"
+#include <driver/rmt_tx.h>
+
 #include "led_strip_encoder.h"
 #include "hdw-led.h"
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "esp_check.h"
+#include <esp_check.h>
 #include "led_strip_encoder.h"
 
 static const char* TAG = "led_encoder";

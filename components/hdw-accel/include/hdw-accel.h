@@ -2,9 +2,10 @@
 #define _HDW_ACCEL_H_
 
 #include <stdint.h>
-#include "driver/i2c.h"
-#include "hal/gpio_types.h"
-#include "esp_err.h"
+
+#include <driver/i2c.h>
+#include <hal/gpio_types.h>
+#include <esp_err.h>
 
 typedef enum
 {

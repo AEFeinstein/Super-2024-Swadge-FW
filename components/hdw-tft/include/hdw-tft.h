@@ -3,9 +3,9 @@
 
 #include <stdint.h>
 
-#include "hal/gpio_types.h"
-#include "hal/spi_types.h"
-#include "driver/ledc.h"
+#include <hal/gpio_types.h>
+#include <hal/spi_types.h>
+#include <driver/ledc.h>
 
 #include "palette.h"
 

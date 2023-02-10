@@ -36,7 +36,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <math.h>
 
 #include "hdw-tft.h"
 #include "bresenham.h"

@@ -68,8 +68,8 @@
 
 #include <stdio.h>
 
-#include "esp_timer.h"
-#include "esp_log.h"
+#include <esp_timer.h>
+#include <esp_log.h>
 
 #include "hdw-btn.h"
 #include "hdw-tft.h"
@@ -107,7 +107,7 @@ void app_main(void)
     initUsb();
 
     // Init esp-now
-    espNowInit(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
+    initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
 
     // Init SPIFFS file system
     initSpiffs();
