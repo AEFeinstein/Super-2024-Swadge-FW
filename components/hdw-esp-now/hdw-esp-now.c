@@ -4,16 +4,74 @@
  *
  * \section esp-now_design Design Philosophy
  *
- * TODO doxygen
+ * <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/network/esp_now.html">ESP-NOW</a>
+ * is a kind of connectionless Wi-Fi communication protocol that is defined by Espressif. This component manages ESP-NOW
+ * so that you don't have to. It provides a simple wrapper to broadcast a packet, espNowSend(), and passes all received
+ * packets through a callback given to initEspNow().
+ *
+ * Swadges do not use any ESP-NOW security and do not pair with each other using ESP-NOW.
+ * All transmissions are broadcasts and all Swadges will receive all other transmissions.
+ * Two Swadges may 'pair' with each other by including the recipient's MAC address in a transmitted packet.
+ * This pairing can be done using p2pConnection.c.
+ *
+ * This component can also facilitate communication between to Swadges using a <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/peripherals/uart.html">Universal
+ * Asynchronous Receiver/Transmitter (UART)</a> wired connection. The wired UART is significantly faster and
+ * significantly more reliable than the wireless one, but it does require a physical wire.
+ *
+ * Swadges have USB-C ports and the wired connection reconfigures the D+ and D- pins within the USB cable to be serial
+ * RX and TX instead. This means that while the serial connection is active, USB is non-functional. It also means that
+ * one Swadge has to treat D+ as RX and D- as TX, while the other has to do the opposite and treat D+ as TX and D- as
+ * RX. If a Swadge mode uses wired connections, it's UI must have an options to assume either role (commonly Swadge A
+ * and Swadge B).
  *
  * \section esp-now_usage Usage
  *
- * TODO doxygen
+ * You don't need to call initEspNow(), checkEspNowRxQueue(), or espNowDeinit() . The system does at the appropriate
+ * time.
+ *
+ * espNowUseWireless() and espNowUseSerial() may be used to switch between wireless connections and wired connections,
+ * respectively. espNowUseSerial() is also used to configure the RX and TX pins for UART communication.
+ *
+ * To send a packet, call espNowSend().
+ * When the packet transmission finishes, the ::hostEspNowSendCb_t callback passed to initEspNow() is called with a
+ * status of either ESP_NOW_SEND_SUCCESS or ESP_NOW_SEND_FAIL.
+ *
+ * When a packet is received, the ::hostEspNowRecvCb_t callback passed to initEspNow() is called with the received
+ * packet.
  *
  * \section esp-now_example Example
  *
  * \code{.c}
- * TODO doxygen
+ * #include "macros.h"
+ * #include "hdw-esp-now.h"
+ *
+ * static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi)
+ * {
+ *     printf("Received %d bytes\n", len);
+ * }
+ *
+ * static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
+ * {
+ *     printf("Sent packet: %d\n", status);
+ * }
+ *
+ * ...
+ *
+ * {
+ *     initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb,
+ *         GPIO_NUM_19, GPIO_NUM_20, UART_NUM_1, ESP_NOW);
+ *
+ *     while(1)
+ *     {
+ *         // Check for received packets
+ *         checkEspNowRxQueue();
+ *
+ *         // Send a test packet
+ *         char testPacket[] = "TEST";
+ *         espNowSend(testPacket, ARRAY_SIZE(testPacket));
+ *     }
+ * }
  * \endcode
  */
 
@@ -23,12 +81,13 @@
 
 #include <stdint.h>
 #include <string.h>
+
 #include <esp_wifi.h>
 #include <esp_now.h>
 #include <esp_err.h>
-#include <freertos/queue.h>
 #include <esp_log.h>
 #include <esp_private/wifi.h>
+#include <freertos/queue.h>
 
 #include "hdw-esp-now.h"
 
@@ -36,16 +95,22 @@
 // Defines
 //==============================================================================
 
+/// The WiFi channel to operate on
 #define ESPNOW_CHANNEL 11
-#define WIFI_RATE      WIFI_PHY_RATE_MCS6_SGI
+/// The WiFi rate to run at, MCS6 with short GI, 65 Mbps for 20MHz, 135 Mbps for 40MHz
+#define WIFI_RATE WIFI_PHY_RATE_MCS6_SGI
 
-// Three random bytes used as 'start' bytes for packets over serial
+/// The first random byte used as a 'start' byte for packets transmitted over UART
 #define FRAMING_START_1 251
+/// The second random byte used as a 'start' byte for packets transmitted over UART
 #define FRAMING_START_2 63
+/// The third random byte used as a 'start' byte for packets transmitted over UART
 #define FRAMING_START_3 114
 
-#define ESP_NOW_SERIAL_RX_BUF_SIZE  256
-#define ESP_NOW_SERIAL_RINGBUF_SIZE 256
+/// The size of the UART receive buffer in bytes
+#define ESP_NOW_SERIAL_RX_BUF_SIZE 256
+/// The size of the ringbuffer used to decode packets in bytes
+#define ESP_NOW_SERIAL_RINGBUF_SIZE 512
 
 //==============================================================================
 // Enums
@@ -53,12 +118,12 @@
 
 typedef enum
 {
-    EU_PARSING_FR_START_1,
-    EU_PARSING_FR_START_2,
-    EU_PARSING_FR_START_3,
-    EU_PARSING_MAC,
-    EU_PARSING_LEN,
-    EU_PARSING_PAYLOAD,
+    EU_PARSING_FR_START_1, ///< Parsing state for the first framing byte
+    EU_PARSING_FR_START_2, ///< Parsing state for the second framing byte
+    EU_PARSING_FR_START_3, ///< Parsing state for the third framing byte
+    EU_PARSING_MAC,        ///< Parsing state for the six MAC bytes
+    EU_PARSING_LEN,        ///< Parsing state for the one length byte
+    EU_PARSING_PAYLOAD,    ///< Parsing state for the payload bytes
 } decodeState_t;
 
 //==============================================================================
@@ -134,9 +199,11 @@ static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
  * @param rx The receive pin when using serial communication instead of wifi
  * @param tx The transmit pin when using serial communication instead of wifi
  * @param uart The UART to use for serial communication
+ * @param wifiMode The WiFi mode. If ESP_NOW_IMMEDIATE, then recvCb is called directly from the interrupt. If ESP_NOW,
+ * then recvCb is called from checkEspNowRxQueue()
  */
-void espNowInit(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx, uart_port_t uart,
-                wifiMode_t mode)
+void initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx, uart_port_t uart,
+                wifiMode_t wifiMode)
 {
     // Save callback functions
     hostEspNowRecvCb = recvCb;
@@ -146,7 +213,7 @@ void espNowInit(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t
     rxGpio  = rx;
     txGpio  = tx;
     uartNum = uart;
-    mode    = mode;
+    mode    = wifiMode;
 
     if (ESP_NOW_IMMEDIATE != mode)
     {
@@ -380,7 +447,7 @@ void espNowUseSerial(bool crossoverPins)
  *
  * @param mac_addr The MAC address of the sender
  * @param data     The data which was received
- * @param len      The length of the data which was received
+ * @param data_len The length of the data which was received
  */
 static void espNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, int data_len)
 {
@@ -601,7 +668,7 @@ void espNowSend(const char* data, uint8_t len)
  * was received
  *
  * @param mac_addr The MAC address which was transmitted to
- * @param status   MT_TX_STATUS_OK or MT_TX_STATUS_FAILED
+ * @param status The transmission status, either ESP_NOW_SEND_SUCCESS or ESP_NOW_SEND_FAIL
  */
 static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
@@ -628,7 +695,7 @@ static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 }
 
 /**
- * This function is automatically called to de-initialize ESP-NOW
+ * This function is called to de-initialize ESP-NOW
  */
 void espNowDeinit(void)
 {
