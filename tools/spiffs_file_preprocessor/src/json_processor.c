@@ -7,6 +7,7 @@
 #include "cJSON.h"
 #include "heatshrink_encoder.h"
 #include "fileUtils.h"
+#include "heatshrink_util.h"
 
 void process_json(const char* infile, const char* outdir)
 {
@@ -19,10 +20,7 @@ void process_json(const char* infile, const char* outdir)
 #ifdef JSON_COMPRESSION
     /* Change the file extension */
     char* dotptr = strrchr(outFilePath, '.');
-    dotptr[1]    = 'h';
-    dotptr[2]    = 'o';
-    dotptr[3]    = 'n';
-    dotptr[4]    = 0;
+    snprintf(&dotptr[1], strlen(dotptr), "hjs");
 #endif
 
     // if(doesFileExist(outFilePath))
@@ -47,60 +45,6 @@ void process_json(const char* infile, const char* outdir)
     fwrite(jsonInStr, sz, 1, outFile);
     fclose(outFile);
 #else
-    /* Minify input file */
-    cJSON* jsonIn           = cJSON_Parse(jsonInStr);
-    char* jsonInUnformatted = cJSON_PrintUnformatted(jsonIn);
-    cJSON_free(jsonIn);
-
-    /* Compress the JSON */
-    uint8_t output[strlen(jsonInUnformatted) + 1];
-    uint32_t outputIdx = 0;
-    uint32_t inputIdx  = 0;
-    size_t copied      = 0;
-
-    /* Create the encoder */
-    heatshrink_encoder* hse = heatshrink_encoder_alloc(8, 4);
-    heatshrink_encoder_reset(hse);
-
-    /* Stream the data in chunks */
-    while (inputIdx < strlen(jsonInUnformatted) + 1)
-    {
-        /* Pass chars to the encoder for compression */
-        copied = 0;
-        heatshrink_encoder_sink(hse, (uint8_t*)(&jsonInUnformatted[inputIdx]), strlen(jsonInUnformatted) + 1 - inputIdx,
-                                &copied);
-        inputIdx += copied;
-
-        /* Save compressed data */
-        copied = 0;
-        heatshrink_encoder_poll(hse, &output[outputIdx], sizeof(output) - outputIdx, &copied);
-        outputIdx += copied;
-    }
-
-    /* Mark all input as processed */
-    heatshrink_encoder_finish(hse);
-
-    /* Flush the last bits of output */
-    copied = 0;
-    heatshrink_encoder_poll(hse, &output[outputIdx], sizeof(output) - outputIdx, &copied);
-    outputIdx += copied;
-
-    /* Free the input */
-    cJSON_free(jsonInUnformatted);
-
-    /* Free the encoder */
-    heatshrink_encoder_free(hse);
-
-    /* Write a Heatshrink Object Notation file */
-    FILE* honFile = fopen(outFilePath, "wb");
-    /* Write uncompressed size first */
-    putc(HI_BYTE(inputIdx), honFile);
-    putc(LO_BYTE(inputIdx), honFile);
-    /* Write compressed bytes */
-    fwrite(output, outputIdx, 1, honFile);
-    fclose(honFile);
-
-    /* Print results */
-    printf("%s:\n  Source file size: %d\n  WSG   file size: %d\n", infile, inputIdx, outputIdx);
+    writeHeatshrinkFile(jsonInStr, sz, outFilePath);
 #endif
 }

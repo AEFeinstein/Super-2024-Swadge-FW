@@ -15,6 +15,7 @@
 #include "image_processor.h"
 
 #include "heatshrink_encoder.h"
+#include "heatshrink_util.h"
 
 #include "fileUtils.h"
 
@@ -35,6 +36,7 @@ typedef struct
 void shuffleArray(uint32_t* ar, uint32_t len);
 int isNeighborNotDrawn(pixel_t** img, int x, int y, int w, int h);
 void spreadError(pixel_t** img, int x, int y, int w, int h, int teR, int teG, int teB, float diagScalar);
+
 /**
  * @brief TODO
  *
@@ -120,9 +122,7 @@ void process_image(const char* infile, const char* outdir)
 
     /* Change the file extension */
     char* dotptr = strrchr(outFilePath, '.');
-    dotptr[1]    = 'w';
-    dotptr[2]    = 's';
-    dotptr[3]    = 'g';
+    snprintf(&dotptr[1], strlen(dotptr), "wsg");
 
     if (doesFileExist(outFilePath))
     {
@@ -270,166 +270,18 @@ void process_image(const char* infile, const char* outdir)
         }
         free(image8b);
 
-        /* Compress the palette-ized image */
-        uint32_t outputSize = sizeof(uint8_t) * (4 + paletteBufSize);
-        uint8_t* output     = malloc(outputSize);
-        uint32_t outputIdx  = 0;
-        uint32_t inputIdx   = 0;
-        size_t copied       = 0;
-
-        /* Creete the encoder */
-        heatshrink_encoder* hse = heatshrink_encoder_alloc(8, 4);
-        heatshrink_encoder_reset(hse);
-        /* Encode the dimension header */
-        uint8_t imgDimHdr[] = {HI_BYTE(w), LO_BYTE(w), HI_BYTE(h), LO_BYTE(h)};
-        switch (heatshrink_encoder_sink(hse, imgDimHdr, sizeof(imgDimHdr), &copied))
-        {
-            case HSER_SINK_OK:
-            {
-                // Continue
-                break;
-            }
-            case HSER_SINK_ERROR_NULL:
-            case HSER_SINK_ERROR_MISUSE:
-            {
-                free(output);
-                free(paletteBuf);
-                heatshrink_encoder_free(hse);
-                fprintf(stderr, "[%d]: Heatshrink error (%s) \n", __LINE__, infile);
-                return;
-            }
-        }
-
-        /* Stream the data in chunks */
-        while (inputIdx < paletteBufSize)
-        {
-            /* Pass pixels to the encoder for compression */
-            copied = 0;
-            switch (heatshrink_encoder_sink(hse, &paletteBuf[inputIdx], paletteBufSize - inputIdx, &copied))
-            {
-                case HSER_SINK_OK:
-                {
-                    // Continue
-                    break;
-                }
-                case HSER_SINK_ERROR_NULL:
-                case HSER_SINK_ERROR_MISUSE:
-                {
-                    free(output);
-                    free(paletteBuf);
-                    heatshrink_encoder_free(hse);
-                    fprintf(stderr, "[%d]: Heatshrink error (%s) \n", __LINE__, infile);
-                    return;
-                }
-            }
-            inputIdx += copied;
-
-            /* Save compressed data */
-            copied             = 0;
-            bool stillEncoding = true;
-            while (stillEncoding)
-            {
-                switch (heatshrink_encoder_poll(hse, &output[outputIdx], outputSize - outputIdx, &copied))
-                {
-                    case HSER_POLL_EMPTY:
-                    {
-                        stillEncoding = false;
-                        break;
-                    }
-                    case HSER_POLL_MORE:
-                    {
-                        stillEncoding = true;
-                        break;
-                    }
-                    case HSER_POLL_ERROR_NULL:
-                    case HSER_POLL_ERROR_MISUSE:
-                    {
-                        free(output);
-                        free(paletteBuf);
-                        heatshrink_encoder_free(hse);
-                        fprintf(stderr, "[%d]: Heatshrink error (%s) \n", __LINE__, infile);
-                        return;
-                    }
-                }
-                outputIdx += copied;
-            }
-        }
-
-        /* Mark all input as processed */
-        switch (heatshrink_encoder_finish(hse))
-        {
-            case HSER_FINISH_DONE:
-            {
-                // Continue
-                break;
-            }
-            case HSER_FINISH_MORE:
-            {
-                /* Flush the last bits of output */
-                copied             = 0;
-                bool stillEncoding = true;
-                while (stillEncoding)
-                {
-                    switch (heatshrink_encoder_poll(hse, &output[outputIdx], outputSize - outputIdx, &copied))
-                    {
-                        case HSER_POLL_EMPTY:
-                        {
-                            stillEncoding = false;
-                            break;
-                        }
-                        case HSER_POLL_MORE:
-                        {
-                            stillEncoding = true;
-                            break;
-                        }
-                        case HSER_POLL_ERROR_NULL:
-                        case HSER_POLL_ERROR_MISUSE:
-                        {
-                            free(output);
-                            free(paletteBuf);
-                            heatshrink_encoder_free(hse);
-                            fprintf(stderr, "[%d]: Heatshrink error (%s) \n", __LINE__, infile);
-                            return;
-                        }
-                    }
-                    outputIdx += copied;
-                }
-                break;
-            }
-            case HSER_FINISH_ERROR_NULL:
-            {
-                free(output);
-                free(paletteBuf);
-                heatshrink_encoder_free(hse);
-                fprintf(stderr, "[%d]: Heatshrink error (%s) \n", __LINE__, infile);
-                return;
-            }
-        }
-
-        /* Free the encoder */
-        heatshrink_encoder_free(hse);
-
-        /* Free data after compressed */
+        /* Combine the header and image*/
+        uint32_t hdrAndImgSz = sizeof(uint8_t) * (4 + paletteBufSize);
+        uint8_t* hdrAndImg   = malloc(hdrAndImgSz);
+        hdrAndImg[0]         = HI_BYTE(w);
+        hdrAndImg[1]         = LO_BYTE(w);
+        hdrAndImg[2]         = HI_BYTE(h);
+        hdrAndImg[3]         = LO_BYTE(h);
+        memcpy(&hdrAndImg[4], paletteBuf, paletteBufSize);
+        /* Write the compressed file */
+        writeHeatshrinkFile(hdrAndImg, hdrAndImgSz, outFilePath);
+        /* Cleanup */
+        free(hdrAndImg);
         free(paletteBuf);
-
-        /* Write a WSG image */
-        FILE* wsgFile = fopen(outFilePath, "wb");
-        /* First two bytes are decompresed size */
-        uint32_t decompressedSize = sizeof(imgDimHdr) + paletteBufSize;
-        putc(HI_BYTE(HI_WORD(decompressedSize)), wsgFile);
-        putc(LO_BYTE(HI_WORD(decompressedSize)), wsgFile);
-        putc(HI_BYTE(LO_WORD(decompressedSize)), wsgFile);
-        putc(LO_BYTE(LO_WORD(decompressedSize)), wsgFile);
-        /* Then dump the compressed bytes */
-        fwrite(output, outputIdx, 1, wsgFile);
-        /* Done writing to the file */
-        fclose(wsgFile);
-
-        /* Free the output */
-        free(output);
-
-        /* Print results */
-        printf("%s:\n  Source file size: %ld\n  WSG   file size: %ld\n", infile, getFileSize(infile),
-               getFileSize(outFilePath));
     }
 }
