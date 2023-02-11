@@ -4,6 +4,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "display/bresenham.c"
                             "display/cndraw.c"
                             "display/wsg.c"
+                            "modes/demo/demoMode.c"
                             "utils/color_utils.c"
                             "utils/linked_list.c"
                             "utils/p2pConnection.c"
@@ -23,7 +24,8 @@ idf_component_register(SRCS "swadge2024.c"
                              spi_flash
                     INCLUDE_DIRS "."
                                  "./utils"
-                                 "./display")
+                                 "./display"
+                                 "./modes/demo")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL

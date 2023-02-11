@@ -89,6 +89,18 @@
 #include "fill.h"
 #include "wsg.h"
 
+#include "macros.h"
+#include "swadgeMode.h"
+#include "demoMode.h"
+
+swadgeMode_t* modes[] = {
+    &demoMode,
+};
+swadgeMode_t* cSwadgeMode;
+
+/// 25 FPS by default
+static uint32_t frameRateUs = 40000;
+
 static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi);
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
@@ -98,16 +110,10 @@ static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
  */
 void app_main(void)
 {
-    ESP_LOGE("MAIN", "boot");
+    cSwadgeMode = modes[0];
 
     // Init timers
     esp_timer_init();
-
-    // Init USB
-    initUsb();
-
-    // Init esp-now
-    initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
 
     // Init SPIFFS file system
     initSpiffs();
@@ -115,13 +121,7 @@ void app_main(void)
     // Init NVS
     initNvs(true);
 
-    font_t ibm;
-    loadFont("ibm_vga8.font", &ibm);
-
-    wsg_t king_donut;
-    loadWsgSpiRam("kid0.wsg", &king_donut, true);
-
-    // Init buttons
+    // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
         GPIO_NUM_0,  // Up
         GPIO_NUM_4,  // Down
@@ -142,12 +142,15 @@ void app_main(void)
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
                 sizeof(touchPads) / sizeof(touchPads[0]));
 
-    // Init buzzer
-    initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
+    // Init mic if it is used by the mode
+    if (NULL != cSwadgeMode->fnAudioCallback)
+    {
+        initMic(GPIO_NUM_7);
+        startMic();
+    }
 
-    // Init mic
-    initMic(GPIO_NUM_7);
-    startMic();
+    // Init buzzer
+    initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, false, false);
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
@@ -163,6 +166,18 @@ void app_main(void)
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39);
 
+    // Init USB if not overridden by the mode
+    if (false == cSwadgeMode->overrideUsb)
+    {
+        initUsb();
+    }
+
+    // Init esp-now if requested by the mode
+    if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
+    {
+        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
+    }
+
     // Init accelerometer
     qma7981_init(I2C_NUM_0,
                  GPIO_NUM_3,  // SDA
@@ -172,127 +187,80 @@ void app_main(void)
     // Init the temperature sensor
     initTemperatureSensor();
 
-    // static const song_t BlackDog = {
-    //     .numNotes      = 28,
-    //     .shouldLoop    = false,
-    //     .loopStartNote = 0,
-    //     .notes = {{.note = E_5, .timeMs = 188}, {.note = G_5, .timeMs = 188},    {.note = G_SHARP_5, .timeMs = 188},
-    //               {.note = A_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_6, .timeMs = 375},
-    //               {.note = A_5, .timeMs = 375}, {.note = D_6, .timeMs = 188},    {.note = E_6, .timeMs = 188},
-    //               {.note = C_6, .timeMs = 94},  {.note = D_6, .timeMs = 94},     {.note = C_6, .timeMs = 188},
-    //               {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
-    //               {.note = C_6, .timeMs = 375}, {.note = A_5, .timeMs = 375},    {.note = G_5, .timeMs = 188},
-    //               {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
-    //               {.note = D_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_5, .timeMs = 188},
-    //               {.note = D_5, .timeMs = 188}, {.note = A_4, .timeMs = 370},    {.note = SILENCE, .timeMs = 10},
-    //               {.note = A_4, .timeMs = 745}},
-    // };
-    // bzrPlayBgm(&BlackDog);
+    // Initialize the loop timer
+    static int64_t tLastLoopUs = 0;
+    tLastLoopUs                = esp_timer_get_time();
 
-    // bool drawScreen = false;
-    while (1)
+    // Initialize the swadge mode
+    if (NULL != cSwadgeMode->fnEnterMode)
     {
-        buttonEvt_t evt              = {0};
-        static uint32_t lastBtnState = 0;
-        while (checkButtonQueue(&evt))
-        {
-            printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
-            lastBtnState = evt.state;
-            // drawScreen = evt.down;
+        cSwadgeMode->fnEnterMode();
+    }
 
-            static hid_gamepad_report_t report;
-            report.buttons = lastBtnState;
-            sendUsbGamepadReport(&report);
-        }
+    // Run the main loop, forever!
+    while (true)
+    {
+        // Track the elapsed time between loop calls
+        int64_t tNowUs     = esp_timer_get_time();
+        int64_t tElapsedUs = tNowUs - tLastLoopUs;
+        tLastLoopUs        = tNowUs;
 
-        int32_t centerVal, intensityVal;
-        if (getTouchCentroid(&centerVal, &intensityVal))
+        // Process ADC samples
+        if (NULL != cSwadgeMode->fnAudioCallback)
         {
-            printf("touch center: %lu, intensity: %lu\n", centerVal, intensityVal);
-        }
-        else
-        {
-            printf("no touch\n");
-        }
-
-        clearPxTft();
-        int numBtns   = 13;
-        int drawWidth = TFT_WIDTH / numBtns;
-        for (int i = 0; i < numBtns; i++)
-        {
-            if (lastBtnState & (1 << i))
+            uint16_t adcSamps[ADC_READ_LEN / SOC_ADC_DIGI_RESULT_BYTES];
+            uint32_t sampleCnt = 0;
+            while (0 < (sampleCnt = loopMic(adcSamps, ARRAY_SIZE(adcSamps))))
             {
-                for (int w = drawWidth * i; w < drawWidth * (i + 1); w++)
+                // Run all samples through an IIR filter
+                for (uint32_t i = 0; i < sampleCnt; i++)
                 {
-                    for (int h = 0; h < TFT_HEIGHT; h++)
-                    {
-                        setPxTft(w, h, (i + 5) * 5);
-                    }
+                    static uint32_t samp_iir = 0;
+
+                    int32_t sample  = adcSamps[i];
+                    samp_iir        = samp_iir - (samp_iir >> 9) + sample;
+                    int32_t newsamp = (sample - (samp_iir >> 9));
+                    newsamp         = CLAMP(newsamp, -32768, 32767);
+                    adcSamps[i]     = newsamp;
                 }
+                cSwadgeMode->fnAudioCallback(adcSamps, sampleCnt);
             }
         }
 
-        drawText(&ibm, c555, "Hello world", 64, 64);
-
-        drawLine(92, 92, 200, 200, c500, 0, 0, 0, 1, 1);
-        speedyLine(102, 92, 210, 200, c050);
-
-        drawWsg(&king_donut, 100, 10, false, false, 0);
-
-        printf("%f\n", readTemperatureSensor());
-
-        int16_t a_x, a_y, a_z;
-        qma7981_get_accel(&a_x, &a_y, &a_z);
-
-        uint16_t outSamps[ADC_READ_LEN / 2];
-        uint32_t sampsRead = loopMic(outSamps, (ADC_READ_LEN / 2));
-
-        // clearPxTft();
-        // for (int i = 0; i < sampsRead; i++)
-        // {
-        //     setPxTft(i, (TFT_HEIGHT - (outSamps[i] >> 4) - 1) % TFT_HEIGHT, c555);
-        // }
-
-        // if (drawScreen)
-        // {
-        //     clearPxTft();
-        //     for (uint16_t y = 0; y < TFT_HEIGHT; y++)
-        //     {
-        //         for (uint16_t x = 0; x < TFT_WIDTH; x++)
-        //         {
-        //             if (x < TFT_WIDTH / 3)
-        //             {
-        //                 setPxTft(x, y, (a_x >> 6) % cTransparent);
-        //             }
-        //             else if (x < (2 * TFT_WIDTH) / 3)
-        //             {
-        //                 setPxTft(x, y, (a_y >> 6) % cTransparent);
-        //             }
-        //             else
-        //             {
-        //                 setPxTft(x, y, (a_z >> 6) % cTransparent);
-        //             }
-        //         }
-        //     }
-        // }
-        // else
-        // {
-        //     clearPxTft();
-        // }
-
-        drawDisplayTft(NULL);
-
-        led_t leds[CONFIG_NUM_LEDS] = {0};
-        for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        // Only draw to the TFT every frameRateUs
+        static uint64_t tAccumDraw = 0;
+        tAccumDraw += tElapsedUs;
+        if (tAccumDraw >= frameRateUs)
         {
-            leds[i].r = (255 * ((i + 0) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-            leds[i].g = (255 * ((i + 3) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-            leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
+            // Decrement the accumulation
+            tAccumDraw -= frameRateUs;
+
+            // Call the mode's main loop
+            if (NULL != cSwadgeMode->fnMainLoop)
+            {
+                // Keep track of the time between main loop calls
+                static uint64_t tLastMainLoopCall = 0;
+                if (0 == tLastMainLoopCall)
+                {
+                    tLastMainLoopCall = tNowUs;
+                }
+                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+                tLastMainLoopCall = tNowUs;
+            }
+
+            // Draw to the TFT
+            drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
         }
-        setLeds(leds, CONFIG_NUM_LEDS);
+
+        // Yield to let the rest of the RTOS run
+        taskYIELD();
     }
-    freeFont(&ibm);
-    freeWsg(&king_donut);
+
+    // Deinitialize the swadge mode
+    if (NULL != cSwadgeMode->fnExitMode)
+    {
+        cSwadgeMode->fnExitMode();
+    }
 }
 
 /**
@@ -306,10 +274,10 @@ void app_main(void)
  */
 static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi)
 {
-    // if(NULL != cSwadgeMode->fnEspNowRecvCb)
-    // {
-    //     cSwadgeMode->fnEspNowRecvCb(mac_addr, data, len, rssi);
-    // }
+    if (NULL != cSwadgeMode->fnEspNowRecvCb)
+    {
+        cSwadgeMode->fnEspNowRecvCb(mac_addr, data, len, rssi);
+    }
 }
 
 /**
@@ -321,8 +289,8 @@ static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, ui
  */
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
-    // if(NULL != cSwadgeMode->fnEspNowSendCb)
-    // {
-    //     cSwadgeMode->fnEspNowSendCb(mac_addr, status);
-    // }
+    if (NULL != cSwadgeMode->fnEspNowSendCb)
+    {
+        cSwadgeMode->fnEspNowSendCb(mac_addr, status);
+    }
 }

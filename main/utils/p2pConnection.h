@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <esp_timer.h>
+
 #define P2P_MAX_DATA_LEN 245
 
 typedef enum
