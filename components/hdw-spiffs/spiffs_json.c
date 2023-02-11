@@ -27,60 +27,19 @@
  */
 char* loadJson(const char* name)
 {
+#ifndef JSON_COMPRESSION
     // Read JSON from file
-    uint8_t* buf = NULL;
     size_t sz;
-    if (!spiffsReadFile(name, &buf, &sz, true))
+    uint8_t* buf = spiffsReadFile(name, &sz, true);
+    if (NULL == buf)
     {
         ESP_LOGE("JSON", "Failed to read %s", name);
         return NULL;
     }
-
-#ifndef JSON_COMPRESSION
     return (char*)buf;
 #else
-    // Pick out the decompresed size and create a space for it
-    uint16_t decompressedSize = (buf[0] << 8) | buf[1];
-    uint8_t* decompressedBuf  = calloc(sizeof(char) * (decompressedSize + 1));
-
-    // Create the decoder
-    size_t copied           = 0;
-    heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
-    heatshrink_decoder_reset(hsd);
-
-    // Decode the file in chunks
-    uint32_t inputIdx  = 0;
-    uint32_t outputIdx = 0;
-    while (inputIdx < (sz - 2))
-    {
-        // Decode some data
-        copied = 0;
-        heatshrink_decoder_sink(hsd, &buf[2 + inputIdx], sz - 2 - inputIdx, &copied);
-        inputIdx += copied;
-
-        // Save it to the output array
-        copied = 0;
-        heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], sizeof(decompressedBuf) - outputIdx, &copied);
-        outputIdx += copied;
-    }
-
-    // Note that it's all done
-    heatshrink_decoder_finish(hsd);
-
-    // Flush any final output
-    copied = 0;
-    heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], sizeof(decompressedBuf) - outputIdx, &copied);
-    outputIdx += copied;
-
-    // All done decoding
-    heatshrink_decoder_finish(hsd);
-    heatshrink_decoder_free(hsd);
-    free(buf);
-
-    // Add null terminator
-    decompressedBuf[decompressedSize] = 0;
-
-    return decompressedBuf;
+    uint32_t decompressedSize = 0;
+    return readHeatshrinkFile(name, &decompressedSize);
 #endif
 }
 

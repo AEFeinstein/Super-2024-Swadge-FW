@@ -42,53 +42,9 @@ bool loadWsg(char* name, wsg_t* wsg)
  */
 bool loadWsgSpiRam(char* name, wsg_t* wsg, bool spiRam)
 {
-    // Read WSG from file
-    uint8_t* buf = NULL;
-    size_t sz;
-    if (!spiffsReadFile(name, &buf, &sz, true))
-    {
-        ESP_LOGE("WSG", "Failed to read %s", name);
-        return false;
-    }
-
-    // Pick out the decompresed size and create a space for it
-    uint32_t decompressedSize = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
-    uint8_t* decompressedBuf  = (uint8_t*)heap_caps_malloc(decompressedSize, MALLOC_CAP_SPIRAM);
-
-    // Create the decoder
-    size_t copied           = 0;
-    heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
-    heatshrink_decoder_reset(hsd);
-
-    // Decode the file in chunks
-    uint32_t inputIdx  = 0;
-    uint32_t outputIdx = 0;
-    while (inputIdx < (sz - 4))
-    {
-        // Decode some data
-        copied = 0;
-        heatshrink_decoder_sink(hsd, &buf[4 + inputIdx], sz - 4 - inputIdx, &copied);
-        inputIdx += copied;
-
-        // Save it to the output array
-        copied = 0;
-        heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], decompressedSize - outputIdx, &copied);
-        outputIdx += copied;
-    }
-
-    // Note that it's all done
-    heatshrink_decoder_finish(hsd);
-
-    // Flush any final output
-    copied = 0;
-    heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], decompressedSize - outputIdx, &copied);
-    outputIdx += copied;
-
-    // All done decoding
-    heatshrink_decoder_finish(hsd);
-    heatshrink_decoder_free(hsd);
-    // Free the bytes read from the file
-    free(buf);
+    // Read and decompress file
+    uint32_t decompressedSize = 0;
+    uint8_t* decompressedBuf  = readHeatshrinkFile(name, &decompressedSize, spiRam);
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
@@ -105,7 +61,7 @@ bool loadWsgSpiRam(char* name, wsg_t* wsg, bool spiRam)
 
     if (NULL != wsg->px)
     {
-        memcpy(wsg->px, &decompressedBuf[4], outputIdx - 4);
+        memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
         free(decompressedBuf);
         return true;
     }

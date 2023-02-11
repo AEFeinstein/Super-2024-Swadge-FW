@@ -13,6 +13,7 @@
 bool initSpiffs(void);
 bool deinitSpiffs(void);
 
-bool spiffsReadFile(const char* fname, uint8_t** output, size_t* outsize, bool readToSpiRam);
+uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam);
+uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpiRam);
 
 #endif

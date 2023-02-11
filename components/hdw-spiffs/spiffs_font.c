@@ -28,11 +28,11 @@
 bool loadFont(const char* name, font_t* font)
 {
     // Read font from file
-    uint8_t* buf  = NULL;
     size_t bufIdx = 0;
     uint8_t chIdx = 0;
     size_t sz;
-    if (!spiffsReadFile(name, &buf, &sz, true))
+    uint8_t* buf = spiffsReadFile(name, &sz, true);
+    if (NULL == buf)
     {
         ESP_LOGE("FONT", "Failed to read %s", name);
         return false;

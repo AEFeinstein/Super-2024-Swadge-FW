@@ -27,9 +27,9 @@
 char* loadTxt(const char* name)
 {
     // Read TXT from file
-    uint8_t* buf = NULL;
     size_t sz;
-    if (!spiffsReadFile(name, &buf, &sz, true))
+    uint8_t* buf = spiffsReadFile(name, &sz, true);
+    if (NULL == buf)
     {
         ESP_LOGE("TXT", "Failed to read %s", name);
         return NULL;
