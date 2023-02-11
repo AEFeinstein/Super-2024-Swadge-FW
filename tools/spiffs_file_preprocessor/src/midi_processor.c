@@ -156,6 +156,17 @@ typedef struct
     uint16_t timeMs;
 } musicalNote_t;
 
+typedef struct
+{
+    int8_t majorKey;
+    int8_t minorKey;
+    int tempo; // uS per quarter note
+    uint8_t timeSigNumerator;
+    uint8_t timeSigDenominator;
+    uint8_t timeSigClocksPerClick;
+    uint8_t timeSig32ndNotePerQuarter;
+} midiParams_t;
+
 /* Look up table from MIDI pitch index to frequency (Hz) */
 static const uint32_t midiFreqs[128] = {
     8,    9,    9,    10,   10,   11,   12,   12,   13,   14,   15,    15,    16,    17,   18,   19,   21,   22,   23,
@@ -165,6 +176,14 @@ static const uint32_t midiFreqs[128] = {
     659,  698,  740,  784,  831,  880,  932,  988,  1047, 1109, 1175,  1245,  1319,  1397, 1480, 1568, 1661, 1760, 1865,
     1976, 2093, 2217, 2349, 2489, 2637, 2794, 2960, 3136, 3322, 3520,  3729,  3951,  4186, 4435, 4699, 4978, 5274, 5588,
     5920, 6272, 6645, 7040, 7459, 7902, 8372, 8870, 9397, 9956, 10548, 11175, 11840, 12544};
+
+/**
+ * @brief
+ *
+ * @param midiParser
+ */
+static void checkMidiEvents(MidiParser* midiParser, unsigned long int lastNoteStart, unsigned long int thisNoteStart,
+                            midiParams_t* params);
 
 /**
  * Process a MIDI file and write a compressed song (.sng)
@@ -196,6 +215,7 @@ void process_midi(const char* infile, const char* outdir)
     /* Declare variables to translate the notes to */
     musicalNote_t* allNotes = NULL;
     uint32_t allNoteIdx     = 0;
+    midiParams_t params     = {0};
 
     /* Look for the first track with notes */
     for (int trackIdx = 0; trackIdx < midiParser->nbOfTracks; trackIdx++)
@@ -208,10 +228,14 @@ void process_midi(const char* infile, const char* outdir)
             allNotes = malloc((2 * track->nbOfNotes) * sizeof(musicalNote_t));
 
             /* For each note */
+            unsigned long int lastNoteStart = track->notes[0].timeBeforeAppear;
             for (int noteIdx = 0; noteIdx < track->nbOfNotes; noteIdx++)
             {
                 /* Get a reference to this note */
                 Note* note = &(track->notes[noteIdx]);
+
+                /* Before processing the note, check for events*/
+                checkMidiEvents(midiParser, lastNoteStart, note->timeBeforeAppear, &params);
 
                 /* Get a reference to the next note, if it exists */
                 Note* nextNote = NULL;
@@ -233,7 +257,7 @@ void process_midi(const char* infile, const char* outdir)
 
                 /* Save this note */
                 allNotes[allNoteIdx].note   = midiFreqs[note->pitch];
-                allNotes[allNoteIdx].timeMs = note->duration;
+                allNotes[allNoteIdx].timeMs = (params.tempo * note->duration) / (1000 * midiParser->ticks);
                 allNoteIdx++;
 
                 /* If there is a note after this one */
@@ -245,10 +269,14 @@ void process_midi(const char* infile, const char* outdir)
                         /* If it does, add a rest to the output between notes */
                         allNotes[allNoteIdx].note = SILENCE;
                         allNotes[allNoteIdx].timeMs
-                            = nextNote->timeBeforeAppear - (note->timeBeforeAppear + note->duration);
+                            = (params.tempo * (nextNote->timeBeforeAppear - (note->timeBeforeAppear + note->duration)))
+                              / (1000 * midiParser->ticks);
                         allNoteIdx++;
                     }
                 }
+
+                // Save this for the next loop
+                lastNoteStart = note->timeBeforeAppear;
             }
 
             /* Break to not process further tracks */
@@ -287,5 +315,90 @@ void process_midi(const char* infile, const char* outdir)
         /* Cleanup */
         free(allNotes);
         free(uncompressedSong);
+    }
+}
+
+/**
+ * @brief Check for midi events to process in between notes, after the last one and before or equal to the current time
+ *
+ * @param midiParser The midi parser
+ * @param lastNoteStart The time the last note was played
+ * @param thisNoteStart The time the current note was played
+ * @param params The parameters to write to
+ */
+static void checkMidiEvents(MidiParser* midiParser, unsigned long int lastNoteStart, unsigned long int thisNoteStart,
+                            midiParams_t* params)
+{
+    /* For each track */
+    for (int trackIdx = 0; trackIdx < midiParser->nbOfTracks; trackIdx++)
+    {
+        Track* track = &(midiParser->tracks[trackIdx]);
+        /* For each event */
+        for (int evtIdx = 0; evtIdx < track->nbOfEvents; evtIdx++)
+        {
+            Event* evt = &track->events[evtIdx];
+            // printf("%5d: %s\n", evt->timeToAppear, evt->type);
+
+            // If this event occurs between the notes we're at, process it
+            if ((0 == lastNoteStart && 0 == thisNoteStart && 0 == evt->timeToAppear)
+                || (lastNoteStart < evt->timeToAppear && evt->timeToAppear <= thisNoteStart))
+            {
+                switch (evt->type)
+                {
+                    case MidiNewTimeSignature:
+                    {
+                        // printf(
+                        // "        Tempo infos: time signature %i/%i 1/4 note is %i ticks %i\n",
+                        //     ,
+                        //     ((unsigned char *)evt->infos)[1],
+                        //     ((unsigned char *)evt->infos)[2],
+                        //     ((unsigned char *)evt->infos)[3]
+                        // );
+                        params->timeSigNumerator          = ((unsigned char*)evt->infos)[0];
+                        params->timeSigDenominator        = ((unsigned char*)evt->infos)[1];
+                        params->timeSigClocksPerClick     = ((unsigned char*)evt->infos)[2];
+                        params->timeSig32ndNotePerQuarter = ((unsigned char*)evt->infos)[3];
+                        break;
+                    }
+                    case MidiNewKeySignature:
+                    {
+                        // printf(
+                        // 	"        Key signature %i %i\n",
+                        // 	((char *)evt->infos)[0],
+                        // 	((char *)evt->infos)[1]
+                        // );
+                        params->majorKey = ((char*)evt->infos)[0];
+                        params->minorKey = ((char*)evt->infos)[1];
+                        break;
+                    }
+                    case MidiTempoChanged:
+                    {
+                        // printf("        Tempo changed: %i\n", *(int *)evt->infos);
+                        params->tempo = *(int*)evt->infos;
+                        break;
+                    }
+                    case MidiTextEvent:
+                    case MidiSequenceNumber:
+                    case MidiNewLyric:
+                    case MidiNewMarker:
+                    case MidiNewCuePoint:
+                    case MidiNewChannelPrefix:
+                    case MidiPortChange:
+                    case MidiSMTPEOffset:
+                    case MidiSequencerSpecificEvent:
+                    case MidiNoteReleased:
+                    case MidiNotePressed:
+                    case MidiPolyphonicPressure:
+                    case MidiControllerValueChanged:
+                    case MidiProgramChanged:
+                    case MidiPressureOfChannelChanged:
+                    case MidiPitchBendChanged:
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+        // printf("---\n");
     }
 }

@@ -150,7 +150,7 @@ void app_main(void)
     }
 
     // Init buzzer
-    initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, false, false);
+    initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
