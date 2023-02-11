@@ -9,6 +9,7 @@
 #include "spiffs_txt.h"
 #include "spiffs_font.h"
 #include "spiffs_wsg.h"
+#include "spiffs_sng.h"
 
 bool initSpiffs(void);
 bool deinitSpiffs(void);

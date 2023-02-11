@@ -27,6 +27,7 @@ typedef struct
 {
     font_t ibm;
     wsg_t king_donut;
+    song_t ode_to_joy;
 } demoVars_t;
 
 demoVars_t* dv;
@@ -40,23 +41,9 @@ static void demoEnterMode(void)
     dv = calloc(1, sizeof(demoVars_t));
     loadFont("ibm_vga8.font", &dv->ibm);
     loadWsgSpiRam("kid0.wsg", &dv->king_donut, true);
+    loadSngSpiRam("ode.sng", &dv->ode_to_joy, true);
 
-    // static const song_t BlackDog = {
-    //     .numNotes      = 28,
-    //     .shouldLoop    = false,
-    //     .loopStartNote = 0,
-    //     .notes = {{.note = E_5, .timeMs = 188}, {.note = G_5, .timeMs = 188},    {.note = G_SHARP_5, .timeMs = 188},
-    //               {.note = A_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_6, .timeMs = 375},
-    //               {.note = A_5, .timeMs = 375}, {.note = D_6, .timeMs = 188},    {.note = E_6, .timeMs = 188},
-    //               {.note = C_6, .timeMs = 94},  {.note = D_6, .timeMs = 94},     {.note = C_6, .timeMs = 188},
-    //               {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
-    //               {.note = C_6, .timeMs = 375}, {.note = A_5, .timeMs = 375},    {.note = G_5, .timeMs = 188},
-    //               {.note = A_5, .timeMs = 183}, {.note = SILENCE, .timeMs = 10}, {.note = A_5, .timeMs = 183},
-    //               {.note = D_5, .timeMs = 188}, {.note = E_5, .timeMs = 188},    {.note = C_5, .timeMs = 188},
-    //               {.note = D_5, .timeMs = 188}, {.note = A_4, .timeMs = 370},    {.note = SILENCE, .timeMs = 10},
-    //               {.note = A_4, .timeMs = 745}},
-    // };
-    // bzrPlayBgm(&BlackDog);
+    bzrPlayBgm(&dv->ode_to_joy);
 }
 
 /**
@@ -66,6 +53,7 @@ static void demoExitMode(void)
 {
     freeWsg(&dv->king_donut);
     freeFont(&dv->ibm);
+    freeSng(&dv->ode_to_joy);
     free(dv);
 }
 
@@ -120,10 +108,26 @@ static void demoMainLoop(int64_t elapsedUs)
             }
         }
     }
-    drawText(&dv->ibm, c555, "Hello world", 64, 64);
+
     drawLine(92, 92, 200, 200, c500, 0, 0, 0, 1, 1);
     speedyLine(102, 92, 210, 200, c050);
     drawWsg(&dv->king_donut, 100, 10, false, false, 0);
+
+    int yIdx         = 64;
+    char dbgTxt[256] = {0};
+    sprintf(dbgTxt, "nNotes = %" PRIu32, dv->ode_to_joy.numNotes);
+    drawText(&dv->ibm, c555, dbgTxt, 0, yIdx);
+    yIdx += (dv->ibm.h + 2);
+
+    int noteIdx = 0;
+    while (yIdx < TFT_HEIGHT)
+    {
+        sprintf(dbgTxt, "f: %5d, t: %5" PRIu32, dv->ode_to_joy.notes[noteIdx].note,
+                dv->ode_to_joy.notes[noteIdx].timeMs);
+        drawText(&dv->ibm, c555, dbgTxt, 0, yIdx);
+        yIdx += (dv->ibm.h + 2);
+        noteIdx++;
+    }
 
     // Read the temperature
     printf("%f\n", readTemperatureSensor());

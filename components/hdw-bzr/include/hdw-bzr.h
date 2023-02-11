@@ -161,7 +161,7 @@ typedef struct
     /// @brief The note index to restart at, if looping
     uint32_t loopStartNote;
     /// @brief An array of notes in the song
-    musicalNote_t notes[];
+    musicalNote_t* notes;
 } song_t;
 
 void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel, bool isBgmMuted,
