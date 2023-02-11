@@ -34,7 +34,7 @@
  * \section bzr_example Example
  *
  * \code{.c}
- * #include "hdw-bzr.c"
+ * #include "hdw-bzr.h"
  *
  * static const song_t BlackDog =
  * {

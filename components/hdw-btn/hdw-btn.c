@@ -61,7 +61,7 @@
  * \section btn_example Example
  *
  * \code{.c}
- * #include "hdw-btn.c"
+ * #include "hdw-btn.h"
  *
  * // Check all queued button events
  * buttonEvt_t evt;

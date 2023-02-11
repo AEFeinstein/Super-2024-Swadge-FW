@@ -34,7 +34,7 @@
  *
  * Setting pixels:
  * \code{.c}
- * #include "hdw-tft.c"
+ * #include "hdw-tft.h"
  *
  * // Clear the display
  * clearPxTft();
@@ -62,7 +62,7 @@
  *
  * Setting the backlight:
  * \code{.c}
- * #include "hdw-tft.c"
+ * #include "hdw-tft.h"
  *
  * // Disable the backlight
  * disableTFTBacklight();

@@ -2,30 +2,42 @@
  *
  * \section mic_design Design Philosophy
  *
- * Microphone code is based on <a
+ * The microphone uses the <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/peripherals/adc_continuous.html">Analog
+ * to Digital Converter (ADC) Continuous Mode Driver</a>.
+ *
+ * The microphone code is based on the <a
  * href="https://github.com/espressif/esp-idf/tree/release/v5.0/examples/peripherals/adc/continuous_read">ADC DMA
  * Example</a>.
  *
- * The microphone is continuously sampled at 8KHz
+ * The microphone is continuously sampled at 8KHz.
  *
  * \section mic_usage Usage
  *
- * TODO doxygen usage
+ * You don't need to call initMic() or deinitMic(). The system does at the appropriate times.
+ *
+ * The system will also automatically call startMic(), though the Swadge Mode can later call stopMic() or startMic()
+when the microphone needs to be used.
+ * Stopping the microphone when not in use can save some processing cycles.
+ *
+ * loopMic()
  *
  * \section mic_example Example
  *
  * \code{.c}
- * #include "hdw-mic.c"
+ * #include "hdw-mic.h"
  *
- * TODO doxygen example
+ * void initMic(gpio_num_t gpio);
+ * void startMic(void);
+ * uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax);
+ * void stopMic(void);
+ * void deinitMic(void);
  * \endcode
  */
 
 //==============================================================================
 // Includes
 //==============================================================================
-
-#include <esp_adc/adc_continuous.h>
 
 #include "hdw-mic.h"
 
