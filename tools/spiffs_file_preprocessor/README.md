@@ -43,3 +43,7 @@ TODO detail .wsg format
 ### `.txt`
 
 No processing is done on `.txt` files. They are copied from the input directory to the output directory,
+
+### `.mid`, `.midi`
+
+The notes on the first track from the MIDI file are converted to buzzer format (frequency, duration), and compressed with Heatshrink compression. The buzzer is single channel, single voice, so if a note starts while another is playing, the first note is stopped.
