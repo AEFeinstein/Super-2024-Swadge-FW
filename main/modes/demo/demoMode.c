@@ -5,9 +5,13 @@ static void demoExitMode(void);
 static void demoMainLoop(int64_t elapsedUs);
 static void demoAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void demoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void demoEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi);
+static void demoEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
 static void demoEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static int16_t demoAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
+
+static void demoConCb(p2pInfo* p2p, connectionEvt_t evt);
+static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
+static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
 swadgeMode_t demoMode = {
     .modeName                 = "Demo",
@@ -28,6 +32,7 @@ typedef struct
     font_t ibm;
     wsg_t king_donut;
     song_t ode_to_joy;
+    p2pInfo p2p;
 } demoVars_t;
 
 demoVars_t* dv;
@@ -44,6 +49,12 @@ static void demoEnterMode(void)
     loadSngSpiRam("ode.sng", &dv->ode_to_joy, true);
 
     bzrPlayBgm(&dv->ode_to_joy);
+
+    p2pInitialize(&dv->p2p, 'd', demoConCb, demoMsgRxCb, -70);
+    p2pStartConnection(&dv->p2p);
+
+    // const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+    // p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
 }
 
 /**
@@ -185,9 +196,9 @@ static void demoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
  * @param len      The length of the data received
  * @param rssi     The RSSI for this packet, from 1 (weak) to ~90 (touching)
  */
-static void demoEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi)
+static void demoEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi)
 {
-    ;
+    p2pRecvCb(&dv->p2p, mac_addr, data, len, rssi);
 }
 
 /**
@@ -200,7 +211,7 @@ static void demoEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t 
  */
 static void demoEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
-    ;
+    p2pSendCb(&dv->p2p, mac_addr, status);
 }
 
 /**
@@ -216,4 +227,40 @@ static void demoEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t stat
 static int16_t demoAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
 {
     return 0;
+}
+
+/**
+ * @brief This callback delivers connection statuses to the Swadge mode
+ *
+ * @param p2p The p2pInfo
+ * @param evt The connection event
+ */
+static void demoConCb(p2pInfo* p2p, connectionEvt_t evt)
+{
+    // Do something
+}
+
+/**
+ * @brief This callback delivers received p2p packets to the Swadge mode
+ *
+ * @param p2p The p2pInfo
+ * @param payload The data that was received
+ * @param len The length of the data that was received
+ */
+static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
+{
+    // Do something
+}
+
+/**
+ * @brief This callback delivers acknowledge status for transmitted messages to the Swadge mode
+ *
+ * @param p2p The p2pInfo
+ * @param status The status of the transmission
+ * @param data The data that was transmitted
+ * @param len The length of the data that was transmitted
+ */
+static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
+{
+    // Do something
 }

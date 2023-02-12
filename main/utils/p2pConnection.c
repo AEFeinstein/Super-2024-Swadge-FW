@@ -1,60 +1,3 @@
-// clang-format off
-
-/*! \file p2pConnection.c
- *
- * \section p2p_design Design Philosophy
- *
- * TODO doxygen
- *
- * @startuml
- * == Connection ==
- * 
- * group Part 1
- * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x00 {P2P_MSG_CONNECT}]"
- * "Swadge_12:12:12:12:12:12" ->  "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x01 {P2P_MSG_START}, 0x00 {seqNum}, (0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB)]"
- * note left: Stop Broadcasting, set p2p->cnc.rxGameStartMsg
- * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x02 {P2P_MSG_ACK}, 0x00 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12)]
- * note right: set p2p->cnc.rxGameStartAck
- * end
- * 
- * group Part 2
- * "Swadge_12:12:12:12:12:12" ->  "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x00 {P2P_MSG_CONNECT}]"
- * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x01 {P2P_MSG_START}, 0x01 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12)]"
- * note right: Stop Broadcasting, set p2p->cnc.rxGameStartMsg, become CLIENT
- * "Swadge_12:12:12:12:12:12" ->  "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x02 {P2P_MSG_ACK}, 0x01 {seqNum}, (0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB)]
- * note left: set p2p->cnc.rxGameStartAck, become SERVER
- * end
- * @enduml
- * TODO
- * @startuml
- * == Unreliable Communication Example ==
- * 
- * group Retries & Sequence Numbers
- * "Swadge_AB:AB:AB:AB:AB:AB" ->x "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x03 {P2P_MSG_DATA}, 0x04 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12), 'd', 'a', 't', 'a']
- * note right: msg not received
- * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x03 {P2P_MSG_DATA}, 0x04 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12), 'd', 'a', 't', 'a']
- * note left: first retry, up to five retries
- * "Swadge_12:12:12:12:12:12" ->x "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x02 {P2P_MSG_ACK}, 0x04 {seqNum}, (0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB)]
- * note left: ack not received
- * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x03 {P2P_MSG_DATA}, 0x04 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12), 'd', 'a', 't', 'a']
- * note left: second retry
- * note right: duplicate seq num, ignore message
- * "Swadge_12:12:12:12:12:12" ->  "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x02 {P2P_MSG_ACK}, 0x05 {seqNum}, (0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB)]
- * end
- * @enduml
- *
- * \section p2p_usage Usage
- *
- * TODO doxygen
- *
- * \section p2p_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-// clang-format on
-
 //==============================================================================
 // Includes
 //==============================================================================
@@ -208,6 +151,7 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
 /**
  * @brief Set the p2p connection protocol to listen for a different mode ID from its own
  *
+ * @param p2p The p2pInfo struct with all the state information
  * @param incomingModeId The unique mode ID used by the other end of this connection
  */
 void p2pSetAsymmetric(p2pInfo* p2p, uint8_t incomingModeId)
@@ -369,6 +313,8 @@ void p2pSendMsg(p2pInfo* p2p, const uint8_t* payload, uint16_t len, p2pMsgTxCbFn
  * the connection process, is ACKed
  *
  * @param p2p The p2pInfo struct with all the state information
+ * @param data The data that was acknowledged
+ * @param dataLen The length of the data
  */
 static void p2pModeMsgSuccess(p2pInfo* p2p, const uint8_t* data, uint8_t dataLen)
 {
@@ -470,8 +416,6 @@ static void p2pSendMsgEx(p2pInfo* p2p, uint8_t* msg, uint16_t len, bool shouldAc
  * @param data     The data
  * @param len      The length of the data
  * @param rssi     The rssi of the received data
- * @return false if the message was processed here,
- *         true if the message should be processed by the swadge mode
  */
 void p2pRecvCb(p2pInfo* p2p, const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi)
 {
@@ -714,6 +658,8 @@ static void p2pSendAckToMac(p2pInfo* p2p, const uint8_t* mac_addr)
  * This is called when p2p->startMsg is acked and processes the connection event
  *
  * @param p2p The p2pInfo struct with all the state information
+ * @param data The start message which was acked
+ * @param dataLen The length of the start message which was acked
  */
 static void p2pGameStartAckRecv(p2pInfo* p2p, const uint8_t* data, uint8_t dataLen)
 {
@@ -913,7 +859,7 @@ void p2pSendCb(p2pInfo* p2p, const uint8_t* mac_addr __attribute__((unused)), es
  * player 1 or player 2. This can be used to determine client/server roles
  *
  * @param p2p The p2pInfo struct with all the state information
- * @return    GOING_SECOND, GOING_FIRST, or NOT_SET
+ * @return    ::GOING_SECOND, ::GOING_FIRST, or ::NOT_SET
  */
 playOrder_t p2pGetPlayOrder(p2pInfo* p2p)
 {
@@ -932,6 +878,7 @@ playOrder_t p2pGetPlayOrder(p2pInfo* p2p)
  * do this, but you might want to for single player modes
  *
  * @param p2p The p2pInfo struct with all the state information
+ * @param order The order to set
  */
 void p2pSetPlayOrder(p2pInfo* p2p, playOrder_t order)
 {

@@ -1,3 +1,80 @@
+/*! \file hdw-tft.h
+ *
+ * \section tft_design Design Philosophy
+ *
+ * TFT code is based on <a
+ * href="https://github.com/espressif/esp-idf/tree/release/v5.0/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
+ * example</a>.
+ *
+ * Each pixel in the framebuffer is of type ::paletteColor_t.
+ * Even though the TFT supports 16 bit color, a 16 bit framebuffer is too big to have in RAM alongside games and such.
+ * Instead, the 8 bit <a href="https://www.rapidtables.com/web/color/Web_Safe.html">Web Safe palette</a> is used, where
+ * each RGB channel has six options for a total of 216 colors. The ::paletteColor_t enum has values for all colors in
+ * the form of cRGB, where R, G, and B each range from 0 to 5. For example, ::c500 is full red.
+ * ::cTransparent is a special value for a transparent pixel.
+ *
+ * \section tft_usage Usage
+ *
+ * You don't need to call initTFT(). The system does so at the appropriate time.
+ * You don't need to call drawDisplayTft() as it is called automatically after each main loop to draw the current
+ * framebuffer to the TFT.
+ *
+ * clearPxTft() is used to clear the current framebuffer.
+ * This must be called before drawing a new frame, unless you want to draw over the prior one.
+ *
+ * setPxTft() and getPxTft() are used to set and get individual pixels in the framebuffer, respectively.
+ * These are not often used directly as there are helper functions to draw text, shapes, and sprites.
+ *
+ * disableTFTBacklight() and enableTFTBacklight() may be called to disable and enable the backlight, respectively.
+ * This may be useful if the Swadge Mode is trying to save power, or the TFT is not necessary.
+ * setTFTBacklightBrightness() is used to set the TFT's brightness. This is usually handled globally by a persistent
+ * setting.
+ *
+ * \section tft_example Example
+ *
+ * Setting pixels:
+ * \code{.c}
+ * #include "hdw-tft.h"
+ *
+ * // Clear the display
+ * clearPxTft();
+ *
+ * // Draw red, green, and blue vertical bars
+ * for(uint16_t y = 0; y < TFT_HEIGHT; y++)
+ * {
+ *     for(uint16_t x = 0; x < TFT_WIDTH; x++)
+ *     {
+ *         if(x < TFT_WIDTH / 3)
+ *         {
+ *             setPxTft(x, y, c500);
+ *         }
+ *         else if (x < (2 * TFT_WIDTH) / 3)
+ *         {
+ *             setPxTft(x, y, c050);
+ *         }
+ *         else
+ *         {
+ *             setPxTft(x, y, c005);
+ *         }
+ *     }
+ * }
+ * \endcode
+ *
+ * Setting the backlight:
+ * \code{.c}
+ * #include "hdw-tft.h"
+ *
+ * // Disable the backlight
+ * disableTFTBacklight();
+ *
+ * // Enable the backlight
+ * enableTFTBacklight();
+ *
+ * // Set the backlight to half brightness
+ * setTFTBacklightBrightness(128);
+ * \endcode
+ */
+
 #ifndef _HDW_TFT_H_
 #define _HDW_TFT_H_
 
@@ -55,19 +132,31 @@ paletteColor_t* getPxTftFramebuffer(void);
 void clearPxTft(void);
 void drawDisplayTft(fnBackgroundDrawCallback_t cb);
 
-// A technique to turbo time set pixels (not yet in use)
+/**
+ * Initiaze a variable to set pixels faster than setPxTft()
+ */
 #define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)getPxTftFramebuffer();
 
-// 5/4 cycles -- note you can do better if you don't need arbitrary X/Y's.
+/**
+ * Set a single pixel in the display. This does not bounds check.
+ * SETUP_FOR_TURBO() must be called before this.
+ *
+ * 5/4 cycles -- note you can do better if you don't need arbitrary X/Y's.
+ */
 #define TURBO_SET_PIXEL(opxc, opy, colorVal)                                                                    \
     asm volatile("mul16u a4, %[width], %[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0"           \
                  :                                                                                              \
                  : [opx] "a"(opxc), [y] "a"(opy), [px] "a"(dispPx), [val] "a"(colorVal), [width] "a"(TFT_WIDTH) \
                  : "a4");
 
-// Very tricky:
-//   We do bgeui which checks to make sure 0 <= x < MAX
-//   Other than that, it's basically the same as above.
+/**
+ * Set a single pixel in the display. This does checks the TFT's bounds.
+ * SETUP_FOR_TURBO() must be called before this.
+ *
+ * Very tricky:
+ *   We do bgeui which checks to make sure 0 <= x < MAX
+ *   Other than that, it's basically the same as above.
+ */
 #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal)                                                                 \
     asm volatile("bgeu %[opx], %[width], failthrough%=\nbgeu %[y], %[height], failthrough%=\nmul16u a4, %[width], " \
                  "%[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0\nfailthrough%=:\n"                  \

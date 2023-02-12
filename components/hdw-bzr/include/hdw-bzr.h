@@ -1,3 +1,62 @@
+/*! \file hdw-bzr.h
+ *
+ * \section bzr_design Design Philosophy
+ *
+ * The buzzer is driven by the <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/ledc.html">LEDC
+ * periphral</a>. This is usually used to generate a PWM signal to control the intensity of an LED, but here it
+ * generates frequencies for the buzzer.
+ *
+ * A hardware timer is started which calls an interrupt every 5ms to check if the song should play the next note.
+ *
+ * This component manages two tracks, background music (bgm) and sound effects (sfx).
+ * When bgm is playing, it may be interrupted by sfx.
+ * If bgm and sfx are playing at the same time, both will progress through their respective notes, but only sfx will be
+ * heard. This way, bgm keeps accurate time even with sfx.
+ *
+ * \section bzr_usage Usage
+ *
+ * You don't need to call initBuzzer(). The system does at the appropriate time.
+ *
+ * A ::musicalNote_t is a ::noteFrequency_t and a duration.
+ * A ::song_t is a list of ::musicalNote_t that may be looped.
+ *
+ * The individual tracks may be muted with bzrSetBgmIsMuted() and bzrGetBgmIsMuted().
+ *
+ * A song can be played on a given track with either bzrPlayBgm() or bzrPlaySfx().
+ * All tracks can be stopped at the same time with bzrStop().
+ *
+ * An individual note can be played with bzrPlayNote() or stopped with bzrStopNote().
+ * This note is not on a specific track. It is useful for instrument modes, not for songs.
+ *
+ * MIDI files that are placed in the ./assets/ folder will be automatically converted to SNG files and loaded into the
+ * SPIFFS filesystem. SNG files are lists of notes with durations and are compressed with Heatshrink compression. These
+ * files can be loaded with loadSng() and must be freed wtih freeSng() when done.
+ *
+ * \section bzr_example Example
+ *
+ * \code{.c}
+ * #include "hdw-bzr.h"
+ *
+ * ...
+ *
+ * // Load a song
+ * song_t ode_to_joy;
+ * loadSng("ode.sgn", &ode_to_joy);
+ *
+ * // Set the song to loop
+ * ode_to_joy.shouldLoop = true;
+ *
+ * // Play the song as background music
+ * bzrPlayBgm(&ode_to_joy);
+ *
+ * ...
+ *
+ * // Free the song when done
+ * freeSng(&ode_to_joy);
+ * \endcode
+ */
+
 #ifndef _BUZZER_H_
 #define _BUZZER_H_
 
@@ -146,21 +205,21 @@ typedef enum
 
 typedef struct
 {
-    /// @brief Note frequency, in Hz
+    /// Note frequency, in Hz
     noteFrequency_t note;
-    /// @brief Note duration, in ms
+    /// Note duration, in ms
     uint32_t timeMs;
 } musicalNote_t;
 
 typedef struct
 {
-    /// @brief true if the song should loop, false if it should play once
+    /// true if the song should loop, false if it should play once
     uint32_t shouldLoop;
-    /// @brief The number of notes in this song
+    /// The number of notes in this song
     uint32_t numNotes;
-    /// @brief The note index to restart at, if looping
+    /// The note index to restart at, if looping
     uint32_t loopStartNote;
-    /// @brief An array of notes in the song
+    /// An array of notes in the song
     musicalNote_t* notes;
 } song_t;
 

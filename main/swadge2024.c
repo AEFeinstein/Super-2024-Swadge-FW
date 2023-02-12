@@ -30,21 +30,27 @@
  *
  * \section hw_api Hardware APIs
  *
- * Physical things you interact with
+ * Physical things you interact with!
  *
- * - hdw-btn.c: Learn how to use both push and touch button input!
- * - hdw-tft.c: Learn how to use the TFT!
- * - hdw-bzr.c: Learn how to use the buzzer!
- * - hdw-accel.c: Learn how to use the accelerometer!
- * - hdw-led.c: Learn how to use the LEDs!
- * - hdw-mic.c: Learn how to use the microphone!
- * - hdw-temperature.c: Learn how to use the temperature sensor!
+ * - hdw-btn.h: Learn how to use both push and touch button input!
+ * - hdw-tft.h: Learn how to use the TFT!
+ * - hdw-bzr.h: Learn how to use the buzzer!
+ * - hdw-accel.h: Learn how to use the accelerometer!
+ * - hdw-led.h: Learn how to use the LEDs!
+ * - hdw-mic.h: Learn how to use the microphone!
+ * - hdw-temperature.h: Learn how to use the temperature sensor!
  * - hdw-usb.c: Learn how to be a USB HID Gamepad!
- * - hdw-esp-now.c, p2pconnection.c: Learn how to communicate with other Swadges!
  *
- * \section sw_api Software APIs
+ * \section nwk_api Network APIs
  *
- * Digital things you interact with
+ * Make Swadges talk!
+ *
+ * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
+ * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
+ *
+ * \section sw_api Persistent Memory APIs
+ *
+ * Manipulate data in persistent memory!
  *
  * - hdw-spiffs.c: Learn how to load and use assets from the SPIFFS partition!
  * - hdw-nvs.c: Learn how to save and load persistent runtime data!
@@ -53,6 +59,7 @@
  *
  * Be an artist!
  *
+ * - color_utils.h: Learn about colors!
  * - font.c: Learn how to draw text to the screen!
  * - bresenham.c: Learn how to draw shapes to the screen!
  * - cndraw.c: Learn how to draw differenter shapes to the screen!
@@ -62,7 +69,6 @@
  *
  * Maybe I should organize these better
  *
- * - color_utils.c: Do stuff with color, both LED and TFT
  * - linked_list.c: A basic data structure
  */
 
@@ -101,7 +107,7 @@ swadgeMode_t* cSwadgeMode;
 /// 25 FPS by default
 static uint32_t frameRateUs = 40000;
 
-static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi);
+static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
 /**
@@ -272,7 +278,7 @@ void app_main(void)
  * @param len
  * @param rssi
  */
-static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi)
+static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi)
 {
     if (NULL != cSwadgeMode->fnEspNowRecvCb)
     {

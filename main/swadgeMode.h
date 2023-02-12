@@ -119,7 +119,7 @@ typedef struct
      * @param len      The length of the data received
      * @param rssi     The RSSI for this packet, from 1 (weak) to ~90 (touching)
      */
-    void (*fnEspNowRecvCb)(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi);
+    void (*fnEspNowRecvCb)(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
 
     /**
      * This function is called whenever an ESP-NOW packet is sent.

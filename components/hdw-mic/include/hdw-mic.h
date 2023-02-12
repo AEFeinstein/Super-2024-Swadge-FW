@@ -1,3 +1,60 @@
+/*! \file hdw-mic.h
+ *
+ * \section mic_design Design Philosophy
+ *
+ * The microphone uses the <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/peripherals/adc_continuous.html">Analog
+ * to Digital Converter (ADC) Continuous Mode Driver</a>.
+ *
+ * The microphone code is based on the <a
+ * href="https://github.com/espressif/esp-idf/tree/release/v5.0/examples/peripherals/adc/continuous_read">ADC DMA
+ * Example</a>.
+ *
+ * The microphone is continuously sampled at 8KHz.
+ *
+ * \section mic_usage Usage
+ *
+ * You don't need to call initMic() or deinitMic(). The system does at the appropriate times.
+ *
+ * The system will also automatically call startMic(), though the Swadge Mode can later call stopMic() or startMic()
+ * when the microphone needs to be used. Stopping the microphone when not in use can save some processing cycles.
+ *
+ * loopMic() is called automatically by the system while the microphone is started and samples are delivered to the
+ * Swadge mode through a callback, ::swadgeMode_t.fnAudioCallback. The Swadge mode can do what it wants with the samples
+ * from there.
+ *
+ * If ::swadgeMode_t.fnAudioCallback is left NULL, then the microphone will not be initialized or sampled.
+ *
+ * \section mic_example Example
+ *
+ * \code{.c}
+ * #include "hdw-mic.h"
+ *
+ * static void demoAudioCallback(uint16_t* samples, uint32_t sampleCnt);
+ *
+ * swadgeMode_t demoMode = {
+ *     ...
+ *     .fnAudioCallback = demoAudioCallback,
+ *     ...
+ * };
+ *
+ * ...
+ *
+ * // Start the mic
+ * startMic();
+ *
+ * // Stop the mic
+ * stopMic();
+ *
+ * ...
+ *
+ * static void demoAudioCallback(uint16_t* samples, uint32_t sampleCnt)
+ * {
+ *     ; // Do something with the audio samples, when the mic is started
+ * }
+ * \endcode
+ */
+
 #ifndef _HDW_MIC_H_
 #define _HDW_MIC_H_
 
@@ -14,6 +71,7 @@
 // Defines
 //==============================================================================
 
+/// The maximum number of bytes read by the ADC in one go
 #define ADC_READ_LEN 512
 
 //==============================================================================

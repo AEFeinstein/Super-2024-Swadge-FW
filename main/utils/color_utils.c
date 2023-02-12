@@ -1,20 +1,3 @@
-/*! \file color_utils.c
- *
- * \section color_utils_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section color_utils_usage Usage
- *
- * TODO doxygen
- *
- * \section color_utils_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================
@@ -143,7 +126,7 @@ uint32_t EHSVtoHEXhelper(uint8_t hue, uint8_t sat, uint8_t val, bool applyGamma)
  * @param applyGamma Whether or not to apply gamma to the output
  * @return An led_t set to the RGB color
  */
-led_t SafeEHSVtoHEXhelper(uint8_t hue, uint8_t sat, uint8_t val, bool applyGamma)
+led_t LedEHSVtoHEXhelper(uint8_t hue, uint8_t sat, uint8_t val, bool applyGamma)
 {
     uint32_t r = EHSVtoHEXhelper((uint8_t)hue, sat, val, applyGamma);
     led_t ret;
