@@ -1,20 +1,3 @@
-/*! \file hdw-nvs.c
- *
- * \section nvs_design Design Philosophy
- *
- * TODO doxy
- *
- * \section nvs_usage Usage
- *
- * TODO doxy
- *
- * \section nvs_example Example
- *
- * \code{.c}
- * TODO doxy
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================

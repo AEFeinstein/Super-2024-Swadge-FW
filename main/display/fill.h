@@ -1,3 +1,20 @@
+/*! \file fill.h
+ *
+ * \section fill_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section fill_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section fill_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _FILL_H_
 #define _FILL_H_
 

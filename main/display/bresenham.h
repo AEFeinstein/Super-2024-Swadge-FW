@@ -1,8 +1,23 @@
-/*
- * bresenham.h
+/*! \file bresenham.h
+ * \author Zingl Alois
+ * \date 22.08.2016
+ * \version 1.2
  *
- *  Created on: Mar 3, 2019
- *      Author: Adam Feinstein
+ * \section bresenham_design Design Philosophy
+ *
+ * TODO doxygen
+ * This is based on <a href="https://github.com/zingl/Bresenham/blob/master/bresenham.c">Zingl Alois's bresenham.c</a>.
+ * More explanation can be found <a href="https://zingl.github.io/bresenham.html">on their webpage</a>.
+ *
+ * \section bresenham_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section bresenham_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
  */
 
 #ifndef SRC_BRESENHAM_H_

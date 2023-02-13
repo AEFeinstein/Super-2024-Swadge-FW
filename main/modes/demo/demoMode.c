@@ -55,6 +55,17 @@ static void demoEnterMode(void)
 
     // const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
     // p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+
+    const char demoKey[]     = "demo_high_score";
+    int32_t highScoreToWrite = 99999;
+    if (true == writeNvs32(demoKey, highScoreToWrite))
+    {
+        int32_t highScoreToRead;
+        if (true == readNvs32(demoKey, &highScoreToRead))
+        {
+            printf("High score in NVS is %ld\n", highScoreToRead);
+        }
+    }
 }
 
 /**

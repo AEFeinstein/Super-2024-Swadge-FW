@@ -1,22 +1,3 @@
-/*! \file linked_list.c
- * \date Sept 12, 2019
- * \author Jonathan Moriarty
- *
- * \section linked_list_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section linked_list_usage Usage
- *
- * TODO doxygen
- *
- * \section linked_list_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================

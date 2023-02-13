@@ -1,3 +1,20 @@
+/*! \file wsg.h
+ *
+ * \section wsg_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section wsg_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section wsg_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _WSG_H_
 #define _WSG_H_
 

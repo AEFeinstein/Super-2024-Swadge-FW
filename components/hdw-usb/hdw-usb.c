@@ -1,20 +1,3 @@
-/*! \file hdw-usb.c
- *
- * \section usb_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section usb_usage Usage
- *
- * TODO doxygen
- *
- * \section usb_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================

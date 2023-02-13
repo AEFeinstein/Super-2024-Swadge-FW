@@ -1,20 +1,3 @@
-/*! \file hdw-spiffs.c
- *
- * \section spiffs_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section spiffs_usage Usage
- *
- * TODO doxygen
- *
- * \section spiffs_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================

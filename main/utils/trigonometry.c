@@ -1,20 +1,3 @@
-/*! \file trigonometry.c
- *
- * \section trigonometry_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section trigonometry_usage Usage
- *
- * TODO doxygen
- *
- * \section trigonometry_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================

@@ -1,20 +1,3 @@
-/*! \file fill.c
- *
- * \section fill_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section fill_usage Usage
- *
- * TODO doxygen
- *
- * \section fill_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================

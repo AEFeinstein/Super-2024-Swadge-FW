@@ -1,3 +1,20 @@
+/*! \file trigonometry.h
+ *
+ * \section trigonometry_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section trigonometry_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section trigonometry_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _TRIGONOMETRY_H_
 #define _TRIGONOMETRY_H_
 

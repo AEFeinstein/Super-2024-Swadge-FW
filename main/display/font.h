@@ -1,3 +1,20 @@
+/*! \file font.h
+ *
+ * \section font_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section font_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section font_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _FONT_H_
 #define _FONT_H_
 

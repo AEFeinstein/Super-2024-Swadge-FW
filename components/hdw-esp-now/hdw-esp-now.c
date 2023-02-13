@@ -93,7 +93,7 @@ static uint32_t uartNum;
 static wifiMode_t mode;
 
 /// A ringbuffer for esp-now serial communication
-static char ringBuf[ESP_NOW_SERIAL_RINGBUF_SIZE];
+static uint8_t ringBuf[ESP_NOW_SERIAL_RINGBUF_SIZE];
 /// The index for the esp-now serial communication ringbuffer's head
 static int16_t rBufHead;
 /// The index for the esp-now serial communication ringbuffer's tail
@@ -379,7 +379,7 @@ static void espNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, int data_
 
     if (ESP_NOW_IMMEDIATE == mode)
     {
-        hostEspNowRecvCb(mac_addr, (const char*)data, data_len, pkt->rssi);
+        hostEspNowRecvCb(mac_addr, (const uint8_t*)data, data_len, pkt->rssi);
     }
     else
     {
@@ -431,7 +431,7 @@ void checkEspNowRxQueue(void)
         uint8_t rxMac[6];
         uint8_t rxMacIdx   = 0;
         uint8_t payloadLen = 0;
-        char payload[256];
+        uint8_t payload[256];
         uint8_t payloadIdx = 0;
 
         // Check the ringBuffer for framed packets
@@ -532,7 +532,7 @@ void checkEspNowRxQueue(void)
             //        packet.mac[5],
             //        dbg);
 
-            hostEspNowRecvCb(packet.mac, (const char*)(&packet.data), packet.len, packet.rssi);
+            hostEspNowRecvCb(packet.mac, packet.data, packet.len, packet.rssi);
         }
     }
 }

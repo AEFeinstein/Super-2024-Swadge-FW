@@ -1,8 +1,20 @@
-/*
- *   linked_list.h
+/*! \file linked_list.h
+ * \date Sept 12, 2019
+ * \author Jonathan Moriarty
  *
- *   Created on: Sept 12, 2019
- *       Author: Jonathan Moriarty
+ * \section linked_list_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section linked_list_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section linked_list_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
  */
 
 #ifndef _LINKED_LIST_H

@@ -1,3 +1,20 @@
+/*! \file hdw-spiffs.h
+ *
+ * \section spiffs_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section spiffs_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section spiffs_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _HDW_SPIFFS_H_
 #define _HDW_SPIFFS_H_
 

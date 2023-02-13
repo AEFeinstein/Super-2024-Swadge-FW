@@ -39,7 +39,7 @@
  * - hdw-led.h: Learn how to use the LEDs!
  * - hdw-mic.h: Learn how to use the microphone!
  * - hdw-temperature.h: Learn how to use the temperature sensor!
- * - hdw-usb.c: Learn how to be a USB HID Gamepad!
+ * - hdw-usb.h: Learn how to be a USB HID Gamepad!
  *
  * \section nwk_api Network APIs
  *
@@ -52,24 +52,26 @@
  *
  * Manipulate data in persistent memory!
  *
- * - hdw-spiffs.c: Learn how to load and use assets from the SPIFFS partition!
- * - hdw-nvs.c: Learn how to save and load persistent runtime data!
+ * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition!
+ * - hdw-nvs.h: Learn how to save and load persistent runtime data!
  *
  * \section gr_api Graphics APIs
  *
  * Be an artist!
  *
+ * - fill.h: Learn how to fill areas on the screen!
+ * - bresenham.h: Learn how to draw shapes on the screen!
+ * - cndraw.h: Learn how to draw differenter shapes on the screen!
+ * - wsg.h: Learn how to draw sprites on the creen!
+ * - font.h: Learn how to draw text on the screen!
  * - color_utils.h: Learn about colors!
- * - font.c: Learn how to draw text to the screen!
- * - bresenham.c: Learn how to draw shapes to the screen!
- * - cndraw.c: Learn how to draw differenter shapes to the screen!
- * - fill.c: Learn how to fill areas on the screen!
  *
  * \section oth_api Other Useful APIs
  *
  * Maybe I should organize these better
  *
- * - linked_list.c: A basic data structure
+ * - linked_list.h: A basic data structure
+ * - trigonometry.h: Fast math based on look up tables
  */
 
 #include <stdio.h>

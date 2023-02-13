@@ -1,22 +1,3 @@
-/*! \file cndraw.c
- * \authors adam, CNLohr
- * \date Sep 26, 2020
- *
- * \section cndraw_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section cndraw_usage Usage
- *
- * TODO doxygen
- *
- * \section cndraw_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 #include <stdio.h>
 
 #include "hdw-tft.h"

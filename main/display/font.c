@@ -1,20 +1,3 @@
-/*! \file font.c
- *
- * \section font_design Design Philosophy
- *
- * TODO doxygen
- *
- * \section font_usage Usage
- *
- * TODO doxygen
- *
- * \section font_example Example
- *
- * \code{.c}
- * TODO doxygen
- * \endcode
- */
-
 //==============================================================================
 // Includes
 //==============================================================================

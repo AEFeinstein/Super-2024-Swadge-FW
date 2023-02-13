@@ -1,8 +1,20 @@
-/*
- * cndraw.h
+/*! \file cndraw.h
+ * \authors adam, CNLohr
+ * \date Sep 26, 2020
  *
- *  Created on: Sep 26, 2020-2022
- *      Author: adam, CNLohr
+ * \section cndraw_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section cndraw_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section cndraw_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
  */
 
 #ifndef CNDRAW_H_
