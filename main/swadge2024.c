@@ -77,7 +77,13 @@
  *
  * - linked_list.h: A basic data structure
  * - trigonometry.h: Fast math based on look up tables
+ * - macros.h: Convenient macros
+ * - swadgeMode.h: Write a mode
  */
+
+//==============================================================================
+// Includes
+//==============================================================================
 
 #include <stdio.h>
 
@@ -106,23 +112,35 @@
 #include "swadgeMode.h"
 #include "demoMode.h"
 
-swadgeMode_t* modes[] = {
+//==============================================================================
+// Variables
+//==============================================================================
+
+static swadgeMode_t* modes[] = {
     &demoMode,
 };
-swadgeMode_t* cSwadgeMode;
+static swadgeMode_t* cSwadgeMode;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = 40000;
 
+//==============================================================================
+// Function declarations
+//==============================================================================
+
 static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
+//==============================================================================
+// Functions
+//==============================================================================
+
 /**
- * @brief TODO doxygen something
- *
+ * The main entry point for firmware. This initializes the system and runs the main loop
  */
 void app_main(void)
 {
+    // Set the Swadge mode pointer
     cSwadgeMode = modes[0];
 
     // Init timers
@@ -192,13 +210,19 @@ void app_main(void)
     }
 
     // Init accelerometer
-    qma7981_init(I2C_NUM_0,
-                 GPIO_NUM_3,  // SDA
-                 GPIO_NUM_41, // SCL
-                 GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
+    if (cSwadgeMode->usesAccelerometer)
+    {
+        qma7981_init(I2C_NUM_0,
+                     GPIO_NUM_3,  // SDA
+                     GPIO_NUM_41, // SCL
+                     GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
+    }
 
     // Init the temperature sensor
-    initTemperatureSensor();
+    if (cSwadgeMode->usesThermometer)
+    {
+        initTemperatureSensor();
+    }
 
     // Initialize the loop timer
     static int64_t tLastLoopUs = 0;
@@ -280,10 +304,10 @@ void app_main(void)
  * Callback from ESP NOW to the current Swadge mode whenever a packet is
  * received. It routes through user_main.c, which knows what the current mode is
  *
- * @param mac_addr
- * @param data
- * @param len
- * @param rssi
+ * @param mac_addr The MAC address of the sender
+ * @param data     The data which was received
+ * @param len      The length of the data which was received
+ * @param rssi     The RSSI for this packet, from 1 (weak) to ~90 (touching)
  */
 static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi)
 {
@@ -297,8 +321,8 @@ static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data,
  * Callback from ESP NOW to the current Swadge mode whenever a packet is sent
  * It routes through user_main.c, which knows what the current mode is
  *
- * @param mac_addr
- * @param status
+ * @param mac_addr The MAC address which was transmitted to
+ * @param status   The transmission status, either ESP_NOW_SEND_SUCCESS or ESP_NOW_SEND_FAIL
  */
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {

@@ -75,6 +75,18 @@ typedef struct
     bool overrideUsb;
 
     /**
+     * If this is false, the accelerometer will not be initialized and qma7981_get_accel() will not function
+     * If this is true, then the swadge will be initialized
+     */
+    bool usesAccelerometer;
+
+    /**
+     * If this is false, the thermometer will not be initialized and readTemperatureSensor() will not function
+     * If this is true, then the swadge will be initialized
+     */
+    bool usesThermometer;
+
+    /**
      * This function is called when this mode is started. It should initialize
      * variables and start the mode.
      */
