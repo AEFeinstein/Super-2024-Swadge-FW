@@ -21,7 +21,18 @@
 #include <stdint.h>
 
 #include "palette.h"
-#include "spiffs_font.h"
+
+typedef struct
+{
+    uint8_t w;
+    uint8_t* bitmap;
+} font_ch_t;
+
+typedef struct
+{
+    uint8_t h;
+    font_ch_t chars['~' - ' ' + 2]; // enough space for all printed ascii chars, and pi
+} font_t;
 
 void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff);
 int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int16_t xOff, int16_t yOff);

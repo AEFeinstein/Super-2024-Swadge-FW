@@ -1,4 +1,11 @@
 idf_component_register(SRCS "swadge2024.c"
+                            "asset_loaders/heatshrink_decoder.c"
+                            "asset_loaders/heatshrink_helper.c"
+                            "asset_loaders/spiffs_font.c"
+                            "asset_loaders/spiffs_json.c"
+                            "asset_loaders/spiffs_sng.c"
+                            "asset_loaders/spiffs_txt.c"
+                            "asset_loaders/spiffs_wsg.c"
                             "display/fill.c"
                             "display/font.c"
                             "display/bresenham.c"
@@ -23,9 +30,10 @@ idf_component_register(SRCS "swadge2024.c"
                     REQUIRES esp_timer
                              spi_flash
                     INCLUDE_DIRS "."
-                                 "./utils"
-                                 "./display"
-                                 "./modes/demo")
+                                "./asset_loaders"
+                                "./utils"
+                                "./display"
+                                "./modes/demo")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL

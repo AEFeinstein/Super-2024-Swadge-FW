@@ -20,7 +20,12 @@
 
 #include <stdint.h>
 
-#include "spiffs_wsg.h"
+typedef struct
+{
+    paletteColor_t* px;
+    uint16_t w;
+    uint16_t h;
+} wsg_t;
 
 void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, int16_t rotateDeg);
 

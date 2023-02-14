@@ -31,6 +31,13 @@
 #include "cndraw.h"
 #include "fill.h"
 
+// Asset loaders
+#include "spiffs_wsg.h"
+#include "spiffs_font.h"
+#include "spiffs_txt.h"
+#include "spiffs_json.h"
+#include "spiffs_sng.h"
+
 // Connection interface
 #include "p2pConnection.h"
 

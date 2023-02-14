@@ -8,7 +8,7 @@
 #include <esp_log.h>
 #include <esp_heap_caps.h>
 
-#include "heatshrink_decoder.h"
+#include "heatshrink_helper.h"
 #include "hdw-spiffs.h"
 #include "spiffs_wsg.h"
 
