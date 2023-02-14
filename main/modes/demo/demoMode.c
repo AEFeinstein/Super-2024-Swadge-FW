@@ -46,9 +46,9 @@ demoVars_t* dv;
 static void demoEnterMode(void)
 {
     dv = calloc(1, sizeof(demoVars_t));
-    loadFont("ibm_vga8.font", &dv->ibm);
-    loadWsgSpiRam("kid0.wsg", &dv->king_donut, true);
-    loadSngSpiRam("ode.sng", &dv->ode_to_joy, true);
+    loadFont("ibm_vga8.font", &dv->ibm, false);
+    loadWsg("kid0.wsg", &dv->king_donut, true);
+    loadSng("ode.sng", &dv->ode_to_joy, true);
 
     bzrPlayBgm(&dv->ode_to_joy);
 

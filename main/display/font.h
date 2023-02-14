@@ -24,14 +24,14 @@
 
 typedef struct
 {
-    uint8_t w;
-    uint8_t* bitmap;
+    uint8_t w;       ///< The width of this character
+    uint8_t* bitmap; ///< This character's bitmap data
 } font_ch_t;
 
 typedef struct
 {
-    uint8_t h;
-    font_ch_t chars['~' - ' ' + 2]; // enough space for all printed ascii chars, and pi
+    uint8_t h;                      ///< The height of this font. All chars have the same height
+    font_ch_t chars['~' - ' ' + 2]; ///< An array of characters, enough space for all printed ASCII chars, and pi
 } font_t;
 
 void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff);

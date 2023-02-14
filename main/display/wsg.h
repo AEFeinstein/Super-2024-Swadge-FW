@@ -22,9 +22,9 @@
 
 typedef struct
 {
-    paletteColor_t* px;
-    uint16_t w;
-    uint16_t h;
+    paletteColor_t* px; ///< The row-order array of pixels in the image
+    uint16_t w;         ///< The width of the image
+    uint16_t h;         ///< The height of the image
 } wsg_t;
 
 void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, int16_t rotateDeg);

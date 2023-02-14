@@ -6,7 +6,7 @@
 
 #include "font.h"
 
-bool loadFont(const char* name, font_t* font);
+bool loadFont(const char* name, font_t* font, bool spiRam);
 void freeFont(font_t* font);
 
 #endif

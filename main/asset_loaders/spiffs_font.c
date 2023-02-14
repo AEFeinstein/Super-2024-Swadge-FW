@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include "hdw-spiffs.h"
 #include "spiffs_font.h"
@@ -22,10 +23,12 @@
  *
  * @param name The name of the font to load. The ::font_t is not allocated by this function
  * @param font A handle to load the font to
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than nromal RAM
  * @return true if the font was loaded successfully
  *         false if the font failed to load and should not be used
  */
-bool loadFont(const char* name, font_t* font)
+bool loadFont(const char* name, font_t* font, bool spiRam)
 {
     // Read font from file
     size_t bufIdx = 0;
@@ -55,7 +58,14 @@ bool loadFont(const char* name, font_t* font)
         int bytes  = (pixels / 8) + ((pixels % 8 == 0) ? 0 : 1);
 
         // Allocate space for this char and copy it over
-        this->bitmap = (uint8_t*)malloc(sizeof(uint8_t) * bytes);
+        if (spiRam)
+        {
+            this->bitmap = (uint8_t*)heap_caps_malloc(sizeof(uint8_t) * bytes, MALLOC_CAP_SPIRAM);
+        }
+        else
+        {
+            this->bitmap = (uint8_t*)malloc(sizeof(uint8_t) * bytes);
+        }
         memcpy(this->bitmap, &buf[bufIdx], bytes);
         bufIdx += bytes;
     }

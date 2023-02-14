@@ -20,27 +20,14 @@
  * @brief Load a SNG from ROM to RAM. SNGs placed in the spiffs_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the SNG to load. The ::song_t is not allocated by this function.
- * @param song  A handle to load the SNG to
- * @return true if the SNG was loaded successfully,
- *         false if the SNG load failed and should not be used
- */
-bool loadSng(char* name, song_t* song)
-{
-    return loadSngSpiRam(name, song, false);
-}
-
-/**
- * @brief Load a SNG from ROM to RAM. SNGs placed in the spiffs_image folder
- * before compilation will be automatically flashed to ROM
- *
  * @param name The filename of the SNG to load
  * @param sng  A handle to load the SNG to
- * @param spiRam true to load to SPI RAM, false to load to normal RAM
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than nromal RAM
  * @return true if the SNG was loaded successfully,
  *         false if the SNG load failed and should not be used
  */
-bool loadSngSpiRam(char* name, song_t* sng, bool spiRam)
+bool loadSng(char* name, song_t* sng, bool spiRam)
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;

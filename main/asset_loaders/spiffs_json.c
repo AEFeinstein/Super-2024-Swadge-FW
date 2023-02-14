@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include "hdw-spiffs.h"
 #include "heatshrink_decoder.h"
@@ -22,15 +23,17 @@
  * before compilation will be automatically flashed to ROM
  *
  * @param name The filename of the JSON to load
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than nromal RAM
  * @return A pointer to a null terminated JSON string. May be NULL if the load
  *         fails. Must be freed after use
  */
-char* loadJson(const char* name)
+char* loadJson(const char* name, bool spiRam)
 {
 #ifndef JSON_COMPRESSION
     // Read JSON from file
     size_t sz;
-    uint8_t* buf = spiffsReadFile(name, &sz, true);
+    uint8_t* buf = spiffsReadFile(name, &sz, spiRam);
     if (NULL == buf)
     {
         ESP_LOGE("JSON", "Failed to read %s", name);
@@ -39,7 +42,7 @@ char* loadJson(const char* name)
     return (char*)buf;
 #else
     uint32_t decompressedSize = 0;
-    return readHeatshrinkFile(name, &decompressedSize);
+    return readHeatshrinkFile(name, &decompressedSize, spiRam);
 #endif
 }
 

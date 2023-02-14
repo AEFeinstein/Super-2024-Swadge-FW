@@ -8,6 +8,7 @@
 #include <stdio.h>
 
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include "hdw-spiffs.h"
 #include "spiffs_txt.h"
@@ -21,14 +22,16 @@
  * before compilation will be automatically flashed to ROM
  *
  * @param name The filename of the TXT to load
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than nromal RAM
  * @return A pointer to a null terminated TXT string. May be NULL if the load
  *         fails. Must be freed after use
  */
-char* loadTxt(const char* name)
+char* loadTxt(const char* name, bool spiRam)
 {
     // Read TXT from file
     size_t sz;
-    uint8_t* buf = spiffsReadFile(name, &sz, true);
+    uint8_t* buf = spiffsReadFile(name, &sz, spiRam);
     if (NULL == buf)
     {
         ESP_LOGE("TXT", "Failed to read %s", name);

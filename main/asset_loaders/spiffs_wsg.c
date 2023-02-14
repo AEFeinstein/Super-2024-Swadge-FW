@@ -20,27 +20,14 @@
  * @brief Load a WSG from ROM to RAM. WSGs placed in the spiffs_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the WSG to load. The ::wsg_t is not allocated by this function.
- * @param wsg  A handle to load the WSG to
- * @return true if the WSG was loaded successfully,
- *         false if the WSG load failed and should not be used
- */
-bool loadWsg(char* name, wsg_t* wsg)
-{
-    return loadWsgSpiRam(name, wsg, false);
-}
-
-/**
- * @brief Load a WSG from ROM to RAM. WSGs placed in the spiffs_image folder
- * before compilation will be automatically flashed to ROM
- *
  * @param name The filename of the WSG to load
  * @param wsg  A handle to load the WSG to
- * @param spiRam true to load to SPI RAM, false to load to normal RAM
+ * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
+ * than nromal RAM
  * @return true if the WSG was loaded successfully,
  *         false if the WSG load failed and should not be used
  */
-bool loadWsgSpiRam(char* name, wsg_t* wsg, bool spiRam)
+bool loadWsg(char* name, wsg_t* wsg, bool spiRam)
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;

@@ -8,8 +8,7 @@
 
 #include "wsg.h"
 
-bool loadWsg(char* name, wsg_t* wsg);
-bool loadWsgSpiRam(char* name, wsg_t* wsg, bool spiRam);
+bool loadWsg(char* name, wsg_t* wsg, bool spiRam);
 void freeWsg(wsg_t* wsg);
 
 #endif
