@@ -52,8 +52,13 @@
  *
  * Manipulate data in persistent memory!
  *
- * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition!
  * - hdw-nvs.h: Learn how to save and load persistent runtime data!
+ * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
+ *     - spiffs_font.h - Load font bitmaps
+ *     - spiffs_wsg.h - Load WSG images
+ *     - spiffs_sng.h - Load SNG songs
+ *     - spiffs_json.h - Load JSON
+ *     - spiffs_txt.h - Load plaintext
  *
  * \section gr_api Graphics APIs
  *
