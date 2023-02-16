@@ -54,7 +54,7 @@
 typedef struct
 {
     /**
-     * This swadge mode's name, mostly for debugging.
+     * This swadge mode's name, used in menus.
      * This is not a function pointer.
      */
     const char* modeName;
@@ -69,7 +69,7 @@ typedef struct
     wifiMode_t wifiMode;
 
     /**
-     * If this is false, then the tiny USB driver will be installed
+     * If this is false, then the default TinyUSB driver will be installed (HID gamepad)
      * If this is true, then the swadge mode can do whatever it wants with USB
      */
     bool overrideUsb;
@@ -152,13 +152,13 @@ typedef struct
 
     /**
      * Advanced USB Functionality, for hooking existing advanced_usb interface.
-     * if "direction" == 1, that is a "get" or an "IN" endpoint, which means Swadge->PC
-     * if "direction" == 0, that is a "set" or an "OUT" endpoint, where the PC sends the swage data.
+     * if \c isGet == 1, that is a "get" or an "IN" endpoint, which means Swadge -> Host
+     * if \c isGet == 0, that is a "set" or an "OUT" endpoint, where the Host sends the Swadge data.
      *
-     * @param buffer
-     * @param length
-     * @param isGet
-     * @return
+     * @param buffer Pointer to full command
+     * @param length Total length of the buffer (command ID incldued)
+     * @param isGet 0 if this is a \c SET_REPORT, 1 if this is a \c GET_REPORT
+     * @return The number of bytes returned to the host
      */
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 } swadgeMode_t;

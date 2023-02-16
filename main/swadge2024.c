@@ -130,6 +130,7 @@ static uint32_t frameRateUs = 40000;
 
 static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+static void setSwadgeMode(void* swadgeMode);
 
 //==============================================================================
 // Functions
@@ -200,7 +201,7 @@ void app_main(void)
     // Init USB if not overridden by the mode
     if (false == cSwadgeMode->overrideUsb)
     {
-        initUsb();
+        initUsb(setSwadgeMode, cSwadgeMode->fnAdvancedUSB);
     }
 
     // Init esp-now if requested by the mode
@@ -329,5 +330,32 @@ static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
     if (NULL != cSwadgeMode->fnEspNowSendCb)
     {
         cSwadgeMode->fnEspNowSendCb(mac_addr, status);
+    }
+}
+
+/**
+ * @brief Set the current Swadge mode
+ *
+ * @param swadgeMode The new Swadge Mode to execute. If NULL, the first mode is switched to
+ */
+static void setSwadgeMode(void* swadgeMode)
+{
+    // If no mode is given, switch to the first
+    if (NULL == swadgeMode)
+    {
+        swadgeMode = &modes[0];
+    }
+
+    // Stop the prior mode
+    if (cSwadgeMode->fnExitMode)
+    {
+        cSwadgeMode->fnExitMode();
+    }
+
+    // Set and start the new mode
+    cSwadgeMode = swadgeMode;
+    if (cSwadgeMode->fnEnterMode)
+    {
+        cSwadgeMode->fnEnterMode();
     }
 }

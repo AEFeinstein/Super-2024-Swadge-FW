@@ -230,7 +230,7 @@ static void demoEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t stat
 /**
  * Advanced USB Functionality, for hooking existing advanced_usb interface.
  * if "direction" == 1, that is a "get" or an "IN" endpoint, which means Swadge->PC
- * if "direction" == 0, that is a "set" or an "OUT" endpoint, where the PC sends the swage data.
+ * if "direction" == 0, that is a "set" or an "OUT" endpoint, where the PC sends the Swadge data.
  *
  * @param buffer
  * @param length
