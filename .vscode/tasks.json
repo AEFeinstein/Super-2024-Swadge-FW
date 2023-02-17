@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "make",
             "args": [
-                "-j1"
+                "-j12"
             ],
             "problemMatcher": [
                 "$gcc"

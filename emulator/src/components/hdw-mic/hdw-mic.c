@@ -3,7 +3,24 @@
 //==============================================================================
 
 #include "hdw-mic.h"
+#include "hdw-mic_emu.h"
 #include "emu_main.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define SSBUF 8192
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+// Input sample circular buffer
+static uint16_t ssamples[SSBUF] = {0};
+static int sshead               = 0;
+static int sstail               = 0;
+static bool adcSampling         = false;
 
 //==============================================================================
 // Functions
@@ -57,4 +74,61 @@ void stopMic(void)
 void deinitMic(void)
 {
     WARN_UNIMPLEMENTED();
+}
+
+/**
+ * @brief TODO
+ *
+ * @param sd
+ * @param in
+ * @param out
+ * @param samplesr
+ * @param samplesp
+ */
+void handleSoundInput(struct SoundDriver* sd, short* in, short* out, int samplesr, int samplesp)
+{
+    // If there are samples to read
+    if (adcSampling && samplesr)
+    {
+        // For each sample
+        for (int i = 0; i < samplesr; i++)
+        {
+            // Read the sample into the circular ssamples[] buffer
+            if (sstail != ((sshead + 1) % SSBUF))
+            {
+#ifndef ANDROID
+                // 12 bit sound, unsigned
+                uint16_t v = ((in[i] + INT16_MAX) >> 4);
+#else
+                // Android does something different
+                uint16_t v = in[i] * 5;
+                if (v > 32767)
+                {
+                    v = 32767;
+                }
+                else if (v < -32768)
+                {
+                    v = -32768;
+                }
+#endif
+
+                // Find and print max and min samples for tuning
+                // static int32_t vMin = INT32_MAX;
+                // static int32_t vMax = INT32_MIN;
+                // if(v > vMax)
+                // {
+                // 	vMax = v;
+                // 	printf("Audio %d -> %d\n", vMin, vMax);
+                // }
+                // if(v < vMin)
+                // {
+                // 	vMin = v;
+                // 	printf("Audio %d -> %d\n", vMin, vMax);
+                // }
+
+                ssamples[sshead] = v;
+                sshead           = (sshead + 1) % SSBUF;
+            }
+        }
+    }
 }

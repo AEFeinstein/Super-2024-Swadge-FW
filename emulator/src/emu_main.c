@@ -4,11 +4,13 @@
 
 #include <unistd.h>
 #include <esp_system.h>
+#include <esp_timer.h>
 
 #include "hdw-tft.h"
 #include "hdw-tft_emu.h"
 #include "hdw-led.h"
 #include "hdw-led_emu.h"
+#include "hdw-bzr.h"
 #include "macros.h"
 
 // Make it so we don't need to include any other C files in our build.
@@ -99,6 +101,21 @@ int main(int argc, char** argv)
  */
 void taskYIELD(void)
 {
+    // Calculate time between calls
+    static int64_t tLastCallUs = 0;
+    int64_t tElapsedUs         = 0;
+    if (0 == tLastCallUs)
+    {
+        tLastCallUs = esp_timer_get_time();
+    }
+    else
+    {
+        // Track the elapsed time between loop calls
+        int64_t tNowUs = esp_timer_get_time();
+        tElapsedUs     = tNowUs - tLastCallUs;
+        tLastCallUs    = tNowUs;
+    }
+
     // These are persistent!
     static short lastWindow_w = 0;
     static short lastWindow_h = 0;
@@ -117,6 +134,9 @@ void taskYIELD(void)
         exit(0);
         return;
     }
+
+    // Check things here which are called by interrupts or timers on the Swadge
+    check_esp_timer(tElapsedUs);
 
     // Grey Background
     CNFGBGColor = BG_COLOR;

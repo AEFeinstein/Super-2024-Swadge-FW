@@ -106,7 +106,7 @@ esp_err_t esp_timer_create(const esp_timer_create_args_t* create_args, esp_timer
     if (NULL == *out_handle)
     {
         // Allocate memory for a timer
-        (*out_handle) = (esp_timer_handle_t)malloc(sizeof(struct esp_timer));
+        (*out_handle) = (esp_timer_handle_t)calloc(1, sizeof(struct esp_timer));
     }
 
     // Initialize the timer
