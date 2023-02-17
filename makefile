@@ -250,7 +250,7 @@ format:
 	clang-format -i -style=file $(COMPONENT_SRCS) $(SOURCES)
 
 cppcheck:
-	cppcheck --std=gnu17 --platform=unix32 --suppress=missingIncludeSystem --enable=all $(DEFINES) $(INC) main > /dev/null
+	cppcheck --std=c17 --platform=unix32 --suppress=missingIncludeSystem --enable=all $(DEFINES) $(INC) main
 
 clean-firmware:
 	idf.py clean

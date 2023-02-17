@@ -133,7 +133,7 @@ paletteColor_t* getPxTftFramebuffer(void);
 void clearPxTft(void);
 void drawDisplayTft(fnBackgroundDrawCallback_t cb);
 
-#if !defined(EMULATOR)
+#if defined(__XTENSA__)
     /**
      * Initiaze a variable to set pixels faster than setPxTft()
      */
