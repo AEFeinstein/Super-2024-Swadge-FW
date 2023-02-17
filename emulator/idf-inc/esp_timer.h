@@ -40,6 +40,36 @@
 extern "C" {
 #endif
 
+typedef enum {
+    FL_ISR_DISPATCH_METHOD   = (1 << 0),  //!< 0=Callback is called from timer task, 1=Callback is called from timer ISR
+    FL_SKIP_UNHANDLED_EVENTS = (1 << 1),  //!< 0=NOT skip unhandled events for periodic timers, 1=Skip unhandled events for periodic timers
+} flags_t;
+
+/**
+ * @brief Timer callback function type
+ * @param arg pointer to opaque user-specific data
+ */
+typedef void (*esp_timer_cb_t)(void* arg);
+
+struct esp_timer {
+    uint64_t alarm;
+    uint64_t period:56;
+    flags_t flags:8;
+    union {
+        esp_timer_cb_t callback;
+        uint32_t event_id;
+    };
+    void* arg;
+// #if WITH_PROFILING
+//     const char* name;
+//     size_t times_triggered;
+//     size_t times_armed;
+//     size_t times_skipped;
+//     uint64_t total_callback_run_time;
+// #endif // WITH_PROFILING
+//     LIST_ENTRY(esp_timer) list_entry;
+};
+
 /**
  * @brief Opaque type representing a single esp_timer
  */
@@ -294,6 +324,8 @@ void esp_timer_isr_dispatch_need_yield(void);
  *      - 0 if timer is not active.
  */
 bool esp_timer_is_active(esp_timer_handle_t timer);
+
+void check_esp_timer(uint64_t elapsed_us);
 
 #ifdef __cplusplus
 }

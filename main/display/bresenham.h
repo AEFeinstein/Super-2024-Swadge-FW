@@ -23,6 +23,7 @@
 #ifndef SRC_BRESENHAM_H_
 #define SRC_BRESENHAM_H_
 
+#include <stdbool.h>
 #include "palette.h"
 
 void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr, int xScale,
@@ -72,5 +73,8 @@ void drawRotatedEllipse(int x, int y, int a, int b, float angle, paletteColor_t 
 void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd, paletteColor_t col);
 void drawQuadSpline(int n, int x[], int y[], paletteColor_t col);
 void drawCubicSpline(int n, int x[], int y[], paletteColor_t col);
+
+void drawOptimizedEllipse(int xm, int ym, int a, int b, paletteColor_t col);
+void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col);
 
 #endif /* SRC_BRESENHAM_H_ */

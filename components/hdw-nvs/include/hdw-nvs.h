@@ -54,8 +54,9 @@
 // Defines
 //==============================================================================
 
-#define NVS_PART_NAME_MAX_SIZE 16 /*!< maximum length of partition name (excluding null terminator) */
-#define NVS_KEY_NAME_MAX_SIZE  16 /*!< Maximal length of NVS key name (including null terminator) */
+#define NVS_PART_NAME_MAX_SIZE 16        /*!< maximum length of partition name (excluding null terminator) */
+#define NVS_KEY_NAME_MAX_SIZE  16        /*!< Maximal length of NVS key name (including null terminator) */
+#define NVS_NAMESPACE_NAME     "storage" /*!< The namespace used for NVS */
 
 //==============================================================================
 // Function Prototypes

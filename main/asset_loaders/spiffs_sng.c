@@ -33,6 +33,11 @@ bool loadSng(char* name, song_t* sng, bool spiRam)
     uint32_t decompressedSize = 0;
     uint8_t* decompressedBuf  = readHeatshrinkFile(name, &decompressedSize, spiRam);
 
+    if (NULL == decompressedBuf)
+    {
+        return false;
+    }
+
     // Save the decompressed info to the sng. The first four bytes are the number of notes
     sng->numNotes
         = (decompressedBuf[0] << 24) | (decompressedBuf[1] << 16) | (decompressedBuf[2] << 8) | decompressedBuf[3];

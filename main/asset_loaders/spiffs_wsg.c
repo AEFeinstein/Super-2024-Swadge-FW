@@ -33,6 +33,11 @@ bool loadWsg(char* name, wsg_t* wsg, bool spiRam)
     uint32_t decompressedSize = 0;
     uint8_t* decompressedBuf  = readHeatshrinkFile(name, &decompressedSize, spiRam);
 
+    if (NULL == decompressedBuf)
+    {
+        return false;
+    }
+
     // Save the decompressed info to the wsg. The first four bytes are dimension
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];

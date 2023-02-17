@@ -65,7 +65,7 @@ static void demoEnterMode(void)
         int32_t highScoreToRead;
         if (true == readNvs32(demoKey, &highScoreToRead))
         {
-            printf("High score in NVS is %ld\n", highScoreToRead);
+            printf("High score in NVS is %" PRId32 "\n", highScoreToRead);
         }
     }
 }
@@ -108,7 +108,7 @@ static void demoMainLoop(int64_t elapsedUs)
     int32_t centerVal, intensityVal;
     if (getTouchCentroid(&centerVal, &intensityVal))
     {
-        printf("touch center: %lu, intensity: %lu\n", centerVal, intensityVal);
+        printf("touch center: %" PRId32 ", intensity: %" PRId32 "\n", centerVal, intensityVal);
     }
     else
     {

@@ -148,13 +148,15 @@ DEFINES_LIST = \
 	SOC_UART_NUM=2 \
 	SOC_ADC_DIGI_RESULT_BYTES=2 \
 	CONFIG_ESP_TIMER_SUPPORTS_ISR_DISPATCH_METHOD=0 \
+	CONFIG_LOG_MAXIMUM_LEVEL=3 \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
+	CONFIG_NUM_LEDS=8
 
 # Extra defines
 DEFINES_LIST += \
-	EMU=1 \
+	EMULATOR=1 \
 	GIT_SHA1=${GIT_HASH} \
 	HAS_XINERAMA=1 \
 	FULL_SCREEN_STEAL_FOCUS=1
@@ -234,7 +236,8 @@ $(EXECUTABLE): $(OBJECTS)
 clean:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
-	-@rm -rf docs
+	-@rm -rf ./docs/html
+	-@rm -rf ./spiffs_image/*
 
 ################################################################################
 # Utility targets
@@ -250,7 +253,10 @@ cppcheck:
 	cppcheck --std=gnu17 --platform=unix32 --suppress=missingIncludeSystem --enable=all $(DEFINES) $(INC) main > /dev/null
 
 clean-firmware:
-	idf.py build
+	idf.py clean
+	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
+	-@rm -rf ./docs/html
+	-@rm -rf ./spiffs_image/*
 
 firmware:
 	idf.py build

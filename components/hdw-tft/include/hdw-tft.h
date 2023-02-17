@@ -79,6 +79,7 @@
 #define _HDW_TFT_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <hal/gpio_types.h>
 #include <hal/spi_types.h>
@@ -132,37 +133,44 @@ paletteColor_t* getPxTftFramebuffer(void);
 void clearPxTft(void);
 void drawDisplayTft(fnBackgroundDrawCallback_t cb);
 
-/**
- * Initiaze a variable to set pixels faster than setPxTft()
- */
-#define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)getPxTftFramebuffer();
+#if !defined(EMULATOR)
+    /**
+     * Initiaze a variable to set pixels faster than setPxTft()
+     */
+    #define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)getPxTftFramebuffer();
 
-/**
- * Set a single pixel in the display. This does not bounds check.
- * SETUP_FOR_TURBO() must be called before this.
- *
- * 5/4 cycles -- note you can do better if you don't need arbitrary X/Y's.
- */
-#define TURBO_SET_PIXEL(opxc, opy, colorVal)                                                                    \
-    asm volatile("mul16u a4, %[width], %[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0"           \
-                 :                                                                                              \
-                 : [opx] "a"(opxc), [y] "a"(opy), [px] "a"(dispPx), [val] "a"(colorVal), [width] "a"(TFT_WIDTH) \
-                 : "a4");
+    /**
+     * Set a single pixel in the display. This does not bounds check.
+     * SETUP_FOR_TURBO() must be called before this.
+     *
+     * 5/4 cycles -- note you can do better if you don't need arbitrary X/Y's.
+     */
+    #define TURBO_SET_PIXEL(opxc, opy, colorVal)                                                                    \
+        asm volatile("mul16u a4, %[width], %[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0"           \
+                     :                                                                                              \
+                     : [opx] "a"(opxc), [y] "a"(opy), [px] "a"(dispPx), [val] "a"(colorVal), [width] "a"(TFT_WIDTH) \
+                     : "a4");
 
-/**
- * Set a single pixel in the display. This does checks the TFT's bounds.
- * SETUP_FOR_TURBO() must be called before this.
- *
- * Very tricky:
- *   We do bgeui which checks to make sure 0 <= x < MAX
- *   Other than that, it's basically the same as above.
- */
-#define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal)                                                                 \
-    asm volatile("bgeu %[opx], %[width], failthrough%=\nbgeu %[y], %[height], failthrough%=\nmul16u a4, %[width], " \
-                 "%[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0\nfailthrough%=:\n"                  \
-                 :                                                                                                  \
-                 : [opx] "a"(opxc), [y] "a"(opy), [px] "a"(dispPx), [val] "a"(colorVal), [width] "a"(TFT_WIDTH),    \
-                   [height] "a"(TFT_HEIGHT)                                                                         \
-                 : "a4");
+    /**
+     * Set a single pixel in the display. This does checks the TFT's bounds.
+     * SETUP_FOR_TURBO() must be called before this.
+     *
+     * Very tricky:
+     *   We do bgeui which checks to make sure 0 <= x < MAX
+     *   Other than that, it's basically the same as above.
+     */
+    #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal)                                                        \
+        asm volatile(                                                                                          \
+            "bgeu %[opx], %[width], failthrough%=\nbgeu %[y], %[height], failthrough%=\nmul16u a4, %[width], " \
+            "%[y]\nadd a4, a4, %[px]\nadd a4, a4, %[opx]\ns8i %[val],a4, 0\nfailthrough%=:\n"                  \
+            :                                                                                                  \
+            : [opx] "a"(opxc), [y] "a"(opy), [px] "a"(dispPx), [val] "a"(colorVal), [width] "a"(TFT_WIDTH),    \
+              [height] "a"(TFT_HEIGHT)                                                                         \
+            : "a4");
+#else
+    #define SETUP_FOR_TURBO()
+    #define TURBO_SET_PIXEL(opxc, opy, colorVal)        setPxTft(opxc, opy, colorVal)
+    #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal) setPxTft(opxc, opy, colorVal)
+#endif
 
 #endif
