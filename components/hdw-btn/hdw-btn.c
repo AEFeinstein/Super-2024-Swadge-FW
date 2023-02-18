@@ -47,6 +47,9 @@ static buttonBit_t touchPadMap[TOUCH_PAD_MAX];
 // Used in getBaseTouchVals() to get zeroed touch sensor values
 static int32_t* baseOffsets = NULL;
 
+/// Timer handle used to periodically poll buttons
+static gptimer_handle_t btnTimer = NULL;
+
 //==============================================================================
 // Prototypes
 //==============================================================================
@@ -89,6 +92,15 @@ void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* t
  */
 void deinitButtons(void)
 {
+    ESP_ERROR_CHECK(gptimer_stop(btnTimer));
+    ESP_ERROR_CHECK(gptimer_disable(btnTimer));
+
+    ESP_ERROR_CHECK(dedic_gpio_del_bundle(bundle));
+
+    ESP_ERROR_CHECK(touch_pad_fsm_stop());
+    ESP_ERROR_CHECK(touch_pad_reset());
+    ESP_ERROR_CHECK(touch_pad_deinit());
+
     vQueueDelete(btn_evt_queue);
     free(touchPads);
     free(baseOffsets);
@@ -185,30 +197,29 @@ static void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons)
     buttonStates = dedic_gpio_bundle_read_in(bundle);
 
     // Initialize the timer
-    gptimer_handle_t gptimer      = NULL;
     gptimer_config_t timer_config = {
         .clk_src       = GPTIMER_CLK_SRC_DEFAULT,
         .direction     = GPTIMER_COUNT_UP,
         .resolution_hz = 1000 * 1000, // 1MHz
     };
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &btnTimer));
 
     gptimer_alarm_config_t config = {
         .alarm_count                = 1000, // Check every 1000 ticks of a 1MHz clock, i.e. every 1ms
         .reload_count               = 0,
         .flags.auto_reload_on_alarm = true,
     };
-    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &config));
+    ESP_ERROR_CHECK(gptimer_set_alarm_action(btnTimer, &config));
 
     // Configure the ISR
     gptimer_event_callbacks_t callbacks = {
         .on_alarm = btn_timer_isr_cb,
     };
-    ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &callbacks, NULL));
+    ESP_ERROR_CHECK(gptimer_register_event_callbacks(btnTimer, &callbacks, NULL));
 
     // Start the timer
-    ESP_ERROR_CHECK(gptimer_enable(gptimer));
-    ESP_ERROR_CHECK(gptimer_start(gptimer));
+    ESP_ERROR_CHECK(gptimer_enable(btnTimer));
+    ESP_ERROR_CHECK(gptimer_start(btnTimer));
 }
 
 /**
