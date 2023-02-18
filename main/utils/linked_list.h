@@ -12,8 +12,22 @@
  *
  * \section linked_list_example Example
  *
+ * Creating an empty list:
  * \code{.c}
- * TODO doxygen
+ * list_t * myList = malloc(sizeof(list_t));
+ * myList->first = NULL;
+ * myList->last = NULL;
+ * myList->length = 0;
+ * \endcode
+ *
+ * Iterating through the list:
+ * \code{.c}
+ * node_t * currentNode = landedTetrads->first;
+ * while (currentNode != NULL)
+ * {
+ *     //Perform desired operations with current node.
+ *     currentNode = currentNode->next;
+ * }
  * \endcode
  */
 
@@ -23,59 +37,25 @@
 // Doubly-linked list.
 typedef struct node
 {
-    void* val;
-    struct node* next;
-    struct node* prev;
+    void* val;         ///< A pointer to the data for this node.
+    struct node* next; ///< The next node in the list
+    struct node* prev; ///< The previous node in the list
 } node_t;
 
 typedef struct
 {
-    node_t* first;
-    node_t* last;
-    int length;
+    node_t* first; ///< The first node in the list
+    node_t* last;  ///< The last node in the list
+    int length;    ///< The number of nodes in the list
 } list_t;
 
-// Creating an empty list example.
-/*
-    list_t * myList = malloc(sizeof(list_t));
-    myList->first = NULL;
-    myList->last = NULL;
-    myList->length = 0;
-*/
-
-// Iterating through the list example.
-/*
-    node_t * currentNode = landedTetrads->first;
-    while (currentNode != NULL)
-    {
-        //Perform desired operations with current node.
-        currentNode = currentNode->next;
-    }
-*/
-
-// Add to the end of the list.
 void push(list_t* list, void* val);
-
-// Remove from the end of the list.
 void* pop(list_t* list);
-
-// Add to the front of the list.
 void unshift(list_t* list, void* val);
-
-// Remove from the front of the list.
 void* shift(list_t* list);
-
-// Add at an index in the list.
 void add(list_t* list, void* val, int index);
-
-// Remove at an index in the list.
 void* removeIdx(list_t* list, int index);
-
-// Remove a given entry from the list.
 void* removeEntry(list_t* list, node_t* entry);
-
-// Remove all items from the list.
-// NOTE: This frees nodes but does not free anything pointed to by the vals of nodes.
 void clear(list_t* list);
 
 #ifdef TEST_LIST

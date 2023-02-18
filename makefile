@@ -46,7 +46,7 @@ SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
 
 # The emulator doesn't build components, but there is a target for formatting them
-COMPONENT_SRCS=$(shell $(FIND) ./components/ -iname "*.[c|h]")
+ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "rawdraw_sf.h" -not -name "rawdraw_sf.h" -not -name "cJSON*")
 
 ################################################################################
 # Includes
@@ -247,7 +247,7 @@ docs:
 	doxygen .\Doxyfile
 
 format:
-	clang-format -i -style=file $(COMPONENT_SRCS) $(SOURCES)
+	clang-format -i -style=file $(ALL_FILES)
 
 CPPCHECK_FLAGS= \
 	--enable=all \
