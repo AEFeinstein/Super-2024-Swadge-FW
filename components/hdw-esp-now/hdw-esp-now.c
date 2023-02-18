@@ -103,7 +103,7 @@ static int16_t rBufTail;
 // Prototypes
 //==============================================================================
 
-static void espNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, int data_len);
+static void espNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, int data_len);
 static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
 //==============================================================================
@@ -366,20 +366,15 @@ void espNowUseSerial(bool crossoverPins)
 /**
  * This callback function is called whenever an ESP-NOW packet is received
  *
- * @param mac_addr The MAC address of the sender
+ * @param esp_now_info Information about the transmission, including The MAC addresses
  * @param data     The data which was received
  * @param data_len The length of the data which was received
  */
-static void espNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, int data_len)
+static void espNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, int data_len)
 {
-    // Negative index to get the ESP NOW header
-    // espNowHeader_t * hdr = (espNowHeader_t *)&data[-sizeof(espNowHeader_t)];
-    // Negative index further to get the WIFI header
-    wifi_pkt_rx_ctrl_t* pkt = (wifi_pkt_rx_ctrl_t*)&data[-sizeof(espNowHeader_t) - sizeof(wifi_pkt_rx_ctrl_t)];
-
     if (ESP_NOW_IMMEDIATE == mode)
     {
-        hostEspNowRecvCb(mac_addr, (const uint8_t*)data, data_len, pkt->rssi);
+        hostEspNowRecvCb(esp_now_info, (const uint8_t*)data, data_len, esp_now_info->rx_ctrl->rssi);
     }
     else
     {
@@ -390,7 +385,7 @@ static void espNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, int data_
         espNowPacket_t packet;
 
         // Copy the MAC
-        memcpy(&packet.mac, mac_addr, sizeof(uint8_t) * 6);
+        memcpy(&packet.mac, esp_now_info->src_addr, sizeof(uint8_t) * 6);
 
         // Make sure the data fits, then copy it
         if (data_len > sizeof(packet.data))
@@ -401,7 +396,7 @@ static void espNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, int data_
         memcpy(&packet.data, data, data_len);
 
         // Copy the RSSI
-        packet.rssi = pkt->rssi;
+        packet.rssi = esp_now_info->rx_ctrl->rssi;
 
         // Queue this packet
         xQueueSendFromISR(esp_now_queue, &packet, NULL);
@@ -493,7 +488,12 @@ void checkEspNowRxQueue(void)
                     // If all payload bytes have been read
                     if (payloadIdx == payloadLen)
                     {
-                        hostEspNowRecvCb(rxMac, payload, payloadLen, 0);
+                        esp_now_recv_info_t recvInfo = {
+                            .des_addr = myMac,
+                            .src_addr = rxMac,
+                            .rx_ctrl  = NULL,
+                        };
+                        hostEspNowRecvCb(&recvInfo, payload, payloadLen, 0);
 
                         // Move the ringBuf head, reset variables
                         rBufHead    = rBufTmpHead;
@@ -532,7 +532,12 @@ void checkEspNowRxQueue(void)
             //        packet.mac[5],
             //        dbg);
 
-            hostEspNowRecvCb(packet.mac, packet.data, packet.len, packet.rssi);
+            esp_now_recv_info_t recvInfo = {
+                .des_addr = myMac,
+                .src_addr = packet.mac,
+                .rx_ctrl  = NULL,
+            };
+            hostEspNowRecvCb(&recvInfo, packet.data, packet.len, packet.rssi);
         }
     }
 }

@@ -133,12 +133,12 @@ typedef struct
     /**
      * This function is called whenever an ESP-NOW packet is received.
      *
-     * @param mac_addr The MAC address which sent this data
+ * @param esp_now_info Information about the transmission, including The MAC addresses
      * @param data     A pointer to the data received
      * @param len      The length of the data received
      * @param rssi     The RSSI for this packet, from 1 (weak) to ~90 (touching)
      */
-    void (*fnEspNowRecvCb)(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
+    void (*fnEspNowRecvCb)(const esp_now_recv_info_t * esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 
     /**
      * This function is called whenever an ESP-NOW packet is sent.

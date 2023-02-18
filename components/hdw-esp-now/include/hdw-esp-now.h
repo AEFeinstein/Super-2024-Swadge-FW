@@ -107,12 +107,13 @@ typedef enum __attribute__((packed))
 
 /**
  * @brief A function typedef for a callback called when an ESP-NOW packet is received
- * @param mac_addr The MAC address of the sender of the received packet
+ * @param esp_now_info Information about the transmission, including The MAC addresses
  * @param data The received packet
  * @param len The length of the received packet
  * @param rssi The signal strength of the received packet
  */
-typedef void (*hostEspNowRecvCb_t)(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
+typedef void (*hostEspNowRecvCb_t)(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
+                                   int8_t rssi);
 /**
  * @brief A function typedef for a callback called when an ESP-NOW packet transmission finishes
  * @param mac_addr The MAC address which was transmitted to

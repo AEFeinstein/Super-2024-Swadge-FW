@@ -5,7 +5,7 @@ static void demoExitMode(void);
 static void demoMainLoop(int64_t elapsedUs);
 static void demoAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void demoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void demoEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
+static void demoEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void demoEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static int16_t demoAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
@@ -204,14 +204,14 @@ static void demoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 /**
  * This function is called whenever an ESP-NOW packet is received.
  *
- * @param mac_addr The MAC address which sent this data
+ * @param esp_now_info Information about the transmission, including The MAC addresses
  * @param data     A pointer to the data received
  * @param len      The length of the data received
  * @param rssi     The RSSI for this packet, from 1 (weak) to ~90 (touching)
  */
-static void demoEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi)
+static void demoEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
-    p2pRecvCb(&dv->p2p, mac_addr, data, len, rssi);
+    p2pRecvCb(&dv->p2p, esp_now_info->src_addr, data, len, rssi);
 }
 
 /**

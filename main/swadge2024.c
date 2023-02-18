@@ -129,7 +129,8 @@ static uint32_t frameRateUs = 40000;
 // Function declarations
 //==============================================================================
 
-static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi);
+static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
+                                   int8_t rssi);
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static void setSwadgeMode(void* swadgeMode);
 
@@ -326,16 +327,17 @@ void deinitSystem(void)
  * Callback from ESP NOW to the current Swadge mode whenever a packet is
  * received. It routes through user_main.c, which knows what the current mode is
  *
- * @param mac_addr The MAC address of the sender
+ * @param esp_now_info Information about the transmission, including The MAC addresses
  * @param data     The data which was received
  * @param len      The length of the data which was received
  * @param rssi     The RSSI for this packet, from 1 (weak) to ~90 (touching)
  */
-static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi)
+static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
+                                   int8_t rssi)
 {
     if (NULL != cSwadgeMode->fnEspNowRecvCb)
     {
-        cSwadgeMode->fnEspNowRecvCb(mac_addr, data, len, rssi);
+        cSwadgeMode->fnEspNowRecvCb(esp_now_info, data, len, rssi);
     }
 }
 
