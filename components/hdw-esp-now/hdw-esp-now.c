@@ -618,7 +618,7 @@ static void espNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 /**
  * This function is called to de-initialize ESP-NOW
  */
-void espNowDeinit(void)
+void deinitEspNow(void)
 {
     if (isSerial)
     {

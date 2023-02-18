@@ -27,7 +27,7 @@
  *
  * \section esp-now_usage Usage
  *
- * You don't need to call initEspNow(), checkEspNowRxQueue(), or espNowDeinit() . The system does at the appropriate
+ * You don't need to call initEspNow(), checkEspNowRxQueue(), or deinitEspNow() . The system does at the appropriate
  * time.
  *
  * espNowUseWireless() and espNowUseSerial() may be used to switch between wireless connections and wired connections,
@@ -121,7 +121,7 @@ typedef void (*hostEspNowSendCb_t)(const uint8_t* mac_addr, esp_now_send_status_
 
 void initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx, uart_port_t uart,
                 wifiMode_t mode);
-void espNowDeinit(void);
+void deinitEspNow(void);
 
 void espNowUseWireless(void);
 void espNowUseSerial(bool crossoverPins);

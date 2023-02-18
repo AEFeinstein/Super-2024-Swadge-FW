@@ -71,7 +71,7 @@ void espNowSend(const char* data, uint8_t len)
 /**
  * This function is called to de-initialize ESP-NOW
  */
-void espNowDeinit(void)
+void deinitEspNow(void)
 {
     WARN_UNIMPLEMENTED();
 }
