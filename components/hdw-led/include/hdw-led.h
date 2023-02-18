@@ -15,7 +15,7 @@
  *
  * \section led_usage Usage
  *
- * You don't need to call initLeds(). The system does so at the appropriate time.
+ * You don't need to call initLeds() or deinitLeds(). The system does so at the appropriate time.
  *
  * You should call setLeds() any time you want to set the LEDs. There is no buffer, so the LEDs are immediately set to
  * the values given. setLeds() takes a pointer to an array of ::led_t as an argument. These structs each have a red,
@@ -54,6 +54,7 @@ typedef struct __attribute__((packed))
 } led_t;
 
 esp_err_t initLeds(gpio_num_t gpio);
+esp_err_t deinitLeds(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
 
 #endif

@@ -30,6 +30,16 @@ esp_err_t initLeds(gpio_num_t gpio)
 }
 
 /**
+ * @brief Deinit LEDs
+ *
+ * @return ESP_OK
+ */
+esp_err_t deinitLeds(void)
+{
+    return ESP_OK;
+}
+
+/**
  * @brief Set the RGB LEDs to the given values
  *
  * @param leds A pointer to an array of ::led_t structs to set the LEDs to. The array must have at least numLeds

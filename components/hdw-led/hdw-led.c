@@ -53,6 +53,19 @@ esp_err_t initLeds(gpio_num_t gpio)
 }
 
 /**
+ * @brief Deinitialize LEDs
+ *
+ * @return ESP_OK
+ */
+esp_err_t deinitLeds(void)
+{
+    ESP_ERROR_CHECK(rmt_disable(led_chan));
+    ESP_ERROR_CHECK(rmt_del_encoder(led_encoder));
+    ESP_ERROR_CHECK(rmt_del_channel(led_chan));
+    return ESP_OK;
+}
+
+/**
  * @brief Set the RGB LEDs to the given values
  *
  * @param leds A pointer to an array of ::led_t structs to set the LEDs to. The array must have at least numLeds
