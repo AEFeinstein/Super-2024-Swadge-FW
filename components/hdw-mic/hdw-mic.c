@@ -125,5 +125,6 @@ void stopMic(void)
  */
 void deinitMic(void)
 {
+    stopMic();
     ESP_ERROR_CHECK(adc_continuous_deinit(adc_handle));
 }

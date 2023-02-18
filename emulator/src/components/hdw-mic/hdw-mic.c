@@ -79,17 +79,18 @@ void stopMic(void)
  */
 void deinitMic(void)
 {
-    // Nothing to do here, emulator sound is initialized in hdw-bzr.c
+    // Nothing to do here, emulator sound is deinitialized in deinitBuzzer()
 }
 
 /**
- * @brief TODO
+ * @brief Callback for sound events, both input and output
+ * Only handle input here
  *
- * @param sd
- * @param in
- * @param out
- * @param samplesr
- * @param samplesp
+ * @param sd The sound driver
+ * @param in A pointer to read samples from. May be NULL
+ * @param out A pointer to write samples to. May be NULL
+ * @param samplesr The number of samples to read
+ * @param samplesp The number of samples to write
  */
 void handleSoundInput(struct SoundDriver* sd, short* in, short* out, int samplesr, int samplesp)
 {

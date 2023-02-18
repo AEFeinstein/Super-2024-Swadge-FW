@@ -300,6 +300,7 @@ static bool buzzer_track_check_next_note(emu_buzzer_t* track, bool isActive)
 
 /**
  * @brief Callback for sound events, both input and output
+ * Handle output here, pass input to handleSoundInput()
  *
  * @param sd The sound driver
  * @param in A pointer to read samples from. May be NULL
