@@ -11,6 +11,8 @@
 #include "hdw-led.h"
 #include "hdw-led_emu.h"
 #include "hdw-bzr.h"
+#include "hdw-btn.h"
+#include "hdw-btn_emu.h"
 #include "macros.h"
 
 // Make it so we don't need to include any other C files in our build.
@@ -297,7 +299,7 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
  */
 void HandleKey(int keycode, int bDown)
 {
-    WARN_UNIMPLEMENTED();
+    emulatorHandleKeys(keycode, bDown);
 }
 
 /**
