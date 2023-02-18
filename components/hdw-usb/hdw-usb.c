@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <esp_log.h>
+#include <class/hid/hid_device.h>
 
 #include "tinyusb.h"
 #include "hdw-usb.h"

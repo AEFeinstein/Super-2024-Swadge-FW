@@ -65,7 +65,6 @@
 #include <stdint.h>
 
 #include <hal/gpio_types.h>
-#include <esp_adc/adc_continuous.h>
 
 //==============================================================================
 // Defines

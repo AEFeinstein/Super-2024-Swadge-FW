@@ -41,8 +41,7 @@
 #ifndef _HDW_USB_
 #define _HDW_USB_
 
-#include "class/hid/hid.h"
-#include "class/hid/hid_device.h"
+#include <class/hid/hid.h>
 
 /**
  * @brief Function typedef for a callback which will send USB SET_REPORT and GET_REPORT messages to a Swadge mode
