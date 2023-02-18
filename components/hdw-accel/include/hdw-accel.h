@@ -16,14 +16,14 @@
  *
  * \section accel_usage Usage
  *
- * You don't need to call qma7981_init(). The system does this the appropriate time.
+ * You don't need to call initAccelerometer() or deInitAccelerometer(). The system does this the appropriate time.
  *
- * You do need to call qma7981_get_accel() to get the current acceleration vector.
+ * You do need to call accelGetAccelVec() to get the current acceleration vector.
  * If you want to poll this from your Swadge Mode's main function, you may.
  *
- * You may call qma7981_set_range() if you want to adjust the measurement range.
+ * You may call accelSetRange() if you want to adjust the measurement range.
  *
- * qma7981_get_step() exists, but it has not been tested, so use it with caution.
+ * accelGetStep() exists, but it has not been tested, so use it with caution.
  * You may need to configure parameters related to step counting.
  *
  * \section accel_example Example
@@ -38,7 +38,7 @@
  * int16_t a_x, a_y, a_z;
  *
  * // Get the current acceleration
- * if(ESP_OK == qma7981_get_accel(&a_x, &a_y, &a_z))
+ * if(ESP_OK == accelGetAccelVec(&a_x, &a_y, &a_z))
  * {
  *     // Print data to debug logs
  *     printf("x: %"PRId16", y: %"PRId16", z:%"PRId16, a_x, a_y, a_z);
@@ -71,10 +71,11 @@ typedef enum
     QMA_BANDWIDTH_1024_HZ = 0b101, ///< 1024Hz bandwidth
 } qma_bandwidth_t;
 
-esp_err_t qma7981_init(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
-                       qma_range_t range, qma_bandwidth_t bandwidth);
-esp_err_t qma7981_set_range(qma_range_t range);
-esp_err_t qma7981_get_accel(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t qma7981_get_step(uint16_t* data);
+esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
+                            qma_range_t range, qma_bandwidth_t bandwidth);
+esp_err_t deInitAccelerometer(void);
+esp_err_t accelSetRange(qma_range_t range);
+esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z);
+esp_err_t accelGetStep(uint16_t* data);
 
 #endif

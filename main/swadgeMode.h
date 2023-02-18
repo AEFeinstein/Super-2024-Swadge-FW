@@ -75,7 +75,7 @@ typedef struct
     bool overrideUsb;
 
     /**
-     * If this is false, the accelerometer will not be initialized and qma7981_get_accel() will not function
+     * If this is false, the accelerometer will not be initialized and accelGetAccelVec() will not function
      * If this is true, then the swadge will be initialized
      */
     bool usesAccelerometer;

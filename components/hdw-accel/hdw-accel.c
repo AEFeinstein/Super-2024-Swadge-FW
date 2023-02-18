@@ -75,8 +75,8 @@ static int16_t signExtend10bit(uint16_t in);
  * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t qma7981_init(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
-                       qma_range_t range, qma_bandwidth_t bandwidth)
+esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
+                            qma_range_t range, qma_bandwidth_t bandwidth)
 {
     i2c_port          = _i2c_port;
     esp_err_t ret_val = ESP_OK;
@@ -104,6 +104,16 @@ esp_err_t qma7981_init(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpi
     ret_val |= qma7981_write_byte(QMA7981_REG_BAND_WIDTH, bandwidth);
 
     return ret_val;
+}
+
+/**
+ * @brief Deinit the accelerometer (nothting to do)
+ *
+ * @return ESP_OK
+ */
+esp_err_t deInitAccelerometer(void)
+{
+    return ESP_OK;
 }
 
 /**
@@ -184,7 +194,7 @@ static esp_err_t qma7981_write_byte(qmaReg_t reg_addr, uint8_t data)
  * @param data The step counter value is written here
  * @return ESP_OK if the step count was read, or a non-zero value if it was not
  */
-esp_err_t qma7981_get_step(uint16_t* data)
+esp_err_t accelGetStep(uint16_t* data)
 {
     esp_err_t ret_val = ESP_OK;
     uint8_t step_h = 0, step_l = 0;
@@ -208,7 +218,7 @@ esp_err_t qma7981_get_step(uint16_t* data)
  * @param range The range to measure, from ::QMA_RANGE_2G to ::QMA_RANGE_32G
  * @return ESP_OK if the range was set, or a non-zero value if it was not
  */
-esp_err_t qma7981_set_range(qma_range_t range)
+esp_err_t accelSetRange(qma_range_t range)
 {
     esp_err_t ret_val = qma7981_write_byte(QMA7981_REG_RANGE, range);
     qma_range         = range;
@@ -226,7 +236,7 @@ esp_err_t qma7981_set_range(qma_range_t range)
  * @param z The Z component of the acceleration vector is written here
  * @return ESP_OK if the acceleration was read, or a non-zero value if it was not
  */
-esp_err_t qma7981_get_accel(int16_t* x, int16_t* y, int16_t* z)
+esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
 {
     static int16_t lastX = 0;
     static int16_t lastY = 0;

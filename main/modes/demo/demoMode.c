@@ -158,7 +158,7 @@ static void demoMainLoop(int64_t elapsedUs)
 
     // Get the acceleration
     int16_t a_x, a_y, a_z;
-    qma7981_get_accel(&a_x, &a_y, &a_z);
+    accelGetAccelVec(&a_x, &a_y, &a_z);
 
     // Set LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};

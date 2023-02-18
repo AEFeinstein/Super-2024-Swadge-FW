@@ -214,10 +214,10 @@ void app_main(void)
     // Init accelerometer
     if (cSwadgeMode->usesAccelerometer)
     {
-        qma7981_init(I2C_NUM_0,
-                     GPIO_NUM_3,  // SDA
-                     GPIO_NUM_41, // SCL
-                     GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
+        initAccelerometer(I2C_NUM_0,
+                          GPIO_NUM_3,  // SDA
+                          GPIO_NUM_41, // SCL
+                          GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
     }
 
     // Init the temperature sensor
