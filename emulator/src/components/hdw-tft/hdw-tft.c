@@ -50,6 +50,7 @@ static int bitmapWidth               = 0;
 static int bitmapHeight              = 0;
 static int displayMult               = 1;
 static bool tftDisabled              = false;
+static uint8_t tftBrightness         = 255;
 
 //==============================================================================
 // Functions
@@ -200,10 +201,22 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
             {
                 for (uint16_t mX = 0; mX < displayMult; mX++)
                 {
-                    int dstX = ((x * displayMult) + mX);
-                    int dstY = ((y * displayMult) + mY);
-                    scaledBitmapDisplay[(dstY * (TFT_WIDTH * displayMult)) + dstX]
-                        = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
+                    int dstX  = ((x * displayMult) + mX);
+                    int dstY  = ((y * displayMult) + mY);
+                    int pxIdx = (dstY * (TFT_WIDTH * displayMult)) + dstX;
+
+                    uint32_t color = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
+
+                    uint8_t r = (color)&0xFF;
+                    r         = (r * tftBrightness) / 255;
+                    uint8_t g = (color >> 8) & 0xFF;
+                    g         = (g * tftBrightness) / 255;
+                    uint8_t b = (color >> 16) & 0xFF;
+                    b         = (b * tftBrightness) / 255;
+
+                    color = (b << 16) | (g << 8) | (r);
+
+                    scaledBitmapDisplay[pxIdx] = color;
                 }
             }
         }
@@ -227,10 +240,10 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
  *
  * @return value is 0 if OK nonzero if error.
  */
-int setTFTBacklightBrightness(uint8_t intensity)
+esp_err_t setTFTBacklightBrightness(uint8_t intensity)
 {
-    WARN_UNIMPLEMENTED();
-    return 0;
+    tftBrightness = intensity;
+    return ESP_OK;
 }
 
 /**

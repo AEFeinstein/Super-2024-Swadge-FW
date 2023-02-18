@@ -84,6 +84,7 @@
 #include <hal/gpio_types.h>
 #include <hal/spi_types.h>
 #include <driver/ledc.h>
+#include <esp_err.h>
 
 #include "palette.h"
 
@@ -123,7 +124,7 @@ typedef void (*fnBackgroundDrawCallback_t)(int16_t x, int16_t y, int16_t w, int1
 
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
              gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel);
-int setTFTBacklightBrightness(uint8_t intensity);
+esp_err_t setTFTBacklightBrightness(uint8_t intensity);
 void disableTFTBacklight(void);
 void enableTFTBacklight(void);
 

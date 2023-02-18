@@ -126,7 +126,7 @@ static esp_lcd_panel_io_handle_t io;
  *
  * @return value is 0 if OK nonzero if error.
  */
-int setTFTBacklightBrightness(uint8_t intensity)
+esp_err_t setTFTBacklightBrightness(uint8_t intensity)
 {
     esp_err_t e;
     if (intensity > CONFIG_TFT_MAX_BRIGHTNESS)
