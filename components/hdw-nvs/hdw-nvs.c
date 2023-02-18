@@ -73,6 +73,16 @@ bool initNvs(bool firstTry)
 }
 
 /**
+ * @brief Deinitialize NVS
+ *
+ * @return true if NVS was deinitialized, false if it failed
+ */
+bool deinitNvs(void)
+{
+    return (ESP_OK == nvs_flash_deinit());
+}
+
+/**
  * @brief Erase and re-initialize the nonvolatile storage
  *
  * @return true if NVS was erased and re-initialized and can be used, false if it failed

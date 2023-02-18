@@ -14,7 +14,7 @@
  *
  * \section nvs_usage Usage
  *
- * You don't need to call initNvs(). The system does this the appropriate time.
+ * You don't need to call initNvs() or deinitNvs(). The system does this the appropriate time.
  *
  * readNvs32() and writeNvs32() can be used to read and write 32 bit integer values.
  *
@@ -63,6 +63,7 @@
 //==============================================================================
 
 bool initNvs(bool firstTry);
+bool deinitNvs(void);
 bool eraseNvs(void);
 bool readNvs32(const char* key, int32_t* outVal);
 bool writeNvs32(const char* key, int32_t val);
