@@ -99,21 +99,23 @@ static inline uint32_t get_ccount()
     #error "Please pick a screen size"
 #endif
 
+#define NUM_S_LINES 2
+
 //==============================================================================
 // Variables
 //==============================================================================
 
+static spi_host_device_t tftSpiHost;
+
 static esp_lcd_panel_handle_t panel_handle = NULL;
 static paletteColor_t* pixels              = NULL;
-static uint16_t* s_lines[2]                = {0};
+static uint16_t* s_lines[NUM_S_LINES]      = {0};
 
 static ledc_channel_t tftLedcChannel;
 static gpio_num_t tftBacklightPin;
 static bool tftBacklightIsPwm;
 
-#if defined(CONFIG_GC9307_240x280) || defined(CONFIG_ST7735_128x160)
-static esp_lcd_panel_io_handle_t io;
-#endif
+static esp_lcd_panel_io_handle_t tft_io_handle = NULL;
 
 //==============================================================================
 // Functions
@@ -157,6 +159,7 @@ esp_err_t setTFTBacklightBrightness(uint8_t intensity)
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
              gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel)
 {
+    tftSpiHost        = spiHost;
     tftBacklightPin   = backlight;
     tftBacklightIsPwm = isPwmBacklight;
     tftLedcChannel    = ledcChannel;
@@ -172,7 +175,6 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     // Initialize the SPI bus
     ESP_ERROR_CHECK(spi_bus_initialize(spiHost, &buscfg, SPI_DMA_CH_AUTO));
 
-    esp_lcd_panel_io_handle_t io_handle     = NULL;
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num       = dc,
         .cs_gpio_num       = cs,
@@ -184,7 +186,7 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     };
 
     // Attach the LCD to the SPI bus
-    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)spiHost, &io_config, &io_handle));
+    ESP_ERROR_CHECK(esp_lcd_new_panel_io_spi((esp_lcd_spi_bus_handle_t)spiHost, &io_config, &tft_io_handle));
 
     esp_lcd_panel_dev_config_t panel_config = {
         .reset_gpio_num = rst,
@@ -194,10 +196,10 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     // Initialize the LCD configuration
 
 #if defined(CONFIG_ST7735_160x80)
-    ESP_ERROR_CHECK(esp_lcd_new_panel_st7735(io_handle, &panel_config, &panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_new_panel_st7735(tft_io_handle, &panel_config, &panel_handle));
 #elif defined(CONFIG_ST7789_240x135) || defined(CONFIG_ST7789_240x240) || defined(CONFIG_ST7735_128x160) \
     || defined(CONFIG_GC9307_240x280)
-    ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(io_handle, &panel_config, &panel_handle));
+    ESP_ERROR_CHECK(esp_lcd_new_panel_st7789(tft_io_handle, &panel_config, &panel_handle));
 #else
     #error "Please pick a screen size"
 #endif
@@ -209,7 +211,7 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     ESP_ERROR_CHECK(esp_lcd_panel_init(panel_handle));
 
     // Allocate memory for the pixel buffers
-    for (int i = 0; i < 2; i++)
+    for (int i = 0; i < NUM_S_LINES; i++)
     {
         s_lines[i] = heap_caps_malloc(TFT_WIDTH * PARALLEL_LINES * sizeof(uint16_t), MALLOC_CAP_DMA);
         assert(s_lines[i] != NULL);
@@ -220,45 +222,27 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     esp_lcd_panel_mirror(panel_handle, MIRROR_X, MIRROR_Y);
     esp_lcd_panel_set_gap(panel_handle, X_OFFSET, Y_OFFSET);
 
-#if defined(CONFIG_GC9307_240x280) || defined(CONFIG_ST7735_128x160)
-    typedef struct
-    {
-        esp_lcd_panel_t base;
-        esp_lcd_panel_io_handle_t io;
-        int reset_gpio_num;
-        bool reset_level;
-        int x_gap;
-        int y_gap;
-        unsigned int bits_per_pixel;
-        uint8_t madctl_val; // save current value of LCD_CMD_MADCTL register
-        uint8_t colmod_cal; // save surrent value of LCD_CMD_COLMOD register
-    } st7789_panel_internal_t;
-    st7789_panel_internal_t* st7789 = __containerof(panel_handle, st7789_panel_internal_t, base);
-
-    io = st7789->io;
-#endif
-
 #if defined(CONFIG_GC9307_240x280)
     esp_lcd_panel_invert_color(panel_handle, false);
     // NOTE: the following call would override settings set by esp_lcd_panel_swap_xy() and esp_lcd_panel_mirror()
     // Both of the prior functions write to the 0x36 register
-    esp_lcd_panel_io_tx_param(io, 0x36, (uint8_t[]){0xE8}, 1); // MX, MY, RGB mode  (MADCTL)
-    esp_lcd_panel_io_tx_param(io, 0x35, (uint8_t[]){0x00}, 1); // "tear effect" testing sync pin.
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xE8}, 1); // MX, MY, RGB mode  (MADCTL)
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x35, (uint8_t[]){0x00}, 1); // "tear effect" testing sync pin.
 #elif defined(CONFIG_ST7735_128x160)
-    esp_lcd_panel_io_tx_param(io, 0xB1, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);
-    esp_lcd_panel_io_tx_param(io, 0xB2, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);
-    esp_lcd_panel_io_tx_param(io, 0xB3, (uint8_t[]){0x05, 0x3C, 0x3C, 0x05, 0x3C, 0x3C}, 6);
-    esp_lcd_panel_io_tx_param(io, 0xB4, (uint8_t[]){0x00}, 1); // 00 Dot inversion,  //07 column inversion
-    esp_lcd_panel_io_tx_param(io, 0x36, (uint8_t[]){0xa0}, 1); // MX, MY, RGB mode  (MADCTL)
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0xB1, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0xB2, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0xB3, (uint8_t[]){0x05, 0x3C, 0x3C, 0x05, 0x3C, 0x3C}, 6);
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0xB4, (uint8_t[]){0x00}, 1); // 00 Dot inversion,  //07 column inversion
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xa0}, 1); // MX, MY, RGB mode  (MADCTL)
     esp_lcd_panel_io_tx_param(
-        io, 0xE0,
+        tft_io_handle, 0xE0,
         (uint8_t[]){0x04, 0x22, 0x07, 0x0A, 0x2E, 0x30, 0x25, 0x2A, 0x28, 0x26, 0x2E, 0x3A, 0x00, 0x01, 0x03, 0x13},
         16);
     esp_lcd_panel_io_tx_param(
-        io, 0xE1,
+        tft_io_handle, 0xE1,
         (uint8_t[]){0x04, 0x16, 0x06, 0x0D, 0x2D, 0x26, 0x23, 0x27, 0x27, 0x25, 0x2D, 0x3B, 0x00, 0x01, 0x04, 0x13},
         16);
-    esp_lcd_panel_io_tx_param(io, 0x20, (uint8_t[]){0}, 0); // buffer color inversion
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x20, (uint8_t[]){0}, 0); // buffer color inversion
 #else
     esp_lcd_panel_invert_color(panel_handle, true);
 #endif
@@ -270,6 +254,24 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     {
         pixels = (paletteColor_t*)malloc(sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
     }
+}
+
+/**
+ * @brief Deinitialize the TFT display
+ */
+void deinitTFT(void)
+{
+    disableTFTBacklight();
+
+    esp_lcd_panel_del(panel_handle);
+    esp_lcd_panel_io_del(tft_io_handle);
+    spi_bus_free(tftSpiHost);
+
+    for (int i = 0; i < NUM_S_LINES; i++)
+    {
+        free(s_lines[i]);
+    }
+    free(pixels);
 }
 
 /**
@@ -292,9 +294,9 @@ void disableTFTBacklight(void)
 {
 #if defined(CONFIG_GC9307_240x280)
     // Display OFF
-    esp_lcd_panel_io_tx_param(io, 0x28, NULL, 0);
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x28, NULL, 0);
     // Enter sleep mode
-    esp_lcd_panel_io_tx_param(io, 0x10, NULL, 0);
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x10, NULL, 0);
 #endif
 
     ledc_stop(LEDC_LOW_SPEED_MODE, tftLedcChannel, 0);
@@ -310,9 +312,9 @@ void enableTFTBacklight(void)
 {
 #if defined(CONFIG_GC9307_240x280)
     // Exit sleep mode
-    esp_lcd_panel_io_tx_param(io, 0x11, NULL, 0);
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x11, NULL, 0);
     // Display ON
-    esp_lcd_panel_io_tx_param(io, 0x29, NULL, 0);
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x29, NULL, 0);
 #endif
 
     if (false == tftBacklightIsPwm)
