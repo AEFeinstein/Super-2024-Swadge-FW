@@ -21,6 +21,15 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
 }
 
 /**
+ * @brief Uninitialize USB HID device
+ * Note, this does nothing as tinyusb_driver_uninstall() doesn't exist
+ */
+void deinitUsb(void)
+{
+    WARN_UNIMPLEMENTED();
+}
+
+/**
  * @brief Send a USB gamepad report to the system
  *
  * @param report The report to send, the current state of all gamepad inputs

@@ -19,7 +19,7 @@
  *
  * \section usb_usage Usage
  *
- * You don't need to call initUsb(). The system does this the appropriate time.
+ * You don't need to call initUsb() or deinitUsb(). The system does this the appropriate time.
  *
  * sendUsbGamepadReport() should be called whenever there is an updated gamepad state to be sent to the host.
  *
@@ -60,6 +60,7 @@ typedef int16_t (*fnAdvancedUsbHandler)(uint8_t* buffer, uint16_t length, uint8_
 typedef void (*fnSetSwadgeMode)(void* mode);
 
 void initUsb(fnSetSwadgeMode setSwadgeMode, fnAdvancedUsbHandler advancedUsbHandler);
+void deinitUsb(void);
 void sendUsbGamepadReport(hid_gamepad_report_t* report);
 void usbSetSwadgeMode(void* newMode);
 
