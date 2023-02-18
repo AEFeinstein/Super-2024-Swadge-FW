@@ -61,10 +61,10 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Parse and handle command line arguments
  *
- * @param argc
- * @param argv
+ * @param argc The number of command line arguments
+ * @param argv An array of null-terminated string arguments
  */
 void handleArgs(int argc, char** argv)
 {
@@ -72,11 +72,11 @@ void handleArgs(int argc, char** argv)
 }
 
 /**
- * @brief TODO
+ * @brief Main function to run the emulator
  *
- * @param argc
- * @param argv
- * @return int
+ * @param argc The number of command line arguments
+ * @param argv An array of null-terminated string arguments
+ * @return 0 if the emulator exited normally, nonzero if there was an error
  */
 int main(int argc, char** argv)
 {
@@ -104,8 +104,8 @@ int main(int argc, char** argv)
 }
 
 /**
- * @brief TODO
- *
+ * @brief This is called from app_main() once each loop. This is effectively the emulator's main loop which handles key
+ * inputs, drawing to the screen (both TFT and LEDs), and checking timers.
  */
 void taskYIELD(void)
 {
