@@ -249,8 +249,18 @@ docs:
 format:
 	clang-format -i -style=file $(COMPONENT_SRCS) $(SOURCES)
 
+CPPCHECK_FLAGS= \
+	--enable=all \
+	--inconclusive \
+	--library=posix \
+	--language=c \
+	--platform=unix32 \
+	--std=c17 \
+	--suppress=missingIncludeSystem \
+	--output-file=./cppcheck_result.txt
+
 cppcheck:
-	cppcheck --std=c17 --platform=unix32 --suppress=missingIncludeSystem --enable=all $(DEFINES) $(INC) main
+	cppcheck $(CPPCHECK_FLAGS) $(DEFINES) $(INC) main components emulator/src
 
 clean-firmware:
 	idf.py clean
