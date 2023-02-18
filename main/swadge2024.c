@@ -40,6 +40,7 @@
  * - hdw-mic.h: Learn how to use the microphone!
  * - hdw-temperature.h: Learn how to use the temperature sensor!
  * - hdw-usb.h: Learn how to be a USB HID Gamepad!
+ *     - advanced_usb_control.h: Use USB for application development!
  *
  * \section nwk_api Network APIs
  *
@@ -54,22 +55,23 @@
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data!
  * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
- *     - spiffs_font.h - Load font bitmaps
- *     - spiffs_wsg.h - Load WSG images
- *     - spiffs_sng.h - Load SNG songs
- *     - spiffs_json.h - Load JSON
- *     - spiffs_txt.h - Load plaintext
+ *     - spiffs_font.h: Load font bitmaps
+ *     - spiffs_wsg.h: Load WSG images
+ *     - spiffs_sng.h: Load SNG songs
+ *     - spiffs_json.h: Load JSON
+ *     - spiffs_txt.h: Load plaintext
  *
  * \section gr_api Graphics APIs
  *
  * Be an artist!
  *
+ * - palette.h: Learn about available colors!
+ * - color_utils.h: Learn about color maniuplation!
  * - fill.h: Learn how to fill areas on the screen!
  * - bresenham.h: Learn how to draw shapes on the screen!
  * - cndraw.h: Learn how to draw differenter shapes on the screen!
  * - wsg.h: Learn how to draw sprites on the creen!
  * - font.h: Learn how to draw text on the screen!
- * - color_utils.h: Learn about colors!
  *
  * \section oth_api Other Useful APIs
  *
