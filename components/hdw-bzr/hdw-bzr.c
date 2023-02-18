@@ -45,7 +45,7 @@ static bool isSfxMuted;
 static uint32_t cFreq;
 
 /// @brief Timer to check for note transitions
-static gptimer_handle_t gptimer;
+static gptimer_handle_t bzrTimer;
 
 /// @brief LEDC timer to play notes
 static ledc_timer_t ledcTimer;
@@ -115,7 +115,7 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
         .direction     = GPTIMER_COUNT_UP,
         .resolution_hz = 1000 * 1000, // 1MHz
     };
-    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));
+    ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &bzrTimer));
 
     // Configure the hardware timer to check for note transitions
     gptimer_alarm_config_t config = {
@@ -123,17 +123,27 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
         .reload_count               = 0,
         .flags.auto_reload_on_alarm = true,
     };
-    ESP_ERROR_CHECK(gptimer_set_alarm_action(gptimer, &config));
+    ESP_ERROR_CHECK(gptimer_set_alarm_action(bzrTimer, &config));
 
     // Configure the ISR
     gptimer_event_callbacks_t callbacks = {
         .on_alarm = buzzer_check_next_note_isr,
     };
-    ESP_ERROR_CHECK(gptimer_register_event_callbacks(gptimer, &callbacks, NULL));
+    ESP_ERROR_CHECK(gptimer_register_event_callbacks(bzrTimer, &callbacks, NULL));
 
     // Don't start the timer until a song is played
-    ESP_ERROR_CHECK(gptimer_enable(gptimer));
-    ESP_ERROR_CHECK(gptimer_stop(gptimer));
+    ESP_ERROR_CHECK(gptimer_enable(bzrTimer));
+    ESP_ERROR_CHECK(gptimer_stop(bzrTimer));
+}
+
+/**
+ * @brief Deinitialize the buzzer
+ */
+void deinitBuzzer(void)
+{
+    ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, ledcChannel, 0));
+    ESP_ERROR_CHECK(gptimer_stop(bzrTimer));
+    ESP_ERROR_CHECK(gptimer_disable(bzrTimer));
 }
 
 /**
@@ -179,7 +189,7 @@ void bzrPlayBgm(const song_t* song)
     {
         // Start playing BGM
         bzrPlayNote(bgm.song->notes[0].note);
-        gptimer_start(gptimer);
+        gptimer_start(bzrTimer);
     }
 }
 
@@ -203,7 +213,7 @@ void bzrPlaySfx(const song_t* song)
 
     // Always play SFX
     bzrPlayNote(sfx.song->notes[0].note);
-    gptimer_start(gptimer);
+    gptimer_start(bzrTimer);
 }
 
 /**
@@ -212,7 +222,7 @@ void bzrPlaySfx(const song_t* song)
 void bzrStop(void)
 {
     // Stop the timer to check notes
-    gptimer_stop(gptimer);
+    gptimer_stop(bzrTimer);
 
     // Stop the note
     bzrStopNote();

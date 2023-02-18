@@ -16,7 +16,7 @@
  *
  * \section bzr_usage Usage
  *
- * You don't need to call initBuzzer(). The system does at the appropriate time.
+ * You don't need to call initBuzzer() or deinitBuzzer(). The system does at the appropriate time.
  *
  * A ::musicalNote_t is a ::noteFrequency_t and a duration.
  * A ::song_t is a list of ::musicalNote_t that may be looped.
@@ -225,6 +225,7 @@ typedef struct
 
 void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel, bool isBgmMuted,
                 bool isSfxMuted);
+void deinitBuzzer(void);
 void bzrSetBgmIsMuted(bool isBgmMuted);
 void bzrGetBgmIsMuted(bool isSfxMuted);
 void bzrPlayBgm(const song_t* song);

@@ -79,14 +79,28 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
     memset(&emuBzrBgm, 0, sizeof(emuBzrBgm));
     memset(&emuBzrSfx, 0, sizeof(emuBzrSfx));
 
-    const esp_timer_create_args_t checkNoteTimeArgs = {.arg                   = NULL,
-                                                       .callback              = buzzer_check_next_note,
-                                                       .dispatch_method       = ESP_TIMER_TASK,
-                                                       .name                  = "BZR",
-                                                       .skip_unhandled_events = true};
-    esp_timer_handle_t checkNoteTimerHandle         = NULL;
+    const esp_timer_create_args_t checkNoteTimeArgs = {
+        .arg                   = NULL,
+        .callback              = buzzer_check_next_note,
+        .dispatch_method       = ESP_TIMER_TASK,
+        .name                  = "BZR",
+        .skip_unhandled_events = true,
+    };
+    esp_timer_handle_t checkNoteTimerHandle = NULL;
     esp_timer_create(&checkNoteTimeArgs, &checkNoteTimerHandle);
     esp_timer_start_periodic(checkNoteTimerHandle, 1);
+}
+
+/**
+ * @brief Deinitialize the buzzer
+ */
+void deinitBuzzer(void)
+{
+    if (sounddriver)
+    {
+        CloseSound(sounddriver);
+        sounddriver = NULL;
+    }
 }
 
 /**
