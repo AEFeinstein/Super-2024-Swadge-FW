@@ -3,6 +3,11 @@
 //==============================================================================
 
 #include <unistd.h>
+#ifdef __linux__
+    #include <signal.h>
+    #include <execinfo.h>
+#endif
+
 #include <esp_system.h>
 #include <esp_timer.h>
 
