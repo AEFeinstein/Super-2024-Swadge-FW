@@ -98,7 +98,11 @@ void deinitBuzzer(void)
 {
     if (sounddriver)
     {
-        CloseSound(sounddriver);
+#if defined(_WIN32)
+        CloseSound(NULL);
+#else
+        CloseSound(sounddriver); // when calling this on Windows, it halts
+#endif
         sounddriver = NULL;
     }
 }

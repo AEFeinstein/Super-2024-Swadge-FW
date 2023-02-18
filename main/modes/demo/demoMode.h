@@ -1,7 +1,7 @@
 #ifndef _DEMO_MODE_H_
 #define _DEMO_MODE_H_
 
-#include "swadgeMode.h"
+#include "swadge2024.h"
 
 extern swadgeMode_t demoMode;
 

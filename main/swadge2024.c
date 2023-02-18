@@ -78,7 +78,7 @@
  * - linked_list.h: A basic data structure
  * - trigonometry.h: Fast math based on look up tables
  * - macros.h: Convenient macros
- * - swadgeMode.h: Write a mode
+ * - swadge2024.h: Write a mode
  */
 
 //==============================================================================
@@ -110,7 +110,7 @@
 #include "wsg.h"
 
 #include "macros.h"
-#include "swadgeMode.h"
+#include "swadge2024.h"
 #include "demoMode.h"
 
 //==============================================================================
@@ -300,6 +300,26 @@ void app_main(void)
     {
         cSwadgeMode->fnExitMode();
     }
+
+    deinitSystem();
+}
+
+/**
+ * @brief Deinitialize all components in the system
+ */
+void deinitSystem(void)
+{
+    // Deinitialize everything!
+    deinitButtons();
+    deinitBuzzer();
+    deinitEspNow();
+    deinitLeds();
+    deinitMic();
+    deinitNvs();
+    deinitSpiffs();
+    deinitTemperatureSensor();
+    deinitTFT();
+    deinitUsb();
 }
 
 /**

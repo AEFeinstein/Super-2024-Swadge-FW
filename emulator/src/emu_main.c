@@ -13,6 +13,7 @@
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
+#include "swadge2024.h"
 #include "macros.h"
 
 // Make it so we don't need to include any other C files in our build.
@@ -133,6 +134,7 @@ void taskYIELD(void)
     // Must be checked after handling input, before graphics
     if (!isRunning)
     {
+        deinitSystem();
         exit(0);
         return;
     }

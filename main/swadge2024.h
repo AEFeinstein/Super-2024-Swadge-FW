@@ -163,4 +163,6 @@ typedef struct
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 } swadgeMode_t;
 
+void deinitSystem(void);
+
 #endif
