@@ -35,7 +35,7 @@ static bool adcSampling         = false;
  */
 void initMic(gpio_num_t gpio)
 {
-    WARN_UNIMPLEMENTED();
+    // Nothing to do here, emulator sound is initialized in initBuzzer()
 }
 
 /**
@@ -43,7 +43,7 @@ void initMic(gpio_num_t gpio)
  */
 void startMic(void)
 {
-    WARN_UNIMPLEMENTED();
+    adcSampling = true;
 }
 
 /**
@@ -56,8 +56,14 @@ void startMic(void)
  */
 uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
 {
-    WARN_UNIMPLEMENTED();
-    return 0;
+    uint32_t samplesRead = 0;
+    while (adcSampling && (sshead != sstail) && samplesRead < outSamplesMax)
+    {
+        *(outSamples++) = ssamples[sstail];
+        sstail          = (sstail + 1) % SSBUF;
+        samplesRead++;
+    }
+    return samplesRead;
 }
 
 /**
@@ -65,7 +71,7 @@ uint32_t loopMic(uint16_t* outSamples, uint32_t outSamplesMax)
  */
 void stopMic(void)
 {
-    WARN_UNIMPLEMENTED();
+    adcSampling = false;
 }
 
 /**
@@ -73,7 +79,7 @@ void stopMic(void)
  */
 void deinitMic(void)
 {
-    WARN_UNIMPLEMENTED();
+    // Nothing to do here, emulator sound is initialized in hdw-bzr.c
 }
 
 /**

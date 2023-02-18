@@ -175,15 +175,15 @@ void app_main(void)
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
                 sizeof(touchPads) / sizeof(touchPads[0]));
 
+    // Init buzzer. This must be called before initMic()
+    initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
+
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
     {
         initMic(GPIO_NUM_7);
         startMic();
     }
-
-    // Init buzzer
-    initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
