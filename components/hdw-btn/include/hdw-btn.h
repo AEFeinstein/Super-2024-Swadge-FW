@@ -23,7 +23,7 @@
  * to be received by the Swadge Mode.
  *
  * The pushbutton GPIOs are all read at the same time using <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
  * GPIO</a>.
  *
  * Originally the pushbuttons would trigger an interrupt, but we found that to have glitchier and less reliable results
@@ -46,7 +46,7 @@
  * position are correlated with events reported in checkButtonQueue().
  *
  * Touchpad interrupts are set up and touchpad values are read with <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.0/esp32s2/api-reference/peripherals/touch_pad.html">Touch
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/touch_pad.html">Touch
  * Sensor</a>.
  *
  * \section btn_usage Usage
