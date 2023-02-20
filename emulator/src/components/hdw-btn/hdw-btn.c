@@ -17,14 +17,14 @@
 
 /// The keyboard keys used for input
 static const char inputKeys[] = {
-    'w', ///< ::PB_UP
-    's', ///< ::PB_DOWN
-    'a', ///< ::PB_LEFT
-    'd', ///< ::PB_RIGHT
-    'l', ///< ::PB_A
-    'k', ///< ::PB_B
-    'o', ///< ::PB_START
-    'i', ///< ::PB_SELECT
+    'W', ///< ::PB_UP
+    'S', ///< ::PB_DOWN
+    'A', ///< ::PB_LEFT
+    'D', ///< ::PB_RIGHT
+    'L', ///< ::PB_A
+    'K', ///< ::PB_B
+    'O', ///< ::PB_START
+    'I', ///< ::PB_SELECT
     '1', ///< ::TB_0
     '2', ///< ::TB_1
     '3', ///< ::TB_2
