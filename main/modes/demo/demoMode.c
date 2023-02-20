@@ -1,3 +1,4 @@
+#include "menu.h"
 #include "demoMode.h"
 
 static void demoEnterMode(void);
@@ -13,8 +14,20 @@ static void demoConCb(p2pInfo* p2p, connectionEvt_t evt);
 static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
+static void demoMenuCb(const char*, bool selected);
+
+static const char demoName[]  = "Demo";
+static const char demoMenu1[] = "Menu 1";
+static const char demoMenu2[] = "Menu 2";
+static const char demoMenu3[] = "Menu 3";
+static const char demoMenu4[] = "Menu 4";
+static const char demoMenu5[] = "Menu 5";
+static const char demoMenu6[] = "Menu 6";
+static const char demoMenu7[] = "Menu 7";
+static const char demoMenu8[] = "Menu 8";
+
 swadgeMode_t demoMode = {
-    .modeName                 = "Demo",
+    .modeName                 = demoName,
     .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
     .usesAccelerometer        = true,
@@ -35,6 +48,7 @@ typedef struct
     wsg_t king_donut;
     song_t ode_to_joy;
     p2pInfo p2p;
+    menu_t* menu;
 } demoVars_t;
 
 demoVars_t* dv;
@@ -50,7 +64,17 @@ static void demoEnterMode(void)
     loadWsg("kid0.wsg", &dv->king_donut, true);
     loadSng("ode.sng", &dv->ode_to_joy, true);
 
-    bzrPlayBgm(&dv->ode_to_joy);
+    // bzrPlayBgm(&dv->ode_to_joy);
+
+    dv->menu = initMenu(demoName, &dv->ibm, demoMenuCb);
+    addSingleItemToMenu(dv->menu, demoMenu1);
+    addSingleItemToMenu(dv->menu, demoMenu2);
+    addSingleItemToMenu(dv->menu, demoMenu3);
+    addSingleItemToMenu(dv->menu, demoMenu4);
+    addSingleItemToMenu(dv->menu, demoMenu5);
+    addSingleItemToMenu(dv->menu, demoMenu6);
+    addSingleItemToMenu(dv->menu, demoMenu7);
+    addSingleItemToMenu(dv->menu, demoMenu8);
 
     p2pInitialize(&dv->p2p, 'd', demoConCb, demoMsgRxCb, -70);
     p2pStartConnection(&dv->p2p);
@@ -78,6 +102,7 @@ static void demoExitMode(void)
     freeWsg(&dv->king_donut);
     freeFont(&dv->ibm);
     freeSng(&dv->ode_to_joy);
+    deinitMenu(dv->menu);
     free(dv);
 }
 
@@ -95,7 +120,13 @@ static void demoMainLoop(int64_t elapsedUs)
     static uint32_t lastBtnState = 0;
     while (checkButtonQueue(&evt))
     {
-        printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
+        menuButton(dv->menu, evt);
+        if (evt.down)
+        {
+            drawMenu(dv->menu);
+        }
+
+        // printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
         lastBtnState = evt.state;
         // drawScreen = evt.down;
 
@@ -105,70 +136,70 @@ static void demoMainLoop(int64_t elapsedUs)
     }
 
     // Check for analog touch
-    int32_t centerVal, intensityVal;
-    if (getTouchCentroid(&centerVal, &intensityVal))
-    {
-        printf("touch center: %" PRId32 ", intensity: %" PRId32 "\n", centerVal, intensityVal);
-    }
-    else
-    {
-        printf("no touch\n");
-    }
+    // int32_t centerVal, intensityVal;
+    // if (getTouchCentroid(&centerVal, &intensityVal))
+    // {
+    //     printf("touch center: %" PRId32 ", intensity: %" PRId32 "\n", centerVal, intensityVal);
+    // }
+    // else
+    // {
+    //     printf("no touch\n");
+    // }
 
-    // Draw to the display
-    clearPxTft();
-    int numBtns   = 13;
-    int drawWidth = TFT_WIDTH / numBtns;
-    for (int i = 0; i < numBtns; i++)
-    {
-        if (lastBtnState & (1 << i))
-        {
-            for (int w = drawWidth * i; w < drawWidth * (i + 1); w++)
-            {
-                for (int h = 0; h < TFT_HEIGHT; h++)
-                {
-                    setPxTft(w, h, (i + 5) * 5);
-                }
-            }
-        }
-    }
+    // // Draw to the display
+    // clearPxTft();
+    // int numBtns   = 13;
+    // int drawWidth = TFT_WIDTH / numBtns;
+    // for (int i = 0; i < numBtns; i++)
+    // {
+    //     if (lastBtnState & (1 << i))
+    //     {
+    //         for (int w = drawWidth * i; w < drawWidth * (i + 1); w++)
+    //         {
+    //             for (int h = 0; h < TFT_HEIGHT; h++)
+    //             {
+    //                 setPxTft(w, h, (i + 5) * 5);
+    //             }
+    //         }
+    //     }
+    // }
 
-    drawLine(92, 92, 200, 200, c500, 0, 0, 0, 1, 1);
-    speedyLine(102, 92, 210, 200, c050);
-    drawWsg(&dv->king_donut, 100, 10, false, false, 0);
+    // drawLine(92, 92, 200, 200, c500, 0, 0, 0, 1, 1);
+    // speedyLine(102, 92, 210, 200, c050);
+    // drawWsg(&dv->king_donut, 100, 10, false, false, 0);
 
-    int yIdx         = 64;
-    char dbgTxt[256] = {0};
-    sprintf(dbgTxt, "nNotes = %" PRIu32, dv->ode_to_joy.numNotes);
-    drawText(&dv->ibm, c555, dbgTxt, 0, yIdx);
-    yIdx += (dv->ibm.h + 2);
+    // int yIdx         = 64;
+    // char dbgTxt[256] = {0};
+    // sprintf(dbgTxt, "nNotes = %" PRIu32, dv->ode_to_joy.numNotes);
+    // drawText(&dv->ibm, c555, dbgTxt, 0, yIdx);
+    // yIdx += (dv->ibm.h + 2);
 
-    int noteIdx = 0;
-    while (yIdx < TFT_HEIGHT)
-    {
-        sprintf(dbgTxt, "f: %5d, t: %5" PRIu32, dv->ode_to_joy.notes[noteIdx].note,
-                dv->ode_to_joy.notes[noteIdx].timeMs);
-        drawText(&dv->ibm, c555, dbgTxt, 0, yIdx);
-        yIdx += (dv->ibm.h + 2);
-        noteIdx++;
-    }
+    // int noteIdx = 0;
+    // while (yIdx < TFT_HEIGHT)
+    // {
+    //     sprintf(dbgTxt, "f: %5d, t: %5" PRIu32, dv->ode_to_joy.notes[noteIdx].note,
+    //             dv->ode_to_joy.notes[noteIdx].timeMs);
+    //     drawText(&dv->ibm, c555, dbgTxt, 0, yIdx);
+    //     yIdx += (dv->ibm.h + 2);
+    //     noteIdx++;
+    // }
 
-    // Read the temperature
-    printf("%f\n", readTemperatureSensor());
+    // // Read the temperature
+    // printf("%f\n", readTemperatureSensor());
 
-    // Get the acceleration
-    int16_t a_x, a_y, a_z;
-    accelGetAccelVec(&a_x, &a_y, &a_z);
+    // // Get the acceleration
+    // int16_t a_x, a_y, a_z;
+    // accelGetAccelVec(&a_x, &a_y, &a_z);
 
-    // Set LEDs
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
-    {
-        leds[i].r = (255 * ((i + 0) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-        leds[i].g = (255 * ((i + 3) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-        leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
-    }
-    setLeds(leds, CONFIG_NUM_LEDS);
+    // // Set LEDs
+    // led_t leds[CONFIG_NUM_LEDS] = {0};
+    // for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    // {
+    //     leds[i].r = (255 * ((i + 0) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
+    //     leds[i].g = (255 * ((i + 3) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
+    //     leds[i].b = (255 * ((i + 6) % CONFIG_NUM_LEDS)) / (CONFIG_NUM_LEDS - 1);
+    // }
+    // setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -276,4 +307,13 @@ static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
     // Do something
+}
+
+/**
+ * @brief TODO
+ *
+ * @param selected
+ */
+static void demoMenuCb(const char*, bool selected)
+{
 }

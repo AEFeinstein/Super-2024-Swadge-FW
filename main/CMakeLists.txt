@@ -11,6 +11,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "display/bresenham.c"
                             "display/cndraw.c"
                             "display/wsg.c"
+                            "menu/menu.c"
                             "modes/demo/demoMode.c"
                             "utils/color_utils.c"
                             "utils/linked_list.c"
@@ -33,6 +34,7 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./asset_loaders"
                                 "./utils"
                                 "./display"
+                                "./menu"
                                 "./modes/demo")
 
 function(spiffs_file_preprocessor)
