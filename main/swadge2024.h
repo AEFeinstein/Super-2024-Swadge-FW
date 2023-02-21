@@ -1,3 +1,20 @@
+/*! \file swadge2024.h
+ *
+ * \section swadgeMode_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section swadgeMode_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section swadgeMode_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _SWADGE_MODE_H_
 #define _SWADGE_MODE_H_
 

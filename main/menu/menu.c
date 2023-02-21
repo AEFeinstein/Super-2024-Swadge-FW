@@ -1,9 +1,29 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "hdw-tft.h"
 #include "menu.h"
+#include "bresenham.h"
+
+//==============================================================================
+// Const Variables
+//==============================================================================
 
 static const char* mnuBackStr = "Back";
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
+static void deinitSubMenu(menu_t* menu);
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * Initialize and return an empty menu. A menu is a collection of vertically
@@ -40,14 +60,52 @@ menu_t* initMenu(const char* title, font_t* font, menuCb cbFunc)
 }
 
 /**
- * Deinitialize a menu. This frees memory allocated for this menu, but not
- * memory allocated elsewhere, like the font or item labels
+ * Deinitialize a menu and all connected menus, including submenus and parent
+ * menus. This frees memory allocated for this menu, but not memory allocated
+ * elsewhere, like the font or item labels
  *
  * @param menu The menu to deinitialize
  */
 void deinitMenu(menu_t* menu)
 {
+    // Traverse to the top level menu
+    while (menu->parentMenu)
+    {
+        menu = menu->parentMenu;
+    }
+
+    // Deinitialize the menu. This has recursion!
+    deinitSubMenu(menu);
+}
+
+/**
+ * Deinitialize a menu and all of its submenus recursively. This frees memory
+ * allocated for this menu, but not memory allocated elsewhere, like the font or
+ * item labels
+ *
+ * @param menu
+ */
+static void deinitSubMenu(menu_t* menu)
+{
+    // For each item
+    node_t* itemNode = menu->items->first;
+    while (itemNode)
+    {
+        menuItem_t* item = (menuItem_t*)itemNode->val;
+        // If there is a submenu
+        if (item->subMenu)
+        {
+            // Deinitialize it
+            deinitSubMenu(item->subMenu);
+        }
+        itemNode = itemNode->next;
+    }
+
+    // Clear all items in the list
+    clear(menu->items);
+    // Free the list
     free(menu->items);
+    // Free the menu
     free(menu);
 }
 
@@ -339,6 +397,8 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 else if (item->label == mnuBackStr)
                 {
                     // If this is the back string, return the parent menu
+                    // Reset the current item when leaving a submenu
+                    menu->currentItem = menu->items->first;
                     return menu->parentMenu;
                 }
                 else if (item->label)
@@ -358,6 +418,8 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 // If there is a parent menu, go back
                 if (menu->parentMenu)
                 {
+                    // Reset the current item when leaving a submenu
+                    menu->currentItem = menu->items->first;
                     return menu->parentMenu;
                 }
                 break;
@@ -388,6 +450,9 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
  */
 void drawMenu(menu_t* menu)
 {
+    // Clear everything first
+    clearPxTft();
+
 #define ITEMS_PER_PAGE 5
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -413,35 +478,59 @@ void drawMenu(menu_t* menu)
         }
     }
 
+    int16_t x = 20;
+    int16_t y = 20;
+
+    // Draw an underlined title
+    drawText(menu->font, c555, menu->title, x, y);
+    y += (menu->font->h + 2);
+    drawLine(x, y, x + textWidth(menu->font, menu->title), y, c555, 0, 0, 0, 1, 1);
+    y += 3;
+
+    // TODO draw page indicators
+
     // Draw a page-worth of items
     for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
     {
         menuItem_t* item = (menuItem_t*)pageStart->val;
         if (NULL != item)
         {
+            // Draw an indicator if the current item is selected
             if (menu->currentItem->val == item)
             {
-                printf("X ");
-            }
-            else
-            {
-                printf("  ");
+                drawText(menu->font, c555, "X", 0, y);
             }
 
+            // Draw the label(s)
             if (item->label)
             {
-                printf("%s\n", item->label);
+                if (item->subMenu)
+                {
+                    char label[64] = {0};
+                    snprintf(label, sizeof(label) - 1, "%s >>", item->label);
+                    drawText(menu->font, c555, label, x, y);
+                }
+                else
+                {
+                    drawText(menu->font, c555, item->label, x, y);
+                }
             }
             else if (item->options)
             {
-                printf("%s\n", item->options[item->currentOpt]);
+                char label[64] = {0};
+                snprintf(label, sizeof(label) - 1, "< %s >", item->options[item->currentOpt]);
+                drawText(menu->font, c555, label, x, y);
             }
+
+            // Move to the next row
+            y += (menu->font->h + 2);
         }
+
+        // Move to the next item
         pageStart = pageStart->next;
         if (NULL == pageStart)
         {
             break;
         }
     }
-    printf("\n");
 }

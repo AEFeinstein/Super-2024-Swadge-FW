@@ -1,3 +1,20 @@
+/*! \file menu.h
+ *
+ * \section menu_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section menu_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section menu_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _MENU_H_
 #define _MENU_H_
 
@@ -32,15 +49,15 @@ typedef struct _menu_t
     menu_t* parentMenu;
 } menu_t;
 
-menu_t* initMenu(const char* title, font_t* font, menuCb cbFunc);
+menu_t* initMenu(const char* title, font_t* font, menuCb cbFunc) __attribute__((warn_unused_result));
 void deinitMenu(menu_t* menu);
-menu_t* startSubMenu(menu_t* menu, const char* label);
-menu_t* endSubMenu(menu_t* menu);
+menu_t* startSubMenu(menu_t* menu, const char* label) __attribute__((warn_unused_result));
+menu_t* endSubMenu(menu_t* menu) __attribute__((warn_unused_result));
 void addSingleItemToMenu(menu_t* menu, const char* label);
 void removeSingleItemFromMenu(menu_t* menu, const char* label);
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels);
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
-menu_t* menuButton(menu_t* menu, buttonEvt_t btn);
+menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 
 void drawMenu(menu_t* menu);
 

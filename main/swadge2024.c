@@ -81,6 +81,7 @@
  * - trigonometry.h: Fast math based on look up tables
  * - macros.h: Convenient macros
  * - swadge2024.h: Write a mode
+ * - menu.h: Make a menu
  */
 
 //==============================================================================
@@ -312,6 +313,12 @@ void app_main(void)
  */
 void deinitSystem(void)
 {
+    // Deinit the swadge mode
+    if (NULL != cSwadgeMode->fnExitMode)
+    {
+        cSwadgeMode->fnExitMode();
+    }
+
     // Deinitialize everything!
     deinitButtons();
     deinitBuzzer();

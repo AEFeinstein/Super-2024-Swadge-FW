@@ -26,6 +26,15 @@ static const char demoMenu6[] = "Menu 6";
 static const char demoMenu7[] = "Menu 7";
 static const char demoMenu8[] = "Menu 8";
 
+static const char opt1[]            = "opt1";
+static const char opt2[]            = "opt2";
+static const char opt3[]            = "opt3";
+static const char opt4[]            = "opt4";
+static const char* const demoOpts[] = {opt1, opt2, opt3, opt4};
+
+static const char demoSubMenu1[] = "SubMenu1";
+static const char demoSubMenu2[] = "SubMenu2";
+
 swadgeMode_t demoMode = {
     .modeName                 = demoName,
     .wifiMode                 = ESP_NOW,
@@ -69,8 +78,15 @@ static void demoEnterMode(void)
     dv->menu = initMenu(demoName, &dv->ibm, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);
     addSingleItemToMenu(dv->menu, demoMenu2);
+
+    dv->menu = startSubMenu(dv->menu, demoSubMenu1);
+    dv->menu = startSubMenu(dv->menu, demoSubMenu2);
+    dv->menu = endSubMenu(dv->menu);
+    dv->menu = endSubMenu(dv->menu);
+
     addSingleItemToMenu(dv->menu, demoMenu3);
     addSingleItemToMenu(dv->menu, demoMenu4);
+    addMultiItemToMenu(dv->menu, demoOpts, ARRAY_SIZE(demoOpts));
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
     addSingleItemToMenu(dv->menu, demoMenu7);
@@ -120,11 +136,7 @@ static void demoMainLoop(int64_t elapsedUs)
     static uint32_t lastBtnState = 0;
     while (checkButtonQueue(&evt))
     {
-        menuButton(dv->menu, evt);
-        if (evt.down)
-        {
-            drawMenu(dv->menu);
-        }
+        dv->menu = menuButton(dv->menu, evt);
 
         // printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
         lastBtnState = evt.state;
@@ -134,6 +146,8 @@ static void demoMainLoop(int64_t elapsedUs)
         report.buttons = lastBtnState;
         sendUsbGamepadReport(&report);
     }
+
+    drawMenu(dv->menu);
 
     // Check for analog touch
     // int32_t centerVal, intensityVal;
@@ -310,10 +324,11 @@ static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 }
 
 /**
- * @brief TODO
+ * @brief
  *
+ * @param label
  * @param selected
  */
-static void demoMenuCb(const char*, bool selected)
+static void demoMenuCb(const char* label, bool selected)
 {
 }
