@@ -33,11 +33,11 @@
 static void p2pConnectionTimeout(void* arg);
 static void p2pTxAllRetriesTimeout(void* arg);
 static void p2pTxRetryTimeout(void* arg);
-static void p2pRestart(p2pInfo* arg);
+static void p2pRestart(p2pInfo* p2p);
 static void p2pRestartTmrCb(void* arg);
 static void p2pStartRestartTimer(void* arg);
 static void p2pProcConnectionEvt(p2pInfo* p2p, connectionEvt_t event);
-static void p2pGameStartAckRecv(p2pInfo* arg, const uint8_t* data, uint8_t dataLen);
+static void p2pGameStartAckRecv(p2pInfo* p2p, const uint8_t* data, uint8_t dataLen);
 static void p2pSendAckToMac(p2pInfo* p2p, const uint8_t* mac_addr);
 static void p2pSendMsgEx(p2pInfo* p2p, uint8_t* msg, uint16_t len, bool shouldAck, p2pAckSuccessFn success,
                          p2pAckFailureFn failure);
@@ -818,14 +818,14 @@ void p2pSendCb(p2pInfo* p2p, const uint8_t* mac_addr __attribute__((unused)), es
         {
             if (0 != p2p->ack.timeSentUs)
             {
-                uint32_t transmissionTimeUs = esp_timer_get_time() - p2p->ack.timeSentUs;
-                // ESP_LOGD("P2P", "Transmission time %dus", transmissionTimeUs);
-                //  The timers are all millisecond, so make sure that
-                //  transmissionTimeUs is at least 1ms
-                if (transmissionTimeUs < 1000)
-                {
-                    transmissionTimeUs = 1000;
-                }
+                // uint32_t transmissionTimeUs = esp_timer_get_time() - p2p->ack.timeSentUs;
+                // // ESP_LOGD("P2P", "Transmission time %dus", transmissionTimeUs);
+                // //  The timers are all millisecond, so make sure that
+                // //  transmissionTimeUs is at least 1ms
+                // if (transmissionTimeUs < 1000)
+                // {
+                //     transmissionTimeUs = 1000;
+                // }
 
                 // Use a fixed retry of 5ms
                 uint32_t waitTimeUs = 5000;

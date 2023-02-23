@@ -223,11 +223,11 @@ typedef struct
     musicalNote_t* notes;
 } song_t;
 
-void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel, bool isBgmMuted,
-                bool isSfxMuted);
+void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, bool _isBgmMuted,
+                bool _isSfxMuted);
 void deinitBuzzer(void);
-void bzrSetBgmIsMuted(bool isBgmMuted);
-void bzrGetBgmIsMuted(bool isSfxMuted);
+void bzrSetBgmIsMuted(bool _isBgmMuted);
+void bzrGetBgmIsMuted(bool _isSfxMuted);
 void bzrPlayBgm(const song_t* song);
 void bzrPlaySfx(const song_t* song);
 void bzrStop(void);

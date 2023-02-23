@@ -22,18 +22,20 @@
  * @param wifiMode The WiFi mode. If ESP_NOW_IMMEDIATE, then recvCb is called directly from the interrupt. If ESP_NOW,
  * then recvCb is called from checkEspNowRxQueue()
  */
-void initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx, uart_port_t uart,
-                wifiMode_t wifiMode)
+esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx,
+                     uart_port_t uart, wifiMode_t wifiMode)
 {
     WARN_UNIMPLEMENTED();
+    return ESP_OK;
 }
 
 /**
  * Start wifi and use it for communication
  */
-void espNowUseWireless(void)
+esp_err_t espNowUseWireless(void)
 {
     WARN_UNIMPLEMENTED();
+    return ESP_OK;
 }
 
 /**

@@ -250,6 +250,23 @@ docs:
 format:
 	clang-format -i -style=file $(ALL_FILES)
 
+################################################################################
+# Firmware targets
+################################################################################
+
+clean-firmware:
+	idf.py clean
+	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
+	-@rm -rf ./docs/html
+	-@rm -rf ./spiffs_image/*
+
+firmware:
+	idf.py build
+
+################################################################################
+# cppcheck targets
+################################################################################
+
 CPPCHECK_FLAGS= \
 	--enable=all \
 	--inconclusive \
@@ -260,17 +277,21 @@ CPPCHECK_FLAGS= \
 	--suppress=missingIncludeSystem \
 	--output-file=./cppcheck_result.txt
 
+CPPCHECK_DIRS= \
+	main \
+	components \
+	emulator/src
+
+CPPCHECK_IGNORE= \
+	emulator/src/rawdraw_sf.h \
+	emulator/sound \
+	emulator/src/components/how-nvs/cJSON.c \
+	emulator/src/components/how-nvs/cJSON.h
+
+CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
+
 cppcheck:
-	cppcheck $(CPPCHECK_FLAGS) $(DEFINES) $(INC) main components emulator/src
-
-clean-firmware:
-	idf.py clean
-	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
-	-@rm -rf ./docs/html
-	-@rm -rf ./spiffs_image/*
-
-firmware:
-	idf.py build
+	cppcheck $(CPPCHECK_FLAGS) $(DEFINES) $(INC) $(CPPCHECK_DIRS) $(CPPCHECK_IGNORE_FLAGS)
 
 # Print any value from this makefile
 print-%  : ; @echo $* = $($*)

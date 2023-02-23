@@ -87,6 +87,7 @@
 #include <stdbool.h>
 
 #include <esp_now.h>
+#include <esp_err.h>
 #include <hal/gpio_types.h>
 #include <driver/uart.h>
 
@@ -121,11 +122,11 @@ typedef void (*hostEspNowRecvCb_t)(const esp_now_recv_info_t* esp_now_info, cons
  */
 typedef void (*hostEspNowSendCb_t)(const uint8_t* mac_addr, esp_now_send_status_t status);
 
-void initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx, uart_port_t uart,
-                wifiMode_t mode);
+esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_num_t rx, gpio_num_t tx,
+                     uart_port_t uart, wifiMode_t wifiMode);
 void deinitEspNow(void);
 
-void espNowUseWireless(void);
+esp_err_t espNowUseWireless(void);
 void espNowUseSerial(bool crossoverPins);
 
 void espNowSend(const char* data, uint8_t len);

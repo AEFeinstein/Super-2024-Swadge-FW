@@ -403,8 +403,7 @@ void clearPxTft(void)
 void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 {
     // Indexes of the line currently being sent to the LCD and the line we're calculating
-    uint8_t sending_line = 0;
-    uint8_t calc_line    = 0;
+    uint8_t calc_line = 0;
 
 #ifdef PROCPROFILE
     uint32_t start, mid, final;
@@ -440,8 +439,8 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
         mid = get_ccount();
 #endif
 
-        sending_line = calc_line;
-        calc_line    = !calc_line;
+        uint8_t sending_line = calc_line;
+        calc_line            = !calc_line;
 
         if (y != 0 && fnBackgroundDrawCallback)
         {

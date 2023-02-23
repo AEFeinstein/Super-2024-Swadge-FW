@@ -2,6 +2,6 @@
 #define _SPIFFS_TXT_H_
 
 char* loadTxt(const char* name, bool spiRam);
-void freeTxt(char* jsonStr);
+void freeTxt(char* txtStr);
 
 #endif
