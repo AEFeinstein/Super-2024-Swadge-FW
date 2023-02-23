@@ -4,7 +4,7 @@
  *
  * The buzzer is driven by the <a
  * href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/ledc.html">LEDC
- * periphral</a>. This is usually used to generate a PWM signal to control the intensity of an LED, but here it
+ * peripheral</a>. This is usually used to generate a PWM signal to control the intensity of an LED, but here it
  * generates frequencies for the buzzer.
  *
  * A hardware timer is started which calls an interrupt every 5ms to check if the song should play the next note.
