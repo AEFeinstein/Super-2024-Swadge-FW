@@ -71,6 +71,11 @@ static int16_t signExtend10bit(uint16_t in);
  * @brief Initialize the accelerometer
  *
  * @param _i2c_port The i2c port to use for the accelerometer
+ * @param sda The GPIO for the Serial DAta line
+ * @param scl The GPIO for the Serial CLock line
+ * @param pullup Either \c GPIO_PULLUP_DISABLE if there are external pullup resistors on SDA and SCL or \c
+ * GPIO_PULLUP_ENABLE if internal pullups should be used
+ * @param clkHz The frequency of the I2C clock
  * @param range The range to measure, between ::QMA_RANGE_2G and ::QMA_RANGE_32G
  * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not

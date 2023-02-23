@@ -202,11 +202,12 @@ typedef void (*p2pMsgRxCbFn)(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 typedef void (*p2pMsgTxCbFn)(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
 /**
- * @brief This typedef is for a function callback called when a message is acknowledged
+ * @brief This typedef is for a function callback called when a message is acknowledged.
+ * It make also contain a data packet which was appended to the ACK.
  *
  * @param p2p The p2pInfo
- * @param data The data which was acknowledged
- * @param len The length of the data which was acknowledged
+ * @param data A data payload returned along with the ACK
+ * @param len The length of the data payload appended to the ACK
  */
 typedef void (*p2pAckSuccessFn)(p2pInfo* p2p, const uint8_t* data, uint8_t len);
 
@@ -214,10 +215,8 @@ typedef void (*p2pAckSuccessFn)(p2pInfo* p2p, const uint8_t* data, uint8_t len);
  * @brief This typedef is for a function callback called when a message is not acknowledged
  *
  * @param p2p The p2pInfo
- * @param data The data which was not acknowledged
- * @param len The length of the data which was not acknowledged
  */
-typedef void (*p2pAckFailureFn)(p2pInfo*);
+typedef void (*p2pAckFailureFn)(p2pInfo* p2p);
 
 /// A start byte for all p2p packets
 #define P2P_START_BYTE 'p'

@@ -45,7 +45,7 @@ static uint8_t did_init_flash_function;
  * @brief Accept a "get" feature report command from a USB host and write
  *         back whatever is needed to send back.
  *
- * @param datalen Number of bytes host is requesting from us.
+ * @param reqlen Number of bytes host is requesting from us.
  * @param data Pointer to a feature get request for the command set.
  * @return Number of bytes that will be returned.
  */
@@ -104,7 +104,7 @@ int advanced_usb_write_log_printf(const char* fmt, va_list args)
  * @brief vaprintf standin for USB logging.
  *
  * @param fmt vaprintf format
- * @param args vaprintf args
+ * @param ... vaprintf args
  * @return size Number of characters that were written.
  */
 int uprintf(const char* fmt, ...)
@@ -159,7 +159,6 @@ int handle_advanced_usb_terminal_get(int reqlen, uint8_t* data)
  *
  * @param datalen Total length of the buffer (command ID incldued)
  * @param data Pointer to full command
- * @return A pointer to a null terminated JSON string. May be NULL if the load
  */
 void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
 {
