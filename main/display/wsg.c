@@ -23,8 +23,6 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
  * Transform a pixel's coordinates by rotation around the sprite's center point,
  * then reflection over Y axis, then reflection over X axis, then translation
  *
- * This intentionally does not have ICACHE_FLASH_ATTR because it may be called often
- *
  * @param x The x coordinate of the pixel location to transform
  * @param y The y coordinate of the pixel location to trasform
  * @param rotateDeg The number of degrees to rotate clockwise, must be 0-359
@@ -338,45 +336,42 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
  */
 void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
 {
-    // Check if there is framebuffer access
+    if (xOff > TFT_WIDTH)
     {
-        if (xOff > TFT_WIDTH)
-        {
-            return;
-        }
+        return;
+    }
 
-        // Bound in the Y direction
-        int32_t yStart = (yOff < 0) ? 0 : yOff;
-        int32_t yEnd   = ((yOff + wsg->h) > TFT_HEIGHT) ? TFT_HEIGHT : (yOff + wsg->h);
+    // Bound in the Y direction
+    int32_t yStart = (yOff < 0) ? 0 : yOff;
+    int32_t yEnd   = ((yOff + wsg->h) > TFT_HEIGHT) ? TFT_HEIGHT : (yOff + wsg->h);
 
-        int wWidth                  = wsg->w;
-        int dWidth                  = TFT_WIDTH;
-        const paletteColor_t* pxWsg = &wsg->px[(yOff < 0) ? (wsg->h - (yEnd - yStart)) * wWidth : 0];
-        paletteColor_t* pxDisp      = &(getPxTftFramebuffer()[yStart * dWidth + xOff]);
+    int wWidth                  = wsg->w;
+    int dWidth                  = TFT_WIDTH;
+    const paletteColor_t* pxWsg = &wsg->px[(yOff < 0) ? (wsg->h - (yEnd - yStart)) * wWidth : 0];
+    paletteColor_t* pxDisp      = &(getPxTftFramebuffer()[yStart * dWidth + xOff]);
 
-        // Bound in the X direction
-        int32_t copyLen = wsg->w;
-        if (xOff < 0)
-        {
-            copyLen += xOff;
-            pxDisp -= xOff;
-            pxWsg -= xOff;
-            xOff = 0;
-        }
+    // Bound in the X direction
+    int32_t copyLen = wsg->w;
+    if (xOff < 0)
+    {
+        copyLen += xOff;
+        pxDisp -= xOff;
+        pxWsg -= xOff;
+        xOff = 0;
+    }
 
-        if (xOff + copyLen > TFT_WIDTH)
-        {
-            copyLen = TFT_WIDTH - xOff;
-        }
+    if (xOff + copyLen > TFT_WIDTH)
+    {
+        copyLen = TFT_WIDTH - xOff;
+    }
 
-        // copy each row
-        for (int32_t y = yStart; y < yEnd; y++)
-        {
-            // Copy the row
-            // TODO probably faster if we can guarantee copyLen is a multiple of 4
-            memcpy(pxDisp, pxWsg, copyLen);
-            pxDisp += dWidth;
-            pxWsg += wWidth;
-        }
+    // copy each row
+    for (int32_t y = yStart; y < yEnd; y++)
+    {
+        // Copy the row
+        // TODO probably faster if we can guarantee copyLen is a multiple of 4
+        memcpy(pxDisp, pxWsg, copyLen);
+        pxDisp += dWidth;
+        pxWsg += wWidth;
     }
 }
