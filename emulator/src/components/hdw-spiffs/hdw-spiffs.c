@@ -89,7 +89,7 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     if (f == NULL)
     {
         // ESP_LOGE("SPIFFS", "Failed to open %s", fnameFull);
-        return false;
+        return NULL;
     }
 
     // Get the file size

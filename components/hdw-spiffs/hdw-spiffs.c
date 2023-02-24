@@ -18,8 +18,12 @@
 //==============================================================================
 
 /* Config data */
-static const esp_vfs_spiffs_conf_t conf
-    = {.base_path = "/spiffs", .partition_label = NULL, .max_files = 5, .format_if_mount_failed = false};
+static const esp_vfs_spiffs_conf_t conf = {
+    .base_path              = "/spiffs",
+    .partition_label        = NULL,
+    .max_files              = 5,
+    .format_if_mount_failed = false,
+};
 
 //==============================================================================
 // Functions
@@ -82,7 +86,7 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     if (f == NULL)
     {
         ESP_LOGE("SPIFFS", "Failed to open %s", fnameFull);
-        return false;
+        return NULL;
     }
 
     // Get the file size
