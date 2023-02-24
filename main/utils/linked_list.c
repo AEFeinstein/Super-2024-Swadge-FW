@@ -3,7 +3,6 @@
 //==============================================================================
 
 #include <stdlib.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <inttypes.h>
 
@@ -37,8 +36,8 @@ static void validateList(const char* func, int line, bool nl, list_t* list, node
 /**
  * @brief Add to the end of the list
  *
- * @param list TOOD
- * @param val
+ * @param list The list to add to
+ * @param val The value to be added
  */
 void push(list_t* list, void* val)
 {
@@ -65,8 +64,8 @@ void push(list_t* list, void* val)
 /**
  * @brief Remove from the end of the list
  *
- * @param list TODO
- * @return void*
+ * @param list The list to remove the last node from
+ * @return The value from the last node
  */
 void* pop(list_t* list)
 {
@@ -105,8 +104,8 @@ void* pop(list_t* list)
 /**
  * @brief Add to the front of the list
  *
- * @param list TODO
- * @param val
+ * @param list The list to add to
+ * @param val The value to add to the list
  */
 void unshift(list_t* list, void* val)
 {
@@ -133,8 +132,8 @@ void unshift(list_t* list, void* val)
 /**
  * @brief Remove from the front of the list
  *
- * @param list TODO
- * @return void*
+ * @param list The list to remove from
+ * @return The value from the first node
  */
 void* shift(list_t* list)
 {
@@ -172,19 +171,24 @@ void* shift(list_t* list)
 
 /**
  * @brief Add at an index in the list
- * TODO: bool return to check if index is valid?
  *
- * @param list TODO
- * @param val
- * @param index
+ * @param list The list to add to
+ * @param val The value to add
+ * @param index The index to add the value at
+ * @return true if the value was added, false if the index was invalid
  */
-void add(list_t* list, void* val, int index)
+bool addIdx(list_t* list, void* val, uint16_t index)
 {
     VALIDATE_LIST(__func__, __LINE__, true, list, val);
-    // If the index we're trying to add to the start of the list
+    // If the index is 0, we're adding to the start of the list
     if (index == 0)
     {
         unshift(list, val);
+    }
+    // Else if the index is the length, we're adding to the end of the list
+    else if (index == list->length)
+    {
+        push(list, val);
     }
     // Else if the index we're trying to add to is before the end of the list
     else if (index < list->length - 1)
@@ -195,7 +199,7 @@ void add(list_t* list, void* val, int index)
         newNode->prev   = NULL;
 
         node_t* current = NULL;
-        for (int i = 0; i < index; i++)
+        for (uint16_t i = 0; i < index; i++)
         {
             current = current == NULL ? list->first : current->next;
         }
@@ -211,22 +215,22 @@ void add(list_t* list, void* val, int index)
 
         list->length++;
     }
-    // Else just add the node to the end of the list
     else
     {
-        push(list, val);
+        return false;
     }
     VALIDATE_LIST(__func__, __LINE__, false, list, val);
+    return true;
 }
 
 /**
  * @brief Remove at an index in the list
  *
- * @param list TODO
- * @param index
- * @return void*
+ * @param list The list to remove from
+ * @param index The index to remove the value from
+ * @return The value that was removed. May be NULL if the index was invalid
  */
-void* removeIdx(list_t* list, int index)
+void* removeIdx(list_t* list, uint16_t index)
 {
     VALIDATE_LIST(__func__, __LINE__, true, list, (void*)((intptr_t)index));
     // If the list is null or empty, dont touch it
@@ -235,11 +239,17 @@ void* removeIdx(list_t* list, int index)
         VALIDATE_LIST(__func__, __LINE__, false, list, (void*)((intptr_t)index));
         return NULL;
     }
-    // If the index we're trying to remove from is the start of the list
+    // Else if the index we're trying to remove from is the start of the list
     else if (index == 0)
     {
         VALIDATE_LIST(__func__, __LINE__, false, list, (void*)((intptr_t)index));
         return shift(list);
+    }
+    // Else if the index we're trying to remove from is the end of the list
+    else if (index == list->length)
+    {
+        VALIDATE_LIST(__func__, __LINE__, false, list, (void*)((intptr_t)index));
+        return pop(list);
     }
     // Else if the index we're trying to remove from is before the end of the list
     else if (index < list->length - 1)
@@ -247,7 +257,7 @@ void* removeIdx(list_t* list, int index)
         void* retval = NULL;
 
         node_t* current = NULL;
-        for (int i = 0; i < index; i++)
+        for (uint16_t i = 0; i < index; i++)
         {
             current = current == NULL ? list->first : current->next;
         }
@@ -268,90 +278,75 @@ void* removeIdx(list_t* list, int index)
         VALIDATE_LIST(__func__, __LINE__, false, list, (void*)((intptr_t)index));
         return retval;
     }
-    // Else just remove the node at the end of the list
     else
     {
-        VALIDATE_LIST(__func__, __LINE__, false, list, (void*)((intptr_t)index));
-        return pop(list);
+        // Index was invalid
+        return NULL;
     }
 }
 
 /**
- * Remove a specific entry from the linked list
- * This only removes the first instance of the entry if it is linked multiple
- * times
+ * Remove a specific entry from the linked list by ::node_t.
+ * This relinks the entry's neighbors, but does not validate that it was part of the given ::list_t.
+ * If the given ::node_t was not part of the given ::list_t, the list length will desync.
  *
- * @param list  The list to remove an entry from
+ * @param list The list to remove an entry from
  * @param entry The entry to remove
- * @return The void* val associated with the removed entry
+ * @return The removed value from the entry, may be NULL if the entry was invalid
  */
 void* removeEntry(list_t* list, node_t* entry)
 {
-    VALIDATE_LIST(__func__, __LINE__, true, list, entry);
-    // If the list is null or empty, dont touch it
-    if (NULL == list || list->length == 0)
+    // Don't do anything with a NULL entry
+    if (NULL == entry)
     {
-        VALIDATE_LIST(__func__, __LINE__, false, list, entry);
         return NULL;
     }
-    // If the entry we're trying to remove is the fist one, shift it
-    else if (list->first == entry)
+
+    VALIDATE_LIST(__func__, __LINE__, true, list, entry);
+
+    // Get references to this node's previous and next nodes
+    node_t* prev = entry->prev;
+    node_t* next = entry->next;
+
+    // Adjust first and last, if necessary
+    if (list->first == entry)
     {
-        VALIDATE_LIST(__func__, __LINE__, false, list, entry);
-        return shift(list);
+        list->first = entry->next;
     }
-    // If the entry we're trying to remove is the last one, pop it
-    else if (list->last == entry)
+    if (list->last == entry)
     {
-        VALIDATE_LIST(__func__, __LINE__, false, list, entry);
-        return pop(list);
+        list->last = entry->prev;
     }
-    // Otherwise it's somewhere in the middle, or doesn't exist
-    else
+
+    // Relink previous and next nodes, if able
+    if (NULL != prev)
     {
-        // Start at list->first->next because we know the entry isn't at the head
-        node_t* prev = list->first;
-        node_t* curr = prev->next;
-        // Iterate!
-        while (curr != NULL)
-        {
-            // Found the node to remove
-            if (entry == curr)
-            {
-                // We need to free the removed node, and adjust the nodes before and after it
-                // current is set to the node before it
-
-                // Link the previous node to the next node
-                prev->next = curr->next;
-                // Link the next node to the previous node
-                curr->next->prev = prev;
-
-                // Save a value to return
-                void* retval = curr->val;
-
-                // Free the unlinked node, decrement the list
-                free(curr);
-                list->length--;
-                VALIDATE_LIST(__func__, __LINE__, false, list, entry);
-
-                // Return the removed value
-                return retval;
-            }
-
-            // Iterate to the next node
-            curr = curr->next;
-            prev = curr->prev;
-        }
+        prev->next = next;
     }
-    // Nothing to be removed
+    if (NULL != next)
+    {
+        next->prev = prev;
+    }
+
+    // Decrement list length
+    list->length--;
+
+    // Save the value
+    void* retVal = entry->val;
+
     VALIDATE_LIST(__func__, __LINE__, false, list, entry);
-    return NULL;
+
+    // free the memory
+    free(entry);
+
+    // Return the value
+    return retVal;
 }
 
 /**
  * @brief Remove all items from the list
  *
- * @param list TODO
+ * @param list The list to clear
  */
 void clear(list_t* list)
 {
@@ -467,7 +462,7 @@ void listTester(void)
                 {
                     idx = esp_random() % l->length;
                 }
-                add(l, NULL, idx);
+                addIdx(l, NULL, idx);
                 break;
             }
             case 5:
