@@ -28,6 +28,7 @@ idf_component_register(SRCS "swadge2024.c"
                                   hdw-tft
                                   hdw-temperature
                                   hdw-usb
+                                  crashwrap
                     REQUIRES esp_timer
                              spi_flash
                     INCLUDE_DIRS "."

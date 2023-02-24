@@ -105,6 +105,7 @@
 #include "hdw-usb.h"
 #include "hdw-esp-now.h"
 #include "hdw-nvs.h"
+#include "crashwrap.h"
 
 #include "font.h"
 #include "bresenham.h"
@@ -146,6 +147,9 @@ static void setSwadgeMode(void* swadgeMode);
  */
 void app_main(void)
 {
+    // Install crash wrapper
+    checkAndInstallCrashwrap();
+
     // Set the Swadge mode pointer
     cSwadgeMode = modes[0];
 
