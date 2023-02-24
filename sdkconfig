@@ -1467,21 +1467,6 @@ CONFIG_WIFI_PROV_STA_ALL_CHANNEL_SCAN=y
 # end of Wi-Fi Provisioning Manager
 
 #
-# Supplicant
-#
-# CONFIG_WPA_MBEDTLS_CRYPTO is not set
-# CONFIG_WPA_WAPI_PSK is not set
-# CONFIG_WPA_SUITE_B_192 is not set
-# CONFIG_WPA_DEBUG_PRINT is not set
-# CONFIG_WPA_TESTING_OPTIONS is not set
-# CONFIG_WPA_WPS_STRICT is not set
-# CONFIG_WPA_11KV_SUPPORT is not set
-# CONFIG_WPA_MBO_SUPPORT is not set
-# CONFIG_WPA_DPP_SUPPORT is not set
-# CONFIG_WPA_11R_SUPPORT is not set
-# end of Supplicant
-
-#
 # TinyUSB Stack
 #
 CONFIG_TINYUSB_DEBUG_LEVEL=0
