@@ -1,6 +1,16 @@
 # Swadge-IDF-5.0
 Migrating the Swadge to ESP IDF 5.0.1, one component at a time
 
+## Documentation
+
+Full Doxygen documentation can be found at https://adam.feinste.in/Swadge-IDF-5.0/
+
+## Continuous Integration
+
+This project uses Github Actions to automatically build the firmware any time a change is pushed to main.
+
+![Build Firmware and Emulator](https://github.com/AEFeinstein/Swadge-IDF-5.0/actions/workflows/build-firmware-and-emulator.yml/badge.svg)
+
 ## Dependencies
 
 * [ESP-IDF](https://github.com/espressif/esp-idf) to build the firmware
