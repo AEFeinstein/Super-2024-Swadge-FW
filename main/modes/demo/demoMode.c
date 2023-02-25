@@ -80,8 +80,12 @@ static void demoEnterMode(void)
     addSingleItemToMenu(dv->menu, demoMenu2);
 
     dv->menu = startSubMenu(dv->menu, demoSubMenu1);
+    addSingleItemToMenu(dv->menu, demoMenu7);
+
     dv->menu = startSubMenu(dv->menu, demoSubMenu2);
+    addSingleItemToMenu(dv->menu, demoMenu8);
     dv->menu = endSubMenu(dv->menu);
+
     dv->menu = endSubMenu(dv->menu);
 
     addSingleItemToMenu(dv->menu, demoMenu3);
@@ -89,8 +93,6 @@ static void demoEnterMode(void)
     addMultiItemToMenu(dv->menu, demoOpts, ARRAY_SIZE(demoOpts));
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
-    addSingleItemToMenu(dv->menu, demoMenu7);
-    addSingleItemToMenu(dv->menu, demoMenu8);
 
     p2pInitialize(&dv->p2p, 'd', demoConCb, demoMsgRxCb, -70);
     p2pStartConnection(&dv->p2p);
@@ -331,4 +333,5 @@ static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
  */
 static void demoMenuCb(const char* label, bool selected)
 {
+    printf("%s %s\n", label, selected ? "selected" : "scrolled to");
 }

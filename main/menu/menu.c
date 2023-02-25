@@ -365,6 +365,11 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                     // Call the callback, not selected
                     menu->cbFunc(item->options[item->currentOpt], false);
                 }
+                else if (menu->parentMenu)
+                {
+                    // If this item has a submenu, enter it
+                    return menu->parentMenu;
+                }
                 break;
             }
             case PB_RIGHT:
@@ -383,6 +388,11 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
 
                     // Call the callback, not selected
                     menu->cbFunc(item->options[item->currentOpt], false);
+                }
+                else if (item->subMenu)
+                {
+                    // If this item has a submenu, enter it
+                    return item->subMenu;
                 }
                 break;
             }
@@ -487,14 +497,19 @@ void drawMenu(menu_t* menu)
     drawLine(x, y, x + textWidth(menu->font, menu->title), y, c555, 0, 0, 0, 1, 1);
     y += 3;
 
-    // TODO draw page indicators
+    // Draw page indicators
+    if (menu->items->length > ITEMS_PER_PAGE)
+    {
+        drawText(menu->font, c555, "~UP~", x, y);
+    }
+    y += (menu->font->h + 2);
 
     // Draw a page-worth of items
     for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
     {
-        menuItem_t* item = (menuItem_t*)pageStart->val;
-        if (NULL != item)
+        if (NULL != pageStart)
         {
+            menuItem_t* item = (menuItem_t*)pageStart->val;
             // Draw an indicator if the current item is selected
             if (menu->currentItem->val == item)
             {
@@ -522,15 +537,18 @@ void drawMenu(menu_t* menu)
                 drawText(menu->font, c555, label, x, y);
             }
 
-            // Move to the next row
-            y += (menu->font->h + 2);
+            // Move to the next item
+            pageStart = pageStart->next;
         }
 
-        // Move to the next item
-        pageStart = pageStart->next;
-        if (NULL == pageStart)
-        {
-            break;
-        }
+        // Move to the next row
+        y += (menu->font->h + 2);
     }
+
+    // Draw page indicators
+    if (menu->items->length > ITEMS_PER_PAGE)
+    {
+        drawText(menu->font, c555, "~DOWN~", x, y);
+    }
+    y += (menu->font->h + 2);
 }
