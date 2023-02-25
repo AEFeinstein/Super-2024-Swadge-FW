@@ -245,7 +245,7 @@ clean:
 ################################################################################
 
 docs:
-	doxygen .\Doxyfile
+	doxygen ./Doxyfile
 
 format:
 	clang-format -i -style=file $(ALL_FILES)
