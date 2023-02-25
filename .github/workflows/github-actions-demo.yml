@@ -29,7 +29,7 @@
          uses: actions/checkout@v3
  
        - name: Compile the Emulator
-         shell: msys2
+         shell: msys2 {0}
          run: |
            make -j2
  
