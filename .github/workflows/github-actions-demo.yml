@@ -1,48 +1,49 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
-jobs:
-  Explore-GitHub-Actions:
-    runs-on: windows-latest
-    steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-
-     - name: Setup MSYS2
-       uses: msys2/setup-msys2@v2
-       with:
-         msystem: MINGW64
-         path-type: minimal
-         release: false
-         update: false
-         install: >-
-           base-devel
-           mingw-w64-x86_64-toolchain
-           git
-           make
-           zip
-           mingw-w64-x86_64-python-pip
-           python-pip
-
-      - name: Check out repository code
-        uses: actions/checkout@v3
-
-      - name: Compile the Emulator
-        shell: msys2
-        run: |
-          make -j2
-
-      - name: Set up the IDF
-        shell: powershell
-        run: |
-          git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
-          ${{ runner.temp }}/esp-idf/install.ps1
-
-      - name: Compile the firmware
-        shell: powershell
-        run: |
-          ${{ runner.temp }}/esp-idf/export.ps1
-          idf.py build
-
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+ name: GitHub Actions Demo
+ run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
+ on: [push]
+ jobs:
+   Explore-GitHub-Actions:
+     runs-on: windows-latest
+     steps:
+       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
+       - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
+       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+  
+       - name: Setup MSYS2
+         uses: msys2/setup-msys2@v2
+         with:
+           msystem: MINGW64
+           path-type: minimal
+           release: false
+           update: false
+           install: >-
+             base-devel
+             mingw-w64-x86_64-toolchain
+             git
+             make
+             zip
+             mingw-w64-x86_64-python-pip
+             python-pip
+  
+       - name: Check out repository code
+         uses: actions/checkout@v3
+ 
+       - name: Compile the Emulator
+         shell: msys2
+         run: |
+           make -j2
+ 
+       - name: Set up the IDF
+         shell: powershell
+         run: |
+           git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
+           ${{ runner.temp }}/esp-idf/install.ps1
+ 
+       - name: Compile the firmware
+         shell: powershell
+         run: |
+           ${{ runner.temp }}/esp-idf/export.ps1
+           idf.py build
+ 
+       - run: echo "🍏 This job's status is ${{ job.status }}."
+ 
