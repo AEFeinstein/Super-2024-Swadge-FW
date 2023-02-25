@@ -13,7 +13,7 @@
  * Swadge. See \c spiffs_create_partition_image in \c CMakeLists.txt.
  *
  * WSG files can be loaded from the SPIFFS filesystem with helper functions in spiffs_wsg.h.
- * Once loaded from the SPIFFS filesystem then can be WSGs can be drawn to the display.
+ * Once loaded from the SPIFFS filesystem WSGs can be drawn to the display.
  *
  * \section wsg_usage Usage
  *
