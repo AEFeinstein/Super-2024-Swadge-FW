@@ -493,7 +493,7 @@ void drawMenu(menu_t* menu)
 
     // Draw an underlined title
     drawText(menu->font, c555, menu->title, x, y);
-    y += (menu->font->h + 2);
+    y += (menu->font->height + 2);
     drawLine(x, y, x + textWidth(menu->font, menu->title), y, c555, 0, 0, 0, 1, 1);
     y += 3;
 
@@ -502,7 +502,7 @@ void drawMenu(menu_t* menu)
     {
         drawText(menu->font, c555, "~UP~", x, y);
     }
-    y += (menu->font->h + 2);
+    y += (menu->font->height + 2);
 
     // Draw a page-worth of items
     for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
@@ -542,7 +542,7 @@ void drawMenu(menu_t* menu)
         }
 
         // Move to the next row
-        y += (menu->font->h + 2);
+        y += (menu->font->height + 2);
     }
 
     // Draw page indicators
@@ -550,5 +550,5 @@ void drawMenu(menu_t* menu)
     {
         drawText(menu->font, c555, "~DOWN~", x, y);
     }
-    y += (menu->font->h + 2);
+    y += (menu->font->height + 2);
 }

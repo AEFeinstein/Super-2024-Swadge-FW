@@ -42,7 +42,7 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
     }
 
     // Read the data into a font struct
-    font->h = buf[bufIdx++];
+    font->height = buf[bufIdx++];
 
     // Read each char
     while (bufIdx < sz)
@@ -51,10 +51,10 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
         font_ch_t* this = &font->chars[chIdx++];
 
         // Read the width
-        this->w = buf[bufIdx++];
+        this->width = buf[bufIdx++];
 
         // Figure out what size the char is
-        int pixels = font->h * this->w;
+        int pixels = font->height * this->width;
         int bytes  = (pixels / 8) + ((pixels % 8 == 0) ? 0 : 1);
 
         // Allocate space for this char and copy it over
@@ -73,8 +73,8 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
     // Zero out any unused chars
     while (chIdx <= '~' - ' ' + 1)
     {
-        font->chars[chIdx].bitmap = NULL;
-        font->chars[chIdx++].w    = 0;
+        font->chars[chIdx].bitmap  = NULL;
+        font->chars[chIdx++].width = 0;
     }
 
     // Free the SPIFFS data
