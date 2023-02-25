@@ -26,7 +26,7 @@ void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, in
     //  esp-2021r2-patch3)
     int bitIdx            = 0;
     const uint8_t* bitmap = ch->bitmap;
-    int wch               = ch->w;
+    int wch               = ch->width;
 
     // Get a pointer to the end of the bitmap
     const uint8_t* endOfBitmap = &bitmap[((wch * h) + 7) >> 3] - 1;
@@ -125,14 +125,14 @@ int16_t drawText(const font_t* font, paletteColor_t color, const char* text, int
     while (*text >= ' ')
     {
         // Only draw if the char is on the screen
-        if (xOff + font->chars[(*text) - ' '].w >= 0)
+        if (xOff + font->chars[(*text) - ' '].width >= 0)
         {
             // Draw char
-            drawChar(color, font->h, &font->chars[(*text) - ' '], xOff, yOff);
+            drawChar(color, font->height, &font->chars[(*text) - ' '], xOff, yOff);
         }
 
         // Move to the next char
-        xOff += (font->chars[(*text) - ' '].w + 1);
+        xOff += (font->chars[(*text) - ' '].width + 1);
         text++;
 
         // If this char is offscreen, finish drawing
@@ -158,7 +158,7 @@ uint16_t textWidth(const font_t* font, const char* text)
     {
         if ((*text) >= ' ')
         {
-            width += (font->chars[(*text) - ' '].w + 1);
+            width += (font->chars[(*text) - ' '].width + 1);
         }
         text++;
     }
@@ -171,19 +171,25 @@ uint16_t textWidth(const font_t* font, const char* text)
 }
 
 /**
- * @brief TODO
+ * @brief Draws text, breaking on word boundaries, until the given bounds are filled or all text is drawn.
  *
- * @param font
- * @param color
- * @param text
- * @param xOff
- * @param yOff
- * @param xMax
- * @param yMax
- * @return const char*
+ * Text will be drawn, starting at `(xOff, yOff)`, wrapping to the next line at ' ' or '-' when the next
+ * word would exceed `xMax`, or immediately when a newline ('\\n') is encountered. Carriage returns and
+ * tabs ('\\r', '\\t') are not supported. When the bottom of the next character would exceed `yMax`, no more
+ * text is drawn and a pointer to the next undrawn character within `text` is returned. If all text has
+ * been written, NULL is returned.
+ *
+ * @param font The font to use when drawing the text
+ * @param color The color of the text to be drawn
+ * @param text The text to be pointed, as a null-terminated string
+ * @param xOff The X-coordinate to begin drawing the text at
+ * @param yOff The Y-coordinate to begin drawing the text at
+ * @param xMax The maximum x-coordinate at which any text may be drawn
+ * @param yMax The maximum y-coordinate at which text may be drawn
+ * @return A pointer to the first unprinted character within `text`, or NULL if all text has been written
  */
-static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
-                                         int16_t* yOff, int16_t xMax, int16_t yMax)
+const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
+                             int16_t xMax, int16_t yMax)
 {
     const char* textPtr = text;
     int16_t textX = *xOff, textY = *yOff;
@@ -198,7 +204,7 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
     }
 
     // while there is text left to print, and the text would not exceed the Y-bounds...
-    while (*textPtr && (textY + font->h <= yMax))
+    while (*textPtr && (textY + font->height <= yMax))
     {
         *yOff = textY;
 
@@ -212,7 +218,7 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
         if (*textPtr == '\n')
         {
             textX = *xOff;
-            textY += font->h + 1;
+            textY += font->height + 1;
             textPtr++;
             continue;
         }
@@ -269,14 +275,14 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
         if (textX + textWidth(font, buf) > xMax || nextBreak == 0)
         {
             // The line won't fit
-            textY += font->h + 1;
+            textY += font->height + 1;
             textX = *xOff;
             continue;
         }
 
         // the line must have enough space for the rest of the buffer
         // print the line, and advance the text pointer and offset
-        if (textY + font->h >= 0 && textY <= TFT_HEIGHT)
+        if (textY + font->height >= 0 && textY <= TFT_HEIGHT)
         {
             textX = drawText(font, color, buf, textX, textY);
         }
@@ -296,42 +302,18 @@ static const char* drawTextWordWrapInner(const font_t* font, paletteColor_t colo
 }
 
 /**
- * @brief Draws text, breaking on word boundaries, until the given bounds are filled or all text is drawn.
- *
- * Text will be drawn, starting at `(xOff, yOff)`, wrapping to the next line at ' ' or '-' when the next
- * word would exceed `xMax`, or immediately when a newline ('\\n') is encountered. Carriage returns and
- * tabs ('\\r', '\\t') are not supported. When the bottom of the next character would exceed `yMax`, no more
- * text is drawn and a pointer to the next undrawn character within `text` is returned. If all text has
- * been written, NULL is returned.
+ * @brief Return the height of a block of word wrapped text
  *
  * @param font The font to use when drawing the text
- * @param color The color of the text to be drawn
  * @param text The text to be pointed, as a null-terminated string
- * @param xOff The X-coordinate to begin drawing the text at
- * @param yOff The Y-coordinate to begin drawing the text at
- * @param xMax The maximum x-coordinate at which any text may be drawn
- * @param yMax The maximum y-coordinate at which text may be drawn
- * @return A pointer to the first unprinted character within `text`, or NULL if all text has been written
+ * @param width The maximum x-coordinate at which any text may be drawn
+ * @param maxHeight The maximum y-coordinate at which text may be drawn
+ * @return The height of the word wrapped text block
  */
-const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
-                             int16_t xMax, int16_t yMax)
-{
-    return drawTextWordWrapInner(font, color, text, xOff, yOff, xMax, yMax);
-}
-
-/**
- * @brief TODO document
- *
- * @param font
- * @param text
- * @param width
- * @param maxHeight
- * @return uint16_t
- */
-uint16_t textHeight(const font_t* font, const char* text, int16_t width, int16_t maxHeight)
+uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width, int16_t maxHeight)
 {
     int16_t xEnd = 0;
     int16_t yEnd = 0;
-    drawTextWordWrapInner(font, cTransparent, text, &xEnd, &yEnd, width, maxHeight);
-    return yEnd + font->h + 1;
+    drawTextWordWrap(font, cTransparent, text, &xEnd, &yEnd, width, maxHeight);
+    return yEnd + font->height + 1;
 }
