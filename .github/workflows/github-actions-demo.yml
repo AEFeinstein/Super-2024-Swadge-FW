@@ -32,7 +32,7 @@
          # shell: msys2 {0}
          run: |
            # Install msys packages
-           C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel mingw-w64-x86_64-toolchain git make zip mingw-w64-x86_64-python-pip python-pip
+           C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel mingw-w64-x86_64-toolchain git make zip mingw-w64-x86_64-python-pip python-pip'
            # Add msys to the path
            $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
            # Build the firmware
