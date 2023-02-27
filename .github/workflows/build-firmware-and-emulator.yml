@@ -5,31 +5,54 @@
    Explore-GitHub-Actions:
      runs-on: windows-latest
      steps:
-      #  - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      #  - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      #  - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
     
-       - name: Check out repository code
-         uses: actions/checkout@v3
+      - name: Check out repository code
+        uses: actions/checkout@v3
  
-       - name: Install msys64 packages
-         run: |
-           C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc zip'
+      - name: Install msys64 packages
+        run: |
+          C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc zip'
 
-       - name: Compile the Emulator
-         run: |
-           $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
-           make -j2
+      - name: Set up the IDF
+        run: |
+          git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
+          ${{ runner.temp }}/esp-idf/install.ps1
+ 
+      - name: Create a version file
+        run: |
+          printf "Commit: https://github.com/AEFeinstein/Swadge-IDF-5.0/commit/$GITHUB_SHA \nBuilt at: $(date)" >> version.txt
 
-       - name: Set up the IDF
-         run: |
-           git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
-           ${{ runner.temp }}/esp-idf/install.ps1
- 
-       - name: Compile the firmware
-         run: |
-           $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
-           ${{ runner.temp }}/esp-idf/export.ps1
-           idf.py build
- 
-      #  - run: echo "🍏 This job's status is ${{ job.status }}."
+      - name: Compile the Emulator
+        run: |
+          $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
+          make -j2
+
+      - name: Upload Emulator artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: swadge2024-emulator
+          path: |
+            swadge_emulator.exe
+            spiffs_image
+            version.txt
+            C:\msys64\mingw64\bin\libwinpthread-1.dll
+
+      - name: Compile the firmware
+        run: |
+          $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
+          ${{ runner.temp }}/esp-idf/export.ps1
+          idf.py build dfu
+
+      - name: Upload Firmware artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: swadge2024-firmware
+          path: |
+            build/swadge2024.elf
+            build/bootloader/bootloader.bin
+            build/partition_table/partition-table.bin
+            build/swadge2024.bin
+            build/storage.bin
+            build/dfu.bin
+            version.txt
+            tools/pyFlashGui/pyFlashGui.py
