@@ -91,3 +91,16 @@ jobs:
         name: ${{ env.FIRMWARE_ARTIFACT }}
         path: |
           tools/pyFlashGui/pyFlashGui.py
+
+    - name: Post to a Slack channel
+      id: slack
+      uses: slackapi/slack-github-action@v1.23.0
+      with:
+        # Slack channel id, channel name, or user id to post message.
+        # See also: https://api.slack.com/methods/chat.postMessage#channels
+        # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
+        channel-id: 'C6FNXU6KX'
+        # For posting a simple plain text message
+        slack-message: "GitHub build result: ${{ job.status }}\nhttps://github.com/AEFeinstein/Swadge-IDF-5.0/actions/runs/${{ env.GITHUB_RUN_ID }}"
+      env:
+        SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
