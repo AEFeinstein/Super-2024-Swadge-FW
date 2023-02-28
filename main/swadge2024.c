@@ -69,7 +69,6 @@
  * - color_utils.h: Learn about color maniuplation!
  * - fill.h: Learn how to fill areas on the screen!
  * - bresenham.h: Learn how to draw shapes on the screen!
- * - cndraw.h: Learn how to draw differenter shapes on the screen!
  * - wsg.h: Learn how to draw sprites on the creen!
  * - font.h: Learn how to draw text on the screen!
  *
@@ -88,32 +87,10 @@
 // Includes
 //==============================================================================
 
-#include <stdio.h>
-
 #include <esp_system.h>
 #include <esp_timer.h>
 #include <esp_log.h>
 
-#include "hdw-btn.h"
-#include "hdw-tft.h"
-#include "hdw-bzr.h"
-#include "hdw-accel.h"
-#include "hdw-led.h"
-#include "hdw-mic.h"
-#include "hdw-temperature.h"
-#include "hdw-spiffs.h"
-#include "hdw-usb.h"
-#include "hdw-esp-now.h"
-#include "hdw-nvs.h"
-#include "crashwrap.h"
-
-#include "font.h"
-#include "bresenham.h"
-#include "cndraw.h"
-#include "fill.h"
-#include "wsg.h"
-
-#include "macros.h"
 #include "swadge2024.h"
 #include "demoMode.h"
 

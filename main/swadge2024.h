@@ -27,6 +27,7 @@
 #include <string.h>
 
 // Hardware interfaces
+#include "crashwrap.h"
 #include "hdw-accel.h"
 #include "hdw-btn.h"
 #include "hdw-bzr.h"
@@ -45,7 +46,6 @@
 #include "font.h"
 #include "wsg.h"
 #include "bresenham.h"
-#include "cndraw.h"
 #include "fill.h"
 
 // Asset loaders
