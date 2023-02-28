@@ -1,3 +1,20 @@
+/*! \file spiffs_song.h
+ *
+ * \section spiffs_song_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section spiffs_song_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section spiffs_song_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _SPIFFS_SNG_H_
 #define _SPIFFS_SNG_H_
 

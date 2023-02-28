@@ -1,3 +1,20 @@
+/*! \file spiffs_font.h
+ *
+ * \section spiffs_font_design Design Philosophy
+ *
+ * TODO doxygen
+ *
+ * \section spiffs_font_usage Usage
+ *
+ * TODO doxygen
+ *
+ * \section spiffs_font_example Example
+ *
+ * \code{.c}
+ * TODO doxygen
+ * \endcode
+ */
+
 #ifndef _SPIFFS_FONT_H_
 #define _SPIFFS_FONT_H_
 
