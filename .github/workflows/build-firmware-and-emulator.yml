@@ -1,6 +1,12 @@
 name: Build Firmware and Emulator
 run-name: ${{ github.actor }} is building both firmware and emulator
-on: [push]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:    
+      - main
 
 env:
   FIRMWARE_ARTIFACT: swadge2024-firmware
