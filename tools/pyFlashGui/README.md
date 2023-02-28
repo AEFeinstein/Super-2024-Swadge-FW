@@ -74,7 +74,7 @@ cp ./build/bootloader/bootloader.bin ./build/swadge-esp32.bin ./build/partition_
 1. Plug the Swadge into the computer with a USB-C cable
 1. Wait for the GUI to flash green, then you're done.
 
-TODO: Make instructional video (flash & test)
+An instructional video can be found here: https://youtu.be/AdtCOf92yiQ
 
 # Kiosk Instructions
 
