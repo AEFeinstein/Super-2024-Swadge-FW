@@ -147,20 +147,26 @@ static void setSwadgeMode(void* swadgeMode);
  */
 void app_main(void)
 {
-    // Install crash wrapper
-    checkAndInstallCrashwrap();
-
     // Set the Swadge mode pointer
     cSwadgeMode = modes[0];
+
+    // Init NVS. Do this first to get test mode status and crashwrap logs
+    initNvs(true);
+
+    // Init USB if not overridden by the mode. This also sets up USB printf
+    if (false == cSwadgeMode->overrideUsb)
+    {
+        initUsb(setSwadgeMode, cSwadgeMode->fnAdvancedUSB);
+    }
+
+    // Check for prior crash info and install crash wrapper
+    checkAndInstallCrashwrap();
 
     // Init timers
     esp_timer_init();
 
     // Init SPIFFS file system
     initSpiffs();
-
-    // Init NVS
-    initNvs(true);
 
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
@@ -206,12 +212,6 @@ void app_main(void)
 
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39);
-
-    // Init USB if not overridden by the mode
-    if (false == cSwadgeMode->overrideUsb)
-    {
-        initUsb(setSwadgeMode, cSwadgeMode->fnAdvancedUSB);
-    }
 
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
