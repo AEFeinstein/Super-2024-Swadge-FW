@@ -89,7 +89,7 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
     ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
 
     // Set the log to print with advanced_usb_write_log_printf()
-    esp_log_set_vprintf( advanced_usb_write_log_printf );
+    esp_log_set_vprintf(advanced_usb_write_log_printf);
 
     ESP_LOGI(TAG, "USB initialization DONE");
 }
