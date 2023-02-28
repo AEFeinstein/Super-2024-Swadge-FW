@@ -24,11 +24,6 @@
 
 #include "palette.h"
 
-#ifdef EMU
-extern uint32_t cndrawPerfcounter;
-#endif
-
-void shadeDisplayArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t shadeLevel, paletteColor_t color);
 
 void outlineTriangle(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
                      paletteColor_t colorA, paletteColor_t colorB);

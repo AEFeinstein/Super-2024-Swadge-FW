@@ -55,6 +55,142 @@ void fillDisplayArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, paletteColo
 }
 
 /**
+ * 'Shade' an area by drawing pixels over it in a ordered-dithering way
+ *
+ * @param x1 The X pixel to start at
+ * @param y1 The Y pixel to start at
+ * @param x2 The X pixel to end at
+ * @param y2 The Y pixel to end at
+ * @param shadeLevel The level of shading, Higher means more shaded. Must be 0 to 4
+ * @param color the color to draw with
+ */
+void shadeDisplayArea(int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint8_t shadeLevel, paletteColor_t color)
+{
+    SETUP_FOR_TURBO();
+    int16_t xMin, yMin, xMax, yMax;
+    if (x1 < x2)
+    {
+        xMin = x1;
+        xMax = x2;
+    }
+    else
+    {
+        xMin = x2;
+        xMax = x1;
+    }
+    if (y1 < y2)
+    {
+        yMin = y1;
+        yMax = y2;
+    }
+    else
+    {
+        yMin = y2;
+        yMax = y1;
+    }
+
+    if (xMin < 0)
+    {
+        xMin = 0;
+    }
+    if (xMax >= (int16_t)TFT_WIDTH)
+    {
+        xMax = TFT_WIDTH - 1;
+    }
+    if (xMin >= (int16_t)TFT_WIDTH)
+    {
+        return;
+    }
+    if (xMax < 0)
+    {
+        return;
+    }
+    if (yMin < 0)
+    {
+        yMin = 0;
+    }
+    if (yMax >= (int16_t)TFT_HEIGHT)
+    {
+        yMax = TFT_HEIGHT - 1;
+    }
+    if (yMin >= (int16_t)TFT_HEIGHT)
+    {
+        return;
+    }
+    if (yMax < 0)
+    {
+        return;
+    }
+
+    for (int16_t dy = yMin; dy <= yMax; dy++)
+    {
+        for (int16_t dx = xMin; dx < xMax; dx++)
+        {
+            switch (shadeLevel)
+            {
+                case 0:
+                {
+                    // 25% faded
+                    if (dy % 2 == 0 && dx % 2 == 0)
+                    {
+                        TURBO_SET_PIXEL_BOUNDS(dx, dy, color);
+                    }
+                    break;
+                }
+                case 1:
+                {
+                    // 37.5% faded
+                    if (dy % 2 == 0 && dx % 2 == 0)
+                    {
+                        TURBO_SET_PIXEL_BOUNDS(dx, dy, color);
+                    }
+                    else if (dx % 4 == 0)
+                    {
+                        TURBO_SET_PIXEL_BOUNDS(dx, dy, color);
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    // 50% faded
+                    if ((dy % 2) == (dx % 2))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS(dx, dy, color);
+                    }
+                    break;
+                }
+                case 3:
+                {
+                    // 62.5% faded
+                    if (dy % 2 == 0 && dx % 2 == 0)
+                    {
+                        TURBO_SET_PIXEL_BOUNDS(dx, dy, color);
+                    }
+                    else if (dx % 4 < 3)
+                    {
+                        TURBO_SET_PIXEL_BOUNDS(dx, dy, color);
+                    }
+                    break;
+                }
+                case 4:
+                {
+                    // 75% faded
+                    if (dy % 2 == 0 || dx % 2 == 0)
+                    {
+                        TURBO_SET_PIXEL_BOUNDS(dx, dy, color);
+                    }
+                    break;
+                }
+                default:
+                {
+                    return;
+                }
+            }
+        }
+    }
+}
+
+/**
  * @brief Attempt to fill a convex shape bounded by a border of a given color using
  * the even-odd rule
  *
