@@ -29,11 +29,6 @@
  * \section accel_example Example
  *
  * \code{.c}
- * #include <inttypes.h>
- * #include "hdw-accel.h"
- *
- * ...
- *
  * // Declare variables to receive acceleration
  * int16_t a_x, a_y, a_z;
  *

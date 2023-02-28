@@ -25,8 +25,6 @@
  *
  * Set the LEDs to a rough rainbow:
  * \code{.c}
- * #include "hdw-led.h"
- *
  * led_t leds[CONFIG_NUM_LEDS] = {0};
  * for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
  * {

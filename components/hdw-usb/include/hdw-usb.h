@@ -28,10 +28,6 @@
  * \section usb_example Example
  *
  * \code{.c}
- * #include "hdw-usb.h"
- *
- * ...
- *
  * static hid_gamepad_report_t report;
  * report.buttons = lastBtnState;
  * sendUsbGamepadReport(&report);

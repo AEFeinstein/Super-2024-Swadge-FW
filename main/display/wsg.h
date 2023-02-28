@@ -28,11 +28,6 @@
  * \section wsg_example Example
  *
  * \code{.c}
- * #include "wsg.h"
- * #include "spiffs_wsg.h"
- *
- * ...
- *
  * // Declare and load an image
  * wsg_t king_donut;
  * loadWsg("kid0.wsg", &king_donut, true);

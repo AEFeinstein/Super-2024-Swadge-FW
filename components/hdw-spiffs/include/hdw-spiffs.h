@@ -35,10 +35,6 @@
  * \section spiffs_example Example
  *
  * \code{.c}
- * #include "font.h"
- * #include "wsg.h"
- * #include "hdw-bzr.h"
- *
  * // Declare and load a font
  * font_t ibm;
  * loadFont("ibm_vga8.font", &ibm, false);

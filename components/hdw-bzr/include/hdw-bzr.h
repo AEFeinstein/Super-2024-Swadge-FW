@@ -36,10 +36,6 @@
  * \section bzr_example Example
  *
  * \code{.c}
- * #include "hdw-bzr.h"
- *
- * ...
- *
  * // Load a song
  * song_t ode_to_joy;
  * loadSng("ode.sgn", &ode_to_joy);

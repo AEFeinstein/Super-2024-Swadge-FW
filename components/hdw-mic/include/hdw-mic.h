@@ -28,8 +28,6 @@
  * \section mic_example Example
  *
  * \code{.c}
- * #include "hdw-mic.h"
- *
  * static void demoAudioCallback(uint16_t* samples, uint32_t sampleCnt);
  *
  * swadgeMode_t demoMode = {

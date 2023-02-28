@@ -30,11 +30,6 @@
  * \section font_example Example
  *
  * \code{.c}
- * #include "font.h"
- * #include "spiffs_font.h"
- *
- * ...
- *
  * // Declare and load a font
  * font_t ibm;
  * loadFont("ibm_vga8.font", &ibm, false);
