@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 static SoundInitFn* SoundDrivers[MAX_SOUND_DRIVERS];
-static char* SoundDriverNames[MAX_SOUND_DRIVERS]; // XXX: There's a bug in my compiler, this should be 'static'
+static char* SoundDriverNames[MAX_SOUND_DRIVERS];
 static int SoundDriverPriorities[MAX_SOUND_DRIVERS];
 /*
 void CleanupSound() __attribute__((destructor));

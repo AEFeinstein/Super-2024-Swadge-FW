@@ -369,7 +369,7 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
     for (int32_t y = yStart; y < yEnd; y++)
     {
         // Copy the row
-        // TODO probably faster if we can guarantee copyLen is a multiple of 4
+        // probably faster if we can guarantee copyLen is a multiple of 4
         memcpy(pxDisp, pxWsg, copyLen);
         pxDisp += dWidth;
         pxWsg += wWidth;
