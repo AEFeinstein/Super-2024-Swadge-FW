@@ -157,17 +157,23 @@ void oddEvenFill(int x0, int y0, int x1, int y1, paletteColor_t boundaryColor, p
 }
 
 /**
- * @brief TODO
+ * This is a recursive flood fill algorithm. It starts at the given coordinate, and will replace the color at
+ * that coordinate, and all adjacent pixels with the same color, with the fill color.
  *
- * adapted from http://www.adammil.net/blog/v126_A_More_Efficient_Flood_Fill.html
+ * The flood is also bounded wthin the given rectangle.
  *
- * @param x
- * @param y
- * @param col
- * @param xMin
- * @param yMin
- * @param xMax
- * @param yMax
+ * Note that the recursive algorithm is relatively slow and uses a lot of stack memory, so try not to use it when
+ * possible.
+ *
+ * This is adapted from http://www.adammil.net/blog/v126_A_More_Efficient_Flood_Fill.html
+ *
+ * @param x The X coordinate to start the fill at
+ * @param y The Y coordinate to start the fill at
+ * @param col The color to fill in
+ * @param xMin The minimum X coordinate to bound the fill
+ * @param yMin The minimum Y coordinate to bound the fill
+ * @param xMax The maximum X coordinate to bound the fill
+ * @param yMax The maximum Y coordinate to bound the fill
  */
 void floodFill(uint16_t x, uint16_t y, paletteColor_t col, uint16_t xMin, uint16_t yMin, uint16_t xMax, uint16_t yMax)
 {
@@ -181,19 +187,20 @@ void floodFill(uint16_t x, uint16_t y, paletteColor_t col, uint16_t xMin, uint16
 }
 
 /**
- * @brief TODO
+ * A helper function for floodFill(), a recursive flood fill algorithm. These two functions do basically the same thing
+ * except this one accepts two colors, the color to replace and the color to replace with.
  *
- * @param x
- * @param y
- * @param search
- * @param fill
- * @param xMin
- * @param yMin
- * @param xMax
- * @param yMax
+ * @param x The X coordinate to start the fill at
+ * @param y The Y coordinate to start the fill at
+ * @param search The color to replace
+ * @param fill The color to draw
+ * @param xMin The minimum X coordinate to bound the fill
+ * @param yMin The minimum Y coordinate to bound the fill
+ * @param xMax The maximum X coordinate to bound the fill
+ * @param yMax The maximum Y coordinate to bound the fill
  */
-void _floodFill(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fill, uint16_t xMin, uint16_t yMin,
-                uint16_t xMax, uint16_t yMax)
+static void _floodFill(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fill, uint16_t xMin, uint16_t yMin,
+                       uint16_t xMax, uint16_t yMax)
 {
     // at this point, we know array[y,x] is clear, and we want to move as far as possible to the upper-left. moving
     // up is much more important than moving left, so we could try to make this smarter by sometimes moving to
@@ -202,26 +209,33 @@ void _floodFill(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fi
     {
         uint16_t ox = x, oy = y;
         while (y != yMin && getPxTft(x, y - 1) == search)
+        {
             y--;
+        }
         while (x != xMin && getPxTft(x - 1, y) == search)
+        {
             x--;
+        }
         if (x == ox && y == oy)
+        {
             break;
+        }
     }
     _floodFillInner(x, y, search, fill, xMin, yMin, xMax, yMax);
 }
 
 /**
- * @brief TODO
+ * A helper function for floodFill() and _floodFillInner(), a recursive flood fill algorithm. This does the heavy
+ * lifting for the algorithm.
  *
- * @param x
- * @param y
- * @param search
- * @param fill
- * @param xMin
- * @param yMin
- * @param xMax
- * @param yMax
+ * @param x The X coordinate to start the fill at
+ * @param y The Y coordinate to start the fill at
+ * @param search The color to replace
+ * @param fill The color to draw
+ * @param xMin The minimum X coordinate to bound the fill
+ * @param yMin The minimum Y coordinate to bound the fill
+ * @param xMax The maximum X coordinate to bound the fill
+ * @param yMax The maximum Y coordinate to bound the fill
  */
 static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, paletteColor_t fill, uint16_t xMin,
                             uint16_t yMin, uint16_t xMax, uint16_t yMax)
@@ -243,7 +257,9 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
             do
             {
                 if (--lastRowLength == 0)
-                    return;                       // shorten the row. if it's full, we're done
+                {
+                    return; // shorten the row. if it's full, we're done
+                }
             } while (getPxTft(++x, y) != search); // otherwise, update the starting point of the main scan to match
             sx = x;
         }
@@ -260,8 +276,10 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
                 // the  |****| main scan assumes the portion of the previous row from x to x+lastRowLength has already
                 // been filled. adjusting x and lastRowLength breaks that assumption in this case, so we must fix it
                 if (y != yMin && getPxTft(x, y - 1) == search)
+                {
                     _floodFill(x, y - 1, search, fill, xMin, yMin, xMax,
                                yMax); // use _Fill since there may be more up and left
+                }
             }
         }
 
@@ -269,7 +287,9 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
         // row from x (inclusive) to x+lastRowLength (exclusive) has already been filled, so we don't need to
         // check it. so scan across to the right in the current row
         for (; sx < xMax && getPxTft(sx, y) == search; rowLength++, sx++)
+        {
             setPxTft(sx, y, fill);
+        }
         // now we've scanned this row. if the block is rectangular, then the previous row has already been scanned,
         // so we don't need to look upwards and we're going to scan the next row in the next iteration so we don't
         // need to look downwards. however, if the block is not rectangular, we may need to look upwards or rightwards
@@ -282,8 +302,10 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
                  ++sx < end;) // 'end' is the end of the previous row, so scan the current row to
             {                 // there. any clear cells would have been connected to the previous
                 if (getPxTft(sx, y) == search)
+                {
                     _floodFillInner(sx, y, search, fill, xMin, yMin, xMax,
                                     yMax); // row. the cells up and left must be set so use FillCore
+                }
             }
         }
         // alternately, if this row is longer than the previous row, as in the case |*** *| then we must look above
@@ -293,8 +315,10 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
             for (int ux = x + lastRowLength; ++ux < sx;) // sx is the end of the current row
             {
                 if (getPxTft(ux, y - 1) == search)
+                {
                     _floodFill(ux, y - 1, search, fill, xMin, yMin, xMax,
                                yMax); // since there may be clear cells up and left, use _Fill
+                }
             }
         }
         lastRowLength = rowLength;              // record the new row length
