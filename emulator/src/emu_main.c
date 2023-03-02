@@ -192,7 +192,7 @@ void taskYIELD(void)
     };
 
     // Draw simulated LEDs
-    if (numLeds > 0 && NULL != leds && !hideLeds)
+    if (numLeds > 1 && NULL != leds && !hideLeds)
     {
         short led_h = window_h / (numLeds / 2);
         for (int i = 0; i < numLeds; i++)

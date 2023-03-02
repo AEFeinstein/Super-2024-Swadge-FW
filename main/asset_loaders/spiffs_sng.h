@@ -1,4 +1,4 @@
-/*! \file spiffs_song.h
+/*! \file spiffs_sng.h
  *
  * \section spiffs_song_design Design Philosophy
  *

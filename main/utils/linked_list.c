@@ -186,7 +186,7 @@ bool addIdx(list_t* list, void* val, uint16_t index)
         unshift(list, val);
     }
     // Else if the index is the length, we're adding to the end of the list
-    else if (index == list->length)
+    else if (index == list->length - 1)
     {
         push(list, val);
     }
@@ -198,10 +198,10 @@ bool addIdx(list_t* list, void* val, uint16_t index)
         newNode->next   = NULL;
         newNode->prev   = NULL;
 
-        node_t* current = NULL;
-        for (uint16_t i = 0; i < index; i++)
+        node_t* current = list->first;
+        for (uint16_t i = 0; i < index - 1; i++)
         {
-            current = current == NULL ? list->first : current->next;
+            current = current->next;
         }
 
         // We need to adjust the newNode, and the nodes before and after it
@@ -246,7 +246,7 @@ void* removeIdx(list_t* list, uint16_t index)
         return shift(list);
     }
     // Else if the index we're trying to remove from is the end of the list
-    else if (index == list->length)
+    else if (index == list->length - 1)
     {
         VALIDATE_LIST(__func__, __LINE__, false, list, (void*)((intptr_t)index));
         return pop(list);
@@ -256,10 +256,10 @@ void* removeIdx(list_t* list, uint16_t index)
     {
         void* retval = NULL;
 
-        node_t* current = NULL;
-        for (uint16_t i = 0; i < index; i++)
+        node_t* current = list->first;
+        for (uint16_t i = 0; i < index - 1; i++)
         {
-            current = current == NULL ? list->first : current->next;
+            current = current->next;
         }
 
         // We need to free the removed node, and adjust the nodes before and after it

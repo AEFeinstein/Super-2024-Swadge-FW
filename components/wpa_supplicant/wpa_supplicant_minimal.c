@@ -23,6 +23,8 @@ typedef int8_t s8;
 
 const char WPA_TAG[] = "WPA";
 
+static struct wpa_funcs* wpa_cb;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool wpa_attach(void)
@@ -173,7 +175,6 @@ void wpa_config_done(void)
 int esp_supplicant_init(void)
 {
     int ret = ESP_OK;
-    struct wpa_funcs* wpa_cb;
 
     wpa_cb = (struct wpa_funcs*)os_zalloc(sizeof(struct wpa_funcs));
     if (!wpa_cb)
@@ -226,7 +227,12 @@ int esp_supplicant_init(void)
 int esp_supplicant_deinit(void)
 {
     // esp_supplicant_common_deinit();
-    return esp_wifi_unregister_wpa_cb_internal();
+    esp_err_t ret = esp_wifi_unregister_wpa_cb_internal();
+    if (wpa_cb)
+    {
+        free(wpa_cb);
+    }
+    return ret;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

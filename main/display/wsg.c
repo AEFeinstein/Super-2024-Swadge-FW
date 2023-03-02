@@ -79,9 +79,7 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
     // there is to rotate by shearing
 
     // If there's any more to rotate, apply three shear matrices in order
-    // if(rotateDeg > 1 && rotateDeg < 89)
-
-    if (rotateDeg > 0)
+    if (0 < rotateDeg && rotateDeg < 90)
     {
         // 1st shear
         wx = wx - ((wy * tan1024[rotateDeg / 2]) + 512) / 1024;
