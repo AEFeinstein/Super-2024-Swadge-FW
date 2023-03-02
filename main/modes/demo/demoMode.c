@@ -163,12 +163,12 @@ static void demoMainLoop(int64_t elapsedUs)
     }
 
     // Draw a red circle
-    drawCircle(200, 50, 20, c500, 0, 0, 1, 1);
+    drawCircle(200, 50, 20, c500);
     // Flood fill the circle with blue
     floodFill(200, 50, c005, 200 - 20, 50 - 20, 200 + 50, 50 + 20);
 
     // Draw a green rectangle
-    drawRect(200, 150, 250, 220, c050, 0, 0, 1, 1);
+    drawRect(200, 150, 250, 220, c050);
     // Odd-even fill the rectangle with blue
     oddEvenFill(190, 140, 260, 230, c050, c005);
 
@@ -203,7 +203,13 @@ static void demoMainLoop(int64_t elapsedUs)
 
     // drawLine(92, 92, 200, 200, c555, 0, 0, 0, 1, 1);
     // speedyLine(102, 92, 210, 200, c050);
-    // drawWsg(&dv->king_donut, 100, 10, false, false, 0);
+    static uint16_t rot = 0;
+    drawWsg(&dv->king_donut, 100, 10, false, false, rot);
+    rot++;
+    if (360 == rot)
+    {
+        rot = 0;
+    }
 
     // int yIdx         = 64;
     // char dbgTxt[256] = {0};

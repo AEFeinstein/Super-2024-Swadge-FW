@@ -23,6 +23,24 @@
 #define FIXEDPOINT   16
 #define FIXEDPOINTD2 15
 
+static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr,
+                          int xScale, int yScale);
+static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
+static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale,
+                             int yScale);
+static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
+static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
+static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale,
+                                 int yScale);
+static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
+                                   int xScale, int yScale);
+static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
+                                int xScale, int yScale);
+static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
+                                    paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
+static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
+                                 int xTr, int yTr, int xScale, int yScale);
+
 /**
  * @brief TODO doxy
  *
@@ -37,8 +55,8 @@
  * @param xScale
  * @param yScale
  */
-void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr, int xScale,
-              int yScale)
+static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr,
+                          int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
     int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
@@ -97,6 +115,21 @@ void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth,
  * @param y1
  * @param col
  * @param dashWidth
+ */
+void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
+{
+    drawLineInner(x0, y0, x1, y1, col, dashWidth, 0, 0, 1, 1);
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
+ * @param dashWidth
  * @param xTr
  * @param yTr
  * @param xScale
@@ -107,7 +140,7 @@ void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dash
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawLine(x0, y0, x1, y1, col, dashWidth, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawLineInner(x0, y0, x1, y1, col, dashWidth, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -368,7 +401,7 @@ void drawLineFast(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t
  * @param xScale
  * @param yScale
  */
-void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -395,6 +428,20 @@ void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int y
  * @param x1
  * @param y1
  * @param col
+ */
+void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col)
+{
+    drawRectInner(x0, y0, x1, y1, col, 0, 0, 1, 1);
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
  * @param xTr
  * @param yTr
  * @param xScale
@@ -404,7 +451,7 @@ void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr,
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawRect(x0, y0, x1, y1, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawRectInner(x0, y0, x1, y1, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -768,7 +815,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
  * @param xScale
  * @param yScale
  */
-void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -807,6 +854,20 @@ void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int 
  * @param a
  * @param b
  * @param col
+ */
+void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
+{
+    drawEllipseInner(xm, ym, a, b, col, 0, 0, 1, 1);
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param a
+ * @param b
+ * @param col
  * @param xTr
  * @param yTr
  * @param xScale
@@ -816,7 +877,7 @@ void drawEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xTr
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawEllipse(xm, ym, a, b, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawEllipseInner(xm, ym, a, b, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -875,7 +936,7 @@ void drawOptimizedEllipse(int xm, int ym, int a, int b, paletteColor_t col)
  * @param xScale
  * @param yScale
  */
-void drawCircle(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -905,6 +966,19 @@ void drawCircle(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int
  * @param ym
  * @param r
  * @param col
+ */
+void drawCircle(int xm, int ym, int r, paletteColor_t col)
+{
+    drawCircleInner(xm, ym, r, col, 0, 0, 1, 1);
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
  * @param xTr
  * @param yTr
  * @param xScale
@@ -914,7 +988,7 @@ void drawCircleScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yT
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawCircle(xm, ym, r, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawCircleInner(xm, ym, r, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -977,7 +1051,7 @@ void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool 
  * @param xScale
  * @param yScale
  */
-void drawCircleFilled(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -1009,6 +1083,19 @@ void drawCircleFilled(int xm, int ym, int r, paletteColor_t col, int xTr, int yT
  * @param ym
  * @param r
  * @param col
+ */
+void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
+{
+    drawCircleFilledInner(xm, ym, r, col, 0, 0, 1, 1);
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param xm
+ * @param ym
+ * @param r
+ * @param col
  * @param xTr
  * @param yTr
  * @param xScale
@@ -1018,7 +1105,7 @@ void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xTr, 
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawCircleFilled(xm, ym, r, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawCircleFilledInner(xm, ym, r, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -1035,8 +1122,8 @@ void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xTr, 
  * @param xScale
  * @param yScale
  */
-void drawEllipseRect(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale,
-                     int yScale) /* rectangular parameter enclosing the ellipse */
+static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale,
+                                 int yScale) /* rectangular parameter enclosing the ellipse */
 {
     SETUP_FOR_TURBO();
 
@@ -1096,6 +1183,21 @@ void drawEllipseRect(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr
  * @param x1
  * @param y1
  * @param col
+ */
+void drawEllipseRect(int x0, int y0, int x1, int y1,
+                                       paletteColor_t col) /* rectangular parameter enclosing the ellipse */
+{
+    drawEllipseRectInner(x0, y0, x1, y1, col, 0, 0, 1, 1);
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param col
  * @param xTr
  * @param yTr
  * @param xScale
@@ -1105,7 +1207,7 @@ void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, i
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawEllipseRect(x0, y0, x1, y1, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawEllipseRectInner(x0, y0, x1, y1, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -1124,8 +1226,8 @@ void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, i
  * @param xScale
  * @param yScale
  */
-void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr, int xScale,
-                       int yScale) /* draw a limited quadratic Bezier segment */
+static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
+                                   int xScale, int yScale) /* draw a limited quadratic Bezier segment */
 {
     SETUP_FOR_TURBO();
 
@@ -1199,18 +1301,11 @@ void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, paletteCo
  * @param x2
  * @param y2
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
  */
-void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
-                             int xScale, int yScale)
+void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2,
+                                         paletteColor_t col) /* draw a limited quadratic Bezier segment */
 {
-    for (uint8_t i = 0; i < xScale * yScale; i++)
-    {
-        drawQuadBezierSeg(x0, y0, x1, y1, x2, y2, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
-    }
+    drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
 
 /**
@@ -1228,8 +1323,31 @@ void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, pal
  * @param xScale
  * @param yScale
  */
-void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr, int xScale,
-                    int yScale) /* draw any quadratic Bezier curve */
+void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
+                             int xScale, int yScale)
+{
+    for (uint8_t i = 0; i < xScale * yScale; i++)
+    {
+        drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+    }
+}
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ * @param xTr
+ * @param yTr
+ * @param xScale
+ * @param yScale
+ */
+static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
+                                int xScale, int yScale) /* draw any quadratic Bezier curve */
 {
     int x = x0 - x1, y = y0 - y1;
     double t = x0 - 2 * x1 + x2, r;
@@ -1250,7 +1368,7 @@ void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor
         x = floor(t + 0.5);
         y = floor(r + 0.5);
         r = (y1 - y0) * (t - x0) / (x1 - x0) + y0; /* intersect P3 | P0 P1 */
-        drawQuadBezierSeg(x0, y0, x, floor(r + 0.5), x, y, col, xTr, yTr, xScale, yScale);
+        drawQuadBezierSegInner(x0, y0, x, floor(r + 0.5), x, y, col, xTr, yTr, xScale, yScale);
         r  = (y1 - y2) * (t - x2) / (x1 - x2) + y2; /* intersect P4 | P1 P2 */
         x0 = x1 = x;
         y0      = y;
@@ -1265,13 +1383,29 @@ void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor
         x = floor(r + 0.5);
         y = floor(t + 0.5);
         r = (x1 - x0) * (t - y0) / (y1 - y0) + x0; /* intersect P6 | P0 P1 */
-        drawQuadBezierSeg(x0, y0, floor(r + 0.5), y, x, y, col, xTr, yTr, xScale, yScale);
+        drawQuadBezierSegInner(x0, y0, floor(r + 0.5), y, x, y, col, xTr, yTr, xScale, yScale);
         r  = (x1 - x2) * (t - y2) / (y1 - y2) + x2; /* intersect P7 | P1 P2 */
         x0 = x;
         x1 = floor(r + 0.5);
         y0 = y1 = y; /* P0 = P6, P1 = P7 */
     }
-    drawQuadBezierSeg(x0, y0, x1, y1, x2, y2, col, xTr, yTr, xScale, yScale); /* remaining part */
+    drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xTr, yTr, xScale, yScale); /* remaining part */
+}
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param col
+ */
+void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2,
+                                      paletteColor_t col) /* draw any quadratic Bezier curve */
+{
+    drawQuadBezierInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
 
 /**
@@ -1294,7 +1428,7 @@ void drawQuadBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, palett
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawQuadBezier(x0, y0, x1, y1, x2, y2, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawQuadBezierInner(x0, y0, x1, y1, x2, y2, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -1386,7 +1520,7 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
             }                           /* x step */
         } while (dy <= xy && dx >= xy); /* gradient negates -> algorithm fails */
     }
-    drawLine(x0, y0, x2, y2, col, 0, 0, 0, 1, 1); /* draw remaining needle to end */
+    drawLine(x0, y0, x2, y2, col, 0); /* draw remaining needle to end */
 }
 
 /**
@@ -1519,7 +1653,7 @@ void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd,
     float w = xd * (long)yd;
     if (zd == 0)
     {
-        return drawEllipseRect(x0, y0, x1, y1, col, 0, 0, 1, 1); /* looks nicer */
+        return drawEllipseRect(x0, y0, x1, y1, col); /* looks nicer */
     }
     if (w != 0.0)
     {
@@ -1551,8 +1685,9 @@ void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd,
  * @param xScale
  * @param yScale
  */
-void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3, paletteColor_t col,
-                        int xTr, int yTr, int xScale, int yScale) /* draw limited cubic Bezier segment */
+static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
+                                    paletteColor_t col, int xTr, int yTr, int xScale,
+                                    int yScale) /* draw limited cubic Bezier segment */
 {
     SETUP_FOR_TURBO();
 
@@ -1570,7 +1705,7 @@ void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, 
     {
         sx = floor((3 * x1 - x0 + 1) / 2);
         sy = floor((3 * y1 - y0 + 1) / 2); /* new midpoint */
-        return drawQuadBezierSeg(x0, y0, sx, sy, x3, y3, col, xTr, yTr, xScale, yScale);
+        return drawQuadBezierSegInner(x0, y0, sx, sy, x3, y3, col, xTr, yTr, xScale, yScale);
     }
     x1 = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) + 1; /* line lengths */
     x2 = (x2 - x3) * (x2 - x3) + (y2 - y3) * (y2 - y3) + 1;
@@ -1670,8 +1805,27 @@ void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, 
         sy = -sy;
         yb = -yb;
         x1 = x2;
-    } while (leg--);                                            /* try other end */
-    drawLine(x0, y0, x3, y3, col, 0, xTr, yTr, xScale, yScale); /* remaining part in case of cusp or crunode */
+    } while (leg--);                                                 /* try other end */
+    drawLineInner(x0, y0, x3, y3, col, 0, xTr, yTr, xScale, yScale); /* remaining part in case of cusp or crunode */
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param x3
+ * @param y3
+ * @param col
+ */
+void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
+                                          paletteColor_t col) /* draw limited cubic Bezier segment */
+{
+    drawCubicBezierSegInner(x0, y0, x1, y1, x2, y2, x3, y3, col, 0, 0, 1, 1);
 }
 
 /**
@@ -1691,8 +1845,8 @@ void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, 
  * @param xScale
  * @param yScale
  */
-void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col, int xTr,
-                     int yTr, int xScale, int yScale) /* draw any cubic Bezier curve */
+static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
+                                 int xTr, int yTr, int xScale, int yScale) /* draw any cubic Bezier curve */
 {
     int n = 0, i = 0;
     long xc = x0 + x1 - x2 - x3, xa = xc - 4 * (x1 - x2);
@@ -1778,7 +1932,8 @@ void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int
         }
         if (x0 != x3 || y0 != y3) /* segment t1 - t2 */
         {
-            drawCubicBezierSeg(x0, y0, x0 + fx1, y0 + fy1, x0 + fx2, y0 + fy2, x3, y3, col, xTr, yTr, xScale, yScale);
+            drawCubicBezierSegInner(x0, y0, x0 + fx1, y0 + fy1, x0 + fx2, y0 + fy2, x3, y3, col, xTr, yTr, xScale,
+                                    yScale);
         }
         x0  = x3;
         y0  = y3;
@@ -1786,6 +1941,25 @@ void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int
         fy0 = fy3;
         t1  = t2;
     }
+}
+
+/**
+ * @brief TODO doxy
+ *
+ * @param x0
+ * @param y0
+ * @param x1
+ * @param y1
+ * @param x2
+ * @param y2
+ * @param x3
+ * @param y3
+ * @param col
+ */
+void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3,
+                                       paletteColor_t col)
+{
+    drawCubicBezierInner(x0, y0, x1, y1, x2, y2, x3, y3, col, 0, 0, 1, 1);
 }
 
 /**
@@ -1810,7 +1984,7 @@ void drawCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawCubicBezier(x0, y0, x1, y1, x2, y2, x3, y3, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawCubicBezierInner(x0, y0, x1, y1, x2, y2, x3, y3, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
     }
 }
 
@@ -1853,13 +2027,13 @@ void drawQuadSpline(int n, int x[], int y[], paletteColor_t col) /* draw quadrat
         }
         x0 = floor((x[i] - x1) * mi + 0.5); /* next corner */
         y0 = floor((y[i] - y1) * mi + 0.5);
-        drawQuadBezier((x0 + x1) / 2, (y0 + y1) / 2, x1, y1, x2, y2, col, 0, 0, 1, 1);
+        drawQuadBezier((x0 + x1) / 2, (y0 + y1) / 2, x1, y1, x2, y2, col);
         x2 = (x0 + x1) / 2;
         x1 = x0;
         y2 = (y0 + y1) / 2;
         y1 = y0;
     }
-    drawQuadBezier(x[0], y[0], x1, y1, x2, y2, col, 0, 0, 1, 1);
+    drawQuadBezier(x[0], y[0], x1, y1, x2, y2, col);
 }
 
 /**
@@ -1873,7 +2047,7 @@ void drawQuadSpline(int n, int x[], int y[], paletteColor_t col) /* draw quadrat
 void drawCubicSpline(int n, int x[], int y[], paletteColor_t col) /* draw cubic spline, destroys input arrays x,y */
 {
 #define M_MAX 6
-    float mi = 0.25, m[M_MAX]; /* diagonal constants of matrix */
+    float mi = 0.25, m[M_MAX] = {0}; /* diagonal constants of matrix */
     int x3 = x[n - 1], y3 = y[n - 1], x4 = x[n], y4 = y[n];
     int i, x0, y0, x1, y1, x2, y2;
 
@@ -1893,7 +2067,7 @@ void drawCubicSpline(int n, int x[], int y[], paletteColor_t col) /* draw cubic 
     }
     x2 = floor((x0 - 3 * x4) / (7 - 4 * mi) + 0.5); /* correct last row */
     y2 = floor((y0 - 3 * y4) / (7 - 4 * mi) + 0.5);
-    drawCubicBezier(x3, y3, (x2 + x4) / 2, (y2 + y4) / 2, x4, y4, x4, y4, col, 0, 0, 1, 1);
+    drawCubicBezier(x3, y3, (x2 + x4) / 2, (y2 + y4) / 2, x4, y4, x4, y4, col);
 
     if (n - 3 < M_MAX)
     {
@@ -1912,7 +2086,7 @@ void drawCubicSpline(int n, int x[], int y[], paletteColor_t col) /* draw cubic 
         x4 = floor((x0 + 4 * x1 + x2 + 3) / 6.0); /* reconstruct P[i] */
         y4 = floor((y0 + 4 * y1 + y2 + 3) / 6.0);
         drawCubicBezier(x4, y4, floor((2 * x1 + x2) / 3 + 0.5), floor((2 * y1 + y2) / 3 + 0.5),
-                        floor((x1 + 2 * x2) / 3 + 0.5), floor((y1 + 2 * y2) / 3 + 0.5), x3, y3, col, 0, 0, 1, 1);
+                        floor((x1 + 2 * x2) / 3 + 0.5), floor((y1 + 2 * y2) / 3 + 0.5), x3, y3, col);
         x3 = x4;
         y3 = y4;
         x2 = x1;
@@ -1925,6 +2099,6 @@ void drawCubicSpline(int n, int x[], int y[], paletteColor_t col) /* draw cubic 
     y0 = y[0];
     y4 = floor((3 * y0 + 7 * y1 + 2 * y2 + 6) / 12.0);
     drawCubicBezier(x4, y4, floor((2 * x1 + x2) / 3 + 0.5), floor((2 * y1 + y2) / 3 + 0.5),
-                    floor((x1 + 2 * x2) / 3 + 0.5), floor((y1 + 2 * y2) / 3 + 0.5), x3, y3, col, 0, 0, 1, 1);
-    drawCubicBezier(x0, y0, x0, y0, (x0 + x1) / 2, (y0 + y1) / 2, x4, y4, col, 0, 0, 1, 1);
+                    floor((x1 + 2 * x2) / 3 + 0.5), floor((y1 + 2 * y2) / 3 + 0.5), x3, y3, col);
+    drawCubicBezier(x0, y0, x0, y0, (x0 + x1) / 2, (y0 + y1) / 2, x4, y4, col);
 }

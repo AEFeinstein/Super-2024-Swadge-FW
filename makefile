@@ -69,11 +69,20 @@ INC = $(patsubst %, -I%, $(INC_DIRS) )
 # These are flags for the compiler, all files
 CFLAGS = \
 	-c \
-	-std=gnu17 \
 	-g \
 	-static-libgcc \
 	-static-libstdc++ \
-	-ggdb
+	-fdiagnostics-color=always \
+	-ffunction-sections \
+	-fdata-sections \
+	-gdwarf-4 \
+	-ggdb \
+	-O2 \
+	-fstrict-volatile-bitfields \
+	-fno-jump-tables \
+	-fno-tree-switch-conversion \
+	-finline-functions \
+	-std=gnu17
 
 ifeq ($(HOST_OS),Linux)
 CFLAGS += \
@@ -153,7 +162,13 @@ DEFINES_LIST = \
 	CONFIG_GC9307_240x280=y \
 	CONFIG_TFT_MAX_BRIGHTNESS=200 \
 	CONFIG_TFT_MIN_BRIGHTNESS=10 \
-	CONFIG_NUM_LEDS=8
+	CONFIG_NUM_LEDS=8 \
+	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
+	_GNU_SOURCE \
+	IDF_VER="v5.0.1" \
+	ESP_PLATFORM \
+	_POSIX_READER_WRITER_LOCKS \
+	CFG_TUSB_MCU=OPT_MCU_ESP32S2 
 
 # Extra defines
 DEFINES_LIST += \
@@ -268,14 +283,15 @@ firmware:
 ################################################################################
 
 CPPCHECK_FLAGS= \
-	--enable=all \
+	--enable=warning \
 	--inconclusive \
 	--library=posix \
 	--language=c \
 	--platform=unix32 \
 	--std=c17 \
 	--suppress=missingIncludeSystem \
-	--output-file=./cppcheck_result.txt
+	--output-file=./cppcheck_result.txt \
+	-j12
 
 CPPCHECK_DIRS= \
 	main \
@@ -285,8 +301,14 @@ CPPCHECK_DIRS= \
 CPPCHECK_IGNORE= \
 	emulator/src/rawdraw_sf.h \
 	emulator/sound \
-	emulator/src/components/how-nvs/cJSON.c \
-	emulator/src/components/how-nvs/cJSON.h
+	emulator/src/components/hdw-nvs/cJSON.c \
+	emulator/src/components/hdw-nvs/cJSON.h \
+	main/asset_loaders/heatshrink_common.h \
+	main/asset_loaders/heatshrink_config.h \
+	main/asset_loaders/heatshrink_decoder.c \
+	main/asset_loaders/heatshrink_decoder.h \
+	main/asset_loaders/heatshrink_helper.c \
+	main/asset_loaders/heatshrink_helper.h
 
 CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 
