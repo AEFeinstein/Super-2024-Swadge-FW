@@ -53,7 +53,7 @@
 #include "spiffs_font.h"
 #include "spiffs_txt.h"
 #include "spiffs_json.h"
-#include "spiffs_sng.h"
+#include "spiffs_song.h"
 
 // Connection interface
 #include "p2pConnection.h"

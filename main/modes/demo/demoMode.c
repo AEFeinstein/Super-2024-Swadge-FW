@@ -71,9 +71,10 @@ static void demoEnterMode(void)
     dv = calloc(1, sizeof(demoVars_t));
     loadFont("ibm_vga8.font", &dv->ibm, false);
     loadWsg("kid0.wsg", &dv->king_donut, true);
-    loadSng("ode.sng", &dv->ode_to_joy, true);
+    loadSong("ode.sng", &dv->ode_to_joy, true);
 
     // bzrPlayBgm(&dv->ode_to_joy);
+    bzrStop();
 
     dv->menu = initMenu(demoName, &dv->ibm, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);
@@ -119,7 +120,7 @@ static void demoExitMode(void)
 {
     freeWsg(&dv->king_donut);
     freeFont(&dv->ibm);
-    freeSng(&dv->ode_to_joy);
+    freeSong(&dv->ode_to_joy);
     deinitMenu(dv->menu);
     free(dv);
 }

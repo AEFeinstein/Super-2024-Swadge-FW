@@ -24,7 +24,7 @@
  * and writing values from the read file into a convenient struct. The loader functions are:
  *  - loadFont() & freeFont() - Load font assets from SPIFFS to draw text to the display
  *  - loadWsg() & freeWsg() - Load image asssets from SPIFFS to draw images to the display
- *  - loadSng() & freeSng() - Load song assets from SPIFFS to play songs on the buzzer
+ *  - loadSong() & freeSong() - Load song assets from SPIFFS to play songs on the buzzer
  *  - loadJson() & freeJson() - Load JSON assets from SPIFFS to configure games
  *  - loadTxt() & freeTxt() - Load text assets from SPIFFS to use in a Swadge mode
  *
@@ -53,11 +53,11 @@
  *
  * // Declare and load a song
  * song_t ode_to_joy;
- * loadSng("ode.sng", &ode_to_joy, true);
+ * loadSong("ode.sng", &ode_to_joy, true);
  * // Play the song
  * bzrPlayBgm(&ode_to_joy);
  * // Free the song
- * freeSng(&ode_to_joy);
+ * freeSong(&ode_to_joy);
  * \endcode
  */
 

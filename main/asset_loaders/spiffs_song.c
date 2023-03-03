@@ -10,7 +10,7 @@
 
 #include "heatshrink_helper.h"
 #include "hdw-spiffs.h"
-#include "spiffs_sng.h"
+#include "spiffs_song.h"
 
 //==============================================================================
 // Functions
@@ -21,13 +21,13 @@
  * before compilation will be automatically flashed to ROM
  *
  * @param name The filename of the SNG to load
- * @param sng  A handle to load the SNG to
+ * @param song  A handle to load the SNG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than nromal RAM
  * @return true if the SNG was loaded successfully,
  *         false if the SNG load failed and should not be used
  */
-bool loadSng(char* name, song_t* sng, bool spiRam)
+bool loadSong(char* name, song_t* song, bool spiRam)
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;
@@ -38,35 +38,35 @@ bool loadSng(char* name, song_t* sng, bool spiRam)
         return false;
     }
 
-    // Save the decompressed info to the sng. The first four bytes are the number of notes
-    sng->numNotes
+    // Save the decompressed info to the song. The first four bytes are the number of notes
+    song->numNotes
         = (decompressedBuf[0] << 24) | (decompressedBuf[1] << 16) | (decompressedBuf[2] << 8) | decompressedBuf[3];
 
     // Default values, not currently saved in the file format
-    sng->loopStartNote = 0;
-    sng->shouldLoop    = false;
+    song->loopStartNote = 0;
+    song->shouldLoop    = false;
 
     // The rest of the bytes are notes
     if (spiRam)
     {
-        sng->notes = (musicalNote_t*)heap_caps_malloc(sizeof(musicalNote_t) * sng->numNotes, MALLOC_CAP_SPIRAM);
+        song->notes = (musicalNote_t*)heap_caps_malloc(sizeof(musicalNote_t) * song->numNotes, MALLOC_CAP_SPIRAM);
     }
     else
     {
-        sng->notes = (musicalNote_t*)malloc(sizeof(musicalNote_t) * sng->numNotes);
+        song->notes = (musicalNote_t*)malloc(sizeof(musicalNote_t) * song->numNotes);
     }
 
-    if (NULL != sng->notes)
+    if (NULL != song->notes)
     {
         // Start after the number of notes
         uint32_t dbIdx = 4;
 
         // Copy all note data
-        for (uint32_t noteIdx = 0; noteIdx < sng->numNotes; noteIdx++)
+        for (uint32_t noteIdx = 0; noteIdx < song->numNotes; noteIdx++)
         {
-            sng->notes[noteIdx].note = (decompressedBuf[dbIdx] << 8) | (decompressedBuf[dbIdx + 1]);
+            song->notes[noteIdx].note = (decompressedBuf[dbIdx] << 8) | (decompressedBuf[dbIdx + 1]);
             dbIdx += 2;
-            sng->notes[noteIdx].timeMs = (decompressedBuf[dbIdx] << 8) | (decompressedBuf[dbIdx + 1]);
+            song->notes[noteIdx].timeMs = (decompressedBuf[dbIdx] << 8) | (decompressedBuf[dbIdx + 1]);
             dbIdx += 2;
         }
         free(decompressedBuf);
@@ -81,9 +81,9 @@ bool loadSng(char* name, song_t* sng, bool spiRam)
 /**
  * @brief Free the memory for a loaded SNG
  *
- * @param sng The SNG handle to free memory from
+ * @param song The SNG handle to free memory from
  */
-void freeSng(song_t* sng)
+void freeSong(song_t* song)
 {
-    free(sng->notes);
+    free(song->notes);
 }
