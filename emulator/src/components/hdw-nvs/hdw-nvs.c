@@ -144,8 +144,8 @@ bool readNvs32(const char* key, int32_t* outVal)
             fclose(nvsFile);
 
             // Parse the JSON
-            cJSON* json     = cJSON_Parse(fbuf);
-            cJSON* jsonIter = json;
+            cJSON* json = cJSON_Parse(fbuf);
+            cJSON* jsonIter;
 
             // Find the requested key
             char* current_key = NULL;
@@ -288,8 +288,8 @@ bool readNvsBlob(const char* key, void* out_value, size_t* length)
             fclose(nvsFile);
 
             // Parse the JSON
-            cJSON* json     = cJSON_Parse(fbuf);
-            cJSON* jsonIter = json;
+            cJSON* json = cJSON_Parse(fbuf);
+            cJSON* jsonIter;
 
             // Find the requested key
             char* current_key = NULL;
@@ -519,8 +519,8 @@ bool readNvsStats(nvs_stats_t* outStats)
             fclose(nvsFile);
 
             // Parse the JSON
-            cJSON* json     = cJSON_Parse(fbuf);
-            cJSON* jsonIter = json;
+            cJSON* json = cJSON_Parse(fbuf);
+            cJSON* jsonIter;
 
             // 1 entry is always used by each namespace, and there should only ever be 1 namespace
             outStats->used_entries = 1;
@@ -618,8 +618,8 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfo
             fclose(nvsFile);
 
             // Parse the JSON
-            cJSON* json     = cJSON_Parse(fbuf);
-            cJSON* jsonIter = json;
+            cJSON* json = cJSON_Parse(fbuf);
+            cJSON* jsonIter;
 
             // If the user doesn't want to receive the stats, only use them internally
             bool freeOutStats = false;

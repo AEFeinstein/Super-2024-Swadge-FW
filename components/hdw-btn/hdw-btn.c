@@ -475,7 +475,7 @@ static int getBaseTouchVals(int32_t* data, int count)
     }
     for (int i = 0; i < numTouchPads; i++)
     {
-        if (curVals[i] <= 0)
+        if (curVals[i] == 0)
         {
             return 0;
         }

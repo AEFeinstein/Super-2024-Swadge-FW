@@ -54,10 +54,10 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     // Make sure the file exists, case sensitive
     bool fileExists = false;
     DIR* d;
-    struct dirent* dir;
     d = opendir("./spiffs_image/");
     if (d)
     {
+        struct dirent* dir;
         while ((dir = readdir(d)) != NULL)
         {
             if (0 == strcmp(dir->d_name, fname))

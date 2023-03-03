@@ -62,7 +62,7 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
     SETUP_FOR_TURBO();
     int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    int err       = dx + dy, e2; /* error value e_xy */
+    int err       = dx + dy; /* error value e_xy */
     int dashCnt   = 0;
     bool dashDraw = true;
 
@@ -85,7 +85,7 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
         {
             TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col);
         }
-        e2 = 2 * err;
+        int e2 = 2 * err;
         if (e2 >= dy) /* e_xy+e_x > 0 */
         {
             if (x0 == x1)
@@ -676,16 +676,10 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             dxA      = (v2x - v1x);
             dyA      = (v2y - v1y);
             sdxA     = (dxA > 0) ? 1 : -1;
-            sdyA     = (dyA > 0) ? 1 : -1;
-            xerrdivA = (dyA * sdyA); // dx, but always positive.
-            if (xerrdivA)
-            {
-                xerrnumeratorA = (((dxA * sdxA) << FIXEDPOINT) + xerrdivA / 2) / xerrdivA;
-            }
-            else
-            {
-                xerrnumeratorA = 0x7fffff;
-            }
+            xerrdivA = (dyA); // dx, but always positive.
+
+            xerrnumeratorA = (((dxA * sdxA) << FIXEDPOINT) + xerrdivA / 2) / xerrdivA;
+
             x0A  = v1x;
             errA = 1 << FIXEDPOINTD2;
         }
@@ -1125,7 +1119,7 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
 
     long a = abs(x1 - x0), b = abs(y1 - y0), b1 = b & 1;          /* diameter */
     double dx = 4 * (1.0 - a) * b * b, dy = 4 * (b1 + 1) * a * a; /* error increment */
-    double err = dx + dy + b1 * a * a, e2;                        /* error of 1.step */
+    double err = dx + dy + b1 * a * a;                            /* error of 1.step */
 
     if (x0 > x1)
     {
@@ -1147,7 +1141,7 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
         TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col); /*  II. Quadrant */
         TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y1 * yScale, col); /* III. Quadrant */
         TURBO_SET_PIXEL_BOUNDS(xTr + x1 * xScale, yTr + y1 * yScale, col); /*  IV. Quadrant */
-        e2 = 2 * err;
+        double e2 = 2 * err;
         if (e2 <= dy)
         {
             y0++;
@@ -1228,8 +1222,8 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
     SETUP_FOR_TURBO();
 
     int sx = x2 - x1, sy = y2 - y1;
-    long xx = x0 - x1, yy = y0 - y1, xy;         /* relative values for checks */
-    double dx, dy, err, cur = xx * sy - yy * sx; /* curvature */
+    long xx = x0 - x1, yy = y0 - y1; /* relative values for checks */
+    double cur = xx * sy - yy * sx;  /* curvature */
 
     assert(xx * sx <= 0 && yy * sy <= 0); /* sign of gradient must not change */
 
@@ -1247,7 +1241,7 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
         xx *= sx = x0 < x2 ? 1 : -1; /* x step direction */
         yy += sy;
         yy *= sy = y0 < y2 ? 1 : -1; /* y step direction */
-        xy       = 2 * xx * yy;
+        long xy  = 2 * xx * yy;
         xx *= xx;
         yy *= yy;              /* differences 2nd degree */
         if (cur * sx * sy < 0) /* negated curvature? */
@@ -1257,11 +1251,11 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
             xy  = -xy;
             cur = -cur;
         }
-        dx = 4.0 * sy * cur * (x1 - x0) + xx - xy; /* differences 1st degree */
-        dy = 4.0 * sx * cur * (y0 - y1) + yy - xy;
+        double dx = 4.0 * sy * cur * (x1 - x0) + xx - xy; /* differences 1st degree */
+        double dy = 4.0 * sx * cur * (y0 - y1) + yy - xy;
         xx += xx;
         yy += yy;
-        err = dx + dy + xy; /* error 1st step */
+        double err = dx + dy + xy; /* error 1st step */
         do
         {
             TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col); /* draw curve */
@@ -1447,7 +1441,7 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
 
     int sx = x2 - x1, sy = y2 - y1; /* relative values for checks */
     double dx = x0 - x2, dy = y0 - y2, xx = x0 - x1, yy = y0 - y1;
-    double xy = xx * sy + yy * sx, cur = xx * sy - yy * sx, err; /* curvature */
+    double xy = xx * sy + yy * sx, cur = xx * sy - yy * sx; /* curvature */
 
     assert(xx * sx <= 0.0 && yy * sy <= 0.0); /* sign of gradient must not change */
 
@@ -1492,7 +1486,7 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
             drawQuadRationalBezierSeg(sx, sy, dx, dy, x2, y2, cur, col);
             return;
         }
-        err = dx + dy - xy; /* error 1.step */
+        double err = dx + dy - xy; /* error 1.step */
         do
         {
             TURBO_SET_PIXEL_BOUNDS(x0, y0, col); /* draw curve */
@@ -1849,7 +1843,7 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
     long xb = x0 - x1 - x2 + x3, xd = xb + 4 * (x1 + x2);
     long yc = y0 + y1 - y2 - y3, ya = yc - 4 * (y1 - y2);
     long yb = y0 - y1 - y2 + y3, yd = yb + 4 * (y1 + y2);
-    float fx0 = x0, fx1, fx2, fx3, fy0 = y0, fy1, fy2, fy3;
+    float fx0 = x0, fy0 = y0;
     double t1 = xb * xb - xa * xc, t2, t[5];
     /* sub-divide curve at gradient sign changes */
     if (xa == 0) /* horizontal */
@@ -1907,11 +1901,12 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
     t[n] = 1.0;              /* begin / end point */
     for (i = 0; i <= n; i++) /* draw each segment separately */
     {
-        t2         = t[i]; /* sub-divide at t[i-1], t[i] */
-        fx1        = (t1 * (t1 * xb - 2 * xc) - t2 * (t1 * (t1 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
-        fy1        = (t1 * (t1 * yb - 2 * yc) - t2 * (t1 * (t1 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
-        fx2        = (t2 * (t2 * xb - 2 * xc) - t1 * (t2 * (t2 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
-        fy2        = (t2 * (t2 * yb - 2 * yc) - t1 * (t2 * (t2 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
+        t2        = t[i]; /* sub-divide at t[i-1], t[i] */
+        float fx1 = (t1 * (t1 * xb - 2 * xc) - t2 * (t1 * (t1 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
+        float fy1 = (t1 * (t1 * yb - 2 * yc) - t2 * (t1 * (t1 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
+        float fx2 = (t2 * (t2 * xb - 2 * xc) - t1 * (t2 * (t2 * xa - 2 * xb) + xc) + xd) / 8 - fx0;
+        float fy2 = (t2 * (t2 * yb - 2 * yc) - t1 * (t2 * (t2 * ya - 2 * yb) + yc) + yd) / 8 - fy0;
+        float fx3, fy3;
         fx0 -= fx3 = (t2 * (t2 * (3 * xb - t2 * xa) - 3 * xc) + xd) / 8;
         fy0 -= fy3 = (t2 * (t2 * (3 * yb - t2 * ya) - 3 * yc) + yd) / 8;
         x3         = floor(fx3 + 0.5);
