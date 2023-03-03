@@ -42,15 +42,16 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
                                  int xTr, int yTr, int xScale, int yScale);
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw a one pixel wide straight line with translation and scaling.
+ * The line may be solid or dashed
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
- * @param dashWidth
- * @param xTr
+ * @param x0 The X coordinate to start the line at
+ * @param y0 The Y coordinate to start the line at
+ * @param x1 The X coordinate to end the line at
+ * @param y1 The Y coordinate to end the line at
+ * @param col The color to draw
+ * @param dashWidth The width of each dash, or 0 for a solid line
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -107,14 +108,15 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a one pixel wide straight line between two points.
+ * The line may be solid or dashed.
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
- * @param dashWidth
+ * @param x0 The X coordinate to start the line at
+ * @param y0 The Y coordinate to start the line at
+ * @param x1 The X coordinate to end the line at
+ * @param y1 The Y coordinate to end the line at
+ * @param col The color to draw
+ * @param dashWidth The width of each dash, or 0 for a solid line
  */
 void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
 {
@@ -122,15 +124,16 @@ void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a line that that is translated and scaled. Scaling may make it wider than one pixel.
+ * The line may be solid or dashed
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
- * @param dashWidth
- * @param xTr
+ * @param x0 The X coordinate to start the line at
+ * @param y0 The Y coordinate to start the line at
+ * @param x1 The X coordinate to end the line at
+ * @param y1 The Y coordinate to end the line at
+ * @param col The color to draw
+ * @param dashWidth The width of each dash, or 0 for a solid line
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -145,7 +148,7 @@ void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dash
 }
 
 /**
- * @brief Optimized method to quickly draw a line.
+ * @brief Optimized method to quickly draw a one pixel wide solid line.
  *
  * @param x0 The X coordinate to start the line at
  * @param y0 The Y coordinate to start the line at
@@ -389,14 +392,14 @@ void drawLineFast(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw the a one pixel wide outline of a rectangle
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
- * @param xTr
+ * @param x0 The X coordinate of the top left corner
+ * @param y0 The Y coordinate of the top left corner
+ * @param x1 The X coordinate of the bottom right corner
+ * @param y1 The Y coordinate of the bottom right corner
+ * @param col The color to draw
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -421,13 +424,13 @@ static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw the a one pixel wide outline of a rectangle
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
+ * @param x0 The X coordinate of the top left corner
+ * @param y0 The Y coordinate of the top left corner
+ * @param x1 The X coordinate of the bottom right corner
+ * @param y1 The Y coordinate of the bottom right corner
+ * @param col The color to draw
  */
 void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col)
 {
@@ -435,14 +438,14 @@ void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col)
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw the outline of a rectangle that is translated and scaled. Scaling may make it wider than one pixel.
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
- * @param xTr
+ * @param x0 The X coordinate of the top left corner
+ * @param y0 The Y coordinate of the top left corner
+ * @param x1 The X coordinate of the bottom right corner
+ * @param y1 The Y coordinate of the bottom right corner
+ * @param col The color to draw
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -456,7 +459,8 @@ void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr,
 }
 
 /**
- * @brief Optimized method to draw a triangle with outline.
+ * @brief Optimized method to draw a triangle with outline. The interior color may be ::cTransparent to draw just an
+ * outline.
  *
  * @param v0x Vertex 0's X coordinate
  * @param v0y Vertex 0's Y coordinate
@@ -619,9 +623,12 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw body
-                for (; x < endx; x++)
+                if (cTransparent != fillColor)
                 {
-                    TURBO_SET_PIXEL(x, y, fillColor);
+                    for (; x < endx; x++)
+                    {
+                        TURBO_SET_PIXEL(x, y, fillColor);
+                    }
                 }
 
                 // Draw right line
@@ -756,9 +763,12 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw body
-                for (; x < endx; x++)
+                if (cTransparent != fillColor)
                 {
-                    TURBO_SET_PIXEL(x, y, fillColor);
+                    for (; x < endx; x++)
+                    {
+                        TURBO_SET_PIXEL(x, y, fillColor);
+                    }
                 }
 
                 // Draw right line
@@ -803,14 +813,14 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw a one pixel wide outline of an ellipse with translation and scaling
  *
- * @param xm
- * @param ym
- * @param a
- * @param b
- * @param col
- * @param xTr
+ * @param xm The X coordinate of the center of the ellipse
+ * @param ym The Y coordinate of the center of the ellipse
+ * @param a The X radius of the ellipse
+ * @param b The Y radius of the ellipse
+ * @param col The color to draw
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -847,28 +857,14 @@ static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, i
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw the outline of an ellipse with translation and scaling. Scaling may make it wider than one pixel.
  *
- * @param xm
- * @param ym
- * @param a
- * @param b
- * @param col
- */
-void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
-{
-    drawEllipseInner(xm, ym, a, b, col, 0, 0, 1, 1);
-}
-
-/**
- * @brief TODO doxy
- *
- * @param xm
- * @param ym
- * @param a
- * @param b
- * @param col
- * @param xTr
+ * @param xm The X coordinate of the center of the ellipse
+ * @param ym The Y coordinate of the center of the ellipse
+ * @param a The X radius of the ellipse
+ * @param b The Y radius of the ellipse
+ * @param col The color to draw
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -882,15 +878,15 @@ void drawEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xTr
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a one pixel wide outline of an ellipse
  *
- * @param xm
- * @param ym
- * @param a
- * @param b
- * @param col
+ * @param xm The X coordinate of the center of the ellipse
+ * @param ym The Y coordinate of the center of the ellipse
+ * @param a The X radius of the ellipse
+ * @param b The Y radius of the ellipse
+ * @param col The color to draw
  */
-void drawOptimizedEllipse(int xm, int ym, int a, int b, paletteColor_t col)
+void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
 {
     SETUP_FOR_TURBO();
 
@@ -925,13 +921,13 @@ void drawOptimizedEllipse(int xm, int ym, int a, int b, paletteColor_t col)
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw the outline of a circle with translation and scaling
  *
- * @param xm
- * @param ym
- * @param r
- * @param col
- * @param xTr
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param col The color to draw
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -960,12 +956,12 @@ static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xTr, 
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw the one pixel wide outline of a circle
  *
- * @param xm
- * @param ym
- * @param r
- * @param col
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param col The color to draw
  */
 void drawCircle(int xm, int ym, int r, paletteColor_t col)
 {
@@ -973,13 +969,13 @@ void drawCircle(int xm, int ym, int r, paletteColor_t col)
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw the outline of a circle with translation and scaling. Scaling may make it wider than one pixel.
  *
- * @param xm
- * @param ym
- * @param r
- * @param col
- * @param xTr
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param col The color to draw
+ * @param xTr TODO doxy
  * @param yTr
  * @param xScale
  * @param yScale
@@ -993,16 +989,16 @@ void drawCircleScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yT
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw the one pixel wide outline of the quadrants of a circle
  *
- * @param xm
- * @param ym
- * @param r
- * @param q1
- * @param q2
- * @param q3
- * @param q4
- * @param col
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param q1 True to draw the top left quadrant
+ * @param q2 True to draw the top right quadrant
+ * @param q3 True to draw the bottom right quadrant
+ * @param q4 True to draw the bottom left quadrant
+ * @param col The color to draw
  */
 void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col)
 {
@@ -1185,7 +1181,7 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
  * @param col
  */
 void drawEllipseRect(int x0, int y0, int x1, int y1,
-                                       paletteColor_t col) /* rectangular parameter enclosing the ellipse */
+                     paletteColor_t col) /* rectangular parameter enclosing the ellipse */
 {
     drawEllipseRectInner(x0, y0, x1, y1, col, 0, 0, 1, 1);
 }
@@ -1303,7 +1299,7 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
  * @param col
  */
 void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2,
-                                         paletteColor_t col) /* draw a limited quadratic Bezier segment */
+                       paletteColor_t col) /* draw a limited quadratic Bezier segment */
 {
     drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
@@ -1403,7 +1399,7 @@ static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
  * @param col
  */
 void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2,
-                                      paletteColor_t col) /* draw any quadratic Bezier curve */
+                    paletteColor_t col) /* draw any quadratic Bezier curve */
 {
     drawQuadBezierInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
@@ -1823,7 +1819,7 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
  * @param col
  */
 void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
-                                          paletteColor_t col) /* draw limited cubic Bezier segment */
+                        paletteColor_t col) /* draw limited cubic Bezier segment */
 {
     drawCubicBezierSegInner(x0, y0, x1, y1, x2, y2, x3, y3, col, 0, 0, 1, 1);
 }
@@ -1956,8 +1952,7 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
  * @param y3
  * @param col
  */
-void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3,
-                                       paletteColor_t col)
+void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col)
 {
     drawCubicBezierInner(x0, y0, x1, y1, x2, y2, x3, y3, col, 0, 0, 1, 1);
 }

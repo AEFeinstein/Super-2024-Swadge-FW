@@ -9,6 +9,10 @@
  * This is based on <a href="https://github.com/zingl/Bresenham/blob/master/bresenham.c">Zingl Alois's bresenham.c</a>.
  * More explanation can be found <a href="https://zingl.github.io/bresenham.html">on their webpage</a>.
  *
+ * http://members.chello.at/~easyfilter/bresenham.c
+ *
+ * http://members.chello.at/~easyfilter/bresenham.html
+ *
  * \section bresenham_usage Usage
  *
  * TODO doxygen
@@ -36,7 +40,6 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                           paletteColor_t fillColor, paletteColor_t outlineColor);
 void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col);
 void drawEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
-void drawOptimizedEllipse(int xm, int ym, int a, int b, paletteColor_t col);
 void drawCircle(int xm, int ym, int r, paletteColor_t col);
 void drawCircleScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
 void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool q4, paletteColor_t col);
@@ -55,10 +58,8 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
 void drawQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, float w, paletteColor_t col);
 void drawRotatedEllipse(int x, int y, int a, int b, float angle, paletteColor_t col);
 void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd, paletteColor_t col);
-void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
-                                          paletteColor_t col);
-void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3,
-                                       paletteColor_t col);
+void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3, paletteColor_t col);
+void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col);
 void drawCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col, int xTr,
                            int yTr, int xScale, int yScale);
 void drawQuadSpline(int n, int x[], int y[], paletteColor_t col);
