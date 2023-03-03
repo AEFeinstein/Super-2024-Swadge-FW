@@ -163,7 +163,7 @@ menu_t* startSubMenu(menu_t* menu, const char* label)
  * corresponding call to endSubMenu()
  *
  * @param menu The menu to end a submenu in
- * @return TODO
+ * @return A pointer to the parent menu to use for future function calls
  */
 menu_t* endSubMenu(menu_t* menu)
 {
@@ -311,7 +311,7 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
  *
  * @param menu The menu to process button events for
  * @param btn The button event that occurred
- * @return TODO
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
 {
