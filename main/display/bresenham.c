@@ -42,21 +42,26 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
                                  int xTr, int yTr, int xScale, int yScale);
 
 /**
- * @brief Helper function to draw a one pixel wide straight line with translation and scaling.
- * The line may be solid or dashed
+ * @brief Helper function to draw a one pixel wide line that that is translated and scaled. Only a single
+ * pixel is drawn for each scaled pixel, with a gap between them. To draw the rest of the pixels, this
+ * function must be called with xScale and yScale adjusted for each subpixel offset within the scaled pixel.
  *
- * @param x0 The X coordinate to start the line at
- * @param y0 The Y coordinate to start the line at
- * @param x1 The X coordinate to end the line at
- * @param y1 The Y coordinate to end the line at
+ * The line may be solid or dashed. The line coordinates are given in terms scaled pixels, not display
+ * pixels. The origin of the scaled pixel coordinates can be translated using xOrigin and yOrigin,
+ * essentially creating a "canvas" of scaled pixels in a section of the screen.
+ *
+ * @param x0 The X coordinate to start the line at, in scaled pixels
+ * @param y0 The Y coordinate to start the line at, in scaled pixels
+ * @param x1 The X coordinate to end the line at, in scaled pixels
+ * @param y1 The Y coordinate to end the line at, in scaled pixels
  * @param col The color to draw
- * @param dashWidth The width of each dash, or 0 for a solid line
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param dashWidth The width of each dash, in scaled pixels, or 0 for a solid line
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr,
+static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin,
                           int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
@@ -72,7 +77,7 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
         {
             if (dashDraw)
             {
-                TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col);
+                TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yTr + y0 * yOrigin, col);
             }
             dashCnt++;
             if (dashWidth == dashCnt)
@@ -83,7 +88,7 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
         }
         else
         {
-            TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col);
+            TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yScale, col);
         }
         int e2 = 2 * err;
         if (e2 >= dy) /* e_xy+e_x > 0 */
@@ -125,25 +130,27 @@ void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
 
 /**
  * @brief Draw a line that that is translated and scaled. Scaling may make it wider than one pixel.
- * The line may be solid or dashed
+ * The line may be solid or dashed. The line coordinates are given in terms scaled pixels, not display
+ * pixels. The origin of the scaled pixel coordinates can be translated using xOrigin and yOrigin,
+ * essentially creating a "canvas" of scaled pixels in a section of the screen.
  *
- * @param x0 The X coordinate to start the line at
- * @param y0 The Y coordinate to start the line at
- * @param x1 The X coordinate to end the line at
- * @param y1 The Y coordinate to end the line at
+ * @param x0 The X coordinate to start the line at, in scaled pixels
+ * @param y0 The Y coordinate to start the line at, in scaled pixels
+ * @param x1 The X coordinate to end the line at, in scaled pixels
+ * @param y1 The Y coordinate to end the line at, in scaled pixels
  * @param col The color to draw
- * @param dashWidth The width of each dash, or 0 for a solid line
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param dashWidth The width of each dash, in scaled pixels, or 0 for a solid line
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr, int xScale,
+void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin, int xScale,
                     int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawLineInner(x0, y0, x1, y1, col, dashWidth, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawLineInner(x0, y0, x1, y1, col, dashWidth, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 
