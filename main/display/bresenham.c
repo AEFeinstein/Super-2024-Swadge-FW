@@ -23,7 +23,7 @@
 #define FIXEDPOINT   16
 #define FIXEDPOINTD2 15
 
-static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr,
+static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin,
                           int xScale, int yScale);
 static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
 static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale,
@@ -77,7 +77,7 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
         {
             if (dashDraw)
             {
-                TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yTr + y0 * yOrigin, col);
+                TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yOrigin, col);
             }
             dashCnt++;
             if (dashWidth == dashCnt)
@@ -145,8 +145,8 @@ void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
  * @param xScale The width of each scaled pixel
  * @param yScale The height of each scaled pixel
  */
-void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin, int xScale,
-                    int yScale)
+void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin,
+                    int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {

@@ -32,8 +32,8 @@
 
 void drawLineFast(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t color);
 void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth);
-void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr, int xScale,
-                    int yScale);
+void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin,
+                    int xScale, int yScale);
 void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col);
 void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
 void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
