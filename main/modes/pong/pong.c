@@ -9,7 +9,7 @@
 #define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
 #define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
 
-#define SPEED_LIMIT (15 << DECIMAL_BITS)
+#define SPEED_LIMIT (30 << DECIMAL_BITS)
 
 static void pongMainLoop(int64_t elapsedUs);
 static void pongEnterMode(void);
@@ -113,6 +113,7 @@ static bool circleRect(int32_t cx, int32_t cy, int32_t radius, int32_t rx, int32
         // right edge
         testX = rx + rw;
     }
+
     if (cy < ry)
     {
         // top edge
@@ -170,6 +171,8 @@ static void pongMainLoop(int64_t elapsedUs)
     pong->ballLoc.x += (pong->ballVel.x * elapsedUs) / 100000;
     pong->ballLoc.y += (pong->ballVel.y * elapsedUs) / 100000;
 
+    // TODO victory check
+
     // Checks for top and bottom wall collisons
     if (((pong->ballLoc.y - BALL_RADIUS) < 0 && pong->ballVel.y < 0)
         || ((pong->ballLoc.y + BALL_RADIUS) > FIELD_HEIGHT && pong->ballVel.y > 0))
@@ -192,8 +195,15 @@ static void pongMainLoop(int64_t elapsedUs)
     {
         // Reverse direction
         pong->ballVel.x = -pong->ballVel.x;
+
+        // Apply extra rotation depending on part of the paddle hit
+        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
+        int16_t diff = pong->ballLoc.y - (pong->paddleLocL + PADDLE_HEIGHT / 2);
+        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
+        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
+
+        // Increase speed
         IncreaseSpeed(1 << DECIMAL_BITS);
-        // TODO angle collision
     }
     // Check for right paddle collision
     else if ((pong->ballVel.x > 0)
@@ -202,81 +212,18 @@ static void pongMainLoop(int64_t elapsedUs)
     {
         // Reverse direction
         pong->ballVel.x = -pong->ballVel.x;
+
+        // Apply extra rotation depending on part of the paddle hit
+        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
+        int16_t diff = pong->ballLoc.y - (pong->paddleLocR + PADDLE_HEIGHT / 2);
+        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
+        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
+
+        // Increase speed
         IncreaseSpeed(1 << DECIMAL_BITS);
-        // TODO angle collision
     }
 
     DrawField();
-
-    // int16_t rotation;
-    // if (pong->restartTimer > 0)
-    // {
-    //     pong->restartTimer--;
-    // }
-    // else
-    // {
-    //     // Physics!
-    //     // Update the ball's position
-    //     pong->ballLoc.x += (pong->ballVel.x * elapsedUs);
-    //     pong->ballLoc.y += (pong->ballVel.y * elapsedUs);
-
-    //     // Check for collisions, win conditions. Nudge the ball if necessary
-    //     // Top wall collision
-    //     if (pong->ballLoc.y < 0 && pong->ballVel.y < 0)
-    //     {
-    //         pong->ballVel.y = -pong->ballVel.y;
-    //     }
-    //     // Bottom wall collision
-    //     else if (pong->ballLoc.y >= FIELD_HEIGHT && pong->ballVel.y > 0)
-    //     {
-    //         pong->ballVel.y = -pong->ballVel.y;
-    //     }
-    //     // left paddle collision
-    //     else if (pong->ballLoc.x < 1 * S_M * V_M && pong->ballVel.x < 0
-    //              && (pong->paddleLocL <= pong->ballLoc.y && pong->ballLoc.y < pong->paddleLocL + PADDLE_SIZE))
-    //     {
-    //         pong->ballVel.x = -pong->ballVel.x;
-    //         pong->ballLoc.x = 1 * S_M * V_M; // right on the edge of the paddle
-
-    //         // Increase speed on collision
-    //         IncreaseSpeed(37); // remember, divided by V_M
-
-    //         // Apply extra rotation depending on part of the paddle hit
-    //         // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2 (+/- 8192)
-    //         int16_t diff = pong->ballLoc.y - (pong->paddleLocL + PADDLE_SIZE / 2);
-    //         // rotate 45deg at edge of paddle, 0deg in middle, linear in between
-    //         rotation = (EXTRA_ROTATION_ON_EDGE * diff) / (PADDLE_SIZE / 2);
-    //         RotateBall(rotation);
-    //     }
-    //     // right paddle collision
-    //     else if (pong->ballLoc.x >= (BOARD_SIZE - 1) * S_M * V_M && pong->ballVel.x > 0
-    //              && (pong->paddleLocR <= pong->ballLoc.y && pong->ballLoc.y < pong->paddleLocR + PADDLE_SIZE))
-    //     {
-    //         pong->ballVel.x = -pong->ballVel.x;
-    //         pong->ballLoc.x = (BOARD_SIZE - 1) * S_M * V_M - 1; // right on the edge of the paddle
-
-    //         // Increase speed on collision
-    //         IncreaseSpeed(37); // remember, divided by V_M
-
-    //         // Apply extra rotation depending on part of the paddle hit
-    //         // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2 (+/- 8192)
-    //         int16_t diff = pong->ballLoc.y - (pong->paddleLocR + PADDLE_SIZE / 2);
-    //         // rotate 45deg at edge of paddle, 0deg in middle, linear in between
-    //         rotation = (EXTRA_ROTATION_ON_EDGE * diff) / (PADDLE_SIZE / 2);
-    //         RotateBall(-rotation);
-    //     }
-    //     // left wall win
-    //     else if (pong->ballLoc.x < 0 && pong->ballVel.x < 0)
-    //     {
-    //         ResetGame(0, 1);
-    //     }
-    //     // right wall win
-    //     else if (pong->ballLoc.x >= BOARD_SIZE * S_M * V_M && pong->ballVel.x > 0)
-    //     {
-    //         ResetGame(0, 0);
-    //     }
-    // }
-    // DrawField();
 }
 
 /**
@@ -319,6 +266,7 @@ void ResetGame(bool isInit, uint8_t whoWon)
  */
 void RotateBall(int16_t degree)
 {
+    // printf("rotate %" PRId16 ": ", degree);
     while (degree < 0)
     {
         degree += 360;
@@ -328,11 +276,15 @@ void RotateBall(int16_t degree)
         degree -= 360;
     }
 
-    int16_t sin = getSin1024(degree);
-    int16_t cos = getCos1024(degree);
+    int16_t sin  = getSin1024(degree);
+    int16_t cos  = getCos1024(degree);
+    int32_t oldX = pong->ballVel.x;
+    int32_t oldY = pong->ballVel.y;
 
-    pong->ballVel.x = (pong->ballVel.x * cos - pong->ballVel.y * sin) / 1024;
-    pong->ballVel.y = (pong->ballVel.x * sin + pong->ballVel.y * cos) / 1024;
+    // printf("[%3d %3d] -> ", pong->ballVel.x, pong->ballVel.y);
+    pong->ballVel.x = ((oldX * cos) - (oldY * sin)) / 1024;
+    pong->ballVel.y = ((oldX * sin) + (oldY * cos)) / 1024;
+    // printf("[%3d %3d]\n", pong->ballVel.x, pong->ballVel.y);
 }
 
 /**
@@ -344,20 +296,13 @@ void RotateBall(int16_t degree)
 void IncreaseSpeed(int16_t speedM)
 {
     int32_t denom      = ABS(pong->ballVel.x) + ABS(pong->ballVel.y);
-    int32_t xComponent = (speedM * ABS(pong->ballVel.x)) / denom;
-    if (pong->ballVel.x < 0)
-    {
-        xComponent = -xComponent;
-    }
-    int32_t yComponent = (speedM * ABS(pong->ballVel.y)) / denom;
-    if (pong->ballVel.y < 0)
-    {
-        yComponent = -yComponent;
-    }
+    int32_t xComponent = (speedM * pong->ballVel.x) / denom;
+    int32_t yComponent = (speedM * pong->ballVel.y) / denom;
 
-    printf("Speedup [%d %d] [%d %d]\n", xComponent, yComponent, pong->ballVel.x, pong->ballVel.y);
+    // printf("Speedup [%3d %3d] + [%3d %3d] = ", xComponent, yComponent, pong->ballVel.x, pong->ballVel.y);
     pong->ballVel.x = CLAMP((pong->ballVel.x + xComponent), -SPEED_LIMIT, SPEED_LIMIT);
     pong->ballVel.y = CLAMP((pong->ballVel.y + yComponent), -SPEED_LIMIT, SPEED_LIMIT);
+    // printf("[%3d %3d]\n", pong->ballVel.x, pong->ballVel.y);
 }
 
 /**
