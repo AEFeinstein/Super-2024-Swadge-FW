@@ -93,12 +93,14 @@
 
 #include "swadge2024.h"
 #include "demoMode.h"
+#include "pong.h"
 
 //==============================================================================
 // Variables
 //==============================================================================
 
 static swadgeMode_t* modes[] = {
+    &pongMode,
     &demoMode,
 };
 static swadgeMode_t* cSwadgeMode;
