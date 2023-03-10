@@ -312,6 +312,8 @@ int actualCharWidth(SFT_Image* img, int32_t* minX, int32_t* maxX)
     // Make aure there is something to measure
     if (img->width == 0 || img->height == 0)
     {
+        *minX = 0;
+        *maxX = 0;
         return img->width;
     }
 
@@ -338,6 +340,12 @@ int actualCharWidth(SFT_Image* img, int32_t* minX, int32_t* maxX)
                 }
             }
         }
+    }
+
+    // No pixels set
+    if(100000 == *minX)
+    {
+        *minX = 0;
     }
 
     // Return the actual width
