@@ -17,12 +17,13 @@ jobs:
     - name: Debug print messages
       run: echo '${{ toJSON(github.event.commits) }}'
 
-    - name: Debug print messages 2
-      run: echo '${{ github.event.commits[0].message }}'
-      
-    - name: Debug print messages 3
-      run: echo '${{ github.event.head_commit.message }}'
-        
+    - name: Debug print messages wildcard
+      run: |
+        echo "test 1"
+        echo '${{ github.event.commits.*.message }}'
+        echo "test 2"
+        echo '${{ toJSON(github.event.commits.*.message) }}'
+
     - name: Create a version file
       run: |
         printf "Commit: https://github.com/AEFeinstein/Swadge-IDF-5.0/commit/$(git rev-parse HEAD) \nBuilt at: $(date)" >> version.txt
