@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "schrift.h": "c",
+        "utf8_to_utf32.h": "c"
+    }
+}
