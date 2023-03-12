@@ -1,15 +1,6 @@
-/********************************************************************
- *                                                                   *
- *                    Curve Rasterizing Algorithm                    *
- *                                                                   *
- ********************************************************************/
-
-/**
-
- *
- * http://members.chello.at/~easyfilter/bresenham.html
- * http://members.chello.at/~easyfilter/bresenham.c
- */
+//==============================================================================
+// Includes
+//==============================================================================
 
 #include <math.h>
 #include <stdlib.h>
@@ -18,28 +9,41 @@
 #include "hdw-tft.h"
 #include "bresenham.h"
 
-// #define assert(x) if(false == (x)) {  return;  }
+//==============================================================================
+// Defines
+//==============================================================================
 
 #define FIXEDPOINT   16
 #define FIXEDPOINTD2 15
 
-static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xTr, int yTr,
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
+static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin,
                           int xScale, int yScale);
-static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
-static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale,
+static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                          int yScale);
+static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                              int yScale);
-static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
-static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
-static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale,
-                                 int yScale);
-static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
-                                   int xScale, int yScale);
-static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
-                                int xScale, int yScale);
+static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                            int yScale);
+static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                                  int yScale);
+static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin,
+                                 int xScale, int yScale);
+static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
+                                   int yOrigin, int xScale, int yScale);
+static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
+                                int yOrigin, int xScale, int yScale);
 static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
-                                    paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
+                                    paletteColor_t col, int xOrigin, int yOrigin, int xScale, int yScale);
 static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
-                                 int xTr, int yTr, int xScale, int yScale);
+                                 int xOrigin, int yOrigin, int xScale, int yScale);
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * @brief Helper function to draw a one pixel wide line that that is translated and scaled. Only a single
@@ -77,7 +81,7 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
         {
             if (dashDraw)
             {
-                TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yTr + y0 * yOrigin, col);
+                TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yOrigin, col);
             }
             dashCnt++;
             if (dashWidth == dashCnt)
@@ -145,8 +149,8 @@ void drawLine(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth)
  * @param xScale The width of each scaled pixel
  * @param yScale The height of each scaled pixel
  */
-void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin, int xScale,
-                    int yScale)
+void drawLineScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int dashWidth, int xOrigin, int yOrigin,
+                    int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
@@ -406,27 +410,28 @@ void drawLineFast(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteColor_t
  * @param x1 The X coordinate of the bottom right corner
  * @param y1 The Y coordinate of the bottom right corner
  * @param col The color to draw
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                          int yScale)
 {
     SETUP_FOR_TURBO();
 
     // Vertical lines
     for (int y = y0; y < y1; y++)
     {
-        TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y * yScale, col);
-        TURBO_SET_PIXEL_BOUNDS(xTr + (x1 - 1) * xScale, yTr + y * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (x1 - 1) * xScale, yOrigin + y * yScale, col);
     }
 
     // Horizontal lines
     for (int x = x0; x < x1; x++)
     {
-        TURBO_SET_PIXEL_BOUNDS(xTr + x * xScale, yTr + y0 * yScale, col);
-        TURBO_SET_PIXEL_BOUNDS(xTr + x * xScale, yTr + (y1 - 1) * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + x * xScale, yOrigin + y0 * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + x * xScale, yOrigin + (y1 - 1) * yScale, col);
     }
 }
 
@@ -452,16 +457,17 @@ void drawRect(int x0, int y0, int x1, int y1, paletteColor_t col)
  * @param x1 The X coordinate of the bottom right corner
  * @param y1 The Y coordinate of the bottom right corner
  * @param col The color to draw
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                    int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawRectInner(x0, y0, x1, y1, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawRectInner(x0, y0, x1, y1, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 
@@ -821,12 +827,13 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
  * @param a The X radius of the ellipse
  * @param b The Y radius of the ellipse
  * @param col The color to draw
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                             int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -835,10 +842,10 @@ static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, i
 
     do
     {
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm - x) * xScale, yTr + (ym + y) * yScale, col); /*   I. Quadrant */
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm + x) * xScale, yTr + (ym + y) * yScale, col); /*  II. Quadrant */
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm + x) * xScale, yTr + (ym - y) * yScale, col); /* III. Quadrant */
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm - x) * xScale, yTr + (ym - y) * yScale, col); /*  IV. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm - x) * xScale, yOrigin + (ym + y) * yScale, col); /*   I. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm + x) * xScale, yOrigin + (ym + y) * yScale, col); /*  II. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm + x) * xScale, yOrigin + (ym - y) * yScale, col); /* III. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm - x) * xScale, yOrigin + (ym - y) * yScale, col); /*  IV. Quadrant */
         e2 = 2 * err;
         if (e2 >= (x * 2 + 1) * (long)b * b) /* e_xy+e_x > 0 */
         {
@@ -852,8 +859,8 @@ static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, i
 
     while (y++ < b) /* too early stop of flat ellipses a=1, */
     {
-        TURBO_SET_PIXEL_BOUNDS(xTr + xm * xScale, yTr + (ym + y) * yScale, col); /* -> finish tip of ellipse */
-        TURBO_SET_PIXEL_BOUNDS(xTr + xm * xScale, yTr + (ym - y) * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + xm * xScale, yOrigin + (ym + y) * yScale, col); /* -> finish tip of ellipse */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + xm * xScale, yOrigin + (ym - y) * yScale, col);
     }
 }
 
@@ -865,16 +872,17 @@ static void drawEllipseInner(int xm, int ym, int a, int b, paletteColor_t col, i
  * @param a The X radius of the ellipse
  * @param b The Y radius of the ellipse
  * @param col The color to draw
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void drawEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                       int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawEllipseInner(xm, ym, a, b, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawEllipseInner(xm, ym, a, b, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 
@@ -928,22 +936,22 @@ void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col)
  * @param ym The Y coordinate of the center of the circle
  * @param r The radius of the circle
  * @param col The color to draw
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawCircleInner(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
 
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
     do
     {
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm - x) * xScale, yTr + (ym + y) * yScale, col); /*   I. Quadrant +x +y */
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm - y) * xScale, yTr + (ym - x) * yScale, col); /*  II. Quadrant -x +y */
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm + x) * xScale, yTr + (ym - y) * yScale, col); /* III. Quadrant -x -y */
-        TURBO_SET_PIXEL_BOUNDS(xTr + (xm + y) * xScale, yTr + (ym + x) * yScale, col); /*  IV. Quadrant +x -y */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm - x) * xScale, yOrigin + (ym + y) * yScale, col); /*   I. Quadrant +x +y */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm - y) * xScale, yOrigin + (ym - x) * yScale, col); /*  II. Quadrant -x +y */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm + x) * xScale, yOrigin + (ym - y) * yScale, col); /* III. Quadrant -x -y */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (xm + y) * xScale, yOrigin + (ym + x) * yScale, col); /*  IV. Quadrant +x -y */
         r = err;
         if (r <= y)
         {
@@ -976,16 +984,16 @@ void drawCircle(int xm, int ym, int r, paletteColor_t col)
  * @param ym The Y coordinate of the center of the circle
  * @param r The radius of the circle
  * @param col The color to draw
- * @param xTr TODO doxy
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawCircleScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void drawCircleScaled(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawCircleInner(xm, ym, r, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawCircleInner(xm, ym, r, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 
@@ -1043,12 +1051,13 @@ void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool 
  * @param ym
  * @param r
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                                  int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -1057,8 +1066,8 @@ static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int
     {
         for (int lineX = xm + x; lineX <= xm - x; lineX++)
         {
-            TURBO_SET_PIXEL_BOUNDS(xTr + lineX * xScale, yTr + (ym - y) * yScale, col);
-            TURBO_SET_PIXEL_BOUNDS(xTr + lineX * xScale, yTr + (ym + y) * yScale, col);
+            TURBO_SET_PIXEL_BOUNDS(xOrigin + lineX * xScale, yOrigin + (ym - y) * yScale, col);
+            TURBO_SET_PIXEL_BOUNDS(xOrigin + lineX * xScale, yOrigin + (ym + y) * yScale, col);
         }
 
         r = err;
@@ -1093,16 +1102,16 @@ void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
  * @param ym
  * @param r
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xOrigin, int yOrigin, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawCircleFilledInner(xm, ym, r, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawCircleFilledInner(xm, ym, r, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 
@@ -1114,13 +1123,13 @@ void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xTr, 
  * @param x1
  * @param y1
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale,
-                                 int yScale) /* rectangular parameter enclosing the ellipse */
+static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin,
+                                 int xScale, int yScale) /* rectangular parameter enclosing the ellipse */
 {
     SETUP_FOR_TURBO();
 
@@ -1144,10 +1153,10 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
 
     do
     {
-        TURBO_SET_PIXEL_BOUNDS(xTr + x1 * xScale, yTr + y0 * yScale, col); /*   I. Quadrant */
-        TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col); /*  II. Quadrant */
-        TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y1 * yScale, col); /* III. Quadrant */
-        TURBO_SET_PIXEL_BOUNDS(xTr + x1 * xScale, yTr + y1 * yScale, col); /*  IV. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + x1 * xScale, yOrigin + y0 * yScale, col); /*   I. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yScale, col); /*  II. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y1 * yScale, col); /* III. Quadrant */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + x1 * xScale, yOrigin + y1 * yScale, col); /*  IV. Quadrant */
         double e2 = 2 * err;
         if (e2 <= dy)
         {
@@ -1165,10 +1174,10 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
 
     while (y0 - y1 <= b) /* too early stop of flat ellipses a=1 */
     {
-        TURBO_SET_PIXEL_BOUNDS(xTr + (x0 - 1) * xScale, yTr + y0 * yScale, col); /* -> finish tip of ellipse */
-        TURBO_SET_PIXEL_BOUNDS(xTr + (x1 + 1) * xScale, yTr + y0++ * yScale, col);
-        TURBO_SET_PIXEL_BOUNDS(xTr + (x0 - 1) * xScale, yTr + y1 * yScale, col);
-        TURBO_SET_PIXEL_BOUNDS(xTr + (x1 + 1) * xScale, yTr + y1-- * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (x0 - 1) * xScale, yOrigin + y0 * yScale, col); /* -> finish tip of ellipse */
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (x1 + 1) * xScale, yOrigin + y0++ * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (x0 - 1) * xScale, yOrigin + y1 * yScale, col);
+        TURBO_SET_PIXEL_BOUNDS(xOrigin + (x1 + 1) * xScale, yOrigin + y1-- * yScale, col);
     }
 }
 
@@ -1195,16 +1204,17 @@ void drawEllipseRect(int x0, int y0, int x1, int y1,
  * @param x1
  * @param y1
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
+                           int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawEllipseRectInner(x0, y0, x1, y1, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawEllipseRectInner(x0, y0, x1, y1, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 
@@ -1218,13 +1228,13 @@ void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, i
  * @param x2
  * @param y2
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
-                                   int xScale, int yScale) /* draw a limited quadratic Bezier segment */
+static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
+                                   int yOrigin, int xScale, int yScale) /* draw a limited quadratic Bezier segment */
 {
     SETUP_FOR_TURBO();
 
@@ -1265,7 +1275,7 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
         double err = dx + dy + xy; /* error 1st step */
         do
         {
-            TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col); /* draw curve */
+            TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yScale, col); /* draw curve */
             if (x0 == x2 && y0 == y2)
             {
                 return; /* last pixel -> curve finished */
@@ -1285,7 +1295,7 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
             }                       /* y step */
         } while (dy < 0 && dx > 0); /* gradient negates -> algorithm fails */
     }
-    drawLineScaled(x0, y0, x2, y2, col, 0, xTr, yTr, xScale, yScale); /* draw remaining part to end */
+    drawLineScaled(x0, y0, x2, y2, col, 0, xOrigin, yOrigin, xScale, yScale); /* draw remaining part to end */
 }
 
 /**
@@ -1315,17 +1325,17 @@ void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2,
  * @param x2
  * @param y2
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
-                             int xScale, int yScale)
+void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
+                             int yOrigin, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 /**
@@ -1338,13 +1348,13 @@ void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, pal
  * @param x2
  * @param y2
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
-                                int xScale, int yScale) /* draw any quadratic Bezier curve */
+static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
+                                int yOrigin, int xScale, int yScale) /* draw any quadratic Bezier curve */
 {
     int x = x0 - x1, y = y0 - y1;
     double t = x0 - 2 * x1 + x2, r;
@@ -1365,7 +1375,7 @@ static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
         x = floor(t + 0.5);
         y = floor(r + 0.5);
         r = (y1 - y0) * (t - x0) / (x1 - x0) + y0; /* intersect P3 | P0 P1 */
-        drawQuadBezierSegInner(x0, y0, x, floor(r + 0.5), x, y, col, xTr, yTr, xScale, yScale);
+        drawQuadBezierSegInner(x0, y0, x, floor(r + 0.5), x, y, col, xOrigin, yOrigin, xScale, yScale);
         r  = (y1 - y2) * (t - x2) / (x1 - x2) + y2; /* intersect P4 | P1 P2 */
         x0 = x1 = x;
         y0      = y;
@@ -1380,13 +1390,13 @@ static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
         x = floor(r + 0.5);
         y = floor(t + 0.5);
         r = (x1 - x0) * (t - y0) / (y1 - y0) + x0; /* intersect P6 | P0 P1 */
-        drawQuadBezierSegInner(x0, y0, floor(r + 0.5), y, x, y, col, xTr, yTr, xScale, yScale);
+        drawQuadBezierSegInner(x0, y0, floor(r + 0.5), y, x, y, col, xOrigin, yOrigin, xScale, yScale);
         r  = (x1 - x2) * (t - y2) / (y1 - y2) + x2; /* intersect P7 | P1 P2 */
         x0 = x;
         x1 = floor(r + 0.5);
         y0 = y1 = y; /* P0 = P6, P1 = P7 */
     }
-    drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xTr, yTr, xScale, yScale); /* remaining part */
+    drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xOrigin, yOrigin, xScale, yScale); /* remaining part */
 }
 /**
  * @brief TODO doxy
@@ -1415,17 +1425,17 @@ void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2,
  * @param x2
  * @param y2
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawQuadBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xTr, int yTr,
+void drawQuadBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin, int yOrigin,
                           int xScale, int yScale) /* draw any quadratic Bezier curve */
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawQuadBezierInner(x0, y0, x1, y1, x2, y2, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawQuadBezierInner(x0, y0, x1, y1, x2, y2, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale, yScale);
     }
 }
 
@@ -1677,13 +1687,13 @@ void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd,
  * @param x3
  * @param y3
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
 static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
-                                    paletteColor_t col, int xTr, int yTr, int xScale,
+                                    paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                                     int yScale) /* draw limited cubic Bezier segment */
 {
     SETUP_FOR_TURBO();
@@ -1702,7 +1712,7 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
     {
         sx = floor((3 * x1 - x0 + 1) / 2);
         sy = floor((3 * y1 - y0 + 1) / 2); /* new midpoint */
-        return drawQuadBezierSegInner(x0, y0, sx, sy, x3, y3, col, xTr, yTr, xScale, yScale);
+        return drawQuadBezierSegInner(x0, y0, sx, sy, x3, y3, col, xOrigin, yOrigin, xScale, yScale);
     }
     x1 = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0) + 1; /* line lengths */
     x2 = (x2 - x3) * (x2 - x3) + (y2 - y3) * (y2 - y3) + 1;
@@ -1749,8 +1759,8 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
 
         for (pxy = &xy, fx = fy = f; x0 != x3 && y0 != y3;)
         {
-            TURBO_SET_PIXEL_BOUNDS(xTr + x0 * xScale, yTr + y0 * yScale, col); /* draw curve */
-            do                                                                 /* move sub-steps of one pixel */
+            TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yScale, col); /* draw curve */
+            do                                                                         /* move sub-steps of one pixel */
             {
                 if (dx > *pxy || dy < *pxy)
                 {
@@ -1802,8 +1812,9 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
         sy = -sy;
         yb = -yb;
         x1 = x2;
-    } while (leg--);                                                 /* try other end */
-    drawLineInner(x0, y0, x3, y3, col, 0, xTr, yTr, xScale, yScale); /* remaining part in case of cusp or crunode */
+    } while (leg--); /* try other end */
+    drawLineInner(x0, y0, x3, y3, col, 0, xOrigin, yOrigin, xScale,
+                  yScale); /* remaining part in case of cusp or crunode */
 }
 
 /**
@@ -1837,13 +1848,13 @@ void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, 
  * @param x3
  * @param y3
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
 static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
-                                 int xTr, int yTr, int xScale, int yScale) /* draw any cubic Bezier curve */
+                                 int xOrigin, int yOrigin, int xScale, int yScale) /* draw any cubic Bezier curve */
 {
     int n = 0, i = 0;
     long xc = x0 + x1 - x2 - x3, xa = xc - 4 * (x1 - x2);
@@ -1930,8 +1941,8 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
         }
         if (x0 != x3 || y0 != y3) /* segment t1 - t2 */
         {
-            drawCubicBezierSegInner(x0, y0, x0 + fx1, y0 + fy1, x0 + fx2, y0 + fy2, x3, y3, col, xTr, yTr, xScale,
-                                    yScale);
+            drawCubicBezierSegInner(x0, y0, x0 + fx1, y0 + fy1, x0 + fx2, y0 + fy2, x3, y3, col, xOrigin, yOrigin,
+                                    xScale, yScale);
         }
         x0  = x3;
         y0  = y3;
@@ -1971,17 +1982,18 @@ void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int
  * @param x3
  * @param y3
  * @param col
- * @param xTr
- * @param yTr
- * @param xScale
- * @param yScale
+ * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
+ * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
+ * @param xScale The width of each scaled pixel
+ * @param yScale The height of each scaled pixel
  */
-void drawCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col, int xTr,
-                           int yTr, int xScale, int yScale)
+void drawCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
+                           int xOrigin, int yOrigin, int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
-        drawCubicBezierInner(x0, y0, x1, y1, x2, y2, x3, y3, col, xTr + i % yScale, yTr + i / xScale, xScale, yScale);
+        drawCubicBezierInner(x0, y0, x1, y1, x2, y2, x3, y3, col, xOrigin + i % yScale, yOrigin + i / xScale, xScale,
+                             yScale);
     }
 }
 
