@@ -1045,12 +1045,12 @@ void drawCircleQuadrants(int xm, int ym, int r, bool q1, bool q2, bool q3, bool 
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw a filled circle with translation and scaling
  *
- * @param xm
- * @param ym
- * @param r
- * @param col
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
@@ -1083,12 +1083,12 @@ static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a filled circle
  *
- * @param xm
- * @param ym
- * @param r
- * @param col
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param col The color to draw
  */
 void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
 {
@@ -1096,12 +1096,12 @@ void drawCircleFilled(int xm, int ym, int r, paletteColor_t col)
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a filed circle with translation and scaling
  *
- * @param xm
- * @param ym
- * @param r
- * @param col
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
@@ -1116,13 +1116,13 @@ void drawCircleFilledScaled(int xm, int ym, int r, paletteColor_t col, int xOrig
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw a one pixel wide outline of an ellipse with translation and scaling within a rectangle
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
+ * @param x0 The X coordinate of the top left corner
+ * @param y0 The Y coordinate of the top left corner
+ * @param x1 The X coordinate of the bottom right corner
+ * @param y1 The Y coordinate of the bottom right corner
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
@@ -1182,13 +1182,13 @@ static void drawEllipseRectInner(int x0, int y0, int x1, int y1, paletteColor_t 
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a one pixel wide outline of an ellipse within a rectangle
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
+ * @param x0 The X coordinate of the top left corner
+ * @param y0 The Y coordinate of the top left corner
+ * @param x1 The X coordinate of the bottom right corner
+ * @param y1 The Y coordinate of the bottom right corner
+ * @param col The color to draw
  */
 void drawEllipseRect(int x0, int y0, int x1, int y1,
                      paletteColor_t col) /* rectangular parameter enclosing the ellipse */
@@ -1197,13 +1197,14 @@ void drawEllipseRect(int x0, int y0, int x1, int y1,
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw the outline of an ellipse with translation and scaling within a rectangle. Scaling may make it wider than
+ * one pixel.
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param col
+ * @param x0 The X coordinate of the top left corner
+ * @param y0 The Y coordinate of the top left corner
+ * @param x1 The X coordinate of the bottom right corner
+ * @param y1 The Y coordinate of the bottom right corner
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
@@ -1219,22 +1220,23 @@ void drawEllipseRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, i
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw a one pixel wide quadratic Bezier curve with translation and scaling.
+ * This is limited to gradients without sign change.
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
  * @param yScale The height of each scaled pixel
  */
 static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
-                                   int yOrigin, int xScale, int yScale) /* draw a limited quadratic Bezier segment */
+                                   int yOrigin, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -1299,32 +1301,33 @@ static void drawQuadBezierSegInner(int x0, int y0, int x1, int y1, int x2, int y
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a one pixel wide quadratic Bezier curve.
+ * This is limited to gradients without sign change.
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param col The color to draw
  */
-void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2,
-                       paletteColor_t col) /* draw a limited quadratic Bezier segment */
+void drawQuadBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col)
 {
     drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a one pixel wide quadratic Bezier curve with translation and scaling.
+ * This is limited to gradients without sign change.
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
@@ -1339,22 +1342,22 @@ void drawQuadBezierSegScaled(int x0, int y0, int x1, int y1, int x2, int y2, pal
     }
 }
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw a one pixel wide quadratic Bezier curve with translation and scaling
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
  * @param yScale The height of each scaled pixel
  */
 static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin,
-                                int yOrigin, int xScale, int yScale) /* draw any quadratic Bezier curve */
+                                int yOrigin, int xScale, int yScale)
 {
     int x = x0 - x1, y = y0 - y1;
     double t = x0 - 2 * x1 + x2, r;
@@ -1399,39 +1402,38 @@ static void drawQuadBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, 
     drawQuadBezierSegInner(x0, y0, x1, y1, x2, y2, col, xOrigin, yOrigin, xScale, yScale); /* remaining part */
 }
 /**
- * @brief TODO doxy
+ * @brief Draw a one pixel wide quadratic Bezier curve
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param col The color to draw
  */
-void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2,
-                    paletteColor_t col) /* draw any quadratic Bezier curve */
+void drawQuadBezier(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col)
 {
     drawQuadBezierInner(x0, y0, x1, y1, x2, y2, col, 0, 0, 1, 1);
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a one pixel wide quadratic Bezier curve with translation and scaling
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
  * @param yScale The height of each scaled pixel
  */
 void drawQuadBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, paletteColor_t col, int xOrigin, int yOrigin,
-                          int xScale, int yScale) /* draw any quadratic Bezier curve */
+                          int xScale, int yScale)
 {
     for (uint8_t i = 0; i < xScale * yScale; i++)
     {
@@ -1440,19 +1442,18 @@ void drawQuadBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, palett
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a limited one pixel wide rational Bezier curve with squared weight
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param w
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param w Squared Weight
+ * @param col The color to draw
  */
-void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, float w,
-                               paletteColor_t col) /* draw a limited rational Bezier segment, squared weight */
+void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, float w, paletteColor_t col)
 {
     SETUP_FOR_TURBO();
 
@@ -1531,19 +1532,18 @@ void drawQuadRationalBezierSeg(int x0, int y0, int x1, int y1, int x2, int y2, f
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw any one pixel wide quadratic rational Bezier curve with squared weight
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param w
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param w Squared Weight
+ * @param col The color to draw
  */
-void drawQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, float w,
-                            paletteColor_t col) /* draw any quadratic rational Bezier curve */
+void drawQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, float w, paletteColor_t col)
 {
     int x = x0 - 2 * x1 + x2, y = y0 - 2 * y1 + y2;
     double xx = x0 - x1, yy = y0 - y1, ww, t, q;
@@ -1622,17 +1622,16 @@ void drawQuadRationalBezier(int x0, int y0, int x1, int y1, int x2, int y2, floa
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw an ellipse rotated by angle (radian)
  *
- * @param x
- * @param y
- * @param a
- * @param b
- * @param angle
- * @param col
+ * @param x The X coordinate of the center of the ellipse
+ * @param y The Y coordinate of the center of the ellipse
+ * @param a The X radius of the ellipse
+ * @param b The Y radius of the ellipse
+ * @param angle The angle, in radians, to rotate the ellipse by
+ * @param col The color to draw
  */
-void drawRotatedEllipse(int x, int y, int a, int b, float angle,
-                        paletteColor_t col) /* draw ellipse rotated by angle (radian) */
+void drawRotatedEllipse(int x, int y, int a, int b, float angle, paletteColor_t col)
 {
     float xd = (long)a * a, yd = (long)b * b;
     float s = sin(angle), zd = (xd - yd) * s;       /* ellipse rotation */
@@ -1644,17 +1643,16 @@ void drawRotatedEllipse(int x, int y, int a, int b, float angle,
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw an ellipse, bounded by a rectangle, rotated (integer)
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param zd
- * @param col
+ * @param x0 The X coordinate of the top left corner
+ * @param y0 The Y coordinate of the top left corner
+ * @param x1 The X coordinate of the bottom right corner
+ * @param y1 The Y coordinate of the bottom right corner
+ * @param zd The integer angle to rotate the ellipse
+ * @param col The color to draw
  */
-void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd,
-                            paletteColor_t col) /* rectangle enclosing the ellipse, integer rotation angle */
+void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd, paletteColor_t col)
 {
     int xd = x1 - x0, yd = y1 - y0;
     float w = xd * (long)yd;
@@ -1676,25 +1674,24 @@ void drawRotatedEllipseRect(int x0, int y0, int x1, int y1, long zd,
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw a limited cubic Bezier segment
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param x3
- * @param y3
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param x3 The X coordinate of the fourth point
+ * @param y3 The Y coordinate of the fourth point
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
  * @param yScale The height of each scaled pixel
  */
 static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
-                                    paletteColor_t col, int xOrigin, int yOrigin, int xScale,
-                                    int yScale) /* draw limited cubic Bezier segment */
+                                    paletteColor_t col, int xOrigin, int yOrigin, int xScale, int yScale)
 {
     SETUP_FOR_TURBO();
 
@@ -1818,43 +1815,42 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw limited cubic Bezier segment
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param x3
- * @param y3
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param x3 The X coordinate of the fourth point
+ * @param y3 The Y coordinate of the fourth point
+ * @param col The color to draw
  */
-void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3,
-                        paletteColor_t col) /* draw limited cubic Bezier segment */
+void drawCubicBezierSeg(int x0, int y0, float x1, float y1, float x2, float y2, int x3, int y3, paletteColor_t col)
 {
     drawCubicBezierSegInner(x0, y0, x1, y1, x2, y2, x3, y3, col, 0, 0, 1, 1);
 }
 
 /**
- * @brief TODO doxy
+ * @brief Helper function to draw any cubic Bezier curve
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param x3
- * @param y3
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param x3 The X coordinate of the fourth point
+ * @param y3 The Y coordinate of the fourth point
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
  * @param yScale The height of each scaled pixel
  */
 static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
-                                 int xOrigin, int yOrigin, int xScale, int yScale) /* draw any cubic Bezier curve */
+                                 int xOrigin, int yOrigin, int xScale, int yScale)
 {
     int n = 0, i = 0;
     long xc = x0 + x1 - x2 - x3, xa = xc - 4 * (x1 - x2);
@@ -1953,17 +1949,17 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw any cubic Bezier curve
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param x3
- * @param y3
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param x3 The X coordinate of the fourth point
+ * @param y3 The Y coordinate of the fourth point
+ * @param col The color to draw
  */
 void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col)
 {
@@ -1971,17 +1967,17 @@ void drawCubicBezier(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw any cubic Bezier curve with translation and scaling
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param x2
- * @param y2
- * @param x3
- * @param y3
- * @param col
+ * @param x0 The X coordinate of the first point
+ * @param y0 The Y coordinate of the first point
+ * @param x1 The X coordinate of the second point
+ * @param y1 The Y coordinate of the second point
+ * @param x2 The X coordinate of the third point
+ * @param y2 The Y coordinate of the third point
+ * @param x3 The X coordinate of the fourth point
+ * @param y3 The Y coordinate of the fourth point
+ * @param col The color to draw
  * @param xOrigin The X-origin, in display pixels, of the scaled pixel area
  * @param yOrigin The Y-origin, in display pixels, of the scaled pixel area
  * @param xScale The width of each scaled pixel
@@ -1998,14 +1994,14 @@ void drawCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a quadratic spline. This overwrites the input arrays x and y.
  *
- * @param n
- * @param x
- * @param y
- * @param col
+ * @param n The number of points in the spline
+ * @param x The X coordinates of the points in the spline
+ * @param y The Y coordinates of the points in the spline
+ * @param col The color to draw
  */
-void drawQuadSpline(int n, int x[], int y[], paletteColor_t col) /* draw quadratic spline, destroys input arrays x,y */
+void drawQuadSpline(int n, int x[], int y[], paletteColor_t col)
 {
 #define M_MAX 6
     float mi = 1, m[M_MAX]; /* diagonal constants of matrix */
@@ -2046,14 +2042,14 @@ void drawQuadSpline(int n, int x[], int y[], paletteColor_t col) /* draw quadrat
 }
 
 /**
- * @brief TODO doxy
+ * @brief Draw a cubic spline. This overwrites the input arrays x and y
  *
- * @param n
- * @param x
- * @param y
- * @param col
+ * @param n The number of points in the spline
+ * @param x The X coordinates of the points in the spline
+ * @param y The Y coordinates of the points in the spline
+ * @param col The color to draw
  */
-void drawCubicSpline(int n, int x[], int y[], paletteColor_t col) /* draw cubic spline, destroys input arrays x,y */
+void drawCubicSpline(int n, int x[], int y[], paletteColor_t col)
 {
 #define M_MAX 6
     float mi = 0.25, m[M_MAX] = {0}; /* diagonal constants of matrix */
