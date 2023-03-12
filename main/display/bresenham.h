@@ -5,22 +5,34 @@
  *
  * \section bresenham_design Design Philosophy
  *
- * TODO doxygen
- * This is based on <a href="https://github.com/zingl/Bresenham/blob/master/bresenham.c">Zingl Alois's bresenham.c</a>.
- * More explanation can be found <a href="https://zingl.github.io/bresenham.html">on their webpage</a>.
+ * The shape and curve drawing code is based on <a
+ * href="https://github.com/zingl/Bresenham/blob/master/bresenham.c">Zingl Alois's bresenham.c</a>. More explanation can
+ * be found <a href="https://zingl.github.io/bresenham.html">on their webpage</a>. An <a
+ * href="http://members.chello.at/~easyfilter/bresenham.c">older version of bresenham.c</a> can be found with an older
+ * description on <a href="http://members.chello.at/~easyfilter/bresenham.html">an older webpage</a>.
  *
- * http://members.chello.at/~easyfilter/bresenham.c
+ * Most, but not all, functions have \c Scaled and normal versions. \c Scaled functions can both scale and translate a
+ * shape or curve before drawing, while normal functions draw one line widths. \c Scaled functions were originally
+ * written for MFPaint to draw to a restricted area.
  *
- * http://members.chello.at/~easyfilter/bresenham.html
+ * Some functions, like drawTriangleOutlined() and drawLineFast() were written for the Swadge and not based on the
+ * original bresenham.c.
  *
  * \section bresenham_usage Usage
  *
- * TODO doxygen
+ * Draw shapes and curves with the given functions. Each function has it's own description that won't be copied here.
  *
  * \section bresenham_example Example
  *
  * \code{.c}
- * TODO doxygen
+ * // Draw a blue line
+ * drawLineFast(102, 92, 210, 200, c005);
+ *
+ * // Draw a red circle
+ * drawCircle(200, 50, 20, c500);
+ *
+ * // Draw a green rectangle
+ * drawRect(200, 150, 250, 220, c050);
  * \endcode
  */
 
