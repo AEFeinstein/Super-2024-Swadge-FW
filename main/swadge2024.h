@@ -45,7 +45,7 @@
 #include "color_utils.h"
 #include "font.h"
 #include "wsg.h"
-#include "bresenham.h"
+#include "shapes.h"
 #include "fill.h"
 
 // Asset loaders

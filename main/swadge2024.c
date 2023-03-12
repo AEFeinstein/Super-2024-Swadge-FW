@@ -68,7 +68,7 @@
  * - palette.h: Learn about available colors!
  * - color_utils.h: Learn about color maniuplation!
  * - fill.h: Learn how to fill areas on the screen!
- * - bresenham.h: Learn how to draw shapes on the screen!
+ * - shapes.h: Learn how to draw shapes and curves on the screen!
  * - wsg.h: Learn how to draw sprites on the creen!
  * - font.h: Learn how to draw text on the screen!
  *

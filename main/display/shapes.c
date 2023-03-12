@@ -7,7 +7,7 @@
 #include <assert.h>
 
 #include "hdw-tft.h"
-#include "bresenham.h"
+#include "shapes.h"
 
 //==============================================================================
 // Defines
