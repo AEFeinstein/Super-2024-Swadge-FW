@@ -1,8 +1,10 @@
 /*! \mainpage Swadge 2024
  *
+ * Generated on \showdate "%A, %B %-d, %H:%M:%S"
+ *
  * \section intro_sec Introduction
  *
- * So you're here to write some Swadge code, eh?
+ * TODO So you're here to write some Swadge code, eh?
  *
  * \section espressif_doc Espressif Documentation
  *
@@ -22,11 +24,11 @@
  *
  * \subsection linux_env Linux Environment
  *
- * Penguins
+ * TODO Penguins
  *
  * \subsection win_env Windows Environment
  *
- * DEVELOPERS! DEVELOPERS! DEVELOPERS!
+ * TODO DEVELOPERS! DEVELOPERS! DEVELOPERS!
  *
  * \section hw_api Hardware APIs
  *
@@ -349,7 +351,7 @@ static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
 /**
  * @brief Set the current Swadge mode
  *
- * @param swadgeMode The new Swadge Mode to execute. If NULL, the first mode is switched to
+ * @param swadgeMode The new Swadge mode to execute. If NULL, the first mode is switched to
  */
 static void setSwadgeMode(void* swadgeMode)
 {
