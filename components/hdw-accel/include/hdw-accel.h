@@ -7,7 +7,7 @@
  * Datasheet</a>.
  *
  * The accelerometer component does not automatically poll the accelerometer.
- * All it does is set up and configure the accelerometer, then it is up to the Swadge Mode to query for acceleration as
+ * All it does is set up and configure the accelerometer, then it is up to the Swadge mode to query for acceleration as
  * appropriate.
  *
  * This component requires the I2C bus to be initialized, so it does that as well.
@@ -19,7 +19,7 @@
  * You don't need to call initAccelerometer() or deInitAccelerometer(). The system does this the appropriate time.
  *
  * You do need to call accelGetAccelVec() to get the current acceleration vector.
- * If you want to poll this from your Swadge Mode's main function, you may.
+ * If you want to poll this from your Swadge mode's main function, you may.
  *
  * You may call accelSetRange() if you want to adjust the measurement range.
  *

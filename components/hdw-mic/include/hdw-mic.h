@@ -16,7 +16,7 @@
  *
  * You don't need to call initMic() or deinitMic(). The system does at the appropriate times.
  *
- * The system will also automatically call startMic(), though the Swadge Mode can later call stopMic() or startMic()
+ * The system will also automatically call startMic(), though the Swadge mode can later call stopMic() or startMic()
  * when the microphone needs to be used. Stopping the microphone when not in use can save some processing cycles.
  *
  * loopMic() is called automatically by the system while the microphone is started and samples are delivered to the

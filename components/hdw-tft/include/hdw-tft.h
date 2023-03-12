@@ -26,7 +26,7 @@
  * These are not often used directly as there are helper functions to draw text, shapes, and sprites.
  *
  * disableTFTBacklight() and enableTFTBacklight() may be called to disable and enable the backlight, respectively.
- * This may be useful if the Swadge Mode is trying to save power, or the TFT is not necessary.
+ * This may be useful if the Swadge mode is trying to save power, or the TFT is not necessary.
  * setTFTBacklightBrightness() is used to set the TFT's brightness. This is usually handled globally by a persistent
  * setting.
  *

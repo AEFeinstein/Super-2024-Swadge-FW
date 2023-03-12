@@ -188,7 +188,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 }
 
 /**
- * @brief Set the Swadge Mode to the given pointer
+ * @brief Set the Swadge mode to the given pointer
  *
  * @param newMode A pointer to the new mode to set
  */
