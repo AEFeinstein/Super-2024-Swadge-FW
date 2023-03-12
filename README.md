@@ -16,7 +16,7 @@ This project uses Github Actions to automatically build the firmware any time a 
 * [ESP-IDF](https://github.com/espressif/esp-idf) to build the firmware
 * [Doxygen](https://www.doxygen.nl/download.html) to build the documentation
 * [clang-format](https://clang.llvm.org/docs/ClangFormat.html) to format the code
-* [find](https://www.gnu.org/software/findutils/manual/html_mono/find.html) to help the makefile
+* [find](https://www.gnu.org/software/findutils/manual/html_mono/find.html) and [wget](https://www.gnu.org/software/wget/) to help the makefile
 
 ## Notes
 

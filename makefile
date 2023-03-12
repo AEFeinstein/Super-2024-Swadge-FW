@@ -260,6 +260,7 @@ clean:
 ################################################################################
 
 docs:
+	-wget -nc -O plantuml.jar https://github.com/plantuml/plantuml/releases/download/v1.2023.4/plantuml-1.2023.4.jar
 	doxygen ./Doxyfile
 
 format:

@@ -32,12 +32,11 @@ jobs:
         uses: actions/checkout@v3
       - name: Generate the HTML documentation
         run: |
-          sudo apt install graphviz
+          sudo apt install graphviz default-jre
           sudo apt remove doxygen
           wget -q -P ~ https://www.doxygen.nl/files/doxygen-1.9.6.linux.bin.tar.gz
           tar -xf ~/doxygen-1.9.6.linux.bin.tar.gz -C ~
           export PATH="$PATH:$HOME/doxygen-1.9.6/bin"
-          # TODO set up plantuml?
           make docs
       - name: Setup Pages
         uses: actions/configure-pages@v3
