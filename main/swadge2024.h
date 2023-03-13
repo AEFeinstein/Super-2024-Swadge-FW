@@ -144,6 +144,7 @@
 // Hardware interfaces
 #include "crashwrap.h"
 #include "hdw-accel.h"
+#include "hdw-battmon.h"
 #include "hdw-btn.h"
 #include "hdw-bzr.h"
 #include "hdw-esp-now.h"

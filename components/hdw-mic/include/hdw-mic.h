@@ -12,6 +12,9 @@
  *
  * The microphone is continuously sampled at 8KHz.
  *
+ * \warning The battery monitor (hdw-battmon.h) and microphone cannot be used at the same time! Each mode can either
+ * continuously sample the microphone or measure the battery voltage, not both.
+ *
  * \section mic_usage Usage
  *
  * You don't need to call initMic() or deinitMic(). The system does at the appropriate times.

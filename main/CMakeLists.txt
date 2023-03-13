@@ -17,6 +17,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "utils/p2pConnection.c"
                             "utils/trigonometry.c"
                     PRIV_REQUIRES hdw-accel
+                                  hdw-battmon
                                   hdw-btn
                                   hdw-bzr
                                   hdw-esp-now

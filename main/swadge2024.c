@@ -43,6 +43,7 @@
  * - hdw-temperature.h: Learn how to use the temperature sensor!
  * - hdw-usb.h: Learn how to be a USB HID Gamepad!
  *     - advanced_usb_control.h: Use USB for application development!
+ * - hdw-battmon.h: Learn how to check the battery voltage!
  *
  * \section nwk_api Network APIs
  *
@@ -176,6 +177,10 @@ void app_main(void)
     {
         initMic(GPIO_NUM_7);
         startMic();
+    }
+    else
+    {
+        initBattmon(GPIO_NUM_6);
     }
 
     // Init TFT, use a different LEDC channel than buzzer
@@ -313,6 +318,7 @@ void deinitSystem(void)
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
+    deinitBattmon();
 }
 
 /**
