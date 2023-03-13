@@ -236,9 +236,7 @@ typedef struct
 
     /**
      * @brief This function is called whenever audio samples are read from the microphone (ADC) and are ready for
-     * processing. Samples are read at 8KHz.
-     *
-     * TODO This cannot be used at the same time as fnBatteryCallback.
+     * processing. Samples are read at 8KHz. If this function is not NULL, then readBattmon() will not work
      *
      * @param samples A pointer to 12 bit audio samples
      * @param sampleCnt The number of samples read
