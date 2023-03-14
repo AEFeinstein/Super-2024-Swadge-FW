@@ -1,3 +1,5 @@
+Meaningless change
+
 # Swadge-IDF-5.0
 Migrating the Swadge to ESP IDF 5.0.1, one component at a time
 
