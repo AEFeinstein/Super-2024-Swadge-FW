@@ -19,7 +19,7 @@ jobs:
    
     - name: Check out repository code
       uses: actions/checkout@v3
- 
+      
     - name: Create a version file
       run: |
         printf "Commit: https://github.com/AEFeinstein/Swadge-IDF-5.0/commit/$(git rev-parse HEAD) \nBuilt at: $(date)" >> version.txt
@@ -107,6 +107,6 @@ jobs:
         # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
         channel-id: 'C6FNXU6KX'
         # For posting a simple plain text message
-        slack-message: "GitHub build result: ${{ job.status }}\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        slack-message: "*Build result*: ${{ job.status }}\n*Commit messages*:\n```\n${{ toJSON(github.event.commits.*.message) }}\n```\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
