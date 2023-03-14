@@ -14,10 +14,12 @@ jobs:
     - name: Check out repository code
       uses: actions/checkout@v3
 
-    - name: Debug
-      run: |
-        echo "${{ toJSON(github.event) }}"
-      
+    - name: Debug print commits
+      run: echo '${{ toJSON(github.event.commits) }}'
+
+    - name: Debug print event
+      run: echo '${{ toJSON(github.event) }}'
+
     - name: Create a version file
       run: |
         printf "Commit: https://github.com/AEFeinstein/Swadge-IDF-5.0/commit/$(git rev-parse HEAD) \nBuilt at: $(date)" >> version.txt
