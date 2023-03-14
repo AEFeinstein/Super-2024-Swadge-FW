@@ -10,7 +10,10 @@ jobs:
   Build-Firmware-And-Emulator:
     runs-on: windows-latest
     steps:
-   
+
+    - name: Debug print event
+      run: echo '${{ toJSON(github.event) }}'
+
     - name: Check out repository code
       uses: actions/checkout@v3
       
