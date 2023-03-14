@@ -157,6 +157,8 @@ If VSCode isn't finding IDF symbols, try running the export.ps1 script from a te
 code ~/esp/Swadge-IDF-5.0
 ```
 
+Updating IDF?
+
 ### Tips
 To add more source files, they either need to be in the main folder, and added to the CMakeLists.txt file there, or in a subdirectory of the components folder with it's own CMakeLists.txt. The folder names are specific. You can read up on the Build System if you're curious.
 
