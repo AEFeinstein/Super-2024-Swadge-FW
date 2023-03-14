@@ -16,7 +16,7 @@ jobs:
 
     - name: Debug
       run: |
-        echo ${{ toJSON(github.event) }}
+        echo "${{ toJSON(github.event) }}"
       
     - name: Create a version file
       run: |
