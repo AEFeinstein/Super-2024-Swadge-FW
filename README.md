@@ -21,7 +21,9 @@ This is living documentation, so if you notice anything incorrect, please open a
 
 ## Documentation
 
-Full Doxygen documentation can be found at https://adam.feinste.in/Swadge-IDF-5.0/
+Full Doxygen documentation is [hosted online here](https://adam.feinste.in/Swadge-IDF-5.0/). This details all APIs and has examples for how to use them. It was written to be referenced when writing Swadge modes.
+
+The [Contribution Guide can be found here](/docs/CONTRIBUTING.md). It should be read before making a contribution.
 
 ## Continuous Integration
 
@@ -128,7 +130,6 @@ The `.vscode` folder already has tasks for making and cleaning the emulator. It 
 
 For Windows and Linux, I recommend setting up native tools. I don't recommend WSL in Windows. I haven't tried any setup on macOS yet.
 
-
 From the official guide:
 > Keep in mind that ESP-IDF does not support spaces in paths.
 
@@ -149,6 +150,12 @@ This project uses Github Actions to build the firmware each time code is committ
 Reread the Get Started Guide, then google your issue, then ask me about it either in a Github issue or the Slack channel. All troubleshooting issues should be written down here for posterity.
 
 If VSCode isn't finding IDF symbols, try running the export.ps1 script from a terminal, then launching code from that same session.
+
+`vsc_esp.ps1`:
+```bash
+~/esp/esp-idf/export.ps1
+code ~/esp/Swadge-IDF-5.0
+```
 
 ### Tips
 To add more source files, they either need to be in the main folder, and added to the CMakeLists.txt file there, or in a subdirectory of the components folder with it's own CMakeLists.txt. The folder names are specific. You can read up on the Build System if you're curious.
