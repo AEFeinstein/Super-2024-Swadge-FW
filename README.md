@@ -41,7 +41,8 @@ This project uses Github Actions to automatically build the firmware any time a 
     You must add add those paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's', and it uses msys2 `find.exe`, not System32's
 When it's all set up, it should look something like this:
 
-    TODO pic
+    ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
+
 1. Clone the ESP IDF v5.0.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
     ```powershell
     Set-ExecutionPolicy -Scope CurrentUser Unrestricted
@@ -54,12 +55,12 @@ When it's all set up, it should look something like this:
 1. Run the following comands, depending on your package manager, to install all necessary packages:
     * `apt`:
         ```bash
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 clang-format cppcheck doxygen python3
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 clang-format cppcheck doxygen python3 python3-venv cmake
         ```
     * `dnf`:
         ```bash
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
-        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck doxygen python3
+        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck doxygen python3 python3-venv cmake
         ```
 1. Clone the ESP IDF v5.0.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
