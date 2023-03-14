@@ -1,6 +1,14 @@
 # Swadge-IDF-5.0
 
-Migrating the Swadge to ESP IDF 5.0.1, one component at a time
+This is the firmware repository for the Super Magfest 2024 Swadge.
+
+<!-- The corresponding hardware repository for the Super Magfest 2024 Swadge can be found here. -->
+
+If you have any questions, feel free to create a Github ticket or email us at circuitboards@magfest.org.
+
+This is living documentation, so if you notice anything incorrect, please open a ticket and/or submit a pull request with a fix!
+
+## Table of Contents
 
 * [Documentation](#documentation)
 * [Continuous Integration](#continuous-integration)
@@ -137,3 +145,12 @@ This project uses Github Actions to build the firmware each time code is committ
 > 
 > Sometimes `install.ps1`, which is also called in that script, can be a bit finicky and not install everything it's supposed to. If it doesn't create a `~/.espressif/python_env` folder, try running it again. And again. And again. As a last resort you can try editing `install.ps1` and swap the `"Setting up Python environment"` and `"Installing ESP-IDF tools"` sections to set up the Python environment first.
 
+### Troubleshooting
+Reread the Get Started Guide, then google your issue, then ask me about it either in a Github issue or the Slack channel. All troubleshooting issues should be written down here for posterity.
+
+If VSCode isn't finding IDF symbols, try running the export.ps1 script from a terminal, then launching code from that same session.
+
+### Tips
+To add more source files, they either need to be in the main folder, and added to the CMakeLists.txt file there, or in a subdirectory of the components folder with it's own CMakeLists.txt. The folder names are specific. You can read up on the Build System if you're curious.
+
+There are a lot of example projects in the IDF that are worth looking at.
