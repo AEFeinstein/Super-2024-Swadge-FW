@@ -6,7 +6,7 @@ This is the firmware repository for the Super Magfest 2024 Swadge.
 
 If you have any questions, feel free to create a Github ticket or email us at circuitboards@magfest.org.
 
-This is living documentation, so if you notice anything incorrect, please open a ticket and/or submit a pull request with a fix!
+This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it, and submit a pull request!
 
 ## Table of Contents
 
@@ -26,6 +26,8 @@ This is living documentation, so if you notice anything incorrect, please open a
 Full Doxygen documentation is [hosted online here](https://adam.feinste.in/Swadge-IDF-5.0/). This details all APIs and has examples for how to use them. It was written to be referenced when writing Swadge modes.
 
 The [Contribution Guide can be found here](/docs/CONTRIBUTING.md). It should be read before making a contribution.
+
+Our [Code of Conduct](/docs/CODE_OF_CONDUCT.md) is simple, but worth reading and adhering to.
 
 ## Continuous Integration
 
@@ -162,4 +164,4 @@ On occasion the ESP-IDF version used to build this project will increment. The e
 
 ## Troubleshooting
 
-Reread this guide, then search the internet for your issue, then ask about it either in a Github issue or the Slack channel (#circuitboards). If your problem is solved, then the solution should be added to this `README.md`.
+Reread this guide, then search the internet for your issue, then ask about it either in a Github issue or the Slack channel, #circuitboards. If your problem is solved, then the solution should be added to this `README.md`.

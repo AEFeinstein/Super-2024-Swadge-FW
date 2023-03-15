@@ -7,7 +7,7 @@
  * to Digital Converter (ADC) Continuous Mode Driver</a>.
  *
  * The microphone code is based on the <a
- * href="https://github.com/espressif/esp-idf/tree/release/v5.0.1/examples/peripherals/adc/continuous_read">ADC DMA
+ * href="https://github.com/espressif/esp-idf/tree/v5.0.1/examples/peripherals/adc/continuous_read">ADC DMA
  * Example</a>.
  *
  * The microphone is continuously sampled at 8KHz.
