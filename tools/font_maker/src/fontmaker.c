@@ -204,7 +204,7 @@ int main(int32_t argc, char** argv)
         for (int32_t y = 0; y < glyph.img.height; y++)
         {
             int32_t pngY = (-minStartY) - glyph.yOff + y;
-            for (int32_t x = glyph.minX; x < glyph.maxX; x++)
+            for (int32_t x = glyph.minX; x <= glyph.maxX; x++)
             {
                 int32_t pngX = imgXoff + x - glyph.minX;
                 if (((uint8_t*)glyph.img.pixels)[y * glyph.img.width + x] >= PIXEL_THRESHOLD)
@@ -349,5 +349,5 @@ int actualCharWidth(SFT_Image* img, int32_t* minX, int32_t* maxX)
     }
 
     // Return the actual width
-    return *maxX - *minX;
+    return *maxX - *minX + 1;
 }
