@@ -87,6 +87,10 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
     };
 
     ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+
+    // Set the log to print with advanced_usb_write_log_printf()
+    esp_log_set_vprintf(advanced_usb_write_log_printf);
+
     ESP_LOGI(TAG, "USB initialization DONE");
 }
 
@@ -184,7 +188,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 }
 
 /**
- * @brief Set the Swadge Mode to the given pointer
+ * @brief Set the Swadge mode to the given pointer
  *
  * @param newMode A pointer to the new mode to set
  */

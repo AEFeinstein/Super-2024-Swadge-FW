@@ -64,3 +64,4 @@ nvs.json
 cppcheck_result.txt
 doxy_warnings.txt
 version.txt
+plantuml.jar

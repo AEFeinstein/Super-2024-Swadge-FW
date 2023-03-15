@@ -11,8 +11,14 @@
 #include <esp_heap_caps.h>
 
 #include "hdw-spiffs.h"
-#include "heatshrink_decoder.h"
+#include "heatshrink_helper.h"
 #include "spiffs_json.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define JSON_COMPRESSION
 
 //==============================================================================
 // Functions
@@ -42,7 +48,7 @@ char* loadJson(const char* name, bool spiRam)
     return (char*)buf;
 #else
     uint32_t decompressedSize = 0;
-    return readHeatshrinkFile(name, &decompressedSize, spiRam);
+    return (char*)readHeatshrinkFile(name, &decompressedSize, spiRam);
 #endif
 }
 

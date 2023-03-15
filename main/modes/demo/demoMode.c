@@ -71,9 +71,10 @@ static void demoEnterMode(void)
     dv = calloc(1, sizeof(demoVars_t));
     loadFont("ibm_vga8.font", &dv->ibm, false);
     loadWsg("kid0.wsg", &dv->king_donut, true);
-    loadSng("ode.sng", &dv->ode_to_joy, true);
+    loadSong("ode.sng", &dv->ode_to_joy, true);
 
     // bzrPlayBgm(&dv->ode_to_joy);
+    bzrStop();
 
     dv->menu = initMenu(demoName, &dv->ibm, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);
@@ -119,7 +120,7 @@ static void demoExitMode(void)
 {
     freeWsg(&dv->king_donut);
     freeFont(&dv->ibm);
-    freeSng(&dv->ode_to_joy);
+    freeSong(&dv->ode_to_joy);
     deinitMenu(dv->menu);
     free(dv);
 }
@@ -133,6 +134,8 @@ static void demoExitMode(void)
  */
 static void demoMainLoop(int64_t elapsedUs)
 {
+    clearPxTft();
+
     // Process button events
     buttonEvt_t evt              = {0};
     static uint32_t lastBtnState = 0;
@@ -149,7 +152,26 @@ static void demoMainLoop(int64_t elapsedUs)
         sendUsbGamepadReport(&report);
     }
 
-    drawMenu(dv->menu);
+    // drawMenu(dv->menu);
+
+    // Fill the display area with a dark cyan
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
+
+    // Shade different areas with different intensities
+    for (int i = 0; i < 5; i++)
+    {
+        shadeDisplayArea(0, (i * TFT_HEIGHT) / 5, TFT_WIDTH / 2, ((i + 1) * TFT_HEIGHT) / 5, i, c321);
+    }
+
+    // Draw a red circle
+    drawCircle(200, 50, 20, c500);
+    // Flood fill the circle with blue
+    floodFill(200, 50, c005, 200 - 20, 50 - 20, 200 + 50, 50 + 20);
+
+    // Draw a green rectangle
+    drawRect(200, 150, 250, 220, c050);
+    // Odd-even fill the rectangle with blue
+    oddEvenFill(190, 140, 260, 230, c050, c005);
 
     // Check for analog touch
     // int32_t centerVal, intensityVal;
@@ -180,9 +202,15 @@ static void demoMainLoop(int64_t elapsedUs)
     //     }
     // }
 
-    // drawLine(92, 92, 200, 200, c500, 0, 0, 0, 1, 1);
+    // drawLine(92, 92, 200, 200, c555, 0, 0, 0, 1, 1);
     // speedyLine(102, 92, 210, 200, c050);
-    // drawWsg(&dv->king_donut, 100, 10, false, false, 0);
+    static uint16_t rot = 0;
+    drawWsg(&dv->king_donut, 100, 10, false, false, rot);
+    rot++;
+    if (360 == rot)
+    {
+        rot = 0;
+    }
 
     // int yIdx         = 64;
     // char dbgTxt[256] = {0};

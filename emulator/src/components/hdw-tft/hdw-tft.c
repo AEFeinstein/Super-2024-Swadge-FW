@@ -226,14 +226,15 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 
                     uint32_t color = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
 
-                    uint8_t r = (color)&0xFF;
+                    uint8_t a = (color)&0xFF;
+                    uint8_t r = (color >> 8) & 0xFF;
                     r         = (r * tftBrightness) / 255;
-                    uint8_t g = (color >> 8) & 0xFF;
+                    uint8_t g = (color >> 16) & 0xFF;
                     g         = (g * tftBrightness) / 255;
-                    uint8_t b = (color >> 16) & 0xFF;
+                    uint8_t b = (color >> 24) & 0xFF;
                     b         = (b * tftBrightness) / 255;
 
-                    color = (b << 16) | (g << 8) | (r);
+                    color = (b << 24) | (g << 16) | (r << 8) | (a);
 
                     scaledBitmapDisplay[pxIdx] = color;
                 }

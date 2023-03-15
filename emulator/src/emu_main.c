@@ -7,6 +7,7 @@
     #include <signal.h>
     #include <execinfo.h>
 #endif
+#include <time.h>
 
 #include <esp_system.h>
 #include <esp_timer.h>
@@ -192,7 +193,7 @@ void taskYIELD(void)
     };
 
     // Draw simulated LEDs
-    if (numLeds > 0 && NULL != leds && !hideLeds)
+    if (numLeds > 1 && NULL != leds && !hideLeds)
     {
         short led_h = window_h / (numLeds / 2);
         for (int i = 0; i < numLeds; i++)
@@ -242,7 +243,12 @@ void taskYIELD(void)
     CNFGSwapBuffers();
 
     // Sleep for one ms
-    usleep(1000);
+    static struct timespec tRemaining = {0};
+    const struct timespec tSleep      = {
+             .tv_sec  = 0 + tRemaining.tv_sec,
+             .tv_nsec = 1000000 + tRemaining.tv_nsec,
+    };
+    nanosleep(&tSleep, &tRemaining);
 }
 
 /**

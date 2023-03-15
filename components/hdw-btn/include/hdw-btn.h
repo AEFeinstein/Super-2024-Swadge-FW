@@ -6,9 +6,9 @@
  * touch-sensitive areas on the PCB. Events from pushbuttons and touchpads are processed different ways, but queued in
  * the same queue.
  *
- * The Swadge Mode needs to call checkButtonQueue() to receive queued button events.
+ * The Swadge mode needs to call checkButtonQueue() to receive queued button events.
  * The event contains which button caused the event, whether it was pressed or released, and the current state of all
- * buttons. This way the Swadge Mode is not responsible for high frequency button polling, and can still receive all
+ * buttons. This way the Swadge mode is not responsible for high frequency button polling, and can still receive all
  * button inputs.
  *
  * In addition to acting as binary buttons, the touchpads may act as a single, analog, touch sensitive strip. These two
@@ -20,7 +20,7 @@
  * Swadge modes. The interrupt saves the prior ::DEBOUNCE_HIST_LEN polled button states and the last reported button
  * state. When all ::DEBOUNCE_HIST_LEN button states are identical, the interrupt accepts the current state and checks
  * if it different than the last reported state. If there is a difference, the button event is queued in the interrupt
- * to be received by the Swadge Mode.
+ * to be received by the Swadge mode.
  *
  * The pushbutton GPIOs are all read at the same time using <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
@@ -29,9 +29,9 @@
  * Originally the pushbuttons would trigger an interrupt, but we found that to have glitchier and less reliable results
  * than polling.
  *
- * Button events used to be delivered to the Swadge Mode via a callback.
+ * Button events used to be delivered to the Swadge mode via a callback.
  * This led to cases where multiple callbacks would occur between a single invocation of that mode's main function.
- * Because the Swadge Mode didn't have a separate queue for button events, this caused events to be dropped.
+ * Because the Swadge mode didn't have a separate queue for button events, this caused events to be dropped.
  * Instead of forcing each mode to queue button events, now each mode must dequeue them rather than having a callback
  * called.
  *
@@ -54,15 +54,13 @@
  * You don't need to call initButtons() or deinitButtons(). The system does at the appropriate times.
  *
  * You do need to call checkButtonQueue() and should do so in a while-loop to receive all events since the last check.
- * This should be done in the Swadge Mode's main function.
+ * This should be done in the Swadge mode's main function.
  *
  * You may call getTouchCentroid() to get the analog touch position. This is independent of checkButtonQueue().
  *
  * \section btn_example Example
  *
  * \code{.c}
- * #include "hdw-btn.h"
- *
  * // Check all queued button events
  * buttonEvt_t evt;
  * while(checkButtonQueue(&evt))

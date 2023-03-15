@@ -31,18 +31,14 @@
  *
  * MIDI files that are placed in the ./assets/ folder will be automatically converted to SNG files and loaded into the
  * SPIFFS filesystem. SNG files are lists of notes with durations and are compressed with Heatshrink compression. These
- * files can be loaded with loadSng() and must be freed wtih freeSng() when done.
+ * files can be loaded with loadSong() and must be freed wtih freeSong() when done.
  *
  * \section bzr_example Example
  *
  * \code{.c}
- * #include "hdw-bzr.h"
- *
- * ...
- *
  * // Load a song
  * song_t ode_to_joy;
- * loadSng("ode.sgn", &ode_to_joy);
+ * loadSong("ode.sng", &ode_to_joy);
  *
  * // Set the song to loop
  * ode_to_joy.shouldLoop = true;
@@ -53,7 +49,7 @@
  * ...
  *
  * // Free the song when done
- * freeSng(&ode_to_joy);
+ * freeSong(&ode_to_joy);
  * \endcode
  */
 

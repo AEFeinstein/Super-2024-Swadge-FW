@@ -59,19 +59,6 @@ typedef struct
     uint8_t data[255];
 } espNowPacket_t;
 
-typedef struct __attribute__((packed))
-{
-    uint8_t macHeader[24];
-    uint8_t categoryCode;
-    uint8_t organizationIdentifier[3];
-    uint8_t randomValues[4];
-    uint8_t elementID;
-    uint8_t length;
-    uint8_t organizationIdentifier_2[3];
-    uint8_t type;
-    uint8_t version;
-} espNowHeader_t;
-
 //==============================================================================
 // Variables
 //==============================================================================

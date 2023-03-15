@@ -7,7 +7,7 @@
 
 #include "hdw-tft.h"
 #include "menu.h"
-#include "bresenham.h"
+#include "shapes.h"
 
 //==============================================================================
 // Const Variables
@@ -163,7 +163,7 @@ menu_t* startSubMenu(menu_t* menu, const char* label)
  * corresponding call to endSubMenu()
  *
  * @param menu The menu to end a submenu in
- * @return TODO
+ * @return A pointer to the parent menu to use for future function calls
  */
 menu_t* endSubMenu(menu_t* menu)
 {
@@ -306,12 +306,12 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
 }
 
 /**
- * This must be called to pass button event from the Swadge Mode to the menu.
+ * This must be called to pass button event from the Swadge mode to the menu.
  * If a button is passed here, it should not be handled anywhere else
  *
  * @param menu The menu to process button events for
  * @param btn The button event that occurred
- * @return TODO
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
 {
@@ -494,7 +494,7 @@ void drawMenu(menu_t* menu)
     // Draw an underlined title
     drawText(menu->font, c555, menu->title, x, y);
     y += (menu->font->height + 2);
-    drawLine(x, y, x + textWidth(menu->font, menu->title), y, c555, 0, 0, 0, 1, 1);
+    drawLine(x, y, x + textWidth(menu->font, menu->title), y, c555, 0);
     y += 3;
 
     // Draw page indicators

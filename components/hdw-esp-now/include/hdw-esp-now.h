@@ -44,9 +44,6 @@
  * \section esp-now_example Example
  *
  * \code{.c}
- * #include "macros.h"
- * #include "hdw-esp-now.h"
- *
  * static void swadgeModeEspNowRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi)
  * {
  *     printf("Received %d bytes\n", len);

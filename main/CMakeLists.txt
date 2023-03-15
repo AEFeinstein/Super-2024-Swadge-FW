@@ -3,13 +3,12 @@ idf_component_register(SRCS "swadge2024.c"
                             "asset_loaders/heatshrink_helper.c"
                             "asset_loaders/spiffs_font.c"
                             "asset_loaders/spiffs_json.c"
-                            "asset_loaders/spiffs_sng.c"
+                            "asset_loaders/spiffs_song.c"
                             "asset_loaders/spiffs_txt.c"
                             "asset_loaders/spiffs_wsg.c"
                             "display/fill.c"
                             "display/font.c"
-                            "display/bresenham.c"
-                            "display/cndraw.c"
+                            "display/shapes.c"
                             "display/wsg.c"
                             "menu/menu.c"
                             "modes/demo/demoMode.c"
@@ -18,6 +17,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "utils/p2pConnection.c"
                             "utils/trigonometry.c"
                     PRIV_REQUIRES hdw-accel
+                                  hdw-battmon
                                   hdw-btn
                                   hdw-bzr
                                   hdw-esp-now

@@ -3,7 +3,7 @@
  * \section tft_design Design Philosophy
  *
  * TFT code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/release/v5.0.1/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
+ * href="https://github.com/espressif/esp-idf/tree/v5.0.1/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
  * example</a>.
  *
  * Each pixel in the framebuffer is of type ::paletteColor_t.
@@ -26,7 +26,7 @@
  * These are not often used directly as there are helper functions to draw text, shapes, and sprites.
  *
  * disableTFTBacklight() and enableTFTBacklight() may be called to disable and enable the backlight, respectively.
- * This may be useful if the Swadge Mode is trying to save power, or the TFT is not necessary.
+ * This may be useful if the Swadge mode is trying to save power, or the TFT is not necessary.
  * setTFTBacklightBrightness() is used to set the TFT's brightness. This is usually handled globally by a persistent
  * setting.
  *
@@ -34,8 +34,6 @@
  *
  * Setting pixels:
  * \code{.c}
- * #include "hdw-tft.h"
- *
  * // Clear the display
  * clearPxTft();
  *
@@ -62,8 +60,6 @@
  *
  * Setting the backlight:
  * \code{.c}
- * #include "hdw-tft.h"
- *
  * // Disable the backlight
  * disableTFTBacklight();
  *

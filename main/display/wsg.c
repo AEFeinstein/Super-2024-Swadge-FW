@@ -79,9 +79,7 @@ static void rotatePixel(int16_t* x, int16_t* y, int16_t rotateDeg, int16_t width
     // there is to rotate by shearing
 
     // If there's any more to rotate, apply three shear matrices in order
-    // if(rotateDeg > 1 && rotateDeg < 89)
-
-    if (rotateDeg > 0)
+    if (0 < rotateDeg && rotateDeg < 90)
     {
         // 1st shear
         wx = wx - ((wy * tan1024[rotateDeg / 2]) + 512) / 1024;
@@ -369,7 +367,7 @@ void drawWsgTile(const wsg_t* wsg, int32_t xOff, int32_t yOff)
     for (int32_t y = yStart; y < yEnd; y++)
     {
         // Copy the row
-        // TODO probably faster if we can guarantee copyLen is a multiple of 4
+        // probably faster if we can guarantee copyLen is a multiple of 4
         memcpy(pxDisp, pxWsg, copyLen);
         pxDisp += dWidth;
         pxWsg += wWidth;

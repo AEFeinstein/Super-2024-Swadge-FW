@@ -208,7 +208,7 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
         }
         case AUSB_CMD_SWITCH_MODE:
         {
-            // Switch Swadge Mode
+            // Switch Swadge mode
             ULOG("SwadgeMode Value: 0x%08x", value);
             usbSetSwadgeMode((void*)value);
             break;
@@ -225,8 +225,11 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
             {
                 if (value > advanced_usb_scratch_buffer_data_size)
                 {
-                    advanced_usb_scratch_buffer_data = realloc(advanced_usb_scratch_buffer_data, value);
-                    memset(advanced_usb_scratch_buffer_data, 0, value);
+                    if (advanced_usb_scratch_buffer_data)
+                    {
+                        free(advanced_usb_scratch_buffer_data);
+                    }
+                    advanced_usb_scratch_buffer_data      = calloc(1, value);
                     advanced_usb_scratch_buffer_data_size = value;
                 }
                 if (value == 0)

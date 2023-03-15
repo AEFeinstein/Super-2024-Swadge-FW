@@ -5,7 +5,7 @@
  * The USB component uses Espressif's <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/usb_device.html">USB
  * Device Driver</a>. It's based on the <a
- * href="https://github.com/espressif/esp-idf/tree/release/v5.0.1/examples/peripherals/usb/device/tusb_hid">TinyUSB
+ * href="https://github.com/espressif/esp-idf/tree/v5.0.1/examples/peripherals/usb/device/tusb_hid">TinyUSB
  * Human Interface Device Example</a>.
  *
  * The Swadge primarily functions as a USB gamepad.
@@ -28,10 +28,6 @@
  * \section usb_example Example
  *
  * \code{.c}
- * #include "hdw-usb.h"
- *
- * ...
- *
  * static hid_gamepad_report_t report;
  * report.buttons = lastBtnState;
  * sendUsbGamepadReport(&report);

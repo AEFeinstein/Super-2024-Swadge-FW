@@ -92,7 +92,7 @@ void deinitMic(void)
  * @param samplesr The number of samples to read
  * @param samplesp The number of samples to write
  */
-void handleSoundInput(struct SoundDriver* sd, short* in, short* out, int samplesr, int samplesp)
+void handleSoundInput(struct SoundDriver* sd, const short* in, short* out, int samplesr, int samplesp)
 {
     // If there are samples to read
     if (adcSampling && samplesr)

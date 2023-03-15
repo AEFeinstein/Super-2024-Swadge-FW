@@ -16,8 +16,6 @@
  * \section temperature_example Example
  *
  * \code{.c}
- * #include "hdw-temperature.h"
- *
  * printf("%f\n", readTemperatureSensor());
  * \endcode
  */

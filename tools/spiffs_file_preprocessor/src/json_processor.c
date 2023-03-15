@@ -9,6 +9,8 @@
 #include "fileUtils.h"
 #include "heatshrink_util.h"
 
+#define JSON_COMPRESSION
+
 void process_json(const char* infile, const char* outdir)
 {
     /* Determine if the output file already exists */
@@ -45,6 +47,6 @@ void process_json(const char* infile, const char* outdir)
     fwrite(jsonInStr, sz, 1, outFile);
     fclose(outFile);
 #else
-    writeHeatshrinkFile(jsonInStr, sz, outFilePath);
+    writeHeatshrinkFile((uint8_t*)jsonInStr, sz, outFilePath);
 #endif
 }
