@@ -16,7 +16,10 @@ jobs:
   Build-Firmware-And-Emulator:
     runs-on: windows-latest
     steps:
-   
+
+    - name: Debug print event
+      run: echo '${{ toJSON(github.event) }}'
+
     - name: Check out repository code
       uses: actions/checkout@v3
       
@@ -107,6 +110,6 @@ jobs:
         # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
         channel-id: 'C6FNXU6KX'
         # For posting a simple plain text message
-        slack-message: "*Build result*: ${{ job.status }}\n*Commit messages*:\n```\n${{ toJSON(github.event.commits.*.message) }}\n```\n${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        slack-message: "*Build Result*: ${{ job.status }}\n*Author*: ${{ github.event.head_commit.author.username }}\n*Head Commit Message*:\n```\n${{ github.event.head_commit.message }}\n```\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
