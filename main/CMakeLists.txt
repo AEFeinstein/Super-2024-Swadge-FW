@@ -12,6 +12,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "display/wsg.c"
                             "menu/menu.c"
                             "modes/demo/demoMode.c"
+                            "modes/mainMenu/mainMenu.c"
                             "modes/pong/pong.c"
                             "utils/color_utils.c"
                             "utils/linked_list.c"
@@ -38,6 +39,7 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./display"
                                 "./menu"
                                 "./modes/pong"
+                                "./modes/mainMenu"
                                 "./modes/demo")
 
 function(spiffs_file_preprocessor)

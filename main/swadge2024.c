@@ -104,20 +104,32 @@
 #include <esp_system.h>
 #include <esp_timer.h>
 #include <esp_log.h>
+#include <esp_sleep.h>
+#include <rom\usb\usb_persist.h>
+#include <rom\usb\chip_usb_dw_wrapper.h>
+#include <soc\rtc_cntl_reg.h>
 
 #include "swadge2024.h"
-#include "demoMode.h"
-#include "pong.h"
+#include "mainMenu.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+// Define RTC_DATA_ATTR if it doesn't exist
+#ifndef RTC_DATA_ATTR
+    #define RTC_DATA_ATTR
+#endif
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-static swadgeMode_t* modes[] = {
-    &pongMode,
-    &demoMode,
-};
-static swadgeMode_t* cSwadgeMode;
+/// @brief The current Swadge mode
+static swadgeMode_t* cSwadgeMode = &mainMenuMode;
+
+/// @brief A pending Swadge mode to use after a deep sleep
+static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = 40000;
@@ -140,11 +152,19 @@ static void setSwadgeMode(void* swadgeMode);
  */
 void app_main(void)
 {
-    // Set the Swadge mode pointer
-    cSwadgeMode = modes[0];
-
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
+
+    // Assume the main menu is shown
+    cSwadgeMode = &mainMenuMode;
+
+    // If the ESP woke from sleep, and there is a pending Swadge Mode
+    if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
+    {
+        // Use the pending mode
+        cSwadgeMode       = pendingSwadgeMode;
+        pendingSwadgeMode = NULL;
+    }
 
     // Init USB if not overridden by the mode. This also sets up USB printf
     if (false == cSwadgeMode->overrideUsb)
@@ -296,6 +316,24 @@ void app_main(void)
             drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
         }
 
+        // If the mode should be switched, do it now
+        if (NULL != pendingSwadgeMode)
+        {
+            // We have to do this otherwise the backlight can glitch
+            disableTFTBacklight();
+
+            // Prevent bootloader on reboot if rebooting from originally bootloaded instance
+            REG_WRITE(RTC_CNTL_OPTION1_REG, 0);
+
+            // Only an issue if originally coming from bootloader. This is actually a ROM function.
+            // It prevents the USB from glitching out on the reboot after the reboot after coming
+            // out of bootloader
+            chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
+
+            esp_sleep_enable_timer_wakeup(1);
+            esp_deep_sleep_start();
+        }
+
         // Yield to let the rest of the RTOS run
         taskYIELD();
     }
@@ -377,7 +415,7 @@ static void setSwadgeMode(void* swadgeMode)
     // If no mode is given, switch to the first
     if (NULL == swadgeMode)
     {
-        swadgeMode = &modes[0];
+        swadgeMode = &mainMenuMode;
     }
 
     // Stop the prior mode
@@ -391,5 +429,46 @@ static void setSwadgeMode(void* swadgeMode)
     if (cSwadgeMode->fnEnterMode)
     {
         cSwadgeMode->fnEnterMode();
+    }
+}
+
+/**
+ * Set up variables to synchronously switch the swadge mode in the main loop
+ *
+ * @param mode A pointer to the mode to switch to
+ */
+void switchToSwadgeMode(swadgeMode_t* mode)
+{
+    pendingSwadgeMode = mode;
+}
+
+/**
+ * @brief Switch to the pending Swadge mode without restarting the system
+ */
+void softSwitchToPendingSwadge(void)
+{
+    if (pendingSwadgeMode)
+    {
+        // Exit the current mode
+        if (NULL != cSwadgeMode->fnExitMode)
+        {
+            cSwadgeMode->fnExitMode();
+        }
+
+        // Stop the buzzer
+        bzrStop();
+
+        // Switch the mode pointer
+        cSwadgeMode       = pendingSwadgeMode;
+        pendingSwadgeMode = NULL;
+
+        // Enter the next mode
+        if (NULL != cSwadgeMode->fnEnterMode)
+        {
+            cSwadgeMode->fnEnterMode();
+        }
+
+        // Reenable the TFT backlight
+        enableTFTBacklight();
     }
 }

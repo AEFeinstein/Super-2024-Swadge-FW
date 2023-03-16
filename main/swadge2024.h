@@ -64,27 +64,6 @@
  * };
  * \endcode
  *
- * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be used by the system firmware
- * \code{.c}
- * #ifndef _DEMO_MODE_H_
- * #define _DEMO_MODE_H_
- *
- * #include "swadge2024.h"
- *
- * extern swadgeMode_t demoMode;
- *
- * #endif
- * \endcode
- *
- * Add the mode to the list of modes in swdage2024.c:
- * \code{.c}
- * #include "demoMode.h"
- *
- * static swadgeMode_t* modes[] = {
- *     &demoMode,
- * };
- * \endcode
- *
  * The declared functions must actually exist somewhere:
  * \code{.c}
  * static void demoEnterMode(void)
@@ -126,6 +105,33 @@
  * {
  *     // Fill this in
  * 	return 0;
+ * }
+ * \endcode
+ *
+ * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be referenced in the main menu
+ * \code{.c}
+ * #ifndef _DEMO_MODE_H_
+ * #define _DEMO_MODE_H_
+ *
+ * #include "swadge2024.h"
+ *
+ * extern swadgeMode_t demoMode;
+ *
+ * #endif
+ * \endcode
+ *
+ * Add the mode to the menu initializer in mainMenuEnterMode():
+ * \code{.c}
+ * #include "demoMode.h"
+ *
+ * addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+ * \endcode
+ *
+ * Add the mode to the selector logic in mainMenuCb():
+ * \code{.c}
+ * else if (label == demoMode.modeName)
+ * {
+ *     switchToSwadgeMode(&demoMode);
  * }
  * \endcode
  */
@@ -288,6 +294,8 @@ typedef struct
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 } swadgeMode_t;
 
+void switchToSwadgeMode(swadgeMode_t* mode);
+void softSwitchToPendingSwadge(void);
 void deinitSystem(void);
 
 #endif
