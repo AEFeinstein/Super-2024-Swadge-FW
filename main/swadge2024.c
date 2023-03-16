@@ -1,14 +1,27 @@
 /*! \mainpage Swadge 2024
  *
+ * Generated on \showdate "%A, %B %-d, %H:%M:%S"
+ *
  * \section intro_sec Introduction
  *
- * So you're here to write some Swadge code, eh?
+ * Welcome to the Swadge 2024 API documentation! Here you will find information on how to use all hardware features of a
+ * Swadge and write a Swadge mode. A Swadge is <a href="https://www.magfest.org/">Magfest's</a> electronic swag-badges.
+ * They play games and make music and shine bright and do all sorts of cool things.
+ *
+ * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
+ * and submit a pull request!
+ *
+ * Most discussions happen in the Magfest Slack, in the \#circuitboards channel. If you are interested in joining and
+ * contributing to this project, email circuitboards@magfest.org.
+ *
+ * General Swadge design principles <a
+ * href="https://docs.google.com/document/d/1TzzatyRWp9t26YWF3qUlOg7NFgmsueL-0suqyDT98IE/edit">can be found here</a>.
  *
  * \section espressif_doc Espressif Documentation
  *
- * The Swadge uses an ESP32-S2 microcontroller with firmware built on IDF 5.0. The goal of this project is to enable
+ * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
- * doing system development or writing a mdoe that requires a specific hardware peripheral, this Espressif documentation
+ * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
  * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
@@ -18,22 +31,32 @@
  * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
  * Technical Reference Manual</a>
  *
- * \section install_sec Installation
+ * \section setup_sec Environment Setup
  *
- * \subsection linux_env Linux Environment
+ * Instructions on how to set up a programming envrionment for this project can be found <a
+ * href="https://github.com/AEFeinstein/Swadge-IDF-5.0#configuring-a-development-environment">in the project's
+ * README.md</a>.
  *
- * Penguins
+ * \section swadge_mode_example Swadge Mode Example
  *
- * \subsection win_env Windows Environment
+ * The <a href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/main/modes/pong">Pong mode</a> is written to be
+ * a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and uses good
+ * design patterns.
  *
- * DEVELOPERS! DEVELOPERS! DEVELOPERS!
+ * \section apis APIs
  *
- * \section hw_api Hardware APIs
+ * What follows are all the APIs available to write Swadge modes. If something does not exist, and it would be
+ * beneficial to multiple Swadge modes, please contribute both the firmware and API documentation. It's a team effort!
  *
- * Physical things you interact with!
+ * \subsection swadge_mode_api Swadge Mode APIs
  *
+ * - swadge2024.h: Write a mode. This is a good starting place
+ * - menu.h: Make a menu within a mode
+ *
+ * \subsection hw_api Hardware APIs
+ *
+ * - hdw-battmon.h: Learn how to check the battery voltage!
  * - hdw-btn.h: Learn how to use both push and touch button input!
- * - hdw-tft.h: Learn how to use the TFT!
  * - hdw-bzr.h: Learn how to use the buzzer!
  * - hdw-accel.h: Learn how to use the accelerometer!
  * - hdw-led.h: Learn how to use the LEDs!
@@ -42,16 +65,12 @@
  * - hdw-usb.h: Learn how to be a USB HID Gamepad!
  *     - advanced_usb_control.h: Use USB for application development!
  *
- * \section nwk_api Network APIs
- *
- * Make Swadges talk!
+ * \subsection nwk_api Network APIs
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
  *
- * \section sw_api Persistent Memory APIs
- *
- * Manipulate data in persistent memory!
+ * \subsection sw_api Persistent Memory APIs
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data!
  * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
@@ -61,26 +80,21 @@
  *     - spiffs_json.h: Load JSON
  *     - spiffs_txt.h: Load plaintext
  *
- * \section gr_api Graphics APIs
+ * \subsection gr_api Graphics APIs
  *
- * Be an artist!
- *
+ * - hdw-tft.h: Learn how to use the TFT!
  * - palette.h: Learn about available colors!
- * - color_utils.h: Learn about color maniuplation!
+ * - color_utils.h: Learn about color manipulation!
  * - fill.h: Learn how to fill areas on the screen!
- * - bresenham.h: Learn how to draw shapes on the screen!
- * - wsg.h: Learn how to draw sprites on the creen!
+ * - shapes.h: Learn how to draw shapes and curves on the screen!
+ * - wsg.h: Learn how to draw sprites on the screen!
  * - font.h: Learn how to draw text on the screen!
  *
- * \section oth_api Other Useful APIs
- *
- * Maybe I should organize these better
+ * \subsection oth_api Other Useful APIs
  *
  * - linked_list.h: A basic data structure
  * - trigonometry.h: Fast math based on look up tables
- * - macros.h: Convenient macros
- * - swadge2024.h: Write a mode
- * - menu.h: Make a menu
+ * - macros.h: Convenient macros like MIN() and MAX()
  */
 
 //==============================================================================
@@ -176,6 +190,10 @@ void app_main(void)
     {
         initMic(GPIO_NUM_7);
         startMic();
+    }
+    else
+    {
+        initBattmon(GPIO_NUM_6);
     }
 
     // Init TFT, use a different LEDC channel than buzzer
@@ -313,6 +331,7 @@ void deinitSystem(void)
     deinitTemperatureSensor();
     deinitTFT();
     deinitUsb();
+    deinitBattmon();
 }
 
 /**
@@ -351,7 +370,7 @@ static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
 /**
  * @brief Set the current Swadge mode
  *
- * @param swadgeMode The new Swadge Mode to execute. If NULL, the first mode is switched to
+ * @param swadgeMode The new Swadge mode to execute. If NULL, the first mode is switched to
  */
 static void setSwadgeMode(void* swadgeMode)
 {

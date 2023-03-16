@@ -7,7 +7,7 @@
 
 #include "hdw-tft.h"
 #include "menu.h"
-#include "bresenham.h"
+#include "shapes.h"
 
 //==============================================================================
 // Const Variables
@@ -306,7 +306,7 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
 }
 
 /**
- * This must be called to pass button event from the Swadge Mode to the menu.
+ * This must be called to pass button event from the Swadge mode to the menu.
  * If a button is passed here, it should not be handled anywhere else
  *
  * @param menu The menu to process button events for

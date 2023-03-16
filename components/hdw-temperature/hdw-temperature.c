@@ -38,7 +38,7 @@ void deinitTemperatureSensor(void)
 }
 
 /**
- * @brief Get a temperature reading from the ESP's onboard temperature sensor
+ * @brief Get a temperature reading from the ESP's onboard temperature sensor, in Celsius
  *
  * @return A floating point temperature, or -274 if not read
  */
