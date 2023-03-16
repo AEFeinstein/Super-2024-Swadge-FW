@@ -6,10 +6,11 @@
  * touch-sensitive areas on the PCB. Events from pushbuttons and touchpads are processed different ways, but queued in
  * the same queue.
  *
- * The Swadge mode needs to call checkButtonQueue() to receive queued button events.
- * The event contains which button caused the event, whether it was pressed or released, and the current state of all
- * buttons. This way the Swadge mode is not responsible for high frequency button polling, and can still receive all
- * button inputs.
+ * The Swadge mode needs to call checkButtonQueueWrapper(), which calls checkButtonQueue() to receive queued button
+ * events. The reason for checkButtonQueueWrapper() is so that the main loop can monitor the button which can be held
+ * down to return to the main menu. The event contains which button caused the event, whether it was pressed or
+ * released, and the current state of all buttons. This way the Swadge mode is not responsible for high frequency button
+ * polling, and can still receive all button inputs.
  *
  * In addition to acting as binary buttons, the touchpads may act as a single, analog, touch sensitive strip. These two
  * ways of reporting are not mutually exclusive.
@@ -41,9 +42,9 @@
  * will fire and the new event will be queued in the same queue used for pushbuttons.
  *
  * In addition to acting as binary buttons, the touchpad can act as a single analog touch strip. getTouchCentroid() may
- * be called to get the current analog touch value. Changes in the analog position are not reported checkButtonQueue(),
- * so getTouchCentroid() must be called as frequently as desired to get values. Do not assume that changes in the analog
- * position are correlated with events reported in checkButtonQueue().
+ * be called to get the current analog touch value. Changes in the analog position are not reported
+ * checkButtonQueueWrapper(), so getTouchCentroid() must be called as frequently as desired to get values. Do not assume
+ * that changes in the analog position are correlated with events reported in checkButtonQueueWrapper().
  *
  * Touchpad interrupts are set up and touchpad values are read with <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/touch_pad.html">Touch
@@ -53,17 +54,17 @@
  *
  * You don't need to call initButtons() or deinitButtons(). The system does at the appropriate times.
  *
- * You do need to call checkButtonQueue() and should do so in a while-loop to receive all events since the last check.
- * This should be done in the Swadge mode's main function.
+ * You do need to call checkButtonQueueWrapper() and should do so in a while-loop to receive all events since the last
+ * check. This should be done in the Swadge mode's main function.
  *
- * You may call getTouchCentroid() to get the analog touch position. This is independent of checkButtonQueue().
+ * You may call getTouchCentroid() to get the analog touch position. This is independent of checkButtonQueueWrapper().
  *
  * \section btn_example Example
  *
  * \code{.c}
  * // Check all queued button events
  * buttonEvt_t evt;
- * while(checkButtonQueue(&evt))
+ * while(checkButtonQueueWrapper(&evt))
  * {
  *     // Print the current event
  *     printf("state: %04X, button: %d, down: %s\n",

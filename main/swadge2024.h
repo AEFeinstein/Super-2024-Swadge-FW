@@ -294,8 +294,11 @@ typedef struct
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 } swadgeMode_t;
 
+bool checkButtonQueueWrapper(buttonEvt_t* evt);
+
 void switchToSwadgeMode(swadgeMode_t* mode);
 void softSwitchToPendingSwadge(void);
+
 void deinitSystem(void);
 
 #endif

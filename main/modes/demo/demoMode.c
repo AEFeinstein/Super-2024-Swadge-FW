@@ -139,7 +139,7 @@ static void demoMainLoop(int64_t elapsedUs)
     // Process button events
     buttonEvt_t evt              = {0};
     static uint32_t lastBtnState = 0;
-    while (checkButtonQueue(&evt))
+    while (checkButtonQueueWrapper(&evt))
     {
         dv->menu = menuButton(dv->menu, evt);
 

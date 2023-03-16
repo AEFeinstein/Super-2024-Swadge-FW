@@ -121,6 +121,8 @@
     #define RTC_DATA_ATTR
 #endif
 
+#define EXIT_TIME_US 1000000
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -133,6 +135,9 @@ static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = 40000;
+
+/// @brief Timer to return to the main menu
+static int64_t timeExitPressed = 0;
 
 //==============================================================================
 // Function declarations
@@ -312,6 +317,27 @@ void app_main(void)
                 tLastMainLoopCall = tNowUs;
             }
 
+            // If the menu button is being held
+            if (0 != timeExitPressed)
+            {
+                // Figure out for how long
+                int64_t tHeldUs = tNowUs - timeExitPressed;
+                // If it has been held for more than the exit time
+                if (tHeldUs > EXIT_TIME_US)
+                {
+                    // Reset the count
+                    timeExitPressed = 0;
+                    // Return to the main menu
+                    switchToSwadgeMode(&mainMenuMode);
+                }
+                else
+                {
+                    // Draw 'progress' bar for exiting. This is done right before the TFT is drawn
+                    int16_t numPx = (tHeldUs * TFT_WIDTH) / EXIT_TIME_US;
+                    fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
+                }
+            }
+
             // Draw to the TFT
             drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
         }
@@ -330,6 +356,7 @@ void app_main(void)
             // out of bootloader
             chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
 
+            // Go to sleep. pendingSwadgeMode will be used after waking up
             esp_sleep_enable_timer_wakeup(1);
             esp_deep_sleep_start();
         }
@@ -471,4 +498,44 @@ void softSwitchToPendingSwadge(void)
         // Reenable the TFT backlight
         enableTFTBacklight();
     }
+}
+
+/**
+ * @brief Service the queue of button events that caused interrupts
+ * This only reutrns a single event, even if there are multiple in the queue
+ * This function may be called multiple times in a row to completely empty the queue
+ *
+ * This is a wrapper for checkButtonQueue() which also monitors the button to return to the main menu
+ *
+ * @param evt If an event occurred, return it through this argument
+ * @return true if an event occurred, false if nothing happened
+ */
+bool checkButtonQueueWrapper(buttonEvt_t* evt)
+{
+    bool retval = checkButtonQueue(evt);
+
+    // Intercept button presses for PB_SELECT
+    if (retval)
+    {
+        // Don't intercept the button on the main menu
+        if (cSwadgeMode != &mainMenuMode)
+        {
+            if (evt->button == PB_SELECT)
+            {
+                if (evt->down)
+                {
+                    // Button was pressed, start the timer
+                    timeExitPressed = esp_timer_get_time();
+                }
+                else
+                {
+                    // Button was released, stop the timer
+                    timeExitPressed = 0;
+                }
+            }
+        }
+    }
+
+    // Return if there was an event or not
+    return retval;
 }

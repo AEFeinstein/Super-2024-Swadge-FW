@@ -147,7 +147,7 @@ static void pongMainLoop(int64_t elapsedUs)
 {
     // Process button events
     buttonEvt_t evt = {0};
-    while (checkButtonQueue(&evt))
+    while (checkButtonQueueWrapper(&evt))
     {
         pong->btnState = evt.state;
     }

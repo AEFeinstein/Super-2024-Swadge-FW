@@ -84,7 +84,7 @@
  * Process button events:
  * \code{.c}
  * buttonEvt_t evt = {0};
- * while (checkButtonQueue(&evt))
+ * while (checkButtonQueueWrapper(&evt))
  * {
  *     menu = menuButton(menu, evt);
  * }

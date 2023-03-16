@@ -101,7 +101,7 @@ static void mainMenuExitMode(void)
 static void mainMenuMainLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt = {0};
-    while (checkButtonQueue(&evt))
+    while (checkButtonQueueWrapper(&evt))
     {
         mainMenu->menu = menuButton(mainMenu->menu, evt);
     }
