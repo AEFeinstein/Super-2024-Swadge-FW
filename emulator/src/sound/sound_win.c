@@ -183,7 +183,7 @@ static struct SoundDriverWin* InitWinSound(struct SoundDriverWin* r)
             memset(&(r->WavBuffIn[i]), 0, sizeof(r->WavBuffIn[i]));
             (r->WavBuffIn[i]).dwBufferLength = r->buffer * 2 * r->channelsRec;
             (r->WavBuffIn[i]).dwLoops        = 1;
-            (r->WavBuffIn[i]).lpData         = (char*)malloc(r->buffer * r->channelsRec * 2);
+            (r->WavBuffIn[i]).lpData         = (char*)calloc(1, r->buffer * r->channelsRec * 2);
             printf("buffer gen size: %d: %p\n", r->buffer * r->channelsRec * 2, (r->WavBuffIn[i]).lpData);
             p = waveInPrepareHeader(r->hMyWaveIn, &(r->WavBuffIn[i]), sizeof(WAVEHDR));
             printf("WIPr: %d\n", p);
@@ -217,7 +217,7 @@ static struct SoundDriverWin* InitWinSound(struct SoundDriverWin* r)
             memset(&(r->WavBuffOut[i]), 0, sizeof(r->WavBuffOut[i]));
             (r->WavBuffOut[i]).dwBufferLength = r->buffer * 2 * r->channelsPlay;
             (r->WavBuffOut[i]).dwLoops        = 1;
-            (r->WavBuffOut[i]).lpData         = (char*)malloc(r->buffer * r->channelsPlay * 2);
+            (r->WavBuffOut[i]).lpData         = (char*)calloc(1, r->buffer * r->channelsPlay * 2);
             p = waveOutPrepareHeader(r->hMyWaveOut, &(r->WavBuffOut[i]), sizeof(WAVEHDR));
             waveOutWrite(r->hMyWaveOut, &(r->WavBuffOut[i]), sizeof(WAVEHDR));
         }
@@ -229,7 +229,7 @@ static struct SoundDriverWin* InitWinSound(struct SoundDriverWin* r)
 void* InitSoundWin(SoundCBType cb, int reqSPS, int reqChannelsRec, int reqChannelsPlay, int sugBufferSize,
                    const char* inputSelect, const char* outputSelect)
 {
-    struct SoundDriverWin* r = (struct SoundDriverWin*)malloc(sizeof(struct SoundDriverWin));
+    struct SoundDriverWin* r = (struct SoundDriverWin*)calloc(1, sizeof(struct SoundDriverWin));
 
     r->CloseFn      = CloseSoundWin;
     r->SoundStateFn = SoundStateWin;

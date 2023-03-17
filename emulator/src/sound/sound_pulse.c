@@ -177,7 +177,7 @@ void* InitSoundPulse(SoundCBType cb, int reqSPS, int reqChannelsRec, int reqChan
     static pa_sample_spec ss;
     int error;
     pa_mainloop_api* pa_mlapi;
-    struct SoundDriverPulse* r = malloc(sizeof(struct SoundDriverPulse));
+    struct SoundDriverPulse* r = calloc(1, sizeof(struct SoundDriverPulse));
 
     r->pa_ml          = pa_mainloop_new();
     pa_mlapi          = pa_mainloop_get_api(r->pa_ml);
