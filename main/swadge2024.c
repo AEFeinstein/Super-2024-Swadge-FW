@@ -105,9 +105,9 @@
 #include <esp_timer.h>
 #include <esp_log.h>
 #include <esp_sleep.h>
-#include <rom\usb\usb_persist.h>
-#include <rom\usb\chip_usb_dw_wrapper.h>
-#include <soc\rtc_cntl_reg.h>
+#include <rom/usb/usb_persist.h>
+#include <rom/usb/chip_usb_dw_wrapper.h>
+#include <soc/rtc_cntl_reg.h>
 
 #include "swadge2024.h"
 #include "mainMenu.h"
