@@ -98,6 +98,11 @@ static void deinitSubMenu(menu_t* menu)
             // Deinitialize it
             deinitSubMenu(item->subMenu);
         }
+
+        // Free the item
+        free(item);
+
+        // Move to the next
         itemNode = itemNode->next;
     }
 

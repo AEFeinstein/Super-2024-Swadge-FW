@@ -289,7 +289,7 @@ CPPCHECK_FLAGS= \
 	--library=posix \
 	--language=c \
 	--platform=unix32 \
-	--std=c17 \
+	--std=c++17 \
 	--suppress=missingIncludeSystem \
 	--output-file=./cppcheck_result.txt \
 	-j12

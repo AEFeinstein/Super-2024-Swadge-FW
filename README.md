@@ -93,12 +93,12 @@ The continuous integration for this project runs on a Windows instance. This mea
 1. Run the following commands, depending on your package manager, to install all necessary packages:
     * `apt`:
         ```bash
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 clang-format cppcheck doxygen python3 python3-venv cmake
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 clang-format cppcheck doxygen python3 python3-pip python3-venv cmake
         ```
     * `dnf`:
         ```bash
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
-        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck doxygen python3 python3-venv cmake
+        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck doxygen python3 python3-pip python3-venv cmake
         ```
 1. Clone the ESP-IDF v5.0.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
