@@ -31,7 +31,7 @@
         },
         {
             // For use with https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb
-            // Also requires https://www.dedoimedo.com/computers/rr-gdb-tool.html
+            // Also requires https://rr-project.org/
             // See instructions here: https://github.com/vadimcn/codelldb/blob/master/MANUAL.md#reverse-debugging
             "name": "Replay",
             "type": "lldb",
