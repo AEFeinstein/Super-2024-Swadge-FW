@@ -169,6 +169,7 @@
 #include "wsg.h"
 #include "shapes.h"
 #include "fill.h"
+#include "menu.h"
 
 // Asset loaders
 #include "spiffs_wsg.h"
