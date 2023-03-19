@@ -1,5 +1,13 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "esp_random.h"
 #include "pong.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
 
 #define DECIMAL_BITS 4
 
@@ -11,24 +19,84 @@
 
 #define SPEED_LIMIT (30 << DECIMAL_BITS)
 
+//==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    PONG_MENU,
+    PONG_GAME,
+} pongScreen_t;
+
+typedef enum
+{
+    PONG_BUTTON,
+    PONG_TOUCH,
+    PONG_TILT,
+} pongControl_t;
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+typedef struct
+{
+    int32_t x;
+    int32_t y;
+} vec_t;
+
+typedef struct
+{
+    menu_t* menu;
+    font_t ibm;
+    p2pInfo p2p;
+    vec_t ballLoc;
+    vec_t ballVel;
+    pongScreen_t screen;
+    pongControl_t control;
+    int32_t paddleLocL;
+    int32_t paddleLocR;
+    uint32_t restartTimerUs;
+    uint16_t btnState;
+} pong_t;
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
 static void pongMainLoop(int64_t elapsedUs);
 static void pongEnterMode(void);
 static void pongExitMode(void);
 static void pongEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void pongEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+static void pongMenuCb(const char* label, bool selected);
+static void pongGameLoop(int64_t elapsedUs);
 
-void ResetGame(bool isInit, uint8_t whoWon);
-void RotateBall(int16_t degree);
-void IncreaseSpeed(int16_t speedM);
-void DrawField(void);
+static void ResetGame(bool isInit, uint8_t whoWon);
+static void RotateBall(int16_t degree);
+static void IncreaseSpeed(int16_t speedM);
+static void DrawField(void);
+static bool checkCircleRectCollision(int32_t cx, int32_t cy, int32_t radius, int32_t rx, int32_t ry, int32_t rw,
+                                     int32_t rh);
 
+//==============================================================================
+// Variables
+//==============================================================================
+
+/// @brief The name for Pong mode, a const char
 const char pongName[] = "Pong";
 
+static const char pongCtrlButton[] = "Button Control";
+static const char pongCtrlTouch[]  = "Touch Control";
+static const char pongCtrlTilt[]   = "Tilt Control";
+
+/// @brief The Swadge mode for Pong
 swadgeMode_t pongMode = {
     .modeName                 = pongName,
     .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
-    .usesAccelerometer        = false,
+    .usesAccelerometer        = true,
     .usesThermometer          = false,
     .fnEnterMode              = pongEnterMode,
     .fnExitMode               = pongExitMode,
@@ -40,30 +108,13 @@ swadgeMode_t pongMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-typedef struct
-{
-    int32_t x;
-    int32_t y;
-} vec_t;
-
-typedef struct
-{
-    p2pInfo p2p;
-    vec_t ballLoc;
-    vec_t ballVel;
-    int32_t paddleLocL;
-    int32_t paddleLocR;
-    uint32_t restartTimerUs;
-    uint16_t btnState;
-} pong_t;
-
+/// @brief All state information for the Pong mode. This whole struct is calloc()'d and free()'d so that Pong is only
+/// using memory while it is being played
 pong_t* pong = NULL;
 
-/**************************
- * *
- * Pong!! *
- * *
- ***************************/
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * @brief TODO
@@ -71,8 +122,22 @@ pong_t* pong = NULL;
  */
 static void pongEnterMode(void)
 {
+    // Allocate and clear all memory for this mode
     pong = calloc(1, sizeof(pong_t));
-    ResetGame(true, 0);
+
+    // Load a font
+    loadFont("ibm_vga8.font", &pong->ibm, false);
+
+    // Allocate the menu
+    pong->menu = initMenu(pongName, &pong->ibm, pongMenuCb);
+
+    // Add control schemes to the menu
+    addSingleItemToMenu(pong->menu, pongCtrlButton);
+    addSingleItemToMenu(pong->menu, pongCtrlTouch);
+    addSingleItemToMenu(pong->menu, pongCtrlTilt);
+
+    // Set the mode to menu mode
+    pong->screen = PONG_MENU;
 }
 
 /**
@@ -81,6 +146,191 @@ static void pongEnterMode(void)
 static void pongExitMode(void)
 {
     free(pong);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param label
+ * @param selected
+ */
+static void pongMenuCb(const char* label, bool selected)
+{
+    if (selected)
+    {
+        if (label == pongCtrlButton)
+        {
+            ResetGame(true, 0);
+            pong->screen  = PONG_GAME;
+            pong->control = PONG_BUTTON;
+        }
+        else if (label == pongCtrlTouch)
+        {
+            ResetGame(true, 0);
+            pong->screen  = PONG_GAME;
+            pong->control = PONG_TOUCH;
+        }
+        else if (label == pongCtrlTilt)
+        {
+            ResetGame(true, 0);
+            pong->screen  = PONG_GAME;
+            pong->control = PONG_TILT;
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param elapsedUs
+ */
+static void pongMainLoop(int64_t elapsedUs)
+{
+    // Run the main loop depending on the screen being displayed
+    switch (pong->screen)
+    {
+        case PONG_MENU:
+        {
+            // Process button events
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                pong->menu = menuButton(pong->menu, evt);
+            }
+
+            // Draw the menu
+            drawMenu(pong->menu);
+            break;
+        }
+        case PONG_GAME:
+        {
+            // Draw the game
+            pongGameLoop(elapsedUs);
+            break;
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param elapsedUs
+ */
+static void pongGameLoop(int64_t elapsedUs)
+{
+    // Always process button events, so the main menu button can be captured
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        pong->btnState = evt.state;
+    }
+
+    // TODO count-in timer
+
+    // Move the paddle depending on the chosen control scheme
+    switch (pong->control)
+    {
+        default:
+        case PONG_BUTTON:
+        {
+            // Move the player paddle
+            if (pong->btnState & PB_UP)
+            {
+                pong->paddleLocL = MAX(pong->paddleLocL - (5 << DECIMAL_BITS), 0);
+            }
+            else if (pong->btnState & PB_DOWN)
+            {
+                pong->paddleLocL = MIN(pong->paddleLocL + (5 << DECIMAL_BITS), FIELD_HEIGHT - PADDLE_HEIGHT);
+            }
+            break;
+        }
+        case PONG_TOUCH:
+        {
+            // Check if the touch area is touched
+            int32_t centerVal, intensityVal;
+            if (getTouchCentroid(&centerVal, &intensityVal))
+            {
+                // If there is a touch, move the paddle to that location
+                pong->paddleLocL = (centerVal * (FIELD_HEIGHT - PADDLE_HEIGHT)) / 1024;
+            }
+            break;
+        }
+        case PONG_TILT:
+        {
+            // Declare variables to receive acceleration
+            int16_t a_x, a_y, a_z;
+            // Get the current acceleration
+            if (ESP_OK == accelGetAccelVec(&a_x, &a_y, &a_z))
+            {
+                pong->paddleLocL
+                    = CLAMP(((a_x + 100) * (FIELD_HEIGHT - PADDLE_HEIGHT)) / 350, 0, (FIELD_HEIGHT - PADDLE_HEIGHT));
+            }
+            break;
+        }
+    }
+
+    // TODO Move the computer paddle
+    pong->paddleLocR = CLAMP(pong->ballLoc.y - PADDLE_HEIGHT / 2, 0, FIELD_HEIGHT - PADDLE_HEIGHT);
+
+    // Update the ball's position
+    pong->ballLoc.x += (pong->ballVel.x * elapsedUs) / 100000;
+    pong->ballLoc.y += (pong->ballVel.y * elapsedUs) / 100000;
+
+    // TODO victory check
+    // TODO score
+
+    // Checks for top and bottom wall collisons
+    if (((pong->ballLoc.y - BALL_RADIUS) < 0 && pong->ballVel.y < 0)
+        || ((pong->ballLoc.y + BALL_RADIUS) > FIELD_HEIGHT && pong->ballVel.y > 0))
+    {
+        // Reverse direction
+        pong->ballVel.y = -pong->ballVel.y;
+    }
+
+    // check for game over
+    if (pong->ballLoc.x < 0 || pong->ballLoc.x > FIELD_WIDTH)
+    {
+        ResetGame(false, pong->ballLoc.x < 0 ? 0 : 1);
+        DrawField();
+        return;
+    }
+
+    // Check for left paddle collision
+    if ((pong->ballVel.x < 0)
+        && checkCircleRectCollision(pong->ballLoc.x, pong->ballLoc.y, BALL_RADIUS, 0, pong->paddleLocL, PADDLE_WIDTH,
+                                    PADDLE_HEIGHT))
+    {
+        // Reverse direction
+        pong->ballVel.x = -pong->ballVel.x;
+
+        // Apply extra rotation depending on part of the paddle hit
+        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
+        int16_t diff = pong->ballLoc.y - (pong->paddleLocL + PADDLE_HEIGHT / 2);
+        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
+        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
+
+        // Increase speed
+        IncreaseSpeed(1 << DECIMAL_BITS);
+    }
+    // Check for right paddle collision
+    else if ((pong->ballVel.x > 0)
+             && checkCircleRectCollision(pong->ballLoc.x, pong->ballLoc.y, BALL_RADIUS, FIELD_WIDTH - PADDLE_WIDTH,
+                                         pong->paddleLocR, PADDLE_WIDTH, PADDLE_HEIGHT))
+    {
+        // Reverse direction
+        pong->ballVel.x = -pong->ballVel.x;
+
+        // Apply extra rotation depending on part of the paddle hit
+        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
+        int16_t diff = pong->ballLoc.y - (pong->paddleLocR + PADDLE_HEIGHT / 2);
+        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
+        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
+
+        // Increase speed
+        IncreaseSpeed(1 << DECIMAL_BITS);
+    }
+
+    DrawField();
 }
 
 /**
@@ -96,7 +346,8 @@ static void pongExitMode(void)
  * @return true
  * @return false
  */
-static bool circleRect(int32_t cx, int32_t cy, int32_t radius, int32_t rx, int32_t ry, int32_t rw, int32_t rh)
+static bool checkCircleRectCollision(int32_t cx, int32_t cy, int32_t radius, int32_t rx, int32_t ry, int32_t rw,
+                                     int32_t rh)
 {
     // temporary variables to set edges for testing
     int32_t testX = cx;
@@ -141,98 +392,10 @@ static bool circleRect(int32_t cx, int32_t cy, int32_t radius, int32_t rx, int32
 /**
  * @brief TODO
  *
- * @param elapsedUs
- */
-static void pongMainLoop(int64_t elapsedUs)
-{
-    // Process button events
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        pong->btnState = evt.state;
-    }
-
-    // TODO count-in timer
-
-    // Move the player paddle
-    if (pong->btnState & PB_UP)
-    {
-        pong->paddleLocL = MAX(pong->paddleLocL - (5 << DECIMAL_BITS), 0);
-    }
-    else if (pong->btnState & PB_DOWN)
-    {
-        pong->paddleLocL = MIN(pong->paddleLocL + (5 << DECIMAL_BITS), FIELD_HEIGHT - PADDLE_HEIGHT);
-    }
-
-    // TODO Move the computer paddle
-    pong->paddleLocR = CLAMP(pong->ballLoc.y - PADDLE_HEIGHT / 2, 0, FIELD_HEIGHT - PADDLE_HEIGHT);
-
-    // Update the ball's position
-    pong->ballLoc.x += (pong->ballVel.x * elapsedUs) / 100000;
-    pong->ballLoc.y += (pong->ballVel.y * elapsedUs) / 100000;
-
-    // TODO victory check
-
-    // Checks for top and bottom wall collisons
-    if (((pong->ballLoc.y - BALL_RADIUS) < 0 && pong->ballVel.y < 0)
-        || ((pong->ballLoc.y + BALL_RADIUS) > FIELD_HEIGHT && pong->ballVel.y > 0))
-    {
-        // Reverse direction
-        pong->ballVel.y = -pong->ballVel.y;
-    }
-
-    // check for game over
-    if (pong->ballLoc.x < 0 || pong->ballLoc.x > FIELD_WIDTH)
-    {
-        ResetGame(false, pong->ballLoc.x < 0 ? 0 : 1);
-        DrawField();
-        return;
-    }
-
-    // Check for left paddle collision
-    if ((pong->ballVel.x < 0)
-        && circleRect(pong->ballLoc.x, pong->ballLoc.y, BALL_RADIUS, 0, pong->paddleLocL, PADDLE_WIDTH, PADDLE_HEIGHT))
-    {
-        // Reverse direction
-        pong->ballVel.x = -pong->ballVel.x;
-
-        // Apply extra rotation depending on part of the paddle hit
-        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
-        int16_t diff = pong->ballLoc.y - (pong->paddleLocL + PADDLE_HEIGHT / 2);
-        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
-        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
-
-        // Increase speed
-        IncreaseSpeed(1 << DECIMAL_BITS);
-    }
-    // Check for right paddle collision
-    else if ((pong->ballVel.x > 0)
-             && circleRect(pong->ballLoc.x, pong->ballLoc.y, BALL_RADIUS, FIELD_WIDTH - PADDLE_WIDTH, pong->paddleLocR,
-                           PADDLE_WIDTH, PADDLE_HEIGHT))
-    {
-        // Reverse direction
-        pong->ballVel.x = -pong->ballVel.x;
-
-        // Apply extra rotation depending on part of the paddle hit
-        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
-        int16_t diff = pong->ballLoc.y - (pong->paddleLocR + PADDLE_HEIGHT / 2);
-        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
-        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
-
-        // Increase speed
-        IncreaseSpeed(1 << DECIMAL_BITS);
-    }
-
-    DrawField();
-}
-
-/**
- * @brief TODO
- *
  * @param isInit
  * @param whoWon
  */
-void ResetGame(bool isInit, uint8_t whoWon)
+static void ResetGame(bool isInit, uint8_t whoWon)
 {
     if (isInit)
     {
@@ -264,7 +427,7 @@ void ResetGame(bool isInit, uint8_t whoWon)
  *
  * @param degree
  */
-void RotateBall(int16_t degree)
+static void RotateBall(int16_t degree)
 {
     // printf("rotate %" PRId16 ": ", degree);
     while (degree < 0)
@@ -293,7 +456,7 @@ void RotateBall(int16_t degree)
  *
  * @param speedM
  */
-void IncreaseSpeed(int16_t speedM)
+static void IncreaseSpeed(int16_t speedM)
 {
     int32_t denom      = ABS(pong->ballVel.x) + ABS(pong->ballVel.y);
     int32_t xComponent = (speedM * pong->ballVel.x) / denom;
@@ -308,7 +471,7 @@ void IncreaseSpeed(int16_t speedM)
 /**
  * @brief Draw the Pong field to the TFT
  */
-void DrawField(void)
+static void DrawField(void)
 {
     clearPxTft();
     drawCircleFilled((pong->ballLoc.x) >> DECIMAL_BITS, (pong->ballLoc.y) >> DECIMAL_BITS, BALL_RADIUS >> DECIMAL_BITS,
