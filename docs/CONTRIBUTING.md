@@ -1,4 +1,4 @@
-# Contribution Guide
+# Contribution Guide {#contribution_guide}
 
 ## How to Contribute a Feature
 

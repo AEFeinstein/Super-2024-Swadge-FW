@@ -21,7 +21,7 @@
  * to determine. Maybe it uses a menu.h, maybe it has a custom UI. All Swadge mode source code should be in the \c
  * /main/modes folder. Each mode should have it's own folder to keep source organized.
  *
- * To build the firmware, the mode's source files must be added to \c /main/CMakeLists.txt. The emulator's \c makefile
+ * To build the firmware, the mode's source files must be added to \c /main/CMakeLists\.txt. The emulator's \c makefile
  * automatically finds files to compile recursively, so they do not need to be explicitly listed.
  *
  * It's best practice not to use 'generic' names for functions and variables, because they may collide with another

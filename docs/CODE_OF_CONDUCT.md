@@ -1,1 +1,3 @@
-# Don't be a jerk
+# Code of Conduct
+
+Don't be a jerk

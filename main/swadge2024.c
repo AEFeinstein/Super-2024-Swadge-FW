@@ -17,6 +17,23 @@
  * General Swadge design principles <a
  * href="https://docs.google.com/document/d/1TzzatyRWp9t26YWF3qUlOg7NFgmsueL-0suqyDT98IE/edit">can be found here</a>.
  *
+ * \section start Where to Start
+ *
+ * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
+ * pages to read from here.
+ *
+ * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
+ * firmware and emulator.
+ * -# Next, read about the basics of a Swadge Mode at \ref swadge2024.h.
+ * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
+ * action.
+ * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
+ * the Swadge firmware.
+ * -# When you're ready to make a contribution, read the \ref contribution_guide first to see how to do it in the most
+ * productive way.
+ * -# Finally, if you want to do lower level or \c component programming, read the \ref espressif_doc to understand the
+ * full capability of the ESP32-S2 chip.
+ *
  * \section espressif_doc Espressif Documentation
  *
  * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
@@ -33,9 +50,7 @@
  *
  * \section setup_sec Environment Setup
  *
- * Instructions on how to set up a programming envrionment for this project can be found <a
- * href="https://github.com/AEFeinstein/Swadge-IDF-5.0#configuring-a-development-environment">in the project's
- * README.md</a>.
+ * Instructions on how to set up a programming envrionment for this project can be found \ref setup.
  *
  * \section swadge_mode_example Swadge Mode Example
  *
@@ -43,7 +58,7 @@
  * a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and uses good
  * design patterns.
  *
- * \section apis APIs
+ * \section apis API Reference
  *
  * What follows are all the APIs available to write Swadge modes. If something does not exist, and it would be
  * beneficial to multiple Swadge modes, please contribute both the firmware and API documentation. It's a team effort!
