@@ -27,15 +27,15 @@ If the path to your home directory has spaces in it, then installation paths sho
 The continuous integration for this project runs on a Windows instance. This means one can read [build-firmware-and-emulator.yml](https://github.com/AEFeinstein/Swadge-IDF-5.0/blob/main/.github/workflows/build-firmware-and-emulator.yml) to see how the Windows build environment is set up from scratch for both the firmware and emulator, though it does not install extra development tools. It is recommend to follow the following guide.
 
 1. [Install `git`](https://git-scm.com/download/win).
-1. [Install `python`](https://www.python.org/downloads/). Make sure to check "Add Python to environment variables" when installing.
-1. [Install `doxygen`](https://www.doxygen.nl/download.html).
-1. [Install `cppcheck`](https://cppcheck.sourceforge.io/).
-1. [Install `msys2`](https://www.msys2.org/).
-1. Start an `msys2` shell and run the following command to install all required packages:
+2. [Install `python`](https://www.python.org/downloads/). Make sure to check "Add Python to environment variables" when installing.
+3. [Install `doxygen`](https://www.doxygen.nl/download.html).
+4. [Install `cppcheck`](https://cppcheck.sourceforge.io/).
+5. [Install `msys2`](https://www.msys2.org/).
+6. Start an `msys2` shell and run the following command to install all required packages:
     ```bash
     pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-clang zip
     ```
-1. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
+7. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
     * `C:\Program Files\doxygen\bin` 
@@ -45,7 +45,7 @@ The continuous integration for this project runs on a Windows instance. This mea
     
     ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
 
-1. Clone the ESP-IDF v5.0.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+8. Clone the ESP-IDF v5.0.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
     ```powershell
     Set-ExecutionPolicy -Scope CurrentUser Unrestricted
     git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
@@ -67,7 +67,7 @@ The continuous integration for this project runs on a Windows instance. This mea
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
         sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck doxygen python3 python3-pip python3-venv cmake
         ```
-1. Clone the ESP-IDF v5.0.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+2. Clone the ESP-IDF v5.0.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
     git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
@@ -81,12 +81,12 @@ The continuous integration for this project runs on a Windows instance. This mea
     git clone https://github.com/AEFeinstein/Swadge-IDF-5.0.git
     cd Swadge-IDF-5.0
     ```
-1. Make sure the ESP-IDF symbols are exported. This example is for Windows, so the actual command may be different for your OS. Note that `export.ps1` does not make any permanent changes and it must be run each time you open a new terminal for a build.
+2. Make sure the ESP-IDF symbols are exported. This example is for Windows, so the actual command may be different for your OS. Note that `export.ps1` does not make any permanent changes and it must be run each time you open a new terminal for a build.
     ```powershell
     ~/esp/esp-idf/export.ps1
     ```
-1. Switch the Swadge to USB power, hold down the PGM button (up on the D-Pad), and plug it into your computer. Note the serial port that enumerates.
-1. Build and flash with a single command. Note in this example the ESP is connected to `COM8`, and the serial port will likely be different on your system.
+3. Switch the Swadge to USB power, hold down the PGM button (up on the D-Pad), and plug it into your computer. Note the serial port that enumerates.
+4. Build and flash with a single command. Note in this example the ESP is connected to `COM8`, and the serial port will likely be different on your system.
     ```powershell
     idf.py -p COM8 -b 2000000 build flash
     ```
@@ -94,11 +94,11 @@ The continuous integration for this project runs on a Windows instance. This mea
 ## Building and Running the Emulator
 
 1. Clone this repository. You probably already have it from the prior step but it never hurt to mention.
-1. Build the emulator.
+2. Build the emulator.
     ```powershell
     make clean all
     ```
-1. Run the emulator. 
+3. Run the emulator. 
    ```powershell
    ./swadge_emulator
    ```
