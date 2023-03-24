@@ -34,24 +34,6 @@
  * -# Finally, if you want to do lower level or \c component programming, read the \ref espressif_doc to understand the
  * full capability of the ESP32-S2 chip.
  *
- * \section espressif_doc Espressif Documentation
- *
- * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
- * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
- * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
- * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/index.html">ESP-IDF API
- * Reference</a>
- * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
- * Datasheet</a>
- * - <a
- * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
- * Technical Reference Manual</a>
- *
- * \section setup_sec Environment Setup
- *
- * Instructions on how to set up a programming envrionment for this project can be found \ref setup.
- *
  * \section swadge_mode_example Swadge Mode Example
  *
  * The <a href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/main/modes/pong">Pong mode</a> is written to be
@@ -110,6 +92,20 @@
  * - linked_list.h: A basic data structure
  * - trigonometry.h: Fast math based on look up tables
  * - macros.h: Convenient macros like MIN() and MAX()
+ * 
+ * \section espressif_doc Espressif Documentation
+ *
+ * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
+ * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
+ * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
+ * is useful:
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * Reference</a>
+ * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
+ * Datasheet</a>
+ * - <a
+ * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
+ * Technical Reference Manual</a>
  */
 
 //==============================================================================

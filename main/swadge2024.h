@@ -10,7 +10,7 @@
  * function pointer to \c NULL. The function won't be called. All fields must be initialized to something, since an
  * uninitialized field may lead to undefined behavior.
  *
- * \note The details of all confiiguration variables and function pointers can be found in ::swadgeMode_t.
+ * \note The details of all configuration variables and function pointers can be found in ::swadgeMode_t.
  *
  * The top level menu will maintain a list of all available modes and the user can pick the mode to run. This approach
  * is similar to apps. Only one mode may run at a single time, and when it runs it will have full system resources.
