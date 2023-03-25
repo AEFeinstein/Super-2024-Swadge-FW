@@ -3,12 +3,9 @@
  * @author gelakinetic (gelakinetic@gmail.com)
  * @brief An example Pong game
  * @date 2023-03-25
- * 
- * TODO WSGs
- * TODO sound
+ *
  * TODO LEDs
  * TODO networking
- * TODO background graphics
  */
 
 //==============================================================================
@@ -25,7 +22,7 @@
 /// Physics math is done with fixed point numbers where the bottom four bits are the fractional part. It's like Q28.4
 #define DECIMAL_BITS 4
 
-#define BALL_RADIUS   (8 << DECIMAL_BITS)
+#define BALL_RADIUS   (5 << DECIMAL_BITS)
 #define PADDLE_WIDTH  (8 << DECIMAL_BITS)
 #define PADDLE_HEIGHT (40 << DECIMAL_BITS)
 #define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
@@ -90,6 +87,13 @@ typedef struct
     uint16_t btnState;      ///< The button state used for paddle control
     bool paddleRMovingUp;   ///< The CPU's paddle direction on easy mode
     bool isPaused;          ///< true if the game is paused, false if it is running
+
+    wsg_t paddleWsg; ///< A graphic for the paddle
+    wsg_t ballWsg;   ///< A graphic for the ball
+
+    song_t bgm;  ///< Background music
+    song_t hit1; ///< Sound effect for one paddle's hit
+    song_t hit2; ///< Sound effect for the other paddle's hit
 } pong_t;
 
 //==============================================================================
@@ -106,6 +110,7 @@ static void pongGameLoop(int64_t elapsedUs);
 
 static void pongResetGame(bool isInit, uint8_t whoWon);
 static void IncreaseBallVelocity(int16_t velAdd);
+static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void DrawField(void);
 
 //==============================================================================
@@ -144,7 +149,7 @@ swadgeMode_t pongMode = {
     .fnExitMode               = pongExitMode,
     .fnMainLoop               = pongMainLoop,
     .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = NULL,
+    .fnBackgroundDrawCallback = pongBackgroundDrawCallback,
     .fnEspNowRecvCb           = pongEspNowRecvCb,
     .fnEspNowSendCb           = pongEspNowSendCb,
     .fnAdvancedUSB            = NULL,
@@ -170,6 +175,16 @@ static void pongEnterMode(void)
 
     // Load a font
     loadFont("ibm_vga8.font", &pong->ibm, false);
+
+    // Load graphics
+    loadWsg("pball.wsg", &pong->ballWsg, false);
+    loadWsg("ppaddle.wsg", &pong->paddleWsg, false);
+
+    // Load SFX
+    loadSong("gmcc.sng", &pong->bgm, false);
+    pong->bgm.shouldLoop = true;
+    loadSong("block1.sng", &pong->hit1, false);
+    loadSong("block2.sng", &pong->hit2, false);
 
     // Initialize the menu
     pong->menu = initMenu(pongName, &pong->ibm, pongMenuCb);
@@ -207,6 +222,13 @@ static void pongExitMode(void)
     deinitMenu(pong->menu);
     // Free the font
     freeFont(&pong->ibm);
+    // Free graphics
+    freeWsg(&pong->ballWsg);
+    freeWsg(&pong->paddleWsg);
+    // Free the songs
+    freeSong(&pong->bgm);
+    freeSong(&pong->hit1);
+    freeSong(&pong->hit2);
     // Free everything else
     free(pong);
 }
@@ -463,6 +485,9 @@ static void pongGameLoop(int64_t elapsedUs)
 
             // Increase velocity
             IncreaseBallVelocity(1 << DECIMAL_BITS);
+
+            // Play SFX
+            bzrPlaySfx(&pong->hit1);
         }
         // Check for right paddle collision
         else if ((pong->ballVel.x > 0) && circleRectIntersection(pong->ball, pong->paddleR))
@@ -477,6 +502,9 @@ static void pongGameLoop(int64_t elapsedUs)
 
             // Increase velocity
             IncreaseBallVelocity(1 << DECIMAL_BITS);
+
+            // Play SFX
+            bzrPlaySfx(&pong->hit2);
         }
     }
 
@@ -506,6 +534,9 @@ static void pongResetGame(bool isInit, uint8_t whoWon)
         pong->paddleR.y      = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
         pong->paddleR.width  = PADDLE_WIDTH;
         pong->paddleR.height = PADDLE_HEIGHT;
+
+        // Start playing music
+        bzrPlayBgm(&pong->bgm);
     }
     else
     {
@@ -557,13 +588,47 @@ static void IncreaseBallVelocity(int16_t magnitude)
 }
 
 /**
+ * This function is called when the display driver wishes to update a
+ * section of the display.
+ *
+ * @param disp The display to draw to
+ * @param x the x coordinate that should be updated
+ * @param y the x coordinate that should be updated
+ * @param w the width of the rectangle to be updated
+ * @param h the height of the rectangle to be updated
+ * @param up update number
+ * @param numUp update number denominator
+ */
+static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    // Use TURBO drawing mode to draw individual pixels fast
+    SETUP_FOR_TURBO();
+
+    // Draw a grid
+    for (int16_t yp = y; yp < y + h; yp++)
+    {
+        for (int16_t xp = x; xp < x + w; xp++)
+        {
+            if ((0 == xp % 40) || (0 == yp % 40))
+            {
+                TURBO_SET_PIXEL(xp, yp, c110);
+            }
+            else
+            {
+                TURBO_SET_PIXEL(xp, yp, c001);
+            }
+        }
+    }
+}
+
+/**
  * @brief Draw the Pong field to the TFT
  */
 static void DrawField(void)
 {
-    // Clear the display
-    clearPxTft();
+    // No need to clear the display before drawing because it's redrawn by pongBackgroundDrawCallback() each time
 
+#if DRAW_SHAPES
     // Bitshift the ball's location and radius from math coordinates to screen coordinates, then draw it
     drawCircleFilled((pong->ball.x) >> DECIMAL_BITS, (pong->ball.y) >> DECIMAL_BITS,
                      (pong->ball.radius) >> DECIMAL_BITS, c555);
@@ -571,12 +636,23 @@ static void DrawField(void)
     // Bitshift the left paddle's location and radius from math coordinates to screen coordinates, then draw it
     drawRect((pong->paddleL.x >> DECIMAL_BITS), (pong->paddleL.y >> DECIMAL_BITS),
              ((pong->paddleL.x + pong->paddleL.width) >> DECIMAL_BITS),
-             ((pong->paddleL.y + pong->paddleL.height) >> DECIMAL_BITS), c050);
-
+             ((pong->paddleL.y + pong->paddleL.height) >> DECIMAL_BITS), c333);
     // Bitshift the right paddle's location and radius from math coordinates to screen coordinates, then draw it
+
     drawRect((pong->paddleR.x >> DECIMAL_BITS), (pong->paddleR.y >> DECIMAL_BITS),
              ((pong->paddleR.x + pong->paddleR.width) >> DECIMAL_BITS),
-             ((pong->paddleR.y + pong->paddleR.height) >> DECIMAL_BITS), c050);
+             ((pong->paddleR.y + pong->paddleR.height) >> DECIMAL_BITS), c333);
+#else // Draw graphics
+
+    // Draw the ball
+    drawWsgSimple(&pong->ballWsg, (pong->ball.x - pong->ball.radius) >> DECIMAL_BITS,
+                  (pong->ball.y - pong->ball.radius) >> DECIMAL_BITS);
+    // Draw one paddle
+    drawWsg(&pong->paddleWsg, pong->paddleL.x >> DECIMAL_BITS, pong->paddleL.y >> DECIMAL_BITS, false, false, 0);
+    // Draw the other paddle, flipped
+    drawWsg(&pong->paddleWsg, pong->paddleR.x >> DECIMAL_BITS, pong->paddleR.y >> DECIMAL_BITS, true, false, 0);
+
+#endif
 
     // Set up variables to draw text
     char scoreStr[16] = {0};
