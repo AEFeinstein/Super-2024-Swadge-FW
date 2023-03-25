@@ -2,9 +2,9 @@
  *
  * \section btn_design Design Philosophy
  *
- * This component handles both push-buttons and touch-pads. Push-buttons are physical, tactile buttons while touch-pads are
- * touch-sensitive areas on the PCB. Events from push-buttons and touch-pads are processed different ways, but queued in
- * the same queue.
+ * This component handles both push-buttons and touch-pads. Push-buttons are physical, tactile buttons while touch-pads
+ * are touch-sensitive areas on the PCB. Events from push-buttons and touch-pads are processed different ways, but
+ * queued in the same queue.
  *
  * The Swadge mode needs to call checkButtonQueueWrapper(), which calls checkButtonQueue() to receive queued button
  * events. The reason for checkButtonQueueWrapper() is so that the main loop can monitor the button which can be held
@@ -27,8 +27,8 @@
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
  * GPIO</a>.
  *
- * Originally the push-buttons would trigger an interrupt, but we found that to have less reliable results with more glitches
- * than polling.
+ * Originally the push-buttons would trigger an interrupt, but we found that to have less reliable results with more
+ * glitches than polling.
  *
  * Button events used to be delivered to the Swadge mode via a callback.
  * This led to cases where multiple callbacks would occur between a single invocation of that mode's main function.
@@ -38,8 +38,8 @@
  *
  * \section tpad_design Touch-pad Design Philosophy
  *
- * Unlike push-button polling, touch-pads use interrupts to detect events. When a touch-pad event is detected, an interrupt
- * will fire and the new event will be queued in the same queue used for push-buttons.
+ * Unlike push-button polling, touch-pads use interrupts to detect events. When a touch-pad event is detected, an
+ * interrupt will fire and the new event will be queued in the same queue used for push-buttons.
  *
  * In addition to acting as binary buttons, the touch-pad can act as a single analog touch strip. getTouchCentroid() may
  * be called to get the current analog touch value. Changes in the analog position are not reported

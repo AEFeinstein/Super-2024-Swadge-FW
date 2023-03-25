@@ -6,9 +6,9 @@
  *
  * <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/network/esp_now.html">ESP-NOW</a>
- * is a kind of connection-less Wi-Fi communication protocol that is defined by Espressif. This component manages ESP-NOW
- * so that you don't have to. It provides a simple wrapper to broadcast a packet, espNowSend(), and passes all received
- * packets through a callback given to initEspNow().
+ * is a kind of connection-less Wi-Fi communication protocol that is defined by Espressif. This component manages
+ * ESP-NOW so that you don't have to. It provides a simple wrapper to broadcast a packet, espNowSend(), and passes all
+ * received packets through a callback given to initEspNow().
  *
  * Swadges do not use any ESP-NOW security and do not pair with each other using ESP-NOW.
  * All transmissions are broadcasts and all Swadges will receive all other transmissions.
