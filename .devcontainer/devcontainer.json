@@ -7,7 +7,7 @@
 	"features": {
 		"ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
 			"upgradePackages": true,
-			"packages": "build-essential,xorg-dev,libx11-dev,libxinerama-dev,libxext-dev,mesa-common-dev,libglu1-mesa-dev,libasound2-dev,libpulse-dev,libasan8,clang-format,cppcheck,doxygen,python3,python3-pip,python3-venv,cmake"
+			"packages": "build-essential,xorg-dev,libx11-dev,libxinerama-dev,libxext-dev,mesa-common-dev,libglu1-mesa-dev,libasound2-dev,libpulse-dev,libasan8,clang-format,cppcheck,doxygen,python3,python3-pip,python3-venv,cmake,libusb-1.0-0-dev"
 		}
 	},
 	"customizations": {
