@@ -15,9 +15,11 @@ idf_component_register(SRCS "swadge2024.c"
                             "modes/mainMenu/mainMenu.c"
                             "modes/pong/pong.c"
                             "utils/color_utils.c"
+                            "utils/geometry.c"
                             "utils/linked_list.c"
                             "utils/p2pConnection.c"
                             "utils/trigonometry.c"
+                            "utils/vector2d.c"
                     PRIV_REQUIRES hdw-accel
                                   hdw-battmon
                                   hdw-btn

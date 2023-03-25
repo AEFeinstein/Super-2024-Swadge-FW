@@ -91,8 +91,10 @@
  *
  * - linked_list.h: A basic data structure
  * - trigonometry.h: Fast math based on look up tables
+ * - vector2d.h: Basic math for 2D vectors
+ * - geometry.h: Basic math for 2D shapes, like collision checks
  * - macros.h: Convenient macros like MIN() and MAX()
- * 
+ *
  * \section espressif_doc Espressif Documentation
  *
  * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable

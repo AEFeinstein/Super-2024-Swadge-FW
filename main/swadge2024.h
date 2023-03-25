@@ -185,6 +185,8 @@
 #include "linked_list.h"
 #include "macros.h"
 #include "trigonometry.h"
+#include "vector2d.h"
+#include "geometry.h"
 
 /**
  * @struct swadgeMode_t
@@ -254,8 +256,8 @@ typedef struct
      * @brief This function is called when the display driver wishes to update a section of the display.
      *
      * @param disp The display to draw to
-     * @param x the x coordiante that should be updated
-     * @param y the x coordiante that should be updated
+     * @param x the x coordinate that should be updated
+     * @param y the x coordinate that should be updated
      * @param w the width of the rectangle to be updated
      * @param h the height of the rectangle to be updated
      * @param up update number
@@ -288,7 +290,7 @@ typedef struct
      * - if \c isGet == 0, that is a "set" or an "OUT" endpoint, where the Host sends data to the Swadge.
      *
      * @param buffer Pointer to full command
-     * @param length Total length of the buffer (command ID incldued)
+     * @param length Total length of the buffer (command ID included)
      * @param isGet 0 if this is a \c SET_REPORT, 1 if this is a \c GET_REPORT
      * @return The number of bytes returned to the host
      */
