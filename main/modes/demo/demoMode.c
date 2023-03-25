@@ -118,6 +118,7 @@ static void demoEnterMode(void)
  */
 static void demoExitMode(void)
 {
+    p2pDeinit(&dv->p2p);
     freeWsg(&dv->king_donut);
     freeFont(&dv->ibm);
     freeSong(&dv->ode_to_joy);
