@@ -31,7 +31,7 @@
  *
  * MIDI files that are placed in the ./assets/ folder will be automatically converted to SNG files and loaded into the
  * SPIFFS filesystem. SNG files are lists of notes with durations and are compressed with Heatshrink compression. These
- * files can be loaded with loadSong() and must be freed wtih freeSong() when done.
+ * files can be loaded with loadSong() and must be freed with freeSong() when done.
  *
  * \section bzr_example Example
  *

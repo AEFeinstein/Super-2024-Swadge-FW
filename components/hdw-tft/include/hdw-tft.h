@@ -6,8 +6,8 @@
  * href="https://github.com/espressif/esp-idf/tree/v5.0.1/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
  * example</a>.
  *
- * Each pixel in the framebuffer is of type ::paletteColor_t.
- * Even though the TFT supports 16 bit color, a 16 bit framebuffer is too big to have in RAM alongside games and such.
+ * Each pixel in the frame-buffer is of type ::paletteColor_t.
+ * Even though the TFT supports 16 bit color, a 16 bit frame-buffer is too big to have in RAM alongside games and such.
  * Instead, the 8 bit <a href="https://www.rapidtables.com/web/color/Web_Safe.html">Web Safe palette</a> is used, where
  * each RGB channel has six options for a total of 216 colors. The ::paletteColor_t enum has values for all colors in
  * the form of cRGB, where R, G, and B each range from 0 to 5. For example, ::c500 is full red.
@@ -17,12 +17,12 @@
  *
  * You don't need to call initTFT() or deinitTFT(). The system does so at the appropriate time.
  * You don't need to call drawDisplayTft() as it is called automatically after each main loop to draw the current
- * framebuffer to the TFT.
+ * frame-buffer to the TFT.
  *
- * clearPxTft() is used to clear the current framebuffer.
+ * clearPxTft() is used to clear the current frame-buffer.
  * This must be called before drawing a new frame, unless you want to draw over the prior one.
  *
- * setPxTft() and getPxTft() are used to set and get individual pixels in the framebuffer, respectively.
+ * setPxTft() and getPxTft() are used to set and get individual pixels in the frame-buffer, respectively.
  * These are not often used directly as there are helper functions to draw text, shapes, and sprites.
  *
  * disableTFTBacklight() and enableTFTBacklight() may be called to disable and enable the backlight, respectively.
@@ -133,7 +133,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t cb);
 
 #if defined(__XTENSA__)
     /**
-     * Initiaze a variable to set pixels faster than setPxTft()
+     * Initialize a variable to set pixels faster than setPxTft()
      */
     #define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)getPxTftFramebuffer();
 

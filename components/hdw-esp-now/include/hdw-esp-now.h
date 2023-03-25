@@ -6,7 +6,7 @@
  *
  * <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/network/esp_now.html">ESP-NOW</a>
- * is a kind of connectionless Wi-Fi communication protocol that is defined by Espressif. This component manages ESP-NOW
+ * is a kind of connection-less Wi-Fi communication protocol that is defined by Espressif. This component manages ESP-NOW
  * so that you don't have to. It provides a simple wrapper to broadcast a packet, espNowSend(), and passes all received
  * packets through a callback given to initEspNow().
  *
@@ -73,8 +73,8 @@
  * \endcode
  */
 
-#ifndef USER_ESPNOWUTILS_H_
-#define USER_ESPNOWUTILS_H_
+#ifndef USER_ESP_NOW_UTILS_H_
+#define USER_ESP_NOW_UTILS_H_
 
 //==============================================================================
 // Includes
@@ -95,8 +95,8 @@
 typedef enum __attribute__((packed))
 {
     NO_WIFI,           ///< WiFi is not used at all
-    ESP_NOW,           ///< ESP-NOW packets are delievered to Swadge modes from the main loop
-    ESP_NOW_IMMEDIATE, ///< ESP-NOW packets are delievered to Swadge modes from the interrupt
+    ESP_NOW,           ///< ESP-NOW packets are delivered to Swadge modes from the main loop
+    ESP_NOW_IMMEDIATE, ///< ESP-NOW packets are delivered to Swadge modes from the interrupt
 } wifiMode_t;
 
 //==============================================================================
@@ -129,4 +129,4 @@ void espNowUseSerial(bool crossoverPins);
 void espNowSend(const char* data, uint8_t len);
 void checkEspNowRxQueue(void);
 
-#endif /* USER_ESPNOWUTILS_H_ */
+#endif /* USER_ESP_NOW_UTILS_H_ */

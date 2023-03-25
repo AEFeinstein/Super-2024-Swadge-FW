@@ -2,7 +2,7 @@
  *
  * \section palette_design Design Philosophy
  *
- * Even though the TFT supports 16 bit color, a 16 bit framebuffer is too big to have in RAM alongside games and such.
+ * Even though the TFT supports 16 bit color, a 16 bit frame-buffer is too big to have in RAM alongside games and such.
  * Instead, the 8 bit <a href="https://www.rapidtables.com/web/color/Web_Safe.html">Web Safe palette</a> is used, where
  * each RGB channel has six options for a total of 216 colors. The ::paletteColor_t enum has values for all colors in
  * the form of cRGB, where R, G, and B each range from 0 to 5. For example, ::c500 is full red.

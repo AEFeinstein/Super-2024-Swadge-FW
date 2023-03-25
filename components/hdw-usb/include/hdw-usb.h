@@ -43,7 +43,7 @@
  * @brief Function typedef for a callback which will send USB SET_REPORT and GET_REPORT messages to a Swadge mode
  *
  * @param buffer Pointer to full command
- * @param length Total length of the buffer (command ID incldued)
+ * @param length Total length of the buffer (command ID included)
  * @param isGet 0 if this is a \c SET_REPORT, 1 if this is a \c GET_REPORT
  * @return The number of bytes returned to the host
  */

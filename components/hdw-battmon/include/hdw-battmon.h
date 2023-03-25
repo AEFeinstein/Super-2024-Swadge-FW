@@ -17,7 +17,7 @@
  *
  * You don't need to call initBattmon() or deinitBattmon(). The system does at the appropriate times.
  *
- * readBattmon() should be called to read the instantanous battery voltage.
+ * readBattmon() should be called to read the instantaneous battery voltage.
  *
  * \section battmon_example Example
  *
