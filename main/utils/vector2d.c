@@ -81,7 +81,7 @@ int32_t dotVec2d(vec_t left, vec_t right)
  * @brief Rotate a vector by a number of degrees and return the result
  *
  * @param vector The vector to rotate
- * @param angle The angle to rotate clockwise by, in degrees
+ * @param degree The angle to rotate clockwise by, in degrees
  * @return The rotated vector
  */
 vec_t rotateVec2d(vec_t vector, int32_t degree)

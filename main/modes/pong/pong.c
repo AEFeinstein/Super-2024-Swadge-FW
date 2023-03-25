@@ -1,3 +1,16 @@
+/**
+ * @file pong.c
+ * @author gelakinetic (gelakinetic@gmail.com)
+ * @brief An example Pong game
+ * @date 2023-03-25
+ * 
+ * TODO WSGs
+ * TODO sound
+ * TODO LEDs
+ * TODO networking
+ * TODO background graphics
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -9,6 +22,7 @@
 // Defines
 //==============================================================================
 
+/// Physics math is done with fixed point numbers where the bottom four bits are the fractional part. It's like Q28.4
 #define DECIMAL_BITS 4
 
 #define BALL_RADIUS   (8 << DECIMAL_BITS)
@@ -23,12 +37,18 @@
 // Enums
 //==============================================================================
 
+/**
+ * @brief Enum of screens that may be shown in pong mode
+ */
 typedef enum
 {
     PONG_MENU,
     PONG_GAME,
 } pongScreen_t;
 
+/**
+ * @brief Enum of control schemes for a pong game
+ */
 typedef enum
 {
     PONG_BUTTON,
@@ -36,29 +56,40 @@ typedef enum
     PONG_TILT,
 } pongControl_t;
 
+/**
+ * @brief Enum of CPU difficulties
+ */
+typedef enum
+{
+    PONG_EASY,
+    PONG_MEDIUM,
+    PONG_HARD,
+} pongDifficulty_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
 
 typedef struct
 {
-    int32_t x;
-    int32_t y;
-} vec_t;
+    menu_t* menu;        ///< The menu structure
+    font_t ibm;          ///< The font used in the menu and game
+    p2pInfo p2p;         ///< Peer to peer connectivity info, currently unused
+    pongScreen_t screen; ///< The screen being displayed
 
-typedef struct
-{
-    menu_t* menu;
-    font_t ibm;
-    p2pInfo p2p;
-    vec_t ballLoc;
-    vec_t ballVel;
-    pongScreen_t screen;
-    pongControl_t control;
-    int32_t paddleLocL;
-    int32_t paddleLocR;
-    uint32_t restartTimerUs;
-    uint16_t btnState;
+    pongControl_t control;       ///< The selected control scheme
+    pongDifficulty_t difficulty; ///< The selected CPU difficulty
+    uint8_t score[2];            ///< The score for the game
+
+    rectangle_t paddleL; ///< The left paddle
+    rectangle_t paddleR; ///< The right paddle
+    circle_t ball;       ///< The ball
+    vec_t ballVel;       ///< The ball's velocity
+
+    int32_t restartTimerUs; ///< A timer that counts down before the game begins
+    uint16_t btnState;      ///< The button state used for paddle control
+    bool paddleRMovingUp;   ///< The CPU's paddle direction on easy mode
+    bool isPaused;          ///< true if the game is paused, false if it is running
 } pong_t;
 
 //==============================================================================
@@ -73,25 +104,36 @@ static void pongEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t stat
 static void pongMenuCb(const char* label, bool selected);
 static void pongGameLoop(int64_t elapsedUs);
 
-static void ResetGame(bool isInit, uint8_t whoWon);
-static void RotateBall(int16_t degree);
-static void IncreaseSpeed(int16_t speedM);
+static void pongResetGame(bool isInit, uint8_t whoWon);
+static void IncreaseBallVelocity(int16_t velAdd);
 static void DrawField(void);
-static bool checkCircleRectCollision(int32_t cx, int32_t cy, int32_t radius, int32_t rx, int32_t ry, int32_t rw,
-                                     int32_t rh);
 
 //==============================================================================
-// Variables
+// Strings
 //==============================================================================
 
-/// @brief The name for Pong mode, a const char
-const char pongName[] = "Pong";
+/* Design Pattern!
+ * These strings are all declared 'const' because they do not change, so that they are placed in ROM, not RAM.
+ * Lengths are not explicitly given so the compiler can figure it out.
+ */
+
+static const char pongName[] = "Pong";
 
 static const char pongCtrlButton[] = "Button Control";
 static const char pongCtrlTouch[]  = "Touch Control";
 static const char pongCtrlTilt[]   = "Tilt Control";
 
-/// @brief The Swadge mode for Pong
+static const char pongDiffEasy[]   = "Easy";
+static const char pongDiffMedium[] = "Medium";
+static const char pongDiffHard[]   = "Impossible";
+
+static const char pongPaused[] = "Paused";
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+/// The Swadge mode for Pong
 swadgeMode_t pongMode = {
     .modeName                 = pongName,
     .wifiMode                 = ESP_NOW,
@@ -108,7 +150,7 @@ swadgeMode_t pongMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-/// @brief All state information for the Pong mode. This whole struct is calloc()'d and free()'d so that Pong is only
+/// All state information for the Pong mode. This whole struct is calloc()'d and free()'d so that Pong is only
 /// using memory while it is being played
 pong_t* pong = NULL;
 
@@ -117,76 +159,119 @@ pong_t* pong = NULL;
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Enter Pong mode, allocate required memory, and initialize required variables
  *
  */
 static void pongEnterMode(void)
 {
-    // Allocate and clear all memory for this mode
+    // Allocate and clear all memory for this mode. All the variables are contained in a single struct for convenience.
+    // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
     pong = calloc(1, sizeof(pong_t));
 
     // Load a font
     loadFont("ibm_vga8.font", &pong->ibm, false);
 
-    // Allocate the menu
+    // Initialize the menu
     pong->menu = initMenu(pongName, &pong->ibm, pongMenuCb);
 
-    // Add control schemes to the menu
-    addSingleItemToMenu(pong->menu, pongCtrlButton);
-    addSingleItemToMenu(pong->menu, pongCtrlTouch);
-    addSingleItemToMenu(pong->menu, pongCtrlTilt);
+    // These are the possible control schemes
+    const char* controlSchemes[] = {
+        pongCtrlButton,
+        pongCtrlTouch,
+        pongCtrlTilt,
+    };
+
+    // Add each control scheme to the menu. Each control scheme has a submenu to select difficulty
+    for (uint8_t i = 0; i < ARRAY_SIZE(controlSchemes); i++)
+    {
+        // Add a control scheme to the menu. This opens a submenu with difficulties
+        pong->menu = startSubMenu(pong->menu, controlSchemes[i]);
+        // Add difficulties to the submenu
+        addSingleItemToMenu(pong->menu, pongDiffEasy);
+        addSingleItemToMenu(pong->menu, pongDiffMedium);
+        addSingleItemToMenu(pong->menu, pongDiffHard);
+        // End the submenu
+        pong->menu = endSubMenu(pong->menu);
+    }
 
     // Set the mode to menu mode
     pong->screen = PONG_MENU;
 }
 
 /**
- * This function is called when the mode is exited. It should free any allocated memory.
+ * This function is called when the mode is exited. It deinitializes variables and frees all memory.
  */
 static void pongExitMode(void)
 {
+    // Deinitialize the menu
+    deinitMenu(pong->menu);
+    // Free the font
+    freeFont(&pong->ibm);
+    // Free everything else
     free(pong);
 }
 
 /**
- * @brief TODO
+ * @brief This callback function is called when an item is selected from the menu
  *
- * @param label
- * @param selected
+ * @param label The item that was selected from the menu
+ * @param selected True if the item was selected with the A button, false if this is a multi-item which scrolled to
  */
 static void pongMenuCb(const char* label, bool selected)
 {
+    // Only care about selected items, not scrolled-to items.
+    // The same callback is called from the menu and submenu with no indication of which menu it was called from
+    // Note that the label arg will be one of the strings used in startSubMenu() or addSingleItemToMenu()
     if (selected)
     {
+        // Save what control scheme is selected (first-level menu)
         if (label == pongCtrlButton)
         {
-            ResetGame(true, 0);
-            pong->screen  = PONG_GAME;
             pong->control = PONG_BUTTON;
         }
+        // Save what control scheme is selected (first-level menu)
         else if (label == pongCtrlTouch)
         {
-            ResetGame(true, 0);
-            pong->screen  = PONG_GAME;
             pong->control = PONG_TOUCH;
         }
+        // Save what control scheme is selected (first-level menu)
         else if (label == pongCtrlTilt)
         {
-            ResetGame(true, 0);
-            pong->screen  = PONG_GAME;
             pong->control = PONG_TILT;
+        }
+        // Save what difficulty is selected and start the game (second-level menu)
+        else if (label == pongDiffEasy)
+        {
+            pong->difficulty = PONG_EASY;
+            pongResetGame(true, 0);
+            pong->screen = PONG_GAME;
+        }
+        // Save what difficulty is selected and start the game (second-level menu)
+        else if (label == pongDiffMedium)
+        {
+            pong->difficulty = PONG_MEDIUM;
+            pongResetGame(true, 0);
+            pong->screen = PONG_GAME;
+        }
+        // Save what difficulty is selected and start the game (second-level menu)
+        else if (label == pongDiffHard)
+        {
+            pong->difficulty = PONG_HARD;
+            pongResetGame(true, 0);
+            pong->screen = PONG_GAME;
         }
     }
 }
 
 /**
- * @brief TODO
+ * @brief This function is called periodically and frequently. It will either draw the menu or play the game, depending
+ * on which screen is currently being displayed
  *
- * @param elapsedUs
+ * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
  */
 static void pongMainLoop(int64_t elapsedUs)
 {
-    // Run the main loop depending on the screen being displayed
+    // Pick what runs and draws depending on the screen being displayed
     switch (pong->screen)
     {
         case PONG_MENU:
@@ -195,6 +280,7 @@ static void pongMainLoop(int64_t elapsedUs)
             buttonEvt_t evt = {0};
             while (checkButtonQueueWrapper(&evt))
             {
+                // Pass button events to the menu
                 pong->menu = menuButton(pong->menu, evt);
             }
 
@@ -204,7 +290,7 @@ static void pongMainLoop(int64_t elapsedUs)
         }
         case PONG_GAME:
         {
-            // Draw the game
+            // Run the main game loop. This will also process button events
             pongGameLoop(elapsedUs);
             break;
         }
@@ -212,20 +298,44 @@ static void pongMainLoop(int64_t elapsedUs)
 }
 
 /**
- * @brief TODO
+ * @brief This function is called periodically and frequently. It runs the actual game, including processing inputs,
+ * physics updates and drawing to the display.
  *
- * @param elapsedUs
+ * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
  */
 static void pongGameLoop(int64_t elapsedUs)
 {
-    // Always process button events, so the main menu button can be captured
+    // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        // Save the button state
         pong->btnState = evt.state;
+
+        // Check if the pause button was pressed
+        if (evt.down && (PB_START == evt.button))
+        {
+            // Toggle pause
+            pong->isPaused = !pong->isPaused;
+        }
     }
 
-    // TODO count-in timer
+    // If the game is paused
+    if (pong->isPaused)
+    {
+        // Just draw and return
+        DrawField();
+        return;
+    }
+
+    // While the restart timer is active
+    while (pong->restartTimerUs > 0)
+    {
+        // Decrement the timer and draw the field, but don't run game logic
+        pong->restartTimerUs -= elapsedUs;
+        DrawField();
+        return;
+    }
 
     // Move the paddle depending on the chosen control scheme
     switch (pong->control)
@@ -233,14 +343,14 @@ static void pongGameLoop(int64_t elapsedUs)
         default:
         case PONG_BUTTON:
         {
-            // Move the player paddle
+            // Move the player paddle if a button is currently down
             if (pong->btnState & PB_UP)
             {
-                pong->paddleLocL = MAX(pong->paddleLocL - (5 << DECIMAL_BITS), 0);
+                pong->paddleL.y = MAX(pong->paddleL.y - (5 << DECIMAL_BITS), 0);
             }
             else if (pong->btnState & PB_DOWN)
             {
-                pong->paddleLocL = MIN(pong->paddleLocL + (5 << DECIMAL_BITS), FIELD_HEIGHT - PADDLE_HEIGHT);
+                pong->paddleL.y = MIN(pong->paddleL.y + (5 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleL.height);
             }
             break;
         }
@@ -250,8 +360,8 @@ static void pongGameLoop(int64_t elapsedUs)
             int32_t centerVal, intensityVal;
             if (getTouchCentroid(&centerVal, &intensityVal))
             {
-                // If there is a touch, move the paddle to that location
-                pong->paddleLocL = (centerVal * (FIELD_HEIGHT - PADDLE_HEIGHT)) / 1024;
+                // If there is a touch, move the paddle to that location of the touch
+                pong->paddleL.y = (centerVal * (FIELD_HEIGHT - pong->paddleL.height)) / 1024;
             }
             break;
         }
@@ -262,210 +372,188 @@ static void pongGameLoop(int64_t elapsedUs)
             // Get the current acceleration
             if (ESP_OK == accelGetAccelVec(&a_x, &a_y, &a_z))
             {
-                pong->paddleLocL
-                    = CLAMP(((a_x + 100) * (FIELD_HEIGHT - PADDLE_HEIGHT)) / 350, 0, (FIELD_HEIGHT - PADDLE_HEIGHT));
+                // Move the paddle to the current tilt location
+                pong->paddleL.y = CLAMP(((a_x + 100) * (FIELD_HEIGHT - pong->paddleL.height)) / 350, 0,
+                                        (FIELD_HEIGHT - pong->paddleL.height));
             }
             break;
         }
     }
 
-    // TODO Move the computer paddle
-    pong->paddleLocR = CLAMP(pong->ballLoc.y - PADDLE_HEIGHT / 2, 0, FIELD_HEIGHT - PADDLE_HEIGHT);
+    // Move the computer paddle
+    switch (pong->difficulty)
+    {
+        default:
+        case PONG_EASY:
+        {
+            // Blindly move up and down
+            if (pong->paddleRMovingUp)
+            {
+                pong->paddleR.y = MAX(pong->paddleR.y - (4 << DECIMAL_BITS), 0);
+                // If the top boundary was hit
+                if (0 == pong->paddleR.y)
+                {
+                    // Start moving down
+                    pong->paddleRMovingUp = false;
+                }
+            }
+            else
+            {
+                pong->paddleR.y = MIN(pong->paddleR.y + (4 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleR.height);
+                // If the bottom boundary was hit
+                if ((FIELD_HEIGHT - pong->paddleR.height) == pong->paddleR.y)
+                {
+                    // Start moving up
+                    pong->paddleRMovingUp = true;
+                }
+            }
+            break;
+        }
+        case PONG_MEDIUM:
+        {
+            // Move towards the ball, slowly
+            if (pong->paddleR.y + (pong->paddleR.height / 2) < pong->ball.y)
+            {
+                pong->paddleR.y = MIN(pong->paddleR.y + (2 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleR.height);
+            }
+            else
+            {
+                pong->paddleR.y = MAX(pong->paddleR.y - (2 << DECIMAL_BITS), 0);
+            }
+            break;
+        }
+        case PONG_HARD:
+        {
+            // Never miss
+            pong->paddleR.y = CLAMP(pong->ball.y - pong->paddleR.height / 2, 0, FIELD_HEIGHT - pong->paddleR.height);
+            break;
+        }
+    }
 
     // Update the ball's position
-    pong->ballLoc.x += (pong->ballVel.x * elapsedUs) / 100000;
-    pong->ballLoc.y += (pong->ballVel.y * elapsedUs) / 100000;
+    pong->ball.x += (pong->ballVel.x * elapsedUs) / 100000;
+    pong->ball.y += (pong->ballVel.y * elapsedUs) / 100000;
 
-    // TODO victory check
-    // TODO score
-
-    // Checks for top and bottom wall collisons
-    if (((pong->ballLoc.y - BALL_RADIUS) < 0 && pong->ballVel.y < 0)
-        || ((pong->ballLoc.y + BALL_RADIUS) > FIELD_HEIGHT && pong->ballVel.y > 0))
+    // Check for goals
+    if (pong->ball.x < 0 || pong->ball.x > FIELD_WIDTH)
     {
-        // Reverse direction
-        pong->ballVel.y = -pong->ballVel.y;
-    }
-
-    // check for game over
-    if (pong->ballLoc.x < 0 || pong->ballLoc.x > FIELD_WIDTH)
-    {
-        ResetGame(false, pong->ballLoc.x < 0 ? 0 : 1);
-        DrawField();
-        return;
-    }
-
-    // Check for left paddle collision
-    if ((pong->ballVel.x < 0)
-        && checkCircleRectCollision(pong->ballLoc.x, pong->ballLoc.y, BALL_RADIUS, 0, pong->paddleLocL, PADDLE_WIDTH,
-                                    PADDLE_HEIGHT))
-    {
-        // Reverse direction
-        pong->ballVel.x = -pong->ballVel.x;
-
-        // Apply extra rotation depending on part of the paddle hit
-        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
-        int16_t diff = pong->ballLoc.y - (pong->paddleLocL + PADDLE_HEIGHT / 2);
-        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
-        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
-
-        // Increase speed
-        IncreaseSpeed(1 << DECIMAL_BITS);
-    }
-    // Check for right paddle collision
-    else if ((pong->ballVel.x > 0)
-             && checkCircleRectCollision(pong->ballLoc.x, pong->ballLoc.y, BALL_RADIUS, FIELD_WIDTH - PADDLE_WIDTH,
-                                         pong->paddleLocR, PADDLE_WIDTH, PADDLE_HEIGHT))
-    {
-        // Reverse direction
-        pong->ballVel.x = -pong->ballVel.x;
-
-        // Apply extra rotation depending on part of the paddle hit
-        // range of diff is -PADDLE_SIZE/2 to PADDLE_SIZE/2
-        int16_t diff = pong->ballLoc.y - (pong->paddleLocR + PADDLE_HEIGHT / 2);
-        // rotate 45deg at edge of paddle, 0deg in middle, linear in between
-        RotateBall((45 * diff) / (PADDLE_HEIGHT / 2));
-
-        // Increase speed
-        IncreaseSpeed(1 << DECIMAL_BITS);
-    }
-
-    DrawField();
-}
-
-/**
- * @brief CIRCLE/RECTANGLE
- *
- * @param cx
- * @param cy
- * @param radius
- * @param rx
- * @param ry
- * @param rw
- * @param rh
- * @return true
- * @return false
- */
-static bool checkCircleRectCollision(int32_t cx, int32_t cy, int32_t radius, int32_t rx, int32_t ry, int32_t rw,
-                                     int32_t rh)
-{
-    // temporary variables to set edges for testing
-    int32_t testX = cx;
-    int32_t testY = cy;
-
-    // which edge is closest?
-    if (cx < rx)
-    {
-        // test left edge
-        testX = rx;
-    }
-    else if (cx > rx + rw)
-    {
-        // right edge
-        testX = rx + rw;
-    }
-
-    if (cy < ry)
-    {
-        // top edge
-        testY = ry;
-    }
-    else if (cy > ry + rh)
-    {
-        // bottom edge
-        testY = ry + rh;
-    }
-
-    // get distance from closest edges
-    int32_t distX    = cx - testX;
-    int32_t distY    = cy - testY;
-    int32_t distance = (distX * distX) + (distY * distY);
-
-    // if the distance is less than the radius, collision!
-    if (distance <= radius * radius)
-    {
-        return true;
-    }
-    return false;
-}
-
-/**
- * @brief TODO
- *
- * @param isInit
- * @param whoWon
- */
-static void ResetGame(bool isInit, uint8_t whoWon)
-{
-    if (isInit)
-    {
-        pong->paddleLocL = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
-        pong->paddleLocR = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
-    }
-    pong->restartTimerUs = 1000000;
-    pong->ballLoc.x      = (FIELD_WIDTH) / 2;
-    pong->ballLoc.y      = (FIELD_HEIGHT) / 2;
-    if (whoWon)
-    {
-        pong->ballVel.x = (5 << DECIMAL_BITS);
+        // Reset the game. This keeps score.
+        pongResetGame(false, pong->ball.x < 0 ? 1 : 0);
     }
     else
     {
-        pong->ballVel.x = -(5 << DECIMAL_BITS);
+        // Checks for top and bottom wall collisions
+        if (((pong->ball.y - pong->ball.radius) < 0 && pong->ballVel.y < 0)
+            || ((pong->ball.y + pong->ball.radius) > FIELD_HEIGHT && pong->ballVel.y > 0))
+        {
+            // Reverse direction
+            pong->ballVel.y = -pong->ballVel.y;
+        }
+
+        // If a goal was not scored,c heck for left paddle collision
+        if ((pong->ballVel.x < 0) && circleRectIntersection(pong->ball, pong->paddleL))
+        {
+            // Reverse direction
+            pong->ballVel.x = -pong->ballVel.x;
+
+            // Apply extra rotation depending on part of the paddle hit
+            int16_t diff = pong->ball.y - (pong->paddleL.y + pong->paddleL.height / 2);
+            // rotate 45deg at edge of paddle, 0deg in middle, linear in between
+            pong->ballVel = rotateVec2d(pong->ballVel, (45 * diff) / (pong->paddleL.height / 2));
+
+            // Increase velocity
+            IncreaseBallVelocity(1 << DECIMAL_BITS);
+        }
+        // Check for right paddle collision
+        else if ((pong->ballVel.x > 0) && circleRectIntersection(pong->ball, pong->paddleR))
+        {
+            // Reverse direction
+            pong->ballVel.x = -pong->ballVel.x;
+
+            // Apply extra rotation depending on part of the paddle hit
+            int16_t diff = pong->ball.y - (pong->paddleR.y + pong->paddleR.height / 2);
+            // rotate 45deg at edge of paddle, 0deg in middle, linear in between
+            pong->ballVel = rotateVec2d(pong->ballVel, -(45 * diff) / (pong->paddleR.height / 2));
+
+            // Increase velocity
+            IncreaseBallVelocity(1 << DECIMAL_BITS);
+        }
     }
-    uint8_t initY = esp_random() % 8;
-    if (initY == 4)
-    {
-        initY++;
-    }
-    pong->ballVel.y = (initY - 4) << DECIMAL_BITS;
+
+    // Draw the field
     DrawField();
 }
 
 /**
- * @brief Rotate the ball in degrees (-360 -> 359)
+ * @brief Reset the pong game variables
  *
- * @param degree
+ * @param isInit True if this is the first time this is being called, false if it is reset after a player scores
+ * @param whoWon The player who scored a point, either 0 or 1
  */
-static void RotateBall(int16_t degree)
+static void pongResetGame(bool isInit, uint8_t whoWon)
 {
-    // printf("rotate %" PRId16 ": ", degree);
-    while (degree < 0)
+    // Set different variables based on initialization
+    if (isInit)
     {
-        degree += 360;
+        // Set up the left paddle
+        pong->paddleL.x      = 0;
+        pong->paddleL.y      = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
+        pong->paddleL.width  = PADDLE_WIDTH;
+        pong->paddleL.height = PADDLE_HEIGHT;
+
+        // Set up the right paddle
+        pong->paddleR.x      = FIELD_WIDTH - PADDLE_WIDTH;
+        pong->paddleR.y      = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
+        pong->paddleR.width  = PADDLE_WIDTH;
+        pong->paddleR.height = PADDLE_HEIGHT;
     }
-    while (degree > 359)
+    else
     {
-        degree -= 360;
+        // Tally the score
+        pong->score[whoWon]++;
     }
 
-    int16_t sin  = getSin1024(degree);
-    int16_t cos  = getCos1024(degree);
-    int32_t oldX = pong->ballVel.x;
-    int32_t oldY = pong->ballVel.y;
+    // Set the restart timer
+    pong->restartTimerUs = 2000000;
 
-    // printf("[%3d %3d] -> ", pong->ballVel.x, pong->ballVel.y);
-    pong->ballVel.x = ((oldX * cos) - (oldY * sin)) / 1024;
-    pong->ballVel.y = ((oldX * sin) + (oldY * cos)) / 1024;
-    // printf("[%3d %3d]\n", pong->ballVel.x, pong->ballVel.y);
+    // Set the ball variables
+    pong->ball.x      = (FIELD_WIDTH) / 2;
+    pong->ball.y      = (FIELD_HEIGHT) / 2;
+    pong->ball.radius = BALL_RADIUS;
+
+    // Give the ball initial velocity to the top right
+    pong->ballVel.x = (4 << DECIMAL_BITS);
+    pong->ballVel.y = -(4 << DECIMAL_BITS);
+
+    // Rotate up to 90 degrees, for some randomness
+    pong->ballVel = rotateVec2d(pong->ballVel, esp_random() % 90);
+
+    // Determine the direction of the serve based on who scored last
+    if (whoWon)
+    {
+        pong->ballVel.x = -pong->ballVel.x;
+    }
 }
 
 /**
- * @brief Apply a multiplier to the velocity.
- * TODO make this additive instead?
+ * @brief Increase the ball's velocity by a fixed amount
  *
- * @param speedM
+ * @param magnitude The magnitude velocity to add to the ball
  */
-static void IncreaseSpeed(int16_t speedM)
+static void IncreaseBallVelocity(int16_t magnitude)
 {
-    int32_t denom      = ABS(pong->ballVel.x) + ABS(pong->ballVel.y);
-    int32_t xComponent = (speedM * pong->ballVel.x) / denom;
-    int32_t yComponent = (speedM * pong->ballVel.y) / denom;
+    if (sqMagVec2d(pong->ballVel) < (SPEED_LIMIT * SPEED_LIMIT))
+    {
+        // Create a vector in the same direction as pong->ballVel with the given magnitude
+        int32_t denom  = ABS(pong->ballVel.x) + ABS(pong->ballVel.y);
+        vec_t velBoost = {
+            .x = (magnitude * pong->ballVel.x) / denom,
+            .y = (magnitude * pong->ballVel.y) / denom,
+        };
 
-    // printf("Speedup [%3d %3d] + [%3d %3d] = ", xComponent, yComponent, pong->ballVel.x, pong->ballVel.y);
-    pong->ballVel.x = CLAMP((pong->ballVel.x + xComponent), -SPEED_LIMIT, SPEED_LIMIT);
-    pong->ballVel.y = CLAMP((pong->ballVel.y + yComponent), -SPEED_LIMIT, SPEED_LIMIT);
-    // printf("[%3d %3d]\n", pong->ballVel.x, pong->ballVel.y);
+        // Add the vectors together
+        pong->ballVel = addVec2d(pong->ballVel, velBoost);
+    }
 }
 
 /**
@@ -473,13 +561,59 @@ static void IncreaseSpeed(int16_t speedM)
  */
 static void DrawField(void)
 {
+    // Clear the display
     clearPxTft();
-    drawCircleFilled((pong->ballLoc.x) >> DECIMAL_BITS, (pong->ballLoc.y) >> DECIMAL_BITS, BALL_RADIUS >> DECIMAL_BITS,
-                     c555);
-    drawRect(0, (pong->paddleLocL >> DECIMAL_BITS), PADDLE_WIDTH >> DECIMAL_BITS,
-             (pong->paddleLocL + PADDLE_HEIGHT) >> DECIMAL_BITS, c050);
-    drawRect((FIELD_WIDTH - PADDLE_WIDTH) >> DECIMAL_BITS, (pong->paddleLocR) >> DECIMAL_BITS,
-             FIELD_WIDTH >> DECIMAL_BITS, (pong->paddleLocR + PADDLE_HEIGHT) >> DECIMAL_BITS, c005);
+
+    // Bitshift the ball's location and radius from math coordinates to screen coordinates, then draw it
+    drawCircleFilled((pong->ball.x) >> DECIMAL_BITS, (pong->ball.y) >> DECIMAL_BITS,
+                     (pong->ball.radius) >> DECIMAL_BITS, c555);
+
+    // Bitshift the left paddle's location and radius from math coordinates to screen coordinates, then draw it
+    drawRect((pong->paddleL.x >> DECIMAL_BITS), (pong->paddleL.y >> DECIMAL_BITS),
+             ((pong->paddleL.x + pong->paddleL.width) >> DECIMAL_BITS),
+             ((pong->paddleL.y + pong->paddleL.height) >> DECIMAL_BITS), c050);
+
+    // Bitshift the right paddle's location and radius from math coordinates to screen coordinates, then draw it
+    drawRect((pong->paddleR.x >> DECIMAL_BITS), (pong->paddleR.y >> DECIMAL_BITS),
+             ((pong->paddleR.x + pong->paddleR.width) >> DECIMAL_BITS),
+             ((pong->paddleR.y + pong->paddleR.height) >> DECIMAL_BITS), c050);
+
+    // Set up variables to draw text
+    char scoreStr[16] = {0};
+    int16_t tWidth;
+
+    // Render a number to a string
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRIu8, pong->score[0]);
+    // Measure the width of the score string
+    tWidth = textWidth(&pong->ibm, scoreStr);
+    // Draw the score string to the display, centered at (TFT_WIDTH / 4)
+    drawText(&pong->ibm, c555, scoreStr, (TFT_WIDTH / 4) - (tWidth / 2), 0);
+
+    // Render a number to a string
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRIu8, pong->score[1]);
+    // Measure the width of the score string
+    tWidth = textWidth(&pong->ibm, scoreStr);
+    // Draw the score string to the display, centered at ((3 * TFT_WIDTH) / 4)
+    drawText(&pong->ibm, c555, scoreStr, ((3 * TFT_WIDTH) / 4) - (tWidth / 2), 0);
+
+    // If the restart timer is active, draw it
+    if (pong->isPaused)
+    {
+        // Measure the width of the time string
+        tWidth = textWidth(&pong->ibm, pongPaused);
+        // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+        drawText(&pong->ibm, c555, pongPaused, ((TFT_WIDTH - tWidth) / 2), 0);
+    }
+    else if (pong->restartTimerUs > 0)
+    {
+        // Render the time to a string
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "%01" PRId32 ".%03" PRId32, pong->restartTimerUs / 1000000,
+                 (pong->restartTimerUs / 1000) % 1000);
+        // Measure the width of the time string
+        tWidth = textWidth(&pong->ibm, scoreStr);
+        // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+        drawText(&pong->ibm, c555, scoreStr, ((TFT_WIDTH - tWidth) / 2), 0);
+    }
 }
 
 /**

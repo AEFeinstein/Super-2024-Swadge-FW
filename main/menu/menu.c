@@ -406,7 +406,8 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 // Handle A button presses
                 if (item->subMenu)
                 {
-                    // If this item has a submenu, enter it
+                    // If this item has a submenu, call the callback, then enter it
+                    menu->cbFunc(item->label, true);
                     return item->subMenu;
                 }
                 else if (item->label == mnuBackStr)

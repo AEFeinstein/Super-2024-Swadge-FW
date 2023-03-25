@@ -3,11 +3,13 @@
  * \section menu_design Design Philosophy
  *
  * Menus are versatile ways to construct a UI where the user can select text labels.
+ *
  * Menus are vertically scrollable and may have any number of rows.
- *
  * Each row in the menu can be a single item selection, a horizontally scrolling multi-item selection, or a submenu.
- *
  * Menus can have any number of submenus.
+ *
+ * When a menu is initialized a callback function must be provided. When menu options are selected, submenus are
+ * entered, or multi-item selections are scrolled, the callback is called.
  *
  * \section menu_usage Usage
  *
