@@ -4,7 +4,6 @@
  * @brief An example Pong game
  * @date 2023-03-25
  *
- * TODO LEDs
  * TODO networking
  */
 
@@ -94,6 +93,10 @@ typedef struct
     song_t bgm;  ///< Background music
     song_t hit1; ///< Sound effect for one paddle's hit
     song_t hit2; ///< Sound effect for the other paddle's hit
+
+    led_t ledL;           ///< The left LED color
+    led_t ledR;           ///< The right LED color
+    int32_t ledFadeTimer; ///< The timer to fade LEDs
 } pong_t;
 
 //==============================================================================
@@ -109,9 +112,14 @@ static void pongMenuCb(const char* label, bool selected);
 static void pongGameLoop(int64_t elapsedUs);
 
 static void pongResetGame(bool isInit, uint8_t whoWon);
-static void IncreaseBallVelocity(int16_t velAdd);
+static void pongFadeLeds(int64_t elapsedUs);
+static void pongControlPlayerPaddle(void);
+static void pongControlCpuPaddle(void);
+static void pongUpdatePhysics(int64_t elapsedUs);
+static void pongIncreaseBallVelocity(int16_t velAdd);
+
 static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void DrawField(void);
+static void pongDrawField(void);
 
 //==============================================================================
 // Strings
@@ -346,7 +354,7 @@ static void pongGameLoop(int64_t elapsedUs)
     if (pong->isPaused)
     {
         // Just draw and return
-        DrawField();
+        pongDrawField();
         return;
     }
 
@@ -355,10 +363,69 @@ static void pongGameLoop(int64_t elapsedUs)
     {
         // Decrement the timer and draw the field, but don't run game logic
         pong->restartTimerUs -= elapsedUs;
-        DrawField();
+        pongDrawField();
         return;
     }
 
+    // Do update each loop
+    pongFadeLeds(elapsedUs);
+    pongControlPlayerPaddle();
+    pongControlCpuPaddle();
+    pongUpdatePhysics(elapsedUs);
+
+    // Draw the field
+    pongDrawField();
+}
+
+/**
+ * @brief Fade the LEDs at a consistent rate over time
+ *
+ * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
+ */
+static void pongFadeLeds(int64_t elapsedUs)
+{
+    // This timer fades out LEDs. The fade is checked every 10ms
+    // The pattern of incrementing a variable by elapsedUs, then decrementing it when it accumulates
+    pong->ledFadeTimer += elapsedUs;
+    while (pong->ledFadeTimer >= 10000)
+    {
+        pong->ledFadeTimer -= 10000;
+
+        // Fade left LED channels independently
+        if (pong->ledL.r)
+        {
+            pong->ledL.r--;
+        }
+        if (pong->ledL.g)
+        {
+            pong->ledL.g--;
+        }
+        if (pong->ledL.b)
+        {
+            pong->ledL.b--;
+        }
+
+        // Fade right LEDs channels independently
+        if (pong->ledR.r)
+        {
+            pong->ledR.r--;
+        }
+        if (pong->ledR.g)
+        {
+            pong->ledR.g--;
+        }
+        if (pong->ledR.b)
+        {
+            pong->ledR.b--;
+        }
+    }
+}
+
+/**
+ * @brief Move the player's paddle according to the chosen control scheme
+ */
+static void pongControlPlayerPaddle(void)
+{
     // Move the paddle depending on the chosen control scheme
     switch (pong->control)
     {
@@ -401,7 +468,13 @@ static void pongGameLoop(int64_t elapsedUs)
             break;
         }
     }
+}
 
+/**
+ * @brief Move the CPU's paddle according to the chosen difficulty
+ */
+static void pongControlCpuPaddle(void)
+{
     // Move the computer paddle
     switch (pong->difficulty)
     {
@@ -451,7 +524,15 @@ static void pongGameLoop(int64_t elapsedUs)
             break;
         }
     }
+}
 
+/**
+ * @brief Update the pong physics including ball position and collisions
+ *
+ * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
+ */
+static void pongUpdatePhysics(int64_t elapsedUs)
+{
     // Update the ball's position
     pong->ball.x += (pong->ballVel.x * elapsedUs) / 100000;
     pong->ball.y += (pong->ballVel.y * elapsedUs) / 100000;
@@ -484,10 +565,15 @@ static void pongGameLoop(int64_t elapsedUs)
             pong->ballVel = rotateVec2d(pong->ballVel, (45 * diff) / (pong->paddleL.height / 2));
 
             // Increase velocity
-            IncreaseBallVelocity(1 << DECIMAL_BITS);
+            pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
             bzrPlaySfx(&pong->hit1);
+
+            // Set an LED
+            pong->ledL.r = 0xFF;
+            pong->ledL.g = 0x80;
+            pong->ledL.b = 0x40;
         }
         // Check for right paddle collision
         else if ((pong->ballVel.x > 0) && circleRectIntersection(pong->ball, pong->paddleR))
@@ -501,15 +587,17 @@ static void pongGameLoop(int64_t elapsedUs)
             pong->ballVel = rotateVec2d(pong->ballVel, -(45 * diff) / (pong->paddleR.height / 2));
 
             // Increase velocity
-            IncreaseBallVelocity(1 << DECIMAL_BITS);
+            pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
             bzrPlaySfx(&pong->hit2);
+
+            // Set an LED
+            pong->ledR.r = 0x40;
+            pong->ledR.g = 0x80;
+            pong->ledR.b = 0xFF;
         }
     }
-
-    // Draw the field
-    DrawField();
 }
 
 /**
@@ -571,7 +659,7 @@ static void pongResetGame(bool isInit, uint8_t whoWon)
  *
  * @param magnitude The magnitude velocity to add to the ball
  */
-static void IncreaseBallVelocity(int16_t magnitude)
+static void pongIncreaseBallVelocity(int16_t magnitude)
 {
     if (sqMagVec2d(pong->ballVel) < (SPEED_LIMIT * SPEED_LIMIT))
     {
@@ -624,11 +712,24 @@ static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 /**
  * @brief Draw the Pong field to the TFT
  */
-static void DrawField(void)
+static void pongDrawField(void)
 {
+    // Create an array for all LEDs
+    led_t leds[CONFIG_NUM_LEDS];
+    // Copy the LED colors for left and right to the whole array
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
+    {
+        leds[i]                         = pong->ledL;
+        leds[i + (CONFIG_NUM_LEDS / 2)] = pong->ledR;
+    }
+    // Set the LED output
+    setLeds(leds, CONFIG_NUM_LEDS);
+
     // No need to clear the display before drawing because it's redrawn by pongBackgroundDrawCallback() each time
 
-#if DRAW_SHAPES
+#ifdef DRAW_SHAPES
+    // This will draw the game with geometric shapes, not sprites
+
     // Bitshift the ball's location and radius from math coordinates to screen coordinates, then draw it
     drawCircleFilled((pong->ball.x) >> DECIMAL_BITS, (pong->ball.y) >> DECIMAL_BITS,
                      (pong->ball.radius) >> DECIMAL_BITS, c555);
@@ -642,7 +743,8 @@ static void DrawField(void)
     drawRect((pong->paddleR.x >> DECIMAL_BITS), (pong->paddleR.y >> DECIMAL_BITS),
              ((pong->paddleR.x + pong->paddleR.width) >> DECIMAL_BITS),
              ((pong->paddleR.y + pong->paddleR.height) >> DECIMAL_BITS), c333);
-#else // Draw graphics
+#else
+    // This will draw the game with sprites, not geometric shapes
 
     // Draw the ball
     drawWsgSimple(&pong->ballWsg, (pong->ball.x - pong->ball.radius) >> DECIMAL_BITS,
