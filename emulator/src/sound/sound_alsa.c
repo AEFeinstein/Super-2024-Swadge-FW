@@ -407,7 +407,7 @@ fail:
 void* InitSoundAlsa(SoundCBType cb, int reqSPS, int reqChannelsRec, int reqChannelsPlay, int sugBufferSize,
                     const char* inputSelect, const char* outputSelect)
 {
-    struct SoundDriverAlsa* r = malloc(sizeof(struct SoundDriverAlsa));
+    struct SoundDriverAlsa* r = calloc(1, sizeof(struct SoundDriverAlsa));
 
     r->CloseFn      = CloseSoundAlsa;
     r->SoundStateFn = SoundStateAlsa;

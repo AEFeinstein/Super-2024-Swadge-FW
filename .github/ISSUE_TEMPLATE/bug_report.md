@@ -14,10 +14,13 @@ _A clear and concise description of what the bug is._
 _A clear and concise description of what you expected to happen._
 
 **Reproduction Steps**
-_Steps to reproduce the behavior_
+_Steps to reproduce the behavior and how often it occurs._
 
 **Screenshots**
 _If applicable, add screenshots to help explain your problem._
+
+**Logs**
+_If applicable, add logs from when the problem occurred._
 
 **Affected Version**
  - Platform: [Windows, Linux, and/or Firmware]

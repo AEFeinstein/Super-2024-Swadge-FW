@@ -34,7 +34,7 @@ int SoundStateNull(struct SoundDriverNull* object)
 void* InitSoundNull(SoundCBType cb, int reqSPS, int reqChannelsRec, int reqChannelsPlay, int sugBufferSize,
                     const char* inputSelect, const char* outputSelect)
 {
-    struct SoundDriverNull* r = malloc(sizeof(struct SoundDriverNull));
+    struct SoundDriverNull* r = calloc(1, sizeof(struct SoundDriverNull));
     r->CloseFn                = CloseSoundNull;
     r->SoundStateFn           = SoundStateNull;
     r->soundcb                = cb;

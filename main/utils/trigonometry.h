@@ -10,7 +10,7 @@
  *
  * \section trigonometry_usage Usage
  *
- * Call getSin1024(), getCos1024(), or getTan1024() withi a degree between 0 and 359 inclusive.
+ * Call getSin1024(), getCos1024(), or getTan1024() with a degree between 0 and 359 inclusive.
  * If the input degree is out of bounds, the result will be indeterminate.
  *
  * The ::sin1024 and ::tan1024 arrays contain the first 91 elements of the respective functions and can be used directly

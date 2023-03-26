@@ -5,6 +5,8 @@
 #include "hdw-accel.h"
 #include "emu_main.h"
 
+static bool accelInit = false;
+
 /**
  * @brief Initialize the accelerometer
  *
@@ -16,7 +18,7 @@
 esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
                             qma_range_t range, qma_bandwidth_t bandwidth)
 {
-    WARN_UNIMPLEMENTED();
+    accelInit = true;
     return ESP_OK;
 }
 
@@ -27,7 +29,7 @@ esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl
  */
 esp_err_t deInitAccelerometer(void)
 {
-    WARN_UNIMPLEMENTED();
+    accelInit = false;
     return ESP_OK;
 }
 
@@ -41,9 +43,16 @@ esp_err_t deInitAccelerometer(void)
  */
 esp_err_t accelGetStep(uint16_t* data)
 {
-    WARN_UNIMPLEMENTED();
-    *data = 0;
-    return ESP_OK;
+    if (accelInit)
+    {
+        // TODO emulate step better
+        *data = 0;
+        return ESP_OK;
+    }
+    else
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
 }
 
 /**
@@ -54,8 +63,14 @@ esp_err_t accelGetStep(uint16_t* data)
  */
 esp_err_t accelSetRange(qma_range_t range)
 {
-    WARN_UNIMPLEMENTED();
-    return ESP_OK;
+    if (accelInit)
+    {
+        return ESP_OK;
+    }
+    else
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
 }
 
 /**
@@ -70,9 +85,17 @@ esp_err_t accelSetRange(qma_range_t range)
  */
 esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
 {
-    WARN_UNIMPLEMENTED();
-    *x = 0;
-    *y = 0;
-    *z = 0;
-    return ESP_OK;
+    if (accelInit)
+    {
+        // TODO emulate tilt better
+        WARN_UNIMPLEMENTED();
+        *x = 0;
+        *y = 0;
+        *z = 0;
+        return ESP_OK;
+    }
+    else
+    {
+        return ESP_ERR_INVALID_STATE;
+    }
 }

@@ -225,5 +225,5 @@ void emulatorHandleKeys(int keycode, int bDown)
 
     // The bottom 8 bits are pushbuttons, followed by five touch buttons
     int touchState = ((buttonState >> 8) & 0x1F);
-    lastTouchLoc   = touchLoc[touchState];
+    lastTouchLoc   = 4 * touchLoc[touchState];
 }

@@ -230,91 +230,110 @@ typedef enum __attribute__((packed))
     P2P_MSG_DATA      ///< A data message
 } p2pMsgType_t;
 
+/**
+ * @brief The byte format for a connection message for a P2P session
+ */
 typedef struct
 {
-    uint8_t startByte;
-    uint8_t modeId;
-    p2pMsgType_t messageType;
+    uint8_t startByte;        ///< Start byte, must be ::P2P_START_BYTE
+    uint8_t modeId;           ///< Mode byte, must be unique per-mode
+    p2pMsgType_t messageType; ///< Message type byte
 } p2pConMsg_t;
 
+/**
+ * @brief The byte format for a common header for all P2P packets
+ */
 typedef struct
 {
-    uint8_t startByte;
-    uint8_t modeId;
-    p2pMsgType_t messageType;
-    uint8_t seqNum;
-    uint8_t macAddr[6];
+    uint8_t startByte;        ///< Start byte, must be ::P2P_START_BYTE
+    uint8_t modeId;           ///< Mode byte, must be unique per-mode
+    p2pMsgType_t messageType; ///< Message type byte
+    uint8_t seqNum;           ///< A sequence number for this packet
+    uint8_t macAddr[6];       ///< The MAC address destination for this packet
 } p2pCommonHeader_t;
 
+/**
+ * @brief The byte format for a P2P data packet
+ */
 typedef struct
 {
-    p2pCommonHeader_t hdr;
-    uint8_t data[P2P_MAX_DATA_LEN];
+    p2pCommonHeader_t hdr;          ///< The common header bytes for a P2P packet
+    uint8_t data[P2P_MAX_DATA_LEN]; ///< The data bytes sent or received
 } p2pDataMsg_t;
 
-// Variables to track acking messages
+/**
+ * @brief All the state variables required for a P2P session with another Swadge
+ */
 typedef struct _p2pInfo
 {
     // Messages that every mode uses
-    uint8_t modeId;
-    uint8_t incomingModeId;
-    p2pConMsg_t conMsg;
-    p2pDataMsg_t ackMsg;
-    p2pCommonHeader_t startMsg;
+    uint8_t modeId; ///< The mode ID set by the mode using P2P
+    uint8_t
+        incomingModeId; ///< A mode ID to listen for which is different than initialized mode ID. See p2pSetAsymmetric()
+    p2pConMsg_t conMsg; ///< The connection message to transmit
+    p2pCommonHeader_t startMsg; ///< The start message to transmit
+    p2pDataMsg_t ackMsg;        ///< The acknowledge message to transmit
+    uint8_t dataInAckLen;       ///< The length of any extra data which was appended to the ACK, see p2pSetDataInAck()
 
     // Callback function pointers
-    p2pConCbFn conCbFn;
-    p2pMsgRxCbFn msgRxCbFn;
-    p2pMsgTxCbFn msgTxCbFn;
+    p2pConCbFn conCbFn;     ///< A callback function called during the connection process
+    p2pMsgRxCbFn msgRxCbFn; ///< A callback function called when receiving a message
+    p2pMsgTxCbFn msgTxCbFn; ///< A callback function called when transmitting a message
 
-    int8_t connectionRssi;
+    int8_t connectionRssi; ///< The minimum RSSI required to begin a connection
 
-    // Variables used for acking and retrying messages
+    /**
+     * @brief Variables used for acknowledging and retrying messages
+     */
     struct
     {
-        bool isWaitingForAck;
-        p2pDataMsg_t msgToAck;
-        uint16_t msgToAckLen;
-        uint32_t timeSentUs;
-        p2pAckSuccessFn SuccessFn;
-        p2pAckFailureFn FailureFn;
-        uint8_t dataInAckLen;
+        bool isWaitingForAck;      ///< true if waiting for an ACK after transmitting a message
+        p2pDataMsg_t msgToAck;     ///< A transmitted message which is waiting for an ACK
+        uint16_t msgToAckLen;      ///< The length of the message which is waiting for an ACK
+        uint32_t timeSentUs;       ///< The time the message is waiting for an ACK was transmitted
+        p2pAckSuccessFn SuccessFn; ///< A callback function to be called if the message is ACKed
+        p2pAckFailureFn FailureFn; ///< A callback function to be called if the message is not ACKed
     } ack;
 
-    // Connection state variables
+    /**
+     * @brief Connection state variables
+     */
     struct
     {
-        bool isActive;
-        bool isConnected;
-        bool broadcastReceived;
-        bool rxGameStartMsg;
-        bool rxGameStartAck;
-        playOrder_t playOrder;
-        uint8_t myMac[6];
-        uint8_t otherMac[6];
-        bool otherMacReceived;
-        uint8_t mySeqNum;
-        uint8_t lastSeqNum;
+        playOrder_t playOrder;  ///< Either ::GOING_FIRST or ::GOING_SECOND depending on how the handshake went
+        uint8_t myMac[6];       ///< This Swadge's MAC address
+        uint8_t otherMac[6];    ///< The other Swadge's MAC address
+        bool isActive;          ///< true if the connection process has started
+        bool isConnected;       ///< true if connected to another Swadge
+        bool broadcastReceived; ///< true if a broadcast was received to start the connection handshake
+        bool rxGameStartMsg;    ///< true if the other Swadge's game start message was received
+        bool rxGameStartAck;    ///< True if this Swadge's game start message was acknowledged
+        bool otherMacReceived;  ///< true if the other Swadge's MAC address has been received
+        uint8_t mySeqNum;       ///< The current sequence number used for transmissions
+        uint8_t lastSeqNum;     ///< The last sequence number used for transmissions
     } cnc;
 
-    // The timers used for connection and acking
+    /**
+     * @brief The timers used for connection and ACKing
+     */
     struct
     {
-        esp_timer_handle_t TxRetry;
-        esp_timer_handle_t TxAllRetries;
-        esp_timer_handle_t Connection;
-        esp_timer_handle_t Reinit;
+        esp_timer_handle_t TxRetry;      ///< A timer used to retry a transmission multiple times if not acknowledged
+        esp_timer_handle_t TxAllRetries; ///< A timer used to cancel a transmission if all attempts failed
+        esp_timer_handle_t Connection;   ///< A timer used to cancel a connection if the handshake fails
+        esp_timer_handle_t Reinit;       ///< A timer used to restart P2P after any complete failures
     } tmr;
 } p2pInfo;
 
-// All the information for a packet to store between the receive callback and
-// the task it's actually processed in
+/**
+ * @brief All the information for a packet to store between the receive callback and the task it's actually processed in
+ */
 typedef struct
 {
-    int8_t rssi;
-    uint8_t mac[6];
-    uint8_t len;
-    p2pDataMsg_t data;
+    int8_t rssi;       ///< The received signal strength indicator for the packet
+    uint8_t mac[6];    ///< The MAC address of the sender
+    uint8_t len;       ///< The length of the received bytes
+    p2pDataMsg_t data; ///< The received bytes
 } p2pPacket_t;
 
 void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbFn msgRxCbFn, int8_t connectionRssi);

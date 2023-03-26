@@ -76,7 +76,7 @@ static void demoEnterMode(void)
     // bzrPlayBgm(&dv->ode_to_joy);
     bzrStop();
 
-    dv->menu = initMenu(demoName, &dv->ibm, demoMenuCb);
+    dv->menu = initMenu(demoName, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);
     addSingleItemToMenu(dv->menu, demoMenu2);
 
@@ -118,6 +118,7 @@ static void demoEnterMode(void)
  */
 static void demoExitMode(void)
 {
+    p2pDeinit(&dv->p2p);
     freeWsg(&dv->king_donut);
     freeFont(&dv->ibm);
     freeSong(&dv->ode_to_joy);
@@ -139,7 +140,7 @@ static void demoMainLoop(int64_t elapsedUs)
     // Process button events
     buttonEvt_t evt              = {0};
     static uint32_t lastBtnState = 0;
-    while (checkButtonQueue(&evt))
+    while (checkButtonQueueWrapper(&evt))
     {
         dv->menu = menuButton(dv->menu, evt);
 
@@ -152,7 +153,7 @@ static void demoMainLoop(int64_t elapsedUs)
         sendUsbGamepadReport(&report);
     }
 
-    // drawMenu(dv->menu);
+    // drawMenu(dv->menu, &dv->ibm);
 
     // Fill the display area with a dark cyan
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);

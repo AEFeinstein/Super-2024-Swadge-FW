@@ -69,7 +69,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-// Doubly-linked list.
+/**
+ * @brief A node in a doubly linked list with pointers to the previous and next values (which may be NULL), and a \c
+ * void* to arbritray data
+ */
 typedef struct node
 {
     void* val;         ///< A pointer to the data for this node.
@@ -77,6 +80,9 @@ typedef struct node
     struct node* prev; ///< The previous node in the list
 } node_t;
 
+/**
+ * @brief A doubly linked list with pointers to the first and last nodes
+ */
 typedef struct
 {
     node_t* first; ///< The first node in the list

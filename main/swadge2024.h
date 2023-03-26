@@ -10,7 +10,7 @@
  * function pointer to \c NULL. The function won't be called. All fields must be initialized to something, since an
  * uninitialized field may lead to undefined behavior.
  *
- * \note The details of all confiiguration variables and function pointers can be found in ::swadgeMode_t.
+ * \note The details of all configuration variables and function pointers can be found in ::swadgeMode_t.
  *
  * The top level menu will maintain a list of all available modes and the user can pick the mode to run. This approach
  * is similar to apps. Only one mode may run at a single time, and when it runs it will have full system resources.
@@ -21,7 +21,7 @@
  * to determine. Maybe it uses a menu.h, maybe it has a custom UI. All Swadge mode source code should be in the \c
  * /main/modes folder. Each mode should have it's own folder to keep source organized.
  *
- * To build the firmware, the mode's source files must be added to \c /main/CMakeLists.txt. The emulator's \c makefile
+ * To build the firmware, the mode's source files must be added to \c /main/CMakeLists\.txt. The emulator's \c makefile
  * automatically finds files to compile recursively, so they do not need to be explicitly listed.
  *
  * It's best practice not to use 'generic' names for functions and variables, because they may collide with another
@@ -61,27 +61,6 @@
  *     .fnEspNowRecvCb           = demoEspNowRecvCb,
  *     .fnEspNowSendCb           = demoEspNowSendCb,
  *     .fnAdvancedUSB            = demoAdvancedUSB,
- * };
- * \endcode
- *
- * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be used by the system firmware
- * \code{.c}
- * #ifndef _DEMO_MODE_H_
- * #define _DEMO_MODE_H_
- *
- * #include "swadge2024.h"
- *
- * extern swadgeMode_t demoMode;
- *
- * #endif
- * \endcode
- *
- * Add the mode to the list of modes in swdage2024.c:
- * \code{.c}
- * #include "demoMode.h"
- *
- * static swadgeMode_t* modes[] = {
- *     &demoMode,
  * };
  * \endcode
  *
@@ -128,6 +107,33 @@
  * 	return 0;
  * }
  * \endcode
+ *
+ * The ::swadgeMode_t should be declared as \c extern in a header file so that it can be referenced in the main menu
+ * \code{.c}
+ * #ifndef _DEMO_MODE_H_
+ * #define _DEMO_MODE_H_
+ *
+ * #include "swadge2024.h"
+ *
+ * extern swadgeMode_t demoMode;
+ *
+ * #endif
+ * \endcode
+ *
+ * Add the mode to the menu initializer in mainMenuEnterMode():
+ * \code{.c}
+ * #include "demoMode.h"
+ *
+ * addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+ * \endcode
+ *
+ * Add the mode to the selector logic in mainMenuCb():
+ * \code{.c}
+ * else if (label == demoMode.modeName)
+ * {
+ *     switchToSwadgeMode(&demoMode);
+ * }
+ * \endcode
  */
 
 #ifndef _SWADGE_MODE_H_
@@ -163,6 +169,7 @@
 #include "wsg.h"
 #include "shapes.h"
 #include "fill.h"
+#include "menu.h"
 
 // Asset loaders
 #include "spiffs_wsg.h"
@@ -178,6 +185,8 @@
 #include "linked_list.h"
 #include "macros.h"
 #include "trigonometry.h"
+#include "vector2d.h"
+#include "geometry.h"
 
 /**
  * @struct swadgeMode_t
@@ -247,8 +256,8 @@ typedef struct
      * @brief This function is called when the display driver wishes to update a section of the display.
      *
      * @param disp The display to draw to
-     * @param x the x coordiante that should be updated
-     * @param y the x coordiante that should be updated
+     * @param x the x coordinate that should be updated
+     * @param y the x coordinate that should be updated
      * @param w the width of the rectangle to be updated
      * @param h the height of the rectangle to be updated
      * @param up update number
@@ -281,12 +290,17 @@ typedef struct
      * - if \c isGet == 0, that is a "set" or an "OUT" endpoint, where the Host sends data to the Swadge.
      *
      * @param buffer Pointer to full command
-     * @param length Total length of the buffer (command ID incldued)
+     * @param length Total length of the buffer (command ID included)
      * @param isGet 0 if this is a \c SET_REPORT, 1 if this is a \c GET_REPORT
      * @return The number of bytes returned to the host
      */
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 } swadgeMode_t;
+
+bool checkButtonQueueWrapper(buttonEvt_t* evt);
+
+void switchToSwadgeMode(swadgeMode_t* mode);
+void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
 

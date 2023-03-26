@@ -3,11 +3,13 @@
  * \section menu_design Design Philosophy
  *
  * Menus are versatile ways to construct a UI where the user can select text labels.
+ *
  * Menus are vertically scrollable and may have any number of rows.
- *
  * Each row in the menu can be a single item selection, a horizontally scrolling multi-item selection, or a submenu.
- *
  * Menus can have any number of submenus.
+ *
+ * When a menu is initialized a callback function must be provided. When menu options are selected, submenus are
+ * entered, or multi-item selections are scrolled, the callback is called.
  *
  * \section menu_usage Usage
  *
@@ -53,7 +55,7 @@
  * \code{.c}
  * // Allocate the menu
  * menu_t * menu;
- * menu = initMenu(demoName, &ibm, demoMenuCb);
+ * menu = initMenu(demoName, demoMenuCb);
  *
  * // Add single items
  * addSingleItemToMenu(menu, demoMenu1);
@@ -84,7 +86,7 @@
  * Process button events:
  * \code{.c}
  * buttonEvt_t evt = {0};
- * while (checkButtonQueue(&evt))
+ * while (checkButtonQueueWrapper(&evt))
  * {
  *     menu = menuButton(menu, evt);
  * }
@@ -92,7 +94,7 @@
  *
  * Draw the menu:
  * \code{.c}
- * drawMenu(menu);
+ * drawMenu(menu, &ibm);
  * \endcode
  *
  * Receive menu callbacks:
@@ -125,26 +127,31 @@ typedef void (*menuCb)(const char*, bool selected);
 
 typedef struct _menu_t menu_t;
 
+/**
+ * @brief The underlying data for an item in a menu. The item may be a single-select, multi-select, or submenu item.
+ */
 typedef struct
 {
-    const char* label;
-    const char* const* options;
-    menu_t* subMenu;
-    uint8_t numOptions;
-    uint8_t currentOpt;
+    const char* label;          ///< The label displayed if single-select or submenu
+    const char* const* options; ///< The labels displayed if multi-select
+    menu_t* subMenu;            ///< A pointer to a submenu, maybe NULL for single-select and multi-select
+    uint8_t numOptions;         ///< The number of options for multi-select
+    uint8_t currentOpt;         ///< The current selected option for multi-select
 } menuItem_t;
 
+/**
+ * @brief The underlying data for a menu. This fundamentally is a list of menuItem_t
+ */
 typedef struct _menu_t
 {
-    const char* title;
-    font_t* font;
-    menuCb cbFunc;
-    list_t* items;
-    node_t* currentItem;
-    menu_t* parentMenu;
+    const char* title;   ///< The title for this menu
+    menuCb cbFunc;       ///< The callback function to call when menu items are selected
+    list_t* items;       ///< A list_t of menu items to display
+    node_t* currentItem; ///< The currently selected menu item
+    menu_t* parentMenu;  ///< The parent menu, may be NULL if this is not a submenu
 } menu_t;
 
-menu_t* initMenu(const char* title, font_t* font, menuCb cbFunc) __attribute__((warn_unused_result));
+menu_t* initMenu(const char* title, menuCb cbFunc) __attribute__((warn_unused_result));
 void deinitMenu(menu_t* menu);
 menu_t* startSubMenu(menu_t* menu, const char* label) __attribute__((warn_unused_result));
 menu_t* endSubMenu(menu_t* menu) __attribute__((warn_unused_result));
@@ -154,6 +161,6 @@ void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabe
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 
-void drawMenu(menu_t* menu);
+void drawMenu(menu_t* menu, font_t* font);
 
 #endif

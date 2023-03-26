@@ -2,32 +2,33 @@
  *
  * \section btn_design Design Philosophy
  *
- * This component handles both pushbuttons and touchpads. Pushbuttons are physical, tactile buttons while touchpads are
- * touch-sensitive areas on the PCB. Events from pushbuttons and touchpads are processed different ways, but queued in
- * the same queue.
+ * This component handles both push-buttons and touch-pads. Push-buttons are physical, tactile buttons while touch-pads
+ * are touch-sensitive areas on the PCB. Events from push-buttons and touch-pads are processed different ways, but
+ * queued in the same queue.
  *
- * The Swadge mode needs to call checkButtonQueue() to receive queued button events.
- * The event contains which button caused the event, whether it was pressed or released, and the current state of all
- * buttons. This way the Swadge mode is not responsible for high frequency button polling, and can still receive all
- * button inputs.
+ * The Swadge mode needs to call checkButtonQueueWrapper(), which calls checkButtonQueue() to receive queued button
+ * events. The reason for checkButtonQueueWrapper() is so that the main loop can monitor the button which can be held
+ * down to return to the main menu. The event contains which button caused the event, whether it was pressed or
+ * released, and the current state of all buttons. This way the Swadge mode is not responsible for high frequency button
+ * polling, and can still receive all button inputs.
  *
- * In addition to acting as binary buttons, the touchpads may act as a single, analog, touch sensitive strip. These two
+ * In addition to acting as binary buttons, the touch-pads may act as a single, analog, touch sensitive strip. These two
  * ways of reporting are not mutually exclusive.
  *
  * \section pbtn_design Pushbutton Design Philosophy
  *
- * The pushbuttons are polled continuously at 1ms intervals in an interrupt, but these readings are not reported to the
+ * The push-buttons are polled continuously at 1ms intervals in an interrupt, but these readings are not reported to the
  * Swadge modes. The interrupt saves the prior ::DEBOUNCE_HIST_LEN polled button states and the last reported button
  * state. When all ::DEBOUNCE_HIST_LEN button states are identical, the interrupt accepts the current state and checks
  * if it different than the last reported state. If there is a difference, the button event is queued in the interrupt
  * to be received by the Swadge mode.
  *
- * The pushbutton GPIOs are all read at the same time using <a
+ * The push-button GPIOs are all read at the same time using <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/dedic_gpio.html">Dedicated
  * GPIO</a>.
  *
- * Originally the pushbuttons would trigger an interrupt, but we found that to have glitchier and less reliable results
- * than polling.
+ * Originally the push-buttons would trigger an interrupt, but we found that to have less reliable results with more
+ * glitches than polling.
  *
  * Button events used to be delivered to the Swadge mode via a callback.
  * This led to cases where multiple callbacks would occur between a single invocation of that mode's main function.
@@ -35,17 +36,17 @@
  * Instead of forcing each mode to queue button events, now each mode must dequeue them rather than having a callback
  * called.
  *
- * \section tpad_design Touchpad Design Philosophy
+ * \section tpad_design Touch-pad Design Philosophy
  *
- * Unlike pushbutton polling, touchpads use interrupts to detect events. When a touchpad event is detected, an interrupt
- * will fire and the new event will be queued in the same queue used for pushbuttons.
+ * Unlike push-button polling, touch-pads use interrupts to detect events. When a touch-pad event is detected, an
+ * interrupt will fire and the new event will be queued in the same queue used for push-buttons.
  *
- * In addition to acting as binary buttons, the touchpad can act as a single analog touch strip. getTouchCentroid() may
- * be called to get the current analog touch value. Changes in the analog position are not reported checkButtonQueue(),
- * so getTouchCentroid() must be called as frequently as desired to get values. Do not assume that changes in the analog
- * position are correlated with events reported in checkButtonQueue().
+ * In addition to acting as binary buttons, the touch-pad can act as a single analog touch strip. getTouchCentroid() may
+ * be called to get the current analog touch value. Changes in the analog position are not reported
+ * checkButtonQueueWrapper(), so getTouchCentroid() must be called as frequently as desired to get values. Do not assume
+ * that changes in the analog position are correlated with events reported in checkButtonQueueWrapper().
  *
- * Touchpad interrupts are set up and touchpad values are read with <a
+ * Touch-pad interrupts are set up and touch-pad values are read with <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/peripherals/touch_pad.html">Touch
  * Sensor</a>.
  *
@@ -53,17 +54,17 @@
  *
  * You don't need to call initButtons() or deinitButtons(). The system does at the appropriate times.
  *
- * You do need to call checkButtonQueue() and should do so in a while-loop to receive all events since the last check.
- * This should be done in the Swadge mode's main function.
+ * You do need to call checkButtonQueueWrapper() and should do so in a while-loop to receive all events since the last
+ * check. This should be done in the Swadge mode's main function.
  *
- * You may call getTouchCentroid() to get the analog touch position. This is independent of checkButtonQueue().
+ * You may call getTouchCentroid() to get the analog touch position. This is independent of checkButtonQueueWrapper().
  *
  * \section btn_example Example
  *
  * \code{.c}
  * // Check all queued button events
  * buttonEvt_t evt;
- * while(checkButtonQueue(&evt))
+ * while(checkButtonQueueWrapper(&evt))
  * {
  *     // Print the current event
  *     printf("state: %04X, button: %d, down: %s\n",
@@ -109,6 +110,10 @@ typedef enum __attribute__((packed))
     TB_4      = 0x1000, //!< Touch pad 4's button bit
 } buttonBit_t;
 
+/**
+ * @brief A button event containing the button that triggered the event, whether it was pressed or released, and the
+ * whole button state
+ */
 typedef struct
 {
     uint16_t state;     //!< A bitmask for the state of all buttons

@@ -223,7 +223,7 @@ extern "C"
      *      - ESP_OK on success
      *      - ESP_ERR_INVALID_STATE if the timer is running
      */
-    esp_err_t esp_timer_delete(esp_timer_handle_t timer);
+    esp_err_t esp_timer_delete(const esp_timer_handle_t timer);
 
     /**
      * @brief Get time in microseconds since boot

@@ -31,7 +31,7 @@
  *
  * MIDI files that are placed in the ./assets/ folder will be automatically converted to SNG files and loaded into the
  * SPIFFS filesystem. SNG files are lists of notes with durations and are compressed with Heatshrink compression. These
- * files can be loaded with loadSong() and must be freed wtih freeSong() when done.
+ * files can be loaded with loadSong() and must be freed with freeSong() when done.
  *
  * \section bzr_example Example
  *
@@ -199,24 +199,24 @@ typedef enum
     B_10       = 31609
 } noteFrequency_t;
 
+/**
+ * @brief A single note and duration to be played on the buzzer
+ */
 typedef struct
 {
-    /// Note frequency, in Hz
-    noteFrequency_t note;
-    /// Note duration, in ms
-    uint32_t timeMs;
+    noteFrequency_t note; ///< Note frequency, in Hz
+    uint32_t timeMs;      ///< Note duration, in ms
 } musicalNote_t;
 
+/**
+ * @brief A list of notes and durations to be played on the buzzer
+ */
 typedef struct
 {
-    /// true if the song should loop, false if it should play once
-    uint32_t shouldLoop;
-    /// The number of notes in this song
-    uint32_t numNotes;
-    /// The note index to restart at, if looping
-    uint32_t loopStartNote;
-    /// An array of notes in the song
-    musicalNote_t* notes;
+    uint32_t shouldLoop;    ///< true if the song should loop, false if it should play once
+    uint32_t numNotes;      ///< The number of notes in this song
+    uint32_t loopStartNote; ///< The note index to restart at, if looping
+    musicalNote_t* notes;   ///< An array of notes in the song
 } song_t;
 
 void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, bool _isBgmMuted,

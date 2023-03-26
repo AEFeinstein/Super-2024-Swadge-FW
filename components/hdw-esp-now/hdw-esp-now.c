@@ -51,12 +51,15 @@ typedef enum
 // Enums
 //==============================================================================
 
+/**
+ * @brief A packet received over ESP-NOW
+ */
 typedef struct
 {
-    int8_t rssi;
-    uint8_t mac[6];
-    uint8_t len;
-    uint8_t data[255];
+    int8_t rssi;       ///< The received signal strength indicator for the packet
+    uint8_t mac[6];    ///< The MAC address of the sender
+    uint8_t len;       ///< The length of the received bytes
+    uint8_t data[255]; ///< The received bytes
 } espNowPacket_t;
 
 //==============================================================================

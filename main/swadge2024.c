@@ -17,33 +17,38 @@
  * General Swadge design principles <a
  * href="https://docs.google.com/document/d/1TzzatyRWp9t26YWF3qUlOg7NFgmsueL-0suqyDT98IE/edit">can be found here</a>.
  *
- * \section espressif_doc Espressif Documentation
+ * \section start Where to Start
  *
- * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
- * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
- * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
- * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/index.html">ESP-IDF API
- * Reference</a>
- * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
- * Datasheet</a>
- * - <a
- * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
- * Technical Reference Manual</a>
+ * If you're just starting Swadge development, you're already at the right place to start! Here's a good sequence of
+ * pages to read from here.
  *
- * \section setup_sec Environment Setup
- *
- * Instructions on how to set up a programming envrionment for this project can be found <a
- * href="https://github.com/AEFeinstein/Swadge-IDF-5.0#configuring-a-development-environment">in the project's
- * README.md</a>.
+ * -# First, follow the guide to \ref setup. This will walk you through setting up the toolchain and compiling the
+ * firmware and emulator.
+ * -# Next, read about the basics of a Swadge Mode at \ref swadge2024.h.
+ * -# Once you understand the basics of a Swadge Mode, check out the \ref swadge_mode_example to see a simple mode in
+ * action.
+ * -# After you grasp the example, you can go deeper and read the full \ref apis to understand the full capability of
+ * the Swadge firmware.
+ * -# When you're ready to make a contribution, read the \ref contribution_guide first to see how to do it in the most
+ * productive way.
+ * -# Finally, if you want to do lower level or \c component programming, read the \ref espressif_doc to understand the
+ * full capability of the ESP32-S2 chip.
  *
  * \section swadge_mode_example Swadge Mode Example
  *
  * The <a href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/main/modes/pong">Pong mode</a> is written to be
  * a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and uses good
- * design patterns.
+ * design patterns. Look out for things like:
+ * - How the \c pong_t struct contains all variables the mode needs
+ * - How immutable strings are declared <tt>static const</tt>
+ * - How fonts, WSGs, songs, and a menu are initialized in \c pongEnterMode() and deinitialized in \c pongExitMode()
+ * - How the main loop runs depending on the screen currently being displayed in \c pongMainLoop() and \c pongGameLoop()
+ * - How a timer pattern is used in \c pongFadeLeds()
+ * - How user input is handled in \c pongControlPlayerPaddle()
+ * - How the game state is updated in \c pongUpdatePhysics()
+ * - How graphics and LEDs are drawn in \c pongDrawField() and \c pongBackgroundDrawCallback()
  *
- * \section apis APIs
+ * \section apis API Reference
  *
  * What follows are all the APIs available to write Swadge modes. If something does not exist, and it would be
  * beneficial to multiple Swadge modes, please contribute both the firmware and API documentation. It's a team effort!
@@ -94,7 +99,23 @@
  *
  * - linked_list.h: A basic data structure
  * - trigonometry.h: Fast math based on look up tables
+ * - vector2d.h: Basic math for 2D vectors
+ * - geometry.h: Basic math for 2D shapes, like collision checks
  * - macros.h: Convenient macros like MIN() and MAX()
+ *
+ * \section espressif_doc Espressif Documentation
+ *
+ * The Swadge uses an ESP32-S2 micro-controller with firmware built on IDF 5.0. The goal of this project is to enable
+ * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
+ * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
+ * is useful:
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * Reference</a>
+ * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
+ * Datasheet</a>
+ * - <a
+ * href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf">ESP32­-S2
+ * Technical Reference Manual</a>
  */
 
 //==============================================================================
@@ -104,21 +125,40 @@
 #include <esp_system.h>
 #include <esp_timer.h>
 #include <esp_log.h>
+#include <esp_sleep.h>
+#include <rom/usb/usb_persist.h>
+#include <rom/usb/chip_usb_dw_wrapper.h>
+#include <soc/rtc_cntl_reg.h>
 
 #include "swadge2024.h"
-#include "demoMode.h"
+#include "mainMenu.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+// Define RTC_DATA_ATTR if it doesn't exist
+#ifndef RTC_DATA_ATTR
+    #define RTC_DATA_ATTR
+#endif
+
+#define EXIT_TIME_US 1000000
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-static swadgeMode_t* modes[] = {
-    &demoMode,
-};
-static swadgeMode_t* cSwadgeMode;
+/// @brief The current Swadge mode
+static swadgeMode_t* cSwadgeMode = &mainMenuMode;
+
+/// @brief A pending Swadge mode to use after a deep sleep
+static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = 40000;
+
+/// @brief Timer to return to the main menu
+static int64_t timeExitPressed = 0;
 
 //==============================================================================
 // Function declarations
@@ -138,11 +178,19 @@ static void setSwadgeMode(void* swadgeMode);
  */
 void app_main(void)
 {
-    // Set the Swadge mode pointer
-    cSwadgeMode = modes[0];
-
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
+
+    // Assume the main menu is shown
+    cSwadgeMode = &mainMenuMode;
+
+    // If the ESP woke from sleep, and there is a pending Swadge Mode
+    if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
+    {
+        // Use the pending mode
+        cSwadgeMode       = pendingSwadgeMode;
+        pendingSwadgeMode = NULL;
+    }
 
     // Init USB if not overridden by the mode. This also sets up USB printf
     if (false == cSwadgeMode->overrideUsb)
@@ -290,8 +338,48 @@ void app_main(void)
                 tLastMainLoopCall = tNowUs;
             }
 
+            // If the menu button is being held
+            if (0 != timeExitPressed)
+            {
+                // Figure out for how long
+                int64_t tHeldUs = tNowUs - timeExitPressed;
+                // If it has been held for more than the exit time
+                if (tHeldUs > EXIT_TIME_US)
+                {
+                    // Reset the count
+                    timeExitPressed = 0;
+                    // Return to the main menu
+                    switchToSwadgeMode(&mainMenuMode);
+                }
+                else
+                {
+                    // Draw 'progress' bar for exiting. This is done right before the TFT is drawn
+                    int16_t numPx = (tHeldUs * TFT_WIDTH) / EXIT_TIME_US;
+                    fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
+                }
+            }
+
             // Draw to the TFT
             drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
+        }
+
+        // If the mode should be switched, do it now
+        if (NULL != pendingSwadgeMode)
+        {
+            // We have to do this otherwise the backlight can glitch
+            disableTFTBacklight();
+
+            // Prevent bootloader on reboot if rebooting from originally bootloaded instance
+            REG_WRITE(RTC_CNTL_OPTION1_REG, 0);
+
+            // Only an issue if originally coming from bootloader. This is actually a ROM function.
+            // It prevents the USB from glitching out on the reboot after the reboot after coming
+            // out of bootloader
+            chip_usb_set_persist_flags(USBDC_PERSIST_ENA);
+
+            // Go to sleep. pendingSwadgeMode will be used after waking up
+            esp_sleep_enable_timer_wakeup(1);
+            esp_deep_sleep_start();
         }
 
         // Yield to let the rest of the RTOS run
@@ -375,7 +463,7 @@ static void setSwadgeMode(void* swadgeMode)
     // If no mode is given, switch to the first
     if (NULL == swadgeMode)
     {
-        swadgeMode = &modes[0];
+        swadgeMode = &mainMenuMode;
     }
 
     // Stop the prior mode
@@ -390,4 +478,85 @@ static void setSwadgeMode(void* swadgeMode)
     {
         cSwadgeMode->fnEnterMode();
     }
+}
+
+/**
+ * Set up variables to synchronously switch the swadge mode in the main loop
+ *
+ * @param mode A pointer to the mode to switch to
+ */
+void switchToSwadgeMode(swadgeMode_t* mode)
+{
+    pendingSwadgeMode = mode;
+}
+
+/**
+ * @brief Switch to the pending Swadge mode without restarting the system
+ */
+void softSwitchToPendingSwadge(void)
+{
+    if (pendingSwadgeMode)
+    {
+        // Exit the current mode
+        if (NULL != cSwadgeMode->fnExitMode)
+        {
+            cSwadgeMode->fnExitMode();
+        }
+
+        // Stop the buzzer
+        bzrStop();
+
+        // Switch the mode pointer
+        cSwadgeMode       = pendingSwadgeMode;
+        pendingSwadgeMode = NULL;
+
+        // Enter the next mode
+        if (NULL != cSwadgeMode->fnEnterMode)
+        {
+            cSwadgeMode->fnEnterMode();
+        }
+
+        // Reenable the TFT backlight
+        enableTFTBacklight();
+    }
+}
+
+/**
+ * @brief Service the queue of button events that caused interrupts
+ * This only reutrns a single event, even if there are multiple in the queue
+ * This function may be called multiple times in a row to completely empty the queue
+ *
+ * This is a wrapper for checkButtonQueue() which also monitors the button to return to the main menu
+ *
+ * @param evt If an event occurred, return it through this argument
+ * @return true if an event occurred, false if nothing happened
+ */
+bool checkButtonQueueWrapper(buttonEvt_t* evt)
+{
+    bool retval = checkButtonQueue(evt);
+
+    // Intercept button presses for PB_SELECT
+    if (retval)
+    {
+        // Don't intercept the button on the main menu
+        if (cSwadgeMode != &mainMenuMode)
+        {
+            if (evt->button == PB_SELECT)
+            {
+                if (evt->down)
+                {
+                    // Button was pressed, start the timer
+                    timeExitPressed = esp_timer_get_time();
+                }
+                else
+                {
+                    // Button was released, stop the timer
+                    timeExitPressed = 0;
+                }
+            }
+        }
+    }
+
+    // Return if there was an event or not
+    return retval;
 }

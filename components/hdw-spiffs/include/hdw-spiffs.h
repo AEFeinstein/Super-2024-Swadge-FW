@@ -20,10 +20,10 @@
  *
  * spiffsReadFile() may be used to read a file straight from SPIFFS, but this probably should not be done directly.
  *
- * Each asset type has it's own SPIFFS loader which handles things like decompresson if the asset type is compressed,
+ * Each asset type has it's own SPIFFS loader which handles things like decompression if the asset type is compressed,
  * and writing values from the read file into a convenient struct. The loader functions are:
  *  - loadFont() & freeFont() - Load font assets from SPIFFS to draw text to the display
- *  - loadWsg() & freeWsg() - Load image asssets from SPIFFS to draw images to the display
+ *  - loadWsg() & freeWsg() - Load image assets from SPIFFS to draw images to the display
  *  - loadSong() & freeSong() - Load song assets from SPIFFS to play songs on the buzzer
  *  - loadJson() & freeJson() - Load JSON assets from SPIFFS to configure games
  *  - loadTxt() & freeTxt() - Load text assets from SPIFFS to use in a Swadge mode

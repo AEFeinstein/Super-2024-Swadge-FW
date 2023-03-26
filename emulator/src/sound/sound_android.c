@@ -215,7 +215,7 @@ static struct SoundDriverAndroid* InitAndroidSound(struct SoundDriverAndroid* r)
         result = (*r->playerBufferQueue)->Clear(r->playerBufferQueue);
         assert(SL_RESULT_SUCCESS == result);
         (void)result;
-        r->playerBuffer = malloc(r->playerBufferSizeBytes);
+        r->playerBuffer = calloc(1, r->playerBufferSizeBytes);
         result = (*r->playerBufferQueue)->Enqueue(r->playerBufferQueue, r->playerBuffer, r->playerBufferSizeBytes);
         assert(SL_RESULT_SUCCESS == result);
         (void)result;
@@ -234,7 +234,7 @@ static struct SoundDriverAndroid* InitAndroidSound(struct SoundDriverAndroid* r)
         (void)result;
         // the buffer is not valid for playback yet
 
-        r->recorderBuffer = malloc(r->recorderBufferSizeBytes);
+        r->recorderBuffer = calloc(1, r->recorderBufferSizeBytes);
 
         // enqueue an empty buffer to be filled by the recorder
         // (for streaming recording, we would enqueue at least 2 empty buffers to start things off)
@@ -300,7 +300,7 @@ void AndroidRequestAppPermissions(const char* perm);
 void* InitSoundAndroid(SoundCBType cb, int reqSPS, int reqChannelsRec, int reqChannelsPlay, int sugBufferSize,
                        const char* inputSelect, const char* outputSelect)
 {
-    struct SoundDriverAndroid* r = (struct SoundDriverAndroid*)malloc(sizeof(struct SoundDriverAndroid));
+    struct SoundDriverAndroid* r = (struct SoundDriverAndroid*)calloc(1, sizeof(struct SoundDriverAndroid));
     memset(r, 0, sizeof(*r));
     r->CloseFn      = CloseSoundAndroid;
     r->SoundStateFn = SoundStateAndroid;
