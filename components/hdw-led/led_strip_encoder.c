@@ -9,6 +9,9 @@
 
 static const char* TAG = "led_encoder";
 
+/**
+ * @brief An encoder to use the RMT peripheral to drive RGB LEDs
+ */
 typedef struct
 {
     rmt_encoder_t base;

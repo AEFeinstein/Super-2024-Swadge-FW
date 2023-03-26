@@ -38,7 +38,15 @@
  *
  * The <a href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/main/modes/pong">Pong mode</a> is written to be
  * a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and uses good
- * design patterns.
+ * design patterns. Look out for things like:
+ * - How the \c pong_t struct contains all variables the mode needs
+ * - How immutable strings are declared <tt>static const</tt>
+ * - How fonts, WSGs, songs, and a menu are initialized in \c pongEnterMode() and deinitialized in \c pongExitMode()
+ * - How the main loop runs depending on the screen currently being displayed in \c pongMainLoop() and \c pongGameLoop()
+ * - How a timer pattern is used in \c pongFadeLeds()
+ * - How user input is handled in \c pongControlPlayerPaddle()
+ * - How the game state is updated in \c pongUpdatePhysics()
+ * - How graphics and LEDs are drawn in \c pongDrawField() and \c pongBackgroundDrawCallback()
  *
  * \section apis API Reference
  *

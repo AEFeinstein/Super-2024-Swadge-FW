@@ -21,11 +21,14 @@
 // Enums
 //==============================================================================
 
+/**
+ * @brief A track for a song on the buzzer. This plays notes from a song_t
+ */
 typedef struct
 {
-    const song_t* song;
-    uint32_t note_index;
-    int64_t start_time;
+    const song_t* song;  ///< The song_t being played
+    uint32_t note_index; ///< The index of the current musicalNote_t in the song
+    int64_t start_time;  ///< The time the current musicalNote_t started in the song
 } buzzerTrack_t;
 
 //==============================================================================

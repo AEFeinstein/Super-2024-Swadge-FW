@@ -41,17 +41,15 @@ static void deinitSubMenu(menu_t* menu);
  * @param title  The title to be displayed for this menu. The underlying memory
  *               isn't copied, so this string must persist for the lifetime of
  *               the menu.
- * @param font   The font to draw this menu with
  * @param cbFunc The function to call when a menu option is selected. The
  *               argument to the callback will be the same pointer
  * @return A pointer to the newly allocated menu_t. This must be deinitialized
  *         when the menu is not used anymore.
  */
-menu_t* initMenu(const char* title, font_t* font, menuCb cbFunc)
+menu_t* initMenu(const char* title, menuCb cbFunc)
 {
     menu_t* menu      = calloc(1, sizeof(menu_t));
     menu->title       = title;
-    menu->font        = font;
     menu->cbFunc      = cbFunc;
     menu->currentItem = NULL;
     menu->items       = calloc(1, sizeof(list_t));
@@ -134,7 +132,6 @@ menu_t* startSubMenu(menu_t* menu, const char* label)
     // Allocate a submenu
     menu_t* subMenu      = calloc(1, sizeof(menu_t));
     subMenu->title       = label;
-    subMenu->font        = menu->font;
     subMenu->cbFunc      = menu->cbFunc;
     subMenu->currentItem = NULL;
     subMenu->items       = calloc(1, sizeof(list_t));
@@ -462,9 +459,10 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
  * animations are smooth. It will draw over the entire display, but may be drawn
  * over afterwards.
  *
- * @param menu The menu to render.
+ * @param menu The menu to render
+ * @param font The font to render the menu with
  */
-void drawMenu(menu_t* menu)
+void drawMenu(menu_t* menu, font_t* font)
 {
     // Clear everything first
     clearPxTft();
@@ -498,17 +496,17 @@ void drawMenu(menu_t* menu)
     int16_t y = 20;
 
     // Draw an underlined title
-    drawText(menu->font, c555, menu->title, x, y);
-    y += (menu->font->height + 2);
-    drawLine(x, y, x + textWidth(menu->font, menu->title), y, c555, 0);
+    drawText(font, c555, menu->title, x, y);
+    y += (font->height + 2);
+    drawLine(x, y, x + textWidth(font, menu->title), y, c555, 0);
     y += 3;
 
     // Draw page indicators
     if (menu->items->length > ITEMS_PER_PAGE)
     {
-        drawText(menu->font, c555, "~UP~", x, y);
+        drawText(font, c555, "~UP~", x, y);
     }
-    y += (menu->font->height + 2);
+    y += (font->height + 2);
 
     // Draw a page-worth of items
     for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
@@ -519,7 +517,7 @@ void drawMenu(menu_t* menu)
             // Draw an indicator if the current item is selected
             if (menu->currentItem->val == item)
             {
-                drawText(menu->font, c555, "X", 0, y);
+                drawText(font, c555, "X", 0, y);
             }
 
             // Draw the label(s)
@@ -529,18 +527,18 @@ void drawMenu(menu_t* menu)
                 {
                     char label[64] = {0};
                     snprintf(label, sizeof(label) - 1, "%s >>", item->label);
-                    drawText(menu->font, c555, label, x, y);
+                    drawText(font, c555, label, x, y);
                 }
                 else
                 {
-                    drawText(menu->font, c555, item->label, x, y);
+                    drawText(font, c555, item->label, x, y);
                 }
             }
             else if (item->options)
             {
                 char label[64] = {0};
                 snprintf(label, sizeof(label) - 1, "< %s >", item->options[item->currentOpt]);
-                drawText(menu->font, c555, label, x, y);
+                drawText(font, c555, label, x, y);
             }
 
             // Move to the next item
@@ -548,13 +546,13 @@ void drawMenu(menu_t* menu)
         }
 
         // Move to the next row
-        y += (menu->font->height + 2);
+        y += (font->height + 2);
     }
 
     // Draw page indicators
     if (menu->items->length > ITEMS_PER_PAGE)
     {
-        drawText(menu->font, c555, "~DOWN~", x, y);
+        drawText(font, c555, "~DOWN~", x, y);
     }
-    y += (menu->font->height + 2);
+    y += (font->height + 2);
 }

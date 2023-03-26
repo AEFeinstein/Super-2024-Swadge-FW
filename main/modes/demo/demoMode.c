@@ -76,7 +76,7 @@ static void demoEnterMode(void)
     // bzrPlayBgm(&dv->ode_to_joy);
     bzrStop();
 
-    dv->menu = initMenu(demoName, &dv->ibm, demoMenuCb);
+    dv->menu = initMenu(demoName, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);
     addSingleItemToMenu(dv->menu, demoMenu2);
 
@@ -153,7 +153,7 @@ static void demoMainLoop(int64_t elapsedUs)
         sendUsbGamepadReport(&report);
     }
 
-    // drawMenu(dv->menu);
+    // drawMenu(dv->menu, &dv->ibm);
 
     // Fill the display area with a dark cyan
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);

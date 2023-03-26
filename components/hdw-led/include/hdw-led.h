@@ -44,6 +44,9 @@
 #include <esp_err.h>
 #include <hal/gpio_types.h>
 
+/**
+ * @brief LED colors, with red, green, and blue components
+ */
 typedef struct __attribute__((packed))
 {
     uint8_t g; //!< The green component, 0-255

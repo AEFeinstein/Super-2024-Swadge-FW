@@ -47,12 +47,20 @@
 
 #include "palette.h"
 
+/**
+ * @brief A character used in a font_t. Each character is a bitmap with the same height as the other characters in the
+ * font.
+ */
 typedef struct
 {
     uint8_t width;   ///< The width of this character
     uint8_t* bitmap; ///< This character's bitmap data
 } font_ch_t;
 
+/**
+ * @brief A font is a collection of font_ch_t for all ASCII characters. Each character has the same height and variable
+ * width.
+ */
 typedef struct
 {
     uint8_t height;                 ///< The height of this font. All chars have the same height

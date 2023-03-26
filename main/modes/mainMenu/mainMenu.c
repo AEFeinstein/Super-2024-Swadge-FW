@@ -70,7 +70,7 @@ static void mainMenuEnterMode(void)
     loadFont("ibm_vga8.font", &mainMenu->ibm, false);
 
     // Allocate the menu
-    mainMenu->menu = initMenu(mainMenuName, &mainMenu->ibm, mainMenuCb);
+    mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
 
     // Add single items
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
@@ -107,7 +107,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenu(mainMenu->menu);
+    drawMenu(mainMenu->menu, &mainMenu->ibm);
 }
 
 /**

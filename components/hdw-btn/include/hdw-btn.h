@@ -110,6 +110,10 @@ typedef enum __attribute__((packed))
     TB_4      = 0x1000, //!< Touch pad 4's button bit
 } buttonBit_t;
 
+/**
+ * @brief A button event containing the button that triggered the event, whether it was pressed or released, and the
+ * whole button state
+ */
 typedef struct
 {
     uint16_t state;     //!< A bitmask for the state of all buttons

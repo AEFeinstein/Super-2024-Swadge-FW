@@ -107,12 +107,12 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
     p2p->startMsg.seqNum      = 0;
     memset(p2p->startMsg.macAddr, 0xFF, sizeof(p2p->startMsg.macAddr));
 
-    // Set up a timer for acking messages
+    // Set up a timer for acknowledging messages
     esp_timer_create_args_t p2pTxRetryTimeoutArgs = {
         .callback              = p2pTxRetryTimeout,
         .arg                   = p2p,
         .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2ptrt",
+        .name                  = "p2pt_rt",
         .skip_unhandled_events = false,
     };
     esp_timer_create(&p2pTxRetryTimeoutArgs, &p2p->tmr.TxRetry);
@@ -122,7 +122,7 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
         .callback              = p2pTxAllRetriesTimeout,
         .arg                   = p2p,
         .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2ptart",
+        .name                  = "p2pt_art",
         .skip_unhandled_events = false,
     };
     esp_timer_create(&p2pTxAllRetriesTimeoutArgs, &p2p->tmr.TxAllRetries);
@@ -132,7 +132,7 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
         .callback              = p2pRestartTmrCb,
         .arg                   = p2p,
         .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2pr",
+        .name                  = "p2pt_r",
         .skip_unhandled_events = false,
     };
     esp_timer_create(&p2pRestartArgs, &p2p->tmr.Reinit);
@@ -142,7 +142,7 @@ void p2pInitialize(p2pInfo* p2p, uint8_t modeId, p2pConCbFn conCbFn, p2pMsgRxCbF
         .callback              = p2pConnectionTimeout,
         .arg                   = p2p,
         .dispatch_method       = ESP_TIMER_TASK,
-        .name                  = "p2pct",
+        .name                  = "p2pt_ct",
         .skip_unhandled_events = false,
     };
     esp_timer_create(&p2pConnectionTimeoutArgs, &p2p->tmr.Connection);
@@ -160,7 +160,7 @@ void p2pSetAsymmetric(p2pInfo* p2p, uint8_t incomingModeId)
 }
 
 /**
- * Start the connection process by sending broadcasts and notify the mode
+ * @brief Start the connection process by sending broadcasts and notify the mode
  *
  * @param p2p The p2pInfo struct with all the state information
  */
@@ -178,7 +178,7 @@ void p2pStartConnection(p2pInfo* p2p)
 }
 
 /**
- * Stop up all timers
+ * @brief Stop up all timers
  *
  * @param p2p The p2pInfo struct with all the state information
  */
@@ -196,7 +196,7 @@ void p2pDeinit(p2pInfo* p2p)
 }
 
 /**
- * Send a broadcast connection message
+ * @brief Send a broadcast connection message
  *
  * Called periodically, with some randomness mixed in from the tmr.Connection
  * timer. The timer is set when connection starts and is stopped when we
@@ -221,7 +221,7 @@ static void p2pConnectionTimeout(void* arg)
 }
 
 /**
- * Retries sending a message to be acked
+ * @brief Retries sending a message to be acked
  *
  * Called from the tmr.TxRetry timer. The timer is set when a message to be
  * ACKed is sent and cleared when an ACK is received
@@ -243,7 +243,7 @@ static void p2pTxRetryTimeout(void* arg)
 }
 
 /**
- * Stops a message transmission attempt after all retries have been exhausted
+ * @brief Stops a message transmission attempt after all retries have been exhausted
  * and calls p2p->ack.FailureFn() if a function was given
  *
  * Called from the tmr.TxAllRetries timer. The timer is set when a message to
@@ -273,7 +273,7 @@ static void p2pTxAllRetriesTimeout(void* arg)
 }
 
 /**
- * Send a message from one Swadge to another. This must not be called before
+ * @brief Send a message from one Swadge to another. This must not be called before
  * the CON_ESTABLISHED event occurs. Message addressing, ACKing, and retries
  * all happen automatically
  *
@@ -309,7 +309,7 @@ void p2pSendMsg(p2pInfo* p2p, const uint8_t* payload, uint16_t len, p2pMsgTxCbFn
 }
 
 /**
- * Callback function for when a message sent by the Swadge mode, not during
+ * @brief Callback function for when a message sent by the Swadge mode, not during
  * the connection process, is ACKed
  *
  * @param p2p The p2pInfo struct with all the state information
@@ -327,7 +327,7 @@ static void p2pModeMsgSuccess(p2pInfo* p2p, const uint8_t* data, uint8_t dataLen
 }
 
 /**
- * Callback function for when a message sent by the Swadge mode, not during
+ * @brief Callback function for when a message sent by the Swadge mode, not during
  * the connection process, is dropped
  *
  * @param p2p The p2pInfo struct with all the state information
@@ -343,7 +343,7 @@ static void p2pModeMsgFailure(p2pInfo* p2p)
 }
 
 /**
- * Wrapper for sending an ESP-NOW message. Handles ACKing and retries for
+ * @brief Wrapper for sending an ESP-NOW message. Handles ACKing and retries for
  * non-broadcast style messages
  *
  * @param p2p       The p2pInfo struct with all the state information
@@ -409,7 +409,7 @@ static void p2pSendMsgEx(p2pInfo* p2p, uint8_t* msg, uint16_t len, bool shouldAc
 }
 
 /**
- * This function must be called whenever an ESP NOW packet is received
+ * @brief This function must be called whenever an ESP NOW packet is received
  *
  * @param p2p      The p2pInfo struct with all the state information
  * @param mac_addr The MAC of the swadge that sent the data
@@ -600,8 +600,10 @@ void p2pRecvCb(p2pInfo* p2p, const uint8_t* mac_addr, const uint8_t* data, uint8
 }
 
 /**
- * Set data to be automatically used as the payload all future ACKs, until the
- * data is cleared. This data will not be transmitted until the next ACK is
+ * @brief Set data to be automatically used as the payload all future ACKs, until the
+ * data is cleared.
+ *
+ * This data will not be transmitted until the next ACK is
  * sent, whenever that is. Normally an ACK does not contain any payload data,
  * but an application can have a more efficient continuous request and response
  * flow by embedding the response in the ACK.
@@ -622,11 +624,11 @@ void p2pSetDataInAck(p2pInfo* p2p, const uint8_t* ackData, uint8_t ackDataLen)
     p2p->ackMsg.hdr.messageType = P2P_MSG_DATA_ACK;
     // Copy the data to the ackMsg, save the length
     memcpy(p2p->ackMsg.data, ackData, ackDataLen);
-    p2p->ack.dataInAckLen = ackDataLen;
+    p2p->dataInAckLen = ackDataLen;
 }
 
 /**
- * Clear any data which was set to be used as the payload in the next ACK
+ * @brief Clear any data which was set to be used as the payload in the next ACK
  *
  * @param p2p The p2pInfo struct with all the state information
  */
@@ -634,11 +636,11 @@ void p2pClearDataInAck(p2pInfo* p2p)
 {
     // Set the message type to indicate no data and clear the length
     p2p->ackMsg.hdr.messageType = P2P_MSG_ACK;
-    p2p->ack.dataInAckLen       = 0;
+    p2p->dataInAckLen           = 0;
 }
 
 /**
- * Helper function to send an ACK message to the given MAC
+ * @brief Helper function to send an ACK message to the given MAC
  *
  * @param p2p      The p2pInfo struct with all the state information
  * @param mac_addr The MAC to address this ACK to
@@ -651,11 +653,11 @@ static void p2pSendAckToMac(p2pInfo* p2p, const uint8_t* mac_addr)
     // Everything else should already be written
     memcpy(p2p->ackMsg.hdr.macAddr, mac_addr, sizeof(p2p->ackMsg.hdr.macAddr));
     // Send the ACK
-    p2pSendMsgEx(p2p, (uint8_t*)&p2p->ackMsg, sizeof(p2pCommonHeader_t) + p2p->ack.dataInAckLen, false, NULL, NULL);
+    p2pSendMsgEx(p2p, (uint8_t*)&p2p->ackMsg, sizeof(p2pCommonHeader_t) + p2p->dataInAckLen, false, NULL, NULL);
 }
 
 /**
- * This is called when p2p->startMsg is acked and processes the connection event
+ * @brief This is called when p2p->startMsg is acked and processes the connection event
  *
  * @param p2p The p2pInfo struct with all the state information
  * @param data The start message which was acked
@@ -669,6 +671,8 @@ static void p2pGameStartAckRecv(p2pInfo* p2p, const uint8_t* data, uint8_t dataL
 }
 
 /**
+ * @brief This function processes connection events
+ *
  * Two steps are necessary to establish a connection in no particular order.
  * 1. This swadge has to receive a start message from another swadge
  * 2. This swadge has to receive an ack to a start message sent to another swadge
@@ -742,7 +746,8 @@ static void p2pProcConnectionEvt(p2pInfo* p2p, connectionEvt_t event)
 }
 
 /**
- * This starts a timer to call p2pRestart(), used in case of a failure
+ * @brief This starts a timer to call p2pRestart(), used in case of a failure
+ *
  * The timer is set when one half of the necessary connection messages is received
  * The timer is disarmed when the connection is established
  *
@@ -758,9 +763,9 @@ static void p2pStartRestartTimer(void* arg)
 }
 
 /**
- * Wrapper for p2pRestart() for a timer callback
- * Restart by deiniting then initing. Persist the msgId and p2p->conCbFn
- * fields
+ * @brief Wrapper for p2pRestart() for a timer callback
+ *
+ * Restart by deinitializing then initializing. Persist the msgId and p2p->conCbFn fields
  *
  * @param arg The p2pInfo struct with all the state information
  */
@@ -770,8 +775,7 @@ static void p2pRestartTmrCb(void* arg)
 }
 
 /**
- * Restart by deiniting then initing. Persist the msgId and p2p->conCbFn
- * fields
+ * @brief Restart by deinitializing then initializing. Persist the msgId and p2p->conCbFn fields
  *
  * @param p2p The p2pInfo struct with all the state information
  */
@@ -796,7 +800,7 @@ static void p2pRestart(p2pInfo* p2p)
 }
 
 /**
- * This must be called by whatever function is registered to the Swadge mode's
+ * @brief This must be called by whatever function is registered to the Swadge mode's
  * fnEspNowSendCb
  *
  * This is called after an attempted transmission. If it was successful, and the
@@ -855,7 +859,7 @@ void p2pSendCb(p2pInfo* p2p, const uint8_t* mac_addr __attribute__((unused)), es
 }
 
 /**
- * After the swadge is connected to another, return whether this Swadge is
+ * @brief After the swadge is connected to another, return whether this Swadge is
  * player 1 or player 2. This can be used to determine client/server roles
  *
  * @param p2p The p2pInfo struct with all the state information
@@ -874,7 +878,7 @@ playOrder_t p2pGetPlayOrder(p2pInfo* p2p)
 }
 
 /**
- * Override whether the Swadge is player 1 or player 2. You probably shouldn't
+ * @brief Override whether the Swadge is player 1 or player 2. You probably shouldn't
  * do this, but you might want to for single player modes
  *
  * @param p2p The p2pInfo struct with all the state information

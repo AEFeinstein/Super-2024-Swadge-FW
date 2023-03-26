@@ -195,7 +195,7 @@ static void pongEnterMode(void)
     loadSong("block2.sng", &pong->hit2, false);
 
     // Initialize the menu
-    pong->menu = initMenu(pongName, &pong->ibm, pongMenuCb);
+    pong->menu = initMenu(pongName, pongMenuCb);
 
     // These are the possible control schemes
     const char* controlSchemes[] = {
@@ -315,7 +315,7 @@ static void pongMainLoop(int64_t elapsedUs)
             }
 
             // Draw the menu
-            drawMenu(pong->menu);
+            drawMenu(pong->menu, &pong->ibm);
             break;
         }
         case PONG_GAME:

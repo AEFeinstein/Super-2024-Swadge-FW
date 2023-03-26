@@ -47,9 +47,9 @@ The continuous integration for this project runs on a Windows instance. This mea
 
 8. Clone the ESP-IDF v5.0.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
     ```powershell
-    Set-ExecutionPolicy -Scope CurrentUser Unrestricted
-    git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
-    ~/esp/esp-idf/install.ps1
+    & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
+    & git clone -b v5.0.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
+    & $HOME\esp\esp-idf\install.ps1
     ```
     **Warning**
     
