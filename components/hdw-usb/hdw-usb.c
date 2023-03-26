@@ -110,8 +110,11 @@ void deinitUsb(void)
  */
 void sendUsbGamepadReport(hid_gamepad_report_t* report)
 {
-    tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, report->x, report->y, report->z, report->rx, report->ry, report->rz,
-                           report->hat, report->buttons);
+    if (tud_ready())
+    {
+        tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, report->x, report->y, report->z, report->rx, report->ry,
+                               report->rz, report->hat, report->buttons);
+    }
 }
 
 //==============================================================================
