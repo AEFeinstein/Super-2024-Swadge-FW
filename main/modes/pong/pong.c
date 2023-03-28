@@ -181,6 +181,8 @@ static void pongEnterMode(void)
     // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
     pong = calloc(1, sizeof(pong_t));
 
+    // TODO add note about loading assets, where to put them, etc
+
     // Load a font
     loadFont("ibm_vga8.font", &pong->ibm, false);
 
