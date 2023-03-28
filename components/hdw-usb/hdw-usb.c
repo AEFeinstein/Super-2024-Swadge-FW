@@ -95,7 +95,7 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
 }
 
 /**
- * @brief Uninitialize USB HID device
+ * @brief Deinitialize USB HID device
  * Note, this does nothing as tinyusb_driver_uninstall() doesn't exist
  */
 void deinitUsb(void)
@@ -110,8 +110,11 @@ void deinitUsb(void)
  */
 void sendUsbGamepadReport(hid_gamepad_report_t* report)
 {
-    tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, report->x, report->y, report->z, report->rx, report->ry, report->rz,
-                           report->hat, report->buttons);
+    if (tud_ready())
+    {
+        tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, report->x, report->y, report->z, report->rx, report->ry,
+                               report->rz, report->hat, report->buttons);
+    }
 }
 
 //==============================================================================
@@ -140,27 +143,27 @@ uint8_t const* tud_hid_descriptor_report_cb(uint8_t instance __attribute__((unus
  * @param report_id The report ID
  * @param report_type Unused
  * @param buffer Pointer to a feature get request for the command set.
- * @param reqlen Number of bytes host is requesting from us.
+ * @param reqLen Number of bytes host is requesting from us.
  * @return The number of bytes returned to the host
  */
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
-                               hid_report_type_t report_type __attribute__((unused)), uint8_t* buffer, uint16_t reqlen)
+                               hid_report_type_t report_type __attribute__((unused)), uint8_t* buffer, uint16_t reqLen)
 {
     if (report_id == 170 || report_id == 171)
     {
-        return handle_advanced_usb_control_get(reqlen, buffer);
+        return handle_advanced_usb_control_get(reqLen, buffer);
     }
     else if (report_id == 172)
     {
-        return handle_advanced_usb_terminal_get(reqlen, buffer);
+        return handle_advanced_usb_terminal_get(reqLen, buffer);
     }
     else if (report_id == 173 && advancedUsbHandler)
     {
-        return advancedUsbHandler(buffer, reqlen, 1);
+        return advancedUsbHandler(buffer, reqLen, 1);
     }
     else
     {
-        return reqlen;
+        return reqLen;
     }
 }
 
@@ -172,7 +175,7 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
  * @param report_id The report ID
  * @param report_type unused
  * @param buffer Pointer to full command
- * @param bufsize Total length of the buffer (command ID incldued)
+ * @param bufsize Total length of the buffer (command ID included)
  */
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type __attribute__((unused)),
                            uint8_t const* buffer, uint16_t bufsize)

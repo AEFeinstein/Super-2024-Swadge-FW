@@ -18,15 +18,15 @@
 
 #include "hdw-tft.h"
 
-// #define PROCPROFILE
+// #define PROC_PROFILE
 
-#ifdef PROCPROFILE
+#ifdef PROC_PROFILE
 void uart_tx_one_char(char c);
-static inline uint32_t get_ccount()
+static inline uint32_t get_cCount()
 {
-    uint32_t ccount;
-    asm volatile("rsr %0,ccount" : "=a"(ccount));
-    return ccount;
+    uint32_t cCount;
+    asm volatile("rsr %0,cCount" : "=a"(cCount));
+    return cCount;
 }
 #endif
 
@@ -66,7 +66,7 @@ static inline uint32_t get_ccount()
     #define MIRROR_Y           true
 #elif defined(CONFIG_ST7735_128x160)
     // Mixture of docs + experimentation
-    // This is the RB027D25N05A / RB017D14N05A (Actually the ST7735S, so inbetween a ST7735 and ST7789)
+    // This is the RB027D25N05A / RB017D14N05A (Actually the ST7735S, so in between a ST7735 and ST7789)
     #define LCD_PIXEL_CLOCK_HZ (40 * 1000 * 1000)
     #define X_OFFSET           0
     #define Y_OFFSET           0
@@ -164,7 +164,7 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     tftBacklightIsPwm = isPwmBacklight;
     tftLedcChannel    = ledcChannel;
 
-    spi_bus_config_t buscfg = {
+    spi_bus_config_t busCfg = {
         .sclk_io_num     = sclk,
         .mosi_io_num     = mosi,
         .miso_io_num     = -1,
@@ -173,7 +173,7 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
         .max_transfer_sz = PARALLEL_LINES * TFT_WIDTH * 2 + 8,
     };
     // Initialize the SPI bus
-    ESP_ERROR_CHECK(spi_bus_initialize(spiHost, &buscfg, SPI_DMA_CH_AUTO));
+    ESP_ERROR_CHECK(spi_bus_initialize(spiHost, &busCfg, SPI_DMA_CH_AUTO));
 
     esp_lcd_panel_io_spi_config_t io_config = {
         .dc_gpio_num       = dc,
@@ -226,14 +226,14 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     esp_lcd_panel_invert_color(panel_handle, false);
     // NOTE: the following call would override settings set by esp_lcd_panel_swap_xy() and esp_lcd_panel_mirror()
     // Both of the prior functions write to the 0x36 register
-    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xE8}, 1); // MX, MY, RGB mode  (MADCTL)
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xE8}, 1); // MX, MY, RGB mode  (MAD CTL)
     esp_lcd_panel_io_tx_param(tft_io_handle, 0x35, (uint8_t[]){0x00}, 1); // "tear effect" testing sync pin.
 #elif defined(CONFIG_ST7735_128x160)
     esp_lcd_panel_io_tx_param(tft_io_handle, 0xB1, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);
     esp_lcd_panel_io_tx_param(tft_io_handle, 0xB2, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);
     esp_lcd_panel_io_tx_param(tft_io_handle, 0xB3, (uint8_t[]){0x05, 0x3C, 0x3C, 0x05, 0x3C, 0x3C}, 6);
     esp_lcd_panel_io_tx_param(tft_io_handle, 0xB4, (uint8_t[]){0x00}, 1); // 00 Dot inversion,  //07 column inversion
-    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xa0}, 1); // MX, MY, RGB mode  (MADCTL)
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xa0}, 1); // MX, MY, RGB mode  (MAD CTL)
     esp_lcd_panel_io_tx_param(
         tft_io_handle, 0xE0,
         (uint8_t[]){0x04, 0x22, 0x07, 0x0A, 0x2E, 0x30, 0x25, 0x2A, 0x28, 0x26, 0x2E, 0x3A, 0x00, 0x01, 0x03, 0x13},
@@ -287,7 +287,7 @@ paletteColor_t* getPxTftFramebuffer(void)
 }
 
 /**
- * @brief Disable the backlight (for powerdown)
+ * @brief Disable the backlight (for power down)
  *
  */
 void disableTFTBacklight(void)
@@ -405,7 +405,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
     // Indexes of the line currently being sent to the LCD and the line we're calculating
     uint8_t calc_line = 0;
 
-#ifdef PROCPROFILE
+#ifdef PROC_PROFILE
     uint32_t start, mid, final;
     uart_tx_one_char('f');
 #endif
@@ -415,8 +415,8 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
     {
         // Calculate a line
 
-#ifdef PROCPROFILE
-        start = get_ccount();
+#ifdef PROC_PROFILE
+        start = get_cCount();
 #endif
 
         // Naive approach is ~100k cycles, later optimization at 60k cycles @ 160 MHz
@@ -434,9 +434,9 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
             outColor += 2;
         }
 
-#ifdef PROCPROFILE
+#ifdef PROC_PROFILE
         uart_tx_one_char('g');
-        mid = get_ccount();
+        mid = get_cCount();
 #endif
 
         uint8_t sending_line = calc_line;
@@ -466,13 +466,13 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
             fnBackgroundDrawCallback(0, y, TFT_WIDTH, PARALLEL_LINES, y / PARALLEL_LINES, TFT_HEIGHT / PARALLEL_LINES);
         }
 
-#ifdef PROCPROFILE
-        final = get_ccount();
+#ifdef PROC_PROFILE
+        final = get_cCount();
         uart_tx_one_char('h');
 #endif
     }
 
-#ifdef PROCPROFILE
+#ifdef PROC_PROFILE
     uart_tx_one_char('i');
     // ESP_LOGI( "tft", "%d/%d", mid - start, final - mid );
 #endif

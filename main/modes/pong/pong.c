@@ -181,6 +181,24 @@ static void pongEnterMode(void)
     // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
     pong = calloc(1, sizeof(pong_t));
 
+    // Below, various assets are loaded from the SPIFFS file system to RAM. How did they get there?
+    // The source assets are found in the /assets/pong/ directory. Each asset is processed and packed into the SPIFFS
+    // file system at compile time The following transformations are made:
+    // * pball.png   -> pball.wsg
+    // * ppaddle.png -> ppaddle.wsg
+    // * block1.mid  -> block1.sng
+    // * block2.mid  -> block2.sng
+    // * gmcc.mid    -> gmcc.sng
+    //
+    // In addition, a common font is found in /assets/fonts/ and is transformed like so:
+    // * ibm_vga8.font.png -> ibm_vga8.font
+    //
+    // If you'd like to learn more about how assets are processed and packed, see
+    // /tools/spiffs_file_preprocessor/README.md
+    //
+    // If you'd like to learn more about how assets are loaded, see
+    // /components/hdw-spiffs/include/hdw-spiffs.h
+
     // Load a font
     loadFont("ibm_vga8.font", &pong->ibm, false);
 
@@ -189,10 +207,10 @@ static void pongEnterMode(void)
     loadWsg("ppaddle.wsg", &pong->paddleWsg, false);
 
     // Load SFX
-    loadSong("gmcc.sng", &pong->bgm, false);
-    pong->bgm.shouldLoop = true;
     loadSong("block1.sng", &pong->hit1, false);
     loadSong("block2.sng", &pong->hit2, false);
+    loadSong("gmcc.sng", &pong->bgm, false);
+    pong->bgm.shouldLoop = true;
 
     // Initialize the menu
     pong->menu = initMenu(pongName, pongMenuCb);

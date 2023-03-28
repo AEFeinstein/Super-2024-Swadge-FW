@@ -44,10 +44,10 @@ void deinitTemperatureSensor(void)
  */
 float readTemperatureSensor(void)
 {
-    float tsens_value;
-    if (ESP_OK == temperature_sensor_get_celsius(temp_sensor, &tsens_value))
+    float tSens_value;
+    if (ESP_OK == temperature_sensor_get_celsius(temp_sensor, &tSens_value))
     {
-        return tsens_value;
+        return tSens_value;
     }
 
     // Impossible!

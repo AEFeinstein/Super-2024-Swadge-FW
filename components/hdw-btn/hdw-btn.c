@@ -62,7 +62,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
 
 static void touchsensor_interrupt_cb(void* arg);
 static int getBaseTouchVals(int32_t* data, int count);
-static int getTouchRawValues(uint32_t* rawvalues, int maxPads);
+static int getTouchRawValues(uint32_t* rawValues, int maxPads);
 
 //==============================================================================
 // Functions
@@ -108,7 +108,7 @@ void deinitButtons(void)
 
 /**
  * @brief Service the queue of button events that caused interrupts
- * This only reutrns a single event, even if there are multiple in the queue
+ * This only returns a single event, even if there are multiple in the queue
  * This function may be called multiple times in a row to completely empty the queue
  *
  * @param evt If an event occurred, return it through this argument
@@ -299,7 +299,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     /* Initialize touch pad peripheral. */
     ESP_ERROR_CHECK(touch_pad_init());
 
-    /* Initialie each touch pad */
+    /* Initialize each touch pad */
     for (uint8_t i = 0; i < numTouchPads; i++)
     {
         ESP_ERROR_CHECK(touch_pad_config(touchPads[i]));
@@ -437,11 +437,11 @@ static void touchsensor_interrupt_cb(void* arg)
  * @brief Get totally raw touch sensor values from buffer.
  * NOTE: You must have touch callbacks enabled to use this.
  *
- * @param data is a pointer to an array of int32_t's to receive the raw touch data.
- * @param count is the number of ints in your array.
+ * @param rawValues is a pointer to an array of int32_t's to receive the raw touch data.
+ * @param maxPads is the number of ints in your array.
  * @return is the number of values that were successfully read.
  */
-static int getTouchRawValues(uint32_t* rawvalues, int maxPads)
+static int getTouchRawValues(uint32_t* rawValues, int maxPads)
 {
     if (maxPads > numTouchPads)
     {
@@ -450,7 +450,7 @@ static int getTouchRawValues(uint32_t* rawvalues, int maxPads)
     for (int i = 0; i < maxPads; i++)
     {
         // If any errors, abort.
-        if (touch_pad_read_raw_data(touchPads[i], &rawvalues[i]))
+        if (touch_pad_read_raw_data(touchPads[i], &rawValues[i]))
         {
             return 0;
         }
@@ -526,7 +526,7 @@ static int getBaseTouchVals(int32_t* data, int count)
  * @brief Get totally raw touch sensor values from buffer.
  * NOTE: You must have touch callbacks enabled to use this.
  *
- * @param[out] centerVal pointer to centroid of touch locaiton from 0..1024 inclusive. Cannot be NULL.
+ * @param[out] centerVal pointer to centroid of touch location from 0..1024 inclusive. Cannot be NULL.
  * @param[out] intensityVal intensity of touch press. Cannot be NULL.
  * @return true if touched (centroid), false if not touched (no centroid)
  */
@@ -563,7 +563,7 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
     int leftOfPeak  = (peakBin > 0) ? baseVals[peakBin - 1] : 0;
     int rightOfPeak = (peakBin < numTouchPads - 1) ? baseVals[peakBin + 1] : 0;
 
-    int opeak  = peak;
+    int oPeak  = peak;
     int center = peakBin << 8;
 
     if (rightOfPeak >= leftOfPeak)
@@ -573,7 +573,7 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
         peak -= leftOfPeak;
         center += (rightOfPeak << 8) / (rightOfPeak + peak);
 
-        *intensityVal = opeak + rightOfPeak;
+        *intensityVal = oPeak + rightOfPeak;
     }
     else
     {
@@ -582,7 +582,7 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
         peak -= rightOfPeak;
         center -= (leftOfPeak << 8) / (leftOfPeak + peak);
 
-        *intensityVal = opeak + leftOfPeak;
+        *intensityVal = oPeak + leftOfPeak;
     }
     *centerVal = center;
     return true;

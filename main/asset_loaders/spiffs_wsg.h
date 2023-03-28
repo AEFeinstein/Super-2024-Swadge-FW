@@ -12,7 +12,7 @@
  *
  * \section spiffs_wsg_usage Usage
  *
- * Load wsgs from SPIFFS to RAM using loadWsg(). Wsgs may be loaded to normal RAM, which is smaller and faster, or
+ * Load WSGs from SPIFFS to RAM using loadWsg(). WSGs may be loaded to normal RAM, which is smaller and faster, or
  * SPI RAM, which is larger and slower.
  *
  * Free when done using freeWsg(). If a wsg is not freed, the memory will leak.

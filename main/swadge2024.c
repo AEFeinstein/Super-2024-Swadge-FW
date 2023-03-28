@@ -39,14 +39,21 @@
  * The <a href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/main/modes/pong">Pong mode</a> is written to be
  * a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and uses good
  * design patterns. Look out for things like:
- * - How the \c pong_t struct contains all variables the mode needs
+ * - How the \c pong_t struct contains all variables the mode needs, is allocated when the mode is entered, and is freed
+ * when the mode exits
  * - How immutable strings are declared <tt>static const</tt>
- * - How fonts, WSGs, songs, and a menu are initialized in \c pongEnterMode() and deinitialized in \c pongExitMode()
+ * - How a \ref menu.h "menu" is initialized in \c pongEnterMode(), updated and drawn in \c pongMainLoop(), and
+ * deinitialized in \c pongExitMode()
+ * - How \ref font.h "fonts", \ref wsg.h "WSG", and \ref hdw-bzr.h "song" assets are loaded in \c pongEnterMode() and
+ * freed in \c pongExitMode()
+ *     - How fonts and WSGs are drawn in \c pongDrawField()
+ *     - How background music is used in \c pongResetGame() and sound effects are used in \c pongUpdatePhysics()
+ * - How a background is drawn in \c pongBackgroundDrawCallback()
+ * - How LEDs are lit in \c pongDrawField()
  * - How the main loop runs depending on the screen currently being displayed in \c pongMainLoop() and \c pongGameLoop()
- * - How a timer pattern is used in \c pongFadeLeds()
+ * - How an accumulating timer pattern is used in \c pongFadeLeds()
  * - How user input is handled in \c pongControlPlayerPaddle()
  * - How the game state is updated in \c pongUpdatePhysics()
- * - How graphics and LEDs are drawn in \c pongDrawField() and \c pongBackgroundDrawCallback()
  *
  * \section apis API Reference
  *
