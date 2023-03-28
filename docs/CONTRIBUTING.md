@@ -8,7 +8,7 @@
 4. This is the fun part, write your feature!
     1. Please comment your code. This makes it easier for everyone to understand.
     2. [Doxygen comments](http://www.doxygen.nl/manual/docblocks.html) will be especially appreciated. You can [set up VSCode](https://marketplace.visualstudio.com/items?itemName=cschlosser.doxdocgen) to automatically add empty Doxygen templates to functions
-    3. You should [run clang-format](https://clang.llvm.org/docs/ClangFormat.html) with [this projects .clang-format file](/.clang-format) to beautify the code. Everyone loves pretty code. There's a [VSCode Extension](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) for this too.
+    3. You should [run clang-format](https://clang.llvm.org/docs/ClangFormat.html) with [this project's .clang-format file](https://github.com/AEFeinstein/Swadge-IDF-5.0/blob/main/.clang-format) to beautify the code. Everyone loves pretty code. There's a [VSCode Extension](https://marketplace.visualstudio.com/items?itemName=xaver.clang-format) for this too.
     4. The code should compile without any warnings.
     5. Please write small, useful messages in each commit.
 5. Test your feature. Try everything, mash buttons, whatever. Get creative. Users certainly will. Write your test plan and steps in the ticket you opened.
