@@ -45,18 +45,18 @@ static uint8_t did_init_flash_function;
  * @brief Accept a "get" feature report command from a USB host and write
  *         back whatever is needed to send back.
  *
- * @param reqlen Number of bytes host is requesting from us.
+ * @param reqLen Number of bytes host is requesting from us.
  * @param data Pointer to a feature get request for the command set.
  * @return Number of bytes that will be returned.
  */
-int handle_advanced_usb_control_get(int reqlen, uint8_t* data)
+int handle_advanced_usb_control_get(int reqLen, uint8_t* data)
 {
     if (advanced_usb_read_offset == 0)
     {
         return 0;
     }
-    memcpy(data, advanced_usb_read_offset, reqlen);
-    return reqlen;
+    memcpy(data, advanced_usb_read_offset, reqLen);
+    return reqLen;
 }
 
 /**
@@ -86,7 +86,7 @@ static int advanced_usb_write_log(void* cookie __attribute__((unused)), const ch
 }
 
 /**
- * @brief vaprintf standin for USB logging.
+ * @brief vaprintf stand-in for USB logging.
  *
  * @param fmt vaprintf format
  * @param args vaprintf args
@@ -101,7 +101,7 @@ int advanced_usb_write_log_printf(const char* fmt, va_list args)
 }
 
 /**
- * @brief vaprintf standin for USB logging.
+ * @brief vaprintf stand-in for USB logging.
  *
  * @param fmt vaprintf format
  * @param ... vaprintf args
@@ -119,11 +119,11 @@ int uprintf(const char* fmt, ...)
 /**
  * @brief USB request to get text in buffer
  *
- * @param reqlen The number of bytes the host is requesting from us.
+ * @param reqLen The number of bytes the host is requesting from us.
  * @param data The data that we will write back into
  * @return size Number of bytes to be returned to the host.
  */
-int handle_advanced_usb_terminal_get(int reqlen, uint8_t* data)
+int handle_advanced_usb_terminal_get(int reqLen, uint8_t* data)
 {
     if (NULL == advanced_usb_printf_buffer)
     {
@@ -137,9 +137,9 @@ int handle_advanced_usb_terminal_get(int reqlen, uint8_t* data)
     int mark = 1;
     if (togo)
     {
-        if (togo > reqlen - 2)
+        if (togo > reqLen - 2)
         {
-            togo = reqlen - 2;
+            togo = reqLen - 2;
         }
         while (mark <= togo)
         {
@@ -157,7 +157,7 @@ int handle_advanced_usb_terminal_get(int reqlen, uint8_t* data)
  * @brief Accept a "send" feature report command from a USB host and interpret it.
  *         executing whatever needs to be executed.
  *
- * @param datalen Total length of the buffer (command ID incldued)
+ * @param datalen Total length of the buffer (command ID included)
  * @param data Pointer to full command
  */
 void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
@@ -201,9 +201,9 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
         case AUSB_CMD_EXEC_RAM:
         {
             // Execute scratch
-            void (*scratchfn)() = (void (*)())(value);
-            ULOG("Executing %p (%p) // base %08x/%p", (void*)value, scratchfn, 0, advanced_usb_scratch_buffer_data);
-            scratchfn();
+            void (*scratchFn)() = (void (*)())(value);
+            ULOG("Executing %p (%p) // base %08x/%p", (void*)value, scratchFn, 0, advanced_usb_scratch_buffer_data);
+            scratchFn();
             break;
         }
         case AUSB_CMD_SWITCH_MODE:
@@ -258,7 +258,7 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
             memset((void*)value, data[10], length);
             break;
         }
-        case ACMD_CMD_GETVER:
+        case ACMD_CMD_GET_VER:
         {
             // TODO: This is terrible.  It should be improved.
             void app_main(void);

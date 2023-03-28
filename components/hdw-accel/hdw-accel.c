@@ -74,7 +74,7 @@ static int16_t signExtend10bit(uint16_t in);
  * @param sda The GPIO for the Serial DAta line
  * @param scl The GPIO for the Serial CLock line
  * @param pullup Either \c GPIO_PULLUP_DISABLE if there are external pullup resistors on SDA and SCL or \c
- * GPIO_PULLUP_ENABLE if internal pullups should be used
+ * GPIO_PULLUP_ENABLE if internal pull-ups should be used
  * @param clkHz The frequency of the I2C clock
  * @param range The range to measure, between ::QMA_RANGE_2G and ::QMA_RANGE_32G
  * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
@@ -112,7 +112,7 @@ esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl
 }
 
 /**
- * @brief Deinit the accelerometer (nothting to do)
+ * @brief Deinit the accelerometer (nothing to do)
  *
  * @return ESP_OK
  */
@@ -252,7 +252,7 @@ esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
     // Do the read
     esp_err_t ret_val = qma7981_read_bytes(QMA7981_REG_DX_L, 6, raw_data);
 
-    // If the read was successsful
+    // If the read was successful
     if (ESP_OK == ret_val)
     {
         // Sign extend the 10 bit value to 16 bits and save it as the last known value

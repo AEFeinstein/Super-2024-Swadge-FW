@@ -24,7 +24,7 @@
  * @param name The name of the font to load. The ::font_t is not allocated by this function
  * @param font A handle to load the font to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
- * than nromal RAM
+ * than normal RAM
  * @return true if the font was loaded successfully
  *         false if the font failed to load and should not be used
  */
@@ -47,7 +47,7 @@ bool loadFont(const char* name, font_t* font, bool spiRam)
     // Read each char
     while (bufIdx < sz)
     {
-        // Get an easy refence to this character
+        // Get an easy reference to this character
         font_ch_t* this = &font->chars[chIdx++];
 
         // Read the width
