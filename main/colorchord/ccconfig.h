@@ -8,7 +8,7 @@
 #define CCEMBEDDED
 #define DFREQ 8000
 
-//We are not enabling these for the ESP8266 port.
+// We are not enabling these for the ESP8266 port.
 #define LIN_WRAPAROUND 0
 #define SORT_NOTES     0
 
