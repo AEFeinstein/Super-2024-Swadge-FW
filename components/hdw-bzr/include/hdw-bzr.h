@@ -223,7 +223,7 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
                 bool _isSfxMuted);
 void deinitBuzzer(void);
 void bzrSetBgmIsMuted(bool _isBgmMuted);
-void bzrGetBgmIsMuted(bool _isSfxMuted);
+void bzrSetSfxIsMuted(bool _isSfxMuted);
 void bzrPlayBgm(const song_t* song);
 void bzrPlaySfx(const song_t* song);
 void bzrStop(void);

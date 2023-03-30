@@ -164,7 +164,7 @@ void bzrSetBgmIsMuted(bool _isBgmMuted)
  *
  * @param _isSfxMuted True if sound effects are muted, false otherwise
  */
-void bzrGetBgmIsMuted(bool _isSfxMuted)
+void bzrSetSfxIsMuted(bool _isSfxMuted)
 {
     isSfxMuted = _isSfxMuted;
 }
