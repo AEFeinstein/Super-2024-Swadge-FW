@@ -4,7 +4,7 @@
 // Includes
 //==============================================================================
 
-#include "embeddedout.h"
+#include "embeddedOut.h"
 #include "color_utils.h"
 
 //==============================================================================
@@ -17,14 +17,14 @@
  * @param eod
  * @param end
  */
-void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
+void UpdateLinearLEDs(embeddedOut_data* eod, embeddedNf_data* end)
 {
     // Source material:
     /*
-        extern uint8_t  end->note_peak_freqs[];
-        extern uint16_t end->note_peak_amps[];  //[MAXNOTES]
-        extern uint16_t end->note_peak_amps2[];  //[MAXNOTES]  (Responds quicker)
-        extern uint8_t  end->note_jumped_to[]; //[MAXNOTES] When a note combines into another one,
+        extern uint8_t  end->note_peak_frequencies[];
+        extern uint16_t end->note_peak_amps[];  //[MAX_NOTES]
+        extern uint16_t end->note_peak_amps2[];  //[MAX_NOTES]  (Responds quicker)
+        extern uint8_t  end->note_jumped_to[]; //[MAX_NOTES] When a note combines into another one,
     */
 
     // Goal: Make splotches of light that are porportional to the strength of notes.
@@ -33,14 +33,14 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
     uint8_t i;
     uint16_t j, l;
     uint32_t total_size_all_notes = 0;
-    int32_t porpamps[MAXNOTES];        // LEDs for each corresponding note.
-    uint8_t sorted_note_map[MAXNOTES]; // mapping from which note into the array of notes from the rest of the system.
+    int32_t porpamps[MAX_NOTES];        // LEDs for each corresponding note.
+    uint8_t sorted_note_map[MAX_NOTES]; // mapping from which note into the array of notes from the rest of the system.
     uint8_t sorted_map_count = 0;
     uint32_t note_nerf_a     = 0;
 
-    for (i = 0; i < MAXNOTES; i++)
+    for (i = 0; i < MAX_NOTES; i++)
     {
-        if (end->note_peak_freqs[i] == 255)
+        if (end->note_peak_frequencies[i] == 255)
         {
             continue;
         }
@@ -49,10 +49,10 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
 
     note_nerf_a = ((note_nerf_a * NERF_NOTE_PORP) >> 8);
 
-    for (i = 0; i < MAXNOTES; i++)
+    for (i = 0; i < MAX_NOTES; i++)
     {
         uint16_t ist = end->note_peak_amps[i];
-        uint8_t nff  = end->note_peak_freqs[i];
+        uint8_t nff  = end->note_peak_frequencies[i];
         if (nff == 255)
         {
             continue;
@@ -65,7 +65,7 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
 #if SORT_NOTES
         for (j = 0; j < sorted_map_count; j++)
         {
-            if (end->note_peak_freqs[sorted_note_map[j]] > nff)
+            if (end->note_peak_frequencies[sorted_note_map[j]] > nff)
             {
                 break; // so j is correct place to insert
             }
@@ -84,15 +84,15 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
 #if 0
     for( i = 0; i < sorted_map_count; i++ )
     {
-        printf( "%d: %d: %d /", sorted_note_map[i],  end->note_peak_freqs[sorted_note_map[i]],
+        printf( "%d: %d: %d /", sorted_note_map[i],  end->note_peak_frequencies[sorted_note_map[i]],
                 end->note_peak_amps[sorted_note_map[i]] );
     }
     printf( "\n" );
 #endif
 
-    uint16_t local_peak_amps[MAXNOTES];
-    uint16_t local_peak_amps2[MAXNOTES];
-    uint8_t local_peak_freq[MAXNOTES];
+    uint16_t local_peak_amps[MAX_NOTES];
+    uint16_t local_peak_amps2[MAX_NOTES];
+    uint8_t local_peak_freq[MAX_NOTES];
 
     // Make a copy of all of the variables into local ones so we don't have to keep double-dereferencing.
     for (i = 0; i < sorted_map_count; i++)
@@ -100,7 +100,7 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
         // printf( "%5d ", local_peak_amps[i] );
         local_peak_amps[i]  = end->note_peak_amps[sorted_note_map[i]] - note_nerf_a;
         local_peak_amps2[i] = end->note_peak_amps2[sorted_note_map[i]];
-        local_peak_freq[i]  = end->note_peak_freqs[sorted_note_map[i]];
+        local_peak_freq[i]  = end->note_peak_frequencies[sorted_note_map[i]];
         //        printf( "%5d ", local_peak_amps[i] );
     }
     //    printf( "\n" );
@@ -174,9 +174,9 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
             {
                 d *= -1;
             }
-            if (d > (NOTERANGE >> 1))
+            if (d > (NOTE_RANGE >> 1))
             {
-                d = NOTERANGE - d + 1;
+                d = NOTE_RANGE - d + 1;
             }
             dqty += (d * d);
 
@@ -214,7 +214,7 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
         {
             amp = 255;
         }
-        uint32_t color = ECCtoHEX((eod->ledFreqOut[j] + eod->RootNoteOffset) % NOTERANGE, 255, amp);
+        uint32_t color = ECCtoHEX((eod->ledFreqOut[j] + eod->RootNoteOffset) % NOTE_RANGE, 255, amp);
 
         // Flipping red and green here.
         eod->ledOut[l * 3 + 1] = (color >> 0) & 0xff;
@@ -264,16 +264,16 @@ void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end)
  * @param eod
  * @param end
  */
-void UpdateAllSameLEDs(embeddedout_data* eod, embeddednf_data* end)
+void UpdateAllSameLEDs(embeddedOut_data* eod, embeddedNf_data* end)
 {
     int i;
     uint8_t freq = 0;
     uint16_t amp = 0;
 
-    for (i = 0; i < MAXNOTES; i++)
+    for (i = 0; i < MAX_NOTES; i++)
     {
         uint16_t ist = end->note_peak_amps2[i];
-        uint8_t ifrq = end->note_peak_freqs[i];
+        uint8_t ifrq = end->note_peak_frequencies[i];
         if (ist > amp && ifrq != 255)
         {
             freq = ifrq;
@@ -287,7 +287,7 @@ void UpdateAllSameLEDs(embeddedout_data* eod, embeddednf_data* end)
     {
         amp = 255;
     }
-    uint32_t color = ECCtoHEX((freq + eod->RootNoteOffset) % NOTERANGE, 255, amp);
+    uint32_t color = ECCtoHEX((freq + eod->RootNoteOffset) % NOTE_RANGE, 255, amp);
 
     for (i = 0; i < CONFIG_NUM_LEDS; i++)
     {
@@ -310,9 +310,9 @@ uint32_t ECCtoHEX(uint8_t note, uint8_t sat, uint8_t val)
 {
     uint16_t hue    = 0;
     uint16_t third  = 65535 / 3;
-    uint32_t renote = ((uint32_t)note * 65536) / NOTERANGE;
+    uint32_t renote = ((uint32_t)note * 65536) / NOTE_RANGE;
 
-    // Note is expected to be a vale from 0..(NOTERANGE-1)
+    // Note is expected to be a vale from 0..(NOTE_RANGE-1)
     // renote goes from 0 to the next one under 65536.
 
     if (renote < third)

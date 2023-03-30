@@ -1,7 +1,7 @@
 // Copyright 2015 <>< Charles Lohr under the ColorChord License.
 
-#ifndef _EMBEDDEDNF_H
-#define _EMBEDDEDNF_H
+#ifndef _EMBEDDED_NF_H
+#define _EMBEDDED_NF_H
 
 #include "ccconfig.h"
 
@@ -9,8 +9,8 @@
 // they can multiply quickly, this is the bees knees.
 #define USE_32DFT
 
-#ifndef DFREQ
-    #define DFREQ 8000
+#ifndef D_FREQ
+    #define D_FREQ 8000
 #endif
 
 // You may make this a float. If PRECOMPUTE_FREQUENCY_TABLE is defined, then
@@ -26,8 +26,8 @@
 // Notes are the individually identifiable notes we receive from the sound.
 // We track up to this many at one time.  Just because a note may appear to
 // vaporize in one frame doesn't mean it is annihilated immediately.
-#ifndef MAXNOTES
-    #define MAXNOTES 12
+#ifndef MAX_NOTES
+    #define MAX_NOTES 12
 #endif
 
 // We take the raw signal off of the
@@ -37,12 +37,12 @@
 
 // Determines bit shifts for where notes lie.  We represent notes with an
 // uint8_t.  We have to define all of the possible locations on the note line
-// in this. note_frequency = 0..((1<<SEMIBITSPERBIN)*FIXBPERO-1)
-#ifndef SEMIBITSPERBIN
-    #define SEMIBITSPERBIN 3
+// in this. note_frequency = 0..((1<<SEMI_BITS_PER_BIN)*FIX_B_PER_O-1)
+#ifndef SEMI_BITS_PER_BIN
+    #define SEMI_BITS_PER_BIN 3
 #endif
 
-#define NOTERANGE ((1 << SEMIBITSPERBIN) * FIXBPERO)
+#define NOTE_RANGE ((1 << SEMI_BITS_PER_BIN) * FIX_B_PER_O)
 
 // If there is detected note this far away from an established note, we will
 // then consider this new note the same one as last time, and move the
@@ -81,7 +81,7 @@
 #endif
 
 // This prevents compilation of any floating-point code, but it does come with
-// an added restriction: Both DFREQ and BASE_FREQ must be #defined to be
+// an added restriction: Both D_FREQ and BASE_FREQ must be #defined to be
 // constants.
 #define PRECOMPUTE_FREQUENCY_TABLE
 
@@ -89,24 +89,24 @@
 
 typedef struct
 {
-    uint16_t folded_bins[FIXBPERO]; //<! The folded fourier output.
-    uint16_t fuzzed_bins[FIXBINS];  //<! The Full DFT after IIR, Blur and Taper
+    uint16_t folded_bins[FIX_B_PER_O]; //<! The folded fourier output.
+    uint16_t fuzzed_bins[FIX_BINS];    //<! The Full DFT after IIR, Blur and Taper
     //  frequency of note; Note if it is == 255,
     // then it means it is not set. It is
     // generally a value from
-    uint8_t note_peak_freqs[MAXNOTES];
-    uint16_t note_peak_amps[MAXNOTES];
-    uint16_t note_peak_amps2[MAXNOTES]; // (Responds quicker)
-    uint8_t note_jumped_to[MAXNOTES];   // When a note combines into another one,
+    uint8_t note_peak_frequencies[MAX_NOTES];
+    uint16_t note_peak_amps[MAX_NOTES];
+    uint16_t note_peak_amps2[MAX_NOTES]; // (Responds quicker)
+    uint8_t note_jumped_to[MAX_NOTES];   // When a note combines into another one,
     // this records where it went. I.e. if
     // your note just disappeared, check this
     // flag.
-} embeddednf_data;
+} embeddedNf_data;
 
-void UpdateFreqs(dft32_data* dd);                          // Not user-useful on most systems.
-void HandleFrameInfo(embeddednf_data* ed, dft32_data* dd); // Not user-useful on most systems
+void UpdateFrequencies(dft32_data* dd);                    // Not user-useful on most systems.
+void HandleFrameInfo(embeddedNf_data* ed, dft32_data* dd); // Not user-useful on most systems
 
 // Call this when starting.
-void InitColorChord(embeddednf_data* ed, dft32_data* dd);
+void InitColorChord(embeddedNf_data* ed, dft32_data* dd);
 
 #endif

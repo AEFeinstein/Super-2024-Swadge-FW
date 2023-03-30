@@ -1,10 +1,10 @@
 // Copyright 2015 <>< Charles Lohr under the ColorChord License.
 
-#ifndef _EMBEDDEDOUT_H
-#define _EMBEDDEDOUT_H
+#ifndef _EMBEDDED_OUT_H
+#define _EMBEDDED_OUT_H
 
 #include "hdw-led.h"
-#include "embeddednf.h"
+#include "embeddedNf.h"
 
 // Controls brightness
 #ifndef NOTE_FINAL_AMP
@@ -40,13 +40,13 @@ typedef struct
     uint8_t ledFreqOutOld[CONFIG_NUM_LEDS];
 
     uint8_t RootNoteOffset; // Set to define what the root note is.  0 = A.
-} embeddedout_data;
+} embeddedOut_data;
 
 // For doing the nice linear strip LED updates
-void UpdateLinearLEDs(embeddedout_data* eod, embeddednf_data* end);
+void UpdateLinearLEDs(embeddedOut_data* eod, embeddedNf_data* end);
 
 // For making all the LEDs the same and quickest.  Good for solo instruments?
-void UpdateAllSameLEDs(embeddedout_data* eod, embeddednf_data* end);
+void UpdateAllSameLEDs(embeddedOut_data* eod, embeddedNf_data* end);
 
 uint32_t ECCtoHEX(uint8_t note, uint8_t sat, uint8_t val);
 
