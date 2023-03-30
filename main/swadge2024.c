@@ -517,6 +517,12 @@ void softSwitchToPendingSwadge(void)
         cSwadgeMode       = pendingSwadgeMode;
         pendingSwadgeMode = NULL;
 
+        // Start mic if requested
+        if (NULL != cSwadgeMode->fnAudioCallback)
+        {
+            startMic();
+        }
+
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)
         {
