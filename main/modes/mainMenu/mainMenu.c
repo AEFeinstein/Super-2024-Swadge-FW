@@ -9,6 +9,7 @@
 #include "demoMode.h"
 #include "pong.h"
 #include "mode_colorchord.h"
+#include "settingsManager.h"
 
 //==============================================================================
 // Structs
@@ -54,6 +55,21 @@ swadgeMode_t mainMenuMode = {
 
 mainMenu_t* mainMenu;
 
+static const char settingsLabel[] = "Settings";
+
+static const char tft1[] = "TFT: 1";
+static const char tft2[] = "TFT: 2";
+static const char tft3[] = "TFT: 3";
+static const char tft4[] = "TFT: 4";
+static const char tft5[] = "TFT: 5";
+static const char tft6[] = "TFT: 6";
+static const char tft7[] = "TFT: 7";
+static const char tft8[] = "TFT: 8";
+
+static const char* const tftOpts[] = {
+    tft1, tft2, tft3, tft4, tft5, tft6, tft7, tft8,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -77,6 +93,10 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
+    addMultiItemToMenu(mainMenu->menu, tftOpts, ARRAY_SIZE(tftOpts));
+    mainMenu->menu = endSubMenu(mainMenu->menu);
 }
 
 /**
@@ -133,6 +153,15 @@ static void mainMenuCb(const char* label, bool selected)
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
+        }
+    }
+    else
+    {
+        if ((tft1 == label) || (tft2 == label) || (tft3 == label) || (tft4 == label) || (tft5 == label)
+            || (tft6 == label) || (tft7 == label) || (tft8 == label))
+        {
+            // Set the brightness based on the number in the label
+            setTftBrightness(label[5] - '1');
         }
     }
 }

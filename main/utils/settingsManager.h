@@ -10,6 +10,8 @@
 // Function Prototypes
 //==============================================================================
 
+void readAllSettings(void);
+
 bool getBgmIsMuted(void);
 bool setBgmIsMuted(bool);
 
@@ -17,8 +19,7 @@ bool getSfxIsMuted(void);
 bool setSfxIsMuted(bool);
 
 int32_t getTftBrightness(void);
-bool incTftBrightness(void);
-bool decTftBrightness(void);
+bool setTftBrightness(uint8_t newVal);
 uint8_t getTftIntensity(void);
 
 int32_t getLedBrightness(void);

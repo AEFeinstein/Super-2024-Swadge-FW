@@ -288,6 +288,9 @@ void app_main(void)
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
 
+    // Read settings from NVS
+    readAllSettings();
+
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
