@@ -20,6 +20,7 @@
 
 static rmt_channel_handle_t led_chan    = NULL;
 static rmt_encoder_handle_t led_encoder = NULL;
+static uint8_t ledBrightness            = 0;
 
 //==============================================================================
 // Functions
@@ -49,6 +50,9 @@ esp_err_t initLeds(gpio_num_t gpio)
 
     ESP_ERROR_CHECK(rmt_enable(led_chan));
 
+    // Set to max brightness by default
+    ledBrightness = 0;
+
     return ESP_OK;
 }
 
@@ -66,6 +70,17 @@ esp_err_t deinitLeds(void)
 }
 
 /**
+ * @brief Set the global LED brightness
+ *
+ * @param brightness 0 (off) to MAX_LED_BRIGHTNESS (max bright)
+ */
+void setLedBrightness(uint8_t brightness)
+{
+    // LED channels are right-shifted by this value when being set
+    ledBrightness = (MAX_LED_BRIGHTNESS - brightness);
+}
+
+/**
  * @brief Set the RGB LEDs to the given values
  *
  * @param leds A pointer to an array of ::led_t structs to set the LEDs to. The array must have at least numLeds
@@ -78,6 +93,24 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
     rmt_transmit_config_t tx_config = {
         .loop_count = 0, // no transfer loop
     };
-    // Flush RGB values to LEDs
-    return rmt_transmit(led_chan, led_encoder, (uint8_t*)leds, numLeds * sizeof(led_t), &tx_config);
+
+    // Make a local copy of LEDs with brightness applied
+    led_t localLeds[numLeds];
+    for (uint8_t i = 0; i < numLeds; i++)
+    {
+        localLeds[i].r = (leds[i].r >> ledBrightness);
+        localLeds[i].g = (leds[i].g >> ledBrightness);
+        localLeds[i].b = (leds[i].b >> ledBrightness);
+    }
+
+    // Write RGB values to LEDs
+    if (ESP_OK == rmt_transmit(led_chan, led_encoder, (uint8_t*)localLeds, numLeds * sizeof(led_t), &tx_config))
+    {
+        // Wait until transmission is done
+        // TODO I don't want to do this, but if data is transmitted too quickly, it junks up RMT and the LEDs
+        // Maybe fix it with rmt_tx_register_event_callbacks()? That didn't seem to work....
+        // Maybe use accumulation timer to only write LEDs every 5ms max?
+        return rmt_tx_wait_all_done(led_chan, -1);
+    }
+    return ESP_ERR_TIMEOUT;
 }

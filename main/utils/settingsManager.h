@@ -12,35 +12,35 @@
 
 void readAllSettings(void);
 
-bool getBgmIsMuted(void);
-bool setBgmIsMuted(bool);
+bool getBgmMutedSetting(void);
+bool setBgmMutedSetting(bool);
 
-bool getSfxIsMuted(void);
-bool setSfxIsMuted(bool);
+bool getSfxMutedSetting(void);
+bool setSfxMutedSetting(bool);
 
-int32_t getTftBrightness(void);
-bool setTftBrightness(uint8_t newVal);
-uint8_t getTftIntensity(void);
+uint8_t getTftBrightnessSetting(void);
+uint8_t getTFTBacklightBrightnessSetting(void);
+bool setTftBrightnessSetting(uint8_t newVal);
 
-int32_t getLedBrightness(void);
-bool setAndSaveLedBrightness(uint8_t brightness);
-bool incLedBrightness(void);
-bool decLedBrightness(void);
+uint8_t getLedBrightnessSetting(void);
+bool setLedBrightnessSetting(uint8_t brightness);
+bool incLedBrightnessSetting(void);
+bool decLedBrightnessSetting(void);
 
-int32_t getMicGain(void);
-uint16_t getMicAmplitude(void);
-bool setMicGain(uint8_t newGain);
-bool decMicGain(void);
-bool incMicGain(void);
+uint8_t getMicGainSetting(void);
+uint16_t getMicGainMultiplierSetting(void);
+bool setMicGainSetting(uint8_t newGain);
+bool decMicGainSetting(void);
+bool incMicGainSetting(void);
 
-uint16_t getScreensaverTime(void);
-bool incScreensaverTime(void);
-bool decScreensaverTime(void);
+uint16_t getScreensaverTimeSetting(void);
+bool incScreensaverTimeSetting(void);
+bool decScreensaverTimeSetting(void);
 
-colorchordMode_t getColorchordMode(void);
-bool setColorchordMode(colorchordMode_t);
+colorchordMode_t getColorchordModeSetting(void);
+bool setColorchordModeSetting(colorchordMode_t);
 
-bool getTestModePassed(void);
-bool setTestModePassed(bool status);
+bool getTestModePassedSetting(void);
+bool setTestModePassedSetting(bool status);
 
 #endif

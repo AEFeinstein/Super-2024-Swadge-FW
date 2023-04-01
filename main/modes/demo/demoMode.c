@@ -91,7 +91,7 @@ static void demoEnterMode(void)
 
     addSingleItemToMenu(dv->menu, demoMenu3);
     addSingleItemToMenu(dv->menu, demoMenu4);
-    addMultiItemToMenu(dv->menu, demoOpts, ARRAY_SIZE(demoOpts));
+    addMultiItemToMenu(dv->menu, demoOpts, ARRAY_SIZE(demoOpts), 0);
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
 

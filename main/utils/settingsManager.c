@@ -112,25 +112,41 @@ static bool setSetting(setting_t* setting, uint32_t newVal)
 
 void readAllSettings(void)
 {
+    // Read the test mode setting
     readSetting(&test_setting);
+
+    // Read and set buzzer settings
     readSetting(&bgm_setting);
+    bzrSetBgmIsMuted(getBgmMutedSetting());
     readSetting(&sfx_setting);
+    bzrSetSfxIsMuted(getSfxMutedSetting());
+
+    // Read and apply TFT settings
     readSetting(&tft_br_setting);
+    setTFTBacklightBrightness(getTFTBacklightBrightnessSetting());
+
+    // Read and apply LED settings
     readSetting(&led_br_setting);
+    setLedBrightness(getLedBrightnessSetting());
+
+    // Read the mic setting
     readSetting(&mic_setting);
+
+    // Read the colorchord setting
     readSetting(&cc_mode_setting);
+
+    // Read the screensaver setting
     readSetting(&scrn_sv_setting);
-    // TODO set peripherals based on read settings?
 }
 
 //==============================================================================
 
-bool getBgmIsMuted(void)
+bool getBgmMutedSetting(void)
 {
     return bgm_setting.val;
 }
 
-bool setBgmIsMuted(bool isMuted)
+bool setBgmMutedSetting(bool isMuted)
 {
     if (setSetting(&bgm_setting, isMuted))
     {
@@ -142,12 +158,12 @@ bool setBgmIsMuted(bool isMuted)
 
 //==============================================================================
 
-bool getSfxIsMuted(void)
+bool getSfxMutedSetting(void)
 {
     return sfx_setting.val;
 }
 
-bool setSfxIsMuted(bool isMuted)
+bool setSfxMutedSetting(bool isMuted)
 {
     if (setSetting(&sfx_setting, isMuted))
     {
@@ -159,22 +175,22 @@ bool setSfxIsMuted(bool isMuted)
 
 //==============================================================================
 
-int32_t getTftBrightness(void)
+uint8_t getTftBrightnessSetting(void)
 {
     return tft_br_setting.val;
 }
 
-uint8_t getTftIntensity(void)
+uint8_t getTFTBacklightBrightnessSetting(void)
 {
     return (CONFIG_TFT_MIN_BRIGHTNESS
             + (((CONFIG_TFT_MAX_BRIGHTNESS - CONFIG_TFT_MIN_BRIGHTNESS) * tft_br_setting.val) / tft_br_param.max));
 }
 
-bool setTftBrightness(uint8_t newVal)
+bool setTftBrightnessSetting(uint8_t newVal)
 {
     if (setSetting(&tft_br_setting, newVal))
     {
-        setTFTBacklightBrightness(getTftIntensity());
+        setTFTBacklightBrightness(getTFTBacklightBrightnessSetting());
         return true;
     }
     return false;
@@ -182,37 +198,49 @@ bool setTftBrightness(uint8_t newVal)
 
 //==============================================================================
 
-int32_t getLedBrightness(void)
+uint8_t getLedBrightnessSetting(void)
 {
     return led_br_setting.val;
 }
 
-bool setAndSaveLedBrightness(uint8_t brightness)
+bool setLedBrightnessSetting(uint8_t brightness)
 {
-    // TODO set LED
-    return setSetting(&led_br_setting, brightness);
+    if (setSetting(&led_br_setting, brightness))
+    {
+        setLedBrightness(getLedBrightnessSetting());
+        return true;
+    }
+    return false;
 }
 
-bool incLedBrightness(void)
+bool incLedBrightnessSetting(void)
 {
-    // TODO set LED
-    return incSetting(&led_br_setting);
+    if (incSetting(&led_br_setting))
+    {
+        setLedBrightness(getLedBrightnessSetting());
+        return true;
+    }
+    return false;
 }
 
-bool decLedBrightness(void)
+bool decLedBrightnessSetting(void)
 {
-    // TODO set LED
-    return decSetting(&led_br_setting);
+    if (decSetting(&led_br_setting))
+    {
+        setLedBrightness(getLedBrightnessSetting());
+        return true;
+    }
+    return false;
 }
 
 //==============================================================================
 
-int32_t getMicGain(void)
+uint8_t getMicGainSetting(void)
 {
     return mic_setting.val;
 }
 
-uint16_t getMicAmplitude(void)
+uint16_t getMicGainMultiplierSetting(void)
 {
     // Using a logarithmic volume control.
     const uint16_t micVols[] = {
@@ -221,19 +249,19 @@ uint16_t getMicAmplitude(void)
     return micVols[mic_setting.val];
 }
 
-bool setMicGain(uint8_t newGain)
+bool setMicGainSetting(uint8_t newGain)
 {
     // TODO set mic
     return setSetting(&mic_setting, newGain);
 }
 
-bool decMicGain(void)
+bool decMicGainSetting(void)
 {
     // TODO set mic
     return decSetting(&mic_setting);
 }
 
-bool incMicGain(void)
+bool incMicGainSetting(void)
 {
     // TODO set mic
     return incSetting(&mic_setting);
@@ -241,41 +269,41 @@ bool incMicGain(void)
 
 //==============================================================================
 
-uint16_t getScreensaverTime(void)
+uint16_t getScreensaverTimeSetting(void)
 {
     return scrn_sv_setting.val;
 }
 
-bool incScreensaverTime(void)
+bool incScreensaverTimeSetting(void)
 {
     return incSetting(&scrn_sv_setting);
 }
 
-bool decScreensaverTime(void)
+bool decScreensaverTimeSetting(void)
 {
     return decSetting(&scrn_sv_setting);
 }
 
 //==============================================================================
 
-colorchordMode_t getColorchordMode(void)
+colorchordMode_t getColorchordModeSetting(void)
 {
     return cc_mode_setting.val;
 }
 
-bool setColorchordMode(colorchordMode_t newMode)
+bool setColorchordModeSetting(colorchordMode_t newMode)
 {
     return setSetting(&cc_mode_setting, newMode);
 }
 
 //==============================================================================
 
-bool getTestModePassed(void)
+bool getTestModePassedSetting(void)
 {
     return test_setting.val;
 }
 
-bool setTestModePassed(bool status)
+bool setTestModePassedSetting(bool status)
 {
     return setSetting(&test_setting, status);
 }

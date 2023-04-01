@@ -70,6 +70,19 @@ static const char* const tftOpts[] = {
     tft1, tft2, tft3, tft4, tft5, tft6, tft7, tft8,
 };
 
+static const char led1[] = "LED: 1";
+static const char led2[] = "LED: 2";
+static const char led3[] = "LED: 3";
+static const char led4[] = "LED: 4";
+static const char led5[] = "LED: 5";
+static const char led6[] = "LED: 6";
+static const char led7[] = "LED: 7";
+static const char led8[] = "LED: 8";
+
+static const char* const ledOpts[] = {
+    led1, led2, led3, led4, led5, led6, led7, led8,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -95,7 +108,8 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
-    addMultiItemToMenu(mainMenu->menu, tftOpts, ARRAY_SIZE(tftOpts));
+    addMultiItemToMenu(mainMenu->menu, tftOpts, ARRAY_SIZE(tftOpts), getTftBrightnessSetting());
+    addMultiItemToMenu(mainMenu->menu, ledOpts, ARRAY_SIZE(ledOpts), getLedBrightnessSetting());
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }
 
@@ -130,6 +144,19 @@ static void mainMenuMainLoop(int64_t elapsedUs)
 
     // Draw the menu
     drawMenu(mainMenu->menu, &mainMenu->ibm);
+
+    // Set LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+
+    leds[0].r = 0xFF;
+    leds[1].g = 0xFF;
+    leds[2].b = 0xFF;
+    leds[3].r = 0xFF;
+    leds[4].g = 0xFF;
+    leds[5].b = 0xFF;
+    leds[6].r = 0xFF;
+    leds[7].g = 0xFF;
+    setLeds(leds, 8);
 }
 
 /**
@@ -161,7 +188,13 @@ static void mainMenuCb(const char* label, bool selected)
             || (tft6 == label) || (tft7 == label) || (tft8 == label))
         {
             // Set the brightness based on the number in the label
-            setTftBrightness(label[5] - '1');
+            setTftBrightnessSetting(label[5] - '1');
+        }
+        else if ((led1 == label) || (led2 == label) || (led3 == label) || (led4 == label) || (led5 == label)
+                 || (led6 == label) || (led7 == label) || (led8 == label))
+        {
+            // Set the brightness based on the number in the label
+            setLedBrightnessSetting(label[5] - '1');
         }
     }
 }

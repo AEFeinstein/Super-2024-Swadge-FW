@@ -204,7 +204,7 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     char text[16] = {0};
 
     // Draw gain indicator
-    snprintf(text, sizeof(text), "Gain: %" PRId32, getMicGain());
+    snprintf(text, sizeof(text), "Gain: %" PRIu8, getMicGainSetting());
     drawText(&colorchord->ibm_vga8, c555, text, TEXT_MARGIN, TEXT_Y);
 
     // Underline it if selected
@@ -215,7 +215,7 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Draw LED brightness indicator
-    snprintf(text, sizeof(text), "LED: %" PRId32, getLedBrightness());
+    snprintf(text, sizeof(text), "LED: %" PRIu8, getLedBrightnessSetting());
     int16_t tWidth = textWidth(&colorchord->ibm_vga8, text);
     drawText(&colorchord->ibm_vga8, c555, text, (TFT_WIDTH - tWidth) / 2, TEXT_Y);
 
@@ -227,7 +227,7 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Draw colorchord mode
-    switch (getColorchordMode())
+    switch (getColorchordModeSetting())
     {
         case LINEAR_LEDS:
         {
@@ -280,7 +280,7 @@ void colorchordButtonCb(buttonEvt_t* evt)
                     case CC_OPT_GAIN:
                     {
                         // Gain
-                        incMicGain();
+                        incMicGainSetting();
                         // Reset max val
                         colorchord->maxValue = 1;
                         break;
@@ -288,13 +288,13 @@ void colorchordButtonCb(buttonEvt_t* evt)
                     case CC_OPT_LED_MODE:
                     {
                         // LED Output
-                        colorchordMode_t newMode = (getColorchordMode() + 1) % NUM_CC_MODES;
-                        setColorchordMode(newMode);
+                        colorchordMode_t newMode = (getColorchordModeSetting() + 1) % NUM_CC_MODES;
+                        setColorchordModeSetting(newMode);
                         break;
                     }
                     case CC_OPT_LED_BRIGHT:
                     {
-                        incLedBrightness();
+                        incLedBrightnessSetting();
                         break;
                     }
                 }
@@ -309,7 +309,7 @@ void colorchordButtonCb(buttonEvt_t* evt)
                     case CC_OPT_GAIN:
                     {
                         // Gain
-                        decMicGain();
+                        decMicGainSetting();
                         // Reset max val
                         colorchord->maxValue = 1;
                         break;
@@ -317,7 +317,7 @@ void colorchordButtonCb(buttonEvt_t* evt)
                     case CC_OPT_LED_MODE:
                     {
                         // LED Output
-                        colorchordMode_t newMode = getColorchordMode();
+                        colorchordMode_t newMode = getColorchordModeSetting();
                         if (newMode == 0)
                         {
                             newMode = NUM_CC_MODES - 1;
@@ -326,12 +326,12 @@ void colorchordButtonCb(buttonEvt_t* evt)
                         {
                             newMode--;
                         }
-                        setColorchordMode(newMode);
+                        setColorchordModeSetting(newMode);
                         break;
                     }
                     case CC_OPT_LED_BRIGHT:
                     {
-                        decLedBrightness();
+                        decLedBrightnessSetting();
                         break;
                     }
                 }
@@ -408,7 +408,7 @@ void colorchordAudioCb(uint16_t* samples, uint32_t sampleCnt)
             // Update LEDs
             colorchord->samplesProcessed = 0;
             HandleFrameInfo(&colorchord->end, &colorchord->dd);
-            switch (getColorchordMode())
+            switch (getColorchordModeSetting())
             {
                 default:
                 case NUM_CC_MODES:

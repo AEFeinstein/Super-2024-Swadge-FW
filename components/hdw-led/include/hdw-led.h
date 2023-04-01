@@ -44,6 +44,8 @@
 #include <esp_err.h>
 #include <hal/gpio_types.h>
 
+#define MAX_LED_BRIGHTNESS 7
+
 /**
  * @brief LED colors, with red, green, and blue components
  */
@@ -57,5 +59,6 @@ typedef struct __attribute__((packed))
 esp_err_t initLeds(gpio_num_t gpio);
 esp_err_t deinitLeds(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
+void setLedBrightness(uint8_t brightness);
 
 #endif

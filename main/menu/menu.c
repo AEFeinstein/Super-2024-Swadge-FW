@@ -254,14 +254,15 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
  *               isn't copied, so this string must persist for the lifetime of
  *               the menu
  * @param numLabels The number of labels for this multi-item
+ * @param currentLabel The current label index to display
  */
-void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels)
+void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel)
 {
     menuItem_t* newItem = calloc(1, sizeof(menuItem_t));
     newItem->label      = NULL;
     newItem->options    = labels;
     newItem->numOptions = numLabels;
-    newItem->currentOpt = 0;
+    newItem->currentOpt = currentLabel;
     newItem->subMenu    = NULL;
     push(menu->items, newItem);
 

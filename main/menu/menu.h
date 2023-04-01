@@ -78,7 +78,7 @@
  * // Add more items to the main menu, including a multi-item
  * addSingleItemToMenu(menu, demoMenu3);
  * addSingleItemToMenu(menu, demoMenu4);
- * addMultiItemToMenu(menu, demoOpts, ARRAY_SIZE(demoOpts));
+ * addMultiItemToMenu(menu, demoOpts, ARRAY_SIZE(demoOpts), 0);
  * addSingleItemToMenu(menu, demoMenu5);
  * addSingleItemToMenu(menu, demoMenu6);
  * \endcode
@@ -157,7 +157,7 @@ menu_t* startSubMenu(menu_t* menu, const char* label) __attribute__((warn_unused
 menu_t* endSubMenu(menu_t* menu) __attribute__((warn_unused_result));
 void addSingleItemToMenu(menu_t* menu, const char* label);
 void removeSingleItemFromMenu(menu_t* menu, const char* label);
-void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels);
+void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel);
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 

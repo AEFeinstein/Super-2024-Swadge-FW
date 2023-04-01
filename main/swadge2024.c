@@ -308,22 +308,24 @@ void app_main(void)
         // Process ADC samples
         if (NULL != cSwadgeMode->fnAudioCallback)
         {
-            uint16_t adcSamps[ADC_READ_LEN / SOC_ADC_DIGI_RESULT_BYTES];
+            uint16_t micAmp = getMicGainMultiplierSetting();
+            uint16_t adcSamples[ADC_READ_LEN / SOC_ADC_DIGI_RESULT_BYTES];
             uint32_t sampleCnt = 0;
-            while (0 < (sampleCnt = loopMic(adcSamps, ARRAY_SIZE(adcSamps))))
+            while (0 < (sampleCnt = loopMic(adcSamples, ARRAY_SIZE(adcSamples))))
             {
                 // Run all samples through an IIR filter
                 for (uint32_t i = 0; i < sampleCnt; i++)
                 {
                     static uint32_t samp_iir = 0;
 
-                    int32_t sample  = adcSamps[i];
+                    int32_t sample  = adcSamples[i];
                     samp_iir        = samp_iir - (samp_iir >> 9) + sample;
-                    int32_t newsamp = (sample - (samp_iir >> 9));
-                    newsamp         = CLAMP(newsamp, -32768, 32767);
-                    adcSamps[i]     = newsamp;
+                    int32_t newSamp = (sample - (samp_iir >> 9));
+                    newSamp         = newSamp * micAmp;
+                    newSamp         = CLAMP(newSamp, -32768, 32767);
+                    adcSamples[i]   = newSamp;
                 }
-                cSwadgeMode->fnAudioCallback(adcSamps, sampleCnt);
+                cSwadgeMode->fnAudioCallback(adcSamples, sampleCnt);
             }
         }
 
@@ -539,7 +541,7 @@ void softSwitchToPendingSwadge(void)
 
 /**
  * @brief Service the queue of button events that caused interrupts
- * This only reutrns a single event, even if there are multiple in the queue
+ * This only returns a single event, even if there are multiple in the queue
  * This function may be called multiple times in a row to completely empty the queue
  *
  * This is a wrapper for checkButtonQueue() which also monitors the button to return to the main menu

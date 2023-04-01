@@ -15,7 +15,9 @@
 
 // For LEDC
 #define LEDC_MODE LEDC_LOW_SPEED_MODE //!< Low speed mode is sufficient
-#define LEDC_DUTY 4095                //!< Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
+#define LEDC_DUTY \
+    4095 //!< Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
+         //!< TODO adjusting this adjusts volume
 
 //==============================================================================
 // Enums
