@@ -15,9 +15,6 @@
 
 // For LEDC
 #define LEDC_MODE LEDC_LOW_SPEED_MODE //!< Low speed mode is sufficient
-#define LEDC_DUTY \
-    4095 //!< Set duty to 50%. ((2 ** 13) - 1) * 50% = 4095
-         //!< TODO adjusting this adjusts volume
 
 //==============================================================================
 // Enums
@@ -31,6 +28,7 @@ typedef struct
     const song_t* song;  ///< The song_t being played
     uint32_t note_index; ///< The index of the current musicalNote_t in the song
     int64_t start_time;  ///< The time the current musicalNote_t started in the song
+    uint16_t volume;     ///< This track's volume, from 0 (off) to 4096 (max)
 } buzzerTrack_t;
 
 //==============================================================================
@@ -41,10 +39,6 @@ typedef struct
 static buzzerTrack_t bgm;
 /// @brief The sound effect track
 static buzzerTrack_t sfx;
-/// @brief If the background track is muted
-static bool isBgmMuted;
-/// @brief If the sound effect track is muted
-static bool isSfxMuted;
 
 /// @brief The current frequency of the note being played
 static uint32_t cFreq;
@@ -74,14 +68,14 @@ static bool buzzer_track_check_next_note(buzzerTrack_t* track, bool isActive, in
  * @param bzrGpio The GPIO the buzzer is attached to
  * @param _ledcTimer The LEDC timer used to drive the buzzer
  * @param _ledcChannel THe LEDC channel used to drive the buzzer
- * @param _isBgmMuted True if background music is muted, false otherwise
- * @param _isSfxMuted True if sound effects are muted, false otherwise
+ * @param _bgmVolume Starting background sound volume, 0 to 4096
+ * @param _sfxVolume Starting effects sound volume, 0 to 4096
  */
-void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, bool _isBgmMuted,
-                bool _isSfxMuted)
+void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, uint16_t _bgmVolume,
+                uint16_t _sfxVolume)
 {
-    isBgmMuted = _isBgmMuted;
-    isSfxMuted = _isSfxMuted;
+    bgm.volume = _bgmVolume;
+    sfx.volume = _sfxVolume;
 
     // Save the LEDC timer and channel
     ledcTimer   = _ledcTimer;
@@ -104,7 +98,7 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
         .timer_sel  = ledcTimer,
         .intr_type  = LEDC_INTR_DISABLE,
         .gpio_num   = bzrGpio,
-        .duty       = LEDC_DUTY, // Set duty to 50%
+        .duty       = bgm.volume, // Duty cycle is equivalent to volume
         .hpoint     = 0,
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
@@ -152,23 +146,23 @@ void deinitBuzzer(void)
 }
 
 /**
- * @brief Set the buzzer's bgm mute status
+ * @brief Set the buzzer's bgm volume
  *
- * @param _isBgmMuted True if background music is muted, false otherwise
+ * @param vol The background volume, 0 to 4096
  */
-void bzrSetBgmIsMuted(bool _isBgmMuted)
+void bzrSetBgmVolume(uint16_t vol)
 {
-    isBgmMuted = _isBgmMuted;
+    bgm.volume = vol;
 }
 
 /**
- * @brief Set the buzzer's sfx mute status
+ * @brief Set the buzzer's sfx volume
  *
- * @param _isSfxMuted True if sound effects are muted, false otherwise
+ * @param vol The background volume, 0 to 4096
  */
-void bzrSetSfxIsMuted(bool _isSfxMuted)
+void bzrSetSfxVolume(uint16_t vol)
 {
-    isSfxMuted = _isSfxMuted;
+    sfx.volume = vol;
 }
 
 /**
@@ -180,7 +174,7 @@ void bzrSetSfxIsMuted(bool _isSfxMuted)
 void bzrPlayBgm(const song_t* song)
 {
     // Don't play if muted
-    if (isBgmMuted)
+    if (0 == bgm.volume)
     {
         return;
     }
@@ -193,7 +187,7 @@ void bzrPlayBgm(const song_t* song)
     if (NULL == sfx.song)
     {
         // Start playing BGM
-        bzrPlayNote(bgm.song->notes[0].note);
+        bzrPlayNote(bgm.song->notes[0].note, bgm.volume);
         gptimer_start(bzrTimer);
     }
 }
@@ -207,7 +201,7 @@ void bzrPlayBgm(const song_t* song)
 void bzrPlaySfx(const song_t* song)
 {
     // Don't play if muted
-    if (isSfxMuted)
+    if (0 == sfx.volume)
     {
         return;
     }
@@ -217,7 +211,7 @@ void bzrPlaySfx(const song_t* song)
     sfx.start_time = esp_timer_get_time();
 
     // Always play SFX
-    bzrPlayNote(sfx.song->notes[0].note);
+    bzrPlayNote(sfx.song->notes[0].note, sfx.volume);
     gptimer_start(bzrTimer);
 }
 
@@ -250,8 +244,9 @@ void bzrStop(void)
  * This has IRAM_ATTR because it may be called from an interrupt
  *
  * @param freq The frequency of the note
+ * @param volume The volume, 0 to 4096
  */
-void IRAM_ATTR bzrPlayNote(noteFrequency_t freq)
+void IRAM_ATTR bzrPlayNote(noteFrequency_t freq, uint16_t volume)
 {
     if (SILENCE == freq)
     {
@@ -266,7 +261,7 @@ void IRAM_ATTR bzrPlayNote(noteFrequency_t freq)
             // Set the frequency
             ledc_set_freq(LEDC_MODE, ledcTimer, cFreq);
             // Set duty to 50%
-            ledc_set_duty(LEDC_MODE, ledcChannel, LEDC_DUTY);
+            ledc_set_duty(LEDC_MODE, ledcChannel, volume);
             // Update duty to start the buzzer
             ledc_update_duty(LEDC_MODE, ledcChannel);
         }
@@ -301,7 +296,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
                                                  void* user_ctx)
 {
     // Don't do much if muted
-    if (isBgmMuted && isSfxMuted)
+    if ((0 == bgm.volume) && (0 == sfx.volume))
     {
         return false;
     }
@@ -318,7 +313,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
     if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bgm.song))
     {
         // Immediately start playing BGM to get back on track faster
-        bzrPlayNote(bgm.song->notes[bgm.note_index].note);
+        bzrPlayNote(bgm.song->notes[bgm.note_index].note, bgm.volume);
     }
     return false;
 }
@@ -359,7 +354,7 @@ static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool is
                 if (isActive)
                 {
                     // Set the note to be played
-                    bzrPlayNote(track->song->notes[track->note_index].note);
+                    bzrPlayNote(track->song->notes[track->note_index].note, track->volume);
                 }
             }
             else

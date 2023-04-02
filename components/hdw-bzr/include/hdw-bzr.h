@@ -21,7 +21,8 @@
  * A ::musicalNote_t is a ::noteFrequency_t and a duration.
  * A ::song_t is a list of ::musicalNote_t that may be looped.
  *
- * The individual tracks may be muted with bzrSetBgmIsMuted() and bzrGetBgmIsMuted().
+ * The individual tracks may have volume adjusted with bzrSetBgmVolume() and bzrSetSfxVolume().
+ * Setting the volume to 0 will mute that track.
  *
  * A song can be played on a given track with either bzrPlayBgm() or bzrPlaySfx().
  * All tracks can be stopped at the same time with bzrStop().
@@ -219,15 +220,15 @@ typedef struct
     musicalNote_t* notes;   ///< An array of notes in the song
 } song_t;
 
-void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, bool _isBgmMuted,
-                bool _isSfxMuted);
+void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, uint16_t _bgmVolume,
+                uint16_t _sfxVolume);
 void deinitBuzzer(void);
-void bzrSetBgmIsMuted(bool _isBgmMuted);
-void bzrSetSfxIsMuted(bool _isSfxMuted);
+void bzrSetBgmVolume(uint16_t vol);
+void bzrSetSfxVolume(uint16_t vol);
 void bzrPlayBgm(const song_t* song);
 void bzrPlaySfx(const song_t* song);
 void bzrStop(void);
-void bzrPlayNote(noteFrequency_t freq);
+void bzrPlayNote(noteFrequency_t freq, uint16_t volume);
 void bzrStopNote(void);
 
 #endif

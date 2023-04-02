@@ -12,11 +12,11 @@
 
 void readAllSettings(void);
 
-bool getBgmMutedSetting(void);
-bool setBgmMutedSetting(bool);
+uint16_t getBgmVolumeSetting(void);
+bool setBgmVolumeSetting(uint16_t);
 
-bool getSfxMutedSetting(void);
-bool setSfxMutedSetting(bool);
+uint16_t getSfxVolumeSetting(void);
+bool setSfxVolumeSetting(uint16_t);
 
 uint8_t getTftBrightnessSetting(void);
 uint8_t getTFTBacklightBrightnessSetting(void);

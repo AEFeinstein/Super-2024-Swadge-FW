@@ -117,9 +117,9 @@ void readAllSettings(void)
 
     // Read and set buzzer settings
     readSetting(&bgm_setting);
-    bzrSetBgmIsMuted(getBgmMutedSetting());
+    bzrSetBgmVolume(getBgmVolumeSetting());
     readSetting(&sfx_setting);
-    bzrSetSfxIsMuted(getSfxMutedSetting());
+    bzrSetSfxVolume(getSfxVolumeSetting());
 
     // Read and apply TFT settings
     readSetting(&tft_br_setting);
@@ -141,16 +141,16 @@ void readAllSettings(void)
 
 //==============================================================================
 
-bool getBgmMutedSetting(void)
+uint16_t getBgmVolumeSetting(void)
 {
     return bgm_setting.val;
 }
 
-bool setBgmMutedSetting(bool isMuted)
+bool setBgmVolumeSetting(uint16_t vol)
 {
-    if (setSetting(&bgm_setting, isMuted))
+    if (setSetting(&bgm_setting, vol))
     {
-        bzrSetBgmIsMuted(isMuted);
+        bzrSetBgmVolume(vol);
         return true;
     }
     return false;
@@ -158,16 +158,16 @@ bool setBgmMutedSetting(bool isMuted)
 
 //==============================================================================
 
-bool getSfxMutedSetting(void)
+uint16_t getSfxVolumeSetting(void)
 {
     return sfx_setting.val;
 }
 
-bool setSfxMutedSetting(bool isMuted)
+bool setSfxVolumeSetting(uint16_t vol)
 {
-    if (setSetting(&sfx_setting, isMuted))
+    if (setSetting(&sfx_setting, vol))
     {
-        bzrSetSfxIsMuted(isMuted);
+        bzrSetSfxVolume(vol);
         return true;
     }
     return false;
