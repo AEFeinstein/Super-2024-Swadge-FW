@@ -83,6 +83,19 @@ static const char* const ledOpts[] = {
     led1, led2, led3, led4, led5, led6, led7, led8,
 };
 
+static const char snd1[] = "SND: 1";
+static const char snd2[] = "SND: 2";
+static const char snd3[] = "SND: 3";
+static const char snd4[] = "SND: 4";
+static const char snd5[] = "SND: 5";
+static const char snd6[] = "SND: 6";
+static const char snd7[] = "SND: 7";
+static const char snd8[] = "SND: 8";
+
+static const char* const sndOpts[] = {
+    snd1, snd2, snd3, snd4, snd5, snd6, snd7, snd8,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -110,6 +123,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
     addMultiItemToMenu(mainMenu->menu, tftOpts, ARRAY_SIZE(tftOpts), getTftBrightnessSetting());
     addMultiItemToMenu(mainMenu->menu, ledOpts, ARRAY_SIZE(ledOpts), getLedBrightnessSetting());
+    addMultiItemToMenu(mainMenu->menu, sndOpts, ARRAY_SIZE(sndOpts), getBgmVolumeSetting());
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }
 
@@ -195,6 +209,35 @@ static void mainMenuCb(const char* label, bool selected)
         {
             // Set the brightness based on the number in the label
             setLedBrightnessSetting(label[5] - '1');
+        }
+        else if ((snd1 == label) || (snd2 == label) || (snd3 == label) || (snd4 == label) || (snd5 == label)
+                 || (snd6 == label) || (snd7 == label) || (snd8 == label))
+        {
+            // Set the volume based on the number in the label
+            setBgmVolumeSetting(label[5] - '1');
+
+            // Play a test tone
+            static musicalNote_t notes[] = {
+                {
+                    .note   = G_4,
+                    .timeMs = 400,
+                },
+                {
+                    .note   = E_5,
+                    .timeMs = 400,
+                },
+                {
+                    .note   = C_5,
+                    .timeMs = 400,
+                },
+            };
+            static const song_t test = {
+                .loopStartNote = 0,
+                .notes         = notes,
+                .numNotes      = ARRAY_SIZE(notes),
+                .shouldLoop    = false,
+            };
+            bzrPlayBgm(&test);
         }
     }
 }

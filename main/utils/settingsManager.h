@@ -13,9 +13,11 @@
 void readAllSettings(void);
 
 uint16_t getBgmVolumeSetting(void);
+uint16_t getBgmVolumeLevelSetting(void);
 bool setBgmVolumeSetting(uint16_t);
 
 uint16_t getSfxVolumeSetting(void);
+uint16_t getSfxVolumeLevelSetting(void);
 bool setSfxVolumeSetting(uint16_t);
 
 uint8_t getTftBrightnessSetting(void);

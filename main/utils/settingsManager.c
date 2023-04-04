@@ -56,8 +56,8 @@ typedef struct
 //==============================================================================
 
 DECL_SETTING(test, 0, 1, 0);
-DECL_SETTING(bgm, 0, 1, 0);
-DECL_SETTING(sfx, 0, 1, 0);
+DECL_SETTING(bgm, 0, 7, 7);
+DECL_SETTING(sfx, 0, 7, 7);
 DECL_SETTING(tft_br, 0, 7, 5);
 DECL_SETTING(led_br, 0, 7, 5);
 DECL_SETTING(mic, 0, 7, 7);
@@ -141,16 +141,25 @@ void readAllSettings(void)
 
 //==============================================================================
 
+const uint16_t volLevels[] = {
+    0, 64, 128, 256, 512, 1024, 2048, 4096,
+};
+
 uint16_t getBgmVolumeSetting(void)
 {
     return bgm_setting.val;
+}
+
+uint16_t getBgmVolumeLevelSetting(void)
+{
+    return volLevels[bgm_setting.val];
 }
 
 bool setBgmVolumeSetting(uint16_t vol)
 {
     if (setSetting(&bgm_setting, vol))
     {
-        bzrSetBgmVolume(vol);
+        bzrSetBgmVolume(getBgmVolumeLevelSetting());
         return true;
     }
     return false;
@@ -163,11 +172,16 @@ uint16_t getSfxVolumeSetting(void)
     return sfx_setting.val;
 }
 
+uint16_t getSfxVolumeLevelSetting(void)
+{
+    return volLevels[sfx_setting.val];
+}
+
 bool setSfxVolumeSetting(uint16_t vol)
 {
     if (setSetting(&sfx_setting, vol))
     {
-        bzrSetSfxVolume(vol);
+        bzrSetSfxVolume(getSfxVolumeLevelSetting());
         return true;
     }
     return false;
