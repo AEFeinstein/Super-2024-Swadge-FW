@@ -34,7 +34,7 @@ typedef struct
 //==============================================================================
 
 /// The sound driver
-static struct SoundDriver* sounddriver = NULL;
+static struct SoundDriver* soundDriver = NULL;
 
 // Output buzzer
 static uint16_t buzzerNote    = SILENCE;
@@ -48,7 +48,7 @@ static emu_buzzer_t emuBzrSfx = {0};
 
 static bool buzzer_track_check_next_note(emu_buzzer_t* track, bool isActive);
 void buzzer_check_next_note(void* arg);
-void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int samplesp);
+void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
 
 //==============================================================================
 // Functions
@@ -70,9 +70,9 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
     emuBzrSfx.volume = _sfxVolume;
 
     bzrStop();
-    if (!sounddriver)
+    if (!soundDriver)
     {
-        sounddriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 1, 256, 0, 0);
+        soundDriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 1, 256, 0, 0);
     }
     memset(&emuBzrBgm, 0, sizeof(emuBzrBgm));
     memset(&emuBzrSfx, 0, sizeof(emuBzrSfx));
@@ -94,14 +94,14 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
  */
 void deinitBuzzer(void)
 {
-    if (sounddriver)
+    if (soundDriver)
     {
 #if defined(_WIN32)
         CloseSound(NULL);
 #else
-        CloseSound(sounddriver); // when calling this on Windows, it halts
+        CloseSound(soundDriver); // when calling this on Windows, it halts
 #endif
-        sounddriver = NULL;
+        soundDriver = NULL;
     }
 }
 
@@ -309,16 +309,16 @@ static bool buzzer_track_check_next_note(emu_buzzer_t* track, bool isActive)
  * @param sd The sound driver
  * @param in A pointer to read samples from. May be NULL
  * @param out A pointer to write samples to. May be NULL
- * @param samplesr The number of samples to read
- * @param samplesp The number of samples to write
+ * @param samples_R The number of samples to read
+ * @param samples_W The number of samples to write
  */
-void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int samplesp)
+void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W)
 {
     // Pass to microphone
-    handleSoundInput(sd, in, out, samplesr, samplesp);
+    handleSoundInput(sd, in, out, samples_R, samples_W);
 
     // If this is an output callback, and there are samples to write
-    if (samplesp && out)
+    if (samples_W && out)
     {
         // Keep track of our place in the wave
         static float placeInWave = 0;
@@ -326,11 +326,12 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int
         // If there is a note to play
         if (buzzerNote)
         {
+            float transitionPoint = (2 * M_PI * buzzerVol) / 8192;
             // For each sample
-            for (int i = 0; i < samplesp; i++)
+            for (int i = 0; i < samples_W; i++)
             {
                 // Write the sample
-                out[i] = 1024 * sin(placeInWave);
+                out[i] = 1024 * ((placeInWave < transitionPoint) ? 1 : -1);
                 // Advance the place in the wave
                 placeInWave += ((2 * M_PI * buzzerNote) / ((float)SAMPLING_RATE));
                 // Keep it bound between 0 and 2*PI
@@ -343,7 +344,7 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int
         else
         {
             // No note to play
-            memset(out, 0, samplesp * 2);
+            memset(out, 0, samples_W * 2);
             placeInWave = 0;
         }
     }
