@@ -28,7 +28,7 @@ typedef struct
 static void mainMenuEnterMode(void);
 static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
-static void mainMenuCb(const char* label, bool selected);
+static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 
 //==============================================================================
 // Variables
@@ -57,43 +57,30 @@ mainMenu_t* mainMenu;
 
 static const char settingsLabel[] = "Settings";
 
-static const char tft1[] = "TFT: 1";
-static const char tft2[] = "TFT: 2";
-static const char tft3[] = "TFT: 3";
-static const char tft4[] = "TFT: 4";
-static const char tft5[] = "TFT: 5";
-static const char tft6[] = "TFT: 6";
-static const char tft7[] = "TFT: 7";
-static const char tft8[] = "TFT: 8";
+static const char tftSettingLabel[] = "TFT";
+static const char ledSettingLabel[] = "LED";
+static const char volSettingLabel[] = "VOL";
 
-static const char* const tftOpts[] = {
-    tft1, tft2, tft3, tft4, tft5, tft6, tft7, tft8,
+// Test tone when the volume changes
+static musicalNote_t volTestToneNotes[] = {
+    {
+        .note   = G_4,
+        .timeMs = 400,
+    },
+    {
+        .note   = E_5,
+        .timeMs = 400,
+    },
+    {
+        .note   = C_5,
+        .timeMs = 400,
+    },
 };
-
-static const char led1[] = "LED: 1";
-static const char led2[] = "LED: 2";
-static const char led3[] = "LED: 3";
-static const char led4[] = "LED: 4";
-static const char led5[] = "LED: 5";
-static const char led6[] = "LED: 6";
-static const char led7[] = "LED: 7";
-static const char led8[] = "LED: 8";
-
-static const char* const ledOpts[] = {
-    led1, led2, led3, led4, led5, led6, led7, led8,
-};
-
-static const char snd1[] = "SND: 1";
-static const char snd2[] = "SND: 2";
-static const char snd3[] = "SND: 3";
-static const char snd4[] = "SND: 4";
-static const char snd5[] = "SND: 5";
-static const char snd6[] = "SND: 6";
-static const char snd7[] = "SND: 7";
-static const char snd8[] = "SND: 8";
-
-static const char* const sndOpts[] = {
-    snd1, snd2, snd3, snd4, snd5, snd6, snd7, snd8,
+static const song_t volTestTone = {
+    .loopStartNote = 0,
+    .notes         = volTestToneNotes,
+    .numNotes      = ARRAY_SIZE(volTestToneNotes),
+    .shouldLoop    = false,
 };
 
 //==============================================================================
@@ -121,9 +108,10 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
-    addMultiItemToMenu(mainMenu->menu, tftOpts, ARRAY_SIZE(tftOpts), getTftBrightnessSetting());
-    addMultiItemToMenu(mainMenu->menu, ledOpts, ARRAY_SIZE(ledOpts), getLedBrightnessSetting());
-    addMultiItemToMenu(mainMenu->menu, sndOpts, ARRAY_SIZE(sndOpts), getBgmVolumeSetting());
+    // TODO extract bounds and current val from settings
+    addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, 0, 8, 4);
+    addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, 0, 8, 4);
+    addSettingsItemToMenu(mainMenu->menu, volSettingLabel, 0, 13, 4);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }
 
@@ -179,7 +167,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
  * @param label
  * @param selected
  */
-static void mainMenuCb(const char* label, bool selected)
+static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
@@ -198,46 +186,18 @@ static void mainMenuCb(const char* label, bool selected)
     }
     else
     {
-        if ((tft1 == label) || (tft2 == label) || (tft3 == label) || (tft4 == label) || (tft5 == label)
-            || (tft6 == label) || (tft7 == label) || (tft8 == label))
+        if (tftSettingLabel == label)
         {
-            // Set the brightness based on the number in the label
-            setTftBrightnessSetting(label[5] - '1');
+            setTftBrightnessSetting(settingVal);
         }
-        else if ((led1 == label) || (led2 == label) || (led3 == label) || (led4 == label) || (led5 == label)
-                 || (led6 == label) || (led7 == label) || (led8 == label))
+        else if (ledSettingLabel == label)
         {
-            // Set the brightness based on the number in the label
-            setLedBrightnessSetting(label[5] - '1');
+            setLedBrightnessSetting(settingVal);
         }
-        else if ((snd1 == label) || (snd2 == label) || (snd3 == label) || (snd4 == label) || (snd5 == label)
-                 || (snd6 == label) || (snd7 == label) || (snd8 == label))
+        else if (volSettingLabel == label)
         {
-            // Set the volume based on the number in the label
-            setBgmVolumeSetting(label[5] - '1');
-
-            // Play a test tone
-            static musicalNote_t notes[] = {
-                {
-                    .note   = G_4,
-                    .timeMs = 400,
-                },
-                {
-                    .note   = E_5,
-                    .timeMs = 400,
-                },
-                {
-                    .note   = C_5,
-                    .timeMs = 400,
-                },
-            };
-            static const song_t test = {
-                .loopStartNote = 0,
-                .notes         = notes,
-                .numNotes      = ARRAY_SIZE(notes),
-                .shouldLoop    = false,
-            };
-            bzrPlayBgm(&test);
+            setBgmVolumeSetting(settingVal);
+            bzrPlayBgm(&volTestTone);
         }
     }
 }

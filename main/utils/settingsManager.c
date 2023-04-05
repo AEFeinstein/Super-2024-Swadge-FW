@@ -56,8 +56,8 @@ typedef struct
 //==============================================================================
 
 DECL_SETTING(test, 0, 1, 0);
-DECL_SETTING(bgm, 0, 7, 7);
-DECL_SETTING(sfx, 0, 7, 7);
+DECL_SETTING(bgm, 0, 13, 13);
+DECL_SETTING(sfx, 0, 13, 13);
 DECL_SETTING(tft_br, 0, 7, 5);
 DECL_SETTING(led_br, 0, 7, 5);
 DECL_SETTING(mic, 0, 7, 7);
@@ -141,8 +141,9 @@ void readAllSettings(void)
 
 //==============================================================================
 
+// TODO move this to the component, not settings manager
 const uint16_t volLevels[] = {
-    0, 64, 128, 256, 512, 1024, 2048, 4096,
+    0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,
 };
 
 uint16_t getBgmVolumeSetting(void)
@@ -196,6 +197,7 @@ uint8_t getTftBrightnessSetting(void)
 
 uint8_t getTFTBacklightBrightnessSetting(void)
 {
+    // TODO move this to the component, not settings manager
     return (CONFIG_TFT_MIN_BRIGHTNESS
             + (((CONFIG_TFT_MAX_BRIGHTNESS - CONFIG_TFT_MIN_BRIGHTNESS) * tft_br_setting.val) / tft_br_param.max));
 }
@@ -257,6 +259,7 @@ uint8_t getMicGainSetting(void)
 uint16_t getMicGainMultiplierSetting(void)
 {
     // Using a logarithmic volume control.
+    // TODO move this to the component, not settings manager
     const uint16_t micVols[] = {
         32, 45, 64, 90, 128, 181, 256, 362,
     };

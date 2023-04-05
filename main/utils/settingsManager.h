@@ -1,3 +1,20 @@
+/*! \file settingsManager.h
+ *
+ * \section settingsManager_design Design Philosophy
+ *
+ * TODO
+ *
+ * \section settingsManager_usage Usage
+ *
+ * TODO
+ *
+ * \section settingsManager_example Example
+ *
+ * \code{.c}
+ * TODO
+ * \endcode
+ */
+
 #ifndef _SETTINGS_MANAGER_H_
 #define _SETTINGS_MANAGER_H_
 

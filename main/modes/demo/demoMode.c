@@ -14,7 +14,7 @@ static void demoConCb(p2pInfo* p2p, connectionEvt_t evt);
 static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
-static void demoMenuCb(const char*, bool selected);
+static void demoMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static const char demoName[]  = "Demo";
 static const char demoMenu1[] = "Menu 1";
@@ -359,8 +359,9 @@ static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
  *
  * @param label
  * @param selected
+ * @param settingVal
  */
-static void demoMenuCb(const char* label, bool selected)
+static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     printf("%s %s\n", label, selected ? "selected" : "scrolled to");
 }

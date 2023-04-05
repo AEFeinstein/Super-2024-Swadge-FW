@@ -109,6 +109,7 @@
  * - vector2d.h: Basic math for 2D vectors
  * - geometry.h: Basic math for 2D shapes, like collision checks
  * - macros.h: Convenient macros like MIN() and MAX()
+ * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \section espressif_doc Espressif Documentation
  *

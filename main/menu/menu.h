@@ -49,6 +49,8 @@
  * static const char opt3[]            = "opt3";
  * static const char opt4[]            = "opt4";
  * static const char* const demoOpts[] = {opt1, opt2, opt3, opt4};
+ *
+ * static const char demoSettingLabel[] = "Setting";
  * \endcode
  *
  * Initialize a menu:
@@ -75,12 +77,13 @@
  * // Finish the first submenu
  * menu = endSubMenu(menu);
  *
- * // Add more items to the main menu, including a multi-item
+ * // Add more items to the main menu, including a multi-item and settings item
  * addSingleItemToMenu(menu, demoMenu3);
  * addSingleItemToMenu(menu, demoMenu4);
  * addMultiItemToMenu(menu, demoOpts, ARRAY_SIZE(demoOpts), 0);
  * addSingleItemToMenu(menu, demoMenu5);
  * addSingleItemToMenu(menu, demoMenu6);
+ * addSettingsItemToMenu(menu, demoSettingLabel, 0, 8, 4);
  * \endcode
  *
  * Process button events:
@@ -121,9 +124,13 @@
 #include "hdw-btn.h"
 #include "font.h"
 
-#define NUM_MENU_ITEMS 5
-
-typedef void (*menuCb)(const char*, bool selected);
+/**
+ * @brief A callback which is called when a menu changes or items are selected
+ * @param label A pointer to the label which was selected or scrolled to
+ * @param selected true if the item was selected with the A button, false if it was scrolled to
+ * @param value If a settings item was selected or scrolled, this is the new value for the setting
+ */
+typedef void (*menuCb)(const char* label, bool selected, uint32_t value);
 
 typedef struct _menu_t menu_t;
 
@@ -137,6 +144,9 @@ typedef struct
     menu_t* subMenu;            ///< A pointer to a submenu, maybe NULL for single-select and multi-select
     uint8_t numOptions;         ///< The number of options for multi-select
     uint8_t currentOpt;         ///< The current selected option for multi-select
+    uint8_t minSetting;         ///< The minimum value for settings items
+    uint8_t maxSetting;         ///< The maximum value for settings items
+    uint8_t currentSetting;     // The current value for settings items
 } menuItem_t;
 
 /**
@@ -159,6 +169,8 @@ void addSingleItemToMenu(menu_t* menu, const char* label);
 void removeSingleItemFromMenu(menu_t* menu, const char* label);
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel);
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
+void addSettingsItemToMenu(menu_t* menu, const char* label, int32_t min, int32_t max, int32_t val);
+void removeSettingsItemFromMenu(menu_t* menu, const char* label);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 
 void drawMenu(menu_t* menu, font_t* font);

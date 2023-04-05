@@ -8,6 +8,7 @@
 #include "hdw-tft.h"
 #include "menu.h"
 #include "shapes.h"
+#include "macros.h"
 
 //==============================================================================
 // Const Variables
@@ -309,6 +310,72 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
 }
 
 /**
+ * Add a settings entry to the menu. A settings entry is left-right scrollable
+ * where an integer setting is incremented or decremented. The ::menuCb callback
+ * will be called each time the settings change with the newly selected value as
+ * the argument. The ::menuCb callback will also be called if the currently
+ * displayed setting is selected with that value as the argument.
+ *
+ * Settings items are rendered with an icon indicating that it is horizontally
+ * scrollable.
+ *
+ * @param menu The menu to add a settings item to
+ * @param label The label for this setting. The integer setting will be drawn after it
+ * @param min The minimum value for the setting
+ * @param max The maximum value for the setting
+ * @param val The starting value for the setting
+ */
+void addSettingsItemToMenu(menu_t* menu, const char* label, int32_t min, int32_t max, int32_t val)
+{
+    menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
+    newItem->label          = label;
+    newItem->minSetting     = min;
+    newItem->maxSetting     = max;
+    newItem->currentSetting = val;
+    push(menu->items, newItem);
+
+    // If this is the first item, set it as the current
+    if (1 == menu->items->length)
+    {
+        menu->currentItem = menu->items->first;
+    }
+}
+
+/**
+ * @brief Remove a settings item entry from the menu. This item is removed by
+ * pointer, not by doing any string comparisons
+ *
+ * @param menu The menu to remove a multi item from
+ * @param label The label to remove
+ */
+void removeSettingsItemFromMenu(menu_t* menu, const char* label)
+{
+    node_t* listNode = menu->items->first;
+    while (NULL != listNode)
+    {
+        menuItem_t* item = listNode->val;
+        if (item->label == label)
+        {
+            removeEntry(menu->items, listNode);
+            if (menu->currentItem == listNode)
+            {
+                if (NULL != listNode->next)
+                {
+                    menu->currentItem = listNode->next;
+                }
+                else
+                {
+                    menu->currentItem = listNode->prev;
+                }
+            }
+            free(item);
+            return;
+        }
+        listNode = listNode->next;
+    }
+}
+
+/**
  * This must be called to pass button event from the Swadge mode to the menu.
  * If a button is passed here, it should not be handled anywhere else
  *
@@ -366,7 +433,13 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                     }
 
                     // Call the callback, not selected
-                    menu->cbFunc(item->options[item->currentOpt], false);
+                    menu->cbFunc(item->options[item->currentOpt], false, 0);
+                }
+                else if (item->minSetting != item->maxSetting)
+                {
+                    item->currentSetting = MAX(item->currentSetting - 1, item->minSetting);
+                    // Call the callback, not selected
+                    menu->cbFunc(item->label, false, item->currentSetting);
                 }
                 else if (menu->parentMenu)
                 {
@@ -390,7 +463,14 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                     }
 
                     // Call the callback, not selected
-                    menu->cbFunc(item->options[item->currentOpt], false);
+                    menu->cbFunc(item->options[item->currentOpt], false, 0);
+                }
+                else if (item->minSetting != item->maxSetting)
+                {
+                    item->currentSetting = MIN(item->currentSetting + 1, item->maxSetting);
+
+                    // Call the callback, not selected
+                    menu->cbFunc(item->label, false, item->currentSetting);
                 }
                 else if (item->subMenu)
                 {
@@ -405,7 +485,7 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 if (item->subMenu)
                 {
                     // If this item has a submenu, call the callback, then enter it
-                    menu->cbFunc(item->label, true);
+                    menu->cbFunc(item->label, true, 0);
                     return item->subMenu;
                 }
                 else if (item->label == mnuBackStr)
@@ -415,15 +495,20 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                     menu->currentItem = menu->items->first;
                     return menu->parentMenu;
                 }
+                else if (item->minSetting != item->maxSetting)
+                {
+                    // Call the callback, not selected
+                    menu->cbFunc(item->label, true, item->currentSetting);
+                }
                 else if (item->label)
                 {
                     // If this is a single item, call the callback
-                    menu->cbFunc(item->label, true);
+                    menu->cbFunc(item->label, true, 0);
                 }
                 else if (item->options)
                 {
                     // If this is a multi item, call the callback
-                    menu->cbFunc(item->options[item->currentOpt], true);
+                    menu->cbFunc(item->options[item->currentOpt], true, 0);
                 }
                 break;
             }
@@ -522,7 +607,13 @@ void drawMenu(menu_t* menu, font_t* font)
             }
 
             // Draw the label(s)
-            if (item->label)
+            if (item->minSetting != item->maxSetting)
+            {
+                char label[64] = {0};
+                snprintf(label, sizeof(label) - 1, "< %s: %d >", item->label, item->currentSetting);
+                drawText(font, c555, label, x, y);
+            }
+            else if (item->label)
             {
                 if (item->subMenu)
                 {
