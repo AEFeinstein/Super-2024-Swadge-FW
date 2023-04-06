@@ -19,6 +19,7 @@ typedef struct
 {
     menu_t* menu;
     font_t ibm;
+    song_t jingle;
 } mainMenu_t;
 
 //==============================================================================
@@ -64,28 +65,6 @@ static const char sfxVolSettingLabel[]      = "SFX";
 static const char micSettingLabel[]         = "MIC";
 static const char screenSaverSettingLabel[] = "Screen Saver";
 
-// Test tone when the volume changes
-static musicalNote_t volTestToneNotes[] = {
-    {
-        .note   = G_4,
-        .timeMs = 400,
-    },
-    {
-        .note   = E_5,
-        .timeMs = 400,
-    },
-    {
-        .note   = C_5,
-        .timeMs = 400,
-    },
-};
-static const song_t volTestTone = {
-    .loopStartNote = 0,
-    .notes         = volTestToneNotes,
-    .numNotes      = ARRAY_SIZE(volTestToneNotes),
-    .shouldLoop    = false,
-};
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -101,6 +80,9 @@ static void mainMenuEnterMode(void)
 
     // Load a font
     loadFont("ibm_vga8.font", &mainMenu->ibm, false);
+
+    // Load a song
+    loadSong("jingle.sng", &mainMenu->jingle, false);
 
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
@@ -133,6 +115,9 @@ static void mainMenuExitMode(void)
 
     // Free the font
     freeFont(&mainMenu->ibm);
+
+    // Free the song
+    freeSong(&mainMenu->jingle);
 
     // Free mode memory
     free(mainMenu);
@@ -204,12 +189,12 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (bgmVolSettingLabel == label)
         {
             setBgmVolumeSetting(settingVal);
-            bzrPlayBgm(&volTestTone);
+            bzrPlayBgm(&mainMenu->jingle);
         }
         else if (sfxVolSettingLabel == label)
         {
             setSfxVolumeSetting(settingVal);
-            bzrPlaySfx(&volTestTone);
+            bzrPlaySfx(&mainMenu->jingle);
         }
         else if (micSettingLabel == label)
         {
