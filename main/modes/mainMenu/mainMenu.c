@@ -57,9 +57,12 @@ mainMenu_t* mainMenu;
 
 static const char settingsLabel[] = "Settings";
 
-static const char tftSettingLabel[] = "TFT";
-static const char ledSettingLabel[] = "LED";
-static const char volSettingLabel[] = "VOL";
+static const char tftSettingLabel[]         = "TFT";
+static const char ledSettingLabel[]         = "LED";
+static const char bgmVolSettingLabel[]      = "BGM";
+static const char sfxVolSettingLabel[]      = "SFX";
+static const char micSettingLabel[]         = "MIC";
+static const char screenSaverSettingLabel[] = "Screen Saver";
 
 // Test tone when the volume changes
 static musicalNote_t volTestToneNotes[] = {
@@ -108,10 +111,14 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
-    // TODO extract bounds and current val from settings
-    addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, 0, 8, 4);
-    addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, 0, 8, 4);
-    addSettingsItemToMenu(mainMenu->menu, volSettingLabel, 0, 13, 4);
+    // Get the bounds and current settings to build this menu
+    addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
+    addSettingsItemToMenu(mainMenu->menu, ledSettingLabel, getLedBrightnessSettingBounds(), getLedBrightnessSetting());
+    addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
+    addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
+    addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
+    addSettingsItemToMenu(mainMenu->menu, screenSaverSettingLabel, getScreensaverTimeSettingBounds(),
+                          getScreensaverTimeSetting());
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }
 
@@ -194,10 +201,23 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setLedBrightnessSetting(settingVal);
         }
-        else if (volSettingLabel == label)
+        else if (bgmVolSettingLabel == label)
         {
             setBgmVolumeSetting(settingVal);
             bzrPlayBgm(&volTestTone);
+        }
+        else if (sfxVolSettingLabel == label)
+        {
+            setSfxVolumeSetting(settingVal);
+            bzrPlaySfx(&volTestTone);
+        }
+        else if (micSettingLabel == label)
+        {
+            setMicGainSetting(settingVal);
+        }
+        else if (screenSaverSettingLabel == label)
+        {
+            setScreensaverTimeSetting(settingVal);
         }
     }
 }

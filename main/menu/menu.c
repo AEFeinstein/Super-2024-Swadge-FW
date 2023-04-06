@@ -321,16 +321,15 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
  *
  * @param menu The menu to add a settings item to
  * @param label The label for this setting. The integer setting will be drawn after it
- * @param min The minimum value for the setting
- * @param max The maximum value for the setting
+ * @param bounds The bounds for this setting
  * @param val The starting value for the setting
  */
-void addSettingsItemToMenu(menu_t* menu, const char* label, int32_t min, int32_t max, int32_t val)
+void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val)
 {
     menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
     newItem->label          = label;
-    newItem->minSetting     = min;
-    newItem->maxSetting     = max;
+    newItem->minSetting     = bounds->min;
+    newItem->maxSetting     = bounds->max;
     newItem->currentSetting = val;
     push(menu->items, newItem);
 

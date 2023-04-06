@@ -83,7 +83,7 @@
  * addMultiItemToMenu(menu, demoOpts, ARRAY_SIZE(demoOpts), 0);
  * addSingleItemToMenu(menu, demoMenu5);
  * addSingleItemToMenu(menu, demoMenu6);
- * addSettingsItemToMenu(menu, demoSettingLabel, 0, 8, 4);
+ * addSettingsItemToMenu(menu, demoSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
  * \endcode
  *
  * Process button events:
@@ -123,6 +123,7 @@
 #include "linked_list.h"
 #include "hdw-btn.h"
 #include "font.h"
+#include "settingsManager.h"
 
 /**
  * @brief A callback which is called when a menu changes or items are selected
@@ -169,7 +170,7 @@ void addSingleItemToMenu(menu_t* menu, const char* label);
 void removeSingleItemFromMenu(menu_t* menu, const char* label);
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel);
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
-void addSettingsItemToMenu(menu_t* menu, const char* label, int32_t min, int32_t max, int32_t val);
+void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val);
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 

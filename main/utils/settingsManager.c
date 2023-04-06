@@ -16,14 +16,6 @@
 
 typedef struct
 {
-    const int32_t min;
-    const int32_t max;
-    const int32_t def;
-    const char* key;
-} settingParam_t;
-
-typedef struct
-{
     const settingParam_t* param;
     int32_t val;
 } setting_t;
@@ -156,6 +148,11 @@ uint16_t getBgmVolumeLevelSetting(void)
     return volLevels[bgm_setting.val];
 }
 
+const settingParam_t* getBgmVolumeSettingBounds(void)
+{
+    return &bgm_param;
+}
+
 bool setBgmVolumeSetting(uint16_t vol)
 {
     if (setSetting(&bgm_setting, vol))
@@ -171,6 +168,11 @@ bool setBgmVolumeSetting(uint16_t vol)
 uint16_t getSfxVolumeSetting(void)
 {
     return sfx_setting.val;
+}
+
+const settingParam_t* getSfxVolumeSettingBounds(void)
+{
+    return &sfx_param;
 }
 
 uint16_t getSfxVolumeLevelSetting(void)
@@ -202,6 +204,11 @@ uint8_t getTFTBacklightBrightnessSetting(void)
             + (((CONFIG_TFT_MAX_BRIGHTNESS - CONFIG_TFT_MIN_BRIGHTNESS) * tft_br_setting.val) / tft_br_param.max));
 }
 
+const settingParam_t* getTftBrightnessSettingBounds(void)
+{
+    return &tft_br_param;
+}
+
 bool setTftBrightnessSetting(uint8_t newVal)
 {
     if (setSetting(&tft_br_setting, newVal))
@@ -217,6 +224,11 @@ bool setTftBrightnessSetting(uint8_t newVal)
 uint8_t getLedBrightnessSetting(void)
 {
     return led_br_setting.val;
+}
+
+const settingParam_t* getLedBrightnessSettingBounds(void)
+{
+    return &led_br_param;
 }
 
 bool setLedBrightnessSetting(uint8_t brightness)
@@ -256,6 +268,11 @@ uint8_t getMicGainSetting(void)
     return mic_setting.val;
 }
 
+const settingParam_t* getMicGainSettingBounds(void)
+{
+    return &mic_param;
+}
+
 uint16_t getMicGainMultiplierSetting(void)
 {
     // Using a logarithmic volume control.
@@ -268,19 +285,16 @@ uint16_t getMicGainMultiplierSetting(void)
 
 bool setMicGainSetting(uint8_t newGain)
 {
-    // TODO set mic
     return setSetting(&mic_setting, newGain);
 }
 
 bool decMicGainSetting(void)
 {
-    // TODO set mic
     return decSetting(&mic_setting);
 }
 
 bool incMicGainSetting(void)
 {
-    // TODO set mic
     return incSetting(&mic_setting);
 }
 
@@ -291,14 +305,14 @@ uint16_t getScreensaverTimeSetting(void)
     return scrn_sv_setting.val;
 }
 
-bool incScreensaverTimeSetting(void)
+const settingParam_t* getScreensaverTimeSettingBounds(void)
 {
-    return incSetting(&scrn_sv_setting);
+    return &scrn_sv_param;
 }
 
-bool decScreensaverTimeSetting(void)
+bool setScreensaverTimeSetting(uint16_t val)
 {
-    return decSetting(&scrn_sv_setting);
+    return setSetting(&scrn_sv_setting, val);
 }
 
 //==============================================================================
