@@ -70,7 +70,8 @@ esp_err_t deinitLeds(void)
 }
 
 /**
- * @brief Set the global LED brightness
+ * @brief Set the global LED brightness. setLedBrightnessSetting() should be called instead if the new volume should be
+ * persistent through a reboot.
  *
  * @param brightness 0 (off) to MAX_LED_BRIGHTNESS (max bright)
  */

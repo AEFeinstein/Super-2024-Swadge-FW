@@ -122,14 +122,18 @@ static esp_lcd_panel_io_handle_t tft_io_handle = NULL;
 //==============================================================================
 
 /**
- * @brief Set TFT Backlight brightness.
+ * @brief Set TFT Backlight brightness. setTftBrightnessSetting() should be called instead if the new volume should be
+ * persistent through a reboot.
  *
- * @param intensity    Sets the brightness 0-255
+ * @param intensity Sets the brightness 0-7
  *
  * @return value is 0 if OK nonzero if error.
  */
 esp_err_t setTFTBacklightBrightness(uint8_t intensity)
 {
+    intensity
+        = (CONFIG_TFT_MIN_BRIGHTNESS + (((CONFIG_TFT_MAX_BRIGHTNESS - CONFIG_TFT_MIN_BRIGHTNESS) * intensity) / 7));
+
     esp_err_t e;
     if (intensity > CONFIG_TFT_MAX_BRIGHTNESS)
     {

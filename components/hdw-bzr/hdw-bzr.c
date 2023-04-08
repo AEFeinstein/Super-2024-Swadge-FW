@@ -59,6 +59,14 @@ static bool buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_ala
 static bool buzzer_track_check_next_note(buzzerTrack_t* track, bool isActive, int64_t cTime);
 
 //==============================================================================
+// Const variables
+//==============================================================================
+
+const uint16_t volLevels[] = {
+    0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,
+};
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -146,23 +154,25 @@ void deinitBuzzer(void)
 }
 
 /**
- * @brief Set the buzzer's bgm volume
+ * @brief Set the buzzer's bgm volume. setBgmVolumeSetting() should be called instead if the new volume should be
+ * persistent through a reboot.
  *
- * @param vol The background volume, 0 to 4096
+ * @param vol The background volume, 0 to 13
  */
 void bzrSetBgmVolume(uint16_t vol)
 {
-    bgm.volume = vol;
+    bgm.volume = volLevels[vol];
 }
 
 /**
- * @brief Set the buzzer's sfx volume
+ * @brief Set the buzzer's sfx volume. setSfxVolumeSetting() should be called instead if the new volume should be
+ * persistent through a reboot.
  *
- * @param vol The background volume, 0 to 4096
+ * @param vol The background volume, 0 to 13
  */
 void bzrSetSfxVolume(uint16_t vol)
 {
-    sfx.volume = vol;
+    sfx.volume = volLevels[vol];
 }
 
 /**

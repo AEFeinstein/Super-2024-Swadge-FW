@@ -22,7 +22,8 @@
  * A ::song_t is a list of ::musicalNote_t that may be looped.
  *
  * The individual tracks may have volume adjusted with bzrSetBgmVolume() and bzrSetSfxVolume().
- * Setting the volume to 0 will mute that track.
+ * setBgmVolumeSetting() and setSfxVolumeSetting() should be called instead if the volume change should be persistent
+ * through reboots. Setting the volume to 0 will mute that track.
  *
  * A song can be played on a given track with either bzrPlayBgm() or bzrPlaySfx().
  * All tracks can be stopped at the same time with bzrStop().

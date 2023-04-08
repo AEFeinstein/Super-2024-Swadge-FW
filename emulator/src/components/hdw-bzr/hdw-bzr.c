@@ -30,6 +30,14 @@ typedef struct
 } emu_buzzer_t;
 
 //==============================================================================
+// Const variables
+//==============================================================================
+
+const uint16_t volLevels[] = {
+    0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,
+};
+
+//==============================================================================
 // Variables
 //==============================================================================
 
@@ -108,21 +116,21 @@ void deinitBuzzer(void)
 /**
  * @brief Set the buzzer's bgm volume
  *
- * @param vol The background volume, 0 to 4096
+ * @param vol The background volume, 0 to 13
  */
 void bzrSetBgmVolume(uint16_t vol)
 {
-    emuBzrBgm.volume = vol;
+    emuBzrBgm.volume = volLevels[vol];
 }
 
 /**
  * @brief Set the buzzer's sfx volume
  *
- * @param vol The background volume, 0 to 4096
+ * @param vol The background volume, 0 to 13
  */
 void bzrSetSfxVolume(uint16_t vol)
 {
-    emuBzrSfx.volume = vol;
+    emuBzrSfx.volume = volLevels[vol];
 }
 
 /**

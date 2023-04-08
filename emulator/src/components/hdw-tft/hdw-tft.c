@@ -256,13 +256,14 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 /**
  * @brief Set TFT Backlight brightness.
  *
- * @param intensity    Sets the brightness 0-255
+ * @param intensity Sets the brightness 0-7
  *
  * @return value is 0 if OK nonzero if error.
  */
 esp_err_t setTFTBacklightBrightness(uint8_t intensity)
 {
-    tftBrightness = intensity;
+    tftBrightness
+        = (CONFIG_TFT_MIN_BRIGHTNESS + (((CONFIG_TFT_MAX_BRIGHTNESS - CONFIG_TFT_MIN_BRIGHTNESS) * intensity) / 7));
     return ESP_OK;
 }
 

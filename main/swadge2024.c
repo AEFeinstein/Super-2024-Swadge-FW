@@ -309,7 +309,12 @@ void app_main(void)
         // Process ADC samples
         if (NULL != cSwadgeMode->fnAudioCallback)
         {
-            uint16_t micAmp = getMicGainMultiplierSetting();
+            // This must have the same number of elements as the bounds in mic_param
+            const uint16_t micGains[] = {
+                32, 45, 64, 90, 128, 181, 256, 362,
+            };
+
+            uint16_t micAmp = micGains[getMicGainSetting()];
             uint16_t adcSamples[ADC_READ_LEN / SOC_ADC_DIGI_RESULT_BYTES];
             uint32_t sampleCnt = 0;
             while (0 < (sampleCnt = loopMic(adcSamples, ARRAY_SIZE(adcSamples))))
