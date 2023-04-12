@@ -1,12 +1,18 @@
 ﻿---
 AccessModifierOffset: '0'
 AlignAfterOpenBracket: Align
-AlignConsecutiveMacros: 'true'
 AlignConsecutiveAssignments: 'true'
+AlignConsecutiveBitFields: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
 AlignConsecutiveDeclarations: 'false'
 AlignEscapedNewlines: Left
 AlignOperands: 'true'
-AlignTrailingComments: 'true'
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
 AllowAllArgumentsOnNextLine: 'false'
 AllowAllParametersOfDeclarationOnNextLine: 'false'
 AllowShortBlocksOnASingleLine: 'false'
