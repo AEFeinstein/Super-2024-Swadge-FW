@@ -3,6 +3,8 @@
 //==============================================================================
 
 #include <driver/rmt_tx.h>
+#include <esp_rom_gpio.h>
+#include <soc/gpio_sig_map.h>
 
 #include "led_strip_encoder.h"
 #include "hdw-led.h"
@@ -21,6 +23,7 @@
 static rmt_channel_handle_t led_chan    = NULL;
 static rmt_encoder_handle_t led_encoder = NULL;
 static uint8_t ledBrightness            = 0;
+static led_t localLeds[CONFIG_NUM_LEDS] = {0};
 
 //==============================================================================
 // Functions
@@ -30,9 +33,10 @@ static uint8_t ledBrightness            = 0;
  * @brief Initialize the RGB LEDs
  *
  * @param gpio The GPIO the LEDs are attached to
+ * @param gpioAlt A GPIO to mirror the LED output to
  * @return ESP_OK if the LEDs initialized, or a nonzero value if they did not
  */
-esp_err_t initLeds(gpio_num_t gpio)
+esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt)
 {
     rmt_tx_channel_config_t tx_chan_config = {
         .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
@@ -52,6 +56,14 @@ esp_err_t initLeds(gpio_num_t gpio)
 
     // Set to max brightness by default
     ledBrightness = 0;
+
+    // Mirror the output to another GPIO
+    // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
+    // really a (rmt_channel_t *), and that struct has a private definition in
+    // rmt_private.h. "int channel_id" happens to be the first struct member, so
+    // it is accessed using *((int*)led_chan). If the private struct ever
+    // changes, this will break!!! 
+    esp_rom_gpio_connect_out_signal( gpioAlt, RMT_SIG_OUT0_IDX + *((int*)led_chan), false, false );
 
     return ESP_OK;
 }
@@ -95,8 +107,13 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
         .loop_count = 0, // no transfer loop
     };
 
-    // Make a local copy of LEDs with brightness applied
-    led_t localLeds[numLeds];
+    // Make sure to not overflow
+    if(numLeds > CONFIG_NUM_LEDS)
+    {
+        numLeds = CONFIG_NUM_LEDS;
+    }
+
+    // Fill a local copy of LEDs with brightness applied
     for (uint8_t i = 0; i < numLeds; i++)
     {
         localLeds[i].r = (leds[i].r >> ledBrightness);
@@ -105,13 +122,5 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
     }
 
     // Write RGB values to LEDs
-    if (ESP_OK == rmt_transmit(led_chan, led_encoder, (uint8_t*)localLeds, numLeds * sizeof(led_t), &tx_config))
-    {
-        // Wait until transmission is done
-        // TODO I don't want to do this, but if data is transmitted too quickly, it junks up RMT and the LEDs
-        // Maybe fix it with rmt_tx_register_event_callbacks()? That didn't seem to work....
-        // Maybe use accumulation timer to only write LEDs every 5ms max?
-        return rmt_tx_wait_all_done(led_chan, -1);
-    }
-    return ESP_ERR_TIMEOUT;
+    return rmt_transmit(led_chan, led_encoder, (uint8_t*)localLeds, numLeds * sizeof(led_t), &tx_config);
 }

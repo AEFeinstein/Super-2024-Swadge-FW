@@ -60,7 +60,7 @@ typedef struct __attribute__((packed))
     uint8_t b; //!< The blue component, 0-255
 } led_t;
 
-esp_err_t initLeds(gpio_num_t gpio);
+esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt);
 esp_err_t deinitLeds(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
 void setLedBrightness(uint8_t brightness);

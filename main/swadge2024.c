@@ -262,7 +262,7 @@ void app_main(void)
             LEDC_CHANNEL_1); // Channel to use for PWM backlight
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39);
+    initLeds(GPIO_NUM_39, GPIO_NUM_18);
 
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
