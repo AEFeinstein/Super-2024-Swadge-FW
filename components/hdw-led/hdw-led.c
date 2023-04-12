@@ -62,8 +62,8 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt)
     // really a (rmt_channel_t *), and that struct has a private definition in
     // rmt_private.h. "int channel_id" happens to be the first struct member, so
     // it is accessed using *((int*)led_chan). If the private struct ever
-    // changes, this will break!!! 
-    esp_rom_gpio_connect_out_signal( gpioAlt, RMT_SIG_OUT0_IDX + *((int*)led_chan), false, false );
+    // changes, this will break!!!
+    esp_rom_gpio_connect_out_signal(gpioAlt, RMT_SIG_OUT0_IDX + *((int*)led_chan), false, false);
 
     return ESP_OK;
 }
@@ -108,7 +108,7 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
     };
 
     // Make sure to not overflow
-    if(numLeds > CONFIG_NUM_LEDS)
+    if (numLeds > CONFIG_NUM_LEDS)
     {
         numLeds = CONFIG_NUM_LEDS;
     }
