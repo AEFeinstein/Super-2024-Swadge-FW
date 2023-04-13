@@ -48,7 +48,7 @@ swadgeMode_t demoMode = {
     .fnBackgroundDrawCallback = demoBackgroundDrawCallback,
     .fnEspNowRecvCb           = demoEspNowRecvCb,
     .fnEspNowSendCb           = demoEspNowSendCb,
-    .fnAdvancedUSB            = NULL,
+    .fnAdvancedUSB            = demoAdvancedUSB,
 };
 
 typedef struct
@@ -98,8 +98,8 @@ static void demoEnterMode(void)
     p2pInitialize(&dv->p2p, 'd', demoConCb, demoMsgRxCb, -70);
     p2pStartConnection(&dv->p2p);
 
-    // const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
-    // p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+    const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+    p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
 
     const char demoKey[]     = "demo_high_score";
     int32_t highScoreToWrite = 99999;
@@ -355,11 +355,11 @@ static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 }
 
 /**
- * @brief
+ * @brief Callback for when menu items are selected
  *
- * @param label
- * @param selected
- * @param settingVal
+ * @param label The menu item that was selected or moved to
+ * @param selected true if the item was selected, false if it was moved to
+ * @param settingVal The value of the setting, if the menu item is a settings item
  */
 static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
 {

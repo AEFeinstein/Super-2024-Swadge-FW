@@ -264,7 +264,7 @@ static void pongExitMode(void)
  *
  * @param label The item that was selected from the menu
  * @param selected True if the item was selected with the A button, false if this is a multi-item which scrolled to
- * @param settingVal
+ * @param settingVal The value of the setting, if the menu item is a settings item
  */
 static void pongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
