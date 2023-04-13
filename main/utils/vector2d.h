@@ -45,7 +45,7 @@ vec_t mulVec2d(vec_t vector, int32_t scalar);
 vec_t divVec2d(vec_t vector, int32_t scalar);
 
 int32_t dotVec2d(vec_t left, vec_t right);
-vec_t rotateVec2d(vec_t vector, int32_t angle);
+vec_t rotateVec2d(vec_t vector, int32_t degree);
 int32_t sqMagVec2d(vec_t vector);
 
 #endif

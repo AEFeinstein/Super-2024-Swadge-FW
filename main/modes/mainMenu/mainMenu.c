@@ -70,8 +70,7 @@ static const char screenSaverSettingLabel[] = "Screen Saver";
 //==============================================================================
 
 /**
- * @brief TODO
- *
+ * @brief Initialize the main menu mode
  */
 static void mainMenuEnterMode(void)
 {
@@ -81,7 +80,7 @@ static void mainMenuEnterMode(void)
     // Load a font
     loadFont("ibm_vga8.font", &mainMenu->ibm, false);
 
-    // Load a song
+    // Load a song for when the volume changes
     loadSong("jingle.sng", &mainMenu->jingle, false);
 
     // Allocate the menu
@@ -92,6 +91,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
 
+    // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
     // Get the bounds and current settings to build this menu
     addSettingsItemToMenu(mainMenu->menu, tftSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
@@ -101,12 +101,12 @@ static void mainMenuEnterMode(void)
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
     addSettingsItemToMenu(mainMenu->menu, screenSaverSettingLabel, getScreensaverTimeSettingBounds(),
                           getScreensaverTimeSetting());
+    // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }
 
 /**
- * @brief TODO
- *
+ * @brief Deinitialize the main menu mode
  */
 static void mainMenuExitMode(void)
 {
@@ -124,12 +124,13 @@ static void mainMenuExitMode(void)
 }
 
 /**
- * @brief TODO
+ * @brief Main loop for the main menu. Simply handles menu input and draws the menu
  *
- * @param elapsedUs
+ * @param elapsedUs unused
  */
 static void mainMenuMainLoop(int64_t elapsedUs)
 {
+    // Pass all button events to the menu
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
@@ -139,7 +140,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     // Draw the menu
     drawMenu(mainMenu->menu, &mainMenu->ibm);
 
-    // Set LEDs
+    // Set LEDs, just because
     led_t leds[CONFIG_NUM_LEDS] = {0};
 
     leds[0].r = 0xFF;
@@ -154,15 +155,17 @@ static void mainMenuMainLoop(int64_t elapsedUs)
 }
 
 /**
- * @brief TODO
+ * @brief Callback for when menu items are selected
  *
- * @param label
- * @param selected
+ * @param label The menu item that was selected or moved to
+ * @param selected true if the item was selected, false if it was moved to
+ * @param settingVal The value of the setting, if the menu item is a settings item
  */
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
     {
+        // These items enter other modes, so they must be selected
         if (label == demoMode.modeName)
         {
             switchToSwadgeMode(&demoMode);
@@ -178,6 +181,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     }
     else
     {
+        // Settings are not selected, they're scrolled to
         if (tftSettingLabel == label)
         {
             setTftBrightnessSetting(settingVal);

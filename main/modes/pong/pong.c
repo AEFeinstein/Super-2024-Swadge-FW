@@ -116,7 +116,7 @@ static void pongFadeLeds(int64_t elapsedUs);
 static void pongControlPlayerPaddle(void);
 static void pongControlCpuPaddle(void);
 static void pongUpdatePhysics(int64_t elapsedUs);
-static void pongIncreaseBallVelocity(int16_t velAdd);
+static void pongIncreaseBallVelocity(int16_t magnitude);
 
 static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void pongDrawField(void);
