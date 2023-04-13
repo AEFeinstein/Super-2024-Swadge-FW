@@ -167,8 +167,11 @@ void drawDisplayTft(fnBackgroundDrawCallback_t cb);
               [height] "a"(TFT_HEIGHT)                                                                         \
             : "a4");
 #else
+    /// @brief Do nothing if this isn't an __XTENSA__ platform
     #define SETUP_FOR_TURBO()
+    /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
     #define TURBO_SET_PIXEL(opxc, opy, colorVal)        setPxTft(opxc, opy, colorVal)
+    /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
     #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal) setPxTft(opxc, opy, colorVal)
 #endif
 

@@ -93,6 +93,9 @@
 #include <driver/gpio.h>
 #include <driver/touch_pad.h>
 
+/**
+ * @brief Bitmask values for all the different buttons
+ */
 typedef enum __attribute__((packed))
 {
     PB_UP     = 0x0001, //!< The up button's bit

@@ -14,11 +14,11 @@ static const char* TAG = "led_encoder";
  */
 typedef struct
 {
-    rmt_encoder_t base;
-    rmt_encoder_t* bytes_encoder;
-    rmt_encoder_t* copy_encoder;
-    int state;
-    rmt_symbol_word_t reset_code;
+    rmt_encoder_t base;           ///< The base encoder
+    rmt_encoder_t* bytes_encoder; ///< A pointer to the bytes encoder
+    rmt_encoder_t* copy_encoder;  ///< A pointer to the copy encoder
+    rmt_encode_state_t state;     ///< The current encoder state
+    rmt_symbol_word_t reset_code; ///< The reset code
 } rmt_led_strip_encoder_t;
 
 static size_t rmt_encode_led_strip(rmt_encoder_t* encoder, rmt_channel_handle_t channel, const void* primary_data,
@@ -37,7 +37,8 @@ static size_t rmt_encode_led_strip(rmt_encoder_t* encoder, rmt_channel_handle_t 
             encoded_symbols += bytes_encoder->encode(bytes_encoder, channel, primary_data, data_size, &session_state);
             if (session_state & RMT_ENCODING_COMPLETE)
             {
-                led_encoder->state = 1; // switch to next state when current encoding session finished
+                // switch to next state when current encoding session finished
+                led_encoder->state = RMT_ENCODING_COMPLETE;
             }
             if (session_state & RMT_ENCODING_MEM_FULL)
             {
@@ -46,7 +47,7 @@ static size_t rmt_encode_led_strip(rmt_encoder_t* encoder, rmt_channel_handle_t 
             }
         }
         // fall-through
-        case 1: // send reset code
+        case RMT_ENCODING_COMPLETE: // send reset code
         {
             encoded_symbols += copy_encoder->encode(copy_encoder, channel, &led_encoder->reset_code,
                                                     sizeof(led_encoder->reset_code), &session_state);

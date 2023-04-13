@@ -50,6 +50,9 @@
 #include <hal/gpio_types.h>
 #include <esp_err.h>
 
+/**
+ * @brief The ranges for acceleration measurement from 2G to 32G (Earth gravity)
+ */
 typedef enum
 {
     QMA_RANGE_2G  = 0b0001, ///< Two G's of measurement range
@@ -59,6 +62,9 @@ typedef enum
     QMA_RANGE_32G = 0b1111, ///< Thirty-two G's of measurement range
 } qma_range_t;
 
+/**
+ * @brief The bandwidth for acceleration measurement
+ */
 typedef enum
 {
     QMA_BANDWIDTH_128_HZ  = 0b111, ///< 128Hz bandwidth
