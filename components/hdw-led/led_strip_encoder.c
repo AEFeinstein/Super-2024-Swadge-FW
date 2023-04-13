@@ -17,7 +17,7 @@ typedef struct
     rmt_encoder_t base;           ///< The base encoder
     rmt_encoder_t* bytes_encoder; ///< A pointer to the bytes encoder
     rmt_encoder_t* copy_encoder;  ///< A pointer to the copy encoder
-    rmt_encode_state_t state;     ///< The current encoder state
+    int state;                    ///< The current encoder state bitmask. Bit values are in rmt_encode_state_t
     rmt_symbol_word_t reset_code; ///< The reset code
 } rmt_led_strip_encoder_t;
 
