@@ -26,23 +26,29 @@ typedef struct
     const song_t* song;
     uint32_t note_index;
     int64_t start_time;
+    uint16_t volume;
 } emu_buzzer_t;
+
+//==============================================================================
+// Const variables
+//==============================================================================
+
+const uint16_t volLevels[] = {
+    0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,
+};
 
 //==============================================================================
 // Variables
 //==============================================================================
 
 /// The sound driver
-static struct SoundDriver* sounddriver = NULL;
+static struct SoundDriver* soundDriver = NULL;
 
 // Output buzzer
-static uint16_t buzzernote    = SILENCE;
+static uint16_t buzzerNote    = SILENCE;
+static uint16_t buzzerVol     = 4096;
 static emu_buzzer_t emuBzrBgm = {0};
 static emu_buzzer_t emuBzrSfx = {0};
-
-// Keep track of muted state
-static bool emuBgmMuted;
-static bool emuSfxMuted;
 
 //==============================================================================
 // Function Prototypes
@@ -50,7 +56,7 @@ static bool emuSfxMuted;
 
 static bool buzzer_track_check_next_note(emu_buzzer_t* track, bool isActive);
 void buzzer_check_next_note(void* arg);
-void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int samplesp);
+void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
 
 //==============================================================================
 // Functions
@@ -62,19 +68,19 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int
  * @param bzrGpio The GPIO the buzzer is attached to
  * @param _ledcTimer The LEDC timer used to drive the buzzer
  * @param _ledcChannel THe LEDC channel used to drive the buzzer
- * @param _isBgmMuted True if background music is muted, false otherwise
- * @param _isSfxMuted True if sound effects are muted, false otherwise
+ * @param _bgmVolume Starting background sound volume, 0 to 4096
+ * @param _sfxVolume Starting effects sound volume, 0 to 4096
  */
-void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, bool _isBgmMuted,
-                bool _isSfxMuted)
+void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, uint16_t _bgmVolume,
+                uint16_t _sfxVolume)
 {
-    emuBgmMuted = _isBgmMuted;
-    emuSfxMuted = _isBgmMuted;
+    emuBzrBgm.volume = _bgmVolume;
+    emuBzrSfx.volume = _sfxVolume;
 
     bzrStop();
-    if (!sounddriver)
+    if (!soundDriver)
     {
-        sounddriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 1, 256, 0, 0);
+        soundDriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 1, 256, 0, 0);
     }
     memset(&emuBzrBgm, 0, sizeof(emuBzrBgm));
     memset(&emuBzrSfx, 0, sizeof(emuBzrSfx));
@@ -96,35 +102,35 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
  */
 void deinitBuzzer(void)
 {
-    if (sounddriver)
+    if (soundDriver)
     {
 #if defined(_WIN32)
         CloseSound(NULL);
 #else
-        CloseSound(sounddriver); // when calling this on Windows, it halts
+        CloseSound(soundDriver); // when calling this on Windows, it halts
 #endif
-        sounddriver = NULL;
+        soundDriver = NULL;
     }
 }
 
 /**
- * @brief Set the buzzer's bgm mute status
+ * @brief Set the buzzer's bgm volume
  *
- * @param _isBgmMuted True if background music is muted, false otherwise
+ * @param vol The background volume, 0 to 13
  */
-void bzrSetBgmIsMuted(bool _isBgmMuted)
+void bzrSetBgmVolume(uint16_t vol)
 {
-    emuBgmMuted = _isBgmMuted;
+    emuBzrBgm.volume = volLevels[vol];
 }
 
 /**
- * @brief Set the buzzer's sfx mute status
+ * @brief Set the buzzer's sfx volume
  *
- * @param _isSfxMuted True if sound effects are muted, false otherwise
+ * @param vol The background volume, 0 to 13
  */
-void bzrGetBgmIsMuted(bool _isSfxMuted)
+void bzrSetSfxVolume(uint16_t vol)
 {
-    emuSfxMuted = _isSfxMuted;
+    emuBzrSfx.volume = volLevels[vol];
 }
 
 /**
@@ -135,7 +141,7 @@ void bzrGetBgmIsMuted(bool _isSfxMuted)
  */
 void bzrPlayBgm(const song_t* song)
 {
-    if (emuBgmMuted)
+    if (0 == emuBzrBgm.volume)
     {
         return;
     }
@@ -148,7 +154,7 @@ void bzrPlayBgm(const song_t* song)
     if (NULL == emuBzrSfx.song)
     {
         // Start playing the first note
-        bzrPlayNote(emuBzrBgm.song->notes[0].note);
+        bzrPlayNote(emuBzrBgm.song->notes[0].note, emuBzrBgm.volume);
     }
 }
 
@@ -160,7 +166,7 @@ void bzrPlayBgm(const song_t* song)
  */
 void bzrPlaySfx(const song_t* song)
 {
-    if (emuSfxMuted)
+    if (0 == emuBzrSfx.volume)
     {
         return;
     }
@@ -171,7 +177,7 @@ void bzrPlaySfx(const song_t* song)
     emuBzrSfx.start_time = esp_timer_get_time();
 
     // Start playing the first note
-    bzrPlayNote(emuBzrSfx.song->notes[0].note);
+    bzrPlayNote(emuBzrSfx.song->notes[0].note, emuBzrSfx.volume);
 }
 
 /**
@@ -179,7 +185,7 @@ void bzrPlaySfx(const song_t* song)
  */
 void bzrStop(void)
 {
-    if (emuBgmMuted && emuSfxMuted)
+    if ((0 == emuBzrBgm.volume) && (0 == emuBzrSfx.volume))
     {
         return;
     }
@@ -192,8 +198,8 @@ void bzrStop(void)
     emuBzrSfx.note_index = 0;
     emuBzrSfx.start_time = 0;
 
-    buzzernote = SILENCE;
-    bzrPlayNote(SILENCE);
+    buzzerNote = SILENCE;
+    bzrPlayNote(SILENCE, 0);
 }
 
 /////////////////////////////
@@ -204,10 +210,12 @@ void bzrStop(void)
  * This has IRAM_ATTR because it may be called from an interrupt
  *
  * @param freq The frequency of the note
+ * @param volume The volume, 0 to 4096
  */
-void bzrPlayNote(noteFrequency_t freq)
+void bzrPlayNote(noteFrequency_t freq, uint16_t volume)
 {
-    buzzernote = freq;
+    buzzerNote = freq;
+    buzzerVol  = volume;
 }
 
 /**
@@ -216,7 +224,7 @@ void bzrPlayNote(noteFrequency_t freq)
  */
 void bzrStopNote(void)
 {
-    bzrPlayNote(SILENCE);
+    bzrPlayNote(SILENCE, 0);
 }
 
 ////////////////////////////////
@@ -226,7 +234,7 @@ void bzrStopNote(void)
  */
 void buzzer_check_next_note(void* arg)
 {
-    if (emuBgmMuted && emuSfxMuted)
+    if ((0 == emuBzrBgm.volume) && (0 == emuBzrSfx.volume))
     {
         return;
     }
@@ -238,7 +246,7 @@ void buzzer_check_next_note(void* arg)
     if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != emuBzrBgm.song))
     {
         // Immediately start playing BGM to get back on track faster
-        bzrPlayNote(emuBzrBgm.song->notes[emuBzrBgm.note_index].note);
+        bzrPlayNote(emuBzrBgm.song->notes[emuBzrBgm.note_index].note, emuBzrBgm.volume);
     }
 }
 
@@ -277,7 +285,7 @@ static bool buzzer_track_check_next_note(emu_buzzer_t* track, bool isActive)
                 if (isActive)
                 {
                     // Play the note
-                    bzrPlayNote(track->song->notes[track->note_index].note);
+                    bzrPlayNote(track->song->notes[track->note_index].note, track->volume);
                 }
             }
             else
@@ -285,7 +293,7 @@ static bool buzzer_track_check_next_note(emu_buzzer_t* track, bool isActive)
                 if (isActive)
                 {
                     // Song is over
-                    buzzernote = SILENCE;
+                    buzzerNote = SILENCE;
                 }
 
                 track->start_time = 0;
@@ -309,30 +317,31 @@ static bool buzzer_track_check_next_note(emu_buzzer_t* track, bool isActive)
  * @param sd The sound driver
  * @param in A pointer to read samples from. May be NULL
  * @param out A pointer to write samples to. May be NULL
- * @param samplesr The number of samples to read
- * @param samplesp The number of samples to write
+ * @param samples_R The number of samples to read
+ * @param samples_W The number of samples to write
  */
-void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int samplesp)
+void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W)
 {
     // Pass to microphone
-    handleSoundInput(sd, in, out, samplesr, samplesp);
+    handleSoundInput(sd, in, out, samples_R, samples_W);
 
     // If this is an output callback, and there are samples to write
-    if (samplesp && out)
+    if (samples_W && out)
     {
         // Keep track of our place in the wave
         static float placeInWave = 0;
 
         // If there is a note to play
-        if (buzzernote)
+        if (buzzerNote)
         {
+            float transitionPoint = (2 * M_PI * buzzerVol) / 8192;
             // For each sample
-            for (int i = 0; i < samplesp; i++)
+            for (int i = 0; i < samples_W; i++)
             {
                 // Write the sample
-                out[i] = 1024 * sin(placeInWave);
+                out[i] = 1024 * ((placeInWave < transitionPoint) ? 1 : -1);
                 // Advance the place in the wave
-                placeInWave += ((2 * M_PI * buzzernote) / ((float)SAMPLING_RATE));
+                placeInWave += ((2 * M_PI * buzzerNote) / ((float)SAMPLING_RATE));
                 // Keep it bound between 0 and 2*PI
                 if (placeInWave >= (2 * M_PI))
                 {
@@ -343,7 +352,7 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samplesr, int
         else
         {
             // No note to play
-            memset(out, 0, samplesp * 2);
+            memset(out, 0, samples_W * 2);
             placeInWave = 0;
         }
     }

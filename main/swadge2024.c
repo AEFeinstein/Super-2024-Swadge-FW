@@ -109,6 +109,7 @@
  * - vector2d.h: Basic math for 2D vectors
  * - geometry.h: Basic math for 2D shapes, like collision checks
  * - macros.h: Convenient macros like MIN() and MAX()
+ * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \section espressif_doc Espressif Documentation
  *
@@ -261,7 +262,7 @@ void app_main(void)
             LEDC_CHANNEL_1); // Channel to use for PWM backlight
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39);
+    initLeds(GPIO_NUM_39, GPIO_NUM_18);
 
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
@@ -288,6 +289,9 @@ void app_main(void)
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
 
+    // Read settings from NVS
+    readAllSettings();
+
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
     {
@@ -305,22 +309,29 @@ void app_main(void)
         // Process ADC samples
         if (NULL != cSwadgeMode->fnAudioCallback)
         {
-            uint16_t adcSamps[ADC_READ_LEN / SOC_ADC_DIGI_RESULT_BYTES];
+            // This must have the same number of elements as the bounds in mic_param
+            const uint16_t micGains[] = {
+                32, 45, 64, 90, 128, 181, 256, 362,
+            };
+
+            uint16_t micAmp = micGains[getMicGainSetting()];
+            uint16_t adcSamples[ADC_READ_LEN / SOC_ADC_DIGI_RESULT_BYTES];
             uint32_t sampleCnt = 0;
-            while (0 < (sampleCnt = loopMic(adcSamps, ARRAY_SIZE(adcSamps))))
+            while (0 < (sampleCnt = loopMic(adcSamples, ARRAY_SIZE(adcSamples))))
             {
                 // Run all samples through an IIR filter
                 for (uint32_t i = 0; i < sampleCnt; i++)
                 {
                     static uint32_t samp_iir = 0;
 
-                    int32_t sample  = adcSamps[i];
+                    int32_t sample  = adcSamples[i];
                     samp_iir        = samp_iir - (samp_iir >> 9) + sample;
-                    int32_t newsamp = (sample - (samp_iir >> 9));
-                    newsamp         = CLAMP(newsamp, -32768, 32767);
-                    adcSamps[i]     = newsamp;
+                    int32_t newSamp = (sample - (samp_iir >> 9));
+                    newSamp         = newSamp * micAmp;
+                    newSamp         = CLAMP(newSamp, -32768, 32767);
+                    adcSamples[i]   = newSamp;
                 }
-                cSwadgeMode->fnAudioCallback(adcSamps, sampleCnt);
+                cSwadgeMode->fnAudioCallback(adcSamples, sampleCnt);
             }
         }
 
@@ -517,6 +528,12 @@ void softSwitchToPendingSwadge(void)
         cSwadgeMode       = pendingSwadgeMode;
         pendingSwadgeMode = NULL;
 
+        // Start mic if requested
+        if (NULL != cSwadgeMode->fnAudioCallback)
+        {
+            startMic();
+        }
+
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)
         {
@@ -530,7 +547,7 @@ void softSwitchToPendingSwadge(void)
 
 /**
  * @brief Service the queue of button events that caused interrupts
- * This only reutrns a single event, even if there are multiple in the queue
+ * This only returns a single event, even if there are multiple in the queue
  * This function may be called multiple times in a row to completely empty the queue
  *
  * This is a wrapper for checkButtonQueue() which also monitors the button to return to the main menu

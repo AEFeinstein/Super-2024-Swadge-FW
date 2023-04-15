@@ -221,6 +221,9 @@ typedef void (*p2pAckFailureFn)(p2pInfo* p2p);
 /// A start byte for all p2p packets
 #define P2P_START_BYTE 'p'
 
+/**
+ * @brief The five different types of p2p messages
+ */
 typedef enum __attribute__((packed))
 {
     P2P_MSG_CONNECT,  ///< The connection broadcast

@@ -108,7 +108,7 @@ static void pongEnterMode(void);
 static void pongExitMode(void);
 static void pongEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void pongEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
-static void pongMenuCb(const char* label, bool selected);
+static void pongMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void pongGameLoop(int64_t elapsedUs);
 
 static void pongResetGame(bool isInit, uint8_t whoWon);
@@ -116,7 +116,7 @@ static void pongFadeLeds(int64_t elapsedUs);
 static void pongControlPlayerPaddle(void);
 static void pongControlCpuPaddle(void);
 static void pongUpdatePhysics(int64_t elapsedUs);
-static void pongIncreaseBallVelocity(int16_t velAdd);
+static void pongIncreaseBallVelocity(int16_t magnitude);
 
 static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void pongDrawField(void);
@@ -264,8 +264,9 @@ static void pongExitMode(void)
  *
  * @param label The item that was selected from the menu
  * @param selected True if the item was selected with the A button, false if this is a multi-item which scrolled to
+ * @param settingVal The value of the setting, if the menu item is a settings item
  */
-static void pongMenuCb(const char* label, bool selected)
+static void pongMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Only care about selected items, not scrolled-to items.
     // The same callback is called from the menu and submenu with no indication of which menu it was called from

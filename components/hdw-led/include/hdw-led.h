@@ -21,6 +21,10 @@
  * the values given. setLeds() takes a pointer to an array of ::led_t as an argument. These structs each have a red,
  * green, and blue field.
  *
+ * setLedBrightness() may be called to adjust overall LED brightness.
+ * Brightness is adjusted per-color-channel, so dimming may produce different colors.
+ * setLedBrightnessSetting() should be called instead if the brightness change should be persistent through reboots.
+ *
  * \section led_example Example
  *
  * Set the LEDs to a rough rainbow:
@@ -44,6 +48,9 @@
 #include <esp_err.h>
 #include <hal/gpio_types.h>
 
+/// @brief The maximum LED brightness setting
+#define MAX_LED_BRIGHTNESS 8
+
 /**
  * @brief LED colors, with red, green, and blue components
  */
@@ -54,8 +61,9 @@ typedef struct __attribute__((packed))
     uint8_t b; //!< The blue component, 0-255
 } led_t;
 
-esp_err_t initLeds(gpio_num_t gpio);
+esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt);
 esp_err_t deinitLeds(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
+void setLedBrightness(uint8_t brightness);
 
 #endif

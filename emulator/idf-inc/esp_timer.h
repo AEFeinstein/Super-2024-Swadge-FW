@@ -59,7 +59,7 @@ extern "C"
     {
         uint64_t alarm;
         uint64_t period : 56;
-        flags_t flags : 8;
+        flags_t flags   : 8;
         union
         {
             esp_timer_cb_t callback;

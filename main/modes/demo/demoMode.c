@@ -14,7 +14,7 @@ static void demoConCb(p2pInfo* p2p, connectionEvt_t evt);
 static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
-static void demoMenuCb(const char*, bool selected);
+static void demoMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static const char demoName[]  = "Demo";
 static const char demoMenu1[] = "Menu 1";
@@ -48,7 +48,7 @@ swadgeMode_t demoMode = {
     .fnBackgroundDrawCallback = demoBackgroundDrawCallback,
     .fnEspNowRecvCb           = demoEspNowRecvCb,
     .fnEspNowSendCb           = demoEspNowSendCb,
-    .fnAdvancedUSB            = NULL,
+    .fnAdvancedUSB            = demoAdvancedUSB,
 };
 
 typedef struct
@@ -91,15 +91,15 @@ static void demoEnterMode(void)
 
     addSingleItemToMenu(dv->menu, demoMenu3);
     addSingleItemToMenu(dv->menu, demoMenu4);
-    addMultiItemToMenu(dv->menu, demoOpts, ARRAY_SIZE(demoOpts));
+    addMultiItemToMenu(dv->menu, demoOpts, ARRAY_SIZE(demoOpts), 0);
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
 
     p2pInitialize(&dv->p2p, 'd', demoConCb, demoMsgRxCb, -70);
     p2pStartConnection(&dv->p2p);
 
-    // const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
-    // p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+    const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+    p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
 
     const char demoKey[]     = "demo_high_score";
     int32_t highScoreToWrite = 99999;
@@ -355,12 +355,13 @@ static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 }
 
 /**
- * @brief
+ * @brief Callback for when menu items are selected
  *
- * @param label
- * @param selected
+ * @param label The menu item that was selected or moved to
+ * @param selected true if the item was selected, false if it was moved to
+ * @param settingVal The value of the setting, if the menu item is a settings item
  */
-static void demoMenuCb(const char* label, bool selected)
+static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     printf("%s %s\n", label, selected ? "selected" : "scrolled to");
 }

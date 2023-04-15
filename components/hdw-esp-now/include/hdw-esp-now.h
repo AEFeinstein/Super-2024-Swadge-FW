@@ -92,9 +92,12 @@
 // Types
 //==============================================================================
 
+/**
+ * @brief The different WiFi modes
+ */
 typedef enum __attribute__((packed))
 {
-    NO_WIFI,           ///< WiFi is not used at all
+    NO_WIFI,           ///< WiFi is not used at all. This saves power
     ESP_NOW,           ///< ESP-NOW packets are delivered to Swadge modes from the main loop
     ESP_NOW_IMMEDIATE, ///< ESP-NOW packets are delivered to Swadge modes from the interrupt
 } wifiMode_t;

@@ -309,8 +309,8 @@ extern "C"
 
     #elif defined(__wasm__)
 
-            // We don't actually have any function defintions here.
-            // The outside system will handle it.
+        // We don't actually have any function defintions here.
+        // The outside system will handle it.
 
     #else
 

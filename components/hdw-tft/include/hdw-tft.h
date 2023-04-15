@@ -29,6 +29,7 @@
  * This may be useful if the Swadge mode is trying to save power, or the TFT is not necessary.
  * setTFTBacklightBrightness() is used to set the TFT's brightness. This is usually handled globally by a persistent
  * setting.
+ * setTftBrightnessSetting() should be called instead if the brightness change should be persistent through reboots.
  *
  * \section tft_example Example
  *
@@ -166,8 +167,11 @@ void drawDisplayTft(fnBackgroundDrawCallback_t cb);
               [height] "a"(TFT_HEIGHT)                                                                         \
             : "a4");
 #else
+    /// @brief Do nothing if this isn't an __XTENSA__ platform
     #define SETUP_FOR_TURBO()
+    /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
     #define TURBO_SET_PIXEL(opxc, opy, colorVal)        setPxTft(opxc, opy, colorVal)
+    /// @brief Passthrough call to setPxTft() if this isn't an __XTENSA__ platform
     #define TURBO_SET_PIXEL_BOUNDS(opxc, opy, colorVal) setPxTft(opxc, opy, colorVal)
 #endif
 

@@ -139,6 +139,10 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
  */
 void emulatorHandleKeys(int keycode, int bDown)
 {
+    if ('a' <= keycode && keycode <= 'z')
+    {
+        keycode = (keycode - 'a' + 'A');
+    }
     // Check keycode against initialized keys
     for (uint8_t idx = 0; idx < ARRAY_SIZE(inputKeys); idx++)
     {

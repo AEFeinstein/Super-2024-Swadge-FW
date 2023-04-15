@@ -1,12 +1,18 @@
 ﻿---
 AccessModifierOffset: '0'
 AlignAfterOpenBracket: Align
-AlignConsecutiveMacros: 'true'
 AlignConsecutiveAssignments: 'true'
+AlignConsecutiveBitFields: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
 AlignConsecutiveDeclarations: 'false'
 AlignEscapedNewlines: Left
 AlignOperands: 'true'
-AlignTrailingComments: 'true'
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
 AllowAllArgumentsOnNextLine: 'false'
 AllowAllParametersOfDeclarationOnNextLine: 'false'
 AllowShortBlocksOnASingleLine: 'false'
@@ -19,6 +25,7 @@ AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: 'false'
 BinPackArguments: 'true'
 BinPackParameters: 'true'
+BreakAfterAttributes: Always
 BreakBeforeBinaryOperators: All
 BreakBeforeBraces: Allman
 BreakBeforeTernaryOperators: 'true'
@@ -33,11 +40,19 @@ IndentCaseLabels: 'true'
 IndentPPDirectives: BeforeHash
 IndentWidth: '4'
 IndentWrappedFunctionNames: 'true'
+InsertNewlineAtEOF: 'false'
+IntegerLiteralSeparator:
+  Binary: -1
+  Decimal: -1
+  Hex: -1
 KeepEmptyLinesAtTheStartOfBlocks: 'false'
 Language: Cpp
+LineEnding: DeriveCRLF
 MaxEmptyLinesToKeep: '1'
 PointerAlignment: Left
 ReflowComments: 'true'
+RemoveSemicolon: 'true'
+RequiresExpressionIndentation: 'Keyword'
 SortIncludes: 'false'
 SortUsingDeclarations: 'false'
 SpaceAfterCStyleCast: 'false'

@@ -187,6 +187,7 @@
 #include "trigonometry.h"
 #include "vector2d.h"
 #include "geometry.h"
+#include "settingsManager.h"
 
 /**
  * @struct swadgeMode_t

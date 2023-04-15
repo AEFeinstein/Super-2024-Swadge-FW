@@ -4,6 +4,11 @@
 // Colors
 //==============================================================================
 
+/**
+ * @brief The 16-bit color values for ::paletteColor_t to actually draw to the TFT
+ *
+ * Each 16 bit value is rrrrrggggggbbbbb, but it's in LSB order, so it's actually gggbbbbbrrrrrggg
+ */
 const uint16_t paletteColors[] = {
     0x0000, 0x0600, 0x0C00, 0x1200, 0x1800, 0x1F00, 0x8001, 0x8601, 0x8C01, 0x9201, 0x9801, 0x9F01, 0x0003, 0x0603,
     0x0C03, 0x1203, 0x1803, 0x1F03, 0x8004, 0x8604, 0x8C04, 0x9204, 0x9804, 0x9F04, 0x0006, 0x0606, 0x0C06, 0x1206,

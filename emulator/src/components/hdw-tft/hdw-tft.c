@@ -50,7 +50,7 @@ static int bitmapWidth               = 0;
 static int bitmapHeight              = 0;
 static int displayMult               = 1;
 static bool tftDisabled              = false;
-static uint8_t tftBrightness         = 255;
+static uint8_t tftBrightness         = CONFIG_TFT_MAX_BRIGHTNESS;
 
 //==============================================================================
 // Functions
@@ -122,7 +122,7 @@ paletteColor_t* getPxTftFramebuffer(void)
 }
 
 /**
- * @brief Disable the backlight (for powerdown)
+ * @brief Disable the backlight (for power down)
  *
  */
 void disableTFTBacklight(void)
@@ -228,11 +228,11 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 
                     uint8_t a = (color)&0xFF;
                     uint8_t r = (color >> 8) & 0xFF;
-                    r         = (r * tftBrightness) / 255;
+                    r         = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
                     uint8_t g = (color >> 16) & 0xFF;
-                    g         = (g * tftBrightness) / 255;
+                    g         = (g * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
                     uint8_t b = (color >> 24) & 0xFF;
-                    b         = (b * tftBrightness) / 255;
+                    b         = (b * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
 
                     color = (b << 24) | (g << 16) | (r << 8) | (a);
 
@@ -256,20 +256,21 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 /**
  * @brief Set TFT Backlight brightness.
  *
- * @param intensity    Sets the brightness 0-255
+ * @param intensity Sets the brightness 0-7
  *
  * @return value is 0 if OK nonzero if error.
  */
 esp_err_t setTFTBacklightBrightness(uint8_t intensity)
 {
-    tftBrightness = intensity;
+    tftBrightness
+        = (CONFIG_TFT_MIN_BRIGHTNESS + (((CONFIG_TFT_MAX_BRIGHTNESS - CONFIG_TFT_MIN_BRIGHTNESS) * intensity) / 7));
     return ESP_OK;
 }
 
 /**
  * Set a multiplier to draw the TFT to the window at
  *
- * @param multiplier The multipler for the display, no less than 1
+ * @param multiplier The multiplier for the display, no less than 1
  */
 void setDisplayBitmapMultiplier(uint8_t multiplier)
 {
