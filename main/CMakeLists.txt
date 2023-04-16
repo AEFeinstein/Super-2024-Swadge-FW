@@ -18,6 +18,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "modes/demo/demoMode.c"
                             "modes/mainMenu/mainMenu.c"
                             "modes/pong/pong.c"
+                            "modes/shooter/mode_shooter.c"
                             "utils/color_utils.c"
                             "utils/geometry.c"
                             "utils/linked_list.c"
@@ -49,6 +50,7 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./modes/colorchord"
                                 "./modes/pong"
                                 "./modes/mainMenu"
+                                "./modes/shooter"
                                 "./modes/demo")
 
 function(spiffs_file_preprocessor)
