@@ -266,6 +266,7 @@ void drawTextures(rayResult_t* rayResult);
 void drawOutlines(rayResult_t* rayResult);
 void drawSprites(rayResult_t* rayResult);
 void drawHUD(void);
+void castFloor(void);
 
 void shooterInitGame(shooterDifficulty_t difficulty);
 void sortSprites(int32_t* order, float* dist, int32_t amount);
@@ -813,9 +814,9 @@ void shooterEnterMode(void)
     loadWsg("h8_ded.wsg", &rc->dead, true);
 
     // Load the wall textures to RAM
-    loadWsg("txStone.wsg", &rc->stoneTex, true);
-    loadWsg("txStripe.wsg", &rc->stripeTex, true);
-    loadWsg("txBrick.wsg", &rc->brickTex, true);
+    loadWsg("ceiling.wsg", &rc->stoneTex, true);
+    loadWsg("floor.wsg", &rc->stripeTex, true);
+    loadWsg("wall.wsg", &rc->brickTex, true);
     loadWsg("txSinW.wsg", &rc->sinTex, true);
 
     // Load the HUD assets
@@ -1241,10 +1242,70 @@ void shooterGameRenderer(int64_t tElapsedUs)
     castRays(rc->rayResult);
     // Clear the display, then draw all the layers
     clearPxTft();
+    castFloor();
     drawTextures(rc->rayResult);
-    drawOutlines(rc->rayResult);
+    // drawOutlines(rc->rayResult);
     drawSprites(rc->rayResult);
     drawHUD();
+}
+
+/**
+ * @brief TODO
+ * 
+ */
+void castFloor(void)
+{
+    wsg_t* floorTex = &rc->stripeTex;
+    // FLOOR CASTING
+    for (int y = 0; y < TFT_HEIGHT; y++)
+    {
+        // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
+        float rayDirX0 = rc->dirX - rc->planeX;
+        float rayDirY0 = rc->dirY - rc->planeY;
+        float rayDirX1 = rc->dirX + rc->planeX;
+        float rayDirY1 = rc->dirY + rc->planeY;
+
+        // Current y position compared to the center of the screen (the horizon)
+        int p = y - (TFT_HEIGHT / 2);
+
+        // Vertical position of the camera.
+        float posZ = 0.5f * TFT_HEIGHT;
+
+        // Horizontal distance from the camera to the floor for the current row.
+        // 0.5 is the z position exactly in the middle between floor and ceiling.
+        float rowDistance = posZ / (float)p;
+
+        // calculate the real world step vector we have to add for each x (parallel to camera plane)
+        // adding step by step avoids multiplications with a weight in the inner loop
+        float floorStepX = rowDistance * (rayDirX1 - rayDirX0) / (float)TFT_WIDTH;
+        float floorStepY = rowDistance * (rayDirY1 - rayDirY0) / (float)TFT_WIDTH;
+
+        // real world coordinates of the leftmost column. This will be updated as we step to the right.
+        float floorX = rc->posX + rowDistance * rayDirX0;
+        float floorY = rc->posY + rowDistance * rayDirY0;
+
+        for (int x = 0; x < TFT_WIDTH; ++x)
+        {
+            // the cell coord is simply got from the integer parts of floorX and floorY
+            int cellX = (int)(floorX);
+            int cellY = (int)(floorY);
+
+            // get the texture coordinate from the fractional part
+            int tx = (int)(floorTex->w * (floorX - cellX)) & (floorTex->w - 1);
+            int ty = (int)(floorTex->h * (floorY - cellY)) & (floorTex->h - 1);
+
+            floorX += floorStepX;
+            floorY += floorStepY;
+
+            paletteColor_t color = floorTex->px[floorTex->w * ty + tx];
+
+            // floor
+            setPxTft(x, y, color);
+
+            // ceiling (symmetrical, at TFT_HEIGHT - y - 1 instead of y)
+            setPxTft(x, TFT_HEIGHT - y - 1, color);
+        }
+    }
 }
 
 /**
