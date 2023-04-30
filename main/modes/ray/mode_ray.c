@@ -27,6 +27,7 @@ typedef struct
     wsg_t texFloor;
     wsg_t texWall;
     wsg_t texCeiling;
+    wsg_t texDoor;
 
     int32_t posX;
     int32_t posY;
@@ -38,6 +39,10 @@ typedef struct
 
     uint16_t btnState;
     uint16_t* floorTexIdx;
+
+    int16_t doorOpen;
+    int32_t doorTimer;
+    bool doorOpening;
 } ray_t;
 
 //==============================================================================
@@ -74,7 +79,7 @@ const uint8_t worldMap[MAP_WIDTH][MAP_HEIGHT]
        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
        {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-       {1, 4, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+       {1, 4, 4, 4, 4, 9, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
        {1, 4, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
        {1, 4, 0, 0, 0, 0, 5, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
        {1, 4, 0, 4, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
@@ -109,7 +114,7 @@ ray_t* ray;
 // Fixed Point Math Functions
 //==============================================================================
 
-static inline int32_t TO_FX(double in)
+static inline int32_t TO_FX(int32_t in)
 {
     return (int32_t)(in * (1 << FRAC_BITS));
 }
@@ -144,6 +149,14 @@ static inline int32_t FLOOR_FX(int32_t a)
     return a & (~((1 << FRAC_BITS) - 1));
 }
 
+// #define FMT_FX    "%s%d.%03d"
+// #define STR_FX(x) ((x) < 0 ? "-" : ""), ABS(FROM_FX(x)), DEC_PART(x)
+
+// static inline int32_t DEC_PART(int32_t in)
+// {
+//     return (1000 * (int64_t)(ABS(in) & ((1 << FRAC_BITS) - 1))) / (1 << FRAC_BITS);
+// }
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -159,14 +172,15 @@ void rayEnterMode(void)
 
     // Set initial position and direction
     ray->posX = (22 << 8), ray->posY = (12 << 8);
+    ray->dirAngle = 0;
     ray->dirX = 0, ray->dirY = 0;
     ray->planeX = 0, ray->planeY = 0;
-    ray->dirAngle = 0;
 
     // Load textures
     loadWsg("floor.wsg", &ray->texFloor, true);
     loadWsg("wall.wsg", &ray->texWall, true);
     loadWsg("ceiling.wsg", &ray->texCeiling, true);
+    loadWsg("door.wsg", &ray->texDoor, true);
 }
 
 /**
@@ -177,6 +191,7 @@ void rayExitMode(void)
     freeWsg(&ray->texFloor);
     freeWsg(&ray->texWall);
     freeWsg(&ray->texCeiling);
+    freeWsg(&ray->texDoor);
     free(ray->floorTexIdx);
     free(ray);
 }
@@ -194,6 +209,24 @@ void rayMainLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         ray->btnState = evt.state;
+    }
+
+    // Run a timer to open and close doors
+    ray->doorTimer += elapsedUs;
+    while (ray->doorTimer >= 5000)
+    {
+        ray->doorTimer -= 5000;
+        if (0 < ray->doorOpen && ray->doorOpen < TO_FX(1))
+        {
+            if (ray->doorOpening)
+            {
+                ray->doorOpen++;
+            }
+            else
+            {
+                ray->doorOpen--;
+            }
+        }
     }
 
     // Find move distances
@@ -244,6 +277,21 @@ void rayMainLoop(int64_t elapsedUs)
         if (ray->dirAngle < TO_FX(0))
         {
             ray->dirAngle += TO_FX(360);
+        }
+    }
+
+    // Open or close doors
+    if (ray->btnState & PB_A)
+    {
+        if (0 == ray->doorOpen)
+        {
+            ray->doorOpening = true;
+            ray->doorOpen    = 1;
+        }
+        else if (TO_FX(1) == ray->doorOpen)
+        {
+            ray->doorOpening = false;
+            ray->doorOpen    = TO_FX(1) - 1;
         }
     }
 
@@ -333,7 +381,7 @@ void castFloorCeiling(int16_t firstRow, int16_t lastRow)
             // Loop through each pixel
             for (int16_t x = 0; x < TFT_WIDTH; ++x)
             {
-                // Get the integer texture coordinate from the float
+                // Get the integer texture coordinate from the fixed point coordinates
                 uint16_t tx = (txf / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_WIDTH;
                 uint16_t ty = (tyf / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_HEIGHT;
 
@@ -383,9 +431,9 @@ void castWalls(void)
     ray->dirX = -getCos1024(FROM_FX(ray->dirAngle)) / 4; // trig functions are already << 10, so >> 2 to get to << 8
     ray->dirY = getSin1024(FROM_FX(ray->dirAngle)) / 4;
 
-    // the 2d rayCaster version of camera plane, orthogonal to the direction vector
-    ray->planeX = MUL_FX(TO_FX(0.66f), ray->dirY);
-    ray->planeY = MUL_FX(TO_FX(-0.66f), ray->dirX);
+    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+    ray->planeX = MUL_FX(((1 << FRAC_BITS) * 2) / 3, ray->dirY);
+    ray->planeY = MUL_FX(-((1 << FRAC_BITS) * 2) / 3, ray->dirX);
 
     // For each ray
     for (int x = 0; x < TFT_WIDTH; x++)
@@ -447,6 +495,8 @@ void castWalls(void)
         bool hit  = false; // was there a wall hit?
         bool side = false; // was a NS or a EW wall hit?
 
+        int32_t wallX;                          // where exactly the wall was hit
+        int16_t lineHeight, drawStart, drawEnd; // the height of the wall strip
         // perform DDA
         while (false == hit)
         {
@@ -464,55 +514,76 @@ void castWalls(void)
                 side = true;
             }
 
-            // Check if ray has hit a wall
+            // Check if ray has hit a wall or door
             if (worldMap[mapX][mapY] > 0)
             {
-                hit = true;
+                // Calculate distance projected on camera direction. This is the shortest distance from the point where
+                // the wall is hit to the camera plane. Euclidean to center camera point would give fisheye effect! This
+                // can be computed as (mapX - ray->posX + (1 - stepX) / 2) / rayDirX for side == 0, or same formula with
+                // Y for size == 1, but can be simplified to the code below thanks to how sideDist and deltaDist are
+                // computed: because they were left scaled to |rayDir|. sideDist is the entire length of the ray above
+                // after the multiple steps, but we subtract deltaDist once because one step more into the wall was
+                // taken above.
+                int32_t perpWallDist;
+                if (false == side)
+                {
+                    perpWallDist = SUB_FX(sideDistX, deltaDistX);
+                }
+                else
+                {
+                    perpWallDist = SUB_FX(sideDistY, deltaDistY);
+                }
+
+                // Calculate height of line to draw on screen, make sure not to div by zero
+                lineHeight = (0 == perpWallDist) ? (TFT_HEIGHT) : (TO_FX(TFT_HEIGHT) / perpWallDist);
+
+                // calculate lowest and highest pixel to fill in current stripe
+                drawStart = (TFT_HEIGHT - lineHeight) / 2;
+                if (drawStart < 0)
+                {
+                    drawStart = 0;
+                }
+                drawEnd = (TFT_HEIGHT + lineHeight) / 2;
+                if (drawEnd > TFT_HEIGHT)
+                {
+                    drawEnd = TFT_HEIGHT;
+                }
+
+                // TODO sometimes textures wraparound b/c the math for wallX comes out to be like
+                // 19.003 -> 0
+                // 19.000 -> 0
+                // 18.995 -> 63
+
+                // calculate value of wallX
+                if (side == 0)
+                {
+                    wallX = ADD_FX(ray->posY, MUL_FX(perpWallDist, rayDirY));
+                }
+                else
+                {
+                    wallX = ADD_FX(ray->posX, MUL_FX(perpWallDist, rayDirX));
+                }
+                wallX = SUB_FX(wallX, FLOOR_FX(wallX));
+
+                // For sliding doors, only collide with the closed part
+                if (9 == worldMap[mapX][mapY])
+                {
+                    // If the fraction of the door the ray hits is closed
+                    if (wallX >= ray->doorOpen)
+                    {
+                        // Count it as a hit
+                        hit = true;
+                        // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's edge
+                        wallX -= ray->doorOpen;
+                    }
+                }
+                else
+                {
+                    // Wall was hit
+                    hit = true;
+                }
             }
         }
-
-        // Calculate distance projected on camera direction. This is the shortest distance from the point where the
-        // wall is hit to the camera plane. Euclidean to center camera point would give fisheye effect! This can be
-        // computed as (mapX - ray->posX + (1 - stepX) / 2) / rayDirX for side == 0, or same formula with Y for size ==
-        // 1, but can be simplified to the code below thanks to how sideDist and deltaDist are computed: because
-        // they were left scaled to |rayDir|. sideDist is the entire length of the ray above after the multiple
-        // steps, but we subtract deltaDist once because one step more into the wall was taken above.
-        int32_t perpWallDist;
-        if (false == side)
-        {
-            perpWallDist = SUB_FX(sideDistX, deltaDistX);
-        }
-        else
-        {
-            perpWallDist = SUB_FX(sideDistY, deltaDistY);
-        }
-
-        // Calculate height of line to draw on screen, make sure not to div by zero
-        int16_t lineHeight = (0 == perpWallDist) ? (TFT_HEIGHT) : (TO_FX(TFT_HEIGHT) / perpWallDist);
-
-        // calculate lowest and highest pixel to fill in current stripe
-        int16_t drawStart = (TFT_HEIGHT - lineHeight) / 2;
-        if (drawStart < 0)
-        {
-            drawStart = 0;
-        }
-        int16_t drawEnd = (TFT_HEIGHT + lineHeight) / 2;
-        if (drawEnd >= TFT_HEIGHT)
-        {
-            drawEnd = TFT_HEIGHT - 1;
-        }
-
-        // calculate value of wallX
-        int32_t wallX; // where exactly the wall was hit
-        if (side == 0)
-        {
-            wallX = ADD_FX(ray->posY, MUL_FX(perpWallDist, rayDirY));
-        }
-        else
-        {
-            wallX = ADD_FX(ray->posX, MUL_FX(perpWallDist, rayDirX));
-        }
-        wallX = SUB_FX(wallX, FLOOR_FX(wallX));
 
         // x coordinate on the texture
         int8_t texX = FROM_FX(wallX * TEX_WIDTH);
@@ -532,6 +603,17 @@ void castWalls(void)
             texPos = (((lineHeight - TFT_HEIGHT) * step) / 2);
         }
 
+        // Pick the texture based on the map tile
+        paletteColor_t* tex;
+        if (9 == worldMap[mapX][mapY])
+        {
+            tex = ray->texDoor.px;
+        }
+        else
+        {
+            tex = ray->texWall.px;
+        }
+
         // Draw a vertical strip
         for (int32_t y = drawStart; y < drawEnd; y++)
         {
@@ -542,7 +624,7 @@ void castWalls(void)
             texPos += step;
 
             // Get the color from the texture
-            TURBO_SET_PIXEL(x, y, ray->texWall.px[TEX_HEIGHT * texY + texX]);
+            TURBO_SET_PIXEL(x, y, tex[TEX_HEIGHT * texY + texX]);
         }
     }
 }
