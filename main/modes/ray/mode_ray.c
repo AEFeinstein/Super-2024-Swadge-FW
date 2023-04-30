@@ -229,19 +229,25 @@ void rayMainLoop(int64_t elapsedUs)
         }
     }
 
+    // Boundary checks are longer than the move dist to not get right up on the wall
+    int32_t boundaryCheckX = ray->dirX / 3;
+    int32_t boundaryCheckY = ray->dirY / 3;
     // Find move distances
     // TODO scale with elapsed time
-    int32_t deltaX = (ray->dirX * 32) / 256; // MUL_FX(ray->dirX, 1);
-    int32_t deltaY = (ray->dirY * 32) / 256; // MUL_FX(ray->dirY, 1);
+    int32_t deltaX = (ray->dirX / 6);
+    int32_t deltaY = (ray->dirY / 6);
 
     // Move forwards if no wall in front of you
     if (ray->btnState & PB_UP)
     {
-        if (worldMap[FROM_FX(ray->posX + deltaX)][FROM_FX(ray->posY)] == false)
+        uint8_t mapTile = worldMap[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)];
+        if (0 == mapTile || (9 == mapTile && ray->doorOpen >= (1 << FRAC_BITS)))
         {
             ray->posX += deltaX;
         }
-        if (worldMap[FROM_FX(ray->posX)][FROM_FX(ray->posY + deltaY)] == false)
+
+        mapTile = worldMap[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)];
+        if (0 == mapTile || (9 == mapTile && ray->doorOpen >= (1 << FRAC_BITS)))
         {
             ray->posY += deltaY;
         }
@@ -250,11 +256,14 @@ void rayMainLoop(int64_t elapsedUs)
     // move backwards if no wall behind you
     if (ray->btnState & PB_DOWN)
     {
-        if (worldMap[FROM_FX(ray->posX - deltaX)][FROM_FX(ray->posY)] == false)
+        uint8_t mapTile = worldMap[FROM_FX(ray->posX - boundaryCheckX)][FROM_FX(ray->posY)];
+        if (0 == mapTile || (9 == mapTile && ray->doorOpen >= (1 << FRAC_BITS)))
         {
             ray->posX -= deltaX;
         }
-        if (worldMap[FROM_FX(ray->posX)][FROM_FX(ray->posY - deltaY)] == false)
+
+        mapTile = worldMap[FROM_FX(ray->posX)][FROM_FX(ray->posY - boundaryCheckY)];
+        if (0 == mapTile || (9 == mapTile && ray->doorOpen >= (1 << FRAC_BITS)))
         {
             ray->posY -= deltaY;
         }
@@ -263,7 +272,7 @@ void rayMainLoop(int64_t elapsedUs)
     // Rotate right
     if (ray->btnState & PB_RIGHT)
     {
-        ray->dirAngle = ADD_FX(ray->dirAngle, TO_FX(3));
+        ray->dirAngle = ADD_FX(ray->dirAngle, TO_FX(5));
         if (ray->dirAngle >= TO_FX(360))
         {
             ray->dirAngle -= TO_FX(360);
@@ -273,7 +282,7 @@ void rayMainLoop(int64_t elapsedUs)
     // Rotate left
     if (ray->btnState & PB_LEFT)
     {
-        ray->dirAngle = SUB_FX(ray->dirAngle, TO_FX(3));
+        ray->dirAngle = SUB_FX(ray->dirAngle, TO_FX(5));
         if (ray->dirAngle < TO_FX(0))
         {
             ray->dirAngle += TO_FX(360);
@@ -283,15 +292,19 @@ void rayMainLoop(int64_t elapsedUs)
     // Open or close doors
     if (ray->btnState & PB_A)
     {
-        if (0 == ray->doorOpen)
+        // Don't open or close door when standing on that tile
+        if (9 != worldMap[FROM_FX(ray->posX)][FROM_FX(ray->posY)])
         {
-            ray->doorOpening = true;
-            ray->doorOpen    = 1;
-        }
-        else if (TO_FX(1) == ray->doorOpen)
-        {
-            ray->doorOpening = false;
-            ray->doorOpen    = TO_FX(1) - 1;
+            if (0 == ray->doorOpen)
+            {
+                ray->doorOpening = true;
+                ray->doorOpen    = 1;
+            }
+            else if (TO_FX(1) == ray->doorOpen)
+            {
+                ray->doorOpening = false;
+                ray->doorOpen    = TO_FX(1) - 1;
+            }
         }
     }
 
