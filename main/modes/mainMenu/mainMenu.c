@@ -10,6 +10,7 @@
 #include "pong.h"
 #include "mode_colorchord.h"
 #include "mode_shooter.h"
+#include "mode_ray.h"
 #include "settingsManager.h"
 
 //==============================================================================
@@ -92,6 +93,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, shooterMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -183,6 +185,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == shooterMode.modeName)
         {
             switchToSwadgeMode(&shooterMode);
+        }
+        else if (label == rayMode.modeName)
+        {
+            switchToSwadgeMode(&rayMode);
         }
     }
     else
