@@ -1251,7 +1251,7 @@ void shooterGameRenderer(int64_t tElapsedUs)
 
 /**
  * @brief TODO
- * 
+ *
  */
 void castFloor(void)
 {
