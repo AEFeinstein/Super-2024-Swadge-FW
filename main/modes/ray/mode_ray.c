@@ -181,6 +181,11 @@ void rayEnterMode(void)
     loadWsg("wall.wsg", &ray->texWall, true);
     loadWsg("ceiling.wsg", &ray->texCeiling, true);
     loadWsg("door.wsg", &ray->texDoor, true);
+
+    // Create an array for all LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    // Set the LED output
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
