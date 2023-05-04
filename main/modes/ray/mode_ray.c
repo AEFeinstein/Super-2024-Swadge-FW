@@ -36,9 +36,9 @@ typedef struct
     int32_t planeX;
     int32_t planeY;
     int32_t dirAngle;
+    int32_t posZ;
 
     uint16_t btnState;
-    uint16_t* floorTexIdx;
 
     int16_t doorOpen;
     int32_t doorTimer;
@@ -167,14 +167,14 @@ static inline int32_t FLOOR_FX(int32_t a)
 void rayEnterMode(void)
 {
     // Allocate memory
-    ray              = calloc(1, sizeof(ray_t));
-    ray->floorTexIdx = heap_caps_calloc(TFT_WIDTH * TFT_HEIGHT / 2, sizeof(uint16_t), MALLOC_CAP_SPIRAM);
+    ray = calloc(1, sizeof(ray_t));
 
     // Set initial position and direction
     ray->posX = (22 << 8), ray->posY = (12 << 8);
     ray->dirAngle = 0;
     ray->dirX = 0, ray->dirY = 0;
     ray->planeX = 0, ray->planeY = 0;
+    ray->posZ = TO_FX(0);
 
     // Load textures
     loadWsg("floor.wsg", &ray->texFloor, true);
@@ -197,7 +197,6 @@ void rayExitMode(void)
     freeWsg(&ray->texWall);
     freeWsg(&ray->texCeiling);
     freeWsg(&ray->texDoor);
-    free(ray->floorTexIdx);
     free(ray);
 }
 
@@ -209,6 +208,9 @@ void rayExitMode(void)
  */
 void rayMainLoop(int64_t elapsedUs)
 {
+    // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
+    castWalls();
+
     // Check all queued button events
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -312,9 +314,6 @@ void rayMainLoop(int64_t elapsedUs)
             }
         }
     }
-
-    // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
-    castWalls();
 }
 
 /**
@@ -346,90 +345,97 @@ void castFloorCeiling(int16_t firstRow, int16_t lastRow)
     SETUP_FOR_TURBO();
 
     // Loop through each horizontal row
-    for (int16_t yLoop = firstRow; yLoop < lastRow; yLoop++)
+    for (int16_t y = firstRow; y < lastRow; y++)
     {
-        // If this is drawing the floor, don't do the math again, just use the
-        // texture coordinates calculated from the ceiling
-        if (yLoop > TFT_HEIGHT / 2)
-        {
-            // Get a pointer to this row's indices
-            uint16_t* floorTexIdxY = &ray->floorTexIdx[(TFT_HEIGHT - yLoop - 1) * TFT_WIDTH];
+        bool isFloor = y > TFT_HEIGHT / 2;
 
-            // Loop through each pixel
-            for (int16_t x = 0; x < TFT_WIDTH; x++)
-            {
-                // Draw the pixel from the texture to the background
-                TURBO_SET_PIXEL(x, yLoop, ray->texFloor.px[floorTexIdxY[x]]);
-            }
+        // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
+        int32_t rayDirX0 = SUB_FX(ray->dirX, ray->planeX);
+        int32_t rayDirY0 = SUB_FX(ray->dirY, ray->planeY);
+        int32_t rayDirX1 = ADD_FX(ray->dirX, ray->planeX);
+        int32_t rayDirY1 = ADD_FX(ray->dirY, ray->planeY);
+
+        // Current y position compared to the center of the screen (the horizon)
+        int16_t p;
+        if (isFloor)
+        {
+            p = (y - (TFT_HEIGHT / 2));
         }
-        // If this is drawing the ceiling, calculate texture coordinates
-        else if (yLoop < TFT_HEIGHT / 2)
+        else
         {
-            // The math in the example doesn't calculate correctly for the ceiling, so calculate the 'floor' instead!
-            int16_t y = TFT_HEIGHT - yLoop - 1;
+            p = ((TFT_HEIGHT / 2) - y);
+        }
 
-            // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
-            int32_t rayDirX0 = SUB_FX(ray->dirX, ray->planeX);
-            int32_t rayDirY0 = SUB_FX(ray->dirY, ray->planeY);
+        // Don't divide by zero (infinite distance on the horizon)
+        if (0 == p)
+        {
+            continue;
+        }
 
-            // Vertical position of the camera.
-            int16_t posZ = TFT_HEIGHT / 2;
+        // Vertical position of the camera.
+        // NOTE: with 0.5, it's exactly in the center between floor and ceiling,
+        // matching also how the walls are being raycasted. For different values
+        // than 0.5, a separate loop must be done for ceiling and floor since
+        // they're no longer symmetrical.
+        int32_t camZ;
+        if (isFloor)
+        {
+            camZ = ADD_FX(TO_FX(TFT_HEIGHT / 2), ray->posZ);
+        }
+        else
+        {
+            camZ = SUB_FX(TO_FX(TFT_HEIGHT / 2), ray->posZ);
+        }
 
-            // Current y position compared to the center of the screen (the horizon)
-            int16_t p = y - posZ;
+        // Horizontal distance from the camera to the floor for the current row.
+        // 0.5 is the z position exactly in the middle between floor and ceiling.
+        // NOTE: this is affine texture mapping, which is not perspective correct
+        // except for perfectly horizontal and vertical surfaces like the floor.
+        // NOTE: this formula is explained as follows: The camera ray goes through
+        // the following two points: the camera itself, which is at a certain
+        // height (posZ), and a point in front of the camera (through an imagined
+        // vertical plane containing the screen pixels) with horizontal distance
+        // 1 from the camera, and vertical position p lower than posZ (posZ - p). When going
+        // through that point, the line has vertically traveled by p units and
+        // horizontally by 1 unit. To hit the floor, it instead needs to travel by
+        // posZ units. It will travel the same ratio horizontally. The ratio was
+        // 1 / p for going through the camera plane, so to go posZ times farther
+        // to reach the floor, we get that the total horizontal distance is posZ / p.
+        int32_t rowDistance = camZ / p;
 
-            // Don't divide by zero (infinite distance on the horizon)
-            if (0 == p)
+        // real world coordinates of the leftmost column. This will be updated as we step to the right.
+        int32_t floorX = ADD_FX(ray->posX, MUL_FX(rowDistance, rayDirX0)) * EX_CEIL_PRECISION;
+        int32_t floorY = ADD_FX(ray->posY, MUL_FX(rowDistance, rayDirY0)) * EX_CEIL_PRECISION;
+
+        // calculate the real world step vector we have to add for each x (parallel to camera plane)
+        // adding step by step avoids multiplications with a weight in the inner loop
+        int32_t floorStepX = (MUL_FX(rowDistance, SUB_FX(rayDirX1, rayDirX0)) * EX_CEIL_PRECISION) / TFT_WIDTH;
+        int32_t floorStepY = (MUL_FX(rowDistance, SUB_FX(rayDirY1, rayDirY0)) * EX_CEIL_PRECISION) / TFT_WIDTH;
+
+        // Loop through each pixel
+        for (int16_t x = 0; x < TFT_WIDTH; ++x)
+        {
+            // the cell coord is simply got from the integer parts of floorX and floorY
+            // int cellX = FROM_FX(floorX);
+            // int cellY = FROM_FX(floorY);
+
+            // get the texture coordinate from the fractional part
+            int32_t fracPartX = floorX - (floorX & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
+            int32_t fracPartY = floorY - (floorY & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
+            uint16_t tx       = ((TEX_WIDTH * fracPartX) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_WIDTH;
+            uint16_t ty       = ((TEX_HEIGHT * fracPartY) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_HEIGHT;
+
+            floorX += floorStepX;
+            floorY += floorStepY;
+
+            // Draw the pixel
+            if (isFloor)
             {
-                continue;
+                TURBO_SET_PIXEL(x, y, ray->texFloor.px[TEX_WIDTH * ty + tx]);
             }
-
-            // Calculate the amount to step each texture coordinate
-            int32_t txfStep = ((posZ * 2 * ray->planeX * TEX_WIDTH) * EX_CEIL_PRECISION) / (TFT_WIDTH * p);
-            int32_t tyfStep = ((posZ * 2 * ray->planeY * TEX_WIDTH) * EX_CEIL_PRECISION) / (TFT_WIDTH * p);
-
-            // real world coordinates of the leftmost column.
-            int32_t floorX = (ray->posX * EX_CEIL_PRECISION) + ((posZ * rayDirX0 * EX_CEIL_PRECISION) / p);
-            int32_t floorY = (ray->posY * EX_CEIL_PRECISION) + ((posZ * rayDirY0 * EX_CEIL_PRECISION) / p);
-
-            // Calculate the coordinate to start the texture at.  This will be updated as we step to the right.
-            int32_t txf = (TEX_WIDTH * (floorX - (floorX & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1))));
-            int32_t tyf = (TEX_WIDTH * (floorY - (floorY & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1))));
-
-            // Loop through each pixel
-            for (int16_t x = 0; x < TFT_WIDTH; ++x)
+            else
             {
-                // Get the integer texture coordinate from the fixed point coordinates
-                uint16_t tx = (txf / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_WIDTH;
-                uint16_t ty = (tyf / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_HEIGHT;
-
-                // Step and modulo the texture X coordinate
-                txf += txfStep;
-                while (txf >= TO_FX(TEX_WIDTH * EX_CEIL_PRECISION))
-                {
-                    txf -= TO_FX(TEX_WIDTH * EX_CEIL_PRECISION);
-                }
-                while (txf < 0)
-                {
-                    txf += TO_FX(TEX_WIDTH * EX_CEIL_PRECISION);
-                }
-
-                // Step and modulo the texture Y coordinate
-                tyf += tyfStep;
-                while (tyf >= TO_FX(TEX_HEIGHT * EX_CEIL_PRECISION))
-                {
-                    tyf -= TO_FX(TEX_HEIGHT * EX_CEIL_PRECISION);
-                }
-                while (tyf < 0)
-                {
-                    tyf += TO_FX(TEX_HEIGHT * EX_CEIL_PRECISION);
-                }
-
-                // Draw the pixel
-                TURBO_SET_PIXEL(x, yLoop, ray->texCeiling.px[TEX_WIDTH * ty + tx]);
-
-                // Save the texture coordinate for the floor
-                ray->floorTexIdx[(yLoop * TFT_WIDTH) + x] = TEX_WIDTH * ty + tx;
+                TURBO_SET_PIXEL(x, y, ray->texCeiling.px[TEX_WIDTH * ty + tx]);
             }
         }
     }
