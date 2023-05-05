@@ -38,6 +38,9 @@ typedef struct
     int32_t dirAngle;
     int32_t posZ;
 
+    int32_t bobTimer;
+    int16_t bobCount;
+
     uint16_t btnState;
 
     int16_t doorOpen;
@@ -210,6 +213,31 @@ void rayMainLoop(int64_t elapsedUs)
 {
     // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
     castWalls();
+
+    // Run a timer for head bob
+    ray->bobTimer += elapsedUs;
+    while (ray->bobTimer > 2500)
+    {
+        ray->bobTimer -= 2500;
+
+        // Only bob when walking or finishing a bob cycle
+        if ((ray->btnState & (PB_UP | PB_DOWN)) || (0 != ray->bobCount && 180 != ray->bobCount))
+        {
+            // Step through the bob cycle, which is a sin function
+            ray->bobCount++;
+            if (360 == ray->bobCount)
+            {
+                ray->bobCount = 0;
+            }
+            // Bob the camera. Note that fixed point numbers are << 8, and trig functions are << 10
+            ray->posZ = getSin1024(ray->bobCount) * 16;
+        }
+        else
+        {
+            // Reset the count to always restart on an upward bob
+            ray->bobCount = 0;
+        }
+    }
 
     // Check all queued button events
     buttonEvt_t evt;
@@ -521,6 +549,7 @@ void castWalls(void)
 
         int32_t wallX;                          // where exactly the wall was hit
         int16_t lineHeight, drawStart, drawEnd; // the height of the wall strip
+        int32_t perpWallDist;
         // perform DDA
         while (false == hit)
         {
@@ -548,7 +577,6 @@ void castWalls(void)
                 // computed: because they were left scaled to |rayDir|. sideDist is the entire length of the ray above
                 // after the multiple steps, but we subtract deltaDist once because one step more into the wall was
                 // taken above.
-                int32_t perpWallDist;
                 if (false == side)
                 {
                     perpWallDist = SUB_FX(sideDistX, deltaDistX);
@@ -562,16 +590,8 @@ void castWalls(void)
                 lineHeight = (0 == perpWallDist) ? (TFT_HEIGHT) : (TO_FX(TFT_HEIGHT) / perpWallDist);
 
                 // calculate lowest and highest pixel to fill in current stripe
-                drawStart = (TFT_HEIGHT - lineHeight) / 2;
-                if (drawStart < 0)
-                {
-                    drawStart = 0;
-                }
-                drawEnd = (TFT_HEIGHT + lineHeight) / 2;
-                if (drawEnd > TFT_HEIGHT)
-                {
-                    drawEnd = TFT_HEIGHT;
-                }
+                drawStart = (TFT_HEIGHT - lineHeight) / 2 + (ray->posZ / perpWallDist);
+                drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
 
                 // TODO sometimes textures wraparound b/c the math for wallX comes out to be like
                 // 19.003 -> 0
@@ -620,11 +640,21 @@ void castWalls(void)
 
         // How much to increase the texture coordinate per screen pixel
         int32_t step = (TEX_HEIGHT << 24) / lineHeight;
-        // Starting texture coordinate
+
+        // Starting texture coordinate. If it would start offscreen, start it at the right spot onscreen instead
         int32_t texPos = 0;
-        if (lineHeight > TFT_HEIGHT)
+        if (drawStart < 0)
         {
-            texPos = (((lineHeight - TFT_HEIGHT) * step) / 2);
+            // Start the texture somewhere in the middle
+            texPos = (-drawStart) * step;
+            // Always start drawing on screen
+            drawStart = 0;
+        }
+
+        // Also make sure to not draw off the bottom of the display
+        if (drawEnd > TFT_HEIGHT)
+        {
+            drawEnd = TFT_HEIGHT;
         }
 
         // Pick the texture based on the map tile
@@ -641,7 +671,7 @@ void castWalls(void)
         // Draw a vertical strip
         for (int32_t y = drawStart; y < drawEnd; y++)
         {
-            // Cast the texture coordinate to integer, and mask with (TEX_HEIGHT - 1) in case of overflow
+            // Cast the texture coordinate to integer, and mod it to ensure no out of bounds reads
             int8_t texY = (texPos >> 24) % TEX_HEIGHT;
 
             // Increment the texture position for the next iteration
