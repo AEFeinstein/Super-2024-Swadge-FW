@@ -68,3 +68,5 @@ plantuml.jar
 spiffs_file_preprocessor
 swadge_emulator
 crash-*.txt
+
+*.pyc
