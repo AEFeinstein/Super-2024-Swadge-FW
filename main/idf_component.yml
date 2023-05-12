@@ -1,6 +1,6 @@
 ## IDF Component Manager Manifest File
 dependencies:
-  espressif/esp_tinyusb: "^1.0.3"
+  espressif/esp_tinyusb: "^1.2.0"
   ## Required IDF version
   idf:
     version: ">=4.1.0"
