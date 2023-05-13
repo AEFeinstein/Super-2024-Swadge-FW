@@ -1,11 +1,20 @@
 {
     "cSpell.words": [
+        "activebackground",
+        "activeforeground",
+        "autoseparators",
+        "borderwidth",
         "columnspan",
+        "highlightbackground",
+        "highlightcolor",
+        "highlightthickness",
+        "insertbackground",
         "LANCZOS",
+        "lineend",
+        "linestart",
+        "maxundo",
         "padx",
         "pady",
-        "pygame",
-        "rowspan",
-        "tearoff"
+        "rowspan"
     ]
 }

@@ -13,13 +13,13 @@ class view:
         self.mapCellSize: int = 32
 
         self.isMapMiddleClicked: bool = False
-        self.lastScrollX = -1
-        self.lastScrollY = -1
-        self.mapOffsetX = 0
-        self.mapOffsetY = 0
+        self.lastScrollX: int = -1
+        self.lastScrollY: int = -1
+        self.mapOffsetX: int = 0
+        self.mapOffsetY: int = 0
 
-        self.selRectX = 0
-        self.selRectY = 0
+        self.selRectX: int = 0
+        self.selRectY: int = 0
 
         self.highlightRect: int = -1
 
@@ -43,36 +43,36 @@ class view:
         frame = tk.Frame(content, background=frameBgColor)
 
         # Setup the button frame and buttons
-        self.buttonFrame = tk.Frame(content, height=0, background=elemBgColor,
-                                    highlightthickness=borderThickness, highlightbackground=borderColor, padx=padding, pady=padding)
-        self.loadButton = tk.Button(self.buttonFrame, height=1, width=6, text="Load", font=fontStyle, background=buttonColor,
-                                    foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
-        self.saveButton = tk.Button(self.buttonFrame, height=1, width=6, text="Save", font=fontStyle, background=buttonColor,
-                                    foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
-        self.exitButton = tk.Button(self.buttonFrame, height=1, width=6, text="Exit", font=fontStyle, background=buttonColor,
-                                    foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
+        self.buttonFrame: tk.Frame = tk.Frame(content, height=0, background=elemBgColor,
+                                              highlightthickness=borderThickness, highlightbackground=borderColor, padx=padding, pady=padding)
+        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=6, text="Load", font=fontStyle, background=buttonColor,
+                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
+        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=6, text="Save", font=fontStyle, background=buttonColor,
+                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
+        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=6, text="Exit", font=fontStyle, background=buttonColor,
+                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
 
         # Set up the canvasses
-        self.paletteCanvas = tk.Canvas(
+        self.paletteCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, width=self.paletteCellSize * 2, height=self.paletteCellSize * 8,
             highlightthickness=borderThickness, highlightbackground=borderColor)
-        self.paletteSelected = tk.Canvas(
+        self.paletteSelected: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, width=self.paletteCellSize * 2, height=self.paletteCellSize * 2,
             highlightthickness=borderThickness, highlightbackground=borderColor)
-        self.mapCanvas = tk.Canvas(
+        self.mapCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
 
         # Set up the text
-        self.cellMetaData = tk.Text(content, width=40,
-                                    undo=True, autoseparators=True, maxundo=-1,
-                                    background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
-                                    highlightthickness=borderThickness, highlightbackground=borderColor,
-                                    highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
-        self.scriptTextEntry = tk.Text(content, height=10,
-                                       undo=True, autoseparators=True, maxundo=-1,
-                                       background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
-                                       highlightthickness=borderThickness, highlightbackground=borderColor,
-                                       highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
+        self.cellMetaData: tk.Text = tk.Text(content, width=40,
+                                             undo=True, autoseparators=True, maxundo=-1,
+                                             background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
+                                             highlightthickness=borderThickness, highlightbackground=borderColor,
+                                             highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
+        self.scriptTextEntry: tk.Text = tk.Text(content, height=10,
+                                                undo=True, autoseparators=True, maxundo=-1,
+                                                background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
+                                                highlightthickness=borderThickness, highlightbackground=borderColor,
+                                                highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
 
         # Configure the main frame
         content.grid(column=0, row=0, sticky=(tk.NSEW))
@@ -95,7 +95,7 @@ class view:
             tk.NSEW), padx=padding, pady=padding)
         self.paletteCanvas.bind("<Button-1>", self.paletteLeftClick)
         self.paletteCanvas.bind('<ButtonRelease-1>', self.clickRelease)
-        self.paletteCanvas.bind('<Motion>', self.mouseMotion)
+        self.paletteCanvas.bind('<Motion>', self.paletteMouseMotion)
 
         # Place the palette selection
         self.paletteSelected.grid(column=0, row=2, sticky=(
@@ -110,7 +110,7 @@ class view:
         self.mapCanvas.bind('<ButtonRelease-1>', self.clickRelease)
         self.mapCanvas.bind('<ButtonRelease-2>', self.clickRelease)
         self.mapCanvas.bind('<ButtonRelease-3>', self.clickRelease)
-        self.mapCanvas.bind('<Motion>', self.mouseMotion)
+        self.mapCanvas.bind('<Motion>', self.mapMouseMotion)
 
         # Place the cell metadata text window
         self.cellMetaData.grid(column=2, row=1, rowspan=2, sticky=(
@@ -119,6 +119,7 @@ class view:
         # Place the script editor text window
         self.scriptTextEntry.grid(column=0, row=3, columnspan=3, sticky=(
             tk.NSEW), padx=padding, pady=padding)
+        self.scriptTextEntry.bind("<KeyRelease>", self.scriptTextChanged)
 
         # Set root weights so the UI scales
         self.root.columnconfigure(0, weight=1)
@@ -177,24 +178,24 @@ class view:
     def mainloop(self):
         self.root.mainloop()
 
-    def paletteLeftClick(self, event):
+    def paletteLeftClick(self, event: tk.Event):
         self.c.clickPalette(int(event.x / self.paletteCellSize),
                             int(event.y / self.paletteCellSize))
 
-    def mapLeftClick(self, event):
+    def mapLeftClick(self, event: tk.Event):
         self.c.leftClickMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
                             int((event.y - self.mapOffsetY) / self.mapCellSize))
 
-    def mapRightClick(self, event):
+    def mapRightClick(self, event: tk.Event):
         self.c.rightClickMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
                              int((event.y - self.mapOffsetY) / self.mapCellSize))
 
-    def mapMiddleClick(self, event):
+    def mapMiddleClick(self, event: tk.Event):
         self.isMapMiddleClicked = True
         self.lastScrollX = event.x
         self.lastScrollY = event.y
 
-    def mouseMotion(self, event):
+    def mapMouseMotion(self, event: tk.Event):
         if self.isMapMiddleClicked:
             self.mapOffsetX = self.mapOffsetX - (self.lastScrollX - event.x)
             self.mapOffsetY = self.mapOffsetY - (self.lastScrollY - event.y)
@@ -202,12 +203,24 @@ class view:
             self.lastScrollY = event.y
             self.redraw()
         else:
-            self.c.moveMouse(int((event.x - self.mapOffsetX) / self.mapCellSize),
-                             int((event.y - self.mapOffsetY) / self.mapCellSize))
+            self.c.moveMouseMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
+                                int((event.y - self.mapOffsetY) / self.mapCellSize))
 
-    def clickRelease(self, event):
+    def paletteMouseMotion(self, event: tk.Event):
+        self.c.moveMousePalette(int((event.x) / self.paletteCellSize),
+                                int((event.y) / self.paletteCellSize))
+
+    def clickRelease(self, event: tk.Event):
         self.isMapMiddleClicked = False
         self.c.releaseClick()
+
+    def scriptTextChanged(self, event: tk.Event):
+        self.scriptTextEntry.tag_remove('highlight', '1.0', 'end')
+        self.scriptTextEntry.tag_add(
+            "highlight", "insert linestart", "insert lineend")
+        self.scriptTextEntry.tag_configure(
+            "highlight", background="OliveDrab1", foreground="black")
+        print(self.scriptTextEntry.get("insert linestart", "insert lineend"))
 
     def redraw(self):
         self.paletteCanvas.delete('all')
