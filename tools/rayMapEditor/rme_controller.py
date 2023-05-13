@@ -28,10 +28,12 @@ class controller:
         self.isMapLeftClicked = False
         self.isPaletteClicked = False
 
-    def moveMouse(self, cellX, cellY):
+    def moveMouseMap(self, cellX, cellY):
         if self.isMapLeftClicked:
             self.leftClickMap(cellX, cellY)
-        elif self.isPaletteClicked:
+
+    def moveMousePalette(self, cellX, cellY):
+        if self.isPaletteClicked:
             self.clickPalette(cellX, cellY)
 
     def rightClickMap(self, x, y):
