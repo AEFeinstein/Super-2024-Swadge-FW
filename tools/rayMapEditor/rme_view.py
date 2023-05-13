@@ -1,4 +1,6 @@
 import tkinter as tk
+from tkinter.filedialog import askopenfile
+from tkinter.filedialog import asksaveasfile
 from PIL import Image, ImageTk
 
 from collections.abc import Mapping
@@ -9,6 +11,9 @@ from rme_tiles import *
 class view:
 
     def __init__(self):
+
+        self.currentFile = None
+
         self.paletteCellSize: int = 64
         self.mapCellSize: int = 32
 
@@ -35,6 +40,7 @@ class view:
         buttonColor: str = '#2B79D7'
         buttonPressedColor: str = '#5191DE'
         buttonFontColor: str = '#FFFFFF'
+        buttonWidth: int = 8
 
         # Setup the root and main frames
         self.root: tk.Tk = tk.Tk()
@@ -45,12 +51,18 @@ class view:
         # Setup the button frame and buttons
         self.buttonFrame: tk.Frame = tk.Frame(content, height=0, background=elemBgColor,
                                               highlightthickness=borderThickness, highlightbackground=borderColor, padx=padding, pady=padding)
-        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=6, text="Load", font=fontStyle, background=buttonColor,
-                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
-        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=6, text="Save", font=fontStyle, background=buttonColor,
-                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
-        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=6, text="Exit", font=fontStyle, background=buttonColor,
-                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0)
+        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Load", font=fontStyle, background=buttonColor,
+                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+                                               command=self.clickLoad)
+        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save", font=fontStyle, background=buttonColor,
+                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+                                               command=self.clickSave)
+        self.saveAsButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save As", font=fontStyle, background=buttonColor,
+                                                 foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+                                                 command=self.clickSaveAs)
+        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", font=fontStyle, background=buttonColor,
+                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+                                               command=self.clickExit)
 
         # Set up the canvasses
         self.paletteCanvas: tk.Canvas = tk.Canvas(
@@ -87,7 +99,9 @@ class view:
                              padx=padding, pady=padding)
         self.saveButton.grid(column=1, row=0, sticky=tk.NSEW,
                              padx=padding, pady=padding)
-        self.exitButton.grid(column=2, row=0, sticky=tk.NSEW,
+        self.saveAsButton.grid(column=2, row=0, sticky=tk.NSEW,
+                               padx=padding, pady=padding)
+        self.exitButton.grid(column=3, row=0, sticky=tk.NSEW,
                              padx=padding, pady=padding)
 
         # Place the palette and bind events
@@ -286,3 +300,34 @@ class view:
         # specified position, Here it is the
         # beginning
         self.cellMetaData.insert('1.0', "[" + str(x) + ", " + str(y) + "]")
+
+    def clickSave(self):
+        if self.currentFile is None:
+            self.clickSaveAs()
+        else:
+            print("save " + self.currentFile.name)
+
+    def clickSaveAs(self):
+        fts = (
+            ('Ray Map Data', '*.rmd'),
+            ('All files', '*.*')
+        )
+        self.currentFile = asksaveasfile(filetypes=fts, defaultextension='rmt')
+        if self.currentFile is not None:
+            print("save as " + self.currentFile.name)
+
+    def clickLoad(self):
+        fts = (
+            ('Ray Map Data', '*.rmd'),
+            ('All files', '*.*')
+        )
+        self.currentFile = askopenfile(filetypes=fts)
+        if self.currentFile is not None:
+            print("load " + self.currentFile.name)
+
+    def clickExit(self):
+        if self.currentFile is not None:
+            print("save " + self.currentFile.name)
+        else:
+            print("autosave")
+        self.root.destroy()
