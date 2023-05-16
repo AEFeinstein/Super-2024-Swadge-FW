@@ -6,12 +6,14 @@ from PIL import Image, ImageTk
 from collections.abc import Mapping
 
 from rme_tiles import *
+from rme_script_editor import scriptValidator
 
 
 class view:
 
     def __init__(self):
 
+        self.sv: scriptValidator = scriptValidator()
         self.currentFile = None
 
         self.paletteCellSize: int = 64
@@ -229,12 +231,17 @@ class view:
         self.c.releaseClick()
 
     def scriptTextChanged(self, event: tk.Event):
+        scriptStr: str = self.scriptTextEntry.get(
+            "insert linestart", "insert lineend")
         self.scriptTextEntry.tag_remove('highlight', '1.0', 'end')
         self.scriptTextEntry.tag_add(
             "highlight", "insert linestart", "insert lineend")
-        self.scriptTextEntry.tag_configure(
-            "highlight", background="OliveDrab1", foreground="black")
-        print(self.scriptTextEntry.get("insert linestart", "insert lineend"))
+        if self.sv.validateScript(scriptStr):
+            self.scriptTextEntry.tag_configure(
+                "highlight", background="green", foreground="black")
+        else:
+            self.scriptTextEntry.tag_configure(
+                "highlight", background="red", foreground="black")
 
     def redraw(self):
         self.paletteCanvas.delete('all')
