@@ -36,12 +36,12 @@
 
 ### THEN Operations
 
-| Operation | Value | Arguments      | Description                                                                                    |  |
-|-----------|-------|----------------|------------------------------------------------------------------------------------------------|--|
-| OPEN      | 8     | \[CELLs\]      | Open all doors on the given cells                                                              |  |
-| CLOSE     | 9     | \[CELLs\]      | Close all doors on the given cells                                                             |  |
-| SPAWN     | 10    | CELL, TYPE, ID | Spawn an object of the given type with the given ID in the given cell. May be an item or enemy |  |
-| DESPAWN   | 11    | \[IDs\]        | Immediately remove the given IDs from the map. May be item or enemy                            |  |
-| DIALOG    | 12    | "TEXT"         | Display the text in a dialog window                                                            |  |
-| WARP      | 13    | CELL           | Warp the player to the given cell                                                              |  |
-| WIN       | 14    |                | Finish the level                                                                               |  |
+| Operation | Value | Arguments      | Description                                                                                    |
+|-----------|-------|----------------|------------------------------------------------------------------------------------------------|
+| OPEN      | 8     | \[CELLs\]      | Open all doors on the given cells                                                              |
+| CLOSE     | 9     | \[CELLs\]      | Close all doors on the given cells                                                             |
+| SPAWN     | 10    | CELL, TYPE, ID | Spawn an object of the given type with the given ID in the given cell. May be an item or enemy |
+| DESPAWN   | 11    | \[IDs\]        | Immediately remove the given IDs from the map. May be item or enemy                            |
+| DIALOG    | 12    | "TEXT"         | Display the text in a dialog window                                                            |
+| WARP      | 13    | CELL           | Warp the player to the given cell                                                              |
+| WIN       | 14    |                | Finish the level                                                                               |
