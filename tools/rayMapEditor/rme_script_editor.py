@@ -72,151 +72,166 @@ class rme_script:
         # Text is a string, not quoted
         return text.strip()
 
+    def isListNotValid(self, array: list) -> bool:
+        return (array is None) or (0 == len(array)) or (None in array)
+
     def toString(self) -> str:
         # TODO write toString()
         return 'IF ' + self.ifOp.name + '() THEN ' + self.thenOp.name + '()'
 
     def fromString(self, if_op: str, if_args: str, then_op: str, then_args: str) -> bool:
-        # Split the args
-        argParts = self.parseArgs(if_args)
+        try:
+            # Split the args
+            argParts = self.parseArgs(if_args)
 
-        # Parse the IF part
-        if ifOpType.SHOOT_OBJS.name == if_op:
-            # Set the operation type
-            self.ifOp = ifOpType.SHOOT_OBJS
-            # Parse the args
-            self.ifArgs['ids'] = [self.parseInt(
-                s) for s in self.parseArray(argParts[0])]
-            self.ifArgs['order'] = self.parseOrder(argParts[1])
-            # Validate the args
-            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']) or self.ifArgs['order'] is None:
+            # Parse the IF part
+            if ifOpType.SHOOT_OBJS.name == if_op:
+                # Set the operation type
+                self.ifOp = ifOpType.SHOOT_OBJS
+                # Parse the args
+                self.ifArgs['ids'] = [self.parseInt(
+                    s) for s in self.parseArray(argParts[0])]
+                self.ifArgs['order'] = self.parseOrder(argParts[1])
+                # Validate the args
+                if self.isListNotValid(self.ifArgs['ids']) or self.ifArgs['order'] is None:
+                    return False
+
+            elif ifOpType.SHOOT_WALLS.name == if_op:
+                self.ifOp = ifOpType.SHOOT_WALLS
+                # Parse the args
+                self.ifArgs['cells'] = [self.parseCell(
+                    s) for s in self.parseArray(argParts[0])]
+                self.ifArgs['order'] = self.parseOrder(argParts[1])
+                # Validate the args
+                if self.isListNotValid(self.ifArgs['cells']) or self.ifArgs['order'] is None:
+                    return False
+
+            elif ifOpType.KILL.name == if_op:
+                # Set the operation type
+                self.ifOp = ifOpType.KILL
+                # Parse the args
+                self.ifArgs['ids'] = [self.parseInt(
+                    s) for s in self.parseArray(argParts[0])]
+                self.ifArgs['order'] = self.parseOrder(argParts[1])
+                # Validate the args
+                if self.isListNotValid(self.ifArgs['ids']) or self.ifArgs['order'] is None:
+                    return False
+
+            elif ifOpType.ENTER.name == if_op:
+                self.ifOp = ifOpType.ENTER
+                # Parse the args
+                self.ifArgs['cell'] = self.parseCell(argParts[0])
+                self.ifArgs['ids'] = [self.parseInt(
+                    s) for s in self.parseArray(argParts[1])]
+                # Validate the args
+                if self.isListNotValid(self.ifArgs['ids']) or self.ifArgs['cell'] is None:
+                    return False
+
+            elif ifOpType.GET.name == if_op:
+                self.ifOp = ifOpType.GET
+                # Parse the args
+                self.ifArgs['ids'] = [self.parseInt(
+                    s) for s in self.parseArray(argParts[0])]
+                # Validate the args
+                if self.isListNotValid(self.ifArgs['ids']):
+                    return False
+
+            elif ifOpType.TOUCH.name == if_op:
+                self.ifOp = ifOpType.TOUCH
+                # Parse the args
+                self.ifArgs['id'] = self.parseInt(argParts[0])
+                # Validate the args
+                if self.ifArgs['id'] is None:
+                    return False
+
+            elif ifOpType.BUTTON_PRESSED.name == if_op:
+                self.ifOp = ifOpType.BUTTON_PRESSED
+                # Parse the args
+                self.ifArgs['btn'] = self.parseInt(argParts[0])
+                # Validate the args
+                if self.ifArgs['btn'] is None:
+                    return False
+
+            elif ifOpType.TIME_ELAPSED.name == if_op:
+                self.ifOp = ifOpType.TIME_ELAPSED
+                # Parse the arg
+                self.ifArgs['tMs'] = self.parseInt(argParts[0])
+                # Validate the args
+                if self.ifArgs['tMs'] is None:
+                    return False
+            else:
                 return False
 
-        elif ifOpType.SHOOT_WALLS.name == if_op:
-            self.ifOp = ifOpType.SHOOT_WALLS
-            # Parse the args
-            self.ifArgs['cells'] = [self.parseCell(
-                s) for s in self.parseArray(argParts[0])]
-            self.ifArgs['order'] = self.parseOrder(argParts[1])
-            # Validate the args
-            if self.ifArgs['cells'] is None or 0 == len(self.ifArgs['cells']) or self.ifArgs['order'] is None:
+            # Split the args
+            argParts = self.parseArgs(then_args)
+
+            # Parse the THEN part
+            if thenOpType.OPEN.name == then_op:
+                # Set the operation
+                self.thenOp = thenOpType.OPEN
+                # Parse the args
+                self.thenArgs['cells'] = [self.parseCell(
+                    s) for s in self.parseArray(argParts[0])]
+                # Validate the args
+                if self.isListNotValid(self.thenArgs['cells']):
+                    return False
+
+            elif thenOpType.CLOSE.name == then_op:
+                # Set the operation
+                self.thenOp = thenOpType.CLOSE
+                # Parse the args
+                self.thenArgs['cells'] = [self.parseCell(
+                    s) for s in self.parseArray(argParts[0])]
+                # Validate the args
+                if self.isListNotValid(self.thenArgs['cells']):
+                    return False
+
+            elif thenOpType.SPAWN.name == then_op:
+                self.thenOp = thenOpType.SPAWN
+                # TODO parse SPAWN
+
+            elif thenOpType.DESPAWN.name == then_op:
+                self.thenOp = thenOpType.DESPAWN
+                # Parse the args
+                self.thenArgs['ids'] = [self.parseInt(
+                    s) for s in self.parseArray(argParts[0])]
+                # Validate the args
+                if self.isListNotValid(self.thenArgs['ids']):
+                    return False
+
+            elif thenOpType.DIALOG.name == then_op:
+                # Set the operation
+                self.thenOp = thenOpType.DIALOG
+                # Parse the args
+                self.thenArgs['text'] = self.parseText(argParts[0])
+                # Validate the args
+                if self.thenArgs['text'] is None:
+                    return False
+
+            elif thenOpType.WARP.name == then_op:
+                # Set the operation
+                self.thenOp = thenOpType.WARP
+                # Parse the args
+                self.thenArgs['cell'] = self.parseCell(argParts[0])
+                # Validate the args
+                if self.thenArgs['cell'] is None:
+                    return False
+
+            elif thenOpType.WIN.name == then_op:
+                # Set the operation
+                self.thenOp = thenOpType.WIN
+                # No arguments
+
+            else:
                 return False
 
-        elif ifOpType.KILL.name == if_op:
-            # Set the operation type
-            self.ifOp = ifOpType.KILL
-            # Parse the args
-            self.ifArgs['ids'] = [self.parseInt(
-                s) for s in self.parseArray(argParts[0])]
-            self.ifArgs['order'] = self.parseOrder(argParts[1])
-            # Validate the args
-            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']) or self.ifArgs['order'] is None:
-                return False
-
-        elif ifOpType.ENTER.name == if_op:
-            self.ifOp = ifOpType.ENTER
-            # Parse the args
-            self.ifArgs['cell'] = self.parseCell(argParts[0])
-            self.ifArgs['ids'] = [self.parseInt(
-                s) for s in self.parseArray(argParts[1])]
-            # Validate the args
-            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']) or self.ifArgs['cell'] is None:
-                return False
-
-        elif ifOpType.GET.name == if_op:
-            self.ifOp = ifOpType.GET
-            # Parse the args
-            self.ifArgs['ids'] = [self.parseInt(
-                s) for s in self.parseArray(argParts[0])]
-            # Validate the args
-            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']):
-                return False
-
-        elif ifOpType.TOUCH.name == if_op:
-            self.ifOp = ifOpType.TOUCH
-            # Parse the args
-            self.ifArgs['id'] = self.parseInt(argParts[0])
-            # Validate the args
-            if self.ifArgs['id'] is None:
-                return False
-
-        elif ifOpType.BUTTON_PRESSED.name == if_op:
-            self.ifOp = ifOpType.BUTTON_PRESSED
-            # Parse the args
-            self.ifArgs['btn'] = self.parseInt(argParts[0])
-            # Validate the args
-            if self.ifArgs['btn'] is None:
-                return False
-
-        elif ifOpType.TIME_ELAPSED.name == if_op:
-            self.ifOp = ifOpType.TIME_ELAPSED
-            # Parse the arg
-            self.ifArgs['tMs'] = self.parseInt(argParts[0])
-            # Validate the args
-            if self.ifArgs['tMs'] is None:
-                return False
-        else:
+            return True
+        except:
+            self.ifOp: ifOpType = None
+            self.ifArgs = {}
+            self.thenOp: thenOpType = None
+            self.thenArgs = {}
             return False
-
-        # Split the args
-        argParts = self.parseArgs(then_args)
-
-        # Parse the THEN part
-        if thenOpType.OPEN.name == then_op:
-            # Set the operation
-            self.thenOp = thenOpType.OPEN
-            # Parse the args
-            self.thenArgs['cells'] = [self.parseCell(
-                s) for s in self.parseArray(argParts[0])]
-            # Validate the args
-            if self.thenArgs['cells'] is None or 0 == len(self.thenArgs['cells']):
-                return False
-
-        elif thenOpType.CLOSE.name == then_op:
-            # Set the operation
-            self.thenOp = thenOpType.CLOSE
-            # Parse the args
-            self.thenArgs['cells'] = [self.parseCell(
-                s) for s in self.parseArray(argParts[0])]
-            # Validate the args
-            if self.thenArgs['cells'] is None or 0 == len(self.thenArgs['cells']):
-                return False
-
-        elif thenOpType.SPAWN.name == then_op:
-            self.thenOp = thenOpType.SPAWN
-            # TODO parse SPAWN
-
-        elif thenOpType.DESPAWN.name == then_op:
-            self.thenOp = thenOpType.DESPAWN
-            # TODO parse DESPAWN
-
-        elif thenOpType.DIALOG.name == then_op:
-            # Set the operation
-            self.thenOp = thenOpType.DIALOG
-            # Parse the args
-            self.thenArgs['text'] = self.parseText(argParts[0])
-            # Validate the args
-            if self.thenArgs['text'] is None:
-                return False
-
-        elif thenOpType.WARP.name == then_op:
-            # Set the operation
-            self.thenOp = thenOpType.WARP
-            # Parse the args
-            self.thenArgs['cell'] = self.parseCell(argParts[0])
-            # Validate the args
-            if self.thenArgs['cell'] is None:
-                return False
-
-        elif thenOpType.WIN.name == then_op:
-            # Set the operation
-            self.thenOp = thenOpType.WIN
-            # No arguments
-
-        else:
-            return False
-
-        return True
 
     def toBytes(self) -> bytearray:
         # TODO write toBytes
