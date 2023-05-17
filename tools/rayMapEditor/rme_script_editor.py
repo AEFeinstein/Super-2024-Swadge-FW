@@ -23,6 +23,11 @@ class thenOpType(Enum):
     WIN = 14
 
 
+class orderType(Enum):
+    IN_ORDER = 0,
+    ANY_ORDER = 1
+
+
 class rme_script:
     def __init__(self) -> None:
         self.ifOp: ifOpType = None
@@ -31,129 +36,150 @@ class rme_script:
         self.thenArgs = {}
         pass
 
+    def parseArgs(self, args: str) -> list[str]:
+        # Args are in the form (a;b;c)
+        result = re.match(r'\s*\((.*)\)\s*', args)
+        if result:
+            return [s.strip() for s in re.split(r';', result.group(1).strip())]
+        return None
+
+    def parseArray(self, array: str) -> list[str]:
+        # Arrays are in the form [a,b,c]
+        result = re.match(r'\s*\[(.*)\]\s*', array)
+        if result:
+            return [s.strip() for s in re.split(r',', result.group(1).strip())]
+        return None
+
+    def parseInt(self, integer: str) -> int:
+        # Integers are integers
+        return int(integer.strip())
+
+    def parseOrder(self, order: str) -> orderType:
+        # Order is either IN_ORDER or ANY_ORDER
+        for type in orderType.__members__.items():
+            if order == type[0]:
+                return type[1]
+        return None
+
+    def parseCell(self, cell: str) -> list[int]:
+        # Cells are in the form {a.b}
+        result = re.match(r'\s*{\s*(\d+)\s*\.\s*(\d+)\s*}\s*', cell)
+        if result:
+            return [int(result.group(1)), int(result.group(2))]
+        return None
+
+    def parseText(self, text: str) -> str:
+        # Text is a string, not quoted
+        return text.strip()
+
     def toString(self) -> str:
         # TODO write toString()
         return 'IF ' + self.ifOp.name + '() THEN ' + self.thenOp.name + '()'
 
-    def parseIdsOrder(self, if_args: str) -> bool:
-        result = re.search(
-            r'\[([\d, ]+)\]\s*,\s*(IN_ORDER|ANY_ORDER)', if_args)
-        if result:
-            ids: list[str] = re.split(r'[\s,]+', result.group(1))
-            self.ifArgs['ids'] = [int(i) for i in ids]
-            self.ifArgs['order'] = result.group(2)
-            return True
-        else:
-            return False
-
     def fromString(self, if_op: str, if_args: str, then_op: str, then_args: str) -> bool:
+        # Split the args
+        argParts = self.parseArgs(if_args)
+
+        # Parse the IF part
         if ifOpType.SHOOT_OBJS.name == if_op:
+            # Set the operation type
             self.ifOp = ifOpType.SHOOT_OBJS
-            if False == self.parseIdsOrder(if_args):
+            # Parse the args
+            self.ifArgs['ids'] = [self.parseInt(
+                s) for s in self.parseArray(argParts[0])]
+            self.ifArgs['order'] = self.parseOrder(argParts[1])
+            # Validate the args
+            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']) or self.ifArgs['order'] is None:
                 return False
 
         elif ifOpType.SHOOT_WALLS.name == if_op:
             self.ifOp = ifOpType.SHOOT_WALLS
-            result = re.search(
-                r'\[([{\d, }]+)\]\s*,\s*(IN_ORDER|ANY_ORDER)', if_args)
-            if result:
-                cells: list[str] = re.split(r'[{}]+', result.group(1))
-                self.ifArgs['cells'] = []
-                for cell in cells:
-                    try:
-                        coordinates: list[str] = re.split(r'[\s,]+', cell)
-                        self.ifArgs['cells'].append(
-                            [int(coordinates[0]), int(coordinates[1])])
-                    except:
-                        pass
-                self.ifArgs['order'] = result.group(2)
-            else:
+            # Parse the args
+            self.ifArgs['cells'] = [self.parseCell(
+                s) for s in self.parseArray(argParts[0])]
+            self.ifArgs['order'] = self.parseOrder(argParts[1])
+            # Validate the args
+            if self.ifArgs['cells'] is None or 0 == len(self.ifArgs['cells']) or self.ifArgs['order'] is None:
                 return False
 
         elif ifOpType.KILL.name == if_op:
+            # Set the operation type
             self.ifOp = ifOpType.KILL
-            if False == self.parseIdsOrder(if_args):
+            # Parse the args
+            self.ifArgs['ids'] = [self.parseInt(
+                s) for s in self.parseArray(argParts[0])]
+            self.ifArgs['order'] = self.parseOrder(argParts[1])
+            # Validate the args
+            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']) or self.ifArgs['order'] is None:
                 return False
 
         elif ifOpType.ENTER.name == if_op:
             self.ifOp = ifOpType.ENTER
-
-            result = re.search(
-                r'{\s*(\d+)\s*,\s*(\d+)\s*}\s*,\s*\[([\d, ]+)\]', if_args)
-            if result:
-                self.ifArgs['cell'] = [
-                    int(result.group(1)), int(result.group(2))]
-                ids: list[str] = re.split(r'[\s,]+', result.group(3))
-                self.ifArgs['ids'] = [int(i) for i in ids]
-            else:
+            # Parse the args
+            self.ifArgs['cell'] = self.parseCell(argParts[0])
+            self.ifArgs['ids'] = [self.parseInt(
+                s) for s in self.parseArray(argParts[1])]
+            # Validate the args
+            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']) or self.ifArgs['cell'] is None:
                 return False
 
         elif ifOpType.GET.name == if_op:
             self.ifOp = ifOpType.GET
-            result = re.search(r'\[([\d, ]+)\]', if_args)
-            if result:
-                ids: list[str] = re.split(r'[\s,]+', result.group(1))
-                self.ifArgs['ids'] = [int(i) for i in ids]
-            else:
+            # Parse the args
+            self.ifArgs['ids'] = [self.parseInt(
+                s) for s in self.parseArray(argParts[0])]
+            # Validate the args
+            if self.ifArgs['ids'] is None or 0 == len(self.ifArgs['ids']):
                 return False
 
         elif ifOpType.TOUCH.name == if_op:
             self.ifOp = ifOpType.TOUCH
-            result = re.search(r'(\d+)', if_args)
-            if result:
-                self.ifArgs['ids'] = int(result.group(1))
-            else:
+            # Parse the args
+            self.ifArgs['id'] = self.parseInt(argParts[0])
+            # Validate the args
+            if self.ifArgs['id'] is None:
                 return False
 
         elif ifOpType.BUTTON_PRESSED.name == if_op:
             self.ifOp = ifOpType.BUTTON_PRESSED
-            result = re.search(r'(\d+)', if_args)
-            if result:
-                self.ifArgs['btn'] = int(result.group(1))
-            else:
+            # Parse the args
+            self.ifArgs['btn'] = self.parseInt(argParts[0])
+            # Validate the args
+            if self.ifArgs['btn'] is None:
                 return False
 
         elif ifOpType.TIME_ELAPSED.name == if_op:
             self.ifOp = ifOpType.TIME_ELAPSED
-            result = re.search(r'(\d+)', if_args)
-            if result:
-                self.ifArgs['tMs'] = int(result.group(1))
-            else:
+            # Parse the arg
+            self.ifArgs['tMs'] = self.parseInt(argParts[0])
+            # Validate the args
+            if self.ifArgs['tMs'] is None:
                 return False
-
         else:
             return False
 
+        # Split the args
+        argParts = self.parseArgs(then_args)
+
+        # Parse the THEN part
         if thenOpType.OPEN.name == then_op:
             # Set the operation
             self.thenOp = thenOpType.OPEN
-            # Parse the arguments
-            cells: list[str] = re.split(r'[{}]+', then_args)
-            self.thenArgs['cells'] = []
-            for cell in cells:
-                try:
-                    coordinates: list[str] = re.split(r'[\s,]+', cell)
-                    self.thenArgs['cells'].append(
-                        [int(coordinates[0]), int(coordinates[1])])
-                except:
-                    pass
-            if 0 == len(self.thenArgs['cells']):
+            # Parse the args
+            self.thenArgs['cells'] = [self.parseCell(
+                s) for s in self.parseArray(argParts[0])]
+            # Validate the args
+            if self.thenArgs['cells'] is None or 0 == len(self.thenArgs['cells']):
                 return False
 
         elif thenOpType.CLOSE.name == then_op:
             # Set the operation
             self.thenOp = thenOpType.CLOSE
-            # Parse the arguments
-            cells: list[str] = re.split(r'[{}]+', then_args)
-            self.thenArgs['cells'] = []
-            for cell in cells:
-                try:
-                    coordinates: list[str] = re.split(r'[\s,]+', cell)
-                    self.thenArgs['cells'].append(
-                        [int(coordinates[0]), int(coordinates[1])])
-                except:
-                    pass
-            if 0 == len(self.thenArgs['cells']):
+            # Parse the args
+            self.thenArgs['cells'] = [self.parseCell(
+                s) for s in self.parseArray(argParts[0])]
+            # Validate the args
+            if self.thenArgs['cells'] is None or 0 == len(self.thenArgs['cells']):
                 return False
 
         elif thenOpType.SPAWN.name == then_op:
@@ -167,26 +193,19 @@ class rme_script:
         elif thenOpType.DIALOG.name == then_op:
             # Set the operation
             self.thenOp = thenOpType.DIALOG
-            # Parse the arguments
-            if 0 == len(then_args):
+            # Parse the args
+            self.thenArgs['text'] = self.parseText(argParts[0])
+            # Validate the args
+            if self.thenArgs['text'] is None:
                 return False
-            self.thenArgs['text'] = then_args
 
         elif thenOpType.WARP.name == then_op:
             # Set the operation
             self.thenOp = thenOpType.WARP
-            # Parse the arguments
-            cells: list[str] = re.split(r'[{}]+', then_args)
-            self.thenArgs['cells'] = []
-            for cell in cells:
-                try:
-                    coordinates: list[str] = re.split(r'[\s,]+', cell)
-                    self.thenArgs['cell'] = [
-                        int(coordinates[0]), int(coordinates[1])]
-                    continue
-                except:
-                    pass
-            if self.thenArgs['cells'] is None:
+            # Parse the args
+            self.thenArgs['cell'] = self.parseCell(argParts[0])
+            # Validate the args
+            if self.thenArgs['cell'] is None:
                 return False
 
         elif thenOpType.WIN.name == then_op:
@@ -211,7 +230,7 @@ class rme_script:
 class scriptValidator:
 
     def __init__(self) -> None:
-        argsRegex: str = '\(([A-Z0-9, \[\]\{\}_]*)\)'
+        argsRegex: str = '(\([A-Z0-9_,;\.\[\]\{\}\s]*\))'
 
         regex = "IF\s+("
 

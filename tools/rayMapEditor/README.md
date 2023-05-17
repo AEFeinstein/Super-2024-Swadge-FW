@@ -12,20 +12,26 @@
 
 ## Script Definition
 
-### Argument Types
+### Syntax
 
-* Cell = `{X, Y}`
-* ID = integer
-* Time = integer, in milliseconds
-* BTN = integer, see `buttonBit_t`
-* ORDER = `IN_ORDER` or `ANY_ORDER`
-* Arrays = `[a, b, c]`
+Arguments, arrays, and CELLs all have different delimiters to make parsing easier.
+
+| Element   | Syntax                    | Notes                                  |
+|-----------|---------------------------|----------------------------------------|
+| Arguments | `(a; b; c)`               | Arguments are only used for Operations |
+| Arrays    | `[a, b, c]`               | May be arrays of any _other_ type      |
+| CELL      | `{x. y}`                  | Only has x and y components            |
+| ORDER     | `IN_ORDER` or `ANY_ORDER` |                                        |
+| ID        | `0`                       | Just an integer                        |
+| TIME      | `0`                       | Just an integer, in milliseconds       |
+| BTN       | `0`                       | Just an integer, see `buttonBit_t`     |
+| TEXT      | `abc`                     | Not quoted                             |
 
 ### IF Operations
 
 | Operation      | Value | Arguments        | Description                                                                                                                                   |
 |----------------|-------|------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
-| SHOOT_OBJS     | 0     | \[IDs\], ORDER   | Condition triggered when all objs are shot (not killed), may either be in the given order or any order                                        |
+| SHOOT_OBJS     | 0     | \[IDs\], ORDER   | Condition triggered when all objects are shot (not killed), may either be in the given order or any order                                     |
 | SHOOT_WALLS    | 1     | \[CELLs\], ORDER | Condition triggered when all walls are shot, may either be in the given order or any order                                                    |
 | KILL           | 2     | \[IDs\], ORDER   | Condition triggered when all enemies are killed, may be in the given order or any order                                                       |
 | ENTER          | 3     | CELL, \[IDs\]    | Condition triggered when the player enters the given cell. If IDs are not empty, the player must have the given items when entering the cell. |
@@ -42,6 +48,6 @@
 | CLOSE     | 9     | \[CELLs\]      | Close all doors on the given cells                                                             |
 | SPAWN     | 10    | CELL, TYPE, ID | Spawn an object of the given type with the given ID in the given cell. May be an item or enemy |
 | DESPAWN   | 11    | \[IDs\]        | Immediately remove the given IDs from the map. May be item or enemy                            |
-| DIALOG    | 12    | "TEXT"         | Display the text in a dialog window                                                            |
+| DIALOG    | 12    | TEXT           | Display the text in a dialog window                                                            |
 | WARP      | 13    | CELL           | Warp the player to the given cell                                                              |
 | WIN       | 14    |                | Finish the level                                                                               |
