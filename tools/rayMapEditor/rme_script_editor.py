@@ -1,6 +1,16 @@
 import re
 from enum import Enum
 
+# Argument keys
+kCell: str = 'cell'
+kCells: str = 'cells'
+kId: str = 'id'
+kIds: str = 'ids'
+kOrder: str = 'order'
+kBtn: str = 'btn'
+kTms: str = 'tMs'
+kText: str = 'text'
+
 
 class ifOpType(Enum):
     SHOOT_OBJS = 0,
@@ -79,36 +89,41 @@ class rme_script:
 
         # Stringify the if args
         ifArgArray = []
-        if 'cell' in self.ifArgs.keys():
-            ifArgArray.append('{' + str(self.ifArgs['cell'][0]) + '.' + str(self.ifArgs['cell'][1]) + '}')
-        if 'ids' in self.ifArgs.keys():
-            ifArgArray.append('[' + ', '.join(str(e) for e in self.ifArgs['ids']) + ']')
-        if 'cells' in self.ifArgs.keys():
-            ifArgArray.append('[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.ifArgs['cells']) + ']')
-        if 'order' in self.ifArgs.keys():
-            ifArgArray.append(self.ifArgs['order'].name)
-        if 'id' in self.ifArgs.keys():
-            ifArgArray.append(str(self.ifArgs['id']))
-        if 'btn' in self.ifArgs.keys():
-            ifArgArray.append(str(self.ifArgs['btn']))
-        if 'tMs' in self.ifArgs.keys():
-            ifArgArray.append(str(self.ifArgs['tMs']))
+        if kCell in self.ifArgs.keys():
+            ifArgArray.append(
+                '{' + str(self.ifArgs[kCell][0]) + '.' + str(self.ifArgs[kCell][1]) + '}')
+        if kIds in self.ifArgs.keys():
+            ifArgArray.append('[' + ', '.join(str(e)
+                              for e in self.ifArgs[kIds]) + ']')
+        if kCells in self.ifArgs.keys():
+            ifArgArray.append(
+                '[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.ifArgs[kCells]) + ']')
+        if kOrder in self.ifArgs.keys():
+            ifArgArray.append(self.ifArgs[kOrder].name)
+        if kId in self.ifArgs.keys():
+            ifArgArray.append(str(self.ifArgs[kId]))
+        if kBtn in self.ifArgs.keys():
+            ifArgArray.append(str(self.ifArgs[kBtn]))
+        if kTms in self.ifArgs.keys():
+            ifArgArray.append(str(self.ifArgs[kTms]))
 
         # Stringify the then args
         thenArgArray = []
-        if 'cells' in self.thenArgs.keys():
-            thenArgArray.append('[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.thenArgs['cells']) + ']')
-        if 'cell' in self.thenArgs.keys():
-            thenArgArray.append('{' + str(self.thenArgs['cell'][0]) + '.' + str(self.thenArgs['cell'][1]) + '}')
-        if 'ids' in self.thenArgs.keys():
-            thenArgArray.append('[' + ', '.join(str(e) for e in self.thenArgs['ids']) + ']')
-        if 'text' in self.thenArgs.keys():
-            thenArgArray.append(self.thenArgs['text'])
+        if kCells in self.thenArgs.keys():
+            thenArgArray.append(
+                '[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.thenArgs[kCells]) + ']')
+        if kCell in self.thenArgs.keys():
+            thenArgArray.append(
+                '{' + str(self.thenArgs[kCell][0]) + '.' + str(self.thenArgs[kCell][1]) + '}')
+        if kIds in self.thenArgs.keys():
+            thenArgArray.append('[' + ', '.join(str(e)
+                                for e in self.thenArgs[kIds]) + ']')
+        if kText in self.thenArgs.keys():
+            thenArgArray.append(self.thenArgs[kText])
         # TODO handle spawn operation
 
         # Stitch it all together
-        return 'IF ' + self.ifOp.name + '(' + '; '.join(ifArgArray)+ ') THEN ' + self.thenOp.name + '(' + '; '.join(thenArgArray) + ')'
-
+        return 'IF ' + self.ifOp.name + '(' + '; '.join(ifArgArray) + ') THEN ' + self.thenOp.name + '(' + '; '.join(thenArgArray) + ')'
 
     def fromString(self, if_op: str, if_args: str, then_op: str, then_args: str) -> bool:
         try:
@@ -120,75 +135,75 @@ class rme_script:
                 # Set the operation type
                 self.ifOp = ifOpType.SHOOT_OBJS
                 # Parse the args
-                self.ifArgs['ids'] = [self.parseInt(
+                self.ifArgs[kIds] = [self.parseInt(
                     s) for s in self.parseArray(argParts[0])]
-                self.ifArgs['order'] = self.parseOrder(argParts[1])
+                self.ifArgs[kOrder] = self.parseOrder(argParts[1])
                 # Validate the args
-                if self.isListNotValid(self.ifArgs['ids']) or self.ifArgs['order'] is None:
+                if self.isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
                     return False
 
             elif ifOpType.SHOOT_WALLS.name == if_op:
                 self.ifOp = ifOpType.SHOOT_WALLS
                 # Parse the args
-                self.ifArgs['cells'] = [self.parseCell(
+                self.ifArgs[kCells] = [self.parseCell(
                     s) for s in self.parseArray(argParts[0])]
-                self.ifArgs['order'] = self.parseOrder(argParts[1])
+                self.ifArgs[kOrder] = self.parseOrder(argParts[1])
                 # Validate the args
-                if self.isListNotValid(self.ifArgs['cells']) or self.ifArgs['order'] is None:
+                if self.isListNotValid(self.ifArgs[kCells]) or self.ifArgs[kOrder] is None:
                     return False
 
             elif ifOpType.KILL.name == if_op:
                 # Set the operation type
                 self.ifOp = ifOpType.KILL
                 # Parse the args
-                self.ifArgs['ids'] = [self.parseInt(
+                self.ifArgs[kIds] = [self.parseInt(
                     s) for s in self.parseArray(argParts[0])]
-                self.ifArgs['order'] = self.parseOrder(argParts[1])
+                self.ifArgs[kOrder] = self.parseOrder(argParts[1])
                 # Validate the args
-                if self.isListNotValid(self.ifArgs['ids']) or self.ifArgs['order'] is None:
+                if self.isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
                     return False
 
             elif ifOpType.ENTER.name == if_op:
                 self.ifOp = ifOpType.ENTER
                 # Parse the args
-                self.ifArgs['cell'] = self.parseCell(argParts[0])
-                self.ifArgs['ids'] = [self.parseInt(
+                self.ifArgs[kCell] = self.parseCell(argParts[0])
+                self.ifArgs[kIds] = [self.parseInt(
                     s) for s in self.parseArray(argParts[1])]
                 # Validate the args
-                if self.isListNotValid(self.ifArgs['ids']) or self.ifArgs['cell'] is None:
+                if self.isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kCell] is None:
                     return False
 
             elif ifOpType.GET.name == if_op:
                 self.ifOp = ifOpType.GET
                 # Parse the args
-                self.ifArgs['ids'] = [self.parseInt(
+                self.ifArgs[kIds] = [self.parseInt(
                     s) for s in self.parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.ifArgs['ids']):
+                if self.isListNotValid(self.ifArgs[kIds]):
                     return False
 
             elif ifOpType.TOUCH.name == if_op:
                 self.ifOp = ifOpType.TOUCH
                 # Parse the args
-                self.ifArgs['id'] = self.parseInt(argParts[0])
+                self.ifArgs[kId] = self.parseInt(argParts[0])
                 # Validate the args
-                if self.ifArgs['id'] is None:
+                if self.ifArgs[kId] is None:
                     return False
 
             elif ifOpType.BUTTON_PRESSED.name == if_op:
                 self.ifOp = ifOpType.BUTTON_PRESSED
                 # Parse the args
-                self.ifArgs['btn'] = self.parseInt(argParts[0])
+                self.ifArgs[kBtn] = self.parseInt(argParts[0])
                 # Validate the args
-                if self.ifArgs['btn'] is None:
+                if self.ifArgs[kBtn] is None:
                     return False
 
             elif ifOpType.TIME_ELAPSED.name == if_op:
                 self.ifOp = ifOpType.TIME_ELAPSED
                 # Parse the arg
-                self.ifArgs['tMs'] = self.parseInt(argParts[0])
+                self.ifArgs[kTms] = self.parseInt(argParts[0])
                 # Validate the args
-                if self.ifArgs['tMs'] is None:
+                if self.ifArgs[kTms] is None:
                     return False
             else:
                 return False
@@ -201,20 +216,20 @@ class rme_script:
                 # Set the operation
                 self.thenOp = thenOpType.OPEN
                 # Parse the args
-                self.thenArgs['cells'] = [self.parseCell(
+                self.thenArgs[kCells] = [self.parseCell(
                     s) for s in self.parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.thenArgs['cells']):
+                if self.isListNotValid(self.thenArgs[kCells]):
                     return False
 
             elif thenOpType.CLOSE.name == then_op:
                 # Set the operation
                 self.thenOp = thenOpType.CLOSE
                 # Parse the args
-                self.thenArgs['cells'] = [self.parseCell(
+                self.thenArgs[kCells] = [self.parseCell(
                     s) for s in self.parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.thenArgs['cells']):
+                if self.isListNotValid(self.thenArgs[kCells]):
                     return False
 
             elif thenOpType.SPAWN.name == then_op:
@@ -224,28 +239,28 @@ class rme_script:
             elif thenOpType.DESPAWN.name == then_op:
                 self.thenOp = thenOpType.DESPAWN
                 # Parse the args
-                self.thenArgs['ids'] = [self.parseInt(
+                self.thenArgs[kIds] = [self.parseInt(
                     s) for s in self.parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.thenArgs['ids']):
+                if self.isListNotValid(self.thenArgs[kIds]):
                     return False
 
             elif thenOpType.DIALOG.name == then_op:
                 # Set the operation
                 self.thenOp = thenOpType.DIALOG
                 # Parse the args
-                self.thenArgs['text'] = self.parseText(argParts[0])
+                self.thenArgs[kText] = self.parseText(argParts[0])
                 # Validate the args
-                if self.thenArgs['text'] is None:
+                if self.thenArgs[kText] is None:
                     return False
 
             elif thenOpType.WARP.name == then_op:
                 # Set the operation
                 self.thenOp = thenOpType.WARP
                 # Parse the args
-                self.thenArgs['cell'] = self.parseCell(argParts[0])
+                self.thenArgs[kCell] = self.parseCell(argParts[0])
                 # Validate the args
-                if self.thenArgs['cell'] is None:
+                if self.thenArgs[kCell] is None:
                     return False
 
             elif thenOpType.WIN.name == then_op:
@@ -271,49 +286,49 @@ class rme_script:
         bytes.append(self.ifOp.value[0])
 
         # Append the IF arguments, order matters
-        if 'cell' in self.ifArgs.keys():
-            bytes.append(self.ifArgs['cell'][0])
-            bytes.append(self.ifArgs['cell'][1])
-        if 'ids' in self.ifArgs.keys():
-            bytes.append(len(self.ifArgs['ids']))
-            for id in self.ifArgs['ids']:
+        if kCell in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kCell][0])
+            bytes.append(self.ifArgs[kCell][1])
+        if kIds in self.ifArgs.keys():
+            bytes.append(len(self.ifArgs[kIds]))
+            for id in self.ifArgs[kIds]:
                 bytes.append(id)
-        if 'cells' in self.ifArgs.keys():
-            bytes.append(len(self.ifArgs['cells']))
-            for cell in self.ifArgs['cells']:
+        if kCells in self.ifArgs.keys():
+            bytes.append(len(self.ifArgs[kCells]))
+            for cell in self.ifArgs[kCells]:
                 bytes.append(cell[0])
                 bytes.append(cell[1])
-        if 'order' in self.ifArgs.keys():
-            if orderType.IN_ORDER == self.ifArgs['order']:
+        if kOrder in self.ifArgs.keys():
+            if orderType.IN_ORDER == self.ifArgs[kOrder]:
                 bytes.append(0)
-            elif orderType.ANY_ORDER == self.ifArgs['order']:
+            elif orderType.ANY_ORDER == self.ifArgs[kOrder]:
                 bytes.append(1)
-        if 'id' in self.ifArgs.keys():
-            bytes.append(self.ifArgs['id'])
-        if 'btn' in self.ifArgs.keys():
-            bytes.append(self.ifArgs['btn']) # Should this be 8 bit?
-        if 'tMs' in self.ifArgs.keys():
-            bytes.append(self.ifArgs['tMs']) # Should this be 8 bit?
+        if kId in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kId])
+        if kBtn in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kBtn])  # Should this be 8 bit?
+        if kTms in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kTms])  # Should this be 8 bit?
 
         # Append the ELSE operation
         bytes.append(self.thenOp.value[0])
 
         # Append the ELSE arguments, order matters
-        if 'cells' in self.thenArgs.keys():
-            bytes.append(len(self.thenArgs['cells']))
-            for cell in self.thenArgs['cells']:
+        if kCells in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs[kCells]))
+            for cell in self.thenArgs[kCells]:
                 bytes.append(cell[0])
                 bytes.append(cell[1])
-        if 'cell' in self.thenArgs.keys():
-            bytes.append(self.thenArgs['cell'][0])
-            bytes.append(self.thenArgs['cell'][1])
-        if 'ids' in self.thenArgs.keys():
-            bytes.append(len(self.thenArgs['ids']))
-            for id in self.thenArgs['ids']:
+        if kCell in self.thenArgs.keys():
+            bytes.append(self.thenArgs[kCell][0])
+            bytes.append(self.thenArgs[kCell][1])
+        if kIds in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs[kIds]))
+            for id in self.thenArgs[kIds]:
                 bytes.append(id)
-        if 'text' in self.thenArgs.keys():
-            bytes.append(len(self.thenArgs['text']))
-            bytes.extend(self.thenArgs['text'].encode())
+        if kText in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs[kText]))
+            bytes.extend(self.thenArgs[kText].encode())
         # TODO handle spawn operation
 
         return bytes
@@ -328,7 +343,7 @@ class scriptValidator:
     def __init__(self) -> None:
         argsRegex: str = '(\([A-Z0-9_,;\.\[\]\{\}\s]*\))'
 
-        regex = "IF\s+("
+        regex = 'IF\s+('
 
         first = False
         for ifOp in ifOpType.__members__.items():
@@ -338,7 +353,7 @@ class scriptValidator:
                 regex = regex + '|'
             regex = regex + ifOp[0]
 
-        regex = regex + ")\s*"
+        regex = regex + ')\s*'
         regex = regex + argsRegex
         regex = regex + '\s+THEN\s+('
 
