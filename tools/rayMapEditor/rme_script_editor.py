@@ -76,8 +76,39 @@ class rme_script:
         return (array is None) or (0 == len(array)) or (None in array)
 
     def toString(self) -> str:
-        # TODO write toString()
-        return 'IF ' + self.ifOp.name + '() THEN ' + self.thenOp.name + '()'
+
+        # Stringify the if args
+        ifArgArray = []
+        if 'cell' in self.ifArgs.keys():
+            ifArgArray.append('{' + str(self.ifArgs['cell'][0]) + '.' + str(self.ifArgs['cell'][1]) + '}')
+        if 'ids' in self.ifArgs.keys():
+            ifArgArray.append('[' + ', '.join(str(e) for e in self.ifArgs['ids']) + ']')
+        if 'cells' in self.ifArgs.keys():
+            ifArgArray.append('[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.ifArgs['cells']) + ']')
+        if 'order' in self.ifArgs.keys():
+            ifArgArray.append(self.ifArgs['order'].name)
+        if 'id' in self.ifArgs.keys():
+            ifArgArray.append(str(self.ifArgs['id']))
+        if 'btn' in self.ifArgs.keys():
+            ifArgArray.append(str(self.ifArgs['btn']))
+        if 'tMs' in self.ifArgs.keys():
+            ifArgArray.append(str(self.ifArgs['tMs']))
+
+        # Stringify the then args
+        thenArgArray = []
+        if 'cells' in self.thenArgs.keys():
+            thenArgArray.append('[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.thenArgs['cells']) + ']')
+        if 'cell' in self.thenArgs.keys():
+            thenArgArray.append('{' + str(self.thenArgs['cell'][0]) + '.' + str(self.thenArgs['cell'][1]) + '}')
+        if 'ids' in self.thenArgs.keys():
+            thenArgArray.append('[' + ', '.join(str(e) for e in self.thenArgs['ids']) + ']')
+        if 'text' in self.thenArgs.keys():
+            thenArgArray.append(self.thenArgs['text'])
+        # TODO handle spawn operation
+
+        # Stitch it all together
+        return 'IF ' + self.ifOp.name + '(' + '; '.join(ifArgArray)+ ') THEN ' + self.thenOp.name + '(' + '; '.join(thenArgArray) + ')'
+
 
     def fromString(self, if_op: str, if_args: str, then_op: str, then_args: str) -> bool:
         try:
@@ -234,8 +265,58 @@ class rme_script:
             return False
 
     def toBytes(self) -> bytearray:
-        # TODO write toBytes
-        return None
+        bytes: bytearray = bytearray()
+
+        # Append the IF operation
+        bytes.append(self.ifOp.value[0])
+
+        # Append the IF arguments, order matters
+        if 'cell' in self.ifArgs.keys():
+            bytes.append(self.ifArgs['cell'][0])
+            bytes.append(self.ifArgs['cell'][1])
+        if 'ids' in self.ifArgs.keys():
+            bytes.append(len(self.ifArgs['ids']))
+            for id in self.ifArgs['ids']:
+                bytes.append(id)
+        if 'cells' in self.ifArgs.keys():
+            bytes.append(len(self.ifArgs['cells']))
+            for cell in self.ifArgs['cells']:
+                bytes.append(cell[0])
+                bytes.append(cell[1])
+        if 'order' in self.ifArgs.keys():
+            if orderType.IN_ORDER == self.ifArgs['order']:
+                bytes.append(0)
+            elif orderType.ANY_ORDER == self.ifArgs['order']:
+                bytes.append(1)
+        if 'id' in self.ifArgs.keys():
+            bytes.append(self.ifArgs['id'])
+        if 'btn' in self.ifArgs.keys():
+            bytes.append(self.ifArgs['btn']) # Should this be 8 bit?
+        if 'tMs' in self.ifArgs.keys():
+            bytes.append(self.ifArgs['tMs']) # Should this be 8 bit?
+
+        # Append the ELSE operation
+        bytes.append(self.thenOp.value[0])
+
+        # Append the ELSE arguments, order matters
+        if 'cells' in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs['cells']))
+            for cell in self.thenArgs['cells']:
+                bytes.append(cell[0])
+                bytes.append(cell[1])
+        if 'cell' in self.thenArgs.keys():
+            bytes.append(self.thenArgs['cell'][0])
+            bytes.append(self.thenArgs['cell'][1])
+        if 'ids' in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs['ids']))
+            for id in self.thenArgs['ids']:
+                bytes.append(id)
+        if 'text' in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs['text']))
+            bytes.extend(self.thenArgs['text'].encode())
+        # TODO handle spawn operation
+
+        return bytes
 
     def fromBytes(self, bytes: bytearray):
         # TODO write fromBytes
