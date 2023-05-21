@@ -13,28 +13,28 @@ kText: str = 'text'
 
 
 class ifOpType(Enum):
-    SHOOT_OBJS = 0,
-    SHOOT_WALLS = 1,
-    KILL = 2,
-    ENTER = 3,
-    GET = 4,
-    TOUCH = 5,
-    BUTTON_PRESSED = 6,
+    SHOOT_OBJS = 0
+    SHOOT_WALLS = 1
+    KILL = 2
+    ENTER = 3
+    GET = 4
+    TOUCH = 5
+    BUTTON_PRESSED = 6
     TIME_ELAPSED = 7
 
 
 class thenOpType(Enum):
-    OPEN = 8,
-    CLOSE = 9,
-    SPAWN = 10,
-    DESPAWN = 11,
-    DIALOG = 12,
-    WARP = 13,
+    OPEN = 8
+    CLOSE = 9
+    SPAWN = 10
+    DESPAWN = 11
+    DIALOG = 12
+    WARP = 13
     WIN = 14
 
 
 class orderType(Enum):
-    IN_ORDER = 0,
+    IN_ORDER = 0
     ANY_ORDER = 1
 
 
@@ -283,7 +283,7 @@ class rme_script:
         bytes: bytearray = bytearray()
 
         # Append the IF operation
-        bytes.append(self.ifOp.value[0])
+        bytes.append(self.ifOp.value)
 
         # Append the IF arguments, order matters
         if kCell in self.ifArgs.keys():
@@ -311,7 +311,7 @@ class rme_script:
             bytes.append(self.ifArgs[kTms])  # Should this be 8 bit?
 
         # Append the ELSE operation
-        bytes.append(self.thenOp.value[0])
+        bytes.append(self.thenOp.value)
 
         # Append the ELSE arguments, order matters
         if kCells in self.thenArgs.keys():
@@ -334,7 +334,123 @@ class rme_script:
         return bytes
 
     def fromBytes(self, bytes: bytearray):
-        # TODO write fromBytes
+
+        # Index to read bytes
+        idx: int = 0
+
+        # Read the if operation
+        self.ifOp = ifOpType._value2member_map_[bytes[idx]]
+        idx = idx + 1
+
+        # Read the if args
+        if self.ifOp == ifOpType.SHOOT_OBJS:
+            # Read IDs
+            numIds: int = bytes[idx]
+            idx = idx + 1
+            self.ifArgs[kIds] = []
+            for id in range(numIds):
+                self.ifArgs[kIds].append(bytes[idx])
+                idx = idx + 1
+            # Read order
+            self.ifArgs[kOrder] = orderType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+        elif self.ifOp == ifOpType.SHOOT_WALLS:
+            # Read Cells
+            numCells: int = bytes[idx]
+            idx = idx + 1
+            self.ifArgs[kCells] = []
+            for id in range(numCells):
+                self.ifArgs[kCells].append([bytes[idx], bytes[idx + 1]])
+                idx = idx + 2
+            # Read order
+            self.ifArgs[kOrder] = orderType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+            pass
+        elif self.ifOp == ifOpType.KILL:
+            # Read the IDs
+            numIds: int = bytes[idx]
+            idx = idx + 1
+            self.ifArgs[kIds] = []
+            for id in range(numIds):
+                self.ifArgs[kIds].append(bytes[idx])
+                idx = idx + 1
+            # Read order
+            self.ifArgs[kOrder] = orderType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+        elif self.ifOp == ifOpType.ENTER:
+            # Read the cell
+            self.ifArgs[kCell] = [bytes[idx], bytes[idx + 1]]
+            idx = idx + 2
+            # Read IDs
+            numIds: int = bytes[idx]
+            idx = idx + 1
+            self.ifArgs[kIds] = []
+            for id in range(numIds):
+                self.ifArgs[kIds].append(bytes[idx])
+                idx = idx + 1
+        elif self.ifOp == ifOpType.GET:
+            # Read IDs
+            numIds: int = bytes[idx]
+            idx = idx + 1
+            self.ifArgs[kIds] = []
+            for id in range(numIds):
+                self.ifArgs[kIds].append(bytes[idx])
+                idx = idx + 1
+        elif self.ifOp == ifOpType.TOUCH:
+            self.ifArgs[kId] = bytes[idx]
+            idx = idx + 1
+        elif self.ifOp == ifOpType.BUTTON_PRESSED:
+            self.ifArgs[kBtn] = bytes[idx]
+            idx = idx + 1
+        elif self.ifOp == ifOpType.TIME_ELAPSED:
+            self.ifArgs[kTms] = bytes[idx]
+            idx = idx + 1
+
+        # Read the then operation
+        self.thenOp = thenOpType._value2member_map_[bytes[idx]]
+        idx = idx + 1
+
+        # Read the then args
+        if self.thenOp == thenOpType.OPEN:
+            # Read Cells
+            numCells: int = bytes[idx]
+            idx = idx + 1
+            self.thenArgs[kCells] = []
+            for id in range(numCells):
+                self.thenArgs[kCells].append([bytes[idx], bytes[idx + 1]])
+                idx = idx + 2
+        elif self.thenOp == thenOpType.CLOSE:
+            # Read Cells
+            numCells: int = bytes[idx]
+            idx = idx + 1
+            self.thenArgs[kCells] = []
+            for id in range(numCells):
+                self.thenArgs[kCells].append([bytes[idx], bytes[idx + 1]])
+                idx = idx + 2
+        elif self.thenOp == thenOpType.SPAWN:
+            # TODO figure out spawning
+            pass
+        elif self.thenOp == thenOpType.DESPAWN:
+            # Read IDs
+            numIds: int = bytes[idx]
+            idx = idx + 1
+            self.thenArgs[kIds] = []
+            for id in range(numIds):
+                self.thenArgs[kIds].append(bytes[idx])
+                idx = idx + 1
+        elif self.thenOp == thenOpType.DIALOG:
+            # Read Text
+            textLen: int = bytes[idx]
+            idx = idx + 1
+            self.thenArgs[kText] = str(bytes[idx:idx + textLen], 'ascii')
+        elif self.thenOp == thenOpType.WARP:
+            # Read the cell
+            self.ifArgs[kCell] = [bytes[idx], bytes[idx + 1]]
+            idx = idx + 2
+        elif self.thenOp == thenOpType.WIN:
+            # No args
+            pass
+
         return
 
 
