@@ -38,51 +38,98 @@ class orderType(Enum):
     ANY_ORDER = 1
 
 
-class rme_script:
+class rme_scriptSplitter:
+
     def __init__(self) -> None:
-        self.ifOp: ifOpType = None
-        self.ifArgs = {}
-        self.thenOp: thenOpType = None
-        self.thenArgs = {}
+        argsRegex: str = '(\([A-Z0-9_,;\.\[\]\{\}\s]*\))'
+
+        regex = 'IF\s+('
+
+        first = False
+        for ifOp in ifOpType.__members__.items():
+            if not first:
+                first = True
+            else:
+                regex = regex + '|'
+            regex = regex + ifOp[0]
+
+        regex = regex + ')\s*'
+        regex = regex + argsRegex
+        regex = regex + '\s+THEN\s+('
+
+        first = False
+        for thenOp in thenOpType.__members__.items():
+            if not first:
+                first = True
+            else:
+                regex = regex + '|'
+            regex = regex + thenOp[0]
+        regex = regex + ')\s*'
+        regex = regex + argsRegex
+
+        self.pattern: re.Pattern = re.compile(regex, flags=re.IGNORECASE)
         pass
 
-    def parseArgs(self, args: str) -> list[str]:
+    def splitScript(self, scriptLine: str) -> list[str]:
+        match = self.pattern.fullmatch(scriptLine)
+        if None != match:
+            return [match.group(1), match.group(2), match.group(3), match.group(4)]
+        return None
+
+
+class rme_script:
+    def __init__(self, bytes: bytearray = None, string: str = None, splitter: rme_scriptSplitter = None) -> None:
+        # Add members
+        self.resetScript()
+        # Parse depending on what args we get
+        if bytes is not None:
+            self.fromBytes(bytes)
+        elif string is not None and splitter is not None:
+            parts = splitter.splitScript(string)
+            if parts is not None and len(parts) == 4:
+                self.fromString(parts[0], parts[1], parts[2], parts[3])
+            else:
+                # Failure, reset the script
+                self.resetScript()
+        pass
+
+    def __parseArgs(self, args: str) -> list[str]:
         # Args are in the form (a;b;c)
         result = re.match(r'\s*\((.*)\)\s*', args)
         if result:
             return [s.strip() for s in re.split(r';', result.group(1).strip())]
         return None
 
-    def parseArray(self, array: str) -> list[str]:
+    def __parseArray(self, array: str) -> list[str]:
         # Arrays are in the form [a,b,c]
         result = re.match(r'\s*\[(.*)\]\s*', array)
         if result:
             return [s.strip() for s in re.split(r',', result.group(1).strip())]
         return None
 
-    def parseInt(self, integer: str) -> int:
+    def __parseInt(self, integer: str) -> int:
         # Integers are integers
         return int(integer.strip())
 
-    def parseOrder(self, order: str) -> orderType:
+    def __parseOrder(self, order: str) -> orderType:
         # Order is either IN_ORDER or ANY_ORDER
         for type in orderType.__members__.items():
             if order == type[0]:
                 return type[1]
         return None
 
-    def parseCell(self, cell: str) -> list[int]:
+    def __parseCell(self, cell: str) -> list[int]:
         # Cells are in the form {a.b}
         result = re.match(r'\s*{\s*(\d+)\s*\.\s*(\d+)\s*}\s*', cell)
         if result:
             return [int(result.group(1)), int(result.group(2))]
         return None
 
-    def parseText(self, text: str) -> str:
+    def __parseText(self, text: str) -> str:
         # Text is a string, not quoted
         return text.strip()
 
-    def isListNotValid(self, array: list) -> bool:
+    def __isListNotValid(self, array: list) -> bool:
         return (array is None) or (0 == len(array)) or (None in array)
 
     def toString(self) -> str:
@@ -128,64 +175,69 @@ class rme_script:
     def fromString(self, if_op: str, if_args: str, then_op: str, then_args: str) -> bool:
         try:
             # Split the args
-            argParts = self.parseArgs(if_args)
+            argParts = self.__parseArgs(if_args)
 
             # Parse the IF part
             if ifOpType.SHOOT_OBJS.name == if_op:
                 # Set the operation type
                 self.ifOp = ifOpType.SHOOT_OBJS
                 # Parse the args
-                self.ifArgs[kIds] = [self.parseInt(
-                    s) for s in self.parseArray(argParts[0])]
-                self.ifArgs[kOrder] = self.parseOrder(argParts[1])
+                self.ifArgs[kIds] = [self.__parseInt(
+                    s) for s in self.__parseArray(argParts[0])]
+                self.ifArgs[kOrder] = self.__parseOrder(argParts[1])
                 # Validate the args
-                if self.isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
+                if self.__isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
+                    self.resetScript()
                     return False
 
             elif ifOpType.SHOOT_WALLS.name == if_op:
                 self.ifOp = ifOpType.SHOOT_WALLS
                 # Parse the args
-                self.ifArgs[kCells] = [self.parseCell(
-                    s) for s in self.parseArray(argParts[0])]
-                self.ifArgs[kOrder] = self.parseOrder(argParts[1])
+                self.ifArgs[kCells] = [self.__parseCell(
+                    s) for s in self.__parseArray(argParts[0])]
+                self.ifArgs[kOrder] = self.__parseOrder(argParts[1])
                 # Validate the args
-                if self.isListNotValid(self.ifArgs[kCells]) or self.ifArgs[kOrder] is None:
+                if self.__isListNotValid(self.ifArgs[kCells]) or self.ifArgs[kOrder] is None:
+                    self.resetScript()
                     return False
 
             elif ifOpType.KILL.name == if_op:
                 # Set the operation type
                 self.ifOp = ifOpType.KILL
                 # Parse the args
-                self.ifArgs[kIds] = [self.parseInt(
-                    s) for s in self.parseArray(argParts[0])]
-                self.ifArgs[kOrder] = self.parseOrder(argParts[1])
+                self.ifArgs[kIds] = [self.__parseInt(
+                    s) for s in self.__parseArray(argParts[0])]
+                self.ifArgs[kOrder] = self.__parseOrder(argParts[1])
                 # Validate the args
-                if self.isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
+                if self.__isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
+                    self.resetScript()
                     return False
 
             elif ifOpType.ENTER.name == if_op:
                 self.ifOp = ifOpType.ENTER
                 # Parse the args
-                self.ifArgs[kCell] = self.parseCell(argParts[0])
-                self.ifArgs[kIds] = [self.parseInt(
-                    s) for s in self.parseArray(argParts[1])]
+                self.ifArgs[kCell] = self.__parseCell(argParts[0])
+                self.ifArgs[kIds] = [self.__parseInt(
+                    s) for s in self.__parseArray(argParts[1])]
                 # Validate the args
-                if self.isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kCell] is None:
+                if self.__isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kCell] is None:
+                    self.resetScript()
                     return False
 
             elif ifOpType.GET.name == if_op:
                 self.ifOp = ifOpType.GET
                 # Parse the args
-                self.ifArgs[kIds] = [self.parseInt(
-                    s) for s in self.parseArray(argParts[0])]
+                self.ifArgs[kIds] = [self.__parseInt(
+                    s) for s in self.__parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.ifArgs[kIds]):
+                if self.__isListNotValid(self.ifArgs[kIds]):
+                    self.resetScript()
                     return False
 
             elif ifOpType.TOUCH.name == if_op:
                 self.ifOp = ifOpType.TOUCH
                 # Parse the args
-                self.ifArgs[kId] = self.parseInt(argParts[0])
+                self.ifArgs[kId] = self.__parseInt(argParts[0])
                 # Validate the args
                 if self.ifArgs[kId] is None:
                     return False
@@ -193,7 +245,7 @@ class rme_script:
             elif ifOpType.BUTTON_PRESSED.name == if_op:
                 self.ifOp = ifOpType.BUTTON_PRESSED
                 # Parse the args
-                self.ifArgs[kBtn] = self.parseInt(argParts[0])
+                self.ifArgs[kBtn] = self.__parseInt(argParts[0])
                 # Validate the args
                 if self.ifArgs[kBtn] is None:
                     return False
@@ -201,35 +253,38 @@ class rme_script:
             elif ifOpType.TIME_ELAPSED.name == if_op:
                 self.ifOp = ifOpType.TIME_ELAPSED
                 # Parse the arg
-                self.ifArgs[kTms] = self.parseInt(argParts[0])
+                self.ifArgs[kTms] = self.__parseInt(argParts[0])
                 # Validate the args
                 if self.ifArgs[kTms] is None:
                     return False
             else:
+                self.resetScript()
                 return False
 
             # Split the args
-            argParts = self.parseArgs(then_args)
+            argParts = self.__parseArgs(then_args)
 
             # Parse the THEN part
             if thenOpType.OPEN.name == then_op:
                 # Set the operation
                 self.thenOp = thenOpType.OPEN
                 # Parse the args
-                self.thenArgs[kCells] = [self.parseCell(
-                    s) for s in self.parseArray(argParts[0])]
+                self.thenArgs[kCells] = [self.__parseCell(
+                    s) for s in self.__parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.thenArgs[kCells]):
+                if self.__isListNotValid(self.thenArgs[kCells]):
+                    self.resetScript()
                     return False
 
             elif thenOpType.CLOSE.name == then_op:
                 # Set the operation
                 self.thenOp = thenOpType.CLOSE
                 # Parse the args
-                self.thenArgs[kCells] = [self.parseCell(
-                    s) for s in self.parseArray(argParts[0])]
+                self.thenArgs[kCells] = [self.__parseCell(
+                    s) for s in self.__parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.thenArgs[kCells]):
+                if self.__isListNotValid(self.thenArgs[kCells]):
+                    self.resetScript()
                     return False
 
             elif thenOpType.SPAWN.name == then_op:
@@ -239,17 +294,18 @@ class rme_script:
             elif thenOpType.DESPAWN.name == then_op:
                 self.thenOp = thenOpType.DESPAWN
                 # Parse the args
-                self.thenArgs[kIds] = [self.parseInt(
-                    s) for s in self.parseArray(argParts[0])]
+                self.thenArgs[kIds] = [self.__parseInt(
+                    s) for s in self.__parseArray(argParts[0])]
                 # Validate the args
-                if self.isListNotValid(self.thenArgs[kIds]):
+                if self.__isListNotValid(self.thenArgs[kIds]):
+                    self.resetScript()
                     return False
 
             elif thenOpType.DIALOG.name == then_op:
                 # Set the operation
                 self.thenOp = thenOpType.DIALOG
                 # Parse the args
-                self.thenArgs[kText] = self.parseText(argParts[0])
+                self.thenArgs[kText] = self.__parseText(argParts[0])
                 # Validate the args
                 if self.thenArgs[kText] is None:
                     return False
@@ -258,7 +314,7 @@ class rme_script:
                 # Set the operation
                 self.thenOp = thenOpType.WARP
                 # Parse the args
-                self.thenArgs[kCell] = self.parseCell(argParts[0])
+                self.thenArgs[kCell] = self.__parseCell(argParts[0])
                 # Validate the args
                 if self.thenArgs[kCell] is None:
                     return False
@@ -269,14 +325,13 @@ class rme_script:
                 # No arguments
 
             else:
+                self.resetScript()
                 return False
 
             return True
-        except:
-            self.ifOp: ifOpType = None
-            self.ifArgs = {}
-            self.thenOp: thenOpType = None
-            self.thenArgs = {}
+        except Exception as e:
+            print(e)
+            self.resetScript()
             return False
 
     def toBytes(self) -> bytearray:
@@ -405,6 +460,9 @@ class rme_script:
         elif self.ifOp == ifOpType.TIME_ELAPSED:
             self.ifArgs[kTms] = bytes[idx]
             idx = idx + 1
+        else:
+            self.resetScript()
+            return
 
         # Read the then operation
         self.thenOp = thenOpType._value2member_map_[bytes[idx]]
@@ -450,51 +508,17 @@ class rme_script:
         elif self.thenOp == thenOpType.WIN:
             # No args
             pass
+        else:
+            self.resetScript()
+            return
 
         return
 
+    def isValid(self) -> bool:
+        return self.ifOp is not None and self.thenOp is not None
 
-class scriptValidator:
-
-    def __init__(self) -> None:
-        argsRegex: str = '(\([A-Z0-9_,;\.\[\]\{\}\s]*\))'
-
-        regex = 'IF\s+('
-
-        first = False
-        for ifOp in ifOpType.__members__.items():
-            if not first:
-                first = True
-            else:
-                regex = regex + '|'
-            regex = regex + ifOp[0]
-
-        regex = regex + ')\s*'
-        regex = regex + argsRegex
-        regex = regex + '\s+THEN\s+('
-
-        first = False
-        for thenOp in thenOpType.__members__.items():
-            if not first:
-                first = True
-            else:
-                regex = regex + '|'
-            regex = regex + thenOp[0]
-        regex = regex + ')\s*'
-        regex = regex + argsRegex
-
-        self.pattern: re.Pattern = re.compile(regex, flags=re.IGNORECASE)
-        pass
-
-    def validateScript(self, scriptLine: str) -> bool:
-        match = self.pattern.fullmatch(scriptLine)
-        if None != match:
-            if_op: str = match.group(1)
-            if_args: str = match.group(2)
-            then_op: str = match.group(3)
-            then_args: str = match.group(4)
-
-            script: rme_script = rme_script()
-            return script.fromString(if_op, if_args, then_op, then_args)
-
-        return False
+    def resetScript(self) -> None:
+        self.ifOp: ifOpType = None
+        self.ifArgs = {}
+        self.thenOp: thenOpType = None
+        self.thenArgs = {}

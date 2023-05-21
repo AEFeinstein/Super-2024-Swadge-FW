@@ -6,14 +6,15 @@ from PIL import Image, ImageTk
 from collections.abc import Mapping
 
 from rme_tiles import *
-from rme_script_editor import scriptValidator
+from rme_script_editor import rme_scriptSplitter
+from rme_script_editor import rme_script
 
 
 class view:
 
     def __init__(self):
 
-        self.sv: scriptValidator = scriptValidator()
+        self.splitter: rme_scriptSplitter = rme_scriptSplitter()
         self.currentFile = None
 
         self.paletteCellSize: int = 64
@@ -236,7 +237,9 @@ class view:
         self.scriptTextEntry.tag_remove('highlight', '1.0', 'end')
         self.scriptTextEntry.tag_add(
             "highlight", "insert linestart", "insert lineend")
-        if self.sv.validateScript(scriptStr):
+        script: rme_script = rme_script(
+            string=scriptStr, splitter=self.splitter)
+        if script.isValid():
             self.scriptTextEntry.tag_configure(
                 "highlight", background="green", foreground="black")
         else:
