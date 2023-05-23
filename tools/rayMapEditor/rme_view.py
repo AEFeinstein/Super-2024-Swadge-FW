@@ -21,6 +21,7 @@ class view:
         self.mapCellSize: int = 32
 
         self.isMapMiddleClicked: bool = False
+        self.isMapRightClicked: bool = False
         self.lastScrollX: int = -1
         self.lastScrollY: int = -1
         self.mapOffsetX: int = 0
@@ -171,6 +172,8 @@ class view:
                          tileType.OBJ_START_POINT, 'imgs/start.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_GUN, 'imgs/item.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_DELETE, 'imgs/delete.png')
 
         # Start maximized
         self.root.state('zoomed')
@@ -204,6 +207,7 @@ class view:
                             int((event.y - self.mapOffsetY) / self.mapCellSize))
 
     def mapRightClick(self, event: tk.Event):
+        self.isMapRightClicked = True
         self.c.rightClickMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
                              int((event.y - self.mapOffsetY) / self.mapCellSize))
 
@@ -219,6 +223,8 @@ class view:
             self.lastScrollX = event.x
             self.lastScrollY = event.y
             self.redraw()
+        elif self.isMapRightClicked:
+            self.mapRightClick(event)
         else:
             self.c.moveMouseMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
                                 int((event.y - self.mapOffsetY) / self.mapCellSize))
@@ -229,22 +235,28 @@ class view:
 
     def clickRelease(self, event: tk.Event):
         self.isMapMiddleClicked = False
+        self.isMapRightClicked = False
         self.c.releaseClick()
 
     def scriptTextChanged(self, event: tk.Event):
-        scriptStr: str = self.scriptTextEntry.get(
-            "insert linestart", "insert lineend")
-        self.scriptTextEntry.tag_remove('highlight', '1.0', 'end')
-        self.scriptTextEntry.tag_add(
-            "highlight", "insert linestart", "insert lineend")
-        script: rme_script = rme_script(
-            string=scriptStr, splitter=self.splitter)
-        if script.isValid():
-            self.scriptTextEntry.tag_configure(
-                "highlight", background="green", foreground="black")
-        else:
-            self.scriptTextEntry.tag_configure(
-                "highlight", background="red", foreground="black")
+
+        self.m.setScripts(self.scriptTextEntry.get(
+            "1.0", tk.END).splitlines(keepends=False))
+
+        line = 1
+        for script in self.m.scripts:
+            tag: str = 'highlight' + str(line)
+            self.scriptTextEntry.tag_remove(
+                tag, str(line) + '.0', str(line) + '.0 lineend')
+            self.scriptTextEntry.tag_add(
+                tag, str(line) + '.0', str(line) + '.0 lineend')
+            if script.isValid():
+                self.scriptTextEntry.tag_configure(
+                    tag, background="green", foreground="black")
+            else:
+                self.scriptTextEntry.tag_configure(
+                    tag, background="red", foreground="black")
+            line = line + 1
 
     def redraw(self):
         self.paletteCanvas.delete('all')
@@ -291,7 +303,7 @@ class view:
         self.paletteSelected.create_image(self.paletteSelected.winfo_width(
         ) / 2, self.paletteSelected.winfo_height() / 2, image=self.texMapPalette[selectedTile], anchor=tk.CENTER)
 
-    def selectCell(self, x, y):
+    def selectCell(self, x, y, objId):
         self.selRectX = x
         self.selRectY = y
 
@@ -309,7 +321,9 @@ class view:
         # Insert method inserts the text at
         # specified position, Here it is the
         # beginning
-        self.cellMetaData.insert('1.0', "[" + str(x) + ", " + str(y) + "]")
+        if objId >= 0:
+            self.cellMetaData.insert(
+                '1.0', "{" + str(x) + "." + str(y) + "}\nID: " + str(objId))
 
     def clickSave(self):
         if self.currentFile is None:

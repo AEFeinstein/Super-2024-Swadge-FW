@@ -12,6 +12,7 @@ class tileType(Enum):
     OBJ_ENEMY = 6
     OBJ_OBELISK = 7
     OBJ_GUN = 9
+    OBJ_DELETE = 10  # Should be last
 
 
 bgTiles: list[tileType] = [
@@ -26,6 +27,7 @@ objTiles: list[tileType] = [
     tileType.OBJ_ENEMY,
     tileType.OBJ_OBELISK,
     tileType.OBJ_GUN,
+    tileType.OBJ_DELETE
 ]
 
 
@@ -33,10 +35,11 @@ class tile:
     def __init__(self):
         self.background: tileType = tileType.BG_FLOOR
         self.object: tileType = tileType.EMPTY
-        self.objectId: int = 0
+        self.objectId: int = -1
 
     def setBg(self, bg: tileType):
         self.background = bg
 
-    def setObj(self, obj: tileType):
+    def setObj(self, obj: tileType, id: int):
         self.object = obj
+        self.objectId = id

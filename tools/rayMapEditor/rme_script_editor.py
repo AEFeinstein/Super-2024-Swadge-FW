@@ -330,7 +330,7 @@ class rme_script:
 
             return True
         except Exception as e:
-            print(e)
+            # print(e)
             self.resetScript()
             return False
 
