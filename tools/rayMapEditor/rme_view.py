@@ -92,6 +92,8 @@ class view:
                                                 highlightthickness=borderThickness, highlightbackground=borderColor,
                                                 highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
 
+        # TODO enable changing map dimensions
+
         # Configure the main frame
         content.grid(column=0, row=0, sticky=(tk.NSEW))
         frame.grid(column=0, row=0, columnspan=3, rowspan=4, sticky=(tk.NSEW))
