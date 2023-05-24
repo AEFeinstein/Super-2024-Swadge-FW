@@ -70,3 +70,4 @@ swadge_emulator
 crash-*.txt
 
 *.pyc
+tools/rayMapEditor/autosave.rmd

@@ -1,5 +1,6 @@
 from rme_tiles import *
 from rme_script_editor import *
+from io import TextIOWrapper
 
 
 class model:
@@ -84,3 +85,104 @@ class model:
         for script in scripts:
             self.scripts.append(rme_script(
                 string=script, splitter=self.splitter))
+
+    def save(self, outFile: TextIOWrapper) -> bool:
+        # Construct file bytes
+        fileBytes: bytearray = bytearray()
+
+        # Write map dimensions
+        if self.getMapHeight() > 255 or self.getMapWidth() > 255:
+            # TODO display error
+            print("MAP TOO BIG!!")
+            return False
+        fileBytes.append(self.getMapWidth())
+        fileBytes.append(self.getMapHeight())
+
+        # Write map tiles
+        for y in range(self.getMapHeight()):
+            for x in range(self.getMapWidth()):
+                fileBytes.append(self.tileMap[x][y].background.value)
+                fileBytes.append(self.tileMap[x][y].object.value)
+                # Only append IDs if there is an object
+                if tileType.EMPTY is not self.tileMap[x][y].object:
+                    fileBytes.append(self.tileMap[x][y].objectId)
+
+        # Write number of scripts
+        if len(self.scripts) > 255:
+            # TODO display error
+            print("TOO MANY SCRIPTS!!")
+            return False
+        fileBytes.append(len(self.scripts))
+
+        # Write script data
+        for script in self.scripts:
+            if script is not None and script.isValid():
+                sb = script.toBytes()
+                if (len(sb) > 255):
+                    # TODO display error
+                    print("SCRIPT TOO BIG!!")
+                    return False
+                fileBytes.append(len(sb))
+                fileBytes.extend(sb)
+            else:
+                # TODO display warning
+                print("INVALID SCRIPT!!")
+
+        # Write bytes to file
+        return len(fileBytes) == outFile.write(fileBytes)
+
+    def load(self, inFile: TextIOWrapper) -> bool:
+        data: bytes = inFile.read()
+        idx: int = 0
+
+        # Read width and height
+        self.mapWidth = data[idx]
+        idx = idx + 1
+        self.mapHeight = data[idx]
+        idx = idx + 1
+
+        # Make empty tiles and used IDs
+        self.tileMap = [
+            [tile() for y in range(self.mapHeight)] for x in range(self.mapWidth)]
+        self.usedIds = []
+        self.currentId = 0
+
+        # Nothing selected yet
+        self.selectedTileType = None
+
+        # Read map tiles
+        for y in range(self.getMapHeight()):
+            for x in range(self.getMapWidth()):
+                # Read background
+                self.tileMap[x][y].background = tileType._value2member_map_[
+                    data[idx]]
+                idx = idx + 1
+                # Read Object
+                self.tileMap[x][y].object = tileType._value2member_map_[
+                    data[idx]]
+                idx = idx + 1
+                # Read optional object ID
+                if tileType.EMPTY is not self.tileMap[x][y].object:
+                    self.tileMap[x][y].objectId = data[idx]
+                    idx = idx + 1
+                    # Note this ID is used
+                    self.usedIds.append(self.tileMap[x][y].objectId)
+
+        # Read number of scripts
+        numScripts: int = data[idx]
+        idx = idx + 1
+
+        # Empty the list of scripts
+        self.scripts = []
+
+        # Read each script
+        for si in range(numScripts):
+            # Read script length
+            sLen: int = data[idx]
+            idx = idx + 1
+            # Read script
+            self.scripts.append(rme_script(bytes=data[idx: idx + sLen]))
+            idx = idx + sLen
+
+        # Everything loaded
+        return True

@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter.filedialog import askopenfile
 from tkinter.filedialog import asksaveasfile
 from PIL import Image, ImageTk
+from io import TextIOWrapper
+import os
 
 from collections.abc import Mapping
 
@@ -15,7 +17,7 @@ class view:
     def __init__(self):
 
         self.splitter: rme_scriptSplitter = rme_scriptSplitter()
-        self.currentFile = None
+        self.currentFilePath: str = None
 
         self.paletteCellSize: int = 64
         self.mapCellSize: int = 32
@@ -326,32 +328,47 @@ class view:
                 '1.0', "{" + str(x) + "." + str(y) + "}\nID: " + str(objId))
 
     def clickSave(self):
-        if self.currentFile is None:
+        if self.currentFilePath is None:
             self.clickSaveAs()
         else:
-            print("save " + self.currentFile.name)
+            with open(self.currentFilePath, 'wb') as saveFile:
+                self.m.save(saveFile)
 
     def clickSaveAs(self):
         fts = (
             ('Ray Map Data', '*.rmd'),
             ('All files', '*.*')
         )
-        self.currentFile = asksaveasfile(filetypes=fts, defaultextension='rmt')
-        if self.currentFile is not None:
-            print("save as " + self.currentFile.name)
+        saveFile: TextIOWrapper = asksaveasfile(
+            mode='wb', filetypes=fts, defaultextension='rmd')
+        if saveFile is not None:
+            self.currentFilePath = os.path.abspath(saveFile.name)
+            self.m.save(saveFile)
 
     def clickLoad(self):
         fts = (
             ('Ray Map Data', '*.rmd'),
             ('All files', '*.*')
         )
-        self.currentFile = askopenfile(filetypes=fts)
-        if self.currentFile is not None:
-            print("load " + self.currentFile.name)
+        loadFile: TextIOWrapper = askopenfile(mode='rb', filetypes=fts)
+        if loadFile is not None:
+            self.currentFilePath = os.path.abspath(loadFile.name)
+            self.m.load(loadFile)
+
+            # Redraw map
+            self.redraw()
+
+            # Clear and set script text
+            self.scriptTextEntry.delete('1.0', tk.END)
+            for script in self.m.scripts:
+                self.scriptTextEntry.insert(tk.END, script.toString() + '\n')
+            # Highlight text
+            self.scriptTextChanged(None)
 
     def clickExit(self):
-        if self.currentFile is not None:
-            print("save " + self.currentFile.name)
+        if self.currentFilePath is not None:
+            self.clickSave()
         else:
-            print("autosave")
+            with open('autosave.rmd', 'wb') as outFile:
+                self.m.save(outFile)
         self.root.destroy()
