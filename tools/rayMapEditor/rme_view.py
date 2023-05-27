@@ -25,10 +25,6 @@ class view:
 
         self.isMapMiddleClicked: bool = False
         self.isMapRightClicked: bool = False
-        self.lastScrollX: int = -1
-        self.lastScrollY: int = -1
-        self.mapOffsetX: int = 0
-        self.mapOffsetY: int = 0
 
         self.selRectX: int = 0
         self.selRectY: int = 0
@@ -221,39 +217,44 @@ class view:
         self.root.mainloop()
 
     def paletteLeftClick(self, event: tk.Event):
-        self.c.clickPalette(int(event.x / self.paletteCellSize),
-                            int(event.y / self.paletteCellSize))
+        x: int = self.paletteCanvas.canvasx(event.x)
+        y: int = self.paletteCanvas.canvasy(event.y)
+        self.c.clickPalette(int(x / self.paletteCellSize),
+                            int(y / self.paletteCellSize))
+
+    def paletteMouseMotion(self, event: tk.Event):
+        x: int = self.paletteCanvas.canvasx(event.x)
+        y: int = self.paletteCanvas.canvasy(event.y)
+        self.c.moveMousePalette(int(x / self.paletteCellSize),
+                                int(y / self.paletteCellSize))
 
     def mapLeftClick(self, event: tk.Event):
-        self.c.leftClickMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
-                            int((event.y - self.mapOffsetY) / self.mapCellSize))
+        x: int = self.mapCanvas.canvasx(event.x)
+        y: int = self.mapCanvas.canvasy(event.y)
+        self.c.leftClickMap(int(x / self.mapCellSize),
+                            int(y / self.mapCellSize))
 
     def mapRightClick(self, event: tk.Event):
         self.isMapRightClicked = True
-        self.c.rightClickMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
-                             int((event.y - self.mapOffsetY) / self.mapCellSize))
+        x: int = self.mapCanvas.canvasx(event.x)
+        y: int = self.mapCanvas.canvasy(event.y)
+        self.c.rightClickMap(int(x / self.mapCellSize),
+                             int(y / self.mapCellSize))
 
     def mapMiddleClick(self, event: tk.Event):
         self.isMapMiddleClicked = True
-        self.lastScrollX = event.x
-        self.lastScrollY = event.y
+        self.mapCanvas.scan_mark(event.x, event.y)
 
     def mapMouseMotion(self, event: tk.Event):
         if self.isMapMiddleClicked:
-            self.mapOffsetX = self.mapOffsetX - (self.lastScrollX - event.x)
-            self.mapOffsetY = self.mapOffsetY - (self.lastScrollY - event.y)
-            self.lastScrollX = event.x
-            self.lastScrollY = event.y
-            self.redraw()
+            self.mapCanvas.scan_dragto(event.x, event.y, gain=1)
         elif self.isMapRightClicked:
             self.mapRightClick(event)
         else:
-            self.c.moveMouseMap(int((event.x - self.mapOffsetX) / self.mapCellSize),
-                                int((event.y - self.mapOffsetY) / self.mapCellSize))
-
-    def paletteMouseMotion(self, event: tk.Event):
-        self.c.moveMousePalette(int((event.x) / self.paletteCellSize),
-                                int((event.y) / self.paletteCellSize))
+            x: int = self.mapCanvas.canvasx(event.x)
+            y: int = self.mapCanvas.canvasy(event.y)
+            self.c.moveMouseMap(int(x / self.mapCellSize),
+                                int(y / self.mapCellSize))
 
     def clickRelease(self, event: tk.Event):
         self.isMapMiddleClicked = False
@@ -309,16 +310,16 @@ class view:
         self.mapCanvas.delete(self.highlightRect)
         # Highlight new cell
         self.highlightRect = self.mapCanvas.create_rectangle(
-            self.mapOffsetX + (self.selRectX * self.mapCellSize), self.mapOffsetY + (self.selRectY * self.mapCellSize), self.mapOffsetX + ((self.selRectX + 1) * self.mapCellSize), self.mapOffsetY + ((self.selRectY + 1) * self.mapCellSize), outline='yellow')
+            (self.selRectX * self.mapCellSize), (self.selRectY * self.mapCellSize), ((self.selRectX + 1) * self.mapCellSize), ((self.selRectY + 1) * self.mapCellSize), outline='yellow')
 
     def drawMapCell(self, x, y):
         t: tile = self.m.tileMap[x][y]
         if (t.background is not tileType.EMPTY):
             self.mapCanvas.create_image(
-                self.mapOffsetX + (x * self.mapCellSize), self.mapOffsetY + (y * self.mapCellSize), image=self.texMapMap[t.background], anchor=tk.NW)
+                (x * self.mapCellSize), (y * self.mapCellSize), image=self.texMapMap[t.background], anchor=tk.NW)
         if (t.object is not tileType.EMPTY):
             self.mapCanvas.create_image(
-                self.mapOffsetX + (x * self.mapCellSize), self.mapOffsetY + (y * self.mapCellSize), image=self.texMapMap[t.object], anchor=tk.NW)
+                (x * self.mapCellSize), (y * self.mapCellSize), image=self.texMapMap[t.object], anchor=tk.NW)
 
     def drawSelectedTile(self, selectedTile: tileType):
         self.paletteSelected.delete('all')
@@ -333,7 +334,7 @@ class view:
         self.mapCanvas.delete(self.highlightRect)
         # Highlight new cell
         self.highlightRect = self.mapCanvas.create_rectangle(
-            self.mapOffsetX + (x * self.mapCellSize), self.mapOffsetY + (y * self.mapCellSize), self.mapOffsetX + ((x + 1) * self.mapCellSize), self.mapOffsetY + ((y + 1) * self.mapCellSize), outline='yellow')
+            (x * self.mapCellSize), (y * self.mapCellSize), ((x + 1) * self.mapCellSize), ((y + 1) * self.mapCellSize), outline='yellow')
 
         # Enable the text for writing
         self.cellMetaData.configure(state='normal')
@@ -412,7 +413,7 @@ class view:
                 parts: list[str] = inputStr.split('x')
                 newW: int = int(parts[0].strip())
                 newH: int = int(parts[1].strip())
-                if newW <= 256 and newH <= 256:
+                if newW < 256 and newH < 256:
                     # Resize the map
                     self.m.setMapSize(newW, newH)
                     # Redraw map and revalidate scripts
