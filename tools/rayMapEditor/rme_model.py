@@ -108,11 +108,12 @@ class model:
                     fileBytes.append(self.tileMap[x][y].objectId)
 
         # Write number of scripts
-        if len(self.scripts) > 255:
+        numScripts: int = sum(x is not None and x.isValid() for x in self.scripts)
+        if numScripts > 255:
             # TODO display error
             print("TOO MANY SCRIPTS!!")
             return False
-        fileBytes.append(len(self.scripts))
+        fileBytes.append(numScripts)
 
         # Write script data
         for script in self.scripts:

@@ -9,10 +9,13 @@ class tileType(Enum):
     BG_CEILING = 3
     BG_DOOR = 4
     OBJ_START_POINT = 5
-    OBJ_ENEMY = 6
-    OBJ_OBELISK = 7
-    OBJ_GUN = 9
-    OBJ_DELETE = 10  # Should be last
+    OBJ_ENEMY_DRAGON = 6
+    OBJ_ENEMY_SKELETON = 7
+    OBJ_ENEMY_KNIGHT = 8
+    OBJ_ENEMY_GOLEM = 9
+    OBJ_OBELISK = 10
+    OBJ_GUN = 11
+    OBJ_DELETE = 12  # Should be last
 
 
 bgTiles: list[tileType] = [
@@ -24,7 +27,10 @@ bgTiles: list[tileType] = [
 
 objTiles: list[tileType] = [
     tileType.OBJ_START_POINT,
-    tileType.OBJ_ENEMY,
+    tileType.OBJ_ENEMY_DRAGON,
+    tileType.OBJ_ENEMY_SKELETON,
+    tileType.OBJ_ENEMY_KNIGHT,
+    tileType.OBJ_ENEMY_GOLEM,
     tileType.OBJ_OBELISK,
     tileType.OBJ_GUN,
     tileType.OBJ_DELETE
