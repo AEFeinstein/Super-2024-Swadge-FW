@@ -392,9 +392,13 @@ class rme_script:
         if kId in self.ifArgs.keys():
             bytes.append(self.ifArgs[kId])
         if kBtn in self.ifArgs.keys():
-            bytes.append(self.ifArgs[kBtn])  # Should this be 8 bit?
+            bytes.append((self.ifArgs[kBtn] >> 8) & 255)
+            bytes.append((self.ifArgs[kBtn] >> 0) & 255)
         if kTms in self.ifArgs.keys():
-            bytes.append(self.ifArgs[kTms])  # Should this be 8 bit?
+            bytes.append((self.ifArgs[kTms] >> 24) & 255)
+            bytes.append((self.ifArgs[kTms] >> 16) & 255)
+            bytes.append((self.ifArgs[kTms] >> 8) & 255)
+            bytes.append((self.ifArgs[kTms] >> 0) & 255)
 
         # Append the ELSE operation
         bytes.append(self.thenOp.value)
@@ -492,11 +496,17 @@ class rme_script:
             self.ifArgs[kId] = bytes[idx]
             idx = idx + 1
         elif self.ifOp == ifOpType.BUTTON_PRESSED:
-            self.ifArgs[kBtn] = bytes[idx]
-            idx = idx + 1
+            self.ifArgs[kBtn] = \
+                (bytes[idx + 0] << 8) + \
+                (bytes[idx + 1])
+            idx = idx + 2
         elif self.ifOp == ifOpType.TIME_ELAPSED:
-            self.ifArgs[kTms] = bytes[idx]
-            idx = idx + 1
+            self.ifArgs[kTms] = \
+                (bytes[idx + 0] << 24) + \
+                (bytes[idx + 1] << 16) + \
+                (bytes[idx + 2] << 8) + \
+                (bytes[idx + 3])
+            idx = idx + 4
         else:
             self.resetScript()
             return
@@ -547,7 +557,7 @@ class rme_script:
             self.thenArgs[kText] = str(bytes[idx:idx + textLen], 'ascii')
         elif self.thenOp == thenOpType.WARP:
             # Read the cell
-            self.ifArgs[kCell] = [bytes[idx], bytes[idx + 1]]
+            self.thenArgs[kCell] = [bytes[idx], bytes[idx + 1]]
             idx = idx + 2
         elif self.thenOp == thenOpType.WIN:
             # No args
