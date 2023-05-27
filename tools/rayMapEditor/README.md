@@ -13,7 +13,7 @@ Load, save, or 'save as' the current map and scripts with the buttons on the top
 
 ## Tiles
 
-A map is a grid of tiles. The map size is configurable, but no larger than 256x256 tiles.
+A map is a grid of tiles. The map size is configurable, but no larger than 255x255 tiles.
 Each tile has a coordinate, where `{0.0}` is in the top left corner. The coordinate may be checked by right clicking on a tile.
 
 Each tile on the map must have a background. Backgrounds are in the left column of the palette.
