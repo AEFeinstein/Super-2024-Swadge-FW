@@ -9,8 +9,6 @@ class model:
         self.tileMap: list[list[tile]] = [
             [tile() for y in range(height)] for x in range(width)]
         self.selectedTileType: tileType = None
-        self.mapWidth = width
-        self.mapHeight = height
         self.scripts: list[rme_script] = []
         self.splitter: rme_scriptSplitter = rme_scriptSplitter()
         self.currentId: int = 0
@@ -19,6 +17,23 @@ class model:
     def setView(self, v):
         from rme_view import view
         self.v: view = v
+
+    def setMapSize(self, newWidth: int, newHeight: int):
+        print(str(newWidth) + ' x ' + str(newHeight))
+
+        # Make a new map
+        newTileMap: list[list[tile]] = [
+            [tile() for y in range(newHeight)] for x in range(newWidth)]
+
+        # Copy as much as one can from old to new
+        minWidth: int = min(newWidth, self.getMapWidth())
+        minHeight: int = min(newHeight, self.getMapHeight())
+        for y in range(minHeight):
+            for x in range(minWidth):
+                newTileMap[x][y] = self.tileMap[x][y]
+
+        # Set the new map
+        self.tileMap = newTileMap
 
     def getMapWidth(self):
         return len(self.tileMap)
@@ -108,7 +123,8 @@ class model:
                     fileBytes.append(self.tileMap[x][y].objectId)
 
         # Write number of scripts
-        numScripts: int = sum(x is not None and x.isValid() for x in self.scripts)
+        numScripts: int = sum(x is not None and x.isValid()
+                              for x in self.scripts)
         if numScripts > 255:
             # TODO display error
             print("TOO MANY SCRIPTS!!")
@@ -137,14 +153,14 @@ class model:
         idx: int = 0
 
         # Read width and height
-        self.mapWidth = data[idx]
+        mapWidth: int = data[idx]
         idx = idx + 1
-        self.mapHeight = data[idx]
+        mapHeight: int = data[idx]
         idx = idx + 1
 
         # Make empty tiles and used IDs
         self.tileMap = [
-            [tile() for y in range(self.mapHeight)] for x in range(self.mapWidth)]
+            [tile() for y in range(mapHeight)] for x in range(mapWidth)]
         self.usedIds = []
         self.currentId = 0
 
