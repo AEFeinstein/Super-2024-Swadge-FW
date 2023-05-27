@@ -169,7 +169,13 @@ class view:
                          tileType.BG_DOOR, 'imgs/door.png')
 
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY, 'imgs/enemy.png')
+                         tileType.OBJ_ENEMY_DRAGON, 'imgs/dragon.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_SKELETON, 'imgs/skeleton.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_KNIGHT, 'imgs/knight.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_GOLEM, 'imgs/golem.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_OBELISK, 'imgs/obelisk.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,

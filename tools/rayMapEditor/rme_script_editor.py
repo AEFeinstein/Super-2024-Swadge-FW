@@ -1,11 +1,13 @@
 import re
 from enum import Enum
+from rme_tiles import tileType
 
 # Argument keys
 kCell: str = 'cell'
 kCells: str = 'cells'
 kId: str = 'id'
 kIds: str = 'ids'
+kSpawns: str = 'spawns'
 kOrder: str = 'order'
 kBtn: str = 'btn'
 kTms: str = 'tMs'
@@ -38,10 +40,18 @@ class orderType(Enum):
     ANY_ORDER = 1
 
 
+class spawn:
+    def __init__(self, type: tileType, id: int, x: int, y: int) -> None:
+        self.type = type
+        self.id = id
+        self.x = x
+        self.y = y
+
+
 class rme_scriptSplitter:
 
     def __init__(self) -> None:
-        argsRegex: str = '(\([A-Z0-9_,;\.\[\]\{\}\s]*\))'
+        argsRegex: str = '(\([A-Z0-9_,;\.\-\[\]\{\}\s]*\))'
 
         regex = 'IF\s+('
 
@@ -120,9 +130,22 @@ class rme_script:
 
     def __parseCell(self, cell: str) -> list[int]:
         # Cells are in the form {a.b}
-        result = re.match(r'\s*{\s*(\d+)\s*\.\s*(\d+)\s*}\s*', cell)
+        result = re.match(r'{\s*(\d+)\s*\.\s*(\d+)\s*}', cell.strip())
         if result:
             return [int(result.group(1)), int(result.group(2))]
+        return None
+
+    def __parseSpawn(self, spawnStr: str) -> spawn:
+        result = re.match(
+            r'{\s*([a-zA-Z_]+)\s*-\s*(\d+)\s*-\s*(\d+)\s*\.\s*(\d+)\s*}', spawnStr.strip())
+        if result:
+            type: tileType = None
+            for a in tileType:
+                if a.name == 'OBJ_' + result.group(1):
+                    type = a
+                    break
+            if type is not None:
+                return spawn(type, int(result.group(2)), int(result.group(3)), int(result.group(4)))
         return None
 
     def __parseText(self, text: str) -> str:
@@ -167,7 +190,9 @@ class rme_script:
                                 for e in self.thenArgs[kIds]) + ']')
         if kText in self.thenArgs.keys():
             thenArgArray.append(self.thenArgs[kText])
-        # TODO handle spawn operation
+        if kSpawns in self.thenArgs.keys():
+            thenArgArray.append(
+                '[' + ', '.join('{' + e.type.name.removeprefix('OBJ_') + '-' + str(e.id) + '-' + str(e.x) + '.' + str(e.y) + '}' for e in self.thenArgs[kSpawns]) + ']')
 
         # Stitch it all together
         return 'IF ' + self.ifOp.name + '(' + '; '.join(ifArgArray) + ') THEN ' + self.thenOp.name + '(' + '; '.join(thenArgArray) + ')'
@@ -289,7 +314,13 @@ class rme_script:
 
             elif thenOpType.SPAWN.name == then_op:
                 self.thenOp = thenOpType.SPAWN
-                # TODO parse SPAWN
+                # Parse the args
+                self.thenArgs[kSpawns] = [self.__parseSpawn(
+                    s) for s in self.__parseArray(argParts[0])]
+                # Validate the args
+                if self.__isListNotValid(self.thenArgs[kSpawns]):
+                    self.resetScript()
+                    return False
 
             elif thenOpType.DESPAWN.name == then_op:
                 self.thenOp = thenOpType.DESPAWN
@@ -384,7 +415,13 @@ class rme_script:
         if kText in self.thenArgs.keys():
             bytes.append(len(self.thenArgs[kText]))
             bytes.extend(self.thenArgs[kText].encode())
-        # TODO handle spawn operation
+        if kSpawns in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs[kSpawns]))
+            for spawnObj in self.thenArgs[kSpawns]:
+                bytes.append(spawnObj.type.value)
+                bytes.append(spawnObj.id)
+                bytes.append(spawnObj.x)
+                bytes.append(spawnObj.y)
 
         return bytes
 
@@ -486,7 +523,14 @@ class rme_script:
                 self.thenArgs[kCells].append([bytes[idx], bytes[idx + 1]])
                 idx = idx + 2
         elif self.thenOp == thenOpType.SPAWN:
-            # TODO figure out spawning
+            # Read spawns
+            numSpawns: int = bytes[idx]
+            idx = idx + 1
+            self.thenArgs[kSpawns] = []
+            for sp in range(numSpawns):
+                self.thenArgs[kSpawns].append(spawn(tileType._value2member_map_[
+                                              bytes[idx]], bytes[idx + 1], bytes[idx + 2], bytes[idx + 3]))
+                idx = idx + 4
             pass
         elif self.thenOp == thenOpType.DESPAWN:
             # Read IDs
