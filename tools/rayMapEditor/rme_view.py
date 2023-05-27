@@ -64,8 +64,8 @@ class view:
                                                  foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
                                                  command=self.clickSaveAs)
         self.resizeMap: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Resize Map", font=fontStyle, background=buttonColor,
-                                                 foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
-                                                 command=self.clickResizeMap)
+                                              foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+                                              command=self.clickResizeMap)
         self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", font=fontStyle, background=buttonColor,
                                                foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
                                                command=self.clickExit)
@@ -109,7 +109,7 @@ class view:
         self.saveAsButton.grid(column=2, row=0, sticky=tk.NW,
                                padx=padding, pady=padding)
         self.resizeMap.grid(column=3, row=0, sticky=tk.NW,
-                               padx=padding, pady=padding)
+                            padx=padding, pady=padding)
         # Place this button in the top right
         self.exitButton.grid(column=4, row=0, sticky=tk.NE,
                              padx=padding, pady=padding)
@@ -119,7 +119,7 @@ class view:
         self.buttonFrame.columnconfigure(1, weight=0)
         self.buttonFrame.columnconfigure(2, weight=0)
         self.buttonFrame.columnconfigure(3, weight=1)
-        
+
         # Place the palette and bind events
         self.paletteCanvas.grid(column=0, row=1, sticky=(
             tk.NSEW), padx=padding, pady=padding)
@@ -395,13 +395,16 @@ class view:
             self.scriptTextChanged(None)
 
     def clickResizeMap(self):
-        inputStr: str = str(self.m.getMapWidth()) + 'x' + str(self.m.getMapHeight())
+        inputStr: str = str(self.m.getMapWidth()) + 'x' + \
+            str(self.m.getMapHeight())
         validInput: bool = True
         while True:
             if validInput:
-                inputStr = simpledialog.askstring('Map Size', 'Enter the map size (w x h)', initialvalue=inputStr)
+                inputStr = simpledialog.askstring(
+                    'Map Size', 'Enter the map size (w x h)', initialvalue=inputStr)
             else:
-                inputStr = simpledialog.askstring('Map Size', 'Invalid value\nEnter the map size (w x h)', initialvalue=inputStr)
+                inputStr = simpledialog.askstring(
+                    'Map Size', 'Invalid value\nEnter the map size (w x h)', initialvalue=inputStr)
 
             if None is inputStr:
                 # Cancel pressed
@@ -413,7 +416,7 @@ class view:
                 parts: list[str] = inputStr.split('x')
                 newW: int = int(parts[0].strip())
                 newH: int = int(parts[1].strip())
-                if newW < 256 and newH < 256:
+                if 0 < newW and newW < 256 and 0 < newH and newH < 256:
                     # Resize the map
                     self.m.setMapSize(newW, newH)
                     # Redraw map and revalidate scripts
