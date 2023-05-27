@@ -1,5 +1,16 @@
 # Ray Map Editor
 
+## Controls
+
+Right click on tiles and objects in the palette on the left edge to select them.
+Right click on the map to place the selected tile or object.
+
+Left click on the map to see that cell's coordinate and optionally that object's ID in the right text box
+
+Middle click on the map to drag the whole map around.
+
+Load, save, or 'save as' the current map and scripts with the buttons on the top.
+
 ## Tiles
 
 A map is a grid of tiles. The map size is configurable, but no larger than 256x256 tiles.
@@ -13,6 +24,7 @@ Each tile on the may may also have an object. Objects are in the right column of
 Object properties arse also intrinsic so item types will be picked up when touched, enemy types will move around and fight, etc.
 Each tile starts with up to one object, though more can be spawned later.
 Each object has an ID which *must* be unique, including the IDs of spawned objects.
+IDs are automatically assigned when placing objects on the map, but must be manually assigned when using them in scripts.
 An object's ID may be checked by right clicking on it.
 
 ## Scripts

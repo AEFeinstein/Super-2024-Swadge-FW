@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import simpledialog
 from tkinter.filedialog import askopenfile
 from tkinter.filedialog import asksaveasfile
 from PIL import Image, ImageTk
@@ -46,7 +47,7 @@ class view:
         buttonColor: str = '#2B79D7'
         buttonPressedColor: str = '#5191DE'
         buttonFontColor: str = '#FFFFFF'
-        buttonWidth: int = 8
+        buttonWidth: int = 12
 
         # Setup the root and main frames
         self.root: tk.Tk = tk.Tk()
@@ -66,6 +67,9 @@ class view:
         self.saveAsButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save As", font=fontStyle, background=buttonColor,
                                                  foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
                                                  command=self.clickSaveAs)
+        self.resizeMap: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Resize Map", font=fontStyle, background=buttonColor,
+                                                 foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+                                                 command=self.clickResizeMap)
         self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", font=fontStyle, background=buttonColor,
                                                foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
                                                command=self.clickExit)
@@ -81,37 +85,45 @@ class view:
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
 
         # Set up the text
-        self.cellMetaData: tk.Text = tk.Text(content, width=40,
+        self.cellMetaData: tk.Text = tk.Text(content, width=40, state="disabled",
                                              undo=True, autoseparators=True, maxundo=-1,
                                              background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
                                              highlightthickness=borderThickness, highlightbackground=borderColor,
                                              highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
+
         self.scriptTextEntry: tk.Text = tk.Text(content, height=10,
                                                 undo=True, autoseparators=True, maxundo=-1,
                                                 background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
                                                 highlightthickness=borderThickness, highlightbackground=borderColor,
                                                 highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
 
-        # TODO enable changing map dimensions
-
         # Configure the main frame
         content.grid(column=0, row=0, sticky=(tk.NSEW))
         frame.grid(column=0, row=0, columnspan=3, rowspan=4, sticky=(tk.NSEW))
 
         # Place the button bar
-        self.buttonFrame.grid(column=0, row=0, columnspan=3,
+        self.buttonFrame.grid(column=0, row=0, columnspan=4,
                               rowspan=1, sticky=tk.NSEW, padx=padding, pady=padding)
 
         # Place the buttons in the button bar
-        self.loadButton.grid(column=0, row=0, sticky=tk.NSEW,
+        self.loadButton.grid(column=0, row=0, sticky=tk.NW,
                              padx=padding, pady=padding)
-        self.saveButton.grid(column=1, row=0, sticky=tk.NSEW,
+        self.saveButton.grid(column=1, row=0, sticky=tk.NW,
                              padx=padding, pady=padding)
-        self.saveAsButton.grid(column=2, row=0, sticky=tk.NSEW,
+        self.saveAsButton.grid(column=2, row=0, sticky=tk.NW,
                                padx=padding, pady=padding)
-        self.exitButton.grid(column=3, row=0, sticky=tk.NSEW,
+        self.resizeMap.grid(column=3, row=0, sticky=tk.NW,
+                               padx=padding, pady=padding)
+        # Place this button in the top right
+        self.exitButton.grid(column=4, row=0, sticky=tk.NE,
                              padx=padding, pady=padding)
 
+        # Configure button column weights
+        self.buttonFrame.columnconfigure(0, weight=0)
+        self.buttonFrame.columnconfigure(1, weight=0)
+        self.buttonFrame.columnconfigure(2, weight=0)
+        self.buttonFrame.columnconfigure(3, weight=1)
+        
         # Place the palette and bind events
         self.paletteCanvas.grid(column=0, row=1, sticky=(
             tk.NSEW), padx=padding, pady=padding)
@@ -323,6 +335,9 @@ class view:
         self.highlightRect = self.mapCanvas.create_rectangle(
             self.mapOffsetX + (x * self.mapCellSize), self.mapOffsetY + (y * self.mapCellSize), self.mapOffsetX + ((x + 1) * self.mapCellSize), self.mapOffsetY + ((y + 1) * self.mapCellSize), outline='yellow')
 
+        # Enable the text for writing
+        self.cellMetaData.configure(state='normal')
+
         # Delete is going to erase anything
         # in the range of 0 and end of file,
         # The respective range given here
@@ -331,9 +346,14 @@ class view:
         # Insert method inserts the text at
         # specified position, Here it is the
         # beginning
+        self.cellMetaData.insert(
+            '1.0', "{" + str(x) + "." + str(y) + "}")
         if objId >= 0:
             self.cellMetaData.insert(
-                '1.0', "{" + str(x) + "." + str(y) + "}\nID: " + str(objId))
+                '2.0', "\nID: " + str(objId))
+
+        # Disable the text for writing
+        self.cellMetaData.configure(state='normal')
 
     def clickSave(self):
         if self.currentFilePath is None:
@@ -372,6 +392,38 @@ class view:
                 self.scriptTextEntry.insert(tk.END, script.toString() + '\n')
             # Highlight text
             self.scriptTextChanged(None)
+
+    def clickResizeMap(self):
+        inputStr: str = str(self.m.getMapWidth()) + 'x' + str(self.m.getMapHeight())
+        validInput: bool = True
+        while True:
+            if validInput:
+                inputStr = simpledialog.askstring('Map Size', 'Enter the map size (w x h)', initialvalue=inputStr)
+            else:
+                inputStr = simpledialog.askstring('Map Size', 'Invalid value\nEnter the map size (w x h)', initialvalue=inputStr)
+
+            if None is inputStr:
+                # Cancel pressed
+                return
+
+            # Validate value
+            try:
+                # Pick out the dimensions
+                parts: list[str] = inputStr.split('x')
+                newW: int = int(parts[0].strip())
+                newH: int = int(parts[1].strip())
+                if newW <= 256 and newH <= 256:
+                    # Resize the map
+                    self.m.setMapSize(newW, newH)
+                    # Redraw map and revalidate scripts
+                    self.redraw()
+                    self.scriptTextChanged(None)
+                    return
+                else:
+                    validInput = False
+            except:
+                # Validation failed, try again
+                validInput = False
 
     def clickExit(self):
         if self.currentFilePath is not None:
