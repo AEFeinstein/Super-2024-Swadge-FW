@@ -140,7 +140,7 @@ void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _led
 
     // Don't start the timer until a song is played
     ESP_ERROR_CHECK(gptimer_enable(bzrTimer));
-    ESP_ERROR_CHECK(gptimer_stop(bzrTimer));
+    gptimer_stop(bzrTimer);
 }
 
 /**
