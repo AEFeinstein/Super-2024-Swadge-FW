@@ -3,7 +3,7 @@
  * \section led_design Design Philosophy
  *
  * LED code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/v5.0.1/examples/peripherals/rmt/led_strip">Espressif's RMT
+ * href="https://github.com/espressif/esp-idf/tree/v5.0.2/examples/peripherals/rmt/led_strip">Espressif's RMT
  * Transmit Example - LED Strip</a>.
  *
  * Each LED has a red, green, and blue component. Each component ranges from 0 to 255.
