@@ -21,7 +21,8 @@
 				"xaver.clang-format",
 				"cschlosser.doxdocgen",
 				"gruntfuggly.todo-tree",
-				"streetsidesoftware.code-spell-checker"
+				"streetsidesoftware.code-spell-checker",
+				"github.vscode-github-actions"
 			]
 		}
 	}
