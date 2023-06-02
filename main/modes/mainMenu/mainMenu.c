@@ -18,7 +18,7 @@
 typedef struct
 {
     menu_t* menu;
-    font_t ibm;
+    font_t logbook;
     song_t jingle;
 } mainMenu_t;
 
@@ -78,7 +78,7 @@ static void mainMenuEnterMode(void)
     mainMenu = calloc(1, sizeof(mainMenu_t));
 
     // Load a font
-    loadFont("ibm_vga8.font", &mainMenu->ibm, false);
+    loadFont("logbook.font", &mainMenu->logbook, false);
 
     // Load a song for when the volume changes
     loadSong("jingle.sng", &mainMenu->jingle, false);
@@ -114,7 +114,7 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Free the font
-    freeFont(&mainMenu->ibm);
+    freeFont(&mainMenu->logbook);
 
     // Free the song
     freeSong(&mainMenu->jingle);
@@ -138,7 +138,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenu(mainMenu->menu, &mainMenu->ibm);
+    drawMenu(mainMenu->menu, &mainMenu->logbook);
 
     // Set LEDs, just because
     led_t leds[CONFIG_NUM_LEDS] = {0};
