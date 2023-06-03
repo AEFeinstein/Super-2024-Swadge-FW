@@ -103,7 +103,7 @@ jobs:
 
     - name: Post to a Slack channel
       id: slack
-      uses: slackapi/slack-github-action@v1.23.0
+      uses: slackapi/slack-github-action@v1.24.0
       with:
         # Slack channel id, channel name, or user id to post message.
         # See also: https://api.slack.com/methods/chat.postMessage#channels
@@ -113,3 +113,4 @@ jobs:
         slack-message: "*Build Result*: ${{ job.status }}\n*Author*: ${{ github.event.head_commit.author.username }}\n*Head Commit Message*:\n```\n${{ github.event.head_commit.message }}\n```\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      if: ${{ github.event.head_commit.message != '' }} 
