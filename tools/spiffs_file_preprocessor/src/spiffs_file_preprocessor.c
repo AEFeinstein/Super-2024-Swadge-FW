@@ -16,6 +16,7 @@
 #include "bin_processor.h"
 #include "txt_processor.h"
 #include "midi_processor.h"
+#include "rmd_processor.h"
 
 const char* outDirName = NULL;
 
@@ -85,6 +86,10 @@ static int processFile(const char* fpath, const struct stat* st __attribute__((u
             else if (endsWith(fpath, ".mid") || endsWith(fpath, ".midi"))
             {
                 process_midi(fpath, outDirName);
+            }
+            else if (endsWith(fpath, ".rmd"))
+            {
+                process_rmd(fpath, outDirName);
             }
             break;
         }
