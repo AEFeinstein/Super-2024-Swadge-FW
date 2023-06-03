@@ -23,7 +23,7 @@
  * @param name The filename of the SNG to load
  * @param song  A handle to load the SNG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
- * than nromal RAM
+ * than normal RAM
  * @return true if the SNG was loaded successfully,
  *         false if the SNG load failed and should not be used
  */
