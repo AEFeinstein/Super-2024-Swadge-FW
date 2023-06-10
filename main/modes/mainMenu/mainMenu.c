@@ -10,6 +10,7 @@
 #include "mode_colorchord.h"
 
 #include "settingsManager.h"
+#include "breakout.h"
 
 //==============================================================================
 // Structs
@@ -91,6 +92,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -171,6 +173,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
+        }
+        else if (label == breakoutMode.modeName)
+        {
+            switchToSwadgeMode(&breakoutMode);
         }
     }
     else
