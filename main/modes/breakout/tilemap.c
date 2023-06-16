@@ -7,6 +7,7 @@
 #include <string.h>
 #include <esp_heap_caps.h>
 
+#include "spiffs_wsg.h"
 #include "tilemap.h"
 #include "leveldef.h"
 #include "esp_random.h"
@@ -74,10 +75,11 @@ void drawTileMap(tilemap_t *tilemap)
             }*/
 
             // Draw only non-garbage tiles
-            if (tile > 0 /*&& tile < 104*/)
+            if (tile > 0 && tile < 128)
             {
                 if(needsTransparency(tile)){
-                    drawWsgSimpleFast(&tilemap->tiles[tile - 1], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
+                    //drawWsgSimpleFast(&tilemap->tiles[tile - 1], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
+                    drawWsgSimple(&tilemap->tiles[tile - 1], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
                 }
                 else {
                     drawWsgTile(&tilemap->tiles[tile - 1], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
@@ -144,7 +146,7 @@ bool loadMapFromFile(tilemap_t *tilemap, const char *name)
     }
     
     size_t sz;
-    uint8_t *buf = spiffsReadFile(name, &buf, &sz);
+    uint8_t *buf = spiffsReadFile(name, &sz, false);
     
     if (NULL == buf)
     {
@@ -181,9 +183,10 @@ bool loadTiles(tilemap_t *tilemap)
 {
     // tiles 0 is invisible
     // remember to subtract 1 from tile index before drawing tile
-    loadWsg("brkTile001.wsg", &tilemap->tiles[0]);
-    loadWsg("brkTile002.wsg", &tilemap->tiles[1]);
-    loadWsg("brkTile003.wsg", &tilemap->tiles[2]);
+    loadWsg("brkTile001.wsg", &tilemap->tiles[0], false);
+    loadWsg("brkTile002.wsg", &tilemap->tiles[1], false);
+    loadWsg("brkTile003.wsg", &tilemap->tiles[2], false);
+    tilemap->tiles[3] = tilemap->tiles[0];
     tilemap->tiles[4] = tilemap->tiles[0];
     tilemap->tiles[5] = tilemap->tiles[0];
     tilemap->tiles[6] = tilemap->tiles[0];
@@ -195,122 +198,129 @@ bool loadTiles(tilemap_t *tilemap)
     tilemap->tiles[12] = tilemap->tiles[0];
     tilemap->tiles[13] = tilemap->tiles[0];
     tilemap->tiles[14] = tilemap->tiles[0];
-    tilemap->tiles[15] = tilemap->tiles[0];
-    loadWsg("brkTile016.wsg", &tilemap->tiles[16]);
-    loadWsg("brkTile017.wsg", &tilemap->tiles[17]);
-    loadWsg("brkTile018.wsg", &tilemap->tiles[18]);
-    loadWsg("brkTile019.wsg", &tilemap->tiles[19]);
-    loadWsg("brkTile020.wsg", &tilemap->tiles[20]);
-    loadWsg("brkTile021.wsg", &tilemap->tiles[21]);
-    loadWsg("brkTile022.wsg", &tilemap->tiles[22]);
-    loadWsg("brkTile023.wsg", &tilemap->tiles[23]);
-    loadWsg("brkTile024.wsg", &tilemap->tiles[24]);
-    loadWsg("brkTile025.wsg", &tilemap->tiles[25]);
-    loadWsg("brkTile026.wsg", &tilemap->tiles[26]);
-    loadWsg("brkTile027.wsg", &tilemap->tiles[27]);
+    loadWsg("brkTile016.wsg", &tilemap->tiles[15], false);
+    loadWsg("brkTile017.wsg", &tilemap->tiles[16], false);
+    loadWsg("brkTile018.wsg", &tilemap->tiles[17], false);
+    loadWsg("brkTile019.wsg", &tilemap->tiles[18], false);
+    loadWsg("brkTile020.wsg", &tilemap->tiles[19], false);
+    loadWsg("brkTile021.wsg", &tilemap->tiles[20], false);
+    loadWsg("brkTile022.wsg", &tilemap->tiles[21], false);
+    loadWsg("brkTile023.wsg", &tilemap->tiles[22], false);
+    loadWsg("brkTile024.wsg", &tilemap->tiles[23], false);
+    loadWsg("brkTile025.wsg", &tilemap->tiles[24], false);
+    loadWsg("brkTile026.wsg", &tilemap->tiles[25], false);
+    loadWsg("brkTile027.wsg", &tilemap->tiles[26], false);
 
+    tilemap->tiles[27] = tilemap->tiles[0];
     tilemap->tiles[28] = tilemap->tiles[0];
     tilemap->tiles[29] = tilemap->tiles[0];
     tilemap->tiles[30] = tilemap->tiles[0];
-    tilemap->tiles[31] = tilemap->tiles[0];
 
 
-    loadWsg("brkTile032.wsg", &tilemap->tiles[32]);
-    loadWsg("brkTile033.wsg", &tilemap->tiles[33]);
-    loadWsg("brkTile034.wsg", &tilemap->tiles[34]);
-    loadWsg("brkTile035.wsg", &tilemap->tiles[35]);
-    loadWsg("brkTile036.wsg", &tilemap->tiles[36]);
-    loadWsg("brkTile037.wsg", &tilemap->tiles[37]);
-    loadWsg("brkTile038.wsg", &tilemap->tiles[38]);
-    loadWsg("brkTile039.wsg", &tilemap->tiles[39]);
-    loadWsg("brkTile040.wsg", &tilemap->tiles[40]);
-    loadWsg("brkTile041.wsg", &tilemap->tiles[41]);
-    loadWsg("brkTile042.wsg", &tilemap->tiles[42]);
-    loadWsg("brkTile043.wsg", &tilemap->tiles[43]);
-    loadWsg("brkTile044.wsg", &tilemap->tiles[44]);
-    loadWsg("brkTile045.wsg", &tilemap->tiles[45]);
-    loadWsg("brkTile046.wsg", &tilemap->tiles[46]);
-    loadWsg("brkTile047.wsg", &tilemap->tiles[47]);
-    loadWsg("brkTile048.wsg", &tilemap->tiles[48]);
-    loadWsg("brkTile049.wsg", &tilemap->tiles[49]);
-    loadWsg("brkTile050.wsg", &tilemap->tiles[50]);
-    loadWsg("brkTile051.wsg", &tilemap->tiles[51]);
-    loadWsg("brkTile052.wsg", &tilemap->tiles[52]);
-    loadWsg("brkTile053.wsg", &tilemap->tiles[53]);
-    loadWsg("brkTile054.wsg", &tilemap->tiles[54]);
-    loadWsg("brkTile055.wsg", &tilemap->tiles[55]);
-    loadWsg("brkTile056.wsg", &tilemap->tiles[56]);
-    loadWsg("brkTile057.wsg", &tilemap->tiles[57]);
-    loadWsg("brkTile058.wsg", &tilemap->tiles[58]);
-    loadWsg("brkTile059.wsg", &tilemap->tiles[59]);
-    loadWsg("brkTile060.wsg", &tilemap->tiles[60]);
-    loadWsg("brkTile061.wsg", &tilemap->tiles[61]);
-    loadWsg("brkTile062.wsg", &tilemap->tiles[62]);
-    loadWsg("brkTile063.wsg", &tilemap->tiles[63]);
-    loadWsg("brkTile064.wsg", &tilemap->tiles[64]);
-    loadWsg("brkTile065.wsg", &tilemap->tiles[65]);
-    loadWsg("brkTile066.wsg", &tilemap->tiles[66]);
-    loadWsg("brkTile067.wsg", &tilemap->tiles[67]);
-    loadWsg("brkTile068.wsg", &tilemap->tiles[68]);
-    loadWsg("brkTile069.wsg", &tilemap->tiles[69]);
-    loadWsg("brkTile070.wsg", &tilemap->tiles[70]);
-    loadWsg("brkTile071.wsg", &tilemap->tiles[71]);
-    loadWsg("brkTile072.wsg", &tilemap->tiles[72]);
-    loadWsg("brkTile073.wsg", &tilemap->tiles[73]);
-    loadWsg("brkTile074.wsg", &tilemap->tiles[74]);
-    loadWsg("brkTile075.wsg", &tilemap->tiles[75]);
-    loadWsg("brkTile076.wsg", &tilemap->tiles[76]);
-    loadWsg("brkTile077.wsg", &tilemap->tiles[77]);
-    loadWsg("brkTile078.wsg", &tilemap->tiles[78]);
-    loadWsg("brkTile079.wsg", &tilemap->tiles[79]);
-    loadWsg("brkTile080.wsg", &tilemap->tiles[80]);
-    loadWsg("brkTile081.wsg", &tilemap->tiles[81]);
-    loadWsg("brkTile082.wsg", &tilemap->tiles[82]);
-    loadWsg("brkTile083.wsg", &tilemap->tiles[83]);
-    loadWsg("brkTile084.wsg", &tilemap->tiles[84]);
-    loadWsg("brkTile085.wsg", &tilemap->tiles[85]);
-    loadWsg("brkTile086.wsg", &tilemap->tiles[86]);
-    loadWsg("brkTile087.wsg", &tilemap->tiles[87]);
-    loadWsg("brkTile088.wsg", &tilemap->tiles[88]);
-    loadWsg("brkTile089.wsg", &tilemap->tiles[89]);
-    loadWsg("brkTile090.wsg", &tilemap->tiles[90]);
-    loadWsg("brkTile091.wsg", &tilemap->tiles[91]);
-    loadWsg("brkTile092.wsg", &tilemap->tiles[92]);
-    loadWsg("brkTile093.wsg", &tilemap->tiles[93]);
-    loadWsg("brkTile094.wsg", &tilemap->tiles[94]);
-    loadWsg("brkTile095.wsg", &tilemap->tiles[95]);
-    loadWsg("brkTile096.wsg", &tilemap->tiles[96]);
-    loadWsg("brkTile097.wsg", &tilemap->tiles[97]);
-    loadWsg("brkTile098.wsg", &tilemap->tiles[98]);
-    loadWsg("brkTile099.wsg", &tilemap->tiles[99]);
-    loadWsg("brkTile100.wsg", &tilemap->tiles[100]);
-    loadWsg("brkTile101.wsg", &tilemap->tiles[101]);
-    loadWsg("brkTile102.wsg", &tilemap->tiles[102]);
-    loadWsg("brkTile103.wsg", &tilemap->tiles[103]);
-    loadWsg("brkTile104.wsg", &tilemap->tiles[104]);
-    loadWsg("brkTile105.wsg", &tilemap->tiles[105]);
-    loadWsg("brkTile106.wsg", &tilemap->tiles[106]);
-    loadWsg("brkTile107.wsg", &tilemap->tiles[107]);
-    loadWsg("brkTile108.wsg", &tilemap->tiles[108]);
-    loadWsg("brkTile109.wsg", &tilemap->tiles[109]);
-    loadWsg("brkTile110.wsg", &tilemap->tiles[110]);
-    loadWsg("brkTile111.wsg", &tilemap->tiles[111]);
-    loadWsg("brkTile112.wsg", &tilemap->tiles[112]);
-    loadWsg("brkTile113.wsg", &tilemap->tiles[113]);
-    loadWsg("brkTile114.wsg", &tilemap->tiles[114]);
-    loadWsg("brkTile115.wsg", &tilemap->tiles[115]);
-    loadWsg("brkTile116.wsg", &tilemap->tiles[116]);
-    loadWsg("brkTile117.wsg", &tilemap->tiles[117]);
-    loadWsg("brkTile118.wsg", &tilemap->tiles[118]);
-    loadWsg("brkTile119.wsg", &tilemap->tiles[119]);
-    loadWsg("brkTile120.wsg", &tilemap->tiles[120]);
-    loadWsg("brkTile121.wsg", &tilemap->tiles[121]);
-    loadWsg("brkTile122.wsg", &tilemap->tiles[122]);
-    loadWsg("brkTile123.wsg", &tilemap->tiles[123]);
-    loadWsg("brkTile124.wsg", &tilemap->tiles[124]);
-    loadWsg("brkTile125.wsg", &tilemap->tiles[125]);
-    loadWsg("brkTile126.wsg", &tilemap->tiles[126]);
-    loadWsg("brkTile127.wsg", &tilemap->tiles[127]);
+    loadWsg("brkTile032.wsg", &tilemap->tiles[31], false);
+    loadWsg("brkTile033.wsg", &tilemap->tiles[32], false);
+    loadWsg("brkTile034.wsg", &tilemap->tiles[33], false);
+    loadWsg("brkTile035.wsg", &tilemap->tiles[34], false);
+    loadWsg("brkTile036.wsg", &tilemap->tiles[35], false);
+    loadWsg("brkTile037.wsg", &tilemap->tiles[36], false);
+    loadWsg("brkTile038.wsg", &tilemap->tiles[37], false);
+    loadWsg("brkTile039.wsg", &tilemap->tiles[38], false);
+    loadWsg("brkTile040.wsg", &tilemap->tiles[39], false);
+    loadWsg("brkTile041.wsg", &tilemap->tiles[40], false);
+    loadWsg("brkTile042.wsg", &tilemap->tiles[41], false);
+    loadWsg("brkTile043.wsg", &tilemap->tiles[42], false);
+    loadWsg("brkTile044.wsg", &tilemap->tiles[43], false);
+    loadWsg("brkTile045.wsg", &tilemap->tiles[44], false);
+    loadWsg("brkTile046.wsg", &tilemap->tiles[45], false);
+    loadWsg("brkTile047.wsg", &tilemap->tiles[46], false);
+    loadWsg("brkTile048.wsg", &tilemap->tiles[47], false);
+    loadWsg("brkTile049.wsg", &tilemap->tiles[48], false);
+    loadWsg("brkTile050.wsg", &tilemap->tiles[49], false);
+    loadWsg("brkTile051.wsg", &tilemap->tiles[50], false);
+    loadWsg("brkTile052.wsg", &tilemap->tiles[51], false);
+    loadWsg("brkTile053.wsg", &tilemap->tiles[52], false);
+    loadWsg("brkTile054.wsg", &tilemap->tiles[53], false);
+    loadWsg("brkTile055.wsg", &tilemap->tiles[54], false);
+    /*loadWsg("brkTile056.wsg", &tilemap->tiles[55], false);
+    loadWsg("brkTile057.wsg", &tilemap->tiles[56], false);
+    loadWsg("brkTile058.wsg", &tilemap->tiles[57], false);
+    loadWsg("brkTile059.wsg", &tilemap->tiles[58], false);
+    loadWsg("brkTile060.wsg", &tilemap->tiles[59], false);
+    loadWsg("brkTile061.wsg", &tilemap->tiles[60], false);
+    loadWsg("brkTile062.wsg", &tilemap->tiles[61], false);
+    loadWsg("brkTile063.wsg", &tilemap->tiles[62], false);*/
+    tilemap->tiles[55] = tilemap->tiles[0];
+    tilemap->tiles[56] = tilemap->tiles[0];
+    tilemap->tiles[57] = tilemap->tiles[0];
+    tilemap->tiles[58] = tilemap->tiles[0];
+    tilemap->tiles[59] = tilemap->tiles[0];
+    tilemap->tiles[60] = tilemap->tiles[0];
+    tilemap->tiles[61] = tilemap->tiles[0];
+    tilemap->tiles[62] = tilemap->tiles[0];
+    loadWsg("brkTile064.wsg", &tilemap->tiles[63], false);
+    loadWsg("brkTile065.wsg", &tilemap->tiles[64], false);
+    loadWsg("brkTile066.wsg", &tilemap->tiles[65], false);
+    loadWsg("brkTile067.wsg", &tilemap->tiles[66], false);
+    loadWsg("brkTile068.wsg", &tilemap->tiles[67], false);
+    loadWsg("brkTile069.wsg", &tilemap->tiles[68], false);
+    loadWsg("brkTile070.wsg", &tilemap->tiles[69], false);
+    loadWsg("brkTile071.wsg", &tilemap->tiles[70], false);
+    loadWsg("brkTile072.wsg", &tilemap->tiles[71], false);
+    loadWsg("brkTile073.wsg", &tilemap->tiles[72], false);
+    loadWsg("brkTile074.wsg", &tilemap->tiles[73], false);
+    loadWsg("brkTile075.wsg", &tilemap->tiles[74], false);
+    loadWsg("brkTile076.wsg", &tilemap->tiles[75], false);
+    loadWsg("brkTile077.wsg", &tilemap->tiles[76], false);
+    loadWsg("brkTile078.wsg", &tilemap->tiles[77], false);
+    loadWsg("brkTile079.wsg", &tilemap->tiles[78], false);
+    loadWsg("brkTile080.wsg", &tilemap->tiles[79], false);
+    loadWsg("brkTile081.wsg", &tilemap->tiles[80], false);
+    loadWsg("brkTile082.wsg", &tilemap->tiles[81], false);
+    loadWsg("brkTile083.wsg", &tilemap->tiles[82], false);
+    loadWsg("brkTile084.wsg", &tilemap->tiles[83], false);
+    loadWsg("brkTile085.wsg", &tilemap->tiles[84], false);
+    loadWsg("brkTile086.wsg", &tilemap->tiles[85], false);
+    loadWsg("brkTile087.wsg", &tilemap->tiles[86], false);
+    loadWsg("brkTile088.wsg", &tilemap->tiles[87], false);
+    loadWsg("brkTile089.wsg", &tilemap->tiles[88], false);
+    loadWsg("brkTile090.wsg", &tilemap->tiles[89], false);
+    loadWsg("brkTile091.wsg", &tilemap->tiles[90], false);
+    loadWsg("brkTile092.wsg", &tilemap->tiles[91], false);
+    loadWsg("brkTile093.wsg", &tilemap->tiles[92], false);
+    loadWsg("brkTile094.wsg", &tilemap->tiles[93], false);
+    loadWsg("brkTile095.wsg", &tilemap->tiles[94], false);
+    loadWsg("brkTile096.wsg", &tilemap->tiles[95], false);
+    loadWsg("brkTile097.wsg", &tilemap->tiles[96], false);
+    loadWsg("brkTile098.wsg", &tilemap->tiles[97], false);
+    loadWsg("brkTile099.wsg", &tilemap->tiles[98], false);
+    loadWsg("brkTile100.wsg", &tilemap->tiles[99], false);
+    loadWsg("brkTile101.wsg", &tilemap->tiles[100], false);
+    loadWsg("brkTile102.wsg", &tilemap->tiles[101], false);
+    loadWsg("brkTile103.wsg", &tilemap->tiles[102], false);
+    loadWsg("brkTile104.wsg", &tilemap->tiles[103], false);
+    loadWsg("brkTile105.wsg", &tilemap->tiles[104], false);
+    loadWsg("brkTile106.wsg", &tilemap->tiles[105], false);
+    loadWsg("brkTile107.wsg", &tilemap->tiles[106], false);
+    loadWsg("brkTile108.wsg", &tilemap->tiles[107], false);
+    loadWsg("brkTile109.wsg", &tilemap->tiles[108], false);
+    loadWsg("brkTile110.wsg", &tilemap->tiles[109], false);
+    loadWsg("brkTile111.wsg", &tilemap->tiles[110], false);
+    loadWsg("brkTile112.wsg", &tilemap->tiles[111], false);
+    loadWsg("brkTile113.wsg", &tilemap->tiles[112], false);
+    loadWsg("brkTile114.wsg", &tilemap->tiles[113], false);
+    loadWsg("brkTile115.wsg", &tilemap->tiles[114], false);
+    loadWsg("brkTile116.wsg", &tilemap->tiles[115], false);
+    loadWsg("brkTile117.wsg", &tilemap->tiles[116], false);
+    loadWsg("brkTile118.wsg", &tilemap->tiles[117], false);
+    loadWsg("brkTile119.wsg", &tilemap->tiles[118], false);
+    loadWsg("brkTile120.wsg", &tilemap->tiles[119], false);
+    loadWsg("brkTile121.wsg", &tilemap->tiles[120], false);
+    loadWsg("brkTile122.wsg", &tilemap->tiles[121], false);
+    loadWsg("brkTile123.wsg", &tilemap->tiles[122], false);
+    loadWsg("brkTile124.wsg", &tilemap->tiles[123], false);
+    loadWsg("brkTile125.wsg", &tilemap->tiles[124], false);
+    loadWsg("brkTile126.wsg", &tilemap->tiles[125], false);
+    loadWsg("brkTile127.wsg", &tilemap->tiles[126], false);
 
 
     
@@ -406,8 +416,9 @@ void freeTilemap(tilemap_t *tilemap){
         switch(i){
             //Skip all placeholder tiles, since they reuse other tiles
             //(see loadTiles)
-            case TILE_UNUSED_4 ... TILE_UNUSED_F:
-            case TILE_UNUSED_28 ... TILE_UNUSED_31:
+            case 4 ... 14:
+            case 27 ... 30:
+            case 55 ... 62:
             {
                 break;
             }

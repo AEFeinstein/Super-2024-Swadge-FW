@@ -6,6 +6,7 @@
 //==============================================================================
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "hdw-led.h"
 #include "common_typedef.h"
 #include "palette.h"
