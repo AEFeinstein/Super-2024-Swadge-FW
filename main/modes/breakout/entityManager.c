@@ -10,7 +10,7 @@
 #include "esp_random.h"
 #include "palette.h"
 
-#include "../../components/hdw-spiffs/spiffs_manager.h"
+#include "hdw-spiffs.h"
 
 //==============================================================================
 // Constants
@@ -129,7 +129,7 @@ void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer){
     }
 }
 
-void drawEntities(display_t * disp, entityManager_t * entityManager)
+void drawEntities(entityManager_t * entityManager)
 {
     for(uint8_t i=0; i < MAX_ENTITIES; i++)
     {
@@ -137,7 +137,7 @@ void drawEntities(display_t * disp, entityManager_t * entityManager)
 
         if(currentEntity.active && currentEntity.visible)
         {
-            drawWsg(disp, &entityManager->sprites[currentEntity.spriteIndex], (currentEntity.x >> SUBPIXEL_RESOLUTION) - 8 - entityManager->tilemap->mapOffsetX, (currentEntity.y >> SUBPIXEL_RESOLUTION)  - entityManager->tilemap->mapOffsetY - 8, currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
+            drawWsg(&entityManager->sprites[currentEntity.spriteIndex], (currentEntity.x >> SUBPIXEL_RESOLUTION) - 8 - entityManager->tilemap->mapOffsetX, (currentEntity.y >> SUBPIXEL_RESOLUTION)  - entityManager->tilemap->mapOffsetY - 8, currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
         }
     }
 };

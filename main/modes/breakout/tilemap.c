@@ -11,7 +11,7 @@
 #include "leveldef.h"
 #include "esp_random.h"
 
-#include "../../components/hdw-spiffs/spiffs_manager.h"
+#include "hdw-spiffs.h"
 
 //==============================================================================
 // Function Prototypes
@@ -38,7 +38,7 @@ void initializeTileMap(tilemap_t *tilemap)
     loadTiles(tilemap);
 }
 
-void drawTileMap(display_t *disp, tilemap_t *tilemap)
+void drawTileMap(tilemap_t *tilemap)
 {
     tilemap->animationTimer--;
     if (tilemap->animationTimer < 0)
@@ -63,24 +63,24 @@ void drawTileMap(display_t *disp, tilemap_t *tilemap)
 
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
             
-            if(tile < TILE_GRASS){
+            if(tile < TILE_BOUNDARY_1){
                 continue;
             }
 
             // Test animated tiles
-            if (tile == 64 || tile == 67)
+            /*if (tile == 64 || tile == 67)
             {
                 tile += tilemap->animationFrame;
-            }
+            }*/
 
             // Draw only non-garbage tiles
-            if (tile > 31 && tile < 104)
+            if (tile > 0 /*&& tile < 104*/)
             {
                 if(needsTransparency(tile)){
-                    drawWsgSimpleFast(disp, &tilemap->tiles[tile - 32], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
+                    drawWsgSimpleFast(&tilemap->tiles[tile - 1], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
                 }
                 else {
-                    drawWsgTile(disp, &tilemap->tiles[tile - 32], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
+                    drawWsgTile(&tilemap->tiles[tile - 1], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
                 }
             }
             else if (tile > 127 && tilemap->tileSpawnEnabled && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y || tilemap->executeTileSpawnAll))
@@ -142,10 +142,11 @@ bool loadMapFromFile(tilemap_t *tilemap, const char *name)
     {
         free(tilemap->map);
     }
-
-    uint8_t *buf = NULL;
+    
     size_t sz;
-    if (!spiffsReadFile(name, &buf, &sz, false))
+    uint8_t *buf = spiffsReadFile(name, &buf, &sz);
+    
+    if (NULL == buf)
     {
         ESP_LOGE("MAP", "Failed to read %s", name);
         return false;
@@ -178,84 +179,141 @@ bool loadMapFromFile(tilemap_t *tilemap, const char *name)
 
 bool loadTiles(tilemap_t *tilemap)
 {
-    // tiles 0-31 are invisible tiles;
-    // remember to subtract 32 from tile index before drawing tile
-    loadWsg("tile032.wsg", &tilemap->tiles[0]);
-    loadWsg("tile033.wsg", &tilemap->tiles[1]);
-    loadWsg("tile034.wsg", &tilemap->tiles[2]);
-    loadWsg("tile035.wsg", &tilemap->tiles[3]);
-    loadWsg("tile036.wsg", &tilemap->tiles[4]);
-    loadWsg("tile037.wsg", &tilemap->tiles[5]);
-    loadWsg("tile038.wsg", &tilemap->tiles[6]);
-    loadWsg("tile039.wsg", &tilemap->tiles[7]);
-    loadWsg("tile040.wsg", &tilemap->tiles[8]);
-    loadWsg("tile041.wsg", &tilemap->tiles[9]);
-
+    // tiles 0 is invisible
+    // remember to subtract 1 from tile index before drawing tile
+    loadWsg("brkTile001.wsg", &tilemap->tiles[0]);
+    loadWsg("brkTile002.wsg", &tilemap->tiles[1]);
+    loadWsg("brkTile003.wsg", &tilemap->tiles[2]);
+    tilemap->tiles[4] = tilemap->tiles[0];
+    tilemap->tiles[5] = tilemap->tiles[0];
+    tilemap->tiles[6] = tilemap->tiles[0];
+    tilemap->tiles[7] = tilemap->tiles[0];
+    tilemap->tiles[8] = tilemap->tiles[0];
+    tilemap->tiles[9] = tilemap->tiles[0];
     tilemap->tiles[10] = tilemap->tiles[0];
     tilemap->tiles[11] = tilemap->tiles[0];
     tilemap->tiles[12] = tilemap->tiles[0];
     tilemap->tiles[13] = tilemap->tiles[0];
     tilemap->tiles[14] = tilemap->tiles[0];
     tilemap->tiles[15] = tilemap->tiles[0];
-    tilemap->tiles[16] = tilemap->tiles[0];
-    tilemap->tiles[17] = tilemap->tiles[0];
-    tilemap->tiles[18] = tilemap->tiles[0];
-    tilemap->tiles[19] = tilemap->tiles[0];
-    tilemap->tiles[20] = tilemap->tiles[0];
-    tilemap->tiles[21] = tilemap->tiles[0];
-    tilemap->tiles[22] = tilemap->tiles[0];
-    tilemap->tiles[23] = tilemap->tiles[0];
-    tilemap->tiles[24] = tilemap->tiles[0];
-    tilemap->tiles[25] = tilemap->tiles[0];
-    tilemap->tiles[26] = tilemap->tiles[0];
+    loadWsg("brkTile016.wsg", &tilemap->tiles[16]);
+    loadWsg("brkTile017.wsg", &tilemap->tiles[17]);
+    loadWsg("brkTile018.wsg", &tilemap->tiles[18]);
+    loadWsg("brkTile019.wsg", &tilemap->tiles[19]);
+    loadWsg("brkTile020.wsg", &tilemap->tiles[20]);
+    loadWsg("brkTile021.wsg", &tilemap->tiles[21]);
+    loadWsg("brkTile022.wsg", &tilemap->tiles[22]);
+    loadWsg("brkTile023.wsg", &tilemap->tiles[23]);
+    loadWsg("brkTile024.wsg", &tilemap->tiles[24]);
+    loadWsg("brkTile025.wsg", &tilemap->tiles[25]);
+    loadWsg("brkTile026.wsg", &tilemap->tiles[26]);
+    loadWsg("brkTile027.wsg", &tilemap->tiles[27]);
 
-    loadWsg("tile059.wsg", &tilemap->tiles[27]);
-    loadWsg("tile060.wsg", &tilemap->tiles[28]);
-    loadWsg("tile061.wsg", &tilemap->tiles[29]);
-    loadWsg("tile062.wsg", &tilemap->tiles[30]);
-    loadWsg("tile063.wsg", &tilemap->tiles[31]);
-    loadWsg("tile064.wsg", &tilemap->tiles[32]);
-    loadWsg("tile065.wsg", &tilemap->tiles[33]);
-    loadWsg("tile066.wsg", &tilemap->tiles[34]);
-    loadWsg("tile067.wsg", &tilemap->tiles[35]);
-    loadWsg("tile068.wsg", &tilemap->tiles[36]);
-    loadWsg("tile069.wsg", &tilemap->tiles[37]);
-    loadWsg("tile070.wsg", &tilemap->tiles[38]);
+    tilemap->tiles[28] = tilemap->tiles[0];
+    tilemap->tiles[29] = tilemap->tiles[0];
+    tilemap->tiles[30] = tilemap->tiles[0];
+    tilemap->tiles[31] = tilemap->tiles[0];
 
-    tilemap->tiles[39] = tilemap->tiles[0];
-    tilemap->tiles[40] = tilemap->tiles[0];
-    tilemap->tiles[41] = tilemap->tiles[0];
-    tilemap->tiles[42] = tilemap->tiles[0];
-    tilemap->tiles[43] = tilemap->tiles[0];
-    tilemap->tiles[44] = tilemap->tiles[0];
-    tilemap->tiles[45] = tilemap->tiles[0];
-    tilemap->tiles[46] = tilemap->tiles[0];
-    tilemap->tiles[47] = tilemap->tiles[0];
 
-    loadWsg("tile080.wsg", &tilemap->tiles[48]);
-    loadWsg("tile081.wsg", &tilemap->tiles[49]);
-    loadWsg("tile082.wsg", &tilemap->tiles[50]);
-    loadWsg("tile083.wsg", &tilemap->tiles[51]);
-    loadWsg("tile084.wsg", &tilemap->tiles[52]);
-    loadWsg("tile085.wsg", &tilemap->tiles[53]);
-    loadWsg("tile086.wsg", &tilemap->tiles[54]);
-    loadWsg("tile087.wsg", &tilemap->tiles[55]);
-    loadWsg("tile088.wsg", &tilemap->tiles[56]);
-    loadWsg("tile089.wsg", &tilemap->tiles[57]);
-    loadWsg("tile090.wsg", &tilemap->tiles[58]);
-    loadWsg("tile091.wsg", &tilemap->tiles[59]);
-    loadWsg("tile092.wsg", &tilemap->tiles[60]);
-    loadWsg("tile093.wsg", &tilemap->tiles[61]);
-    loadWsg("tile094.wsg", &tilemap->tiles[62]);
-    loadWsg("tile095.wsg", &tilemap->tiles[63]);
-    loadWsg("tile096.wsg", &tilemap->tiles[64]);
-    loadWsg("tile097.wsg", &tilemap->tiles[65]);
-    loadWsg("tile098.wsg", &tilemap->tiles[66]);
-    loadWsg("tile099.wsg", &tilemap->tiles[67]);
-    loadWsg("tile100.wsg", &tilemap->tiles[68]);
-    loadWsg("tile101.wsg", &tilemap->tiles[69]);
-    loadWsg("tile102.wsg", &tilemap->tiles[70]);
-    loadWsg("tile103.wsg", &tilemap->tiles[71]);
+    loadWsg("brkTile032.wsg", &tilemap->tiles[32]);
+    loadWsg("brkTile033.wsg", &tilemap->tiles[33]);
+    loadWsg("brkTile034.wsg", &tilemap->tiles[34]);
+    loadWsg("brkTile035.wsg", &tilemap->tiles[35]);
+    loadWsg("brkTile036.wsg", &tilemap->tiles[36]);
+    loadWsg("brkTile037.wsg", &tilemap->tiles[37]);
+    loadWsg("brkTile038.wsg", &tilemap->tiles[38]);
+    loadWsg("brkTile039.wsg", &tilemap->tiles[39]);
+    loadWsg("brkTile040.wsg", &tilemap->tiles[40]);
+    loadWsg("brkTile041.wsg", &tilemap->tiles[41]);
+    loadWsg("brkTile042.wsg", &tilemap->tiles[42]);
+    loadWsg("brkTile043.wsg", &tilemap->tiles[43]);
+    loadWsg("brkTile044.wsg", &tilemap->tiles[44]);
+    loadWsg("brkTile045.wsg", &tilemap->tiles[45]);
+    loadWsg("brkTile046.wsg", &tilemap->tiles[46]);
+    loadWsg("brkTile047.wsg", &tilemap->tiles[47]);
+    loadWsg("brkTile048.wsg", &tilemap->tiles[48]);
+    loadWsg("brkTile049.wsg", &tilemap->tiles[49]);
+    loadWsg("brkTile050.wsg", &tilemap->tiles[50]);
+    loadWsg("brkTile051.wsg", &tilemap->tiles[51]);
+    loadWsg("brkTile052.wsg", &tilemap->tiles[52]);
+    loadWsg("brkTile053.wsg", &tilemap->tiles[53]);
+    loadWsg("brkTile054.wsg", &tilemap->tiles[54]);
+    loadWsg("brkTile055.wsg", &tilemap->tiles[55]);
+    loadWsg("brkTile056.wsg", &tilemap->tiles[56]);
+    loadWsg("brkTile057.wsg", &tilemap->tiles[57]);
+    loadWsg("brkTile058.wsg", &tilemap->tiles[58]);
+    loadWsg("brkTile059.wsg", &tilemap->tiles[59]);
+    loadWsg("brkTile060.wsg", &tilemap->tiles[60]);
+    loadWsg("brkTile061.wsg", &tilemap->tiles[61]);
+    loadWsg("brkTile062.wsg", &tilemap->tiles[62]);
+    loadWsg("brkTile063.wsg", &tilemap->tiles[63]);
+    loadWsg("brkTile064.wsg", &tilemap->tiles[64]);
+    loadWsg("brkTile065.wsg", &tilemap->tiles[65]);
+    loadWsg("brkTile066.wsg", &tilemap->tiles[66]);
+    loadWsg("brkTile067.wsg", &tilemap->tiles[67]);
+    loadWsg("brkTile068.wsg", &tilemap->tiles[68]);
+    loadWsg("brkTile069.wsg", &tilemap->tiles[69]);
+    loadWsg("brkTile070.wsg", &tilemap->tiles[70]);
+    loadWsg("brkTile071.wsg", &tilemap->tiles[71]);
+    loadWsg("brkTile072.wsg", &tilemap->tiles[72]);
+    loadWsg("brkTile073.wsg", &tilemap->tiles[73]);
+    loadWsg("brkTile074.wsg", &tilemap->tiles[74]);
+    loadWsg("brkTile075.wsg", &tilemap->tiles[75]);
+    loadWsg("brkTile076.wsg", &tilemap->tiles[76]);
+    loadWsg("brkTile077.wsg", &tilemap->tiles[77]);
+    loadWsg("brkTile078.wsg", &tilemap->tiles[78]);
+    loadWsg("brkTile079.wsg", &tilemap->tiles[79]);
+    loadWsg("brkTile080.wsg", &tilemap->tiles[80]);
+    loadWsg("brkTile081.wsg", &tilemap->tiles[81]);
+    loadWsg("brkTile082.wsg", &tilemap->tiles[82]);
+    loadWsg("brkTile083.wsg", &tilemap->tiles[83]);
+    loadWsg("brkTile084.wsg", &tilemap->tiles[84]);
+    loadWsg("brkTile085.wsg", &tilemap->tiles[85]);
+    loadWsg("brkTile086.wsg", &tilemap->tiles[86]);
+    loadWsg("brkTile087.wsg", &tilemap->tiles[87]);
+    loadWsg("brkTile088.wsg", &tilemap->tiles[88]);
+    loadWsg("brkTile089.wsg", &tilemap->tiles[89]);
+    loadWsg("brkTile090.wsg", &tilemap->tiles[90]);
+    loadWsg("brkTile091.wsg", &tilemap->tiles[91]);
+    loadWsg("brkTile092.wsg", &tilemap->tiles[92]);
+    loadWsg("brkTile093.wsg", &tilemap->tiles[93]);
+    loadWsg("brkTile094.wsg", &tilemap->tiles[94]);
+    loadWsg("brkTile095.wsg", &tilemap->tiles[95]);
+    loadWsg("brkTile096.wsg", &tilemap->tiles[96]);
+    loadWsg("brkTile097.wsg", &tilemap->tiles[97]);
+    loadWsg("brkTile098.wsg", &tilemap->tiles[98]);
+    loadWsg("brkTile099.wsg", &tilemap->tiles[99]);
+    loadWsg("brkTile100.wsg", &tilemap->tiles[100]);
+    loadWsg("brkTile101.wsg", &tilemap->tiles[101]);
+    loadWsg("brkTile102.wsg", &tilemap->tiles[102]);
+    loadWsg("brkTile103.wsg", &tilemap->tiles[103]);
+    loadWsg("brkTile104.wsg", &tilemap->tiles[104]);
+    loadWsg("brkTile105.wsg", &tilemap->tiles[105]);
+    loadWsg("brkTile106.wsg", &tilemap->tiles[106]);
+    loadWsg("brkTile107.wsg", &tilemap->tiles[107]);
+    loadWsg("brkTile108.wsg", &tilemap->tiles[108]);
+    loadWsg("brkTile109.wsg", &tilemap->tiles[109]);
+    loadWsg("brkTile110.wsg", &tilemap->tiles[110]);
+    loadWsg("brkTile111.wsg", &tilemap->tiles[111]);
+    loadWsg("brkTile112.wsg", &tilemap->tiles[112]);
+    loadWsg("brkTile113.wsg", &tilemap->tiles[113]);
+    loadWsg("brkTile114.wsg", &tilemap->tiles[114]);
+    loadWsg("brkTile115.wsg", &tilemap->tiles[115]);
+    loadWsg("brkTile116.wsg", &tilemap->tiles[116]);
+    loadWsg("brkTile117.wsg", &tilemap->tiles[117]);
+    loadWsg("brkTile118.wsg", &tilemap->tiles[118]);
+    loadWsg("brkTile119.wsg", &tilemap->tiles[119]);
+    loadWsg("brkTile120.wsg", &tilemap->tiles[120]);
+    loadWsg("brkTile121.wsg", &tilemap->tiles[121]);
+    loadWsg("brkTile122.wsg", &tilemap->tiles[122]);
+    loadWsg("brkTile123.wsg", &tilemap->tiles[123]);
+    loadWsg("brkTile124.wsg", &tilemap->tiles[124]);
+    loadWsg("brkTile125.wsg", &tilemap->tiles[125]);
+    loadWsg("brkTile126.wsg", &tilemap->tiles[126]);
+    loadWsg("brkTile127.wsg", &tilemap->tiles[127]);
+
+
+    
 
 
     return true;
@@ -307,16 +365,10 @@ bool isSolid(uint8_t tileId)
 {
     switch (tileId)
     {
-    case TILE_EMPTY ... TILE_UNUSED_29:
+    case TILE_EMPTY:
         return false;
         break;
-    case TILE_INVISIBLE_BLOCK ... TILE_METAL_PIPE_V:
-        return true;
-        break;
-    case TILE_BOUNCE_BLOCK:
-        return false;
-        break;
-    case TILE_DIRT_PATH ... TILE_CONTAINER_3:
+    case TILE_BOUNDARY_1 ... TILE_UNUSED_127:
         return true;
         break;
     default:
@@ -339,23 +391,10 @@ void unlockScrolling(tilemap_t *tilemap){
 
 bool needsTransparency(uint8_t tileId){
     switch(tileId) {
-        case TILE_BOUNCE_BLOCK:
-        case TILE_GIRDER:
-        case TILE_CONTAINER_1 ... TILE_CONTAINER_3:
-        case TILE_COIN_1 ... TILE_COIN_3:
-        case TILE_LADDER:
-        case TILE_BG_GOAL_ZONE ... TILE_BG_CLOUD_D:
-            return true;
-        case TILE_BG_CLOUD:
+        case TILE_BOUNDARY_1 ... TILE_UNUSED_31:
             return false;
-        case TILE_BG_TALL_GRASS ... TILE_BG_MOUNTAIN_R:
+        case TILE_BLOCK_2x1_RED_L ... TILE_UNUSED_127:
             return true;
-        case TILE_BG_MOUNTAIN ... TILE_BG_METAL:
-            return false;
-        case TILE_BG_CHAINS:
-            return true;
-        case TILE_BG_WALL:
-            return false;
         default:
             return false;
     }
@@ -367,8 +406,8 @@ void freeTilemap(tilemap_t *tilemap){
         switch(i){
             //Skip all placeholder tiles, since they reuse other tiles
             //(see loadTiles)
-            case 10 ... 26:
-            case 39 ... 47:
+            case TILE_UNUSED_4 ... TILE_UNUSED_F:
+            case TILE_UNUSED_28 ... TILE_UNUSED_31:
             {
                 break;
             }

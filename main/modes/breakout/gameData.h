@@ -6,24 +6,13 @@
 //==============================================================================
 
 #include <stdint.h>
-#include "led_util.h"
+#include "hdw-led.h"
 #include "common_typedef.h"
-#include "swadgeMode.h"
 #include "palette.h"
-#include "musical_buzzer.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
-/*static const song_t snd1up =
-{
-    .notes = 
-    {
-        {G_7, 40},{D_6, 40},{B_5, 80}
-    },
-    .numNotes = 3,
-    .shouldLoop = false
-};*/
 
 //==============================================================================
 // Structs
@@ -54,7 +43,7 @@ typedef struct
     uint8_t levelDeaths;
     uint8_t initialHp;
     
-    led_t leds[NUM_LEDS];
+    led_t leds[8 /*CONFIG_NUM_LEDS*/];
 
     paletteColor_t bgColor;
 
