@@ -13,6 +13,7 @@
 
 #include "esp_random.h"
 #include "breakout.h"
+#include "tilemap.h"
 
 //==============================================================================
 // Defines
@@ -68,24 +69,19 @@ typedef enum
 
 typedef struct
 {
-    menu_t* menu;        ///< The menu structure
-    font_t ibm;          ///< The font used in the menu and game
-    p2pInfo p2p;         ///< Peer to peer connectivity info, currently unused
+    menu_t* menu; ///< The menu structure
+    font_t ibm;   ///< The font used in the menu and game
+    tilemap_t tilemap;
+
     breakoutScreen_t screen; ///< The screen being displayed
 
     breakoutControl_t control;       ///< The selected control scheme
     breakoutDifficulty_t difficulty; ///< The selected CPU difficulty
-    uint8_t score[2];            ///< The score for the game
 
-    rectangle_t paddleL; ///< The left paddle
-    rectangle_t paddleR; ///< The right paddle
-    circle_t ball;       ///< The ball
-    vec_t ballVel;       ///< The ball's velocity
+    uint16_t btnState;
+    uint16_t prevBtnState;
 
-    int32_t restartTimerUs; ///< A timer that counts down before the game begins
-    uint16_t btnState;      ///< The button state used for paddle control
-    bool paddleRMovingUp;   ///< The CPU's paddle direction on easy mode
-    bool isPaused;          ///< true if the game is paused, false if it is running
+    int32_t frameTimer;
 
     wsg_t paddleWsg; ///< A graphic for the paddle
     wsg_t ballWsg;   ///< A graphic for the ball
@@ -106,7 +102,8 @@ typedef struct
 static void breakoutMainLoop(int64_t elapsedUs);
 static void breakoutEnterMode(void);
 static void breakoutExitMode(void);
-static void breakoutEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
+static void breakoutEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
+                                 int8_t rssi);
 static void breakoutEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void breakoutGameLoop(int64_t elapsedUs);
@@ -140,7 +137,7 @@ static const char breakoutDiffEasy[]   = "Easy";
 static const char breakoutDiffMedium[] = "Medium";
 static const char breakoutDiffHard[]   = "Impossible";
 
-static const char breakoutPaused[] = "Paused";
+//static const char breakoutPaused[] = "Paused";
 
 //==============================================================================
 // Variables
@@ -158,8 +155,8 @@ swadgeMode_t breakoutMode = {
     .fnMainLoop               = breakoutMainLoop,
     .fnAudioCallback          = NULL,
     .fnBackgroundDrawCallback = breakoutBackgroundDrawCallback,
-    .fnEspNowRecvCb           = breakoutEspNowRecvCb,
-    .fnEspNowSendCb           = breakoutEspNowSendCb,
+    .fnEspNowRecvCb           = NULL, //breakoutEspNowRecvCb,
+    .fnEspNowSendCb           = NULL, //breakoutEspNowSendCb,
     .fnAdvancedUSB            = NULL,
 };
 
@@ -182,8 +179,8 @@ static void breakoutEnterMode(void)
     breakout = calloc(1, sizeof(breakout_t));
 
     // Below, various assets are loaded from the SPIFFS file system to RAM. How did they get there?
-    // The source assets are found in the /assets/breakout/ directory. Each asset is processed and packed into the SPIFFS
-    // file system at compile time The following transformations are made:
+    // The source assets are found in the /assets/breakout/ directory. Each asset is processed and packed into the
+    // SPIFFS file system at compile time The following transformations are made:
     // * pball.png   -> pball.wsg
     // * ppaddle.png -> ppaddle.wsg
     // * block1.mid  -> block1.sng
@@ -214,6 +211,10 @@ static void breakoutEnterMode(void)
 
     // Initialize the menu
     breakout->menu = initMenu(breakoutName, breakoutMenuCb);
+
+    initializeTileMap(&(breakout->tilemap));
+
+    loadMapFromFile(&(breakout->tilemap), "level1.bin");
 
     // These are the possible control schemes
     const char* controlSchemes[] = {
@@ -365,12 +366,12 @@ static void breakoutGameLoop(int64_t elapsedUs)
         if (evt.down && (PB_START == evt.button))
         {
             // Toggle pause
-            breakout->isPaused = !breakout->isPaused;
+            // breakout->isPaused = !breakout->isPaused;
         }
     }
 
     // If the game is paused
-    if (breakout->isPaused)
+    /*if (breakout->isPaused)
     {
         // Just draw and return
         breakoutDrawField();
@@ -384,16 +385,17 @@ static void breakoutGameLoop(int64_t elapsedUs)
         breakout->restartTimerUs -= elapsedUs;
         breakoutDrawField();
         return;
-    }
+    }*/
 
     // Do update each loop
     breakoutFadeLeds(elapsedUs);
-    breakoutControlPlayerPaddle();
-    breakoutControlCpuPaddle();
-    breakoutUpdatePhysics(elapsedUs);
+    // breakoutControlPlayerPaddle();
+    // breakoutControlCpuPaddle();
+    // breakoutUpdatePhysics(elapsedUs);
 
     // Draw the field
     breakoutDrawField();
+    drawTileMap(&(breakout->tilemap));
 }
 
 /**
@@ -443,7 +445,7 @@ static void breakoutFadeLeds(int64_t elapsedUs)
 /**
  * @brief Move the player's paddle according to the chosen control scheme
  */
-static void breakoutControlPlayerPaddle(void)
+/*static void breakoutControlPlayerPaddle(void)
 {
     // Move the paddle depending on the chosen control scheme
     switch (breakout->control)
@@ -458,7 +460,8 @@ static void breakoutControlPlayerPaddle(void)
             }
             else if (breakout->btnState & PB_DOWN)
             {
-                breakout->paddleL.y = MIN(breakout->paddleL.y + (5 << DECIMAL_BITS), FIELD_HEIGHT - breakout->paddleL.height);
+                breakout->paddleL.y = MIN(breakout->paddleL.y + (5 << DECIMAL_BITS), FIELD_HEIGHT -
+breakout->paddleL.height);
             }
             break;
         }
@@ -487,12 +490,12 @@ static void breakoutControlPlayerPaddle(void)
             break;
         }
     }
-}
+}*/
 
 /**
  * @brief Move the CPU's paddle according to the chosen difficulty
  */
-static void breakoutControlCpuPaddle(void)
+/*static void breakoutControlCpuPaddle(void)
 {
     // Move the computer paddle
     switch (breakout->difficulty)
@@ -513,7 +516,8 @@ static void breakoutControlCpuPaddle(void)
             }
             else
             {
-                breakout->paddleR.y = MIN(breakout->paddleR.y + (4 << DECIMAL_BITS), FIELD_HEIGHT - breakout->paddleR.height);
+                breakout->paddleR.y = MIN(breakout->paddleR.y + (4 << DECIMAL_BITS), FIELD_HEIGHT -
+breakout->paddleR.height);
                 // If the bottom boundary was hit
                 if ((FIELD_HEIGHT - breakout->paddleR.height) == breakout->paddleR.y)
                 {
@@ -528,7 +532,8 @@ static void breakoutControlCpuPaddle(void)
             // Move towards the ball, slowly
             if (breakout->paddleR.y + (breakout->paddleR.height / 2) < breakout->ball.y)
             {
-                breakout->paddleR.y = MIN(breakout->paddleR.y + (2 << DECIMAL_BITS), FIELD_HEIGHT - breakout->paddleR.height);
+                breakout->paddleR.y = MIN(breakout->paddleR.y + (2 << DECIMAL_BITS), FIELD_HEIGHT -
+breakout->paddleR.height);
             }
             else
             {
@@ -539,18 +544,18 @@ static void breakoutControlCpuPaddle(void)
         case BREAKOUT_HARD:
         {
             // Never miss
-            breakout->paddleR.y = CLAMP(breakout->ball.y - breakout->paddleR.height / 2, 0, FIELD_HEIGHT - breakout->paddleR.height);
-            break;
+            breakout->paddleR.y = CLAMP(breakout->ball.y - breakout->paddleR.height / 2, 0, FIELD_HEIGHT -
+breakout->paddleR.height); break;
         }
     }
-}
+}*/
 
 /**
  * @brief Update the breakout physics including ball position and collisions
  *
  * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
  */
-static void breakoutUpdatePhysics(int64_t elapsedUs)
+/*static void breakoutUpdatePhysics(int64_t elapsedUs)
 {
     // Update the ball's position
     breakout->ball.x += (breakout->ballVel.x * elapsedUs) / 100000;
@@ -617,7 +622,7 @@ static void breakoutUpdatePhysics(int64_t elapsedUs)
             breakout->ledR.b = 0xFF;
         }
     }
-}
+}*/
 
 /**
  * @brief Reset the breakout game variables
@@ -628,7 +633,7 @@ static void breakoutUpdatePhysics(int64_t elapsedUs)
 static void breakoutResetGame(bool isInit, uint8_t whoWon)
 {
     // Set different variables based on initialization
-    if (isInit)
+    /*+if (isInit)
     {
         // Set up the left paddle
         breakout->paddleL.x      = 0;
@@ -670,7 +675,7 @@ static void breakoutResetGame(bool isInit, uint8_t whoWon)
     if (whoWon)
     {
         breakout->ballVel.x = -breakout->ballVel.x;
-    }
+    }*/
 }
 
 /**
@@ -678,7 +683,7 @@ static void breakoutResetGame(bool isInit, uint8_t whoWon)
  *
  * @param magnitude The magnitude velocity to add to the ball
  */
-static void breakoutIncreaseBallVelocity(int16_t magnitude)
+/*static void breakoutIncreaseBallVelocity(int16_t magnitude)
 {
     if (sqMagVec2d(breakout->ballVel) < (SPEED_LIMIT * SPEED_LIMIT))
     {
@@ -692,7 +697,7 @@ static void breakoutIncreaseBallVelocity(int16_t magnitude)
         // Add the vectors together
         breakout->ballVel = addVec2d(breakout->ballVel, velBoost);
     }
-}
+}*/
 
 /**
  * This function is called when the display driver wishes to update a
@@ -733,7 +738,7 @@ static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
  */
 static void breakoutDrawField(void)
 {
-    // Create an array for all LEDs
+    /*// Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS];
     // Copy the LED colors for left and right to the whole array
     for (uint8_t i = 0; i < CONFIG_NUM_LEDS / 2; i++)
@@ -769,9 +774,11 @@ static void breakoutDrawField(void)
     drawWsgSimple(&breakout->ballWsg, (breakout->ball.x - breakout->ball.radius) >> DECIMAL_BITS,
                   (breakout->ball.y - breakout->ball.radius) >> DECIMAL_BITS);
     // Draw one paddle
-    drawWsg(&breakout->paddleWsg, breakout->paddleL.x >> DECIMAL_BITS, breakout->paddleL.y >> DECIMAL_BITS, false, false, 0);
+    drawWsg(&breakout->paddleWsg, breakout->paddleL.x >> DECIMAL_BITS, breakout->paddleL.y >> DECIMAL_BITS, false,
+            false, 0);
     // Draw the other paddle, flipped
-    drawWsg(&breakout->paddleWsg, breakout->paddleR.x >> DECIMAL_BITS, breakout->paddleR.y >> DECIMAL_BITS, true, false, 0);
+    drawWsg(&breakout->paddleWsg, breakout->paddleR.x >> DECIMAL_BITS, breakout->paddleR.y >> DECIMAL_BITS, true, false,
+            0);
 
 #endif
 
@@ -810,8 +817,9 @@ static void breakoutDrawField(void)
         tWidth = textWidth(&breakout->ibm, scoreStr);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
         drawText(&breakout->ibm, c555, scoreStr, ((TFT_WIDTH - tWidth) / 2), 0);
-    }
+    }*/
 }
+
 
 /**
  * This function is called whenever an ESP-NOW packet is received.
@@ -821,10 +829,10 @@ static void breakoutDrawField(void)
  * @param len The length of the data received
  * @param rssi The RSSI for this packet, from 1 (weak) to ~90 (touching)
  */
-static void breakoutEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
+/*static void breakoutEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
     p2pRecvCb(&breakout->p2p, esp_now_info->src_addr, data, len, rssi);
-}
+}*/
 
 /**
  * This function is called whenever an ESP-NOW packet is sent.
@@ -834,7 +842,7 @@ static void breakoutEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
  * @param mac_addr The MAC address which the data was sent to
  * @param status The status of the transmission
  */
-static void breakoutEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
+/*static void breakoutEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
     p2pSendCb(&breakout->p2p, mac_addr, status);
-}
+}*/

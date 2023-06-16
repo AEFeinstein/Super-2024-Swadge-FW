@@ -11,6 +11,7 @@
 #include "palette.h"
 
 #include "hdw-spiffs.h"
+#include "spiffs_wsg.h"
 
 //==============================================================================
 // Constants
@@ -40,7 +41,7 @@ void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilema
 
 void loadSprites(entityManager_t * entityManager)
 {
-    loadWsg("sprite000.wsg", &entityManager->sprites[SP_PLAYER_IDLE]);
+    /*loadWsg("sprite000.wsg", &entityManager->sprites[SP_PLAYER_IDLE]);
     loadWsg("sprite001.wsg", &entityManager->sprites[SP_PLAYER_WALK1]);
     loadWsg("sprite002.wsg", &entityManager->sprites[SP_PLAYER_WALK2]);
     loadWsg("sprite003.wsg", &entityManager->sprites[SP_PLAYER_WALK3]);
@@ -90,7 +91,7 @@ void loadSprites(entityManager_t * entityManager)
     loadWsg("sprite047.wsg", &entityManager->sprites[SP_CHECKPOINT_INACTIVE]);
     loadWsg("sprite048.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_1]);
     loadWsg("sprite049.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_2]);
-    loadWsg("tile039.wsg", &entityManager->sprites[SP_BOUNCE_BLOCK]);
+    loadWsg("tile039.wsg", &entityManager->sprites[SP_BOUNCE_BLOCK]);*/
 };
 
 void updateEntities(entityManager_t * entityManager)
@@ -192,7 +193,7 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
     entity_t *createdEntity;
 
     switch(objectIndex){
-        case ENTITY_PLAYER:
+        /*case ENTITY_PLAYER:
             createdEntity = createPlayer(entityManager, x, y);
             break;
         case ENTITY_TEST:
@@ -299,7 +300,7 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
             break;
         case ENTITY_BGM_CHANGE_5:
             createdEntity = createBgmChange5(entityManager, x, y);
-            break;
+            break;*/
 
         default:
             createdEntity = NULL;
@@ -311,7 +312,7 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
 
     return createdEntity;
 }
-
+/*
 entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {
     entity_t * entity = findInactiveEntity(entityManager);
@@ -339,7 +340,7 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
-    entity->type = ENTITY_PLAYER;
+    //entity->type = ENTITY_PLAYER;
     entity->spriteIndex = SP_PLAYER_IDLE;
     entity->updateFunction = &updatePlayer;
     entity->collisionHandler = &playerCollisionHandler;
@@ -372,7 +373,7 @@ entity_t* createTestObject(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->spriteFlipVertical = false;
     entity->scoreValue = 100;
 
-    entity->type = ENTITY_TEST;
+    //entity->type = ENTITY_TEST;
     entity->spriteIndex = SP_ENEMY_BASIC;
     entity->updateFunction = &updateTestObject;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -396,7 +397,7 @@ entity_t* createScrollLockLeft(entityManager_t * entityManager, uint16_t x, uint
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->type = ENTITY_SCROLL_LOCK_LEFT;
+    //entity->type = ENTITY_SCROLL_LOCK_LEFT;
     entity->updateFunction = &updateScrollLockLeft;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -418,7 +419,7 @@ entity_t* createScrollLockRight(entityManager_t * entityManager, uint16_t x, uin
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->type = ENTITY_SCROLL_LOCK_RIGHT;
+    //entity->type = ENTITY_SCROLL_LOCK_RIGHT;
     entity->updateFunction = &updateScrollLockRight;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -440,7 +441,7 @@ entity_t* createScrollLockUp(entityManager_t * entityManager, uint16_t x, uint16
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->type = ENTITY_SCROLL_LOCK_UP;
+    //entity->type = ENTITY_SCROLL_LOCK_UP;
     entity->updateFunction = &updateScrollLockUp;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -462,7 +463,7 @@ entity_t* createScrollLockDown(entityManager_t * entityManager, uint16_t x, uint
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->type = ENTITY_SCROLL_LOCK_DOWN;
+    //entity->type = ENTITY_SCROLL_LOCK_DOWN;
     entity->updateFunction = &updateScrollLockDown;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -484,7 +485,7 @@ entity_t* createScrollUnlock(entityManager_t * entityManager, uint16_t x, uint16
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->type = ENTITY_SCROLL_UNLOCK;
+    //entity->type = ENTITY_SCROLL_UNLOCK;
     entity->updateFunction = &updateScrollUnlock;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -517,7 +518,7 @@ entity_t* createHitBlock(entityManager_t * entityManager, uint16_t x, uint16_t y
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
 
-    entity->type = ENTITY_HIT_BLOCK;
+    //entity->type = ENTITY_HIT_BLOCK;
     entity->spriteIndex = SP_HITBLOCK_CONTAINER;
     entity->animationTimer = 0;
     entity->updateFunction = &updateHitBlock;
@@ -549,7 +550,7 @@ entity_t* createPowerUp(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
 
-    entity->type = ENTITY_POWERUP;
+    //entity->type = ENTITY_POWERUP;
     entity->spriteIndex = (entityManager->playerEntity->hp < 2) ? SP_GAMING_1 : SP_MUSIC_1;
     entity->animationTimer = 0;
     entity->updateFunction = &updatePowerUp;
@@ -582,7 +583,7 @@ entity_t* createWarp(entityManager_t * entityManager, uint16_t x, uint16_t y){
 
     entity->spriteFlipVertical = false;
 
-    entity->type = ENTITY_WARP;
+    //entity->type = ENTITY_WARP;
     entity->spriteIndex = SP_WARP_1;
     entity->animationTimer = 0;
     entity->updateFunction = &updateWarp;
@@ -619,7 +620,7 @@ entity_t* createDustBunny(entityManager_t * entityManager, uint16_t x, uint16_t 
 
     entity->scoreValue = 150;
 
-    entity->type = ENTITY_DUST_BUNNY;
+    //entity->type = ENTITY_DUST_BUNNY;
     entity->spriteIndex = SP_DUSTBUNNY_IDLE;
     entity->updateFunction = &updateDustBunny;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -656,7 +657,7 @@ entity_t* createWasp(entityManager_t * entityManager, uint16_t x, uint16_t y)
         
     entity->xspeed = (entity->spriteFlipHorizontal)? -16 : 16;
 
-    entity->type = ENTITY_WASP;
+    //entity->type = ENTITY_WASP;
     entity->spriteIndex = SP_WASP_1;
     entity->updateFunction = &updateWasp;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -690,7 +691,7 @@ entity_t* createEnemyBushL2(entityManager_t * entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical = false;
     entity->scoreValue = 150;
 
-    entity->type = ENTITY_BUSH_2;
+    //entity->type = ENTITY_BUSH_2;
     entity->spriteIndex = SP_ENEMY_BUSH_L2;
     entity->updateFunction = &updateTestObject;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -726,7 +727,7 @@ entity_t* createEnemyBushL3(entityManager_t * entityManager, uint16_t x, uint16_
 
     entity->yDamping = 20; //This will be repurposed as a state timer
 
-    entity->type = ENTITY_BUSH_3;
+    //entity->type = ENTITY_BUSH_3;
     entity->spriteIndex = SP_ENEMY_BUSH_L3;
     entity->updateFunction = &updateEnemyBushL3;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -762,7 +763,7 @@ entity_t* createDustBunnyL2(entityManager_t * entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical = false;
     entity->scoreValue = 200;
 
-    entity->type = ENTITY_DUST_BUNNY_2;
+    //entity->type = ENTITY_DUST_BUNNY_2;
     entity->spriteIndex = SP_DUSTBUNNY_L2_IDLE;
     entity->updateFunction = &updateDustBunnyL2;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -798,7 +799,7 @@ entity_t* createDustBunnyL3(entityManager_t * entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical = false;
     entity->scoreValue = 300;
 
-    entity->type = ENTITY_DUST_BUNNY_3;
+    //entity->type = ENTITY_DUST_BUNNY_3;
     entity->spriteIndex = SP_DUSTBUNNY_L3_IDLE;
     entity->updateFunction = &updateDustBunnyL3;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -837,7 +838,7 @@ entity_t* createWaspL2(entityManager_t * entityManager, uint16_t x, uint16_t y)
     
     entity->xspeed = (entity->spriteFlipHorizontal)? -24 : 24;
 
-    entity->type = ENTITY_WASP_2;
+    //entity->type = ENTITY_WASP_2;
     entity->spriteIndex = SP_WASP_L2_1;
     entity->updateFunction = &updateWaspL2;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -875,7 +876,7 @@ entity_t* createWaspL3(entityManager_t * entityManager, uint16_t x, uint16_t y)
         
     entity->xspeed = (entity->spriteFlipHorizontal)? -24 : 24;
 
-    entity->type = ENTITY_WASP_3;
+    //entity->type = ENTITY_WASP_3;
     entity->spriteIndex = SP_WASP_L3_1;
     entity->updateFunction = &updateWaspL3;
     entity->collisionHandler = &enemyCollisionHandler;
@@ -900,7 +901,7 @@ entity_t* createBgColBlue(entityManager_t * entityManager, uint16_t x, uint16_t 
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = c335;
     
-    entity->type = ENTITY_BGCOL_BLUE;
+    //entity->type = ENTITY_BGCOL_BLUE;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -923,7 +924,7 @@ entity_t* createBgColYellow(entityManager_t * entityManager, uint16_t x, uint16_
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = c542;
     
-    entity->type = ENTITY_BGCOL_YELLOW;
+    //entity->type = ENTITY_BGCOL_YELLOW;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -946,7 +947,7 @@ entity_t* createBgColOrange(entityManager_t * entityManager, uint16_t x, uint16_
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = c532;
 
-    entity->type = ENTITY_BGCOL_ORANGE;
+    //entity->type = ENTITY_BGCOL_ORANGE;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -969,7 +970,7 @@ entity_t* createBgColPurple(entityManager_t * entityManager, uint16_t x, uint16_
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = c214;
     
-    entity->type = ENTITY_BGCOL_PURPLE;
+    //entity->type = ENTITY_BGCOL_PURPLE;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -992,7 +993,7 @@ entity_t* createBgColDarkPurple(entityManager_t * entityManager, uint16_t x, uin
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = c103;
 
-    entity->type = ENTITY_BGCOL_DARK_PURPLE;
+    //entity->type = ENTITY_BGCOL_DARK_PURPLE;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1016,7 +1017,7 @@ entity_t* createBgColBlack(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->xDamping = c000;
 
 
-    entity->type = ENTITY_BGCOL_BLACK;
+    //entity->type = ENTITY_BGCOL_BLACK;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1039,7 +1040,7 @@ entity_t* createBgColNeutralGreen(entityManager_t * entityManager, uint16_t x, u
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = c133;
 
-    entity->type = ENTITY_BGCOL_NEUTRAL_GREEN;
+    //entity->type = ENTITY_BGCOL_NEUTRAL_GREEN;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1062,7 +1063,7 @@ entity_t* createBgColNeutralDarkRed(entityManager_t * entityManager, uint16_t x,
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = c200;
     
-    entity->type = ENTITY_BGCOL_DARK_RED;
+    //entity->type = ENTITY_BGCOL_DARK_RED;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1085,7 +1086,7 @@ entity_t* createBgColNeutralDarkGreen(entityManager_t * entityManager, uint16_t 
     entity->y = y << SUBPIXEL_RESOLUTION;
      entity->xDamping = c010;
 
-    entity->type = ENTITY_BGCOL_DARK_GREEN;
+    //entity->type = ENTITY_BGCOL_DARK_GREEN;
     entity->updateFunction = &updateBgCol;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1115,7 +1116,7 @@ entity_t* create1up(entityManager_t * entityManager, uint16_t x, uint16_t y){
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
 
-    entity->type = ENTITY_1UP;
+    //entity->type = ENTITY_1UP;
     entity->spriteIndex = SP_1UP_1;
     entity->animationTimer = 0;
     entity->updateFunction = &update1up;
@@ -1150,7 +1151,7 @@ entity_t* createWaveBall(entityManager_t * entityManager, uint16_t x, uint16_t y
     entity->yDamping = 3; //This will be repurposed as a state timer
     entity->xDamping = 0; //This will be repurposed as a state tracker
 
-    entity->type = ENTITY_WAVE_BALL;
+    //entity->type = ENTITY_WAVE_BALL;
     entity->spriteIndex = SP_WAVEBALL_1;
     entity->animationTimer = 0;
     entity->updateFunction = &updateWaveBall;
@@ -1185,7 +1186,7 @@ entity_t* createCheckpoint(entityManager_t * entityManager, uint16_t x, uint16_t
 
     entity->xDamping = 0; //State of the checkpoint. 0 = inactive, 1 = active
 
-    entity->type = ENTITY_CHECKPOINT;
+    //entity->type = ENTITY_CHECKPOINT;
     entity->spriteIndex = SP_CHECKPOINT_INACTIVE;
     entity->animationTimer = 0;
     entity->updateFunction = &updateCheckpoint;
@@ -1217,7 +1218,7 @@ entity_t* createBgmChange1(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = BGM_MAIN;
     
-    entity->type = ENTITY_BGM_CHANGE_1;
+    //entity->type = ENTITY_BGM_CHANGE_1;
     entity->updateFunction = &updateBgmChange;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1240,7 +1241,7 @@ entity_t* createBgmChange2(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = BGM_ATHLETIC;
     
-    entity->type = ENTITY_BGM_CHANGE_2;
+    //entity->type = ENTITY_BGM_CHANGE_2;
     entity->updateFunction = &updateBgmChange;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1263,7 +1264,7 @@ entity_t* createBgmChange3(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = BGM_UNDERGROUND;
     
-    entity->type = ENTITY_BGM_CHANGE_3;
+    //entity->type = ENTITY_BGM_CHANGE_3;
     entity->updateFunction = &updateBgmChange;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1286,7 +1287,7 @@ entity_t* createBgmChange4(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = BGM_FORTRESS;
     
-    entity->type = ENTITY_BGM_CHANGE_4;
+    //entity->type = ENTITY_BGM_CHANGE_4;
     entity->updateFunction = &updateBgmChange;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1309,7 +1310,7 @@ entity_t* createBgmChange5(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = BGM_NULL;
     
-    entity->type = ENTITY_BGM_CHANGE_5;
+    //entity->type = ENTITY_BGM_CHANGE_5;
     entity->updateFunction = &updateBgmChange;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1332,7 +1333,7 @@ entity_t* createBgmStop(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->y = y << SUBPIXEL_RESOLUTION;
     entity->xDamping = BGM_NULL;
     
-    entity->type = ENTITY_BGM_STOP;
+    //entity->type = ENTITY_BGM_STOP;
     entity->updateFunction = &updateBgmChange;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
@@ -1340,3 +1341,4 @@ entity_t* createBgmStop(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     return entity;
 }
+*/
