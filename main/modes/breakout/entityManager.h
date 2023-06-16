@@ -11,7 +11,7 @@
 #include "entity.h"
 #include "tilemap.h"
 #include "gameData.h"
-#include "display.h"
+#include "hdw-tft.h"
 
 //==============================================================================
 // Constants
@@ -42,7 +42,7 @@ void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilema
 void loadSprites(entityManager_t * entityManager);
 void updateEntities(entityManager_t * entityManager);
 void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer);
-void drawEntities(display_t * disp, entityManager_t * entityManager);
+void drawEntities(entityManager_t * entityManager);
 entity_t * findInactiveEntity(entityManager_t * entityManager);
 
 void viewFollowEntity(tilemap_t * tilemap, entity_t * entity);
