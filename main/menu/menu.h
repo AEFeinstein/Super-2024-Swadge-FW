@@ -175,5 +175,6 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 
 void drawMenu(menu_t* menu, font_t* font);
+void drawMenuThemed(menu_t* menu, font_t* font);
 
 #endif

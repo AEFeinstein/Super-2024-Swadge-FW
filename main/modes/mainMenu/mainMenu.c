@@ -36,7 +36,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char mainMenuName[] = "Main Menu";
+static const char mainMenuName[] = "MAIN MENU";
 
 swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
@@ -138,7 +138,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenu(mainMenu->menu, &mainMenu->logbook);
+    drawMenuThemed(mainMenu->menu, &mainMenu->logbook);
 
     // Set LEDs, just because
     led_t leds[CONFIG_NUM_LEDS] = {0};
