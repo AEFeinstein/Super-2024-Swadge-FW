@@ -650,21 +650,25 @@ void drawMenu(menu_t* menu, font_t* font)
 }
 
 // Defines for dimensions
-#define CORNER_THICKNESS 2
-#define CORNER_LENGTH    7
-#define FILL_OFFSET      4
-#define TEXT_OFFSET      8
-#define ROW_SPACING      2
+#define CORNER_THICKNESS   2
+#define CORNER_LENGTH      7
+#define FILL_OFFSET        4
+#define TEXT_OFFSET        8
+#define ROW_SPACING        2
+#define TOP_LINE_SPACING   3
+#define TOP_LINE_THICKNESS 1
 
 static void drawMenuText(font_t* font, const char* text, int16_t x, int16_t y, bool isSelected)
 {
     // Pick colors based on selection
-    paletteColor_t cornerColor = c411;
-    paletteColor_t textColor   = c511;
+    paletteColor_t cornerColor  = c411;
+    paletteColor_t textColor    = c511;
+    paletteColor_t topLineColor = c211;
     if (isSelected)
     {
-        cornerColor = c532;
-        textColor   = c554;
+        cornerColor  = c532;
+        textColor    = c554;
+        topLineColor = c422;
     }
 
     // Helper dimensions
@@ -696,6 +700,16 @@ static void drawMenuText(font_t* font, const char* text, int16_t x, int16_t y, b
     fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_THICKNESS,
                     y + tHeight + (2 * TEXT_OFFSET) - CORNER_LENGTH, //
                     x + (2 * TEXT_OFFSET) + tWidth, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
+
+    // Top line
+    fillDisplayArea(x + CORNER_LENGTH + TOP_LINE_SPACING, y, //
+                    x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH - TOP_LINE_SPACING, y + TOP_LINE_THICKNESS,
+                    topLineColor);
+
+    // Bottom line
+    fillDisplayArea(x + CORNER_LENGTH + TOP_LINE_SPACING, y + tHeight + (2 * TEXT_OFFSET) - TOP_LINE_THICKNESS, //
+                    x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH - TOP_LINE_SPACING, y + tHeight + (2 * TEXT_OFFSET),
+                    topLineColor);
 
     // Fill the background for selected items
     if (isSelected)
