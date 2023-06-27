@@ -9,6 +9,7 @@
 #include "menu.h"
 #include "shapes.h"
 #include "macros.h"
+#include "fill.h"
 
 //==============================================================================
 // Const Variables
@@ -646,4 +647,150 @@ void drawMenu(menu_t* menu, font_t* font)
         drawText(font, c555, "~DOWN~", x, y);
     }
     y += (font->height + 2);
+}
+
+// Defines for dimensions
+#define CORNER_THICKNESS 2
+#define CORNER_LENGTH    7
+#define FILL_OFFSET      4
+#define TEXT_OFFSET      8
+#define ROW_SPACING      2
+
+static void drawMenuText(font_t* font, const char* text, int16_t x, int16_t y, bool isSelected)
+{
+    // Pick colors based on selection
+    paletteColor_t cornerColor = c411;
+    paletteColor_t textColor   = c511;
+    if (isSelected)
+    {
+        cornerColor = c532;
+        textColor   = c554;
+    }
+
+    // Helper dimensions
+    int16_t tWidth  = textWidth(font, text);
+    int16_t tHeight = font->height;
+
+    // Upper left corner
+    fillDisplayArea(x, y, //
+                    x + CORNER_LENGTH, y + CORNER_THICKNESS, cornerColor);
+    fillDisplayArea(x, y, //
+                    x + CORNER_THICKNESS, y + CORNER_LENGTH, cornerColor);
+
+    // Upper right corner
+    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH, y, //
+                    x + (2 * TEXT_OFFSET) + tWidth, y + CORNER_THICKNESS, cornerColor);
+    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_THICKNESS, y, //
+                    x + (2 * TEXT_OFFSET) + tWidth, y + CORNER_LENGTH, cornerColor);
+
+    // Lower left corner
+    fillDisplayArea(x, y + tHeight + (2 * TEXT_OFFSET) - CORNER_THICKNESS, //
+                    x + CORNER_LENGTH, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
+    fillDisplayArea(x, y + tHeight + (2 * TEXT_OFFSET) - CORNER_LENGTH, //
+                    x + CORNER_THICKNESS, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
+
+    // Lower right corner
+    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH,
+                    y + tHeight + (2 * TEXT_OFFSET) - CORNER_THICKNESS, //
+                    x + (2 * TEXT_OFFSET) + tWidth, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
+    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_THICKNESS,
+                    y + tHeight + (2 * TEXT_OFFSET) - CORNER_LENGTH, //
+                    x + (2 * TEXT_OFFSET) + tWidth, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
+
+    // Fill the background for selected items
+    if (isSelected)
+    {
+        fillDisplayArea(x + FILL_OFFSET, y + FILL_OFFSET, x + tWidth + FILL_OFFSET + TEXT_OFFSET,
+                        y + font->height + FILL_OFFSET + TEXT_OFFSET, c411);
+    }
+
+    // Draw the text
+    drawText(font, textColor, text, x + TEXT_OFFSET, y + TEXT_OFFSET);
+}
+
+void drawMenuThemed(menu_t* menu, font_t* font)
+{
+    // Clear everything first
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
+
+#define ITEMS_PER_PAGE 5
+
+    // Find the start of the 'page'
+    node_t* pageStart = menu->items->first;
+    uint8_t pageIdx   = 0;
+
+    node_t* curNode = menu->items->first;
+    while (NULL != curNode)
+    {
+        if (curNode->val == menu->currentItem->val)
+        {
+            // Found it, stop!
+            break;
+        }
+        else
+        {
+            curNode = curNode->next;
+            pageIdx++;
+            if (ITEMS_PER_PAGE <= pageIdx && NULL != curNode)
+            {
+                pageIdx   = 0;
+                pageStart = curNode;
+            }
+        }
+    }
+
+    int16_t x = 20;
+    int16_t y = 12;
+
+    // Draw a title
+    drawText(font, c542, menu->title, x, y);
+    y += (font->height + 2);
+
+    if (menu->items->length > ITEMS_PER_PAGE)
+    {
+        // TODO Draw UP page indicator
+    }
+
+    // Draw a page-worth of items
+    for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
+    {
+        if (NULL != pageStart)
+        {
+            menuItem_t* item = (menuItem_t*)pageStart->val;
+            bool isSelected  = (menu->currentItem->val == item);
+
+            // Draw the label(s)
+            if (item->minSetting != item->maxSetting)
+            {
+                // TODO draw left & right indicators
+                char label[64] = {0};
+                snprintf(label, sizeof(label) - 1, "%s: %d", item->label, item->currentSetting);
+                drawMenuText(font, label, x, y, isSelected);
+            }
+            else if (item->label)
+            {
+                if (item->subMenu)
+                {
+                    // TODO draw left submenu indicator
+                }
+                drawMenuText(font, item->label, x, y, isSelected);
+            }
+            else if (item->options)
+            {
+                // TODO draw left & right indicators
+                drawMenuText(font, item->options[item->currentOpt], x, y, isSelected);
+            }
+
+            // Move to the next item
+            pageStart = pageStart->next;
+        }
+
+        // Move to the next row
+        y += (font->height + (TEXT_OFFSET * 2) + ROW_SPACING);
+    }
+
+    if (menu->items->length > ITEMS_PER_PAGE)
+    {
+        // TODO Draw DOWN page indicator
+    }
 }
