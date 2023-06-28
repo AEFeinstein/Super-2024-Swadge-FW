@@ -3,8 +3,6 @@
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
-#include "spiffs_font.h"
-#include "spiffs_wsg.h"
 
 static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
                          bool leftArrow, bool rightArrow);
