@@ -162,6 +162,8 @@ typedef struct _menu_t
     menu_t* parentMenu;  ///< The parent menu, may be NULL if this is not a submenu
 } menu_t;
 
+extern const char* mnuBackStr;
+
 menu_t* initMenu(const char* title, menuCb cbFunc) __attribute__((warn_unused_result));
 void deinitMenu(menu_t* menu);
 menu_t* startSubMenu(menu_t* menu, const char* label) __attribute__((warn_unused_result));
@@ -173,8 +175,5 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
 void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val);
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
-
-void drawMenu(menu_t* menu, font_t* font);
-void drawMenuThemed(menu_t* menu, font_t* font);
 
 #endif
