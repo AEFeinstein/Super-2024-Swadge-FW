@@ -2,7 +2,8 @@
 #define _MENU_RENDERER_H_
 
 #include "menu.h"
-#include "font.h"
+#include "spiffs_font.h"
+#include "spiffs_wsg.h"
 
 typedef struct
 {
