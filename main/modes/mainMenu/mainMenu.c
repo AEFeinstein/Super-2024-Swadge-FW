@@ -2,13 +2,13 @@
 // Includes
 //==============================================================================
 
-#include "mainMenu.h"
-#include "menu.h"
 #include "swadge2024.h"
 
+#include "mainMenu.h"
 #include "demoMode.h"
 #include "pong.h"
 #include "mode_colorchord.h"
+
 #include "settingsManager.h"
 
 //==============================================================================
@@ -18,6 +18,7 @@
 typedef struct
 {
     menu_t* menu;
+    menuRender_t* renderer;
     font_t logbook;
     song_t jingle;
 } mainMenu_t;
@@ -103,6 +104,9 @@ static void mainMenuEnterMode(void)
                           getScreensaverTimeSetting());
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    // Initialize menu renderer
+    mainMenu->renderer = initMenuRenderer(&mainMenu->logbook);
 }
 
 /**
@@ -112,6 +116,9 @@ static void mainMenuExitMode(void)
 {
     // Deinit menu
     deinitMenu(mainMenu->menu);
+
+    // Deinit renderer
+    deinitMenuRenderer(mainMenu->renderer);
 
     // Free the font
     freeFont(&mainMenu->logbook);
@@ -138,7 +145,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenuThemed(mainMenu->menu, &mainMenu->logbook);
+    drawMenuThemed(mainMenu->menu, mainMenu->renderer);
 
     // Set LEDs, just because
     led_t leds[CONFIG_NUM_LEDS] = {0};
