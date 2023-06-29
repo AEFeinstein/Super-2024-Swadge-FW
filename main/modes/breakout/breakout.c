@@ -13,7 +13,10 @@
 
 #include "esp_random.h"
 #include "breakout.h"
+
+#include "gameData.h"
 #include "tilemap.h"
+#include "entityManager.h"
 
 //==============================================================================
 // Defines
@@ -71,7 +74,10 @@ typedef struct
 {
     menu_t* menu; ///< The menu structure
     font_t ibm;   ///< The font used in the menu and game
+    
+    gameData_t gameData;
     tilemap_t tilemap;
+    entityManager_t entityManager;
 
     breakoutScreen_t screen; ///< The screen being displayed
 
@@ -212,7 +218,12 @@ static void breakoutEnterMode(void)
     // Initialize the menu
     breakout->menu = initMenu(breakoutName, breakoutMenuCb);
 
+    initializeGameData(&(breakout->gameData));
     initializeTileMap(&(breakout->tilemap));
+    initializeEntityManager(&(breakout->entityManager), &(breakout->tilemap), &(breakout->gameData));
+    
+    breakout->tilemap.entityManager = &(breakout->entityManager);
+    breakout->tilemap.executeTileSpawnAll = true;
 
     loadMapFromFile(&(breakout->tilemap), "level1.bin");
 
@@ -256,6 +267,9 @@ static void breakoutExitMode(void)
     freeSong(&breakout->bgm);
     freeSong(&breakout->hit1);
     freeSong(&breakout->hit2);
+
+    freeTilemap(&breakout->tilemap);
+    freeEntityManager(&breakout->entityManager);
     // Free everything else
     free(breakout);
 }
@@ -392,9 +406,12 @@ static void breakoutGameLoop(int64_t elapsedUs)
     // breakoutControlPlayerPaddle();
     // breakoutControlCpuPaddle();
     // breakoutUpdatePhysics(elapsedUs);
+    
+    updateEntities(&(breakout->entityManager));
 
     // Draw the field
     breakoutDrawField();
+    drawEntities(&(breakout->entityManager));
     drawTileMap(&(breakout->tilemap));
 }
 

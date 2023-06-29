@@ -29,7 +29,7 @@ void initializeTileMap(tilemap_t *tilemap)
     tilemap->mapOffsetX = 0;
     tilemap->mapOffsetY = 0;
 
-    tilemap->tileSpawnEnabled = false;
+    tilemap->tileSpawnEnabled = true;
     tilemap->executeTileSpawnColumn = -1;
     tilemap->executeTileSpawnRow = -1;
 

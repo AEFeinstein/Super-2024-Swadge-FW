@@ -31,10 +31,10 @@ typedef enum {
 } bgmEnum_t;
 
 typedef enum {
-    SP_PLAYER_IDLE,
-    SP_PLAYER_WALK1,
-    SP_PLAYER_WALK2,
-    SP_PLAYER_WALK3,
+    SP_PADDLE_0,
+    SP_PADDLE_1,
+    SP_PADDLE_2,
+    SP_BALL,
     SP_PLAYER_JUMP,
     SP_PLAYER_SLIDE,
     SP_PLAYER_HURT,

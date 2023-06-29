@@ -10,14 +10,14 @@
 #include "common_typedef.h"
 #include "entity.h"
 #include "tilemap.h"
-#include "gameData.h"
+#include "gameData.h"51
 #include "hdw-tft.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 32
-#define SPRITESET_SIZE 51
+#define SPRITESET_SIZE 4
 
 //==============================================================================
 // Structs

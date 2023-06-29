@@ -41,11 +41,11 @@ void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilema
 
 void loadSprites(entityManager_t * entityManager)
 {
-    /*loadWsg("sprite000.wsg", &entityManager->sprites[SP_PLAYER_IDLE]);
-    loadWsg("sprite001.wsg", &entityManager->sprites[SP_PLAYER_WALK1]);
-    loadWsg("sprite002.wsg", &entityManager->sprites[SP_PLAYER_WALK2]);
-    loadWsg("sprite003.wsg", &entityManager->sprites[SP_PLAYER_WALK3]);
-    loadWsg("sprite004.wsg", &entityManager->sprites[SP_PLAYER_JUMP]);
+    loadWsg("paddle000.wsg", &entityManager->sprites[SP_PADDLE_0], false);
+    loadWsg("paddle001.wsg", &entityManager->sprites[SP_PADDLE_1], false);
+    loadWsg("paddle002.wsg", &entityManager->sprites[SP_PADDLE_2], false);
+    loadWsg("ball.wsg", &entityManager->sprites[SP_BALL], false);
+    /*loadWsg("sprite004.wsg", &entityManager->sprites[SP_PLAYER_JUMP]);
     loadWsg("sprite005.wsg", &entityManager->sprites[SP_PLAYER_SLIDE]);
     loadWsg("sprite006.wsg", &entityManager->sprites[SP_PLAYER_HURT]);
     loadWsg("sprite007.wsg", &entityManager->sprites[SP_PLAYER_CLIMB]);
@@ -193,9 +193,10 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
     entity_t *createdEntity;
 
     switch(objectIndex){
-        /*case ENTITY_PLAYER:
+        case ENTITY_PLAYER_PADDLE_BOTTOM:
             createdEntity = createPlayer(entityManager, x, y);
             break;
+        /*
         case ENTITY_TEST:
             createdEntity = createTestObject(entityManager, x, y);
             break;
@@ -312,7 +313,7 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
 
     return createdEntity;
 }
-/*
+
 entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {
     entity_t * entity = findInactiveEntity(entityManager);
@@ -332,16 +333,16 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->yMaxSpeed = 64; //72;
     entity->xDamping = 1;
     entity->yDamping = 4;
-    entity->gravityEnabled = true;
+    entity->gravityEnabled = false;
     entity->gravity = 4;
-    entity->falling = true;
+    entity->falling = false;
     entity->jumpPower = 0;
     entity->spriteFlipVertical = false;
     entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
     //entity->type = ENTITY_PLAYER;
-    entity->spriteIndex = SP_PLAYER_IDLE;
+    entity->spriteIndex = SP_PADDLE_0;
     entity->updateFunction = &updatePlayer;
     entity->collisionHandler = &playerCollisionHandler;
     entity->tileCollisionHandler = &playerTileCollisionHandler;
@@ -349,7 +350,7 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->overlapTileHandler = &playerOverlapTileHandler;
     return entity;
 }
-
+/*
 entity_t* createTestObject(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {
     entity_t * entity = findInactiveEntity(entityManager);
@@ -1196,14 +1197,14 @@ entity_t* createCheckpoint(entityManager_t * entityManager, uint16_t x, uint16_t
 
     return entity;
 };
-
+*/
 void freeEntityManager(entityManager_t * self){
     free(self->entities);
     for(uint8_t i=0; i<SPRITESET_SIZE; i++){
         freeWsg(&self->sprites[i]);
     }
 }
-
+/*
 entity_t* createBgmChange1(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {
     entity_t * entity = findInactiveEntity(entityManager);
