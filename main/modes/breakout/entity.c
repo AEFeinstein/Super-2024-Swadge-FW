@@ -65,9 +65,17 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     // self->tileCollisionHandler = NULL;
     // self->overlapTileHandler = NULL;
 };
-/*
+
 void updatePlayer(entity_t *self)
 {
+    // Check if the touch area is touched
+    int32_t centerVal, intensityVal;
+    if (getTouchCentroid(&centerVal, &intensityVal))
+    {
+        // If there is a touch, move the paddle to that location of the touch
+        self->x = centerVal << 2;
+    }
+
     if (self->gameData->btnState & PB_B)
     {
         self->xMaxSpeed = 52;
@@ -171,6 +179,7 @@ void updatePlayer(entity_t *self)
         self->animationTimer--;
     }
 
+    /*
     if (self->hp >2 && self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B) && self->animationTimer == 0)
     {
         entity_t * createdEntity = createEntity(self->entityManager, ENTITY_WAVE_BALL, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
@@ -181,7 +190,7 @@ void updatePlayer(entity_t *self)
              //buzzer_play_sfx(&sndWaveBall);
         }
         self->animationTimer = 30;
-    }
+    }*/
 
     if(
         (
@@ -193,15 +202,15 @@ void updatePlayer(entity_t *self)
         self->gameData->changeState = ST_PAUSE;
     }
 
-    moveEntityWithTileCollisions(self);
-    dieWhenFallingOffScreen(self);
-    applyGravity(self);
-    applyDamping(self);
-    detectEntityCollisions(self);
-    animatePlayer(self);
+    //moveEntityWithTileCollisions(self);
+    //dieWhenFallingOffScreen(self);
+    //applyGravity(self);
+    //applyDamping(self);
+    //detectEntityCollisions(self);
+    //animatePlayer(self);
     
 };
-
+/*
 void updateTestObject(entity_t *self)
 {
     if(self->gameData->frameCount % 10 == 0) {
@@ -408,11 +417,12 @@ void moveEntityWithTileCollisions(entity_t *self)
     self->x = newX + self->xspeed;
     self->y = newY + self->yspeed;
 }
-
+*/
 void defaultFallOffTileHandler(entity_t *self){
     self->falling = true;
 }
 
+/*
 void applyDamping(entity_t *self)
 {
     if (!self->falling || !self->gravityEnabled)
@@ -577,10 +587,10 @@ void detectEntityCollisions(entity_t *self)
         }
     }
 }
-
+*/
 void playerCollisionHandler(entity_t *self, entity_t *other)
 {
-    switch (other->type)
+    /*switch (other->type)
     {
         case ENTITY_TEST:
         case ENTITY_DUST_BUNNY:
@@ -679,9 +689,10 @@ void playerCollisionHandler(entity_t *self, entity_t *other)
         {
             break;
         }
-    }
+    }*/
 }
 
+/*
 void enemyCollisionHandler(entity_t *self, entity_t *other)
 {
     switch (other->type)
@@ -723,6 +734,7 @@ void enemyCollisionHandler(entity_t *self, entity_t *other)
         }
     }
 }
+*/
 
 void dummyCollisionHandler(entity_t *self, entity_t *other)
 {
@@ -731,7 +743,7 @@ void dummyCollisionHandler(entity_t *self, entity_t *other)
 
 bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
-    switch (tileId)
+    /*switch (tileId)
     {
     case TILE_CONTAINER_1:
     case TILE_BRICK_BLOCK:
@@ -885,11 +897,11 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         }
         // trigger tile collision resolution
         return true;
-    }
+    }*/
 
     return false;
 }
-
+/*
 bool enemyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     switch(tileId){
@@ -957,12 +969,13 @@ bool enemyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8
 
     return false;
 }
-
+*/
 bool dummyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
     return false;
 }
 
+/*
 void dieWhenFallingOffScreen(entity_t *self)
 {
     uint16_t deathBoundary = (self->tilemap->mapOffsetY + TILEMAP_DISPLAY_HEIGHT_PIXELS + DESPAWN_THRESHOLD);
@@ -975,13 +988,14 @@ void dieWhenFallingOffScreen(entity_t *self)
         self->gameData->changeState = ST_DEAD;
         destroyEntity(self, true);
     }
-}
+}*/
 
 void updateDummy(entity_t *self)
 {
     // Do nothing, because that's what dummies do!
 }
 
+/*
 void updateScrollLockLeft(entity_t *self)
 {
     self->tilemap->minMapOffsetX = (self->x >> SUBPIXEL_RESOLUTION) - 8;
@@ -1688,9 +1702,9 @@ void updateCheckpoint(entity_t* self){
 
     despawnWhenOffscreen(self);
 }
-
+*/
 void playerOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty){
-    switch(tileId){
+    /*switch(tileId){
         case TILE_COIN_1...TILE_COIN_3:{
             setTile(self->tilemap, tx, ty, TILE_EMPTY);
             addCoins(self->gameData, 1);
@@ -1715,13 +1729,14 @@ void playerOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
         if(self->yspeed < 0){
             self->yspeed = -32;
         }
-    }
+    }*/
 }
 
 void defaultOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty){
     //Nothing to do.
 }
 
+/*
 void updateBgmChange(entity_t* self){
     self->gameData->changeBgm = self->xDamping;
     destroyEntity(self, true);
