@@ -15,7 +15,6 @@ typedef struct
 menuRender_t* initMenuRenderer(font_t* menuFont);
 void deinitMenuRenderer(menuRender_t* renderer);
 
-void drawMenu(menu_t* menu, font_t* font);
 void drawMenuThemed(menu_t* menu, menuRender_t* renderer);
 
 #endif
