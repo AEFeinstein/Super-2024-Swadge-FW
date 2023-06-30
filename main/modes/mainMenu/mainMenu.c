@@ -145,20 +145,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenuThemed(mainMenu->menu, mainMenu->renderer);
-
-    // Set LEDs, just because
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-
-    leds[0].r = 0xFF;
-    leds[1].g = 0xFF;
-    leds[2].b = 0xFF;
-    leds[3].r = 0xFF;
-    leds[4].g = 0xFF;
-    leds[5].b = 0xFF;
-    leds[6].r = 0xFF;
-    leds[7].g = 0xFF;
-    setLeds(leds, 8);
+    drawMenuThemed(mainMenu->menu, mainMenu->renderer, elapsedUs);
 }
 
 /**

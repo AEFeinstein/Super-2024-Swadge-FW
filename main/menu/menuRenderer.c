@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <esp_random.h>
 #include "menuRenderer.h"
 #include "hdw-tft.h"
 #include "shapes.h"
@@ -22,6 +23,11 @@
 #define PAGE_ARROW_X_OFFSET 60
 #define PAGE_ARROW_Y_OFFSET 5
 #define Y_SECTION_MARGIN    20
+
+#define MENU_LED_BRIGHTNESS_MIN     128
+#define MENU_LED_BRIGHTNESS_RANGE   128
+#define MENU_LED_TIME_STEP_US_MIN   8192
+#define MENU_LED_TIME_STEP_US_RANGE 16384
 
 //==============================================================================
 // Function Prototypes
@@ -46,6 +52,15 @@ menuRender_t* initMenuRenderer(font_t* menuFont)
     renderer->font         = menuFont;
     loadWsg("mnuArrow.wsg", &renderer->arrow, false);
     loadWsg("mnuArrowS.wsg", &renderer->arrowS, false);
+
+    // Initialize LEDs
+    for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        renderer->ledTimers[idx].maxBrightness = MENU_LED_BRIGHTNESS_MIN + (esp_random() % MENU_LED_BRIGHTNESS_RANGE);
+        renderer->ledTimers[idx].periodUs = MENU_LED_TIME_STEP_US_MIN + (esp_random() % MENU_LED_TIME_STEP_US_RANGE);
+    }
+    setLeds(renderer->leds, CONFIG_NUM_LEDS);
+
     return renderer;
 }
 
@@ -183,10 +198,52 @@ static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, in
  *
  * @param menu
  * @param renderer
+ * @param elapsedUs
  */
-void drawMenuThemed(menu_t* menu, menuRender_t* renderer)
+void drawMenuThemed(menu_t* menu, menuRender_t* renderer, int64_t elapsedUs)
 {
-    // Clear everything first
+    // For each LED
+    for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
+    {
+        // Get a convenient reference to that LED's timers
+        menuLed_t* mLed = &renderer->ledTimers[idx];
+        // Increment the timer
+        mLed->timerUs += elapsedUs;
+        // Check if the timer expired
+        while (mLed->timerUs >= mLed->periodUs)
+        {
+            // Decrement the timer
+            mLed->timerUs -= mLed->periodUs;
+            // If the LED is lighting
+            if (mLed->isLighting)
+            {
+                // Make it brighter
+                renderer->leds[idx].r++;
+                // Check if it hit peak brightness
+                if (mLed->maxBrightness == renderer->leds[idx].r)
+                {
+                    mLed->isLighting = false;
+                }
+            }
+            else
+            {
+                // Make it dimmer
+                renderer->leds[idx].r--;
+                // Check if the LED is off
+                if (0 == renderer->leds[idx].r)
+                {
+                    mLed->isLighting = true;
+                    // Pick new random speed and brightness
+                    mLed->maxBrightness = MENU_LED_BRIGHTNESS_MIN + (esp_random() % MENU_LED_BRIGHTNESS_RANGE);
+                    mLed->periodUs      = MENU_LED_TIME_STEP_US_MIN + (esp_random() % MENU_LED_TIME_STEP_US_RANGE);
+                }
+            }
+        }
+    }
+    // Light the LEDs
+    setLeds(renderer->leds, CONFIG_NUM_LEDS);
+
+    // Clear the TFT
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
 
     // Find the start of the 'page'
