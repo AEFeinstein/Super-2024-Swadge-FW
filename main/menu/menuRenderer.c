@@ -1,132 +1,41 @@
-#include "menuRenderer.h"
+//==============================================================================
+// Includes
+//==============================================================================
 
+#include "menuRenderer.h"
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
 
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define CORNER_THICKNESS    2
+#define CORNER_LENGTH       7
+#define FILL_OFFSET         4
+#define TEXT_OFFSET         6
+#define ROW_SPACING         3
+#define TOP_LINE_SPACING    3
+#define TOP_LINE_THICKNESS  1
+#define ITEMS_PER_PAGE      5
+#define PAGE_ARROW_X_OFFSET 60
+#define PAGE_ARROW_Y_OFFSET 5
+#define Y_SECTION_MARGIN    20
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
 static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
-                         bool leftArrow, bool rightArrow);
+                         bool leftArrow, bool rightArrow, bool doubleArrows);
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
- * Render a menu to the TFT. This should be called each main loop so that menu
- * animations are smooth. It will draw over the entire display, but may be drawn
- * over afterwards.
- *
- * @param menu The menu to render
- * @param font The font to render the menu with
- */
-void drawMenu(menu_t* menu, font_t* font)
-{
-    // Clear everything first
-    clearPxTft();
-
-#define ITEMS_PER_PAGE 5
-    // Find the start of the 'page'
-    node_t* pageStart = menu->items->first;
-    uint8_t pageIdx   = 0;
-
-    node_t* curNode = menu->items->first;
-    while (NULL != curNode)
-    {
-        if (curNode->val == menu->currentItem->val)
-        {
-            // Found it, stop!
-            break;
-        }
-        else
-        {
-            curNode = curNode->next;
-            pageIdx++;
-            if (ITEMS_PER_PAGE <= pageIdx && NULL != curNode)
-            {
-                pageIdx   = 0;
-                pageStart = curNode;
-            }
-        }
-    }
-
-    int16_t x = 20;
-    int16_t y = 20;
-
-    // Draw an underlined title
-    drawText(font, c555, menu->title, x, y);
-    y += (font->height + 2);
-    drawLine(x, y, x + textWidth(font, menu->title), y, c555, 0);
-    y += 3;
-
-    // Draw page indicators
-    if (menu->items->length > ITEMS_PER_PAGE)
-    {
-        drawText(font, c555, "~UP~", x, y);
-    }
-    y += (font->height + 2);
-
-    // Draw a page-worth of items
-    for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
-    {
-        if (NULL != pageStart)
-        {
-            menuItem_t* item = (menuItem_t*)pageStart->val;
-            // Draw an indicator if the current item is selected
-            if (menu->currentItem->val == item)
-            {
-                drawText(font, c555, "X", 0, y);
-            }
-
-            // Draw the label(s)
-            if (item->minSetting != item->maxSetting)
-            {
-                char label[64] = {0};
-                snprintf(label, sizeof(label) - 1, "< %s: %d >", item->label, item->currentSetting);
-                drawText(font, c555, label, x, y);
-            }
-            else if (item->label)
-            {
-                if (item->subMenu)
-                {
-                    char label[64] = {0};
-                    snprintf(label, sizeof(label) - 1, "%s >>", item->label);
-                    drawText(font, c555, label, x, y);
-                }
-                else
-                {
-                    drawText(font, c555, item->label, x, y);
-                }
-            }
-            else if (item->options)
-            {
-                char label[64] = {0};
-                snprintf(label, sizeof(label) - 1, "< %s >", item->options[item->currentOpt]);
-                drawText(font, c555, label, x, y);
-            }
-
-            // Move to the next item
-            pageStart = pageStart->next;
-        }
-
-        // Move to the next row
-        y += (font->height + 2);
-    }
-
-    // Draw page indicators
-    if (menu->items->length > ITEMS_PER_PAGE)
-    {
-        drawText(font, c555, "~DOWN~", x, y);
-    }
-    y += (font->height + 2);
-}
-
-// Defines for dimensions
-#define CORNER_THICKNESS   2
-#define CORNER_LENGTH      7
-#define FILL_OFFSET        4
-#define TEXT_OFFSET        8
-#define ROW_SPACING        2
-#define TOP_LINE_SPACING   3
-#define TOP_LINE_THICKNESS 1
-
-/**
- * @brief TODO
+ * @brief TODO doc
  *
  * @param menuFont
  * @return menuRender_t*
@@ -155,16 +64,17 @@ void deinitMenuRenderer(menuRender_t* renderer)
 /**
  * @brief TODO doc
  *
- * @param font
+ * @param renderer
  * @param text
  * @param x
  * @param y
  * @param isSelected
  * @param leftArrow
  * @param rightArrow
+ * @param doubleArrows
  */
 static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
-                         bool leftArrow, bool rightArrow)
+                         bool leftArrow, bool rightArrow, bool doubleArrows)
 {
     // Pick colors based on selection
     paletteColor_t cornerColor  = c411;
@@ -220,8 +130,8 @@ static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, in
     // Fill the background for selected items
     if (isSelected)
     {
-        fillDisplayArea(x + FILL_OFFSET, y + FILL_OFFSET, x + tWidth + FILL_OFFSET + TEXT_OFFSET,
-                        y + tHeight + FILL_OFFSET + TEXT_OFFSET, c411);
+        fillDisplayArea(x + FILL_OFFSET, y + FILL_OFFSET, x + TEXT_OFFSET + tWidth + (TEXT_OFFSET - FILL_OFFSET),
+                        y + TEXT_OFFSET + tHeight + (TEXT_OFFSET - FILL_OFFSET), c411);
     }
 
     // Draw the text
@@ -235,7 +145,16 @@ static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, in
         {
             arrow = &renderer->arrowS;
         }
-        drawWsg(arrow, x, y + TEXT_OFFSET + (tHeight / 2) - (arrow->h / 2), true, false, 0);
+        int16_t arrowX = x + CORNER_THICKNESS - arrow->w;
+        int16_t arrowY = y + TEXT_OFFSET + (tHeight / 2) - (arrow->h / 2);
+        drawWsg(arrow, arrowX, arrowY, true, false, 0);
+
+        // Draw another arrow if requested
+        if (doubleArrows)
+        {
+            arrowX -= arrow->w;
+            drawWsg(arrow, arrowX, arrowY, true, false, 0);
+        }
     }
 
     // Draw the right arrow, if applicable
@@ -246,8 +165,16 @@ static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, in
         {
             arrow = &renderer->arrowS;
         }
-        drawWsg(arrow, x + (TEXT_OFFSET * 2) + tWidth - arrow->w, y + TEXT_OFFSET + (tHeight / 2) - (arrow->h / 2),
-                false, false, 0);
+        int16_t arrowX = x + (TEXT_OFFSET * 2) + tWidth - CORNER_THICKNESS;
+        int16_t arrowY = y + TEXT_OFFSET + (tHeight / 2) - (arrow->h / 2);
+        drawWsg(arrow, arrowX, arrowY, false, false, 0);
+
+        // Draw another arrow if requested
+        if (doubleArrows)
+        {
+            arrowX += arrow->w;
+            drawWsg(arrow, arrowX, arrowY, false, false, 0);
+        }
     }
 }
 
@@ -261,8 +188,6 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer)
 {
     // Clear everything first
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
-
-#define ITEMS_PER_PAGE 5
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -288,16 +213,20 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer)
         }
     }
 
+    // Where to start drawing
     int16_t x = 20;
-    int16_t y = 12;
+    int16_t y = Y_SECTION_MARGIN;
 
     // Draw a title
     drawText(renderer->font, c542, menu->title, x, y);
-    y += (renderer->font->height + 2);
+    y += renderer->font->height + Y_SECTION_MARGIN;
 
     if (menu->items->length > ITEMS_PER_PAGE)
     {
-        // TODO Draw UP page indicator
+        // Draw UP page indicator
+        int16_t arrowX = PAGE_ARROW_X_OFFSET;
+        int16_t arrowY = y - renderer->arrow.h - PAGE_ARROW_Y_OFFSET;
+        drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 270);
     }
 
     // Draw a page-worth of items
@@ -314,18 +243,19 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer)
                 // Create key and value label, then draw it
                 char label[64] = {0};
                 snprintf(label, sizeof(label) - 1, "%s: %d", item->label, item->currentSetting);
-                drawMenuText(renderer, label, x, y, isSelected, true, true);
+                drawMenuText(renderer, label, x, y, isSelected, item->currentSetting != item->minSetting,
+                             item->currentSetting != item->maxSetting, false);
             }
             else if (item->label)
             {
                 // Draw text with arrow if there is a submenu or this is the back button
                 drawMenuText(renderer, item->label, x, y, isSelected, (mnuBackStr == item->label),
-                             (NULL != item->subMenu));
+                             (NULL != item->subMenu), true);
             }
             else if (item->options)
             {
                 // Draw text with arrows
-                drawMenuText(renderer, item->options[item->currentOpt], x, y, isSelected, true, true);
+                drawMenuText(renderer, item->options[item->currentOpt], x, y, isSelected, true, true, false);
             }
 
             // Move to the next item
@@ -336,8 +266,12 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer)
         y += (renderer->font->height + (TEXT_OFFSET * 2) + ROW_SPACING);
     }
 
+    y -= ROW_SPACING;
     if (menu->items->length > ITEMS_PER_PAGE)
     {
         // TODO Draw DOWN page indicator
+        int16_t arrowX = PAGE_ARROW_X_OFFSET;
+        int16_t arrowY = y + PAGE_ARROW_Y_OFFSET;
+        drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 90);
     }
 }
