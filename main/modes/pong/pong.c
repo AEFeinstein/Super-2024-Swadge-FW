@@ -337,7 +337,7 @@ static void pongMainLoop(int64_t elapsedUs)
             }
 
             // Draw the menu
-            drawMenuThemed(pong->menu, pong->menuRenderer);
+            drawMenuThemed(pong->menu, pong->menuRenderer, elapsedUs);
             break;
         }
         case PONG_GAME:
