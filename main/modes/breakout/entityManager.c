@@ -41,10 +41,22 @@ void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilema
 
 void loadSprites(entityManager_t * entityManager)
 {
-    loadWsg("paddle000.wsg", &entityManager->sprites[SP_PADDLE_0], false);
-    loadWsg("paddle001.wsg", &entityManager->sprites[SP_PADDLE_1], false);
-    loadWsg("paddle002.wsg", &entityManager->sprites[SP_PADDLE_2], false);
-    loadWsg("ball.wsg", &entityManager->sprites[SP_BALL], false);
+    loadWsg("paddle000.wsg", &(entityManager->sprites[SP_PADDLE_0].wsg), false);
+    entityManager->sprites[SP_PADDLE_0].originX=12;
+    entityManager->sprites[SP_PADDLE_0].originY=4;
+
+    loadWsg("paddle001.wsg", &entityManager->sprites[SP_PADDLE_1].wsg, false);
+    entityManager->sprites[SP_PADDLE_1].originX=12;
+    entityManager->sprites[SP_PADDLE_1].originY=4;
+
+    loadWsg("paddle002.wsg", &entityManager->sprites[SP_PADDLE_2].wsg, false);
+    entityManager->sprites[SP_PADDLE_2].originX=12;
+    entityManager->sprites[SP_PADDLE_2].originY=4;
+
+    loadWsg("ball.wsg", &entityManager->sprites[SP_BALL].wsg, false);
+    entityManager->sprites[SP_BALL].originX=4;
+    entityManager->sprites[SP_BALL].originY=4;
+
     /*loadWsg("sprite004.wsg", &entityManager->sprites[SP_PLAYER_JUMP]);
     loadWsg("sprite005.wsg", &entityManager->sprites[SP_PLAYER_SLIDE]);
     loadWsg("sprite006.wsg", &entityManager->sprites[SP_PLAYER_HURT]);
@@ -138,7 +150,7 @@ void drawEntities(entityManager_t * entityManager)
 
         if(currentEntity.active && currentEntity.visible)
         {
-            drawWsg(&entityManager->sprites[currentEntity.spriteIndex], (currentEntity.x >> SUBPIXEL_RESOLUTION) - 8 - entityManager->tilemap->mapOffsetX, (currentEntity.y >> SUBPIXEL_RESOLUTION)  - entityManager->tilemap->mapOffsetY - 8, currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
+            drawWsg(&(entityManager->sprites[currentEntity.spriteIndex].wsg), (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - entityManager->tilemap->mapOffsetX, (currentEntity.y >> SUBPIXEL_RESOLUTION)  - entityManager->tilemap->mapOffsetY - entityManager->sprites[currentEntity.spriteIndex].originY, currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
         }
     }
 };
@@ -1201,7 +1213,7 @@ entity_t* createCheckpoint(entityManager_t * entityManager, uint16_t x, uint16_t
 void freeEntityManager(entityManager_t * self){
     free(self->entities);
     for(uint8_t i=0; i<SPRITESET_SIZE; i++){
-        freeWsg(&self->sprites[i]);
+        freeWsg(&(self->sprites[i].wsg));
     }
 }
 /*
