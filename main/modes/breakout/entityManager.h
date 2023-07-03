@@ -10,8 +10,9 @@
 #include "common_typedef.h"
 #include "entity.h"
 #include "tilemap.h"
-#include "gameData.h"51
+#include "gameData.h"
 #include "hdw-tft.h"
+#include "sprite.h"
 
 //==============================================================================
 // Constants
@@ -25,7 +26,7 @@
 
 struct entityManager_t
 {
-    wsg_t sprites[SPRITESET_SIZE];
+    sprite_t sprites[SPRITESET_SIZE];
     entity_t * entities;
     uint8_t activeEntities;
 
