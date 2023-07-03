@@ -406,7 +406,7 @@ static void breakoutGameLoop(int64_t elapsedUs)
     // breakoutControlPlayerPaddle();
     // breakoutControlCpuPaddle();
     // breakoutUpdatePhysics(elapsedUs);
-    
+
     updateEntities(&(breakout->entityManager));
 
     // Draw the field
