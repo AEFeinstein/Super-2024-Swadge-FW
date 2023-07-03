@@ -208,10 +208,10 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
         case ENTITY_PLAYER_PADDLE_BOTTOM:
             createdEntity = createPlayer(entityManager, x, y);
             break;
-        /*
-        case ENTITY_TEST:
-            createdEntity = createTestObject(entityManager, x, y);
+        case ENTITY_PLAYER_BALL:
+            createdEntity = createBall(entityManager, x, y);
             break;
+        /*
         case ENTITY_SCROLL_LOCK_LEFT:
             createdEntity = createScrollLockLeft(entityManager, x, y);
             break;
@@ -362,8 +362,8 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->overlapTileHandler = &playerOverlapTileHandler;
     return entity;
 }
-/*
-entity_t* createTestObject(entityManager_t * entityManager, uint16_t x, uint16_t y)
+
+entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {
     entity_t * entity = findInactiveEntity(entityManager);
 
@@ -376,27 +376,27 @@ entity_t* createTestObject(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->xspeed = (x < (entityManager->tilemap->mapOffsetX + 120)) ? 8 : -8;
-    entity->yspeed = 0;
+    entity->xspeed = 64;
+    entity->yspeed = -64;
     entity->xMaxSpeed = 132;
     entity->yMaxSpeed = 132;
-    entity->gravityEnabled = true;
+    entity->gravityEnabled = false;
     entity->gravity = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->scoreValue = 100;
 
     //entity->type = ENTITY_TEST;
-    entity->spriteIndex = SP_ENEMY_BASIC;
-    entity->updateFunction = &updateTestObject;
-    entity->collisionHandler = &enemyCollisionHandler;
-    entity->tileCollisionHandler = &enemyTileCollisionHandler;
+    entity->spriteIndex = SP_BALL;
+    entity->updateFunction = &updateBall;
+    //entity->collisionHandler = &ballCollisionHandler;
+    entity->tileCollisionHandler = &ballTileCollisionHandler;
     entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
 
     return entity;
 }
-
+/*
 entity_t* createScrollLockLeft(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {
     entity_t * entity = findInactiveEntity(entityManager);

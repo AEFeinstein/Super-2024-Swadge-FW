@@ -15,9 +15,9 @@
 // Constants
 //==============================================================================
 #define SUBPIXEL_RESOLUTION 4
-#define TILE_SIZE_IN_POWERS_OF_2 4
-#define TILE_SIZE 16
-#define HALF_TILE_SIZE 8
+#define TILE_SIZE_IN_POWERS_OF_2 3
+#define TILE_SIZE 8
+#define HALF_TILE_SIZE 4
 #define DESPAWN_THRESHOLD 64
 
 #define SIGNOF(x) ((x > 0) - (x < 0))
@@ -69,14 +69,26 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
 void updatePlayer(entity_t *self)
 {
     // Check if the touch area is touched
-    int32_t centerVal, intensityVal;
-    if (getTouchCentroid(&centerVal, &intensityVal))
+    int32_t centerVal, intensityVal, touchIntoLevel,xdiff;
+    if(getTouchCentroid(&centerVal, &intensityVal))
     {
-        // If there is a touch, move the paddle to that location of the touch
-        self->x = centerVal << 2;
+        touchIntoLevel = (centerVal << 2) + 216;
+        touchIntoLevel = CLAMP(touchIntoLevel,580,3888);
+        xdiff = self->x - touchIntoLevel;
+        xdiff = CLAMP(xdiff, -1024, 1024);
+        if (self->x != touchIntoLevel)
+        {
+            self->xspeed = -xdiff;
+        } else {
+            self->xspeed = 0;
+        }
+    } else {
+        self->xspeed = 0;
     }
 
-    if (self->gameData->btnState & PB_B)
+    self->x += self->xspeed;
+
+    /*if (self->gameData->btnState & PB_B)
     {
         self->xMaxSpeed = 52;
     }
@@ -177,7 +189,7 @@ void updatePlayer(entity_t *self)
 
     if(self->animationTimer > 0){
         self->animationTimer--;
-    }
+    }*/
 
     /*
     if (self->hp >2 && self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B) && self->animationTimer == 0)
@@ -210,19 +222,13 @@ void updatePlayer(entity_t *self)
     //animatePlayer(self);
     
 };
-/*
-void updateTestObject(entity_t *self)
+
+void updateBall(entity_t *self)
 {
-    if(self->gameData->frameCount % 10 == 0) {
-        self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
-    }
-
-    despawnWhenOffscreen(self);
     moveEntityWithTileCollisions(self);
-    applyGravity(self);
-    detectEntityCollisions(self);
+    //detectEntityCollisions(self);
 };
-
+/*
 void updateHitBlock(entity_t *self)
 {
     if(self->homeTileY > self->tilemap->mapHeight){
@@ -308,6 +314,7 @@ void updateHitBlock(entity_t *self)
         destroyEntity(self, false);
     }
 };
+*/
 
 void moveEntityWithTileCollisions(entity_t *self)
 {
@@ -363,7 +370,7 @@ void moveEntityWithTileCollisions(entity_t *self)
             {
                 uint8_t newVerticalTile = getTile(self->tilemap, tx, newTy);
 
-                if (newVerticalTile > TILE_UNUSED_29 && newVerticalTile < TILE_BG_GOAL_ZONE)
+                //if (newVerticalTile > TILE_UNUSED_29 && newVerticalTile < TILE_BG_GOAL_ZONE)
                 {
                     if (self->tileCollisionHandler(self, newVerticalTile, tx, newTy, 2 << (self->yspeed > 0)))
                     {
@@ -393,7 +400,7 @@ void moveEntityWithTileCollisions(entity_t *self)
             {
                 uint8_t newHorizontalTile = getTile(self->tilemap, newTx, ty);
 
-                if (newHorizontalTile > TILE_UNUSED_29 && newHorizontalTile < TILE_BG_GOAL_ZONE)
+                //if (newHorizontalTile > TILE_UNUSED_29 && newHorizontalTile < TILE_BG_GOAL_ZONE)
                 {
                     if (self->tileCollisionHandler(self, newHorizontalTile, newTx, ty, (self->xspeed > 0)))
                     {
@@ -417,7 +424,7 @@ void moveEntityWithTileCollisions(entity_t *self)
     self->x = newX + self->xspeed;
     self->y = newY + self->yspeed;
 }
-*/
+
 void defaultFallOffTileHandler(entity_t *self){
     self->falling = true;
 }
@@ -873,7 +880,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         break;
     }
     }
-
+ */
     if (isSolid(tileId))
     {
         switch (direction)
@@ -897,7 +904,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         }
         // trigger tile collision resolution
         return true;
-    }*/
+    }
 
     return false;
 }
@@ -972,6 +979,34 @@ bool enemyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8
 */
 bool dummyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
+    return false;
+}
+
+bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+{
+    if (isSolid(tileId))
+    {
+        switch (direction)
+        {
+        case 0: // PB_LEFT
+            self->xspeed = -self->xspeed;
+            break;
+        case 1: // PB_RIGHT
+            self->xspeed = -self->xspeed;
+            break;
+        case 2: // PB_UP
+            self->yspeed = -self->yspeed;
+            break;
+        case 4: // PB_DOWN
+            self->yspeed = -self->yspeed;
+            break;
+        default: // Should never hit
+            return false;
+        }
+        // trigger tile collision resolution
+        return true;
+    }
+
     return false;
 }
 
