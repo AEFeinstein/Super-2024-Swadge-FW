@@ -44,18 +44,34 @@ void loadSprites(entityManager_t * entityManager)
     loadWsg("paddle000.wsg", &(entityManager->sprites[SP_PADDLE_0].wsg), false);
     entityManager->sprites[SP_PADDLE_0].originX=12;
     entityManager->sprites[SP_PADDLE_0].originY=4;
+    entityManager->sprites[SP_PADDLE_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_PADDLE_0].collisionBox.x1 = 23;
+    entityManager->sprites[SP_PADDLE_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_PADDLE_0].collisionBox.y1 = 7;
 
     loadWsg("paddle001.wsg", &entityManager->sprites[SP_PADDLE_1].wsg, false);
     entityManager->sprites[SP_PADDLE_1].originX=12;
     entityManager->sprites[SP_PADDLE_1].originY=4;
+    entityManager->sprites[SP_PADDLE_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_PADDLE_1].collisionBox.x1 = 23;
+    entityManager->sprites[SP_PADDLE_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_PADDLE_1].collisionBox.y1 = 7;
 
     loadWsg("paddle002.wsg", &entityManager->sprites[SP_PADDLE_2].wsg, false);
     entityManager->sprites[SP_PADDLE_2].originX=12;
     entityManager->sprites[SP_PADDLE_2].originY=4;
+    entityManager->sprites[SP_PADDLE_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_PADDLE_2].collisionBox.x1 = 23;
+    entityManager->sprites[SP_PADDLE_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_PADDLE_2].collisionBox.y1 = 7;
 
     loadWsg("ball.wsg", &entityManager->sprites[SP_BALL].wsg, false);
     entityManager->sprites[SP_BALL].originX=4;
     entityManager->sprites[SP_BALL].originY=4;
+    entityManager->sprites[SP_BALL].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL].collisionBox.y1 = 7;
 
     /*loadWsg("sprite004.wsg", &entityManager->sprites[SP_PLAYER_JUMP]);
     loadWsg("sprite005.wsg", &entityManager->sprites[SP_PLAYER_SLIDE]);
@@ -353,7 +369,7 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
-    //entity->type = ENTITY_PLAYER;
+    entity->type = ENTITY_PLAYER_PADDLE_BOTTOM;
     entity->spriteIndex = SP_PADDLE_0;
     entity->updateFunction = &updatePlayer;
     entity->collisionHandler = &playerCollisionHandler;
@@ -386,10 +402,10 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical = false;
     entity->scoreValue = 100;
 
-    //entity->type = ENTITY_TEST;
+    entity->type = ENTITY_PLAYER_BALL;
     entity->spriteIndex = SP_BALL;
     entity->updateFunction = &updateBall;
-    //entity->collisionHandler = &ballCollisionHandler;
+    entity->collisionHandler = &ballCollisionHandler;
     entity->tileCollisionHandler = &ballTileCollisionHandler;
     entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
