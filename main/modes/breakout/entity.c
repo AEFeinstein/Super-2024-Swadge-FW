@@ -10,6 +10,7 @@
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "esp_random.h"
+#include "aabb_utils.h"
 
 //==============================================================================
 // Constants
@@ -226,7 +227,12 @@ void updatePlayer(entity_t *self)
 void updateBall(entity_t *self)
 {
     moveEntityWithTileCollisions(self);
-    //detectEntityCollisions(self);
+    detectEntityCollisions(self);
+
+    if((self->y >> 4) > 240){
+        self->y = 236 << 4;
+        self->yspeed = -24;
+    }
 };
 /*
 void updateHitBlock(entity_t *self)
@@ -577,24 +583,44 @@ void animatePlayer(entity_t *self)
         self->spriteIndex = SP_PLAYER_IDLE;
     }
 }
-
+*/
 void detectEntityCollisions(entity_t *self)
 {
+    sprite_t* selfSprite = &(self->entityManager->sprites[self->spriteIndex]);
+    box_t* selfSpriteBox = &(selfSprite->collisionBox);
+    
+    box_t selfBox;
+    selfBox.x0 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->originX + selfSpriteBox->x0;
+    selfBox.y0 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->originY + selfSpriteBox->y0;
+    selfBox.x1 = (self->x >> SUBPIXEL_RESOLUTION) - selfSprite->originX + selfSpriteBox->x1;
+    selfBox.y1 = (self->y >> SUBPIXEL_RESOLUTION) - selfSprite->originY + selfSpriteBox->y1;
+
+    entity_t *checkEntity;
+    sprite_t* checkEntitySprite;
+    box_t* checkEntitySpriteBox;          
+    box_t checkEntityBox;
+
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
-        entity_t *checkEntity = &(self->entityManager->entities[i]);
+        checkEntity = &(self->entityManager->entities[i]);
         if (checkEntity->active && checkEntity != self)
         {
-            uint32_t dist = abs(self->x - checkEntity->x) + abs(self->y - checkEntity->y);
+            checkEntitySprite = &(self->entityManager->sprites[checkEntity->spriteIndex]);
+            checkEntitySpriteBox = &(checkEntitySprite->collisionBox);
+            
+            checkEntityBox.x0 = (checkEntity->x >> SUBPIXEL_RESOLUTION) - checkEntitySprite->originX + checkEntitySpriteBox->x0;
+            checkEntityBox.y0 = (checkEntity->y >> SUBPIXEL_RESOLUTION) - checkEntitySprite->originY + checkEntitySpriteBox->y0;
+            checkEntityBox.x1 = (checkEntity->x >> SUBPIXEL_RESOLUTION) - checkEntitySprite->originX + checkEntitySpriteBox->x1;
+            checkEntityBox.y1 = (checkEntity->y >> SUBPIXEL_RESOLUTION) - checkEntitySprite->originY + checkEntitySpriteBox->y1;
 
-            if (dist < 200)
+            if (boxesCollide(selfBox, checkEntityBox, 0))
             {
                 self->collisionHandler(self, checkEntity);
             }
         }
     }
 }
-*/
+
 void playerCollisionHandler(entity_t *self, entity_t *other)
 {
     /*switch (other->type)
@@ -746,6 +772,23 @@ void enemyCollisionHandler(entity_t *self, entity_t *other)
 void dummyCollisionHandler(entity_t *self, entity_t *other)
 {
     return;
+}
+
+void ballCollisionHandler(entity_t *self, entity_t *other)
+{
+    switch (other->type)
+    {
+        case ENTITY_PLAYER_PADDLE_BOTTOM:
+            if(other->y > self->y){
+                self->yspeed=-32;
+                self->xspeed=CLAMP((self->x - other->x)/2,-96,96);
+            }       
+            break;
+        default:
+        {
+            break;
+        }
+    }
 }
 
 bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
