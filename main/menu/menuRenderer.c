@@ -7,6 +7,7 @@
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
+#include "color_utils.h"
 
 //==============================================================================
 // Defines
@@ -218,9 +219,9 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer, int64_t elapsedUs)
             if (mLed->isLighting)
             {
                 // Make it brighter
-                renderer->leds[idx].r++;
+                renderer->ledTimers[idx].brightness++;
                 // Check if it hit peak brightness
-                if (mLed->maxBrightness == renderer->leds[idx].r)
+                if (mLed->maxBrightness == renderer->ledTimers[idx].brightness)
                 {
                     mLed->isLighting = false;
                 }
@@ -228,9 +229,9 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer, int64_t elapsedUs)
             else
             {
                 // Make it dimmer
-                renderer->leds[idx].r--;
+                renderer->ledTimers[idx].brightness--;
                 // Check if the LED is off
-                if (0 == renderer->leds[idx].r)
+                if (0 == renderer->ledTimers[idx].brightness)
                 {
                     mLed->isLighting = true;
                     // Pick new random speed and brightness
@@ -238,6 +239,7 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer, int64_t elapsedUs)
                     mLed->periodUs      = MENU_LED_TIME_STEP_US_MIN + (esp_random() % MENU_LED_TIME_STEP_US_RANGE);
                 }
             }
+            renderer->leds[idx].r = gamma_correction_table[renderer->ledTimers[idx].brightness];
         }
     }
     // Light the LEDs

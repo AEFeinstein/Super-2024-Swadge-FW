@@ -11,6 +11,7 @@ typedef struct
     uint32_t periodUs;
     uint32_t timerUs;
     uint8_t maxBrightness;
+    uint8_t brightness;
     bool isLighting;
 } menuLed_t;
 

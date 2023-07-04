@@ -38,6 +38,9 @@
 #include "palette.h"
 #include "hdw-led.h"
 
+/// A LUT which maps perceived brightness to LED brightness
+extern const uint32_t gamma_correction_table[256];
+
 uint32_t EHSVtoHEXhelper(uint8_t hue, uint8_t sat, uint8_t val, bool applyGamma);
 led_t LedEHSVtoHEXhelper(uint8_t hue, uint8_t sat, uint8_t val, bool applyGamma);
 paletteColor_t paletteHsvToHex(uint8_t hue, uint8_t sat, uint8_t val);
