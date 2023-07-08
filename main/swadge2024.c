@@ -63,7 +63,7 @@
  * \subsection swadge_mode_api Swadge Mode APIs
  *
  * - swadge2024.h: Write a mode. This is a good starting place
- * - menu.h: Make a menu within a mode
+ * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
  *
  * \subsection hw_api Hardware APIs
  *

@@ -11,6 +11,10 @@
  * When a menu is initialized a callback function must be provided. When menu options are selected, submenus are
  * entered, or multi-item selections are scrolled, the callback is called.
  *
+ * The menu data structure is created and managed in menu.h, but graphical rendering is handled in
+ * menuLogbookRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
+ * data structure in a number of styles. As of now, only menuLogbookRenderer.h is supplied.
+ *
  * \section menu_usage Usage
  *
  * Menus can be initialized with initMenu() and deinitialized with deinitMenu().
@@ -28,7 +32,7 @@
  * Button events must be passed to the menu with menuButton().
  * These button presses should not be handled elsewhere simultaneously.
  *
- * Menus can be drawn with drawMenu(). A menu will draw over the entire display but may be drawn over later.
+ * Menus are drawn with a renderer, such as menuLogbookRenderer.h.
  *
  * \section menu_example Example
  *
@@ -53,7 +57,7 @@
  * static const char demoSettingLabel[] = "Setting";
  * \endcode
  *
- * Initialize a menu:
+ * Initialize a menu and renderer:
  * \code{.c}
  * // Allocate the menu
  * menu_t * menu;
@@ -84,6 +88,12 @@
  * addSingleItemToMenu(menu, demoMenu5);
  * addSingleItemToMenu(menu, demoMenu6);
  * addSettingsItemToMenu(menu, demoSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
+ *
+ * // Load a font
+ * font_t logbook;
+ * loadFont("logbook.font", &logbook, false);
+ * // Initialize a renderer
+ * menuLogbookRenderer_t* renderer = initMenuLogbookRenderer(&logbook);
  * \endcode
  *
  * Process button events:
@@ -95,9 +105,9 @@
  * }
  * \endcode
  *
- * Draw the menu:
+ * Draw the menu from swadgeMode_t.fnMainLoop:
  * \code{.c}
- * drawMenu(menu, &ibm);
+ * drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
  * \endcode
  *
  * Receive menu callbacks:
@@ -108,10 +118,12 @@
  * }
  * \endcode
  *
- * Deinitialize menu:
+ * Deinitialize menu and renderer:
  * \code{.c}
  * // Free the menu
  * deinitMenu(menu);
+ * // Free the renderer
+ * deinitMenuLogbookRenderer(renderer);
  * \endcode
  */
 
@@ -162,6 +174,7 @@ typedef struct _menu_t
     menu_t* parentMenu;  ///< The parent menu, may be NULL if this is not a submenu
 } menu_t;
 
+/// @brief A string used to return to super-menus that says "Back"
 extern const char* mnuBackStr;
 
 menu_t* initMenu(const char* title, menuCb cbFunc) __attribute__((warn_unused_result));

@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include <esp_random.h>
-#include "menuRenderer.h"
+#include "menuLogbookRenderer.h"
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
@@ -34,7 +34,7 @@
 // Function Prototypes
 //==============================================================================
 
-static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
+static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
                          bool leftArrow, bool rightArrow, bool doubleArrows);
 
 //==============================================================================
@@ -42,15 +42,16 @@ static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, in
 //==============================================================================
 
 /**
- * @brief TODO doc
+ * @brief Initialize a and return a menu renderer.
  *
- * @param menuFont
- * @return menuRender_t*
+ * @param menuFont The font used to draw this menu, preferably "logbook.font"
+ * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuLogbookRenderer()
+ * when done
  */
-menuRender_t* initMenuRenderer(font_t* menuFont)
+menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
 {
-    menuRender_t* renderer = calloc(1, sizeof(menuRender_t));
-    renderer->font         = menuFont;
+    menuLogbookRenderer_t* renderer = calloc(1, sizeof(menuLogbookRenderer_t));
+    renderer->font                  = menuFont;
     loadWsg("mnuArrow.wsg", &renderer->arrow, false);
     loadWsg("mnuArrowS.wsg", &renderer->arrowS, false);
 
@@ -66,11 +67,12 @@ menuRender_t* initMenuRenderer(font_t* menuFont)
 }
 
 /**
- * @brief TODO doc
+ * @brief Deinitialize a menu renderer and free associated memory. This will not free the font passed into
+ * initMenuLogbookRenderer()
  *
- * @param renderer
+ * @param renderer The renderer to deinitialize. It must not be used after deinitialization.
  */
-void deinitMenuRenderer(menuRender_t* renderer)
+void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
 {
     freeWsg(&renderer->arrow);
     freeWsg(&renderer->arrowS);
@@ -78,18 +80,18 @@ void deinitMenuRenderer(menuRender_t* renderer)
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw a single line of themed menu text
  *
- * @param renderer
- * @param text
- * @param x
- * @param y
- * @param isSelected
- * @param leftArrow
- * @param rightArrow
- * @param doubleArrows
+ * @param renderer The renderer to draw with
+ * @param text The text to draw
+ * @param x The X coordinate to draw the text at
+ * @param y The Y coordinate to draw the text at
+ * @param isSelected true if the text is selected, false if it is not
+ * @param leftArrow true to draw an arrow to the left, used when a menu item has options or a submenu
+ * @param rightArrow true to draw an arrow to the right, used when a menu item has options or a super-menu
+ * @param doubleArrows true to draw double arrows instead of single arrows, used when entering or leaving submenus
  */
-static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
+static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
                          bool leftArrow, bool rightArrow, bool doubleArrows)
 {
     // Pick colors based on selection
@@ -195,13 +197,13 @@ static void drawMenuText(menuRender_t* renderer, const char* text, int16_t x, in
 }
 
 /**
- * @brief TODO doc
+ * @brief Draw a themed menu to the display and control the LEDs
  *
- * @param menu
- * @param renderer
- * @param elapsedUs
+ * @param menu The menu to draw
+ * @param renderer The renderer to draw with
+ * @param elapsedUs The time elapsed since this function was last called, for LED animation
  */
-void drawMenuThemed(menu_t* menu, menuRender_t* renderer, int64_t elapsedUs)
+void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elapsedUs)
 {
     // For each LED
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
@@ -328,7 +330,7 @@ void drawMenuThemed(menu_t* menu, menuRender_t* renderer, int64_t elapsedUs)
     y -= ROW_SPACING;
     if (menu->items->length > ITEMS_PER_PAGE)
     {
-        // TODO Draw DOWN page indicator
+        // Draw DOWN page indicator
         int16_t arrowX = PAGE_ARROW_X_OFFSET;
         int16_t arrowY = y + PAGE_ARROW_Y_OFFSET;
         drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 90);

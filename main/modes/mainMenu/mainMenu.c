@@ -18,7 +18,7 @@
 typedef struct
 {
     menu_t* menu;
-    menuRender_t* renderer;
+    menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
 } mainMenu_t;
@@ -106,7 +106,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuRenderer(&mainMenu->logbook);
+    mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
 }
 
 /**
@@ -118,7 +118,7 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Deinit renderer
-    deinitMenuRenderer(mainMenu->renderer);
+    deinitMenuLogbookRenderer(mainMenu->renderer);
 
     // Free the font
     freeFont(&mainMenu->logbook);
@@ -145,7 +145,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenuThemed(mainMenu->menu, mainMenu->renderer, elapsedUs);
+    drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
 }
 
 /**
