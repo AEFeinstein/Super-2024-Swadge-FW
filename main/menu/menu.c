@@ -5,16 +5,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "hdw-tft.h"
 #include "menu.h"
-#include "shapes.h"
 #include "macros.h"
 
 //==============================================================================
 // Const Variables
 //==============================================================================
 
-static const char* mnuBackStr = "Back";
+const char* mnuBackStr = "Back";
 
 //==============================================================================
 // Function Prototypes
@@ -537,113 +535,4 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
         }
     }
     return menu;
-}
-
-/**
- * Render a menu to the TFT. This should be called each main loop so that menu
- * animations are smooth. It will draw over the entire display, but may be drawn
- * over afterwards.
- *
- * @param menu The menu to render
- * @param font The font to render the menu with
- */
-void drawMenu(menu_t* menu, font_t* font)
-{
-    // Clear everything first
-    clearPxTft();
-
-#define ITEMS_PER_PAGE 5
-    // Find the start of the 'page'
-    node_t* pageStart = menu->items->first;
-    uint8_t pageIdx   = 0;
-
-    node_t* curNode = menu->items->first;
-    while (NULL != curNode)
-    {
-        if (curNode->val == menu->currentItem->val)
-        {
-            // Found it, stop!
-            break;
-        }
-        else
-        {
-            curNode = curNode->next;
-            pageIdx++;
-            if (ITEMS_PER_PAGE <= pageIdx && NULL != curNode)
-            {
-                pageIdx   = 0;
-                pageStart = curNode;
-            }
-        }
-    }
-
-    int16_t x = 20;
-    int16_t y = 20;
-
-    // Draw an underlined title
-    drawText(font, c555, menu->title, x, y);
-    y += (font->height + 2);
-    drawLine(x, y, x + textWidth(font, menu->title), y, c555, 0);
-    y += 3;
-
-    // Draw page indicators
-    if (menu->items->length > ITEMS_PER_PAGE)
-    {
-        drawText(font, c555, "~UP~", x, y);
-    }
-    y += (font->height + 2);
-
-    // Draw a page-worth of items
-    for (uint8_t itemIdx = 0; itemIdx < ITEMS_PER_PAGE; itemIdx++)
-    {
-        if (NULL != pageStart)
-        {
-            menuItem_t* item = (menuItem_t*)pageStart->val;
-            // Draw an indicator if the current item is selected
-            if (menu->currentItem->val == item)
-            {
-                drawText(font, c555, "X", 0, y);
-            }
-
-            // Draw the label(s)
-            if (item->minSetting != item->maxSetting)
-            {
-                char label[64] = {0};
-                snprintf(label, sizeof(label) - 1, "< %s: %d >", item->label, item->currentSetting);
-                drawText(font, c555, label, x, y);
-            }
-            else if (item->label)
-            {
-                if (item->subMenu)
-                {
-                    char label[64] = {0};
-                    snprintf(label, sizeof(label) - 1, "%s >>", item->label);
-                    drawText(font, c555, label, x, y);
-                }
-                else
-                {
-                    drawText(font, c555, item->label, x, y);
-                }
-            }
-            else if (item->options)
-            {
-                char label[64] = {0};
-                snprintf(label, sizeof(label) - 1, "< %s >", item->options[item->currentOpt]);
-                drawText(font, c555, label, x, y);
-            }
-
-            // Move to the next item
-            pageStart = pageStart->next;
-        }
-
-        // Move to the next row
-        y += (font->height + 2);
-    }
-
-    // Draw page indicators
-    if (menu->items->length > ITEMS_PER_PAGE)
-    {
-        drawText(font, c555, "~DOWN~", x, y);
-    }
-    y += (font->height + 2);
 }

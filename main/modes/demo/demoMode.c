@@ -153,8 +153,6 @@ static void demoMainLoop(int64_t elapsedUs)
         sendUsbGamepadReport(&report);
     }
 
-    // drawMenu(dv->menu, &dv->ibm);
-
     // Fill the display area with a dark cyan
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 

@@ -68,10 +68,11 @@ typedef enum
 
 typedef struct
 {
-    menu_t* menu;        ///< The menu structure
-    font_t ibm;          ///< The font used in the menu and game
-    p2pInfo p2p;         ///< Peer to peer connectivity info, currently unused
-    pongScreen_t screen; ///< The screen being displayed
+    menu_t* menu;                               ///< The menu structure
+    menuLogbookRenderer_t* menuLogbookRenderer; ///< Renderer for the menu
+    font_t ibm;                                 ///< The font used in the menu and game
+    p2pInfo p2p;                                ///< Peer to peer connectivity info, currently unused
+    pongScreen_t screen;                        ///< The screen being displayed
 
     pongControl_t control;       ///< The selected control scheme
     pongDifficulty_t difficulty; ///< The selected CPU difficulty
@@ -213,7 +214,8 @@ static void pongEnterMode(void)
     pong->bgm.shouldLoop = true;
 
     // Initialize the menu
-    pong->menu = initMenu(pongName, pongMenuCb);
+    pong->menu                = initMenu(pongName, pongMenuCb);
+    pong->menuLogbookRenderer = initMenuLogbookRenderer(&pong->ibm);
 
     // These are the possible control schemes
     const char* controlSchemes[] = {
@@ -246,6 +248,7 @@ static void pongExitMode(void)
 {
     // Deinitialize the menu
     deinitMenu(pong->menu);
+    deinitMenuLogbookRenderer(pong->menuLogbookRenderer);
     // Free the font
     freeFont(&pong->ibm);
     // Free graphics
@@ -334,7 +337,7 @@ static void pongMainLoop(int64_t elapsedUs)
             }
 
             // Draw the menu
-            drawMenu(pong->menu, &pong->ibm);
+            drawMenuLogbook(pong->menu, pong->menuLogbookRenderer, elapsedUs);
             break;
         }
         case PONG_GAME:
