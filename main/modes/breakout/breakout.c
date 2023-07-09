@@ -73,7 +73,8 @@ typedef enum
 typedef struct
 {
     menu_t* menu; ///< The menu structure
-    font_t ibm;   ///< The font used in the menu and game
+    menuLogbookRenderer_t* mRenderer; ///< The menu renderer
+    font_t logbook;   ///< The font used in the menu and game
     
     gameData_t gameData;
     tilemap_t tilemap;
@@ -203,7 +204,7 @@ static void breakoutEnterMode(void)
     // /components/hdw-spiffs/include/hdw-spiffs.h
 
     // Load a font
-    loadFont("ibm_vga8.font", &breakout->ibm, false);
+    loadFont("logbook.font", &breakout->logbook, false);
 
     // Load graphics
     loadWsg("pball.wsg", &breakout->ballWsg, false);
@@ -217,6 +218,7 @@ static void breakoutEnterMode(void)
 
     // Initialize the menu
     breakout->menu = initMenu(breakoutName, breakoutMenuCb);
+    breakout->mRenderer = initMenuLogbookRenderer(&breakout->logbook);
 
     initializeGameData(&(breakout->gameData));
     initializeTileMap(&(breakout->tilemap));
@@ -258,8 +260,9 @@ static void breakoutExitMode(void)
 {
     // Deinitialize the menu
     deinitMenu(breakout->menu);
+    deinitMenuLogbookRenderer(breakout->mRenderer);
     // Free the font
-    freeFont(&breakout->ibm);
+    freeFont(&breakout->logbook);
     // Free graphics
     freeWsg(&breakout->ballWsg);
     freeWsg(&breakout->paddleWsg);
@@ -349,7 +352,7 @@ static void breakoutMainLoop(int64_t elapsedUs)
             }
 
             // Draw the menu
-            drawMenu(breakout->menu, &breakout->ibm);
+            drawMenuLogbook(breakout->menu, breakout->mRenderer, elapsedUs);
             break;
         }
         case BREAKOUT_GAME:
@@ -806,24 +809,24 @@ static void breakoutDrawField(void)
     // Render a number to a string
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRIu8, breakout->score[0]);
     // Measure the width of the score string
-    tWidth = textWidth(&breakout->ibm, scoreStr);
+    tWidth = textWidth(&breakout->logbook, scoreStr);
     // Draw the score string to the display, centered at (TFT_WIDTH / 4)
-    drawText(&breakout->ibm, c555, scoreStr, (TFT_WIDTH / 4) - (tWidth / 2), 0);
+    drawText(&breakout->logbook, c555, scoreStr, (TFT_WIDTH / 4) - (tWidth / 2), 0);
 
     // Render a number to a string
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%" PRIu8, breakout->score[1]);
     // Measure the width of the score string
-    tWidth = textWidth(&breakout->ibm, scoreStr);
+    tWidth = textWidth(&breakout->logbook, scoreStr);
     // Draw the score string to the display, centered at ((3 * TFT_WIDTH) / 4)
-    drawText(&breakout->ibm, c555, scoreStr, ((3 * TFT_WIDTH) / 4) - (tWidth / 2), 0);
+    drawText(&breakout->logbook, c555, scoreStr, ((3 * TFT_WIDTH) / 4) - (tWidth / 2), 0);
 
     // If the restart timer is active, draw it
     if (breakout->isPaused)
     {
         // Measure the width of the time string
-        tWidth = textWidth(&breakout->ibm, breakoutPaused);
+        tWidth = textWidth(&breakout->logbook, breakoutPaused);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&breakout->ibm, c555, breakoutPaused, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&breakout->logbook, c555, breakoutPaused, ((TFT_WIDTH - tWidth) / 2), 0);
     }
     else if (breakout->restartTimerUs > 0)
     {
@@ -831,9 +834,9 @@ static void breakoutDrawField(void)
         snprintf(scoreStr, sizeof(scoreStr) - 1, "%01" PRId32 ".%03" PRId32, breakout->restartTimerUs / 1000000,
                  (breakout->restartTimerUs / 1000) % 1000);
         // Measure the width of the time string
-        tWidth = textWidth(&breakout->ibm, scoreStr);
+        tWidth = textWidth(&breakout->logbook, scoreStr);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&breakout->ibm, c555, scoreStr, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&breakout->logbook, c555, scoreStr, ((TFT_WIDTH - tWidth) / 2), 0);
     }*/
 }
 
