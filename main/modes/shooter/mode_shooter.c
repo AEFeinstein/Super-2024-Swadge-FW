@@ -170,6 +170,7 @@ typedef struct
 {
     shooterMode_t mode;
     menu_t* menu;
+    menuLogbookRenderer_t* mRenderer;
 
     uint8_t rButtonState;
     int32_t strafeLeftTmr;
@@ -821,7 +822,7 @@ void shooterEnterMode(void)
 
     // Load the HUD assets
     loadWsg("heart.wsg", &(rc->heart), true);
-    loadWsg("mNote.wsg", &(rc->mNote), true);
+    loadWsg("mnote.wsg", &(rc->mNote), true);
 
     loadWsg("gtr1.wsg", &rc->gtr[0], true);
     loadWsg("gtr2.wsg", &rc->gtr[1], true);
@@ -837,6 +838,8 @@ void shooterEnterMode(void)
     loadFont("ibm_vga8.font", &rc->tomThumb, true);
     loadFont("ibm_vga8.font", &rc->ibm, true);
     loadFont("ibm_vga8.font", &rc->radioStars, true);
+    
+    rc->mRenderer = initMenuLogbookRenderer(&rc->ibm);
 
     // Set up the LED timer
     rc->closestDist     = 0xFFFFFFFF;
@@ -861,6 +864,7 @@ void shooterExitMode(void)
 {
     // Free menu
     deinitMenu(rc->menu);
+    deinitMenuLogbookRenderer(rc->mRenderer);
 
     // Free assets
     freeWsg(&rc->walk[0]);
@@ -1182,7 +1186,7 @@ void shooterRenderTask(int64_t tElapsedUs)
         default:
         case RC_MENU:
         {
-            drawMenu(rc->menu, &rc->ibm);
+            drawMenuLogbook(rc->menu, rc->mRenderer, tElapsedUs);
             break;
         }
         case RC_MAP_SELECT:
