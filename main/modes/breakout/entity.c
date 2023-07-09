@@ -1027,6 +1027,15 @@ bool dummyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8
 
 bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
+     switch(tileId){
+        case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
+            breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
+        }
+        default: {
+            break;
+        }
+    }
+
     if (isSolid(tileId))
     {
         switch (direction)
@@ -1052,6 +1061,61 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
 
     return false;
 }
+
+void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty){
+    switch(tileId){
+        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_BLACK: {
+           setTile(tilemap, tx, ty, TILE_EMPTY);
+           break;
+        }
+        case TILE_BLOCK_2x1_RED_L:
+        case TILE_BLOCK_2x1_ORANGE_L:
+        case TILE_BLOCK_2x1_YELLOW_L:
+        case TILE_BLOCK_2x1_GREEN_L:
+        case TILE_BLOCK_2x1_CYAN_L:
+        case TILE_BLOCK_2x1_BLUE_L:
+        case TILE_BLOCK_2x1_PURPLE_L:
+        case TILE_BLOCK_2x1_MAGENTA_L:
+        case TILE_BLOCK_2x1_WHITE_L:
+        case TILE_BLOCK_2x1_TAN_L:
+        case TILE_BLOCK_2x1_BROWN_L:
+        case TILE_BLOCK_2x1_BLACK_L:
+        {
+           setTile(tilemap, tx, ty, TILE_EMPTY);
+           
+           if(isBlock(getTile(tilemap, tx+1, ty))){
+            setTile(tilemap, tx+1, ty, TILE_EMPTY);
+           }
+
+           break;
+        }
+        case TILE_BLOCK_2x1_RED_R:
+        case TILE_BLOCK_2x1_ORANGE_R:
+        case TILE_BLOCK_2x1_YELLOW_R:
+        case TILE_BLOCK_2x1_GREEN_R:
+        case TILE_BLOCK_2x1_CYAN_R:
+        case TILE_BLOCK_2x1_BLUE_R:
+        case TILE_BLOCK_2x1_PURPLE_R:
+        case TILE_BLOCK_2x1_MAGENTA_R:
+        case TILE_BLOCK_2x1_WHITE_R:
+        case TILE_BLOCK_2x1_TAN_R:
+        case TILE_BLOCK_2x1_BROWN_R:
+        case TILE_BLOCK_2x1_BLACK_R:
+        {
+           setTile(tilemap, tx, ty, TILE_EMPTY);
+                                 
+           if(isBlock(getTile(tilemap, tx-1, ty))){
+            setTile(tilemap, tx-1, ty, TILE_EMPTY);
+           }
+
+           break;
+        }
+        
+        default: {
+            break;
+        }
+    }
+};
 
 /*
 void dieWhenFallingOffScreen(entity_t *self)

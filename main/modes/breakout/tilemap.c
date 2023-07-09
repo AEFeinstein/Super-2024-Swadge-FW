@@ -386,6 +386,18 @@ bool isSolid(uint8_t tileId)
     }
 }
 
+bool isBlock(uint8_t tileId){
+    switch (tileId)
+    {
+        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_2x2_BLACK_DR:
+            return true;
+        default:
+            return false;
+    }
+    
+    return false;
+}
+
 // bool isInteractive(uint8_t tileId)
 // {
 //     return tileId > TILE_INVISIBLE_BLOCK && tileId < TILE_BG_GOAL_ZONE;
