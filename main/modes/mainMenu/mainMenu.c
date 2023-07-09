@@ -2,10 +2,9 @@
 // Includes
 //==============================================================================
 
-#include "mainMenu.h"
-#include "menu.h"
 #include "swadge2024.h"
 
+#include "mainMenu.h"
 #include "demoMode.h"
 #include "pong.h"
 #include "mode_colorchord.h"
@@ -20,6 +19,7 @@
 typedef struct
 {
     menu_t* menu;
+    menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
 } mainMenu_t;
@@ -38,7 +38,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char mainMenuName[] = "Main Menu";
+static const char mainMenuName[] = "MAIN MENU";
 
 swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
@@ -107,6 +107,9 @@ static void mainMenuEnterMode(void)
                           getScreensaverTimeSetting());
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    // Initialize menu renderer
+    mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
 }
 
 /**
@@ -116,6 +119,9 @@ static void mainMenuExitMode(void)
 {
     // Deinit menu
     deinitMenu(mainMenu->menu);
+
+    // Deinit renderer
+    deinitMenuLogbookRenderer(mainMenu->renderer);
 
     // Free the font
     freeFont(&mainMenu->logbook);
@@ -142,20 +148,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenu(mainMenu->menu, &mainMenu->logbook);
-
-    // Set LEDs, just because
-    led_t leds[CONFIG_NUM_LEDS] = {0};
-
-    leds[0].r = 0xFF;
-    leds[1].g = 0xFF;
-    leds[2].b = 0xFF;
-    leds[3].r = 0xFF;
-    leds[4].g = 0xFF;
-    leds[5].b = 0xFF;
-    leds[6].r = 0xFF;
-    leds[7].g = 0xFF;
-    setLeds(leds, 8);
+    drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
 }
 
 /**

@@ -63,7 +63,7 @@
  * \subsection swadge_mode_api Swadge Mode APIs
  *
  * - swadge2024.h: Write a mode. This is a good starting place
- * - menu.h: Make a menu within a mode
+ * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
  *
  * \subsection hw_api Hardware APIs
  *
@@ -117,7 +117,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.0.2/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
