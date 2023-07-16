@@ -33,7 +33,7 @@
 
 #include "mode_ray.h"
 
-void loadRmh(const char* name, rayMap_t* map, int32_t* startX, int32_t* startY, bool spiRam);
+void loadRmh(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX, int32_t* startY, bool spiRam);
 void freeRmh(rayMap_t* map);
 
 #endif

@@ -24,12 +24,13 @@
  *
  * @param name The filename of the RMH to load
  * @param map The map to load into
+ * @param objs TODO
  * @param startX Where the starting X coordinate is loaded into
  * @param startY Where the starting Y coordinate is loaded into
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  */
-void loadRmh(const char* name, rayMap_t* map, int32_t* startX, int32_t* startY, bool spiRam)
+void loadRmh(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX, int32_t* startY, bool spiRam)
 {
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
@@ -49,6 +50,8 @@ void loadRmh(const char* name, rayMap_t* map, int32_t* startX, int32_t* startY, 
     {
         map->tiles[x] = (rayMapCellType_t*)heap_caps_calloc(map->h, sizeof(rayMapCellType_t), caps);
     }
+
+    int16_t objIdx = 0;
 
     // Read tile data
     for (uint16_t y = 0; y < map->h; y++)
@@ -90,6 +93,10 @@ void loadRmh(const char* name, rayMap_t* map, int32_t* startX, int32_t* startY, 
                     case OBJ_OBELISK:
                     case OBJ_GUN:
                     {
+                        objs[objIdx].posX = TO_FX(x);
+                        objs[objIdx].posY = TO_FX(y);
+                        objs[objIdx].id   = id;
+                        objIdx++;
                         // TODO save these object types or something
                         break;
                     }

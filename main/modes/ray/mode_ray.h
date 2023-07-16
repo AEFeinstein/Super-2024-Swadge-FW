@@ -2,6 +2,9 @@
 #define _MODE_RAY_H_
 
 #include "swadge2024.h"
+#include "fp_math.h"
+
+#define MAX_RAY_OBJS 256
 
 typedef enum __attribute__((packed))
 {
@@ -28,6 +31,46 @@ typedef struct
     // TODO objects
     // TODO rules
 } rayMap_t;
+
+typedef struct
+{
+    wsg_t* sprite;
+    int32_t dist; // TODO care about integer type?
+    q24_8 posX;
+    q24_8 posY;
+    int16_t id;
+} rayObj_t;
+
+typedef struct
+{
+    wsg_t texFloor;
+    wsg_t texWall;
+    wsg_t texCeiling;
+    wsg_t texDoor;
+    wsg_t texPirate;
+
+    rayMap_t map;
+    rayObj_t objs[MAX_RAY_OBJS];
+
+    q24_8 posX;
+    q24_8 posY;
+    q24_8 dirX;
+    q24_8 dirY;
+    q24_8 planeX;
+    q24_8 planeY;
+    q24_8 dirAngle;
+    q24_8 posZ;
+    q24_8 wallDistBuffer[TFT_WIDTH];
+
+    int32_t bobTimer;
+    int16_t bobCount;
+
+    uint16_t btnState;
+
+    int16_t doorOpen;
+    int32_t doorTimer;
+    bool doorOpening;
+} ray_t;
 
 extern swadgeMode_t rayMode;
 
