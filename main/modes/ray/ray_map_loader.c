@@ -12,7 +12,7 @@
 
 #include "hdw-spiffs.h"
 #include "heatshrink_helper.h"
-#include "spiffs_rmh.h"
+#include "ray_map_loader.h"
 
 //==============================================================================
 // Functions
@@ -30,7 +30,7 @@
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  */
-void loadRmh(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX, int32_t* startY, bool spiRam)
+void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX, int32_t* startY, bool spiRam)
 {
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
@@ -114,7 +114,7 @@ void loadRmh(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX, i
  *
  * @param map the ::rayMap_t to free
  */
-void freeRmh(rayMap_t* map)
+void freeRayMap(rayMap_t* map)
 {
     // Free each column
     for (uint16_t x = 0; x < map->w; x++)

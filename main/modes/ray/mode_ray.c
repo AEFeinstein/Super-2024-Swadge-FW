@@ -4,7 +4,7 @@
 
 #include <esp_heap_caps.h>
 #include "mode_ray.h"
-#include "spiffs_rmh.h"
+#include "ray_map_loader.h"
 #include "ray_renderer.h"
 
 //==============================================================================
@@ -65,7 +65,7 @@ void rayEnterMode(void)
     }
 
     // Load the map and object data
-    loadRmh("demo.rmh", &ray->map, ray->objs, &ray->posX, &ray->posY, false);
+    loadRayMap("demo.rmh", &ray->map, ray->objs, &ray->posX, &ray->posY, false);
 
     // Set initial position and direction
     ray->posX     = TO_FX(ray->posX);
@@ -97,7 +97,7 @@ void rayExitMode(void)
     freeWsg(&ray->texWall);
     freeWsg(&ray->texCeiling);
     freeWsg(&ray->texDoor);
-    freeRmh(&ray->map);
+    freeRayMap(&ray->map);
     free(ray);
 }
 
