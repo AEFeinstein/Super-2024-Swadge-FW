@@ -435,8 +435,6 @@ void castSprites(ray_t* ray)
             // required for correct matrix multiplication
             q24_8 invDetDivisor = SUB_FX(MUL_FX(ray->planeX, ray->dirY), MUL_FX(ray->dirX, ray->planeY));
 
-            // TODO do all the X math first to see if its on screen, then do Y math??
-            q24_8 transformX = DIV_FX(SUB_FX(MUL_FX(ray->dirY, spriteX), MUL_FX(ray->dirX, spriteY)), invDetDivisor);
             // this is actually the depth inside the screen, that what Z is in 3D
             q24_8 transformY
                 = DIV_FX(ADD_FX(MUL_FX(-ray->planeY, spriteX), MUL_FX(ray->planeX, spriteY)), invDetDivisor);
@@ -444,15 +442,41 @@ void castSprites(ray_t* ray)
             // If this is negative, the texture isn't going to be drawn, so just stop here
             if (transformY <= 0)
             {
+                // Not drawn in bounds, so continue to the next object
                 continue;
             }
+
+            // TODO do all the X math first to see if its on screen, then do Y math??
+            q24_8 transformX = DIV_FX(SUB_FX(MUL_FX(ray->dirY, spriteX), MUL_FX(ray->dirX, spriteY)), invDetDivisor);
 
             // The division here takes the number from q24_8 to int16_t
             int16_t spriteScreenX = (TFT_WIDTH * (transformX + transformY)) / (2 * transformY);
 
+            // calculate width of the sprite
+            // TODO is this getting height???
+            int16_t spriteWidth = TO_FX(TFT_HEIGHT) / transformY;
+            spriteWidth         = ABS(spriteWidth);
+            int16_t drawStartX  = spriteScreenX - (spriteWidth / 2);
+            if (drawStartX < 0)
+            {
+                drawStartX = 0;
+            }
+            int16_t drawEndX = spriteScreenX + (spriteWidth / 2);
+            if (drawEndX >= TFT_WIDTH)
+            {
+                drawEndX = TFT_WIDTH - 1;
+            }
+
+            if (drawStartX >= TFT_WIDTH || drawEndX < 0)
+            {
+                // Not drawn in bounds, so continue to the next object
+                continue;
+            }
+
             // calculate height of the sprite on screen
             // using 'transformY' instead of the real distance prevents fisheye
-            int16_t spriteHeight = FROM_FX(ABS(DIV_FX(TO_FX(TFT_HEIGHT), transformY)));
+            int16_t spriteHeight = TO_FX(TFT_HEIGHT) / transformY;
+            spriteHeight         = ABS(spriteHeight);
             // calculate lowest and highest pixel to fill in current stripe
             int16_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2;
             if (drawStartY < 0)
@@ -465,18 +489,9 @@ void castSprites(ray_t* ray)
                 drawEndY = TFT_HEIGHT - 1;
             }
 
-            // calculate width of the sprite
-            int16_t spriteWidth = FROM_FX(ABS(DIV_FX(TO_FX(TFT_HEIGHT), transformY)));
-            int16_t drawStartX  = -spriteWidth / 2 + spriteScreenX;
-            if (drawStartX < 0)
-            {
-                drawStartX = 0;
-            }
-            int16_t drawEndX = spriteWidth / 2 + spriteScreenX;
-            if (drawEndX >= TFT_WIDTH)
-            {
-                drawEndX = TFT_WIDTH - 1;
-            }
+            // Get initial texture X coordinate and the step per-screen-pixel
+            q16_16 texX      = ((TEX_WIDTH * (drawStartX - spriteScreenX + (spriteWidth / 2))) << 16) / (spriteWidth);
+            q16_16 texXDelta = (TEX_WIDTH << 16) / spriteWidth;
 
             // loop through every vertical stripe of the sprite on screen
             for (int16_t stripe = drawStartX; stripe < drawEndX; stripe++)
@@ -484,24 +499,24 @@ void castSprites(ray_t* ray)
                 // Check wallDistBuffer to make sure the sprite is on the screen
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
-                    // TODO clean up this math
-                    // Calculate the X texture coordinate per-stripe
-                    int texX
-                        = (int)(256 * (stripe - (-spriteWidth / 2 + spriteScreenX)) * TEX_WIDTH / spriteWidth) / 256;
+                    // Get initial texture Y coordinate and the step per-screen-pixel
+                    q16_16 texY
+                        = ((TEX_HEIGHT * (drawStartY + ((spriteHeight - TFT_HEIGHT) / 2))) << 16) / (spriteHeight);
+                    q16_16 texYDelta = (TEX_HEIGHT << 16) / spriteHeight;
+
                     // for every pixel of the current stripe
                     for (int16_t y = drawStartY; y < drawEndY; y++)
                     {
-                        // 256 and 128 factors to avoid floats
-                        int d    = (y)*256 - TFT_HEIGHT * 128 + spriteHeight * 128;
-                        int texY = ((d * TEX_HEIGHT) / spriteHeight) / 256;
                         // get current color from the texture, draw if not transparent
-                        paletteColor_t color = ray->texPirate.px[TEX_WIDTH * texY + texX];
+                        paletteColor_t color = ray->texPirate.px[TEX_WIDTH * (texY >> 16) + (texX >> 16)];
                         if (cTransparent != color)
                         {
                             TURBO_SET_PIXEL(stripe, y, color);
                         }
+                        texY += texYDelta;
                     }
                 }
+                texX += texXDelta;
             }
         }
     }
