@@ -838,7 +838,7 @@ void shooterEnterMode(void)
     loadFont("ibm_vga8.font", &rc->tomThumb, true);
     loadFont("ibm_vga8.font", &rc->ibm, true);
     loadFont("ibm_vga8.font", &rc->radioStars, true);
-    
+
     rc->mRenderer = initMenuLogbookRenderer(&rc->ibm);
 
     // Set up the LED timer
