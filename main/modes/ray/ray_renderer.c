@@ -473,17 +473,21 @@ void castSprites(ray_t* ray)
                 continue;
             }
 
+            // Adjust the sprite draw based on the vertical camera height.
+            // Dividing two q24_8 variables gets a int16_t
+            int16_t spritePosZ = ray->posZ / transformY;
+
             // calculate height of the sprite on screen
             // using 'transformY' instead of the real distance prevents fisheye
             int16_t spriteHeight = TO_FX(TFT_HEIGHT) / transformY;
             spriteHeight         = ABS(spriteHeight);
             // calculate lowest and highest pixel to fill in current stripe
-            int16_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2;
+            int16_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
             if (drawStartY < 0)
             {
                 drawStartY = 0;
             }
-            int16_t drawEndY = (spriteHeight + TFT_HEIGHT) / 2;
+            int16_t drawEndY = (spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
             if (drawEndY >= TFT_HEIGHT)
             {
                 drawEndY = TFT_HEIGHT - 1;
@@ -500,8 +504,8 @@ void castSprites(ray_t* ray)
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
                     // Get initial texture Y coordinate and the step per-screen-pixel
-                    q16_16 texY
-                        = ((TEX_HEIGHT * (drawStartY + ((spriteHeight - TFT_HEIGHT) / 2))) << 16) / (spriteHeight);
+                    q16_16 texY = ((TEX_HEIGHT * ((drawStartY - spritePosZ) + ((spriteHeight - TFT_HEIGHT) / 2))) << 16)
+                                  / (spriteHeight);
                     q16_16 texYDelta = (TEX_HEIGHT << 16) / spriteHeight;
 
                     // for every pixel of the current stripe
