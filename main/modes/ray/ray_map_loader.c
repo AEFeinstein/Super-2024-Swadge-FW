@@ -75,6 +75,7 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
                     case BG_FLOOR:
                     case BG_CEILING:
                     case OBJ_DELETE:
+                    case OBJ_BULLET:
                     {
                         // Not really objects
                         break;
