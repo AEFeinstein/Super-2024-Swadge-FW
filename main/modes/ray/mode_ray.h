@@ -20,7 +20,8 @@ typedef enum __attribute__((packed))
     OBJ_ENEMY_GOLEM    = 9,
     OBJ_OBELISK        = 10,
     OBJ_GUN            = 11,
-    OBJ_DELETE         = 12, // Should be last
+    OBJ_BULLET         = 12,
+    OBJ_DELETE         = 13, // Should be last
 } rayMapCellType_t;
 
 typedef struct
@@ -34,11 +35,15 @@ typedef struct
 
 typedef struct
 {
-    wsg_t* sprite;
-    int32_t dist; // TODO care about integer type?
-    q24_8 posX;
-    q24_8 posY;
-    int16_t id;
+    wsg_t* sprite;         ///< The sprite for this object
+    int32_t dist;          ///< The distance between the player and this object, used for sorting before casting
+    q24_8 posX;            ///< The X position of this object
+    q24_8 posY;            ///< The Y position of this object
+    q24_8 velX;            ///< The X velocity of this object
+    q24_8 velY;            ///< The Y velocity of this object
+    q24_8 radius;          ///< The radius of this object
+    rayMapCellType_t type; ///< The object's type
+    int16_t id;            ///< This object's ID
 } rayObj_t;
 
 typedef struct
@@ -47,7 +52,12 @@ typedef struct
     wsg_t texWall;
     wsg_t texCeiling;
     wsg_t texDoor;
-    wsg_t texPirate;
+
+    wsg_t texDragon;
+    wsg_t texGolem;
+    wsg_t texKnight;
+    wsg_t texSkeleton;
+    wsg_t texBullet;
 
     rayMap_t map;
     rayObj_t objs[MAX_RAY_OBJS];
@@ -73,5 +83,7 @@ typedef struct
 } ray_t;
 
 extern swadgeMode_t rayMode;
+
+wsg_t* getTexture(rayMapCellType_t type);
 
 #endif

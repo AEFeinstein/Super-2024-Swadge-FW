@@ -6,6 +6,7 @@
 #include "mode_ray.h"
 #include "ray_map_loader.h"
 #include "ray_renderer.h"
+#include "ray_object.h"
 
 //==============================================================================
 // Function Prototypes
@@ -80,7 +81,13 @@ void rayEnterMode(void)
     loadWsg("wall.wsg", &ray->texWall, true);
     loadWsg("ceiling.wsg", &ray->texCeiling, true);
     loadWsg("door.wsg", &ray->texDoor, true);
-    loadWsg("pirate.wsg", &ray->texPirate, true);
+
+    loadWsg("golem.wsg", &ray->texGolem, true);
+    loadWsg("dragon.wsg", &ray->texDragon, true);
+    loadWsg("knight.wsg", &ray->texKnight, true);
+    loadWsg("skeleton.wsg", &ray->texSkeleton, true);
+
+    loadWsg("bullet.wsg", &ray->texBullet, true);
 
     // Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -102,6 +109,64 @@ void rayExitMode(void)
 }
 
 /**
+ * @brief Return texture for the cell type
+ *
+ * @param type
+ * @return wsg_t*
+ */
+wsg_t* getTexture(rayMapCellType_t type)
+{
+    switch (type)
+    {
+        case EMPTY:
+        case OBJ_DELETE:
+        case OBJ_START_POINT:
+        case OBJ_OBELISK:
+        case OBJ_GUN:
+        {
+            return NULL;
+        }
+        case OBJ_BULLET:
+        {
+            return &ray->texBullet;
+        }
+        case BG_FLOOR:
+        {
+            return &ray->texFloor;
+        }
+        case BG_WALL:
+        {
+            return &ray->texWall;
+        }
+        case BG_CEILING:
+        {
+            return &ray->texCeiling;
+        }
+        case BG_DOOR:
+        {
+            return &ray->texDoor;
+        }
+        case OBJ_ENEMY_DRAGON:
+        {
+            return &ray->texDragon;
+        }
+        case OBJ_ENEMY_SKELETON:
+        {
+            return &ray->texSkeleton;
+        }
+        case OBJ_ENEMY_KNIGHT:
+        {
+            return &ray->texKnight;
+        }
+        case OBJ_ENEMY_GOLEM:
+        {
+            return &ray->texGolem;
+        }
+    }
+    return NULL;
+}
+
+/**
  * @brief This function is called from the main loop. It's pretty quick, but the timing may be inconsistent.
  *
  * @param elapsedUs The time elapsed since the last time this function was called. Use this value to determine when
@@ -109,6 +174,16 @@ void rayExitMode(void)
  */
 void rayMainLoop(int64_t elapsedUs)
 {
+    // Check all queued button events
+    uint16_t prevBtnState = ray->btnState;
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        ray->btnState = evt.state;
+    }
+
+    // Move objects, check logic, etc.
+    moveRayObjects(ray, elapsedUs);
     // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
     castWalls(ray);
     // Draw sprites
@@ -137,13 +212,6 @@ void rayMainLoop(int64_t elapsedUs)
             // Reset the count to always restart on an upward bob
             ray->bobCount = 0;
         }
-    }
-
-    // Check all queued button events
-    buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
-    {
-        ray->btnState = evt.state;
     }
 
     // Run a timer to open and close doors
@@ -220,8 +288,29 @@ void rayMainLoop(int64_t elapsedUs)
         }
     }
 
+    if ((ray->btnState & PB_A) && !(prevBtnState & PB_A))
+    {
+        // TODO shoot
+        for (uint16_t newIdx = 0; newIdx < MAX_RAY_OBJS; newIdx++)
+        {
+            if (-1 == ray->objs[newIdx].id)
+            {
+                ray->objs[newIdx].sprite = &ray->texBullet;
+                ray->objs[newIdx].dist   = 0;
+                ray->objs[newIdx].posX   = ray->posX;
+                ray->objs[newIdx].posY   = ray->posY;
+                ray->objs[newIdx].velX   = ray->dirX;
+                ray->objs[newIdx].velY   = ray->dirY;
+                ray->objs[newIdx].radius = DIV_FX(TO_FX(ray->texBullet.w), TO_FX(64));
+                ray->objs[newIdx].type   = OBJ_BULLET;
+                ray->objs[newIdx].id     = 0;
+                break;
+            }
+        }
+    }
+
     // Open or close doors
-    if (ray->btnState & PB_A)
+    if (ray->btnState & PB_B)
     {
         // Don't open or close door when standing on that tile
         if (BG_DOOR != ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY)])

@@ -260,12 +260,24 @@ void castWalls(ray_t* ray)
                     // Save the distance to this wall strip, used for sprite casting
                     ray->wallDistBuffer[x] = perpWallDist;
 
-                    // Calculate height of line to draw on screen, make sure not to div by zero
-                    lineHeight = (0 == perpWallDist) ? (TFT_HEIGHT) : (TO_FX(TFT_HEIGHT) / perpWallDist);
+                    if (perpWallDist == 0)
+                    {
+                        // Calculate height of line to draw on screen, make sure not to div by zero
+                        lineHeight = TFT_HEIGHT;
 
-                    // calculate lowest and highest pixel to fill in current stripe
-                    drawStart = (TFT_HEIGHT - lineHeight) / 2 + (ray->posZ / perpWallDist);
-                    drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
+                        // calculate lowest and highest pixel to fill in current stripe
+                        drawStart = (TFT_HEIGHT - lineHeight) / 2;
+                        drawEnd   = (TFT_HEIGHT + lineHeight) / 2;
+                    }
+                    else
+                    {
+                        // Calculate height of line to draw on screen, make sure not to div by zero
+                        lineHeight = TO_FX(TFT_HEIGHT) / perpWallDist;
+
+                        // calculate lowest and highest pixel to fill in current stripe
+                        drawStart = (TFT_HEIGHT - lineHeight) / 2 + (ray->posZ / perpWallDist);
+                        drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
+                    }
 
                     // TODO sometimes textures wraparound b/c the math for wallX comes out to be like
                     // 19.003 -> 0
@@ -386,7 +398,8 @@ void castWalls(ray_t* ray)
  */
 static int objDistComparator(const void* obj1, const void* obj2)
 {
-    return (((const rayObj_t*)obj1)->dist - ((const rayObj_t*)obj2)->dist);
+    // TODO validate this
+    return (((const rayObj_t*)obj2)->dist - ((const rayObj_t*)obj1)->dist);
 }
 
 /**
@@ -423,6 +436,10 @@ void castSprites(ray_t* ray)
         // Make sure this object slot is occupied
         if (-1 != obj->id)
         {
+            // Get WSG dimensions for convenience
+            uint16_t tWidth  = obj->sprite->w;
+            uint16_t tHeight = obj->sprite->h;
+
             // translate sprite position to relative to camera
             q24_8 spriteX = SUB_FX(obj->posX, ray->posX);
             q24_8 spriteY = SUB_FX(obj->posY, ray->posY);
@@ -454,17 +471,21 @@ void castSprites(ray_t* ray)
 
             // calculate width of the sprite
             // TODO is this getting height???
-            int16_t spriteWidth = TO_FX(TFT_HEIGHT) / transformY;
-            spriteWidth         = ABS(spriteWidth);
-            int16_t drawStartX  = spriteScreenX - (spriteWidth / 2);
+            int16_t spriteWidth = (tWidth * TO_FX(TFT_HEIGHT)) / (TEX_WIDTH * transformY);
+            if (0 == spriteWidth)
+            {
+                continue;
+            }
+            spriteWidth        = ABS(spriteWidth);
+            int16_t drawStartX = spriteScreenX - (spriteWidth / 2);
             if (drawStartX < 0)
             {
                 drawStartX = 0;
             }
             int16_t drawEndX = spriteScreenX + (spriteWidth / 2);
-            if (drawEndX >= TFT_WIDTH)
+            if (drawEndX > TFT_WIDTH)
             {
-                drawEndX = TFT_WIDTH - 1;
+                drawEndX = TFT_WIDTH;
             }
 
             if (drawStartX >= TFT_WIDTH || drawEndX < 0)
@@ -488,14 +509,14 @@ void castSprites(ray_t* ray)
                 drawStartY = 0;
             }
             int16_t drawEndY = (spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
-            if (drawEndY >= TFT_HEIGHT)
+            if (drawEndY > TFT_HEIGHT)
             {
-                drawEndY = TFT_HEIGHT - 1;
+                drawEndY = TFT_HEIGHT;
             }
 
             // Get initial texture X coordinate and the step per-screen-pixel
-            q16_16 texX      = ((TEX_WIDTH * (drawStartX - spriteScreenX + (spriteWidth / 2))) << 16) / (spriteWidth);
-            q16_16 texXDelta = (TEX_WIDTH << 16) / spriteWidth;
+            q16_16 texX      = ((tWidth * (drawStartX - spriteScreenX + (spriteWidth / 2))) << 16) / (spriteWidth);
+            q16_16 texXDelta = (tWidth << 16) / spriteWidth;
 
             // loop through every vertical stripe of the sprite on screen
             for (int16_t stripe = drawStartX; stripe < drawEndX; stripe++)
@@ -504,15 +525,15 @@ void castSprites(ray_t* ray)
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
                     // Get initial texture Y coordinate and the step per-screen-pixel
-                    q16_16 texY = ((TEX_HEIGHT * ((drawStartY - spritePosZ) + ((spriteHeight - TFT_HEIGHT) / 2))) << 16)
+                    q16_16 texY = ((tHeight * ((drawStartY - spritePosZ) + ((spriteHeight - TFT_HEIGHT) / 2))) << 16)
                                   / (spriteHeight);
-                    q16_16 texYDelta = (TEX_HEIGHT << 16) / spriteHeight;
+                    q16_16 texYDelta = (tHeight << 16) / spriteHeight;
 
                     // for every pixel of the current stripe
                     for (int16_t y = drawStartY; y < drawEndY; y++)
                     {
                         // get current color from the texture, draw if not transparent
-                        paletteColor_t color = ray->texPirate.px[TEX_WIDTH * (texY >> 16) + (texX >> 16)];
+                        paletteColor_t color = obj->sprite->px[tWidth * (texY >> 16) + (texX >> 16)];
                         if (cTransparent != color)
                         {
                             TURBO_SET_PIXEL(stripe, y, color);

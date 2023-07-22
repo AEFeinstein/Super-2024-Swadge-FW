@@ -93,9 +93,15 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
                     case OBJ_OBELISK:
                     case OBJ_GUN:
                     {
-                        objs[objIdx].posX = TO_FX(x);
-                        objs[objIdx].posY = TO_FX(y);
-                        objs[objIdx].id   = id;
+                        objs[objIdx].sprite = getTexture(obj);
+                        objs[objIdx].dist   = 0;
+                        objs[objIdx].posX   = TO_FX(x);
+                        objs[objIdx].posY   = TO_FX(y);
+                        objs[objIdx].velX   = TO_FX(0);
+                        objs[objIdx].velY   = TO_FX(0);
+                        objs[objIdx].radius = DIV_FX(TO_FX(objs[objIdx].sprite->w), TO_FX(64)); // each cell is 64px
+                        objs[objIdx].type   = obj;
+                        objs[objIdx].id     = id;
                         objIdx++;
                         // TODO save these object types or something
                         break;
