@@ -236,7 +236,7 @@ void castWalls(ray_t* ray)
             }
 
             // Check if ray has hit a wall or door
-            switch (ray->map.tiles[mapX][mapY])
+            switch (ray->map.tiles[mapX][mapY].type)
             {
                 case BG_WALL:
                 case BG_DOOR:
@@ -296,16 +296,16 @@ void castWalls(ray_t* ray)
                     wallX = SUB_FX(wallX, FLOOR_FX(wallX));
 
                     // For sliding doors, only collide with the closed part
-                    if (BG_DOOR == ray->map.tiles[mapX][mapY])
+                    if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
                     {
                         // If the fraction of the door the ray hits is closed
-                        if (wallX >= ray->doorOpen)
+                        if (wallX >= ray->map.tiles[mapX][mapY].doorOpen)
                         {
                             // Count it as a hit
                             hit = true;
                             // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's
                             // edge
-                            wallX -= ray->doorOpen;
+                            wallX -= ray->map.tiles[mapX][mapY].doorOpen;
                         }
                     }
                     else
@@ -364,7 +364,7 @@ void castWalls(ray_t* ray)
 
         // Pick the texture based on the map tile
         paletteColor_t* tex;
-        if (BG_DOOR == ray->map.tiles[mapX][mapY])
+        if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
         {
             tex = ray->texDoor.px;
         }

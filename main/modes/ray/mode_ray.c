@@ -17,7 +17,7 @@ void rayExitMode(void);
 void rayMainLoop(int64_t elapsedUs);
 void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
-static bool isPassableCell(rayMapCellType_t cell);
+static bool isPassableCell(rayMapCell_t* cell);
 
 //==============================================================================
 // Const Variables
@@ -219,15 +219,15 @@ void rayMainLoop(int64_t elapsedUs)
     while (ray->doorTimer >= 5000)
     {
         ray->doorTimer -= 5000;
-        if (0 < ray->doorOpen && ray->doorOpen < TO_FX(1))
+
+        for (int16_t y = 0; y < ray->map.h; y++)
         {
-            if (ray->doorOpening)
+            for (int16_t x = 0; x < ray->map.w; x++)
             {
-                ray->doorOpen++;
-            }
-            else
-            {
-                ray->doorOpen--;
+                if (ray->map.tiles[x][y].doorOpen > 0 && ray->map.tiles[x][y].doorOpen < TO_FX(1))
+                {
+                    ray->map.tiles[x][y].doorOpen++;
+                }
             }
         }
     }
@@ -243,12 +243,12 @@ void rayMainLoop(int64_t elapsedUs)
     // Move forwards if no wall in front of you
     if (ray->btnState & PB_UP)
     {
-        if (isPassableCell(ray->map.tiles[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)]))
+        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)]))
         {
             ray->posX += deltaX;
         }
 
-        if (isPassableCell(ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)]))
+        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)]))
         {
             ray->posY += deltaY;
         }
@@ -257,12 +257,12 @@ void rayMainLoop(int64_t elapsedUs)
     // move backwards if no wall behind you
     if (ray->btnState & PB_DOWN)
     {
-        if (isPassableCell(ray->map.tiles[FROM_FX(ray->posX - boundaryCheckX)][FROM_FX(ray->posY)]))
+        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX - boundaryCheckX)][FROM_FX(ray->posY)]))
         {
             ray->posX -= deltaX;
         }
 
-        if (isPassableCell(ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY - boundaryCheckY)]))
+        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY - boundaryCheckY)]))
         {
             ray->posY -= deltaY;
         }
@@ -308,25 +308,6 @@ void rayMainLoop(int64_t elapsedUs)
             }
         }
     }
-
-    // Open or close doors
-    if (ray->btnState & PB_B)
-    {
-        // Don't open or close door when standing on that tile
-        if (BG_DOOR != ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY)])
-        {
-            if (0 == ray->doorOpen)
-            {
-                ray->doorOpening = true;
-                ray->doorOpen    = 1;
-            }
-            else if (TO_FX(1) == ray->doorOpen)
-            {
-                ray->doorOpening = false;
-                ray->doorOpen    = TO_FX(1) - 1;
-            }
-        }
-    }
 }
 
 /**
@@ -352,9 +333,9 @@ void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16
  * @param cell The cell type to check
  * @return true if the cell can be passed through, false if it cannot
  */
-static bool isPassableCell(rayMapCellType_t cell)
+static bool isPassableCell(rayMapCell_t* cell)
 {
-    switch (cell)
+    switch (cell->type)
     {
         case BG_WALL:
         {
@@ -364,7 +345,7 @@ static bool isPassableCell(rayMapCellType_t cell)
         case BG_DOOR:
         {
             // Only pass through open doors
-            return (TO_FX(1) == ray->doorOpen);
+            return (TO_FX(1) == cell->doorOpen);
         }
         case EMPTY:
         case BG_FLOOR:
@@ -377,6 +358,7 @@ static bool isPassableCell(rayMapCellType_t cell)
         case OBJ_OBELISK:
         case OBJ_GUN:
         case OBJ_DELETE:
+        case OBJ_BULLET:
         default:
         {
             // Always pass through everything else

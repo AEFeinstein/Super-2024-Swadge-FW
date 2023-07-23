@@ -2,6 +2,14 @@
 
 static bool objectsIntersect(rayObj_t* obj1, rayObj_t* obj2);
 
+/**
+ * @brief TODO doc
+ * 
+ * @param obj1 
+ * @param obj2 
+ * @return true 
+ * @return false 
+ */
 static bool objectsIntersect(rayObj_t* obj1, rayObj_t* obj2)
 {
     q24_8 deltaX    = (obj2->posX - obj1->posX);
@@ -10,6 +18,12 @@ static bool objectsIntersect(rayObj_t* obj1, rayObj_t* obj2)
     return (deltaX * deltaX) + (deltaY * deltaY) < (radiusSum * radiusSum);
 }
 
+/**
+ * @brief TODO doc
+ * 
+ * @param ray 
+ * @param elapsedUs 
+ */
 void moveRayObjects(ray_t* ray, int64_t elapsedUs)
 {
     for (uint16_t i = 0; i < MAX_RAY_OBJS; i++)
@@ -25,18 +39,26 @@ void moveRayObjects(ray_t* ray, int64_t elapsedUs)
                 obj->posY += (obj->velY * elapsedUs) / 100000;
 
                 // Check if it hit a wall
-                switch (ray->map.tiles[FROM_FX(obj->posX)][FROM_FX(obj->posY)])
+                rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->posX)][FROM_FX(obj->posY)];
+                switch (cell->type)
                 {
                     case BG_WALL:
                     {
-                        // TODO destroy this bullet
+                        // Destroy this bullet
                         memset(obj, 0, sizeof(rayObj_t));
                         obj->id = -1;
                         break;
                     }
                     case BG_DOOR:
                     {
-                        // TODO check if door is open
+                        // Start opening the door
+                        if (0 == cell->doorOpen)
+                        {
+                            cell->doorOpen = 1;
+                            // Destroy this bullet
+                            memset(obj, 0, sizeof(rayObj_t));
+                            obj->id = -1;
+                        }
                         break;
                     }
                     case EMPTY:

@@ -26,9 +26,15 @@ typedef enum __attribute__((packed))
 
 typedef struct
 {
+    rayMapCellType_t type;
+    q24_8 doorOpen;
+} rayMapCell_t;
+
+typedef struct
+{
     uint16_t w;
     uint16_t h;
-    rayMapCellType_t** tiles;
+    rayMapCell_t** tiles;
     // TODO objects
     // TODO rules
 } rayMap_t;
@@ -77,9 +83,7 @@ typedef struct
 
     uint16_t btnState;
 
-    int16_t doorOpen;
     int32_t doorTimer;
-    bool doorOpening;
 } ray_t;
 
 extern swadgeMode_t rayMode;

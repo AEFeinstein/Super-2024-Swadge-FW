@@ -45,10 +45,10 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
     map->h = fileData[fileIdx++];
 
     // Allocate the tiles, 2D array
-    map->tiles = (rayMapCellType_t**)heap_caps_calloc(map->w, sizeof(rayMapCellType_t*), caps);
+    map->tiles = (rayMapCell_t**)heap_caps_calloc(map->w, sizeof(rayMapCell_t*), caps);
     for (uint16_t x = 0; x < map->w; x++)
     {
-        map->tiles[x] = (rayMapCellType_t*)heap_caps_calloc(map->h, sizeof(rayMapCellType_t), caps);
+        map->tiles[x] = (rayMapCell_t*)heap_caps_calloc(map->h, sizeof(rayMapCell_t), caps);
     }
 
     int16_t objIdx = 0;
@@ -59,8 +59,9 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
         for (uint16_t x = 0; x < map->w; x++)
         {
             // Each tile has a type and object
-            map->tiles[x][y]     = fileData[fileIdx++];
-            rayMapCellType_t obj = fileData[fileIdx++];
+            map->tiles[x][y].type     = fileData[fileIdx++];
+            map->tiles[x][y].doorOpen = 0;
+            rayMapCellType_t obj      = fileData[fileIdx++];
 
             // If the object isn't empty
             if (EMPTY != obj)
