@@ -142,7 +142,8 @@ void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer){
     {
         entity_t* currentEntity = &(entityManager->entities[i]);
         
-        currentEntity->active = false;
+        destroyEntity(currentEntity, true);
+        //currentEntity->active = false;
 
     //TODO: respawn warp container blocks
     /*

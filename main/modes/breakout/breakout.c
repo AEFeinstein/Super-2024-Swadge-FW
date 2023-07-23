@@ -68,12 +68,13 @@ typedef enum
 //==============================================================================
 // Structs
 //==============================================================================
-
-typedef struct
+typedef void (*gameUpdateFunction_t)(void *self, int64_t elapsedUs);
+typedef struct 
 {
     menu_t* menu; ///< The menu structure
     menuLogbookRenderer_t* mRenderer; ///< The menu renderer
     font_t logbook;   ///< The font used in the menu and game
+    font_t ibm_vga8;
     
     gameData_t gameData;
     tilemap_t tilemap;
@@ -99,6 +100,8 @@ typedef struct
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
     int32_t ledFadeTimer; ///< The timer to fade LEDs
+
+    gameUpdateFunction_t update;
 } breakout_t;
 
 //==============================================================================
@@ -112,10 +115,54 @@ static void breakoutExitMode(void);
 static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void breakoutGameLoop(int64_t elapsedUs);
 
-static void breakoutResetGame(bool isInit, uint8_t whoWon);
 static void breakoutFadeLeds(int64_t elapsedUs);
 
 static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+
+static void drawBreakoutHud(font_t *font, gameData_t *gameData);
+static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs);
+static void drawBreakoutTitleScreen(font_t *font, gameData_t *gameData);
+static void breakoutChangeStateReadyScreen(breakout_t *self);
+static void breakoutUpdateReadyScreen(breakout_t *self, int64_t elapsedUs);
+static void breakoutDrawReadyScreen(font_t *logbook, font_t *ibm_vga8, gameData_t *gameData);
+static void breakoutChangeStateGame(breakout_t *self);
+static void breakoutDetectGameStateChange(breakout_t *self);
+static void breakoutDetectBgmChange(breakout_t *self);
+static void breakoutChangeStateDead(breakout_t *self);
+static void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs);
+static void breakoutChangeStateGameOver(breakout_t *self);
+static void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs);
+static void breakoutDrawGameOver(font_t *logbook, font_t *ibm_vga8, gameData_t *gameData);
+static void breakoutChangeStateTitleScreen(breakout_t *self);
+static void breakoutChangeStateLevelClear(breakout_t *self);
+static void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs);
+static void breakoutDrawLevelClear(font_t *font, gameData_t *gameData);
+static void breakoutChangeStateGameClear(breakout_t *self);
+static void breakoutUpdateGameClear(breakout_t *self, int64_t elapsedUs);
+static void breakoutDrawGameClear(font_t *font, gameData_t *gameData);
+static void breakoutInitializeBreakoutHighScores(breakout_t* self);
+static void breakoutLoadBreakoutHighScores(breakout_t* self);
+static void breakoutSaveBreakoutHighScores(breakout_t* self);
+static void breakoutInitializeBreakoutUnlockables(breakout_t* self);
+static void breakoutLoadBreakoutUnlockables(breakout_t* self);
+static void breakoutSaveBreakoutUnlockables(breakout_t* self);
+
+/*
+static void drawBreakoutHighScores(font_t *font, breakoutHighScores_t *highScores, gameData_t *gameData);
+uint8_t getHighScoreRank(breakoutHighScores_t *highScores, uint32_t newScore);
+static void insertScoreIntoHighScores(breakoutHighScores_t *highScores, uint32_t newScore, char newInitials[], uint8_t rank);
+*/
+
+static void breakoutChangeStateNameEntry(breakout_t *self);
+static void breakoutUpdateNameEntry(breakout_t *self, int64_t elapsedUs);
+static void breakoutDrawNameEntry(font_t *font, gameData_t *gameData, uint8_t currentInitial);
+static void breakoutChangeStateShowHighScores(breakout_t *self);
+static void breakoutUpdateShowHighScores(breakout_t *self, int64_t elapsedUs);
+static void breakoutDrawShowHighScores(font_t *font, uint8_t menuState);
+static void breakoutChangeStatePause(breakout_t *self);
+static void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs);
+static void breakoutDrawPause(font_t *font);
+uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 
 //==============================================================================
 // Strings
@@ -128,15 +175,20 @@ static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
 
 static const char breakoutName[] = "Breakout";
 
+static const char breakoutStartGame[] = "Start Game";
+
 static const char breakoutCtrlButton[] = "Button Control";
 static const char breakoutCtrlTouch[]  = "Touch Control";
 static const char breakoutCtrlTilt[]   = "Tilt Control";
 
-static const char breakoutDiffEasy[]   = "Easy";
+//static const char breakoutDiffEasy[]   = "Easy";
 static const char breakoutDiffMedium[] = "Medium";
 static const char breakoutDiffHard[]   = "Impossible";
 
 //static const char breakoutPaused[] = "Paused";
+
+static const char breakoutReady[] = "Get Ready!";
+static const char breakoutGameOver[] = "Game Over!";
 
 //==============================================================================
 // Variables
@@ -177,6 +229,7 @@ static void breakoutEnterMode(void)
 
     // Load a font
     loadFont("logbook.font", &breakout->logbook, false);
+    loadFont("ibm_vga8.font", &breakout->ibm_vga8, false);
 
     // Load graphics
     loadWsg("pball.wsg", &breakout->ballWsg, false);
@@ -208,21 +261,23 @@ static void breakoutEnterMode(void)
         breakoutCtrlTilt,
     };
 
+    addSingleItemToMenu(breakout->menu, breakoutStartGame);
     // Add each control scheme to the menu. Each control scheme has a submenu to select difficulty
-    for (uint8_t i = 0; i < ARRAY_SIZE(controlSchemes); i++)
-    {
+    //for (uint8_t i = 0; i < ARRAY_SIZE(controlSchemes); i++)
+    //{
         // Add a control scheme to the menu. This opens a submenu with difficulties
-        breakout->menu = startSubMenu(breakout->menu, controlSchemes[i]);
+        //breakout->menu = startSubMenu(breakout->menu, controlSchemes[i]);
         // Add difficulties to the submenu
-        addSingleItemToMenu(breakout->menu, breakoutDiffEasy);
-        addSingleItemToMenu(breakout->menu, breakoutDiffMedium);
-        addSingleItemToMenu(breakout->menu, breakoutDiffHard);
+        //addSingleItemToMenu(breakout->menu, breakoutStartGame);
+        //addSingleItemToMenu(breakout->menu, breakoutDiffMedium);
+        //addSingleItemToMenu(breakout->menu, breakoutDiffHard);
         // End the submenu
-        breakout->menu = endSubMenu(breakout->menu);
-    }
+        //breakout->menu = endSubMenu(breakout->menu);
+    //}
 
     // Set the mode to menu mode
     breakout->screen = BREAKOUT_MENU;
+    breakout->update = &breakoutUpdateTitleScreen;
 }
 
 /**
@@ -235,6 +290,7 @@ static void breakoutExitMode(void)
     deinitMenuLogbookRenderer(breakout->mRenderer);
     // Free the font
     freeFont(&breakout->logbook);
+    freeFont(&breakout->ibm_vga8);
     // Free graphics
     freeWsg(&breakout->ballWsg);
     freeWsg(&breakout->paddleWsg);
@@ -279,25 +335,27 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             breakout->control = BREAKOUT_TILT;
         }
         // Save what difficulty is selected and start the game (second-level menu)
-        else if (label == breakoutDiffEasy)
+        else if (label == breakoutStartGame)
         {
             breakout->difficulty = BREAKOUT_EASY;
-            breakoutResetGame(true, 0);
             breakout->screen = BREAKOUT_GAME;
+            initializeGameDataFromTitleScreen(&(breakout->gameData));
+            loadMapFromFile(&(breakout->tilemap), "level1.bin");
+            breakoutChangeStateReadyScreen(breakout);   
         }
         // Save what difficulty is selected and start the game (second-level menu)
         else if (label == breakoutDiffMedium)
         {
             breakout->difficulty = BREAKOUT_MEDIUM;
-            breakoutResetGame(true, 0);
             breakout->screen = BREAKOUT_GAME;
+            breakoutChangeStateReadyScreen(breakout);
         }
         // Save what difficulty is selected and start the game (second-level menu)
         else if (label == breakoutDiffHard)
         {
             breakout->difficulty = BREAKOUT_HARD;
-            breakoutResetGame(true, 0);
             breakout->screen = BREAKOUT_GAME;
+            breakoutChangeStateReadyScreen(breakout);
         }
     }
 }
@@ -310,30 +368,51 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
  */
 static void breakoutMainLoop(int64_t elapsedUs)
 {
-    // Pick what runs and draws depending on the screen being displayed
-    switch (breakout->screen)
-    {
-        case BREAKOUT_MENU:
-        {
-            // Process button events
-            buttonEvt_t evt = {0};
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // Pass button events to the menu
-                breakout->menu = menuButton(breakout->menu, evt);
-            }
+    breakout->update(breakout, elapsedUs);
+}
 
-            // Draw the menu
-            drawMenuLogbook(breakout->menu, breakout->mRenderer, elapsedUs);
-            break;
-        }
-        case BREAKOUT_GAME:
-        {
-            // Run the main game loop. This will also process button events
-            breakoutGameLoop(elapsedUs);
-            break;
-        }
+void breakoutChangeStateTitleScreen(breakout_t *self){
+    self->gameData.frameCount = 0;
+    self->update=&breakoutUpdateTitleScreen;
+}
+
+static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
+    // Process button events
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Pass button events to the menu
+        breakout->menu = menuButton(breakout->menu, evt);
     }
+
+    // Draw the menu
+    drawMenuLogbook(breakout->menu, breakout->mRenderer, elapsedUs);
+}
+
+static void breakoutChangeStateReadyScreen(breakout_t *self){
+    self->gameData.frameCount = 0;
+    self->update = &breakoutUpdateReadyScreen;
+}
+
+static void breakoutUpdateReadyScreen(breakout_t *self, int64_t elapsedUs){    
+    self->gameData.frameCount++;
+    if(self->gameData.frameCount > 179){
+        breakoutChangeStateGame(self);
+    }
+
+    breakoutDrawReadyScreen(&(self->logbook), &(self->ibm_vga8), &(self->gameData));
+}
+
+static void breakoutDrawReadyScreen(font_t *logbook, font_t *ibm_vga8, gameData_t *gameData){
+    drawBreakoutHud(ibm_vga8, gameData);
+    drawText(logbook, c555, breakoutReady, (TFT_WIDTH - textWidth(logbook, breakoutReady)) >> 1, 128);
+}
+
+static void breakoutChangeStateGame(breakout_t *self){
+    self->gameData.frameCount = 0;
+    deactivateAllEntities(&(self->entityManager), false);
+    self->tilemap.executeTileSpawnAll = true;
+    self->update = &breakoutGameLoop;
 }
 
 /**
@@ -383,10 +462,17 @@ static void breakoutGameLoop(int64_t elapsedUs)
     // breakoutUpdatePhysics(elapsedUs);
 
     updateEntities(&(breakout->entityManager));
+    breakoutDetectGameStateChange(breakout);
 
     // Draw the field
     drawEntities(&(breakout->entityManager));
     drawTileMap(&(breakout->tilemap));
+    drawBreakoutHud(&(breakout->ibm_vga8), &(breakout->gameData));
+
+    breakout->gameData.frameCount++;
+    if(breakout->gameData.frameCount > 59){
+        breakout->gameData.frameCount = 0;
+    }
 }
 
 /**
@@ -465,4 +551,140 @@ static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int1
             }
         }
     }
+}
+
+void breakoutDetectGameStateChange(breakout_t *self){
+    if(!self->gameData.changeState){
+        return;
+    }
+
+    switch (self->gameData.changeState)
+    {
+        case ST_DEAD:
+            breakoutChangeStateDead(self);
+            break;
+
+        case ST_READY_SCREEN:
+            breakoutChangeStateReadyScreen(self);
+            break;
+        
+        case ST_LEVEL_CLEAR:
+            //breakoutChangeStateLevelClear(self);
+            break;
+
+        case ST_PAUSE:
+            //breakoutChangeStatePause(self);
+            break;
+
+        default:
+            break;
+    }
+
+    self->gameData.changeState = 0;
+}
+
+void breakoutChangeStateDead(breakout_t *self){
+    self->gameData.frameCount = 0;
+    self->gameData.lives--;
+    self->gameData.levelDeaths++;
+    self->gameData.combo = 0;
+    self->gameData.comboTimer = 0;
+    self->gameData.initialHp = 1;
+
+    //buzzer_stop();
+    //buzzer_play_bgm(&sndDie);
+
+    self->update=&breakoutUpdateDead;
+}
+
+
+void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs){
+    self->gameData.frameCount++;
+    if(self->gameData.frameCount > 179){
+        if(self->gameData.lives > 0){
+            breakoutChangeStateReadyScreen(self);
+        } else {
+            breakoutChangeStateGameOver(self);
+        }
+    }
+
+    updateEntities(&(self->entityManager));
+    drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
+    drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
+
+    /*if(self->gameData.countdown < 0){
+        drawText(self->disp, &(self->radiostars), c555, str_time_up, (self->disp->w - textWidth(&(self->radiostars), str_time_up)) / 2, 128);
+    }*/
+}
+
+void breakoutChangeStateGameOver(breakout_t *self){
+    self->gameData.frameCount = 0;
+    resetGameDataLeds(&(self->gameData)); 
+    //buzzer_play_bgm(&bgmGameOver);
+    self->update=&breakoutUpdateGameOver;
+}
+
+void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs){
+    self->gameData.frameCount++;
+    if(self->gameData.frameCount > 179){
+        /*//Handle unlockables
+
+        if(self->gameData.score >= BIG_SCORE) {
+            self->unlockables.bigScore = true;
+        }
+
+        if(self->gameData.score >= BIGGER_SCORE) {
+            self->unlockables.biggerScore = true;
+        }
+
+        if(!self->gameData.debugMode){
+            savePlatformerUnlockables(self);
+        }
+
+        changeStateNameEntry(self);*/
+        breakoutChangeStateTitleScreen(self);
+    }
+
+    breakoutDrawGameOver(&(self->logbook), &(self->ibm_vga8), &(self->gameData));
+    //updateLedsGameOver(&(self->gameData));
+}
+
+void breakoutDrawGameOver(font_t *logbook, font_t *ibm_vga8, gameData_t *gameData){
+    drawBreakoutHud(ibm_vga8, gameData);
+    drawText(logbook, c555, breakoutGameOver, (TFT_WIDTH - textWidth(logbook, breakoutGameOver)) / 2, 128);
+}
+
+static void drawBreakoutHud(font_t *font, gameData_t *gameData){
+    char coinStr[8];
+    snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
+
+    char scoreStr[32];
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
+
+    char levelStr[15];
+    snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
+
+    char livesStr[8];
+    snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
+
+    char timeStr[10];
+    snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
+
+    if(gameData->frameCount > 29) {
+        drawText(font, c500, "1UP", 24, 2);
+    }
+    
+    drawText(font, c555, livesStr, 48, 2);
+    //drawText(font, c555, coinStr, 160, 16);
+    drawText(font, c555, scoreStr, 80, 2);
+    drawText(font, c555, levelStr, 184, 2);
+    //drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220, 16);
+
+    if(gameData->comboTimer == 0){
+        return;
+    }
+
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+    //drawText(d, font, (gameData->comboTimer < 60) ? c030: greenColors[(platformer->gameData.frameCount >> 3) % 4], scoreStr, 8, 30);
 }

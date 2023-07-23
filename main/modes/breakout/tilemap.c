@@ -424,11 +424,11 @@ bool needsTransparency(uint8_t tileId){
 
 void freeTilemap(tilemap_t *tilemap){
     free(tilemap->map);
-    for(uint8_t i=0; i<TILESET_SIZE; i++){
+    for(uint8_t i=0; i<126; i++){
         switch(i){
             //Skip all placeholder tiles, since they reuse other tiles
             //(see loadTiles)
-            case 4 ... 14:
+            case 3 ... 14:
             case 27 ... 30:
             case 55 ... 62:
             {

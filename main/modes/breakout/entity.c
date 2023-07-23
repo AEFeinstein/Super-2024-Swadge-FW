@@ -230,8 +230,10 @@ void updateBall(entity_t *self)
     detectEntityCollisions(self);
 
     if((self->y >> 4) > 240){
-        self->y = 236 << 4;
-        self->yspeed = -24;
+        self->gameData->changeState = ST_DEAD;
+        destroyEntity(self, true);
+        //self->y = 236 << 4;
+        //self->yspeed = -24;
     }
 };
 /*
@@ -522,7 +524,7 @@ void despawnWhenOffscreen(entity_t *self)
         destroyEntity(self, true);
     }
 }
-
+*/
 void destroyEntity(entity_t *self, bool respawn)
 {
     if (respawn && !(self->homeTileX == 0 && self->homeTileY == 0))
@@ -533,7 +535,7 @@ void destroyEntity(entity_t *self, bool respawn)
     // self->entityManager->activeEntities--;
     self->active = false;
 }
-
+/*
 void animatePlayer(entity_t *self)
 {
     if (self->spriteIndex == SP_PLAYER_WIN || self->spriteIndex == SP_PLAYER_HURT)
