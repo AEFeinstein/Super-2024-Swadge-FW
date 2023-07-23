@@ -21,11 +21,11 @@ void moveRayObjects(ray_t* ray, int64_t elapsedUs)
             {
                 // Update the bullet's position
                 // TODO justify the scaling factor
-                obj->posX += (obj->velX * elapsedUs) / 1000000;
-                obj->posY += (obj->velY * elapsedUs) / 1000000;
+                obj->posX += (obj->velX * elapsedUs) / 100000;
+                obj->posY += (obj->velY * elapsedUs) / 100000;
 
                 // Check if it hit a wall
-                switch (ray->map.tiles[FROM_FX(obj->posX)][FROM_FX(obj->posX)])
+                switch (ray->map.tiles[FROM_FX(obj->posX)][FROM_FX(obj->posY)])
                 {
                     case BG_WALL:
                     {

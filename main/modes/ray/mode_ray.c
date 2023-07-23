@@ -297,8 +297,8 @@ void rayMainLoop(int64_t elapsedUs)
             {
                 ray->objs[newIdx].sprite = &ray->texBullet;
                 ray->objs[newIdx].dist   = 0;
-                ray->objs[newIdx].posX   = ray->posX;
-                ray->objs[newIdx].posY   = ray->posY;
+                ray->objs[newIdx].posX   = ray->posX + ray->dirX / 2;
+                ray->objs[newIdx].posY   = ray->posY + ray->dirY / 2;
                 ray->objs[newIdx].velX   = ray->dirX;
                 ray->objs[newIdx].velY   = ray->dirY;
                 ray->objs[newIdx].radius = DIV_FX(TO_FX(ray->texBullet.w), TO_FX(64));
