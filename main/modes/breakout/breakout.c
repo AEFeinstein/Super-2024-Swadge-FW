@@ -113,7 +113,7 @@ static void breakoutEnterMode(void);
 static void breakoutExitMode(void);
 
 static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal);
-static void breakoutGameLoop(int64_t elapsedUs);
+static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs);
 
 static void breakoutFadeLeds(int64_t elapsedUs);
 
@@ -421,14 +421,14 @@ static void breakoutChangeStateGame(breakout_t *self){
  *
  * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
  */
-static void breakoutGameLoop(int64_t elapsedUs)
+static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
 {
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         // Save the button state
-        breakout->btnState = evt.state;
+        self->btnState = evt.state;
 
         // Check if the pause button was pressed
         if (evt.down && (PB_START == evt.button))
@@ -461,17 +461,17 @@ static void breakoutGameLoop(int64_t elapsedUs)
     // breakoutControlCpuPaddle();
     // breakoutUpdatePhysics(elapsedUs);
 
-    updateEntities(&(breakout->entityManager));
-    breakoutDetectGameStateChange(breakout);
+    updateEntities(&(self->entityManager));
+    breakoutDetectGameStateChange(self);
 
     // Draw the field
-    drawEntities(&(breakout->entityManager));
-    drawTileMap(&(breakout->tilemap));
-    drawBreakoutHud(&(breakout->ibm_vga8), &(breakout->gameData));
+    drawEntities(&(self->entityManager));
+    drawTileMap(&(self->tilemap));
+    drawBreakoutHud(&(self->ibm_vga8), &(breakout->gameData));
 
-    breakout->gameData.frameCount++;
-    if(breakout->gameData.frameCount > 59){
-        breakout->gameData.frameCount = 0;
+    self->gameData.frameCount++;
+    if(self->gameData.frameCount > 59){
+        self->gameData.frameCount = 0;
     }
 }
 
