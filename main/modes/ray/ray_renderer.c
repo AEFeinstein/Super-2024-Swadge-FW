@@ -22,6 +22,8 @@
 //==============================================================================
 
 static int objDistComparator(const void* obj1, const void* obj2);
+static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX, q24_8 posY, q24_8 rayDirX,
+                              q24_8 rayDirY, q24_8 deltaDistX, q24_8 deltaDistY, q24_8 doorOpen);
 
 //==============================================================================
 // Functions
@@ -217,7 +219,6 @@ void castWalls(ray_t* ray)
 
         q24_8 wallX;                            // where exactly the wall was hit
         int16_t lineHeight, drawStart, drawEnd; // the height of the wall strip
-        q24_8 perpWallDist;
         // perform DDA
         while (false == hit)
         {
@@ -241,6 +242,24 @@ void castWalls(ray_t* ray)
                 case BG_WALL:
                 case BG_DOOR:
                 {
+                    // If this cell is a door
+                    if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
+                    {
+                        // Check if the ray actually intersects the recessed door
+                        if (rayIntersectsDoor(side, mapX, mapY, ray->posX, ray->posY, rayDirX, rayDirY, deltaDistX,
+                                              deltaDistY, ray->map.tiles[mapX][mapY].doorOpen))
+                        {
+                            // Add a half step to these values to recess the door
+                            sideDistX = ADD_FX(sideDistX, deltaDistX / 2);
+                            sideDistY = ADD_FX(sideDistY, deltaDistY / 2);
+                        }
+                        else
+                        {
+                            // Didn't collide with a door, so keep DDA'ing
+                            continue;
+                        }
+                    }
+
                     // Calculate distance projected on camera direction. This is the shortest distance from the point
                     // where the wall is hit to the camera plane. Euclidean to center camera point would give fisheye
                     // effect! This can be computed as (mapX - ray->posX + (1 - stepX) / 2) / rayDirX for side == 0, or
@@ -248,6 +267,7 @@ void castWalls(ray_t* ray)
                     // and deltaDist are computed: because they were left scaled to |rayDir|. sideDist is the entire
                     // length of the ray above after the multiple steps, but we subtract deltaDist once because one step
                     // more into the wall was taken above.
+                    q24_8 perpWallDist;
                     if (false == side)
                     {
                         perpWallDist = SUB_FX(sideDistX, deltaDistX);
@@ -295,24 +315,15 @@ void castWalls(ray_t* ray)
                     }
                     wallX = SUB_FX(wallX, FLOOR_FX(wallX));
 
-                    // For sliding doors, only collide with the closed part
+                    // For sliding doors
                     if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
                     {
-                        // If the fraction of the door the ray hits is closed
-                        if (wallX >= ray->map.tiles[mapX][mapY].doorOpen)
-                        {
-                            // Count it as a hit
-                            hit = true;
-                            // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's
-                            // edge
-                            wallX -= ray->map.tiles[mapX][mapY].doorOpen;
-                        }
+                        // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's edge
+                        wallX -= ray->map.tiles[mapX][mapY].doorOpen;
                     }
-                    else
-                    {
-                        // Wall was hit
-                        hit = true;
-                    }
+
+                    // Wall or door was hit, this stops the DDA loop
+                    hit = true;
                     break;
                 }
                 case EMPTY:
@@ -326,9 +337,10 @@ void castWalls(ray_t* ray)
                 case OBJ_OBELISK:
                 case OBJ_GUN:
                 case OBJ_DELETE:
+                case OBJ_BULLET:
                 default:
                 {
-                    // Hit some type we don't care about
+                    // Ray doesn't intersect with these
                     break;
                 }
             }
@@ -386,6 +398,116 @@ void castWalls(ray_t* ray)
             TURBO_SET_PIXEL(x, y, tex[TEX_HEIGHT * texY + texX]);
         }
     }
+}
+
+/**
+ * @brief Check if a ray intersects with a door. Doors are recessed a half-cell back
+ *
+ * @param side true if the ray came through horizontal boundary, false if it came through a vertical boundary
+ * @param mapX The player's current map cell X
+ * @param mapY The player's current map cell Y
+ * @param posX The player's current position X, fixed point decimal
+ * @param posY The player's current position Y, fixed point decimal
+ * @param rayDirX The X component of the ray being cast, fixed point decimal
+ * @param rayDirY The Y component of the ray being cast, fixed point decimal
+ * @param deltaDistX The X component of a DDA step, fixed point decimal
+ * @param deltaDistY The Y component of a DDA step, fixed point decimal
+ * @param doorOpen How open the door is, 0 to 1, fixed point decimal
+ * @return true if the ray intersects the door, false if it doesn't
+ */
+static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX, q24_8 posY, q24_8 rayDirX,
+                              q24_8 rayDirY, q24_8 deltaDistX, q24_8 deltaDistY, q24_8 doorOpen)
+{
+    // Avoid division by zero
+    if (0 == rayDirX)
+    {
+        // Compare the decimal part of the camera X position to how open the door is
+        if ((posX & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+        {
+            // Intersection!
+            return true;
+        }
+    }
+    else
+    {
+        // Find the B part of a line formula (y = m*x + b)
+        q24_8 playerB = SUB_FX(posY, DIV_FX(MUL_FX(posX, rayDirY), rayDirX));
+
+        // Do different checks whether the ray is coming through a horizontal or vertical boundary
+        if (side)
+        {
+            // Check for intersection with 'horizontal' door, i.e. fixed Y
+            // Avoid division by zero
+            if (0 == rayDirY)
+            {
+                // Compare the decimal part of the camera Y position to how open the door is
+                if ((posY & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+                {
+                    // Intersection
+                    return true;
+                }
+            }
+            else
+            {
+                // Find the door's Y so we can solve for X (recess it half a cell)
+                q24_8 doorY;
+                if (deltaDistY > 0)
+                {
+                    doorY = TO_FX(mapY) + (1 << (FRAC_BITS - 1));
+                }
+                else
+                {
+                    doorY = TO_FX(mapY) - (1 << (FRAC_BITS - 1));
+                }
+
+                // Solve for the X of the intersection
+                q24_8 doorIntersectionX = DIV_FX(MUL_FX(SUB_FX(doorY, playerB), rayDirX), rayDirY);
+
+                // If the intersection is in the same cell as the door
+                if (FROM_FX(doorIntersectionX) == mapX)
+                {
+                    // Compare the decimal part of the intersection point with how open the door is
+                    if ((doorIntersectionX & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+                    {
+                        // The ray intersects with the door
+                        return true;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // 'Vertical' door, fixed X
+
+            // Find the door's X so we can solve for Y (recess it half a cell)
+            q24_8 doorX;
+            if (deltaDistX > 0)
+            {
+                doorX = TO_FX(mapX) + (1 << (FRAC_BITS - 1));
+            }
+            else
+            {
+                doorX = TO_FX(mapX) - (1 << (FRAC_BITS - 1));
+            }
+
+            // Solve for the Y of the intersection
+            q24_8 doorIntersectionY = ADD_FX(DIV_FX(MUL_FX(doorX, rayDirY), rayDirX), playerB);
+
+            // If the intersection is in the same cell as the door
+            if (FROM_FX(doorIntersectionY) == mapY)
+            {
+                // Compare the decimal part of the intersection point with how open the door is
+                if ((doorIntersectionY & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+                {
+                    // The ray intersects with the door
+                    return true;
+                }
+            }
+        }
+    }
+
+    // No intersection
+    return false;
 }
 
 /**

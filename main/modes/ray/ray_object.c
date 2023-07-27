@@ -4,11 +4,11 @@ static bool objectsIntersect(rayObj_t* obj1, rayObj_t* obj2);
 
 /**
  * @brief TODO doc
- * 
- * @param obj1 
- * @param obj2 
- * @return true 
- * @return false 
+ *
+ * @param obj1
+ * @param obj2
+ * @return true
+ * @return false
  */
 static bool objectsIntersect(rayObj_t* obj1, rayObj_t* obj2)
 {
@@ -20,9 +20,9 @@ static bool objectsIntersect(rayObj_t* obj1, rayObj_t* obj2)
 
 /**
  * @brief TODO doc
- * 
- * @param ray 
- * @param elapsedUs 
+ *
+ * @param ray
+ * @param elapsedUs
  */
 void moveRayObjects(ray_t* ray, int64_t elapsedUs)
 {

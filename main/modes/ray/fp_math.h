@@ -18,7 +18,7 @@ static inline q24_8 TO_FX(uint32_t in)
     return (q24_8)(in * (1 << FRAC_BITS));
 }
 
-static inline uint32_t FROM_FX(q24_8 in)
+static inline int32_t FROM_FX(q24_8 in)
 {
     return in / (1 << FRAC_BITS);
 }
