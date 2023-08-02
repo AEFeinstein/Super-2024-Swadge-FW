@@ -16,6 +16,7 @@
 #include "gameData.h"
 #include "tilemap.h"
 #include "entityManager.h"
+#include "leveldef.h"
 
 //==============================================================================
 // Defines
@@ -139,7 +140,7 @@ static void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawLevelClear(font_t *font, gameData_t *gameData);
 static void breakoutChangeStateGameClear(breakout_t *self);
 static void breakoutUpdateGameClear(breakout_t *self, int64_t elapsedUs);
-static void breakoutDrawGameClear(font_t *font, gameData_t *gameData);
+static void breakoutDrawGameClear(font_t *ibm_vga8, font_t *logbook, gameData_t *gameData);
 static void breakoutInitializeBreakoutHighScores(breakout_t* self);
 static void breakoutLoadBreakoutHighScores(breakout_t* self);
 static void breakoutSaveBreakoutHighScores(breakout_t* self);
@@ -163,6 +164,19 @@ static void breakoutChangeStatePause(breakout_t *self);
 static void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawPause(font_t *font);
 uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
+
+//==============================================================================
+// Level Definitons
+//==============================================================================
+
+#define NUM_LEVELS 2
+
+static const leveldef_t leveldef[2] = {
+    {.filename = "brkLevel1.bin",
+     .timeLimit = 180},
+    {.filename = "brkLvlChar1.bin",
+     .timeLimit = 180}
+     };
 
 //==============================================================================
 // Strings
@@ -189,6 +203,9 @@ static const char breakoutDiffHard[]   = "Impossible";
 
 static const char breakoutReady[] = "Get Ready!";
 static const char breakoutGameOver[] = "Game Over!";
+
+static const char breakoutLevelClear[] = "Cleared!";
+static const char breakoutPause[] = "Paused";
 
 //==============================================================================
 // Variables
@@ -252,7 +269,7 @@ static void breakoutEnterMode(void)
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
 
-    loadMapFromFile(&(breakout->tilemap), "brkLevel1.bin");
+    loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
 
     // These are the possible control schemes
     const char* controlSchemes[] = {
@@ -340,7 +357,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             breakout->difficulty = BREAKOUT_EASY;
             breakout->screen = BREAKOUT_GAME;
             initializeGameDataFromTitleScreen(&(breakout->gameData));
-            loadMapFromFile(&(breakout->tilemap), "brkLevel1.bin");
+            loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
             breakoutChangeStateReadyScreen(breakout);   
         }
         // Save what difficulty is selected and start the game (second-level menu)
@@ -473,6 +490,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     if(self->gameData.frameCount > 59){
         self->gameData.frameCount = 0;
     }
+
 }
 
 /**
@@ -569,11 +587,11 @@ void breakoutDetectGameStateChange(breakout_t *self){
             break;
         
         case ST_LEVEL_CLEAR:
-            //breakoutChangeStateLevelClear(self);
+            breakoutChangeStateLevelClear(self);
             break;
 
         case ST_PAUSE:
-            //breakoutChangeStatePause(self);
+            breakoutChangeStatePause(self);
             break;
 
         default:
@@ -687,4 +705,168 @@ static void drawBreakoutHud(font_t *font, gameData_t *gameData){
 
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
     //drawText(d, font, (gameData->comboTimer < 60) ? c030: greenColors[(platformer->gameData.frameCount >> 3) % 4], scoreStr, 8, 30);
+}
+
+void breakoutChangeStateLevelClear(breakout_t *self){
+    self->gameData.frameCount = 0;
+    resetGameDataLeds(&(self->gameData));
+    self->update=&breakoutUpdateLevelClear;
+}
+
+void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){ 
+    self->gameData.frameCount++;
+
+    if(self->gameData.frameCount > 60){
+        if(self->gameData.countdown > 0){
+            self->gameData.countdown--;
+            
+            if(self->gameData.countdown % 2){
+                //buzzer_play_bgm(&sndTally);
+            }
+
+            uint16_t comboPoints = 50 * self->gameData.combo;
+
+            self->gameData.score += comboPoints;
+            self->gameData.comboScore = comboPoints;
+
+            if(self->gameData.combo > 1){
+                self->gameData.combo--;
+            }
+        } else if(self->gameData.frameCount % 60 == 0) {
+            //Hey look, it's a frame rule!
+            
+            uint16_t levelIndex = breakoutGetLevelIndex(self->gameData.world, self->gameData.level);
+            
+            if(levelIndex >= NUM_LEVELS - 1){
+                //Game Cleared!
+
+                if(!self->gameData.debugMode){
+                    //Determine achievements
+                    /*self->unlockables.gameCleared = true;
+                    
+                    if(!self->gameData.continuesUsed){
+                        self->unlockables.oneCreditCleared = true;
+
+                        if(self->gameData.inGameTimer < FAST_TIME) {
+                            self->unlockables.fastTime = true;
+                        }
+                    }
+
+                    if(self->gameData.score >= BIG_SCORE) {
+                        self->unlockables.bigScore = true;
+                    }
+
+                    if(self->gameData.score >= BIGGER_SCORE) {
+                        self->unlockables.biggerScore = true;
+                    }
+                }*/
+
+                breakoutChangeStateGameClear(self);
+            } else {
+                 //Advance to the next level
+                self->gameData.level++;
+                if(self->gameData.level > 4){
+                    self->gameData.world++;
+                    self->gameData.level = 1;
+                }
+
+                //Unlock the next level
+                levelIndex++;
+                /*if(levelIndex > self->unlockables.maxLevelIndexUnlocked){
+                    self->unlockables.maxLevelIndexUnlocked = levelIndex;
+                }*/
+                loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
+                breakoutChangeStateReadyScreen(self);
+            }
+
+            /*if(!self->gameData.debugMode){
+                savePlatformerUnlockables(self);
+            }*/
+        }
+    }
+
+    updateEntities(&(self->entityManager));
+    drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
+    drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
+    breakoutDrawLevelClear( &(self->logbook), &(self->gameData));
+    updateLedsLevelClear(&(self->gameData));
+}
+}
+
+void breakoutDrawLevelClear(font_t *font, gameData_t *gameData){
+    drawText(font, c555, breakoutLevelClear, (TFT_WIDTH - textWidth(font, breakoutLevelClear)) / 2, 128);
+}
+
+void breakoutChangeStateGameClear(breakout_t *self){
+    self->gameData.frameCount = 0;
+    self->update=&breakoutUpdateGameClear;
+    resetGameDataLeds(&(self->gameData));
+    //buzzer_play_bgm(&bgmSmooth);
+}
+
+void breakoutUpdateGameClear(breakout_t *self, int64_t elapsedUs){    
+    self->gameData.frameCount++;
+
+    if(self->gameData.frameCount > 450){
+        if(self->gameData.lives > 0){
+            if(self->gameData.frameCount % 60 == 0){
+                self->gameData.lives--;
+                self->gameData.score += 200000;
+                //buzzer_play_sfx(&snd1up);
+            }
+        } else if(self->gameData.frameCount % 960 == 0) {
+            breakoutChangeStateGameOver(self);
+        }
+    }
+
+    drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
+    breakoutDrawGameClear(&(self->ibm_vga8), &(self->logbook), &(self->gameData));
+    updateLedsGameClear(&(self->gameData));
+}
+
+void breakoutDrawGameClear(font_t *ibm_vga8, font_t *logbook, gameData_t *gameData){
+    drawBreakoutHud(ibm_vga8, gameData);
+
+    drawText(logbook, c555, "Thanks for playing!", 24, 48);
+    
+    if(gameData->frameCount > 300){
+        drawText(logbook, c555, "See you", 8, 112);
+        drawText(logbook, c555, "next mission!", 8, 160);
+    }
+
+}
+
+void breakoutChangeStatePause(breakout_t *self){
+    //buzzer_play_bgm(&sndPause);
+    self->update=&breakoutUpdatePause;
+}
+
+void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
+    if((
+        (self->gameData.btnState & PB_START)
+        &&
+        !(self->gameData.prevBtnState & PB_START)
+    )){
+        //buzzer_play_sfx(&sndPause);
+        //self->gameData.changeBgm = self->gameData.currentBgm;
+        //self->gameData.currentBgm = BGM_NULL;
+        self->update=&breakoutGameLoop;
+    }
+
+    drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
+    drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
+    breakoutDrawPause(&(self->logbook));
+
+    self->prevBtnState = self->btnState;
+    self->gameData.prevBtnState = self->prevBtnState;
+}
+
+void breakoutDrawPause(font_t *font){
+    drawText(font, c555, breakoutPause, (TFT_WIDTH - textWidth(font, breakoutPause)) / 2, 128);
+}
+
+uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level){
+    return (world-1) * 4 + (level-1);
 }
