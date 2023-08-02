@@ -12,7 +12,6 @@
 typedef struct {
     char filename[16];
     uint16_t timeLimit;
-    uint16_t checkpointTimeLimit;
 } leveldef_t;
 
 
