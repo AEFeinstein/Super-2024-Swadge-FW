@@ -169,10 +169,10 @@ bool loadMapFromFile(tilemap_t *tilemap, const char *name)
     tilemap->minMapOffsetY = 0;
     tilemap->maxMapOffsetY = height * TILE_SIZE - TILEMAP_DISPLAY_HEIGHT_PIXELS;
 
-    for(uint16_t i=0; i<16; i++){
+    /*for(uint16_t i=0; i<16; i++){
         tilemap->warps[i].x = buf[2 + width * height + i * 2];
         tilemap->warps[i].y = buf[2 + width * height + i * 2 + 1];
-    }
+    }*/
 
     free(buf);
 
