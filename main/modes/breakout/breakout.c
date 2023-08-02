@@ -252,7 +252,7 @@ static void breakoutEnterMode(void)
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
 
-    loadMapFromFile(&(breakout->tilemap), "level1.bin");
+    loadMapFromFile(&(breakout->tilemap), "brkLevel1.bin");
 
     // These are the possible control schemes
     const char* controlSchemes[] = {
@@ -340,7 +340,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             breakout->difficulty = BREAKOUT_EASY;
             breakout->screen = BREAKOUT_GAME;
             initializeGameDataFromTitleScreen(&(breakout->gameData));
-            loadMapFromFile(&(breakout->tilemap), "level1.bin");
+            loadMapFromFile(&(breakout->tilemap), "brkLevel1.bin");
             breakoutChangeStateReadyScreen(breakout);   
         }
         // Save what difficulty is selected and start the game (second-level menu)
