@@ -1,0 +1,55 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "swdglnd-character.tmx",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "breakout-tiles.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 6.0061,
+            "scaleInEditor": 6.04
+        },
+        "level1.tmx": {
+            "scale": 1.8793,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 130.89980311818232,
+                "y": 142.87234608630874
+            }
+        },
+        "swdglnd-character.tmx": {
+            "scale": 2.415,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 184.6790890269151,
+                "y": 100.41407867494823
+            }
+        }
+    },
+    "last.exportedFilePath": "/Users/jvega/Desktop",
+    "last.imagePath": "/Users/jvega/Pictures/My Art/Aseprite/breakout",
+    "map.height": 30,
+    "map.lastUsedExportFilter": "Breakout map format (*.bin)",
+    "map.lastUsedFormat": "tmx",
+    "map.tileHeight": 8,
+    "map.tileWidth": 8,
+    "map.width": 35,
+    "openFiles": [
+        "swdglnd-character.tmx",
+        "level1.tmx"
+    ],
+    "project": "breakout.tiled-project",
+    "recentFiles": [
+        "level1.tmx",
+        "swdglnd-character.tmx",
+        "breakout-tiles.tsx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 8,
+        "width": 8
+    }
+}
