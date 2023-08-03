@@ -3,9 +3,17 @@
 //==============================================================================
 
 #include "hdw-accel.h"
+#include "esp_random.h"
 #include "emu_main.h"
 
+#define ONE_G 242
+///< The range of randomness to add to or subtract from the actual value at each reading
+#define ACCEL_JITTER 3
+
 static bool accelInit = false;
+static int16_t _accelX = 0;
+static int16_t _accelY = 0;
+static int16_t _accelZ = 0;
 
 /**
  * @brief Initialize the accelerometer
@@ -18,6 +26,22 @@ static bool accelInit = false;
 esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
                             qma_range_t range, qma_bandwidth_t bandwidth)
 {
+    // divide up one G evenly between the axes, randomly
+    // the math doesn't quite math but honestly it's good enough
+    int16_t start = ONE_G;
+
+    _accelX = (esp_random() % start);
+    start -= _accelX;
+
+    _accelY = (esp_random() % start);
+    start -= _accelY;
+
+    _accelZ = start;
+
+    _accelX *= (esp_random() % 2) ? 1 : -1;
+    _accelY *= (esp_random() % 2) ? 1 : -1;
+    _accelZ *= (esp_random() % 2) ? 1 : -1;
+
     accelInit = true;
     return ESP_OK;
 }
@@ -85,13 +109,55 @@ esp_err_t accelSetRange(qma_range_t range)
  */
 esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
 {
+
     if (accelInit)
     {
-        // TODO emulate tilt better
-        WARN_UNIMPLEMENTED();
-        *x = 0;
-        *y = 0;
-        *z = 0;
+        *x = _accelX + (esp_random() % (ACCEL_JITTER * 2 + 1) - ACCEL_JITTER - 1);
+        *y = _accelY + (esp_random() % (ACCEL_JITTER * 2 + 1) - ACCEL_JITTER - 1);
+        *z = _accelZ + (esp_random() % (ACCEL_JITTER * 2 + 1) - ACCEL_JITTER - 1);
+
+        // randomly, approximately every 3 readings
+        if (!(esp_random() % 3))
+        {
+            // change the value, in a random direction
+            // this will make sure the sum is about 1G
+            switch ((esp_random() % 6))
+            {
+                #define SWAP(a,b) if (a > -ONE_G && b < ONE_G) { a--; b++; }
+
+                // X -> Y
+                case 0:
+                SWAP(_accelX, _accelY)
+                break;
+
+                // X -> Z
+                case 3:
+                SWAP(_accelX, _accelZ)
+                break;
+
+                // Y -> X
+                case 1:
+                SWAP(_accelY, _accelX)
+                break;
+
+                // Y -> Z
+                case 4:
+                SWAP(_accelY, _accelZ)
+                break;
+
+                // Z -> X
+                case 2:
+                SWAP(_accelZ, _accelX)
+                break;
+
+                // Z -> Y
+                case 5:
+                SWAP(_accelZ, _accelY)
+                break;
+
+                #undef SWAP
+            }
+        }
         return ESP_OK;
     }
     else
