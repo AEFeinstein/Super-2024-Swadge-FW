@@ -16,7 +16,7 @@
 //==============================================================================
 
 /// The keyboard keys used for input
-static const char inputKeys[] = {
+static char inputKeys[] = {
     'W', ///< ::PB_UP
     'S', ///< ::PB_DOWN
     'A', ///< ::PB_LEFT
@@ -231,3 +231,8 @@ void emulatorHandleKeys(int keycode, int bDown)
     int touchState = ((buttonState >> 8) & 0x1F);
     lastTouchLoc   = 4 * touchLoc[touchState];
 }
+
+void emulatorSetKeyMap(const char* keyMap) {
+    memcpy(inputKeys, keyMap, 13);
+}
+
