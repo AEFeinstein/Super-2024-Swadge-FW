@@ -3,14 +3,15 @@
 //==============================================================================
 
 #include "hdw-accel.h"
+#include "hdw-accel_emu.h"
+#include "trigonometry.h"
 #include "esp_random.h"
 #include "emu_main.h"
+#include "macros.h"
 
 #define ONE_G 242
-///< The range of randomness to add to or subtract from the actual value at each reading
-#define ACCEL_JITTER 3
 
-static bool accelInit = false;
+static bool accelInit  = false;
 static int16_t _accelX = 0;
 static int16_t _accelY = 0;
 static int16_t _accelZ = 0;
@@ -28,20 +29,15 @@ esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl
 {
     // divide up one G evenly between the axes, randomly
     // the math doesn't quite math but honestly it's good enough
-    int16_t start = ONE_G;
-
-    _accelX = (esp_random() % start);
-    start -= _accelX;
-
-    _accelY = (esp_random() % start);
-    start -= _accelY;
-
-    _accelZ = start;
-
-    _accelX *= (esp_random() % 2) ? 1 : -1;
-    _accelY *= (esp_random() % 2) ? 1 : -1;
-    _accelZ *= (esp_random() % 2) ? 1 : -1;
-
+    if (emulatorArgs.emulateMotion)
+    {
+        emulatorSetAccelerometerRotation(ONE_G, emulatorArgs.motionZ, emulatorArgs.motionX);
+    }
+    else
+    {
+        // at least give a somewhat sane reading
+        _accelZ = ONE_G;
+    }
     accelInit = true;
     return ESP_OK;
 }
@@ -109,53 +105,51 @@ esp_err_t accelSetRange(qma_range_t range)
  */
 esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
 {
-
     if (accelInit)
     {
-        *x = _accelX + (esp_random() % (ACCEL_JITTER * 2 + 1) - ACCEL_JITTER - 1);
-        *y = _accelY + (esp_random() % (ACCEL_JITTER * 2 + 1) - ACCEL_JITTER - 1);
-        *z = _accelZ + (esp_random() % (ACCEL_JITTER * 2 + 1) - ACCEL_JITTER - 1);
+        if (emulatorArgs.motionJitter)
+        {
+            // Set each coordinate to the real coordinate +/- the motionJitterAmount, but still clamp the total value to +/- 512
+            *x = MAX(-512, MIN(512, _accelX + (esp_random() % (emulatorArgs.motionJitterAmount * 2 + 1) - emulatorArgs.motionJitterAmount - 1)));
+            *y = MAX(-512, MIN(512, _accelY + (esp_random() % (emulatorArgs.motionJitterAmount * 2 + 1) - emulatorArgs.motionJitterAmount - 1)));
+            *z = MAX(-512, MIN(512, _accelZ + (esp_random() % (emulatorArgs.motionJitterAmount * 2 + 1) - emulatorArgs.motionJitterAmount - 1)));
+        }
+        else
+        {
+            *x = _accelX;
+            *y = _accelY;
+            *z = _accelZ;
+        }
 
         // randomly, approximately every 3 readings
-        if (!(esp_random() % 3))
+        if (emulatorArgs.motionDrift)
         {
-            // change the value, in a random direction
-            // this will make sure the sum is about 1G
-            switch ((esp_random() % 6))
+            switch (esp_random() % 6)
             {
-                #define SWAP(a,b) if (a > -ONE_G && b < ONE_G) { a--; b++; }
-
-                // X -> Y
                 case 0:
-                SWAP(_accelX, _accelY)
+                emulatorArgs.motionX = (emulatorArgs.motionX + 1) % 360;
                 break;
 
-                // X -> Z
-                case 3:
-                SWAP(_accelX, _accelZ)
-                break;
-
-                // Y -> X
                 case 1:
-                SWAP(_accelY, _accelX)
+                emulatorArgs.motionX = (emulatorArgs.motionX + 359) % 360;
                 break;
 
-                // Y -> Z
-                case 4:
-                SWAP(_accelY, _accelZ)
+                default:
+                break;
+            }
+
+            switch (esp_random() % 6)
+            {
+                case 0:
+                emulatorArgs.motionZ = (emulatorArgs.motionZ + 1) % 360;
                 break;
 
-                // Z -> X
-                case 2:
-                SWAP(_accelZ, _accelX)
+                case 1:
+                emulatorArgs.motionZ = (emulatorArgs.motionZ + 359) % 360;
                 break;
 
-                // Z -> Y
-                case 5:
-                SWAP(_accelZ, _accelY)
+                default:
                 break;
-
-                #undef SWAP
             }
         }
         return ESP_OK;
@@ -163,5 +157,52 @@ esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
     else
     {
         return ESP_ERR_INVALID_STATE;
+    }
+}
+
+/**
+ * @brief Sets the raw accelerometer reading to be returned by the emulator
+ *
+ * @param x The x axis value, from -512 to 512, inclusive
+ * @param y The y axis value, from -512 to 512, inclusive
+ * @param z The z axis value, from -512 to 512, inclusive
+ */
+void emulatorSetAccelerometer(int16_t x, int16_t y, int16_t z)
+{
+    if (x >= -512 && x <= 512 && y >= -512 && y <= 512 && z >= -512 && z <= 512)
+    {
+        _accelX = x;
+        _accelY = y;
+        _accelZ = z;
+    }
+}
+
+/**
+ * @brief Sets the raw accelerometer reading to the vector defined by the given magnitude and rotations.
+ *
+ * @param value     The magnitude of the acceleration vector, from -512 to 512, inclusive
+ * @param zRotation The counterclockwise rotation about the +Z axis, in degrees
+ * @param xRotation The counterclockwise rotation about the +X axis, in degrees
+ */
+void emulatorSetAccelerometerRotation(int16_t value, uint16_t zRotation, uint16_t xRotation)
+{
+    if (value >= -512 && value <= 512 && zRotation <= 360 && xRotation <= 360)
+    {
+        /*
+        stackoverflow says:
+
+        x = r * sin(polar) * cos(alpha)
+        y = r * sin(polar) * sin(alpha)
+        z = r * cos(polar)
+
+        Where:
+
+        r     is the Radius
+        alpha is the horizontal angle from the X axis
+        polar is the vertical angle from the Z axis
+        */
+        _accelX = value * getSin1024(zRotation) / 1024 * getCos1024(xRotation) / 1024;
+        _accelY = value * getSin1024(zRotation) / 1024 * getSin1024(xRotation) / 1024;
+        _accelZ = value * getCos1024(zRotation) / 1024;
     }
 }
