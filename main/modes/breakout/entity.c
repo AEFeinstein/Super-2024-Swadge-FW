@@ -781,9 +781,9 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
     switch (other->type)
     {
         case ENTITY_PLAYER_PADDLE_BOTTOM:
-            if(other->y > self->y){
+            if(self->yspeed > 0){
                 self->yspeed=-32;
-                self->xspeed=CLAMP((self->x - other->x)/2,-96,96);
+                self->xspeed=CLAMP((self->x - other->x)/2,-80,80);
             }       
             break;
         default:
@@ -1068,6 +1068,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
     switch(tileId){
         case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_BLACK: {
            setTile(tilemap, tx, ty, TILE_EMPTY);
+           gameData->targetBlocksBroken++;
            break;
         }
         case TILE_BLOCK_2x1_RED_L:
@@ -1084,9 +1085,11 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x1_BLACK_L:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
+           gameData->targetBlocksBroken++;
            
            if(isBlock(getTile(tilemap, tx+1, ty))){
             setTile(tilemap, tx+1, ty, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
            }
 
            break;
@@ -1105,9 +1108,143 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x1_BLACK_R:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-                                 
+           gameData->targetBlocksBroken++;
+
            if(isBlock(getTile(tilemap, tx-1, ty))){
             setTile(tilemap, tx-1, ty, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           break;
+        }
+        case TILE_BLOCK_2x2_RED_UL:
+        case TILE_BLOCK_2x2_ORANGE_UL:
+        case TILE_BLOCK_2x2_YELLOW_UL:
+        case TILE_BLOCK_2x2_GREEN_UL:
+        case TILE_BLOCK_2x2_CYAN_UL:
+        case TILE_BLOCK_2x2_BLUE_UL:
+        case TILE_BLOCK_2x2_PURPLE_UL:
+        case TILE_BLOCK_2x2_MAGENTA_UL:
+        case TILE_BLOCK_2x2_WHITE_UL:
+        case TILE_BLOCK_2x2_TAN_UL:
+        case TILE_BLOCK_2x2_BROWN_UL:
+        case TILE_BLOCK_2x2_BLACK_UL:
+        {
+           setTile(tilemap, tx, ty, TILE_EMPTY);
+           gameData->targetBlocksBroken++;
+           
+           if(isBlock(getTile(tilemap, tx+1, ty))){
+            setTile(tilemap, tx+1, ty, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           if(isBlock(getTile(tilemap, tx,ty+1))){
+            setTile(tilemap, tx, ty+1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+            if(isBlock(getTile(tilemap, tx+1,ty+1))){
+            setTile(tilemap, tx+1, ty+1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           break;
+        }
+        case TILE_BLOCK_2x2_RED_UR:
+        case TILE_BLOCK_2x2_ORANGE_UR:
+        case TILE_BLOCK_2x2_YELLOW_UR:
+        case TILE_BLOCK_2x2_GREEN_UR:
+        case TILE_BLOCK_2x2_CYAN_UR:
+        case TILE_BLOCK_2x2_BLUE_UR:
+        case TILE_BLOCK_2x2_PURPLE_UR:
+        case TILE_BLOCK_2x2_MAGENTA_UR:
+        case TILE_BLOCK_2x2_WHITE_UR:
+        case TILE_BLOCK_2x2_TAN_UR:
+        case TILE_BLOCK_2x2_BROWN_UR:
+        case TILE_BLOCK_2x2_BLACK_UR:
+        {
+           setTile(tilemap, tx, ty, TILE_EMPTY);
+           gameData->targetBlocksBroken++;
+           
+           if(isBlock(getTile(tilemap, tx-1, ty))){
+            setTile(tilemap, tx-1, ty, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           if(isBlock(getTile(tilemap, tx,ty+1))){
+            setTile(tilemap, tx, ty+1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+            if(isBlock(getTile(tilemap, tx-1,ty+1))){
+            setTile(tilemap, tx-1, ty+1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           break;
+        }
+        case TILE_BLOCK_2x2_RED_DL:
+        case TILE_BLOCK_2x2_ORANGE_DL:
+        case TILE_BLOCK_2x2_YELLOW_DL:
+        case TILE_BLOCK_2x2_GREEN_DL:
+        case TILE_BLOCK_2x2_CYAN_DL:
+        case TILE_BLOCK_2x2_BLUE_DL:
+        case TILE_BLOCK_2x2_PURPLE_DL:
+        case TILE_BLOCK_2x2_MAGENTA_DL:
+        case TILE_BLOCK_2x2_WHITE_DL:
+        case TILE_BLOCK_2x2_TAN_DL:
+        case TILE_BLOCK_2x2_BROWN_DL:
+        case TILE_BLOCK_2x2_BLACK_DL:
+        {
+           setTile(tilemap, tx, ty, TILE_EMPTY);
+           gameData->targetBlocksBroken++;
+           
+           if(isBlock(getTile(tilemap, tx+1, ty))){
+            setTile(tilemap, tx+1, ty, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           if(isBlock(getTile(tilemap, tx,ty-1))){
+            setTile(tilemap, tx, ty-1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+            if(isBlock(getTile(tilemap, tx+1,ty-1))){
+            setTile(tilemap, tx+1, ty-1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           break;
+        }
+        case TILE_BLOCK_2x2_RED_DR:
+        case TILE_BLOCK_2x2_ORANGE_DR:
+        case TILE_BLOCK_2x2_YELLOW_DR:
+        case TILE_BLOCK_2x2_GREEN_DR:
+        case TILE_BLOCK_2x2_CYAN_DR:
+        case TILE_BLOCK_2x2_BLUE_DR:
+        case TILE_BLOCK_2x2_PURPLE_DR:
+        case TILE_BLOCK_2x2_MAGENTA_DR:
+        case TILE_BLOCK_2x2_WHITE_DR:
+        case TILE_BLOCK_2x2_TAN_DR:
+        case TILE_BLOCK_2x2_BROWN_DR:
+        case TILE_BLOCK_2x2_BLACK_DR:
+        {
+           setTile(tilemap, tx, ty, TILE_EMPTY);
+           gameData->targetBlocksBroken++;
+           
+           if(isBlock(getTile(tilemap, tx-1, ty))){
+            setTile(tilemap, tx-1, ty, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+           if(isBlock(getTile(tilemap, tx,ty-1))){
+            setTile(tilemap, tx, ty-1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
+           }
+
+            if(isBlock(getTile(tilemap, tx-1,ty-1))){
+            setTile(tilemap, tx-1, ty-1, TILE_EMPTY);
+            gameData->targetBlocksBroken++;
            }
 
            break;
@@ -1116,6 +1253,10 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         default: {
             break;
         }
+    }
+
+    if(gameData->targetBlocksBroken >= tilemap->totalTargetBlocks){
+        gameData->changeState = ST_LEVEL_CLEAR;
     }
 };
 

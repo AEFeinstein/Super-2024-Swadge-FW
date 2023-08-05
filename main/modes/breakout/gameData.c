@@ -56,6 +56,7 @@
     gameData->initialHp = 1;
     gameData->continuesUsed = (gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer = 0;
+    gameData->targetBlocksBroken = 0;
 
     resetGameDataLeds(gameData);
 }

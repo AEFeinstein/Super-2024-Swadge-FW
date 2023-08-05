@@ -175,7 +175,7 @@ typedef struct {
     uint8_t mapWidth;
     uint8_t mapHeight;
     
-    warp_t warps[16];
+    uint16_t totalTargetBlocks;
 
     int16_t mapOffsetX;
     int16_t mapOffsetY;

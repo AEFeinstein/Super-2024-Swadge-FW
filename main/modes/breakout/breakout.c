@@ -715,9 +715,10 @@ void breakoutChangeStateLevelClear(breakout_t *self){
 
 void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){ 
     self->gameData.frameCount++;
+    self->gameData.targetBlocksBroken = 0;
 
     if(self->gameData.frameCount > 60){
-        if(self->gameData.countdown > 0){
+        /*if(self->gameData.countdown > 0){
             self->gameData.countdown--;
             
             if(self->gameData.countdown % 2){
@@ -732,7 +733,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             if(self->gameData.combo > 1){
                 self->gameData.combo--;
             }
-        } else if(self->gameData.frameCount % 60 == 0) {
+        } else*/ if(self->gameData.frameCount % 60 == 0) {
             //Hey look, it's a frame rule!
             
             uint16_t levelIndex = breakoutGetLevelIndex(self->gameData.world, self->gameData.level);
@@ -740,7 +741,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             if(levelIndex >= NUM_LEVELS - 1){
                 //Game Cleared!
 
-                if(!self->gameData.debugMode){
+                //if(!self->gameData.debugMode){
                     //Determine achievements
                     /*self->unlockables.gameCleared = true;
                     
@@ -762,6 +763,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
                 }*/
 
                 breakoutChangeStateGameClear(self);
+                return;
             } else {
                  //Advance to the next level
                 self->gameData.level++;
@@ -777,6 +779,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
                 }*/
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
                 breakoutChangeStateReadyScreen(self);
+                return;
             }
 
             /*if(!self->gameData.debugMode){
@@ -785,13 +788,12 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
         }
     }
 
-    updateEntities(&(self->entityManager));
+    //updateEntities(&(self->entityManager));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
     breakoutDrawLevelClear( &(self->logbook), &(self->gameData));
     updateLedsLevelClear(&(self->gameData));
-}
 }
 
 void breakoutDrawLevelClear(font_t *font, gameData_t *gameData){
@@ -828,11 +830,11 @@ void breakoutUpdateGameClear(breakout_t *self, int64_t elapsedUs){
 void breakoutDrawGameClear(font_t *ibm_vga8, font_t *logbook, gameData_t *gameData){
     drawBreakoutHud(ibm_vga8, gameData);
 
-    drawText(logbook, c555, "Thanks for playing!", 24, 48);
+    drawText(logbook, c555, "Thanks for playing!", 16, 48);
     
     if(gameData->frameCount > 300){
-        drawText(logbook, c555, "See you", 8, 112);
-        drawText(logbook, c555, "next mission!", 8, 160);
+        drawText(logbook, c555, "See you next", 8, 112);
+        drawText(logbook, c555, "debug mission!", 8, 160);
     }
 
 }
