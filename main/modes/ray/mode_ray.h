@@ -84,6 +84,9 @@ typedef struct
     uint16_t btnState;
 
     int32_t doorTimer;
+
+    rayObj_t* lockedTargetObj;
+    bool isStrafing;
 } ray_t;
 
 extern swadgeMode_t rayMode;

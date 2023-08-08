@@ -187,7 +187,7 @@ void rayMainLoop(int64_t elapsedUs)
     // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
     castWalls(ray);
     // Draw sprites
-    castSprites(ray);
+    rayObj_t* lockedTargetObj = castSprites(ray);
 
     // Run a timer for head bob
     ray->bobTimer += elapsedUs;
@@ -232,6 +232,66 @@ void rayMainLoop(int64_t elapsedUs)
         }
     }
 
+    // TODO make a movement vector
+
+    // B button locks onto enemies
+    if ((ray->btnState & PB_B) && !(prevBtnState & PB_B))
+    {
+        // Try to acquire lock
+        ray->lockedTargetObj = lockedTargetObj;
+        ray->isStrafing      = true;
+    }
+    else if (!(ray->btnState & PB_B) && (prevBtnState & PB_B))
+    {
+        // Release locked target
+        ray->lockedTargetObj = NULL;
+        ray->isStrafing      = false;
+    }
+
+    // Strafing is either locked or unlocked
+    if (ray->isStrafing)
+    {
+        if (ray->lockedTargetObj)
+        {
+            // Adjust position to always center on the locked target object
+            // TODO gotta set dirAngle based on difference in position between self and obj
+        }
+
+        // Strafe right
+        if (ray->btnState & PB_RIGHT)
+        {
+            // TODO adjust direction vector
+        }
+
+        // Strafe left
+        if (ray->btnState & PB_LEFT)
+        {
+            // TODO adjust direction vector
+        }
+    }
+    else
+    {
+        // Rotate right, in place
+        if (ray->btnState & PB_RIGHT)
+        {
+            ray->dirAngle = ADD_FX(ray->dirAngle, TO_FX(5));
+            if (ray->dirAngle >= TO_FX(360))
+            {
+                ray->dirAngle -= TO_FX(360);
+            }
+        }
+
+        // Rotate left, in place
+        if (ray->btnState & PB_LEFT)
+        {
+            ray->dirAngle = SUB_FX(ray->dirAngle, TO_FX(5));
+            if (ray->dirAngle < TO_FX(0))
+            {
+                ray->dirAngle += TO_FX(360);
+            }
+        }
+    }
+
     // Boundary checks are longer than the move dist to not get right up on the wall
     q24_8 boundaryCheckX = ray->dirX / 3;
     q24_8 boundaryCheckY = ray->dirY / 3;
@@ -241,6 +301,7 @@ void rayMainLoop(int64_t elapsedUs)
     q24_8 deltaY = (ray->dirY / 6);
 
     // Move forwards if no wall in front of you
+    // TODO adjust movement vector, refactor the actual movement afterwards
     if (ray->btnState & PB_UP)
     {
         if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)]))
@@ -255,6 +316,7 @@ void rayMainLoop(int64_t elapsedUs)
     }
 
     // move backwards if no wall behind you
+    // TODO adjust movement vector, refactor the actual movement afterwards
     if (ray->btnState & PB_DOWN)
     {
         if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX - boundaryCheckX)][FROM_FX(ray->posY)]))
@@ -265,26 +327,6 @@ void rayMainLoop(int64_t elapsedUs)
         if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY - boundaryCheckY)]))
         {
             ray->posY -= deltaY;
-        }
-    }
-
-    // Rotate right
-    if (ray->btnState & PB_RIGHT)
-    {
-        ray->dirAngle = ADD_FX(ray->dirAngle, TO_FX(5));
-        if (ray->dirAngle >= TO_FX(360))
-        {
-            ray->dirAngle -= TO_FX(360);
-        }
-    }
-
-    // Rotate left
-    if (ray->btnState & PB_LEFT)
-    {
-        ray->dirAngle = SUB_FX(ray->dirAngle, TO_FX(5));
-        if (ray->dirAngle < TO_FX(0))
-        {
-            ray->dirAngle += TO_FX(360);
         }
     }
 

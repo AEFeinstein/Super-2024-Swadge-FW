@@ -17,6 +17,9 @@
 #define EX_CEIL_PRECISION_BITS 8
 #define EX_CEIL_PRECISION      (1 << EX_CEIL_PRECISION_BITS)
 
+// Half width of the lock zone when locking on enemies
+#define LOCK_ZONE 16
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -525,12 +528,15 @@ static int objDistComparator(const void* obj1, const void* obj2)
 }
 
 /**
- * @brief TODO
+ * @brief
  *
  * @param ray
+ * @return The closest sprite in the lock zone (may be NULL)
  */
-void castSprites(ray_t* ray)
+rayObj_t* castSprites(ray_t* ray)
 {
+    rayObj_t* lockedObj = NULL;
+
     // Setup to draw
     SETUP_FOR_TURBO();
 
@@ -640,6 +646,13 @@ void castSprites(ray_t* ray)
             q16_16 texX      = ((tWidth * (drawStartX - spriteScreenX + (spriteWidth / 2))) << 16) / (spriteWidth);
             q16_16 texXDelta = (tWidth << 16) / spriteWidth;
 
+            // Check if the sprite is in the lock zone
+            if ((drawStartX <= ((TFT_WIDTH / 2) + LOCK_ZONE)) && (drawEndX >= ((TFT_WIDTH / 2) - LOCK_ZONE)))
+            {
+                // Closest sprites are drawn last, so override the lock
+                lockedObj = obj;
+            }
+
             // loop through every vertical stripe of the sprite on screen
             for (int16_t stripe = drawStartX; stripe < drawEndX; stripe++)
             {
@@ -667,4 +680,5 @@ void castSprites(ray_t* ray)
             }
         }
     }
+    return lockedObj;
 }
