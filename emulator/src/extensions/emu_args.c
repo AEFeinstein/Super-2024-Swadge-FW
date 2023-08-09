@@ -124,6 +124,7 @@ static const char argFuzzTouch[]   = "fuzz-touch";
 static const char argFuzzMotion[]  = "fuzz-motion";
 static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
+static const char argKeymap[]      = "keymap";
 static const char argLock[]        = "lock";
 static const char argMode[]        = "mode";
 static const char argModeSwitch[]  = "mode-switch";
@@ -147,6 +148,7 @@ static const struct option options[] =
     { argFuzzMotion,  optional_argument, (int*)&emulatorArgs.fuzzMotion,   true },
     { argHeadless,    no_argument,       (int*)&emulatorArgs.headless,     true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
+    { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
@@ -156,7 +158,6 @@ static const struct option options[] =
     { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, true },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
-
     {0},
 };
 
@@ -172,6 +173,7 @@ static const optDoc_t argDocs[] =
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
     { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
+    {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, dvorak, or dvp"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
@@ -241,12 +243,17 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         }
         return true;
     }
-    else if (argMode == optName)
+    else if (argKeymap == optName)
     {
         if (arg)
         {
-            emulatorArgs.startMode = arg;
+            emulatorArgs.keymap = arg;
         }
+        return true;
+    }
+    else if (argMode == optName)
+    {
+        emulatorArgs.startMode = arg;
     }
     else if (argModeList == optName)
     {
