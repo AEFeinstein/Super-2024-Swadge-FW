@@ -81,7 +81,7 @@ static void drawLineInner(int x0, int y0, int x1, int y1, paletteColor_t col, in
         {
             if (dashDraw)
             {
-                TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yOrigin, col);
+                TURBO_SET_PIXEL_BOUNDS(xOrigin + x0 * xScale, yOrigin + y0 * yScale, col);
             }
             dashCnt++;
             if (dashWidth == dashCnt)
