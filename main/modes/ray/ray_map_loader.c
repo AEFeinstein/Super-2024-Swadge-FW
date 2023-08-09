@@ -97,8 +97,9 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
                     {
                         objs[objIdx].sprite = getTexture(obj);
                         objs[objIdx].dist   = 0;
-                        objs[objIdx].posX   = TO_FX(x);
-                        objs[objIdx].posY   = TO_FX(y);
+                        // Center the position in the tile
+                        objs[objIdx].posX   = TO_FX(x) + (1 << (FRAC_BITS - 1));
+                        objs[objIdx].posY   = TO_FX(y) + (1 << (FRAC_BITS - 1));
                         objs[objIdx].velX   = TO_FX(0);
                         objs[objIdx].velY   = TO_FX(0);
                         objs[objIdx].radius = DIV_FX(TO_FX(objs[objIdx].sprite->w), TO_FX(64)); // each cell is 64px

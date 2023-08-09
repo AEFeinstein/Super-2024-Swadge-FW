@@ -151,15 +151,6 @@ void castWalls(ray_t* ray)
     // We'll be drawing pixels, so set this up
     SETUP_FOR_TURBO();
 
-    // Compute cartesian direction and camera plane from direction
-    // direction vector, cartesian coordinates
-    ray->dirX = -getCos1024(FROM_FX(ray->dirAngle)) / 4; // trig functions are already << 10, so >> 2 to get to << 8
-    ray->dirY = getSin1024(FROM_FX(ray->dirAngle)) / 4;
-
-    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-    ray->planeX = MUL_FX(((1 << FRAC_BITS) * 2) / 3, ray->dirY);
-    ray->planeY = MUL_FX(-((1 << FRAC_BITS) * 2) / 3, ray->dirX);
-
     // For each ray
     for (int16_t x = 0; x < TFT_WIDTH; x++)
     {
@@ -646,19 +637,19 @@ rayObj_t* castSprites(ray_t* ray)
             q16_16 texX      = ((tWidth * (drawStartX - spriteScreenX + (spriteWidth / 2))) << 16) / (spriteWidth);
             q16_16 texXDelta = (tWidth << 16) / spriteWidth;
 
-            // Check if the sprite is in the lock zone
-            if ((drawStartX <= ((TFT_WIDTH / 2) + LOCK_ZONE)) && (drawEndX >= ((TFT_WIDTH / 2) - LOCK_ZONE)))
-            {
-                // Closest sprites are drawn last, so override the lock
-                lockedObj = obj;
-            }
-
             // loop through every vertical stripe of the sprite on screen
             for (int16_t stripe = drawStartX; stripe < drawEndX; stripe++)
             {
                 // Check wallDistBuffer to make sure the sprite is on the screen
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
+                    // Check if this should be locked onto
+                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE))
+                    {
+                        // Closest sprites are drawn last, so override the lock
+                        lockedObj = obj;
+                    }
+
                     // Get initial texture Y coordinate and the step per-screen-pixel
                     q16_16 texY = ((tHeight * ((drawStartY - spritePosZ) + ((spriteHeight - TFT_HEIGHT) / 2))) << 16)
                                   / (spriteHeight);

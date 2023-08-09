@@ -146,3 +146,91 @@ int32_t getTan1024(int16_t degree)
         }
     }
 }
+
+/**
+ * @brief CORDIC approximation of arctan
+ *
+ * @param x The x component
+ * @param y The y component
+ * @return The approximation of atan(y/x), in degrees
+ */
+int32_t cordicAtan2(int32_t x, int32_t y)
+{
+    // Check for 90 degree angles first
+    if (x == 0)
+    {
+        if (y > 0)
+        {
+            return 0;
+        }
+        else
+        {
+            return 180;
+        }
+    }
+    else if (y == 0)
+    {
+        if (x > 0)
+        {
+            return 90;
+        }
+        else
+        {
+            return 270;
+        }
+    }
+
+    // Constants for speed, it's sin(128), sin(64), sin(32), etc.
+    const int16_t cSin1024[] = {807, 920, 543, 282, 143, 71, 36, 18};
+    const int16_t cCos1024[] = {-630, 449, 868, 984, 1014, 1022, 1023, 1024};
+
+    // X and Y coordinates after rotation
+    int32_t xNew;
+    int32_t yNew;
+    // The cumulative rotation
+    int16_t sumAngle = 0;
+
+    // Scale these up for precision
+    x *= 1024;
+    y *= 1024;
+
+    // Pretty much a binary search trying to get x to 0
+    int16_t loop = 0;
+    for (int16_t angle = 128; angle > 0; angle /= 2)
+    {
+        if (x > 0)
+        {
+            // rotate counterclockwise
+            xNew = (x * cCos1024[loop]) - (y * cSin1024[loop]);
+            yNew = (y * cCos1024[loop]) + (x * cSin1024[loop]);
+            sumAngle += angle;
+        }
+        else
+        {
+            // rotate clockwise
+            xNew = (x * cCos1024[loop]) + (y * cSin1024[loop]);
+            yNew = (y * cCos1024[loop]) - (x * cSin1024[loop]);
+            sumAngle -= angle;
+        }
+
+        // Scale down the factor from sin1024 and cos1024
+        x = xNew / 1024;
+        y = yNew / 1024;
+
+        // Increment the loop for the angle LUTs
+        loop++;
+    }
+
+    // Make sure the returned angle is within [0,359]
+    while (sumAngle < 0)
+    {
+        sumAngle += 360;
+    }
+    while (sumAngle >= 360)
+    {
+        sumAngle -= 360;
+    }
+
+    // Return it
+    return sumAngle;
+}

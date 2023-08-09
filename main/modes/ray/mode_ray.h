@@ -85,7 +85,6 @@ typedef struct
 
     int32_t doorTimer;
 
-    rayObj_t* lockedTargetObj;
     bool isStrafing;
 } ray_t;
 

@@ -18,6 +18,7 @@ void rayMainLoop(int64_t elapsedUs);
 void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static bool isPassableCell(rayMapCell_t* cell);
+void setPlayerAngle(q24_8 angle);
 
 //==============================================================================
 // Const Variables
@@ -68,12 +69,10 @@ void rayEnterMode(void)
     // Load the map and object data
     loadRayMap("demo.rmh", &ray->map, ray->objs, &ray->posX, &ray->posY, false);
 
-    // Set initial position and direction
-    ray->posX     = TO_FX(ray->posX);
-    ray->posY     = TO_FX(ray->posY);
-    ray->dirAngle = 0;
-    ray->dirX = 0, ray->dirY = 0;
-    ray->planeX = 0, ray->planeY = 0;
+    // Set initial position and direction, centered on the tile
+    ray->posX = TO_FX(ray->posX) + (1 << (FRAC_BITS - 1));
+    ray->posY = TO_FX(ray->posY) + (1 << (FRAC_BITS - 1));
+    setPlayerAngle(TO_FX(0));
     ray->posZ = TO_FX(0);
 
     // Load textures
@@ -187,7 +186,7 @@ void rayMainLoop(int64_t elapsedUs)
     // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
     castWalls(ray);
     // Draw sprites
-    rayObj_t* lockedTargetObj = castSprites(ray);
+    rayObj_t* centeredSprite = castSprites(ray);
 
     // Run a timer for head bob
     ray->bobTimer += elapsedUs;
@@ -233,28 +232,28 @@ void rayMainLoop(int64_t elapsedUs)
     }
 
     // TODO make a movement vector
+    int16_t movementAngle = -1;
 
-    // B button locks onto enemies
+    // B button strafes, which may lock on an enemy
     if ((ray->btnState & PB_B) && !(prevBtnState & PB_B))
     {
-        // Try to acquire lock
-        ray->lockedTargetObj = lockedTargetObj;
-        ray->isStrafing      = true;
+        // Set strafe to true
+        ray->isStrafing = true;
     }
     else if (!(ray->btnState & PB_B) && (prevBtnState & PB_B))
     {
-        // Release locked target
-        ray->lockedTargetObj = NULL;
-        ray->isStrafing      = false;
+        // Set strafe to false
+        ray->isStrafing = false;
     }
 
     // Strafing is either locked or unlocked
     if (ray->isStrafing)
     {
-        if (ray->lockedTargetObj)
+        if (centeredSprite)
         {
             // Adjust position to always center on the locked target object
-            // TODO gotta set dirAngle based on difference in position between self and obj
+            int32_t newAngle = cordicAtan2(centeredSprite->posX - ray->posX, ray->posY - centeredSprite->posY);
+            setPlayerAngle(TO_FX(newAngle));
         }
 
         // Strafe right
@@ -274,21 +273,23 @@ void rayMainLoop(int64_t elapsedUs)
         // Rotate right, in place
         if (ray->btnState & PB_RIGHT)
         {
-            ray->dirAngle = ADD_FX(ray->dirAngle, TO_FX(5));
-            if (ray->dirAngle >= TO_FX(360))
+            q24_8 newAngle = ADD_FX(ray->dirAngle, TO_FX(5));
+            if (newAngle >= TO_FX(360))
             {
-                ray->dirAngle -= TO_FX(360);
+                newAngle -= TO_FX(360);
             }
+            setPlayerAngle(newAngle);
         }
 
         // Rotate left, in place
         if (ray->btnState & PB_LEFT)
         {
-            ray->dirAngle = SUB_FX(ray->dirAngle, TO_FX(5));
-            if (ray->dirAngle < TO_FX(0))
+            q24_8 newAngle = SUB_FX(ray->dirAngle, TO_FX(5));
+            if (newAngle < TO_FX(0))
             {
-                ray->dirAngle += TO_FX(360);
+                newAngle += TO_FX(360);
             }
+            setPlayerAngle(newAngle);
         }
     }
 
@@ -350,6 +351,26 @@ void rayMainLoop(int64_t elapsedUs)
             }
         }
     }
+}
+
+/**
+ * @brief Helper function to set the angle the player is facing and associated camera variables
+ *
+ * @param angle The angle the player is facing. Must be in the range [0, 359]. 0 is north
+ */
+void setPlayerAngle(q24_8 angle)
+{
+    // The angle the player is facing
+    ray->dirAngle = angle;
+
+    // Compute cartesian direction from angular direction
+    // trig functions are already << 10, so / 4 to get to << 8
+    ray->dirY = -getCos1024(FROM_FX(ray->dirAngle)) / 4;
+    ray->dirX = getSin1024(FROM_FX(ray->dirAngle)) / 4;
+
+    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+    ray->planeX = MUL_FX(-((1 << FRAC_BITS) * 2) / 3, ray->dirY);
+    ray->planeY = MUL_FX(((1 << FRAC_BITS) * 2) / 3, ray->dirX);
 }
 
 /**
