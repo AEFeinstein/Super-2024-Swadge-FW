@@ -15,8 +15,14 @@
 // Variables
 //==============================================================================
 
+/// The default touchpad intensity value if set using keys
+#define TOUCH_INTENSITY_KEY 512
+
+// The bottom 8 bits are pushbuttons, followed by five touch buttons
+#define TOUCH_BUTTON_MASK (0x1F << 8)
+
 /// The keyboard keys used for input
-static char inputKeys[] = {
+static const char inputKeys[] = {
     'W', ///< ::PB_UP
     'S', ///< ::PB_DOWN
     'A', ///< ::PB_LEFT
@@ -40,6 +46,15 @@ static list_t* buttonQueue;
 
 /// The touchpad analog location
 static int32_t lastTouchLoc = 0;
+
+/// The touchpad analog intensity
+static int32_t lastTouchIntensity = TOUCH_INTENSITY_KEY;
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
+static void emulatorSetTouchCentroidOnly(int32_t centerVal, int32_t intensityVal);
 
 //==============================================================================
 // Functions
@@ -119,10 +134,10 @@ bool checkButtonQueue(buttonEvt_t* evt)
  */
 bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 {
-    if (buttonState & (TB_0 | TB_1 | TB_2 | TB_3 | TB_4))
+    if (buttonState & (TB_0 | TB_1 | TB_2 | TB_3 | TB_4) || lastTouchIntensity > 0)
     {
         *centerVal    = lastTouchLoc;
-        *intensityVal = 512;
+        *intensityVal = lastTouchIntensity;
         return true;
     }
     else
@@ -132,65 +147,119 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 }
 
 /**
- * @brief This handles key events from rawdraw
+ * @brief Inject a single button press or release event into the emulator
  *
- * @param keycode The key that was pressed or released
- * @param bDown true if the key was pressed, false if it was released
+ * @param button
+ * @param down
  */
-void emulatorHandleKeys(int keycode, int bDown)
+void emulatorInjectButton(buttonBit_t button, bool down)
 {
-    if ('a' <= keycode && keycode <= 'z')
+    // Set or clear the button
+    if (down)
     {
-        keycode = (keycode - 'a' + 'A');
-    }
-    // Check keycode against initialized keys
-    for (uint8_t idx = 0; idx < ARRAY_SIZE(inputKeys); idx++)
-    {
-        // If this matches
-        if (keycode == inputKeys[idx])
+        // Check if button was already pressed
+        if (buttonState & button)
         {
-            // Set or clear the button
-            if (bDown)
-            {
-                // Check if button was already pressed
-                if (buttonState & (1 << idx))
-                {
-                    // It was, just return
-                    return;
-                }
-                else
-                {
-                    // It wasn't, set it!
-                    buttonState |= (1 << idx);
-                }
-            }
-            else
-            {
-                // Check if button was already released
-                if (0 == (buttonState & (1 << idx)))
-                {
-                    // It was, just return
-                    return;
-                }
-                else
-                {
-                    // It wasn't, clear it!
-                    buttonState &= ~(1 << idx);
-                }
-            }
-
-            // Create a new event
-            buttonEvt_t* evt = malloc(sizeof(buttonEvt_t));
-            evt->button      = (1 << idx);
-            evt->down        = bDown;
-            evt->state       = buttonState;
-
-            // Add the event to the list
-            push(buttonQueue, evt);
-            break;
+            // It was, just return
+            return;
+        }
+        else
+        {
+            // It wasn't, set it!
+            buttonState |= button;
+        }
+    }
+    else
+    {
+        // Check if button was already released
+        if (0 == (buttonState & button))
+        {
+            // It was, just return
+            return;
+        }
+        else
+        {
+            // It wasn't, clear it!
+            buttonState &= ~button;
         }
     }
 
+    // Create a new event
+    buttonEvt_t* evt = malloc(sizeof(buttonEvt_t));
+    evt->button      = button;
+    evt->down        = down;
+    evt->state       = buttonState;
+
+    // Add the event to the list
+    push(buttonQueue, evt);
+}
+
+/**
+ * @brief Only sets the touch centroid value without sending any events, for internal use.
+ *
+ * @param centerVal    The centroid center value
+ * @param intensityVal The centroid intensity value
+ */
+static void emulatorSetTouchCentroidOnly(int32_t centerVal, int32_t intensityVal)
+{
+    lastTouchLoc       = centerVal;
+    lastTouchIntensity = intensityVal;
+}
+
+/**
+ * @brief Update the touch centroid value
+ *
+ * @param centerVal
+ * @param intensityVal
+ */
+void emulatorSetTouchCentroid(int32_t centerVal, int32_t intensityVal)
+{
+    emulatorSetTouchCentroidOnly(centerVal, intensityVal);
+
+    // Determine which keys are being pressed by this touch value
+    // This isn't strictly a one-to-one mapping, but we're going to
+    // estimate it based on the button positions
+
+#define TOUCH_BUTTON_COUNT 5
+
+    // The distance from centerVal that a pad would be activated
+    // For the max intensity value, 1024, this would be 128, meaning that
+    // any pad that intersects with [centerVal - 128, centerval + 128] would be considered touched
+    // The possibility of multi-touch is ignored
+    int32_t intensitySpill = (intensityVal / 8);
+
+    int32_t touchLeft  = MAX(centerVal - intensitySpill, 0);
+    int32_t touchRight = MIN(centerVal + intensitySpill, 1024);
+
+    // We'll just send the event we expect for every button, and if the button is
+    // already pressed or already released, great
+    for (uint8_t touchpadNum = 0; touchpadNum < TOUCH_BUTTON_COUNT; touchpadNum++)
+    {
+        int32_t padLeft  = touchpadNum * 1024 / TOUCH_BUTTON_COUNT;
+        int32_t padRight = (touchpadNum + 1) * 1024 / TOUCH_BUTTON_COUNT;
+
+        buttonBit_t tb = 1 << (touchpadNum + 8);
+        if (intensityVal > 0)
+        {
+            // There was a touch intensity value, so set all buttons according to whether the touch intersects them
+            emulatorInjectButton(tb, (MAX(padLeft, touchLeft) <= MIN(padRight, touchRight)));
+        }
+        else
+        {
+            // This should be a "touchpad up" event, so set all the touchpad buttons to "released"
+            emulatorInjectButton(tb, false);
+        }
+    }
+}
+
+/**
+ * @brief Maps a bitmap of ::buttonbit_t onto a touchCentroid value.
+ *
+ * @param buttonState A bitmap of any ::buttonBit_t buttons. Non-touch buttons are ignored.
+ * @return int32_t The corresponding touch centroid value, in the range [0, 1024)
+ */
+int32_t emulatorMapTouchCentroid(buttonBit_t buttonState)
+{
     /* LUT the location */
     const uint8_t touchLoc[] = {
         128, // 00000
@@ -228,11 +297,46 @@ void emulatorHandleKeys(int keycode, int bDown)
     };
 
     // The bottom 8 bits are pushbuttons, followed by five touch buttons
-    int touchState = ((buttonState >> 8) & 0x1F);
-    lastTouchLoc   = 4 * touchLoc[touchState];
+    int touchState = (buttonState & TOUCH_BUTTON_MASK) >> 8;
+
+    return touchLoc[touchState] * 4;
 }
 
-void emulatorSetKeyMap(const char* keyMap) {
-    memcpy(inputKeys, keyMap, 13);
+/**
+ * @brief This handles key events from rawdraw
+ *
+ * @param keycode The key that was pressed or released
+ * @param bDown true if the key was pressed, false if it was released
+ */
+void emulatorHandleKeys(int keycode, int bDown)
+{
+    // Convert lowercase characters to their uppercase equivalents
+    if ('a' <= keycode && keycode <= 'z')
+    {
+        keycode = (keycode - 'a' + 'A');
+    }
+
+    // Check keycode against initialized keys
+    for (uint8_t idx = 0; idx < ARRAY_SIZE(inputKeys); idx++)
+    {
+        // If this matches one of the keycodes in the input key map
+        if (keycode == inputKeys[idx])
+        {
+            // Check if the key we're inputting is for a touchpad button.
+            // If so, we'll update the emulated touch state to match the buttons
+            if (TOUCH_BUTTON_MASK & idx)
+            {
+                // set the centroid without creating button events, since we already handled the key presses
+                emulatorSetTouchCentroidOnly(emulatorMapTouchCentroid(buttonState), TOUCH_INTENSITY_KEY);
+            }
+
+            emulatorInjectButton((buttonBit_t)(1 << idx), bDown);
+            break;
+        }
+    }
 }
 
+buttonBit_t emulatorGetButtonState(void)
+{
+    return buttonState;
+}

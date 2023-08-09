@@ -61,6 +61,7 @@
 
 #define ARG_FULLSCREEN     "fullscreen"
 #define ARG_HIDE_LEDS      "hide-leds"
+#define ARG_TOUCH          "touch"
 #define ARG_HELP           "help"
 
 //==============================================================================
@@ -82,11 +83,12 @@ emuArgs_t emulatorArgs = {
 };
 
 static const char helpUsage[]
-    = "usage: %s [--fullscreen] [--hide-leds] [--help]\n"
+    = "usage: %s [--fullscreen] [--hide-leds] [--touch] [--help]\n"
       "Emulates a swadge\n"
       "\n"
       "--" ARG_FULLSCREEN "\t\topen in fullscreen mode\n"
       "--" ARG_HIDE_LEDS "\t\tdon't draw simulated LEDs on the sides of the window\n"
+      "--" ARG_TOUCH "\t\tsimulate touch sensor readings with a virtual touch-pad\n"
       "--" ARG_HELP "\t\t\tdisplay this help message and exit\n";
 
 //==============================================================================
@@ -114,6 +116,10 @@ bool emuParseArgs(int argc, char** argv)
         else if (MATCH_ARG(ARG_HIDE_LEDS))
         {
             emulatorArgs.hideLeds = true;
+        }
+        else if (MATCH_ARG(ARG_TOUCH))
+        {
+            emulatorArgs.emulateTouch = true;
         }
         else if (MATCH_ARG(ARG_HELP))
         {
