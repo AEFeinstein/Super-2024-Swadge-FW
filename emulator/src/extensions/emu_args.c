@@ -117,23 +117,26 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
-static const char argFullscreen[]  = "fullscreen";
-static const char argFuzz[]        = "fuzz";
-static const char argFuzzButtons[] = "fuzz-buttons";
-static const char argFuzzTouch[]   = "fuzz-touch";
-static const char argFuzzMotion[]  = "fuzz-motion";
-static const char argHeadless[]    = "headless";
-static const char argHideLeds[]    = "hide-leds";
-static const char argKeymap[]      = "keymap";
-static const char argLock[]        = "lock";
-static const char argMode[]        = "mode";
-static const char argModeSwitch[]  = "mode-switch";
-static const char argModeList[]    = "modes-list";
-static const char argPlayback[]    = "playback";
-static const char argRecord[]      = "record";
-static const char argTouch[]       = "touch";
-static const char argHelp[]        = "help";
-static const char argUsage[]       = "usage";
+static const char argFullscreen[]   = "fullscreen";
+static const char argFuzz[]         = "fuzz";
+static const char argFuzzButtons[]  = "fuzz-buttons";
+static const char argFuzzTouch[]    = "fuzz-touch";
+static const char argFuzzMotion[]   = "fuzz-motion";
+static const char argHeadless[]     = "headless";
+static const char argHideLeds[]     = "hide-leds";
+static const char argKeymap[]       = "keymap";
+static const char argLock[]         = "lock";
+static const char argMode[]         = "mode";
+static const char argModeSwitch[]   = "mode-switch";
+static const char argModeList[]     = "modes-list";
+static const char argMotion[]       = "motion";
+static const char argMotionDrift[]  = "motion-drift";
+static const char argMotionJitter[] = "motion-jitter";
+static const char argPlayback[]     = "playback";
+static const char argRecord[]       = "record";
+static const char argTouch[]        = "touch";
+static const char argHelp[]         = "help";
+static const char argUsage[]        = "usage";
 
 // clang-format off
 /**
@@ -151,10 +154,13 @@ static const struct option options[] =
     { argKeymap,      required_argument, NULL,                             'k'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMode,        required_argument, NULL,                             'm'  },
-    { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
-    { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
     { argModeSwitch,  optional_argument, NULL,                             10   },
     { argModeList,    no_argument,       NULL,                             0    },
+    { argMotion,      no_argument,       (int*)&emulatorArgs.emulateMotion,true },
+    { argMotionDrift, no_argument,       (int*)&emulatorArgs.motionDrift,  true },
+    { argMotionJitter,optional_argument, (int*)&emulatorArgs.motionJitter, true },
+    { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
+    { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
     { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, 't'  },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
@@ -178,6 +184,9 @@ static const optDoc_t argDocs[] =
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
+    {'m', argMotion,      NULL,    "Enable simulated accelerometer readings with a virtual trackball"},
+    { 0,  argMotionDrift, NULL,    "Simulate accelerometer readings drifting slowly over time"},
+    { 0,  argMotionJitter,"MAX-DEGREES", "Simulate accelerometer readings randomly varying from the true value"},
     {'p', argPlayback,    "FILE",  "Play back recorded emulator inputs from a file" },
     {'r', argRecord,      "FILE",  "Record emulator inputs to a file" },
     {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
@@ -284,6 +293,30 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         {
             // Use default
             emulatorArgs.modeSwitchTime = optVal;
+        }
+    }
+    else if (argMotionDrift == optName)
+    {
+        // Motion Drift
+        emulatorArgs.emulateMotion = true;
+        emulatorArgs.motionDrift = true;
+    }
+    else if (argMotionJitter == optName)
+    {
+        // Motion Jitter
+        emulatorArgs.emulateMotion = true;
+        emulatorArgs.motionJitter = true;
+
+        if (arg != NULL)
+        {
+            errno = 0;
+            emulatorArgs.motionJitterAmount = strtol(arg, NULL, 0);
+            if (errno != 0)
+            {
+                fprintf(stderr, "Error: Invalid integer parameter value '%s' for argument '--%s'\n",
+                        arg, optName);
+                return false;
+            }
         }
     }
     else if (argRecord == optName)
