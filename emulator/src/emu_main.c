@@ -12,6 +12,8 @@
 #include <esp_system.h>
 #include <esp_timer.h>
 #include <errno.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "hdw-tft.h"
 #include "hdw-tft_emu.h"
@@ -30,61 +32,122 @@
 #define CNFGOGL
 #include "rawdraw_sf.h"
 
+// Useful if you're trying to find the code for a key/button
+// #define DEBUG_INPUTS
+
+#define EMU_EXTENSIONS
+
+#include "emu_args.h"
+#include "emu_ext.h"
+
 #include "emu_main.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
 
-#define MIN_LED_WIDTH         64
-#define MOTION_CONTROL_HEIGHT 128
-#define MOTION_CONTROL_WIDTH  128
-#define BG_COLOR              0x191919FF // This color isn't part of the palette
-#define DIV_COLOR             0x808080FF
+#define MIN_LED_WIDTH 64
+#define BG_COLOR      0x191919FF // This color isn't part of the palette
+#define DIV_WIDTH     1
+#define DIV_HEIGHT    1
+#define DIV_COLOR     0x808080FF
+
+//==============================================================================
+// Macros
+//==============================================================================
+
+/**
+ * @brief Macro to use once in each function to setup the loop, before using ::EMU_CB_LOOP()
+ */
+#define EMU_CB_SETUP \
+    int cbCount;     \
+    const emuCallback_t** cbList = getEmuCallbacks(&cbCount);
+
+#define EMU_CB_LOOP_BARE    for (int i = 0; i < cbCount; i++)
+#define EMU_CB_HAS_FN(cbFn) (cbList[i]->cbFn != NULL)
+#define EMU_CB_NAME         (cbList[i]->name)
+
+/**
+ * @brief Macro to be used as a for-loop replacement for calling a particular callback
+ *
+ * This macro must only be used after ::EMU_CB_SETUP has been used in the current scope.
+ * Use this macro as though it were \c for(;;) initializer -- with braces. The body will
+ * only operate on ::emuCallback_t for which \c cbFn is not NULL.
+ *
+ * Example:
+ * \code{.c}
+ * void doCallbacks(void)
+ * {
+ *     EMU_CB_SETUP
+ *     EMU_CB_LOOP(fnPreFrameCb)
+ *     {
+ *         EMU_CB(fnPreFrameCb);
+ *     }
+ * }
+ * \endcode
+ */
+#define EMU_CB_LOOP(cbFn) \
+    EMU_CB_LOOP_BARE      \
+    if (cbEnabled[i] && EMU_CB_HAS_FN(cbFn))
+
+/**
+ * @brief Macro used to call \c cbFn on the current callback with any args inside of an ::EMU_CB_LOOP loop.
+ */
+#define EMU_CB(cbFn, ...) cbList[i]->cbFn(__VA_ARGS__)
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+/**
+ * @brief Struct representing a sub-pane in the main emulator window
+ *
+ */
+typedef struct
+{
+    uint32_t paneW; ///< Width of the pane, or 0 if there is no pane
+    uint32_t paneH; ///< Height of the pane, or 0 if there is no pane
+    uint32_t paneX; ///< X offset of the pane
+    uint32_t paneY; ///< Y offset of the pane
+} emuPane_t;
+
+/**
+ * @brief Stores a pane-set's minimum area requirement and number of panes for convenience
+ *
+ */
+typedef struct
+{
+    /**
+     * @brief The minimum size of this pane's variable dimension (height for top/bottom, width for left/right)
+     */
+    uint32_t min;
+
+    /**
+     * @brief Stores the total number of sub-panes that were requested within this pane
+     */
+    uint32_t count;
+} emuPaneInfo_t;
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-#define ARG_DVORAK        "dvorak"
-#define ARG_FULLSCREEN    "fullscreen"
-#define ARG_HIDE_LEDS     "hide-leds"
-#define ARG_MOTION        "motion"
-#define ARG_MOTION_DRIFT  "motion-drift"
-#define ARG_MOTION_JITTER "motion-jitter"
-#define ARG_TOUCH         "touch"
-#define ARG_HELP          "help"
-
-static const char keyboardLayoutDvorak[] = ",OAENTRC&[{}(";
-
-static const char helpUsage[]
-    = "usage: %s [--fullscreen] [--hide-leds] [--dvorak] [--motion [--motion-jitter] [--motion-drift]] [--help]\n"
-      "Emulates a swadge\n"
-      "\n"
-      "--" ARG_DVORAK "\t\tuse controls mapped for dvorak instead of qwerty\n"
-      "--" ARG_FULLSCREEN "\t\topen in fullscreen mode\n"
-      "--" ARG_HIDE_LEDS "\t\tdon't draw simulated LEDs on the sides of the window\n"
-      "--" ARG_MOTION "\t\tsimulate accelerometer readings with virtual trackball\n"
-      "--" ARG_MOTION_DRIFT "\tsimulate accelerometer readings drifting over time\n"
-      "--" ARG_MOTION_JITTER " [MAX=3]\tsimulate accelerometer readings randomly varying slightly from the true value\n"
-      "--" ARG_TOUCH "\t\tsimulate touch sensor readings with a virtual touch-pad\n"
-      "--" ARG_HELP "\t\t\tdisplay this help message and exit\n";
-
-emuArgs_t emulatorArgs = {
-    .fullscreen    = false,
-    .hideLeds      = false,
-    .emulateMotion = false,
-    .motionZ       = 0,
-    .motionX       = 0,
-};
-
 static bool isRunning = true;
 
-static bool dragging        = false;
-static int32_t dragX        = 0;
-static int32_t dragY        = 0;
-static int16_t startMotionZ = 0;
-static int16_t startMotionX = 0;
+#ifdef EMU_EXTENSIONS
+
+/// @brief Stores any panes associated with callbacks
+static emuPane_t emuPanes[16] = {0};
+
+/// @brief Stores whether each callback is enabled
+static bool cbEnabled[16] = {false};
+#endif
+
+/// @brief Stores the size and location of the left LED panel, if any
+static emuPane_t ledPaneLeft = {0};
+
+/// @brief Stores the size and location of the right LED panel, if any
+static emuPane_t ledPaneRight = {0};
 
 //==============================================================================
 // Function Prototypes
@@ -97,7 +160,11 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
 static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uint32_t col);
-static void plotMotionControl(int w, int h, int x, int y, int zRotation, int xRotation);
+static void plotLeds(led_t* leds, int numLeds, emuPane_t* leftPane, emuPane_t* rightPane);
+
+static void calculatePaneInfo(emuPaneInfo_t* paneInfos);
+static void layoutWindow(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
+                         uint8_t* screenMult);
 
 //==============================================================================
 // Functions
@@ -111,96 +178,11 @@ static void plotMotionControl(int w, int h, int x, int y, int zRotation, int xRo
  */
 void handleArgs(int argc, char** argv)
 {
-#define MATCH_ARG(argName) (!strncmp(arg, "--" argName, sizeof("--" argName)))
-#define REQUIRE_PARAM(name)                                                             \
-    if (param == NULL)                                                                  \
-    {                                                                                   \
-        fprintf(stderr, "Error: Missing required parameter for argument '%s'\n", name); \
-        isRunning = false;                                                              \
-        break;                                                                          \
-    }                                                                                   \
-    else                                                                                \
-    {                                                                                   \
-        valUsed = true;                                                                 \
-    }
-
-#define INT_VALUE(name) _##name##Value
-#define REQUIRE_INT(name)                                                                                \
-    errno              = 0;                                                                              \
-    int _##name##Value = strtol(param, NULL, 0);                                                         \
-    if (errno != 0)                                                                                      \
-    {                                                                                                    \
-        fprintf(stderr, "Error: Invalid integer parameter value '%s' for argument '%s'\n", param, name); \
-        isRunning = false;                                                                               \
-        break;                                                                                           \
-    }                                                                                                    \
-    else                                                                                                 \
-    {                                                                                                    \
-        valUsed = true;                                                                                  \
-    }
-
-    for (int n = 1; n < argc; n++)
+    // Parse the arguments and check for errors
+    if (!emuParseArgs(argc, argv))
     {
-        char* arg    = argv[n];
-        char* param  = NULL;
-        bool valUsed = false;
-
-        // If there's another argument, and it doesn't start with a '-'
-        if (n + 1 < argc && strncmp(argv[n + 1], "-", 1))
-        {
-            param = argv[n + 1];
-        }
-
-        if (MATCH_ARG(ARG_DVORAK))
-        {
-            emulatorSetKeyMap(keyboardLayoutDvorak);
-        }
-        else if (MATCH_ARG(ARG_FULLSCREEN))
-        {
-            emulatorArgs.fullscreen = true;
-        }
-        else if (MATCH_ARG(ARG_HIDE_LEDS))
-        {
-            emulatorArgs.hideLeds = true;
-        }
-        else if (MATCH_ARG(ARG_MOTION))
-        {
-            emulatorArgs.emulateMotion = true;
-        }
-        else if (MATCH_ARG(ARG_MOTION_DRIFT))
-        {
-            emulatorArgs.motionDrift = true;
-        }
-        else if (MATCH_ARG(ARG_MOTION_JITTER))
-        {
-            emulatorArgs.motionJitter = true;
-
-            if (param != NULL)
-            {
-                REQUIRE_INT(ARG_MOTION_JITTER)
-                emulatorArgs.motionJitterAmount = INT_VALUE(ARG_MOTION_JITTER);
-            }
-        }
-        else if (MATCH_ARG(ARG_TOUCH))
-        {
-            emulatorArgs.emulateTouch = true;
-        }
-        else if (MATCH_ARG(ARG_HELP))
-        {
-            printf(helpUsage, *argv);
-            isRunning = false;
-            break;
-        }
-        else
-        {
-            fprintf(stderr, "Warning: Unrecognized argument '%s'\n", arg);
-        }
-
-        // If we used a parameter value here, don't try to parse it as an argument
-        if (valUsed)
-        {
-            n++;
-        }
+        // Error parsing, set isRunning to false
+        isRunning = false;
     }
 }
 
@@ -221,8 +203,30 @@ int main(int argc, char** argv)
 
     if (!isRunning)
     {
+        // For one reason or another, we're done after parsing args, so quit now
         return 0;
     }
+
+#ifdef EMU_EXTENSIONS
+    // Call any init callbacks we may have and pass them the parsed command-line arguments
+    // We also determine which extensions are enabled here, which is important for laying out the window properly
+    EMU_CB_SETUP
+    EMU_CB_LOOP_BARE
+    {
+        // Mark an extension as enabled if it either has no init callback, or its init callback returns true
+        if (EMU_CB_HAS_FN(fnInitCb))
+        {
+            printf("Initializing extension %s...\n", EMU_CB_NAME);
+            cbEnabled[i] = EMU_CB(fnInitCb, &emulatorArgs);
+            printf("Extension %s %s.\n", EMU_CB_NAME, cbEnabled[i] ? "initialized" : "disabled");
+        }
+        else
+        {
+            cbEnabled[i] = true;
+            printf("Extension %s enabled\n", EMU_CB_NAME);
+        }
+    }
+#endif
 
     // First initialize rawdraw
     // Screen-specific configurations
@@ -233,9 +237,18 @@ int main(int argc, char** argv)
     }
     else
     {
-        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH * 2) + (emulatorArgs.hideLeds ? 0 : ((MIN_LED_WIDTH * 4) + 2)),
-                  (TFT_HEIGHT * 2) + (emulatorArgs.emulateMotion ? MOTION_CONTROL_HEIGHT : 0));
+        // Get all the pane info to see how much space we need aside from the simulated TFT screen
+        emuPaneInfo_t paneInfos[5] = {0};
+        calculatePaneInfo(paneInfos);
+
+        // Add the screen size to the minimum pane sizes to get our window size
+        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH)*2 + paneInfos[PANE_LEFT].min + paneInfos[PANE_RIGHT].min,
+                  (TFT_HEIGHT)*2 + paneInfos[PANE_TOP].min + paneInfos[PANE_BOTTOM].min);
     }
+
+    // We won't call the pre-frame callback for the very first frame
+    // This is because everything isn't initialized and there would have to be emu-specific code to do so
+    // post-initialization So, this is fine, we get one frame of peace before the emulator can start messing with stuff.
 
     // This is the 'main' that gets called when the ESP boots. It does not return
     app_main();
@@ -247,6 +260,18 @@ int main(int argc, char** argv)
  */
 void taskYIELD(void)
 {
+#ifdef EMU_EXTENSIONS
+    // Count total frames, just for callback reasons
+    static uint64_t frameNum = 0;
+
+    // Call the post-frame callback
+    EMU_CB_SETUP
+    EMU_CB_LOOP(fnPostFrameCb)
+    {
+        EMU_CB(fnPostFrameCb, frameNum);
+    }
+#endif
+
     // Calculate time between calls
     static int64_t tLastCallUs = 0;
     int64_t tElapsedUs         = 0;
@@ -265,7 +290,11 @@ void taskYIELD(void)
     // These are persistent!
     static short lastWindow_w = 0;
     static short lastWindow_h = 0;
-    static int16_t led_w      = MIN_LED_WIDTH;
+
+    // Below: Support for pausing and unpausing the emulator
+    // Keep track of whether we've called the pre-frame callbacks yet
+    // bool preFrameCalled = false;
+    // do {
 
     // Always handle inputs
     if (!CNFGHandleInput())
@@ -292,25 +321,14 @@ void taskYIELD(void)
     // Get the current window dimensions
     short window_w, window_h;
     CNFGGetDimensions(&window_w, &window_h);
+    static emuPane_t screenPane;
 
     // If the dimensions changed
     if ((lastWindow_h != window_h) || (lastWindow_w != window_w))
     {
-        // Figure out how much the TFT should be scaled by
-        uint8_t widthMult = (window_w - (emulatorArgs.hideLeds ? 0 : ((4 * MIN_LED_WIDTH) - 2))) / TFT_WIDTH;
-        if (0 == widthMult)
-        {
-            widthMult = 1;
-        }
-        uint8_t heightMult = (window_h - (emulatorArgs.emulateMotion ? MOTION_CONTROL_HEIGHT : 0)) / TFT_HEIGHT;
-        if (0 == heightMult)
-        {
-            heightMult = 1;
-        }
-        uint8_t screenMult = MIN(widthMult, heightMult);
-
-        // LEDs take up the rest of the horizontal space
-        led_w = emulatorArgs.hideLeds ? 0 : (window_w - 2 - (screenMult * TFT_WIDTH)) / 4;
+        uint8_t screenMult;
+        // Recalculate the window layout and get the settings for the screen
+        layoutWindow(window_w, window_h, TFT_WIDTH, TFT_HEIGHT, &screenPane, &screenMult);
 
         // Set the multiplier
         setDisplayBitmapMultiplier(screenMult);
@@ -324,51 +342,35 @@ void taskYIELD(void)
     uint8_t numLeds;
     led_t* leds = getLedMemory(&numLeds);
 
-    // Where LEDs are drawn, kinda
-    const int16_t ledOffsets[8][2] = {
-        {1, 2}, {0, 3}, {0, 1}, {1, 0}, {2, 0}, {3, 1}, {3, 3}, {2, 2},
-    };
+    plotLeds(leds, numLeds, &ledPaneLeft, &ledPaneRight);
 
-    // Draw simulated LEDs
-    if (numLeds > 1 && NULL != leds && !emulatorArgs.hideLeds)
+    // Draw dividing lines, if they're on-screen
+    CNFGColor(DIV_COLOR);
+
+    // Draw Left Divider
+    if (screenPane.paneX > 0)
     {
-        short led_h = window_h / (numLeds / 2);
-        for (int i = 0; i < numLeds; i++)
-        {
-            CNFGColor((leds[i].r << 24) | (leds[i].g << 16) | (leds[i].b << 8) | 0xFF);
-
-            int16_t xOffset = 0;
-            if (ledOffsets[i][0] < 2)
-            {
-                xOffset = ledOffsets[i][0] * (led_w / 2);
-            }
-            else
-            {
-                xOffset = window_w - led_w - ((4 - ledOffsets[i][0]) * (led_w / 2));
-            }
-
-            int16_t yOffset = ledOffsets[i][1] * led_h;
-
-            // Draw the LED
-            CNFGTackRectangle(xOffset, yOffset, xOffset + (led_w * 3) / 2, yOffset + led_h);
-        }
+        CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
     }
 
-    // Draw dividing lines
-    if (!emulatorArgs.hideLeds)
+    // Draw Right Divider
+    if (screenPane.paneX + screenPane.paneW < window_w)
     {
-        CNFGColor(DIV_COLOR);
-        CNFGTackSegment(led_w * 2, 0, led_w * 2, window_h);
-        CNFGTackSegment(window_w - (led_w * 2), 0, window_w - (led_w * 2), window_h);
+        CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
     }
 
-    if (emulatorArgs.emulateMotion)
+    // Draw Top Divider
+    if (screenPane.paneY > 0)
     {
-        CNFGColor(DIV_COLOR);
-        CNFGTackSegment(emulatorArgs.hideLeds ? 0 : (led_w * 2), window_h - MOTION_CONTROL_HEIGHT,
-                        emulatorArgs.hideLeds ? window_w : window_w - (led_w * 2), window_h - MOTION_CONTROL_HEIGHT);
-        plotMotionControl(MOTION_CONTROL_WIDTH, MOTION_CONTROL_HEIGHT, (window_w - MOTION_CONTROL_WIDTH) / 2,
-                          window_h - MOTION_CONTROL_HEIGHT, emulatorArgs.motionZ, emulatorArgs.motionX);
+        CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
+                        screenPane.paneY - 1);
+    }
+
+    // Draw Bottom Divider
+    if (screenPane.paneY + screenPane.paneH < window_h)
+    {
+        CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
+                        screenPane.paneY + screenPane.paneH);
     }
 
     // Get the display memory
@@ -381,11 +383,22 @@ void taskYIELD(void)
         plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, BG_COLOR);
 #endif
         // Update the display, centered
-        CNFGBlitImage(bitmapDisplay, emulatorArgs.hideLeds ? ((window_w - bitmapWidth) / 2) : ((led_w * 2) + 1),
-                      emulatorArgs.emulateMotion ? (window_h - MOTION_CONTROL_HEIGHT - bitmapHeight) / 2
-                                                 : (window_h - bitmapHeight) / 2,
-                      bitmapWidth, bitmapHeight);
+        CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
     }
+
+#ifdef EMU_EXTENSIONS
+    // After the screen has been fully rendered, call all the render callbacks to render anything else
+    EMU_CB_LOOP(fnRenderCb)
+    {
+        // Get the pane associated with this callback.
+        // If there's no pane associated, the pane will just be all zeros
+        emuPane_t* pane = emuPanes + i;
+        if (cbEnabled[i] && pane->paneH > 0 && pane->paneW > 0)
+        {
+            EMU_CB(fnRenderCb, window_w, window_h, pane->paneW, pane->paneH, pane->paneX, pane->paneY);
+        }
+    }
+#endif
 
     // Display the image and wait for time to display next frame.
     CNFGSwapBuffers();
@@ -397,6 +410,42 @@ void taskYIELD(void)
              .tv_nsec = 1000000 + tRemaining.tv_nsec,
     };
     nanosleep(&tSleep, &tRemaining);
+
+#ifdef EMU_EXTENSIONS
+    EMU_CB_LOOP(fnPreFrameCb)
+    {
+        EMU_CB(fnPreFrameCb, ++frameNum);
+    }
+#endif
+
+    // Below: Support for pausing and unpausing the emulator
+    // Note:  Remove the above EMU_CB_LOOP(fnPreFrameCb)... if uncommenting the below
+    //     // Don't call the pre-frame callbacks until the emulator is unpaused.
+    //     // And also, only call it once per frame
+    //     // This means that the pre-frame callback gets called once (assuming the post-frame
+    //     // callback didn't already pause) and then, if one of them pauses, they don't get called
+    //     // again until after
+    //     // be able to handle input as normal, which is good since that's the only way we'd
+    //     if (!preFrameCalled && !emuTimerIsPaused())
+    //     {
+    //         preFrameCalled = true;
+    //
+    //         // Call the pre-frame callbacks just before we return to the swadge main loop
+    //         // When fnPreFrameCb is first called, the system is always initialized
+    //         // and this is the optimal time to inject button presses, pause, etc.
+    //         EMU_CB_LOOP(fnPreFrameCb)
+    //         {
+    //             EMU_CB(fnPreFrameCb, ++frameNum);
+    //         }
+    //     }
+    //
+    //     // Set the elapsed micros to 0 so ESP timer tasks don't get called repeatedly if we pause
+    //     // (if we just updated the time normally instead, this would be 0 anyway since time is paused, but this
+    //     shortcuts that) tElapsedUs = 0;
+    //
+    //     // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
+    //     // and the pre-frame callbacks have all been called
+    // } while (isRunning && (!preFrameCalled || emuTimerIsPaused()));
 }
 
 /**
@@ -453,70 +502,311 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
 }
 
 /**
- * @brief Helper function to render an indicator for the simulated acceleration vector
+ * @brief Plots the given LEDs within the given panes
  *
- * The X axis lies within the plane of the swadge's circuit board, parallel with the line
- * passing through the Select and Start buttons, with +X being towards the A and B buttons
- * on the right and -X being towards the D-pad to the left.
- * The Y axis lies within the plane of the swadge's circuit board, perpendicular to the
- * X axis, with +Y being towards the lanyard hole at the top of the swadge, and with -Y
- * being towards the microphone at the bottom of the swadge.
- * The Z axis is perpendicular to the plane of the swadge's circuit board, with +Z being
- * on the front side, and -Z being the back side.
- *
- * @param w The width of the indicator, in pixels
- * @param h The height of the indicator, in pixels
- * @param x The X location of the top-left of the indicator
- * @param y The Y location of the top-left of the indicator
- * @param zRotation The clockwise rotation about the +Z (vertical) axis, in degrees
- * @param xRotation The clockwise rotation about the +X (horizontal) axis, in degrees
+ * @param leds
+ * @param numLeds
+ * @param leftPane
+ * @param rightPane
  */
-static void plotMotionControl(int w, int h, int x, int y, int zRotation, int xRotation)
+static void plotLeds(led_t* leds, int numLeds, emuPane_t* leftPane, emuPane_t* rightPane)
 {
-#define CALC_CIRCLE_POLY(buf, tris, xo, yo, r)                           \
-    do                                                                   \
-    {                                                                    \
-        for (int i = 0; i < (tris); i++)                                 \
-        {                                                                \
-            buf[i].x = (xo) + getCos1024(i * 360 / (tris)) * (r) / 1024; \
-            buf[i].y = (yo) + getSin1024(i * 360 / (tris)) * (r) / 1024; \
-        }                                                                \
-    } while (false)
+    // Where LEDs are drawn, kinda
+    // first value is the LED column (top-to-bottom(?))
+    // second value is the row
+    const int16_t ledOffsets[8][2] = {
+        {1, 2}, {0, 3}, {0, 1}, {1, 0}, // Left side LEDs
+        {2, 0}, {3, 1}, {3, 3}, {2, 2}, // Right side LEDs
+    };
 
-    RDPoint circle[72];
-    CALC_CIRCLE_POLY(circle, 72, x + w / 2, y + h / 2, w / 2);
+    // Draw simulated LEDs
+    if (numLeds > 1 && NULL != leds && !emulatorArgs.hideLeds)
+    {
+        for (int i = 0; i < numLeds; i++)
+        {
+            emuPane_t* pane = (ledOffsets[i][0] < 2) ? leftPane : rightPane;
 
-    CNFGColor(0xFFFFFFFF);
-    CNFGTackPoly(circle, 72);
-#undef TRIS
+            int16_t ledH = pane->paneH / (numLeds / 2);
+            int16_t ledW = pane->paneW / 2;
 
-    // The Z axis, which by default would be just a dot in the middle of the circle, is pushed from the center towards
-    // the bottom with a +X rotation, and towards the top with a -X rotation Then, with a Z rotation, the position of
-    // the Z dot simply follows the rotation So, to draw the +Z dot...
-    // 1. Get the distance from the middle of the circle, which is based on the X rotation so zPosRadius = (h/2) *
-    // sin(xRotation) / 1024
-    // 2. Get the X and Y from the rotation of that, which is zPosX = (x + h/2) + zPosRadius * cos(zRotation) / 1024,
-    // zPosY = zPosradius * sin(zRotation) / 1024
-    // 3. Note that these values are for when xRotation <= 90 || xRotation >= 270; for the other cases, invert and swap
-    // cos and sin, making zPos = (x + w / 2) - zPosRadius * sin(zRotation) / 1024, zPosY = (y + h / 2) - zPosRadius *
-    // cos(zRotation) / 1024
-    uint16_t zPosRadius = (h / 2) * sin(xRotation) / 1024;
+            int16_t xOffset = pane->paneX + (ledOffsets[i][0] % 2) * (ledW / 2);
+            int16_t yOffset = ledOffsets[i][1] * ledH;
 
-    uint16_t zOffX = zPosRadius * cos(zRotation) / 1024;
-    uint16_t zOffY = zPosRadius * sin(zRotation) / 1024;
+            CNFGColor((leds[i].r << 24) | (leds[i].g << 16) | (leds[i].b << 8) | 0xFF);
+            CNFGTackRectangle(xOffset, yOffset, xOffset + ledW * 3 / 2, yOffset + ledH);
+        }
+    }
+}
 
-    bool zPosVisible = (xRotation <= 90 || xRotation >= 270);
-    uint16_t zPosX   = x + (w / 2) + zPosVisible ? zOffX : -zOffY;
-    uint16_t zPosY   = y + (h / 2) + zPosVisible ? zOffY : -zOffX;
+/**
+ * @brief Helper function to calculate the minimum size needed for the display
+ *
+ * The results of the calculation will be written into \c paneInfos at the index
+ * matching the value of ::emuCallback_t::paneLoc. \c paneInfos[0] will not be written
+ * to since that corresponds to \c PANE_NONE.
+ *
+ * @param paneInfos A pointer to a 0-initialized array of at least 5 ::emuPaneInfo_t to be used as output.
+ */
+static void calculatePaneInfo(emuPaneInfo_t* paneInfos)
+{
+    // Handle the hardcoded LED panes
+    if (!emulatorArgs.hideLeds)
+    {
+        paneInfos[PANE_LEFT].min = MIN_LED_WIDTH * 2;
+        paneInfos[PANE_LEFT].count++;
+        paneInfos[PANE_RIGHT].min = MIN_LED_WIDTH * 2;
+        paneInfos[PANE_RIGHT].count++;
+    }
 
-    // Draw smaller circle with less precision
-    CALC_CIRCLE_POLY(circle, 4, zPosX, zPosY, 3);
+#ifdef EMU_EXTENSIONS
+    // Figure out the minimum required height/width of each pane side
+    // For this we don't need to know anything about the
+    EMU_CB_SETUP
+    for (int i = 0; i < cbCount; i++)
+    {
+        /*if (!cbEnabled[i])
+        {
+            continue;
+        }*/
 
-    CNFGColor(0xFF0000FF);
-    CNFGTackPoly(circle, 4);
-    CNFGTackPixel(zPosX, zPosY);
+        paneLocation_t paneLoc = cbList[i]->paneLocation;
 
-    // printf("the Z axis dot is at %d, %d relative to %d, %d\n", zOffX, zOffY, x + (w / 2), y + (h / 2));
+        // make sure the callback wants a pane at all
+        if (paneLoc != PANE_NONE && cbList[i]->minPaneW > 0 && cbList[i]->minPaneH > 0 && cbEnabled[i])
+        {
+            // There should be a pane associated with this callback
+            switch (paneLoc)
+            {
+                case PANE_NONE:
+                    // Do nothing, there's no pane, also this is "impossible"
+                    break;
+
+                case PANE_LEFT:
+                case PANE_RIGHT:
+                {
+                    paneInfos[paneLoc].min = MAX(cbList[i]->minPaneW, paneInfos[paneLoc].min);
+                    paneInfos[paneLoc].count++;
+                    // minLeftPaneH += cbList[i]->minPaneH;
+                    // minRightPaneH += cbList[i]->minPaneH;
+                    break;
+                }
+
+                case PANE_TOP:
+                case PANE_BOTTOM:
+                {
+                    paneInfos[paneLoc].min = MAX(cbList[i]->minPaneH, paneInfos[paneLoc].min);
+                    paneInfos[paneLoc].count++;
+                    // minTopPaneW += cbList[i]->minPaneW;
+                    // minBottomPaneW += cbList[i]->minPaneH
+                    break;
+                }
+            }
+        }
+    }
+#endif
+}
+
+/**
+ * @brief Calculates the position of all elements inside the main window and updates their locations and sizes.
+ *
+ * If winW and winH are negative,
+ *
+ * @param winW The total window width, in pixels. If <0,
+ * @param winH The total window height, in pixels
+ * @param screenW The actual width of the emulator screen, in pixels
+ * @param screenH The actual height of the emulator screen, in pixels
+ * @param screenPane A pointer to an ::emuPane_t to be updated with the screen location and dimensions
+ * @param screenMult A pointer to an int to be updated with the screen scale multiplier
+ */
+static void layoutWindow(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
+                         uint8_t* screenMult)
+{
+    // The minimums will never change, so just calculate them once
+    static bool paneInfosCalculated = false;
+
+    static emuPaneInfo_t paneInfos[5] = {0};
+
+    // We only need to calculate the pane infos once, since they only depend on the callbacks
+    if (!paneInfosCalculated)
+    {
+        calculatePaneInfo(paneInfos);
+
+        paneInfosCalculated = true;
+    }
+
+    // Figure out how much the screen should be scaled b
+    uint8_t widthMult = (winW - paneInfos[PANE_LEFT].min - paneInfos[PANE_RIGHT].min) / screenW;
+    if (0 == widthMult)
+    {
+        widthMult = 1;
+    }
+
+    uint8_t heightMult = (winH - paneInfos[PANE_TOP].min - paneInfos[PANE_BOTTOM].min) / screenH;
+    if (0 == heightMult)
+    {
+        heightMult = 1;
+    }
+
+    // Set the scale to whichever dimension's multiplier was smallest
+    *screenMult = MIN(widthMult, heightMult);
+
+    // Update the screen pane size to the scaled size of the screen
+    screenPane->paneW = screenW * (*screenMult);
+    screenPane->paneH = screenH * (*screenMult);
+
+    // These will hold the overall pane dimensions for easier logic
+    emuPane_t winPanes[5] = {0};
+
+    // The number of panes assigned in each area, for positioning subpanes
+    uint8_t assigned[5] = {0};
+
+    // Width/height of the dividers between the screen and each pane, if there are any
+    uint32_t leftDivW   = DIV_WIDTH * (paneInfos[PANE_LEFT].count > 0);
+    uint32_t rightDivW  = DIV_WIDTH * (paneInfos[PANE_RIGHT].count > 0);
+    uint32_t topDivH    = DIV_HEIGHT * (paneInfos[PANE_TOP].count > 0);
+    uint32_t bottomDivH = DIV_HEIGHT * (paneInfos[PANE_BOTTOM].count > 0);
+
+    // Assign the remaining space to the left and right panes proportionally with their minimum sizes
+    winPanes[PANE_LEFT].paneX = 0;
+    winPanes[PANE_LEFT].paneY = 0;
+
+    // Only set the pane dimensions if there are actually any panes, to avoid division-by-zero
+    if (paneInfos[PANE_LEFT].count > 0)
+    {
+        winPanes[PANE_LEFT].paneW
+            = MAX(0, (winW - rightDivW - leftDivW - screenPane->paneW) * (paneInfos[PANE_LEFT].min)
+                         / (paneInfos[PANE_LEFT].min + paneInfos[PANE_RIGHT].min));
+        winPanes[PANE_LEFT].paneH = winH;
+    }
+
+    // The screen will be just to the right of the left pane and its divider
+    screenPane->paneX = winPanes[PANE_LEFT].paneW + leftDivW;
+
+    // Assign whatever space is left to the right pane to account for rounding problems
+    winPanes[PANE_RIGHT].paneX = screenPane->paneX + screenPane->paneW + rightDivW;
+    winPanes[PANE_RIGHT].paneY = 0;
+    if (paneInfos[PANE_RIGHT].count > 0)
+    {
+        winPanes[PANE_RIGHT].paneW
+            = MAX(0, winW - (winPanes[PANE_LEFT].paneW + leftDivW + screenPane->paneW + rightDivW));
+        winPanes[PANE_RIGHT].paneH = winH;
+    }
+
+    // Now do the horizontal panes, which have the same X and W as the screen
+    winPanes[PANE_TOP].paneX = screenPane->paneX;
+    winPanes[PANE_TOP].paneY = 0;
+    if (paneInfos[PANE_TOP].count > 0)
+    {
+        winPanes[PANE_TOP].paneW = screenPane->paneW;
+        // Assign the remaining space to the left and right panes proportionally with their minimum sizes
+        winPanes[PANE_TOP].paneH = MAX(0, (winH - bottomDivH - topDivH - screenPane->paneH) * (paneInfos[PANE_TOP].min)
+                                              / (paneInfos[PANE_TOP].min + paneInfos[PANE_BOTTOM].min));
+    }
+
+    // For the bottom one, flip things around just a bit so we can center the screen properly
+    if (paneInfos[PANE_BOTTOM].count > 0)
+    {
+        winPanes[PANE_BOTTOM].paneW = screenPane->paneW;
+        // Assign whatever space is left to the right pane to account for roundoff
+        winPanes[PANE_BOTTOM].paneH
+            = MAX(0, winH - (winPanes[PANE_TOP].paneH + topDivH + screenPane->paneH + bottomDivH));
+    }
+
+    // The screen will be just below the top pane and its divider, plus half of any extra space not used by the panes
+    // (to center)
+    screenPane->paneY
+        = winPanes[PANE_TOP].paneH + topDivH
+          + (winH - winPanes[PANE_TOP].paneH - winPanes[PANE_BOTTOM].paneH - screenPane->paneH - topDivH - bottomDivH)
+                / 2;
+
+    winPanes[PANE_BOTTOM].paneX = screenPane->paneX;
+    winPanes[PANE_BOTTOM].paneY = screenPane->paneY + screenPane->paneH + bottomDivH;
+
+///< Macro for calculating the offset of the current sub-pane within the overall pane
+#define SUBPANE_OFFSET(side, hOrW) \
+    ((paneInfos[side].count > 0) ? (assigned[side] * winPanes[side].pane##hOrW / paneInfos[side].count) : 0)
+
+///< Macro for calculating the size of the currunt sub-pane within the overall pane
+#define SUBPANE_SIZE(side, hOrW)                                                                                   \
+    ((paneInfos[side].count > 0)                                                                                   \
+         ? ((assigned[side] + 1) * winPanes[side].pane##hOrW / paneInfos[side].count - SUBPANE_OFFSET(side, hOrW)) \
+         : 0)
+
+    if (!emulatorArgs.hideLeds)
+    {
+        // Copy the base pane settings to the LED panes
+        memcpy(&ledPaneLeft, winPanes + PANE_LEFT, sizeof(emuPane_t));
+        memcpy(&ledPaneRight, winPanes + PANE_RIGHT, sizeof(emuPane_t));
+
+        // We only need to change the heights if there are any other panes
+        // Otherwise, the overall pane is already the correct dimensions for the LED pane
+        if (paneInfos[PANE_LEFT].count > 1)
+        {
+            ledPaneLeft.paneY += SUBPANE_OFFSET(PANE_LEFT, H);
+            ledPaneLeft.paneH = SUBPANE_SIZE(PANE_LEFT, H);
+        }
+
+        if (paneInfos[PANE_RIGHT].count > 1)
+        {
+            ledPaneRight.paneY += SUBPANE_OFFSET(PANE_RIGHT, H);
+            ledPaneRight.paneH = SUBPANE_SIZE(PANE_RIGHT, H);
+        }
+
+        assigned[PANE_LEFT]++;
+        assigned[PANE_RIGHT]++;
+    }
+
+    // One difference between the left/right and toplbottom sides that's now important:
+    // Left/Right panes get the entire side
+    // Top/Bottom panes only get the space under the screen...
+
+    // Now, we actually apply all the dimensions we calculated to the panes
+#ifdef EMU_EXTENSIONS
+    EMU_CB_SETUP
+    for (int i = 0; i < cbCount; i++)
+    {
+        paneLocation_t paneLoc = cbList[i]->paneLocation;
+        if (paneLoc != PANE_NONE && cbList[i]->minPaneW > 0 && cbList[i]->minPaneH > 0)
+        {
+            ///< This is the enum for the location this pane is in -- TOP, BOTTOM, LEFT, RIGHT
+            emuPane_t* cbPane = (emuPanes + i);
+
+            // Copy the overall pane settings for the appropriate side onto the sub-pane for this callback
+            memcpy(cbPane, (winPanes + paneLoc), sizeof(emuPane_t));
+
+            // Now, we just
+            switch (paneLoc)
+            {
+                case PANE_NONE:
+                    // Do nothing, there's no pane, also this is "impossible"
+                    break;
+
+                case PANE_LEFT:
+                case PANE_RIGHT:
+                {
+                    // Handle the left/right columns
+                    // We just set the Y and Height
+                    cbPane->paneY += SUBPANE_OFFSET(paneLoc, H);
+                    cbPane->paneH = SUBPANE_SIZE(paneLoc, H);
+                    break;
+                }
+
+                case PANE_TOP:
+                case PANE_BOTTOM:
+                {
+                    cbPane->paneX += SUBPANE_OFFSET(paneLoc, W);
+                    cbPane->paneW = SUBPANE_SIZE(paneLoc, W);
+                    break;
+                }
+            }
+
+            assigned[paneLoc]++;
+        }
+    }
+#endif
+
+#undef SUBPANE_OFFSET
+#undef SUBPANE_SIZE
 }
 
 /**
@@ -527,7 +817,52 @@ static void plotMotionControl(int w, int h, int x, int y, int zRotation, int xRo
  */
 void HandleKey(int keycode, int bDown)
 {
-    emulatorHandleKeys(keycode, bDown);
+#ifdef DEBUG_INPUTS
+    if (' ' <= keycode && keycode <= '~')
+    {
+        printf("HandleKey(keycode='%c', bDown=%s\n", keycode, bDown ? "true" : "false");
+    }
+    else
+    {
+        printf("HandleKey(keycode=%d, bDown=%s\n", keycode, bDown ? "true" : "false");
+    }
+#endif
+
+    int32_t finalKey = keycode;
+
+#ifdef EMU_EXTENSIONS
+    EMU_CB_SETUP
+    EMU_CB_LOOP(fnKeyCb)
+    {
+        int32_t newKey = EMU_CB(fnKeyCb, finalKey, bDown);
+
+        // If the callback returns anything other than 0, we must handle it specially
+        if (newKey != 0)
+        {
+            if (newKey < 0)
+            {
+                // The event was consumed by the handler, so stop processing now
+                return;
+            }
+            else
+            {
+                // The key was replaced by the handler, so use that for any more callbacks
+                finalKey = newKey;
+            }
+        }
+    }
+#endif
+
+    // Assuming no callbacks canceled the key event earlier, handle it normally
+    emulatorHandleKeys(finalKey, bDown);
+
+    // When in fullscreen, exit with escape
+    if (finalKey == CNFG_KEY_ESCAPE) // && emulatorArgs.fullscreen)
+    {
+        printf("Escape\n");
+        isRunning = false;
+        return;
+    }
 }
 
 /**
@@ -540,53 +875,22 @@ void HandleKey(int keycode, int bDown)
  */
 void HandleButton(int x, int y, int button, int bDown)
 {
-    WARN_UNIMPLEMENTED();
-    if (button == 1)
+#ifdef DEBUG_INPUTS
+    printf("HandleButton(x=%d, y=%d, button=%x, bDown=%s\n", x, y, button, bDown ? "true" : "false");
+#endif
+
+#ifdef EMU_EXTENSIONS
+    EMU_CB_SETUP
+    EMU_CB_LOOP(fnMouseButtonCb)
     {
-        // Left-mouse click
-        if (bDown)
+        // Convert button to its corresponding bitmask for simplicity and consistency
+        if (EMU_CB(fnMouseButtonCb, x, y, 1 << (button - 1), bDown))
         {
-            if (emulatorArgs.emulateMotion)
-            {
-                // Get the current window dimensions
-                short window_w, window_h;
-                CNFGGetDimensions(&window_w, &window_h);
-
-                int left   = (window_w - MOTION_CONTROL_WIDTH) / 2;
-                int top    = window_h - MOTION_CONTROL_HEIGHT;
-                int right  = left + MOTION_CONTROL_WIDTH;
-                int bottom = window_h;
-
-                if (left <= x && x <= right && top <= y && y <= bottom)
-                {
-                    printf("dragStart(%d,%d)\n", x, y);
-                    dragX        = x;
-                    dragY        = y;
-                    startMotionZ = emulatorArgs.motionZ;
-                    startMotionX = emulatorArgs.motionX;
-                    dragging     = true;
-                }
-            }
-        }
-        else
-        {
-            if (dragging)
-            {
-                printf("dragEnd(%d,%d, %d,%d)\n", x, y, dragX, dragY);
-
-                dragging = false;
-            }
+            // Stop processing if the event was consumed
+            return;
         }
     }
-    else if (button == 4)
-    {
-        // Right-mouse click
-        if (bDown)
-        {
-            emulatorArgs.motionX = 0;
-            emulatorArgs.motionZ = 0;
-        }
-    }
+#endif
 }
 
 /**
@@ -598,38 +902,20 @@ void HandleButton(int x, int y, int button, int bDown)
  */
 void HandleMotion(int x, int y, int mask)
 {
-    // left-click drag
-    if (mask == 1 && dragging)
+#ifdef DEBUG_INPUTS
+    printf("HandleMotion(x=%d, y=%d, mask=%x\n", x, y, mask);
+#endif
+
+#ifdef EMU_EXTENSIONS
+    EMU_CB_SETUP
+    EMU_CB_LOOP(fnMouseMoveCb)
     {
-        int diffX = (x - dragX) / 2;
-        int diffY = (y - dragY) / 2;
-
-        if (diffX < 5 && diffX > -5)
+        if (EMU_CB(fnMouseMoveCb, x, y, mask))
         {
-            diffX = 0;
+            return;
         }
-
-        if (diffY < 5 && diffY > -5)
-        {
-            diffY = 0;
-        }
-
-        emulatorSetAccelerometerRotation(
-            256, (emulatorArgs.motionX + diffX > 0 ? diffX % 360 : 360 - abs(diffX) % 360) % 360,
-            (emulatorArgs.motionZ + diffY > 0 ? diffY % 360 : 360 - abs(diffY) % 360) % 360);
     }
-    else if (mask != 0)
-    {
-        // 0x01 == LEFT_CLICK
-        // 0x02 == MIDDLE_CLICK
-        // 0x03 == RIGHT_CLICK
-        // 0x08 == SCROLL_UP
-        // 0x10 == SCROLL_DOWN
-        // 0x20 == SCROLL_LEFT
-        // 0x40 == SCROLL_RIGHT
-
-        // printf("mask=%x, %d, %d\n", mask, x, y);
-    }
+#endif
 }
 
 /**
