@@ -1044,7 +1044,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
 
                 if(!tunernome->isSilent)
                 {
-                    bzrPlaySfx(song);
+                    //bzrPlaySfx(song);
                 }
                 setLeds(leds, CONFIG_NUM_LEDS);
                 tunernome->isBlinking = true;
