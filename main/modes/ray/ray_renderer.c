@@ -211,8 +211,8 @@ void castWalls(ray_t* ray)
         bool hit  = false; // was there a wall hit?
         bool side = false; // was a NS or a EW wall hit?
 
-        q24_8 wallX;                            // where exactly the wall was hit
-        int16_t lineHeight, drawStart, drawEnd; // the height of the wall strip
+        q24_8 wallX        = 0;                             // where exactly the wall was hit
+        int16_t lineHeight = 0, drawStart = 0, drawEnd = 0; // the height of the wall strip
         // perform DDA
         while (false == hit)
         {
@@ -314,6 +314,13 @@ void castWalls(ray_t* ray)
                     {
                         // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's edge
                         wallX -= ray->map.tiles[mapX][mapY].doorOpen;
+
+                        // If this is negative, it would draw an out-of-bounds pixel.
+                        // Negative numbers are a rounding error, so make it zero
+                        if (wallX < 0)
+                        {
+                            wallX = 0;
+                        }
                     }
 
                     // Wall or door was hit, this stops the DDA loop
@@ -585,25 +592,40 @@ rayObj_t* castSprites(ray_t* ray)
             // TODO do all the X math first to see if its on screen, then do Y math??
             q24_8 transformX = DIV_FX(SUB_FX(MUL_FX(ray->dirY, spriteX), MUL_FX(ray->dirX, spriteY)), invDetDivisor);
 
-            // The division here takes the number from q24_8 to int16_t
+            // The center of the sprite in screen space
+            //  The division here takes the number from q24_8 to int16_t
             int16_t spriteScreenX = (TFT_WIDTH * (transformX + transformY)) / (2 * transformY);
 
-            // calculate width of the sprite
-            // TODO is this getting height???
+            // The width of the screen area to draw the sprite into, in pixels
             int16_t spriteWidth = (tWidth * TO_FX(TFT_HEIGHT)) / (TEX_WIDTH * transformY);
             if (0 == spriteWidth)
             {
+                // If this sprite has zero width, don't draw it
                 continue;
             }
-            spriteWidth        = ABS(spriteWidth);
+            // Width should always be positive
+            spriteWidth = ABS(spriteWidth);
+
+            // This is the texture step per-screen-pixel
+            q16_16 texXDelta = (tWidth << 16) / spriteWidth;
+            // This is the inital texture X coordinate
+            q16_16 texX = 0;
+
+            // Find the pixel X coordinate where the sprite draw starts. It may be negative
             int16_t drawStartX = spriteScreenX - (spriteWidth / 2);
+            // If the sprite would start to draw off-screen
             if (drawStartX < 0)
             {
+                // Advance the initial texture X coordinate by the difference
+                texX = texXDelta * -drawStartX;
+                // Start drawing at the screen edge
                 drawStartX = 0;
             }
+            // Find the pixel X coordinate where the sprite draw ends. It may be off the screen
             int16_t drawEndX = spriteScreenX + (spriteWidth / 2);
             if (drawEndX > TFT_WIDTH)
             {
+                // Always stop drawing at the screen edge
                 drawEndX = TFT_WIDTH;
             }
 
@@ -621,21 +643,29 @@ rayObj_t* castSprites(ray_t* ray)
             // using 'transformY' instead of the real distance prevents fisheye
             int16_t spriteHeight = TO_FX(TFT_HEIGHT) / transformY;
             spriteHeight         = ABS(spriteHeight);
-            // calculate lowest and highest pixel to fill in current stripe
+
+            // This is the texture step per-screen-pixel
+            q16_16 texYDelta = (tHeight << 16) / spriteHeight;
+            // This is the inital texture Y coordinate
+            q16_16 initialTexY = 0;
+
+            // Find the pixel Y coordinate where the sprite draw starts. It may be negative
             int16_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
             if (drawStartY < 0)
             {
+                // Advance the initial texture Y coordinate by the difference
+                initialTexY = texYDelta * -drawStartY;
+                // Start drawing at the screen edge
                 drawStartY = 0;
             }
+
+            // Find the pixel Y coordinate where the sprite draw ends. It may be off the screen
             int16_t drawEndY = (spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
             if (drawEndY > TFT_HEIGHT)
             {
+                // Always stop drawing at the screen edge
                 drawEndY = TFT_HEIGHT;
             }
-
-            // Get initial texture X coordinate and the step per-screen-pixel
-            q16_16 texX      = ((tWidth * (drawStartX - spriteScreenX + (spriteWidth / 2))) << 16) / (spriteWidth);
-            q16_16 texXDelta = (tWidth << 16) / spriteWidth;
 
             // loop through every vertical stripe of the sprite on screen
             for (int16_t stripe = drawStartX; stripe < drawEndX; stripe++)
@@ -650,10 +680,8 @@ rayObj_t* castSprites(ray_t* ray)
                         lockedObj = obj;
                     }
 
-                    // Get initial texture Y coordinate and the step per-screen-pixel
-                    q16_16 texY = ((tHeight * ((drawStartY - spritePosZ) + ((spriteHeight - TFT_HEIGHT) / 2))) << 16)
-                                  / (spriteHeight);
-                    q16_16 texYDelta = (tHeight << 16) / spriteHeight;
+                    // Reset the texture Y coordinate
+                    q16_16 texY = initialTexY;
 
                     // for every pixel of the current stripe
                     for (int16_t y = drawStartY; y < drawEndY; y++)
