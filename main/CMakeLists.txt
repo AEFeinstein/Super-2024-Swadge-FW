@@ -23,7 +23,6 @@ idf_component_register(SRCS "swadge2024.c"
                             "modes/ray/ray_renderer.c"
                             "modes/ray/ray_map_loader.c"
                             "modes/ray/ray_object.c"
-                            "modes/shooter/mode_shooter.c"
                             "utils/color_utils.c"
                             "utils/geometry.c"
                             "utils/linked_list.c"
@@ -56,7 +55,6 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./modes/pong"
                                 "./modes/mainMenu"
                                 "./modes/ray"
-                                "./modes/shooter"
                                 "./modes/demo")
 
 function(spiffs_file_preprocessor)
