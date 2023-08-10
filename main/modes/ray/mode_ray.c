@@ -103,6 +103,14 @@ void rayExitMode(void)
     freeWsg(&ray->texWall);
     freeWsg(&ray->texCeiling);
     freeWsg(&ray->texDoor);
+
+    freeWsg(&ray->texGolem);
+    freeWsg(&ray->texDragon);
+    freeWsg(&ray->texKnight);
+    freeWsg(&ray->texSkeleton);
+
+    freeWsg(&ray->texBullet);
+
     freeRayMap(&ray->map);
     free(ray);
 }
