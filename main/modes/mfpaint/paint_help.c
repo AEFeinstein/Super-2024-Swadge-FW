@@ -1,6 +1,6 @@
 #include "paint_help.h"
 
-#include "btn.h"
+#include "hdw-btn.h"
 
 /*
  * Interactive Help Definitions
@@ -19,19 +19,19 @@ static const char STR_BRUSH_POLYGON[] = "Polygon";
 const paintHelpStep_t helpSteps[] =
 {
     {
-        .trigger = { .type = PRESS_ALL, .data = (UP | DOWN | LEFT | RIGHT) },
+        .trigger = { .type = PRESS_ALL, .data = (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT) },
         .prompt = "Welcome to MFPaint!\nLet's get started: First, use the D-Pad to move the cursor around!"
     },
     {
-        .trigger = { .type = RELEASE, .data = BTN_A, },
+        .trigger = { .type = RELEASE, .data = PB_A, },
         .prompt = "Excellent!\nNow, press A to draw something!"
     },
     {
-        .trigger = { .type = PRESS, .data = (BTN_A | DOWN), },
+        .trigger = { .type = PRESS, .data = (PB_A | PB_DOWN), },
         .prompt = STR_HOLD_A_TO_DRAW
     },
     {
-        .trigger = { .type = RELEASE, .data = DOWN, },
+        .trigger = { .type = RELEASE, .data = PB_DOWN, },
         .prompt = STR_HOLD_A_TO_DRAW
     },
     {
@@ -39,8 +39,8 @@ const paintHelpStep_t helpSteps[] =
         .prompt = "Magnificent! But what if you make a mistake? Worry not, you can UNDO! Press and hold the TOUCH PAD between Y and X..."
     },
     {
-        .trigger = { .type = PRESS, .data = TOUCH_ANY | SELECT, },
-        .backtrack = { .type = RELEASE, .data = TOUCH_ANY | SWIPE_LEFT | SWIPE_RIGHT | TOUCH_X | TOUCH_Y | SELECT },
+        .trigger = { .type = PRESS, .data = TOUCH_ANY | PB_SELECT, },
+        .backtrack = { .type = RELEASE, .data = TOUCH_ANY | SWIPE_LEFT | SWIPE_RIGHT | TOUCH_X | TOUCH_Y | PB_SELECT },
         .backtrackSteps = 1,
         .prompt = "And then press SELECT to UNDO the last action"
     },

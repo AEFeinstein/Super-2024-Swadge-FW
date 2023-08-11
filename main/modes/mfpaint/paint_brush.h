@@ -3,8 +3,6 @@
 
 #include <stdint.h>
 
-#include "display.h"
-
 #include "paint_type.h"
 
 /**

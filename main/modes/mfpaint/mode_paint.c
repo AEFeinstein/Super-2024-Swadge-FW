@@ -5,14 +5,13 @@
 
 #include "swadgeMode.h"
 #include "btn.h"
-#include "meleeMenu.h"
-#include "swadge_esp32.h"
-#include "nvs_manager.h"
-#include "bresenham.h"
+#include "menu.h"
+#include "menuLogbookRenderer.h"
+#include "swadge2024.h"
+#include "settingsManager.h"
+#include "shapes.h"
 #include "math.h"
 
-#include "mode_main_menu.h"
-#include "swadge_util.h"
 #include "settingsManager.h"
 
 #include "mode_paint.h"
@@ -46,7 +45,7 @@ const char menuOptExit[] = "Exit";
 const char menuOptBack[] = "Back";
 
 // Mode struct function declarations
-void paintEnterMode(display_t* disp);
+void paintEnterMode(void);
 void paintExitMode(void);
 void paintMainLoop(int64_t elapsedUs);
 void paintButtonCb(buttonEvt_t* evt);
@@ -84,12 +83,11 @@ void paintSetupSettingsMenu(bool reset);
 
 // Mode struct function implemetations
 
-void paintEnterMode(display_t* disp)
+void paintEnterMode(void)
 {
     PAINT_LOGI("Allocating %zu bytes for paintMenu...", sizeof(paintMenu_t));
     paintMenu = calloc(1, sizeof(paintMenu_t));
 
-    paintMenu->disp = disp;
     loadFont("mm.font", &(paintMenu->menuFont));
 
     paintMenu->menu = initMeleeMenu(paintTitle, &(paintMenu->menuFont), paintMainMenuCb);
@@ -127,13 +125,13 @@ void paintMainLoop(int64_t elapsedUs)
         if (getScreensaverTime() != 0 && paintMenu->idleTimer >= (getScreensaverTime() * 1000000))
         {
             PAINT_LOGI("Selected Gallery");
-            paintGallerySetup(paintMenu->disp, true);
+            paintGallerySetup(true);
             paintGallery->returnScreen = paintMenu->screen;
             paintMenu->screen = PAINT_GALLERY;
         }
         else
         {
-            drawMeleeMenu(paintMenu->disp, paintMenu->menu);
+            drawMeleeMenu(paintMenu->menu);
         }
         break;
     }
@@ -494,13 +492,13 @@ void paintMainMenuCb(const char* opt)
     {
         PAINT_LOGI("Selected Draw");
         paintMenu->screen = PAINT_DRAW;
-        paintDrawScreenSetup(paintMenu->disp);
+        paintDrawScreenSetup();
     }
     else if (opt == menuOptGallery)
     {
         PAINT_LOGI("Selected Gallery");
         paintMenu->screen = PAINT_GALLERY;
-        paintGallerySetup(paintMenu->disp, false);
+        paintGallerySetup(false);
     }
     else if (opt == menuOptNetwork)
     {
@@ -512,8 +510,8 @@ void paintMainMenuCb(const char* opt)
     {
         PAINT_LOGE("Selected Help");
         paintMenu->screen = PAINT_HELP;
-        paintTutorialSetup(paintMenu->disp);
-        paintDrawScreenSetup(paintMenu->disp);
+        paintTutorialSetup();
+        paintDrawScreenSetup();
     }
     else if (opt == menuOptSettings)
     {

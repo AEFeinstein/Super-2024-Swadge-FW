@@ -2,8 +2,7 @@
 #define _PAINT_DRAW_H_
 
 #include "palette.h"
-#include "swadge_util.h"
-#include "swadgeMode.h"
+#include "swadge2024.h"
 
 #include "paint_common.h"
 #include "paint_brush.h"
@@ -42,9 +41,9 @@ void paintSaveModePrevOption(void);
 void paintSaveModeNextOption(void);
 
 // Setup/cleanup functions
-void paintDrawScreenSetup(display_t* disp);
+void paintDrawScreenSetup(void);
 void paintDrawScreenCleanup(void);
-void paintTutorialSetup(display_t* disp);
+void paintTutorialSetup(void);
 void paintTutorialPostSetup(void);
 void paintTutorialCleanup(void);
 void paintTutorialOnEvent(void);

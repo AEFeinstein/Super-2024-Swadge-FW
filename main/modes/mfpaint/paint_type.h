@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "display.h"
+#include "palette.h"
 
 // The number of colors in the palette and the max number of colors an image can be saved with
 #define PAINT_MAX_COLORS 16
@@ -119,9 +119,6 @@ typedef enum
 /// @brief Definition for a paintable screen region
 typedef struct
 {
-    // This screen's display
-    display_t* disp;
-
     // The X and Y offset of the canvas's top-left pixel
     uint16_t x, y;
 

@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <malloc.h>
 
-#include "nvs_manager.h"
+#include "settingsManager.h"
 
 #include "paint_common.h"
 #include "paint_type.h"

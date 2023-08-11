@@ -1,6 +1,6 @@
 #include "paint_nvs.h"
 
-#include "nvs_manager.h"
+#include "settingsManager.h"
 
 #include "paint_common.h"
 #include "paint_draw.h"
@@ -141,8 +141,8 @@ bool paintDeserialize(paintCanvas_t* dest, const uint8_t* data, size_t offset, s
         x1 = (offset * 2 + (n * 2 + 1)) % dest->w;
         y1 = (offset * 2 + (n * 2 + 1)) / dest->w;
 
-        setPxScaled(dest->disp, x0, y0, dest->palette[data[n] >> 4], dest->x, dest->y, dest->xScale, dest->yScale);
-        setPxScaled(dest->disp, x1, y1, dest->palette[data[n] & 0xF], dest->x, dest->y, dest->xScale, dest->yScale);
+        setPxScaled(x0, y0, dest->palette[data[n] >> 4], dest->x, dest->y, dest->xScale, dest->yScale);
+        setPxScaled(x1, y1, dest->palette[data[n] & 0xF], dest->x, dest->y, dest->xScale, dest->yScale);
     }
 
     return offset * 2 + (count * 2) < dest->w * dest->h;
@@ -177,7 +177,7 @@ size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset,
         y1 = canvas->y + (offset * 2 + (n * 2 + 1)) / canvas->w * canvas->yScale;
 
         // we only need to save the top-left pixel of each scaled pixel, since they're the same unless something is very broken
-        dest[n] = paletteIndex[(uint8_t)canvas->disp->getPx(x0, y0)] << 4 | paletteIndex[(uint8_t)canvas->disp->getPx(x1, y1)];
+        dest[n] = paletteIndex[(uint8_t)getPxTft(x0, y0)] << 4 | paletteIndex[(uint8_t)getPxTft(x1, y1)];
     }
 
     return count;

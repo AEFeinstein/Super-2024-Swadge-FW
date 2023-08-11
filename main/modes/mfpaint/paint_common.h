@@ -4,11 +4,10 @@
 #include <stddef.h>
 
 #include "esp_log.h"
-#include "swadgeMode.h"
-#include "meleeMenu.h"
-#include "led_util.h"
+#include "hdw-tft.h"
+#include "swadge2024.h"
+#include "menu.h"
 #include "p2pConnection.h"
-#include "mode_dance.h"
 #include "linked_list.h"
 
 #include "px_stack.h"
@@ -158,9 +157,7 @@ typedef struct
 
 typedef struct
 {
-    // Basic data
-    display_t* disp;
-    led_t leds[NUM_LEDS];
+    led_t leds[CONFIG_NUM_LEDS];
 
     paintCanvas_t canvas;
 
@@ -300,7 +297,6 @@ typedef struct
 
 typedef struct
 {
-    display_t* disp;
     paintCanvas_t canvas;
     int32_t index;
 
@@ -345,7 +341,6 @@ typedef struct
 
 typedef struct
 {
-    display_t* disp;
     paintCanvas_t canvas;
     int32_t index;
 
@@ -394,8 +389,6 @@ typedef struct
 
     int64_t idleTimer;
     bool enableScreensaver;
-
-    display_t* disp;
 
     // The screen within paint that the user is in
     paintScreen_t screen;

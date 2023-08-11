@@ -38,7 +38,7 @@ void colorReplaceWsg(wsg_t* wsg, paletteColor_t find, paletteColor_t replace)
     }
 }
 
-void paintPlotSquareWave(display_t* disp, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t waveLength, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t waveLength, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     uint16_t xDiff = (x0 < x1) ? x1 - x0 : x0 - x1;
     uint16_t yDiff = (y0 < y1) ? y1 - y0 : y0 - y1;
@@ -73,11 +73,11 @@ void paintPlotSquareWave(display_t* disp, uint16_t x0, uint16_t y0, uint16_t x1,
 
         while (x != x1)
         {
-            setPxScaled(disp, x, y, col, xTr, yTr, xScale, yScale);
+            setPxScaled(x, y, col, xTr, yTr, xScale, yScale);
 
             if (x == stop)
             {
-                plotLineScaled(disp, x, y, x, y + yDir * waveHeight, col, 0, xTr, yTr, xScale, yScale);
+                plotLineScaled(x, y, x, y + yDir * waveHeight, col, 0, xTr, yTr, xScale, yScale);
                 y += yDir * waveHeight;
                 yDir = -yDir;
                 stop = x + waveLength * xDir;
@@ -94,11 +94,11 @@ void paintPlotSquareWave(display_t* disp, uint16_t x0, uint16_t y0, uint16_t x1,
 
         while (y != y1)
         {
-            setPxScaled(disp, x, y, col, xTr, yTr, xScale, yScale);
+            setPxScaled(x, y, col, xTr, yTr, xScale, yScale);
 
             if (y == stop)
             {
-                plotLineScaled(disp, x, y, x + xDir * waveHeight, y, col, 0, xTr, yTr, xScale, yScale);
+                plotLineScaled(x, y, x + xDir * waveHeight, y, col, 0, xTr, yTr, xScale, yScale);
                 x += xDir * waveHeight;
                 xDir = -xDir;
                 stop = y + waveLength * yDir;
@@ -109,7 +109,7 @@ void paintPlotSquareWave(display_t* disp, uint16_t x0, uint16_t y0, uint16_t x1,
     }
 }
 
-void plotRectFilled(display_t* disp, int x0, int y0, int x1, int y1, paletteColor_t col)
+void plotRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col)
 {
     if (x0 >= x1 || y0 >= y1)
     {
@@ -117,12 +117,12 @@ void plotRectFilled(display_t* disp, int x0, int y0, int x1, int y1, paletteColo
         return;
     }
 
-    fillDisplayArea(disp, x0, y0, x1 - 1, y1 - 1, col);
+    fillDisplayArea(x0, y0, x1 - 1, y1 - 1, col);
 }
 
-void plotRectFilledScaled(display_t* disp, int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void plotRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
-    fillDisplayArea(disp, xTr + x0 * xScale, yTr + y0 * yScale, xTr + (x1) * xScale, yTr + (y1) * yScale, col);
+    fillDisplayArea(xTr + x0 * xScale, yTr + y0 * yScale, xTr + (x1) * xScale, yTr + (y1) * yScale, col);
 }
 
 void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColor_t replace)
@@ -132,20 +132,20 @@ void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColo
     {
         for (uint8_t y = 0; y < canvas->h; y++)
         {
-            if (canvas->disp->getPx(canvas->x + x * canvas->xScale, canvas->y + y * canvas->yScale) == search)
+            if (getPxTft(canvas->x + x * canvas->xScale, canvas->y + y * canvas->yScale) == search)
             {
-                setPxScaled(canvas->disp, x, y, replace, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+                setPxScaled(x, y, replace, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
             }
         }
     }
 }
 
-void setPxScaled(display_t* disp, int x, int y, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void setPxScaled(int x, int y, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
-    plotRectFilledScaled(disp, x, y, x + 1, y + 1, col, xTr, yTr, xScale, yScale);
+    plotRectFilledScaled(x, y, x + 1, y + 1, col, xTr, yTr, xScale, yScale);
 }
 
-bool paintDrawWsgTemp(display_t* disp, const wsg_t* wsg, pxStack_t* saveTo, uint16_t xOffset, uint16_t yOffset, colorMapFn_t colorSwap)
+bool paintDrawWsgTemp(const wsg_t* wsg, pxStack_t* saveTo, uint16_t xOffset, uint16_t yOffset, colorMapFn_t colorSwap)
 {
     size_t i = 0;
 
@@ -161,7 +161,7 @@ bool paintDrawWsgTemp(display_t* disp, const wsg_t* wsg, pxStack_t* saveTo, uint
         {
             if (wsg->px[i] != cTransparent)
             {
-                if (!pushPx(saveTo, disp, xOffset + x, yOffset + y))
+                if (!pushPx(saveTo, xOffset + x, yOffset + y))
                 {
                     // There wasn't enough space to save the pixel!!!
                     // This definitely shouldn't have happened because we already
@@ -170,7 +170,7 @@ bool paintDrawWsgTemp(display_t* disp, const wsg_t* wsg, pxStack_t* saveTo, uint
                     return false;
                 }
 
-                disp->setPx(xOffset + x, yOffset + y, colorSwap ? colorSwap(disp->getPx(xOffset + x, yOffset + y)) : wsg->px[i]);
+                setPxTft(xOffset + x, yOffset + y, colorSwap ? colorSwap(getPxTft(xOffset + x, yOffset + y)) : wsg->px[i]);
             }
         }
     }
@@ -179,16 +179,16 @@ bool paintDrawWsgTemp(display_t* disp, const wsg_t* wsg, pxStack_t* saveTo, uint
 }
 
 // Calculate the maximum possible [square] scale, given the display's dimensions and the image dimensions, plus any margins required
-uint8_t paintGetMaxScale(display_t* disp, uint16_t imgW, uint16_t imgH, uint16_t xMargin, uint16_t yMargin)
+uint8_t paintGetMaxScale(uint16_t imgW, uint16_t imgH, uint16_t xMargin, uint16_t yMargin)
 {
     // Prevent infinite loops and overflows
-    if (xMargin >= disp->w || yMargin >= disp->w)
+    if (xMargin >= TFT_WIDTH || yMargin >= TFT_WIDTH)
     {
         return 1;
     }
 
-    uint16_t maxW = disp->w - xMargin;
-    uint16_t maxH = disp->h - yMargin;
+    uint16_t maxW = TFT_WIDTH - xMargin;
+    uint16_t maxH = TFT_HEIGHT - yMargin;
 
     uint8_t scale = 1;
 

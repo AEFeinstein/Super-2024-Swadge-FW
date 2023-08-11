@@ -83,7 +83,7 @@ bool maybeGrowPxStack(pxStack_t* pxStack, size_t count)
  * @return True if the pixel was pushed successfully, false otherwise
  *
  */
-bool pushPx(pxStack_t* pxStack, display_t* disp, uint16_t x, uint16_t y)
+bool pushPx(pxStack_t* pxStack, uint16_t x, uint16_t y)
 {
     if (!maybeGrowPxStack(pxStack, 1))
     {
@@ -93,7 +93,7 @@ bool pushPx(pxStack_t* pxStack, display_t* disp, uint16_t x, uint16_t y)
     pxStack->index++;
     pxStack->data[pxStack->index].x = x;
     pxStack->data[pxStack->index].y = y;
-    pxStack->data[pxStack->index].col = disp->getPx(x, y);
+    pxStack->data[pxStack->index].col = getPx(x, y);
 
     return true;
 }
@@ -107,13 +107,13 @@ bool pushPx(pxStack_t* pxStack, display_t* disp, uint16_t x, uint16_t y)
  * @brief Pops a pixel from the stack and restores it to the screen
  * @return `true` if a pixel was popped, and `false` if the stack was empty.
  */
-bool popPx(pxStack_t* pxStack, display_t* disp)
+bool popPx(pxStack_t* pxStack)
 {
     // Make sure the stack isn't empty
     if (pxStack->index >= 0)
     {
         // Draw the pixel from the top of the stack
-        disp->setPx(pxStack->data[pxStack->index].x, pxStack->data[pxStack->index].y, pxStack->data[pxStack->index].col);
+        setPxTft(pxStack->data[pxStack->index].x, pxStack->data[pxStack->index].y, pxStack->data[pxStack->index].col);
         pxStack->index--;
 
         // Is this really necessary? The stack empties often so maybe it's better not to reallocate constantly
@@ -163,17 +163,17 @@ size_t pxStackSize(const pxStack_t* pxStack)
     return pxStack->index + 1;
 }
 
-bool pushPxScaled(pxStack_t* pxStack, display_t* disp, int x, int y, int xTr, int yTr, int xScale, int yScale)
+bool pushPxScaled(pxStack_t* pxStack, int x, int y, int xTr, int yTr, int xScale, int yScale)
 {
-    return pushPx(pxStack, disp, xTr + x * xScale, yTr + y * yScale);
+    return pushPx(pxStack, xTr + x * xScale, yTr + y * yScale);
 }
 
-bool popPxScaled(pxStack_t* pxStack, display_t* disp, int xScale, int yScale)
+bool popPxScaled(pxStack_t* pxStack, int xScale, int yScale)
 {
     pxVal_t px;
     if (peekPx(pxStack, &px))
     {
-        plotRectFilled(disp, px.x, px.y, px.x + xScale + 1, px.y + yScale + 1, px.col);
+        plotRectFilled(px.x, px.y, px.x + xScale + 1, px.y + yScale + 1, px.col);
         dropPx(pxStack);
 
         return true;

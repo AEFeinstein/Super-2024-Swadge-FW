@@ -63,12 +63,10 @@ const char inactiveIconStr[] = "%s_inactive.wsg";
 const brush_t* firstBrush = brushes;
 const brush_t* lastBrush = brushes + sizeof(brushes) / sizeof(brushes[0]) - 1;
 
-void paintDrawScreenSetup(display_t* disp)
+void paintDrawScreenSetup(void)
 {
     PAINT_LOGD("Allocating %zu bytes for paintState", sizeof(paintDraw_t));
     paintState = calloc(sizeof(paintDraw_t), 1);
-    paintState->disp = disp;
-    paintState->canvas.disp = disp;
 
     loadFont(PAINT_TOOLBAR_FONT, &(paintState->toolbarFont));
     loadFont(PAINT_SAVE_MENU_FONT, &(paintState->saveMenuFont));
@@ -217,7 +215,7 @@ void paintDrawScreenSetup(display_t* disp)
         moveCursorAbsolute(getCursor(), &paintState->canvas, paintState->canvas.w / 2, paintState->canvas.h / 2);
     }
 
-    paintState->disp->clearPx();
+    clearPxTft();
 
     paintSetupTool();
 
@@ -263,7 +261,7 @@ void paintDrawScreenCleanup(void)
     free(paintState);
 }
 
-void paintTutorialSetup(display_t* disp)
+void paintTutorialSetup(void)
 {
     paintHelp = calloc(sizeof(paintHelp_t), 1);
     paintHelp->curHelp = helpSteps;
@@ -364,13 +362,13 @@ bool paintTutorialCheckTrigger(const paintHelpTrigger_t* trigger)
 void paintPositionDrawCanvas(void)
 {
     // Calculate the highest scale that will fit on the screen
-    uint8_t scale = paintGetMaxScale(paintState->disp, paintState->canvas.w, paintState->canvas.h, paintState->marginLeft + paintState->marginRight, paintState->marginTop + paintState->marginBottom);
+    uint8_t scale = paintGetMaxScale(paintState->canvas.w, paintState->canvas.h, paintState->marginLeft + paintState->marginRight, paintState->marginTop + paintState->marginBottom);
 
     paintState->canvas.xScale = scale;
     paintState->canvas.yScale = scale;
 
-    paintState->canvas.x = paintState->marginLeft + (paintState->canvas.disp->w - paintState->marginLeft - paintState->marginRight - paintState->canvas.w * paintState->canvas.xScale) / 2;
-    paintState->canvas.y = paintState->marginTop + (paintState->canvas.disp->h - paintState->marginTop - paintState->marginBottom - paintState->canvas.h * paintState->canvas.yScale) / 2;
+    paintState->canvas.x = paintState->marginLeft + (TFT_WIDTH - paintState->marginLeft - paintState->marginRight - paintState->canvas.w * paintState->canvas.xScale) / 2;
+    paintState->canvas.y = paintState->marginTop + (TFT_HEIGHT - paintState->marginTop - paintState->marginBottom - paintState->canvas.h * paintState->canvas.yScale) / 2;
 }
 
 void paintDrawScreenMainLoop(int64_t elapsedUs)
@@ -544,9 +542,9 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     {
         int16_t pastColorBoxX = PAINT_COLORBOX_MARGIN_X + (paintState->canvas.x - 1 - PAINT_COLORBOX_W - PAINT_COLORBOX_MARGIN_X * 2 - 2) / 2 + PAINT_COLORBOX_W + 2 + 6;
         int16_t wrapY = paintState->canvas.y + paintState->canvas.h * paintState->canvas.yScale + 3;
-        const char* rest = drawTextWordWrap(paintState->disp, &paintState->toolbarFont, c000, paintHelp->curHelp->prompt,
+        const char* rest = drawTextWordWrap(&paintState->toolbarFont, c000, paintHelp->curHelp->prompt,
                  &pastColorBoxX, &wrapY,
-                 paintState->disp->w, paintState->disp->h - paintState->marginBottom + paintHelp->helpH);
+                 TFT_WIDTH, TFT_HEIGHT - paintState->marginBottom + paintHelp->helpH);
         if (rest)
         {
             PAINT_LOGW("Some tutorial text didn't fit: %s", rest);
@@ -1808,7 +1806,7 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
         break;
     }
 
-    pushPxScaled(&getArtist()->pickPoints, paintState->disp, getCursor()->x, getCursor()->y, paintState->canvas.x, paintState->canvas.y, paintState->canvas.xScale, paintState->canvas.yScale);
+    pushPxScaled(&getArtist()->pickPoints, getCursor()->x, getCursor()->y, paintState->canvas.x, paintState->canvas.y, paintState->canvas.xScale, paintState->canvas.yScale);
 
     if (getArtist()->brushDef->mode == HOLD_DRAW)
     {
@@ -1830,7 +1828,7 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
             else if (isLastPick)
             {
                 // Special case: If we're on the next-to-last possible point, we have to add the start again as the last point
-                pushPx(&getArtist()->pickPoints, paintState->disp, firstPick.x, firstPick.y);
+                pushPx(&getArtist()->pickPoints, firstPick.x, firstPick.y);
 
                 drawNow = true;
             }
@@ -1851,7 +1849,7 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
         // Convert the pick points into an array of canvas-coordinates
         paintConvertPickPointsScaled(&getArtist()->pickPoints, &paintState->canvas, canvasPickPoints);
 
-        while (popPxScaled(&getArtist()->pickPoints, paintState->disp, paintState->canvas.xScale, paintState->canvas.yScale));
+        while (popPxScaled(&getArtist()->pickPoints, paintState->canvas.xScale, paintState->canvas.yScale));
 
         // Save the current state before we draw, but only do it on the first press if we're using a HOLD_DRAW pen
         if (getArtist()->brushDef->mode != HOLD_DRAW || paintState->aPress)
@@ -1923,7 +1921,7 @@ void paintSetupTool(void)
     }
 
     // Undraw and hide any stored temporary pixels
-    while (popPxScaled(&getArtist()->pickPoints, paintState->disp, paintState->canvas.xScale, paintState->canvas.yScale));
+    while (popPxScaled(&getArtist()->pickPoints, paintState->canvas.xScale, paintState->canvas.yScale));
     showCursor(getCursor(), &paintState->canvas);
 }
 
@@ -2124,7 +2122,7 @@ void paintDrawPickPoints(void)
         if (getPx(&getArtist()->pickPoints, i, &point))
         {
             bool invert = (i == 0 && getArtist()->brushDef->mode == PICK_POINT_LOOP) && pxStackSize(&getArtist()->pickPoints) > 1;
-            plotRectFilled(paintState->disp, point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, invert ? getContrastingColor(point.col) : getArtist()->fgColor);
+            plotRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, invert ? getContrastingColor(point.col) : getArtist()->fgColor);
         }
     }
 }
@@ -2136,7 +2134,7 @@ void paintHidePickPoints(void)
     {
         if (getPx(&getArtist()->pickPoints, i, &point))
         {
-            plotRectFilled(paintState->disp, point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, point.col);
+            plotRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, point.col);
         }
     }
 }

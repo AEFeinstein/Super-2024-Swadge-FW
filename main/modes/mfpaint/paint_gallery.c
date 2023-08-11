@@ -46,11 +46,9 @@ paintGallery_t* paintGallery;
 
 static int16_t arrowCharToRot(char dir);
 
-void paintGallerySetup(display_t* disp, bool screensaver)
+void paintGallerySetup(bool screensaver)
 {
     paintGallery = calloc(sizeof(paintGallery_t), 1);
-    paintGallery->disp = disp;
-    paintGallery->canvas.disp = disp;
     paintGallery->galleryTime = 0;
     paintGallery->galleryLoadNew = true;
     paintGallery->screensaverMode = screensaver;
@@ -219,23 +217,23 @@ void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char lef
     uint16_t width = textWidth(&paintGallery->infoFont, text);
     uint16_t padding = 3;
     int16_t yOffset;
-    int16_t xOffset = center ? ((paintGallery->disp->w - width) / 2) : GALLERY_INFO_X_MARGIN;
+    int16_t xOffset = center ? ((TFT_WIDTH - width) / 2) : GALLERY_INFO_X_MARGIN;
 
     if (row < 0)
     {
-        yOffset = paintGallery->disp->h + ((row) * (paintGallery->infoFont.h + padding * 2)) - GALLERY_INFO_Y_MARGIN;
+        yOffset = TFT_WIDTH + ((row) * (paintGallery->infoFont.h + padding * 2)) - GALLERY_INFO_Y_MARGIN;
     }
     else
     {
         yOffset = GALLERY_INFO_Y_MARGIN + row * (paintGallery->infoFont.h + padding * 2);
     }
 
-    fillDisplayArea(paintGallery->disp, 0, yOffset, paintGallery->disp->w, yOffset + padding * 2 + paintGallery->infoFont.h, c555);
+    fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + padding * 2 + paintGallery->infoFont.h, c555);
 
     if (leftArrow != 0)
     {
         // assumes arrows are always square, flip between W and H if that's ever the case
-        drawWsg(paintGallery->disp, &paintGallery->arrow,
+        drawWsg(&paintGallery->arrow,
                 xOffset - GALLERY_ARROW_MARGIN - paintGallery->arrow.w,
                 yOffset + padding + (paintGallery->infoFont.h - paintGallery->arrow.h) / 2,
                 false, false, arrowCharToRot(leftArrow));
@@ -244,13 +242,13 @@ void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char lef
     if (rightArrow != 0)
     {
         // assumes arrows are always square, flip between W and H if that's ever the case
-        drawWsg(paintGallery->disp, &paintGallery->arrow,
+        drawWsg(&paintGallery->arrow,
                 xOffset + width + GALLERY_ARROW_MARGIN,
                 yOffset + padding + (paintGallery->infoFont.h - paintGallery->arrow.h) / 2,
                 false, false, arrowCharToRot(rightArrow));
     }
 
-    drawText(paintGallery->disp, &paintGallery->infoFont, c000, text, xOffset, yOffset + padding);
+    drawText(&paintGallery->infoFont, c000, text, xOffset, yOffset + padding);
 
     // start the timer to clear the screen
     paintGallery->infoTimeRemaining = GALLERY_INFO_TIME;
@@ -381,7 +379,7 @@ bool paintGalleryDoLoad(void)
 {
     if(paintLoadDimensions(&paintGallery->canvas, paintGallery->gallerySlot))
     {
-        uint8_t maxScale = paintGetMaxScale(paintGallery->canvas.disp, paintGallery->canvas.w, paintGallery->canvas.h, 0, 0);
+        uint8_t maxScale = paintGetMaxScale(paintGallery->canvas.w, paintGallery->canvas.h, 0, 0);
 
         if (paintGallery->galleryScale > maxScale)
         {
@@ -395,10 +393,10 @@ bool paintGalleryDoLoad(void)
         paintGallery->canvas.xScale = paintGallery->galleryScale;
         paintGallery->canvas.yScale = paintGallery->galleryScale;
 
-        paintGallery->canvas.x = (paintGallery->disp->w - paintGallery->canvas.w * paintGallery->canvas.xScale) / 2;
-        paintGallery->canvas.y = (paintGallery->disp->h - paintGallery->canvas.h * paintGallery->canvas.yScale) / 2;
+        paintGallery->canvas.x = (TFT_WIDTH - paintGallery->canvas.w * paintGallery->canvas.xScale) / 2;
+        paintGallery->canvas.y = (TFT_HEIGHT - paintGallery->canvas.h * paintGallery->canvas.yScale) / 2;
 
-        paintGallery->disp->clearPx();
+        clearPxTft();
 
         return paintLoad(&paintGallery->index, &paintGallery->canvas, paintGallery->gallerySlot);
     }
