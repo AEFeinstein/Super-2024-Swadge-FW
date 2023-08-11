@@ -239,8 +239,11 @@ void rayMainLoop(int64_t elapsedUs)
         }
     }
 
-    // TODO make a movement vector
-    int16_t movementAngle = -1;
+    // Find move distances
+    // TODO scale with elapsed time
+    // TODO normalize when moving diagonally
+    q24_8 deltaX = 0;
+    q24_8 deltaY = 0;
 
     // B button strafes, which may lock on an enemy
     if ((ray->btnState & PB_B) && !(prevBtnState & PB_B))
@@ -262,18 +265,20 @@ void rayMainLoop(int64_t elapsedUs)
             // Adjust position to always center on the locked target object
             int32_t newAngle = cordicAtan2(centeredSprite->posX - ray->posX, ray->posY - centeredSprite->posY);
             setPlayerAngle(TO_FX(newAngle));
+            // TODO this style of strafe (adjust angle, move tangentially) makes the player slowly spiral outward
         }
 
-        // Strafe right
         if (ray->btnState & PB_RIGHT)
         {
-            // TODO adjust direction vector
+            // Strafe right
+            deltaX -= (ray->dirY / 6);
+            deltaY += (ray->dirX / 6);
         }
-
-        // Strafe left
-        if (ray->btnState & PB_LEFT)
+        else if (ray->btnState & PB_LEFT)
         {
-            // TODO adjust direction vector
+            // Strafe left
+            deltaX += (ray->dirY / 6);
+            deltaY -= (ray->dirX / 6);
         }
     }
     else
@@ -301,42 +306,34 @@ void rayMainLoop(int64_t elapsedUs)
         }
     }
 
-    // Boundary checks are longer than the move dist to not get right up on the wall
-    q24_8 boundaryCheckX = ray->dirX / 3;
-    q24_8 boundaryCheckY = ray->dirY / 3;
-    // Find move distances
-    // TODO scale with elapsed time
-    q24_8 deltaX = (ray->dirX / 6);
-    q24_8 deltaY = (ray->dirY / 6);
-
-    // Move forwards if no wall in front of you
-    // TODO adjust movement vector, refactor the actual movement afterwards
+    // If the up button is held
     if (ray->btnState & PB_UP)
     {
-        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)]))
-        {
-            ray->posX += deltaX;
-        }
-
-        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)]))
-        {
-            ray->posY += deltaY;
-        }
+        // Move forward
+        deltaX += (ray->dirX / 6);
+        deltaY += (ray->dirY / 6);
+    }
+    // Else if the down button is held
+    else if (ray->btnState & PB_DOWN)
+    {
+        // Move backwards
+        deltaX -= (ray->dirX / 6);
+        deltaY -= (ray->dirY / 6);
     }
 
-    // move backwards if no wall behind you
-    // TODO adjust movement vector, refactor the actual movement afterwards
-    if (ray->btnState & PB_DOWN)
-    {
-        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX - boundaryCheckX)][FROM_FX(ray->posY)]))
-        {
-            ray->posX -= deltaX;
-        }
+    // Boundary checks are longer than the move dist to not get right up on the wall
+    q24_8 boundaryCheckX = deltaX * 2;
+    q24_8 boundaryCheckY = deltaY * 2;
 
-        if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY - boundaryCheckY)]))
-        {
-            ray->posY -= deltaY;
-        }
+    // Move forwards if no wall in front of you
+    if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)]))
+    {
+        ray->posX += deltaX;
+    }
+
+    if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)]))
+    {
+        ray->posY += deltaY;
     }
 
     if ((ray->btnState & PB_A) && !(prevBtnState & PB_A))

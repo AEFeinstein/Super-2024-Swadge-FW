@@ -299,7 +299,7 @@ void castWalls(ray_t* ray)
                     // 18.995 -> 63
 
                     // calculate value of wallX
-                    if (side == 0)
+                    if (false == side)
                     {
                         wallX = ADD_FX(ray->posY, MUL_FX(perpWallDist, rayDirY));
                     }
@@ -351,7 +351,7 @@ void castWalls(ray_t* ray)
         int8_t texX = FROM_FX(wallX * TEX_WIDTH);
 
         // Mirror X texture coordinate for certain walls
-        if ((side == 0 && rayDirX > 0) || (side == 1 && rayDirY < 0))
+        if ((false == side && rayDirX > 0) || (true == side && rayDirY < 0))
         {
             texX = TEX_WIDTH - texX - 1;
         }
