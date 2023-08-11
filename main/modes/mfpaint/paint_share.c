@@ -75,7 +75,7 @@ void paintReceiveEnterMode(void);
 void paintShareExitMode(void);
 void paintShareMainLoop(int64_t elapsedUs);
 void paintShareButtonCb(buttonEvt_t* evt);
-void paintShareRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi);
+void paintShareRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 void paintShareSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 
 void paintShareP2pConnCb(p2pInfo* p2p, connectionEvt_t evt);
@@ -181,33 +181,34 @@ bool paintShareLogState(char* dest, size_t size)
 swadgeMode_t modePaintShare =
 {
     .modeName = "MFPaint.net Send",
+    .wifiMode = ESP_NOW,
+    .overrideUsb = false,
+    .usesAccelerometer = false,
+    .usesThermometer = false,
     .fnEnterMode = paintShareEnterMode,
     .fnExitMode = paintShareExitMode,
     .fnMainLoop = paintShareMainLoop,
-    .fnButtonCallback = paintShareButtonCb,
-    .fnTouchCallback = NULL,
-    .wifiMode = ESP_NOW,
+    .fnAudioCallback = NULL,
+    .fnBackgroundDrawCallback = NULL,
     .fnEspNowRecvCb = paintShareRecvCb,
     .fnEspNowSendCb = paintShareSendCb,
-    .fnAccelerometerCallback = NULL,
-    .fnAudioCallback = NULL,
-    .fnTemperatureCallback = NULL,
+    .fnAdvancedUSB = NULL,
 };
 
 swadgeMode_t modePaintReceive =
 {
     .modeName = "MFPaint.net Recv",
+    .wifiMode = ESP_NOW,
+    .overrideUsb = false,
+    .usesAccelerometer = false,
+    .usesThermometer = false,
     .fnEnterMode = paintReceiveEnterMode,
     .fnExitMode = paintShareExitMode,
     .fnMainLoop = paintShareMainLoop,
-    .fnButtonCallback = paintShareButtonCb,
-    .fnTouchCallback = NULL,
-    .wifiMode = ESP_NOW,
+    .fnAudioCallback = NULL,
     .fnEspNowRecvCb = paintShareRecvCb,
     .fnEspNowSendCb = paintShareSendCb,
-    .fnAccelerometerCallback = NULL,
-    .fnAudioCallback = NULL,
-    .fnTemperatureCallback = NULL,
+    .fnAdvancedUSB = NULL,
 };
 
 static bool isSender(void)
@@ -1149,9 +1150,9 @@ void paintShareButtonCb(buttonEvt_t* evt)
     }
 }
 
-void paintShareRecvCb(const uint8_t* mac_addr, const char* data, uint8_t len, int8_t rssi)
+void paintShareRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
-    p2pRecvCb(&paintShare->p2pInfo, mac_addr, (const uint8_t*)data, len, rssi);
+    p2pRecvCb(&paintShare->p2pInfo, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
 
 void paintShareP2pSendCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)

@@ -55,20 +55,21 @@ void paintNetworkMenuCb(const char* opt);
 void paintSettingsMenuCb(const char* opt);
 
 
-swadgeMode modePaint =
+swadgeMode_t modePaint =
 {
     .modeName = paintTitle,
+    .wifiMode = ESP_NOW,
+    .overrideUsb = false,
+    .usesAccelerometer = false,
+    .usesThermometer = false,
     .fnEnterMode = paintEnterMode,
     .fnExitMode = paintExitMode,
     .fnMainLoop = paintMainLoop,
-    .fnButtonCallback = paintButtonCb,
-    .fnTouchCallback = paintTouchCb,
-    .wifiMode = NO_WIFI,
+    .fnAudioCallback = NULL,
+    .fnBackgroundDrawCallback = NULL,
     .fnEspNowRecvCb = NULL,
     .fnEspNowSendCb = NULL,
-    .fnAccelerometerCallback = NULL,
-    .fnAudioCallback = NULL,
-    .fnTemperatureCallback = NULL,
+    .fnAdvancedUSB = NULL,
 };
 
 // Util function declarations
