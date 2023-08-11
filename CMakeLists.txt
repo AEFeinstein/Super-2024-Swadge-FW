@@ -8,3 +8,5 @@ include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(swadge2024)
 
 idf_build_set_property(COMPILE_OPTIONS "-finline-functions" APPEND)
+idf_build_set_property(COMPILE_OPTIONS "-DCFG_TUD_HID_EP_BUFSIZE=255" APPEND)
+

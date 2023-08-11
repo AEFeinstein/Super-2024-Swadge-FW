@@ -151,15 +151,15 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id,
 {
     if (report_id == 170 || report_id == 171)
     {
-        return handle_advanced_usb_control_get(reqLen, buffer);
+       return handle_advanced_usb_control_get(reqLen+1, buffer-1);
     }
     else if (report_id == 172)
     {
-        return handle_advanced_usb_terminal_get(reqLen, buffer);
+        return handle_advanced_usb_terminal_get(reqLen+1, buffer-1);
     }
     else if (report_id == 173 && advancedUsbHandler)
     {
-        return advancedUsbHandler(buffer, reqLen, 1);
+        return advancedUsbHandler(buffer-1, reqLen+1, 1);
     }
     else
     {
@@ -182,11 +182,11 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 {
     if (report_id >= 170 && report_id <= 171)
     {
-        handle_advanced_usb_control_set(bufsize, buffer);
+        handle_advanced_usb_control_set(bufsize+1, buffer-1);
     }
     else if (report_id == 173 && advancedUsbHandler)
     {
-        advancedUsbHandler((uint8_t*)buffer, bufsize, 0);
+        advancedUsbHandler((uint8_t*)buffer-1, bufsize+1, 0);
     }
 }
 

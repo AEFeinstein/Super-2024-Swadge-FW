@@ -138,6 +138,7 @@
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
 
+#include "advanced_usb_control.h"
 #include "swadge2024.h"
 #include "mainMenu.h"
 
