@@ -178,7 +178,7 @@ void paintButtonCb(buttonEvt_t* evt)
         {
             if (evt->down)
             {
-                if (evt->button == BTN_B)
+                if (evt->button == PB_B)
                 {
                     paintMenu->screen = PAINT_MENU;
                     paintSetupMainMenu(false);
@@ -196,7 +196,7 @@ void paintButtonCb(buttonEvt_t* evt)
             if (evt->down)
             {
                 const char* selectedOption = paintMenu->menu->rows[paintMenu->menu->selectedRow];
-                if (evt->button == LEFT || evt->button == RIGHT)
+                if (evt->button == PB_LEFT || evt->button == PB_RIGHT)
                 {
                     if (menuOptBlinkOn == selectedOption || menuOptBlinkOff == selectedOption ||
                         menuOptLedsOn == selectedOption || menuOptLedsOff == selectedOption)
@@ -217,19 +217,19 @@ void paintButtonCb(buttonEvt_t* evt)
                     else if (menuOptEraseSlot == selectedOption || menuOptEraseData == selectedOption)
                     {
                         paintMenu->settingsMenuSelection = paintMenu->menu->selectedRow;
-                        if (evt->button == LEFT)
+                        if (evt->button == PB_LEFT)
                         {
                             paintMenuPrevEraseOption();
                             paintSetupSettingsMenu(false);
                         }
-                        else if (evt->button == RIGHT)
+                        else if (evt->button == PB_RIGHT)
                         {
                             paintMenuNextEraseOption();
                             paintSetupSettingsMenu(false);
                         }
                     }
                 }
-                else if (evt->button == BTN_B)
+                else if (evt->button == PB_B)
                 {
                     if (paintMenu->eraseDataSelected)
                     {

@@ -293,28 +293,28 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
 
         switch (evt->button)
         {
-            case UP:
+            case PB_UP:
             {
                 paintGallery->showUi = true;
                 paintGalleryDecreaseSpeed();
                 break;
             }
 
-            case DOWN:
+            case PB_DOWN:
             {
                 paintGallery->showUi = true;
                 paintGalleryIncreaseSpeed();
                 break;
             }
 
-            case LEFT:
+            case PB_LEFT:
             {
                 portableDancePrev(paintGallery->portableDances);
                 paintGallery->showUi = true;
                 break;
             }
 
-            case RIGHT:
+            case PB_RIGHT:
             {
                 portableDanceNext(paintGallery->portableDances);
                 paintGallery->showUi = true;
@@ -322,7 +322,7 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
             }
 
             case START:
-            case BTN_B:
+            case PB_B:
             {
                 // Exit
                 paintReturnToMainMenu();
@@ -338,7 +338,7 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
                 break;
             }
 
-            case BTN_A:
+            case PB_A:
             {
                 paintGallery->gallerySlot = paintGetNextSlotInUse(paintGallery->index, paintGallery->gallerySlot);
                 paintGallery->galleryLoadNew = (prevSlot != paintGallery->gallerySlot);

@@ -893,14 +893,14 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
         paintState->redrawToolbar = true;
         switch (evt->button)
         {
-            case BTN_A:
+            case PB_A:
             {
                 // Don't do anything? Confirm change?
                 paintEditPaletteConfirm();
                 break;
             }
 
-            case BTN_B:
+            case PB_B:
             {
                 // Revert back to the original color
                 if (paintState->newColor != paintState->canvas.palette[paintState->paletteSelect])
@@ -916,13 +916,13 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case START:
+            case PB_START:
             {
                 // Handled in button up
                 break;
             }
 
-            case SELECT:
+            case PB_SELECT:
             {
                 // {R/G/B}++
                 // We will normally use the touchpad for this
@@ -930,28 +930,28 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case UP:
+            case PB_UP:
             {
                 // Prev color
                 paintEditPalettePrevColor();
                 break;
             }
 
-            case DOWN:
+            case PB_DOWN:
             {
                 // Next color
                 paintEditPaletteNextColor();
                 break;
             }
 
-            case LEFT:
+            case PB_LEFT:
             {
                 // Swap between R, G, and B
                 paintEditPalettePrevChannel();
                 break;
             }
 
-            case RIGHT:
+            case PB_RIGHT:
             {
                 // Swap between R, G, and B
                 paintEditPaletteNextChannel();
@@ -962,7 +962,7 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
     else
     {
         // Button up
-        if (evt->button == START)
+        if (evt->button == PB_START)
         {
             // Return to draw mode
             paintState->paletteSelect = 0;
@@ -980,7 +980,7 @@ void paintSaveModeButtonCb(const buttonEvt_t* evt)
         paintState->redrawToolbar = true;
         switch (evt->button)
         {
-            case BTN_A:
+            case PB_A:
             {
                 switch (paintState->saveMenu)
                 {
@@ -1138,33 +1138,33 @@ void paintSaveModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case UP:
+            case PB_UP:
             {
                 paintSaveModePrevItem();
                 break;
             }
 
-            case DOWN:
-            case SELECT:
+            case PB_DOWN:
+            case PB_SELECT:
             {
 
                 paintSaveModeNextItem();
                 break;
             }
 
-            case LEFT:
+            case PB_LEFT:
             {
                 paintSaveModePrevOption();
                 break;
             }
 
-            case RIGHT:
+            case PB_RIGHT:
             {
                 paintSaveModeNextOption();
                 break;
             }
 
-            case BTN_B:
+            case PB_B:
             {
                 // Exit save menu
                 paintState->saveMenu = HIDDEN;
@@ -1172,7 +1172,7 @@ void paintSaveModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case START:
+            case PB_START:
             // Handle this in button up
             break;
         }
@@ -1180,7 +1180,7 @@ void paintSaveModeButtonCb(const buttonEvt_t* evt)
     else
     {
         //////// Save mode button release
-        if (evt->button == START)
+        if (evt->button == PB_START)
         {
             // Exit save menu
             paintState->saveMenu = HIDDEN;
@@ -1197,7 +1197,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
         //////// Select-mode button release
         switch (evt->button)
         {
-            case SELECT:
+            case PB_SELECT:
             {
                 if (paintCanUndo())
                 {
@@ -1206,7 +1206,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case START:
+            case PB_START:
             {
                 if (paintCanRedo())
                 {
@@ -1215,7 +1215,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case UP:
+            case PB_UP:
             {
                 // Select previous color
                 paintState->redrawToolbar = true;
@@ -1224,7 +1224,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case DOWN:
+            case PB_DOWN:
             {
                 // Select next color
                 paintState->redrawToolbar = true;
@@ -1233,7 +1233,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case LEFT:
+            case PB_LEFT:
             {
                 // Select previous brush
                 paintPrevTool();
@@ -1241,7 +1241,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case RIGHT:
+            case PB_RIGHT:
             {
                 // Select next brush
                 paintNextTool();
@@ -1250,7 +1250,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
             }
 
 
-            case BTN_A:
+            case PB_A:
             {
                 // Increase brush size / next variant
                 paintIncBrushWidth(1);
@@ -1258,7 +1258,7 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case BTN_B:
+            case PB_B:
             {
                 // Decrease brush size / prev variant
                 paintDecBrushWidth(1);
@@ -1300,7 +1300,7 @@ void paintDrawScreenPollTouch()
                         // Don't worry about X or Y, we'll only decide those on release I guess
                         paintHelp->allButtons |= TOUCH_ANY;
                         // Replace the touch buttons, but not any of the real buttons
-                        paintHelp->curButtons = TOUCH_ANY | (paintHelp->curButtons & (UP | DOWN | LEFT | RIGHT | BTN_A | BTN_B | START | SELECT));
+                        paintHelp->curButtons = TOUCH_ANY | (paintHelp->curButtons & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT));
                         paintHelp->lastButton = TOUCH_ANY;
                         paintHelp->lastButtonDown = true;
                         paintTutorialOnEvent();
@@ -1371,7 +1371,7 @@ void paintDrawScreenPollTouch()
 
                     if (paintHelp != NULL)
                     {
-                        paintHelp->curButtons = paintHelp->curButtons & (UP | DOWN | LEFT | RIGHT | BTN_A | BTN_B | START | SELECT);
+                        paintHelp->curButtons = paintHelp->curButtons & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT);
                         paintHelp->lastButtonDown = false;
 
                         if (swipeMagnitude == 0)
@@ -1410,7 +1410,7 @@ void paintDrawScreenPollTouch()
                     // Only do something in tutorial mode
                     if (paintHelp != NULL)
                     {
-                        paintHelp->curButtons = paintHelp->curButtons & (UP | DOWN | LEFT | RIGHT | BTN_A | BTN_B | START | SELECT);
+                        paintHelp->curButtons = paintHelp->curButtons & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT);
                         paintHelp->lastButtonDown = false;
                         paintHelp->lastButton = TOUCH_ANY;
                         paintTutorialOnEvent();
@@ -1483,11 +1483,11 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         // Draw mode buttons
         switch (evt->button)
         {
-            case SELECT:
+            case PB_SELECT:
             // SELECT no longer does anything
             break;
 
-            case BTN_A:
+            case PB_A:
             {
                 // Draw
                 paintState->aHeld = true;
@@ -1495,7 +1495,7 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case BTN_B:
+            case PB_B:
             {
                 // Swap the foreground and background colors
                 paintSwapFgBgColors();
@@ -1505,17 +1505,17 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case UP:
-            case DOWN:
-            case LEFT:
-            case RIGHT:
+            case PB_UP:
+            case PB_DOWN:
+            case PB_LEFT:
+            case PB_RIGHT:
             {
-                paintHandleDpad(evt->state & (UP | DOWN | LEFT | RIGHT));
+                paintHandleDpad(evt->state & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT));
                 paintState->firstMove = true;
                 break;
             }
 
-            case START:
+            case PB_START:
             // Don't do anything until start is released to avoid conflicting with EXIT
             break;
         }
@@ -1525,7 +1525,7 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         //////// Draw mode button release
         switch (evt->button)
         {
-            case START:
+            case PB_START:
             {
                 if (!paintState->saveInProgress)
                 {
@@ -1543,27 +1543,27 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case BTN_A:
+            case PB_A:
             {
                 // Stop drawing
                 paintState->aHeld = false;
                 break;
             }
 
-            case BTN_B:
+            case PB_B:
             // Do nothing; color swap is handled on button down
             break;
 
-            case UP:
-            case DOWN:
-            case LEFT:
-            case RIGHT:
+            case PB_UP:
+            case PB_DOWN:
+            case PB_LEFT:
+            case PB_RIGHT:
             {
-                paintHandleDpad(evt->state & (UP | DOWN | LEFT | RIGHT));
+                paintHandleDpad(evt->state & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT));
                 break;
             }
 
-            case SELECT:
+            case PB_SELECT:
             // This is handled in BTN_MODE_SELECT already
             break;
         }
@@ -1574,20 +1574,20 @@ void paintHandleDpad(uint16_t state)
 {
     paintState->unhandledButtons |= state;
 
-    if (!(state & UP) != !(state & DOWN))
+    if (!(state & PB_UP) != !(state & PB_DOWN))
     {
         // Up or down, but not both, are pressed
-        paintState->moveY = (state & DOWN) ? 1 : -1;
+        paintState->moveY = (state & PB_DOWN) ? 1 : -1;
     }
     else
     {
         paintState->moveY = 0;
     }
 
-    if (!(state & LEFT) != !(state & RIGHT))
+    if (!(state & PB_LEFT) != !(state & PB_RIGHT))
     {
         // Left or right, but not both, are pressed
-        paintState->moveX = (state & RIGHT) ? 1 : -1;
+        paintState->moveX = (state & PB_RIGHT) ? 1 : -1;
     }
     else
     {

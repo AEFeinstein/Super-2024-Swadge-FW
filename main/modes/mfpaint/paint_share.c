@@ -1016,7 +1016,7 @@ void paintShareButtonCb(buttonEvt_t* evt)
         {
             switch (evt->button)
             {
-                case LEFT:
+                case PB_LEFT:
                 {
                     // Load previous image
                     paintShare->shareSaveSlot = paintGetPrevSlotInUse(paintShare->index, paintShare->shareSaveSlot);
@@ -1024,7 +1024,7 @@ void paintShareButtonCb(buttonEvt_t* evt)
                     paintShare->shareUpdateScreen = true;
                     break;
                 }
-                case RIGHT:
+                case PB_RIGHT:
                 {
                     // Load next image
                     paintShare->shareSaveSlot = paintGetNextSlotInUse(paintShare->index, paintShare->shareSaveSlot);
@@ -1033,7 +1033,7 @@ void paintShareButtonCb(buttonEvt_t* evt)
                     break;
                 }
 
-                case BTN_A:
+                case PB_A:
                 {
                     // Begin sharing!
                     paintBeginShare();
@@ -1041,30 +1041,30 @@ void paintShareButtonCb(buttonEvt_t* evt)
                     break;
                 }
 
-                case BTN_B:
+                case PB_B:
                 {
                     switchToSwadgeMode(&modePaint);
                     break;
                 }
 
-                case UP:
-                case DOWN:
+                case PB_UP:
+                case PB_DOWN:
                 // Do Nothing!
-                case SELECT:
-                case START:
+                case PB_SELECT:
+                case PB_START:
                 // Or do something on button up to avoid conflict with exit mode
                 break;
             }
         }
         else
         {
-            if (evt->button == SELECT)
+            if (evt->button == PB_SELECT)
             {
                 paintShare->shareSaveSlot = paintGetNextSlotInUse(paintShare->index, paintShare->shareSaveSlot);
                 paintShare->clearScreen = true;
                 paintShare->shareUpdateScreen = true;
             }
-            else if (evt->button == START)
+            else if (evt->button == PB_START)
             {
                 paintBeginShare();
                 paintShare->shareUpdateScreen = true;
@@ -1077,51 +1077,51 @@ void paintShareButtonCb(buttonEvt_t* evt)
         {
             switch (evt->button)
             {
-                case LEFT:
+                case PB_LEFT:
                 {
                     paintShare->shareSaveSlot = PREV_WRAP(paintShare->shareSaveSlot, PAINT_SAVE_SLOTS);
                     paintShare->shareUpdateScreen = true;
                     break;
                 }
 
-                case RIGHT:
+                case PB_RIGHT:
                 {
                     paintShare->shareSaveSlot = NEXT_WRAP(paintShare->shareSaveSlot, PAINT_SAVE_SLOTS);
                     paintShare->shareUpdateScreen = true;
                     break;
                 }
 
-                case BTN_A:
+                case PB_A:
                 {
                     paintShareDoSave();
                     switchToSwadgeMode(&modePaint);
                     break;
                 }
 
-                case BTN_B:
+                case PB_B:
                 {
                     // Exit without saving
                     switchToSwadgeMode(&modePaint);
                     break;
                 }
 
-                case UP:
-                case DOWN:
+                case PB_UP:
+                case PB_DOWN:
                 // Do Nothing!
-                case SELECT:
-                case START:
+                case PB_SELECT:
+                case PB_START:
                 // Or do something on button-up instead, to avoid overlap with SELECT+START
                 break;
             }
         }
         else
         {
-            if (evt->button == START)
+            if (evt->button == PB_START)
             {
                 paintShareDoSave();
                 switchToSwadgeMode(&modePaint);
             }
-            else if (evt->button == SELECT)
+            else if (evt->button == PB_SELECT)
             {
                 paintShare->shareSaveSlot = NEXT_WRAP(paintShare->shareSaveSlot, PAINT_SAVE_SLOTS);
                 paintShare->shareUpdateScreen = true;
@@ -1131,7 +1131,7 @@ void paintShareButtonCb(buttonEvt_t* evt)
         // Yes! They need to pick their destination slot before starting P2P
     } else if (paintShare->shareState == SHARE_SEND_COMPLETE)
     {
-        if (evt->down && evt->button == BTN_B)
+        if (evt->down && evt->button == PB_B)
         {
             switchToSwadgeMode(&modePaint);
         }
@@ -1142,7 +1142,7 @@ void paintShareButtonCb(buttonEvt_t* evt)
         }
     } else if (paintShare->shareState == SHARE_SEND_WAIT_FOR_CONN || paintShare->shareState == SHARE_RECV_WAIT_FOR_CONN)
     {
-        if (evt->down && evt->button == BTN_B)
+        if (evt->down && evt->button == PB_B)
         {
             switchToSwadgeMode(&modePaint);
         }
