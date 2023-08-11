@@ -426,7 +426,7 @@ void paintRenderShareMode(int64_t elapsedUs)
         fillDisplayArea(0, 0, paintShare->canvas.x, TFT_HEIGHT, SHARE_BG_COLOR);
 
         // Right side of screen
-        fillDisplayArea(paintShare->canvas.x + paintShare->canvas.w * paintShare->canvas.xScale, 0, TFT_WIDTH, TFT_HEIGHt, SHARE_BG_COLOR);
+        fillDisplayArea(paintShare->canvas.x + paintShare->canvas.w * paintShare->canvas.xScale, 0, TFT_WIDTH, TFT_HEIGHT, SHARE_BG_COLOR);
 
         // Bottom of screen
         fillDisplayArea(0, paintShare->canvas.y + paintShare->canvas.h * paintShare->canvas.yScale, TFT_WIDTH, TFT_HEIGHT, SHARE_BG_COLOR);
