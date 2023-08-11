@@ -11,6 +11,7 @@
 #include "hdw-btn.h"
 #include "esp_random.h"
 #include "aabb_utils.h"
+#include "trigonometry.h"
 
 //==============================================================================
 // Constants
@@ -782,9 +783,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
     {
         case ENTITY_PLAYER_PADDLE_BOTTOM:
             if(self->yspeed > 0){
-                self->yspeed=-32;
-                self->xspeed=CLAMP((self->x - other->x)/2,-80,80);
-            }       
+                setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, 63);
+            }
             break;
         default:
         {
@@ -1278,6 +1278,23 @@ void dieWhenFallingOffScreen(entity_t *self)
 void updateDummy(entity_t *self)
 {
     // Do nothing, because that's what dummies do!
+}
+
+void setVelocity(entity_t *self, int16_t direction, int16_t magnitude){
+    while (direction < 0)
+    {
+        direction += 360;
+    }
+    while (direction > 359)
+    {
+        direction -= 360;
+    }
+
+    int16_t sin  = getSin1024(direction);
+    int16_t cos  = getCos1024(direction);
+
+    self->xspeed = (magnitude * cos) / 1024;
+    self->yspeed = -(magnitude * sin) / 1024;
 }
 
 /*

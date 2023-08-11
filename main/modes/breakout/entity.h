@@ -135,6 +135,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
 void dieWhenFallingOffScreen(entity_t *self);
 
 void updateDummy(entity_t* self);
+void setVelocity(entity_t *self, int16_t direction, int16_t magnitude);
 
 void updateScrollLockLeft(entity_t* self);
 void updateScrollLockRight(entity_t* self);
