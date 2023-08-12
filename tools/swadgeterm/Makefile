@@ -1,4 +1,4 @@
-all : usblog
+all : swadgeterm
 
 UNAME := $(shell uname)
 
@@ -13,8 +13,8 @@ LDFLAGS:=C:/windows/system32/setupapi.dll
 endif
 
 
-usblog : usblog.c
+swadgeterm : swadgeterm.c
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
 clean :
-	rm -rf usblog
+	rm -rf swadgeterm
