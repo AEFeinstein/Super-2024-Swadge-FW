@@ -354,11 +354,6 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
     }
 }
 
-void paintGalleryModeTouchCb(touch_event_t* evt)
-{
-    paintGalleryModePollTouch();
-}
-
 void paintGalleryModePollTouch(void)
 {
     int32_t centroid, intensity;

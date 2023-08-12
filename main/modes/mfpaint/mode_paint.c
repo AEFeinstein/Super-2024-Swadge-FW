@@ -3,8 +3,8 @@
 
 #include "esp_log.h"
 
-#include "swadgeMode.h"
-#include "btn.h"
+#include "swadge2024.h"
+#include "hdw-btn.h"
 #include "menu.h"
 #include "menuLogbookRenderer.h"
 #include "swadge2024.h"
@@ -49,7 +49,7 @@ void paintEnterMode(void);
 void paintExitMode(void);
 void paintMainLoop(int64_t elapsedUs);
 void paintButtonCb(buttonEvt_t* evt);
-void paintTouchCb(touch_event_t* evt);
+void paintTouchCb(buttonEvt_t* evt);
 void paintMainMenuCb(const char* opt);
 void paintNetworkMenuCb(const char* opt);
 void paintSettingsMenuCb(const char* opt);
@@ -282,7 +282,7 @@ void paintButtonCb(buttonEvt_t* evt)
     }
 }
 
-void paintTouchCb(touch_event_t* evt)
+void paintTouchCb(buttonEvt_t* evt)
 {
     if (paintMenu->screen == PAINT_DRAW || paintMenu->screen == PAINT_HELP)
     {
@@ -290,7 +290,8 @@ void paintTouchCb(touch_event_t* evt)
     }
     else if (paintMenu->screen == PAINT_GALLERY)
     {
-        paintGalleryModeTouchCb(evt);
+        // TODO: Make sure the gallery does its touch events
+        // I deleted the callback because
     }
 }
 

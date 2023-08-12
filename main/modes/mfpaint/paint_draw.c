@@ -1426,7 +1426,7 @@ void paintDrawScreenPollTouch()
     }
 }
 
-void paintDrawScreenTouchCb(const touch_event_t* evt)
+void paintDrawScreenTouchCb(const buttonEvt_t* evt)
 {
     // Call the centroid polling function here too
     paintDrawScreenPollTouch();
