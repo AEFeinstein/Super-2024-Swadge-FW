@@ -1,6 +1,5 @@
 #include "paint_gallery.h"
 
-#include "mode_dance.h"
 #include "settingsManager.h"
 
 #include "mode_paint.h"
@@ -13,7 +12,7 @@
 static const char transitionTime[] = "Slideshow: %g sec";
 static const char transitionOff[] = "Slideshow: Off";
 static const char transitionTimeNvsKey[] = "paint_gal_time";
-static const char danceIndexKey[] = "paint_dance_idx";
+//static const char danceIndexKey[] = "paint_dance_idx";
 
 
 // Possible transition times, in ms
@@ -86,6 +85,7 @@ void paintGallerySetup(bool screensaver)
 
     paintGallery->gallerySpeed = US_PER_MS * transitionTimeMap[paintGallery->gallerySpeedIndex];
 
+    /* TODO: Add this back when LED dances are solved
     paintGallery->portableDances = initPortableDance(danceIndexKey);
     portableDanceDisableDance(paintGallery->portableDances, "Flashlight");
 
@@ -93,6 +93,7 @@ void paintGallerySetup(bool screensaver)
     {
         portableDanceSetByName(paintGallery->portableDances, "None");
     }
+    */
 
 
     // clear LEDs, which might still be set by menu
@@ -105,14 +106,14 @@ void paintGalleryCleanup(void)
 {
     freeFont(&paintGallery->infoFont);
     freeWsg(&paintGallery->arrow);
-    freePortableDance(paintGallery->portableDances);
+    //freePortableDance(paintGallery->portableDances);
     free(paintGallery);
 }
 
 void paintGalleryMainLoop(int64_t elapsedUs)
 {
     paintGalleryModePollTouch();
-    portableDanceMainLoop(paintGallery->portableDances, elapsedUs);
+    //portableDanceMainLoop(paintGallery->portableDances, elapsedUs);
 
     if (paintGallery->infoTimeRemaining > 0)
     {
@@ -208,8 +209,8 @@ void paintGalleryDrawUi(void)
     }
 
     // Draw the LED dance at the bottom
-    snprintf(text, sizeof(text), "LEDs: %s", portableDanceGetName(paintGallery->portableDances));
-    paintGalleryAddInfoText(text, -1, true, 'L', 'R');
+    //snprintf(text, sizeof(text), "LEDs: %s", portableDanceGetName(paintGallery->portableDances));
+    //paintGalleryAddInfoText(text, -1, true, 'L', 'R');
 }
 
 void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char leftArrow, char rightArrow)
@@ -309,14 +310,14 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
 
             case PB_LEFT:
             {
-                portableDancePrev(paintGallery->portableDances);
+                //portableDancePrev(paintGallery->portableDances);
                 paintGallery->showUi = true;
                 break;
             }
 
             case PB_RIGHT:
             {
-                portableDanceNext(paintGallery->portableDances);
+                //portableDanceNext(paintGallery->portableDances);
                 paintGallery->showUi = true;
                 break;
             }

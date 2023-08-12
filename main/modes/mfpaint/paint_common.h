@@ -357,7 +357,7 @@ typedef struct
     int64_t gallerySpeed;
     int32_t gallerySpeedIndex;
 
-    portableDance_t* portableDances;
+    //portableDance_t* portableDances;
 
     // Reaining time that info text will be shown
     int64_t infoTimeRemaining;
