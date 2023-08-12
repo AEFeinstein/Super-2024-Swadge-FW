@@ -50,7 +50,7 @@ static uint8_t did_init_flash_function;
  * @param data Pointer to a feature get request for the command set.
  * @return Number of bytes that will be returned.
  */
-int handle_advanced_usb_control_get(int reqLen, uint8_t* data)
+int handle_advanced_usb_control_get(uint8_t* data, int reqLen)
 {
     if (advanced_usb_read_offset == 0)
     {
@@ -124,7 +124,7 @@ int uprintf(const char* fmt, ...)
  * @param data The data that we will write back into
  * @return size Number of bytes to be returned to the host.
  */
-int handle_advanced_usb_terminal_get(int reqLen, uint8_t* data)
+int handle_advanced_usb_terminal_get(uint8_t* data, int reqLen)
 {
     if (NULL == advanced_usb_printf_buffer)
     {
@@ -161,7 +161,7 @@ int handle_advanced_usb_terminal_get(int reqLen, uint8_t* data)
  * @param datalen Total length of the buffer (command ID included)
  * @param data Pointer to full command
  */
-void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
+void IRAM_ATTR handle_advanced_usb_control_set(const uint8_t* data, int datalen)
 {
     if (datalen < 6)
     {
