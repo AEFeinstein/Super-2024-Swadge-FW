@@ -1,7 +1,7 @@
 all : reboot
 
 reboot : bootload_reboot_stub.bin
-	esptool.py --before no_reset --after no_reset --port /dev/ttyACM0 load_ram bootload_reboot_stub.bin 
+	esptool.py --before no_reset --after no_reset load_ram bootload_reboot_stub.bin
 
 bootload_reboot_stub.bin : bootload_reboot_stub.o
 	xtensa-esp32s2-elf-objcopy -O binary bootload_reboot_stub.o bootload_reboot_stub.bin

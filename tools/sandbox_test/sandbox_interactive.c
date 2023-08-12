@@ -82,7 +82,7 @@ int main( int argc, char ** argv )
 		rdata[0] = 172;
 		r = hid_get_feature_report( hd, rdata, 513 );
 #ifdef WIN32
-		int toprint = r - 3;
+		int toprint = r - 4;
 #else
 		int toprint = r - 2;
 #endif
