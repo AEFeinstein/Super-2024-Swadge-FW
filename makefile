@@ -282,10 +282,8 @@ firmware:
 usbflash :
 	make -C tools/reboot_into_bootloader
 	idf.py flash
-	make -C tools/bootload_reboot_stub bootload_reboot_stub.bin
-	esptool.py --before no_reset --after no_reset --after no_reset load_ram tools/bootload_reboot_stub/bootload_reboot_stub.bin
+	make -C tools/bootload_reboot_stub reboot
 	make -C tools/swadgeterm term
-	tools/swadgeterm/swadgeterm
 
 ################################################################################
 # cppcheck targets
