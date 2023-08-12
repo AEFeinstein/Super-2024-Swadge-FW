@@ -10,7 +10,7 @@ else
 CFLAGS:=-Os -s
 CC:=gcc
 LDFLAGS:=C:/windows/system32/setupapi.dll
-RCMD:=./reboot_swadge_into_bootloader.exe
+RCMD:=reboot_swadge_into_bootloader.exe
 endif
 
 all : $(RCMD) reboot
