@@ -7,6 +7,7 @@
 #include "mainMenu.h"
 #include "demoMode.h"
 #include "pong.h"
+#include "lumberjack.h"
 #include "mode_colorchord.h"
 
 #include "settingsManager.h"
@@ -90,6 +91,7 @@ static void mainMenuEnterMode(void)
     // Add single items
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
 
     // Start a submenu for settings
@@ -167,6 +169,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pongMode.modeName)
         {
             switchToSwadgeMode(&pongMode);
+        }
+        else if (label == lumberjackMode.modeName)
+        {
+            switchToSwadgeMode(&lumberjackMode);
         }
         else if (label == colorchordMode.modeName)
         {

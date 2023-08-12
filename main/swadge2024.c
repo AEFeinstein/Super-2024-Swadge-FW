@@ -140,6 +140,7 @@
 
 #include "swadge2024.h"
 #include "mainMenu.h"
+#include "lumberjack.h"
 
 //==============================================================================
 // Defines
@@ -190,7 +191,7 @@ void app_main(void)
     initNvs(true);
 
     // Assume the main menu is shown
-    cSwadgeMode = &mainMenuMode;
+    cSwadgeMode = &lumberjackMode;
 
     // If the ESP woke from sleep, and there is a pending Swadge Mode
     if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
