@@ -2,7 +2,7 @@
 
 #include "paint_common.h"
 
-#include "bresenham.h"
+#include "shapes.h"
 
 paletteColor_t getContrastingColor(paletteColor_t col)
 {
@@ -77,7 +77,7 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
 
             if (x == stop)
             {
-                plotLineScaled(x, y, x, y + yDir * waveHeight, col, 0, xTr, yTr, xScale, yScale);
+                drawLineScaled(x, y, x, y + yDir * waveHeight, col, 0, xTr, yTr, xScale, yScale);
                 y += yDir * waveHeight;
                 yDir = -yDir;
                 stop = x + waveLength * xDir;
@@ -98,7 +98,7 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
 
             if (y == stop)
             {
-                plotLineScaled(x, y, x + xDir * waveHeight, y, col, 0, xTr, yTr, xScale, yScale);
+                drawLineScaled(x, y, x + xDir * waveHeight, y, col, 0, xTr, yTr, xScale, yScale);
                 x += xDir * waveHeight;
                 xDir = -xDir;
                 stop = y + waveLength * yDir;
@@ -109,18 +109,18 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
     }
 }
 
-void plotRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col)
+void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col)
 {
     if (x0 >= x1 || y0 >= y1)
     {
-        PAINT_LOGE("Attempted to plot invalid rect plotRectFilled(%d, %d, %d, %d). Returning to avoid segfault", x0, y0, x1, y1);
+        PAINT_LOGE("Attempted to plot invalid rect drawRectFilled(%d, %d, %d, %d). Returning to avoid segfault", x0, y0, x1, y1);
         return;
     }
 
     fillDisplayArea(x0, y0, x1 - 1, y1 - 1, col);
 }
 
-void plotRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void drawRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
     fillDisplayArea(xTr + x0 * xScale, yTr + y0 * yScale, xTr + (x1) * xScale, yTr + (y1) * yScale, col);
 }
@@ -142,7 +142,7 @@ void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColo
 
 void setPxScaled(int x, int y, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
-    plotRectFilledScaled(x, y, x + 1, y + 1, col, xTr, yTr, xScale, yScale);
+    drawRectFilledScaled(x, y, x + 1, y + 1, col, xTr, yTr, xScale, yScale);
 }
 
 bool paintDrawWsgTemp(const wsg_t* wsg, pxStack_t* saveTo, uint16_t xOffset, uint16_t yOffset, colorMapFn_t colorSwap)

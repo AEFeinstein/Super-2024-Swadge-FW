@@ -54,8 +54,8 @@ void paintGallerySetup(bool screensaver)
     paintGallery->screensaverMode = screensaver;
     // Show the UI at the start if we're a screensaver
     paintGallery->showUi = !screensaver;
-    loadFont("radiostars.font", &paintGallery->infoFont);
-    loadWsg("arrow12.wsg", &paintGallery->arrow);
+    loadFont("radiostars.font", &paintGallery->infoFont, false);
+    loadWsg("arrow12.wsg", &paintGallery->arrow, false);
 
     // Recolor the arrow to black
     colorReplaceWsg(&paintGallery->arrow, c555, c000);
@@ -96,9 +96,9 @@ void paintGallerySetup(bool screensaver)
 
 
     // clear LEDs, which might still be set by menu
-    led_t leds[NUM_LEDS];
-    memset(leds, 0, sizeof(led_t) * NUM_LEDS);
-    setLeds(leds, NUM_LEDS);
+    led_t leds[CONFIG_NUM_LEDS];
+    memset(leds, 0, sizeof(led_t) * CONFIG_NUM_LEDS);
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 void paintGalleryCleanup(void)
@@ -192,7 +192,7 @@ void paintGalleryDrawUi(void)
     paintGalleryAddInfoText(text, 1, false, 0, 0);
 
     // Draw the controls
-    snprintf(text, sizeof(text), "Y~X: LED Brightness: %d", getLedBrightness());
+    snprintf(text, sizeof(text), "Y~X: LED Brightness: %d", getLedBrightnessSetting());
     paintGalleryAddInfoText(text, 2, false, 0, 0);
 
 
@@ -221,21 +221,21 @@ void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char lef
 
     if (row < 0)
     {
-        yOffset = TFT_WIDTH + ((row) * (paintGallery->infoFont.h + padding * 2)) - GALLERY_INFO_Y_MARGIN;
+        yOffset = TFT_WIDTH + ((row) * (paintGallery->infoFont.height + padding * 2)) - GALLERY_INFO_Y_MARGIN;
     }
     else
     {
-        yOffset = GALLERY_INFO_Y_MARGIN + row * (paintGallery->infoFont.h + padding * 2);
+        yOffset = GALLERY_INFO_Y_MARGIN + row * (paintGallery->infoFont.height + padding * 2);
     }
 
-    fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + padding * 2 + paintGallery->infoFont.h, c555);
+    fillDisplayArea(0, yOffset, TFT_WIDTH, yOffset + padding * 2 + paintGallery->infoFont.height, c555);
 
     if (leftArrow != 0)
     {
         // assumes arrows are always square, flip between W and H if that's ever the case
         drawWsg(&paintGallery->arrow,
                 xOffset - GALLERY_ARROW_MARGIN - paintGallery->arrow.w,
-                yOffset + padding + (paintGallery->infoFont.h - paintGallery->arrow.h) / 2,
+                yOffset + padding + (paintGallery->infoFont.height - paintGallery->arrow.h) / 2,
                 false, false, arrowCharToRot(leftArrow));
     }
 
@@ -244,7 +244,7 @@ void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char lef
         // assumes arrows are always square, flip between W and H if that's ever the case
         drawWsg(&paintGallery->arrow,
                 xOffset + width + GALLERY_ARROW_MARGIN,
-                yOffset + padding + (paintGallery->infoFont.h - paintGallery->arrow.h) / 2,
+                yOffset + padding + (paintGallery->infoFont.height - paintGallery->arrow.h) / 2,
                 false, false, arrowCharToRot(rightArrow));
     }
 
@@ -321,7 +321,7 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
                 break;
             }
 
-            case START:
+            case PB_START:
             case PB_B:
             {
                 // Exit
@@ -329,7 +329,7 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
                 return;
             }
 
-            case SELECT:
+            case PB_SELECT:
             {
                 // Increase size
                 paintGallery->galleryScale++;
@@ -367,9 +367,9 @@ void paintGalleryModePollTouch(void)
         // But also reverse it so up is bright and down is less bright
         uint8_t curTouchSegment = ((centroid * 7 + 512) / 1024);
 
-        if (curTouchSegment != getLedBrightness())
+        if (curTouchSegment != getLedBrightnessSetting())
         {
-            setAndSaveLedBrightness(curTouchSegment);
+            setLedBrightnessSetting(curTouchSegment);
             paintGallery->showUi = true;
         }
     }

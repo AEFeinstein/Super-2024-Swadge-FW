@@ -89,7 +89,7 @@ void paintEnterMode(void)
     PAINT_LOGI("Allocating %zu bytes for paintMenu...", sizeof(paintMenu_t));
     paintMenu = calloc(1, sizeof(paintMenu_t));
 
-    loadFont("mm.font", &(paintMenu->menuFont));
+    loadFont("mm.font", &(paintMenu->menuFont), false);
 
     paintMenu->menu = initMeleeMenu(paintTitle, &(paintMenu->menuFont), paintMainMenuCb);
 

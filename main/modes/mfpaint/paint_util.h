@@ -1,7 +1,11 @@
 #ifndef _PAINT_UTIL_H_
 #define _PAINT_UTIL_H_
 
+#include <stdbool.h>
+#include <stdint.h>
+
 #include "palette.h"
+#include "wsg.h"
 
 #include "paint_type.h"
 #include "px_stack.h"
@@ -15,8 +19,8 @@ void colorReplaceWsg(wsg_t* wsg, paletteColor_t find, paletteColor_t replace);
 bool paintDrawWsgTemp(const wsg_t* wsg, pxStack_t* saveTo, uint16_t x, uint16_t y, colorMapFn_t colorSwap);
 
 void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t waveLength, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
-void plotRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col);
-void plotRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
+void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col);
+void drawRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
 void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColor_t replace);
 
 void setPxScaled(int x, int y, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);

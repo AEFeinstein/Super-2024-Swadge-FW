@@ -246,12 +246,12 @@ void paintShareCommonSetup(void)
 
     paintShare->connectionStarted = false;
 
-    if (!loadFont("radiostars.font", &paintShare->toolbarFont))
+    if (!loadFont("radiostars.font", &paintShare->toolbarFont, false))
     {
         PAINT_LOGE("Unable to load font!");
     }
 
-    if (!loadWsg("arrow12.wsg", &paintShare->arrowWsg))
+    if (!loadWsg("arrow12.wsg", &paintShare->arrowWsg, false))
     {
         PAINT_LOGE("Unable to load arrow WSG!");
     }
@@ -369,8 +369,8 @@ void paintShareRenderProgressBar(int64_t elapsedUs, uint16_t x, uint16_t y, uint
     }
 
     // Draw border
-    plotRect(x, y, x + w, y + h, SHARE_PROGRESS_BORDER);
-    plotRectFilled(x + 1, y + 1, x + w, y + h, SHARE_PROGRESS_BG);
+    drawRect(x, y, x + w, y + h, SHARE_PROGRESS_BORDER);
+    drawRectFilled(x + 1, y + 1, x + w, y + h, SHARE_PROGRESS_BG);
 
     if (!indeterminate)
     {
@@ -381,7 +381,7 @@ void paintShareRenderProgressBar(int64_t elapsedUs, uint16_t x, uint16_t y, uint
 
         // Now, we just draw a box at (progress * (width) / maxProgress)
         uint16_t size = (progress > maxProgress ? maxProgress : progress) * w / maxProgress;
-        plotRectFilled(x + 1, y + 1, x + size, y + h, SHARE_PROGRESS_FG);
+        drawRectFilled(x + 1, y + 1, x + size, y + h, SHARE_PROGRESS_FG);
     }
     else
     {
@@ -398,18 +398,18 @@ void paintShareRenderProgressBar(int64_t elapsedUs, uint16_t x, uint16_t y, uint
             {
                 // Split the segment into two parts
                 // From x0 to MAX
-                plotRectFilled(x + 1 + x0, y + 1, x + w, y + h, SHARE_PROGRESS_FG);
+                drawRectFilled(x + 1 + x0, y + 1, x + w, y + h, SHARE_PROGRESS_FG);
 
                 if (x1 != 0)
                 {
                     // From 0 to x1
                     // Don't draw this if x1 == 0, because then x + 1 == x + 1 + x1, and there would be no box
-                    plotRectFilled(x + 1, y + 1, x + 1 + x1, y + h, SHARE_PROGRESS_FG);
+                    drawRectFilled(x + 1, y + 1, x + 1 + x1, y + h, SHARE_PROGRESS_FG);
                 }
             }
             else
             {
-                plotRectFilled(x + 1 + x0, y + 1, x + 1 + x1, y + h, SHARE_PROGRESS_FG);
+                drawRectFilled(x + 1 + x0, y + 1, x + 1 + x1, y + h, SHARE_PROGRESS_FG);
             }
         }
     }
@@ -433,7 +433,7 @@ void paintRenderShareMode(int64_t elapsedUs)
         fillDisplayArea(0, paintShare->canvas.y + paintShare->canvas.h * paintShare->canvas.yScale, TFT_WIDTH, TFT_HEIGHT, SHARE_BG_COLOR);
 
         // Border the canvas
-        plotRect(paintShare->canvas.x - 1, paintShare->canvas.y - 1, paintShare->canvas.x + paintShare->canvas.w * paintShare->canvas.xScale + 1, paintShare->canvas.y + paintShare->canvas.h * paintShare->canvas.yScale + 1, SHARE_CANVAS_BORDER);
+        drawRect(paintShare->canvas.x - 1, paintShare->canvas.y - 1, paintShare->canvas.x + paintShare->canvas.w * paintShare->canvas.xScale + 1, paintShare->canvas.y + paintShare->canvas.h * paintShare->canvas.yScale + 1, SHARE_CANVAS_BORDER);
     }
     else
     {
@@ -500,31 +500,31 @@ void paintRenderShareMode(int64_t elapsedUs)
 #endif
 
     // debug lines
-    //plotLine(paintShare->disp, 0, SHARE_TOP_MARGIN, paintShare->disp->w, SHARE_TOP_MARGIN, c000, 2);
-    //plotLine(paintShare->disp, 0, paintShare->disp->h - SHARE_BOTTOM_MARGIN, paintShare->disp->w, paintShare->disp->h - SHARE_BOTTOM_MARGIN, c000, 2);
+    //drawLine(paintShare->disp, 0, SHARE_TOP_MARGIN, paintShare->disp->w, SHARE_TOP_MARGIN, c000, 2);
+    //drawLine(paintShare->disp, 0, paintShare->disp->h - SHARE_BOTTOM_MARGIN, paintShare->disp->w, paintShare->disp->h - SHARE_BOTTOM_MARGIN, c000, 2);
 
     paintShareRenderProgressBar(elapsedUs, SHARE_PROGRESS_LEFT, 0, TFT_WIDTH - SHARE_PROGESS_RIGHT - SHARE_PROGRESS_LEFT, SHARE_TOP_MARGIN);
 
     // Draw the text over the progress bar
     uint16_t w = textWidth(&paintShare->toolbarFont, text);
-    uint16_t y = (SHARE_TOP_MARGIN - paintShare->toolbarFont.h) / 2;
+    uint16_t y = (SHARE_TOP_MARGIN - paintShare->toolbarFont.height) / 2;
     drawText(&paintShare->toolbarFont, c000, text, (TFT_WIDTH - w) / 2, y);
     if (arrows)
     {
         // flip instead of using rotation to prevent 1px offset
-        drawWsg(&paintShare->arrowWsg, (TFT_WIDTH - w) / 2 - paintShare->arrowWsg.w - 6, y + (paintShare->toolbarFont.h - paintShare->arrowWsg.h) / 2, false, true, 90);
-        drawWsg(&paintShare->arrowWsg, (TFT_WIDTH - w) / 2 + w + 6, y + (paintShare->toolbarFont.h - paintShare->arrowWsg.h) / 2, false, false, 90);
+        drawWsg(&paintShare->arrowWsg, (TFT_WIDTH - w) / 2 - paintShare->arrowWsg.w - 6, y + (paintShare->toolbarFont.height - paintShare->arrowWsg.h) / 2, false, true, 90);
+        drawWsg(&paintShare->arrowWsg, (TFT_WIDTH - w) / 2 + w + 6, y + (paintShare->toolbarFont.height - paintShare->arrowWsg.h) / 2, false, false, 90);
     }
 
     if (bottomText != NULL)
     {
         if (paintShare->canvas.h > 0 && paintShare->canvas.yScale > 0)
         {
-            y = paintShare->canvas.y + paintShare->canvas.h * paintShare->canvas.yScale + (TFT_HEIGHT - paintShare->canvas.y - paintShare->canvas.h * paintShare->canvas.yScale - paintShare->toolbarFont.h) / 2;
+            y = paintShare->canvas.y + paintShare->canvas.h * paintShare->canvas.yScale + (TFT_HEIGHT - paintShare->canvas.y - paintShare->canvas.h * paintShare->canvas.yScale - paintShare->toolbarFont.height) / 2;
         }
         else
         {
-            y = TFT_HEIGHT - paintShare->toolbarFont.h - 8;
+            y = TFT_HEIGHT - paintShare->toolbarFont.height - 8;
         }
 
         w = textWidth(&paintShare->toolbarFont, bottomText);
@@ -590,7 +590,7 @@ void paintShareHandleCanvas(void)
     paintShare->canvas.y = SHARE_TOP_MARGIN + (TFT_HEIGHT - SHARE_TOP_MARGIN - SHARE_BOTTOM_MARGIN - paintShare->canvas.h * paintShare->canvas.yScale) / 2;
 
     clearPxTft();
-    plotRectFilledScaled(0, 0, paintShare->canvas.w, paintShare->canvas.h, c555, paintShare->canvas.x, paintShare->canvas.y, paintShare->canvas.xScale, paintShare->canvas.yScale);
+    drawRectFilledScaled(0, 0, paintShare->canvas.w, paintShare->canvas.h, c555, paintShare->canvas.x, paintShare->canvas.y, paintShare->canvas.xScale, paintShare->canvas.yScale);
 
     paintShare->shareState = SHARE_RECV_PIXEL_DATA;
     paintShareSendPixelRequest();

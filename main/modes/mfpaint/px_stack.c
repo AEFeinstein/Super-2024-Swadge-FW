@@ -1,6 +1,9 @@
 #include "px_stack.h"
 
 #include <malloc.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 #include "paint_common.h"
 #include "paint_util.h"
@@ -93,7 +96,7 @@ bool pushPx(pxStack_t* pxStack, uint16_t x, uint16_t y)
     pxStack->index++;
     pxStack->data[pxStack->index].x = x;
     pxStack->data[pxStack->index].y = y;
-    pxStack->data[pxStack->index].col = getPx(x, y);
+    pxStack->data[pxStack->index].col = getPxTft(x, y);
 
     return true;
 }
