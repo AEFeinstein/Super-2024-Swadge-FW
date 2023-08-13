@@ -7,7 +7,8 @@ enum lumberjackPlayerState {
     LUMBERJACK_RUN = 2,
     LUMBERJACK_DUCK = 3,
     LUMBERJACK_VICTORY = 4,
-    LUMBERJACK_CLIMB = 5
+    LUMBERJACK_CLIMB = 5,
+    LUMBERJACK_FALLING = 6
 };
 
 //Animation speeds
@@ -18,6 +19,7 @@ int lumberjackAnimationNone[] = {0};
 int lumberjackAnimationIdle[] = {0, 1, 2, 1};
 int lumberjackAnimationRun[] = {7, 8, 9, 10, 11, 12};
 int lumberjackAnimationDuck[] = {16};
+int lumberjackAnimationFall[] = {13};
 int lumberjackAnimationDead[] = {14};
 int lumberjackAnimationVictory[] = {15};
 int lumberjackAnimationClimb[] = {17 ,18,19,20};

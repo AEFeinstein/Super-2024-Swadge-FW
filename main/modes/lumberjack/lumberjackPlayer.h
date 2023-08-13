@@ -9,10 +9,16 @@ typedef struct
 {
     wsg_t frames[21];
     bool flipped;
+    bool onGround;
+    bool jumping;
+    bool jumpPressed;
     int state;
     int currentFrame;
     int x;
     int y;
+    int tx;
+    int ty;
+    int h;
     int animationSpeed;
     int64_t timerFrameUpdate;
 } lumberjackHero_t;

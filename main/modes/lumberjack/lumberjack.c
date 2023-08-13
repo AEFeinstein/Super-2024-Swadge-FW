@@ -12,15 +12,18 @@
 static void lumberjackEnterMode(void);
 static void lumberjackExitMode(void);
 static void lumberjackMainLoop(int64_t elapsedUs);
+static void lumberjackMenuLoop(int64_t elapsedUs);
+static void lumberjackGameLoop(int64_t elapsedUs);
 static void lumberjackAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
-static int16_t lumberjackAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
 static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt);
 static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
+static void lumberjackDoControls(void);
+static void lumberjackTileMap(void);
 
 //static void lumberjackMenuCb(const char*, bool selected, uint32_t settingVal);
 
@@ -41,7 +44,7 @@ swadgeMode_t lumberjackMode = {
     .fnBackgroundDrawCallback = lumberjackBackgroundDrawCallback,
     .fnEspNowRecvCb           = lumberjackEspNowRecvCb,
     .fnEspNowSendCb           = lumberjackEspNowSendCb,
-    .fnAdvancedUSB            = lumberjackAdvancedUSB,
+    .fnAdvancedUSB            = NULL,
 };
 lumberjackVars_t* lumv;
 
@@ -61,6 +64,18 @@ static void lumberjackEnterMode(void)
     loadWsg("bottom_floor8.wsg", &lumv->floorTiles[7], true);
     loadWsg("bottom_floor9.wsg", &lumv->floorTiles[8], true);
     loadWsg("bottom_floor10.wsg", &lumv->floorTiles[9], true);
+    loadWsg("water_floor1.wsg", &lumv->animationTiles[0], true);
+    loadWsg("water_floor2.wsg", &lumv->animationTiles[1], true);
+    loadWsg("water_floor3.wsg", &lumv->animationTiles[2], true);
+    loadWsg("water_floor4.wsg", &lumv->animationTiles[3], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[4], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[5], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[6], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[7], true);
+    loadWsg("water_floor_b1.wsg", &lumv->animationTiles[8], true);
+    loadWsg("water_floor_b2.wsg", &lumv->animationTiles[9], true);
+    loadWsg("water_floor_b3.wsg", &lumv->animationTiles[10], true);
+    loadWsg("water_floor_b4.wsg", &lumv->animationTiles[11], true);
 
     //Init menu :(
 
@@ -72,7 +87,7 @@ static void lumberjackEnterMode(void)
     p2pSendMsg(&lumv->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
 
     lumv->worldTimer = 0;
-
+    lumv->liquidAnimationFrame = 0;
     //High score stuff?
 
     //Setup first level
@@ -81,17 +96,64 @@ static void lumberjackEnterMode(void)
 
 void lumberjackSetupLevel(int index)
 {
-    ESP_LOGI("LUM", "Hi");
+    ESP_LOGI("LUM", "Hy %d", index);
 
+    lumv->yOffset = 0;
 
     lumv->localPlayer = calloc (1, sizeof(lumberjackHero_t));
     lumberjackSetupPlayer(lumv->localPlayer, 0);
-    lumberjackSpawnPlayer(lumv->localPlayer, 150, 160, 0);
+    lumberjackSpawnPlayer(lumv->localPlayer, 94, 0, 0);
 
     // lumv->remotePlayer = calloc (1, sizeof(lumberjackHero_t));
     // lumberjackSetupPlayer(lumv->remotePlayer, 1);
     // lumberjackSpawnPlayer(lumv->remotePlayer, 100, 160, 1);
-    
+    memcpy(lumv->tiles ,(int[]) {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0,
+    4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 0, 0, 0,
+    0, 0, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 10, 0, 0, 0,
+    }, sizeof lumv->tiles);
+
+    memcpy(lumv->anim, (int[]){
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 3, 1,
+    2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2,
+    }, sizeof * lumv->anim);
 }
 
 
@@ -107,55 +169,245 @@ static void lumberjackExitMode(void)
 
 static void lumberjackMainLoop(int64_t elapsedUs)
 {
+    lumberjackGameLoop(elapsedUs);
+}
+
+static void lumberjackMenuLoop(int64_t elapsedUs)
+{
+
+}
+
+static void lumberjackGameLoop(int64_t elapsedUs)
+{
+    //Update State
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        lumv->btnState = evt.state;
+    }
+
     //Check Controls
-    //lumberjackDoControls();
+    lumberjackDoControls();
   
-    //update animations
+
+    //Check physics
+   //push down on player
+    bool playerOnGround = false;
+    
+    //Take player's current y and shift down one pixel
+    int checkPoint = lumv->localPlayer->y + 25;
+    
+    int tileCheck = 0;
+    
+    if (lumv->localPlayer->h > 0)
+    {
+        lumv->localPlayer->x += 5;
+    }
+    else if (lumv->localPlayer->h < 0)
+    {
+        lumv->localPlayer->x -= 5;
+    }
+
+    //World wrap
+    lumv->localPlayer->x %= 295;
+    if (lumv->localPlayer->x < -20)
+    {
+        lumv->localPlayer->x += 295;
+    }
+    
+    //Crude
+    lumv->localPlayer->tx = (int)(lumv->localPlayer->x / 16);
+
+    if (lumv->localPlayer->tx < 0) lumv->localPlayer->tx = 0;
+    if (lumv->localPlayer->tx > 18) lumv->localPlayer->tx = 18;
+
+    lumv->localPlayer->ty = (int)(lumv->localPlayer->y / 16);
+
+    if (lumv->localPlayer->ty < 0) lumv->localPlayer->ty = 0;
+    if (lumv->localPlayer->ty > 18) lumv->localPlayer->ty = 18; //Kill player
+
+
+    //(lumv->localPlayer->ty * 20)+lumv->localPlayer->tx
+    //Do two checks
+    int tx1,tx2,ty;
+    for (int yMod = 0; yMod < 8; yMod++)
+    {
+
+        tx1 = (int)((lumv->localPlayer->x ) / 16);
+        tx2 = (int)((lumv->localPlayer->x + 16) / 16);
+
+        if (tx1 < 0) tx1 = 0;
+        if (tx1 > 18) tx1 = 18;
+        if (tx2 < 0) tx2 = 0;
+        if (tx2 > 18) tx2 = 18;
+        ty = (int)((lumv->localPlayer->y+48) / 16);//(int)((lumv->localPlayer->ty) / 16);
+
+        if (ty < 0) ty = 0;
+        if (ty > 20) ty = 20;// This is going to cause problems later
+
+        int tileCheck1 = lumv->tiles[(ty * 18) + tx1];
+        int tileCheck2 = lumv->tiles[(ty * 18) + tx2];
+
+        playerOnGround = (tileCheck1 != 0 && tileCheck1 != 1 && tileCheck1 != 6 && tileCheck1 != 5 && tileCheck1 != 10);
+        
+        if (playerOnGround == false)
+        {
+            playerOnGround = (tileCheck2 != 0 && tileCheck2 != 1 && tileCheck2 != 6 && tileCheck2 != 5 && tileCheck2 != 10);
+        }
+
+        if (playerOnGround == false)
+        {
+            lumv->localPlayer->y++;
+        }
+        else
+        {
+            break;
+        }
+
+    }
+
+    lumv->localPlayer->onGround = playerOnGround;
+
+    //ESP_LOGI("LUM", "%d %d %d %d", tx1, tx2, lumv->localPlayer->y, ty);
+    
     lumv->worldTimer += elapsedUs;
+
     if (lumv->worldTimer > 150500)
     {
         lumv->worldTimer -= 150500;
+        lumv->liquidAnimationFrame++;
+        lumv->liquidAnimationFrame %=4;
     }
 
-    // lumv->remotePlayer->timerFrameUpdate += elapsedUs;
-
-    // if (lumv->remotePlayer->timerFrameUpdate > 150500)
-    // {
-    //     lumv->remotePlayer->currentFrame++;
-    //     lumv->remotePlayer->currentFrame %= 3;
-    //     lumv->remotePlayer->timerFrameUpdate -= 150500;
-    // }
-
     lumv->localPlayer->timerFrameUpdate += elapsedUs;
-
     if (lumv->localPlayer->timerFrameUpdate > lumv->localPlayer->animationSpeed)
     {
         lumv->localPlayer->currentFrame++;
-        lumv->localPlayer->timerFrameUpdate -= lumv->localPlayer->animationSpeed;
+        lumv->localPlayer->timerFrameUpdate = 0;//;
     }
 
+    lumv->yOffset = lumv->localPlayer->y - 16;
+    if (lumv->yOffset < 16) lumv->yOffset = 16;
+    if (lumv->yOffset > 96) lumv->yOffset = 96;
 
     //Draw section
-    fillDisplayArea ( 0,0, 300,256,c145); 	
+    fillDisplayArea ( 0,0, 280,256,c145); 	
 
     //Redraw bottom
-    drawWsgSimple(&lumv->floorTiles[0], 16, 208);
-    drawWsgSimple(&lumv->floorTiles[5], 16, 224);
-    for (int i = 0; i < 13; i++)
-    {
-        drawWsgSimple(&lumv->floorTiles[1], 32 + (i * 16), 208);
-        drawWsgSimple(&lumv->floorTiles[7], 32 + (i * 16), 224);
-    }
-
-    drawWsgSimple(&lumv->floorTiles[2], 240, 176);
-    drawWsgSimple(&lumv->floorTiles[3], 240, 192);
-    drawWsgSimple(&lumv->floorTiles[4], 240, 208);
-    drawWsgSimple(&lumv->floorTiles[9], 240, 224);
+    lumberjackTileMap();
 
     int currentFrame = lumberjackGetPlayerAnimation(lumv->localPlayer);
-    ESP_LOGI("LUM", "%ld %d", sizeof(int), currentFrame);
     //drawWsg(&lumv->remotePlayer->frames[lumv->remotePlayer->currentFrame], lumv->remotePlayer->x, lumv->remotePlayer->y, lumv->remotePlayer->flipped, false, 0);
-    drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x, lumv->localPlayer->y, lumv->localPlayer->flipped, false, 0);
+    drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
+
+    if (lumv->localPlayer->x > 270)
+    {
+        drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 295, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
+    }
+
+    //Debug
+    char debug[16] ={0};        
+    snprintf(debug, sizeof(debug), "CellX: %d %d", lumv->localPlayer->x, lumv->localPlayer->y);
+
+    drawText(&lumv->ibm, c000, debug, 16, 16);
+
+    if (lumv->localPlayer->jumpPressed)
+    {
+        drawText(&lumv->ibm, c555, "A", 16, 32);
+    }   
+    else
+    {
+        drawText(&lumv->ibm, c000, "A", 16, 32);
+    }
+
+}
+
+static void lumberjackTileMap()
+{
+    for (int y = 0; y < 21; y++)
+    {
+        for (int x = 0; x < 18; x++)
+        {
+            int tileIndex = lumv->tiles[ (y * 18) + x];
+            int animIndex = lumv->anim[(y * 18) + x];
+
+            if ((y * 16) - lumv->yOffset >= -16)
+            {
+                if (animIndex > 0 && animIndex < 4)
+                {
+                    drawWsgSimple(&lumv->animationTiles[((animIndex - 1) * 4) + (lumv->liquidAnimationFrame % 4)],-4 + x * 16, (y * 16) - lumv->yOffset + 8);
+                }
+
+                if (tileIndex > 0 && tileIndex < 13)
+                {
+                    if (tileIndex < 11)
+                    {
+                        drawWsgSimple(&lumv->floorTiles[tileIndex - 1],x * 16, (y * 16) - lumv->yOffset);
+                    }
+                }
+            }
+
+        }
+    }
+}
+
+static void lumberjackDoControls()
+{
+    int previousState = lumv->localPlayer->state;
+    bool buttonPressed = false;
+    if (lumv->btnState & PB_LEFT)
+    {
+        lumv->localPlayer->flipped = true;
+        lumv->localPlayer->state = 2;
+        lumv->localPlayer->h = -1;
+        buttonPressed = true;
+    }
+    else if (lumv->btnState & PB_RIGHT)
+    {
+        lumv->localPlayer->flipped = false;
+        lumv->localPlayer->state = 2;
+        lumv->localPlayer->h = 1;
+
+        buttonPressed = true;
+    }
+    else
+    {
+        lumv->localPlayer->h = 0;
+    }
+    
+    if (lumv->btnState & PB_DOWN)
+    {
+        buttonPressed = true;
+        if (lumv->localPlayer->onGround)
+        {
+            lumv->localPlayer->state = 3;
+        }
+    }
+    else if (lumv->btnState & PB_UP)
+    {
+        buttonPressed = true;
+    }
+
+    //TODO: This is sloppy Troy
+    if (lumv->btnState & PB_A)
+    {
+        lumv->localPlayer->jumpPressed = true;
+    }
+    else
+    {
+        lumv->localPlayer->jumpPressed = false;
+    }
+
+    if (buttonPressed == false)
+    {
+        lumv->localPlayer->state = 1; //Do a ton of other checks here
+    }
+
+    if (lumv->localPlayer->state != previousState)
+    {
+        //lumv->localPlayer->currentFrame = 0;
+        lumv->localPlayer->timerFrameUpdate = 0;
+    }
 }
 
 static void lumberjackAudioCallback(uint16_t* samples, uint32_t sampleCnt)
@@ -178,10 +430,6 @@ static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
     p2pSendCb(&lumv->p2p, mac_addr, status);
 }
 
-static int16_t lumberjackAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
-{
-    return 0;
-}
 
 static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
 {

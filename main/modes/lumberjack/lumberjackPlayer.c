@@ -1,5 +1,6 @@
-#include "lumberjackPlayer.h"
+
 #include "lumberjack_types.h"
+#include "lumberjackPlayer.h"
 
 void lumberjackSetupPlayer(lumberjackHero_t* hero, int character)
 {
@@ -61,11 +62,22 @@ void lumberjackSpawnPlayer(lumberjackHero_t* hero, int x, int y, int facing)
     hero->y = y;
     hero->flipped = (facing == 0);
     hero->state = LUMBERJACK_IDLE;
+    hero->timerFrameUpdate = 0;
+    hero->onGround = true;
 }
 
 int lumberjackGetPlayerAnimation(lumberjackHero_t* hero)
 {
     int animation =  hero->state;
+    hero->animationSpeed = 150000;
+
+    if (hero->onGround == false && hero->jumping == false)
+    {
+        //lumberjackAnimationFall
+        return lumberjackAnimationFall[hero->currentFrame % ((int)( sizeof(lumberjackAnimationFall) / sizeof(lumberjackAnimationFall[0])) )];
+
+    }
+    
     if (animation == LUMBERJACK_DUCK)
     {        
         hero->animationSpeed = 150000;
