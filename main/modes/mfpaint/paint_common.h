@@ -380,9 +380,9 @@ typedef struct
     // Main Menu Font
     font_t menuFont;
     // Main Menu
-    meleeMenu_t* menu;
+    menu_t* menu;
+    menuLogbookRenderer_t* menuRenderer;
 
-    uint16_t menuSelection, networkMenuSelection, settingsMenuSelection;
     uint8_t eraseSlot;
 
     bool eraseDataSelected, eraseDataConfirm;

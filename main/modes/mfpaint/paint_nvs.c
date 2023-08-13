@@ -1,16 +1,53 @@
 #include "paint_nvs.h"
 
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
+
 #include "settingsManager.h"
+#include "hdw-nvs.h"
+#include "macros.h"
 
 #include "paint_common.h"
 #include "paint_draw.h"
 #include "paint_ui.h"
 #include "paint_util.h"
 
+#define PAINT_PARAM(m, x, k, d) \
+static const settingParam_t paint##k##Param = { \
+    .min = m, \
+    .max = x, \
+    .def = d, \
+    .key = "mfp." #k \
+}
+
+#define PAINT_BOOL_PARAM(k, d) PAINT_PARAM((0), (1), k, d)
+
+#define PAINT_BIT_PARAM(k) PAINT_PARAM(INT32_MIN, INT32_MAX, k, 0)
+
 static const char KEY_PAINT_INDEX[] = "pnt_idx";
 static const char KEY_PAINT_SLOT_PALETTE[] = "paint_%02d_pal";
 static const char KEY_PAINT_SLOT_DIM[] = "paint_%02d_dim";
 static const char KEY_PAINT_SLOT_CHUNK[] = "paint_%02dc%05u";
+
+/*static const settingParam_t paintOldIndex = {
+    .min = INT32_MIN,
+    .max = INT32_MAX,
+    .def = 0,
+    .key = KEY_PAINT_INDEX,
+};*/
+
+PAINT_BIT_PARAM(InUseSlot);
+PAINT_BIT_PARAM(RecentSlot);
+PAINT_BOOL_PARAM(EnableLeds, true);
+PAINT_BOOL_PARAM(EnableBlink, true);
+PAINT_BOOL_PARAM(Migrated, false);
+
+static void migrateIndex(int32_t index);
+static void migrateSlot(uint8_t slot);
+static int32_t paintReadParam(const settingParam_t* param);
+static bool paintWriteParam(const settingParam_t* param, int32_t val);
+
 
 // void paintDebugIndex(int32_t index)
 // {
@@ -43,6 +80,116 @@ static const char KEY_PAINT_SLOT_CHUNK[] = "paint_%02dc%05u";
 //     PAINT_LOGD("===========");
 // }
 
+const settingParam_t* paintGetInUseSlotBounds(void)
+{
+    return &paintInUseSlotParam;
+}
+
+const settingParam_t* paintGetRecentSlotBounds(void)
+{
+    return &paintRecentSlotParam;
+}
+
+const settingParam_t* paintGetEnableLedsBounds(void)
+{
+    return &paintEnableLedsParam;
+}
+
+const settingParam_t* paintGetEnableBlinkBounds(void)
+{
+    return &paintEnableBlinkParam;
+}
+
+const settingParam_t* paintGetMigratedBounds(void)
+{
+    return &paintMigratedParam;
+}
+
+int32_t paintGetInUseSlots(void)
+{
+    return paintReadParam(&paintInUseSlotParam);
+}
+
+void paintSetInUseSlots(int32_t inUseSlots)
+{
+    paintWriteParam(&paintInUseSlotParam, inUseSlots);
+}
+
+/*int32_t paintGetRecentSlot(void)
+{
+
+}*/
+
+/*void paintSetRecentSlot(int32_t recentSlot)
+{
+
+}*/
+
+bool paintGetEnableLeds(void)
+{
+    return paintReadParam(&paintEnableLedsParam);
+}
+
+void paintSetEnableLeds(bool enableLeds)
+{
+    paintWriteParam(&paintEnableLedsParam, enableLeds);
+}
+
+bool paintGetEnableBlink(void)
+{
+    return paintReadParam(&paintEnableBlinkParam);
+}
+
+void paintSetEnableBlink(bool enableBlink)
+{
+    paintWriteParam(&paintEnableBlinkParam, enableBlink);
+}
+
+void migrateIndex(int32_t index)
+{
+    // TODO: Migrate the index to separate bitfields/bools per setting
+    // Sure, it wastes a few bytes, but... ok
+    // (32 bits for files in use / recent)
+    // 1. Check if the index has already been migrated
+    // 2. Read each bitfield within the old index
+    // 3. Write each value to its new setting
+    // 4. Update the index value to indicate it was migrated
+    // 5. Save the index
+    // 6. Never touch it again
+
+    //if (!(index & PAINT_INDEX_MIGRATED)) {
+        // Index has not been migrated, do it here
+
+        // index |= PAINT_INDEX_MIGRATED;
+    //}
+}
+
+void migrateSlot(uint8_t slot)
+{
+    // TODO: Migrate slots to a compressed storage format / one that just uses a single chunk
+    // blobs can be much bigger than the size of a max image, but there should probably be a
+    // somewhat robust check to make sure we don't go below some threshold of available space.
+    // Compression -- check if we can use miniz.h in here (don't see why not).
+}
+
+static int32_t paintReadParam(const settingParam_t* param)
+{
+    int32_t out;
+    // Wrap this just in case we need to do stuff later
+    if (!readNvs32(param->key, &out))
+    {
+        // Set the default value if the read failed
+        out = param->def;
+    }
+
+    return out;
+}
+
+static bool paintWriteParam(const settingParam_t* param, int32_t val)
+{
+    return writeNvs32(param->key, CLAMP(val, param->min, param->max));
+}
+
 void paintLoadIndex(int32_t* index)
 {
     //       SFX?
@@ -51,6 +198,9 @@ void paintLoadIndex(int32_t* index)
     // |xxxxxvvv  |Recent?|  |Inuse? |
     // 0000 0000  0000 0000  0000 0000
 
+    // TODO: First, try to read our new index, and if that fails, see if the old index is around and migrate that
+
+    // if (paintReadParam(&index))
     if (!readNvs32(KEY_PAINT_INDEX, index))
     {
         PAINT_LOGW("No metadata! Setting defaults");

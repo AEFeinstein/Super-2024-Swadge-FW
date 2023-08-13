@@ -6,9 +6,28 @@
 #include <malloc.h>
 
 #include "settingsManager.h"
+#include "hdw-nvs.h"
 
 #include "paint_common.h"
 #include "paint_type.h"
+
+// Settings bounds for the menu
+const settingParam_t* paintGetInUseSlotBounds(void);
+const settingParam_t* paintGetRecentSlotBounds(void);
+const settingParam_t* paintGetEnableLedsBounds(void);
+const settingParam_t* paintGetEnableBlinkBounds(void);
+const settingParam_t* paintGetMigratedBounds(void);
+
+// Getters / setters for the new separated values
+int32_t paintGetInUseSlots(void);
+void paintSetInUseSlots(int32_t inUseSlots);
+//int32_t paintGetRecentSlot(void);
+//void paintSetRecentSlot(int32_t recentSlot);
+bool paintGetEnableLeds(void);
+void paintSetEnableLeds(bool enableLeds);
+bool paintGetEnableBlink(void);
+void paintSetEnableBlink(bool enableBlink);
+
 
 // void paintDebugIndex(int32_t index);
 void paintLoadIndex(int32_t* dest);
