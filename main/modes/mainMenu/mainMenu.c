@@ -59,32 +59,25 @@ mainMenu_t* mainMenu;
 
 static const char settingsLabel[] = "Settings";
 
-static const char tftSettingLabel[]         = "TFT";
-static const char ledSettingLabel[]         = "LED";
-static const char bgmVolSettingLabel[]      = "BGM";
-static const char sfxVolSettingLabel[]      = "SFX";
-static const char micSettingLabel[]         = "MIC";
+static const char tftSettingLabel[]    = "TFT";
+static const char ledSettingLabel[]    = "LED";
+static const char bgmVolSettingLabel[] = "BGM";
+static const char sfxVolSettingLabel[] = "SFX";
+static const char micSettingLabel[]    = "MIC";
 
-static const int32_t screenSaverSettingsValues[] =
-{
-    0,  // Off
-    10, // 10sec
-    20, // 20sec
-    30, // 30sec
-    60, // 60sec
-    120,    // 2min
-    300,    // 5min
+static const int32_t screenSaverSettingsValues[] = {
+    0,   // Off
+    10,  // 10sec
+    20,  // 20sec
+    30,  // 30sec
+    60,  // 60sec
+    120, // 2min
+    300, // 5min
 };
 
-static const char* screenSaverSettingsOptions[] =
-{
-    "Screen Saver: Off",
-    "Screen Saver: 10s",
-    "Screen Saver: 20s",
-    "Screen Saver: 30s",
-    "Screen Saver: 1m",
-    "Screen Saver: 2m",
-    "Screen Saver: 5m",
+static const char* screenSaverSettingsOptions[] = {
+    "Screen Saver: Off", "Screen Saver: 10s", "Screen Saver: 20s", "Screen Saver: 30s",
+    "Screen Saver: 1m",  "Screen Saver: 2m",  "Screen Saver: 5m",
 };
 
 //==============================================================================
@@ -122,9 +115,9 @@ static void mainMenuEnterMode(void)
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
-    addSettingsOptionsItemToMenu(mainMenu->menu,
-                                 screenSaverSettingsOptions, screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
-                                 getScreensaverTimeSettingBounds(), getScreensaverTimeSetting());
+    addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsOptions, screenSaverSettingsValues,
+                                 ARRAY_SIZE(screenSaverSettingsValues), getScreensaverTimeSettingBounds(),
+                                 getScreensaverTimeSetting());
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
@@ -221,7 +214,8 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setMicGainSetting(settingVal);
         }
-        else if (screenSaverSettingsOptions <= label && label < screenSaverSettingsOptions + ARRAY_SIZE(screenSaverSettingsOptions))
+        else if (screenSaverSettingsOptions <= label
+                 && label < screenSaverSettingsOptions + ARRAY_SIZE(screenSaverSettingsOptions))
         {
             setScreensaverTimeSetting(settingVal);
         }

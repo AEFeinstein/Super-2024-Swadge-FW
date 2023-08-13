@@ -188,8 +188,9 @@ void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabe
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
 void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val);
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
-void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels, const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds, int32_t currentOption);
-void removeSettingsOptionsItemToMenu(menu_t menu, const char* const *optionLabels);
+void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels, const int32_t* optionValues,
+                                  uint8_t numOptions, const settingParam_t* bounds, int32_t currentOption);
+void removeSettingsOptionsItemToMenu(menu_t menu, const char* const* optionLabels);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 
 #endif

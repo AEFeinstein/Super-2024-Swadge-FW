@@ -390,7 +390,8 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
  * @param currentValue The current value of the setting. Must be one of the values
  *                     in \c optionValues.
  */
-void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels, const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds, int32_t currentValue)
+void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels, const int32_t* optionValues,
+                                  uint8_t numOptions, const settingParam_t* bounds, int32_t currentValue)
 {
     menuItem_t* newItem  = calloc(1, sizeof(menuItem_t));
     newItem->options     = optionLabels;
@@ -400,7 +401,7 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels,
     newItem->maxSetting  = bounds->max;
 
     // Set the current option to the first in case we can't find it
-    newItem->currentOpt  = 0;
+    newItem->currentOpt = 0;
 
     // Find the matching element in optionValues
     // We're doing this here because pretty much it's gonna happen somewhere.
@@ -424,7 +425,6 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels,
         menu->currentItem = menu->items->first;
     }
 }
-
 
 /**
  * @brief Remove a settings options item entry from the menu. This item is removed by
