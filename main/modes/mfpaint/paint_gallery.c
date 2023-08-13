@@ -53,7 +53,7 @@ void paintGallerySetup(bool screensaver)
     paintGallery->screensaverMode = screensaver;
     // Show the UI at the start if we're a screensaver
     paintGallery->showUi = !screensaver;
-    loadFont("radiostars.font", &paintGallery->infoFont, false);
+    loadFont("ibm_vga8.font", &paintGallery->infoFont, false);
     loadWsg("arrow12.wsg", &paintGallery->arrow, false);
 
     // Recolor the arrow to black

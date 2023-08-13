@@ -246,7 +246,7 @@ void paintShareCommonSetup(void)
 
     paintShare->connectionStarted = false;
 
-    if (!loadFont("radiostars.font", &paintShare->toolbarFont, false))
+    if (!loadFont(PAINT_SHARE_TOOLBAR_FONT, &paintShare->toolbarFont, false))
     {
         PAINT_LOGE("Unable to load font!");
     }

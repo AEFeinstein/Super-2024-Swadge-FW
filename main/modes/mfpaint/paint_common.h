@@ -59,8 +59,12 @@
 #define PAINT_TOOLBAR_TEXT_PADDING_Y 3
 
 #define PAINT_TOOLBAR_FONT "ibm_vga8.font"
-#define PAINT_SAVE_MENU_FONT "radiostars.font"
-#define PAINT_SMALL_FONT "tom_thumb.font"
+//#define PAINT_SHARE_TOOLBAR_FONT "radiostars.font"
+#define PAINT_SHARE_TOOLBAR_FONT "ibm_vga8.font"
+//#define PAINT_SAVE_MENU_FONT "radiostars.font"
+#define PAINT_SAVE_MENU_FONT "ibm_vga8.font"
+//#define PAINT_SMALL_FONT "tom_thumb.font"
+#define PAINT_SMALL_FONT "ibm_vga8.font"
 
 #define PAINT_TOOLBAR_BG c444
 
