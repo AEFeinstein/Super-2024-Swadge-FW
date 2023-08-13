@@ -76,8 +76,8 @@ static const int32_t screenSaverSettingsValues[] = {
 };
 
 static const char* screenSaverSettingsOptions[] = {
-    "Screen Saver: Off", "Screen Saver: 10s", "Screen Saver: 20s", "Screen Saver: 30s",
-    "Screen Saver: 1m",  "Screen Saver: 2m",  "Screen Saver: 5m",
+    "Screensaver: Off", "Screensaver: 10s", "Screensaver: 20s", "Screensaver: 30s",
+    "Screensaver: 1m",  "Screensaver: 2m",  "Screensaver: 5m",
 };
 
 //==============================================================================
@@ -214,8 +214,8 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setMicGainSetting(settingVal);
         }
-        else if (screenSaverSettingsOptions <= label
-                 && label < screenSaverSettingsOptions + ARRAY_SIZE(screenSaverSettingsOptions))
+        else if (*screenSaverSettingsOptions <= label
+                 && label <= *(screenSaverSettingsOptions + ARRAY_SIZE(screenSaverSettingsOptions) - 1))
         {
             setScreensaverTimeSetting(settingVal);
         }
