@@ -54,6 +54,9 @@
  * static const char opt4[]            = "opt4";
  * static const char* const demoOpts[] = {opt1, opt2, opt3, opt4};
  *
+ * static const char* const optionSettingLabels = {"Off", "30 Seconds", "5 Minutes"};
+ * static const uint32_t optionSettingValues = {0, 30, 300};
+ *
  * static const char demoSettingLabel[] = "Setting";
  * \endcode
  *
@@ -88,6 +91,8 @@
  * addSingleItemToMenu(menu, demoMenu5);
  * addSingleItemToMenu(menu, demoMenu6);
  * addSettingsItemToMenu(menu, demoSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
+ * addSettingsOptionsItemToMenu(menu, optionSettingLabels, optionSettingValues, ARRAY_SIZE(optionSettingValues),
+ *                              getScreensaverTimeSettingBounds(), 0);
  *
  * // Load a font
  * font_t logbook;
@@ -112,9 +117,9 @@
  *
  * Receive menu callbacks:
  * \code{.c}
- * static void demoMenuCb(const char* label, bool selected)
+ * static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
  * {
- *     printf("%s %s\n", label, selected ? "selected" : "scrolled to");
+ *     printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
  * }
  * \endcode
  *
