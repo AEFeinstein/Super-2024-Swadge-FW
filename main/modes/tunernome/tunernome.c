@@ -105,7 +105,7 @@ typedef struct
 
     font_t ibm_vga8;
     font_t radiostars;
-    font_t mm;
+    font_t logbook;
 
     buttonBit_t lastBpmButton;
     uint32_t bpmButtonCurChangeUs;
@@ -132,7 +132,7 @@ typedef struct
     int16_t intensity[NUM_SEMITONES];
 
     wsg_t radiostarsArrowWsg;
-    wsg_t mmArrowWsg;
+    wsg_t logbookArrowWsg;
     wsg_t flatWsg;
 
     uint32_t blinkStartUs;
@@ -395,7 +395,7 @@ void tunernomeEnterMode(void)
 
     loadFont("ibm_vga8.font", &tunernome->ibm_vga8, false);
     loadFont("radiostars.font", &tunernome->radiostars, false);
-    loadFont("logbook.font", &tunernome->mm, false);
+    loadFont("logbook.font", &tunernome->logbook, false);
 
     float intermedX = cosf(TONAL_DIFF_IN_TUNE_DEVIATION * M_PI / 17 );
     float intermedY = sinf(TONAL_DIFF_IN_TUNE_DEVIATION * M_PI / 17 );
@@ -404,7 +404,7 @@ void tunernomeEnterMode(void)
     TUNER_THRES_Y = round(TUNER_CENTER_Y - (ABS(intermedY) * TUNER_RADIUS));
 
     loadWsg("arrow12.wsg", &(tunernome->radiostarsArrowWsg), false);
-    loadWsg("arrow21.wsg", &(tunernome->mmArrowWsg), false);
+    loadWsg("arrow21.wsg", &(tunernome->logbookArrowWsg), false);
     loadWsg("flat_mm.wsg", &(tunernome->flatWsg), false);
 
     tunernome->beatLength = 4;
@@ -483,10 +483,10 @@ void tunernomeExitMode(void)
 
     freeFont(&tunernome->ibm_vga8);
     freeFont(&tunernome->radiostars);
-    freeFont(&tunernome->mm);
+    freeFont(&tunernome->logbook);
 
     freeWsg(&(tunernome->radiostarsArrowWsg));
-    freeWsg(&(tunernome->mmArrowWsg));
+    freeWsg(&(tunernome->logbookArrowWsg));
     freeWsg(&(tunernome->flatWsg));
 
     free(tunernome);
@@ -567,9 +567,9 @@ void plotInstrumentNameAndNotes(const char* instrumentName, const char* const* i
                                 uint16_t numNotes)
 {
     // Mode name
-    drawText(&tunernome->mm, c555, instrumentName,
-             (TFT_WIDTH - textWidth(&tunernome->mm, instrumentName)) / 2,
-             (TFT_HEIGHT - tunernome->mm.height) / 2 - TUNER_TEXT_Y_OFFSET);
+    drawText(&tunernome->logbook, c555, instrumentName,
+             (TFT_WIDTH - textWidth(&tunernome->logbook, instrumentName)) / 2,
+             (TFT_HEIGHT - tunernome->logbook.height) / 2 - TUNER_TEXT_Y_OFFSET);
 
     // Note names of strings, arranged to match LED positions
     bool oddNumLedRows = (int) ceil(numNotes / 2.0f) % 2 == 1;
@@ -579,23 +579,23 @@ void plotInstrumentNameAndNotes(const char* instrumentName, const char* const* i
         int y;
         if(oddNumLedRows)
         {
-            y = (TFT_HEIGHT - tunernome->mm.height) / 2 + (tunernome->mm.height + 5) * (1 - i) - TUNER_TEXT_Y_OFFSET;
+            y = (TFT_HEIGHT - tunernome->logbook.height) / 2 + (tunernome->logbook.height + 5) * (1 - i) - TUNER_TEXT_Y_OFFSET;
         }
         else
         {
-            y = TFT_HEIGHT / 2 + (tunernome->mm.height + 5) * (- i) + 2 - TUNER_TEXT_Y_OFFSET;
+            y = TFT_HEIGHT / 2 + (tunernome->logbook.height + 5) * (- i) + 2 - TUNER_TEXT_Y_OFFSET;
         }
 
         char buf[2] = {0};
         strncpy(buf, instrumentNotes[i], 1);
-        drawText(&tunernome->mm, c555, buf,
-                 (TFT_WIDTH - textWidth(&tunernome->mm, instrumentName)) / 2 -
-                 textWidth(&tunernome->mm, /*placeholder for widest note name + ' '*/ "A4 "), y);
+        drawText(&tunernome->logbook, c555, buf,
+                 (TFT_WIDTH - textWidth(&tunernome->logbook, instrumentName)) / 2 -
+                 textWidth(&tunernome->logbook, /*placeholder for widest note name + ' '*/ "A4 "), y);
 
         strncpy(buf, instrumentNotes[i] + 1, 1);
-        drawText(&tunernome->mm, c555, buf,
-                 (TFT_WIDTH - textWidth(&tunernome->mm, instrumentName)) / 2 -
-                 textWidth(&tunernome->mm, /*placeholder for widest octave number + ' '*/ "4 "), y);
+        drawText(&tunernome->logbook, c555, buf,
+                 (TFT_WIDTH - textWidth(&tunernome->logbook, instrumentName)) / 2 -
+                 textWidth(&tunernome->logbook, /*placeholder for widest octave number + ' '*/ "4 "), y);
     }
     oddNumLedRows = (int) floor(numNotes / 2.0f) % 2 == 1;
     // Right Column
@@ -604,21 +604,21 @@ void plotInstrumentNameAndNotes(const char* instrumentName, const char* const* i
         int y;
         if(oddNumLedRows)
         {
-            y = (TFT_HEIGHT - tunernome->mm.height) / 2 + (tunernome->mm.height + 5) * (i - ceil(numNotes / 2.0f) - 1) - TUNER_TEXT_Y_OFFSET;
+            y = (TFT_HEIGHT - tunernome->logbook.height) / 2 + (tunernome->logbook.height + 5) * (i - ceil(numNotes / 2.0f) - 1) - TUNER_TEXT_Y_OFFSET;
         }
         else
         {
-            y = TFT_HEIGHT / 2 + (tunernome->mm.height + 5) * (i - ceil(numNotes / 2.0f) - 1) + 2 - TUNER_TEXT_Y_OFFSET;
+            y = TFT_HEIGHT / 2 + (tunernome->logbook.height + 5) * (i - ceil(numNotes / 2.0f) - 1) + 2 - TUNER_TEXT_Y_OFFSET;
         }
 
         char buf[2] = {0};
         strncpy(buf, instrumentNotes[i], 1);
-        drawText(&tunernome->mm, c555, buf,
-                 (TFT_WIDTH + textWidth(&tunernome->mm, instrumentName)) / 2 + textWidth(&tunernome->mm, " "), y);
+        drawText(&tunernome->logbook, c555, buf,
+                 (TFT_WIDTH + textWidth(&tunernome->logbook, instrumentName)) / 2 + textWidth(&tunernome->logbook, " "), y);
         
         strncpy(buf, instrumentNotes[i] + 1, 1);
-        drawText(&tunernome->mm, c555, buf,
-                 (TFT_WIDTH + textWidth(&tunernome->mm, instrumentName)) / 2 + textWidth(&tunernome->mm, /*' ' + placeholder for widest note name without octave number*/ " A"), y);
+        drawText(&tunernome->logbook, c555, buf,
+                 (TFT_WIDTH + textWidth(&tunernome->logbook, instrumentName)) / 2 + textWidth(&tunernome->logbook, /*' ' + placeholder for widest note name without octave number*/ " A"), y);
     }
 
     drawText(&tunernome->radiostars, c555, playStringsText,
@@ -749,11 +749,11 @@ void tunernomeMainLoop(int64_t elapsedUs)
             // Up/Down arrows in middle of display around current note/mode
             drawWsg(&(tunernome->radiostarsArrowWsg),
                     (TFT_WIDTH - tunernome->radiostarsArrowWsg.w) / 2 + 1,
-                    (TFT_HEIGHT - tunernome->mm.height) / 2 - tunernome->radiostarsArrowWsg.h - TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET,
+                    (TFT_HEIGHT - tunernome->logbook.height) / 2 - tunernome->radiostarsArrowWsg.h - TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET,
                     false, false, 0);
             drawWsg(&(tunernome->radiostarsArrowWsg),
                     (TFT_WIDTH - tunernome->radiostarsArrowWsg.w) / 2 + 1,
-                    (TFT_HEIGHT + tunernome->mm.height) / 2 + TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET,
+                    (TFT_HEIGHT + tunernome->logbook.height) / 2 + TUNER_ARROW_Y_OFFSET - TUNER_TEXT_Y_OFFSET,
                     false, true, 0);
 
             // Current note/mode in middle of display
@@ -806,20 +806,20 @@ void tunernomeMainLoop(int64_t elapsedUs)
                         bool shouldDrawFlat = (semitoneNoteNames[semitoneNum][strlen(semitoneNoteNames[semitoneNum]) - 1] == 1);
                         char buf[5] = {0};
                         strncpy(buf, semitoneNoteNames[semitoneNum], 4);
-                        int16_t tWidth = textWidth(&tunernome->mm, buf);
+                        int16_t tWidth = textWidth(&tunernome->logbook, buf);
                         if(shouldDrawFlat)
                         {
                             tWidth += tunernome->flatWsg.w + 1;
                         }
-                        int16_t textEnd = drawText(&tunernome->mm, c555, buf,
+                        int16_t textEnd = drawText(&tunernome->logbook, c555, buf,
                                                    (TFT_WIDTH - tWidth) / 2 + 1,
-                                                   (TFT_HEIGHT - tunernome->mm.height) / 2 - TUNER_TEXT_Y_OFFSET);
+                                                   (TFT_HEIGHT - tunernome->logbook.height) / 2 - TUNER_TEXT_Y_OFFSET);
 
                         // Append the wsg for a flat
                         if(shouldDrawFlat)
                         {
                             drawWsg(&tunernome->flatWsg, textEnd,
-                                    (TFT_HEIGHT - tunernome->mm.height) / 2 - TUNER_TEXT_Y_OFFSET,
+                                    (TFT_HEIGHT - tunernome->logbook.height) / 2 - TUNER_TEXT_Y_OFFSET,
                                     false, false, 0);
                         }
 
@@ -885,20 +885,20 @@ void tunernomeMainLoop(int64_t elapsedUs)
                     bool shouldDrawFlat = (semitoneNoteNames[semitoneNum][strlen(semitoneNoteNames[semitoneNum]) - 1] == 1);
                     char buf[5] = {0};
                     strncpy(buf, semitoneNoteNames[semitoneNum], 4);
-                    int16_t tWidth = textWidth(&tunernome->mm, buf);
+                    int16_t tWidth = textWidth(&tunernome->logbook, buf);
                     if(shouldDrawFlat)
                     {
                         tWidth += tunernome->flatWsg.w + 1;
                     }
-                    int16_t textEnd = drawText(&tunernome->mm, c555, buf,
+                    int16_t textEnd = drawText(&tunernome->logbook, c555, buf,
                                                (TFT_WIDTH - tWidth) / 2 + 1,
-                                               (TFT_HEIGHT - tunernome->mm.height) / 2 - TUNER_TEXT_Y_OFFSET);
+                                               (TFT_HEIGHT - tunernome->logbook.height) / 2 - TUNER_TEXT_Y_OFFSET);
 
                     // Append the wsg for a flat
                     if(shouldDrawFlat)
                     {
                         drawWsg(&tunernome->flatWsg, textEnd,
-                                (TFT_HEIGHT - tunernome->mm.height) / 2 - TUNER_TEXT_Y_OFFSET,
+                                (TFT_HEIGHT - tunernome->logbook.height) / 2 - TUNER_TEXT_Y_OFFSET,
                                 false, false, 0);
                     }
                     break;
@@ -912,14 +912,14 @@ void tunernomeMainLoop(int64_t elapsedUs)
             // BPM at top of display
             char bpmStr[16];
             sprintf(bpmStr, "%d BPM", tunernome->bpm);
-            int16_t beforeText = (TFT_WIDTH - textWidth(&tunernome->mm, bpmStr)) / 2;
-            int16_t afterText = drawText(&tunernome->mm, c555, bpmStr, beforeText, 5);
+            int16_t beforeText = (TFT_WIDTH - textWidth(&tunernome->logbook, bpmStr)) / 2;
+            int16_t afterText = drawText(&tunernome->logbook, c555, bpmStr, beforeText, 5);
             
-            drawWsg(&(tunernome->mmArrowWsg),
-                    beforeText - tunernome->mmArrowWsg.w - 8,
+            drawWsg(&(tunernome->logbookArrowWsg),
+                    beforeText - tunernome->logbookArrowWsg.w - 8,
                     5,
                     false, false, 0);
-            drawWsg(&(tunernome->mmArrowWsg),
+            drawWsg(&(tunernome->logbookArrowWsg),
                     afterText + 7,
                     5,
                     false, true, 0);
