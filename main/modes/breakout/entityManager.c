@@ -42,26 +42,26 @@ void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilema
 void loadSprites(entityManager_t * entityManager)
 {
     loadWsg("paddle000.wsg", &(entityManager->sprites[SP_PADDLE_0].wsg), false);
-    entityManager->sprites[SP_PADDLE_0].originX=12;
+    entityManager->sprites[SP_PADDLE_0].originX=14;
     entityManager->sprites[SP_PADDLE_0].originY=4;
     entityManager->sprites[SP_PADDLE_0].collisionBox.x0 = 0;
-    entityManager->sprites[SP_PADDLE_0].collisionBox.x1 = 23;
+    entityManager->sprites[SP_PADDLE_0].collisionBox.x1 = 27;
     entityManager->sprites[SP_PADDLE_0].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_0].collisionBox.y1 = 7;
 
     loadWsg("paddle001.wsg", &entityManager->sprites[SP_PADDLE_1].wsg, false);
-    entityManager->sprites[SP_PADDLE_1].originX=12;
+    entityManager->sprites[SP_PADDLE_1].originX=14;
     entityManager->sprites[SP_PADDLE_1].originY=4;
     entityManager->sprites[SP_PADDLE_1].collisionBox.x0 = 0;
-    entityManager->sprites[SP_PADDLE_1].collisionBox.x1 = 23;
+    entityManager->sprites[SP_PADDLE_1].collisionBox.x1 = 27;
     entityManager->sprites[SP_PADDLE_1].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_1].collisionBox.y1 = 7;
 
     loadWsg("paddle002.wsg", &entityManager->sprites[SP_PADDLE_2].wsg, false);
-    entityManager->sprites[SP_PADDLE_2].originX=12;
+    entityManager->sprites[SP_PADDLE_2].originX=14;
     entityManager->sprites[SP_PADDLE_2].originY=4;
     entityManager->sprites[SP_PADDLE_2].collisionBox.x0 = 0;
-    entityManager->sprites[SP_PADDLE_2].collisionBox.x1 = 23;
+    entityManager->sprites[SP_PADDLE_2].collisionBox.x1 = 27;
     entityManager->sprites[SP_PADDLE_2].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_2].collisionBox.y1 = 7;
 

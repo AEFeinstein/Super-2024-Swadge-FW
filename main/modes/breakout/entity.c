@@ -74,8 +74,11 @@ void updatePlayer(entity_t *self)
     int32_t centerVal, intensityVal, touchIntoLevel,xdiff;
     if(getTouchCentroid(&centerVal, &intensityVal))
     {
-        touchIntoLevel = (centerVal << 2) + 216;
-        touchIntoLevel = CLAMP(touchIntoLevel,580,3888);
+        touchIntoLevel = (centerVal << 2) + 128; // play with this value until center touch moves paddle to center
+
+        //                                    the leftmost coordinate that the originX point of the paddle sprite can occupy
+        //                                    |   the rightmost coordinate that the originX point of the paddle sprite can occupy
+        touchIntoLevel = CLAMP(touchIntoLevel,608,3872);
         xdiff = self->x - touchIntoLevel;
         xdiff = CLAMP(xdiff, -1024, 1024);
         if (self->x != touchIntoLevel)
