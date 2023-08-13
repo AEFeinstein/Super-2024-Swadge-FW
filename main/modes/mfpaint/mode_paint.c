@@ -115,17 +115,26 @@ void paintExitMode(void)
 
 void paintMainLoop(int64_t elapsedUs)
 {
+    // Handle all input frst regardless of screen
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Touch and button events are combined now, so split them back up, heh
+        if (evt.button & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_START | PB_SELECT))
+        {
+            paintButtonCb(&evt);
+        }
+
+        if (evt.button & (TB_0 | TB_1 | TB_2 | TB_3 | TB_4))
+        {
+            paintTouchCb(&evt);
+        }
+    }
 
     switch (paintMenu->screen)
     {
     case PAINT_MENU:
     {
-        buttonEvt_t evt = {0};
-        while (checkButtonQueueWrapper(&evt))
-        {
-            paintMenu->menu = menuButton(paintMenu->menu, evt);
-        }
-
         if (paintMenu->enableScreensaver && getScreensaverTimeSetting() != 0)
         {
             paintMenu->idleTimer += elapsedUs;
@@ -176,7 +185,7 @@ void paintButtonCb(buttonEvt_t* evt)
     {
         case PAINT_MENU:
         {
-            menuButton(paintMenu->menu, *evt);
+            paintMenu->menu = menuButton(paintMenu->menu, *evt);
             break;
         }
 
@@ -272,7 +281,7 @@ void paintTouchCb(buttonEvt_t* evt)
     else if (paintMenu->screen == PAINT_GALLERY)
     {
         // TODO: Make sure the gallery does its touch events
-        // I deleted the callback because
+        // I deleted the callback because... I guess we'll never know.
     }
 }
 
@@ -457,9 +466,8 @@ void paintMenuCb(const char* opt, bool selected, uint32_t value)
     }
 }
 
-void paintSettingsMenuCb(const char* opt)
+/*void paintSettingsMenuCb(const char* opt)
 {
-    /*
     paintMenu->settingsMenuSelection = paintMenu->menu->selectedRow;
 
     int32_t index;
@@ -527,8 +535,7 @@ void paintSettingsMenuCb(const char* opt)
     }
 
     paintSetupSettingsMenu(false);
-    */
-}
+}*/
 
 void paintReturnToMainMenu(void)
 {

@@ -5,6 +5,7 @@
 
 #include "p2pConnection.h"
 #include "shapes.h"
+#include "hdw-btn.h"
 
 #include "mode_paint.h"
 #include "paint_common.h"
@@ -863,6 +864,11 @@ void paintShareRetry(void)
 
 void paintShareMainLoop(int64_t elapsedUs)
 {
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        paintShareButtonCb(&evt);
+    }
     // Handle the sending of the packets and the other things
     if (paintShare->clearScreen)
     {
