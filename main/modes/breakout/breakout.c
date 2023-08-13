@@ -440,21 +440,13 @@ static void breakoutChangeStateGame(breakout_t *self){
  */
 static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
 {
-    // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         // Save the button state
-        self->btnState = evt.state;
-
-        // Check if the pause button was pressed
-        if (evt.down && (PB_START == evt.button))
-        {
-            // Toggle pause
-            // breakout->isPaused = !breakout->isPaused;
-        }
+        breakout->gameData.btnState = evt.state;
     }
-
+    
     // If the game is paused
     /*if (breakout->isPaused)
     {
@@ -478,8 +470,9 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     // breakoutControlCpuPaddle();
     // breakoutUpdatePhysics(elapsedUs);
 
-    updateEntities(&(self->entityManager));
     breakoutDetectGameStateChange(self);
+    updateEntities(&(self->entityManager));
+
 
     // Draw the field
     drawEntities(&(self->entityManager));
@@ -491,6 +484,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
         self->gameData.frameCount = 0;
     }
 
+    breakout->gameData.prevBtnState = breakout->gameData.btnState;
 }
 
 /**
@@ -841,10 +835,18 @@ void breakoutDrawGameClear(font_t *ibm_vga8, font_t *logbook, gameData_t *gameDa
 
 void breakoutChangeStatePause(breakout_t *self){
     //buzzer_play_bgm(&sndPause);
+    self->gameData.btnState = 0;
     self->update=&breakoutUpdatePause;
 }
 
 void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        breakout->gameData.btnState = evt.state;
+    }
+
     if((
         (self->gameData.btnState & PB_START)
         &&
@@ -853,6 +855,7 @@ void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
         //buzzer_play_sfx(&sndPause);
         //self->gameData.changeBgm = self->gameData.currentBgm;
         //self->gameData.currentBgm = BGM_NULL;
+        self->gameData.btnState = 0;
         self->update=&breakoutGameLoop;
     }
 
@@ -861,7 +864,6 @@ void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
     breakoutDrawPause(&(self->logbook));
 
-    self->prevBtnState = self->btnState;
     self->gameData.prevBtnState = self->prevBtnState;
 }
 
