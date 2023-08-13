@@ -361,22 +361,26 @@ static int TUNER_FLAT_THRES_X;
 static int TUNER_SHARP_THRES_X;
 static int TUNER_THRES_Y;
 
+static const musicalNote_t metronome_primary_notes[] =
+{
+    {F_SHARP_5, METRONOME_CLICK_MS}
+};
+
 const song_t metronome_primary =
 {
-    .notes =
-    {
-        {F_SHARP_5, METRONOME_CLICK_MS}
-    },
+    .notes = metronome_primary_notes,
     .numNotes = 1,
     .shouldLoop = false
 };
 
+static const musicalNote_t metronome_secondary_notes[] =
+{
+    {F_SHARP_4, METRONOME_CLICK_MS}
+};
+
 const song_t metronome_secondary =
 {
-    .notes =
-    {
-        {F_SHARP_4, METRONOME_CLICK_MS}
-    },
+    .notes = metronome_secondary_notes,
     .numNotes = 1,
     .shouldLoop = false
 };
@@ -1044,7 +1048,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
 
                 if(!tunernome->isSilent)
                 {
-                    //bzrPlaySfx(song);
+                    bzrPlaySfx(song);
                 }
                 setLeds(leds, CONFIG_NUM_LEDS);
                 tunernome->isBlinking = true;
