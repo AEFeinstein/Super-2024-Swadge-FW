@@ -394,7 +394,7 @@ void tunernomeEnterMode(void)
     tunernome = calloc(1, sizeof(tunernome_t));
 
     loadFont("ibm_vga8.font", &tunernome->ibm_vga8, false);
-    loadFont("logbook.font", &tunernome->radiostars, false);
+    loadFont("radiostars.font", &tunernome->radiostars, false);
     loadFont("logbook.font", &tunernome->mm, false);
 
     float intermedX = cosf(TONAL_DIFF_IN_TUNE_DEVIATION * M_PI / 17 );
