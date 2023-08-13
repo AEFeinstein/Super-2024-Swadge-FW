@@ -176,7 +176,7 @@ bool popPxScaled(pxStack_t* pxStack, int xScale, int yScale)
     pxVal_t px;
     if (peekPx(pxStack, &px))
     {
-        plotRectFilled(px.x, px.y, px.x + xScale + 1, px.y + yScale + 1, px.col);
+        drawRectFilled(px.x, px.y, px.x + xScale + 1, px.y + yScale + 1, px.col);
         dropPx(pxStack);
 
         return true;

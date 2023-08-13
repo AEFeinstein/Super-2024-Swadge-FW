@@ -3,7 +3,7 @@
 #include <string.h>
 #include "esp_heap_caps.h"
 
-#include "musical_buzzer.h"
+#include "hdw-bzr.h"
 
 #include "paint_ui.h"
 #include "paint_brush.h"
@@ -13,8 +13,7 @@
 #include "paint_song.h"
 #include "paint_help.h"
 
-
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#include "macros.h"
 
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
@@ -68,9 +67,9 @@ void paintDrawScreenSetup(void)
     PAINT_LOGD("Allocating %zu bytes for paintState", sizeof(paintDraw_t));
     paintState = calloc(sizeof(paintDraw_t), 1);
 
-    loadFont(PAINT_TOOLBAR_FONT, &(paintState->toolbarFont));
-    loadFont(PAINT_SAVE_MENU_FONT, &(paintState->saveMenuFont));
-    loadFont(PAINT_SMALL_FONT, &(paintState->smallFont));
+    loadFont(PAINT_TOOLBAR_FONT, &(paintState->toolbarFont), false);
+    loadFont(PAINT_SAVE_MENU_FONT, &(paintState->saveMenuFont), false);
+    loadFont(PAINT_SMALL_FONT, &(paintState->smallFont), false);
     paintState->clearScreen = true;
     paintState->blinkOn = true;
     paintState->blinkTimer = 0;
@@ -82,13 +81,13 @@ void paintDrawScreenSetup(void)
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
         snprintf(iconName, sizeof(iconName), activeIconStr, brush->iconName);
-        if (!loadWsg(iconName, &brush->iconActive))
+        if (!loadWsg(iconName, &brush->iconActive, false))
         {
             PAINT_LOGE("Loading icon %s failed!!!", iconName);
         }
 
         snprintf(iconName, sizeof(iconName), inactiveIconStr, brush->iconName);
-        if (!loadWsg(iconName, &brush->iconInactive))
+        if (!loadWsg(iconName, &brush->iconInactive, false))
         {
             PAINT_LOGE("Loading icon %s failed!!!", iconName);
         }
@@ -105,17 +104,17 @@ void paintDrawScreenSetup(void)
         }
     }
 
-    if (!loadWsg("pointer.wsg", &paintState->picksWsg))
+    if (!loadWsg("pointer.wsg", &paintState->picksWsg, false))
     {
         PAINT_LOGE("Loading pointer.wsg icon failed!!!");
     }
 
-    if (!loadWsg("brush_size.wsg", &paintState->brushSizeWsg))
+    if (!loadWsg("brush_size.wsg", &paintState->brushSizeWsg, false))
     {
         PAINT_LOGE("Loading brush_size.wsg icon failed!!!");
     }
 
-    if (!loadWsg("arrow9.wsg", &paintState->smallArrowWsg))
+    if (!loadWsg("arrow9.wsg", &paintState->smallArrowWsg, false))
     {
         PAINT_LOGE("Loading arrow5.wsg icon failed!!!");
     }
@@ -124,7 +123,7 @@ void paintDrawScreenSetup(void)
         colorReplaceWsg(&paintState->smallArrowWsg, c555, c000);
     }
 
-    if (!loadWsg("arrow12.wsg", &paintState->bigArrowWsg))
+    if (!loadWsg("arrow12.wsg", &paintState->bigArrowWsg, false))
     {
         PAINT_LOGE("Loading arrow5.wsg icon failed!!!");
     }
@@ -133,12 +132,12 @@ void paintDrawScreenSetup(void)
         colorReplaceWsg(&paintState->bigArrowWsg, c555, c000);
     }
 
-    if (!loadWsg("newfile.wsg", &paintState->newfileWsg))
+    if (!loadWsg("newfile.wsg", &paintState->newfileWsg, false))
     {
         PAINT_LOGE("Loading newfile.wsg icon failed!!!");
     }
 
-    if (!loadWsg("overwrite.wsg", &paintState->overwriteWsg))
+    if (!loadWsg("overwrite.wsg", &paintState->overwriteWsg, false))
     {
         PAINT_LOGE("Loading overwrite.wsg icon failed!!!");
     }
@@ -150,11 +149,11 @@ void paintDrawScreenSetup(void)
     // * The minimum height of the color picker, plus some padding
     // ... plus, 1px for the canvas border
 
-    uint16_t saveMenuSpace = paintState->saveMenuFont.h + 2 * PAINT_TOOLBAR_TEXT_PADDING_Y;
+    uint16_t saveMenuSpace = paintState->saveMenuFont.height + 2 * PAINT_TOOLBAR_TEXT_PADDING_Y;
     uint16_t toolbarSpace = spriteH + 2;
 
     // text above picker bars, plus 2px margin, plus min colorbar height (6), plus 2px above and below for select borders
-    uint16_t colorPickerSpace = paintState->smallFont.h + 2 + PAINT_COLOR_PICKER_MIN_BAR_H + 2 + 2;
+    uint16_t colorPickerSpace = paintState->smallFont.height + 2 + PAINT_COLOR_PICKER_MIN_BAR_H + 2 + 2;
 
     paintState->marginTop = MAX(saveMenuSpace, MAX(toolbarSpace, colorPickerSpace)) + 1;
 
@@ -162,7 +161,7 @@ void paintDrawScreenSetup(void)
     // Left: Leave room for the color boxes, their margins, their borders, and the canvas border
     paintState->marginLeft = PAINT_COLORBOX_W + PAINT_COLORBOX_MARGIN_X * 2 + 2 + 1;
     // Bottom: Leave room for the brush name, 4px margin, and the canvas border
-    paintState->marginBottom = paintState->toolbarFont.h + 4 + 1;
+    paintState->marginBottom = paintState->toolbarFont.height + 4 + 1;
     // Right: We just need to stay away from the rounded corner, so like, 12px?
     paintState->marginRight = 12;
 
@@ -223,15 +222,15 @@ void paintDrawScreenSetup(void)
     // Might not be necessary here
     paintUpdateLeds();
 
-    buzzer_stop();
-    buzzer_play_bgm(&paintBgm);
+    bzrStop();
+    bzrPlayBgm(&paintBgm);
 
     PAINT_LOGI("It's paintin' time! Canvas is %d x %d pixels!", paintState->canvas.w, paintState->canvas.h);
 }
 
 void paintDrawScreenCleanup(void)
 {
-    buzzer_stop();
+    bzrStop();
 
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
@@ -270,7 +269,7 @@ void paintTutorialSetup(void)
 // gets called after paintState is allocated and has basic info, but before canvas layout is done
 void paintTutorialPostSetup(void)
 {
-    paintHelp->helpH = PAINT_HELP_TEXT_LINES * (paintState->toolbarFont.h + 1) - 1;
+    paintHelp->helpH = PAINT_HELP_TEXT_LINES * (paintState->toolbarFont.height + 1) - 1;
 }
 
 void paintTutorialCleanup(void)
@@ -2104,14 +2103,14 @@ void paintUpdateLeds(void)
         }
     }
 
-    for (uint8_t i = 0; i < NUM_LEDS; i++)
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
         paintState->leds[i].b = (rgb >>  0) & 0xFF;
         paintState->leds[i].g = (rgb >>  8) & 0xFF;
         paintState->leds[i].r = (rgb >> 16) & 0xFF;
     }
 
-    setLeds(paintState->leds, NUM_LEDS);
+    setLeds(paintState->leds, CONFIG_NUM_LEDS);
 }
 
 void paintDrawPickPoints(void)
@@ -2122,7 +2121,7 @@ void paintDrawPickPoints(void)
         if (getPx(&getArtist()->pickPoints, i, &point))
         {
             bool invert = (i == 0 && getArtist()->brushDef->mode == PICK_POINT_LOOP) && pxStackSize(&getArtist()->pickPoints) > 1;
-            plotRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, invert ? getContrastingColor(point.col) : getArtist()->fgColor);
+            drawRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, invert ? getContrastingColor(point.col) : getArtist()->fgColor);
         }
     }
 }
@@ -2134,7 +2133,7 @@ void paintHidePickPoints(void)
     {
         if (getPx(&getArtist()->pickPoints, i, &point))
         {
-            plotRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, point.col);
+            drawRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1, point.y + paintState->canvas.yScale + 1, point.col);
         }
     }
 }

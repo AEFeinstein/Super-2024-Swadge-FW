@@ -2,6 +2,9 @@
 #define _PAINT_BRUSH_H_
 
 #include <stdint.h>
+#include <stdbool.h>
+
+#include "wsg.h"
 
 #include "paint_type.h"
 
