@@ -90,7 +90,7 @@ void paintEnterMode(void)
     PAINT_LOGI("Allocating %zu bytes for paintMenu...", sizeof(paintMenu_t));
     paintMenu = calloc(1, sizeof(paintMenu_t));
 
-    loadFont("mm.font", &(paintMenu->menuFont), false);
+    loadFont("logbook.font", &(paintMenu->menuFont), false);
 
     paintMenu->menu = initMenu(paintTitle, paintMenuCb);
     paintMenu->menuRenderer = initMenuLogbookRenderer(&paintMenu->menuFont);
@@ -115,10 +115,17 @@ void paintExitMode(void)
 
 void paintMainLoop(int64_t elapsedUs)
 {
+
     switch (paintMenu->screen)
     {
     case PAINT_MENU:
     {
+        buttonEvt_t evt = {0};
+        while (checkButtonQueueWrapper(&evt))
+        {
+            paintMenu->menu = menuButton(paintMenu->menu, evt);
+        }
+
         if (paintMenu->enableScreensaver && getScreensaverTimeSetting() != 0)
         {
             paintMenu->idleTimer += elapsedUs;
