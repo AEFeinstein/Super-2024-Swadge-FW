@@ -268,6 +268,7 @@ static void breakoutEnterMode(void)
     
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
+    breakout->tilemap.mapOffsetX = -4;
 
     loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
 

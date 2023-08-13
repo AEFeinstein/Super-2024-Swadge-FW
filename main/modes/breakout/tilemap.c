@@ -55,11 +55,15 @@ void drawTileMap(tilemap_t *tilemap)
             break;
         }
 
-        for (uint16_t x = (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2); x < (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2) + TILEMAP_DISPLAY_WIDTH_TILES; x++)
+        for (int32_t x = (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2); x < (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2) + TILEMAP_DISPLAY_WIDTH_TILES; x++)
         {
             if (x >= tilemap->mapWidth)
             {
                 break;
+            } 
+            else if (x < 0)
+            {
+                continue;
             }
 
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
