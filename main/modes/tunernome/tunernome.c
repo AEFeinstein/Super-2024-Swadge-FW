@@ -404,7 +404,7 @@ void tunernomeEnterMode(void)
     TUNER_THRES_Y = round(TUNER_CENTER_Y - (ABS(intermedY) * TUNER_RADIUS));
 
     loadWsg("arrow12.wsg", &(tunernome->radiostarsArrowWsg), false);
-    loadWsg("arrow21.wsg", &(tunernome->logbookArrowWsg), false);
+    loadWsg("arrow18.wsg", &(tunernome->logbookArrowWsg), false);
     loadWsg("flat_mm.wsg", &(tunernome->flatWsg), false);
 
     tunernome->beatLength = 4;
