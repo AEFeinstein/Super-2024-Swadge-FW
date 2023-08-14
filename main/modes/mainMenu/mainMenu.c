@@ -31,7 +31,6 @@ static void mainMenuEnterMode(void);
 static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
-static bool isScreenSaverOptionLabel(const char* label);
 
 //==============================================================================
 // Variables
@@ -60,11 +59,12 @@ mainMenu_t* mainMenu;
 
 static const char settingsLabel[] = "Settings";
 
-static const char tftSettingLabel[]    = "TFT";
-static const char ledSettingLabel[]    = "LED";
-static const char bgmVolSettingLabel[] = "BGM";
-static const char sfxVolSettingLabel[] = "SFX";
-static const char micSettingLabel[]    = "MIC";
+static const char tftSettingLabel[]          = "TFT";
+static const char ledSettingLabel[]          = "LED";
+static const char bgmVolSettingLabel[]       = "BGM";
+static const char sfxVolSettingLabel[]       = "SFX";
+static const char micSettingLabel[]          = "MIC";
+static const char screenSaverSettingsLabel[] = "Screensaver: ";
 
 static const int32_t screenSaverSettingsValues[] = {
     0,   // Off
@@ -77,30 +77,12 @@ static const int32_t screenSaverSettingsValues[] = {
 };
 
 static const char* const screenSaverSettingsOptions[] = {
-    "Screensaver: Off", "Screensaver: 10s", "Screensaver: 20s", "Screensaver: 30s",
-    "Screensaver: 1m",  "Screensaver: 2m",  "Screensaver: 5m",
+    "Off", "10s", "20s", "30s", "1m", "2m", "5m",
 };
 
 //==============================================================================
 // Functions
 //==============================================================================
-
-/**
- * @brief Local helper function to check if the label is one of the screensaver values
- *
- */
-static bool isScreenSaverOptionLabel(const char* label)
-{
-    for (uint8_t i = 0; i < ARRAY_SIZE(screenSaverSettingsOptions); i++)
-    {
-        if (label == screenSaverSettingsOptions[i])
-        {
-            return true;
-        }
-    }
-
-    return false;
-}
 
 /**
  * @brief Initialize the main menu mode
@@ -133,9 +115,9 @@ static void mainMenuEnterMode(void)
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
-    addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsOptions, screenSaverSettingsValues,
-                                 ARRAY_SIZE(screenSaverSettingsValues), getScreensaverTimeSettingBounds(),
-                                 getScreensaverTimeSetting());
+    addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
+                                 screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
+                                 getScreensaverTimeSettingBounds(), getScreensaverTimeSetting());
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
@@ -232,7 +214,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setMicGainSetting(settingVal);
         }
-        else if (isScreenSaverOptionLabel(label))
+        else if (screenSaverSettingsLabel == label)
         {
             setScreensaverTimeSetting(settingVal);
         }
