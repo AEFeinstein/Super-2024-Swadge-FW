@@ -433,7 +433,7 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels,
  * @param menu The menu to remove a multi item from
  * @param optionLabels The list of option labels to remove
  */
-void removeSettingsOptionsItemFrommenu(menu_t* menu, const char* const* optionLabels)
+void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels)
 {
     node_t* listNode = menu->items->first;
     while (NULL != listNode)
