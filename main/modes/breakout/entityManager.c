@@ -393,9 +393,9 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    //entity->xspeed = 32;
-    //entity->yspeed = -32;
-    setVelocity(entity, 46, 63);
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    //setVelocity(entity, 46, 63);
     entity->xMaxSpeed = 132;
     entity->yMaxSpeed = 132;
     entity->gravityEnabled = false;
@@ -406,8 +406,8 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     entity->type = ENTITY_PLAYER_BALL;
     entity->spriteIndex = SP_BALL;
-    entity->updateFunction = &updateBall;
-    entity->collisionHandler = &ballCollisionHandler;
+    entity->updateFunction = &updateBallAtStart;
+    entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &ballTileCollisionHandler;
     entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;

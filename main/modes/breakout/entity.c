@@ -43,6 +43,7 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     self->fallOffTileHandler = NULL; //&defaultFallOffTileHandler;
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical = false;
+    self->attachedToEntity = NULL;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -229,9 +230,28 @@ void updatePlayer(entity_t *self)
 };
 
 void updateBall(entity_t *self)
-{
-    moveEntityWithTileCollisions(self);
-    detectEntityCollisions(self);
+{ 
+    if(self->attachedToEntity != NULL){
+        //Ball is caught
+        self->x = self->attachedToEntity->x;
+        self->y = self->attachedToEntity->y-((self->entityManager->sprites[self->spriteIndex].originY + self->entityManager->sprites[self->attachedToEntity->spriteIndex].originY) << SUBPIXEL_RESOLUTION);
+
+        if(
+            self->gameData->btnState & PB_UP
+            &&
+            !self->gameData->prevBtnState & PB_UP
+        )
+        {
+            //Launch ball
+            self->yspeed = -63;
+            //self->xspeed = self->attachedToEntity->xspeed;
+            self->attachedToEntity = NULL;
+        }
+    } else {
+        //Ball is in play
+        moveEntityWithTileCollisions(self);
+        detectEntityCollisions(self);
+    }
 
     if((self->y >> 4) > 240){
         self->gameData->changeState = ST_DEAD;
@@ -240,6 +260,26 @@ void updateBall(entity_t *self)
         //self->yspeed = -24;
     }
 };
+
+void updateBallAtStart(entity_t *self){
+    //Find a nearby paddle and attach ball to it
+    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    {
+        entity_t *checkEntity = &(self->entityManager->entities[i]);
+        if (checkEntity->active && checkEntity != self && checkEntity->type == ENTITY_PLAYER_PADDLE_BOTTOM)
+        {
+            uint32_t dist = abs(self->x - checkEntity->x) + abs(self->y - checkEntity->y);
+
+            if (dist < 400)
+            {
+                self->attachedToEntity = checkEntity;
+                self->updateFunction = &updateBall;
+                self->collisionHandler = &ballCollisionHandler;
+            }
+        }
+    }
+}
+
 /*
 void updateHitBlock(entity_t *self)
 {

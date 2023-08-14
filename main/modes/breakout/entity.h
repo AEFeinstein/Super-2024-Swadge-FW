@@ -86,6 +86,8 @@ struct entity_t
     uint8_t hp;
     int8_t invincibilityFrames;
     uint16_t scoreValue;
+
+    entity_t *attachedToEntity;
     
     //entity_t *entities;
     entityManager_t *entityManager;
@@ -103,6 +105,7 @@ void initializeEntity(entity_t * self, entityManager_t * entityManager, tilemap_
 
 void updatePlayer(entity_t * self);
 void updateBall(entity_t * self);
+void updateBallAtStart(entity_t *self);
 void updateHitBlock(entity_t * self);
 
 void moveEntityWithTileCollisions(entity_t * self);
