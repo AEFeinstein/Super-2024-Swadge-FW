@@ -31,6 +31,7 @@ static void mainMenuEnterMode(void);
 static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
+static bool isScreenSaverOptionLabel(const char* label);
 
 //==============================================================================
 // Variables
@@ -75,7 +76,7 @@ static const int32_t screenSaverSettingsValues[] = {
     300, // 5min
 };
 
-static const char* screenSaverSettingsOptions[] = {
+static const char* const screenSaverSettingsOptions[] = {
     "Screensaver: Off", "Screensaver: 10s", "Screensaver: 20s", "Screensaver: 30s",
     "Screensaver: 1m",  "Screensaver: 2m",  "Screensaver: 5m",
 };
@@ -83,6 +84,23 @@ static const char* screenSaverSettingsOptions[] = {
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief Local helper function to check if the label is one of the screensaver values
+ *
+ */
+static bool isScreenSaverOptionLabel(const char* label)
+{
+    for (uint8_t i = 0; i < ARRAY_SIZE(screenSaverSettingsOptions); i++)
+    {
+        if (label == screenSaverSettingsOptions[i])
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 /**
  * @brief Initialize the main menu mode
@@ -214,8 +232,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setMicGainSetting(settingVal);
         }
-        else if (*screenSaverSettingsOptions <= label
-                 && label <= *(screenSaverSettingsOptions + ARRAY_SIZE(screenSaverSettingsOptions) - 1))
+        else if (isScreenSaverOptionLabel(label))
         {
             setScreensaverTimeSetting(settingVal);
         }
