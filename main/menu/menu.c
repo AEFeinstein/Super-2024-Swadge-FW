@@ -380,13 +380,18 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
  *
  * @param menu The menu to add a settings options item to
  * @param settingLabel The overall label for this setting. This is what will be
- *                     passed to the callback when the selected option changes.
+ *                     passed to the callback when the selected option changes,
+ *                     and this value will be rendered preceding the selected
+ *                     option's label.
  * @param optionLabels All of the labels for each option. The underlying memory
  *                     isn't copied, so these strings must persist for the
- *                     lifetime of the menu.
+ *                     lifetime of the menu. The label value for the selected
+ *                     option will be rendered following the settingLabel.
  * @param optionValues The corresponding settings values for each option. The
- *                     underlying memory isn't copied, so these strings must
- *                     persist for the lifetime of the menu. These values
+ *                     underlying memory isn't copied, so this array must
+ *                     persist for the lifetime of the menu. These values will
+ *                     not be rendered, but will be passed to the callback as
+ *                     the \c value when the selected option is changed.
  * @param numOptions The number of options and labels for this settings item.
  * @param bounds The bounds for this setting
  * @param currentValue The current value of the setting. Must be one of the values
