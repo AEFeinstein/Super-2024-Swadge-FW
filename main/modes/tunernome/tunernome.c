@@ -1154,7 +1154,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                     case PB_B:
                     {
                         // Cycle microphone sensitivity
-                        incMicGainSetting();
+                        decMicGainSetting();
                         break;
                     }
                     default:
