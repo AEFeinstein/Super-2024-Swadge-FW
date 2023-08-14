@@ -30,11 +30,12 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t *tilemap, gameData_t *gameData)
+void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t *tilemap, gameData_t *gameData, soundManager_t *soundManager)
 {
     self->active = false;
     self->tilemap = tilemap;
     self->gameData = gameData;
+    self->soundManager = soundManager;
     self->homeTileX = 0;
     self->homeTileY = 0;
     self->gravity = false;
@@ -827,6 +828,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
         case ENTITY_PLAYER_PADDLE_BOTTOM:
             if(self->yspeed > 0){
                 setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, 63);
+                bzrPlaySfx(&(self->soundManager->hit1));
             }
             break;
         default:
@@ -1075,6 +1077,7 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
      switch(tileId){
         case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
+            bzrPlaySfx(&(self->soundManager->hit2));
         }
         default: {
             break;

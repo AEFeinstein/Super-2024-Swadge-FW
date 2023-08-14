@@ -13,6 +13,7 @@
 #include "gameData.h"
 #include "hdw-tft.h"
 #include "sprite.h"
+#include "soundManager.h"
 
 //==============================================================================
 // Constants
@@ -39,7 +40,7 @@ struct entityManager_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData);
+void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData, soundManager_t * soundManager);
 void loadSprites(entityManager_t * entityManager);
 void updateEntities(entityManager_t * entityManager);
 void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer);

@@ -15,7 +15,9 @@
 
 #include "gameData.h"
 #include "tilemap.h"
+#include "soundManager.h"
 #include "entityManager.h"
+
 #include "leveldef.h"
 
 //==============================================================================
@@ -94,9 +96,7 @@ typedef struct
     wsg_t paddleWsg; ///< A graphic for the paddle
     wsg_t ballWsg;   ///< A graphic for the ball
 
-    song_t bgm;  ///< Background music
-    song_t hit1; ///< Sound effect for one paddle's hit
-    song_t hit2; ///< Sound effect for the other paddle's hit
+    soundManager_t soundManager;
 
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
@@ -252,19 +252,14 @@ static void breakoutEnterMode(void)
     loadWsg("pball.wsg", &breakout->ballWsg, false);
     loadWsg("ppaddle.wsg", &breakout->paddleWsg, false);
 
-    // Load SFX
-    loadSong("block1.sng", &breakout->hit1, false);
-    loadSong("block2.sng", &breakout->hit2, false);
-    loadSong("gmcc.sng", &breakout->bgm, false);
-    breakout->bgm.shouldLoop = true;
-
     // Initialize the menu
     breakout->menu = initMenu(breakoutName, breakoutMenuCb);
     breakout->mRenderer = initMenuLogbookRenderer(&breakout->logbook);
 
     initializeGameData(&(breakout->gameData));
     initializeTileMap(&(breakout->tilemap));
-    initializeEntityManager(&(breakout->entityManager), &(breakout->tilemap), &(breakout->gameData));
+    initializeSoundManager(&(breakout->soundManager));
+    initializeEntityManager(&(breakout->entityManager), &(breakout->tilemap), &(breakout->gameData), &(breakout->soundManager));
     
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
@@ -312,12 +307,9 @@ static void breakoutExitMode(void)
     // Free graphics
     freeWsg(&breakout->ballWsg);
     freeWsg(&breakout->paddleWsg);
-    // Free the songs
-    freeSong(&breakout->bgm);
-    freeSong(&breakout->hit1);
-    freeSong(&breakout->hit2);
 
     freeTilemap(&breakout->tilemap);
+    freeSoundManager(&breakout->soundManager);
     freeEntityManager(&breakout->entityManager);
     // Free everything else
     free(breakout);

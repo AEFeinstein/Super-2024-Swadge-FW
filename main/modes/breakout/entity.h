@@ -10,6 +10,7 @@
 #include "common_typedef.h"
 #include "tilemap.h"
 #include "gameData.h"
+#include "soundManager.h"
 
 //==============================================================================
 // Enums
@@ -76,6 +77,7 @@ struct entity_t
 
     tilemap_t * tilemap;
     gameData_t * gameData;
+    soundManager_t * soundManager;
 
     uint8_t homeTileX;
     uint8_t homeTileY;
@@ -101,7 +103,7 @@ struct entity_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void initializeEntity(entity_t * self, entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData);
+void initializeEntity(entity_t * self, entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData, soundManager_t * soundManager);
 
 void updatePlayer(entity_t * self);
 void updateBall(entity_t * self);
