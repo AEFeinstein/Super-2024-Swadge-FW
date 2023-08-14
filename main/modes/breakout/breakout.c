@@ -458,11 +458,12 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     }*/
 
     // Do update each loop
-    breakoutFadeLeds(elapsedUs);
+    //breakoutFadeLeds(elapsedUs);
     // breakoutControlPlayerPaddle();
     // breakoutControlCpuPaddle();
     // breakoutUpdatePhysics(elapsedUs);
 
+    updateLedsInGame(&(self->gameData));
     breakoutDetectGameStateChange(self);
     updateEntities(&(self->entityManager));
 
@@ -606,6 +607,7 @@ void breakoutChangeStateDead(breakout_t *self){
 void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs){
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 179){
+        resetGameDataLeds(&(self->gameData));
         if(self->gameData.lives > 0){
             breakoutChangeStateReadyScreen(self);
         } else {
@@ -613,6 +615,7 @@ void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs){
         }
     }
 
+    updateLedsInGame(&(self->gameData));
     updateEntities(&(self->entityManager));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));

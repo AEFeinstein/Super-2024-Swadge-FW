@@ -1301,10 +1301,166 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         }
     }
 
+    setLedBreakBlock(gameData, tileId);
+
     if(gameData->targetBlocksBroken >= tilemap->totalTargetBlocks){
         gameData->changeState = ST_LEVEL_CLEAR;
     }
 };
+
+void setLedBreakBlock(gameData_t *gameData, uint8_t tileId){
+    uint8_t ledIndex = esp_random() % CONFIG_NUM_LEDS;
+    uint8_t nr = 0;
+    uint8_t ng = 0;
+    uint8_t nb = 0;
+
+    switch(tileId){
+        case TILE_BLOCK_1x1_RED:
+        case TILE_BLOCK_2x1_RED_L:
+        case TILE_BLOCK_2x1_RED_R:
+        case TILE_BLOCK_2x2_RED_UL:
+        case TILE_BLOCK_2x2_RED_UR:
+        case TILE_BLOCK_2x2_RED_DL:
+        case TILE_BLOCK_2x2_RED_DR: {
+            nr = 255;
+            break;
+        }
+        case TILE_BLOCK_1x1_ORANGE:
+        case TILE_BLOCK_2x1_ORANGE_L:
+        case TILE_BLOCK_2x1_ORANGE_R:
+        case TILE_BLOCK_2x2_ORANGE_UL:
+        case TILE_BLOCK_2x2_ORANGE_UR:
+        case TILE_BLOCK_2x2_ORANGE_DL:
+        case TILE_BLOCK_2x2_ORANGE_DR: {
+            nr = 255;
+            ng = 127;
+            break;
+        }
+        case TILE_BLOCK_1x1_YELLOW:
+        case TILE_BLOCK_2x1_YELLOW_L:
+        case TILE_BLOCK_2x1_YELLOW_R:
+        case TILE_BLOCK_2x2_YELLOW_UL:
+        case TILE_BLOCK_2x2_YELLOW_UR:
+        case TILE_BLOCK_2x2_YELLOW_DL:
+        case TILE_BLOCK_2x2_YELLOW_DR: {
+            nr = 255;
+            ng = 255;
+            break;
+        }
+        case TILE_BLOCK_1x1_GREEN:
+        case TILE_BLOCK_2x1_GREEN_L:
+        case TILE_BLOCK_2x1_GREEN_R:
+        case TILE_BLOCK_2x2_GREEN_UL:
+        case TILE_BLOCK_2x2_GREEN_UR:
+        case TILE_BLOCK_2x2_GREEN_DL:
+        case TILE_BLOCK_2x2_GREEN_DR: {
+            ng = 255;
+            break;
+        }
+        case TILE_BLOCK_1x1_CYAN:
+        case TILE_BLOCK_2x1_CYAN_L:
+        case TILE_BLOCK_2x1_CYAN_R:
+        case TILE_BLOCK_2x2_CYAN_UL:
+        case TILE_BLOCK_2x2_CYAN_UR:
+        case TILE_BLOCK_2x2_CYAN_DL:
+        case TILE_BLOCK_2x2_CYAN_DR: {
+            ng = 255;
+            nb = 255;
+            break;
+        }
+        case TILE_BLOCK_1x1_BLUE:
+        case TILE_BLOCK_2x1_BLUE_L:
+        case TILE_BLOCK_2x1_BLUE_R:
+        case TILE_BLOCK_2x2_BLUE_UL:
+        case TILE_BLOCK_2x2_BLUE_UR:
+        case TILE_BLOCK_2x2_BLUE_DL:
+        case TILE_BLOCK_2x2_BLUE_DR: {
+            nb = 255;
+            break;
+        }
+        case TILE_BLOCK_1x1_PURPLE:
+        case TILE_BLOCK_2x1_PURPLE_L:
+        case TILE_BLOCK_2x1_PURPLE_R:
+        case TILE_BLOCK_2x2_PURPLE_UL:
+        case TILE_BLOCK_2x2_PURPLE_UR:
+        case TILE_BLOCK_2x2_PURPLE_DL:
+        case TILE_BLOCK_2x2_PURPLE_DR: {
+            nr = 255;
+            nb = 127;
+            break;
+        }
+        case TILE_BLOCK_1x1_MAGENTA:
+        case TILE_BLOCK_2x1_MAGENTA_L:
+        case TILE_BLOCK_2x1_MAGENTA_R:
+        case TILE_BLOCK_2x2_MAGENTA_UL:
+        case TILE_BLOCK_2x2_MAGENTA_UR:
+        case TILE_BLOCK_2x2_MAGENTA_DL:
+        case TILE_BLOCK_2x2_MAGENTA_DR: {
+            nr = 255;
+            nb = 255;
+            break;
+        }
+        case TILE_BLOCK_1x1_WHITE:
+        case TILE_BLOCK_2x1_WHITE_L:
+        case TILE_BLOCK_2x1_WHITE_R:
+        case TILE_BLOCK_2x2_WHITE_UL:
+        case TILE_BLOCK_2x2_WHITE_UR:
+        case TILE_BLOCK_2x2_WHITE_DL:
+        case TILE_BLOCK_2x2_WHITE_DR: {
+            nr = 255;
+            ng = 255;
+            nb = 255;
+            break;
+        }
+        case TILE_BLOCK_1x1_TAN:
+        case TILE_BLOCK_2x1_TAN_L:
+        case TILE_BLOCK_2x1_TAN_R:
+        case TILE_BLOCK_2x2_TAN_UL:
+        case TILE_BLOCK_2x2_TAN_UR:
+        case TILE_BLOCK_2x2_TAN_DL:
+        case TILE_BLOCK_2x2_TAN_DR: {
+            nr = 255;
+            ng = 204;
+            nb = 103;
+            break;
+        }
+        case TILE_BLOCK_1x1_BROWN:
+        case TILE_BLOCK_2x1_BROWN_L:
+        case TILE_BLOCK_2x1_BROWN_R:
+        case TILE_BLOCK_2x2_BROWN_UL:
+        case TILE_BLOCK_2x2_BROWN_UR:
+        case TILE_BLOCK_2x2_BROWN_DL:
+        case TILE_BLOCK_2x2_BROWN_DR: {
+            nr = 153;
+            ng = 102;
+            nb = 102;
+            break;
+        }
+        case TILE_BLOCK_1x1_BLACK:
+        case TILE_BLOCK_2x1_BLACK_L:
+        case TILE_BLOCK_2x1_BLACK_R:
+        case TILE_BLOCK_2x2_BLACK_UL:
+        case TILE_BLOCK_2x2_BLACK_UR:
+        case TILE_BLOCK_2x2_BLACK_DL:
+        case TILE_BLOCK_2x2_BLACK_DR: {
+            nr = 64;
+            ng = 64;
+            nb = 64;
+            break;
+        }
+        default: {
+            break;
+        }
+
+        
+    }
+
+    gameData->leds[ledIndex].r = CLAMP(gameData->leds[ledIndex].r + nr, 0, 255);
+    gameData->leds[ledIndex].g = CLAMP(gameData->leds[ledIndex].g + ng, 0, 255);
+    gameData->leds[ledIndex].b = CLAMP(gameData->leds[ledIndex].b + nb, 0, 255);
+
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
 
 /*
 void dieWhenFallingOffScreen(entity_t *self)

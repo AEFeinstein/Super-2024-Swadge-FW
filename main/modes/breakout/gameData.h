@@ -75,5 +75,6 @@ void updateLedsShowHighScores(gameData_t * gameData);
 void updateLedsLevelClear(gameData_t * gameData);
 void updateLedsGameClear(gameData_t * gameData);
 void updateLedsGameOver(gameData_t * gameData);
+void updateLedsInGame(gameData_t * gameData);
 
 #endif

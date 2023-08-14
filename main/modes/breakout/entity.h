@@ -136,6 +136,7 @@ bool dummyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8
 bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
 void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty);
+void setLedBreakBlock(gameData_t *gameData, uint8_t tileId);
 
 void dieWhenFallingOffScreen(entity_t *self);
 
