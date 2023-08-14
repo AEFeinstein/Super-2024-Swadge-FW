@@ -497,6 +497,15 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 {
                     menu->currentItem = menu->currentItem->prev;
                 }
+
+                // Call the callback for the move
+                item = menu->currentItem->val;
+                menu->cbFunc(
+                    item->options ? item->options[item->currentOpt] : item->label,
+                    false,
+                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting
+                );
+
                 break;
             }
             case PB_DOWN:
@@ -510,6 +519,14 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 {
                     menu->currentItem = menu->currentItem->next;
                 }
+
+                item = menu->currentItem->val;
+                menu->cbFunc(
+                    item->options ? item->options[item->currentOpt] : item->label,
+                    false,
+                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting
+                );
+
                 break;
             }
             case PB_LEFT:
