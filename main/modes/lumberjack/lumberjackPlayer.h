@@ -10,12 +10,19 @@ typedef struct
     wsg_t frames[21];
     bool flipped;
     bool onGround;
+
     bool jumping;
     bool jumpPressed;
+    bool jumpReady;
+    int jumpTimer;
+
     int state;
     int currentFrame;
     int x;
     int y;
+    float vx;
+    float vy;
+
     int tx;
     int ty;
     int h;

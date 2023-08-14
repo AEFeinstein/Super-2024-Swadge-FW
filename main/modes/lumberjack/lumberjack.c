@@ -28,8 +28,12 @@ static void lumberjackTileMap(void);
 //static void lumberjackMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static const char lumberjackName[] = "Lumber Jack";
+lumberjackTile_t lumberjackCollisionDebugTiles[8] = {};
 
-void lumberjackSetupLevel(int index);
+static void lumberjackSetupLevel(int index);
+static lumberjackTile_t* lumberjackGetTile(int x, int y);
+static bool lumberjackIsCollisionTile(int index);
+
 
 swadgeMode_t lumberjackMode = {
     .modeName                 = lumberjackName,
@@ -51,7 +55,6 @@ lumberjackVars_t* lumv;
 static void lumberjackEnterMode(void)
 {
     lumv = calloc(1, sizeof(lumberjackVars_t));
-    
     loadFont("ibm_vga8.font", &lumv->ibm, false);
 
     loadWsg("bottom_floor1.wsg", &lumv->floorTiles[0], true);
@@ -96,24 +99,25 @@ static void lumberjackEnterMode(void)
 
 void lumberjackSetupLevel(int index)
 {
-    ESP_LOGI("LUM", "Hy %d", index);
 
     lumv->yOffset = 0;
+    lumv->currentMapHeight = 21;
 
     lumv->localPlayer = calloc (1, sizeof(lumberjackHero_t));
     lumberjackSetupPlayer(lumv->localPlayer, 0);
     lumberjackSpawnPlayer(lumv->localPlayer, 94, 0, 0);
 
-    // lumv->remotePlayer = calloc (1, sizeof(lumberjackHero_t));
-    // lumberjackSetupPlayer(lumv->remotePlayer, 1);
-    // lumberjackSpawnPlayer(lumv->remotePlayer, 100, 160, 1);
-    memcpy(lumv->tiles ,(int[]) {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    for (int i = 0; i < 400; i++)
+    {
+        lumv->tiles[i] = 0;
+    }
+    uint8_t level[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -129,9 +133,9 @@ void lumberjackSetupLevel(int index)
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 0, 0, 0,
     0, 0, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 10, 0, 0, 0,
-    }, sizeof lumv->tiles);
-
-    memcpy(lumv->anim, (int[]){
+    };
+    
+    uint8_t ani[] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -153,7 +157,15 @@ void lumberjackSetupLevel(int index)
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     1, 3, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 1, 3, 1,
     2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2,
-    }, sizeof * lumv->anim);
+    };
+
+    for (int i = 0; i < 378; i++)
+    {
+        lumv->tiles[i] = level[i];
+        lumv->anim[i] = ani[i]; 
+    }
+
+    
 }
 
 
@@ -179,6 +191,7 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
 
 static void lumberjackGameLoop(int64_t elapsedUs)
 {
+    
     //Update State
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -188,25 +201,31 @@ static void lumberjackGameLoop(int64_t elapsedUs)
 
     //Check Controls
     lumberjackDoControls();
-  
+
+    //Clear cruft
+    for (int i = 0; i < 8; i++)
+    {
+        lumberjackCollisionDebugTiles[i].type = -1;
+        lumberjackCollisionDebugTiles[i].x = -1;
+        lumberjackCollisionDebugTiles[i].y = -1;
+        lumberjackCollisionDebugTiles[i].collision = -1;
+        lumberjackCollisionDebugTiles[i].index = -1;
+    }  
+
+    if (lumv->localPlayer->onGround && !lumv->localPlayer->jumpReady)
+    {
+        if (lumv->localPlayer->jumpPressed == false)
+        {
+            lumv->localPlayer->jumpReady = true;
+        }
+    }
 
     //Check physics
    //push down on player
     bool playerOnGround = false;
     
     //Take player's current y and shift down one pixel
-    int checkPoint = lumv->localPlayer->y + 25;
     
-    int tileCheck = 0;
-    
-    if (lumv->localPlayer->h > 0)
-    {
-        lumv->localPlayer->x += 5;
-    }
-    else if (lumv->localPlayer->h < 0)
-    {
-        lumv->localPlayer->x -= 5;
-    }
 
     //World wrap
     lumv->localPlayer->x %= 295;
@@ -214,61 +233,130 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     {
         lumv->localPlayer->x += 295;
     }
+
+    //Check jumping first
+    if (lumv->localPlayer->jumpPressed)
+    {
+        
+        if (lumv->localPlayer->onGround && lumv->localPlayer->jumpReady)
+        {
+            //Check if player CAN jump
+            //ESP_LOGI("L", "Trying to jump");
+            lumv->localPlayer->jumpReady = false; 
+            lumv->localPlayer->jumping = true;
+            lumv->localPlayer->vy = -15;
+            lumv->localPlayer->jumpTimer = 200000;
+            lumv->localPlayer->onGround = false;
+        }
+        else if (lumv->localPlayer->jumping)
+        {
+            lumv->localPlayer->vy -= 6;
+        }
+    }
+
+    if (lumv->localPlayer->jumpTimer > 0)
+    {
+        lumv->localPlayer->jumpTimer -= elapsedUs;
+        //ESP_LOGI("LUM", "TIMER %d", lumv->localPlayer->jumpTimer);
+        if (lumv->localPlayer->jumpTimer <= 0)
+        {
+           lumv->localPlayer->jumpTimer  = 0;
+           lumv->localPlayer->jumping = false;
+        }
+    } 
+        
+
     
-    //Crude
-    lumv->localPlayer->tx = (int)(lumv->localPlayer->x / 16);
-
-    if (lumv->localPlayer->tx < 0) lumv->localPlayer->tx = 0;
-    if (lumv->localPlayer->tx > 18) lumv->localPlayer->tx = 18;
-
-    lumv->localPlayer->ty = (int)(lumv->localPlayer->y / 16);
-
-    if (lumv->localPlayer->ty < 0) lumv->localPlayer->ty = 0;
-    if (lumv->localPlayer->ty > 18) lumv->localPlayer->ty = 18; //Kill player
 
 
-    //(lumv->localPlayer->ty * 20)+lumv->localPlayer->tx
-    //Do two checks
-    int tx1,tx2,ty;
-    for (int yMod = 0; yMod < 8; yMod++)
+    if (lumv->localPlayer->jumping == false)
+        lumv->localPlayer->vy += 6; //Fix gravity
+
+    if (lumv->localPlayer->h > 0)
+    {
+        if (lumv->localPlayer->onGround)
+            lumv->localPlayer->vx += 5;
+        else
+            lumv->localPlayer->vx += 8;
+
+    }
+    else if (lumv->localPlayer->h < 0)
+    {
+        if (lumv->localPlayer->onGround)
+            lumv->localPlayer->vx -= 5;
+        else
+            lumv->localPlayer->vx -= 8;
+    }
+    else
+    {
+        if (lumv->localPlayer->onGround)
+            lumv->localPlayer->vx *= .1;
+    }
+
+    if (lumv->localPlayer->vx > 15) lumv->localPlayer->vx = 15;
+    if (lumv->localPlayer->vx < -15) lumv->localPlayer->vx = -15;
+    if (lumv->localPlayer->vy < -30) lumv->localPlayer->vy = -30;
+    if (lumv->localPlayer->vy > 16) lumv->localPlayer->vy = 16;
+   
+    //Physics test
+    int destinationX = lumv->localPlayer->x + (lumv->localPlayer->vx * elapsedUs) / 100000;
+    int destinationY = lumv->localPlayer->y + (lumv->localPlayer->vy * elapsedUs) / 100000;
+
+    //Collision
+    if (lumv->localPlayer->vx < 0)
+    {
+        lumberjackTile_t* tileA = lumberjackGetTile(destinationX + 0, lumv->localPlayer->y + 2);
+        lumberjackTile_t* tileB = lumberjackGetTile(destinationX + 0, lumv->localPlayer->y + 31);
+
+        if (lumberjackIsCollisionTile(tileA->type) || lumberjackIsCollisionTile(tileB->type))
+        {
+            destinationX = lumv->localPlayer->x;
+            lumv->localPlayer->vx = 0;
+            
+        }
+    }
+    else if (lumv->localPlayer->vx > 0)
+    {
+        lumberjackTile_t* tileA = lumberjackGetTile(destinationX + 24, lumv->localPlayer->y + 2);
+        lumberjackTile_t* tileB = lumberjackGetTile(destinationX + 24, lumv->localPlayer->y + 31);
+
+        if (lumberjackIsCollisionTile(tileA->type) || lumberjackIsCollisionTile(tileB->type))
+        {
+            destinationX = lumv->localPlayer->x;
+            lumv->localPlayer->vx = 0;
+        }
+    }
+
+    if (lumv->localPlayer->vy < 0)
+    {
+        lumberjackTile_t* tileA = lumberjackGetTile(destinationX, destinationY);
+        lumberjackTile_t* tileB = lumberjackGetTile(destinationX + 16, destinationY);
+
+        if (lumberjackIsCollisionTile(tileA->type) || lumberjackIsCollisionTile(tileB->type))
+        {
+            destinationY = lumv->localPlayer->y;
+            lumv->localPlayer->jumpTimer = 0;
+            lumv->localPlayer->jumping = false;
+            lumv->localPlayer->vy = 0;
+        }
+    }
+    else if (lumv->localPlayer->vy > 0)
     {
 
-        tx1 = (int)((lumv->localPlayer->x ) / 16);
-        tx2 = (int)((lumv->localPlayer->x + 16) / 16);
+        lumberjackTile_t* tileA = lumberjackGetTile(destinationX, destinationY + 31);
+        lumberjackTile_t* tileB = lumberjackGetTile(destinationX + 16, destinationY + 31);
 
-        if (tx1 < 0) tx1 = 0;
-        if (tx1 > 18) tx1 = 18;
-        if (tx2 < 0) tx2 = 0;
-        if (tx2 > 18) tx2 = 18;
-        ty = (int)((lumv->localPlayer->y+48) / 16);//(int)((lumv->localPlayer->ty) / 16);
-
-        if (ty < 0) ty = 0;
-        if (ty > 20) ty = 20;// This is going to cause problems later
-
-        int tileCheck1 = lumv->tiles[(ty * 18) + tx1];
-        int tileCheck2 = lumv->tiles[(ty * 18) + tx2];
-
-        playerOnGround = (tileCheck1 != 0 && tileCheck1 != 1 && tileCheck1 != 6 && tileCheck1 != 5 && tileCheck1 != 10);
-        
-        if (playerOnGround == false)
+        if (lumberjackIsCollisionTile(tileA->type) || lumberjackIsCollisionTile(tileB->type))
         {
-            playerOnGround = (tileCheck2 != 0 && tileCheck2 != 1 && tileCheck2 != 6 && tileCheck2 != 5 && tileCheck2 != 10);
+            destinationY = ((tileA->y - 2) * 16);
+            lumv->localPlayer->vy = 0;
+            playerOnGround = true;
         }
-
-        if (playerOnGround == false)
-        {
-            lumv->localPlayer->y++;
-        }
-        else
-        {
-            break;
-        }
-
     }
 
     lumv->localPlayer->onGround = playerOnGround;
-
-    //ESP_LOGI("LUM", "%d %d %d %d", tx1, tx2, lumv->localPlayer->y, ty);
+    lumv->localPlayer->x = destinationX;
+    lumv->localPlayer->y = destinationY;
     
     lumv->worldTimer += elapsedUs;
 
@@ -286,7 +374,7 @@ static void lumberjackGameLoop(int64_t elapsedUs)
         lumv->localPlayer->timerFrameUpdate = 0;//;
     }
 
-    lumv->yOffset = lumv->localPlayer->y - 16;
+    lumv->yOffset = lumv->localPlayer->y - 140;
     if (lumv->yOffset < 16) lumv->yOffset = 16;
     if (lumv->yOffset > 96) lumv->yOffset = 96;
 
@@ -297,12 +385,12 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     lumberjackTileMap();
 
     int currentFrame = lumberjackGetPlayerAnimation(lumv->localPlayer);
+ 
     //drawWsg(&lumv->remotePlayer->frames[lumv->remotePlayer->currentFrame], lumv->remotePlayer->x, lumv->remotePlayer->y, lumv->remotePlayer->flipped, false, 0);
-    drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
-
+    drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 4, lumv->localPlayer->y - 16 - lumv->yOffset, lumv->localPlayer->flipped, false, 0);    
     if (lumv->localPlayer->x > 270)
     {
-        drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 295, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
+        drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 299, lumv->localPlayer->y - 16 - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
     }
 
     //Debug
@@ -310,6 +398,17 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     snprintf(debug, sizeof(debug), "CellX: %d %d", lumv->localPlayer->x, lumv->localPlayer->y);
 
     drawText(&lumv->ibm, c000, debug, 16, 16);
+
+    /*
+    for (int i = 0; i < 8; i++)
+    {
+        if ((lumberjackCollisionDebugTiles[i].type != -1) && lumberjackIsCollisionTile(lumberjackCollisionDebugTiles[i].type))
+        {
+            fillDisplayArea(lumberjackCollisionDebugTiles[i].x * 16, (lumberjackCollisionDebugTiles[i].y * 16) - lumv->yOffset, (lumberjackCollisionDebugTiles[i].x * 16)+16, (lumberjackCollisionDebugTiles[i].y * 16) + 16 - lumv->yOffset, c500);
+        }
+    }*/
+
+    //fillDisplayArea(lumv->localPlayer->x, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->x + 32, lumv->localPlayer->y + 32 - lumv->yOffset, c050);
 
     if (lumv->localPlayer->jumpPressed)
     {
@@ -335,7 +434,7 @@ static void lumberjackTileMap()
             {
                 if (animIndex > 0 && animIndex < 4)
                 {
-                    drawWsgSimple(&lumv->animationTiles[((animIndex - 1) * 4) + (lumv->liquidAnimationFrame % 4)],-4 + x * 16, (y * 16) - lumv->yOffset + 8);
+                    drawWsgSimple(&lumv->animationTiles[((animIndex - 1) * 4) + (lumv->liquidAnimationFrame % 4)], x * 16, (y * 16) - lumv->yOffset + 8);
                 }
 
                 if (tileIndex > 0 && tileIndex < 13)
@@ -445,6 +544,48 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
 {
 
 }
+
+static lumberjackTile_t* lumberjackGetTile(int x, int y)
+{    
+    int tx = (int)x/16;
+    int ty = (int)y/16;
+
+    if (tx < 0)
+        tx = 17;
+    if (tx > 17)
+        tx = 0;
+    
+    if (ty < 0) ty = 0;
+    if (ty > lumv->currentMapHeight) ty = lumv->currentMapHeight;
+
+    for (int i = 0; i < 8; i++ )
+    {
+        if (lumberjackCollisionDebugTiles[i].type == -1)
+        {
+            if (lumberjackCollisionDebugTiles[i].index == (ty * 18) + tx)
+                return &lumberjackCollisionDebugTiles[i];
+
+            lumberjackCollisionDebugTiles[i].index = (ty * 18) + tx;
+            lumberjackCollisionDebugTiles[i].x = tx;
+            lumberjackCollisionDebugTiles[i].y = ty;
+            lumberjackCollisionDebugTiles[i].type = lumv->tiles[(ty * 18) + tx];
+
+            return &lumberjackCollisionDebugTiles[i];
+        }
+    }
+    
+    return NULL;
+}
+
+static bool lumberjackIsCollisionTile(int index)
+{
+    if (index == 0 || index == 1 || index == 6 || index == 5 || index == 10)
+        return false;
+
+
+    return true;
+}
+
 
 // static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingVal)
 // {

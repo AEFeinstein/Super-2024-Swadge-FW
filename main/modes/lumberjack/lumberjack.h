@@ -21,18 +21,29 @@ typedef struct
     int64_t worldTimer;
     int64_t physicsTimer;
     int liquidAnimationFrame;
+    int currentMapHeight;
 
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
 
-    int tiles[378];
-    int anim[378];
+    uint8_t tiles[400];
+    uint8_t anim[400];
     
     lumberjackHero_t* localPlayer;
     lumberjackHero_t* remotePlayer;
 
 } lumberjackVars_t;
 
+typedef struct 
+{
+    /* data */
+    int x;
+    int y;
+    int collision;
+    int type;
+    int index;
+
+} lumberjackTile_t;
 
 
 #endif
