@@ -500,9 +500,12 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
 
                 // Call the callback for the move
                 item = menu->currentItem->val;
+
                 menu->cbFunc(
-                    item->options ? item->options[item->currentOpt] : item->label,
+                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
+                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label,
                     false,
+                    // If the item is a setting with options, pass the current option value. Otherwise, the regular setting
                     item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting
                 );
 
@@ -521,9 +524,12 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 }
 
                 item = menu->currentItem->val;
+
                 menu->cbFunc(
-                    item->options ? item->options[item->currentOpt] : item->label,
+                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
+                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label,
                     false,
+                    // If the item is a setting with options, pass the current option value. Otherwise, the regular setting
                     item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting
                 );
 
