@@ -1,8 +1,8 @@
-/*
- * mode_tunernome.c
- *
- *  Created on: September 17th, 2020
- *      Author: bryce
+/**
+ * @file mode_tunernome.c
+ * @author Brycey92
+ * @brief All the musical tools you could want, if you only want a tuner and metronome
+ * @date 2023-08-14
  */
 
 /*============================================================================
