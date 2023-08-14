@@ -50,6 +50,7 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./menu"
                                 "./modes/colorchord"
                                 "./modes/pong"
+                                "./modes/tunernome"
                                 "./modes/mainMenu"
                                 "./modes/demo")
 

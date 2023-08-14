@@ -33,12 +33,12 @@
     #define M_PI 3.14159265358979323846
 #endif
 
-#define CORNER_OFFSET 15
+#define CORNER_OFFSET         15
 
-#define NUM_GUITAR_STRINGS    lengthof(guitarNoteNames)
-#define NUM_VIOLIN_STRINGS    lengthof(violinNoteNames)
-#define NUM_UKULELE_STRINGS   lengthof(ukuleleNoteNames)
-#define NUM_BANJO_STRINGS     lengthof(banjoNoteNames)
+#define NUM_GUITAR_STRINGS    ARRAY_SIZE(guitarNoteNames)
+#define NUM_VIOLIN_STRINGS    ARRAY_SIZE(violinNoteNames)
+#define NUM_UKULELE_STRINGS   ARRAY_SIZE(ukuleleNoteNames)
+#define NUM_BANJO_STRINGS     ARRAY_SIZE(banjoNoteNames)
 #define GUITAR_OFFSET         0
 #define CHROMATIC_OFFSET      6 // adjust start point by quartertones
 #define SENSITIVITY           5
@@ -60,15 +60,8 @@
 #define BPM_CHANGE_FAST_MS    2000
 #define BPM_CHANGE_REPEAT_MS  50
 
-/// Helper macro to return an integer clamped within a range (MIN to MAX)
-#define CLAMP(X, MIN, MAX) ( ((X) > (MAX)) ? (MAX) : ( ((X) < (MIN)) ? (MIN) : (X)) )
-/// Helper macro to return the absolute value of an integer
-#define ABS(X) (((X) < 0) ? -(X) : (X))
-/// Helper macro to return the highest of two integers
-#define MAX(X, Y) ( ((X) > (Y)) ? (X) : (Y) )
-#define lengthof(x) (sizeof(x) / sizeof(x[0]))
-
-#define NUM_SEMITONES 12
+// Musical constant, do not change
+#define NUM_SEMITONES         12
 
 typedef enum
 {
@@ -361,7 +354,7 @@ static int TUNER_FLAT_THRES_X;
 static int TUNER_SHARP_THRES_X;
 static int TUNER_THRES_Y;
 
-static const musicalNote_t metronome_primary_notes[] =
+static musicalNote_t metronome_primary_notes[] =
 {
     {F_SHARP_5, METRONOME_CLICK_MS}
 };
@@ -373,7 +366,7 @@ const song_t metronome_primary =
     .shouldLoop = false
 };
 
-static const musicalNote_t metronome_secondary_notes[] =
+static musicalNote_t metronome_secondary_notes[] =
 {
     {F_SHARP_4, METRONOME_CLICK_MS}
 };
