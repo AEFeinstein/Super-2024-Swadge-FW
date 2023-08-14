@@ -173,6 +173,10 @@ static void mainMenuMainLoop(int64_t elapsedUs)
  */
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
+    // Stop the buzzer first no matter what, so that it turns off
+    // if we scroll away from the BGM or SFX settings.
+    bzrStop();
+
     if (selected)
     {
         // These items enter other modes, so they must be selected
