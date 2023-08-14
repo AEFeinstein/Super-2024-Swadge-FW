@@ -379,6 +379,8 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
  * selected label and setting value as the arguments.
  *
  * @param menu The menu to add a settings options item to
+ * @param settingLabel The overall label for this setting. This is what will be
+ *                     passed to the callback when the selected option changes.
  * @param optionLabels All of the labels for each option. The underlying memory
  *                     isn't copied, so these strings must persist for the
  *                     lifetime of the menu.
@@ -390,10 +392,12 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
  * @param currentValue The current value of the setting. Must be one of the values
  *                     in \c optionValues.
  */
-void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels, const int32_t* optionValues,
-                                  uint8_t numOptions, const settingParam_t* bounds, int32_t currentValue)
+void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
+                                  const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
+                                  int32_t currentValue)
 {
     menuItem_t* newItem  = calloc(1, sizeof(menuItem_t));
+    newItem->label       = settingLabel;
     newItem->options     = optionLabels;
     newItem->settingVals = optionValues;
     newItem->numOptions  = numOptions;
@@ -517,13 +521,16 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                         item->currentOpt--;
                     }
 
+                    // Call the callback, not selected
                     if (item->settingVals)
                     {
                         item->currentSetting = item->settingVals[item->currentOpt];
+                        menu->cbFunc(item->label, false, item->currentSetting);
                     }
-
-                    // Call the callback, not selected
-                    menu->cbFunc(item->options[item->currentOpt], false, item->settingVals ? item->currentSetting : 0);
+                    else
+                    {
+                        menu->cbFunc(item->options[item->currentOpt], false, 0);
+                    }
                 }
                 else if (item->minSetting != item->maxSetting)
                 {
@@ -552,13 +559,16 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                         item->currentOpt++;
                     }
 
+                    // Call the callback, not selected
                     if (item->settingVals)
                     {
                         item->currentSetting = item->settingVals[item->currentOpt];
+                        menu->cbFunc(item->label, false, item->currentSetting);
                     }
-
-                    // Call the callback, not selected
-                    menu->cbFunc(item->options[item->currentOpt], false, item->settingVals ? item->currentSetting : 0);
+                    else
+                    {
+                        menu->cbFunc(item->options[item->currentOpt], false, 0);
+                    }
                 }
                 else if (item->minSetting != item->maxSetting)
                 {

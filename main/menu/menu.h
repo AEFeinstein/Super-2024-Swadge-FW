@@ -54,6 +54,7 @@
  * static const char opt4[]            = "opt4";
  * static const char* const demoOpts[] = {opt1, opt2, opt3, opt4};
  *
+ * static const char optionSettingLabel[] = "OptSetting: "
  * static const char* const optionSettingLabels = {"Off", "30 Seconds", "5 Minutes"};
  * static const uint32_t optionSettingValues = {0, 30, 300};
  *
@@ -91,8 +92,8 @@
  * addSingleItemToMenu(menu, demoMenu5);
  * addSingleItemToMenu(menu, demoMenu6);
  * addSettingsItemToMenu(menu, demoSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
- * addSettingsOptionsItemToMenu(menu, optionSettingLabels, optionSettingValues, ARRAY_SIZE(optionSettingValues),
- *                              getScreensaverTimeSettingBounds(), 0);
+ * addSettingsOptionsItemToMenu(menu, optionSettingLabel, optionSettingLabels, optionSettingValues,
+ *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
  * // Load a font
  * font_t logbook;
@@ -193,8 +194,9 @@ void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabe
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
 void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val);
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
-void addSettingsOptionsItemToMenu(menu_t* menu, const char* const* optionLabels, const int32_t* optionValues,
-                                  uint8_t numOptions, const settingParam_t* bounds, int32_t currentOption);
+void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
+                                  const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
+                                  int32_t currentOption);
 void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
 menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
 
