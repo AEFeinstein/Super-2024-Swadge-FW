@@ -279,11 +279,15 @@ clean-firmware:
 firmware:
 	idf.py build
 
+# For now, works on Linux.  You can copy-paste these for Windows.
 usbflash :
 	make -C tools/reboot_into_bootloader
+	sleep 1.2
 	idf.py flash
+	sleep 1.2
 	make -C tools/bootload_reboot_stub reboot
-	make -C tools/swadgeterm term
+	sleep 2.5
+	make -C tools/swadgeterm monitor
 
 ################################################################################
 # cppcheck targets
