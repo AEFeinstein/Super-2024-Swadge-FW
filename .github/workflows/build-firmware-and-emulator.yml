@@ -28,7 +28,11 @@ jobs:
     - name: Create a version file
       run: |
         printf "Commit: https://github.com/AEFeinstein/Swadge-IDF-5.0/commit/$(git rev-parse HEAD) \nBuilt at: $(date)" >> version.txt
-
+        
+    - name: Extract head commit info
+      run: |
+        echo "HEAD_COMMIT_INFO='$(git show -s --format=medium ${{ github.event.head_commit.sha }})'">> $GITHUB_ENV
+    
     - name: Post to a Slack channel
       id: slack
       uses: slackapi/slack-github-action@v1.23.0
@@ -38,6 +42,6 @@ jobs:
         # You can pass in multiple channels to post to by providing a comma-delimited list of channel IDs.
         channel-id: 'C6FNXU6KX'
         # For posting a simple plain text message
-        slack-message: "*Build Result*: ${{ job.status }}\n*Author*: ${{ github.event.head_commit.author.username }}\n*Head Commit Message*:\n```\n${{ github.event.head_commit.message }}\n```\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        slack-message: "*Build Result*: ${{ job.status }}\n${{ env.HEAD_COMMIT_INFO }}\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
