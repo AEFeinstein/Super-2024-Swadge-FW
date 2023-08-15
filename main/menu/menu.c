@@ -517,11 +517,11 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 // Scroll options to the left, if applicable
                 if (item->options)
                 {
-                    if (0 == item->currentOpt)
+                    if (0 == item->currentOpt && !item->settingVals)
                     {
                         item->currentOpt = item->numOptions - 1;
                     }
-                    else
+                    else if (item->currentOpt > 0)
                     {
                         item->currentOpt--;
                     }
@@ -555,11 +555,11 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 // Scroll options to the right, if applicable
                 if (item->options)
                 {
-                    if (item->numOptions - 1 == item->currentOpt)
+                    if (item->numOptions - 1 == item->currentOpt && !item->settingVals)
                     {
                         item->currentOpt = 0;
                     }
-                    else
+                    else if (item->currentOpt + 1 < item->numOptions)
                     {
                         item->currentOpt++;
                     }
