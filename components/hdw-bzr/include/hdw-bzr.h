@@ -13,6 +13,8 @@
  * When bgm is playing, it may be interrupted by sfx.
  * If bgm and sfx are playing at the same time, both will progress through their respective notes, but only sfx will be
  * heard. This way, bgm keeps accurate time even with sfx.
+ * 
+ * TODO update with stereo notes
  *
  * \section bzr_usage Usage
  *
