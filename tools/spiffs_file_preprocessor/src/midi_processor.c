@@ -148,12 +148,24 @@ typedef enum __attribute__((packed))
     B_10       = 31609
 } noteFrequency_t;
 
+/**
+ * @brief Enum for which buzzer a note should play out of
+ */
+typedef enum
+{
+    BZR_LEFT,  ///< Play out of the left buzzer
+    BZR_RIGHT, ///< Play out of the right buzzer
+    BZR_STEREO ///< Play out of both buzzers
+} buzzerPlayChannel_t;
+
+/**
+ * @brief A single note and duration to be played on the buzzer
+ */
 typedef struct
 {
-    //* @brief Note frequency, in Hz */
-    noteFrequency_t note;
-    //* @brief Note duration, in ms */
-    uint16_t timeMs;
+    noteFrequency_t note;        ///< Note frequency, in Hz
+    uint32_t timeMs;             ///< Note duration, in ms
+    buzzerPlayChannel_t channel; ///< The channel this note should be played on
 } musicalNote_t;
 
 typedef struct
@@ -258,6 +270,7 @@ void process_midi(const char* infile, const char* outdir)
                 /* Save this note */
                 allNotes[allNoteIdx].note   = midiFreqs[note->pitch];
                 allNotes[allNoteIdx].timeMs = (params.tempo * note->duration) / (1000 * midiParser->ticks);
+                allNotes[allNoteIdx].channel = BZR_STEREO; // TODO process channels
                 allNoteIdx++;
 
                 /* If there is a note after this one */
@@ -271,6 +284,7 @@ void process_midi(const char* infile, const char* outdir)
                         allNotes[allNoteIdx].timeMs
                             = (params.tempo * (nextNote->timeBeforeAppear - (note->timeBeforeAppear + note->duration)))
                               / (1000 * midiParser->ticks);
+                        allNotes[allNoteIdx].channel = BZR_STEREO; // TODO process channels
                         allNoteIdx++;
                     }
                 }
@@ -307,6 +321,7 @@ void process_midi(const char* infile, const char* outdir)
             uncompressedSong[uIdx++] = (allNotes[noteIdx].note >> 0) & 0xFF;
             uncompressedSong[uIdx++] = (allNotes[noteIdx].timeMs >> 8) & 0xFF;
             uncompressedSong[uIdx++] = (allNotes[noteIdx].timeMs >> 0) & 0xFF;
+            uncompressedSong[uIdx++] = (allNotes[noteIdx].channel) & 0xFF;
         }
 
         /* Write the compressed bytes to a file */

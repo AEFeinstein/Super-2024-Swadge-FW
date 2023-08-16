@@ -68,6 +68,8 @@ bool loadSong(char* name, song_t* song, bool spiRam)
             dbIdx += 2;
             song->notes[noteIdx].timeMs = (decompressedBuf[dbIdx] << 8) | (decompressedBuf[dbIdx + 1]);
             dbIdx += 2;
+            song->notes[noteIdx].channel = decompressedBuf[dbIdx];
+            dbIdx += 1;
         }
         free(decompressedBuf);
         return true;
