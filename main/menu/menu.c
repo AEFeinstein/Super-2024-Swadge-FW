@@ -29,9 +29,9 @@ static void deinitSubMenu(menu_t* menu);
  * scrollable rows. The rows are separated into pages, and when a page
  * boundary is crossed the whole page scrolls.
  *
- * Rows may be single items, where the callback is called whenever it is
- * selected or multi items, which is a collection of horizontally scrollable
- * items and the callback is called whenever it scrolls or is selected.
+ * Rows may be single items, or multi items, which are collections of horizontally
+ * scrollable items. The callback is called whenever a row is moved to or selected,
+ * and when a multi item is scrolled to or selected.
  *
  * Rows may also be submenus. When a submenu is selected, the callback is not
  * called, and instead a the submenu is rendered. Each submenu automatically
@@ -497,6 +497,17 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 {
                     menu->currentItem = menu->currentItem->prev;
                 }
+
+                // Call the callback for the move
+                item = menu->currentItem->val;
+
+                menu->cbFunc(
+                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
+                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label, false,
+                    // If the item is a setting with options, pass the current option value. Otherwise, the regular
+                    // setting
+                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
+
                 break;
             }
             case PB_DOWN:
@@ -510,6 +521,16 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 {
                     menu->currentItem = menu->currentItem->next;
                 }
+
+                item = menu->currentItem->val;
+
+                menu->cbFunc(
+                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
+                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label, false,
+                    // If the item is a setting with options, pass the current option value. Otherwise, the regular
+                    // setting
+                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
+
                 break;
             }
             case PB_LEFT:
