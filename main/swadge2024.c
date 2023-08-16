@@ -238,7 +238,8 @@ void app_main(void)
                 sizeof(touchPads) / sizeof(touchPads[0]));
 
     // Init buzzer. This must be called before initMic()
-    initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
+    initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
+               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, false, false);
 
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)

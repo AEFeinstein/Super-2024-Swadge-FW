@@ -590,7 +590,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
-            bzrPlaySfx(&pong->hit1);
+            bzrPlaySfx(&pong->hit1, BZR_STEREO);
 
             // Set an LED
             pong->ledL.r = 0xFF;
@@ -612,7 +612,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
-            bzrPlaySfx(&pong->hit2);
+            bzrPlaySfx(&pong->hit2, BZR_STEREO);
 
             // Set an LED
             pong->ledR.r = 0x40;
@@ -646,7 +646,8 @@ static void pongResetGame(bool isInit, uint8_t whoWon)
         pong->paddleR.height = PADDLE_HEIGHT;
 
         // Start playing music
-        bzrPlayBgm(&pong->bgm);
+        // TODO this isnt working?
+        bzrPlayBgm(&pong->bgm, BZR_STEREO);
     }
     else
     {

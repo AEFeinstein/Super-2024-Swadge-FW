@@ -213,12 +213,12 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (bgmVolSettingLabel == label)
         {
             setBgmVolumeSetting(settingVal);
-            bzrPlayBgm(&mainMenu->jingle);
+            bzrPlaySfx(&mainMenu->jingle, BZR_LEFT);
         }
         else if (sfxVolSettingLabel == label)
         {
             setSfxVolumeSetting(settingVal);
-            bzrPlaySfx(&mainMenu->jingle);
+            bzrPlaySfx(&mainMenu->jingle, BZR_RIGHT);
         }
         else if (micSettingLabel == label)
         {
