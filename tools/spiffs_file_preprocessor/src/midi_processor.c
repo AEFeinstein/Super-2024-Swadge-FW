@@ -237,7 +237,7 @@ void process_midi(const char* infile, const char* outdir)
         if (track->nbOfNotes > 0)
         {
             /* Allocate enough space for all the notes with rests in between them */
-            allNotes = malloc((2 * track->nbOfNotes) * sizeof(musicalNote_t));
+            allNotes = calloc((2 * track->nbOfNotes), sizeof(musicalNote_t));
 
             /* For each note */
             unsigned long int lastNoteStart = track->notes[0].timeBeforeAppear;
@@ -305,7 +305,7 @@ void process_midi(const char* infile, const char* outdir)
     if (NULL != allNotes)
     {
         /* Put all the uncomressed song bytes in an array with specific byte order*/
-        uint8_t* uncompressedSong = malloc(4 + (4 * allNoteIdx));
+        uint8_t* uncompressedSong = calloc(1, 4 + (5 * allNoteIdx));
         uint32_t uIdx             = 0;
 
         /* Write number of notes */
