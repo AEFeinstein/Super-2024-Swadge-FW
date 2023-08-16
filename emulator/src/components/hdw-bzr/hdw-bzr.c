@@ -83,7 +83,7 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
     bzrStop();
     if (!soundDriver)
     {
-        soundDriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 1, 256, 0, 0);
+        soundDriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 2, 256, 0, 0);
     }
     memset(&emuBzrBgm, 0, sizeof(emuBzrBgm));
     memset(&emuBzrSfx, 0, sizeof(emuBzrSfx));
@@ -347,10 +347,12 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
         {
             float transitionPoint = (2 * M_PI * buzzerVol) / 8192;
             // For each sample
-            for (int i = 0; i < samples_W; i++)
+            for (int i = 0; i < samples_W; i += 2)
             {
-                // Write the sample
+                // Write the left channel sample
                 out[i] = 1024 * ((placeInWave < transitionPoint) ? 1 : -1);
+                // Write the right channel sample
+                out[i + 1] = 1024 * ((placeInWave < transitionPoint) ? 1 : -1);
                 // Advance the place in the wave
                 placeInWave += ((2 * M_PI * buzzerNote) / ((float)SAMPLING_RATE));
                 // Keep it bound between 0 and 2*PI
