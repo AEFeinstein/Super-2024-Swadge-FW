@@ -433,7 +433,8 @@ static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool is
                     {
                         case BZR_STEREO:
                         {
-                            // For mono songs (i.e. the note is played on both channels), play on the track's given channel
+                            // For mono songs (i.e. the note is played on both channels), play on the track's given
+                            // channel
                             bzrPlayNote(track->song->notes[track->note_index].note, track->channel, track->volume);
                             break;
                         }
