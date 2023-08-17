@@ -36,7 +36,7 @@ typedef struct
     uint16_t btnState;      ///< The button state
 
     //current level
-    sokoLevel_t* currentLevel;
+    sokoLevel_t currentLevel;
 
 } soko_t;
 

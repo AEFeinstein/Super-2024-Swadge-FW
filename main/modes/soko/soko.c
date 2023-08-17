@@ -31,6 +31,7 @@ swadgeMode_t sokoMode = {
     .fnAdvancedUSB            = NULL,
 };
 
+soko_t* soko=NULL;
 static void sokoEnterMode(void)
 {
     soko = calloc(1, sizeof(soko_t));
@@ -57,7 +58,7 @@ static void sokoExitMode(void)
     freeFont(&soko->ibm);
 
     //free the level
-    free(soko->currentLevel);
+
     // Free everything else
     free(soko);
 }
@@ -69,6 +70,11 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
     {
        //placeholder.
        if(label == sokoResumeGameLabel)
+       {
+            //load level.
+            sokoLoadLevel(0);
+            soko->screen = SOKO_LEVELPLAY;
+       }else if(label == sokoNewGameLabel)
        {
             //load level.
             sokoLoadLevel(0);
@@ -113,7 +119,7 @@ static void sokoMainLoop(int64_t elapsedUs)
 
             //background had been drawn, input has been processed and functions called. Now do followup logic and draw level.
             //gameplay loop
-            gameLoop(elapsedUs);
+            gameLoop(soko,elapsedUs);
         }
     }
 }
@@ -126,15 +132,17 @@ static void sokoLoadLevel(uint16_t levelIndex)
 
     //here we learn how big the level is from the image.
 
-    soko->currentLevel->tiles[0][0] = SK_WALL;
-    soko->currentLevel->tiles[1][0] = SK_WALL;
-    soko->currentLevel->tiles[2][0] = SK_WALL;
-    soko->currentLevel->tiles[0][1] = SK_WALL;
-    soko->currentLevel->tiles[1][1] = SK_EMPTY;
-    soko->currentLevel->tiles[2][1] = SK_WALL;
-    soko->currentLevel->tiles[0][2] = SK_WALL;
-    soko->currentLevel->tiles[1][2] = SK_WALL;
-    soko->currentLevel->tiles[2][2] = SK_WALL;
+    soko->currentLevel.width = 3;
+    soko->currentLevel.height = 3;
+    soko->currentLevel.tiles[0][0] = SK_WALL;
+    soko->currentLevel.tiles[1][0] = SK_WALL;
+    soko->currentLevel.tiles[2][0] = SK_WALL;
+    soko->currentLevel.tiles[0][1] = SK_WALL;
+    soko->currentLevel.tiles[1][1] = SK_EMPTY;
+    soko->currentLevel.tiles[2][1] = SK_WALL;
+    soko->currentLevel.tiles[0][2] = SK_WALL;
+    soko->currentLevel.tiles[1][2] = SK_WALL;
+    soko->currentLevel.tiles[2][2] = SK_WALL;
 
 }
 
@@ -149,9 +157,9 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
     {
         for (int16_t xp = x; xp < x + w; xp++)
         {
-            if ((0 == xp % 40) || (0 == yp % 40))
+            if ((0 == xp % 20) || (0 == yp % 20))
             {
-                TURBO_SET_PIXEL(xp, yp, c110);
+                TURBO_SET_PIXEL(xp, yp, c002);
             }
             else
             {
