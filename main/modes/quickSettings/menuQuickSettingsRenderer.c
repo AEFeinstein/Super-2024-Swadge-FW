@@ -27,6 +27,8 @@
 /// The panel corner-radius
 #define PANEL_R 15
 
+#define TEXT_MARGIN 10
+
 #define PANEL_BG_COLOR c333
 #define PANEL_BOX_COLOR c000
 #define PANEL_TEXT_COLOR c000
@@ -134,7 +136,7 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
 
         // Draw selected icon
         uint16_t iconX = panelX + index * PANEL_W / (menu->items->length) + ((PANEL_W - ICON_W * menu->items->length) / menu->items->length / 2);
-        uint16_t iconY = (PANEL_H - renderer->font->height - 5 - 1 - wsgToDraw->h - ICON_BOX_PX * 2) / 2;
+        uint16_t iconY = (PANEL_H - renderer->font->height - TEXT_MARGIN - 1 - wsgToDraw->h - ICON_BOX_PX * 2) / 2;
         drawWsgSimple(wsgToDraw, iconX, iconY);
 
         if (item == menu->currentItem->val)
@@ -144,7 +146,7 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
 
             drawRect(iconX - 1, iconY - 1, iconX + ICON_W + 1, iconY + ICON_H + 1, PANEL_BOX_COLOR);
 
-            drawText(renderer->font, PANEL_TEXT_COLOR, label, panelX + 5, PANEL_H - renderer->font->height - 5);
+            drawText(renderer->font, PANEL_TEXT_COLOR, label, panelX + TEXT_MARGIN, PANEL_H - renderer->font->height - TEXT_MARGIN - 1);
         }
 
         node = node->next;
