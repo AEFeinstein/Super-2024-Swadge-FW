@@ -52,7 +52,8 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./modes/dance"
                                 "./modes/pong"
                                 "./modes/mainMenu"
-                                "./modes/demo")
+                                "./modes/demo"
+                                "./modes/soko")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL

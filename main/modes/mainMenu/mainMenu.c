@@ -9,6 +9,7 @@
 #include "pong.h"
 #include "mode_colorchord.h"
 #include "mode_dance.h"
+#include "soko.h"
 
 #include "settingsManager.h"
 
@@ -103,6 +104,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
 
     // Add single items
+    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
@@ -197,6 +199,8 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modeDance.modeName)
         {
             switchToSwadgeMode(&modeDance);
+        }else if (label == sokoMode.modeName){
+            switchToSwadgeMode(&sokoMode);
         }
     }
     else
