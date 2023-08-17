@@ -307,7 +307,7 @@ void process_midi(const char* infile, const char* outdir)
     deleteMidiParserStruct(midiParser);
 
     /* If notes were parsed */
-    if (NULL != notes)
+    if (NULL != notes[0])
     {
         uint32_t totalSongBytes = 4; // Four bytes for the number of channels
         for (uint8_t ch = 0; ch < channelIdx; ch++)
