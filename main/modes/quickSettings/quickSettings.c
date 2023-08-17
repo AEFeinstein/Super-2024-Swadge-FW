@@ -12,6 +12,7 @@
 
 #include "quickSettings.h"
 #include "menu.h"
+#include "menu_utils.h"
 #include "menuQuickSettingsRenderer.h"
 
 #include "settingsManager.h"

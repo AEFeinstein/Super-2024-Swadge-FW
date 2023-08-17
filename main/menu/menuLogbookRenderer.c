@@ -4,6 +4,7 @@
 
 #include <esp_random.h>
 #include "menuLogbookRenderer.h"
+#include "menu_utils.h"
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
