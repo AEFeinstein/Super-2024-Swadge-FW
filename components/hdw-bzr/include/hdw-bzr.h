@@ -13,7 +13,7 @@
  * When bgm is playing, it may be interrupted by sfx.
  * If bgm and sfx are playing at the same time, both will progress through their respective notes, but only sfx will be
  * heard. This way, bgm keeps accurate time even with sfx.
- * 
+ *
  * TODO update with stereo notes
  *
  * \section bzr_usage Usage
@@ -222,20 +222,25 @@ typedef enum
  */
 typedef struct
 {
-    noteFrequency_t note;        ///< Note frequency, in Hz
-    int32_t timeMs;              ///< Note duration, in ms
-    buzzerPlayChannel_t channel; ///< The channel this note should be played on
+    noteFrequency_t note; ///< Note frequency, in Hz
+    int32_t timeMs;       ///< Note duration, in ms
 } musicalNote_t;
+
+typedef struct
+{
+    int32_t numNotes;      ///< The number of notes in this song
+    int32_t loopStartNote; ///< The note index to restart at, if looping
+    musicalNote_t* notes;  ///< An array of notes in the song
+} songChannel_t;
 
 /**
  * @brief A list of notes and durations to be played on the buzzer
  */
 typedef struct
 {
-    int32_t numNotes;      ///< The number of notes in this song
-    int32_t loopStartNote; ///< The note index to restart at, if looping
-    bool shouldLoop;       ///< true if the song should loop, false if it should play once
-    musicalNote_t* notes;  ///< An array of notes in the song
+    int16_t numChannels;     ///< The number of channels in this song
+    bool shouldLoop;         ///< true if the song should loop, false if it should play once
+    songChannel_t* channels; ///< The channels for this song
 } song_t;
 
 void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t ledcChannelL, gpio_num_t bzrGpioR,
