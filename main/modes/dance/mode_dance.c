@@ -144,7 +144,7 @@ void danceEnterMode(void)
     danceState->buttonPressedTimer = 0;
 
     loadFont("logbook.font", &(danceState->infoFont), false);
-    loadWsg("arrow21.wsg", &danceState->arrow, false);
+    loadWsg("arrow18.wsg", &danceState->arrow, false);
 }
 
 /**

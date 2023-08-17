@@ -9,6 +9,7 @@
 #include "pong.h"
 #include "mode_colorchord.h"
 #include "mode_dance.h"
+#include "tunernome.h"
 
 #include "settingsManager.h"
 
@@ -107,6 +108,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modeDance.modeName);
+    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -197,6 +199,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modeDance.modeName)
         {
             switchToSwadgeMode(&modeDance);
+        }
+        else if (label == tunernomeMode.modeName)
+        {
+            switchToSwadgeMode(&tunernomeMode);
         }
     }
     else
