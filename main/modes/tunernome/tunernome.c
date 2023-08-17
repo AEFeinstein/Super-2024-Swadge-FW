@@ -999,10 +999,10 @@ void tunernomeMainLoop(int64_t elapsedUs)
                             }
                             case PB_LEFT:
                             case PB_RIGHT:
-                            case BTN_A:
-                            case BTN_B:
-                            case START:
-                            case SELECT:
+                            case PB_A:
+                            case PB_B:
+                            case PB_START:
+                            case PB_SELECT:
                             default:
                             {
                                 break;
@@ -1076,9 +1076,9 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         break;
                     }
                     // TODO: left/right to cycle common tunings per-instrument?
-                    case LEFT:
-                    case RIGHT:
-                    case SELECT:
+                    case PB_LEFT:
+                    case PB_RIGHT:
+                    case PB_SELECT:
                     default:
                     {
                         break;
@@ -1137,8 +1137,8 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         tunernome->isSilent = !tunernome->isSilent;
                         break;
                     }
-                    case BTN_A:
-                    case BTN_B:
+                    case PB_A:
+                    case PB_B:
                     default:
                     {
                         break;
@@ -1166,8 +1166,8 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                     case PB_RIGHT:
                     case PB_A:
                     case PB_B:
-                    case START:
-                    case SELECT:
+                    case PB_START:
+                    case PB_SELECT:
                     default:
                     {
                         break;
