@@ -10,7 +10,7 @@
 
 #include "swadge2024.h"
 
-extern swadgeMode_t modeTunernome;
+extern swadgeMode_t tunernomeMode;
 
 extern const song_t metronome_primary;
 extern const song_t metronome_secondary;

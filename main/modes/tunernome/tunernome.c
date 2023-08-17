@@ -168,7 +168,7 @@ static inline int16_t getSemiDiffAround(uint16_t idx);
  * Variables
  *==========================================================================*/
 
-swadgeMode_t modeTunernome = {.modeName                 = "Tunernome",
+swadgeMode_t tunernomeMode = {.modeName                 = "Tunernome",
                               .wifiMode                 = NO_WIFI,
                               .overrideUsb              = false,
                               .usesAccelerometer        = false,
