@@ -210,7 +210,7 @@ static void pongEnterMode(void)
     // Load SFX
     loadSong("block1.sng", &pong->hit1, false);
     loadSong("block2.sng", &pong->hit2, false);
-    loadSong("gmcc.sng", &pong->bgm, false);
+    loadSong("stereo.sng", &pong->bgm, false);
     pong->bgm.shouldLoop = true;
 
     // Initialize the menu
