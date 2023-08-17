@@ -997,6 +997,12 @@ void tunernomeMainLoop(int64_t elapsedUs)
                                 modifyBpm(-mod);
                                 break;
                             }
+                            case PB_LEFT:
+                            case PB_RIGHT:
+                            case BTN_A:
+                            case BTN_B:
+                            case START:
+                            case SELECT:
                             default:
                             {
                                 break;
@@ -1058,17 +1064,21 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         incMicGainSetting();
                         break;
                     }
-                    case PB_START:
-                    {
-                        switchToSubmode(TN_METRONOME);
-                        break;
-                    }
                     case PB_B:
                     {
                         // Cycle microphone sensitivity
                         decMicGainSetting();
                         break;
                     }
+                    case PB_START:
+                    {
+                        switchToSubmode(TN_METRONOME);
+                        break;
+                    }
+                    // TODO: left/right to cycle common tunings per-instrument?
+                    case LEFT:
+                    case RIGHT:
+                    case SELECT:
                     default:
                     {
                         break;
@@ -1127,6 +1137,8 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         tunernome->isSilent = !tunernome->isSilent;
                         break;
                     }
+                    case BTN_A:
+                    case BTN_B:
                     default:
                     {
                         break;
@@ -1135,6 +1147,7 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
             }     // if(down)
             else
             {
+                // Stop button repetition and reset related variables
                 switch (evt->button)
                 {
                     case PB_UP:
@@ -1149,6 +1162,12 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         }
                         break;
                     }
+                    case PB_LEFT:
+                    case PB_RIGHT:
+                    case PB_A:
+                    case PB_B:
+                    case START:
+                    case SELECT:
                     default:
                     {
                         break;
