@@ -607,7 +607,7 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 }
                 else if (item->settingVals)
                 {
-                    menu->cbFunc(item->options[item->currentOpt], true, item->settingVals[item->currentOpt]);
+                    menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
                 }
                 else if (item->minSetting != item->maxSetting)
                 {
