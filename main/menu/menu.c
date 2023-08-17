@@ -408,6 +408,7 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
     newItem->numOptions  = numOptions;
     newItem->minSetting  = bounds->min;
     newItem->maxSetting  = bounds->max;
+    newItem->currentSetting = currentValue;
 
     // Set the current option to the first in case we can't find it
     newItem->currentOpt = 0;
