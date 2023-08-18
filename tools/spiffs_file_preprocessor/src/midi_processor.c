@@ -234,10 +234,10 @@ void process_midi(const char* inFile, const char* outDir)
     midiParams_t params                    = {0};
 
     /* Look for the first track with notes */
-    for (int trackIdx = 0; trackIdx < midiParser->nbOfTracks; trackIdx++)
+    for (int midiTrackIdx = 0; midiTrackIdx < midiParser->nbOfTracks; midiTrackIdx++)
     {
         /* Only process the first track with notes */
-        Track* track = &(midiParser->tracks[trackIdx]);
+        Track* track = &(midiParser->tracks[midiTrackIdx]);
         if (track->nbOfNotes > 0)
         {
             if (trackIdx < MAX_NUM_CHANNELS)
@@ -391,9 +391,9 @@ static void checkMidiEvents(MidiParser* midiParser, unsigned long int lastNoteSt
                             midiParams_t* params)
 {
     /* For each track */
-    for (int trackIdx = 0; trackIdx < midiParser->nbOfTracks; trackIdx++)
+    for (int midiTrackIdx = 0; midiTrackIdx < midiParser->nbOfTracks; midiTrackIdx++)
     {
-        Track* track = &(midiParser->tracks[trackIdx]);
+        Track* track = &(midiParser->tracks[midiTrackIdx]);
         /* For each event */
         for (int evtIdx = 0; evtIdx < track->nbOfEvents; evtIdx++)
         {
