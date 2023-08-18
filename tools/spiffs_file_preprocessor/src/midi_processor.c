@@ -220,16 +220,17 @@ void process_midi(const char* infile, const char* outdir)
     if (doesFileExist(outFilePath))
     {
         /* printf("Output for %s already exists\n", infile); */
-        // return;
+        return;
     }
 
     /* Parse the MIDI file */
     MidiParser* midiParser = parseMidi(infile, false, true);
 
-/* Declare variables to translate the notes to */
+    /* Declare variables to translate the notes to */
     uint8_t channelIdx                     = 0;
     musicalNote_t* notes[MAX_NUM_CHANNELS] = {NULL, NULL};
     uint32_t noteIdxs[MAX_NUM_CHANNELS]    = {0, 0};
+    uint32_t totalLength[MAX_NUM_CHANNELS] = {0, 0};
     midiParams_t params                    = {0};
 
     /* Look for the first track with notes */
@@ -276,6 +277,7 @@ void process_midi(const char* infile, const char* outdir)
                     notes[channelIdx][noteIdxs[channelIdx]].note = midiFreqs[note->pitch];
                     notes[channelIdx][noteIdxs[channelIdx]].timeMs
                         = (params.tempo * note->duration) / (1000 * midiParser->ticks);
+                    totalLength[channelIdx] += notes[channelIdx][noteIdxs[channelIdx]].timeMs;
                     noteIdxs[channelIdx]++;
 
                     /* If there is a note after this one */
@@ -290,6 +292,7 @@ void process_midi(const char* infile, const char* outdir)
                                 = (params.tempo
                                    * (nextNote->timeBeforeAppear - (note->timeBeforeAppear + note->duration)))
                                   / (1000 * midiParser->ticks);
+                            totalLength[channelIdx] += notes[channelIdx][noteIdxs[channelIdx]].timeMs;
                             noteIdxs[channelIdx]++;
                         }
                     }
@@ -301,6 +304,21 @@ void process_midi(const char* infile, const char* outdir)
                 channelIdx++;
             }
         }
+    }
+
+    if(totalLength[0] < totalLength[1])
+    {
+        // Pad out track 0 to be the same length as track 1
+        notes[0][noteIdxs[0]].note = SILENCE;
+        notes[0][noteIdxs[0]].timeMs = totalLength[1] - totalLength[0];
+        noteIdxs[0]++;
+    }
+    else if (totalLength[0] > totalLength[1])
+    {
+        // Pad out track 1 to be the same length as track 0
+        notes[1][noteIdxs[1]].note = SILENCE;
+        notes[1][noteIdxs[1]].timeMs = totalLength[1] - totalLength[0];
+        noteIdxs[1]++;
     }
 
     /* Cleanup the parser */
