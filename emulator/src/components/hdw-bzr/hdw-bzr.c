@@ -15,8 +15,7 @@
 // Defines
 //==============================================================================
 
-#define SAMPLING_RATE    8000
-#define NUM_BZR_CHANNELS 2
+#define SAMPLING_RATE 8000
 
 //==============================================================================
 // Structs
@@ -27,22 +26,22 @@
  */
 typedef struct
 {
-    const songChannel_t* sChan; ///< The song currently being played on this track
-    int32_t note_index;         ///< The note index into the song
-    int64_t start_time;         ///< TODO
-    bool should_loop;           ///< TODO
+    const songTrack_t* sChan; ///< The song currently being played on this track
+    int32_t note_index;       ///< The note index into the song
+    int64_t start_time;       ///< TODO
+    bool should_loop;         ///< TODO
 } bzrTrack_t;
 
 /**
- * @brief A buzzer channel, currently either left or right
+ * @brief A buzzer, currently either left or right
  */
 typedef struct
 {
     noteFrequency_t cFreq; ///< The current frequency of the note being played
     uint16_t vol;          ///< The current volume
-    bzrTrack_t bgm;        ///< The BGM track for this channel
-    bzrTrack_t sfx;        ///< The SFX track for this channel
-} bzrChannel_t;
+    bzrTrack_t bgm;        ///< The BGM track for this buzzer
+    bzrTrack_t sfx;        ///< The SFX track for this buzzer
+} buzzer_t;
 
 //==============================================================================
 // Const variables
@@ -60,7 +59,7 @@ const uint16_t volLevels[] = {
 static struct SoundDriver* soundDriver = NULL;
 
 // Output buzzers
-static bzrChannel_t emuBzrChannels[NUM_BZR_CHANNELS] = {0};
+static buzzer_t buzzers[NUM_BUZZERS] = {0};
 uint16_t bgmVolume;
 uint16_t sfxVolume;
 
@@ -68,7 +67,7 @@ uint16_t sfxVolume;
 // Function Prototypes
 //==============================================================================
 
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t channel, uint16_t volume, bool isActive);
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t buzzer, uint16_t volume, bool isActive);
 void buzzer_check_next_note(void* arg);
 void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
 
@@ -84,7 +83,7 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
  * @param ledcChannelL The LEDC channel used to drive the left buzzer
  * @param bzrGpioR The GPIO the right buzzer is attached to
  * @param ledcTimerR The LEDC timer used to drive the right buzzer
- * @param ledcChannelR THe LEDC channel used to drive the right buzzer
+ * @param ledcChannelR The LEDC channel used to drive the right buzzer
  * @param bgmVolume Starting background sound volume, 0 to 4096
  * @param sfxVolume Starting effects sound volume, 0 to 4096
  */
@@ -98,7 +97,7 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
         soundDriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 2, 256, 0, 0);
     }
 
-    memset(&emuBzrChannels, 0, sizeof(emuBzrChannels));
+    memset(&buzzers, 0, sizeof(buzzers));
     bgmVolume = _bgmVolume;
     sfxVolume = _sfxVolume;
 
@@ -155,38 +154,38 @@ void bzrSetSfxVolume(uint16_t vol)
  * than sound effects
  *
  * @param song The song to play as a sequence of notes
- * @param channel TODO
+ * @param track The track to play BGM on
  */
-void bzrPlayBgm(const song_t* song, buzzerPlayChannel_t channel)
+void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
 {
     int64_t startTime = esp_timer_get_time();
-    if (1 == song->numChannels)
+    if (1 == song->numTracks)
     {
         // Song is mono, play it accordingly
-        switch (channel)
+        switch (track)
         {
             case BZR_STEREO:
             {
                 // Play the same thing on both buzzers
-                emuBzrChannels[BZR_LEFT].bgm.sChan       = &song->channels[0];
-                emuBzrChannels[BZR_LEFT].bgm.note_index  = -1;
-                emuBzrChannels[BZR_LEFT].bgm.start_time  = startTime;
-                emuBzrChannels[BZR_LEFT].bgm.should_loop = song->shouldLoop;
+                buzzers[BZR_LEFT].bgm.sChan       = &song->tracks[0];
+                buzzers[BZR_LEFT].bgm.note_index  = -1;
+                buzzers[BZR_LEFT].bgm.start_time  = startTime;
+                buzzers[BZR_LEFT].bgm.should_loop = song->shouldLoop;
 
-                emuBzrChannels[BZR_RIGHT].bgm.sChan       = &song->channels[0];
-                emuBzrChannels[BZR_RIGHT].bgm.note_index  = -1;
-                emuBzrChannels[BZR_RIGHT].bgm.start_time  = startTime;
-                emuBzrChannels[BZR_RIGHT].bgm.should_loop = song->shouldLoop;
+                buzzers[BZR_RIGHT].bgm.sChan       = &song->tracks[0];
+                buzzers[BZR_RIGHT].bgm.note_index  = -1;
+                buzzers[BZR_RIGHT].bgm.start_time  = startTime;
+                buzzers[BZR_RIGHT].bgm.should_loop = song->shouldLoop;
                 break;
             }
             case BZR_LEFT:
             case BZR_RIGHT:
             {
-                // Play the mono song on the given channel
-                emuBzrChannels[channel].bgm.sChan       = &song->channels[0];
-                emuBzrChannels[channel].bgm.note_index  = -1;
-                emuBzrChannels[channel].bgm.start_time  = startTime;
-                emuBzrChannels[channel].bgm.should_loop = song->shouldLoop;
+                // Play the mono song on the given track
+                buzzers[track].bgm.sChan       = &song->tracks[0];
+                buzzers[track].bgm.note_index  = -1;
+                buzzers[track].bgm.start_time  = startTime;
+                buzzers[track].bgm.should_loop = song->shouldLoop;
                 break;
             }
         }
@@ -194,15 +193,15 @@ void bzrPlayBgm(const song_t* song, buzzerPlayChannel_t channel)
     else
     {
         // Play the stereo song on both buzzers
-        emuBzrChannels[BZR_LEFT].bgm.sChan       = &song->channels[0];
-        emuBzrChannels[BZR_LEFT].bgm.note_index  = -1;
-        emuBzrChannels[BZR_LEFT].bgm.start_time  = startTime;
-        emuBzrChannels[BZR_LEFT].bgm.should_loop = song->shouldLoop;
+        buzzers[BZR_LEFT].bgm.sChan       = &song->tracks[0];
+        buzzers[BZR_LEFT].bgm.note_index  = -1;
+        buzzers[BZR_LEFT].bgm.start_time  = startTime;
+        buzzers[BZR_LEFT].bgm.should_loop = song->shouldLoop;
 
-        emuBzrChannels[BZR_RIGHT].bgm.sChan       = &song->channels[1];
-        emuBzrChannels[BZR_RIGHT].bgm.note_index  = -1;
-        emuBzrChannels[BZR_RIGHT].bgm.start_time  = startTime;
-        emuBzrChannels[BZR_RIGHT].bgm.should_loop = song->shouldLoop;
+        buzzers[BZR_RIGHT].bgm.sChan       = &song->tracks[1];
+        buzzers[BZR_RIGHT].bgm.note_index  = -1;
+        buzzers[BZR_RIGHT].bgm.start_time  = startTime;
+        buzzers[BZR_RIGHT].bgm.should_loop = song->shouldLoop;
     }
 }
 
@@ -211,35 +210,38 @@ void bzrPlayBgm(const song_t* song, buzzerPlayChannel_t channel)
  * than background music
  *
  * @param song The song to play as a sequence of notes
- * @param channel TODO
+ * @param track The track to play SFX on
  */
-void bzrPlaySfx(const song_t* song, buzzerPlayChannel_t channel)
+void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
 {
     int64_t startTime = esp_timer_get_time();
-    if (1 == song->numChannels)
+    if (1 == song->numTracks)
     {
         // Song is mono, play it accordingly
-        switch (channel)
+        switch (track)
         {
             case BZR_STEREO:
             {
                 // Play the same thing on both buzzers
-                emuBzrChannels[BZR_LEFT].sfx.sChan      = &song->channels[0];
-                emuBzrChannels[BZR_LEFT].sfx.note_index = -1;
-                emuBzrChannels[BZR_LEFT].sfx.start_time = startTime;
+                buzzers[BZR_LEFT].sfx.sChan       = &song->tracks[0];
+                buzzers[BZR_LEFT].sfx.note_index  = -1;
+                buzzers[BZR_LEFT].sfx.start_time  = startTime;
+                buzzers[BZR_LEFT].sfx.should_loop = song->shouldLoop;
 
-                emuBzrChannels[BZR_RIGHT].sfx.sChan      = &song->channels[0];
-                emuBzrChannels[BZR_RIGHT].sfx.note_index = -1;
-                emuBzrChannels[BZR_RIGHT].sfx.start_time = startTime;
+                buzzers[BZR_RIGHT].sfx.sChan       = &song->tracks[0];
+                buzzers[BZR_RIGHT].sfx.note_index  = -1;
+                buzzers[BZR_RIGHT].sfx.start_time  = startTime;
+                buzzers[BZR_RIGHT].sfx.should_loop = song->shouldLoop;
                 break;
             }
             case BZR_LEFT:
             case BZR_RIGHT:
             {
-                // Play the mono song on the given channel
-                emuBzrChannels[channel].sfx.sChan      = &song->channels[0];
-                emuBzrChannels[channel].sfx.note_index = -1;
-                emuBzrChannels[channel].sfx.start_time = startTime;
+                // Play the mono song on the given track
+                buzzers[track].sfx.sChan       = &song->tracks[0];
+                buzzers[track].sfx.note_index  = -1;
+                buzzers[track].sfx.start_time  = startTime;
+                buzzers[track].sfx.should_loop = song->shouldLoop;
                 break;
             }
         }
@@ -247,13 +249,15 @@ void bzrPlaySfx(const song_t* song, buzzerPlayChannel_t channel)
     else
     {
         // Play the stereo song on both buzzers
-        emuBzrChannels[BZR_LEFT].sfx.sChan      = &song->channels[0];
-        emuBzrChannels[BZR_LEFT].sfx.note_index = -1;
-        emuBzrChannels[BZR_LEFT].sfx.start_time = startTime;
+        buzzers[BZR_LEFT].sfx.sChan       = &song->tracks[0];
+        buzzers[BZR_LEFT].sfx.note_index  = -1;
+        buzzers[BZR_LEFT].sfx.start_time  = startTime;
+        buzzers[BZR_LEFT].sfx.should_loop = song->shouldLoop;
 
-        emuBzrChannels[BZR_RIGHT].sfx.sChan      = &song->channels[1];
-        emuBzrChannels[BZR_RIGHT].sfx.note_index = -1;
-        emuBzrChannels[BZR_RIGHT].sfx.start_time = startTime;
+        buzzers[BZR_RIGHT].sfx.sChan       = &song->tracks[1];
+        buzzers[BZR_RIGHT].sfx.note_index  = -1;
+        buzzers[BZR_RIGHT].sfx.start_time  = startTime;
+        buzzers[BZR_RIGHT].sfx.should_loop = song->shouldLoop;
     }
 }
 
@@ -262,7 +266,7 @@ void bzrPlaySfx(const song_t* song, buzzerPlayChannel_t channel)
  */
 void bzrStop(void)
 {
-    memset(emuBzrChannels, 0, sizeof(emuBzrChannels));
+    memset(buzzers, 0, sizeof(buzzers));
     bzrPlayNote(SILENCE, BZR_LEFT, 0);
     bzrPlayNote(SILENCE, BZR_RIGHT, 0);
 }
@@ -275,12 +279,12 @@ void bzrStop(void)
  * This has IRAM_ATTR because it may be called from an interrupt
  *
  * @param freq The frequency of the note
- * @param channel TODO
+ * @param track The track to play a note on
  * @param volume The volume, 0 to 4096
  */
-void bzrPlayNote(noteFrequency_t freq, buzzerPlayChannel_t channel, uint16_t volume)
+void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume)
 {
-    switch (channel)
+    switch (track)
     {
         case BZR_STEREO:
         {
@@ -291,8 +295,8 @@ void bzrPlayNote(noteFrequency_t freq, buzzerPlayChannel_t channel, uint16_t vol
         case BZR_LEFT:
         case BZR_RIGHT:
         {
-            emuBzrChannels[channel].cFreq = freq;
-            emuBzrChannels[channel].vol   = volume;
+            buzzers[track].cFreq = freq;
+            buzzers[track].vol   = volume;
             break;
         }
     }
@@ -302,32 +306,34 @@ void bzrPlayNote(noteFrequency_t freq, buzzerPlayChannel_t channel, uint16_t vol
  * @brief Stop playing a single note on the buzzer
  * This has IRAM_ATTR because it may be called from an interrupt
  *
- * @param channel TODO
+ * @param track The track to stop
  */
-void bzrStopNote(buzzerPlayChannel_t channel)
+void bzrStopNote(buzzerPlayTrack_t track)
 {
-    bzrPlayNote(SILENCE, channel, 0);
+    bzrPlayNote(SILENCE, track, 0);
 }
 
 ////////////////////////////////
 
 /**
  * @brief Call this periodically to check if the next note in the song should be played
+ *
+ * @param arg unused
  */
 void buzzer_check_next_note(void* arg)
 {
-    for (int16_t cIdx = 0; cIdx < NUM_BZR_CHANNELS; cIdx++)
+    for (int16_t cIdx = 0; cIdx < NUM_BUZZERS; cIdx++)
     {
-        bzrChannel_t* chan = &emuBzrChannels[cIdx];
+        buzzer_t* buzzer = &buzzers[cIdx];
 
-        bool sfxIsActive = buzzer_track_check_next_note(&chan->sfx, cIdx, sfxVolume, true);
-        bool bgmIsActive = buzzer_track_check_next_note(&chan->bgm, cIdx, bgmVolume, !sfxIsActive);
+        bool sfxIsActive = buzzer_track_check_next_note(&buzzer->sfx, cIdx, sfxVolume, true);
+        bool bgmIsActive = buzzer_track_check_next_note(&buzzer->bgm, cIdx, bgmVolume, !sfxIsActive);
 
         // If nothing is playing, but there is BGM (i.e. SFX finished)
-        if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != chan->bgm.sChan))
+        if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != buzzer->bgm.sChan))
         {
             // Immediately start playing BGM to get back on track faster
-            bzrPlayNote(chan->bgm.sChan->notes[chan->bgm.note_index].note, cIdx, bgmVolume);
+            bzrPlayNote(buzzer->bgm.sChan->notes[buzzer->bgm.note_index].note, cIdx, bgmVolume);
         }
     }
 }
@@ -336,12 +342,14 @@ void buzzer_check_next_note(void* arg)
  * @brief Advance the notes in a specific track and play them if the track is active
  *
  * @param track The track to check notes in
- * @param channel The buzzer channel to play on
- * @param isActive true to play notes, false to just advance them
+ * @param bIdx The index of the buzzer to play on
+ * @param volume The volume to play at
+ * @param isActive true if this is active and should set a note to be played
+ *                 false to just advance notes without playing
  * @return true  if this track is playing a note
  *         false if it is not
  */
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t channel, uint16_t volume, bool isActive)
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive)
 {
     // Check if there is a song and there are still notes
     if ((NULL != track->sChan) && (track->note_index < track->sChan->numNotes))
@@ -369,7 +377,7 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t channel, uin
                 if (isActive)
                 {
                     // Play the note
-                    bzrPlayNote(track->sChan->notes[track->note_index].note, channel, volume);
+                    bzrPlayNote(track->sChan->notes[track->note_index].note, bIdx, volume);
                 }
             }
             else
@@ -377,7 +385,7 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t channel, uin
                 if (isActive)
                 {
                     // Song is over
-                    bzrStopNote(channel);
+                    bzrStopNote(bIdx);
                 }
 
                 track->start_time = 0;
@@ -413,21 +421,21 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
     if (samples_W && out)
     {
         // Keep track of our place in the wave
-        static float placeInWave[NUM_BZR_CHANNELS] = {0, 0};
+        static float placeInWave[NUM_BUZZERS] = {0, 0};
 
-        for (int cIdx = 0; cIdx < NUM_BZR_CHANNELS; cIdx++)
+        for (int cIdx = 0; cIdx < NUM_BUZZERS; cIdx++)
         {
             // If there is a note to play
-            if (emuBzrChannels[cIdx].cFreq)
+            if (buzzers[cIdx].cFreq)
             {
-                float transitionPoint = (2 * M_PI * emuBzrChannels[cIdx].vol) / 8192;
+                float transitionPoint = (2 * M_PI * buzzers[cIdx].vol) / 8192;
                 // For each sample
                 for (int i = 0; i < samples_W; i += 2)
                 {
                     // Write the sample, interleaved
                     out[i + cIdx] = 1024 * ((placeInWave[cIdx] < transitionPoint) ? 1 : -1);
                     // Advance the place in the wave
-                    placeInWave[cIdx] += ((2 * M_PI * emuBzrChannels[cIdx].cFreq) / ((float)SAMPLING_RATE));
+                    placeInWave[cIdx] += ((2 * M_PI * buzzers[cIdx].cFreq) / ((float)SAMPLING_RATE));
                     // Keep it bound between 0 and 2*PI
                     if (placeInWave[cIdx] >= (2 * M_PI))
                     {

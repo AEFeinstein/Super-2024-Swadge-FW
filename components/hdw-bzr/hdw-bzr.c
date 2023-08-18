@@ -2,6 +2,8 @@
 // Includes
 //==============================================================================
 
+#include <string.h>
+
 #include <esp_log.h>
 #include <esp_timer.h>
 #include <esp_attr.h>
@@ -13,64 +15,68 @@
 // Defines
 //==============================================================================
 
-// For LEDC
 #define LEDC_MODE LEDC_LOW_SPEED_MODE //!< Low speed mode is sufficient
 
 //==============================================================================
-// Enums
+// Structs
 //==============================================================================
 
 /**
- * @brief A buzzer channel, currently either left or right
+ * @brief A track for a song on the buzzer. This plays notes from a songTrack_t
+ */
+typedef struct
+{
+    int64_t start_time;        ///< The time the current musicalNote_t started in the song
+    int32_t note_index;        ///< The index of the current musicalNote_t in the song
+    const songTrack_t* sTrack; ///< The song being played
+    bool should_loop;          ///< Whether or not this track should loop when done
+} bzrTrack_t;
+
+/**
+ * @brief A physical buzzer that has BGM and SFX tracks
  */
 typedef struct
 {
     ledc_timer_t ledcTimer;     ///< LEDC timer to play notes
     ledc_channel_t ledcChannel; ///< LEDC channel to play notes
     noteFrequency_t cFreq;      ///< The current frequency of the note being played
-} bzrChannel_t;
-
-/**
- * @brief A track for a song on the buzzer. This plays notes from a song_t
- */
-typedef struct
-{
-    const song_t* song;          ///< The song_t being played
-    int32_t note_index;          ///< The index of the current musicalNote_t in the song
-    int64_t start_time;          ///< The time the current musicalNote_t started in the song
-    uint16_t volume;             ///< This track's volume, from 0 (off) to 4096 (max)
-    buzzerPlayChannel_t channel; ///< The channel to play this song on, if mono
-} buzzerTrack_t;
+    uint16_t volume;            ///< This track's volume, from 0 (off) to 4096 (max)
+    bzrTrack_t bgm;             ///< The BGM track for this buzzer
+    bzrTrack_t sfx;             ///< The SFX track for this buzzer
+} buzzer_t;
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-/// @brief The background track
-static buzzerTrack_t bgm;
-/// @brief The sound effect track
-static buzzerTrack_t sfx;
-
 /// @brief Timer to check for note transitions
-static gptimer_handle_t bzrTimer;
+static gptimer_handle_t bzrTimer = NULL;
+/// @brief Track if the buzzer timer is active or not
+static bool bzrTimerActive = false;
 
-/// @brief Array of buzzer channels, left and right
-static bzrChannel_t bzrChannels[2];
+/// @brief Array of buzzers, left and right
+static buzzer_t buzzers[NUM_BUZZERS] = {0};
+
+/// @brief BGM volume
+static uint16_t bgmVolume = 0;
+/// @brief SFX volume
+static uint16_t sfxVolume = 0;
 
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
 
-static void initBuzzerChannel(bzrChannel_t* channel, gpio_num_t bzrGpio, ledc_timer_t ledcTimer,
-                              ledc_channel_t ledcChannel);
+static void initSingleBuzzer(buzzer_t* buzzer, gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel);
 static bool buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
-static bool buzzer_track_check_next_note(buzzerTrack_t* track, bool isActive, int64_t cTime);
+static bool buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume, bool isActive,
+                                         int64_t cTime);
+static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* song, buzzerPlayTrack_t track);
 
 //==============================================================================
 // Const variables
 //==============================================================================
 
-const uint16_t volLevels[] = {
+static const uint16_t volLevels[] = {
     0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096,
 };
 
@@ -79,27 +85,27 @@ const uint16_t volLevels[] = {
 //==============================================================================
 
 /**
- * @brief Initialize the buzzer
+ * @brief Initialize the buzzers
  *
  * @param bzrGpioL The GPIO the left buzzer is attached to
  * @param ledcTimerL The LEDC timer used to drive the left buzzer
- * @param ledcChannelL THe LEDC channel used to drive the left buzzer
+ * @param ledcChannelL The LEDC channel used to drive the left buzzer
  * @param bzrGpioR The GPIO the right buzzer is attached to
  * @param ledcTimerR The LEDC timer used to drive the right buzzer
- * @param ledcChannelR THe LEDC channel used to drive the right buzzer
- * @param bgmVolume Starting background sound volume, 0 to 4096
- * @param sfxVolume Starting effects sound volume, 0 to 4096
+ * @param ledcChannelR The LEDC channel used to drive the right buzzer
+ * @param _bgmVolume Starting background sound volume, 0 to 4096
+ * @param _sfxVolume Starting effects sound volume, 0 to 4096
  */
 void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t ledcChannelL, gpio_num_t bzrGpioR,
-                ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t bgmVolume, uint16_t sfxVolume)
+                ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t _bgmVolume, uint16_t _sfxVolume)
 {
     // Set initial volume
-    bgm.volume = bgmVolume;
-    sfx.volume = sfxVolume;
+    bgmVolume = _bgmVolume;
+    sfxVolume = _sfxVolume;
 
     // Save the LEDC timers and channels
-    initBuzzerChannel(&bzrChannels[BZR_LEFT], bzrGpioL, ledcTimerL, ledcChannelL);
-    initBuzzerChannel(&bzrChannels[BZR_RIGHT], bzrGpioR, ledcTimerR, ledcChannelR);
+    initSingleBuzzer(&buzzers[BZR_LEFT], bzrGpioL, ledcTimerL, ledcChannelL);
+    initSingleBuzzer(&buzzers[BZR_RIGHT], bzrGpioR, ledcTimerR, ledcChannelR);
 
     // Initialize the timer
     gptimer_config_t timer_config = {
@@ -126,28 +132,31 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
     // Don't start the timer until a song is played
     ESP_ERROR_CHECK(gptimer_enable(bzrTimer));
     gptimer_stop(bzrTimer);
+    bzrTimerActive = false;
 }
 
 /**
- * @brief Initialize a single buzzer channel's LEDC
+ * @brief Initialize a single buzzer's LEDC
  *
- * @param channel The buzzer channel to initialize
+ * @param buzzer The buzzer to initialize
  * @param bzrGpio The GPIO the buzzer is on
  * @param ledcTimer The LEDC timer to use for this buzzer
  * @param ledcChannel The LEDC channel to use for this buzzer
  */
-static void initBuzzerChannel(bzrChannel_t* channel, gpio_num_t bzrGpio, ledc_timer_t ledcTimer,
-                              ledc_channel_t ledcChannel)
+static void initSingleBuzzer(buzzer_t* buzzer, gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel)
 {
     // Set variables in the struct
-    channel->ledcChannel = ledcChannel;
-    channel->ledcTimer   = ledcTimer;
-    channel->cFreq       = SILENCE;
+    buzzer->ledcChannel = ledcChannel;
+    buzzer->ledcTimer   = ledcTimer;
+    buzzer->cFreq       = SILENCE;
+    buzzer->volume      = 0;
+    memset(&buzzer->bgm, 0, sizeof(bzrTrack_t));
+    memset(&buzzer->sfx, 0, sizeof(bzrTrack_t));
 
     // Prepare and then apply the LEDC PWM timer configuration
     ledc_timer_config_t ledc_timer = {
         .speed_mode      = LEDC_MODE,
-        .timer_num       = channel->ledcTimer,
+        .timer_num       = buzzer->ledcTimer,
         .duty_resolution = LEDC_TIMER_13_BIT,
         .freq_hz         = C_4, // Reasonable place to start
         .clk_cfg         = LEDC_USE_APB_CLK,
@@ -157,17 +166,17 @@ static void initBuzzerChannel(bzrChannel_t* channel, gpio_num_t bzrGpio, ledc_ti
     // Prepare and then apply the LEDC PWM channel configuration
     ledc_channel_config_t ledc_channel = {
         .speed_mode = LEDC_MODE,
-        .channel    = channel->ledcChannel,
-        .timer_sel  = channel->ledcTimer,
+        .channel    = buzzer->ledcChannel,
+        .timer_sel  = buzzer->ledcTimer,
         .intr_type  = LEDC_INTR_DISABLE,
         .gpio_num   = bzrGpio,
-        .duty       = bgm.volume, // Duty cycle is equivalent to volume
+        .duty       = bgmVolume, // Duty cycle is equivalent to volume
         .hpoint     = 0,
     };
     ESP_ERROR_CHECK(ledc_channel_config(&ledc_channel));
 
     // Stop all buzzer output
-    ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, channel->ledcChannel, 0));
+    ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, buzzer->ledcChannel, 0));
 }
 
 /**
@@ -175,8 +184,8 @@ static void initBuzzerChannel(bzrChannel_t* channel, gpio_num_t bzrGpio, ledc_ti
  */
 void deinitBuzzer(void)
 {
-    ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, bzrChannels[BZR_LEFT].ledcChannel, 0));
-    ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, bzrChannels[BZR_RIGHT].ledcChannel, 0));
+    ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, buzzers[BZR_LEFT].ledcChannel, 0));
+    ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, buzzers[BZR_RIGHT].ledcChannel, 0));
     ESP_ERROR_CHECK(gptimer_stop(bzrTimer));
     ESP_ERROR_CHECK(gptimer_disable(bzrTimer));
 }
@@ -189,7 +198,7 @@ void deinitBuzzer(void)
  */
 void bzrSetBgmVolume(uint16_t vol)
 {
-    bgm.volume = volLevels[vol];
+    bgmVolume = volLevels[vol];
 }
 
 /**
@@ -200,7 +209,52 @@ void bzrSetBgmVolume(uint16_t vol)
  */
 void bzrSetSfxVolume(uint16_t vol)
 {
-    sfx.volume = volLevels[vol];
+    sfxVolume = volLevels[vol];
+}
+
+/**
+ * @brief Play a song_t on one or two bzrTrack_t depending on what
+ *
+ * @param trackL The left track to play on
+ * @param trackR The right track to play on
+ * @param song The song_t to play
+ * @param track The requested track or tracks to play on
+ */
+static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* song, buzzerPlayTrack_t track)
+{
+    int64_t startTime = esp_timer_get_time();
+    if (1 == song->numTracks)
+    {
+        // Mono song, play it on the requested tracks
+        if (BZR_STEREO == track || BZR_LEFT == track)
+        {
+            trackL->sTrack      = &song->tracks[0];
+            trackL->note_index  = -1;
+            trackL->start_time  = startTime;
+            trackL->should_loop = song->shouldLoop;
+        }
+
+        if (BZR_STEREO == track || BZR_RIGHT == track)
+        {
+            trackR->sTrack      = &song->tracks[0];
+            trackR->note_index  = -1;
+            trackR->start_time  = startTime;
+            trackR->should_loop = song->shouldLoop;
+        }
+    }
+    else
+    {
+        // Stereo song, play it on both tracks
+        trackL->sTrack      = &song->tracks[0];
+        trackL->note_index  = -1;
+        trackL->start_time  = startTime;
+        trackL->should_loop = song->shouldLoop;
+
+        trackR->sTrack      = &song->tracks[1];
+        trackR->note_index  = -1;
+        trackR->start_time  = startTime;
+        trackR->should_loop = song->shouldLoop;
+    }
 }
 
 /**
@@ -208,26 +262,25 @@ void bzrSetSfxVolume(uint16_t vol)
  * than sound effects
  *
  * @param song The song to play as a sequence of notes
- * @param channel The channel to play on if the song is mono. This is ignored if the song is stereo
+ * @param track The track to play on if the song is mono. This is ignored if the song is stereo
  */
-void bzrPlayBgm(const song_t* song, buzzerPlayChannel_t channel)
+void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
 {
     // Don't play if muted
-    if (0 == bgm.volume)
+    if (0 == bgmVolume)
     {
         return;
     }
 
-    bgm.song       = song;
-    bgm.note_index = -1;
-    bgm.start_time = esp_timer_get_time();
-    bgm.channel    = channel;
+    // Play this song on the BGM track
+    bzrPlayTrack(&buzzers[0].bgm, &buzzers[1].bgm, song, track);
 
-    // If there is no current SFX
-    if (NULL == sfx.song)
+    // If the timer is off
+    if (false == bzrTimerActive)
     {
         // Start timer, the timer function will start the song
         gptimer_start(bzrTimer);
+        bzrTimerActive = true;
     }
 }
 
@@ -236,23 +289,26 @@ void bzrPlayBgm(const song_t* song, buzzerPlayChannel_t channel)
  * than background music
  *
  * @param song The song to play as a sequence of notes
- * @param channel The channel to play on if the song is mono. This is ignored if the song is stereo
+ * @param track The track to play on if the song is mono. This is ignored if the song is stereo
  */
-void bzrPlaySfx(const song_t* song, buzzerPlayChannel_t channel)
+void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
 {
     // Don't play if muted
-    if (0 == sfx.volume)
+    if (0 == sfxVolume)
     {
         return;
     }
 
-    sfx.song       = song;
-    sfx.note_index = -1;
-    sfx.start_time = esp_timer_get_time();
-    sfx.channel    = channel;
+    // Play this song on the SFX track
+    bzrPlayTrack(&buzzers[0].sfx, &buzzers[1].sfx, song, track);
 
-    // Always play SFX, the timer function will start the song
-    gptimer_start(bzrTimer);
+    // If the timer is off
+    if (false == bzrTimerActive)
+    {
+        // Start timer, the timer function will start the song
+        gptimer_start(bzrTimer);
+        bzrTimerActive = true;
+    }
 }
 
 /**
@@ -262,19 +318,18 @@ void bzrStop(void)
 {
     // Stop the timer to check notes
     gptimer_stop(bzrTimer);
+    bzrTimerActive = false;
 
     // Stop the note
     bzrStopNote(BZR_LEFT);
     bzrStopNote(BZR_RIGHT);
 
     // Clear internal variables
-    bgm.note_index = 0;
-    bgm.song       = NULL;
-    bgm.start_time = 0;
-
-    sfx.note_index = 0;
-    sfx.song       = NULL;
-    sfx.start_time = 0;
+    for (uint8_t cIdx = 0; cIdx < NUM_BUZZERS; cIdx++)
+    {
+        memset(&(buzzers[cIdx].bgm), 0, sizeof(bzrTrack_t));
+        memset(&(buzzers[cIdx].sfx), 0, sizeof(bzrTrack_t));
+    }
 }
 
 /////////////////////////////
@@ -285,16 +340,16 @@ void bzrStop(void)
  * This has IRAM_ATTR because it may be called from an interrupt
  *
  * @param freq The frequency of the note
- * @param channel The channel to play the note on
+ * @param track The track to play the note on
  * @param volume The volume, 0 to 4096
  */
-void IRAM_ATTR bzrPlayNote(noteFrequency_t freq, buzzerPlayChannel_t channel, uint16_t volume)
+void IRAM_ATTR bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume)
 {
-    switch (channel)
+    switch (track)
     {
         case BZR_STEREO:
         {
-            // Mono means play on both channels
+            // Mono means play on both buzzers
             bzrPlayNote(freq, BZR_LEFT, volume);
             bzrPlayNote(freq, BZR_RIGHT, volume);
             break;
@@ -304,20 +359,20 @@ void IRAM_ATTR bzrPlayNote(noteFrequency_t freq, buzzerPlayChannel_t channel, ui
         {
             if (SILENCE == freq)
             {
-                bzrStopNote(channel);
+                bzrStopNote(track);
                 return;
             }
             else
             {
-                if (bzrChannels[channel].cFreq != freq)
+                if (buzzers[track].cFreq != freq)
                 {
-                    bzrChannels[channel].cFreq = freq;
+                    buzzers[track].cFreq = freq;
                     // Set the frequency
-                    ledc_set_freq(LEDC_MODE, bzrChannels[channel].ledcTimer, bzrChannels[channel].cFreq);
+                    ledc_set_freq(LEDC_MODE, buzzers[track].ledcTimer, buzzers[track].cFreq);
                     // Set duty to 50%
-                    ledc_set_duty(LEDC_MODE, bzrChannels[channel].ledcChannel, volume);
+                    ledc_set_duty(LEDC_MODE, buzzers[track].ledcChannel, volume);
                     // Update duty to start the buzzer
-                    ledc_update_duty(LEDC_MODE, bzrChannels[channel].ledcChannel);
+                    ledc_update_duty(LEDC_MODE, buzzers[track].ledcChannel);
                 }
             }
             break;
@@ -329,13 +384,13 @@ void IRAM_ATTR bzrPlayNote(noteFrequency_t freq, buzzerPlayChannel_t channel, ui
  * @brief Stop playing a single note on the buzzer
  * This has IRAM_ATTR because it may be called from an interrupt
  */
-void IRAM_ATTR bzrStopNote(buzzerPlayChannel_t channel)
+void IRAM_ATTR bzrStopNote(buzzerPlayTrack_t track)
 {
-    switch (channel)
+    switch (track)
     {
         case BZR_STEREO:
         {
-            // Mono means play on both channels
+            // Mono means play on both buzzers
             bzrStopNote(BZR_LEFT);
             bzrStopNote(BZR_RIGHT);
             break;
@@ -343,8 +398,8 @@ void IRAM_ATTR bzrStopNote(buzzerPlayChannel_t channel)
         case BZR_LEFT:
         case BZR_RIGHT:
         {
-            bzrChannels[channel].cFreq = SILENCE;
-            ledc_stop(LEDC_MODE, bzrChannels[channel].ledcChannel, 0);
+            buzzers[track].cFreq = SILENCE;
+            ledc_stop(LEDC_MODE, buzzers[track].ledcChannel, 0);
             break;
         }
     }
@@ -358,17 +413,16 @@ void IRAM_ATTR bzrStopNote(buzzerPlayChannel_t channel)
  *
  * This has IRAM_ATTR because it is an interrupt
  *
- * @param timer
- * @param edata
- * @param user_ctx
- * @return true
- * @return false
+ * @param timer Timer handle created by gptimer_new_timer
+ * @param edata Alarm event data, fed by driver
+ * @param user_ctx User data, passed from gptimer_register_event_callbacks
+ * @return true if a high priority task has been waken up by this function, false otherwise
  */
 static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata,
                                                  void* user_ctx)
 {
     // Don't do much if muted
-    if ((0 == bgm.volume) && (0 == sfx.volume))
+    if ((0 == bgmVolume) && (0 == sfxVolume))
     {
         return false;
     }
@@ -376,16 +430,20 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
     // Get the current time
     int64_t cTime = esp_timer_get_time();
 
-    // Try playing SFX first
-    bool sfxIsActive = buzzer_track_check_next_note(&sfx, true, cTime);
-    // Then play BGM if SFX isn't active
-    bool bgmIsActive = buzzer_track_check_next_note(&bgm, !sfxIsActive, cTime);
-
-    // If nothing is playing, but there is BGM (i.e. SFX finished)
-    if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bgm.song))
+    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
     {
-        // Immediately start playing BGM to get back on track faster
-        bzrPlayNote(bgm.song->notes[bgm.note_index].note, bgm.song->notes[bgm.note_index].channel, bgm.volume);
+        buzzer_t* bzr = &buzzers[bIdx];
+        // Try playing SFX first
+        bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, cTime);
+        // Then play BGM if SFX isn't active
+        bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, sfxVolume, !sfxIsActive, cTime);
+
+        // If nothing is playing, but there is BGM (i.e. SFX finished)
+        if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bzr->bgm.sTrack))
+        {
+            // Immediately start playing BGM to get back on track faster
+            bzrPlayNote(bzr->bgm.sTrack->notes[bzr->bgm.note_index].note, bIdx, bgmVolume);
+        }
     }
     return false;
 }
@@ -397,56 +455,40 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
  * This has IRAM_ATTR because it is called from buzzer_check_next_note_isr()
  *
  * @param track The track to advance notes in
+ * @param bIdx The index of the buzzer to play on
+ * @param volume The volume to play
  * @param isActive true if this is active and should set a note to be played
  *                 false to just advance notes without playing
  * @param cTime The current system time in microseconds
  * @return true  if this track is playing a note
  *         false if this track is not playing a note
  */
-static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool isActive, int64_t cTime)
+static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume,
+                                                   bool isActive, int64_t cTime)
 {
     // Check if there is a song and there are still notes
-    if ((NULL != track->song) && (track->note_index < track->song->numNotes))
+    if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
     {
         // Check if the song is beginning or it's time to play the next note
         if ((-1 == track->note_index)
-            || (cTime - track->start_time >= (1000 * track->song->notes[track->note_index].timeMs)))
+            || (cTime - track->start_time >= (1000 * track->sTrack->notes[track->note_index].timeMs)))
         {
             // Move to the next note
-            // TODO check multiple notes for multiple channels
             track->note_index++;
             track->start_time = cTime;
 
             // Loop if we should
-            if (track->song->shouldLoop && (track->note_index == track->song->numNotes))
+            if (track->should_loop && (track->note_index == track->sTrack->numNotes))
             {
-                track->note_index = track->song->loopStartNote;
+                track->note_index = track->sTrack->loopStartNote;
             }
 
             // If there is a note
-            if (track->note_index < track->song->numNotes)
+            if (track->note_index < track->sTrack->numNotes)
             {
                 if (isActive)
                 {
-                    // Set the note to be played
-                    switch (track->song->notes[track->note_index].channel)
-                    {
-                        case BZR_STEREO:
-                        {
-                            // For mono songs (i.e. the note is played on both channels), play on the track's given
-                            // channel
-                            bzrPlayNote(track->song->notes[track->note_index].note, track->channel, track->volume);
-                            break;
-                        }
-                        case BZR_LEFT:
-                        case BZR_RIGHT:
-                        {
-                            // For stereo songs, play on the note's given channel
-                            bzrPlayNote(track->song->notes[track->note_index].note,
-                                        track->song->notes[track->note_index].channel, track->volume);
-                            break;
-                        }
-                    }
+                    bzrPlayNote(track->sTrack->notes[track->note_index].note, bIdx, volume);
                 }
             }
             else
@@ -454,13 +496,13 @@ static bool IRAM_ATTR buzzer_track_check_next_note(buzzerTrack_t* track, bool is
                 if (isActive)
                 {
                     // Set the song to stop
-                    bzrStopNote(track->channel);
+                    bzrStopNote(bIdx);
                 }
 
                 // Clear track data
                 track->start_time = 0;
                 track->note_index = 0;
-                track->song       = NULL;
+                track->sTrack     = NULL;
                 // Track isn't active
                 return false;
             }
