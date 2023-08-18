@@ -22,6 +22,20 @@
 //==============================================================================
 
 /**
+ * @brief Types of loops for a track
+ */
+typedef enum
+{
+    NO_LOOP,
+    MONO_LOOP,
+    STEREO_LOOP
+} loopType_t;
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+/**
  * @brief A track for a song on the buzzer. This plays notes from a songTrack_t
  */
 typedef struct
@@ -29,7 +43,7 @@ typedef struct
     int64_t start_time;        ///< The time the current musicalNote_t started in the song
     int32_t note_index;        ///< The index of the current musicalNote_t in the song
     const songTrack_t* sTrack; ///< The song being played
-    bool should_loop;          ///< Whether or not this track should loop when done
+    loopType_t should_loop;    ///< Whether or not this track should loop when done
 } bzrTrack_t;
 
 /**
@@ -69,7 +83,7 @@ static uint16_t sfxVolume = 0;
 static void initSingleBuzzer(buzzer_t* buzzer, gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel);
 static bool buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 static bool buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume, bool isActive,
-                                         int64_t cTime);
+                                         int64_t cTime, bool* looped);
 static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* song, buzzerPlayTrack_t track);
 
 //==============================================================================
@@ -231,7 +245,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
             trackL->sTrack      = &song->tracks[0];
             trackL->note_index  = -1;
             trackL->start_time  = startTime;
-            trackL->should_loop = song->shouldLoop;
+            trackL->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
         }
 
         if (BZR_STEREO == track || BZR_RIGHT == track)
@@ -239,7 +253,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
             trackR->sTrack      = &song->tracks[0];
             trackR->note_index  = -1;
             trackR->start_time  = startTime;
-            trackR->should_loop = song->shouldLoop;
+            trackR->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
         }
     }
     else
@@ -248,12 +262,12 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
         trackL->sTrack      = &song->tracks[0];
         trackL->note_index  = -1;
         trackL->start_time  = startTime;
-        trackL->should_loop = song->shouldLoop;
+        trackL->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
 
         trackR->sTrack      = &song->tracks[1];
         trackR->note_index  = -1;
         trackR->start_time  = startTime;
-        trackR->should_loop = song->shouldLoop;
+        trackR->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
     }
 }
 
@@ -325,10 +339,10 @@ void bzrStop(void)
     bzrStopNote(BZR_RIGHT);
 
     // Clear internal variables
-    for (uint8_t cIdx = 0; cIdx < NUM_BUZZERS; cIdx++)
+    for (uint8_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
     {
-        memset(&(buzzers[cIdx].bgm), 0, sizeof(bzrTrack_t));
-        memset(&(buzzers[cIdx].sfx), 0, sizeof(bzrTrack_t));
+        memset(&(buzzers[bIdx].bgm), 0, sizeof(bzrTrack_t));
+        memset(&(buzzers[bIdx].sfx), 0, sizeof(bzrTrack_t));
     }
 }
 
@@ -427,6 +441,10 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
         return false;
     }
 
+    // Keep track if a track looped so that the other may loop in sync
+    bool sfxLooped[NUM_BUZZERS] = {false, false};
+    bool bgmLooped[NUM_BUZZERS] = {false, false};
+
     // Get the current time
     int64_t cTime = esp_timer_get_time();
 
@@ -434,9 +452,10 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
     {
         buzzer_t* bzr = &buzzers[bIdx];
         // Try playing SFX first
-        bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, cTime);
+        bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, cTime, &sfxLooped[bIdx]);
         // Then play BGM if SFX isn't active
-        bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, sfxVolume, !sfxIsActive, cTime);
+        bool bgmIsActive
+            = buzzer_track_check_next_note(&bzr->bgm, bIdx, sfxVolume, !sfxIsActive, cTime, &bgmLooped[bIdx]);
 
         // If nothing is playing, but there is BGM (i.e. SFX finished)
         if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bzr->bgm.sTrack))
@@ -445,6 +464,31 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
             bzrPlayNote(bzr->bgm.sTrack->notes[bzr->bgm.note_index].note, bIdx, bgmVolume);
         }
     }
+
+    // Stereo loop SFX in sync
+    if (sfxLooped[0])
+    {
+        buzzers[1].sfx.note_index = buzzers[1].sfx.sTrack->loopStartNote;
+        buzzers[1].sfx.start_time = buzzers[0].sfx.start_time;
+    }
+    else if (sfxLooped[1])
+    {
+        buzzers[0].sfx.note_index = buzzers[0].sfx.sTrack->loopStartNote;
+        buzzers[0].sfx.start_time = buzzers[1].sfx.start_time;
+    }
+
+    // Stereo loop BGM in sync
+    if (bgmLooped[0])
+    {
+        buzzers[1].bgm.note_index = buzzers[1].bgm.sTrack->loopStartNote;
+        buzzers[1].bgm.start_time = buzzers[0].bgm.start_time;
+    }
+    else if (bgmLooped[1])
+    {
+        buzzers[0].bgm.note_index = buzzers[0].bgm.sTrack->loopStartNote;
+        buzzers[0].bgm.start_time = buzzers[1].bgm.start_time;
+    }
+
     return false;
 }
 
@@ -460,11 +504,12 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
  * @param isActive true if this is active and should set a note to be played
  *                 false to just advance notes without playing
  * @param cTime The current system time in microseconds
+ * @param looped Output parameter, true if this looped and the other track should loop too
  * @return true  if this track is playing a note
  *         false if this track is not playing a note
  */
 static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume,
-                                                   bool isActive, int64_t cTime)
+                                                   bool isActive, int64_t cTime, bool* looped)
 {
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
@@ -480,6 +525,10 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
             // Loop if we should
             if (track->should_loop && (track->note_index == track->sTrack->numNotes))
             {
+                if (STEREO_LOOP == track->should_loop)
+                {
+                    *looped = true;
+                }
                 track->note_index = track->sTrack->loopStartNote;
             }
 

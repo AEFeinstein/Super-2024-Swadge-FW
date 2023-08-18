@@ -21,15 +21,22 @@
 // Structs
 //==============================================================================
 
+typedef enum
+{
+    NO_LOOP,
+    MONO_LOOP,
+    STEREO_LOOP
+} loopType_t;
+
 /**
  * @brief A buzzer track which a song is played on, either BGM or SFX
  */
 typedef struct
 {
-    const songTrack_t* sChan; ///< The song currently being played on this track
-    int32_t note_index;       ///< The note index into the song
-    int64_t start_time;       ///< TODO
-    bool should_loop;         ///< TODO
+    const songTrack_t* sTrack; ///< The song currently being played on this track
+    int32_t note_index;        ///< The note index into the song
+    int64_t start_time;        ///< The time this track started playing notes
+    loopType_t should_loop;    ///< True if this track should loop, false if it plays once
 } bzrTrack_t;
 
 /**
@@ -67,7 +74,7 @@ uint16_t sfxVolume;
 // Function Prototypes
 //==============================================================================
 
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t buzzer, uint16_t volume, bool isActive);
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive, bool* looped);
 void buzzer_check_next_note(void* arg);
 void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
 
@@ -150,6 +157,51 @@ void bzrSetSfxVolume(uint16_t vol)
 }
 
 /**
+ * @brief Play a song_t on one or two bzrTrack_t depending on what
+ *
+ * @param trackL The left track to play on
+ * @param trackR The right track to play on
+ * @param song The song_t to play
+ * @param track The requested track or tracks to play on
+ */
+static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* song, buzzerPlayTrack_t track)
+{
+    int64_t startTime = esp_timer_get_time();
+    if (1 == song->numTracks)
+    {
+        // Mono song, play it on the requested tracks
+        if (BZR_STEREO == track || BZR_LEFT == track)
+        {
+            trackL->sTrack      = &song->tracks[0];
+            trackL->note_index  = -1;
+            trackL->start_time  = startTime;
+            trackL->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
+        }
+
+        if (BZR_STEREO == track || BZR_RIGHT == track)
+        {
+            trackR->sTrack      = &song->tracks[0];
+            trackR->note_index  = -1;
+            trackR->start_time  = startTime;
+            trackL->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
+        }
+    }
+    else
+    {
+        // Stereo song, play it on both tracks
+        trackL->sTrack      = &song->tracks[0];
+        trackL->note_index  = -1;
+        trackL->start_time  = startTime;
+        trackL->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
+
+        trackR->sTrack      = &song->tracks[1];
+        trackR->note_index  = -1;
+        trackR->start_time  = startTime;
+        trackR->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
+    }
+}
+
+/**
  * @brief Start playing a background music on the buzzer. This has lower priority
  * than sound effects
  *
@@ -158,51 +210,7 @@ void bzrSetSfxVolume(uint16_t vol)
  */
 void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
 {
-    int64_t startTime = esp_timer_get_time();
-    if (1 == song->numTracks)
-    {
-        // Song is mono, play it accordingly
-        switch (track)
-        {
-            case BZR_STEREO:
-            {
-                // Play the same thing on both buzzers
-                buzzers[BZR_LEFT].bgm.sChan       = &song->tracks[0];
-                buzzers[BZR_LEFT].bgm.note_index  = -1;
-                buzzers[BZR_LEFT].bgm.start_time  = startTime;
-                buzzers[BZR_LEFT].bgm.should_loop = song->shouldLoop;
-
-                buzzers[BZR_RIGHT].bgm.sChan       = &song->tracks[0];
-                buzzers[BZR_RIGHT].bgm.note_index  = -1;
-                buzzers[BZR_RIGHT].bgm.start_time  = startTime;
-                buzzers[BZR_RIGHT].bgm.should_loop = song->shouldLoop;
-                break;
-            }
-            case BZR_LEFT:
-            case BZR_RIGHT:
-            {
-                // Play the mono song on the given track
-                buzzers[track].bgm.sChan       = &song->tracks[0];
-                buzzers[track].bgm.note_index  = -1;
-                buzzers[track].bgm.start_time  = startTime;
-                buzzers[track].bgm.should_loop = song->shouldLoop;
-                break;
-            }
-        }
-    }
-    else
-    {
-        // Play the stereo song on both buzzers
-        buzzers[BZR_LEFT].bgm.sChan       = &song->tracks[0];
-        buzzers[BZR_LEFT].bgm.note_index  = -1;
-        buzzers[BZR_LEFT].bgm.start_time  = startTime;
-        buzzers[BZR_LEFT].bgm.should_loop = song->shouldLoop;
-
-        buzzers[BZR_RIGHT].bgm.sChan       = &song->tracks[1];
-        buzzers[BZR_RIGHT].bgm.note_index  = -1;
-        buzzers[BZR_RIGHT].bgm.start_time  = startTime;
-        buzzers[BZR_RIGHT].bgm.should_loop = song->shouldLoop;
-    }
+    bzrPlayTrack(&buzzers[0].bgm, &buzzers[1].bgm, song, track);
 }
 
 /**
@@ -214,51 +222,7 @@ void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
  */
 void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
 {
-    int64_t startTime = esp_timer_get_time();
-    if (1 == song->numTracks)
-    {
-        // Song is mono, play it accordingly
-        switch (track)
-        {
-            case BZR_STEREO:
-            {
-                // Play the same thing on both buzzers
-                buzzers[BZR_LEFT].sfx.sChan       = &song->tracks[0];
-                buzzers[BZR_LEFT].sfx.note_index  = -1;
-                buzzers[BZR_LEFT].sfx.start_time  = startTime;
-                buzzers[BZR_LEFT].sfx.should_loop = song->shouldLoop;
-
-                buzzers[BZR_RIGHT].sfx.sChan       = &song->tracks[0];
-                buzzers[BZR_RIGHT].sfx.note_index  = -1;
-                buzzers[BZR_RIGHT].sfx.start_time  = startTime;
-                buzzers[BZR_RIGHT].sfx.should_loop = song->shouldLoop;
-                break;
-            }
-            case BZR_LEFT:
-            case BZR_RIGHT:
-            {
-                // Play the mono song on the given track
-                buzzers[track].sfx.sChan       = &song->tracks[0];
-                buzzers[track].sfx.note_index  = -1;
-                buzzers[track].sfx.start_time  = startTime;
-                buzzers[track].sfx.should_loop = song->shouldLoop;
-                break;
-            }
-        }
-    }
-    else
-    {
-        // Play the stereo song on both buzzers
-        buzzers[BZR_LEFT].sfx.sChan       = &song->tracks[0];
-        buzzers[BZR_LEFT].sfx.note_index  = -1;
-        buzzers[BZR_LEFT].sfx.start_time  = startTime;
-        buzzers[BZR_LEFT].sfx.should_loop = song->shouldLoop;
-
-        buzzers[BZR_RIGHT].sfx.sChan       = &song->tracks[1];
-        buzzers[BZR_RIGHT].sfx.note_index  = -1;
-        buzzers[BZR_RIGHT].sfx.start_time  = startTime;
-        buzzers[BZR_RIGHT].sfx.should_loop = song->shouldLoop;
-    }
+    bzrPlayTrack(&buzzers[0].sfx, &buzzers[1].sfx, song, track);
 }
 
 /**
@@ -322,19 +286,43 @@ void bzrStopNote(buzzerPlayTrack_t track)
  */
 void buzzer_check_next_note(void* arg)
 {
-    for (int16_t cIdx = 0; cIdx < NUM_BUZZERS; cIdx++)
+    bool sfxLooped[NUM_BUZZERS] = {false, false};
+    bool bgmLooped[NUM_BUZZERS] = {false, false};
+    for (int16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
     {
-        buzzer_t* buzzer = &buzzers[cIdx];
+        buzzer_t* buzzer = &buzzers[bIdx];
 
-        bool sfxIsActive = buzzer_track_check_next_note(&buzzer->sfx, cIdx, sfxVolume, true);
-        bool bgmIsActive = buzzer_track_check_next_note(&buzzer->bgm, cIdx, bgmVolume, !sfxIsActive);
+        bool sfxIsActive = buzzer_track_check_next_note(&buzzer->sfx, bIdx, sfxVolume, true, &sfxLooped[bIdx]);
+        bool bgmIsActive = buzzer_track_check_next_note(&buzzer->bgm, bIdx, bgmVolume, !sfxIsActive, &bgmLooped[bIdx]);
 
         // If nothing is playing, but there is BGM (i.e. SFX finished)
-        if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != buzzer->bgm.sChan))
+        if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != buzzer->bgm.sTrack))
         {
             // Immediately start playing BGM to get back on track faster
-            bzrPlayNote(buzzer->bgm.sChan->notes[buzzer->bgm.note_index].note, cIdx, bgmVolume);
+            bzrPlayNote(buzzer->bgm.sTrack->notes[buzzer->bgm.note_index].note, bIdx, bgmVolume);
         }
+    }
+
+    if (sfxLooped[0])
+    {
+        buzzers[1].sfx.note_index = 0;
+        buzzers[1].sfx.start_time = buzzers[0].sfx.start_time;
+    }
+    else if (sfxLooped[1])
+    {
+        buzzers[0].sfx.note_index = 0;
+        buzzers[0].sfx.start_time = buzzers[1].sfx.start_time;
+    }
+
+    if (bgmLooped[0])
+    {
+        buzzers[1].bgm.note_index = 0;
+        buzzers[1].bgm.start_time = buzzers[0].bgm.start_time;
+    }
+    else if (bgmLooped[1])
+    {
+        buzzers[0].bgm.note_index = 0;
+        buzzers[0].bgm.start_time = buzzers[1].bgm.start_time;
     }
 }
 
@@ -346,38 +334,43 @@ void buzzer_check_next_note(void* arg)
  * @param volume The volume to play at
  * @param isActive true if this is active and should set a note to be played
  *                 false to just advance notes without playing
+ * @param looped Output parameter, true if this looped and the other track should loop too
  * @return true  if this track is playing a note
  *         false if it is not
  */
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive)
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive, bool* looped)
 {
     // Check if there is a song and there are still notes
-    if ((NULL != track->sChan) && (track->note_index < track->sChan->numNotes))
+    if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
     {
         // Get the current time
         int64_t cTime = esp_timer_get_time();
 
         // Check if it's time to play the next note
         if ((-1 == track->note_index)
-            || (cTime - track->start_time >= (1000 * track->sChan->notes[track->note_index].timeMs)))
+            || (cTime - track->start_time >= (1000 * track->sTrack->notes[track->note_index].timeMs)))
         {
             // Move to the next note
             track->note_index++;
             track->start_time = cTime;
 
             // Loop if requested
-            if (track->should_loop && (track->note_index == track->sChan->numNotes))
+            if (track->should_loop && (track->note_index == track->sTrack->numNotes))
             {
-                track->note_index = 0;
+                if (STEREO_LOOP == track->should_loop)
+                {
+                    *looped = true;
+                }
+                track->note_index = track->sTrack->loopStartNote;
             }
 
             // If there is a note
-            if (track->note_index < track->sChan->numNotes)
+            if (track->note_index < track->sTrack->numNotes)
             {
                 if (isActive)
                 {
                     // Play the note
-                    bzrPlayNote(track->sChan->notes[track->note_index].note, bIdx, volume);
+                    bzrPlayNote(track->sTrack->notes[track->note_index].note, bIdx, volume);
                 }
             }
             else
@@ -390,7 +383,7 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16
 
                 track->start_time = 0;
                 track->note_index = 0;
-                track->sChan      = NULL;
+                track->sTrack     = NULL;
                 // Track is inactive
                 return false;
             }
@@ -423,23 +416,23 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
         // Keep track of our place in the wave
         static float placeInWave[NUM_BUZZERS] = {0, 0};
 
-        for (int cIdx = 0; cIdx < NUM_BUZZERS; cIdx++)
+        for (int bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
         {
             // If there is a note to play
-            if (buzzers[cIdx].cFreq)
+            if (buzzers[bIdx].cFreq)
             {
-                float transitionPoint = (2 * M_PI * buzzers[cIdx].vol) / 8192;
+                float transitionPoint = (2 * M_PI * buzzers[bIdx].vol) / 8192;
                 // For each sample
                 for (int i = 0; i < samples_W; i += 2)
                 {
                     // Write the sample, interleaved
-                    out[i + cIdx] = 1024 * ((placeInWave[cIdx] < transitionPoint) ? 1 : -1);
+                    out[i + bIdx] = 1024 * ((placeInWave[bIdx] < transitionPoint) ? 1 : -1);
                     // Advance the place in the wave
-                    placeInWave[cIdx] += ((2 * M_PI * buzzers[cIdx].cFreq) / ((float)SAMPLING_RATE));
+                    placeInWave[bIdx] += ((2 * M_PI * buzzers[bIdx].cFreq) / ((float)SAMPLING_RATE));
                     // Keep it bound between 0 and 2*PI
-                    if (placeInWave[cIdx] >= (2 * M_PI))
+                    if (placeInWave[bIdx] >= (2 * M_PI))
                     {
-                        placeInWave[cIdx] -= (2 * M_PI);
+                        placeInWave[bIdx] -= (2 * M_PI);
                     }
                 }
             }
@@ -449,9 +442,9 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
                 for (int i = 0; i < samples_W; i += 2)
                 {
                     // Write the sample, interleaved
-                    out[i + cIdx] = 0;
+                    out[i + bIdx] = 0;
                 }
-                placeInWave[cIdx] = 0;
+                placeInWave[bIdx] = 0;
             }
         }
     }
