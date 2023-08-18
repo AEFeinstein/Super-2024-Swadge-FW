@@ -144,6 +144,11 @@ static void sokoLoadLevel(uint16_t levelIndex)
     soko->currentLevel.tiles[1][2] = SK_WALL;
     soko->currentLevel.tiles[2][2] = SK_WALL;
 
+    printf("create entities");
+    soko->currentLevel.entityCount = 1;
+    soko->currentLevel.entities[0].type = SKE_PLAYER;
+    soko->currentLevel.entities[0].x = 1;
+    soko->currentLevel.entities[0].y = 1;
 }
 
 //placeholder.

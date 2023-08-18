@@ -47,9 +47,19 @@ void drawTiles(sokoLevel_t* level)
             }
             //draw outline around the square.
             //drawRect(ox+x*s,oy+y*s,ox+x*s+s,oy+y*s+s,color);
-
-        
         }
-
     }
+
+    for (size_t i = 0; i < level->entityCount; i++)
+    {
+        switch (level->entities[i].type)
+        {
+            case SKE_PLAYER:
+                drawCircleFilled(ox+level->entities[i].x*s+s/2,oy+level->entities[i].y*s+s/2,s/2-1,c411);
+                break;
+            default:
+                break;
+        }
+    }
+    
 }
