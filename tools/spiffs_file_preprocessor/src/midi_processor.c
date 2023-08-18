@@ -182,7 +182,7 @@ typedef struct
 } midiParams_t;
 
 /* Look up table from MIDI pitch index to frequency (Hz) */
-static const uint32_t midiFreqs[128] = {
+static const uint32_t midiFrequencies[128] = {
     8,    9,    9,    10,   10,   11,   12,   12,   13,   14,   15,    15,    16,    17,   18,   19,   21,   22,   23,
     25,   26,   28,   29,   31,   33,   35,   37,   39,   41,   44,    46,    49,    52,   55,   58,   62,   65,   69,
     73,   78,   82,   87,   93,   98,   104,  110,  117,  123,  131,   139,   147,   156,  165,  175,  185,  196,  208,
@@ -202,32 +202,32 @@ static void checkMidiEvents(MidiParser* midiParser, unsigned long int lastNoteSt
 /**
  * Process a MIDI file and write a compressed song (.sng)
  *
- * @param infile The MIDI file to process
- * @param outdir The output file name
+ * @param inFile The MIDI file to process
+ * @param outDir The output file name
  */
-void process_midi(const char* infile, const char* outdir)
+void process_midi(const char* inFile, const char* outDir)
 {
     /* Determine if the output file already exists */
     char outFilePath[128] = {0};
-    strcat(outFilePath, outdir);
+    strcat(outFilePath, outDir);
     strcat(outFilePath, "/");
-    strcat(outFilePath, get_filename(infile));
+    strcat(outFilePath, get_filename(inFile));
 
     /* Change the file extension */
-    char* dotptr = strrchr(outFilePath, '.');
-    snprintf(&dotptr[1], strlen(dotptr), "sng");
+    char* dotPtr = strrchr(outFilePath, '.');
+    snprintf(&dotPtr[1], strlen(dotPtr), "sng");
 
     if (doesFileExist(outFilePath))
     {
-        /* printf("Output for %s already exists\n", infile); */
+        /* printf("Output for %s already exists\n", inFile); */
         return;
     }
 
     /* Parse the MIDI file */
-    MidiParser* midiParser = parseMidi(infile, false, true);
+    MidiParser* midiParser = parseMidi(inFile, false, true);
 
     /* Declare variables to translate the notes to */
-    uint8_t channelIdx                     = 0;
+    uint8_t trackIdx                       = 0;
     musicalNote_t* notes[MAX_NUM_CHANNELS] = {NULL, NULL};
     uint32_t noteIdxs[MAX_NUM_CHANNELS]    = {0, 0};
     uint32_t totalLength[MAX_NUM_CHANNELS] = {0, 0};
@@ -240,26 +240,26 @@ void process_midi(const char* infile, const char* outdir)
         Track* track = &(midiParser->tracks[trackIdx]);
         if (track->nbOfNotes > 0)
         {
-            if (channelIdx < MAX_NUM_CHANNELS)
+            if (trackIdx < MAX_NUM_CHANNELS)
             {
                 /* Allocate enough space for all the notes with rests in between them */
-                notes[channelIdx] = calloc((2 * track->nbOfNotes), sizeof(musicalNote_t));
+                notes[trackIdx] = calloc((2 * track->nbOfNotes) + 1, sizeof(musicalNote_t));
 
                 /* For each note */
                 unsigned long int lastNoteStart = track->notes[0].timeBeforeAppear;
-                for (int noteIdx = 0; noteIdx < track->nbOfNotes; noteIdx++)
+                for (int midiNoteIdx = 0; midiNoteIdx < track->nbOfNotes; midiNoteIdx++)
                 {
                     /* Get a reference to this note */
-                    Note* note = &(track->notes[noteIdx]);
+                    Note* note = &(track->notes[midiNoteIdx]);
 
                     /* Before processing the note, check for events*/
                     checkMidiEvents(midiParser, lastNoteStart, note->timeBeforeAppear, &params);
 
                     /* Get a reference to the next note, if it exists */
                     Note* nextNote = NULL;
-                    if ((noteIdx + 1) < track->nbOfNotes)
+                    if ((midiNoteIdx + 1) < track->nbOfNotes)
                     {
-                        nextNote = &(track->notes[noteIdx + 1]);
+                        nextNote = &(track->notes[midiNoteIdx + 1]);
                     }
 
                     /* If there is a note after this one */
@@ -274,11 +274,11 @@ void process_midi(const char* infile, const char* outdir)
                     }
 
                     /* Save this note */
-                    notes[channelIdx][noteIdxs[channelIdx]].note = midiFreqs[note->pitch];
-                    notes[channelIdx][noteIdxs[channelIdx]].timeMs
+                    notes[trackIdx][noteIdxs[trackIdx]].note = midiFrequencies[note->pitch];
+                    notes[trackIdx][noteIdxs[trackIdx]].timeMs
                         = (params.tempo * note->duration) / (1000 * midiParser->ticks);
-                    totalLength[channelIdx] += notes[channelIdx][noteIdxs[channelIdx]].timeMs;
-                    noteIdxs[channelIdx]++;
+                    totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
+                    noteIdxs[trackIdx]++;
 
                     /* If there is a note after this one */
                     if (NULL != nextNote)
@@ -287,38 +287,43 @@ void process_midi(const char* infile, const char* outdir)
                         if (note->timeBeforeAppear + note->duration < nextNote->timeBeforeAppear)
                         {
                             /* If it does, add a rest to the output between notes */
-                            notes[channelIdx][noteIdxs[channelIdx]].note = SILENCE;
-                            notes[channelIdx][noteIdxs[channelIdx]].timeMs
+                            notes[trackIdx][noteIdxs[trackIdx]].note = SILENCE;
+                            notes[trackIdx][noteIdxs[trackIdx]].timeMs
                                 = (params.tempo
                                    * (nextNote->timeBeforeAppear - (note->timeBeforeAppear + note->duration)))
                                   / (1000 * midiParser->ticks);
-                            totalLength[channelIdx] += notes[channelIdx][noteIdxs[channelIdx]].timeMs;
-                            noteIdxs[channelIdx]++;
+                            totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
+                            noteIdxs[trackIdx]++;
                         }
                     }
 
                     // Save this for the next loop
                     lastNoteStart = note->timeBeforeAppear;
                 }
-                // Move to the next channel
-                channelIdx++;
+                // Move to the next track
+                trackIdx++;
             }
         }
     }
 
-    if(totalLength[0] < totalLength[1])
+    // If there are multiple tracks
+    if (trackIdx > 1)
     {
-        // Pad out track 0 to be the same length as track 1
-        notes[0][noteIdxs[0]].note = SILENCE;
-        notes[0][noteIdxs[0]].timeMs = totalLength[1] - totalLength[0];
-        noteIdxs[0]++;
-    }
-    else if (totalLength[0] > totalLength[1])
-    {
-        // Pad out track 1 to be the same length as track 0
-        notes[1][noteIdxs[1]].note = SILENCE;
-        notes[1][noteIdxs[1]].timeMs = totalLength[1] - totalLength[0];
-        noteIdxs[1]++;
+        // Make sure the are equal in length
+        if (totalLength[0] < totalLength[1])
+        {
+            // Pad out track 0 to be the same length as track 1
+            notes[0][noteIdxs[0]].note   = SILENCE;
+            notes[0][noteIdxs[0]].timeMs = totalLength[1] - totalLength[0];
+            noteIdxs[0]++;
+        }
+        else if (totalLength[0] > totalLength[1])
+        {
+            // Pad out track 1 to be the same length as track 0
+            notes[1][noteIdxs[1]].note   = SILENCE;
+            notes[1][noteIdxs[1]].timeMs = totalLength[1] - totalLength[0];
+            noteIdxs[1]++;
+        }
     }
 
     /* Cleanup the parser */
@@ -327,24 +332,24 @@ void process_midi(const char* infile, const char* outdir)
     /* If notes were parsed */
     if (NULL != notes[0])
     {
-        uint32_t totalSongBytes = 4; // Four bytes for the number of channels
-        for (uint8_t ch = 0; ch < channelIdx; ch++)
+        uint32_t totalSongBytes = 4; // Four bytes for the number of tracks
+        for (uint8_t ch = 0; ch < trackIdx; ch++)
         {
-            totalSongBytes += 4;                  // Number of notes per channel
+            totalSongBytes += 4;                  // Number of notes per track
             totalSongBytes += (4 * noteIdxs[ch]); // Space for the nodes
         }
 
-        /* Put all the uncomressed song bytes in an array with specific byte order*/
+        /* Put all the uncompressed song bytes in an array with specific byte order*/
         uint8_t* uncompressedSong = calloc(1, totalSongBytes);
         uint32_t uIdx             = 0;
 
-        /* Write number of channels */
-        uncompressedSong[uIdx++] = (channelIdx >> 24) & 0xFF;
-        uncompressedSong[uIdx++] = (channelIdx >> 16) & 0xFF;
-        uncompressedSong[uIdx++] = (channelIdx >> 8) & 0xFF;
-        uncompressedSong[uIdx++] = (channelIdx >> 0) & 0xFF;
+        /* Write number of track */
+        uncompressedSong[uIdx++] = (trackIdx >> 24) & 0xFF;
+        uncompressedSong[uIdx++] = (trackIdx >> 16) & 0xFF;
+        uncompressedSong[uIdx++] = (trackIdx >> 8) & 0xFF;
+        uncompressedSong[uIdx++] = (trackIdx >> 0) & 0xFF;
 
-        for (uint8_t ch = 0; ch < channelIdx; ch++)
+        for (uint8_t ch = 0; ch < trackIdx; ch++)
         {
             /* Write number of notes */
             uncompressedSong[uIdx++] = (noteIdxs[ch] >> 24) & 0xFF;
@@ -366,7 +371,7 @@ void process_midi(const char* infile, const char* outdir)
         writeHeatshrinkFile(uncompressedSong, uIdx, outFilePath);
 
         /* Cleanup */
-        for (uint8_t ch = 0; ch < channelIdx; ch++)
+        for (uint8_t ch = 0; ch < trackIdx; ch++)
         {
             free(notes[ch]);
         }
