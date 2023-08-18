@@ -1,12 +1,33 @@
 #include "soko_game.h"
 #include "soko.h"
+#include "soko_input.h"
+
+void sokoTryPlayerMovement(soko_t*);
 
 void gameLoop(soko_t* soko, int64_t elapsedUs)
 {
     //logic
     
+    sokoTryPlayerMovement(soko);
+
     //draw level
     drawTiles(&soko->currentLevel);
+}
+
+
+//Gameplay Logic
+void sokoTryPlayerMovement(soko_t* soko)
+{
+    sokoEntity_t* player = &soko->currentLevel.entities[soko->currentLevel.playerIndex];
+    if(soko->input.playerInputDeltaX != 0)
+    {
+        player->x += soko->input.playerInputDeltaX;
+    }
+    if(soko->input.playerInputDeltaY != 0)
+    {
+        player->y = player->y+soko->input.playerInputDeltaY;
+    }
+    printf("player: (%i, %i)\n",player->x,player->y);
 }
 
 //draw the background tiles of the level.

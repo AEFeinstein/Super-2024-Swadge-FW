@@ -37,10 +37,24 @@ typedef struct
     uint8_t width;
     uint8_t height;
     uint8_t entityCount;
+    uint16_t playerIndex;//we could have multiple players...
     sokoTile_t tiles[20][20];
     sokoEntity_t entities[25];//todo: pointer and runtime array size
 } sokoLevel_t;
 
+
+//todo: move to sokoinputh
+typedef struct
+{
+    //player input
+    uint16_t btnState;      ///< The button state
+    uint16_t prevBtnState;
+
+    //we moved. 
+    int playerInputDeltaX;
+    int playerInputDeltaY;
+
+} sokoGameplayInput_t;
 
 
 typedef struct
@@ -50,8 +64,8 @@ typedef struct
     font_t ibm;                                 ///< The font used in the menu and game
     sokoScreen_t screen;                        ///< The screen being displayed
 
-    //player input
-    uint16_t btnState;      ///< The button state
+    //input
+    sokoGameplayInput_t input;
 
     //current level
     sokoLevel_t currentLevel;

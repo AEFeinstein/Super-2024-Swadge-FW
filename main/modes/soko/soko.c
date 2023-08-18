@@ -1,5 +1,6 @@
 #include "soko.h"
 #include "soko_game.h"
+#include "soko_input.h"
 
 static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
@@ -111,12 +112,12 @@ static void sokoMainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 // Save the button state
-                soko->btnState = evt.state;
+                soko->input.btnState = evt.state;
             }
 
             //process input functions in input.
             //Input will turn state into function calls into the game code, and handle complexities.
-
+            sokoPreProcessInput(&soko->input);
             //background had been drawn, input has been processed and functions called. Now do followup logic and draw level.
             //gameplay loop
             gameLoop(soko,elapsedUs);
@@ -145,10 +146,11 @@ static void sokoLoadLevel(uint16_t levelIndex)
     soko->currentLevel.tiles[2][2] = SK_WALL;
 
     printf("create entities");
+    soko->currentLevel.playerIndex = 0;
     soko->currentLevel.entityCount = 1;
-    soko->currentLevel.entities[0].type = SKE_PLAYER;
-    soko->currentLevel.entities[0].x = 1;
-    soko->currentLevel.entities[0].y = 1;
+    soko->currentLevel.entities[soko->currentLevel.playerIndex].type = SKE_PLAYER;
+    soko->currentLevel.entities[soko->currentLevel.playerIndex].x = 1;
+    soko->currentLevel.entities[soko->currentLevel.playerIndex].y = 1;
 }
 
 //placeholder.
