@@ -514,14 +514,32 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
     {
-        // Check if the song is beginning or it's time to play the next note
-        if ((-1 == track->note_index)
-            || (cTime - track->start_time >= (1000 * track->sTrack->notes[track->note_index].timeMs)))
+        // Check if it's time to play the next note
+        bool shouldAdvance = false;
+        if (-1 == track->note_index)
         {
-            // Move to the next note
+            // Index is negative, so the song is just starting
             track->note_index++;
             track->start_time = cTime;
+            shouldAdvance     = true;
+        }
+        else
+        {
+            // Get the current note length
+            int32_t noteTimeUs = (1000 * track->sTrack->notes[track->note_index].timeMs);
+            // If the note expired
+            if (cTime >= track->start_time + noteTimeUs)
+            {
+                // Move to the next, accumulating start_time for accuracy
+                track->note_index++;
+                track->start_time += noteTimeUs;
+                shouldAdvance = true;
+            }
+        }
 
+        // Check if it's time to play the next note
+        if (shouldAdvance)
+        {
             // Loop if we should
             if (track->should_loop && (track->note_index == track->sTrack->numNotes))
             {
