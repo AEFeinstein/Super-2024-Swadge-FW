@@ -2,6 +2,7 @@
 #define _SOKO_MODE_H_
 
 #include "swadge2024.h"
+#include "soko_input.h"
 
 extern swadgeMode_t sokoMode;
 
@@ -43,26 +44,19 @@ typedef struct
 } sokoLevel_t;
 
 
-//todo: move to sokoinputh
-typedef struct
-{
-    //player input
-    uint16_t btnState;      ///< The button state
-    uint16_t prevBtnState;
 
-    //we moved. 
-    int playerInputDeltaX;
-    int playerInputDeltaY;
-
-} sokoGameplayInput_t;
 
 
 typedef struct
 {
+    //meta
     menu_t* menu;                               ///< The menu structure
     menuLogbookRenderer_t* menuLogbookRenderer; ///< Renderer for the menu
     font_t ibm;                                 ///< The font used in the menu and game
     sokoScreen_t screen;                        ///< The screen being displayed
+
+    //game settings
+    uint16_t maxPush;                           ///< Maximum number of crates the player can push. Use 0 for no limit.
 
     //input
     sokoGameplayInput_t input;

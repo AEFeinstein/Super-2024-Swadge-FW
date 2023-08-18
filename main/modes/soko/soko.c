@@ -1,6 +1,5 @@
 #include "soko.h"
 #include "soko_game.h"
-#include "soko_input.h"
 
 static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
@@ -8,7 +7,6 @@ static void sokoExitMode(void);
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void sokoLoadLevel(uint16_t);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-
 
 //strings
 static const char sokoModeName[] = "Sokobanabokabon";
@@ -141,7 +139,6 @@ static void sokoLoadLevel(uint16_t levelIndex)
     {
         for (size_t y = 0; y < soko->currentLevel.height; y++)
         {
-            printf("l");
             if(x == 0 || y == 0)
             {
                 soko->currentLevel.tiles[x][y] = SK_WALL;

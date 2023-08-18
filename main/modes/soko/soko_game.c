@@ -1,10 +1,9 @@
 #include "soko_game.h"
 #include "soko.h"
-#include "soko_input.h"
 
 void sokoTryPlayerMovement(void);
 sokoTile_t sokoGetTile(int, int);
-bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int);
+bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int,uint16_t);
 bool allCratesOnGoal(void);
 
 soko_t* s;
@@ -12,7 +11,10 @@ sokoEntity_t* player;
 
 void sokoInitGame(soko_t* soko)
 {
+    printf("init sokobon game.");
+    //set gameplay settings from default settings, if we want powerups or whatever.
     s = soko;
+    s->maxPush = 0;//set to 1 for "traditional" sokoban.
     player = &s->currentLevel.entities[s->currentLevel.playerIndex];
 }
 
@@ -59,14 +61,20 @@ void sokoTryPlayerMovement()
         return;
     }
 
-    sokoTryMoveEntityInDirection(player,s->input.playerInputDeltaX,s->input.playerInputDeltaY);
+    sokoTryMoveEntityInDirection(player,s->input.playerInputDeltaX,s->input.playerInputDeltaY,0);
 }
 
 
-bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy)
+bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy, uint16_t push)
 {
     //prevent infitnite loop where you push yourself nowhere.
-    if(dx == 0 && dy == 0)
+    if(dx == 0 && dy == 0 )
+    {
+        return false;
+    }
+
+    //maxiumum number of crates we can push. Traditional sokoban has a limit of one. I prefer infinite.
+    if(s->maxPush != 0 && push>s->maxPush)
     {
         return false;
     }
@@ -85,7 +93,7 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy)
             {
                 if(s->currentLevel.entities[i].x == px && s->currentLevel.entities[i].y == py)
                 {
-                    if(sokoTryMoveEntityInDirection(&s->currentLevel.entities[i],dx,dy))
+                    if(sokoTryMoveEntityInDirection(&s->currentLevel.entities[i],dx,dy,push+1))
                     {
                         entity->x += dx;
                         entity->y += dy;
