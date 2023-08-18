@@ -46,14 +46,14 @@ bool loadSong(char* name, song_t* song, bool spiRam)
     uint32_t dbIdx = 0;
 
     // Save the number of channels in this song
-    song->numChannels = (decompressedBuf[dbIdx] << 24) | (decompressedBuf[dbIdx + 1] << 16)
-                        | (decompressedBuf[dbIdx + 2] << 8) | decompressedBuf[dbIdx + 3];
+    song->numTracks = (decompressedBuf[dbIdx] << 24) | (decompressedBuf[dbIdx + 1] << 16)
+                      | (decompressedBuf[dbIdx + 2] << 8) | decompressedBuf[dbIdx + 3];
     dbIdx += 4;
 
     // Allocate each channel
-    song->channels = heap_caps_calloc(song->numChannels, sizeof(songChannel_t), caps);
+    song->tracks = heap_caps_calloc(song->numTracks, sizeof(songTrack_t), caps);
 
-    if (NULL == song->channels)
+    if (NULL == song->tracks)
     {
         // Allocation failed
         free(decompressedBuf);
@@ -61,10 +61,10 @@ bool loadSong(char* name, song_t* song, bool spiRam)
     }
 
     // For each channel
-    for (int16_t cIdx = 0; cIdx < song->numChannels; cIdx++)
+    for (int16_t cIdx = 0; cIdx < song->numTracks; cIdx++)
     {
         // Get a convenience pointer to this channel
-        songChannel_t* ch = &song->channels[cIdx];
+        songTrack_t* ch = &song->tracks[cIdx];
 
         // Default values, not currently saved in the file format
         ch->loopStartNote = 0;
@@ -107,9 +107,9 @@ bool loadSong(char* name, song_t* song, bool spiRam)
  */
 void freeSong(song_t* song)
 {
-    for (int16_t cIdx = 0; cIdx < song->numChannels; cIdx++)
+    for (int16_t cIdx = 0; cIdx < song->numTracks; cIdx++)
     {
-        free(song->channels[cIdx].notes);
+        free(song->tracks[cIdx].notes);
     }
-    free(song->channels);
+    free(song->tracks);
 }

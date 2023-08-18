@@ -65,6 +65,9 @@
 #include <hal/gpio_types.h>
 #include <driver/ledc.h>
 
+/** @brief The number of physical buzzers */
+#define NUM_BUZZERS 2
+
 /**
  * @brief Frequencies for all the notes, in hertz.
  *
@@ -215,7 +218,7 @@ typedef enum
     BZR_LEFT,  ///< Play out of the left buzzer
     BZR_RIGHT, ///< Play out of the right buzzer
     BZR_STEREO ///< Play out of both buzzers
-} buzzerPlayChannel_t;
+} buzzerPlayTrack_t;
 
 /**
  * @brief A single note and duration to be played on the buzzer
@@ -231,27 +234,27 @@ typedef struct
     int32_t numNotes;      ///< The number of notes in this song
     int32_t loopStartNote; ///< The note index to restart at, if looping
     musicalNote_t* notes;  ///< An array of notes in the song
-} songChannel_t;
+} songTrack_t;
 
 /**
  * @brief A list of notes and durations to be played on the buzzer
  */
 typedef struct
 {
-    int16_t numChannels;     ///< The number of channels in this song
-    bool shouldLoop;         ///< true if the song should loop, false if it should play once
-    songChannel_t* channels; ///< The channels for this song
+    int16_t numTracks;   ///< The number of tracks in this song
+    bool shouldLoop;     ///< true if the song should loop, false if it should play once
+    songTrack_t* tracks; ///< The tracks for this song
 } song_t;
 
 void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t ledcChannelL, gpio_num_t bzrGpioR,
-                ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t bgmVolume, uint16_t sfxVolume);
+                ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t _bgmVolume, uint16_t _sfxVolume);
 void deinitBuzzer(void);
 void bzrSetBgmVolume(uint16_t vol);
 void bzrSetSfxVolume(uint16_t vol);
-void bzrPlayBgm(const song_t* song, buzzerPlayChannel_t channel);
-void bzrPlaySfx(const song_t* song, buzzerPlayChannel_t channel);
+void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track);
+void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track);
 void bzrStop(void);
-void bzrPlayNote(noteFrequency_t freq, buzzerPlayChannel_t channel, uint16_t volume);
-void bzrStopNote(buzzerPlayChannel_t channel);
+void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume);
+void bzrStopNote(buzzerPlayTrack_t track);
 
 #endif
