@@ -69,7 +69,7 @@ static int32_t quickSettingsMenuFlipItem(const char* label);
 static const char quickSettingsName[] = "Settings";
 
 static const char quickSettingsLeds[] = "LEDs ";
-static const char quickSettingsSfx[]  = "Sounds ";
+static const char quickSettingsSfx[]  = "Sound Effects ";
 static const char quickSettingsBgm[]  = "Music ";
 
 static const char quickSettingsOn[]    = "On";
