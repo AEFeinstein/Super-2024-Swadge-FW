@@ -575,7 +575,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pong->ballVel.y = -pong->ballVel.y;
         }
 
-        // If a goal was not scored,c heck for left paddle collision
+        // If a goal was not scored, check for left paddle collision
         if ((pong->ballVel.x < 0) && circleRectIntersection(pong->ball, pong->paddleL))
         {
             // Reverse direction
@@ -590,7 +590,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
-            bzrPlaySfx(&pong->hit1, BZR_STEREO);
+            bzrPlaySfx(&pong->hit1, BZR_LEFT);
 
             // Set an LED
             pong->ledL.r = 0xFF;
@@ -612,7 +612,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
-            bzrPlaySfx(&pong->hit2, BZR_STEREO);
+            bzrPlaySfx(&pong->hit2, BZR_RIGHT);
 
             // Set an LED
             pong->ledR.r = 0x40;
@@ -646,7 +646,6 @@ static void pongResetGame(bool isInit, uint8_t whoWon)
         pong->paddleR.height = PADDLE_HEIGHT;
 
         // Start playing music
-        // TODO this isnt working?
         bzrPlayBgm(&pong->bgm, BZR_STEREO);
     }
     else
