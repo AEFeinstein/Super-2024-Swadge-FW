@@ -69,6 +69,7 @@ typedef struct
 
     //current level
     sokoLevel_t currentLevel;
+    bool allCratesOnGoal;
 
 } soko_t;
 

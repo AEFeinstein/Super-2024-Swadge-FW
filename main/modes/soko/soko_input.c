@@ -11,19 +11,19 @@ void sokoPreProcessInput(sokoGameplayInput_t* input)
 
     if (input->btnState & PB_UP && !(input->prevBtnState & PB_UP))
     {
-        input->playerInputDeltaY = 1;
+        input->playerInputDeltaY = -1;
     }
     else if (input->btnState & PB_DOWN && !(input->prevBtnState & PB_DOWN))
     {
-        input->playerInputDeltaY = -1;
+        input->playerInputDeltaY = 1;
     }
     else if (input->btnState & PB_LEFT && !(input->prevBtnState & PB_LEFT))
     {
-        input->playerInputDeltaX = 1;
+        input->playerInputDeltaX = -1;
     }
     else if (input->btnState & PB_RIGHT && !(input->prevBtnState & PB_RIGHT))
     {
-        input->playerInputDeltaX = -1;
+        input->playerInputDeltaX = 1;
     }
 
 

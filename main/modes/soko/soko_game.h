@@ -1,4 +1,5 @@
 #include "soko.h"
 
-void gameLoop(soko_t*,int64_t);
+void sokoInitGame(soko_t*);
+void gameLoop(int64_t);
 void drawTiles(sokoLevel_t*);

@@ -2,32 +2,111 @@
 #include "soko.h"
 #include "soko_input.h"
 
-void sokoTryPlayerMovement(soko_t*);
+void sokoTryPlayerMovement(void);
+sokoTile_t sokoGetTile(int, int);
+bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int);
+bool allCratesOnGoal(void);
 
-void gameLoop(soko_t* soko, int64_t elapsedUs)
+soko_t* s;
+sokoEntity_t* player;
+
+void sokoInitGame(soko_t* soko)
+{
+    s = soko;
+    player = &s->currentLevel.entities[s->currentLevel.playerIndex];
+}
+
+void gameLoop(int64_t elapsedUs)
 {
     //logic
-    
-    sokoTryPlayerMovement(soko);
+    sokoTryPlayerMovement();
+
+    s->allCratesOnGoal = allCratesOnGoal();
 
     //draw level
-    drawTiles(&soko->currentLevel);
+    drawTiles(&s->currentLevel);
+
+    //debug allcrates 
+
+    // Render the time to a string
+    char str[16] = {0};
+    int16_t tWidth;
+    if(!s->allCratesOnGoal)
+    {
+        snprintf(str, sizeof(str) - 1, "sokoban");
+        // Measure the width of the time string
+        tWidth = textWidth(&s->ibm, str);
+        // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+        drawText(&s->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+    }else
+    {
+        snprintf(str, sizeof(str) - 1, "sokasuccess");
+        // Measure the width of the time string
+        tWidth = textWidth(&s->ibm, str);
+        // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+        drawText(&s->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+    }
+        
 }
 
 
 //Gameplay Logic
-void sokoTryPlayerMovement(soko_t* soko)
+void sokoTryPlayerMovement()
 {
-    sokoEntity_t* player = &soko->currentLevel.entities[soko->currentLevel.playerIndex];
-    if(soko->input.playerInputDeltaX != 0)
+    
+    if(s->input.playerInputDeltaX == 0 && s->input.playerInputDeltaY == 0)
     {
-        player->x += soko->input.playerInputDeltaX;
+        return;
     }
-    if(soko->input.playerInputDeltaY != 0)
+
+    sokoTryMoveEntityInDirection(player,s->input.playerInputDeltaX,s->input.playerInputDeltaY);
+}
+
+
+bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy)
+{
+    //prevent infitnite loop where you push yourself nowhere.
+    if(dx == 0 && dy == 0)
     {
-        player->y = player->y+soko->input.playerInputDeltaY;
+        return false;
     }
-    printf("player: (%i, %i)\n",player->x,player->y);
+
+    int px = entity->x+dx;
+    int py = entity->y+dy;
+    sokoTile_t nextTile = sokoGetTile(px,py);
+
+    if(nextTile == SK_EMPTY || nextTile == SK_GOAL)
+    {
+        //Is there an entity at this position?
+        for (size_t i = 0; i < s->currentLevel.entityCount; i++)
+        {
+            //is pushable.
+            if(s->currentLevel.entities[i].type == SKE_CRATE)
+            {
+                if(s->currentLevel.entities[i].x == px && s->currentLevel.entities[i].y == py)
+                {
+                    if(sokoTryMoveEntityInDirection(&s->currentLevel.entities[i],dx,dy))
+                    {
+                        entity->x += dx;
+                        entity->y += dy;
+                        return true;
+                    }else{
+                        //can't push? can't move.
+                        return false;
+                    }
+                   
+                }
+            }
+            
+        }
+        
+        //nothing to push, then we can move.
+        entity->x += dx;
+        entity->y += dy;
+        return true;
+    }
+    
+    return false;
 }
 
 //draw the background tiles of the level.
@@ -78,9 +157,41 @@ void drawTiles(sokoLevel_t* level)
             case SKE_PLAYER:
                 drawCircleFilled(ox+level->entities[i].x*s+s/2,oy+level->entities[i].y*s+s/2,s/2-1,c411);
                 break;
+            case SKE_CRATE:
+                drawCircleFilled(ox+level->entities[i].x*s+s/2,oy+level->entities[i].y*s+s/2,s/2-1,c441);
             default:
                 break;
         }
     }
     
+}
+
+bool allCratesOnGoal()
+{
+    for (size_t i = 0; i < s->currentLevel.entityCount; i++)
+    {
+        if(s->currentLevel.entities[i].type == SKE_CRATE)
+        {
+            if(s->currentLevel.tiles[s->currentLevel.entities[i].x][s->currentLevel.entities[i].y] != SK_GOAL)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+sokoTile_t sokoGetTile(int x, int y)
+{
+    if(x<0 || x >= s->currentLevel.width)
+    {
+        return SK_WALL;
+    }
+    if(y<0 || y >= s->currentLevel.height)
+    {
+        return SK_WALL;
+    }
+     
+    return s->currentLevel.tiles[x][y];
 }

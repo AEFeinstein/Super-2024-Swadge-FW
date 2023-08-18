@@ -74,14 +74,15 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
        {
             //load level.
             sokoLoadLevel(0);
+            sokoInitGame(soko);
             soko->screen = SOKO_LEVELPLAY;
        }else if(label == sokoNewGameLabel)
        {
             //load level.
             sokoLoadLevel(0);
+            sokoInitGame(soko);
             soko->screen = SOKO_LEVELPLAY;
        }
-       
     }
 }
 
@@ -120,7 +121,7 @@ static void sokoMainLoop(int64_t elapsedUs)
             sokoPreProcessInput(&soko->input);
             //background had been drawn, input has been processed and functions called. Now do followup logic and draw level.
             //gameplay loop
-            gameLoop(soko,elapsedUs);
+            gameLoop(elapsedUs);
         }
     }
 }
@@ -133,24 +134,43 @@ static void sokoLoadLevel(uint16_t levelIndex)
 
     //here we learn how big the level is from the image.
 
-    soko->currentLevel.width = 3;
-    soko->currentLevel.height = 3;
-    soko->currentLevel.tiles[0][0] = SK_WALL;
-    soko->currentLevel.tiles[1][0] = SK_WALL;
-    soko->currentLevel.tiles[2][0] = SK_WALL;
-    soko->currentLevel.tiles[0][1] = SK_WALL;
-    soko->currentLevel.tiles[1][1] = SK_EMPTY;
-    soko->currentLevel.tiles[2][1] = SK_WALL;
-    soko->currentLevel.tiles[0][2] = SK_WALL;
-    soko->currentLevel.tiles[1][2] = SK_WALL;
-    soko->currentLevel.tiles[2][2] = SK_WALL;
+    soko->currentLevel.width = 7;
+    soko->currentLevel.height = 7;
+    
+    for (size_t x = 0; x < soko->currentLevel.width; x++)
+    {
+        for (size_t y = 0; y < soko->currentLevel.height; y++)
+        {
+            printf("l");
+            if(x == 0 || y == 0)
+            {
+                soko->currentLevel.tiles[x][y] = SK_WALL;
+            }else{
+                soko->currentLevel.tiles[x][y] = SK_EMPTY;
+            }
+        }
+    }
+    
+    soko->currentLevel.tiles[4][4] = SK_WALL;
+    soko->currentLevel.tiles[5][2] = SK_GOAL;
+    soko->currentLevel.tiles[5][3] = SK_GOAL;
+
 
     printf("create entities");
     soko->currentLevel.playerIndex = 0;
-    soko->currentLevel.entityCount = 1;
+    soko->currentLevel.entityCount = 3;
+
     soko->currentLevel.entities[soko->currentLevel.playerIndex].type = SKE_PLAYER;
     soko->currentLevel.entities[soko->currentLevel.playerIndex].x = 1;
     soko->currentLevel.entities[soko->currentLevel.playerIndex].y = 1;
+
+    soko->currentLevel.entities[1].type = SKE_CRATE;
+    soko->currentLevel.entities[1].x = 2;
+    soko->currentLevel.entities[1].y = 2;
+
+    soko->currentLevel.entities[2].type = SKE_CRATE;
+    soko->currentLevel.entities[2].x = 3;
+    soko->currentLevel.entities[2].y = 3;
 }
 
 //placeholder.
