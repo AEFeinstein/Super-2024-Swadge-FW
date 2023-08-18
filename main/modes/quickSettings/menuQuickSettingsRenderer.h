@@ -18,5 +18,6 @@ typedef struct
 menuQuickSettingsRenderer_t* initMenuQuickSettingsRenderer(font_t* font);
 void deinitMenuQuickSettingsRenderer(menuQuickSettingsRenderer_t* renderer);
 void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, int64_t elapsedUs);
-void quickSettingsRendererAddIcon(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg, const wsg_t* offWsg);
+void quickSettingsRendererAddIcon(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg,
+                                  const wsg_t* offWsg);
 #endif

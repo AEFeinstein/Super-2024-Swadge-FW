@@ -152,7 +152,7 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US 1000000
+#define EXIT_TIME_US  1000000
 #define PAUSE_TIME_US 500000
 
 //==============================================================================
@@ -354,8 +354,7 @@ void app_main(void)
             tAccumDraw -= frameRateUs;
 
             // Call the mode's main loop
-            if (NULL != cSwadgeMode->fnMainLoop
-                || (NULL != overlayMode && NULL != overlayMode->fnMainLoop))
+            if (NULL != cSwadgeMode->fnMainLoop || (NULL != overlayMode && NULL != overlayMode->fnMainLoop))
             {
                 // Keep track of the time between main loop calls
                 static uint64_t tLastMainLoopCall = 0;
@@ -403,7 +402,6 @@ void app_main(void)
 
                 if (tHeldUs > PAUSE_TIME_US)
                 {
-
                     if (NULL != overlayMode)
                     {
                         // Quick settings is active, just quit that

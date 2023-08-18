@@ -401,13 +401,13 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
                                   int32_t currentValue)
 {
-    menuItem_t* newItem  = calloc(1, sizeof(menuItem_t));
-    newItem->label       = settingLabel;
-    newItem->options     = optionLabels;
-    newItem->settingVals = optionValues;
-    newItem->numOptions  = numOptions;
-    newItem->minSetting  = bounds->min;
-    newItem->maxSetting  = bounds->max;
+    menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
+    newItem->label          = settingLabel;
+    newItem->options        = optionLabels;
+    newItem->settingVals    = optionValues;
+    newItem->numOptions     = numOptions;
+    newItem->minSetting     = bounds->min;
+    newItem->maxSetting     = bounds->max;
     newItem->currentSetting = currentValue;
 
     // Set the current option to the first in case we can't find it

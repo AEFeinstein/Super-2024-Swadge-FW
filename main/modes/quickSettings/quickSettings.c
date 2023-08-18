@@ -36,7 +36,7 @@ typedef struct
 {
     menu_t* menu;                          ///< The menu structure
     menuQuickSettingsRenderer_t* renderer; ///< Renderer for the menu
-    font_t font;                          ///< The font used for menu text
+    font_t font;                           ///< The font used for menu text
 
     wsg_t iconGeneric;
     wsg_t iconSfxOn;
@@ -69,19 +69,21 @@ static int32_t quickSettingsMenuFlipItem(const char* label);
 static const char quickSettingsName[] = "Settings";
 
 static const char quickSettingsLeds[] = "LEDs ";
-static const char quickSettingsSfx[] = "Sounds ";
-static const char quickSettingsBgm[] = "Music ";
+static const char quickSettingsSfx[]  = "Sounds ";
+static const char quickSettingsBgm[]  = "Music ";
 
-static const char quickSettingsOn[] = "On";
-static const char quickSettingsOff[] = "Off";
+static const char quickSettingsOn[]    = "On";
+static const char quickSettingsOff[]   = "Off";
 static const char quickSettingsMuted[] = "Muted";
 
 static const char* const quickSettingsOptionsLeds[] = {
-    quickSettingsOff, quickSettingsOn,
+    quickSettingsOff,
+    quickSettingsOn,
 };
 
 static const char* const quickSettingsOptionsAudio[] = {
-    quickSettingsMuted, quickSettingsOn,
+    quickSettingsMuted,
+    quickSettingsOn,
 };
 
 //==============================================================================
@@ -167,20 +169,27 @@ static void quickSettingsEnterMode(void)
     // Set up the values we'll use for the settings -- keep the current value if we toggle, or the max
     // If we get an independent mute setting we can just use that instead and not worry about it
     const settingParam_t* ledsBounds = getLedBrightnessSettingBounds();
-    const settingParam_t* sfxBounds = getSfxVolumeSettingBounds();
-    const settingParam_t* bgmBounds = getBgmVolumeSettingBounds();
+    const settingParam_t* sfxBounds  = getSfxVolumeSettingBounds();
+    const settingParam_t* bgmBounds  = getBgmVolumeSettingBounds();
 
-    int32_t ledsValue = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), quickSettings->ledsOptionsValues);
+    int32_t ledsValue
+        = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), quickSettings->ledsOptionsValues);
     int32_t sfxValue = setupQuickSettingParams(sfxBounds, getSfxVolumeSetting(), quickSettings->sfxOptionsValues);
     int32_t bgmValue = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), quickSettings->bgmOptionsValues);
 
-    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsLeds, quickSettingsOptionsLeds, quickSettings->ledsOptionsValues, 2, ledsBounds, ledsValue);
-    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsSfx, quickSettingsOptionsAudio, quickSettings->sfxOptionsValues, 2, sfxBounds, sfxValue);
-    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsBgm, quickSettingsOptionsAudio, quickSettings->bgmOptionsValues, 2, bgmBounds, bgmValue);
+    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsLeds, quickSettingsOptionsLeds,
+                                 quickSettings->ledsOptionsValues, 2, ledsBounds, ledsValue);
+    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsSfx, quickSettingsOptionsAudio,
+                                 quickSettings->sfxOptionsValues, 2, sfxBounds, sfxValue);
+    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsBgm, quickSettingsOptionsAudio,
+                                 quickSettings->bgmOptionsValues, 2, bgmBounds, bgmValue);
 
-    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsLeds, &quickSettings->iconLedsOn, &quickSettings->iconLedsOff);
-    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsSfx, &quickSettings->iconSfxOn, &quickSettings->iconSfxOff);
-    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsBgm, &quickSettings->iconBgmOn, &quickSettings->iconBgmOff);
+    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsLeds, &quickSettings->iconLedsOn,
+                                 &quickSettings->iconLedsOff);
+    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsSfx, &quickSettings->iconSfxOn,
+                                 &quickSettings->iconSfxOff);
+    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsBgm, &quickSettings->iconBgmOn,
+                                 &quickSettings->iconBgmOff);
 }
 
 /**
@@ -253,20 +262,20 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
         switch (evt.button)
         {
             case PB_UP:
-            evt.button = PB_LEFT;
-            break;
+                evt.button = PB_LEFT;
+                break;
 
             case PB_DOWN:
-            evt.button = PB_RIGHT;
-            break;
+                evt.button = PB_RIGHT;
+                break;
 
             case PB_LEFT:
-            evt.button = PB_UP;
-            break;
+                evt.button = PB_UP;
+                break;
 
             case PB_RIGHT:
-            evt.button = PB_DOWN;
-            break;
+                evt.button = PB_DOWN;
+                break;
 
             case PB_A:
             case PB_B:
@@ -277,7 +286,7 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
             case TB_2:
             case TB_3:
             case TB_4:
-            break;
+                break;
         }
 
         // Pass button events to the menu
@@ -290,7 +299,7 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
 
 static int32_t quickSettingsMenuFlipItem(const char* label)
 {
-    node_t* node = quickSettings->menu->currentItem;
+    node_t* node     = quickSettings->menu->currentItem;
     menuItem_t* item = (menuItem_t*)(node->val);
 
     // Quick short-circuit for the current node

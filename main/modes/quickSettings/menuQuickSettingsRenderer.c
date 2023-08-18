@@ -29,14 +29,13 @@
 
 #define TEXT_MARGIN 10
 
-#define PANEL_BG_COLOR c333
-#define PANEL_BOX_COLOR c000
+#define PANEL_BG_COLOR   c333
+#define PANEL_BOX_COLOR  c000
 #define PANEL_TEXT_COLOR c000
 
-#define ICON_W 16
-#define ICON_H 16
+#define ICON_W      16
+#define ICON_H      16
 #define ICON_BOX_PX 2
-
 
 //==============================================================================
 // Structs
@@ -102,23 +101,21 @@ void deinitMenuQuickSettingsRenderer(menuQuickSettingsRenderer_t* renderer)
 
 void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, int64_t elapsedUs)
 {
-    node_t* node = menu->items->first;
+    node_t* node  = menu->items->first;
     uint8_t index = 0;
 
     // Draw the panel background
     uint16_t panelX = (TFT_WIDTH - PANEL_W) / 2;
     fillDisplayArea(panelX, 0, panelX + PANEL_W, PANEL_H - PANEL_R, PANEL_BG_COLOR);
     fillDisplayArea(panelX + PANEL_R, PANEL_H - PANEL_R, panelX + PANEL_W - PANEL_R, PANEL_H, PANEL_BG_COLOR);
-    //drawCircleQuadrants(panelX + PANEL_R, PANEL_H - PANEL_R, PANEL_R, false, false, false, true, PANEL_BG_COLOR);
-    //drawCircleQuadrants(panelX + PANEL_W - PANEL_R, PANEL_H - PANEL_R, PANEL_R, false, false, true, false, PANEL_BG_COLOR);
     drawCircleFilled(panelX + PANEL_R, PANEL_H - PANEL_R - 1, PANEL_R, PANEL_BG_COLOR);
     drawCircleFilled(panelX + PANEL_W - PANEL_R - 1, PANEL_H - PANEL_R - 1, PANEL_R, PANEL_BG_COLOR);
-
 
     while (node != NULL)
     {
         menuItem_t* item = (menuItem_t*)(node->val);
-        const quickSettingsItemInfo_t* info = getInfoForLabel(renderer, item->label ? item->label : item->options[item->currentOpt]);
+        const quickSettingsItemInfo_t* info
+            = getInfoForLabel(renderer, item->label ? item->label : item->options[item->currentOpt]);
         const wsg_t* wsgToDraw = renderer->defaultIcon;
 
         if (info != NULL)
@@ -135,18 +132,20 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
         }
 
         // Draw selected icon
-        uint16_t iconX = panelX + index * PANEL_W / (menu->items->length) + ((PANEL_W - ICON_W * menu->items->length) / menu->items->length / 2);
+        uint16_t iconX = panelX + index * PANEL_W / (menu->items->length)
+                         + ((PANEL_W - ICON_W * menu->items->length) / menu->items->length / 2);
         uint16_t iconY = (PANEL_H - renderer->font->height - TEXT_MARGIN - 1 - wsgToDraw->h - ICON_BOX_PX * 2) / 2;
         drawWsgSimple(wsgToDraw, iconX, iconY);
 
         if (item == menu->currentItem->val)
         {
-            char buffer[64] = {0};
+            char buffer[64]   = {0};
             const char* label = getMenuItemLabelText(buffer, sizeof(buffer), item);
 
             drawRect(iconX - 1, iconY - 1, iconX + ICON_W + 1, iconY + ICON_H + 1, PANEL_BOX_COLOR);
 
-            drawText(renderer->font, PANEL_TEXT_COLOR, label, panelX + TEXT_MARGIN, PANEL_H - renderer->font->height - TEXT_MARGIN - 1);
+            drawText(renderer->font, PANEL_TEXT_COLOR, label, panelX + TEXT_MARGIN,
+                     PANEL_H - renderer->font->height - TEXT_MARGIN - 1);
         }
 
         node = node->next;
@@ -154,14 +153,14 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
     }
 }
 
-void quickSettingsRendererAddIcon(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg, const wsg_t* offWsg)
+void quickSettingsRendererAddIcon(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg,
+                                  const wsg_t* offWsg)
 {
     quickSettingsItemInfo_t* info = calloc(1, sizeof(quickSettingsItemInfo_t));
 
-    info->label = label;
-    info->onWsg = onWsg;
+    info->label  = label;
+    info->onWsg  = onWsg;
     info->offWsg = offWsg;
 
     push(&renderer->iconMap, info);
 }
-

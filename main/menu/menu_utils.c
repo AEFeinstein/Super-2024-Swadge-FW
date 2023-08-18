@@ -91,7 +91,7 @@ bool menuItemHasOptions(const menuItem_t* item)
 bool menuItemHasPrev(const menuItem_t* item)
 {
     return (menuItemHasOptions(item) && (0 != item->currentOpt))
-            || (menuItemIsSetting(item) && (item->currentSetting > item->minSetting));
+           || (menuItemIsSetting(item) && (item->currentSetting > item->minSetting));
 }
 
 /**
@@ -103,8 +103,8 @@ bool menuItemHasPrev(const menuItem_t* item)
  */
 bool menuItemHasNext(const menuItem_t* item)
 {
-    return (menuItemHasOptions(item) && (item->currentOpt != item->numOptions - 1)) \
-            || (menuItemIsSetting(item) && (item->currentSetting < item->maxSetting));
+    return (menuItemHasOptions(item) && (item->currentOpt != item->numOptions - 1))
+           || (menuItemIsSetting(item) && (item->currentSetting < item->maxSetting));
 }
 
 /**

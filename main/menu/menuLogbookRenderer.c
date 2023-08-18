@@ -299,11 +299,11 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
             menuItem_t* item = (menuItem_t*)pageStart->val;
             bool isSelected  = (menu->currentItem->val == item);
 
-            char buffer[64] = {0};
+            char buffer[64]   = {0};
             const char* label = getMenuItemLabelText(buffer, sizeof(buffer), item);
 
-            bool leftArrow = menuItemHasPrev(item) || menuItemIsBack(item);
-            bool rightArrow = menuItemHasNext(item) || menuItemHasSubMenu(item);
+            bool leftArrow    = menuItemHasPrev(item) || menuItemIsBack(item);
+            bool rightArrow   = menuItemHasNext(item) || menuItemHasSubMenu(item);
             bool doubleArrows = menuItemIsBack(item) || menuItemHasSubMenu(item);
 
             drawMenuText(renderer, label, x, y, isSelected, leftArrow, rightArrow, doubleArrows);
