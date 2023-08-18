@@ -8,6 +8,8 @@
 #include "demoMode.h"
 #include "pong.h"
 #include "mode_colorchord.h"
+#include "mode_dance.h"
+#include "tunernome.h"
 
 #include "settingsManager.h"
 
@@ -105,6 +107,8 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modeDance.modeName);
+    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -173,6 +177,10 @@ static void mainMenuMainLoop(int64_t elapsedUs)
  */
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
+    // Stop the buzzer first no matter what, so that it turns off
+    // if we scroll away from the BGM or SFX settings.
+    bzrStop();
+
     if (selected)
     {
         // These items enter other modes, so they must be selected
@@ -187,6 +195,14 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
+        }
+        else if (label == modeDance.modeName)
+        {
+            switchToSwadgeMode(&modeDance);
+        }
+        else if (label == tunernomeMode.modeName)
+        {
+            switchToSwadgeMode(&tunernomeMode);
         }
     }
     else
