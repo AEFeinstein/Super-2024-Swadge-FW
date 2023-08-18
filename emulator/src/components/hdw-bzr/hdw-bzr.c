@@ -347,13 +347,27 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16
         int64_t cTime = esp_timer_get_time();
 
         // Check if it's time to play the next note
-        if ((-1 == track->note_index)
-            || (cTime - track->start_time >= (1000 * track->sTrack->notes[track->note_index].timeMs)))
+        bool shouldAdvance = false;
+        if (-1 == track->note_index)
         {
-            // Move to the next note
             track->note_index++;
             track->start_time = cTime;
+            shouldAdvance     = true;
+        }
+        else
+        {
+            int32_t noteTimeUs = (1000 * track->sTrack->notes[track->note_index].timeMs);
+            if (cTime >= track->start_time + noteTimeUs)
+            {
+                track->note_index++;
+                track->start_time += noteTimeUs;
+                shouldAdvance = true;
+            }
+        }
 
+        // Check if it's time to play the next note
+        if (shouldAdvance)
+        {
             // Loop if requested
             if (track->should_loop && (track->note_index == track->sTrack->numNotes))
             {
