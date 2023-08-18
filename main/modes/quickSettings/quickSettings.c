@@ -262,11 +262,11 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
         switch (evt.button)
         {
             case PB_UP:
-                evt.button = PB_LEFT;
+                evt.button = PB_RIGHT;
                 break;
 
             case PB_DOWN:
-                evt.button = PB_RIGHT;
+                evt.button = PB_LEFT;
                 break;
 
             case PB_LEFT:
