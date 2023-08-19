@@ -240,16 +240,16 @@ void updateLedsInGame(gameData_t * gameData){
     //if(( (gameData->frameCount) % 10) == 0){
         for (int32_t i = 0; i < 8; i++)
         {
-            if(gameData->leds[i].r > 0){
-                gameData->leds[i].r -= 0x01;
+            if(gameData->leds[i].r > 1){
+                gameData->leds[i].r -= 0x02;
             }
             
-            if(gameData->leds[i].g > 0){
-                gameData->leds[i].g -= 0x01;
+            if(gameData->leds[i].g > 1){
+                gameData->leds[i].g -= 0x02;
             }
 
-            if(gameData->leds[i].b > 0){
-                gameData->leds[i].b -= 0x01;
+            if(gameData->leds[i].b > 1){
+                gameData->leds[i].b -= 0x02;
             }
         }
     //}

@@ -1322,9 +1322,9 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
 
 void setLedBreakBlock(gameData_t *gameData, uint8_t tileId){
     uint8_t ledIndex = esp_random() % CONFIG_NUM_LEDS;
-    uint8_t nr = 0;
-    uint8_t ng = 0;
-    uint8_t nb = 0;
+    uint16_t nr = 0;
+    uint16_t ng = 0;
+    uint16_t nb = 0;
 
     switch(tileId){
         case TILE_BLOCK_1x1_RED:
@@ -1467,9 +1467,13 @@ void setLedBreakBlock(gameData_t *gameData, uint8_t tileId){
         
     }
 
-    gameData->leds[ledIndex].r = CLAMP(gameData->leds[ledIndex].r + nr, 0, 255);
-    gameData->leds[ledIndex].g = CLAMP(gameData->leds[ledIndex].g + ng, 0, 255);
-    gameData->leds[ledIndex].b = CLAMP(gameData->leds[ledIndex].b + nb, 0, 255);
+    nr += gameData->leds[ledIndex].r;
+    ng += gameData->leds[ledIndex].g;
+    nb += gameData->leds[ledIndex].b;
+
+    gameData->leds[ledIndex].r = CLAMP(nr, 0, 255);
+    gameData->leds[ledIndex].g = CLAMP(ng, 0, 255);
+    gameData->leds[ledIndex].b = CLAMP(nb, 0, 255);
 
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }

@@ -412,6 +412,7 @@ static void breakoutUpdateReadyScreen(breakout_t *self, int64_t elapsedUs){
         breakoutChangeStateGame(self);
     }
 
+    updateLedsInGame(&(self->gameData));
     breakoutDrawReadyScreen(&(self->logbook), &(self->ibm_vga8), &(self->gameData));
 }
 
