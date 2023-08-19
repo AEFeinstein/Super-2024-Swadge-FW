@@ -1110,6 +1110,18 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
     return false;
 }
 
+void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty){
+    switch(tileId){
+        case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
+            breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
+            bzrPlaySfx(&(self->soundManager->hit2));
+        }
+        default: {
+            break;
+        }
+    }
+}
+
 void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty){
     switch(tileId){
         case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_BLACK: {

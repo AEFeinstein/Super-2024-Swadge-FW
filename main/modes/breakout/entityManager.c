@@ -410,7 +410,7 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &ballTileCollisionHandler;
     entity->fallOffTileHandler = &defaultFallOffTileHandler;
-    entity->overlapTileHandler = &defaultOverlapTileHandler;
+    entity->overlapTileHandler = &ballOverlapTileHandler;
 
     return entity;
 }
