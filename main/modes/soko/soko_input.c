@@ -1,7 +1,9 @@
 #include "soko_input.h"
 
 /**
- * @brief Input preprocessing turns btnstate into game-logic usable data. Handles DAS, settings, etc.
+ * @brief Input preprocessing turns btnstate into game-logic usable data.
+ * Input variables only set on press, as appropriate.
+ * Handles DAS, settings, etc.
  * Called once a frame before game loop.
  * 
  * @param input 

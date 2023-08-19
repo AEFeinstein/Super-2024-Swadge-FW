@@ -155,12 +155,12 @@ static void sokoLoadLevel(uint16_t levelIndex)
     //populate background array
     //populate entities array
 
-    //here we learn how big the level is from the image.
-
     soko->currentLevel.width = soko->levelWSG.w;
     soko->currentLevel.height = soko->levelWSG.h;
     
-    //scale will either be the drawn WSG scale or some clculated max considering size.
+    //player and crate wsg's are 16px right now.
+    //In picross I wrote a drawWSGScaled for the main screen when i could get away with it on level select screen. but here I think just commit to something.
+    // Maybe 24? How big are levels going to get?
     soko->currentLevel.levelScale = 16;
 
     soko->currentLevel.entityCount = 0;
@@ -189,16 +189,16 @@ static void sokoLoadLevel(uint16_t levelIndex)
 
 static sokoTile_t sokoGetTileFromColor(paletteColor_t col)
 {
-    //even if player (blue) or crate (red) is here, they stand on floor. 505 is player and crate, invalid.
+    //even if player (c005) or crate (c500) is here, they stand on floor. 505 is player and crate, invalid.
     if(col== c555 || col == c005 || col == c500){
         return SKT_FLOOR;
     }else if(col == c000)
     {
         return SKT_WALL;
-    }else if(col == c050 || col == c550 || col == c055){//has green. r and b used for entity. g for tile.
+    }else if(col == c050 || col == c550 || col == c055){//goal is c050, crate and goal is c550, player and goal is c055
         return SKT_GOAL;
     }
-    //transparent or invalid is empty. Todo: can catch transparent and report error otherwise; once comitted to encoding scheme.
+    //transparent or invalid is empty. Todo: can catch transparent and report error otherwise... once comitted to encoding scheme.
     return SKT_EMPTY;
 }
 

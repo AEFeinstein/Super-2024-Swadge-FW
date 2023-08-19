@@ -90,7 +90,7 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy, uint16_t
         return false;
     }
 
-    //maxiumum number of crates we can push. Traditional sokoban has a limit of one. I prefer infinite.
+    //maxiumum number of crates we can push. Traditional sokoban has a limit of one. I prefer infinite for challenges.
     if(s->maxPush != 0 && push>s->maxPush)
     {
         return false;
@@ -125,7 +125,7 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy, uint16_t
             
         }
         
-        //nothing to push, then we can move.
+        //No wall in front of us and nothing to push, we can move.
         entity->x += dx;
         entity->y += dy;
         return true;
