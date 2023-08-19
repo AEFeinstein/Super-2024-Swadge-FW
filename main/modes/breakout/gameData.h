@@ -37,7 +37,7 @@ typedef struct
     uint8_t world;
     uint8_t level;
 
-    uint16_t combo;
+    int16_t combo;
     int16_t comboTimer;
     uint32_t comboScore;
 
@@ -67,7 +67,7 @@ typedef struct
 void initializeGameData(gameData_t * gameData);
 void initializeGameDataFromTitleScreen(gameData_t * gameData);
 void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData);
-void scorePoints(gameData_t * gameData, uint16_t points);
+void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo);
 void addCoins(gameData_t * gameData, uint8_t coins);
 void updateComboTimer(gameData_t * gameData);
 void resetGameDataLeds(gameData_t * gameData);

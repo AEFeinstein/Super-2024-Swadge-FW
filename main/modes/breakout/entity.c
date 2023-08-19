@@ -829,6 +829,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             if(self->yspeed > 0){
                 setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, 63);
                 bzrPlaySfx(&(self->soundManager->hit1));
+                scorePoints(self->gameData, 0, 2);
             }
             break;
         default:
@@ -1078,6 +1079,7 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
         case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
             bzrPlaySfx(&(self->soundManager->hit2));
+            scorePoints(self->gameData, 10, -1);
         }
         default: {
             break;
@@ -1115,6 +1117,7 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
         case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
             bzrPlaySfx(&(self->soundManager->hit2));
+            scorePoints(self->gameData, 1, -1);
         }
         default: {
             break;

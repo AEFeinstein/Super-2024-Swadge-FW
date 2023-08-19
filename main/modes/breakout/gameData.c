@@ -94,8 +94,11 @@ void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData){
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void scorePoints(gameData_t * gameData, uint16_t points){
-    gameData->combo++;
+void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo){
+    gameData->combo += incCombo;
+    if(gameData->combo < 1){
+        gameData->combo = 1;
+    }
     
     uint32_t comboPoints = points * gameData->combo;
 

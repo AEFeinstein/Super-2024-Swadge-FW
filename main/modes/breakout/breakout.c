@@ -181,6 +181,12 @@ static const leveldef_t leveldef[2] = {
      };
 
 //==============================================================================
+// Look Up Tables
+//==============================================================================
+
+static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
+
+//==============================================================================
 // Strings
 //==============================================================================
 
@@ -352,7 +358,10 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             breakout->difficulty = BREAKOUT_EASY;
             breakout->screen = BREAKOUT_GAME;
             initializeGameDataFromTitleScreen(&(breakout->gameData));
+            breakout->gameData.world = 1;
+            breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
+            breakout->gameData.countdown = leveldef[0].timeLimit;
             breakoutChangeStateReadyScreen(breakout);   
         }
         // Save what difficulty is selected and start the game (second-level menu)
@@ -443,33 +452,9 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
         self->gameData.btnState = evt.state;
     }
     
-    // If the game is paused
-    /*if (breakout->isPaused)
-    {
-        // Just draw and return
-        breakoutDrawField();
-        return;
-    }
-
-    // While the restart timer is active
-    while (breakout->restartTimerUs > 0)
-    {
-        // Decrement the timer and draw the field, but don't run game logic
-        breakout->restartTimerUs -= elapsedUs;
-        breakoutDrawField();
-        return;
-    }*/
-
-    // Do update each loop
-    //breakoutFadeLeds(elapsedUs);
-    // breakoutControlPlayerPaddle();
-    // breakoutControlCpuPaddle();
-    // breakoutUpdatePhysics(elapsedUs);
-
     updateLedsInGame(&(self->gameData));
     breakoutDetectGameStateChange(self);
     updateEntities(&(self->entityManager));
-
 
     // Draw the field
     drawEntities(&(self->entityManager));
@@ -479,6 +464,12 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 59){
         self->gameData.frameCount = 0;
+
+        if(self->gameData.countdown > 0){
+            self->gameData.countdown--;
+        }
+        
+        self->gameData.inGameTimer++;
     }
 
     self->gameData.prevBtnState = self->gameData.btnState;
@@ -679,8 +670,8 @@ static void drawBreakoutHud(font_t *font, gameData_t *gameData){
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
 
-    char timeStr[10];
-    snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
+    //char timeStr[10];
+    //snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
 
     if(gameData->frameCount > 29) {
         drawText(font, c500, "1UP", 24, 2);
@@ -692,12 +683,20 @@ static void drawBreakoutHud(font_t *font, gameData_t *gameData){
     drawText(font, c555, levelStr, 184, 2);
     //drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220, 16);
 
+    drawText(font, c555, "B", 271, 32);
+    drawText(font, c555, "O", 271, 44);
+    drawText(font, c555, "N", 271, 56);
+    drawText(font, c555, "U", 271, 68);
+    drawText(font, c555, "S", 271, 80);
+    drawRect(271,96,279,96+(gameData->countdown >> 1), c555);
+
     if(gameData->comboTimer == 0){
         return;
     }
 
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-    //drawText(d, font, (gameData->comboTimer < 60) ? c030: greenColors[(platformer->gameData.frameCount >> 3) % 4], scoreStr, 8, 30);
+    //snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
+    drawText(font, (gameData->comboTimer < 60) ? c030: greenColors[(breakout->gameData.frameCount >> 3) % 4], scoreStr, 144, 2);
 }
 
 void breakoutChangeStateLevelClear(breakout_t *self){
@@ -711,14 +710,14 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
     self->gameData.targetBlocksBroken = 0;
 
     if(self->gameData.frameCount > 60){
-        /*if(self->gameData.countdown > 0){
+        if(self->gameData.countdown > 0){
             self->gameData.countdown--;
             
             if(self->gameData.countdown % 2){
                 //buzzer_play_bgm(&sndTally);
             }
 
-            uint16_t comboPoints = 50 * self->gameData.combo;
+            uint16_t comboPoints = 20 * self->gameData.combo;
 
             self->gameData.score += comboPoints;
             self->gameData.comboScore = comboPoints;
@@ -726,7 +725,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             if(self->gameData.combo > 1){
                 self->gameData.combo--;
             }
-        } else*/ if(self->gameData.frameCount % 60 == 0) {
+        } else if(self->gameData.frameCount % 60 == 0) {
             //Hey look, it's a frame rule!
             
             uint16_t levelIndex = breakoutGetLevelIndex(self->gameData.world, self->gameData.level);
@@ -771,6 +770,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }*/
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
+                breakout->gameData.countdown = leveldef[levelIndex].timeLimit;
                 breakoutChangeStateReadyScreen(self);
                 return;
             }
