@@ -44,7 +44,11 @@ static void sokoEnterMode(void)
     soko->levels[0]="sk_testpuzzle.wsg";
     
     //free a wsg that we never loaded... is bad.
-    loadWsg(soko->levels[0],&soko->levelWSG,false);
+    loadWsg(soko->levels[0],&soko->levelWSG,true);//spiRAM cus only used during loading, not gameplay.
+
+    //load sprite assets
+    loadWsg("sk_player.wsg",&soko->playerWSG,false);
+    loadWsg("sk_crate.wsg",&soko->crateWSG,false);
 
     // Initialize the menu
     soko->menu                = initMenu(sokoModeName, sokoMenuCb);
@@ -55,6 +59,8 @@ static void sokoEnterMode(void)
 
     // Set the mode to menu mode
     soko->screen = SOKO_MENU;
+    soko->state = SKS_INIT;
+
 }
 
 static void sokoExitMode(void)
@@ -68,6 +74,10 @@ static void sokoExitMode(void)
 
     //free the level
     freeWsg(&soko->levelWSG);
+
+    //free sprites
+    freeWsg(&soko->playerWSG);
+    freeWsg(&soko->crateWSG);
 
     // Free everything else
     free(soko);
@@ -138,6 +148,7 @@ static void sokoMainLoop(int64_t elapsedUs)
 static void sokoLoadLevel(uint16_t levelIndex)
 {
     printf("load level\n");
+    soko->state = SKS_INIT;
     //get image file from selected index
     loadWsg(soko->levels[levelIndex],&soko->levelWSG,false);
 
@@ -150,7 +161,7 @@ static void sokoLoadLevel(uint16_t levelIndex)
     soko->currentLevel.height = soko->levelWSG.h;
     
     //scale will either be the drawn WSG scale or some clculated max considering size.
-    soko->currentLevel.levelScale = 15;
+    soko->currentLevel.levelScale = 16;
 
     soko->currentLevel.entityCount = 0;
     paletteColor_t sampleColor;
@@ -178,15 +189,17 @@ static void sokoLoadLevel(uint16_t levelIndex)
 
 static sokoTile_t sokoGetTileFromColor(paletteColor_t col)
 {
-    if(col == c000)
+    //even if player (blue) or crate (red) is here, they stand on floor. 505 is player and crate, invalid.
+    if(col== c555 || col == c005 || col == c500){
+        return SKT_FLOOR;
+    }else if(col == c000)
     {
-        return SK_WALL;
+        return SKT_WALL;
     }else if(col == c050 || col == c550 || col == c055){//has green. r and b used for entity. g for tile.
-        return SK_GOAL;
+        return SKT_GOAL;
     }
-    //even if player is here (blue), they stand on empty. 
-    return SK_EMPTY;
-    
+    //transparent or invalid is empty. Todo: can catch transparent and report error otherwise; once comitted to encoding scheme.
+    return SKT_EMPTY;
 }
 
 static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t col)

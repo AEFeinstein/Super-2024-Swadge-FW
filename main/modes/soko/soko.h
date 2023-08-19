@@ -15,6 +15,13 @@ typedef enum
 
 typedef enum
 {
+    SKS_INIT, ///< meta enum used for edge cases
+    SKS_GAMEPLAY,
+    SKS_VICTORY,
+} sokoGameState_t;
+
+typedef enum
+{
     SKE_NONE=0,
     SKE_PLAYER=1,
     SKE_CRATE=2,
@@ -22,9 +29,10 @@ typedef enum
 
 typedef enum
 {
-    SK_EMPTY = 0,
-    SK_WALL = 1,
-    SK_GOAL = 2,
+    SKT_EMPTY = 0,
+    SKT_FLOOR = 1,
+    SKT_WALL = 2,
+    SKT_GOAL = 3,
 } sokoTile_t;
 
 typedef struct 
@@ -43,9 +51,7 @@ typedef struct
     uint16_t playerIndex;//we could have multiple players...
     sokoTile_t tiles[SOKO_MAX_LEVELSIZE][SOKO_MAX_LEVELSIZE];
     sokoEntity_t entities[SOKO_MAX_ENTITY_COUNT];//todo: pointer and runtime array size
-} sokoLevel_t;
-
-
+} sokoLevel_t; 
 
 typedef struct
 {
@@ -57,7 +63,11 @@ typedef struct
 
     //game settings
     uint16_t maxPush;                           ///< Maximum number of crates the player can push. Use 0 for no limit.
+    sokoGameState_t state;
+    wsg_t playerWSG;
+    wsg_t crateWSG;
 
+    //level
     char* levels[SOKO_LEVEL_COUNT];///< List of wsg filenames. not comitted to storing level data like this, but idk if I need level names like picross.
     wsg_t levelWSG;                            ///< Current level
 
