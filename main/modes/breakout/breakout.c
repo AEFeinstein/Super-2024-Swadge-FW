@@ -20,6 +20,8 @@
 
 #include "leveldef.h"
 
+#include <esp_log.h>
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -437,7 +439,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         // Save the button state
-        breakout->gameData.btnState = evt.state;
+        self->gameData.btnState = evt.state;
     }
     
     // If the game is paused
@@ -478,7 +480,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
         self->gameData.frameCount = 0;
     }
 
-    breakout->gameData.prevBtnState = breakout->gameData.btnState;
+    self->gameData.prevBtnState = self->gameData.btnState;
 }
 
 /**

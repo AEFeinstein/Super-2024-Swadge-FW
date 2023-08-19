@@ -12,6 +12,7 @@
 #include "esp_random.h"
 #include "aabb_utils.h"
 #include "trigonometry.h"
+#include <esp_log.h>
 
 //==============================================================================
 // Constants
@@ -240,7 +241,7 @@ void updateBall(entity_t *self)
         if(
             self->gameData->btnState & PB_UP
             &&
-            !self->gameData->prevBtnState & PB_UP
+            !(self->gameData->prevBtnState & PB_UP)
         )
         {
             //Launch ball
