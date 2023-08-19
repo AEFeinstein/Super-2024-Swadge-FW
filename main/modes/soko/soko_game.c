@@ -11,11 +11,15 @@ sokoEntity_t* player;
 
 void sokoInitGame(soko_t* soko)
 {
-    printf("init sokobon game.");
-    //set gameplay settings from default settings, if we want powerups or whatever.
+    printf("init sokobon game.\n");
+
+    //Configure conveninence pointers.
     s = soko;
-    s->maxPush = 0;//set to 1 for "traditional" sokoban.
     player = &s->currentLevel.entities[s->currentLevel.playerIndex];
+
+    //set gameplay settings from default settings, if we want powerups or whatever that adjusts them, or have a state machine.
+    s->maxPush = 0;//set to 1 for "traditional" sokoban.
+
 }
 
 void gameLoop(int64_t elapsedUs)
@@ -121,9 +125,9 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy, uint16_t
 void drawTiles(sokoLevel_t* level)
 {
     SETUP_FOR_TURBO();
-    uint16_t s = 15;//scale
-    uint16_t ox = (TFT_WIDTH/2)-((level->width)*s/2);
-    uint16_t oy = (TFT_HEIGHT/2)-((level->height)*s/2);
+    uint16_t scale = level->levelScale;
+    uint16_t ox = (TFT_WIDTH/2)-((level->width)*scale/2);
+    uint16_t oy = (TFT_HEIGHT/2)-((level->height)*scale/2);
 
     for (size_t x = 0; x < level->width; x++)
     {
@@ -146,9 +150,9 @@ void drawTiles(sokoLevel_t* level)
             }
             //Draw a square.
             //none of this matters it's all getting replaced with drawwsg later.
-            for (size_t xd = ox+x*s; xd < ox+x*s+s; xd++)
+            for (size_t xd = ox+x*scale; xd < ox+x*scale+scale; xd++)
             {
-                for (size_t yd = oy+y*s; yd < oy+y*s+s; yd++)
+                for (size_t yd = oy+y*scale; yd < oy+y*scale+scale; yd++)
                 {
                     TURBO_SET_PIXEL(xd, yd, color);
                 }
@@ -163,10 +167,11 @@ void drawTiles(sokoLevel_t* level)
         switch (level->entities[i].type)
         {
             case SKE_PLAYER:
-                drawCircleFilled(ox+level->entities[i].x*s+s/2,oy+level->entities[i].y*s+s/2,s/2-1,c411);
+                drawCircleFilled(ox+level->entities[i].x*scale+scale/2,oy+level->entities[i].y*scale+scale/2,scale/2-1,c411);
                 break;
             case SKE_CRATE:
-                drawCircleFilled(ox+level->entities[i].x*s+s/2,oy+level->entities[i].y*s+s/2,s/2-1,c441);
+                drawCircleFilled(ox+level->entities[i].x*scale+scale/2,oy+level->entities[i].y*scale+scale/2,scale/2-1,c441);
+            case SKE_NONE:
             default:
                 break;
         }

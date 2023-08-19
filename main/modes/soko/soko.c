@@ -7,6 +7,9 @@ static void sokoExitMode(void);
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void sokoLoadLevel(uint16_t);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static sokoTile_t sokoGetTileFromColor(paletteColor_t);
+static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t);
+
 
 //strings
 static const char sokoModeName[] = "Sokobanabokabon";
@@ -36,6 +39,12 @@ static void sokoEnterMode(void)
     soko = calloc(1, sizeof(soko_t));
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, false);
+    
+    //todo: move to convenience function for loading level data. Preferrebly in it's own file so contributors can futz with it with fewer git merge cases.
+    soko->levels[0]="sk_testpuzzle.wsg";
+    
+    //free a wsg that we never loaded... is bad.
+    loadWsg(soko->levels[0],&soko->levelWSG,false);
 
     // Initialize the menu
     soko->menu                = initMenu(sokoModeName, sokoMenuCb);
@@ -53,10 +62,12 @@ static void sokoExitMode(void)
     // Deinitialize the menu
     deinitMenu(soko->menu);
     deinitMenuLogbookRenderer(soko->menuLogbookRenderer);
+
     // Free the font
     freeFont(&soko->ibm);
 
     //free the level
+    freeWsg(&soko->levelWSG);
 
     // Free everything else
     free(soko);
@@ -126,48 +137,69 @@ static void sokoMainLoop(int64_t elapsedUs)
 
 static void sokoLoadLevel(uint16_t levelIndex)
 {
+    printf("load level\n");
     //get image file from selected index
+    loadWsg(soko->levels[levelIndex],&soko->levelWSG,false);
+
     //populate background array
     //populate entities array
 
     //here we learn how big the level is from the image.
 
-    soko->currentLevel.width = 7;
-    soko->currentLevel.height = 7;
+    soko->currentLevel.width = soko->levelWSG.w;
+    soko->currentLevel.height = soko->levelWSG.h;
     
+    //scale will either be the drawn WSG scale or some clculated max considering size.
+    soko->currentLevel.levelScale = 15;
+
+    soko->currentLevel.entityCount = 0;
+    paletteColor_t sampleColor;
+
     for (size_t x = 0; x < soko->currentLevel.width; x++)
     {
         for (size_t y = 0; y < soko->currentLevel.height; y++)
         {
-            if(x == 0 || y == 0)
-            {
-                soko->currentLevel.tiles[x][y] = SK_WALL;
-            }else{
-                soko->currentLevel.tiles[x][y] = SK_EMPTY;
+            sampleColor = soko->levelWSG.px[y * soko->levelWSG.w + x];
+            soko->currentLevel.tiles[x][y] = sokoGetTileFromColor(sampleColor);
+            sokoEntityType_t e = sokoGetEntityFromColor(sampleColor);
+            if(e != SKE_NONE){
+                soko->currentLevel.entities[soko->currentLevel.entityCount].type = e;
+                soko->currentLevel.entities[soko->currentLevel.entityCount].x = x;
+                soko->currentLevel.entities[soko->currentLevel.entityCount].y = y;
+                if(e == SKE_PLAYER)
+                {
+                    soko->currentLevel.playerIndex = soko->currentLevel.entityCount;
+                }
+                soko->currentLevel.entityCount = soko->currentLevel.entityCount+1;
             }
         }
     }
+}
+
+static sokoTile_t sokoGetTileFromColor(paletteColor_t col)
+{
+    if(col == c000)
+    {
+        return SK_WALL;
+    }else if(col == c050 || col == c550 || col == c055){//has green. r and b used for entity. g for tile.
+        return SK_GOAL;
+    }
+    //even if player is here (blue), they stand on empty. 
+    return SK_EMPTY;
     
-    soko->currentLevel.tiles[4][4] = SK_WALL;
-    soko->currentLevel.tiles[5][2] = SK_GOAL;
-    soko->currentLevel.tiles[5][3] = SK_GOAL;
+}
 
+static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t col)
+{
+    //todo: get actual rgb value from the paletteColors array and check if the rgb values > 0.
+    if(col == c500 || col == c550)
+    {
+        return SKE_CRATE;
+    }else if(col == c005 || col == c055){//has green. r and b used for entity. g for tile.
+        return SKE_PLAYER;
+    }
 
-    printf("create entities");
-    soko->currentLevel.playerIndex = 0;
-    soko->currentLevel.entityCount = 3;
-
-    soko->currentLevel.entities[soko->currentLevel.playerIndex].type = SKE_PLAYER;
-    soko->currentLevel.entities[soko->currentLevel.playerIndex].x = 1;
-    soko->currentLevel.entities[soko->currentLevel.playerIndex].y = 1;
-
-    soko->currentLevel.entities[1].type = SKE_CRATE;
-    soko->currentLevel.entities[1].x = 2;
-    soko->currentLevel.entities[1].y = 2;
-
-    soko->currentLevel.entities[2].type = SKE_CRATE;
-    soko->currentLevel.entities[2].x = 3;
-    soko->currentLevel.entities[2].y = 3;
+    return SKE_NONE;
 }
 
 //placeholder.

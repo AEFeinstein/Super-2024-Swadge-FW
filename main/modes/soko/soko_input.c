@@ -1,9 +1,11 @@
 #include "soko_input.h"
 
-
-//process input to update the input data.
-//turn the btnstate into playerInputTry deltas. Calculate DAS, speed settings, and so on.
-//called once a frame
+/**
+ * @brief Input preprocessing turns btnstate into game-logic usable data. Handles DAS, settings, etc.
+ * Called once a frame before game loop.
+ * 
+ * @param input 
+ */
 void sokoPreProcessInput(sokoGameplayInput_t* input)
 {
     input->playerInputDeltaY = 0;
