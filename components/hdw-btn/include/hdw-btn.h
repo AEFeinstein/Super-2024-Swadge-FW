@@ -129,5 +129,6 @@ void deinitButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
 bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal);
+bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity);
 
 #endif

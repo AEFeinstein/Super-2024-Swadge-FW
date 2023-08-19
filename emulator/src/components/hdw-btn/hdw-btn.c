@@ -44,11 +44,18 @@ static uint32_t buttonState = 0;
 /// The queue for button events
 static list_t* buttonQueue;
 
+/// The touchpad analog location angle
+static int32_t lastTouchAngle = 0;
+
+/// The touchpad analog location radius
+static int32_t lastTouchRadius = 0;
+
+/// @deprecated
 /// The touchpad analog location
 static int32_t lastTouchLoc = 0;
 
 /// The touchpad analog intensity
-static int32_t lastTouchIntensity = TOUCH_INTENSITY_KEY;
+static int32_t lastTouchIntensity = 0;
 
 //==============================================================================
 // Function Prototypes
@@ -147,6 +154,36 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 }
 
 /**
+ * @brief Get the touch intensity and location in terms of angle and distance from
+ * the center touchpad
+ *
+ * @param[out] angle A pointer to return the angle of the center of the touch, in degrees
+ * @param[out] radius A pointer to return the radius of the touch centroid
+ * @param[out] intensity A pointer to return the intensity of the touch
+ * @return true If the touchpad was touched and values were written to the out-params
+ * @return false If no touch is detected and nothing was written
+ */
+bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
+{
+    // If lastTouchIntensity is 0, we should return false as that's "not touched"
+    // But still perform the null checks on the args like the real swadge first
+    if (!angle || !radius || !intensity || 0 == lastTouchIntensity)
+    {
+        return false;
+    }
+
+    // Just do the actual "is the touchpad touched" check, then write placeholder values
+
+    // TODO: Actual touchpad implementation
+
+    // A touch in the center at 50% intensity
+    *angle = lastTouchAngle;
+    *radius = lastTouchRadius;
+    *intensity = lastTouchIntensity;
+    return true;
+}
+
+/**
  * @brief Inject a single button press or release event into the emulator
  *
  * @param button
@@ -192,6 +229,14 @@ void emulatorInjectButton(buttonBit_t button, bool down)
 
     // Add the event to the list
     push(buttonQueue, evt);
+}
+
+void emulatorSetTouchAngleRadius(int32_t angle, int32_t radius, int32_t intensity)
+{
+    printf("touch(phi=%d, r=%d, i=%d)\n", angle, radius, intensity);
+    lastTouchAngle = angle;
+    lastTouchRadius = radius;
+    lastTouchIntensity = intensity;
 }
 
 /**
