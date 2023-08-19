@@ -245,8 +245,7 @@ void updateBall(entity_t *self)
         )
         {
             //Launch ball
-            self->yspeed = -63;
-            //self->xspeed = self->attachedToEntity->xspeed;
+            setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
             self->attachedToEntity = NULL;
         }
     } else {
