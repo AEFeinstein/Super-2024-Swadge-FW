@@ -47,7 +47,10 @@ static void sokoEnterMode(void)
     loadWsg(soko->levels[0],&soko->levelWSG,true);//spiRAM cus only used during loading, not gameplay.
 
     //load sprite assets
-    loadWsg("sk_player.wsg",&soko->playerWSG,false);
+    loadWsg("sk_player_down.wsg",&soko->playerDownWSG,false);
+    loadWsg("sk_player_up.wsg",&soko->playerUpWSG,false);
+    loadWsg("sk_player_left.wsg",&soko->playerLeftWSG,false);
+    loadWsg("sk_player_right.wsg",&soko->playerRightWSG,false);
     loadWsg("sk_crate.wsg",&soko->crateWSG,false);
 
     // Initialize the menu
@@ -76,7 +79,10 @@ static void sokoExitMode(void)
     freeWsg(&soko->levelWSG);
 
     //free sprites
-    freeWsg(&soko->playerWSG);
+    freeWsg(&soko->playerUpWSG);
+    freeWsg(&soko->playerDownWSG);
+    freeWsg(&soko->playerLeftWSG);
+    freeWsg(&soko->playerRightWSG);
     freeWsg(&soko->crateWSG);
 
     // Free everything else

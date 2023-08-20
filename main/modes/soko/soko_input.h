@@ -25,6 +25,7 @@ typedef struct
     uint64_t firstDASTime;///< how many microseconds after DAS has started before the next DAS
 
     //input output data. ie: usable Gameplay data.
+    //todo: use Direction in input
     int playerInputDeltaX;
     int playerInputDeltaY;
 

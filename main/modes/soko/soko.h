@@ -40,6 +40,7 @@ typedef struct
     sokoEntityType_t type;
     uint16_t x;
     uint16_t y;
+    sokoDirection_t facing;
 } sokoEntity_t;
 
 typedef struct
@@ -64,7 +65,10 @@ typedef struct
     //game settings
     uint16_t maxPush;                           ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
-    wsg_t playerWSG;
+    wsg_t playerUpWSG;
+    wsg_t playerRightWSG;
+    wsg_t playerLeftWSG;
+    wsg_t playerDownWSG;
     wsg_t crateWSG;
 
     //level

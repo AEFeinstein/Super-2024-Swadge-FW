@@ -5,6 +5,7 @@ void sokoTryPlayerMovement(void);
 sokoTile_t sokoGetTile(int, int);
 bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int,uint16_t);
 bool allCratesOnGoal(void);
+sokoDirection_t sokoDirectionFromDelta(int, int);
 
 soko_t* s;
 sokoEntity_t* player;
@@ -117,6 +118,7 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy, uint16_t
                     {
                         entity->x += dx;
                         entity->y += dy;
+                        entity->facing = sokoDirectionFromDelta(dx,dy);
                         return true;
                     }else{
                         //can't push? can't move.
@@ -131,6 +133,7 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy, uint16_t
         //No wall in front of us and nothing to push, we can move.
         entity->x += dx;
         entity->y += dy;
+        entity->facing = sokoDirectionFromDelta(dx,dy);
         return true;
     }
     
@@ -188,11 +191,24 @@ void drawTiles(sokoLevel_t* level)
         switch (level->entities[i].type)
         {
             case SKE_PLAYER:
-                // drawCircleFilled(ox+level->entities[i].x*scale+scale/2,oy+level->entities[i].y*scale+scale/2,scale/2-1,c411);
-                drawWsg(&s->playerWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                switch(level->entities[i].facing){
+                    case SKD_UP:
+                        drawWsg(&s->playerUpWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                    case SKD_RIGHT:
+                        drawWsg(&s->playerRightWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                    case SKD_LEFT:
+                        drawWsg(&s->playerLeftWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                    case SKD_DOWN:
+                    default:
+                        drawWsg(&s->playerDownWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                }
+                
                 break;
             case SKE_CRATE:
-                //drawCircleFilled(ox+level->entities[i].x*scale+scale/2,oy+level->entities[i].y*scale+scale/2,scale/2-1,c441);
                  drawWsg(&s->crateWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
             case SKE_NONE:
             default:
@@ -218,6 +234,25 @@ bool allCratesOnGoal()
     return true;
 }
 
+
+sokoDirection_t sokoDirectionFromDelta(int dx,int dy)
+{
+    if(dx > 0 && dy == 0)
+    {
+        return SKD_RIGHT;
+    }else  if(dx < 0 && dy == 0)
+    {
+        return SKD_LEFT;
+    }else  if(dx == 0 && dy < 0)
+    {
+        return SKD_UP;
+    }else  if(dx == 0 && dy > 0)
+    {
+        return SKD_DOWN;
+    }
+
+    return SKD_NONE;
+}
 sokoTile_t sokoGetTile(int x, int y)
 {
     if(x<0 || x >= s->currentLevel.width)

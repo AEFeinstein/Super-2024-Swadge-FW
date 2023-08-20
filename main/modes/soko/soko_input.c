@@ -8,9 +8,9 @@
  */
 void sokoInitInput(sokoGameplayInput_t* input)
 {
-        input->dasTime = 100000;///>how many microseconds after DAS has started before the next DAS
-        input->firstDASTime = 500000;///> How many microseconds before DAS starts
-        input->DASActive = false;///> If DAS has begun. User may be holding before first DAS, this is false. After first, it becomes true.
+        input->dasTime = 100000;
+        input->firstDASTime = 500000;
+        input->DASActive = false;
         input->prevHoldingDir = SKD_NONE;
         input->prevBtnState = 0;
         input->playerInputDeltaX = 0;
@@ -84,6 +84,7 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
         input->timeHeldDirection = 0;
 
         //trigger movement
+        //todo: in sokogame i had to write delta to direction. This is basically directionenum to delta, which could be extracted too.
         switch (input->holdingDir)
         {
             case SKD_RIGHT:
