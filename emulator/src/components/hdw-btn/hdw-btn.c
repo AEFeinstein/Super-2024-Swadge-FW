@@ -9,17 +9,12 @@
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
 #include "emu_main.h"
+#include "trigonometry.h"
 #include "linked_list.h"
 
 //==============================================================================
 // Variables
 //==============================================================================
-
-/// The default touchpad intensity value if set using keys
-#define TOUCH_INTENSITY_KEY 512
-
-// The bottom 8 bits are pushbuttons, followed by five touch buttons
-#define TOUCH_BUTTON_MASK (0x1F << 8)
 
 /// The keyboard keys used for input
 static const char inputKeys[] = {
@@ -30,12 +25,7 @@ static const char inputKeys[] = {
     'L', ///< ::PB_A
     'K', ///< ::PB_B
     'O', ///< ::PB_START
-    'I', ///< ::PB_SELECT
-    '1', ///< ::TB_0
-    '2', ///< ::TB_1
-    '3', ///< ::TB_2
-    '4', ///< ::TB_3
-    '5'  ///< ::TB_4
+    'I'  ///< ::PB_SELECT
 };
 
 /// The current state of all input buttons
@@ -50,18 +40,8 @@ static int32_t lastTouchAngle = 0;
 /// The touchpad analog location radius
 static int32_t lastTouchRadius = 0;
 
-/// @deprecated
-/// The touchpad analog location
-static int32_t lastTouchLoc = 0;
-
 /// The touchpad analog intensity
 static int32_t lastTouchIntensity = 0;
-
-//==============================================================================
-// Function Prototypes
-//==============================================================================
-
-static void emulatorSetTouchCentroidOnly(int32_t centerVal, int32_t intensityVal);
 
 //==============================================================================
 // Functions
@@ -141,16 +121,9 @@ bool checkButtonQueue(buttonEvt_t* evt)
  */
 bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 {
-    if (buttonState & (TB_0 | TB_1 | TB_2 | TB_3 | TB_4) || lastTouchIntensity > 0)
-    {
-        *centerVal    = lastTouchLoc;
-        *intensityVal = lastTouchIntensity;
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    // Just simulate the centroid using the circular touchpad's horizontal axis only
+    int32_t y;
+    return getTouchCartesian(centerVal, &y, intensityVal);
 }
 
 /**
@@ -181,6 +154,95 @@ bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
     *radius = lastTouchRadius;
     *intensity = lastTouchIntensity;
     return true;
+}
+
+/**
+ * @brief Get the touchpad values as cartesian coordinates
+ *
+ * @param[out] x A pointer to be set to the X touch coordinate, from 0 to 1023
+ * @param[out] y A pointer to be set to the Y touch coordinate, from 0 to 1023
+ * @param[out] intensity A pointer to be set to the touch intensity
+ * @return true if the touchpad was touched and values were returned
+ * @return false if the touchpad was not touched
+ */
+bool getTouchCartesian(int32_t* x, int32_t* y, int32_t* intensity)
+{
+    int32_t angle;
+    int32_t radius;
+    if (getTouchAngleRadius(&angle, &radius, intensity))
+    {
+        // Set X and Y to the X and Y coords, respectively
+        if (x)
+        {
+            *x = CLAMP((1024 + getCos1024(angle) * radius / 1024) / 2, 0, 1023);
+        }
+
+        if (y)
+        {
+            *y = CLAMP((1024 + getSin1024(angle) * radius / 1024) / 2, 0, 1023);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * @brief Return the touchpad value as a joystick, with an optional analog strength
+ *
+ * @param[out] analog If non-NULL, will be written with the magnitude of the offset
+ * @param useDiagonals If true, the joystick will return 8 directions, otherwise only 4
+ * @return touchJoysticK_t
+ */
+touchJoystick_t getTouchJoystick(uint16_t* analog, bool useCenter, bool useDiagonals)
+{
+    // Use 4 or 8 sectors, depending on whether we're using diagonals
+    uint8_t sectors = useDiagonals ? 8 : 4;
+
+    // The angle of the start of the first (EAST) sector
+    int16_t offset = 360 - (360 / sectors) / 2;
+
+    int32_t angle;
+    int32_t radius;
+    int32_t intensity;
+    if (getTouchAngleRadius(&angle, &radius, &intensity))
+    {
+        // Touched!
+        if (analog)
+        {
+            // Write the radius to the analog value, if given
+            *analog = radius;
+        }
+
+        // Check if we're too close to the center, and return just TB_CENTER
+        if (useCenter && radius < 64)
+        {
+            // TODO is this an OK value for the "center pad" position?
+            return TB_CENTER;
+        }
+
+        //
+
+        for (uint8_t sector = 0; sector <= sectors; sector++)
+        {
+            // Divide the circle into sectors
+            int16_t start = (offset + (360 * sector / sectors)) % 360;
+            int16_t end = (offset + (360 * (sector + 1) / sectors)) % 360;
+
+            // Check if the angle is within bounds, making sure to account for wraparound
+            // In the wraparound case, we just need one boundary to match, otherwise both
+            if ((end < start) ? (angle < end || angle >= start) : (start <= angle && angle < end))
+            {
+                // Return the main button, plus (if diagonals are enabled) the next one too
+                return TB_RIGHT << (sector / (useDiagonals ? 2 : 1))
+                        | ((useDiagonals && (sector & 1)) ? (TB_RIGHT << ((sector / 2 + 1) % 4)) : 0);
+            }
+        }
+    }
+
+    // No touch, so return 0
+    return 0;
 }
 
 /**
@@ -233,118 +295,9 @@ void emulatorInjectButton(buttonBit_t button, bool down)
 
 void emulatorSetTouchAngleRadius(int32_t angle, int32_t radius, int32_t intensity)
 {
-    printf("touch(phi=%d, r=%d, i=%d)\n", angle, radius, intensity);
     lastTouchAngle = angle;
     lastTouchRadius = radius;
     lastTouchIntensity = intensity;
-}
-
-/**
- * @brief Only sets the touch centroid value without sending any events, for internal use.
- *
- * @param centerVal    The centroid center value
- * @param intensityVal The centroid intensity value
- */
-static void emulatorSetTouchCentroidOnly(int32_t centerVal, int32_t intensityVal)
-{
-    lastTouchLoc       = centerVal;
-    lastTouchIntensity = intensityVal;
-}
-
-/**
- * @brief Update the touch centroid value
- *
- * @param centerVal
- * @param intensityVal
- */
-void emulatorSetTouchCentroid(int32_t centerVal, int32_t intensityVal)
-{
-    emulatorSetTouchCentroidOnly(centerVal, intensityVal);
-
-    // Determine which keys are being pressed by this touch value
-    // This isn't strictly a one-to-one mapping, but we're going to
-    // estimate it based on the button positions
-
-#define TOUCH_BUTTON_COUNT 5
-
-    // The distance from centerVal that a pad would be activated
-    // For the max intensity value, 1024, this would be 128, meaning that
-    // any pad that intersects with [centerVal - 128, centerval + 128] would be considered touched
-    // The possibility of multi-touch is ignored
-    int32_t intensitySpill = (intensityVal / 8);
-
-    int32_t touchLeft  = MAX(centerVal - intensitySpill, 0);
-    int32_t touchRight = MIN(centerVal + intensitySpill, 1024);
-
-    // We'll just send the event we expect for every button, and if the button is
-    // already pressed or already released, great
-    for (uint8_t touchpadNum = 0; touchpadNum < TOUCH_BUTTON_COUNT; touchpadNum++)
-    {
-        int32_t padLeft  = touchpadNum * 1024 / TOUCH_BUTTON_COUNT;
-        int32_t padRight = (touchpadNum + 1) * 1024 / TOUCH_BUTTON_COUNT;
-
-        buttonBit_t tb = 1 << (touchpadNum + 8);
-        if (intensityVal > 0)
-        {
-            // There was a touch intensity value, so set all buttons according to whether the touch intersects them
-            emulatorInjectButton(tb, (MAX(padLeft, touchLeft) <= MIN(padRight, touchRight)));
-        }
-        else
-        {
-            // This should be a "touchpad up" event, so set all the touchpad buttons to "released"
-            emulatorInjectButton(tb, false);
-        }
-    }
-}
-
-/**
- * @brief Maps a bitmap of ::buttonbit_t onto a touchCentroid value.
- *
- * @param buttonState A bitmap of any ::buttonBit_t buttons. Non-touch buttons are ignored.
- * @return int32_t The corresponding touch centroid value, in the range [0, 1024)
- */
-int32_t emulatorMapTouchCentroid(buttonBit_t buttonState)
-{
-    /* LUT the location */
-    const uint8_t touchLoc[] = {
-        128, // 00000
-        0,   // 00001
-        64,  // 00010
-        32,  // 00011
-        128, // 00100
-        64,  // 00101
-        96,  // 00110
-        64,  // 00111
-        192, // 01000
-        96,  // 01001
-        128, // 01010
-        85,  // 01011
-        160, // 01100
-        106, // 01101
-        128, // 01110
-        96,  // 01111
-        255, // 10000
-        128, // 10001
-        160, // 10010
-        106, // 10011
-        192, // 10100
-        128, // 10101
-        149, // 10110
-        112, // 10111
-        224, // 11000
-        149, // 11001
-        170, // 11010
-        128, // 11011
-        192, // 11100
-        144, // 11101
-        160, // 11110
-        128, // 11111
-    };
-
-    // The bottom 8 bits are pushbuttons, followed by five touch buttons
-    int touchState = (buttonState & TOUCH_BUTTON_MASK) >> 8;
-
-    return touchLoc[touchState] * 4;
 }
 
 /**
@@ -367,14 +320,6 @@ void emulatorHandleKeys(int keycode, int bDown)
         // If this matches one of the keycodes in the input key map
         if (keycode == inputKeys[idx])
         {
-            // Check if the key we're inputting is for a touchpad button.
-            // If so, we'll update the emulated touch state to match the buttons
-            if (TOUCH_BUTTON_MASK & idx)
-            {
-                // set the centroid without creating button events, since we already handled the key presses
-                emulatorSetTouchCentroidOnly(emulatorMapTouchCentroid(buttonState), TOUCH_INTENSITY_KEY);
-            }
-
             emulatorInjectButton((buttonBit_t)(1 << idx), bDown);
             break;
         }

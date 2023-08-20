@@ -114,6 +114,19 @@ typedef enum __attribute__((packed))
 } buttonBit_t;
 
 /**
+ * @brief Bitmask values for all the virtual joystick positions of ::getTouchJoystick()
+ * TODO: Combine with buttonBit_t instead?
+ */
+typedef enum __attribute__((packed))
+{
+    TB_CENTER     = 0x0100,
+    TB_RIGHT      = 0x0200,
+    TB_UP         = 0x0400,
+    TB_LEFT       = 0x0800,
+    TB_DOWN       = 0x1000,
+} touchJoystick_t;
+
+/**
  * @brief A button event containing the button that triggered the event, whether it was pressed or released, and the
  * whole button state
  */
@@ -130,5 +143,7 @@ bool checkButtonQueue(buttonEvt_t*);
 
 bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal);
 bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity);
+bool getTouchCartesian(int32_t* x, int32_t* y, int32_t* intensity);
+touchJoystick_t getTouchJoystick(uint16_t* analog, bool useCenter, bool useDiagonals);
 
 #endif

@@ -616,3 +616,91 @@ bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
     *intensity = 512;
     return true;
 }
+
+/**
+ * @brief Get the touchpad values as cartesian coordinates
+ *
+ * @param[out] x A pointer to be set to the X touch coordinate, from 0 to 1023
+ * @param[out] y A pointer to be set to the Y touch coordinate, from 0 to 1023
+ * @param[out] intensity A pointer to be set to the touch intensity
+ * @return true if the touchpad was touched and values were returned
+ * @return false if the touchpad was not touched
+ */
+bool getTouchCartesian(int32_t* x, int32_t* y, int32_t* intensity)
+{
+    int32_t angle;
+    int32_t radius;
+    if (getTouchAngleRadius(&angle, &radius, intensity))
+    {
+        // Set X and Y to the X and Y coords, respectively
+        if (x)
+        {
+            *x = CLAMP((1024 + getCos1024(angle) * radius / 1024) / 2, 0, 1023);
+        }
+
+        if (y)
+        {
+            *y = CLAMP((1024 + getSin1024(angle) * radius / 1024) / 2, 0, 1023);
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * @brief Return the touchpad value as a joystick, with an optional analog strength
+ *
+ * @param[out] analog If non-NULL, will be written with the magnitude of the offset
+ * @param useDiagonals If true, the joystick will return 8 directions, otherwise only 4
+ * @return touchJoysticK_t
+ */
+touchJoystick_t getTouchJoystick(uint16_t* analog, bool useCenter, bool useDiagonals)
+{
+    // Use 4 or 8 sectors, depending on whether we're using diagonals
+    uint8_t sectors = useDiagonals ? 8 : 4;
+
+    // The angle of the start of the first (EAST) sector
+    int16_t offset = 360 - (360 / sectors) / 2;
+
+    int32_t angle;
+    int32_t radius;
+    int32_t intensity;
+    if (getTouchAngleRadius(&angle, &radius, &intensity))
+    {
+        // Touched!
+        if (analog)
+        {
+            // Write the radius to the analog value, if given
+            *analog = radius;
+        }
+
+        // Check if we're too close to the center, and return just TB_CENTER
+        if (useCenter && radius < 64)
+        {
+            // TODO is this an OK value for the "center pad" position?
+            return TB_CENTER;
+        }
+
+        // Check each sector
+        for (uint8_t sector = 0; sector <= sectors; sector++)
+        {
+            // Divide the circle into sectors
+            int16_t start = (offset + (360 * sector / sectors)) % 360;
+            int16_t end = (offset + (360 * (sector + 1) / sectors)) % 360;
+
+            // Check if the angle is within bounds, making sure to account for wraparound
+            // In the wraparound case, we just need one boundary to match, otherwise both
+            if ((end < start) ? (angle < end || angle >= start) : (start <= angle && angle < end))
+            {
+                // Return the main button, plus (if diagonals are enabled) the next one too
+                return TB_RIGHT << (sector / (useDiagonals ? 2 : 1))
+                       | ((useDiagonals && (sector & 1)) ? (TB_RIGHT << ((sector / 2 + 1) % 4)) : 0);
+            }
+        }
+    }
+
+    // No touch, so return 0
+    return 0;
+}
