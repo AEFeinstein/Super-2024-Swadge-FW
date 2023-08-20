@@ -856,10 +856,19 @@ void HandleKey(int keycode, int bDown)
     // Assuming no callbacks canceled the key event earlier, handle it normally
     emulatorHandleKeys(finalKey, bDown);
 
-    // When in fullscreen, exit with escape
-    if (finalKey == CNFG_KEY_ESCAPE) // && emulatorArgs.fullscreen)
+    // Keep track of when shift is held so we can exit on SHIFT + BACKSPACE
+    // I would do CTRL+W, but rawdraw doesn't have a define for shift...
+    static bool shiftDown = false;
+    if (finalKey == CNFG_KEY_SHIFT)
     {
-        printf("Escape\n");
+        shiftDown = bDown;
+    }
+
+    // When in fullscreen, exit with Escape
+    // And any time with Shift + Backspace
+    if ((finalKey == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen)
+        || (finalKey == CNFG_KEY_BACKSPACE && shiftDown))
+    {
         isRunning = false;
         return;
     }
