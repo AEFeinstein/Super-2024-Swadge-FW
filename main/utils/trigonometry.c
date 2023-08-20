@@ -9,6 +9,7 @@
 //==============================================================================
 
 /// Approximates arctan(y / x) to within 1 degree, but only when 0 <= (y / x) <= 1
+/// Modified from https://math.stackexchange.com/a/1098585 to fit the format of your numbers.
 #define ARCTAN_APPROX(y, x) (-y * (47 * y - 182 * x) / 3 / x / x)
 
 //==============================================================================
