@@ -137,7 +137,7 @@ static void sokoMainLoop(int64_t elapsedUs)
 
             //process input functions in input.
             //Input will turn state into function calls into the game code, and handle complexities.
-            sokoPreProcessInput(&soko->input);
+            sokoPreProcessInput(&soko->input,elapsedUs);
             //background had been drawn, input has been processed and functions called. Now do followup logic and draw level.
             //gameplay loop
             gameLoop(elapsedUs);
@@ -157,6 +157,7 @@ static void sokoLoadLevel(uint16_t levelIndex)
 
     soko->currentLevel.width = soko->levelWSG.w;
     soko->currentLevel.height = soko->levelWSG.h;
+    
     
     //player and crate wsg's are 16px right now.
     //In picross I wrote a drawWSGScaled for the main screen when i could get away with it on level select screen. but here I think just commit to something.

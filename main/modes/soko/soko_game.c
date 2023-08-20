@@ -11,11 +11,14 @@ sokoEntity_t* player;
 
 void sokoInitGame(soko_t* soko)
 {
+
     printf("init sokobon game.\n");
 
     //Configure conveninence pointers.
     s = soko;
     player = &s->currentLevel.entities[s->currentLevel.playerIndex];
+
+    sokoInitInput(&s->input);
 
     //set gameplay settings from default settings, if we want powerups or whatever that adjusts them, or have a state machine.
     s->maxPush = 0;//set to 1 for "traditional" sokoban.
