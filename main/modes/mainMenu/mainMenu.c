@@ -9,6 +9,7 @@
 #include "pong.h"
 #include "mode_colorchord.h"
 #include "accelTest.h"
+#include "touchTest.h"
 
 #include "settingsManager.h"
 
@@ -93,6 +94,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -177,6 +179,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == accelTestMode.modeName)
         {
             switchToSwadgeMode(&accelTestMode);
+        }
+        else if (label == touchTestMode.modeName)
+        {
+            switchToSwadgeMode(&touchTestMode);
         }
     }
     else
