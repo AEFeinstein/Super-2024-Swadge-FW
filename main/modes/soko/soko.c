@@ -33,10 +33,11 @@ swadgeMode_t sokoMode = {
     .fnAdvancedUSB            = NULL,
 };
 
-soko_t* soko=NULL;
+//soko_t* soko=NULL;
+soko_abs_t* soko=NULL;
 static void sokoEnterMode(void)
 {
-    soko = calloc(1, sizeof(soko_t));
+    soko = calloc(1, sizeof(soko_abs_t));
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, false);
     
@@ -146,7 +147,7 @@ static void sokoMainLoop(int64_t elapsedUs)
             sokoPreProcessInput(&soko->input,elapsedUs);
             //background had been drawn, input has been processed and functions called. Now do followup logic and draw level.
             //gameplay loop
-            gameLoop(elapsedUs);
+            soko->gameLoopFunc(soko, elapsedUs);
         }
     }
 }

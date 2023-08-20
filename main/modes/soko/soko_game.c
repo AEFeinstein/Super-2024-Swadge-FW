@@ -1,33 +1,42 @@
 #include "soko_game.h"
 #include "soko.h"
+#include "soko_gamerules.h"
 
+/*
 void sokoTryPlayerMovement(void);
 sokoTile_t sokoGetTile(int, int);
 bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int,uint16_t);
 bool allCratesOnGoal(void);
+
+*/
 sokoDirection_t sokoDirectionFromDelta(int, int);
 
-soko_t* s;
-sokoEntity_t* player;
+//soko_t* s;
+//sokoEntity_t* player;
 
-void sokoInitGame(soko_t* soko)
+soko_abs_t* soko_s;
+
+
+void sokoInitGame(soko_abs_t* soko)
 {
 
     printf("init sokobon game.\n");
 
     //Configure conveninence pointers.
-    s = soko;
-    player = &s->currentLevel.entities[s->currentLevel.playerIndex];
+    soko_s = soko;
+    soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
 
-    sokoInitInput(&s->input);
+    sokoInitInput(&soko_s->input);
 
     //set gameplay settings from default settings, if we want powerups or whatever that adjusts them, or have a state machine.
-    s->maxPush = 0;//set to 1 for "traditional" sokoban.
+    soko_s->maxPush = 0;//set to 1 for "traditional" sokoban.
 
     soko->state = SKS_GAMEPLAY;
+    sokoConfigGamemode(soko,SOKO_CLASSIC);
 
 }
 
+/*
 void gameLoop(int64_t elapsedUs)
 {
     if(s->state == SKS_GAMEPLAY)
@@ -266,3 +275,4 @@ sokoTile_t sokoGetTile(int x, int y)
      
     return s->currentLevel.tiles[x][y];
 }
+*/

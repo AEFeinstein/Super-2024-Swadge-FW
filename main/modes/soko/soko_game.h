@@ -1,5 +1,12 @@
+#ifndef SOKO_GAME_H
+#define SOKO_GAME_H
+
 #include "soko.h"
 
-void sokoInitGame(soko_t*);
+void sokoInitGame(soko_abs_t*);
 void gameLoop(int64_t);
 void drawTiles(sokoLevel_t*);
+
+
+
+#endif //SOKO_GAME_H
