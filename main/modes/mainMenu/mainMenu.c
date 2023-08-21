@@ -8,6 +8,8 @@
 #include "demoMode.h"
 #include "pong.h"
 #include "mode_colorchord.h"
+#include "mode_dance.h"
+#include "tunernome.h"
 #include "accelTest.h"
 #include "touchTest.h"
 
@@ -61,12 +63,26 @@ mainMenu_t* mainMenu;
 
 static const char settingsLabel[] = "Settings";
 
-static const char tftSettingLabel[]         = "TFT";
-static const char ledSettingLabel[]         = "LED";
-static const char bgmVolSettingLabel[]      = "BGM";
-static const char sfxVolSettingLabel[]      = "SFX";
-static const char micSettingLabel[]         = "MIC";
-static const char screenSaverSettingLabel[] = "Screen Saver";
+static const char tftSettingLabel[]          = "TFT";
+static const char ledSettingLabel[]          = "LED";
+static const char bgmVolSettingLabel[]       = "BGM";
+static const char sfxVolSettingLabel[]       = "SFX";
+static const char micSettingLabel[]          = "MIC";
+static const char screenSaverSettingsLabel[] = "Screensaver: ";
+
+static const int32_t screenSaverSettingsValues[] = {
+    0,   // Off
+    10,  // 10sec
+    20,  // 20sec
+    30,  // 30sec
+    60,  // 60sec
+    120, // 2min
+    300, // 5min
+};
+
+static const char* const screenSaverSettingsOptions[] = {
+    "Off", "10s", "20s", "30s", "1m", "2m", "5m",
+};
 
 //==============================================================================
 // Functions
@@ -93,6 +109,8 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modeDance.modeName);
+    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
 
@@ -104,8 +122,10 @@ static void mainMenuEnterMode(void)
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
-    addSettingsItemToMenu(mainMenu->menu, screenSaverSettingLabel, getScreensaverTimeSettingBounds(),
-                          getScreensaverTimeSetting());
+
+    addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
+                                 screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
+                                 getScreensaverTimeSettingBounds(), getScreensaverTimeSetting());
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
@@ -161,6 +181,10 @@ static void mainMenuMainLoop(int64_t elapsedUs)
  */
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
+    // Stop the buzzer first no matter what, so that it turns off
+    // if we scroll away from the BGM or SFX settings.
+    bzrStop();
+
     if (selected)
     {
         // These items enter other modes, so they must be selected
@@ -175,6 +199,14 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
+        }
+        else if (label == modeDance.modeName)
+        {
+            switchToSwadgeMode(&modeDance);
+        }
+        else if (label == tunernomeMode.modeName)
+        {
+            switchToSwadgeMode(&tunernomeMode);
         }
         else if (label == accelTestMode.modeName)
         {
@@ -210,7 +242,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             setMicGainSetting(settingVal);
         }
-        else if (screenSaverSettingLabel == label)
+        else if (screenSaverSettingsLabel == label)
         {
             setScreensaverTimeSetting(settingVal);
         }
