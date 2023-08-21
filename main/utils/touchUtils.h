@@ -14,6 +14,10 @@ typedef enum __attribute__((packed))
     TB_UP         = 0x0400,
     TB_LEFT       = 0x0800,
     TB_DOWN       = 0x1000,
+    TB_UP_RIGHT   = 0x0600,
+    TB_UP_LEFT    = 0x0C00,
+    TB_DOWN_LEFT  = 0x1800,
+    TB_DOWN_RIGHT = 0x1200,
 } touchJoystick_t;
 
 typedef struct
