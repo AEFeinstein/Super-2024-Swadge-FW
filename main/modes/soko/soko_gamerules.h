@@ -13,6 +13,8 @@ void absSokoDrawTiles(soko_abs_t *self, sokoLevel_t* level);
 bool absSokoAllCratesOnGoal(soko_abs_t *self);
 sokoTile_t absSokoGetTile(soko_abs_t *self, int x, int y);
 
+sokoDirection_t sokoDirectionFromDelta(int, int);
+
 void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant);
 
 #endif //SOKO_GAMERULES_H

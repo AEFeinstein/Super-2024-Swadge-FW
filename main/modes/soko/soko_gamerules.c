@@ -104,6 +104,60 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int
             {
                 if(self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py)
                 {
+                    if(self->sokoTryMoveEntityInDirectionFunc(self,&self->currentLevel.entities[i],dx,dy,push+1))
+                    {
+                        entity->x += dx;
+                        entity->y += dy;
+                        entity->facing = sokoDirectionFromDelta(dx,dy);
+                        return true;
+                    }else{
+                        //can't push? can't move.
+                        return false;
+                    }
+                   
+                }
+            }
+            
+        }
+        
+        //No wall in front of us and nothing to push, we can move.
+        entity->x += dx;
+        entity->y += dy;
+        entity->facing = sokoDirectionFromDelta(dx,dy);
+        return true;
+    }
+    
+    return false;
+}
+/*
+bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int dx, int dy, uint16_t push)
+{
+    //prevent infitnite loop where you push yourself nowhere.
+    if(dx == 0 && dy == 0 )
+    {
+        return false;
+    }
+
+    //maxiumum number of crates we can push. Traditional sokoban has a limit of one. I prefer infinite for challenges.
+    if(self->maxPush != 0 && push>self->maxPush)
+    {
+        return false;
+    }
+
+    int px = entity->x+dx;
+    int py = entity->y+dy;
+    sokoTile_t nextTile = self->sokoGetTileFunc(self,px,py);
+
+    if(nextTile == SKT_FLOOR || nextTile == SKT_GOAL || nextTile == SKT_EMPTY)
+    {
+        //Is there an entity at this position?
+        for (size_t i = 0; i < self->currentLevel.entityCount; i++)
+        {
+            //is pushable.
+            if(self->currentLevel.entities[i].type == SKE_CRATE)
+            {
+                if(self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py)
+                {
                     if(self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i],dx,dy,push+1))
                     {
                         entity->x += dx;
@@ -127,7 +181,87 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int
     
     return false;
 }
+*/
 
+//draw the tiles (and entities, for now) of the level.
+void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
+{
+    SETUP_FOR_TURBO();
+    uint16_t scale = level->levelScale;
+    uint16_t ox = (TFT_WIDTH/2)-((level->width)*scale/2);
+    uint16_t oy = (TFT_HEIGHT/2)-((level->height)*scale/2);
+
+    for (size_t x = 0; x < level->width; x++)
+    {
+        for (size_t y = 0; y < level->height; y++)
+        {
+            paletteColor_t color = cTransparent;
+            switch (level->tiles[x][y])
+            {
+                case SKT_FLOOR:
+                    color = c444;
+                    break;
+                case SKT_WALL:
+                    color = c111;
+                    break;
+                case SKT_GOAL:
+                    color = c141;
+                    break;
+                case SKT_EMPTY:
+                    color = cTransparent;
+                default:
+                    break;
+            }
+        
+            //Draw a square.
+            //none of this matters it's all getting replaced with drawwsg later.
+            if(color != cTransparent){
+                for (size_t xd = ox+x*scale; xd < ox+x*scale+scale; xd++)
+                {
+                    for (size_t yd = oy+y*scale; yd < oy+y*scale+scale; yd++)
+                    {
+                        TURBO_SET_PIXEL(xd, yd, color);
+                    }
+                }
+            }
+            //draw outline around the square.
+            //drawRect(ox+x*s,oy+y*s,ox+x*s+s,oy+y*s+s,color);
+        }
+    }
+
+    for (size_t i = 0; i < level->entityCount; i++)
+    {
+        switch (level->entities[i].type)
+        {
+            case SKE_PLAYER:
+                switch(level->entities[i].facing){
+                    case SKD_UP:
+                        drawWsg(&self->playerUpWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                    case SKD_RIGHT:
+                        drawWsg(&self->playerRightWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                    case SKD_LEFT:
+                        drawWsg(&self->playerLeftWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                    case SKD_DOWN:
+                    default:
+                        drawWsg(&self->playerDownWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                        break;
+                }
+                
+                break;
+            case SKE_CRATE:
+                 drawWsg(&self->crateWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+            case SKE_NONE:
+            default:
+                break;
+        }
+    }
+    
+}
+
+/*
 //draw the tiles (and entities, for now) of the level.
 void absSokoDrawTiles(soko_abs_t *self, sokoLevel_t* level)
 {
@@ -192,7 +326,7 @@ void absSokoDrawTiles(soko_abs_t *self, sokoLevel_t* level)
     }
     
 }
-
+*/
 bool absSokoAllCratesOnGoal(soko_abs_t *self)
 {
     for (size_t i = 0; i < self->currentLevel.entityCount; i++)
@@ -221,4 +355,23 @@ sokoTile_t absSokoGetTile(soko_abs_t *self, int x, int y)
     }
      
     return self->currentLevel.tiles[x][y];
+}
+
+sokoDirection_t sokoDirectionFromDelta(int dx,int dy)
+{
+    if(dx > 0 && dy == 0)
+    {
+        return SKD_RIGHT;
+    }else  if(dx < 0 && dy == 0)
+    {
+        return SKD_LEFT;
+    }else  if(dx == 0 && dy < 0)
+    {
+        return SKD_UP;
+    }else  if(dx == 0 && dy > 0)
+    {
+        return SKD_DOWN;
+    }
+
+    return SKD_NONE;
 }

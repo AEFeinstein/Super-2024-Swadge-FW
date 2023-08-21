@@ -102,6 +102,10 @@ typedef struct soko_abs_s
     uint16_t maxPush;                           ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
     wsg_t playerWSG;
+    wsg_t playerUpWSG;
+    wsg_t playerRightWSG;
+    wsg_t playerLeftWSG;
+    wsg_t playerDownWSG;
     wsg_t crateWSG;
 
     //level
@@ -125,6 +129,7 @@ typedef struct soko_abs_s
 
     //Player Convenience Pointer
     sokoEntity_t* soko_player;
+
 
 } soko_abs_t;
 

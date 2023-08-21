@@ -9,7 +9,7 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int,uint16_t);
 bool allCratesOnGoal(void);
 
 */
-sokoDirection_t sokoDirectionFromDelta(int, int);
+//sokoDirection_t sokoDirectionFromDelta(int, int);
 
 //soko_t* s;
 //sokoEntity_t* player;
