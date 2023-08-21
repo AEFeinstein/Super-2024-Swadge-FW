@@ -866,8 +866,7 @@ void HandleKey(int keycode, int bDown)
 
     // When in fullscreen, exit with Escape
     // And any time with Shift + Backspace
-    if ((finalKey == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen)
-        || (finalKey == CNFG_KEY_BACKSPACE && shiftDown))
+    if ((finalKey == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen) || (finalKey == CNFG_KEY_BACKSPACE && shiftDown))
     {
         isRunning = false;
         return;

@@ -31,13 +31,13 @@ typedef struct
 
     uint16_t btnState; ///< The button state
 
-    bool touch;        ///< Whether or not the touchpad is currently touched
+    bool touch; ///< Whether or not the touchpad is currently touched
 
     int32_t angle;     ///< The latest touchpad angle
     int32_t radius;    ///< The latest touchpad radius
     int32_t intensity; ///< The latest touchpad intensity
 
-    touchSpinState_t spin;  ///< Struct to keep track of the spin state
+    touchSpinState_t spin; ///< Struct to keep track of the spin state
 } touchTest_t;
 
 //==============================================================================
@@ -52,7 +52,8 @@ static void touchTestReset(void);
 static void touchTestHandleInput(void);
 
 static void touchTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void touchDrawCircle(const char* label, int16_t x, int16_t y, int16_t r, int16_t segs, bool center, touchJoystick_t val);
+static void touchDrawCircle(const char* label, int16_t x, int16_t y, int16_t r, int16_t segs, bool center,
+                            touchJoystick_t val);
 static void touchDrawVector(int16_t x, int16_t y, int16_t r);
 static void touchTestDraw(void);
 
@@ -165,8 +166,8 @@ static void touchTestHandleInput(void)
  */
 static void touchTestReset(void)
 {
-    touchTest->angle = 0;
-    touchTest->radius = 0;
+    touchTest->angle     = 0;
+    touchTest->radius    = 0;
     touchTest->intensity = 0;
 
     touchTest->spin.startSet = false;
@@ -206,21 +207,24 @@ static void touchTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
  * @param r
  * @param segs
  */
-static void touchDrawCircle(const char* label, int16_t x, int16_t y, int16_t r, int16_t segs, bool center, touchJoystick_t val)
+static void touchDrawCircle(const char* label, int16_t x, int16_t y, int16_t r, int16_t segs, bool center,
+                            touchJoystick_t val)
 {
-    drawText(&touchTest->ibm, c555, label, x - textWidth(&touchTest->ibm, label) / 2, y - r - touchTest->ibm.height - 5);
+    drawText(&touchTest->ibm, c555, label, x - textWidth(&touchTest->ibm, label) / 2,
+             y - r - touchTest->ibm.height - 5);
 
     // Draw outer circle
     drawCircle(x, y, r, c222);
 
     int16_t centerR = center ? 10 : 0;
-    int16_t offset = 360 - (360 / segs) / 2;
+    int16_t offset  = 360 - (360 / segs) / 2;
 
     // Draw the segment lines
     for (uint8_t sector = 0; sector < segs; sector++)
     {
         int16_t angle = (offset + (360 * sector / segs)) % 360;
-        drawLineFast(x + getCos1024(angle) * centerR / 1024, y + getSin1024(angle) * centerR / 1024, x + getCos1024(angle) * r / 1024, y + getSin1024(angle) * r / 1024, c222);
+        drawLineFast(x + getCos1024(angle) * centerR / 1024, y + getSin1024(angle) * centerR / 1024,
+                     x + getCos1024(angle) * r / 1024, y + getSin1024(angle) * r / 1024, c222);
     }
 
     // Draw center circle?
@@ -275,7 +279,8 @@ static void touchDrawCircle(const char* label, int16_t x, int16_t y, int16_t r, 
         }
 
         // Fill in the segment
-        floodFill(x + getCos1024(angle) * fillR / 1024, y - getSin1024(angle) * fillR / 1024, c555, x - r - 1, y - r - 1, x + r + 1, y + r + 1);
+        floodFill(x + getCos1024(angle) * fillR / 1024, y - getSin1024(angle) * fillR / 1024, c555, x - r - 1,
+                  y - r - 1, x + r + 1, y + r + 1);
     }
 }
 
@@ -313,13 +318,13 @@ static void touchDrawVector(int16_t x, int16_t y, int16_t r)
     drawText(&touchTest->ibm, c555, "Raw", x - textW / 2, y - r - touchTest->ibm.height - 5);
     drawCircle(x, y, r, c222);
 
-    int16_t startR = r * 6 / 7;
+    int16_t startR     = r * 6 / 7;
     int16_t diagStartR = r * 4 / 7;
-    int16_t diagR = (r + 1) * 2 / 3;
-    drawLineFast(x + startR, y,          x + r, y,     c222);
-    drawLineFast(x,          y - startR, x,     y - r, c222);
-    drawLineFast(x - startR, y,          x - r, y,     c222);
-    drawLineFast(x,          y + startR, x,     y + r, c222);
+    int16_t diagR      = (r + 1) * 2 / 3;
+    drawLineFast(x + startR, y, x + r, y, c222);
+    drawLineFast(x, y - startR, x, y - r, c222);
+    drawLineFast(x - startR, y, x - r, y, c222);
+    drawLineFast(x, y + startR, x, y + r, c222);
 
     drawLineFast(x + diagStartR, y - diagStartR, x + diagR, y - diagR, c222);
     drawLineFast(x - diagStartR, y - diagStartR, x - diagR, y - diagR, c222);
@@ -331,8 +336,8 @@ static void touchDrawVector(int16_t x, int16_t y, int16_t r)
              y - getSin1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024,
              touchTest->touch ? c555 : c333, 0);
     drawCircleFilled(x + getCos1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024,
-                     y - getSin1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024,
-                     3, touchTest->touch ? c500 : c333);
+                     y - getSin1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024, 3,
+                     touchTest->touch ? c500 : c333);
 }
 
 /**
@@ -363,7 +368,6 @@ static void touchTestDraw(void)
 
     // Write the values
     char buffer[64];
-
 
     int16_t textW = textWidth(&touchTest->ibm, "Angle");
     int16_t textX = 60 - textW / 2;
@@ -414,7 +418,9 @@ static void touchTestDraw(void)
     if (touchTest->touch || touchTest->spin.startSet)
     {
         // Draw the spin text in the middle, right of "Angle"
-        snprintf(buffer, sizeof(buffer) - 1, "Spins: %+"PRId32"%c%"PRId32, touchTest->spin.spins, (touchTest->spin.spins < 0 || touchTest->spin.remainder < 0) ? '-' : '+', ABS(touchTest->spin.remainder));
+        snprintf(buffer, sizeof(buffer) - 1, "Spins: %+" PRId32 "%c%" PRId32, touchTest->spin.spins,
+                 (touchTest->spin.spins < 0 || touchTest->spin.remainder < 0) ? '-' : '+',
+                 ABS(touchTest->spin.remainder));
         textW = textWidth(&touchTest->ibm, buffer);
         textX = TFT_WIDTH / 2 - 35;
         textY = TFT_HEIGHT / 4 + 35 + 15;

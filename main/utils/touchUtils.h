@@ -29,7 +29,7 @@ typedef struct
     int32_t lastAngle;
     int32_t lastRadius;
 
-    int32_t spins;  ///< The number of complete CCW spins made. Negative indicates clockwise spins
+    int32_t spins;     ///< The number of complete CCW spins made. Negative indicates clockwise spins
     int32_t remainder; ///< The angle of the partial CCW spin, or negative for a CW spin
 } touchSpinState_t;
 

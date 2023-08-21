@@ -179,13 +179,13 @@ static int16_t innerAtan2(int32_t y, int32_t x)
     else if (x < 0)
     {
         // Flip X and result
-        x = -x;
+        x   = -x;
         sig = -1;
     }
     else if (y < 0)
     {
         // Flip Y and result
-        y = -y;
+        y   = -y;
         sig = -1;
     }
 

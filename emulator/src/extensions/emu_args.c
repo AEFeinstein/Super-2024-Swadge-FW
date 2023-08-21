@@ -59,10 +59,10 @@
 // Defines
 //==============================================================================
 
-#define ARG_FULLSCREEN     "fullscreen"
-#define ARG_HIDE_LEDS      "hide-leds"
-#define ARG_TOUCH          "touch"
-#define ARG_HELP           "help"
+#define ARG_FULLSCREEN "fullscreen"
+#define ARG_HIDE_LEDS  "hide-leds"
+#define ARG_TOUCH      "touch"
+#define ARG_HELP       "help"
 
 //==============================================================================
 // Variables
@@ -82,14 +82,13 @@ emuArgs_t emulatorArgs = {
     .emulateTouch = false,
 };
 
-static const char helpUsage[]
-    = "usage: %s [--fullscreen] [--hide-leds] [--touch] [--help]\n"
-      "Emulates a swadge\n"
-      "\n"
-      "--" ARG_FULLSCREEN "\t\topen in fullscreen mode\n"
-      "--" ARG_HIDE_LEDS "\t\tdon't draw simulated LEDs on the sides of the window\n"
-      "--" ARG_TOUCH "\t\tsimulate touch sensor readings with a virtual touch-pad\n"
-      "--" ARG_HELP "\t\t\tdisplay this help message and exit\n";
+static const char helpUsage[] = "usage: %s [--fullscreen] [--hide-leds] [--touch] [--help]\n"
+                                "Emulates a swadge\n"
+                                "\n"
+                                "--" ARG_FULLSCREEN "\t\topen in fullscreen mode\n"
+                                "--" ARG_HIDE_LEDS "\t\tdon't draw simulated LEDs on the sides of the window\n"
+                                "--" ARG_TOUCH "\t\tsimulate touch sensor readings with a virtual touch-pad\n"
+                                "--" ARG_HELP "\t\t\tdisplay this help message and exit\n";
 
 //==============================================================================
 // Functions

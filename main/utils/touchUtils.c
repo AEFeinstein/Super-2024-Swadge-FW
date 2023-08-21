@@ -9,15 +9,13 @@
 #include "macros.h"
 #include "trigonometry.h"
 
-
 /**
- * @brief Get the touchpad values as cartesian coordinates
+ * @brief Convert touchpad angle and radius to cartesian coordinates
  *
+ * @param angle  The touchpad angle to convert
+ * @param radius The touchpad radius to convert
  * @param[out] x A pointer to be set to the X touch coordinate, from 0 to 1023
  * @param[out] y A pointer to be set to the Y touch coordinate, from 0 to 1023
- * @param[out] intensity A pointer to be set to the touch intensity
- * @return true if the touchpad was touched and values were returned
- * @return false if the touchpad was not touched
  */
 void getTouchCartesian(int32_t angle, int32_t radius, int32_t* x, int32_t* y)
 {
@@ -34,12 +32,14 @@ void getTouchCartesian(int32_t angle, int32_t radius, int32_t* x, int32_t* y)
 }
 
 /**
- * @brief Return the touchpad value as a joystick, with an optional analog strength
+ * @brief Convert touchpad angle and radius to a joystick enum, with either 4 or 8 directions
+ * and an optional center dead-zone.
  *
  * @param angle The touch angle reported by ::getTouchAngleRadius()
  * @param radius The touch radius reported by ::getTouchAngleRadius()
+ * @param useCenter If true, TB_CENTER will be returned if the stick is touched but inside the dead-zone
  * @param useDiagonals If true, diagonal directions will be returned as the bitwise OR of two directions
- * @return touchJoysticK_t The touchJoystick_t enum, or 0 if
+ * @return touchJoystick_t The joystick direction, or 0 if no direction could be determined.
  */
 touchJoystick_t getTouchJoystick(int32_t angle, int32_t radius, bool useCenter, bool useDiagonals)
 {
@@ -61,7 +61,7 @@ touchJoystick_t getTouchJoystick(int32_t angle, int32_t radius, bool useCenter, 
     {
         // Divide the circle into sectors
         int16_t start = (offset + (360 * sector / sectors)) % 360;
-        int16_t end = (offset + (360 * (sector + 1) / sectors)) % 360;
+        int16_t end   = (offset + (360 * (sector + 1) / sectors)) % 360;
 
         // Check if the angle is within bounds, making sure to account for wraparound
         // In the wraparound case, we just need one boundary to match, otherwise both
@@ -69,7 +69,7 @@ touchJoystick_t getTouchJoystick(int32_t angle, int32_t radius, bool useCenter, 
         {
             // Return the main button, plus (if diagonals are enabled) the next one too
             return TB_RIGHT << (sector / (useDiagonals ? 2 : 1))
-                    | ((useDiagonals && (sector & 1)) ? (TB_RIGHT << ((sector / 2 + 1) % 4)) : 0);
+                   | ((useDiagonals && (sector & 1)) ? (TB_RIGHT << ((sector / 2 + 1) % 4)) : 0);
         }
     }
 
@@ -93,14 +93,14 @@ void getTouchSpins(touchSpinState_t* state, int32_t angle, int32_t radius)
         if (!state->startSet)
         {
             // This is the start of the touch
-            state->startSet = true;
-            state->startAngle = angle;
+            state->startSet    = true;
+            state->startAngle  = angle;
             state->startRadius = radius;
 
-            state->lastAngle = angle;
+            state->lastAngle  = angle;
             state->lastRadius = radius;
 
-            state->spins = 0;
+            state->spins     = 0;
             state->remainder = 0;
         }
         else
@@ -167,9 +167,9 @@ void getTouchSpins(touchSpinState_t* state, int32_t angle, int32_t radius)
                 state->remainder %= 360;
             }
 
-            state->lastAngle = angle;
+            state->lastAngle  = angle;
             state->lastRadius = radius;
-            ESP_LOGI("touchUtils", "%"PRId32" - %"PRId32" is %"PRId32"\n", state->lastAngle, angle, angleDiff);
+            ESP_LOGI("touchUtils", "%" PRId32 " - %" PRId32 " is %" PRId32 "\n", state->lastAngle, angle, angleDiff);
         }
     }
 }

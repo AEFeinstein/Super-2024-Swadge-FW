@@ -157,8 +157,8 @@ bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
     // TODO: Actual touchpad implementation
 
     // A touch in the center at 50% intensity
-    *angle = lastTouchAngle;
-    *radius = lastTouchRadius;
+    *angle     = lastTouchAngle;
+    *radius    = lastTouchRadius;
     *intensity = lastTouchIntensity;
     return true;
 }
@@ -213,8 +213,8 @@ void emulatorInjectButton(buttonBit_t button, bool down)
 
 void emulatorSetTouchAngleRadius(int32_t angle, int32_t radius, int32_t intensity)
 {
-    lastTouchAngle = angle;
-    lastTouchRadius = radius;
+    lastTouchAngle     = angle;
+    lastTouchRadius    = radius;
     lastTouchIntensity = intensity;
 }
 

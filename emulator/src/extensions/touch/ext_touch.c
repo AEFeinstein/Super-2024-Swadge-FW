@@ -24,15 +24,15 @@
 // A nice gray for inactive touchpads
 #define COLOR_TOUCHPAD_INACTIVE 0x337722FF
 // Like almost gray, but a bit green?
-#define COLOR_TOUCHPAD_SEP      0x336633FF
+#define COLOR_TOUCHPAD_SEP 0x336633FF
 // Some sort of dark yellow, I think, for active touch
-#define COLOR_TOUCH   0x88FF00FF
+#define COLOR_TOUCH 0x88FF00FF
 // Some light gray for hover, maybe transparent??
-#define COLOR_HOVER   0x44884488
+#define COLOR_HOVER 0x44884488
 
 // These come from just playing around with a real swadge
-#define INTENSITY_MAX (1<<18)
-#define INTENSITY_MIN (1<<10)
+#define INTENSITY_MAX (1 << 18)
+#define INTENSITY_MIN (1 << 10)
 
 #define TOUCHPAD_SPACING 4
 
@@ -122,11 +122,10 @@ static emuTouch_t emuTouch = {0};
 static bool isInTouchBounds(int32_t x, int32_t y)
 {
     int32_t ringSize = MIN(emuTouch.paneW, emuTouch.paneH);
-    int32_t xMin = emuTouch.paneX + (emuTouch.paneW - ringSize) / 2;
-    int32_t yMin = emuTouch.paneY + (emuTouch.paneH - ringSize) / 2;
+    int32_t xMin     = emuTouch.paneX + (emuTouch.paneW - ringSize) / 2;
+    int32_t yMin     = emuTouch.paneY + (emuTouch.paneH - ringSize) / 2;
 
-    return xMin <= x && x <= xMin + ringSize
-           && yMin <= y && y <= yMin + ringSize;
+    return xMin <= x && x <= xMin + ringSize && yMin <= y && y <= yMin + ringSize;
 }
 
 static void calculateTouch(int32_t x, int32_t y, int32_t* angle, int32_t* radius, int32_t* intensity)
@@ -139,7 +138,8 @@ static void calculateTouch(int32_t x, int32_t y, int32_t* angle, int32_t* radius
 
     // Get the x/y offsets normalized to [-1024, 1023]
     int32_t xCenterOff = CLAMP(1024 * ((int32_t)xOffset - ((int32_t)emuTouch.paneW / 2)) / (ringSize / 2), -1023, 1023);
-    int32_t yCenterOff = CLAMP(1024 * -((int32_t)yOffset - ((int32_t)emuTouch.paneH / 2)) / (ringSize / 2), -1023, 1023);
+    int32_t yCenterOff
+        = CLAMP(1024 * -((int32_t)yOffset - ((int32_t)emuTouch.paneH / 2)) / (ringSize / 2), -1023, 1023);
 
     int32_t rawAngle = getAtan2(yCenterOff, xCenterOff);
 
@@ -206,7 +206,8 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked)
             emuTouch.lastClickY = y;
 
             // Calculate the new touch values and save them
-            calculateTouch(x, y, &(emuTouch.lastTouchAngle), &(emuTouch.lastTouchRadius), &(emuTouch.lastTouchIntensity));
+            calculateTouch(x, y, &(emuTouch.lastTouchAngle), &(emuTouch.lastTouchRadius),
+                           &(emuTouch.lastTouchIntensity));
             emulatorSetTouchAngleRadius(emuTouch.lastTouchAngle, emuTouch.lastTouchRadius, emuTouch.lastTouchIntensity);
         }
         else
@@ -237,7 +238,7 @@ static bool touchInit(emuArgs_t* emuArgs)
 {
     emuTouch.emuArgs = emuArgs;
 
-    emuTouch.dragging = false;
+    emuTouch.dragging   = false;
     emuTouch.lastClickX = 0;
     emuTouch.lastClickY = 0;
 
@@ -312,8 +313,14 @@ static void touchRender(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t p
     // If the user is hovering within the touch area, draw a lighter circle underneath the mouse
     if (emuTouch.dragging || (emuTouch.hovering && isInTouchBounds(emuTouch.lastHoverX, emuTouch.lastHoverY)))
     {
-        int32_t x = emuTouch.dragging ? (int32_t)centerX + getCos1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius * (int32_t)outerR / 1024 / 1024 : emuTouch.lastHoverX;
-        int32_t y = emuTouch.dragging ? (int32_t)centerY - getSin1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius * (int32_t)outerR / 1024 / 1024 : emuTouch.lastHoverY;
+        int32_t x = emuTouch.dragging ? (int32_t)centerX
+                                            + getCos1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius
+                                                  * (int32_t)outerR / 1024 / 1024
+                                      : emuTouch.lastHoverX;
+        int32_t y = emuTouch.dragging ? (int32_t)centerY
+                                            - getSin1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius
+                                                  * (int32_t)outerR / 1024 / 1024
+                                      : emuTouch.lastHoverY;
 
         int32_t logIntensity = 0;
         int32_t tmpIntensity = emuTouch.lastTouchIntensity;
