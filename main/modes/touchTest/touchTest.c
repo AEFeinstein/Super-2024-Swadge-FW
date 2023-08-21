@@ -284,33 +284,6 @@ static void touchDrawCircle(const char* label, int16_t x, int16_t y, int16_t r, 
     }
 }
 
-/*
-    // Draw a circle with tick marks at each 45-degree interval
-    int16_t textW = textWidth(&touchTest->ibm, "Raw");
-    drawText(&touchTest->ibm, c555, "Raw", 60 - textW / 2, TFT_HEIGHT / 2 - 35 - touchTest->ibm.height - 10);
-    drawCircle(60, TFT_HEIGHT / 2, 35, c222);
-
-    drawLineFast(90, TFT_HEIGHT / 2, 95, TFT_HEIGHT / 2, c222);
-    drawLineFast(60 + 21, TFT_HEIGHT / 2 + 21, 60 + 24, TFT_HEIGHT / 2 + 24, c222);
-
-    drawLineFast(30, TFT_HEIGHT / 2, 25, TFT_HEIGHT / 2, c222);
-    drawLineFast(60 - 21, TFT_HEIGHT / 2 + 21, 60 - 24, TFT_HEIGHT / 2 + 24, c222);
-
-    drawLineFast(60, TFT_HEIGHT / 2 - 30, 60, TFT_HEIGHT / 2 - 35, c222);
-    drawLineFast(60 - 21, TFT_HEIGHT / 2 - 21, 60 - 24, TFT_HEIGHT / 2 - 24, c222);
-
-    drawLineFast(60, TFT_HEIGHT / 2 + 30, 60, TFT_HEIGHT / 2 + 35, c222);
-    drawLineFast(60 + 21, TFT_HEIGHT / 2 - 21, 60 + 24, TFT_HEIGHT / 2 - 24, c222);
-
-    // Draw a line indicating the analog touch vector
-    drawLine(60, TFT_HEIGHT / 2, 60 + getCos1024(touchTest->angle) * touchTest->radius / 1024 * 30 / 1024,
-             TFT_HEIGHT / 2 - getSin1024(touchTest->angle) * touchTest->radius / 1024 * 30 / 1024,
-             touchTest->touch ? c555 : c333, 0);
-    drawCircleFilled(60 + getCos1024(touchTest->angle) * touchTest->radius / 1024 * 30 / 1024,
-                     TFT_HEIGHT / 2 - getSin1024(touchTest->angle) * touchTest->radius / 1024 * 30 / 1024,
-                     3, touchTest->touch ? c500 : c333);
-*/
-
 static void touchDrawVector(int16_t x, int16_t y, int16_t r)
 {
     // Draw a circle with tick marks at each 45-degree interval
