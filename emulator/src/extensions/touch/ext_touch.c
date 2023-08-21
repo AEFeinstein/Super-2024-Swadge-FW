@@ -30,6 +30,10 @@
 // Some light gray for hover, maybe transparent??
 #define COLOR_HOVER   0x44884488
 
+// These come from just playing around with a real swadge
+#define INTENSITY_MAX (1<<18)
+#define INTENSITY_MIN (1<<10)
+
 #define TOUCHPAD_SPACING 4
 
 /**
@@ -56,7 +60,7 @@
 //==============================================================================
 
 static bool isInTouchBounds(int32_t x, int32_t y);
-static void calculateTouch(int32_t x, int32_t y, int16_t* angle, int16_t* radius, int16_t* intensity);
+static void calculateTouch(int32_t x, int32_t y, int32_t* angle, int32_t* radius, int32_t* intensity);
 static bool updateTouch(int32_t x, int32_t y, bool clicked);
 
 static bool touchInit(emuArgs_t* emuArgs);
@@ -80,9 +84,9 @@ typedef struct
     int32_t lastHoverX;
     int32_t lastHoverY;
 
-    int16_t lastTouchAngle;
-    int16_t lastTouchRadius;
-    int16_t lastTouchIntensity;
+    int32_t lastTouchAngle;
+    int32_t lastTouchRadius;
+    int32_t lastTouchIntensity;
     buttonBit_t lastTouchButtons;
 
     uint32_t paneX;
@@ -125,7 +129,7 @@ static bool isInTouchBounds(int32_t x, int32_t y)
            && yMin <= y && y <= yMin + ringSize;
 }
 
-static void calculateTouch(int32_t x, int32_t y, int16_t* angle, int16_t* radius, int16_t* intensity)
+static void calculateTouch(int32_t x, int32_t y, int32_t* angle, int32_t* radius, int32_t* intensity)
 {
     int32_t ringSize = MIN(emuTouch.paneW, emuTouch.paneH);
 
@@ -137,7 +141,7 @@ static void calculateTouch(int32_t x, int32_t y, int16_t* angle, int16_t* radius
     int32_t xCenterOff = CLAMP(1024 * ((int32_t)xOffset - ((int32_t)emuTouch.paneW / 2)) / (ringSize / 2), -1023, 1023);
     int32_t yCenterOff = CLAMP(1024 * -((int32_t)yOffset - ((int32_t)emuTouch.paneH / 2)) / (ringSize / 2), -1023, 1023);
 
-    int16_t rawAngle = getAtan2(yCenterOff, xCenterOff); //(int16_t)(360 * atan2(1.0 * yCenterOff, 1.0 * xCenterOff) / (2 * M_PI));
+    int32_t rawAngle = getAtan2(yCenterOff, xCenterOff);
 
     // convert phi to be in [0, 360) instead of [-180, 180]
     *angle = ((rawAngle % 360) + 360) % 360;
@@ -146,7 +150,7 @@ static void calculateTouch(int32_t x, int32_t y, int16_t* angle, int16_t* radius
     *radius = CLAMP((xCenterOff * xCenterOff + yCenterOff * yCenterOff) / 1024, 0, 1023);
 
     // The intensity changes elsewhere so just grab it
-    *intensity = CLAMP(emuTouch.lastTouchIntensity, 0, 1023);
+    *intensity = emuTouch.lastTouchIntensity;
 }
 
 /**
@@ -237,7 +241,7 @@ static bool touchInit(emuArgs_t* emuArgs)
     emuTouch.lastClickX = 0;
     emuTouch.lastClickY = 0;
 
-    emuTouch.lastTouchIntensity = 512;
+    emuTouch.lastTouchIntensity = INTENSITY_MIN;
 
     return emuArgs->emulateTouch;
 }
@@ -255,12 +259,12 @@ static bool touchMouseButton(int32_t x, int32_t y, mouseButton_t button, bool do
     }
     else if (button == EMU_SCROLL_UP && isInTouchBounds(x, y))
     {
-        emuTouch.lastTouchIntensity = CLAMP(emuTouch.lastTouchIntensity << 1, 1, 1023);
+        emuTouch.lastTouchIntensity = CLAMP(emuTouch.lastTouchIntensity + 1024, INTENSITY_MIN, INTENSITY_MAX);
         return true;
     }
     else if (button == EMU_SCROLL_DOWN && isInTouchBounds(x, y))
     {
-        emuTouch.lastTouchIntensity = CLAMP((emuTouch.lastTouchIntensity + 1) >> 1, 1, 1023);
+        emuTouch.lastTouchIntensity = CLAMP(emuTouch.lastTouchIntensity - 1024, INTENSITY_MIN, INTENSITY_MAX);
         return true;
     }
     return false;
@@ -311,8 +315,15 @@ static void touchRender(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t p
         int32_t x = emuTouch.dragging ? (int32_t)centerX + getCos1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius * (int32_t)outerR / 1024 / 1024 : emuTouch.lastHoverX;
         int32_t y = emuTouch.dragging ? (int32_t)centerY - getSin1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius * (int32_t)outerR / 1024 / 1024 : emuTouch.lastHoverY;
 
+        int32_t logIntensity = 0;
+        int32_t tmpIntensity = emuTouch.lastTouchIntensity;
+        while (tmpIntensity >>= 1)
+        {
+            logIntensity++;
+        }
+
         // Draw the touch circle
-        CALC_CIRCLE_POLY(points, ARRAY_SIZE(points), x, y, emuTouch.lastTouchIntensity * innerR / 1024);
+        CALC_CIRCLE_POLY(points, ARRAY_SIZE(points), x, y, (logIntensity - 5) * 3 / 2);
         CNFGColor(emuTouch.dragging ? COLOR_TOUCH : COLOR_HOVER);
         CNFGTackPoly(points, ARRAY_SIZE(points));
     }
