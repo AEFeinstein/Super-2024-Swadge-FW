@@ -601,7 +601,8 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
 {
     int32_t baseVals[numTouchPads];
-    if (!angle || !radius || !intensity || getBaseTouchVals(baseVals, numTouchPads) == 0)
+    int32_t centerVal;
+    if (!angle || !radius || !intensity || !getTouchCentroid(&centerVal, intensity))
     {
         return false;
     }
@@ -609,10 +610,10 @@ bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
     // Just do the actual "is the touchpad touched" check, then write placeholder values
 
     // TODO: Actual touchpad implementation
+    // For now, just pretend X->Y is the entire circular touchpad
+    *angle = ((1024 - centerVal) * 360 / 1024) % 360;
 
-    // A touch in the center at 50% intensity
-    *angle = 0;
-    *radius = 0;
-    *intensity = 512;
+    // Lock radius to 512
+    *radius = 512;
     return true;
 }
