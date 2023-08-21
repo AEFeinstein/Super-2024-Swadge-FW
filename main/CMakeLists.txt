@@ -25,6 +25,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "utils/linked_list.c"
                             "utils/p2pConnection.c"
                             "utils/settingsManager.c"
+                            "utils/touchUtils.c"
                             "utils/trigonometry.c"
                             "utils/vector2d.c"
                     PRIV_REQUIRES hdw-accel

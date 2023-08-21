@@ -18,16 +18,7 @@
 #include "fill.h"
 #include "linked_list.h"
 #include "font.h"
-
-//==============================================================================
-// Defines
-//==============================================================================
-
-#define TOUCH_FMT "(phi=%03" PRId16 ", r=%03" PRId16 ", i=%03" PRId16 ")"
-
-#define GRAPH_BG_COLOR   c000
-#define GRAPH_AXIS_COLOR c555
-#define GRAPH_TEXT_COLOR c222
+#include "touchUtils.h"
 
 //==============================================================================
 // Structs
@@ -40,20 +31,13 @@ typedef struct
 
     uint16_t btnState; ///< The button state
 
-    bool touch;
+    bool touch;        ///< Whether or not the touchpad is currently touched
 
     int32_t angle;     ///< The latest touchpad angle
     int32_t radius;    ///< The latest touchpad radius
     int32_t intensity; ///< The latest touchpad intensity
 
-    int16_t cartX;
-    int16_t cartY;
-
-    uint16_t analog;
-    touchJoystick_t joystick4;
-    touchJoystick_t joystick8;
-    touchJoystick_t joystick4Center;
-    touchJoystick_t joystick8Center;
+    touchSpinState_t spin;  ///< Struct to keep track of the spin state
 } touchTest_t;
 
 //==============================================================================
@@ -165,11 +149,15 @@ static void touchTestHandleInput(void)
 {
     // Just call all the options for getting touchpad readings for demonstration purposes
     touchTest->touch = getTouchAngleRadius(&touchTest->angle, &touchTest->radius, &touchTest->intensity);
-    getTouchCartesian(&touchTest->cartX, &touchTest->cartY, &touchTest->intensity);
-    touchTest->joystick8 = getTouchJoystick(&touchTest->analog, false, true);
-    touchTest->joystick4 = getTouchJoystick(&touchTest->analog, false, false);
-    touchTest->joystick8Center = getTouchJoystick(&touchTest->analog, true, true);
-    touchTest->joystick4Center = getTouchJoystick(&touchTest->analog, true, false);
+
+    if (touchTest->touch)
+    {
+        getTouchSpins(&touchTest->spin, touchTest->angle, touchTest->radius);
+    }
+    else
+    {
+        touchTest->spin.startSet = false;
+    }
 }
 
 /**
@@ -181,14 +169,7 @@ static void touchTestReset(void)
     touchTest->radius = 0;
     touchTest->intensity = 0;
 
-    touchTest->cartX = 0;
-    touchTest->cartY = 0;
-
-    touchTest->joystick4 = 0;
-    touchTest->joystick8 = 0;
-    touchTest->joystick4Center = 0;
-    touchTest->joystick8Center = 0;
-    touchTest->analog = 0;
+    touchTest->spin.startSet = false;
 }
 
 /**
@@ -212,7 +193,7 @@ static void touchTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
     {
         for (int16_t xp = x; xp < x + w; xp++)
         {
-            TURBO_SET_PIXEL(xp, yp, GRAPH_BG_COLOR);
+            TURBO_SET_PIXEL(xp, yp, c000);
         }
     }
 }
@@ -360,19 +341,22 @@ static void touchDrawVector(int16_t x, int16_t y, int16_t r)
 static void touchTestDraw(void)
 {
     // Draw the line for X
-    drawLine(20, TFT_HEIGHT - 15, TFT_WIDTH - 20, TFT_HEIGHT - 15, GRAPH_AXIS_COLOR, 0);
+    drawLine(20, TFT_HEIGHT - 15, TFT_WIDTH - 20, TFT_HEIGHT - 15, c555, 0);
 
     // Draw the line for Y
-    drawLine(15, 20, 15, TFT_HEIGHT - 20, GRAPH_AXIS_COLOR, 0);
+    drawLine(15, 20, 15, TFT_HEIGHT - 20, c555, 0);
 
     // And the marker, if there's a touch
     if (touchTest->touch)
     {
+        int32_t cartX, cartY;
+        getTouchCartesian(touchTest->angle, touchTest->radius, &cartX, &cartY);
+
         // And the marker for X
-        drawCircleFilled(20 + (TFT_WIDTH - 40) * touchTest->cartX / 1024, TFT_HEIGHT - 15, 5, c050);
+        drawCircleFilled(20 + (TFT_WIDTH - 40) * cartX / 1024, TFT_HEIGHT - 15, 5, c050);
 
         // And Y
-        drawCircleFilled(15, TFT_HEIGHT - 20 - (TFT_HEIGHT - 40) * touchTest->cartY / 1024, 5, c050);
+        drawCircleFilled(15, TFT_HEIGHT - 20 - (TFT_HEIGHT - 40) * cartY / 1024, 5, c050);
     }
 
     touchDrawVector(60, TFT_HEIGHT / 4, 35);
@@ -397,7 +381,7 @@ static void touchTestDraw(void)
     textY += touchTest->ibm.height + 5;
     drawText(&touchTest->ibm, c555, buffer, textX, textY);
     // Draw a lil degree sign
-    drawCircle(textX + textW + 1, textY, 1, c555);
+    drawCircle(textX + textW + 2, textY, 1, c555);
 
     // Skip a line, draw the radius header
     textY += (touchTest->ibm.height + 2) * 2;
@@ -427,15 +411,31 @@ static void touchTestDraw(void)
     textY += touchTest->ibm.height + 5;
     drawText(&touchTest->ibm, c555, buffer, textX, textY);
 
+    if (touchTest->touch || touchTest->spin.startSet)
+    {
+        // Draw the spin text in the middle, right of "Angle"
+        snprintf(buffer, sizeof(buffer) - 1, "Spins: %+"PRId32"%c%"PRId32, touchTest->spin.spins, (touchTest->spin.spins < 0 || touchTest->spin.remainder < 0) ? '-' : '+', ABS(touchTest->spin.remainder));
+        textW = textWidth(&touchTest->ibm, buffer);
+        textX = TFT_WIDTH / 2 - 35;
+        textY = TFT_HEIGHT / 4 + 35 + 15;
+        drawText(&touchTest->ibm, c555, buffer, textX, textY);
+        // Draw a degree sign
+        drawCircle(textX + textW + 2, textY, 1, c555);
+    }
+
     // Draw the 4-direction touchpad circle
-    touchDrawCircle("4", TFT_WIDTH / 2, TFT_HEIGHT / 4, 35, 4, false, touchTest->joystick4);
+    touchDrawCircle("4", TFT_WIDTH / 2, TFT_HEIGHT / 4, 35, 4, false,
+                    getTouchJoystick(touchTest->angle, touchTest->radius, false, false));
 
     // Draw the 8-direction touchpad circle
-    touchDrawCircle("8", TFT_WIDTH - 60, TFT_HEIGHT / 4, 35, 8, false, touchTest->joystick8);
+    touchDrawCircle("8", TFT_WIDTH - 60, TFT_HEIGHT / 4, 35, 8, false,
+                    getTouchJoystick(touchTest->angle, touchTest->radius, false, true));
 
     // Draw the 4-direction touchpad with center circle
-    touchDrawCircle("4+Center", TFT_WIDTH / 2, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 4, true, touchTest->joystick4Center);
+    touchDrawCircle("4+Center", TFT_WIDTH / 2, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 4, true,
+                    getTouchJoystick(touchTest->angle, touchTest->radius, true, false));
 
     // Draw the 8-direction touchpad with center circle
-    touchDrawCircle("8+Center", TFT_WIDTH - 60, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 8, true, touchTest->joystick8Center);
+    touchDrawCircle("8+Center", TFT_WIDTH - 60, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 8, true,
+                    getTouchJoystick(touchTest->angle, touchTest->radius, true, true));
 }
