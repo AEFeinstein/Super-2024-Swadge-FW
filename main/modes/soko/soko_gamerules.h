@@ -17,4 +17,7 @@ sokoDirection_t sokoDirectionFromDelta(int, int);
 
 void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant);
 
+sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter);
+sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2);
+
 #endif //SOKO_GAMERULES_H

@@ -30,6 +30,7 @@ typedef enum
     SKE_NONE=0,
     SKE_PLAYER=1,
     SKE_CRATE=2,
+    SKE_LASER_90=3
 } sokoEntityType_t;
 
 typedef enum
@@ -38,6 +39,9 @@ typedef enum
     SKT_FLOOR = 1,
     SKT_WALL = 2,
     SKT_GOAL = 3,
+    SKT_PORTAL = 4,
+    SKT_LASER_EMIT = 5,
+    SKT_LASER_RECEIVE = 6
 } sokoTile_t;
 
 typedef struct 
@@ -47,6 +51,21 @@ typedef struct
     uint16_t y;
     sokoDirection_t facing;
 } sokoEntity_t;
+
+typedef struct sokoVec_s
+{
+    int16_t x;
+    int16_t y;
+} sokoVec_t;
+
+typedef struct sokoCollision_s
+{
+    uint16_t x;
+    uint16_t y;
+    uint16_t entityFlag;
+    uint16_t entityIndex;
+
+} sokoCollision_t;
 
 typedef struct
 {

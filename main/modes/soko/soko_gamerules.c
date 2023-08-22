@@ -375,3 +375,104 @@ sokoDirection_t sokoDirectionFromDelta(int dx,int dy)
 
     return SKD_NONE;
 }
+
+sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
+{
+    sokoDirection_t dir = emitter->facing;
+    sokoVec_t projVec = {0, 0};
+    sokoVec_t emitVec = {emitter->x,emitter->y};
+    switch (dir){
+    case SKD_DOWN:
+        projVec.y = 1;
+        break;
+    case SKD_UP:
+        projVec.y = -1;
+        break;
+    case SKD_LEFT:
+        projVec.x = -1;
+        break;
+    case SKD_RIGHT:
+        projVec.x = 1;
+        break;
+    default:
+        //return base entity position
+    }
+    
+    
+    //Iterate over tiles in ray to edge of level
+    sokoVec_t testPos = sokoAddCoord(emitVec,projVec);
+    int entityCount = self->currentLevel.entityCount;
+    //todo: make first pass pack a statically allocated array with only the entities in the path of the laser.
+    
+    
+    
+    uint8_t tileCollision[] = {0,0,1,0,0,1,1}; //There should be a pointer internal to the game state so this can vary with game mode
+    uint8_t entityCollision[] = {0,0,0,1};
+
+    int16_t possibleSquares = 0;
+    if(dir==SKD_RIGHT) //move these checks into the switch statement
+    {
+        possibleSquares = self->currentLevel.width - emitVec.x; //Up to and including far wall
+    }
+    if(dir==SKD_LEFT)
+    {
+        possibleSquares = emitVec.x + 1;
+    }
+    if(dir==SKD_UP)
+    {
+        possibleSquares = emitVec.y + 1;
+    }
+    if(dir==SKD_DOWN)
+    {
+        possibleSquares = self->currentLevel.height - emitVec.y;
+    }
+
+    int tileCollFlag, entCollFlag, entCollInd;
+    tileCollFlag = entCollFlag = entCollInd = 0;
+
+    sokoCollision_t retVal;
+
+    for (int n=0;n < possibleSquares; n++)
+    {
+        sokoTile_t posTile = absSokoGetTile(self,testPos.x,testPos.y);
+        if(tileCollision[posTile])
+        {
+            tileCollFlag = 1;
+            break;
+        }
+        for(int m = 0;m < entityCount;m++) //iterate over tiles/entities to check for laser collision. First pass finds everything in the path of the 
+        {
+            sokoEntity_t candidateEntity = self->currentLevel.entities[m];
+            if(candidateEntity.x == testPos.x && candidateEntity.y == testPos.y)
+            {
+                if(entityCollision[candidateEntity.type])
+                {
+                    entCollFlag = 1;
+                    entCollInd = m;
+                    break;
+                }
+
+            }
+        }
+        
+        if(entCollFlag)
+        {
+            break;
+        }
+        testPos = sokoAddCoord(testPos,projVec);
+    }
+    retVal.x = testPos.x;
+    retVal.y = testPos.y;
+    retVal.entityIndex = entCollInd;
+    retVal.entityFlag = entCollFlag;
+    return retVal;
+
+}
+
+sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2)
+{
+    sokoVec_t retVal;
+    retVal.x = op1.x + op2.x;
+    retVal.y = op1.x + op2.x;
+    return retVal;
+}
