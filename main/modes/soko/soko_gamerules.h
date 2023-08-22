@@ -1,6 +1,9 @@
 #ifndef SOKO_GAMERULES_H
 #define SOKO_GAMERULES_H
 
+/// @brief call [entity][tile] to get a bool that is true if that entity can NOT walk (or get pushed onto) that tile.
+bool sokoEntityTileCollision[4][8];
+
 void sokoTryPlayerMovement(void);
 sokoTile_t sokoGetTile(int, int);
 bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int,uint16_t);

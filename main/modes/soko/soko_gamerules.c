@@ -2,6 +2,15 @@
 #include "soko.h"
 #include "soko_gamerules.h"
 
+//True if the entity CANNOT go on the tile
+bool sokoEntityTileCollision[4][8] = {
+    //Empty, //floor  //wall   //goal    //portal  //l-emit  //l-receive //walked
+    {true,    false,    true,    false,    false,    false,    false,      false},//SKE_NONE
+    {true,    false,    true,    false,    false,    false,    false,      true},//PLAYER
+    {true,    false,    true,    false,    false,    false,    false,      false},//CRATE
+    {true,    false,    true,    false,    false,    false,    false,      false},//LASER
+};
+
 void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should be called when you reload a level to make sure game rules are correct
 {
     if(variant == SOKO_CLASSIC) //standard gamemode. Check 'variant' variable
@@ -34,6 +43,7 @@ void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
         self->sokoTryPlayerMovementFunc(self);
 
         //victory status. stored separate from gamestate because of future gameplay ideas/remixes.
+        //todo: rename to isVictory or such.
         self->allCratesOnGoal = self->isVictoryConditionFunc(self);
         if(self->allCratesOnGoal){
             self->state = SKS_VICTORY;
@@ -102,7 +112,8 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int
     int py = entity->y+dy;
     sokoTile_t nextTile = self->sokoGetTileFunc(self,px,py);
 
-    if(nextTile == SKT_FLOOR || nextTile == SKT_GOAL || nextTile == SKT_EMPTY)
+    //when this is false, we CAN move. True for Collision.
+    if(!sokoEntityTileCollision[entity->type][nextTile])
     {
         //Is there an entity at this position?
         for (size_t i = 0; i < self->currentLevel.entityCount; i++)
@@ -500,7 +511,16 @@ void eulerSokoTryPlayerMovement(soko_abs_t *self)
     bool moved = self->sokoTryMoveEntityInDirectionFunc(self, self->soko_player,self->input.playerInputDeltaX,self->input.playerInputDeltaY,0);
     if(moved)
     {
-        self->currentLevel.tiles[x][y] = SKT_FLOOR_WALKED;
+        //previous
+        if(self->currentLevel.tiles[x][y] == SKT_FLOOR)
+        {
+            self->currentLevel.tiles[x][y] = SKT_FLOOR_WALKED;
+        }
+        //current
+        if(self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] == SKT_FLOOR)
+        {
+            self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] = SKT_FLOOR_WALKED;
+        }
     }
 }
 
