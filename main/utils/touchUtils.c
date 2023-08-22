@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include "esp_log.h"
-
 #include "macros.h"
 #include "trigonometry.h"
 
@@ -169,7 +167,6 @@ void getTouchSpins(touchSpinState_t* state, int32_t angle, int32_t radius)
 
             state->lastAngle  = angle;
             state->lastRadius = radius;
-            ESP_LOGI("touchUtils", "%" PRId32 " - %" PRId32 " is %" PRId32 "\n", state->lastAngle, angle, angleDiff);
         }
     }
 }
