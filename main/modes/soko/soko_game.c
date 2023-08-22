@@ -32,7 +32,7 @@ void sokoInitGame(soko_abs_t* soko)
     soko_s->maxPush = 0;//set to 1 for "traditional" sokoban.
 
     soko->state = SKS_GAMEPLAY;
-    sokoConfigGamemode(soko,SOKO_CLASSIC);
+    sokoConfigGamemode(soko,SOKO_EULER);
 
 }
 

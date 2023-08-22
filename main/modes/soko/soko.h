@@ -22,7 +22,8 @@ typedef enum
 
 typedef enum
 {
-    SOKO_CLASSIC = 1
+    SOKO_CLASSIC = 1,
+    SOKO_EULER = 2
 } soko_var_t;
 
 typedef enum
@@ -41,7 +42,8 @@ typedef enum
     SKT_GOAL = 3,
     SKT_PORTAL = 4,
     SKT_LASER_EMIT = 5,
-    SKT_LASER_RECEIVE = 6
+    SKT_LASER_RECEIVE = 6,
+    SKT_FLOOR_WALKED = 7
 } sokoTile_t;
 
 typedef struct 
@@ -143,7 +145,7 @@ typedef struct soko_abs_s
     void (*sokoTryPlayerMovementFunc)(soko_abs_t *self);
     bool (*sokoTryMoveEntityInDirectionFunc)(soko_abs_t *self, sokoEntity_t* entity, int dx, int dy, uint16_t push);
     void (*drawTilesFunc)(soko_abs_t *self, sokoLevel_t* level);
-    bool (*allCratesOnGoalFunc)(soko_abs_t *self);
+    bool (*isVictoryConditionFunc)(soko_abs_t *self);
     sokoTile_t (*sokoGetTileFunc)(soko_abs_t *self, int x, int y);
 
     //Player Convenience Pointer

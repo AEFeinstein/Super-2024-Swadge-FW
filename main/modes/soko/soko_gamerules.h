@@ -6,6 +6,7 @@ sokoTile_t sokoGetTile(int, int);
 bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int,uint16_t);
 bool allCratesOnGoal(void);
 
+//classic and default
 void absSokoGameLoop( soko_abs_t *self, int64_t elapsedUs);
 void absSokoTryPlayerMovement(soko_abs_t *self);
 bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int dx, int dy, uint16_t push);
@@ -19,5 +20,9 @@ void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant);
 
 sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter);
 sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2);
+
+//euler
+void eulerSokoTryPlayerMovement(soko_abs_t *self);
+bool eulerNoUnwalkedFloors(soko_abs_t *self);
 
 #endif //SOKO_GAMERULES_H

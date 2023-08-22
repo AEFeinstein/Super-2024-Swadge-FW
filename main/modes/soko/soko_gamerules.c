@@ -2,17 +2,25 @@
 #include "soko.h"
 #include "soko_gamerules.h"
 
-
-
 void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should be called when you reload a level to make sure game rules are correct
 {
-    if(1) //standard gamemode. Check 'variant' variable
+    if(variant == SOKO_CLASSIC) //standard gamemode. Check 'variant' variable
     {
+        printf("Config Soko to Classic\n");
         gamestate->gameLoopFunc = absSokoGameLoop;
         gamestate->sokoTryPlayerMovementFunc = absSokoTryPlayerMovement;
         gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
         gamestate->drawTilesFunc = absSokoDrawTiles;
-        gamestate->allCratesOnGoalFunc = absSokoAllCratesOnGoal;
+        gamestate->isVictoryConditionFunc = absSokoAllCratesOnGoal;
+        gamestate->sokoGetTileFunc = absSokoGetTile;
+    }else if(variant == SOKO_EULER) //standard gamemode. Check 'variant' variable
+    {
+        printf("Config Soko to Euler\n");
+        gamestate->gameLoopFunc = absSokoGameLoop;
+        gamestate->sokoTryPlayerMovementFunc = eulerSokoTryPlayerMovement;
+        gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
+        gamestate->drawTilesFunc = absSokoDrawTiles;
+        gamestate->isVictoryConditionFunc = absSokoAllCratesOnGoal;
         gamestate->sokoGetTileFunc = absSokoGetTile;
     }
     //add conditional for alternative variants
@@ -26,7 +34,7 @@ void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
         self->sokoTryPlayerMovementFunc(self);
 
         //victory status. stored separate from gamestate because of future gameplay ideas/remixes.
-        self->allCratesOnGoal = self->allCratesOnGoalFunc(self);
+        self->allCratesOnGoal = self->isVictoryConditionFunc(self);
         if(self->allCratesOnGoal){
             self->state = SKS_VICTORY;
         }
@@ -125,7 +133,7 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int
         entity->y += dy;
         entity->facing = sokoDirectionFromDelta(dx,dy);
         return true;
-    }
+    }//all other floor types invalid. Be careful when we add tile types in different rule sets.
     
     return false;
 }
@@ -206,6 +214,9 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     break;
                 case SKT_GOAL:
                     color = c141;
+                    break;
+                case SKT_FLOOR_WALKED:
+                    color = c334;
                     break;
                 case SKT_EMPTY:
                     color = cTransparent;
@@ -404,8 +415,6 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
     int entityCount = self->currentLevel.entityCount;
     //todo: make first pass pack a statically allocated array with only the entities in the path of the laser.
     
-    
-    
     uint8_t tileCollision[] = {0,0,1,0,0,1,1}; //There should be a pointer internal to the game state so this can vary with game mode
     uint8_t entityCollision[] = {0,0,0,1};
 
@@ -475,4 +484,38 @@ sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2)
     retVal.x = op1.x + op2.x;
     retVal.y = op1.x + op2.x;
     return retVal;
+}
+
+
+//Euler Game Modes
+void eulerSokoTryPlayerMovement(soko_abs_t *self)
+{
+    if(self->input.playerInputDeltaX == 0 && self->input.playerInputDeltaY == 0)
+    {
+        return;
+    }
+
+    uint16_t x = self->soko_player->x;
+    uint16_t y = self->soko_player->y;
+    bool moved = self->sokoTryMoveEntityInDirectionFunc(self, self->soko_player,self->input.playerInputDeltaX,self->input.playerInputDeltaY,0);
+    if(moved)
+    {
+        self->currentLevel.tiles[x][y] = SKT_FLOOR_WALKED;
+    }
+}
+
+bool eulerNoUnwalkedFloors(soko_abs_t *self)
+{
+    for (size_t x = 0; x < self->currentLevel.width; x++)
+    {
+        for (size_t y = 0; y < self->currentLevel.height; y++)
+        {
+            if(self->currentLevel.tiles[x][y] == SKT_FLOOR)
+            {
+                return false;
+            }
+        }
+    }
+
+    return true;
 }
