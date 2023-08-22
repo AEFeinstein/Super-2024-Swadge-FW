@@ -21,6 +21,9 @@
 // Defines
 //==============================================================================
 
+// The minimum width & height of the pane
+#define PANE_MIN_SIZE 128
+
 // A nice gray for inactive touchpads
 #define COLOR_TOUCHPAD_INACTIVE 0x337722FF
 // Like almost gray, but a bit green?
@@ -66,7 +69,7 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked);
 static bool touchInit(emuArgs_t* emuArgs);
 static bool touchMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
 static bool touchMouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
-static void touchRender(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t paneH, uint32_t paneX, uint32_t paneY);
+static void touchRender(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
 
 //==============================================================================
 // Structs
@@ -99,11 +102,8 @@ typedef struct
 // Variables
 //==============================================================================
 
-emuCallback_t touchEmuCallback = {
+emuExtension_t touchEmuCallback = {
     .name            = "touch",
-    .paneLocation    = PANE_BOTTOM,
-    .minPaneW        = 128,
-    .minPaneH        = 128,
     .fnInitCb        = touchInit,
     .fnPreFrameCb    = NULL,
     .fnPostFrameCb   = NULL,
@@ -244,7 +244,15 @@ static bool touchInit(emuArgs_t* emuArgs)
 
     emuTouch.lastTouchIntensity = INTENSITY_MIN;
 
-    return emuArgs->emulateTouch;
+    if (emuArgs->emulateTouch)
+    {
+        requestPane(&touchEmuCallback, PANE_BOTTOM, PANE_MIN_SIZE, PANE_MIN_SIZE);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 static bool touchMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)
@@ -271,16 +279,22 @@ static bool touchMouseButton(int32_t x, int32_t y, mouseButton_t button, bool do
     return false;
 }
 
-static void touchRender(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t paneH, uint32_t paneX, uint32_t paneY)
+static void touchRender(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes)
 {
+    // We only should have one pane, so just exit if we don't have it
+    if (numPanes < 1)
+    {
+        return;
+    }
+
     // Save the pane dimensions for later
-    emuTouch.paneX = paneX;
-    emuTouch.paneW = paneW;
-    emuTouch.paneH = paneH;
-    emuTouch.paneY = paneY;
+    emuTouch.paneX = pane->paneX;
+    emuTouch.paneW = pane->paneW;
+    emuTouch.paneH = pane->paneH;
+    emuTouch.paneY = pane->paneY;
 
     // outer radius of the "ring" touchpad
-    uint32_t outerR = MIN(paneW, paneH) / 2;
+    uint32_t outerR = MIN(pane->paneW, pane->paneH) / 2;
 
     // radius of the center touchpad
     uint32_t innerR = outerR / 3;
@@ -288,8 +302,8 @@ static void touchRender(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t p
     // radius of the circle separating the
     uint32_t spaceR = innerR + TOUCHPAD_SPACING;
 
-    uint32_t centerX = paneX + paneW / 2;
-    uint32_t centerY = paneY + paneH / 2;
+    uint32_t centerX = pane->paneX + pane->paneW / 2;
+    uint32_t centerY = pane->paneY + pane->paneH / 2;
 
     RDPoint points[32] = {0};
 

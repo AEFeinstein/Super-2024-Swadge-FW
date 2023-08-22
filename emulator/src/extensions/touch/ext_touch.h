@@ -9,4 +9,4 @@
 
 #include "emu_ext.h"
 
-extern emuCallback_t touchEmuCallback;
+extern emuExtension_t touchEmuCallback;

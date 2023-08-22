@@ -6,14 +6,14 @@
  * allow functionality to be easily extended without modifying the emulator itself.
  *
  * Any callback functions that are not needed may be set to \c NULL and they will be ignored.
- * Details on the behavior and usage of each of these callbacks is available in ::emuCallback_t.
+ * Details on the behavior and usage of each of these callbacks is available in ::emuExtension_t.
  *
  * \section emuExt_usage Usage
  *
- * An extension is created by defining an ::emuCallback_t struct. Aside from some restrictions
+ * An extension is created by defining an ::emuExtension_t struct. Aside from some restrictions
  * which may be described in each callback function's documentation, these functions are free
  * to make use of any exposed emulator state and functionality to enhance the swadge emulation.
- * These extension may even render to the screen using ::emuCallbackT::fnRenderCb and the drawing
+ * These extension may even render to the screen using ::emuExtension_t::fnRenderCb and the drawing
  * functionality in \c "rawdraw_sf.h". If \c paneLocation, \c minPaneW, and \c minPaneH are all
  * non-zero, the extension will be assigned a dedicated pane where it can draw anything.
  *
@@ -36,7 +36,7 @@
  * static void exampleExtRender(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t paneH, uint32_t paneX, uint32_t
  * paneY);
  *
- * const emuCallback_t exampleExt = {
+ * const emuExtension_t exampleExt = {
  *     .name            = "Example",
  *     .paneLocation    = PANE_BOTTOM,
  *     .minPaneW        = 50,
@@ -57,20 +57,11 @@
  * // ...
  * #include "example_ext.h"
  *
- * static const emuCallback_t registeredCallbacks[] = {
- *     ... / Existing extensions
+ * static const emuExtension_t registeredExtensions[] = {
+ *     ... // Existing extensions
  *     exampleExt,
  * };
  * \endcode
- *
- *
- *
- *
- *
- *
- *
- *
- *
  */
 
 #pragma once
@@ -109,12 +100,34 @@ typedef enum
  */
 typedef enum
 {
-    PANE_NONE   = 0,
-    PANE_LEFT   = 1,
-    PANE_RIGHT  = 2,
-    PANE_TOP    = 3,
-    PANE_BOTTOM = 4,
+    PANE_NONE   = 0, ///< No pane
+    PANE_LEFT   = 1, ///< Left side pane, extends the entire height of the window
+    PANE_RIGHT  = 2, ///< Right side pane, extends the entire height of the window
+    PANE_TOP    = 3, ///< Top pane, extends only above the screen and between the side panes
+    PANE_BOTTOM = 4, ///< Bottom pane, extends only below the screen and between the side panes
 } paneLocation_t;
+
+/**
+ * @brief Struct representing a sub-pane in the main emulator window
+ *
+ */
+typedef struct
+{
+    uint32_t paneW;     ///< Width of the pane
+    uint32_t paneH;     ///< Height of the pane
+    uint32_t paneX;     ///< X offset of the pane
+    uint32_t paneY;     ///< Y offset of the pane
+} emuPane_t;
+
+/**
+ * @brief Struct representing the minimum size and count of a set of panes
+ *
+ */
+typedef struct
+{
+    uint32_t min;   ///< The minimum width or height of this pane
+    uint32_t count; ///< The total number of sub-panes in this pane
+} emuPaneMinimum_t;
 
 /**
  * @brief Struct for holding various callbacks used to extend emulator functionality.
@@ -221,21 +234,28 @@ typedef struct
      *
      * @param winW The window width, in pixels
      * @param winH The window height, in pixels
-     * @param paneW The pane's width, or zero if the callback has no pane associated
-     * @param paneH The pane's height, or zero if the callback has no pane associated
-     * @param paneX The pane's X offset within the main window
-     * @param paneY The pane's Y offset within the main window
+     * @param panes A pointer to an array of panes, in the order they were requested
+     * @param numPanes The number of panes in the array
      */
-    void (*fnRenderCb)(uint32_t winW, uint32_t winH, uint32_t paneW, uint32_t paneH, uint32_t paneX, uint32_t paneY);
-} emuCallback_t;
+    void (*fnRenderCb)(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes);
+} emuExtension_t;
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
-/**
- * @brief Get the list of emulator callbacks and return the number via the \c count out-param
- * @param count A pointer to an int to be updated with the number of items in the returned emuCallback_t* list
- * @return emuCallback_t* A pointer to a list of emuCallback_t containing \c *count items
- */
-const emuCallback_t** getEmuCallbacks(int* count);
+void initExtensions(const emuArgs_t* args);
+void deinitExtensions(void);
+void enableExtension(const char* name);
+void disableExtension(const char* name);
+void calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
+void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
+                 uint8_t* screenMult);
+void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH);
+
+void doExtPreFrameCb(uint64_t frame);
+void doExtPostFrameCb(uint64_t frame);
+int32_t doExtKeyCb(uint32_t keycode, bool down);
+void doExtMouseMoveCb(int32_t x, int32_t y, mouseButton_t buttonMask);
+void doExtMouseButtonCb(int32_t x, int32_t y, mouseButton_t button, bool down);
+void doExtRenderCb(uint32_t winW, uint32_t winH);
