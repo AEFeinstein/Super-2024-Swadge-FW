@@ -95,16 +95,15 @@ typedef enum
 } mouseButton_t;
 
 /**
- * @brief The location of a pane within the window, or no pane.
+ * @brief The location of a pane within the window.
  *
  */
 typedef enum
 {
-    PANE_NONE   = 0, ///< No pane
-    PANE_LEFT   = 1, ///< Left side pane, extends the entire height of the window
-    PANE_RIGHT  = 2, ///< Right side pane, extends the entire height of the window
-    PANE_TOP    = 3, ///< Top pane, extends only above the screen and between the side panes
-    PANE_BOTTOM = 4, ///< Bottom pane, extends only below the screen and between the side panes
+    PANE_LEFT   = 0, ///< Left side pane, extends the entire height of the window
+    PANE_RIGHT  = 1, ///< Right side pane, extends the entire height of the window
+    PANE_TOP    = 2, ///< Top pane, extends only above the screen and between the side panes
+    PANE_BOTTOM = 3, ///< Bottom pane, extends only below the screen and between the side panes
 } paneLocation_t;
 
 /**

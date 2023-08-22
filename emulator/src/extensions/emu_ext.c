@@ -93,7 +93,7 @@ typedef struct
 typedef struct
 {
     list_t extensions;
-    emuPaneMinimum_t paneMinimums[5];
+    emuPaneMinimum_t paneMinimums[4];
     bool paneMinsCalculated;
 } emuExtManager_t;
 
@@ -290,10 +290,9 @@ void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, u
  * @brief Helper function to calculate the minimum size needed for the extension panes
  *
  * The results of the calculation will be written into \c paneInfos at the index
- * matching the value of ::emuCallback_t::paneLoc. \c paneInfos[0] will not be written
- * to since that corresponds to \c PANE_NONE.
+ * matching the value of ::emuCallback_t::paneLoc.
  *
- * @param[out] paneInfos A pointer to a 0-initialized array of at least 5 ::emuPaneInfo_t to be used as output.
+ * @param[out] paneInfos A pointer to a 0-initialized array of at least 4 ::emuPaneInfo_t to be used as output.
  */
 void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
 {
@@ -323,10 +322,6 @@ void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
                     // or the minimum height for top/bottom panes
                     switch (paneInfo->loc)
                     {
-                        case PANE_NONE:
-                            // Do nothing
-                            break;
-
                         case PANE_LEFT:
                         case PANE_RIGHT:
                         {
@@ -400,10 +395,10 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     screenPane->paneH = screenH * (*screenMult);
 
     // These will hold the overall pane dimensions for easier logic
-    emuPane_t winPanes[5] = {0};
+    emuPane_t winPanes[4] = {0};
 
     // The number of panes assigned in each area, for positioning subpanes
-    uint8_t assigned[5] = {0};
+    uint8_t assigned[4] = {0};
 
     // Width/height of the dividers between the screen and each pane, if there are any
     uint32_t leftDivW   = paneInfos[PANE_LEFT].count > 0;
@@ -504,10 +499,6 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                 // Now, we just override the variable settings
                 switch (paneInfo->loc)
                 {
-                    case PANE_NONE:
-                        // Do nothing, there's no pane, also this is "impossible"
-                        break;
-
                     case PANE_LEFT:
                     case PANE_RIGHT:
                     {
