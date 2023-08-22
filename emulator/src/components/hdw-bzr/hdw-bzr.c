@@ -74,7 +74,7 @@ uint16_t sfxVolume;
 // Function Prototypes
 //==============================================================================
 
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive, bool* looped);
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive);
 void buzzer_check_next_note(void* arg);
 void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
 
@@ -286,14 +286,12 @@ void bzrStopNote(buzzerPlayTrack_t track)
  */
 void buzzer_check_next_note(void* arg)
 {
-    bool sfxLooped[NUM_BUZZERS] = {false, false};
-    bool bgmLooped[NUM_BUZZERS] = {false, false};
     for (int16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
     {
         buzzer_t* buzzer = &buzzers[bIdx];
 
-        bool sfxIsActive = buzzer_track_check_next_note(&buzzer->sfx, bIdx, sfxVolume, true, &sfxLooped[bIdx]);
-        bool bgmIsActive = buzzer_track_check_next_note(&buzzer->bgm, bIdx, bgmVolume, !sfxIsActive, &bgmLooped[bIdx]);
+        bool sfxIsActive = buzzer_track_check_next_note(&buzzer->sfx, bIdx, sfxVolume, true);
+        bool bgmIsActive = buzzer_track_check_next_note(&buzzer->bgm, bIdx, bgmVolume, !sfxIsActive);
 
         // If nothing is playing, but there is BGM (i.e. SFX finished)
         if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != buzzer->bgm.sTrack))
@@ -301,28 +299,6 @@ void buzzer_check_next_note(void* arg)
             // Immediately start playing BGM to get back on track faster
             bzrPlayNote(buzzer->bgm.sTrack->notes[buzzer->bgm.note_index].note, bIdx, bgmVolume);
         }
-    }
-
-    if (sfxLooped[0])
-    {
-        buzzers[1].sfx.note_index = 0;
-        buzzers[1].sfx.start_time = buzzers[0].sfx.start_time;
-    }
-    else if (sfxLooped[1])
-    {
-        buzzers[0].sfx.note_index = 0;
-        buzzers[0].sfx.start_time = buzzers[1].sfx.start_time;
-    }
-
-    if (bgmLooped[0])
-    {
-        buzzers[1].bgm.note_index = 0;
-        buzzers[1].bgm.start_time = buzzers[0].bgm.start_time;
-    }
-    else if (bgmLooped[1])
-    {
-        buzzers[0].bgm.note_index = 0;
-        buzzers[0].bgm.start_time = buzzers[1].bgm.start_time;
     }
 }
 
@@ -334,11 +310,10 @@ void buzzer_check_next_note(void* arg)
  * @param volume The volume to play at
  * @param isActive true if this is active and should set a note to be played
  *                 false to just advance notes without playing
- * @param looped Output parameter, true if this looped and the other track should loop too
  * @return true  if this track is playing a note
  *         false if it is not
  */
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive, bool* looped)
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive)
 {
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
@@ -371,10 +346,6 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16
             // Loop if requested
             if (track->should_loop && (track->note_index == track->sTrack->numNotes))
             {
-                if (STEREO_LOOP == track->should_loop)
-                {
-                    *looped = true;
-                }
                 track->note_index = track->sTrack->loopStartNote;
             }
 
