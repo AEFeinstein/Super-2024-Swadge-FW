@@ -21,6 +21,11 @@ typedef struct
 {
     song_t hit1;
     song_t hit2;
+    song_t hit3;
+    song_t launch;
+    song_t die;
+    song_t tally;
+
 } soundManager_t;
 
 //==============================================================================

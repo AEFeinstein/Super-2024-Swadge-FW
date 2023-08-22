@@ -247,6 +247,7 @@ void updateBall(entity_t *self)
             //Launch ball
             setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
             self->attachedToEntity = NULL;
+            bzrPlaySfx(&(self->soundManager->launch));
         }
     } else {
         //Ball is in play
@@ -257,6 +258,7 @@ void updateBall(entity_t *self)
     if((self->y >> 4) > 240){
         self->gameData->changeState = ST_DEAD;
         destroyEntity(self, true);
+        bzrPlaySfx(&(self->soundManager->die));
         //self->y = 236 << 4;
         //self->yspeed = -24;
     }
@@ -828,7 +830,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
         case ENTITY_PLAYER_PADDLE_BOTTOM:
             if(self->yspeed > 0){
                 setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, 63);
-                bzrPlaySfx(&(self->soundManager->hit1));
+                bzrPlaySfx(&(self->soundManager->hit2));
                 scorePoints(self->gameData, 0, 2);
             }
             break;
@@ -1078,10 +1080,15 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
      switch(tileId){
         case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
-            bzrPlaySfx(&(self->soundManager->hit2));
+            bzrPlaySfx(&(self->soundManager->hit1));
             scorePoints(self->gameData, 10, -1);
+            break;
         }
-        default: {
+        case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
+            bzrPlaySfx(&(self->soundManager->hit3));
+            break;
+        }
+        default: {         
             break;
         }
     }
@@ -1116,8 +1123,13 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
     switch(tileId){
         case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
-            bzrPlaySfx(&(self->soundManager->hit2));
+            bzrPlaySfx(&(self->soundManager->hit1));
             scorePoints(self->gameData, 1, -1);
+            break;
+        }
+        case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
+            bzrPlaySfx(&(self->soundManager->hit3));
+            break;
         }
         default: {
             break;
