@@ -29,7 +29,7 @@ typedef struct
     const songTrack_t* sTrack; ///< The song currently being played on this track
     int32_t note_index;        ///< The note index into the song
     int64_t start_time;        ///< The time this track started playing notes
-    loopType_t should_loop;    ///< True if this track should loop, false if it plays once
+    bool should_loop;          ///< True if this track should loop, false if it plays once
 } bzrTrack_t;
 
 /**
