@@ -22,20 +22,6 @@
 //==============================================================================
 
 /**
- * @brief Types of loops for a track
- */
-typedef enum
-{
-    NO_LOOP,
-    MONO_LOOP,
-    STEREO_LOOP
-} loopType_t;
-
-//==============================================================================
-// Structs
-//==============================================================================
-
-/**
  * @brief A track for a song on the buzzer. This plays notes from a songTrack_t
  */
 typedef struct
@@ -43,7 +29,7 @@ typedef struct
     int64_t start_time;        ///< The time the current musicalNote_t started in the song
     int32_t note_index;        ///< The index of the current musicalNote_t in the song
     const songTrack_t* sTrack; ///< The song being played
-    loopType_t should_loop;    ///< Whether or not this track should loop when done
+    bool should_loop;          ///< Whether or not this track should loop when done
 } bzrTrack_t;
 
 /**
@@ -245,7 +231,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
             trackL->sTrack      = &song->tracks[0];
             trackL->note_index  = -1;
             trackL->start_time  = startTime;
-            trackL->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
+            trackL->should_loop = song->shouldLoop;
         }
 
         if (BZR_STEREO == track || BZR_RIGHT == track)
@@ -253,7 +239,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
             trackR->sTrack      = &song->tracks[0];
             trackR->note_index  = -1;
             trackR->start_time  = startTime;
-            trackR->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
+            trackR->should_loop = song->shouldLoop;
         }
     }
     else
@@ -262,12 +248,12 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
         trackL->sTrack      = &song->tracks[0];
         trackL->note_index  = -1;
         trackL->start_time  = startTime;
-        trackL->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
+        trackL->should_loop = song->shouldLoop;
 
         trackR->sTrack      = &song->tracks[1];
         trackR->note_index  = -1;
         trackR->start_time  = startTime;
-        trackR->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
+        trackR->should_loop = song->shouldLoop;
     }
 }
 

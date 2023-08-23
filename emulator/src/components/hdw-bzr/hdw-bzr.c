@@ -21,13 +21,6 @@
 // Structs
 //==============================================================================
 
-typedef enum
-{
-    NO_LOOP,
-    MONO_LOOP,
-    STEREO_LOOP
-} loopType_t;
-
 /**
  * @brief A buzzer track which a song is played on, either BGM or SFX
  */
@@ -175,7 +168,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
             trackL->sTrack      = &song->tracks[0];
             trackL->note_index  = -1;
             trackL->start_time  = startTime;
-            trackL->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
+            trackL->should_loop = song->shouldLoop;
         }
 
         if (BZR_STEREO == track || BZR_RIGHT == track)
@@ -183,7 +176,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
             trackR->sTrack      = &song->tracks[0];
             trackR->note_index  = -1;
             trackR->start_time  = startTime;
-            trackL->should_loop = song->shouldLoop ? ((BZR_STEREO == track) ? (STEREO_LOOP) : (MONO_LOOP)) : (NO_LOOP);
+            trackL->should_loop = song->shouldLoop;
         }
     }
     else
@@ -192,12 +185,12 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
         trackL->sTrack      = &song->tracks[0];
         trackL->note_index  = -1;
         trackL->start_time  = startTime;
-        trackL->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
+        trackL->should_loop = song->shouldLoop;
 
         trackR->sTrack      = &song->tracks[1];
         trackR->note_index  = -1;
         trackR->start_time  = startTime;
-        trackR->should_loop = song->shouldLoop ? STEREO_LOOP : NO_LOOP;
+        trackR->should_loop = song->shouldLoop;
     }
 }
 
