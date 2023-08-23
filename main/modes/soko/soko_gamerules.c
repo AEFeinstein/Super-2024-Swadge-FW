@@ -29,7 +29,7 @@ void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should
         gamestate->sokoTryPlayerMovementFunc = eulerSokoTryPlayerMovement;
         gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
         gamestate->drawTilesFunc = absSokoDrawTiles;
-        gamestate->isVictoryConditionFunc = absSokoAllCratesOnGoal;
+        gamestate->isVictoryConditionFunc = eulerNoUnwalkedFloors;
         gamestate->sokoGetTileFunc = absSokoGetTile;
     }
     //add conditional for alternative variants
