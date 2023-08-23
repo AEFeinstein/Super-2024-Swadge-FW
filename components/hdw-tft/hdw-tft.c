@@ -111,6 +111,7 @@ static esp_lcd_panel_handle_t panel_handle = NULL;
 static paletteColor_t* pixels              = NULL;
 static uint16_t* s_lines[NUM_S_LINES]      = {0};
 
+static ledc_timer_t tftLedcTimer;
 static ledc_channel_t tftLedcChannel;
 static gpio_num_t tftBacklightPin;
 static bool tftBacklightIsPwm;
@@ -159,14 +160,16 @@ esp_err_t setTFTBacklightBrightness(uint8_t intensity)
  * @param backlight The GPIO used to PWM control the backlight
  * @param isPwmBacklight true to set up the backlight as PWM, false to have it be on/off
  * @param ledcChannel The LEDC channel to use for the PWM backlight
+ * @param ledcTimer The LEDC timer to use for the PWM backlight
  */
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
-             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel)
+             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer)
 {
     tftSpiHost        = spiHost;
     tftBacklightPin   = backlight;
     tftBacklightIsPwm = isPwmBacklight;
     tftLedcChannel    = ledcChannel;
+    tftLedcTimer      = ledcTimer;
 
     spi_bus_config_t busCfg = {
         .sclk_io_num     = sclk,
@@ -339,7 +342,7 @@ void enableTFTBacklight(void)
             .speed_mode      = LEDC_LOW_SPEED_MODE,
             .duty_resolution = LEDC_TIMER_8_BIT,
             .freq_hz         = 50000,
-            .timer_num       = 0,
+            .timer_num       = tftLedcTimer,
             .clk_cfg         = LEDC_AUTO_CLK,
         };
         ESP_ERROR_CHECK(ledc_timer_config(&ledc_config_timer));
@@ -347,7 +350,7 @@ void enableTFTBacklight(void)
             .gpio_num   = tftBacklightPin,
             .speed_mode = LEDC_LOW_SPEED_MODE,
             .channel    = tftLedcChannel,
-            .timer_sel  = 0,
+            .timer_sel  = tftLedcTimer,
             .duty       = 255, // Disable to start.
         };
         ESP_ERROR_CHECK(ledc_channel_config(&ledc_config_backlight));
