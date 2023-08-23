@@ -245,8 +245,8 @@ typedef struct
 
 void initExtensions(const emuArgs_t* args);
 void deinitExtensions(void);
-void enableExtension(const char* name);
-void disableExtension(const char* name);
+bool enableExtension(const char* name);
+bool disableExtension(const char* name);
 void calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
 void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
                  uint8_t* screenMult);
