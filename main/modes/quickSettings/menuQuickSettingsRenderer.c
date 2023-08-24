@@ -171,13 +171,16 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
         // Draw selected icon
         uint16_t iconX = panelX + index * PANEL_W / (menu->items->length)
                          + ((PANEL_W - ICON_W * menu->items->length) / menu->items->length / 2);
-        uint16_t iconY = (PANEL_H - renderer->font->height - TEXT_MARGIN - 1 - wsgToDraw->h - ICON_BOX_PX * 2) / 2;
+        uint16_t iconY = (PANEL_H - renderer->font->height - TEXT_MARGIN - 1 - ICON_H - ICON_BOX_PX * 2) / 2;
         // Background behind icon
         // PANEL_ICON_BG_COLOR_[UN]SEL
         fillDisplayArea(iconX - 1, iconY - 1, iconX + ICON_W + 1, iconY + ICON_H + 1,
                         selected ? PANEL_ICON_BG_COLOR_SEL
                                  : (off ? PANEL_ICON_BG_COLOR_OFF : PANEL_ICON_BG_COLOR_UNSEL));
-        drawWsgSimple(wsgToDraw, iconX, iconY);
+        if (wsgToDraw)
+        {
+            drawWsgSimple(wsgToDraw, iconX, iconY);
+        }
 
         drawRect(iconX - 2, iconY - 2, iconX + ICON_W + 2, iconY + ICON_H + 2,
                  selected ? PANEL_BOX_COLOR_SEL : PANEL_BOX_COLOR_UNSEL);
