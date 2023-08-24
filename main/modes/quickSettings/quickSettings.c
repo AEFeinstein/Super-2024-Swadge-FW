@@ -45,21 +45,33 @@ typedef struct
     wsg_t iconBgmOff;
     wsg_t iconLedsOn;
     wsg_t iconLedsOff;
+    wsg_t iconTftOn;
+    wsg_t iconTftOff;
 
-    int32_t sfxOptionsValues[2];
-    int32_t bgmOptionsValues[2];
-    int32_t ledsOptionsValues[2];
+    int32_t lastOnSfxValue;
+    int32_t minSfxValue;
+
+    int32_t lastOnBgmValue;
+    int32_t minBgmValue;
+
+    int32_t lastOnLedsValue;
+    int32_t minLedsValue;
+
+    int32_t lastOnTftValue;
+    int32_t minTftValue;
 } quickSettingsMenu_t;
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
-static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* optionValues);
+static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* onValue, int32_t* minValue);
 static void quickSettingsMainLoop(int64_t elapsedUs);
 static void quickSettingsEnterMode(void);
 static void quickSettingsExitMode(void);
 static void quickSettingsMenuCb(const char* label, bool selected, uint32_t settingVal);
+static int32_t quickSettingsFlipValue(const char* label, int32_t value);
+static void quickSettingsOnChange(const char* label, int32_t value);
 static int32_t quickSettingsMenuFlipItem(const char* label);
 
 //==============================================================================
@@ -68,23 +80,19 @@ static int32_t quickSettingsMenuFlipItem(const char* label);
 
 static const char quickSettingsName[] = "Settings";
 
-static const char quickSettingsLeds[] = "LEDs ";
-static const char quickSettingsSfx[]  = "Sound Effects ";
-static const char quickSettingsBgm[]  = "Music ";
+static const char quickSettingsLeds[] = "LED Brightness";
+static const char quickSettingsSfx[]  = "SFX Volume";
+static const char quickSettingsBgm[]  = "Music Volume";
+static const char quickSettingsBacklight[] = "Screen Brightness: ";
 
-static const char quickSettingsOn[]    = "On";
-static const char quickSettingsOff[]   = "Off";
-static const char quickSettingsMuted[] = "Muted";
-
-static const char* const quickSettingsOptionsLeds[] = {
-    quickSettingsOff,
-    quickSettingsOn,
-};
-
-static const char* const quickSettingsOptionsAudio[] = {
-    quickSettingsMuted,
-    quickSettingsOn,
-};
+static const char quickSettingsLedsOff[] = "LEDs Off";
+static const char quickSettingsLedsMax[] = "LED Brightness: Max";
+static const char quickSettingsSfxMuted[] = "SFX Muted";
+static const char quickSettingsSfxMax[]= "SFX Volume: Max";
+static const char quickSettingsBgmMuted[] = "Music Muted";
+static const char quickSettingsBgmMax[]= "Music Volume: Max";
+static const char quickSettingsBacklightOff[] = "Screen Backlight Off";
+static const char quickSettingsBacklightMax[] = "Screen Brightness: Max";
 
 //==============================================================================
 // Variables
@@ -120,20 +128,22 @@ quickSettingsMenu_t* quickSettings = NULL;
  *
  * @param bounds The setting bounds to use, with min for the "off" value
  * @param currentValue The current setting value, to be used as the "on" value if larger than the min
- * @param optionValues Pointer to an array of 2 values where the values will be written
+ * @param[out] onValue Pointer to write the "on" value for this setting
+ * @param[out] minValue Pointer to write the minimum value for this setting
  * @return int32_t Returns the current setting value for convenience
  */
-static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* optionValues)
+static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* onValue, int32_t* minValue)
 {
-    // Use the minimum and the current value for the toggles
-    // This way, we get the current value back after toggling off.
-    optionValues[0] = bounds->min;
-    optionValues[1] = currentValue;
-
-    // However, if it was already off / at the minimum, we need it to be something, so just use the max
+    *minValue = bounds->min;
     if (currentValue <= bounds->min)
     {
-        optionValues[1] = bounds->max;
+        // If the setting is already off / at the minimum, we need it to be something, so use the max
+        *onValue = bounds->max;
+    }
+    else
+    {
+        // If the setting is any other value, use it for last "on" value
+        *onValue = currentValue;
     }
 
     return currentValue;
@@ -161,6 +171,8 @@ static void quickSettingsEnterMode(void)
     loadWsg("musicDisabled.wsg", &quickSettings->iconBgmOff, true);
     loadWsg("sfxEnabled.wsg", &quickSettings->iconSfxOn, true);
     loadWsg("sfxDisabled.wsg", &quickSettings->iconSfxOff, true);
+    loadWsg("backlightEnabled.wsg", &quickSettings->iconTftOn, true);
+    loadWsg("backlightDisabled.wsg", &quickSettings->iconTftOff, true);
 
     // Initialize the menu
     quickSettings->menu     = initMenu(quickSettingsName, quickSettingsMenuCb);
@@ -169,27 +181,29 @@ static void quickSettingsEnterMode(void)
     // Set up the values we'll use for the settings -- keep the current value if we toggle, or the max
     // If we get an independent mute setting we can just use that instead and not worry about it
     const settingParam_t* ledsBounds = getLedBrightnessSettingBounds();
+    const settingParam_t* tftBounds = getTftBrightnessSettingBounds();
     const settingParam_t* sfxBounds  = getSfxVolumeSettingBounds();
     const settingParam_t* bgmBounds  = getBgmVolumeSettingBounds();
 
     int32_t ledsValue
-        = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), quickSettings->ledsOptionsValues);
-    int32_t sfxValue = setupQuickSettingParams(sfxBounds, getSfxVolumeSetting(), quickSettings->sfxOptionsValues);
-    int32_t bgmValue = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), quickSettings->bgmOptionsValues);
+        = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), &quickSettings->lastOnLedsValue, &quickSettings->minLedsValue);
+    int32_t tftValue = setupQuickSettingParams(tftBounds, getTftBrightnessSetting(), &quickSettings->lastOnTftValue, &quickSettings->minTftValue);
+    int32_t sfxValue = setupQuickSettingParams(sfxBounds, getSfxVolumeSetting(), &quickSettings->lastOnSfxValue, &quickSettings->minSfxValue);
+    int32_t bgmValue = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue, &quickSettings->minBgmValue);
 
-    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsLeds, quickSettingsOptionsLeds,
-                                 quickSettings->ledsOptionsValues, 2, ledsBounds, ledsValue);
-    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsSfx, quickSettingsOptionsAudio,
-                                 quickSettings->sfxOptionsValues, 2, sfxBounds, sfxValue);
-    addSettingsOptionsItemToMenu(quickSettings->menu, quickSettingsBgm, quickSettingsOptionsAudio,
-                                 quickSettings->bgmOptionsValues, 2, bgmBounds, bgmValue);
+    addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
+    addSettingsItemToMenu(quickSettings->menu, quickSettingsBacklight, tftBounds, tftValue);
+    addSettingsItemToMenu(quickSettings->menu, quickSettingsSfx, sfxBounds, sfxValue);
+    addSettingsItemToMenu(quickSettings->menu, quickSettingsBgm, bgmBounds, bgmValue);
 
-    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsLeds, &quickSettings->iconLedsOn,
-                                 &quickSettings->iconLedsOff);
-    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsSfx, &quickSettings->iconSfxOn,
-                                 &quickSettings->iconSfxOff);
-    quickSettingsRendererAddIcon(quickSettings->renderer, quickSettingsBgm, &quickSettings->iconBgmOn,
-                                 &quickSettings->iconBgmOff);
+    quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsLeds, &quickSettings->iconLedsOn,
+                                         &quickSettings->iconLedsOff, quickSettingsLedsMax, quickSettingsLedsOff);
+    quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsBacklight, &quickSettings->iconTftOn,
+                                         &quickSettings->iconTftOff, quickSettingsBacklightMax, quickSettingsBacklightOff);
+    quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsSfx, &quickSettings->iconSfxOn,
+                                         &quickSettings->iconSfxOff, quickSettingsSfxMax, quickSettingsSfxMuted);
+    quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsBgm, &quickSettings->iconBgmOn,
+                                         &quickSettings->iconBgmOff, quickSettingsBgmMax, quickSettingsBgmMuted);
 }
 
 /**
@@ -231,19 +245,7 @@ static void quickSettingsMenuCb(const char* label, bool selected, uint32_t setti
         settingVal = quickSettingsMenuFlipItem(label);
     }
 
-    if (label == quickSettingsLeds)
-    {
-        // Set the leds to the setting value
-        setLedBrightnessSetting(settingVal);
-    }
-    else if (label == quickSettingsSfx)
-    {
-        setSfxVolumeSetting(settingVal);
-    }
-    else if (label == quickSettingsBgm)
-    {
-        setBgmVolumeSetting(settingVal);
-    }
+    quickSettingsOnChange(label, settingVal);
 }
 
 /**
@@ -297,6 +299,64 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
     drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
 }
 
+static int32_t quickSettingsFlipValue(const char* label, int32_t value)
+{
+    if (label == quickSettingsLeds)
+    {
+        return (value <= quickSettings->minLedsValue) ? quickSettings->lastOnLedsValue : quickSettings->minLedsValue;
+    }
+    else if (label == quickSettingsBacklight)
+    {
+        return (value <= quickSettings->minTftValue) ? quickSettings->lastOnTftValue : quickSettings->minTftValue;
+    }
+    else if (label == quickSettingsSfx)
+    {
+        return (value <= quickSettings->minSfxValue) ? quickSettings->lastOnSfxValue : quickSettings->minSfxValue;
+    }
+    else if (label == quickSettingsBgm)
+    {
+        return (value <= quickSettings->minBgmValue) ? quickSettings->lastOnBgmValue : quickSettings->minBgmValue;
+    }
+
+    return 0;
+}
+
+static void quickSettingsOnChange(const char* label, int32_t value)
+{
+    if (label == quickSettingsLeds)
+    {
+        setLedBrightnessSetting(value);
+        if (value > quickSettings->minLedsValue)
+        {
+            quickSettings->lastOnLedsValue = value;
+        }
+    }
+    else if (label == quickSettingsBacklight)
+    {
+        setTftBrightnessSetting(value);
+        if (value > quickSettings->minTftValue)
+        {
+            quickSettings->lastOnTftValue = value;
+        }
+    }
+    else if (label == quickSettingsSfx)
+    {
+        setSfxVolumeSetting(value);
+        if (value > quickSettings->minSfxValue)
+        {
+            quickSettings->lastOnSfxValue = value;
+        }
+    }
+    else if (label == quickSettingsBgm)
+    {
+        setBgmVolumeSetting(value);
+        if (value > quickSettings->minBgmValue)
+        {
+            quickSettings->lastOnBgmValue = value;
+        }
+    }
+}
+
 static int32_t quickSettingsMenuFlipItem(const char* label)
 {
     node_t* node     = quickSettings->menu->currentItem;
@@ -319,7 +379,7 @@ static int32_t quickSettingsMenuFlipItem(const char* label)
             node = node->next;
         }
 
-        if (item == NULL)
+        if (NULL == item)
         {
             // Not found, do nothing
             return 0;
@@ -328,10 +388,17 @@ static int32_t quickSettingsMenuFlipItem(const char* label)
 
     // Item must have been found here
     // Flip the seleted option
-    item->currentOpt = item->numOptions - 1 - item->currentOpt;
+    if (item->options)
+    {
+        item->currentOpt = item->numOptions - 1 - item->currentOpt;
 
-    // Update the setting
-    item->currentSetting = item->settingVals[item->currentOpt];
+        // Update the setting
+        item->currentSetting = item->settingVals[item->currentOpt];
+    }
+    else
+    {
+        item->currentSetting = quickSettingsFlipValue(label, item->currentSetting);
+    }
 
     return item->currentSetting;
 }
