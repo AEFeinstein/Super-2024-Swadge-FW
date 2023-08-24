@@ -165,9 +165,8 @@ static swadgeMode_t* cSwadgeMode = &mainMenuMode;
 /// @brief A pending Swadge mode to use after a deep sleep
 static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
-/// @brief A minimal Swadge mode to be displayed on top of others
-/// Note that it only gets init/exit and mainLoop callbacks.
-static swadgeMode_t* overlayMode = NULL;
+/// @brief Whether or not the quck settings overlay mode is shown
+static bool showQuickSettings = false;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = 40000;
@@ -354,7 +353,7 @@ void app_main(void)
             tAccumDraw -= frameRateUs;
 
             // Call the mode's main loop
-            if (NULL != cSwadgeMode->fnMainLoop || (NULL != overlayMode && NULL != overlayMode->fnMainLoop))
+            if (NULL != cSwadgeMode->fnMainLoop || showQuickSettings)
             {
                 // Keep track of the time between main loop calls
                 static uint64_t tLastMainLoopCall = 0;
@@ -363,10 +362,10 @@ void app_main(void)
                     tLastMainLoopCall = tNowUs;
                 }
 
-                if (NULL != overlayMode && NULL != overlayMode->fnMainLoop)
+                if (showQuickSettings)
                 {
                     // Call the overlay mode's main loop if there is one
-                    overlayMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+                    quickSettingsMode.fnMainLoop(tNowUs - tLastMainLoopCall);
                 }
                 else
                 {
@@ -377,7 +376,7 @@ void app_main(void)
             }
 
             // If the menu button is being held
-            if (0 != timeExitPressed && !overlayMode)
+            if (0 != timeExitPressed && !showQuickSettings)
             {
                 // Figure out for how long
                 int64_t tHeldUs = tNowUs - timeExitPressed;
@@ -402,26 +401,17 @@ void app_main(void)
 
                 if (tHeldUs > PAUSE_TIME_US)
                 {
-                    if (NULL != overlayMode)
+                    if (showQuickSettings)
                     {
                         // Quick settings is active, just quit that
-                        if (NULL != overlayMode->fnExitMode)
-                        {
-                            overlayMode->fnExitMode();
-                        }
-
-                        overlayMode = NULL;
+                        quickSettingsMode.fnExitMode();
+                        showQuickSettings = false;
                     }
                     else
                     {
                         // Quick settings not active, set it up
-                        overlayMode = &quickSettingsMode;
-
-                        // Init the quick settings mode
-                        if (overlayMode->fnEnterMode != NULL)
-                        {
-                            overlayMode->fnEnterMode();
-                        }
+                        quickSettingsMode.fnEnterMode();
+                        showQuickSettings = true;
                     }
 
                     // Reset the count
@@ -429,13 +419,13 @@ void app_main(void)
                 }
                 else
                 {
-                    int16_t numPx = (tHeldUs * TFT_WIDTH) / PAUSE_TIME_US;
-                    fillDisplayArea(0, 0, numPx, 10, c333);
+                    int16_t numPx = (tHeldUs * (TFT_WIDTH - 60)) / PAUSE_TIME_US;
+                    fillDisplayArea(30, 0, 30 + numPx, 10, c333);
                 }
             }
 
             // Draw to the TFT
-            drawDisplayTft(overlayMode ? NULL : cSwadgeMode->fnBackgroundDrawCallback);
+            drawDisplayTft(showQuickSettings ? NULL : cSwadgeMode->fnBackgroundDrawCallback);
         }
 
         // If the mode should be switched, do it now
@@ -622,7 +612,7 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
         // Don't intercept the button on the main menu
         if (cSwadgeMode != &mainMenuMode)
         {
-            if (evt->button == PB_SELECT && !overlayMode)
+            if (evt->button == PB_SELECT && !showQuickSettings)
             {
                 if (evt->down)
                 {
