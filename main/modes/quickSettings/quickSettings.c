@@ -179,6 +179,7 @@ static void quickSettingsEnterMode(void)
     // Initialize the menu
     quickSettings->menu     = initMenu(quickSettingsName, quickSettingsMenuCb);
     quickSettings->renderer = initMenuQuickSettingsRenderer(&quickSettings->font);
+    quickSettings->renderer->defaultIcon = &quickSettings->iconGeneric;
 
     // Set up the values we'll use for the settings -- keep the current value if we toggle, or the max
     // If we get an independent mute setting we can just use that instead and not worry about it
