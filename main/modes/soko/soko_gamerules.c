@@ -11,6 +11,8 @@ bool sokoEntityTileCollision[4][8] = {
     {true,    false,    true,    false,    false,    false,    false,      false},//LASER
 };
 
+uint64_t victoryDanceTimer;
+
 void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should be called when you reload a level to make sure game rules are correct
 {
     if(variant == SOKO_CLASSIC) //standard gamemode. Check 'variant' variable
@@ -32,7 +34,79 @@ void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should
         gamestate->isVictoryConditionFunc = eulerNoUnwalkedFloors;
         gamestate->sokoGetTileFunc = absSokoGetTile;
     }
+    else if(variant == SOKO_OVERWORLD)
+    {
+        printf("Config Soko to Overworld\n");
+        gamestate->gameLoopFunc = overworldSokoGameLoop;
+        gamestate->sokoTryPlayerMovementFunc = absSokoTryPlayerMovement;
+        gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
+        gamestate->drawTilesFunc = absSokoDrawTiles;
+        gamestate->isVictoryConditionFunc = overworldPortalEntered;
+        gamestate->sokoGetTileFunc = absSokoGetTile;
+    }
     //add conditional for alternative variants
+}
+
+void overworldSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
+{
+    if(self->state == SKS_GAMEPLAY)
+    {
+        //logic
+        self->sokoTryPlayerMovementFunc(self);
+
+        //victory status. stored separate from gamestate because of future gameplay ideas/remixes.
+        //todo: rename to isVictory or such.
+        self->allCratesOnGoal = self->isVictoryConditionFunc(self);
+        if(self->allCratesOnGoal){
+            self->state = SKS_VICTORY;
+            printf("Player at %d,%d\n",self->soko_player->x,self->soko_player->y);
+            victoryDanceTimer = 0;
+        }
+        //draw level
+        self->drawTilesFunc(self, &self->currentLevel);
+
+    }else if(self->state == SKS_VICTORY)
+    {
+        
+        self->drawTilesFunc(self, &self->currentLevel);
+        
+        //check for input for exit/next level.
+        uint8_t targetWorldIndex = 0;
+        for(int i = 0; i < self->portalCount; i++)
+        {
+            if(self->soko_player->x == self->portals[i].x && self->soko_player->y == self->portals[i].y)
+            {
+                targetWorldIndex = i+1;
+                break;
+            }
+        }
+        printf("Player at %d,%d\n",self->soko_player->x,self->soko_player->y);
+        self->loadNewLevelIndex = targetWorldIndex;
+        self->loadNewLevelFlag = true;
+        self->screen = SOKO_LOADNEWLEVEL;
+        
+    }
+
+
+    //DEBUG PLACEHOLDER:
+            // Render the time to a string
+            char str[16] = {0};
+            int16_t tWidth;
+            if(!self->allCratesOnGoal)
+            {
+                snprintf(str, sizeof(str) - 1, "sokoban");
+                // Measure the width of the time string
+                tWidth = textWidth(&self->ibm, str);
+                // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+                drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+            }else
+            {
+                snprintf(str, sizeof(str) - 1, "sokasuccess");
+                // Measure the width of the time string
+                tWidth = textWidth(&self->ibm, str);
+                // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+                drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+            }
 }
 
 void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
@@ -47,6 +121,7 @@ void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
         self->allCratesOnGoal = self->isVictoryConditionFunc(self);
         if(self->allCratesOnGoal){
             self->state = SKS_VICTORY;
+            victoryDanceTimer = 0;
         }
         //draw level
         self->drawTilesFunc(self, &self->currentLevel);
@@ -55,6 +130,13 @@ void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
     {
         //check for input for exit/next level.
         self->drawTilesFunc(self, &self->currentLevel);
+        victoryDanceTimer += elapsedUs;
+        if(victoryDanceTimer > SOKO_VICTORY_TIMER_US)
+        {
+            self->loadNewLevelIndex = 0;
+            self->loadNewLevelFlag = true;
+            self->screen = SOKO_LOADNEWLEVEL;
+        }
     }
 
 
@@ -231,6 +313,10 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     break;
                 case SKT_EMPTY:
                     color = cTransparent;
+                    break;
+                case SKT_PORTAL:
+                    color = c440;
+                    break;
                 default:
                     break;
             }
@@ -538,4 +624,16 @@ bool eulerNoUnwalkedFloors(soko_abs_t *self)
     }
 
     return true;
+}
+
+bool overworldPortalEntered(soko_abs_t *self)
+{
+    for(uint8_t i = 0; i < self->portalCount; i++)
+    {
+        if(self->soko_player->x == self->portals[i].x && self->soko_player->y == self->portals[i].y)
+        {
+            return true;
+        }
+    }
+    return false;
 }

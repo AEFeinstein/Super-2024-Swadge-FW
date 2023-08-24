@@ -1,5 +1,6 @@
 #include "soko.h"
 #include "soko_game.h"
+#include "soko_gamerules.h"
 
 static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
@@ -35,6 +36,26 @@ swadgeMode_t sokoMode = {
 
 //soko_t* soko=NULL;
 soko_abs_t* soko=NULL;
+
+extern const char* sokoLevelNames[] = 
+{
+    "sk_overworld1.wsg",
+    "sk_testpuzzle.wsg",
+    "sk_test1.wsg",
+    "sk_test2.wsg",
+    "sk_test3.wsg"
+};
+
+extern const soko_var_t sokoLevelVariants[] =
+{
+    SOKO_OVERWORLD,
+    SOKO_EULER,
+    SOKO_CLASSIC,
+    SOKO_CLASSIC,
+    SOKO_CLASSIC
+};
+
+
 static void sokoEnterMode(void)
 {
     soko = calloc(1, sizeof(soko_abs_t));
@@ -148,16 +169,24 @@ static void sokoMainLoop(int64_t elapsedUs)
             //background had been drawn, input has been processed and functions called. Now do followup logic and draw level.
             //gameplay loop
             soko->gameLoopFunc(soko, elapsedUs);
+            break;
+        }
+        case SOKO_LOADNEWLEVEL:
+        {
+            sokoLoadLevel(soko->loadNewLevelIndex);
+            sokoInitNewLevel(soko,sokoLevelVariants[soko->loadNewLevelIndex]);
+            
+            soko->screen = SOKO_LEVELPLAY;
         }
     }
 }
 
 static void sokoLoadLevel(uint16_t levelIndex)
 {
-    printf("load level\n");
+    printf("load level %d\n",levelIndex);
     soko->state = SKS_INIT;
     //get image file from selected index
-    loadWsg(soko->levels[levelIndex],&soko->levelWSG,false);
+    loadWsg(sokoLevelNames[levelIndex],&soko->levelWSG,false);
 
     //populate background array
     //populate entities array
@@ -173,6 +202,7 @@ static void sokoLoadLevel(uint16_t levelIndex)
 
     soko->currentLevel.entityCount = 0;
     paletteColor_t sampleColor;
+    soko->portalCount = 0;
 
     for (size_t x = 0; x < soko->currentLevel.width; x++)
     {
@@ -180,6 +210,15 @@ static void sokoLoadLevel(uint16_t levelIndex)
         {
             sampleColor = soko->levelWSG.px[y * soko->levelWSG.w + x];
             soko->currentLevel.tiles[x][y] = sokoGetTileFromColor(sampleColor);
+            if(soko->currentLevel.tiles[x][y] == SKT_PORTAL)
+            {
+                soko->portals[soko->portalCount].index = soko->portalCount + 1; //For basic test, 1 indexed with levels, but multi-room overworld needs more sophistication to keep indeces correct.
+                soko->portals[soko->portalCount].x = x;
+                soko->portals[soko->portalCount].y = y;
+                printf("Portal %d at %d,%d\n",soko->portals[soko->portalCount].index, soko->portals[soko->portalCount].x, soko->portals[soko->portalCount].y);
+                soko->portalCount += 1;
+                
+            }
             sokoEntityType_t e = sokoGetEntityFromColor(sampleColor);
             if(e != SKE_NONE){
                 soko->currentLevel.entities[soko->currentLevel.entityCount].type = e;
@@ -198,13 +237,21 @@ static void sokoLoadLevel(uint16_t levelIndex)
 static sokoTile_t sokoGetTileFromColor(paletteColor_t col)
 {
     //even if player (c005) or crate (c500) is here, they stand on floor. 505 is player and crate, invalid.
-    if(col== c555 || col == c005 || col == c500){
+    if(col== c555 || col == c005 || col == c500)
+    {
         return SKT_FLOOR;
-    }else if(col == c000)
+    }
+    else if(col == c000)
     {
         return SKT_WALL;
-    }else if(col == c050 || col == c550 || col == c055){//goal is c050, crate and goal is c550, player and goal is c055
+    }
+    else if(col == c050 || col == c550 || col == c055)
+    {//goal is c050, crate and goal is c550, player and goal is c055
         return SKT_GOAL;
+    }
+    else if(col == c440) //remember, web safe colors are {0,1,2,3,4,5} cRGB or {0,51,102,153,204,255} decimal. Increments of 0x33 or 51. cABC = 0x(0x33*A)(0x33*B)(0x33*C)
+    {
+        return SKT_PORTAL;
     }
     //transparent or invalid is empty. Todo: can catch transparent and report error otherwise... once comitted to encoding scheme.
     return SKT_EMPTY;

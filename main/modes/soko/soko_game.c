@@ -32,8 +32,27 @@ void sokoInitGame(soko_abs_t* soko)
     soko_s->maxPush = 0;//set to 1 for "traditional" sokoban.
 
     soko->state = SKS_GAMEPLAY;
-    sokoConfigGamemode(soko,SOKO_EULER);
+    
+    sokoConfigGamemode(soko,SOKO_OVERWORLD);
+    
+    //sokoConfigGamemode(soko,SOKO_EULER);
 
+}
+
+void sokoInitNewLevel(soko_abs_t* soko, soko_var_t variant)
+{
+    printf("Init New Level.\n");
+
+    soko_s = soko;
+    soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
+    sokoInitInput(&soko_s->input);
+
+    //set gameplay settings from default settings, if we want powerups or whatever that adjusts them, or have a state machine.
+    soko_s->maxPush = 0;//set to 1 for "traditional" sokoban.
+
+    soko->state = SKS_GAMEPLAY;
+    
+    sokoConfigGamemode(soko,variant);
 }
 
 /*

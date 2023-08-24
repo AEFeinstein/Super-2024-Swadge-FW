@@ -7,11 +7,31 @@
 
 extern swadgeMode_t sokoMode;
 
+
+
+
+typedef enum
+{
+    SOKO_OVERWORLD = 0,
+    SOKO_CLASSIC = 1,
+    SOKO_EULER = 2
+} soko_var_t;
+
+
 typedef enum
 {
     SOKO_MENU,
     SOKO_LEVELPLAY,
+    SOKO_LOADNEWLEVEL
 } sokoScreen_t;
+
+typedef struct soko_portal_s
+{
+    uint8_t x;
+    uint8_t y;
+    uint8_t index;
+    bool levelCompleted; //use this to show completed levels later
+} soko_portal_t;
 
 typedef enum
 {
@@ -20,11 +40,14 @@ typedef enum
     SKS_VICTORY,
 } sokoGameState_t;
 
+/*
 typedef enum
 {
+    SOKO_OVERWORLD = 0,
     SOKO_CLASSIC = 1,
     SOKO_EULER = 2
 } soko_var_t;
+*/
 
 typedef enum
 {
@@ -133,6 +156,9 @@ typedef struct soko_abs_s
     char* levels[SOKO_LEVEL_COUNT];///< List of wsg filenames. not comitted to storing level data like this, but idk if I need level names like picross.
     wsg_t levelWSG;                            ///< Current level
 
+    soko_portal_t portals[SOKO_MAX_PORTALS];
+    uint8_t portalCount;
+
     //input
     sokoGameplayInput_t input;
 
@@ -151,6 +177,9 @@ typedef struct soko_abs_s
     //Player Convenience Pointer
     sokoEntity_t* soko_player;
 
+    bool loadNewLevelFlag;
+    uint8_t loadNewLevelIndex;
+    soko_var_t loadNewLevelVariant;
 
 } soko_abs_t;
 

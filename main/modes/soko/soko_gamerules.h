@@ -28,4 +28,8 @@ sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2);
 void eulerSokoTryPlayerMovement(soko_abs_t *self);
 bool eulerNoUnwalkedFloors(soko_abs_t *self);
 
+//overworld
+void overworldSokoGameLoop(soko_abs_t *self, int64_t elapsedUs);
+bool overworldPortalEntered(soko_abs_t *self);
+
 #endif //SOKO_GAMERULES_H
