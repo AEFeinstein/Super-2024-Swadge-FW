@@ -29,14 +29,14 @@
 
 #define TEXT_MARGIN 10
 
-#define PANEL_BG_COLOR        c200
-#define PANEL_BORDER_COLOR    c532
+#define PANEL_BG_COLOR            c200
+#define PANEL_BORDER_COLOR        c532
 #define PANEL_ICON_BG_COLOR_SEL   c411
-#define PANEL_ICON_BG_COLOR_UNSEL   c311
-#define PANEL_ICON_BG_COLOR_OFF c222
-#define PANEL_BOX_COLOR_SEL   c532
-#define PANEL_BOX_COLOR_UNSEL c200
-#define PANEL_TEXT_COLOR      c542
+#define PANEL_ICON_BG_COLOR_UNSEL c311
+#define PANEL_ICON_BG_COLOR_OFF   c222
+#define PANEL_BOX_COLOR_SEL       c532
+#define PANEL_BOX_COLOR_UNSEL     c200
+#define PANEL_TEXT_COLOR          c542
 
 #define ICON_W      16
 #define ICON_H      16
@@ -129,8 +129,10 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
     drawLineFast(panelX - 1, 0, panelX - 1, PANEL_H - PANEL_R, PANEL_BORDER_COLOR);
     drawLineFast(panelX + PANEL_W, 0, panelX + PANEL_W, PANEL_H - PANEL_R, PANEL_BORDER_COLOR);
     drawLineFast(panelX + PANEL_R, PANEL_H, panelX + PANEL_W - PANEL_R, PANEL_H, PANEL_BORDER_COLOR);
-    drawCircleQuadrants(panelX + PANEL_R - 1, PANEL_H - PANEL_R, PANEL_R, false, true, false, false, PANEL_BORDER_COLOR);
-    drawCircleQuadrants(panelX + PANEL_W - PANEL_R, PANEL_H - PANEL_R, PANEL_R, true, false, false, false, PANEL_BORDER_COLOR);
+    drawCircleQuadrants(panelX + PANEL_R - 1, PANEL_H - PANEL_R, PANEL_R, false, true, false, false,
+                        PANEL_BORDER_COLOR);
+    drawCircleQuadrants(panelX + PANEL_W - PANEL_R, PANEL_H - PANEL_R, PANEL_R, true, false, false, false,
+                        PANEL_BORDER_COLOR);
 
     while (node != NULL)
     {
@@ -138,8 +140,8 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
         const quickSettingsItemInfo_t* info
             = getInfoForLabel(renderer, item->label ? item->label : item->options[item->currentOpt]);
         const wsg_t* wsgToDraw = renderer->defaultIcon;
-        const char* label = NULL;
-        bool off = false;
+        const char* label      = NULL;
+        bool off               = false;
 
         if (info != NULL)
         {
@@ -147,7 +149,7 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
             {
                 // Setting is at the minimum, use the "off" icon
                 wsgToDraw = info->offWsg;
-                off = true;
+                off       = true;
             }
             else
             {
@@ -172,8 +174,9 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
         uint16_t iconY = (PANEL_H - renderer->font->height - TEXT_MARGIN - 1 - wsgToDraw->h - ICON_BOX_PX * 2) / 2;
         // Background behind icon
         // PANEL_ICON_BG_COLOR_[UN]SEL
-        fillDisplayArea(iconX - 1, iconY - 1, iconX + ICON_W + 1, iconY + ICON_H + 1, selected ? PANEL_ICON_BG_COLOR_SEL : (
-            off ? PANEL_ICON_BG_COLOR_OFF : PANEL_ICON_BG_COLOR_UNSEL));
+        fillDisplayArea(iconX - 1, iconY - 1, iconX + ICON_W + 1, iconY + ICON_H + 1,
+                        selected ? PANEL_ICON_BG_COLOR_SEL
+                                 : (off ? PANEL_ICON_BG_COLOR_OFF : PANEL_ICON_BG_COLOR_UNSEL));
         drawWsgSimple(wsgToDraw, iconX, iconY);
 
         drawRect(iconX - 2, iconY - 2, iconX + ICON_W + 2, iconY + ICON_H + 2,
@@ -181,7 +184,7 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
 
         if (selected)
         {
-            char buffer[64]   = {0};
+            char buffer[64] = {0};
             if (NULL == label)
             {
                 label = getMenuItemLabelText(buffer, sizeof(buffer), item);
@@ -197,13 +200,13 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
 }
 
 void quickSettingsRendererCustomizeOption(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg,
-                                  const wsg_t* offWsg, const char* maxLabel, const char* minLabel)
+                                          const wsg_t* offWsg, const char* maxLabel, const char* minLabel)
 {
     quickSettingsItemInfo_t* info = calloc(1, sizeof(quickSettingsItemInfo_t));
 
-    info->label  = label;
-    info->onWsg  = onWsg;
-    info->offWsg = offWsg;
+    info->label    = label;
+    info->onWsg    = onWsg;
+    info->offWsg   = offWsg;
     info->minLabel = minLabel;
     info->maxLabel = maxLabel;
 

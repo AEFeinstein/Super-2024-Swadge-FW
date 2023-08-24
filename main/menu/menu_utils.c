@@ -54,8 +54,8 @@ const char* getMenuItemLabelText(char* buffer, int buflen, const menuItem_t* ite
 /**
  * @brief Returns whether a menu item is a settings item
  *
- * This will return true for items that were added with either ::addSettingsItemToMenu()
- * or ::addSettingsOptionsItemToMenu()
+ * This will return true for items that were added with either addSettingsItemToMenu()
+ * or addSettingsOptionsItemToMenu()
  *
  * @param item A pointer to the menu item to check
  * @return true if the item is associated with a setting
@@ -69,8 +69,8 @@ bool menuItemIsSetting(const menuItem_t* item)
 /**
  * @brief Returns whether this menu item has options
  *
- * This will return true for items that were added with either ::addMultiItemToMenu()
- * or ::addSettingsOptionsItemToMenu()
+ * This will return true for items that were added with either addMultiItemToMenu()
+ * or addSettingsOptionsItemToMenu()
  *
  * @param item A pointer to the menu item to check
  * @return true if the item has multiple options

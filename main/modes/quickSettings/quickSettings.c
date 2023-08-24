@@ -65,7 +65,8 @@ typedef struct
 // Function Prototypes
 //==============================================================================
 
-static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* onValue, int32_t* minValue);
+static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* onValue,
+                                       int32_t* minValue);
 static void quickSettingsMainLoop(int64_t elapsedUs);
 static void quickSettingsEnterMode(void);
 static void quickSettingsExitMode(void);
@@ -80,17 +81,17 @@ static int32_t quickSettingsMenuFlipItem(const char* label);
 
 static const char quickSettingsName[] = "Settings";
 
-static const char quickSettingsLeds[] = "LED Brightness";
-static const char quickSettingsSfx[]  = "SFX Volume";
-static const char quickSettingsBgm[]  = "Music Volume";
+static const char quickSettingsLeds[]      = "LED Brightness";
+static const char quickSettingsSfx[]       = "SFX Volume";
+static const char quickSettingsBgm[]       = "Music Volume";
 static const char quickSettingsBacklight[] = "Screen Brightness: ";
 
-static const char quickSettingsLedsOff[] = "LEDs Off";
-static const char quickSettingsLedsMax[] = "LED Brightness: Max";
-static const char quickSettingsSfxMuted[] = "SFX Muted";
-static const char quickSettingsSfxMax[]= "SFX Volume: Max";
-static const char quickSettingsBgmMuted[] = "Music Muted";
-static const char quickSettingsBgmMax[]= "Music Volume: Max";
+static const char quickSettingsLedsOff[]      = "LEDs Off";
+static const char quickSettingsLedsMax[]      = "LED Brightness: Max";
+static const char quickSettingsSfxMuted[]     = "SFX Muted";
+static const char quickSettingsSfxMax[]       = "SFX Volume: Max";
+static const char quickSettingsBgmMuted[]     = "Music Muted";
+static const char quickSettingsBgmMax[]       = "Music Volume: Max";
 static const char quickSettingsBacklightOff[] = "Screen Backlight Off";
 static const char quickSettingsBacklightMax[] = "Screen Brightness: Max";
 
@@ -132,7 +133,8 @@ quickSettingsMenu_t* quickSettings = NULL;
  * @param[out] minValue Pointer to write the minimum value for this setting
  * @return int32_t Returns the current setting value for convenience
  */
-static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* onValue, int32_t* minValue)
+static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t currentValue, int32_t* onValue,
+                                       int32_t* minValue)
 {
     *minValue = bounds->min;
     if (currentValue <= bounds->min)
@@ -181,15 +183,18 @@ static void quickSettingsEnterMode(void)
     // Set up the values we'll use for the settings -- keep the current value if we toggle, or the max
     // If we get an independent mute setting we can just use that instead and not worry about it
     const settingParam_t* ledsBounds = getLedBrightnessSettingBounds();
-    const settingParam_t* tftBounds = getTftBrightnessSettingBounds();
+    const settingParam_t* tftBounds  = getTftBrightnessSettingBounds();
     const settingParam_t* sfxBounds  = getSfxVolumeSettingBounds();
     const settingParam_t* bgmBounds  = getBgmVolumeSettingBounds();
 
-    int32_t ledsValue
-        = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), &quickSettings->lastOnLedsValue, &quickSettings->minLedsValue);
-    int32_t tftValue = setupQuickSettingParams(tftBounds, getTftBrightnessSetting(), &quickSettings->lastOnTftValue, &quickSettings->minTftValue);
-    int32_t sfxValue = setupQuickSettingParams(sfxBounds, getSfxVolumeSetting(), &quickSettings->lastOnSfxValue, &quickSettings->minSfxValue);
-    int32_t bgmValue = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue, &quickSettings->minBgmValue);
+    int32_t ledsValue = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), &quickSettings->lastOnLedsValue,
+                                                &quickSettings->minLedsValue);
+    int32_t tftValue  = setupQuickSettingParams(tftBounds, getTftBrightnessSetting(), &quickSettings->lastOnTftValue,
+                                                &quickSettings->minTftValue);
+    int32_t sfxValue  = setupQuickSettingParams(sfxBounds, getSfxVolumeSetting(), &quickSettings->lastOnSfxValue,
+                                                &quickSettings->minSfxValue);
+    int32_t bgmValue  = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue,
+                                                &quickSettings->minBgmValue);
 
     addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsBacklight, tftBounds, tftValue);
@@ -199,7 +204,8 @@ static void quickSettingsEnterMode(void)
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsLeds, &quickSettings->iconLedsOn,
                                          &quickSettings->iconLedsOff, quickSettingsLedsMax, quickSettingsLedsOff);
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsBacklight, &quickSettings->iconTftOn,
-                                         &quickSettings->iconTftOff, quickSettingsBacklightMax, quickSettingsBacklightOff);
+                                         &quickSettings->iconTftOff, quickSettingsBacklightMax,
+                                         quickSettingsBacklightOff);
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsSfx, &quickSettings->iconSfxOn,
                                          &quickSettings->iconSfxOff, quickSettingsSfxMax, quickSettingsSfxMuted);
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsBgm, &quickSettings->iconBgmOn,
