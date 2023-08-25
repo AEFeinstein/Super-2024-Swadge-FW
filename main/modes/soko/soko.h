@@ -14,7 +14,8 @@ typedef enum
 {
     SOKO_OVERWORLD = 0,
     SOKO_CLASSIC = 1,
-    SOKO_EULER = 2
+    SOKO_EULER = 2,
+    SOKO_LASERBOUNCE = 3
 } soko_var_t;
 
 

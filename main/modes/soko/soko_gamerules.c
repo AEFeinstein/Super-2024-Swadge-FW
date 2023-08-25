@@ -2,6 +2,8 @@
 #include "soko.h"
 #include "soko_gamerules.h"
 
+#include "shapes.h"
+
 //True if the entity CANNOT go on the tile
 bool sokoEntityTileCollision[4][8] = {
     //Empty, //floor  //wall   //goal    //portal  //l-emit  //l-receive //walked
@@ -44,10 +46,23 @@ void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should
         gamestate->isVictoryConditionFunc = overworldPortalEntered;
         gamestate->sokoGetTileFunc = absSokoGetTile;
     }
+    else if (variant == SOKO_LASERBOUNCE)
+    {
+        printf("Config Soko to Laser Bounce\n");
+        gamestate->gameLoopFunc = laserBounceSokoGameLoop;
+        gamestate->sokoTryPlayerMovementFunc = absSokoTryPlayerMovement;
+        gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
+        gamestate->drawTilesFunc = absSokoDrawTiles;
+        gamestate->isVictoryConditionFunc = absSokoAllCratesOnGoal;
+        gamestate->sokoGetTileFunc = absSokoGetTile;
+    }
+    
     //add conditional for alternative variants
 }
 
-void overworldSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
+
+
+void laserBounceSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
 {
     if(self->state == SKS_GAMEPLAY)
     {
@@ -59,32 +74,22 @@ void overworldSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
         self->allCratesOnGoal = self->isVictoryConditionFunc(self);
         if(self->allCratesOnGoal){
             self->state = SKS_VICTORY;
-            printf("Player at %d,%d\n",self->soko_player->x,self->soko_player->y);
             victoryDanceTimer = 0;
         }
         //draw level
         self->drawTilesFunc(self, &self->currentLevel);
-
+        drawLaserFromEntity(self,self->soko_player);
     }else if(self->state == SKS_VICTORY)
     {
-        
-        self->drawTilesFunc(self, &self->currentLevel);
-        
         //check for input for exit/next level.
-        uint8_t targetWorldIndex = 0;
-        for(int i = 0; i < self->portalCount; i++)
+        self->drawTilesFunc(self, &self->currentLevel);
+        victoryDanceTimer += elapsedUs;
+        if(victoryDanceTimer > SOKO_VICTORY_TIMER_US)
         {
-            if(self->soko_player->x == self->portals[i].x && self->soko_player->y == self->portals[i].y)
-            {
-                targetWorldIndex = i+1;
-                break;
-            }
+            self->loadNewLevelIndex = 0;
+            self->loadNewLevelFlag = true;
+            self->screen = SOKO_LOADNEWLEVEL;
         }
-        printf("Player at %d,%d\n",self->soko_player->x,self->soko_player->y);
-        self->loadNewLevelIndex = targetWorldIndex;
-        self->loadNewLevelFlag = true;
-        self->screen = SOKO_LOADNEWLEVEL;
-        
     }
 
 
@@ -107,7 +112,9 @@ void overworldSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
                 // Draw the time string to the display, centered at (TFT_WIDTH / 2)
                 drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
             }
+        
 }
+
 
 void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
 {
@@ -484,6 +491,33 @@ sokoDirection_t sokoDirectionFromDelta(int dx,int dy)
     return SKD_NONE;
 }
 
+sokoVec_t sokoGridToPix(soko_abs_t* self,sokoVec_t grid) //Convert grid position to screen pixel position
+{
+    sokoVec_t retVec;
+    SETUP_FOR_TURBO();
+    uint16_t scale = self->currentLevel.levelScale; //@todo These should be in constants, but too lazy to change all references at the moment.
+    uint16_t ox = (TFT_WIDTH/2)-((self->currentLevel.width)*scale/2);
+    uint16_t oy = (TFT_HEIGHT/2)-((self->currentLevel.height)*scale/2); 
+    retVec.x = ox+scale*grid.x+scale/2;
+    retVec.y = oy+scale*grid.y+scale/2;
+    return retVec;
+}
+
+void drawLaserFromEntity(soko_abs_t* self, sokoEntity_t* emitter)
+{
+    sokoCollision_t impactSpot = sokoBeamImpact(self, self->soko_player);
+    //printf("Player Pos: x:%d,y:%d Facing:%d Impact Result: x:%d,y:%d, Flag:%d Index:%d\n",self->soko_player->x,self->soko_player->y,self->soko_player->facing,impactSpot.x,impactSpot.y,impactSpot.entityFlag,impactSpot.entityIndex);
+    sokoVec_t playerGrid,impactGrid;
+    playerGrid.x = emitter->x;
+    playerGrid.y = emitter->y;
+    impactGrid.x = impactSpot.x;
+    impactGrid.y = impactSpot.y;
+    sokoVec_t playerPix = sokoGridToPix(self,playerGrid);
+    sokoVec_t impactPix = sokoGridToPix(self,impactGrid);
+    drawLine(playerPix.x,playerPix.y,impactPix.x,impactPix.y,c500,0);
+
+}
+
 sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
 {
     sokoDirection_t dir = emitter->facing;
@@ -513,7 +547,7 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
     //todo: make first pass pack a statically allocated array with only the entities in the path of the laser.
     
     uint8_t tileCollision[] = {0,0,1,0,0,1,1}; //There should be a pointer internal to the game state so this can vary with game mode
-    uint8_t entityCollision[] = {0,0,0,1};
+    uint8_t entityCollision[] = {0,0,1,1};
 
     int16_t possibleSquares = 0;
     if(dir==SKD_RIGHT) //move these checks into the switch statement
@@ -537,10 +571,13 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
     tileCollFlag = entCollFlag = entCollInd = 0;
 
     sokoCollision_t retVal;
+    //printf("emitVec(%d,%d)",emitVec.x,emitVec.y);
+    //printf("projVec:(%d,%d) possibleSquares:%d ",projVec.x,projVec.y,possibleSquares);
 
     for (int n=0;n < possibleSquares; n++)
     {
         sokoTile_t posTile = absSokoGetTile(self,testPos.x,testPos.y);
+        //printf("|n:%d,posTile:(%d,%d):%d|",n,testPos.x,testPos.y,posTile);
         if(tileCollision[posTile])
         {
             tileCollFlag = 1;
@@ -549,16 +586,20 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
         for(int m = 0;m < entityCount;m++) //iterate over tiles/entities to check for laser collision. First pass finds everything in the path of the 
         {
             sokoEntity_t candidateEntity = self->currentLevel.entities[m];
+            //printf("|m:%d;CE:(%d,%d)%d",m,candidateEntity.x,candidateEntity.y,candidateEntity.type);
             if(candidateEntity.x == testPos.x && candidateEntity.y == testPos.y)
             {
+                //printf(";POSMATCH;Coll:%d",entityCollision[candidateEntity.type]);
                 if(entityCollision[candidateEntity.type])
                 {
                     entCollFlag = 1;
                     entCollInd = m;
+                    //printf("|");
                     break;
                 }
 
             }
+            //printf("|");
         }
         
         if(entCollFlag)
@@ -567,10 +608,12 @@ sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
         }
         testPos = sokoAddCoord(testPos,projVec);
     }
+    //printf("\n");
     retVal.x = testPos.x;
     retVal.y = testPos.y;
     retVal.entityIndex = entCollInd;
     retVal.entityFlag = entCollFlag;
+    //printf("impactPoint:(%d,%d)\n",testPos.x,testPos.y);
     return retVal;
 
 }
@@ -579,7 +622,7 @@ sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2)
 {
     sokoVec_t retVal;
     retVal.x = op1.x + op2.x;
-    retVal.y = op1.x + op2.x;
+    retVal.y = op1.y + op2.y;
     return retVal;
 }
 
@@ -624,6 +667,68 @@ bool eulerNoUnwalkedFloors(soko_abs_t *self)
     }
 
     return true;
+}
+
+void overworldSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
+{
+    if(self->state == SKS_GAMEPLAY)
+    {
+        //logic
+        self->sokoTryPlayerMovementFunc(self);
+
+        //victory status. stored separate from gamestate because of future gameplay ideas/remixes.
+        //todo: rename to isVictory or such.
+        self->allCratesOnGoal = self->isVictoryConditionFunc(self);
+        if(self->allCratesOnGoal){
+            self->state = SKS_VICTORY;
+            printf("Player at %d,%d\n",self->soko_player->x,self->soko_player->y);
+            victoryDanceTimer = 0;
+        }
+        //draw level
+        self->drawTilesFunc(self, &self->currentLevel);
+
+    }else if(self->state == SKS_VICTORY)
+    {
+        
+        self->drawTilesFunc(self, &self->currentLevel);
+        
+        //check for input for exit/next level.
+        uint8_t targetWorldIndex = 0;
+        for(int i = 0; i < self->portalCount; i++)
+        {
+            if(self->soko_player->x == self->portals[i].x && self->soko_player->y == self->portals[i].y)
+            {
+                targetWorldIndex = i+1;
+                break;
+            }
+        }
+        printf("Player at %d,%d\n",self->soko_player->x,self->soko_player->y);
+        self->loadNewLevelIndex = targetWorldIndex;
+        self->loadNewLevelFlag = true;
+        self->screen = SOKO_LOADNEWLEVEL;
+        
+    }
+
+
+    //DEBUG PLACEHOLDER:
+            // Render the time to a string
+            char str[16] = {0};
+            int16_t tWidth;
+            if(!self->allCratesOnGoal)
+            {
+                snprintf(str, sizeof(str) - 1, "sokoban");
+                // Measure the width of the time string
+                tWidth = textWidth(&self->ibm, str);
+                // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+                drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+            }else
+            {
+                snprintf(str, sizeof(str) - 1, "sokasuccess");
+                // Measure the width of the time string
+                tWidth = textWidth(&self->ibm, str);
+                // Draw the time string to the display, centered at (TFT_WIDTH / 2)
+                drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+            }
 }
 
 bool overworldPortalEntered(soko_abs_t *self)

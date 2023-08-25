@@ -52,7 +52,7 @@ extern const soko_var_t sokoLevelVariants[] =
     SOKO_EULER,
     SOKO_CLASSIC,
     SOKO_CLASSIC,
-    SOKO_CLASSIC
+    SOKO_LASERBOUNCE
 };
 
 
