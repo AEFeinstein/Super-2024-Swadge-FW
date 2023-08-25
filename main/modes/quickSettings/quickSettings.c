@@ -177,8 +177,8 @@ static void quickSettingsEnterMode(void)
     loadWsg("backlightDisabled.wsg", &quickSettings->iconTftOff, true);
 
     // Initialize the menu
-    quickSettings->menu     = initMenu(quickSettingsName, quickSettingsMenuCb);
-    quickSettings->renderer = initMenuQuickSettingsRenderer(&quickSettings->font);
+    quickSettings->menu                  = initMenu(quickSettingsName, quickSettingsMenuCb);
+    quickSettings->renderer              = initMenuQuickSettingsRenderer(&quickSettings->font);
     quickSettings->renderer->defaultIcon = &quickSettings->iconGeneric;
 
     // Set up the values we'll use for the settings -- keep the current value if we toggle, or the max
