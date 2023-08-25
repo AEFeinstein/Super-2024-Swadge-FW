@@ -17,7 +17,7 @@ void writeHeatshrinkFile(uint8_t* input, uint32_t len, const char* outFilePath)
     int32_t errLine = -1;
     /* Set up variables for compression */
     uint32_t outputSize = len;
-    uint8_t* output     = malloc(outputSize);
+    uint8_t* output     = calloc(1, outputSize);
     uint32_t outputIdx  = 0;
     uint32_t inputIdx   = 0;
     size_t copied       = 0;

@@ -23,7 +23,7 @@
  * @param name The filename of the WSG to load
  * @param wsg  A handle to load the WSG to
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
- * than nromal RAM
+ * than normal RAM
  * @return true if the WSG was loaded successfully,
  *         false if the WSG load failed and should not be used
  */

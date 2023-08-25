@@ -275,13 +275,29 @@ static int TUNER_FLAT_THRES_X;
 static int TUNER_SHARP_THRES_X;
 static int TUNER_THRES_Y;
 
-static musicalNote_t metronome_primary_notes[] = {{F_SHARP_5, METRONOME_CLICK_MS}};
+static musicalNote_t metronome_primary_notes[] = {{
+    .note   = F_SHARP_5,
+    .timeMs = METRONOME_CLICK_MS,
+}};
+static songTrack_t metronome_primary_tracks[]  = {{
+     .numNotes      = ARRAY_SIZE(metronome_primary_notes),
+     .loopStartNote = 0,
+     .notes         = metronome_primary_notes,
+}};
+const song_t metronome_primary
+    = {.numTracks = ARRAY_SIZE(metronome_primary_tracks), .shouldLoop = false, .tracks = metronome_primary_tracks};
 
-const song_t metronome_primary = {.notes = metronome_primary_notes, .numNotes = 1, .shouldLoop = false};
-
-static musicalNote_t metronome_secondary_notes[] = {{F_SHARP_4, METRONOME_CLICK_MS}};
-
-const song_t metronome_secondary = {.notes = metronome_secondary_notes, .numNotes = 1, .shouldLoop = false};
+static musicalNote_t metronome_secondary_notes[] = {{
+    .note   = F_SHARP_4,
+    .timeMs = METRONOME_CLICK_MS,
+}};
+static songTrack_t metronome_secondary_tracks[]  = {{
+     .numNotes      = ARRAY_SIZE(metronome_secondary_notes),
+     .loopStartNote = 0,
+     .notes         = metronome_secondary_notes,
+}};
+const song_t metronome_secondary
+    = {.numTracks = ARRAY_SIZE(metronome_secondary_tracks), .shouldLoop = false, .tracks = metronome_secondary_tracks};
 
 /*============================================================================
  * Functions
@@ -953,7 +969,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
 
                 if (!tunernome->isSilent)
                 {
-                    bzrPlaySfx(song);
+                    bzrPlaySfx(song, BZR_STEREO);
                 }
                 setLeds(leds, CONFIG_NUM_LEDS);
                 tunernome->isBlinking         = true;

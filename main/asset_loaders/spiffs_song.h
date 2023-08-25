@@ -20,12 +20,12 @@
  * \section spiffs_song_example Example
  *
  * \code{.c}
- * // Declare and load a song
+ * // Load a song
  * song_t ode_to_joy;
  * loadSong("ode.sng", &ode_to_joy, true);
- * // Play a song
- * bzrPlayBgm(&ode_to_joy);
- * // Stop and free the song
+ * // Play the song as background music
+ * bzrPlayBgm(&ode_to_joy, BZR_STEREO);
+ * // Free the song when done
  * bzrStop();
  * freeSong(&ode_to_joy);
  * \endcode

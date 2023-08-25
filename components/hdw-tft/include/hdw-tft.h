@@ -120,7 +120,7 @@
 typedef void (*fnBackgroundDrawCallback_t)(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
-             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel);
+             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer);
 void deinitTFT(void);
 esp_err_t setTFTBacklightBrightness(uint8_t intensity);
 void disableTFTBacklight(void);

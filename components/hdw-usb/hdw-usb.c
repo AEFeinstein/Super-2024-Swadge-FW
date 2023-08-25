@@ -15,12 +15,12 @@
 
 static const char* TAG = "USB";
 
+// clang-format off
 /**
- * @brief HID report descriptor, just a gamepad
+ * @brief HID Gamepad Report Descriptor Template
+ * with 32 buttons, 2 joysticks and 1 hat/dpad with following layout
+ * | X | Y | Z | Rz | Rx | Ry (1 byte each) | hat/DPAD (1 byte) | Button Map (4 bytes) |
  */
- // Gamepad Report Descriptor Template
-// with 32 buttons, 2 joysticks and 1 hat/dpad with following layout
-// | X | Y | Z | Rz | Rx | Ry (1 byte each) | hat/DPAD (1 byte) | Button Map (4 bytes) |
 #define TUD_HID_REPORT_DESC_GAMEPAD_SWADGE(...) \
   HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     )                 ,\
   HID_USAGE      ( HID_USAGE_DESKTOP_GAMEPAD  )                 ,\
@@ -77,6 +77,7 @@ static const char* TAG = "USB";
     HID_USAGE        ( HID_USAGE_DESKTOP_GAMEPAD              ) ,\
     HID_FEATURE      ( HID_DATA | HID_ARRAY | HID_ABSOLUTE    ) ,\
   HID_COLLECTION_END
+// clang-format on
 
 static const uint8_t hid_report_descriptor[] = {TUD_HID_REPORT_DESC_GAMEPAD_SWADGE()};
 
