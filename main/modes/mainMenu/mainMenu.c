@@ -8,6 +8,7 @@
 #include "demoMode.h"
 #include "jukebox.h"
 #include "pong.h"
+#include "marbles.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "tunernome.h"
@@ -108,6 +109,7 @@ static void mainMenuEnterMode(void)
     // Add single items
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, marblesMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
@@ -195,6 +197,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pongMode.modeName)
         {
             switchToSwadgeMode(&pongMode);
+        }
+        else if (label == marblesMode.modeName)
+        {
+            switchToSwadgeMode(&marblesMode);
         }
         else if (label == colorchordMode.modeName)
         {
