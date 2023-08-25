@@ -70,6 +70,13 @@ static const quickSettingsItemInfo_t* getInfoForLabel(menuQuickSettingsRenderer_
 // Static Functions
 //==============================================================================
 
+/**
+ * @brief Get the customization info, if any, for the menu item with the given label
+ *
+ * @param renderer The quick settings menu renderer
+ * @param label    The label of the menu item to find the info for
+ * @return A pointer to a ::quickSettingsItemInfo_t, or NULL if no info was found for the given label
+ */
 static const quickSettingsItemInfo_t* getInfoForLabel(menuQuickSettingsRenderer_t* renderer, const char* label)
 {
     node_t* node = renderer->iconMap.first;
@@ -94,6 +101,13 @@ static const quickSettingsItemInfo_t* getInfoForLabel(menuQuickSettingsRenderer_
 // Functions
 //==============================================================================
 
+/**
+ * @brief Initilaize the quick settings menu renderer
+ *
+ * @param font A pointer to the font to draw menu item labels
+ * @return A pointer to the new menu renderer. This must be deallocated with deinitMenuQuickSettingsRenderer()
+ * when done
+ */
 menuQuickSettingsRenderer_t* initMenuQuickSettingsRenderer(font_t* font)
 {
     menuQuickSettingsRenderer_t* renderer = calloc(1, sizeof(menuQuickSettingsRenderer_t));
@@ -102,6 +116,11 @@ menuQuickSettingsRenderer_t* initMenuQuickSettingsRenderer(font_t* font)
     return renderer;
 }
 
+/**
+ * @brief Deinitializes the quick settings menu renderer and frees any associated memory
+ *
+ * @param renderer The renderer to deinitialize.
+ */
 void deinitMenuQuickSettingsRenderer(menuQuickSettingsRenderer_t* renderer)
 {
     node_t* info = NULL;
@@ -113,6 +132,13 @@ void deinitMenuQuickSettingsRenderer(menuQuickSettingsRenderer_t* renderer)
     free(renderer);
 }
 
+/**
+ * @brief Draws the quick settings menu to the display
+ *
+ * @param menu The menu to draw
+ * @param renderer The renderer to draw with
+ * @param elapsedUs The time elapsed since this function was last called
+ */
 void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, int64_t elapsedUs)
 {
     node_t* node  = menu->items->first;
@@ -202,6 +228,19 @@ void drawMenuQuickSettings(menu_t* menu, menuQuickSettingsRenderer_t* renderer, 
     }
 }
 
+/**
+ * @brief Adds customization options to a menu item so that its icon and/or label change with its setting value
+ *
+ * \c onWsg, \c offWsg, \c maxLabel, and \c minLabel may all be left NULL to use the default icon
+ * or label respectively.
+ *
+ * @param renderer The quick settings menu renderer to add the customization option to
+ * @param label The label of the menu item to be customized
+ * @param onWsg The icon to be used when the item is set to any value other than the minimum setting
+ * @param offWsg The icon to be used when the item is set to the minimum setting value
+ * @param maxLabel The text label to show when the item is set to the max setting value
+ * @param minLabel The text label to show when the item is set to the min setting value
+ */
 void quickSettingsRendererCustomizeOption(menuQuickSettingsRenderer_t* renderer, const char* label, const wsg_t* onWsg,
                                           const wsg_t* offWsg, const char* maxLabel, const char* minLabel)
 {

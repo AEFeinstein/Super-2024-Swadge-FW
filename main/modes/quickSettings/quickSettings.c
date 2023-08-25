@@ -152,7 +152,7 @@ static int32_t setupQuickSettingParams(const settingParam_t* bounds, int32_t cur
 }
 
 /**
- * @brief Enter Pong mode, allocate required memory, and initialize required variables
+ * @brief Enter Quick Settings mode, allocate required memory, and initialize required variables
  *
  */
 static void quickSettingsEnterMode(void)
@@ -188,6 +188,7 @@ static void quickSettingsEnterMode(void)
     const settingParam_t* sfxBounds  = getSfxVolumeSettingBounds();
     const settingParam_t* bgmBounds  = getBgmVolumeSettingBounds();
 
+    // Calculate the settings' minimums and set up their "on" values for toggling
     int32_t ledsValue = setupQuickSettingParams(ledsBounds, getLedBrightnessSetting(), &quickSettings->lastOnLedsValue,
                                                 &quickSettings->minLedsValue);
     int32_t tftValue  = setupQuickSettingParams(tftBounds, getTftBrightnessSetting(), &quickSettings->lastOnTftValue,
@@ -197,11 +198,13 @@ static void quickSettingsEnterMode(void)
     int32_t bgmValue  = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue,
                                                 &quickSettings->minBgmValue);
 
+    // Add the actual items to the menu
     addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsBacklight, tftBounds, tftValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsSfx, sfxBounds, sfxValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsBgm, bgmBounds, bgmValue);
 
+    // Customize the icons and labels for all the quick settings items
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsLeds, &quickSettings->iconLedsOn,
                                          &quickSettings->iconLedsOff, quickSettingsLedsMax, quickSettingsLedsOff);
     quickSettingsRendererCustomizeOption(quickSettings->renderer, quickSettingsBacklight, &quickSettings->iconTftOn,
@@ -252,6 +255,7 @@ static void quickSettingsMenuCb(const char* label, bool selected, uint32_t setti
         settingVal = quickSettingsMenuFlipItem(label);
     }
 
+    // Now handle the changed setting value
     quickSettingsOnChange(label, settingVal);
 }
 
@@ -306,6 +310,16 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
     drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
 }
 
+/**
+ * @brief Returns the value that the setting should be set to if toggled from the given value
+ *
+ * If \c value is equal to the setting's minimum value, the most-recent non-minimum value for that
+ * setting is returned. Otherwise, the minimum value is returned.
+ *
+ * @param label The menu item to get the flipped setting value of
+ * @param value The current value of the setting to be flipped
+ * @return int32_t The flipped setting value
+ */
 static int32_t quickSettingsFlipValue(const char* label, int32_t value)
 {
     if (label == quickSettingsLeds)
@@ -328,6 +342,12 @@ static int32_t quickSettingsFlipValue(const char* label, int32_t value)
     return 0;
 }
 
+/**
+ * @brief Handles the updating and tracking of the last "on" value for the given menu item
+ *
+ * @param label The label of the menu item to update
+ * @param value The new setting value to be updated to
+ */
 static void quickSettingsOnChange(const char* label, int32_t value)
 {
     if (label == quickSettingsLeds)
@@ -364,6 +384,12 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
 }
 
+/**
+ * @brief Toggles the given menu item between its last "on" value and the setting minimum value
+ *
+ * @param label The label of the menu item to flip
+ * @return int32_t The item's new setting value after flipping
+ */
 static int32_t quickSettingsMenuFlipItem(const char* label)
 {
     node_t* node     = quickSettings->menu->currentItem;
