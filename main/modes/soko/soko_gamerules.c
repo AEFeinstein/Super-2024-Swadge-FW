@@ -5,12 +5,13 @@
 #include "shapes.h"
 
 //True if the entity CANNOT go on the tile
-bool sokoEntityTileCollision[4][8] = {
+bool sokoEntityTileCollision[5][8] = {
     //Empty, //floor  //wall   //goal    //portal  //l-emit  //l-receive //walked
     {true,    false,    true,    false,    false,    false,    false,      false},//SKE_NONE
     {true,    false,    true,    false,    false,    false,    false,      true},//PLAYER
     {true,    false,    true,    false,    false,    false,    false,      false},//CRATE
     {true,    false,    true,    false,    false,    false,    false,      false},//LASER
+    {true,    false,    true,    false,    false,    false,    false,      false},//STICKY CRATE
 };
 
 uint64_t victoryDanceTimer;
@@ -217,12 +218,13 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int
         for (size_t i = 0; i < self->currentLevel.entityCount; i++)
         {
             //is pushable.
-            if(self->currentLevel.entities[i].type == SKE_CRATE)
+            if(self->currentLevel.entities[i].type == SKE_CRATE || self->currentLevel.entities[i].type == SKE_STICKY_CRATE)
             {
                 if(self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py)
                 {
                     if(self->sokoTryMoveEntityInDirectionFunc(self,&self->currentLevel.entities[i],dx,dy,push+1))
                     {
+                        printf("pushing entity");
                         entity->x += dx;
                         entity->y += dy;
                         entity->facing = sokoDirectionFromDelta(dx,dy);
@@ -246,59 +248,6 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int
     
     return false;
 }
-/*
-bool absSokoTryMoveEntityInDirection(soko_abs_t *self, sokoEntity_t* entity, int dx, int dy, uint16_t push)
-{
-    //prevent infitnite loop where you push yourself nowhere.
-    if(dx == 0 && dy == 0 )
-    {
-        return false;
-    }
-
-    //maxiumum number of crates we can push. Traditional sokoban has a limit of one. I prefer infinite for challenges.
-    if(self->maxPush != 0 && push>self->maxPush)
-    {
-        return false;
-    }
-
-    int px = entity->x+dx;
-    int py = entity->y+dy;
-    sokoTile_t nextTile = self->sokoGetTileFunc(self,px,py);
-
-    if(nextTile == SKT_FLOOR || nextTile == SKT_GOAL || nextTile == SKT_EMPTY)
-    {
-        //Is there an entity at this position?
-        for (size_t i = 0; i < self->currentLevel.entityCount; i++)
-        {
-            //is pushable.
-            if(self->currentLevel.entities[i].type == SKE_CRATE)
-            {
-                if(self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py)
-                {
-                    if(self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i],dx,dy,push+1))
-                    {
-                        entity->x += dx;
-                        entity->y += dy;
-                        return true;
-                    }else{
-                        //can't push? can't move.
-                        return false;
-                    }
-                   
-                }
-            }
-            
-        }
-        
-        //No wall in front of us and nothing to push, we can move.
-        entity->x += dx;
-        entity->y += dy;
-        return true;
-    }
-    
-    return false;
-}
-*/
 
 //draw the tiles (and entities, for now) of the level.
 void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
@@ -377,6 +326,10 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                 break;
             case SKE_CRATE:
                  drawWsg(&self->crateWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                 break;
+            case SKE_STICKY_CRATE:
+                 drawWsg(&self->stickyCrateWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
+                break;
             case SKE_NONE:
             default:
                 break;
@@ -647,8 +600,11 @@ void eulerSokoTryPlayerMovement(soko_abs_t *self)
     uint16_t x = self->soko_player->x;
     uint16_t y = self->soko_player->y;
     bool moved = self->sokoTryMoveEntityInDirectionFunc(self, self->soko_player,self->input.playerInputDeltaX,self->input.playerInputDeltaY,0);
+    
     if(moved)
     {
+        //Paint Floor
+
         //previous
         if(self->currentLevel.tiles[x][y] == SKT_FLOOR)
         {
@@ -658,6 +614,25 @@ void eulerSokoTryPlayerMovement(soko_abs_t *self)
         if(self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] == SKT_FLOOR)
         {
             self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] = SKT_FLOOR_WALKED;
+        }
+
+        //Try Sticky Blocks
+        //Loop through all entities is probably not really slower than sampling? We usually have <5 entities.
+        for (size_t i = 0; i < self->currentLevel.entityCount; i++)
+        {
+            if(self->currentLevel.entities[i].type == SKE_STICKY_CRATE)
+            {
+                if(self->currentLevel.entities[i].x == x && self->currentLevel.entities[i].y == y+1)
+                {
+                    absSokoTryMoveEntityInDirection(self,&self->currentLevel.entities[i],self->input.playerInputDeltaX,self->input.playerInputDeltaY,0);
+                }else if(self->currentLevel.entities[i].x == x && self->currentLevel.entities[i].y == y-1){
+                    absSokoTryMoveEntityInDirection(self,&self->currentLevel.entities[i],self->input.playerInputDeltaX,self->input.playerInputDeltaY,0);
+                }else if(self->currentLevel.entities[i].y == y && self->currentLevel.entities[i].x == x+1){
+                    absSokoTryMoveEntityInDirection(self,&self->currentLevel.entities[i],self->input.playerInputDeltaX,self->input.playerInputDeltaY,0);
+                }else if(self->currentLevel.entities[i].y == y && self->currentLevel.entities[i].x == x-1){
+                    absSokoTryMoveEntityInDirection(self,&self->currentLevel.entities[i],self->input.playerInputDeltaX,self->input.playerInputDeltaY,0);
+                }
+            }
         }
     }
 }

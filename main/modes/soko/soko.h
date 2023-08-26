@@ -55,7 +55,8 @@ typedef enum
     SKE_NONE=0,
     SKE_PLAYER=1,
     SKE_CRATE=2,
-    SKE_LASER_90=3
+    SKE_LASER_90=3,
+    SKE_STICKY_CRATE=4 
 } sokoEntityType_t;
 
 typedef enum
@@ -152,6 +153,7 @@ typedef struct soko_abs_s
     wsg_t playerLeftWSG;
     wsg_t playerDownWSG;
     wsg_t crateWSG;
+    wsg_t stickyCrateWSG;
 
     //level
     char* levels[SOKO_LEVEL_COUNT];///< List of wsg filenames. not comitted to storing level data like this, but idk if I need level names like picross.

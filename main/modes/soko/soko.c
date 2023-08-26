@@ -40,7 +40,7 @@ soko_abs_t* soko=NULL;
 extern const char* sokoLevelNames[] = 
 {
     "sk_overworld1.wsg",
-    "sk_testpuzzle.wsg",
+    "sk_sticky_test.wsg",
     "sk_test1.wsg",
     "sk_test2.wsg",
     "sk_test3.wsg"
@@ -74,6 +74,7 @@ static void sokoEnterMode(void)
     loadWsg("sk_player_left.wsg",&soko->playerLeftWSG,false);
     loadWsg("sk_player_right.wsg",&soko->playerRightWSG,false);
     loadWsg("sk_crate.wsg",&soko->crateWSG,false);
+    loadWsg("sk_sticky_crate.wsg",&soko->stickyCrateWSG,false);
 
     // Initialize the menu
     soko->menu                = initMenu(sokoModeName, sokoMenuCb);
@@ -106,6 +107,7 @@ static void sokoExitMode(void)
     freeWsg(&soko->playerLeftWSG);
     freeWsg(&soko->playerRightWSG);
     freeWsg(&soko->crateWSG);
+    freeWsg(&soko->stickyCrateWSG);
 
     // Free everything else
     free(soko);
@@ -237,7 +239,7 @@ static void sokoLoadLevel(uint16_t levelIndex)
 static sokoTile_t sokoGetTileFromColor(paletteColor_t col)
 {
     //even if player (c005) or crate (c500) is here, they stand on floor. 505 is player and crate, invalid.
-    if(col== c555 || col == c005 || col == c500)
+    if(col== c555 || col == c005 || col == c500 || col == c101)
     {
         return SKT_FLOOR;
     }
@@ -265,6 +267,8 @@ static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t col)
         return SKE_CRATE;
     }else if(col == c005 || col == c055){//has green. r and b used for entity. g for tile.
         return SKE_PLAYER;
+    }else if(col == c101){
+        return SKE_STICKY_CRATE;
     }
 
     return SKE_NONE;
