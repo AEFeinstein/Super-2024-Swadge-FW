@@ -65,6 +65,5 @@ cppcheck_result.txt
 doxy_warnings.txt
 version.txt
 plantuml.jar
-spiffs_file_preprocessor
 swadge_emulator
 crash-*.txt

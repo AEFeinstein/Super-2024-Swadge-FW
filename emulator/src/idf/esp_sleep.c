@@ -1,5 +1,8 @@
+#include <unistd.h>
 #include "esp_sleep.h"
 #include "swadge2024.h"
+
+static uint64_t timeToLightSleep = 0;
 
 esp_sleep_wakeup_cause_t esp_sleep_get_wakeup_cause(void)
 {
@@ -8,6 +11,13 @@ esp_sleep_wakeup_cause_t esp_sleep_get_wakeup_cause(void)
 
 esp_err_t esp_sleep_enable_timer_wakeup(uint64_t time_in_us)
 {
+    timeToLightSleep = time_in_us;
+    return ESP_OK;
+}
+
+esp_err_t esp_light_sleep_start(void)
+{
+    usleep(timeToLightSleep);
     return ESP_OK;
 }
 

@@ -8,19 +8,19 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}\\spiffs_file_preprocessor.exe",
+            "program": "${workspaceFolder}/spiffs_file_preprocessor",
             "args": [
                 "-i",
-                "..\\assets",
+                "../../assets",
                 "-o",
-                "..\\spiffs_image"
+                "../../spiffs_image"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "D:/msys64/mingw64/bin/gdb.exe",
+            "miDebuggerPath": "C:/msys64/mingw64/bin/gdb.exe",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
