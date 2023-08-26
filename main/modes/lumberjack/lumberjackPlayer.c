@@ -29,7 +29,7 @@ void lumberjackSetupPlayer(lumberjackHero_t* hero, int character)
         loadWsg("lumbers_red_20.wsg", &hero->frames[19], true);
         loadWsg("lumbers_red_21.wsg", &hero->frames[20], true);
     }
-    else
+    else if (character == 1)
     {
         loadWsg("lumbers_green_1.wsg", &hero->frames[0], true);
         loadWsg("lumbers_green_2.wsg", &hero->frames[1], true);
@@ -53,6 +53,30 @@ void lumberjackSetupPlayer(lumberjackHero_t* hero, int character)
         loadWsg("lumbers_green_20.wsg", &hero->frames[19], true);
         loadWsg("lumbers_green_21.wsg", &hero->frames[20], true);
 
+    } else 
+    {
+
+        loadWsg("secret_swadgeland_1.wsg", &hero->frames[0], true);
+        loadWsg("secret_swadgeland_2.wsg", &hero->frames[1], true);
+        loadWsg("secret_swadgeland_3.wsg", &hero->frames[2], true);
+        loadWsg("secret_swadgeland_4.wsg", &hero->frames[3], true);
+        loadWsg("secret_swadgeland_5.wsg", &hero->frames[4], true);
+        loadWsg("secret_swadgeland_6.wsg", &hero->frames[5], true);
+        loadWsg("secret_swadgeland_7.wsg", &hero->frames[6], true);
+        loadWsg("secret_swadgeland_8.wsg", &hero->frames[7], true);
+        loadWsg("secret_swadgeland_9.wsg", &hero->frames[8], true);
+        loadWsg("secret_swadgeland_10.wsg", &hero->frames[9], true);
+        loadWsg("secret_swadgeland_11.wsg", &hero->frames[10], true);
+        loadWsg("secret_swadgeland_12.wsg", &hero->frames[11], true);
+        loadWsg("secret_swadgeland_13.wsg", &hero->frames[12], true);
+        loadWsg("secret_swadgeland_14.wsg", &hero->frames[13], true);
+        loadWsg("secret_swadgeland_15.wsg", &hero->frames[14], true);
+        loadWsg("secret_swadgeland_16.wsg", &hero->frames[15], true);
+        loadWsg("secret_swadgeland_17.wsg", &hero->frames[16], true);
+        loadWsg("secret_swadgeland_18.wsg", &hero->frames[17], true);
+        loadWsg("secret_swadgeland_19.wsg", &hero->frames[18], true);
+        loadWsg("secret_swadgeland_20.wsg", &hero->frames[19], true);
+        loadWsg("secret_swadgeland_21.wsg", &hero->frames[20], true);
     }
     
 }

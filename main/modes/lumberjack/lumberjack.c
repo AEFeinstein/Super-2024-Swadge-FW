@@ -104,7 +104,7 @@ void lumberjackSetupLevel(int index)
     lumv->currentMapHeight = 21;
 
     lumv->localPlayer = calloc (1, sizeof(lumberjackHero_t));
-    lumberjackSetupPlayer(lumv->localPlayer, 0);
+    lumberjackSetupPlayer(lumv->localPlayer, 3);
     lumberjackSpawnPlayer(lumv->localPlayer, 94, 0, 0);
 
     for (int i = 0; i < 400; i++)
@@ -121,7 +121,7 @@ void lumberjackSetupLevel(int index)
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 4, 4, 3, 3, 4, 4, 0, 0, 0, 0, 0, 0,
     4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -132,7 +132,7 @@ void lumberjackSetupLevel(int index)
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 0, 0, 0,
-    0, 0, 6, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 10, 0, 0, 0,
+    0, 0, 6, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 10, 0, 0, 0,
     };
     
     uint8_t ani[] = {
@@ -221,11 +221,7 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     }
 
     //Check physics
-   //push down on player
     bool playerOnGround = false;
-    
-    //Take player's current y and shift down one pixel
-    
 
     //World wrap
     lumv->localPlayer->x %= 295;
@@ -241,11 +237,10 @@ static void lumberjackGameLoop(int64_t elapsedUs)
         if (lumv->localPlayer->onGround && lumv->localPlayer->jumpReady)
         {
             //Check if player CAN jump
-            //ESP_LOGI("L", "Trying to jump");
             lumv->localPlayer->jumpReady = false; 
             lumv->localPlayer->jumping = true;
             lumv->localPlayer->vy = -15;
-            lumv->localPlayer->jumpTimer = 200000;
+            lumv->localPlayer->jumpTimer = 225000;
             lumv->localPlayer->onGround = false;
         }
         else if (lumv->localPlayer->jumping)
@@ -257,17 +252,12 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     if (lumv->localPlayer->jumpTimer > 0)
     {
         lumv->localPlayer->jumpTimer -= elapsedUs;
-        //ESP_LOGI("LUM", "TIMER %d", lumv->localPlayer->jumpTimer);
         if (lumv->localPlayer->jumpTimer <= 0)
         {
            lumv->localPlayer->jumpTimer  = 0;
            lumv->localPlayer->jumping = false;
         }
     } 
-        
-
-    
-
 
     if (lumv->localPlayer->jumping == false)
         lumv->localPlayer->vy += 6; //Fix gravity
@@ -334,7 +324,7 @@ static void lumberjackGameLoop(int64_t elapsedUs)
 
         if (lumberjackIsCollisionTile(tileA->type) || lumberjackIsCollisionTile(tileB->type))
         {
-            destinationY = lumv->localPlayer->y;
+            destinationY = ((tileA->y + 1) * 16);
             lumv->localPlayer->jumpTimer = 0;
             lumv->localPlayer->jumping = false;
             lumv->localPlayer->vy = 0;
@@ -375,7 +365,7 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     }
 
     lumv->yOffset = lumv->localPlayer->y - 140;
-    if (lumv->yOffset < 16) lumv->yOffset = 16;
+    if (lumv->yOffset < -16) lumv->yOffset = -16;
     if (lumv->yOffset > 96) lumv->yOffset = 96;
 
     //Draw section
@@ -386,11 +376,10 @@ static void lumberjackGameLoop(int64_t elapsedUs)
 
     int currentFrame = lumberjackGetPlayerAnimation(lumv->localPlayer);
  
-    //drawWsg(&lumv->remotePlayer->frames[lumv->remotePlayer->currentFrame], lumv->remotePlayer->x, lumv->remotePlayer->y, lumv->remotePlayer->flipped, false, 0);
-    drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 4, lumv->localPlayer->y - 16 - lumv->yOffset, lumv->localPlayer->flipped, false, 0);    
+    drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 4, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);    
     if (lumv->localPlayer->x > 270)
     {
-        drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 299, lumv->localPlayer->y - 16 - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
+        drawWsg(&lumv->localPlayer->frames[currentFrame], lumv->localPlayer->x - 299, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
     }
 
     //Debug
@@ -398,17 +387,6 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     snprintf(debug, sizeof(debug), "CellX: %d %d", lumv->localPlayer->x, lumv->localPlayer->y);
 
     drawText(&lumv->ibm, c000, debug, 16, 16);
-
-    /*
-    for (int i = 0; i < 8; i++)
-    {
-        if ((lumberjackCollisionDebugTiles[i].type != -1) && lumberjackIsCollisionTile(lumberjackCollisionDebugTiles[i].type))
-        {
-            fillDisplayArea(lumberjackCollisionDebugTiles[i].x * 16, (lumberjackCollisionDebugTiles[i].y * 16) - lumv->yOffset, (lumberjackCollisionDebugTiles[i].x * 16)+16, (lumberjackCollisionDebugTiles[i].y * 16) + 16 - lumv->yOffset, c500);
-        }
-    }*/
-
-    //fillDisplayArea(lumv->localPlayer->x, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->x + 32, lumv->localPlayer->y + 32 - lumv->yOffset, c050);
 
     if (lumv->localPlayer->jumpPressed)
     {
