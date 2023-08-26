@@ -339,11 +339,11 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
             {
                 if (marbles->buttonState & PB_LEFT)
                 {
-                    entity->angle = (entity->angle + 5) % 360;
+                    entity->angle = (entity->angle + 2) % 360;
                 }
                 else if (marbles->buttonState & PB_RIGHT)
                 {
-                    entity->angle = (entity->angle + 355) % 360;
+                    entity->angle = (entity->angle + 358) % 360;
                 }
 
                 if (marbles->buttonState & PB_A)
@@ -424,6 +424,7 @@ static void marblesDrawLevel(void)
                 floodFill(entity->x, entity->y, entity->shooter.nextMarble.color, entity->x - marbles->arrow18.w,
                           entity->y - marbles->arrow18.h, entity->x + marbles->arrow18.w,
                           entity->y + marbles->arrow18.h);
+                drawLine(entity->x, entity->y, entity->x + getCos1024(entity->angle) * 300 / 1024, entity->y - getSin1024(entity->angle) * 300 / 1024, c511, 6);
                 break;
             }
         }
@@ -499,6 +500,10 @@ static void marblesLoadLevel(void)
     }
 }
 
+/**
+ * @brief Free all memory associated with the currently-loaded level
+ *
+ */
 static void marblesUnloadLevel(void)
 {
     if (marbles->level->specials)
