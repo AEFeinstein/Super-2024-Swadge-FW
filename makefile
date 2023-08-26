@@ -293,7 +293,7 @@ usbflash :
 	make -C tools/bootload_reboot_stub reboot
 	sleep 2.5
 	make -C tools/swadgeterm monitor
-#endif
+endif
 
 ################################################################################
 # cppcheck targets
