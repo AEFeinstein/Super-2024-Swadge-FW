@@ -9,7 +9,9 @@
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
 #include "emu_main.h"
+#include "trigonometry.h"
 #include "linked_list.h"
+#include "touchUtils.h"
 
 //==============================================================================
 // Variables
@@ -24,12 +26,7 @@ static const char inputKeys[] = {
     'L', ///< ::PB_A
     'K', ///< ::PB_B
     'O', ///< ::PB_START
-    'I', ///< ::PB_SELECT
-    '1', ///< ::TB_0
-    '2', ///< ::TB_1
-    '3', ///< ::TB_2
-    '4', ///< ::TB_3
-    '5'  ///< ::TB_4
+    'I'  ///< ::PB_SELECT
 };
 
 /// The current state of all input buttons
@@ -38,8 +35,14 @@ static uint32_t buttonState = 0;
 /// The queue for button events
 static list_t* buttonQueue;
 
-/// The touchpad analog location
-static int32_t lastTouchLoc = 0;
+/// The touchpad analog location angle
+static int32_t lastTouchAngle = 0;
+
+/// The touchpad analog location radius
+static int32_t lastTouchRadius = 0;
+
+/// The touchpad analog intensity
+static int32_t lastTouchIntensity = 0;
 
 //==============================================================================
 // Functions
@@ -119,16 +122,100 @@ bool checkButtonQueue(buttonEvt_t* evt)
  */
 bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 {
-    if (buttonState & (TB_0 | TB_1 | TB_2 | TB_3 | TB_4))
+    // Just simulate the centroid using the circular touchpad's horizontal axis only
+    int32_t angle, radius;
+    if (getTouchAngleRadius(&angle, &radius, intensityVal))
     {
-        *centerVal    = lastTouchLoc;
-        *intensityVal = 512;
+        getTouchCartesian(angle, radius, centerVal, NULL);
         return true;
     }
-    else
+
+    return false;
+}
+
+/**
+ * @brief Get the touch intensity and location in terms of angle and distance from
+ * the center touchpad
+ *
+ * @param[out] angle A pointer to return the angle of the center of the touch, in degrees
+ * @param[out] radius A pointer to return the radius of the touch centroid
+ * @param[out] intensity A pointer to return the intensity of the touch
+ * @return true If the touchpad was touched and values were written to the out-params
+ * @return false If no touch is detected and nothing was written
+ */
+bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
+{
+    // If lastTouchIntensity is 0, we should return false as that's "not touched"
+    // But still perform the null checks on the args like the real swadge first
+    if (!angle || !radius || !intensity || 0 == lastTouchIntensity)
     {
         return false;
     }
+
+    // Just do the actual "is the touchpad touched" check, then write placeholder values
+
+    // TODO: Actual touchpad implementation
+
+    // A touch in the center at 50% intensity
+    *angle     = lastTouchAngle;
+    *radius    = lastTouchRadius;
+    *intensity = lastTouchIntensity;
+    return true;
+}
+
+/**
+ * @brief Inject a single button press or release event into the emulator
+ *
+ * @param button
+ * @param down
+ */
+void emulatorInjectButton(buttonBit_t button, bool down)
+{
+    // Set or clear the button
+    if (down)
+    {
+        // Check if button was already pressed
+        if (buttonState & button)
+        {
+            // It was, just return
+            return;
+        }
+        else
+        {
+            // It wasn't, set it!
+            buttonState |= button;
+        }
+    }
+    else
+    {
+        // Check if button was already released
+        if (0 == (buttonState & button))
+        {
+            // It was, just return
+            return;
+        }
+        else
+        {
+            // It wasn't, clear it!
+            buttonState &= ~button;
+        }
+    }
+
+    // Create a new event
+    buttonEvt_t* evt = malloc(sizeof(buttonEvt_t));
+    evt->button      = button;
+    evt->down        = down;
+    evt->state       = buttonState;
+
+    // Add the event to the list
+    push(buttonQueue, evt);
+}
+
+void emulatorSetTouchAngleRadius(int32_t angle, int32_t radius, int32_t intensity)
+{
+    lastTouchAngle     = angle;
+    lastTouchRadius    = radius;
+    lastTouchIntensity = intensity;
 }
 
 /**
@@ -139,95 +226,25 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
  */
 void emulatorHandleKeys(int keycode, int bDown)
 {
+    // Convert lowercase characters to their uppercase equivalents
     if ('a' <= keycode && keycode <= 'z')
     {
         keycode = (keycode - 'a' + 'A');
     }
+
     // Check keycode against initialized keys
     for (uint8_t idx = 0; idx < ARRAY_SIZE(inputKeys); idx++)
     {
-        // If this matches
+        // If this matches one of the keycodes in the input key map
         if (keycode == inputKeys[idx])
         {
-            // Set or clear the button
-            if (bDown)
-            {
-                // Check if button was already pressed
-                if (buttonState & (1 << idx))
-                {
-                    // It was, just return
-                    return;
-                }
-                else
-                {
-                    // It wasn't, set it!
-                    buttonState |= (1 << idx);
-                }
-            }
-            else
-            {
-                // Check if button was already released
-                if (0 == (buttonState & (1 << idx)))
-                {
-                    // It was, just return
-                    return;
-                }
-                else
-                {
-                    // It wasn't, clear it!
-                    buttonState &= ~(1 << idx);
-                }
-            }
-
-            // Create a new event
-            buttonEvt_t* evt = malloc(sizeof(buttonEvt_t));
-            evt->button      = (1 << idx);
-            evt->down        = bDown;
-            evt->state       = buttonState;
-
-            // Add the event to the list
-            push(buttonQueue, evt);
+            emulatorInjectButton((buttonBit_t)(1 << idx), bDown);
             break;
         }
     }
+}
 
-    /* LUT the location */
-    const uint8_t touchLoc[] = {
-        128, // 00000
-        0,   // 00001
-        64,  // 00010
-        32,  // 00011
-        128, // 00100
-        64,  // 00101
-        96,  // 00110
-        64,  // 00111
-        192, // 01000
-        96,  // 01001
-        128, // 01010
-        85,  // 01011
-        160, // 01100
-        106, // 01101
-        128, // 01110
-        96,  // 01111
-        255, // 10000
-        128, // 10001
-        160, // 10010
-        106, // 10011
-        192, // 10100
-        128, // 10101
-        149, // 10110
-        112, // 10111
-        224, // 11000
-        149, // 11001
-        170, // 11010
-        128, // 11011
-        192, // 11100
-        144, // 11101
-        160, // 11110
-        128, // 11111
-    };
-
-    // The bottom 8 bits are pushbuttons, followed by five touch buttons
-    int touchState = ((buttonState >> 8) & 0x1F);
-    lastTouchLoc   = 4 * touchLoc[touchState];
+buttonBit_t emulatorGetButtonState(void)
+{
+    return buttonState;
 }

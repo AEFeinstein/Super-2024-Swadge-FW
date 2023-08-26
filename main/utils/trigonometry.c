@@ -5,6 +5,14 @@
 #include "trigonometry.h"
 
 //==============================================================================
+// Macros
+//==============================================================================
+
+/// Approximates arctan(y / x) to within 1 degree, but only when 0 <= (y / x) <= 1
+/// Modified from https://math.stackexchange.com/a/1098585 to fit the format of your numbers.
+#define ARCTAN_APPROX(y, x) (-y * (47 * y - 182 * x) / 3 / x / x)
+
+//==============================================================================
 // Constant data
 //==============================================================================
 
@@ -28,6 +36,12 @@ const uint16_t tan1024[91] = {
     2100, 2196, 2300, 2412, 2534, 2668,  2813,  2974,  3152,  3349,  3571,  3822, 4107, 4435, 4818, 5268,
     5807, 6465, 7286, 8340, 9743, 11704, 14644, 19539, 29324, 58665, 65535,
 };
+
+//==============================================================================
+// Static Function Prototypes
+//==============================================================================
+
+static int16_t innerAtan2(int32_t y, int32_t x);
 
 //==============================================================================
 // Functions
@@ -144,5 +158,77 @@ int32_t getTan1024(int16_t degree)
             // 91 -> 179
             return -tan1024[180 - degree];
         }
+    }
+}
+
+/**
+ * @brief Static helper function to make sure the ::ARCTAN_APPROX macro
+ * is only called with parameters inside its domain.
+ */
+static int16_t innerAtan2(int32_t y, int32_t x)
+{
+    int8_t sig = 1;
+
+    // Handle flipping the sign to make sure everything fits
+    if (x < 0 && y < 0)
+    {
+        // Flip both X and Y but not the result
+        x = -x;
+        y = -y;
+    }
+    else if (x < 0)
+    {
+        // Flip X and result
+        x   = -x;
+        sig = -1;
+    }
+    else if (y < 0)
+    {
+        // Flip Y and result
+        y   = -y;
+        sig = -1;
+    }
+
+    if (y > x)
+    {
+        // y > x means (y/x) > 1, so instead
+        return sig * (90 - ARCTAN_APPROX(x, y));
+    }
+    else
+    {
+        return sig * ARCTAN_APPROX(y, x);
+    }
+}
+
+/**
+ * @brief Calculate the angle of the line from the origin to (x, y), in degrees
+ *
+ * If both x and y are 0, atan2 is undefined and will return 0.
+ *
+ * @param y The Y coordinate of the point to calculate the angle to
+ * @param x The X coordinate of the point to calculate the angle to
+ * @return int16_t The angle degree, between 0 and 359.
+ */
+int16_t getAtan2(int32_t y, int32_t x)
+{
+    if (x == 0 && y == 0)
+    {
+        return 0;
+    }
+    else if (y > 0)
+    {
+        return ((90 - innerAtan2(x, y)) + 360) % 360;
+    }
+    else if (y < 0)
+    {
+        return ((270 - innerAtan2(x, y)) + 360) % 360;
+    }
+    else if (x < 0)
+    {
+        return (180 + innerAtan2(y, x)) % 360;
+    }
+    else
+    {
+        return innerAtan2(y, x);
     }
 }
