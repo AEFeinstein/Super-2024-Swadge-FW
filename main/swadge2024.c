@@ -232,7 +232,8 @@ void app_main(void)
         TOUCH_PAD_NUM10, // GPIO_NUM_10
         TOUCH_PAD_NUM11, // GPIO_NUM_11
         TOUCH_PAD_NUM12, // GPIO_NUM_12
-        TOUCH_PAD_NUM13  // GPIO_NUM_13
+        TOUCH_PAD_NUM13, // GPIO_NUM_13
+        TOUCH_PAD_NUM14, // GPIO_NUM_14
     };
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
                 sizeof(touchPads) / sizeof(touchPads[0]));

@@ -281,6 +281,7 @@ void danceButtonHandler(buttonEvt_t* evt)
             case TB_2:
             case TB_3:
             case TB_4:
+            case TB_5:
             {
                 // Unused
                 break;

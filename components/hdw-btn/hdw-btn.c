@@ -61,7 +61,6 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
                             bool denoiseEnable);
 
 static void touchsensor_interrupt_cb(void* arg);
-static int getBaseTouchVals(int32_t* data, int count);
 static int getTouchRawValues(uint32_t* rawValues, int maxPads);
 
 //==============================================================================
@@ -466,7 +465,7 @@ static int getTouchRawValues(uint32_t* rawValues, int maxPads)
  * @param count is the number of ints in your array.
  * @return is the number of values that were successfully read.
  */
-static int getBaseTouchVals(int32_t* data, int count)
+int getBaseTouchVals(int32_t* data, int count)
 {
     uint32_t curVals[numTouchPads];
     if (getTouchRawValues(curVals, numTouchPads) == 0)

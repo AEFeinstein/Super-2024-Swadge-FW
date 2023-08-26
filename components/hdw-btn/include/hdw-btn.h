@@ -111,6 +111,7 @@ typedef enum __attribute__((packed))
     TB_2      = 0x0400, //!< Touch pad 2's button bit
     TB_3      = 0x0800, //!< Touch pad 3's button bit
     TB_4      = 0x1000, //!< Touch pad 4's button bit
+    TB_5      = 0x2000, //!< Touch pad 5's button bit
 } buttonBit_t;
 
 /**
@@ -128,6 +129,7 @@ void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* t
 void deinitButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
+int getBaseTouchVals(int32_t* data, int count);
 bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal);
 
 #endif
