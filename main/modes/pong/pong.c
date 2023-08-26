@@ -468,11 +468,20 @@ static void pongControlPlayerPaddle(void)
         case PONG_TOUCH:
         {
             // Check if the touch area is touched
-            int32_t centerVal, intensityVal;
-            if (getTouchCentroid(&centerVal, &intensityVal))
+            int32_t phi, r, intensity;
+            if (getTouchJoystick(&phi, &r, &intensity))
             {
                 // If there is a touch, move the paddle to that location of the touch
-                pong->paddleL.y = (centerVal * (FIELD_HEIGHT - pong->paddleL.height)) / 1024;
+                int paddley = phi - 320;
+                if (paddley < 0 )
+                {
+                    paddley = 0;
+                }
+                if (paddley >= 640 )
+                {
+                    paddley = 639;
+                }
+                pong->paddleL.y = (paddley * (FIELD_HEIGHT - pong->paddleL.height)) / 640;
             }
             break;
         }

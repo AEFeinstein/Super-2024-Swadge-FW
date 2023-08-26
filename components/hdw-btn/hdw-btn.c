@@ -364,7 +364,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
                  (uint32_t)(touch_value * touchPadSensitivity));
     }
 
-    getTouchCentroid(0, 0);
+    getTouchJoystick(0, 0, 0);
 }
 
 /**
@@ -522,26 +522,35 @@ int getBaseTouchVals(int32_t* data, int count)
 }
 
 /**
- * @brief Get totally raw touch sensor values from buffer.
+ * @brief Get high-level touch input, an analog input.
  * NOTE: You must have touch callbacks enabled to use this.
  *
- * @param[out] centerVal pointer to centroid of touch location from 0..1024 inclusive. Cannot be NULL.
- * @param[out] intensityVal intensity of touch press. Cannot be NULL.
- * @return true if touched (centroid), false if not touched (no centroid)
+ * @param[out] phi the angle of the touch. Where 0 is right, 320 is up, 640 is left and 960 is down.
+ * @param[out] r is how far from center you are.  511 is on the outside edge, 0 is on the inside.
+ * @param[out] intensity is how hard the user is pressing.
+ * @return true if touched (joystick), false if not touched (no centroid)
  */
-bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
+int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity )
 {
-    int32_t baseVals[numTouchPads];
-    if (!centerVal || !intensityVal || getBaseTouchVals(baseVals, numTouchPads) == 0)
-    {
-        return false;
-    }
+    #define TOUCH_CENTER 2
+    const uint8_t ringzones[] = { 3, 0, 1, 4, 5 };
+    #define NUM_TZ_RING 5
+    int32_t baseVals[6];
+    int32_t ringIntensity = 0;
+    int bc = getBaseTouchVals( baseVals, 6 );
+    if( bc != 6 )
+        return 0;
 
+    int centerIntensity = baseVals[TOUCH_CENTER];
+
+    // First, compute phi.
+
+    // Find most pressed pad
     int peak    = -1;
     int peakBin = -1;
-    for (int i = 0; i < numTouchPads; i++)
+    for (int i = 0; i < NUM_TZ_RING; i++)
     {
-        int32_t bv = baseVals[i];
+        int32_t bv = baseVals[ringzones[i]];
         if (bv > peak)
         {
             peak    = bv;
@@ -551,16 +560,18 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 
     if (peakBin < 0)
     {
-        return false;
+        return 0;
     }
+
     // Arbitrary, but we use 1200 as the minimum peak value.
-    if (peak < 1200)
+    if (peak < 1200 && centerIntensity < 1200 )
     {
-        return false;
+        return 0;
     }
+
     // We know our peak bin, now we need to know the average and differential of the adjacent bins.
-    int leftOfPeak  = (peakBin > 0) ? baseVals[peakBin - 1] : 0;
-    int rightOfPeak = (peakBin < numTouchPads - 1) ? baseVals[peakBin + 1] : 0;
+    int leftOfPeak  = (peakBin > 0) ? baseVals[ringzones[peakBin - 1]] : baseVals[ringzones[NUM_TZ_RING - 1]];
+    int rightOfPeak = (peakBin < NUM_TZ_RING - 1) ? baseVals[ringzones[peakBin + 1]] : baseVals[ringzones[0]];
 
     int oPeak  = peak;
     int center = peakBin << 8;
@@ -572,7 +583,7 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
         peak -= leftOfPeak;
         center += (rightOfPeak << 8) / (rightOfPeak + peak);
 
-        *intensityVal = oPeak + rightOfPeak;
+        ringIntensity = oPeak + rightOfPeak;
     }
     else
     {
@@ -581,8 +592,29 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
         peak -= rightOfPeak;
         center -= (leftOfPeak << 8) / (leftOfPeak + peak);
 
-        *intensityVal = oPeak + leftOfPeak;
+        ringIntensity = oPeak + leftOfPeak;
     }
-    *centerVal = center;
-    return true;
+
+    int ringph = (center < 0)?(center + 1280):center;
+    if (phi)
+    {
+        *phi = ringph;
+    }
+
+    // Find ratio of ring to inner.
+    int totalIntensity = centerIntensity + ringIntensity;
+    int radius = (ringIntensity<<10) / totalIntensity;
+
+    if (r)
+    {
+        *r = radius;
+    }
+
+    if (intensity)
+    {
+        *intensity = totalIntensity;
+    }
+
+    return 1;
 }
+

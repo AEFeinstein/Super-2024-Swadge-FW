@@ -91,83 +91,6 @@ void sandbox_exit()
 //    ESP_LOGI( "sandbox", "Exit" );
 }
 
-int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity )
-{
-	#define TOUCH_CENTER 2
-	const uint8_t ringzones[] = { 3, 0, 1, 4, 5 };
-	#define NUM_TZ_RING 5
-	int32_t baseVals[6];
-	int32_t ringIntensity = 0;
-	int bc = getBaseTouchVals( baseVals, 6 );
-	if( bc != 6 )
-		return bc;
-
-
-	int centerIntensity = baseVals[TOUCH_CENTER];
-
-	// First, compute phi.
-
-	// Find most pressed pad
-    int peak    = -1;
-    int peakBin = -1;
-    for (int i = 0; i < NUM_TZ_RING; i++)
-    {
-        int32_t bv = baseVals[ringzones[i]];
-        if (bv > peak)
-        {
-            peak    = bv;
-            peakBin = i;
-        }
-    }
-
-    if (peakBin < 0)
-    {
-        return 0;
-    }
-    // Arbitrary, but we use 1200 as the minimum peak value.
-    if (peak < 1200 && centerIntensity < 1200 )
-    {
-        return 0;
-    }
-    // We know our peak bin, now we need to know the average and differential of the adjacent bins.
-    int leftOfPeak  = (peakBin > 0) ? baseVals[ringzones[peakBin - 1]] : baseVals[ringzones[NUM_TZ_RING - 1]];
-    int rightOfPeak = (peakBin < NUM_TZ_RING - 1) ? baseVals[ringzones[peakBin + 1]] : baseVals[ringzones[0]];
-
-    int oPeak  = peak;
-    int center = peakBin << 8;
-
-    if (rightOfPeak >= leftOfPeak)
-    {
-        // We bend upward (or are neutral)
-        rightOfPeak -= leftOfPeak;
-        peak -= leftOfPeak;
-        center += (rightOfPeak << 8) / (rightOfPeak + peak);
-
-        ringIntensity = oPeak + rightOfPeak;
-    }
-    else
-    {	
-        // We bend downward
-        leftOfPeak -= rightOfPeak;
-        peak -= rightOfPeak;
-        center -= (leftOfPeak << 8) / (leftOfPeak + peak);
-
-        ringIntensity = oPeak + leftOfPeak;
-    }
-	int ringph = (center < 0)?(center + 1280):center;
-	if( phi ) *phi = ringph;
-
-	// Find ratio of ring to inner.
-	int totalIntensity = centerIntensity + ringIntensity;
-	int radius = (ringIntensity<<10) / totalIntensity;
-
-	if( r ) *r = radius;
-
-	if( intensity ) *intensity = totalIntensity;
-
-	return 6;
-}
-
 void sandbox_tick()
 {
 #if 1
@@ -246,30 +169,26 @@ void sandbox_tick()
         menu = menuButton(menu, evt);
     }
 #endif
-	int32_t phi = 0;
-	int32_t r = 0;
-	int32_t intensity = 0;
+    int32_t phi = 0;
+    int32_t r = 0;
+    int32_t intensity = 0;
     start = getCycleCount();
-	int tbv = getTouchJoystick( &phi, &r, &intensity );
+    int tbv = getTouchJoystick( &phi, &r, &intensity );
     end = getCycleCount();
 
-	if( tbv > 0 )
-	{
-		extern const int16_t sin1024[91];
+    if( tbv > 0 )
+    {
+        phi = phi * 360 / 1280 + 330;
+        if( phi >= 360 ) phi -= 360;
+        int32_t sY = -getSin1024( phi ) * r;
+        phi += 90;
+        if( phi >= 360 ) phi -= 360;
+        int32_t sX = getSin1024( phi ) * r;
 
-		phi = phi * 360 / 1280 + 330;
-		if( phi >= 360 ) phi -= 360;
-		int32_t sY = -getSin1024( phi ) * r;
-		phi += 90;
-		if( phi >= 360 ) phi -= 360;
-		int32_t sX = getSin1024( phi ) * r;
+        drawWsg( &example_sprite, 120-10 + (sX>>15), 140-20 + (sY>>15), 0, 0, 0 );
+    }
 
-	    drawWsg( &example_sprite, 120-10 + (sX>>15), 140-20 + (sY>>15), 0, 0, 0 );
-	}
-
-	ESP_LOGI( "sandbox", "TBV [%lu] %ld %ld %ld %d", end-start, phi, r, intensity, tbv );
-
-
+    ESP_LOGI( "sandbox", "TBV [%lu] %ld %ld %ld %d", end-start, phi, r, intensity, tbv );
 }
 
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )

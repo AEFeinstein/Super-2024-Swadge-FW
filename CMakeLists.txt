@@ -5,6 +5,11 @@
 cmake_minimum_required(VERSION 3.16)
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+
+# These have to appear here, otherwise, ninja ignores them.
+idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_panic_handler" APPEND)
+idf_build_set_property(LINK_OPTIONS "-Wl,--wrap=esp_panic_abort" APPEND)
+
 project(swadge2024)
 
 idf_build_set_property(COMPILE_OPTIONS "-finline-functions" APPEND)

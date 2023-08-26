@@ -130,6 +130,6 @@ void deinitButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
 int getBaseTouchVals(int32_t* data, int count);
-bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal);
+int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity );
 
 #endif
