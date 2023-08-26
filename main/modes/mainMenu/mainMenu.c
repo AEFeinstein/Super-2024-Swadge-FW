@@ -201,6 +201,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == rayMode.modeName)
         {
             switchToSwadgeMode(&rayMode);
+        }
         else if (label == modeDance.modeName)
         {
             switchToSwadgeMode(&modeDance);

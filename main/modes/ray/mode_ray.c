@@ -24,7 +24,7 @@ void setPlayerAngle(q24_8 angle);
 // Const Variables
 //==============================================================================
 
-const char rayName[] = "Ray";
+const char rayName[] = "Magtroid Pocket";
 
 //==============================================================================
 // Variables
