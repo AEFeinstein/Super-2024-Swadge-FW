@@ -64,6 +64,20 @@ typedef struct
 
 typedef struct
 {
+    uint16_t x;
+    uint16_t y;
+} point_t;
+
+/// @brief Contains the path info. Will probably get more complicated later.
+typedef struct
+{
+    uint8_t length;  ///< The number of points in the track
+    point_t* points; ///< The array of points
+    bool temporary;  ///< Whether this track should be deleted with its owner
+} marbleTrack_t;
+
+typedef struct
+{
     marblesEntType_t type; ///< Type of this entity
 
     int16_t x;        ///< Entity's X coordinate
@@ -71,8 +85,8 @@ typedef struct
     int16_t velocity; ///< Entity's velocity
     int16_t angle;    ///< Entity's heading angle, if not on a track
 
-    uint8_t track;    ///< If nonzero, this entity is on the track with this number
-    int32_t trackPos; ///< If on a track, this is the entity's position along its track
+    marbleTrack_t* track;    ///< If non-NULL, the entity is traveling along this track
+    int32_t trackPos; ///< If on a track, this is the entity's position along the track
 
     union
     {
@@ -100,12 +114,6 @@ typedef struct
     marbleType_t type; ///< The type of special marble to generate
 } marblesSpecial_t;
 
-typedef struct
-{
-    uint16_t x;
-    uint16_t y;
-} point_t;
-
 /// @brief Defines the starting state for a level
 typedef struct
 {
@@ -116,12 +124,7 @@ typedef struct
 
     uint16_t numMarbles; ///< The total number of marbles to generate this level
 
-    /// @brief Contains the path info. Will probably get more complicated later.
-    struct
-    {
-        uint8_t length;  ///< The number of points in the track
-        point_t* points; ///< The array of points
-    } track;
+    marbleTrack_t track; ///< The track that marbles follow
 
     point_t shooterLoc; ///< The location of the center of the player's marble shooter
 } marblesLevel_t;
@@ -161,7 +164,7 @@ static void marblesDrawLevel(void);
 static void marblesLoadLevel(void);
 static void marblesUnloadLevel(void);
 
-static void marblesCalculateTrackPos(uint8_t trackLength, const point_t* points, int32_t position, int16_t* x,
+static bool marblesCalculateTrackPos(uint8_t trackLength, const point_t* points, int32_t position, int16_t* x,
                                      int16_t* y);
 static bool collideMarbles(const marblesEntity_t* a, const marblesEntity_t* b);
 
@@ -299,18 +302,24 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
                 if (entity->track)
                 {
                     entity->trackPos += entity->velocity;
-                    marblesCalculateTrackPos(marbles->level->track.length, marbles->level->track.points,
-                                             entity->trackPos, &entity->x, &entity->y);
-
-                    if (prevEntity && prevEntity->type == MARBLE && prevEntity->track)
+                    if (!marblesCalculateTrackPos(entity->track->length, entity->track->points,
+                                             entity->trackPos, &entity->x, &entity->y)
+                         && entity->track->temporary)
                     {
-                        // Bump this marble back until it doesn't collide with the last one
-                        while (collideMarbles(prevEntity, entity) && entity->trackPos > 0)
+                        cull = true;
+                    }
+                    else
+                    {
+                        if (prevEntity && prevEntity->type == MARBLE && prevEntity->track && prevEntity->track == entity->track)
                         {
-                            // go in the reverse of the actual velocity
-                            entity->trackPos += (entity->velocity >= 0 ? -1 : 1);
-                            marblesCalculateTrackPos(marbles->level->track.length, marbles->level->track.points,
-                                                     entity->trackPos, &entity->x, &entity->y);
+                            // Bump this marble back until it doesn't collide with the last one
+                            while (collideMarbles(prevEntity, entity) && entity->trackPos > 0)
+                            {
+                                // go in the reverse of the actual velocity
+                                entity->trackPos += (entity->velocity >= 0 ? -1 : 1);
+                                marblesCalculateTrackPos(entity->track->length, entity->track->points,
+                                                        entity->trackPos, &entity->x, &entity->y);
+                            }
                         }
                     }
                 }
@@ -354,13 +363,34 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
                         proj->type            = MARBLE;
                         proj->x               = entity->x;
                         proj->y               = entity->y;
-                        proj->velocity        = 4;
+                        proj->velocity        = 10;
                         proj->angle           = entity->angle;
                         proj->marble.type     = NORMAL;
                         proj->marble.color    = entity->shooter.nextMarble.color;
                         entity->shooter.nextMarble.color
                             = marbles->level->colors[esp_random() % marbles->level->numColors];
-                        proj->track = 0;
+
+
+                        int16_t mult = 300;
+                        int16_t endX;
+                        int16_t endY;
+
+                        // TODO: Use trigonometry to fix this insane loop
+                        do {
+                            endX = entity->x + getCos1024(entity->angle) * mult / 1024;
+                            endY = entity->y - getSin1024(entity->angle) * mult / 1024;
+                            mult -= 5;
+                        } while (endX < 0 || endX > TFT_WIDTH || endY < 0 || endY > TFT_HEIGHT);
+
+                        proj->trackPos = 0;
+                        proj->track = calloc(1, sizeof(marbleTrack_t));
+                        proj->track->length = 2;
+                        proj->track->points = malloc(proj->track->length * sizeof(point_t));
+                        proj->track->points[0].x = proj->x;
+                        proj->track->points[0].y = proj->y;
+                        proj->track->points[1].x = endX;
+                        proj->track->points[1].y = endY;
+                        proj->track->temporary = true;
 
                         push(&marbles->entities, proj);
 
@@ -376,7 +406,15 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
         {
             node_t* tmp = node;
             node        = node->next;
-            free(removeEntry(&marbles->entities, tmp));
+            marblesEntity_t* deleting = removeEntry(&marbles->entities, tmp);
+
+            // If the entity has a temporary path, make sure that's freed too
+            if (deleting->track && deleting->track->temporary)
+            {
+                free(deleting->track);
+            }
+
+            free(deleting);
         }
         else
         {
@@ -424,7 +462,19 @@ static void marblesDrawLevel(void)
                 floodFill(entity->x, entity->y, entity->shooter.nextMarble.color, entity->x - marbles->arrow18.w,
                           entity->y - marbles->arrow18.h, entity->x + marbles->arrow18.w,
                           entity->y + marbles->arrow18.h);
-                drawLine(entity->x, entity->y, entity->x + getCos1024(entity->angle) * 300 / 1024, entity->y - getSin1024(entity->angle) * 300 / 1024, c511, 6);
+
+                int16_t mult = 300;
+
+                int16_t endX;
+                int16_t endY;
+
+                do {
+                    endX = entity->x + getCos1024(entity->angle) * mult / 1024;
+                    endY = entity->y - getSin1024(entity->angle) * mult / 1024;
+                    mult -= 5;
+                } while (endX < 0 || endX > TFT_WIDTH || endY < 0 || endY > TFT_HEIGHT);
+                // now... trace that ray to the edge of the screen and cut it as needed
+                drawLine(entity->x, entity->y, endX, endY, c511, 6);
                 break;
             }
         }
@@ -491,7 +541,7 @@ static void marblesLoadLevel(void)
     for (uint8_t i = 0; i < 4; i++)
     {
         marblesEntity_t* marble = calloc(1, sizeof(marblesEntity_t));
-        marble->track           = 1;
+        marble->track           = &level->track;
         marble->trackPos        = 50 * (3 - i);
         marble->velocity        = 5;
         marble->marble.type     = NORMAL;
@@ -520,6 +570,11 @@ static void marblesUnloadLevel(void)
     marblesEntity_t* val = NULL;
     while (NULL != (val = pop(&marbles->entities)))
     {
+        if (val->track && val->track->temporary)
+        {
+            free(val->track);
+        }
+
         free(val);
     }
 }
@@ -610,12 +665,12 @@ static void marblesMenuCb(const char* label, bool selected, uint32_t settingVal)
  * @param[out] x A pointer to an int to be updated to the result X-coordinate
  * @param[out] y A pointer to an int to be updated to the result Y-coordinate
  */
-static void marblesCalculateTrackPos(uint8_t trackLength, const point_t* points, int32_t distance, int16_t* x,
+static bool marblesCalculateTrackPos(uint8_t trackLength, const point_t* points, int32_t distance, int16_t* x,
                                      int16_t* y)
 {
     if (distance > (trackLength - 1) * 1000)
     {
-        return;
+        return false;
     }
 
     int32_t startPoint = distance / 1000;
@@ -636,6 +691,8 @@ static void marblesCalculateTrackPos(uint8_t trackLength, const point_t* points,
         *x = ((999 - n) * p0->x + n * p1->x) / 1000;
         *y = ((999 - n) * p0->y + n * p1->y) / 1000;
     }
+
+    return true;
 }
 
 static bool collideMarbles(const marblesEntity_t* a, const marblesEntity_t* b)
