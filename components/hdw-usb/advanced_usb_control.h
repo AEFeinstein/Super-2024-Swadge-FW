@@ -142,9 +142,9 @@ typedef enum __attribute__((packed))
     AUSB_CMD_FLASH_READ = 0x12
 } ausb_cmd_t;
 
-int handle_advanced_usb_control_get(int reqLen, uint8_t* data);
-int handle_advanced_usb_terminal_get(int reqLen, uint8_t* data);
-void handle_advanced_usb_control_set(int datalen, const uint8_t* data);
+int handle_advanced_usb_control_get(uint8_t* data, int reqLen);
+int handle_advanced_usb_terminal_get(uint8_t* data, int reqLen);
+void handle_advanced_usb_control_set(const uint8_t* data, int datalen);
 int advanced_usb_write_log_printf(const char* fmt, va_list args);
 int uprintf(const char* fmt, ...);
 

@@ -57,7 +57,7 @@ DECL_SETTING(tft_br, 0, 7, 5);
 DECL_SETTING(led_br, 0, 8, 5);
 DECL_SETTING(mic, 0, 7, 7);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
-DECL_SETTING(scrn_sv, 0, 6, 2);
+DECL_SETTING(scrn_sv, 0, 300, 20);
 
 //==============================================================================
 // Static Function Prototypes

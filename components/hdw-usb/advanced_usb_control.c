@@ -7,6 +7,7 @@
 #include <esp_flash.h>
 #include <rom/rtc.h>
 #include <soc/rtc_cntl_reg.h>
+#include <esp_log.h>
 
 #include "tinyusb.h"
 
@@ -49,7 +50,7 @@ static uint8_t did_init_flash_function;
  * @param data Pointer to a feature get request for the command set.
  * @return Number of bytes that will be returned.
  */
-int handle_advanced_usb_control_get(int reqLen, uint8_t* data)
+int handle_advanced_usb_control_get(uint8_t* data, int reqLen)
 {
     if (advanced_usb_read_offset == 0)
     {
@@ -123,7 +124,7 @@ int uprintf(const char* fmt, ...)
  * @param data The data that we will write back into
  * @return size Number of bytes to be returned to the host.
  */
-int handle_advanced_usb_terminal_get(int reqLen, uint8_t* data)
+int handle_advanced_usb_terminal_get(uint8_t* data, int reqLen)
 {
     if (NULL == advanced_usb_printf_buffer)
     {
@@ -160,7 +161,7 @@ int handle_advanced_usb_terminal_get(int reqLen, uint8_t* data)
  * @param datalen Total length of the buffer (command ID included)
  * @param data Pointer to full command
  */
-void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
+void IRAM_ATTR handle_advanced_usb_control_set(const uint8_t* data, int datalen)
 {
     if (datalen < 6)
     {
@@ -188,7 +189,7 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
                 return;
             }
             intptr_t length = data[6] | (data[7] << 8);
-            ULOG("Writing %d into %p", length, (void*)value);
+            ULOG("Writing %lu into %p", (uint32_t)length, (void*)value);
             memcpy((void*)value, data + 8, length);
             break;
         }
@@ -219,8 +220,8 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
             // value = -1 will just cause a report.
             // value = 0 will clear it.
             // value < 0 just read current data.
-            ULOG("Allocating to %d (Current: %p / %d)", value, advanced_usb_scratch_buffer_data,
-                 advanced_usb_scratch_buffer_data_size);
+            ULOG("Allocating to %lu (Current: %p / %lu)", (uint32_t)value, advanced_usb_scratch_buffer_data,
+                 (uint32_t)advanced_usb_scratch_buffer_data_size);
             if (!(value & 0x80000000))
             {
                 if (value > advanced_usb_scratch_buffer_data_size)
@@ -244,7 +245,7 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
             advanced_usb_scratch_immediate[0] = (intptr_t)advanced_usb_scratch_buffer_data;
             advanced_usb_scratch_immediate[1] = advanced_usb_scratch_buffer_data_size;
             advanced_usb_read_offset          = (uint32_t*)(&advanced_usb_scratch_immediate[0]);
-            ULOG("New: %p / %d", advanced_usb_scratch_buffer_data, advanced_usb_scratch_buffer_data_size);
+            ULOG("New: %p / %lu", advanced_usb_scratch_buffer_data, advanced_usb_scratch_buffer_data_size);
             break;
         }
         case ACMD_CMD_MEMSET:
@@ -254,7 +255,7 @@ void IRAM_ATTR handle_advanced_usb_control_set(int datalen, const uint8_t* data)
                 return;
             }
             intptr_t length = data[6] | (data[7] << 8) | (data[8] << 16) | (data[9] << 24);
-            ULOG("Memset %d into %p", length, (void*)value);
+            ULOG("Memset %d into %p", (int)length, (void*)value);
             memset((void*)value, data[10], length);
             break;
         }

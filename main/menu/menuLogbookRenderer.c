@@ -303,7 +303,15 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
             {
                 // Create key and value label, then draw it
                 char label[64] = {0};
-                snprintf(label, sizeof(label) - 1, "%s: %d", item->label, item->currentSetting);
+                if (item->options)
+                {
+                    snprintf(label, sizeof(label) - 1, "%s%s", item->label, item->options[item->currentOpt]);
+                }
+                else
+                {
+                    snprintf(label, sizeof(label) - 1, "%s: %d", item->label, item->currentSetting);
+                }
+
                 drawMenuText(renderer, label, x, y, isSelected, item->currentSetting != item->minSetting,
                              item->currentSetting != item->maxSetting, false);
             }

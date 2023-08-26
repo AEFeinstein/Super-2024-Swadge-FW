@@ -138,6 +138,7 @@
 #include <rom/usb/chip_usb_dw_wrapper.h>
 #include <soc/rtc_cntl_reg.h>
 
+#include "advanced_usb_control.h"
 #include "swadge2024.h"
 #include "mainMenu.h"
 
@@ -237,7 +238,8 @@ void app_main(void)
                 sizeof(touchPads) / sizeof(touchPads[0]));
 
     // Init buzzer. This must be called before initMic()
-    initBuzzer(GPIO_NUM_40, LEDC_TIMER_3, LEDC_CHANNEL_0, false, false);
+    initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
+               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, false, false);
 
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
@@ -252,14 +254,15 @@ void app_main(void)
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
-            GPIO_NUM_36,     // sclk
-            GPIO_NUM_37,     // mosi
-            GPIO_NUM_21,     // dc
-            GPIO_NUM_34,     // cs
-            GPIO_NUM_38,     // rst
-            GPIO_NUM_35,     // backlight
-            true,            // PWM backlight
-            LEDC_CHANNEL_1); // Channel to use for PWM backlight
+            GPIO_NUM_36,    // sclk
+            GPIO_NUM_37,    // mosi
+            GPIO_NUM_21,    // dc
+            GPIO_NUM_34,    // cs
+            GPIO_NUM_38,    // rst
+            GPIO_NUM_35,    // backlight
+            true,           // PWM backlight
+            LEDC_CHANNEL_2, // Channel to use for PWM backlight
+            LEDC_TIMER_2);  // Timer to use for PWM backlight
 
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39, GPIO_NUM_18);
