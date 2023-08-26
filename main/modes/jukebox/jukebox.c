@@ -148,9 +148,6 @@ static const char str_brightness[] = "Touch: LED Brightness:";
 static const char str_stop[] = ": Stop";
 static const char str_play[] = ": Play";
 
-// Songs
-
-
 // Arrays
 
 static const jukeboxSong jukeboxMusic[] =
