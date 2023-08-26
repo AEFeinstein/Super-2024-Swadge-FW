@@ -7,6 +7,8 @@
 #include "linked_list.h"
 #include "geometry.h"
 #include "trigonometry.h"
+#include "esp_random.h"
+#include "fill.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -137,7 +139,9 @@ typedef struct
 
     marblesScreen_t screen;
     marblesLevel_t* level; ///< The current level's initial settings
-    list_t entities;       ///< The entities in the current level
+
+    list_t entities;        ///< The entities in the current level
+    uint64_t shootCooldown; ///< us remaining until another marble can be shot
 } marblesMode_t;
 
 //==============================================================================
@@ -300,6 +304,7 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
 
                     if (prevEntity && prevEntity->type == MARBLE && prevEntity->track)
                     {
+                        // Bump this marble back until it doesn't collide with the last one
                         while (collideMarbles(prevEntity, entity) && entity->trackPos > 0)
                         {
                             // go in the reverse of the actual velocity
@@ -311,8 +316,9 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
                 }
                 else
                 {
+                    // Move the marble along its trajectory
                     entity->x += entity->velocity * getCos1024(entity->angle) / 1024;
-                    entity->y += entity->velocity * getSin1024(entity->angle) / 1024;
+                    entity->y -= entity->velocity * getSin1024(entity->angle) / 1024;
 
                     if (entity->x + MARBLE_R < 0 || entity->y + MARBLE_R < 0 || entity->x > TFT_WIDTH + MARBLE_R
                         || entity->y > TFT_HEIGHT + MARBLE_R)
@@ -339,18 +345,43 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
                 {
                     entity->angle = (entity->angle + 355) % 360;
                 }
+
+                if (marbles->buttonState & PB_A)
+                {
+                    if (marbles->shootCooldown == 0)
+                    {
+                        marblesEntity_t* proj = calloc(1, sizeof(marblesEntity_t));
+                        proj->type            = MARBLE;
+                        proj->x               = entity->x;
+                        proj->y               = entity->y;
+                        proj->velocity        = 4;
+                        proj->angle           = entity->angle;
+                        proj->marble.type     = NORMAL;
+                        proj->marble.color    = entity->shooter.nextMarble.color;
+                        entity->shooter.nextMarble.color
+                            = marbles->level->colors[esp_random() % marbles->level->numColors];
+                        proj->track = 0;
+
+                        push(&marbles->entities, proj);
+
+                        // TODO constant-ize
+                        marbles->shootCooldown = 300000;
+                    }
+                }
                 break;
             }
         }
 
-        node = node->next;
         if (cull)
         {
-            free(removeEntry(&marbles->entities, node->prev));
+            node_t* tmp = node;
+            node        = node->next;
+            free(removeEntry(&marbles->entities, tmp));
         }
         else
         {
             prevEntity = entity;
+            node       = node->next;
         }
     }
 }
@@ -388,7 +419,11 @@ static void marblesDrawLevel(void)
 
             case SHOOTER:
             {
-                drawWsg(&marbles->arrow18, entity->x, entity->y, false, false, 359 - (entity->angle + 270) % 360);
+                drawWsg(&marbles->arrow18, entity->x - marbles->arrow18.w / 2, entity->y - marbles->arrow18.h / 2,
+                        false, false, 359 - (entity->angle + 270) % 360);
+                floodFill(entity->x, entity->y, entity->shooter.nextMarble.color, entity->x - marbles->arrow18.w,
+                          entity->y - marbles->arrow18.h, entity->x + marbles->arrow18.w,
+                          entity->y + marbles->arrow18.h);
                 break;
             }
         }
@@ -445,10 +480,11 @@ static void marblesLoadLevel(void)
     /////////////////////////////////////////////////////////////////////
     marblesEntity_t* shooter = calloc(1, sizeof(marblesEntity_t));
 
-    shooter->type  = SHOOTER;
-    shooter->x     = level->shooterLoc.x;
-    shooter->y     = level->shooterLoc.y;
-    shooter->angle = 90;
+    shooter->type                     = SHOOTER;
+    shooter->x                        = level->shooterLoc.x;
+    shooter->y                        = level->shooterLoc.y;
+    shooter->angle                    = 90;
+    shooter->shooter.nextMarble.color = level->colors[esp_random() % level->numColors];
     push(&marbles->entities, shooter);
 
     for (uint8_t i = 0; i < 4; i++)
@@ -511,6 +547,15 @@ static void marblesMainLoop(int64_t elapsedUs)
 
         case IN_LEVEL:
         {
+            if (marbles->shootCooldown < elapsedUs)
+            {
+                marbles->shootCooldown = 0;
+            }
+            else
+            {
+                marbles->shootCooldown -= elapsedUs;
+            }
+
             marblesUpdatePhysics(elapsedUs);
             marblesDrawLevel();
             break;
