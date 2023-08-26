@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 /**
- * @brief Bitmask values for all the virtual joystick positions of ::getTouchJoystick()
+ * @brief Bitmask values for all the virtual joystick positions of ::getTouchJoystickEx()
  */
 typedef enum __attribute__((packed))
 {
@@ -34,7 +34,7 @@ typedef struct
 } touchSpinState_t;
 
 void getTouchCartesian(int32_t angle, int32_t radius, int32_t* x, int32_t* y);
-touchJoystick_t getTouchJoystick(int32_t angle, int32_t radius, bool useCenter, bool useDiagonals);
+touchJoystick_t getTouchJoystickEx(int32_t angle, int32_t radius, bool useCenter, bool useDiagonals);
 void getTouchSpins(touchSpinState_t* state, int32_t angle, int32_t radius);
 
 #endif

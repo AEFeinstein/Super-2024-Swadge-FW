@@ -473,11 +473,11 @@ static void pongControlPlayerPaddle(void)
             {
                 // If there is a touch, move the paddle to that location of the touch
                 int paddley = phi - 320;
-                if (paddley < 0 )
+                if (paddley < 0)
                 {
                     paddley = 0;
                 }
-                if (paddley >= 640 )
+                if (paddley >= 640)
                 {
                     paddley = 639;
                 }

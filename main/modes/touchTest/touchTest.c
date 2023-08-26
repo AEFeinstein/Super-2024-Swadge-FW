@@ -149,7 +149,7 @@ static void touchTestMainLoop(int64_t elapsedUs)
 static void touchTestHandleInput(void)
 {
     // Just call all the options for getting touchpad readings for demonstration purposes
-    touchTest->touch = getTouchAngleRadius(&touchTest->angle, &touchTest->radius, &touchTest->intensity);
+    touchTest->touch = getTouchJoystick(&touchTest->angle, &touchTest->radius, &touchTest->intensity);
 
     if (touchTest->touch)
     {
@@ -404,17 +404,17 @@ static void touchTestDraw(void)
 
     // Draw the 4-direction touchpad circle
     touchDrawCircle("4", TFT_WIDTH / 2, TFT_HEIGHT / 4, 35, 4, false,
-                    getTouchJoystick(touchTest->angle, touchTest->radius, false, false));
+                    getTouchJoystickEx(touchTest->angle, touchTest->radius, false, false));
 
     // Draw the 8-direction touchpad circle
     touchDrawCircle("8", TFT_WIDTH - 60, TFT_HEIGHT / 4, 35, 8, false,
-                    getTouchJoystick(touchTest->angle, touchTest->radius, false, true));
+                    getTouchJoystickEx(touchTest->angle, touchTest->radius, false, true));
 
     // Draw the 4-direction touchpad with center circle
     touchDrawCircle("4+Center", TFT_WIDTH / 2, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 4, true,
-                    getTouchJoystick(touchTest->angle, touchTest->radius, true, false));
+                    getTouchJoystickEx(touchTest->angle, touchTest->radius, true, false));
 
     // Draw the 8-direction touchpad with center circle
     touchDrawCircle("8+Center", TFT_WIDTH - 60, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 8, true,
-                    getTouchJoystick(touchTest->angle, touchTest->radius, true, true));
+                    getTouchJoystickEx(touchTest->angle, touchTest->radius, true, true));
 }

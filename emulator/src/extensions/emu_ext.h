@@ -113,10 +113,10 @@ typedef enum
  */
 typedef struct
 {
-    uint32_t paneW;     ///< Width of the pane
-    uint32_t paneH;     ///< Height of the pane
-    uint32_t paneX;     ///< X offset of the pane
-    uint32_t paneY;     ///< Y offset of the pane
+    uint32_t paneW; ///< Width of the pane
+    uint32_t paneH; ///< Height of the pane
+    uint32_t paneX; ///< X offset of the pane
+    uint32_t paneY; ///< Y offset of the pane
 } emuPane_t;
 
 /**

@@ -530,15 +530,15 @@ int getBaseTouchVals(int32_t* data, int count)
  * @param[out] intensity is how hard the user is pressing.
  * @return true if touched (joystick), false if not touched (no centroid)
  */
-int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity )
+int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 {
-    #define TOUCH_CENTER 2
-    const uint8_t ringzones[] = { 3, 0, 1, 4, 5 };
-    #define NUM_TZ_RING 5
+#define TOUCH_CENTER 2
+    const uint8_t ringZones[] = {3, 0, 1, 4, 5};
+#define NUM_TZ_RING 5
     int32_t baseVals[6];
     int32_t ringIntensity = 0;
-    int bc = getBaseTouchVals( baseVals, 6 );
-    if( bc != 6 )
+    int bc                = getBaseTouchVals(baseVals, 6);
+    if (bc != 6)
         return 0;
 
     int centerIntensity = baseVals[TOUCH_CENTER];
@@ -550,7 +550,7 @@ int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity )
     int peakBin = -1;
     for (int i = 0; i < NUM_TZ_RING; i++)
     {
-        int32_t bv = baseVals[ringzones[i]];
+        int32_t bv = baseVals[ringZones[i]];
         if (bv > peak)
         {
             peak    = bv;
@@ -564,14 +564,14 @@ int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity )
     }
 
     // Arbitrary, but we use 1200 as the minimum peak value.
-    if (peak < 1200 && centerIntensity < 1200 )
+    if (peak < 1200 && centerIntensity < 1200)
     {
         return 0;
     }
 
     // We know our peak bin, now we need to know the average and differential of the adjacent bins.
-    int leftOfPeak  = (peakBin > 0) ? baseVals[ringzones[peakBin - 1]] : baseVals[ringzones[NUM_TZ_RING - 1]];
-    int rightOfPeak = (peakBin < NUM_TZ_RING - 1) ? baseVals[ringzones[peakBin + 1]] : baseVals[ringzones[0]];
+    int leftOfPeak  = (peakBin > 0) ? baseVals[ringZones[peakBin - 1]] : baseVals[ringZones[NUM_TZ_RING - 1]];
+    int rightOfPeak = (peakBin < NUM_TZ_RING - 1) ? baseVals[ringZones[peakBin + 1]] : baseVals[ringZones[0]];
 
     int oPeak  = peak;
     int center = peakBin << 8;
@@ -595,15 +595,15 @@ int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity )
         ringIntensity = oPeak + leftOfPeak;
     }
 
-    int ringph = (center < 0)?(center + 1280):center;
+    int ringPh = (center < 0) ? (center + 1280) : center;
     if (phi)
     {
-        *phi = ringph;
+        *phi = ringPh;
     }
 
     // Find ratio of ring to inner.
     int totalIntensity = centerIntensity + ringIntensity;
-    int radius = (ringIntensity<<10) / totalIntensity;
+    int radius         = (ringIntensity << 10) / totalIntensity;
 
     if (r)
     {
@@ -617,4 +617,3 @@ int getTouchJoystick( int32_t * phi, int32_t * r, int32_t * intensity )
 
     return 1;
 }
-

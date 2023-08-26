@@ -300,7 +300,7 @@ void dancePollTouch(void)
     if (getTouchJoystick(&phi, &r, &intensity))
     {
         // Make sure we are pressing on the edge.
-        if (intensity > 5000 && r > 512 )
+        if (intensity > 5000 && r > 512)
         {
             uint8_t index = ((phi * (sizeof(danceSpeeds) / sizeof(*danceSpeeds) - 1) + 640) / 1280);
 

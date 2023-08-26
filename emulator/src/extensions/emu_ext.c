@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <printf.h>
 
 // Extension Includes
 #include "ext_touch.h"
@@ -33,7 +32,7 @@ static const emuExtension_t* registeredExtensions[] = {
 // Macros
 //==============================================================================
 
-#define EMU_CB_LOOP_BARE    for(node_t* node = extManager.extensions.first; node != NULL; node = node->next)
+#define EMU_CB_LOOP_BARE    for (node_t* node = extManager.extensions.first; node != NULL; node = node->next)
 #define EMU_CB_INFO         ((emuExtInfo_t*)(node->val))
 #define EMU_CB_HAS_FN(cbFn) (EMU_CB_INFO->extension && EMU_CB_INFO->extension->cbFn)
 #define EMU_CB_NAME         (EMU_CB_INFO->extension->name)
@@ -178,7 +177,7 @@ void initExtensions(const emuArgs_t* args)
     for (int i = 0; i < ARRAY_SIZE(registeredExtensions); i++)
     {
         const emuExtension_t* ext = cbList[i];
-        emuExtInfo_t* info = calloc(1, sizeof(emuExtInfo_t));
+        emuExtInfo_t* info        = calloc(1, sizeof(emuExtInfo_t));
         push(&extManager.extensions, info);
 
         info->extension = ext;
@@ -278,7 +277,7 @@ void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, u
     {
         emuPaneInfo_t* paneInfo = calloc(1, sizeof(emuPaneInfo_t));
 
-        paneInfo->loc = loc;
+        paneInfo->loc  = loc;
         paneInfo->minW = minW;
         paneInfo->minH = minH;
 
@@ -496,7 +495,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
             {
                 // Make sure each pane isn't hidden
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)(paneNode->val);
-                emuPane_t* cbPane = &(paneInfo->pane);
+                emuPane_t* cbPane       = &(paneInfo->pane);
 
                 // Copy the overall pane settings for the appropriate side onto the sub-pane for this callback
                 memcpy(cbPane, (winPanes + paneInfo->loc), sizeof(emuPane_t));
@@ -648,7 +647,7 @@ void doExtRenderCb(uint32_t winW, uint32_t winH)
         if (info && info->enabled && info->extension && info->extension->fnRenderCb)
         {
             emuPane_t panes[info->panes.length];
-            uint8_t i = 0;
+            uint8_t i        = 0;
             node_t* paneNode = info->panes.first;
             while (NULL != paneNode)
             {
