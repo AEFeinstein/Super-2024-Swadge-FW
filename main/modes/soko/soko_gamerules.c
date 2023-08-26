@@ -13,9 +13,6 @@ bool sokoEntityTileCollision[4][8] = {
     {true,    false,    true,    false,    false,    false,    false,      false},//LASER
 };
 
-//move to .h?
-void sharedGameLoop(soko_abs_t *self);
-
 uint64_t victoryDanceTimer;
 
 void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should be called when you reload a level to make sure game rules are correct
@@ -176,6 +173,9 @@ void sharedGameLoop(soko_abs_t *self){
     if(self->input.restartLevel)
     {
         restartCurrentLevel(self);
+    }else if(self->input.exitToOverworld)
+    {
+        exitToOverworld(self);
     }
 }
 
@@ -759,5 +759,13 @@ void restartCurrentLevel(soko_abs_t *self)
 
     //todo: what can we do about screen flash when restarting?
     self->loadNewLevelFlag = true;
+    self->screen = SOKO_LOADNEWLEVEL;
+}
+
+void exitToOverworld(soko_abs_t *self)
+{
+    self->loadNewLevelIndex = 0;
+    self->loadNewLevelFlag = true;
+    // self->state = SKS_GAMEPLAY;
     self->screen = SOKO_LOADNEWLEVEL;
 }

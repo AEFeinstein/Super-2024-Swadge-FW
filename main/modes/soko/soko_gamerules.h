@@ -40,6 +40,7 @@ bool eulerNoUnwalkedFloors(soko_abs_t *self);
 void overworldSokoGameLoop(soko_abs_t *self, int64_t elapsedUs);
 bool overworldPortalEntered(soko_abs_t *self);
 void restartCurrentLevel(soko_abs_t *self);
+void exitToOverworld(soko_abs_t *self);
 
 
 #endif //SOKO_GAMERULES_H

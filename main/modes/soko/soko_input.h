@@ -29,6 +29,7 @@ typedef struct
     int playerInputDeltaX;
     int playerInputDeltaY;
     bool restartLevel;
+    bool exitToOverworld;
 
 } sokoGameplayInput_t;
 
