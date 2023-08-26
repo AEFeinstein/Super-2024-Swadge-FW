@@ -15,6 +15,7 @@ void sokoInitInput(sokoGameplayInput_t* input)
         input->prevBtnState = 0;
         input->playerInputDeltaX = 0;
         input->playerInputDeltaY = 0;
+        input->restartLevel = false;
 }
 /**
  * @brief Input preprocessing turns btnstate into game-logic usable data.
@@ -31,6 +32,12 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
     //reset output data.
     input->playerInputDeltaY = 0;
     input->playerInputDeltaX = 0;
+
+    //Non directional buttons
+    if((btn & PB_B) && !(input->prevBtnState & PB_B))
+    {
+        input-> restartLevel = true;
+    }//else set to false, but this won't matter when level reloads.
 
     //update holding direction
     if((btn & PB_UP) && !(btn & 0b1110))

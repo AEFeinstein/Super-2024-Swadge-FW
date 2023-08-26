@@ -13,6 +13,9 @@ bool sokoEntityTileCollision[4][8] = {
     {true,    false,    true,    false,    false,    false,    false,      false},//LASER
 };
 
+//move to .h?
+void sharedGameLoop(soko_abs_t *self);
+
 uint64_t victoryDanceTimer;
 
 void sokoConfigGamemode(soko_abs_t* gamestate, soko_var_t variant) //This should be called when you reload a level to make sure game rules are correct
@@ -112,7 +115,8 @@ void laserBounceSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
                 // Draw the time string to the display, centered at (TFT_WIDTH / 2)
                 drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
             }
-        
+            sharedGameLoop(self);
+
 }
 
 
@@ -148,7 +152,6 @@ void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
 
 
     //DEBUG PLACEHOLDER:
-            // Render the time to a string
             char str[16] = {0};
             int16_t tWidth;
             if(!self->allCratesOnGoal)
@@ -166,9 +169,15 @@ void absSokoGameLoop(soko_abs_t *self, int64_t elapsedUs)
                 // Draw the time string to the display, centered at (TFT_WIDTH / 2)
                 drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
             }
-        
+            sharedGameLoop(self);
 }
 
+void sharedGameLoop(soko_abs_t *self){
+    if(self->input.restartLevel)
+    {
+        restartCurrentLevel(self);
+    }
+}
 
 //Gameplay Logic
 void absSokoTryPlayerMovement(soko_abs_t *self)
@@ -741,4 +750,14 @@ bool overworldPortalEntered(soko_abs_t *self)
         }
     }
     return false;
+}
+
+void restartCurrentLevel(soko_abs_t *self)
+{
+    //assumed this is set already?
+    //self->loadNewLevelIndex = self->loadNewLevelIndex;
+
+    //todo: what can we do about screen flash when restarting?
+    self->loadNewLevelFlag = true;
+    self->screen = SOKO_LOADNEWLEVEL;
 }

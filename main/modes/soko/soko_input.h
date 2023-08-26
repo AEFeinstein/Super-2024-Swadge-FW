@@ -28,6 +28,7 @@ typedef struct
     //todo: use Direction in input
     int playerInputDeltaX;
     int playerInputDeltaY;
+    bool restartLevel;
 
 } sokoGameplayInput_t;
 
