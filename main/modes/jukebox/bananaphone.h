@@ -732,16 +732,21 @@ static musicalNote_t bananaphoneNotes[] =
     {SILENCE, 19},
 };
 
-static songTrack_t bananaphoneTrack =
+static const songTrack_t bananaphoneTrack =
 {
     .numNotes = ARRAY_SIZE(bananaphoneNotes),
     .loopStartNote = 175,
     .notes = bananaphoneNotes
 };
 
+static songTrack_t bananaphoneTrackArray[] =
+{
+    bananaphoneTrack
+};
+
 static const song_t bananaphone =
 {
     .numTracks = 1,
     .shouldLoop = true,
-    .tracks = {&bananaphoneTrack}
+    .tracks = bananaphoneTrackArray
 };
