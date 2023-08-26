@@ -474,17 +474,17 @@ void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLa
  * If a button is passed here, it should not be handled anywhere else
  *
  * @param menu The menu to process button events for
- * @param btn The button event that occurred
+ * @param evt The button event that occurred
  * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
-menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
+menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
 {
-    if (btn.down)
+    if (evt.down)
     {
         // Get a pointer to the item for convenience
         menuItem_t* item = menu->currentItem->val;
 
-        switch (btn.button)
+        switch (evt.button)
         {
             case PB_UP:
             {
