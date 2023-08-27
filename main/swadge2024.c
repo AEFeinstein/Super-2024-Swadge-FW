@@ -141,6 +141,8 @@
 #include "advanced_usb_control.h"
 #include "swadge2024.h"
 #include "mainMenu.h"
+#include "quickSettings.h"
+#include "shapes.h"
 
 //==============================================================================
 // Defines
@@ -151,7 +153,8 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US 1000000
+#define EXIT_TIME_US  1000000
+#define PAUSE_TIME_US 500000
 
 //==============================================================================
 // Variables
@@ -163,11 +166,17 @@ static swadgeMode_t* cSwadgeMode = &mainMenuMode;
 /// @brief A pending Swadge mode to use after a deep sleep
 static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
+/// @brief Whether or not the quck settings overlay mode is shown
+static bool showQuickSettings = false;
+
 /// 25 FPS by default
 static uint32_t frameRateUs = 40000;
 
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
+
+/// @brief Timer to open quick settings menu
+static int64_t timePausePressed = 0;
 
 //==============================================================================
 // Function declarations
@@ -348,7 +357,7 @@ void app_main(void)
             tAccumDraw -= frameRateUs;
 
             // Call the mode's main loop
-            if (NULL != cSwadgeMode->fnMainLoop)
+            if (NULL != cSwadgeMode->fnMainLoop || showQuickSettings)
             {
                 // Keep track of the time between main loop calls
                 static uint64_t tLastMainLoopCall = 0;
@@ -356,12 +365,22 @@ void app_main(void)
                 {
                     tLastMainLoopCall = tNowUs;
                 }
-                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+
+                if (showQuickSettings)
+                {
+                    // Call the overlay mode's main loop if there is one
+                    quickSettingsMode.fnMainLoop(tNowUs - tLastMainLoopCall);
+                }
+                else
+                {
+                    // Otherwise, call the regular swadge mode's main loop
+                    cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
+                }
                 tLastMainLoopCall = tNowUs;
             }
 
             // If the menu button is being held
-            if (0 != timeExitPressed)
+            if (0 != timeExitPressed && !showQuickSettings)
             {
                 // Figure out for how long
                 int64_t tHeldUs = tNowUs - timeExitPressed;
@@ -380,9 +399,40 @@ void app_main(void)
                     fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
                 }
             }
+            else if (0 != timePausePressed)
+            {
+                int64_t tHeldUs = tNowUs - timePausePressed;
+
+                if (tHeldUs > PAUSE_TIME_US)
+                {
+                    if (showQuickSettings)
+                    {
+                        // Quick settings is active, just quit that
+                        quickSettingsMode.fnExitMode();
+                        showQuickSettings = false;
+                    }
+                    else
+                    {
+                        // Quick settings not active, set it up
+                        quickSettingsMode.fnEnterMode();
+                        showQuickSettings = true;
+                    }
+
+                    // Reset the count
+                    timePausePressed = 0;
+                }
+                else
+                {
+                    int16_t r = QUICK_SETTINGS_PANEL_R;
+                    int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
+                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
+                    fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx, r + 1, c333);
+                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + numPx + r, 0, r, c333);
+                }
+            }
 
             // Draw to the TFT
-            drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
+            drawDisplayTft(showQuickSettings ? NULL : cSwadgeMode->fnBackgroundDrawCallback);
         }
 
         // If the mode should be switched, do it now
@@ -569,7 +619,7 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
         // Don't intercept the button on the main menu
         if (cSwadgeMode != &mainMenuMode)
         {
-            if (evt->button == PB_SELECT)
+            if (evt->button == PB_SELECT && !showQuickSettings)
             {
                 if (evt->down)
                 {
@@ -580,6 +630,22 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
                 {
                     // Button was released, stop the timer
                     timeExitPressed = 0;
+                }
+            }
+            else if (evt->button == PB_START && !timeExitPressed)
+            {
+                // Handle the start button for the quick-settings menu,
+                // but only if we're not already handling select and the
+                // quick-settings menu is not already enabled
+                if (evt->down)
+                {
+                    // Button was pressed, start the timer
+                    timePausePressed = esp_timer_get_time();
+                }
+                else
+                {
+                    // Button was relesaed, stop the timer
+                    timePausePressed = 0;
                 }
             }
         }

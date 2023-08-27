@@ -4,6 +4,7 @@
 
 #include <esp_random.h>
 #include "menuLogbookRenderer.h"
+#include "menu_utils.h"
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "fill.h"
@@ -298,34 +299,14 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
             menuItem_t* item = (menuItem_t*)pageStart->val;
             bool isSelected  = (menu->currentItem->val == item);
 
-            // Draw the label(s)
-            if (item->minSetting != item->maxSetting)
-            {
-                // Create key and value label, then draw it
-                char label[64] = {0};
-                if (item->options)
-                {
-                    snprintf(label, sizeof(label) - 1, "%s%s", item->label, item->options[item->currentOpt]);
-                }
-                else
-                {
-                    snprintf(label, sizeof(label) - 1, "%s: %d", item->label, item->currentSetting);
-                }
+            char buffer[64]   = {0};
+            const char* label = getMenuItemLabelText(buffer, sizeof(buffer), item);
 
-                drawMenuText(renderer, label, x, y, isSelected, item->currentSetting != item->minSetting,
-                             item->currentSetting != item->maxSetting, false);
-            }
-            else if (item->label)
-            {
-                // Draw text with arrow if there is a submenu or this is the back button
-                drawMenuText(renderer, item->label, x, y, isSelected, (mnuBackStr == item->label),
-                             (NULL != item->subMenu), true);
-            }
-            else if (item->options)
-            {
-                // Draw text with arrows
-                drawMenuText(renderer, item->options[item->currentOpt], x, y, isSelected, true, true, false);
-            }
+            bool leftArrow    = menuItemHasPrev(item) || menuItemIsBack(item);
+            bool rightArrow   = menuItemHasNext(item) || menuItemHasSubMenu(item);
+            bool doubleArrows = menuItemIsBack(item) || menuItemHasSubMenu(item);
+
+            drawMenuText(renderer, label, x, y, isSelected, leftArrow, rightArrow, doubleArrows);
 
             // Move to the next item
             pageStart = pageStart->next;
