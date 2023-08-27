@@ -33,6 +33,7 @@
  *============================================================================*/
 
 #define CORNER_OFFSET 14
+#define JUKEBOX_SPRITE_Y_OFFSET 3
 #define LINE_BREAK_Y 8
 
 /*==============================================================================
@@ -77,7 +78,7 @@ typedef struct
 
     // WSGs
     wsg_t arrow;
-    wsg_t background;
+    wsg_t jukeboxSprite;
 
     // Touch
     bool touchHeld;
@@ -194,8 +195,7 @@ void  jukeboxEnterMode()
 
     // Load images
     loadWsg("arrow12.wsg", &jukebox->arrow, false);
-    // Load a background image to SPI RAM
-    loadWsg("jukebox.wsg", &jukebox->background, true);
+    loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
     // Initialize menu
     jukebox->menu = initMenu(str_jukebox, &jukeboxMainMenuCb);
@@ -236,7 +236,7 @@ void  jukeboxExitMode(void)
     freeFont(&jukebox->logbook);
 
     freeWsg(&jukebox->arrow);
-    freeWsg(&jukebox->background);
+    freeWsg(&jukebox->jukeboxSprite);
 
     freePortableDance(jukebox->portableDances);
 
@@ -410,7 +410,11 @@ void  jukeboxMainLoop(int64_t elapsedUs)
 
             portableDanceMainLoop(jukebox->portableDances, elapsedUs);
 
-            //fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c010);
+            // Plot jukebox sprite
+            int16_t spriteWidth = jukebox->jukeboxSprite.w;
+            drawWsg(&jukebox->jukeboxSprite,
+                        (TFT_WIDTH - spriteWidth) / 2, TFT_HEIGHT - jukebox->jukeboxSprite.h - JUKEBOX_SPRITE_Y_OFFSET,
+                        false, false, 0);
 
             // Plot the button funcs
             // LEDs
@@ -609,16 +613,22 @@ void jukeboxBackgroundDrawCb(int16_t x, int16_t y,
     {
         case JUKEBOX_MENU:
         {
-            // This draws menu background
+            // The menu draw function in the main loop handles this already
             break;
         }
         case JUKEBOX_PLAYER:
         {
-            // Figure out source and destination pointers
-            paletteColor_t* dst = &getPxTftFramebuffer()[(y * TFT_WIDTH) + x];
-            paletteColor_t* src = &jukebox->background.px[(y * TFT_WIDTH) + x];
-            // Copy the image to the framebuffer
-            memcpy(dst, src, w * h);
+            // Use TURBO drawing mode to draw individual pixels fast
+            SETUP_FOR_TURBO();
+
+            // Draw a grid
+            for (int16_t yp = y; yp < y + h; yp++)
+            {
+                for (int16_t xp = x; xp < x + w; xp++)
+                {
+                    TURBO_SET_PIXEL(xp, yp, c234);
+                }
+            }
             break;
         }
     }
