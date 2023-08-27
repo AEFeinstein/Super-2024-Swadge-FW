@@ -26,8 +26,6 @@
 #include "jukebox.h"
 #include "menu.h"
 
-#include "bananaphone.h"
-
 /*==============================================================================
  * Defines
  *============================================================================*/
@@ -80,6 +78,11 @@ typedef struct
     wsg_t arrow;
     wsg_t jukeboxSprite;
 
+    // Midis
+    song_t pongHit1;
+    song_t pongHit2;
+    song_t pongBgm;
+
     // Touch
     bool touchHeld;
     int32_t touchPosition;
@@ -101,7 +104,7 @@ jukebox_t* jukebox;
 typedef struct
 {
     char* name;
-    const song_t* song;
+    song_t* song;
 } jukeboxSong;
 
 typedef struct
@@ -151,21 +154,34 @@ static const char str_play[] = ": Play";
 
 // Arrays
 
-static const jukeboxSong jukeboxMusic[] =
+// TODO: get these midis from Dac
+// static const jukeboxSong jukeboxMusic[] =
+// {
+//     {.name = "Hot Rod", .song = &hotrod},
+//     {.name = "Fauxrio Kart", .song = &fauxrio_kart},
+//     {.name = "The Lake", .song = &the_lake},
+//     {.name = "Ya like jazz?", .song = &herecomesthesun},
+//     {.name = "Banana", .song = &bananaphone},
+// };
+
+static jukeboxSong pongMusic[] =
 {
-    // {.name = "Hot Rod", .song = &hotrod},
-    // {.name = "Fauxrio Kart", .song = &fauxrio_kart},
-    // {.name = "The Lake", .song = &the_lake},
-    // {.name = "Ya like jazz?", .song = &herecomesthesun},
-    {.name = "Banana", .song = &bananaphone},
+    {.name = "BGM", .song = NULL},
 };
 
 static const jukeboxCategory musicCategories[] =
 {
-    {.categoryName = "Jukebox", .numSongs = ARRAY_SIZE(jukeboxMusic), .songs = jukeboxMusic},
+    //{.categoryName = "Jukebox", .numSongs = ARRAY_SIZE(jukeboxMusic), .songs = jukeboxMusic},
+    {.categoryName = "Pong", .numSongs = ARRAY_SIZE(pongMusic), .songs = pongMusic},
 };
 
-static const jukeboxSong tunernomesfx[] =
+static jukeboxSong pongSfx[] =
+{
+    {.name = "Block 1", .song = NULL},
+    {.name = "Block 2", .song = NULL},
+};
+
+static const jukeboxSong tunernomeSfx[] =
 {
     {.name = "Primary", .song = &metronome_primary},
     {.name = "Secondary", .song = &metronome_secondary},
@@ -173,7 +189,8 @@ static const jukeboxSong tunernomesfx[] =
 
 static const jukeboxCategory sfxCategories[] =
 {
-    {.categoryName = "Tunernome", .numSongs = ARRAY_SIZE(tunernomesfx), .songs = tunernomesfx},
+    {.categoryName = "Pong", .numSongs = ARRAY_SIZE(pongSfx), .songs = pongSfx},
+    {.categoryName = "Tunernome", .numSongs = ARRAY_SIZE(tunernomeSfx), .songs = tunernomeSfx},
 };
 
 /*============================================================================
@@ -196,6 +213,15 @@ void  jukeboxEnterMode()
     // Load images
     loadWsg("arrow12.wsg", &jukebox->arrow, false);
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
+
+    // Load midis
+    loadSong("block1.sng", &jukebox->pongHit1, false);
+    loadSong("block2.sng", &jukebox->pongHit2, false);
+    loadSong("stereo.sng", &jukebox->pongBgm, false);
+    jukebox->pongBgm.shouldLoop = true;
+    pongMusic[0].song = &jukebox->pongBgm;
+    pongSfx[0].song = &jukebox->pongHit1;
+    pongSfx[1].song = &jukebox->pongHit2;
 
     // Initialize menu
     jukebox->menu = initMenu(str_jukebox, &jukeboxMainMenuCb);
