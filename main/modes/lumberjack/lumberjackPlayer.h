@@ -1,37 +1,11 @@
 #ifndef _LUMBERJACK_PLAYER_H_
 #define _LUMBERJACK_PLAYER_H_
 
-#include "swadge2024.h"
+#include "lumberjack_types.h"
 
+void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character);
+void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing);
+void lumberjackRespawn(lumberjackEntity_t* hero);
+ int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero);
 
-//Let's start making a mess right away
-typedef struct 
-{
-    wsg_t frames[21];
-    bool flipped;
-    bool onGround;
-
-    bool jumping;
-    bool jumpPressed;
-    bool jumpReady;
-    int jumpTimer;
-
-    int state;
-    int currentFrame;
-    int x;
-    int y;
-    float vx;
-    float vy;
-
-    int tx;
-    int ty;
-    int h;
-    int animationSpeed;
-    int64_t timerFrameUpdate;
-} lumberjackHero_t;
-
-void lumberjackSetupPlayer(lumberjackHero_t* hero, int character);
-void lumberjackSpawnPlayer(lumberjackHero_t* hero, int x, int y, int facing);
-int lumberjackGetPlayerAnimation(lumberjackHero_t* hero);
-
-#endif
+#endif 

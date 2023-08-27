@@ -3,36 +3,11 @@
 
 #include "swadge2024.h"
 
+#include "lumberjackEntity.h"
 #include "lumberjackPlayer.h"
  
 extern swadgeMode_t lumberjackMode;
 
-
-
-typedef struct
-{
-    font_t ibm;
-    p2pInfo p2p;
-    menu_t* menu;
-    uint16_t btnState;      ///<-- The STOLEN! ;)
-
-    int yOffset;
-
-    int64_t worldTimer;
-    int64_t physicsTimer;
-    int liquidAnimationFrame;
-    int currentMapHeight;
-
-    wsg_t floorTiles[20];
-    wsg_t animationTiles[20];
-
-    uint8_t tiles[400];
-    uint8_t anim[400];
-    
-    lumberjackHero_t* localPlayer;
-    lumberjackHero_t* remotePlayer;
-
-} lumberjackVars_t;
 
 typedef struct 
 {
@@ -42,8 +17,39 @@ typedef struct
     int collision;
     int type;
     int index;
+    int offset;
+    int offset_time;
 
 } lumberjackTile_t;
+
+typedef struct
+{
+    font_t ibm;
+    p2pInfo p2p;
+    menu_t* menu;
+    uint16_t btnState;      ///<-- The STOLEN! ;)
+
+    int yOffset;
+    int lives;
+
+    int64_t worldTimer;
+    int64_t physicsTimer;
+    int liquidAnimationFrame;
+    int currentMapHeight;
+
+    wsg_t floorTiles[20];
+    wsg_t animationTiles[20];
+
+    lumberjackTile_t tile[400];
+    uint8_t anim[400];
+
+    lumberjackEntity_t* enemy[8];
+    
+    lumberjackEntity_t* localPlayer;
+    lumberjackEntity_t* remotePlayer;
+
+} lumberjackVars_t;
+
 
 
 #endif
