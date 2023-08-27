@@ -26,13 +26,11 @@
 // Variables
 //==============================================================================
 
-/// A queue to move touch and push button reads from the ISR to the main loop
+/// A queue to move push button reads from the ISR to the main loop
 static QueueHandle_t btn_evt_queue = NULL;
-/// The current state of the touch and push buttons
+/// The current state of the push buttons
 static uint32_t buttonStates = 0;
-/// The current state of the touch buttons, used in btn_timer_isr_cb() and touchsensor_interrupt_cb()
-static volatile uint32_t touchIsrState = 0;
-/// The current state of the push buttons, used in btn_timer_isr_cb() and touchsensor_interrupt_cb()
+/// The current state of the push buttons, used in btn_timer_isr_cb()
 static volatile uint32_t pushIsrState = 0;
 
 /// A bundle of GPIOs to read as button input
@@ -42,8 +40,6 @@ static dedic_gpio_bundle_handle_t bundle = NULL;
 static int numTouchPads;
 /// A pointer to an array of configured touchpads
 static touch_pad_t* touchPads;
-/// A map between configured touch_pad_t and buttonBit_t
-static buttonBit_t touchPadMap[TOUCH_PAD_MAX];
 // Used in getBaseTouchVals() to get zeroed touch sensor values
 static int32_t* baseOffsets = NULL;
 
@@ -60,7 +56,6 @@ static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_d
 static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity,
                             bool denoiseEnable);
 
-static void touchsensor_interrupt_cb(void* arg);
 static int getTouchRawValues(uint32_t* rawValues, int maxPads);
 
 //==============================================================================
@@ -73,8 +68,7 @@ static int getTouchRawValues(uint32_t* rawValues, int maxPads);
  * @param pushButtons A list of GPIOs with pushbuttons to initialize. The list should be in the same order as
  * ::buttonBit_t, starting at ::PB_UP
  * @param numPushButtons The number of pushbuttons to initialize
- * @param touchPads A list of touch buttons to initialize. The list should be in the same order as ::buttonBit_t,
- * starting at ::TB_0
+ * @param touchPads A list of touch areas that make up a touchpad to initialize.
  * @param numTouchPads The number of touch buttons to initialize
  */
 void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
@@ -261,8 +255,6 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
     {
         // save the event
         pushIsrState = evt;
-        // Add the current touch state
-        evt |= touchIsrState;
         // Queue this state from the ISR
         xQueueSendFromISR(btn_evt_queue, &evt, &high_task_awoken);
     }
@@ -302,8 +294,6 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     for (uint8_t i = 0; i < numTouchPads; i++)
     {
         ESP_ERROR_CHECK(touch_pad_config(touchPads[i]));
-        /* Create a mapping from touch pad to button bit */
-        touchPadMap[touchPads[i]] = (TB_0 << i);
     }
 
     /* Initialize denoise if requested */
@@ -338,9 +328,6 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     ESP_LOGD("TOUCH", "touch pad filter init");
     ESP_ERROR_CHECK(touch_pad_timeout_set(true, SOC_TOUCH_PAD_THRESHOLD_MAX));
 
-    /* Register touch interrupt ISR, enable intr type. */
-    ESP_ERROR_CHECK(touch_pad_isr_register(touchsensor_interrupt_cb, NULL, TOUCH_PAD_INTR_MASK_ALL));
-
     /* Enable interrupts, but not TOUCH_PAD_INTR_MASK_SCAN_DONE */
     ESP_ERROR_CHECK(
         touch_pad_intr_enable(TOUCH_PAD_INTR_MASK_ACTIVE | TOUCH_PAD_INTR_MASK_INACTIVE | TOUCH_PAD_INTR_MASK_TIMEOUT));
@@ -365,71 +352,6 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
     }
 
     getTouchJoystick(0, 0, 0);
-}
-
-/**
- * Handle an interrupt triggered when a pad is touched.
- * Recognize what pad has been touched and save it in a table.
- *
- * @param arg unused
- */
-static void touchsensor_interrupt_cb(void* arg)
-{
-    uint32_t newTpState = touchIsrState;
-
-    BaseType_t high_task_awoken = pdFALSE;
-
-    uint32_t intr_mask = touch_pad_read_intr_status_mask();
-    // uint32_t pad_status = touch_pad_get_status();
-    buttonBit_t btnBit = touchPadMap[touch_pad_get_current_meas_channel()];
-    // touch_ll_filter_read_smooth(touch_pad_t touch_num, uint32_t *smooth_data)
-
-    /* Non-touch event statuses */
-    if (intr_mask & TOUCH_PAD_INTR_MASK_SCAN_DONE)
-    {
-        // ESP_LOGI("TOUCH", "The touch sensor group measurement is done [%d].", isrEvt.pad_num);
-        return;
-    }
-    else if (intr_mask & TOUCH_PAD_INTR_MASK_TIMEOUT)
-    {
-        /* Add your exception handling in here. */
-        // ESP_LOGI("TOUCH", "Touch sensor channel %d measure timeout. Skip this exception channel!!", isrEvt.pad_num);
-        // ESP_ERROR_CHECK(touch_pad_timeout_resume()); // Point on the next channel to measure.
-        touch_pad_timeout_resume();
-        return;
-    }
-    /* Handle events */
-    else if (intr_mask & TOUCH_PAD_INTR_MASK_ACTIVE)
-    {
-        // ESP_LOGI("TOUCH", "TouchSensor [%d] be activated, status mask 0x%x", isrEvt.pad_num, isrEvt.pad_status);
-        newTpState |= btnBit;
-    }
-    else if (intr_mask & TOUCH_PAD_INTR_MASK_INACTIVE)
-    {
-        // ESP_LOGI("TOUCH", "TouchSensor [%d] be inactivated, status mask 0x%x", isrEvt.pad_num, isrEvt.pad_status);
-        newTpState &= ~btnBit;
-    }
-    else
-    {
-        /* Shouldn't happen */
-        return;
-    }
-
-    /* If there is a state change, queue it from the ISR */
-    if (touchIsrState != newTpState)
-    {
-        // save the event
-        touchIsrState = newTpState;
-        // Add the current touch state
-        newTpState |= pushIsrState;
-        // Queue this state from the ISR
-        xQueueSendFromISR(btn_evt_queue, &newTpState, &high_task_awoken);
-    }
-
-    if (high_task_awoken == pdTRUE)
-    {
-        portYIELD_FROM_ISR();
-    }
 }
 
 /**

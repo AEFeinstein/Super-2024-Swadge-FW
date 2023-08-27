@@ -361,16 +361,6 @@ void colorchordButtonCb(buttonEvt_t* evt)
                 }
                 break;
             }
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
-            case TB_5:
-            {
-                // Ignore touch pads
-                break;
-            }
         }
     }
 }

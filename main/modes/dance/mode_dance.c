@@ -276,12 +276,6 @@ void danceButtonHandler(buttonEvt_t* evt)
 
             case PB_SELECT:
             case PB_START:
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
-            case TB_5:
             {
                 // Unused
                 break;
