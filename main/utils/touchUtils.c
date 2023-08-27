@@ -33,13 +33,13 @@ void getTouchCartesian(int32_t angle, int32_t radius, int32_t* x, int32_t* y)
  * @brief Convert touchpad angle and radius to a joystick enum, with either 4 or 8 directions
  * and an optional center dead-zone.
  *
- * @param angle The touch angle reported by ::getTouchAngleRadius()
- * @param radius The touch radius reported by ::getTouchAngleRadius()
+ * @param angle The touch angle reported by ::getTouchJoystick()
+ * @param radius The touch radius reported by ::getTouchJoystick()
  * @param useCenter If true, TB_CENTER will be returned if the stick is touched but inside the dead-zone
  * @param useDiagonals If true, diagonal directions will be returned as the bitwise OR of two directions
  * @return touchJoystick_t The joystick direction, or 0 if no direction could be determined.
  */
-touchJoystick_t getTouchJoystick(int32_t angle, int32_t radius, bool useCenter, bool useDiagonals)
+touchJoystick_t getTouchJoystickEx(int32_t angle, int32_t radius, bool useCenter, bool useDiagonals)
 {
     // Use 4 or 8 sectors, depending on whether we're using diagonals
     uint8_t sectors = useDiagonals ? 8 : 4;

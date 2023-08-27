@@ -54,8 +54,7 @@ static int32_t lastTouchIntensity = 0;
  * @param pushButtons A list of GPIOs with pushbuttons to initialize. The list should be in the same order as
  * ::buttonBit_t, starting at ::PB_UP
  * @param numPushButtons The number of pushbuttons to initialize
- * @param touchPads A list of touch buttons to initialize. The list should be in the same order as ::buttonBit_t,
- * starting at ::TB_0
+ * @param touchPads A list of touch areas that make up a touchpad to initialize.
  * @param numTouchPads The number of touch buttons to initialize
  */
 void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
@@ -124,7 +123,7 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
 {
     // Just simulate the centroid using the circular touchpad's horizontal axis only
     int32_t angle, radius;
-    if (getTouchAngleRadius(&angle, &radius, intensityVal))
+    if (getTouchJoystick(&angle, &radius, intensityVal))
     {
         getTouchCartesian(angle, radius, centerVal, NULL);
         return true;
@@ -137,17 +136,17 @@ bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
  * @brief Get the touch intensity and location in terms of angle and distance from
  * the center touchpad
  *
- * @param[out] angle A pointer to return the angle of the center of the touch, in degrees
- * @param[out] radius A pointer to return the radius of the touch centroid
+ * @param[out] phi A pointer to return the angle of the center of the touch, in degrees
+ * @param[out] r A pointer to return the radius of the touch centroid
  * @param[out] intensity A pointer to return the intensity of the touch
  * @return true If the touchpad was touched and values were written to the out-params
  * @return false If no touch is detected and nothing was written
  */
-bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
+int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 {
     // If lastTouchIntensity is 0, we should return false as that's "not touched"
     // But still perform the null checks on the args like the real swadge first
-    if (!angle || !radius || !intensity || 0 == lastTouchIntensity)
+    if (!phi || !r || !intensity || 0 == lastTouchIntensity)
     {
         return false;
     }
@@ -157,8 +156,8 @@ bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
     // TODO: Actual touchpad implementation
 
     // A touch in the center at 50% intensity
-    *angle     = lastTouchAngle;
-    *radius    = lastTouchRadius;
+    *phi       = lastTouchAngle;
+    *r         = lastTouchRadius;
     *intensity = lastTouchIntensity;
     return true;
 }

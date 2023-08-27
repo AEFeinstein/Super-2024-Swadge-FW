@@ -660,11 +660,6 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
             }
             case PB_START:
             case PB_SELECT:
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
             default:
             {
                 // Unused

@@ -45,10 +45,10 @@
 // Defines
 //==============================================================================
 
-#define BG_COLOR      0x191919FF // This color isn't parjt of the palette
-#define DIV_WIDTH     1
-#define DIV_HEIGHT    1
-#define DIV_COLOR     0x808080FF
+#define BG_COLOR   0x191919FF // This color isn't parjt of the palette
+#define DIV_WIDTH  1
+#define DIV_HEIGHT 1
+#define DIV_COLOR  0x808080FF
 
 //==============================================================================
 // Variables
@@ -127,7 +127,7 @@ int main(int argc, char** argv)
         // Get all the pane info to see how much space we need aside from the simulated TFT screen
         emuPaneMinimum_t paneMins[5] = {0};
         calculatePaneMinimums(&paneMins);
-        int32_t sidePanesW = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
+        int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
 
         // Add the screen size to the minimum pane sizes to get our window size

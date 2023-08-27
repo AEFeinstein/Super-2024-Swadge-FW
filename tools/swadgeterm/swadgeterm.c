@@ -26,50 +26,61 @@ hid_device * hd;
 
 int main( int argc, char ** argv )
 {
-	int first = 1;
-
 	hid_init();
-	hd = hid_open( VID, PID, 0 );
-	if( !hd ) { fprintf( stderr, "Could not open USB [interactive]\n" ); return -94; }
 
 #ifdef WIN32
 	HANDLE hConsole = GetStdHandle( STD_OUTPUT_HANDLE );
 	system(""); // enable VT100 Escape Sequence for WINDOWS 10 Ver. 1607 
 #endif
 
+	int toprint = 0;
+	int r = -5;
+	int already_waiting = 0;
+
+	uint8_t rdata[513] = { 0 };
 	do
 	{
-		int r;
-
-		// Disable tick.
-		uint8_t rdata[513] = { 0 };
-		rdata[0] = 172;
-		r = hid_get_feature_report( hd, rdata, 513 );
-#ifdef WIN32
-		int toprint = r - 4;
-#else
-		int toprint = r - 2;
-#endif
-
 		if( r < 0 )
 		{
 			do
 			{
 				hd = hid_open( VID, PID, 0 );
 				if( !hd )
-					fprintf( stderr, "Could not open USB\n" );
+				{
+					if( !already_waiting )
+					{
+						fprintf( stderr, "Waiting for USB...\n" );
+						already_waiting = 1;
+					}
+				}
 				else
-					fprintf( stderr, "Error: hid_get_feature_report failed with error %d\n", r );
-
+				{
+					fprintf( stderr, "Connected.\n" );
+				}
 				usleep( 100000 );
 			} while( !hd );
-
-			continue;
 		}
 		else if( toprint > 0 )
 		{
 			write( 1, rdata + 2, toprint );
 		}
+		// Disable tick.
+		rdata[0] = 172;
+		r = hid_get_feature_report( hd, rdata, force_packet_length );
+
+		already_waiting = 0;
+
+		if( r < 1 )
+		{
+			fprintf( stderr, "Error: hid_get_feature_report failed with error %d\n", r );
+			continue;
+		}
+
+#ifdef WIN32
+		toprint = r - 4;
+#else
+		toprint = r - 3;
+#endif
 	} while( 1 );
 
 	hid_close( hd );
