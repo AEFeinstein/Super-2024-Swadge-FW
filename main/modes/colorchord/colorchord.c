@@ -253,7 +253,7 @@ void colorchordMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Draw reminder text
-    const char exitText[] = "Start + Select to Exit";
+    const char exitText[] = "Hold Select to Exit";
     int16_t exitWidth     = textWidth(&colorchord->ibm_vga8, exitText);
     drawText(&colorchord->ibm_vga8, c555, exitText, (TFT_WIDTH - exitWidth) / 2,
              TFT_HEIGHT - colorchord->ibm_vga8.height - TEXT_Y);
