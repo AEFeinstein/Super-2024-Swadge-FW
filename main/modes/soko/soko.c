@@ -56,12 +56,29 @@ static void sokoEnterMode(void)
     loadWsg(soko->levels[0], &soko->levelWSG, true); // spiRAM cus only used during loading, not gameplay.
 
     // load sprite assets
-    loadWsg("sk_player_down.wsg", &soko->playerDownWSG, false);
-    loadWsg("sk_player_up.wsg", &soko->playerUpWSG, false);
-    loadWsg("sk_player_left.wsg", &soko->playerLeftWSG, false);
-    loadWsg("sk_player_right.wsg", &soko->playerRightWSG, false);
-    loadWsg("sk_crate.wsg", &soko->crateWSG, false);
-    loadWsg("sk_sticky_crate.wsg", &soko->stickyCrateWSG, false);
+    soko->currentTheme = &soko->sokoDefaultTheme;
+
+//Default Theme
+    loadWsg("sk_player_down.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
+    loadWsg("sk_player_up.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
+    loadWsg("sk_player_left.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
+    loadWsg("sk_player_right.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
+    loadWsg("sk_crate.wsg", &soko->sokoDefaultTheme.crateWSG, false);
+    loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
+
+    soko->sokoDefaultTheme.wallColor = c111;
+    soko->sokoDefaultTheme.floorColor = c444;
+
+//Overworld Theme
+    soko->overworldTheme.playerDownWSG = soko->sokoDefaultTheme.playerDownWSG;
+    soko->overworldTheme.playerUpWSG = soko->sokoDefaultTheme.playerUpWSG;
+    soko->overworldTheme.playerLeftWSG = soko->sokoDefaultTheme.playerLeftWSG;
+    soko->overworldTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
+    soko->overworldTheme.crateWSG = soko->sokoDefaultTheme.crateWSG;
+    soko->overworldTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
+
+    soko->overworldTheme.wallColor = c121;
+    soko->overworldTheme.floorColor = c454;
 
     // Initialize the menu
     soko->menu                = initMenu(sokoModeName, sokoMenuCb);
@@ -88,12 +105,12 @@ static void sokoExitMode(void)
     freeWsg(&soko->levelWSG);
 
     // free sprites
-    freeWsg(&soko->playerUpWSG);
-    freeWsg(&soko->playerDownWSG);
-    freeWsg(&soko->playerLeftWSG);
-    freeWsg(&soko->playerRightWSG);
-    freeWsg(&soko->crateWSG);
-    freeWsg(&soko->stickyCrateWSG);
+    freeWsg(&soko->sokoDefaultTheme.playerUpWSG);
+    freeWsg(&soko->sokoDefaultTheme.playerDownWSG);
+    freeWsg(&soko->sokoDefaultTheme.playerLeftWSG);
+    freeWsg(&soko->sokoDefaultTheme.playerRightWSG);
+    freeWsg(&soko->sokoDefaultTheme.crateWSG);
+    freeWsg(&soko->sokoDefaultTheme.stickyCrateWSG);
 
     // Free everything else
     free(soko);

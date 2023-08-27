@@ -92,6 +92,20 @@ typedef struct sokoCollision_s
 
 typedef struct
 {
+    wsg_t playerWSG;
+    wsg_t playerUpWSG;
+    wsg_t playerRightWSG;
+    wsg_t playerLeftWSG;
+    wsg_t playerDownWSG;
+    wsg_t crateWSG;
+    wsg_t stickyCrateWSG;
+    paletteColor_t wallColor;
+    paletteColor_t floorColor;
+
+} sokoTheme_t;
+
+typedef struct
+{
     uint16_t levelScale;
     uint8_t width;
     uint8_t height;
@@ -112,12 +126,7 @@ typedef struct
     // game settings
     uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
-    wsg_t playerUpWSG;
-    wsg_t playerRightWSG;
-    wsg_t playerLeftWSG;
-    wsg_t playerDownWSG;
-    wsg_t crateWSG;
-
+    
     // level
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
                                     ///< I need level names like picross.
@@ -144,13 +153,11 @@ typedef struct soko_abs_s
     // game settings
     uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
-    wsg_t playerWSG;
-    wsg_t playerUpWSG;
-    wsg_t playerRightWSG;
-    wsg_t playerLeftWSG;
-    wsg_t playerDownWSG;
-    wsg_t crateWSG;
-    wsg_t stickyCrateWSG;
+
+    //theme settings
+    sokoTheme_t* currentTheme; ///< Points to one of the other themes.
+    sokoTheme_t overworldTheme;
+    sokoTheme_t sokoDefaultTheme;
 
     // level
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if

@@ -22,6 +22,7 @@ void sokoConfigGamemode(
     soko_abs_t* gamestate,
     soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
 {
+    gamestate->currentTheme = &gamestate->sokoDefaultTheme;
     if (variant == SOKO_CLASSIC) // standard gamemode. Check 'variant' variable
     {
         printf("Config Soko to Classic\n");
@@ -54,6 +55,9 @@ void sokoConfigGamemode(
         gamestate->drawTilesFunc                    = absSokoDrawTiles;
         gamestate->isVictoryConditionFunc           = overworldPortalEntered;
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
+
+        gamestate->currentTheme = &gamestate->overworldTheme;
+
     }
     else if (variant == SOKO_LASERBOUNCE)
     {
@@ -336,10 +340,10 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             switch (level->tiles[x][y])
             {
                 case SKT_FLOOR:
-                    color = c444;
+                    color = self->currentTheme->floorColor;
                     break;
                 case SKT_WALL:
-                    color = c111;
+                    color = self->currentTheme->wallColor;
                     break;
                 case SKT_GOAL:
                     color = c141;
@@ -386,31 +390,31 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     switch (level->entities[i].facing)
                     {
                         case SKD_UP:
-                            drawWsg(&self->playerUpWSG, ox + level->entities[i].x * scale,
+                            drawWsg(&self->currentTheme->playerUpWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
                         case SKD_RIGHT:
-                            drawWsg(&self->playerRightWSG, ox + level->entities[i].x * scale,
+                            drawWsg(&self->currentTheme->playerRightWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
                         case SKD_LEFT:
-                            drawWsg(&self->playerLeftWSG, ox + level->entities[i].x * scale,
+                            drawWsg(&self->currentTheme->playerLeftWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
                         case SKD_DOWN:
                         default:
-                            drawWsg(&self->playerDownWSG, ox + level->entities[i].x * scale,
+                            drawWsg(&self->currentTheme->playerDownWSG, ox + level->entities[i].x * scale,
                                     oy + level->entities[i].y * scale, false, false, 0);
                             break;
                     }
 
                     break;
                 case SKE_CRATE:
-                    drawWsg(&self->crateWSG, ox + level->entities[i].x * scale, oy + level->entities[i].y * scale, false,
+                    drawWsg(&self->currentTheme->crateWSG, ox + level->entities[i].x * scale, oy + level->entities[i].y * scale, false,
                             false, 0);
                     break;
                 case SKE_STICKY_CRATE:
-                    drawWsg(&self->stickyCrateWSG, ox + level->entities[i].x * scale, oy + level->entities[i].y * scale,
+                    drawWsg(&self->currentTheme->stickyCrateWSG, ox + level->entities[i].x * scale, oy + level->entities[i].y * scale,
                             false, false, 0);
                     break;
                 case SKE_NONE:
