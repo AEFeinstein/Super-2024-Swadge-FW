@@ -14,6 +14,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "display/shapes.c"
                             "display/wsg.c"
                             "menu/menu.c"
+                            "menu/menu_utils.c"
                             "menu/menuLogbookRenderer.c"
                             "modes/colorchord/mode_colorchord.c"
                             "modes/dance/mode_dance.c"
@@ -22,6 +23,8 @@ idf_component_register(SRCS "swadge2024.c"
                             "modes/jukebox/jukebox.c"
                             "modes/mainMenu/mainMenu.c"
                             "modes/pong/pong.c"
+                            "modes/quickSettings/menuQuickSettingsRenderer.c"
+                            "modes/quickSettings/quickSettings.c"
                             "modes/tunernome/tunernome.c"
                             "utils/color_utils.c"
                             "utils/geometry.c"
@@ -57,7 +60,8 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./modes/pong"
                                 "./modes/tunernome"
                                 "./modes/mainMenu"
-                                "./modes/demo")
+                                "./modes/demo"
+                                "./modes/quickSettings")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL
