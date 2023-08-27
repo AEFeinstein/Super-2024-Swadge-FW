@@ -3,102 +3,105 @@
 /**
  * @brief Initialize Input. Does this for every puzzle start, to reset button state.
  * Also where config like dastime is set.
- * 
- * @param input 
+ *
+ * @param input
  */
 void sokoInitInput(sokoGameplayInput_t* input)
 {
-        input->dasTime = 100000;
-        input->firstDASTime = 500000;
-        input->DASActive = false;
-        input->prevHoldingDir = SKD_NONE;
-        input->prevBtnState = 0;
-        input->playerInputDeltaX = 0;
-        input->playerInputDeltaY = 0;
-        input->restartLevel = false;
-        input->exitToOverworld = false;
+    input->dasTime           = 100000;
+    input->firstDASTime      = 500000;
+    input->DASActive         = false;
+    input->prevHoldingDir    = SKD_NONE;
+    input->prevBtnState      = 0;
+    input->playerInputDeltaX = 0;
+    input->playerInputDeltaY = 0;
+    input->restartLevel      = false;
+    input->exitToOverworld   = false;
 }
 /**
  * @brief Input preprocessing turns btnstate into game-logic usable data.
  * Input variables only set on press, as appropriate.
  * Handles DAS, settings, etc.
  * Called once a frame before game loop.
- * 
- * @param input 
+ *
+ * @param input
  */
 void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
 {
-    
     uint16_t btn = input->btnState;
-    //reset output data.
+    // reset output data.
     input->playerInputDeltaY = 0;
     input->playerInputDeltaX = 0;
 
-    //Non directional buttons
-    if((btn & PB_B) && !(input->prevBtnState & PB_B))
+    // Non directional buttons
+    if ((btn & PB_B) && !(input->prevBtnState & PB_B))
     {
-        input-> restartLevel = true;
-    }//else set to false, but this won't matter when level reloads.
+        input->restartLevel = true;
+    } // else set to false, but this won't matter when level reloads.
 
-    if((btn & PB_START) && !(input->prevBtnState & PB_START))
+    if ((btn & PB_START) && !(input->prevBtnState & PB_START))
     {
-        input-> exitToOverworld = true;
-    }//else set to false, but this won't matter when we quit
+        input->exitToOverworld = true;
+    } // else set to false, but this won't matter when we quit
 
-
-    //update holding direction
-    if((btn & PB_UP) && !(btn & 0b1110))
+    // update holding direction
+    if ((btn & PB_UP) && !(btn & 0b1110))
     {
         input->holdingDir = SKD_UP;
-    }else if((btn & PB_DOWN) && !(btn & 0b1101))
+    }
+    else if ((btn & PB_DOWN) && !(btn & 0b1101))
     {
         input->holdingDir = SKD_DOWN;
-    }else if((btn & PB_LEFT) && !(btn & 0b1011))
+    }
+    else if ((btn & PB_LEFT) && !(btn & 0b1011))
     {
         input->holdingDir = SKD_LEFT;
-    }else if((btn & PB_RIGHT) && !(btn & 0b0111))
+    }
+    else if ((btn & PB_RIGHT) && !(btn & 0b0111))
     {
         input->holdingDir = SKD_RIGHT;
-    }else{
-        input->holdingDir = SKD_NONE;
-        input->DASActive = false;
-        input->timeHeldDirection = 0;//reset when buttons change or multiple buttons.
+    }
+    else
+    {
+        input->holdingDir        = SKD_NONE;
+        input->DASActive         = false;
+        input->timeHeldDirection = 0; // reset when buttons change or multiple buttons.
     }
 
-    //going from one button to another without letting go could cheese DAS. 
-    if(input->holdingDir != input->prevHoldingDir)
+    // going from one button to another without letting go could cheese DAS.
+    if (input->holdingDir != input->prevHoldingDir)
     {
-        input->DASActive = false;
+        input->DASActive         = false;
         input->timeHeldDirection = 0;
     }
 
-    //increment DAS time.
-    if(input->holdingDir != SKD_NONE)
+    // increment DAS time.
+    if (input->holdingDir != SKD_NONE)
     {
         input->timeHeldDirection += elapsedUs;
     }
 
-    //two cases when DAS gets triggered: initial and every one after the initial.
+    // two cases when DAS gets triggered: initial and every one after the initial.
     bool triggerDAS = false;
-    if(input->DASActive == false && input->timeHeldDirection > input->firstDASTime)
+    if (input->DASActive == false && input->timeHeldDirection > input->firstDASTime)
     {
-        triggerDAS = true;
+        triggerDAS       = true;
         input->DASActive = true;
     }
-        
-    if(input->DASActive == true && input->timeHeldDirection > input->dasTime)
+
+    if (input->DASActive == true && input->timeHeldDirection > input->dasTime)
     {
         triggerDAS = true;
-    }   
-    
-    if(triggerDAS)
+    }
+
+    if (triggerDAS)
     {
-        printf("trigger das");
-        //reset timer
+        // reset timer
         input->timeHeldDirection = 0;
 
-        //trigger movement
-        //todo: in sokogame i had to write delta to direction. This is basically directionenum to delta, which could be extracted too.
+        // trigger movement
+        // todo: in sokogame i had to write delta to direction. This is basically directionenum to delta, which could be
+        // extracted too.
         switch (input->holdingDir)
         {
             case SKD_RIGHT:
@@ -117,10 +120,12 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
             default:
                 break;
         }
-    }else
-    {//if !trigger DAS
+    }
+    else
+    { // if !trigger DAS
 
-        //holdingDir is ONLY holding one button. So we use normal buttonstate for taps so we can tap button two before releasing button one.
+        // holdingDir is ONLY holding one button. So we use normal buttonstate for taps so we can tap button two before
+        // releasing button one.
         if (input->btnState & PB_UP && !(input->prevBtnState & PB_UP))
         {
             input->playerInputDeltaY = -1;
@@ -138,9 +143,9 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
             input->playerInputDeltaX = 1;
         }
 
-    }//end !triggerDAS
+    } // end !triggerDAS
 
-    //do this last
-    input->prevBtnState = btn;
+    // do this last
+    input->prevBtnState   = btn;
     input->prevHoldingDir = input->holdingDir;
 }

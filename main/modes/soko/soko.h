@@ -7,17 +7,13 @@
 
 extern swadgeMode_t sokoMode;
 
-
-
-
 typedef enum
 {
-    SOKO_OVERWORLD = 0,
-    SOKO_CLASSIC = 1,
-    SOKO_EULER = 2,
+    SOKO_OVERWORLD   = 0,
+    SOKO_CLASSIC     = 1,
+    SOKO_EULER       = 2,
     SOKO_LASERBOUNCE = 3
 } soko_var_t;
-
 
 typedef enum
 {
@@ -31,7 +27,7 @@ typedef struct soko_portal_s
     uint8_t x;
     uint8_t y;
     uint8_t index;
-    bool levelCompleted; //use this to show completed levels later
+    bool levelCompleted; // use this to show completed levels later
 } soko_portal_t;
 
 typedef enum
@@ -52,26 +48,26 @@ typedef enum
 
 typedef enum
 {
-    SKE_NONE=0,
-    SKE_PLAYER=1,
-    SKE_CRATE=2,
-    SKE_LASER_90=3,
-    SKE_STICKY_CRATE=4 
+    SKE_NONE         = 0,
+    SKE_PLAYER       = 1,
+    SKE_CRATE        = 2,
+    SKE_LASER_90     = 3,
+    SKE_STICKY_CRATE = 4
 } sokoEntityType_t;
 
 typedef enum
 {
-    SKT_EMPTY = 0,
-    SKT_FLOOR = 1,
-    SKT_WALL = 2,
-    SKT_GOAL = 3,
-    SKT_PORTAL = 4,
-    SKT_LASER_EMIT = 5,
+    SKT_EMPTY         = 0,
+    SKT_FLOOR         = 1,
+    SKT_WALL          = 2,
+    SKT_GOAL          = 3,
+    SKT_PORTAL        = 4,
+    SKT_LASER_EMIT    = 5,
     SKT_LASER_RECEIVE = 6,
-    SKT_FLOOR_WALKED = 7
+    SKT_FLOOR_WALKED  = 7
 } sokoTile_t;
 
-typedef struct 
+typedef struct
 {
     sokoEntityType_t type;
     uint16_t x;
@@ -100,21 +96,21 @@ typedef struct
     uint8_t width;
     uint8_t height;
     uint8_t entityCount;
-    uint16_t playerIndex;//we could have multiple players...
+    uint16_t playerIndex; // we could have multiple players...
     sokoTile_t tiles[SOKO_MAX_LEVELSIZE][SOKO_MAX_LEVELSIZE];
-    sokoEntity_t entities[SOKO_MAX_ENTITY_COUNT];//todo: pointer and runtime array size
-} sokoLevel_t; 
+    sokoEntity_t entities[SOKO_MAX_ENTITY_COUNT]; // todo: pointer and runtime array size
+} sokoLevel_t;
 
 typedef struct
 {
-    //meta
+    // meta
     menu_t* menu;                               ///< The menu structure
     menuLogbookRenderer_t* menuLogbookRenderer; ///< Renderer for the menu
     font_t ibm;                                 ///< The font used in the menu and game
     sokoScreen_t screen;                        ///< The screen being displayed
 
-    //game settings
-    uint16_t maxPush;                           ///< Maximum number of crates the player can push. Use 0 for no limit.
+    // game settings
+    uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
     wsg_t playerUpWSG;
     wsg_t playerRightWSG;
@@ -122,14 +118,15 @@ typedef struct
     wsg_t playerDownWSG;
     wsg_t crateWSG;
 
-    //level
-    char* levels[SOKO_LEVEL_COUNT];///< List of wsg filenames. not comitted to storing level data like this, but idk if I need level names like picross.
-    wsg_t levelWSG;                            ///< Current level
+    // level
+    char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
+                                    ///< I need level names like picross.
+    wsg_t levelWSG;                 ///< Current level
 
-    //input
+    // input
     sokoGameplayInput_t input;
 
-    //current level
+    // current level
     sokoLevel_t currentLevel;
     bool allCratesOnGoal;
 
@@ -138,14 +135,14 @@ typedef struct
 typedef struct soko_abs_s soko_abs_t;
 typedef struct soko_abs_s
 {
-    //meta
+    // meta
     menu_t* menu;                               ///< The menu structure
     menuLogbookRenderer_t* menuLogbookRenderer; ///< Renderer for the menu
     font_t ibm;                                 ///< The font used in the menu and game
     sokoScreen_t screen;                        ///< The screen being displayed
 
-    //game settings
-    uint16_t maxPush;                           ///< Maximum number of crates the player can push. Use 0 for no limit.
+    // game settings
+    uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
     wsg_t playerWSG;
     wsg_t playerUpWSG;
@@ -155,29 +152,39 @@ typedef struct soko_abs_s
     wsg_t crateWSG;
     wsg_t stickyCrateWSG;
 
-    //level
-    char* levels[SOKO_LEVEL_COUNT];///< List of wsg filenames. not comitted to storing level data like this, but idk if I need level names like picross.
-    wsg_t levelWSG;                            ///< Current level
+    // level
+    char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
+                                    ///< I need level names like picross.
+    wsg_t levelWSG;                 ///< Current level
 
     soko_portal_t portals[SOKO_MAX_PORTALS];
     uint8_t portalCount;
 
-    //input
+    // input
     sokoGameplayInput_t input;
 
-    //current level
+    // current level
     sokoLevel_t currentLevel;
     bool allCratesOnGoal;
 
-    //game loop functions //Functions are moved into game struct so engine can support different game rules
-    void (*gameLoopFunc)(soko_abs_t *self, int64_t elapsedUs);
-    void (*sokoTryPlayerMovementFunc)(soko_abs_t *self);
-    bool (*sokoTryMoveEntityInDirectionFunc)(soko_abs_t *self, sokoEntity_t* entity, int dx, int dy, uint16_t push);
-    void (*drawTilesFunc)(soko_abs_t *self, sokoLevel_t* level);
-    bool (*isVictoryConditionFunc)(soko_abs_t *self);
-    sokoTile_t (*sokoGetTileFunc)(soko_abs_t *self, int x, int y);
+    // camera features
+    bool camEnabled;
+    uint16_t camX;
+    uint16_t camY;
+    uint16_t camPadExtentX;
+    uint16_t camPadExtentY;
+    uint16_t camWidth;
+    uint16_t camHeight;
 
-    //Player Convenience Pointer
+    // game loop functions //Functions are moved into game struct so engine can support different game rules
+    void (*gameLoopFunc)(soko_abs_t* self, int64_t elapsedUs);
+    void (*sokoTryPlayerMovementFunc)(soko_abs_t* self);
+    bool (*sokoTryMoveEntityInDirectionFunc)(soko_abs_t* self, sokoEntity_t* entity, int dx, int dy, uint16_t push);
+    void (*drawTilesFunc)(soko_abs_t* self, sokoLevel_t* level);
+    bool (*isVictoryConditionFunc)(soko_abs_t* self);
+    sokoTile_t (*sokoGetTileFunc)(soko_abs_t* self, int x, int y);
+
+    // Player Convenience Pointer
     sokoEntity_t* soko_player;
 
     bool loadNewLevelFlag;

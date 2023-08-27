@@ -8,6 +8,4 @@ void sokoInitNewLevel(soko_abs_t* soko, soko_var_t variant);
 void gameLoop(int64_t);
 void drawTiles(sokoLevel_t*);
 
-
-
-#endif //SOKO_GAME_H
+#endif // SOKO_GAME_H

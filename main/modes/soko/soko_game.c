@@ -9,50 +9,49 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t*, int, int,uint16_t);
 bool allCratesOnGoal(void);
 
 */
-//sokoDirection_t sokoDirectionFromDelta(int, int);
+// sokoDirection_t sokoDirectionFromDelta(int, int);
 
-//soko_t* s;
-//sokoEntity_t* player;
+// soko_t* s;
+// sokoEntity_t* player;
 
 soko_abs_t* soko_s;
 
-
 void sokoInitGame(soko_abs_t* soko)
 {
-
     printf("init sokobon game.\n");
 
-    //Configure conveninence pointers.
-    soko_s = soko;
+    // Configure conveninence pointers.
+    soko_s              = soko;
     soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
+
+    // reset camera
+    soko->camX = soko_s->soko_player->x;
+    soko->camY = soko_s->soko_player->y;
 
     sokoInitInput(&soko_s->input);
 
-    //set gameplay settings from default settings, if we want powerups or whatever that adjusts them, or have a state machine.
-    soko_s->maxPush = 0;//set to 1 for "traditional" sokoban.
-
     soko->state = SKS_GAMEPLAY;
-    
-    sokoConfigGamemode(soko,SOKO_OVERWORLD);
-    
-    //sokoConfigGamemode(soko,SOKO_EULER);
 
+    sokoConfigGamemode(soko, SOKO_OVERWORLD);
+
+    // sokoConfigGamemode(soko,SOKO_EULER);
 }
 
 void sokoInitNewLevel(soko_abs_t* soko, soko_var_t variant)
 {
     printf("Init New Level.\n");
 
-    soko_s = soko;
+    soko_s              = soko;
     soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
     sokoInitInput(&soko_s->input);
 
-    //set gameplay settings from default settings, if we want powerups or whatever that adjusts them, or have a state machine.
-    soko_s->maxPush = 0;//set to 1 for "traditional" sokoban.
+    // set gameplay settings from default settings, if we want powerups or whatever that adjusts them, or have a state
+    // machine.
+    soko_s->maxPush = 0; // set to 1 for "traditional" sokoban.
 
     soko->state = SKS_GAMEPLAY;
-    
-    sokoConfigGamemode(soko,variant);
+
+    sokoConfigGamemode(soko, variant);
 }
 
 /*
@@ -97,14 +96,14 @@ void gameLoop(int64_t elapsedUs)
                 // Draw the time string to the display, centered at (TFT_WIDTH / 2)
                 drawText(&s->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
             }
-        
+
 }
 
 
 //Gameplay Logic
 void sokoTryPlayerMovement()
 {
-    
+
     if(s->input.playerInputDeltaX == 0 && s->input.playerInputDeltaY == 0)
     {
         return;
@@ -152,19 +151,19 @@ bool sokoTryMoveEntityInDirection(sokoEntity_t* entity, int dx, int dy, uint16_t
                         //can't push? can't move.
                         return false;
                     }
-                   
+
                 }
             }
-            
+
         }
-        
+
         //No wall in front of us and nothing to push, we can move.
         entity->x += dx;
         entity->y += dy;
         entity->facing = sokoDirectionFromDelta(dx,dy);
         return true;
     }
-    
+
     return false;
 }
 
@@ -197,7 +196,7 @@ void drawTiles(sokoLevel_t* level)
                 default:
                     break;
             }
-        
+
             //Draw a square.
             //none of this matters it's all getting replaced with drawwsg later.
             if(color != cTransparent){
@@ -234,7 +233,7 @@ void drawTiles(sokoLevel_t* level)
                         drawWsg(&s->playerDownWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
                         break;
                 }
-                
+
                 break;
             case SKE_CRATE:
                  drawWsg(&s->crateWSG,ox+level->entities[i].x*scale,oy+level->entities[i].y*scale,false,false,0);
@@ -243,7 +242,7 @@ void drawTiles(sokoLevel_t* level)
                 break;
         }
     }
-    
+
 }
 
 bool allCratesOnGoal()
@@ -291,7 +290,7 @@ sokoTile_t sokoGetTile(int x, int y)
     {
         return SKT_WALL;
     }
-     
+
     return s->currentLevel.tiles[x][y];
 }
 */
