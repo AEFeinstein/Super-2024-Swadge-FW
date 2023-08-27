@@ -20,6 +20,7 @@ const char * menu_Bootload = "Bootloader";
 
 //#define REBOOT_TEST
 //#define PROFILE_TEST
+//#define TEST_JOYSTICK
 #define MODE7_TEST
 
 #ifdef MODE7_TEST
@@ -94,11 +95,11 @@ void sandbox_exit()
 void sandbox_tick()
 {
 #if 1
-    uint32_t start, end;
 #ifdef PROFILE_TEST
     volatile uint32_t profiles[7];  // Use of volatile here to force compiler to order instructions and not cheat.
     // Profile function call into assembly land
     // Mostly used to understand function call overhead.
+    uint32_t start, end;
     start = getCycleCount();
     minimal_function();
     end = getCycleCount();
@@ -169,6 +170,11 @@ void sandbox_tick()
         menu = menuButton(menu, evt);
     }
 #endif
+
+#ifdef TEST_JOYSTICK
+    uint32_t start, end;
+
+    // Show king donut where have our joystick.
     int32_t phi = 0;
     int32_t r = 0;
     int32_t intensity = 0;
@@ -185,10 +191,13 @@ void sandbox_tick()
         if( phi >= 360 ) phi -= 360;
         int32_t sX = getSin1024( phi ) * r;
 
-        drawWsg( &example_sprite, 120-10 + (sX>>15), 140-20 + (sY>>15), 0, 0, 0 );
+        drawWsg( &example_sprite, 120-10 + (sX>>15), 140-20 + (sY>>15), 0, 0, 360-phi );
     }
 
-    ESP_LOGI( "sandbox", "TBV [%lu] %ld %ld %ld %d", end-start, phi, r, intensity, tbv );
+    ESP_LOGI( "sandbox", "[%lu] %ld %ld %ld %d", end-start, phi, r, intensity, tbv );
+
+#endif
+
 }
 
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
