@@ -30,9 +30,9 @@
  * Defines
  *============================================================================*/
 
-#define CORNER_OFFSET 14
+#define CORNER_OFFSET           14
 #define JUKEBOX_SPRITE_Y_OFFSET 3
-#define LINE_BREAK_Y 8
+#define LINE_BREAK_Y            8
 
 /*==============================================================================
  * Enums
@@ -49,13 +49,12 @@ typedef enum
  * Prototypes
  *============================================================================*/
 
-void  jukeboxEnterMode(void);
-void  jukeboxExitMode(void);
-void  jukeboxButtonCallback(buttonEvt_t* evt);
-void  jukeboxMainLoop(int64_t elapsedUs);
-void  jukeboxMainMenuCb(const char* label, bool selected, uint32_t settingVal);
-void  jukeboxBackgroundDrawCb(int16_t x, int16_t y,
-                             int16_t w, int16_t h, int16_t up, int16_t upNum );
+void jukeboxEnterMode(void);
+void jukeboxExitMode(void);
+void jukeboxButtonCallback(buttonEvt_t* evt);
+void jukeboxMainLoop(int64_t elapsedUs);
+void jukeboxMainMenuCb(const char* label, bool selected, uint32_t settingVal);
+void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 void setJukeboxMainMenu(bool resetPos);
 
@@ -84,8 +83,8 @@ typedef struct
     song_t pongBgm;
 
     // Touch
-    bool touchHeld;
-    int32_t touchPosition;
+    int32_t touchAngle;
+    int32_t touchRadius;
     int32_t touchIntensity;
 
     // Light Dances
@@ -118,21 +117,20 @@ typedef struct
  * Variables
  *============================================================================*/
 
-swadgeMode_t jukeboxMode =
-{
-    .modeName = "Jukebox",
-    .wifiMode = NO_WIFI,
-    .overrideUsb = false,
-    .usesAccelerometer = false,
-    .usesThermometer = false,
-    .fnEnterMode = jukeboxEnterMode,
-    .fnExitMode = jukeboxExitMode,
-    .fnMainLoop = jukeboxMainLoop,
-    .fnAudioCallback = NULL,
+swadgeMode_t jukeboxMode = {
+    .modeName                 = "Jukebox",
+    .wifiMode                 = NO_WIFI,
+    .overrideUsb              = false,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
+    .fnEnterMode              = jukeboxEnterMode,
+    .fnExitMode               = jukeboxExitMode,
+    .fnMainLoop               = jukeboxMainLoop,
+    .fnAudioCallback          = NULL,
     .fnBackgroundDrawCallback = jukeboxBackgroundDrawCb,
-    .fnEspNowRecvCb = NULL,
-    .fnEspNowSendCb = NULL,
-    .fnAdvancedUSB = NULL
+    .fnEspNowRecvCb           = NULL,
+    .fnEspNowSendCb           = NULL,
+    .fnAdvancedUSB            = NULL,
 };
 
 /*==============================================================================
@@ -140,17 +138,17 @@ swadgeMode_t jukeboxMode =
  *============================================================================*/
 
 // Text
-static const char str_jukebox[]  = "Jukebox";
-static const char str_bgm_muted[] =  "Swadge music is muted!";
-static const char str_sfx_muted[] =  "Swadge SFX are muted!";
-static const char str_bgm[] = "Music";
-static const char str_sfx[] = "SFX";
-static const char str_exit[] = "Exit";
-static const char str_leds[] = "Sel: LEDs:";
-static const char str_back[] = "Start: Back";
+static const char str_jukebox[]    = "Jukebox";
+static const char str_bgm_muted[]  = "Swadge music is muted!";
+static const char str_sfx_muted[]  = "Swadge SFX are muted!";
+static const char str_bgm[]        = "Music";
+static const char str_sfx[]        = "SFX";
+static const char str_exit[]       = "Exit";
+static const char str_leds[]       = "Sel: LEDs:";
+static const char str_back[]       = "Start: Back";
 static const char str_brightness[] = "Touch: LED Brightness:";
-static const char str_stop[] = ": Stop";
-static const char str_play[] = ": Play";
+static const char str_stop[]       = ": Stop";
+static const char str_play[]       = ": Play";
 
 // Arrays
 
@@ -164,31 +162,26 @@ static const char str_play[] = ": Play";
 //     {.name = "Banana", .song = &bananaphone},
 // };
 
-static jukeboxSong pongMusic[] =
-{
+static jukeboxSong pongMusic[] = {
     {.name = "BGM", .song = NULL},
 };
 
-static const jukeboxCategory musicCategories[] =
-{
+static const jukeboxCategory musicCategories[] = {
     //{.categoryName = "Jukebox", .numSongs = ARRAY_SIZE(jukeboxMusic), .songs = jukeboxMusic},
     {.categoryName = "Pong", .numSongs = ARRAY_SIZE(pongMusic), .songs = pongMusic},
 };
 
-static jukeboxSong pongSfx[] =
-{
+static jukeboxSong pongSfx[] = {
     {.name = "Block 1", .song = NULL},
     {.name = "Block 2", .song = NULL},
 };
 
-static const jukeboxSong tunernomeSfx[] =
-{
+static const jukeboxSong tunernomeSfx[] = {
     {.name = "Primary", .song = &metronome_primary},
     {.name = "Secondary", .song = &metronome_secondary},
 };
 
-static const jukeboxCategory sfxCategories[] =
-{
+static const jukeboxCategory sfxCategories[] = {
     {.categoryName = "Pong", .numSongs = ARRAY_SIZE(pongSfx), .songs = pongSfx},
     {.categoryName = "Tunernome", .numSongs = ARRAY_SIZE(tunernomeSfx), .songs = tunernomeSfx},
 };
@@ -200,7 +193,7 @@ static const jukeboxCategory sfxCategories[] =
 /**
  * Initializer for jukebox
  */
-void  jukeboxEnterMode()
+void jukeboxEnterMode()
 {
     // Allocate zero'd memory for the mode
     jukebox = calloc(1, sizeof(jukebox_t));
@@ -219,12 +212,12 @@ void  jukeboxEnterMode()
     loadSong("block2.sng", &jukebox->pongHit2, false);
     loadSong("stereo.sng", &jukebox->pongBgm, false);
     jukebox->pongBgm.shouldLoop = true;
-    pongMusic[0].song = &jukebox->pongBgm;
-    pongSfx[0].song = &jukebox->pongHit1;
-    pongSfx[1].song = &jukebox->pongHit2;
+    pongMusic[0].song           = &jukebox->pongBgm;
+    pongSfx[0].song             = &jukebox->pongHit1;
+    pongSfx[1].song             = &jukebox->pongHit2;
 
     // Initialize menu
-    jukebox->menu = initMenu(str_jukebox, &jukeboxMainMenuCb);
+    jukebox->menu                = initMenu(str_jukebox, &jukeboxMainMenuCb);
     jukebox->menuLogbookRenderer = initMenuLogbookRenderer(&jukebox->logbook);
     addSingleItemToMenu(jukebox->menu, str_bgm);
     addSingleItemToMenu(jukebox->menu, str_sfx);
@@ -253,7 +246,7 @@ void  jukeboxEnterMode()
 /**
  * Called when jukebox is exited
  */
-void  jukeboxExitMode(void)
+void jukeboxExitMode(void)
 {
     bzrStop();
 
@@ -277,18 +270,18 @@ void  jukeboxExitMode(void)
  *
  * @param evt The button event that occurred
  */
-void  jukeboxButtonCallback(buttonEvt_t* evt)
+void jukeboxButtonCallback(buttonEvt_t* evt)
 {
-    if(!evt->down)
+    if (!evt->down)
     {
         return;
     }
 
-    switch(evt->button)
+    switch (evt->button)
     {
         case PB_A:
         {
-            if(jukebox->inMusicSubmode)
+            if (jukebox->inMusicSubmode)
             {
                 bzrPlayBgm(musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO);
             }
@@ -318,7 +311,7 @@ void  jukeboxButtonCallback(buttonEvt_t* evt)
         {
             bzrStop();
             uint8_t length;
-            if(jukebox->inMusicSubmode)
+            if (jukebox->inMusicSubmode)
             {
                 length = ARRAY_SIZE(musicCategories);
             }
@@ -327,7 +320,7 @@ void  jukeboxButtonCallback(buttonEvt_t* evt)
                 length = ARRAY_SIZE(sfxCategories);
             }
 
-            if(jukebox->categoryIdx == 0)
+            if (jukebox->categoryIdx == 0)
             {
                 jukebox->categoryIdx = length;
             }
@@ -340,7 +333,7 @@ void  jukeboxButtonCallback(buttonEvt_t* evt)
         {
             bzrStop();
             uint8_t length;
-            if(jukebox->inMusicSubmode)
+            if (jukebox->inMusicSubmode)
             {
                 length = ARRAY_SIZE(musicCategories);
             }
@@ -358,7 +351,7 @@ void  jukeboxButtonCallback(buttonEvt_t* evt)
         {
             bzrStop();
             uint8_t length;
-            if(jukebox->inMusicSubmode)
+            if (jukebox->inMusicSubmode)
             {
                 length = musicCategories[jukebox->categoryIdx].numSongs;
             }
@@ -367,7 +360,7 @@ void  jukeboxButtonCallback(buttonEvt_t* evt)
                 length = sfxCategories[jukebox->categoryIdx].numSongs;
             }
 
-            if(jukebox->songIdx == 0)
+            if (jukebox->songIdx == 0)
             {
                 jukebox->songIdx = length;
             }
@@ -378,7 +371,7 @@ void  jukeboxButtonCallback(buttonEvt_t* evt)
         {
             bzrStop();
             uint8_t length;
-            if(jukebox->inMusicSubmode)
+            if (jukebox->inMusicSubmode)
             {
                 length = musicCategories[jukebox->categoryIdx].numSongs;
             }
@@ -400,11 +393,11 @@ void  jukeboxButtonCallback(buttonEvt_t* evt)
 /**
  * Update the display by drawing the current state of affairs
  */
-void  jukeboxMainLoop(int64_t elapsedUs)
+void jukeboxMainLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt = {0};
 
-    switch(jukebox->screen)
+    switch (jukebox->screen)
     {
         case JUKEBOX_MENU:
         {
@@ -426,166 +419,118 @@ void  jukeboxMainLoop(int64_t elapsedUs)
                 jukeboxButtonCallback(&evt);
             }
 
-            jukebox->touchHeld = getTouchCentroid(&jukebox->touchPosition, &jukebox->touchIntensity);
-            if(jukebox->touchHeld)
+            if (getTouchJoystick(&jukebox->touchAngle, &jukebox->touchRadius, &jukebox->touchIntensity))
             {
-                jukebox->touchPosition = roundf((jukebox->touchPosition * MAX_LED_BRIGHTNESS) / 255.0f);
-
-                setLedBrightnessSetting((uint8_t) jukebox->touchPosition);
+                setLedBrightnessSetting((jukebox->touchAngle * (MAX_LED_BRIGHTNESS + 1)) / 360);
             }
 
             portableDanceMainLoop(jukebox->portableDances, elapsedUs);
 
             // Plot jukebox sprite
             int16_t spriteWidth = jukebox->jukeboxSprite.w;
-            drawWsg(&jukebox->jukeboxSprite,
-                        (TFT_WIDTH - spriteWidth) / 2, TFT_HEIGHT - jukebox->jukeboxSprite.h - JUKEBOX_SPRITE_Y_OFFSET,
-                        false, false, 0);
+            drawWsg(&jukebox->jukeboxSprite, (TFT_WIDTH - spriteWidth) / 2,
+                    TFT_HEIGHT - jukebox->jukeboxSprite.h - JUKEBOX_SPRITE_Y_OFFSET, false, false, 0);
 
             // Plot the button funcs
             // LEDs
-            drawText(
-                &jukebox->radiostars, c555,
-                str_leds,
-                CORNER_OFFSET,
-                CORNER_OFFSET);
+            drawText(&jukebox->radiostars, c555, str_leds, CORNER_OFFSET, CORNER_OFFSET);
             // Light dance name
-            drawText(&(jukebox->radiostars), c111,
-                portableDanceGetName(jukebox->portableDances),
-                TFT_WIDTH - CORNER_OFFSET - textWidth(&jukebox->radiostars, portableDanceGetName(jukebox->portableDances)),
-                CORNER_OFFSET);
+            drawText(&(jukebox->radiostars), c111, portableDanceGetName(jukebox->portableDances),
+                     TFT_WIDTH - CORNER_OFFSET
+                         - textWidth(&jukebox->radiostars, portableDanceGetName(jukebox->portableDances)),
+                     CORNER_OFFSET);
 
             // Back
-            drawText(
-                &jukebox->radiostars, c555,
-                str_back,
-                CORNER_OFFSET,
-                CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
+            drawText(&jukebox->radiostars, c555, str_back, CORNER_OFFSET,
+                     CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
 
             // LED Brightness
-            drawText(
-                &jukebox->radiostars, c555,
-                str_brightness,
-                CORNER_OFFSET,
-                CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
+            drawText(&jukebox->radiostars, c555, str_brightness, CORNER_OFFSET,
+                     CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
             char text[32];
             snprintf(text, sizeof(text), "%d", getLedBrightnessSetting());
-            drawText(
-                &jukebox->radiostars, c111,
-                text,
-                TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
-                CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
+            drawText(&jukebox->radiostars, c111, text,
+                     TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
+                     CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
 
             // Stop
-            int16_t afterText = drawText(
-                                    &jukebox->radiostars, c511,
-                                    "B",
-                                    CORNER_OFFSET,
-                                    TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
-            drawText(
-                &jukebox->radiostars, c555,
-                str_stop,
-                afterText,
-                TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
+            int16_t afterText = drawText(&jukebox->radiostars, c511, "B", CORNER_OFFSET,
+                                         TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
+            drawText(&jukebox->radiostars, c555, str_stop, afterText,
+                     TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
             // Play
-            afterText = drawText(
-                            &jukebox->radiostars, c151,
-                            "A",
-                            TFT_WIDTH - textWidth(&jukebox->radiostars, str_play) - textWidth(&jukebox->radiostars, "A") - CORNER_OFFSET,
-                            TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
-            drawText(
-                &jukebox->radiostars, c555,
-                str_play,
-                afterText,
-                TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
-
-
+            afterText = drawText(&jukebox->radiostars, c151, "A",
+                                 TFT_WIDTH - textWidth(&jukebox->radiostars, str_play)
+                                     - textWidth(&jukebox->radiostars, "A") - CORNER_OFFSET,
+                                 TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
+            drawText(&jukebox->radiostars, c555, str_play, afterText,
+                     TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
             char* categoryName;
             char* songName;
             char* songTypeName;
             uint8_t numSongs;
             bool drawNames = false;
-            if(jukebox->inMusicSubmode)
+            if (jukebox->inMusicSubmode)
             {
                 // Warn the user that the swadge is muted, if that's the case
-                if(getBgmVolumeSetting() == getBgmVolumeSettingBounds()->min)
+                if (getBgmVolumeSetting() == getBgmVolumeSettingBounds()->min)
                 {
-                    drawText(
-                        &jukebox->radiostars, c551,
-                        str_bgm_muted,
-                        (TFT_WIDTH - textWidth(&jukebox->radiostars, str_bgm_muted)) / 2,
-                        TFT_HEIGHT / 2);
+                    drawText(&jukebox->radiostars, c551, str_bgm_muted,
+                             (TFT_WIDTH - textWidth(&jukebox->radiostars, str_bgm_muted)) / 2, TFT_HEIGHT / 2);
                 }
                 else
                 {
                     categoryName = musicCategories[jukebox->categoryIdx].categoryName;
-                    songName = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
+                    songName     = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
                     songTypeName = "Music";
-                    numSongs = musicCategories[jukebox->categoryIdx].numSongs;
-                    drawNames = true;
+                    numSongs     = musicCategories[jukebox->categoryIdx].numSongs;
+                    drawNames    = true;
                 }
             }
             else
             {
                 // Warn the user that the swadge is muted, if that's the case
-                if(getSfxVolumeSetting() == getSfxVolumeSettingBounds()->min)
+                if (getSfxVolumeSetting() == getSfxVolumeSettingBounds()->min)
                 {
-                    drawText(
-                        &jukebox->radiostars, c551,
-                        str_sfx_muted,
-                        (TFT_WIDTH - textWidth(&jukebox->radiostars, str_sfx_muted)) / 2,
-                        TFT_HEIGHT / 2);
+                    drawText(&jukebox->radiostars, c551, str_sfx_muted,
+                             (TFT_WIDTH - textWidth(&jukebox->radiostars, str_sfx_muted)) / 2, TFT_HEIGHT / 2);
                 }
                 else
                 {
                     categoryName = sfxCategories[jukebox->categoryIdx].categoryName;
-                    songName = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
+                    songName     = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
                     songTypeName = "SFX";
-                    numSongs = sfxCategories[jukebox->categoryIdx].numSongs;
-                    drawNames = true;
+                    numSongs     = sfxCategories[jukebox->categoryIdx].numSongs;
+                    drawNames    = true;
                 }
             }
 
-            if(drawNames)
+            if (drawNames)
             {
                 // Draw the mode name
                 snprintf(text, sizeof(text), "Mode: %s", categoryName);
                 int16_t width = textWidth(&(jukebox->radiostars), text);
-                int16_t yOff = (TFT_HEIGHT - jukebox->radiostars.height) / 2 - jukebox->radiostars.height * 0;
-                drawText(&(jukebox->radiostars), c313,
-                        text,
-                        (TFT_WIDTH - width) / 2,
-                        yOff);
+                int16_t yOff  = (TFT_HEIGHT - jukebox->radiostars.height) / 2 - jukebox->radiostars.height * 0;
+                drawText(&(jukebox->radiostars), c313, text, (TFT_WIDTH - width) / 2, yOff);
                 // Draw category arrows if this submode has more than 1 category
-                if((jukebox->inMusicSubmode && ARRAY_SIZE(musicCategories) > 1) || ARRAY_SIZE(sfxCategories) > 1)
+                if ((jukebox->inMusicSubmode && ARRAY_SIZE(musicCategories) > 1) || ARRAY_SIZE(sfxCategories) > 1)
                 {
-                    drawWsg(&jukebox->arrow,
-                            ((TFT_WIDTH - width) / 2) - 8 - jukebox->arrow.w, yOff,
-                            false, false, 0);
-                    drawWsg(&jukebox->arrow,
-                            ((TFT_WIDTH - width) / 2) + width + 8, yOff,
-                            false, false, 180);
+                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - 8 - jukebox->arrow.w, yOff, false, false, 0);
+                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 180);
                 }
 
                 // Draw the song name
                 snprintf(text, sizeof(text), "%s: %s", songTypeName, songName);
-                yOff = (TFT_HEIGHT - jukebox->radiostars.height) / 2 + jukebox->radiostars.height * 2.5f;
+                yOff  = (TFT_HEIGHT - jukebox->radiostars.height) / 2 + jukebox->radiostars.height * 2.5f;
                 width = textWidth(&(jukebox->radiostars), text);
-                drawText(&(jukebox->radiostars), c113,
-                        text,
-                        (TFT_WIDTH - width) / 2,
-                        yOff);
+                drawText(&(jukebox->radiostars), c113, text, (TFT_WIDTH - width) / 2, yOff);
                 // Draw song arrows if this category has more than 1 song
-                if(numSongs > 1)
+                if (numSongs > 1)
                 {
-                    drawWsg(&jukebox->arrow,
-                            ((TFT_WIDTH - width) / 2) - 8 - jukebox->arrow.w, yOff,
-                            false, false, 270);
-                    drawWsg(&jukebox->arrow,
-                            ((TFT_WIDTH - width) / 2) + width + 8, yOff,
-                            false, false, 90);
+                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - 8 - jukebox->arrow.w, yOff, false, false, 270);
+                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 90);
                 }
             }
             break;
@@ -595,23 +540,23 @@ void  jukeboxMainLoop(int64_t elapsedUs)
 
 void jukeboxMainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    if(!selected)
+    if (!selected)
     {
         return;
     }
 
     if (label == str_bgm)
     {
-        jukebox->screen = JUKEBOX_PLAYER;
-        jukebox->categoryIdx = 0;
-        jukebox->songIdx = 0;
+        jukebox->screen         = JUKEBOX_PLAYER;
+        jukebox->categoryIdx    = 0;
+        jukebox->songIdx        = 0;
         jukebox->inMusicSubmode = true;
     }
     else if (label == str_sfx)
     {
-        jukebox->screen = JUKEBOX_PLAYER;
-        jukebox->categoryIdx = 0;
-        jukebox->songIdx = 0;
+        jukebox->screen         = JUKEBOX_PLAYER;
+        jukebox->categoryIdx    = 0;
+        jukebox->songIdx        = 0;
         jukebox->inMusicSubmode = false;
     }
     else if (label == str_exit)
@@ -632,8 +577,7 @@ void jukeboxMainMenuCb(const char* label, bool selected, uint32_t settingVal)
  * @param up The current number of the update call
  * @param upNum The total number of update calls for this frame
  */
-void jukeboxBackgroundDrawCb(int16_t x, int16_t y,
-                             int16_t w, int16_t h, int16_t up, int16_t upNum )
+void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     switch (jukebox->screen)
     {

@@ -277,31 +277,32 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
         switch (evt.button)
         {
             case PB_UP:
+            {
                 evt.button = PB_RIGHT;
                 break;
-
+            }
             case PB_DOWN:
+            {
                 evt.button = PB_LEFT;
                 break;
-
+            }
             case PB_LEFT:
+            {
                 evt.button = PB_UP;
                 break;
-
+            }
             case PB_RIGHT:
+            {
                 evt.button = PB_DOWN;
                 break;
-
+            }
             case PB_A:
             case PB_B:
             case PB_START:
             case PB_SELECT:
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
+            {
                 break;
+            }
         }
 
         // Pass button events to the menu

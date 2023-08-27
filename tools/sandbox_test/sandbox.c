@@ -12,6 +12,7 @@
 #include "soc/rtc_cntl_reg.h"
 #include "soc/gpio_reg.h"
 #include "coreutil.h"
+#include "hdw-btn.h"
 
 int global_i = 100;
 menu_t * menu;
@@ -126,7 +127,7 @@ void sandbox_tick()
     // The ESP32-S2 can only write once in a buffered write.
     start = getCycleCount();
     WRITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
-    WRITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
+    WR  ITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
     end = getCycleCount();
     profiles[4] = end-start-1;
 
@@ -152,10 +153,7 @@ void sandbox_tick()
 //    if( menu )
 //        drawMenu(menu);
 
-    start = getCycleCount();
-
-    end = getCycleCount();
-    ESP_LOGI( "sandbox", "SPROF: %lu / Mode7: %d", end-start, mode7timing );
+//    ESP_LOGI( "sandbox", "SPROF: %lu / Mode7: %d", end-start, mode7timing );
 
     for( int mode = 0; mode < 8; mode++ )
     {
@@ -171,7 +169,26 @@ void sandbox_tick()
         menu = menuButton(menu, evt);
     }
 #endif
+    int32_t phi = 0;
+    int32_t r = 0;
+    int32_t intensity = 0;
+    start = getCycleCount();
+    int tbv = getTouchJoystick( &phi, &r, &intensity );
+    end = getCycleCount();
 
+    if( tbv > 0 )
+    {
+        phi = phi * 360 / 1280 + 330;
+        if( phi >= 360 ) phi -= 360;
+        int32_t sY = -getSin1024( phi ) * r;
+        phi += 90;
+        if( phi >= 360 ) phi -= 360;
+        int32_t sX = getSin1024( phi ) * r;
+
+        drawWsg( &example_sprite, 120-10 + (sX>>15), 140-20 + (sY>>15), 0, 0, 0 );
+    }
+
+    ESP_LOGI( "sandbox", "TBV [%lu] %ld %ld %ld %d", end-start, phi, r, intensity, tbv );
 }
 
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
