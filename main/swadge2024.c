@@ -142,6 +142,7 @@
 #include "swadge2024.h"
 #include "mainMenu.h"
 #include "quickSettings.h"
+#include "shapes.h"
 
 //==============================================================================
 // Defines
@@ -421,8 +422,11 @@ void app_main(void)
                 }
                 else
                 {
-                    int16_t numPx = (tHeldUs * QUICK_SETTINGS_PANEL_W) / PAUSE_TIME_US;
-                    fillDisplayArea((TFT_WIDTH - QUICK_SETTINGS_PANEL_W) / 2, 0, (TFT_WIDTH - QUICK_SETTINGS_PANEL_W) / 2 + numPx, 10, c333);
+                    int16_t r = QUICK_SETTINGS_PANEL_R;
+                    int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
+                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
+                    fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx, r + 1, c333);
+                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + numPx + r, 0, r, c333);
                 }
             }
 
