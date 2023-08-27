@@ -112,27 +112,6 @@ bool checkButtonQueue(buttonEvt_t* evt)
 }
 
 /**
- * @brief Get totally raw touch sensor values from buffer.
- * NOTE: You must have touch callbacks enabled to use this.
- *
- * @param[out] centerVal pointer to centroid of touch locaiton from 0..1024 inclusive. Cannot be NULL.
- * @param[out] intensityVal intensity of touch press. Cannot be NULL.
- * @return true if touched (centroid), false if not touched (no centroid)
- */
-bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
-{
-    // Just simulate the centroid using the circular touchpad's horizontal axis only
-    int32_t angle, radius;
-    if (getTouchJoystick(&angle, &radius, intensityVal))
-    {
-        getTouchCartesian(angle, radius, centerVal, NULL);
-        return true;
-    }
-
-    return false;
-}
-
-/**
  * @brief Get the touch intensity and location in terms of angle and distance from
  * the center touchpad
  *

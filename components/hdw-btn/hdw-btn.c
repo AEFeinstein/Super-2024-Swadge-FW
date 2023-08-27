@@ -57,6 +57,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
                             bool denoiseEnable);
 
 static int getTouchRawValues(uint32_t* rawValues, int maxPads);
+static int getBaseTouchVals(int32_t* data, int count);
 
 //==============================================================================
 // Functions

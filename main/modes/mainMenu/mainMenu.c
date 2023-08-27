@@ -6,6 +6,7 @@
 
 #include "mainMenu.h"
 #include "demoMode.h"
+#include "jukebox.h"
 #include "pong.h"
 #include "mode_colorchord.h"
 #include "mode_dance.h"
@@ -110,6 +111,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modeDance.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
 
     // Start a submenu for settings
@@ -205,6 +207,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == tunernomeMode.modeName)
         {
             switchToSwadgeMode(&tunernomeMode);
+        }
+        else if (label == jukeboxMode.modeName)
+        {
+            switchToSwadgeMode(&jukeboxMode);
         }
         else if (label == touchTestMode.modeName)
         {
