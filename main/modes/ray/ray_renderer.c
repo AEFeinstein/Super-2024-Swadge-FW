@@ -135,7 +135,8 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
             }
             else
             {
-                TURBO_SET_PIXEL(x, y, ray->textures[BG_CEILING].px[TEX_WIDTH * ty + tx]);
+                // TODO set special ceiling texture
+                TURBO_SET_PIXEL(x, y, ray->textures[BG_FLOOR].px[TEX_WIDTH * ty + tx]);
             }
         }
     }
@@ -231,144 +232,98 @@ void castWalls(ray_t* ray)
             }
 
             // Check if ray has hit a wall or door
-            switch (ray->map.tiles[mapX][mapY].type)
+            rayMapCellType_t tileType = ray->map.tiles[mapX][mapY].type;
+            if (CELL_IS_TYPE(tileType, BG | WALL) || CELL_IS_TYPE(tileType, BG | DOOR))
             {
-                case BG_WALL_1:
-                case BG_WALL_2:
-                case BG_WALL_3:
-                case BG_DOOR:
-                case BG_DOOR_CHARGE:
-                case BG_DOOR_MISSILE:
-                case BG_DOOR_ICE:
-                case BG_DOOR_XRAY:
+                // If this cell is a door
+                if (CELL_IS_TYPE(tileType, BG | DOOR))
                 {
-                    // If this cell is a door
-                    if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
+                    // Check if the ray actually intersects the recessed door
+                    if (rayIntersectsDoor(side, mapX, mapY, ray->posX, ray->posY, rayDirX, rayDirY, deltaDistX,
+                                          deltaDistY, ray->map.tiles[mapX][mapY].doorOpen))
                     {
-                        // Check if the ray actually intersects the recessed door
-                        if (rayIntersectsDoor(side, mapX, mapY, ray->posX, ray->posY, rayDirX, rayDirY, deltaDistX,
-                                              deltaDistY, ray->map.tiles[mapX][mapY].doorOpen))
-                        {
-                            // Add a half step to these values to recess the door
-                            sideDistX = ADD_FX(sideDistX, deltaDistX / 2);
-                            sideDistY = ADD_FX(sideDistY, deltaDistY / 2);
-                        }
-                        else
-                        {
-                            // Didn't collide with a door, so keep DDA'ing
-                            continue;
-                        }
-                    }
-
-                    // Calculate distance projected on camera direction. This is the shortest distance from the point
-                    // where the wall is hit to the camera plane. Euclidean to center camera point would give fisheye
-                    // effect! This can be computed as (mapX - ray->posX + (1 - stepX) / 2) / rayDirX for side == 0, or
-                    // same formula with Y for size == 1, but can be simplified to the code below thanks to how sideDist
-                    // and deltaDist are computed: because they were left scaled to |rayDir|. sideDist is the entire
-                    // length of the ray above after the multiple steps, but we subtract deltaDist once because one step
-                    // more into the wall was taken above.
-                    q24_8 perpWallDist;
-                    if (false == side)
-                    {
-                        perpWallDist = SUB_FX(sideDistX, deltaDistX);
+                        // Add a half step to these values to recess the door
+                        sideDistX = ADD_FX(sideDistX, deltaDistX / 2);
+                        sideDistY = ADD_FX(sideDistY, deltaDistY / 2);
                     }
                     else
                     {
-                        perpWallDist = SUB_FX(sideDistY, deltaDistY);
+                        // Didn't collide with a door, so keep DDA'ing
+                        continue;
                     }
-
-                    // Save the distance to this wall strip, used for sprite casting
-                    ray->wallDistBuffer[x] = perpWallDist;
-
-                    if (perpWallDist == 0)
-                    {
-                        // Calculate height of line to draw on screen, make sure not to div by zero
-                        lineHeight = TFT_HEIGHT;
-
-                        // calculate lowest and highest pixel to fill in current stripe
-                        drawStart = (TFT_HEIGHT - lineHeight) / 2;
-                        drawEnd   = (TFT_HEIGHT + lineHeight) / 2;
-                    }
-                    else
-                    {
-                        // Calculate height of line to draw on screen, make sure not to div by zero
-                        lineHeight = TO_FX(TFT_HEIGHT) / perpWallDist;
-
-                        // calculate lowest and highest pixel to fill in current stripe
-                        drawStart = (TFT_HEIGHT - lineHeight) / 2 + (ray->posZ / perpWallDist);
-                        drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
-                    }
-
-                    // TODO sometimes textures wraparound b/c the math for wallX comes out to be like
-                    // 19.003 -> 0
-                    // 19.000 -> 0
-                    // 18.995 -> 63
-
-                    // calculate value of wallX
-                    if (false == side)
-                    {
-                        wallX = ADD_FX(ray->posY, MUL_FX(perpWallDist, rayDirY));
-                    }
-                    else
-                    {
-                        wallX = ADD_FX(ray->posX, MUL_FX(perpWallDist, rayDirX));
-                    }
-                    wallX = SUB_FX(wallX, FLOOR_FX(wallX));
-
-                    // For sliding doors
-                    if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
-                    {
-                        // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's edge
-                        wallX -= ray->map.tiles[mapX][mapY].doorOpen;
-
-                        // If this is negative, it would draw an out-of-bounds pixel.
-                        // Negative numbers are a rounding error, so make it zero
-                        if (wallX < 0)
-                        {
-                            wallX = 0;
-                        }
-                    }
-
-                    // Wall or door was hit, this stops the DDA loop
-                    hit = true;
-                    break;
                 }
-                case EMPTY:
-                case BG_FLOOR:
-                case BG_FLOOR_WATER:
-                case BG_FLOOR_LAVA:
-                case OBJ_START_POINT:
-                case OBJ_ENEMY_BEAM:
-                case OBJ_ENEMY_CHARGE:
-                case OBJ_ENEMY_MISSILE:
-                case OBJ_ENEMY_ICE:
-                case OBJ_ENEMY_XRAY:
-                case OBJ_ITEM_BEAM:
-                case OBJ_ITEM_CHARGE_BEAM:
-                case OBJ_ITEM_MISSILE:
-                case OBJ_ITEM_ICE:
-                case OBJ_ITEM_XRAY:
-                case OBJ_ITEM_SUIT_WATER:
-                case OBJ_ITEM_SUIT_LAVA:
-                case OBJ_ITEM_ENERGY_TANK:
-                case OBJ_ITEM_KEY:
-                case OBJ_ITEM_ARTIFACT:
-                case OBJ_ITEM_PICKUP_ENERGY:
-                case OBJ_ITEM_PICKUP_MISSILE:
-                case OBJ_SCENERY_TERMINAL:
-                case OBJ_DELETE:
-                case BULLET_NORMAL:
-                case BULLET_CHARGE:
-                case BULLET_ICE:
-                case BULLET_MISSILE:
-                case BULLET_XRAY:
-                case BG_CEILING:
-                case NUM_RAY_MAP_CELL_TYPES:
-                default:
+
+                // Calculate distance projected on camera direction. This is the shortest distance from the point
+                // where the wall is hit to the camera plane. Euclidean to center camera point would give fisheye
+                // effect! This can be computed as (mapX - ray->posX + (1 - stepX) / 2) / rayDirX for side == 0, or
+                // same formula with Y for size == 1, but can be simplified to the code below thanks to how sideDist
+                // and deltaDist are computed: because they were left scaled to |rayDir|. sideDist is the entire
+                // length of the ray above after the multiple steps, but we subtract deltaDist once because one step
+                // more into the wall was taken above.
+                q24_8 perpWallDist;
+                if (false == side)
                 {
-                    // Ray doesn't intersect with these
-                    break;
+                    perpWallDist = SUB_FX(sideDistX, deltaDistX);
                 }
+                else
+                {
+                    perpWallDist = SUB_FX(sideDistY, deltaDistY);
+                }
+
+                // Save the distance to this wall strip, used for sprite casting
+                ray->wallDistBuffer[x] = perpWallDist;
+
+                if (perpWallDist == 0)
+                {
+                    // Calculate height of line to draw on screen, make sure not to div by zero
+                    lineHeight = TFT_HEIGHT;
+
+                    // calculate lowest and highest pixel to fill in current stripe
+                    drawStart = (TFT_HEIGHT - lineHeight) / 2;
+                    drawEnd   = (TFT_HEIGHT + lineHeight) / 2;
+                }
+                else
+                {
+                    // Calculate height of line to draw on screen, make sure not to div by zero
+                    lineHeight = TO_FX(TFT_HEIGHT) / perpWallDist;
+
+                    // calculate lowest and highest pixel to fill in current stripe
+                    drawStart = (TFT_HEIGHT - lineHeight) / 2 + (ray->posZ / perpWallDist);
+                    drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
+                }
+
+                // TODO sometimes textures wraparound b/c the math for wallX comes out to be like
+                // 19.003 -> 0
+                // 19.000 -> 0
+                // 18.995 -> 63
+
+                // calculate value of wallX
+                if (false == side)
+                {
+                    wallX = ADD_FX(ray->posY, MUL_FX(perpWallDist, rayDirY));
+                }
+                else
+                {
+                    wallX = ADD_FX(ray->posX, MUL_FX(perpWallDist, rayDirX));
+                }
+                wallX = SUB_FX(wallX, FLOOR_FX(wallX));
+
+                // For sliding doors
+                if (CELL_IS_TYPE(tileType, BG | DOOR))
+                {
+                    // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's edge
+                    wallX -= ray->map.tiles[mapX][mapY].doorOpen;
+
+                    // If this is negative, it would draw an out-of-bounds pixel.
+                    // Negative numbers are a rounding error, so make it zero
+                    if (wallX < 0)
+                    {
+                        wallX = 0;
+                    }
+                }
+
+                // Wall or door was hit, this stops the DDA loop
+                hit = true;
             }
         }
 

@@ -29,88 +29,41 @@ void moveRayObjects(ray_t* ray, int64_t elapsedUs)
     for (uint16_t i = 0; i < MAX_RAY_OBJS; i++)
     {
         rayObj_t* obj = &(ray->objs[i]);
-        switch (obj->type)
-        {
-            case BULLET_NORMAL:
-            {
-                // Update the bullet's position
-                // TODO justify the scaling factor
-                obj->posX += (obj->velX * elapsedUs) / 100000;
-                obj->posY += (obj->velY * elapsedUs) / 100000;
 
-                // Check if it hit a wall
-                rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->posX)][FROM_FX(obj->posY)];
-                switch (cell->type)
+        if (CELL_IS_TYPE(obj->type, OBJ | BULLET))
+        {
+            // Update the bullet's position
+            // TODO justify the scaling factor
+            obj->posX += (obj->velX * elapsedUs) / 100000;
+            obj->posY += (obj->velY * elapsedUs) / 100000;
+
+            // Check if it hit a wall
+            rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->posX)][FROM_FX(obj->posY)];
+            switch (cell->type)
+            {
+                // If a wall is it
+                if (CELL_IS_TYPE(cell->type, BG | WALL))
                 {
-                    case BG_WALL_1:
-                    case BG_WALL_2:
-                    case BG_WALL_3:
+                    // Destroy this bullet
+                    memset(obj, 0, sizeof(rayObj_t));
+                    obj->id = -1;
+                }
+                // Else if a door is hit
+                else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+                {
+                    // Start opening the door
+                    // TODO check bullet / door combo
+                    if (0 == cell->doorOpen)
                     {
+                        cell->doorOpen = 1;
                         // Destroy this bullet
                         memset(obj, 0, sizeof(rayObj_t));
                         obj->id = -1;
-                        break;
-                    }
-                    case BG_DOOR:
-                    case BG_DOOR_CHARGE:
-                    case BG_DOOR_MISSILE:
-                    case BG_DOOR_ICE:
-                    case BG_DOOR_XRAY:
-                    {
-                        // Start opening the door
-                        if (0 == cell->doorOpen)
-                        {
-                            cell->doorOpen = 1;
-                            // Destroy this bullet
-                            memset(obj, 0, sizeof(rayObj_t));
-                            obj->id = -1;
-                        }
-                        break;
-                    }
-                    case EMPTY:
-                    case BG_FLOOR:
-                    case BG_FLOOR_WATER:
-                    case BG_FLOOR_LAVA:
-                    case OBJ_START_POINT:
-                    case OBJ_ENEMY_BEAM:
-                    case OBJ_ENEMY_CHARGE:
-                    case OBJ_ENEMY_MISSILE:
-                    case OBJ_ENEMY_ICE:
-                    case OBJ_ENEMY_XRAY:
-                    case OBJ_ITEM_BEAM:
-                    case OBJ_ITEM_CHARGE_BEAM:
-                    case OBJ_ITEM_MISSILE:
-                    case OBJ_ITEM_ICE:
-                    case OBJ_ITEM_XRAY:
-                    case OBJ_ITEM_SUIT_WATER:
-                    case OBJ_ITEM_SUIT_LAVA:
-                    case OBJ_ITEM_ENERGY_TANK:
-                    case OBJ_ITEM_KEY:
-                    case OBJ_ITEM_ARTIFACT:
-                    case OBJ_ITEM_PICKUP_ENERGY:
-                    case OBJ_ITEM_PICKUP_MISSILE:
-                    case OBJ_SCENERY_TERMINAL:
-                    case OBJ_DELETE:
-                    case BULLET_NORMAL:
-                    case BULLET_CHARGE:
-                    case BULLET_ICE:
-                    case BULLET_MISSILE:
-                    case BULLET_XRAY:
-                    case BG_CEILING:
-                    case NUM_RAY_MAP_CELL_TYPES:
-                    {
-                        // No collision
-                        break;
                     }
                 }
-                break;
             }
-            default:
-            {
-                break;
-            }
+            break;
         }
     }
-
     // TODO check for bullet-object collisions after updating all positions
 }

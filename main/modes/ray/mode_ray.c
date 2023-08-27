@@ -26,9 +26,51 @@ void setPlayerAngle(q24_8 angle);
 
 const char rayName[] = "Magtroid Pocket";
 
+// TODO replace this with legit WSG management
+uint8_t texVals[] = {
+    EMPTY,
+    DELETE,
+    BG_FLOOR,
+    BG_FLOOR_WATER,
+    BG_FLOOR_LAVA,
+    BG_WALL_1,
+    BG_WALL_2,
+    BG_WALL_3,
+    BG_DOOR,
+    BG_DOOR_CHARGE,
+    BG_DOOR_MISSILE,
+    BG_DOOR_ICE,
+    BG_DOOR_XRAY,
+    OBJ_ENEMY_START_POINT,
+    OBJ_ENEMY_BEAM,
+    OBJ_ENEMY_CHARGE,
+    OBJ_ENEMY_MISSILE,
+    OBJ_ENEMY_ICE,
+    OBJ_ENEMY_XRAY,
+    OBJ_ITEM_BEAM,
+    OBJ_ITEM_CHARGE_BEAM,
+    OBJ_ITEM_MISSILE,
+    OBJ_ITEM_ICE,
+    OBJ_ITEM_XRAY,
+    OBJ_ITEM_SUIT_WATER,
+    OBJ_ITEM_SUIT_LAVA,
+    OBJ_ITEM_ENERGY_TANK,
+    OBJ_ITEM_KEY,
+    OBJ_ITEM_ARTIFACT,
+    OBJ_ITEM_PICKUP_ENERGY,
+    OBJ_ITEM_PICKUP_MISSILE,
+    OBJ_BULLET_NORMAL,
+    OBJ_BULLET_CHARGE,
+    OBJ_BULLET_ICE,
+    OBJ_BULLET_MISSILE,
+    OBJ_BULLET_XRAY,
+    OBJ_SCENERY_TERMINAL,
+};
+
 // Order MUST MATCH rayMapCellType_t
 static const char* texNames[] = {
     "EMPTY.wsg",
+    "DELETE.wsg",
     "BG_FLOOR.wsg",
     "BG_FLOOR_WATER.wsg",
     "BG_FLOOR_LAVA.wsg",
@@ -40,7 +82,7 @@ static const char* texNames[] = {
     "BG_DOOR_MISSILE.wsg",
     "BG_DOOR_ICE.wsg",
     "BG_DOOR_XRAY.wsg",
-    "OBJ_START_POINT.wsg",
+    "OBJ_ENEMY_START_POINT.wsg",
     "OBJ_ENEMY_BEAM.wsg",
     "OBJ_ENEMY_CHARGE.wsg",
     "OBJ_ENEMY_MISSILE.wsg",
@@ -58,14 +100,12 @@ static const char* texNames[] = {
     "OBJ_ITEM_ARTIFACT.wsg",
     "OBJ_ITEM_PICKUP_ENERGY.wsg",
     "OBJ_ITEM_PICKUP_MISSILE.wsg",
+    "OBJ_BULLET_NORMAL.wsg",
+    "OBJ_BULLET_CHARGE.wsg",
+    "OBJ_BULLET_ICE.wsg",
+    "OBJ_BULLET_MISSILE.wsg",
+    "OBJ_BULLET_XRAY.wsg",
     "OBJ_SCENERY_TERMINAL.wsg",
-    "OBJ_DELETE.wsg",
-    "BULLET_NORMAL.wsg",
-    "BULLET_CHARGE.wsg",
-    "BULLET_ICE.wsg",
-    "BULLET_MISSILE.wsg",
-    "BULLET_XRAY.wsg",
-    "BG_CEILING.wsg",
 };
 
 //==============================================================================
@@ -118,12 +158,9 @@ void rayEnterMode(void)
     ray->posZ = TO_FX(0);
 
     // Load all textures
-    for (int16_t idx = 0; idx < NUM_RAY_MAP_CELL_TYPES; idx++)
+    for (int16_t idx = 0; idx < ARRAY_SIZE(texNames); idx++)
     {
-        if (OBJ_DELETE != idx && EMPTY != idx)
-        {
-            loadWsg(texNames[idx], &ray->textures[idx], true);
-        }
+        loadWsg(texNames[idx], &ray->textures[texVals[idx]], true);
     }
 
     // Create an array for all LEDs
@@ -138,9 +175,9 @@ void rayEnterMode(void)
 void rayExitMode(void)
 {
     // Free all textures
-    for (int16_t idx = 0; idx < NUM_RAY_MAP_CELL_TYPES; idx++)
+    for (int16_t idx = 0; idx < ARRAY_SIZE(texNames); idx++)
     {
-        freeWsg(&ray->textures[idx]);
+        freeWsg(&ray->textures[texVals[idx]]);
     }
 
     freeRayMap(&ray->map);
@@ -323,19 +360,19 @@ void rayMainLoop(int64_t elapsedUs)
 
     if ((ray->btnState & PB_A) && !(prevBtnState & PB_A))
     {
-        // TODO shoot
+        // TODO shoot different things
         for (uint16_t newIdx = 0; newIdx < MAX_RAY_OBJS; newIdx++)
         {
             if (-1 == ray->objs[newIdx].id)
             {
-                ray->objs[newIdx].sprite = &ray->textures[BULLET_NORMAL];
+                ray->objs[newIdx].sprite = &ray->textures[OBJ_BULLET_NORMAL];
                 ray->objs[newIdx].dist   = 0;
                 ray->objs[newIdx].posX   = ray->posX + ray->dirX / 2;
                 ray->objs[newIdx].posY   = ray->posY + ray->dirY / 2;
                 ray->objs[newIdx].velX   = ray->dirX;
                 ray->objs[newIdx].velY   = ray->dirY;
-                ray->objs[newIdx].radius = DIV_FX(TO_FX(ray->textures[BULLET_NORMAL].w), TO_FX(64));
-                ray->objs[newIdx].type   = BULLET_NORMAL;
+                ray->objs[newIdx].radius = DIV_FX(TO_FX(ray->textures[OBJ_BULLET_NORMAL].w), TO_FX(64));
+                ray->objs[newIdx].type   = OBJ_BULLET_NORMAL;
                 ray->objs[newIdx].id     = 0;
                 break;
             }
@@ -388,59 +425,19 @@ void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16
  */
 static bool isPassableCell(rayMapCell_t* cell)
 {
-    switch (cell->type)
+    if (CELL_IS_TYPE(cell->type, BG | WALL))
     {
-        case BG_WALL_1:
-        case BG_WALL_2:
-        case BG_WALL_3:
-        {
-            // Never pass through walls
-            return false;
-        }
-        case BG_DOOR:
-        case BG_DOOR_CHARGE:
-        case BG_DOOR_MISSILE:
-        case BG_DOOR_ICE:
-        case BG_DOOR_XRAY:
-        {
-            // Only pass through open doors
-            return (TO_FX(1) == cell->doorOpen);
-        }
-        case EMPTY:
-        case BG_FLOOR:
-        case BG_FLOOR_WATER:
-        case BG_FLOOR_LAVA:
-        case OBJ_START_POINT:
-        case OBJ_ENEMY_BEAM:
-        case OBJ_ENEMY_CHARGE:
-        case OBJ_ENEMY_MISSILE:
-        case OBJ_ENEMY_ICE:
-        case OBJ_ENEMY_XRAY:
-        case OBJ_ITEM_BEAM:
-        case OBJ_ITEM_CHARGE_BEAM:
-        case OBJ_ITEM_MISSILE:
-        case OBJ_ITEM_ICE:
-        case OBJ_ITEM_XRAY:
-        case OBJ_ITEM_SUIT_WATER:
-        case OBJ_ITEM_SUIT_LAVA:
-        case OBJ_ITEM_ENERGY_TANK:
-        case OBJ_ITEM_KEY:
-        case OBJ_ITEM_ARTIFACT:
-        case OBJ_ITEM_PICKUP_ENERGY:
-        case OBJ_ITEM_PICKUP_MISSILE:
-        case OBJ_SCENERY_TERMINAL:
-        case OBJ_DELETE:
-        case BULLET_NORMAL:
-        case BULLET_CHARGE:
-        case BULLET_ICE:
-        case BULLET_MISSILE:
-        case BULLET_XRAY:
-        case BG_CEILING:
-        case NUM_RAY_MAP_CELL_TYPES:
-        default:
-        {
-            // Always pass through everything else
-            return true;
-        }
+        // Never pass through walls
+        return false;
+    }
+    else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+    {
+        // Only pass through open doors
+        return (TO_FX(1) == cell->doorOpen);
+    }
+    else
+    {
+        // Always pass through everything else
+        return true;
     }
 }

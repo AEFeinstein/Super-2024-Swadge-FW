@@ -68,75 +68,26 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
             {
                 // Read the object's ID
                 uint8_t id = fileData[fileIdx++];
-                switch (obj)
+                if (obj == OBJ_ENEMY_START_POINT)
                 {
-                    case EMPTY:
-                    case OBJ_DELETE:
-                    case BG_FLOOR:
-                    case BG_FLOOR_WATER:
-                    case BG_FLOOR_LAVA:
-                    case BG_WALL_1:
-                    case BG_WALL_2:
-                    case BG_WALL_3:
-                    case BG_DOOR:
-                    case BG_DOOR_CHARGE:
-                    case BG_DOOR_MISSILE:
-                    case BG_DOOR_ICE:
-                    case BG_DOOR_XRAY:
-                    case BG_CEILING:
-                    {
-                        // Backgrounds, not objects
-                        break;
-                    }
-                    case OBJ_START_POINT:
-                    {
-                        // Save the starting coordinates
-                        *startX = x;
-                        *startY = y;
-                        break;
-                    }
-                    case OBJ_ENEMY_BEAM:
-                    case OBJ_ENEMY_CHARGE:
-                    case OBJ_ENEMY_MISSILE:
-                    case OBJ_ENEMY_ICE:
-                    case OBJ_ENEMY_XRAY:
-                    case OBJ_ITEM_BEAM:
-                    case OBJ_ITEM_CHARGE_BEAM:
-                    case OBJ_ITEM_MISSILE:
-                    case OBJ_ITEM_ICE:
-                    case OBJ_ITEM_XRAY:
-                    case OBJ_ITEM_SUIT_WATER:
-                    case OBJ_ITEM_SUIT_LAVA:
-                    case OBJ_ITEM_ENERGY_TANK:
-                    case OBJ_ITEM_KEY:
-                    case OBJ_ITEM_ARTIFACT:
-                    case OBJ_ITEM_PICKUP_ENERGY:
-                    case OBJ_ITEM_PICKUP_MISSILE:
-                    case OBJ_SCENERY_TERMINAL:
-                    {
-                        objs[objIdx].sprite = getTexture(obj);
-                        objs[objIdx].dist   = 0;
-                        // Center the position in the tile
-                        objs[objIdx].posX   = TO_FX(x) + (1 << (FRAC_BITS - 1));
-                        objs[objIdx].posY   = TO_FX(y) + (1 << (FRAC_BITS - 1));
-                        objs[objIdx].velX   = TO_FX(0);
-                        objs[objIdx].velY   = TO_FX(0);
-                        objs[objIdx].radius = DIV_FX(TO_FX(objs[objIdx].sprite->w), TO_FX(64)); // each cell is 64px
-                        objs[objIdx].type   = obj;
-                        objs[objIdx].id     = id;
-                        objIdx++;
-                        break;
-                    }
-                    case BULLET_NORMAL:
-                    case BULLET_CHARGE:
-                    case BULLET_ICE:
-                    case BULLET_MISSILE:
-                    case BULLET_XRAY:
-                    case NUM_RAY_MAP_CELL_TYPES:
-                    {
-                        // Bullets aren't loadable
-                        break;
-                    }
+                    // Save the starting coordinates
+                    *startX = x;
+                    *startY = y;
+                }
+                if (CELL_IS_TYPE(obj, OBJ))
+                {
+                    // Objects
+                    objs[objIdx].sprite = getTexture(obj);
+                    objs[objIdx].dist   = 0;
+                    // Center the position in the tile
+                    objs[objIdx].posX   = TO_FX(x) + (1 << (FRAC_BITS - 1));
+                    objs[objIdx].posY   = TO_FX(y) + (1 << (FRAC_BITS - 1));
+                    objs[objIdx].velX   = TO_FX(0);
+                    objs[objIdx].velY   = TO_FX(0);
+                    objs[objIdx].radius = DIV_FX(TO_FX(objs[objIdx].sprite->w), TO_FX(64)); // each cell is 64px
+                    objs[objIdx].type   = obj;
+                    objs[objIdx].id     = id;
+                    objIdx++;
                 }
             }
         }
