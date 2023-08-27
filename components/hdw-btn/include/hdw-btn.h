@@ -54,6 +54,11 @@
  * check. This should be done in the Swadge mode's main function.
  *
  * You may call getTouchJoystick() to get the analog touch position. This is independent of checkButtonQueueWrapper().
+ * Three utility functions are provided to interpret touch data different ways.
+ * - getTouchJoystickZones() is available to translate the analog touches into a four, five, eight, or nine-way virtual
+ * directional pad.
+ * - getTouchSpins() is available to count the number of times the touch joystick was circled around.
+ * - getTouchCartesian() is available to translate the polar coordinates of the touch into the Cartesian X-Y plane
  *
  * \section btn_example Example
  *
