@@ -35,5 +35,6 @@ int16_t getSin1024(int16_t degree);
 int16_t getCos1024(int16_t degree);
 int32_t getTan1024(int16_t degree);
 int32_t cordicAtan2(int32_t x, int32_t y);
+int16_t getAtan2(int32_t y, int32_t x);
 
 #endif

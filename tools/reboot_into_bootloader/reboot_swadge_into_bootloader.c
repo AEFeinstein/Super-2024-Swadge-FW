@@ -24,10 +24,24 @@ int tries = 0;
 
 int main()
 {
+    int do_for_tries = 100;
+
     int r;
+redo:
     hid_init();
     hd = hid_open( VID, PID, 0);
-    if( !hd ) { fprintf( stderr, "Could not open USB\n" ); return -94; }
+    if( !hd )
+    {
+#ifdef WIN32
+	    Sleep( 2000 );
+#else
+	    usleep(200000);
+#endif
+
+        fprintf( stderr, "Could not open USB\n" );
+        if( do_for_tries-- ) goto redo;
+        return -94;
+    }
 
     // Disable mode.
     uint8_t rdata[reg_packet_length];
@@ -48,7 +62,7 @@ int main()
 #ifdef WIN32
     Sleep( 2000 );
 #else
-    usleep(200000);
+    usleep(800000);
 #endif
     return 0;
 }

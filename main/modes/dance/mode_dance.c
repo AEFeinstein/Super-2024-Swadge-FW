@@ -276,11 +276,6 @@ void danceButtonHandler(buttonEvt_t* evt)
 
             case PB_SELECT:
             case PB_START:
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
             {
                 // Unused
                 break;
@@ -295,13 +290,17 @@ void danceButtonHandler(buttonEvt_t* evt)
  */
 void dancePollTouch(void)
 {
-    int32_t centroid, intensity;
-    if (getTouchCentroid(&centroid, &intensity))
+    int32_t phi, r, intensity;
+    if (getTouchJoystick(&phi, &r, &intensity))
     {
-        uint8_t index = ((centroid * (sizeof(danceSpeeds) / sizeof(*danceSpeeds) - 1) + 512) / 1024);
+        // Make sure we are pressing on the edge.
+        if (intensity > 5000 && r > 512)
+        {
+            uint8_t index = ((phi * (sizeof(danceSpeeds) / sizeof(*danceSpeeds) - 1) + 640) / 1280);
 
-        danceState->danceSpeed         = index;
-        danceState->buttonPressedTimer = 0;
+            danceState->danceSpeed         = index;
+            danceState->buttonPressedTimer = 0;
+        }
     }
 }
 
