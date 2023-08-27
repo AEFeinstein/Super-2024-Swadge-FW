@@ -486,7 +486,7 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     }
 
     // Arbitrary, but we use 1200 as the minimum peak value.
-    if (peak < 1200 && centerIntensity < 1200)
+    if (peak < 4200 && centerIntensity < 4200)
     {
         return 0;
     }
@@ -518,6 +518,9 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     }
 
     int ringPh = (center < 0) ? (center + 1280) : center;
+
+    // 0->1280 --> 0->360
+    ringPh = ( ringPh * 9 ) >> 5;
     if (phi)
     {
         *phi = ringPh;
