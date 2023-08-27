@@ -1,4 +1,5 @@
 #include "menuQuickSettingsRenderer.h"
+#include "quickSettings.h"
 #include "menu_utils.h"
 
 #include "hdw-tft.h"
@@ -18,11 +19,10 @@
 // Defines
 //==============================================================================
 
-/// The width of the panel, centered in the screen
-#define PANEL_W (TFT_WIDTH - 60)
+#define PANEL_W QUICK_SETTINGS_PANEL_W
 
 /// The height of the panel, from the top of the screen
-#define PANEL_H 70
+#define PANEL_H QUICK_SETTINGS_PANEL_H
 
 /// The panel corner-radius
 #define PANEL_R 15

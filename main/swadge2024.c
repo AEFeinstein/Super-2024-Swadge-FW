@@ -421,8 +421,8 @@ void app_main(void)
                 }
                 else
                 {
-                    int16_t numPx = (tHeldUs * (TFT_WIDTH - 60)) / PAUSE_TIME_US;
-                    fillDisplayArea(30, 0, 30 + numPx, 10, c333);
+                    int16_t numPx = (tHeldUs * QUICK_SETTINGS_PANEL_W) / PAUSE_TIME_US;
+                    fillDisplayArea((TFT_WIDTH - QUICK_SETTINGS_PANEL_W) / 2, 0, (TFT_WIDTH - QUICK_SETTINGS_PANEL_W) / 2 + numPx, 10, c333);
                 }
             }
 
