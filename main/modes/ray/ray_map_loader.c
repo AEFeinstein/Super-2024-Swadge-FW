@@ -71,14 +71,21 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
                 switch (obj)
                 {
                     case EMPTY:
-                    case BG_WALL:
-                    case BG_DOOR:
-                    case BG_FLOOR:
-                    case BG_CEILING:
                     case OBJ_DELETE:
-                    case OBJ_BULLET:
+                    case BG_FLOOR:
+                    case BG_FLOOR_WATER:
+                    case BG_FLOOR_LAVA:
+                    case BG_WALL_1:
+                    case BG_WALL_2:
+                    case BG_WALL_3:
+                    case BG_DOOR:
+                    case BG_DOOR_CHARGE:
+                    case BG_DOOR_MISSILE:
+                    case BG_DOOR_ICE:
+                    case BG_DOOR_XRAY:
+                    case BG_CEILING:
                     {
-                        // Not really objects
+                        // Backgrounds, not objects
                         break;
                     }
                     case OBJ_START_POINT:
@@ -88,12 +95,24 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
                         *startY = y;
                         break;
                     }
-                    case OBJ_ENEMY_DRAGON:
-                    case OBJ_ENEMY_SKELETON:
-                    case OBJ_ENEMY_KNIGHT:
-                    case OBJ_ENEMY_GOLEM:
-                    case OBJ_OBELISK:
-                    case OBJ_GUN:
+                    case OBJ_ENEMY_BEAM:
+                    case OBJ_ENEMY_CHARGE:
+                    case OBJ_ENEMY_MISSILE:
+                    case OBJ_ENEMY_ICE:
+                    case OBJ_ENEMY_XRAY:
+                    case OBJ_ITEM_BEAM:
+                    case OBJ_ITEM_CHARGE_BEAM:
+                    case OBJ_ITEM_MISSILE:
+                    case OBJ_ITEM_ICE:
+                    case OBJ_ITEM_XRAY:
+                    case OBJ_ITEM_SUIT_WATER:
+                    case OBJ_ITEM_SUIT_LAVA:
+                    case OBJ_ITEM_ENERGY_TANK:
+                    case OBJ_ITEM_KEY:
+                    case OBJ_ITEM_ARTIFACT:
+                    case OBJ_ITEM_PICKUP_ENERGY:
+                    case OBJ_ITEM_PICKUP_MISSILE:
+                    case OBJ_SCENERY_TERMINAL:
                     {
                         objs[objIdx].sprite = getTexture(obj);
                         objs[objIdx].dist   = 0;
@@ -106,7 +125,16 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
                         objs[objIdx].type   = obj;
                         objs[objIdx].id     = id;
                         objIdx++;
-                        // TODO save these object types or something
+                        break;
+                    }
+                    case BULLET_NORMAL:
+                    case BULLET_CHARGE:
+                    case BULLET_ICE:
+                    case BULLET_MISSILE:
+                    case BULLET_XRAY:
+                    case NUM_RAY_MAP_CELL_TYPES:
+                    {
+                        // Bullets aren't loadable
                         break;
                     }
                 }

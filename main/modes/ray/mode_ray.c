@@ -26,6 +26,48 @@ void setPlayerAngle(q24_8 angle);
 
 const char rayName[] = "Magtroid Pocket";
 
+// Order MUST MATCH rayMapCellType_t
+static const char* texNames[] = {
+    "EMPTY.wsg",
+    "BG_FLOOR.wsg",
+    "BG_FLOOR_WATER.wsg",
+    "BG_FLOOR_LAVA.wsg",
+    "BG_WALL_1.wsg",
+    "BG_WALL_2.wsg",
+    "BG_WALL_3.wsg",
+    "BG_DOOR.wsg",
+    "BG_DOOR_CHARGE.wsg",
+    "BG_DOOR_MISSILE.wsg",
+    "BG_DOOR_ICE.wsg",
+    "BG_DOOR_XRAY.wsg",
+    "OBJ_START_POINT.wsg",
+    "OBJ_ENEMY_BEAM.wsg",
+    "OBJ_ENEMY_CHARGE.wsg",
+    "OBJ_ENEMY_MISSILE.wsg",
+    "OBJ_ENEMY_ICE.wsg",
+    "OBJ_ENEMY_XRAY.wsg",
+    "OBJ_ITEM_BEAM.wsg",
+    "OBJ_ITEM_CHARGE_BEAM.wsg",
+    "OBJ_ITEM_MISSILE.wsg",
+    "OBJ_ITEM_ICE.wsg",
+    "OBJ_ITEM_XRAY.wsg",
+    "OBJ_ITEM_SUIT_WATER.wsg",
+    "OBJ_ITEM_SUIT_LAVA.wsg",
+    "OBJ_ITEM_ENERGY_TANK.wsg",
+    "OBJ_ITEM_KEY.wsg",
+    "OBJ_ITEM_ARTIFACT.wsg",
+    "OBJ_ITEM_PICKUP_ENERGY.wsg",
+    "OBJ_ITEM_PICKUP_MISSILE.wsg",
+    "OBJ_SCENERY_TERMINAL.wsg",
+    "OBJ_DELETE.wsg",
+    "BULLET_NORMAL.wsg",
+    "BULLET_CHARGE.wsg",
+    "BULLET_ICE.wsg",
+    "BULLET_MISSILE.wsg",
+    "BULLET_XRAY.wsg",
+    "BG_CEILING.wsg",
+};
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -75,18 +117,14 @@ void rayEnterMode(void)
     setPlayerAngle(TO_FX(0));
     ray->posZ = TO_FX(0);
 
-    // Load textures
-    loadWsg("floor.wsg", &ray->texFloor, true);
-    loadWsg("wall.wsg", &ray->texWall, true);
-    loadWsg("ceiling.wsg", &ray->texCeiling, true);
-    loadWsg("door.wsg", &ray->texDoor, true);
-
-    loadWsg("golem.wsg", &ray->texGolem, true);
-    loadWsg("dragon.wsg", &ray->texDragon, true);
-    loadWsg("knight.wsg", &ray->texKnight, true);
-    loadWsg("skeleton.wsg", &ray->texSkeleton, true);
-
-    loadWsg("bullet.wsg", &ray->texBullet, true);
+    // Load all textures
+    for (int16_t idx = 0; idx < NUM_RAY_MAP_CELL_TYPES; idx++)
+    {
+        if (OBJ_DELETE != idx && EMPTY != idx)
+        {
+            loadWsg(texNames[idx], &ray->textures[idx], true);
+        }
+    }
 
     // Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -99,17 +137,11 @@ void rayEnterMode(void)
  */
 void rayExitMode(void)
 {
-    freeWsg(&ray->texFloor);
-    freeWsg(&ray->texWall);
-    freeWsg(&ray->texCeiling);
-    freeWsg(&ray->texDoor);
-
-    freeWsg(&ray->texGolem);
-    freeWsg(&ray->texDragon);
-    freeWsg(&ray->texKnight);
-    freeWsg(&ray->texSkeleton);
-
-    freeWsg(&ray->texBullet);
+    // Free all textures
+    for (int16_t idx = 0; idx < NUM_RAY_MAP_CELL_TYPES; idx++)
+    {
+        freeWsg(&ray->textures[idx]);
+    }
 
     freeRayMap(&ray->map);
     free(ray);
@@ -123,54 +155,7 @@ void rayExitMode(void)
  */
 wsg_t* getTexture(rayMapCellType_t type)
 {
-    switch (type)
-    {
-        case EMPTY:
-        case OBJ_DELETE:
-        case OBJ_START_POINT:
-        case OBJ_OBELISK:
-        case OBJ_GUN:
-        {
-            return NULL;
-        }
-        case OBJ_BULLET:
-        {
-            return &ray->texBullet;
-        }
-        case BG_FLOOR:
-        {
-            return &ray->texFloor;
-        }
-        case BG_WALL:
-        {
-            return &ray->texWall;
-        }
-        case BG_CEILING:
-        {
-            return &ray->texCeiling;
-        }
-        case BG_DOOR:
-        {
-            return &ray->texDoor;
-        }
-        case OBJ_ENEMY_DRAGON:
-        {
-            return &ray->texDragon;
-        }
-        case OBJ_ENEMY_SKELETON:
-        {
-            return &ray->texSkeleton;
-        }
-        case OBJ_ENEMY_KNIGHT:
-        {
-            return &ray->texKnight;
-        }
-        case OBJ_ENEMY_GOLEM:
-        {
-            return &ray->texGolem;
-        }
-    }
-    return NULL;
+    return &ray->textures[type];
 }
 
 /**
@@ -343,14 +328,14 @@ void rayMainLoop(int64_t elapsedUs)
         {
             if (-1 == ray->objs[newIdx].id)
             {
-                ray->objs[newIdx].sprite = &ray->texBullet;
+                ray->objs[newIdx].sprite = &ray->textures[BULLET_NORMAL];
                 ray->objs[newIdx].dist   = 0;
                 ray->objs[newIdx].posX   = ray->posX + ray->dirX / 2;
                 ray->objs[newIdx].posY   = ray->posY + ray->dirY / 2;
                 ray->objs[newIdx].velX   = ray->dirX;
                 ray->objs[newIdx].velY   = ray->dirY;
-                ray->objs[newIdx].radius = DIV_FX(TO_FX(ray->texBullet.w), TO_FX(64));
-                ray->objs[newIdx].type   = OBJ_BULLET;
+                ray->objs[newIdx].radius = DIV_FX(TO_FX(ray->textures[BULLET_NORMAL].w), TO_FX(64));
+                ray->objs[newIdx].type   = BULLET_NORMAL;
                 ray->objs[newIdx].id     = 0;
                 break;
             }
@@ -405,28 +390,53 @@ static bool isPassableCell(rayMapCell_t* cell)
 {
     switch (cell->type)
     {
-        case BG_WALL:
+        case BG_WALL_1:
+        case BG_WALL_2:
+        case BG_WALL_3:
         {
             // Never pass through walls
             return false;
         }
         case BG_DOOR:
+        case BG_DOOR_CHARGE:
+        case BG_DOOR_MISSILE:
+        case BG_DOOR_ICE:
+        case BG_DOOR_XRAY:
         {
             // Only pass through open doors
             return (TO_FX(1) == cell->doorOpen);
         }
         case EMPTY:
         case BG_FLOOR:
-        case BG_CEILING:
+        case BG_FLOOR_WATER:
+        case BG_FLOOR_LAVA:
         case OBJ_START_POINT:
-        case OBJ_ENEMY_DRAGON:
-        case OBJ_ENEMY_SKELETON:
-        case OBJ_ENEMY_KNIGHT:
-        case OBJ_ENEMY_GOLEM:
-        case OBJ_OBELISK:
-        case OBJ_GUN:
+        case OBJ_ENEMY_BEAM:
+        case OBJ_ENEMY_CHARGE:
+        case OBJ_ENEMY_MISSILE:
+        case OBJ_ENEMY_ICE:
+        case OBJ_ENEMY_XRAY:
+        case OBJ_ITEM_BEAM:
+        case OBJ_ITEM_CHARGE_BEAM:
+        case OBJ_ITEM_MISSILE:
+        case OBJ_ITEM_ICE:
+        case OBJ_ITEM_XRAY:
+        case OBJ_ITEM_SUIT_WATER:
+        case OBJ_ITEM_SUIT_LAVA:
+        case OBJ_ITEM_ENERGY_TANK:
+        case OBJ_ITEM_KEY:
+        case OBJ_ITEM_ARTIFACT:
+        case OBJ_ITEM_PICKUP_ENERGY:
+        case OBJ_ITEM_PICKUP_MISSILE:
+        case OBJ_SCENERY_TERMINAL:
         case OBJ_DELETE:
-        case OBJ_BULLET:
+        case BULLET_NORMAL:
+        case BULLET_CHARGE:
+        case BULLET_ICE:
+        case BULLET_MISSILE:
+        case BULLET_XRAY:
+        case BG_CEILING:
+        case NUM_RAY_MAP_CELL_TYPES:
         default:
         {
             // Always pass through everything else

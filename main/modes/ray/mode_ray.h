@@ -8,20 +8,46 @@
 
 typedef enum __attribute__((packed))
 {
-    EMPTY              = 0,
-    BG_FLOOR           = 1,
-    BG_WALL            = 2,
-    BG_CEILING         = 3,
-    BG_DOOR            = 4,
-    OBJ_START_POINT    = 5,
-    OBJ_ENEMY_DRAGON   = 6,
-    OBJ_ENEMY_SKELETON = 7,
-    OBJ_ENEMY_KNIGHT   = 8,
-    OBJ_ENEMY_GOLEM    = 9,
-    OBJ_OBELISK        = 10,
-    OBJ_GUN            = 11,
-    OBJ_BULLET         = 12,
-    OBJ_DELETE         = 13, // Should be last
+    EMPTY                   = 0,
+    BG_FLOOR                = 1,
+    BG_FLOOR_WATER          = 2,
+    BG_FLOOR_LAVA           = 3,
+    BG_WALL_1               = 4,
+    BG_WALL_2               = 5,
+    BG_WALL_3               = 6,
+    BG_DOOR                 = 7,
+    BG_DOOR_CHARGE          = 8,
+    BG_DOOR_MISSILE         = 9,
+    BG_DOOR_ICE             = 10,
+    BG_DOOR_XRAY            = 11,
+    OBJ_START_POINT         = 12,
+    OBJ_ENEMY_BEAM          = 13,
+    OBJ_ENEMY_CHARGE        = 14,
+    OBJ_ENEMY_MISSILE       = 15,
+    OBJ_ENEMY_ICE           = 16,
+    OBJ_ENEMY_XRAY          = 17,
+    OBJ_ITEM_BEAM           = 18,
+    OBJ_ITEM_CHARGE_BEAM    = 19,
+    OBJ_ITEM_MISSILE        = 20,
+    OBJ_ITEM_ICE            = 21,
+    OBJ_ITEM_XRAY           = 22,
+    OBJ_ITEM_SUIT_WATER     = 23,
+    OBJ_ITEM_SUIT_LAVA      = 24,
+    OBJ_ITEM_ENERGY_TANK    = 25,
+    OBJ_ITEM_KEY            = 26,
+    OBJ_ITEM_ARTIFACT       = 27,
+    OBJ_ITEM_PICKUP_ENERGY  = 28,
+    OBJ_ITEM_PICKUP_MISSILE = 29,
+    OBJ_SCENERY_TERMINAL    = 30,
+    OBJ_DELETE              = 31, // Should be last
+    // This and later values do not exist in the map editor
+    BULLET_NORMAL,
+    BULLET_CHARGE,
+    BULLET_ICE,
+    BULLET_MISSILE,
+    BULLET_XRAY,
+    BG_CEILING,
+    NUM_RAY_MAP_CELL_TYPES,
 } rayMapCellType_t;
 
 typedef struct
@@ -54,16 +80,7 @@ typedef struct
 
 typedef struct
 {
-    wsg_t texFloor;
-    wsg_t texWall;
-    wsg_t texCeiling;
-    wsg_t texDoor;
-
-    wsg_t texDragon;
-    wsg_t texGolem;
-    wsg_t texKnight;
-    wsg_t texSkeleton;
-    wsg_t texBullet;
+    wsg_t textures[NUM_RAY_MAP_CELL_TYPES];
 
     rayMap_t map;
     rayObj_t objs[MAX_RAY_OBJS];

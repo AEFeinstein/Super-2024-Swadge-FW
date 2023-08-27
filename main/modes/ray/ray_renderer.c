@@ -131,11 +131,11 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
             // Draw the pixel
             if (isFloor)
             {
-                TURBO_SET_PIXEL(x, y, ray->texFloor.px[TEX_WIDTH * ty + tx]);
+                TURBO_SET_PIXEL(x, y, ray->textures[BG_FLOOR].px[TEX_WIDTH * ty + tx]);
             }
             else
             {
-                TURBO_SET_PIXEL(x, y, ray->texCeiling.px[TEX_WIDTH * ty + tx]);
+                TURBO_SET_PIXEL(x, y, ray->textures[BG_CEILING].px[TEX_WIDTH * ty + tx]);
             }
         }
     }
@@ -233,8 +233,14 @@ void castWalls(ray_t* ray)
             // Check if ray has hit a wall or door
             switch (ray->map.tiles[mapX][mapY].type)
             {
-                case BG_WALL:
+                case BG_WALL_1:
+                case BG_WALL_2:
+                case BG_WALL_3:
                 case BG_DOOR:
+                case BG_DOOR_CHARGE:
+                case BG_DOOR_MISSILE:
+                case BG_DOOR_ICE:
+                case BG_DOOR_XRAY:
                 {
                     // If this cell is a door
                     if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
@@ -329,16 +335,35 @@ void castWalls(ray_t* ray)
                 }
                 case EMPTY:
                 case BG_FLOOR:
-                case BG_CEILING:
+                case BG_FLOOR_WATER:
+                case BG_FLOOR_LAVA:
                 case OBJ_START_POINT:
-                case OBJ_ENEMY_DRAGON:
-                case OBJ_ENEMY_SKELETON:
-                case OBJ_ENEMY_KNIGHT:
-                case OBJ_ENEMY_GOLEM:
-                case OBJ_OBELISK:
-                case OBJ_GUN:
+                case OBJ_ENEMY_BEAM:
+                case OBJ_ENEMY_CHARGE:
+                case OBJ_ENEMY_MISSILE:
+                case OBJ_ENEMY_ICE:
+                case OBJ_ENEMY_XRAY:
+                case OBJ_ITEM_BEAM:
+                case OBJ_ITEM_CHARGE_BEAM:
+                case OBJ_ITEM_MISSILE:
+                case OBJ_ITEM_ICE:
+                case OBJ_ITEM_XRAY:
+                case OBJ_ITEM_SUIT_WATER:
+                case OBJ_ITEM_SUIT_LAVA:
+                case OBJ_ITEM_ENERGY_TANK:
+                case OBJ_ITEM_KEY:
+                case OBJ_ITEM_ARTIFACT:
+                case OBJ_ITEM_PICKUP_ENERGY:
+                case OBJ_ITEM_PICKUP_MISSILE:
+                case OBJ_SCENERY_TERMINAL:
                 case OBJ_DELETE:
-                case OBJ_BULLET:
+                case BULLET_NORMAL:
+                case BULLET_CHARGE:
+                case BULLET_ICE:
+                case BULLET_MISSILE:
+                case BULLET_XRAY:
+                case BG_CEILING:
+                case NUM_RAY_MAP_CELL_TYPES:
                 default:
                 {
                     // Ray doesn't intersect with these
@@ -379,11 +404,11 @@ void castWalls(ray_t* ray)
         paletteColor_t* tex;
         if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
         {
-            tex = ray->texDoor.px;
+            tex = ray->textures[BG_DOOR].px;
         }
         else
         {
-            tex = ray->texWall.px;
+            tex = ray->textures[BG_WALL_1].px;
         }
 
         // Draw a vertical strip
