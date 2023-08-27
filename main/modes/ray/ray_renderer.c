@@ -376,7 +376,7 @@ void castWalls(ray_t* ray)
         int8_t texX = FROM_FX(wallX * TEX_WIDTH);
 
         // Mirror X texture coordinate for certain walls
-        if ((false == side && rayDirX > 0) || (true == side && rayDirY < 0))
+        if ((false == side && rayDirX < 0) || (true == side && rayDirY > 0))
         {
             texX = TEX_WIDTH - texX - 1;
         }
