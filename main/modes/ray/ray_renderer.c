@@ -359,15 +359,7 @@ void castWalls(ray_t* ray)
         }
 
         // Pick the texture based on the map tile
-        paletteColor_t* tex;
-        if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
-        {
-            tex = getTexByType(ray, BG_DOOR)->px;
-        }
-        else
-        {
-            tex = getTexByType(ray, BG_WALL_1)->px;
-        }
+        paletteColor_t* tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
 
         // Draw a vertical strip
         for (int16_t y = drawStart; y < drawEnd; y++)

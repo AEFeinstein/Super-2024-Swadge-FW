@@ -6,7 +6,7 @@
 
 #define MAX_RAY_OBJS 256
 
-#define CELL_IS_TYPE(cell, type) (((cell) & (type)) == (type))
+#define CELL_IS_TYPE(cell, type) (((cell) & (0xE0)) == (type))
 
 // Bits used for tile type construction, topmost bit
 #define BG  0x00
@@ -63,11 +63,11 @@ typedef enum __attribute__((packed))
     OBJ_ITEM_PICKUP_ENERGY  = (OBJ | ITEM | 11),
     OBJ_ITEM_PICKUP_MISSILE = (OBJ | ITEM | 12),
     // Bullets
-    OBJ_BULLET_NORMAL  = (OBJ | ITEM | 13),
-    OBJ_BULLET_CHARGE  = (OBJ | ITEM | 14),
-    OBJ_BULLET_ICE     = (OBJ | ITEM | 15),
-    OBJ_BULLET_MISSILE = (OBJ | ITEM | 16),
-    OBJ_BULLET_XRAY    = (OBJ | ITEM | 17),
+    OBJ_BULLET_NORMAL  = (OBJ | BULLET | 13),
+    OBJ_BULLET_CHARGE  = (OBJ | BULLET | 14),
+    OBJ_BULLET_ICE     = (OBJ | BULLET | 15),
+    OBJ_BULLET_MISSILE = (OBJ | BULLET | 16),
+    OBJ_BULLET_XRAY    = (OBJ | BULLET | 17),
     // Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1),
 } rayMapCellType_t;
