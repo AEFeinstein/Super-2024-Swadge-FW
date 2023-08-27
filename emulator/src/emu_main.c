@@ -189,6 +189,7 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
+        CNFGTearDown();
         exit(0);
         return;
     }
