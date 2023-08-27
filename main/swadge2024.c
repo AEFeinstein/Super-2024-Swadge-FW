@@ -423,7 +423,7 @@ void app_main(void)
                 }
                 else
                 {
-                    int16_t r = QUICK_SETTINGS_PANEL_R;
+                    int16_t r     = QUICK_SETTINGS_PANEL_R;
                     int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
                     drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
                     fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx, r + 1, c333);

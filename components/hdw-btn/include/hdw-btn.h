@@ -3,8 +3,7 @@
  * \section btn_design Design Philosophy
  *
  * This component handles both push-buttons and touch-pads. Push-buttons are physical, tactile buttons while touch-pads
- * are touch-sensitive areas on the PCB. Events from push-buttons and touch-pads are processed different ways, but
- * queued in the same queue.
+ * are touch-sensitive areas on the PCB. Events from push-buttons and touch-pads are processed different ways.
  *
  * The Swadge mode needs to call checkButtonQueueWrapper(), which calls checkButtonQueue() to receive queued button
  * events. The reason for checkButtonQueueWrapper() is so that the main loop can monitor the button which can be held
@@ -12,8 +11,8 @@
  * released, and the current state of all buttons. This way the Swadge mode is not responsible for high frequency button
  * polling, and can still receive all button inputs.
  *
- * In addition to acting as binary buttons, the touch-pads may act as a single, analog, touch sensitive strip. These two
- * ways of reporting are not mutually exclusive.
+ * The individual touch-pads are only represented as a single, larger, circular analog touchpad which reports touches in
+ * polar coordinates.
  *
  * \section pbtn_design Pushbutton Design Philosophy
  *
@@ -38,15 +37,12 @@
  *
  * \section tpad_design Touch-pad Design Philosophy
  *
- * Unlike push-button polling, touch-pads use interrupts to detect events. When a touch-pad event is detected, an
- * interrupt will fire and the new event will be queued in the same queue used for push-buttons.
+ * Unlike push-buttons, the touch-pads are treated as a single circular area (not discrete touch areas) and are not
+ * polled. Events like touches are not queued to be processed later. The individual Swadge mode must poll the current
+ * touch state with getTouchJoystick(). The touch state reports the polar coordinates of the touch (angle and radius) as
+ * well as the intensity of the touch.
  *
- * In addition to acting as binary buttons, the touch-pad can act as a single analog touch strip. getTouchCentroid() may
- * be called to get the current analog touch value. Changes in the analog position are not reported
- * checkButtonQueueWrapper(), so getTouchCentroid() must be called as frequently as desired to get values. Do not assume
- * that changes in the analog position are correlated with events reported in checkButtonQueueWrapper().
- *
- * Touch-pad interrupts are set up and touch-pad values are read with <a
+ * Touch-pad areas are set up and read with <a
  * href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/peripherals/touch_pad.html">Touch
  * Sensor</a>.
  *
@@ -57,7 +53,7 @@
  * You do need to call checkButtonQueueWrapper() and should do so in a while-loop to receive all events since the last
  * check. This should be done in the Swadge mode's main function.
  *
- * You may call getTouchCentroid() to get the analog touch position. This is independent of checkButtonQueueWrapper().
+ * You may call getTouchJoystick() to get the analog touch position. This is independent of checkButtonQueueWrapper().
  *
  * \section btn_example Example
  *
@@ -72,10 +68,10 @@
  * }
  *
  * // Check if the touch area is touched, and print values if it is
- * int32_t centerVal, intensityVal;
- * if (getTouchCentroid(&centerVal, &intensityVal))
+ * int32_t phi, r, intensity;
+ * if (getTouchJoystick(&phi, &r, &intensity))
  * {
- *     printf("touch center: %lu, intensity: %lu\n", centerVal, intensityVal);
+ *     printf("touch center: %" PRIu32 ", intensity: %" PRIu32 ", intensity %" PRIu32 "\n", phi, r, intensity);
  * }
  * else
  * {
@@ -123,7 +119,6 @@ void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* t
 void deinitButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 
-int getBaseTouchVals(int32_t* data, int count);
 int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity);
 
 #endif
