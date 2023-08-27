@@ -29,6 +29,36 @@
 // #define TO_SUBPIXEL_COORDS(x) ((x) << SUBPIXEL_RESOLUTION)
 
 //==============================================================================
+// Look Up Tables
+//==============================================================================
+
+#define BOMB_EXPLOSION_TILE_CHECK_OFFSET_LENGTH 42
+static const int16_t bombExplosionTileCheckOffsets[42] = {
+//   X,  Y
+    -1, -2,
+     0, -2,
+     1, -2,
+    -2, -1,
+    -1, -1,
+     0, -1,
+     1, -1,
+     2, -1,
+    -2,  0,
+    -1,  0,
+     0,  0,
+     1,  0,
+     2,  0,
+    -2,  1,
+    -1,  1,
+     0,  1,
+     1,  1,
+     2,  1,
+    -1,  2,
+     0,  2,
+     1,  2
+};
+
+//==============================================================================
 // Functions
 //==============================================================================
 void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t *tilemap, gameData_t *gameData, soundManager_t *soundManager)
@@ -253,6 +283,16 @@ void updateBall(entity_t *self)
         //Ball is in play
         moveEntityWithTileCollisions(self);
         detectEntityCollisions(self);
+
+        if(
+            self->gameData->btnState & PB_DOWN
+            &&
+            !(self->gameData->prevBtnState & PB_DOWN)
+        )
+        {
+            //Drop bomb
+            createEntity(self->entityManager, ENTITY_PLAYER_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+        }
     }
 
     if((self->y >> 4) > 240){
@@ -280,6 +320,57 @@ void updateBallAtStart(entity_t *self){
                 self->collisionHandler = &ballCollisionHandler;
             }
         }
+    }
+}
+
+void updateBomb(entity_t * self){
+    if(self->gameData->frameCount % 5 == 0) {
+        self->spriteIndex = SP_BOMB_0 + ((self->spriteIndex + 1) % 2);
+    }
+
+    if(
+        self->gameData->btnState & PB_UP
+        &&
+        !(self->gameData->prevBtnState & PB_UP)
+    ){
+        uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
+        uint8_t ty = TO_TILE_COORDS(self->y >> SUBPIXEL_RESOLUTION);
+        uint8_t ctx, cty;
+
+        for(uint16_t i = 0; i < BOMB_EXPLOSION_TILE_CHECK_OFFSET_LENGTH; i+=2){
+            ctx = tx + bombExplosionTileCheckOffsets[i];
+            cty = ty + bombExplosionTileCheckOffsets[i+1];
+            uint8_t tileId = getTile(self->tilemap, ctx, cty);
+
+            switch(tileId){
+                case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
+                    breakBlockTile(self->tilemap, self->gameData, tileId, ctx, cty);
+                    //bzrPlaySfx(&(self->soundManager->hit1));
+                    scorePoints(self->gameData, 10, 0);
+                    break;
+                }
+                case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
+                    //bzrPlaySfx(&(self->soundManager->hit3));
+                    break;
+                }
+                default: {         
+                    break;
+                }
+            }
+        }
+
+        createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+        destroyEntity(self, false);
+    }
+}
+
+void updateExplosion(entity_t * self){
+    if(self->gameData->frameCount % 5 == 0) {
+        self->spriteIndex++;
+    }
+
+    if(self->spriteIndex > SP_EXPLOSION_3){
+        destroyEntity(self, false);
     }
 }
 

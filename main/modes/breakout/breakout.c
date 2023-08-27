@@ -457,8 +457,8 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     updateEntities(&(self->entityManager));
 
     // Draw the field
-    drawEntities(&(self->entityManager));
     drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(breakout->gameData));
 
     self->gameData.frameCount++;

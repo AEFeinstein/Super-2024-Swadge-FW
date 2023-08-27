@@ -36,7 +36,7 @@ void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilema
 
     
     //entityManager->viewEntity = createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16, entityManager->tilemap->warps[0].y * 16);
-    entityManager->playerEntity = entityManager->viewEntity;
+    //entityManager->playerEntity = entityManager->viewEntity;
 };
 
 void loadSprites(entityManager_t * entityManager)
@@ -73,53 +73,61 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_BALL].collisionBox.y0 = 0;
     entityManager->sprites[SP_BALL].collisionBox.y1 = 7;
 
-    /*loadWsg("sprite004.wsg", &entityManager->sprites[SP_PLAYER_JUMP]);
-    loadWsg("sprite005.wsg", &entityManager->sprites[SP_PLAYER_SLIDE]);
-    loadWsg("sprite006.wsg", &entityManager->sprites[SP_PLAYER_HURT]);
-    loadWsg("sprite007.wsg", &entityManager->sprites[SP_PLAYER_CLIMB]);
-    loadWsg("sprite008.wsg", &entityManager->sprites[SP_PLAYER_WIN]);
-    loadWsg("sprite009.wsg", &entityManager->sprites[SP_ENEMY_BASIC]);
-    loadWsg("tile066.wsg", &entityManager->sprites[SP_HITBLOCK_CONTAINER]);
-    loadWsg("tile034.wsg", &entityManager->sprites[SP_HITBLOCK_BRICKS]);
-    loadWsg("sprite012.wsg", &entityManager->sprites[SP_DUSTBUNNY_IDLE]);
-    loadWsg("sprite013.wsg", &entityManager->sprites[SP_DUSTBUNNY_CHARGE]);
-    loadWsg("sprite014.wsg", &entityManager->sprites[SP_DUSTBUNNY_JUMP]);
-    loadWsg("sprite015.wsg", &entityManager->sprites[SP_GAMING_1]);
-    loadWsg("sprite016.wsg", &entityManager->sprites[SP_GAMING_2]);
-    loadWsg("sprite017.wsg", &entityManager->sprites[SP_GAMING_3]);
-    loadWsg("sprite018.wsg", &entityManager->sprites[SP_MUSIC_1]);
-    loadWsg("sprite019.wsg", &entityManager->sprites[SP_MUSIC_2]);
-    loadWsg("sprite020.wsg", &entityManager->sprites[SP_MUSIC_3]);
-    loadWsg("sprite021.wsg", &entityManager->sprites[SP_WARP_1]);
-    loadWsg("sprite022.wsg", &entityManager->sprites[SP_WARP_2]);
-    loadWsg("sprite023.wsg", &entityManager->sprites[SP_WARP_3]);
-    loadWsg("sprite024.wsg", &entityManager->sprites[SP_WASP_1]);
-    loadWsg("sprite025.wsg", &entityManager->sprites[SP_WASP_2]);
-    loadWsg("sprite026.wsg", &entityManager->sprites[SP_WASP_DIVE]);
-    loadWsg("sprite027.wsg", &entityManager->sprites[SP_1UP_1]);
-    loadWsg("sprite028.wsg", &entityManager->sprites[SP_1UP_2]);
-    loadWsg("sprite029.wsg", &entityManager->sprites[SP_1UP_3]);
-    loadWsg("sprite030.wsg", &entityManager->sprites[SP_WAVEBALL_1]);
-    loadWsg("sprite031.wsg", &entityManager->sprites[SP_WAVEBALL_2]);
-    loadWsg("sprite032.wsg", &entityManager->sprites[SP_WAVEBALL_3]);
-    loadWsg("sprite033.wsg", &entityManager->sprites[SP_ENEMY_BUSH_L2]);
-    loadWsg("sprite034.wsg", &entityManager->sprites[SP_ENEMY_BUSH_L3]);
-    loadWsg("sprite035.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_IDLE]);
-    loadWsg("sprite036.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_CHARGE]);
-    loadWsg("sprite037.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_JUMP]);
-    loadWsg("sprite038.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_IDLE]);
-    loadWsg("sprite039.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_CHARGE]);
-    loadWsg("sprite040.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_JUMP]);
-    loadWsg("sprite041.wsg", &entityManager->sprites[SP_WASP_L2_1]);
-    loadWsg("sprite042.wsg", &entityManager->sprites[SP_WASP_L2_2]);
-    loadWsg("sprite043.wsg", &entityManager->sprites[SP_WASP_L2_DIVE]);
-    loadWsg("sprite044.wsg", &entityManager->sprites[SP_WASP_L3_1]);
-    loadWsg("sprite045.wsg", &entityManager->sprites[SP_WASP_L3_2]);
-    loadWsg("sprite046.wsg", &entityManager->sprites[SP_WASP_L3_DIVE]);
-    loadWsg("sprite047.wsg", &entityManager->sprites[SP_CHECKPOINT_INACTIVE]);
-    loadWsg("sprite048.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_1]);
-    loadWsg("sprite049.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_2]);
-    loadWsg("tile039.wsg", &entityManager->sprites[SP_BOUNCE_BLOCK]);*/
+    loadWsg("dbmb000.wsg", &entityManager->sprites[SP_BOMB_0].wsg, false);
+    entityManager->sprites[SP_BOMB_0].originX=4;
+    entityManager->sprites[SP_BOMB_0].originY=4;
+    entityManager->sprites[SP_BOMB_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BOMB_0].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BOMB_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BOMB_0].collisionBox.y1 = 7;
+
+    loadWsg("dbmb001.wsg", &entityManager->sprites[SP_BOMB_1].wsg, false);
+    entityManager->sprites[SP_BOMB_1].originX=4;
+    entityManager->sprites[SP_BOMB_1].originY=4;
+    entityManager->sprites[SP_BOMB_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BOMB_1].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BOMB_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BOMB_1].collisionBox.y1 = 7;
+
+    loadWsg("dbmb002.wsg", &entityManager->sprites[SP_BOMB_2].wsg, false);
+    entityManager->sprites[SP_BOMB_2].originX=4;
+    entityManager->sprites[SP_BOMB_2].originY=4;
+    entityManager->sprites[SP_BOMB_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BOMB_2].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BOMB_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BOMB_2].collisionBox.y1 = 7;
+
+    loadWsg("boom000.wsg", &entityManager->sprites[SP_EXPLOSION_0].wsg, false);
+    entityManager->sprites[SP_EXPLOSION_0].originX=20;
+    entityManager->sprites[SP_EXPLOSION_0].originY=20;
+    entityManager->sprites[SP_EXPLOSION_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_EXPLOSION_0].collisionBox.x1 = 39;
+    entityManager->sprites[SP_EXPLOSION_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_EXPLOSION_0].collisionBox.y1 = 39;
+
+    loadWsg("boom001.wsg", &entityManager->sprites[SP_EXPLOSION_1].wsg, false);
+    entityManager->sprites[SP_EXPLOSION_1].originX=20;
+    entityManager->sprites[SP_EXPLOSION_1].originY=20;
+    entityManager->sprites[SP_EXPLOSION_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_EXPLOSION_1].collisionBox.x1 = 39;
+    entityManager->sprites[SP_EXPLOSION_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_EXPLOSION_1].collisionBox.y1 = 39;
+
+    loadWsg("boom002.wsg", &entityManager->sprites[SP_EXPLOSION_2].wsg, false);
+    entityManager->sprites[SP_EXPLOSION_2].originX=20;
+    entityManager->sprites[SP_EXPLOSION_2].originY=20;
+    entityManager->sprites[SP_EXPLOSION_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_EXPLOSION_2].collisionBox.x1 = 39;
+    entityManager->sprites[SP_EXPLOSION_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_EXPLOSION_2].collisionBox.y1 = 39;
+
+    loadWsg("boom003.wsg", &entityManager->sprites[SP_EXPLOSION_3].wsg, false);
+    entityManager->sprites[SP_EXPLOSION_3].originX=20;
+    entityManager->sprites[SP_EXPLOSION_3].originY=20;
+    entityManager->sprites[SP_EXPLOSION_3].collisionBox.x0 = 0;
+    entityManager->sprites[SP_EXPLOSION_3].collisionBox.x1 = 39;
+    entityManager->sprites[SP_EXPLOSION_3].collisionBox.y0 = 0;
+    entityManager->sprites[SP_EXPLOSION_3].collisionBox.y1 = 39;
 };
 
 void updateEntities(entityManager_t * entityManager)
@@ -185,7 +193,7 @@ entity_t * findInactiveEntity(entityManager_t * entityManager)
         entityIndex++;
 
         //Extra safeguard to make sure we don't get stuck here
-        if(entityIndex > MAX_ENTITIES)
+        if(entityIndex >= MAX_ENTITIES)
         {
             return NULL;
         }
@@ -227,6 +235,12 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
             break;
         case ENTITY_PLAYER_BALL:
             createdEntity = createBall(entityManager, x, y);
+            break;
+        case ENTITY_PLAYER_BOMB:
+            createdEntity = createBomb(entityManager, x, y);
+            break;
+        case ENTITY_PLAYER_BOMB_EXPLOSION:
+            createdEntity = createExplosion(entityManager, x, y);
             break;
         /*
         case ENTITY_SCROLL_LOCK_LEFT:
@@ -414,6 +428,75 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     return entity;
 }
+
+entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = true;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+    
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    entity->xMaxSpeed = 132;
+    entity->yMaxSpeed = 132;
+    entity->gravityEnabled = false;
+    entity->gravity = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical = false;
+    entity->scoreValue = 100;
+
+    entity->type = ENTITY_PLAYER_BOMB;
+    entity->spriteIndex = SP_BOMB_0;
+    entity->updateFunction = &updateBomb;
+    entity->collisionHandler = &dummyCollisionHandler;
+    entity->tileCollisionHandler = &dummyTileCollisionHandler;
+    entity->fallOffTileHandler = &defaultFallOffTileHandler;
+    entity->overlapTileHandler = &defaultOverlapTileHandler;
+
+    return entity;
+}
+
+entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = true;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+    
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    entity->xMaxSpeed = 132;
+    entity->yMaxSpeed = 132;
+    entity->gravityEnabled = false;
+    entity->gravity = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical = false;
+    entity->scoreValue = 100;
+
+    entity->type = ENTITY_PLAYER_BOMB_EXPLOSION;
+    entity->spriteIndex = SP_EXPLOSION_0;
+    entity->updateFunction = &updateExplosion;
+    entity->collisionHandler = &dummyCollisionHandler;
+    entity->tileCollisionHandler = &dummyTileCollisionHandler;
+    entity->fallOffTileHandler = &defaultFallOffTileHandler;
+    entity->overlapTileHandler = &defaultOverlapTileHandler;
+
+    return entity;
+}
+
 /*
 entity_t* createScrollLockLeft(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {

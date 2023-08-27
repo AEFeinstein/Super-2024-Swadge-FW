@@ -33,7 +33,9 @@ typedef enum {
     ENTITY_UNUSED_13,
     ENTITY_UNUSED_14,
     ENTITY_UNUSED_15,
-    ENTITY_PLAYER_BALL
+    ENTITY_PLAYER_BALL,
+    ENTITY_PLAYER_BOMB,
+    ENTITY_PLAYER_BOMB_EXPLOSION
 } entityIndex_t;
 
 //==============================================================================
@@ -108,7 +110,11 @@ void initializeEntity(entity_t * self, entityManager_t * entityManager, tilemap_
 void updatePlayer(entity_t * self);
 void updateBall(entity_t * self);
 void updateBallAtStart(entity_t *self);
+void updateBomb(entity_t * self);
+void updateExplosion(entity_t * self);
+
 void updateHitBlock(entity_t * self);
+
 
 void moveEntityWithTileCollisions(entity_t * self);
 void defaultFallOffTileHandler(entity_t *self);
