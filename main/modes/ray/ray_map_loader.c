@@ -13,6 +13,7 @@
 #include "hdw-spiffs.h"
 #include "heatshrink_helper.h"
 #include "ray_map_loader.h"
+#include "ray_tex_manager.h"
 
 //==============================================================================
 // Functions
@@ -23,17 +24,20 @@
  * before compilation will be automatically flashed to ROM
  *
  * @param name The filename of the RMH to load
- * @param map The map to load into
- * @param objs TODO
- * @param startX Where the starting X coordinate is loaded into
- * @param startY Where the starting Y coordinate is loaded into
+ * @param ray The ray_t to load the map into
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  */
-void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX, int32_t* startY, bool spiRam)
+void loadRayMap(const char* name, ray_t* ray, bool spiRam)
 {
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
+
+    // Convenience pointers
+    rayMap_t* map  = &ray->map;
+    rayObj_t* objs = ray->objs;
+    q24_8* startX  = &ray->posX;
+    q24_8* startY  = &ray->posY;
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;
@@ -74,10 +78,10 @@ void loadRayMap(const char* name, rayMap_t* map, rayObj_t* objs, int32_t* startX
                     *startX = x;
                     *startY = y;
                 }
-                if (CELL_IS_TYPE(obj, OBJ))
+                else if (CELL_IS_TYPE(obj, OBJ))
                 {
                     // Objects
-                    objs[objIdx].sprite = getTexture(obj);
+                    objs[objIdx].sprite = getTexByType(ray, obj);
                     objs[objIdx].dist   = 0;
                     // Center the position in the tile
                     objs[objIdx].posX   = TO_FX(x) + (1 << (FRAC_BITS - 1));

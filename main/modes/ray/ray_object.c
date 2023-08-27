@@ -39,30 +39,26 @@ void moveRayObjects(ray_t* ray, int64_t elapsedUs)
 
             // Check if it hit a wall
             rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->posX)][FROM_FX(obj->posY)];
-            switch (cell->type)
+            // If a wall is it
+            if (CELL_IS_TYPE(cell->type, BG | WALL))
             {
-                // If a wall is it
-                if (CELL_IS_TYPE(cell->type, BG | WALL))
+                // Destroy this bullet
+                memset(obj, 0, sizeof(rayObj_t));
+                obj->id = -1;
+            }
+            // Else if a door is hit
+            else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+            {
+                // Start opening the door
+                // TODO check bullet / door combo
+                if (0 == cell->doorOpen)
                 {
+                    cell->doorOpen = 1;
                     // Destroy this bullet
                     memset(obj, 0, sizeof(rayObj_t));
                     obj->id = -1;
                 }
-                // Else if a door is hit
-                else if (CELL_IS_TYPE(cell->type, BG | DOOR))
-                {
-                    // Start opening the door
-                    // TODO check bullet / door combo
-                    if (0 == cell->doorOpen)
-                    {
-                        cell->doorOpen = 1;
-                        // Destroy this bullet
-                        memset(obj, 0, sizeof(rayObj_t));
-                        obj->id = -1;
-                    }
-                }
             }
-            break;
         }
     }
     // TODO check for bullet-object collisions after updating all positions

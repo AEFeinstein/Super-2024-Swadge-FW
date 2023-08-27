@@ -89,6 +89,12 @@ typedef struct
 
 typedef struct
 {
+    char* name;
+    wsg_t texture;
+} namedTexture_t;
+
+typedef struct
+{
     wsg_t* sprite;         ///< The sprite for this object
     int32_t dist;          ///< The distance between the player and this object, used for sorting before casting
     q24_8 posX;            ///< The X position of this object
@@ -102,8 +108,6 @@ typedef struct
 
 typedef struct
 {
-    wsg_t textures[256]; // TODO turn this into a list
-
     rayMap_t map;
     rayObj_t objs[MAX_RAY_OBJS];
 
@@ -125,10 +129,11 @@ typedef struct
     int32_t doorTimer;
 
     bool isStrafing;
+
+    namedTexture_t* loadedTextures;
+    uint8_t* typeToIdxMap;
 } ray_t;
 
 extern swadgeMode_t rayMode;
-
-wsg_t* getTexture(rayMapCellType_t type);
 
 #endif

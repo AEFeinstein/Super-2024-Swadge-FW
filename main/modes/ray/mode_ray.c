@@ -7,6 +7,7 @@
 #include "ray_map_loader.h"
 #include "ray_renderer.h"
 #include "ray_object.h"
+#include "ray_tex_manager.h"
 
 //==============================================================================
 // Function Prototypes
@@ -25,88 +26,6 @@ void setPlayerAngle(q24_8 angle);
 //==============================================================================
 
 const char rayName[] = "Magtroid Pocket";
-
-// TODO replace this with legit WSG management
-uint8_t texVals[] = {
-    EMPTY,
-    DELETE,
-    BG_FLOOR,
-    BG_FLOOR_WATER,
-    BG_FLOOR_LAVA,
-    BG_WALL_1,
-    BG_WALL_2,
-    BG_WALL_3,
-    BG_DOOR,
-    BG_DOOR_CHARGE,
-    BG_DOOR_MISSILE,
-    BG_DOOR_ICE,
-    BG_DOOR_XRAY,
-    OBJ_ENEMY_START_POINT,
-    OBJ_ENEMY_BEAM,
-    OBJ_ENEMY_CHARGE,
-    OBJ_ENEMY_MISSILE,
-    OBJ_ENEMY_ICE,
-    OBJ_ENEMY_XRAY,
-    OBJ_ITEM_BEAM,
-    OBJ_ITEM_CHARGE_BEAM,
-    OBJ_ITEM_MISSILE,
-    OBJ_ITEM_ICE,
-    OBJ_ITEM_XRAY,
-    OBJ_ITEM_SUIT_WATER,
-    OBJ_ITEM_SUIT_LAVA,
-    OBJ_ITEM_ENERGY_TANK,
-    OBJ_ITEM_KEY,
-    OBJ_ITEM_ARTIFACT,
-    OBJ_ITEM_PICKUP_ENERGY,
-    OBJ_ITEM_PICKUP_MISSILE,
-    OBJ_BULLET_NORMAL,
-    OBJ_BULLET_CHARGE,
-    OBJ_BULLET_ICE,
-    OBJ_BULLET_MISSILE,
-    OBJ_BULLET_XRAY,
-    OBJ_SCENERY_TERMINAL,
-};
-
-// Order MUST MATCH rayMapCellType_t
-static const char* texNames[] = {
-    "EMPTY.wsg",
-    "DELETE.wsg",
-    "BG_FLOOR.wsg",
-    "BG_FLOOR_WATER.wsg",
-    "BG_FLOOR_LAVA.wsg",
-    "BG_WALL_1.wsg",
-    "BG_WALL_2.wsg",
-    "BG_WALL_3.wsg",
-    "BG_DOOR.wsg",
-    "BG_DOOR_CHARGE.wsg",
-    "BG_DOOR_MISSILE.wsg",
-    "BG_DOOR_ICE.wsg",
-    "BG_DOOR_XRAY.wsg",
-    "OBJ_ENEMY_START_POINT.wsg",
-    "OBJ_ENEMY_BEAM.wsg",
-    "OBJ_ENEMY_CHARGE.wsg",
-    "OBJ_ENEMY_MISSILE.wsg",
-    "OBJ_ENEMY_ICE.wsg",
-    "OBJ_ENEMY_XRAY.wsg",
-    "OBJ_ITEM_BEAM.wsg",
-    "OBJ_ITEM_CHARGE_BEAM.wsg",
-    "OBJ_ITEM_MISSILE.wsg",
-    "OBJ_ITEM_ICE.wsg",
-    "OBJ_ITEM_XRAY.wsg",
-    "OBJ_ITEM_SUIT_WATER.wsg",
-    "OBJ_ITEM_SUIT_LAVA.wsg",
-    "OBJ_ITEM_ENERGY_TANK.wsg",
-    "OBJ_ITEM_KEY.wsg",
-    "OBJ_ITEM_ARTIFACT.wsg",
-    "OBJ_ITEM_PICKUP_ENERGY.wsg",
-    "OBJ_ITEM_PICKUP_MISSILE.wsg",
-    "OBJ_BULLET_NORMAL.wsg",
-    "OBJ_BULLET_CHARGE.wsg",
-    "OBJ_BULLET_ICE.wsg",
-    "OBJ_BULLET_MISSILE.wsg",
-    "OBJ_BULLET_XRAY.wsg",
-    "OBJ_SCENERY_TERMINAL.wsg",
-};
 
 //==============================================================================
 // Variables
@@ -149,7 +68,7 @@ void rayEnterMode(void)
     }
 
     // Load the map and object data
-    loadRayMap("demo.rmh", &ray->map, ray->objs, &ray->posX, &ray->posY, false);
+    loadRayMap("demo.rmh", ray, false);
 
     // Set initial position and direction, centered on the tile
     ray->posX = TO_FX(ray->posX) + (1 << (FRAC_BITS - 1));
@@ -157,11 +76,8 @@ void rayEnterMode(void)
     setPlayerAngle(TO_FX(0));
     ray->posZ = TO_FX(0);
 
-    // Load all textures
-    for (int16_t idx = 0; idx < ARRAY_SIZE(texNames); idx++)
-    {
-        loadWsg(texNames[idx], &ray->textures[texVals[idx]], true);
-    }
+    // Initialize texture manager
+    initLoadedTextures(ray);
 
     // Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -174,25 +90,9 @@ void rayEnterMode(void)
  */
 void rayExitMode(void)
 {
-    // Free all textures
-    for (int16_t idx = 0; idx < ARRAY_SIZE(texNames); idx++)
-    {
-        freeWsg(&ray->textures[texVals[idx]]);
-    }
-
     freeRayMap(&ray->map);
+    freeAllTex(ray);
     free(ray);
-}
-
-/**
- * @brief Return texture for the cell type
- *
- * @param type
- * @return wsg_t*
- */
-wsg_t* getTexture(rayMapCellType_t type)
-{
-    return &ray->textures[type];
 }
 
 /**
@@ -365,13 +265,14 @@ void rayMainLoop(int64_t elapsedUs)
         {
             if (-1 == ray->objs[newIdx].id)
             {
-                ray->objs[newIdx].sprite = &ray->textures[OBJ_BULLET_NORMAL];
+                wsg_t* texture           = getTexByType(ray, OBJ_BULLET_NORMAL);
+                ray->objs[newIdx].sprite = texture;
                 ray->objs[newIdx].dist   = 0;
                 ray->objs[newIdx].posX   = ray->posX + ray->dirX / 2;
                 ray->objs[newIdx].posY   = ray->posY + ray->dirY / 2;
                 ray->objs[newIdx].velX   = ray->dirX;
                 ray->objs[newIdx].velY   = ray->dirY;
-                ray->objs[newIdx].radius = DIV_FX(TO_FX(ray->textures[OBJ_BULLET_NORMAL].w), TO_FX(64));
+                ray->objs[newIdx].radius = DIV_FX(TO_FX(texture->w), TO_FX(64));
                 ray->objs[newIdx].type   = OBJ_BULLET_NORMAL;
                 ray->objs[newIdx].id     = 0;
                 break;

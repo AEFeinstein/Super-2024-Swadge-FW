@@ -4,6 +4,7 @@
 
 #include "mode_ray.h"
 #include "ray_renderer.h"
+#include "ray_tex_manager.h"
 #include "fp_math.h"
 #include "hdw-tft.h"
 
@@ -131,12 +132,14 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
             // Draw the pixel
             if (isFloor)
             {
-                TURBO_SET_PIXEL(x, y, ray->textures[BG_FLOOR].px[TEX_WIDTH * ty + tx]);
+                wsg_t* texture = getTexByType(ray, BG_FLOOR);
+                TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
             }
             else
             {
                 // TODO set special ceiling texture
-                TURBO_SET_PIXEL(x, y, ray->textures[BG_FLOOR].px[TEX_WIDTH * ty + tx]);
+                wsg_t* texture = getTexByType(ray, BG_FLOOR);
+                TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
             }
         }
     }
@@ -359,11 +362,11 @@ void castWalls(ray_t* ray)
         paletteColor_t* tex;
         if (BG_DOOR == ray->map.tiles[mapX][mapY].type)
         {
-            tex = ray->textures[BG_DOOR].px;
+            tex = getTexByType(ray, BG_DOOR)->px;
         }
         else
         {
-            tex = ray->textures[BG_WALL_1].px;
+            tex = getTexByType(ray, BG_WALL_1)->px;
         }
 
         // Draw a vertical strip
