@@ -257,6 +257,10 @@ void jukeboxExitMode(void)
     freeWsg(&jukebox->arrow);
     freeWsg(&jukebox->jukeboxSprite);
 
+    freeSong(&jukebox->pongHit1);
+    freeSong(&jukebox->pongHit2);
+    freeSong(&jukebox->pongBgm);
+
     freePortableDance(jukebox->portableDances);
 
     deinitMenuLogbookRenderer(jukebox->menuLogbookRenderer);
