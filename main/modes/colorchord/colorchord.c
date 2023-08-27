@@ -6,8 +6,8 @@
 #include <esp_log.h>
 #include <esp_timer.h>
 
-#include "mode_colorchord.h"
-#include "mode_colorchord_types.h"
+#include "colorchord.h"
+#include "colorchordTypes.h"
 
 // For colorchord
 #include "embeddedOut.h"

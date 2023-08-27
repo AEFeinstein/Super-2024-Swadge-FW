@@ -18,7 +18,7 @@
 
 #include "hdw-tft.h"
 #include "mainMenu.h"
-#include "portable_dance.h"
+#include "portableDance.h"
 #include "tunernome.h"
 #include "settingsManager.h"
 #include "swadge2024.h"

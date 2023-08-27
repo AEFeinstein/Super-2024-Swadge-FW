@@ -1,5 +1,5 @@
 /*
- * mode_dance.c
+ * dance.c
  *
  *  Created on: Nov 10, 2018
  *      Author: adam
@@ -11,7 +11,7 @@
 
 #include <esp_sleep.h>
 
-#include "mode_dance.h"
+#include "dance.h"
 #include "settingsManager.h"
 
 //==============================================================================
@@ -110,7 +110,7 @@ const ledDanceArg ledDances[] = {
     {.func = danceRandomDance, .arg = 0, .name = "Shuffle All"},
 };
 
-swadgeMode_t modeDance = {
+swadgeMode_t danceMode = {
     .modeName        = "Light Dances",
     .fnEnterMode     = danceEnterMode,
     .fnExitMode      = danceExitMode,
