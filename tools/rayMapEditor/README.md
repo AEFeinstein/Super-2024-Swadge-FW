@@ -84,14 +84,38 @@ Arguments, arrays, CELLs, and SPAWNs all have different delimiters to make parsi
 
 These are the objects that can be spawned
 
-| Object           | Notes                                                |
-|------------------|------------------------------------------------------|
-| `ENEMY_DRAGON`   | Enemy type                                           |
-| `ENEMY_SKELETON` | Enemy type                                           |
-| `ENEMY_KNIGHT`   | Enemy type                                           |
-| `ENEMY_GOLEM`    | Enemy type                                           |
-| `OBELISK`        | Static type, no implicit interaction                 |
-| `GUN`            | Item type, can be picked up and used to shoot things |
+| Object                    | Notes                                              |
+|---------------------------|----------------------------------------------------|
+| `BG_FLOOR`                | Normal floor                                       |
+| `BG_FLOOR_WATER`          | Water floor, moves slowly                          |
+| `BG_FLOOR_LAVA`           | Lava floor, takes damage                           |
+| `BG_WALL_1`               | Wall variant 1                                     |
+| `BG_WALL_2`               | Wall variant 2                                     |
+| `BG_WALL_3`               | Wall variant 3                                     |
+| `BG_DOOR`                 | Door, normal beam                                  |
+| `BG_DOOR_CHARGE`          | Door, charge beam                                  |
+| `BG_DOOR_MISSILE`         | Door, missile                                      |
+| `BG_DOOR_ICE`             | Door, ice beam                                     |
+| `BG_DOOR_XRAY`            | Door, x-ray beam                                   |
+| `OBJ_START_POINT`         | Starting point, not a real object                  |
+| `OBJ_ENEMY_BEAM`          | Enemy type, weak to normal beam                    |
+| `OBJ_ENEMY_CHARGE`        | Enemy type, weak to charge beam                    |
+| `OBJ_ENEMY_MISSILE`       | Enemy type, weak to missile                        |
+| `OBJ_ENEMY_ICE`           | Enemy type, weak to ice beam                       |
+| `OBJ_ENEMY_XRAY`          | Enemy type, weak to x-ray beam                     |
+| `OBJ_ITEM_BEAM`           | Power-up, normal beam                              |
+| `OBJ_ITEM_CHARGE_BEAM`    | Power-up, charge beam                              |
+| `OBJ_ITEM_MISSILE`        | Power-up, missiles (also missile capacity upgrade) |
+| `OBJ_ITEM_ICE`            | Power-up, ice beam                                 |
+| `OBJ_ITEM_XRAY`           | Power-up, x-ray visor                              |
+| `OBJ_ITEM_SUIT_WATER`     | Power-up, suit, water resistance                   |
+| `OBJ_ITEM_SUIT_LAVA`      | Power-up, suit, lava resistance                    |
+| `OBJ_ITEM_ENERGY_TANK`    | Power-up, energy tank                              |
+| `OBJ_ITEM_KEY`            | Access item, key                                   |
+| `OBJ_ITEM_ARTIFACT`       | Access item, artifact                              |
+| `OBJ_ITEM_PICKUP_ENERGY`  | Pickup, energy                                     |
+| `OBJ_ITEM_PICKUP_MISSILE` | Pickup, missiles                                   |
+| `OBJ_SCENERY_TERMINAL`    | Scenery, computer terminal                         |
 
 ### Script Examples
 

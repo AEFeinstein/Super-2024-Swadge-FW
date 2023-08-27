@@ -72,10 +72,10 @@ class view:
 
         # Set up the canvasses
         self.paletteCanvas: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 2, height=self.paletteCellSize * 8,
+            content, background=elemBgColor, width=self.paletteCellSize * 3, height=self.paletteCellSize * 8,
             highlightthickness=borderThickness, highlightbackground=borderColor)
         self.paletteSelected: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 2, height=self.paletteCellSize * 2,
+            content, background=elemBgColor, width=self.paletteCellSize * 3, height=self.paletteCellSize * 2,
             highlightthickness=borderThickness, highlightbackground=borderColor)
         self.mapCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
@@ -167,31 +167,37 @@ class view:
         self.texMapPalette: Mapping[tileType, ImageTk.PhotoImage] = {}
         self.texMapMap: Mapping[tileType, ImageTk.PhotoImage] = {}
 
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR, 'imgs/floor.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL, 'imgs/wall.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_CEILING, 'imgs/ceiling.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR, 'imgs/door.png')
-
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_DRAGON, 'imgs/dragon.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_SKELETON, 'imgs/skeleton.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_KNIGHT, 'imgs/knight.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_GOLEM, 'imgs/golem.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_OBELISK, 'imgs/obelisk.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_START_POINT, 'imgs/start.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_GUN, 'imgs/item.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_DELETE, 'imgs/delete.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR, 'imgs/BG_FLOOR.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_WATER, 'imgs/BG_FLOOR_WATER.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_LAVA, 'imgs/BG_FLOOR_LAVA.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_1, 'imgs/BG_WALL_1.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_2, 'imgs/BG_WALL_2.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_3, 'imgs/BG_WALL_3.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR, 'imgs/BG_DOOR.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_CHARGE, 'imgs/BG_DOOR_CHARGE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_MISSILE, 'imgs/BG_DOOR_MISSILE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_ICE, 'imgs/BG_DOOR_ICE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_XRAY, 'imgs/BG_DOOR_XRAY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_START_POINT, 'imgs/OBJ_START_POINT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_BEAM, 'imgs/OBJ_ENEMY_BEAM.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_CHARGE, 'imgs/OBJ_ENEMY_CHARGE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_MISSILE, 'imgs/OBJ_ENEMY_MISSILE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_ICE, 'imgs/OBJ_ENEMY_ICE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_XRAY, 'imgs/OBJ_ENEMY_XRAY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_BEAM, 'imgs/OBJ_ITEM_BEAM.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_CHARGE_BEAM, 'imgs/OBJ_ITEM_CHARGE_BEAM.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_MISSILE, 'imgs/OBJ_ITEM_MISSILE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_ICE, 'imgs/OBJ_ITEM_ICE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_XRAY, 'imgs/OBJ_ITEM_XRAY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_SUIT_WATER, 'imgs/OBJ_ITEM_SUIT_WATER.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_SUIT_LAVA, 'imgs/OBJ_ITEM_SUIT_LAVA.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_ENERGY_TANK, 'imgs/OBJ_ITEM_ENERGY_TANK.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_KEY, 'imgs/OBJ_ITEM_KEY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_ARTIFACT, 'imgs/OBJ_ITEM_ARTIFACT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_ENERGY, 'imgs/OBJ_ITEM_PICKUP_ENERGY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_MISSILE, 'imgs/OBJ_ITEM_PICKUP_MISSILE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_SCENERY_TERMINAL, 'imgs/OBJ_SCENERY_TERMINAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_DELETE, 'imgs/OBJ_DELETE.png')
 
         # Start maximized
         self.root.state('zoomed')
@@ -199,10 +205,10 @@ class view:
     def loadTexture(self, pMap, mMap, key, texFile):
         img = Image.open(texFile)
         pResize = img.resize(
-            size=[self.paletteCellSize, self.paletteCellSize], resample=Image.LANCZOS)
+            size=(self.paletteCellSize, self.paletteCellSize), resample=Image.LANCZOS)
         pMap[key] = ImageTk.PhotoImage(pResize)
         mResize = img.resize(
-            size=[self.mapCellSize, self.mapCellSize], resample=Image.LANCZOS)
+            size=(self.mapCellSize, self.mapCellSize), resample=Image.LANCZOS)
         mMap[key] = ImageTk.PhotoImage(mResize)
 
     def setController(self, c):
@@ -293,13 +299,17 @@ class view:
                     0, y*self.paletteCellSize, image=self.texMapPalette[bg], anchor=tk.NW)
             y = y+1
 
-        # Draw objects in the palette
+        # Draw objects in the palette into two columns
+        x: int = 1
         y: int = 0
         for obj in objTiles:
             if obj is not tileType.EMPTY:
                 self.paletteCanvas.create_image(
-                    self.paletteCellSize, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
+                    x*self.paletteCellSize, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
             y = y+1
+            if 11 == y:
+                y = 0
+                x = x+1
 
         # Draw the map
         for x in range(self.m.getMapWidth()):
