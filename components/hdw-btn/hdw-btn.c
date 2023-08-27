@@ -543,33 +543,3 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 
     return 1;
 }
-
-/**
- * @brief Get the touch intensity and location in terms of angle and distance from
- * the center touchpad
- *
- * @param[out] angle A pointer to return the angle of the center of the touch, in degrees
- * @param[out] radius A pointer to return the radius of the touch centroid
- * @param[out] intensity A pointer to return the intensity of the touch
- * @return true If the touchpad was touched and values were written to the out-params
- * @return false If no touch is detected and nothing was written
- */
-bool getTouchAngleRadius(int32_t* angle, int32_t* radius, int32_t* intensity)
-{
-    int32_t baseVals[numTouchPads];
-    int32_t centerVal;
-    if (!angle || !radius || !intensity || !getTouchCentroid(&centerVal, intensity))
-    {
-        return false;
-    }
-
-    // Just do the actual "is the touchpad touched" check, then write placeholder values
-
-    // TODO: Actual touchpad implementation
-    // For now, just pretend X->Y is the entire circular touchpad
-    *angle = ((1024 - centerVal) * 360 / 1024) % 360;
-
-    // Lock radius to 512
-    *radius = 512;
-    return true;
-}

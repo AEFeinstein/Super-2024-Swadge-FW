@@ -87,7 +87,7 @@ typedef struct
     int32_t lastHoverX;
     int32_t lastHoverY;
 
-    int32_t lastTouchAngle;
+    int32_t lastTouchPhi;
     int32_t lastTouchRadius;
     int32_t lastTouchIntensity;
     buttonBit_t lastTouchButtons;
@@ -206,9 +206,8 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked)
             emuTouch.lastClickY = y;
 
             // Calculate the new touch values and save them
-            calculateTouch(x, y, &(emuTouch.lastTouchAngle), &(emuTouch.lastTouchRadius),
-                           &(emuTouch.lastTouchIntensity));
-            emulatorSetTouchAngleRadius(emuTouch.lastTouchAngle, emuTouch.lastTouchRadius, emuTouch.lastTouchIntensity);
+            calculateTouch(x, y, &(emuTouch.lastTouchPhi), &(emuTouch.lastTouchRadius), &(emuTouch.lastTouchIntensity));
+            emulatorSetTouchJoystick(emuTouch.lastTouchPhi, emuTouch.lastTouchRadius, emuTouch.lastTouchIntensity);
         }
         else
         {
@@ -216,7 +215,7 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked)
             emuTouch.dragging = false;
 
             // ... and reset the touch centroid to 0, since we're not touching the touchpad
-            emulatorSetTouchAngleRadius(0, 0, 0);
+            emulatorSetTouchJoystick(0, 0, 0);
         }
 
         // Consume this mouse event, since did something with it
@@ -328,11 +327,11 @@ static void touchRender(uint32_t winW, uint32_t winH, const emuPane_t* pane, uin
     if (emuTouch.dragging || (emuTouch.hovering && isInTouchBounds(emuTouch.lastHoverX, emuTouch.lastHoverY)))
     {
         int32_t x = emuTouch.dragging ? (int32_t)centerX
-                                            + getCos1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius
+                                            + getCos1024(emuTouch.lastTouchPhi) * emuTouch.lastTouchRadius
                                                   * (int32_t)outerR / 1024 / 1024
                                       : emuTouch.lastHoverX;
         int32_t y = emuTouch.dragging ? (int32_t)centerY
-                                            - getSin1024(emuTouch.lastTouchAngle) * emuTouch.lastTouchRadius
+                                            - getSin1024(emuTouch.lastTouchPhi) * emuTouch.lastTouchRadius
                                                   * (int32_t)outerR / 1024 / 1024
                                       : emuTouch.lastHoverY;
 
