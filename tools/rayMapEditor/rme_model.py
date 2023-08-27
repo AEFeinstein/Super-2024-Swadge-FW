@@ -1,5 +1,6 @@
 from rme_tiles import *
 from rme_script_editor import *
+from rme_view import NUM_PALETTE_ROWS
 from io import TextIOWrapper
 
 
@@ -51,7 +52,7 @@ class model:
     def setMapTileObj(self, x: int, y: int, obj: tileType):
         if (0 <= x and x < len(self.tileMap)):
             if (0 <= y and y < len(self.tileMap[x])):
-                if tileType.OBJ_DELETE == obj:
+                if tileType.DELETE == obj:
                     if tileType.EMPTY != self.tileMap[x][y].object:
                         self.usedIds.remove(self.tileMap[x][y].objectId)
                         self.tileMap[x][y].setObj(tileType.EMPTY, -1)
@@ -77,8 +78,9 @@ class model:
             # backgrounds in the first column
             if 0 <= y and y < len(bgTiles):
                 return bgTiles[y]
-        elif 1 == x:
-            # objects i the second column
+        else:
+            # objects i the other columns
+            y = y + NUM_PALETTE_ROWS * (x - 1)
             if 0 <= y and y < len(objTiles):
                 return objTiles[y]
         return None

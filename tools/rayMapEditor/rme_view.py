@@ -12,7 +12,7 @@ from rme_tiles import *
 from rme_script_editor import rme_scriptSplitter
 from rme_script_editor import rme_script
 
-
+NUM_PALETTE_ROWS = 11
 class view:
 
     def __init__(self):
@@ -178,7 +178,7 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_MISSILE, 'imgs/BG_DOOR_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_ICE, 'imgs/BG_DOOR_ICE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_XRAY, 'imgs/BG_DOOR_XRAY.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_START_POINT, 'imgs/OBJ_START_POINT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_BEAM, 'imgs/OBJ_ENEMY_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_CHARGE, 'imgs/OBJ_ENEMY_CHARGE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_MISSILE, 'imgs/OBJ_ENEMY_MISSILE.png')
@@ -197,10 +197,10 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_ENERGY, 'imgs/OBJ_ITEM_PICKUP_ENERGY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_MISSILE, 'imgs/OBJ_ITEM_PICKUP_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_SCENERY_TERMINAL, 'imgs/OBJ_SCENERY_TERMINAL.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_DELETE, 'imgs/OBJ_DELETE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.DELETE, 'imgs/DELETE.png')
 
         # Start maximized
-        self.root.state('zoomed')
+        self.root.wm_state('normal') # 'zoomed' works for windows
 
     def loadTexture(self, pMap, mMap, key, texFile):
         img = Image.open(texFile)
@@ -307,7 +307,7 @@ class view:
                 self.paletteCanvas.create_image(
                     x*self.paletteCellSize, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
             y = y+1
-            if 11 == y:
+            if NUM_PALETTE_ROWS == y:
                 y = 0
                 x = x+1
 

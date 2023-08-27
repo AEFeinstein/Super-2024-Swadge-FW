@@ -97,7 +97,7 @@ These are the objects that can be spawned
 | `BG_DOOR_MISSILE`         | Door, missile                                      |
 | `BG_DOOR_ICE`             | Door, ice beam                                     |
 | `BG_DOOR_XRAY`            | Door, x-ray beam                                   |
-| `OBJ_START_POINT`         | Starting point, not a real object                  |
+| `OBJ_ENEMY_START_POINT`         | Starting point, not a real object                  |
 | `OBJ_ENEMY_BEAM`          | Enemy type, weak to normal beam                    |
 | `OBJ_ENEMY_CHARGE`        | Enemy type, weak to charge beam                    |
 | `OBJ_ENEMY_MISSILE`       | Enemy type, weak to missile                        |

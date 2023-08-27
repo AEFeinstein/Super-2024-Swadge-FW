@@ -1,49 +1,68 @@
 
 from enum import Enum
 
+# Bits used for tile type construction, topmost bit
+BG      = 0x00
+OBJ     = 0x80
+# Types of background, next two top bits
+META    = 0x00
+FLOOR   = 0x20
+WALL    = 0x40
+DOOR    = 0x60
+# Types of objects, next two top bits
+ITEM    = 0x00
+ENEMY   = 0x20
+BULLET  = 0x40
+SCENERY = 0x60
+# Bottom five bits are used for uniqueness
 
 class tileType(Enum):
     # Special empty type
-    EMPTY = 0
-    # Background tiles
-    BG_FLOOR = 1
-    BG_FLOOR_WATER = 2
-    BG_FLOOR_LAVA = 3
-    BG_WALL_1 = 4
-    BG_WALL_2 = 5
-    BG_WALL_3 = 6
-    BG_DOOR = 7
-    BG_DOOR_CHARGE = 8
-    BG_DOOR_MISSILE = 9
-    BG_DOOR_ICE = 10
-    BG_DOOR_XRAY = 11
-    # Meta tile, starting point
-    OBJ_START_POINT = 12
-    # Enemies
-    OBJ_ENEMY_BEAM = 13
-    OBJ_ENEMY_CHARGE = 14
-    OBJ_ENEMY_MISSILE = 15
-    OBJ_ENEMY_ICE = 16
-    OBJ_ENEMY_XRAY = 17
-    # Power-ups
-    OBJ_ITEM_BEAM = 18
-    OBJ_ITEM_CHARGE_BEAM = 19
-    OBJ_ITEM_MISSILE = 20
-    OBJ_ITEM_ICE = 21
-    OBJ_ITEM_XRAY = 22
-    OBJ_ITEM_SUIT_WATER = 23
-    OBJ_ITEM_SUIT_LAVA = 24
-    OBJ_ITEM_ENERGY_TANK = 25
-    # Permanent non-power-items
-    OBJ_ITEM_KEY = 26
-    OBJ_ITEM_ARTIFACT = 27
-    # Transient items
-    OBJ_ITEM_PICKUP_ENERGY = 28
-    OBJ_ITEM_PICKUP_MISSILE = 29
-    # Scenery
-    OBJ_SCENERY_TERMINAL = 30
+    EMPTY           = (BG | META | 0)
     # Special delete tile
-    OBJ_DELETE = 31
+    DELETE          = (BG | META | 1)
+    # Background tiles
+    BG_FLOOR        = (BG | FLOOR | 1)
+    BG_FLOOR_WATER  = (BG | FLOOR | 2)
+    BG_FLOOR_LAVA   = (BG | FLOOR | 3)
+    BG_WALL_1       = (BG | WALL  | 1)
+    BG_WALL_2       = (BG | WALL  | 2)
+    BG_WALL_3       = (BG | WALL  | 3)
+    BG_DOOR         = (BG | DOOR  | 1)
+    BG_DOOR_CHARGE  = (BG | DOOR  | 2)
+    BG_DOOR_MISSILE = (BG | DOOR  | 3)
+    BG_DOOR_ICE     = (BG | DOOR  | 4)
+    BG_DOOR_XRAY    = (BG | DOOR  | 5)
+    # Self and Enemies
+    OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1)
+    OBJ_ENEMY_BEAM        = (OBJ | ENEMY | 2)
+    OBJ_ENEMY_CHARGE      = (OBJ | ENEMY | 3)
+    OBJ_ENEMY_MISSILE     = (OBJ | ENEMY | 4)
+    OBJ_ENEMY_ICE         = (OBJ | ENEMY | 5)
+    OBJ_ENEMY_XRAY        = (OBJ | ENEMY | 6)
+    # Power-ups
+    OBJ_ITEM_BEAM        = (OBJ | ITEM | 1)
+    OBJ_ITEM_CHARGE_BEAM = (OBJ | ITEM | 2)
+    OBJ_ITEM_MISSILE     = (OBJ | ITEM | 3)
+    OBJ_ITEM_ICE         = (OBJ | ITEM | 4)
+    OBJ_ITEM_XRAY        = (OBJ | ITEM | 5)
+    OBJ_ITEM_SUIT_WATER  = (OBJ | ITEM | 6)
+    OBJ_ITEM_SUIT_LAVA   = (OBJ | ITEM | 7)
+    OBJ_ITEM_ENERGY_TANK = (OBJ | ITEM | 8)
+    # Permanent non-power-items
+    OBJ_ITEM_KEY         = (OBJ | ITEM |  9)
+    OBJ_ITEM_ARTIFACT    = (OBJ | ITEM | 10)
+    # Transient items
+    OBJ_ITEM_PICKUP_ENERGY  = (OBJ | ITEM | 11)
+    OBJ_ITEM_PICKUP_MISSILE = (OBJ | ITEM | 12)
+    # Bullets
+    OBJ_BULLET_NORMAL  = (OBJ | ITEM | 13)
+    OBJ_BULLET_CHARGE  = (OBJ | ITEM | 14)
+    OBJ_BULLET_ICE     = (OBJ | ITEM | 15)
+    OBJ_BULLET_MISSILE = (OBJ | ITEM | 16)
+    OBJ_BULLET_XRAY    = (OBJ | ITEM | 17)
+    # Scenery
+    OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1)
 
 bgTiles: list[tileType] = [
     tileType.BG_FLOOR,
@@ -60,7 +79,7 @@ bgTiles: list[tileType] = [
 ]
 
 objTiles: list[tileType] = [
-    tileType.OBJ_START_POINT,
+    tileType.OBJ_ENEMY_START_POINT,
     tileType.OBJ_ENEMY_BEAM,
     tileType.OBJ_ENEMY_CHARGE,
     tileType.OBJ_ENEMY_MISSILE,
@@ -79,7 +98,7 @@ objTiles: list[tileType] = [
     tileType.OBJ_ITEM_PICKUP_ENERGY,
     tileType.OBJ_ITEM_PICKUP_MISSILE,
     tileType.OBJ_SCENERY_TERMINAL,
-    tileType.OBJ_DELETE
+    tileType.DELETE
 ]
 
 
