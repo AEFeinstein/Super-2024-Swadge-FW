@@ -36,12 +36,18 @@ typedef struct
     int64_t physicsTimer;
     int liquidAnimationFrame;
     int currentMapHeight;
+    int spawnTimer;
+    int spawnIndex;
+    int spawnSide;
 
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
 
     lumberjackTile_t tile[400];
     uint8_t anim[400];
+
+    wsg_t playerSprites[63];
+    wsg_t enemySprites[21];
 
     lumberjackEntity_t* enemy[8];
     
