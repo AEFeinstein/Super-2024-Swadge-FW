@@ -53,4 +53,11 @@
  */
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + STATIC_EXP(IS_ARRAY(arr)))
 
+/**
+ * @brief Returns (a + b) % d, but with negative values converted to equivalent positive values.
+ * The resulting value will always be in the range [0, d), assuming d > 0.
+ */
+// The first modulo, (b % d) will return e.g. -90 for (-270 % 360)
+#define POS_MODULO_ADD(a, b, d) ((a + (b % d) + d) % d)
+
 #endif

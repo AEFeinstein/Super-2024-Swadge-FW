@@ -198,6 +198,6 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
                                   int32_t currentOption);
 void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
-menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
+menu_t* menuButton(menu_t* menu, buttonEvt_t evt) __attribute__((warn_unused_result));
 
 #endif

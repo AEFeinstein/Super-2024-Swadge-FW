@@ -401,13 +401,14 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
                                   int32_t currentValue)
 {
-    menuItem_t* newItem  = calloc(1, sizeof(menuItem_t));
-    newItem->label       = settingLabel;
-    newItem->options     = optionLabels;
-    newItem->settingVals = optionValues;
-    newItem->numOptions  = numOptions;
-    newItem->minSetting  = bounds->min;
-    newItem->maxSetting  = bounds->max;
+    menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
+    newItem->label          = settingLabel;
+    newItem->options        = optionLabels;
+    newItem->settingVals    = optionValues;
+    newItem->numOptions     = numOptions;
+    newItem->minSetting     = bounds->min;
+    newItem->maxSetting     = bounds->max;
+    newItem->currentSetting = currentValue;
 
     // Set the current option to the first in case we can't find it
     newItem->currentOpt = 0;
@@ -474,17 +475,17 @@ void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLa
  * If a button is passed here, it should not be handled anywhere else
  *
  * @param menu The menu to process button events for
- * @param btn The button event that occurred
+ * @param evt The button event that occurred
  * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
-menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
+menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
 {
-    if (btn.down)
+    if (evt.down)
     {
         // Get a pointer to the item for convenience
         menuItem_t* item = menu->currentItem->val;
 
-        switch (btn.button)
+        switch (evt.button)
         {
             case PB_UP:
             {
@@ -628,7 +629,7 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 }
                 else if (item->settingVals)
                 {
-                    menu->cbFunc(item->options[item->currentOpt], true, item->settingVals[item->currentOpt]);
+                    menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
                 }
                 else if (item->minSetting != item->maxSetting)
                 {
@@ -660,11 +661,6 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
             }
             case PB_START:
             case PB_SELECT:
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
             default:
             {
                 // Unused
