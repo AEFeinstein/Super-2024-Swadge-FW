@@ -212,11 +212,11 @@ void setGamepadMainMenu(bool resetPos)
 {
     deinitMenu(gamepad->menu);
     gamepad->menu = initMenu(gamepadMode.modeName, gamepadMainMenuCb);
-    addRowToMeleeMenu(gamepad->menu, str_pc);
-    addRowToMeleeMenu(gamepad->menu, str_ns);
-    addRowToMeleeMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.touchAnalogOn ? str_touch_analog_on : str_touch_analog_off);
-    addRowToMeleeMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.accelOn ? str_accel_on : str_accel_off);
-    addRowToMeleeMenu(gamepad->menu, str_exit);
+    addSingleItemToMenu(gamepad->menu, str_pc);
+    addSingleItemToMenu(gamepad->menu, str_ns);
+    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.touchAnalogOn ? str_touch_analog_on : str_touch_analog_off);
+    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.accelOn ? str_accel_on : str_accel_off);
+    addSingleItemToMenu(gamepad->menu, str_exit);
 
     gamepad->screen = GAMEPAD_MENU;
 
