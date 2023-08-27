@@ -286,7 +286,6 @@ static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t col)
 // placeholder.
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    printf("%d, %d",TFT_WIDTH,TFT_HEIGHT);
     // Use TURBO drawing mode to draw individual pixels fast
     SETUP_FOR_TURBO();
 

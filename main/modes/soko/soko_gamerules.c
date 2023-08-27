@@ -325,13 +325,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
     }
 
     SETUP_FOR_TURBO();
-
-    //Don't draw tiles that are off the limits of the screen.
-    if(self->camEnabled)
-    {
-        
-    }
-
+    
    // uint16_t DEBUG_DRAW_COUNT=0;
 
     for (size_t x = screenMinX; x < screenMaxX; x++)
