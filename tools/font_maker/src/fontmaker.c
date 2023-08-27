@@ -92,7 +92,7 @@ int main(int32_t argc, char** argv)
 
     // Pick out the arguments
     char* fontFile     = argv[1];
-    int32_t fontSizePx = atoi(argv[2]);
+    float fontSizePx = atof(argv[2]);
 
     // Validate size
     if (0 == fontSizePx)

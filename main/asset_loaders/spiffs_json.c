@@ -30,7 +30,7 @@
  *
  * @param name The filename of the JSON to load
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
- * than nromal RAM
+ * than normal RAM
  * @return A pointer to a null terminated JSON string. May be NULL if the load
  *         fails. Must be freed after use
  */

@@ -29,9 +29,9 @@ static void deinitSubMenu(menu_t* menu);
  * scrollable rows. The rows are separated into pages, and when a page
  * boundary is crossed the whole page scrolls.
  *
- * Rows may be single items, where the callback is called whenever it is
- * selected or multi items, which is a collection of horizontally scrollable
- * items and the callback is called whenever it scrolls or is selected.
+ * Rows may be single items, or multi items, which are collections of horizontally
+ * scrollable items. The callback is called whenever a row is moved to or selected,
+ * and when a multi item is scrolled to or selected.
  *
  * Rows may also be submenus. When a submenu is selected, the callback is not
  * called, and instead a the submenu is rendered. Each submenu automatically
@@ -373,21 +373,119 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
 }
 
 /**
+ * Adds a settings item entry to the menu with a specific list of options. The
+ * enry will be left-right scrollable. The ::menuCb callback will be called
+ * each time the setting-options item scrolls or is selected with the newly
+ * selected label and setting value as the arguments.
+ *
+ * @param menu The menu to add a settings options item to
+ * @param settingLabel The overall label for this setting. This is what will be
+ *                     passed to the callback when the selected option changes,
+ *                     and this value will be rendered preceding the selected
+ *                     option's label.
+ * @param optionLabels All of the labels for each option. The underlying memory
+ *                     isn't copied, so these strings must persist for the
+ *                     lifetime of the menu. The label value for the selected
+ *                     option will be rendered following the settingLabel.
+ * @param optionValues The corresponding settings values for each option. The
+ *                     underlying memory isn't copied, so this array must
+ *                     persist for the lifetime of the menu. These values will
+ *                     not be rendered, but will be passed to the callback as
+ *                     the \c value when the selected option is changed.
+ * @param numOptions The number of options and labels for this settings item.
+ * @param bounds The bounds for this setting
+ * @param currentValue The current value of the setting. Must be one of the values
+ *                     in \c optionValues.
+ */
+void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
+                                  const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
+                                  int32_t currentValue)
+{
+    menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
+    newItem->label          = settingLabel;
+    newItem->options        = optionLabels;
+    newItem->settingVals    = optionValues;
+    newItem->numOptions     = numOptions;
+    newItem->minSetting     = bounds->min;
+    newItem->maxSetting     = bounds->max;
+    newItem->currentSetting = currentValue;
+
+    // Set the current option to the first in case we can't find it
+    newItem->currentOpt = 0;
+
+    // Find the matching element in optionValues
+    // We're doing this here because pretty much it's gonna happen somewhere.
+    // Doing it this way makes it super easy to use anywhere and we don't need
+    // to worry that much if the value happened to be changed to an invalid
+    // option somewhere else -- we'll just reset it if it's changed.
+    for (uint8_t i = 0; i < numOptions; i++)
+    {
+        if (currentValue == newItem->settingVals[i])
+        {
+            newItem->currentOpt = i;
+            break;
+        }
+    }
+
+    push(menu->items, newItem);
+
+    // If this is the first item, set it as the current
+    if (1 == menu->items->length)
+    {
+        menu->currentItem = menu->items->first;
+    }
+}
+
+/**
+ * @brief Remove a settings options item entry from the menu. This item is removed by
+ * pointer, not by doing any string comparisons
+ *
+ * @param menu The menu to remove a multi item from
+ * @param optionLabels The list of option labels to remove
+ */
+void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels)
+{
+    node_t* listNode = menu->items->first;
+    while (NULL != listNode)
+    {
+        menuItem_t* item = listNode->val;
+        if (item->options == optionLabels)
+        {
+            removeEntry(menu->items, listNode);
+            if (menu->currentItem == listNode)
+            {
+                if (NULL != listNode->next)
+                {
+                    menu->currentItem = listNode->next;
+                }
+                else
+                {
+                    menu->currentItem = listNode->prev;
+                }
+            }
+            free(item);
+            return;
+        }
+        listNode = listNode->next;
+    }
+}
+
+/**
  * This must be called to pass button event from the Swadge mode to the menu.
  * If a button is passed here, it should not be handled anywhere else
  *
  * @param menu The menu to process button events for
- * @param btn The button event that occurred
+ * @param evt The button event that occurred
  * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
-menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
+menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
 {
-    if (btn.down)
+    if (evt.down)
     {
         // Get a pointer to the item for convenience
         menuItem_t* item = menu->currentItem->val;
 
-        switch (btn.button)
+        switch (evt.button)
         {
             case PB_UP:
             {
@@ -400,6 +498,17 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 {
                     menu->currentItem = menu->currentItem->prev;
                 }
+
+                // Call the callback for the move
+                item = menu->currentItem->val;
+
+                menu->cbFunc(
+                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
+                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label, false,
+                    // If the item is a setting with options, pass the current option value. Otherwise, the regular
+                    // setting
+                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
+
                 break;
             }
             case PB_DOWN:
@@ -413,6 +522,16 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 {
                     menu->currentItem = menu->currentItem->next;
                 }
+
+                item = menu->currentItem->val;
+
+                menu->cbFunc(
+                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
+                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label, false,
+                    // If the item is a setting with options, pass the current option value. Otherwise, the regular
+                    // setting
+                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
+
                 break;
             }
             case PB_LEFT:
@@ -420,17 +539,25 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 // Scroll options to the left, if applicable
                 if (item->options)
                 {
-                    if (0 == item->currentOpt)
+                    if (0 == item->currentOpt && !item->settingVals)
                     {
                         item->currentOpt = item->numOptions - 1;
                     }
-                    else
+                    else if (item->currentOpt > 0)
                     {
                         item->currentOpt--;
                     }
 
                     // Call the callback, not selected
-                    menu->cbFunc(item->options[item->currentOpt], false, 0);
+                    if (item->settingVals)
+                    {
+                        item->currentSetting = item->settingVals[item->currentOpt];
+                        menu->cbFunc(item->label, false, item->currentSetting);
+                    }
+                    else
+                    {
+                        menu->cbFunc(item->options[item->currentOpt], false, 0);
+                    }
                 }
                 else if (item->minSetting != item->maxSetting)
                 {
@@ -450,17 +577,25 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                 // Scroll options to the right, if applicable
                 if (item->options)
                 {
-                    if (item->numOptions - 1 == item->currentOpt)
+                    if (item->numOptions - 1 == item->currentOpt && !item->settingVals)
                     {
                         item->currentOpt = 0;
                     }
-                    else
+                    else if (item->currentOpt + 1 < item->numOptions)
                     {
                         item->currentOpt++;
                     }
 
                     // Call the callback, not selected
-                    menu->cbFunc(item->options[item->currentOpt], false, 0);
+                    if (item->settingVals)
+                    {
+                        item->currentSetting = item->settingVals[item->currentOpt];
+                        menu->cbFunc(item->label, false, item->currentSetting);
+                    }
+                    else
+                    {
+                        menu->cbFunc(item->options[item->currentOpt], false, 0);
+                    }
                 }
                 else if (item->minSetting != item->maxSetting)
                 {
@@ -492,6 +627,10 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
                     menu->currentItem = menu->items->first;
                     return menu->parentMenu;
                 }
+                else if (item->settingVals)
+                {
+                    menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
+                }
                 else if (item->minSetting != item->maxSetting)
                 {
                     // Call the callback, not selected
@@ -522,11 +661,6 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t btn)
             }
             case PB_START:
             case PB_SELECT:
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
             default:
             {
                 // Unused
