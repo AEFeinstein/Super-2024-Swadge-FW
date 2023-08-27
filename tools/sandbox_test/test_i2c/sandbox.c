@@ -61,10 +61,100 @@
 
 struct LSM6DSLData
 {
-	uint16_t temp;
+	int32_t temp;
+	uint32_t caltime;
 	int32_t gyroaccum[3];
+
+	float fqQuat[4];  // Quats are wxyz
+
+
+	// For debug
 	int16_t gyrolast[3];
+	int16_t accellast[3];
+	float fqQuatLast[4];  // Quats are wxyz
+
 } LSM6DSL;
+
+#include <math.h>
+
+float rsqrtf ( float x )
+{
+	typedef union { int32_t i; float f; } fiunion; 
+    const float xhalf = 0.5f * x;
+    fiunion i = { .f = x };
+
+    i.i = 0x5f375a86 - ( i.i >> 1 );
+    x = i.f;
+    x = x * ( 1.5f - xhalf * x * x );
+    x = x * ( 1.5f - xhalf * x * x );
+
+    return x;
+}
+
+void mathEulerToQuat( float * q, const float * euler )
+{
+	float pitch = euler[0];
+	float yaw = euler[1];
+	float roll = euler[2];
+    float cr = cosf(pitch * 0.5);
+    float sr = sinf(pitch * 0.5);
+    float cp = cosf(yaw * 0.5);
+    float sp = sinf(yaw * 0.5);
+    float cy = cosf(roll * 0.5);
+    float sy = sinf(roll * 0.5);
+    q[0] = cr * cp * cy + sr * sp * sy;
+    q[1] = sr * cp * cy - cr * sp * sy;
+    q[2] = cr * sp * cy + sr * cp * sy;
+    q[3] = cr * cp * sy - sr * sp * cy;
+}
+
+void mathQuatApply(float * qout, const float * q1, const float * q2) {
+	// NOTE: Does not normalize
+	float tmpw, tmpx, tmpy;
+	tmpw = (q1[0] * q2[0]) - (q1[1] * q2[1]) - (q1[2] * q2[2]) - (q1[3] * q2[3]);
+	tmpx = (q1[0] * q2[1]) + (q1[1] * q2[0]) + (q1[2] * q2[3]) - (q1[3] * q2[2]);
+	tmpy = (q1[0] * q2[2]) - (q1[1] * q2[3]) + (q1[2] * q2[0]) + (q1[3] * q2[1]);
+	qout[3] = (q1[0] * q2[3]) + (q1[1] * q2[2]) - (q1[2] * q2[1]) + (q1[3] * q2[0]);
+	qout[2] = tmpy;
+	qout[1] = tmpx;
+	qout[0] = tmpw;
+}
+
+void mathQuatNormalize(float * qout, const float * qin )
+{
+	float qmag = qin[0] * qin[0] + qin[1] * qin[1] + qin[2] * qin[2] + qin[3] * qin[3];
+	qmag = rsqrtf( qmag );
+	qout[0] = qin[0] * qmag;
+	qout[1] = qin[1] * qmag;
+	qout[2] = qin[2] * qmag;
+	qout[3] = qin[3] * qmag;
+}
+
+void mathCrossProduct(float * p, const float * a, const float * b)
+{
+	float tx = a[1] * b[2] - a[2] * b[1];
+    float ty = a[2] * b[0] - a[0] * b[2];
+    p[2] = a[0] * b[1] - a[1] * b[0];
+	p[1] = ty;
+	p[0] = tx;
+}
+
+void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p )
+{
+	// return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
+	float iqo[3];
+	mathCrossProduct( iqo, q + 1, p );
+	iqo[0] += q[0] * p[0];
+	iqo[1] += q[0] * p[1];
+	iqo[2] += q[0] * p[2];
+	float ret[3];
+	mathCrossProduct( ret, q + 1, iqo );
+	pout[0] = ret[0] * 2.0 + p[0];
+	pout[1] = ret[1] * 2.0 + p[1];
+	pout[2] = ret[2] * 2.0 + p[2];
+}
+
+
 
 static esp_err_t GeneralSet( int dev, int reg, int val )
 {
@@ -139,30 +229,58 @@ static void LSM6DSLIntegrate()
 	int16_t data[72];
 	int r = GeneralI2CGet( LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2 );
 	if( r < 0 ) return;
-
-	ld->temp = data[0];
+	if( r == 2 ) ld->temp = data[0];
 	int readr = ReadLSM6DSL( (uint8_t*)data, sizeof( data ) );
 
 	int samp;
 	int16_t * cdata = data;
 
+    uint32_t start = getCycleCount();
+
 	for( samp = 0; samp < readr; samp+=12 )
 	{
-		ld->gyroaccum[0] += cdata[0];
-		ld->gyroaccum[1] += cdata[1];
-		ld->gyroaccum[2] += cdata[2];
+		int16_t * euler_deltas = cdata;
+		ld->gyroaccum[0] += euler_deltas[0];
+		ld->gyroaccum[1] += euler_deltas[1];
+		ld->gyroaccum[2] += euler_deltas[2];
 
-		ld->gyrolast[0] = cdata[0];
-		ld->gyrolast[1] = cdata[1];
-		ld->gyrolast[2] = cdata[2];
+		// 2000 dps full-scale
+		// 32768 is full-scale
+		// 208 SPS
+		// convert to radians.
+		float fScale = ( 4000.0f / 32768.0f / 208.0f * 3.14159f / 180.0f );  
+
+		float fEulers[3] = {
+			0,//-euler_deltas[0] * fScale,  
+			euler_deltas[2],  
+			euler_deltas[1] * 0 };
+		// [0] = +X axis coming out right of controller.
+		// [1] = +Y axis, pointing straight up out of controller.
+		// [2] = +Z axis, pointing straight up out of controller.
+
+		mathEulerToQuat( ld->fqQuatLast, fEulers );
+		mathQuatApply( ld->fqQuat, ld->fqQuat, ld->fqQuatLast );
 
 		cdata += 6;
 	}
+
+	//mathQuatNormalize( ld->fqQuat, ld->fqQuat );
+
+	ld->gyrolast[0] = cdata[-6];
+	ld->gyrolast[1] = cdata[-5];
+	ld->gyrolast[2] = cdata[-4];
+	ld->accellast[0] = cdata[-3];
+	ld->accellast[1] = cdata[-2];
+	ld->accellast[2] = cdata[-1];
+
+    ld->caltime = getCycleCount() - start;
 }
 
 static void LMS6DS3Setup()
 {
 	memset( &LSM6DSL, 0, sizeof(LSM6DSL) );
+	LSM6DSL.fqQuat[0] = 1;
+
 	// Enable access
 	LSM6DSLSet( LSM6DSL_FUNC_CFG_ACCESS, 0x20 );
 	LSM6DSLSet( LSM6DSL_CTRL3_C, 0x81 ); // Force reset
@@ -171,8 +289,9 @@ static void LMS6DS3Setup()
 	LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR
 	LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices in FIFO.
 	LSM6DSLSet( LSM6DSL_CTRL1_XL, 0b01011001 ); // Setup accel (16 g's FS)
-	LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01010100 ); // Setup gyro, 500dps
-	LSM6DSLSet( LSM6DSL_CTRL7_G, 0b10000000 ); // Setup gyro, not high performance mode.
+	LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01011100 ); // Setup gyro, 2000dps
+	LSM6DSLSet( LSM6DSL_CTRL4_C, 0x00 ); // Disable all filtering.
+	LSM6DSLSet( LSM6DSL_CTRL7_G, 0b00000000 ); // Setup gyro, not high performance mode = 0x80.  High perf = 0x00
 	LSM6DSLSet( LSM6DSL_FIFO_CTRL2, 0b00000000 ); //Temp not in fifo  (Why no work?)
 
 	uint8_t who = 0xaa;
@@ -236,8 +355,8 @@ void sandbox_main(void)
     };
 
 	//i2c_driver_delete( I2C_NUM_0 );
-    ESP_LOGI( "sandbox", "i2c_param_config=%d", i2c_param_config(I2C_NUM_0, &conf) );
-	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
+//    ESP_LOGI( "sandbox", "i2c_param_config=%d", i2c_param_config(I2C_NUM_0, &conf) );
+//	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
 
 	LMS6DS3Setup();
 	GeneralSet( QMC6308_ADDRESS, 0x0b, 0x80 );
@@ -261,17 +380,18 @@ void sandbox_tick()
         drawWsg( &example_sprite, (global_i%20)+270, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
     }
 
-    buttonEvt_t evt              = {0};
+    buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
         menu = menuButton(menu, evt);
     }
 
-    int i;
+
     char ctsbuffer[1024];
     char *cts = ctsbuffer;
 
 #if 0
+    int i;
 	// 0x12 = QMA7981
 	// 0x2c = QMC6308 
 	// 0x6a = LSM6DSL
@@ -328,10 +448,19 @@ void sandbox_tick()
 #endif
 
 	LSM6DSLIntegrate();
-
-	cts += sprintf( cts, "%d / %5d %5d %5d / %ld %ld %ld", LSM6DSL.temp, 
+/*
+	cts += sprintf( cts, "%ld %ld / %5d %5d %5d / %5d %5d %5d / %ld %ld %ld / %f %f %f %f",
+		LSM6DSL.caltime, LSM6DSL.temp, 
+		LSM6DSL.accellast[0], LSM6DSL.accellast[1], LSM6DSL.accellast[2],
 		LSM6DSL.gyrolast[0], LSM6DSL.gyrolast[1], LSM6DSL.gyrolast[2], 
-		LSM6DSL.gyroaccum[0], LSM6DSL.gyroaccum[1], LSM6DSL.gyroaccum[2] );
+		LSM6DSL.gyroaccum[0], LSM6DSL.gyroaccum[1], LSM6DSL.gyroaccum[2],
+		LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3]  );
+*/
+
+	float plusy[3] = { 0, 1, 0 };
+	mathRotateVectorByQuaternion( plusy, LSM6DSL.fqQuat, plusy );
+	cts += sprintf( cts, "%f %f %f %f / %f %f %f", LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3],
+		plusy[0], plusy[1], plusy[2] );
 
 	ESP_LOGI( "I2C", "%s", ctsbuffer );
 }
@@ -340,11 +469,9 @@ void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, i
 {
     int i;
 
-    //uint32_t start = getCycleCount();
     fillDisplayArea(x, y, x+w, y+h, 0 );
     for( i = 0; i < 16; i++ )
         fillDisplayArea(i*16+8, y, i*16+16+8, y+16, up*16+i );
-    //mode7timing = getCycleCount() - start;
 }
 
 
