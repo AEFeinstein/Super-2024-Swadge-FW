@@ -236,6 +236,8 @@ static void quickSettingsExitMode(void)
     freeWsg(&quickSettings->iconBgmOff);
     freeWsg(&quickSettings->iconSfxOn);
     freeWsg(&quickSettings->iconSfxOff);
+    freeWsg(&quickSettings->iconTftOn);
+    freeWsg(&quickSettings->iconTftOff);
 
     free(quickSettings);
 }
