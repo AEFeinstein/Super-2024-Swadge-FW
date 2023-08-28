@@ -1,6 +1,8 @@
+# Porting 2023 Swadge Modes {#porting}
+
 This is a non-exhaustive list of changes I've found to be needed when porting Tunernome. They should cut down on time required to port modes from 2023. If porting from pre-2023, check out [this similar list I made last year](https://github.com/AEFeinstein/Super-2023-Swadge-FW/issues/31#issuecomment-1221395802).
 
-# Changes that involve re-design
+## Changes that involve re-design
 
 - `mm.font` has been removed. The closest font is `logbook.font` which is 3 pixels smaller in height. Arrows and symbol `wsg`s need to be updated for the smaller font too.
 - Accel, touch, and button callbacks no longer exist. Instead, checks must be done in the main loop function. This can be used to more easily adapt button callbacks to the new standard:
@@ -18,7 +20,7 @@ while (checkButtonQueueWrapper(&evt))
 // The rest of your mainLoop function
 ```
 
-# Things that need to be changed in mode header files
+## Things that need to be changed in mode header files
 
 - Add `#include "swadge2024.h"`
 - Naming conventions changed from `mode_tunernome.h` to `tunernome.h`. Don't forget to change your header guard names too:
@@ -28,17 +30,17 @@ _MODE_TUNERNOME_H_
 _TUNERNOME_H_
 ```
 
-# Things that need to be added to `enterMode` and `exitMode` functions
+## Things that need to be added to `enterMode` and `exitMode` functions
 
 - `tunernome->menuRenderer = initMenuLogbookRenderer(&tunernome->logbookFont);`
 
 - `deinitMenuLogbookRenderer(tunernome->renderer);`
 
-# Things that need to be intelligently deleted
+## Things that need to be intelligently deleted
 
 - `tunernome->disp`
 
-# Things that need to be intelligently changed or replaced
+## Things that need to be intelligently changed or replaced
 
 ```
 modeTunernome
@@ -108,7 +110,7 @@ drawMeleeMenu(tunernome->menu);
 drawMenuLogbook(tunernome->menu, tunernome->renderer, elapsedUs);
 ```
 
-# Things that can be find/replaced
+## Things that can be find/replaced
 
 ```
 swadgeMode
