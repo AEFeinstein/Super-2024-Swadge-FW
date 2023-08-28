@@ -45,10 +45,10 @@ extern const soko_var_t sokoLevelVariants[]
 
 extern const char* sokoBinLevelNames[] =
 {
+    "sk_binOverworld.bin",
     "warehouse.bin",
     "sk_sticky_test.bin",
     "sk_test1.bin",
-    "sk_test2.bin",
     "sk_test3.bin"
 };
 
@@ -278,9 +278,22 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     i += 6;
                     break;
                 case SKB_WARPINTERNALEXIT:
+                    flagByte = self->levelBinaryData[i+2];
+
                     i += 2; //No data or properties in this object.
                     break; //Can be used later on for verifying valid warps from save files.
-                case SKB_WARPEXTERNAL:
+                case SKB_WARPEXTERNAL: //[typep][flags][index]
+                    //todo implement extraction of index value and which values should be used for auto-indexed portals
+                    self->currentLevel.tiles[objX][objY] = SKT_PORTAL;
+                    self->portals[self->portalCount].index
+                    = self->portalCount + 1; // For basic test, 1 indexed with levels, but multi-room overworld needs
+                                             // more sophistication to keep indeces correct.
+                    self->portals[self->portalCount].x = objX;
+                    self->portals[self->portalCount].y = objY;
+                    printf("Portal %d at %d,%d\n", self->portals[self->portalCount].index,
+                        self->portals[self->portalCount].x, self->portals[self->portalCount].y);
+                    soko->portalCount += 1;
+                    i += 4;
                     break;
                 case SKB_BUTTON: //[type][flag][numTargets][targetx][targety]...
                     flagByte = self->levelBinaryData[i+2];
@@ -419,7 +432,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                 break;
             }
             self->currentLevel.tiles[tileX][tileY] = tileType;
-            printf("BinData@%d: %d Tile: %d at (%d,%d) index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
+            //printf("BinData@%d: %d Tile: %d at (%d,%d) index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
             tileIndex++;
         }
         
@@ -437,11 +450,11 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
     //The pointer returned by spiffsReadFile can be freed with free() with no additional steps.
     soko->currentLevel.width = soko->levelBinaryData[0]; //first two bytes of a level's data always describe the bounding width and height of the tilemap.
     soko->currentLevel.height = soko->levelBinaryData[1]; //Max Theoretical Level Bounding Box Size is 255x255, though you'll likely run into issues with entities first.
-    for(int i = 0; i < fileSize; i++)
-    {
-        printf("%d, ",soko->levelBinaryData[i]);
-    }
-    printf("\n");
+    //for(int i = 0; i < fileSize; i++)
+    //{
+    //    printf("%d, ",soko->levelBinaryData[i]);
+    //}
+    //printf("\n");
     soko->currentLevel.levelScale = 16;
     soko->camWidth  = TFT_WIDTH / (soko->currentLevel.levelScale);
     soko->camHeight = TFT_HEIGHT / (soko->currentLevel.levelScale);
@@ -454,11 +467,11 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
     soko->portalCount = 0;
 
     sokoLoadBinTiles(soko,(int)fileSize);
-    for(int k = 0; k < soko->currentLevel.entityCount; k++)
-    {
-        printf("Ent%d:%d (%d,%d)",k,soko->currentLevel.entities[k].type,soko->currentLevel.entities[k].x,soko->currentLevel.entities[k].y);
-    }
-    printf("\n");
+    //for(int k = 0; k < soko->currentLevel.entityCount; k++)
+    //{
+    //    printf("Ent%d:%d (%d,%d)",k,soko->currentLevel.entities[k].type,soko->currentLevel.entities[k].x,soko->currentLevel.entities[k].y);
+    //}
+    //printf("\n");
 }
 
 static void sokoLoadLevel(uint16_t levelIndex)

@@ -305,6 +305,7 @@ function propExtract(objItem, objArr)
             break;
         case "warpexternal":
             var variant = 0b0;
+            var target_id = properties.target_id;
             if(properties.manualIndex)
             {
                 variant = variant | soko_warpexternal_properties.manualIndex;
