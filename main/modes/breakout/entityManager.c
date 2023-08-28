@@ -223,9 +223,9 @@ void viewFollowEntity(tilemap_t * tilemap, entity_t * entity){
 }
 
 entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint16_t x, uint16_t y){
-    //if(entityManager->activeEntities == MAX_ENTITIES){
-    //    return NULL;
-    //}
+    if(entityManager->activeEntities == MAX_ENTITIES){
+        return NULL;
+    }
 
     entity_t *createdEntity;
 
@@ -350,9 +350,9 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
             createdEntity = NULL;
     }
 
-    //if(createdEntity != NULL) {
-    //    entityManager->activeEntities++;
-    //}
+    if(createdEntity != NULL) {
+        entityManager->activeEntities++;
+    }
 
     return createdEntity;
 }
@@ -446,6 +446,9 @@ entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->yspeed = 0;
     entity->xMaxSpeed = 132;
     entity->yMaxSpeed = 132;
+
+    entity->xDamping = 30; //Repurposed for cooldown timer
+
     entity->gravityEnabled = false;
     entity->gravity = 0;
     entity->spriteFlipHorizontal = false;

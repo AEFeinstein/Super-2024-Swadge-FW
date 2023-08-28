@@ -432,6 +432,7 @@ static void breakoutDrawReadyScreen(font_t *logbook, font_t *ibm_vga8, gameData_
 
 static void breakoutChangeStateGame(breakout_t *self){
     self->gameData.frameCount = 0;
+    self->gameData.playerBombsCount = 0;
     deactivateAllEntities(&(self->entityManager), false);
     self->tilemap.executeTileSpawnAll = true;
     self->update = &breakoutGameLoop;
@@ -586,10 +587,10 @@ void breakoutDetectGameStateChange(breakout_t *self){
 void breakoutChangeStateDead(breakout_t *self){
     self->gameData.frameCount = 0;
     self->gameData.lives--;
-    self->gameData.levelDeaths++;
+    //self->gameData.levelDeaths++;
     self->gameData.combo = 0;
     self->gameData.comboTimer = 0;
-    self->gameData.initialHp = 1;
+    //self->gameData.initialHp = 1;
 
     //buzzer_stop();
     //buzzer_play_bgm(&sndDie);

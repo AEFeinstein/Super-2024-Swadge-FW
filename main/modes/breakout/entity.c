@@ -284,14 +284,26 @@ void updateBall(entity_t *self)
         moveEntityWithTileCollisions(self);
         detectEntityCollisions(self);
 
+
+        if(self->gameData->bombDetonateCooldown > 0){
+            self->gameData->bombDetonateCooldown--;
+        }
+
         if(
             self->gameData->btnState & PB_DOWN
             &&
             !(self->gameData->prevBtnState & PB_DOWN)
         )
         {
-            //Drop bomb
-            createEntity(self->entityManager, ENTITY_PLAYER_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            if(self->gameData->playerBombsCount < 3){
+                //Drop bomb
+                entity_t* createdBomb = createEntity(self->entityManager, ENTITY_PLAYER_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+                if(createdBomb != NULL){
+                    self->gameData->playerBombs[self->gameData->nextBombSlot] = createdBomb;
+                    self->gameData->nextBombSlot = (self->gameData->nextBombSlot + 1) % 3;
+                    self->gameData->playerBombsCount++;
+                }
+            }
         }
     }
 
@@ -324,6 +336,10 @@ void updateBallAtStart(entity_t *self){
 }
 
 void updateBomb(entity_t * self){
+    if(self->gameData->playerBombs[self->gameData->nextBombToDetonate] != self || self->gameData->bombDetonateCooldown > 0){
+        return;
+    }
+
     if(self->gameData->frameCount % 5 == 0) {
         self->spriteIndex = SP_BOMB_0 + ((self->spriteIndex + 1) % 2);
     }
@@ -359,8 +375,12 @@ void updateBomb(entity_t * self){
             }
         }
 
-        createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
         destroyEntity(self, false);
+        createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+        
+        self->gameData->nextBombToDetonate = (self->gameData->nextBombToDetonate + 1) % 3;
+        self->gameData->playerBombsCount--;
+        self->gameData->bombDetonateCooldown = 8;
     }
 }
 
@@ -670,7 +690,7 @@ void destroyEntity(entity_t *self, bool respawn)
         self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->type + 128;
     }
 
-    // self->entityManager->activeEntities--;
+    self->entityManager->activeEntities--;
     self->active = false;
 }
 /*

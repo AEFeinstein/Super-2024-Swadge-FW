@@ -41,11 +41,17 @@ typedef struct
     int16_t comboTimer;
     uint32_t comboScore;
 
-    bool extraLifeCollected;
-    uint8_t checkpoint;
-    uint8_t levelDeaths;
-    uint8_t initialHp;
-    
+    //bool extraLifeCollected;
+    //uint8_t checkpoint;
+    //uint8_t levelDeaths;
+    //uint8_t initialHp;
+
+    entity_t* playerBombs[3];
+    uint8_t playerBombsCount;
+    uint8_t nextBombToDetonate;
+    uint8_t nextBombSlot;
+    uint8_t bombDetonateCooldown;
+
     led_t leds[8 /*CONFIG_NUM_LEDS*/];
 
     paletteColor_t bgColor;

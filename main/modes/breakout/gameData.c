@@ -28,13 +28,22 @@
     gameData->initials[1] = 'A';
     gameData->initials[2] = 'A';
     gameData->rank = 5;
-    gameData->extraLifeCollected = false;
+    /*gameData->extraLifeCollected = false;
     gameData->checkpoint = 0;
     gameData->levelDeaths = 0;
-    gameData->initialHp = 1;
+    gameData->initialHp = 1;*/
     gameData->debugMode = false;
     gameData->continuesUsed = false;
     gameData->inGameTimer = 0;
+
+    gameData->playerBombs[0] = NULL;
+    gameData->playerBombs[1] = NULL;
+    gameData->playerBombs[2] = NULL;
+
+    gameData->playerBombsCount = 0;
+    gameData->nextBombToDetonate = 0;
+    gameData->nextBombSlot = 0;
+    gameData->bombDetonateCooldown = 0;
 }
 
  void initializeGameDataFromTitleScreen(gameData_t * gameData){
@@ -48,17 +57,22 @@
     gameData->combo = 0;
     gameData->comboTimer = 0;
     gameData->bgColor = c000;
-    gameData->extraLifeCollected = false;
+    /*gameData->extraLifeCollected = false;
     gameData->checkpoint = 0;
-    gameData->levelDeaths = 0;
+    gameData->levelDeaths = 0;*/
     gameData->currentBgm = 0;
     gameData->changeBgm = 0;
-    gameData->initialHp = 1;
+    /*gameData->initialHp = 1;*/
     gameData->continuesUsed = (gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer = 0;
     gameData->targetBlocksBroken = 0;
 
     resetGameDataLeds(gameData);
+
+    gameData->playerBombsCount = 0;
+    gameData->nextBombToDetonate = 0;
+    gameData->nextBombSlot = 0;
+    gameData->bombDetonateCooldown = 0;
 }
 
 void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData){
@@ -105,7 +119,7 @@ void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo){
     gameData->score += comboPoints;
     gameData->comboScore = comboPoints;
     
-    gameData->comboTimer = (gameData->levelDeaths < 3) ? 240: 1;
+    //gameData->comboTimer = (gameData->levelDeaths < 3) ? 240: 1;
 }
 
 void addCoins(gameData_t * gameData, uint8_t coins){
