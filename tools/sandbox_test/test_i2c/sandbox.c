@@ -664,10 +664,9 @@ void sandbox_tick()
 	}
 #endif
 
-	cts += sprintf( cts, "%ld %d %f %f %f %f / %f %f %f / %f %f %f / %d %d", LSM6DSL.caltime, LSM6DSL.lastreadr,
+	cts += sprintf( cts, "%ld %d %f %f %f %f / %f %f %f / %d %d", LSM6DSL.caltime, LSM6DSL.lastreadr,
 		LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3],
-		plusy[0], plusy[1], plusy[2],
-		plusy_out[0], plusy_out[1], plusy_out[2], vertices, lines );
+		plusx_out[0], plusx_out[1], plusx_out[2], vertices, lines );
 
 	ESP_LOGI( "I2C", "%s", ctsbuffer );
 }
