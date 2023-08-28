@@ -29,7 +29,7 @@ jobs:
 
     - name: Install msys64 packages
       run: |
-        C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel gcc gdb clang zip libargp-devel'
+        C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel gcc gdb zip libargp-devel'
 
     - name: Compile the Emulator
       run: |
