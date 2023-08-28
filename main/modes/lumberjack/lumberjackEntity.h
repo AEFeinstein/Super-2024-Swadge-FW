@@ -26,8 +26,12 @@ typedef struct
     float vy;
     float maxVX;
     int type;
+    int maxLevel;
     int respawn;
+
+    bool upgrading;
     bool ready; //Ready to be placed because it's not in game
+    bool showAlert;
 
     int width;
     int height;
@@ -44,5 +48,6 @@ void lumberjackResetEnemy(lumberjackEntity_t* enemy);
 void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side);
 bool checkCollision(lumberjackEntity_t* AA, lumberjackEntity_t* BB);
 void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex);
+void lumberjackDoEnemyControls(lumberjackEntity_t* enemy);
 
 #endif

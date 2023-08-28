@@ -49,6 +49,8 @@ typedef struct
     wsg_t playerSprites[63];
     wsg_t enemySprites[21];
 
+    wsg_t alertSprite;
+
     lumberjackEntity_t* enemy[8];
     
     lumberjackEntity_t* localPlayer;

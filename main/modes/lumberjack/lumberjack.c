@@ -177,6 +177,8 @@ static void lumberjackEnterMode(void)
     loadWsg("enemy_c5.wsg", &lumv->enemySprites[18], true);
     loadWsg("enemy_c6.wsg", &lumv->enemySprites[19], true);
     loadWsg("enemy_c7.wsg", &lumv->enemySprites[20], true);
+
+    loadWsg("alert.wsg", &lumv->alertSprite, true); 
     
     //Init menu :(
 
@@ -205,7 +207,6 @@ void lumberjackSetupLevel(int index)
     lumv->spawnIndex = 0;
     lumv->spawnTimer = 750;
     lumv->spawnSide = 0;
-
     
 
     lumv->localPlayer = calloc (1, sizeof(lumberjackEntity_t));
@@ -290,13 +291,28 @@ static void lumberjackExitMode(void)
 {    
     p2pDeinit(&lumv->p2p);
 
+    //** FREE THE SPRITES **//
     //Free the enemies
-    for (int i =0; i < 8; i++)
+    for (int i =0; i < 21; i++)
     {
-        //lumberjackUnloadEnemy(lumv->enemy[i]);
+        freeWsg(&lumv->enemySprites[i]);
+    }
+
+
+    //Free the players
+    for (int i =0; i < 63; i++)
+    {
+        freeWsg(&lumv->playerSprites[i]);
     }
 
     //Free the tiles
+    for (int i = 0; i < 12; i++)
+    {
+        freeWsg(&lumv->animationTiles[i]);
+    }
+
+    freeWsg(&lumv->alertSprite);
+    
     freeFont(&lumv->ibm);
     free(lumv);
 }
@@ -326,6 +342,13 @@ static void lumberjackGameLoop(int64_t elapsedUs)
     {
         lumberjackDoControls();
     }   
+
+    for (int i = 0; i < 8; i++)
+    {
+        if (lumv->enemy[i] == NULL) continue;
+
+        lumberjackDoEnemyControls(lumv->enemy[i]);
+    }
 
     //Clear cruft
     lumberjackUpdate(elapsedUs);
@@ -360,9 +383,18 @@ static void lumberjackGameLoop(int64_t elapsedUs)
         lumberjackEntity_t* enemy = lumv->enemy[i]; 
         if (enemy == NULL || enemy->ready == true) continue;
 
+        enemy->showAlert = false;
         if (enemy->state == LUMBERJACK_BUMPED_IDLE)
         {
             enemy->respawn -= elapsedUs / 10000;
+
+
+            enemy->showAlert = enemy->respawn < 200;
+            if (enemy->showAlert)
+            {
+                enemy->upgrading = true;
+
+            }
 
             if (enemy->respawn <= 0)
             {
@@ -373,8 +405,10 @@ static void lumberjackGameLoop(int64_t elapsedUs)
 
                 enemy->direction = (enemy->flipped) ? -1 : 1;
                 
-
+                enemy->showAlert = false;
                 enemy->vy = -10;
+
+                lumberjackUpdateEnemy(enemy, enemy->type + 1);
             }
         }
 
@@ -496,12 +530,17 @@ static void lumberjackGameLoop(int64_t elapsedUs)
 
         int eFrame = lumberjackGetEnemyAnimation(enemy);
 
-        drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x, enemy->y - lumv->yOffset, enemy->flipped, false, 0);
-        
+        drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x, enemy->y - lumv->yOffset, enemy->flipped, false, 0);       
     
         if (enemy->x > 270)
         {
             drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x - 299, enemy->y - lumv->yOffset, enemy->flipped, false, 0);
+        }
+
+        if (enemy->showAlert)
+        {
+            //Fix the magic number :(
+            drawWsg(&lumv->alertSprite, enemy->x + 6, enemy->y - 26 - lumv->yOffset, enemy->flipped, false, 0);       
         }
     
     }
@@ -542,7 +581,7 @@ static void lumberjackGameLoop(int64_t elapsedUs)
 void lumberjackSpawnCheck(int64_t elapseUs)
 {
 
-    if (lumv->spawnTimer > 0)
+    if (lumv->spawnTimer >= 0)
     {
         bool spawnReady = true;
 

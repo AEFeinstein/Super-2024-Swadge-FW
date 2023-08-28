@@ -10,6 +10,7 @@ void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character)
     enemy->maxVX = 0;
     enemy->active = false;
     enemy->ready = true; 
+    enemy->showAlert = false;
     enemy->spriteOffset = 0;
 
     lumberjackUpdateEnemy(enemy, character);
@@ -25,6 +26,8 @@ void lumberjackResetEnemy(lumberjackEntity_t* enemy)
     enemy->ready = true;
     enemy->y = 0;
     enemy->x = 0;
+    enemy->upgrading = false;
+
 }
 
 void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side)
@@ -54,13 +57,25 @@ void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side)
 
 void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
 {
+    
+   
+    enemy->type = newIndex;
+
+    if (enemy->type > enemy->maxLevel)
+    {
+        enemy->type = enemy->maxLevel;
+    }
+
+    enemy->upgrading = false;
+
     if (newIndex == 0)
     {
         enemy->width = 15;
         enemy->height = 15;
         enemy->tileHeight = 1;
-        enemy->maxVX = 5;
+        enemy->maxVX = 4;
         enemy->spriteOffset = 0;
+        enemy->maxLevel = 2;
 
     }
     else if (newIndex == 1)
@@ -68,8 +83,9 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->width = 15;
         enemy->height = 15;
         enemy->tileHeight = 1;
-        enemy->maxVX = 5;
+        enemy->maxVX = 8;
         enemy->spriteOffset = 7;
+        enemy->maxLevel = 2;
 
     }
     else if (newIndex == 2)
@@ -77,8 +93,9 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->width = 15;
         enemy->height = 15;
         enemy->tileHeight = 1;
-        enemy->maxVX = 5;
+        enemy->maxVX = 10;
         enemy->spriteOffset = 14;
+        enemy->maxLevel = 2;
 
     }
 
@@ -90,7 +107,9 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
 void lumberjackDoEnemyControls(lumberjackEntity_t* enemy)
 {
     //pick between types I guess
+    //if enemy->type 1, 2, or 3... continue
 
+    
 }
 
 
@@ -104,6 +123,10 @@ uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy)
         return 5;
     }
 
+    if (enemy->upgrading)
+    {
+        enemy->animationSpeed /=2;
+    }
 
     if (animation == LUMBERJACK_RUN)
     {
