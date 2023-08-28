@@ -120,7 +120,7 @@ void deinitBuzzer(void)
 {
     if (soundDriver)
     {
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(__CYGWIN__)
         CloseSound(NULL);
 #else
         CloseSound(soundDriver); // when calling this on Windows, it halts

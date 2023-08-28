@@ -50,7 +50,8 @@ jobs:
       with:
         name: ${{ env.EMULATOR_ARTIFACT }}
         path: |
-          C:\msys64\mingw64\bin\libwinpthread-1.dll
+          C:\msys64\usr\bin\msys-argp-0.dll
+          C:\msys64\usr\bin\msys-2.0.dll
 
     - name: Set up the IDF
       run: |
