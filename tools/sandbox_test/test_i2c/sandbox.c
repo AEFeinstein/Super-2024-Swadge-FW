@@ -14,6 +14,13 @@
 #include "coreutil.h"
 #include "hdw-btn.h"
 
+#include "bunny.h"
+
+int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
+
+
+int frameno;
+
 #define LSM6DSL_ADDRESS						0x6a
 #define QMC6308_ADDRESS						0x2c
 
@@ -68,9 +75,15 @@ struct LSM6DSLData
 
 
 	// For debug
+	int lastreadr;
+	int32_t gyroaccum[3];
+	uint32_t gyrocount;
 	int16_t gyrolast[3];
 	int16_t accellast[3];
-	float fqQuatLast[4];  // Quats are wxyz
+
+	// Quats are wxyz.
+	// You can take a vector, in controller space, rotate by this vector, and you get it in world space.
+	float fqQuatLast[4];
 
 } LSM6DSL;
 
@@ -96,6 +109,17 @@ float rsqrtf ( float x )
     x = x * ( 1.5f - xhalf * x * x );
 
     return x;
+}
+
+float mathsqrtf( float x )
+{
+	// Trick to do approximate, fast square roots.
+	float o = x;
+	o = (o+x/o)/2;
+	o = (o+x/o)/2;
+	o = (o+x/o)/2;
+	o = (o+x/o)/2;
+	return o;
 }
 
 void mathEulerToQuat( float * q, const float * euler )
@@ -150,12 +174,27 @@ void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p
 {
 	// return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
 	float iqo[3];
-	mathCrossProduct( iqo, q + 1, p );
+	mathCrossProduct( iqo, q + 1 /*.xyz*/, p );
 	iqo[0] += q[0] * p[0];
 	iqo[1] += q[0] * p[1];
 	iqo[2] += q[0] * p[2];
 	float ret[3];
-	mathCrossProduct( ret, q + 1, iqo );
+	mathCrossProduct( ret, q + 1 /*.xyz*/, iqo );
+	pout[0] = ret[0] * 2.0 + p[0];
+	pout[1] = ret[1] * 2.0 + p[1];
+	pout[2] = ret[2] * 2.0 + p[2];
+}
+
+void mathRotateVectorByInverseOfQuaternion(float * pout, const float * q, const float * p )
+{
+	// return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
+	float iqo[3];
+	mathCrossProduct( iqo, p, q + 1 /*.xyz*/ );
+	iqo[0] += q[0] * p[0];
+	iqo[1] += q[0] * p[1];
+	iqo[2] += q[0] * p[2];
+	float ret[3];
+	mathCrossProduct( ret, iqo, q + 1 /*.xyz*/ );
 	pout[0] = ret[0] * 2.0 + p[0];
 	pout[1] = ret[1] * 2.0 + p[1];
 	pout[2] = ret[2] * 2.0 + p[2];
@@ -231,7 +270,7 @@ static void LSM6DSLIntegrate()
 {
 	struct LSM6DSLData * ld = &LSM6DSL;
 
-	int16_t data[72];
+	int16_t data[6*16];
 	int r = GeneralI2CGet( LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2 );
 	if( r < 0 ) return;
 	if( r == 2 ) ld->temp = data[0];
@@ -248,11 +287,24 @@ static void LSM6DSLIntegrate()
 	// [1] = +Y axis, pointing straight up out of controller, out where the USB port is.
 	// [2] = +Z axis, pointing up from the face of the controller.
 
+	ld->lastreadr = readr;
+
 	for( samp = 0; samp < readr; samp+=12 )
 	{
 		// Extract data from IMU
 		int16_t * euler_deltas = cdata; // Euler angles, from gyro.
 		int16_t * accel_data   = cdata + 3;
+
+		// Manual cal, used only for Steps 2..8
+		euler_deltas[0] -= 12;
+		euler_deltas[1] += 22;
+		euler_deltas[2] += 4;
+
+		// We can sum rotations to understand the amount of counts in a full circle.
+		ld->gyroaccum[0] += euler_deltas[0];
+		ld->gyroaccum[1] += euler_deltas[1];
+		ld->gyroaccum[2] += euler_deltas[2];
+		ld->gyrocount++;
 
 		// STEP 1:  Visually inspect the gyro values.
 		// STEP 2:  Integrate the gyro values, verify they are correct.
@@ -260,8 +312,10 @@ static void LSM6DSLIntegrate()
 		// 2000 dps full-scale
 		// 32768 is full-scale
 		// 208 SPS
-		// convert to radians.
-		float fScale = ( 4000.0f / 32768.0f / 208.0f * 3.14159f / 180.0f );  
+		// convert to radians. ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );  
+		// Measured = 560,000 counts per scale (Measured by looking at sum)
+		// Testing -> 3.14159 * 2.0 / 566000;
+		float fScale = ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );
 
 		// STEP 3:  Integrate gyro values into a quaternion.
 		// This step is validated by working with just one axis at a time
@@ -287,13 +341,57 @@ static void LSM6DSLIntegrate()
 
 		// STEP 6A: Examine vectors.  Generally speaking, we want an "up" vector, not a gravity vector.
 		// this is "up" in the controller's point of view.
-		int32_t raw_up[3] = { -accel_data[0], accel_data[1], -accel_data[2] };
+		float accel_up[3] = { 
+			-accel_data[0],
+			 accel_data[1],
+			-accel_data[2]
+		};
+
+		float accel_inverse_mag = rsqrtf( accel_up[0] * accel_up[0] + accel_up[1] * accel_up[1] + accel_up[2] * accel_up[2] );
+		accel_up[0] *= accel_inverse_mag;
+		accel_up[1] *= accel_inverse_mag;
+		accel_up[2] *= accel_inverse_mag;
+
 		//ESP_LOGI( "SB", "%ld %ld %ld", raw_up[0], raw_up[1], raw_up[2] );
+
+		// Step 6B: Next, compute what we think "up" should be from our point of view.  We will use +Y Up.
+		float what_we_think_is_up[3] = { 0, 1, 0 };
+		mathRotateVectorByInverseOfQuaternion( what_we_think_is_up, LSM6DSL.fqQuat, what_we_think_is_up );
+
+		// Step 6C: Next, we determine how far off we are.  This will tell us our error.
+		float corrective_quaternion[4];
+
+		// TRICKY: The ouput of this is actually the axis of rotation, which is ironically
+		// in vector-form the same as a quaternion.  So we can write directly into the quat.
+		mathCrossProduct( corrective_quaternion + 1, accel_up, what_we_think_is_up );
+
+		// Now, we apply this in step 7.
+
+		// First, we can compute what the drift values of our axes are, to anti-drift them.
+		// If you do only this, you will always end up in an unstable oscillation. 
+		
+
+		// Second, we can apply a very small corrective tug.  This helps prevent oscillation
+		// about the correct answer.  This acts sort of like a P term to a PID loop.
+		const float corrective_force = 0.001f;
+		corrective_quaternion[1] *= corrective_force;
+		corrective_quaternion[2] *= corrective_force;
+		corrective_quaternion[3] *= corrective_force;
+
+		// x^2+y^2+z^2+q^2 -> ALGEBRA! -> sqrt( 1-x^2-y^2-z^2 ) = w
+		corrective_quaternion[0] = mathsqrtf( 1 
+			- corrective_quaternion[1]*corrective_quaternion[1]
+			- corrective_quaternion[2]*corrective_quaternion[2]
+			- corrective_quaternion[3]*corrective_quaternion[3] );
+//		ESP_LOGI( "x", "%f %f %f %f\n", corrective_quaternion[0], corrective_quaternion[1], corrective_quaternion[2], corrective_quaternion[3] );
+		mathQuatApply( ld->fqQuat, ld->fqQuat, corrective_quaternion );
+
+
+		// Magnitude of correction angle = inverse_sin( magntiude( axis_of_correction ) );
+		// We want to significantly reduce that. To mute any effect.
 
 
 		// TODO which directon of frame of reference?  Up relative to controller? OR controller relative to world?
-		
-
 		cdata += 6;
 	}
 
@@ -386,6 +484,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 
 void sandbox_main(void)
 {
+	frameno = 0;
 
     ESP_LOGI( "sandbox", "Running from IRAM. %d", global_i );
 
@@ -426,6 +525,7 @@ void sandbox_exit()
 
 void sandbox_tick()
 {
+/*
     for( int mode = 0; mode < 8; mode++ )
     {
         drawWsg( &example_sprite, 50+mode*20, (global_i%20)-10, !!(mode&1), !!(mode & 2), (mode & 4)*10);
@@ -433,6 +533,7 @@ void sandbox_tick()
         drawWsg( &example_sprite, (global_i%20)-10, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
         drawWsg( &example_sprite, (global_i%20)+270, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
     }
+*/
 
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -510,10 +611,63 @@ void sandbox_tick()
 		LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3]  );
 */
 
-	float plusy[3] = { 1, 0, 0 };
+	float plusy[3] = { 0, 1, 0 };
+	float plusy_out[3] = { 0, 1, 0 };
 	mathRotateVectorByQuaternion( plusy, LSM6DSL.fqQuat, plusy );
-	cts += sprintf( cts, "%f %f %f %f / %f %f %f", LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3],
-		plusy[0], plusy[1], plusy[2] );
+//	mathRotateVectorByInverseOfQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
+	mathRotateVectorByQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
+
+	float plusx_out[3] = { 1, 0, 0 };
+	mathRotateVectorByQuaternion( plusx_out, LSM6DSL.fqQuat, plusx_out );
+
+	float plusz_out[3] = { 0, 0, 1 };
+	mathRotateVectorByQuaternion( plusz_out, LSM6DSL.fqQuat, plusz_out );
+
+	int i, vertices = 0;
+	for( i = 0; i < sizeof(bunny_verts)/2; i+= 3 )
+	{
+		float bz = -bunny_verts[i+0];
+		float by = bunny_verts[i+1];
+		float bx = bunny_verts[i+2];
+
+		float box = bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2];
+		float boy = bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2];
+		float boz = bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2];
+
+		bunny_verts_out[vertices*3+0] = box/250 + 280/2; 
+		bunny_verts_out[vertices*3+1] = -boy/250 + 240/2;  // Convert from right-handed to left-handed coordinate frame.
+		bunny_verts_out[vertices*3+2] = boz;
+
+		vertices++;
+	}
+/*
+	int centerX = 280/2;
+	int centerY = 240/2;
+	float xcomp = -plusy_out[0];
+	float ycomp = plusy_out[1];
+	int v0x = xcomp * 90;
+	int v0y = ycomp * 90;
+	drawLineFast(centerX-v0x, centerY-v0y, centerX+v0x, centerY+v0y, 215 );
+*/
+
+#if 1
+	int lines = 0;
+	for( i = 0; i < sizeof(bunny_lines); i+= 2 )
+	{
+		int v1 = bunny_lines[i]*3;
+		int v2 = bunny_lines[i+1]*3;
+		float col = bunny_verts_out[v1+2]/2000 + 8;
+		if( col > 5 ) col = 5;
+		else if( col < 0 ) continue;
+		drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1+1],bunny_verts_out[v2], bunny_verts_out[v2+1], col);
+		lines++;
+	}
+#endif
+
+	cts += sprintf( cts, "%ld %d %f %f %f %f / %f %f %f / %f %f %f / %d %d", LSM6DSL.caltime, LSM6DSL.lastreadr,
+		LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3],
+		plusy[0], plusy[1], plusy[2],
+		plusy_out[0], plusy_out[1], plusy_out[2], vertices, lines );
 
 	ESP_LOGI( "I2C", "%s", ctsbuffer );
 }
@@ -523,8 +677,6 @@ void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, i
     int i;
 
     fillDisplayArea(x, y, x+w, y+h, 0 );
-    for( i = 0; i < 16; i++ )
-        fillDisplayArea(i*16+8, y, i*16+16+8, y+16, up*16+i );
 }
 
 
