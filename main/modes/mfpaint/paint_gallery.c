@@ -6,6 +6,7 @@
 #include "paint_common.h"
 #include "paint_nvs.h"
 #include "paint_util.h"
+#include "touchUtils.h"
 
 #include <string.h>
 
@@ -357,8 +358,12 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
 void paintGalleryModePollTouch(void)
 {
     int32_t centroid, intensity;
-    if (getTouchCentroid(&centroid, &intensity))
+
+    int32_t angle, radius;
+    if (getTouchJoystick(&angle, &radius, &intensity))
     {
+        // TODO: Use the touchpad properly
+        getTouchCartesian(angle, radius, &centroid, NULL);
         // Bar is touched, convert the centroid into 8 segments (0-7)
         // But also reverse it so up is bright and down is less bright
         uint8_t curTouchSegment = ((centroid * 7 + 512) / 1024);

@@ -447,10 +447,17 @@ static const musicalNote_t paintBgmNotes[] =
     {.note = SILENCE, .timeMs = 125},
 };
 
+const songTrack_t paintSongTrack =
+{
+    .numNotes = 442,
+    .loopStartNote = 0,
+    .notes = paintBgmNotes,
+};
+
 const song_t paintBgm =
 {
-    .notes = paintBgmNotes,
-    .numNotes = 442,
-    .shouldLoop = true
+    .numTracks  = 1,
+    .shouldLoop = true,
+    .tracks = &paintSongTrack,
 };
 

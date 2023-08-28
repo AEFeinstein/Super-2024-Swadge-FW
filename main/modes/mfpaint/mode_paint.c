@@ -53,7 +53,6 @@ void paintEnterMode(void);
 void paintExitMode(void);
 void paintMainLoop(int64_t elapsedUs);
 void paintButtonCb(buttonEvt_t* evt);
-void paintTouchCb(buttonEvt_t* evt);
 
 swadgeMode_t modePaint =
 {
@@ -119,16 +118,7 @@ void paintMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        // Touch and button events are combined now, so split them back up, heh
-        if (evt.button & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_START | PB_SELECT))
-        {
-            paintButtonCb(&evt);
-        }
-
-        if (evt.button & (TB_0 | TB_1 | TB_2 | TB_3 | TB_4))
-        {
-            paintTouchCb(&evt);
-        }
+        paintButtonCb(&evt);
     }
 
     switch (paintMenu->screen)
@@ -269,19 +259,6 @@ void paintButtonCb(buttonEvt_t* evt)
         case PAINT_RECEIVE:
             // Handled in a different mode
         break;
-    }
-}
-
-void paintTouchCb(buttonEvt_t* evt)
-{
-    if (paintMenu->screen == PAINT_DRAW || paintMenu->screen == PAINT_HELP)
-    {
-        paintDrawScreenTouchCb(evt);
-    }
-    else if (paintMenu->screen == PAINT_GALLERY)
-    {
-        // TODO: Make sure the gallery does its touch events
-        // I deleted the callback because... I guess we'll never know.
     }
 }
 

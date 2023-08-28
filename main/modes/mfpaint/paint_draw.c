@@ -4,6 +4,8 @@
 #include "esp_heap_caps.h"
 
 #include "hdw-bzr.h"
+#include "hdw-btn.h"
+#include "touchUtils.h"
 
 #include "paint_ui.h"
 #include "paint_brush.h"
@@ -223,7 +225,7 @@ void paintDrawScreenSetup(void)
     paintUpdateLeds();
 
     bzrStop();
-    bzrPlayBgm(&paintBgm);
+    bzrPlayBgm(&paintBgm, BZR_LEFT);
 
     PAINT_LOGI("It's paintin' time! Canvas is %d x %d pixels!", paintState->canvas.w, paintState->canvas.h);
 }
@@ -1268,12 +1270,16 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
     }
 }
 
-void paintDrawScreenPollTouch()
+void paintDrawScreenPollTouch(void)
 {
     int32_t centroid, intensity;
+    int32_t phi, r, y;
 
-    if (getTouchCentroid(&centroid, &intensity))
+    if (getTouchJoystick(&phi, &r, &intensity))
     {
+        //
+        getTouchCartesian(phi, r, &centroid, &y);
+
         // Bar is touched
         switch (paintState->buttonMode)
         {
@@ -1423,12 +1429,6 @@ void paintDrawScreenPollTouch()
             }
         }
     }
-}
-
-void paintDrawScreenTouchCb(const buttonEvt_t* evt)
-{
-    // Call the centroid polling function here too
-    paintDrawScreenPollTouch();
 }
 
 void paintDrawScreenButtonCb(const buttonEvt_t* evt)
@@ -1702,7 +1702,7 @@ bool paintMaybeSacrificeUndoForHeap(void)
     return false;
 }
 
-bool paintCanUndo()
+bool paintCanUndo(void)
 {
     // We can undo as long as one of these is true:
     //  - The undoHead is NULL and undoList.last is NOT NULL
@@ -1710,7 +1710,7 @@ bool paintCanUndo()
     return (paintState->undoHead == NULL && paintState->undoList.last != NULL) || (paintState->undoHead != NULL && paintState->undoHead->prev != NULL);
 }
 
-bool paintCanRedo()
+bool paintCanRedo(void)
 {
     // We can redo as long as all of these are true:
     //  - The undoHead is NOT NULL
