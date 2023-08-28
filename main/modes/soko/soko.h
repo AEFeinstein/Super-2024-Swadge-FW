@@ -52,7 +52,13 @@ typedef enum
     SKE_PLAYER       = 1,
     SKE_CRATE        = 2,
     SKE_LASER_90     = 3,
-    SKE_STICKY_CRATE = 4
+    SKE_STICKY_CRATE = 4,
+    SKE_WARP         = 5,
+    SKE_BUTTON       = 6,
+    SKE_LASER_EMIT_UP= 7,
+    SKE_LASER_RECEIVE_OMNI = 8,
+    SKE_LASER_RECEIVE= 9,
+    SKE_GHOST        = 10
 } sokoEntityType_t;
 
 typedef enum
@@ -69,10 +75,25 @@ typedef enum
 
 typedef struct
 {
+    bool sticky; //For Crates, this determines if crates stick to players. For Buttons, this determines if the button stays down.
+    bool trail; //Crates leave Euler trails
+    bool players; //For Crates, allow player push. For Button, allow player press.
+    bool crates; //For Buttons, allow crate push. For Portals, allow crate transport.
+    bool inverted; //For Buttons, invert default state of affected blocks. For ghost blocks, inverts default tangibility. Button and Ghostblock with both cancel.
+    uint8_t* targetX;
+    uint8_t* targetY;
+    uint8_t targetCount;
+    uint8_t hp;
+} sokoEntityProperties_t; //this is a separate type so that it can be allocated as several different types with a void pointer and some aggressive casting.
+
+typedef struct
+{
     sokoEntityType_t type;
     uint16_t x;
     uint16_t y;
     sokoDirection_t facing;
+    sokoEntityProperties_t* properties;
+    bool propFlag;
 } sokoEntity_t;
 
 typedef struct sokoVec_s
@@ -113,6 +134,7 @@ typedef struct
     uint16_t playerIndex; // we could have multiple players...
     sokoTile_t tiles[SOKO_MAX_LEVELSIZE][SOKO_MAX_LEVELSIZE];
     sokoEntity_t entities[SOKO_MAX_ENTITY_COUNT]; // todo: pointer and runtime array size
+    soko_var_t gameMode;
 } sokoLevel_t;
 
 typedef struct
@@ -163,6 +185,7 @@ typedef struct soko_abs_s
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
                                     ///< I need level names like picross.
     wsg_t levelWSG;                 ///< Current level
+    uint8_t* levelBinaryData;
 
     soko_portal_t portals[SOKO_MAX_PORTALS];
     uint8_t portalCount;
