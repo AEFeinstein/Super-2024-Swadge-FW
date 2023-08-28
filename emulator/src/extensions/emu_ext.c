@@ -17,6 +17,7 @@
 #include "ext_leds.h"
 #include "ext_fuzzer.h"
 #include "ext_modes.h"
+#include "ext_replay.h"
 
 //==============================================================================
 // Registered Extensions
@@ -31,6 +32,7 @@ static const emuExtension_t* registeredExtensions[] = {
     &ledEmuExtension,
     &fuzzerEmuExtension,
     &modesEmuExtension,
+    &replayEmuExtension,
 };
 
 //==============================================================================

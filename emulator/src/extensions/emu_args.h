@@ -43,6 +43,12 @@ typedef struct
     bool motionDrift;
 
     bool emulateTouch;
+
+    /// @brief Name of the file to record inputs to
+    const char* recordFile;
+
+    /// @brief Name of the file to replay inputs from
+    const char* replayFile;
 } emuArgs_t;
 
 //==============================================================================
