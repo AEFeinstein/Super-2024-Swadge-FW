@@ -218,6 +218,22 @@ int main( int argc, char ** argv )
 			if( r ) { fprintf( stderr, "Error shelling symbols. Error: %d\n", r ); return -6; }
 		}
 
+
+		// Count
+		{
+			int i = 0;
+			FILE * f = fopen( "build/count.txt", "r" );
+			if( f ) { fscanf( f, "%d", &i ); fclose( f ); }
+			i++;
+			f = fopen( "build/count.txt", "w" );
+			if( f )
+			{
+				fprintf( f, "%d\n", i );
+				fclose( f );
+			}
+		}
+
+
 		{
 			FILE * provided = fopen( "build/provided.lds", "w" );
 			FILE * f = fopen( "build/system_symbols.txt", "r" );

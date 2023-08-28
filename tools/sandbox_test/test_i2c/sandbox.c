@@ -63,7 +63,6 @@ struct LSM6DSLData
 {
 	int32_t temp;
 	uint32_t caltime;
-	int32_t gyroaccum[3];
 
 	float fqQuat[4];  // Quats are wxyz
 
@@ -76,6 +75,14 @@ struct LSM6DSLData
 } LSM6DSL;
 
 #include <math.h>
+
+/* Coordinate frame:
+	OpenGL / OpenVR / Godot / Etc...
+
+	+X goes right.
+	+Y comes out top of controller.
+	+Z comes toward user (Into User's Eyes)
+*/
 
 float rsqrtf ( float x )
 {
@@ -97,11 +104,11 @@ void mathEulerToQuat( float * q, const float * euler )
 	float yaw = euler[1];
 	float roll = euler[2];
     float cr = cosf(pitch * 0.5);
-    float sr = sinf(pitch * 0.5);
-    float cp = cosf(yaw * 0.5);
-    float sp = sinf(yaw * 0.5);
+    float sr = sinf(pitch * 0.5); // Pitch: About X
+    float cp = cosf(yaw * 0.5); 
+    float sp = sinf(yaw * 0.5);   // Yaw:   About Y
     float cy = cosf(roll * 0.5);
-    float sy = sinf(roll * 0.5);
+    float sy = sinf(roll * 0.5);  // Roll:  About Z
     q[0] = cr * cp * cy + sr * sp * sy;
     q[1] = sr * cp * cy - cr * sp * sy;
     q[2] = cr * sp * cy + sr * cp * sy;
@@ -153,8 +160,6 @@ void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p
 	pout[1] = ret[1] * 2.0 + p[1];
 	pout[2] = ret[2] * 2.0 + p[2];
 }
-
-
 
 static esp_err_t GeneralSet( int dev, int reg, int val )
 {
@@ -237,12 +242,20 @@ static void LSM6DSLIntegrate()
 
     uint32_t start = getCycleCount();
 
+	// STEP 0:  Decide your coordinate frame.
+
+	// [0] = +X axis coming out right of controller.
+	// [1] = +Y axis, pointing straight up out of controller, out where the USB port is.
+	// [2] = +Z axis, pointing up from the face of the controller.
+
 	for( samp = 0; samp < readr; samp+=12 )
 	{
-		int16_t * euler_deltas = cdata;
-		ld->gyroaccum[0] += euler_deltas[0];
-		ld->gyroaccum[1] += euler_deltas[1];
-		ld->gyroaccum[2] += euler_deltas[2];
+		// Extract data from IMU
+		int16_t * euler_deltas = cdata; // Euler angles, from gyro.
+		int16_t * accel_data   = cdata + 3;
+
+		// STEP 1:  Visually inspect the gyro values.
+		// STEP 2:  Integrate the gyro values, verify they are correct.
 
 		// 2000 dps full-scale
 		// 32768 is full-scale
@@ -250,28 +263,69 @@ static void LSM6DSLIntegrate()
 		// convert to radians.
 		float fScale = ( 4000.0f / 32768.0f / 208.0f * 3.14159f / 180.0f );  
 
+		// STEP 3:  Integrate gyro values into a quaternion.
+		// This step is validated by working with just one axis at a time
+		// then apply a coordinate frame to ld->fqQuat and validate that it is
+		// correct.
 		float fEulers[3] = {
-			0,//-euler_deltas[0] * fScale,  
-			euler_deltas[2],  
-			euler_deltas[1] * 0 };
-		// [0] = +X axis coming out right of controller.
-		// [1] = +Y axis, pointing straight up out of controller.
-		// [2] = +Z axis, pointing straight up out of controller.
+			-euler_deltas[0] * fScale,
+			euler_deltas[1] * fScale,
+			-euler_deltas[2] * fScale };
 
 		mathEulerToQuat( ld->fqQuatLast, fEulers );
 		mathQuatApply( ld->fqQuat, ld->fqQuat, ld->fqQuatLast );
 
+		// STEP 4: Validate yor values by doing 4 90 degree turns
+		//  across multiple axes.
+		// i.e. rotate controller down, clockwise from top, up, counter-clockwise.
+		// while investigating quaternion.  It should return to identity.
+
+		// STEP 6: Determine our "error" based on accelerometer.
+		// NOTE: This step could be done on the inner loop if you want, and done over
+		// every accelerometer cycle, or it can be done on the outside, every few cycles.
+		// all that realy matters is that it is done periodically.
+
+		// STEP 6A: Examine vectors.  Generally speaking, we want an "up" vector, not a gravity vector.
+		// this is "up" in the controller's point of view.
+		int32_t raw_up[3] = { -accel_data[0], accel_data[1], -accel_data[2] };
+		//ESP_LOGI( "SB", "%ld %ld %ld", raw_up[0], raw_up[1], raw_up[2] );
+
+
+		// TODO which directon of frame of reference?  Up relative to controller? OR controller relative to world?
+		
+
 		cdata += 6;
 	}
 
-	//mathQuatNormalize( ld->fqQuat, ld->fqQuat );
+	// Now we move onto the outer loop.
+	// STEP 5: We now want to normalize the quat periodically.  Don't do this too
+	// soon, otherwise you won't notice math errors.  Realistically, this should
+	// only need to be done every hundreds of thousands of samples.
+	//
+	// Also, don't do this too often, otherwise you will reduce accuracy, 
+	// unnecessarily.
+	float * qRot = ld->fqQuat;
+	float qmagsq = qRot[0] * qRot[0] + qRot[1] * qRot[1] + qRot[2] * qRot[2] + qRot[3] * qRot[3];
+	if( qmagsq > 1.05 || qmagsq < 0.95 )
+	{
+		// This normalizes everything.
+		qmagsq = rsqrtf( qmagsq );
+		qRot[0] = qRot[0] * qmagsq;
+		qRot[1] = qRot[1] * qmagsq;
+		qRot[2] = qRot[2] * qmagsq;
+		qRot[3] = qRot[3] * qmagsq;
+	}
 
-	ld->gyrolast[0] = cdata[-6];
-	ld->gyrolast[1] = cdata[-5];
-	ld->gyrolast[2] = cdata[-4];
-	ld->accellast[0] = cdata[-3];
-	ld->accellast[1] = cdata[-2];
-	ld->accellast[2] = cdata[-1];
+
+	if( samp )
+	{
+		ld->gyrolast[0] = cdata[-6];
+		ld->gyrolast[1] = cdata[-5];
+		ld->gyrolast[2] = cdata[-4];
+		ld->accellast[0] = cdata[-3];
+		ld->accellast[1] = cdata[-2];
+		ld->accellast[2] = cdata[-1];
+	}
 
     ld->caltime = getCycleCount() - start;
 }
@@ -342,7 +396,7 @@ void sandbox_main(void)
     addSingleItemToMenu(menu, menu_Bootload);
 
     loadWsg("kid0.wsg", &example_sprite, true);
-
+/*
 	// Try to reinstall, just in case.
     i2c_config_t conf = {
         .mode             = I2C_MODE_MASTER,
@@ -354,10 +408,10 @@ void sandbox_main(void)
         .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
     };
 
-	//i2c_driver_delete( I2C_NUM_0 );
-//    ESP_LOGI( "sandbox", "i2c_param_config=%d", i2c_param_config(I2C_NUM_0, &conf) );
-//	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
-
+//	i2c_driver_delete( I2C_NUM_0 );
+    ESP_LOGI( "sandbox", "i2c_param_config=%d", i2c_param_config(I2C_NUM_0, &conf) );
+	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
+*/
 	LMS6DS3Setup();
 	GeneralSet( QMC6308_ADDRESS, 0x0b, 0x80 );
 	GeneralSet( QMC6308_ADDRESS, 0x0b, 0x03 );
@@ -453,11 +507,10 @@ void sandbox_tick()
 		LSM6DSL.caltime, LSM6DSL.temp, 
 		LSM6DSL.accellast[0], LSM6DSL.accellast[1], LSM6DSL.accellast[2],
 		LSM6DSL.gyrolast[0], LSM6DSL.gyrolast[1], LSM6DSL.gyrolast[2], 
-		LSM6DSL.gyroaccum[0], LSM6DSL.gyroaccum[1], LSM6DSL.gyroaccum[2],
 		LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3]  );
 */
 
-	float plusy[3] = { 0, 1, 0 };
+	float plusy[3] = { 1, 0, 0 };
 	mathRotateVectorByQuaternion( plusy, LSM6DSL.fqQuat, plusy );
 	cts += sprintf( cts, "%f %f %f %f / %f %f %f", LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3],
 		plusy[0], plusy[1], plusy[2] );
