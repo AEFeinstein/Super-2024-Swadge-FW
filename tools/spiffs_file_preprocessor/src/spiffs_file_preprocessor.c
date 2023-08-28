@@ -152,7 +152,7 @@ int main(int argc, char** argv)
     {
 #if defined(_WIN32)
         mkdir(outDirName);
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__CYGWIN__)
         mkdir(outDirName, 0777);
 #endif
     }

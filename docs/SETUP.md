@@ -26,28 +26,30 @@ If the path to your home directory has spaces in it, then installation paths sho
 
 The continuous integration for this project runs on a Windows instance. This means one can read [build-firmware-and-emulator.yml](https://github.com/AEFeinstein/Swadge-IDF-5.0/blob/main/.github/workflows/build-firmware-and-emulator.yml) to see how the Windows build environment is set up from scratch for both the firmware and emulator, though it does not install extra development tools. It is recommend to follow the following guide.
 
-1. [Install `git`](https://git-scm.com/download/win).
-2. [Install `python`](https://www.python.org/downloads/). Make sure to check "Add Python to environment variables" when installing.
+1. [Install `git`](https://git-scm.com/download/win). This is for version control.
+2. [Install `python`](https://www.python.org/downloads/). This is for a few utilities. Make sure to check "Add Python to environment variables" when installing.
     * Once python is installed, _before_ setting up the IDF, install `esptool`. We've seen issues when running the IDF's `esptool` independently, but the version in the The Python Package Index seems to work fine. If you've already set up an environment and need to install `esptool`, make sure to do so in a terminal where you **have not** run `export.ps1`, which sets up IDF environment variables.
     ```bash
     python -m pip install esptool
     ```
-3. [Install `doxygen`](https://www.doxygen.nl/download.html).
-4. [Install `cppcheck`](https://cppcheck.sourceforge.io/).
-5. [Install `msys2`](https://www.msys2.org/).
+3. [Install `doxygen`](https://www.doxygen.nl/download.html). This is for generating documentation.
+4. [Install `cppcheck`](https://cppcheck.sourceforge.io/). This is for static code analysis.
+5. [Install the latest stable `LLVM`](https://github.com/llvm/llvm-project/releases). This is for `clang-format`, which formats code.
+5. [Install `msys2`](https://www.msys2.org/). This is the toolchain which will build the emulator.
 6. Start an `msys2` shell and run the following command to install all required packages:
     ```bash
-    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-clang zip
+    pacman --noconfirm -S base-devel gcc gdb zip libargp-devel
     ```
 7. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
     * `C:\Program Files\doxygen\bin` 
     * `C:\Program Files\Cppcheck`
+    * `C:\Program Files\LLVM\bin`
     
-    You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
+    You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. `LLVM` must be last. When it's all set up, it should look something like this:
     
-    ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
+    ![image](https://github.com/AEFeinstein/Swadge-IDF-5.0/assets/231180/84ccb960-01b7-49f1-b4a5-daa094dba7e7)
 
 8. Clone the ESP-IDF v5.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
     ```powershell
