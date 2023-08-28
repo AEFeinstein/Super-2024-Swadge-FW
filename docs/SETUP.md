@@ -37,7 +37,7 @@ The continuous integration for this project runs on a Windows instance. This mea
 5. [Install `msys2`](https://www.msys2.org/).
 6. Start an `msys2` shell and run the following command to install all required packages:
     ```bash
-    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-clang zip
+    pacman --noconfirm -S base-devel gcc gdb clang zip libargp-devel
     ```
 7. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
