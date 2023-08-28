@@ -8,9 +8,9 @@
 #include "demoMode.h"
 #include "jukebox.h"
 #include "pong.h"
-#include "mode_colorchord.h"
+#include "colorchord.h"
+#include "dance.h"
 #include "mode_ray.h"
-#include "mode_dance.h"
 #include "tunernome.h"
 #include "touchTest.h"
 
@@ -111,7 +111,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, modeDance.modeName);
+    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
@@ -206,9 +206,9 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&rayMode);
         }
-        else if (label == modeDance.modeName)
+        else if (label == danceMode.modeName)
         {
-            switchToSwadgeMode(&modeDance);
+            switchToSwadgeMode(&danceMode);
         }
         else if (label == tunernomeMode.modeName)
         {

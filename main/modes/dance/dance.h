@@ -1,12 +1,12 @@
 /*
- * mode_dance.h
+ * dance.h
  *
  *  Created on: Nov 10, 2018
  *      Author: adam
  */
 
-#ifndef MODE_DANCE_H_
-#define MODE_DANCE_H_
+#ifndef _DANCE_H_
+#define _DANCE_H_
 
 #include "swadge2024.h"
 
@@ -19,7 +19,7 @@ typedef struct
     char* name;
 } ledDanceArg;
 
-extern swadgeMode_t modeDance;
+extern swadgeMode_t danceMode;
 extern const ledDanceArg ledDances[];
 
 void danceComet(uint32_t tElapsedUs, uint32_t arg, bool reset);

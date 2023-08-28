@@ -18,7 +18,7 @@
 
 #include "hdw-tft.h"
 #include "mainMenu.h"
-#include "portable_dance.h"
+#include "portableDance.h"
 #include "tunernome.h"
 #include "settingsManager.h"
 #include "swadge2024.h"
@@ -256,6 +256,10 @@ void jukeboxExitMode(void)
 
     freeWsg(&jukebox->arrow);
     freeWsg(&jukebox->jukeboxSprite);
+
+    freeSong(&jukebox->pongHit1);
+    freeSong(&jukebox->pongHit2);
+    freeSong(&jukebox->pongBgm);
 
     freePortableDance(jukebox->portableDances);
 
