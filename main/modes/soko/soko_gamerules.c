@@ -495,18 +495,23 @@ drawCircleFilled(ox+level->entities[i].x*scale+scale/2,oy+level->entities[i].y*s
 */
 bool absSokoAllCratesOnGoal(soko_abs_t* self)
 {
+    //printf("Victory Enter\n");
     for (size_t i = 0; i < self->currentLevel.entityCount; i++)
     {
+        //printf("Loop Enter ");
         if (self->currentLevel.entities[i].type == SKE_CRATE)
         {
+            //printf("Crate Found ");
             if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y]
                 != SKT_GOAL)
             {
+                //printf("Crate Off Goal");
                 return false;
             }
         }
+        //printf("\n");
     }
-
+    //printf("Victory True\n");
     return true;
 }
 

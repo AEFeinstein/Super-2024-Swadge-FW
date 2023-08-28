@@ -22,6 +22,28 @@ typedef enum
     SOKO_LOADNEWLEVEL
 } sokoScreen_t;
 
+typedef enum
+{
+    SKB_EMPTY = 0,
+    SKB_WALL = 1,
+    SKB_FLOOR = 2,
+    SKB_GOAL = 3,
+    SKB_NO_WALK = 4,
+    SKB_OBJSTART = 201, //Object and Signal Bytes are over 200
+    SKB_COMPRESS = 202,
+    SKB_PLAYER = 203,
+    SKB_CRATE = 204,
+    SKB_WARPINTERNAL = 205,
+    SKB_WARPINTERNALEXIT = 206,
+    SKB_WARPEXTERNAL = 207,
+    SKB_BUTTON = 208,
+    SKB_LASEREMITTER = 209,
+    SKB_LASERRECEIVEROMNI = 210,
+    SKB_LASERRECEIVER = 211,
+    SKB_LASER90ROTATE = 212,
+    SKB_GHOSTBLOCK = 213,
+    SKB_OBJEND = 230
+} soko_bin_t; //Binary file byte value decode list
 typedef struct soko_portal_s
 {
     uint8_t x;

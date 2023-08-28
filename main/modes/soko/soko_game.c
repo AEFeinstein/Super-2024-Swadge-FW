@@ -16,6 +16,23 @@ bool allCratesOnGoal(void);
 
 soko_abs_t* soko_s;
 
+void sokoInitGameBin(soko_abs_t* soko)
+{
+    printf("init sokoban game binary");
+
+    soko_s = soko;
+    soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
+
+    soko->camX = soko_s->soko_player->x;
+    soko->camY = soko_s->soko_player->y;
+
+    sokoInitInput(&soko_s->input);
+
+    soko->state = SKS_GAMEPLAY;
+
+    sokoConfigGamemode(soko, soko->currentLevel.gameMode);
+}
+
 void sokoInitGame(soko_abs_t* soko)
 {
     printf("init sokobon game.\n");

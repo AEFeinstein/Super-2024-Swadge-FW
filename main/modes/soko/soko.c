@@ -6,6 +6,7 @@ static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
 static void sokoExitMode(void);
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal);
+static void sokoLoadBinLevel(uint16_t levelIndex);
 static void sokoLoadLevel(uint16_t);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static sokoTile_t sokoGetTileFromColor(paletteColor_t);
@@ -44,7 +45,7 @@ extern const soko_var_t sokoLevelVariants[]
 
 extern const char* sokoBinLevelNames[] =
 {
-    "sk_overworld1.bin",
+    "warehouse.bin",
     "sk_sticky_test.bin",
     "sk_test1.bin",
     "sk_test2.bin",
@@ -133,8 +134,9 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == sokoResumeGameLabel)
         {
             // load level.
-            sokoLoadLevel(0);
-            sokoInitGame(soko);
+            //sokoLoadLevel(0);
+            sokoLoadBinLevel(0);
+            sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
         else if (label == sokoNewGameLabel)
@@ -195,28 +197,7 @@ static void sokoMainLoop(int64_t elapsedUs)
     }
 }
 
-typedef enum
-{
-    SKB_EMPTY = 0,
-    SKB_WALL = 1,
-    SKB_FLOOR = 2,
-    SKB_GOAL = 3,
-    SKB_NO_WALK = 4,
-    SKB_OBJSTART = 201, //Object and Signal Bytes are over 200
-    SKB_COMPRESS = 202,
-    SKB_PLAYER = 203,
-    SKB_CRATE = 204,
-    SKB_WARPINTERNAL = 205,
-    SKB_WARPINTERNALEXIT = 206,
-    SKB_WARPEXTERNAL = 207,
-    SKB_BUTTON = 208,
-    SKB_LASEREMITTER = 209,
-    SKB_LASERRECEIVEROMNI = 210,
-    SKB_LASERRECEIVER = 211,
-    SKB_LASER90ROTATE = 212,
-    SKB_GHOSTBLOCK = 213,
-    SKB_OBJEND = 230
-} soko_bin_t; //Binary file byte value decode list
+
 
 void freeEntity(soko_abs_t* self, sokoEntity_t* entity) //Free internal entity structures
 {
@@ -233,13 +214,13 @@ void freeEntity(soko_abs_t* self, sokoEntity_t* entity) //Free internal entity s
     self->currentLevel.entityCount -= 1;
 }
 
-void sokoLoadBinTiles(soko_abs_t* self)
+void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
 {
-    
+    const int HEADER_BYTE_OFFSET = 2;
     int totalTiles = self->currentLevel.width * self->currentLevel.height;
     int tileIndex = 0;
     self->currentLevel.entityCount = 0;
-    for(int i = 0; i < totalTiles; i++)
+    for(int i = HEADER_BYTE_OFFSET; i < byteCount; i++)
     {
         if(self->levelBinaryData[i] == SKB_OBJSTART) //Objects in level data should be of the form SKB_OBJSTART, SKB_[Object Type], [Data Bytes] , SKB_OBJEND
         {
@@ -251,6 +232,7 @@ void sokoLoadBinTiles(soko_abs_t* self)
             switch(self->levelBinaryData[i+1]) //On creating entities, index should be advanced to the SKB_OBJEND byte so the post-increment moves to the next tile.
             {
                 case SKB_COMPRESS:
+                    i += 2;
                     break; //Not yet implemented
                 case SKB_PLAYER:
                     self->currentLevel.gameMode = self->levelBinaryData[i+2];
@@ -258,6 +240,7 @@ void sokoLoadBinTiles(soko_abs_t* self)
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
                     self->soko_player = &self->currentLevel.entities[self->currentLevel.playerIndex];
+                    self->currentLevel.playerIndex = self->currentLevel.entityCount;
                     self->currentLevel.entityCount+=1;
                     i += 3; 
                     break;
@@ -265,7 +248,7 @@ void sokoLoadBinTiles(soko_abs_t* self)
                     flagByte = self->levelBinaryData[i+2];
                     sticky = !!(flagByte & (0x1 << 0));
                     trail = !!(flagByte & (0x1 << 1));
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = sticky ? SKE_CRATE : SKE_STICKY_CRATE;
+                    self->currentLevel.entities[self->currentLevel.entityCount].type = sticky ? SKE_STICKY_CRATE : SKE_CRATE;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
@@ -412,9 +395,34 @@ void sokoLoadBinTiles(soko_abs_t* self)
         {
             int tileX = (tileIndex) % (self->currentLevel.width);
             int tileY = (tileIndex) / (self->currentLevel.width);
-            self->currentLevel.tiles[tileX][tileY] = self->levelBinaryData[i];
+            //self->currentLevel.tiles[tileX][tileY] = self->levelBinaryData[i];
+            int tileType = 0;
+            switch(self->levelBinaryData[i]) //This is a bit easier to read than two arrays
+            {
+                case SKB_EMPTY:
+                    tileType = SKT_EMPTY;
+                    break;
+                case SKB_WALL:
+                    tileType = SKT_WALL;
+                    break;
+                case SKB_FLOOR:
+                    tileType = SKT_FLOOR;
+                    break;
+                case SKB_NO_WALK:
+                    tileType = SKT_FLOOR; //@todo Add No-Walk floors that can only accept crates or pass lasers
+                    break;
+                case SKB_GOAL:
+                    tileType = SKT_GOAL;
+                    break;
+                default:
+                    tileType = SKT_EMPTY;
+                break;
+            }
+            self->currentLevel.tiles[tileX][tileY] = tileType;
+            printf("BinData@%d: %d Tile: %d at (%d,%d) index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
             tileIndex++;
         }
+        
     }
 }
 
@@ -429,7 +437,28 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
     //The pointer returned by spiffsReadFile can be freed with free() with no additional steps.
     soko->currentLevel.width = soko->levelBinaryData[0]; //first two bytes of a level's data always describe the bounding width and height of the tilemap.
     soko->currentLevel.height = soko->levelBinaryData[1]; //Max Theoretical Level Bounding Box Size is 255x255, though you'll likely run into issues with entities first.
-    sokoLoadBinTiles(soko);
+    for(int i = 0; i < fileSize; i++)
+    {
+        printf("%d, ",soko->levelBinaryData[i]);
+    }
+    printf("\n");
+    soko->currentLevel.levelScale = 16;
+    soko->camWidth  = TFT_WIDTH / (soko->currentLevel.levelScale);
+    soko->camHeight = TFT_HEIGHT / (soko->currentLevel.levelScale);
+    soko->camEnabled = soko->camWidth<soko->currentLevel.width || soko->camHeight< soko->currentLevel.height;
+    soko->camPadExtentX = soko->camWidth * 0.6 * 0.5;
+    soko->camPadExtentY = soko->camHeight * 0.6 * 0.5;
+
+    soko->currentLevel.entityCount = 0;
+
+    soko->portalCount = 0;
+
+    sokoLoadBinTiles(soko,(int)fileSize);
+    for(int k = 0; k < soko->currentLevel.entityCount; k++)
+    {
+        printf("Ent%d:%d (%d,%d)",k,soko->currentLevel.entities[k].type,soko->currentLevel.entities[k].x,soko->currentLevel.entities[k].y);
+    }
+    printf("\n");
 }
 
 static void sokoLoadLevel(uint16_t levelIndex)
