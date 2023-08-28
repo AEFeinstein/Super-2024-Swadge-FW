@@ -401,13 +401,14 @@ void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const 
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
                                   int32_t currentValue)
 {
-    menuItem_t* newItem  = calloc(1, sizeof(menuItem_t));
-    newItem->label       = settingLabel;
-    newItem->options     = optionLabels;
-    newItem->settingVals = optionValues;
-    newItem->numOptions  = numOptions;
-    newItem->minSetting  = bounds->min;
-    newItem->maxSetting  = bounds->max;
+    menuItem_t* newItem     = calloc(1, sizeof(menuItem_t));
+    newItem->label          = settingLabel;
+    newItem->options        = optionLabels;
+    newItem->settingVals    = optionValues;
+    newItem->numOptions     = numOptions;
+    newItem->minSetting     = bounds->min;
+    newItem->maxSetting     = bounds->max;
+    newItem->currentSetting = currentValue;
 
     // Set the current option to the first in case we can't find it
     newItem->currentOpt = 0;
@@ -628,7 +629,7 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
                 }
                 else if (item->settingVals)
                 {
-                    menu->cbFunc(item->options[item->currentOpt], true, item->settingVals[item->currentOpt]);
+                    menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
                 }
                 else if (item->minSetting != item->maxSetting)
                 {
@@ -660,11 +661,6 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
             }
             case PB_START:
             case PB_SELECT:
-            case TB_0:
-            case TB_1:
-            case TB_2:
-            case TB_3:
-            case TB_4:
             default:
             {
                 // Unused
