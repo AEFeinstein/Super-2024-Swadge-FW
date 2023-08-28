@@ -145,7 +145,7 @@ void process_image(const char* infile, const char* outdir)
         }
 
         /* Create an array of pixel indicies, then shuffle it */
-        uint32_t* indices = (uint32_t*)malloc(sizeof(uint32_t) * w * h); //[w * h];
+        uint32_t* indices = (uint32_t*)calloc(w * h, sizeof(uint32_t)); //[w * h];
         for (int i = 0; i < w * h; i++)
         {
             indices[i] = i;
@@ -219,7 +219,7 @@ void process_image(const char* infile, const char* outdir)
 // #define WRITE_DITHERED_PNG
 #ifdef WRITE_DITHERED_PNG
         /* Convert to a pixel buffer */
-        unsigned char* pixBuf = (unsigned char*)malloc(sizeof(unsigned char) * w * h * 4); //[w*h*4];
+        unsigned char* pixBuf = (unsigned char*)calloc(w * h * 4, sizeof(unsigned char)); //[w*h*4];
         int pixBufIdx         = 0;
         for (int y = 0; y < h; y++)
         {
@@ -241,7 +241,7 @@ void process_image(const char* infile, const char* outdir)
 
         /* Convert to a palette buffer */
         uint32_t paletteBufSize   = sizeof(unsigned char) * w * h;
-        unsigned char* paletteBuf = malloc(paletteBufSize);
+        unsigned char* paletteBuf = calloc(1, paletteBufSize);
         int paletteBufIdx         = 0;
         for (int y = 0; y < h; y++)
         {
@@ -272,7 +272,7 @@ void process_image(const char* infile, const char* outdir)
 
         /* Combine the header and image*/
         uint32_t hdrAndImgSz = sizeof(uint8_t) * (4 + paletteBufSize);
-        uint8_t* hdrAndImg   = malloc(hdrAndImgSz);
+        uint8_t* hdrAndImg   = calloc(1, hdrAndImgSz);
         hdrAndImg[0]         = HI_BYTE(w);
         hdrAndImg[1]         = LO_BYTE(w);
         hdrAndImg[2]         = HI_BYTE(h);

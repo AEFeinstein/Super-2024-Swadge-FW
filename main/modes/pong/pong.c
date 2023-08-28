@@ -210,7 +210,7 @@ static void pongEnterMode(void)
     // Load SFX
     loadSong("block1.sng", &pong->hit1, false);
     loadSong("block2.sng", &pong->hit2, false);
-    loadSong("gmcc.sng", &pong->bgm, false);
+    loadSong("stereo.sng", &pong->bgm, false);
     pong->bgm.shouldLoop = true;
 
     // Initialize the menu
@@ -468,11 +468,20 @@ static void pongControlPlayerPaddle(void)
         case PONG_TOUCH:
         {
             // Check if the touch area is touched
-            int32_t centerVal, intensityVal;
-            if (getTouchCentroid(&centerVal, &intensityVal))
+            int32_t phi, r, intensity;
+            if (getTouchJoystick(&phi, &r, &intensity))
             {
                 // If there is a touch, move the paddle to that location of the touch
-                pong->paddleL.y = (centerVal * (FIELD_HEIGHT - pong->paddleL.height)) / 1024;
+                int paddley = phi - 320;
+                if (paddley < 0)
+                {
+                    paddley = 0;
+                }
+                if (paddley >= 640)
+                {
+                    paddley = 639;
+                }
+                pong->paddleL.y = (paddley * (FIELD_HEIGHT - pong->paddleL.height)) / 640;
             }
             break;
         }
@@ -575,7 +584,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pong->ballVel.y = -pong->ballVel.y;
         }
 
-        // If a goal was not scored,c heck for left paddle collision
+        // If a goal was not scored, check for left paddle collision
         if ((pong->ballVel.x < 0) && circleRectIntersection(pong->ball, pong->paddleL))
         {
             // Reverse direction
@@ -590,7 +599,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
-            bzrPlaySfx(&pong->hit1);
+            bzrPlaySfx(&pong->hit1, BZR_LEFT);
 
             // Set an LED
             pong->ledL.r = 0xFF;
@@ -612,7 +621,7 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pongIncreaseBallVelocity(1 << DECIMAL_BITS);
 
             // Play SFX
-            bzrPlaySfx(&pong->hit2);
+            bzrPlaySfx(&pong->hit2, BZR_RIGHT);
 
             // Set an LED
             pong->ledR.r = 0x40;
@@ -646,7 +655,7 @@ static void pongResetGame(bool isInit, uint8_t whoWon)
         pong->paddleR.height = PADDLE_HEIGHT;
 
         // Start playing music
-        bzrPlayBgm(&pong->bgm);
+        bzrPlayBgm(&pong->bgm, BZR_STEREO);
     }
     else
     {

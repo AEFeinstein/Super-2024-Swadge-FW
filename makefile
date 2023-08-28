@@ -248,12 +248,23 @@ $(EXECUTABLE): $(OBJECTS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
-# This clean everything
+# This cleans emulator files
 clean:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
 	-@rm -rf ./spiffs_image/*
+
+# This cleans everything
+fullclean: clean
+	idf.py fullclean
+	git clean -fX
+	$(MAKE) -C ./tools/sandbox_test clean
+	$(MAKE) -C ./tools/hidapi_test clean
+	$(MAKE) -C ./tools/bootload_reboot_stub clean
+	$(MAKE) -C ./tools/font_maker clean
+	$(MAKE) -C ./tools/swadgeterm clean
+	$(MAKE) -C ./tools/reboot_into_bootloader clean
 
 ################################################################################
 # Utility targets
@@ -278,6 +289,22 @@ clean-firmware:
 
 firmware:
 	idf.py build
+
+# For now, works on Linux.  You can copy-paste these for Windows.
+
+ifeq ($(HOST_OS),Windows)
+usbflash :
+	tools/reflash_and_monitor.bat
+else
+usbflash :
+	$(MAKE) -C tools/reboot_into_bootloader
+	sleep 1.2
+	idf.py flash
+	sleep 1.2
+	$(MAKE) -C tools/bootload_reboot_stub reboot
+	sleep 2.5
+	$(MAKE) -C tools/swadgeterm monitor
+endif
 
 ################################################################################
 # cppcheck targets

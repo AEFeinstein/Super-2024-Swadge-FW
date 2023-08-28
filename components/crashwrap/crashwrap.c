@@ -104,12 +104,13 @@ void checkAndInstallCrashwrap(void)
 
     if (nvs_open("storage", NVS_READONLY, &handle) != ESP_OK)
     {
+        ESP_LOGW(crashwrapTag, "Couldnot find 'storage' NVS");
         return;
     }
 
     if (nvs_get_blob(handle, crashwrapTag, &cd, &length) == ESP_OK && length >= sizeof(cd))
     {
-        ESP_LOGW(crashwrapTag, "Crashwrap length: %zu", length);
+        ESP_LOGW(crashwrapTag, "Crashwrap length: %zu/%zu", length, sizeof(cd));
         ESP_LOGW(crashwrapTag, "Last Crash: ADDR: %08" PRIx32 " FRAME: %08" PRIx32 " EXCEPTION: %d", (uint32_t)cd.addr,
                  (uint32_t)cd.frame, cd.exception);
     }
