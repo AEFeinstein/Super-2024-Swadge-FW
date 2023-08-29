@@ -7,8 +7,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <getopt.h>
-//#include "getopt_win.h"
+//#include <getopt.h>
+#include "getopt_win.h"
 
 #include "emu_args.h"
 #include "macros.h"

@@ -99,18 +99,13 @@ char    *optarg;		/* argument associated with option */
 #define	BADARG		((*options == ':') ? (int)':' : (int)'?')
 #define	INORDER 	(int)1
 
-#ifndef __CYGWIN__
-#define __progname __argv[0]
-#else
-extern char __declspec(dllimport) *__progname;
-#endif
-
 #ifdef __CYGWIN__
 static char EMSG[] = "";
 #else
 #define	EMSG		""
 #endif
 
+struct option;
 static int getopt_internal(int nargc, char * const *nargv, const char *options,
 	const struct option *long_options, int *idx, int flags);
 static int parse_long_options(char * const *nargv, const char *options,
@@ -135,7 +130,6 @@ static const char illoptstring[] = "unknown option -- %s";
 static void
 _vwarnx(const char *fmt,va_list ap)
 {
-  (void)fprintf(stderr,"%s: ",__progname);
   if (fmt != NULL)
     (void)vfprintf(stderr,fmt,ap);
   (void)fprintf(stderr,"\n");
