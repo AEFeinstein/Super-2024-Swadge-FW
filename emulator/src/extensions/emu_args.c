@@ -279,6 +279,9 @@ static void printUsage(const char* progName)
 
     col += printf("Usage: %s", progName);
 
+    // Do this as 2 steps to keep the code shorter
+    // First step: We build the short-options string out, then print it
+    // Second step: We print out each argument's long options
     for (uint8_t step = 0; step < 2; step++)
     {
         const optDoc_t* end = (argDocs + ARRAY_SIZE(argDocs));
@@ -288,17 +291,21 @@ static void printUsage(const char* progName)
 
             if (step == 0)
             {
+                // Just build up the short-opt string
                 if (doc->shortOpt)
                 {
+                    // Use the short-opt from the docs if we have it
                     *(shortOut++) = doc->shortOpt;
                 }
                 else if (option && option->val && option->val > ' ' && option->val <= '~')
                 {
+                    // Otherwise, check if the option was found and has a printable val.
                     *(shortOut++) = option->val;
                 }
             }
             else
             {
+                // Print out the long-opt string
                 bool arg         = false;
                 bool argOptional = false;
 
@@ -333,12 +340,14 @@ static void printUsage(const char* progName)
 
         if (step == 0)
         {
+            // Print out the short-opt string we just finished building
             *(shortOut) = '\0';
             snprintf(buffer, sizeof(buffer) - 1, " [-%s]", shortOpts);
             printColWordWrap(buffer, &col, HELP_USAGE_COL, HELP_WRAP_COL);
         }
         else
         {
+            // Print a line at the end of the usage
             printf("\n");
         }
     }
@@ -488,6 +497,7 @@ static void printColWordWrap(const char* text, int* col, int startCol, int wrapC
             }
         }
 
+        // Handle embedded newlines here so we can indent properly
         if (*ptr == '\n')
         {
             // Newline!
@@ -497,28 +507,35 @@ static void printColWordWrap(const char* text, int* col, int startCol, int wrapC
             continue;
         }
 
+        // Find the next space in the string
         nextSpace = strchr(ptr, ' ') - ptr;
 
+        // Copy a chunk of text into our buffer
         strncpy(buf, ptr, sizeof(buf) - 1);
         buf[sizeof(buf) - 1] = '\0';
 
+        // Worst-case, break the string at the end of the buffer
         nextBreak = strlen(buf);
 
         if (nextSpace >= 0 && nextSpace < nextBreak)
         {
+            // The next space is before the buffer end, so end right after that
             nextBreak = nextSpace + 1;
         }
 
         buf[nextBreak] = '\0';
 
+        // Check if the remaining string is too long to fit without a force-break
         if (startCol + strlen(buf) > wrapCol)
         {
+            // It is, so force-break it
             while ((*col) + strlen(buf) > wrapCol)
             {
                 buf[--nextBreak] = '\0';
             }
         }
 
+        // Now the string won't fit or we're out of buffer, so wrap
         if ((*col) + strlen(buf) > wrapCol || nextBreak == 0)
         {
             // Wrap!
@@ -528,6 +545,7 @@ static void printColWordWrap(const char* text, int* col, int startCol, int wrapC
             continue;
         }
 
+        // Actually print out the buffer and move the text pointer
         *col += printf("%s", buf);
         ptr += nextBreak;
     }
