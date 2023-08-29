@@ -117,30 +117,41 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
         for (int16_t x = 0; x < TFT_WIDTH; ++x)
         {
             // the cell coord is simply got from the integer parts of floorX and floorY
-            // int cellX = FROM_FX(floorX);
-            // int cellY = FROM_FX(floorY);
+            uint16_t cellX = (floorX) >> (FRAC_BITS + EX_CEIL_PRECISION_BITS);
+            uint16_t cellY = (floorY) >> (FRAC_BITS + EX_CEIL_PRECISION_BITS);
 
-            // get the texture coordinate from the fractional part
-            q16_16 fracPartX = floorX - (floorX & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
-            q16_16 fracPartY = floorY - (floorY & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
-            uint16_t tx      = ((TEX_WIDTH * fracPartX) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_WIDTH;
-            uint16_t ty      = ((TEX_HEIGHT * fracPartY) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_HEIGHT;
+            // Only draw floor and ceiling for valid cells, otherwise leave the pixel as-is
+            if (cellX < ray->map.w && cellY < ray->map.h)
+            {
+                // get the texture coordinate from the fractional part
+                q16_16 fracPartX = floorX - (floorX & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
+                q16_16 fracPartY = floorY - (floorY & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
+                uint16_t tx      = ((TEX_WIDTH * fracPartX) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_WIDTH;
+                uint16_t ty = ((TEX_HEIGHT * fracPartY) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_HEIGHT;
 
+                // Draw the pixel
+                if (isFloor)
+                {
+                    rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
+                    // Always draw floor under doors
+                    if (CELL_IS_TYPE(type, BG | DOOR))
+                    {
+                        type = BG_FLOOR;
+                    }
+                    wsg_t* texture = getTexByType(ray, type);
+                    TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
+                }
+                else
+                {
+                    // TODO set special ceiling texture
+                    wsg_t* texture = getTexByType(ray, BG_FLOOR);
+                    TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
+                }
+            }
+
+            // Always increment, regardless of if pixels were drawn
             floorX += floorStepX;
             floorY += floorStepY;
-
-            // Draw the pixel
-            if (isFloor)
-            {
-                wsg_t* texture = getTexByType(ray, BG_FLOOR);
-                TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
-            }
-            else
-            {
-                // TODO set special ceiling texture
-                wsg_t* texture = getTexByType(ray, BG_FLOOR);
-                TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
-            }
         }
     }
 }

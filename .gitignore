@@ -72,3 +72,4 @@ crash-*.txt
 *.pyc
 tools/rayMapEditor/autosave.rmd
 perf.data
+*.stackdump
