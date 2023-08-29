@@ -42,9 +42,19 @@ typedef struct
     uint16_t motionJitterAmount;
     bool motionDrift;
 
+    // Touch Extension
+
     bool emulateTouch;
 
-    /// @brief Name of the file to record inputs to
+    // Replay Extension
+
+    /// @brief Whether or not to record the inputs to a file
+    bool record;
+
+    /// @brief Whether or not to play back recorded inputs from a file
+    bool playback;
+
+    /// @brief Name of the file to record inputs to, or NULL for the default
     const char* recordFile;
 
     /// @brief Name of the file to replay inputs from

@@ -1,7 +1,6 @@
 #include "ext_replay.h"
 #include "emu_ext.h"
 #include "esp_timer.h"
-#include "esp_timer_emu.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
 #include "hdw-accel.h"
@@ -12,6 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <time.h>
 
 #ifdef DEBUG
 #define REPLAY_DEBUG(str, ...) printf(str "\n", __VA_ARGS__);
@@ -144,19 +144,21 @@ replay_t replay;
 
 static bool replayInit(emuArgs_t* emuArgs)
 {
-    //emuArgs->replayFile =
-    emuArgs->replayFile = "rec1.csv";
-
     memset(&replay, 0, sizeof(replay_t));
 
-    if (emuArgs->recordFile)
+    if (emuArgs->record)
     {
-        replay.file = fopen(emuArgs->recordFile, "a");
+        struct timespec ts;
+        char filename[64];
+        clock_gettime(CLOCK_REALTIME, &ts);
+        snprintf(filename, sizeof(filename) - 1, "rec-%lu.csv", ts.tv_sec);
+
+        replay.file = fopen(emuArgs->recordFile ? emuArgs->recordFile : filename, "a");
         replay.mode = RECORD;
         replay.useFrames = false;
         return replay.file != NULL;
     }
-    else if (emuArgs->replayFile)
+    else if (emuArgs->playback)
     {
         replay.file = fopen(emuArgs->replayFile, "r");
         replay.mode = REPLAY;

@@ -119,6 +119,8 @@ static const char argLock[]        = "lock";
 static const char argMode[]        = "mode";
 static const char argModeSwitch[]  = "mode-switch";
 static const char argModeList[]    = "modes-list";
+static const char argPlayback[]    = "playback";
+static const char argRecord[]      = "record";
 static const char argTouch[]       = "touch";
 static const char argHelp[]        = "help";
 static const char argUsage[]       = "usage";
@@ -137,6 +139,8 @@ static const struct option options[] =
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMode,        required_argument, NULL,                             'm'  },
+    { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
+    { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
     { argModeSwitch,  optional_argument, NULL,                             10   },
     { argModeList,    no_argument,       NULL,                             0    },
     { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, true },
@@ -161,6 +165,8 @@ static const optDoc_t argDocs[] =
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
+    {'p', argPlayback,    "FILE",  "Play back recorded emulator inputs from a file" },
+    {'r', argRecord,      "FILE",  "Record emulator inputs to a file" },
     {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
@@ -269,6 +275,40 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
     // Handle options with a short-option here:
     switch (optVal)
     {
+
+        // Handle argPlayback
+        case 'p':
+        {
+            if (emulatorArgs.record)
+            {
+                printf("Cannot playback and record at the same time\n");
+                return false;
+            }
+
+            if (arg)
+            {
+                emulatorArgs.replayFile = arg;
+            }
+            break;
+        }
+
+        // Handle argRecord
+        case 'r':
+        {
+            if (emulatorArgs.playback)
+            {
+                printf("Cannot playback and record at the same time\n");
+                return false;
+            }
+
+            if (arg)
+            {
+                printf("Got recordFile %s\n", arg);
+                emulatorArgs.recordFile = arg;
+            }
+            break;
+        }
+
             // case 'x':
             // doSomething();
             // if (error) return false;
