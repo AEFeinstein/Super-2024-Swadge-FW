@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "soko.h"
 #include "soko_game.h"
 #include "soko_gamerules.h"
@@ -11,6 +13,8 @@ static void sokoLoadLevel(uint16_t);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static sokoTile_t sokoGetTileFromColor(paletteColor_t);
 static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t);
+static int sokoFindIndex(soko_abs_t* self, int targetIndex);
+static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self);
 
 // strings
 static const char sokoModeName[]        = "Sokobanabokabon";
@@ -43,7 +47,7 @@ extern const char* sokoLevelNames[]
 extern const soko_var_t sokoLevelVariants[]
     = {SOKO_OVERWORLD, SOKO_EULER, SOKO_CLASSIC, SOKO_CLASSIC, SOKO_LASERBOUNCE};
 
-extern const char* sokoBinLevelNames[] =
+extern const char* sokoBinLevelNames[] = //@TODO: Remove this when all levels do binary loading and dynamic name loading.
 {
     "sk_binOverworld.bin",
     "warehouse.bin",
@@ -51,6 +55,7 @@ extern const char* sokoBinLevelNames[] =
     "sk_test1.bin",
     "sk_test3.bin"
 };
+
 
 static void sokoEnterMode(void)
 {
@@ -61,7 +66,7 @@ static void sokoEnterMode(void)
     // todo: move to convenience function for loading level data. Preferrebly in it's own file so contributors can futz
     // with it with fewer git merge cases.
     soko->levels[0] = "sk_testpuzzle.wsg";
-
+    
     // free a wsg that we never loaded... is bad.
     loadWsg(soko->levels[0], &soko->levelWSG, true); // spiRAM cus only used during loading, not gameplay.
 
@@ -111,6 +116,9 @@ static void sokoExitMode(void)
     // Free the font
     freeFont(&soko->ibm);
 
+    //free the level name file
+    freeTxt(soko->levelFileText);
+
     // free the level
     freeWsg(&soko->levelWSG);
 
@@ -135,6 +143,23 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // load level.
             //sokoLoadLevel(0);
+            soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt",true);
+            sokoExtractLevelNamesAndIndeces(soko);
+            /*
+            for(int i = 0; i < 20; i++)
+            {
+                int ind = findIndex(soko,i);
+                
+                if(ind != -1)
+                {
+                    printf("Found %d at %d:%s\n",i,ind,soko->levelNames[ind]);
+                }
+                else
+                {
+                    printf("%d Not Found\n",i);
+                }
+            }
+            */
             sokoLoadBinLevel(0);
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
@@ -220,6 +245,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
     int totalTiles = self->currentLevel.width * self->currentLevel.height;
     int tileIndex = 0;
     self->currentLevel.entityCount = 0;
+    self->goalCount = 0;
     for(int i = HEADER_BYTE_OFFSET; i < byteCount; i++)
     {
         if(self->levelBinaryData[i] == SKB_OBJSTART) //Objects in level data should be of the form SKB_OBJSTART, SKB_[Object Type], [Data Bytes] , SKB_OBJEND
@@ -426,6 +452,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     break;
                 case SKB_GOAL:
                     tileType = SKT_GOAL;
+                    self->goals[self->goalCount].x = tileX;
+                    self->goals[self->goalCount].y = tileY;
+                    self->goalCount++;
                     break;
                 default:
                     tileType = SKT_EMPTY;
@@ -609,4 +638,67 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
             }
         }
     }
+}
+
+static int sokoFindIndex(soko_abs_t* self, int targetIndex)
+{
+    //Filenames are formatted like '1:sk_level.bin:'
+    int retVal = -1;
+    for(int i = 0; i < targetIndex; i++)
+    {
+        if(self->levelIndeces[i] == targetIndex)
+        {
+            retVal = i;
+        }
+    }
+    return retVal;
+}
+
+static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
+{
+    printf("Mode Testing!\n");
+    printf("%s",self->levelFileText);
+    printf("%d\n",(int)strlen(self->levelFileText));
+    //char* a = strstr(self->levelFileText,":");
+    //char* b = strstr(a,".bin:");
+    //printf("%d",(int)((int)b-(int)a));
+    //char* stringPtrs[30];
+    //memset(stringPtrs,0,30*sizeof(char*));
+    char** stringPtrs = soko->levelNames;
+    memset(stringPtrs,0,SOKO_LEVEL_COUNT*sizeof(char*));
+    int* levelInds = soko->levelIndeces;
+    memset(levelInds,0,SOKO_LEVEL_COUNT*sizeof(int));
+    int intInd = 0;
+    int ind = 0;
+    char* storageStr = strtok(self->levelFileText,":");
+    while(storageStr != NULL)
+    {
+        if(strtol(storageStr,NULL,10) && !(strstr(storageStr,".bin"))) //Make sure you're note accidentally reading a number from a filename
+        {
+            levelInds[intInd] = (int)strtol(storageStr,NULL,10);
+            printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
+            intInd++;
+        }
+        else{
+            if(!strpbrk(storageStr,"\n\t\r ") && (strstr(storageStr,".bin")))
+            {
+                int tokLen = strlen(storageStr);
+                char* tempPtr = calloc((tokLen+1),sizeof(char)); //Length plus null teminator
+                //strcpy(tempPtr,storageStr);
+                //stringPtrs[ind] = tempPtr;
+                stringPtrs[ind] = storageStr;
+                //printf("%s\n",storageStr);
+            ind++;
+            }
+        }
+        //printf("This guy!\n");
+        storageStr = strtok(NULL,":");
+    }
+    printf("Strings: %d, Ints: %d\n", ind, intInd);
+    printf("Backwards!\n");
+    for(int i = ind-1; i > -1; i--)
+    {
+        printf("Index: %d : %d : %s\n",i,levelInds[i],stringPtrs[i]);
+    }
+
 }

@@ -52,6 +52,12 @@ typedef struct soko_portal_s
     bool levelCompleted; // use this to show completed levels later
 } soko_portal_t;
 
+typedef struct soko_goal_s
+{
+    uint8_t x;
+    uint8_t y;
+} soko_goal_t;
+
 typedef enum
 {
     SKS_INIT, ///< meta enum used for edge cases
@@ -194,6 +200,11 @@ typedef struct soko_abs_s
     font_t ibm;                                 ///< The font used in the menu and game
     sokoScreen_t screen;                        ///< The screen being displayed
 
+    char* levelFileText;
+    char* levelNames[SOKO_LEVEL_COUNT];
+    int levelIndeces[SOKO_LEVEL_COUNT];
+
+
     // game settings
     uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
@@ -211,6 +222,9 @@ typedef struct soko_abs_s
 
     soko_portal_t portals[SOKO_MAX_PORTALS];
     uint8_t portalCount;
+
+    soko_goal_t goals[SOKO_MAX_GOALS];
+    uint8_t goalCount;
 
     // input
     sokoGameplayInput_t input;
