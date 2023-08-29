@@ -13,6 +13,25 @@
 #include "macros.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+///< The column to print short options aligned to
+#define HELP_SHORT_COL 1
+
+///< The column to print long options aligned to
+#define HELP_LONG_COL 5
+
+///< The column to print the description to
+#define HELP_DESC_COL 29
+
+///< The maximum width of the help text before wrapping to the next line
+#define HELP_WRAP_COL 100
+
+///< The column to start wrapped usage lines at
+#define HELP_USAGE_COL 12
+
+//==============================================================================
 // Structs
 //==============================================================================
 
@@ -47,12 +66,13 @@ typedef struct
 // Function Prototypes
 //==============================================================================
 
+static bool handleArgument(const char* optName, const char* arg, int optVal);
 static void printHelp(const char* progName);
 static void printUsage(const char* progName);
 static const optDoc_t* findOptDoc(char shortOpt, const char* longOpt);
 static const struct option* findOption(char shortOpt, const char* longOpt);
 static void getOptionsStr(char* buffer, int buflen);
-static void printColWordWrap(const char* text, int *col, int startCol, int wrapCol);
+static void printColWordWrap(const char* text, int* col, int startCol, int wrapCol);
 
 //==============================================================================
 // Variables
@@ -74,6 +94,9 @@ emuArgs_t emulatorArgs = {
 
 static const char mainDoc[] = "Emulates a swadge";
 
+// Long argument name definitions
+// These MUST be defined here, so that they are
+// the same in both options and argDocs
 static const char argFullscreen[] = "fullscreen";
 static const char argHideLeds[]   = "hide-leds";
 static const char argTouch[]      = "touch";
@@ -81,6 +104,9 @@ static const char argHelp[]       = "help";
 static const char argUsage[]      = "usage";
 
 // clang-format off
+/**
+ * @brief The option definitions for getopt
+ */
 static const struct option options[] =
 {
     { argFullscreen, no_argument, (int*)&emulatorArgs.fullscreen,   true },
@@ -91,54 +117,69 @@ static const struct option options[] =
 
     {0},
 };
-// clang-format on
 
 /**
  * @brief Documentation strings for all options
- *
  */
 static const optDoc_t argDocs[] =
 {
-    { 'f', argFullscreen, NULL, "Open in fullscreen mode" },
-    {  0,  argHideLeds,   NULL, "Don't draw simulated LEDs next to the display" },
-    { 't', argTouch,      NULL, "Simulate touch sensor readings with a virtual touchpad" },
-    { 'h', argHelp,       NULL, "Give this help list" },
-    {  0,  argUsage,      NULL, "Give a short usage message" },
+    {'f', argFullscreen, NULL, "Open in fullscreen mode" },
+    { 0,  argHideLeds,   NULL, "Don't draw simulated LEDs next to the display" },
+    {'t', argTouch,      NULL, "Simulate touch sensor readings with a virtual touchpad" },
+    {'h', argHelp,       NULL, "Give this help list" },
+    { 0,  argUsage,      NULL, "Give a short usage message" },
 };
+// clang-format on
 
 //==============================================================================
 // Functions
 //==============================================================================
 
-/*Usage: swadge_emulator [OPTION...]
-Emulates a swadge
+/**
+ * @brief Handle a command-line option
+ *
+ * @param optName The name of the option
+ * @param arg The string value of this option's argument, or NULL
+ * @param optVal The value set in the struct, usually the short option
+ * @return true If the argument was handled successfully
+ * @return false If there was an error or the program should exit
+ */
+static bool handleArgument(const char* optName, const char* arg, int optVal)
+{
+    // Handle arguments with no short-option like this:
+    // if (optName == argUsage)
+    //{ doSomething(); return true }
 
-  -f, --fullscreen           Open in fullscreen mode
-  -l, --hide-leds            Don't draw simulated LEDs next to the display
-  -t, --touch                Simulate touch sensor readings with a virtual
-                             touchpads
-  -?, --help                 Give this help list
-      --usage                Give a short usage message
-*/
+    // Handle options with a short-option here:
+    switch (optVal)
+    {
+            // case 'x':
+            // doSomething();
+            // return true;
 
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+/**
+ * @brief Print out the help text for this program, describing all options.
+ *
+ * @param progName The name of the executable to use in the help message
+ */
 static void printHelp(const char* progName)
 {
-    int shortCol = 1;
-    int longCol = 5;
-    int textCol = 29;
-    int margin = 80;
-
     printf("Usage: %s [OPTION...]\n%s\n", progName, mainDoc);
-
-#define INDENT(COLNUM) do { putchar(' '); } while (++col < COLNUM)
 
     const optDoc_t* end = (argDocs + ARRAY_SIZE(argDocs));
     for (const optDoc_t* doc = argDocs; doc != end; doc++)
     {
-        int col = 0;
+        int col                     = 0;
         const struct option* option = findOption(doc->shortOpt, doc->longOpt);
-        bool arg = false;
-        bool argOptional = false;
+        bool arg                    = false;
+        bool argOptional            = false;
 
         // option should never be NULL, but might as well check
         if (NULL != option)
@@ -149,31 +190,44 @@ static void printHelp(const char* progName)
             }
             else if (option->has_arg == optional_argument)
             {
-                arg = true;
+                arg         = true;
                 argOptional = true;
             }
         }
 
+        // Print out the short option, if any
         if (doc->shortOpt)
         {
-            INDENT(shortCol);
+            // Align with the short-opt column, plus a guaranteed space
+            do
+            {
+                putchar(' ');
+            } while (++col < HELP_SHORT_COL);
             col += printf("-%c,", doc->shortOpt);
         }
 
+        // Print out the long option, if any
         if (doc->longOpt)
         {
-            INDENT(longCol);
+            // Align with the long-opt column, plus a guaranteed space
+            do
+            {
+                putchar(' ');
+            } while (++col < HELP_LONG_COL);
             col += printf("--%s", doc->longOpt);
         }
 
+        // Print out the argument documentation, if it has an arg
         if (arg)
         {
+            // Put brackets around an optional arg
             if (argOptional)
             {
                 putchar('[');
                 col++;
             }
 
+            // Print the arg doc string if it exists, otherwise a generic one
             if (doc->argDoc)
             {
                 col += printf("=%s", doc->argDoc);
@@ -183,6 +237,7 @@ static void printHelp(const char* progName)
                 col += printf("=OPTION");
             }
 
+            // Close the optional bracket
             if (argOptional)
             {
                 putchar(']');
@@ -190,27 +245,34 @@ static void printHelp(const char* progName)
             }
         }
 
+        // Finally, print out the actual description, wrapping to the correct column
         if (doc->doc)
         {
-            printColWordWrap(doc->doc, &col, textCol, margin);
+            // Align to the description column
+            do
+            {
+                putchar(' ');
+            } while (++col < HELP_DESC_COL);
+
+            printColWordWrap(doc->doc, &col, HELP_DESC_COL, HELP_WRAP_COL);
         }
 
+        // Newline after each option
         putchar('\n');
     }
-
-#undef INDENT
 }
 
-/*Usage: swadge_emulator [-flt?] [--fullscreen] [--hide-leds] [--touch] [--help]
-            [--usage]
-*/
-
+/**
+ * @brief Prints a brief usage message which lists valid options only
+ *
+ * @param progName The executable name to use in the usage message
+ */
 static void printUsage(const char* progName)
 {
     char shortOpts[ARRAY_SIZE(argDocs) + 1];
     char buffer[128];
     char* shortOut = shortOpts;
-    int col = 0;
+    int col        = 0;
 
     // Make sure it's null-terminated no matter what
     *(shortOut) = '\0';
@@ -237,8 +299,35 @@ static void printUsage(const char* progName)
             }
             else
             {
-                snprintf(buffer, sizeof(buffer) - 1, " [--%s]", doc->longOpt);
-                printColWordWrap(buffer, &col, 12, 80);
+                bool arg         = false;
+                bool argOptional = false;
+
+                if (NULL != option)
+                {
+                    if (option->has_arg == required_argument)
+                    {
+                        arg = true;
+                    }
+                    else if (option->has_arg == optional_argument)
+                    {
+                        arg         = true;
+                        argOptional = true;
+                    }
+                }
+
+                if (arg || doc->argDoc)
+                {
+                    // Write the option with its argument hint
+                    const char* argName = doc->argDoc ? doc->argDoc : "OPTION";
+                    snprintf(buffer, sizeof(buffer) - 1, argOptional ? " [--%s[=%s]]" : "[--%s=%s]", doc->longOpt,
+                             argName);
+                }
+                else
+                {
+                    // Write the option name, no arguments
+                    snprintf(buffer, sizeof(buffer) - 1, " [--%s]", doc->longOpt);
+                }
+                printColWordWrap(buffer, &col, HELP_USAGE_COL, HELP_WRAP_COL);
             }
         }
 
@@ -246,7 +335,7 @@ static void printUsage(const char* progName)
         {
             *(shortOut) = '\0';
             snprintf(buffer, sizeof(buffer) - 1, " [-%s]", shortOpts);
-            printColWordWrap(buffer, &col, 0, 80);
+            printColWordWrap(buffer, &col, HELP_USAGE_COL, HELP_WRAP_COL);
         }
         else
         {
@@ -292,8 +381,7 @@ static const struct option* findOption(char shortOpt, const char* longOpt)
 
     while (opt->name != NULL)
     {
-        if ((opt->val > ' ' && opt->val <= '~' && opt->val == shortOpt)
-            || opt->name == longOpt)
+        if ((opt->val > ' ' && opt->val <= '~' && opt->val == shortOpt) || opt->name == longOpt)
         {
             return opt;
         }
@@ -305,28 +393,34 @@ static const struct option* findOption(char shortOpt, const char* longOpt)
 }
 
 /**
- * @brief Write the value for the \c options argument to getopt_long()
+ * @brief Write the value for the short \c options argument to getopt_long()
  *
- * @param buffer
- * @param buflen
+ * \c buffer should have at least 3 characters for each option, plus 2
+ *
+ * @param buffer A buffer to write the option string into
+ * @param buflen The maximum number of characters to write to \c buffer
  */
 static void getOptionsStr(char* buffer, int buflen)
 {
     // pointer to our output into buffer
     char* out = buffer;
 
-    if (buflen == 0)
+    if (buflen < 2)
     {
         return;
     }
 
 // Macro to make it easy to properly check for buffer overruns
-#define CHECK_BUFFER if (out + 1 == buffer + buflen) { break; }
+#define CHECK_BUFFER                \
+    if (out + 1 == buffer + buflen) \
+    {                               \
+        break;                      \
+    }
 
     // If we want to stop getopt from printing its own errors for missing args,
     // we can add a colon to the beginning of the string:
-    // *(out++) = ':';
-    // CHECK_BUFFER
+    *(out++) = ':';
+
     const optDoc_t* end = (argDocs + ARRAY_SIZE(argDocs));
     for (const optDoc_t* doc = argDocs; doc != end; doc++)
     {
@@ -362,23 +456,42 @@ static void getOptionsStr(char* buffer, int buflen)
     *out = '\0';
 }
 
-static void printColWordWrap(const char* text, int *col, int startCol, int wrapCol)
+/**
+ * @brief Print a string to stdout with word-wrap and indentation
+ *
+ * @param text The string to print
+ * @param col A pointer to an integer that holds the current colunm to print at
+ * @param startCol The position to resume writing at after wrapping
+ * @param wrapCol The column to start wrapping at
+ */
+static void printColWordWrap(const char* text, int* col, int startCol, int wrapCol)
 {
     const char* ptr = text;
+    bool firstLine  = false;
     int nextSpace, nextBreak;
     char buf[64];
 
+    if (*col < startCol)
+    {
+        firstLine = true;
+    }
+
     while (*ptr)
     {
-        while (*col < startCol)
+        if (!firstLine)
         {
-            putchar(' ');
-            (*col)++;
+            // Unless this is the first line, skip to the starting column
+            while (*col < startCol)
+            {
+                putchar(' ');
+                (*col)++;
+            }
         }
 
         if (*ptr == '\n')
         {
             // Newline!
+            firstLine = false;
             putchar(*(ptr++));
             *col = 0;
             continue;
@@ -408,6 +521,8 @@ static void printColWordWrap(const char* text, int *col, int startCol, int wrapC
 
         if ((*col) + strlen(buf) > wrapCol || nextBreak == 0)
         {
+            // Wrap!
+            firstLine = false;
             putchar('\n');
             *col = 0;
             continue;
@@ -418,22 +533,29 @@ static void printColWordWrap(const char* text, int *col, int startCol, int wrapC
     }
 }
 
+/**
+ * @brief Parse the emulator's arguments and set up ::emulatorArgs
+ *
+ * @param argc The number of command-line arguments
+ * @param argv The command-line arguments array
+ * @return true If the command-line arguments were successfully parsed
+ * @return false If there was an error parsing the arguments
+ */
 bool emuParseArgs(int argc, char** argv)
 {
-    const char* executableName = *argv;
+    const char* executableName       = *argv;
     const char* prettyExecutableName = executableName + strlen(executableName);
 
     // Prettify the executable name by working backwards to strip everything
     //  before the first slash or backslash
-    while (prettyExecutableName > executableName
-           && *(prettyExecutableName - 1) != '/'
+    while (prettyExecutableName > executableName && *(prettyExecutableName - 1) != '/'
            && *(prettyExecutableName - 1) != '\\')
     {
         --prettyExecutableName;
     }
 
     // Get a buffer big enough to hold all possible option chars
-    char shortOpts[ARRAY_SIZE(options) * 2 + 1];
+    char shortOpts[ARRAY_SIZE(options) * 3 + 4];
     *shortOpts = '\0';
 
     // Generate the short-option string that getopt wants from our own doc struct
@@ -441,9 +563,10 @@ bool emuParseArgs(int argc, char** argv)
 
     while (true)
     {
-        int optIndex = -1;
-        int optVal = getopt_long(argc, argv, shortOpts, options, &optIndex);
+        int optIndex                = -1;
+        int optVal                  = getopt_long(argc, argv, shortOpts, options, &optIndex);
         const struct option* option = NULL;
+        const char* optName         = NULL;
 
         if (optVal < 0)
         {
@@ -453,7 +576,7 @@ bool emuParseArgs(int argc, char** argv)
         else if (optVal == '?')
         {
             // Handle unknown argument
-            //exit(1);
+            // exit(1);
             return false;
         }
         else if (optVal == ':')
@@ -479,6 +602,7 @@ bool emuParseArgs(int argc, char** argv)
 
             if (NULL != option)
             {
+                optName = option->name;
                 if (NULL != option->flag)
                 {
                     // A long-opt matching this short-option was found
@@ -489,6 +613,11 @@ bool emuParseArgs(int argc, char** argv)
                     *(option->flag) = option->val;
                 }
             }
+        }
+
+        if (NULL == optName && NULL != optDoc)
+        {
+            optName = optDoc->longOpt;
         }
 
         // Ok, now for the case of an option which has no short-opt in the getopt options struct,
@@ -510,20 +639,29 @@ bool emuParseArgs(int argc, char** argv)
             }
             else
             {
-                // There is no optDoc or it has no shortOpt
-                // So, let's... just use the string constant pointer. It's fine.
-                optKey = option ? (int)option->name : '?';
+                // There is no optDoc or it has no shortOpt, just use 0
+                optKey = 0;
             }
         }
 
-        if (optKey == argUsage)
+        if (optKey == '?')
         {
-            printUsage(prettyExecutableName);
             return false;
         }
         else if (optKey == 'h')
         {
             printHelp(prettyExecutableName);
+            return false;
+        }
+        else if (optName == argUsage)
+        {
+            printUsage(prettyExecutableName);
+            return false;
+        }
+
+        if (!handleArgument(optName ? optName : NULL, optarg, optKey))
+        {
+            // handleArgument() returned error, so should we
             return false;
         }
     }
