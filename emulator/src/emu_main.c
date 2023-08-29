@@ -223,27 +223,30 @@ void taskYIELD(void)
     // Draw dividing lines, if they're on-screen
     CNFGColor(DIV_COLOR);
 
+    emuPaneMinimum_t paneMins[4];
+    calculatePaneMinimums(paneMins);
+
     // Draw Left Divider
-    if (screenPane.paneX > 0)
+    if (paneMins[PANE_LEFT].count > 0)
     {
         CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
     }
 
     // Draw Right Divider
-    if (screenPane.paneX + screenPane.paneW < window_w)
+    if (paneMins[PANE_RIGHT].count > 0)
     {
         CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
     }
 
     // Draw Top Divider
-    if (screenPane.paneY > 0)
+    if (paneMins[PANE_TOP].count > 0)
     {
         CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
                         screenPane.paneY - 1);
     }
 
     // Draw Bottom Divider
-    if (screenPane.paneY + screenPane.paneH < window_h)
+    if (paneMins[PANE_BOTTOM].count > 0)
     {
         CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
                         screenPane.paneY + screenPane.paneH);

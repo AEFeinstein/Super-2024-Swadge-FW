@@ -19,11 +19,7 @@ endif
 # Programs to use
 ################################################################################
 
-ifeq ($(HOST_OS),Windows)
-	CC = x86_64-w64-mingw32-gcc.exe
-else ifeq ($(HOST_OS),Linux)
-	CC = gcc
-endif
+CC = gcc
 
 FIND:=find
 ifeq ($(HOST_OS),Windows)
@@ -168,7 +164,11 @@ DEFINES_LIST = \
 	IDF_VER="v5.1" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
-	CFG_TUSB_MCU=OPT_MCU_ESP32S2 
+	CFG_TUSB_MCU=OPT_MCU_ESP32S2
+
+ifeq ($(HOST_OS),Windows)
+	DEFINES_LIST += WINDOWS
+endif
 
 # Extra defines
 DEFINES_LIST += \
@@ -196,7 +196,7 @@ OBJECTS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(SOURCES))
 # This is a list of libraries to include. Order doesn't matter
 
 ifeq ($(HOST_OS),Windows)
-    LIBS = opengl32 gdi32 user32 winmm WSock32
+    LIBS = opengl32 gdi32 user32 winmm WSock32 argp
 endif
 ifeq ($(HOST_OS),Linux)
     LIBS = m X11 asound pulse rt GL GLX pthread Xext Xinerama
@@ -248,12 +248,23 @@ $(EXECUTABLE): $(OBJECTS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
-# This clean everything
+# This cleans emulator files
 clean:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
 	-@rm -rf ./spiffs_image/*
+
+# This cleans everything
+fullclean: clean
+	idf.py fullclean
+	git clean -fX
+	$(MAKE) -C ./tools/sandbox_test clean
+	$(MAKE) -C ./tools/hidapi_test clean
+	$(MAKE) -C ./tools/bootload_reboot_stub clean
+	$(MAKE) -C ./tools/font_maker clean
+	$(MAKE) -C ./tools/swadgeterm clean
+	$(MAKE) -C ./tools/reboot_into_bootloader clean
 
 ################################################################################
 # Utility targets

@@ -36,7 +36,7 @@ static uint32_t buttonState = 0;
 static list_t* buttonQueue;
 
 /// The touchpad analog location angle
-static int32_t lastTouchAngle = 0;
+static int32_t lastTouchPhi = 0;
 
 /// The touchpad analog location radius
 static int32_t lastTouchRadius = 0;
@@ -130,12 +130,8 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
         return false;
     }
 
-    // Just do the actual "is the touchpad touched" check, then write placeholder values
-
-    // TODO: Actual touchpad implementation
-
     // A touch in the center at 50% intensity
-    *phi       = lastTouchAngle;
+    *phi       = lastTouchPhi;
     *r         = lastTouchRadius;
     *intensity = lastTouchIntensity;
     return true;
@@ -189,9 +185,9 @@ void emulatorInjectButton(buttonBit_t button, bool down)
     push(buttonQueue, evt);
 }
 
-void emulatorSetTouchAngleRadius(int32_t angle, int32_t radius, int32_t intensity)
+void emulatorSetTouchJoystick(int32_t phi, int32_t radius, int32_t intensity)
 {
-    lastTouchAngle     = angle;
+    lastTouchPhi       = phi;
     lastTouchRadius    = radius;
     lastTouchIntensity = intensity;
 }

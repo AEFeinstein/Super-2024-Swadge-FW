@@ -2,67 +2,15 @@
 // Includes
 //==============================================================================
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <string.h>
 #include <errno.h>
-#include <stdio.h>
+#include <argp.h>
 #include "emu_args.h"
 
 //==============================================================================
-// Macros
+// Function Prototypes
 //==============================================================================
 
-/**
- * @brief Generates a conditional to check if the current argument matches argName.
- *
- * @param argName Must be a string literal
- */
-#define MATCH_ARG(argName) (!strncmp(arg, "--" argName, sizeof("--" argName)))
-
-/**
- * @brief Generates an error if there is no parameter value given for this argument
- */
-#define REQUIRE_PARAM(name)                                                             \
-    if (param == NULL)                                                                  \
-    {                                                                                   \
-        fprintf(stderr, "Error: Missing required parameter for argument '%s'\n", name); \
-        return false;                                                                   \
-    }                                                                                   \
-    else                                                                                \
-    {                                                                                   \
-        valUsed = true;                                                                 \
-    }
-
-///< Returns the string value of the current argument's parameter
-#define STR_VALUE(name) (valUsed = true, param)
-
-///< Returns the integer value of the current argument's parameter
-#define INT_VALUE(name) _##name##Value
-
-///< Parses the named argument as an integer or generates an error if not
-#define REQUIRE_INT(name)                                                                                \
-    errno              = 0;                                                                              \
-    int _##name##Value = strtol(param, NULL, 0);                                                         \
-    if (errno != 0)                                                                                      \
-    {                                                                                                    \
-        fprintf(stderr, "Error: Invalid integer parameter value '%s' for argument '%s'\n", param, name); \
-        return false;                                                                                    \
-    }                                                                                                    \
-    else                                                                                                 \
-    {                                                                                                    \
-        valUsed = true;                                                                                  \
-    }
-
-//==============================================================================
-// Defines
-//==============================================================================
-
-#define ARG_FULLSCREEN "fullscreen"
-#define ARG_HIDE_LEDS  "hide-leds"
-#define ARG_TOUCH      "touch"
-#define ARG_HELP       "help"
+static error_t parseOpt(int key, char* arg, struct argp_state* state);
 
 //==============================================================================
 // Variables
@@ -82,62 +30,57 @@ emuArgs_t emulatorArgs = {
     .emulateTouch = false,
 };
 
-static const char helpUsage[] = "usage: %s [--fullscreen] [--hide-leds] [--touch] [--help]\n"
-                                "Emulates a swadge\n"
-                                "\n"
-                                "--" ARG_FULLSCREEN "\t\topen in fullscreen mode\n"
-                                "--" ARG_HIDE_LEDS "\t\tdon't draw simulated LEDs on the sides of the window\n"
-                                "--" ARG_TOUCH "\t\tsimulate touch sensor readings with a virtual touch-pad\n"
-                                "--" ARG_HELP "\t\t\tdisplay this help message and exit\n";
+static const char doc[] = "Emulates a swadge";
+
+// clang-format off
+static const struct argp_option options[] =
+{
+    { "fullscreen", 'f', 0, 0, "Open in fullscreen mode" },
+    { "hide-leds",  'l', 0, 0, "Don't draw simulated LEDs next to the display" },
+    { "touch",      't', 0, 0, "Simulate touch sensor readings with a virtual touchpad" },
+    {0},
+};
+// clang-format on
+
+static struct argp argp = {options, parseOpt, NULL, doc};
 
 //==============================================================================
 // Functions
 //==============================================================================
 
-bool emuParseArgs(int argc, char** argv)
+static error_t parseOpt(int key, char* arg, struct argp_state* state)
 {
-    for (int n = 1; n < argc; n++)
+    switch (key)
     {
-        char* arg    = argv[n];
-        char* param  = NULL;
-        bool valUsed = false;
-
-        // If there's another argument, and it doesn't start with a '-'
-        if (n + 1 < argc && strncmp(argv[n + 1], "-", 1))
+        case 'f':
         {
-            param = argv[n + 1];
-        }
-
-        if (MATCH_ARG(ARG_FULLSCREEN))
-        {
+            // Fullscreen
             emulatorArgs.fullscreen = true;
+            break;
         }
-        else if (MATCH_ARG(ARG_HIDE_LEDS))
+
+        case 'l':
         {
+            // Hide LEDs
             emulatorArgs.hideLeds = true;
+            break;
         }
-        else if (MATCH_ARG(ARG_TOUCH))
+
+        case 't':
         {
+            // Touchpad
             emulatorArgs.emulateTouch = true;
-        }
-        else if (MATCH_ARG(ARG_HELP))
-        {
-            printf(helpUsage, *argv);
-
-            // Return false to stop execution after printing help
-            return false;
-        }
-        else
-        {
-            fprintf(stderr, "Warning: Unrecognized argument '%s'\n", arg);
-        }
-
-        // If we used a parameter value here, don't try to parse it as an argument
-        if (valUsed && param != NULL)
-        {
-            n++;
+            break;
         }
     }
 
-    return true;
+    return 0;
+}
+
+bool emuParseArgs(int argc, char** argv)
+{
+    // Pass nothing to input because we just have a static args struct
+    // If argp_parse returns non-zero there's an error
+    // So, return true as long as it's zero
+    return (0 == argp_parse(&argp, argc, argv, 0, 0, NULL));
 }
