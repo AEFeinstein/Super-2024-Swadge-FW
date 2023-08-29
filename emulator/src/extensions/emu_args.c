@@ -585,6 +585,7 @@ bool emuParseArgs(int argc, char** argv)
         int optVal                  = getopt_long(argc, argv, shortOpts, options, &optIndex);
         const struct option* option = NULL;
         const char* optName         = NULL;
+        const char* optArg          = optarg;
 
         if (optVal < 0)
         {
@@ -638,6 +639,14 @@ bool emuParseArgs(int argc, char** argv)
             optName = optDoc->longOpt;
         }
 
+        if(!optArg
+           && NULL != argv[optind]
+           && '-' != *(argv[optind]))
+        {
+            // This makes optional arguments work even if you don't connect them with the '='
+           optArg = argv[optind++];
+        }
+
         // Ok, now for the case of an option which has no short-opt in the getopt options struct,
         // but we have assigned one with the optDocs. So, we should... if we have a short opt,
         // look for a long opt which also has that option
@@ -677,7 +686,7 @@ bool emuParseArgs(int argc, char** argv)
             return false;
         }
 
-        if (!handleArgument(optName ? optName : NULL, optarg, optKey))
+        if (!handleArgument(optName ? optName : NULL, optArg, optKey))
         {
             // handleArgument() returned error, so should we
             return false;
