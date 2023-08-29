@@ -13,6 +13,21 @@ typedef int32_t q8_24;  // 8 bits integer, 24 bits fraction
 // Fixed Point Math Functions
 //==============================================================================
 
+// Switch to use macros or inline functions
+#define FP_MATH_DEFINES
+
+#ifdef FP_MATH_DEFINES
+
+    #define TO_FX(in)    ((in) << FRAC_BITS)
+    #define FROM_FX(in)  ((in) >> FRAC_BITS)
+    #define ADD_FX(a, b) ((a) + (b))
+    #define SUB_FX(a, b) ((a) - (b))
+    #define MUL_FX(a, b) (((a) * (b)) >> FRAC_BITS)
+    #define DIV_FX(a, b) (((a) << FRAC_BITS) / (b))
+    #define FLOOR_FX(a)  ((a) & (~((1 << FRAC_BITS) - 1)))
+
+#else
+
 static inline q24_8 TO_FX(uint32_t in)
 {
     return (q24_8)(in * (1 << FRAC_BITS));
@@ -56,5 +71,6 @@ static inline q24_8 FLOOR_FX(q24_8 a)
 // {
 //     return (1000 * (int64_t)(ABS(in) & ((1 << FRAC_BITS) - 1))) / (1 << FRAC_BITS);
 // }
+#endif
 
 #endif
