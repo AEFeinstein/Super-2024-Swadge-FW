@@ -19,7 +19,11 @@ endif
 # Programs to use
 ################################################################################
 
-CC = gcc
+ifeq ($(HOST_OS),Windows)
+	CC = x86_64-w64-mingw32-gcc.exe
+else ifeq ($(HOST_OS),Linux)
+	CC = gcc
+endif
 
 FIND:=find
 ifeq ($(HOST_OS),Windows)
@@ -166,10 +170,6 @@ DEFINES_LIST = \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2
 
-ifeq ($(HOST_OS),Windows)
-	DEFINES_LIST += WINDOWS
-endif
-
 # Extra defines
 DEFINES_LIST += \
 	EMULATOR=1 \
@@ -196,7 +196,7 @@ OBJECTS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(SOURCES))
 # This is a list of libraries to include. Order doesn't matter
 
 ifeq ($(HOST_OS),Windows)
-    LIBS = opengl32 gdi32 user32 winmm WSock32 argp
+    LIBS = opengl32 gdi32 user32 winmm WSock32
 endif
 ifeq ($(HOST_OS),Linux)
     LIBS = m X11 asound pulse rt GL GLX pthread Xext Xinerama
