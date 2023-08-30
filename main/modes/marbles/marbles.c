@@ -139,6 +139,7 @@ typedef struct
     wsg_t arrow18;
 
     buttonBit_t buttonState;
+    int32_t inputRotation;
 
     marblesScreen_t screen;
     marblesLevel_t* level; ///< The current level's initial settings
@@ -266,13 +267,6 @@ static void marblesHandleButton(buttonEvt_t evt)
                     marbles->screen = MAIN_MENU;
                     marblesUnloadLevel();
                     break;
-
-                case TB_0:
-                case TB_1:
-                case TB_2:
-                case TB_3:
-                case TB_4:
-                    break;
             }
             marbles->buttonState = evt.state;
             break;
@@ -346,14 +340,7 @@ static void marblesUpdatePhysics(int64_t elapsedUs)
 
             case SHOOTER:
             {
-                if (marbles->buttonState & PB_LEFT)
-                {
-                    entity->angle = (entity->angle + 2) % 360;
-                }
-                else if (marbles->buttonState & PB_RIGHT)
-                {
-                    entity->angle = (entity->angle + 358) % 360;
-                }
+                entity->angle = (int16_t)marbles->inputRotation;
 
                 if (marbles->buttonState & PB_A)
                 {
@@ -607,6 +594,8 @@ static void marblesMainLoop(int64_t elapsedUs)
 
         case IN_LEVEL:
         {
+            getTouchJoystick(&marbles->inputRotation, NULL, NULL);
+
             if (marbles->shootCooldown < elapsedUs)
             {
                 marbles->shootCooldown = 0;
