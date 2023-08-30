@@ -24,6 +24,11 @@ typedef struct
     bool fullscreen;
     bool hideLeds;
 
+    bool fuzz;
+    bool fuzzButtons;
+    bool fuzzTouch;
+    bool fuzzMotion;
+
     /// @brief Name of the keymap to use, or NULL if none
     const char* keymap;
 
