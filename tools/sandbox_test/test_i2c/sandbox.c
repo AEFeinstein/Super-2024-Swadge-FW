@@ -71,8 +71,13 @@ struct LSM6DSLData
 	int32_t temp;
 	uint32_t caltime;
 
+	// Quats are wxyz.
+	// You can take a vector, in controller space, rotate by this quat, and you get it in world space.
+	float fqQuatLast[4];
 	float fqQuat[4];  // Quats are wxyz
 
+	// Bias for all of the euler angles.
+	float fvBias[3];
 
 	// For debug
 	int lastreadr;
@@ -80,10 +85,7 @@ struct LSM6DSLData
 	uint32_t gyrocount;
 	int16_t gyrolast[3];
 	int16_t accellast[3];
-
-	// Quats are wxyz.
-	// You can take a vector, in controller space, rotate by this vector, and you get it in world space.
-	float fqQuatLast[4];
+	float fCorrectLast[3];
 
 } LSM6DSL;
 
@@ -114,12 +116,17 @@ float rsqrtf ( float x )
 float mathsqrtf( float x )
 {
 	// Trick to do approximate, fast square roots.
+	int sign = x < 0;
+	if( sign ) x = -x;
 	float o = x;
 	o = (o+x/o)/2;
 	o = (o+x/o)/2;
 	o = (o+x/o)/2;
 	o = (o+x/o)/2;
-	return o;
+	if( sign )
+		return -o;
+	else
+		return o;
 }
 
 void mathEulerToQuat( float * q, const float * euler )
@@ -296,9 +303,9 @@ static void LSM6DSLIntegrate()
 		int16_t * accel_data   = cdata + 3;
 
 		// Manual cal, used only for Steps 2..8
-		euler_deltas[0] -= 12;
-		euler_deltas[1] += 22;
-		euler_deltas[2] += 4;
+	//	euler_deltas[0] -= 12;
+	//	euler_deltas[1] += 22;
+	//	euler_deltas[2] += 4;
 
 		// We can sum rotations to understand the amount of counts in a full circle.
 		ld->gyroaccum[0] += euler_deltas[0];
@@ -315,16 +322,22 @@ static void LSM6DSLIntegrate()
 		// convert to radians. ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );  
 		// Measured = 560,000 counts per scale (Measured by looking at sum)
 		// Testing -> 3.14159 * 2.0 / 566000;
-		float fScale = ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );
+		float fFudge = 1.1;
+		float fScale = ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f ) * fFudge;
 
 		// STEP 3:  Integrate gyro values into a quaternion.
 		// This step is validated by working with just one axis at a time
 		// then apply a coordinate frame to ld->fqQuat and validate that it is
 		// correct.
+		float fEulerScales[3] = {
+			-fScale,
+			 fScale,
+			-fScale };
+
 		float fEulers[3] = {
-			-euler_deltas[0] * fScale,
-			euler_deltas[1] * fScale,
-			-euler_deltas[2] * fScale };
+			euler_deltas[0] * fEulerScales[0] + ld->fvBias[0],
+			euler_deltas[1] * fEulerScales[1] + ld->fvBias[1],
+			euler_deltas[2] * fEulerScales[2] + ld->fvBias[2] };
 
 		mathEulerToQuat( ld->fqQuatLast, fEulers );
 		mathQuatApply( ld->fqQuat, ld->fqQuat, ld->fqQuatLast );
@@ -369,11 +382,17 @@ static void LSM6DSLIntegrate()
 
 		// First, we can compute what the drift values of our axes are, to anti-drift them.
 		// If you do only this, you will always end up in an unstable oscillation. 
-		
+		memcpy( ld->fCorrectLast, corrective_quaternion+1, 12 );
+		// XXX TODO: We need to multiply by amount the accelerometer gives us assurance.
+		ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
+		ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
+		ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
+
 
 		// Second, we can apply a very small corrective tug.  This helps prevent oscillation
 		// about the correct answer.  This acts sort of like a P term to a PID loop.
-		const float corrective_force = 0.001f;
+		// This is actually the **primary**, or fastest responding thing.
+		const float corrective_force = 0.005f;
 		corrective_quaternion[1] *= corrective_force;
 		corrective_quaternion[2] *= corrective_force;
 		corrective_quaternion[3] *= corrective_force;
@@ -385,7 +404,6 @@ static void LSM6DSLIntegrate()
 			- corrective_quaternion[3]*corrective_quaternion[3] );
 //		ESP_LOGI( "x", "%f %f %f %f\n", corrective_quaternion[0], corrective_quaternion[1], corrective_quaternion[2], corrective_quaternion[3] );
 		mathQuatApply( ld->fqQuat, ld->fqQuat, corrective_quaternion );
-
 
 		// Magnitude of correction angle = inverse_sin( magntiude( axis_of_correction ) );
 		// We want to significantly reduce that. To mute any effect.
@@ -664,9 +682,12 @@ void sandbox_tick()
 	}
 #endif
 
-	cts += sprintf( cts, "%ld %d %f %f %f %f / %f %f %f / %d %d", LSM6DSL.caltime, LSM6DSL.lastreadr,
-		LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3],
-		plusx_out[0], plusx_out[1], plusx_out[2], vertices, lines );
+	cts += sprintf( cts, "%ld %d %f %f %f / %f %f %f / %3d %3d %3d / %4d %4d %4d / %d %d", LSM6DSL.caltime, LSM6DSL.lastreadr,
+		LSM6DSL.fCorrectLast[0], LSM6DSL.fCorrectLast[1], LSM6DSL.fCorrectLast[2],
+		LSM6DSL.fvBias[0],		LSM6DSL.fvBias[1],		LSM6DSL.fvBias[2],
+		LSM6DSL.gyrolast[0], LSM6DSL.gyrolast[1], LSM6DSL.gyrolast[2],
+		LSM6DSL.accellast[0], LSM6DSL.accellast[1], LSM6DSL.accellast[2],
+		 vertices, lines );
 
 	ESP_LOGI( "I2C", "%s", ctsbuffer );
 }
