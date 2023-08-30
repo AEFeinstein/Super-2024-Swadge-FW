@@ -155,13 +155,15 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
     {
             // case 'x':
             // doSomething();
+            // if (error) return false;
             // return true;
 
         default:
-            return false;
+            break;
     }
 
-    return false;
+    // It's OK if an arg is unhandled, as it may just be a flag set automatically
+    return true;
 }
 
 /**
@@ -601,7 +603,6 @@ bool emuParseArgs(int argc, char** argv)
         else if (optVal == ':')
         {
             // Unknown argument, print custom error message
-            // (Not In Use)
             printf("%1$s: unrecognized option '%3$s'\nTry `%2$s --help` or `%2$s --usage` for more\ninformation.\n",
                    executableName, prettyExecutableName, optarg);
         }
@@ -673,10 +674,12 @@ bool emuParseArgs(int argc, char** argv)
 
         if (optKey == '?')
         {
+            // Error message was already printed, just return false
             return false;
         }
         else if (optKey == 'h')
         {
+            // Special handling
             printHelp(prettyExecutableName);
             return false;
         }
