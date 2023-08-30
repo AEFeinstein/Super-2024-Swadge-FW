@@ -96,9 +96,10 @@ typedef enum
     SKT_WALL          = 2,
     SKT_GOAL          = 3,
     SKT_PORTAL        = 4,
-    SKT_LASER_EMIT    = 5,
-    SKT_LASER_RECEIVE = 6,
-    SKT_FLOOR_WALKED  = 7
+    SKT_LASER_EMIT    = 5, //To Be Removed
+    SKT_LASER_RECEIVE = 6, //To Be Removed
+    SKT_FLOOR_WALKED  = 7,
+    SKT_NO_WALK       = 8
 } sokoTile_t;
 
 typedef struct

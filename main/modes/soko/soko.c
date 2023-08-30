@@ -364,6 +364,9 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
                     self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX = calloc(SOKO_MAX_ENTITY_COUNT,sizeof(uint8_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX = calloc(SOKO_MAX_ENTITY_COUNT,sizeof(uint8_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = 0;
                     self->currentLevel.entityCount+=1;
                     i += 3;
                     break;
@@ -656,8 +659,8 @@ static int sokoFindIndex(soko_abs_t* self, int targetIndex)
 
 static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
 {
-    printf("Mode Testing!\n");
-    printf("%s",self->levelFileText);
+    printf("Loading Level List...!\n");
+    printf("%s\n",self->levelFileText);
     printf("%d\n",(int)strlen(self->levelFileText));
     //char* a = strstr(self->levelFileText,":");
     //char* b = strstr(a,".bin:");
@@ -673,10 +676,10 @@ static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
     char* storageStr = strtok(self->levelFileText,":");
     while(storageStr != NULL)
     {
-        if(strtol(storageStr,NULL,10) && !(strstr(storageStr,".bin"))) //Make sure you're note accidentally reading a number from a filename
+        if(strtol(storageStr,NULL,10) && !(strstr(storageStr,".bin"))) //Make sure you're not accidentally reading a number from a filename
         {
             levelInds[intInd] = (int)strtol(storageStr,NULL,10);
-            printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
+            //printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
             intInd++;
         }
         else{
@@ -695,7 +698,7 @@ static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
         storageStr = strtok(NULL,":");
     }
     printf("Strings: %d, Ints: %d\n", ind, intInd);
-    printf("Backwards!\n");
+    printf("Levels and Indeces:\n");
     for(int i = ind-1; i > -1; i--)
     {
         printf("Index: %d : %d : %s\n",i,levelInds[i],stringPtrs[i]);

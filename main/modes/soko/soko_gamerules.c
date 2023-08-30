@@ -580,6 +580,211 @@ void drawLaserFromEntity(soko_abs_t* self, sokoEntity_t* emitter)
     drawLine(playerPix.x, playerPix.y, impactPix.x, impactPix.y, c500, 0);
 }
 
+int sokoBeamImpactRecursive(soko_abs_t* self,int emitter_x, int emitter_y, sokoDirection_t emitterDir, sokoEntity_t* rootEmitter);
+
+void sokoDoBeam(soko_abs_t* self)
+{
+    bool receiverImpact;
+    for(int entInd = 0; entInd < self->currentLevel.entityCount; entInd++)
+    {
+        if(self->currentLevel.entities[entInd].type == SKE_LASER_EMIT_UP)
+        {
+            self->currentLevel.entities[entInd].properties->targetCount = 0;
+            receiverImpact = sokoBeamImpactRecursive(self, self->currentLevel.entities[entInd].x, self->currentLevel.entities[entInd].y, self->currentLevel.entities[entInd].type, &self->currentLevel.entities[entInd]);
+        }
+    }
+}
+
+bool sokoLaserTileCollision(sokoTile_t testTile)
+{
+    switch(testTile)
+    {
+        case SKT_EMPTY:
+            return false;
+        case SKT_FLOOR:
+            return false;
+        case SKT_WALL:
+            return true;
+        case SKT_GOAL:
+            return false;
+        case SKT_PORTAL:
+            return false;
+        case SKT_FLOOR_WALKED:
+            return false;
+        case SKT_NO_WALK:
+            return false;
+        default:
+            return false;
+    }
+}
+
+bool sokoLaserEntityCollision(sokoEntityType_t testEntity)
+{
+    switch(testEntity) //Anything that doesn't unconditionally pass should return true
+    {
+        case SKE_NONE:
+            return false;
+        case SKE_PLAYER:
+            return false;
+        case SKE_CRATE:
+            return true;
+        case SKE_LASER_90:
+            return true;
+        case SKE_STICKY_CRATE:
+            return true;
+        case SKE_WARP:
+            return false;
+        case SKE_BUTTON:
+            return false;
+        case SKE_LASER_EMIT_UP:
+            return true;
+        case SKE_LASER_RECEIVE_OMNI:
+            return true;
+        case SKE_LASER_RECEIVE:
+            return true;
+        case SKE_GHOST:
+            return true;
+        default:
+            return false;
+    }
+}
+
+sokoDirection_t sokoRedirectDir(sokoDirection_t emitterDir, bool inverted)
+{
+    switch(emitterDir)
+    {
+        case SKD_UP:
+            return inverted ? SKD_LEFT : SKD_RIGHT;
+        case SKD_DOWN:
+            return inverted ? SKD_RIGHT : SKD_LEFT;
+        case SKD_RIGHT:
+            return inverted ? SKD_DOWN : SKD_UP;
+        case SKD_LEFT:
+            return inverted ? SKD_UP : SKD_DOWN;
+        default:
+            return SKD_NONE;
+    }
+}
+
+int sokoBeamImpactRecursive(soko_abs_t* self,int emitter_x, int emitter_y, sokoDirection_t emitterDir, sokoEntity_t* rootEmitter)
+{
+    sokoDirection_t dir = emitterDir;
+    sokoVec_t projVec   = {0, 0};
+    sokoVec_t emitVec   = {emitter_x, emitter_y};
+    switch (dir)
+    {
+        case SKD_DOWN:
+            projVec.y = 1;
+            break;
+        case SKD_UP:
+            projVec.y = -1;
+            break;
+        case SKD_LEFT:
+            projVec.x = -1;
+            break;
+        case SKD_RIGHT:
+            projVec.x = 1;
+            break;
+        default:
+            projVec.y = -1;
+            break;
+            // return base entity position
+    }
+
+    // Iterate over tiles in ray to edge of level
+    sokoVec_t testPos = sokoAddCoord(emitVec, projVec);
+    int entityCount   = self->currentLevel.entityCount;
+    // todo: make first pass pack a statically allocated array with only the entities in the path of the laser.
+
+
+    int16_t possibleSquares = 0;
+    if (dir == SKD_RIGHT) // move these checks into the switch statement
+    {
+        possibleSquares = self->currentLevel.width - emitVec.x; // Up to and including far wall
+    }
+    if (dir == SKD_LEFT)
+    {
+        possibleSquares = emitVec.x + 1;
+    }
+    if (dir == SKD_UP)
+    {
+        possibleSquares = emitVec.y + 1;
+    }
+    if (dir == SKD_DOWN)
+    {
+        possibleSquares = self->currentLevel.height - emitVec.y;
+    }
+
+    int tileCollFlag, entCollFlag, entCollInd;
+    tileCollFlag = entCollFlag = entCollInd = 0;
+
+    bool retVal;
+    // printf("emitVec(%d,%d)",emitVec.x,emitVec.y);
+    // printf("projVec:(%d,%d) possibleSquares:%d ",projVec.x,projVec.y,possibleSquares);
+
+    for (int n = 0; n < possibleSquares; n++)
+    {
+        sokoTile_t posTile = absSokoGetTile(self, testPos.x, testPos.y);
+        // printf("|n:%d,posTile:(%d,%d):%d|",n,testPos.x,testPos.y,posTile);
+        if (sokoLaserTileCollision(posTile))
+        {
+            tileCollFlag = 1;
+            break;
+        }
+        for (int m = 0; m < entityCount; m++) // iterate over tiles/entities to check for laser collision. First pass
+                                              // finds everything in the path of the
+        {
+            sokoEntity_t candidateEntity = self->currentLevel.entities[m];
+            // printf("|m:%d;CE:(%d,%d)%d",m,candidateEntity.x,candidateEntity.y,candidateEntity.type);
+            if (candidateEntity.x == testPos.x && candidateEntity.y == testPos.y)
+            {
+                // printf(";POSMATCH;Coll:%d",entityCollision[candidateEntity.type]);
+                if (sokoLaserEntityCollision(candidateEntity.type))
+                {
+                    entCollFlag = 1;
+                    entCollInd  = m;
+                    // printf("|");
+                    break;
+                }
+            }
+            // printf("|");
+        }
+        sokoEntityProperties_t* entProps = rootEmitter->properties;
+        if (tileCollFlag)
+        {
+            entProps->targetX[entProps->targetCount] = testPos.x; //Pack target properties with every impacted position.
+            entProps->targetY[entProps->targetCount] = testPos.y; 
+            entProps->targetCount++;
+        }
+        if (entCollFlag)
+        {
+            sokoEntityType_t entType = self->currentLevel.entities[entCollInd].type;
+            
+            entProps->targetX[entProps->targetCount] = testPos.x; //Pack target properties with every impacted entity.
+            entProps->targetY[entProps->targetCount] = testPos.y; //If there's a redirect, it will be added after this one.
+            entProps->targetCount++;
+            if(entType == SKE_LASER_90)
+            {
+                sokoDirection_t redirectDir = sokoRedirectDir(emitterDir, self->currentLevel.entities[entCollInd].facing); //SKD_UP or SKD_DOWN
+                sokoBeamImpactRecursive(self,testPos.x,testPos.y,redirectDir,rootEmitter);
+            }
+            
+            break;
+        }
+        testPos = sokoAddCoord(testPos, projVec);
+    }
+    retVal = self->currentLevel.entities[entCollInd].properties->targetCount;
+    // printf("\n");
+    //retVal.x           = testPos.x;
+    //retVal.y           = testPos.y;
+    //retVal.entityIndex = entCollInd;
+    //retVal.entityFlag  = entCollFlag;
+    // printf("impactPoint:(%d,%d)\n",testPos.x,testPos.y);
+    return retVal;    
+
+}
+
+
 sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
 {
     sokoDirection_t dir = emitter->facing;

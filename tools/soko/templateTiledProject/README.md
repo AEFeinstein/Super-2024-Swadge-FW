@@ -50,6 +50,7 @@ The game uses an overworld for level selection. In order to designate the level 
 ### External Warps:
     External warps are used in the overworld for level selection. When the player steps on an External Warp, the level pointed to by the associated index (See Level List File) will be loaded. When the player completes the loaded puzzle, they will automatically reload the overworld level they came from.
     The 'manuallyIndexed' property, when true, indicates that the game should check the 'target_id' value to find the appropriate level index. When false, this property indicates that the game may use this warp to point to a level which is not already attached to another external warp. Automatically indexed external warps will be assigned the lowest unused level index from the Level List File.
+    
 ### Laser Emitter/Receiver:
     Be sure to set the 'emitDirection' property.
     Valid values are:
