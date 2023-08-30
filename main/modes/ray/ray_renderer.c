@@ -15,8 +15,8 @@
 #define TEX_WIDTH  64
 #define TEX_HEIGHT 64
 
+// When casting floor and ceiling, use 8 more decimal bits and 8 fewer whole number bits
 #define EX_CEIL_PRECISION_BITS 8
-#define EX_CEIL_PRECISION      (1 << EX_CEIL_PRECISION_BITS)
 
 // Half width of the lock zone when locking on enemies
 #define LOCK_ZONE 16
@@ -45,10 +45,26 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
     // We'll be drawing pixels, so set this up
     SETUP_FOR_TURBO();
 
-    // Set up pointers for textures later
-    paletteColor_t* floorTex = NULL;
-    // TODO set special ceiling texture
-    paletteColor_t* ceilTex = getTexById(ray, BG_FLOOR)->px;
+    // Track which cell the ceiling or floor is being drawn in
+    uint16_t cellX = 0;
+    uint16_t cellY = 0;
+
+    // Track the last cell the ceiling or floor was drawn in to reset textures which it changes
+    uint16_t lastCellX = 0xFFFF;
+    uint16_t lastCellY = 0xFFFF;
+
+    // Set up variables for fixed point texture coordinates
+    q16_16 texPosX = 0;
+    q16_16 texPosY = 0;
+
+    // Set up variables for integer texture indices
+    uint16_t tx = 0;
+    uint16_t ty = 0;
+
+    // Set a pointer for textures later
+    paletteColor_t* texture = NULL;
+    // The ceiling texture is always this
+    paletteColor_t* ceilTexture = getTexByType(ray, BG_FLOOR)->px;
 
     // Save these to not resolve pointers later
     uint16_t mapW = ray->map.w;
@@ -63,7 +79,8 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
     // Loop through each horizontal row
     for (int16_t y = firstRow; y < lastRow; y++)
     {
-        bool isFloor = y > TFT_HEIGHT / 2;
+        // Are we casting on the floor or ceiling?
+        bool isFloor = y > (TFT_HEIGHT / 2);
 
         // Current y position compared to the center of the screen (the horizon)
         int16_t p;
@@ -114,23 +131,24 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
         q24_8 rowDistance = camZ / p;
 
         // real world coordinates of the leftmost column. This will be updated as we step to the right.
-        q16_16 floorX = ADD_FX(ray->posX, MUL_FX(rowDistance, rayDirX0)) * EX_CEIL_PRECISION;
-        q16_16 floorY = ADD_FX(ray->posY, MUL_FX(rowDistance, rayDirY0)) * EX_CEIL_PRECISION;
+        q16_16 floorX = ADD_FX(ray->posX, MUL_FX(rowDistance, rayDirX0)) << EX_CEIL_PRECISION_BITS;
+        q16_16 floorY = ADD_FX(ray->posY, MUL_FX(rowDistance, rayDirY0)) << EX_CEIL_PRECISION_BITS;
 
         // calculate the real world step vector we have to add for each x (parallel to camera plane)
         // adding step by step avoids multiplications with a weight in the inner loop
-        q16_16 floorStepX = (MUL_FX(rowDistance, SUB_FX(rayDirX1, rayDirX0)) * EX_CEIL_PRECISION) / TFT_WIDTH;
-        q16_16 floorStepY = (MUL_FX(rowDistance, SUB_FX(rayDirY1, rayDirY0)) * EX_CEIL_PRECISION) / TFT_WIDTH;
+        q16_16 floorStepX = (MUL_FX(rowDistance, SUB_FX(rayDirX1, rayDirX0)) << EX_CEIL_PRECISION_BITS) / TFT_WIDTH;
+        q16_16 floorStepY = (MUL_FX(rowDistance, SUB_FX(rayDirY1, rayDirY0)) << EX_CEIL_PRECISION_BITS) / TFT_WIDTH;
 
-        uint16_t lastCellX = 0xFFFF;
-        uint16_t lastCellY = 0xFFFF;
+        // This is the fixed point amount each texture coordinate increments per screen pixel
+        q16_16 texStepX = TEX_WIDTH * floorStepX;
+        q16_16 texStepY = TEX_HEIGHT * floorStepY;
 
         // Loop through each pixel
         for (int16_t x = 0; x < TFT_WIDTH; ++x)
         {
             // the cell coord is simply got from the integer parts of floorX and floorY
-            uint16_t cellX = (floorX) >> (FRAC_BITS + EX_CEIL_PRECISION_BITS);
-            uint16_t cellY = (floorY) >> (FRAC_BITS + EX_CEIL_PRECISION_BITS);
+            cellX = floorX >> Q16_16_FRAC_BITS;
+            cellY = floorY >> Q16_16_FRAC_BITS;
 
             // Only draw floor and ceiling for valid cells, otherwise leave the pixel as-is
             if (cellX < mapW && cellY < mapH)
@@ -142,36 +160,42 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
                     lastCellX = cellX;
                     lastCellY = cellY;
 
-                    // Get the next cell texture
-                    rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
-                    // Always draw floor under doors
-                    if (CELL_IS_TYPE(type, BG | DOOR))
+                    if (isFloor)
                     {
-                        type = BG_FLOOR;
+                        // Get the next cell texture
+                        rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
+                        // Always draw floor under doors
+                        if (CELL_IS_TYPE(type, BG | DOOR))
+                        {
+                            type = BG_FLOOR;
+                        }
+                        texture = getTexByType(ray, type)->px;
                     }
-                    floorTex = getTexByType(ray, type)->px;
+                    else
+                    {
+                        texture = ceilTexture;
+                    }
+
+                    // get the texture coordinate from the fractional part
+                    texPosX = (TEX_WIDTH * (floorX - (floorX & Q16_16_WHOLE_MASK)));
+                    texPosY = (TEX_HEIGHT * (floorY - (floorY & Q16_16_WHOLE_MASK)));
                 }
 
-                // get the texture coordinate from the fractional part
-                q16_16 fracPartX = floorX - (floorX & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
-                q16_16 fracPartY = floorY - (floorY & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
-                uint16_t tx      = ((TEX_WIDTH * fracPartX) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_WIDTH;
-                uint16_t ty = ((TEX_HEIGHT * fracPartY) / (1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS))) % TEX_HEIGHT;
+                // Get the integer texture indices from the fixed point texture position
+                tx = (((uint32_t)texPosX) >> Q16_16_FRAC_BITS) % TEX_WIDTH;
+                ty = (((uint32_t)texPosY) >> Q16_16_FRAC_BITS) % TEX_HEIGHT;
 
                 // Draw the pixel
-                if (isFloor)
-                {
-                    TURBO_SET_PIXEL(x, y, floorTex[TEX_WIDTH * ty + tx]);
-                }
-                else
-                {
-                    TURBO_SET_PIXEL(x, y, ceilTex[TEX_WIDTH * ty + tx]);
-                }
+                TURBO_SET_PIXEL(x, y, texture[TEX_WIDTH * ty + tx]);
             }
 
             // Always increment, regardless of if pixels were drawn
             floorX += floorStepX;
             floorY += floorStepY;
+
+            // Increment the texture coordinate as well
+            texPosX += texStepX;
+            texPosY += texStepY;
         }
     }
 }

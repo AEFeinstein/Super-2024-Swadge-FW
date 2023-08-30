@@ -7,7 +7,17 @@ typedef int32_t q24_8;  // 24 bits integer, 8 bits fraction
 typedef int32_t q16_16; // 16 bits integer, 16 bits fraction
 typedef int32_t q8_24;  // 8 bits integer, 24 bits fraction
 
-#define FRAC_BITS 8
+#define FRAC_BITS        8
+#define Q24_8_DECI_MASK  ((1 << FRAC_BITS) - 1)
+#define Q24_8_WHOLE_MASK (~Q24_8_DECI_MASK)
+
+#define Q16_16_FRAC_BITS  16
+#define Q16_16_DECI_MASK  ((1 << Q16_16_FRAC_BITS) - 1)
+#define Q16_16_WHOLE_MASK (~Q16_16_DECI_MASK)
+
+#define Q8_24_FRAC_BITS  24
+#define Q8_24_DECI_MASK  ((1 << Q8_24_FRAC_BITS) - 1)
+#define Q8_24_WHOLE_MASK (~Q8_24_DECI_MASK)
 
 //==============================================================================
 // Fixed Point Math Functions
