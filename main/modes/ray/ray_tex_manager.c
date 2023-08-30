@@ -152,7 +152,7 @@ void freeAllTex(ray_t* ray)
     for (int16_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
     {
         // Check if the name is NULL
-        if (NULL == ray->loadedTextures[idx].name)
+        if (NULL != ray->loadedTextures[idx].name)
         {
             free(ray->loadedTextures[idx].name);
             freeWsg(&ray->loadedTextures[idx].texture);
