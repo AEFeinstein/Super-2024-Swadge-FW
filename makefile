@@ -88,6 +88,12 @@ ifeq ($(HOST_OS),Linux)
 CFLAGS += \
 	-fsanitize=address \
 	-fno-omit-frame-pointer
+
+ENABLE_GCOV=false
+
+ifeq ($(ENABLE_GCOV),true)
+    CFLAGS += -fprofile-arcs -ftest-coverage -DENABLE_GCOV
+endif
 endif
 
 # These are warning flags that the IDF uses
@@ -216,6 +222,10 @@ LIBRARY_FLAGS += \
 	-fsanitize=address \
 	-fno-omit-frame-pointer \
 	-static-libasan
+
+ifeq ($(ENABLE_GCOV),true)
+    LIBRARY_FLAGS += -lgcov -fprofile-arcs -ftest-coverage
+endif
 endif
 
 ################################################################################
@@ -343,6 +353,11 @@ CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 
 cppcheck:
 	cppcheck $(CPPCHECK_FLAGS) $(DEFINES) $(INC) $(CPPCHECK_DIRS) $(CPPCHECK_IGNORE_FLAGS)
+
+gen-coverage:
+	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
+	genhtml ./coverage.info --output-directory ./coverage
+	firefox ./coverage/index.html &
 
 # Print any value from this makefile
 print-%  : ; @echo $* = $($*)

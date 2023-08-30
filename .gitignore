@@ -7,6 +7,10 @@
 *.obj
 *.elf
 
+# Coverage files
+*.gcda
+*.gcno
+
 # Linker output
 *.ilk
 *.map
@@ -73,3 +77,5 @@ crash-*.txt
 tools/rayMapEditor/autosave.rmd
 perf.data
 *.stackdump
+coverage/
+coverage.info

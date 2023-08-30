@@ -15,6 +15,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef ENABLE_GCOV
+    #include <gcov.h>
+#endif
+
 #include "hdw-tft.h"
 #include "hdw-tft_emu.h"
 #include "hdw-led.h"
@@ -190,6 +194,11 @@ void taskYIELD(void)
     {
         deinitSystem();
         CNFGTearDown();
+
+#ifdef ENABLE_GCOV
+    __gcov_dump();
+#endif
+
         exit(0);
         return;
     }
