@@ -640,12 +640,10 @@ bool emuParseArgs(int argc, char** argv)
             optName = optDoc->longOpt;
         }
 
-        if(!optArg
-           && NULL != argv[optind]
-           && '-' != *(argv[optind]))
+        if (!optArg && NULL != argv[optind] && '-' != *(argv[optind]))
         {
             // This makes optional arguments work even if you don't connect them with the '='
-           optArg = argv[optind++];
+            optArg = argv[optind++];
         }
 
         // Ok, now for the case of an option which has no short-opt in the getopt options struct,

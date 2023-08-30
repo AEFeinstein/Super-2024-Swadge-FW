@@ -45,16 +45,25 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
     // We'll be drawing pixels, so set this up
     SETUP_FOR_TURBO();
 
+    // Set up pointers for textures later
+    paletteColor_t* floorTex = NULL;
+    // TODO set special ceiling texture
+    paletteColor_t* ceilTex = getTexById(ray, BG_FLOOR)->px;
+
+    // Save these to not resolve pointers later
+    uint16_t mapW = ray->map.w;
+    uint16_t mapH = ray->map.h;
+
+    // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
+    q24_8 rayDirX0 = SUB_FX(ray->dirX, ray->planeX);
+    q24_8 rayDirY0 = SUB_FX(ray->dirY, ray->planeY);
+    q24_8 rayDirX1 = ADD_FX(ray->dirX, ray->planeX);
+    q24_8 rayDirY1 = ADD_FX(ray->dirY, ray->planeY);
+
     // Loop through each horizontal row
     for (int16_t y = firstRow; y < lastRow; y++)
     {
         bool isFloor = y > TFT_HEIGHT / 2;
-
-        // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
-        q24_8 rayDirX0 = SUB_FX(ray->dirX, ray->planeX);
-        q24_8 rayDirY0 = SUB_FX(ray->dirY, ray->planeY);
-        q24_8 rayDirX1 = ADD_FX(ray->dirX, ray->planeX);
-        q24_8 rayDirY1 = ADD_FX(ray->dirY, ray->planeY);
 
         // Current y position compared to the center of the screen (the horizon)
         int16_t p;
@@ -113,6 +122,9 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
         q16_16 floorStepX = (MUL_FX(rowDistance, SUB_FX(rayDirX1, rayDirX0)) * EX_CEIL_PRECISION) / TFT_WIDTH;
         q16_16 floorStepY = (MUL_FX(rowDistance, SUB_FX(rayDirY1, rayDirY0)) * EX_CEIL_PRECISION) / TFT_WIDTH;
 
+        uint16_t lastCellX = 0xFFFF;
+        uint16_t lastCellY = 0xFFFF;
+
         // Loop through each pixel
         for (int16_t x = 0; x < TFT_WIDTH; ++x)
         {
@@ -121,8 +133,25 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
             uint16_t cellY = (floorY) >> (FRAC_BITS + EX_CEIL_PRECISION_BITS);
 
             // Only draw floor and ceiling for valid cells, otherwise leave the pixel as-is
-            if (cellX < ray->map.w && cellY < ray->map.h)
+            if (cellX < mapW && cellY < mapH)
             {
+                // If the cell changed
+                if ((cellX != lastCellX) || (cellY != lastCellY))
+                {
+                    // Record the change
+                    lastCellX = cellX;
+                    lastCellY = cellY;
+
+                    // Get the next cell texture
+                    rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
+                    // Always draw floor under doors
+                    if (CELL_IS_TYPE(type, BG | DOOR))
+                    {
+                        type = BG_FLOOR;
+                    }
+                    floorTex = getTexByType(ray, type)->px;
+                }
+
                 // get the texture coordinate from the fractional part
                 q16_16 fracPartX = floorX - (floorX & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
                 q16_16 fracPartY = floorY - (floorY & ~((1 << (FRAC_BITS + EX_CEIL_PRECISION_BITS)) - 1));
@@ -132,20 +161,11 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
                 // Draw the pixel
                 if (isFloor)
                 {
-                    rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
-                    // Always draw floor under doors
-                    if (CELL_IS_TYPE(type, BG | DOOR))
-                    {
-                        type = BG_FLOOR;
-                    }
-                    wsg_t* texture = getTexByType(ray, type);
-                    TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
+                    TURBO_SET_PIXEL(x, y, floorTex[TEX_WIDTH * ty + tx]);
                 }
                 else
                 {
-                    // TODO set special ceiling texture
-                    wsg_t* texture = getTexByType(ray, BG_FLOOR);
-                    TURBO_SET_PIXEL(x, y, texture->px[TEX_WIDTH * ty + tx]);
+                    TURBO_SET_PIXEL(x, y, ceilTex[TEX_WIDTH * ty + tx]);
                 }
             }
 
