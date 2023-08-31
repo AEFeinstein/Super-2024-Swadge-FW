@@ -42,12 +42,25 @@ void esp_deep_sleep_start(void)
     }
 }
 
+/**
+ * @brief Forcibly switch the emulator into a different swadge mode, even if it is locked.
+ *
+ * @param mode The swadge mode to force-switch into
+ */
 void emulatorForceSwitchToSwadgeMode(swadgeMode_t* mode)
 {
+    // Switch the swadge mode normally
     switchToSwadgeMode(mode);
+
+    // Allow the next mode change to complete
     overrideLock = true;
 }
 
+/**
+ * @brief Set whether the swadge mode may be changed as normally via ::switchToSwadgeMode()
+ *
+ * @param locked Whether or not the swadge mode should be locked
+ */
 void emulatorSetSwadgeModeLocked(bool locked)
 {
     modeLocked = locked;
