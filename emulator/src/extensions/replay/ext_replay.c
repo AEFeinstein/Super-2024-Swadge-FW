@@ -13,6 +13,12 @@
 #include <inttypes.h>
 #include <time.h>
 
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define HEADER "Time,Type,Value\n"
+
 #ifdef DEBUG
 #define REPLAY_DEBUG(str, ...) printf(str "\n", __VA_ARGS__);
 #else
@@ -47,10 +53,7 @@ typedef enum
 
 typedef struct
 {
-    union {
-        int64_t time;
-        uint64_t frame;
-    };
+    int64_t time;
 
     replayLogType_t type;
 
@@ -67,7 +70,6 @@ typedef struct
     bool readCompleted;
 
     replayMode_t mode;
-    bool useFrames;
     bool headerHandled;
 
     buttonBit_t lastButtons;
@@ -155,7 +157,6 @@ static bool replayInit(emuArgs_t* emuArgs)
 
         replay.file = fopen(emuArgs->recordFile ? emuArgs->recordFile : filename, "a");
         replay.mode = RECORD;
-        replay.useFrames = false;
         return replay.file != NULL;
     }
     else if (emuArgs->playback)
@@ -172,24 +173,15 @@ static bool replayInit(emuArgs_t* emuArgs)
 
 static void replayRecordFrame(uint64_t frame)
 {
-    char buffer[64];
     replayEntry_t logEntry = {0};
 
     if (!replay.headerHandled)
     {
         replay.headerHandled = true;
-        snprintf(buffer, sizeof(buffer) - 1, "%s,Type,Value\n", replay.useFrames ? "Frame" : "Time");
-        fwrite(buffer, 1, strlen(buffer), replay.file);
+        fwrite(HEADER, 1, strlen(HEADER), replay.file);
     }
 
-    if (replay.useFrames)
-    {
-        logEntry.frame = frame;
-    }
-    else
-    {
-        logEntry.time = esp_timer_get_time();
-    }
+    logEntry.time = esp_timer_get_time();
 
     int32_t touchPhi, touchR, touchIntensity;
     if (!getTouchJoystick(&touchPhi, &touchR, &touchIntensity))
@@ -241,50 +233,62 @@ static void replayRecordFrame(uint64_t frame)
             break;
 
             case TOUCH_PHI:
+            {
                 if (touchPhi != replay.lastTouchPhi)
                 {
                     logEntry.accelVal = touchPhi;
                     writeEntry(&logEntry);
                 }
-            break;
+                break;
+            }
 
             case TOUCH_R:
-            if (touchR != replay.lastTouchR)
             {
-                logEntry.touchVal = touchR;
-                writeEntry(&logEntry);
+                if (touchR != replay.lastTouchR)
+                {
+                    logEntry.touchVal = touchR;
+                    writeEntry(&logEntry);
+                }
+                break;
             }
-            break;
 
             case TOUCH_INTENSITY:
-            if (touchIntensity != replay.lastTouchIntensity)
             {
-                logEntry.touchVal = touchIntensity;
-                writeEntry(&logEntry);
+                if (touchIntensity != replay.lastTouchIntensity)
+                {
+                    logEntry.touchVal = touchIntensity;
+                    writeEntry(&logEntry);
+                }
+                break;
             }
-            break;
 
             case ACCEL_X:
-            if (accelX != replay.lastAccelX)
             {
-                logEntry.accelVal = accelX;
-                writeEntry(&logEntry);
+                if (accelX != replay.lastAccelX)
+                {
+                    logEntry.accelVal = accelX;
+                    writeEntry(&logEntry);
+                }
                 break;
             }
 
             case ACCEL_Y:
-            if (accelY != replay.lastAccelY)
             {
-                logEntry.accelVal = accelY;
-                writeEntry(&logEntry);
+                if (accelY != replay.lastAccelY)
+                {
+                    logEntry.accelVal = accelY;
+                    writeEntry(&logEntry);
+                }
                 break;
             }
 
             case ACCEL_Z:
-            if (accelZ != replay.lastAccelZ)
             {
-                logEntry.accelVal = accelZ;
-                writeEntry(&logEntry);
+                if (accelZ != replay.lastAccelZ)
+                {
+                    logEntry.accelVal = accelZ;
+                    writeEntry(&logEntry);
+                }
                 break;
             }
         }
@@ -322,7 +326,7 @@ static void replayPlaybackFrame(uint64_t frame)
         int16_t accelY = replay.lastAccelY;
         int16_t accelZ = replay.lastAccelZ;
 
-        while (replay.useFrames ? (frame >= replay.nextEntry.frame) : (time >= replay.nextEntry.time))
+        while (time >= replay.nextEntry.time)
         {
             switch (replay.nextEntry.type)
             {
@@ -436,18 +440,11 @@ static bool readEntry(replayEntry_t* entry)
     char buffer[64];
     if (!replay.headerHandled)
     {
-        if (fscanf(replay.file, "%63[^,],Type,Value\n", buffer))
+        if (1 != fscanf(replay.file, "%63[^\n]\n", buffer)
+           || strncmp(buffer, HEADER, strlen(buffer)))
         {
-            if (!strncmp(buffer, "Frame", sizeof(buffer) - 1))
-            {
-                // If the header has "Frame" as the first element, go by frame number
-                // Otherwise, we use timestamp
-                replay.useFrames = true;
-            }
-        }
-        else
-        {
-            // Return false, indicating we couldn't read a header.
+            // Couldn't read, anything.
+            printf("ERR: Invalid playback file, could not parse header\n");
             return false;
         }
 
@@ -455,15 +452,8 @@ static bool readEntry(replayEntry_t* entry)
     }
 
     int result;
-    // Read index key (frame or timestamp)
-    if (replay.useFrames)
-    {
-        result = fscanf(replay.file, "%"PRIu64",", &replay.nextEntry.frame);
-    }
-    else
-    {
-        result = fscanf(replay.file, "%"PRId64",", &replay.nextEntry.time);
-    }
+    // Read timestamp index
+    result = fscanf(replay.file, "%"PRId64",", &replay.nextEntry.time);
 
     // Check if the index key was readable
     if (result != 1)
@@ -475,7 +465,7 @@ static bool readEntry(replayEntry_t* entry)
         }
         else
         {
-            printf("ERR: Can't read %s from recording: %d\n", replay.useFrames ? "Frame" : "Time", result);
+            printf("ERR: Can't read Time from recording: %d\n", result);
         }
         return false;
     }
@@ -571,15 +561,8 @@ static void writeEntry(const replayEntry_t* entry)
     char* ptr = buffer;
 #define BUFSIZE (buffer + sizeof(buffer) - 1 - ptr)
 
-    // Write key (frame/time)
-    if (replay.useFrames)
-    {
-        ptr += snprintf(ptr, BUFSIZE, "%"PRIu64",", entry->frame);
-    }
-    else
-    {
-        ptr += snprintf(ptr, BUFSIZE, "%"PRId64",", entry->time);
-    }
+    // Write time key
+    ptr += snprintf(ptr, BUFSIZE, "%"PRId64",", entry->time);
 
     // Write entry type
     ptr += snprintf(ptr, BUFSIZE, "%s,", replayLogTypeStrs[entry->type]);
@@ -596,7 +579,7 @@ static void writeEntry(const replayEntry_t* entry)
             }
 
             // TODO: Check for invalid button index?
-            ptr += snprintf(ptr, BUFSIZE, "%s\n", replayButtonNames[i]);
+            snprintf(ptr, BUFSIZE, "%s\n", replayButtonNames[i]);
             break;
         }
 
@@ -604,7 +587,7 @@ static void writeEntry(const replayEntry_t* entry)
         case TOUCH_R:
         case TOUCH_INTENSITY:
         {
-            ptr += snprintf(ptr, BUFSIZE, "%"PRId32"\n", entry->touchVal);
+            snprintf(ptr, BUFSIZE, "%"PRId32"\n", entry->touchVal);
             break;
         }
 
@@ -612,7 +595,7 @@ static void writeEntry(const replayEntry_t* entry)
         case ACCEL_Y:
         case ACCEL_Z:
         {
-            ptr += snprintf(ptr, BUFSIZE, "%"PRId16"\n", entry->accelVal);
+            snprintf(ptr, BUFSIZE, "%"PRId16"\n", entry->accelVal);
             break;
         }
     }
