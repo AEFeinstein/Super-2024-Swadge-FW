@@ -32,6 +32,11 @@ typedef struct
     /// @brief Name of the keymap to use, or NULL if none
     const char* keymap;
 
+    bool lock;
+
+    const char* startMode;
+    uint32_t modeSwitchTime;
+
     bool emulateMotion;
     bool motionJitter;
     uint16_t motionJitterAmount;

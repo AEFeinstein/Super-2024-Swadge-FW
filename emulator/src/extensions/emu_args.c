@@ -11,6 +11,7 @@
 
 #include "emu_args.h"
 #include "macros.h"
+#include "ext_modes.h"
 
 //==============================================================================
 // Defines
@@ -90,6 +91,11 @@ emuArgs_t emulatorArgs = {
 
     .keymap = NULL,
 
+    .lock = false,
+
+    .startMode = NULL,
+    .modeSwitchTime = 0,
+
     .emulateMotion      = false,
     .motionJitter       = false,
     .motionJitterAmount = 5,
@@ -109,6 +115,10 @@ static const char argFuzzButtons[] = "fuzz-buttons";
 static const char argFuzzTouch[]   = "fuzz-touch";
 static const char argFuzzMotion[]  = "fuzz-motion";
 static const char argHideLeds[]    = "hide-leds";
+static const char argLock[]        = "lock";
+static const char argMode[]        = "mode";
+static const char argModeSwitch[]  = "mode-switch";
+static const char argModeList[]    = "modes-list";
 static const char argTouch[]       = "touch";
 static const char argHelp[]        = "help";
 static const char argUsage[]       = "usage";
@@ -125,6 +135,10 @@ static const struct option options[] =
     { argFuzzTouch,   optional_argument, (int*)&emulatorArgs.fuzzTouch,    true },
     { argFuzzMotion,  optional_argument, (int*)&emulatorArgs.fuzzMotion,   true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
+    { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
+    { argMode,        required_argument, NULL,                             'm'  },
+    { argModeSwitch,  optional_argument, NULL,                             10   },
+    { argModeList,    no_argument,       NULL,                             0    },
     { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, true },
     { argHelp,        no_argument,       NULL,                             'h'  },
     { argUsage,       no_argument,       NULL,                             0    },
@@ -143,6 +157,10 @@ static const optDoc_t argDocs[] =
     { 0,  argFuzzTouch,   "y|n",   "Set whether touchpad inputs are fuzzed" },
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
+    {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
+    {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
+    { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
+    { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
     {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
@@ -208,6 +226,44 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
             emulatorArgs.fuzzMotion = parseBoolArg(arg, true);
         }
         return true;
+    }
+    else if (argMode == optName)
+    {
+        if (arg)
+        {
+            emulatorArgs.startMode = arg;
+        }
+    }
+    else if (argModeList == optName)
+    {
+        int numModes;
+        const swadgeMode_t** modes = emulatorGetSwadgeModes(&numModes);
+
+        printf("All Modes: \n");
+        for (int i = 0; i < numModes; i++)
+        {
+            printf(" - %s\n", modes[i]->modeName);
+        }
+
+        return false;
+    }
+    else if (argModeSwitch == optName)
+    {
+        if (arg)
+        {
+            errno = 0;
+            emulatorArgs.modeSwitchTime = atol(arg);
+            if (errno)
+            {
+                printf("ERR: Invalid integer value '%s'\n", arg);
+                return false;
+            }
+        }
+        else
+        {
+            // Use default
+            emulatorArgs.modeSwitchTime = optVal;
+        }
     }
 
     // Handle options with a short-option here:
