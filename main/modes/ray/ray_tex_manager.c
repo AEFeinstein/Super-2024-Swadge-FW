@@ -29,6 +29,11 @@
  */
 void initLoadedTextures(ray_t* ray)
 {
+    loadWsg("GUN_NORMAL.wsg", &ray->guns[LO_NORMAL], true);
+    loadWsg("GUN_MISSILE.wsg", &ray->guns[LO_MISSILE], true);
+    loadWsg("GUN_ICE.wsg", &ray->guns[LO_ICE], true);
+    loadWsg("GUN_XRAY.wsg", &ray->guns[LO_XRAY], true);
+
     // Allocate space for the textures
     ray->loadedTextures = heap_caps_calloc(MAX_LOADED_TEXTURES, sizeof(namedTexture_t), MALLOC_CAP_SPIRAM);
     // Types are 8 bit, non sequential, so allocate a 256 element array. Probably too many
@@ -149,6 +154,11 @@ wsg_t* getTexById(ray_t* ray, uint8_t id)
  */
 void freeAllTex(ray_t* ray)
 {
+    freeWsg(&ray->guns[LO_NORMAL]);
+    freeWsg(&ray->guns[LO_MISSILE]);
+    freeWsg(&ray->guns[LO_ICE]);
+    freeWsg(&ray->guns[LO_XRAY]);
+
     for (int16_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
     {
         // Check if the name is NULL

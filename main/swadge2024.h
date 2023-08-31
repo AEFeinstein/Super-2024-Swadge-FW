@@ -189,6 +189,7 @@
 #include "vector2d.h"
 #include "geometry.h"
 #include "settingsManager.h"
+#include "touchUtils.h"
 
 /**
  * @struct swadgeMode_t

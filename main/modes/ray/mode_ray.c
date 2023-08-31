@@ -111,12 +111,89 @@ void rayMainLoop(int64_t elapsedUs)
         ray->btnState = evt.state;
     }
 
+    // Check if the touch area is touched, and print values if it is
+    int32_t phi, r, intensity;
+    if (getTouchJoystick(&phi, &r, &intensity))
+    {
+        // If there isn't a loadout change in progress
+        if (ray->loadoutChangeTimer == 0)
+        {
+            // Get the zones from the touchpad
+            touchJoystick_t tj = getTouchJoystickZones(phi, r, true, false);
+            if (!(tj & TB_CENTER))
+            {
+                // Get the loadout touched
+                rayLoadout_t nextLoadout = LO_NORMAL;
+                if (tj & TB_UP)
+                {
+                    nextLoadout = LO_NORMAL;
+                }
+                else if (tj & TB_RIGHT)
+                {
+                    nextLoadout = LO_MISSILE;
+                }
+                else if (tj & TB_LEFT)
+                {
+                    nextLoadout = LO_ICE;
+                }
+                else if (tj & TB_DOWN)
+                {
+                    nextLoadout = LO_XRAY;
+                }
+
+                // If a new loadout was touched
+                if (ray->loadout != nextLoadout)
+                {
+                    // Start a timer to switch to the next loadout
+                    ray->loadoutChangeTimer = LOADOUT_TIMER_US;
+                    ray->nextLoadout        = nextLoadout;
+                }
+            }
+        }
+    }
+    else
+    {
+        // Button Not touched. If this was during a loadout change, cancel it
+        if (ray->nextLoadout != ray->loadout)
+        {
+            // Reset the timer to bring the gun up and set the next loadout to the current one
+            ray->loadoutChangeTimer = LOADOUT_TIMER_US - ray->loadoutChangeTimer;
+            ray->nextLoadout        = ray->loadout;
+        }
+    }
+
+    // If a loadout change is in progress
+    if (ray->loadoutChangeTimer)
+    {
+        // Decrement the timer
+        ray->loadoutChangeTimer -= elapsedUs;
+
+        // If the timer elapsed
+        if (ray->loadoutChangeTimer <= 0)
+        {
+            if (ray->loadout != ray->nextLoadout)
+            {
+                // Swap the loadout
+                ray->loadout = ray->nextLoadout;
+                // Set the timer for the load in
+                ray->loadoutChangeTimer = LOADOUT_TIMER_US;
+            }
+            else
+            {
+                // All done swapping
+                ray->loadoutChangeTimer = 0;
+            }
+        }
+    }
+
     // Move objects, check logic, etc.
     moveRayObjects(ray, elapsedUs);
     // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
     castWalls(ray);
     // Draw sprites
     rayObj_t* centeredSprite = castSprites(ray);
+    // Draw the HUD
+    drawHud(ray);
 
     // Run a timer for head bob
     ray->bobTimer += elapsedUs;
@@ -297,8 +374,8 @@ void setPlayerAngle(q24_8 angle)
     ray->dirX = getSin1024(FROM_FX(ray->dirAngle)) / 4;
 
     // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-    ray->planeX = MUL_FX(-((1 << FRAC_BITS) * 2) / 3, ray->dirY);
-    ray->planeY = MUL_FX(((1 << FRAC_BITS) * 2) / 3, ray->dirX);
+    ray->planeX = MUL_FX(-TO_FX(2) / 3, ray->dirY);
+    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
 }
 
 /**

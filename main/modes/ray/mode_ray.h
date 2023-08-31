@@ -106,6 +106,21 @@ typedef struct
     int16_t id;            ///< This object's ID
 } rayObj_t;
 
+/** @brief The time to swap out and swap in a gun, in microseconds */
+#define LOADOUT_TIMER_US (1 << 18)
+
+/**
+ * @brief All the possible loadouts
+ */
+typedef enum
+{
+    LO_NORMAL,   ///< Normal loadout
+    LO_MISSILE,  ///< Missile loadout
+    LO_ICE,      ///< Ice beam loadout
+    LO_XRAY,     ///< X-Ray loadout
+    NUM_LOADOUTS ///< The number of loadouts
+} rayLoadout_t;
+
 typedef struct
 {
     rayMap_t map;
@@ -130,8 +145,13 @@ typedef struct
 
     bool isStrafing;
 
+    rayLoadout_t loadout;
+    rayLoadout_t nextLoadout;
+    int32_t loadoutChangeTimer;
+
     namedTexture_t* loadedTextures;
     uint8_t* typeToIdxMap;
+    wsg_t guns[NUM_LOADOUTS];
 } ray_t;
 
 extern swadgeMode_t rayMode;

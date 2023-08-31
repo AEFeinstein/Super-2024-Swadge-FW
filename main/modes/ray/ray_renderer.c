@@ -214,7 +214,7 @@ void castWalls(ray_t* ray)
     for (int16_t x = 0; x < TFT_WIDTH; x++)
     {
         // calculate ray position and direction
-        q24_8 cameraX = ((x * (2 << FRAC_BITS)) / TFT_WIDTH) - (1 << FRAC_BITS); // x-coordinate in camera space
+        q24_8 cameraX = ((x * TO_FX(2)) / TFT_WIDTH) - TO_FX(1); // x-coordinate in camera space
         q24_8 rayDirX = ADD_FX(ray->dirX, MUL_FX(ray->planeX, cameraX));
         q24_8 rayDirY = ADD_FX(ray->dirY, MUL_FX(ray->planeY, cameraX));
 
@@ -232,8 +232,8 @@ void castWalls(ray_t* ray)
         // ratio between deltaDistX and deltaDistY matters, due to the way the DDA
         // stepping further below works. So the values can be computed as below.
         // Division through zero is prevented
-        q24_8 deltaDistX = (rayDirX == 0) ? INT32_MAX : ABS(DIV_FX((1 << FRAC_BITS), rayDirX));
-        q24_8 deltaDistY = (rayDirY == 0) ? INT32_MAX : ABS(DIV_FX((1 << FRAC_BITS), rayDirY));
+        q24_8 deltaDistX = (rayDirX == 0) ? INT32_MAX : ABS(DIV_FX(TO_FX(1), rayDirX));
+        q24_8 deltaDistY = (rayDirY == 0) ? INT32_MAX : ABS(DIV_FX(TO_FX(1), rayDirY));
 
         // what direction to step in x or y-direction (either +1 or -1)
         int8_t stepX = 0;
@@ -453,7 +453,7 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
     if (0 == rayDirX)
     {
         // Compare the decimal part of the camera X position to how open the door is
-        if ((posX & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+        if ((posX & (TO_FX(1) - 1)) >= doorOpen)
         {
             // Intersection!
             return true;
@@ -472,7 +472,7 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
             if (0 == rayDirY)
             {
                 // Compare the decimal part of the camera Y position to how open the door is
-                if ((posY & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+                if ((posY & (TO_FX(1) - 1)) >= doorOpen)
                 {
                     // Intersection
                     return true;
@@ -498,7 +498,7 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
                 if (FROM_FX(doorIntersectionX) == mapX)
                 {
                     // Compare the decimal part of the intersection point with how open the door is
-                    if ((doorIntersectionX & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+                    if ((doorIntersectionX & (TO_FX(1) - 1)) >= doorOpen)
                     {
                         // The ray intersects with the door
                         return true;
@@ -528,7 +528,7 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
             if (FROM_FX(doorIntersectionY) == mapY)
             {
                 // Compare the decimal part of the intersection point with how open the door is
-                if ((doorIntersectionY & ((1 << FRAC_BITS) - 1)) >= doorOpen)
+                if ((doorIntersectionY & (TO_FX(1) - 1)) >= doorOpen)
                 {
                     // The ray intersects with the door
                     return true;
@@ -634,7 +634,10 @@ rayObj_t* castSprites(ray_t* ray)
                 continue;
             }
             // Width should always be positive
-            spriteWidth = ABS(spriteWidth);
+            if (spriteWidth < 0)
+            {
+                spriteWidth = -spriteWidth;
+            }
 
             // This is the texture step per-screen-pixel
             q16_16 texXDelta = (tWidth << 16) / spriteWidth;
@@ -672,7 +675,10 @@ rayObj_t* castSprites(ray_t* ray)
             // calculate height of the sprite on screen
             // using 'transformY' instead of the real distance prevents fisheye
             int16_t spriteHeight = TO_FX(TFT_HEIGHT) / transformY;
-            spriteHeight         = ABS(spriteHeight);
+            if (spriteHeight < 0)
+            {
+                spriteHeight = -spriteHeight;
+            }
 
             // This is the texture step per-screen-pixel
             q16_16 texYDelta = (tHeight << 16) / spriteHeight;
@@ -730,4 +736,32 @@ rayObj_t* castSprites(ray_t* ray)
         }
     }
     return lockedObj;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ray
+ */
+void drawHud(ray_t* ray)
+{
+    wsg_t* gun      = &ray->guns[ray->loadout];
+    int16_t yOffset = TFT_HEIGHT - gun->h;
+    // If a loadout change is in progress
+    if (ray->loadoutChangeTimer)
+    {
+        // Loadout is changing out
+        if (ray->loadout != ray->nextLoadout)
+        {
+            // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves down
+            yOffset += (gun->h - ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US));
+        }
+        // Loadout is changing in
+        else
+        {
+            // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves up
+            yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
+        }
+    }
+    drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
 }

@@ -7,5 +7,6 @@
 void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow);
 void castWalls(ray_t* ray);
 rayObj_t* castSprites(ray_t* ray);
+void drawHud(ray_t* ray);
 
 #endif
