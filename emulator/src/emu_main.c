@@ -73,6 +73,15 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
 //==============================================================================
 
 /**
+ * @brief Quits the emulator
+ *
+ */
+void emulatorQuit(void)
+{
+    isRunning = false;
+}
+
+/**
  * @brief Parse and handle command line arguments
  *
  * @param argc The number of command line arguments
@@ -113,6 +122,12 @@ int main(int argc, char** argv)
     // Call any init callbacks we may have and pass them the parsed command-line arguments
     // We also determine which extensions are enabled here, which is important for laying out the window properly
     initExtensions(&emulatorArgs);
+
+    if (!isRunning)
+    {
+        // One of the extension must have quit due to an error.
+        return 0;
+    }
 #endif
 
     // First initialize rawdraw
