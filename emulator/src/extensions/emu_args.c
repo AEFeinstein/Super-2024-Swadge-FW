@@ -84,16 +84,16 @@ emuArgs_t emulatorArgs = {
     .fullscreen = false,
     .hideLeds   = false,
 
-    .fuzz = false,
+    .fuzz        = false,
     .fuzzButtons = false,
-    .fuzzTouch = false,
-    .fuzzMotion = false,
+    .fuzzTouch   = false,
+    .fuzzMotion  = false,
 
     .keymap = NULL,
 
     .lock = false,
 
-    .startMode = NULL,
+    .startMode      = NULL,
     .modeSwitchTime = 0,
 
     .emulateMotion      = false,
@@ -190,8 +190,8 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
     {
         // Enable Fuzz
         emulatorArgs.fuzzButtons = true;
-        emulatorArgs.fuzzTouch = true;
-        emulatorArgs.fuzzMotion = true;
+        emulatorArgs.fuzzTouch   = true;
+        emulatorArgs.fuzzMotion  = true;
         return true;
     }
     else if (argFuzzButtons == optName)
@@ -251,7 +251,7 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
     {
         if (arg)
         {
-            errno = 0;
+            errno                       = 0;
             emulatorArgs.modeSwitchTime = atol(arg);
             if (errno)
             {
@@ -756,12 +756,10 @@ bool emuParseArgs(int argc, char** argv)
             optName = optDoc->longOpt;
         }
 
-        if(!optArg
-           && NULL != argv[optind]
-           && '-' != *(argv[optind]))
+        if (!optArg && NULL != argv[optind] && '-' != *(argv[optind]))
         {
             // This makes optional arguments work even if you don't connect them with the '='
-           optArg = argv[optind++];
+            optArg = argv[optind++];
         }
 
         // Ok, now for the case of an option which has no short-opt in the getopt options struct,
@@ -855,14 +853,12 @@ static bool parseBoolArg(const char* val, bool defaultValue)
 
             default:
             {
-                if (!strncmp("off", val, MAX(2, strlen("off")))
-                    || !strncmp("disable", val, strlen(val))
+                if (!strncmp("off", val, MAX(2, strlen("off"))) || !strncmp("disable", val, strlen(val))
                     || !strncmp("without", val, MAX(5, strlen(val))))
                 {
                     return false;
                 }
-                else if (!strncmp("on", val, strlen("on"))
-                         || !strncmp("enable", val, strlen("enable"))
+                else if (!strncmp("on", val, strlen("on")) || !strncmp("enable", val, strlen("enable"))
                          || !strncmp("with", val, strlen(val)))
                 {
                     return true;

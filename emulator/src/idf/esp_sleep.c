@@ -4,8 +4,8 @@
 #include "swadge2024.h"
 
 static uint64_t timeToLightSleep = 0;
-static bool modeLocked = false;
-static bool overrideLock = false;
+static bool modeLocked           = false;
+static bool overrideLock         = false;
 
 esp_sleep_wakeup_cause_t esp_sleep_get_wakeup_cause(void)
 {
@@ -63,6 +63,6 @@ void emulatorForceSwitchToSwadgeMode(swadgeMode_t* mode)
  */
 void emulatorSetSwadgeModeLocked(bool locked)
 {
-    modeLocked = locked;
+    modeLocked   = locked;
     overrideLock = false;
 }

@@ -11,8 +11,11 @@
 #include <stdlib.h>
 
 // Mode Includes
-// Quickly regenerate with:
-// grep -lirE '^extern swadgeMode_t (.*);' | grep -oE '([^/]+\.h)' | grep -v quickSettings | awk '{printf "#include \"%s\"\n",$1 }' | sort
+/*
+ Quickly regenerate with:
+   grep -lirE '^extern swadgeMode_t (.*);' | grep -oE '([^/]+\.h)'
+    | grep -v quickSettings | awk '{printf "#include \"%s\"\n",$1 }' | sort
+*/
 #include "accelTest.h"
 #include "colorchord.h"
 #include "dance.h"
@@ -27,7 +30,7 @@
 // Defines
 //==============================================================================
 
-#define ONE_SECOND 1000000 //us
+#define ONE_SECOND 1000000 // us
 
 //==============================================================================
 // Function Prototypes
@@ -41,10 +44,13 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 // Variables
 //==============================================================================
 
-// Quickly regenerate with:
-// grep -hirE '^extern swadgeMode_t (.*);' main/modes/ | awk '{print $3}' | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
-static swadgeMode_t* allSwadgeModes[] =
-{
+/*
+ Quickly regenerate with:
+   grep -hirE '^extern swadgeMode_t (.*);' main/modes/ | awk '{print $3}'
+     | sed -E 's/(.*);/\&\1,/g' | grep -v quickSettings | sort
+*/
+// clang-format off
+static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
     &colorchordMode,
     &danceMode,
@@ -55,9 +61,9 @@ static swadgeMode_t* allSwadgeModes[] =
     &touchTestMode,
     &tunernomeMode,
 };
+// clang-format on
 
-emuExtension_t modesEmuExtension =
-{
+emuExtension_t modesEmuExtension = {
     .name            = "modes",
     .fnInitCb        = modesInitCb,
     .fnPreFrameCb    = modesPreFrameCb,
@@ -107,18 +113,18 @@ void modesPreFrameCb(uint64_t frame)
         // Periodic mode switching is enabled!
         // Keep track of when we need to switch modes
         static int64_t lastTime = 0;
-        static int64_t timer = 0;
+        static int64_t timer    = 0;
 
         if (lastTime == 0)
         {
             lastTime = esp_timer_get_time();
-            timer = ((int64_t)emulatorArgs.modeSwitchTime) * ONE_SECOND;
+            timer    = ((int64_t)emulatorArgs.modeSwitchTime) * ONE_SECOND;
         }
         else
         {
-            int64_t now = esp_timer_get_time();
+            int64_t now     = esp_timer_get_time();
             int64_t elapsed = now - lastTime;
-            lastTime = now;
+            lastTime        = now;
             if (elapsed >= timer)
             {
                 timer = ((int64_t)emulatorArgs.modeSwitchTime * ONE_SECOND) - (elapsed - timer);
@@ -129,7 +135,6 @@ void modesPreFrameCb(uint64_t frame)
                 timer -= elapsed;
             }
         }
-
     }
 }
 
