@@ -196,7 +196,7 @@ void taskYIELD(void)
         CNFGTearDown();
 
 #ifdef ENABLE_GCOV
-    __gcov_dump();
+        __gcov_dump();
 #endif
 
         exit(0);
