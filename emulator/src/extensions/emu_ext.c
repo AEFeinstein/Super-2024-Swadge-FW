@@ -266,9 +266,7 @@ bool enableExtension(const char* name)
     emuExtInfo_t* extInfo = findExtInfo(findExt(name));
     if (NULL != extInfo)
     {
-        extInfo->enabled = true;
-
-        if (!extInfo->initialized)
+        if (!extInfo->initialized || !extInfo->enabled)
         {
             if (extInfo->extension->fnInitCb)
             {
@@ -284,6 +282,8 @@ bool enableExtension(const char* name)
         {
             extManager.paneMinsCalculated = false;
         }
+
+        extInfo->enabled = true;
 
         return true;
     }

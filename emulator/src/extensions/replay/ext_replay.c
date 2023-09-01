@@ -6,6 +6,7 @@
 #include "hdw-accel.h"
 #include "hdw-accel_emu.h"
 #include "macros.h"
+#include "emu_main.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +25,8 @@
 #else
 #define REPLAY_DEBUG(str, ...)
 #endif
+
+#define LAST_TYPE QUIT
 
 //==============================================================================
 // Enums
@@ -45,6 +48,8 @@ typedef enum
     ACCEL_X,
     ACCEL_Y,
     ACCEL_Z,
+    FUZZ,
+    QUIT,
 } replayLogType_t;
 
 //==============================================================================
@@ -112,6 +117,8 @@ static const char* replayLogTypeStrs[] =
     "AccelX",
     "AccelY",
     "AccelZ",
+    "Fuzz",
+    "Quit",
 };
 
 static const char* replayButtonNames[] =
@@ -197,7 +204,7 @@ static void replayRecordFrame(uint64_t frame)
     buttonBit_t curButtons = emulatorGetButtonState();
 
 
-    for (replayLogType_t type = BUTTON_PRESS; type <= ACCEL_Z; type += 1)
+    for (replayLogType_t type = BUTTON_PRESS; type <= LAST_TYPE; type += 1)
     {
         logEntry.type = type;
 
@@ -291,9 +298,13 @@ static void replayRecordFrame(uint64_t frame)
                 }
                 break;
             }
+
+            // These would be manually inserted, so no need to handle writing
+            case FUZZ:
+            case QUIT:
+            break;
         }
     }
-
 
     replay.lastTouchR = touchR;
     replay.lastTouchPhi = touchPhi;
@@ -379,6 +390,25 @@ static void replayPlaybackFrame(uint64_t frame)
                 case ACCEL_Z:
                 {
                     accelZ = replay.nextEntry.accelVal;
+                    break;
+                }
+
+                case FUZZ:
+                {
+                    emulatorArgs.fuzz = true;
+                    emulatorArgs.fuzzButtons = true;
+                    emulatorArgs.fuzzTouch = true;
+                    emulatorArgs.fuzzMotion = true;
+
+                    printf("Replay: Enabling Fuzzer");
+                    enableExtension("fuzzer");
+                    break;
+                }
+
+                case QUIT:
+                {
+                    printf("Replay: Stopping Emulator\n");
+                    emulatorQuit();
                     break;
                 }
             }
@@ -476,7 +506,7 @@ static bool readEntry(replayEntry_t* entry)
         return false;
     }
 
-    for (replayLogType_t type = BUTTON_PRESS; type <= ACCEL_Z; type += 1)
+    for (replayLogType_t type = BUTTON_PRESS; type <= LAST_TYPE; type += 1)
     {
         const char* str = replayLogTypeStrs[type];
         if (!strncmp(str, buffer, sizeof(buffer) - 1))
@@ -485,7 +515,7 @@ static bool readEntry(replayEntry_t* entry)
             break;
         }
 
-        if (type == ACCEL_Z)
+        if (type == LAST_TYPE)
         {
             printf("ERR: No action type matched '%s'\n", buffer);
             return false;
@@ -546,6 +576,21 @@ static bool readEntry(replayEntry_t* entry)
             break;
         }
 
+        case FUZZ:
+        {
+            // Just advance to the next line
+            fscanf(replay.file, "%*[^\n]\n");
+
+            break;
+        }
+
+        case QUIT:
+        {
+            // Just advance to the next line
+            fscanf(replay.file, "%*[^\n]\n");
+            break;
+        }
+
         default:
         {
             return false;
@@ -596,6 +641,12 @@ static void writeEntry(const replayEntry_t* entry)
         case ACCEL_Z:
         {
             snprintf(ptr, BUFSIZE, "%"PRId16"\n", entry->accelVal);
+            break;
+        }
+
+        case FUZZ:
+        case QUIT:
+        {
             break;
         }
     }
