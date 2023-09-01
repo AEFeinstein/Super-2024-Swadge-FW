@@ -11,6 +11,7 @@
 
 #include "emu_args.h"
 #include "macros.h"
+#include "ext_modes.h"
 
 //==============================================================================
 // Defines
@@ -73,6 +74,7 @@ static const optDoc_t* findOptDoc(char shortOpt, const char* longOpt);
 static const struct option* findOption(char shortOpt, const char* longOpt);
 static void getOptionsStr(char* buffer, int buflen);
 static void printColWordWrap(const char* text, int* col, int startCol, int wrapCol);
+static bool parseBoolArg(const char* val, bool defaultValue);
 
 //==============================================================================
 // Variables
@@ -82,7 +84,17 @@ emuArgs_t emulatorArgs = {
     .fullscreen = false,
     .hideLeds   = false,
 
+    .fuzz        = false,
+    .fuzzButtons = false,
+    .fuzzTouch   = false,
+    .fuzzMotion  = false,
+
     .keymap = NULL,
+
+    .lock = false,
+
+    .startMode      = NULL,
+    .modeSwitchTime = 0,
 
     .emulateMotion      = false,
     .motionJitter       = false,
@@ -97,11 +109,19 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
-static const char argFullscreen[] = "fullscreen";
-static const char argHideLeds[]   = "hide-leds";
-static const char argTouch[]      = "touch";
-static const char argHelp[]       = "help";
-static const char argUsage[]      = "usage";
+static const char argFullscreen[]  = "fullscreen";
+static const char argFuzz[]        = "fuzz";
+static const char argFuzzButtons[] = "fuzz-buttons";
+static const char argFuzzTouch[]   = "fuzz-touch";
+static const char argFuzzMotion[]  = "fuzz-motion";
+static const char argHideLeds[]    = "hide-leds";
+static const char argLock[]        = "lock";
+static const char argMode[]        = "mode";
+static const char argModeSwitch[]  = "mode-switch";
+static const char argModeList[]    = "modes-list";
+static const char argTouch[]       = "touch";
+static const char argHelp[]        = "help";
+static const char argUsage[]       = "usage";
 
 // clang-format off
 /**
@@ -109,11 +129,19 @@ static const char argUsage[]      = "usage";
  */
 static const struct option options[] =
 {
-    { argFullscreen, no_argument, (int*)&emulatorArgs.fullscreen,   true },
-    { argHideLeds,   no_argument, (int*)&emulatorArgs.hideLeds,     true },
-    { argTouch,      no_argument, (int*)&emulatorArgs.emulateTouch, true },
-    { argHelp,       no_argument, NULL,                             'h'  },
-    { argUsage,      no_argument, NULL,                             0    },
+    { argFullscreen,  no_argument,       (int*)&emulatorArgs.fullscreen,   true },
+    { argFuzz,        no_argument,       (int*)&emulatorArgs.fuzz,         true },
+    { argFuzzButtons, optional_argument, (int*)&emulatorArgs.fuzzButtons,  true },
+    { argFuzzTouch,   optional_argument, (int*)&emulatorArgs.fuzzTouch,    true },
+    { argFuzzMotion,  optional_argument, (int*)&emulatorArgs.fuzzMotion,   true },
+    { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
+    { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
+    { argMode,        required_argument, NULL,                             'm'  },
+    { argModeSwitch,  optional_argument, NULL,                             10   },
+    { argModeList,    no_argument,       NULL,                             0    },
+    { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, true },
+    { argHelp,        no_argument,       NULL,                             'h'  },
+    { argUsage,       no_argument,       NULL,                             0    },
 
     {0},
 };
@@ -123,11 +151,19 @@ static const struct option options[] =
  */
 static const optDoc_t argDocs[] =
 {
-    {'f', argFullscreen, NULL, "Open in fullscreen mode" },
-    { 0,  argHideLeds,   NULL, "Don't draw simulated LEDs next to the display" },
-    {'t', argTouch,      NULL, "Simulate touch sensor readings with a virtual touchpad" },
-    {'h', argHelp,       NULL, "Give this help list" },
-    { 0,  argUsage,      NULL, "Give a short usage message" },
+    {'f', argFullscreen,  NULL,    "Open in fullscreen mode" },
+    { 0,  argFuzz,        NULL,    "Enable fuzzing mode, which injects random input in order to test modes" },
+    { 0,  argFuzzButtons, "y|n",   "Set whether buttons are fuzzed" },
+    { 0,  argFuzzTouch,   "y|n",   "Set whether touchpad inputs are fuzzed" },
+    { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
+    { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
+    {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
+    {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
+    { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
+    { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
+    {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
+    {'h', argHelp,        NULL,    "Give this help list" },
+    { 0,  argUsage,       NULL,    "Give a short usage message" },
 };
 // clang-format on
 
@@ -149,6 +185,86 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
     // Handle arguments with no short-option like this:
     // if (optName == argUsage)
     //{ doSomething(); return true }
+
+    if (argFuzz == optName)
+    {
+        // Enable Fuzz
+        emulatorArgs.fuzzButtons = true;
+        emulatorArgs.fuzzTouch   = true;
+        emulatorArgs.fuzzMotion  = true;
+        return true;
+    }
+    else if (argFuzzButtons == optName)
+    {
+        // Fuzz Buttons
+        emulatorArgs.fuzz = true;
+        // Set arg to parsed boolean arg if present, otherwise true
+        if (arg)
+        {
+            emulatorArgs.fuzzButtons = parseBoolArg(arg, true);
+        }
+        return true;
+    }
+    else if (argFuzzTouch == optName)
+    {
+        // Fuzz Touch
+        emulatorArgs.fuzz = true;
+        // Set arg to parsed boolean arg if present, otherwise true
+        if (arg)
+        {
+            emulatorArgs.fuzzTouch = parseBoolArg(arg, true);
+        }
+        return true;
+    }
+    else if (argFuzzMotion == optName)
+    {
+        // Fuzz Motion
+        emulatorArgs.fuzz = true;
+        // Set arg to parsed boolean arg if present, otherwise true
+        if (arg)
+        {
+            emulatorArgs.fuzzMotion = parseBoolArg(arg, true);
+        }
+        return true;
+    }
+    else if (argMode == optName)
+    {
+        if (arg)
+        {
+            emulatorArgs.startMode = arg;
+        }
+    }
+    else if (argModeList == optName)
+    {
+        int numModes;
+        const swadgeMode_t** modes = emulatorGetSwadgeModes(&numModes);
+
+        printf("All Modes: \n");
+        for (int i = 0; i < numModes; i++)
+        {
+            printf(" - %s\n", modes[i]->modeName);
+        }
+
+        return false;
+    }
+    else if (argModeSwitch == optName)
+    {
+        if (arg)
+        {
+            errno                       = 0;
+            emulatorArgs.modeSwitchTime = atol(arg);
+            if (errno)
+            {
+                printf("ERR: Invalid integer value '%s'\n", arg);
+                return false;
+            }
+        }
+        else
+        {
+            // Use default
+            emulatorArgs.modeSwitchTime = optVal;
+        }
+    }
 
     // Handle options with a short-option here:
     switch (optVal)
@@ -596,15 +712,18 @@ bool emuParseArgs(int argc, char** argv)
         }
         else if (optVal == '?')
         {
-            // Handle unknown argument
-            // exit(1);
+            // Unknown argument, print custom error message
+            printf("%1$s: unrecognized option '%3$s'\n\nTry `%2$s --help` or `%2$s --usage` for more\ninformation.\n",
+                   executableName, prettyExecutableName, argv[optind - 1]);
             return false;
         }
         else if (optVal == ':')
         {
-            // Unknown argument, print custom error message
-            printf("%1$s: unrecognized option '%3$s'\nTry `%2$s --help` or `%2$s --usage` for more\ninformation.\n",
-                   executableName, prettyExecutableName, optarg);
+            // Missing value, print custom error message
+            printf("%1$s: option '%3$s' missing required argument\n\nTry `%2$s --help` or `%2$s --usage` for "
+                   "more\ninformation.\n",
+                   executableName, prettyExecutableName, argv[optind - 1]);
+            return false;
         }
 
         // This was a short option,
@@ -640,12 +759,10 @@ bool emuParseArgs(int argc, char** argv)
             optName = optDoc->longOpt;
         }
 
-        if(!optArg
-           && NULL != argv[optind]
-           && '-' != *(argv[optind]))
+        if (!optArg && NULL != argv[optind] && '-' != *(argv[optind]))
         {
             // This makes optional arguments work even if you don't connect them with the '='
-           optArg = argv[optind++];
+            optArg = argv[optind++];
         }
 
         // Ok, now for the case of an option which has no short-opt in the getopt options struct,
@@ -697,4 +814,65 @@ bool emuParseArgs(int argc, char** argv)
     }
 
     return true;
+}
+
+/**
+ * @brief Parses an option argument string into a boolean value
+ *
+ * The following characters will be recognized as \c true or \c false, respectively,
+ * if at the beginning of the string: \c '1'/'0', \c 'T'/'F', \c 't'/'f', \c 'Y'/'N',
+ * and \c 'y'/'n'.
+ *
+ * The following full strings for \c true are also supported: \c "on", \c "enable",
+ * and \c "with". For \c false, these strings are supported: \c "off", \c "disable",
+ * and \c "without".
+ *
+ * If \c val is \c NULL, \c false is always returned.
+ *
+ * @param val The string to parse
+ * @param defaultValue The value to return if no boolean was recognized.
+ * @return true If the string matches any truthy string
+ * @return false If the string matches any falsy string
+ */
+static bool parseBoolArg(const char* val, bool defaultValue)
+{
+    if (val)
+    {
+        switch (*val)
+        {
+            case '1':
+            case 'T':
+            case 't':
+            case 'Y':
+            case 'y':
+                return true;
+
+            case '0':
+            case 'F':
+            case 'f':
+            case 'N':
+            case 'n':
+                return false;
+
+            default:
+            {
+                if (!strncmp("off", val, MAX(2, strlen("off"))) || !strncmp("disable", val, strlen(val))
+                    || !strncmp("without", val, MAX(5, strlen(val))))
+                {
+                    return false;
+                }
+                else if (!strncmp("on", val, strlen("on")) || !strncmp("enable", val, strlen("enable"))
+                         || !strncmp("with", val, strlen(val)))
+                {
+                    return true;
+                }
+                else
+                {
+                    return defaultValue;
+                }
+            }
+        }
+    }
+
+    return false;
 }
