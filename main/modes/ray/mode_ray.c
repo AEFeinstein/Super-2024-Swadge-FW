@@ -342,7 +342,16 @@ void rayMainLoop(int64_t elapsedUs)
         {
             if (-1 == ray->objs[newIdx].id)
             {
-                wsg_t* texture           = getTexByType(ray, OBJ_BULLET_NORMAL);
+                const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
+                    OBJ_BULLET_NORMAL, ///< Normal loadout
+                    // TODO charge unaccounted for
+                    OBJ_BULLET_MISSILE, ///< Missile loadout
+                    OBJ_BULLET_ICE,     ///< Ice beam loadout
+                    OBJ_BULLET_XRAY     ///< X-Ray loadout
+                };
+                rayMapCellType_t bulletType = bulletMap[ray->loadout];
+
+                wsg_t* texture           = getTexByType(ray, bulletType);
                 ray->objs[newIdx].sprite = texture;
                 ray->objs[newIdx].dist   = 0;
                 ray->objs[newIdx].posX   = ray->posX + ray->dirX / 2;
@@ -350,7 +359,7 @@ void rayMainLoop(int64_t elapsedUs)
                 ray->objs[newIdx].velX   = ray->dirX;
                 ray->objs[newIdx].velY   = ray->dirY;
                 ray->objs[newIdx].radius = DIV_FX(TO_FX(texture->w), TO_FX(64));
-                ray->objs[newIdx].type   = OBJ_BULLET_NORMAL;
+                ray->objs[newIdx].type   = bulletType;
                 ray->objs[newIdx].id     = 0;
                 break;
             }

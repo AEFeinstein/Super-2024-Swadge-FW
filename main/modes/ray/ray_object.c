@@ -49,14 +49,20 @@ void moveRayObjects(ray_t* ray, int64_t elapsedUs)
             // Else if a door is hit
             else if (CELL_IS_TYPE(cell->type, BG | DOOR))
             {
-                // Start opening the door
-                // TODO check bullet / door combo
-                if (0 == cell->doorOpen)
+                if ((BG_DOOR == cell->type) // Normal doors are openable by anything
+                    || (BG_DOOR_CHARGE == cell->type /*&& OBJ_BULLET_CHARGE == obj->type*/) // TODO charge beam
+                    || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->type)
+                    || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->type)
+                    || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->type))
                 {
-                    cell->doorOpen = 1;
-                    // Destroy this bullet
-                    memset(obj, 0, sizeof(rayObj_t));
-                    obj->id = -1;
+                    // Start opening the door
+                    if (0 == cell->doorOpen)
+                    {
+                        cell->doorOpen = 1;
+                        // Destroy this bullet
+                        memset(obj, 0, sizeof(rayObj_t));
+                        obj->id = -1;
+                    }
                 }
             }
         }

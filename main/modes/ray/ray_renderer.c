@@ -21,6 +21,21 @@
 // Half width of the lock zone when locking on enemies
 #define LOCK_ZONE 16
 
+const paletteColor_t xrayPaletteSwap[]
+    = {c555, c554, c553, c552, c551, c550, c545, c544, c543, c542, c541, c540, c535,        c534, c533, c532, c531,
+       c530, c525, c524, c523, c522, c521, c520, c515, c514, c513, c512, c511, c510,        c505, c504, c503, c502,
+       c501, c500, c455, c454, c453, c452, c451, c450, c445, c444, c443, c442, c441,        c440, c435, c434, c433,
+       c432, c431, c430, c425, c424, c423, c422, c421, c420, c415, c414, c413, c412,        c411, c410, c405, c404,
+       c403, c402, c401, c400, c355, c354, c353, c352, c351, c350, c345, c344, c343,        c342, c341, c340, c335,
+       c334, c333, c332, c331, c330, c325, c324, c323, c322, c321, c320, c315, c314,        c313, c312, c311, c310,
+       c305, c304, c303, c302, c301, c300, c255, c254, c253, c252, c251, c250, c245,        c244, c243, c242, c241,
+       c240, c235, c234, c233, c232, c231, c230, c225, c224, c223, c222, c221, c220,        c215, c214, c213, c212,
+       c211, c210, c205, c204, c203, c202, c201, c200, c155, c154, c153, c152, c151,        c150, c145, c144, c143,
+       c142, c141, c140, c135, c134, c133, c132, c131, c130, c125, c124, c123, c122,        c121, c120, c115, c114,
+       c113, c112, c111, c110, c105, c104, c103, c102, c101, c100, c055, c054, c053,        c052, c051, c050, c045,
+       c044, c043, c042, c041, c040, c035, c034, c033, c032, c031, c030, c025, c024,        c023, c022, c021, c020,
+       c015, c014, c013, c012, c011, c010, c005, c004, c003, c002, c001, c000, cTransparent};
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -44,6 +59,9 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
 {
     // We'll be drawing pixels, so set this up
     SETUP_FOR_TURBO();
+
+    // Boolean if the colors should be drawn inverted
+    bool isXray = (LO_XRAY == ray->loadout);
 
     // Track which cell the ceiling or floor is being drawn in
     uint16_t cellX = 0;
@@ -186,7 +204,14 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
                 ty = (((uint32_t)texPosY) >> Q16_16_FRAC_BITS) % TEX_HEIGHT;
 
                 // Draw the pixel
-                TURBO_SET_PIXEL(x, y, texture[TEX_WIDTH * ty + tx]);
+                if (isXray)
+                {
+                    TURBO_SET_PIXEL(x, y, xrayPaletteSwap[texture[TEX_WIDTH * ty + tx]]);
+                }
+                else
+                {
+                    TURBO_SET_PIXEL(x, y, texture[TEX_WIDTH * ty + tx]);
+                }
             }
 
             // Always increment, regardless of if pixels were drawn
@@ -209,6 +234,9 @@ void castWalls(ray_t* ray)
 {
     // We'll be drawing pixels, so set this up
     SETUP_FOR_TURBO();
+
+    // Boolean if the colors should be drawn inverted
+    bool isXray = (LO_XRAY == ray->loadout);
 
     // For each ray
     for (int16_t x = 0; x < TFT_WIDTH; x++)
@@ -272,6 +300,7 @@ void castWalls(ray_t* ray)
 
         q24_8 wallX        = 0;                             // where exactly the wall was hit
         int16_t lineHeight = 0, drawStart = 0, drawEnd = 0; // the height of the wall strip
+        bool xrayOverride = false;                          // Whether or not a wall should be drawn instead of a door
         // perform DDA
         while (false == hit)
         {
@@ -293,8 +322,30 @@ void castWalls(ray_t* ray)
             rayMapCellType_t tileType = ray->map.tiles[mapX][mapY].type;
             if (CELL_IS_TYPE(tileType, BG | WALL) || CELL_IS_TYPE(tileType, BG | DOOR))
             {
+                // Check if the door should be drawn recessed or not
+                bool drawRecessedDoor = false;
+                if (tileType == BG_DOOR_XRAY)
+                {
+                    // X-Ray door, only draw recessed if the X-Ray loadout is active or the door is open
+                    if ((LO_XRAY == ray->loadout) || (TO_FX(1) == ray->map.tiles[mapX][mapY].doorOpen))
+                    {
+                        // Draw recessed door
+                        drawRecessedDoor = true;
+                    }
+                    // If not fully open, draw X-Ray doors as walls without the X-Ray loadout
+                    else
+                    {
+                        xrayOverride = true;
+                    }
+                }
+                else if (CELL_IS_TYPE(tileType, BG | DOOR))
+                {
+                    // Not an X-Ray door, always draw recessed
+                    drawRecessedDoor = true;
+                }
+
                 // If this cell is a door
-                if (CELL_IS_TYPE(tileType, BG | DOOR))
+                if (drawRecessedDoor)
                 {
                     // Check if the ray actually intersects the recessed door
                     if (rayIntersectsDoor(side, mapX, mapY, ray->posX, ray->posY, rayDirX, rayDirY, deltaDistX,
@@ -367,7 +418,7 @@ void castWalls(ray_t* ray)
                 wallX = SUB_FX(wallX, FLOOR_FX(wallX));
 
                 // For sliding doors
-                if (CELL_IS_TYPE(tileType, BG | DOOR))
+                if (drawRecessedDoor)
                 {
                     // Adjust wallX to start drawing the texture at the door's edge rather than the map cell's edge
                     wallX -= ray->map.tiles[mapX][mapY].doorOpen;
@@ -414,7 +465,15 @@ void castWalls(ray_t* ray)
         }
 
         // Pick the texture based on the map tile
-        paletteColor_t* tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
+        paletteColor_t* tex;
+        if (xrayOverride)
+        {
+            tex = getTexByType(ray, BG_WALL_1)->px;
+        }
+        else
+        {
+            tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
+        }
 
         // Draw a vertical strip
         for (int16_t y = drawStart; y < drawEnd; y++)
@@ -426,7 +485,15 @@ void castWalls(ray_t* ray)
             texPos += step;
 
             // Get the color from the texture
-            TURBO_SET_PIXEL(x, y, tex[TEX_HEIGHT * texY + texX]);
+
+            if (isXray)
+            {
+                TURBO_SET_PIXEL(x, y, xrayPaletteSwap[tex[TEX_HEIGHT * texY + texX]]);
+            }
+            else
+            {
+                TURBO_SET_PIXEL(x, y, tex[TEX_HEIGHT * texY + texX]);
+            }
         }
     }
 }
@@ -567,6 +634,9 @@ rayObj_t* castSprites(ray_t* ray)
 
     // Setup to draw
     SETUP_FOR_TURBO();
+
+    // Boolean if the colors should be drawn inverted
+    bool isXray = (LO_XRAY == ray->loadout);
 
     // Assign each sprite a distance from the player
     for (int i = 0; i < MAX_RAY_OBJS; i++)
@@ -726,7 +796,14 @@ rayObj_t* castSprites(ray_t* ray)
                         paletteColor_t color = obj->sprite->px[tWidth * (texY >> 16) + (texX >> 16)];
                         if (cTransparent != color)
                         {
-                            TURBO_SET_PIXEL(stripe, y, color);
+                            if (isXray)
+                            {
+                                TURBO_SET_PIXEL(stripe, y, xrayPaletteSwap[color]);
+                            }
+                            else
+                            {
+                                TURBO_SET_PIXEL(stripe, y, color);
+                            }
                         }
                         texY += texYDelta;
                     }
