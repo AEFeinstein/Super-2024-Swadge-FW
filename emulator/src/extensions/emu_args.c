@@ -712,15 +712,18 @@ bool emuParseArgs(int argc, char** argv)
         }
         else if (optVal == '?')
         {
-            // Handle unknown argument
-            // exit(1);
+            // Unknown argument, print custom error message
+            printf("%1$s: unrecognized option '%3$s'\n\nTry `%2$s --help` or `%2$s --usage` for more\ninformation.\n",
+                   executableName, prettyExecutableName, argv[optind - 1]);
             return false;
         }
         else if (optVal == ':')
         {
-            // Unknown argument, print custom error message
-            printf("%1$s: unrecognized option '%3$s'\nTry `%2$s --help` or `%2$s --usage` for more\ninformation.\n",
-                   executableName, prettyExecutableName, optarg);
+            // Missing value, print custom error message
+            printf("%1$s: option '%3$s' missing required argument\n\nTry `%2$s --help` or `%2$s --usage` for "
+                   "more\ninformation.\n",
+                   executableName, prettyExecutableName, argv[optind - 1]);
+            return false;
         }
 
         // This was a short option,
