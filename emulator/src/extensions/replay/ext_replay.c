@@ -23,9 +23,9 @@
 #define HEADER "Time,Type,Value\n"
 
 #ifdef DEBUG
-#define REPLAY_DEBUG(str, ...) printf(str "\n", __VA_ARGS__);
+    #define REPLAY_DEBUG(str, ...) printf(str "\n", __VA_ARGS__);
 #else
-#define REPLAY_DEBUG(str, ...)
+    #define REPLAY_DEBUG(str, ...)
 #endif
 
 //==============================================================================
@@ -65,7 +65,8 @@ typedef struct
 
     replayLogType_t type;
 
-    union {
+    union
+    {
         buttonBit_t buttonVal;
         int32_t touchVal;
         int16_t accelVal;
@@ -111,35 +112,15 @@ static void writeLe(uint8_t* vals, uint32_t size, FILE* stream);
 // Variables
 //==============================================================================
 
-static const char* replayLogTypeStrs[] =
-{
-    "BtnDown",
-    "BtnUp",
-    "TouchPhi",
-    "TouchR",
-    "TouchI",
-    "AccelX",
-    "AccelY",
-    "AccelZ",
-    "Fuzz",
-    "Quit",
-    "Screenshot",
+static const char* replayLogTypeStrs[] = {
+    "BtnDown", "BtnUp", "TouchPhi", "TouchR", "TouchI", "AccelX", "AccelY", "AccelZ", "Fuzz", "Quit", "Screenshot",
 };
 
-static const char* replayButtonNames[] =
-{
-    "Up",
-    "Down",
-    "Left",
-    "Right",
-    "A",
-    "B",
-    "Start",
-    "Select",
+static const char* replayButtonNames[] = {
+    "Up", "Down", "Left", "Right", "A", "B", "Start", "Select",
 };
 
-emuExtension_t replayEmuExtension =
-{
+emuExtension_t replayEmuExtension = {
     .name            = "replay",
     .fnInitCb        = replayInit,
     .fnPreFrameCb    = replayPreFrame,
@@ -207,8 +188,8 @@ static void replayRecordFrame(uint64_t frame)
     int32_t touchPhi, touchR, touchIntensity;
     if (!getTouchJoystick(&touchPhi, &touchR, &touchIntensity))
     {
-        touchPhi = 0;
-        touchR = 0;
+        touchPhi       = 0;
+        touchR         = 0;
         touchIntensity = 0;
     }
 
@@ -216,7 +197,6 @@ static void replayRecordFrame(uint64_t frame)
     accelGetAccelVec(&accelX, &accelY, &accelZ);
 
     buttonBit_t curButtons = emulatorGetButtonState();
-
 
     for (replayLogType_t type = BUTTON_PRESS; type <= LAST_TYPE; type += 1)
     {
@@ -231,8 +211,8 @@ static void replayRecordFrame(uint64_t frame)
                     buttonBit_t btn = (1 << i);
                     if ((curButtons & btn) != (replay.lastButtons & btn))
                     {
-                        bool press = (curButtons & btn) == btn;
-                        logEntry.type = press ? BUTTON_PRESS : BUTTON_RELEASE;
+                        bool press         = (curButtons & btn) == btn;
+                        logEntry.type      = press ? BUTTON_PRESS : BUTTON_RELEASE;
                         logEntry.buttonVal = btn;
                         writeEntry(&logEntry);
 
@@ -250,8 +230,8 @@ static void replayRecordFrame(uint64_t frame)
             }
 
             case BUTTON_RELEASE:
-            // Handled already by BUTTON_PRESS for fastness
-            break;
+                // Handled already by BUTTON_PRESS for fastness
+                break;
 
             case TOUCH_PHI:
             {
@@ -317,16 +297,16 @@ static void replayRecordFrame(uint64_t frame)
             case FUZZ:
             case QUIT:
             case SCREENSHOT:
-            break;
+                break;
         }
     }
 
-    replay.lastTouchR = touchR;
-    replay.lastTouchPhi = touchPhi;
+    replay.lastTouchR         = touchR;
+    replay.lastTouchPhi       = touchPhi;
     replay.lastTouchIntensity = touchIntensity;
-    replay.lastAccelX = accelX;
-    replay.lastAccelY = accelY;
-    replay.lastAccelZ = accelZ;
+    replay.lastAccelX         = accelX;
+    replay.lastAccelY         = accelY;
+    replay.lastAccelZ         = accelZ;
 
     // Flush all the entries to the file so that we can close the file the proper way
     // which is obviously to let the OS deal with it when the process exits
@@ -343,9 +323,9 @@ static void replayPlaybackFrame(uint64_t frame)
     // Unless we've finished reading the file completely
     if (!replay.readCompleted)
     {
-        int64_t time = esp_timer_get_time();
-        int32_t touchPhi = replay.lastTouchPhi;
-        int32_t touchR = replay.lastTouchR;
+        int64_t time           = esp_timer_get_time();
+        int32_t touchPhi       = replay.lastTouchPhi;
+        int32_t touchR         = replay.lastTouchR;
         int32_t touchIntensity = replay.lastTouchIntensity;
 
         int16_t accelX = replay.lastAccelX;
@@ -410,10 +390,10 @@ static void replayPlaybackFrame(uint64_t frame)
 
                 case FUZZ:
                 {
-                    emulatorArgs.fuzz = true;
+                    emulatorArgs.fuzz        = true;
                     emulatorArgs.fuzzButtons = true;
-                    emulatorArgs.fuzzTouch = true;
-                    emulatorArgs.fuzzMotion = true;
+                    emulatorArgs.fuzzTouch   = true;
+                    emulatorArgs.fuzzMotion  = true;
 
                     printf("Replay: Enabling Fuzzer");
                     enableExtension("fuzzer");
@@ -463,12 +443,13 @@ static void replayPlaybackFrame(uint64_t frame)
             }
         }
 
-        if (touchPhi != replay.lastTouchPhi || touchR != replay.lastTouchR || touchIntensity != replay.lastTouchIntensity)
+        if (touchPhi != replay.lastTouchPhi || touchR != replay.lastTouchR
+            || touchIntensity != replay.lastTouchIntensity)
         {
             REPLAY_DEBUG("Updating touch to Phi=%d, R=%d, Intensity=%d\n", touchPhi, touchR, touchIntensity);
             emulatorSetTouchJoystick(touchPhi, touchR, touchIntensity);
-            replay.lastTouchPhi = touchPhi;
-            replay.lastTouchR = touchR;
+            replay.lastTouchPhi       = touchPhi;
+            replay.lastTouchR         = touchR;
             replay.lastTouchIntensity = touchIntensity;
         }
 
@@ -506,8 +487,7 @@ static bool readEntry(replayEntry_t* entry)
     char buffer[64];
     if (!replay.headerHandled)
     {
-        if (1 != fscanf(replay.file, "%63[^\n]\n", buffer)
-           || strncmp(buffer, HEADER, strlen(buffer)))
+        if (1 != fscanf(replay.file, "%63[^\n]\n", buffer) || strncmp(buffer, HEADER, strlen(buffer)))
         {
             // Couldn't read, anything.
             printf("ERR: Invalid playback file, could not parse header\n");
@@ -519,7 +499,7 @@ static bool readEntry(replayEntry_t* entry)
 
     int result;
     // Read timestamp index
-    result = fscanf(replay.file, "%"PRId64",", &replay.nextEntry.time);
+    result = fscanf(replay.file, "%" PRId64 ",", &replay.nextEntry.time);
 
     // Check if the index key was readable
     if (result != 1)
@@ -581,7 +561,7 @@ static bool readEntry(replayEntry_t* entry)
 
                 if (i == 7)
                 {
-                // Should have broken by now, throw error
+                    // Should have broken by now, throw error
                     printf("ERR: Can't find button matching '%s'\n", buffer);
                     return false;
                 }
@@ -594,7 +574,7 @@ static bool readEntry(replayEntry_t* entry)
         case TOUCH_R:
         case TOUCH_INTENSITY:
         {
-            if (1 != fscanf(replay.file, "%"PRId32"\n", &replay.nextEntry.touchVal))
+            if (1 != fscanf(replay.file, "%" PRId32 "\n", &replay.nextEntry.touchVal))
             {
                 return false;
             }
@@ -623,7 +603,8 @@ static bool readEntry(replayEntry_t* entry)
         case QUIT:
         {
             // Just advance to the next line
-            while (fgetc(replay.file) != '\n');
+            while (fgetc(replay.file) != '\n')
+                ;
             break;
         }
 
@@ -633,7 +614,8 @@ static bool readEntry(replayEntry_t* entry)
             if (1 != fscanf(replay.file, "%63[^\n]\n", buffer))
             {
                 // Skip to the end
-                while (fgetc(replay.file) != '\n');
+                while (fgetc(replay.file) != '\n')
+                    ;
                 entry->filename = NULL;
             }
             else
@@ -662,7 +644,7 @@ static void writeEntry(const replayEntry_t* entry)
 #define BUFSIZE (buffer + sizeof(buffer) - 1 - ptr)
 
     // Write time key
-    ptr += snprintf(ptr, BUFSIZE, "%"PRId64",", entry->time);
+    ptr += snprintf(ptr, BUFSIZE, "%" PRId64 ",", entry->time);
 
     // Write entry type
     ptr += snprintf(ptr, BUFSIZE, "%s,", replayLogTypeStrs[entry->type]);
@@ -674,7 +656,8 @@ static void writeEntry(const replayEntry_t* entry)
         {
             // Find button index
             int i = 0;
-            while ((1 << i) != entry->buttonVal && i < 7) {
+            while ((1 << i) != entry->buttonVal && i < 7)
+            {
                 i++;
             }
 
@@ -687,7 +670,7 @@ static void writeEntry(const replayEntry_t* entry)
         case TOUCH_R:
         case TOUCH_INTENSITY:
         {
-            snprintf(ptr, BUFSIZE, "%"PRId32"\n", entry->touchVal);
+            snprintf(ptr, BUFSIZE, "%" PRId32 "\n", entry->touchVal);
             break;
         }
 
@@ -695,7 +678,7 @@ static void writeEntry(const replayEntry_t* entry)
         case ACCEL_Y:
         case ACCEL_Z:
         {
-            snprintf(ptr, BUFSIZE, "%"PRId16"\n", entry->accelVal);
+            snprintf(ptr, BUFSIZE, "%" PRId16 "\n", entry->accelVal);
             break;
         }
 
@@ -743,18 +726,28 @@ bool takeScreenshot(const char* name)
     }
 
 #define BMP_HEADER_SIZE 54
-#define BITS_PER_PIXEL 24
+#define BITS_PER_PIXEL  24
     // Calculate row size accounting for padding
-    uint16_t rowSize = (width * BITS_PER_PIXEL + 31) / 32 * 4;
+    uint16_t rowSize            = (width * BITS_PER_PIXEL + 31) / 32 * 4;
     uint16_t paddingBytesPerRow = ((width * BITS_PER_PIXEL % 32) + 7) / 8;
-    uint32_t pxDataSize = rowSize * height;
-    uint32_t totalSize = pxDataSize + BMP_HEADER_SIZE;
+    uint32_t pxDataSize         = rowSize * height;
+    uint32_t totalSize          = pxDataSize + BMP_HEADER_SIZE;
 
     uint32_t tmp32;
     uint16_t tmp16;
 
-#define WRITE_32(x) do { tmp32 = (x); writeLe((uint8_t*)&tmp32, 4, bmp); } while(0)
-#define WRITE_16(x) do { tmp16 = (x); writeLe((uint8_t*)&tmp16, 2, bmp); } while(0)
+#define WRITE_32(x)                        \
+    do                                     \
+    {                                      \
+        tmp32 = (x);                       \
+        writeLe((uint8_t*)&tmp32, 4, bmp); \
+    } while (0)
+#define WRITE_16(x)                        \
+    do                                     \
+    {                                      \
+        tmp16 = (x);                       \
+        writeLe((uint8_t*)&tmp16, 2, bmp); \
+    } while (0)
 
     // Write bitmap header
     fputc('B', bmp);

@@ -272,7 +272,8 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
             // Use default
             emulatorArgs.modeSwitchTime = optVal;
         }
-    } else if (argRecord == optName)
+    }
+    else if (argRecord == optName)
     {
         if (emulatorArgs.playback)
         {
