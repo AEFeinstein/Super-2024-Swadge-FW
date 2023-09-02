@@ -715,7 +715,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             self->gameData.countdown--;
             
             if(self->gameData.countdown % 2){
-                bzrPlayBgm(&(self->soundManager.tally));
+                bzrPlayBgm(&(self->soundManager.tally), BZR_STEREO);
             }
 
             uint16_t comboPoints = 20 * self->gameData.combo;
