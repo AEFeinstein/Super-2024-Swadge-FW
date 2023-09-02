@@ -452,7 +452,8 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
         // Save the button state
         self->gameData.btnState = evt.state;
     }
-    
+    updateTouchInput(&(self->gameData));
+
     updateLedsInGame(&(self->gameData));
     breakoutDetectGameStateChange(self);
     updateEntities(&(self->entityManager));

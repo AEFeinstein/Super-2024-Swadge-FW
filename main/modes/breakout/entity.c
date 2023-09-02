@@ -12,7 +12,6 @@
 #include "esp_random.h"
 #include "aabb_utils.h"
 #include "trigonometry.h"
-#include "touchUtils.h"
 #include <esp_log.h>
 
 //==============================================================================
@@ -122,14 +121,14 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
 void updatePlayer(entity_t *self)
 {
     // Check if the touch area is touched
-    int32_t angle, radius, intensity, xdiff;
+    int32_t /*angle, radius, intensity,*/ xdiff;
     
-    if(getTouchJoystick(&angle, &radius, &intensity))
+    if(self->gameData->isTouched)
     {
-        int32_t touchX, touchY;
-        getTouchCartesian(angle, radius, &touchX, &touchY);
+        //int32_t touchX, touchY;
+        //getTouchCartesian(angle, radius, &touchX, &touchY);
 
-        int32_t touchIntoLevel = (touchX << 2) + 128; // play with this value until center touch moves paddle to center
+        int32_t touchIntoLevel = (self->gameData->touchX << 2) + 128; // play with this value until center touch moves paddle to center
 
         //                                    the leftmost coordinate that the originX point of the paddle sprite can occupy
         //                                    |   the rightmost coordinate that the originX point of the paddle sprite can occupy

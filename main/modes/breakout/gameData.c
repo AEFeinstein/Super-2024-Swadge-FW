@@ -7,6 +7,8 @@
 #include "entityManager.h"
 //#include "platformer_sounds.h"
 #include "esp_random.h"
+#include "hdw-btn.h"
+#include "touchUtils.h"
 
 //==============================================================================
 // Functions
@@ -278,4 +280,13 @@ void updateLedsInGame(gameData_t * gameData){
     }
 
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}
+
+void updateTouchInput(gameData_t * gameData){
+    if(getTouchJoystick(&(gameData->touchPhi), &(gameData->touchRadius), &(gameData->touchIntensity))){
+        gameData->isTouched = true;
+        getTouchCartesian(gameData->touchPhi, gameData->touchRadius, &(gameData->touchX), &(gameData->touchY));
+    } else {
+        gameData->isTouched = false;
+    }
 }

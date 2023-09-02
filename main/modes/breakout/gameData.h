@@ -52,6 +52,13 @@ typedef struct
     uint8_t nextBombSlot;
     uint8_t bombDetonateCooldown;
 
+    int32_t touchPhi;
+    int32_t touchRadius;
+    int32_t touchIntensity;
+    int32_t isTouched;
+    int32_t touchX;
+    int32_t touchY;
+
     led_t leds[8 /*CONFIG_NUM_LEDS*/];
 
     paletteColor_t bgColor;
@@ -82,5 +89,6 @@ void updateLedsLevelClear(gameData_t * gameData);
 void updateLedsGameClear(gameData_t * gameData);
 void updateLedsGameOver(gameData_t * gameData);
 void updateLedsInGame(gameData_t * gameData);
+void updateTouchInput(gameData_t * gameData);
 
 #endif
