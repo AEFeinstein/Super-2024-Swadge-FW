@@ -188,10 +188,7 @@ static const optDoc_t argDocs[] =
  */
 static bool handleArgument(const char* optName, const char* arg, int optVal)
 {
-    // Handle arguments with no short-option like this:
-    // if (optName == argUsage)
-    //{ doSomething(); return true }
-
+    // Handle all arguments by their long-option, as it will always be set.
     if (argFuzz == optName)
     {
         // Enable Fuzz
@@ -270,52 +267,31 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
             // Use default
             emulatorArgs.modeSwitchTime = optVal;
         }
-    }
-
-    // Handle options with a short-option here:
-    switch (optVal)
+    } else if (argRecord == optName)
     {
-
-        // Handle argPlayback
-        case 'p':
+        if (emulatorArgs.playback)
         {
-            if (emulatorArgs.record)
-            {
-                printf("Cannot playback and record at the same time\n");
-                return false;
-            }
-
-            if (arg)
-            {
-                emulatorArgs.replayFile = arg;
-            }
-            break;
+            printf("ERR: Cannot playback and record at the same time\n");
+            return false;
         }
 
-        // Handle argRecord
-        case 'r':
+        if (arg)
         {
-            if (emulatorArgs.playback)
-            {
-                printf("Cannot playback and record at the same time\n");
-                return false;
-            }
-
-            if (arg)
-            {
-                printf("Got recordFile %s\n", arg);
-                emulatorArgs.recordFile = arg;
-            }
-            break;
+            emulatorArgs.recordFile = arg;
+        }
+    }
+    else if (argPlayback == optName)
+    {
+        if (emulatorArgs.record)
+        {
+            printf("ERR: Cannot playback and record at the same time\n");
+            return false;
         }
 
-            // case 'x':
-            // doSomething();
-            // if (error) return false;
-            // return true;
-
-        default:
-            break;
+        if (arg)
+        {
+            emulatorArgs.replayFile = arg;
+        }
     }
 
     // It's OK if an arg is unhandled, as it may just be a flag set automatically
