@@ -25,6 +25,8 @@ typedef struct
     song_t launch;
     song_t die;
     song_t tally;
+    song_t dropBomb;
+    song_t detonate;
 
 } soundManager_t;
 

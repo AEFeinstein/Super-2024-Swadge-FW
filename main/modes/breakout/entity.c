@@ -311,6 +311,8 @@ void updateBall(entity_t *self)
                     self->gameData->playerBombs[self->gameData->nextBombSlot] = createdBomb;
                     self->gameData->nextBombSlot = (self->gameData->nextBombSlot + 1) % 3;
                     self->gameData->playerBombsCount++;
+
+                    bzrPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
                 }
             }
         }
@@ -390,6 +392,8 @@ void updateBomb(entity_t * self){
         self->gameData->nextBombToDetonate = (self->gameData->nextBombToDetonate + 1) % 3;
         self->gameData->playerBombsCount--;
         self->gameData->bombDetonateCooldown = 8;
+
+        bzrPlaySfx(&(self->soundManager->detonate), BZR_LEFT);
     }
 }
 
