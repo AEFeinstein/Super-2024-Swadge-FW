@@ -11,6 +11,9 @@
 
 #include <esp_system.h>
 #include <esp_timer.h>
+#include <errno.h>
+#include <string.h>
+#include <stdio.h>
 
 #include "hdw-tft.h"
 #include "hdw-tft_emu.h"
@@ -19,31 +22,39 @@
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
+#include "hdw-accel_emu.h"
 #include "swadge2024.h"
 #include "macros.h"
+#include "trigonometry.h"
 
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
 #include "rawdraw_sf.h"
 
+// Useful if you're trying to find the code for a key/button
+// #define DEBUG_INPUTS
+
+#define EMU_EXTENSIONS
+
+#include "emu_args.h"
+#include "emu_ext.h"
 #include "emu_main.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
 
-#define MIN_LED_WIDTH 64
-#define BG_COLOR      0x191919FF // This color isn't part of the palette
-#define DIV_COLOR     0x808080FF
+#define BG_COLOR   0x191919FF // This color isn't parjt of the palette
+#define DIV_WIDTH  1
+#define DIV_HEIGHT 1
+#define DIV_COLOR  0x808080FF
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-static bool isRunning  = true;
-static bool fullscreen = false;
-static bool hideLeds   = false;
+static bool isRunning = true;
 
 //==============================================================================
 // Function Prototypes
@@ -62,6 +73,15 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
 //==============================================================================
 
 /**
+ * @brief Quits the emulator
+ *
+ */
+void emulatorQuit(void)
+{
+    isRunning = false;
+}
+
+/**
  * @brief Parse and handle command line arguments
  *
  * @param argc The number of command line arguments
@@ -69,7 +89,12 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
  */
 void handleArgs(int argc, char** argv)
 {
-    WARN_UNIMPLEMENTED();
+    // Parse the arguments and check for errors
+    if (!emuParseArgs(argc, argv))
+    {
+        // Error parsing, set isRunning to false
+        isRunning = false;
+    }
 }
 
 /**
@@ -87,18 +112,46 @@ int main(int argc, char** argv)
 
     handleArgs(argc, argv);
 
+    if (!isRunning)
+    {
+        // For one reason or another, we're done after parsing args, so quit now
+        return 0;
+    }
+
+#ifdef EMU_EXTENSIONS
+    // Call any init callbacks we may have and pass them the parsed command-line arguments
+    // We also determine which extensions are enabled here, which is important for laying out the window properly
+    initExtensions(&emulatorArgs);
+
+    if (!isRunning)
+    {
+        // One of the extension must have quit due to an error.
+        return 0;
+    }
+#endif
+
     // First initialize rawdraw
     // Screen-specific configurations
     // Save window dimensions from the last loop
-    if (fullscreen)
+    if (emulatorArgs.fullscreen)
     {
         CNFGSetupFullscreen("Swadge 2024 Simulator", 0);
     }
     else
     {
-        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH * 2) + (hideLeds ? 0 : ((MIN_LED_WIDTH * 4) + 2)),
-                  (TFT_HEIGHT * 2));
+        // Get all the pane info to see how much space we need aside from the simulated TFT screen
+        emuPaneMinimum_t paneMins[5] = {0};
+        calculatePaneMinimums(&paneMins);
+        int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
+        int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
+
+        // Add the screen size to the minimum pane sizes to get our window size
+        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH)*2 + sidePanesW, (TFT_HEIGHT)*2 + topBottomPanesH);
     }
+
+    // We won't call the pre-frame callback for the very first frame
+    // This is because everything isn't initialized and there would have to be emu-specific code to do so
+    // post-initialization So, this is fine, we get one frame of peace before the emulator can start messing with stuff.
 
     // This is the 'main' that gets called when the ESP boots. It does not return
     app_main();
@@ -110,6 +163,12 @@ int main(int argc, char** argv)
  */
 void taskYIELD(void)
 {
+#ifdef EMU_EXTENSIONS
+    // Count total frames, just for callback reasons
+    static uint64_t frameNum = 0;
+    doExtPostFrameCb(frameNum);
+#endif
+
     // Calculate time between calls
     static int64_t tLastCallUs = 0;
     int64_t tElapsedUs         = 0;
@@ -128,7 +187,11 @@ void taskYIELD(void)
     // These are persistent!
     static short lastWindow_w = 0;
     static short lastWindow_h = 0;
-    static int16_t led_w      = MIN_LED_WIDTH;
+
+    // Below: Support for pausing and unpausing the emulator
+    // Keep track of whether we've called the pre-frame callbacks yet
+    // bool preFrameCalled = false;
+    // do {
 
     // Always handle inputs
     if (!CNFGHandleInput())
@@ -155,25 +218,14 @@ void taskYIELD(void)
     // Get the current window dimensions
     short window_w, window_h;
     CNFGGetDimensions(&window_w, &window_h);
+    static emuPane_t screenPane;
 
     // If the dimensions changed
     if ((lastWindow_h != window_h) || (lastWindow_w != window_w))
     {
-        // Figure out how much the TFT should be scaled by
-        uint8_t widthMult = (window_w - (hideLeds ? 0 : ((4 * MIN_LED_WIDTH) - 2))) / TFT_WIDTH;
-        if (0 == widthMult)
-        {
-            widthMult = 1;
-        }
-        uint8_t heightMult = window_h / TFT_HEIGHT;
-        if (0 == heightMult)
-        {
-            heightMult = 1;
-        }
-        uint8_t screenMult = MIN(widthMult, heightMult);
-
-        // LEDs take up the rest of the horizontal space
-        led_w = hideLeds ? 0 : (window_w - 2 - (screenMult * TFT_WIDTH)) / 4;
+        uint8_t screenMult;
+        // Recalculate the window layout and get the settings for the screen
+        layoutPanes(window_w, window_h, TFT_WIDTH, TFT_HEIGHT, &screenPane, &screenMult);
 
         // Set the multiplier
         setDisplayBitmapMultiplier(screenMult);
@@ -183,46 +235,36 @@ void taskYIELD(void)
         lastWindow_h = window_h;
     }
 
-    // Get the LED memory
-    uint8_t numLeds;
-    led_t* leds = getLedMemory(&numLeds);
+    // Draw dividing lines, if they're on-screen
+    CNFGColor(DIV_COLOR);
 
-    // Where LEDs are drawn, kinda
-    const int16_t ledOffsets[8][2] = {
-        {1, 2}, {0, 3}, {0, 1}, {1, 0}, {2, 0}, {3, 1}, {3, 3}, {2, 2},
-    };
+    emuPaneMinimum_t paneMins[4];
+    calculatePaneMinimums(paneMins);
 
-    // Draw simulated LEDs
-    if (numLeds > 1 && NULL != leds && !hideLeds)
+    // Draw Left Divider
+    if (paneMins[PANE_LEFT].count > 0)
     {
-        short led_h = window_h / (numLeds / 2);
-        for (int i = 0; i < numLeds; i++)
-        {
-            CNFGColor((leds[i].r << 24) | (leds[i].g << 16) | (leds[i].b << 8) | 0xFF);
-
-            int16_t xOffset = 0;
-            if (ledOffsets[i][0] < 2)
-            {
-                xOffset = ledOffsets[i][0] * (led_w / 2);
-            }
-            else
-            {
-                xOffset = window_w - led_w - ((4 - ledOffsets[i][0]) * (led_w / 2));
-            }
-
-            int16_t yOffset = ledOffsets[i][1] * led_h;
-
-            // Draw the LED
-            CNFGTackRectangle(xOffset, yOffset, xOffset + (led_w * 3) / 2, yOffset + led_h);
-        }
+        CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
     }
 
-    // Draw dividing lines
-    if (!hideLeds)
+    // Draw Right Divider
+    if (paneMins[PANE_RIGHT].count > 0)
     {
-        CNFGColor(DIV_COLOR);
-        CNFGTackSegment(led_w * 2, 0, led_w * 2, window_h);
-        CNFGTackSegment(window_w - (led_w * 2), 0, window_w - (led_w * 2), window_h);
+        CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
+    }
+
+    // Draw Top Divider
+    if (paneMins[PANE_TOP].count > 0)
+    {
+        CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
+                        screenPane.paneY - 1);
+    }
+
+    // Draw Bottom Divider
+    if (paneMins[PANE_BOTTOM].count > 0)
+    {
+        CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
+                        screenPane.paneY + screenPane.paneH);
     }
 
     // Get the display memory
@@ -235,9 +277,13 @@ void taskYIELD(void)
         plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, BG_COLOR);
 #endif
         // Update the display, centered
-        CNFGBlitImage(bitmapDisplay, hideLeds ? ((window_w - bitmapWidth) / 2) : ((led_w * 2) + 1),
-                      (window_h - bitmapHeight) / 2, bitmapWidth, bitmapHeight);
+        CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
     }
+
+#ifdef EMU_EXTENSIONS
+    // After the screen has been fully rendered, call all the render callbacks to render anything else
+    doExtRenderCb(window_w, window_h);
+#endif
 
     // Display the image and wait for time to display next frame.
     CNFGSwapBuffers();
@@ -249,6 +295,36 @@ void taskYIELD(void)
              .tv_nsec = 1000000 + tRemaining.tv_nsec,
     };
     nanosleep(&tSleep, &tRemaining);
+
+#ifdef EMU_EXTENSIONS
+    doExtPreFrameCb(++frameNum);
+#endif
+
+    // Below: Support for pausing and unpausing the emulator
+    // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
+    //     // Don't call the pre-frame callbacks until the emulator is unpaused.
+    //     // And also, only call it once per frame
+    //     // This means that the pre-frame callback gets called once (assuming the post-frame
+    //     // callback didn't already pause) and then, if one of them pauses, they don't get called
+    //     // again until after
+    //     // be able to handle input as normal, which is good since that's the only way we'd
+    //     if (!preFrameCalled && !emuTimerIsPaused())
+    //     {
+    //         preFrameCalled = true;
+    //
+    //         // Call the pre-frame callbacks just before we return to the swadge main loop
+    //         // When fnPreFrameCb is first called, the system is always initialized
+    //         // and this is the optimal time to inject button presses, pause, etc.
+    //         doExtPreFrameCb(++frameNum);
+    //     }
+    //
+    //     // Set the elapsed micros to 0 so ESP timer tasks don't get called repeatedly if we pause
+    //     // (if we just updated the time normally instead, this would be 0 anyway since time is paused, but this
+    //     shortcuts that) tElapsedUs = 0;
+    //
+    //     // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
+    //     // and the pre-frame callbacks have all been called
+    // } while (isRunning && (!preFrameCalled || emuTimerIsPaused()));
 }
 
 /**
@@ -312,7 +388,43 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
  */
 void HandleKey(int keycode, int bDown)
 {
+#ifdef DEBUG_INPUTS
+    if (' ' <= keycode && keycode <= '~')
+    {
+        printf("HandleKey(keycode='%c', bDown=%s\n", keycode, bDown ? "true" : "false");
+    }
+    else
+    {
+        printf("HandleKey(keycode=%d, bDown=%s\n", keycode, bDown ? "true" : "false");
+    }
+#endif
+
+#ifdef EMU_EXTENSIONS
+    keycode = doExtKeyCb(keycode, bDown);
+    if (keycode < 0)
+    {
+        return;
+    }
+#endif
+
+    // Assuming no callbacks canceled the key event earlier, handle it normally
     emulatorHandleKeys(keycode, bDown);
+
+    // Keep track of when shift is held so we can exit on SHIFT + BACKSPACE
+    // I would do CTRL+W, but rawdraw doesn't have a define for ctrl...
+    static bool shiftDown = false;
+    if (keycode == CNFG_KEY_SHIFT)
+    {
+        shiftDown = bDown;
+    }
+
+    // When in fullscreen, exit with Escape
+    // And any time with Shift + Backspace
+    if ((keycode == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen) || (keycode == CNFG_KEY_BACKSPACE && shiftDown))
+    {
+        isRunning = false;
+        return;
+    }
 }
 
 /**
@@ -325,7 +437,13 @@ void HandleKey(int keycode, int bDown)
  */
 void HandleButton(int x, int y, int button, int bDown)
 {
-    WARN_UNIMPLEMENTED();
+#ifdef DEBUG_INPUTS
+    printf("HandleButton(x=%d, y=%d, button=%x, bDown=%s\n", x, y, button, bDown ? "true" : "false");
+#endif
+
+#ifdef EMU_EXTENSIONS
+    doExtMouseButtonCb(x, y, button, bDown);
+#endif
 }
 
 /**
@@ -337,7 +455,13 @@ void HandleButton(int x, int y, int button, int bDown)
  */
 void HandleMotion(int x, int y, int mask)
 {
-    WARN_UNIMPLEMENTED();
+#ifdef DEBUG_INPUTS
+    printf("HandleMotion(x=%d, y=%d, mask=%x\n", x, y, mask);
+#endif
+
+#ifdef EMU_EXTENSIONS
+    doExtMouseMoveCb(x, y, mask);
+#endif
 }
 
 /**

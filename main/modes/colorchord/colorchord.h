@@ -1,5 +1,5 @@
-#ifndef _MODE_COLORCHORD_H_
-#define _MODE_COLORCHORD_H_
+#ifndef _COLORCHORD_H_
+#define _COLORCHORD_H_
 
 #include "swadge2024.h"
 

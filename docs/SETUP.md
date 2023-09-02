@@ -26,14 +26,18 @@ If the path to your home directory has spaces in it, then installation paths sho
 
 The continuous integration for this project runs on a Windows instance. This means one can read [build-firmware-and-emulator.yml](https://github.com/AEFeinstein/Swadge-IDF-5.0/blob/main/.github/workflows/build-firmware-and-emulator.yml) to see how the Windows build environment is set up from scratch for both the firmware and emulator, though it does not install extra development tools. It is recommend to follow the following guide.
 
-1. [Install `git`](https://git-scm.com/download/win).
-2. [Install `python`](https://www.python.org/downloads/). Make sure to check "Add Python to environment variables" when installing.
-3. [Install `doxygen`](https://www.doxygen.nl/download.html).
-4. [Install `cppcheck`](https://cppcheck.sourceforge.io/).
-5. [Install `msys2`](https://www.msys2.org/).
-6. Start an `msys2` shell and run the following command to install all required packages:
+1. [Install `git`](https://git-scm.com/download/win). This is for version control.
+2. [Install `python`](https://www.python.org/downloads/). This is for a few utilities. Make sure to check "Add Python to environment variables" when installing.
+    * Once python is installed, _before_ setting up the IDF, install `esptool`. We've seen issues when running the IDF's `esptool` independently, but the version in the The Python Package Index seems to work fine. If you've already set up an environment and need to install `esptool`, make sure to do so in a terminal where you **have not** run `export.ps1`, which sets up IDF environment variables.
     ```bash
-    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-clang zip
+    python -m pip install esptool
+    ```
+3. [Install `doxygen`](https://www.doxygen.nl/download.html). This is for generating documentation.
+4. [Install `cppcheck`](https://cppcheck.sourceforge.io/). This is for static code analysis.
+5. [Install `msys2`](https://www.msys2.org/). This is the environment in which the emulator will be built.
+6. Start an `msys2` shell and run the following command to install all required packages for building the emulator:
+    ```bash
+    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip
     ```
 7. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
@@ -51,9 +55,9 @@ The continuous integration for this project runs on a Windows instance. This mea
     & git clone -b v5.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
     & $HOME\esp\esp-idf\install.ps1
     ```
-    **Warning**
-    
-    Sometimes `install.ps1` can be a bit finicky and not install everything it's supposed to. If it doesn't create a `$HOME/.espressif/python_env` folder, try running a few more times. As a last resort you can try editing `install.ps1` and swap the `"Setting up Python environment"` and `"Installing ESP-IDF tools"` sections to set up the Python environment first.
+    > **Warning**
+    >
+    > Sometimes `install.ps1` can be a bit finicky and not install everything it's supposed to. If it doesn't create a `$HOME/.espressif/python_env` folder, try running a few more times. As a last resort you can try editing `install.ps1` and swap the `"Setting up Python environment"` and `"Installing ESP-IDF tools"` sections to set up the Python environment first.
 
 ## Configuring a Linux Environment
 
@@ -85,11 +89,20 @@ The continuous integration for this project runs on a Windows instance. This mea
     ```powershell
     ~/esp/esp-idf/export.ps1
     ```
-3. Switch the Swadge to USB power, hold down the PGM button (up on the D-Pad), and plug it into your computer. Note the serial port that enumerates.
-4. Build and flash with a single command. Note in this example the ESP is connected to `COM8`, and the serial port will likely be different on your system.
+3. Manual Flashing
+    1. Switch the Swadge to USB power so that it is off, hold down the PGM button (up on the D-Pad), and plug it into your computer. Note the serial port that enumerates.
+    2. Build and flash with a single command. Note in this example the ESP is connected to `COM8`, and the serial port will likely be different on your system.
     ```powershell
     idf.py -p COM8 -b 2000000 build flash
     ```
+4. Automatic Flashing
+    1. Once the Swadge is plugged in and powered on, run this single command which will build the firmware, reboot the Swadge into bootloader mode, flash the firmware, reboot the Swadge again, and open up a serial terminal for debug output.
+    ```bash
+    make usbflash
+    ```
+    > **Warning**
+    >
+    > The Windows version of this script uses `esptool.exe` rather than `esptool.py` because `esptool.py`sometimes doesn't work when invoked independently. If this doesn't work, make sure you've installed `esptool` per the instructions in "Configuring a Windows Environment".
 
 ## Building and Running the Emulator
 

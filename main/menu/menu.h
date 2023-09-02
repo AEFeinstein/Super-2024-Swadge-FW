@@ -54,6 +54,10 @@
  * static const char opt4[]            = "opt4";
  * static const char* const demoOpts[] = {opt1, opt2, opt3, opt4};
  *
+ * static const char optionSettingLabel[] = "OptSetting: "
+ * static const char* const optionSettingLabels = {"Off", "30 Seconds", "5 Minutes"};
+ * static const uint32_t optionSettingValues = {0, 30, 300};
+ *
  * static const char demoSettingLabel[] = "Setting";
  * \endcode
  *
@@ -88,6 +92,8 @@
  * addSingleItemToMenu(menu, demoMenu5);
  * addSingleItemToMenu(menu, demoMenu6);
  * addSettingsItemToMenu(menu, demoSettingLabel, getTftBrightnessSettingBounds(), getTftBrightnessSetting());
+ * addSettingsOptionsItemToMenu(menu, optionSettingLabel, optionSettingLabels, optionSettingValues,
+ *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
  * // Load a font
  * font_t logbook;
@@ -112,9 +118,9 @@
  *
  * Receive menu callbacks:
  * \code{.c}
- * static void demoMenuCb(const char* label, bool selected)
+ * static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
  * {
- *     printf("%s %s\n", label, selected ? "selected" : "scrolled to");
+ *     printf("%s %s, setting=%d\n", label, selected ? "selected" : "scrolled to", settingVal);
  * }
  * \endcode
  *
@@ -159,6 +165,7 @@ typedef struct
     uint8_t currentOpt;         ///< The current selected option for multi-select
     uint8_t minSetting;         ///< The minimum value for settings items
     uint8_t maxSetting;         ///< The maximum value for settings items
+    const int32_t* settingVals; ///< The setting value options for settings-options items
     uint8_t currentSetting;     // The current value for settings items
 } menuItem_t;
 
@@ -187,6 +194,10 @@ void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabe
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
 void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t* bounds, int32_t val);
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
-menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
+void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
+                                  const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
+                                  int32_t currentOption);
+void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
+menu_t* menuButton(menu_t* menu, buttonEvt_t evt) __attribute__((warn_unused_result));
 
 #endif
