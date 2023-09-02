@@ -463,6 +463,10 @@ entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
 
+    //Entity cannot be respawned from the tilemap
+    entity->homeTileX = 0;
+    entity->homeTileY = 0;
+
     return entity;
 }
 
@@ -496,6 +500,10 @@ entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t 
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
     entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
+
+    //Entity cannot be respawned from the tilemap
+    entity->homeTileX = 0;
+    entity->homeTileY = 0;
 
     return entity;
 }
