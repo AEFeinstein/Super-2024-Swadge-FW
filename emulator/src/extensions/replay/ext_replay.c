@@ -14,6 +14,8 @@
 #include <inttypes.h>
 #include <time.h>
 
+#include "hdw-tft_emu.h"
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -25,8 +27,6 @@
 #else
 #define REPLAY_DEBUG(str, ...)
 #endif
-
-#define LAST_TYPE QUIT
 
 //==============================================================================
 // Enums
@@ -50,7 +50,10 @@ typedef enum
     ACCEL_Z,
     FUZZ,
     QUIT,
+    SCREENSHOT,
 } replayLogType_t;
+
+#define LAST_TYPE SCREENSHOT
 
 //==============================================================================
 // Structs
@@ -66,6 +69,7 @@ typedef struct
         buttonBit_t buttonVal;
         int32_t touchVal;
         int16_t accelVal;
+        char* filename;
     };
 } replayEntry_t;
 
@@ -98,10 +102,10 @@ static bool replayInit(emuArgs_t* emuArgs);
 static void replayRecordFrame(uint64_t frame);
 static void replayPlaybackFrame(uint64_t frame);
 static void replayPreFrame(uint64_t frame);
-static void replayPostFrame(uint64_t frame);
 
 static bool readEntry(replayEntry_t* out);
 static void writeEntry(const replayEntry_t* entry);
+static void writeLe(uint8_t* vals, uint32_t size, FILE* stream);
 
 //==============================================================================
 // Variables
@@ -119,6 +123,7 @@ static const char* replayLogTypeStrs[] =
     "AccelZ",
     "Fuzz",
     "Quit",
+    "Screenshot",
 };
 
 static const char* replayButtonNames[] =
@@ -138,36 +143,45 @@ emuExtension_t replayEmuExtension =
     .name            = "replay",
     .fnInitCb        = replayInit,
     .fnPreFrameCb    = replayPreFrame,
-    .fnPostFrameCb   = replayPostFrame,
+    .fnPostFrameCb   = NULL,
     .fnKeyCb         = NULL,
     .fnMouseMoveCb   = NULL,
     .fnMouseButtonCb = NULL,
     .fnRenderCb      = NULL,
 };
 
-replay_t replay;
+replay_t replay = {0};
 
 //==============================================================================
 // Functions
 //==============================================================================
 
+/**
+ * @brief Initialize the replay extension
+ *
+ * @param emuArgs
+ * @return true If the extension is enabled and will etiher record or play back.
+ * @return false
+ */
 static bool replayInit(emuArgs_t* emuArgs)
 {
-    memset(&replay, 0, sizeof(replay_t));
-
     if (emuArgs->record)
     {
+        // Construct a timestamp-based filename
         struct timespec ts;
         char filename[64];
         clock_gettime(CLOCK_REALTIME, &ts);
         snprintf(filename, sizeof(filename) - 1, "rec-%lu.csv", ts.tv_sec);
 
-        replay.file = fopen(emuArgs->recordFile ? emuArgs->recordFile : filename, "a");
+        // If specified, use custom filename, otherwise use timestamp one
+        printf("\nReplay: Recording inputs to file %s\n", emuArgs->recordFile ? emuArgs->recordFile : filename);
+        replay.file = fopen(emuArgs->recordFile ? emuArgs->recordFile : filename, "w");
         replay.mode = RECORD;
         return replay.file != NULL;
     }
     else if (emuArgs->playback)
     {
+        printf("\nReplay: Replaying inputs from file %s\n", emuArgs->replayFile);
         replay.file = fopen(emuArgs->replayFile, "r");
         replay.mode = REPLAY;
 
@@ -302,6 +316,7 @@ static void replayRecordFrame(uint64_t frame)
             // These would be manually inserted, so no need to handle writing
             case FUZZ:
             case QUIT:
+            case SCREENSHOT:
             break;
         }
     }
@@ -411,12 +426,38 @@ static void replayPlaybackFrame(uint64_t frame)
                     emulatorQuit();
                     break;
                 }
+
+                case SCREENSHOT:
+                {
+                    if (NULL != replay.nextEntry.filename)
+                    {
+                        printf("Replay: Saving screenshot to '%s'\n", replay.nextEntry.filename);
+                        // Screenshot has a specific name, save it to that
+                        takeScreenshot(replay.nextEntry.filename);
+
+                        // This string is dynamically alloated, so delete it
+                        free(replay.nextEntry.filename);
+                        replay.nextEntry.filename = NULL;
+                    }
+                    else
+                    {
+                        // No filename was given, save it to a timestamp-based name
+                        struct timespec ts;
+                        char filename[64];
+                        clock_gettime(CLOCK_REALTIME, &ts);
+                        snprintf(filename, sizeof(filename) - 1, "screenshot-%lu.bmp", ts.tv_sec);
+
+                        printf("Replay: Saving screenshot to '%s'\n", filename);
+                        takeScreenshot(filename);
+                    }
+                    break;
+                }
             }
 
             // Get the next entry
             if (!readEntry(&replay.nextEntry))
             {
-                printf("Replay: Reached end of script\n");
+                printf("Replay: Reached end of recording\n");
                 replay.readCompleted = true;
                 break;
             }
@@ -458,11 +499,6 @@ static void replayPreFrame(uint64_t frame)
             break;
         }
     }
-}
-
-static void replayPostFrame(uint64_t frame)
-{
-    //emuSetEspTimerTime()
 }
 
 static bool readEntry(replayEntry_t* entry)
@@ -587,7 +623,26 @@ static bool readEntry(replayEntry_t* entry)
         case QUIT:
         {
             // Just advance to the next line
-            fscanf(replay.file, "%*[^\n]\n");
+            while (fgetc(replay.file) != '\n');
+            break;
+        }
+
+        case SCREENSHOT:
+        {
+            // Read the filename from the screenshot
+            if (1 != fscanf(replay.file, "%63[^\n]\n", buffer))
+            {
+                // Skip to the end
+                while (fgetc(replay.file) != '\n');
+                entry->filename = NULL;
+            }
+            else
+            {
+                char* tmpStr = malloc(strlen(buffer) + 1);
+                strncpy(tmpStr, buffer, strlen(buffer) + 1);
+                entry->filename = tmpStr;
+            }
+
             break;
         }
 
@@ -646,10 +701,130 @@ static void writeEntry(const replayEntry_t* entry)
 
         case FUZZ:
         case QUIT:
+        case SCREENSHOT:
         {
             break;
         }
     }
 
     fwrite(buffer, 1, strlen(buffer), replay.file);
+}
+
+static void writeLe(uint8_t* vals, uint32_t size, FILE* stream)
+{
+    static const uint32_t test = 0x01020304;
+
+    for (uint32_t i = 0; i < size; i++)
+    {
+        if (*((const char*)&test) == 0x04)
+        {
+            // Little Endian
+            fputc(vals[i], stream);
+        }
+        else
+        {
+            // Big Endian
+            fputc(vals[size - i - 1], stream);
+        }
+    }
+}
+
+bool takeScreenshot(const char* name)
+{
+    uint16_t width, height;
+    uint32_t* bitmap = getDisplayBitmap(&width, &height);
+
+    FILE* bmp = fopen(name, "wb");
+
+    if (!bmp)
+    {
+        printf("ERR: Unable to open file '%s' for writing\n", name);
+        return false;
+    }
+
+#define BMP_HEADER_SIZE 54
+#define BITS_PER_PIXEL 24
+    // Calculate row size accounting for padding
+    uint16_t rowSize = (width * BITS_PER_PIXEL + 31) / 32 * 4;
+    uint16_t paddingBytesPerRow = ((width * BITS_PER_PIXEL % 32) + 7) / 8;
+    uint32_t pxDataSize = rowSize * height;
+    uint32_t totalSize = pxDataSize + BMP_HEADER_SIZE;
+
+    uint32_t tmp32;
+    uint16_t tmp16;
+
+#define WRITE_32(x) do { tmp32 = (x); writeLe((uint8_t*)&tmp32, 4, bmp); } while(0)
+#define WRITE_16(x) do { tmp16 = (x); writeLe((uint8_t*)&tmp16, 2, bmp); } while(0)
+
+    // Write bitmap header
+    fputc('B', bmp);
+    fputc('M', bmp);
+
+    // Write total size (little-endian)
+    WRITE_32(totalSize);
+
+    // Write 4 Reserved Bytes
+    WRITE_32(0);
+
+    // Write pixel data offset
+    WRITE_32(BMP_HEADER_SIZE);
+
+    // DIB Header
+    // Write DIB length
+    WRITE_32(40);
+
+    // Write Pixel Width
+    WRITE_32(width);
+
+    // Write Pixel Height
+    WRITE_32(height);
+
+    // Write color planes
+    WRITE_16(1);
+
+    // Write bits per pixel
+    WRITE_16(24);
+
+    // Write pixel format / compression
+    WRITE_32(0);
+
+    // Write pixel data size
+    WRITE_32(pxDataSize);
+
+    // Write print resolution (2853px/meter == 72DPI)
+    WRITE_32(2835);
+    WRITE_32(2853);
+
+    // Write color palette count
+    WRITE_32(0);
+
+    // Write important color count
+    WRITE_32(0);
+
+    // Write the bitmap lines, from the bottom-up
+    for (int16_t row = height - 1; row >= 0; --row)
+    {
+        // Write the pixels in this line, from left-to-right
+        for (uint16_t col = 0; col < width; col++)
+        {
+            // 24BPP / 8BPC
+            uint8_t r = (bitmap[row * width + col] >> 8) & 0xFF;
+            uint8_t g = (bitmap[row * width + col] >> 16) & 0xFF;
+            uint8_t b = (bitmap[row * width + col] >> 24) & 0xFF;
+
+            fputc(r, bmp);
+            fputc(g, bmp);
+            fputc(b, bmp);
+        }
+
+        // Add padding at end of line
+        for (uint16_t i = 0; i < paddingBytesPerRow; i++)
+        {
+            fputc(0, bmp);
+        }
+    }
+
+    fclose(bmp);
+
+    return true;
 }
