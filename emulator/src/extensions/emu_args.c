@@ -89,6 +89,8 @@ emuArgs_t emulatorArgs = {
     .fuzzTouch   = false,
     .fuzzMotion  = false,
 
+    .headless = false,
+
     .keymap = NULL,
 
     .lock = false,
@@ -114,6 +116,7 @@ static const char argFuzz[]        = "fuzz";
 static const char argFuzzButtons[] = "fuzz-buttons";
 static const char argFuzzTouch[]   = "fuzz-touch";
 static const char argFuzzMotion[]  = "fuzz-motion";
+static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
 static const char argLock[]        = "lock";
 static const char argMode[]        = "mode";
@@ -136,6 +139,7 @@ static const struct option options[] =
     { argFuzzButtons, optional_argument, (int*)&emulatorArgs.fuzzButtons,  true },
     { argFuzzTouch,   optional_argument, (int*)&emulatorArgs.fuzzTouch,    true },
     { argFuzzMotion,  optional_argument, (int*)&emulatorArgs.fuzzMotion,   true },
+    { argHeadless,    no_argument,       (int*)&emulatorArgs.headless,     true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMode,        required_argument, NULL,                             'm'  },
@@ -160,6 +164,7 @@ static const optDoc_t argDocs[] =
     { 0,  argFuzzButtons, "y|n",   "Set whether buttons are fuzzed" },
     { 0,  argFuzzTouch,   "y|n",   "Set whether touchpad inputs are fuzzed" },
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
+    { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},

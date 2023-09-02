@@ -140,9 +140,19 @@ int main(int argc, char** argv)
         calculatePaneMinimums(&paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
+        int32_t winW            = (TFT_WIDTH) * 2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT) * 2 + topBottomPanesH;
+
+        if (emulatorArgs.headless)
+        {
+            // If the window dimensions are negative, the window will still exist but not be displayed.
+            // TODO does this work on all platforms?
+            winW = -winW;
+            winH = -winH;
+        }
 
         // Add the screen size to the minimum pane sizes to get our window size
-        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH)*2 + sidePanesW, (TFT_HEIGHT)*2 + topBottomPanesH);
+        CNFGSetup("Swadge 2024 Simulator", winW, winH);
     }
 
     // We won't call the pre-frame callback for the very first frame
