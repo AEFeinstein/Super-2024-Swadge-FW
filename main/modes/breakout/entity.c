@@ -304,6 +304,10 @@ void updateBall(entity_t *self)
                 //Drop bomb
                 entity_t* createdBomb = createEntity(self->entityManager, ENTITY_PLAYER_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
                 if(createdBomb != NULL){
+                    if(self->gameData->playerBombsCount == 0){
+                        self->gameData->nextBombToDetonate = self->gameData->nextBombSlot;
+                    }
+
                     self->gameData->playerBombs[self->gameData->nextBombSlot] = createdBomb;
                     self->gameData->nextBombSlot = (self->gameData->nextBombSlot + 1) % 3;
                     self->gameData->playerBombsCount++;
