@@ -92,6 +92,7 @@ struct entity_t
     uint16_t scoreValue;
 
     entity_t *attachedToEntity;
+    bool shouldAdvanceMultiplier;
     
     //entity_t *entities;
     entityManager_t *entityManager;

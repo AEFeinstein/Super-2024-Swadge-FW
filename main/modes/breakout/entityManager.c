@@ -417,6 +417,7 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->scoreValue = 100;
+    entity->shouldAdvanceMultiplier = false;
 
     entity->type = ENTITY_PLAYER_BALL;
     entity->spriteIndex = SP_BALL;

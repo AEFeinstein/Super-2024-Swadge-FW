@@ -93,6 +93,7 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical = false;
     self->attachedToEntity = NULL;
+    self->shouldAdvanceMultiplier = false;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -971,7 +972,11 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             if(self->yspeed > 0){
                 setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, 63);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
-                scorePoints(self->gameData, 0, 2);
+
+                if(self->shouldAdvanceMultiplier){
+                    scorePoints(self->gameData, 0, 2 );
+                    self->shouldAdvanceMultiplier = false;
+                }
             }
             break;
         default:
@@ -1222,6 +1227,7 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
             bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
             scorePoints(self->gameData, 10, -1);
+            self->shouldAdvanceMultiplier = true;
             break;
         }
         case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
