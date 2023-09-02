@@ -33,30 +33,46 @@
 // Look Up Tables
 //==============================================================================
 
-#define BOMB_EXPLOSION_TILE_CHECK_OFFSET_LENGTH 42
-static const int16_t bombExplosionTileCheckOffsets[42] = {
+#define BOMB_EXPLOSION_TILE_CHECK_OFFSET_LENGTH 74
+static const int16_t bombExplosionTileCheckOffsets[74] = {
 //   X,  Y
+    -1, -3,
+     0, -3,
+     1, -3,
+    -2, -2,
     -1, -2,
      0, -2,
      1, -2,
+     2, -2,
+    -3, -1,
     -2, -1,
     -1, -1,
      0, -1,
      1, -1,
      2, -1,
+     3, -1,
+    -3,  0,
     -2,  0,
     -1,  0,
      0,  0,
      1,  0,
      2,  0,
+     3,  0,
+    -3,  1,
     -2,  1,
     -1,  1,
      0,  1,
      1,  1,
      2,  1,
+     3,  1,
+    -2,  2,
     -1,  2,
      0,  2,
-     1,  2
+     1,  2,
+     2,  2,
+    -1,  3,
+     0,  3,
+     1,  3
 };
 
 //==============================================================================
