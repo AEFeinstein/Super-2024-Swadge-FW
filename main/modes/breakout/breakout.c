@@ -691,13 +691,13 @@ static void drawBreakoutHud(font_t *font, gameData_t *gameData){
     drawText(font, c555, "S", 271, 80);
     drawRect(271,96,279,96+(gameData->countdown >> 1), c555);
 
-    if(gameData->comboTimer == 0){
-        return;
-    }
+    //if(gameData->comboTimer == 0){
+    //    return;
+    //}
 
     //snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
     snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
-    drawText(font, (gameData->comboTimer < 60) ? c030: greenColors[(breakout->gameData.frameCount >> 3) % 4], scoreStr, 144, 2);
+    drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4], scoreStr, 144, 2);
 }
 
 void breakoutChangeStateLevelClear(breakout_t *self){
