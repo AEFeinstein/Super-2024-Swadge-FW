@@ -38,7 +38,6 @@ static const emuExtension_t* registeredExtensions[] = {
 #define EMU_CB_LOOP_BARE    for (node_t* node = extManager.extensions.first; node != NULL; node = node->next)
 #define EMU_CB_INFO         ((emuExtInfo_t*)(node->val))
 #define EMU_CB_HAS_FN(cbFn) (EMU_CB_INFO->extension && EMU_CB_INFO->extension->cbFn)
-#define EMU_CB_NAME         (EMU_CB_INFO->extension->name)
 
 /**
  * @brief Macro to be used as a for-loop replacement for calling a particular callback
@@ -112,7 +111,7 @@ static emuExtManager_t extManager = {0};
 //==============================================================================
 
 static emuExtInfo_t* findExtInfo(const emuExtension_t* ext);
-static emuExtension_t* findExt(const char* name);
+static const emuExtension_t* findExt(const char* name);
 
 //==============================================================================
 // Functions
@@ -154,7 +153,7 @@ static emuExtInfo_t* findExtInfo(const emuExtension_t* ext)
  * @param name
  * @return const emuExtension_t*
  */
-static emuExtension_t* findExt(const char* name)
+static const emuExtension_t* findExt(const char* name)
 {
     const emuExtension_t** cbList = registeredExtensions;
 
@@ -202,7 +201,7 @@ static void preloadExtensions(void)
  *
  * @param args
  */
-void initExtensions(const emuArgs_t* args)
+void initExtensions(emuArgs_t* args)
 {
     preloadExtensions();
 
@@ -472,9 +471,8 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     // Only set the pane dimensions if there are actually any panes, to avoid division-by-zero
     if (paneInfos[PANE_LEFT].count > 0)
     {
-        winPanes[PANE_LEFT].paneW
-            = MAX(0, (winW - rightDivW - leftDivW - screenPane->paneW) * (paneInfos[PANE_LEFT].min)
-                         / (paneInfos[PANE_LEFT].min + paneInfos[PANE_RIGHT].min));
+        winPanes[PANE_LEFT].paneW = (winW - rightDivW - leftDivW - screenPane->paneW) * (paneInfos[PANE_LEFT].min)
+                                    / (paneInfos[PANE_LEFT].min + paneInfos[PANE_RIGHT].min);
         winPanes[PANE_LEFT].paneH = winH;
     }
 
@@ -487,7 +485,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     if (paneInfos[PANE_RIGHT].count > 0)
     {
         winPanes[PANE_RIGHT].paneW
-            = MAX(0, winW - (winPanes[PANE_LEFT].paneW + leftDivW + screenPane->paneW + rightDivW));
+            = winW - (winPanes[PANE_LEFT].paneW + leftDivW + screenPane->paneW + rightDivW);
         winPanes[PANE_RIGHT].paneH = winH;
     }
 
@@ -498,8 +496,8 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     {
         winPanes[PANE_TOP].paneW = screenPane->paneW;
         // Assign the remaining space to the left and right panes proportionally with their minimum sizes
-        winPanes[PANE_TOP].paneH = MAX(0, (winH - bottomDivH - topDivH - screenPane->paneH) * (paneInfos[PANE_TOP].min)
-                                              / (paneInfos[PANE_TOP].min + paneInfos[PANE_BOTTOM].min));
+        winPanes[PANE_TOP].paneH = (winH - bottomDivH - topDivH - screenPane->paneH) * (paneInfos[PANE_TOP].min)
+                                              / (paneInfos[PANE_TOP].min + paneInfos[PANE_BOTTOM].min);
     }
 
     // For the bottom one, flip things around just a bit so we can center the screen properly
@@ -508,7 +506,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
         winPanes[PANE_BOTTOM].paneW = screenPane->paneW;
         // Assign whatever space is left to the right pane to account for roundoff
         winPanes[PANE_BOTTOM].paneH
-            = MAX(0, winH - (winPanes[PANE_TOP].paneH + topDivH + screenPane->paneH + bottomDivH));
+            = winH - (winPanes[PANE_TOP].paneH + topDivH + screenPane->paneH + bottomDivH);
     }
 
     // The screen will be just below the top pane and its divider, plus half of any extra space not used by the panes
