@@ -7,6 +7,7 @@
 #include "hdw-accel_emu.h"
 #include "macros.h"
 #include "emu_main.h"
+#include "ext_modes.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,9 +52,10 @@ typedef enum
     FUZZ,
     QUIT,
     SCREENSHOT,
+    SET_MODE,
 } replayLogType_t;
 
-#define LAST_TYPE SCREENSHOT
+#define LAST_TYPE SET_MODE
 
 //==============================================================================
 // Structs
@@ -71,6 +73,7 @@ typedef struct
         int32_t touchVal;
         int16_t accelVal;
         char* filename;
+        char* modeName;
     };
 } replayEntry_t;
 
@@ -113,7 +116,8 @@ static void writeLe(uint8_t* vals, uint32_t size, FILE* stream);
 //==============================================================================
 
 static const char* replayLogTypeStrs[] = {
-    "BtnDown", "BtnUp", "TouchPhi", "TouchR", "TouchI", "AccelX", "AccelY", "AccelZ", "Fuzz", "Quit", "Screenshot",
+    "BtnDown", "BtnUp",  "TouchPhi", "TouchR", "TouchI",     "AccelX",
+    "AccelY",  "AccelZ", "Fuzz",     "Quit",   "Screenshot", "SetMode",
 };
 
 static const char* replayButtonNames[] = {
@@ -297,6 +301,7 @@ static void replayRecordFrame(uint64_t frame)
             case FUZZ:
             case QUIT:
             case SCREENSHOT:
+            case SET_MODE:
                 break;
         }
     }
@@ -429,6 +434,26 @@ static void replayPlaybackFrame(uint64_t frame)
 
                         printf("Replay: Saving screenshot to '%s'\n", filename);
                         takeScreenshot(filename);
+                    }
+                    break;
+                }
+
+                case SET_MODE:
+                {
+                    if (NULL != replay.nextEntry.modeName)
+                    {
+                        if (emulatorSetSwadgeModeByName(replay.nextEntry.modeName))
+                        {
+                            printf("Replay: Set mode to '%s'\n", replay.nextEntry.modeName);
+                        }
+                        else
+                        {
+                            printf("ERR: Replay: Can't find mode '%s'!", replay.nextEntry.modeName);
+                        }
+
+                        // This string is dynamically alloated, so delete it
+                        free(replay.nextEntry.modeName);
+                        replay.nextEntry.modeName = NULL;
                     }
                     break;
                 }
@@ -628,6 +653,18 @@ static bool readEntry(replayEntry_t* entry)
             break;
         }
 
+        case SET_MODE:
+        {
+            // Read the mode name from the file
+            if (1 != fscanf(replay.file, "%63[^\n]\n", buffer))
+            {
+                return false;
+            }
+
+            entry->modeName = strndup(buffer, sizeof(buffer) - 1);
+            break;
+        }
+
         default:
         {
             return false;
@@ -685,6 +722,7 @@ static void writeEntry(const replayEntry_t* entry)
         case FUZZ:
         case QUIT:
         case SCREENSHOT:
+        case SET_MODE:
         {
             break;
         }

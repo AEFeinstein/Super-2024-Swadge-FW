@@ -161,3 +161,18 @@ swadgeMode_t* getRandomSwadgeMode(void)
 {
     return allSwadgeModes[rand() % ARRAY_SIZE(allSwadgeModes)];
 }
+
+bool emulatorSetSwadgeModeByName(const char* name)
+{
+    swadgeMode_t* mode = emulatorFindSwadgeMode(name);
+
+    if (NULL != mode)
+    {
+        emulatorForceSwitchToSwadgeMode(mode);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
