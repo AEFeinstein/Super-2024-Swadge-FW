@@ -136,8 +136,8 @@ int main(int argc, char** argv)
     else
     {
         // Get all the pane info to see how much space we need aside from the simulated TFT screen
-        emuPaneMinimum_t paneMins[5] = {0};
-        calculatePaneMinimums(&paneMins);
+        emuPaneMinimum_t paneMins[4] = {0};
+        calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
         int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
