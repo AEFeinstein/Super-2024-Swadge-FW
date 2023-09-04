@@ -665,7 +665,10 @@ static bool readEntry(replayEntry_t* entry)
                 return false;
             }
 
-            entry->modeName = strndup(buffer, sizeof(buffer) - 1);
+            char* tmpStr = malloc(strlen(buffer) + 1);
+            strncpy(tmpStr, buffer, strlen(buffer) + 1);
+            entry->modeName = tmpStr;
+
             break;
         }
 
