@@ -15,6 +15,8 @@
 // Extension Includes
 #include "ext_touch.h"
 #include "ext_leds.h"
+#include "ext_fuzzer.h"
+#include "ext_modes.h"
 
 //==============================================================================
 // Registered Extensions
@@ -27,6 +29,8 @@
 static const emuExtension_t* registeredExtensions[] = {
     &touchEmuCallback,
     &ledEmuExtension,
+    &fuzzerEmuExtension,
+    &modesEmuExtension,
 };
 
 //==============================================================================
