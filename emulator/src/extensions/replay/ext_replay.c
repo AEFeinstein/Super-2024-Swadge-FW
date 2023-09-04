@@ -156,7 +156,8 @@ static bool replayInit(emuArgs_t* emuArgs)
         struct timespec ts;
         char filename[64];
         clock_gettime(CLOCK_REALTIME, &ts);
-        snprintf(filename, sizeof(filename) - 1, "rec-%lu.csv", ts.tv_sec);
+        uint64_t timeSec = (uint64_t)ts.tv_sec;
+        snprintf(filename, sizeof(filename) - 1, "rec-%" PRIu64 ".csv", timeSec);
 
         // If specified, use custom filename, otherwise use timestamp one
         printf("\nReplay: Recording inputs to file %s\n", emuArgs->recordFile ? emuArgs->recordFile : filename);
@@ -430,7 +431,10 @@ static void replayPlaybackFrame(uint64_t frame)
                         struct timespec ts;
                         char filename[64];
                         clock_gettime(CLOCK_REALTIME, &ts);
-                        snprintf(filename, sizeof(filename) - 1, "screenshot-%lu.bmp", ts.tv_sec);
+
+                        // Turns out time_t doesn't printf well, so stick it in something that does
+                        uint64_t timeSec = (uint64_t)ts.tv_sec;
+                        snprintf(filename, sizeof(filename) - 1, "screenshot-%" PRIu64 ".bmp", timeSec);
 
                         printf("Replay: Saving screenshot to '%s'\n", filename);
                         takeScreenshot(filename);
