@@ -20,15 +20,15 @@ void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character)
 
     if (character == 0)
     {
-        hero->spriteOffset = 5;
+        hero->spriteOffset = 0;
     }
     else if (character == 1)
     {
-        hero->spriteOffset = 22;
+        hero->spriteOffset = 17;
 
     } else 
     {
-        hero->spriteOffset = 42;
+        hero->spriteOffset = 34;
     }
     
 }

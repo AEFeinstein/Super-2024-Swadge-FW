@@ -56,63 +56,63 @@ void lumberjackStartGameMode(lumberjackGameType_t type)
     loadWsg("water_floor_b4.wsg", &lumv->animationTiles[11], false);
     ESP_LOGI(LUM_TAG, "Loading Characters");
     
-    loadWsg("lumbers_red_1.wsg", &lumv->playerSprites[5], true);
-    loadWsg("lumbers_red_2.wsg", &lumv->playerSprites[6], true);
-    loadWsg("lumbers_red_3.wsg", &lumv->playerSprites[7], true);
-    loadWsg("lumbers_red_4.wsg", &lumv->playerSprites[8], false);
-    loadWsg("lumbers_red_5.wsg", &lumv->playerSprites[9], true);
-    loadWsg("lumbers_red_6.wsg", &lumv->playerSprites[10], true);
-    loadWsg("lumbers_red_7.wsg", &lumv->playerSprites[11], true);
-    loadWsg("lumbers_red_8.wsg", &lumv->playerSprites[12], true);
-    loadWsg("lumbers_red_9.wsg", &lumv->playerSprites[13], true);
-    loadWsg("lumbers_red_10.wsg", &lumv->playerSprites[14], true);
-    loadWsg("lumbers_red_11.wsg", &lumv->playerSprites[15], true);
-    loadWsg("lumbers_red_12.wsg", &lumv->playerSprites[16], true);
-    loadWsg("lumbers_red_13.wsg", &lumv->playerSprites[17], true);
-    loadWsg("lumbers_red_14.wsg", &lumv->playerSprites[18], true);
-    loadWsg("lumbers_red_15.wsg", &lumv->playerSprites[19], true);
-    loadWsg("lumbers_red_16.wsg", &lumv->playerSprites[20], true);
-    loadWsg("lumbers_red_17.wsg", &lumv->playerSprites[21], true);
+    loadWsg("lumbers_red_1.wsg", &lumv->playerSprites[0], true);
+    loadWsg("lumbers_red_2.wsg", &lumv->playerSprites[1], true);
+    loadWsg("lumbers_red_3.wsg", &lumv->playerSprites[2], true);
+    loadWsg("lumbers_red_4.wsg", &lumv->playerSprites[3], false); // These two things break 3 seconds after the game loads
+    loadWsg("lumbers_red_5.wsg", &lumv->playerSprites[4], false); // I think the memory is being replaces
+    loadWsg("lumbers_red_6.wsg", &lumv->playerSprites[5], true);
+    loadWsg("lumbers_red_7.wsg", &lumv->playerSprites[6], true);
+    loadWsg("lumbers_red_8.wsg", &lumv->playerSprites[7], true);
+    loadWsg("lumbers_red_9.wsg", &lumv->playerSprites[8], true);
+    loadWsg("lumbers_red_10.wsg", &lumv->playerSprites[9], true);
+    loadWsg("lumbers_red_11.wsg", &lumv->playerSprites[10], true);
+    loadWsg("lumbers_red_12.wsg", &lumv->playerSprites[11], true);
+    loadWsg("lumbers_red_13.wsg", &lumv->playerSprites[12], true);
+    loadWsg("lumbers_red_14.wsg", &lumv->playerSprites[13], true);
+    loadWsg("lumbers_red_15.wsg", &lumv->playerSprites[14], true);
+    loadWsg("lumbers_red_16.wsg", &lumv->playerSprites[15], true);
+    loadWsg("lumbers_red_17.wsg", &lumv->playerSprites[16], true);
     
-    loadWsg("lumbers_green_1.wsg", &lumv->playerSprites[22], true);
-    loadWsg("lumbers_green_2.wsg", &lumv->playerSprites[23], true);
-    loadWsg("lumbers_green_3.wsg", &lumv->playerSprites[24], true);
-    loadWsg("lumbers_green_4.wsg", &lumv->playerSprites[25], true);
-    loadWsg("lumbers_green_5.wsg", &lumv->playerSprites[26], true);
-    loadWsg("lumbers_green_6.wsg", &lumv->playerSprites[27], true);
-    loadWsg("lumbers_green_7.wsg", &lumv->playerSprites[28], true);
-    loadWsg("lumbers_green_8.wsg", &lumv->playerSprites[29], true);
-    loadWsg("lumbers_green_9.wsg", &lumv->playerSprites[30], true);
-    loadWsg("lumbers_green_10.wsg", &lumv->playerSprites[31], true);
-    loadWsg("lumbers_green_11.wsg", &lumv->playerSprites[32], true);
-    loadWsg("lumbers_green_12.wsg", &lumv->playerSprites[33], true);
-    loadWsg("lumbers_green_13.wsg", &lumv->playerSprites[34], true);
-    loadWsg("lumbers_green_14.wsg", &lumv->playerSprites[35], true);
-    loadWsg("lumbers_green_15.wsg", &lumv->playerSprites[36], true);
-    loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[37], true);
-    loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[38], true);
+    loadWsg("lumbers_green_1.wsg", &lumv->playerSprites[17], true);
+    loadWsg("lumbers_green_2.wsg", &lumv->playerSprites[18], true);
+    loadWsg("lumbers_green_3.wsg", &lumv->playerSprites[19], true);
+    loadWsg("lumbers_green_4.wsg", &lumv->playerSprites[20], true);
+    loadWsg("lumbers_green_5.wsg", &lumv->playerSprites[21], true);
+    loadWsg("lumbers_green_6.wsg", &lumv->playerSprites[22], true);
+    loadWsg("lumbers_green_7.wsg", &lumv->playerSprites[23], true);
+    loadWsg("lumbers_green_8.wsg", &lumv->playerSprites[24], true);
+    loadWsg("lumbers_green_9.wsg", &lumv->playerSprites[25], true);
+    loadWsg("lumbers_green_10.wsg", &lumv->playerSprites[26], true);
+    loadWsg("lumbers_green_11.wsg", &lumv->playerSprites[27], true);
+    loadWsg("lumbers_green_12.wsg", &lumv->playerSprites[28], true);
+    loadWsg("lumbers_green_13.wsg", &lumv->playerSprites[29], true);
+    loadWsg("lumbers_green_14.wsg", &lumv->playerSprites[30], true);
+    loadWsg("lumbers_green_15.wsg", &lumv->playerSprites[31], true);
+    loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[32], true);
+    loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[33], true);
     /*
-    loadWsg("secret_swadgeland_1.wsg", &lumv->playerSprites[42], true);
-    loadWsg("secret_swadgeland_2.wsg", &lumv->playerSprites[43], true);
-    loadWsg("secret_swadgeland_3.wsg", &lumv->playerSprites[44], true);
-    loadWsg("secret_swadgeland_4.wsg", &lumv->playerSprites[45], true);
-    loadWsg("secret_swadgeland_5.wsg", &lumv->playerSprites[46], true);
-    loadWsg("secret_swadgeland_6.wsg", &lumv->playerSprites[47], true);
-    loadWsg("secret_swadgeland_7.wsg", &lumv->playerSprites[48], true);
-    loadWsg("secret_swadgeland_8.wsg", &lumv->playerSprites[49], true);
-    loadWsg("secret_swadgeland_9.wsg", &lumv->playerSprites[50], true);
-    loadWsg("secret_swadgeland_10.wsg", &lumv->playerSprites[51], true);
-    loadWsg("secret_swadgeland_11.wsg", &lumv->playerSprites[52], true);
-    loadWsg("secret_swadgeland_12.wsg", &lumv->playerSprites[53], true);
-    loadWsg("secret_swadgeland_13.wsg", &lumv->playerSprites[54], true);
-    loadWsg("secret_swadgeland_14.wsg", &lumv->playerSprites[55], true);
-    loadWsg("secret_swadgeland_15.wsg", &lumv->playerSprites[56], true);
-    loadWsg("secret_swadgeland_16.wsg", &lumv->playerSprites[57], true);
-    loadWsg("secret_swadgeland_17.wsg", &lumv->playerSprites[58], true);
-    loadWsg("secret_swadgeland_18.wsg", &lumv->playerSprites[59], true);
-    loadWsg("secret_swadgeland_19.wsg", &lumv->playerSprites[60], true);
-    loadWsg("secret_swadgeland_20.wsg", &lumv->playerSprites[61], true);
-    loadWsg("secret_swadgeland_21.wsg", &lumv->playerSprites[62], true);*/
+    loadWsg("secret_swadgeland_1.wsg", &lumv->playerSprites[34], true);
+    loadWsg("secret_swadgeland_2.wsg", &lumv->playerSprites[35], true);
+    loadWsg("secret_swadgeland_3.wsg", &lumv->playerSprites[36], true);
+    loadWsg("secret_swadgeland_4.wsg", &lumv->playerSprites[37], true);
+    loadWsg("secret_swadgeland_5.wsg", &lumv->playerSprites[38], true);
+    loadWsg("secret_swadgeland_6.wsg", &lumv->playerSprites[39], true);
+    loadWsg("secret_swadgeland_7.wsg", &lumv->playerSprites[40], true);
+    loadWsg("secret_swadgeland_8.wsg", &lumv->playerSprites[41], true);
+    loadWsg("secret_swadgeland_9.wsg", &lumv->playerSprites[42], true);
+    loadWsg("secret_swadgeland_10.wsg", &lumv->playerSprites[43], true);
+    loadWsg("secret_swadgeland_11.wsg", &lumv->playerSprites[44], true);
+    loadWsg("secret_swadgeland_12.wsg", &lumv->playerSprites[45], true);
+    loadWsg("secret_swadgeland_13.wsg", &lumv->playerSprites[46], true);
+    loadWsg("secret_swadgeland_14.wsg", &lumv->playerSprites[47], true);
+    loadWsg("secret_swadgeland_15.wsg", &lumv->playerSprites[48], true);
+    loadWsg("secret_swadgeland_16.wsg", &lumv->playerSprites[49], true);
+    loadWsg("secret_swadgeland_17.wsg", &lumv->playerSprites[50], true);
+    loadWsg("secret_swadgeland_18.wsg", &lumv->playerSprites[51], true);
+    loadWsg("secret_swadgeland_19.wsg", &lumv->playerSprites[52], true);
+    loadWsg("secret_swadgeland_20.wsg", &lumv->playerSprites[53], true);
+    loadWsg("secret_swadgeland_21.wsg", &lumv->playerSprites[54], true);*/
     
     ESP_LOGI(LUM_TAG, "Loading Enemies");
     loadWsg("enemy_a1.wsg", &lumv->enemySprites[0], true);
@@ -138,7 +138,6 @@ void lumberjackStartGameMode(lumberjackGameType_t type)
     loadWsg("enemy_c7.wsg", &lumv->enemySprites[20], true);
 
     loadWsg("alert.wsg", &lumv->alertSprite, true); 
-    //lumberjackSetupLevel(0);
 
     if (lumv->gameType == LUMBERJACK_ATTACK)
     {
@@ -166,7 +165,7 @@ void lumberjackSetupLevel(int index)
     lumberjackSpawnPlayer(lumv->localPlayer, 94, 0, 0);
     
     //snprintf(lumv->localPlayer->name, sizeof(lumv->localPlayer->name), "Player");
-    strcpy(lumv->localPlayer->name," Dennis");
+    strcpy(lumv->localPlayer->name," Dennis"); //If you see this... this name means nothing
 
     for (int i = 0; i < 2; i++)
     {
@@ -493,14 +492,13 @@ void baseMode(int64_t elapsedUs)
 
     //drawRect(lumv->localPlayer->x - 4, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->x + 32, lumv->localPlayer->y - lumv->yOffset + 32, c050);
     //drawWsgSimple(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 4, lumv->localPlayer->y - lumv->yOffset);
-    drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 4, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);    
-   
 
-    //fillDisplayArea ( lumv->localPlayer->x - 4, lumv->localPlayer->y - lumv->yOffset, 32,32, c424);
-    
+    //This is where it breaks. When it tries to play frame 3 or 4 it crashes.
+    drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 4, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);    
+
     if (lumv->localPlayer->x > 270)
     {
-        //drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 299, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
+        drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 299, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
     }
 
     //Debug
