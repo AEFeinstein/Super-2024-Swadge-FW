@@ -5,21 +5,23 @@
 
 #include "lumberjackEntity.h"
 #include "lumberjackPlayer.h"
- 
+
 extern const char* LUM_TAG;
 extern swadgeMode_t lumberjackMode;
 
-typedef enum{
+typedef enum
+{
     LUMBERJACK_MENU,
     LUMBERJACK_A,
     LUMBERJACK_B,
-}lumberjackScreen_t;
+} lumberjackScreen_t;
 
-typedef enum{
+typedef enum
+{
     LUMBERJACK_NONE,
     LUMBERJACK_PANIC,
     LUMBERJACK_ATTACK
-}lumberjackGameType_t;
+} lumberjackGameType_t;
 
 typedef struct
 {
@@ -28,13 +30,13 @@ typedef struct
     font_t ibm;
     font_t logbook;
 
-    //The pass throughs
+    // The pass throughs
     p2pInfo p2p;
     lumberjackScreen_t screen;
 
 } lumberjack_t;
 
-typedef struct 
+typedef struct
 {
     /* data */
     int x;
@@ -53,7 +55,7 @@ typedef struct
     font_t ibm;
     p2pInfo p2p;
     menu_t* menu;
-    uint16_t btnState;      ///<-- The STOLEN! ;)
+    uint16_t btnState; ///<-- The STOLEN! ;)
 
     int yOffset;
     int lives;
@@ -80,15 +82,12 @@ typedef struct
     wsg_t slowload[400];
 
     lumberjackEntity_t* enemy[8];
-    
+
     lumberjackEntity_t* localPlayer;
     lumberjackEntity_t* remotePlayer;
 
     lumberjackGameType_t gameType;
 
 } lumberjackVars_t;
-
-
-
 
 #endif

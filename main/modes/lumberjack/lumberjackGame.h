@@ -1,6 +1,5 @@
 #ifndef _LUMBERJACK_MODE_H
-#define _LUMBERJACK_MODE_H_
-
+    #define _LUMBERJACK_MODE_H_
 
 void lumberjackStartGameMode(lumberjackGameType_t type);
 void lumberjackExitGameMode(void);

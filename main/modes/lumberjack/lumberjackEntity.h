@@ -3,11 +3,10 @@
 
 #include "swadge2024.h"
 
-
 typedef struct
 {
     bool flipped;
-    bool onGround;    
+    bool onGround;
     bool active;
 
     bool flying;
@@ -35,7 +34,7 @@ typedef struct
     int8_t cH;
 
     bool upgrading;
-    bool ready; //Ready to be placed because it's not in game
+    bool ready; // Ready to be placed because it's not in game
     bool showAlert;
 
     int width;
@@ -56,7 +55,6 @@ void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side);
 bool checkCollision(lumberjackEntity_t* AA, lumberjackEntity_t* BB);
 void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex);
 void lumberjackDoEnemyControls(lumberjackEntity_t* enemy);
-
 
 void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy);
 void lumberjackUpdatePlayerCollision(lumberjackEntity_t* player);
