@@ -12,7 +12,8 @@ void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character)
     enemy->ready = true; 
     enemy->showAlert = false;
     enemy->spriteOffset = 0;
-
+    enemy->cW = 15;
+    enemy->cH = 15;
     lumberjackUpdateEnemy(enemy, character);
     
 }
@@ -28,6 +29,7 @@ void lumberjackResetEnemy(lumberjackEntity_t* enemy)
     enemy->x = 0;
     enemy->upgrading = false;
 
+    lumberjackUpdateEnemy(enemy, enemy->type);
 }
 
 void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side)
@@ -49,7 +51,7 @@ void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side)
     else
 {
         enemy->direction = -1; // This needs to be decided ahead of time
-        enemy->x = 200;
+        enemy->x = 279;
         enemy->vx = 0;// -enemy->maxVX;
         enemy->flipped = true;        
     }
@@ -77,15 +79,20 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->spriteOffset = 0;
         enemy->maxLevel = 2;
 
+        enemy->cW = 15;
+        enemy->cH = 15;
+
     }
     else if (newIndex == 1)
     {
         enemy->width = 15;
         enemy->height = 15;
         enemy->tileHeight = 1;
-        enemy->maxVX = 8;
+        enemy->maxVX = 6;
         enemy->spriteOffset = 7;
         enemy->maxLevel = 2;
+        enemy->cW = 15;
+        enemy->cH = 15;
 
     }
     else if (newIndex == 2)
@@ -93,9 +100,11 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->width = 15;
         enemy->height = 15;
         enemy->tileHeight = 1;
-        enemy->maxVX = 10;
+        enemy->maxVX = 8;
         enemy->spriteOffset = 14;
         enemy->maxLevel = 2;
+        enemy->cW = 15;
+        enemy->cH = 15;
 
     }
 
@@ -108,8 +117,31 @@ void lumberjackDoEnemyControls(lumberjackEntity_t* enemy)
 {
     //pick between types I guess
     //if enemy->type 1, 2, or 3... continue
+    //enemy->direction = -1;
 
-    
+}
+
+void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy)
+{
+    enemy->cX = enemy->x;
+    enemy->cY = enemy->y;
+}
+
+void lumberjackUpdatePlayerCollision(lumberjackEntity_t* player)
+{
+    player->cX = player->cX + 2;
+    player->cW = player->width -4;
+
+    if (player->state == LUMBERJACK_DUCK)
+    {
+        player->cY = player->cY + 8;
+        player->cH = player->height -16;
+    }
+    else
+    {
+        player->cY = player->cY + 4;
+        player->cH = player->height -8;
+    }
 }
 
 

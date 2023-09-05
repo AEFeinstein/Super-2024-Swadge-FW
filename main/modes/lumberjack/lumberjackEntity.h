@@ -22,12 +22,17 @@ typedef struct
     int x;
     int y;
     int spriteOffset;
-    float vx;
+    int vx;
     float vy;
-    float maxVX;
+    int maxVX;
     int type;
     int maxLevel;
     int respawn;
+
+    int cX;
+    int cY;
+    int8_t cW;
+    int8_t cH;
 
     bool upgrading;
     bool ready; //Ready to be placed because it's not in game
@@ -40,6 +45,8 @@ typedef struct
     int direction;
     int animationSpeed;
     int64_t timerFrameUpdate;
+    char name[16];
+
 } lumberjackEntity_t;
 
 void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character);
@@ -49,5 +56,9 @@ void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side);
 bool checkCollision(lumberjackEntity_t* AA, lumberjackEntity_t* BB);
 void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex);
 void lumberjackDoEnemyControls(lumberjackEntity_t* enemy);
+
+
+void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy);
+void lumberjackUpdatePlayerCollision(lumberjackEntity_t* player);
 
 #endif

@@ -142,6 +142,7 @@
 #include "advanced_usb_control.h"
 #include "swadge2024.h"
 #include "mainMenu.h"
+#include "lumberjack.h"
 #include "quickSettings.h"
 #include "shapes.h"
 
@@ -229,8 +230,8 @@ void app_main(void)
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
         GPIO_NUM_0,  // Up
-        GPIO_NUM_4,  // Down
-        GPIO_NUM_2,  // Left
+        GPIO_NUM_2,  // Down
+        GPIO_NUM_4,  // Left
         GPIO_NUM_1,  // Right
         GPIO_NUM_16, // A
         GPIO_NUM_15, // B
@@ -371,6 +372,7 @@ void app_main(void)
                 {
                     // Call the overlay mode's main loop if there is one
                     quickSettingsMode.fnMainLoop(tNowUs - tLastMainLoopCall);
+                    
                 }
                 else
                 {
@@ -379,6 +381,7 @@ void app_main(void)
                 }
                 tLastMainLoopCall = tNowUs;
             }
+
 
             // If the menu button is being held
             if (0 != timeExitPressed && !showQuickSettings)
@@ -635,6 +638,7 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
             }
             else if (evt->button == PB_START && !timeExitPressed)
             {
+                ESP_LOGI("UTL", "START EVET");
                 // Handle the start button for the quick-settings menu,
                 // but only if we're not already handling select and the
                 // quick-settings menu is not already enabled

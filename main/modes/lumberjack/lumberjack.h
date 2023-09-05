@@ -6,8 +6,33 @@
 #include "lumberjackEntity.h"
 #include "lumberjackPlayer.h"
  
+const static char* LUM_TAG = "LUM";
 extern swadgeMode_t lumberjackMode;
 
+typedef enum{
+    LUMBERJACK_MENU,
+    LUMBERJACK_A,
+    LUMBERJACK_B,
+}lumberjackScreen_t;
+
+typedef enum{
+    LUMBERJACK_NONE,
+    LUMBERJACK_PANIC,
+    LUMBERJACK_ATTACK
+}lumberjackGameType_t;
+
+typedef struct
+{
+    menu_t* menu;
+    menuLogbookRenderer_t* menuLogbookRenderer;
+    font_t ibm;
+    font_t logbook;
+
+    //The pass throughs
+    p2pInfo p2p;
+    lumberjackScreen_t screen;
+
+} lumberjack_t;
 
 typedef struct 
 {
@@ -24,6 +49,7 @@ typedef struct
 
 typedef struct
 {
+    bool loaded;
     font_t ibm;
     p2pInfo p2p;
     menu_t* menu;
@@ -46,17 +72,22 @@ typedef struct
     lumberjackTile_t tile[400];
     uint8_t anim[400];
 
-    wsg_t playerSprites[63];
     wsg_t enemySprites[21];
+    wsg_t playerSprites[41];
 
     wsg_t alertSprite;
+
+    wsg_t slowload[400];
 
     lumberjackEntity_t* enemy[8];
     
     lumberjackEntity_t* localPlayer;
     lumberjackEntity_t* remotePlayer;
 
+    lumberjackGameType_t gameType;
+
 } lumberjackVars_t;
+
 
 
 

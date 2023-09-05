@@ -20,11 +20,11 @@ void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character)
 
     if (character == 0)
     {
-        hero->spriteOffset = 0;
+        hero->spriteOffset = 5;
     }
     else if (character == 1)
     {
-        hero->spriteOffset = 21;
+        hero->spriteOffset = 22;
 
     } else 
     {
@@ -38,6 +38,7 @@ void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
     hero->x = x;
     hero->y = 270;
     hero->vx = 0;
+    hero->maxVX = 15;
     hero->vy = 0;
     hero->flipped = (facing == 0);
     hero->state = LUMBERJACK_IDLE;
@@ -50,6 +51,7 @@ void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
 void lumberjackRespawn(lumberjackEntity_t* hero)
 {
     hero->x = 130;
+    hero->maxVX = 15;
     hero->y = 270;
     hero->active = true;
     hero->ready = false;
