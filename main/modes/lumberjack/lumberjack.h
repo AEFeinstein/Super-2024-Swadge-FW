@@ -6,7 +6,7 @@
 #include "lumberjackEntity.h"
 #include "lumberjackPlayer.h"
  
-const static char* LUM_TAG = "LUM";
+extern const char* LUM_TAG;
 extern swadgeMode_t lumberjackMode;
 
 typedef enum{

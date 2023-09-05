@@ -107,10 +107,6 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->cH = 15;
 
     }
-
-
-    enemy->type = newIndex;
-
 }
 
 void lumberjackDoEnemyControls(lumberjackEntity_t* enemy)
@@ -162,20 +158,20 @@ uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy)
 
     if (animation == LUMBERJACK_RUN)
     {
-        int anim[] = {0, 1, 2, 3};
+        const int anim[] = {0, 1, 2, 3};
         return anim[enemy->currentFrame % 4];
     }
 
     if (animation == LUMBERJACK_BUMPED)
     {
-        int anim[] = {4};
+        const int anim[] = {4};
         return anim[enemy->currentFrame % 2];
     }
 
 
     if (animation == LUMBERJACK_BUMPED_IDLE)
     {
-        int anim[] = {5, 6};
+        const int anim[] = {5, 6};
         return anim[enemy->currentFrame % 2];
     }
 

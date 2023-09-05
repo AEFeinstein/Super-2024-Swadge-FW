@@ -33,7 +33,7 @@ static const char lumberjackPanic[] = "Panic";
 static const char lumberjackAttack[] = "Attack";
 static const char lumberjackBack[] = "Back";
 
-
+const char* LUM_TAG = "LUM";
 
 swadgeMode_t lumberjackMode = {
     .modeName                 = lumberjackName,
@@ -44,7 +44,7 @@ swadgeMode_t lumberjackMode = {
     .fnEnterMode              = lumberjackEnterMode,
     .fnExitMode               = lumberjackExitMode,
     .fnMainLoop               = lumberjackMainLoop,
-    .fnAudioCallback          = NULL,
+    .fnAudioCallback          = lumberjackAudioCallback,
     .fnBackgroundDrawCallback = lumberjackBackgroundDrawCallback,
     .fnEspNowRecvCb           = lumberjackEspNowRecvCb,
     .fnEspNowSendCb           = lumberjackEspNowSendCb,
@@ -91,6 +91,7 @@ static void lumberjackEnterMode(void)
 
 static void lumberjackExitMode(void)
 {    
+    lumberjackExitGameMode();
     p2pDeinit(&lumberjack->p2p);
     freeFont(&lumberjack->ibm);
     freeFont(&lumberjack->logbook);
@@ -165,6 +166,14 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
     //Do anything
 }
 
+/**
+ * @brief TODO use this somewhere
+ * 
+ * @param p2p 
+ * @param status 
+ * @param data 
+ * @param len 
+ */
 static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
 
@@ -173,12 +182,12 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
 
 static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    ESP_LOGI("LUM", "Info ");
+    ESP_LOGI(LUM_TAG, "Info ");
     if (selected)
     {
         if (label == lumberjackPanic)
         {
-            ESP_LOGI("LUM", "Panic");   
+            ESP_LOGI(LUM_TAG, "Panic");   
             lumberjack->screen = LUMBERJACK_A;
             lumberjackStartGameMode(LUMBERJACK_PANIC);
         }

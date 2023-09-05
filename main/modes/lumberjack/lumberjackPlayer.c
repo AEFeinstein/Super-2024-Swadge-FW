@@ -66,58 +66,58 @@ void lumberjackRespawn(lumberjackEntity_t* hero)
 
 int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
 {
-    int animationNone[] = {0};
+    // int animationNone[] = {0};
 
     int animation =  hero->state;
     hero->animationSpeed = 150000;
 
     if (hero->onGround == false && hero->jumping == false && hero->active)
     {
-        int animationFall[] = {13};
-        return animationFall[hero->currentFrame % ((int)( sizeof(animationFall) / sizeof(animationFall[0])) )];
+        const int animationFall[] = {13};
+        return animationFall[hero->currentFrame % ARRAY_SIZE(animationFall)];
 
     }
     
     if (animation == LUMBERJACK_DUCK)
     {        
-        int animationDuck[] = {16};
+        const int animationDuck[] = {16};
         hero->animationSpeed = 150000;
-        return animationDuck[hero->currentFrame % ((int)( sizeof(animationDuck) / sizeof(animationDuck[0])) )];
+        return animationDuck[hero->currentFrame % ARRAY_SIZE(animationDuck)];
     }
 
     if (animation == LUMBERJACK_RUN)
     {
-        int animationRun[] = {7, 8, 9, 10, 11, 12};
+        const int animationRun[] = {7, 8, 9, 10, 11, 12};
         hero->animationSpeed = 90000;        
-        return animationRun[hero->currentFrame % ((int)( sizeof(animationRun) / sizeof(animationRun[0])) )];
+        return animationRun[hero->currentFrame % ARRAY_SIZE(animationRun)];
     }
 
     if (animation == LUMBERJACK_IDLE)
     {
-        int animationIdle[] = {0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 3, 1};
+        const int animationIdle[] = {0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 2, 1, 0, 1, 3, 1};
         hero->animationSpeed = 150000;
-        return animationIdle[hero->currentFrame % ((int)( sizeof(animationIdle) / sizeof(animationIdle[0])) )];
+        return animationIdle[hero->currentFrame % ARRAY_SIZE(animationIdle)];
     }
 
     if (animation == LUMBERJACK_DEAD)
     {
-        int animationDead[] = {14};
+        const int animationDead[] = {14};
         hero->animationSpeed = 150000;
-        return animationDead[hero->currentFrame % ((int)( sizeof(animationDead) / sizeof(animationDead[0])) )];
+        return animationDead[hero->currentFrame % ARRAY_SIZE(animationDead)];
     }
 
     if (animation == LUMBERJACK_VICTORY)
     {
-        int animationVictory[] = {15};
+        const int animationVictory[] = {15};
         hero->animationSpeed = 150000;
-        return animationVictory[hero->currentFrame % ((int)( sizeof(animationVictory) / sizeof(animationVictory[0])) )];
+        return animationVictory[hero->currentFrame % ARRAY_SIZE(animationVictory)];
 
     }
     if (animation == LUMBERJACK_CLIMB)
     {
-        int animationClimb[] = {17 ,18,19,20};
+        const int animationClimb[] = {17 ,18,19,20};
         hero->animationSpeed = 150000;
-        return animationClimb[hero->currentFrame % ((int)( sizeof(animationClimb) / sizeof(animationClimb[0])) )];
+        return animationClimb[hero->currentFrame % ARRAY_SIZE(animationClimb)];
 
     }
 
