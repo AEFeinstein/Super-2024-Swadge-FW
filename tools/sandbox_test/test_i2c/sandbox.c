@@ -11,6 +11,10 @@
 #include "mainMenu.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/gpio_reg.h"
+#include "soc/io_mux_reg.h"
+#include "rom/gpio.h"
+#include "soc/i2c_reg.h"
+#include "soc/gpio_struct.h"
 #include "coreutil.h"
 #include "hdw-btn.h"
 
@@ -19,6 +23,7 @@
 int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
 
 
+extern uint32_t frameRateUs;
 int frameno;
 
 #define LSM6DSL_ADDRESS						0x6a
@@ -118,6 +123,7 @@ float mathsqrtf( float x )
 	// Trick to do approximate, fast square roots.
 	int sign = x < 0;
 	if( sign ) x = -x;
+	if( x < 0.0000001 ) return 0.0001;
 	float o = x;
 	o = (o+x/o)/2;
 	o = (o+x/o)/2;
@@ -257,6 +263,8 @@ static int ReadLSM6DSL( uint8_t * data, int data_len )
     i2c_cmd_link_delete(cmdHandle);
 	if( err < 0 ) return err;
 
+	if( fifolen == 0 ) return 0;
+
 	fifolen &= 0x3ff;
 	if( fifolen > data_len / 2 ) fifolen = data_len / 2;
 
@@ -392,7 +400,7 @@ static void LSM6DSLIntegrate()
 		// Second, we can apply a very small corrective tug.  This helps prevent oscillation
 		// about the correct answer.  This acts sort of like a P term to a PID loop.
 		// This is actually the **primary**, or fastest responding thing.
-		const float corrective_force = 0.005f;
+		const float corrective_force = 0.001f;
 		corrective_quaternion[1] *= corrective_force;
 		corrective_quaternion[2] *= corrective_force;
 		corrective_quaternion[3] *= corrective_force;
@@ -448,8 +456,28 @@ static void LSM6DSLIntegrate()
 
 static void LMS6DS3Setup()
 {
+
+	// Shake any device off the bus.
+	int i;
+	int gpio_scl = 41;
+	for( i = 0; i < 16; i++ )
+	{
+		gpio_matrix_out( gpio_scl, 256, 1, 0 );
+		GPIO.out1_w1tc.val = (1<<(gpio_scl-32));
+		esp_rom_delay_us(10);
+		gpio_matrix_out( gpio_scl, 256, 1, 0 );
+		GPIO.out1_w1ts.val = (1<<(gpio_scl-32));
+		esp_rom_delay_us(10);
+	}
+	gpio_matrix_out( gpio_scl, 29, 0, 0 );
+	WRITE_PERI_REG( I2C_SCL_LOW_PERIOD_REG( 0 ), 3 );
+	WRITE_PERI_REG( I2C_SDA_HOLD_REG( 0 ), 3 );
+	WRITE_PERI_REG( I2C_SDA_SAMPLE_REG( 0 ), 3 );
+	WRITE_PERI_REG( I2C_SCL_HIGH_PERIOD_REG( 0 ), 3 );
+
 	memset( &LSM6DSL, 0, sizeof(LSM6DSL) );
 	LSM6DSL.fqQuat[0] = 1;
+	LSM6DSL.fqQuatLast[0] = 1;
 
 	// Enable access
 	LSM6DSLSet( LSM6DSL_FUNC_CFG_ACCESS, 0x20 );
@@ -513,6 +541,8 @@ void sandbox_main(void)
     addSingleItemToMenu(menu, menu_Bootload);
 
     loadWsg("kid0.wsg", &example_sprite, true);
+
+	frameRateUs = 0;
 /*
 	// Try to reinstall, just in case.
     i2c_config_t conf = {
@@ -633,6 +663,7 @@ void sandbox_tick()
 	float plusy_out[3] = { 0, 1, 0 };
 	mathRotateVectorByQuaternion( plusy, LSM6DSL.fqQuat, plusy );
 //	mathRotateVectorByInverseOfQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
+
 	mathRotateVectorByQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
 
 	float plusx_out[3] = { 1, 0, 0 };
@@ -682,7 +713,8 @@ void sandbox_tick()
 	}
 #endif
 
-	cts += sprintf( cts, "%ld %d %f %f %f / %f %f %f / %3d %3d %3d / %4d %4d %4d / %d %d", LSM6DSL.caltime, LSM6DSL.lastreadr,
+	cts += sprintf( cts, "%ld %d %f %f %f / %f %f %f / %3d %3d %3d / %4d %4d %4d / %d %d",
+		LSM6DSL.caltime, LSM6DSL.lastreadr,
 		LSM6DSL.fCorrectLast[0], LSM6DSL.fCorrectLast[1], LSM6DSL.fCorrectLast[2],
 		LSM6DSL.fvBias[0],		LSM6DSL.fvBias[1],		LSM6DSL.fvBias[2],
 		LSM6DSL.gyrolast[0], LSM6DSL.gyrolast[1], LSM6DSL.gyrolast[2],
