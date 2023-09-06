@@ -95,16 +95,15 @@ typedef enum
 } mouseButton_t;
 
 /**
- * @brief The location of a pane within the window, or no pane.
+ * @brief The location of a pane within the window.
  *
  */
 typedef enum
 {
-    PANE_NONE   = 0, ///< No pane
-    PANE_LEFT   = 1, ///< Left side pane, extends the entire height of the window
-    PANE_RIGHT  = 2, ///< Right side pane, extends the entire height of the window
-    PANE_TOP    = 3, ///< Top pane, extends only above the screen and between the side panes
-    PANE_BOTTOM = 4, ///< Bottom pane, extends only below the screen and between the side panes
+    PANE_LEFT   = 0, ///< Left side pane, extends the entire height of the window
+    PANE_RIGHT  = 1, ///< Right side pane, extends the entire height of the window
+    PANE_TOP    = 2, ///< Top pane, extends only above the screen and between the side panes
+    PANE_BOTTOM = 3, ///< Bottom pane, extends only below the screen and between the side panes
 } paneLocation_t;
 
 /**
@@ -246,8 +245,8 @@ typedef struct
 
 void initExtensions(const emuArgs_t* args);
 void deinitExtensions(void);
-void enableExtension(const char* name);
-void disableExtension(const char* name);
+bool enableExtension(const char* name);
+bool disableExtension(const char* name);
 void calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
 void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
                  uint8_t* screenMult);

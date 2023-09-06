@@ -57,6 +57,7 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
                             bool denoiseEnable);
 
 static int getTouchRawValues(uint32_t* rawValues, int maxPads);
+static int getBaseTouchVals(int32_t* data, int count);
 
 //==============================================================================
 // Functions
@@ -520,7 +521,7 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     int ringPh = (center < 0) ? (center + 1280) : center;
 
     // 0->1280 --> 0->360
-    ringPh = ( ringPh * 9 ) >> 5;
+    ringPh = (ringPh * 9) >> 5;
     if (phi)
     {
         *phi = ringPh;

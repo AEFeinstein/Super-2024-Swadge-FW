@@ -1,8 +1,8 @@
-#ifndef _PORTABLE_DANCE_H_
-#define _PORTABLE_DANCE_H_
+#ifndef _PORTABLEDANCE_H_
+#define _PORTABLEDANCE_H_
 
 #include "swadge2024.h"
-#include "mode_dance.h"
+#include "dance.h"
 
 typedef struct
 {

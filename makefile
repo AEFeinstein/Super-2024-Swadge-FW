@@ -46,7 +46,7 @@ SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "rawdraw_sf.h" -not -name "rawdraw_sf.h" -not -name "cJSON*")
+ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "rawdraw_sf.h" -not -name "getopt_win.h" -not -name "cJSON*")
 
 ################################################################################
 # Includes
@@ -103,7 +103,7 @@ CFLAGS_WARNINGS = \
 	-Wno-enum-conversion \
 	-Wno-error=unused-but-set-variable \
 	-Wno-old-style-declaration
-	
+
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
 	-Wundef \
@@ -168,7 +168,7 @@ DEFINES_LIST = \
 	IDF_VER="v5.1" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
-	CFG_TUSB_MCU=OPT_MCU_ESP32S2 
+	CFG_TUSB_MCU=OPT_MCU_ESP32S2
 
 # Extra defines
 DEFINES_LIST += \
@@ -248,12 +248,23 @@ $(EXECUTABLE): $(OBJECTS)
 	@mkdir -p $(@D) # This creates a directory before building an object in it.
 	$(CC) $(CFLAGS) $(CFLAGS_WARNINGS) $(CFLAGS_WARNINGS_EXTRA) $(DEFINES) $(INC) $< -o $@
 
-# This clean everything
+# This cleans emulator files
 clean:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
 	-@rm -rf ./spiffs_image/*
+
+# This cleans everything
+fullclean: clean
+	idf.py fullclean
+	git clean -fX
+	$(MAKE) -C ./tools/sandbox_test clean
+	$(MAKE) -C ./tools/hidapi_test clean
+	$(MAKE) -C ./tools/bootload_reboot_stub clean
+	$(MAKE) -C ./tools/font_maker clean
+	$(MAKE) -C ./tools/swadgeterm clean
+	$(MAKE) -C ./tools/reboot_into_bootloader clean
 
 ################################################################################
 # Utility targets
@@ -286,13 +297,13 @@ usbflash :
 	tools/reflash_and_monitor.bat
 else
 usbflash :
-	make -C tools/reboot_into_bootloader
+	$(MAKE) -C tools/reboot_into_bootloader
 	sleep 1.2
 	idf.py flash
 	sleep 1.2
-	make -C tools/bootload_reboot_stub reboot
+	$(MAKE) -C tools/bootload_reboot_stub reboot
 	sleep 2.5
-	make -C tools/swadgeterm monitor
+	$(MAKE) -C tools/swadgeterm monitor
 endif
 
 ################################################################################
@@ -317,6 +328,7 @@ CPPCHECK_DIRS= \
 
 CPPCHECK_IGNORE= \
 	emulator/src/rawdraw_sf.h \
+	emulator/src/getopt_win.h \
 	emulator/sound \
 	emulator/src/components/hdw-nvs/cJSON.c \
 	emulator/src/components/hdw-nvs/cJSON.h \

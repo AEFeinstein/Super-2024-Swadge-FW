@@ -1,5 +1,5 @@
-#ifndef _MODE_COLORCHORD_TYPES_H_
-#define _MODE_COLORCHORD_TYPES_H_
+#ifndef _COLORCHORDTYPES_H_
+#define _COLORCHORDTYPES_H_
 
 // Enum for NVM
 typedef enum

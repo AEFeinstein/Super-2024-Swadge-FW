@@ -447,11 +447,6 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
 static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume,
                                                    bool isActive, int64_t cTime)
 {
-    if (!track || !track->sTrack)
-    {
-        return false;
-    }
-
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
     {

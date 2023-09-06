@@ -69,7 +69,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "mode_colorchord_types.h"
+#include "colorchordTypes.h"
 
 //==============================================================================
 // Structs

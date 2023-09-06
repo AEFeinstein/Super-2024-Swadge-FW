@@ -36,7 +36,7 @@ static uint32_t buttonState = 0;
 static list_t* buttonQueue;
 
 /// The touchpad analog location angle
-static int32_t lastTouchAngle = 0;
+static int32_t lastTouchPhi = 0;
 
 /// The touchpad analog location radius
 static int32_t lastTouchRadius = 0;
@@ -112,27 +112,6 @@ bool checkButtonQueue(buttonEvt_t* evt)
 }
 
 /**
- * @brief Get totally raw touch sensor values from buffer.
- * NOTE: You must have touch callbacks enabled to use this.
- *
- * @param[out] centerVal pointer to centroid of touch locaiton from 0..1024 inclusive. Cannot be NULL.
- * @param[out] intensityVal intensity of touch press. Cannot be NULL.
- * @return true if touched (centroid), false if not touched (no centroid)
- */
-bool getTouchCentroid(int32_t* centerVal, int32_t* intensityVal)
-{
-    // Just simulate the centroid using the circular touchpad's horizontal axis only
-    int32_t angle, radius;
-    if (getTouchJoystick(&angle, &radius, intensityVal))
-    {
-        getTouchCartesian(angle, radius, centerVal, NULL);
-        return true;
-    }
-
-    return false;
-}
-
-/**
  * @brief Get the touch intensity and location in terms of angle and distance from
  * the center touchpad
  *
@@ -151,12 +130,8 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
         return false;
     }
 
-    // Just do the actual "is the touchpad touched" check, then write placeholder values
-
-    // TODO: Actual touchpad implementation
-
     // A touch in the center at 50% intensity
-    *phi       = lastTouchAngle;
+    *phi       = lastTouchPhi;
     *r         = lastTouchRadius;
     *intensity = lastTouchIntensity;
     return true;
@@ -210,9 +185,9 @@ void emulatorInjectButton(buttonBit_t button, bool down)
     push(buttonQueue, evt);
 }
 
-void emulatorSetTouchAngleRadius(int32_t angle, int32_t radius, int32_t intensity)
+void emulatorSetTouchJoystick(int32_t phi, int32_t radius, int32_t intensity)
 {
-    lastTouchAngle     = angle;
+    lastTouchPhi       = phi;
     lastTouchRadius    = radius;
     lastTouchIntensity = intensity;
 }
