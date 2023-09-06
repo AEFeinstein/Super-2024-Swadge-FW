@@ -12,7 +12,7 @@
  * The play order is determined by who acknowledges the start message first, which is suitably random.
  * A connection sequence looks like this:
  *
- * @startuml
+ * @startuml{conn_seq.png} "Connection Sequence"
  * == Connection ==
  * 
  * group Part 1
@@ -35,7 +35,7 @@
  * After connection, Swadges are free to send messages to each other.
  * An example of unreliable communication with retries and duplication is as follows.
  * 
- * @startuml
+ * @startuml{unre_comm.png} "Unreliable Communication"
  * == Unreliable Communication Example ==
  * 
  * group Retries & Sequence Numbers
