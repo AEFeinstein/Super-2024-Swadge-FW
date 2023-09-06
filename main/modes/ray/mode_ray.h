@@ -4,7 +4,7 @@
 #include "swadge2024.h"
 #include "fp_math.h"
 
-#define MAX_RAY_OBJS 256
+#define MAX_RAY_BULLETS 32
 
 #define CELL_IS_TYPE(cell, type) (((cell) & (0xE0)) == (type))
 
@@ -83,8 +83,7 @@ typedef struct
     uint16_t w;
     uint16_t h;
     rayMapCell_t** tiles;
-    // TODO objects
-    // TODO rules
+    // TODO load rules somewhere
 } rayMap_t;
 
 typedef struct
@@ -96,7 +95,6 @@ typedef struct
 typedef struct
 {
     wsg_t* sprite;         ///< The sprite for this object
-    int32_t dist;          ///< The distance between the player and this object, used for sorting before casting
     q24_8 posX;            ///< The X position of this object
     q24_8 posY;            ///< The Y position of this object
     q24_8 velX;            ///< The X velocity of this object
@@ -124,7 +122,10 @@ typedef enum
 typedef struct
 {
     rayMap_t map;
-    rayObj_t objs[MAX_RAY_OBJS];
+
+    rayObj_t bullets[MAX_RAY_BULLETS];
+    list_t enemies;
+    list_t objects;
 
     q24_8 posX;
     q24_8 posY;

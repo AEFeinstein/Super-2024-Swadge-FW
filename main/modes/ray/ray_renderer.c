@@ -12,14 +12,26 @@
 // Defines
 //==============================================================================
 
-#define TEX_WIDTH  64
-#define TEX_HEIGHT 64
-
 // When casting floor and ceiling, use 8 more decimal bits and 8 fewer whole number bits
 #define EX_CEIL_PRECISION_BITS 8
 
 // Half width of the lock zone when locking on enemies
 #define LOCK_ZONE 16
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+/// Helper struct to sort rayObj_t by distance from the player
+typedef struct
+{
+    rayObj_t* obj;
+    uint32_t dist;
+} objDist_t;
+
+//==============================================================================
+// Const data
+//==============================================================================
 
 const paletteColor_t xrayPaletteSwap[]
     = {c555, c554, c553, c552, c551, c550, c545, c544, c543, c542, c541, c540, c535,        c534, c533, c532, c531,
@@ -49,11 +61,12 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Draw a section of the floor and ceiling pixels. The floor and ceiling are drawn first. This iterates over the
+ * screen top-to-bottom and draws horizontal rows.
  *
- * @param ray
- * @param firstRow
- * @param lastRow
+ * @param ray The entire game state
+ * @param firstRow The first row to draw
+ * @param lastRow The last row to draw
  */
 void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
 {
@@ -226,9 +239,10 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
 }
 
 /**
- * @brief TODO
+ * @brief Draw all the wall pixels. Walls are drawn second. This iterates over the screen left-to-right and draws
+ * vertical columns.
  *
- * @param ray
+ * @param ray The entire game state
  */
 void castWalls(ray_t* ray)
 {
@@ -401,7 +415,7 @@ void castWalls(ray_t* ray)
                     drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
                 }
 
-                // TODO sometimes textures wraparound b/c the math for wallX comes out to be like
+                // Sometimes textures wraparound b/c the math for wallX comes out to be like
                 // 19.003 -> 0
                 // 19.000 -> 0
                 // 18.995 -> 63
@@ -551,11 +565,11 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
                 q24_8 doorY;
                 if (deltaDistY > 0)
                 {
-                    doorY = TO_FX(mapY) + (1 << (FRAC_BITS - 1));
+                    doorY = TO_FX(mapY) + TO_FX_FRAC(1, 2);
                 }
                 else
                 {
-                    doorY = TO_FX(mapY) - (1 << (FRAC_BITS - 1));
+                    doorY = TO_FX(mapY) - TO_FX_FRAC(1, 2);
                 }
 
                 // Solve for the X of the intersection
@@ -581,11 +595,11 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
             q24_8 doorX;
             if (deltaDistX > 0)
             {
-                doorX = TO_FX(mapX) + (1 << (FRAC_BITS - 1));
+                doorX = TO_FX(mapX) + TO_FX_FRAC(1, 2);
             }
             else
             {
-                doorX = TO_FX(mapX) - (1 << (FRAC_BITS - 1));
+                doorX = TO_FX(mapX) - TO_FX_FRAC(1, 2);
             }
 
             // Solve for the Y of the intersection
@@ -613,20 +627,22 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
  *
  * @param obj1 A rayObj_t* to compare
  * @param obj2 Another rayObj_t* to compare
- * @return an integer less than, equal to, or greater than zero if the first argument is considered to be respectively
- * less than, equal to, or greater than the second.
+ * @return an integer less than, equal to, or greater than zero if the first
+ *         argument is considered to be respectively less than, equal to, or
+ *         greater than the second.
  */
 static int objDistComparator(const void* obj1, const void* obj2)
 {
-    // TODO validate this
-    return (((const rayObj_t*)obj2)->dist - ((const rayObj_t*)obj1)->dist);
+    return (((const objDist_t*)obj2)->dist - ((const objDist_t*)obj1)->dist);
 }
 
 /**
- * @brief
+ * @brief Draw all the sprites. Sprites are drawn third. This sorts all sprites from furthest away to closest, then
+ * draws them on the screen.
  *
- * @param ray
- * @return The closest sprite in the lock zone (may be NULL)
+ * @param ray The entire game state
+ * @return The closest sprite in the lock zone, i.e. center of the display. This may be NULL if there are no centered
+ * sprites.
  */
 rayObj_t* castSprites(ray_t* ray)
 {
@@ -638,26 +654,73 @@ rayObj_t* castSprites(ray_t* ray)
     // Boolean if the colors should be drawn inverted
     bool isXray = (LO_XRAY == ray->loadout);
 
-    // Assign each sprite a distance from the player
-    for (int i = 0; i < MAX_RAY_OBJS; i++)
+    // Put an array on the stack to sort all sprites
+    objDist_t allObjs[MAX_RAY_BULLETS + ray->objects.length + ray->enemies.length];
+    int32_t allObjsIdx = 0;
+
+    q24_8 rayPosX = ray->posX;
+    q24_8 rayPosY = ray->posY;
+
+    // Assign each bullet a distance from the player
+    for (int i = 0; i < MAX_RAY_BULLETS; i++)
     {
         // Make a convenience pointer
-        rayObj_t* obj = &ray->objs[i];
+        rayObj_t* obj = &ray->bullets[i];
         if (-1 != obj->id)
         {
-            // sqrt not taken, unneeded
-            obj->dist = ((ray->posX - obj->posX) * (ray->posX - obj->posX)) + //
-                        ((ray->posY - obj->posY) * (ray->posY - obj->posY));
+            // Save the pointer and the distance to sort
+            allObjs[allObjsIdx].obj  = obj;
+            q24_8 delX               = rayPosX - obj->posX;
+            q24_8 delY               = rayPosY - obj->posY;
+            allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
+            allObjsIdx++;
         }
     }
+
+    // Assign each enemy a distance from the player
+    node_t* currentNode = ray->enemies.first;
+    while (currentNode != NULL)
+    {
+        // Get a pointer from the linked list
+        rayObj_t* obj = ((rayObj_t*)currentNode->val);
+
+        // Save the pointer and the distance to sort
+        allObjs[allObjsIdx].obj  = obj;
+        q24_8 delX               = rayPosX - obj->posX;
+        q24_8 delY               = rayPosY - obj->posY;
+        allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
+        allObjsIdx++;
+
+        // Iterate to the next node
+        currentNode = currentNode->next;
+    }
+
+    // Assign each enemy a distance from the player
+    currentNode = ray->objects.first;
+    while (currentNode != NULL)
+    {
+        // Get a pointer from the linked list
+        rayObj_t* obj = ((rayObj_t*)currentNode->val);
+
+        // Save the pointer and the distance to sort
+        allObjs[allObjsIdx].obj  = obj;
+        q24_8 delX               = rayPosX - obj->posX;
+        q24_8 delY               = rayPosY - obj->posY;
+        allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
+        allObjsIdx++;
+
+        // Iterate to the next node
+        currentNode = currentNode->next;
+    }
+
     // Sort the sprites by distance
-    qsort(ray->objs, MAX_RAY_OBJS, sizeof(rayObj_t), objDistComparator);
+    qsort(allObjs, allObjsIdx, sizeof(objDist_t), objDistComparator);
 
     // after sorting the sprites, do the projection and draw them
-    for (int i = 0; i < MAX_RAY_OBJS; i++)
+    for (int i = 0; i < allObjsIdx; i++)
     {
         // Make a convenience pointer
-        rayObj_t* obj = &ray->objs[i];
+        rayObj_t* obj = allObjs[i].obj;
 
         // Make sure this object slot is occupied
         if (-1 != obj->id)
@@ -689,7 +752,7 @@ rayObj_t* castSprites(ray_t* ray)
                 continue;
             }
 
-            // TODO do all the X math first to see if its on screen, then do Y math??
+            // Do all the X math first to see if its on screen, then do Y math??
             q24_8 transformX = DIV_FX(SUB_FX(MUL_FX(ray->dirY, spriteX), MUL_FX(ray->dirX, spriteY)), invDetDivisor);
 
             // The center of the sprite in screen space
@@ -816,9 +879,9 @@ rayObj_t* castSprites(ray_t* ray)
 }
 
 /**
- * @brief TODO
+ * @brief Draw the HUD on the display based on the player loadout. This is drawn last.
  *
- * @param ray
+ * @param ray The entire game state
  */
 void drawHud(ray_t* ray)
 {

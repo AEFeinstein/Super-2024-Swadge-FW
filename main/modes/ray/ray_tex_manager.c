@@ -12,7 +12,10 @@
 // Defines
 //==============================================================================
 
-/// The maximum number of loaded sprites. TODO pick a better number
+/**
+ * The maximum number of loaded sprites.
+ * TODO pick a better number for all textures
+ */
 #define MAX_LOADED_TEXTURES 64
 
 /// Helper macro to load textures
@@ -29,6 +32,7 @@
  */
 void initLoadedTextures(ray_t* ray)
 {
+    // Load HUD textures
     loadWsg("GUN_NORMAL.wsg", &ray->guns[LO_NORMAL], true);
     loadWsg("GUN_MISSILE.wsg", &ray->guns[LO_MISSILE], true);
     loadWsg("GUN_ICE.wsg", &ray->guns[LO_ICE], true);

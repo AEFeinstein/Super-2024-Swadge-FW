@@ -28,13 +28,14 @@ typedef int32_t q8_24;  // 8 bits integer, 24 bits fraction
 
 #ifdef FP_MATH_DEFINES
 
-    #define TO_FX(in)    ((in) << FRAC_BITS)
-    #define FROM_FX(in)  ((in) >> FRAC_BITS)
-    #define ADD_FX(a, b) ((a) + (b))
-    #define SUB_FX(a, b) ((a) - (b))
-    #define MUL_FX(a, b) (((a) * (b)) >> FRAC_BITS)
-    #define DIV_FX(a, b) (((a) << FRAC_BITS) / (b))
-    #define FLOOR_FX(a)  ((a) & (~((1 << FRAC_BITS) - 1)))
+    #define TO_FX(in)              ((in) << FRAC_BITS)
+    #define FROM_FX(in)            ((in) >> FRAC_BITS)
+    #define ADD_FX(a, b)           ((a) + (b))
+    #define SUB_FX(a, b)           ((a) - (b))
+    #define MUL_FX(a, b)           (((a) * (b)) >> FRAC_BITS)
+    #define DIV_FX(a, b)           (((a) << FRAC_BITS) / (b))
+    #define FLOOR_FX(a)            ((a) & (~((1 << FRAC_BITS) - 1)))
+    #define TO_FX_FRAC(num, denom) DIV_FX(num, denom)
 
 #else
 
@@ -60,7 +61,7 @@ static inline q24_8 SUB_FX(q24_8 a, q24_8 b)
 
 static inline q24_8 MUL_FX(q24_8 a, q24_8 b)
 {
-    // TODO could be simpler without rounding
+    // could be simpler without rounding
     return ((a * b) + (1 << (FRAC_BITS - 1))) / (1 << FRAC_BITS);
 }
 

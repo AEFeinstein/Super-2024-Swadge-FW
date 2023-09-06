@@ -34,10 +34,9 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
 
     // Convenience pointers
-    rayMap_t* map  = &ray->map;
-    rayObj_t* objs = ray->objs;
-    q24_8* startX  = &ray->posX;
-    q24_8* startY  = &ray->posY;
+    rayMap_t* map = &ray->map;
+    q24_8* startX = &ray->posX;
+    q24_8* startY = &ray->posY;
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;
@@ -55,8 +54,6 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
         map->tiles[x] = (rayMapCell_t*)heap_caps_calloc(map->h, sizeof(rayMapCell_t), caps);
     }
 
-    int16_t objIdx = 0;
-
     // Read tile data
     for (uint16_t y = 0; y < map->h; y++)
     {
@@ -65,33 +62,46 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
             // Each tile has a type and object
             map->tiles[x][y].type     = fileData[fileIdx++];
             map->tiles[x][y].doorOpen = 0;
-            rayMapCellType_t obj      = fileData[fileIdx++];
+            rayMapCellType_t type     = fileData[fileIdx++];
 
-            // If the object isn't empty
-            if (EMPTY != obj)
+            // If the type isn't empty
+            if (EMPTY != type)
             {
-                // Read the object's ID
+                // Read the type's ID
                 uint8_t id = fileData[fileIdx++];
-                if (obj == OBJ_ENEMY_START_POINT)
+                // If it's the starting point
+                if (type == OBJ_ENEMY_START_POINT)
                 {
                     // Save the starting coordinates
                     *startX = x;
                     *startY = y;
                 }
-                else if (CELL_IS_TYPE(obj, OBJ))
+                // If it's an object
+                else if ((type & OBJ) == OBJ)
                 {
-                    // Objects
-                    objs[objIdx].sprite = getTexByType(ray, obj);
-                    objs[objIdx].dist   = 0;
+                    // Allocate a new object
+                    rayObj_t* newObj = (rayObj_t*)heap_caps_calloc(1, sizeof(rayObj_t), MALLOC_CAP_SPIRAM);
+
+                    newObj->sprite = getTexByType(ray, type);
                     // Center the position in the tile
-                    objs[objIdx].posX   = TO_FX(x) + (1 << (FRAC_BITS - 1));
-                    objs[objIdx].posY   = TO_FX(y) + (1 << (FRAC_BITS - 1));
-                    objs[objIdx].velX   = TO_FX(0);
-                    objs[objIdx].velY   = TO_FX(0);
-                    objs[objIdx].radius = DIV_FX(TO_FX(objs[objIdx].sprite->w), TO_FX(64)); // each cell is 64px
-                    objs[objIdx].type   = obj;
-                    objs[objIdx].id     = id;
-                    objIdx++;
+                    newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+                    newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+                    newObj->velX   = TO_FX(0);
+                    newObj->velY   = TO_FX(0);
+                    newObj->radius = DIV_FX(TO_FX(newObj->sprite->w), TO_FX(64)); // each cell is 64px
+                    newObj->type   = type;
+                    newObj->id     = id;
+
+                    if ((type & ENEMY) == ENEMY)
+                    {
+                        // Add it to the linked list
+                        push(&ray->enemies, newObj);
+                    }
+                    else
+                    {
+                        // Add it to the linked list
+                        push(&ray->objects, newObj);
+                    }
                 }
             }
         }

@@ -62,17 +62,19 @@ void rayEnterMode(void)
     ray = calloc(1, sizeof(ray_t));
 
     // Set invalid IDs for all objects
-    for (uint16_t objIdx = 0; objIdx < MAX_RAY_OBJS; objIdx++)
+    for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
     {
-        ray->objs[objIdx].id = -1;
+        ray->bullets[objIdx].id = -1;
     }
+
+    // ray->enemies and ray->objects are already cleared
 
     // Load the map and object data
     loadRayMap("demo.rmh", ray, false);
 
     // Set initial position and direction, centered on the tile
-    ray->posX = TO_FX(ray->posX) + (1 << (FRAC_BITS - 1));
-    ray->posY = TO_FX(ray->posY) + (1 << (FRAC_BITS - 1));
+    ray->posX = TO_FX(ray->posX) + TO_FX_FRAC(1, 2);
+    ray->posY = TO_FX(ray->posY) + TO_FX_FRAC(1, 2);
     setPlayerAngle(TO_FX(0));
     ray->posZ = TO_FX(0);
 
@@ -90,6 +92,17 @@ void rayEnterMode(void)
  */
 void rayExitMode(void)
 {
+    // Empty all lists
+    rayObj_t* poppedObj = NULL;
+    while (NULL != (poppedObj = pop(&ray->enemies)))
+    {
+        free(poppedObj);
+    }
+    while (NULL != (poppedObj = pop(&ray->objects)))
+    {
+        free(poppedObj);
+    }
+
     freeRayMap(&ray->map);
     freeAllTex(ray);
     free(ray);
@@ -191,7 +204,7 @@ void rayMainLoop(int64_t elapsedUs)
     // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
     castWalls(ray);
     // Draw sprites
-    rayObj_t* centeredSprite = castSprites(ray);
+    const rayObj_t* centeredSprite = castSprites(ray);
     // Draw the HUD
     drawHud(ray);
 
@@ -335,35 +348,11 @@ void rayMainLoop(int64_t elapsedUs)
         ray->posY += deltaY;
     }
 
+    // If the A button is pressed
     if ((ray->btnState & PB_A) && !(prevBtnState & PB_A))
     {
-        // TODO shoot different things
-        for (uint16_t newIdx = 0; newIdx < MAX_RAY_OBJS; newIdx++)
-        {
-            if (-1 == ray->objs[newIdx].id)
-            {
-                const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
-                    OBJ_BULLET_NORMAL, ///< Normal loadout
-                    // TODO charge unaccounted for
-                    OBJ_BULLET_MISSILE, ///< Missile loadout
-                    OBJ_BULLET_ICE,     ///< Ice beam loadout
-                    OBJ_BULLET_XRAY     ///< X-Ray loadout
-                };
-                rayMapCellType_t bulletType = bulletMap[ray->loadout];
-
-                wsg_t* texture           = getTexByType(ray, bulletType);
-                ray->objs[newIdx].sprite = texture;
-                ray->objs[newIdx].dist   = 0;
-                ray->objs[newIdx].posX   = ray->posX + ray->dirX / 2;
-                ray->objs[newIdx].posY   = ray->posY + ray->dirY / 2;
-                ray->objs[newIdx].velX   = ray->dirX;
-                ray->objs[newIdx].velY   = ray->dirY;
-                ray->objs[newIdx].radius = DIV_FX(TO_FX(texture->w), TO_FX(64));
-                ray->objs[newIdx].type   = bulletType;
-                ray->objs[newIdx].id     = 0;
-                break;
-            }
-        }
+        // Fire a shot
+        fireShot(ray);
     }
 }
 
