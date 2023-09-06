@@ -151,19 +151,19 @@ uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy)
     if (animation == LUMBERJACK_RUN)
     {
         const int anim[] = {0, 1, 2, 3};
-        return anim[enemy->currentFrame % 4];
+        return anim[enemy->currentFrame % ARRAY_SIZE(anim)];
     }
 
     if (animation == LUMBERJACK_BUMPED)
     {
         const int anim[] = {4};
-        return anim[enemy->currentFrame % 2];
+        return anim[enemy->currentFrame % ARRAY_SIZE(anim)];
     }
 
     if (animation == LUMBERJACK_BUMPED_IDLE)
     {
         const int anim[] = {5, 6};
-        return anim[enemy->currentFrame % 2];
+        return anim[enemy->currentFrame % ARRAY_SIZE(anim)];
     }
 
     return 0;
