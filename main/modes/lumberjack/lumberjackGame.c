@@ -11,6 +11,23 @@
 #include "lumberjackEntity.h"
 #include "lumberjackPlayer.h"
 
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define LUMBERJACK_TILEANIMATION_SPEED 150500
+
+#define LUMBERJACK_SCREEN_X_OFFSET 299
+#define LUMBERJACK_SCREEN_X_MIN 0
+#define LUMBERJACK_SCREEN_X_MAX 270
+
+
+#define LUMBERJACK_SCREEN_Y_OFFSET 140
+#define LUMBERJACK_SCREEN_Y_MIN -16
+#define LUMBERJACK_SCREEN_Y_MAX 96
+
+
+
 static lumberjackTile_t* lumberjackGetTile(int x, int y);
 static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs);
 static bool lumberjackIsCollisionTile(int index);
@@ -31,38 +48,38 @@ void lumberjackStartGameMode(lumberjackGameType_t type)
     lumv->gameType             = type;
 
     ESP_LOGI(LUM_TAG, "Loading floor Tiles");
-    loadWsg("bottom_floor1.wsg", &lumv->floorTiles[0], false);
-    loadWsg("bottom_floor2.wsg", &lumv->floorTiles[1], false);
-    loadWsg("bottom_floor3.wsg", &lumv->floorTiles[2], false);
-    loadWsg("bottom_floor4.wsg", &lumv->floorTiles[3], false);
-    loadWsg("bottom_floor5.wsg", &lumv->floorTiles[4], false);
-    loadWsg("bottom_floor6.wsg", &lumv->floorTiles[5], false);
-    loadWsg("bottom_floor7.wsg", &lumv->floorTiles[6], false);
-    loadWsg("bottom_floor8.wsg", &lumv->floorTiles[7], false);
-    loadWsg("bottom_floor9.wsg", &lumv->floorTiles[8], false);
-    loadWsg("bottom_floor10.wsg", &lumv->floorTiles[9], false);
+    loadWsg("bottom_floor1.wsg", &lumv->floorTiles[0], true);
+    loadWsg("bottom_floor2.wsg", &lumv->floorTiles[1], true);
+    loadWsg("bottom_floor3.wsg", &lumv->floorTiles[2], true);
+    loadWsg("bottom_floor4.wsg", &lumv->floorTiles[3], true);
+    loadWsg("bottom_floor5.wsg", &lumv->floorTiles[4], true);
+    loadWsg("bottom_floor6.wsg", &lumv->floorTiles[5], true);
+    loadWsg("bottom_floor7.wsg", &lumv->floorTiles[6], true);
+    loadWsg("bottom_floor8.wsg", &lumv->floorTiles[7], true);
+    loadWsg("bottom_floor9.wsg", &lumv->floorTiles[8], true);
+    loadWsg("bottom_floor10.wsg", &lumv->floorTiles[9], true);
     ESP_LOGI(LUM_TAG, "Loading Animation Tiles");
 
-    loadWsg("water_floor1.wsg", &lumv->animationTiles[0], false);
-    loadWsg("water_floor2.wsg", &lumv->animationTiles[1], false);
-    loadWsg("water_floor3.wsg", &lumv->animationTiles[2], false);
-    loadWsg("water_floor4.wsg", &lumv->animationTiles[3], false);
-    loadWsg("water_floor0.wsg", &lumv->animationTiles[4], false);
-    loadWsg("water_floor0.wsg", &lumv->animationTiles[5], false);
-    loadWsg("water_floor0.wsg", &lumv->animationTiles[6], false);
-    loadWsg("water_floor0.wsg", &lumv->animationTiles[7], false);
-    loadWsg("water_floor_b1.wsg", &lumv->animationTiles[8], false);
-    loadWsg("water_floor_b2.wsg", &lumv->animationTiles[9], false);
-    loadWsg("water_floor_b3.wsg", &lumv->animationTiles[10], false);
-    loadWsg("water_floor_b4.wsg", &lumv->animationTiles[11], false);
-    ESP_LOGI(LUM_TAG, "Loading Characters");
+    loadWsg("water_floor1.wsg", &lumv->animationTiles[0], true);
+    loadWsg("water_floor2.wsg", &lumv->animationTiles[1], true);
+    loadWsg("water_floor3.wsg", &lumv->animationTiles[2], true);
+    loadWsg("water_floor4.wsg", &lumv->animationTiles[3], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[4], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[5], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[6], true);
+    loadWsg("water_floor0.wsg", &lumv->animationTiles[7], true);
+    loadWsg("water_floor_b1.wsg", &lumv->animationTiles[8], true);
+    loadWsg("water_floor_b2.wsg", &lumv->animationTiles[9], true);
+    loadWsg("water_floor_b3.wsg", &lumv->animationTiles[10], true);
+    loadWsg("water_floor_b4.wsg", &lumv->animationTiles[11], true);
 
+    ESP_LOGI(LUM_TAG, "Loading Characters");
     loadWsg("lumbers_red_1.wsg", &lumv->playerSprites[0], true);
     loadWsg("lumbers_red_2.wsg", &lumv->playerSprites[1], true);
     loadWsg("lumbers_red_3.wsg", &lumv->playerSprites[2], true);
     loadWsg("lumbers_red_4.wsg", &lumv->playerSprites[3],
-            false); // These two things break 3 seconds after the game loads
-    loadWsg("lumbers_red_5.wsg", &lumv->playerSprites[4], false); // I think the memory is being replaces
+            true); // These two things break 3 seconds after the game loads
+    loadWsg("lumbers_red_5.wsg", &lumv->playerSprites[4], true); // I think the memory is being replaces
     loadWsg("lumbers_red_6.wsg", &lumv->playerSprites[5], true);
     loadWsg("lumbers_red_7.wsg", &lumv->playerSprites[6], true);
     loadWsg("lumbers_red_8.wsg", &lumv->playerSprites[7], true);
@@ -93,7 +110,7 @@ void lumberjackStartGameMode(lumberjackGameType_t type)
     loadWsg("lumbers_green_15.wsg", &lumv->playerSprites[31], true);
     loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[32], true);
     loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[33], true);
-    /*
+    
     loadWsg("secret_swadgeland_1.wsg", &lumv->playerSprites[34], true);
     loadWsg("secret_swadgeland_2.wsg", &lumv->playerSprites[35], true);
     loadWsg("secret_swadgeland_3.wsg", &lumv->playerSprites[36], true);
@@ -114,7 +131,7 @@ void lumberjackStartGameMode(lumberjackGameType_t type)
     loadWsg("secret_swadgeland_18.wsg", &lumv->playerSprites[51], true);
     loadWsg("secret_swadgeland_19.wsg", &lumv->playerSprites[52], true);
     loadWsg("secret_swadgeland_20.wsg", &lumv->playerSprites[53], true);
-    loadWsg("secret_swadgeland_21.wsg", &lumv->playerSprites[54], true);*/
+    loadWsg("secret_swadgeland_21.wsg", &lumv->playerSprites[54], true);
 
     ESP_LOGI(LUM_TAG, "Loading Enemies");
     loadWsg("enemy_a1.wsg", &lumv->enemySprites[0], true);
@@ -149,10 +166,13 @@ void lumberjackStartGameMode(lumberjackGameType_t type)
     {
         lumberjackSetupLevel(0);
     }
+
+    ESP_LOGI(LUM_TAG, "height %d", TFT_HEIGHT);
 }
 
 void lumberjackSetupLevel(int index)
 {
+    //This all to be loaded externally
     lumv->yOffset          = 0;
     lumv->currentMapHeight = 21;
     lumv->lives            = 3;
@@ -240,7 +260,7 @@ void baseMode(int64_t elapsedUs)
     // return;
 
     // Check Controls
-    if (lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_OFFSCREEN)
+    if (lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_UNSPAWNED)
     {
         lumberjackDoControls();
     }
@@ -280,6 +300,7 @@ void baseMode(int64_t elapsedUs)
 
     // Check physics
 
+    lumberjackUpdatePlayerCollision(lumv->localPlayer);
     // Enemy
     for (int eIdx = 0; eIdx < ARRAY_SIZE(lumv->enemy); eIdx++)
     {
@@ -302,7 +323,6 @@ void baseMode(int64_t elapsedUs)
             {
                 // Hopefully the enemy isn't dead off screen.
                 //  lumberjackResetEnemy(enemy);
-                // ESP_LOGI(LUM_TAG, "FLIP IT!");
                 enemy->state = LUMBERJACK_RUN;
 
                 enemy->direction = (enemy->flipped) ? -1 : 1;
@@ -315,7 +335,6 @@ void baseMode(int64_t elapsedUs)
         }
 
         lumberjackUpdateEntity(enemy, elapsedUs);
-        lumberjackUpdatePlayerCollision(lumv->localPlayer);
 
         for (int oeIdx = 0; oeIdx < ARRAY_SIZE(lumv->enemy); oeIdx++)
         {
@@ -389,9 +408,9 @@ void baseMode(int64_t elapsedUs)
 
     lumv->worldTimer += elapsedUs;
 
-    if (lumv->worldTimer > 150500)
+    if (lumv->worldTimer > LUMBERJACK_TILEANIMATION_SPEED)
     {
-        lumv->worldTimer -= 150500;
+        lumv->worldTimer -= LUMBERJACK_TILEANIMATION_SPEED;
         lumv->liquidAnimationFrame++;
         lumv->liquidAnimationFrame %= 4;
     }
@@ -419,11 +438,11 @@ void baseMode(int64_t elapsedUs)
         lumv->localPlayer->timerFrameUpdate = 0; //;
     }
 
-    lumv->yOffset = lumv->localPlayer->y - 140;
-    if (lumv->yOffset < -16)
-        lumv->yOffset = -16;
-    if (lumv->yOffset > 96)
-        lumv->yOffset = 96;
+    lumv->yOffset = lumv->localPlayer->y - LUMBERJACK_SCREEN_Y_OFFSET;
+    if (lumv->yOffset < LUMBERJACK_SCREEN_Y_MIN)
+        lumv->yOffset = LUMBERJACK_SCREEN_Y_MIN;
+    if (lumv->yOffset > LUMBERJACK_SCREEN_Y_MAX)
+        lumv->yOffset = LUMBERJACK_SCREEN_Y_MAX;
 
     // Draw section
     // fillDisplayArea ( 0,0, 280,256, c145);
@@ -444,9 +463,9 @@ void baseMode(int64_t elapsedUs)
         drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x, enemy->y - lumv->yOffset, enemy->flipped,
                 false, 0);
 
-        if (enemy->x > 270)
+        if (enemy->x > LUMBERJACK_SCREEN_X_MAX)
         {
-            drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x - 299, enemy->y - lumv->yOffset,
+            drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x - LUMBERJACK_SCREEN_X_OFFSET, enemy->y - lumv->yOffset,
                     enemy->flipped, false, 0);
         }
 
@@ -475,17 +494,20 @@ void baseMode(int64_t elapsedUs)
     drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 4,
             lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
 
-    if (lumv->localPlayer->x > 270)
+    if (lumv->localPlayer->x > LUMBERJACK_SCREEN_X_MAX)
     {
-        drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 299,
+        drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - LUMBERJACK_SCREEN_X_OFFSET,
                 lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
     }
 
     // Debug
+    
     char debug[20] = {0};
-    snprintf(debug, sizeof(debug), "CellX: %d %d %d", lumv->enemy[0]->x, lumv->enemy[1]->x, lumv->spawnTimer);
+    snprintf(debug, sizeof(debug), "CellX: %d %d %d", lumv->localPlayer->cX, lumv->localPlayer->cY, lumv->localPlayer->cH);
 
     drawText(&lumv->ibm, c000, debug, 16, 16);
+
+    drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX + lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
 
     if (lumv->localPlayer->jumpPressed)
     {

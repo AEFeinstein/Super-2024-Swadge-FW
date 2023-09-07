@@ -4,6 +4,7 @@
 enum lumberjackPlayerState
 {
     LUMBERJACK_DEAD        = -1,
+    LUMBERJACK_UNSPAWNED   = 0,
     LUMBERJACK_IDLE        = 1,
     LUMBERJACK_RUN         = 2,
     LUMBERJACK_DUCK        = 3,

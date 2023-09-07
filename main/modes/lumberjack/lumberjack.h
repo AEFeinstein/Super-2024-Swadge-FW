@@ -75,7 +75,7 @@ typedef struct
     uint8_t anim[400];
 
     wsg_t enemySprites[21];
-    wsg_t playerSprites[41];
+    wsg_t playerSprites[54];
 
     wsg_t alertSprite;
 

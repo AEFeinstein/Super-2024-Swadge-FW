@@ -1,3 +1,4 @@
+#include <esp_log.h>
 #include "lumberjack_types.h"
 #include "lumberjackEntity.h"
 #include "lumberjack.h"
@@ -118,17 +119,17 @@ void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy)
 
 void lumberjackUpdatePlayerCollision(lumberjackEntity_t* player)
 {
-    player->cX = player->cX + 2;
+    player->cX = player->x + 2;
     player->cW = player->width - 4;
 
     if (player->state == LUMBERJACK_DUCK)
     {
-        player->cY = player->cY + 8;
-        player->cH = player->height - 16;
+        player->cY = player->y + 15;
+        player->cH = player->height - 14;
     }
     else
     {
-        player->cY = player->cY + 4;
+        player->cY = player->y + 4;
         player->cH = player->height - 8;
     }
 }
@@ -151,19 +152,19 @@ uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy)
     if (animation == LUMBERJACK_RUN)
     {
         const int anim[] = {0, 1, 2, 3};
-        return anim[enemy->currentFrame % ARRAY_SIZE(anim)];
+        return anim[enemy->currentFrame % 4];
     }
 
     if (animation == LUMBERJACK_BUMPED)
     {
         const int anim[] = {4};
-        return anim[enemy->currentFrame % ARRAY_SIZE(anim)];
+        return anim[enemy->currentFrame % 2];
     }
 
     if (animation == LUMBERJACK_BUMPED_IDLE)
     {
         const int anim[] = {5, 6};
-        return anim[enemy->currentFrame % ARRAY_SIZE(anim)];
+        return anim[enemy->currentFrame % 2];
     }
 
     return 0;
