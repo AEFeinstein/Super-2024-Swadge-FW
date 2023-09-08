@@ -64,10 +64,10 @@ void rayEnterMode(void)
     // Set invalid IDs for all objects
     for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
     {
-        ray->bullets[objIdx].id = -1;
+        ray->bullets[objIdx].c.id = -1;
     }
 
-    // ray->enemies and ray->objects are already cleared
+    // ray->enemies and ray->scenery are already cleared
 
     // Load the map and object data
     loadRayMap("demo.rmh", ray, false);
@@ -93,14 +93,15 @@ void rayEnterMode(void)
 void rayExitMode(void)
 {
     // Empty all lists
-    rayObj_t* poppedObj = NULL;
-    while (NULL != (poppedObj = pop(&ray->enemies)))
+    rayEnemy_t* poppedEnemy = NULL;
+    while (NULL != (poppedEnemy = pop(&ray->enemies)))
     {
-        free(poppedObj);
+        free(poppedEnemy);
     }
-    while (NULL != (poppedObj = pop(&ray->objects)))
+    rayScenery_t* poppedScenery = NULL;
+    while (NULL != (poppedScenery = pop(&ray->scenery)))
     {
-        free(poppedObj);
+        free(poppedScenery);
     }
 
     freeRayMap(&ray->map);
@@ -201,10 +202,11 @@ void rayMainLoop(int64_t elapsedUs)
 
     // Move objects, check logic, etc.
     moveRayObjects(ray, elapsedUs);
+    checkRayCollisions(ray);
     // Draw the walls. The background is already drawn in rayBackgroundDrawCallback()
     castWalls(ray);
     // Draw sprites
-    const rayObj_t* centeredSprite = castSprites(ray);
+    const rayObjCommon_t* centeredSprite = castSprites(ray);
     // Draw the HUD
     drawHud(ray);
 

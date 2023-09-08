@@ -40,13 +40,15 @@ typedef enum __attribute__((packed))
     BG_DOOR_MISSILE = (BG | DOOR | 3),
     BG_DOOR_ICE     = (BG | DOOR | 4),
     BG_DOOR_XRAY    = (BG | DOOR | 5),
+    BG_DOOR_SCRIPT  = (BG | DOOR | 6),
     // Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1),
-    OBJ_ENEMY_BEAM        = (OBJ | ENEMY | 2),
-    OBJ_ENEMY_CHARGE      = (OBJ | ENEMY | 3),
-    OBJ_ENEMY_MISSILE     = (OBJ | ENEMY | 4),
-    OBJ_ENEMY_ICE         = (OBJ | ENEMY | 5),
-    OBJ_ENEMY_XRAY        = (OBJ | ENEMY | 6),
+    OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2),
+    OBJ_ENEMY_STRONG      = (OBJ | ENEMY | 3),
+    OBJ_ENEMY_ARMORED     = (OBJ | ENEMY | 4),
+    OBJ_ENEMY_FLAMING     = (OBJ | ENEMY | 5),
+    OBJ_ENEMY_HIDDEN      = (OBJ | ENEMY | 6),
+    OBJ_ENEMY_BOSS        = (OBJ | ENEMY | 7),
     // Power-ups
     OBJ_ITEM_BEAM        = (OBJ | ITEM | 1),
     OBJ_ITEM_CHARGE_BEAM = (OBJ | ITEM | 2),
@@ -94,15 +96,34 @@ typedef struct
 
 typedef struct
 {
-    wsg_t* sprite;         ///< The sprite for this object
+    wsg_t* sprite;         ///< The current sprite for this object
     q24_8 posX;            ///< The X position of this object
     q24_8 posY;            ///< The Y position of this object
-    q24_8 velX;            ///< The X velocity of this object
-    q24_8 velY;            ///< The Y velocity of this object
     q24_8 radius;          ///< The radius of this object
     rayMapCellType_t type; ///< The object's type
-    int16_t id;            ///< This object's ID
-} rayObj_t;
+    int32_t id;            ///< This object's ID
+} rayObjCommon_t;
+
+typedef struct
+{
+    rayObjCommon_t c; ///< Common object properties
+    q24_8 velX;       ///< The X velocity of this bullet
+    q24_8 velY;       ///< The Y velocity of this bullet
+} rayBullet_t;
+
+typedef struct
+{
+    rayObjCommon_t c;        ///< Common object properties
+    uint8_t walkSprites[4];  ///< The walking sprites for this enemy
+    uint8_t shootSprites[4]; ///< The shooting sprites for this enemy
+    uint8_t hurtSprites[4];  ///< The getting shot sprites for this enemy
+    // TODO enemy state and stuff
+} rayEnemy_t;
+
+typedef struct
+{
+    rayObjCommon_t c; ///< Common object properties
+} rayScenery_t;
 
 /** @brief The time to swap out and swap in a gun, in microseconds */
 #define LOADOUT_TIMER_US (1 << 18)
@@ -123,9 +144,9 @@ typedef struct
 {
     rayMap_t map;
 
-    rayObj_t bullets[MAX_RAY_BULLETS];
+    rayBullet_t bullets[MAX_RAY_BULLETS];
     list_t enemies;
-    list_t objects;
+    list_t scenery;
 
     q24_8 posX;
     q24_8 posY;
@@ -153,6 +174,8 @@ typedef struct
     namedTexture_t* loadedTextures;
     uint8_t* typeToIdxMap;
     wsg_t guns[NUM_LOADOUTS];
+
+    rayEnemy_t eTemplates[6]; // Six enemy types
 } ray_t;
 
 extern swadgeMode_t rayMode;

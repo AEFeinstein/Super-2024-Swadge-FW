@@ -7,6 +7,7 @@
 
 #include "macros.h"
 #include "ray_tex_manager.h"
+#include "ray_object.h"
 
 //==============================================================================
 // Defines
@@ -16,7 +17,7 @@
  * The maximum number of loaded sprites.
  * TODO pick a better number for all textures
  */
-#define MAX_LOADED_TEXTURES 64
+#define MAX_LOADED_TEXTURES 128
 
 /// Helper macro to load textures
 #define LOAD_TEXTURE(r, t) loadTexture(r, #t ".wsg", t)
@@ -55,12 +56,7 @@ void initLoadedTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_DOOR_MISSILE);
     LOAD_TEXTURE(ray, BG_DOOR_ICE);
     LOAD_TEXTURE(ray, BG_DOOR_XRAY);
-    LOAD_TEXTURE(ray, OBJ_ENEMY_START_POINT);
-    LOAD_TEXTURE(ray, OBJ_ENEMY_BEAM);
-    LOAD_TEXTURE(ray, OBJ_ENEMY_CHARGE);
-    LOAD_TEXTURE(ray, OBJ_ENEMY_MISSILE);
-    LOAD_TEXTURE(ray, OBJ_ENEMY_ICE);
-    LOAD_TEXTURE(ray, OBJ_ENEMY_XRAY);
+    LOAD_TEXTURE(ray, BG_DOOR_SCRIPT);
     LOAD_TEXTURE(ray, OBJ_ITEM_BEAM);
     LOAD_TEXTURE(ray, OBJ_ITEM_CHARGE_BEAM);
     LOAD_TEXTURE(ray, OBJ_ITEM_MISSILE);
@@ -79,6 +75,9 @@ void initLoadedTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_BULLET_MISSILE);
     LOAD_TEXTURE(ray, OBJ_BULLET_XRAY);
     LOAD_TEXTURE(ray, OBJ_SCENERY_TERMINAL);
+
+    // This loads enemy textures
+    initEnemyTemplates(ray);
 }
 
 /**

@@ -22,10 +22,10 @@
 // Structs
 //==============================================================================
 
-/// Helper struct to sort rayObj_t by distance from the player
+/// Helper struct to sort rayObjCommon_t by distance from the player
 typedef struct
 {
-    rayObj_t* obj;
+    rayObjCommon_t* obj;
     uint32_t dist;
 } objDist_t;
 
@@ -623,10 +623,10 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
 }
 
 /**
- * @brief Compare two rayObj_t* based on distance
+ * @brief Compare two objDist_t* based on distance
  *
- * @param obj1 A rayObj_t* to compare
- * @param obj2 Another rayObj_t* to compare
+ * @param obj1 A objDist_t* to compare
+ * @param obj2 Another objDist_t* to compare
  * @return an integer less than, equal to, or greater than zero if the first
  *         argument is considered to be respectively less than, equal to, or
  *         greater than the second.
@@ -644,9 +644,9 @@ static int objDistComparator(const void* obj1, const void* obj2)
  * @return The closest sprite in the lock zone, i.e. center of the display. This may be NULL if there are no centered
  * sprites.
  */
-rayObj_t* castSprites(ray_t* ray)
+rayObjCommon_t* castSprites(ray_t* ray)
 {
-    rayObj_t* lockedObj = NULL;
+    rayObjCommon_t* lockedObj = NULL;
 
     // Setup to draw
     SETUP_FOR_TURBO();
@@ -655,7 +655,7 @@ rayObj_t* castSprites(ray_t* ray)
     bool isXray = (LO_XRAY == ray->loadout);
 
     // Put an array on the stack to sort all sprites
-    objDist_t allObjs[MAX_RAY_BULLETS + ray->objects.length + ray->enemies.length];
+    objDist_t allObjs[MAX_RAY_BULLETS + ray->scenery.length + ray->enemies.length];
     int32_t allObjsIdx = 0;
 
     q24_8 rayPosX = ray->posX;
@@ -665,13 +665,13 @@ rayObj_t* castSprites(ray_t* ray)
     for (int i = 0; i < MAX_RAY_BULLETS; i++)
     {
         // Make a convenience pointer
-        rayObj_t* obj = &ray->bullets[i];
-        if (-1 != obj->id)
+        rayBullet_t* obj = &ray->bullets[i];
+        if (-1 != obj->c.id)
         {
             // Save the pointer and the distance to sort
-            allObjs[allObjsIdx].obj  = obj;
-            q24_8 delX               = rayPosX - obj->posX;
-            q24_8 delY               = rayPosY - obj->posY;
+            allObjs[allObjsIdx].obj  = &obj->c;
+            q24_8 delX               = rayPosX - obj->c.posX;
+            q24_8 delY               = rayPosY - obj->c.posY;
             allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
             allObjsIdx++;
         }
@@ -682,12 +682,12 @@ rayObj_t* castSprites(ray_t* ray)
     while (currentNode != NULL)
     {
         // Get a pointer from the linked list
-        rayObj_t* obj = ((rayObj_t*)currentNode->val);
+        rayEnemy_t* obj = ((rayEnemy_t*)currentNode->val);
 
         // Save the pointer and the distance to sort
-        allObjs[allObjsIdx].obj  = obj;
-        q24_8 delX               = rayPosX - obj->posX;
-        q24_8 delY               = rayPosY - obj->posY;
+        allObjs[allObjsIdx].obj  = &obj->c;
+        q24_8 delX               = rayPosX - obj->c.posX;
+        q24_8 delY               = rayPosY - obj->c.posY;
         allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
         allObjsIdx++;
 
@@ -696,16 +696,16 @@ rayObj_t* castSprites(ray_t* ray)
     }
 
     // Assign each enemy a distance from the player
-    currentNode = ray->objects.first;
+    currentNode = ray->scenery.first;
     while (currentNode != NULL)
     {
         // Get a pointer from the linked list
-        rayObj_t* obj = ((rayObj_t*)currentNode->val);
+        rayScenery_t* obj = ((rayScenery_t*)currentNode->val);
 
         // Save the pointer and the distance to sort
-        allObjs[allObjsIdx].obj  = obj;
-        q24_8 delX               = rayPosX - obj->posX;
-        q24_8 delY               = rayPosY - obj->posY;
+        allObjs[allObjsIdx].obj  = &obj->c;
+        q24_8 delX               = rayPosX - obj->c.posX;
+        q24_8 delY               = rayPosY - obj->c.posY;
         allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
         allObjsIdx++;
 
@@ -720,7 +720,7 @@ rayObj_t* castSprites(ray_t* ray)
     for (int i = 0; i < allObjsIdx; i++)
     {
         // Make a convenience pointer
-        rayObj_t* obj = allObjs[i].obj;
+        rayObjCommon_t* obj = allObjs[i].obj;
 
         // Make sure this object slot is occupied
         if (-1 != obj->id)

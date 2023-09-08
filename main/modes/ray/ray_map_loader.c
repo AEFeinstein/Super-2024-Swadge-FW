@@ -80,27 +80,42 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                 else if ((type & OBJ) == OBJ)
                 {
                     // Allocate a new object
-                    rayObj_t* newObj = (rayObj_t*)heap_caps_calloc(1, sizeof(rayObj_t), MALLOC_CAP_SPIRAM);
-
-                    newObj->sprite = getTexByType(ray, type);
-                    // Center the position in the tile
-                    newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-                    newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                    newObj->velX   = TO_FX(0);
-                    newObj->velY   = TO_FX(0);
-                    newObj->radius = DIV_FX(TO_FX(newObj->sprite->w), TO_FX(64)); // each cell is 64px
-                    newObj->type   = type;
-                    newObj->id     = id;
-
                     if ((type & ENEMY) == ENEMY)
                     {
+                        // Allocate the enemy
+                        rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
+
+                        // Copy enemy data from the template (sprite indices, type)
+                        memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
+
+                        // Set ID
+                        newObj->c.id = id;
+
+                        // Set spatial values
+                        newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+                        newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+                        newObj->c.radius = DIV_FX(TO_FX(newObj->c.sprite->w), TO_FX(64)); // each cell is 64px
+
                         // Add it to the linked list
                         push(&ray->enemies, newObj);
                     }
                     else
                     {
+                        rayScenery_t* newObj
+                            = (rayScenery_t*)heap_caps_calloc(1, sizeof(rayScenery_t), MALLOC_CAP_SPIRAM);
+
+                        // Set type, sprite and ID
+                        newObj->c.type   = type;
+                        newObj->c.sprite = getTexByType(ray, type);
+                        newObj->c.id     = id;
+
+                        // Set spatial values
+                        newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+                        newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+                        newObj->c.radius = DIV_FX(TO_FX(newObj->c.sprite->w), TO_FX(64)); // each cell is 64px
+
                         // Add it to the linked list
-                        push(&ray->objects, newObj);
+                        push(&ray->scenery, newObj);
                     }
                 }
             }
