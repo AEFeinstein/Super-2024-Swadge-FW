@@ -87,6 +87,7 @@ CFLAGS = \
 ifeq ($(HOST_OS),Linux)
 CFLAGS += \
 	-fsanitize=address \
+	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer
 
 ENABLE_GCOV=false
@@ -220,6 +221,7 @@ LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \
 	-fsanitize=address \
+	-fsanitize=bounds-strict \
 	-fno-omit-frame-pointer \
 	-static-libasan
 
