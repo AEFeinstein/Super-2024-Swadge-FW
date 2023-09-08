@@ -43,11 +43,11 @@ void initEnemyTemplates(ray_t* ray)
         for (int32_t frIdx = 0; frIdx < ARRAY_SIZE(ray->eTemplates->hurtSprites); frIdx++)
         {
             // Load the textures
-            snprintf(buf, sizeof(buf) - 1, "E_%s_WALK_%d.wsg", eTypes[eIdx], frIdx);
+            snprintf(buf, sizeof(buf) - 1, "E_%s_WALK_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
             ray->eTemplates[eIdx].walkSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_SHOOT_%d.wsg", eTypes[eIdx], frIdx);
+            snprintf(buf, sizeof(buf) - 1, "E_%s_SHOOT_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
             ray->eTemplates[eIdx].shootSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_HURT_%d.wsg", eTypes[eIdx], frIdx);
+            snprintf(buf, sizeof(buf) - 1, "E_%s_HURT_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
             ray->eTemplates[eIdx].hurtSprites[frIdx] = loadTexture(ray, buf, EMPTY);
         }
         // Set initial texture
