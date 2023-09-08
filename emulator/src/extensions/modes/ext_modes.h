@@ -8,3 +8,4 @@ extern emuExtension_t modesEmuExtension;
 
 swadgeMode_t** emulatorGetSwadgeModes(int* count);
 swadgeMode_t* emulatorFindSwadgeMode(const char* name);
+bool emulatorSetSwadgeModeByName(const char* name);
