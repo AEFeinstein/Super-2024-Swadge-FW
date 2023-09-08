@@ -75,6 +75,8 @@ struct entity_t
     uint8_t spriteIndex;
     bool spriteFlipHorizontal;
     bool spriteFlipVertical;
+    int16_t spriteRotateAngle;
+
     uint8_t animationTimer;
 
     tilemap_t * tilemap;
@@ -109,6 +111,8 @@ struct entity_t
 void initializeEntity(entity_t * self, entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData, soundManager_t * soundManager);
 
 void updatePlayer(entity_t * self);
+void updatePlayerVertical(entity_t * self);
+
 void updateBall(entity_t * self);
 void updateBallAtStart(entity_t *self);
 void updateBomb(entity_t * self);

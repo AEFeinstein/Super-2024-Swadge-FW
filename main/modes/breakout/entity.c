@@ -91,6 +91,7 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     self->fallOffTileHandler = NULL; //&defaultFallOffTileHandler;
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical = false;
+    self->spriteRotateAngle = 0;
     self->attachedToEntity = NULL;
     self->shouldAdvanceMultiplier = false;
 
@@ -298,23 +299,122 @@ void updatePlayer(entity_t *self)
     
 };
 
+void updatePlayerVertical(entity_t *self)
+{
+    // Check if the touch area is touched
+    int32_t /*angle, radius, intensity,*/ ydiff;
+    
+    if(self->gameData->isTouched)
+    {
+        //int32_t touchX, touchY;
+        //getTouchCartesian(angle, radius, &touchX, &touchY);
+
+        int32_t touchIntoLevel = ((960 - self->gameData->touchY)<< 2) + 128; // play with this value until center touch moves paddle to center
+
+        //                                    the leftmost coordinate that the originX point of the paddle sprite can occupy
+        //                                    |   the rightmost coordinate that the originX point of the paddle sprite can occupy
+        touchIntoLevel = CLAMP(touchIntoLevel,608,3872);
+        ydiff = self->y - touchIntoLevel;
+        ydiff = CLAMP(ydiff, -1024, 1024);
+        if (self->y != touchIntoLevel)
+        {
+            self->yspeed = -ydiff;
+        } else {
+            self->yspeed = 0;
+        }
+    } else {
+        self->yspeed = 0;
+    }
+
+    self->y += self->yspeed;
+
+    if(self->gameData->frameCount % 15 == 0 && self->spriteIndex < SP_PADDLE_VERTICAL_2){
+        self->spriteIndex++;
+    }
+
+    if(
+        (
+            (self->gameData->btnState & PB_START)
+            &&
+            !(self->gameData->prevBtnState & PB_START)
+        )
+    ){
+        self->gameData->changeState = ST_PAUSE;
+    }
+
+};
+
 void updateBall(entity_t *self)
 { 
     if(self->attachedToEntity != NULL){
         //Ball is caught
-        self->x = self->attachedToEntity->x;
-        self->y = self->attachedToEntity->y-((self->entityManager->sprites[self->spriteIndex].originY + self->entityManager->sprites[self->attachedToEntity->spriteIndex].originY) << SUBPIXEL_RESOLUTION);
+        switch(self->attachedToEntity->type){
+            case(ENTITY_PLAYER_PADDLE_BOTTOM):
+                self->x = self->attachedToEntity->x;
+                self->y = self->attachedToEntity->y-((self->entityManager->sprites[self->spriteIndex].originY + self->entityManager->sprites[self->attachedToEntity->spriteIndex].originY) << SUBPIXEL_RESOLUTION);
 
-        if(
-            self->gameData->btnState & PB_UP
-            &&
-            !(self->gameData->prevBtnState & PB_UP)
-        )
-        {
-            //Launch ball
-            setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
-            self->attachedToEntity = NULL;
-            bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                if(
+                    self->gameData->btnState & PB_UP
+                    &&
+                    !(self->gameData->prevBtnState & PB_UP)
+                )
+                {
+                    //Launch ball
+                    setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    self->attachedToEntity = NULL;
+                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                }
+                break;
+            case(ENTITY_PLAYER_PADDLE_TOP):
+                self->x = self->attachedToEntity->x;
+                self->y = self->attachedToEntity->y+((self->entityManager->sprites[self->spriteIndex].originY + self->entityManager->sprites[self->attachedToEntity->spriteIndex].originY) << SUBPIXEL_RESOLUTION);
+
+                if(
+                    self->gameData->btnState & PB_UP
+                    &&
+                    !(self->gameData->prevBtnState & PB_UP)
+                )
+                {
+                    //Launch ball
+                    setVelocity(self, 270 + CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    self->attachedToEntity = NULL;
+                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                }
+                break;
+            case(ENTITY_PLAYER_PADDLE_LEFT):
+                self->x = self->attachedToEntity->x+((self->entityManager->sprites[self->spriteIndex].originX + self->entityManager->sprites[self->attachedToEntity->spriteIndex].originX) << SUBPIXEL_RESOLUTION);
+                self->y = self->attachedToEntity->y;
+
+                if(
+                    self->gameData->btnState & PB_UP
+                    &&
+                    !(self->gameData->prevBtnState & PB_UP)
+                )
+                {
+                    //Launch ball
+                    setVelocity(self, 0 - CLAMP((self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    self->attachedToEntity = NULL;
+                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                }
+                break;
+            case(ENTITY_PLAYER_PADDLE_RIGHT):
+                self->x = self->attachedToEntity->x-((self->entityManager->sprites[self->spriteIndex].originX + self->entityManager->sprites[self->attachedToEntity->spriteIndex].originX) << SUBPIXEL_RESOLUTION);
+                self->y = self->attachedToEntity->y;
+
+                if(
+                    self->gameData->btnState & PB_UP
+                    &&
+                    !(self->gameData->prevBtnState & PB_UP)
+                )
+                {
+                    //Launch ball
+                    setVelocity(self, 180 - CLAMP((self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    self->attachedToEntity = NULL;
+                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                }
+                break;
+            default:
+                break;
         }
     } else {
         //Ball is in play
@@ -364,7 +464,7 @@ void updateBallAtStart(entity_t *self){
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         entity_t *checkEntity = &(self->entityManager->entities[i]);
-        if (checkEntity->active && checkEntity != self && checkEntity->type == ENTITY_PLAYER_PADDLE_BOTTOM)
+        if (checkEntity->active && checkEntity != self && (checkEntity->type == ENTITY_PLAYER_PADDLE_BOTTOM || checkEntity->type == ENTITY_PLAYER_PADDLE_TOP || checkEntity->type == ENTITY_PLAYER_PADDLE_LEFT || checkEntity->type == ENTITY_PLAYER_PADDLE_RIGHT) )
         {
             uint32_t dist = abs(self->x - checkEntity->x) + abs(self->y - checkEntity->y);
 
@@ -1006,6 +1106,34 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                     scorePoints(self->gameData, 0, 2 );
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_0;
+                }
+            }
+            break;
+        case ENTITY_PLAYER_PADDLE_LEFT:
+            if(self->xspeed < 0){
+                setVelocity(self, 0 + (self->y - other->y)/SUBPIXEL_RESOLUTION, 63);
+                //self->yspeed = -self->yspeed; 
+
+                bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
+
+                if(self->shouldAdvanceMultiplier){
+                    scorePoints(self->gameData, 0, 2 );
+                    self->shouldAdvanceMultiplier = false;
+                    other->spriteIndex = SP_PADDLE_VERTICAL_0;
+                }
+            }
+            break;
+        case ENTITY_PLAYER_PADDLE_RIGHT:
+            if(self->xspeed > 0){
+                setVelocity(self, 180 + (other->y - self->y)/SUBPIXEL_RESOLUTION, 63);
+                //self->yspeed = -self->yspeed; 
+
+                bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
+
+                if(self->shouldAdvanceMultiplier){
+                    scorePoints(self->gameData, 0, 2 );
+                    self->shouldAdvanceMultiplier = false;
+                    other->spriteIndex = SP_PADDLE_VERTICAL_0;
                 }
             }
             break;
