@@ -89,6 +89,8 @@ emuArgs_t emulatorArgs = {
     .fuzzTouch   = false,
     .fuzzMotion  = false,
 
+    .headless = false,
+
     .keymap = NULL,
 
     .lock = false,
@@ -102,6 +104,12 @@ emuArgs_t emulatorArgs = {
     .motionDrift        = false,
 
     .emulateTouch = false,
+
+    .record   = false,
+    .playback = false,
+
+    .recordFile = NULL,
+    .replayFile = NULL,
 };
 
 static const char mainDoc[] = "Emulates a swadge";
@@ -114,11 +122,14 @@ static const char argFuzz[]        = "fuzz";
 static const char argFuzzButtons[] = "fuzz-buttons";
 static const char argFuzzTouch[]   = "fuzz-touch";
 static const char argFuzzMotion[]  = "fuzz-motion";
+static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
 static const char argLock[]        = "lock";
 static const char argMode[]        = "mode";
 static const char argModeSwitch[]  = "mode-switch";
 static const char argModeList[]    = "modes-list";
+static const char argPlayback[]    = "playback";
+static const char argRecord[]      = "record";
 static const char argTouch[]       = "touch";
 static const char argHelp[]        = "help";
 static const char argUsage[]       = "usage";
@@ -134,9 +145,12 @@ static const struct option options[] =
     { argFuzzButtons, optional_argument, (int*)&emulatorArgs.fuzzButtons,  true },
     { argFuzzTouch,   optional_argument, (int*)&emulatorArgs.fuzzTouch,    true },
     { argFuzzMotion,  optional_argument, (int*)&emulatorArgs.fuzzMotion,   true },
+    { argHeadless,    no_argument,       (int*)&emulatorArgs.headless,     true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMode,        required_argument, NULL,                             'm'  },
+    { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
+    { argRecord,      optional_argument, (int*)&emulatorArgs.record,       'r'  },
     { argModeSwitch,  optional_argument, NULL,                             10   },
     { argModeList,    no_argument,       NULL,                             0    },
     { argTouch,       no_argument,       (int*)&emulatorArgs.emulateTouch, true },
@@ -156,11 +170,14 @@ static const optDoc_t argDocs[] =
     { 0,  argFuzzButtons, "y|n",   "Set whether buttons are fuzzed" },
     { 0,  argFuzzTouch,   "y|n",   "Set whether touchpad inputs are fuzzed" },
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
+    { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
     { 0,  argModeList,    NULL,    "Print out a list of all possible values for MODE" },
+    {'p', argPlayback,    "FILE",  "Play back recorded emulator inputs from a file" },
+    {'r', argRecord,      "FILE",  "Record emulator inputs to a file" },
     {'t', argTouch,       NULL,    "Simulate touch sensor readings with a virtual touchpad" },
     {'h', argHelp,        NULL,    "Give this help list" },
     { 0,  argUsage,       NULL,    "Give a short usage message" },
@@ -182,10 +199,7 @@ static const optDoc_t argDocs[] =
  */
 static bool handleArgument(const char* optName, const char* arg, int optVal)
 {
-    // Handle arguments with no short-option like this:
-    // if (optName == argUsage)
-    //{ doSomething(); return true }
-
+    // Handle all arguments by their long-option, as it will always be set.
     if (argFuzz == optName)
     {
         // Enable Fuzz
@@ -265,17 +279,31 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
             emulatorArgs.modeSwitchTime = optVal;
         }
     }
-
-    // Handle options with a short-option here:
-    switch (optVal)
+    else if (argRecord == optName)
     {
-            // case 'x':
-            // doSomething();
-            // if (error) return false;
-            // return true;
+        if (emulatorArgs.playback)
+        {
+            printf("ERR: Cannot playback and record at the same time\n");
+            return false;
+        }
 
-        default:
-            break;
+        if (arg)
+        {
+            emulatorArgs.recordFile = arg;
+        }
+    }
+    else if (argPlayback == optName)
+    {
+        if (emulatorArgs.record)
+        {
+            printf("ERR: Cannot playback and record at the same time\n");
+            return false;
+        }
+
+        if (arg)
+        {
+            emulatorArgs.replayFile = arg;
+        }
     }
 
     // It's OK if an arg is unhandled, as it may just be a flag set automatically
