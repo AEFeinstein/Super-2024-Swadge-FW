@@ -105,7 +105,7 @@ emuArgs_t emulatorArgs = {
 
     .emulateTouch = false,
 
-    .record = false,
+    .record   = false,
     .playback = false,
 
     .recordFile = NULL,
