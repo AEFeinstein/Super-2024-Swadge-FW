@@ -51,7 +51,6 @@ typedef void(*overlapTileHandler_t)(struct entity_t *self, uint8_t tileId, uint8
 struct entity_t
 {
     bool active;
-    //bool important;
 
     uint8_t type;
     updateFunction_t updateFunction;
@@ -118,21 +117,10 @@ void updateBallAtStart(entity_t *self);
 void updateBomb(entity_t * self);
 void updateExplosion(entity_t * self);
 
-void updateHitBlock(entity_t * self);
-
-
 void moveEntityWithTileCollisions(entity_t * self);
 void defaultFallOffTileHandler(entity_t *self);
 
-void despawnWhenOffscreen(entity_t *self);
-
 void destroyEntity(entity_t *self, bool respawn);
-
-void applyDamping(entity_t *self);
-
-void applyGravity(entity_t *self);
-
-void animatePlayer(entity_t * self);
 
 void detectEntityCollisions(entity_t *self);
 
@@ -150,56 +138,7 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
 void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty);
 void setLedBreakBlock(gameData_t *gameData, uint8_t tileId);
 
-void dieWhenFallingOffScreen(entity_t *self);
-
 void updateDummy(entity_t* self);
 void setVelocity(entity_t *self, int16_t direction, int16_t magnitude);
-
-void updateScrollLockLeft(entity_t* self);
-void updateScrollLockRight(entity_t* self);
-void updateScrollLockUp(entity_t* self);
-void updateScrollLockDown(entity_t* self);
-void updateScrollUnlock(entity_t* self);
-
-void updateEntityDead(entity_t* self);
-
-void updatePowerUp(entity_t* self);
-void update1up(entity_t* self);
-void updateWarp(entity_t* self);
-
-void updateDustBunny(entity_t* self);
-void updateDustBunnyL2(entity_t* self);
-void updateDustBunnyL3(entity_t* self);
-bool dustBunnyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool dustBunnyL2TileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool dustBunnyL3TileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-
-
-void updateWasp(entity_t* self);
-void updateWaspL2(entity_t* self);
-void updateWaspL3(entity_t* self);
-bool waspTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-
-void killEnemy(entity_t* target);
-
-void updateBgCol(entity_t* self);
-
-void turnAroundAtEdgeOfTileHandler(entity_t *self);
-
-void updateEnemyBushL3(entity_t* self);
-
-void updateCheckpoint(entity_t* self);
-
-void playerOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
-void defaultOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
-
-void updateBgmChange(entity_t* self);
-
-void updateWaveBall(entity_t* self);
-
-// bool waveBallTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-void waveBallOverlapTileHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty);
-void powerUpCollisionHandler(entity_t *self, entity_t *other);
-void killPlayer(entity_t *self);
 
 #endif
