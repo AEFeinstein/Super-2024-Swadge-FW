@@ -135,7 +135,7 @@ int main(int argc, char** argv)
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
 
         // Add the screen size to the minimum pane sizes to get our window size
-        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH)*2 + sidePanesW, (TFT_HEIGHT)*2 + topBottomPanesH);
+        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH) * 2 + sidePanesW, (TFT_HEIGHT) * 2 + topBottomPanesH);
     }
 
     // We won't call the pre-frame callback for the very first frame

@@ -599,7 +599,7 @@ void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led
             {
                 // Note too sharp, make it red
                 red = 255;
-                grn = blu = 255 - (tonalDiff)*15;
+                grn = blu = 255 - (tonalDiff) * 15;
             }
             else
             {
