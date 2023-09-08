@@ -233,6 +233,9 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
         case ENTITY_PLAYER_PADDLE_BOTTOM:
             createdEntity = createPlayer(entityManager, x, y);
             break;
+        case ENTITY_PLAYER_PADDLE_TOP:
+            createdEntity = createPlayerPaddleTop(entityManager, x, y);
+            break;
         case ENTITY_PLAYER_BALL:
             createdEntity = createBall(entityManager, x, y);
             break;
@@ -385,6 +388,43 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
     entity->type = ENTITY_PLAYER_PADDLE_BOTTOM;
+    entity->spriteIndex = SP_PADDLE_0;
+    entity->updateFunction = &updatePlayer;
+    entity->collisionHandler = &playerCollisionHandler;
+    entity->tileCollisionHandler = &playerTileCollisionHandler;
+    entity->fallOffTileHandler = &defaultFallOffTileHandler;
+    entity->overlapTileHandler = &playerOverlapTileHandler;
+    return entity;
+}
+
+entity_t* createPlayerPaddleTop(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = true;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    entity->xMaxSpeed = 40; //72; Walking
+    entity->yMaxSpeed = 64; //72;
+    entity->xDamping = 1;
+    entity->yDamping = 4;
+    entity->gravityEnabled = false;
+    entity->gravity = 4;
+    entity->falling = false;
+    entity->jumpPower = 0;
+    entity->spriteFlipVertical = true;
+    entity->hp = 1;
+    entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
+
+    entity->type = ENTITY_PLAYER_PADDLE_TOP;
     entity->spriteIndex = SP_PADDLE_0;
     entity->updateFunction = &updatePlayer;
     entity->collisionHandler = &playerCollisionHandler;

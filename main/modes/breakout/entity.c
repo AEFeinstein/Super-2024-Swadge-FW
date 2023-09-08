@@ -147,6 +147,10 @@ void updatePlayer(entity_t *self)
 
     self->x += self->xspeed;
 
+    if(self->gameData->frameCount % 15 == 0 && self->spriteIndex < SP_PADDLE_2){
+        self->spriteIndex++;
+    }
+
     /*if (self->gameData->btnState & PB_B)
     {
         self->xMaxSpeed = 52;
@@ -250,6 +254,18 @@ void updatePlayer(entity_t *self)
         self->animationTimer--;
     }*/
 
+    /*
+    if (self->hp >2 && self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B) && self->animationTimer == 0)
+    {
+        entity_t * createdEntity = createEntity(self->entityManager, ENTITY_WAVE_BALL, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+        if(createdEntity != NULL){
+            createdEntity->xspeed= (self->spriteFlipHorizontal) ? -(128 + abs(self->xspeed) + abs(self->yspeed)):128 + abs(self->xspeed) + abs(self->yspeed);
+            createdEntity->homeTileX = 0;
+            createdEntity->homeTileY = 0;
+             //buzzer_play_sfx(&sndWaveBall);
+        }
+        self->animationTimer = 30;
+    }*/
     /*
     if (self->hp >2 && self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B) && self->animationTimer == 0)
     {
@@ -975,6 +991,21 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                 if(self->shouldAdvanceMultiplier){
                     scorePoints(self->gameData, 0, 2 );
                     self->shouldAdvanceMultiplier = false;
+                    other->spriteIndex = SP_PADDLE_0;
+                }
+            }
+            break;
+        case ENTITY_PLAYER_PADDLE_TOP:
+            if(self->yspeed < 0){
+                setVelocity(self, 270 + (self->x - other->x)/SUBPIXEL_RESOLUTION, 63);
+                //self->yspeed = -self->yspeed; 
+
+                bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
+
+                if(self->shouldAdvanceMultiplier){
+                    scorePoints(self->gameData, 0, 2 );
+                    self->shouldAdvanceMultiplier = false;
+                    other->spriteIndex = SP_PADDLE_0;
                 }
             }
             break;
