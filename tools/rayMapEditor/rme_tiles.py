@@ -33,13 +33,15 @@ class tileType(Enum):
     BG_DOOR_MISSILE = (BG | DOOR  | 3)
     BG_DOOR_ICE     = (BG | DOOR  | 4)
     BG_DOOR_XRAY    = (BG | DOOR  | 5)
+    BG_DOOR_SCRIPT  = (BG | DOOR  | 6)
     # Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1)
-    OBJ_ENEMY_BEAM        = (OBJ | ENEMY | 2)
-    OBJ_ENEMY_CHARGE      = (OBJ | ENEMY | 3)
-    OBJ_ENEMY_MISSILE     = (OBJ | ENEMY | 4)
-    OBJ_ENEMY_ICE         = (OBJ | ENEMY | 5)
-    OBJ_ENEMY_XRAY        = (OBJ | ENEMY | 6)
+    OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2)
+    OBJ_ENEMY_STRONG      = (OBJ | ENEMY | 3)
+    OBJ_ENEMY_ARMORED     = (OBJ | ENEMY | 4)
+    OBJ_ENEMY_FLAMING     = (OBJ | ENEMY | 5)
+    OBJ_ENEMY_HIDDEN      = (OBJ | ENEMY | 6)
+    OBJ_ENEMY_BOSS        = (OBJ | ENEMY | 7)
     # Power-ups
     OBJ_ITEM_BEAM        = (OBJ | ITEM | 1)
     OBJ_ITEM_CHARGE_BEAM = (OBJ | ITEM | 2)
@@ -75,16 +77,18 @@ bgTiles: list[tileType] = [
     tileType.BG_DOOR_CHARGE,
     tileType.BG_DOOR_MISSILE,
     tileType.BG_DOOR_ICE,
-    tileType.BG_DOOR_XRAY
+    tileType.BG_DOOR_XRAY,
+    tileType.BG_DOOR_SCRIPT
 ]
 
 objTiles: list[tileType] = [
     tileType.OBJ_ENEMY_START_POINT,
-    tileType.OBJ_ENEMY_BEAM,
-    tileType.OBJ_ENEMY_CHARGE,
-    tileType.OBJ_ENEMY_MISSILE,
-    tileType.OBJ_ENEMY_ICE,
-    tileType.OBJ_ENEMY_XRAY,
+    tileType.OBJ_ENEMY_NORMAL,
+    tileType.OBJ_ENEMY_STRONG,
+    tileType.OBJ_ENEMY_ARMORED,
+    tileType.OBJ_ENEMY_FLAMING,
+    tileType.OBJ_ENEMY_HIDDEN,
+    tileType.OBJ_ENEMY_BOSS,
     tileType.OBJ_ITEM_BEAM,
     tileType.OBJ_ITEM_CHARGE_BEAM,
     tileType.OBJ_ITEM_MISSILE,
