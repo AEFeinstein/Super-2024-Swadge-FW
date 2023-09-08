@@ -28,7 +28,7 @@
 
 typedef struct
 {
-    font_t logbook;       ///< The font used in the menu and game
+    font_t sevenSegment;       ///< The font used in the menu and game
 
     uint32_t score;        ///< The score for the game
 
@@ -101,7 +101,7 @@ static void pushyEnterMode(void)
     pushy = calloc(1, sizeof(pushy_t));
 
     // Load a font
-    loadFont("logbook.font", &pushy->logbook, false);
+    loadFont("seven_segment.font", &pushy->sevenSegment, false);
 }
 
 /**
@@ -110,7 +110,7 @@ static void pushyEnterMode(void)
 static void pushyExitMode(void)
 {
     // Free the font
-    freeFont(&pushy->logbook);
+    freeFont(&pushy->sevenSegment);
     // Free everything else
     free(pushy);
 }
@@ -135,6 +135,17 @@ static void pushyMainLoop(int64_t elapsedUs)
             pushy->score++;
         }
     }
+
+    // Draw "unlit" 7-segment displays
+    char eights[NUM_DIGITS + 1];
+    memset(eights, '8', NUM_DIGITS);
+    eights[NUM_DIGITS] = 0;
+    drawText(&pushy->sevenSegment, c111, eights, (TFT_WIDTH - textWidth(&pushy->sevenSegment, eights)) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
+
+    // Draw "lit" segments
+    char buf[NUM_DIGITS + 1];
+    snprintf(buf, NUM_DIGITS + 1, "%0*u", NUM_DIGITS, pushy->score);
+    drawText(&pushy->sevenSegment, c555, buf, (TFT_WIDTH - textWidth(&pushy->sevenSegment, buf)) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
 }
 
 /**
