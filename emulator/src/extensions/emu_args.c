@@ -104,6 +104,12 @@ emuArgs_t emulatorArgs = {
     .motionDrift        = false,
 
     .emulateTouch = false,
+
+    .record = false,
+    .playback = false,
+
+    .recordFile = NULL,
+    .replayFile = NULL,
 };
 
 static const char mainDoc[] = "Emulates a swadge";
