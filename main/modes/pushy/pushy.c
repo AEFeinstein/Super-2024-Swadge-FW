@@ -30,7 +30,9 @@
 #define NUM_PUSHY_COLORS 11 // 0-9 and "off"
 
 #define IDLE_SECONDS_UNTIL_SAVE 3
-#define SCORE_BTWN_SAVES 1000
+#define SAVE_AT_MOD 100
+
+#define SHUFFLE_AT_MOD 1000
 
 #define HUE_STEP 28
 #define SATURATION 255
@@ -315,10 +317,13 @@ static void readButton(void)
             pushy->counter++;
             pushy->fireCounter++;
             pushy->usSinceLastInput = 0;
-            if(pushy->counter % SCORE_BTWN_SAVES == 0)
+            if(pushy->counter % SAVE_AT_MOD == 0)
+            {
+                saveMemory();
+            }
+            if(pushy->counter % SHUFFLE_AT_MOD == 0)
             {
                 shuffleColors();
-                saveMemory();
             }
         }
     }
