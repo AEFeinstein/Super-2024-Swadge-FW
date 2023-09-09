@@ -65,25 +65,25 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_PADDLE_2].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_2].collisionBox.y1 = 7;
 
-    entityManager->sprites[SP_PADDLE_VERTICAL_0].wsg = entityManager->sprites[SP_PADDLE_0].wsg;
-    entityManager->sprites[SP_PADDLE_VERTICAL_0].originX=14;
-    entityManager->sprites[SP_PADDLE_VERTICAL_0].originY=4;
+    loadWsg("paddleVertical000.wsg", &entityManager->sprites[SP_PADDLE_VERTICAL_0].wsg, false);
+    entityManager->sprites[SP_PADDLE_VERTICAL_0].originX=4;
+    entityManager->sprites[SP_PADDLE_VERTICAL_0].originY=14;
     entityManager->sprites[SP_PADDLE_VERTICAL_0].collisionBox.x0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_0].collisionBox.x1 = 7;
     entityManager->sprites[SP_PADDLE_VERTICAL_0].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_0].collisionBox.y1 = 27;
 
-    entityManager->sprites[SP_PADDLE_VERTICAL_1].wsg = entityManager->sprites[SP_PADDLE_1].wsg;
-    entityManager->sprites[SP_PADDLE_VERTICAL_1].originX=14;
-    entityManager->sprites[SP_PADDLE_VERTICAL_1].originY=4;
+    loadWsg("paddleVertical001.wsg", &entityManager->sprites[SP_PADDLE_VERTICAL_1].wsg, false);
+    entityManager->sprites[SP_PADDLE_VERTICAL_1].originX=4;
+    entityManager->sprites[SP_PADDLE_VERTICAL_1].originY=14;
     entityManager->sprites[SP_PADDLE_VERTICAL_1].collisionBox.x0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_1].collisionBox.x1 = 7;
     entityManager->sprites[SP_PADDLE_VERTICAL_1].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_1].collisionBox.y1 = 27;
 
-    entityManager->sprites[SP_PADDLE_VERTICAL_2].wsg = entityManager->sprites[SP_PADDLE_2].wsg;
-    entityManager->sprites[SP_PADDLE_VERTICAL_2].originX=14;
-    entityManager->sprites[SP_PADDLE_VERTICAL_2].originY=4;
+    loadWsg("paddleVertical002.wsg", &entityManager->sprites[SP_PADDLE_VERTICAL_2].wsg, false);
+    entityManager->sprites[SP_PADDLE_VERTICAL_2].originX=4;
+    entityManager->sprites[SP_PADDLE_VERTICAL_2].originY=14;
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.x0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.x1 = 7;
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.y0 = 0;
@@ -489,9 +489,9 @@ entity_t* createPlayerPaddleLeft(entityManager_t * entityManager, uint16_t x, ui
     entity->gravity = 4;
     entity->falling = false;
     entity->jumpPower = 0;
-    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipHorizontal = true;
     entity->spriteFlipVertical = false;
-    entity->spriteRotateAngle = 90;
+    entity->spriteRotateAngle = 0;
     entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
@@ -530,7 +530,7 @@ entity_t* createPlayerPaddleRight(entityManager_t * entityManager, uint16_t x, u
     entity->jumpPower = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
-    entity->spriteRotateAngle = 270;
+    entity->spriteRotateAngle = 0;
     entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
@@ -1479,12 +1479,6 @@ entity_t* createCheckpoint(entityManager_t * entityManager, uint16_t x, uint16_t
 void freeEntityManager(entityManager_t * self){
     free(self->entities);
     for(uint8_t i=0; i<SPRITESET_SIZE; i++){
-        
-        //Skip sprites that reuse wsg's from other sprites
-        if(i == SP_PADDLE_VERTICAL_0 || i == SP_PADDLE_VERTICAL_1 || i == SP_PADDLE_VERTICAL_2){
-            continue;
-        }
-
         freeWsg(&(self->sprites[i].wsg));
     }
 }
