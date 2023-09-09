@@ -36,7 +36,8 @@
 
 #define SHUFFLE_AT_MOD 1000
 
-#define HUE_STEP 28
+#define HUE_STEP (255 / (NUM_PUSHY_COLORS - 2))       // reserve a color for white, one for "off"/grey, and evenly spread the remaining colors across the rainbow
+#define RAINBOW_HUE_STEP (255 / NUM_PUSHY_COLORS - 1) // reserve a color for "off"/grey, and evenly spread the remaining colors across the rainbow
 #define SATURATION 255
 #define BRIGHTNESS 255
 
@@ -55,32 +56,29 @@
 
 typedef struct
 {
-    font_t sevenSegment;      ///< The font used in the game
+    font_t sevenSegment;                     ///< The font used in the game
 
-    char eights[NUM_DIGITS + 1];
-    uint16_t eightsWidth;
+    char eights[NUM_DIGITS + 1];             ///< A string of '8's to draw behind the score as "unlit" seven-segment displays
+    uint16_t eightsWidth;                    ///< The width of the string of '8's, in pixels
 
-    uint32_t counter;           ///< The score for the game
-    uint32_t lastSaveCounter;   ///< The last score that was saved
+    uint32_t counter;                        ///< The score for the game
+    uint32_t lastSaveCounter;                ///< The last score that was saved
 
     uint32_t allFireCounts[FIREWINDOWS];
     uint32_t fireCounter;
     uint32_t fireWindowCount;
     int64_t fireWindowStartUs;
-    int64_t buttonPushedMillis;
+    int64_t buttonPushedUs;                  ///< Microseconds since the last button push
+    uint16_t btnState;                       ///< The button state
 
-    int64_t usSinceLastInput; ///< Microseconds since the last save
-    uint16_t btnState;        ///< The button state
+    int64_t rainbowTimer;                    ///< 0 if no digits should be rainbow, or EFFECT_MAX if any digits should
+    int64_t weedTimer;                       ///< 0 if no digits should be weed colored, or EFFECT_MAX if any digits should
+    bool rainbowDigits[NUM_DIGITS];          ///< A bitmap of digits that should be rainbow, from most significant digit at [0] to least significant digit at [NUM_DIGITS]
+    bool weedDigits[NUM_DIGITS];             ///< A bitmap of digits that should be weed colored, from most significant digit at [0] to least significant digit at [NUM_DIGITS]
+    float weedHue;                           ///< The hue to display on digits that are weed colored
 
-    int64_t rainbowTimer;
-    int64_t weedTimer;
-    bool rainbowDigits[8];
-    bool weedDigits[8];
-    float weedHue;
-    int64_t ledFadeTimer;     ///< The timer to fade LEDs
-
-    paletteColor_t colors[NUM_PUSHY_COLORS];        ///< 
-    uint8_t rainbowHues[NUM_PUSHY_COLORS]; ///< 
+    paletteColor_t colors[NUM_PUSHY_COLORS]; ///< Colors for each digit 0-9
+    uint8_t rainbowHues[NUM_PUSHY_COLORS];   ///< Hues to display on digits that are rainbow
 
     led_t boxleds[CONFIG_NUM_LEDS];
 } pushy_t;
@@ -174,12 +172,12 @@ static void pushyEnterMode(void)
     // Initialize fire variables
     pushy->fireWindowStartUs = esp_timer_get_time();
 
-    // Initialize weed and rainbow variables
+    // Initialize weed and rainbow effect variables
     pushy->rainbowTimer = EFFECT_MAX;
     pushy->weedTimer = EFFECT_MAX;
 
     // Initialize default color values
-    pushy->colors[0] = paletteHsvToHex(0, 0, BRIGHTNESS);               // white
+    pushy->colors[0] = paletteHsvToHex(0, 0, BRIGHTNESS);                     // white
     pushy->colors[1] = paletteHsvToHex(HUE_STEP * 0, SATURATION, BRIGHTNESS); // red
     pushy->colors[2] = paletteHsvToHex(HUE_STEP * 1, SATURATION, BRIGHTNESS); // orange
     pushy->colors[3] = paletteHsvToHex(HUE_STEP * 2, SATURATION, BRIGHTNESS); // yellow
@@ -189,19 +187,19 @@ static void pushyEnterMode(void)
     pushy->colors[7] = c025; //paletteHsvToHex(HUE_STEP * 6, SATURATION, BRIGHTNESS); // blue
     pushy->colors[8] = paletteHsvToHex(HUE_STEP * 7, SATURATION, BRIGHTNESS); // purpley
     pushy->colors[9] = paletteHsvToHex(HUE_STEP * 8, SATURATION, BRIGHTNESS); // pinkish
-    pushy->colors[10] = paletteHsvToHex(0, 0, 55);                      // grey
+    pushy->colors[10] = paletteHsvToHex(0, 0, 55);                            // grey
 
-    pushy->rainbowHues[0] = 23 * 0;
-    pushy->rainbowHues[1] = 23 * 1;
-    pushy->rainbowHues[2] = 23 * 2;
-    pushy->rainbowHues[3] = 23 * 3;
-    pushy->rainbowHues[4] = 23 * 4;
-    pushy->rainbowHues[5] = 23 * 5;
-    pushy->rainbowHues[6] = 23 * 6;
-    pushy->rainbowHues[7] = 23 * 7;
-    pushy->rainbowHues[8] = 23 * 8;
-    pushy->rainbowHues[9] = 23 * 9;
-    pushy->rainbowHues[10] = 23 * 10;
+    pushy->rainbowHues[0] = RAINBOW_HUE_STEP * 0;
+    pushy->rainbowHues[1] = RAINBOW_HUE_STEP * 1;
+    pushy->rainbowHues[2] = RAINBOW_HUE_STEP * 2;
+    pushy->rainbowHues[3] = RAINBOW_HUE_STEP * 3;
+    pushy->rainbowHues[4] = RAINBOW_HUE_STEP * 4;
+    pushy->rainbowHues[5] = RAINBOW_HUE_STEP * 5;
+    pushy->rainbowHues[6] = RAINBOW_HUE_STEP * 6;
+    pushy->rainbowHues[7] = RAINBOW_HUE_STEP * 7;
+    pushy->rainbowHues[8] = RAINBOW_HUE_STEP * 8;
+    pushy->rainbowHues[9] = RAINBOW_HUE_STEP * 9;
+    pushy->rainbowHues[10] = RAINBOW_HUE_STEP * 10; // never actually used, as this is redirected to pushy->colors[10]
 
     shuffleColors();
 }
@@ -232,17 +230,17 @@ static void pushyExitMode(void)
  */
 static void pushyMainLoop(int64_t elapsedUs)
 {
-    pushy->usSinceLastInput += elapsedUs;
+    pushy->buttonPushedUs += elapsedUs;
 
     readButton();
 
     // If the score has changed, save if the last input was longer ago than our threshold or if the score is a multiple of 100
-    if(pushy->lastSaveCounter != pushy->counter && pushy->usSinceLastInput > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000)
+    if(pushy->lastSaveCounter != pushy->counter && pushy->buttonPushedUs > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000)
     {
         saveMemory();
     }
 
-    // Draw "unlit" 7-segment displays
+    // Draw "unlit" seven-segment displays
     drawText(&pushy->sevenSegment, pushy->colors[NUM_PUSHY_COLORS - 1], pushy->eights, (TFT_WIDTH - pushy->eightsWidth) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
 
     // Draw "lit" segments
@@ -313,12 +311,12 @@ static void readButton(void)
         // Save the button state
         pushy->btnState = evt.state;
 
-        // Check if the pause button was pressed
+        // Check if the A button was pressed
         if (evt.down && (PB_A == evt.button))
         {
             pushy->counter++;
             pushy->fireCounter++;
-            pushy->usSinceLastInput = 0;
+            pushy->buttonPushedUs = 0;
             if(pushy->counter % SAVE_AT_MOD == 0)
             {
                 saveMemory();
@@ -464,10 +462,12 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
 {
     // printf("showing a digit\n");
     
+    // Convert the number to a string
     paletteColor_t color;
     char numberAsStr[2];
     snprintf(numberAsStr, 2, "%1"PRIu8, number);
 
+    // Apply weed and rainbow effects, or if no effects, get the current color for this digit
     if (pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
     {
         color = paletteHsvToHex((int) pushy->weedHue, SATURATION, BRIGHTNESS);
@@ -485,6 +485,7 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
         color = pushy->colors[colorIndex];
     }
 
+    // Draw the digit to the screen
     uint16_t digitWidth = textWidth(&pushy->sevenSegment, "8");
     drawText(&pushy->sevenSegment, color, numberAsStr,
         (TFT_WIDTH - pushy->eightsWidth) / 2 + ((digitWidth + 1) * (NUM_DIGITS - 1 - digitIndexFromLeastSignificant)),
