@@ -349,6 +349,11 @@ void app_main(void)
             }
         }
 
+        if (ESP_NOW == cSwadgeMode->wifiMode || ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode)
+        {
+            checkEspNowRxQueue();
+        }
+
         // Only draw to the TFT every frameRateUs
         static uint64_t tAccumDraw = 0;
         tAccumDraw += tElapsedUs;
