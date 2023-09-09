@@ -10,6 +10,8 @@
 //==============================================================================
 
 //#include "esp_random.h"
+#include "hdw-nvs.h"
+
 #include "pushy.h"
 
 //==============================================================================
@@ -17,6 +19,8 @@
 //==============================================================================
 
 #define NUM_DIGITS 8
+#define IDLE_SECONDS_UNTIL_SAVE 3
+#define SCORE_BTWN_SAVES 100
 
 //==============================================================================
 // Enums
@@ -28,14 +32,15 @@
 
 typedef struct
 {
-    font_t sevenSegment;       ///< The font used in the menu and game
+    font_t sevenSegment;      ///< The font used in the game
 
-    uint32_t score;        ///< The score for the game
+    uint32_t score;           ///< The score for the game
+    uint32_t lastSaveScore;   ///< The last score that was saved
 
-    int32_t lastSaveUs;
-    uint16_t btnState;    ///< The button state
+    int64_t usSinceLastInput; ///< Microseconds since the last save
+    uint16_t btnState;        ///< The button state
 
-    int32_t ledFadeTimer; ///< The timer to fade LEDs
+    int64_t ledFadeTimer;     ///< The timer to fade LEDs
 } pushy_t;
 
 //==============================================================================
@@ -60,6 +65,7 @@ static void pushyBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
  */
 
 static const char pushyName[] = "Pushy Kawaii Go";
+static const char pushyScoreKey[] = "pk_score";
 
 //==============================================================================
 // Variables
@@ -102,6 +108,9 @@ static void pushyEnterMode(void)
 
     // Load a font
     loadFont("seven_segment.font", &pushy->sevenSegment, false);
+
+    // Load score from NVS
+    readNvs32(pushyScoreKey, (int32_t*) &pushy->score);
 }
 
 /**
@@ -109,8 +118,12 @@ static void pushyEnterMode(void)
  */
 static void pushyExitMode(void)
 {
+    // Save score to NVS
+    writeNvs32(pushyScoreKey, (int32_t) pushy->score);
+
     // Free the font
     freeFont(&pushy->sevenSegment);
+
     // Free everything else
     free(pushy);
 }
@@ -123,6 +136,8 @@ static void pushyExitMode(void)
  */
 static void pushyMainLoop(int64_t elapsedUs)
 {
+    pushy->usSinceLastInput += elapsedUs;
+
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
@@ -133,7 +148,16 @@ static void pushyMainLoop(int64_t elapsedUs)
         if (evt.down && (PB_A == evt.button))
         {
             pushy->score++;
+            pushy->usSinceLastInput = 0;
         }
+    }
+
+    // If the score has changed, save if the last input was longer ago than our threshold or if the score is a multiple of 100
+    if(pushy->lastSaveScore != pushy->score && (pushy->usSinceLastInput > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000 || pushy->score % 100 == 0))
+    {
+        // Save score to NVS
+        writeNvs32(pushyScoreKey, (int32_t) pushy->score);
+        pushy->lastSaveScore = pushy->score;
     }
 
     // Draw "unlit" 7-segment displays
