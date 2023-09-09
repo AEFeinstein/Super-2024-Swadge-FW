@@ -36,8 +36,7 @@
 #define SATURATION 255
 #define BRIGHTNESS 255
 
-#define WEED_MAX 200
-#define RAINBOW_MAX 200
+#define EFFECT_MAX 200
 
 #define FIRE_TIMER_MS 100
 #define FIREWINDOWS 100
@@ -172,8 +171,8 @@ static void pushyEnterMode(void)
     pushy->fireWindowStartUs = esp_timer_get_time();
 
     // Initialize weed and rainbow variables
-    pushy->rainbowTimer = RAINBOW_MAX;
-    pushy->weedTimer = WEED_MAX;
+    pushy->rainbowTimer = EFFECT_MAX;
+    pushy->weedTimer = EFFECT_MAX;
 
     // Initialize default color values
     pushy->colors[0] = paletteHsvToHex(0, 0, BRIGHTNESS);               // white
@@ -345,6 +344,7 @@ static void checkSubStr(char const* counterStr, char const* const subStr, bool d
     char const* subStrInCounterStr = strstr(counterStr, subStr);
     if(subStrInCounterStr == NULL)
     {
+        *timer = EFFECT_MAX;
         return;
     }
 
@@ -373,21 +373,19 @@ static void updateEffects(char const* counterStr)
     checkRainbow(counterStr);
     checkWeed(counterStr);
 
-    if (pushy->rainbowTimer < RAINBOW_MAX)
+    if (pushy->rainbowTimer < EFFECT_MAX)
     {
         for (int i = 0; i < NUM_PUSHY_COLORS; i++)
         {
             pushy->rainbowHues[i] = (pushy->rainbowHues[i] + 2 % 255);
         }
-        pushy->rainbowTimer++;
     }
 
-    if (pushy->weedTimer < WEED_MAX)
+    if (pushy->weedTimer < EFFECT_MAX)
     {
         pushy->weedHue = 105;
         // pushy->weedHue -= 0.25;
         // pushy->weedHue = MAX(weedHue, 24);
-        pushy->weedTimer++;
     }
 }
 
@@ -461,13 +459,13 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
     char numberAsStr[2];
     snprintf(numberAsStr, 2, "%1u", number);
 
-    if (pushy->weedTimer < WEED_MAX && pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
+    if (pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
     {
         color = paletteHsvToHex((int) pushy->weedHue, SATURATION, BRIGHTNESS);
         // printf("weed digit at %u\n", digitIndexFromLeastSignificant);
         // printf("weed timer is %llu\n", pushy->weedTimer);
     }
-    else if (pushy->rainbowTimer < RAINBOW_MAX && pushy->rainbowDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant] && colorIndex != NUM_PUSHY_COLORS - 1)
+    else if (pushy->rainbowDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant] && colorIndex != NUM_PUSHY_COLORS - 1)
     {
         color = paletteHsvToHex(pushy->rainbowHues[0], SATURATION, BRIGHTNESS);
         // printf("rainbow digit at %u\n", digitIndexFromLeastSignificant);
