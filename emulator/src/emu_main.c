@@ -309,9 +309,6 @@ void taskYIELD(void)
 
     doExtPreFrameCb(++frameNum);
 
-    // If the mode isn't set to IMMEDIATE, this gets called twice. I think we can keep up.
-    checkEspNowRxQueue();
-
     // Below: Support for pausing and unpausing the emulator
     // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
     //     // Don't call the pre-frame callbacks until the emulator is unpaused.

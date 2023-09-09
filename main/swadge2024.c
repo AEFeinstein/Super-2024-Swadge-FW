@@ -350,7 +350,7 @@ void app_main(void)
             }
         }
 
-        if (ESP_NOW == cSwadgeMode->wifiMode)
+        if (NO_WIFI != cSwadgeMode->wifiMode)
         {
             checkEspNowRxQueue();
         }
