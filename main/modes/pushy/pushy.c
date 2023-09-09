@@ -28,7 +28,8 @@
 
 // clang-format off
 
-#define LOGFIRE false
+#define LOGFIRE  false
+#define LOGPUSHY false
 
 #define NUM_DIGITS        8
 #define NUM_PUSHY_COLORS 11 // 0-9 and "off"
@@ -305,7 +306,9 @@ static void shuffleColors(void)
     for (uint8_t i = 0; i < NUM_PUSHY_COLORS - 1; i++)
     {
         uint8_t n = esp_random() % (NUM_PUSHY_COLORS - 1);
-        // printf("gonna swap the next two colors: %" PRIu8 ", %" PRIu8 "\n", i, n);
+#if LOGPUSHY
+        printf("gonna swap the next two colors: %" PRIu8 ", %" PRIu8 "\n", i, n);
+#endif
 
         paletteColor_t temp = pushy->colors[n];
         pushy->colors[n]    = pushy->colors[i];
@@ -341,7 +344,9 @@ static void readButton(void)
 
 static void displayCounter(char const* counterStr)
 {
-    // printf("Displaying counter\n");
+#if LOGPUSHY
+    printf("Displaying counter\n");
+#endif
 
     for (unsigned int i = 0; i < NUM_DIGITS; i++)
     {
@@ -386,7 +391,9 @@ static void checkWeed(char const* counterStr)
 
 static void updateEffects(char const* counterStr)
 {
-    // printf("Updating effects\n");
+#if LOGPUSHY
+    printf("Updating effects\n");
+#endif
     checkRainbow(counterStr);
     checkWeed(counterStr);
 
@@ -430,7 +437,10 @@ static uint32_t getFireCount(void)
 
 static void displayFire(void)
 {
-    // // printf("Displaying fire\n");
+#if LOGPUSHY
+    printf("Displaying fire\n");
+#endif
+
     // for (int i = 0; i < CONFIG_NUM_LEDS; i++)
     // {
     //     pushy->boxleds[i] = LedEHSVtoHEXhelper(0, 200, 200);
@@ -464,13 +474,18 @@ static void updateFire(void)
         pushy->fireCounter                           = 0;
         pushy->fireWindowCount   = (pushy->fireWindowCount + 1) % FIREWINDOWS; // this rotates us through the array
         pushy->fireWindowStartUs = currentUs;
-        // printf("Fire count: %" PRIu32 "\n", getFireCount());
+
+#if LOGPUSHY
+        printf("Fire count: %" PRIu32 "\n", getFireCount());
+#endif
     }
 }
 
 void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSignificant)
 {
-    // printf("showing a digit\n");
+#if LOGPUSHY
+    printf("showing a digit\n");
+#endif
 
     // Convert the number to a string
     paletteColor_t color;
@@ -481,15 +496,19 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
     if (pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
     {
         color = paletteHsvToHex((int)pushy->weedHue, SATURATION, BRIGHTNESS);
-        // printf("weed digit at %" PRIu8 "\n", digitIndexFromLeastSignificant);
-        // printf("weed timer is %" PRIi64 "\n", pushy->weedTimer);
+#if LOGPUSHY
+        printf("weed digit at %" PRIu8 "\n", digitIndexFromLeastSignificant);
+        printf("weed timer is %" PRIi64 "\n", pushy->weedTimer);
+#endif
     }
     else if (pushy->rainbowDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant]
              && colorIndex != NUM_PUSHY_COLORS - 1)
     {
         color = paletteHsvToHex(pushy->rainbowHues[0], SATURATION, BRIGHTNESS);
-        // printf("rainbow digit at %" PRIu8 "\n", digitIndexFromLeastSignificant);
-        // printf("rainbow timer is %" PRIi64 "\n", pushy->rainbowTimer);
+#if LOGPUSHY
+        printf("rainbow digit at %" PRIu8 "\n", digitIndexFromLeastSignificant);
+        printf("rainbow timer is %" PRIi64 "\n", pushy->rainbowTimer);
+#endif
     }
     else
     {
