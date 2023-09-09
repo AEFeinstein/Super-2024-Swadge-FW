@@ -27,6 +27,7 @@
 #include "macros.h"
 #include "trigonometry.h"
 
+#include "hdw-esp-now.h"
 #include "mainMenu.h"
 
 // Make it so we don't need to include any other C files in our build.
@@ -307,6 +308,9 @@ void taskYIELD(void)
     nanosleep(&tSleep, &tRemaining);
 
     doExtPreFrameCb(++frameNum);
+
+    // If the mode isn't set to IMMEDIATE, this gets called twice. I think we can keep up.
+    checkEspNowRxQueue();
 
     // Below: Support for pausing and unpausing the emulator
     // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
