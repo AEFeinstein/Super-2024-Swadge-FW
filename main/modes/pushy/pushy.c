@@ -153,7 +153,7 @@ static void pushyMainLoop(int64_t elapsedUs)
     }
 
     // If the score has changed, save if the last input was longer ago than our threshold or if the score is a multiple of 100
-    if(pushy->lastSaveScore != pushy->score && (pushy->usSinceLastInput > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000 || pushy->score % 100 == 0))
+    if(pushy->lastSaveScore != pushy->score && (pushy->usSinceLastInput > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000 || pushy->score % SCORE_BTWN_SAVES == 0))
     {
         // Save score to NVS
         writeNvs32(pushyScoreKey, (int32_t) pushy->score);
