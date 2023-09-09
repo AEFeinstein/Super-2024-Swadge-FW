@@ -26,25 +26,30 @@
 // Defines
 //==============================================================================
 
+// clang-format off
+
 #define LOGFIRE false
 
-#define NUM_DIGITS 8
+#define NUM_DIGITS        8
 #define NUM_PUSHY_COLORS 11 // 0-9 and "off"
 
-#define IDLE_SECONDS_UNTIL_SAVE 3
-#define SAVE_AT_MOD 100
+#define IDLE_SECONDS_UNTIL_SAVE   3
+#define SAVE_AT_MOD             100
 
 #define SHUFFLE_AT_MOD 1000
 
-#define HUE_STEP (255 / (NUM_PUSHY_COLORS - 2))       // reserve a color for white, one for "off"/grey, and evenly spread the remaining colors across the rainbow
-#define RAINBOW_HUE_STEP (255 / NUM_PUSHY_COLORS - 1) // reserve a color for "off"/grey, and evenly spread the remaining colors across the rainbow
-#define SATURATION 255
-#define BRIGHTNESS 255
+// reserve a color for white, one for "off"/grey, and evenly spread the remaining colors across the rainbow
+#define HUE_STEP         (255 / (NUM_PUSHY_COLORS - 2))
+// reserve a color for "off"/grey, and evenly spread the remaining colors across the rainbow
+#define RAINBOW_HUE_STEP (255 / (NUM_PUSHY_COLORS - 1))
+#define SATURATION        255
+#define BRIGHTNESS        255
+// clang-format on
 
 #define EFFECT_MAX 200
 
 #define FIRE_TIMER_MS 100
-#define FIREWINDOWS 100
+#define FIREWINDOWS   100
 
 //==============================================================================
 // Enums
