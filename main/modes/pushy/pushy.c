@@ -121,10 +121,10 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
  * Lengths are not explicitly given so the compiler can figure it out.
  */
 
-static const char pushyName[] = "Pushy Kawaii Go";
+static const char pushyName[]       = "Pushy Kawaii Go";
 static const char pushyCounterKey[] = "pk_counter";
-static const char rainbowStr[] = "69";
-static const char weedStr[] = "420";
+static const char rainbowStr[]      = "69";
+static const char weedStr[]         = "420";
 
 //==============================================================================
 // Variables
@@ -171,42 +171,42 @@ static void pushyEnterMode(void)
     // Initialize string for "unlit" seven-segment displays
     memset(pushy->eights, '8', NUM_DIGITS);
     pushy->eights[NUM_DIGITS] = 0;
-    pushy->eightsWidth = textWidth(&pushy->sevenSegment, pushy->eights);
+    pushy->eightsWidth        = textWidth(&pushy->sevenSegment, pushy->eights);
 
     // Load score from NVS
-    readNvs32(pushyCounterKey, (int32_t*) &pushy->counter);
+    readNvs32(pushyCounterKey, (int32_t*)&pushy->counter);
 
     // Initialize fire variables
     pushy->fireWindowStartUs = esp_timer_get_time();
 
     // Initialize weed and rainbow effect variables
     pushy->rainbowTimer = EFFECT_MAX;
-    pushy->weedTimer = EFFECT_MAX;
+    pushy->weedTimer    = EFFECT_MAX;
 
     // Initialize default color values
     // clang-format off
-    pushy->colors[0] =  paletteHsvToHex(           0,          0, BRIGHTNESS); // white
-    pushy->colors[1] =  paletteHsvToHex(HUE_STEP * 0, SATURATION, BRIGHTNESS); // red
-    pushy->colors[2] =  paletteHsvToHex(HUE_STEP * 1, SATURATION, BRIGHTNESS); // orange
-    pushy->colors[3] =  paletteHsvToHex(HUE_STEP * 2, SATURATION, BRIGHTNESS); // yellow
-    pushy->colors[4] =  paletteHsvToHex(HUE_STEP * 3, SATURATION, BRIGHTNESS); // lime green
-    pushy->colors[5] =  paletteHsvToHex(HUE_STEP * 4, SATURATION, BRIGHTNESS); // green
-    pushy->colors[6] =  paletteHsvToHex(HUE_STEP * 5, SATURATION, BRIGHTNESS); // aqua-ish
-    pushy->colors[7] =  c025; //paletteHsvToHex(HUE_STEP * 6, SATURATION, BRIGHTNESS); // blue
-    pushy->colors[8] =  paletteHsvToHex(HUE_STEP * 7, SATURATION, BRIGHTNESS); // purpley
-    pushy->colors[9] =  paletteHsvToHex(HUE_STEP * 8, SATURATION, BRIGHTNESS); // pinkish
+    pushy->colors[0]  = paletteHsvToHex(           0,          0, BRIGHTNESS); // white
+    pushy->colors[1]  = paletteHsvToHex(HUE_STEP * 0, SATURATION, BRIGHTNESS); // red
+    pushy->colors[2]  = paletteHsvToHex(HUE_STEP * 1, SATURATION, BRIGHTNESS); // orange
+    pushy->colors[3]  = paletteHsvToHex(HUE_STEP * 2, SATURATION, BRIGHTNESS); // yellow
+    pushy->colors[4]  = paletteHsvToHex(HUE_STEP * 3, SATURATION, BRIGHTNESS); // lime green
+    pushy->colors[5]  = paletteHsvToHex(HUE_STEP * 4, SATURATION, BRIGHTNESS); // green
+    pushy->colors[6]  = paletteHsvToHex(HUE_STEP * 5, SATURATION, BRIGHTNESS); // aqua-ish
+    pushy->colors[7]  = c025; //paletteHsvToHex(HUE_STEP * 6, SATURATION, BRIGHTNESS); // blue
+    pushy->colors[8]  = paletteHsvToHex(HUE_STEP * 7, SATURATION, BRIGHTNESS); // purpley
+    pushy->colors[9]  = paletteHsvToHex(HUE_STEP * 8, SATURATION, BRIGHTNESS); // pinkish
     pushy->colors[10] = paletteHsvToHex(0, 0, 55);                             // grey
 
-    pushy->rainbowHues[0] =  RAINBOW_HUE_STEP *  0;
-    pushy->rainbowHues[1] =  RAINBOW_HUE_STEP *  1;
-    pushy->rainbowHues[2] =  RAINBOW_HUE_STEP *  2;
-    pushy->rainbowHues[3] =  RAINBOW_HUE_STEP *  3;
-    pushy->rainbowHues[4] =  RAINBOW_HUE_STEP *  4;
-    pushy->rainbowHues[5] =  RAINBOW_HUE_STEP *  5;
-    pushy->rainbowHues[6] =  RAINBOW_HUE_STEP *  6;
-    pushy->rainbowHues[7] =  RAINBOW_HUE_STEP *  7;
-    pushy->rainbowHues[8] =  RAINBOW_HUE_STEP *  8;
-    pushy->rainbowHues[9] =  RAINBOW_HUE_STEP *  9;
+    pushy->rainbowHues[0]  = RAINBOW_HUE_STEP *  0;
+    pushy->rainbowHues[1]  = RAINBOW_HUE_STEP *  1;
+    pushy->rainbowHues[2]  = RAINBOW_HUE_STEP *  2;
+    pushy->rainbowHues[3]  = RAINBOW_HUE_STEP *  3;
+    pushy->rainbowHues[4]  = RAINBOW_HUE_STEP *  4;
+    pushy->rainbowHues[5]  = RAINBOW_HUE_STEP *  5;
+    pushy->rainbowHues[6]  = RAINBOW_HUE_STEP *  6;
+    pushy->rainbowHues[7]  = RAINBOW_HUE_STEP *  7;
+    pushy->rainbowHues[8]  = RAINBOW_HUE_STEP *  8;
+    pushy->rainbowHues[9]  = RAINBOW_HUE_STEP *  9;
     pushy->rainbowHues[10] = RAINBOW_HUE_STEP * 10; // never actually used, as this is redirected to pushy->colors[10]
     // clang-format on
 
@@ -219,9 +219,9 @@ static void pushyEnterMode(void)
 static void pushyExitMode(void)
 {
     // Save score to NVS
-    if(pushy->lastSaveCounter != pushy->counter)
+    if (pushy->lastSaveCounter != pushy->counter)
     {
-        writeNvs32(pushyCounterKey, (int32_t) pushy->counter);
+        writeNvs32(pushyCounterKey, (int32_t)pushy->counter);
     }
 
     // Free the font
@@ -243,18 +243,19 @@ static void pushyMainLoop(int64_t elapsedUs)
 
     readButton();
 
-    // If the score has changed, save if the last input was longer ago than our threshold or if the score is a multiple of 100
-    if(pushy->lastSaveCounter != pushy->counter && pushy->buttonPushedUs > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000)
+    // If score has changed, save if last input was longer ago than our threshold or if score is a multiple of 100
+    if (pushy->lastSaveCounter != pushy->counter && pushy->buttonPushedUs > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000)
     {
         saveMemory();
     }
 
     // Draw "unlit" seven-segment displays
-    drawText(&pushy->sevenSegment, pushy->colors[NUM_PUSHY_COLORS - 1], pushy->eights, (TFT_WIDTH - pushy->eightsWidth) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
+    drawText(&pushy->sevenSegment, pushy->colors[NUM_PUSHY_COLORS - 1], pushy->eights,
+             (TFT_WIDTH - pushy->eightsWidth) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
 
     // Draw "lit" segments
     char counterStr[NUM_DIGITS + 1];
-    snprintf(counterStr, NUM_DIGITS + 1, "%*"PRIu32, NUM_DIGITS, pushy->counter);
+    snprintf(counterStr, NUM_DIGITS + 1, "%*" PRIu32, NUM_DIGITS, pushy->counter);
 
     updateEffects(counterStr);
     updateFire();
@@ -295,7 +296,7 @@ static void pushyBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
 // Save score to NVS
 static void saveMemory(void)
 {
-    writeNvs32(pushyCounterKey, (int32_t) pushy->counter);
+    writeNvs32(pushyCounterKey, (int32_t)pushy->counter);
     pushy->lastSaveCounter = pushy->counter;
 }
 
@@ -304,11 +305,11 @@ static void shuffleColors(void)
     for (uint8_t i = 0; i < NUM_PUSHY_COLORS - 1; i++)
     {
         uint8_t n = esp_random() % (NUM_PUSHY_COLORS - 1);
-        // printf("gonna swap the next two colors: %"PRIu8", %"PRIu8"\n", i, n);
-        
+        // printf("gonna swap the next two colors: %" PRIu8 ", %" PRIu8 "\n", i, n);
+
         paletteColor_t temp = pushy->colors[n];
-        pushy->colors[n] = pushy->colors[i];
-        pushy->colors[i] = temp;
+        pushy->colors[n]    = pushy->colors[i];
+        pushy->colors[i]    = temp;
     }
 }
 
@@ -326,11 +327,11 @@ static void readButton(void)
             pushy->counter++;
             pushy->fireCounter++;
             pushy->buttonPushedUs = 0;
-            if(pushy->counter % SAVE_AT_MOD == 0)
+            if (pushy->counter % SAVE_AT_MOD == 0)
             {
                 saveMemory();
             }
-            if(pushy->counter % SHUFFLE_AT_MOD == 0)
+            if (pushy->counter % SHUFFLE_AT_MOD == 0)
             {
                 shuffleColors();
             }
@@ -341,7 +342,7 @@ static void readButton(void)
 static void displayCounter(char const* counterStr)
 {
     // printf("Displaying counter\n");
-    
+
     for (unsigned int i = 0; i < NUM_DIGITS; i++)
     {
         // As i increases, we move from least-significant digit to most-significant digit
@@ -356,9 +357,9 @@ static void displayCounter(char const* counterStr)
 static void checkSubStr(char const* counterStr, char const* const subStr, bool digitBitmap[NUM_DIGITS], int64_t* timer)
 {
     memset(digitBitmap, false, NUM_DIGITS);
-    
+
     char const* subStrInCounterStr = strstr(counterStr, subStr);
-    if(subStrInCounterStr == NULL)
+    if (subStrInCounterStr == NULL)
     {
         *timer = EFFECT_MAX;
         return;
@@ -419,9 +420,9 @@ static uint32_t getFireCount(void)
 
     for (uint8_t i = 0; i < FIREWINDOWS; i++)
     {
-    printf("%"PRIu32" ", pushy->allFireCounts[i]);
+        printf("%" PRIu32 " ", pushy->allFireCounts[i]);
     }
-    printf("\n%"PRIu32"\n", totalFire);
+    printf("\n%" PRIu32 "\n", totalFire);
 #endif
 
     return totalFire;
@@ -460,34 +461,35 @@ static void updateFire(void)
     if (currentUs - pushy->fireWindowStartUs > FIRE_TIMER_MS * 1000) // defines how long between checks of the windows
     {
         pushy->allFireCounts[pushy->fireWindowCount] = pushy->fireCounter; // how many presses in the current window
-        pushy->fireCounter = 0;
-        pushy->fireWindowCount = (pushy->fireWindowCount + 1) % FIREWINDOWS; // this rotates us through the array
+        pushy->fireCounter                           = 0;
+        pushy->fireWindowCount   = (pushy->fireWindowCount + 1) % FIREWINDOWS; // this rotates us through the array
         pushy->fireWindowStartUs = currentUs;
-        // printf("Fire count: %"PRIu32"\n", getFireCount());
+        // printf("Fire count: %" PRIu32 "\n", getFireCount());
     }
 }
 
 void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSignificant)
 {
     // printf("showing a digit\n");
-    
+
     // Convert the number to a string
     paletteColor_t color;
     char numberAsStr[2];
-    snprintf(numberAsStr, 2, "%1"PRIu8, number);
+    snprintf(numberAsStr, 2, "%1" PRIu8, number);
 
     // Apply weed and rainbow effects, or if no effects, get the current color for this digit
     if (pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
     {
-        color = paletteHsvToHex((int) pushy->weedHue, SATURATION, BRIGHTNESS);
-        // printf("weed digit at %"PRIu8"\n", digitIndexFromLeastSignificant);
-        // printf("weed timer is %"PRIi64"\n", pushy->weedTimer);
+        color = paletteHsvToHex((int)pushy->weedHue, SATURATION, BRIGHTNESS);
+        // printf("weed digit at %" PRIu8 "\n", digitIndexFromLeastSignificant);
+        // printf("weed timer is %" PRIi64 "\n", pushy->weedTimer);
     }
-    else if (pushy->rainbowDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant] && colorIndex != NUM_PUSHY_COLORS - 1)
+    else if (pushy->rainbowDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant]
+             && colorIndex != NUM_PUSHY_COLORS - 1)
     {
         color = paletteHsvToHex(pushy->rainbowHues[0], SATURATION, BRIGHTNESS);
-        // printf("rainbow digit at %"PRIu8"\n", digitIndexFromLeastSignificant);
-        // printf("rainbow timer is %"PRIi64"\n", pushy->rainbowTimer);
+        // printf("rainbow digit at %" PRIu8 "\n", digitIndexFromLeastSignificant);
+        // printf("rainbow timer is %" PRIi64 "\n", pushy->rainbowTimer);
     }
     else
     {
@@ -497,6 +499,7 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
     // Draw the digit to the screen
     uint16_t digitWidth = textWidth(&pushy->sevenSegment, "8");
     drawText(&pushy->sevenSegment, color, numberAsStr,
-        (TFT_WIDTH - pushy->eightsWidth) / 2 + ((digitWidth + 1) * (NUM_DIGITS - 1 - digitIndexFromLeastSignificant)),
-        (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
+             (TFT_WIDTH - pushy->eightsWidth) / 2
+                 + ((digitWidth + 1) * (NUM_DIGITS - 1 - digitIndexFromLeastSignificant)),
+             (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
 }
