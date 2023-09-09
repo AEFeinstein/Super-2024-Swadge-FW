@@ -18,9 +18,9 @@
     #include <fcntl.h>
 #endif
 
- #include <unistd.h>
- #include <string.h>
- #include <errno.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
 
 #include "hdw-esp-now.h"
 #include "esp_wifi.h"
@@ -31,8 +31,8 @@
 // Defines
 //==============================================================================
 
-#define ESP_NOW_PORT 32888
-#define MAXRECVSTRING 1024  // Longest string to receive
+#define ESP_NOW_PORT  32888
+#define MAXRECVSTRING 1024 // Longest string to receive
 
 //==============================================================================
 // Variables
@@ -70,7 +70,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
 #if defined(USING_WINDOWS)
     // Initialize Winsock
     WSADATA wsaData;
-    if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0)
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
     {
         ESP_LOGE("WIFI", "WSAStartup failed");
         return ESP_ERR_WIFI_IF;
@@ -86,8 +86,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
 
     // Set socket to allow broadcast
     int broadcastPermission = 1;
-    if (setsockopt(socketFd, SOL_SOCKET, SO_BROADCAST, (void *) &broadcastPermission,
-                   sizeof(broadcastPermission)) < 0)
+    if (setsockopt(socketFd, SOL_SOCKET, SO_BROADCAST, (void*)&broadcastPermission, sizeof(broadcastPermission)) < 0)
     {
         ESP_LOGE("WIFI", "setsockopt() failed");
         return ESP_ERR_WIFI_IF;
@@ -95,7 +94,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
 
     // Allow multiple sockets to bind to the same port
     int enable = 1;
-    if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (void *) &enable, sizeof(int)) < 0)
+    if (setsockopt(socketFd, SOL_SOCKET, SO_REUSEADDR, (void*)&enable, sizeof(int)) < 0)
     {
         ESP_LOGE("WIFI", "setsockopt() failed");
         return ESP_ERR_WIFI_IF;
@@ -116,24 +115,24 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     }
 #else
     int optval_enable = 1;
-    setsockopt(socketFd, SOL_SOCKET, O_NONBLOCK, (char *)&optval_enable, sizeof(optval_enable));
+    setsockopt(socketFd, SOL_SOCKET, O_NONBLOCK, (char*)&optval_enable, sizeof(optval_enable));
 #endif
 
     // Set nonblocking timeout
     struct timeval read_timeout;
-    read_timeout.tv_sec = 0;
+    read_timeout.tv_sec  = 0;
     read_timeout.tv_usec = 10;
-    setsockopt(socketFd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&read_timeout, sizeof(read_timeout));
+    setsockopt(socketFd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&read_timeout, sizeof(read_timeout));
 
     // Construct bind structure
-    struct sockaddr_in broadcastAddr;                  // Broadcast Address
-    memset(&broadcastAddr, 0, sizeof(broadcastAddr));  // Zero out structure
-    broadcastAddr.sin_family = AF_INET;                // Internet address family
-    broadcastAddr.sin_addr.s_addr = htonl(INADDR_ANY); // Any incoming interface
-    broadcastAddr.sin_port = htons(ESP_NOW_PORT);      // Broadcast port
+    struct sockaddr_in broadcastAddr;                    // Broadcast Address
+    memset(&broadcastAddr, 0, sizeof(broadcastAddr));    // Zero out structure
+    broadcastAddr.sin_family      = AF_INET;             // Internet address family
+    broadcastAddr.sin_addr.s_addr = htonl(INADDR_ANY);   // Any incoming interface
+    broadcastAddr.sin_port        = htons(ESP_NOW_PORT); // Broadcast port
 
     // Bind to the broadcast port
-    if (bind(socketFd, (struct sockaddr *) &broadcastAddr, sizeof(broadcastAddr)) < 0)
+    if (bind(socketFd, (struct sockaddr*)&broadcastAddr, sizeof(broadcastAddr)) < 0)
     {
         ESP_LOGE("WIFI", "bind() failed");
         return ESP_ERR_WIFI_IF;
@@ -167,35 +166,31 @@ void espNowUseSerial(bool crossoverPins)
  */
 void checkEspNowRxQueue(void)
 {
-    char recvString[MAXRECVSTRING+1]; // Buffer for received string
-    int recvStringLen;                // Length of received string
+    char recvString[MAXRECVSTRING + 1]; // Buffer for received string
+    int recvStringLen;                  // Length of received string
 
     // While we've received a packet
     while ((recvStringLen = recvfrom(socketFd, recvString, MAXRECVSTRING, 0, NULL, 0)) > 0)
     {
         // If the packet matches the ESP_NOW format
         uint8_t recvMac[6] = {0};
-        if(6 == sscanf(recvString, "ESP_NOW-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX-",
-                       &recvMac[0],
-                       &recvMac[1],
-                       &recvMac[2],
-                       &recvMac[3],
-                       &recvMac[4],
-                       &recvMac[5]))
+        if (6
+            == sscanf(recvString, "ESP_NOW-%02hhX%02hhX%02hhX%02hhX%02hhX%02hhX-", &recvMac[0], &recvMac[1],
+                      &recvMac[2], &recvMac[3], &recvMac[4], &recvMac[5]))
         {
             // Make sure the MAC differs from our own
             uint8_t ourMac[6] = {0};
             esp_wifi_get_mac(WIFI_IF_STA, ourMac);
-            if(0 != memcmp(recvMac, ourMac, sizeof(ourMac)))
+            if (0 != memcmp(recvMac, ourMac, sizeof(ourMac)))
             {
                 // Set up the receive info
                 esp_now_recv_info_t espNowInfo = {0};
-                espNowInfo.src_addr = recvMac;
-                espNowInfo.des_addr = ourMac;
+                espNowInfo.src_addr            = recvMac;
+                espNowInfo.des_addr            = ourMac;
 
                 wifi_pkt_rx_ctrl_t packetRxCtrl = {0};
-                packetRxCtrl.rssi = 0x7F;
-                espNowInfo.rx_ctrl = &packetRxCtrl;
+                packetRxCtrl.rssi               = 0x7F;
+                espNowInfo.rx_ctrl              = &packetRxCtrl;
 
                 // If it does, send it to the application through the callback
                 hostEspNowRecvCb(&espNowInfo, (uint8_t*)&recvString[21], recvStringLen - 21, packetRxCtrl.rssi);
@@ -216,16 +211,16 @@ void espNowSend(const char* data, uint8_t dataLen)
     struct sockaddr_in broadcastAddr; // Broadcast address
 
     // Construct local address structure
-    memset(&broadcastAddr, 0, sizeof(broadcastAddr));   // Zero out structure
-    broadcastAddr.sin_family = AF_INET;                 // Internet address family
-    broadcastAddr.sin_addr.s_addr = htonl(INADDR_NONE); // Broadcast IP address  // inet_addr("255.255.255.255");
-    broadcastAddr.sin_port = htons(ESP_NOW_PORT);       // Broadcast port
+    memset(&broadcastAddr, 0, sizeof(broadcastAddr));    // Zero out structure
+    broadcastAddr.sin_family      = AF_INET;             // Internet address family
+    broadcastAddr.sin_addr.s_addr = htonl(INADDR_NONE);  // Broadcast IP address  // inet_addr("255.255.255.255");
+    broadcastAddr.sin_port        = htons(ESP_NOW_PORT); // Broadcast port
 
     // Tack on ESP-NOW header and randomized MAC address
     char espNowPacket[dataLen + 24];
     uint8_t mac[6] = {0};
     esp_wifi_get_mac(WIFI_IF_STA, mac);
-    sprintf(espNowPacket, "ESP_NOW-%02X%02X%02X%02X%02X%02X-", mac[0],mac[1],mac[2],mac[3],mac[4],mac[5]);
+    sprintf(espNowPacket, "ESP_NOW-%02X%02X%02X%02X%02X%02X-", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     int hdrLen = strlen(espNowPacket);
     memcpy(&espNowPacket[hdrLen], data, dataLen);
 
@@ -234,10 +229,12 @@ void espNowSend(const char* data, uint8_t dataLen)
 
     errno = 0;
     // Send the packet
-    int sentLen = sendto(socketFd, espNowPacket, hdrLen + dataLen, 0, (struct sockaddr *)&broadcastAddr, sizeof(broadcastAddr));
+    int sentLen
+        = sendto(socketFd, espNowPacket, hdrLen + dataLen, 0, (struct sockaddr*)&broadcastAddr, sizeof(broadcastAddr));
     if (sentLen != (hdrLen + dataLen))
     {
-        ESP_LOGE("WIFI", "sendto() sent a different number of bytes than expected: %d, not %d", sentLen, hdrLen + dataLen);
+        ESP_LOGE("WIFI", "sendto() sent a different number of bytes than expected: %d, not %d", sentLen,
+                 hdrLen + dataLen);
         if (errno != 0)
         {
             ESP_LOGE("WIFI", "errno was: %d", errno);

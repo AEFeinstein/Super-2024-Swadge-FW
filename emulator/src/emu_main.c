@@ -161,7 +161,6 @@ int main(int argc, char** argv)
     // main menu mode to force ESPNOW to always initialize when the emulator starts
     mainMenuMode.wifiMode = ESP_NOW;
 
-
     // This is the 'main' that gets called when the ESP boots. It does not return
     app_main();
 }
