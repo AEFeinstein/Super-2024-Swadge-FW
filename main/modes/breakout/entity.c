@@ -144,7 +144,7 @@ void updatePlayer(entity_t *self)
 
     self->x += self->xspeed;
 
-    if(self->gameData->frameCount % 15 == 0 && self->spriteIndex < SP_PADDLE_2){
+    if(self->gameData->frameCount % 10 == 0 && self->spriteIndex < SP_PADDLE_2){
         self->spriteIndex++;
     }
 
@@ -170,11 +170,11 @@ void updatePlayerVertical(entity_t *self)
     {
         int32_t ydiff;
 
-        int32_t touchIntoLevel = ((960 - self->gameData->touchY)<< 2) + 128; // play with this value until center touch moves paddle to center
+        int32_t touchIntoLevel = ((960 - self->gameData->touchY)<< 2) + 160; // play with this value until center touch moves paddle to center
 
         //                                    the leftmost coordinate that the originX point of the paddle sprite can occupy
         //                                    |   the rightmost coordinate that the originX point of the paddle sprite can occupy
-        touchIntoLevel = CLAMP(touchIntoLevel,608,3872);
+        touchIntoLevel = CLAMP(touchIntoLevel,608,3488);
         ydiff = self->y - touchIntoLevel;
         ydiff = CLAMP(ydiff, -1024, 1024);
         if (self->y != touchIntoLevel)
@@ -189,7 +189,7 @@ void updatePlayerVertical(entity_t *self)
 
     self->y += self->yspeed;
 
-    if(self->gameData->frameCount % 15 == 0 && self->spriteIndex < SP_PADDLE_VERTICAL_2){
+    if(self->gameData->frameCount % 10 == 0 && self->spriteIndex < SP_PADDLE_VERTICAL_2){
         self->spriteIndex++;
     }
 
@@ -273,7 +273,7 @@ void updateBall(entity_t *self)
                 )
                 {
                     //Launch ball
-                    setVelocity(self, 180 - CLAMP((self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    setVelocity(self, 180 - CLAMP(-(self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
                     self->attachedToEntity = NULL;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -657,7 +657,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_RIGHT:
             if(self->xspeed > 0){
-                setVelocity(self, 180 + (other->y - self->y)/SUBPIXEL_RESOLUTION, 63);
+                setVelocity(self, 180 + (self->y - other->y)/SUBPIXEL_RESOLUTION, 63);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
