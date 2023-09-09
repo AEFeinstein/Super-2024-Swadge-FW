@@ -92,7 +92,7 @@ void initLoadedTextures(ray_t* ray)
 uint8_t loadTexture(ray_t* ray, const char* name, rayMapCellType_t type)
 {
     // Iterate over the loaded textures
-    for (int16_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
+    for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
     {
         // Check if the name is NULL
         if (NULL == ray->loadedTextures[idx].name)
@@ -162,7 +162,7 @@ void freeAllTex(ray_t* ray)
     freeWsg(&ray->guns[LO_ICE]);
     freeWsg(&ray->guns[LO_XRAY]);
 
-    for (int16_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
+    for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
     {
         // Check if the name is NULL
         if (NULL != ray->loadedTextures[idx].name)

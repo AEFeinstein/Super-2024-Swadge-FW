@@ -7,7 +7,7 @@
 #define TEX_WIDTH  64
 #define TEX_HEIGHT 64
 
-void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow);
+void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow);
 void castWalls(ray_t* ray);
 rayObjCommon_t* castSprites(ray_t* ray);
 void drawHud(ray_t* ray);

@@ -49,15 +49,15 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
 
     // Allocate the tiles, 2D array
     map->tiles = (rayMapCell_t**)heap_caps_calloc(map->w, sizeof(rayMapCell_t*), caps);
-    for (uint16_t x = 0; x < map->w; x++)
+    for (uint32_t x = 0; x < map->w; x++)
     {
         map->tiles[x] = (rayMapCell_t*)heap_caps_calloc(map->h, sizeof(rayMapCell_t), caps);
     }
 
     // Read tile data
-    for (uint16_t y = 0; y < map->h; y++)
+    for (uint32_t y = 0; y < map->h; y++)
     {
-        for (uint16_t x = 0; x < map->w; x++)
+        for (uint32_t x = 0; x < map->w; x++)
         {
             // Each tile has a type and object
             map->tiles[x][y].type     = fileData[fileIdx++];
@@ -134,7 +134,7 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
 void freeRayMap(rayMap_t* map)
 {
     // Free each column
-    for (uint16_t x = 0; x < map->w; x++)
+    for (uint32_t x = 0; x < map->w; x++)
     {
         free(map->tiles[x]);
     }

@@ -11,8 +11,8 @@
 //==============================================================================
 
 static bool objectsIntersect(const rayObjCommon_t* obj1, const rayObjCommon_t* obj2);
-static void moveRayBullets(ray_t* ray, int64_t elapsedUs);
-static void moveRayEnemies(ray_t* ray, int64_t elapsedUs);
+static void moveRayBullets(ray_t* ray, int32_t elapsedUs);
+static void moveRayEnemies(ray_t* ray, int32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -63,7 +63,7 @@ void initEnemyTemplates(ray_t* ray)
 void fireShot(ray_t* ray)
 {
     // Iterate over the bullet list, finding a new slot
-    for (uint16_t newIdx = 0; newIdx < MAX_RAY_BULLETS; newIdx++)
+    for (uint32_t newIdx = 0; newIdx < MAX_RAY_BULLETS; newIdx++)
     {
         // If this slot has a negative ID, use it
         if (-1 == ray->bullets[newIdx].c.id)
@@ -110,7 +110,7 @@ void fireShot(ray_t* ray)
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-void moveRayObjects(ray_t* ray, int64_t elapsedUs)
+void moveRayObjects(ray_t* ray, int32_t elapsedUs)
 {
     moveRayBullets(ray, elapsedUs);
     moveRayEnemies(ray, elapsedUs);
@@ -122,10 +122,10 @@ void moveRayObjects(ray_t* ray, int64_t elapsedUs)
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-static void moveRayBullets(ray_t* ray, int64_t elapsedUs)
+static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
 {
     // For each bullet slot
-    for (uint16_t i = 0; i < MAX_RAY_BULLETS; i++)
+    for (uint32_t i = 0; i < MAX_RAY_BULLETS; i++)
     {
         // If a bullet is in the slot
         rayBullet_t* obj = &(ray->bullets[i]);
@@ -178,7 +178,7 @@ static void moveRayBullets(ray_t* ray, int64_t elapsedUs)
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-static void moveRayEnemies(ray_t* ray, int64_t elapsedUs)
+static void moveRayEnemies(ray_t* ray, int32_t elapsedUs)
 {
     // Iterate over the linked list
     node_t* currentNode = ray->enemies.first;

@@ -118,7 +118,7 @@ void rayExitMode(void)
 void rayMainLoop(int64_t elapsedUs)
 {
     // Check all queued button events
-    uint16_t prevBtnState = ray->btnState;
+    uint32_t prevBtnState = ray->btnState;
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
@@ -241,9 +241,9 @@ void rayMainLoop(int64_t elapsedUs)
     {
         ray->doorTimer -= 5000;
 
-        for (int16_t y = 0; y < ray->map.h; y++)
+        for (int32_t y = 0; y < ray->map.h; y++)
         {
-            for (int16_t x = 0; x < ray->map.w; x++)
+            for (int32_t x = 0; x < ray->map.w; x++)
             {
                 if (ray->map.tiles[x][y].doorOpen > 0 && ray->map.tiles[x][y].doorOpen < TO_FX(1))
                 {

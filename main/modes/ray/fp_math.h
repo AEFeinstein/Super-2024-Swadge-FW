@@ -80,7 +80,7 @@ static inline q24_8 FLOOR_FX(q24_8 a)
 
 // static inline int32_t DEC_PART(q24_8 in)
 // {
-//     return (1000 * (int64_t)(ABS(in) & ((1 << FRAC_BITS) - 1))) / (1 << FRAC_BITS);
+//     return (1000 * (int32_t)(ABS(in) & ((1 << FRAC_BITS) - 1))) / (1 << FRAC_BITS);
 // }
 #endif
 

@@ -82,8 +82,8 @@ typedef struct
 
 typedef struct
 {
-    uint16_t w;
-    uint16_t h;
+    uint32_t w;
+    uint32_t h;
     rayMapCell_t** tiles;
     // TODO load rules somewhere
 } rayMap_t;
@@ -159,9 +159,9 @@ typedef struct
     q24_8 wallDistBuffer[TFT_WIDTH];
 
     int32_t bobTimer;
-    int16_t bobCount;
+    int32_t bobCount;
 
-    uint16_t btnState;
+    uint32_t btnState;
 
     int32_t doorTimer;
 

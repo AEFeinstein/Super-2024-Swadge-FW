@@ -53,7 +53,7 @@ const paletteColor_t xrayPaletteSwap[]
 //==============================================================================
 
 static int objDistComparator(const void* obj1, const void* obj2);
-static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX, q24_8 posY, q24_8 rayDirX,
+static bool rayIntersectsDoor(bool side, int32_t mapX, int32_t mapY, q24_8 posX, q24_8 posY, q24_8 rayDirX,
                               q24_8 rayDirY, q24_8 deltaDistX, q24_8 deltaDistY, q24_8 doorOpen);
 
 //==============================================================================
@@ -68,7 +68,7 @@ static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX,
  * @param firstRow The first row to draw
  * @param lastRow The last row to draw
  */
-void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
+void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
 {
     // We'll be drawing pixels, so set this up
     SETUP_FOR_TURBO();
@@ -77,20 +77,20 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
     bool isXray = (LO_XRAY == ray->loadout);
 
     // Track which cell the ceiling or floor is being drawn in
-    uint16_t cellX = 0;
-    uint16_t cellY = 0;
+    uint32_t cellX = 0;
+    uint32_t cellY = 0;
 
     // Track the last cell the ceiling or floor was drawn in to reset textures which it changes
-    uint16_t lastCellX = 0xFFFF;
-    uint16_t lastCellY = 0xFFFF;
+    uint32_t lastCellX = -1;
+    uint32_t lastCellY = -1;
 
     // Set up variables for fixed point texture coordinates
     q16_16 texPosX = 0;
     q16_16 texPosY = 0;
 
     // Set up variables for integer texture indices
-    uint16_t tx = 0;
-    uint16_t ty = 0;
+    uint32_t tx = 0;
+    uint32_t ty = 0;
 
     // Set a pointer for textures later
     paletteColor_t* texture = NULL;
@@ -98,8 +98,8 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
     paletteColor_t* ceilTexture = getTexByType(ray, BG_FLOOR)->px;
 
     // Save these to not resolve pointers later
-    uint16_t mapW = ray->map.w;
-    uint16_t mapH = ray->map.h;
+    uint32_t mapW = ray->map.w;
+    uint32_t mapH = ray->map.h;
 
     // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
     q24_8 rayDirX0 = SUB_FX(ray->dirX, ray->planeX);
@@ -108,13 +108,13 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
     q24_8 rayDirY1 = ADD_FX(ray->dirY, ray->planeY);
 
     // Loop through each horizontal row
-    for (int16_t y = firstRow; y < lastRow; y++)
+    for (int32_t y = firstRow; y < lastRow; y++)
     {
         // Are we casting on the floor or ceiling?
         bool isFloor = y > (TFT_HEIGHT / 2);
 
         // Current y position compared to the center of the screen (the horizon)
-        int16_t p;
+        int32_t p;
         if (isFloor)
         {
             p = (y - (TFT_HEIGHT / 2));
@@ -175,7 +175,7 @@ void castFloorCeiling(ray_t* ray, int16_t firstRow, int16_t lastRow)
         q16_16 texStepY = TEX_HEIGHT * floorStepY;
 
         // Loop through each pixel
-        for (int16_t x = 0; x < TFT_WIDTH; ++x)
+        for (int32_t x = 0; x < TFT_WIDTH; ++x)
         {
             // the cell coord is simply got from the integer parts of floorX and floorY
             cellX = floorX >> Q16_16_FRAC_BITS;
@@ -253,7 +253,7 @@ void castWalls(ray_t* ray)
     bool isXray = (LO_XRAY == ray->loadout);
 
     // For each ray
-    for (int16_t x = 0; x < TFT_WIDTH; x++)
+    for (int32_t x = 0; x < TFT_WIDTH; x++)
     {
         // calculate ray position and direction
         q24_8 cameraX = ((x * TO_FX(2)) / TFT_WIDTH) - TO_FX(1); // x-coordinate in camera space
@@ -261,8 +261,8 @@ void castWalls(ray_t* ray)
         q24_8 rayDirY = ADD_FX(ray->dirY, MUL_FX(ray->planeY, cameraX));
 
         // which box of the map we're in
-        int16_t mapX = FROM_FX(ray->posX);
-        int16_t mapY = FROM_FX(ray->posY);
+        int32_t mapX = FROM_FX(ray->posX);
+        int32_t mapY = FROM_FX(ray->posY);
 
         // length of ray from one x or y-side to next x or y-side
         // these are derived as:
@@ -278,8 +278,8 @@ void castWalls(ray_t* ray)
         q24_8 deltaDistY = (rayDirY == 0) ? INT32_MAX : ABS(DIV_FX(TO_FX(1), rayDirY));
 
         // what direction to step in x or y-direction (either +1 or -1)
-        int8_t stepX = 0;
-        int8_t stepY = 0;
+        int32_t stepX = 0;
+        int32_t stepY = 0;
 
         // length of ray from current position to next x or y-side
         q24_8 sideDistX = 0;
@@ -313,7 +313,7 @@ void castWalls(ray_t* ray)
         bool side = false; // was a NS or a EW wall hit?
 
         q24_8 wallX        = 0;                             // where exactly the wall was hit
-        int16_t lineHeight = 0, drawStart = 0, drawEnd = 0; // the height of the wall strip
+        int32_t lineHeight = 0, drawStart = 0, drawEnd = 0; // the height of the wall strip
         bool xrayOverride = false;                          // Whether or not a wall should be drawn instead of a door
         // perform DDA
         while (false == hit)
@@ -451,7 +451,7 @@ void castWalls(ray_t* ray)
         }
 
         // x coordinate on the texture
-        int8_t texX = FROM_FX(wallX * TEX_WIDTH);
+        int32_t texX = FROM_FX(wallX * TEX_WIDTH);
 
         // Mirror X texture coordinate for certain walls
         if ((false == side && rayDirX < 0) || (true == side && rayDirY > 0))
@@ -490,10 +490,10 @@ void castWalls(ray_t* ray)
         }
 
         // Draw a vertical strip
-        for (int16_t y = drawStart; y < drawEnd; y++)
+        for (int32_t y = drawStart; y < drawEnd; y++)
         {
             // Cast the texture coordinate to integer, and mod it to ensure no out of bounds reads
-            int8_t texY = (texPos >> 24) % TEX_HEIGHT;
+            int32_t texY = (texPos >> 24) % TEX_HEIGHT;
 
             // Increment the texture position for the next iteration
             texPos += step;
@@ -527,7 +527,7 @@ void castWalls(ray_t* ray)
  * @param doorOpen How open the door is, 0 to 1, fixed point decimal
  * @return true if the ray intersects the door, false if it doesn't
  */
-static bool rayIntersectsDoor(bool side, int16_t mapX, int16_t mapY, q24_8 posX, q24_8 posY, q24_8 rayDirX,
+static bool rayIntersectsDoor(bool side, int32_t mapX, int32_t mapY, q24_8 posX, q24_8 posY, q24_8 rayDirX,
                               q24_8 rayDirY, q24_8 deltaDistX, q24_8 deltaDistY, q24_8 doorOpen)
 {
     // Avoid division by zero
@@ -726,8 +726,8 @@ rayObjCommon_t* castSprites(ray_t* ray)
         if (-1 != obj->id)
         {
             // Get WSG dimensions for convenience
-            uint16_t tWidth  = obj->sprite->w;
-            uint16_t tHeight = obj->sprite->h;
+            uint32_t tWidth  = obj->sprite->w;
+            uint32_t tHeight = obj->sprite->h;
 
             // translate sprite position to relative to camera
             q24_8 spriteX = SUB_FX(obj->posX, ray->posX);
@@ -756,11 +756,11 @@ rayObjCommon_t* castSprites(ray_t* ray)
             q24_8 transformX = DIV_FX(SUB_FX(MUL_FX(ray->dirY, spriteX), MUL_FX(ray->dirX, spriteY)), invDetDivisor);
 
             // The center of the sprite in screen space
-            //  The division here takes the number from q24_8 to int16_t
-            int16_t spriteScreenX = (TFT_WIDTH * (transformX + transformY)) / (2 * transformY);
+            //  The division here takes the number from q24_8 to int32_t
+            int32_t spriteScreenX = (TFT_WIDTH * (transformX + transformY)) / (2 * transformY);
 
             // The width of the screen area to draw the sprite into, in pixels
-            int16_t spriteWidth = (tWidth * TO_FX(TFT_HEIGHT)) / (TEX_WIDTH * transformY);
+            int32_t spriteWidth = (tWidth * TO_FX(TFT_HEIGHT)) / (TEX_WIDTH * transformY);
             if (0 == spriteWidth)
             {
                 // If this sprite has zero width, don't draw it
@@ -778,7 +778,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
             q16_16 texX = 0;
 
             // Find the pixel X coordinate where the sprite draw starts. It may be negative
-            int16_t drawStartX = spriteScreenX - (spriteWidth / 2);
+            int32_t drawStartX = spriteScreenX - (spriteWidth / 2);
             // If the sprite would start to draw off-screen
             if (drawStartX < 0)
             {
@@ -788,7 +788,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 drawStartX = 0;
             }
             // Find the pixel X coordinate where the sprite draw ends. It may be off the screen
-            int16_t drawEndX = spriteScreenX + (spriteWidth / 2);
+            int32_t drawEndX = spriteScreenX + (spriteWidth / 2);
             if (drawEndX > TFT_WIDTH)
             {
                 // Always stop drawing at the screen edge
@@ -802,12 +802,12 @@ rayObjCommon_t* castSprites(ray_t* ray)
             }
 
             // Adjust the sprite draw based on the vertical camera height.
-            // Dividing two q24_8 variables gets a int16_t
-            int16_t spritePosZ = ray->posZ / transformY;
+            // Dividing two q24_8 variables gets a int32_t
+            int32_t spritePosZ = ray->posZ / transformY;
 
             // calculate height of the sprite on screen
             // using 'transformY' instead of the real distance prevents fisheye
-            int16_t spriteHeight = TO_FX(TFT_HEIGHT) / transformY;
+            int32_t spriteHeight = TO_FX(TFT_HEIGHT) / transformY;
             if (spriteHeight < 0)
             {
                 spriteHeight = -spriteHeight;
@@ -819,7 +819,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
             q16_16 initialTexY = 0;
 
             // Find the pixel Y coordinate where the sprite draw starts. It may be negative
-            int16_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
+            int32_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
             if (drawStartY < 0)
             {
                 // Advance the initial texture Y coordinate by the difference
@@ -829,7 +829,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
             }
 
             // Find the pixel Y coordinate where the sprite draw ends. It may be off the screen
-            int16_t drawEndY = (spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
+            int32_t drawEndY = (spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
             if (drawEndY > TFT_HEIGHT)
             {
                 // Always stop drawing at the screen edge
@@ -837,7 +837,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
             }
 
             // loop through every vertical stripe of the sprite on screen
-            for (int16_t stripe = drawStartX; stripe < drawEndX; stripe++)
+            for (int32_t stripe = drawStartX; stripe < drawEndX; stripe++)
             {
                 // Check wallDistBuffer to make sure the sprite is on the screen
                 if (transformY < ray->wallDistBuffer[stripe])
@@ -853,7 +853,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
                     q16_16 texY = initialTexY;
 
                     // for every pixel of the current stripe
-                    for (int16_t y = drawStartY; y < drawEndY; y++)
+                    for (int32_t y = drawStartY; y < drawEndY; y++)
                     {
                         // get current color from the texture, draw if not transparent
                         paletteColor_t color = obj->sprite->px[tWidth * (texY >> 16) + (texX >> 16)];
@@ -886,7 +886,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
 void drawHud(ray_t* ray)
 {
     wsg_t* gun      = &ray->guns[ray->loadout];
-    int16_t yOffset = TFT_HEIGHT - gun->h;
+    int32_t yOffset = TFT_HEIGHT - gun->h;
     // If a loadout change is in progress
     if (ray->loadoutChangeTimer)
     {
