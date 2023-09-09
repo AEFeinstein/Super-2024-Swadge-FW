@@ -250,6 +250,8 @@ static void pushyMainLoop(int64_t elapsedUs)
 
     displayCounter(counterStr);
     displayFire();
+
+    setLeds(pushy->boxleds, CONFIG_NUM_LEDS);
 }
 
 /**
