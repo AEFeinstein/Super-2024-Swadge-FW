@@ -37,8 +37,6 @@
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
 
-#define EMU_EXTENSIONS
-
 #include "emu_args.h"
 #include "emu_ext.h"
 #include "emu_main.h"
@@ -120,7 +118,6 @@ int main(int argc, char** argv)
         return 0;
     }
 
-#ifdef EMU_EXTENSIONS
     // Call any init callbacks we may have and pass them the parsed command-line arguments
     // We also determine which extensions are enabled here, which is important for laying out the window properly
     initExtensions(&emulatorArgs);
@@ -130,7 +127,6 @@ int main(int argc, char** argv)
         // One of the extension must have quit due to an error.
         return 0;
     }
-#endif
 
     // First initialize rawdraw
     // Screen-specific configurations
@@ -142,13 +138,23 @@ int main(int argc, char** argv)
     else
     {
         // Get all the pane info to see how much space we need aside from the simulated TFT screen
-        emuPaneMinimum_t paneMins[5] = {0};
-        calculatePaneMinimums(&paneMins);
+        emuPaneMinimum_t paneMins[4] = {0};
+        calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
+        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
+
+        if (emulatorArgs.headless)
+        {
+            // If the window dimensions are negative, the window will still exist but not be displayed.
+            // TODO does this work on all platforms?
+            winW = -winW;
+            winH = -winH;
+        }
 
         // Add the screen size to the minimum pane sizes to get our window size
-        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH)*2 + sidePanesW, (TFT_HEIGHT)*2 + topBottomPanesH);
+        CNFGSetup("Swadge 2024 Simulator", winW, winH);
     }
 
     // We won't call the pre-frame callback for the very first frame
@@ -171,11 +177,9 @@ int main(int argc, char** argv)
  */
 void taskYIELD(void)
 {
-#ifdef EMU_EXTENSIONS
     // Count total frames, just for callback reasons
     static uint64_t frameNum = 0;
     doExtPostFrameCb(frameNum);
-#endif
 
     // Calculate time between calls
     static int64_t tLastCallUs = 0;
@@ -288,10 +292,8 @@ void taskYIELD(void)
         CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
     }
 
-#ifdef EMU_EXTENSIONS
     // After the screen has been fully rendered, call all the render callbacks to render anything else
     doExtRenderCb(window_w, window_h);
-#endif
 
     // Display the image and wait for time to display next frame.
     CNFGSwapBuffers();
@@ -304,9 +306,7 @@ void taskYIELD(void)
     };
     nanosleep(&tSleep, &tRemaining);
 
-#ifdef EMU_EXTENSIONS
     doExtPreFrameCb(++frameNum);
-#endif
 
     // Below: Support for pausing and unpausing the emulator
     // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
@@ -407,13 +407,11 @@ void HandleKey(int keycode, int bDown)
     }
 #endif
 
-#ifdef EMU_EXTENSIONS
     keycode = doExtKeyCb(keycode, bDown);
     if (keycode < 0)
     {
         return;
     }
-#endif
 
     // Assuming no callbacks canceled the key event earlier, handle it normally
     emulatorHandleKeys(keycode, bDown);
@@ -449,9 +447,7 @@ void HandleButton(int x, int y, int button, int bDown)
     printf("HandleButton(x=%d, y=%d, button=%x, bDown=%s\n", x, y, button, bDown ? "true" : "false");
 #endif
 
-#ifdef EMU_EXTENSIONS
     doExtMouseButtonCb(x, y, button, bDown);
-#endif
 }
 
 /**
@@ -467,9 +463,7 @@ void HandleMotion(int x, int y, int mask)
     printf("HandleMotion(x=%d, y=%d, mask=%x\n", x, y, mask);
 #endif
 
-#ifdef EMU_EXTENSIONS
     doExtMouseMoveCb(x, y, mask);
-#endif
 }
 
 /**
