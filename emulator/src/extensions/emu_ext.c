@@ -484,8 +484,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     winPanes[PANE_RIGHT].paneY = 0;
     if (paneInfos[PANE_RIGHT].count > 0)
     {
-        winPanes[PANE_RIGHT].paneW
-            = winW - (winPanes[PANE_LEFT].paneW + leftDivW + screenPane->paneW + rightDivW);
+        winPanes[PANE_RIGHT].paneW = winW - (winPanes[PANE_LEFT].paneW + leftDivW + screenPane->paneW + rightDivW);
         winPanes[PANE_RIGHT].paneH = winH;
     }
 
@@ -497,7 +496,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
         winPanes[PANE_TOP].paneW = screenPane->paneW;
         // Assign the remaining space to the left and right panes proportionally with their minimum sizes
         winPanes[PANE_TOP].paneH = (winH - bottomDivH - topDivH - screenPane->paneH) * (paneInfos[PANE_TOP].min)
-                                              / (paneInfos[PANE_TOP].min + paneInfos[PANE_BOTTOM].min);
+                                   / (paneInfos[PANE_TOP].min + paneInfos[PANE_BOTTOM].min);
     }
 
     // For the bottom one, flip things around just a bit so we can center the screen properly
@@ -505,8 +504,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     {
         winPanes[PANE_BOTTOM].paneW = screenPane->paneW;
         // Assign whatever space is left to the right pane to account for roundoff
-        winPanes[PANE_BOTTOM].paneH
-            = winH - (winPanes[PANE_TOP].paneH + topDivH + screenPane->paneH + bottomDivH);
+        winPanes[PANE_BOTTOM].paneH = winH - (winPanes[PANE_TOP].paneH + topDivH + screenPane->paneH + bottomDivH);
     }
 
     // The screen will be just below the top pane and its divider, plus half of any extra space not used by the panes
