@@ -319,7 +319,8 @@ CPPCHECK_FLAGS= \
 	--std=c++17 \
 	--suppress=missingIncludeSystem \
 	--output-file=./cppcheck_result.txt \
-	-j12
+	-j12 \
+	-D__linux__=1
 
 CPPCHECK_DIRS= \
 	main \
