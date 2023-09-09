@@ -59,7 +59,7 @@ static void pushyBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
  * Lengths are not explicitly given so the compiler can figure it out.
  */
 
-static const char pushyName[] = "Pushy";
+static const char pushyName[] = "Pushy Kawaii Go";
 
 //==============================================================================
 // Variables
