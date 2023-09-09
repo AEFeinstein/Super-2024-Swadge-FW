@@ -9,7 +9,13 @@
 // Includes
 //==============================================================================
 
-//#include "esp_random.h"
+#include <stdio.h>
+#include <string.h>
+
+#include "color_utils.h"
+#include "esp_random.h"
+#include "esp_timer.h"
+#include "hdw-led.h"
 #include "hdw-nvs.h"
 
 #include "pushy.h"
@@ -18,9 +24,23 @@
 // Defines
 //==============================================================================
 
+#define LOGFIRE false
+
 #define NUM_DIGITS 8
+#define NUM_PUSHY_COLORS 11 // 0-9 and "off"
+
 #define IDLE_SECONDS_UNTIL_SAVE 3
 #define SCORE_BTWN_SAVES 1000
+
+#define HUE_STEP 28
+#define SATURATION 255
+#define BRIGHTNESS 255
+
+#define WEED_MAX 200
+#define RAINBOW_MAX 200
+
+#define FIRE_TIMER_MS 100
+#define FIREWINDOWS 100
 
 //==============================================================================
 // Enums
@@ -34,13 +54,32 @@ typedef struct
 {
     font_t sevenSegment;      ///< The font used in the game
 
-    uint32_t score;           ///< The score for the game
-    uint32_t lastSaveScore;   ///< The last score that was saved
+    char eights[NUM_DIGITS + 1];
+    uint16_t eightsWidth;
+
+    uint32_t counter;           ///< The score for the game
+    uint32_t lastSaveCounter;   ///< The last score that was saved
+
+    uint32_t allFireCounts[FIREWINDOWS];
+    uint32_t fireCounter;
+    uint32_t fireWindowCount;
+    int64_t fireWindowStartUs;
+    int64_t buttonPushedMillis;
 
     int64_t usSinceLastInput; ///< Microseconds since the last save
     uint16_t btnState;        ///< The button state
 
+    int64_t rainbowTimer;
+    int64_t weedTimer;
+    bool rainbowDigits[8];
+    bool weedDigits[8];
+    float weedHue;
     int64_t ledFadeTimer;     ///< The timer to fade LEDs
+
+    paletteColor_t colors[NUM_PUSHY_COLORS];        ///< 
+    uint8_t rainbowHues[NUM_PUSHY_COLORS]; ///< 
+
+    led_t boxleds[CONFIG_NUM_LEDS];
 } pushy_t;
 
 //==============================================================================
@@ -50,10 +89,20 @@ typedef struct
 static void pushyMainLoop(int64_t elapsedUs);
 static void pushyEnterMode(void);
 static void pushyExitMode(void);
-
-static void pushyFadeLeds(int64_t elapsedUs);
-
 static void pushyBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+
+static void saveMemory(void);
+static void shuffleColors(void);
+static void readButton(void);
+static void displayCounter(char const* counterStr);
+static void checkSubStr(char const* counterStr, char const* const subStr, bool digitBitmap[NUM_DIGITS], int64_t* timer);
+static void checkRainbow(char const* counterStr);
+static void checkWeed(char const* counterStr);
+static void updateEffects(char const* counterStr);
+static uint32_t getFireCount(void);
+static void displayFire(void);
+static void updateFire(void);
+void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSignificant);
 
 //==============================================================================
 // Strings
@@ -65,7 +114,9 @@ static void pushyBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
  */
 
 static const char pushyName[] = "Pushy Kawaii Go";
-static const char pushyScoreKey[] = "pk_score";
+static const char pushyCounterKey[] = "pk_counter";
+static const char rainbowStr[] = "69";
+static const char weedStr[] = "420";
 
 //==============================================================================
 // Variables
@@ -109,8 +160,47 @@ static void pushyEnterMode(void)
     // Load a font
     loadFont("seven_segment.font", &pushy->sevenSegment, false);
 
+    // Initialize string for "unlit" seven-segment displays
+    memset(pushy->eights, '8', NUM_DIGITS);
+    pushy->eights[NUM_DIGITS] = 0;
+    pushy->eightsWidth = textWidth(&pushy->sevenSegment, pushy->eights);
+
     // Load score from NVS
-    readNvs32(pushyScoreKey, (int32_t*) &pushy->score);
+    readNvs32(pushyCounterKey, (int32_t*) &pushy->counter);
+
+    // Initialize fire variables
+    pushy->fireWindowStartUs = esp_timer_get_time();
+
+    // Initialize weed and rainbow variables
+    pushy->rainbowTimer = RAINBOW_MAX;
+    pushy->weedTimer = WEED_MAX;
+
+    // Initialize default color values
+    pushy->colors[0] = paletteHsvToHex(0, 0, BRIGHTNESS);               // white
+    pushy->colors[1] = paletteHsvToHex(HUE_STEP * 0, SATURATION, BRIGHTNESS); // red
+    pushy->colors[2] = paletteHsvToHex(HUE_STEP * 1, SATURATION, BRIGHTNESS); // orange
+    pushy->colors[3] = paletteHsvToHex(HUE_STEP * 2, SATURATION, BRIGHTNESS); // yellow
+    pushy->colors[4] = paletteHsvToHex(HUE_STEP * 3, SATURATION, BRIGHTNESS); // lime green
+    pushy->colors[5] = paletteHsvToHex(HUE_STEP * 4, SATURATION, BRIGHTNESS); // green
+    pushy->colors[6] = paletteHsvToHex(HUE_STEP * 5, SATURATION, BRIGHTNESS); // aqua-ish
+    pushy->colors[7] = c025; //paletteHsvToHex(HUE_STEP * 6, SATURATION, BRIGHTNESS); // blue
+    pushy->colors[8] = paletteHsvToHex(HUE_STEP * 7, SATURATION, BRIGHTNESS); // purpley
+    pushy->colors[9] = paletteHsvToHex(HUE_STEP * 8, SATURATION, BRIGHTNESS); // pinkish
+    pushy->colors[10] = paletteHsvToHex(0, 0, 55);                      // grey
+
+    pushy->rainbowHues[0] = 23 * 0;
+    pushy->rainbowHues[1] = 23 * 1;
+    pushy->rainbowHues[2] = 23 * 2;
+    pushy->rainbowHues[3] = 23 * 3;
+    pushy->rainbowHues[4] = 23 * 4;
+    pushy->rainbowHues[5] = 23 * 5;
+    pushy->rainbowHues[6] = 23 * 6;
+    pushy->rainbowHues[7] = 23 * 7;
+    pushy->rainbowHues[8] = 23 * 8;
+    pushy->rainbowHues[9] = 23 * 9;
+    pushy->rainbowHues[10] = 23 * 10;
+
+    shuffleColors();
 }
 
 /**
@@ -119,7 +209,10 @@ static void pushyEnterMode(void)
 static void pushyExitMode(void)
 {
     // Save score to NVS
-    writeNvs32(pushyScoreKey, (int32_t) pushy->score);
+    if(pushy->lastSaveCounter != pushy->counter)
+    {
+        writeNvs32(pushyCounterKey, (int32_t) pushy->counter);
+    }
 
     // Free the font
     freeFont(&pushy->sevenSegment);
@@ -138,57 +231,26 @@ static void pushyMainLoop(int64_t elapsedUs)
 {
     pushy->usSinceLastInput += elapsedUs;
 
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Save the button state
-        pushy->btnState = evt.state;
-
-        // Check if the pause button was pressed
-        if (evt.down && (PB_A == evt.button))
-        {
-            pushy->score++;
-            pushy->usSinceLastInput = 0;
-        }
-    }
+    readButton();
 
     // If the score has changed, save if the last input was longer ago than our threshold or if the score is a multiple of 100
-    if(pushy->lastSaveScore != pushy->score && (pushy->usSinceLastInput > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000 || pushy->score % SCORE_BTWN_SAVES == 0))
+    if(pushy->lastSaveCounter != pushy->counter && pushy->usSinceLastInput > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000)
     {
-        // Save score to NVS
-        writeNvs32(pushyScoreKey, (int32_t) pushy->score);
-        pushy->lastSaveScore = pushy->score;
+        saveMemory();
     }
 
     // Draw "unlit" 7-segment displays
-    char eights[NUM_DIGITS + 1];
-    memset(eights, '8', NUM_DIGITS);
-    eights[NUM_DIGITS] = 0;
-    drawText(&pushy->sevenSegment, c111, eights, (TFT_WIDTH - textWidth(&pushy->sevenSegment, eights)) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
+    drawText(&pushy->sevenSegment, pushy->colors[NUM_PUSHY_COLORS - 1], pushy->eights, (TFT_WIDTH - pushy->eightsWidth) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
 
     // Draw "lit" segments
-    char buf[NUM_DIGITS + 1];
-    snprintf(buf, NUM_DIGITS + 1, "%0*u", NUM_DIGITS, pushy->score);
-    drawText(&pushy->sevenSegment, c555, buf, (TFT_WIDTH - textWidth(&pushy->sevenSegment, buf)) / 2, (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
-}
+    char counterStr[NUM_DIGITS + 1];
+    snprintf(counterStr, NUM_DIGITS + 1, "%*u", NUM_DIGITS, pushy->counter);
 
-/**
- * @brief Fade the LEDs at a consistent rate over time
- *
- * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
- */
-static void pushyFadeLeds(int64_t elapsedUs)
-{
-    // This timer fades out LEDs. The fade is checked every 10ms
-    // The pattern of incrementing a variable by elapsedUs, then decrementing it when it accumulates
-    pushy->ledFadeTimer += elapsedUs;
-    while (pushy->ledFadeTimer >= 10000)
-    {
-        pushy->ledFadeTimer -= 10000;
+    updateEffects(counterStr);
+    updateFire();
 
-        // Fade left LED channels independently
-        // TODO: rotate RGB and rename this function to match this new purpose
-    }
+    displayCounter(counterStr);
+    displayFire();
 }
 
 /**
@@ -213,14 +275,211 @@ static void pushyBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
     {
         for (int16_t xp = x; xp < x + w; xp++)
         {
-            if ((0 == xp % 40) || (0 == yp % 40))
+            TURBO_SET_PIXEL(xp, yp, c000);
+        }
+    }
+}
+
+// Save score to NVS
+static void saveMemory(void)
+{
+    writeNvs32(pushyCounterKey, (int32_t) pushy->counter);
+    pushy->lastSaveCounter = pushy->counter;
+}
+
+static void shuffleColors(void)
+{
+    for (uint8_t i = 0; i < NUM_PUSHY_COLORS - 1; i++)
+    {
+        uint8_t n = esp_random() % (NUM_PUSHY_COLORS - 1);
+        // printf("gonna swap the next two colors: %u, %u\n", i, n);
+        
+        paletteColor_t temp = pushy->colors[n];
+        pushy->colors[n] = pushy->colors[i];
+        pushy->colors[i] = temp;
+    }
+}
+
+static void readButton(void)
+{
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        pushy->btnState = evt.state;
+
+        // Check if the pause button was pressed
+        if (evt.down && (PB_A == evt.button))
+        {
+            pushy->counter++;
+            pushy->fireCounter++;
+            pushy->usSinceLastInput = 0;
+            if(pushy->counter % SCORE_BTWN_SAVES == 0)
             {
-                TURBO_SET_PIXEL(xp, yp, c110);
-            }
-            else
-            {
-                TURBO_SET_PIXEL(xp, yp, c000);
+                shuffleColors();
+                saveMemory();
             }
         }
     }
+}
+
+static void displayCounter(char const* counterStr)
+{
+    // printf("Displaying counter\n");
+    
+    for (unsigned int i = 0; i < NUM_DIGITS; i++)
+    {
+        // As i increases, we move from least-significant digit to most-significant digit
+        if ((counterStr[NUM_DIGITS - 1 - i]) != ' ')
+        {
+            int c = counterStr[NUM_DIGITS - 1 - i] - '0';
+            showDigit(c, c, i);
+        }
+    }
+}
+
+static void checkSubStr(char const* counterStr, char const* const subStr, bool digitBitmap[NUM_DIGITS], int64_t* timer)
+{
+    memset(digitBitmap, false, NUM_DIGITS);
+    
+    char const* subStrInCounterStr = strstr(counterStr, subStr);
+    if(subStrInCounterStr == NULL)
+    {
+        return;
+    }
+
+    uint8_t startDigit = subStrInCounterStr - counterStr;
+    for (uint8_t i = 0; i < strlen(subStr); i++)
+    {
+        digitBitmap[startDigit + i] = true;
+    }
+
+    *timer = 0;
+}
+
+static void checkRainbow(char const* counterStr)
+{
+    checkSubStr(counterStr, rainbowStr, pushy->rainbowDigits, &pushy->rainbowTimer);
+}
+
+static void checkWeed(char const* counterStr)
+{
+    checkSubStr(counterStr, weedStr, pushy->weedDigits, &pushy->weedTimer);
+}
+
+static void updateEffects(char const* counterStr)
+{
+    // printf("Updating effects\n");
+    checkRainbow(counterStr);
+    checkWeed(counterStr);
+
+    if (pushy->rainbowTimer < RAINBOW_MAX)
+    {
+        for (int i = 0; i < NUM_PUSHY_COLORS; i++)
+        {
+            pushy->rainbowHues[i] = (pushy->rainbowHues[i] + 2 % 255);
+        }
+        pushy->rainbowTimer++;
+    }
+
+    if (pushy->weedTimer < WEED_MAX)
+    {
+        pushy->weedHue = 105;
+        // pushy->weedHue -= 0.25;
+        // pushy->weedHue = MAX(weedHue, 24);
+        pushy->weedTimer++;
+    }
+}
+
+static uint32_t getFireCount(void)
+{
+    uint32_t totalFire = 0;
+
+    for (uint8_t i = 0; i < FIREWINDOWS; i++)
+    {
+        totalFire += pushy->allFireCounts[i];
+    }
+
+#if LOGFIRE
+    printf("Fire subs: ");
+
+    for (uint8_t i = 0; i < FIREWINDOWS; i++)
+    {
+    printf("%u ", pushy->allFireCounts[i]);
+    }
+    printf("\n%u\n", totalFire);
+#endif
+
+    return totalFire;
+}
+
+static void displayFire(void)
+{
+    // // printf("Displaying fire\n");
+    // for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    // {
+    //     pushy->boxleds[i] = LedEHSVtoHEXhelper(0, 200, 200);
+    // }
+    // setLeds(pushy->boxleds, CONFIG_NUM_LEDS);
+    // return;
+
+    int count = getFireCount();
+
+    led_t color = LedEHSVtoHEXhelper((uint8_t)(count / 2.5), 255, 250, true);
+
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        if (count > 5)
+        {
+            pushy->boxleds[i] = color;
+        }
+        else
+        {
+            pushy->boxleds[i] = LedEHSVtoHEXhelper(0, 0, 10, true);
+        }
+    }
+}
+
+static void updateFire(void)
+{
+    int64_t currentUs = esp_timer_get_time();
+    if (currentUs - pushy->fireWindowStartUs > FIRE_TIMER_MS * 1000) // defines how long between checks of the windows
+    {
+        pushy->allFireCounts[pushy->fireWindowCount] = pushy->fireCounter; // how many presses in the current window
+        pushy->fireCounter = 0;
+        pushy->fireWindowCount = (pushy->fireWindowCount + 1) % FIREWINDOWS; // this rotates us through the array
+        pushy->fireWindowStartUs = currentUs;
+        // printf("Fire count: %u\n", getFireCount());
+    }
+}
+
+void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSignificant)
+{
+    // printf("showing a digit\n");
+    
+    paletteColor_t color;
+    char numberAsStr[2];
+    snprintf(numberAsStr, 2, "%1u", number);
+
+    if (pushy->weedTimer < WEED_MAX && pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
+    {
+        color = paletteHsvToHex((int) pushy->weedHue, SATURATION, BRIGHTNESS);
+        // printf("weed digit at %u\n", digitIndexFromLeastSignificant);
+        // printf("weed timer is %llu\n", pushy->weedTimer);
+    }
+    else if (pushy->rainbowTimer < RAINBOW_MAX && pushy->rainbowDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant] && colorIndex != NUM_PUSHY_COLORS - 1)
+    {
+        color = paletteHsvToHex(pushy->rainbowHues[0], SATURATION, BRIGHTNESS);
+        // printf("rainbow digit at %u\n", digitIndexFromLeastSignificant);
+        // printf("rainbow timer is %llu\n", pushy->rainbowTimer);
+    }
+    else
+    {
+        color = pushy->colors[colorIndex];
+    }
+
+    uint16_t digitWidth = textWidth(&pushy->sevenSegment, "8");
+    drawText(&pushy->sevenSegment, color, numberAsStr,
+        (TFT_WIDTH - pushy->eightsWidth) / 2 + ((digitWidth + 1) * (NUM_DIGITS - 1 - digitIndexFromLeastSignificant)),
+        (TFT_HEIGHT - pushy->sevenSegment.height) / 2);
 }
