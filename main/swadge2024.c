@@ -281,7 +281,8 @@ void app_main(void)
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
     {
-        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, cSwadgeMode->wifiMode);
+        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX,
+                   cSwadgeMode->wifiMode);
     }
 
     // Init accelerometer
