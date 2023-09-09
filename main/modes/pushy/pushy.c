@@ -10,6 +10,7 @@
 // Includes
 //==============================================================================
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -246,7 +247,7 @@ static void pushyMainLoop(int64_t elapsedUs)
 
     // Draw "lit" segments
     char counterStr[NUM_DIGITS + 1];
-    snprintf(counterStr, NUM_DIGITS + 1, "%*u", NUM_DIGITS, pushy->counter);
+    snprintf(counterStr, NUM_DIGITS + 1, "%*"PRIu32, NUM_DIGITS, pushy->counter);
 
     updateEffects(counterStr);
     updateFire();
@@ -296,7 +297,7 @@ static void shuffleColors(void)
     for (uint8_t i = 0; i < NUM_PUSHY_COLORS - 1; i++)
     {
         uint8_t n = esp_random() % (NUM_PUSHY_COLORS - 1);
-        // printf("gonna swap the next two colors: %u, %u\n", i, n);
+        // printf("gonna swap the next two colors: %"PRIu8", %"PRIu8"\n", i, n);
         
         paletteColor_t temp = pushy->colors[n];
         pushy->colors[n] = pushy->colors[i];
@@ -411,9 +412,9 @@ static uint32_t getFireCount(void)
 
     for (uint8_t i = 0; i < FIREWINDOWS; i++)
     {
-    printf("%u ", pushy->allFireCounts[i]);
+    printf("%"PRIu32" ", pushy->allFireCounts[i]);
     }
-    printf("\n%u\n", totalFire);
+    printf("\n%"PRIu32"\n", totalFire);
 #endif
 
     return totalFire;
@@ -455,7 +456,7 @@ static void updateFire(void)
         pushy->fireCounter = 0;
         pushy->fireWindowCount = (pushy->fireWindowCount + 1) % FIREWINDOWS; // this rotates us through the array
         pushy->fireWindowStartUs = currentUs;
-        // printf("Fire count: %u\n", getFireCount());
+        // printf("Fire count: %"PRIu32"\n", getFireCount());
     }
 }
 
@@ -465,19 +466,19 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
     
     paletteColor_t color;
     char numberAsStr[2];
-    snprintf(numberAsStr, 2, "%1u", number);
+    snprintf(numberAsStr, 2, "%1"PRIu8, number);
 
     if (pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
     {
         color = paletteHsvToHex((int) pushy->weedHue, SATURATION, BRIGHTNESS);
-        // printf("weed digit at %u\n", digitIndexFromLeastSignificant);
-        // printf("weed timer is %llu\n", pushy->weedTimer);
+        // printf("weed digit at %"PRIu8"\n", digitIndexFromLeastSignificant);
+        // printf("weed timer is %"PRIi64"\n", pushy->weedTimer);
     }
     else if (pushy->rainbowDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant] && colorIndex != NUM_PUSHY_COLORS - 1)
     {
         color = paletteHsvToHex(pushy->rainbowHues[0], SATURATION, BRIGHTNESS);
-        // printf("rainbow digit at %u\n", digitIndexFromLeastSignificant);
-        // printf("rainbow timer is %llu\n", pushy->rainbowTimer);
+        // printf("rainbow digit at %"PRIu8"\n", digitIndexFromLeastSignificant);
+        // printf("rainbow timer is %"PRIi64"\n", pushy->rainbowTimer);
     }
     else
     {
