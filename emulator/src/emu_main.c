@@ -27,6 +27,9 @@
 #include "macros.h"
 #include "trigonometry.h"
 
+#include "hdw-esp-now.h"
+#include "mainMenu.h"
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
@@ -158,6 +161,12 @@ int main(int argc, char** argv)
     // We won't call the pre-frame callback for the very first frame
     // This is because everything isn't initialized and there would have to be emu-specific code to do so
     // post-initialization So, this is fine, we get one frame of peace before the emulator can start messing with stuff.
+
+    // This is a hack to make sure ESPNOW is always initialized on the emulator.
+    // The real swadge initializes wifi on boot only if the mode requires it,
+    // but the emulator doesn't actually reboot, so instead we just change the mode of the
+    // main menu mode to force ESPNOW to always initialize when the emulator starts
+    mainMenuMode.wifiMode = ESP_NOW;
 
     // This is the 'main' that gets called when the ESP boots. It does not return
     app_main();

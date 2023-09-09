@@ -118,7 +118,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -282,7 +282,8 @@ void app_main(void)
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
     {
-        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
+        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX,
+                   cSwadgeMode->wifiMode);
     }
 
     // Init accelerometer
@@ -348,6 +349,11 @@ void app_main(void)
                 }
                 cSwadgeMode->fnAudioCallback(adcSamples, sampleCnt);
             }
+        }
+
+        if (NO_WIFI != cSwadgeMode->wifiMode)
+        {
+            checkEspNowRxQueue();
         }
 
         // Only draw to the TFT every frameRateUs

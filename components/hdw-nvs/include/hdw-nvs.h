@@ -3,7 +3,7 @@
  * \section nvs_design Design Philosophy
  *
  * The hdw-nvs component is a convenience wrapper for the IDF's <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/storage/nvs_flash.html">Non-volatile
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/storage/nvs_flash.html">Non-volatile
  * Storage Library</a>. Non-volatile storage (NVS) library is designed to store key-value pairs in flash.
  *
  * The goal is to make reading and writing integer and blob values easy and simple for Swadge modes.
