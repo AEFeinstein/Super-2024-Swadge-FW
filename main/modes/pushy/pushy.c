@@ -56,6 +56,7 @@
 
 typedef struct
 {
+    // clang-format off
     font_t sevenSegment;                     ///< The font used in the game
 
     char eights[NUM_DIGITS + 1];             ///< A string of '8's to draw behind the score as "unlit" seven-segment displays
@@ -81,6 +82,7 @@ typedef struct
     uint8_t rainbowHues[NUM_PUSHY_COLORS];   ///< Hues to display on digits that are rainbow
 
     led_t boxleds[CONFIG_NUM_LEDS];
+    // clang-format on
 } pushy_t;
 
 //==============================================================================
@@ -177,29 +179,31 @@ static void pushyEnterMode(void)
     pushy->weedTimer = EFFECT_MAX;
 
     // Initialize default color values
-    pushy->colors[0] = paletteHsvToHex(0, 0, BRIGHTNESS);                     // white
-    pushy->colors[1] = paletteHsvToHex(HUE_STEP * 0, SATURATION, BRIGHTNESS); // red
-    pushy->colors[2] = paletteHsvToHex(HUE_STEP * 1, SATURATION, BRIGHTNESS); // orange
-    pushy->colors[3] = paletteHsvToHex(HUE_STEP * 2, SATURATION, BRIGHTNESS); // yellow
-    pushy->colors[4] = paletteHsvToHex(HUE_STEP * 3, SATURATION, BRIGHTNESS); // lime green
-    pushy->colors[5] = paletteHsvToHex(HUE_STEP * 4, SATURATION, BRIGHTNESS); // green
-    pushy->colors[6] = paletteHsvToHex(HUE_STEP * 5, SATURATION, BRIGHTNESS); // aqua-ish
-    pushy->colors[7] = c025; //paletteHsvToHex(HUE_STEP * 6, SATURATION, BRIGHTNESS); // blue
-    pushy->colors[8] = paletteHsvToHex(HUE_STEP * 7, SATURATION, BRIGHTNESS); // purpley
-    pushy->colors[9] = paletteHsvToHex(HUE_STEP * 8, SATURATION, BRIGHTNESS); // pinkish
-    pushy->colors[10] = paletteHsvToHex(0, 0, 55);                            // grey
+    // clang-format off
+    pushy->colors[0] =  paletteHsvToHex(           0,          0, BRIGHTNESS); // white
+    pushy->colors[1] =  paletteHsvToHex(HUE_STEP * 0, SATURATION, BRIGHTNESS); // red
+    pushy->colors[2] =  paletteHsvToHex(HUE_STEP * 1, SATURATION, BRIGHTNESS); // orange
+    pushy->colors[3] =  paletteHsvToHex(HUE_STEP * 2, SATURATION, BRIGHTNESS); // yellow
+    pushy->colors[4] =  paletteHsvToHex(HUE_STEP * 3, SATURATION, BRIGHTNESS); // lime green
+    pushy->colors[5] =  paletteHsvToHex(HUE_STEP * 4, SATURATION, BRIGHTNESS); // green
+    pushy->colors[6] =  paletteHsvToHex(HUE_STEP * 5, SATURATION, BRIGHTNESS); // aqua-ish
+    pushy->colors[7] =  c025; //paletteHsvToHex(HUE_STEP * 6, SATURATION, BRIGHTNESS); // blue
+    pushy->colors[8] =  paletteHsvToHex(HUE_STEP * 7, SATURATION, BRIGHTNESS); // purpley
+    pushy->colors[9] =  paletteHsvToHex(HUE_STEP * 8, SATURATION, BRIGHTNESS); // pinkish
+    pushy->colors[10] = paletteHsvToHex(0, 0, 55);                             // grey
 
-    pushy->rainbowHues[0] = RAINBOW_HUE_STEP * 0;
-    pushy->rainbowHues[1] = RAINBOW_HUE_STEP * 1;
-    pushy->rainbowHues[2] = RAINBOW_HUE_STEP * 2;
-    pushy->rainbowHues[3] = RAINBOW_HUE_STEP * 3;
-    pushy->rainbowHues[4] = RAINBOW_HUE_STEP * 4;
-    pushy->rainbowHues[5] = RAINBOW_HUE_STEP * 5;
-    pushy->rainbowHues[6] = RAINBOW_HUE_STEP * 6;
-    pushy->rainbowHues[7] = RAINBOW_HUE_STEP * 7;
-    pushy->rainbowHues[8] = RAINBOW_HUE_STEP * 8;
-    pushy->rainbowHues[9] = RAINBOW_HUE_STEP * 9;
+    pushy->rainbowHues[0] =  RAINBOW_HUE_STEP *  0;
+    pushy->rainbowHues[1] =  RAINBOW_HUE_STEP *  1;
+    pushy->rainbowHues[2] =  RAINBOW_HUE_STEP *  2;
+    pushy->rainbowHues[3] =  RAINBOW_HUE_STEP *  3;
+    pushy->rainbowHues[4] =  RAINBOW_HUE_STEP *  4;
+    pushy->rainbowHues[5] =  RAINBOW_HUE_STEP *  5;
+    pushy->rainbowHues[6] =  RAINBOW_HUE_STEP *  6;
+    pushy->rainbowHues[7] =  RAINBOW_HUE_STEP *  7;
+    pushy->rainbowHues[8] =  RAINBOW_HUE_STEP *  8;
+    pushy->rainbowHues[9] =  RAINBOW_HUE_STEP *  9;
     pushy->rainbowHues[10] = RAINBOW_HUE_STEP * 10; // never actually used, as this is redirected to pushy->colors[10]
+    // clang-format on
 
     shuffleColors();
 }
