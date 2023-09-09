@@ -36,7 +36,7 @@ const char* LUM_TAG = "LUM";
 
 swadgeMode_t lumberjackMode = {
     .modeName                 = lumberjackName,
-    .wifiMode                 = ESP_NOW_IMMEDIATE,
+    .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
@@ -54,6 +54,7 @@ lumberjack_t* lumberjack = NULL;
 
 static void lumberjackEnterMode(void)
 {
+    ESP_LOGI(LUM_TAG, "Lumber!");
     // Allocate and clear all memory for the menu mode.
     lumberjack = calloc(1, sizeof(lumberjack_t));
 
@@ -75,16 +76,13 @@ static void lumberjackEnterMode(void)
     bzrStop(); // Stop the buzzer?
 
     // High score stuff?
-
-    // Setup first level
-
-    lumberjack->screen = LUMBERJACK_A;
-    lumberjackStartGameMode(LUMBERJACK_PANIC);
+    // Unlockables ? Save data?
 }
 
 static void lumberjackExitMode(void)
 {
     lumberjackExitGameMode();
+    
     p2pDeinit(&lumberjack->p2p);
     freeFont(&lumberjack->ibm);
     freeFont(&lumberjack->logbook);
@@ -98,7 +96,6 @@ static void lumberjackMainLoop(int64_t elapsedUs)
     {
         case LUMBERJACK_MENU:
         {
-            ESP_LOGI(LUM_TAG, "Menu");
             lumberjackMenuLoop(elapsedUs);
             break;
         }
@@ -133,23 +130,53 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
     // Are we drawing the game here?
 }
 
+
+//==============================================================================
+// ESP_NOW
+//==============================================================================
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
+    ESP_LOGI(LUM_TAG, "Getting: %d", (uint8_t)&data);
+    p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, data, len, rssi);
 }
 
 static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
+    p2pSendCb(&lumberjack->p2p, mac_addr, status);
 }
 
 static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
     // Do anything
+    if (evt == CON_ESTABLISHED)
+    {
+        ESP_LOGI(LUM_TAG, "LumberJack.Net ready!");
+
+        if (GOING_FIRST == p2pGetPlayOrder(p2p))
+        {
+            const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+            p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
+
+        }
+
+    }
+    
+    lumberjack->conStatus = evt;
 }
 
 static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
     // Do anything
+    printf("Received %d %d!", *payload, len);
+}
+
+void lumberjackSendAttack(int number)
+{
+    printf("Sending attack!\n");
+    const uint8_t testMsg[] = {0x13};
+    p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
+        
 }
 
 /**
@@ -162,7 +189,9 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
  */
 static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
+    ESP_LOGI(LUM_TAG, "Yeah sent");
 }
+
 
 static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingVal)
 {

@@ -32,6 +32,7 @@ typedef struct
 
     // The pass throughs
     p2pInfo p2p;
+    connectionEvt_t conStatus;
     lumberjackScreen_t screen;
 
 } lumberjack_t;
@@ -53,7 +54,7 @@ typedef struct
 {
     bool loaded;
     font_t ibm;
-    p2pInfo p2p;
+    lumberjack_t* lumberjackMain;
     menu_t* menu;
     uint16_t btnState; ///<-- The STOLEN! ;)
 

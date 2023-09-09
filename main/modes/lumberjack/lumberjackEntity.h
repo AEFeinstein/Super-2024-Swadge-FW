@@ -11,6 +11,9 @@ typedef struct
 
     bool flying;
 
+    bool attackPressed;
+    bool attackThisFrame;
+
     bool jumping;
     bool jumpPressed;
     bool jumpReady;

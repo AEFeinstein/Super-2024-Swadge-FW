@@ -31,13 +31,15 @@
 static lumberjackTile_t* lumberjackGetTile(int x, int y);
 static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs);
 static bool lumberjackIsCollisionTile(int index);
+static void lumberjackGameMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
 lumberjackVars_t* lumv;
-lumberjackTile_t lumberjackCollisionDebugTiles[32] = {};
+lumberjackTile_t lumberjackCollisionCheckTiles[32] = {};
 
 void lumberjackStartGameMode(lumberjackGameType_t type)
 {
     lumv = calloc(1, sizeof(lumberjackVars_t));
+
     loadFont("ibm_vga8.font", &lumv->ibm, false);
 
     bzrStop(); // Stop the buzzer?
@@ -187,12 +189,12 @@ void lumberjackSetupLevel(int index)
     // snprintf(lumv->localPlayer->name, sizeof(lumv->localPlayer->name), "Player");
     strcpy(lumv->localPlayer->name, " Dennis"); // If you see this... this name means nothing
 
-    for (int i = 0; i < 2; i++)
+    for (int eSpawnIndex = 0; eSpawnIndex < 2; eSpawnIndex++)
     {
-        lumv->enemy[i] = calloc(1, sizeof(lumberjackEntity_t));
-        lumberjackSetupEnemy(lumv->enemy[i], 0);
+        lumv->enemy[eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
+        lumberjackSetupEnemy(lumv->enemy[eSpawnIndex], 0);
 
-        sprintf(lumv->enemy[i]->name, "Enemy %d", i);
+        sprintf(lumv->enemy[eSpawnIndex]->name, "Enemy %d", eSpawnIndex);
     }
 
     const uint8_t level[] = {
@@ -223,13 +225,13 @@ void lumberjackSetupLevel(int index)
         0, 0, 0, 0, 0, 0, 3, 1, 3, 1, 2, 2, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2,
     };
 
-    for (int i = 0; i < ARRAY_SIZE(ani); i++)
+    for (int tileIndex = 0; tileIndex < ARRAY_SIZE(ani); tileIndex++)
     {
-        lumv->anim[i] = ani[i];
+        lumv->anim[tileIndex] = ani[tileIndex];
 
-        lumv->tile[i].x    = i % 18;
-        lumv->tile[i].y    = i / 18;
-        lumv->tile[i].type = level[i];
+        lumv->tile[tileIndex].x    = tileIndex % 18;
+        lumv->tile[tileIndex].y    = tileIndex / 18;
+        lumv->tile[tileIndex].type = level[tileIndex];
     }
 
     ESP_LOGI(LUM_TAG, "LOADED");
@@ -250,6 +252,20 @@ void lumberjackGameLoop(int64_t elapsedUs)
 
 void baseMode(int64_t elapsedUs)
 {
+
+    //Ignore the first frame because everything was loading
+    //Here we might want to do something like say "On first frame loaded do stuff"
+    if (lumv->loaded == false)
+    {
+        lumv->loaded = true;
+
+        ESP_LOGI(LUM_TAG, "Load Time %ld", (long)elapsedUs);
+
+        //If networked, send "Loaded complete!" ?
+
+        return;
+    }
+
     // Update State
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -262,15 +278,22 @@ void baseMode(int64_t elapsedUs)
     // Check Controls
     if (lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_UNSPAWNED)
     {
+        bool attackThisFrame = lumv->localPlayer->attackPressed;
         lumberjackDoControls();
+        
+        if (!attackThisFrame && lumv->localPlayer->attackPressed)
+        {
+            ESP_LOGI(LUM_TAG, "Attack this frame!");
+            lumberjackSendAttack(0);
+        }
     }
 
-    for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+    for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
     {
-        if (lumv->enemy[i] == NULL)
+        if (lumv->enemy[enemyIndex] == NULL)
             continue;
 
-        lumberjackDoEnemyControls(lumv->enemy[i]);
+        lumberjackDoEnemyControls(lumv->enemy[enemyIndex]);
     }
 
     // Clear cruft
@@ -279,15 +302,15 @@ void baseMode(int64_t elapsedUs)
     // Check spawn
     lumberjackSpawnCheck(elapsedUs);
 
-    for (int i = 0; i < ARRAY_SIZE(lumberjackCollisionDebugTiles); i++)
+    for (int colTileIndex = 0; colTileIndex < ARRAY_SIZE(lumberjackCollisionCheckTiles); colTileIndex++)
     {
-        lumberjackCollisionDebugTiles[i].type        = -1;
-        lumberjackCollisionDebugTiles[i].x           = -1;
-        lumberjackCollisionDebugTiles[i].y           = -1;
-        lumberjackCollisionDebugTiles[i].collision   = -1;
-        lumberjackCollisionDebugTiles[i].index       = -1;
-        lumberjackCollisionDebugTiles[i].offset      = 0;
-        lumberjackCollisionDebugTiles[i].offset_time = 0;
+        lumberjackCollisionCheckTiles[colTileIndex].type        = -1;
+        lumberjackCollisionCheckTiles[colTileIndex].x           = -1;
+        lumberjackCollisionCheckTiles[colTileIndex].y           = -1;
+        lumberjackCollisionCheckTiles[colTileIndex].collision   = -1;
+        lumberjackCollisionCheckTiles[colTileIndex].index       = -1;
+        lumberjackCollisionCheckTiles[colTileIndex].offset      = 0;
+        lumberjackCollisionCheckTiles[colTileIndex].offset_time = 0;
     }
 
     if (lumv->localPlayer->onGround && !lumv->localPlayer->jumpReady)
@@ -362,9 +385,9 @@ void baseMode(int64_t elapsedUs)
         lumberjackUpdateEntity(lumv->localPlayer, elapsedUs);
 
         //
-        for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+        for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
         {
-            lumberjackEntity_t* enemy = lumv->enemy[i];
+            lumberjackEntity_t* enemy = lumv->enemy[enemyIndex];
 
             if (enemy == NULL || lumv->localPlayer->state == LUMBERJACK_DEAD)
                 continue;
@@ -417,16 +440,16 @@ void baseMode(int64_t elapsedUs)
 
     // Update animation
     // Enemy Animation
-    for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+    for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
     {
-        if (lumv->enemy[i] == NULL)
+        if (lumv->enemy[enemyIndex] == NULL)
             continue;
 
-        lumv->enemy[i]->timerFrameUpdate += elapsedUs;
-        if (lumv->enemy[i]->timerFrameUpdate > lumv->enemy[i]->animationSpeed)
+        lumv->enemy[enemyIndex]->timerFrameUpdate += elapsedUs;
+        if (lumv->enemy[enemyIndex]->timerFrameUpdate > lumv->enemy[enemyIndex]->animationSpeed)
         {
-            lumv->enemy[i]->currentFrame++;
-            lumv->enemy[i]->timerFrameUpdate = 0; //;
+            lumv->enemy[enemyIndex]->currentFrame++;
+            lumv->enemy[enemyIndex]->timerFrameUpdate = 0; //;
         }
     }
 
@@ -452,11 +475,11 @@ void baseMode(int64_t elapsedUs)
 
     // Draw enemies
 
-    for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+    for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
     {
-        if (lumv->enemy[i] == NULL || lumv->enemy[i]->ready)
+        if (lumv->enemy[enemyIndex] == NULL || lumv->enemy[enemyIndex]->ready)
             continue;
-        lumberjackEntity_t* enemy = lumv->enemy[i];
+        lumberjackEntity_t* enemy = lumv->enemy[enemyIndex];
 
         int eFrame = lumberjackGetEnemyAnimation(enemy);
 
@@ -483,13 +506,7 @@ void baseMode(int64_t elapsedUs)
         // ESP_LOGI(LUM_TAG, "DEAD %d", currentFrame);
     }
 
-    // ESP_LOGI(LUM_TAG, "Err %d %ld %d", lumv->playerSprites[3], elapsedUs, lumv->localPlayer->y - lumv->yOffset);
-
-    // drawRect(lumv->localPlayer->x - 4, lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->x + 32,
-    // lumv->localPlayer->y - lumv->yOffset + 32, c050);
-    // drawWsgSimple(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 4,
-    // lumv->localPlayer->y - lumv->yOffset);
-
+    
     // This is where it breaks. When it tries to play frame 3 or 4 it crashes.
     drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 4,
             lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
@@ -503,7 +520,7 @@ void baseMode(int64_t elapsedUs)
     // Debug
     
     char debug[20] = {0};
-    snprintf(debug, sizeof(debug), "CellX: %d %d %d", lumv->localPlayer->cX, lumv->localPlayer->cY, lumv->localPlayer->cH);
+    snprintf(debug, sizeof(debug), "Debug: %d %d %d", 5, lumv->localPlayer->cY, lumv->localPlayer->cH);
 
     drawText(&lumv->ibm, c000, debug, 16, 16);
 
@@ -516,6 +533,15 @@ void baseMode(int64_t elapsedUs)
     else
     {
         drawText(&lumv->ibm, c000, "A", 16, 32);
+    }
+
+    if (lumv->localPlayer->attackPressed)
+    {
+        drawText(&lumv->ibm, c555, "B", 48, 32);
+    }
+    else
+    {
+        drawText(&lumv->ibm, c000, "B", 48, 32);
     }
 }
 
@@ -530,19 +556,19 @@ void lumberjackSpawnCheck(int64_t elapseUs)
 
         if (lumv->spawnTimer < 0)
         {
-            for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+            for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
             {
-                if (lumv->enemy[i] == NULL)
+                if (lumv->enemy[enemyIndex] == NULL)
                     continue;
 
-                if (lumv->enemy[i]->ready && lumv->enemy[i]->state != LUMBERJACK_DEAD)
+                if (lumv->enemy[enemyIndex]->ready && lumv->enemy[enemyIndex]->state != LUMBERJACK_DEAD)
                 {
                     lumv->spawnSide++;
                     lumv->spawnSide %= 2;
 
                     lumv->spawnTimer = 750;
 
-                    lumberjackRespawnEnemy(lumv->enemy[i], lumv->spawnSide);
+                    lumberjackRespawnEnemy(lumv->enemy[enemyIndex], lumv->spawnSide);
                     spawnReady = false;
                     // break;
                 }
@@ -612,14 +638,14 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
 
     if (entity->active)
     {
-        if (entity->direction > 0)
+        if (entity->direction > 0 && entity->state != LUMBERJACK_DUCK)
         {
             if (entity->onGround)
                 entity->vx += 5;
             else
                 entity->vx += 8;
         }
-        else if (entity->direction < 0)
+        else if (entity->direction < 0 && entity->state != LUMBERJACK_DUCK)
         {
             if (entity->onGround)
                 entity->vx -= 5;
@@ -769,17 +795,17 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
 
 void lumberjackUpdate(int64_t elapseUs)
 {
-    for (int i = 0; i < ARRAY_SIZE(lumv->tile); i++)
+    for (int tileIndex = 0; tileIndex < ARRAY_SIZE(lumv->tile); tileIndex++)
     {
-        if (lumv->tile[i].offset > 0)
+        if (lumv->tile[tileIndex].offset > 0)
         {
-            // ESP_LOGI(LUM_TAG, "Update %d",lumv->tile[i].offset);
+            // ESP_LOGI(LUM_TAG, "Update %d",lumv->tile[tileIndex].offset);
 
-            lumv->tile[i].offset_time -= elapseUs;
-            if (lumv->tile[i].offset_time < 0)
+            lumv->tile[tileIndex].offset_time -= elapseUs;
+            if (lumv->tile[tileIndex].offset_time < 0)
             {
-                lumv->tile[i].offset_time += 2500;
-                lumv->tile[i].offset--;
+                lumv->tile[tileIndex].offset_time += 2500;
+                lumv->tile[tileIndex].offset--;
             }
         }
     }
@@ -867,6 +893,16 @@ void lumberjackDoControls(void)
         lumv->localPlayer->jumpPressed = false;
     }
 
+    // TODO: This is sloppy too Troy
+    if (lumv->btnState & PB_B)
+    {
+        lumv->localPlayer->attackPressed = true;
+    }
+    else
+    {
+        lumv->localPlayer->attackPressed = false;
+    }
+
     if (buttonPressed == false && lumv->localPlayer->active)
     {
         lumv->localPlayer->state = 1; // Do a ton of other checks here
@@ -895,19 +931,19 @@ static lumberjackTile_t* lumberjackGetTile(int x, int y)
         ty = lumv->currentMapHeight;
 
     // int test = -1;
-    for (int i = 0; i < 32; i++)
+    for (int colTileIndex = 0; colTileIndex < 32; colTileIndex++)
     {
-        if (lumberjackCollisionDebugTiles[i].type == -1)
+        if (lumberjackCollisionCheckTiles[colTileIndex].type == -1)
         {
-            if (lumberjackCollisionDebugTiles[i].index == (ty * 18) + tx)
-                return &lumberjackCollisionDebugTiles[i];
+            if (lumberjackCollisionCheckTiles[colTileIndex].index == (ty * 18) + tx)
+                return &lumberjackCollisionCheckTiles[colTileIndex];
 
-            lumberjackCollisionDebugTiles[i].index = (ty * 18) + tx;
-            lumberjackCollisionDebugTiles[i].x     = tx;
-            lumberjackCollisionDebugTiles[i].y     = ty;
-            lumberjackCollisionDebugTiles[i].type  = lumv->tile[(ty * 18) + tx].type;
+            lumberjackCollisionCheckTiles[colTileIndex].index = (ty * 18) + tx;
+            lumberjackCollisionCheckTiles[colTileIndex].x     = tx;
+            lumberjackCollisionCheckTiles[colTileIndex].y     = ty;
+            lumberjackCollisionCheckTiles[colTileIndex].type  = lumv->tile[(ty * 18) + tx].type;
 
-            return &lumberjackCollisionDebugTiles[i];
+            return &lumberjackCollisionCheckTiles[colTileIndex];
         }
         // test = i;
     }
@@ -931,9 +967,9 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
         // TODO put in bump the player
     }
 
-    for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+    for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
     {
-        lumberjackEntity_t* enemy = lumv->enemy[i];
+        lumberjackEntity_t* enemy = lumv->enemy[enemyIndex];
         if (enemy == NULL)
             continue;
 
@@ -975,28 +1011,35 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
                     enemy->state     = LUMBERJACK_BUMPED;
                 }
 
-                //  ESP_LOGI(LUM_TAG, "BUMPED!");
             }
 
-            /**
-            if (tileA != NULL)
-                ESP_LOGI(LUM_TAG, "Tile A %d %d", tileA->index, tile->index);
-
-            if (tileB != NULL)
-                ESP_LOGI(LUM_TAG, "Tile B %d %d", tileB->index, tile->index);
-                */
-        }
-        else
-        {
-            //    ESP_LOGI(LUM_TAG, "Not ground!");
         }
     }
 }
 
+///
+///
+
+/**
+ * @brief TODO use this somewhere
+ *
+ * @param p2p
+ * @param status
+ * @param data
+ * @param len
+ */
+static void lumberjackGameMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
+{
+    ESP_LOGI(LUM_TAG, "Yeah sending!");
+}
+
+
 void lumberjackExitGameMode(void)
 {
-    printf("FREE");
-    p2pDeinit(&lumv->p2p);
+    //Everything crashes if you don't load it first
+    if (lumv == NULL) return;
+
+    
     //** FREE THE SPRITES **//
     // Free the enemies
     for (int i = 0; i < ARRAY_SIZE(lumv->enemySprites); i++)
