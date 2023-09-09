@@ -240,10 +240,9 @@ void espNowSend(const char* data, uint8_t dataLen)
         ESP_LOGE("WIFI", "sendto() sent a different number of bytes than expected: %d, not %d", sentLen, hdrLen + dataLen);
         if (errno != 0)
         {
-            ESP_LOGE("WIFI", "error was: %d", errno);
+            ESP_LOGE("WIFI", "errno was: %d", errno);
         }
 
-        // (const uint8_t* mac_addr, esp_now_send_status_t status)
         hostEspNowSendCb(bcastMac, ESP_NOW_SEND_FAIL);
     }
     else
