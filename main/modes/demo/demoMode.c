@@ -370,6 +370,15 @@ static int16_t demoAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
  */
 static void demoConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
+    if (evt == CON_ESTABLISHED)
+    {
+        if (GOING_FIRST == p2pGetPlayOrder(p2p))
+        {
+            const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+            p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+        }
+    }
+
     dv->conStatus = evt;
 }
 
