@@ -20,7 +20,7 @@
 
 #define NUM_DIGITS 8
 #define IDLE_SECONDS_UNTIL_SAVE 3
-#define SCORE_BTWN_SAVES 100
+#define SCORE_BTWN_SAVES 1000
 
 //==============================================================================
 // Enums
