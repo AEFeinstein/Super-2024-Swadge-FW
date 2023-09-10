@@ -1,7 +1,7 @@
 #ifndef _LUMBERJACK_MODE_H
     #define _LUMBERJACK_MODE_H_
 
-void lumberjackStartGameMode(lumberjackGameType_t type);
+void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex);
 void lumberjackExitGameMode(void);
 void lumberjackSetupLevel(int index);
 void lumberjackDoControls(void);

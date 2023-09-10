@@ -36,7 +36,7 @@ static void lumberjackGameMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const 
 lumberjackVars_t* lumv;
 lumberjackTile_t lumberjackCollisionCheckTiles[32] = {};
 
-void lumberjackStartGameMode(lumberjackGameType_t type)
+void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex)
 {
     lumv = calloc(1, sizeof(lumberjackVars_t));
 
@@ -162,17 +162,17 @@ void lumberjackStartGameMode(lumberjackGameType_t type)
 
     if (lumv->gameType == LUMBERJACK_ATTACK)
     {
-        lumberjackSetupLevel(0);
+        lumberjackSetupLevel(characterIndex);
     }
     else if (lumv->gameType == LUMBERJACK_PANIC)
     {
-        lumberjackSetupLevel(0);
+        lumberjackSetupLevel(characterIndex);
     }
 
     ESP_LOGI(LUM_TAG, "height %d", TFT_HEIGHT);
 }
 
-void lumberjackSetupLevel(int index)
+void lumberjackSetupLevel(int characterIndex)
 {
     //This all to be loaded externally
     lumv->yOffset          = 0;
@@ -183,7 +183,7 @@ void lumberjackSetupLevel(int index)
     lumv->spawnSide        = 0;
 
     lumv->localPlayer = calloc(1, sizeof(lumberjackEntity_t));
-    lumberjackSetupPlayer(lumv->localPlayer, 0);
+    lumberjackSetupPlayer(lumv->localPlayer, characterIndex);
     lumberjackSpawnPlayer(lumv->localPlayer, 94, 0, 0);
 
     // snprintf(lumv->localPlayer->name, sizeof(lumv->localPlayer->name), "Player");
@@ -524,7 +524,7 @@ void baseMode(int64_t elapsedUs)
 
     drawText(&lumv->ibm, c000, debug, 16, 16);
 
-    drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX + lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
+    //drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX + lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
 
     if (lumv->localPlayer->jumpPressed)
     {

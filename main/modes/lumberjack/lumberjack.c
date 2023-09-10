@@ -32,6 +32,11 @@ static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
 static const char lumberjackBack[]   = "Back";
 
+//static const char lumberjackNone[]    = "None";
+static const char lumberjackRedCharacter[]       = "Character: Red";
+static const char lumberjackGreen[]              = "Character: Green";
+static const char lumberjackSpecialCharacter[]   = "Character: Special";
+
 const char* LUM_TAG = "LUM";
 
 swadgeMode_t lumberjackMode = {
@@ -66,6 +71,29 @@ static void lumberjackEnterMode(void)
 
     addSingleItemToMenu(lumberjack->menu, lumberjackPanic);
     addSingleItemToMenu(lumberjack->menu, lumberjackAttack);
+
+    if (true) //Ignore this line
+    {
+        static const char* defaultCharacters[] =
+        {
+            lumberjackRedCharacter,
+            lumberjackGreen
+        };
+
+        addMultiItemToMenu(lumberjack->menu, defaultCharacters, ARRAY_SIZE(defaultCharacters), 0);
+    }
+    else
+    {
+        static const char* defaultCharacterswUnlocks[] =
+        {
+            lumberjackRedCharacter,
+            lumberjackGreen,
+            lumberjackSpecialCharacter
+
+        };
+
+        addMultiItemToMenu(lumberjack->menu, defaultCharacterswUnlocks, ARRAY_SIZE(defaultCharacterswUnlocks), 0);
+    }
 
     lumberjack->screen = LUMBERJACK_MENU;
 
@@ -148,7 +176,7 @@ static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
 
 static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
-    // Do anything
+    // Do anything 
     if (evt == CON_ESTABLISHED)
     {
         ESP_LOGI(LUM_TAG, "LumberJack.Net ready!");
@@ -202,17 +230,50 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         {
             ESP_LOGI(LUM_TAG, "Panic");
             lumberjack->screen = LUMBERJACK_A;
-            lumberjackStartGameMode(LUMBERJACK_PANIC);
+            lumberjackStartGameMode(LUMBERJACK_PANIC, lumberjack->selected);
         }
         else if (label == lumberjackAttack)
         {
             ESP_LOGI(LUM_TAG, "Attack");
             lumberjack->screen = LUMBERJACK_B;
-            lumberjackStartGameMode(LUMBERJACK_ATTACK);
+            lumberjackStartGameMode(LUMBERJACK_ATTACK, lumberjack->selected);
         }
-        else if (label == lumberjackBack)
+        
+        if (label == lumberjackRedCharacter)
+        {
+            lumberjack->selected = 0;
+        }
+        else if (label == lumberjackGreen)
+        {
+            lumberjack->selected = 1;
+        }
+        else if (label == lumberjackSpecialCharacter)
+        {
+            lumberjack->selected = 2;
+        }
+
+
+
+        if (label == lumberjackBack)
         {
             //.switchToSwadgeMode(&mainMenuMode);
+        }
+    }
+    else
+    {
+
+        
+        if (label == lumberjackRedCharacter)
+        {
+            lumberjack->selected = 0;
+        }
+        else if (label == lumberjackGreen)
+        {
+            lumberjack->selected = 1;
+        }
+        else if (label == lumberjackSpecialCharacter)
+        {
+            lumberjack->selected = 2;
         }
     }
 }

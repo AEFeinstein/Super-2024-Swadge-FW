@@ -30,6 +30,9 @@ typedef struct
     font_t ibm;
     font_t logbook;
 
+    uint8_t selected;
+    bool networked;
+
     // The pass throughs
     p2pInfo p2p;
     connectionEvt_t conStatus;
