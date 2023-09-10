@@ -170,7 +170,7 @@ void updatePlayerVertical(entity_t *self)
     {
         int32_t ydiff;
 
-        int32_t touchIntoLevel = ((960 - self->gameData->touchY)<< 2) + 160; // play with this value until center touch moves paddle to center
+        int32_t touchIntoLevel = ((984 - self->gameData->touchY)<< 2) + 128; // play with this value until center touch moves paddle to center
 
         //                                    the leftmost coordinate that the originX point of the paddle sprite can occupy
         //                                    |   the rightmost coordinate that the originX point of the paddle sprite can occupy
