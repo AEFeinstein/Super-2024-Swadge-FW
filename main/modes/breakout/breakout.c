@@ -174,7 +174,7 @@ uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 #define NUM_LEVELS 2
 
 static const leveldef_t leveldef[11] = {
-    {.filename = "starlite.bin",
+    {.filename = "intro.bin",
      .timeLimit = 180},
     {.filename = "rightside.bin",
      .timeLimit = 180},
