@@ -69,6 +69,9 @@ void rayEnterMode(void)
 
     // ray->enemies and ray->scenery are already cleared
 
+    // Initialize texture manager
+    initLoadedTextures(ray);
+
     // Load the map and object data
     loadRayMap("demo.rmh", ray, false);
 
@@ -77,9 +80,6 @@ void rayEnterMode(void)
     ray->posY = TO_FX(ray->posY) + TO_FX_FRAC(1, 2);
     setPlayerAngle(TO_FX(0));
     ray->posZ = TO_FX(0);
-
-    // Initialize texture manager
-    initLoadedTextures(ray);
 
     // Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};

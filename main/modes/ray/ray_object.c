@@ -13,6 +13,8 @@
 static bool objectsIntersect(const rayObjCommon_t* obj1, const rayObjCommon_t* obj2);
 static void moveRayBullets(ray_t* ray, int32_t elapsedUs);
 static void moveRayEnemies(ray_t* ray, int32_t elapsedUs);
+static void moveEnemyRook(rayEnemy_t* enemy, q24_8 pPosX, q24_8 pPosY, int32_t elapsedUs);
+static void animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -51,7 +53,7 @@ void initEnemyTemplates(ray_t* ray)
             ray->eTemplates[eIdx].hurtSprites[frIdx] = loadTexture(ray, buf, EMPTY);
         }
         // Set initial texture
-        ray->eTemplates[eIdx].c.sprite = getTexById(ray, ray->eTemplates[eIdx].walkSprites[0]);
+        ray->eTemplates[eIdx].c.sprite = ray->eTemplates[eIdx].walkSprites[0];
     }
 }
 
@@ -173,6 +175,58 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
 }
 
 /**
+ * @brief TODO doc
+ *
+ * @param enemy
+ * @param elapsedUs
+ */
+static void animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs)
+{
+    enemy->animTimerLimit = 250000;
+    enemy->animTimer += elapsedUs;
+    if (enemy->animTimer >= enemy->animTimerLimit)
+    {
+        // Decrement timer
+        enemy->animTimer -= enemy->animTimerLimit;
+
+        // Move to next frame
+        if (E_WALKING == enemy->state)
+        {
+            // TODO decide when to transition to shooting
+
+            // Walking has double the number of frames and cycles
+            enemy->animTimerFrame = (enemy->animTimerFrame + 1) % NUM_WALK_FRAMES;
+
+            // Pick the sprite accordingly, and mirror the back half
+            enemy->c.sprite         = enemy->walkSprites[enemy->animTimerFrame % NUM_NON_WALK_FRAMES];
+            enemy->c.spriteMirrored = (enemy->animTimerFrame >= NUM_NON_WALK_FRAMES);
+        }
+        else
+        {
+            // Move to the next frame
+            enemy->animTimerFrame++;
+            // If the sequence is over
+            if (enemy->animTimerFrame >= NUM_NON_WALK_FRAMES)
+            {
+                // Return to walking
+                enemy->state = E_WALKING;
+            }
+
+            // Pick the sprite accordingly
+            if (E_SHOOTING == enemy->state)
+            {
+                enemy->c.sprite = enemy->shootSprites[enemy->animTimerFrame];
+                // TODO spawn a bullet on the Nth frame
+            }
+            else // Must be E_HURT
+            {
+                enemy->c.sprite = enemy->hurtSprites[enemy->animTimerFrame];
+            }
+        }
+    }
+}
+
+/**
  * @brief Move all enemies
  *
  * @param ray The entire game state
@@ -188,9 +242,56 @@ static void moveRayEnemies(ray_t* ray, int32_t elapsedUs)
         rayEnemy_t* obj = ((rayEnemy_t*)currentNode->val);
 
         // TODO move enemies
+        moveEnemyRook(obj, ray->posX, ray->posY, elapsedUs);
+        animateEnemy(obj, elapsedUs);
 
         // Iterate to the next node
         currentNode = currentNode->next;
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param enemy
+ * @param pPosX
+ * @param pPosY
+ * @param elapsedUs
+ */
+static void moveEnemyRook(rayEnemy_t* enemy, q24_8 pPosX, q24_8 pPosY, int32_t elapsedUs)
+{
+    q24_8 delX = SUB_FX(pPosX, enemy->c.posX); // positive if the player is to the right
+    q24_8 delY = SUB_FX(pPosY, enemy->c.posY); // positive if the player is above
+
+    q24_8 sqrDist = ADD_FX(MUL_FX(delX, delX), MUL_FX(delY, delY));
+    if (sqrDist > TO_FX(2))
+    {
+        if (ABS(delX) > ABS(delY))
+        {
+            if (delX > 0)
+            {
+                // Move rightward
+                enemy->c.posX += TO_FX_FRAC(1, 12);
+            }
+            else
+            {
+                // Move leftward
+                enemy->c.posX -= TO_FX_FRAC(1, 12);
+            }
+        }
+        else
+        {
+            if (delY > 0)
+            {
+                // Move up
+                enemy->c.posY += TO_FX_FRAC(1, 12);
+            }
+            else
+            {
+                // Move down
+                enemy->c.posY -= TO_FX_FRAC(1, 12);
+            }
+        }
     }
 }
 

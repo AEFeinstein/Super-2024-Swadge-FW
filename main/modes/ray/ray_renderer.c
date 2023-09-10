@@ -801,6 +801,13 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 continue;
             }
 
+            // Mirrored sprites draw backwards
+            if (obj->spriteMirrored)
+            {
+                texXDelta = -texXDelta;
+                texX      = (tWidth << 16) - texX - 1;
+            }
+
             // Adjust the sprite draw based on the vertical camera height.
             // Dividing two q24_8 variables gets a int32_t
             int32_t spritePosZ = ray->posZ / transformY;

@@ -87,9 +87,9 @@ void initLoadedTextures(ray_t* ray)
  * @param ray The ray_t to load a texture into
  * @param wsgName The name of the texture to load
  * @param type The type for this texture
- * @return The index where the texture is stored, can be used with getTexById()
+ * @return The A pointer to the loaded texture
  */
-uint8_t loadTexture(ray_t* ray, const char* name, rayMapCellType_t type)
+wsg_t* loadTexture(ray_t* ray, const char* name, rayMapCellType_t type)
 {
     // Iterate over the loaded textures
     for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
@@ -112,18 +112,18 @@ uint8_t loadTexture(ray_t* ray, const char* name, rayMapCellType_t type)
                 ray->typeToIdxMap[type] = idx;
             }
 
-            // Return the index
-            return idx;
+            // Return the pointer
+            return &ray->loadedTextures[idx].texture;
         }
         else if (0 == strcmp(ray->loadedTextures[idx].name, name))
         {
             // Name matches, so return this loaded texture
-            return idx;
+            return &ray->loadedTextures[idx].texture;
         }
     }
     // Should be impossible to get here
     ESP_LOGE("JSON", "Couldn't load texture");
-    return 0;
+    return NULL;
 }
 
 /**
@@ -136,18 +136,6 @@ uint8_t loadTexture(ray_t* ray, const char* name, rayMapCellType_t type)
 wsg_t* getTexByType(ray_t* ray, rayMapCellType_t type)
 {
     return &ray->loadedTextures[ray->typeToIdxMap[type]].texture;
-}
-
-/**
- * @brief Get a texture by ID
- *
- * @param ray The ray_t to get a texture from
- * @param id The ID to get a texture for
- * @return The texture
- */
-wsg_t* getTexById(ray_t* ray, uint8_t id)
-{
-    return &ray->loadedTextures[id].texture;
 }
 
 /**

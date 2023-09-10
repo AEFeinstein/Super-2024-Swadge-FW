@@ -102,6 +102,7 @@ typedef struct
     q24_8 radius;          ///< The radius of this object
     rayMapCellType_t type; ///< The object's type
     int32_t id;            ///< This object's ID
+    bool spriteMirrored;   ///< Whether or not the sprite should be drawn mirrored
 } rayObjCommon_t;
 
 typedef struct
@@ -111,12 +112,26 @@ typedef struct
     q24_8 velY;       ///< The Y velocity of this bullet
 } rayBullet_t;
 
+typedef enum
+{
+    E_WALKING,
+    E_SHOOTING,
+    E_HURT,
+} rayEnemyState_t;
+
+#define NUM_NON_WALK_FRAMES 4
+#define NUM_WALK_FRAMES     (NUM_NON_WALK_FRAMES * 2)
+
 typedef struct
 {
-    rayObjCommon_t c;        ///< Common object properties
-    uint8_t walkSprites[4];  ///< The walking sprites for this enemy
-    uint8_t shootSprites[4]; ///< The shooting sprites for this enemy
-    uint8_t hurtSprites[4];  ///< The getting shot sprites for this enemy
+    rayObjCommon_t c; ///< Common object properties
+    rayEnemyState_t state;
+    uint32_t animTimer;
+    uint32_t animTimerLimit;
+    uint32_t animTimerFrame;
+    wsg_t* walkSprites[NUM_NON_WALK_FRAMES];  ///< The walking sprites for this enemy
+    wsg_t* shootSprites[NUM_NON_WALK_FRAMES]; ///< The shooting sprites for this enemy
+    wsg_t* hurtSprites[NUM_NON_WALK_FRAMES];  ///< The getting shot sprites for this enemy
     // TODO enemy state and stuff
 } rayEnemy_t;
 
