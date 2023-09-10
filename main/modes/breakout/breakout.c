@@ -1,7 +1,7 @@
 /**
  * @file breakout.c
  * @author J.Vega (JVeg199X)
- * @brief It's breakout.
+ * @brief It's Galactic Breakdown.
  * @date 2023-07-01
  *
  */
@@ -173,11 +173,29 @@ uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 
 #define NUM_LEVELS 2
 
-static const leveldef_t leveldef[2] = {
-    {.filename = "brkLevel1.bin",
+static const leveldef_t leveldef[11] = {
+    {.filename = "starlite.bin",
+     .timeLimit = 180},
+    {.filename = "rightside.bin",
+     .timeLimit = 180},
+    {.filename = "upsidedown.bin",
+     .timeLimit = 180},
+    {.filename = "leftside.bin",
+     .timeLimit = 180},
+    {.filename = "split.bin",
+     .timeLimit = 180},
+    {.filename = "mag01.bin",
+     .timeLimit = 180},
+    {.filename = "mag02.bin",
      .timeLimit = 180},
     {.filename = "brkLvlChar1.bin",
-     .timeLimit = 180}
+     .timeLimit = 180},
+    {.filename = "bombtest.bin",
+     .timeLimit = 180},
+    {.filename = "ponglike.bin",
+     .timeLimit = 180},
+    {.filename = "starlite.bin",
+     .timeLimit = 180},
      };
 
 //==============================================================================
@@ -195,7 +213,7 @@ static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
  * Lengths are not explicitly given so the compiler can figure it out.
  */
 
-static const char breakoutName[] = "Breakout";
+static const char breakoutName[] = "Galactic Breakdown";
 
 static const char breakoutStartGame[] = "Start Game";
 
