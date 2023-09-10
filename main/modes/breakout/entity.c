@@ -315,7 +315,7 @@ void updateBall(entity_t *self)
         }
     }
 
-    if((self->y >> 4) > 240){
+    if(self->y > 3840 || self->x > 4480) {
         self->gameData->changeState = ST_DEAD;
         destroyEntity(self, true);
         bzrPlaySfx(&(self->soundManager->die), BZR_STEREO);

@@ -354,7 +354,7 @@ uint8_t getTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty)
 
     if (/*tx < 0 ||*/ tx >= tilemap->mapWidth)
     {
-        return 1;
+        return 0;
     }
 
     return tilemap->map[ty * tilemap->mapWidth + tx];
