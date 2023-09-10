@@ -12,8 +12,9 @@
 
 #include "hdw-spiffs.h"
 #include "heatshrink_helper.h"
-#include "ray_map_loader.h"
+#include "ray_map.h"
 #include "ray_tex_manager.h"
+#include "ray_renderer.h"
 
 //==============================================================================
 // Functions
@@ -35,8 +36,6 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
 
     // Convenience pointers
     rayMap_t* map = &ray->map;
-    q24_8* startX = &ray->posX;
-    q24_8* startY = &ray->posY;
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;
@@ -73,8 +72,8 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                 if (type == OBJ_ENEMY_START_POINT)
                 {
                     // Save the starting coordinates
-                    *startX = x;
-                    *startY = y;
+                    ray->posX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
+                    ray->posY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
                 }
                 // If it's an object
                 else if ((type & OBJ) == OBJ)
@@ -94,7 +93,7 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                         // Set spatial values
                         newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
                         newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                        newObj->c.radius = DIV_FX(TO_FX(newObj->c.sprite->w), TO_FX(64)); // each cell is 64px
+                        newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
 
                         // Add it to the linked list
                         push(&ray->enemies, newObj);
@@ -112,7 +111,7 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                         // Set spatial values
                         newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
                         newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                        newObj->c.radius = DIV_FX(TO_FX(newObj->c.sprite->w), TO_FX(64)); // each cell is 64px
+                        newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
 
                         // Add it to the linked list
                         push(&ray->scenery, newObj);
@@ -140,4 +139,29 @@ void freeRayMap(rayMap_t* map)
     }
     // Free the pointers
     free(map->tiles);
+}
+
+/**
+ * @brief Check if a cell is currently passable
+ *
+ * @param cell The cell type to check
+ * @return true if the cell can be passed through, false if it cannot
+ */
+bool isPassableCell(rayMapCell_t* cell)
+{
+    if (CELL_IS_TYPE(cell->type, BG | WALL))
+    {
+        // Never pass through walls
+        return false;
+    }
+    else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+    {
+        // Only pass through open doors
+        return (TO_FX(1) == cell->doorOpen);
+    }
+    else
+    {
+        // Always pass through everything else
+        return true;
+    }
 }

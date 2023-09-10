@@ -191,6 +191,8 @@ typedef struct
     wsg_t guns[NUM_LOADOUTS];
 
     rayEnemy_t eTemplates[6]; // Six enemy types
+
+    rayObjCommon_t* targetedObj;
 } ray_t;
 
 extern swadgeMode_t rayMode;

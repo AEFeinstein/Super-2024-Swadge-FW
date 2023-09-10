@@ -27,11 +27,11 @@
 //==============================================================================
 
 /**
- * @brief Allocate memory and preload all textures
+ * @brief Allocate memory and preload all environment textures
  *
- * @param ray The ::ray_t to load textures for
+ * @param ray The ray_t to load textures for
  */
-void initLoadedTextures(ray_t* ray)
+void loadEnvTextures(ray_t* ray)
 {
     // Load HUD textures
     loadWsg("GUN_NORMAL.wsg", &ray->guns[LO_NORMAL], true);
@@ -75,9 +75,6 @@ void initLoadedTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_BULLET_MISSILE);
     LOAD_TEXTURE(ray, OBJ_BULLET_XRAY);
     LOAD_TEXTURE(ray, OBJ_SCENERY_TERMINAL);
-
-    // This loads enemy textures
-    initEnemyTemplates(ray);
 }
 
 /**
@@ -131,7 +128,7 @@ wsg_t* loadTexture(ray_t* ray, const char* name, rayMapCellType_t type)
  *
  * @param ray The ray_t to get a texture from
  * @param type The type to get a texture for
- * @return The texture
+ * @return A pointer to the texture
  */
 wsg_t* getTexByType(ray_t* ray, rayMapCellType_t type)
 {

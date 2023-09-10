@@ -33,6 +33,7 @@ typedef struct
 // Const data
 //==============================================================================
 
+// LUT for a palette swap when in X-Ray loadout mode
 const paletteColor_t xrayPaletteSwap[]
     = {c555, c554, c553, c552, c551, c550, c545, c544, c543, c542, c541, c540, c535,        c534, c533, c532, c531,
        c530, c525, c524, c523, c522, c521, c520, c515, c514, c513, c512, c511, c510,        c505, c504, c503, c502,
@@ -63,6 +64,7 @@ static bool rayIntersectsDoor(bool side, int32_t mapX, int32_t mapY, q24_8 posX,
 /**
  * @brief Draw a section of the floor and ceiling pixels. The floor and ceiling are drawn first. This iterates over the
  * screen top-to-bottom and draws horizontal rows.
+ * This is called from the background draw callback
  *
  * @param ray The entire game state
  * @param firstRow The first row to draw
@@ -138,11 +140,11 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
         q24_8 camZ;
         if (isFloor)
         {
-            camZ = ADD_FX(TO_FX(TFT_HEIGHT / 2), ray->posZ);
+            camZ = ADD_FX(TO_FX_FRAC(TFT_HEIGHT, 2), ray->posZ);
         }
         else
         {
-            camZ = SUB_FX(TO_FX(TFT_HEIGHT / 2), ray->posZ);
+            camZ = SUB_FX(TO_FX_FRAC(TFT_HEIGHT, 2), ray->posZ);
         }
 
         // Horizontal distance from the camera to the floor for the current row.
@@ -241,6 +243,7 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
 /**
  * @brief Draw all the wall pixels. Walls are drawn second. This iterates over the screen left-to-right and draws
  * vertical columns.
+ * This is called from the main loop.
  *
  * @param ray The entire game state
  */
@@ -639,6 +642,7 @@ static int objDistComparator(const void* obj1, const void* obj2)
 /**
  * @brief Draw all the sprites. Sprites are drawn third. This sorts all sprites from furthest away to closest, then
  * draws them on the screen.
+ * This is called from the main loop.
  *
  * @param ray The entire game state
  * @return The closest sprite in the lock zone, i.e. center of the display. This may be NULL if there are no centered
@@ -658,6 +662,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
     objDist_t allObjs[MAX_RAY_BULLETS + ray->scenery.length + ray->enemies.length];
     int32_t allObjsIdx = 0;
 
+    // For convenience
     q24_8 rayPosX = ray->posX;
     q24_8 rayPosY = ray->posY;
 
@@ -887,6 +892,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
 /**
  * @brief Draw the HUD on the display based on the player loadout. This is drawn last.
+ * This is called from the main loop.
  *
  * @param ray The entire game state
  */
@@ -911,4 +917,56 @@ void drawHud(ray_t* ray)
         }
     }
     drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
+}
+
+/**
+ * @brief Run all environment timers, including door openings and head-bob
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
+ */
+void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
+{
+    // Run a timer for head bob
+    ray->bobTimer += elapsedUs;
+    while (ray->bobTimer > 2500)
+    {
+        ray->bobTimer -= 2500;
+
+        // Only bob when walking or finishing a bob cycle
+        if ((ray->btnState & (PB_UP | PB_DOWN)) || (0 != ray->bobCount && 180 != ray->bobCount))
+        {
+            // Step through the bob cycle, which is a sin function
+            ray->bobCount++;
+            if (360 == ray->bobCount)
+            {
+                ray->bobCount = 0;
+            }
+            // Bob the camera. Note that fixed point numbers are << 8, and trig functions are << 10
+            ray->posZ = getSin1024(ray->bobCount) * 4;
+        }
+        else
+        {
+            // Reset the count to always restart on an upward bob
+            ray->bobCount = 0;
+        }
+    }
+
+    // Run a timer to open and close doors
+    ray->doorTimer += elapsedUs;
+    while (ray->doorTimer >= 5000)
+    {
+        ray->doorTimer -= 5000;
+
+        for (int32_t y = 0; y < ray->map.h; y++)
+        {
+            for (int32_t x = 0; x < ray->map.w; x++)
+            {
+                if (ray->map.tiles[x][y].doorOpen > 0 && ray->map.tiles[x][y].doorOpen < TO_FX(1))
+                {
+                    ray->map.tiles[x][y].doorOpen++;
+                }
+            }
+        }
+    }
 }
