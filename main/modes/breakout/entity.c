@@ -645,7 +645,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_LEFT:
             if(self->xspeed < 0){
-                setVelocity(self, 0 + (self->y - other->y)/SUBPIXEL_RESOLUTION, 63);
+                setVelocity(self, 0 + (other->y - self->y)/SUBPIXEL_RESOLUTION, 63);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
