@@ -490,7 +490,7 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
     // Convert the number to a string
     paletteColor_t color;
     char numberAsStr[4];
-    snprintf(numberAsStr, sizeof(numberAsStr), "%01" PRIu8, number);
+    snprintf(numberAsStr, sizeof(numberAsStr), "%1" PRIu8, number);
 
     // Apply weed and rainbow effects, or if no effects, get the current color for this digit
     if (pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])
