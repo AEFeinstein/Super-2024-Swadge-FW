@@ -169,22 +169,16 @@ void updateEntities(entityManager_t * entityManager)
     }
 };
 
-void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer){
+void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer, bool respawn){
     for(uint8_t i=0; i < MAX_ENTITIES; i++)
     {
         entity_t* currentEntity = &(entityManager->entities[i]);
-        
-        destroyEntity(currentEntity, true);
-        //currentEntity->active = false;
-
-    //TODO: respawn warp container blocks
-    /*
-        if(currentEntity->type == ENTITY_WARP){
-            //In destroyEntity, this will overflow to the correct value.
-            currentEntity->type = 128 + TILE_CONTAINER_1;
+        if(!currentEntity->active){
+            continue;
         }
-    */
-   
+        
+        destroyEntity(currentEntity, respawn);
+ 
         if(excludePlayer && currentEntity == entityManager->playerEntity){
             currentEntity->active = true;
         }

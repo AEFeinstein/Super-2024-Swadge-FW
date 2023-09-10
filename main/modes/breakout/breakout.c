@@ -433,7 +433,7 @@ static void breakoutDrawReadyScreen(font_t *logbook, font_t *ibm_vga8, gameData_
 static void breakoutChangeStateGame(breakout_t *self){
     self->gameData.frameCount = 0;
     self->gameData.playerBombsCount = 0;
-    deactivateAllEntities(&(self->entityManager), false);
+    deactivateAllEntities(&(self->entityManager), false, true);
     self->tilemap.executeTileSpawnAll = true;
     self->update = &breakoutGameLoop;
 }
@@ -729,7 +729,8 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             }
         } else if(self->gameData.frameCount % 60 == 0) {
             //Hey look, it's a frame rule!
-            
+            deactivateAllEntities(&(self->entityManager), false, false);
+
             uint16_t levelIndex = breakoutGetLevelIndex(self->gameData.world, self->gameData.level);
             
             if(levelIndex >= NUM_LEVELS - 1){

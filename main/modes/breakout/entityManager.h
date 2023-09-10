@@ -43,7 +43,7 @@ struct entityManager_t
 void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData, soundManager_t * soundManager);
 void loadSprites(entityManager_t * entityManager);
 void updateEntities(entityManager_t * entityManager);
-void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer);
+void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer, bool respawn);
 void drawEntities(entityManager_t * entityManager);
 entity_t * findInactiveEntity(entityManager_t * entityManager);
 
