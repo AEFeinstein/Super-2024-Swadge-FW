@@ -15,10 +15,20 @@
 #include "paint_song.h"
 #include "paint_help.h"
 
+#include "wheel_menu.h"
+
 #include "macros.h"
+
+static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal);
 
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
+
+static const char toolWheelTitleStr[] = "Tool Wheel";
+static const char toolWheelBrushStr[] = "Brush";
+static const char toolWheelColorStr[] = "Color";
+static const char toolWheelSizeStr[] = "Size";
+static const char toolWheelOptionsStr[] = "Options";
 
 static paletteColor_t defaultPalette[] =
 {
@@ -227,12 +237,36 @@ void paintDrawScreenSetup(void)
     bzrStop();
     bzrPlayBgm(&paintBgm, BZR_LEFT);
 
+    // Set up the tool wheel
+    paintState->showToolWheel = false;
+    paintState->toolWheel = initMenu(toolWheelTitleStr, paintToolWheelCb);
+    paintState->toolWheelRenderer = initWheelMenu(&paintState->toolbarFont, 315);
+
+    // Right: Up/Down for Size
+    addSingleItemToMenu(paintState->toolWheel, toolWheelSizeStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->brushSizeWsg, 0);
+
+    // Top: Left/Right for Brush
+    addSingleItemToMenu(paintState->toolWheel, toolWheelBrushStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &brushes[0].iconActive, 1);
+
+    // Left: Up/Down for Color
+    addSingleItemToMenu(paintState->toolWheel, toolWheelColorStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelColorStr, &paintState->smallArrowWsg, 2);
+
+    // Bottom: Options sub-menu (TODO)
+    addSingleItemToMenu(paintState->toolWheel, toolWheelOptionsStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelOptionsStr, &paintState->newfileWsg, 3);
+
     PAINT_LOGI("It's paintin' time! Canvas is %d x %d pixels!", paintState->canvas.w, paintState->canvas.h);
 }
 
 void paintDrawScreenCleanup(void)
 {
     bzrStop();
+
+    deinitWheelMenu(paintState->toolWheelRenderer);
+    deinitMenu(paintState->toolWheel);
 
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
@@ -512,32 +546,41 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
         }
     }
 
-    if (paintState->index & PAINT_ENABLE_BLINK)
+    if (paintState->showToolWheel)
     {
-        if (paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_ON)
-        {
-            paintState->blinkTimer %= BLINK_TIME_ON;
-            paintState->blinkOn = false;
-            paintHidePickPoints();
-        }
-        else if (!paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_OFF)
-        {
-            paintState->blinkTimer %= BLINK_TIME_OFF;
-            paintState->blinkOn = true;
-            paintDrawPickPoints();
-        } else if (paintState->blinkOn)
-        {
-            paintDrawPickPoints();
-        }
-
-        paintState->blinkTimer += elapsedUs;
+        paintClearCanvas(&paintState->canvas, c111);
+        drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
     }
     else
     {
-        paintDrawPickPoints();
+        if (paintState->index & PAINT_ENABLE_BLINK)
+        {
+            if (paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_ON)
+            {
+                paintState->blinkTimer %= BLINK_TIME_ON;
+                paintState->blinkOn = false;
+                paintHidePickPoints();
+            }
+            else if (!paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_OFF)
+            {
+                paintState->blinkTimer %= BLINK_TIME_OFF;
+                paintState->blinkOn = true;
+                paintDrawPickPoints();
+            } else if (paintState->blinkOn)
+            {
+                paintDrawPickPoints();
+            }
+
+            paintState->blinkTimer += elapsedUs;
+        }
+        else
+        {
+            paintDrawPickPoints();
+        }
+
+        drawCursor(getCursor(), &paintState->canvas);
     }
 
-    drawCursor(getCursor(), &paintState->canvas);
 
     if (paintHelp != NULL)
     {
@@ -1277,8 +1320,19 @@ void paintDrawScreenPollTouch(void)
 
     if (getTouchJoystick(&phi, &r, &intensity))
     {
-        //
         getTouchCartesian(phi, r, &centroid, &y);
+
+        if (!paintState->showToolWheel)
+        {
+            paintSaveCanvas(&paintState->canvas);
+            paintState->showToolWheel = true;
+        }
+
+        paintState->toolWheel = wheelMenuSetSelection(paintState->toolWheel, paintState->toolWheelRenderer, phi, r);
+        return;
+
+
+        /////////////////////////////// old code below, probs delete
 
         // Bar is touched
         switch (paintState->buttonMode)
@@ -1347,6 +1401,16 @@ void paintDrawScreenPollTouch(void)
     }
     else
     {
+        if (paintState->showToolWheel)
+        {
+            paintState->showToolWheel = false;
+            paintRestoreCanvas(&paintState->canvas);
+        }
+
+        return;
+
+        /////////////////////////////// old code below, probs delete
+
         // Bar is not touched
         // Do not use centroid/intensity here
         // And only do anything if paintState->touchDown is still true
@@ -1780,6 +1844,76 @@ void paintRedo(paintCanvas_t* canvas)
     paintApplyUndo(canvas);
 }
 
+bool paintSaveCanvas(paintCanvas_t* canvas)
+{
+    // Allocate a new paintUndo_t to store the canvas
+    paintUndo_t* undoData = paintState->storedCanvas;
+
+    // Calculate the amount of space we wolud need to store the canvas pixels
+    size_t pxSize = paintGetStoredSize(canvas);
+
+    if (!undoData)
+    {
+        // Allocate memory for the undo data struct and its pixel data in one go
+        void* undoMem = heap_caps_malloc(sizeof(paintUndo_t) + pxSize, MALLOC_CAP_SPIRAM);
+        if (undoMem != NULL)
+        {
+            // Alloc succeeded, use the data
+            undoData = undoMem;
+            undoData->px = (uint8_t*)undoMem + sizeof(paintUndo_t);
+        }
+        else
+        {
+            // Alloc failed, reuse the first undo data
+            undoData = shift(&paintState->undoList);
+        }
+    }
+
+    if (!undoData)
+    {
+        PAINT_LOGD("Failed to allocate or reuse undo data! Can't save canvas");
+        // There's no data at all! We're completely out of space!
+        return false;
+    }
+
+    // Save the palette
+    memcpy(undoData->palette, canvas->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
+
+    bool cursorVisible = getCursor()->show;
+    if (cursorVisible)
+    {
+        hideCursor(getCursor(), canvas);
+    }
+    // Save the pixel data
+    paintSerialize(undoData->px, canvas, 0, pxSize);
+
+    if (cursorVisible)
+    {
+        showCursor(getCursor(), canvas);
+    }
+
+    paintState->storedCanvas = undoData;
+
+    return true;
+}
+
+void paintRestoreCanvas(paintCanvas_t* canvas)
+{
+    if (NULL == paintState->storedCanvas)
+    {
+        return;
+    }
+
+    // Don't restore palette
+    hideCursor(getCursor(), canvas);
+
+    size_t pxSize = paintGetStoredSize(canvas);
+    paintDeserialize(canvas, paintState->storedCanvas->px, 0, pxSize);
+
+    // feels weird to do this inside the undo functions... but it's probably ok? we've already undone anyway
+    showCursor(getCursor(), canvas);
+}
+
 void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
 {
     hideCursor(getCursor(), &paintState->canvas);
@@ -2148,4 +2282,9 @@ paintCursor_t* getCursor(void)
 {
     // TODO Take player order into account
     return &paintState->artist->cursor;
+}
+
+static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal)
+{
+    PAINT_LOGI("Selected tool wheel item %s", label);
 }

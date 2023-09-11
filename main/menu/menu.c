@@ -470,6 +470,254 @@ void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLa
     }
 }
 
+static void menuCallCallbackForItem(menu_t* menu, menuItem_t* item, bool selected)
+{
+    menu->cbFunc(
+        // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
+        (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label,
+        // Pass along selected
+        selected,
+        // If the item is a setting with options, pass the current option value. Otherwise, the regular
+        // setting
+        item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
+}
+
+/**
+ * @brief Changes the selected item to the one with the given label, just as though it were scrolled to.
+ *
+ * @param menu The menu to change the selected item of
+ * @param label The label of the menu item or an option to select
+ * @return menu_t* A pointer to the menu to use for future function calls. It may be a sub or parent menu.
+ */
+menu_t* menuNavigateToItem(menu_t* menu, const char* label)
+{
+    node_t* listNode = menu->items->first;
+    while (NULL != listNode)
+    {
+        menuItem_t* item = listNode->val;
+
+        if (item->label)
+        {
+            if (item->label && item->label == label)
+            {
+                menu->currentItem = listNode;
+                menuCallCallbackForItem(menu, item, false);
+                return menu;
+            }
+        }
+        else if (item->options)
+        {
+            for (uint8_t i = 0; i < item->numOptions; i++)
+            {
+                if (item->options[i] == label)
+                {
+                    menu->currentItem = listNode;
+                    item->currentOpt = i;
+
+                    if (item->settingVals)
+                    {
+                        item->currentSetting = item->settingVals[i];
+                    }
+
+                    menuCallCallbackForItem(menu, item, false);
+                    return menu;
+                }
+            }
+        }
+
+        listNode = listNode->next;
+    }
+
+    return menu;
+}
+
+/**
+ * @brief
+ *
+ * @param menu
+ * @return menu_t*
+ */
+menu_t* menuNavigateToPrevItem(menu_t* menu)
+{
+    if (NULL == menu->currentItem->prev)
+    {
+        menu->currentItem = menu->items->last;
+    }
+    else
+    {
+        menu->currentItem = menu->currentItem->prev;
+    }
+
+    // Call the callback for the move
+    menuCallCallbackForItem(menu, menu->currentItem->val, false);
+
+    return menu;
+}
+
+/**
+ * @brief
+ *
+ * @param menu
+ * @return menu_t*
+ */
+menu_t* menuNavigateToNextItem(menu_t* menu)
+{
+    // Scroll down
+    if (NULL == menu->currentItem->next)
+    {
+        menu->currentItem = menu->items->first;
+    }
+    else
+    {
+        menu->currentItem = menu->currentItem->next;
+    }
+
+    // Call the callback for the move
+    menuCallCallbackForItem(menu, menu->currentItem->val, false);
+    return menu;
+}
+
+/**
+ * @brief
+ *
+ * @param menu
+ * @return menu_t*
+ */
+menu_t* menuNavigateToPrevOption(menu_t* menu)
+{
+    // Get a pointer to the item for convenience
+    menuItem_t* item = menu->currentItem ? menu->currentItem->val : NULL;
+
+    // Scroll options to the left, if applicable
+    if (NULL == item)
+    {
+        return menu;
+    }
+    else if (item->options)
+    {
+        if (0 == item->currentOpt && !item->settingVals)
+        {
+            item->currentOpt = item->numOptions - 1;
+        }
+        else if (item->currentOpt > 0)
+        {
+            item->currentOpt--;
+        }
+    }
+    else if (item->minSetting != item->maxSetting)
+    {
+        item->currentSetting = MAX(item->currentSetting - 1, item->minSetting);
+    }
+    else if (menu->parentMenu)
+    {
+        // If this item has a parent menu, return to it -- no callback
+        return menu->parentMenu;
+    }
+    else
+    {
+        // Don't call the callback again for items without options
+        return menu;
+    }
+
+    // Call the callback, not selected
+    menuCallCallbackForItem(menu, item, false);
+    return menu;
+}
+
+menu_t* menuNavigateToNextOption(menu_t* menu)
+{
+    menuItem_t* item = menu->currentItem ? menu->currentItem->val : NULL;
+
+    // Scroll options to the right, if applicable
+    if (NULL == item)
+    {
+        return menu;
+    }
+    else if (item->options)
+    {
+        if (item->numOptions - 1 == item->currentOpt && !item->settingVals)
+        {
+            item->currentOpt = 0;
+        }
+        else if (item->currentOpt + 1 < item->numOptions)
+        {
+            item->currentOpt++;
+        }
+
+        // Call the callback, not selected
+        if (item->settingVals)
+        {
+            item->currentSetting = item->settingVals[item->currentOpt];
+        }
+    }
+    else if (item->minSetting != item->maxSetting)
+    {
+        item->currentSetting = MIN(item->currentSetting + 1, item->maxSetting);
+    }
+    else if (item->subMenu)
+    {
+        // If this item has a submenu, enter it
+        return item->subMenu;
+    }
+    else
+    {
+        // Don't call the callback again for items without options
+        return menu;
+    }
+
+    menuCallCallbackForItem(menu, item, false);
+    return menu;
+}
+
+menu_t* menuSelectCurrentItem(menu_t* menu)
+{
+    menuItem_t* item = menu->currentItem ? menu->currentItem->val : NULL;
+
+    // Handle A button presses
+    if (NULL == item)
+    {
+        return menu;
+    }
+    else if (item->subMenu)
+    {
+        // If this item has a submenu, call the callback, then enter it
+        menu->cbFunc(item->label, true, 0);
+        return item->subMenu;
+    }
+    else if (item->settingVals)
+    {
+        menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
+    }
+    else if (item->minSetting != item->maxSetting)
+    {
+        // Call the callback, not selected
+        menu->cbFunc(item->label, true, item->currentSetting);
+    }
+    else if (item->label)
+    {
+        if (item->label == mnuBackStr)
+        {
+            // If this is the back string, return the parent menu
+            // Reset the current item when leaving a submenu
+            menu->currentItem = menu->items->first;
+            return menu->parentMenu;
+        }
+        else
+        {
+            // If this is a single item, call the callback
+            menu->cbFunc(item->label, true, 0);
+        }
+    }
+    else if (item->options)
+    {
+        // If this is a multi item, call the callback
+        menu->cbFunc(item->options[item->currentOpt], true, 0);
+    }
+
+    // maybe return menu?
+    return menu;
+}
+
 /**
  * This must be called to pass button event from the Swadge mode to the menu.
  * If a button is passed here, it should not be handled anywhere else
@@ -490,162 +738,23 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
             case PB_UP:
             {
                 // Scroll up
-                if (NULL == menu->currentItem->prev)
-                {
-                    menu->currentItem = menu->items->last;
-                }
-                else
-                {
-                    menu->currentItem = menu->currentItem->prev;
-                }
-
-                // Call the callback for the move
-                item = menu->currentItem->val;
-
-                menu->cbFunc(
-                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
-                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label, false,
-                    // If the item is a setting with options, pass the current option value. Otherwise, the regular
-                    // setting
-                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
-
-                break;
+                return menuNavigateToPrevItem(menu);
             }
             case PB_DOWN:
             {
-                // Scroll down
-                if (NULL == menu->currentItem->next)
-                {
-                    menu->currentItem = menu->items->first;
-                }
-                else
-                {
-                    menu->currentItem = menu->currentItem->next;
-                }
-
-                item = menu->currentItem->val;
-
-                menu->cbFunc(
-                    // If the item is a non-setting item with options, pass the option label. Otherwise, the main label
-                    (item->options && !item->settingVals) ? item->options[item->currentOpt] : item->label, false,
-                    // If the item is a setting with options, pass the current option value. Otherwise, the regular
-                    // setting
-                    item->settingVals ? item->settingVals[item->currentOpt] : item->currentSetting);
-
-                break;
+                return menuNavigateToNextItem(menu);
             }
             case PB_LEFT:
             {
-                // Scroll options to the left, if applicable
-                if (item->options)
-                {
-                    if (0 == item->currentOpt && !item->settingVals)
-                    {
-                        item->currentOpt = item->numOptions - 1;
-                    }
-                    else if (item->currentOpt > 0)
-                    {
-                        item->currentOpt--;
-                    }
-
-                    // Call the callback, not selected
-                    if (item->settingVals)
-                    {
-                        item->currentSetting = item->settingVals[item->currentOpt];
-                        menu->cbFunc(item->label, false, item->currentSetting);
-                    }
-                    else
-                    {
-                        menu->cbFunc(item->options[item->currentOpt], false, 0);
-                    }
-                }
-                else if (item->minSetting != item->maxSetting)
-                {
-                    item->currentSetting = MAX(item->currentSetting - 1, item->minSetting);
-                    // Call the callback, not selected
-                    menu->cbFunc(item->label, false, item->currentSetting);
-                }
-                else if (menu->parentMenu)
-                {
-                    // If this item has a submenu, enter it
-                    return menu->parentMenu;
-                }
-                break;
+                return menuNavigateToPrevOption(menu);
             }
             case PB_RIGHT:
             {
-                // Scroll options to the right, if applicable
-                if (item->options)
-                {
-                    if (item->numOptions - 1 == item->currentOpt && !item->settingVals)
-                    {
-                        item->currentOpt = 0;
-                    }
-                    else if (item->currentOpt + 1 < item->numOptions)
-                    {
-                        item->currentOpt++;
-                    }
-
-                    // Call the callback, not selected
-                    if (item->settingVals)
-                    {
-                        item->currentSetting = item->settingVals[item->currentOpt];
-                        menu->cbFunc(item->label, false, item->currentSetting);
-                    }
-                    else
-                    {
-                        menu->cbFunc(item->options[item->currentOpt], false, 0);
-                    }
-                }
-                else if (item->minSetting != item->maxSetting)
-                {
-                    item->currentSetting = MIN(item->currentSetting + 1, item->maxSetting);
-
-                    // Call the callback, not selected
-                    menu->cbFunc(item->label, false, item->currentSetting);
-                }
-                else if (item->subMenu)
-                {
-                    // If this item has a submenu, enter it
-                    return item->subMenu;
-                }
-                break;
+                return menuNavigateToNextOption(menu);
             }
             case PB_A:
             {
-                // Handle A button presses
-                if (item->subMenu)
-                {
-                    // If this item has a submenu, call the callback, then enter it
-                    menu->cbFunc(item->label, true, 0);
-                    return item->subMenu;
-                }
-                else if (item->label == mnuBackStr)
-                {
-                    // If this is the back string, return the parent menu
-                    // Reset the current item when leaving a submenu
-                    menu->currentItem = menu->items->first;
-                    return menu->parentMenu;
-                }
-                else if (item->settingVals)
-                {
-                    menu->cbFunc(item->label, true, item->settingVals[item->currentOpt]);
-                }
-                else if (item->minSetting != item->maxSetting)
-                {
-                    // Call the callback, not selected
-                    menu->cbFunc(item->label, true, item->currentSetting);
-                }
-                else if (item->label)
-                {
-                    // If this is a single item, call the callback
-                    menu->cbFunc(item->label, true, 0);
-                }
-                else if (item->options)
-                {
-                    // If this is a multi item, call the callback
-                    menu->cbFunc(item->options[item->currentOpt], true, 0);
-                }
+                menuSelectCurrentItem(menu);
                 break;
             }
             case PB_B:

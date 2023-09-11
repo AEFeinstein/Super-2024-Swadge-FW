@@ -7,6 +7,7 @@
 #include "hdw-tft.h"
 #include "swadge2024.h"
 #include "menu.h"
+#include "wheel_menu.h"
 #include "p2pConnection.h"
 #include "linked_list.h"
 
@@ -297,6 +298,30 @@ typedef struct
     // After an undo is performed, this points to the action that was undone.
     // This allows redo to work. If the image is edited, this and all following items are removed.
     node_t* undoHead;
+
+
+    /// @brief Canvas stored so we can draw over it
+    paintUndo_t* storedCanvas;
+
+    //////// Tool Wheel
+
+    bool showToolWheel;
+
+    // The menu for the tool wheel
+    menu_t* toolWheel;
+
+    // The renderer for the tool wheel menu
+    wheelMenuRenderer_t* toolWheelRenderer;
+
+    //// Icons for various tool wheel things
+
+    wsg_t wheelSizeWsg;
+
+    wsg_t wheelBrushWsg;
+
+    wsg_t wheelColorWsg;
+
+    wsg_t wheelSettingsWsg;
 } paintDraw_t;
 
 typedef struct
@@ -396,10 +421,10 @@ typedef struct
 
     // The screen within paint that the user is in
     paintScreen_t screen;
-} paintMenu_t;
+} paintMainMenu_t;
 
 
-extern paintMenu_t* paintMenu;
+extern paintMainMenu_t* paintMenu;
 
 
 #endif

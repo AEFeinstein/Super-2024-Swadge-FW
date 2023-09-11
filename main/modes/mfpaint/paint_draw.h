@@ -59,6 +59,8 @@ bool paintCanRedo(void);
 void paintApplyUndo(paintCanvas_t* canvas);
 void paintUndo(paintCanvas_t* canvas);
 void paintRedo(paintCanvas_t* canvas);
+bool paintSaveCanvas(paintCanvas_t* canvas);
+void paintRestoreCanvas(paintCanvas_t* canvas);
 void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col);
 void paintSwapFgBgColors(void);
 void paintEnterSelectMode(void);
