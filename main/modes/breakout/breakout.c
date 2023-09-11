@@ -19,6 +19,7 @@
 #include "entityManager.h"
 
 #include "leveldef.h"
+#include "mainMenu.h"
 
 #include <esp_log.h>
 
@@ -80,6 +81,8 @@ typedef struct
     menuLogbookRenderer_t* mRenderer; ///< The menu renderer
     font_t logbook;   ///< The font used in the menu and game
     font_t ibm_vga8;
+
+    menuItem_t* levelSelectMenuItem;
     
     gameData_t gameData;
     tilemap_t tilemap;
@@ -168,12 +171,12 @@ static void breakoutDrawPause(font_t *font);
 uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 
 //==============================================================================
-// Level Definitons
+// Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 2
+#define NUM_LEVELS 11
 
-static const leveldef_t leveldef[11] = {
+static const leveldef_t leveldef[NUM_LEVELS] = {
     {.filename = "intro.bin",
      .timeLimit = 180},
     {.filename = "rightside.bin",
@@ -197,7 +200,7 @@ static const leveldef_t leveldef[11] = {
     {.filename = "starlite.bin",
      .timeLimit = 180},
      };
-
+    
 //==============================================================================
 // Look Up Tables
 //==============================================================================
@@ -215,17 +218,9 @@ static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
 
 static const char breakoutName[] = "Galactic Breakdown";
 
-static const char breakoutStartGame[] = "Start Game";
-
-static const char breakoutCtrlButton[] = "Button Control";
-static const char breakoutCtrlTouch[]  = "Touch Control";
-static const char breakoutCtrlTilt[]   = "Tilt Control";
-
-//static const char breakoutDiffEasy[]   = "Easy";
-static const char breakoutDiffMedium[] = "Medium";
-static const char breakoutDiffHard[]   = "Impossible";
-
-//static const char breakoutPaused[] = "Paused";
+static const char breakoutNewGame[] = "New Game";
+static const char breakoutContinue[] = "Continue - Lv";
+static const char breakoutExit[] = "Exit";
 
 static const char breakoutReady[] = "Get Ready!";
 static const char breakoutGameOver[] = "Game Over!";
@@ -293,26 +288,24 @@ static void breakoutEnterMode(void)
 
     loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
 
-    // These are the possible control schemes
-    const char* controlSchemes[] = {
-        breakoutCtrlButton,
-        breakoutCtrlTouch,
-        breakoutCtrlTilt,
-    };
+    addSingleItemToMenu(breakout->menu, breakoutNewGame);
 
-    addSingleItemToMenu(breakout->menu, breakoutStartGame);
-    // Add each control scheme to the menu. Each control scheme has a submenu to select difficulty
-    //for (uint8_t i = 0; i < ARRAY_SIZE(controlSchemes); i++)
-    //{
-        // Add a control scheme to the menu. This opens a submenu with difficulties
-        //breakout->menu = startSubMenu(breakout->menu, controlSchemes[i]);
-        // Add difficulties to the submenu
-        //addSingleItemToMenu(breakout->menu, breakoutStartGame);
-        //addSingleItemToMenu(breakout->menu, breakoutDiffMedium);
-        //addSingleItemToMenu(breakout->menu, breakoutDiffHard);
-        // End the submenu
-        //breakout->menu = endSubMenu(breakout->menu);
-    //}
+    /*
+        Manually allocate and build "level select" menu item
+        because the max setting will have to change as levels are unlocked
+    */
+
+    breakout->levelSelectMenuItem = calloc(1,sizeof(menuItem_t));
+    breakout->levelSelectMenuItem->label = breakoutContinue;
+    breakout->levelSelectMenuItem->minSetting = 1;
+    breakout->levelSelectMenuItem->maxSetting = NUM_LEVELS;
+    breakout->levelSelectMenuItem->currentSetting = 1;
+    breakout->levelSelectMenuItem->options = NULL;
+    breakout->levelSelectMenuItem->subMenu = NULL;
+
+    push(breakout->menu->items, breakout->levelSelectMenuItem);
+
+    addSingleItemToMenu(breakout->menu, breakoutExit);
 
     // Set the mode to menu mode
     breakout->screen = BREAKOUT_MENU;
@@ -324,12 +317,15 @@ static void breakoutEnterMode(void)
  */
 static void breakoutExitMode(void)
 {
-    // Deinitialize the menu
+    // Deinitialize the menu.
+    // This will also free the "level select" menu item.
     deinitMenu(breakout->menu);
     deinitMenuLogbookRenderer(breakout->mRenderer);
-    // Free the font
+
+    // Free the fonts
     freeFont(&breakout->logbook);
     freeFont(&breakout->ibm_vga8);
+
     // Free graphics
     freeWsg(&breakout->ballWsg);
     freeWsg(&breakout->paddleWsg);
@@ -337,6 +333,7 @@ static void breakoutExitMode(void)
     freeTilemap(&breakout->tilemap);
     freeSoundManager(&breakout->soundManager);
     freeEntityManager(&breakout->entityManager);
+
     // Free everything else
     free(breakout);
 }
@@ -350,28 +347,9 @@ static void breakoutExitMode(void)
  */
 static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    // Only care about selected items, not scrolled-to items.
-    // The same callback is called from the menu and submenu with no indication of which menu it was called from
-    // Note that the label arg will be one of the strings used in startSubMenu() or addSingleItemToMenu()
     if (selected)
     {
-        // Save what control scheme is selected (first-level menu)
-        if (label == breakoutCtrlButton)
-        {
-            breakout->control = BREAKOUT_BUTTON;
-        }
-        // Save what control scheme is selected (first-level menu)
-        else if (label == breakoutCtrlTouch)
-        {
-            breakout->control = BREAKOUT_TOUCH;
-        }
-        // Save what control scheme is selected (first-level menu)
-        else if (label == breakoutCtrlTilt)
-        {
-            breakout->control = BREAKOUT_TILT;
-        }
-        // Save what difficulty is selected and start the game (second-level menu)
-        else if (label == breakoutStartGame)
+        if (label == breakoutNewGame)
         {
             breakout->difficulty = BREAKOUT_EASY;
             breakout->screen = BREAKOUT_GAME;
@@ -381,20 +359,20 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
             breakout->gameData.countdown = leveldef[0].timeLimit;
             breakoutChangeStateReadyScreen(breakout);   
-        }
-        // Save what difficulty is selected and start the game (second-level menu)
-        else if (label == breakoutDiffMedium)
+        } else if (label == breakoutContinue)
         {
-            breakout->difficulty = BREAKOUT_MEDIUM;
+            breakout->difficulty = BREAKOUT_EASY;
             breakout->screen = BREAKOUT_GAME;
-            breakoutChangeStateReadyScreen(breakout);
+            initializeGameDataFromTitleScreen(&(breakout->gameData));
+            breakout->gameData.world = 1;
+            breakout->gameData.level = settingVal;
+            loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level - 1].filename);
+            breakout->gameData.countdown = leveldef[breakout->gameData.level -1].timeLimit;
+            breakoutChangeStateReadyScreen(breakout);   
         }
-        // Save what difficulty is selected and start the game (second-level menu)
-        else if (label == breakoutDiffHard)
+        else if (label == breakoutExit)
         {
-            breakout->difficulty = BREAKOUT_HARD;
-            breakout->screen = BREAKOUT_GAME;
-            breakoutChangeStateReadyScreen(breakout);
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
 }
@@ -685,7 +663,7 @@ static void drawBreakoutHud(font_t *font, gameData_t *gameData){
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
     char levelStr[15];
-    snprintf(levelStr, sizeof(levelStr) - 1, "Level %d-%d", gameData->world, gameData->level);
+    snprintf(levelStr, sizeof(levelStr) - 1, "Level %d", gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
@@ -749,7 +727,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             //Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false);
 
-            uint16_t levelIndex = breakoutGetLevelIndex(self->gameData.world, self->gameData.level);
+            uint16_t levelIndex = self->gameData.level;
             
             if(levelIndex >= NUM_LEVELS - 1){
                 //Game Cleared!
