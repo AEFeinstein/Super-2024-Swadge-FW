@@ -643,6 +643,7 @@ void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs){
         }
 
         changeStateNameEntry(self);*/
+        deactivateAllEntities(&(self->entityManager), false, false);
         breakoutChangeStateTitleScreen(self);
     }
 
