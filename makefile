@@ -125,7 +125,7 @@ CFLAGS_WARNINGS_EXTRA = \
 	-Wshadow \
 	-Wredundant-decls \
 	-Wjump-misses-init \
-	-Wswitch-enum \
+	-Wswitch \
 	-Wcast-align \
 	-Wformat-nonliteral \
 	-Wno-switch-default \
