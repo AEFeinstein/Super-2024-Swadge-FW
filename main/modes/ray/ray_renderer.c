@@ -659,7 +659,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
     bool isXray = (LO_XRAY == ray->loadout);
 
     // Put an array on the stack to sort all sprites
-    objDist_t allObjs[MAX_RAY_BULLETS + ray->scenery.length + ray->enemies.length];
+    objDist_t allObjs[MAX_RAY_BULLETS + ray->scenery.length + ray->enemies.length + ray->items.length];
     int32_t allObjsIdx = 0;
 
     // For convenience
@@ -705,12 +705,30 @@ rayObjCommon_t* castSprites(ray_t* ray)
     while (currentNode != NULL)
     {
         // Get a pointer from the linked list
-        rayScenery_t* obj = ((rayScenery_t*)currentNode->val);
+        rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
 
         // Save the pointer and the distance to sort
-        allObjs[allObjsIdx].obj  = &obj->c;
-        q24_8 delX               = rayPosX - obj->c.posX;
-        q24_8 delY               = rayPosY - obj->c.posY;
+        allObjs[allObjsIdx].obj  = obj;
+        q24_8 delX               = rayPosX - obj->posX;
+        q24_8 delY               = rayPosY - obj->posY;
+        allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
+        allObjsIdx++;
+
+        // Iterate to the next node
+        currentNode = currentNode->next;
+    }
+
+    // Assign each item a distance from the player
+    currentNode = ray->items.first;
+    while (currentNode != NULL)
+    {
+        // Get a pointer from the linked list
+        rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
+
+        // Save the pointer and the distance to sort
+        allObjs[allObjsIdx].obj  = obj;
+        q24_8 delX               = rayPosX - obj->posX;
+        q24_8 delY               = rayPosY - obj->posY;
         allObjs[allObjsIdx].dist = (delX * delX) + (delY * delY);
         allObjsIdx++;
 

@@ -31,15 +31,28 @@ void initializePlayer(ray_t* ray)
     setPlayerAngle(ray, TO_FX(0));
     // Set the head-bob to centered
     ray->posZ = TO_FX(0);
+
+    // Empty out the inventory
+    // TODO only do this on first boot-up
+    memset(&ray->inventory, 0, sizeof(ray->inventory));
+    for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
+    {
+        for (int32_t pIdx = 0; pIdx < NUM_PICKUPS_PER_MAP; pIdx++)
+        {
+            ray->inventory.healthPickUps[mapIdx][pIdx]   = -1;
+            ray->inventory.missilesPickUps[mapIdx][pIdx] = -1;
+        }
+    }
 }
 
 /**
  * @brief Check button inputs for the player. This will move the player and shoot bullets
  *
  * @param ray The entire game state
+ * @param centeredSprite The sprite currently centered in the view
  * @param elapsedUs The elapsed time since this function was last called
  */
-void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
+void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t elapsedUs)
 {
     // Check all queued button events
     uint32_t prevBtnState = ray->btnState;
@@ -58,11 +71,18 @@ void rayPlayerCheckButtons(ray_t* ray, uint32_t elapsedUs)
     {
         // Set strafe to true
         ray->isStrafing = true;
+        // If there is a centered sprite
+        if (centeredSprite)
+        {
+            // Lock onto it
+            ray->targetedObj = centeredSprite;
+        }
     }
     else if (!(ray->btnState & PB_B) && (prevBtnState & PB_B))
     {
         // Set strafe to false
-        ray->isStrafing = false;
+        ray->isStrafing  = false;
+        ray->targetedObj = NULL;
     }
 
     // Strafing is either locked or unlocked
@@ -189,20 +209,20 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             if (!(tj & TB_CENTER))
             {
                 // Get the loadout touched
-                rayLoadout_t nextLoadout = LO_NORMAL;
+                rayLoadout_t nextLoadout = ray->loadout;
                 if (tj & TB_UP)
                 {
                     nextLoadout = LO_NORMAL;
                 }
-                else if (tj & TB_RIGHT)
+                else if ((tj & TB_RIGHT) && (ray->inventory.missileLoadOut))
                 {
                     nextLoadout = LO_MISSILE;
                 }
-                else if (tj & TB_LEFT)
+                else if ((tj & TB_LEFT) && (ray->inventory.iceLoadOut))
                 {
                     nextLoadout = LO_ICE;
                 }
-                else if (tj & TB_DOWN)
+                else if ((tj & TB_DOWN) && (ray->inventory.xrayLoadOut))
                 {
                     nextLoadout = LO_XRAY;
                 }
@@ -272,4 +292,126 @@ void setPlayerAngle(ray_t* ray, q24_8 angle)
     // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
     ray->planeX = MUL_FX(-TO_FX(2) / 3, ray->dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
+}
+
+/**
+ * @brief This handles what happens when a player touches an item
+ *
+ * @param ray The whole game state
+ * @param type The type of item touched
+ * @param mapId The current map ID, used to track non-unique persistent pick-ups
+ * @param itemId The item's ID
+ */
+void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_t itemId)
+{
+    rayInventory_t* inventory = &ray->inventory;
+    switch (type)
+    {
+        case OBJ_ITEM_CHARGE_BEAM:
+        {
+            inventory->chargePowerUp = true;
+            break;
+        }
+        case OBJ_ITEM_ICE:
+        {
+            inventory->iceLoadOut = true;
+            // Switch to the ice loadout
+            ray->loadout = LO_ICE;
+            break;
+        }
+        case OBJ_ITEM_XRAY:
+        {
+            inventory->xrayLoadOut = true;
+            // Switch to the xray loadout
+            ray->loadout = LO_XRAY;
+            break;
+        }
+        case OBJ_ITEM_SUIT_WATER:
+        {
+            inventory->waterSuit = true;
+            break;
+        }
+        case OBJ_ITEM_SUIT_LAVA:
+        {
+            inventory->lavaSuit = true;
+            break;
+        }
+        case OBJ_ITEM_MISSILE:
+        {
+            // Find a slot to save this missile pickup
+            for (int32_t idx = 0; idx < NUM_PICKUPS_PER_MAP; idx++)
+            {
+                // The ID of an item can't be -1, so this is free
+                if (-1 == inventory->missilesPickUps[mapId][idx])
+                {
+                    if (!inventory->missileLoadOut)
+                    {
+                        // Picking up any missiles enables the loadout
+                        inventory->missileLoadOut = true;
+                        // Switch to the missile loadout
+                        ray->loadout = LO_MISSILE;
+                    }
+                    // Add five missiles
+                    inventory->maxNumMissiles += 5;
+
+                    // Save the coordinates
+                    inventory->missilesPickUps[mapId][idx] = itemId;
+                    break;
+                }
+            }
+            break;
+        }
+        case OBJ_ITEM_ENERGY_TANK:
+        {
+            // Find a slot to save this health pickup
+            for (int32_t idx = 0; idx < NUM_PICKUPS_PER_MAP; idx++)
+            {
+                // The ID of an item can't be -1, so this is free
+                if (-1 == inventory->healthPickUps[mapId][idx])
+                {
+                    // Add 100 health
+                    inventory->maxHealth += 100;
+                    // Reset health
+                    inventory->health = inventory->maxHealth;
+
+                    // Save the coordinates
+                    inventory->healthPickUps[mapId][idx] = itemId;
+                    break;
+                }
+            }
+            break;
+        }
+        case OBJ_ITEM_ARTIFACT:
+        {
+            inventory->artifacts[mapId] = true;
+            break;
+        }
+        case OBJ_ITEM_PICKUP_ENERGY:
+        {
+            // Transient, add 20 health, not going over the max
+            inventory->health = MIN(inventory->health + 20, inventory->maxHealth);
+            break;
+        }
+        case OBJ_ITEM_PICKUP_MISSILE:
+        {
+            // Transient, add 5 missiles, not going over the max
+            inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
+            break;
+        }
+        case OBJ_ITEM_KEY:
+        {
+            // TODO implement keys?
+            break;
+        }
+        case OBJ_ITEM_BEAM:
+        {
+            // TODO implement first beam?
+            break;
+        }
+        default:
+        {
+            // Don't care about other types
+            break;
+        }
+    }
 }

@@ -100,26 +100,36 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                     }
                     else
                     {
-                        rayScenery_t* newObj
-                            = (rayScenery_t*)heap_caps_calloc(1, sizeof(rayScenery_t), MALLOC_CAP_SPIRAM);
+                        // TODO check for persistent health & missile upgrades in the inventory before spawning
+                        rayObjCommon_t* newObj
+                            = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
 
                         // Set type, sprite and ID
-                        newObj->c.type   = type;
-                        newObj->c.sprite = getTexByType(ray, type);
-                        newObj->c.id     = id;
+                        newObj->type   = type;
+                        newObj->sprite = getTexByType(ray, type);
+                        newObj->id     = id;
 
                         // Set spatial values
-                        newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-                        newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                        newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
+                        newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+                        newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+                        newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
 
                         // Add it to the linked list
-                        push(&ray->scenery, newObj);
+                        if ((type & ITEM) == ITEM)
+                        {
+                            push(&ray->items, newObj);
+                        }
+                        else
+                        {
+                            push(&ray->scenery, newObj);
+                        }
                     }
                 }
             }
         }
     }
+
+    // TODO load rules!!
 
     // Free the file data
     free(fileData);

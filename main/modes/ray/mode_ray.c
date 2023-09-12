@@ -64,7 +64,7 @@ static void rayEnterMode(void)
     {
         ray->bullets[objIdx].c.id = -1;
     }
-    // ray->enemies and ray->scenery are already cleared
+    // lists of enemies, items, and scenery are already cleared
 
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
@@ -94,7 +94,14 @@ static void rayExitMode(void)
     {
         free(poppedEnemy);
     }
-    rayScenery_t* poppedScenery = NULL;
+
+    rayObjCommon_t* poppedItem = NULL;
+    while (NULL != (poppedItem = pop(&ray->items)))
+    {
+        free(poppedItem);
+    }
+
+    rayObjCommon_t* poppedScenery = NULL;
     while (NULL != (poppedScenery = pop(&ray->scenery)))
     {
         free(poppedScenery);
@@ -120,7 +127,7 @@ static void rayMainLoop(int64_t elapsedUs)
     // Draw the walls after floor & ceiling
     castWalls(ray);
     // Draw sprites after walls
-    ray->targetedObj = castSprites(ray);
+    rayObjCommon_t* centeredSprite = castSprites(ray);
     // Draw the HUD after sprites
     drawHud(ray);
 
@@ -128,7 +135,7 @@ static void rayMainLoop(int64_t elapsedUs)
     runEnvTimers(ray, elapsedUs);
 
     // Check buttons for the player and move player accordingly
-    rayPlayerCheckButtons(ray, elapsedUs);
+    rayPlayerCheckButtons(ray, centeredSprite, elapsedUs);
 
     // Check the joystick for the player and update loadout accordingly
     rayPlayerCheckJoystick(ray, elapsedUs);

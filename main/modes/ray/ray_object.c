@@ -6,6 +6,7 @@
 #include "ray_tex_manager.h"
 #include "ray_renderer.h"
 #include "ray_map.h"
+#include "ray_player.h"
 
 //==============================================================================
 // Function Prototypes
@@ -356,7 +357,7 @@ void checkRayCollisions(ray_t* ray)
         .radius = TO_FX_FRAC(32, 2 * TEX_WIDTH),
     };
 
-    // Iterate through all bullets
+    // Check if a bullet touches a player
     for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
     {
         rayBullet_t* bullet = &ray->bullets[bIdx];
@@ -372,8 +373,37 @@ void checkRayCollisions(ray_t* ray)
         }
     }
 
-    // Iterate over the enemies
-    node_t* currentNode = ray->enemies.first;
+    // Check if the player touches an item
+    node_t* currentNode = ray->items.first;
+    while (currentNode != NULL)
+    {
+        // Get a pointer from the linked list
+        rayObjCommon_t* item = ((rayObjCommon_t*)currentNode->val);
+
+        node_t* toRemove = NULL;
+        // Check intersection
+        if (objectsIntersect(&player, item))
+        {
+            // Touch the item
+            rayPlayerTouchItem(ray, item->type, ray->mapId, item->id);
+            toRemove = currentNode;
+        }
+
+        // Iterate to the next node
+        currentNode = currentNode->next;
+
+        // If the prior node should be removed
+        if (toRemove)
+        {
+            // Free the item
+            free(item);
+            // Remove it from the list
+            removeEntry(&ray->items, toRemove);
+        }
+    }
+
+    // Check if a bullet touches an enemy
+    currentNode = ray->enemies.first;
     while (currentNode != NULL)
     {
         // Get a pointer from the linked list
@@ -399,12 +429,12 @@ void checkRayCollisions(ray_t* ray)
         currentNode = currentNode->next;
     }
 
-    // Iterate over the scenery
+    // Check if a bullet touches scenery
     currentNode = ray->scenery.first;
     while (currentNode != NULL)
     {
         // Get a pointer from the linked list
-        rayScenery_t* scenery = ((rayScenery_t*)currentNode->val);
+        rayObjCommon_t* scenery = ((rayObjCommon_t*)currentNode->val);
 
         // Iterate through all bullets
         for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
@@ -413,9 +443,10 @@ void checkRayCollisions(ray_t* ray)
             if (1 == bullet->c.id)
             {
                 // A player's bullet
-                if (objectsIntersect(&scenery->c, &bullet->c))
+                if (objectsIntersect(scenery, &bullet->c))
                 {
                     // Scenery was shot
+                    printf("SHOT SCENERY %d\n", scenery->type);
                     // De-allocate the bullet
                     bullet->c.id = -1;
                 }
