@@ -32,6 +32,16 @@
 
 #include "palette.h"
 
+typedef enum
+{
+    NO_SCROLL = 0,
+    SCROLL_VERT = 1,
+    SCROLL_HORIZ = 2,
+    SCROLL_REVERSE = 4,
+    SCROLL_VERT_R = SCROLL_VERT | SCROLL_REVERSE,
+    SCROLL_HORIZ_R = SCROLL_HORIZ | SCROLL_REVERSE,
+} wheelScrollDir_t;
+
 typedef struct
 {
     /// @brief The font to draw the menu labels with
@@ -64,13 +74,18 @@ typedef struct
     paletteColor_t borderColor;
 
     bool customBack;
+    bool touched;
+    bool active;
 } wheelMenuRenderer_t;
 
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle);
 void deinitWheelMenu(wheelMenuRenderer_t* renderer);
 void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedUs);
 
-void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon, uint8_t position);
-menu_t* wheelMenuSetSelection(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius);
+void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon, uint8_t position, wheelScrollDir_t scrollDir);
+menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius);
+menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, buttonEvt_t* evt);
+menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer);
+bool wheelMenuActive(menu_t* menu, wheelMenuRenderer_t* renderer);
 
 #endif

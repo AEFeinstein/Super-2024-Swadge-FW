@@ -30,6 +30,11 @@ static const char toolWheelColorStr[] = "Color";
 static const char toolWheelSizeStr[] = "Size";
 static const char toolWheelOptionsStr[] = "Options";
 
+static const char toolWheelSaveStr[] = "Save";
+static const char toolWheelLoadStr[] = "Load";
+static const char toolWheelNewStr[] = "New";
+static const char toolWheelExitStr[] = "Exit";
+
 static paletteColor_t defaultPalette[] =
 {
     c000, // black
@@ -239,24 +244,66 @@ void paintDrawScreenSetup(void)
 
     // Set up the tool wheel
     paintState->showToolWheel = false;
+    paintState->toolWheelWaiting = false;
     paintState->toolWheel = initMenu(toolWheelTitleStr, paintToolWheelCb);
     paintState->toolWheelRenderer = initWheelMenu(&paintState->toolbarFont, 315);
 
     // Right: Up/Down for Size
-    addSingleItemToMenu(paintState->toolWheel, toolWheelSizeStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->brushSizeWsg, 0);
+    settingParam_t sizeBounds = {
+        .min = getArtist()->brushDef->minSize,
+        .max = getArtist()->brushDef->maxSize,
+        .def = getArtist()->brushWidth,
+        .key = NULL,
+    };
+    addSettingsItemToMenu(paintState->toolWheel, toolWheelSizeStr, &sizeBounds, sizeBounds.def);
+    paintState->toolWheelBrushSizeItem = paintState->toolWheel->items->last->val;
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->brushSizeWsg, 0, SCROLL_VERT);
 
     // Top: Left/Right for Brush
-    addSingleItemToMenu(paintState->toolWheel, toolWheelBrushStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &brushes[0].iconActive, 1);
+    settingParam_t toolBounds = {
+        .min = 0,
+        .max = ARRAY_SIZE(brushes) - 1,
+        .def = (getArtist()->brushDef - brushes),
+        .key = NULL,
+    };
+    addSettingsItemToMenu(paintState->toolWheel, toolWheelBrushStr, &toolBounds, toolBounds.def);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &brushes[0].iconInactive, 1, SCROLL_HORIZ);
 
     // Left: Up/Down for Color
-    addSingleItemToMenu(paintState->toolWheel, toolWheelColorStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelColorStr, &paintState->smallArrowWsg, 2);
+    settingParam_t colorBounds = {
+        .min = 0,
+        .max = PAINT_MAX_COLORS - 1,
+        .def = 0,
+        .key = NULL,
+    };
+    addSettingsItemToMenu(paintState->toolWheel, toolWheelColorStr, &colorBounds, colorBounds.def);
+    paintState->toolWheelColorItem = paintState->toolWheel->items->last->val;
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelColorStr, &paintState->smallArrowWsg, 2, SCROLL_VERT_R);
 
-    // Bottom: Options sub-menu (TODO)
-    addSingleItemToMenu(paintState->toolWheel, toolWheelOptionsStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelOptionsStr, &paintState->newfileWsg, 3);
+    // Bottom: Options sub-menu
+    paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelOptionsStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelOptionsStr, &paintState->newfileWsg, 3, NO_SCROLL);
+
+    // Options menu
+    // Right: Save
+    addSingleItemToMenu(paintState->toolWheel, toolWheelSaveStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSaveStr, &paintState->newfileWsg, 0, NO_SCROLL);
+
+    // Top: Load
+    addSingleItemToMenu(paintState->toolWheel, toolWheelLoadStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelLoadStr, &brushes[4].iconInactive, 1, NO_SCROLL);
+
+    // Left: New
+    addSingleItemToMenu(paintState->toolWheel, toolWheelNewStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelNewStr, &paintState->newfileWsg, 2, NO_SCROLL);
+
+    // Bottom: Exit/Quit
+    addSingleItemToMenu(paintState->toolWheel, toolWheelExitStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelExitStr, &paintState->overwriteWsg, 3, NO_SCROLL);
+
+    //wheelMenuSetItemInfo(paintState->toolWheelRenderer, mnuBackStr, &paintState->overwriteWsg, 4, NO_SCROLL);
+
+    paintState->toolWheel = endSubMenu(paintState->toolWheel);
 
     PAINT_LOGI("It's paintin' time! Canvas is %d x %d pixels!", paintState->canvas.w, paintState->canvas.h);
 }
@@ -285,6 +332,11 @@ void paintDrawScreenCleanup(void)
     {
         deinitCursor(&paintState->artist[i].cursor);
         freePxStack(&paintState->artist[i].pickPoints);
+    }
+
+    if (paintState->storedCanvas)
+    {
+        free(paintState->storedCanvas);
     }
 
     paintFreeCursorSprite(&paintState->cursorWsg);
@@ -546,13 +598,28 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
         }
     }
 
-    if (paintState->showToolWheel)
+    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
     {
-        paintClearCanvas(&paintState->canvas, c111);
+        if (!paintState->showToolWheel)
+        {
+            paintSaveCanvas(&paintState->canvas);
+            paintState->showToolWheel = true;
+            paintState->redrawToolbar = true;
+        }
+
+        paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
         drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
     }
     else
     {
+        if (paintState->showToolWheel)
+        {
+            paintRestoreCanvas(&paintState->canvas);
+            paintState->showToolWheel = false;
+            paintExitSelectMode();
+            paintState->redrawToolbar = true;
+        }
+
         if (paintState->index & PAINT_ENABLE_BLINK)
         {
             if (paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_ON)
@@ -1322,13 +1389,7 @@ void paintDrawScreenPollTouch(void)
     {
         getTouchCartesian(phi, r, &centroid, &y);
 
-        if (!paintState->showToolWheel)
-        {
-            paintSaveCanvas(&paintState->canvas);
-            paintState->showToolWheel = true;
-        }
-
-        paintState->toolWheel = wheelMenuSetSelection(paintState->toolWheel, paintState->toolWheelRenderer, phi, r);
+        paintState->toolWheel = wheelMenuTouch(paintState->toolWheel, paintState->toolWheelRenderer, phi, r);
         return;
 
 
@@ -1401,12 +1462,7 @@ void paintDrawScreenPollTouch(void)
     }
     else
     {
-        if (paintState->showToolWheel)
-        {
-            paintState->showToolWheel = false;
-            paintRestoreCanvas(&paintState->canvas);
-        }
-
+        paintState->toolWheel = wheelMenuTouchRelease(paintState->toolWheel, paintState->toolWheelRenderer);
         return;
 
         /////////////////////////////// old code below, probs delete
@@ -1506,30 +1562,38 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
         paintHelp->curButtons = evt->state | (paintHelp->curButtons & (TOUCH_ANY | TOUCH_X | TOUCH_Y | SWIPE_LEFT | SWIPE_RIGHT));
     }
 
-    switch (paintState->buttonMode)
+    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
     {
-        case BTN_MODE_DRAW:
+        PAINT_LOGI("Menu is active, sending it a button press");
+        wheelMenuButton(paintState->toolWheel, paintState->toolWheelRenderer, evt);
+    }
+    else
+    {
+        switch (paintState->buttonMode)
         {
-            paintDrawModeButtonCb(evt);
-            break;
-        }
+            case BTN_MODE_DRAW:
+            {
+                paintDrawModeButtonCb(evt);
+                break;
+            }
 
-        case BTN_MODE_SELECT:
-        {
-            paintSelectModeButtonCb(evt);
-            break;
-        }
+            case BTN_MODE_SELECT:
+            {
+                paintSelectModeButtonCb(evt);
+                break;
+            }
 
-        case BTN_MODE_SAVE:
-        {
-            paintSaveModeButtonCb(evt);
-            break;
-        }
+            case BTN_MODE_SAVE:
+            {
+                paintSaveModeButtonCb(evt);
+                break;
+            }
 
-        case BTN_MODE_PALETTE:
-        {
-            paintPaletteModeButtonCb(evt);
-            break;
+            case BTN_MODE_PALETTE:
+            {
+                paintPaletteModeButtonCb(evt);
+                break;
+            }
         }
     }
 
@@ -2178,6 +2242,7 @@ void paintEnterSelectMode(void)
     paintState->moveX = 0;
     paintState->moveY = 0;
     paintState->btnHoldTime = 0;
+    paintState->toolWheelColorItem->currentSetting = 0;
 }
 
 void paintExitSelectMode(void)
@@ -2286,5 +2351,49 @@ paintCursor_t* getCursor(void)
 
 static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal)
 {
-    PAINT_LOGI("Selected tool wheel item %s", label);
+    if (selected)
+    {
+        PAINT_LOGI("Selected tool wheel item %s", label);
+        /*if (label == mnuBackStr)
+        {
+            paintState->showToolWheel = false;
+        }*/
+    }
+    else
+    {
+        if (toolWheelBrushStr == label)
+        {
+            paintEnterSelectMode();
+            while (brushes + settingVal != getArtist()->brushDef)
+            {
+                if (getArtist()->brushDef < brushes + settingVal)
+                {
+                    paintNextTool();
+                }
+                else
+                {
+                    paintPrevTool();
+                }
+            }
+            paintState->redrawToolbar = true;
+        }
+        else if (toolWheelColorStr == label)
+        {
+            paintEnterSelectMode();
+            // Select previous color
+            paintState->redrawToolbar = true;
+            paintState->paletteSelect = settingVal;
+            paintUpdateLeds();
+        }
+        else if (toolWheelSizeStr == label)
+        {
+            paintEnterSelectMode();
+            paintSetBrushWidth(settingVal);
+        }
+        else
+        {
+            paintExitSelectMode();
+        }
+        PAINT_LOGI("Moved to tool wheel item %s", label);
+    }
 }

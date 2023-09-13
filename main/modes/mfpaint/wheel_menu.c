@@ -16,6 +16,7 @@ typedef struct
     const char* label;
     const wsg_t* icon;
     uint8_t position;
+    wheelScrollDir_t scroll;
 } wheelItemInfo_t;
 
 static wheelItemInfo_t* findInfo(wheelMenuRenderer_t* renderer, const char* label);
@@ -46,6 +47,8 @@ wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle)
     renderer->x = TFT_WIDTH / 2;
     renderer->y = TFT_HEIGHT / 2;
 
+    renderer->active = false;
+
     return renderer;
 }
 
@@ -66,13 +69,15 @@ void deinitWheelMenu(wheelMenuRenderer_t* renderer)
  * @param label The label of the item to set the icon and position for
  * @param icon  The icon to use when drawing the menu item
  * @param position The order of the item in the ring, centered around the anchor angle
+ * @param scrollDir Which axis this item should be scrollable in
  */
-void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon, uint8_t position)
+void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon, uint8_t position, wheelScrollDir_t scrollDir)
 {
     wheelItemInfo_t* info = malloc(sizeof(wheelItemInfo_t));
     info->label = label;
     info->icon = icon;
     info->position = position;
+    info->scroll = scrollDir;
 
     if (label == mnuBackStr)
     {
@@ -92,12 +97,16 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     uint16_t centerR = renderer->centerR; //menu->currentItem ? renderer->centerR : renderer->centerR + (renderer->unselR - renderer->centerR) / 2;
     uint16_t fillAngle = 0;
 
-    // We need to draw the WSGs after all the fills, so just store the locations to make calculations easier
+    // If we haven't customized the back option to be around the ring, then we use the center
+    // So, remove one from the ring items to compensate
+    uint8_t ringItems = menu->items->length - ((menu->parentMenu && !renderer->customBack) ? 1 : 0);
+
+    // We need to draw the WSGs after all the fills, so just store the locations to avoid calculating twice
     struct {
         uint16_t x;
         uint16_t y;
         wsg_t* wsg;
-    } iconsToDraw[menu->items->length];
+    } iconsToDraw[ringItems];
     uint8_t wsgs = 0;
 
     while (node != NULL)
@@ -109,13 +118,15 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         if (info != NULL)
         {
             // Calculate where this sector starts
-            uint16_t startAngle = (renderer->anchorAngle + info->position * 360 / menu->items->length) % 360;
-            uint16_t endAngle = (renderer->anchorAngle + (info->position + 1) * 360 / menu->items->length) % 360;
+            uint16_t startAngle = (renderer->anchorAngle + info->position * 360 / ringItems) % 360;
+            uint16_t endAngle = (renderer->anchorAngle + (info->position + 1) * 360 / ringItems) % 360;
 
             // We'll use the center angle for drawing icons, filling in, etc.
-            uint16_t centerAngle = (startAngle < endAngle) ? (startAngle + (endAngle - startAngle) / 2) : (startAngle + ((endAngle + 360) - startAngle) / 2);
+            uint16_t centerAngle = (startAngle < endAngle)
+                    ? (startAngle + (endAngle - startAngle) / 2)
+                    : (startAngle + ((endAngle + 360) - startAngle) / 2);
 
-            uint16_t r = (menu->currentItem == node) ? renderer->selR : renderer->unselR;
+            uint16_t r = (renderer->touched && menu->currentItem == node) ? renderer->selR : renderer->unselR;
 
             drawLine(renderer->x + getCos1024(startAngle) * centerR / 1024,
                      renderer->y - getSin1024(startAngle) * centerR / 1024,
@@ -137,7 +148,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 ++wsgs;
             }
 
-            if (menu->currentItem == node)
+            if (renderer->touched && menu->currentItem == node)
             {
                 for (uint16_t ang = startAngle; ang != endAngle; ang = (ang + 1) % 360)
                 {
@@ -155,10 +166,13 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         node = node->next;
     }
 
-    if (!menu->currentItem)
+    if (!renderer->touched || !menu->currentItem || (!renderer->customBack && menuItemIsBack(menu->currentItem->val)))
     {
         // This special case is just to fill faster than flood fill, it should work fine
-        drawCircleFilled(renderer->x, renderer->y, centerR, renderer->selBgColor);
+        if (renderer->touched)
+        {
+            drawCircleFilled(renderer->x, renderer->y, centerR, renderer->selBgColor);
+        }
 
         // draw the center circle border after
         drawCircle(renderer->x, renderer->y, centerR, renderer->borderColor);
@@ -189,8 +203,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     }
 }
 
-menu_t* wheelMenuSetSelection(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius)
+menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius)
 {
+    renderer->touched = true;
+    renderer->active = true;
+
     // Check if the angle is actually before the starting angle
     if ((angle % 360) < renderer->anchorAngle)
     {
@@ -201,47 +218,169 @@ menu_t* wheelMenuSetSelection(menu_t* menu, wheelMenuRenderer_t* renderer, uint1
 
     if (radius <= (renderer->centerR * 1024 / renderer->selR))
     {
-        if (!renderer->customBack)
+        if (!renderer->customBack && menu->parentMenu)
         {
-            menu_t* tmp = menuNavigateToItem(menu, mnuBackStr);
-            if (tmp->currentItem && ((menuItem_t*)tmp->currentItem->val)->label != mnuBackStr)
+            return menuNavigateToItem(menu, mnuBackStr);
+        }
+        else
+        {
+            if (menu->currentItem)
             {
-                // item wasn't changed as we wanted
-                // Unselect
-                tmp->currentItem = NULL;
+                menu->currentItem = NULL;
+                menu->cbFunc(NULL, false, 0);
             }
-
-            return tmp;
+            return menu;
         }
     }
 
-    // Calculate the offset
-    uint8_t index = (angle - renderer->anchorAngle) * menu->items->length / 360;
+    // Compensate for the "Back" item unless it's included in the ring
+    uint8_t ringItems = menu->items->length - ((menu->parentMenu && !renderer->customBack) ? 1 : 0);
 
-    if (index < menu->items->length)
+    // Calculate the offset
+    uint8_t index = (angle - renderer->anchorAngle) * ringItems / 360;
+
+    if (index < ringItems)
     {
-        node_t* node = renderer->itemInfos.first;
+        node_t* node = menu->items->first;
 
         // Find the item configured for that offset
         while (node != NULL)
         {
-            wheelItemInfo_t* item = node->val;
-            if (item && (item->position == index))
+            menuItem_t* menuItem = node->val;
+            wheelItemInfo_t* info = findInfo(renderer, menuItem->label ? menuItem->label : menuItem->options[0]);
+            if (info && (info->position == index))
             {
                 // Only navigate to it if it's not the current item already
-                if (!menu->currentItem || ((menuItem_t*)menu->currentItem->val)->label != item->label)
+                if (node != menu->currentItem)
                 {
-                    return menuNavigateToItem(menu, item->label);
+                    return menuNavigateToItem(menu, info->label);
                 }
 
-                break;
+
+                return menu;
             }
 
             node = node->next;
         }
+    return menu;
+}
+
+menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, buttonEvt_t* evt)
+{
+    if (evt->down && menu->currentItem)
+    {
+        menuItem_t* item = menu->currentItem->val;
+        wheelItemInfo_t* info = findInfo(renderer, item->options ? item->options[0] : item->label);
+
+        if (info && info->scroll != NO_SCROLL)
+        {
+            switch (evt->button)
+            {
+                case PB_UP:
+                {
+                    if (info->scroll & SCROLL_VERT)
+                    {
+                        return (info->scroll & SCROLL_REVERSE)
+                               ? menuNavigateToPrevOption(menu)
+                               : menuNavigateToNextOption(menu);
+                    }
+
+                    break;
+                }
+
+                case PB_DOWN:
+                {
+                    if (info->scroll & SCROLL_VERT)
+                    {
+                        return (info->scroll & SCROLL_REVERSE)
+                               ? menuNavigateToNextOption(menu)
+                               : menuNavigateToPrevOption(menu);
+                    }
+                    break;
+                }
+
+                case PB_LEFT:
+                {
+                    if (info->scroll & SCROLL_HORIZ)
+                    {
+                        return (info->scroll & SCROLL_REVERSE)
+                               ? menuNavigateToNextOption(menu)
+                               : menuNavigateToPrevOption(menu);
+                    }
+                    break;
+                }
+
+                case PB_RIGHT:
+                {
+                    if (info->scroll & SCROLL_HORIZ)
+                    {
+                        return (info->scroll & SCROLL_REVERSE)
+                               ? menuNavigateToPrevOption(menu)
+                               : menuNavigateToNextOption(menu);
+                    }
+                    break;
+                }
+
+                case PB_A:
+                {
+                    return menuSelectCurrentItem(menu);
+                }
+
+                case PB_B:
+                case PB_SELECT:
+                case PB_START:
+                default:
+                    break;
+            }
+        }
     }
 
     return menu;
+}
+
+menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer)
+{
+    if (!renderer->touched)
+    {
+        return menu;
+    }
+
+    renderer->touched = false;
+
+    if (!renderer->active)
+    {
+        return menu;
+    }
+
+    if (menu->currentItem)
+    {
+        if (!menuItemHasSubMenu(menu->currentItem->val) && !menuItemIsBack(menu->currentItem->val))
+        {
+            // Don't stay active after the touch is released
+            renderer->active = false;
+        }
+
+        return menuSelectCurrentItem(menu);
+    }
+    else
+    {
+        // No selection! Go back
+        if (menu->parentMenu)
+        {
+            return menu->parentMenu;
+        }
+        else
+        {
+            // There's no higher level menu, just close
+            renderer->active = false;
+            return menu;
+        }
+    }
+}
+
+bool wheelMenuActive(menu_t* menu, wheelMenuRenderer_t* renderer)
+{
+    return renderer->active;
 }
 
 static wheelItemInfo_t* findInfo(wheelMenuRenderer_t* renderer, const char* label)

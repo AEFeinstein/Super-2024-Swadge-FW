@@ -66,31 +66,38 @@ void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, pa
 void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_t* paintState, const brush_t* firstBrush, const brush_t* lastBrush)
 {
     //////// Background
+    bool toolWheelVisible = wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer);
 
-    // Fill top bar
-    fillDisplayArea(0, 0, TFT_WIDTH, canvas->y, PAINT_TOOLBAR_BG);
 
-    // Fill left side bar
-    fillDisplayArea(0, 0, canvas->x, TFT_HEIGHT, PAINT_TOOLBAR_BG);
-
-    // Fill right bar, if there's room
-    if (canvas->x + canvas->w * canvas->xScale < TFT_WIDTH)
+    if (toolWheelVisible)
     {
-        fillDisplayArea(canvas->x + canvas->w * canvas->xScale, 0, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
     }
-
-    // Fill bottom bar, if there's room
-    if (canvas->y + canvas->h * canvas->yScale < TFT_HEIGHT)
+    else
     {
-        fillDisplayArea(0, canvas->y + canvas->h * canvas->yScale, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
+        // Fill top bar
+        fillDisplayArea(0, 0, TFT_WIDTH, canvas->y, PAINT_TOOLBAR_BG);
+
+        // Fill left side bar
+        fillDisplayArea(0, 0, canvas->x, TFT_HEIGHT, PAINT_TOOLBAR_BG);
+
+        // Fill right bar, if there's room
+        if (canvas->x + canvas->w * canvas->xScale < TFT_WIDTH)
+        {
+            fillDisplayArea(canvas->x + canvas->w * canvas->xScale, 0, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
+        }
+
+        // Fill bottom bar, if there's room
+        if (canvas->y + canvas->h * canvas->yScale < TFT_HEIGHT)
+        {
+            fillDisplayArea(0, canvas->y + canvas->h * canvas->yScale, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
 
 
-        // Draw a black rectangle under where the exit progress bar will be so it can be seen
+            // Draw a black rectangle under where the exit progress bar will be so it can be seen
+        }
+
+        // Draw border around canvas
+        drawRect(canvas->x - 1, canvas->y - 1, canvas->x + canvas->w * canvas->xScale + 1, canvas->y + canvas->h * canvas->yScale + 1, c000);
     }
-
-
-    // Draw border around canvas
-    drawRect(canvas->x - 1, canvas->y - 1, canvas->x + canvas->w * canvas->xScale + 1, canvas->y + canvas->h * canvas->yScale + 1, c000);
 
 
     //////// Draw the active FG/BG colors and the color palette

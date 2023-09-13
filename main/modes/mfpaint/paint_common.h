@@ -307,8 +307,17 @@ typedef struct
 
     bool showToolWheel;
 
+    // Tool wheel shown even though touch released
+    bool toolWheelWaiting;
+
     // The menu for the tool wheel
     menu_t* toolWheel;
+
+    // So we can update the brush size item options easily
+    menuItem_t* toolWheelBrushSizeItem;
+
+    // So we can update the color item options easily
+    menuItem_t* toolWheelColorItem;
 
     // The renderer for the tool wheel menu
     wheelMenuRenderer_t* toolWheelRenderer;
