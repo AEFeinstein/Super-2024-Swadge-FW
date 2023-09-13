@@ -395,6 +395,11 @@ void checkRayCollisions(ray_t* ray)
         // If the prior node should be removed
         if (toRemove)
         {
+            // Remove the lock
+            if (ray->targetedObj == item)
+            {
+                ray->targetedObj = NULL;
+            }
             // Free the item
             free(item);
             // Remove it from the list

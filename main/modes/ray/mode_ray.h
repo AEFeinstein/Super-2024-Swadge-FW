@@ -245,13 +245,12 @@ typedef struct
     list_t scenery;                       ///< A list of all scenery (doesn't move, can be shot)
     list_t items;                         ///< A list of all items (doesn't move, can be shot)
 
-    q24_8 posX;     ///< The player's X position
-    q24_8 posY;     ///< The player's Y position
-    q24_8 dirAngle; ///< The angle the player is looking
-    q24_8 dirX;     ///< The player's X direction (derived from dirAngle)
-    q24_8 dirY;     ///< The player's Y direction (derived from dirAngle)
-    q24_8 planeX;   ///< The X camera plane, orthogonal to dir vector (derived from dirAngle)
-    q24_8 planeY;   ///< The Y camera plane, orthogonal to dir vector (derived from dirAngle)
+    q24_8 posX;   ///< The player's X position
+    q24_8 posY;   ///< The player's Y position
+    q24_8 dirX;   ///< The player's X direction (derived from dirAngle)
+    q24_8 dirY;   ///< The player's Y direction (derived from dirAngle)
+    q24_8 planeX; ///< The X camera plane, orthogonal to dir vector (derived from dirAngle)
+    q24_8 planeY; ///< The Y camera plane, orthogonal to dir vector (derived from dirAngle)
 
     q24_8 wallDistBuffer[TFT_WIDTH]; ///< The distance of each vertical strip of pixels, used for sprite casting
 

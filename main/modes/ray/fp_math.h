@@ -2,6 +2,7 @@
 #define _FP_MATH_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 typedef int32_t q24_8;  // 24 bits integer, 8 bits fraction
 typedef int32_t q16_16; // 16 bits integer, 16 bits fraction
@@ -22,6 +23,8 @@ typedef int32_t q8_24;  // 8 bits integer, 24 bits fraction
 //==============================================================================
 // Fixed Point Math Functions
 //==============================================================================
+
+void fastNormVec(q24_8* xp, q24_8* yp);
 
 // Switch to use macros or inline functions
 #define FP_MATH_DEFINES

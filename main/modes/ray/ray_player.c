@@ -10,12 +10,6 @@
 #include "ray_map.h"
 
 //==============================================================================
-// Function Prototypes
-//==============================================================================
-
-static void setPlayerAngle(ray_t* ray, q24_8 angle);
-
-//==============================================================================
 // Functions
 //==============================================================================
 
@@ -27,8 +21,12 @@ static void setPlayerAngle(ray_t* ray, q24_8 angle);
 void initializePlayer(ray_t* ray)
 {
     // ray->posX and ray->posY (position) are set by loadRayMap()
-    // Set the direction angle to 0
-    setPlayerAngle(ray, TO_FX(0));
+    // Set the direction
+    ray->dirX = TO_FX(0);
+    ray->dirY = TO_FX(1);
+    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+    ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
+    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
     // Set the head-bob to centered
     ray->posZ = TO_FX(0);
 
@@ -88,14 +86,6 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     // Strafing is either locked or unlocked
     if (ray->isStrafing)
     {
-        if (ray->targetedObj)
-        {
-            // Adjust position to always center on the locked target object
-            int32_t newAngle = cordicAtan2(ray->targetedObj->posX - ray->posX, ray->posY - ray->targetedObj->posY);
-            setPlayerAngle(ray, TO_FX(newAngle));
-            // This style of strafe (adjust angle, move tangentially) makes the player slowly spiral outward. Oh well.
-        }
-
         if (ray->btnState & PB_RIGHT)
         {
             // Strafe right
@@ -113,28 +103,39 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     }
     else
     {
-        // Rotate right, in place
+        // Assume no rotation
+        int32_t rotateDeg = 0;
+
         if (ray->btnState & PB_RIGHT)
         {
+            // Rotate right
             // TODO scale with elapsed time
-            q24_8 newAngle = ADD_FX(ray->dirAngle, TO_FX(5));
-            if (newAngle >= TO_FX(360))
-            {
-                newAngle -= TO_FX(360);
-            }
-            setPlayerAngle(ray, newAngle);
+            rotateDeg = 5;
+        }
+        else if (ray->btnState & PB_LEFT)
+        {
+            // Rotate left
+            // TODO scale with elapsed time
+            rotateDeg = 355;
         }
 
-        // Rotate left, in place
-        if (ray->btnState & PB_LEFT)
+        // If we should rotate
+        if (rotateDeg)
         {
-            // TODO scale with elapsed time
-            q24_8 newAngle = SUB_FX(ray->dirAngle, TO_FX(5));
-            if (newAngle < TO_FX(0))
-            {
-                newAngle += TO_FX(360);
-            }
-            setPlayerAngle(ray, newAngle);
+            // Do trig functions, only once
+            int32_t sinVal = getSin1024(rotateDeg);
+            int32_t cosVal = getCos1024(rotateDeg);
+            // Find the rotated X and Y vectors
+            q24_8 newX = (ray->dirX * cosVal) - (ray->dirY * sinVal);
+            q24_8 newY = (ray->dirX * sinVal) + (ray->dirY * cosVal);
+            ray->dirX  = newX;
+            ray->dirY  = newY;
+            // Normalize the vector
+            fastNormVec(&ray->dirX, &ray->dirY);
+
+            // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
+            ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
+            ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
         }
     }
 
@@ -170,6 +171,19 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)]))
     {
         ray->posY += deltaY;
+    }
+
+    // After moving position, recompute direction to targeted object
+    if (ray->isStrafing && ray->targetedObj)
+    {
+        // Re-lock on the target after moving
+        ray->dirX = ray->targetedObj->posX - ray->posX;
+        ray->dirY = ray->targetedObj->posY - ray->posY;
+        fastNormVec(&ray->dirX, &ray->dirY);
+
+        // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
+        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
     }
 
     // If the A button is pressed
@@ -271,27 +285,6 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             }
         }
     }
-}
-
-/**
- * @brief Helper function to set the angle the player is facing and associated camera variables
- *
- * @param ray The entire game state
- * @param angle The angle the player is facing. Must be in the range [0, 359]. 0 is north
- */
-void setPlayerAngle(ray_t* ray, q24_8 angle)
-{
-    // The angle the player is facing
-    ray->dirAngle = angle;
-
-    // Compute cartesian direction from angular direction
-    // trig functions are already << 10, so / 4 to get to << 8
-    ray->dirY = -getCos1024(FROM_FX(ray->dirAngle)) / 4;
-    ray->dirX = getSin1024(FROM_FX(ray->dirAngle)) / 4;
-
-    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-    ray->planeX = MUL_FX(-TO_FX(2) / 3, ray->dirY);
-    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
 }
 
 /**
