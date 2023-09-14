@@ -79,7 +79,7 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                 else if ((type & OBJ) == OBJ)
                 {
                     // Allocate a new object
-                    if ((type & ENEMY) == ENEMY)
+                    if ((type & 0x60) == ENEMY)
                     {
                         // Allocate the enemy
                         rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
@@ -115,7 +115,7 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                         newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
 
                         // Add it to the linked list
-                        if ((type & ITEM) == ITEM)
+                        if ((type & 0x60) == ITEM)
                         {
                             push(&ray->items, newObj);
                         }

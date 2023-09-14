@@ -97,7 +97,7 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
     // Set a pointer for textures later
     paletteColor_t* texture = NULL;
     // The ceiling texture is always this
-    paletteColor_t* ceilTexture = getTexByType(ray, BG_FLOOR)->px;
+    paletteColor_t* ceilTexture = getTexByType(ray, BG_CEILING)->px;
 
     // Save these to not resolve pointers later
     uint32_t mapW = ray->map.w;
@@ -916,25 +916,28 @@ rayObjCommon_t* castSprites(ray_t* ray)
  */
 void drawHud(ray_t* ray)
 {
-    wsg_t* gun      = &ray->guns[ray->loadout];
-    int32_t yOffset = TFT_HEIGHT - gun->h;
-    // If a loadout change is in progress
-    if (ray->loadoutChangeTimer)
+    if (LO_NONE != ray->loadout)
     {
-        // Loadout is changing out
-        if (ray->loadout != ray->nextLoadout)
+        wsg_t* gun      = &ray->guns[ray->loadout];
+        int32_t yOffset = TFT_HEIGHT - gun->h;
+        // If a loadout change is in progress
+        if (ray->loadoutChangeTimer)
         {
-            // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves down
-            yOffset += (gun->h - ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US));
+            // Loadout is changing out
+            if (ray->loadout != ray->nextLoadout)
+            {
+                // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves down
+                yOffset += (gun->h - ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US));
+            }
+            // Loadout is changing in
+            else
+            {
+                // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves up
+                yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
+            }
         }
-        // Loadout is changing in
-        else
-        {
-            // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves up
-            yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
-        }
+        drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
     }
-    drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
 }
 
 /**

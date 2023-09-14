@@ -23,7 +23,7 @@ void initializePlayer(ray_t* ray)
     // ray->posX and ray->posY (position) are set by loadRayMap()
     // Set the direction
     ray->dirX = TO_FX(0);
-    ray->dirY = TO_FX(1);
+    ray->dirY = -TO_FX(1);
     // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
@@ -187,10 +187,11 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     }
 
     // If the A button is pressed
-    if ((ray->btnState & PB_A) && !(prevBtnState & PB_A))
+    if ((ray->btnState & PB_A) && !(prevBtnState & PB_A) && (LO_NONE != ray->loadout))
     {
         // Easy map for loadout to bullet type
         const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
+            EMPTY,
             OBJ_BULLET_NORMAL, ///< Normal loadout
             // TODO charge beam unaccounted for
             OBJ_BULLET_MISSILE, ///< Missile loadout
@@ -224,7 +225,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             {
                 // Get the loadout touched
                 rayLoadout_t nextLoadout = ray->loadout;
-                if (tj & TB_UP)
+                if ((tj & TB_UP) && (ray->inventory.beamLoadOut))
                 {
                     nextLoadout = LO_NORMAL;
                 }
@@ -254,7 +255,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
     else
     {
         // Button Not touched. If this was during a loadout change, cancel it
-        if (ray->nextLoadout != ray->loadout)
+        if ((ray->nextLoadout != ray->loadout) && !ray->forceLoadoutSwap)
         {
             // Reset the timer to bring the gun up and set the next loadout to the current one
             ray->loadoutChangeTimer = LOADOUT_TIMER_US - ray->loadoutChangeTimer;
@@ -282,6 +283,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             {
                 // All done swapping
                 ray->loadoutChangeTimer = 0;
+                ray->forceLoadoutSwap   = false;
             }
         }
     }
@@ -300,23 +302,43 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
     rayInventory_t* inventory = &ray->inventory;
     switch (type)
     {
+        case OBJ_ITEM_BEAM:
+        {
+            inventory->beamLoadOut = true;
+            // Switch to the normal loadout
+            ray->loadoutChangeTimer = LOADOUT_TIMER_US;
+            ray->nextLoadout        = LO_NORMAL;
+            ray->forceLoadoutSwap   = true;
+            break;
+        }
         case OBJ_ITEM_CHARGE_BEAM:
         {
             inventory->chargePowerUp = true;
+            if (LO_NORMAL != ray->loadout)
+            {
+                // Switch to the normal loadout
+                ray->loadoutChangeTimer = LOADOUT_TIMER_US;
+                ray->nextLoadout        = LO_NORMAL;
+                ray->forceLoadoutSwap   = true;
+            }
             break;
         }
         case OBJ_ITEM_ICE:
         {
             inventory->iceLoadOut = true;
             // Switch to the ice loadout
-            ray->loadout = LO_ICE;
+            ray->loadoutChangeTimer = LOADOUT_TIMER_US;
+            ray->nextLoadout        = LO_ICE;
+            ray->forceLoadoutSwap   = true;
             break;
         }
         case OBJ_ITEM_XRAY:
         {
             inventory->xrayLoadOut = true;
             // Switch to the xray loadout
-            ray->loadout = LO_XRAY;
+            ray->loadoutChangeTimer = LOADOUT_TIMER_US;
+            ray->nextLoadout        = LO_XRAY;
+            ray->forceLoadoutSwap   = true;
             break;
         }
         case OBJ_ITEM_SUIT_WATER:
@@ -342,7 +364,9 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
                         // Picking up any missiles enables the loadout
                         inventory->missileLoadOut = true;
                         // Switch to the missile loadout
-                        ray->loadout = LO_MISSILE;
+                        ray->loadoutChangeTimer = LOADOUT_TIMER_US;
+                        ray->nextLoadout        = LO_MISSILE;
+                        ray->forceLoadoutSwap   = true;
                     }
                     // Add five missiles
                     inventory->maxNumMissiles += 5;
@@ -387,18 +411,16 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         }
         case OBJ_ITEM_PICKUP_MISSILE:
         {
-            // Transient, add 5 missiles, not going over the max
-            inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
+            if (ray->inventory.missileLoadOut)
+            {
+                // Transient, add 5 missiles, not going over the max
+                inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
+            }
             break;
         }
         case OBJ_ITEM_KEY:
         {
             // TODO implement keys?
-            break;
-        }
-        case OBJ_ITEM_BEAM:
-        {
-            // TODO implement first beam?
             break;
         }
         default:
