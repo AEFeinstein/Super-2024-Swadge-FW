@@ -25,6 +25,7 @@
 #include "pong.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "mode_ray.h"
 
 //==============================================================================
 // Defines
@@ -60,6 +61,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &pongMode,
     &touchTestMode,
     &tunernomeMode,
+    &rayMode
 };
 // clang-format on
 
