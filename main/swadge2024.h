@@ -42,7 +42,7 @@
  * "modes/pong"
  * \endcode
  * 
- * under the INCLUDES section. This 
+ * under the INCLUDES section.
  * 
  * 
  * Function prototypes must be declared before using them to initialize function pointers:
