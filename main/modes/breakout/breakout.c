@@ -51,26 +51,6 @@ typedef enum
     BREAKOUT_GAME,
 } breakoutScreen_t;
 
-/**
- * @brief Enum of control schemes for a breakout game
- */
-typedef enum
-{
-    BREAKOUT_BUTTON,
-    BREAKOUT_TOUCH,
-    BREAKOUT_TILT,
-} breakoutControl_t;
-
-/**
- * @brief Enum of CPU difficulties
- */
-typedef enum
-{
-    BREAKOUT_EASY,
-    BREAKOUT_MEDIUM,
-    BREAKOUT_HARD,
-} breakoutDifficulty_t;
-
 //==============================================================================
 // Structs
 //==============================================================================
