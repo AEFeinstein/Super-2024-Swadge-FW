@@ -378,7 +378,6 @@ void app_main(void)
                 {
                     // Call the overlay mode's main loop if there is one
                     quickSettingsMode.fnMainLoop(tNowUs - tLastMainLoopCall);
-
                 }
                 else
                 {
@@ -387,7 +386,6 @@ void app_main(void)
                 }
                 tLastMainLoopCall = tNowUs;
             }
-
 
             // If the menu button is being held
             if (0 != timeExitPressed && !showQuickSettings)
