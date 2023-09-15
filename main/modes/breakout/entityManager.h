@@ -57,51 +57,7 @@ entity_t* createPlayerPaddleRight(entityManager_t * entityManager, uint16_t x, u
 entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y);
 entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y);
 entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createScrollLockLeft(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createScrollLockRight(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createScrollLockUp(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createScrollLockDown(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createScrollUnlock(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createHitBlock(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createPowerUp(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createWarp(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createDustBunny(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createWasp(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createEnemyBushL2(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createEnemyBushL3(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createDustBunnyL2(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createDustBunnyL3(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createWaspL2(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createWaspL3(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColBlue(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColYellow(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColOrange(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColPurple(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColDarkPurple(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColBlack(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColNeutralGreen(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColNeutralDarkRed(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgColNeutralDarkGreen(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* create1up(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createWaveBall(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createCheckpoint(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgmChange5(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgmChange1(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgmChange2(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgmChange3(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgmChange4(entityManager_t * entityManager, uint16_t x, uint16_t y);
-entity_t* createBgmStop(entityManager_t * entityManager, uint16_t x, uint16_t y);
+
 void freeEntityManager(entityManager_t * entityManager);
-
-
-
-
-
-
-
-
-
-
-
 
 #endif
