@@ -83,8 +83,9 @@ void deinitWheelMenu(wheelMenuRenderer_t* renderer);
 void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedUs);
 
 void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, const wsg_t* icon, uint8_t position, wheelScrollDir_t scrollDir);
+void wheelMenuSetItemColor(wheelMenuRenderer_t* renderer, const char* label, paletteColor_t selectedBg, paletteColor_t unselectedBg);
 menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius);
-menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, buttonEvt_t* evt);
+menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, const buttonEvt_t* evt);
 menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer);
 bool wheelMenuActive(menu_t* menu, wheelMenuRenderer_t* renderer);
 

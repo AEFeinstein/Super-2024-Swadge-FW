@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 #include "settingsManager.h"
 #include "hdw-nvs.h"
@@ -26,9 +27,9 @@ static const settingParam_t paint##k##Param = { \
 #define PAINT_BIT_PARAM(k) PAINT_PARAM(INT32_MIN, INT32_MAX, k, 0)
 
 static const char KEY_PAINT_INDEX[] = "pnt_idx";
-static const char KEY_PAINT_SLOT_PALETTE[] = "paint_%02d_pal";
-static const char KEY_PAINT_SLOT_DIM[] = "paint_%02d_dim";
-static const char KEY_PAINT_SLOT_CHUNK[] = "paint_%02dc%05u";
+static const char KEY_PAINT_SLOT_PALETTE[] = "paint_%02" PRIu8 "_pal";
+static const char KEY_PAINT_SLOT_DIM[] = "paint_%02" PRIu8 "_dim";
+static const char KEY_PAINT_SLOT_CHUNK[] = "paint_%02" PRIu8 "c%05" PRIu32;
 
 /*static const settingParam_t paintOldIndex = {
     .min = INT32_MIN,
@@ -213,7 +214,7 @@ void paintSaveIndex(int32_t index)
 {
     if (writeNvs32(KEY_PAINT_INDEX, index))
     {
-        PAINT_LOGD("Saved index: %04x", index);
+        PAINT_LOGD("Saved index: %04" PRIx32, index);
     }
     else
     {
@@ -391,11 +392,11 @@ bool paintSave(int32_t* index, const paintCanvas_t* canvas, uint8_t slot)
         snprintf(key, 16, KEY_PAINT_SLOT_CHUNK, slot, chunkNumber);
         if (writeNvsBlob(key, imgChunk, written))
         {
-            PAINT_LOGD("Saved blob %u with %zu bytes", chunkNumber, written);
+            PAINT_LOGD("Saved blob %" PRIu32 " with %zu bytes", chunkNumber, written);
         }
         else
         {
-            PAINT_LOGE("Unable to save blob %u", chunkNumber);
+            PAINT_LOGE("Unable to save blob %" PRIu32, chunkNumber);
             free(imgChunk);
             return false;
         }
@@ -441,7 +442,7 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
 
     if (!paintGetSlotInUse(*index, slot))
     {
-        PAINT_LOGW("Attempted to load from uninitialized slot %d", slot);
+        PAINT_LOGW("Attempted to load from uninitialized slot %"PRIu8, slot);
         free(imgChunk);
         return false;
     }
@@ -470,7 +471,7 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
 
     if (!paintLoadDimensions(canvas, slot))
     {
-        PAINT_LOGE("Slot %d has 0 dimension! Stopping load and clearing slot", slot);
+        PAINT_LOGE("Slot %" PRIu8 " has 0 dimension! Stopping load and clearing slot", slot);
         paintClearSlot(index, slot);
         free(imgChunk);
         return false;
@@ -488,7 +489,7 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
         // panic
         if (!readNvsBlob(key, NULL, &lastChunkSize) || lastChunkSize > PAINT_SAVE_CHUNK_SIZE)
         {
-            PAINT_LOGE("Unable to read size of blob %u in slot %s", chunkNumber, key);
+            PAINT_LOGE("Unable to read size of blob %" PRIu32 " in slot %s", chunkNumber, key);
             free(imgChunk);
             return false;
         }
@@ -496,11 +497,11 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
         // read the chunk
         if (readNvsBlob(key, imgChunk, &lastChunkSize))
         {
-            PAINT_LOGD("Read blob %d (%zu bytes)", chunkNumber, lastChunkSize);
+            PAINT_LOGD("Read blob %" PRIu32 " (%zu bytes)", chunkNumber, lastChunkSize);
         }
         else
         {
-            PAINT_LOGE("Unable to read blob %d", chunkNumber);
+            PAINT_LOGE("Unable to read blob %" PRIu32, chunkNumber);
             // do panic if we miss one chunk, it's probably not ok...
             free(imgChunk);
             return false;
@@ -596,13 +597,13 @@ void paintDeleteSlot(int32_t* index, uint8_t slot)
     }
 
     // Erase chunks until we fail to find one
-    uint8_t i = 0;
+    uint32_t i = 0;
     do
     {
         snprintf(key, 16, KEY_PAINT_SLOT_CHUNK, slot, i++);
     } while (eraseNvsKey(key));
 
-    PAINT_LOGI("Erased %d chunks of slot %d", i - 1, slot);
+    PAINT_LOGI("Erased %" PRIu32 " chunks of slot %" PRIu8, i - 1, slot);
     paintClearSlot(index, slot);
 
     if (paintGetRecentSlot(*index) == slot)

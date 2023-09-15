@@ -71,6 +71,27 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
 
     if (toolWheelVisible)
     {
+        // Clear whole screen
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
+
+        // Draw the palette
+        /*uint16_t colorBoxX = PAINT_COLORBOX_MARGIN_X + (paintState->canvas.x - 1 - PAINT_COLORBOX_W - PAINT_COLORBOX_MARGIN_X * 2 - 2) / 2;
+        uint16_t colorBoxY = PAINT_ACTIVE_COLOR_Y + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + 1 + PAINT_COLORBOX_MARGIN_TOP;
+
+        // vertically center the color boxes in the available space
+        colorBoxY = colorBoxY + (TFT_HEIGHT - PAINT_COLORBOX_MARGIN_TOP - (PAINT_MAX_COLORS * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H)) - colorBoxY - PAINT_COLORBOX_MARGIN_TOP) / 2;
+
+        //////// Recent Colors (palette)
+        for (int i = 0; i < PAINT_MAX_COLORS; i++)
+        {
+            drawColorBox(colorBoxX, colorBoxY + i * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H), PAINT_COLORBOX_W, PAINT_COLORBOX_H, canvas->palette[i], false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
+        }
+
+        if (paintState->buttonMode == BTN_MODE_SELECT || paintState->buttonMode == BTN_MODE_PALETTE)
+        {
+            // Draw a slightly bigger color box for the selected color
+            drawColorBox(colorBoxX - 3, colorBoxY + paintState->paletteSelect * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H) - 3, PAINT_COLORBOX_W + 6, PAINT_COLORBOX_H + 6, canvas->palette[paintState->paletteSelect], true, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
+        }*/
     }
     else
     {
@@ -90,9 +111,6 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         if (canvas->y + canvas->h * canvas->yScale < TFT_HEIGHT)
         {
             fillDisplayArea(0, canvas->y + canvas->h * canvas->yScale, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
-
-
-            // Draw a black rectangle under where the exit progress bar will be so it can be seen
         }
 
         // Draw border around canvas
@@ -100,33 +118,10 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
     }
 
 
-    //////// Draw the active FG/BG colors and the color palette
-
-
     //////// Active Colors
     // Draw the background color, then draw the foreground color overlapping it and offset by half in both directions
-    drawColorBox(PAINT_ACTIVE_COLOR_X, PAINT_ACTIVE_COLOR_Y, PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->bgColor, false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
+    drawColorBox(PAINT_ACTIVE_COLOR_X - 1, PAINT_ACTIVE_COLOR_Y, PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->bgColor, false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
     drawColorBox(PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W / 2, PAINT_ACTIVE_COLOR_Y + PAINT_COLORBOX_H / 2, PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->fgColor, false, cTransparent, PAINT_COLORBOX_SHADOW_BOTTOM);
-
-    uint16_t colorBoxX = PAINT_COLORBOX_MARGIN_X + (paintState->canvas.x - 1 - PAINT_COLORBOX_W - PAINT_COLORBOX_MARGIN_X * 2 - 2) / 2;
-    uint16_t colorBoxY = PAINT_ACTIVE_COLOR_Y + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + 1 + PAINT_COLORBOX_MARGIN_TOP;
-
-    // vertically center the color boxes in the available space
-    colorBoxY = colorBoxY + (TFT_HEIGHT - PAINT_COLORBOX_MARGIN_TOP - (PAINT_MAX_COLORS * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H)) - colorBoxY - PAINT_COLORBOX_MARGIN_TOP) / 2;
-
-
-    //////// Recent Colors (palette)
-    for (int i = 0; i < PAINT_MAX_COLORS; i++)
-    {
-        drawColorBox(colorBoxX, colorBoxY + i * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H), PAINT_COLORBOX_W, PAINT_COLORBOX_H, canvas->palette[i], false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
-    }
-
-    if (paintState->buttonMode == BTN_MODE_SELECT || paintState->buttonMode == BTN_MODE_PALETTE)
-    {
-        // Draw a slightly bigger color box for the selected color
-        drawColorBox(colorBoxX - 3, colorBoxY + paintState->paletteSelect * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H) - 3, PAINT_COLORBOX_W + 6, PAINT_COLORBOX_H + 6, canvas->palette[paintState->paletteSelect], true, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
-    }
-
 
     uint16_t textX = 30, textY = (paintState->canvas.y - 1 - 2 * PAINT_TOOLBAR_TEXT_PADDING_Y) / 2;
 
@@ -150,9 +145,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         //////// Tools
 
         // Draw the brush icons
-        uint16_t iconOffset = 30;
-        const brush_t* curBrush;
-        for (curBrush = firstBrush; curBrush <= lastBrush; curBrush++)
+        /*uint16_t iconOffset = 30;
+        for (const brush_t* curBrush = firstBrush; curBrush <= lastBrush; curBrush++)
         {
             const wsg_t* brushIcon = (curBrush == artist->brushDef) ? &curBrush->iconActive : &curBrush->iconInactive;
             uint16_t iconY = (paintState->canvas.y - 1 - brushIcon->h) / 2;
@@ -172,13 +166,20 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
             drawWsg(brushIcon, iconOffset, iconY, false, false, 0);
 
             iconOffset += brushIcon->w + 1;
-        }
+        }*/
 
         // Draw the brush size, if applicable and not constant
         char text[16];
 
-        textX = canvas->x;
+        textX = PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + PAINT_COLORBOX_MARGIN_X + 1;
         textY = TFT_HEIGHT - paintState->toolbarFont.height - 4;
+
+        fillDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h, textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
+                        (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect] : artist->fgColor);
+        drawWsgSimple(&artist->brushDef->iconActive, textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
+        drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1, textX + artist->brushDef->iconActive.w + 2, textY + paintState->toolbarFont.height + 1, c000);
+
+        textX += artist->brushDef->iconActive.w + PAINT_COLORBOX_MARGIN_X + 2;
 
         // Draw the brush name
         textX = drawText(&paintState->toolbarFont, c000, artist->brushDef->name, textX, textY);

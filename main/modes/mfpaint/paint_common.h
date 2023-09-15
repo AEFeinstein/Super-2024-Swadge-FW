@@ -79,14 +79,17 @@
 #define PAINT_COLORBOX_SHADOW_TOP c000
 #define PAINT_COLORBOX_SHADOW_BOTTOM c111
 
+// The screen's corner radius in pixels
+#define TFT_CORNER_RADIUS 40
+
 // Vertical margin between each color box
 #define PAINT_COLORBOX_MARGIN_TOP 2
 // Minimum margin to the left and right of each color box
 #define PAINT_COLORBOX_MARGIN_X 4
 
 // X and Y position of the active color boxes (foreground/background color)
-#define PAINT_ACTIVE_COLOR_X ((canvas->x - PAINT_COLORBOX_W - PAINT_COLORBOX_W / 2) / 2)
-#define PAINT_ACTIVE_COLOR_Y (canvas->y - PAINT_COLORBOX_H / 2)
+#define PAINT_ACTIVE_COLOR_X (TFT_CORNER_RADIUS / 2 + PAINT_COLORBOX_MARGIN_X)
+#define PAINT_ACTIVE_COLOR_Y (TFT_HEIGHT - PAINT_COLORBOX_H * 2 - PAINT_COLORBOX_MARGIN_TOP)
 
 // Color picker stuff
 #define PAINT_COLOR_PICKER_MIN_BAR_H 6
@@ -319,18 +322,21 @@ typedef struct
     // So we can update the color item options easily
     menuItem_t* toolWheelColorItem;
 
+    // Labels for each color, so there's something to display on the tool wheel
+    // 8 chars is enough for #00AABB\0
+    char colorNames[PAINT_MAX_COLORS][9];
+
     // The renderer for the tool wheel menu
     wheelMenuRenderer_t* toolWheelRenderer;
 
     //// Icons for various tool wheel things
 
     wsg_t wheelSizeWsg;
-
     wsg_t wheelBrushWsg;
-
     wsg_t wheelColorWsg;
-
     wsg_t wheelSettingsWsg;
+    wsg_t wheelUndoWsg;
+    wsg_t wheelRedoWsg;
 } paintDraw_t;
 
 typedef struct
