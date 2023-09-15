@@ -23,7 +23,7 @@ typedef struct
     union
     {
         /// @brief Holds each keycode in a separate char
-        struct keys
+        struct
         {
             char up;
             char down;
@@ -35,17 +35,11 @@ typedef struct
 
             char start;
             char select;
-
-            char touch1;
-            char touch2;
-            char touch3;
-            char touch4;
-            char touch5;
         };
 
         /// @brief Holds all keycodes in a single string
-        // These keycodes will be in the same
-        char keymap[14];
+        // These keycodes will be in the same memory
+        char keymap[9];
     };
 } emuKeymap_t;
 
@@ -65,11 +59,10 @@ const emuExtension_t keymapEmuCallback = {
 };
 
 static const emuKeymap_t keymaps[] = {
-    {.name = "qwerty", .keymap = "WSADLKOI12345"},  // QWERTY (default)
-    {.name = "azerty", .keymap = "ZSQDLKOI12345"},  // AZERTY
-    {.name = "colemak", .keymap = "WRASIEYU12345"}, // Colemak
-    {.name = "dvorak", .keymap = ",OAENTRC12345"},  // Dvorak
-    {.name = "dvp", .keymap = ",OAENTRC&[{}("},     // Programmer Dvorak
+    {.name = "qwerty", .keymap = "WSADLKOI"},  // QWERTY (default)
+    {.name = "azerty", .keymap = "ZSQDLKOI"},  // AZERTY
+    {.name = "colemak", .keymap = "WRASIEYU"}, // Colemak
+    {.name = "dvorak", .keymap = ",OAENTRC"},  // Dvorak
 };
 
 static const emuKeymap_t* activeKeymap = NULL;
@@ -84,7 +77,7 @@ static bool keymapInit(emuArgs_t* emuArgs)
     {
         for (const emuKeymap_t* keymap = keymaps; keymap < (keymaps + ARRAY_SIZE(keymaps)); keymap++)
         {
-            if (!strncmp(emuArgs->keymap, keymap->name, sizeof(keymap->name) - 1))
+            if (!strncmp(emuArgs->keymap, keymap->name, strlen(emuArgs->keymap)))
             {
                 printf("Set keymap to '%s'\n", keymap->name);
                 // Set the keyboard map, we found it!
@@ -118,7 +111,7 @@ static int32_t keymapKeyCb(uint32_t keycode, bool down)
     // Check if the key matches one in the layout
     if (activeKeymap != NULL)
     {
-        for (uint8_t i = 0; i < 13; i++)
+        for (uint8_t i = 0; i < 8; i++)
         {
             if (activeKeymap->keymap[i] == keycode)
             {
@@ -128,7 +121,7 @@ static int32_t keymapKeyCb(uint32_t keycode, bool down)
         }
     }
 
-    for (uint8_t i = 0; i < 13; i++)
+    for (uint8_t i = 0; i < 8; i++)
     {
         if (keymaps->keymap[i] == keycode)
         {
