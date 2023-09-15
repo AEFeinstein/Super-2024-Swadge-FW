@@ -295,25 +295,17 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->xMaxSpeed = 40; //72; Walking
-    entity->yMaxSpeed = 64; //72;
-    entity->xDamping = 1;
-    entity->yDamping = 4;
-    entity->gravityEnabled = false;
-    entity->gravity = 4;
-    entity->falling = false;
     entity->jumpPower = 0;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
     entity->hp = 1;
-    entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
+    entity->animationTimer = 0;
 
     entity->type = ENTITY_PLAYER_PADDLE_BOTTOM;
     entity->spriteIndex = SP_PADDLE_0;
     entity->updateFunction = &updatePlayer;
     entity->collisionHandler = &playerCollisionHandler;
     entity->tileCollisionHandler = &playerTileCollisionHandler;
-    entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &playerOverlapTileHandler;
     return entity;
 }
@@ -333,13 +325,6 @@ entity_t* createPlayerPaddleTop(entityManager_t * entityManager, uint16_t x, uin
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->xMaxSpeed = 40; //72; Walking
-    entity->yMaxSpeed = 64; //72;
-    entity->xDamping = 1;
-    entity->yDamping = 4;
-    entity->gravityEnabled = false;
-    entity->gravity = 4;
-    entity->falling = false;
     entity->jumpPower = 0;
     entity->spriteFlipVertical = true;
     entity->spriteRotateAngle = 0;
@@ -351,7 +336,6 @@ entity_t* createPlayerPaddleTop(entityManager_t * entityManager, uint16_t x, uin
     entity->updateFunction = &updatePlayer;
     entity->collisionHandler = &playerCollisionHandler;
     entity->tileCollisionHandler = &playerTileCollisionHandler;
-    entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &playerOverlapTileHandler;
     return entity;
 }
@@ -371,13 +355,6 @@ entity_t* createPlayerPaddleLeft(entityManager_t * entityManager, uint16_t x, ui
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->xMaxSpeed = 40; //72; Walking
-    entity->yMaxSpeed = 64; //72;
-    entity->xDamping = 1;
-    entity->yDamping = 4;
-    entity->gravityEnabled = false;
-    entity->gravity = 4;
-    entity->falling = false;
     entity->jumpPower = 0;
     entity->spriteFlipHorizontal = true;
     entity->spriteFlipVertical = false;
@@ -390,7 +367,6 @@ entity_t* createPlayerPaddleLeft(entityManager_t * entityManager, uint16_t x, ui
     entity->updateFunction = &updatePlayerVertical;
     entity->collisionHandler = &playerCollisionHandler;
     entity->tileCollisionHandler = &playerTileCollisionHandler;
-    entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &playerOverlapTileHandler;
     return entity;
 }
@@ -410,13 +386,6 @@ entity_t* createPlayerPaddleRight(entityManager_t * entityManager, uint16_t x, u
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->xMaxSpeed = 40; //72; Walking
-    entity->yMaxSpeed = 64; //72;
-    entity->xDamping = 1;
-    entity->yDamping = 4;
-    entity->gravityEnabled = false;
-    entity->gravity = 4;
-    entity->falling = false;
     entity->jumpPower = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
@@ -429,7 +398,6 @@ entity_t* createPlayerPaddleRight(entityManager_t * entityManager, uint16_t x, u
     entity->updateFunction = &updatePlayerVertical;
     entity->collisionHandler = &playerCollisionHandler;
     entity->tileCollisionHandler = &playerTileCollisionHandler;
-    entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &playerOverlapTileHandler;
     return entity;
 }
@@ -449,11 +417,6 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     
     entity->xspeed = 0;
     entity->yspeed = 0;
-    //setVelocity(entity, 46, 63);
-    entity->xMaxSpeed = 132;
-    entity->yMaxSpeed = 132;
-    entity->gravityEnabled = false;
-    entity->gravity = 4;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
@@ -465,7 +428,6 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->updateFunction = &updateBallAtStart;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &ballTileCollisionHandler;
-    entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &ballOverlapTileHandler;
 
     return entity;
@@ -486,13 +448,6 @@ entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
     
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->xMaxSpeed = 132;
-    entity->yMaxSpeed = 132;
-
-    entity->xDamping = 30; //Repurposed for cooldown timer
-
-    entity->gravityEnabled = false;
-    entity->gravity = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
@@ -503,7 +458,6 @@ entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->updateFunction = &updateBomb;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
-    entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
 
     //Entity cannot be respawned from the tilemap
@@ -528,10 +482,6 @@ entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t 
     
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->xMaxSpeed = 132;
-    entity->yMaxSpeed = 132;
-    entity->gravityEnabled = false;
-    entity->gravity = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
@@ -542,7 +492,6 @@ entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t 
     entity->updateFunction = &updateExplosion;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
-    entity->fallOffTileHandler = &defaultFallOffTileHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
 
     //Entity cannot be respawned from the tilemap
