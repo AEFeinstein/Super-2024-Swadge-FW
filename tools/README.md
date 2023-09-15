@@ -14,3 +14,7 @@ This file can be given to `spiffs_file_preprocessor` to flash to the Swadge and 
 ## [`pyFlashGui`](./pyFlashGui)
 
 `pyFlashGui` is a Python GUI program which is used to program Swadges during manufacturing. It spins around and programs Swadges as they are connected to the host computer over USB.
+
+## `monitor_emu_wifi.py`
+
+`monitor_emu_wifi.py` is a Python command-line program which listens for emulated ESPNOW packets and prints them for debugging purposes.

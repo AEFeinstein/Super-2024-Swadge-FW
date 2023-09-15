@@ -67,3 +67,5 @@ version.txt
 plantuml.jar
 swadge_emulator
 crash-*.txt
+screenshot-*.bmp
+rec-*.csv

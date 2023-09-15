@@ -183,7 +183,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
             .reserved = 0                  /* Reserved for future feature set */
         },
     };
-    if (ESP_OK != (err = esp_wifi_set_config(WIFI_IF_NAN, &config)))
+    if (ESP_OK != (err = esp_wifi_set_config(WIFI_IF_STA, &config)))
     {
         ESP_LOGW("ESPNOW", "Couldn't set station config");
         return err;
@@ -202,7 +202,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return err;
     }
 
-    if (ESP_OK != (err = esp_wifi_config_80211_tx_rate(WIFI_IF_NAN, WIFI_RATE)))
+    if (ESP_OK != (err = esp_wifi_config_80211_tx_rate(WIFI_IF_STA, WIFI_RATE)))
     {
         ESP_LOGW("ESPNOW", "Couldn't set PHY rate %s", esp_err_to_name(err));
         return err;
@@ -214,7 +214,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return err;
     }
 
-    if (ESP_OK != (err = esp_wifi_config_espnow_rate(WIFI_IF_NAN, WIFI_RATE)))
+    if (ESP_OK != (err = esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_RATE)))
     {
         ESP_LOGW("ESPNOW", "Couldn't set PHY rate %s", esp_err_to_name(err));
         return err;
@@ -228,7 +228,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     }
 
     // Set data rate
-    if (ESP_OK != (err = esp_wifi_internal_set_fix_rate(WIFI_IF_NAN, true, WIFI_RATE)))
+    if (ESP_OK != (err = esp_wifi_internal_set_fix_rate(WIFI_IF_STA, true, WIFI_RATE)))
     {
         ESP_LOGW("ESPNOW", "Couldn't set data rate");
         return err;
@@ -289,7 +289,7 @@ esp_err_t espNowUseWireless(void)
                 .peer_addr = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF},
                 .lmk = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
                 .channel = ESPNOW_CHANNEL,
-                .ifidx   = WIFI_IF_NAN,
+                .ifidx   = WIFI_IF_STA,
                 .encrypt = 0,
                 .priv    = NULL};
             if (ESP_OK != (err = esp_now_add_peer(&broadcastPeer)))
