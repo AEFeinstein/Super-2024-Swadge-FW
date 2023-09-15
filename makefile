@@ -19,7 +19,11 @@ endif
 # Programs to use
 ################################################################################
 
-CC = gcc
+ifeq ($(HOST_OS),Windows)
+	CC = x86_64-w64-mingw32-gcc.exe
+else ifeq ($(HOST_OS),Linux)
+	CC = gcc
+endif
 
 FIND:=find
 ifeq ($(HOST_OS),Windows)
@@ -42,7 +46,7 @@ SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "rawdraw_sf.h" -not -name "rawdraw_sf.h" -not -name "cJSON*")
+ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "rawdraw_sf.h" -not -name "getopt_win.h" -not -name "cJSON*")
 
 ################################################################################
 # Includes
@@ -99,7 +103,7 @@ CFLAGS_WARNINGS = \
 	-Wno-enum-conversion \
 	-Wno-error=unused-but-set-variable \
 	-Wno-old-style-declaration
-	
+
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
 	-Wundef \
@@ -161,14 +165,10 @@ DEFINES_LIST = \
 	CONFIG_NUM_LEDS=8 \
 	configENABLE_FREERTOS_DEBUG_OCDAWARE=1 \
 	_GNU_SOURCE \
-	IDF_VER="v5.1" \
+	IDF_VER="v5.1.1" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
 	CFG_TUSB_MCU=OPT_MCU_ESP32S2
-
-ifeq ($(HOST_OS),Windows)
-	DEFINES_LIST += WINDOWS
-endif
 
 # Extra defines
 DEFINES_LIST += \
@@ -196,7 +196,7 @@ OBJECTS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(SOURCES))
 # This is a list of libraries to include. Order doesn't matter
 
 ifeq ($(HOST_OS),Windows)
-    LIBS = opengl32 gdi32 user32 winmm WSock32 argp
+    LIBS = opengl32 gdi32 user32 winmm WSock32
 endif
 ifeq ($(HOST_OS),Linux)
     LIBS = m X11 asound pulse rt GL GLX pthread Xext Xinerama
@@ -319,7 +319,8 @@ CPPCHECK_FLAGS= \
 	--std=c++17 \
 	--suppress=missingIncludeSystem \
 	--output-file=./cppcheck_result.txt \
-	-j12
+	-j12 \
+	-D__linux__=1
 
 CPPCHECK_DIRS= \
 	main \
@@ -328,6 +329,7 @@ CPPCHECK_DIRS= \
 
 CPPCHECK_IGNORE= \
 	emulator/src/rawdraw_sf.h \
+	emulator/src/getopt_win.h \
 	emulator/sound \
 	emulator/src/components/hdw-nvs/cJSON.c \
 	emulator/src/components/hdw-nvs/cJSON.h \

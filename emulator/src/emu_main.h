@@ -12,3 +12,5 @@
             printf("%s is UNIMPLEMENTED\n", __func__); \
         }                                              \
     }
+
+void emulatorQuit(void);

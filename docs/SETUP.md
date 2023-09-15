@@ -2,7 +2,7 @@
 
 ## General Notes
 
-It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
+It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
@@ -34,27 +34,25 @@ The continuous integration for this project runs on a Windows instance. This mea
     ```
 3. [Install `doxygen`](https://www.doxygen.nl/download.html). This is for generating documentation.
 4. [Install `cppcheck`](https://cppcheck.sourceforge.io/). This is for static code analysis.
-5. [Install the latest stable `LLVM`](https://github.com/llvm/llvm-project/releases). This is for `clang-format`, which formats code.
-5. [Install `msys2`](https://www.msys2.org/). This is the toolchain which will build the emulator.
-6. Start an `msys2` shell and run the following command to install all required packages:
+5. [Install `msys2`](https://www.msys2.org/). This is the environment in which the emulator will be built.
+6. Start an `msys2` shell and run the following command to install all required packages for building the emulator:
     ```bash
-    pacman --noconfirm -S base-devel gcc gdb zip libargp-devel
+    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip
     ```
 7. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
     * `C:\Program Files\doxygen\bin` 
     * `C:\Program Files\Cppcheck`
-    * `C:\Program Files\LLVM\bin`
     
-    You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. `LLVM` must be last. When it's all set up, it should look something like this:
+    You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
-    ![image](https://github.com/AEFeinstein/Swadge-IDF-5.0/assets/231180/84ccb960-01b7-49f1-b4a5-daa094dba7e7)
+    ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
 
-8. Clone the ESP-IDF v5.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+8. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
     ```powershell
     & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
-    & git clone -b v5.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
+    & git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
     & $HOME\esp\esp-idf\install.ps1
     ```
     > **Warning**
@@ -73,9 +71,9 @@ The continuous integration for this project runs on a Windows instance. This mea
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
         sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck doxygen python3 python3-pip python3-venv cmake libusb-1.0-0-dev
         ```
-2. Clone the ESP-IDF v5.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+2. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 
