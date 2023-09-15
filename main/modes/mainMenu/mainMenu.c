@@ -11,6 +11,7 @@
 #include "pong.h"
 #include "mode_paint.h"
 #include "colorchord.h"
+#include "lumberjack.h"
 #include "dance.h"
 #include "tunernome.h"
 #include "touchTest.h"
@@ -108,7 +109,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
 
     // Add single items
-    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
@@ -227,6 +228,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == touchTestMode.modeName)
         {
             switchToSwadgeMode(&touchTestMode);
+        }
+        else if (label == lumberjackMode.modeName)
+        {
+            switchToSwadgeMode(&lumberjackMode);
         }
     }
     else
