@@ -85,10 +85,7 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     self->soundManager = soundManager;
     self->homeTileX = 0;
     self->homeTileY = 0;
-    self->gravity = false;
-    self->falling = false;
     self->entityManager = entityManager;
-    self->fallOffTileHandler = NULL; //&defaultFallOffTileHandler;
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical = false;
     self->spriteRotateAngle = 0;
@@ -124,6 +121,8 @@ void updatePlayer(entity_t *self)
     if(self->gameData->isTouched)
     {
         int32_t xdiff;
+
+        //TODO: tune these values some more!!!
 
         int32_t touchIntoLevel = (self->gameData->touchX << 2) + 128; // play with this value until center touch moves paddle to center
 
@@ -492,7 +491,7 @@ void moveEntityWithTileCollisions(entity_t *self)
                     }
                 }
 
-                if (!self->falling)
+                /*if (!self->falling)
                 {
                     uint8_t newBelowTile = getTile(self->tilemap, tx, ty + 1);
 
@@ -500,17 +499,13 @@ void moveEntityWithTileCollisions(entity_t *self)
                     {
                         self->fallOffTileHandler(self);
                     }
-                }
+                }*/
             }
         }
     }
 
     self->x = newX + self->xspeed;
     self->y = newY + self->yspeed;
-}
-
-void defaultFallOffTileHandler(entity_t *self){
-    self->falling = true;
 }
 
 void destroyEntity(entity_t *self, bool respawn)
@@ -690,8 +685,6 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
             self->yspeed = 0;
             break;
         case 4: // PB_DOWN
-            // Landed on platform
-            self->falling = false;
             self->yspeed = 0;
             break;
         default: // Should never hit

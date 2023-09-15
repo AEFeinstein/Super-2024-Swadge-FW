@@ -61,16 +61,6 @@ struct entity_t
     int16_t xspeed;
     int16_t yspeed;
 
-    int16_t xMaxSpeed;
-    int16_t yMaxSpeed;
-
-    int16_t xDamping;
-    int16_t yDamping;
-
-    bool gravityEnabled;
-    int16_t gravity;
-    bool falling;
-
     uint8_t spriteIndex;
     bool spriteFlipHorizontal;
     bool spriteFlipVertical;
@@ -95,12 +85,10 @@ struct entity_t
     entity_t *attachedToEntity;
     bool shouldAdvanceMultiplier;
     
-    //entity_t *entities;
     entityManager_t *entityManager;
 
     collisionHandler_t collisionHandler;
     tileCollisionHandler_t tileCollisionHandler;
-    fallOffTileHandler_t fallOffTileHandler;
     overlapTileHandler_t overlapTileHandler;
 };
 
@@ -118,7 +106,6 @@ void updateBomb(entity_t * self);
 void updateExplosion(entity_t * self);
 
 void moveEntityWithTileCollisions(entity_t * self);
-void defaultFallOffTileHandler(entity_t *self);
 
 void destroyEntity(entity_t *self, bool respawn);
 
