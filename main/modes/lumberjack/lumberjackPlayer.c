@@ -6,10 +6,10 @@
 #include <esp_log.h>
 
 #define LUMBERJACK_DEFAULT_ANIMATION_SPEED 150000
-#define LUMBERJACK_SPAWN_Y 270
-#define LUMBERJACK_HERO_WIDTH 24
-#define LUMBERJACK_HERO_HEIGHT 31
-#define LUMBERJACK_HERO_DUCK_HEIGHT 31
+#define LUMBERJACK_SPAWN_Y                 270
+#define LUMBERJACK_HERO_WIDTH              24
+#define LUMBERJACK_HERO_HEIGHT             31
+#define LUMBERJACK_HERO_DUCK_HEIGHT        31
 
 void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character)
 {

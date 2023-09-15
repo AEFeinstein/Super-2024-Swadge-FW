@@ -18,12 +18,12 @@
 #define LUMBERJACK_TILEANIMATION_SPEED 150500
 
 #define LUMBERJACK_SCREEN_X_OFFSET 299
-#define LUMBERJACK_SCREEN_X_MIN 0
-#define LUMBERJACK_SCREEN_X_MAX 270
+#define LUMBERJACK_SCREEN_X_MIN    0
+#define LUMBERJACK_SCREEN_X_MAX    270
 
 #define LUMBERJACK_SCREEN_Y_OFFSET 140
-#define LUMBERJACK_SCREEN_Y_MIN -16
-#define LUMBERJACK_SCREEN_Y_MAX 96
+#define LUMBERJACK_SCREEN_Y_MIN    -16
+#define LUMBERJACK_SCREEN_Y_MAX    96
 
 static lumberjackTile_t* lumberjackGetTile(int x, int y);
 static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs);
@@ -1038,7 +1038,6 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
 
 ///
 ///
-
 
 void lumberjackExitGameMode(void)
 {
