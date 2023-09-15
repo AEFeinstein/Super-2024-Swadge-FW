@@ -15,7 +15,7 @@ class controller:
         self.isPaletteClicked = True
         type = self.m.getPaletteType(x, y)
         if type is not None:
-            self.m.setSelectedTileType(type)
+            self.m.setSelectedTileType(type, x, y)
 
     def leftClickMap(self, x, y):
         self.isMapLeftClicked = True

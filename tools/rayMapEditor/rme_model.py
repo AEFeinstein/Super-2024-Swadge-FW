@@ -85,9 +85,9 @@ class model:
                 return objTiles[y]
         return None
 
-    def setSelectedTileType(self, type):
+    def setSelectedTileType(self, type, x, y):
         self.selectedTileType = type
-        self.v.drawSelectedTile(self.selectedTileType)
+        self.v.drawSelectedTile(self.selectedTileType, x, y)
 
     def getSelectedTileType(self):
         return self.selectedTileType

@@ -30,6 +30,7 @@ class view:
         self.selRectY: int = 0
 
         self.highlightRect: int = -1
+        self.paletteHighlightRect: int = -1
 
         frameBgColor: str = '#181818'
         elemBgColor: str = '#1F1F1F'
@@ -74,14 +75,11 @@ class view:
         self.paletteCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, width=self.paletteCellSize * 3, height=self.paletteCellSize * 8,
             highlightthickness=borderThickness, highlightbackground=borderColor)
-        self.paletteSelected: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 3, height=self.paletteCellSize * 2,
-            highlightthickness=borderThickness, highlightbackground=borderColor)
         self.mapCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
 
         # Set up the text
-        self.cellMetaData: tk.Text = tk.Text(content, width=40, state="disabled",
+        self.cellMetaData: tk.Text = tk.Text(content, width=10, state="disabled",
                                              undo=True, autoseparators=True, maxundo=-1,
                                              background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
                                              highlightthickness=borderThickness, highlightbackground=borderColor,
@@ -126,10 +124,6 @@ class view:
         self.paletteCanvas.bind("<Button-1>", self.paletteLeftClick)
         self.paletteCanvas.bind('<ButtonRelease-1>', self.clickRelease)
         self.paletteCanvas.bind('<Motion>', self.paletteMouseMotion)
-
-        # Place the palette selection
-        self.paletteSelected.grid(column=0, row=2, sticky=(
-            tk.NSEW), padx=padding, pady=padding)
 
         # Place the map and bind events
         self.mapCanvas.grid(column=1, row=1, rowspan=2, sticky=(
@@ -206,11 +200,29 @@ class view:
 
     def loadTexture(self, pMap, mMap, key, texFile):
         img = Image.open(texFile)
+
+        # Resize for the palette        
+        if(img.width < img.height):
+            newHeight = self.paletteCellSize
+            newWidth = img.width * (newHeight / img.height)
+        else:
+            newWidth = self.paletteCellSize
+            newHeight = img.height * (newWidth / img.width)
         pResize = img.resize(
-            size=(self.paletteCellSize, self.paletteCellSize), resample=Image.LANCZOS)
+            size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS)
+       
         pMap[key] = ImageTk.PhotoImage(pResize)
+
+        # Resize for the map
+        if(img.width < img.height):
+            newHeight = self.mapCellSize
+            newWidth = img.width * (newHeight / img.height)
+        else:
+            newWidth = self.mapCellSize
+            newHeight = img.height * (newWidth / img.width)
+
         mResize = img.resize(
-            size=(self.mapCellSize, self.mapCellSize), resample=Image.LANCZOS)
+            size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS)
         mMap[key] = ImageTk.PhotoImage(mResize)
 
     def setController(self, c):
@@ -306,8 +318,12 @@ class view:
         y: int = 0
         for obj in objTiles:
             if obj is not tileType.EMPTY:
+
+                imgWidth: int = self.texMapPalette[obj].width()
+                hOffset = int((self.paletteCellSize - imgWidth) / 2)
+
                 self.paletteCanvas.create_image(
-                    x*self.paletteCellSize, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
+                    x*self.paletteCellSize + hOffset, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
             y = y+1
             if NUM_PALETTE_ROWS == y:
                 y = 0
@@ -327,16 +343,25 @@ class view:
     def drawMapCell(self, x, y):
         t: tile = self.m.tileMap[x][y]
         if (t.background is not tileType.EMPTY):
-            self.mapCanvas.create_image(
-                (x * self.mapCellSize), (y * self.mapCellSize), image=self.texMapMap[t.background], anchor=tk.NW)
-        if (t.object is not tileType.EMPTY):
-            self.mapCanvas.create_image(
-                (x * self.mapCellSize), (y * self.mapCellSize), image=self.texMapMap[t.object], anchor=tk.NW)
+            imgWidth: int = self.texMapMap[t.background].width()
+            hOffset = int((self.mapCellSize - imgWidth) / 2)
 
-    def drawSelectedTile(self, selectedTile: tileType):
-        self.paletteSelected.delete('all')
-        self.paletteSelected.create_image(self.paletteSelected.winfo_width(
-        ) / 2, self.paletteSelected.winfo_height() / 2, image=self.texMapPalette[selectedTile], anchor=tk.CENTER)
+            self.mapCanvas.create_image(
+                (x * self.mapCellSize) + hOffset, (y * self.mapCellSize), image=self.texMapMap[t.background], anchor=tk.NW)
+        if (t.object is not tileType.EMPTY):
+            imgWidth: int = self.texMapMap[t.object].width()
+            hOffset = int((self.mapCellSize - imgWidth) / 2)
+
+            self.mapCanvas.create_image(
+                (x * self.mapCellSize) + hOffset, (y * self.mapCellSize), image=self.texMapMap[t.object], anchor=tk.NW)
+
+    def drawSelectedTile(self, selectedTile: tileType, x, y):
+        # Clear highlight from old cell
+        self.paletteCanvas.delete(self.paletteHighlightRect)
+        # Highlight new cell
+        self.paletteHighlightRect = self.paletteCanvas.create_rectangle(
+            (x * self.paletteCellSize), (y * self.paletteCellSize), ((x + 1) * self.paletteCellSize), ((y + 1) * self.paletteCellSize), outline='yellow', width=5)
+        pass
 
     def selectCell(self, x, y, objId):
         self.selRectX = x
