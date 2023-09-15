@@ -124,16 +124,27 @@ bool checkButtonQueue(buttonEvt_t* evt)
 int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
 {
     // If lastTouchIntensity is 0, we should return false as that's "not touched"
-    // But still perform the null checks on the args like the real swadge first
-    if (!phi || !r || !intensity || 0 == lastTouchIntensity)
+    if (0 == lastTouchIntensity)
     {
         return false;
     }
 
     // A touch in the center at 50% intensity
-    *phi       = lastTouchPhi;
-    *r         = lastTouchRadius;
-    *intensity = lastTouchIntensity;
+    if (phi)
+    {
+        *phi       = lastTouchPhi;
+    }
+
+    if (r)
+    {
+        *r         = lastTouchRadius;
+    }
+
+    if (intensity)
+    {
+        *intensity = lastTouchIntensity;
+    }
+
     return true;
 }
 
