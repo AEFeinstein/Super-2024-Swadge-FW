@@ -29,8 +29,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback, &ledEmuExtension, &fuzzerEmuExtension, &keymapEmuCallback, &modesEmuExtension,
-    &replayEmuExtension,
+    &touchEmuCallback,  &ledEmuExtension,   &fuzzerEmuExtension,
+    &keymapEmuCallback, &modesEmuExtension, &replayEmuExtension,
 };
 
 //==============================================================================
