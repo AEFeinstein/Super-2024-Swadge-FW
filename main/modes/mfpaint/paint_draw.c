@@ -178,26 +178,14 @@ void paintDrawScreenSetup(void)
         PAINT_LOGE("Loading overwrite.wsg icon failed!!!");
     }
 
-    // Setup the margins
-    // Top: Leave room for the tallest of...
-    // * The save menu text plus padding above and below it
-    // * The tallest sprite, plus some padding
-    // * The minimum height of the color picker, plus some padding
-    // ... plus, 1px for the canvas border
-
-    uint16_t saveMenuSpace = paintState->saveMenuFont.height + 2 * PAINT_TOOLBAR_TEXT_PADDING_Y;
-    uint16_t toolbarSpace = spriteH + 2;
-
-    // text above picker bars, plus 2px margin, plus min colorbar height (6), plus 2px above and below for select borders
-    uint16_t colorPickerSpace = paintState->smallFont.height + 2 + PAINT_COLOR_PICKER_MIN_BAR_H + 2 + 2;
-
     paintState->marginTop = TFT_CORNER_RADIUS * 2 / 3;
-
 
     // Left: Leave room for the color boxes, their margins, their borders, and the canvas border
     paintState->marginLeft = TFT_CORNER_RADIUS * 2 / 3;
-    // Bottom: Leave room for the brush name, 4px margin, and the canvas border
-    paintState->marginBottom = paintState->toolbarFont.height + 4 + 1;
+    // Bottom: Leave room for the brush name/icon/color boxes, 4px margin, and the canvas border
+    paintState->marginBottom
+        = MAX(brushes->iconActive.h + 1, MAX(paintState->toolbarFont.height + PAINT_COLORBOX_MARGIN_X + 1,
+                                             PAINT_COLORBOX_H + PAINT_COLORBOX_H / 2 + 2 + PAINT_COLORBOX_MARGIN_X));
     // Right: We just need to stay away from the rounded corner, so like, 12px?
     paintState->marginRight = TFT_CORNER_RADIUS * 2 / 3;
 
