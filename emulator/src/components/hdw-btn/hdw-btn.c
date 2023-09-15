@@ -132,12 +132,12 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     // A touch in the center at 50% intensity
     if (phi)
     {
-        *phi       = lastTouchPhi;
+        *phi = lastTouchPhi;
     }
 
     if (r)
     {
-        *r         = lastTouchRadius;
+        *r = lastTouchRadius;
     }
 
     if (intensity)
