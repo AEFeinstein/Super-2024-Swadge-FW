@@ -9,14 +9,12 @@
 
 #define PIXEL_STACK_MIN_SIZE 2
 
-
 /// @brief Represents the value of a pixel and its screen coordinates
 typedef struct
 {
     uint16_t x, y;
     paletteColor_t col;
 } pxVal_t;
-
 
 /// @brief A structure for storing an unbounded number of pixels and their color.
 typedef struct
@@ -30,7 +28,6 @@ typedef struct
     // The index of the value on the top of the stack
     int32_t index;
 } pxStack_t;
-
 
 bool initPxStack(pxStack_t* pxStack);
 void freePxStack(pxStack_t* pxStack);

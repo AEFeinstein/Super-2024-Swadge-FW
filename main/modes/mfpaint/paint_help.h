@@ -68,9 +68,17 @@ typedef struct
 {
     paintHelpIndicatorType_t type;
 
-    union {
-        struct { uint16_t x0, y0, x1, y1; } box;
-        struct { uint16_t x, y; int dir; } arrow;
+    union
+    {
+        struct
+        {
+            uint16_t x0, y0, x1, y1;
+        } box;
+        struct
+        {
+            uint16_t x, y;
+            int dir;
+        } arrow;
     };
 } paintHelpIndicator_t;
 

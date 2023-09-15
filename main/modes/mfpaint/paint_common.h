@@ -30,19 +30,22 @@
 #define PAINT_ENABLE_LEDS (0x0001 << (PAINT_SAVE_SLOTS * 2))
 
 // Whether to play SFX on drawing, etc.
-#define PAINT_ENABLE_SFX  (0x0002 << (PAINT_SAVE_SLOTS * 2))
+#define PAINT_ENABLE_SFX (0x0002 << (PAINT_SAVE_SLOTS * 2))
 
 // Whether to play background music
-#define PAINT_ENABLE_BGM  (0x0004 << (PAINT_SAVE_SLOTS * 2))
+#define PAINT_ENABLE_BGM (0x0004 << (PAINT_SAVE_SLOTS * 2))
 
 // Whether to enable blinking pick points, and any other potentilaly annoying things
 #define PAINT_ENABLE_BLINK (0x0008 << (PAINT_SAVE_SLOTS * 2))
 
 // Default to LEDs, SFX, and music on, with slot 0 marked as most recent
-#define PAINT_DEFAULTS (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK | (PAINT_SAVE_SLOTS << PAINT_SAVE_SLOTS))
+#define PAINT_DEFAULTS                                                            \
+    (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK \
+     | (PAINT_SAVE_SLOTS << PAINT_SAVE_SLOTS))
 
 // Mask for the index that includes everything except the most-recent index
-#define PAINT_MASK_NOT_RECENT (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK | ((1 << PAINT_SAVE_SLOTS) - 1))
+#define PAINT_MASK_NOT_RECENT \
+    (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK | ((1 << PAINT_SAVE_SLOTS) - 1))
 
 // The size of the buffer for loading/saving the image. Each chunk is saved as a separate blob in NVS
 #define PAINT_SAVE_CHUNK_SIZE 1024
@@ -50,21 +53,20 @@
 #define PAINT_SHARE_PX_PACKET_LEN (P2P_MAX_DATA_LEN - 3 - 11)
 #define PAINT_SHARE_PX_PER_PACKET PAINT_SHARE_PX_PACKET_LEN * 2
 
-
 //////// Draw Screen Layout Constants and Colors
 
-#define PAINT_DEFAULT_CANVAS_WIDTH 70
+#define PAINT_DEFAULT_CANVAS_WIDTH  70
 #define PAINT_DEFAULT_CANVAS_HEIGHT 60
 
 // Keep at least 3px free above and below the toolbar text
 #define PAINT_TOOLBAR_TEXT_PADDING_Y 3
 
 #define PAINT_TOOLBAR_FONT "ibm_vga8.font"
-//#define PAINT_SHARE_TOOLBAR_FONT "radiostars.font"
+// #define PAINT_SHARE_TOOLBAR_FONT "radiostars.font"
 #define PAINT_SHARE_TOOLBAR_FONT "ibm_vga8.font"
-//#define PAINT_SAVE_MENU_FONT "radiostars.font"
+// #define PAINT_SAVE_MENU_FONT "radiostars.font"
 #define PAINT_SAVE_MENU_FONT "ibm_vga8.font"
-//#define PAINT_SMALL_FONT "tom_thumb.font"
+// #define PAINT_SMALL_FONT "tom_thumb.font"
 #define PAINT_SMALL_FONT "ibm_vga8.font"
 
 #define PAINT_TOOLBAR_BG c444
@@ -76,7 +78,7 @@
 // Spacing between the tool icons and the size, and the size and pick point counts
 #define TOOL_INFO_TEXT_MARGIN_Y 6
 
-#define PAINT_COLORBOX_SHADOW_TOP c000
+#define PAINT_COLORBOX_SHADOW_TOP    c000
 #define PAINT_COLORBOX_SHADOW_BOTTOM c111
 
 // The screen's corner radius in pixels
@@ -93,7 +95,7 @@
 
 // Color picker stuff
 #define PAINT_COLOR_PICKER_MIN_BAR_H 6
-#define PAINT_COLOR_PICKER_BAR_W 6
+#define PAINT_COLOR_PICKER_BAR_W     6
 
 //////// Help layout stuff
 
@@ -103,9 +105,8 @@
 //////// Macros
 
 // Calculates previous and next items with wraparound
-#define PREV_WRAP(i, count) ((i) == 0 ? (count) - 1 : (i - 1))
+#define PREV_WRAP(i, count) ((i) == 0 ? (count)-1 : (i - 1))
 #define NEXT_WRAP(i, count) ((i + 1) % count)
-
 
 //////// Various Constants
 
@@ -117,9 +118,8 @@
 // 10 seconds to go to gallery screensaver
 #define PAINT_SCREENSAVER_TIMEOUT 10000000
 
-#define BLINK_TIME_ON 500000
+#define BLINK_TIME_ON  500000
 #define BLINK_TIME_OFF 200000
-
 
 /// @brief Struct encapsulating a cursor on the screen
 typedef struct
@@ -142,7 +142,6 @@ typedef struct
     /// @brief True when the cursor state has changed and it needs to be redrawn
     bool redraw;
 } paintCursor_t;
-
 
 /// @brief Struct encapsulating all info for a single player
 typedef struct
@@ -206,7 +205,6 @@ typedef struct
     // Icon to indicate used slot
     wsg_t overwriteWsg;
 
-
     //////// Local-only UI state
 
     // Which mode will be used to interpret button presses
@@ -255,7 +253,6 @@ typedef struct
     // The brush width
     uint8_t startBrushWidth;
 
-
     //////// Save data flags
 
     // True if the canvas has been modified since last save
@@ -266,7 +263,6 @@ typedef struct
 
     // True when a save has been started but not yet completed. Prevents input while saving.
     bool saveInProgress;
-
 
     //// Save Menu Flags
 
@@ -279,7 +275,6 @@ typedef struct
     // State for Yes/No options in the save menu.
     bool saveMenuBoolOption;
 
-
     //////// Rendering flags
 
     // If set, the canvas will be cleared and the screen will be redrawn. Set on startup.
@@ -288,10 +283,10 @@ typedef struct
     // Set to redraw the toolbar on the next loop, when a brush or color is being selected
     bool redrawToolbar;
 
-    // Whether all pick points should be redrawn with the current fgColor, for when the color changes while we're picking
+    // Whether all pick points should be redrawn with the current fgColor, for when the color changes while we're
+    // picking
     // TODO: This might not be necessary any more since we redraw those constantly.
     bool recolorPickPoints;
-
 
     //////// Undo Data
 
@@ -301,7 +296,6 @@ typedef struct
     // After an undo is performed, this points to the action that was undone.
     // This allows redo to work. If the image is edited, this and all following items are removed.
     node_t* undoHead;
-
 
     /// @brief Canvas stored so we can draw over it
     paintUndo_t* storedCanvas;
@@ -391,7 +385,6 @@ typedef struct
     font_t infoFont;
     wsg_t arrow;
 
-
     // TODO rename these to better things now that they're in their own struct
 
     // Last timestamp of gallery transition
@@ -401,7 +394,7 @@ typedef struct
     int64_t gallerySpeed;
     int32_t gallerySpeedIndex;
 
-    //portableDance_t* portableDances;
+    // portableDance_t* portableDances;
 
     // Reaining time that info text will be shown
     int64_t infoTimeRemaining;
@@ -438,9 +431,6 @@ typedef struct
     paintScreen_t screen;
 } paintMainMenu_t;
 
-
 extern paintMainMenu_t* paintMenu;
 
-
 #endif
-

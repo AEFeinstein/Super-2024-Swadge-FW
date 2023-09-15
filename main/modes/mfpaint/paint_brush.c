@@ -7,10 +7,10 @@
 #include "paint_util.h"
 #include "shapes.h"
 
-
 void paintDrawSquarePen(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
 {
-    drawRectFilledScaled(points[0].x - (size / 2), points[0].y - (size / 2), points[0].x + ((size + 1) / 2), points[0].y + ((size + 1) / 2), col, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+    drawRectFilledScaled(points[0].x - (size / 2), points[0].y - (size / 2), points[0].x + ((size + 1) / 2),
+                         points[0].y + ((size + 1) / 2), col, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
 }
 
 void paintDrawCirclePen(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
@@ -31,7 +31,8 @@ void paintDrawLine(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, ui
     {
         for (int16_t y = -size / 2; y < (size + 1) / 2; y++)
         {
-            drawLineScaled(points[0].x + x, points[0].y + y, points[1].x + x, points[1].y + y, col, 0, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+            drawLineScaled(points[0].x + x, points[0].y + y, points[1].x + x, points[1].y + y, col, 0, canvas->x,
+                           canvas->y, canvas->xScale, canvas->yScale);
         }
     }
 }
@@ -42,7 +43,9 @@ void paintDrawCurve(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, u
     {
         for (int16_t y = -size / 2; y < (size + 1) / 2; y++)
         {
-            drawCubicBezierScaled(points[0].x + x, points[0].y + y, points[1].x + x, points[1].y + y, points[2].x + x, points[2].y + y, points[3].x + x, points[3].y + y, col, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+            drawCubicBezierScaled(points[0].x + x, points[0].y + y, points[1].x + x, points[1].y + y, points[2].x + x,
+                                  points[2].y + y, points[3].x + x, points[3].y + y, col, canvas->x, canvas->y,
+                                  canvas->xScale, canvas->yScale);
         }
     }
 }
@@ -78,7 +81,8 @@ void paintDrawRectangle(paintCanvas_t* canvas, point_t* points, uint8_t numPoint
     paintDrawLine(canvas, tmpPoints, 2, size, col);
 }
 
-void paintDrawFilledRectangle(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
+void paintDrawFilledRectangle(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size,
+                              paletteColor_t col)
 {
     uint16_t x0 = (points[0].x > points[1].x) ? points[1].x : points[0].x;
     uint16_t y0 = (points[0].y > points[1].y) ? points[1].y : points[0].y;
@@ -93,13 +97,14 @@ void paintDrawCircle(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, 
 {
     uint16_t dX = abs(points[0].x - points[1].x);
     uint16_t dY = abs(points[0].y - points[1].y);
-    uint16_t r = (uint16_t)(sqrt(dX*dX+dY*dY) + 0.5);
+    uint16_t r  = (uint16_t)(sqrt(dX * dX + dY * dY) + 0.5);
 
     for (int16_t x = -size / 2; x < (size + 1) / 2; x++)
     {
         for (int16_t y = -size / 2; y < (size + 1) / 2; y++)
         {
-            drawCircleScaled(points[0].x + x, points[0].y + y, r, col, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+            drawCircleScaled(points[0].x + x, points[0].y + y, r, col, canvas->x, canvas->y, canvas->xScale,
+                             canvas->yScale);
         }
     }
 }
@@ -108,7 +113,7 @@ void paintDrawFilledCircle(paintCanvas_t* canvas, point_t* points, uint8_t numPo
 {
     uint16_t dX = abs(points[0].x - points[1].x);
     uint16_t dY = abs(points[0].y - points[1].y);
-    uint16_t r = (uint16_t)(sqrt(dX*dX+dY*dY) + 0.5);
+    uint16_t r  = (uint16_t)(sqrt(dX * dX + dY * dY) + 0.5);
 
     drawCircleFilledScaled(points[0].x, points[0].y, r, col, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
 }
@@ -135,12 +140,16 @@ void paintDrawEllipse(paintCanvas_t* canvas, point_t* points, uint8_t numPoints,
             }
             // for some reason, plotting an ellipse also plots 2 extra points outside of the ellipse
             // let's just work around that
-            pushPxScaled(&tmpPxs, x0 + x + ((x1 - x) - (x0 + x) + 1) / 2, y0 - 2 + y, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
-            pushPxScaled(&tmpPxs, x0 + x + ((x1 - x) - (x0 + x) + 1) / 2, y1 + 2 - y, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+            pushPxScaled(&tmpPxs, x0 + x + ((x1 - x) - (x0 + x) + 1) / 2, y0 - 2 + y, canvas->x, canvas->y,
+                         canvas->xScale, canvas->yScale);
+            pushPxScaled(&tmpPxs, x0 + x + ((x1 - x) - (x0 + x) + 1) / 2, y1 + 2 - y, canvas->x, canvas->y,
+                         canvas->xScale, canvas->yScale);
 
-            drawEllipseRectScaled(x0 + x, y0 + y, x1 - x, y1 - y, col, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+            drawEllipseRectScaled(x0 + x, y0 + y, x1 - x, y1 - y, col, canvas->x, canvas->y, canvas->xScale,
+                                  canvas->yScale);
 
-            while (popPxScaled(&tmpPxs, canvas->xScale, canvas->yScale));
+            while (popPxScaled(&tmpPxs, canvas->xScale, canvas->yScale))
+                ;
         }
     }
     freePxStack(&tmpPxs);
@@ -156,10 +165,12 @@ void paintDrawPolygon(paintCanvas_t* canvas, point_t* points, uint8_t numPoints,
 
 void paintDrawSquareWave(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
 {
-    paintPlotSquareWave(points[0].x, points[0].y, points[1].x, points[1].y, size, col, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+    paintPlotSquareWave(points[0].x, points[0].y, points[1].x, points[1].y, size, col, canvas->x, canvas->y,
+                        canvas->xScale, canvas->yScale);
 }
 
 void paintDrawPaintBucket(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
 {
-    floodFill(canvas->x + canvas->xScale * points[0].x, canvas->y + canvas->yScale * points[0].y, col, canvas->x, canvas->y, canvas->x + canvas->xScale * canvas->w, canvas->y + canvas->yScale * canvas->h);
+    floodFill(canvas->x + canvas->xScale * points[0].x, canvas->y + canvas->yScale * points[0].y, col, canvas->x,
+              canvas->y, canvas->x + canvas->xScale * canvas->w, canvas->y + canvas->yScale * canvas->h);
 }

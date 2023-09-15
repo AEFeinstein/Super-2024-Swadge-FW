@@ -12,7 +12,7 @@ bool initPxStack(pxStack_t* pxStack)
 {
     pxStack->size = PIXEL_STACK_MIN_SIZE;
     PAINT_LOGD("Allocating pixel stack with size %zu", pxStack->size);
-    pxStack->data = malloc(sizeof(pxVal_t) * pxStack->size);
+    pxStack->data  = malloc(sizeof(pxVal_t) * pxStack->size);
     pxStack->index = -1;
 
     return (pxStack->data != NULL);
@@ -24,7 +24,7 @@ void freePxStack(pxStack_t* pxStack)
     {
         free(pxStack->data);
         PAINT_LOGD("Freed pixel stack");
-        pxStack->size = 0;
+        pxStack->size  = 0;
         pxStack->index = -1;
     }
 }
@@ -33,7 +33,7 @@ void freePxStack(pxStack_t* pxStack)
  * Ensures that the pixel stack has enough space for `count` additional elements, growing the stack
  * if necessary. Retuns true if there is sufficient space, or false if sufficient space could not be
  * allocated.
-*/
+ */
 bool maybeGrowPxStack(pxStack_t* pxStack, size_t count)
 {
     if (pxStack->index + count >= pxStack->size)
@@ -94,8 +94,8 @@ bool pushPx(pxStack_t* pxStack, uint16_t x, uint16_t y)
     }
 
     pxStack->index++;
-    pxStack->data[pxStack->index].x = x;
-    pxStack->data[pxStack->index].y = y;
+    pxStack->data[pxStack->index].x   = x;
+    pxStack->data[pxStack->index].y   = y;
     pxStack->data[pxStack->index].col = getPxTft(x, y);
 
     return true;
@@ -120,7 +120,7 @@ bool popPx(pxStack_t* pxStack)
         pxStack->index--;
 
         // Is this really necessary? The stack empties often so maybe it's better not to reallocate constantly
-        //maybeShrinkPxStack(pxStack);
+        // maybeShrinkPxStack(pxStack);
 
         return true;
     }

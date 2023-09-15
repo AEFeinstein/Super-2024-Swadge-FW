@@ -512,7 +512,7 @@ menu_t* menuNavigateToItem(menu_t* menu, const char* label)
                 if (item->options[i] == label)
                 {
                     menu->currentItem = listNode;
-                    item->currentOpt = i;
+                    item->currentOpt  = i;
 
                     if (item->settingVals)
                     {

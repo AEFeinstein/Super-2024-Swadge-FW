@@ -32,7 +32,6 @@ void paintEditPalettePrevColor(void);
 void paintEditPaletteNextColor(void);
 void paintEditPaletteConfirm(void);
 
-
 // Save menu helpers
 void paintSaveModePrevItem(void);
 void paintSaveModeNextItem(void);

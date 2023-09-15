@@ -15,21 +15,16 @@
 #include "paint_util.h"
 
 #define PAINT_PARAM(m, x, k, d) \
-static const settingParam_t paint##k##Param = { \
-    .min = m, \
-    .max = x, \
-    .def = d, \
-    .key = "mfp." #k \
-}
+    static const settingParam_t paint##k##Param = {.min = m, .max = x, .def = d, .key = "mfp." #k}
 
 #define PAINT_BOOL_PARAM(k, d) PAINT_PARAM((0), (1), k, d)
 
 #define PAINT_BIT_PARAM(k) PAINT_PARAM(INT32_MIN, INT32_MAX, k, 0)
 
-static const char KEY_PAINT_INDEX[] = "pnt_idx";
+static const char KEY_PAINT_INDEX[]        = "pnt_idx";
 static const char KEY_PAINT_SLOT_PALETTE[] = "paint_%02" PRIu8 "_pal";
-static const char KEY_PAINT_SLOT_DIM[] = "paint_%02" PRIu8 "_dim";
-static const char KEY_PAINT_SLOT_CHUNK[] = "paint_%02" PRIu8 "c%05" PRIu32;
+static const char KEY_PAINT_SLOT_DIM[]     = "paint_%02" PRIu8 "_dim";
+static const char KEY_PAINT_SLOT_CHUNK[]   = "paint_%02" PRIu8 "c%05" PRIu32;
 
 /*static const settingParam_t paintOldIndex = {
     .min = INT32_MIN,
@@ -48,7 +43,6 @@ static void migrateIndex(int32_t index);
 static void migrateSlot(uint8_t slot);
 static int32_t paintReadParam(const settingParam_t* param);
 static bool paintWriteParam(const settingParam_t* param, int32_t val);
-
 
 // void paintDebugIndex(int32_t index)
 // {
@@ -158,10 +152,10 @@ void migrateIndex(int32_t index)
     // 5. Save the index
     // 6. Never touch it again
 
-    //if (!(index & PAINT_INDEX_MIGRATED)) {
-        // Index has not been migrated, do it here
+    // if (!(index & PAINT_INDEX_MIGRATED)) {
+    //  Index has not been migrated, do it here
 
-        // index |= PAINT_INDEX_MIGRATED;
+    // index |= PAINT_INDEX_MIGRATED;
     //}
 }
 
@@ -252,7 +246,7 @@ bool paintGetAnySlotInUse(int32_t index)
 
 /**
  * Returns the most recent save slot used, or PAINT_SAVE_SLOTS if there is none set
-*/
+ */
 uint8_t paintGetRecentSlot(int32_t index)
 {
     return (index >> PAINT_SAVE_SLOTS) & 0b111;
@@ -327,7 +321,8 @@ size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset,
         x1 = canvas->x + (offset * 2 + (n * 2 + 1)) % canvas->w * canvas->xScale;
         y1 = canvas->y + (offset * 2 + (n * 2 + 1)) / canvas->w * canvas->yScale;
 
-        // we only need to save the top-left pixel of each scaled pixel, since they're the same unless something is very broken
+        // we only need to save the top-left pixel of each scaled pixel, since they're the same unless something is very
+        // broken
         dest[n] = paletteIndex[(uint8_t)getPxTft(x0, y0)] << 4 | paletteIndex[(uint8_t)getPxTft(x1, y1)];
     }
 
@@ -376,13 +371,13 @@ bool paintSave(int32_t* index, const paintCanvas_t* canvas, uint8_t slot)
     }
     else
     {
-        PAINT_LOGE("Couldn't save dimensions to slot %s",key);
+        PAINT_LOGE("Couldn't save dimensions to slot %s", key);
         free(imgChunk);
         return false;
     }
 
-    size_t offset = 0;
-    size_t written = 0;
+    size_t offset        = 0;
+    size_t written       = 0;
     uint32_t chunkNumber = 0;
 
     // Write until we're done
@@ -442,7 +437,7 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
 
     if (!paintGetSlotInUse(*index, slot))
     {
-        PAINT_LOGW("Attempted to load from uninitialized slot %"PRIu8, slot);
+        PAINT_LOGW("Attempted to load from uninitialized slot %" PRIu8, slot);
         free(imgChunk);
         return false;
     }
@@ -480,7 +475,7 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
     // Read all the chunks
     size_t lastChunkSize = 0;
     uint32_t chunkNumber = 0;
-    size_t offset = 0;
+    size_t offset        = 0;
 
     do
     {
@@ -537,7 +532,7 @@ bool paintLoadDimensions(paintCanvas_t* canvas, uint8_t slot)
     }
     else
     {
-        PAINT_LOGE("Couldn't read dimensions from slot %s",key);
+        PAINT_LOGE("Couldn't read dimensions from slot %s", key);
         return false;
     }
 

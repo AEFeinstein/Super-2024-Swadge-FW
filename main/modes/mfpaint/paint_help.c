@@ -10,11 +10,12 @@
  * step to be considered "completed" and move on to the next step.
  */
 
-static const char STR_HOLD_A_TO_DRAW[] = "Cool! You can also hold A to draw while moving with the D-Pad. Let's try it! Hold A and press D-Pad DOWN";
+static const char STR_HOLD_A_TO_DRAW[]
+    = "Cool! You can also hold A to draw while moving with the D-Pad. Let's try it! Hold A and press D-Pad DOWN";
 static const char STR_RELEASE_TOUCH_PAD_TO_CONFIRM[] = "And release the TOUCH PAD to confirm!";
 
 static const char STR_BRUSH_RECTANGLE[] = "Rectangle";
-static const char STR_BRUSH_POLYGON[] = "Polygon";
+static const char STR_BRUSH_POLYGON[]   = "Polygon";
 
 const paintHelpStep_t helpSteps[] =
 {

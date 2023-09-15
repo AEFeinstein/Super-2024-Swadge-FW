@@ -14,9 +14,12 @@ void restoreCursorPixels(void);
 void plotCursor(void);
 void paintRenderCursor(void);
 
-void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, paletteColor_t col, bool selected, paletteColor_t topBorder, paletteColor_t bottomBorder);
-void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_t* paintState, const brush_t* firstBrush, const brush_t* lastBrush);
-uint16_t paintRenderGradientBox(paintCanvas_t* canvas, char channel, paletteColor_t col, uint16_t x, uint16_t y, uint16_t barW, uint16_t h, bool selected);
+void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, paletteColor_t col, bool selected,
+                  paletteColor_t topBorder, paletteColor_t bottomBorder);
+void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_t* paintState,
+                        const brush_t* firstBrush, const brush_t* lastBrush);
+uint16_t paintRenderGradientBox(paintCanvas_t* canvas, char channel, paletteColor_t col, uint16_t x, uint16_t y,
+                                uint16_t barW, uint16_t h, bool selected);
 void paintRenderColorPicker(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_t* paintState);
 void paintRenderAll(void);
 

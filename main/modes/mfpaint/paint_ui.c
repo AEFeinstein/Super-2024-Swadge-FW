@@ -8,28 +8,29 @@
 #include "paint_util.h"
 #include "paint_nvs.h"
 
-static const char startMenuUndo[] = "Undo";
-static const char startMenuRedo[] = "Redo";
-static const char startMenuSave[] = "Save";
-static const char startMenuLoad[] = "Load";
-static const char startMenuSlot[] = "Slot %d";
-static const char startMenuOverwrite[] = "Overwrite?";
-static const char startMenuYes[] = "Yes";
-static const char startMenuNo[] = "No";
-static const char startMenuClearCanvas[] = "New";
+static const char startMenuUndo[]           = "Undo";
+static const char startMenuRedo[]           = "Redo";
+static const char startMenuSave[]           = "Save";
+static const char startMenuLoad[]           = "Load";
+static const char startMenuSlot[]           = "Slot %d";
+static const char startMenuOverwrite[]      = "Overwrite?";
+static const char startMenuYes[]            = "Yes";
+static const char startMenuNo[]             = "No";
+static const char startMenuClearCanvas[]    = "New";
 static const char startMenuConfirmUnsaved[] = "Unsaved! OK?";
-static const char startMenuExit[] = "Exit";
-static const char startMenuEditPalette[] = "Edit Palette";
-static const char str_red[] = "Red";
-static const char str_green[] = "Green";
-static const char str_blue[] = "Blue";
+static const char startMenuExit[]           = "Exit";
+static const char startMenuEditPalette[]    = "Edit Palette";
+static const char str_red[]                 = "Red";
+static const char str_green[]               = "Green";
+static const char str_blue[]                = "Blue";
 
-void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, paletteColor_t col, bool selected, paletteColor_t topBorder, paletteColor_t bottomBorder)
+void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, paletteColor_t col, bool selected,
+                  paletteColor_t topBorder, paletteColor_t bottomBorder)
 {
     int dashLen = selected ? 1 : 0;
     if (selected)
     {
-        topBorder = c000;
+        topBorder    = c000;
         bottomBorder = c000;
     }
 
@@ -49,7 +50,7 @@ void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, pa
     if (topBorder != cTransparent)
     {
         // Top border
-        drawLine(xOffset - 1,  yOffset, xOffset + w - 1, yOffset, topBorder, dashLen);
+        drawLine(xOffset - 1, yOffset, xOffset + w - 1, yOffset, topBorder, dashLen);
         // Left border
         drawLine(xOffset - 1, yOffset, xOffset - 1, yOffset + h - 1, topBorder, dashLen);
     }
@@ -63,11 +64,11 @@ void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, pa
     }
 }
 
-void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_t* paintState, const brush_t* firstBrush, const brush_t* lastBrush)
+void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_t* paintState,
+                        const brush_t* firstBrush, const brush_t* lastBrush)
 {
     //////// Background
     bool toolWheelVisible = wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer);
-
 
     if (toolWheelVisible)
     {
@@ -75,22 +76,27 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
 
         // Draw the palette
-        /*uint16_t colorBoxX = PAINT_COLORBOX_MARGIN_X + (paintState->canvas.x - 1 - PAINT_COLORBOX_W - PAINT_COLORBOX_MARGIN_X * 2 - 2) / 2;
-        uint16_t colorBoxY = PAINT_ACTIVE_COLOR_Y + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + 1 + PAINT_COLORBOX_MARGIN_TOP;
+        /*uint16_t colorBoxX = PAINT_COLORBOX_MARGIN_X + (paintState->canvas.x - 1 - PAINT_COLORBOX_W -
+        PAINT_COLORBOX_MARGIN_X * 2 - 2) / 2; uint16_t colorBoxY = PAINT_ACTIVE_COLOR_Y + PAINT_COLORBOX_W +
+        PAINT_COLORBOX_W / 2 + 1 + PAINT_COLORBOX_MARGIN_TOP;
 
         // vertically center the color boxes in the available space
-        colorBoxY = colorBoxY + (TFT_HEIGHT - PAINT_COLORBOX_MARGIN_TOP - (PAINT_MAX_COLORS * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H)) - colorBoxY - PAINT_COLORBOX_MARGIN_TOP) / 2;
+        colorBoxY = colorBoxY + (TFT_HEIGHT - PAINT_COLORBOX_MARGIN_TOP - (PAINT_MAX_COLORS * (PAINT_COLORBOX_MARGIN_TOP
+        + PAINT_COLORBOX_H)) - colorBoxY - PAINT_COLORBOX_MARGIN_TOP) / 2;
 
         //////// Recent Colors (palette)
         for (int i = 0; i < PAINT_MAX_COLORS; i++)
         {
-            drawColorBox(colorBoxX, colorBoxY + i * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H), PAINT_COLORBOX_W, PAINT_COLORBOX_H, canvas->palette[i], false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
+            drawColorBox(colorBoxX, colorBoxY + i * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H), PAINT_COLORBOX_W,
+        PAINT_COLORBOX_H, canvas->palette[i], false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
         }
 
         if (paintState->buttonMode == BTN_MODE_SELECT || paintState->buttonMode == BTN_MODE_PALETTE)
         {
             // Draw a slightly bigger color box for the selected color
-            drawColorBox(colorBoxX - 3, colorBoxY + paintState->paletteSelect * (PAINT_COLORBOX_MARGIN_TOP + PAINT_COLORBOX_H) - 3, PAINT_COLORBOX_W + 6, PAINT_COLORBOX_H + 6, canvas->palette[paintState->paletteSelect], true, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
+            drawColorBox(colorBoxX - 3, colorBoxY + paintState->paletteSelect * (PAINT_COLORBOX_MARGIN_TOP +
+        PAINT_COLORBOX_H) - 3, PAINT_COLORBOX_W + 6, PAINT_COLORBOX_H + 6, canvas->palette[paintState->paletteSelect],
+        true, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
         }*/
     }
     else
@@ -114,14 +120,17 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         }
 
         // Draw border around canvas
-        drawRect(canvas->x - 1, canvas->y - 1, canvas->x + canvas->w * canvas->xScale + 1, canvas->y + canvas->h * canvas->yScale + 1, c000);
+        drawRect(canvas->x - 1, canvas->y - 1, canvas->x + canvas->w * canvas->xScale + 1,
+                 canvas->y + canvas->h * canvas->yScale + 1, c000);
     }
-
 
     //////// Active Colors
     // Draw the background color, then draw the foreground color overlapping it and offset by half in both directions
-    drawColorBox(PAINT_ACTIVE_COLOR_X - 1, PAINT_ACTIVE_COLOR_Y, PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->bgColor, false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
-    drawColorBox(PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W / 2, PAINT_ACTIVE_COLOR_Y + PAINT_COLORBOX_H / 2, PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->fgColor, false, cTransparent, PAINT_COLORBOX_SHADOW_BOTTOM);
+    drawColorBox(PAINT_ACTIVE_COLOR_X - 1, PAINT_ACTIVE_COLOR_Y, PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->bgColor,
+                 false, PAINT_COLORBOX_SHADOW_TOP, PAINT_COLORBOX_SHADOW_BOTTOM);
+    drawColorBox(PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W / 2, PAINT_ACTIVE_COLOR_Y + PAINT_COLORBOX_H / 2,
+                 PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->fgColor, false, cTransparent,
+                 PAINT_COLORBOX_SHADOW_BOTTOM);
 
     uint16_t textX = 30, textY = (paintState->canvas.y - 1 - 2 * PAINT_TOOLBAR_TEXT_PADDING_Y) / 2;
 
@@ -129,7 +138,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
     if (paintState->saveMenu != HIDDEN && paintState->saveMenu != COLOR_PICKER)
     {
         // Up arrow 1px above center of text
-        drawWsg(&paintState->smallArrowWsg, textX, textY + paintState->saveMenuFont.height / 2 - paintState->smallArrowWsg.h - 1, false, false, 0);
+        drawWsg(&paintState->smallArrowWsg, textX,
+                textY + paintState->saveMenuFont.height / 2 - paintState->smallArrowWsg.h - 1, false, false, 0);
 
         // Down arrow 1px below center of text
         drawWsg(&paintState->smallArrowWsg, textX, textY + paintState->saveMenuFont.height / 2 + 1, false, false, 180);
@@ -160,7 +170,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
             // if this is the active brush, draw the FG color underneath it first
             if (curBrush == artist->brushDef)
             {
-                fillDisplayArea(iconOffset, iconY, iconOffset + brushIcon->w, iconY + brushIcon->h, (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect] : artist->fgColor);
+                fillDisplayArea(iconOffset, iconY, iconOffset + brushIcon->w, iconY + brushIcon->h,
+        (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect] : artist->fgColor);
             }
 
             drawWsg(brushIcon, iconOffset, iconY, false, false, 0);
@@ -174,10 +185,14 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         textX = PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + PAINT_COLORBOX_MARGIN_X + 1;
         textY = TFT_HEIGHT - paintState->toolbarFont.height - 4;
 
-        fillDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h, textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
-                        (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect] : artist->fgColor);
-        drawWsgSimple(&artist->brushDef->iconActive, textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
-        drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1, textX + artist->brushDef->iconActive.w + 2, textY + paintState->toolbarFont.height + 1, c000);
+        fillDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h,
+                        textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
+                        (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect]
+                                                                    : artist->fgColor);
+        drawWsgSimple(&artist->brushDef->iconActive, textX + 1,
+                      textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
+        drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1,
+                 textX + artist->brushDef->iconActive.w + 2, textY + paintState->toolbarFont.height + 1, c000);
 
         textX += artist->brushDef->iconActive.w + PAINT_COLORBOX_MARGIN_X + 2;
 
@@ -197,7 +212,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
 
             textX += 4;
             // Draw the icon on the text's baseline
-            drawWsg(&paintState->brushSizeWsg, textX, textY + paintState->toolbarFont.height - paintState->brushSizeWsg.h, false, false, 0);
+            drawWsg(&paintState->brushSizeWsg, textX,
+                    textY + paintState->toolbarFont.height - paintState->brushSizeWsg.h, false, false, 0);
             textX += paintState->brushSizeWsg.w + 1;
             textX = drawText(&paintState->toolbarFont, c000, text, textX, textY);
         }
@@ -208,7 +224,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
             snprintf(text, sizeof(text), "%zu/%d", pxStackSize(&artist->pickPoints), artist->brushDef->maxPoints);
 
             textX += 4;
-            drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h, false, false, 0);
+            drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
+                    false, false, 0);
             textX += paintState->picksWsg.w + 1;
             drawText(&paintState->toolbarFont, c000, text, textX, textY);
         }
@@ -227,7 +244,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
             }
 
             textX += 4;
-            drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h, false, false, 0);
+            drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
+                    false, false, 0);
             textX += paintState->picksWsg.w + 1;
             drawText(&paintState->toolbarFont, c000, text, textX, textY);
         }
@@ -250,7 +268,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
 
         if (saving)
         {
-            fileIcon = paintGetSlotInUse(paintState->index, paintState->selectedSlot) ? &paintState->overwriteWsg : &paintState->newfileWsg;
+            fileIcon = paintGetSlotInUse(paintState->index, paintState->selectedSlot) ? &paintState->overwriteWsg
+                                                                                      : &paintState->newfileWsg;
         }
 
         // Draw the slot number
@@ -258,7 +277,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         snprintf(text, sizeof(text), startMenuSlot, paintState->selectedSlot + 1);
         uint16_t textW = textWidth(&paintState->saveMenuFont, text);
 
-        // Text goes all the way to the right, minus 13px for the corner, then the arrow, arrow spacing, [icon and spacing,] and the text itself
+        // Text goes all the way to the right, minus 13px for the corner, then the arrow, arrow spacing, [icon and
+        // spacing,] and the text itself
         textX = TFT_WIDTH - 13 - paintState->bigArrowWsg.w - 4 - (fileIcon ? fileIcon->w + 4 : 0) - textW;
         drawText(&paintState->saveMenuFont, c000, text, textX, textY);
 
@@ -268,10 +288,11 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         }
 
         // Left arrow
-        drawWsg(&paintState->bigArrowWsg, textX - 4 - paintState->bigArrowWsg.w, textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 270);
+        drawWsg(&paintState->bigArrowWsg, textX - 4 - paintState->bigArrowWsg.w,
+                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 270);
         // Right arrow
-        drawWsg(&paintState->bigArrowWsg, textX + textW + 4 + (fileIcon ? fileIcon->w + 4 : 0), textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 90);
-
+        drawWsg(&paintState->bigArrowWsg, textX + textW + 4 + (fileIcon ? fileIcon->w + 4 : 0),
+                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 90);
     }
     else if (paintState->saveMenu == CONFIRM_OVERWRITE)
     {
@@ -284,7 +305,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
     {
         drawText(&paintState->saveMenuFont, c000, startMenuClearCanvas, textX, textY);
     }
-    else if (paintState->saveMenu == CONFIRM_CLEAR || paintState->saveMenu == CONFIRM_EXIT || paintState->saveMenu == CONFIRM_UNSAVED)
+    else if (paintState->saveMenu == CONFIRM_CLEAR || paintState->saveMenu == CONFIRM_EXIT
+             || paintState->saveMenu == CONFIRM_UNSAVED)
     {
         // Draw "Unsaved! OK?"
         drawText(&paintState->saveMenuFont, c000, startMenuConfirmUnsaved, textX, textY);
@@ -307,28 +329,39 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
     if (drawYesNo)
     {
         // Draw "Yes" / "No"
-        const char* optionText =  (paintState->saveMenuBoolOption ? startMenuYes : startMenuNo);
-        uint16_t textW = textWidth(&paintState->saveMenuFont, optionText);
-        textX = TFT_WIDTH - 13 - paintState->bigArrowWsg.w - 4 - textW;
+        const char* optionText = (paintState->saveMenuBoolOption ? startMenuYes : startMenuNo);
+        uint16_t textW         = textWidth(&paintState->saveMenuFont, optionText);
+        textX                  = TFT_WIDTH - 13 - paintState->bigArrowWsg.w - 4 - textW;
 
         drawText(&paintState->saveMenuFont, c000, optionText, textX, textY);
 
         // Left arrow
-        drawWsg(&paintState->bigArrowWsg, textX - 4 - paintState->bigArrowWsg.w, textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 270);
+        drawWsg(&paintState->bigArrowWsg, textX - 4 - paintState->bigArrowWsg.w,
+                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 270);
         // Right arrow
-        drawWsg(&paintState->bigArrowWsg, textX + textW + 4, textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 90);
+        drawWsg(&paintState->bigArrowWsg, textX + textW + 4,
+                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 90);
     }
 }
 
-uint16_t paintRenderGradientBox(paintCanvas_t* canvas, char channel, paletteColor_t col, uint16_t x, uint16_t y, uint16_t barW, uint16_t h, bool selected)
+uint16_t paintRenderGradientBox(paintCanvas_t* canvas, char channel, paletteColor_t col, uint16_t x, uint16_t y,
+                                uint16_t barW, uint16_t h, bool selected)
 {
     uint16_t channelVal;
     switch (channel)
     {
-        case 'r': channelVal = col / 36;      break;
-        case 'g': channelVal = (col / 6) % 6; break;
-        case 'b': channelVal = col % 6;       break;
-        default:  channelVal = 0;             break;
+        case 'r':
+            channelVal = col / 36;
+            break;
+        case 'g':
+            channelVal = (col / 6) % 6;
+            break;
+        case 'b':
+            channelVal = col % 6;
+            break;
+        default:
+            channelVal = 0;
+            break;
     }
 
     // draw the color bar... under the text box?
@@ -389,23 +422,27 @@ void paintRenderColorPicker(paintArtist_t* artist, paintCanvas_t* canvas, paintD
     uint16_t barY = paintState->smallFont.height + 2 + 2;
     uint16_t barH = canvas->y - barY - 2 - 2 - 1;
 
-    uint16_t textW = textWidth(&paintState->smallFont, str_red);
-    uint16_t barWidth = paintRenderGradientBox(canvas, 'r', paintState->newColor, barOffset, barY, PAINT_COLOR_PICKER_BAR_W, barH, rCur);
+    uint16_t textW    = textWidth(&paintState->smallFont, str_red);
+    uint16_t barWidth = paintRenderGradientBox(canvas, 'r', paintState->newColor, barOffset, barY,
+                                               PAINT_COLOR_PICKER_BAR_W, barH, rCur);
     drawText(&paintState->smallFont, c000, str_red, barOffset + (barWidth - textW) / 2, 1);
     barOffset += barWidth + barMargin;
 
-    textW = textWidth(&paintState->smallFont, str_green);
-    barWidth = paintRenderGradientBox(canvas, 'g', paintState->newColor, barOffset, barY, PAINT_COLOR_PICKER_BAR_W, barH, gCur);
+    textW    = textWidth(&paintState->smallFont, str_green);
+    barWidth = paintRenderGradientBox(canvas, 'g', paintState->newColor, barOffset, barY, PAINT_COLOR_PICKER_BAR_W,
+                                      barH, gCur);
     drawText(&paintState->smallFont, c000, str_green, barOffset + (barWidth - textW) / 2, 1);
     barOffset += barWidth + barMargin;
 
-    textW = textWidth(&paintState->smallFont, str_blue);
-    barWidth = paintRenderGradientBox(canvas, 'b', paintState->newColor, barOffset, barY, PAINT_COLOR_PICKER_BAR_W, barH, bCur);
+    textW    = textWidth(&paintState->smallFont, str_blue);
+    barWidth = paintRenderGradientBox(canvas, 'b', paintState->newColor, barOffset, barY, PAINT_COLOR_PICKER_BAR_W,
+                                      barH, bCur);
     drawText(&paintState->smallFont, c000, str_blue, barOffset + (barWidth - textW) / 2, 1);
     barOffset += barWidth + barMargin;
 
     char hexCode[16];
-    snprintf(hexCode, sizeof(hexCode), "#%02X%02X%02X", paintState->editPaletteR * 51, paintState->editPaletteG * 51, paintState->editPaletteB * 51);
+    snprintf(hexCode, sizeof(hexCode), "#%02X%02X%02X", paintState->editPaletteR * 51, paintState->editPaletteG * 51,
+             paintState->editPaletteB * 51);
 
     textW = textWidth(&paintState->toolbarFont, hexCode);
 
@@ -420,12 +457,14 @@ void paintRenderColorPicker(paintArtist_t* artist, paintCanvas_t* canvas, paintD
     drawColorBox(barOffset, barY, hexW, barH, paintState->newColor, false, c000, c000);
 
     // Draw the hex code for the color centered (vertically + horizontally) in the box
-    drawText(&paintState->toolbarFont, getContrastingColorBW(paintState->newColor), hexCode, barOffset + (hexW - textW) / 2, barY + (barH - paintState->toolbarFont.height) / 2);
+    drawText(&paintState->toolbarFont, getContrastingColorBW(paintState->newColor), hexCode,
+             barOffset + (hexW - textW) / 2, barY + (barH - paintState->toolbarFont.height) / 2);
 }
 
 void paintClearCanvas(const paintCanvas_t* canvas, paletteColor_t bgColor)
 {
-    fillDisplayArea(canvas->x, canvas->y, canvas->x + canvas->w * canvas->xScale, canvas->y + canvas->h * canvas->yScale, bgColor);
+    fillDisplayArea(canvas->x, canvas->y, canvas->x + canvas->w * canvas->xScale,
+                    canvas->y + canvas->h * canvas->yScale, bgColor);
 }
 
 // Generates a cursor sprite that's a box
@@ -441,8 +480,8 @@ bool paintGenerateCursorSprite(wsg_t* cursorWsg, const paintCanvas_t* canvas, ui
         return false;
     }
 
-    cursorWsg->w = newW;
-    cursorWsg->h = newH;
+    cursorWsg->w  = newW;
+    cursorWsg->h  = newH;
     cursorWsg->px = newData;
 
     paletteColor_t pxVal;
@@ -471,8 +510,8 @@ void paintFreeCursorSprite(wsg_t* cursorWsg)
     {
         free(cursorWsg->px);
         cursorWsg->px = NULL;
-        cursorWsg->w = 0;
-        cursorWsg->h = 0;
+        cursorWsg->w  = 0;
+        cursorWsg->h  = 0;
     }
 }
 
@@ -481,8 +520,8 @@ void initCursor(paintCursor_t* cursor, paintCanvas_t* canvas, const wsg_t* sprit
     cursor->sprite = sprite;
 
     cursor->show = false;
-    cursor->x = 0;
-    cursor->y = 0;
+    cursor->x    = 0;
+    cursor->y    = 0;
 
     cursor->redraw = true;
 
@@ -508,7 +547,7 @@ void setCursorOffset(paintCursor_t* cursor, int16_t x, int16_t y)
 {
     cursor->spriteOffsetX = x;
     cursor->spriteOffsetY = y;
-    cursor->redraw = true;
+    cursor->redraw        = true;
 }
 
 /// @brief Undraws the cursor and removes its pixels from the stack
@@ -516,7 +555,8 @@ void setCursorOffset(paintCursor_t* cursor, int16_t x, int16_t y)
 /// @param canvas The canvas to hide the cursor pixels from
 void undrawCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
 {
-    while (popPx(&cursor->underPxs));
+    while (popPx(&cursor->underPxs))
+        ;
 
     cursor->redraw = true;
 }
@@ -530,7 +570,7 @@ void hideCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
     {
         undrawCursor(cursor, canvas);
 
-        cursor->show = false;
+        cursor->show   = false;
         cursor->redraw = true;
     }
 }
@@ -543,7 +583,7 @@ bool showCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
 {
     if (!cursor->show)
     {
-        cursor->show = true;
+        cursor->show   = true;
         cursor->redraw = true;
         return drawCursor(cursor, canvas);
     }
@@ -557,12 +597,19 @@ bool showCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
 /// @return true if the cursor was drawn, or false if it could not be due to memory constraints
 bool drawCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
 {
-    bool cursorIsNearEdge = (canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX < canvas->x || canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX + cursor->sprite->w > canvas->x + canvas->w * canvas->xScale || canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY < canvas->y || canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY + cursor->sprite->h > canvas->y + canvas->h * canvas->yScale);
+    bool cursorIsNearEdge = (canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX < canvas->x
+                             || canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX + cursor->sprite->w
+                                    > canvas->x + canvas->w * canvas->xScale
+                             || canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY < canvas->y
+                             || canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY + cursor->sprite->h
+                                    > canvas->y + canvas->h * canvas->yScale);
     if (cursor->show && (cursor->redraw || cursorIsNearEdge))
     {
         // Undraw the previous cursor pixels, if there are any
         undrawCursor(cursor, canvas);
-        if (!paintDrawWsgTemp(cursor->sprite, &cursor->underPxs, canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX, canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY, getContrastingColor))
+        if (!paintDrawWsgTemp(cursor->sprite, &cursor->underPxs,
+                              canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX,
+                              canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY, getContrastingColor))
         {
             // Return false if we couldn't draw/save the cursor
             return false;
@@ -597,7 +644,8 @@ void moveCursorRelative(paintCursor_t* cursor, paintCanvas_t* canvas, int16_t xD
     if (newY >= canvas->h)
     {
         newY = canvas->h - 1;
-    } else if (newY < 0)
+    }
+    else if (newY < 0)
     {
         newY = 0;
     }
@@ -607,16 +655,17 @@ void moveCursorRelative(paintCursor_t* cursor, paintCanvas_t* canvas, int16_t xD
     if (newX != cursor->x || newY != cursor->y)
     {
         cursor->redraw = true;
-        cursor->x = newX;
-        cursor->y = newY;
+        cursor->x      = newX;
+        cursor->y      = newY;
     }
 }
 
 void moveCursorAbsolute(paintCursor_t* cursor, paintCanvas_t* canvas, uint16_t x, uint16_t y)
 {
-    if (x < canvas->w && y < canvas->h) {
+    if (x < canvas->w && y < canvas->h)
+    {
         cursor->redraw = true;
-        cursor->x = x;
-        cursor->y = y;
+        cursor->x      = x;
+        cursor->y      = y;
     }
 }

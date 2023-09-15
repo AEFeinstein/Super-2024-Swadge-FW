@@ -9,9 +9,9 @@ paletteColor_t getContrastingColor(paletteColor_t col)
     uint32_t rgb = paletteToRGB(col);
 
     // TODO I guess this actually won't work at all on 50% gray, or that well on other grays
-    uint8_t r = 255 - (rgb & 0xFF);
-    uint8_t g = 255 - ((rgb >> 8) & 0xFF);
-    uint8_t b = 255 - ((rgb >> 16) & 0xFF);
+    uint8_t r            = 255 - (rgb & 0xFF);
+    uint8_t g            = 255 - ((rgb >> 8) & 0xFF);
+    uint8_t b            = 255 - ((rgb >> 16) & 0xFF);
     uint32_t contrastCol = (r << 16) | (g << 8) | (b);
 
     return RGBtoPalette(contrastCol);
@@ -20,9 +20,9 @@ paletteColor_t getContrastingColor(paletteColor_t col)
 paletteColor_t getContrastingColorBW(paletteColor_t col)
 {
     uint32_t rgb = paletteToRGB(col);
-    uint8_t r = rgb & 0xFF;
-    uint8_t g = (rgb >> 8) & 0xFF;
-    uint8_t b = (rgb >> 16) & 0xFF;
+    uint8_t r    = rgb & 0xFF;
+    uint8_t g    = (rgb >> 8) & 0xFF;
+    uint8_t b    = (rgb >> 16) & 0xFF;
 
     // TODO something with HSL but this pretty much works...
     return (r + g + b) / 3 > 76 ? c000 : c555;
@@ -32,13 +32,15 @@ void colorReplaceWsg(wsg_t* wsg, paletteColor_t find, paletteColor_t replace)
 {
     for (uint16_t i = 0; i < wsg->h * wsg->w; i++)
     {
-        if (wsg->px[i] == find) {
+        if (wsg->px[i] == find)
+        {
             wsg->px[i] = replace;
         }
     }
 }
 
-void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t waveLength, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
+void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint16_t waveLength, paletteColor_t col,
+                         int xTr, int yTr, int xScale, int yScale)
 {
     uint16_t xDiff = (x0 < x1) ? x1 - x0 : x0 - x1;
     uint16_t yDiff = (y0 < y1) ? y1 - y0 : y0 - y1;
@@ -67,9 +69,10 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
     if (xDiff > yDiff)
     {
         // Horizontal -- waveHeight is on Y axis
-        PAINT_LOGD("This wave is %d wide and %d tall, which means it will contain %d complete waves plus %d extra", xDiff, yDiff, xDiff / (waveLength * 2), xDiff % (waveLength * 2));
+        PAINT_LOGD("This wave is %d wide and %d tall, which means it will contain %d complete waves plus %d extra",
+                   xDiff, yDiff, xDiff / (waveLength * 2), xDiff % (waveLength * 2));
         extra = xDiff % (waveLength * 2);
-        stop = x + waveLength * xDir - extra / 2;
+        stop  = x + waveLength * xDir - extra / 2;
 
         while (x != x1)
         {
@@ -83,14 +86,14 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
                 stop = x + waveLength * xDir;
             }
 
-            x+= xDir;
+            x += xDir;
         }
     }
     else
     {
         // Vertical -- waveHeight is on X axis
         extra = yDiff % (waveLength * 2);
-        stop = y + waveLength * yDir - extra / 2;
+        stop  = y + waveLength * yDir - extra / 2;
 
         while (y != y1)
         {
@@ -113,7 +116,8 @@ void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col)
 {
     if (x0 >= x1 || y0 >= y1)
     {
-        PAINT_LOGE("Attempted to plot invalid rect drawRectFilled(%d, %d, %d, %d). Returning to avoid segfault", x0, y0, x1, y1);
+        PAINT_LOGE("Attempted to plot invalid rect drawRectFilled(%d, %d, %d, %d). Returning to avoid segfault", x0, y0,
+                   x1, y1);
         return;
     }
 
@@ -122,7 +126,7 @@ void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col)
 
 void drawRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale)
 {
-    fillDisplayArea(xTr + x0 * xScale, yTr + y0 * yScale, xTr + (x1) * xScale, yTr + (y1) * yScale, col);
+    fillDisplayArea(xTr + x0 * xScale, yTr + y0 * yScale, xTr + (x1)*xScale, yTr + (y1)*yScale, col);
 }
 
 void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColor_t replace)
@@ -170,7 +174,8 @@ bool paintDrawWsgTemp(const wsg_t* wsg, pxStack_t* saveTo, uint16_t xOffset, uin
                     return false;
                 }
 
-                setPxTft(xOffset + x, yOffset + y, colorSwap ? colorSwap(getPxTft(xOffset + x, yOffset + y)) : wsg->px[i]);
+                setPxTft(xOffset + x, yOffset + y,
+                         colorSwap ? colorSwap(getPxTft(xOffset + x, yOffset + y)) : wsg->px[i]);
             }
         }
     }
@@ -178,7 +183,8 @@ bool paintDrawWsgTemp(const wsg_t* wsg, pxStack_t* saveTo, uint16_t xOffset, uin
     return true;
 }
 
-// Calculate the maximum possible [square] scale, given the display's dimensions and the image dimensions, plus any margins required
+// Calculate the maximum possible [square] scale, given the display's dimensions and the image dimensions, plus any
+// margins required
 uint8_t paintGetMaxScale(uint16_t imgW, uint16_t imgH, uint16_t xMargin, uint16_t yMargin)
 {
     // Prevent infinite loops and overflows
