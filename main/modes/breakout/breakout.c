@@ -88,24 +88,12 @@ typedef struct
     tilemap_t tilemap;
     entityManager_t entityManager;
 
-    breakoutScreen_t screen; ///< The screen being displayed
-
-    breakoutControl_t control;       ///< The selected control scheme
-    breakoutDifficulty_t difficulty; ///< The selected CPU difficulty
-
     uint16_t btnState;
     uint16_t prevBtnState;
 
     int32_t frameTimer;
 
-    wsg_t paddleWsg; ///< A graphic for the paddle
-    wsg_t ballWsg;   ///< A graphic for the ball
-
     soundManager_t soundManager;
-
-    led_t ledL;           ///< The left LED color
-    led_t ledR;           ///< The right LED color
-    int32_t ledFadeTimer; ///< The timer to fade LEDs
 
     gameUpdateFunction_t update;
 } breakout_t;
@@ -120,8 +108,6 @@ static void breakoutExitMode(void);
 
 static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs);
-
-static void breakoutFadeLeds(int64_t elapsedUs);
 
 static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
@@ -269,10 +255,6 @@ static void breakoutEnterMode(void)
     loadFont("logbook.font", &breakout->logbook, false);
     loadFont("ibm_vga8.font", &breakout->ibm_vga8, false);
 
-    // Load graphics
-    loadWsg("pball.wsg", &breakout->ballWsg, false);
-    loadWsg("ppaddle.wsg", &breakout->paddleWsg, false);
-
     // Initialize the menu
     breakout->menu = initMenu(breakoutName, breakoutMenuCb);
     breakout->mRenderer = initMenuLogbookRenderer(&breakout->logbook);
@@ -308,7 +290,6 @@ static void breakoutEnterMode(void)
     addSingleItemToMenu(breakout->menu, breakoutExit);
 
     // Set the mode to menu mode
-    breakout->screen = BREAKOUT_MENU;
     breakout->update = &breakoutUpdateTitleScreen;
 }
 
@@ -325,10 +306,6 @@ static void breakoutExitMode(void)
     // Free the fonts
     freeFont(&breakout->logbook);
     freeFont(&breakout->ibm_vga8);
-
-    // Free graphics
-    freeWsg(&breakout->ballWsg);
-    freeWsg(&breakout->paddleWsg);
 
     freeTilemap(&breakout->tilemap);
     freeSoundManager(&breakout->soundManager);
@@ -351,20 +328,14 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
     {
         if (label == breakoutNewGame)
         {
-            breakout->difficulty = BREAKOUT_EASY;
-            breakout->screen = BREAKOUT_GAME;
             initializeGameDataFromTitleScreen(&(breakout->gameData));
-            breakout->gameData.world = 1;
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
             breakout->gameData.countdown = leveldef[0].timeLimit;
             breakoutChangeStateReadyScreen(breakout);   
         } else if (label == breakoutContinue)
         {
-            breakout->difficulty = BREAKOUT_EASY;
-            breakout->screen = BREAKOUT_GAME;
             initializeGameDataFromTitleScreen(&(breakout->gameData));
-            breakout->gameData.world = 1;
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level - 1].filename);
             breakout->gameData.countdown = leveldef[breakout->gameData.level -1].timeLimit;
@@ -474,50 +445,6 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
 }
 
 /**
- * @brief Fade the LEDs at a consistent rate over time
- *
- * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
- */
-static void breakoutFadeLeds(int64_t elapsedUs)
-{
-    // This timer fades out LEDs. The fade is checked every 10ms
-    // The pattern of incrementing a variable by elapsedUs, then decrementing it when it accumulates
-    breakout->ledFadeTimer += elapsedUs;
-    while (breakout->ledFadeTimer >= 10000)
-    {
-        breakout->ledFadeTimer -= 10000;
-
-        // Fade left LED channels independently
-        if (breakout->ledL.r)
-        {
-            breakout->ledL.r--;
-        }
-        if (breakout->ledL.g)
-        {
-            breakout->ledL.g--;
-        }
-        if (breakout->ledL.b)
-        {
-            breakout->ledL.b--;
-        }
-
-        // Fade right LEDs channels independently
-        if (breakout->ledR.r)
-        {
-            breakout->ledR.r--;
-        }
-        if (breakout->ledR.g)
-        {
-            breakout->ledR.g--;
-        }
-        if (breakout->ledR.b)
-        {
-            breakout->ledR.b--;
-        }
-    }
-}
-
-/**
  * This function is called when the display driver wishes to update a
  * section of the display.
  *
@@ -586,7 +513,6 @@ void breakoutChangeStateDead(breakout_t *self){
     self->gameData.lives--;
     //self->gameData.levelDeaths++;
     self->gameData.combo = 0;
-    self->gameData.comboTimer = 0;
     //self->gameData.initialHp = 1;
 
     //buzzer_stop();
@@ -657,9 +583,6 @@ void breakoutDrawGameOver(font_t *logbook, font_t *ibm_vga8, gameData_t *gameDat
 }
 
 static void drawBreakoutHud(font_t *font, gameData_t *gameData){
-    char coinStr[8];
-    snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
-
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
@@ -759,10 +682,6 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             } else {
                  //Advance to the next level
                 self->gameData.level++;
-                if(self->gameData.level > 4){
-                    self->gameData.world++;
-                    self->gameData.level = 1;
-                }
 
                 //Unlock the next level
                 levelIndex++;
