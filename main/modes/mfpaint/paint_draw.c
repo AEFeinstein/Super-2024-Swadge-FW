@@ -530,10 +530,6 @@ void paintPositionDrawCanvas(void)
 
 void paintDrawScreenMainLoop(int64_t elapsedUs)
 {
-    static uint32_t frames = 0;
-
-    PAINT_LOGI("Call number %" PRIu32, frames++);
-
     paintDrawScreenPollTouch();
 
     // Screen Reset
