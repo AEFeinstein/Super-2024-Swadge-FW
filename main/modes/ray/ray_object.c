@@ -161,9 +161,8 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
             else if (CELL_IS_TYPE(cell->type, BG | DOOR))
             {
                 // Check if the bullet type can open the door
-                // TODO handle charge beam
                 if ((BG_DOOR == cell->type) // Normal doors are openable by anything
-                    || (BG_DOOR_CHARGE == cell->type /*&& OBJ_BULLET_CHARGE == obj->type*/)
+                    || (BG_DOOR_CHARGE == cell->type && OBJ_BULLET_CHARGE == obj->c.type)
                     || (BG_DOOR_SCRIPT == cell->type) // TODO disable shooting script doors
                     || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
                     || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)

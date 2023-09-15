@@ -35,12 +35,18 @@ void initializePlayer(ray_t* ray)
     memset(&ray->inventory, 0, sizeof(ray->inventory));
     for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
     {
-        for (int32_t pIdx = 0; pIdx < NUM_PICKUPS_PER_MAP; pIdx++)
+        for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
         {
-            ray->inventory.healthPickUps[mapIdx][pIdx]   = -1;
             ray->inventory.missilesPickUps[mapIdx][pIdx] = -1;
         }
+        for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
+        {
+            ray->inventory.healthPickUps[mapIdx][pIdx] = -1;
+        }
     }
+    // Set initial health
+    ray->inventory.maxHealth = GAME_START_HEALTH;
+    ray->inventory.health    = GAME_START_HEALTH;
 }
 
 /**
@@ -59,6 +65,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     {
         ray->btnState = evt.state;
     }
+
+    // If the player is in water without the water suit
+    bool isInWater = (!ray->inventory.waterSuit)
+                     && (BG_FLOOR_WATER == ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY)].type);
 
     // Find move distances
     q24_8 deltaX = 0;
@@ -158,6 +168,14 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
 
     // TODO normalize deltaX and deltaY to something scaled with elapsed time
 
+    // If the player is in water
+    if (isInWater)
+    {
+        // Slow down movement by a fourth
+        deltaX /= 4;
+        deltaY /= 4;
+    }
+
     // Boundary checks are longer than the move dist to not get right up on the wall
     q24_8 boundaryCheckX = deltaX * 2;
     q24_8 boundaryCheckY = deltaY * 2;
@@ -186,21 +204,70 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
         ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
     }
 
-    // If the A button is pressed
-    if ((ray->btnState & PB_A) && !(prevBtnState & PB_A) && (LO_NONE != ray->loadout))
+    // If the player has a gun
+    if (LO_NONE != ray->loadout)
     {
-        // Easy map for loadout to bullet type
-        const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
-            EMPTY,
-            OBJ_BULLET_NORMAL, ///< Normal loadout
-            // TODO charge beam unaccounted for
-            OBJ_BULLET_MISSILE, ///< Missile loadout
-            OBJ_BULLET_ICE,     ///< Ice beam loadout
-            OBJ_BULLET_XRAY     ///< X-Ray loadout
-        };
+        // What, if any, bullet to fire
+        rayMapCellType_t bullet = EMPTY;
 
-        // Fire a shot
-        rayCreateBullet(ray, bulletMap[ray->loadout], ray->posX, ray->posY, ray->dirX, ray->dirY, true);
+        // If A was pressed
+        if ((ray->btnState & PB_A) && !(prevBtnState & PB_A))
+        {
+            // Check ammo for the missile loadout
+            if (LO_MISSILE == ray->loadout)
+            {
+                if (0 < ray->inventory.numMissiles)
+                {
+                    // Decrement missile count
+                    ray->inventory.numMissiles--;
+                    // Fire a missile
+                    bullet = OBJ_BULLET_MISSILE;
+                }
+            }
+            else
+            {
+                // Start charging if applicable
+                if (LO_NORMAL == ray->loadout && ray->inventory.chargePowerUp)
+                {
+                    // Start charging
+                    ray->chargeTimer = 1;
+                }
+
+                // Fire according to loadout
+                const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
+                    EMPTY,
+                    OBJ_BULLET_NORMAL,  ///< Normal loadout
+                    OBJ_BULLET_MISSILE, ///< Missile loadout
+                    OBJ_BULLET_ICE,     ///< Ice beam loadout
+                    OBJ_BULLET_XRAY     ///< X-Ray loadout
+                };
+                bullet = bulletMap[ray->loadout];
+            }
+        }
+        else if (!(ray->btnState & PB_A) && (prevBtnState & PB_A))
+        {
+            // A was released, check if the beam is charged
+            if (ray->chargeTimer >= CHARGE_TIME_US)
+            {
+                // Shoot charge beam
+                bullet = OBJ_BULLET_CHARGE;
+            }
+            ray->chargeTimer = 0;
+        }
+
+        // If charging
+        if (0 < ray->chargeTimer && ray->chargeTimer <= CHARGE_TIME_US)
+        {
+            // Accumulate the timer
+            ray->chargeTimer += elapsedUs;
+        }
+
+        // If there is a bullet to fire
+        if (EMPTY != bullet)
+        {
+            // Fire a shot
+            rayCreateBullet(ray, bullet, ray->posX, ray->posY, ray->dirX, ray->dirY, true);
+        }
     }
 }
 
@@ -354,7 +421,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_MISSILE:
         {
             // Find a slot to save this missile pickup
-            for (int32_t idx = 0; idx < NUM_PICKUPS_PER_MAP; idx++)
+            for (int32_t idx = 0; idx < MISSILE_UPGRADES_PER_MAP; idx++)
             {
                 // The ID of an item can't be -1, so this is free
                 if (-1 == inventory->missilesPickUps[mapId][idx])
@@ -369,6 +436,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
                         ray->forceLoadoutSwap   = true;
                     }
                     // Add five missiles
+                    inventory->numMissiles += 5;
                     inventory->maxNumMissiles += 5;
 
                     // Save the coordinates
@@ -381,13 +449,13 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_ENERGY_TANK:
         {
             // Find a slot to save this health pickup
-            for (int32_t idx = 0; idx < NUM_PICKUPS_PER_MAP; idx++)
+            for (int32_t idx = 0; idx < E_TANKS_PER_MAP; idx++)
             {
                 // The ID of an item can't be -1, so this is free
                 if (-1 == inventory->healthPickUps[mapId][idx])
                 {
-                    // Add 100 health
-                    inventory->maxHealth += 100;
+                    // Add max health
+                    inventory->maxHealth += HEALTH_PER_E_TANK;
                     // Reset health
                     inventory->health = inventory->maxHealth;
 
@@ -427,6 +495,34 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         {
             // Don't care about other types
             break;
+        }
+    }
+}
+
+/**
+ * @brief Check if a player should take damage for standing in lava
+ *
+ * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
+ */
+void rayPlayerCheckLava(ray_t* ray, uint32_t elapsedUs)
+{
+    //  If the player is in lava without the lava suit
+    if ((!ray->inventory.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY)].type))
+    {
+        // Run a timer to take lava damage
+        ray->lavaTimer += elapsedUs;
+        if (ray->lavaTimer <= US_PER_LAVA_DAMAGE)
+        {
+            ray->lavaTimer -= US_PER_LAVA_DAMAGE;
+            if (ray->inventory.health)
+            {
+                ray->inventory.health--;
+                if (0 == ray->inventory.health)
+                {
+                    // TODO game over
+                }
+            }
         }
     }
 }

@@ -66,6 +66,8 @@ static void rayEnterMode(void)
     }
     // lists of enemies, items, and scenery are already cleared
 
+    loadFont("ibm_vga8.font", &ray->ibm, true);
+
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
 
@@ -111,6 +113,10 @@ static void rayExitMode(void)
     freeRayMap(&ray->map);
     // Free the textures
     freeAllTex(ray);
+
+    // Free the font
+    freeFont(&ray->ibm);
+
     // Free the game state
     free(ray);
 }
@@ -139,6 +145,9 @@ static void rayMainLoop(int64_t elapsedUs)
 
     // Check the joystick for the player and update loadout accordingly
     rayPlayerCheckJoystick(ray, elapsedUs);
+
+    // Check for lava damage
+    rayPlayerCheckLava(ray, elapsedUs);
 
     // Move objects including enemies and bullets
     moveRayObjects(ray, elapsedUs);

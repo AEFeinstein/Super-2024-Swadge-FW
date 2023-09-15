@@ -14,8 +14,23 @@
 
 /** The number of total maps */
 #define NUM_MAPS 6
-/** The number of pickups per map (three missile, three e.tanks) */
-#define NUM_PICKUPS_PER_MAP 3
+/** The number of missile pickups per map */
+#define MISSILE_UPGRADES_PER_MAP 3
+
+/** The player's starting max health */
+#define GAME_START_HEALTH 50
+/** How much health is gained for each energy tank found */
+#define HEALTH_PER_E_TANK 25
+/** The number of energy tank pickups per map */
+#define E_TANKS_PER_MAP 1
+/** The player's total maximum possible health */
+#define MAX_HEALTH_EVER (GAME_START_HEALTH + (NUM_MAPS * E_TANKS_PER_MAP * HEALTH_PER_E_TANK))
+
+/** Microseconds per one damage when standing in lava */
+#define US_PER_LAVA_DAMAGE 500000
+
+/** Microseconds to charge the charge beam */
+#define CHARGE_TIME_US 2097152
 
 /** The number of bullets tracked at a given point in time */
 #define MAX_RAY_BULLETS 32
@@ -213,11 +228,11 @@ typedef struct
 typedef struct
 {
     // Persistent pick-ups
-    int32_t missilesPickUps[NUM_MAPS][NUM_PICKUPS_PER_MAP]; ///< Coordinate list of acquired missile expansions
-    int32_t healthPickUps[NUM_MAPS][NUM_PICKUPS_PER_MAP];   ///< Coordinate list of acquired e.tanks
+    int32_t missilesPickUps[NUM_MAPS][MISSILE_UPGRADES_PER_MAP]; ///< Coordinate list of acquired missile expansions
+    int32_t healthPickUps[NUM_MAPS][E_TANKS_PER_MAP];            ///< Coordinate list of acquired e.tanks
     // Current status
     int32_t health;         ///< The player's current health
-    int32_t maxHealth;      ///< The player's current max health
+    int32_t maxHealth;      ///< The player's current max health.
     int32_t numMissiles;    ///< The player's current missile count
     int32_t maxNumMissiles; ///< The player's current max missile count
     // Persistent beam pickups
@@ -272,12 +287,16 @@ typedef struct
     int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
 
+    int32_t lavaTimer;   ///< Timer to apply lava damage
+    int32_t chargeTimer; ///< Timer to charge shots
+
     namedTexture_t* loadedTextures; ///< A list of loaded textures
     uint8_t* typeToIdxMap;          ///< A map of rayMapCellType_t to respective textures
     wsg_t guns[NUM_LOADOUTS];       ///< Textures for the HUD guns
 
     rayEnemy_t eTemplates[6]; ///< Enemy type templates, copied when initializing enemies
 
+    font_t ibm; ///< A font to draw the HUD
 } ray_t;
 
 //==============================================================================

@@ -938,6 +938,70 @@ void drawHud(ray_t* ray)
         }
         drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
     }
+
+    // If the player has missiles
+    if (ray->inventory.missileLoadOut)
+    {
+        // Draw a count of missiles
+        char missileStr[16] = {0};
+        snprintf(missileStr, sizeof(missileStr) - 1, "%03" PRId32 "/%03" PRId32, ray->inventory.numMissiles,
+                 ray->inventory.maxNumMissiles);
+        drawText(&ray->ibm, c555, missileStr, 64, TFT_HEIGHT - ray->ibm.height);
+    }
+
+#define BAR_END_MARGIN  40
+#define BAR_SIDE_MARGIN 8
+#define BAR_WIDTH       8
+    // Find the width of the entire health bar
+    int32_t maxHealthWidth = (ray->inventory.maxHealth * (TFT_WIDTH - (BAR_END_MARGIN * 2))) / MAX_HEALTH_EVER;
+    // Find the width of the filled part of the health bar
+    int32_t currHealthWidth = (ray->inventory.health * (TFT_WIDTH - (BAR_END_MARGIN * 2))) / MAX_HEALTH_EVER;
+    // Draw a health bar
+    fillDisplayArea(BAR_END_MARGIN,                   //
+                    BAR_SIDE_MARGIN,                  //
+                    BAR_END_MARGIN + currHealthWidth, //
+                    BAR_SIDE_MARGIN + BAR_WIDTH,      //
+                    c030);
+    fillDisplayArea(BAR_END_MARGIN + currHealthWidth, //
+                    BAR_SIDE_MARGIN,                  //
+                    BAR_END_MARGIN + maxHealthWidth,  //
+                    BAR_SIDE_MARGIN + BAR_WIDTH,      //
+                    c400);
+
+    // Draw charge beam indicator
+    int32_t chargeIndicatorStart
+        = TFT_HEIGHT - BAR_END_MARGIN - ((ray->chargeTimer * (TFT_HEIGHT - (2 * BAR_END_MARGIN))) / CHARGE_TIME_US);
+    fillDisplayArea(BAR_SIDE_MARGIN,             //
+                    chargeIndicatorStart,        //
+                    BAR_SIDE_MARGIN + BAR_WIDTH, //
+                    TFT_HEIGHT - BAR_END_MARGIN, //
+                    c550);
+    fillDisplayArea(TFT_WIDTH - BAR_SIDE_MARGIN - BAR_WIDTH, //
+                    chargeIndicatorStart,                    //
+                    TFT_WIDTH - BAR_SIDE_MARGIN,             //
+                    TFT_HEIGHT - BAR_END_MARGIN,             //
+                    c550);
+
+    // Draw side bars according to suit colors
+    paletteColor_t sideBarColor = c432;
+    if (ray->inventory.waterSuit)
+    {
+        sideBarColor = c223;
+    }
+    else if (ray->inventory.lavaSuit)
+    {
+        sideBarColor = c510;
+    }
+    fillDisplayArea(BAR_SIDE_MARGIN,             //
+                    BAR_END_MARGIN,              //
+                    BAR_SIDE_MARGIN + BAR_WIDTH, //
+                    chargeIndicatorStart,        //
+                    sideBarColor);
+    fillDisplayArea(TFT_WIDTH - BAR_SIDE_MARGIN - BAR_WIDTH, //
+                    BAR_END_MARGIN,                          //
+                    TFT_WIDTH - BAR_SIDE_MARGIN,             //
+                    chargeIndicatorStart,                    //
+                    sideBarColor);
 }
 
 /**
