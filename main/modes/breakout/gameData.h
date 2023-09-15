@@ -28,23 +28,17 @@ typedef struct
 
     uint32_t score;
     uint8_t lives;
-    uint8_t coins;
+
     int16_t countdown;
     uint16_t frameCount;
 
     uint16_t targetBlocksBroken;
-
-    uint8_t world;
+    
     uint8_t level;
 
     int16_t combo;
-    int16_t comboTimer;
+    //int16_t comboTimer;
     uint32_t comboScore;
-
-    //bool extraLifeCollected;
-    //uint8_t checkpoint;
-    //uint8_t levelDeaths;
-    //uint8_t initialHp;
 
     entity_t* playerBombs[3];
     uint8_t playerBombsCount;
@@ -81,8 +75,6 @@ void initializeGameData(gameData_t * gameData);
 void initializeGameDataFromTitleScreen(gameData_t * gameData);
 void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData);
 void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo);
-void addCoins(gameData_t * gameData, uint8_t coins);
-void updateComboTimer(gameData_t * gameData);
 void resetGameDataLeds(gameData_t * gameData);
 void updateLedsShowHighScores(gameData_t * gameData);
 void updateLedsLevelClear(gameData_t * gameData);

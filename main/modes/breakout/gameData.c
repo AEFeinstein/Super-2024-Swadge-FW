@@ -19,12 +19,12 @@
     gameData->score = 0;
     gameData->lives = 3;
     gameData->countdown = 000;
-    gameData->world = 1;
+
     gameData->level = 1;
     gameData->frameCount = 0;
-    gameData->coins = 0;
+
     gameData->combo = 0;
-    gameData->comboTimer = 0;
+    //gameData->comboTimer = 0;
     gameData->bgColor = c335;
     gameData->initials[0] = 'A';
     gameData->initials[1] = 'A';
@@ -55,17 +55,13 @@
     gameData->lives = 3;
     gameData->countdown = 000;
     gameData->frameCount = 0;
-    gameData->coins = 0;
+
     gameData->combo = 0;
-    gameData->comboTimer = 0;
+    //gameData->comboTimer = 0;
     gameData->bgColor = c000;
-    /*gameData->extraLifeCollected = false;
-    gameData->checkpoint = 0;
-    gameData->levelDeaths = 0;*/
     gameData->currentBgm = 0;
     gameData->changeBgm = 0;
-    /*gameData->initialHp = 1;*/
-    gameData->continuesUsed = (gameData->world == 1 && gameData->level == 1) ? false : true;
+    gameData->continuesUsed = (gameData->level == 1) ? false : true;
     gameData->inGameTimer = 0;
     gameData->targetBlocksBroken = 0;
 
@@ -123,26 +119,6 @@ void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo){
     
     //gameData->comboTimer = (gameData->levelDeaths < 3) ? 240: 1;
 }
-
-void addCoins(gameData_t * gameData, uint8_t coins){
-    gameData->coins+=coins;
-    if(gameData->coins > 99){
-        gameData->lives++;
-        //buzzer_play_sfx(&snd1up);
-        gameData->coins = 0;
-    } else {
-        //buzzer_play_sfx(&sndCoin);
-    }
-}
-
-void updateComboTimer(gameData_t * gameData){
-    gameData->comboTimer--;
-
-    if(gameData->comboTimer < 0){
-        gameData->comboTimer = 0;
-        gameData->combo = 0;
-    }
-};
 
 void resetGameDataLeds(gameData_t * gameData)
 {
