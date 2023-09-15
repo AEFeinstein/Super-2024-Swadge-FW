@@ -230,8 +230,8 @@ void app_main(void)
     // Init buttons and touch pads
     gpio_num_t pushButtons[] = {
         GPIO_NUM_0,  // Up
-        GPIO_NUM_2,  // Down
-        GPIO_NUM_4,  // Left
+        GPIO_NUM_4,  // Down
+        GPIO_NUM_2,  // Left
         GPIO_NUM_1,  // Right
         GPIO_NUM_16, // A
         GPIO_NUM_15, // B
