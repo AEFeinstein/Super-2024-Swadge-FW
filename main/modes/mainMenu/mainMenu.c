@@ -10,6 +10,7 @@
 #include "pushy.h"
 #include "pong.h"
 #include "colorchord.h"
+#include "lumberjack.h"
 #include "dance.h"
 #include "mode_ray.h"
 #include "tunernome.h"
@@ -108,9 +109,9 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
 
     // Add single items
-    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
@@ -227,6 +228,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == touchTestMode.modeName)
         {
             switchToSwadgeMode(&touchTestMode);
+        }
+        else if (label == lumberjackMode.modeName)
+        {
+            switchToSwadgeMode(&lumberjackMode);
         }
     }
     else
