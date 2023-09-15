@@ -21,24 +21,23 @@
 #define LUMBERJACK_SCREEN_X_MIN 0
 #define LUMBERJACK_SCREEN_X_MAX 270
 
-
 #define LUMBERJACK_SCREEN_Y_OFFSET 140
 #define LUMBERJACK_SCREEN_Y_MIN -16
 #define LUMBERJACK_SCREEN_Y_MAX 96
 
-
-
 static lumberjackTile_t* lumberjackGetTile(int x, int y);
 static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs);
 static bool lumberjackIsCollisionTile(int index);
-static void lumberjackGameMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
+
+void DrawGame(void);
 
 lumberjackVars_t* lumv;
 lumberjackTile_t lumberjackCollisionCheckTiles[32] = {};
 
-void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex)
+void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 {
-    lumv = calloc(1, sizeof(lumberjackVars_t));
+    lumv                 = calloc(1, sizeof(lumberjackVars_t));
+    lumv->lumberjackMain = main;
 
     loadFont("ibm_vga8.font", &lumv->ibm, false);
 
@@ -47,7 +46,7 @@ void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex)
     lumv->worldTimer           = 0;
     lumv->liquidAnimationFrame = 0;
     lumv->loaded               = false;
-    lumv->gameType             = type;
+    lumv->gameType             = main->gameMode;
 
     ESP_LOGI(LUM_TAG, "Loading floor Tiles");
     loadWsg("bottom_floor1.wsg", &lumv->floorTiles[0], true);
@@ -112,7 +111,7 @@ void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex)
     loadWsg("lumbers_green_15.wsg", &lumv->playerSprites[31], true);
     loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[32], true);
     loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[33], true);
-    
+
     loadWsg("secret_swadgeland_1.wsg", &lumv->playerSprites[34], true);
     loadWsg("secret_swadgeland_2.wsg", &lumv->playerSprites[35], true);
     loadWsg("secret_swadgeland_3.wsg", &lumv->playerSprites[36], true);
@@ -160,11 +159,11 @@ void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex)
 
     loadWsg("alert.wsg", &lumv->alertSprite, true);
 
-    if (lumv->gameType == LUMBERJACK_ATTACK)
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
         lumberjackSetupLevel(characterIndex);
     }
-    else if (lumv->gameType == LUMBERJACK_PANIC)
+    else if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
         lumberjackSetupLevel(characterIndex);
     }
@@ -174,7 +173,7 @@ void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex)
 
 void lumberjackSetupLevel(int characterIndex)
 {
-    //This all to be loaded externally
+    // This all to be loaded externally
     lumv->yOffset          = 0;
     lumv->currentMapHeight = 21;
     lumv->lives            = 3;
@@ -182,7 +181,8 @@ void lumberjackSetupLevel(int characterIndex)
     lumv->spawnTimer       = 2750;
     lumv->spawnSide        = 0;
 
-    lumv->localPlayer = calloc(1, sizeof(lumberjackEntity_t));
+    lumv->localPlayer  = calloc(1, sizeof(lumberjackEntity_t));
+    lumv->remotePlayer = calloc(1, sizeof(lumberjackEntity_t));
     lumberjackSetupPlayer(lumv->localPlayer, characterIndex);
     lumberjackSpawnPlayer(lumv->localPlayer, 94, 0, 0);
 
@@ -248,20 +248,33 @@ void restartLevel(void)
 void lumberjackGameLoop(int64_t elapsedUs)
 {
     baseMode(elapsedUs);
+
+    // If networked
+    if (lumv->lumberjackMain->networked && lumv->lumberjackMain->conStatus == CON_ESTABLISHED)
+        lumberjackUpdateLocation(lumv->localPlayer->x, lumv->localPlayer->y, lumv->localPlayer->drawFrame);
+
+    DrawGame();
+}
+
+void lumberjackUpdateRemote(int remoteX, int remoteY, int remoteFrame)
+{
+    lumv->remotePlayer->x         = remoteX;
+    lumv->remotePlayer->y         = remoteY;
+    lumv->remotePlayer->drawFrame = remoteFrame;
+    lumv->remotePlayer->active    = true;
 }
 
 void baseMode(int64_t elapsedUs)
 {
-
-    //Ignore the first frame because everything was loading
-    //Here we might want to do something like say "On first frame loaded do stuff"
+    // Ignore the first frame because everything was loading
+    // Here we might want to do something like say "On first frame loaded do stuff"
     if (lumv->loaded == false)
     {
         lumv->loaded = true;
 
         ESP_LOGI(LUM_TAG, "Load Time %ld", (long)elapsedUs);
 
-        //If networked, send "Loaded complete!" ?
+        // If networked, send "Loaded complete!" ?
 
         return;
     }
@@ -280,7 +293,7 @@ void baseMode(int64_t elapsedUs)
     {
         bool attackThisFrame = lumv->localPlayer->attackPressed;
         lumberjackDoControls();
-        
+
         if (!attackThisFrame && lumv->localPlayer->attackPressed)
         {
             ESP_LOGI(LUM_TAG, "Attack this frame!");
@@ -322,8 +335,8 @@ void baseMode(int64_t elapsedUs)
     }
 
     // Check physics
-
     lumberjackUpdatePlayerCollision(lumv->localPlayer);
+
     // Enemy
     for (int eIdx = 0; eIdx < ARRAY_SIZE(lumv->enemy); eIdx++)
     {
@@ -345,7 +358,6 @@ void baseMode(int64_t elapsedUs)
             if (enemy->respawn <= 0)
             {
                 // Hopefully the enemy isn't dead off screen.
-                //  lumberjackResetEnemy(enemy);
                 enemy->state = LUMBERJACK_RUN;
 
                 enemy->direction = (enemy->flipped) ? -1 : 1;
@@ -397,8 +409,6 @@ void baseMode(int64_t elapsedUs)
                 // DO AABB checking
                 if (checkCollision(lumv->localPlayer, enemy))
                 {
-                    // ESP_LOGI(LUM_TAG, "Collision");
-
                     if (enemy->state == LUMBERJACK_BUMPED || enemy->state == LUMBERJACK_BUMPED_IDLE)
                     {
                         enemy->state = LUMBERJACK_DEAD;
@@ -466,10 +476,11 @@ void baseMode(int64_t elapsedUs)
         lumv->yOffset = LUMBERJACK_SCREEN_Y_MIN;
     if (lumv->yOffset > LUMBERJACK_SCREEN_Y_MAX)
         lumv->yOffset = LUMBERJACK_SCREEN_Y_MAX;
+}
 
+void DrawGame(void)
+{
     // Draw section
-    // fillDisplayArea ( 0,0, 280,256, c145);
-
     // Redraw bottom
     lumberjackTileMap();
 
@@ -488,8 +499,8 @@ void baseMode(int64_t elapsedUs)
 
         if (enemy->x > LUMBERJACK_SCREEN_X_MAX)
         {
-            drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x - LUMBERJACK_SCREEN_X_OFFSET, enemy->y - lumv->yOffset,
-                    enemy->flipped, false, 0);
+            drawWsg(&lumv->enemySprites[enemy->spriteOffset + eFrame], enemy->x - LUMBERJACK_SCREEN_X_OFFSET,
+                    enemy->y - lumv->yOffset, enemy->flipped, false, 0);
         }
 
         if (enemy->showAlert)
@@ -506,25 +517,34 @@ void baseMode(int64_t elapsedUs)
         // ESP_LOGI(LUM_TAG, "DEAD %d", currentFrame);
     }
 
-    
+    lumv->localPlayer->drawFrame = lumv->localPlayer->spriteOffset + currentFrame;
+
     // This is where it breaks. When it tries to play frame 3 or 4 it crashes.
-    drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - 4,
+    drawWsg(&lumv->playerSprites[lumv->localPlayer->drawFrame], lumv->localPlayer->x - 4,
             lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
 
     if (lumv->localPlayer->x > LUMBERJACK_SCREEN_X_MAX)
     {
-        drawWsg(&lumv->playerSprites[lumv->localPlayer->spriteOffset + currentFrame], lumv->localPlayer->x - LUMBERJACK_SCREEN_X_OFFSET,
+        drawWsg(&lumv->playerSprites[lumv->localPlayer->drawFrame], lumv->localPlayer->x - LUMBERJACK_SCREEN_X_OFFSET,
                 lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
     }
 
+    if (lumv->remotePlayer->active)
+    {
+        drawWsg(&lumv->playerSprites[lumv->remotePlayer->drawFrame], lumv->remotePlayer->x - 4,
+                lumv->remotePlayer->y - lumv->yOffset, false, false, 0);
+    }
+
     // Debug
-    
+
     char debug[20] = {0};
-    snprintf(debug, sizeof(debug), "Debug: %d %d %d", 5, lumv->localPlayer->cY, lumv->localPlayer->cH);
+    snprintf(debug, sizeof(debug), "Debug: %d %d %d", lumv->localPlayer->x, lumv->localPlayer->y,
+             lumv->localPlayer->cH);
 
     drawText(&lumv->ibm, c000, debug, 16, 16);
 
-    //drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX + lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
+    // drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX +
+    // lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
 
     if (lumv->localPlayer->jumpPressed)
     {
@@ -813,6 +833,7 @@ void lumberjackUpdate(int64_t elapseUs)
 
 void lumberjackTileMap(void)
 {
+    // TODO: Stop drawing any area of the map that is off screen
     for (int y = 0; y < 21; y++)
     {
         for (int x = 0; x < 18; x++)
@@ -1010,9 +1031,7 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
                     enemy->direction = 0;
                     enemy->state     = LUMBERJACK_BUMPED;
                 }
-
             }
-
         }
     }
 }
@@ -1020,26 +1039,13 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
 ///
 ///
 
-/**
- * @brief TODO use this somewhere
- *
- * @param p2p
- * @param status
- * @param data
- * @param len
- */
-static void lumberjackGameMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
-{
-    ESP_LOGI(LUM_TAG, "Yeah sending!");
-}
-
 
 void lumberjackExitGameMode(void)
 {
-    //Everything crashes if you don't load it first
-    if (lumv == NULL) return;
+    // Everything crashes if you don't load it first
+    if (lumv == NULL)
+        return;
 
-    
     //** FREE THE SPRITES **//
     // Free the enemies
     for (int i = 0; i < ARRAY_SIZE(lumv->enemySprites); i++)

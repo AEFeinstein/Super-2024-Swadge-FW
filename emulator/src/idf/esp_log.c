@@ -21,6 +21,6 @@ void esp_log_write(esp_log_level_t level, const char* tag, const char* format, .
         vsnprintf(dbgStr, sizeof(dbgStr), format, args);
         va_end(args);
 
-        printf("%c| %s\n", levelChars[level], dbgStr);
+        printf("%c|%s| %s\n", levelChars[level], tag, dbgStr);
     }
 }

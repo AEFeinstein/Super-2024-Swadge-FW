@@ -77,7 +77,7 @@ int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
 
     int animation        = hero->state;
     hero->animationSpeed = LUMBERJACK_DEFAULT_ANIMATION_SPEED;
-    hero->height = LUMBERJACK_HERO_HEIGHT;
+    hero->height         = LUMBERJACK_HERO_HEIGHT;
 
     if (hero->onGround == false && hero->jumping == false && hero->active)
     {
@@ -88,7 +88,7 @@ int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
     if (animation == LUMBERJACK_DUCK)
     {
         const int animationDuck[] = {16};
-        hero->height = LUMBERJACK_HERO_DUCK_HEIGHT;
+        hero->height              = LUMBERJACK_HERO_DUCK_HEIGHT;
         hero->animationSpeed      = LUMBERJACK_DEFAULT_ANIMATION_SPEED;
         return animationDuck[hero->currentFrame % ARRAY_SIZE(animationDuck)];
     }

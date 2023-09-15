@@ -21,6 +21,7 @@ typedef struct
 
     int state;
     int currentFrame;
+    int drawFrame;
     int x;
     int y;
     int spriteOffset;

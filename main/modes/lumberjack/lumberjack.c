@@ -27,21 +27,27 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
 
 static void lumberjackMenuCb(const char*, bool selected, uint32_t settingVal);
 
+static void lumberjackJoinGame(void);
+
 static const char lumberjackName[]   = "Lumberjack";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
 static const char lumberjackBack[]   = "Back";
 
-//static const char lumberjackNone[]    = "None";
-static const char lumberjackRedCharacter[]       = "Character: Red";
-static const char lumberjackGreen[]              = "Character: Green";
-static const char lumberjackSpecialCharacter[]   = "Character: Special";
+// static const char lumberjackNone[]    = "None";
+static const char lumberjackRedCharacter[]     = "Character: Red";
+static const char lumberjackGreen[]            = "Character: Green";
+static const char lumberjackSpecialCharacter[] = "Character: Special";
+
+static const char lumberjackMenuSinglePlayer[]      = "Single Player";
+static const char lumberjackMenuMultiPlayerHost[]   = "Multi-Player";
+static const char lumberjackMenuMultiPlayerClient[] = "Multi-Player Join";
 
 const char* LUM_TAG = "LUM";
 
 swadgeMode_t lumberjackMode = {
     .modeName                 = lumberjackName,
-    .wifiMode                 = ESP_NOW,
+    .wifiMode                 = ESP_NOW_IMMEDIATE,
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
@@ -69,37 +75,36 @@ static void lumberjackEnterMode(void)
     lumberjack->menu                = initMenu(lumberjackName, lumberjackMenuCb);
     lumberjack->menuLogbookRenderer = initMenuLogbookRenderer(&lumberjack->logbook);
 
-    addSingleItemToMenu(lumberjack->menu, lumberjackPanic);
+    lumberjack->gameMode  = LUMBERJACK_MODE_NONE;
+    lumberjack->networked = false;
+    lumberjack->host      = false;
+
+    lumberjack->menu = startSubMenu(lumberjack->menu, lumberjackPanic);
+    addSingleItemToMenu(lumberjack->menu, lumberjackMenuSinglePlayer);
+    addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerHost);
+    addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerClient);
+    lumberjack->menu = endSubMenu(lumberjack->menu);
+
     addSingleItemToMenu(lumberjack->menu, lumberjackAttack);
 
-    if (true) //Ignore this line
+    if (true) // Ignore this line
     {
-        static const char* defaultCharacters[] =
-        {
-            lumberjackRedCharacter,
-            lumberjackGreen
-        };
+        static const char* defaultCharacters[] = {lumberjackRedCharacter, lumberjackGreen};
 
         addMultiItemToMenu(lumberjack->menu, defaultCharacters, ARRAY_SIZE(defaultCharacters), 0);
     }
     else
     {
-        static const char* defaultCharacterswUnlocks[] =
-        {
-            lumberjackRedCharacter,
-            lumberjackGreen,
-            lumberjackSpecialCharacter
-
-        };
+        static const char* defaultCharacterswUnlocks[]
+            = {lumberjackRedCharacter, lumberjackGreen, lumberjackSpecialCharacter};
 
         addMultiItemToMenu(lumberjack->menu, defaultCharacterswUnlocks, ARRAY_SIZE(defaultCharacterswUnlocks), 0);
     }
 
     lumberjack->screen = LUMBERJACK_MENU;
 
-    p2pInitialize(&lumberjack->p2p, 0x13, lumberjackConCb, lumberjackMsgRxCb, -70);
-    p2pStartConnection(&lumberjack->p2p);
-    // Init menu :(
+    // Lumberjack. Game 19
+    //  Init menu :(
 
     bzrStop(); // Stop the buzzer?
 
@@ -107,10 +112,29 @@ static void lumberjackEnterMode(void)
     // Unlockables ? Save data?
 }
 
+static void lumberjackJoinGame(void)
+{
+    if (lumberjack->gameMode == LUMBERJACK_MODE_PANIC)
+    {
+        lumberjack->screen = LUMBERJACK_A;
+        lumberjackStartGameMode(lumberjack, lumberjack->selected);
+        return;
+    }
+
+    if (lumberjack->gameMode == LUMBERJACK_MODE_ATTACK)
+    {
+        lumberjack->screen = LUMBERJACK_B;
+        lumberjackStartGameMode(lumberjack, lumberjack->selected);
+        return;
+    }
+
+    lumberjack->screen = LUMBERJACK_MENU;
+}
+
 static void lumberjackExitMode(void)
 {
     lumberjackExitGameMode();
-    
+
     p2pDeinit(&lumberjack->p2p);
     freeFont(&lumberjack->ibm);
     freeFont(&lumberjack->logbook);
@@ -158,14 +182,13 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
     // Are we drawing the game here?
 }
 
-
 //==============================================================================
 // ESP_NOW
 //==============================================================================
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    ESP_LOGI(LUM_TAG, "Getting: %d", (uint8_t)&data);
+    // ESP_LOGI(LUM_TAG, "Getting: %d", (uint8_t)&data);
     p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, data, len, rssi);
 }
 
@@ -176,35 +199,60 @@ static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
 
 static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
-    // Do anything 
+    // Do anything
     if (evt == CON_ESTABLISHED)
     {
-        ESP_LOGI(LUM_TAG, "LumberJack.Net ready!");
+        ESP_LOGI(LUM_TAG, "LumberJack.Net ready! %d", (int)p2pGetPlayOrder(p2p));
 
         if (GOING_FIRST == p2pGetPlayOrder(p2p))
         {
+            ESP_LOGI(LUM_TAG, "HOST?");
             const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+
             p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
-
         }
-
     }
-    
+
+    if (evt == CON_LOST)
+    {
+        // Do we attempt to get it back?
+        ESP_LOGW(LUM_TAG, "We lost connection!");
+    }
+
     lumberjack->conStatus = evt;
 }
 
 static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
     // Do anything
-    printf("Received %d %d!", *payload, len);
+
+    if (len > 1)
+    {
+        if (payload[0] == 0x19)
+        {
+            int locX      = (int)payload[1] << 0 | (uint32_t)payload[2] << 8;
+            int locY      = (int)payload[3] << 0 | (uint32_t)payload[4] << 8;
+            uint8_t frame = (uint8_t)payload[5];
+            printf("Got %d,%d %d|", locX, locY, frame);
+
+            lumberjackUpdateRemote(locX, locY, frame);
+        }
+    }
+
+    printf("Received %d %d!\n", *payload, len);
 }
 
 void lumberjackSendAttack(int number)
 {
-    printf("Sending attack!\n");
     const uint8_t testMsg[] = {0x13};
     p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
-        
+}
+
+void lumberjackUpdateLocation(int ghostX, int ghostY, int frame)
+{
+    const uint8_t locationMessage[6]
+        = {0x19, (uint8_t)(ghostX >> 0), (uint8_t)(ghostX >> 8), (uint8_t)(ghostY >> 0), (uint8_t)(ghostY >> 8), frame};
+    p2pSendMsg(&lumberjack->p2p, locationMessage, ARRAY_SIZE(locationMessage), lumberjackMsgTxCbFn);
 }
 
 /**
@@ -217,9 +265,7 @@ void lumberjackSendAttack(int number)
  */
 static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
-    ESP_LOGI(LUM_TAG, "Yeah sent");
 }
-
 
 static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
@@ -229,16 +275,42 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         if (label == lumberjackPanic)
         {
             ESP_LOGI(LUM_TAG, "Panic");
-            lumberjack->screen = LUMBERJACK_A;
-            lumberjackStartGameMode(LUMBERJACK_PANIC, lumberjack->selected);
+            lumberjack->gameMode = LUMBERJACK_MODE_PANIC;
+            // lumberjack->screen = LUMBERJACK_A;
+            // lumberjackStartGameMode(LUMBERJACK_MODE_PANIC, lumberjack->selected);
         }
         else if (label == lumberjackAttack)
         {
             ESP_LOGI(LUM_TAG, "Attack");
-            lumberjack->screen = LUMBERJACK_B;
-            lumberjackStartGameMode(LUMBERJACK_ATTACK, lumberjack->selected);
+            lumberjack->gameMode = LUMBERJACK_MODE_ATTACK;
+
+            // lumberjack->screen = LUMBERJACK_B;
+            // lumberjackStartGameMode(LUMBERJACK_MODE_ATTACK, lumberjack->selected);
         }
-        
+
+        if (label == lumberjackMenuMultiPlayerHost)
+        {
+            p2pInitialize(&lumberjack->p2p, 0x13, lumberjackConCb, lumberjackMsgRxCb, -70);
+            p2pStartConnection(&lumberjack->p2p);
+            lumberjack->networked = true;
+            lumberjack->host      = true;
+            lumberjackJoinGame();
+        }
+        else if (label == lumberjackMenuMultiPlayerClient)
+        {
+            p2pInitialize(&lumberjack->p2p, 0x13, lumberjackConCb, lumberjackMsgRxCb, -70);
+            p2pStartConnection(&lumberjack->p2p);
+            lumberjack->networked = true;
+            lumberjack->host      = false;
+            lumberjackJoinGame();
+        }
+        else if (label == lumberjackMenuSinglePlayer)
+        {
+            lumberjack->networked = false;
+            lumberjack->host      = false;
+            lumberjackJoinGame();
+        }
+
         if (label == lumberjackRedCharacter)
         {
             lumberjack->selected = 0;
@@ -252,8 +324,6 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
             lumberjack->selected = 2;
         }
 
-
-
         if (label == lumberjackBack)
         {
             //.switchToSwadgeMode(&mainMenuMode);
@@ -261,8 +331,6 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
     }
     else
     {
-
-        
         if (label == lumberjackRedCharacter)
         {
             lumberjack->selected = 0;

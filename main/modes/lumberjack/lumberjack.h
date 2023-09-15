@@ -18,9 +18,9 @@ typedef enum
 
 typedef enum
 {
-    LUMBERJACK_NONE,
-    LUMBERJACK_PANIC,
-    LUMBERJACK_ATTACK
+    LUMBERJACK_MODE_NONE,
+    LUMBERJACK_MODE_PANIC,
+    LUMBERJACK_MODE_ATTACK
 } lumberjackGameType_t;
 
 typedef struct
@@ -32,11 +32,13 @@ typedef struct
 
     uint8_t selected;
     bool networked;
+    bool host;
 
     // The pass throughs
     p2pInfo p2p;
     connectionEvt_t conStatus;
     lumberjackScreen_t screen;
+    lumberjackGameType_t gameMode;
 
 } lumberjack_t;
 
