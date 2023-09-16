@@ -17,6 +17,7 @@
 #include "touchTest.h"
 
 #include "settingsManager.h"
+#include "breakout.h"
 
 //==============================================================================
 // Structs
@@ -113,6 +114,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, marblesMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
@@ -208,6 +210,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
+        }
+        else if (label == breakoutMode.modeName)
+        {
+            switchToSwadgeMode(&breakoutMode);
         }
         else if (label == danceMode.modeName)
         {
