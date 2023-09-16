@@ -270,7 +270,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             // Copy the real label first if we're using a static string
             if (label != buffer)
             {
-                strncpy(buffer, sizeof(buffer) - 1, label);
+                strncpy(buffer, label, sizeof(buffer));
                 label = buffer;
             }
 
