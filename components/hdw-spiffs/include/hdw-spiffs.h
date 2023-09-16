@@ -4,7 +4,7 @@
  *
  * SPIFFS is a file system intended for SPI NOR flash devices on embedded targets. It supports wear levelling, file
  * system consistency checks, and more. The full API reference can be found here: <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/storage/spiffs.html">SPIFFS
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/storage/spiffs.html">SPIFFS
  * Filesystem</a>.
  *
  * Ths Swadge treats SPIFFS as a read-only file system.
@@ -51,12 +51,13 @@
  * // Free the image
  * freeWsg(&king_donut);
  *
- * // Declare and load a song
+ * // Load a song
  * song_t ode_to_joy;
  * loadSong("ode.sng", &ode_to_joy, true);
- * // Play the song
- * bzrPlayBgm(&ode_to_joy);
- * // Free the song
+ * // Play the song as background music
+ * bzrPlayBgm(&ode_to_joy, BZR_STEREO);
+ * // Free the song when done
+ * bzrStop();
  * freeSong(&ode_to_joy);
  * \endcode
  */

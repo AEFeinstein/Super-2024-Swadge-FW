@@ -2,55 +2,64 @@
  *
  * \section bzr_design Design Philosophy
  *
- * The buzzer is driven by the <a
- * href="https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/api-reference/peripherals/ledc.html">LEDC
+ * The buzzers are driven by the <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/peripherals/ledc.html">LEDC
  * peripheral</a>. This is usually used to generate a PWM signal to control the intensity of an LED, but here it
- * generates frequencies for the buzzer.
+ * generates frequencies for the buzzers.
  *
- * A hardware timer is started which calls an interrupt every 5ms to check if the song should play the next note.
+ * A hardware timer is started which calls an interrupt every 5ms to check if the song should play the next note, so no
+ * note can be shorter than 5ms.
  *
- * This component manages two tracks, background music (bgm) and sound effects (sfx).
- * When bgm is playing, it may be interrupted by sfx.
- * If bgm and sfx are playing at the same time, both will progress through their respective notes, but only sfx will be
- * heard. This way, bgm keeps accurate time even with sfx.
+ * This component manages two physical buzzers, each with two tracks, background music (BGM) and sound effects (SFX).
+ * When BGM is playing, it may be interrupted by SFX. SFX will not interrupt BGM.
+ * If BGM and SFX are playing at the same time, both will progress through their respective notes, but only SFX will be
+ * heard. This way, BGM keeps accurate time even when SFX is playing.
+ *
+ * Songs may be played on one or more buzzer. If the ::song_t has two tracks, the first one will play on the left buzzer
+ * and the second one will play on the right one. This cannot be changed. If the ::song_t has one track, it may be
+ * played on the left buzzer, the right buzzer, or both simultaneously. If a one-track SFX interrupts a two-track BGM,
+ * it may interrupt on just the left buzzer, just the right buzzer, or both.
+ *
+ * A ::musicalNote_t is a ::noteFrequency_t and a duration.
+ * A ::songTrack_t is a list of ::musicalNote_t which are played in sequence.
+ * A ::song_t is one or two ::songTrack_t, each of identical total time length, which may be looped.
  *
  * \section bzr_usage Usage
  *
  * You don't need to call initBuzzer() or deinitBuzzer(). The system does at the appropriate time.
  *
- * A ::musicalNote_t is a ::noteFrequency_t and a duration.
- * A ::song_t is a list of ::musicalNote_t that may be looped.
- *
- * The individual tracks may have volume adjusted with bzrSetBgmVolume() and bzrSetSfxVolume().
+ * The BGM and SFX may have their volume individually adjusted with bzrSetBgmVolume() and bzrSetSfxVolume().
  * setBgmVolumeSetting() and setSfxVolumeSetting() should be called instead if the volume change should be persistent
- * through reboots. Setting the volume to 0 will mute that track.
+ * through reboots. Setting the volume to 0 will mute it.
  *
- * A song can be played on a given track with either bzrPlayBgm() or bzrPlaySfx().
- * All tracks can be stopped at the same time with bzrStop().
+ * A song can be played on with either bzrPlayBgm() or bzrPlaySfx().
+ * Both BGM and SFX can be stopped at the same time with bzrStop().
  *
  * An individual note can be played with bzrPlayNote() or stopped with bzrStopNote().
- * This note is not on a specific track. It is useful for instrument modes, not for songs.
+ * This note is not considered BGM or SFX. It is useful for instrument modes, not for songs.
  *
  * MIDI files that are placed in the ./assets/ folder will be automatically converted to SNG files and loaded into the
- * SPIFFS filesystem. SNG files are lists of notes with durations and are compressed with Heatshrink compression. These
- * files can be loaded with loadSong() and must be freed with freeSong() when done.
+ * SPIFFS filesystem. MIDI files may have up to two tracks of non-overlapping notes. Any more tracks will be ignored.
+ * SNG files are lists of notes with durations and are compressed with Heatshrink compression. These files can be loaded
+ * with loadSong() and must be freed with freeSong() when done.
  *
  * \section bzr_example Example
  *
  * \code{.c}
  * // Load a song
  * song_t ode_to_joy;
- * loadSong("ode.sng", &ode_to_joy);
+ * loadSong("ode.sng", &ode_to_joy, true);
  *
  * // Set the song to loop
  * ode_to_joy.shouldLoop = true;
  *
  * // Play the song as background music
- * bzrPlayBgm(&ode_to_joy);
+ * bzrPlayBgm(&ode_to_joy, BZR_STEREO);
  *
  * ...
  *
  * // Free the song when done
+ * bzrStop();
  * freeSong(&ode_to_joy);
  * \endcode
  */
@@ -62,6 +71,9 @@
 #include <stdint.h>
 #include <hal/gpio_types.h>
 #include <driver/ledc.h>
+
+/** @brief The number of physical buzzers */
+#define NUM_BUZZERS 2
 
 /**
  * @brief Frequencies for all the notes, in hertz.
@@ -191,49 +203,68 @@ typedef enum
     A_9        = 14080, ///< A9
     A_SHARP_9  = 14917, ///< A#9
     B_9        = 15804, ///< B9
-    C_10       = 16744, ///< C_10
-    C_SHARP_10 = 17740, ///< C# 10
-    D_10       = 18795, ///< D_10
-    D_SHARP_10 = 19912, ///< D# 10
-    E_10       = 21096, ///< E_10
-    F_10       = 22351, ///< F_10
-    F_SHARP_10 = 23680, ///< F# 10
-    G_10       = 25088, ///< G_10
-    G_SHARP_10 = 26580, ///< G# 10
-    A_10       = 28160, ///< A_10
-    A_SHARP_10 = 29834, ///< A# 10
-    B_10       = 31609  ///< B_10
+    C_10       = 16744, ///< C10
+    C_SHARP_10 = 17740, ///< C#10
+    D_10       = 18795, ///< D10
+    D_SHARP_10 = 19912, ///< D#10
+    E_10       = 21096, ///< E10
+    F_10       = 22351, ///< F10
+    F_SHARP_10 = 23680, ///< F#10
+    G_10       = 25088, ///< G10
+    G_SHARP_10 = 26580, ///< G#10
+    A_10       = 28160, ///< A10
+    A_SHARP_10 = 29834, ///< A#10
+    B_10       = 31609  ///< B10
 } noteFrequency_t;
 
 /**
- * @brief A single note and duration to be played on the buzzer
+ * @brief Enum for which buzzer a note should play out of
+ */
+typedef enum
+{
+    BZR_LEFT,  ///< Play out of the left buzzer
+    BZR_RIGHT, ///< Play out of the right buzzer
+    BZR_STEREO ///< Play out of both buzzers
+} buzzerPlayTrack_t;
+
+/**
+ * @brief A single note and duration to play on the buzzer
  */
 typedef struct
 {
     noteFrequency_t note; ///< Note frequency, in Hz
-    uint32_t timeMs;      ///< Note duration, in ms
+    int32_t timeMs;       ///< Note duration, in ms
 } musicalNote_t;
 
 /**
- * @brief A list of notes and durations to be played on the buzzer
+ * @brief A list of notes and durations to play on the buzzer
  */
 typedef struct
 {
-    uint32_t shouldLoop;    ///< true if the song should loop, false if it should play once
-    uint32_t numNotes;      ///< The number of notes in this song
-    uint32_t loopStartNote; ///< The note index to restart at, if looping
-    musicalNote_t* notes;   ///< An array of notes in the song
+    int32_t numNotes;      ///< The number of notes in this song
+    int32_t loopStartNote; ///< The note index to restart at, if looping
+    musicalNote_t* notes;  ///< An array of notes in the song
+} songTrack_t;
+
+/**
+ * @brief A collection of lists of notes and durations to play on the buzzers
+ */
+typedef struct
+{
+    int16_t numTracks;   ///< The number of tracks in this song
+    bool shouldLoop;     ///< true if the song should loop, false if it should play once
+    songTrack_t* tracks; ///< The tracks for this song
 } song_t;
 
-void initBuzzer(gpio_num_t bzrGpio, ledc_timer_t _ledcTimer, ledc_channel_t _ledcChannel, uint16_t _bgmVolume,
-                uint16_t _sfxVolume);
+void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t ledcChannelL, gpio_num_t bzrGpioR,
+                ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t _bgmVolume, uint16_t _sfxVolume);
 void deinitBuzzer(void);
 void bzrSetBgmVolume(uint16_t vol);
 void bzrSetSfxVolume(uint16_t vol);
-void bzrPlayBgm(const song_t* song);
-void bzrPlaySfx(const song_t* song);
+void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track);
+void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track);
 void bzrStop(void);
-void bzrPlayNote(noteFrequency_t freq, uint16_t volume);
-void bzrStopNote(void);
+void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume);
+void bzrStopNote(buzzerPlayTrack_t track);
 
 #endif

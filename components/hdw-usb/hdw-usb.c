@@ -5,7 +5,6 @@
 #include <esp_log.h>
 #include <class/hid/hid_device.h>
 
-#include "tinyusb.h"
 #include "hdw-usb.h"
 #include "advanced_usb_control.h"
 
@@ -15,12 +14,12 @@
 
 static const char* TAG = "USB";
 
+// clang-format off
 /**
- * @brief HID report descriptor, just a gamepad
+ * @brief HID Gamepad Report Descriptor Template
+ * with 32 buttons, 2 joysticks and 1 hat/dpad with following layout
+ * | X | Y | Z | Rz | Rx | Ry (1 byte each) | hat/DPAD (1 byte) | Button Map (4 bytes) |
  */
- // Gamepad Report Descriptor Template
-// with 32 buttons, 2 joysticks and 1 hat/dpad with following layout
-// | X | Y | Z | Rz | Rx | Ry (1 byte each) | hat/DPAD (1 byte) | Button Map (4 bytes) |
 #define TUD_HID_REPORT_DESC_GAMEPAD_SWADGE(...) \
   HID_USAGE_PAGE ( HID_USAGE_PAGE_DESKTOP     )                 ,\
   HID_USAGE      ( HID_USAGE_DESKTOP_GAMEPAD  )                 ,\
@@ -77,6 +76,7 @@ static const char* TAG = "USB";
     HID_USAGE        ( HID_USAGE_DESKTOP_GAMEPAD              ) ,\
     HID_FEATURE      ( HID_DATA | HID_ARRAY | HID_ABSOLUTE    ) ,\
   HID_COLLECTION_END
+// clang-format on
 
 static const uint8_t hid_report_descriptor[] = {TUD_HID_REPORT_DESC_GAMEPAD_SWADGE()};
 
@@ -120,6 +120,7 @@ static const uint8_t hid_configuration_descriptor[] = {
 
 static fnAdvancedUsbHandler advancedUsbHandler;
 static fnSetSwadgeMode setSwadgeMode;
+static const uint8_t* c_descriptor;
 
 //==============================================================================
 // Functions
@@ -146,12 +147,25 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
         .configuration_descriptor = hid_configuration_descriptor,
     };
 
-    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+    // Initialize TinyUSB with the default descriptor
+    initTusb(&tusb_cfg, hid_report_descriptor);
 
     // Set the log to print with advanced_usb_write_log_printf()
     esp_log_set_vprintf(advanced_usb_write_log_printf);
 
     ESP_LOGI(TAG, "USB initialization DONE");
+}
+
+/**
+ * @brief Initialize TinyUSB
+ *
+ * @param tusb_cfg The TinyUSB configuration
+ * @param descriptor The descriptor to use for this configuration
+ */
+void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor)
+{
+    c_descriptor = descriptor;
+    ESP_ERROR_CHECK(tinyusb_driver_install(tusb_cfg));
 }
 
 /**
@@ -191,7 +205,7 @@ void sendUsbGamepadReport(hid_gamepad_report_t* report)
 uint8_t const* tud_hid_descriptor_report_cb(uint8_t instance __attribute__((unused)))
 {
     // We use only one interface and one HID report descriptor, so we can ignore parameter 'instance'
-    return hid_report_descriptor;
+    return c_descriptor;
 }
 
 /**

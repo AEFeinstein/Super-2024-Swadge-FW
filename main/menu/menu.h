@@ -166,7 +166,7 @@ typedef struct
     uint8_t minSetting;         ///< The minimum value for settings items
     uint8_t maxSetting;         ///< The maximum value for settings items
     const int32_t* settingVals; ///< The setting value options for settings-options items
-    uint8_t currentSetting;     // The current value for settings items
+    uint8_t currentSetting;     ///< The current value for settings items
 } menuItem_t;
 
 /**
@@ -196,8 +196,16 @@ void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
 void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
-                                  int32_t currentOption);
+                                  int32_t currentValue);
 void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
-menu_t* menuButton(menu_t* menu, buttonEvt_t btn) __attribute__((warn_unused_result));
+
+menu_t* menuNavigateToItem(menu_t* menu, const char* label);
+menu_t* menuNavigateToPrevItem(menu_t* menu);
+menu_t* menuNavigateToNextItem(menu_t* menu);
+menu_t* menuNavigateToPrevOption(menu_t* menu);
+menu_t* menuNavigateToNextOption(menu_t* menu);
+menu_t* menuSelectCurrentItem(menu_t* menu);
+
+menu_t* menuButton(menu_t* menu, buttonEvt_t evt) __attribute__((warn_unused_result));
 
 #endif

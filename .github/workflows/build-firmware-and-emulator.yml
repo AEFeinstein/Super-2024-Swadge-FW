@@ -29,7 +29,7 @@ jobs:
 
     - name: Install msys64 packages
       run: |
-        C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc zip'
+        C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip'
 
     - name: Compile the Emulator
       run: |
@@ -54,7 +54,7 @@ jobs:
 
     - name: Set up the IDF
       run: |
-        git clone -b v5.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
+        git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
         ${{ runner.temp }}/esp-idf/install.ps1
  
     - name: Compile the firmware
@@ -102,6 +102,7 @@ jobs:
           tools/pyFlashGui/pyFlashGui.py
 
     - name: Post to a Slack channel
+      if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       id: slack
       uses: slackapi/slack-github-action@v1.23.0
       with:

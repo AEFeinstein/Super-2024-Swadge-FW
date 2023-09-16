@@ -3,9 +3,9 @@
  * \section usb_design Design Philosophy
  *
  * The USB component uses Espressif's <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/peripherals/usb_device.html">USB
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/peripherals/usb_device.html">USB
  * Device Driver</a>. It's based on the <a
- * href="https://github.com/espressif/esp-idf/tree/v5.1/examples/peripherals/usb/device/tusb_hid">TinyUSB
+ * href="https://github.com/espressif/esp-idf/tree/v5.1.1/examples/peripherals/usb/device/tusb_hid">TinyUSB
  * Human Interface Device Example</a>.
  *
  * The Swadge primarily functions as a USB gamepad.
@@ -38,6 +38,7 @@
 #define _HDW_USB_
 
 #include <class/hid/hid.h>
+#include "tinyusb.h"
 
 /**
  * @brief Function typedef for a callback which will send USB SET_REPORT and GET_REPORT messages to a Swadge mode
@@ -58,5 +59,6 @@ void initUsb(fnSetSwadgeMode setSwadgeMode, fnAdvancedUsbHandler advancedUsbHand
 void deinitUsb(void);
 void sendUsbGamepadReport(hid_gamepad_report_t* report);
 void usbSetSwadgeMode(void* newMode);
+void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor);
 
 #endif

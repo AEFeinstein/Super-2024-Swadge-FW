@@ -57,6 +57,9 @@ typedef struct
     wsg_t king_donut;
     song_t ode_to_joy;
     p2pInfo p2p;
+    uint16_t sentPackets;
+    uint16_t recvPackets;
+    connectionEvt_t conStatus;
     menu_t* menu;
 } demoVars_t;
 
@@ -73,7 +76,7 @@ static void demoEnterMode(void)
     loadWsg("kid0.wsg", &dv->king_donut, true);
     loadSong("ode.sng", &dv->ode_to_joy, true);
 
-    // bzrPlayBgm(&dv->ode_to_joy);
+    bzrPlayBgm(&dv->ode_to_joy, BZR_STEREO);
     bzrStop();
 
     dv->menu = initMenu(demoName, demoMenuCb);
@@ -95,11 +98,10 @@ static void demoEnterMode(void)
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
 
-    p2pInitialize(&dv->p2p, 'd', demoConCb, demoMsgRxCb, -70);
-    p2pStartConnection(&dv->p2p);
+    dv->conStatus = CON_LOST;
 
-    const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
-    p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+    p2pInitialize(&dv->p2p, 'p', demoConCb, demoMsgRxCb, -70);
+    p2pStartConnection(&dv->p2p);
 
     const char demoKey[]     = "demo_high_score";
     int32_t highScoreToWrite = 99999;
@@ -148,6 +150,13 @@ static void demoMainLoop(int64_t elapsedUs)
         lastBtnState = evt.state;
         // drawScreen = evt.down;
 
+        if (evt.button == PB_B && evt.down && dv->conStatus == CON_ESTABLISHED)
+        {
+            printf("Sending packet\n");
+            const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+            p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+        }
+
         static hid_gamepad_report_t report;
         report.buttons = lastBtnState;
         sendUsbGamepadReport(&report);
@@ -171,6 +180,43 @@ static void demoMainLoop(int64_t elapsedUs)
     drawRect(200, 150, 250, 220, c050);
     // Odd-even fill the rectangle with blue
     oddEvenFill(190, 140, 260, 230, c050, c005);
+
+    char buffer[16];
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRIu16, dv->sentPackets);
+
+    fillDisplayArea(15, 200, 45, 220, c544);
+    drawText(&dv->ibm, c000, buffer, 20, 205);
+
+    snprintf(buffer, sizeof(buffer) - 1, "%" PRIu16, dv->recvPackets);
+    fillDisplayArea(45, 200, 75, 220, c454);
+    drawText(&dv->ibm, c000, buffer, 50, 205);
+
+    paletteColor_t statusColor;
+    switch (dv->conStatus)
+    {
+        case CON_STARTED:
+            statusColor = c300;
+            break;
+
+        case RX_GAME_START_ACK:
+            statusColor = c330;
+            break;
+
+        case RX_GAME_START_MSG:
+            statusColor = c530;
+            break;
+
+        case CON_ESTABLISHED:
+            statusColor = c050;
+            break;
+
+        case CON_LOST:
+        default:
+            statusColor = c500;
+            break;
+    }
+
+    fillDisplayArea(15, 180, 75, 200, statusColor);
 
     // Check for analog touch
     // int32_t centerVal, intensityVal;
@@ -324,7 +370,16 @@ static int16_t demoAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
  */
 static void demoConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
-    // Do something
+    if (evt == CON_ESTABLISHED)
+    {
+        if (GOING_FIRST == p2pGetPlayOrder(p2p))
+        {
+            const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+            p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+        }
+    }
+
+    dv->conStatus = evt;
 }
 
 /**
@@ -337,6 +392,7 @@ static void demoConCb(p2pInfo* p2p, connectionEvt_t evt)
 static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
     // Do something
+    dv->recvPackets++;
 }
 
 /**
@@ -350,6 +406,7 @@ static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
     // Do something
+    dv->sentPackets++;
 }
 
 /**
