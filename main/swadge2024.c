@@ -391,7 +391,7 @@ void app_main(void)
             if (0 != timeExitPressed && !showQuickSettings)
             {
                 // Figure out for how long
-                int64_t tHeldUs = tNowUs - timeExitPressed;
+                int64_t tHeldUs = esp_timer_get_time() - timeExitPressed;
                 // If it has been held for more than the exit time
                 if (tHeldUs > EXIT_TIME_US)
                 {
@@ -409,7 +409,7 @@ void app_main(void)
             }
             else if (0 != timePausePressed)
             {
-                int64_t tHeldUs = tNowUs - timePausePressed;
+                int64_t tHeldUs = esp_timer_get_time() - timePausePressed;
 
                 if (tHeldUs > PAUSE_TIME_US)
                 {
@@ -432,7 +432,7 @@ void app_main(void)
                 else
                 {
                     int16_t r     = QUICK_SETTINGS_PANEL_R;
-                    int16_t numPx = (MAX(0, tHeldUs) * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US + 1;
+                    int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
                     drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
                     fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx + 1, r + 1, c333);
                     drawCircleFilled(QUICK_SETTINGS_PANEL_X + numPx + r, 0, r, c333);
@@ -642,7 +642,6 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
             }
             else if (evt->button == PB_START && !timeExitPressed)
             {
-                ESP_LOGI("UTL", "START EVET");
                 // Handle the start button for the quick-settings menu,
                 // but only if we're not already handling select and the
                 // quick-settings menu is not already enabled
