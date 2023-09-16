@@ -10,6 +10,7 @@
 #include "wheel_menu.h"
 #include "p2pConnection.h"
 #include "linked_list.h"
+#include "geometry.h"
 
 #include "px_stack.h"
 #include "paint_type.h"
@@ -312,6 +313,9 @@ typedef struct
 
     // So we can update the brush size item options easily
     menuItem_t* toolWheelBrushSizeItem;
+
+    // A box to center the selected tool wheel item label at
+    rectangle_t toolWheelLabelBox;
 
     // So we can update the color item options easily
     menuItem_t* toolWheelColorItem;

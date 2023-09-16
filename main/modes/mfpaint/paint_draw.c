@@ -322,7 +322,12 @@ void paintDrawScreenSetup(void)
     paintState->showToolWheel     = false;
     paintState->toolWheelWaiting  = false;
     paintState->toolWheel         = initMenu(toolWheelTitleStr, paintToolWheelCb);
-    paintState->toolWheelRenderer = initWheelMenu(&paintState->toolbarFont, 90);
+    paintState->toolWheelRenderer = initWheelMenu(&paintState->toolbarFont, 90, &paintState->toolWheelLabelBox);
+
+    paintState->toolWheelLabelBox.x = TFT_CORNER_RADIUS;
+    paintState->toolWheelLabelBox.y = 4;
+    paintState->toolWheelLabelBox.width = TFT_WIDTH - TFT_CORNER_RADIUS * 2;
+    paintState->toolWheelLabelBox.height = 20;
 
     // Tool wheel icons
     if (!loadWsg("wheel_brush.wsg", &paintState->wheelBrushWsg, false))

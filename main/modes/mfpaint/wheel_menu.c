@@ -10,6 +10,7 @@
 
 #include <inttypes.h>
 #include <malloc.h>
+#include <string.h>
 
 typedef struct
 {
@@ -30,12 +31,13 @@ static wheelItemInfo_t* findInfo(wheelMenuRenderer_t* renderer, const char* labe
  * @param anchorAngle The angle where the center of the first item will be anchored
  * @return wheelMenuRenderer_t*
  */
-wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle)
+wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox)
 {
     wheelMenuRenderer_t* renderer = calloc(1, sizeof(wheelMenuRenderer_t));
 
     renderer->font        = font;
     renderer->anchorAngle = anchorAngle;
+    renderer->textBox = textBox;
 
     renderer->textColor    = c000;
     renderer->borderColor  = c000;
@@ -126,8 +128,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     // Draw background circle for the unselected area
     drawCircleFilled(renderer->x, renderer->y, renderer->unselR, renderer->unselBgColor);
 
-    uint16_t centerR = renderer->centerR; // menu->currentItem ? renderer->centerR : renderer->centerR +
-                                          // (renderer->unselR - renderer->centerR) / 2;
+    uint16_t centerR          = renderer->centerR;
     uint16_t fillAngle        = 0;
     paletteColor_t selBgColor = renderer->selBgColor;
 
@@ -255,6 +256,37 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         {
             drawWsgSimple(iconsToDraw[i].wsg, iconsToDraw[i].x, iconsToDraw[i].y);
         }
+    }
+
+    if (renderer->textBox && menu->currentItem)
+    {
+        char buffer[128];
+        const char* label = getMenuItemLabelText(buffer, sizeof(buffer) - 1, menu->currentItem->val);
+        uint16_t textW = textWidth(renderer->font, label);
+        uint8_t n = 0;
+
+        while (textW > renderer->textBox->width)
+        {
+            // Copy the real label first if we're using a static string
+            if (label != buffer)
+            {
+                strncpy(buffer, sizeof(buffer) - 1, label);
+                label = buffer;
+            }
+
+            char* ptr = buffer + strlen(buffer);
+            // Shorten the text by one, and add trailing
+            *ptr-- = '\0';
+
+            for (uint8_t i = 0; i < 3 && ptr > buffer; i++)
+            {
+                *ptr-- = '.';
+            }
+
+            textW = textWidth(renderer->font, label);
+        }
+
+        drawText(renderer->font, renderer->textColor, label, renderer->textBox->x + (renderer->textBox->width - textW) / 2, renderer->textBox->y + (renderer->textBox->height - renderer->font->height - 1) / 2);
     }
 }
 

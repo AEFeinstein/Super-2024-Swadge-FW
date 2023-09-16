@@ -29,7 +29,7 @@
 #include "menu.h"
 #include "menu_utils.h"
 #include "wsg.h"
-
+#include "geometry.h"
 #include "palette.h"
 
 typedef enum
@@ -46,6 +46,9 @@ typedef struct
 {
     /// @brief The font to draw the menu labels with
     const font_t* font;
+
+    /// @brief A pointer to the text box to draw the selected item's label inside
+    const rectangle_t* textBox;
 
     /// @brief The list holding each item's information
     list_t itemInfos;
@@ -78,7 +81,7 @@ typedef struct
     bool active;
 } wheelMenuRenderer_t;
 
-wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle);
+wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox);
 void deinitWheelMenu(wheelMenuRenderer_t* renderer);
 void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedUs);
 
