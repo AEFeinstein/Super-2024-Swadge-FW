@@ -2,6 +2,25 @@
 
 #include "tinyusb.h"
 
+#define TUD_HID_REPORT_DESC_GAMEPAD(x)
+
+#define TUD_CONFIG_DESC_LEN (9)
+
+// Config number, interface count, string index, total length, attribute, power in mA
+#define TUD_CONFIG_DESCRIPTOR(config_num, _itfcount, _stridx, _total_len, _attribute, _power_ma) \
+    config_num, _itfcount, _stridx, _total_len, _attribute, _power_ma
+#define TUD_HID_DESCRIPTOR(_itfnum, _stridx, _boot_protocol, _report_desc_len, _epin, _epsize, _ep_interval) \
+    _itfnum, _stridx, _boot_protocol, _report_desc_len, _epin, _epsize, _ep_interval
+
+#define CFG_TUD_HID      1
+#define TUD_HID_DESC_LEN (9 + 9 + 7)
+
+enum
+{
+    TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP = TU_BIT(5),
+    TUSB_DESC_CONFIG_ATT_SELF_POWERED  = TU_BIT(6),
+};
+
 //--------------------------------------------------------------------+
 // GAMEPAD
 //--------------------------------------------------------------------+
