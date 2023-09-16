@@ -173,7 +173,7 @@ static const optDoc_t argDocs[] =
     { 0,  argFuzzMotion,  "y|n",   "Set whether motion inputs are fuzzed" },
     { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
-    {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, dvorak, or dvp"},
+    {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
