@@ -40,7 +40,6 @@ idf_component_register(SRCS "swadge2024.c"
                             "modes/mfpaint/paint_ui.c"
                             "modes/mfpaint/paint_util.c"
                             "modes/mfpaint/px_stack.c"
-                            "modes/mfpaint/wheel_menu.c"
                             "modes/pushy/pushy.c"
                             "modes/pong/pong.c"
                             "modes/breakout/breakout.c"
@@ -62,6 +61,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "utils/touchUtils.c"
                             "utils/trigonometry.c"
                             "utils/vector2d.c"
+                            "utils/wheel_menu.c"
                     PRIV_REQUIRES hdw-accel
                                   hdw-battmon
                                   hdw-btn
