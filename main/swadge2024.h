@@ -32,13 +32,13 @@
  *
  * Adding a mode to the CMakeFile requires adding two separate lines in the idf_component_register section.
  *
- * \c
+ * \code{.c}
  * "modes/pong/pong.c"
  * \endcode
  *
  * under the SRCS section and
  *
- * \c
+ * \code{.c}
  * "modes/pong"
  * \endcode
  *

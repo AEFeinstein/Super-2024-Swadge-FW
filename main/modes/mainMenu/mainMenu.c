@@ -10,6 +10,7 @@
 #include "pushy.h"
 #include "pong.h"
 #include "marbles.h"
+#include "mode_paint.h"
 #include "colorchord.h"
 #include "lumberjack.h"
 #include "dance.h"
@@ -114,6 +115,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, marblesMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
     addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
@@ -206,6 +208,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == marblesMode.modeName)
         {
             switchToSwadgeMode(&marblesMode);
+        }
+        else if (label == modePaint.modeName)
+        {
+            switchToSwadgeMode(&modePaint);
         }
         else if (label == colorchordMode.modeName)
         {
