@@ -198,6 +198,66 @@ const hid_gamepad_button_bm_t touchMapNs[] = {
     GAMEPAD_NS_BUTTON_Y, GAMEPAD_NS_BUTTON_TL, GAMEPAD_NS_BUTTON_Z, GAMEPAD_NS_BUTTON_TR, GAMEPAD_NS_BUTTON_X,
 };
 
+/// @brief  Switch Descriptor
+static const tusb_desc_device_t nsDescriptor = {
+    .bLength            = 18U,
+    .bDescriptorType    = 1,
+    .bcdUSB             = 0x0200,
+    .bDeviceClass       = 0x00,
+    .bDeviceSubClass    = 0x00,
+    .bDeviceProtocol    = 0x00,
+    .bMaxPacketSize0    = 64,
+    .idVendor           = 0x0f0d,
+    .idProduct          = 0x0092,
+    .bcdDevice          = 0x0100,
+    .iManufacturer      = 0x01,
+    .iProduct           = 0x02,
+    .iSerialNumber      = 0x03,
+    .bNumConfigurations = 0x01,
+};
+
+/// @brief  Switch tusb configuration
+static const tinyusb_config_t ns_tusb_cfg = {.descriptor = &nsDescriptor};
+
+/// @brief PC string Descriptor
+static const char* hid_string_descriptor[5] = {
+    // array of pointer to string descriptors
+    (char[]){0x09, 0x04},   // 0: is supported language is English (0x0409)
+    "Magfest",              // 1: Manufacturer
+    "Swadge Controller",    // 2: Product
+    "123456",               // 3: Serials, should use chip ID
+    "Swadge HID interface", // 4: HID
+};
+
+/// @brief PC report Descriptor
+static const uint8_t hid_report_descriptor[] = {TUD_HID_REPORT_DESC_GAMEPAD()};
+
+/// @brief PC Config Descriptor
+static const uint8_t hid_configuration_descriptor[] = {
+    TUD_CONFIG_DESCRIPTOR(1,                                                        // Configuration number
+                          1,                                                        // interface count
+                          0,                                                        // string index
+                          (TUD_CONFIG_DESC_LEN + (CFG_TUD_HID * TUD_HID_DESC_LEN)), // total length
+                          TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,                       // attribute
+                          100),                                                     // power in mA
+
+    TUD_HID_DESCRIPTOR(0,                             // Interface number
+                       4,                             // string index
+                       false,                         // boot protocol
+                       sizeof(hid_report_descriptor), // report descriptor len
+                       0x81,                          // EP In address
+                       16,                            // size
+                       10),                           // polling interval
+};
+
+/// @brief PC tusb configuration
+static const tinyusb_config_t pc_tusb_cfg = {
+    .device_descriptor        = NULL,
+    .string_descriptor        = hid_string_descriptor,
+    .external_phy             = false,
+    .configuration_descriptor = hid_configuration_descriptor,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -313,61 +373,14 @@ void gamepadStart(gamepadType_t type)
 {
     gamepad->gamepadType = type;
 
-    const tusb_desc_device_t nsDescriptor = {
-        .bLength            = 18U,
-        .bDescriptorType    = 1,
-        .bcdUSB             = 0x0200,
-        .bDeviceClass       = 0x00,
-        .bDeviceSubClass    = 0x00,
-        .bDeviceProtocol    = 0x00,
-        .bMaxPacketSize0    = 64,
-        .idVendor           = 0x0f0d,
-        .idProduct          = 0x0092,
-        .bcdDevice          = 0x0100,
-        .iManufacturer      = 0x01,
-        .iProduct           = 0x02,
-        .iSerialNumber      = 0x03,
-        .bNumConfigurations = 0x01,
-    };
-
-    const char* hid_string_descriptor[5] = {
-        // array of pointer to string descriptors
-        (char[]){0x09, 0x04},   // 0: is supported language is English (0x0409)
-        "Magfest",              // 1: Manufacturer
-        "Swadge Controller",    // 2: Product
-        "123456",               // 3: Serials, should use chip ID
-        "Swadge HID interface", // 4: HID
-    };
-
-    const uint8_t hid_report_descriptor[] = {TUD_HID_REPORT_DESC_GAMEPAD()};
-
-    const uint8_t hid_configuration_descriptor[] = {
-        TUD_CONFIG_DESCRIPTOR(1,                                                        // Configuration number
-                              1,                                                        // interface count
-                              0,                                                        // string index
-                              (TUD_CONFIG_DESC_LEN + (CFG_TUD_HID * TUD_HID_DESC_LEN)), // total length
-                              TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP,                       // attribute
-                              100),                                                     // power in mA
-
-        TUD_HID_DESCRIPTOR(0,                             // Interface number
-                           4,                             // string index
-                           false,                         // boot protocol
-                           sizeof(hid_report_descriptor), // report descriptor len
-                           0x81,                          // EP In address
-                           16,                            // size
-                           10),                           // polling interval
-    };
-
-    const tinyusb_config_t default_cfg = {
-        .device_descriptor        = NULL,
-        .string_descriptor        = hid_string_descriptor,
-        .external_phy             = false,
-        .configuration_descriptor = hid_configuration_descriptor,
-    };
-
-    tinyusb_config_t tusb_cfg = {.descriptor = &nsDescriptor};
-
-    tinyusb_driver_install((gamepad->gamepadType == GAMEPAD_NS) ? &tusb_cfg : &default_cfg);
+    if (gamepad->gamepadType == GAMEPAD_NS)
+    {
+        initTusb(&ns_tusb_cfg, (const uint8_t*)&nsDescriptor);
+    }
+    else
+    {
+        initTusb(&pc_tusb_cfg, hid_report_descriptor);
+    }
 
     gamepad->gpNsState.x  = 128;
     gamepad->gpNsState.y  = 128;
