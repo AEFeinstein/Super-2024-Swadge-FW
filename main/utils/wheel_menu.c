@@ -1,3 +1,7 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "wheel_menu.h"
 
 #include "hdw-tft.h"
@@ -12,6 +16,10 @@
 #include <malloc.h>
 #include <string.h>
 
+//==============================================================================
+// Structs
+//==============================================================================
+
 typedef struct
 {
     const char* label;
@@ -22,14 +30,23 @@ typedef struct
     paletteColor_t unselectedBg;
 } wheelItemInfo_t;
 
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
 static wheelItemInfo_t* findInfo(wheelMenuRenderer_t* renderer, const char* label);
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * @brief Initializes and returns a new wheel menu with the default settings
  *
  * @param font The font to draw menu item labels with
  * @param anchorAngle The angle where the center of the first item will be anchored
- * @return wheelMenuRenderer_t*
+ * @param textBox TODO doc
+ * @return TODO doc
  */
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox)
 {
@@ -56,6 +73,11 @@ wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, con
     return renderer;
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param renderer
+ */
 void deinitWheelMenu(wheelMenuRenderer_t* renderer)
 {
     node_t* info = NULL;
@@ -70,6 +92,7 @@ void deinitWheelMenu(wheelMenuRenderer_t* renderer)
 /**
  * @brief Sets the icon and ring position for the item with the given label
  *
+ * @param renderer TODO doc
  * @param label The label of the item to set the icon and position for
  * @param icon  The icon to use when drawing the menu item
  * @param position The order of the item in the ring, centered around the anchor angle
@@ -103,6 +126,14 @@ void wheelMenuSetItemInfo(wheelMenuRenderer_t* renderer, const char* label, cons
     }
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param renderer
+ * @param label
+ * @param selectedBg
+ * @param unselectedBg
+ */
 void wheelMenuSetItemColor(wheelMenuRenderer_t* renderer, const char* label, paletteColor_t selectedBg,
                            paletteColor_t unselectedBg)
 {
@@ -121,6 +152,13 @@ void wheelMenuSetItemColor(wheelMenuRenderer_t* renderer, const char* label, pal
     info->selectedBg   = selectedBg;
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param menu
+ * @param renderer
+ * @param elapsedUs
+ */
 void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedUs)
 {
     node_t* node = menu->items->first;
@@ -260,7 +298,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
     if (renderer->textBox && menu->currentItem && renderer->touched)
     {
-        char buffer[128];
+        char buffer[128]  = {0};
         const char* label = getMenuItemLabelText(buffer, sizeof(buffer) - 1, menu->currentItem->val);
 
         uint16_t textW = textWidth(renderer->font, label);
@@ -270,7 +308,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             // Copy the real label first if we're using a static string
             if (label != buffer)
             {
-                strncpy(buffer, label, sizeof(buffer));
+                strncpy(buffer, label, sizeof(buffer) - 1);
                 label = buffer;
             }
 
@@ -292,6 +330,15 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     }
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param menu
+ * @param renderer
+ * @param angle
+ * @param radius
+ * @return menu_t*
+ */
 menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t angle, uint16_t radius)
 {
     renderer->touched = true;
@@ -356,6 +403,14 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
     return menu;
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param menu
+ * @param renderer
+ * @param evt
+ * @return menu_t*
+ */
 menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, const buttonEvt_t* evt)
 {
     if (evt->down && menu->currentItem)
@@ -425,6 +480,13 @@ menu_t* wheelMenuButton(menu_t* menu, wheelMenuRenderer_t* renderer, const butto
     return menu;
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param menu
+ * @param renderer
+ * @return menu_t*
+ */
 menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer)
 {
     if (!renderer->touched)
@@ -474,11 +536,26 @@ menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer)
     }
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param menu
+ * @param renderer
+ * @return true
+ * @return false
+ */
 bool wheelMenuActive(menu_t* menu, wheelMenuRenderer_t* renderer)
 {
     return renderer && renderer->active;
 }
 
+/**
+ * @brief TODO doc
+ *
+ * @param renderer
+ * @param label
+ * @return wheelItemInfo_t*
+ */
 static wheelItemInfo_t* findInfo(wheelMenuRenderer_t* renderer, const char* label)
 {
     node_t* node = renderer->itemInfos.first;

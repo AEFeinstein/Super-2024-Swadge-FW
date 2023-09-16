@@ -1,4 +1,4 @@
-/*! \file paint_menu.h
+/*! \file wheel_menu.h
  *
  * The new and improved paint menu will work like this, thanks to the new touchpad:
  *
@@ -32,53 +32,40 @@
 #include "geometry.h"
 #include "palette.h"
 
+/**
+ * @brief Wheel scroll directions
+ */
 typedef enum
 {
-    NO_SCROLL      = 0,
-    SCROLL_VERT    = 1,
-    SCROLL_HORIZ   = 2,
-    SCROLL_REVERSE = 4,
-    SCROLL_VERT_R  = SCROLL_VERT | SCROLL_REVERSE,
-    SCROLL_HORIZ_R = SCROLL_HORIZ | SCROLL_REVERSE,
+    NO_SCROLL      = 0,                             ///< TODO doc
+    SCROLL_VERT    = 1,                             ///< TODO doc
+    SCROLL_HORIZ   = 2,                             ///< TODO doc
+    SCROLL_REVERSE = 4,                             ///< TODO doc
+    SCROLL_VERT_R  = SCROLL_VERT | SCROLL_REVERSE,  ///< TODO doc
+    SCROLL_HORIZ_R = SCROLL_HORIZ | SCROLL_REVERSE, ///< TODO doc
 } wheelScrollDir_t;
 
+/**
+ * @brief Renderer for a menu wheel
+ */
 typedef struct
 {
-    /// @brief The font to draw the menu labels with
-    const font_t* font;
-
-    /// @brief A pointer to the text box to draw the selected item's label inside
-    const rectangle_t* textBox;
-
-    /// @brief The list holding each item's information
-    list_t itemInfos;
-
-    /// @brief The angle around which the 0th menu item will be centered
-    uint16_t anchorAngle;
-
-    /// @brief The X position of the center of the menu
-    uint16_t x;
-
-    /// @brief The Y position of the center of the menu
-    uint16_t y;
-
-    /// @brief The radius of the center circle of the menu, or 0 if none
-    uint16_t centerR;
-
-    /// @brief The radius of unselected items' sectors
-    uint16_t unselR;
-
-    /// @brief The radius of the selected sector
-    uint16_t selR;
-
-    paletteColor_t textColor;
-    paletteColor_t unselBgColor;
-    paletteColor_t selBgColor;
-    paletteColor_t borderColor;
-
-    bool customBack;
-    bool touched;
-    bool active;
+    const font_t* font;          ///< The font to draw the menu labels with
+    const rectangle_t* textBox;  ///< A pointer to the text box to draw the selected item's label inside
+    list_t itemInfos;            ///< The list holding each item's information
+    uint16_t anchorAngle;        ///< The angle around which the 0th menu item will be centered
+    uint16_t x;                  ///< The X position of the center of the menu
+    uint16_t y;                  ///< The Y position of the center of the menu
+    uint16_t centerR;            ///< The radius of the center circle of the menu, or 0 if none
+    uint16_t unselR;             ///< The radius of unselected items' sectors
+    uint16_t selR;               ///< The radius of the selected sector
+    paletteColor_t textColor;    ///< TODO doc
+    paletteColor_t unselBgColor; ///< TODO doc
+    paletteColor_t selBgColor;   ///< TODO doc
+    paletteColor_t borderColor;  ///< TODO doc
+    bool customBack;             ///< TODO doc
+    bool touched;                ///< TODO doc
+    bool active;                 ///< TODO doc
 } wheelMenuRenderer_t;
 
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox);
