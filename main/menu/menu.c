@@ -773,8 +773,7 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
             }
             case PB_A:
             {
-                menuSelectCurrentItem(menu);
-                break;
+                return menuSelectCurrentItem(menu);
             }
             case PB_B:
             {
