@@ -38,6 +38,7 @@
 #define _HDW_USB_
 
 #include <class/hid/hid.h>
+#include "tinyusb.h"
 
 /**
  * @brief Function typedef for a callback which will send USB SET_REPORT and GET_REPORT messages to a Swadge mode
@@ -58,5 +59,6 @@ void initUsb(fnSetSwadgeMode setSwadgeMode, fnAdvancedUsbHandler advancedUsbHand
 void deinitUsb(void);
 void sendUsbGamepadReport(hid_gamepad_report_t* report);
 void usbSetSwadgeMode(void* newMode);
+void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor);
 
 #endif

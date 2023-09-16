@@ -22,6 +22,7 @@
 #include "demoMode.h"
 #include "jukebox.h"
 #include "mainMenu.h"
+#include "mode_paint.h"
 #include "pong.h"
 #include "lumberjack.h"
 #include "touchTest.h"
@@ -59,6 +60,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &demoMode,
     &jukeboxMode,
     &mainMenuMode,
+    &modePaint,
     &pongMode,
     &lumberjackMode,
     &touchTestMode,

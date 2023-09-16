@@ -29,22 +29,22 @@
  * \c demo in the example below.
  *
  * \section swadgeMode_example Example
- * 
+ *
  * Adding a mode to the CMakeFile requires adding two separate lines in the idf_component_register section.
- * 
- * \c
+ *
+ * \code{.c}
  * "modes/pong/pong.c"
  * \endcode
  *
  * under the SRCS section and
- * 
- * \c
+ *
+ * \code{.c}
  * "modes/pong"
  * \endcode
- * 
+ *
  * under the INCLUDES section.
- * 
- * 
+ *
+ *
  * Function prototypes must be declared before using them to initialize function pointers:
  * \code{.c}
  * // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM

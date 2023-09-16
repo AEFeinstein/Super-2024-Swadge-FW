@@ -38,3 +38,14 @@ void sendUsbGamepadReport(hid_gamepad_report_t* report)
 {
     WARN_UNIMPLEMENTED();
 }
+
+/**
+ * @brief Initialize TinyUSB
+ *
+ * @param tusb_cfg The TinyUSB configuration
+ * @param descriptor The descriptor to use for this configuration
+ */
+void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor)
+{
+    WARN_UNIMPLEMENTED();
+}
