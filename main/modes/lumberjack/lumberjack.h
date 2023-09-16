@@ -47,7 +47,6 @@ typedef struct
     /* data */
     int x;
     int y;
-    int collision;
     int type;
     int index;
     int offset;
@@ -83,7 +82,7 @@ typedef struct
     wsg_t subtitle_green;
     wsg_t subtitle_white;
 
-    lumberjackTile_t tile[400];
+    lumberjackTile_t* tile;
     uint8_t anim[400];
 
     wsg_t enemySprites[21];
