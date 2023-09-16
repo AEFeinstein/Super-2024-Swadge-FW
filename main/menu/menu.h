@@ -196,7 +196,7 @@ void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
 void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
-                                  int32_t currentOption);
+                                  int32_t currentValue);
 void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
 
 menu_t* menuNavigateToItem(menu_t* menu, const char* label);

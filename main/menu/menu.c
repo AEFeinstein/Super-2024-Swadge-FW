@@ -25,7 +25,7 @@ static void deinitSubMenu(menu_t* menu);
 //==============================================================================
 
 /**
- * Initialize and return an empty menu. A menu is a collection of vertically
+ * @brief Initialize and return an empty menu. A menu is a collection of vertically
  * scrollable rows. The rows are separated into pages, and when a page
  * boundary is crossed the whole page scrolls.
  *
@@ -42,7 +42,7 @@ static void deinitSubMenu(menu_t* menu);
  *               the menu.
  * @param cbFunc The function to call when a menu option is selected. The
  *               argument to the callback will be the same pointer
- * @return A pointer to the newly allocated menu_t. This must be deinitialized
+ * @return A pointer to the newly allocated menu_t. This must be de-initialized
  *         when the menu is not used anymore.
  */
 menu_t* initMenu(const char* title, menuCb cbFunc)
@@ -57,7 +57,7 @@ menu_t* initMenu(const char* title, menuCb cbFunc)
 }
 
 /**
- * Deinitialize a menu and all connected menus, including submenus and parent
+ * @brief Deinitialize a menu and all connected menus, including submenus and parent
  * menus. This frees memory allocated for this menu, but not memory allocated
  * elsewhere, like the font or item labels
  *
@@ -76,7 +76,7 @@ void deinitMenu(menu_t* menu)
 }
 
 /**
- * Deinitialize a menu and all of its submenus recursively. This frees memory
+ * @brief Deinitialize a menu and all of its submenus recursively. This frees memory
  * allocated for this menu, but not memory allocated elsewhere, like the font or
  * item labels
  *
@@ -112,7 +112,7 @@ static void deinitSubMenu(menu_t* menu)
 }
 
 /**
- * Add a submenu item to the menu. When this item is select, the submenu is
+ * @brief Add a submenu item to the menu. When this item is select, the submenu is
  * rendered. The ::menuCb is not called.
  *
  * All items added to this ::menu_t after calling startSubMenu() will be added
@@ -156,7 +156,7 @@ menu_t* startSubMenu(menu_t* menu, const char* label)
 }
 
 /**
- * Finish adding items to a submenu and resume adding items to the parent menu.
+ * @brief Finish adding items to a submenu and resume adding items to the parent menu.
  * This will automatically add a "Back" item to the submenu, which returns to
  * the parent menu. ::menuCb will not be called when "Back" is selected.
  *
@@ -180,7 +180,7 @@ menu_t* endSubMenu(menu_t* menu)
 }
 
 /**
- * Add a single item entry to the menu. When this item is selected, the ::menuCb
+ * @brief Add a single item entry to the menu. When this item is selected, the ::menuCb
  * callback is called with the given label as the argument.
  *
  * @param menu The menu to add a single item to
@@ -205,7 +205,7 @@ void addSingleItemToMenu(menu_t* menu, const char* label)
 }
 
 /**
- * Remove a single item entry from the menu. This item is removed by pointer,
+ * @brief Remove a single item entry from the menu. This item is removed by pointer,
  * not by doing a string comparison.
  *
  * @param menu The menu to remove a single item from
@@ -239,7 +239,7 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
 }
 
 /**
- * Add a multiple item entry to the menu. The multiple items exist in a single
+ * @brief Add a multiple item entry to the menu. The multiple items exist in a single
  * entry and are left-right scrollable. The ::menuCb callback will be called
  * each time the multi-item scrolls with the newly selected label as the
  * argument. The ::menuCb callback will also be called if the currently
@@ -273,7 +273,7 @@ void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabe
 }
 
 /**
- * Remove a multi item entry from the menu. This item is removed by pointer,
+ * @brief Remove a multi item entry from the menu. This item is removed by pointer,
  * not by doing any string comparisons.
  *
  * @param menu The menu to remove a multi item from
@@ -308,7 +308,7 @@ void removeMultiItemFromMenu(menu_t* menu, const char* const* labels)
 }
 
 /**
- * Add a settings entry to the menu. A settings entry is left-right scrollable
+ * @brief Add a settings entry to the menu. A settings entry is left-right scrollable
  * where an integer setting is incremented or decremented. The ::menuCb callback
  * will be called each time the settings change with the newly selected value as
  * the argument. The ::menuCb callback will also be called if the currently
@@ -373,8 +373,8 @@ void removeSettingsItemFromMenu(menu_t* menu, const char* label)
 }
 
 /**
- * Adds a settings item entry to the menu with a specific list of options. The
- * enry will be left-right scrollable. The ::menuCb callback will be called
+ * @brief Adds a settings item entry to the menu with a specific list of options. The
+ * entry will be left-right scrollable. The ::menuCb callback will be called
  * each time the setting-options item scrolls or is selected with the newly
  * selected label and setting value as the arguments.
  *
@@ -470,6 +470,13 @@ void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLa
     }
 }
 
+/**
+ * @brief Helper function to call the callback when a menu is navigated or an item is selected
+ *
+ * @param menu The menu to call a callback for
+ * @param item The item that was selected or scrolled to
+ * @param selected true if the item was selected, false if it was only navigated to
+ */
 static void menuCallCallbackForItem(menu_t* menu, menuItem_t* item, bool selected)
 {
     menu->cbFunc(
@@ -487,7 +494,7 @@ static void menuCallCallbackForItem(menu_t* menu, menuItem_t* item, bool selecte
  *
  * @param menu The menu to change the selected item of
  * @param label The label of the menu item or an option to select
- * @return menu_t* A pointer to the menu to use for future function calls. It may be a sub or parent menu.
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
 menu_t* menuNavigateToItem(menu_t* menu, const char* label)
 {
@@ -498,7 +505,7 @@ menu_t* menuNavigateToItem(menu_t* menu, const char* label)
 
         if (item->label)
         {
-            if (item->label && item->label == label)
+            if (item->label == label)
             {
                 menu->currentItem = listNode;
                 menuCallCallbackForItem(menu, item, false);
@@ -532,10 +539,10 @@ menu_t* menuNavigateToItem(menu_t* menu, const char* label)
 }
 
 /**
- * @brief
+ * @brief Navigate to the previous item in the menu. This is equivalent to pressing the UP button
  *
- * @param menu
- * @return menu_t*
+ * @param menu The menu to navigate in
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
 menu_t* menuNavigateToPrevItem(menu_t* menu)
 {
@@ -555,10 +562,10 @@ menu_t* menuNavigateToPrevItem(menu_t* menu)
 }
 
 /**
- * @brief
+ * @brief Navigate to the next item in the menu. This is equivalent to pressing the DOWN button
  *
- * @param menu
- * @return menu_t*
+ * @param menu The menu to navigate in
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
 menu_t* menuNavigateToNextItem(menu_t* menu)
 {
@@ -578,10 +585,10 @@ menu_t* menuNavigateToNextItem(menu_t* menu)
 }
 
 /**
- * @brief
+ * @brief Navigate to the previous option in a menu item. This is equivalent to pressing the LEFT button
  *
- * @param menu
- * @return menu_t*
+ * @param menu The menu to navigate in
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
  */
 menu_t* menuNavigateToPrevOption(menu_t* menu)
 {
@@ -624,6 +631,12 @@ menu_t* menuNavigateToPrevOption(menu_t* menu)
     return menu;
 }
 
+/**
+ * @brief Navigate to the next option in a menu item. This is equivalent to pressing the RIGHT button
+ *
+ * @param menu The menu to navigate in
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
+ */
 menu_t* menuNavigateToNextOption(menu_t* menu)
 {
     menuItem_t* item = menu->currentItem ? menu->currentItem->val : NULL;
@@ -669,6 +682,12 @@ menu_t* menuNavigateToNextOption(menu_t* menu)
     return menu;
 }
 
+/**
+ * @brief Select the current item in a menu item. This is equivalent to pressing the A button.
+ *
+ * @param menu The menu to select an item in
+ * @return A pointer to the menu to use for future function calls. It may be a sub or parent menu.
+ */
 menu_t* menuSelectCurrentItem(menu_t* menu)
 {
     menuItem_t* item = menu->currentItem ? menu->currentItem->val : NULL;
@@ -719,7 +738,7 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
 }
 
 /**
- * This must be called to pass button event from the Swadge mode to the menu.
+ * @brief This must be called to pass button event from the Swadge mode to the menu.
  * If a button is passed here, it should not be handled anywhere else
  *
  * @param menu The menu to process button events for
@@ -731,7 +750,7 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
     if (evt.down)
     {
         // Get a pointer to the item for convenience
-        menuItem_t* item = menu->currentItem->val;
+        const menuItem_t* item = menu->currentItem->val;
 
         switch (evt.button)
         {
