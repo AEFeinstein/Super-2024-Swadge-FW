@@ -3,29 +3,86 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "swdglnd-character.tmx",
+    "activeFile": "ponglike.tmx",
     "expandedProjectPaths": [
     ],
+    "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
         "breakout-tiles.tsx": {
             "dynamicWrapping": false,
-            "scaleInDock": 6.0061,
+            "scaleInDock": 6,
             "scaleInEditor": 6.04
+        },
+        "intro.tmx": {
+            "scale": 3.05,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.1639344262295,
+                "y": 118.19672131147543
+            }
+        },
+        "leftside.tmx": {
+            "scale": 3.0393238434163696,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.6562847608454,
+                "y": 120.58603126280666
+            }
         },
         "level1.tmx": {
             "scale": 1.8793,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 130.89980311818232,
+                "x": 131.1658596285851,
                 "y": 142.87234608630874
+            }
+        },
+        "mag01.tmx": {
+            "scale": 3.0501785714285714,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.15572858731926,
+                "y": 121.14044845149584
+            }
+        },
+        "ponglike.tmx": {
+            "scale": 2.865939597315436,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 131.37052865757275,
+                "y": 117.76242608746561
+            }
+        },
+        "split.tmx": {
+            "scale": 3.0501785714285714,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.15572858731926,
+                "y": 121.14044845149584
+            }
+        },
+        "starlite.tmx": {
+            "scale": 3.0501785714285714,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.48357824483344,
+                "y": 121.46829810901001
             }
         },
         "swdglnd-character.tmx": {
             "scale": 2.415,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 184.6790890269151,
-                "y": 100.41407867494823
+                "x": 140.1656314699793,
+                "y": 120.28985507246375
+            }
+        },
+        "test.tmx": {
+            "scale": 3.0501785714285714,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.15572858731926,
+                "y": 120.15689947895325
             }
         }
     },
@@ -38,13 +95,25 @@
     "map.tileWidth": 8,
     "map.width": 35,
     "openFiles": [
+        "intro.tmx",
         "swdglnd-character.tmx",
-        "level1.tmx"
+        "leftside.tmx",
+        "mag01.tmx",
+        "split.tmx",
+        "starlite.tmx",
+        "ponglike.tmx"
     ],
     "project": "breakout.tiled-project",
     "recentFiles": [
-        "level1.tmx",
+        "intro.tmx",
         "swdglnd-character.tmx",
+        "leftside.tmx",
+        "mag01.tmx",
+        "split.tmx",
+        "starlite.tmx",
+        "ponglike.tmx",
+        "test.tmx",
+        "level1.tmx",
         "breakout-tiles.tsx"
     ],
     "tileset.lastUsedFormat": "tsx",

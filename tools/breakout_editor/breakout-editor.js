@@ -16,7 +16,7 @@ tiled.registerMapFormat("Breakout", {
         map.setSize(view[0], view[1]);
         map.setTileSize(tileSizeInPixels, tileSizeInPixels);
 
-        var tileset = tiled.open(filePath + '/breakout-tileset.tsx');
+        var tileset = tiled.open(filePath + '/breakout-tiles.tsx');
         
         var layer = new TileLayer();
 
