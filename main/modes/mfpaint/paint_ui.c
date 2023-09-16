@@ -221,7 +221,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         if (artist->brushDef->mode == PICK_POINT && artist->brushDef->maxPoints > 1)
         {
             // Draw the number of picks made / total
-            snprintf(text, sizeof(text), "%"PRIu32"/%d", (uint32_t)pxStackSize(&artist->pickPoints), artist->brushDef->maxPoints);
+            snprintf(text, sizeof(text), "%" PRIu32 "/%d", (uint32_t)pxStackSize(&artist->pickPoints),
+                     artist->brushDef->maxPoints);
 
             textX += 4;
             drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
@@ -240,7 +241,7 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
             }
             else
             {
-                snprintf(text, sizeof(text), "%"PRIu32, (uint32_t)(maxPicks - pxStackSize(&artist->pickPoints) - 1));
+                snprintf(text, sizeof(text), "%" PRIu32, (uint32_t)(maxPicks - pxStackSize(&artist->pickPoints) - 1));
             }
 
             textX += 4;

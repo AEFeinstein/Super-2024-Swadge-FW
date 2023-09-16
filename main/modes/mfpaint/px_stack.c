@@ -11,7 +11,7 @@
 bool initPxStack(pxStack_t* pxStack)
 {
     pxStack->size = PIXEL_STACK_MIN_SIZE;
-    PAINT_LOGD("Allocating pixel stack with size %"PRIu32, (uint32_t)pxStack->size);
+    PAINT_LOGD("Allocating pixel stack with size %" PRIu32, (uint32_t)pxStack->size);
     pxStack->data  = malloc(sizeof(pxVal_t) * pxStack->size);
     pxStack->index = -1;
 
@@ -46,7 +46,7 @@ bool maybeGrowPxStack(pxStack_t* pxStack, size_t count)
             newSize *= 2;
         }
 
-        PAINT_LOGD("Expanding pixel stack to size %"PRIu32, (uint32_t)newSize);
+        PAINT_LOGD("Expanding pixel stack to size %" PRIu32, (uint32_t)newSize);
         void* newPtr = realloc(pxStack->data, sizeof(pxVal_t) * newSize);
         if (newPtr == NULL)
         {
