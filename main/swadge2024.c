@@ -31,6 +31,7 @@
  * the Swadge firmware.
  * -# When you're ready to make a contribution, read the \ref contribution_guide first to see how to do it in the most
  * productive way.
+ * -# If you want to bring a mode forward from last year's Swadge, take a look at \ref porting.
  * -# Finally, if you want to do lower level or \c component programming, read the \ref espressif_doc to understand the
  * full capability of the ESP32-S2 chip.
  *
@@ -117,7 +118,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -141,6 +142,7 @@
 #include "advanced_usb_control.h"
 #include "swadge2024.h"
 #include "mainMenu.h"
+#include "lumberjack.h"
 #include "quickSettings.h"
 #include "shapes.h"
 
@@ -280,7 +282,8 @@ void app_main(void)
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
     {
-        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
+        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX,
+                   cSwadgeMode->wifiMode);
     }
 
     // Init accelerometer
@@ -348,6 +351,11 @@ void app_main(void)
             }
         }
 
+        if (NO_WIFI != cSwadgeMode->wifiMode)
+        {
+            checkEspNowRxQueue();
+        }
+
         // Only draw to the TFT every frameRateUs
         static uint64_t tAccumDraw = 0;
         tAccumDraw += tElapsedUs;
@@ -383,7 +391,7 @@ void app_main(void)
             if (0 != timeExitPressed && !showQuickSettings)
             {
                 // Figure out for how long
-                int64_t tHeldUs = tNowUs - timeExitPressed;
+                int64_t tHeldUs = esp_timer_get_time() - timeExitPressed;
                 // If it has been held for more than the exit time
                 if (tHeldUs > EXIT_TIME_US)
                 {
@@ -401,7 +409,7 @@ void app_main(void)
             }
             else if (0 != timePausePressed)
             {
-                int64_t tHeldUs = tNowUs - timePausePressed;
+                int64_t tHeldUs = esp_timer_get_time() - timePausePressed;
 
                 if (tHeldUs > PAUSE_TIME_US)
                 {
@@ -424,9 +432,9 @@ void app_main(void)
                 else
                 {
                     int16_t r     = QUICK_SETTINGS_PANEL_R;
-                    int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
+                    int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US + 1;
                     drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
-                    fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx, r + 1, c333);
+                    fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx + 1, r + 1, c333);
                     drawCircleFilled(QUICK_SETTINGS_PANEL_X + numPx + r, 0, r, c333);
                 }
             }

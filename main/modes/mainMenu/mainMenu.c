@@ -7,14 +7,19 @@
 #include "mainMenu.h"
 #include "demoMode.h"
 #include "jukebox.h"
+#include "pushy.h"
 #include "pong.h"
-#include "mode_colorchord.h"
-#include "mode_dance.h"
+#include "marbles.h"
+#include "mode_paint.h"
+#include "colorchord.h"
+#include "lumberjack.h"
+#include "dance.h"
 #include "tunernome.h"
 #include "touchTest.h"
 #include "gamepad.h"
 
 #include "settingsManager.h"
+#include "breakout.h"
 
 //==============================================================================
 // Structs
@@ -107,10 +112,14 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
 
     // Add single items
-    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, marblesMode.modeName);
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, modeDance.modeName);
+    addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
+    addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
@@ -198,13 +207,29 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&pongMode);
         }
+        else if (label == marblesMode.modeName)
+        {
+            switchToSwadgeMode(&marblesMode);
+        }
+        else if (label == modePaint.modeName)
+        {
+            switchToSwadgeMode(&modePaint);
+        }
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
         }
-        else if (label == modeDance.modeName)
+        else if (label == breakoutMode.modeName)
         {
-            switchToSwadgeMode(&modeDance);
+            switchToSwadgeMode(&breakoutMode);
+        }
+        else if (label == danceMode.modeName)
+        {
+            switchToSwadgeMode(&danceMode);
+        }
+        else if (label == pushyMode.modeName)
+        {
+            switchToSwadgeMode(&pushyMode);
         }
         else if (label == tunernomeMode.modeName)
         {
@@ -221,6 +246,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == gamepadMode.modeName)
         {
             switchToSwadgeMode(&gamepadMode);
+        }
+        else if (label == lumberjackMode.modeName)
+        {
+            switchToSwadgeMode(&lumberjackMode);
         }
     }
     else

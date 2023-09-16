@@ -27,6 +27,9 @@
 #include "macros.h"
 #include "trigonometry.h"
 
+#include "hdw-esp-now.h"
+#include "mainMenu.h"
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
@@ -34,8 +37,6 @@
 
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
-
-#define EMU_EXTENSIONS
 
 #include "emu_args.h"
 #include "emu_ext.h"
@@ -71,6 +72,15 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief Quits the emulator
+ *
+ */
+void emulatorQuit(void)
+{
+    isRunning = false;
+}
 
 /**
  * @brief Parse and handle command line arguments
@@ -109,11 +119,15 @@ int main(int argc, char** argv)
         return 0;
     }
 
-#ifdef EMU_EXTENSIONS
     // Call any init callbacks we may have and pass them the parsed command-line arguments
     // We also determine which extensions are enabled here, which is important for laying out the window properly
     initExtensions(&emulatorArgs);
-#endif
+
+    if (!isRunning)
+    {
+        // One of the extension must have quit due to an error.
+        return 0;
+    }
 
     // First initialize rawdraw
     // Screen-specific configurations
@@ -125,18 +139,34 @@ int main(int argc, char** argv)
     else
     {
         // Get all the pane info to see how much space we need aside from the simulated TFT screen
-        emuPaneMinimum_t paneMins[5] = {0};
-        calculatePaneMinimums(&paneMins);
+        emuPaneMinimum_t paneMins[4] = {0};
+        calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
+        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
+
+        if (emulatorArgs.headless)
+        {
+            // If the window dimensions are negative, the window will still exist but not be displayed.
+            // TODO does this work on all platforms?
+            winW = -winW;
+            winH = -winH;
+        }
 
         // Add the screen size to the minimum pane sizes to get our window size
-        CNFGSetup("Swadge 2024 Simulator", (TFT_WIDTH)*2 + sidePanesW, (TFT_HEIGHT)*2 + topBottomPanesH);
+        CNFGSetup("Swadge 2024 Simulator", winW, winH);
     }
 
     // We won't call the pre-frame callback for the very first frame
     // This is because everything isn't initialized and there would have to be emu-specific code to do so
     // post-initialization So, this is fine, we get one frame of peace before the emulator can start messing with stuff.
+
+    // This is a hack to make sure ESPNOW is always initialized on the emulator.
+    // The real swadge initializes wifi on boot only if the mode requires it,
+    // but the emulator doesn't actually reboot, so instead we just change the mode of the
+    // main menu mode to force ESPNOW to always initialize when the emulator starts
+    mainMenuMode.wifiMode = ESP_NOW;
 
     // This is the 'main' that gets called when the ESP boots. It does not return
     app_main();
@@ -148,11 +178,9 @@ int main(int argc, char** argv)
  */
 void taskYIELD(void)
 {
-#ifdef EMU_EXTENSIONS
     // Count total frames, just for callback reasons
     static uint64_t frameNum = 0;
     doExtPostFrameCb(frameNum);
-#endif
 
     // Calculate time between calls
     static int64_t tLastCallUs = 0;
@@ -223,27 +251,30 @@ void taskYIELD(void)
     // Draw dividing lines, if they're on-screen
     CNFGColor(DIV_COLOR);
 
+    emuPaneMinimum_t paneMins[4];
+    calculatePaneMinimums(paneMins);
+
     // Draw Left Divider
-    if (screenPane.paneX > 0)
+    if (paneMins[PANE_LEFT].count > 0)
     {
         CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
     }
 
     // Draw Right Divider
-    if (screenPane.paneX + screenPane.paneW < window_w)
+    if (paneMins[PANE_RIGHT].count > 0)
     {
         CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
     }
 
     // Draw Top Divider
-    if (screenPane.paneY > 0)
+    if (paneMins[PANE_TOP].count > 0)
     {
         CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
                         screenPane.paneY - 1);
     }
 
     // Draw Bottom Divider
-    if (screenPane.paneY + screenPane.paneH < window_h)
+    if (paneMins[PANE_BOTTOM].count > 0)
     {
         CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
                         screenPane.paneY + screenPane.paneH);
@@ -262,10 +293,8 @@ void taskYIELD(void)
         CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
     }
 
-#ifdef EMU_EXTENSIONS
     // After the screen has been fully rendered, call all the render callbacks to render anything else
     doExtRenderCb(window_w, window_h);
-#endif
 
     // Display the image and wait for time to display next frame.
     CNFGSwapBuffers();
@@ -278,9 +307,7 @@ void taskYIELD(void)
     };
     nanosleep(&tSleep, &tRemaining);
 
-#ifdef EMU_EXTENSIONS
     doExtPreFrameCb(++frameNum);
-#endif
 
     // Below: Support for pausing and unpausing the emulator
     // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
@@ -381,13 +408,11 @@ void HandleKey(int keycode, int bDown)
     }
 #endif
 
-#ifdef EMU_EXTENSIONS
     keycode = doExtKeyCb(keycode, bDown);
     if (keycode < 0)
     {
         return;
     }
-#endif
 
     // Assuming no callbacks canceled the key event earlier, handle it normally
     emulatorHandleKeys(keycode, bDown);
@@ -423,9 +448,7 @@ void HandleButton(int x, int y, int button, int bDown)
     printf("HandleButton(x=%d, y=%d, button=%x, bDown=%s\n", x, y, button, bDown ? "true" : "false");
 #endif
 
-#ifdef EMU_EXTENSIONS
     doExtMouseButtonCb(x, y, button, bDown);
-#endif
 }
 
 /**
@@ -441,9 +464,7 @@ void HandleMotion(int x, int y, int mask)
     printf("HandleMotion(x=%d, y=%d, mask=%x\n", x, y, mask);
 #endif
 
-#ifdef EMU_EXTENSIONS
     doExtMouseMoveCb(x, y, mask);
-#endif
 }
 
 /**
