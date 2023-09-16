@@ -1,0 +1,42 @@
+{
+    "activeFile": "templateMap.tmx",
+    "expandedProjectPaths": [
+        "."
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "": {
+            "scaleInEditor": 1
+        },
+        "objLayers.tsx": {
+            "dynamicWrapping": true,
+            "scaleInDock": 1,
+            "scaleInEditor": 1
+        },
+        "templateMap.tmx": {
+            "scale": 4.492708333333334,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 58.094134013447714,
+                "y": 48.18919545559935
+            }
+        },
+        "templateMap.tmx#tilesheet": {
+            "dynamicWrapping": false,
+            "scaleInDock": 1
+        }
+    },
+    "last.exportedFilePath": "C:/Users/grana/repos/Swadge-IDF-5.0/tools/soko/templateTiledProject",
+    "last.imagePath": "C:/Users/grana/repos/Swadge-IDF-5.0/tools/soko/templateTiledProject/tileSprites",
+    "map.lastUsedExportFilter": "All Files (*)",
+    "openFiles": [
+        "templateMap.tmx",
+        "objLayers.tsx"
+    ],
+    "project": "templateProject.tiled-project",
+    "property.type": "bool",
+    "recentFiles": [
+        "objLayers.tsx",
+        "templateMap.tmx"
+    ]
+}
