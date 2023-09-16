@@ -16,6 +16,7 @@
 #include "dance.h"
 #include "tunernome.h"
 #include "touchTest.h"
+#include "gamepad.h"
 
 #include "settingsManager.h"
 #include "breakout.h"
@@ -122,6 +123,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -240,6 +242,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == touchTestMode.modeName)
         {
             switchToSwadgeMode(&touchTestMode);
+        }
+        else if (label == gamepadMode.modeName)
+        {
+            switchToSwadgeMode(&gamepadMode);
         }
         else if (label == lumberjackMode.modeName)
         {
