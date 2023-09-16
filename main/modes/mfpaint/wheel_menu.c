@@ -37,7 +37,7 @@ wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, con
 
     renderer->font        = font;
     renderer->anchorAngle = anchorAngle;
-    renderer->textBox = textBox;
+    renderer->textBox     = textBox;
 
     renderer->textColor    = c000;
     renderer->borderColor  = c000;
@@ -286,7 +286,9 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             textW = textWidth(renderer->font, label);
         }
 
-        drawText(renderer->font, renderer->textColor, label, renderer->textBox->x + (renderer->textBox->width - textW) / 2, renderer->textBox->y + (renderer->textBox->height - renderer->font->height - 1) / 2);
+        drawText(renderer->font, renderer->textColor, label,
+                 renderer->textBox->x + (renderer->textBox->width - textW) / 2,
+                 renderer->textBox->y + (renderer->textBox->height - renderer->font->height - 1) / 2);
     }
 }
 
