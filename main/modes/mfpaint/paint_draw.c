@@ -698,13 +698,18 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     // TODO render toolbar always
     // paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
 
-    if (paintState->redrawToolbar)
+    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
     {
+        paintEnterSelectMode();
+
+        paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
         paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
-        paintState->redrawToolbar = false;
+        drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
     }
     else
     {
+        paintExitSelectMode();
+        paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
         // Don't remember why we only do this when redrawToolbar is true
         // Oh, it's because `paintState->redrawToolbar` is mostly only set in select mode unless you press B?
         if (paintState->aHeld || paintState->aPress)
@@ -745,18 +750,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
                 paintState->moveY = 0;
             }
         }
-    }
-
-    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
-    {
-        paintEnterSelectMode();
-
-        paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
-        drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
-    }
-    else
-    {
-        paintExitSelectMode();
 
         if (paintState->index & PAINT_ENABLE_BLINK)
         {
