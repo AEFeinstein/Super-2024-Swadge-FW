@@ -258,12 +258,12 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         }
     }
 
-    if (renderer->textBox && menu->currentItem)
+    if (renderer->textBox && menu->currentItem && renderer->touched)
     {
         char buffer[128];
         const char* label = getMenuItemLabelText(buffer, sizeof(buffer) - 1, menu->currentItem->val);
+
         uint16_t textW = textWidth(renderer->font, label);
-        uint8_t n = 0;
 
         while (textW > renderer->textBox->width)
         {

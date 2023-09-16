@@ -335,6 +335,7 @@ typedef struct
     wsg_t wheelSettingsWsg;
     wsg_t wheelUndoWsg;
     wsg_t wheelRedoWsg;
+    wsg_t wheelSaveWsg;
 } paintDraw_t;
 
 typedef struct

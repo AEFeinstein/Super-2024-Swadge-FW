@@ -28,15 +28,15 @@ paintHelp_t* paintHelp;
 static const char toolWheelTitleStr[]   = "Tool Wheel";
 static const char toolWheelBrushStr[]   = "Brush";
 static const char toolWheelColorStr[]   = "Color";
-static const char toolWheelSizeStr[]    = "Size";
-static const char toolWheelOptionsStr[] = "Options";
+static const char toolWheelSizeStr[]    = "Brush Size";
+static const char toolWheelOptionsStr[] = "More";
 static const char toolWheelUndoStr[]    = "Undo";
 static const char toolWheelRedoStr[]    = "Redo";
 
 static const char toolWheelSaveStr[] = "Save";
 static const char toolWheelLoadStr[] = "Load";
 static const char toolWheelNewStr[]  = "New";
-static const char toolWheelExitStr[] = "Exit";
+static const char toolWheelExitStr[] = "Stop Drawing";
 
 static paletteColor_t defaultPalette[] = {
     c000, // black
@@ -360,6 +360,11 @@ void paintDrawScreenSetup(void)
         PAINT_LOGE("Loading wheel_redo.wsg icon failed!!!");
     }
 
+    if (!loadWsg("wheel_save.wsg", &paintState->wheelSaveWsg, false))
+    {
+        PAINT_LOGE("Loading wheel_save.wsg icon failed!!!");
+    }
+
     // Top: Sub-menu for Brush
     paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelBrushStr);
     wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &paintState->wheelBrushWsg, 0, SCROLL_HORIZ);
@@ -418,7 +423,7 @@ void paintDrawScreenSetup(void)
 
     // Right: Save
     addSingleItemToMenu(paintState->toolWheel, toolWheelSaveStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSaveStr, &paintState->newfileWsg, 3, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSaveStr, &paintState->wheelSaveWsg, 3, NO_SCROLL);
 
     paintState->toolWheel = endSubMenu(paintState->toolWheel);
 
@@ -450,6 +455,7 @@ void paintDrawScreenCleanup(void)
     freeWsg(&paintState->wheelSettingsWsg);
     freeWsg(&paintState->wheelUndoWsg);
     freeWsg(&paintState->wheelRedoWsg);
+    freeWsg(&paintState->wheelSaveWsg);
 
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
