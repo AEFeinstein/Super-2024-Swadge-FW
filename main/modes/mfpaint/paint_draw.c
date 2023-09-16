@@ -168,7 +168,7 @@ static void paintSetupColorWheel(void)
 
 void paintDrawScreenSetup(void)
 {
-    PAINT_LOGD("Allocating %zu bytes for paintState", sizeof(paintDraw_t));
+    PAINT_LOGD("Allocating %"PRIu32" bytes for paintState", (uint32_t)sizeof(paintDraw_t));
     paintState = calloc(sizeof(paintDraw_t), 1);
 
     loadFont(PAINT_TOOLBAR_FONT, &(paintState->toolbarFont), false);
@@ -2012,7 +2012,7 @@ void paintApplyUndo(paintCanvas_t* canvas)
     size_t pxSize = paintGetStoredSize(canvas);
     paintDeserialize(canvas, undo->px, 0, pxSize);
 
-    PAINT_LOGD("Undid %zu bytes!", pxSize);
+    PAINT_LOGD("Undid %"PRIu32" bytes!", (uint32_t)pxSize);
 
     // feels weird to do this inside the undo functions... but it's probably ok? we've already undone anyway
     showCursor(getCursor(), canvas);

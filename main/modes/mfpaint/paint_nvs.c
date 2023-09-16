@@ -349,8 +349,8 @@ bool paintSave(int32_t* index, const paintCanvas_t* canvas, uint8_t slot)
 
     // Save the palette map, this lets us compact the image by 50%
     snprintf(key, 16, KEY_PAINT_SLOT_PALETTE, slot);
-    PAINT_LOGD("paletteColor_t size: %zu, max colors: %d", sizeof(paletteColor_t), PAINT_MAX_COLORS);
-    PAINT_LOGD("Palette will take up %zu bytes", sizeof(canvas->palette));
+    PAINT_LOGD("paletteColor_t size: %"PRIu32", max colors: %d", (uint32_t)sizeof(paletteColor_t), PAINT_MAX_COLORS);
+    PAINT_LOGD("Palette will take up %"PRIu32" bytes", (uint32_t)sizeof(canvas->palette));
     if (writeNvsBlob(key, canvas->palette, sizeof(canvas->palette)))
     {
         PAINT_LOGD("Saved palette to slot %s", key);
@@ -387,7 +387,7 @@ bool paintSave(int32_t* index, const paintCanvas_t* canvas, uint8_t slot)
         snprintf(key, 16, KEY_PAINT_SLOT_CHUNK, slot, chunkNumber);
         if (writeNvsBlob(key, imgChunk, written))
         {
-            PAINT_LOGD("Saved blob %" PRIu32 " with %zu bytes", chunkNumber, written);
+            PAINT_LOGD("Saved blob %" PRIu32 " with %"PRIu32" bytes", chunkNumber, (uint32_t)written);
         }
         else
         {
@@ -455,7 +455,7 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
     // TODO Move this outside of this function
     if (readNvsBlob(key, canvas->palette, &paletteSize))
     {
-        PAINT_LOGD("Read %zu bytes of palette from slot %s", paletteSize, key);
+        PAINT_LOGD("Read %"PRIu32" bytes of palette from slot %s", (uint32_t)paletteSize, key);
     }
     else
     {
@@ -492,7 +492,7 @@ bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
         // read the chunk
         if (readNvsBlob(key, imgChunk, &lastChunkSize))
         {
-            PAINT_LOGD("Read blob %" PRIu32 " (%zu bytes)", chunkNumber, lastChunkSize);
+            PAINT_LOGD("Read blob %" PRIu32 " (%"PRIu32" bytes)", (uint32_t)chunkNumber, (uint32_t)lastChunkSize);
         }
         else
         {

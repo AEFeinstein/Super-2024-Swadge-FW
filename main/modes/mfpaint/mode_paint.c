@@ -84,7 +84,7 @@ void paintSetupMainMenu(void);
 
 void paintEnterMode(void)
 {
-    PAINT_LOGI("Allocating %zu bytes for paintMenu...", sizeof(paintMainMenu_t));
+    PAINT_LOGI("Allocating %"PRIu32" bytes for paintMenu...", (uint32_t)sizeof(paintMainMenu_t));
     paintMenu = calloc(1, sizeof(paintMainMenu_t));
 
     loadFont("logbook.font", &(paintMenu->menuFont), false);
