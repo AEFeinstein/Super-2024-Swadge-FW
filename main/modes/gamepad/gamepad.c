@@ -5,15 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "tinyusb.h"
 #include "esp_timer.h"
 #include "esp_log.h"
-#include "hdw-nvs.h"
-#include "hdw-usb.h"
-#include "hid.h"
-#include "menu.h"
 
-#include "swadge2024.h"
-
+#include "touchUtils.h"
 #include "gamepad.h"
 #include "mainMenu.h"
 
@@ -27,19 +23,19 @@
 #define DPAD_CLUSTER_RADIUS 45
 
 #define START_BTN_RADIUS 10
-#define START_BTN_SEP     2
+#define START_BTN_SEP    2
 
 #define AB_BTN_RADIUS 25
-#define AB_BTN_Y_OFF   8
-#define AB_BTN_SEP     2
+#define AB_BTN_Y_OFF  8
+#define AB_BTN_SEP    2
 
-#define ACCEL_BAR_HEIGHT  8
-#define ACCEL_BAR_SEP     1
-#define MAX_ACCEL_BAR_W 100
+#define ACCEL_BAR_HEIGHT 8
+#define ACCEL_BAR_SEP    1
+#define MAX_ACCEL_BAR_W  100
 
-#define TOUCHBAR_WIDTH       100
-#define TOUCHBAR_HEIGHT       20
-#define TOUCHBAR_Y_OFF        55
+#define TOUCHBAR_WIDTH         100
+#define TOUCHBAR_HEIGHT        20
+#define TOUCHBAR_Y_OFF         55
 #define TOUCHBAR_ANALOG_HEIGHT 8
 
 //==============================================================================
@@ -52,14 +48,62 @@ typedef enum
     GAMEPAD_MAIN
 } gamepadScreen_t;
 
-typedef enum {
+typedef enum
+{
     GAMEPAD_GENERIC,
     GAMEPAD_NS
 } gamepadType_t;
 
+/// Switch Gamepad Buttons Bitmap
+typedef enum
+{
+    GAMEPAD_NS_BUTTON_Y       = 0x01,
+    GAMEPAD_NS_BUTTON_B       = 0x02,
+    GAMEPAD_NS_BUTTON_A       = 0x04,
+    GAMEPAD_NS_BUTTON_X       = 0x08,
+    GAMEPAD_NS_BUTTON_TL      = 0x10,
+    GAMEPAD_NS_BUTTON_TR      = 0x20,
+    GAMEPAD_NS_BUTTON_TL2     = 0x40,
+    GAMEPAD_NS_BUTTON_TR2     = 0x80,
+    GAMEPAD_NS_BUTTON_MINUS   = 0x100,
+    GAMEPAD_NS_BUTTON_PLUS    = 0x200,
+    GAMEPAD_NS_BUTTON_THUMBL  = 0x400,
+    GAMEPAD_NS_BUTTON_THUMBR  = 0x800,
+    GAMEPAD_NS_BUTTON_HOME    = 0x1000,
+    GAMEPAD_NS_BUTTON_CAPTURE = 0x2000,
+    GAMEPAD_NS_BUTTON_Z       = 0x4000, /// UNUSED?
+} hid_gamepad_ns_button_bm_t;
+
+/// Switch Gamepad HAT/DPAD Buttons (from Linux input event codes)
+typedef enum
+{
+    GAMEPAD_NS_HAT_CENTERED   = 8, ///< DPAD_CENTERED
+    GAMEPAD_NS_HAT_UP         = 0, ///< DPAD_UP
+    GAMEPAD_NS_HAT_UP_RIGHT   = 1, ///< DPAD_UP_RIGHT
+    GAMEPAD_NS_HAT_RIGHT      = 2, ///< DPAD_RIGHT
+    GAMEPAD_NS_HAT_DOWN_RIGHT = 3, ///< DPAD_DOWN_RIGHT
+    GAMEPAD_NS_HAT_DOWN       = 4, ///< DPAD_DOWN
+    GAMEPAD_NS_HAT_DOWN_LEFT  = 5, ///< DPAD_DOWN_LEFT
+    GAMEPAD_NS_HAT_LEFT       = 6, ///< DPAD_LEFT
+    GAMEPAD_NS_HAT_UP_LEFT    = 7, ///< DPAD_UP_LEFT
+} hid_gamepad_ns_hat_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
+
+/// HID Switch Gamepad Protocol Report.
+typedef struct TU_ATTR_PACKED
+{
+    uint16_t buttons; ///< Buttons mask for currently pressed buttons
+    uint8_t hat;      ///< Buttons mask for currently pressed buttons in the DPad/hat
+    int8_t x;         ///< Delta x  movement of left analog-stick
+    int8_t y;         ///< Delta y  movement of left analog-stick
+    int8_t rx;        ///< Delta Rx movement of analog left trigger
+    int8_t ry;        ///< Delta Ry movement of analog right trigger
+    int8_t z;         ///< Delta z  movement of right analog-joystick
+    int8_t rz;        ///< Delta Rz movement of right analog-joystick
+} hid_gamepad_ns_report_t;
 
 typedef struct // 4 bools = 4 bytes = 32 bits
 {
@@ -83,7 +127,6 @@ typedef struct
     menu_t* menu;
     menuLogbookRenderer_t* renderer;
     gamepadScreen_t screen;
-    uint16_t settingsPos;
 
     hid_gamepad_report_t gpState;
     hid_gamepad_ns_report_t gpNsState;
@@ -104,7 +147,6 @@ void gamepadMainLoop(int64_t elapsedUs);
 void gamepadButtonCb(buttonEvt_t* evt);
 void gamepadReportStateToHost(void);
 
-void setGamepadMainMenu(bool resetPos);
 void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void gamepadMenuLoop(int64_t elapsedUs);
 void gamepadStart(gamepadType_t type);
@@ -118,53 +160,42 @@ static const char* getButtonName(hid_gamepad_button_bm_t button);
 // Variables
 //==============================================================================
 
-static const char str_pc[] = "PC";
-static const char str_ns[] = "Switch";
-static const char str_touch_analog_on[] = "Touch: Digi+Analog";
+static const char str_pc[]               = "PC";
+static const char str_ns[]               = "Switch";
+static const char str_touch_analog_on[]  = "Touch: Digi+Analog";
 static const char str_touch_analog_off[] = "Touch: Digital Only";
-static const char str_accel_on[] = "Accel: On";
-static const char str_accel_off[] = "Accel: Off";
-static const char str_exit[] = "Exit";
+static const char str_accel_on[]         = "Accel: On";
+static const char str_accel_off[]        = "Accel: Off";
+static const char str_exit[]             = "Exit";
 static const char KEY_GAMEPAD_SETTINGS[] = "gp_settings";
 
 gamepad_t* gamepad;
 
-swadgeMode_t gamepadMode =
-{
-    .modeName = "Gamepad",
-    .wifiMode = NO_WIFI,
-    .overrideUsb = true,
-    .usesAccelerometer = true,
-    .usesThermometer = false,
-    .fnEnterMode = gamepadEnterMode,
-    .fnExitMode = gamepadExitMode,
-    .fnMainLoop = gamepadMenuLoop,
-    .fnAudioCallback = NULL,
+swadgeMode_t gamepadMode = {
+    .modeName                 = "Gamepad",
+    .wifiMode                 = NO_WIFI,
+    .overrideUsb              = true,
+    .usesAccelerometer        = true,
+    .usesThermometer          = false,
+    .fnEnterMode              = gamepadEnterMode,
+    .fnExitMode               = gamepadExitMode,
+    .fnMainLoop               = gamepadMenuLoop,
+    .fnAudioCallback          = NULL,
     .fnBackgroundDrawCallback = NULL,
-    .fnEspNowRecvCb = NULL,
-    .fnEspNowSendCb = NULL,
-    .fnAdvancedUSB= NULL
-    
+    .fnEspNowRecvCb           = NULL,
+    .fnEspNowSendCb           = NULL,
+    .fnAdvancedUSB            = NULL,
+
 };
 
 // TODO: handle 8-way joystick
-const hid_gamepad_button_bm_t touchMap[] =
-{
-    GAMEPAD_BUTTON_C,
-    GAMEPAD_BUTTON_X,
-    GAMEPAD_BUTTON_Y,
-    GAMEPAD_BUTTON_Z,
-    GAMEPAD_BUTTON_TL,
+const hid_gamepad_button_bm_t touchMap[] = {
+    GAMEPAD_BUTTON_C, GAMEPAD_BUTTON_X, GAMEPAD_BUTTON_Y, GAMEPAD_BUTTON_Z, GAMEPAD_BUTTON_TL,
 };
 
 // TODO: handle 8-way joystick?
-const hid_gamepad_button_bm_t touchMapNs[] =
-{
-    GAMEPAD_NS_BUTTON_Y,
-    GAMEPAD_NS_BUTTON_TL,
-    GAMEPAD_NS_BUTTON_Z,
-    GAMEPAD_NS_BUTTON_TR,
-    GAMEPAD_NS_BUTTON_X,
+const hid_gamepad_button_bm_t touchMapNs[] = {
+    GAMEPAD_NS_BUTTON_Y, GAMEPAD_NS_BUTTON_TL, GAMEPAD_NS_BUTTON_Z, GAMEPAD_NS_BUTTON_TR, GAMEPAD_NS_BUTTON_X,
 };
 
 //==============================================================================
@@ -172,24 +203,27 @@ const hid_gamepad_button_bm_t touchMapNs[] =
 //==============================================================================
 
 /**
- * Enter the gamepad mode, allocate memory, intialize USB
+ * Enter the gamepad mode, allocate memory, initialize USB
  */
 void gamepadEnterMode(void)
 {
     // Allocate and zero memory
     gamepad = (gamepad_t*)calloc(1, sizeof(gamepad_t));
-    
+
     // Load the fonts
     loadFont("logbook.font", &(gamepad->logbookFont), false);
     loadFont("ibm_vga8.font", &(gamepad->ibmFont), false);
 
     // Initialize menu
     gamepad->menu = initMenu(gamepadMode.modeName, gamepadMainMenuCb);
+    addSingleItemToMenu(gamepad->menu, str_pc);
+    addSingleItemToMenu(gamepad->menu, str_ns);
+    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.touchAnalogOn ? str_touch_analog_on
+                                                                                             : str_touch_analog_off);
+    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.accelOn ? str_accel_on : str_accel_off);
+    addSingleItemToMenu(gamepad->menu, str_exit);
 
     loadGamepadToggleSettings(&gamepad->gamepadToggleSettings);
-
-    // Setup menu items
-    setGamepadMainMenu(true);
 
     // Initialize menu renderer
     gamepad->renderer = initMenuLogbookRenderer(&gamepad->logbookFont);
@@ -208,29 +242,9 @@ void gamepadExitMode(void)
     free(gamepad);
 }
 
-void setGamepadMainMenu(bool resetPos)
-{
-    deinitMenu(gamepad->menu);
-    gamepad->menu = initMenu(gamepadMode.modeName, gamepadMainMenuCb);
-    addSingleItemToMenu(gamepad->menu, str_pc);
-    addSingleItemToMenu(gamepad->menu, str_ns);
-    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.touchAnalogOn ? str_touch_analog_on : str_touch_analog_off);
-    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.accelOn ? str_accel_on : str_accel_off);
-    addSingleItemToMenu(gamepad->menu, str_exit);
-
-    gamepad->screen = GAMEPAD_MENU;
-
-    // Set the position
-    if(resetPos)
-    {
-        gamepad->settingsPos = 0;
-    }
-    gamepad->menu->currentItem = gamepad->settingsPos;
-}
-
 void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    if(selected)
+    if (selected)
     {
         if (label == str_pc)
         {
@@ -253,12 +267,9 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
     }
     else // TODO: verify this is the proper way to use `selected`
     {
-        // Save the position
-        gamepad->settingsPos = gamepad->menu->currentItem;
-
         bool needRedraw = false;
 
-        if(label == str_touch_analog_on)
+        if (label == str_touch_analog_on)
         {
             // Touch analog is on, turn it off
             gamepad->gamepadToggleSettings.settings.touchAnalogOn = false;
@@ -266,7 +277,7 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             needRedraw = true;
         }
-        else if(label == str_touch_analog_off)
+        else if (label == str_touch_analog_off)
         {
             // Touch analog is off, turn it on
             gamepad->gamepadToggleSettings.settings.touchAnalogOn = true;
@@ -274,7 +285,7 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             needRedraw = true;
         }
-        else if(label == str_accel_on)
+        else if (label == str_accel_on)
         {
             // Accel is on, turn it off
             gamepad->gamepadToggleSettings.settings.accelOn = false;
@@ -282,7 +293,7 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
 
             needRedraw = true;
         }
-        else if(label == str_accel_off)
+        else if (label == str_accel_off)
         {
             // Accel is off, turn it on
             gamepad->gamepadToggleSettings.settings.accelOn = true;
@@ -291,44 +302,42 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
             needRedraw = true;
         }
 
-        if(needRedraw)
+        if (needRedraw)
         {
-            setGamepadMainMenu(false);
+            gamepad->screen = GAMEPAD_MENU;
         }
     }
 }
 
-void gamepadStart(gamepadType_t type){
+void gamepadStart(gamepadType_t type)
+{
     gamepad->gamepadType = type;
 
     tusb_desc_device_t nsDescriptor = {
-        .bLength = 18U,
-        .bDescriptorType = 1,
-        .bcdUSB = 0x0200,
-        .bDeviceClass = 0x00,
-        .bDeviceSubClass = 0x00,
-        .bDeviceProtocol = 0x00,
-        .bMaxPacketSize0 = 64,
-        .idVendor = 0x0f0d,
-        .idProduct = 0x0092,
-        .bcdDevice = 0x0100,
-        .iManufacturer = 0x01,
-        .iProduct = 0x02,
-        .iSerialNumber = 0x03,
-        .bNumConfigurations = 0x01
+        .bLength            = 18U,
+        .bDescriptorType    = 1,
+        .bcdUSB             = 0x0200,
+        .bDeviceClass       = 0x00,
+        .bDeviceSubClass    = 0x00,
+        .bDeviceProtocol    = 0x00,
+        .bMaxPacketSize0    = 64,
+        .idVendor           = 0x0f0d,
+        .idProduct          = 0x0092,
+        .bcdDevice          = 0x0100,
+        .iManufacturer      = 0x01,
+        .iProduct           = 0x02,
+        .iSerialNumber      = 0x03,
+        .bNumConfigurations = 0x01,
     };
 
-    tinyusb_config_t default_cfg = {
-    };
+    tinyusb_config_t default_cfg = {};
 
-    tinyusb_config_t tusb_cfg = {
-        .descriptor = &nsDescriptor
-    };
+    tinyusb_config_t tusb_cfg = {.descriptor = &nsDescriptor};
 
-    tinyusb_driver_install((gamepad->gamepadType==GAMEPAD_NS) ? &tusb_cfg :&default_cfg);
+    tinyusb_driver_install((gamepad->gamepadType == GAMEPAD_NS) ? &tusb_cfg : &default_cfg);
 
-    gamepad->gpNsState.x = 128;
-    gamepad->gpNsState.y = 128;
+    gamepad->gpNsState.x  = 128;
+    gamepad->gpNsState.y  = 128;
     gamepad->gpNsState.rx = 128;
     gamepad->gpNsState.ry = 128;
 
@@ -346,7 +355,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
 {
     buttonEvt_t evt = {0};
 
-    switch(gamepad->screen)
+    switch (gamepad->screen)
     {
         case GAMEPAD_MENU:
         {
@@ -366,7 +375,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
             gamepadMainLoop(elapsedUs);
             break;
         }
-            //No wifi mode stuff
+            // No wifi mode stuff
     }
 }
 
@@ -378,7 +387,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
 void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
 {
     // Check if plugged in or not
-    if(tud_ready() != gamepad->isPluggedIn)
+    if (tud_ready() != gamepad->isPluggedIn)
     {
         gamepad->isPluggedIn = tud_ready();
     }
@@ -388,46 +397,40 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Always Draw some reminder text, centered
     const char reminderText[] = "Start + Select to Exit";
-    int16_t tWidth = textWidth(&gamepad->ibmFont, reminderText);
+    int16_t tWidth            = textWidth(&gamepad->ibmFont, reminderText);
     drawText(&gamepad->ibmFont, c555, reminderText, (TFT_WIDTH - tWidth) / 2, 10);
 
-    if(gamepad->gamepadType == GAMEPAD_NS)
+    if (gamepad->gamepadType == GAMEPAD_NS)
     {
         // Draw button combo text, centered
         const char captureText[] = "Down + Select:  Capture";
-        tWidth = textWidth(&gamepad->ibmFont, captureText);
-        int16_t textX = (TFT_WIDTH - tWidth) / 2;
-        int16_t afterText = drawText(&gamepad->ibmFont, c555, captureText, textX, TFT_HEIGHT - gamepad->ibmFont.height * 2 - 12);
+        tWidth                   = textWidth(&gamepad->ibmFont, captureText);
+        int16_t textX            = (TFT_WIDTH - tWidth) / 2;
+        int16_t afterText
+            = drawText(&gamepad->ibmFont, c555, captureText, textX, TFT_HEIGHT - gamepad->ibmFont.height * 2 - 12);
 
         const char homeText1[] = "Down + Start:";
         drawText(&gamepad->ibmFont, c555, homeText1, textX, TFT_HEIGHT - gamepad->ibmFont.height - 10);
 
         const char* homeText2 = getButtonName(GAMEPAD_NS_BUTTON_HOME);
-        tWidth = textWidth(&gamepad->ibmFont, homeText2);
+        tWidth                = textWidth(&gamepad->ibmFont, homeText2);
         drawText(&gamepad->ibmFont, c555, homeText2, afterText - tWidth - 1, TFT_HEIGHT - gamepad->ibmFont.height - 10);
     }
 
     // If it's plugged in, draw buttons
-    if(gamepad->isPluggedIn)
+    if (gamepad->isPluggedIn)
     {
         // Helper function pointer
         void (*drawFunc)(int, int, int, paletteColor_t);
 
         // A list of all the hat directions, in order
-        static const uint8_t hatDirs[] = 
-        {
-            GAMEPAD_HAT_UP,
-            GAMEPAD_HAT_UP_RIGHT,
-            GAMEPAD_HAT_RIGHT,
-            GAMEPAD_HAT_DOWN_RIGHT,
-            GAMEPAD_HAT_DOWN,
-            GAMEPAD_HAT_DOWN_LEFT,
-            GAMEPAD_HAT_LEFT,
-            GAMEPAD_HAT_UP_LEFT
+        static const uint8_t hatDirs[] = {
+            GAMEPAD_HAT_UP,   GAMEPAD_HAT_UP_RIGHT,  GAMEPAD_HAT_RIGHT, GAMEPAD_HAT_DOWN_RIGHT,
+            GAMEPAD_HAT_DOWN, GAMEPAD_HAT_DOWN_LEFT, GAMEPAD_HAT_LEFT,  GAMEPAD_HAT_UP_LEFT,
         };
 
         // For each hat direction
-        for(uint8_t i = 0; i < ARRAY_SIZE(hatDirs); i++)
+        for (uint8_t i = 0; i < ARRAY_SIZE(hatDirs); i++)
         {
             // The degree around the cluster
             int16_t deg = i * 45;
@@ -435,17 +438,20 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
             int16_t xc = TFT_WIDTH / 4;
             int16_t yc = (TFT_HEIGHT / 2) + Y_OFF;
             // Draw the button around the cluster
-            xc += (( getSin1024(deg) * DPAD_CLUSTER_RADIUS) / 1024);
+            xc += ((getSin1024(deg) * DPAD_CLUSTER_RADIUS) / 1024);
             yc += ((-getCos1024(deg) * DPAD_CLUSTER_RADIUS) / 1024);
 
             // Draw either a filled or outline circle, if this is the direction pressed
-            switch(gamepad->gamepadType){
-                case GAMEPAD_NS:{
-                    drawFunc = (gamepad->gpNsState.hat == (hatDirs[i]-1)) ? &drawCircleFilled : &drawCircle;
+            switch (gamepad->gamepadType)
+            {
+                case GAMEPAD_NS:
+                {
+                    drawFunc = (gamepad->gpNsState.hat == (hatDirs[i] - 1)) ? &drawCircleFilled : &drawCircle;
                     break;
                 }
                 case GAMEPAD_GENERIC:
-                default: {
+                default:
+                {
                     drawFunc = (gamepad->gpState.hat == hatDirs[i]) ? &drawCircleFilled : &drawCircle;
                     break;
                 }
@@ -455,13 +461,16 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
         }
 
         // Select button
-        switch(gamepad->gamepadType){
-            case GAMEPAD_NS:{
+        switch (gamepad->gamepadType)
+        {
+            case GAMEPAD_NS:
+            {
                 drawFunc = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_MINUS) ? &drawCircleFilled : &drawCircle;
                 break;
             }
             case GAMEPAD_GENERIC:
-            default:{
+            default:
+            {
                 drawFunc = (gamepad->gpState.buttons & GAMEPAD_BUTTON_SELECT) ? &drawCircleFilled : &drawCircle;
                 break;
             }
@@ -470,73 +479,78 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
         int16_t y = (TFT_HEIGHT / 4) + Y_OFF;
         drawFunc(x, y, START_BTN_RADIUS, c333);
 
-        if(gamepad->gamepadType == GAMEPAD_NS)
+        if (gamepad->gamepadType == GAMEPAD_NS)
         {
             const char* buttonName = getButtonName(GAMEPAD_NS_BUTTON_MINUS);
-            drawText(&gamepad->ibmFont, c444, buttonName, x - textWidth(&gamepad->ibmFont, buttonName) / 2, y - gamepad->ibmFont.height / 2);
+            drawText(&gamepad->ibmFont, c444, buttonName, x - textWidth(&gamepad->ibmFont, buttonName) / 2,
+                     y - gamepad->ibmFont.height / 2);
         }
 
         // Start button
-        switch(gamepad->gamepadType){ 
-            case GAMEPAD_NS:{
+        switch (gamepad->gamepadType)
+        {
+            case GAMEPAD_NS:
+            {
                 drawFunc = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_PLUS) ? &drawCircleFilled : &drawCircle;
                 break;
             }
             case GAMEPAD_GENERIC:
-            default:{
+            default:
+            {
                 drawFunc = (gamepad->gpState.buttons & GAMEPAD_BUTTON_START) ? &drawCircleFilled : &drawCircle;
                 break;
             }
         }
         x = (TFT_WIDTH / 2) + START_BTN_RADIUS + START_BTN_SEP;
-        drawFunc(x,
-                 y,
-                 START_BTN_RADIUS, c333);
+        drawFunc(x, y, START_BTN_RADIUS, c333);
 
-        if(gamepad->gamepadType == GAMEPAD_NS)
+        if (gamepad->gamepadType == GAMEPAD_NS)
         {
             const char* buttonName = getButtonName(GAMEPAD_NS_BUTTON_PLUS);
-            drawText(&gamepad->ibmFont, c444, buttonName, x - textWidth(&gamepad->ibmFont, buttonName) / 2, y - gamepad->ibmFont.height / 2);
+            drawText(&gamepad->ibmFont, c444, buttonName, x - textWidth(&gamepad->ibmFont, buttonName) / 2,
+                     y - gamepad->ibmFont.height / 2);
         }
 
         // Button A
-        switch(gamepad->gamepadType){
-            case GAMEPAD_NS:{
+        switch (gamepad->gamepadType)
+        {
+            case GAMEPAD_NS:
+            {
                 drawFunc = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_A) ? &drawCircleFilled : &drawCircle;
                 break;
             }
             case GAMEPAD_GENERIC:
-            default: {
+            default:
+            {
                 drawFunc = (gamepad->gpState.buttons & GAMEPAD_BUTTON_A) ? &drawCircleFilled : &drawCircle;
                 break;
             }
         }
-        drawFunc(
-                 ((3 * TFT_WIDTH) / 4) + AB_BTN_RADIUS + AB_BTN_SEP,
-                 (TFT_HEIGHT / 2) - AB_BTN_Y_OFF + Y_OFF,
+        drawFunc(((3 * TFT_WIDTH) / 4) + AB_BTN_RADIUS + AB_BTN_SEP, (TFT_HEIGHT / 2) - AB_BTN_Y_OFF + Y_OFF,
                  AB_BTN_RADIUS, c243);
 
         // Button B
-        switch(gamepad->gamepadType){
-            case GAMEPAD_NS:{
+        switch (gamepad->gamepadType)
+        {
+            case GAMEPAD_NS:
+            {
                 drawFunc = (gamepad->gpNsState.buttons & GAMEPAD_NS_BUTTON_B) ? &drawCircleFilled : &drawCircle;
                 break;
             }
             case GAMEPAD_GENERIC:
-            default:{
+            default:
+            {
                 drawFunc = (gamepad->gpState.buttons & GAMEPAD_BUTTON_B) ? &drawCircleFilled : &drawCircle;
                 break;
             }
         }
-        drawFunc(
-                 ((3 * TFT_WIDTH) / 4) - AB_BTN_RADIUS - AB_BTN_SEP,
-                 (TFT_HEIGHT / 2) + AB_BTN_Y_OFF + Y_OFF,
+        drawFunc(((3 * TFT_WIDTH) / 4) - AB_BTN_RADIUS - AB_BTN_SEP, (TFT_HEIGHT / 2) + AB_BTN_Y_OFF + Y_OFF,
                  AB_BTN_RADIUS, c401);
 
         // Draw touch strip
         int16_t tBarX = TFT_WIDTH - TOUCHBAR_WIDTH;
 
-        // TOOD: translate new touchpad data into 4-way or 8-way joystick
+        // TODO: translate new touchpad data into 4-way or 8-way joystick
         // switch(gamepad->gamepadType){
         //     case GAMEPAD_GENERIC: {
         //         if(evt->down)
@@ -565,64 +579,52 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
         // }
 
         // If we're on the generic gamepad and touch analog is enabled, plot the extra indicator on the screen
-        if(gamepad->gamepadType == GAMEPAD_GENERIC && gamepad->gamepadToggleSettings.settings.touchAnalogOn)
+        if (gamepad->gamepadType == GAMEPAD_GENERIC && gamepad->gamepadToggleSettings.settings.touchAnalogOn)
         {
-            int32_t center, intensity;
-            if(getTouchCentroid(&center, &intensity))
+            int32_t phi, r, intensity;
+            if (getTouchJoystick(&phi, &r, &intensity))
             {
                 // TODO: rebuild this for new touchpad
-                // Subtract 2 from TOUCHBAR_WIDTH while scaling so we can draw a 3px-wide cursor centered on center, without covering the box borders
-                center = (TOUCHBAR_WIDTH - 2) * center / 1024 + 1;
-            }
-            else
-            {
-                center = TOUCHBAR_WIDTH / 2;
-                // Intensity is unused, so no need to set right now. Uncomment if it gets used
-                //intensity = 0;
             }
 
-            drawRect(
-                     tBarX - 1       , TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT                          - 1,
-                     TFT_WIDTH, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + TOUCHBAR_ANALOG_HEIGHT + 1,
-                     c111);
-            fillDisplayArea(
-                            tBarX + center - 1, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
-                            tBarX + center + 1, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + TOUCHBAR_ANALOG_HEIGHT,
-                            c444);
+            // drawRect(
+            //          tBarX - 1       , TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT                          - 1,
+            //          TFT_WIDTH, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + TOUCHBAR_ANALOG_HEIGHT + 1,
+            //          c111);
+            // fillDisplayArea(
+            //                 tBarX + center - 1, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
+            //                 tBarX + center + 1, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + TOUCHBAR_ANALOG_HEIGHT,
+            //                 c444);
         }
 
-        uint8_t numTouchElem = ARRAY_SIZE(touchMap[0]);
-        for(uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
+        uint8_t numTouchElem = ARRAY_SIZE(touchMap);
+        for (uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
         {
             int16_t x1 = tBarX - 1;
             int16_t x2 = tBarX + (TOUCHBAR_WIDTH / numTouchElem);
 
-            if((gamepad->gamepadType == GAMEPAD_GENERIC) ? gamepad->gpState.buttons & touchMap[touchIdx]:gamepad->gpNsState.buttons & touchMapNs[touchIdx])
+            if ((gamepad->gamepadType == GAMEPAD_GENERIC) ? gamepad->gpState.buttons & touchMap[touchIdx]
+                                                          : gamepad->gpNsState.buttons & touchMapNs[touchIdx])
             {
-                fillDisplayArea(
-                                x1, TOUCHBAR_Y_OFF,
-                                x2, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
-                                c111);
+                fillDisplayArea(x1, TOUCHBAR_Y_OFF, x2, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c111);
             }
             else
             {
-                drawRect(
-                         x1, TOUCHBAR_Y_OFF,
-                         x2, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
-                         c111);
-
+                drawRect(x1, TOUCHBAR_Y_OFF, x2, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c111);
             }
 
-            if(gamepad->gamepadType == GAMEPAD_NS)
+            if (gamepad->gamepadType == GAMEPAD_NS)
             {
                 const char* buttonName = getButtonName(touchMapNs[touchIdx]);
-                drawText(&gamepad->ibmFont, c444, buttonName, x1 + (x2 - x1 - textWidth(&gamepad->ibmFont, buttonName)) / 2, TOUCHBAR_Y_OFF + (TOUCHBAR_HEIGHT - gamepad->ibmFont.height) / 2);
+                drawText(&gamepad->ibmFont, c444, buttonName,
+                         x1 + (x2 - x1 - textWidth(&gamepad->ibmFont, buttonName)) / 2,
+                         TOUCHBAR_Y_OFF + (TOUCHBAR_HEIGHT - gamepad->ibmFont.height) / 2);
             }
 
             tBarX += (TOUCHBAR_WIDTH / numTouchElem);
         }
 
-        if(gamepad->gamepadToggleSettings.settings.accelOn && gamepad->gamepadType == GAMEPAD_GENERIC)
+        if (gamepad->gamepadToggleSettings.settings.accelOn && gamepad->gamepadType == GAMEPAD_GENERIC)
         {
             // Declare variables to receive acceleration
             int16_t a_x, a_y, a_z;
@@ -661,20 +663,22 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
     {
         // If it's not plugged in, give a hint
         const char* plugInText;
-        switch(gamepad->gamepadType){
-            case GAMEPAD_NS:{
+        switch (gamepad->gamepadType)
+        {
+            case GAMEPAD_NS:
+            {
                 plugInText = "Plug USB-C into Switch please!";
                 break;
             }
             case GAMEPAD_GENERIC:
-            default: {
+            default:
+            {
                 plugInText = "Plug USB-C into computer please!";
                 break;
             }
         }
         tWidth = textWidth(&gamepad->ibmFont, plugInText);
-        drawText(&gamepad->ibmFont, c555, plugInText,
-                 (TFT_WIDTH - tWidth) / 2,
+        drawText(&gamepad->ibmFont, c555, plugInText, (TFT_WIDTH - tWidth) / 2,
                  (TFT_HEIGHT - gamepad->ibmFont.height) / 2);
     }
 }
@@ -686,36 +690,39 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
  */
 void gamepadButtonCb(buttonEvt_t* evt)
 {
-    switch(gamepad->gamepadType){
-        case GAMEPAD_GENERIC: {
+    switch (gamepad->gamepadType)
+    {
+        case GAMEPAD_GENERIC:
+        {
             // Build a list of all independent buttons held down
-            gamepad->gpState.buttons &= ~(GAMEPAD_BUTTON_A | GAMEPAD_BUTTON_B | GAMEPAD_BUTTON_START | GAMEPAD_BUTTON_SELECT);
-            if(evt->state & PB_A)
+            gamepad->gpState.buttons
+                &= ~(GAMEPAD_BUTTON_A | GAMEPAD_BUTTON_B | GAMEPAD_BUTTON_START | GAMEPAD_BUTTON_SELECT);
+            if (evt->state & PB_A)
             {
                 gamepad->gpState.buttons |= GAMEPAD_BUTTON_A;
             }
-            if(evt->state & PB_B)
+            if (evt->state & PB_B)
             {
                 gamepad->gpState.buttons |= GAMEPAD_BUTTON_B;
             }
-            if(evt->state & PB_START)
+            if (evt->state & PB_START)
             {
                 gamepad->gpState.buttons |= GAMEPAD_BUTTON_START;
             }
-            if(evt->state & PB_SELECT)
+            if (evt->state & PB_SELECT)
             {
                 gamepad->gpState.buttons |= GAMEPAD_BUTTON_SELECT;
             }
 
             // Figure out which way the D-Pad is pointing
             gamepad->gpState.hat = GAMEPAD_HAT_CENTERED;
-            if(evt->state & PB_UP)
+            if (evt->state & PB_UP)
             {
-                if(evt->state & PB_RIGHT)
+                if (evt->state & PB_RIGHT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_UP_RIGHT;
                 }
-                else if(evt->state & PB_LEFT)
+                else if (evt->state & PB_LEFT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_UP_LEFT;
                 }
@@ -724,13 +731,13 @@ void gamepadButtonCb(buttonEvt_t* evt)
                     gamepad->gpState.hat = GAMEPAD_HAT_UP;
                 }
             }
-            else if(evt->state & PB_DOWN)
+            else if (evt->state & PB_DOWN)
             {
-                if(evt->state & PB_RIGHT)
+                if (evt->state & PB_RIGHT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_DOWN_RIGHT;
                 }
-                else if(evt->state & PB_LEFT)
+                else if (evt->state & PB_LEFT)
                 {
                     gamepad->gpState.hat = GAMEPAD_HAT_DOWN_LEFT;
                 }
@@ -739,55 +746,62 @@ void gamepadButtonCb(buttonEvt_t* evt)
                     gamepad->gpState.hat = GAMEPAD_HAT_DOWN;
                 }
             }
-            else if(evt->state & PB_RIGHT)
+            else if (evt->state & PB_RIGHT)
             {
                 gamepad->gpState.hat = GAMEPAD_HAT_RIGHT;
             }
-            else if(evt->state & PB_LEFT)
+            else if (evt->state & PB_LEFT)
             {
                 gamepad->gpState.hat = GAMEPAD_HAT_LEFT;
             }
 
             break;
         }
-        case GAMEPAD_NS:{
+        case GAMEPAD_NS:
+        {
             // Build a list of all independent buttons held down
             gamepad->gpNsState.buttons = 0;
 
-            if(evt->state & PB_A)
+            if (evt->state & PB_A)
             {
                 gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_A;
             }
-            if(evt->state & PB_B)
+            if (evt->state & PB_B)
             {
                 gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_B;
             }
-            if(evt->state & PB_START)
+            if (evt->state & PB_START)
             {
-                if(evt->state & PB_DOWN){
+                if (evt->state & PB_DOWN)
+                {
                     gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_HOME;
-                } else {
+                }
+                else
+                {
                     gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_PLUS;
                 }
             }
-            if(evt->state & PB_SELECT)
+            if (evt->state & PB_SELECT)
             {
-                if(evt->state & PB_DOWN){
+                if (evt->state & PB_DOWN)
+                {
                     gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_CAPTURE;
-                } else {
+                }
+                else
+                {
                     gamepad->gpNsState.buttons |= GAMEPAD_NS_BUTTON_MINUS;
                 }
             }
 
             // Figure out which way the D-Pad is pointing
             gamepad->gpNsState.hat = GAMEPAD_NS_HAT_CENTERED;
-            if(evt->state & PB_UP)
+            if (evt->state & PB_UP)
             {
-                if(evt->state & PB_RIGHT)
+                if (evt->state & PB_RIGHT)
                 {
                     gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP_RIGHT;
                 }
-                else if(evt->state & PB_LEFT)
+                else if (evt->state & PB_LEFT)
                 {
                     gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP_LEFT;
                 }
@@ -796,13 +810,13 @@ void gamepadButtonCb(buttonEvt_t* evt)
                     gamepad->gpNsState.hat = GAMEPAD_NS_HAT_UP;
                 }
             }
-            else if(evt->state & PB_DOWN)
+            else if (evt->state & PB_DOWN)
             {
-                if(evt->state & PB_RIGHT)
+                if (evt->state & PB_RIGHT)
                 {
                     gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN_RIGHT;
                 }
-                else if(evt->state & PB_LEFT)
+                else if (evt->state & PB_LEFT)
                 {
                     gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN_LEFT;
                 }
@@ -811,11 +825,11 @@ void gamepadButtonCb(buttonEvt_t* evt)
                     gamepad->gpNsState.hat = GAMEPAD_NS_HAT_DOWN;
                 }
             }
-            else if(evt->state & PB_RIGHT)
+            else if (evt->state & PB_RIGHT)
             {
                 gamepad->gpNsState.hat = GAMEPAD_NS_HAT_RIGHT;
             }
-            else if(evt->state & PB_LEFT)
+            else if (evt->state & PB_LEFT)
             {
                 gamepad->gpNsState.hat = GAMEPAD_NS_HAT_LEFT;
             }
@@ -823,7 +837,7 @@ void gamepadButtonCb(buttonEvt_t* evt)
             break;
         }
     }
-    
+
     // Send state to host
     gamepadReportStateToHost();
 }
@@ -834,28 +848,28 @@ void gamepadButtonCb(buttonEvt_t* evt)
 void gamepadReportStateToHost(void)
 {
     // Only send data if USB is ready
-    if(tud_ready())
+    if (tud_ready())
     {
-        switch(gamepad->gamepadType){
-            case GAMEPAD_GENERIC: {
+        switch (gamepad->gamepadType)
+        {
+            case GAMEPAD_GENERIC:
+            {
                 // TODO: handle 8-way joystick
-                if(gamepad->gamepadToggleSettings.settings.touchAnalogOn && gamepad->gpState.buttons & ((touchMap[0] | touchMap[1] | touchMap[2] | touchMap[3])))// | touchMap[4] | touchMap[5] | touchMap[6] | touchMap[7])))
+                if (gamepad->gamepadToggleSettings.settings.touchAnalogOn
+                    && gamepad->gpState.buttons
+                           & ((touchMap[0] | touchMap[1] | touchMap[2]
+                               | touchMap[3]))) // | touchMap[4] | touchMap[5] | touchMap[6] | touchMap[7])))
                 {
-                    int32_t center, intensity;
-                    // TODO: handle when this returns false
-                    getTouchCentroid(&center, &intensity);
-                    int16_t scaledVal = (center >> 2) - 128;
-                    if(scaledVal < -128)
+                    int32_t phi, r, intensity;
+                    if (getTouchJoystick(&phi, &r, &intensity))
                     {
-                        gamepad->gpState.z = -128;
-                    }
-                    else if (scaledVal > 127)
-                    {
-                        gamepad->gpState.z = 127;
+                        int32_t x, y;
+                        getTouchCartesian(phi, r, &x, &y);
+                        gamepad->gpState.z = (127 * (phi - 180)) / 360;
                     }
                     else
                     {
-                        gamepad->gpState.z = scaledVal;
+                        gamepad->gpState.z = 0;
                     }
                 }
                 else
@@ -863,17 +877,24 @@ void gamepadReportStateToHost(void)
                     gamepad->gpState.z = 0;
                 }
                 // Send the state over USB
-                tud_gamepad_report(&gamepad->gpState);
+                tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, gamepad->gpState.x, gamepad->gpState.y,
+                                       gamepad->gpState.z, gamepad->gpState.rx, gamepad->gpState.ry,
+                                       gamepad->gpState.rz, gamepad->gpState.hat, gamepad->gpState.buttons);
+
                 break;
             }
-            case GAMEPAD_NS: {
-                tud_gamepad_ns_report(&gamepad->gpNsState);
+            case GAMEPAD_NS:
+            {
+                // TODO check this
+                // tud_gamepad_ns_report(&gamepad->gpNsState);
+                tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, gamepad->gpState.x, gamepad->gpState.y,
+                                       gamepad->gpState.z, gamepad->gpState.rx, gamepad->gpState.ry,
+                                       gamepad->gpState.rz, gamepad->gpState.hat, gamepad->gpState.buttons);
+
                 break;
             }
         }
-        
-        
-    }    
+    }
 }
 
 static bool saveGamepadToggleSettings(union gamepadToggleSettings_u* toggleSettings)
@@ -887,7 +908,7 @@ static bool loadGamepadToggleSettings(union gamepadToggleSettings_u* toggleSetti
     if (!r)
     {
         memset(toggleSettings, 0, sizeof(union gamepadToggleSettings_u));
-        toggleSettings->settings.accelOn = true;
+        toggleSettings->settings.accelOn       = true;
         toggleSettings->settings.touchAnalogOn = true;
         return saveGamepadToggleSettings(toggleSettings);
     }
@@ -896,7 +917,7 @@ static bool loadGamepadToggleSettings(union gamepadToggleSettings_u* toggleSetti
 
 static const char* getButtonName(hid_gamepad_button_bm_t button)
 {
-    switch(button)
+    switch (button)
     {
         case GAMEPAD_NS_BUTTON_Y:
         {
