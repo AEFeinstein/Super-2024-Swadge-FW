@@ -378,7 +378,6 @@ void app_main(void)
                 {
                     // Call the overlay mode's main loop if there is one
                     quickSettingsMode.fnMainLoop(tNowUs - tLastMainLoopCall);
-                    
                 }
                 else
                 {
@@ -387,7 +386,6 @@ void app_main(void)
                 }
                 tLastMainLoopCall = tNowUs;
             }
-
 
             // If the menu button is being held
             if (0 != timeExitPressed && !showQuickSettings)
@@ -435,6 +433,10 @@ void app_main(void)
                 {
                     int16_t r     = QUICK_SETTINGS_PANEL_R;
                     int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
+
+                    if (numPx < 0)
+                        numPx = abs(numPx);
+
                     drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
                     fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx, r + 1, c333);
                     drawCircleFilled(QUICK_SETTINGS_PANEL_X + numPx + r, 0, r, c333);

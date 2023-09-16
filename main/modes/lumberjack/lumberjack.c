@@ -85,7 +85,11 @@ static void lumberjackEnterMode(void)
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerClient);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
-    addSingleItemToMenu(lumberjack->menu, lumberjackAttack);
+    lumberjack->menu = startSubMenu(lumberjack->menu, lumberjackAttack);
+    addSingleItemToMenu(lumberjack->menu, lumberjackMenuSinglePlayer);
+    addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerHost);
+    addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerClient);
+    lumberjack->menu = endSubMenu(lumberjack->menu);
 
     if (true) // Ignore this line
     {
@@ -136,7 +140,7 @@ static void lumberjackExitMode(void)
     lumberjackExitGameMode();
 
     p2pDeinit(&lumberjack->p2p);
-    freeFont(&lumberjack->ibm);
+    freeFont(&lumberjack->ibm); 
     freeFont(&lumberjack->logbook);
     deinitMenu(lumberjack->menu);
     free(lumberjack);
@@ -244,8 +248,11 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
 void lumberjackSendAttack(int number)
 {
-    const uint8_t testMsg[] = {0x13};
-    p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
+    if (lumberjack->networked)
+    {
+        const uint8_t testMsg[] = {0x13};
+        p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
+    }
 }
 
 void lumberjackUpdateLocation(int ghostX, int ghostY, int frame)

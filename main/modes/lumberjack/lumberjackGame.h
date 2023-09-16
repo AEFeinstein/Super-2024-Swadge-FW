@@ -10,6 +10,7 @@ void lumberjackDoControls(void);
 void lumberjackTileMap(void);
 void lumberjackUpdate(int64_t elapseUs);
 
+void lumberjackTitleLoop(int64_t elapsedUs);
 void lumberjackGameLoop(int64_t elapsedUs);
 void lumberjackUpdateLocation(int ghostX, int ghostY, int frame);
 void lumberjackUpdateRemote(int remoteX, int remoteY, int remoteFrame);

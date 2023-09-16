@@ -29,6 +29,7 @@ static lumberjackTile_t* lumberjackGetTile(int x, int y);
 static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs);
 static bool lumberjackIsCollisionTile(int index);
 
+void DrawTitle(void);
 void DrawGame(void);
 
 lumberjackVars_t* lumv;
@@ -47,6 +48,26 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->liquidAnimationFrame = 0;
     lumv->loaded               = false;
     lumv->gameType             = main->gameMode;
+    lumv->onTitle                = true;
+
+    ESP_LOGI(LUM_TAG, "Load Title");
+    loadWsg("lumbers_title.wsg", &lumv->title, true);
+
+    if (main->screen == LUMBERJACK_A)
+    {
+        loadWsg("lumbers_title_panic_red.wsg", &lumv->subtitle_red, true);
+        loadWsg("lumbers_title_panic_green.wsg", &lumv->subtitle_green, true);
+        loadWsg("lumbers_title_panic_white.wsg", &lumv->subtitle_white, true);
+    }
+
+    if (main->screen == LUMBERJACK_B)
+    {
+    
+        loadWsg("lumbers_title_attack_red.wsg", &lumv->subtitle_red, true);
+        loadWsg("lumbers_title_attack_green.wsg", &lumv->subtitle_green, true);    
+        loadWsg("lumbers_title_attack_white.wsg", &lumv->subtitle_white, true);    
+    }
+
 
     ESP_LOGI(LUM_TAG, "Loading floor Tiles");
     loadWsg("bottom_floor1.wsg", &lumv->floorTiles[0], true);
@@ -75,64 +96,68 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("water_floor_b4.wsg", &lumv->animationTiles[11], true);
 
     ESP_LOGI(LUM_TAG, "Loading Characters");
-    loadWsg("lumbers_red_1.wsg", &lumv->playerSprites[0], true);
-    loadWsg("lumbers_red_2.wsg", &lumv->playerSprites[1], true);
-    loadWsg("lumbers_red_3.wsg", &lumv->playerSprites[2], true);
-    loadWsg("lumbers_red_4.wsg", &lumv->playerSprites[3],
-            true); // These two things break 3 seconds after the game loads
-    loadWsg("lumbers_red_5.wsg", &lumv->playerSprites[4], true); // I think the memory is being replaces
-    loadWsg("lumbers_red_6.wsg", &lumv->playerSprites[5], true);
-    loadWsg("lumbers_red_7.wsg", &lumv->playerSprites[6], true);
-    loadWsg("lumbers_red_8.wsg", &lumv->playerSprites[7], true);
-    loadWsg("lumbers_red_9.wsg", &lumv->playerSprites[8], true);
-    loadWsg("lumbers_red_10.wsg", &lumv->playerSprites[9], true);
-    loadWsg("lumbers_red_11.wsg", &lumv->playerSprites[10], true);
-    loadWsg("lumbers_red_12.wsg", &lumv->playerSprites[11], true);
-    loadWsg("lumbers_red_13.wsg", &lumv->playerSprites[12], true);
-    loadWsg("lumbers_red_14.wsg", &lumv->playerSprites[13], true);
-    loadWsg("lumbers_red_15.wsg", &lumv->playerSprites[14], true);
-    loadWsg("lumbers_red_16.wsg", &lumv->playerSprites[15], true);
-    loadWsg("lumbers_red_17.wsg", &lumv->playerSprites[16], true);
 
-    loadWsg("lumbers_green_1.wsg", &lumv->playerSprites[17], true);
-    loadWsg("lumbers_green_2.wsg", &lumv->playerSprites[18], true);
-    loadWsg("lumbers_green_3.wsg", &lumv->playerSprites[19], true);
-    loadWsg("lumbers_green_4.wsg", &lumv->playerSprites[20], true);
-    loadWsg("lumbers_green_5.wsg", &lumv->playerSprites[21], true);
-    loadWsg("lumbers_green_6.wsg", &lumv->playerSprites[22], true);
-    loadWsg("lumbers_green_7.wsg", &lumv->playerSprites[23], true);
-    loadWsg("lumbers_green_8.wsg", &lumv->playerSprites[24], true);
-    loadWsg("lumbers_green_9.wsg", &lumv->playerSprites[25], true);
-    loadWsg("lumbers_green_10.wsg", &lumv->playerSprites[26], true);
-    loadWsg("lumbers_green_11.wsg", &lumv->playerSprites[27], true);
-    loadWsg("lumbers_green_12.wsg", &lumv->playerSprites[28], true);
-    loadWsg("lumbers_green_13.wsg", &lumv->playerSprites[29], true);
-    loadWsg("lumbers_green_14.wsg", &lumv->playerSprites[30], true);
-    loadWsg("lumbers_green_15.wsg", &lumv->playerSprites[31], true);
-    loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[32], true);
-    loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[33], true);
+    if (characterIndex == 0)
+    {
+        loadWsg("lumbers_red_1.wsg", &lumv->playerSprites[0], true);
+        loadWsg("lumbers_red_2.wsg", &lumv->playerSprites[1], true);
+        loadWsg("lumbers_red_3.wsg", &lumv->playerSprites[2], true);
+        loadWsg("lumbers_red_4.wsg", &lumv->playerSprites[3], true); 
+        loadWsg("lumbers_red_5.wsg", &lumv->playerSprites[4], true);
+        loadWsg("lumbers_red_6.wsg", &lumv->playerSprites[5], true);
+        loadWsg("lumbers_red_7.wsg", &lumv->playerSprites[6], true);
+        loadWsg("lumbers_red_8.wsg", &lumv->playerSprites[7], true);
+        loadWsg("lumbers_red_9.wsg", &lumv->playerSprites[8], true);
+        loadWsg("lumbers_red_10.wsg", &lumv->playerSprites[9], true);
+        loadWsg("lumbers_red_11.wsg", &lumv->playerSprites[10], true);
+        loadWsg("lumbers_red_12.wsg", &lumv->playerSprites[11], true);
+        loadWsg("lumbers_red_13.wsg", &lumv->playerSprites[12], true);
+        loadWsg("lumbers_red_14.wsg", &lumv->playerSprites[13], true);
+        loadWsg("lumbers_red_15.wsg", &lumv->playerSprites[14], true);
+        loadWsg("lumbers_red_16.wsg", &lumv->playerSprites[15], true);
+        loadWsg("lumbers_red_17.wsg", &lumv->playerSprites[16], true);
+    }
+    else if (characterIndex == 1)
+    {
+        loadWsg("lumbers_green_1.wsg", &lumv->playerSprites[0], true);
+        loadWsg("lumbers_green_2.wsg", &lumv->playerSprites[1], true);
+        loadWsg("lumbers_green_3.wsg", &lumv->playerSprites[2], true);
+        loadWsg("lumbers_green_4.wsg", &lumv->playerSprites[3], true);
+        loadWsg("lumbers_green_5.wsg", &lumv->playerSprites[4], true);
+        loadWsg("lumbers_green_6.wsg", &lumv->playerSprites[5], true);
+        loadWsg("lumbers_green_7.wsg", &lumv->playerSprites[6], true);
+        loadWsg("lumbers_green_8.wsg", &lumv->playerSprites[7], true);
+        loadWsg("lumbers_green_9.wsg", &lumv->playerSprites[8], true);
+        loadWsg("lumbers_green_10.wsg", &lumv->playerSprites[9], true);
+        loadWsg("lumbers_green_11.wsg", &lumv->playerSprites[10], true);
+        loadWsg("lumbers_green_12.wsg", &lumv->playerSprites[11], true);
+        loadWsg("lumbers_green_13.wsg", &lumv->playerSprites[12], true);
+        loadWsg("lumbers_green_14.wsg", &lumv->playerSprites[13], true);
+        loadWsg("lumbers_green_15.wsg", &lumv->playerSprites[14], true);
+        loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[15], true);
+        loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[16], true);
+    }
+    else if (characterIndex == 2)
+    {
 
-    loadWsg("secret_swadgeland_1.wsg", &lumv->playerSprites[34], true);
-    loadWsg("secret_swadgeland_2.wsg", &lumv->playerSprites[35], true);
-    loadWsg("secret_swadgeland_3.wsg", &lumv->playerSprites[36], true);
-    loadWsg("secret_swadgeland_4.wsg", &lumv->playerSprites[37], true);
-    loadWsg("secret_swadgeland_5.wsg", &lumv->playerSprites[38], true);
-    loadWsg("secret_swadgeland_6.wsg", &lumv->playerSprites[39], true);
-    loadWsg("secret_swadgeland_7.wsg", &lumv->playerSprites[40], true);
-    loadWsg("secret_swadgeland_8.wsg", &lumv->playerSprites[41], true);
-    loadWsg("secret_swadgeland_9.wsg", &lumv->playerSprites[42], true);
-    loadWsg("secret_swadgeland_10.wsg", &lumv->playerSprites[43], true);
-    loadWsg("secret_swadgeland_11.wsg", &lumv->playerSprites[44], true);
-    loadWsg("secret_swadgeland_12.wsg", &lumv->playerSprites[45], true);
-    loadWsg("secret_swadgeland_13.wsg", &lumv->playerSprites[46], true);
-    loadWsg("secret_swadgeland_14.wsg", &lumv->playerSprites[47], true);
-    loadWsg("secret_swadgeland_15.wsg", &lumv->playerSprites[48], true);
-    loadWsg("secret_swadgeland_16.wsg", &lumv->playerSprites[49], true);
-    loadWsg("secret_swadgeland_17.wsg", &lumv->playerSprites[50], true);
-    loadWsg("secret_swadgeland_18.wsg", &lumv->playerSprites[51], true);
-    loadWsg("secret_swadgeland_19.wsg", &lumv->playerSprites[52], true);
-    loadWsg("secret_swadgeland_20.wsg", &lumv->playerSprites[53], true);
-    loadWsg("secret_swadgeland_21.wsg", &lumv->playerSprites[54], true);
+        loadWsg("secret_swadgeland_1.wsg", &lumv->playerSprites[0], true);
+        loadWsg("secret_swadgeland_2.wsg", &lumv->playerSprites[1], true);
+        loadWsg("secret_swadgeland_3.wsg", &lumv->playerSprites[2], true);
+        loadWsg("secret_swadgeland_4.wsg", &lumv->playerSprites[3], true);
+        loadWsg("secret_swadgeland_5.wsg", &lumv->playerSprites[4], true);
+        loadWsg("secret_swadgeland_6.wsg", &lumv->playerSprites[5], true);
+        loadWsg("secret_swadgeland_7.wsg", &lumv->playerSprites[6], true);
+        loadWsg("secret_swadgeland_8.wsg", &lumv->playerSprites[7], true);
+        loadWsg("secret_swadgeland_9.wsg", &lumv->playerSprites[8], true);
+        loadWsg("secret_swadgeland_10.wsg", &lumv->playerSprites[9], true);
+        loadWsg("secret_swadgeland_11.wsg", &lumv->playerSprites[10], true);
+        loadWsg("secret_swadgeland_12.wsg", &lumv->playerSprites[11], true);
+        loadWsg("secret_swadgeland_13.wsg", &lumv->playerSprites[12], true);
+        loadWsg("secret_swadgeland_14.wsg", &lumv->playerSprites[13], true);
+        loadWsg("secret_swadgeland_15.wsg", &lumv->playerSprites[14], true);
+        loadWsg("secret_swadgeland_16.wsg", &lumv->playerSprites[15], true);
+        loadWsg("secret_swadgeland_17.wsg", &lumv->playerSprites[16], true);
+    }
 
     ESP_LOGI(LUM_TAG, "Loading Enemies");
     loadWsg("enemy_a1.wsg", &lumv->enemySprites[0], true);
@@ -168,7 +193,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         lumberjackSetupLevel(characterIndex);
     }
 
-    ESP_LOGI(LUM_TAG, "height %d", TFT_HEIGHT);
+    ESP_LOGI(LUM_TAG, "width %d height %d",TFT_WIDTH, TFT_HEIGHT);
 }
 
 void lumberjackSetupLevel(int characterIndex)
@@ -198,17 +223,27 @@ void lumberjackSetupLevel(int characterIndex)
     }
 
     const uint8_t level[] = {
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 4, 4, 3, 3, 4, 4, 0,
-        0, 0, 0, 0, 0, 4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 1, 2, 2, 2, 2, 2,
-        2, 2, 2, 2, 2, 2, 5, 0, 0, 0, 0, 0, 6, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 10, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        4, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 4,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 4, 4, 3, 3, 4, 4, 0, 0, 0, 0, 0, 0, 
+        4, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 5, 0, 0, 0,
+        0, 0, 6, 7, 8, 8, 8, 8, 8, 8, 8, 8, 8, 9, 10, 0, 0, 0,
     };
 
     const uint8_t ani[] = {
@@ -245,8 +280,33 @@ void restartLevel(void)
     lumberjackRespawn(lumv->localPlayer);
 }
 
+void lumberjackTitleLoop(int64_t elapsedUs)
+{
+
+    // Update State
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        lumv->btnState = evt.state;
+    }
+
+    if (lumv->btnState & PB_A)
+    {
+        lumv->onTitle = false;
+    }
+
+    DrawTitle();
+}
+
 void lumberjackGameLoop(int64_t elapsedUs)
 {
+
+    if (lumv->onTitle == true)
+    {
+        lumberjackTitleLoop(elapsedUs);
+        return;
+    }
+
     baseMode(elapsedUs);
 
     // If networked
@@ -478,6 +538,18 @@ void baseMode(int64_t elapsedUs)
         lumv->yOffset = LUMBERJACK_SCREEN_Y_MAX;
 }
 
+void DrawTitle(void)
+{
+    drawWsgSimple(&lumv->title, (TFT_WIDTH / 2) - 51, (TFT_HEIGHT / 2) - 48);
+    drawWsgSimple(&lumv->subtitle_red, (TFT_WIDTH/2)- 36, (TFT_HEIGHT/2) -9);
+    for (int i = 0; i < 18; i++)
+    {
+        drawWsgSimple(&lumv->floorTiles[1], i * 16, 208);
+        drawWsgSimple(&lumv->floorTiles[7], i * 16, 224);
+    }
+
+}
+ 
 void DrawGame(void)
 {
     // Draw section
@@ -517,7 +589,7 @@ void DrawGame(void)
         // ESP_LOGI(LUM_TAG, "DEAD %d", currentFrame);
     }
 
-    lumv->localPlayer->drawFrame = lumv->localPlayer->spriteOffset + currentFrame;
+    lumv->localPlayer->drawFrame = currentFrame;
 
     // This is where it breaks. When it tries to play frame 3 or 4 it crashes.
     drawWsg(&lumv->playerSprites[lumv->localPlayer->drawFrame], lumv->localPlayer->x - 4,
