@@ -20,7 +20,7 @@ void sokoInitGameBin(soko_abs_t* soko)
 {
     printf("init sokoban game binary");
 
-    soko_s = soko;
+    soko_s              = soko;
     soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
 
     soko->camX = soko_s->soko_player->x;

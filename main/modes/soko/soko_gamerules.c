@@ -57,7 +57,6 @@ void sokoConfigGamemode(
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
 
         gamestate->currentTheme = &gamestate->overworldTheme;
-
     }
     else if (variant == SOKO_LASERBOUNCE)
     {
@@ -242,7 +241,7 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                         entity->x += dx;
                         entity->y += dy;
                         entity->facing = sokoDirectionFromDelta(dx, dy);
-                        return true;//if entities overlap, we should not break here?
+                        return true; // if entities overlap, we should not break here?
                     }
                     else
                     {
@@ -267,16 +266,16 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
 void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 {
     uint16_t scale = level->levelScale;
-    //These are in level space (not pixels) and must be within bounds of currentLevel.tiles.
-    int16_t screenMinX,screenMaxX,screenMinY,screenMaxY;
-    //offsets.
+    // These are in level space (not pixels) and must be within bounds of currentLevel.tiles.
+    int16_t screenMinX, screenMaxX, screenMinY, screenMaxY;
+    // offsets.
     uint16_t ox, oy;
 
     // Recalculate Camera Position
     // todo: extract to a function if we end up with different draw functions. Part of future pointer refactor.
     if (self->camEnabled)
     {
-        //calculate camera position. Shift if needed. Cam position was initiated to player position.
+        // calculate camera position. Shift if needed. Cam position was initiated to player position.
         if (self->soko_player->x > self->camX + self->camPadExtentX)
         {
             self->camX = self->soko_player->x - self->camPadExtentX;
@@ -294,43 +293,48 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
             self->camY = self->soko_player->y + self->camPadExtentY;
         }
 
-        //calculate offsets
+        // calculate offsets
         ox = -self->camX * scale + (TFT_WIDTH / 2);
         oy = -self->camY * scale + (TFT_HEIGHT / 2);
 
-        //calculate out of bounds draws. todo: make tenery operators.
-        screenMinX = self->camX - self->camWidth/2 - 1;
-        if(screenMinX < 0){
+        // calculate out of bounds draws. todo: make tenery operators.
+        screenMinX = self->camX - self->camWidth / 2 - 1;
+        if (screenMinX < 0)
+        {
             screenMinX = 0;
         }
-        screenMaxX = self->camX + self->camWidth/2 + 1;
-        if(screenMaxX > level->width){
+        screenMaxX = self->camX + self->camWidth / 2 + 1;
+        if (screenMaxX > level->width)
+        {
             screenMaxX = level->width;
         }
-        screenMinY = self->camY - self->camHeight/2 - 1;
-        if(screenMinY < 0){
+        screenMinY = self->camY - self->camHeight / 2 - 1;
+        if (screenMinY < 0)
+        {
             screenMinY = 0;
         }
-        screenMaxY = self->camY + self->camHeight/2 + 1;
-        if(screenMaxY > level->height){
+        screenMaxY = self->camY + self->camHeight / 2 + 1;
+        if (screenMaxY > level->height)
+        {
             screenMaxY = level->height;
         }
-    } else
-    {//no camera
-        //calculate offsets to center the level.
+    }
+    else
+    { // no camera
+        // calculate offsets to center the level.
         ox = (TFT_WIDTH / 2) - ((level->width) * scale / 2);
         oy = (TFT_HEIGHT / 2) - ((level->height) * scale / 2);
 
-        //bounds are just the level.
-        screenMinX = 0; 
+        // bounds are just the level.
+        screenMinX = 0;
         screenMaxX = level->width;
         screenMinY = 0;
         screenMaxY = level->height;
     }
 
     SETUP_FOR_TURBO();
-    
-   // uint16_t DEBUG_DRAW_COUNT=0;
+
+    // uint16_t DEBUG_DRAW_COUNT=0;
 
     for (size_t x = screenMinX; x < screenMaxX; x++)
     {
@@ -373,16 +377,17 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     }
                 }
             }
-            //DEBUG_DRAW_COUNT++;
-            // draw outline around the square.
-            // drawRect(ox+x*s,oy+y*s,ox+x*s+s,oy+y*s+s,color);
+            // DEBUG_DRAW_COUNT++;
+            //  draw outline around the square.
+            //  drawRect(ox+x*s,oy+y*s,ox+x*s+s,oy+y*s+s,color);
         }
     }
 
     for (size_t i = 0; i < level->entityCount; i++)
     {
-        //don't bother drawing off screen
-        if(level->entities[i].x >= screenMinX && level->entities[i].x <= screenMaxX && level->entities[i].y >= screenMinY && level->entities[i].y <= screenMaxY)
+        // don't bother drawing off screen
+        if (level->entities[i].x >= screenMinX && level->entities[i].x <= screenMaxX
+            && level->entities[i].y >= screenMinY && level->entities[i].y <= screenMaxY)
         {
             switch (level->entities[i].type)
             {
@@ -410,18 +415,18 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 
                     break;
                 case SKE_CRATE:
-                    drawWsg(&self->currentTheme->crateWSG, ox + level->entities[i].x * scale, oy + level->entities[i].y * scale, false,
-                            false, 0);
+                    drawWsg(&self->currentTheme->crateWSG, ox + level->entities[i].x * scale,
+                            oy + level->entities[i].y * scale, false, false, 0);
                     break;
                 case SKE_STICKY_CRATE:
-                    drawWsg(&self->currentTheme->stickyCrateWSG, ox + level->entities[i].x * scale, oy + level->entities[i].y * scale,
-                            false, false, 0);
+                    drawWsg(&self->currentTheme->stickyCrateWSG, ox + level->entities[i].x * scale,
+                            oy + level->entities[i].y * scale, false, false, 0);
                     break;
                 case SKE_NONE:
                 default:
                     break;
             }
-           // DEBUG_DRAW_COUNT++;
+            // DEBUG_DRAW_COUNT++;
         }
     }
 }
@@ -495,23 +500,23 @@ drawCircleFilled(ox+level->entities[i].x*scale+scale/2,oy+level->entities[i].y*s
 */
 bool absSokoAllCratesOnGoal(soko_abs_t* self)
 {
-    //printf("Victory Enter\n");
+    // printf("Victory Enter\n");
     for (size_t i = 0; i < self->currentLevel.entityCount; i++)
     {
-        //printf("Loop Enter ");
+        // printf("Loop Enter ");
         if (self->currentLevel.entities[i].type == SKE_CRATE)
         {
-            //printf("Crate Found ");
+            // printf("Crate Found ");
             if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y]
                 != SKT_GOAL)
             {
-                //printf("Crate Off Goal");
+                // printf("Crate Off Goal");
                 return false;
             }
         }
-        //printf("\n");
+        // printf("\n");
     }
-    //printf("Victory True\n");
+    // printf("Victory True\n");
     return true;
 }
 
@@ -580,24 +585,27 @@ void drawLaserFromEntity(soko_abs_t* self, sokoEntity_t* emitter)
     drawLine(playerPix.x, playerPix.y, impactPix.x, impactPix.y, c500, 0);
 }
 
-int sokoBeamImpactRecursive(soko_abs_t* self,int emitter_x, int emitter_y, sokoDirection_t emitterDir, sokoEntity_t* rootEmitter);
+int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, sokoDirection_t emitterDir,
+                            sokoEntity_t* rootEmitter);
 
 void sokoDoBeam(soko_abs_t* self)
 {
     bool receiverImpact;
-    for(int entInd = 0; entInd < self->currentLevel.entityCount; entInd++)
+    for (int entInd = 0; entInd < self->currentLevel.entityCount; entInd++)
     {
-        if(self->currentLevel.entities[entInd].type == SKE_LASER_EMIT_UP)
+        if (self->currentLevel.entities[entInd].type == SKE_LASER_EMIT_UP)
         {
             self->currentLevel.entities[entInd].properties->targetCount = 0;
-            receiverImpact = sokoBeamImpactRecursive(self, self->currentLevel.entities[entInd].x, self->currentLevel.entities[entInd].y, self->currentLevel.entities[entInd].type, &self->currentLevel.entities[entInd]);
+            receiverImpact                                              = sokoBeamImpactRecursive(
+                self, self->currentLevel.entities[entInd].x, self->currentLevel.entities[entInd].y,
+                self->currentLevel.entities[entInd].type, &self->currentLevel.entities[entInd]);
         }
     }
 }
 
 bool sokoLaserTileCollision(sokoTile_t testTile)
 {
-    switch(testTile)
+    switch (testTile)
     {
         case SKT_EMPTY:
             return false;
@@ -620,7 +628,7 @@ bool sokoLaserTileCollision(sokoTile_t testTile)
 
 bool sokoLaserEntityCollision(sokoEntityType_t testEntity)
 {
-    switch(testEntity) //Anything that doesn't unconditionally pass should return true
+    switch (testEntity) // Anything that doesn't unconditionally pass should return true
     {
         case SKE_NONE:
             return false;
@@ -651,7 +659,7 @@ bool sokoLaserEntityCollision(sokoEntityType_t testEntity)
 
 sokoDirection_t sokoRedirectDir(sokoDirection_t emitterDir, bool inverted)
 {
-    switch(emitterDir)
+    switch (emitterDir)
     {
         case SKD_UP:
             return inverted ? SKD_LEFT : SKD_RIGHT;
@@ -666,7 +674,8 @@ sokoDirection_t sokoRedirectDir(sokoDirection_t emitterDir, bool inverted)
     }
 }
 
-int sokoBeamImpactRecursive(soko_abs_t* self,int emitter_x, int emitter_y, sokoDirection_t emitterDir, sokoEntity_t* rootEmitter)
+int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, sokoDirection_t emitterDir,
+                            sokoEntity_t* rootEmitter)
 {
     sokoDirection_t dir = emitterDir;
     sokoVec_t projVec   = {0, 0};
@@ -695,7 +704,6 @@ int sokoBeamImpactRecursive(soko_abs_t* self,int emitter_x, int emitter_y, sokoD
     sokoVec_t testPos = sokoAddCoord(emitVec, projVec);
     int entityCount   = self->currentLevel.entityCount;
     // todo: make first pass pack a statically allocated array with only the entities in the path of the laser.
-
 
     int16_t possibleSquares = 0;
     if (dir == SKD_RIGHT) // move these checks into the switch statement
@@ -752,38 +760,39 @@ int sokoBeamImpactRecursive(soko_abs_t* self,int emitter_x, int emitter_y, sokoD
         sokoEntityProperties_t* entProps = rootEmitter->properties;
         if (tileCollFlag)
         {
-            entProps->targetX[entProps->targetCount] = testPos.x; //Pack target properties with every impacted position.
-            entProps->targetY[entProps->targetCount] = testPos.y; 
+            entProps->targetX[entProps->targetCount] = testPos.x; // Pack target properties with every impacted
+                                                                  // position.
+            entProps->targetY[entProps->targetCount] = testPos.y;
             entProps->targetCount++;
         }
         if (entCollFlag)
         {
             sokoEntityType_t entType = self->currentLevel.entities[entCollInd].type;
-            
-            entProps->targetX[entProps->targetCount] = testPos.x; //Pack target properties with every impacted entity.
-            entProps->targetY[entProps->targetCount] = testPos.y; //If there's a redirect, it will be added after this one.
+
+            entProps->targetX[entProps->targetCount] = testPos.x; // Pack target properties with every impacted entity.
+            entProps->targetY[entProps->targetCount]
+                = testPos.y; // If there's a redirect, it will be added after this one.
             entProps->targetCount++;
-            if(entType == SKE_LASER_90)
+            if (entType == SKE_LASER_90)
             {
-                sokoDirection_t redirectDir = sokoRedirectDir(emitterDir, self->currentLevel.entities[entCollInd].facing); //SKD_UP or SKD_DOWN
-                sokoBeamImpactRecursive(self,testPos.x,testPos.y,redirectDir,rootEmitter);
+                sokoDirection_t redirectDir
+                    = sokoRedirectDir(emitterDir, self->currentLevel.entities[entCollInd].facing); // SKD_UP or SKD_DOWN
+                sokoBeamImpactRecursive(self, testPos.x, testPos.y, redirectDir, rootEmitter);
             }
-            
+
             break;
         }
         testPos = sokoAddCoord(testPos, projVec);
     }
     retVal = self->currentLevel.entities[entCollInd].properties->targetCount;
     // printf("\n");
-    //retVal.x           = testPos.x;
-    //retVal.y           = testPos.y;
-    //retVal.entityIndex = entCollInd;
-    //retVal.entityFlag  = entCollFlag;
+    // retVal.x           = testPos.x;
+    // retVal.y           = testPos.y;
+    // retVal.entityIndex = entCollInd;
+    // retVal.entityFlag  = entCollFlag;
     // printf("impactPoint:(%d,%d)\n",testPos.x,testPos.y);
-    return retVal;    
-
+    return retVal;
 }
-
 
 sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter)
 {

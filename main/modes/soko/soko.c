@@ -47,15 +47,10 @@ extern const char* sokoLevelNames[]
 extern const soko_var_t sokoLevelVariants[]
     = {SOKO_OVERWORLD, SOKO_EULER, SOKO_CLASSIC, SOKO_CLASSIC, SOKO_LASERBOUNCE};
 
-extern const char* sokoBinLevelNames[] = //@TODO: Remove this when all levels do binary loading and dynamic name loading.
-{
-    "sk_binOverworld.bin",
-    "warehouse.bin",
-    "sk_sticky_test.bin",
-    "sk_test1.bin",
-    "sk_test3.bin"
+//@TODO: Remove this when all levels do binary loading and dynamic name loading.
+extern const char* sokoBinLevelNames[] = {
+    "sk_binOverworld.bin", "warehouse.bin", "sk_sticky_test.bin", "sk_test1.bin", "sk_test3.bin",
 };
-
 
 static void sokoEnterMode(void)
 {
@@ -66,14 +61,14 @@ static void sokoEnterMode(void)
     // todo: move to convenience function for loading level data. Preferrebly in it's own file so contributors can futz
     // with it with fewer git merge cases.
     soko->levels[0] = "sk_testpuzzle.wsg";
-    
+
     // free a wsg that we never loaded... is bad.
     loadWsg(soko->levels[0], &soko->levelWSG, true); // spiRAM cus only used during loading, not gameplay.
 
     // load sprite assets
     soko->currentTheme = &soko->sokoDefaultTheme;
 
-//Default Theme
+    // Default Theme
     loadWsg("sk_player_down.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
     loadWsg("sk_player_up.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
     loadWsg("sk_player_left.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
@@ -81,18 +76,18 @@ static void sokoEnterMode(void)
     loadWsg("sk_crate.wsg", &soko->sokoDefaultTheme.crateWSG, false);
     loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
 
-    soko->sokoDefaultTheme.wallColor = c111;
+    soko->sokoDefaultTheme.wallColor  = c111;
     soko->sokoDefaultTheme.floorColor = c444;
 
-//Overworld Theme
-    soko->overworldTheme.playerDownWSG = soko->sokoDefaultTheme.playerDownWSG;
-    soko->overworldTheme.playerUpWSG = soko->sokoDefaultTheme.playerUpWSG;
-    soko->overworldTheme.playerLeftWSG = soko->sokoDefaultTheme.playerLeftWSG;
+    // Overworld Theme
+    soko->overworldTheme.playerDownWSG  = soko->sokoDefaultTheme.playerDownWSG;
+    soko->overworldTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
+    soko->overworldTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
     soko->overworldTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
-    soko->overworldTheme.crateWSG = soko->sokoDefaultTheme.crateWSG;
+    soko->overworldTheme.crateWSG       = soko->sokoDefaultTheme.crateWSG;
     soko->overworldTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
 
-    soko->overworldTheme.wallColor = c121;
+    soko->overworldTheme.wallColor  = c121;
     soko->overworldTheme.floorColor = c454;
 
     // Initialize the menu
@@ -116,7 +111,7 @@ static void sokoExitMode(void)
     // Free the font
     freeFont(&soko->ibm);
 
-    //free the level name file
+    // free the level name file
     freeTxt(soko->levelFileText);
 
     // free the level
@@ -142,14 +137,14 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == sokoResumeGameLabel)
         {
             // load level.
-            //sokoLoadLevel(0);
-            soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt",true);
+            // sokoLoadLevel(0);
+            soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt", true);
             sokoExtractLevelNamesAndIndeces(soko);
             /*
             for(int i = 0; i < 20; i++)
             {
                 int ind = findIndex(soko,i);
-                
+
                 if(ind != -1)
                 {
                     printf("Found %d at %d:%s\n",i,ind,soko->levelNames[ind]);
@@ -222,13 +217,11 @@ static void sokoMainLoop(int64_t elapsedUs)
     }
 }
 
-
-
-void freeEntity(soko_abs_t* self, sokoEntity_t* entity) //Free internal entity structures
+void freeEntity(soko_abs_t* self, sokoEntity_t* entity) // Free internal entity structures
 {
-    if(entity->propFlag)
+    if (entity->propFlag)
     {
-        if(entity->properties->targetCount)
+        if (entity->properties->targetCount)
         {
             free(entity->properties->targetX);
             free(entity->properties->targetY);
@@ -241,205 +234,230 @@ void freeEntity(soko_abs_t* self, sokoEntity_t* entity) //Free internal entity s
 
 void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
 {
-    const int HEADER_BYTE_OFFSET = 2;
-    int totalTiles = self->currentLevel.width * self->currentLevel.height;
-    int tileIndex = 0;
+    const int HEADER_BYTE_OFFSET   = 2;
+    int totalTiles                 = self->currentLevel.width * self->currentLevel.height;
+    int tileIndex                  = 0;
     self->currentLevel.entityCount = 0;
-    self->goalCount = 0;
-    for(int i = HEADER_BYTE_OFFSET; i < byteCount; i++)
+    self->goalCount                = 0;
+    for (int i = HEADER_BYTE_OFFSET; i < byteCount; i++)
     {
-        if(self->levelBinaryData[i] == SKB_OBJSTART) //Objects in level data should be of the form SKB_OBJSTART, SKB_[Object Type], [Data Bytes] , SKB_OBJEND
+        if (self->levelBinaryData[i] == SKB_OBJSTART) // Objects in level data should be of the form SKB_OBJSTART,
+                                                      // SKB_[Object Type], [Data Bytes] , SKB_OBJEND
         {
-            int objX = (tileIndex-1) % (self->currentLevel.width); //Look at the previous
-            int objY = (tileIndex-1) / (self->currentLevel.width);
+            int objX = (tileIndex - 1) % (self->currentLevel.width); // Look at the previous
+            int objY = (tileIndex - 1) / (self->currentLevel.width);
             uint8_t flagByte, direction;
-            bool players,crates,sticky,trail,inverted;
+            bool players, crates, sticky, trail, inverted;
             int hp, targetX, targetY;
-            switch(self->levelBinaryData[i+1]) //On creating entities, index should be advanced to the SKB_OBJEND byte so the post-increment moves to the next tile.
+            switch (self->levelBinaryData[i + 1]) // On creating entities, index should be advanced to the SKB_OBJEND
+                                                  // byte so the post-increment moves to the next tile.
             {
                 case SKB_COMPRESS:
                     i += 2;
-                    break; //Not yet implemented
+                    break; // Not yet implemented
                 case SKB_PLAYER:
-                    self->currentLevel.gameMode = self->levelBinaryData[i+2];
+                    self->currentLevel.gameMode                                      = self->levelBinaryData[i + 2];
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_PLAYER;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->soko_player = &self->currentLevel.entities[self->currentLevel.playerIndex];
+                    self->soko_player              = &self->currentLevel.entities[self->currentLevel.playerIndex];
                     self->currentLevel.playerIndex = self->currentLevel.entityCount;
-                    self->currentLevel.entityCount+=1;
-                    i += 3; 
+                    self->currentLevel.entityCount += 1;
+                    i += 3;
                     break;
                 case SKB_CRATE:
-                    flagByte = self->levelBinaryData[i+2];
-                    sticky = !!(flagByte & (0x1 << 0));
-                    trail = !!(flagByte & (0x1 << 1));
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = sticky ? SKE_STICKY_CRATE : SKE_CRATE;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
+                    flagByte = self->levelBinaryData[i + 2];
+                    sticky   = !!(flagByte & (0x1 << 0));
+                    trail    = !!(flagByte & (0x1 << 1));
+                    self->currentLevel.entities[self->currentLevel.entityCount].type
+                        = sticky ? SKE_STICKY_CRATE : SKE_CRATE;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y = objY;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties
+                        = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky = sticky;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->trail = trail;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->trail  = trail;
                     self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
                 case SKB_WARPINTERNAL: //[type][flags][hp][destx][desty]
-                    flagByte = self->levelBinaryData[i+2];
-                    crates = !!(flagByte & (0x1 << 0));
-                    hp = self->levelBinaryData[i+3];
-                    targetX = self->levelBinaryData[i+4];
-                    targetY = self->levelBinaryData[i+5];
+                    flagByte = self->levelBinaryData[i + 2];
+                    crates   = !!(flagByte & (0x1 << 0));
+                    hp       = self->levelBinaryData[i + 3];
+                    targetX  = self->levelBinaryData[i + 4];
+                    targetY  = self->levelBinaryData[i + 5];
+
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_WARP;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties
+                        = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->crates = crates;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->hp = hp;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX = malloc(sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY = malloc(sizeof(uint8_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->hp     = hp;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                        = malloc(sizeof(uint8_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY
+                        = malloc(sizeof(uint8_t));
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = 1;
-                    self->currentLevel.entityCount+=1;
+                    self->currentLevel.entityCount += 1;
                     i += 6;
                     break;
                 case SKB_WARPINTERNALEXIT:
-                    flagByte = self->levelBinaryData[i+2];
+                    flagByte = self->levelBinaryData[i + 2];
 
-                    i += 2; //No data or properties in this object.
-                    break; //Can be used later on for verifying valid warps from save files.
+                    i += 2;            // No data or properties in this object.
+                    break;             // Can be used later on for verifying valid warps from save files.
                 case SKB_WARPEXTERNAL: //[typep][flags][index]
-                    //todo implement extraction of index value and which values should be used for auto-indexed portals
+                    // todo implement extraction of index value and which values should be used for auto-indexed portals
                     self->currentLevel.tiles[objX][objY] = SKT_PORTAL;
                     self->portals[self->portalCount].index
-                    = self->portalCount + 1; // For basic test, 1 indexed with levels, but multi-room overworld needs
-                                             // more sophistication to keep indeces correct.
+                        = self->portalCount + 1; // For basic test, 1 indexed with levels, but multi-room overworld
+                                                 // needs more sophistication to keep indeces correct.
                     self->portals[self->portalCount].x = objX;
                     self->portals[self->portalCount].y = objY;
                     printf("Portal %d at %d,%d\n", self->portals[self->portalCount].index,
-                        self->portals[self->portalCount].x, self->portals[self->portalCount].y);
+                           self->portals[self->portalCount].x, self->portals[self->portalCount].y);
                     soko->portalCount += 1;
                     i += 4;
                     break;
                 case SKB_BUTTON: //[type][flag][numTargets][targetx][targety]...
-                    flagByte = self->levelBinaryData[i+2];
-                    crates = !!(flagByte & (0x1 << 0));
-                    players = !!(flagByte & (0x1 << 1));
+                    flagByte = self->levelBinaryData[i + 2];
+                    crates   = !!(flagByte & (0x1 << 0));
+                    players  = !!(flagByte & (0x1 << 1));
                     inverted = !!(flagByte & (0x1 << 2));
-                    sticky = !!(flagByte & (0x1 << 3));
-                    hp = self->levelBinaryData[i+3];
+                    sticky   = !!(flagByte & (0x1 << 3));
+                    hp       = self->levelBinaryData[i + 3];
+
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_BUTTON;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties
+                        = malloc(sizeof(sokoEntityProperties_t));
                     self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX = malloc(sizeof(uint8_t) * hp);
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY = malloc(sizeof(uint8_t) * hp);
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                        = malloc(sizeof(uint8_t) * hp);
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY
+                        = malloc(sizeof(uint8_t) * hp);
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = true;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->crates = crates;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->inverted = inverted;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky = sticky;
-                    for(int j = 0; j < hp; j++)
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->crates      = crates;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players     = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->inverted    = inverted;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky      = sticky;
+                    for (int j = 0; j < hp; j++)
                     {
-                        self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX[j] = self->levelBinaryData[3 + 2*j + 1];
-                        self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY[j] = self->levelBinaryData[3 + 2*(j + 1)];
+                        self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX[j]
+                            = self->levelBinaryData[3 + 2 * j + 1];
+                        self->currentLevel.entities[self->currentLevel.entityCount].properties->targetY[j]
+                            = self->levelBinaryData[3 + 2 * (j + 1)];
                     }
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = hp;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->crates = crates;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->inverted = inverted;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky = sticky;
-                    self->currentLevel.entityCount+=1;
-                    i += (4 + 2*hp);
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->players     = players;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->crates      = crates;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->inverted    = inverted;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky      = sticky;
+                    self->currentLevel.entityCount += 1;
+                    i += (4 + 2 * hp);
                     break;
                 case SKB_LASEREMITTER: //[type][flag]
-                    flagByte = self->levelBinaryData[i+2];
-                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is direction bits and P is player push
+                    flagByte  = self->levelBinaryData[i + 2];
+                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
+                                                              // direction bits and P is player push
                     players = !!(flagByte & (0x1 < 1));
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_LASER_EMIT_UP;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
+
+                    self->currentLevel.entities[self->currentLevel.entityCount].type   = SKE_LASER_EMIT_UP;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x      = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y      = objY;
                     self->currentLevel.entities[self->currentLevel.entityCount].facing = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties
+                        = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag            = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX = calloc(SOKO_MAX_ENTITY_COUNT,sizeof(uint8_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX = calloc(SOKO_MAX_ENTITY_COUNT,sizeof(uint8_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                        = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties->targetX
+                        = calloc(SOKO_MAX_ENTITY_COUNT, sizeof(uint8_t));
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->targetCount = 0;
-                    self->currentLevel.entityCount+=1;
+                    self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
                 case SKB_LASERRECEIVEROMNI:
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_LASER_RECEIVE_OMNI;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entityCount+=1;
+                    self->currentLevel.entityCount += 1;
                     i += 2;
                     break;
                 case SKB_LASERRECEIVER:
-                    flagByte = self->levelBinaryData[i+2];
-                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is direction bits and P is player push
+                    flagByte  = self->levelBinaryData[i + 2];
+                    direction = (flagByte & (0x3 << 6)) >> 6; // flagbyte stores direction in 0bDD0000P0 Where D is
+                                                              // direction bits and P is player push
                     players = !!(flagByte & (0x1 < 1));
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_LASER_RECEIVE;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
+
+                    self->currentLevel.entities[self->currentLevel.entityCount].type   = SKE_LASER_RECEIVE;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x      = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y      = objY;
                     self->currentLevel.entities[self->currentLevel.entityCount].facing = direction;
-                    self->currentLevel.entityCount+=1;
+                    self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
                 case SKB_LASER90ROTATE:
-                    flagByte = self->levelBinaryData[i+2];
+                    flagByte  = self->levelBinaryData[i + 2];
                     direction = !!(flagByte & (0x1 < 0));
-                    players = !!(flagByte & (0x1 < 1));
-                    self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_LASER_90;
-                    self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
-                    self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
+                    players   = !!(flagByte & (0x1 < 1));
+
+                    self->currentLevel.entities[self->currentLevel.entityCount].type   = SKE_LASER_90;
+                    self->currentLevel.entities[self->currentLevel.entityCount].x      = objX;
+                    self->currentLevel.entities[self->currentLevel.entityCount].y      = objY;
                     self->currentLevel.entities[self->currentLevel.entityCount].facing = direction;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties
+                        = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag            = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
-                    self->currentLevel.entityCount+=1;
+                    self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
                 case SKB_GHOSTBLOCK:
-                    flagByte = self->levelBinaryData[i+2];
+                    flagByte = self->levelBinaryData[i + 2];
                     inverted = !!(flagByte & (0x1 < 2));
-                    players = !!(flagByte & (0x1 < 1));
+                    players  = !!(flagByte & (0x1 < 1));
+
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_GHOST;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
-                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag = true;
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties
+                        = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].propFlag            = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->players = players;
-                    self->currentLevel.entityCount+=1;
+                    self->currentLevel.entityCount += 1;
                     i += 3;
                     break;
                 case SKB_OBJEND:
                     i += 1;
                     break;
-                default: //Make the best of an undefined object type and try to skip it by finding its end byte
-                    bool objEndFound = false;
+                default: // Make the best of an undefined object type and try to skip it by finding its end byte
+                    bool objEndFound          = false;
                     int undefinedObjectLength = 0;
-                    while(!objEndFound)
+                    while (!objEndFound)
                     {
                         undefinedObjectLength += 1;
-                        if(self->levelBinaryData[i+undefinedObjectLength] == SKB_OBJEND)
+                        if (self->levelBinaryData[i + undefinedObjectLength] == SKB_OBJEND)
                         {
                             objEndFound = true;
                         }
-                        
                     }
-                    i += undefinedObjectLength; //Move to the completion byte of an undefined object type and hope it doesn't have two end bytes.
+                    i += undefinedObjectLength; // Move to the completion byte of an undefined object type and hope it
+                                                // doesn't have two end bytes.
             }
         }
         else
         {
             int tileX = (tileIndex) % (self->currentLevel.width);
             int tileY = (tileIndex) / (self->currentLevel.width);
-            //self->currentLevel.tiles[tileX][tileY] = self->levelBinaryData[i];
+            // self->currentLevel.tiles[tileX][tileY] = self->levelBinaryData[i];
             int tileType = 0;
-            switch(self->levelBinaryData[i]) //This is a bit easier to read than two arrays
+            switch (self->levelBinaryData[i]) // This is a bit easier to read than two arrays
             {
                 case SKB_EMPTY:
                     tileType = SKT_EMPTY;
@@ -454,43 +472,46 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     tileType = SKT_FLOOR; //@todo Add No-Walk floors that can only accept crates or pass lasers
                     break;
                 case SKB_GOAL:
-                    tileType = SKT_GOAL;
+                    tileType                       = SKT_GOAL;
                     self->goals[self->goalCount].x = tileX;
                     self->goals[self->goalCount].y = tileY;
                     self->goalCount++;
                     break;
                 default:
                     tileType = SKT_EMPTY;
-                break;
+                    break;
             }
             self->currentLevel.tiles[tileX][tileY] = tileType;
-            //printf("BinData@%d: %d Tile: %d at (%d,%d) index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
+            // printf("BinData@%d: %d Tile: %d at (%d,%d)
+            // index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
             tileIndex++;
         }
-        
     }
 }
 
 static void sokoLoadBinLevel(uint16_t levelIndex)
 {
-    const int HEADER_BYTE_OFFSET = 2; //Number of bytes before tile data begins
+    const int HEADER_BYTE_OFFSET = 2; // Number of bytes before tile data begins
 
     printf("load level %d\n", levelIndex);
     soko->state = SKS_INIT;
     size_t fileSize;
-    soko->levelBinaryData = spiffsReadFile(sokoBinLevelNames[levelIndex], &fileSize, true); //Heap CAPS malloc/calloc allocation for SPI RAM
-    //The pointer returned by spiffsReadFile can be freed with free() with no additional steps.
-    soko->currentLevel.width = soko->levelBinaryData[0]; //first two bytes of a level's data always describe the bounding width and height of the tilemap.
-    soko->currentLevel.height = soko->levelBinaryData[1]; //Max Theoretical Level Bounding Box Size is 255x255, though you'll likely run into issues with entities first.
-    //for(int i = 0; i < fileSize; i++)
+    soko->levelBinaryData = spiffsReadFile(sokoBinLevelNames[levelIndex], &fileSize,
+                                           true); // Heap CAPS malloc/calloc allocation for SPI RAM
+    // The pointer returned by spiffsReadFile can be freed with free() with no additional steps.
+    soko->currentLevel.width = soko->levelBinaryData[0];  // first two bytes of a level's data always describe the
+                                                          // bounding width and height of the tilemap.
+    soko->currentLevel.height = soko->levelBinaryData[1]; // Max Theoretical Level Bounding Box Size is 255x255, though
+                                                          // you'll likely run into issues with entities first.
+    // for(int i = 0; i < fileSize; i++)
     //{
-    //    printf("%d, ",soko->levelBinaryData[i]);
-    //}
-    //printf("\n");
+    //     printf("%d, ",soko->levelBinaryData[i]);
+    // }
+    // printf("\n");
     soko->currentLevel.levelScale = 16;
-    soko->camWidth  = TFT_WIDTH / (soko->currentLevel.levelScale);
-    soko->camHeight = TFT_HEIGHT / (soko->currentLevel.levelScale);
-    soko->camEnabled = soko->camWidth<soko->currentLevel.width || soko->camHeight< soko->currentLevel.height;
+    soko->camWidth                = TFT_WIDTH / (soko->currentLevel.levelScale);
+    soko->camHeight               = TFT_HEIGHT / (soko->currentLevel.levelScale);
+    soko->camEnabled    = soko->camWidth < soko->currentLevel.width || soko->camHeight < soko->currentLevel.height;
     soko->camPadExtentX = soko->camWidth * 0.6 * 0.5;
     soko->camPadExtentY = soko->camHeight * 0.6 * 0.5;
 
@@ -498,12 +519,13 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
 
     soko->portalCount = 0;
 
-    sokoLoadBinTiles(soko,(int)fileSize);
-    //for(int k = 0; k < soko->currentLevel.entityCount; k++)
+    sokoLoadBinTiles(soko, (int)fileSize);
+    // for(int k = 0; k < soko->currentLevel.entityCount; k++)
     //{
-    //    printf("Ent%d:%d (%d,%d)",k,soko->currentLevel.entities[k].type,soko->currentLevel.entities[k].x,soko->currentLevel.entities[k].y);
-    //}
-    //printf("\n");
+    //     printf("Ent%d:%d
+    //     (%d,%d)",k,soko->currentLevel.entities[k].type,soko->currentLevel.entities[k].x,soko->currentLevel.entities[k].y);
+    // }
+    // printf("\n");
 }
 
 static void sokoLoadLevel(uint16_t levelIndex)
@@ -532,10 +554,11 @@ static void sokoLoadLevel(uint16_t levelIndex)
 
     // enable the camera only if the levelwidth or the levelHeight is greater than camWidth or camHeight.
     // should we enable it independently for x/y if the level is thin?
-    soko->camEnabled = soko->camWidth<soko->currentLevel.width || soko->camHeight< soko->currentLevel.height;
+    soko->camEnabled = soko->camWidth < soko->currentLevel.width || soko->camHeight < soko->currentLevel.height;
 
     // percentage of screen to let the player move around in. Small for testing.
-    //these are half extents. so .7*.5 is 70% of the screen for the movement box. The extent had to be smaller or = than half the camsize.
+    // these are half extents. so .7*.5 is 70% of the screen for the movement box. The extent had to be smaller or =
+    // than half the camsize.
     soko->camPadExtentX = soko->camWidth * 0.6 * 0.5;
     soko->camPadExtentY = soko->camHeight * 0.6 * 0.5;
 
@@ -645,11 +668,11 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 
 static int sokoFindIndex(soko_abs_t* self, int targetIndex)
 {
-    //Filenames are formatted like '1:sk_level.bin:'
+    // Filenames are formatted like '1:sk_level.bin:'
     int retVal = -1;
-    for(int i = 0; i < targetIndex; i++)
+    for (int i = 0; i < targetIndex; i++)
     {
-        if(self->levelIndeces[i] == targetIndex)
+        if (self->levelIndeces[i] == targetIndex)
         {
             retVal = i;
         }
@@ -660,48 +683,49 @@ static int sokoFindIndex(soko_abs_t* self, int targetIndex)
 static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
 {
     printf("Loading Level List...!\n");
-    printf("%s\n",self->levelFileText);
-    printf("%d\n",(int)strlen(self->levelFileText));
-    //char* a = strstr(self->levelFileText,":");
-    //char* b = strstr(a,".bin:");
-    //printf("%d",(int)((int)b-(int)a));
-    //char* stringPtrs[30];
-    //memset(stringPtrs,0,30*sizeof(char*));
+    printf("%s\n", self->levelFileText);
+    printf("%d\n", (int)strlen(self->levelFileText));
+    // char* a = strstr(self->levelFileText,":");
+    // char* b = strstr(a,".bin:");
+    // printf("%d",(int)((int)b-(int)a));
+    // char* stringPtrs[30];
+    // memset(stringPtrs,0,30*sizeof(char*));
     char** stringPtrs = soko->levelNames;
-    memset(stringPtrs,0,SOKO_LEVEL_COUNT*sizeof(char*));
+    memset(stringPtrs, 0, SOKO_LEVEL_COUNT * sizeof(char*));
     int* levelInds = soko->levelIndeces;
-    memset(levelInds,0,SOKO_LEVEL_COUNT*sizeof(int));
-    int intInd = 0;
-    int ind = 0;
-    char* storageStr = strtok(self->levelFileText,":");
-    while(storageStr != NULL)
+    memset(levelInds, 0, SOKO_LEVEL_COUNT * sizeof(int));
+    int intInd       = 0;
+    int ind          = 0;
+    char* storageStr = strtok(self->levelFileText, ":");
+    while (storageStr != NULL)
     {
-        if(strtol(storageStr,NULL,10) && !(strstr(storageStr,".bin"))) //Make sure you're not accidentally reading a number from a filename
+        if (strtol(storageStr, NULL, 10)
+            && !(strstr(storageStr, ".bin"))) // Make sure you're not accidentally reading a number from a filename
         {
-            levelInds[intInd] = (int)strtol(storageStr,NULL,10);
-            //printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
+            levelInds[intInd] = (int)strtol(storageStr, NULL, 10);
+            // printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
             intInd++;
         }
-        else{
-            if(!strpbrk(storageStr,"\n\t\r ") && (strstr(storageStr,".bin")))
+        else
+        {
+            if (!strpbrk(storageStr, "\n\t\r ") && (strstr(storageStr, ".bin")))
             {
-                int tokLen = strlen(storageStr);
-                char* tempPtr = calloc((tokLen+1),sizeof(char)); //Length plus null teminator
-                //strcpy(tempPtr,storageStr);
-                //stringPtrs[ind] = tempPtr;
+                int tokLen    = strlen(storageStr);
+                char* tempPtr = calloc((tokLen + 1), sizeof(char)); // Length plus null teminator
+                // strcpy(tempPtr,storageStr);
+                // stringPtrs[ind] = tempPtr;
                 stringPtrs[ind] = storageStr;
-                //printf("%s\n",storageStr);
-            ind++;
+                // printf("%s\n",storageStr);
+                ind++;
             }
         }
-        //printf("This guy!\n");
-        storageStr = strtok(NULL,":");
+        // printf("This guy!\n");
+        storageStr = strtok(NULL, ":");
     }
     printf("Strings: %d, Ints: %d\n", ind, intInd);
     printf("Levels and Indeces:\n");
-    for(int i = ind-1; i > -1; i--)
+    for (int i = ind - 1; i > -1; i--)
     {
-        printf("Index: %d : %d : %s\n",i,levelInds[i],stringPtrs[i]);
+        printf("Index: %d : %d : %s\n", i, levelInds[i], stringPtrs[i]);
     }
-
 }

@@ -24,26 +24,26 @@ typedef enum
 
 typedef enum
 {
-    SKB_EMPTY = 0,
-    SKB_WALL = 1,
-    SKB_FLOOR = 2,
-    SKB_GOAL = 3,
-    SKB_NO_WALK = 4,
-    SKB_OBJSTART = 201, //Object and Signal Bytes are over 200
-    SKB_COMPRESS = 202,
-    SKB_PLAYER = 203,
-    SKB_CRATE = 204,
-    SKB_WARPINTERNAL = 205,
-    SKB_WARPINTERNALEXIT = 206,
-    SKB_WARPEXTERNAL = 207,
-    SKB_BUTTON = 208,
-    SKB_LASEREMITTER = 209,
+    SKB_EMPTY             = 0,
+    SKB_WALL              = 1,
+    SKB_FLOOR             = 2,
+    SKB_GOAL              = 3,
+    SKB_NO_WALK           = 4,
+    SKB_OBJSTART          = 201, // Object and Signal Bytes are over 200
+    SKB_COMPRESS          = 202,
+    SKB_PLAYER            = 203,
+    SKB_CRATE             = 204,
+    SKB_WARPINTERNAL      = 205,
+    SKB_WARPINTERNALEXIT  = 206,
+    SKB_WARPEXTERNAL      = 207,
+    SKB_BUTTON            = 208,
+    SKB_LASEREMITTER      = 209,
     SKB_LASERRECEIVEROMNI = 210,
-    SKB_LASERRECEIVER = 211,
-    SKB_LASER90ROTATE = 212,
-    SKB_GHOSTBLOCK = 213,
-    SKB_OBJEND = 230
-} soko_bin_t; //Binary file byte value decode list
+    SKB_LASERRECEIVER     = 211,
+    SKB_LASER90ROTATE     = 212,
+    SKB_GHOSTBLOCK        = 213,
+    SKB_OBJEND            = 230
+} soko_bin_t; // Binary file byte value decode list
 typedef struct soko_portal_s
 {
     uint8_t x;
@@ -76,17 +76,17 @@ typedef enum
 
 typedef enum
 {
-    SKE_NONE         = 0,
-    SKE_PLAYER       = 1,
-    SKE_CRATE        = 2,
-    SKE_LASER_90     = 3,
-    SKE_STICKY_CRATE = 4,
-    SKE_WARP         = 5,
-    SKE_BUTTON       = 6,
-    SKE_LASER_EMIT_UP= 7,
+    SKE_NONE               = 0,
+    SKE_PLAYER             = 1,
+    SKE_CRATE              = 2,
+    SKE_LASER_90           = 3,
+    SKE_STICKY_CRATE       = 4,
+    SKE_WARP               = 5,
+    SKE_BUTTON             = 6,
+    SKE_LASER_EMIT_UP      = 7,
     SKE_LASER_RECEIVE_OMNI = 8,
-    SKE_LASER_RECEIVE= 9,
-    SKE_GHOST        = 10
+    SKE_LASER_RECEIVE      = 9,
+    SKE_GHOST              = 10
 } sokoEntityType_t;
 
 typedef enum
@@ -96,24 +96,27 @@ typedef enum
     SKT_WALL          = 2,
     SKT_GOAL          = 3,
     SKT_PORTAL        = 4,
-    SKT_LASER_EMIT    = 5, //To Be Removed
-    SKT_LASER_RECEIVE = 6, //To Be Removed
+    SKT_LASER_EMIT    = 5, // To Be Removed
+    SKT_LASER_RECEIVE = 6, // To Be Removed
     SKT_FLOOR_WALKED  = 7,
     SKT_NO_WALK       = 8
 } sokoTile_t;
 
 typedef struct
 {
-    bool sticky; //For Crates, this determines if crates stick to players. For Buttons, this determines if the button stays down.
-    bool trail; //Crates leave Euler trails
-    bool players; //For Crates, allow player push. For Button, allow player press.
-    bool crates; //For Buttons, allow crate push. For Portals, allow crate transport.
-    bool inverted; //For Buttons, invert default state of affected blocks. For ghost blocks, inverts default tangibility. Button and Ghostblock with both cancel.
+    bool sticky;   // For Crates, this determines if crates stick to players. For Buttons, this determines if the button
+                   // stays down.
+    bool trail;    // Crates leave Euler trails
+    bool players;  // For Crates, allow player push. For Button, allow player press.
+    bool crates;   // For Buttons, allow crate push. For Portals, allow crate transport.
+    bool inverted; // For Buttons, invert default state of affected blocks. For ghost blocks, inverts default
+                   // tangibility. Button and Ghostblock with both cancel.
     uint8_t* targetX;
     uint8_t* targetY;
     uint8_t targetCount;
     uint8_t hp;
-} sokoEntityProperties_t; //this is a separate type so that it can be allocated as several different types with a void pointer and some aggressive casting.
+} sokoEntityProperties_t; // this is a separate type so that it can be allocated as several different types with a void
+                          // pointer and some aggressive casting.
 
 typedef struct
 {
@@ -177,7 +180,7 @@ typedef struct
     // game settings
     uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
-    
+
     // level
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if
                                     ///< I need level names like picross.
@@ -205,12 +208,11 @@ typedef struct soko_abs_s
     char* levelNames[SOKO_LEVEL_COUNT];
     int levelIndeces[SOKO_LEVEL_COUNT];
 
-
     // game settings
     uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
     sokoGameState_t state;
 
-    //theme settings
+    // theme settings
     sokoTheme_t* currentTheme; ///< Points to one of the other themes.
     sokoTheme_t overworldTheme;
     sokoTheme_t sokoDefaultTheme;
