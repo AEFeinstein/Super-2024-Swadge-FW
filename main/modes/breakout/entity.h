@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "common_typedef.h"
+#include "breakout_typedef.h"
 #include "tilemap.h"
 #include "gameData.h"
 #include "soundManager.h"

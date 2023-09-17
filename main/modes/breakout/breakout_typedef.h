@@ -1,5 +1,5 @@
-#ifndef PLATFORMER_COMMON_TYPEDEF_INCLUDED
-#define PLATFORMER_COMMON_TYPEDEF_INCLUDED
+#ifndef BREAKOUT_TYPEDEF_INCLUDED
+#define BREAKOUT_TYPEDEF_INCLUDED
 
 typedef struct platformer_t platformer_t;
 typedef struct entityManager_t entityManager_t;
