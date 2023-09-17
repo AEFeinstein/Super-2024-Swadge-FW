@@ -21,6 +21,9 @@
 #include "leveldef.h"
 #include "mainMenu.h"
 
+#include "fill.h"
+#include "starfield.h"
+
 #include <esp_log.h>
 
 //==============================================================================
@@ -54,6 +57,7 @@ struct breakout_t
     int32_t frameTimer;
 
     soundManager_t soundManager;
+    starfield_t starfield;
 
     gameUpdateFunction_t update;
 };
@@ -223,7 +227,8 @@ static void breakoutEnterMode(void)
     initializeTileMap(&(breakout->tilemap));
     initializeSoundManager(&(breakout->soundManager));
     initializeEntityManager(&(breakout->entityManager), &(breakout->tilemap), &(breakout->gameData), &(breakout->soundManager));
-    
+    initializeStarfield(&(breakout->starfield));
+
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
     breakout->tilemap.mapOffsetX = -4;
@@ -388,7 +393,10 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     breakoutDetectGameStateChange(self);
     updateEntities(&(self->entityManager));
 
+    updateStarfield(&(self->starfield));
+
     // Draw the field
+    drawStarfield(&(self->starfield));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(breakout->gameData));
@@ -421,24 +429,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
  */
 static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    // Use TURBO drawing mode to draw individual pixels fast
-    SETUP_FOR_TURBO();
-
-    // Draw a grid
-    for (int16_t yp = y; yp < y + h; yp++)
-    {
-        for (int16_t xp = x; xp < x + w; xp++)
-        {
-            if ((0 == xp % 40) || (0 == yp % 40))
-            {
-                TURBO_SET_PIXEL(xp, yp, c110);
-            }
-            else
-            {
-                TURBO_SET_PIXEL(xp, yp, c001);
-            }
-        }
-    }
+    fillDisplayArea(x, y, x + w, y + h, c000);
 }
 
 void breakoutDetectGameStateChange(breakout_t *self){
@@ -498,6 +489,10 @@ void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs){
 
     updateLedsInGame(&(self->gameData));
     updateEntities(&(self->entityManager));
+
+    updateStarfield(&(self->starfield));
+    drawStarfield(&(self->starfield));
+    
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
@@ -664,6 +659,8 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
     }
 
     //updateEntities(&(self->entityManager));
+
+    drawStarfield(&(self->starfield));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
@@ -740,6 +737,7 @@ void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
         self->update=&breakoutGameLoop;
     }
 
+    drawStarfield(&(self->starfield));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
