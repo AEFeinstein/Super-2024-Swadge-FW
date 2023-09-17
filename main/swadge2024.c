@@ -155,8 +155,8 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US  1000000
-#define PAUSE_TIME_US 500000
+#define EXIT_TIME_US          1000000
+#define PAUSE_TIME_US         500000
 #define DEFAULT_FRAME_RATE_US 40000
 
 //==============================================================================
@@ -534,9 +534,9 @@ static void setSwadgeMode(void* swadgeMode)
  */
 void switchToSwadgeMode(swadgeMode_t* mode)
 {
-    //Set the framerate back to default
+    // Set the framerate back to default
     setFrameRateUs(DEFAULT_FRAME_RATE_US);
-    
+
     pendingSwadgeMode = mode;
 }
 
@@ -632,7 +632,7 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 
 /**
  * @brief Set the framerate, in microseconds
- * 
+ *
  * @param newFrameRateUs The time between frame draws, in microseconds
  */
 void setFrameRateUs(uint32_t newFrameRateUs)
