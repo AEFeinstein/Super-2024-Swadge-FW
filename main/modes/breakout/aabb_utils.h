@@ -4,12 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <palette.h>
-
-typedef struct
-{
-    int32_t x;
-    int32_t y;
-} vector_t;
+#include <vector2d.h>
 
 typedef struct
 {
