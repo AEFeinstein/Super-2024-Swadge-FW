@@ -33,10 +33,10 @@
 #define ACCEL_BAR_SEP    1
 #define MAX_ACCEL_BAR_W  100
 
-#define TOUCHBAR_WIDTH         100
-#define TOUCHBAR_HEIGHT        20
-#define TOUCHBAR_Y_OFF         55
-#define TOUCHBAR_ANALOG_HEIGHT 8
+#define TOUCHBAR_WIDTH  100
+#define TOUCHBAR_HEIGHT 20
+#define TOUCHBAR_Y_OFF  55
+// #define TOUCHBAR_ANALOG_HEIGHT 8
 
 //==============================================================================
 // Enums

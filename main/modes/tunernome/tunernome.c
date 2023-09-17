@@ -284,7 +284,7 @@ static songTrack_t metronome_primary_tracks[]  = {{
      .loopStartNote = 0,
      .notes         = metronome_primary_notes,
 }};
-const song_t metronome_primary
+song_t metronome_primary
     = {.numTracks = ARRAY_SIZE(metronome_primary_tracks), .shouldLoop = false, .tracks = metronome_primary_tracks};
 
 static musicalNote_t metronome_secondary_notes[] = {{
@@ -296,7 +296,7 @@ static songTrack_t metronome_secondary_tracks[]  = {{
      .loopStartNote = 0,
      .notes         = metronome_secondary_notes,
 }};
-const song_t metronome_secondary
+song_t metronome_secondary
     = {.numTracks = ARRAY_SIZE(metronome_secondary_tracks), .shouldLoop = false, .tracks = metronome_secondary_tracks};
 
 /*============================================================================

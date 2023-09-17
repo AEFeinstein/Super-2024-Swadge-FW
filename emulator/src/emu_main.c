@@ -50,10 +50,8 @@
 // Defines
 //==============================================================================
 
-#define BG_COLOR   0x191919FF // This color isn't parjt of the palette
-#define DIV_WIDTH  1
-#define DIV_HEIGHT 1
-#define DIV_COLOR  0x808080FF
+#define BG_COLOR  0x191919FF // This color isn't parjt of the palette
+#define DIV_COLOR 0x808080FF
 
 //==============================================================================
 // Variables
