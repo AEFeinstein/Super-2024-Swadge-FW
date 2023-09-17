@@ -143,7 +143,7 @@ static void stream_record_cb(pa_stream* s, size_t length, void* userdata)
 
 static void stream_underflow_cb(pa_stream* s, void* userdata)
 {
-    printf("underflow\n");
+    // printf("underflow\n");
 }
 
 void pa_state_cb(pa_context* c, void* userdata)
