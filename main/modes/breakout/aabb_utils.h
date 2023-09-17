@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <palette.h>
-#include <vector2d.h>
 
 typedef struct
 {
