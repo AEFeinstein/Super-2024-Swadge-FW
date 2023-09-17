@@ -173,6 +173,7 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_ICE, '../../assets/ray/BG_DOOR_ICE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_XRAY, '../../assets/ray/BG_DOOR_XRAY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_SCRIPT, '../../assets/ray/BG_DOOR_SCRIPT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_KEY, '../../assets/ray/BG_DOOR_KEY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/E_NORMAL_WALK_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_STRONG, '../../assets/ray/E_STRONG_WALK_0.png')

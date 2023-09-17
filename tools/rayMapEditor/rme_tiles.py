@@ -35,6 +35,7 @@ class tileType(Enum):
     BG_DOOR_ICE     = (BG | DOOR  | 4)
     BG_DOOR_XRAY    = (BG | DOOR  | 5)
     BG_DOOR_SCRIPT  = (BG | DOOR  | 6)
+    BG_DOOR_KEY     = (BG | DOOR  | 7)
     # Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1)
     OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2)
@@ -79,7 +80,8 @@ bgTiles: list[tileType] = [
     tileType.BG_DOOR_MISSILE,
     tileType.BG_DOOR_ICE,
     tileType.BG_DOOR_XRAY,
-    tileType.BG_DOOR_SCRIPT
+    tileType.BG_DOOR_SCRIPT,
+    tileType.BG_DOOR_KEY
 ]
 
 objTiles: list[tileType] = [

@@ -94,6 +94,7 @@ typedef enum __attribute__((packed))
     BG_DOOR_ICE     = (BG | DOOR | 4),
     BG_DOOR_XRAY    = (BG | DOOR | 5),
     BG_DOOR_SCRIPT  = (BG | DOOR | 6),
+    BG_DOOR_KEY     = (BG | DOOR | 7),
     // Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1),
     OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2),
@@ -246,6 +247,7 @@ typedef struct
     bool waterSuit; ///< True if the water suit was acquired
     // Key items
     bool artifacts[6]; ///< List of acquired artifacts
+    int32_t keys;      ///< The number of small keys the player currently has
 } rayInventory_t;
 
 /**

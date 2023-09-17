@@ -166,7 +166,8 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                     || (BG_DOOR_SCRIPT == cell->type) // TODO disable shooting script doors
                     || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
                     || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)
-                    || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type))
+                    || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type)
+                    || (BG_DOOR_KEY == cell->type && (ray->inventory.keys > 0)))
                 {
                     // If the door is closed
                     if (0 == cell->doorOpen)
@@ -176,6 +177,13 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                         // Destroy this bullet
                         memset(obj, 0, sizeof(rayBullet_t));
                         obj->c.id = -1;
+
+                        // If this door requires a key
+                        if (BG_DOOR_KEY == cell->type)
+                        {
+                            // Use the key
+                            ray->inventory.keys--;
+                        }
                     }
                 }
             }

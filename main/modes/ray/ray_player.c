@@ -488,7 +488,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         }
         case OBJ_ITEM_KEY:
         {
-            // TODO implement keys?
+            // Pick up a key
+            inventory->keys++;
             break;
         }
         default:
