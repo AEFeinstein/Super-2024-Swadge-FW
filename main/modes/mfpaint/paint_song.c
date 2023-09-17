@@ -1,7 +1,7 @@
 #include "hdw-bzr.h"
 #include "paint_song.h"
 
-static const musicalNote_t paintBgmNotes[] = {
+static musicalNote_t paintBgmNotes[] = {
     {.note = A_4, .timeMs = 62},       {.note = SILENCE, .timeMs = 125},  {.note = D_3, .timeMs = 62},
     {.note = SILENCE, .timeMs = 125},  {.note = F_SHARP_3, .timeMs = 62}, {.note = SILENCE, .timeMs = 125},
     {.note = D_3, .timeMs = 62},       {.note = SILENCE, .timeMs = 125},  {.note = C_SHARP_4, .timeMs = 62},
@@ -152,7 +152,7 @@ static const musicalNote_t paintBgmNotes[] = {
     {.note = SILENCE, .timeMs = 125},
 };
 
-const songTrack_t paintSongTrack = {
+songTrack_t paintSongTrack = {
     .numNotes      = 442,
     .loopStartNote = 0,
     .notes         = paintBgmNotes,

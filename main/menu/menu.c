@@ -749,9 +749,6 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
 {
     if (evt.down)
     {
-        // Get a pointer to the item for convenience
-        const menuItem_t* item = menu->currentItem->val;
-
         switch (evt.button)
         {
             case PB_UP:

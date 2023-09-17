@@ -258,7 +258,7 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
     else if (argModeList == optName)
     {
         int numModes;
-        const swadgeMode_t** modes = emulatorGetSwadgeModes(&numModes);
+        swadgeMode_t** modes = emulatorGetSwadgeModes(&numModes);
 
         printf("All Modes: \n");
         for (int i = 0; i < numModes; i++)

@@ -14,7 +14,7 @@
 // Function Prototypes
 //==============================================================================
 
-static bool fuzzerInitCb(const emuArgs_t* emuArgs);
+static bool fuzzerInitCb(emuArgs_t* emuArgs);
 static void fuzzerPreFrameCb(uint64_t frame);
 
 //==============================================================================
@@ -49,7 +49,7 @@ static fuzzer_t fuzzer = {0};
 // Functions
 //==============================================================================
 
-static bool fuzzerInitCb(const emuArgs_t* emuArgs)
+static bool fuzzerInitCb(emuArgs_t* emuArgs)
 {
     // Save the options in our own struct for convenience
     fuzzer.buttons = emuArgs->fuzzButtons;
