@@ -73,7 +73,7 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
                 if (CELL_IS_TYPE(type, BG | WALL))
                 {
                     // All walls are the same
-                    color = c212;
+                    color = c001;
                 }
                 else if (CELL_IS_TYPE(type, BG | DOOR))
                 {
@@ -87,7 +87,7 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
                         }
                         case BG_DOOR_CHARGE:
                         {
-                            color = c123;
+                            color = c234;
                             break;
                         }
                         case BG_DOOR_MISSILE:
@@ -97,13 +97,13 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
                         }
                         case BG_DOOR_ICE:
                         {
-                            color = c040;
+                            color = c004;
                             break;
                         }
                         case BG_DOOR_XRAY:
                         {
                             // TODO hide XRAY doors on the map?
-                            color = c004;
+                            color = c020;
                             break;
                         }
                         case BG_DOOR_SCRIPT:
@@ -113,7 +113,7 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
                         }
                         case BG_DOOR_KEY:
                         {
-                            color = c330;
+                            color = c440;
                             break;
                         }
                         default:
@@ -125,8 +125,29 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
                 }
                 else if (CELL_IS_TYPE(type, BG | FLOOR))
                 {
-                    // All floors are the same
-                    color = c111;
+                    switch (type)
+                    {
+                        case BG_FLOOR:
+                        {
+                            color = c111;
+                            break;
+                        }
+                        case BG_FLOOR_LAVA:
+                        {
+                            color = c311;
+                            break;
+                        }
+                        case BG_FLOOR_WATER:
+                        {
+                            color = c113;
+                            break;
+                        }
+                        default:
+                        {
+                            // Can't reach here
+                            break;
+                        }
+                    }
                 }
 
                 // Draw a rectangle for this map cell
