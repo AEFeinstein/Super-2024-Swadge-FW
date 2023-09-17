@@ -609,7 +609,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             //Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false);
 
-            uint16_t levelIndex = self->gameData.level;
+            uint16_t levelIndex = self->gameData.level - 1;
             
             if(levelIndex >= NUM_LEVELS - 1){
                 //Game Cleared!
