@@ -251,11 +251,23 @@ typedef struct
 } rayInventory_t;
 
 /**
+ * @brief The different screens that can be displayed
+ */
+typedef enum
+{
+    RAY_MENU,   ///< The main menu is being shown
+    RAY_GAME,   ///< The game loop is being shown
+    RAY_DIALOG, ///< A dialog box is being shown
+} rayScreen_t;
+
+/**
  * @brief The entire game state
  *
  */
 typedef struct
 {
+    rayScreen_t screen; ///< The current screen being shown
+
     rayMap_t map;      ///< The loaded map
     int32_t mapId;     ///< The ID of the current map (TODO)
     int32_t doorTimer; ///< A timer used to open doors
@@ -299,6 +311,10 @@ typedef struct
     rayEnemy_t eTemplates[6]; ///< Enemy type templates, copied when initializing enemies
 
     font_t ibm; ///< A font to draw the HUD
+
+    const char* dialogText;     ///< A pointer to the current dialog text
+    const char* nextDialogText; ///< A pointer to the next dialog text, if it doesn't fit in one box
+    wsg_t* dialogPortrait;      ///< A portrait to draw above the dialog text
 } ray_t;
 
 //==============================================================================

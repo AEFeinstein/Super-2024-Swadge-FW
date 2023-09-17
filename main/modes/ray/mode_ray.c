@@ -9,6 +9,7 @@
 #include "ray_object.h"
 #include "ray_tex_manager.h"
 #include "ray_player.h"
+#include "ray_dialog.h"
 
 //==============================================================================
 // Function Prototypes
@@ -32,7 +33,7 @@ const char rayName[] = "Magtroid Pocket";
 swadgeMode_t rayMode = {
     .modeName                 = rayName,
     .wifiMode                 = NO_WIFI,
-    .overrideUsb              = false,
+    .overrideUsb              = true, // Not actually doing anything, just don't init USB
     .usesAccelerometer        = false,
     .usesThermometer          = false,
     .fnEnterMode              = rayEnterMode,
@@ -83,6 +84,9 @@ static void rayEnterMode(void)
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Set the initial screen
+    ray->screen = RAY_GAME;
 }
 
 /**
@@ -128,32 +132,51 @@ static void rayExitMode(void)
  */
 static void rayMainLoop(int64_t elapsedUs)
 {
-    // Render everything! This must be done first, to draw over the floor and ceiling,
-    // which were drawn in the background callback, before updating any positions or directions
-    // Draw the walls after floor & ceiling
-    castWalls(ray);
-    // Draw sprites after walls
-    rayObjCommon_t* centeredSprite = castSprites(ray);
-    // Draw the HUD after sprites
-    drawHud(ray);
+    switch (ray->screen)
+    {
+        case RAY_MENU:
+        {
+            break;
+        }
+        case RAY_GAME:
+        {
+            // Render everything! This must be done first, to draw over the floor and ceiling,
+            // which were drawn in the background callback, before updating any positions or directions
+            // Draw the walls after floor & ceiling
+            castWalls(ray);
+            // Draw sprites after walls
+            rayObjCommon_t* centeredSprite = castSprites(ray);
+            // Draw the HUD after sprites
+            drawHud(ray);
 
-    // Run timers for head-bob, doors, etc.
-    runEnvTimers(ray, elapsedUs);
+            // Run timers for head-bob, doors, etc.
+            runEnvTimers(ray, elapsedUs);
 
-    // Check buttons for the player and move player accordingly
-    rayPlayerCheckButtons(ray, centeredSprite, elapsedUs);
+            // Check buttons for the player and move player accordingly
+            rayPlayerCheckButtons(ray, centeredSprite, elapsedUs);
 
-    // Check the joystick for the player and update loadout accordingly
-    rayPlayerCheckJoystick(ray, elapsedUs);
+            // Check the joystick for the player and update loadout accordingly
+            rayPlayerCheckJoystick(ray, elapsedUs);
 
-    // Check for lava damage
-    rayPlayerCheckLava(ray, elapsedUs);
+            // Check for lava damage
+            rayPlayerCheckLava(ray, elapsedUs);
 
-    // Move objects including enemies and bullets
-    moveRayObjects(ray, elapsedUs);
+            // Move objects including enemies and bullets
+            moveRayObjects(ray, elapsedUs);
 
-    // Check for collisions between the moved player, enemies, and bullets
-    checkRayCollisions(ray);
+            // Check for collisions between the moved player, enemies, and bullets
+            checkRayCollisions(ray);
+            break;
+        }
+        case RAY_DIALOG:
+        {
+            // Render first
+            rayDialogRender(ray);
+            // Then check buttons
+            rayDialogCheckButtons(ray);
+            break;
+        }
+    }
 }
 
 /**
@@ -169,6 +192,19 @@ static void rayMainLoop(int64_t elapsedUs)
  */
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    // Draw a portion of the background
-    castFloorCeiling(ray, y, y + h);
+    switch (ray->screen)
+    {
+        case RAY_MENU:
+        case RAY_DIALOG:
+        {
+            // Do nothing
+            break;
+        }
+        case RAY_GAME:
+        {
+            // Draw a portion of the background
+            castFloorCeiling(ray, y, y + h);
+            break;
+        }
+    }
 }

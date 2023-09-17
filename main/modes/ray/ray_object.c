@@ -7,6 +7,7 @@
 #include "ray_renderer.h"
 #include "ray_map.h"
 #include "ray_player.h"
+#include "ray_dialog.h"
 
 //==============================================================================
 // Function Prototypes
@@ -462,6 +463,10 @@ void checkRayCollisions(ray_t* ray)
                     printf("SHOT SCENERY %d\n", scenery->type);
                     // De-allocate the bullet
                     bullet->c.id = -1;
+
+                    // Show a dummy dialog
+                    // TODO delete this!
+                    rayShowDialog(ray, lorem, scenery->sprite);
                 }
             }
         }
