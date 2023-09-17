@@ -269,6 +269,9 @@ static void breakoutEnterMode(void)
 
     addSingleItemToMenu(breakout->menu, breakoutExit);
 
+    //Set frame rate to 60 FPS
+    setFrameRateUs(16666);
+
     // Set the mode to menu mode
     breakout->update = &breakoutUpdateTitleScreen;
 }
