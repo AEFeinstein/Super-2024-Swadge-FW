@@ -116,6 +116,11 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
                             color = c330;
                             break;
                         }
+                        default:
+                        {
+                            // Can't reach here
+                            break;
+                        }
                     }
                 }
                 else if (CELL_IS_TYPE(type, BG | FLOOR))
