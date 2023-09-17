@@ -467,6 +467,11 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
                     // Add five missiles
                     inventory->numMissiles += 5;
                     inventory->maxNumMissiles += 5;
+                    // Cap at 99 missiles
+                    if (inventory->maxNumMissiles > 99)
+                    {
+                        inventory->maxNumMissiles = 99;
+                    }
 
                     // Save the coordinates
                     inventory->missilesPickUps[mapId][idx] = itemId;
@@ -485,6 +490,12 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
                 {
                     // Add max health
                     inventory->maxHealth += HEALTH_PER_E_TANK;
+                    // Cap the max health
+                    if (inventory->maxHealth > MAX_HEALTH_EVER)
+                    {
+                        inventory->maxHealth = MAX_HEALTH_EVER;
+                    }
+
                     // Reset health
                     inventory->health = inventory->maxHealth;
 

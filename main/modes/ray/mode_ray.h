@@ -26,6 +26,9 @@
 /** The player's total maximum possible health */
 #define MAX_HEALTH_EVER (GAME_START_HEALTH + (NUM_MAPS * E_TANKS_PER_MAP * HEALTH_PER_E_TANK))
 
+/** The maximum number of missiles possible */
+#define MAX_MISSILES_EVER 99
+
 /** Microseconds per one damage when standing in lava */
 #define US_PER_LAVA_DAMAGE 500000
 

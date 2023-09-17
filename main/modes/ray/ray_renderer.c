@@ -944,10 +944,15 @@ void drawHud(ray_t* ray)
     {
         // Draw a count of missiles
         char missileStr[16] = {0};
-        snprintf(missileStr, sizeof(missileStr) - 1, "%03" PRId32 "/%03" PRId32, ray->inventory.numMissiles,
+        snprintf(missileStr, sizeof(missileStr) - 1, "M:%02" PRId32 "/%02" PRId32, ray->inventory.numMissiles,
                  ray->inventory.maxNumMissiles);
-        drawText(&ray->ibm, c555, missileStr, 64, TFT_HEIGHT - ray->ibm.height);
+        drawText(&ray->ibm, c555, missileStr, 40, TFT_HEIGHT - ray->ibm.height);
     }
+
+    // Draw a count of Keys
+    char keyStr[16] = {0};
+    snprintf(keyStr, sizeof(keyStr) - 1, "K:%" PRId32, ray->inventory.keys);
+    drawText(&ray->ibm, c555, keyStr, 100, TFT_HEIGHT - ray->ibm.height);
 
 #define BAR_END_MARGIN  40
 #define BAR_SIDE_MARGIN 8
