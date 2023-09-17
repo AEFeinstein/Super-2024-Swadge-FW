@@ -54,8 +54,8 @@ typedef enum
 //==============================================================================
 // Structs
 //==============================================================================
-typedef void (*gameUpdateFunction_t)(void *self, int64_t elapsedUs);
-typedef struct 
+typedef void (*gameUpdateFunction_t)(breakout_t *self, int64_t elapsedUs);
+struct breakout_t
 {
     menu_t* menu; ///< The menu structure
     menuLogbookRenderer_t* mRenderer; ///< The menu renderer
@@ -76,7 +76,7 @@ typedef struct
     soundManager_t soundManager;
 
     gameUpdateFunction_t update;
-} breakout_t;
+};
 
 //==============================================================================
 // Function Prototypes
