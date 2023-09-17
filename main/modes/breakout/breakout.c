@@ -27,29 +27,9 @@
 // Defines
 //==============================================================================
 
-/// Physics math is done with fixed point numbers where the bottom four bits are the fractional part. It's like Q28.4
-#define DECIMAL_BITS 4
-
-#define BALL_RADIUS   (5 << DECIMAL_BITS)
-#define PADDLE_WIDTH  (8 << DECIMAL_BITS)
-#define PADDLE_HEIGHT (40 << DECIMAL_BITS)
-#define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
-#define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
-
-#define SPEED_LIMIT (30 << DECIMAL_BITS)
-
 //==============================================================================
 // Enums
 //==============================================================================
-
-/**
- * @brief Enum of screens that may be shown in breakout mode
- */
-typedef enum
-{
-    BREAKOUT_MENU,
-    BREAKOUT_GAME,
-} breakoutScreen_t;
 
 //==============================================================================
 // Structs
