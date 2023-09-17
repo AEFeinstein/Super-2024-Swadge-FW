@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "wsg.h"
-#include "common_typedef.h"
+#include "breakout_typedef.h"
 #include "entityManager.h"
 
 //==============================================================================
