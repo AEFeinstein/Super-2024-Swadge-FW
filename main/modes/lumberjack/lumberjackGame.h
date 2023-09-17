@@ -3,11 +3,11 @@
 
 void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex);
 
-// void lumberjackStartGameMode(lumberjackGameType_t type, uint8_t characterIndex);
 void lumberjackExitGameMode(void);
 void lumberjackSetupLevel(int index);
 void lumberjackDoControls(void);
 void lumberjackTileMap(void);
+void lumberjackDrawWaterLevel(void);
 void lumberjackUpdate(int64_t elapseUs);
 
 void lumberjackTitleLoop(int64_t elapsedUs);

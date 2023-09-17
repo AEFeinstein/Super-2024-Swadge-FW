@@ -29,7 +29,7 @@ static void lumberjackMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static void lumberjackJoinGame(void);
 
-static const char lumberjackName[]   = "Lumberjack";
+static const char lumberjackName[]   = "Lumber Jack";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
 static const char lumberjackBack[]   = "Back";

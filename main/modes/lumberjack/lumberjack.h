@@ -56,6 +56,15 @@ typedef struct
 
 typedef struct
 {
+    int x;
+    int y;
+    int type;
+    bool active;
+
+} lumberjackAxeBlock_t;
+
+typedef struct
+{
     bool loaded;
     bool onTitle;
     font_t ibm;
@@ -69,10 +78,27 @@ typedef struct
     int64_t worldTimer;
     int64_t physicsTimer;
     int liquidAnimationFrame;
+    int stageAnimationFrame;
     int currentMapHeight;
     int spawnTimer;
     int spawnIndex;
     int spawnSide;
+
+    int waterLevel;
+    int waterTimer;
+    int waterSpeed;
+    int waterDirection;
+    int playerSpawnX;
+    int playerSpawnY;
+
+    int enemy1Count;
+    int enemy2Count;
+    int enemy3Count;
+    int enemy4Count;
+    int enemy5Count;
+    int enemy6Count;
+    int enemy7Count;
+    int enemy8Count;
 
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
@@ -85,6 +111,11 @@ typedef struct
     lumberjackTile_t* tile;
     uint8_t anim[400];
 
+    wsg_t greenBlockSprite[7];
+    wsg_t redBlockSprite[7];
+    wsg_t unknownBlockSprite[7];
+    wsg_t unusedBlockSprite[7];
+
     wsg_t enemySprites[21];
     wsg_t playerSprites[16];
 
@@ -92,8 +123,9 @@ typedef struct
 
     wsg_t slowload[400];
 
-    lumberjackEntity_t* enemy[8];
+    lumberjackEntity_t* enemy[64];
 
+    lumberjackAxeBlock_t* axeBlocks[8];
     lumberjackEntity_t* localPlayer;
     lumberjackEntity_t* remotePlayer;
 
