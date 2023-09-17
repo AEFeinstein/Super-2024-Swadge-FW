@@ -157,6 +157,7 @@
 
 #define EXIT_TIME_US  1000000
 #define PAUSE_TIME_US 500000
+#define DEFAULT_FRAME_RATE_US 40000
 
 //==============================================================================
 // Variables
@@ -172,7 +173,7 @@ static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 static bool showQuickSettings = false;
 
 /// 25 FPS by default
-static uint32_t frameRateUs = 40000;
+static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
@@ -533,6 +534,9 @@ static void setSwadgeMode(void* swadgeMode)
  */
 void switchToSwadgeMode(swadgeMode_t* mode)
 {
+    //Set the framerate back to default
+    setFrameRateUs(DEFAULT_FRAME_RATE_US);
+    
     pendingSwadgeMode = mode;
 }
 
@@ -624,4 +628,14 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 
     // Return if there was an event or not
     return retval;
+}
+
+/**
+ * @brief Set the framerate, in microseconds
+ * 
+ * @param newFrameRateUs The time between frame draws, in microseconds
+ */
+void setFrameRateUs(uint32_t newFrameRateUs)
+{
+    frameRateUs = newFrameRateUs;
 }

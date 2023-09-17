@@ -21,41 +21,24 @@
 #include "leveldef.h"
 #include "mainMenu.h"
 
+#include "fill.h"
+#include "starfield.h"
+
 #include <esp_log.h>
 
 //==============================================================================
 // Defines
 //==============================================================================
 
-/// Physics math is done with fixed point numbers where the bottom four bits are the fractional part. It's like Q28.4
-#define DECIMAL_BITS 4
-
-#define BALL_RADIUS   (5 << DECIMAL_BITS)
-#define PADDLE_WIDTH  (8 << DECIMAL_BITS)
-#define PADDLE_HEIGHT (40 << DECIMAL_BITS)
-#define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
-#define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
-
-#define SPEED_LIMIT (30 << DECIMAL_BITS)
-
 //==============================================================================
 // Enums
 //==============================================================================
 
-/**
- * @brief Enum of screens that may be shown in breakout mode
- */
-typedef enum
-{
-    BREAKOUT_MENU,
-    BREAKOUT_GAME,
-} breakoutScreen_t;
-
 //==============================================================================
 // Structs
 //==============================================================================
-typedef void (*gameUpdateFunction_t)(void *self, int64_t elapsedUs);
-typedef struct 
+typedef void (*gameUpdateFunction_t)(breakout_t *self, int64_t elapsedUs);
+struct breakout_t
 {
     menu_t* menu; ///< The menu structure
     menuLogbookRenderer_t* mRenderer; ///< The menu renderer
@@ -74,9 +57,10 @@ typedef struct
     int32_t frameTimer;
 
     soundManager_t soundManager;
+    starfield_t starfield;
 
     gameUpdateFunction_t update;
-} breakout_t;
+};
 
 //==============================================================================
 // Function Prototypes
@@ -243,7 +227,8 @@ static void breakoutEnterMode(void)
     initializeTileMap(&(breakout->tilemap));
     initializeSoundManager(&(breakout->soundManager));
     initializeEntityManager(&(breakout->entityManager), &(breakout->tilemap), &(breakout->gameData), &(breakout->soundManager));
-    
+    initializeStarfield(&(breakout->starfield));
+
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
     breakout->tilemap.mapOffsetX = -4;
@@ -268,6 +253,9 @@ static void breakoutEnterMode(void)
     push(breakout->menu->items, breakout->levelSelectMenuItem);
 
     addSingleItemToMenu(breakout->menu, breakoutExit);
+
+    //Set frame rate to 60 FPS
+    setFrameRateUs(16666);
 
     // Set the mode to menu mode
     breakout->update = &breakoutUpdateTitleScreen;
@@ -405,7 +393,10 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     breakoutDetectGameStateChange(self);
     updateEntities(&(self->entityManager));
 
+    updateStarfield(&(self->starfield));
+
     // Draw the field
+    drawStarfield(&(self->starfield));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(breakout->gameData));
@@ -438,24 +429,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
  */
 static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    // Use TURBO drawing mode to draw individual pixels fast
-    SETUP_FOR_TURBO();
-
-    // Draw a grid
-    for (int16_t yp = y; yp < y + h; yp++)
-    {
-        for (int16_t xp = x; xp < x + w; xp++)
-        {
-            if ((0 == xp % 40) || (0 == yp % 40))
-            {
-                TURBO_SET_PIXEL(xp, yp, c110);
-            }
-            else
-            {
-                TURBO_SET_PIXEL(xp, yp, c001);
-            }
-        }
-    }
+    fillDisplayArea(x, y, x + w, y + h, c000);
 }
 
 void breakoutDetectGameStateChange(breakout_t *self){
@@ -515,6 +489,10 @@ void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs){
 
     updateLedsInGame(&(self->gameData));
     updateEntities(&(self->entityManager));
+
+    updateStarfield(&(self->starfield));
+    drawStarfield(&(self->starfield));
+    
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
@@ -631,7 +609,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             //Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false);
 
-            uint16_t levelIndex = self->gameData.level;
+            uint16_t levelIndex = self->gameData.level - 1;
             
             if(levelIndex >= NUM_LEVELS - 1){
                 //Game Cleared!
@@ -681,6 +659,8 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
     }
 
     //updateEntities(&(self->entityManager));
+
+    drawStarfield(&(self->starfield));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
@@ -757,6 +737,7 @@ void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
         self->update=&breakoutGameLoop;
     }
 
+    drawStarfield(&(self->starfield));
     drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
