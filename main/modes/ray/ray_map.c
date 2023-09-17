@@ -53,6 +53,9 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
         map->tiles[x] = (rayMapCell_t*)heap_caps_calloc(map->h, sizeof(rayMapCell_t), caps);
     }
 
+    // Allocate space to track what tiles have been visited
+    map->visitedTiles = (bool*)heap_caps_calloc(map->w * map->h, sizeof(bool), caps);
+
     // Read tile data
     for (uint32_t y = 0; y < map->h; y++)
     {
@@ -173,5 +176,32 @@ bool isPassableCell(rayMapCell_t* cell)
     {
         // Always pass through everything else
         return true;
+    }
+}
+
+/**
+ * @brief Mark a tile, and surrounding tiles, as visited on the map.
+ * Visited tiles are drawn in the pause menu
+ *
+ * @param map The map to mark tiles visited for
+ * @param x The X coordinate of the tile that was visited
+ * @param y The Y coordinate of the tile that was visited
+ */
+void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
+{
+    // Find in-bounds loop indices
+    int16_t minX = MAX(0, x - 1);
+    int16_t maxX = MIN(map->w - 1, x + 1);
+    int16_t minY = MAX(0, y - 1);
+    int16_t maxY = MIN(map->h - 1, y + 1);
+
+    // For a 3x3 grid (inbounds)
+    for (int16_t yIdx = minY; yIdx <= maxY; yIdx++)
+    {
+        for (int16_t xIdx = minX; xIdx <= maxX; xIdx++)
+        {
+            // Mark these cells as visited
+            map->visitedTiles[(yIdx * map->w) + xIdx] = true;
+        }
     }
 }

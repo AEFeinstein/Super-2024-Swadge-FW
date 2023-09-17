@@ -10,6 +10,7 @@
 #include "ray_tex_manager.h"
 #include "ray_player.h"
 #include "ray_dialog.h"
+#include "ray_pause.h"
 
 //==============================================================================
 // Function Prototypes
@@ -80,6 +81,9 @@ static void rayEnterMode(void)
 
     // Set initial position and direction, centered on the tile
     initializePlayer(ray);
+
+    // Mark the starting tile as visited
+    markTileVisited(&ray->map, FROM_FX(ray->posX), FROM_FX(ray->posY));
 
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
@@ -176,6 +180,14 @@ static void rayMainLoop(int64_t elapsedUs)
             rayDialogCheckButtons(ray);
             break;
         }
+        case RAY_PAUSE:
+        {
+            // Render first
+            rayPauseRender(ray, elapsedUs);
+            // Then check buttons
+            rayPauseCheckButtons(ray);
+            break;
+        }
     }
 }
 
@@ -205,6 +217,11 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
             // Draw a portion of the background
             castFloorCeiling(ray, y, y + h);
             break;
+        }
+        case RAY_PAUSE:
+        {
+            // Draw a black background
+            fillDisplayArea(x, y, x + w, y + h, c000);
         }
     }
 }

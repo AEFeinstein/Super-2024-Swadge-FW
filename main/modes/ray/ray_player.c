@@ -8,6 +8,7 @@
 #include "ray_player.h"
 #include "ray_object.h"
 #include "ray_map.h"
+#include "ray_pause.h"
 
 //==============================================================================
 // Functions
@@ -59,11 +60,109 @@ void initializePlayer(ray_t* ray)
 void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t elapsedUs)
 {
     // Check all queued button events
-    uint32_t prevBtnState = ray->btnState;
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
+        // Save the current button state
         ray->btnState = evt.state;
+
+        // The start button enters the pause menu
+        if (PB_START == evt.button && evt.down)
+        {
+            // Show the pause menu
+            rayShowPause(ray);
+            // Cancel any charges
+            ray->chargeTimer        = 0;
+            ray->loadoutChangeTimer = 0;
+            ray->forceLoadoutSwap   = false;
+            return;
+        }
+        // The B button toggles strafing
+        else if (PB_B == evt.button)
+        {
+            if (evt.down)
+            {
+                // Set strafe to true
+                ray->isStrafing = true;
+                // If there is a centered sprite
+                if (centeredSprite)
+                {
+                    // Lock onto it
+                    ray->targetedObj = centeredSprite;
+                }
+            }
+            else
+            {
+                // Set strafe to false
+                ray->isStrafing  = false;
+                ray->targetedObj = NULL;
+            }
+        }
+        // The A button shoots. Make sure there is a gun
+        else if ((LO_NONE != ray->loadout) && (PB_A == evt.button))
+        {
+            // What, if any, bullet to fire
+            rayMapCellType_t bullet = EMPTY;
+
+            if (evt.down)
+            {
+                // A was pressed
+                // Check ammo for the missile loadout
+                if (LO_MISSILE == ray->loadout)
+                {
+                    if (0 < ray->inventory.numMissiles)
+                    {
+                        // Decrement missile count
+                        ray->inventory.numMissiles--;
+                        // Fire a missile
+                        bullet = OBJ_BULLET_MISSILE;
+                    }
+                }
+                else
+                {
+                    // Start charging if applicable
+                    if (LO_NORMAL == ray->loadout && ray->inventory.chargePowerUp)
+                    {
+                        // Start charging
+                        ray->chargeTimer = 1;
+                    }
+
+                    // Fire according to loadout
+                    const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
+                        EMPTY,
+                        OBJ_BULLET_NORMAL,  ///< Normal loadout
+                        OBJ_BULLET_MISSILE, ///< Missile loadout
+                        OBJ_BULLET_ICE,     ///< Ice beam loadout
+                        OBJ_BULLET_XRAY     ///< X-Ray loadout
+                    };
+                    bullet = bulletMap[ray->loadout];
+                }
+            }
+            else
+            {
+                // A was released, check if the beam is charged
+                if (ray->chargeTimer >= CHARGE_TIME_US)
+                {
+                    // Shoot charge beam
+                    bullet = OBJ_BULLET_CHARGE;
+                }
+                ray->chargeTimer = 0;
+            }
+
+            // If there is a bullet to fire
+            if (EMPTY != bullet)
+            {
+                // Fire a shot
+                rayCreateBullet(ray, bullet, ray->posX, ray->posY, ray->dirX, ray->dirY, true);
+            }
+        }
+    }
+
+    // If charging the beam
+    if (0 < ray->chargeTimer && ray->chargeTimer <= CHARGE_TIME_US)
+    {
+        // Accumulate the timer
+        ray->chargeTimer += elapsedUs;
     }
 
     // If the player is in water without the water suit
@@ -73,25 +172,6 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     // Find move distances
     q24_8 deltaX = 0;
     q24_8 deltaY = 0;
-
-    // B button strafes, which may lock on an enemy
-    if ((ray->btnState & PB_B) && !(prevBtnState & PB_B))
-    {
-        // Set strafe to true
-        ray->isStrafing = true;
-        // If there is a centered sprite
-        if (centeredSprite)
-        {
-            // Lock onto it
-            ray->targetedObj = centeredSprite;
-        }
-    }
-    else if (!(ray->btnState & PB_B) && (prevBtnState & PB_B))
-    {
-        // Set strafe to false
-        ray->isStrafing  = false;
-        ray->targetedObj = NULL;
-    }
 
     // Strafing is either locked or unlocked
     if (ray->isStrafing)
@@ -180,6 +260,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     q24_8 boundaryCheckX = deltaX * 2;
     q24_8 boundaryCheckY = deltaY * 2;
 
+    // Save the old cell to check for crossing cell boundaries
+    int16_t oldCellX = FROM_FX(ray->posX);
+    int16_t oldCellY = FROM_FX(ray->posY);
+
     // Move forwards if no wall in front of you
     if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)]))
     {
@@ -189,6 +273,17 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)]))
     {
         ray->posY += deltaY;
+    }
+
+    // Get the new cell to check for crossing cell boundaries
+    int16_t newCellX = FROM_FX(ray->posX);
+    int16_t newCellY = FROM_FX(ray->posY);
+
+    // If the cell changed
+    if (oldCellX != newCellX || oldCellY != newCellY)
+    {
+        // Mark it on the map
+        markTileVisited(&ray->map, newCellX, newCellY);
     }
 
     // After moving position, recompute direction to targeted object
@@ -202,72 +297,6 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
         // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
         ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
         ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
-    }
-
-    // If the player has a gun
-    if (LO_NONE != ray->loadout)
-    {
-        // What, if any, bullet to fire
-        rayMapCellType_t bullet = EMPTY;
-
-        // If A was pressed
-        if ((ray->btnState & PB_A) && !(prevBtnState & PB_A))
-        {
-            // Check ammo for the missile loadout
-            if (LO_MISSILE == ray->loadout)
-            {
-                if (0 < ray->inventory.numMissiles)
-                {
-                    // Decrement missile count
-                    ray->inventory.numMissiles--;
-                    // Fire a missile
-                    bullet = OBJ_BULLET_MISSILE;
-                }
-            }
-            else
-            {
-                // Start charging if applicable
-                if (LO_NORMAL == ray->loadout && ray->inventory.chargePowerUp)
-                {
-                    // Start charging
-                    ray->chargeTimer = 1;
-                }
-
-                // Fire according to loadout
-                const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
-                    EMPTY,
-                    OBJ_BULLET_NORMAL,  ///< Normal loadout
-                    OBJ_BULLET_MISSILE, ///< Missile loadout
-                    OBJ_BULLET_ICE,     ///< Ice beam loadout
-                    OBJ_BULLET_XRAY     ///< X-Ray loadout
-                };
-                bullet = bulletMap[ray->loadout];
-            }
-        }
-        else if (!(ray->btnState & PB_A) && (prevBtnState & PB_A))
-        {
-            // A was released, check if the beam is charged
-            if (ray->chargeTimer >= CHARGE_TIME_US)
-            {
-                // Shoot charge beam
-                bullet = OBJ_BULLET_CHARGE;
-            }
-            ray->chargeTimer = 0;
-        }
-
-        // If charging
-        if (0 < ray->chargeTimer && ray->chargeTimer <= CHARGE_TIME_US)
-        {
-            // Accumulate the timer
-            ray->chargeTimer += elapsedUs;
-        }
-
-        // If there is a bullet to fire
-        if (EMPTY != bullet)
-        {
-            // Fire a shot
-            rayCreateBullet(ray, bullet, ray->posX, ray->posY, ray->dirX, ray->dirY, true);
-        }
     }
 }
 

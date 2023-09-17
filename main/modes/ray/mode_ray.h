@@ -172,6 +172,7 @@ typedef struct
     uint32_t w;           ///< The width of the map
     uint32_t h;           ///< The height of the map
     rayMapCell_t** tiles; ///< A 2D array of tiles in the map
+    bool* visitedTiles;   ///< A 1D array of all the visited tiles in the map, row-order
 } rayMap_t;
 
 /**
@@ -258,6 +259,7 @@ typedef enum
     RAY_MENU,   ///< The main menu is being shown
     RAY_GAME,   ///< The game loop is being shown
     RAY_DIALOG, ///< A dialog box is being shown
+    RAY_PAUSE,  ///< The pause menu is being shown
 } rayScreen_t;
 
 /**
@@ -315,6 +317,9 @@ typedef struct
     const char* dialogText;     ///< A pointer to the current dialog text
     const char* nextDialogText; ///< A pointer to the next dialog text, if it doesn't fit in one box
     wsg_t* dialogPortrait;      ///< A portrait to draw above the dialog text
+
+    uint32_t pauseBlinkTimer; ///< A timer to blink things on the pause menu
+    bool pauseBlink;          ///< Boolean for two draw states on the pause menu
 } ray_t;
 
 //==============================================================================
