@@ -21,22 +21,40 @@
 
 static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal);
 static void paintSetupColorWheel(void);
+static void paintSetupDialog(paintDialog_t dialog);
+static void paintDialogCb(const char* label);
 
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
 
 static const char toolWheelTitleStr[]   = "Tool Wheel";
-static const char toolWheelBrushStr[]   = "Brush";
-static const char toolWheelColorStr[]   = "Color";
+static const char toolWheelBrushStr[]   = "Select Brush";
+static const char toolWheelColorStr[]   = "Select Color";
 static const char toolWheelSizeStr[]    = "Brush Size";
 static const char toolWheelOptionsStr[] = "More";
 static const char toolWheelUndoStr[]    = "Undo";
 static const char toolWheelRedoStr[]    = "Redo";
 
-static const char toolWheelSaveStr[] = "Save";
-static const char toolWheelLoadStr[] = "Load";
-static const char toolWheelNewStr[]  = "New";
-static const char toolWheelExitStr[] = "Stop Drawing";
+static const char toolWheelSaveStr[]    = "Save";
+static const char toolWheelLoadStr[]    = "Load";
+static const char toolWheelNewStr[]     = "New";
+static const char toolWheelPaletteStr[] = "Edit Colors";
+static const char toolWheelExitStr[]    = "Quit Drawing";
+
+
+static const char dialogUnsavedTitleStr[] = "Unsaved Changes!";
+static const char dialogOverwriteTitleStr[] = "Overwrite Existing?";
+static const char dialogErrorTitleStr[] = "Error!";
+
+static const char dialogUnsavedDetailStr[] = "There are unsaved changes to the current drawing! Continue without saving?";
+static const char dialogOverwriteDetailStr[] = "This file already exists! Overwrite it with the current drawing?";
+static const char dialogErrorDetailStr[] = "Fatal Error! ";
+
+static const char dialogOptionCancelStr[] = "Cancel";
+static const char dialogOptionSaveStr[] = "Save";
+static const char dialogOptionSaveAsStr[] = "Save as...";
+static const char dialogOptionExitStr[] = "Quit";
+static const char dialogOptionOkStr[] = "OK";
 
 static paletteColor_t defaultPalette[] = {
     c000, // black
@@ -365,6 +383,26 @@ void paintDrawScreenSetup(void)
         PAINT_LOGE("Loading wheel_save.wsg icon failed!!!");
     }
 
+    if (!loadWsg("wheel_open.wsg", &paintState->wheelOpenWsg, false))
+    {
+        PAINT_LOGE("Loading wheel_open.wsg icon failed!!!");
+    }
+
+    if (!loadWsg("wheel_new.wsg", &paintState->wheelNewWsg, false))
+    {
+        PAINT_LOGE("Loading wheel_new.wsg icon failed!!!");
+    }
+
+    if (!loadWsg("wheel_exit.wsg", &paintState->wheelExitWsg, false))
+    {
+        PAINT_LOGE("Loading wheel_exit.wsg icon failed!!!");
+    }
+
+    if (!loadWsg("wheel_palette.wsg", &paintState->wheelPaletteWsg, false))
+    {
+        PAINT_LOGE("Loading wheel_palette.wsg icon failed!!!");
+    }
+
     // Top: Sub-menu for Brush
     paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelBrushStr);
     wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &paintState->wheelBrushWsg, 0, SCROLL_HORIZ);
@@ -411,21 +449,40 @@ void paintDrawScreenSetup(void)
 
     // Top: Load
     addSingleItemToMenu(paintState->toolWheel, toolWheelLoadStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelLoadStr, &brushes[4].iconInactive, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelLoadStr, &paintState->wheelOpenWsg, 0, NO_SCROLL);
 
     // Left: New
     addSingleItemToMenu(paintState->toolWheel, toolWheelNewStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelNewStr, &paintState->newfileWsg, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelNewStr, &paintState->wheelNewWsg, 1, NO_SCROLL);
 
-    // Bottom: Exit/Quit
+    // Bottom-left: Exit/Quit
     addSingleItemToMenu(paintState->toolWheel, toolWheelExitStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelExitStr, &paintState->overwriteWsg, 2, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelExitStr, &paintState->wheelExitWsg, 2, NO_SCROLL);
+
+    // Bottom-right: Edit palette
+    paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelPaletteStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelPaletteStr, &paintState->wheelPaletteWsg, 3, NO_SCROLL);
+
+    // Save this submenu so we can check if we're there or not
+    paintState->editPaletteWheel = paintState->toolWheel;
+
+    // Add the color menu items again, but this time underneath the edit palette option
+    // The wheel options will apply alreday based on the labels (weird right?)
+    for (uint8_t i = 0; i < PAINT_MAX_COLORS; ++i)
+    {
+        addSingleItemToMenu(paintState->toolWheel, paintState->colorNames[i]);
+    }
+
+    // End edit palette, Back to the Options menu
+    paintState->toolWheel = endSubMenu(paintState->toolWheel);
 
     // Right: Save
     addSingleItemToMenu(paintState->toolWheel, toolWheelSaveStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSaveStr, &paintState->wheelSaveWsg, 3, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSaveStr, &paintState->wheelSaveWsg, 4, NO_SCROLL);
 
+    // Back to the top-level menu
     paintState->toolWheel = endSubMenu(paintState->toolWheel);
+
 
     // Right: Up/Down for Size
     settingParam_t sizeBounds = {
@@ -438,13 +495,17 @@ void paintDrawScreenSetup(void)
     paintState->toolWheelBrushSizeItem = paintState->toolWheel->items->last->val;
     wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->wheelSizeWsg, 5, SCROLL_VERT);
 
-    // PAINT_LOGI("It's paintin' time! Canvas is %" PRIu16 " x %" PRIu16 " pixels!", paintState->canvas.w,
-    // paintState->canvas.h);
+    // Initialize with no icon to start, and default to error
+    paintState->dialogBox = initDialogBox(dialogErrorTitleStr, dialogErrorDetailStr, NULL, paintDialogCb);
+    paintSetupDialog(DIALOG_ERROR);
+    paintState->showDialogBox = false;
 }
 
 void paintDrawScreenCleanup(void)
 {
     bzrStop(true);
+
+    deinitDialogBox(paintState->dialogBox);
 
     deinitWheelMenu(paintState->toolWheelRenderer);
     deinitMenu(paintState->toolWheel);
@@ -456,6 +517,10 @@ void paintDrawScreenCleanup(void)
     freeWsg(&paintState->wheelUndoWsg);
     freeWsg(&paintState->wheelRedoWsg);
     freeWsg(&paintState->wheelSaveWsg);
+    freeWsg(&paintState->wheelOpenWsg);
+    freeWsg(&paintState->wheelNewWsg);
+    freeWsg(&paintState->wheelExitWsg);
+    freeWsg(&paintState->wheelPaletteWsg);
 
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
@@ -611,7 +676,10 @@ void paintPositionDrawCanvas(void)
 
 void paintDrawScreenMainLoop(int64_t elapsedUs)
 {
-    paintDrawScreenPollTouch();
+    if (!paintState->showDialogBox)
+    {
+        paintDrawScreenPollTouch();
+    }
 
     // Screen Reset
     if (paintState->clearScreen)
@@ -704,13 +772,22 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     // TODO render toolbar always
     // paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
 
-    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
+    if (paintState->showDialogBox || wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
     {
         paintEnterSelectMode();
 
         paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
         paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
-        drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
+
+        if (paintState->showDialogBox)
+        {
+            //drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, 30, 30, TFT_WIDTH - 60, TFT_HEIGHT - 60, 5);
+            drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, DIALOG_CENTER, DIALOG_CENTER, DIALOG_AUTO, DIALOG_AUTO, 6);
+        }
+        else
+        {
+            drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
+        }
     }
     else
     {
@@ -1707,7 +1784,11 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
             = evt->state | (paintHelp->curButtons & (TOUCH_ANY | TOUCH_X | TOUCH_Y | SWIPE_LEFT | SWIPE_RIGHT));
     }
 
-    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
+    if (paintState->showDialogBox)
+    {
+        dialogBoxButton(paintState->dialogBox, evt);
+    }
+    else if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
     {
         PAINT_LOGI("Menu is active, sending it a button press");
         wheelMenuButton(paintState->toolWheel, paintState->toolWheelRenderer, evt);
@@ -1755,8 +1836,9 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         // Draw mode buttons
         switch (evt->button)
         {
-            case PB_SELECT:
-                // SELECT no longer does anything
+            case PB_START:
+                // We're gonna enter the quick-save menu... save the canvas!
+                paintSaveCanvas(&paintState->canvas);
                 break;
 
             case PB_A:
@@ -1787,7 +1869,7 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case PB_START:
+            case PB_SELECT:
                 // Don't do anything until start is released to avoid conflicting with EXIT
                 break;
         }
@@ -1797,7 +1879,7 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         //////// Draw mode button release
         switch (evt->button)
         {
-            case PB_START:
+            case PB_SELECT:
             {
                 if (!paintState->saveInProgress)
                 {
@@ -1835,8 +1917,8 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case PB_SELECT:
-                // This is handled in BTN_MODE_SELECT already
+            case PB_START:
+                paintRestoreCanvas(&paintState->canvas);
                 break;
         }
     }
@@ -2433,12 +2515,6 @@ void paintUpdateRecents(uint8_t selectedIndex)
 {
     getArtist()->fgColor = paintState->canvas.palette[selectedIndex];
 
-    for (uint8_t i = selectedIndex; i > 0; i--)
-    {
-        paintState->canvas.palette[i] = paintState->canvas.palette[i - 1];
-    }
-    paintState->canvas.palette[0] = getArtist()->fgColor;
-
     paintUpdateLeds();
 
     // If there are any pick points, update their color to reduce confusion
@@ -2550,8 +2626,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         {
             if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
             {
-                paintState->saveMenuBoolOption = false;
-                paintState->saveMenu           = CONFIRM_OVERWRITE;
+                paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
             }
             else
             {
@@ -2563,7 +2638,14 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
                  && label <= paintState->colorNames[PAINT_MAX_COLORS - 1])
         {
             uint8_t colorIndex        = (label - *paintState->colorNames) / sizeof(*paintState->colorNames);
+
+            // Set palette color
             paintState->paletteSelect = colorIndex;
+
+            if (paintState->toolWheel == paintState->editPaletteWheel)
+            {
+                paintEditPaletteSetupColor();
+            }
         }
     }
     else
@@ -2615,4 +2697,71 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         }
         PAINT_LOGI("Moved to tool wheel item %s", label);
     }
+}
+
+static void paintSetupDialog(paintDialog_t dialog)
+{
+    paintState->showDialogBox = true;
+    if (paintState->dialog == dialog)
+    {
+        return;
+    }
+
+    paintState->dialog = dialog;
+
+    const char* title;
+    const char* detail;
+    const wsg_t* icon = NULL;
+
+    // Clear any previous options
+    dialogBoxReset(paintState->dialogBox);
+
+    switch (dialog)
+    {
+        case DIALOG_CONFIRM_UNSAVED:
+        {
+            title = dialogUnsavedTitleStr;
+            detail = dialogUnsavedDetailStr;
+
+            // Unsaved! Continue? Cancel, Save, Save as... OK
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionSaveStr, NULL, OPTHINT_NORMAL);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionSaveAsStr, NULL, OPTHINT_NORMAL);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
+        case DIALOG_CONFIRM_OVERWRITE:
+        {
+            title = dialogOverwriteTitleStr;
+            detail = dialogOverwriteDetailStr;
+
+            // Already exists! Overwrite?
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionSaveAsStr, NULL, OPTHINT_NORMAL);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
+        case DIALOG_ERROR:
+        default:
+        {
+            title = dialogErrorTitleStr;
+            detail = dialogErrorDetailStr;
+
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionExitStr, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
+            break;
+        }
+    }
+
+    // Actually set the new title/detail/icon
+    paintState->dialogBox->title = title;
+    paintState->dialogBox->detail = detail;
+    paintState->dialogBox->icon = icon;
+}
+
+static void paintDialogCb(const char* label)
+{
+    PAINT_LOGI("Dialog option %s chosen!", label);
+
 }

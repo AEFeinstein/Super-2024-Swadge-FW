@@ -80,7 +80,7 @@ wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, con
  */
 void deinitWheelMenu(wheelMenuRenderer_t* renderer)
 {
-    node_t* info = NULL;
+    wheelItemInfo_t* info = NULL;
     while ((info = pop(&renderer->itemInfos)))
     {
         free(info);
@@ -348,7 +348,14 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
     {
         if (!renderer->customBack && menu->parentMenu)
         {
-            return menuNavigateToItem(menu, mnuBackStr);
+            // Only navigate if we're not already on the "Back" item.
+            if (!menu->currentItem || ((menuItem_t*)menu->currentItem->val)->label != mnuBackStr)
+            {
+                return menuNavigateToItem(menu, mnuBackStr);
+            }
+
+            // Just return the menu, the callback was already called
+            return menu;
         }
         else
         {

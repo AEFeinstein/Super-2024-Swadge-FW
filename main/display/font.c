@@ -8,6 +8,23 @@
 #include "font.h"
 
 //==============================================================================
+// Enums
+//==============================================================================
+
+/// @brief Flag for drawTextWordWrapFlags() to draw the text normally
+#define TEXT_DRAW 0
+
+/// @brief Flag for drawTexTWordWrapFlags() to measure the text without drawing
+#define TEXT_MEASURE 1
+
+//==============================================================================
+// Static Function Declarations
+//==============================================================================
+
+static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
+                                        int16_t xMax, int16_t yMax, uint16_t flags);
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -170,26 +187,8 @@ uint16_t textWidth(const font_t* font, const char* text)
     return width;
 }
 
-/**
- * @brief Draws text, breaking on word boundaries, until the given bounds are filled or all text is drawn.
- *
- * Text will be drawn, starting at `(xOff, yOff)`, wrapping to the next line at ' ' or '-' when the next
- * word would exceed `xMax`, or immediately when a newline ('\\n') is encountered. Carriage returns and
- * tabs ('\\r', '\\t') are not supported. When the bottom of the next character would exceed `yMax`, no more
- * text is drawn and a pointer to the next undrawn character within `text` is returned. If all text has
- * been written, NULL is returned.
- *
- * @param font The font to use when drawing the text
- * @param color The color of the text to be drawn
- * @param text The text to be pointed, as a null-terminated string
- * @param xOff The X-coordinate to begin drawing the text at
- * @param yOff The Y-coordinate to begin drawing the text at
- * @param xMax The maximum x-coordinate at which any text may be drawn
- * @param yMax The maximum y-coordinate at which text may be drawn
- * @return A pointer to the first unprinted character within `text`, or NULL if all text has been written
- */
-const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
-                             int16_t xMax, int16_t yMax)
+static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
+                                        int16_t xMax, int16_t yMax, uint16_t flags)
 {
     const char* textPtr = text;
     int16_t textX = *xOff, textY = *yOff;
@@ -282,7 +281,7 @@ const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const cha
 
         // the line must have enough space for the rest of the buffer
         // print the line, and advance the text pointer and offset
-        if (textY + font->height >= 0 && textY <= TFT_HEIGHT)
+        if (!(flags & TEXT_MEASURE) && textY + font->height >= 0 && textY <= TFT_HEIGHT)
         {
             textX = drawText(font, color, buf, textX, textY);
         }
@@ -302,6 +301,30 @@ const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const cha
 }
 
 /**
+ * @brief Draws text, breaking on word boundaries, until the given bounds are filled or all text is drawn.
+ *
+ * Text will be drawn, starting at `(xOff, yOff)`, wrapping to the next line at ' ' or '-' when the next
+ * word would exceed `xMax`, or immediately when a newline ('\\n') is encountered. Carriage returns and
+ * tabs ('\\r', '\\t') are not supported. When the bottom of the next character would exceed `yMax`, no more
+ * text is drawn and a pointer to the next undrawn character within `text` is returned. If all text has
+ * been written, NULL is returned.
+ *
+ * @param font The font to use when drawing the text
+ * @param color The color of the text to be drawn
+ * @param text The text to be pointed, as a null-terminated string
+ * @param xOff The X-coordinate to begin drawing the text at
+ * @param yOff The Y-coordinate to begin drawing the text at
+ * @param xMax The maximum x-coordinate at which any text may be drawn
+ * @param yMax The maximum y-coordinate at which text may be drawn
+ * @return A pointer to the first unprinted character within `text`, or NULL if all text has been written
+ */
+const char* drawTextWordWrap(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
+                             int16_t xMax, int16_t yMax)
+{
+    return drawTextWordWrapFlags(font, color, text, xOff, yOff, xMax, yMax, TEXT_DRAW);
+}
+
+/**
  * @brief Return the height of a block of word wrapped text
  *
  * @param font The font to use when drawing the text
@@ -314,6 +337,6 @@ uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width,
 {
     int16_t xEnd = 0;
     int16_t yEnd = 0;
-    drawTextWordWrap(font, cTransparent, text, &xEnd, &yEnd, width, maxHeight);
+    drawTextWordWrapFlags(font, cTransparent, text, &xEnd, &yEnd, width, maxHeight, TEXT_MEASURE);
     return yEnd + font->height + 1;
 }

@@ -8,6 +8,7 @@
 #include "swadge2024.h"
 #include "menu.h"
 #include "wheel_menu.h"
+#include "dialogBox.h"
 #include "p2pConnection.h"
 #include "linked_list.h"
 #include "geometry.h"
@@ -163,6 +164,13 @@ typedef struct
     paletteColor_t fgColor, bgColor;
 } paintArtist_t;
 
+typedef enum
+{
+    DIALOG_CONFIRM_UNSAVED,
+    DIALOG_CONFIRM_OVERWRITE,
+    DIALOG_ERROR,
+} paintDialog_t;
+
 typedef struct
 {
     led_t leds[CONFIG_NUM_LEDS];
@@ -311,6 +319,9 @@ typedef struct
     // The menu for the tool wheel
     menu_t* toolWheel;
 
+    // The sub-menu for the edit palette
+    menu_t* editPaletteWheel;
+
     // So we can update the brush size item options easily
     menuItem_t* toolWheelBrushSizeItem;
 
@@ -336,6 +347,21 @@ typedef struct
     wsg_t wheelUndoWsg;
     wsg_t wheelRedoWsg;
     wsg_t wheelSaveWsg;
+    wsg_t wheelOpenWsg;
+    wsg_t wheelNewWsg;
+    wsg_t wheelExitWsg;
+    wsg_t wheelPaletteWsg;
+
+    //////// Dialog Box
+
+    /// @brief Whether or not to show a dialog
+    bool showDialogBox;
+
+    /// @brief Which dialog to show
+    paintDialog_t dialog;
+
+    /// @brief The actual dialog
+    dialogBox_t* dialogBox;
 } paintDraw_t;
 
 typedef struct
