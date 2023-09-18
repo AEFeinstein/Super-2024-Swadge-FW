@@ -152,6 +152,8 @@ void freeRayMap(rayMap_t* map)
     }
     // Free the pointers
     free(map->tiles);
+    // Free visited tiles too
+    free(map->visitedTiles);
 }
 
 /**
