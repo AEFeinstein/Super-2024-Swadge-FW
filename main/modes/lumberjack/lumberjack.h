@@ -67,15 +67,16 @@ typedef struct
 {
     bool loaded;
     bool onTitle;
+    bool gameOver;
     font_t ibm;
     lumberjack_t* lumberjackMain;
     menu_t* menu;
     uint16_t btnState; ///<-- The STOLEN! ;)
 
     int yOffset;
-    int lives;
 
     int64_t worldTimer;
+    int64_t transitionTimer;
     int64_t physicsTimer;
     int liquidAnimationFrame;
     int stageAnimationFrame;
@@ -102,11 +103,13 @@ typedef struct
 
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
+    wsg_t minicharacters[3];
 
     wsg_t title;
     wsg_t subtitle_red;
     wsg_t subtitle_green;
     wsg_t subtitle_white;
+    wsg_t gameoverSprite;
 
     lumberjackTile_t* tile;
     uint8_t anim[400];
@@ -117,7 +120,7 @@ typedef struct
     wsg_t unusedBlockSprite[7];
 
     wsg_t enemySprites[21];
-    wsg_t playerSprites[16];
+    wsg_t playerSprites[18];
 
     wsg_t alertSprite;
 

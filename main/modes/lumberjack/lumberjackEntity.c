@@ -5,15 +5,16 @@
 
 void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character)
 {
-    enemy->direction    = 1;
-    enemy->state        = LUMBERJACK_RUN;
-    enemy->maxVX        = 0;
-    enemy->active       = false;
-    enemy->ready        = true;
-    enemy->showAlert    = false;
-    enemy->spriteOffset = 0;
-    enemy->cW           = 15;
-    enemy->cH           = 15;
+    enemy->direction        = 1;
+    enemy->state            = LUMBERJACK_RUN;
+    enemy->maxVX            = 0;
+    enemy->active           = false;
+    enemy->ready            = true;
+    enemy->showAlert        = false;
+    enemy->spriteOffset     = 0;
+    enemy->cW               = 15;
+    enemy->cH               = 15;
+    enemy->submergedTimer   = 0;
     lumberjackUpdateEnemy(enemy, character);
 }
 
@@ -39,6 +40,7 @@ void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side)
     enemy->active     = true;
     enemy->ready      = false;
     enemy->y          = 0;
+    enemy->lives      = 1;
 
     // I need to figure out why when moving right he appears to move faster
     if (side == 1)

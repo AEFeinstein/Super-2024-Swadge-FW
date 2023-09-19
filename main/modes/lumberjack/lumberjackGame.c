@@ -36,6 +36,7 @@
 #define LUMBERJACK_MAP_WIDTH            18
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
 #define LUMBERJACK_RESPAWN_TIMER        3750
+#define LUMBERJACK_SUBMERGE_TIMER       300
 
 
 static lumberjackTile_t* lumberjackGetTile(int x, int y);
@@ -43,6 +44,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
 static bool lumberjackIsCollisionTile(int index);
 
 bool lumberjackLoadLevel(int index);
+void lumberjackOnLocalPlayerDeath(void);
 
 void DrawTitle(void);
 void DrawGame(void);
@@ -67,6 +69,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         lumv->axeBlocks[i]->active = false;
     }
 
+    lumv->gameOver             = false;
     lumv->worldTimer           = 0;
     lumv->liquidAnimationFrame = 0;
     lumv->stageAnimationFrame  = 0;
@@ -92,6 +95,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_title_attack_white.wsg", &lumv->subtitle_white, true);    
     }
 
+    loadWsg("lumbers_game_over.wsg", &lumv->gameoverSprite, true);
 
     ESP_LOGI(LUM_TAG, "Loading floor Tiles");
     loadWsg("bottom_floor1.wsg", &lumv->floorTiles[0], true);
@@ -121,6 +125,12 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
     ESP_LOGI(LUM_TAG, "Loading Characters");
 
+    ESP_LOGI(LUM_TAG, "*Loading character icons");
+    loadWsg("lumbers_red_lives.wsg", &lumv->minicharacters[0], true);
+    loadWsg("lumbers_green_lives.wsg", &lumv->minicharacters[1], true);
+    loadWsg("secret_swadgeland_lives.wsg", &lumv->minicharacters[2], true);
+
+    ESP_LOGI(LUM_TAG, "*Loading character sprites");
     if (characterIndex == 0)
     {
         loadWsg("lumbers_red_1.wsg", &lumv->playerSprites[0], true);
@@ -140,6 +150,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_red_15.wsg", &lumv->playerSprites[14], true);
         loadWsg("lumbers_red_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("lumbers_red_17.wsg", &lumv->playerSprites[16], true);
+        loadWsg("lumbers_red_22.wsg", &lumv->playerSprites[17], true);
     }
     else if (characterIndex == 1)
     {
@@ -160,6 +171,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_green_15.wsg", &lumv->playerSprites[14], true);
         loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[16], true);
+        loadWsg("lumbers_green_22.wsg", &lumv->playerSprites[17], true);
     }
     else if (characterIndex == 2)
     {
@@ -181,7 +193,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("secret_swadgeland_15.wsg", &lumv->playerSprites[14], true);
         loadWsg("secret_swadgeland_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("secret_swadgeland_17.wsg", &lumv->playerSprites[16], true);
-    }
+        loadWsg("secret_swadgeland_22.wsg", &lumv->playerSprites[17], true);
+    } 
 
     ESP_LOGI(LUM_TAG, "Loading Enemies");
     loadWsg("lumbers_enemy_a1.wsg", &lumv->enemySprites[0], true);
@@ -286,12 +299,12 @@ bool lumberjackLoadLevel(int index)
         }
         
     }
+    
     int offset = (lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH) + 12;
     ESP_LOGI (LUM_TAG, "%d",((int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8)));
     //lumv->tile = &level;
     lumv->playerSpawnX = (int)buffer[offset];
     lumv->playerSpawnY = (int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8);
-
     
 
     return true;
@@ -299,15 +312,15 @@ bool lumberjackLoadLevel(int index)
 
 void lumberjackSetupLevel(int characterIndex)
 {
-
+    
     ESP_LOGI(LUM_TAG, "LOADING LEVEL");
     bool levelLoaded = lumberjackLoadLevel(0);
         
     // This all to be loaded externally
     lumv->yOffset          = 0;
-    lumv->lives            = 3;
     lumv->spawnIndex       = 0;
     lumv->spawnTimer       = 2750;
+    lumv->transitionTimer  = 0;
     lumv->spawnSide        = 0;
     lumv->waterLevel       = lumv->currentMapHeight * 16;
     lumv->waterDirection   = -1; // This needs to be taken in to account with the intro timer
@@ -384,6 +397,7 @@ void lumberjackSetupLevel(int characterIndex)
  */
 void restartLevel(void)
 {
+    lumv->localPlayer->lives--;
     lumberjackRespawn(lumv->localPlayer);
 }
 
@@ -428,31 +442,45 @@ void lumberjackGameLoop(int64_t elapsedUs)
     }
 
     baseMode(elapsedUs);
-    //if panic mode do water
-    lumv->waterTimer -= elapsedUs/10000;
-    if (lumv->waterTimer < 0)
+
+    if (lumv->gameOver)
     {
-        lumv->waterTimer += lumv->waterSpeed;
-        lumv->waterLevel += lumv->waterDirection;
+        lumv->transitionTimer -= elapsedUs/10000;
 
-        if (lumv->waterLevel > lumv->currentMapHeight * 16)
+        if (lumv->transitionTimer <= 0)
         {
-            lumv->waterLevel     = lumv->currentMapHeight * 16;
-            lumv->waterTimer     = lumv->waterSpeed * 10;
-            lumv->waterDirection = -1;
+            lumv->transitionTimer = 0;       
+            switchToSwadgeMode(&lumberjackMode);                 
         }
-
-        if (lumv->waterLevel < 0)
-        {
-            lumv->waterLevel = 0;
-        }
-        
     }
 
-    // If networked
-    if (lumv->lumberjackMain->networked && lumv->lumberjackMain->conStatus == CON_ESTABLISHED)
-        lumberjackUpdateLocation(lumv->localPlayer->x, lumv->localPlayer->y, lumv->localPlayer->drawFrame);
+    //if panic mode do water
+    if (lumv->gameOver == false)
+    {
+        lumv->waterTimer -= elapsedUs/10000;
+        if (lumv->waterTimer < 0)
+        {
+            lumv->waterTimer += lumv->waterSpeed;
+            lumv->waterLevel += lumv->waterDirection;
 
+            if (lumv->waterLevel > lumv->currentMapHeight * 16)
+            {
+                lumv->waterLevel     = lumv->currentMapHeight * 16;
+                lumv->waterTimer     = lumv->waterSpeed * 10;
+                lumv->waterDirection = -1;
+            }
+
+            if (lumv->waterLevel < 0)
+            {
+                lumv->waterLevel = 0;
+            }
+            
+        }
+
+        // If networked
+        if (lumv->lumberjackMain->networked && lumv->lumberjackMain->conStatus == CON_ESTABLISHED)
+            lumberjackUpdateLocation(lumv->localPlayer->x, lumv->localPlayer->y, lumv->localPlayer->drawFrame);
+    }
     DrawGame();
 }
 
@@ -501,12 +529,15 @@ void baseMode(int64_t elapsedUs)
         }
     }
 
-    for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
+    if (!lumv->gameOver)
     {
-        if (lumv->enemy[enemyIndex] == NULL)
-            continue;
+        for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
+        {
+            if (lumv->enemy[enemyIndex] == NULL)
+                continue;
 
-        lumberjackDoEnemyControls(lumv->enemy[enemyIndex]);
+            lumberjackDoEnemyControls(lumv->enemy[enemyIndex]);
+        }
     }
 
     // Clear cruft
@@ -536,46 +567,49 @@ void baseMode(int64_t elapsedUs)
     // Check physics
     lumberjackUpdatePlayerCollision(lumv->localPlayer);
 
-    // Enemy
-    for (int eIdx = 0; eIdx < ARRAY_SIZE(lumv->enemy); eIdx++)
+    if (!lumv->gameOver)
     {
-        lumberjackEntity_t* enemy = lumv->enemy[eIdx];
-        if (enemy == NULL || enemy->ready == true)
-            continue;
-
-        enemy->showAlert = false;
-        if (enemy->state == LUMBERJACK_BUMPED_IDLE)
+        // Enemy
+        for (int eIdx = 0; eIdx < ARRAY_SIZE(lumv->enemy); eIdx++)
         {
-            enemy->respawn -= elapsedUs / 10000;
-
-            enemy->showAlert = enemy->respawn < 200;
-            if (enemy->showAlert)
-            {
-                enemy->upgrading = true;
-            }
-
-            if (enemy->respawn <= 0)
-            {
-                // Hopefully the enemy isn't dead off screen.
-                enemy->state = LUMBERJACK_RUN;
-
-                enemy->direction = (enemy->flipped) ? -1 : 1;
-
-                enemy->showAlert = false;
-                enemy->vy        = -10;
-
-                lumberjackUpdateEnemy(enemy, enemy->type + 1);
-            }
-        }
-
-        lumberjackUpdateEntity(enemy, elapsedUs);
-
-        for (int oeIdx = 0; oeIdx < ARRAY_SIZE(lumv->enemy); oeIdx++)
-        {
-            if (lumv->enemy[oeIdx] == NULL)
+            lumberjackEntity_t* enemy = lumv->enemy[eIdx];
+            if (enemy == NULL || enemy->ready == true)
                 continue;
 
-            lumberjackUpdateEnemyCollision(lumv->enemy[oeIdx]);
+            enemy->showAlert = false;
+            if (enemy->state == LUMBERJACK_BUMPED_IDLE)
+            {
+                enemy->respawn -= elapsedUs / 10000;
+
+                enemy->showAlert = enemy->respawn < 200;
+                if (enemy->showAlert)
+                {
+                    enemy->upgrading = true;
+                }
+
+                if (enemy->respawn <= 0)
+                {
+                    // Hopefully the enemy isn't dead off screen.
+                    enemy->state = LUMBERJACK_RUN;
+
+                    enemy->direction = (enemy->flipped) ? -1 : 1;
+
+                    enemy->showAlert = false;
+                    enemy->vy        = -10;
+
+                    lumberjackUpdateEnemy(enemy, enemy->type + 1);
+                }
+            }
+
+            lumberjackUpdateEntity(enemy, elapsedUs);
+
+            for (int oeIdx = 0; oeIdx < ARRAY_SIZE(lumv->enemy); oeIdx++)
+            {
+                if (lumv->enemy[oeIdx] == NULL)
+                    continue;
+
+                lumberjackUpdateEnemyCollision(lumv->enemy[oeIdx]);
+            }
         }
     }
 
@@ -584,10 +618,12 @@ void baseMode(int64_t elapsedUs)
     {
         lumv->localPlayer->respawn -= elapsedUs / 10000;
 
-        if (lumv->localPlayer->respawn <= 0 && lumv->lives > 0)
+        if (lumv->localPlayer->respawn <= 0 && lumv->localPlayer->lives > 0)
         {
+            ESP_LOGI(LUM_TAG, "RESPAWN PLAYER!");
             // Respawn player
             lumv->localPlayer->respawn = 0;
+            lumv->localPlayer->lives--;
             lumberjackRespawn(lumv->localPlayer);
         }
     }
@@ -600,7 +636,7 @@ void baseMode(int64_t elapsedUs)
         {
             lumberjackEntity_t* enemy = lumv->enemy[enemyIndex];
 
-            if (enemy == NULL || lumv->localPlayer->state == LUMBERJACK_DEAD)
+            if (enemy == NULL || lumv->localPlayer->state == LUMBERJACK_DEAD || lumv->localPlayer->state == LUMBERJACK_INVINCIBLE)
                 continue;
 
             if (enemy->state != LUMBERJACK_DEAD && enemy->state != LUMBERJACK_OFFSCREEN)
@@ -610,7 +646,7 @@ void baseMode(int64_t elapsedUs)
                 {
                     if (enemy->state == LUMBERJACK_BUMPED || enemy->state == LUMBERJACK_BUMPED_IDLE)
                     {
-                        enemy->state = LUMBERJACK_DEAD;
+                        enemy->state = LUMBERJACK_DEAD; // Enemy Death
                         enemy->vy    = -30;
                         if (lumv->localPlayer->vx != 0)
                         {
@@ -627,11 +663,7 @@ void baseMode(int64_t elapsedUs)
                     {
                         // Kill player
                         // ESP_LOGI(LUM_TAG, "KILL PLAYER");
-                        lumv->localPlayer->state     = LUMBERJACK_DEAD;
-                        lumv->localPlayer->vy        = -20;
-                        lumv->localPlayer->active    = false;
-                        lumv->localPlayer->jumping   = false;
-                        lumv->localPlayer->jumpTimer = 0;
+                        lumberjackOnLocalPlayerDeath();
                     }
                 }
             }
@@ -648,18 +680,38 @@ void baseMode(int64_t elapsedUs)
         lumv->stageAnimationFrame++;
     }
 
-    // Update animation
-    // Enemy Animation
-    for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
+    //if Panic mode... check to see if player's head is under water.
+    if (lumv->localPlayer->y > lumv->waterLevel && lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_OFFSCREEN)
     {
-        if (lumv->enemy[enemyIndex] == NULL)
-            continue;
+        //ESP_LOGW(LUM_TAG, "UNDER WATER! %d", lumv->localPlayer->submergedTimer);
+        lumv->localPlayer->submergedTimer -= elapsedUs / 10000;
 
-        lumv->enemy[enemyIndex]->timerFrameUpdate += elapsedUs;
-        if (lumv->enemy[enemyIndex]->timerFrameUpdate > lumv->enemy[enemyIndex]->animationSpeed)
+        if (lumv->localPlayer->submergedTimer <= 0)
         {
-            lumv->enemy[enemyIndex]->currentFrame++;
-            lumv->enemy[enemyIndex]->timerFrameUpdate = 0; //;
+            lumv->localPlayer->submergedTimer = 0;
+            lumberjackOnLocalPlayerDeath();
+        }
+    }
+    else
+    {
+        lumv->localPlayer->submergedTimer = LUMBERJACK_SUBMERGE_TIMER;
+    }
+
+    // Update animation
+    if (!lumv->gameOver)
+    {        
+        // Enemy Animation
+        for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
+        {
+            if (lumv->enemy[enemyIndex] == NULL)
+                continue;
+
+            lumv->enemy[enemyIndex]->timerFrameUpdate += elapsedUs;
+            if (lumv->enemy[enemyIndex]->timerFrameUpdate > lumv->enemy[enemyIndex]->animationSpeed)
+            {
+                lumv->enemy[enemyIndex]->currentFrame++;
+                lumv->enemy[enemyIndex]->timerFrameUpdate = 0; //;
+            }
         }
     }
 
@@ -678,12 +730,34 @@ void baseMode(int64_t elapsedUs)
         lumv->yOffset = LUMBERJACK_SCREEN_Y_MAX;
 }
 
+void lumberjackOnLocalPlayerDeath(void)
+{
+    lumv->localPlayer->state     = LUMBERJACK_DEAD;
+    lumv->localPlayer->vy        = -20;
+    lumv->localPlayer->active    = false;
+    lumv->localPlayer->jumping   = false;
+    lumv->localPlayer->jumpTimer = 0;
+
+    if (lumv->localPlayer->lives <= 0)
+    {
+        ESP_LOGI(LUM_TAG, "Game over!");
+        lumv->gameOver = true;
+        lumv->transitionTimer = 400;
+    }
+}
+
 void DrawTitle(void)
 {
     drawWsgSimple(&lumv->title, (TFT_WIDTH / 2) - 51, (TFT_HEIGHT / 2) - 48);
     
-    
-    drawWsgSimple(&lumv->subtitle_red, (TFT_WIDTH/2)- 36, (TFT_HEIGHT/2) -9);
+    if (lumv->localPlayer->type == 0)
+    {
+        drawWsgSimple(&lumv->subtitle_red, (TFT_WIDTH/2)- 36, (TFT_HEIGHT/2) -9);
+    }
+    else if (lumv->localPlayer->type == 1)
+    {
+        drawWsgSimple(&lumv->subtitle_green, (TFT_WIDTH/2)- 36, (TFT_HEIGHT/2) -9);
+    }
     
     for (int i = 0; i < LUMBERJACK_MAP_WIDTH; i++)
     {
@@ -739,6 +813,11 @@ void DrawGame(void)
 
     }
 
+    if (lumv->localPlayer->submergedTimer != LUMBERJACK_SUBMERGE_TIMER && ((lumv->localPlayer->submergedTimer/10) % 3) != 0)
+    {
+        drawWsg(&lumv->alertSprite, lumv->localPlayer->x + 6, lumv->localPlayer->y - 26 - lumv->yOffset, false, false, 0);
+    }
+
     lumv->localPlayer->drawFrame = currentFrame;
 
     // This is where it breaks. When it tries to play frame 3 or 4 it crashes.
@@ -760,10 +839,27 @@ void DrawGame(void)
     //If playing panic mode draw water
     lumberjackDrawWaterLevel();
 
+    for (int i = 0; i < lumv->localPlayer->lives; i++)
+    {
+        int icon = lumv->localPlayer->type;
 
+        if (icon > ARRAY_SIZE(lumv->minicharacters))
+        {
+            icon = 0;
+        }
+        drawWsgSimple(&lumv->minicharacters[icon], (i * 17) + 10, 20);
+    }
+
+    if (lumv->gameOver)
+    {
+        drawWsgSimple(&lumv->gameoverSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
+    }
+
+    drawText(&lumv->ibm, c555, "00000", 16, 16);
     // Debug
 
     char debug[20] = {0};
+    /*
     snprintf(debug, sizeof(debug), "Debug: %d %d %d", lumv->localPlayer->x, lumv->localPlayer->y,
              lumv->localPlayer->cH);
 
@@ -789,6 +885,7 @@ void DrawGame(void)
     {
         drawText(&lumv->ibm, c000, "B", 48, 32);
     }
+    */
 }
 
 void lumberjackSpawnCheck(int64_t elapseUs)
@@ -1025,7 +1122,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
             {
                 entity->respawn          = 500;
                 entity->ready            = true;
-                lumv->localPlayer->state = LUMBERJACK_DEAD;
+                lumberjackOnLocalPlayerDeath();
                 return;
             }
             else
@@ -1102,14 +1199,14 @@ void lumberjackDoControls(void)
     if (lumv->btnState & PB_LEFT)
     {
         lumv->localPlayer->flipped   = true;
-        lumv->localPlayer->state     = 2;
+        lumv->localPlayer->state     = LUMBERJACK_RUN;
         lumv->localPlayer->direction = -1;
         buttonPressed                = true;
     }
     else if (lumv->btnState & PB_RIGHT)
     {
         lumv->localPlayer->flipped   = false;
-        lumv->localPlayer->state     = 2;
+        lumv->localPlayer->state     = LUMBERJACK_RUN;
         lumv->localPlayer->direction = 1;
 
         buttonPressed = true;
@@ -1157,7 +1254,8 @@ void lumberjackDoControls(void)
 
     if (buttonPressed == false && lumv->localPlayer->active)
     {
-        lumv->localPlayer->state = 1; // Do a ton of other checks here
+        if (lumv->localPlayer->state != LUMBERJACK_INVINCIBLE)
+            lumv->localPlayer->state = LUMBERJACK_IDLE; // Do a ton of other checks here
     }
 
     if (lumv->localPlayer->state != previousState)
@@ -1283,6 +1381,9 @@ void lumberjackExitGameMode(void)
         return;
 
     //** FREE THE SPRITES **//
+
+    freeWsg(&lumv->gameoverSprite);
+
     // Free the enemies
     for (int i = 0; i < ARRAY_SIZE(lumv->enemySprites); i++)
     {

@@ -26,11 +26,13 @@ typedef struct
     int y;
     int spriteOffset;
     int vx;
+    int lives;
     float vy;
     int maxVX;
     int type;
     int maxLevel;
     int respawn;
+    int submergedTimer;
 
     int cX;
     int cY;
