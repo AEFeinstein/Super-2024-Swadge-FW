@@ -38,47 +38,48 @@ Any `IF` may be paired with any other `THEN`.
 
 These are the conditions which can trigger scripts.
 
-| Operation      | Value | Arguments        | Description                                                                                                                         |
-|----------------|-------|------------------|-------------------------------------------------------------------------------------------------------------------------------------|
-| SHOOT_OBJS     | 0     | \[IDs\], ORDER   | Triggered when all objects are shot (not killed), may either be in the given order or any order                                     |
-| SHOOT_WALLS    | 1     | \[CELLs\], ORDER | Triggered when all walls are shot, may either be in the given order or any order                                                    |
-| KILL           | 2     | \[IDs\], ORDER   | Triggered when all enemies are killed, may be in the given order or any order                                                       |
-| ENTER          | 3     | CELL, \[IDs\]    | Triggered when the player enters the given cell. If IDs are not empty, the player must have the given items when entering the cell. |
-| GET            | 4     | \[IDs\]          | Triggered when all items with given IDs are obtained                                                                                |
-| TOUCH          | 5     | ID               | Triggered when item with the given ID is touched (i.e. warp gate)                                                                   |
-| BUTTON_PRESSED | 6     | BTN              | Triggered when the button is pressed (useful for tutorial)                                                                          |
-| TIME_ELAPSED   | 7     | TIME             | Triggered after the given time elapses from the start of the level                                                                  |
+| Operation    | Value | Arguments                          | Description                                                                                                                                  |
+|--------------|-------|------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
+| SHOOT_OBJS   | 0     | AND_OR, \[IDs\], ORDER, ONE_TIME   | Triggered when one or all objects are shot. If all, may either be in the given order or any order. May reset after triggering.               |
+| KILL         | 1     | AND_OR, \[IDs\], ORDER, ONE_TIME   | Triggered when one or all all enemies are killed. If all, may be in the given order or any order. May reset after triggering.                |
+| GET          | 2     | AND_OR, \[IDs\], ORDER, ONE_TIME   | Triggered when one or all objects with given IDs are obtained. If all, may be in the given order or any order. May reset after triggering.   |
+| TOUCH        | 3     | AND_OR, \[IDs\], ORDER, ONE_TIME   | Triggered when one or all objects with the given ID are touched. If all, may be in the given order or any order. May reset after triggering. |
+| SHOOT_WALLS  | 4     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when one or all walls in the given cells are shot. If all, may be in the given order or any order. May reset after triggering.     |
+| ENTER        | 5     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when the player enters one or all of the given cells. If all, may be in the given order or any order. May reset after triggering.  |
+| TIME_ELAPSED | 6     | TIME                               | Triggered after the given time, in milliseconds, elapses from the start of the level.                                                        |
 
 ### THEN Operations
 
 These are the actions that occur when a script is triggered
 
-| Operation | Value | Arguments  | Description                                                                                                                                                        |
-|-----------|-------|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| OPEN      | 8     | \[CELLs\]  | Open all doors on the given cells                                                                                                                                  |
-| CLOSE     | 9     | \[CELLs\]  | Close all doors on the given cells                                                                                                                                 |
-| SPAWN     | 10    | \[SPAWNs\] | Spawn objects of the given types with the given IDs in the given cells. May be an item or enemy. If an object with that ID exists already, it will not be spawned. |
-| DESPAWN   | 11    | \[IDs\]    | Immediately remove the given IDs from the map. May be item or enemy.                                                                                               |
-| DIALOG    | 12    | TEXT       | Display the text in a dialog window                                                                                                                                |
-| WARP      | 13    | CELL       | Warp the player to the given cell                                                                                                                                  |
-| WIN       | 14    |            | Finish the level                                                                                                                                                   |
+| Operation | Value | Arguments   | Description                                                                                                                               |
+|-----------|-------|-------------|-------------------------------------------------------------------------------------------------------------------------------------------|
+| OPEN      | 7     | \[CELLs\]   | Open all doors on the given cells                                                                                                         |
+| CLOSE     | 8     | \[CELLs\]   | Close all doors on the given cells                                                                                                        |
+| SPAWN     | 9     | \[SPAWNs\]  | Spawn objects of the given types with the given IDs in the given cells. If an object with that ID exists already, it will not be spawned. |
+| DESPAWN   | 10    | \[IDs\]     | Immediately remove the objects with the given IDs from the map.                                                                           |
+| DIALOG    | 11    | TEXT        | Display the text in a dialog window                                                                                                       |
+| WARP      | 12    | MAP, CELL   | Warp the player to the given cell                                                                                                         |
+| WIN       | 13    |             | Beat the game                                                                                                                             |
 
 ### Script Element Syntax
 
 These are the elements that are used for `IF` and `THEN` arguments.
 Arguments, arrays, CELLs, and SPAWNs all have different delimiters to make parsing easier.
 
-| Element   | Syntax             | Notes                                                                                                                                      |
-|-----------|--------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| Arguments | `(a; b; c)`        | Arguments are only used for Operations                                                                                                     |
-| Arrays    | `[a, b, c]`        | May be arrays of CELLs, SPAWNs, or IDs                                                                                                     |
-| CELL      | `{x. y}`           | Only has x and y components                                                                                                                |
-| SPAWN     | `{TYPE- ID- x. y}` | TYPE is any `tileType` (see below). ID, x, and y are integers                                                                              |
-| ORDER     | `abc`              | `IN_ORDER` or `ANY_ORDER`                                                                                                                  |
-| TEXT      | `abc`              | Not quoted, cannot use the characters `(` or `)`                                                                                           |
-| ID        | `0`                | Integer from 0 to 255                                                                                                                      |
-| BTN       | `0`                | Integer from 0 to 65535, see [`buttonBit_t`](https://github.com/AEFeinstein/Swadge-IDF-5.0/blob/main/components/hdw-btn/include/hdw-btn.h) |
-| TIME      | `0`                | Integer from 0 to 2147483647, in milliseconds                                                                                              |
+| Element   | Syntax          | Notes                                                           |
+|-----------|-----------------|-----------------------------------------------------------------|
+| Arguments | `(a; b; c)`     | Arguments are only used for Operations                          |
+| Arrays    | `[a, b, c]`     | May be arrays of CELLs, SPAWNs, or IDs                          |
+| CELL      | `{x. y}`        | Only has x and y components                                     |
+| ID        | `0`             | Integer from 0 to 255                                           |
+| SPAWN     | `{TYPE-ID-x.y}` | `TYPE` is any `tileType` (see below). ID, x, and y are integers |
+| AND_OR    | `abc`           | `AND` or `OR`                                                   |
+| ORDER     | `abc`           | `IN_ORDER` or `ANY_ORDER`                                       |
+| ONE_TIME  | `abc`           | `ONCE` or `ALWAYS`                                              |
+| TEXT      | `abc`           | Not quoted, cannot use the characters `(` or `)`                |
+| TIME      | `0`             | Integer from 0 to 2147483647, in milliseconds                   |
+| MAP       | `0`             | Integer corresponding to the map, 0 to 5                        |
 
 ### Tile Types
 
@@ -86,23 +87,12 @@ These are the objects that can be spawned
 
 | Object                    | Notes                                              |
 |---------------------------|----------------------------------------------------|
-| `BG_FLOOR`                | Normal floor                                       |
-| `BG_FLOOR_WATER`          | Water floor, moves slowly                          |
-| `BG_FLOOR_LAVA`           | Lava floor, takes damage                           |
-| `BG_WALL_1`               | Wall variant 1                                     |
-| `BG_WALL_2`               | Wall variant 2                                     |
-| `BG_WALL_3`               | Wall variant 3                                     |
-| `BG_DOOR`                 | Door, normal beam                                  |
-| `BG_DOOR_CHARGE`          | Door, charge beam                                  |
-| `BG_DOOR_MISSILE`         | Door, missile                                      |
-| `BG_DOOR_ICE`             | Door, ice beam                                     |
-| `BG_DOOR_XRAY`            | Door, x-ray beam                                   |
-| `OBJ_ENEMY_START_POINT`   | Starting point, not a real object                  |
 | `OBJ_ENEMY_NORMAL`        | Enemy type, weak to normal beam                    |
 | `OBJ_ENEMY_STRONG`        | Enemy type, weak to charge beam                    |
 | `OBJ_ENEMY_ARMORED`       | Enemy type, weak to missile                        |
 | `OBJ_ENEMY_FLAMING`       | Enemy type, weak to ice beam                       |
 | `OBJ_ENEMY_HIDDEN`        | Enemy type, weak to x-ray beam                     |
+| `OBJ_ENEMY_BOSS`          | Boss Enemy                                         |
 | `OBJ_ITEM_BEAM`           | Power-up, normal beam                              |
 | `OBJ_ITEM_CHARGE_BEAM`    | Power-up, charge beam                              |
 | `OBJ_ITEM_MISSILE`        | Power-up, missiles (also missile capacity upgrade) |
@@ -119,6 +109,7 @@ These are the objects that can be spawned
 
 ### Script Examples
 
+TODO rewrite these
 ```
 IF SHOOT_OBJS([0, 1, 2, 3]; IN_ORDER)     THEN OPEN([{0.1}, {2.3}])
 IF SHOOT_WALLS([{4.5}, {6.7}]; ANY_ORDER) THEN CLOSE([{0.1}, {2.3}])
