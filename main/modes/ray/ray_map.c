@@ -15,6 +15,7 @@
 #include "ray_map.h"
 #include "ray_tex_manager.h"
 #include "ray_renderer.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Functions
@@ -132,7 +133,8 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
         }
     }
 
-    // TODO load rules!!
+    // Load Scripts
+    loadScripts(ray, &fileData[fileIdx], decompressedSize - fileIdx, caps);
 
     // Free the file data
     free(fileData);

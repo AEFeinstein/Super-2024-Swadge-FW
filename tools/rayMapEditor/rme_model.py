@@ -138,11 +138,12 @@ class model:
         for script in self.scripts:
             if script is not None and script.isValid():
                 sb = script.toBytes()
-                if (len(sb) > 255):
+                if (len(sb) > 65535):
                     # TODO display error
                     print("SCRIPT TOO BIG!!")
                     return False
-                fileBytes.append(len(sb))
+                fileBytes.append((len(sb) >> 8) & 0xFF)
+                fileBytes.append((len(sb) >> 0) & 0xFF)
                 fileBytes.extend(sb)
             else:
                 # TODO display warning
@@ -198,8 +199,8 @@ class model:
         # Read each script
         for si in range(numScripts):
             # Read script length
-            sLen: int = data[idx]
-            idx = idx + 1
+            sLen: int = (data[idx] << 8) | (data[idx + 1])
+            idx = idx + 2
             # Read script
             self.scripts.append(rme_script(bytes=data[idx: idx + sLen]))
             idx = idx + sLen

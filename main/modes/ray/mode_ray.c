@@ -11,6 +11,7 @@
 #include "ray_player.h"
 #include "ray_dialog.h"
 #include "ray_pause.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Function Prototypes
@@ -117,6 +118,8 @@ static void rayExitMode(void)
         free(poppedScenery);
     }
 
+    // Free the scripts
+    freeScripts(ray);
     // Free the map
     freeRayMap(&ray->map);
     // Free the textures

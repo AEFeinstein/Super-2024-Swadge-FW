@@ -370,7 +370,9 @@ class rme_script:
             for id in self.thenArgs[kIds]:
                 bytes.append(id)
         if kText in self.thenArgs.keys():
-            bytes.append(len(self.thenArgs[kText]))
+            textLen = len(self.thenArgs[kText])
+            bytes.append((textLen >> 8) & 255)
+            bytes.append((textLen >> 0) & 255)
             bytes.extend(self.thenArgs[kText].encode())
         if kMap in self.thenArgs.keys():
             bytes.append(self.thenArgs[kMap])
@@ -475,8 +477,10 @@ class rme_script:
                 idx = idx + 1
         elif thenOpType.DIALOG == self.thenOp:
             # Read length of text
-            textLen: int = bytes[idx]
-            idx = idx + 1
+            textLen: int = \
+                (bytes[idx + 0] << 8) + \
+                (bytes[idx + 1])
+            idx = idx + 2
             # Read text
             self.thenArgs[kText] = str(bytes[idx:idx + textLen], 'ascii')
             idx = idx + textLen

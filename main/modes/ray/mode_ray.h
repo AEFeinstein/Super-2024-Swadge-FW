@@ -154,9 +154,152 @@ typedef enum
     NUM_LOADOUTS ///< The number of loadouts
 } rayLoadout_t;
 
+/**
+ * @brief Types of events that trigger scripts
+ */
+typedef enum
+{
+    SHOOT_OBJS   = 0, ///< Objects were shot
+    KILL         = 1, ///< Enemies were killed
+    GET          = 2, ///< Items were gotten
+    TOUCH        = 3, ///< Objects were touched
+    SHOOT_WALLS  = 4, ///< Walls were shot
+    ENTER        = 5, ///< Map cells were entered
+    TIME_ELAPSED = 6, ///< Time elapsed
+} ifOp_t;
+
+/**
+ * @brief Types of things that scripts can do
+ */
+typedef enum
+{
+    OPEN    = 7,  ///< Open doors
+    CLOSE   = 8,  ///< Close doors
+    SPAWN   = 9,  ///< Spawn enemies or items
+    DESPAWN = 10, ///< Despawn enemies or items
+    DIALOG  = 11, ///< Show a dialog box
+    WARP    = 12, ///< Warp to a location on a map
+    WIN     = 13, ///< Win the game
+} thenOp_t;
+
+/**
+ * @brief A script argument, whether to AND or OR items in a list
+ */
+typedef enum
+{
+    AND = 0, ///< All items in the list must happen for the script to trigger
+    OR  = 1, ///< Any item in the list may happen for the script to trigger
+} andOr_t;
+
+/**
+ * @brief A script argument, whether the items in a list are ordered or not
+ */
+typedef enum
+{
+    IN_ORDER  = 0, ///< Items in the list must happen in the specific order
+    ANY_ORDER = 1, ///< Items in the list may happen in any order
+} order_t;
+
+/**
+ * @brief A script argument, whether the script repeats after triggering or not
+ */
+typedef enum
+{
+    ONCE   = 0, ///< The script only triggers once
+    ALWAYS = 1, ///< The script resets after triggering
+} repeat_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
+
+/**
+ * @brief A script argument, coordinates in the map
+ */
+typedef struct
+{
+    uint8_t x; ///< The X coordinate
+    uint8_t y; ///< The Y coordinate
+} rayMapCoordinates_t;
+
+/**
+ * @brief A script argument, some object that should be spawned
+ */
+typedef struct
+{
+    rayMapCellType_t type;   ///< The type of object to spawn
+    rayMapCoordinates_t pos; ///< Where to spawn the object
+    uint8_t id;              ///< The ID of the spawned object
+} raySpawn_t;
+
+/**
+ * @brief A script. This has some condition that triggers it (if) and some event
+ * that occurs when it is triggered (then). The trigger and event both have
+ * arguments stored in a union
+ */
+typedef struct
+{
+    ifOp_t ifOp; ///< The type of condition that triggers the script
+    /// A union of arguments for the condition that triggers the script
+    union
+    {
+        uint32_t time; ///< A time in ms
+        /// A struct of arguments which is a list of IDs
+        struct
+        {
+            andOr_t andOr;    ///< Whether or not the IDs in the list should be AND'd or OR'd
+            order_t order;    ///< Whether or not the order of IDs in the list matters
+            repeat_t oneTime; ///< Whether or not the script triggers once or repeatedly
+            uint8_t numIds;   ///< The number of IDs in the list
+            uint8_t* ids;     ///< A list of IDs
+        } idList;
+        /// A struct of arguments which is a list of map cells
+        struct
+        {
+            andOr_t andOr;              ///< Whether or not the cells in the list should be AND'd or OR'd
+            order_t order;              ///< Whether or not the order of cells in the list matters
+            repeat_t oneTime;           ///< Whether or not the script triggers once or repeatedly
+            uint8_t numCells;           ///< The number of cells in the list
+            rayMapCoordinates_t* cells; ///< A list of cells
+        } cellList;
+    } ifArgs;
+
+    thenOp_t thenOp; ///< The type of event that happens
+    /// A union of arguments for the event that the script triggers
+    union
+    {
+        /// A struct of arguments which is a list of cells
+        struct
+        {
+            uint8_t numCells;           ///< The number of cells in the list
+            rayMapCoordinates_t* cells; ///< A list of cells
+        } cellList;
+
+        /// A struct of arguments which is a list of spawns
+        struct
+        {
+            uint8_t numSpawns;  ///< The number of spawns in the list
+            raySpawn_t* spawns; ///< A list of spawns
+        } spawnList;
+
+        /// A struct of arguments which is a list of IDs
+        struct
+        {
+            uint8_t numIds; ///< The number of IDs in the list
+            uint8_t* ids;   ///< A list of IDs
+        } idList;
+
+        char* text; ///< Text to be displayed
+
+        /// A struct of arguments which is a map and cell destination to warp to
+        struct
+        {
+            uint8_t mapId;           ///< The map ID to warp to
+            rayMapCoordinates_t pos; ///< The position to warp to
+        } warpDest;
+    } thenArgs;
+
+} rayScript_t;
 
 /**
  * @brief A single map cell
@@ -323,6 +466,8 @@ typedef struct
 
     uint32_t pauseBlinkTimer; ///< A timer to blink things on the pause menu
     bool pauseBlink;          ///< Boolean for two draw states on the pause menu
+
+    list_t scriptList; ///< A list of scripts
 } ray_t;
 
 //==============================================================================
