@@ -100,8 +100,9 @@ class model:
     def setScripts(self, scripts: list[str]) -> None:
         self.scripts: list[rme_script] = []
         for script in scripts:
-            self.scripts.append(rme_script(
-                string=script, splitter=self.splitter))
+            if script.strip():
+                self.scripts.append(rme_script(
+                    string=script, splitter=self.splitter))
 
     def save(self, outFile: TextIOWrapper) -> bool:
         # Construct file bytes

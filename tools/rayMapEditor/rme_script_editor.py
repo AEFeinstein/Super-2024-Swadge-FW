@@ -3,41 +3,51 @@ from enum import Enum
 from rme_tiles import tileType
 
 # Argument keys
+kMap: str = 'map'
 kCell: str = 'cell'
 kCells: str = 'cells'
-kId: str = 'id'
 kIds: str = 'ids'
 kSpawns: str = 'spawns'
 kOrder: str = 'order'
-kBtn: str = 'btn'
 kTms: str = 'tMs'
 kText: str = 'text'
+kAndOr: str = 'andor'
+kOneTime: str = 'onetime'
 
 
 class ifOpType(Enum):
     SHOOT_OBJS = 0
-    SHOOT_WALLS = 1
-    KILL = 2
-    ENTER = 3
-    GET = 4
-    TOUCH = 5
-    BUTTON_PRESSED = 6
-    TIME_ELAPSED = 7
+    KILL = 1
+    GET = 2
+    TOUCH = 3
+    SHOOT_WALLS = 4
+    ENTER = 5
+    TIME_ELAPSED = 6
 
 
 class thenOpType(Enum):
-    OPEN = 8
-    CLOSE = 9
-    SPAWN = 10
-    DESPAWN = 11
-    DIALOG = 12
-    WARP = 13
-    WIN = 14
+    OPEN = 7
+    CLOSE = 8
+    SPAWN = 9
+    DESPAWN = 10
+    DIALOG = 11
+    WARP = 12
+    WIN = 13
 
 
 class orderType(Enum):
     IN_ORDER = 0
     ANY_ORDER = 1
+
+
+class andOrType(Enum):
+    AND = 0
+    OR = 1
+
+
+class oneTimeType(Enum):
+    ONCE = 0
+    ALWAYS = 1
 
 
 class spawn:
@@ -51,7 +61,7 @@ class spawn:
 class rme_scriptSplitter:
 
     def __init__(self) -> None:
-        argsRegex: str = '(\([A-Z0-9_,;\.\-\[\]\{\}\s]*\))'
+        argsRegex: str = '(\([^\(\)]*\))'
 
         regex = 'IF\s+('
 
@@ -128,6 +138,20 @@ class rme_script:
                 return type[1]
         return None
 
+    def __parseAndOr(self, order: str) -> andOrType:
+        # Either AND or OR
+        for type in andOrType.__members__.items():
+            if order == type[0]:
+                return type[1]
+        return None
+
+    def __parseOneTime(self, order: str) -> oneTimeType:
+        # Either ONCE or ALWAYS
+        for type in oneTimeType.__members__.items():
+            if order == type[0]:
+                return type[1]
+        return None
+
     def __parseCell(self, cell: str) -> list[int]:
         # Cells are in the form {a.b}
         result = re.match(r'{\s*(\d+)\s*\.\s*(\d+)\s*}', cell.strip())
@@ -139,13 +163,11 @@ class rme_script:
         result = re.match(
             r'{\s*([a-zA-Z_]+)\s*-\s*(\d+)\s*-\s*(\d+)\s*\.\s*(\d+)\s*}', spawnStr.strip())
         if result:
-            type: tileType = None
-            for a in tileType:
-                if a.name == 'OBJ_' + result.group(1):
-                    type = a
-                    break
-            if type is not None:
+            try:
+                type = tileType[result.group(1)]
                 return spawn(type, int(result.group(2)), int(result.group(3)), int(result.group(4)))
+            except:
+                return None
         return None
 
     def __parseText(self, text: str) -> str:
@@ -159,9 +181,8 @@ class rme_script:
 
         # Stringify the if args
         ifArgArray = []
-        if kCell in self.ifArgs.keys():
-            ifArgArray.append(
-                '{' + str(self.ifArgs[kCell][0]) + '.' + str(self.ifArgs[kCell][1]) + '}')
+        if kAndOr in self.ifArgs.keys():
+            ifArgArray.append(str(self.ifArgs[kAndOr].name))
         if kIds in self.ifArgs.keys():
             ifArgArray.append('[' + ', '.join(str(e)
                               for e in self.ifArgs[kIds]) + ']')
@@ -170,10 +191,8 @@ class rme_script:
                 '[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.ifArgs[kCells]) + ']')
         if kOrder in self.ifArgs.keys():
             ifArgArray.append(self.ifArgs[kOrder].name)
-        if kId in self.ifArgs.keys():
-            ifArgArray.append(str(self.ifArgs[kId]))
-        if kBtn in self.ifArgs.keys():
-            ifArgArray.append(str(self.ifArgs[kBtn]))
+        if kOneTime in self.ifArgs.keys():
+            ifArgArray.append(self.ifArgs[kOneTime].name)
         if kTms in self.ifArgs.keys():
             ifArgArray.append(str(self.ifArgs[kTms]))
 
@@ -182,17 +201,19 @@ class rme_script:
         if kCells in self.thenArgs.keys():
             thenArgArray.append(
                 '[' + ', '.join('{' + str(e[0]) + '.' + str(e[1]) + '}' for e in self.thenArgs[kCells]) + ']')
-        if kCell in self.thenArgs.keys():
-            thenArgArray.append(
-                '{' + str(self.thenArgs[kCell][0]) + '.' + str(self.thenArgs[kCell][1]) + '}')
+        if kSpawns in self.thenArgs.keys():
+            thenArgArray.append('[' + ', '.join('{' + e.type.name + '-' + str(e.id) + '-' + str(
+                e.x) + '.' + str(e.y) + '}' for e in self.thenArgs[kSpawns]) + ']')
         if kIds in self.thenArgs.keys():
             thenArgArray.append('[' + ', '.join(str(e)
                                 for e in self.thenArgs[kIds]) + ']')
         if kText in self.thenArgs.keys():
             thenArgArray.append(self.thenArgs[kText])
-        if kSpawns in self.thenArgs.keys():
+        if kMap in self.thenArgs.keys():
+            thenArgArray.append(str(self.thenArgs[kMap]))
+        if kCell in self.thenArgs.keys():
             thenArgArray.append(
-                '[' + ', '.join('{' + e.type.name.removeprefix('OBJ_') + '-' + str(e.id) + '-' + str(e.x) + '.' + str(e.y) + '}' for e in self.thenArgs[kSpawns]) + ']')
+                '{' + str(self.thenArgs[kCell][0]) + '.' + str(self.thenArgs[kCell][1]) + '}')
 
         # Stitch it all together
         return 'IF ' + self.ifOp.name + '(' + '; '.join(ifArgArray) + ') THEN ' + self.thenOp.name + '(' + '; '.join(thenArgArray) + ')'
@@ -202,81 +223,34 @@ class rme_script:
             # Split the args
             argParts = self.__parseArgs(if_args)
 
-            # Parse the IF part
-            if ifOpType.SHOOT_OBJS.name == if_op:
-                # Set the operation type
-                self.ifOp = ifOpType.SHOOT_OBJS
+            # Set the operation type
+            self.ifOp = ifOpType[if_op]
+            if (ifOpType.SHOOT_OBJS == self.ifOp) or (ifOpType.KILL == self.ifOp) or \
+                    (ifOpType.GET == self.ifOp) or (ifOpType.TOUCH == self.ifOp):
                 # Parse the args
-                self.ifArgs[kIds] = [self.__parseInt(
-                    s) for s in self.__parseArray(argParts[0])]
-                self.ifArgs[kOrder] = self.__parseOrder(argParts[1])
-                # Validate the args
-                if self.__isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
-                    self.resetScript()
-                    return False
-
-            elif ifOpType.SHOOT_WALLS.name == if_op:
-                self.ifOp = ifOpType.SHOOT_WALLS
-                # Parse the args
-                self.ifArgs[kCells] = [self.__parseCell(
-                    s) for s in self.__parseArray(argParts[0])]
-                self.ifArgs[kOrder] = self.__parseOrder(argParts[1])
-                # Validate the args
-                if self.__isListNotValid(self.ifArgs[kCells]) or self.ifArgs[kOrder] is None:
-                    self.resetScript()
-                    return False
-
-            elif ifOpType.KILL.name == if_op:
-                # Set the operation type
-                self.ifOp = ifOpType.KILL
-                # Parse the args
-                self.ifArgs[kIds] = [self.__parseInt(
-                    s) for s in self.__parseArray(argParts[0])]
-                self.ifArgs[kOrder] = self.__parseOrder(argParts[1])
-                # Validate the args
-                if self.__isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kOrder] is None:
-                    self.resetScript()
-                    return False
-
-            elif ifOpType.ENTER.name == if_op:
-                self.ifOp = ifOpType.ENTER
-                # Parse the args
-                self.ifArgs[kCell] = self.__parseCell(argParts[0])
+                self.ifArgs[kAndOr] = self.__parseAndOr(argParts[0])
                 self.ifArgs[kIds] = [self.__parseInt(
                     s) for s in self.__parseArray(argParts[1])]
+                self.ifArgs[kOrder] = self.__parseOrder(argParts[2])
+                self.ifArgs[kOneTime] = self.__parseOneTime(argParts[3])
                 # Validate the args
-                if self.__isListNotValid(self.ifArgs[kIds]) or self.ifArgs[kCell] is None:
+                if (self.ifArgs[kAndOr] is None) or self.__isListNotValid(self.ifArgs[kIds]) or \
+                        (self.ifArgs[kOrder] is None) or (self.ifArgs[kOneTime] is None):
                     self.resetScript()
                     return False
-
-            elif ifOpType.GET.name == if_op:
-                self.ifOp = ifOpType.GET
+            elif (ifOpType.SHOOT_WALLS == self.ifOp) or (ifOpType.ENTER == self.ifOp):
                 # Parse the args
-                self.ifArgs[kIds] = [self.__parseInt(
-                    s) for s in self.__parseArray(argParts[0])]
+                self.ifArgs[kAndOr] = self.__parseAndOr(argParts[0])
+                self.ifArgs[kCells] = [self.__parseCell(
+                    s) for s in self.__parseArray(argParts[1])]
+                self.ifArgs[kOrder] = self.__parseOrder(argParts[2])
+                self.ifArgs[kOneTime] = self.__parseOneTime(argParts[3])
                 # Validate the args
-                if self.__isListNotValid(self.ifArgs[kIds]):
+                if (self.ifArgs[kAndOr] is None) or self.__isListNotValid(self.ifArgs[kCells]) or \
+                        (self.ifArgs[kOrder] is None) or (self.ifArgs[kOneTime] is None):
                     self.resetScript()
                     return False
-
-            elif ifOpType.TOUCH.name == if_op:
-                self.ifOp = ifOpType.TOUCH
-                # Parse the args
-                self.ifArgs[kId] = self.__parseInt(argParts[0])
-                # Validate the args
-                if self.ifArgs[kId] is None:
-                    return False
-
-            elif ifOpType.BUTTON_PRESSED.name == if_op:
-                self.ifOp = ifOpType.BUTTON_PRESSED
-                # Parse the args
-                self.ifArgs[kBtn] = self.__parseInt(argParts[0])
-                # Validate the args
-                if self.ifArgs[kBtn] is None:
-                    return False
-
-            elif ifOpType.TIME_ELAPSED.name == if_op:
-                self.ifOp = ifOpType.TIME_ELAPSED
+            elif (ifOpType.TIME_ELAPSED == self.ifOp):
                 # Parse the arg
                 self.ifArgs[kTms] = self.__parseInt(argParts[0])
                 # Validate the args
@@ -290,9 +264,8 @@ class rme_script:
             argParts = self.__parseArgs(then_args)
 
             # Parse the THEN part
-            if thenOpType.OPEN.name == then_op:
-                # Set the operation
-                self.thenOp = thenOpType.OPEN
+            self.thenOp = thenOpType[then_op]
+            if (thenOpType.OPEN == self.thenOp) or (thenOpType.CLOSE == self.thenOp):
                 # Parse the args
                 self.thenArgs[kCells] = [self.__parseCell(
                     s) for s in self.__parseArray(argParts[0])]
@@ -301,19 +274,7 @@ class rme_script:
                     self.resetScript()
                     return False
 
-            elif thenOpType.CLOSE.name == then_op:
-                # Set the operation
-                self.thenOp = thenOpType.CLOSE
-                # Parse the args
-                self.thenArgs[kCells] = [self.__parseCell(
-                    s) for s in self.__parseArray(argParts[0])]
-                # Validate the args
-                if self.__isListNotValid(self.thenArgs[kCells]):
-                    self.resetScript()
-                    return False
-
-            elif thenOpType.SPAWN.name == then_op:
-                self.thenOp = thenOpType.SPAWN
+            elif thenOpType.SPAWN == self.thenOp:
                 # Parse the args
                 self.thenArgs[kSpawns] = [self.__parseSpawn(
                     s) for s in self.__parseArray(argParts[0])]
@@ -322,8 +283,7 @@ class rme_script:
                     self.resetScript()
                     return False
 
-            elif thenOpType.DESPAWN.name == then_op:
-                self.thenOp = thenOpType.DESPAWN
+            elif thenOpType.DESPAWN == self.thenOp:
                 # Parse the args
                 self.thenArgs[kIds] = [self.__parseInt(
                     s) for s in self.__parseArray(argParts[0])]
@@ -332,28 +292,24 @@ class rme_script:
                     self.resetScript()
                     return False
 
-            elif thenOpType.DIALOG.name == then_op:
-                # Set the operation
-                self.thenOp = thenOpType.DIALOG
+            elif thenOpType.DIALOG == self.thenOp:
                 # Parse the args
                 self.thenArgs[kText] = self.__parseText(argParts[0])
                 # Validate the args
                 if self.thenArgs[kText] is None:
                     return False
 
-            elif thenOpType.WARP.name == then_op:
-                # Set the operation
-                self.thenOp = thenOpType.WARP
+            elif thenOpType.WARP == self.thenOp:
                 # Parse the args
-                self.thenArgs[kCell] = self.__parseCell(argParts[0])
+                self.thenArgs[kMap] = self.__parseInt(argParts[0])
+                self.thenArgs[kCell] = self.__parseCell(argParts[1])
                 # Validate the args
-                if self.thenArgs[kCell] is None:
+                if (self.thenArgs[kMap] is None) or (self.thenArgs[kCell] is None):
                     return False
 
-            elif thenOpType.WIN.name == then_op:
-                # Set the operation
-                self.thenOp = thenOpType.WIN
+            elif thenOpType.WIN == self.thenOp:
                 # No arguments
+                pass
 
             else:
                 self.resetScript()
@@ -372,9 +328,8 @@ class rme_script:
         bytes.append(self.ifOp.value)
 
         # Append the IF arguments, order matters
-        if kCell in self.ifArgs.keys():
-            bytes.append(self.ifArgs[kCell][0])
-            bytes.append(self.ifArgs[kCell][1])
+        if kAndOr in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kAndOr].value)
         if kIds in self.ifArgs.keys():
             bytes.append(len(self.ifArgs[kIds]))
             for id in self.ifArgs[kIds]:
@@ -385,15 +340,9 @@ class rme_script:
                 bytes.append(cell[0])
                 bytes.append(cell[1])
         if kOrder in self.ifArgs.keys():
-            if orderType.IN_ORDER == self.ifArgs[kOrder]:
-                bytes.append(0)
-            elif orderType.ANY_ORDER == self.ifArgs[kOrder]:
-                bytes.append(1)
-        if kId in self.ifArgs.keys():
-            bytes.append(self.ifArgs[kId])
-        if kBtn in self.ifArgs.keys():
-            bytes.append((self.ifArgs[kBtn] >> 8) & 255)
-            bytes.append((self.ifArgs[kBtn] >> 0) & 255)
+            bytes.append(self.ifArgs[kOrder].value)
+        if kOneTime in self.ifArgs.keys():
+            bytes.append(self.ifArgs[kOneTime].value)
         if kTms in self.ifArgs.keys():
             bytes.append((self.ifArgs[kTms] >> 24) & 255)
             bytes.append((self.ifArgs[kTms] >> 16) & 255)
@@ -409,16 +358,6 @@ class rme_script:
             for cell in self.thenArgs[kCells]:
                 bytes.append(cell[0])
                 bytes.append(cell[1])
-        if kCell in self.thenArgs.keys():
-            bytes.append(self.thenArgs[kCell][0])
-            bytes.append(self.thenArgs[kCell][1])
-        if kIds in self.thenArgs.keys():
-            bytes.append(len(self.thenArgs[kIds]))
-            for id in self.thenArgs[kIds]:
-                bytes.append(id)
-        if kText in self.thenArgs.keys():
-            bytes.append(len(self.thenArgs[kText]))
-            bytes.extend(self.thenArgs[kText].encode())
         if kSpawns in self.thenArgs.keys():
             bytes.append(len(self.thenArgs[kSpawns]))
             for spawnObj in self.thenArgs[kSpawns]:
@@ -426,6 +365,18 @@ class rme_script:
                 bytes.append(spawnObj.id)
                 bytes.append(spawnObj.x)
                 bytes.append(spawnObj.y)
+        if kIds in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs[kIds]))
+            for id in self.thenArgs[kIds]:
+                bytes.append(id)
+        if kText in self.thenArgs.keys():
+            bytes.append(len(self.thenArgs[kText]))
+            bytes.extend(self.thenArgs[kText].encode())
+        if kMap in self.thenArgs.keys():
+            bytes.append(self.thenArgs[kMap])
+        if kCell in self.thenArgs.keys():
+            bytes.append(self.thenArgs[kCell][0])
+            bytes.append(self.thenArgs[kCell][1])
 
         return bytes
 
@@ -439,10 +390,15 @@ class rme_script:
         idx = idx + 1
 
         # Read the if args
-        if self.ifOp == ifOpType.SHOOT_OBJS:
-            # Read IDs
+        if (ifOpType.SHOOT_OBJS == self.ifOp) or (ifOpType.KILL == self.ifOp) or \
+                (ifOpType.GET == self.ifOp) or (ifOpType.TOUCH == self.ifOp):
+            # Read and/or
+            self.ifArgs[kAndOr] = andOrType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+            # Read number of IDs
             numIds: int = bytes[idx]
             idx = idx + 1
+            # Read IDs
             self.ifArgs[kIds] = []
             for id in range(numIds):
                 self.ifArgs[kIds].append(bytes[idx])
@@ -450,57 +406,29 @@ class rme_script:
             # Read order
             self.ifArgs[kOrder] = orderType._value2member_map_[bytes[idx]]
             idx = idx + 1
-        elif self.ifOp == ifOpType.SHOOT_WALLS:
-            # Read Cells
+            # Read one time
+            self.ifArgs[kOneTime] = oneTimeType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+        elif (ifOpType.SHOOT_WALLS == self.ifOp) or (ifOpType.ENTER == self.ifOp):
+            # Read and/or
+            self.ifArgs[kAndOr] = andOrType._value2member_map_[bytes[idx]]
+            idx = idx + 1
+            # Read number of cells
             numCells: int = bytes[idx]
             idx = idx + 1
+            # Read cells
             self.ifArgs[kCells] = []
-            for id in range(numCells):
+            for cell in range(numCells):
                 self.ifArgs[kCells].append([bytes[idx], bytes[idx + 1]])
                 idx = idx + 2
             # Read order
             self.ifArgs[kOrder] = orderType._value2member_map_[bytes[idx]]
             idx = idx + 1
-            pass
-        elif self.ifOp == ifOpType.KILL:
-            # Read the IDs
-            numIds: int = bytes[idx]
+            # Read one time
+            self.ifArgs[kOneTime] = oneTimeType._value2member_map_[bytes[idx]]
             idx = idx + 1
-            self.ifArgs[kIds] = []
-            for id in range(numIds):
-                self.ifArgs[kIds].append(bytes[idx])
-                idx = idx + 1
-            # Read order
-            self.ifArgs[kOrder] = orderType._value2member_map_[bytes[idx]]
-            idx = idx + 1
-        elif self.ifOp == ifOpType.ENTER:
-            # Read the cell
-            self.ifArgs[kCell] = [bytes[idx], bytes[idx + 1]]
-            idx = idx + 2
-            # Read IDs
-            numIds: int = bytes[idx]
-            idx = idx + 1
-            self.ifArgs[kIds] = []
-            for id in range(numIds):
-                self.ifArgs[kIds].append(bytes[idx])
-                idx = idx + 1
-        elif self.ifOp == ifOpType.GET:
-            # Read IDs
-            numIds: int = bytes[idx]
-            idx = idx + 1
-            self.ifArgs[kIds] = []
-            for id in range(numIds):
-                self.ifArgs[kIds].append(bytes[idx])
-                idx = idx + 1
-        elif self.ifOp == ifOpType.TOUCH:
-            self.ifArgs[kId] = bytes[idx]
-            idx = idx + 1
-        elif self.ifOp == ifOpType.BUTTON_PRESSED:
-            self.ifArgs[kBtn] = \
-                (bytes[idx + 0] << 8) + \
-                (bytes[idx + 1])
-            idx = idx + 2
-        elif self.ifOp == ifOpType.TIME_ELAPSED:
+        elif ifOpType.TIME_ELAPSED == self.ifOp:
+            # Read the time
             self.ifArgs[kTms] = \
                 (bytes[idx + 0] << 24) + \
                 (bytes[idx + 1] << 16) + \
@@ -516,50 +444,50 @@ class rme_script:
         idx = idx + 1
 
         # Read the then args
-        if self.thenOp == thenOpType.OPEN:
-            # Read Cells
+        if (thenOpType.OPEN == self.thenOp) or (thenOpType.CLOSE == self.thenOp):
+            # Read Number of cells
             numCells: int = bytes[idx]
             idx = idx + 1
+            # Read cells
             self.thenArgs[kCells] = []
-            for id in range(numCells):
+            for cell in range(numCells):
                 self.thenArgs[kCells].append([bytes[idx], bytes[idx + 1]])
                 idx = idx + 2
-        elif self.thenOp == thenOpType.CLOSE:
-            # Read Cells
-            numCells: int = bytes[idx]
-            idx = idx + 1
-            self.thenArgs[kCells] = []
-            for id in range(numCells):
-                self.thenArgs[kCells].append([bytes[idx], bytes[idx + 1]])
-                idx = idx + 2
-        elif self.thenOp == thenOpType.SPAWN:
-            # Read spawns
+        elif thenOpType.SPAWN == self.thenOp:
+            # Read number of spawns
             numSpawns: int = bytes[idx]
             idx = idx + 1
+            # Read spawns
             self.thenArgs[kSpawns] = []
             for sp in range(numSpawns):
                 self.thenArgs[kSpawns].append(spawn(tileType._value2member_map_[
                                               bytes[idx]], bytes[idx + 1], bytes[idx + 2], bytes[idx + 3]))
                 idx = idx + 4
             pass
-        elif self.thenOp == thenOpType.DESPAWN:
-            # Read IDs
+        elif thenOpType.DESPAWN == self.thenOp:
+            # Read number of IDs
             numIds: int = bytes[idx]
             idx = idx + 1
+            # Read IDs
             self.thenArgs[kIds] = []
             for id in range(numIds):
                 self.thenArgs[kIds].append(bytes[idx])
                 idx = idx + 1
-        elif self.thenOp == thenOpType.DIALOG:
-            # Read Text
+        elif thenOpType.DIALOG == self.thenOp:
+            # Read length of text
             textLen: int = bytes[idx]
             idx = idx + 1
+            # Read text
             self.thenArgs[kText] = str(bytes[idx:idx + textLen], 'ascii')
-        elif self.thenOp == thenOpType.WARP:
+            idx = idx + textLen
+        elif thenOpType.WARP == self.thenOp:
+            # Read the map
+            self.thenArgs[kMap] = bytes[idx]
+            idx = idx + 1
             # Read the cell
             self.thenArgs[kCell] = [bytes[idx], bytes[idx + 1]]
             idx = idx + 2
-        elif self.thenOp == thenOpType.WIN:
+        elif thenOpType.WIN == self.thenOp:
             # No args
             pass
         else:

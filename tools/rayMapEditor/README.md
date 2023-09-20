@@ -2,10 +2,10 @@
 
 ## Controls
 
-Right click on tiles and objects in the palette on the left edge to select them.
-Right click on the map to place the selected tile or object.
+Left click on tiles and objects in the palette on the left edge to select them.
+Left click on the map to place the selected tile or object.
 
-Left click on the map to see that cell's coordinate and optionally that object's ID in the right text box
+Right click on the map to see that cell's coordinate and optionally that object's ID in the right text box
 
 Middle click on the map to drag the whole map around.
 
@@ -109,16 +109,33 @@ These are the objects that can be spawned
 
 ### Script Examples
 
-TODO rewrite these
+If three enemies are killed in any order, open a door:
 ```
-IF SHOOT_OBJS([0, 1, 2, 3]; IN_ORDER)     THEN OPEN([{0.1}, {2.3}])
-IF SHOOT_WALLS([{4.5}, {6.7}]; ANY_ORDER) THEN CLOSE([{0.1}, {2.3}])
-IF KILL([0, 1, 2, 3]; IN_ORDER)           THEN SPAWN([{ENEMY_DRAGON-98-0.1},{ENEMY_SKELETON-99-2.3}])
-IF ENTER({4.5}; [6, 7, 8])                THEN DESPAWN([98, 99])
-IF GET([0, 1, 2, 3])                      THEN WIN()
-IF TOUCH(7)                               THEN WARP({5.3})
-IF BUTTON_PRESSED(512)                    THEN DIALOG(BUTTON PRESSED)
-IF TIME_ELAPSED(10000)                    THEN CLOSE([{7.7}, {8.8}])
+IF KILL(AND; [1, 2, 3]; ANY_ORDER; ALWAYS) THEN OPEN([{7.2}])
+```
+If three objects are shot in a specific order, spawn an energy tank:
+```
+IF SHOOT_OBJS(AND; [41, 42, 43]; IN_ORDER; ONCE) THEN SPAWN([{OBJ_ITEM_ENERGY_TANK-99-42.45}])
+```
+When a specific item is gotten, win the game:
+```
+IF GET (OR; [99]; ANY_ORDER; ONCE) THEN WIN()
+```
+If an item is touched, then warp to map 3, cell {2.1}:
+```
+IF TOUCH (OR; [3]; ANY_ORDER; ONCE) THEN WARP(3; {2.1})
+```
+When four walls are shot in a specific order, kill some enemies:
+```
+IF SHOOT_WALLS (AND; [{1.1}, {1.2}, {1.3}, {1.4}]; IN_ORDER; ONCE) THEN DESPAWN([5, 6, 7, 8])
+```
+When a room is entered from either of two ways, close the doors behind the player:
+```
+IF ENTER (OR; [{42.39}, {42.51}]; ANY_ORDER; ALWAYS) THEN CLOSE([{42.38}, {42.52}])
+```
+After a minute, tell the player a minute has elapsed:
+```
+IF TIME_ELAPSED(60000) THEN DIALOG(One minute has elapsed!)
 ```
 
 ## RMD File Format
