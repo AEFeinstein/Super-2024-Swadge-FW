@@ -92,6 +92,12 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 fileIdx += 4;
                 break;
             }
+            default:
+            case NUM_IF_OP_TYPES:
+            {
+                // Not real types
+                break;
+            }
         }
 
         // Read the then operation
@@ -219,6 +225,12 @@ static void freeScript(rayScript_t* script)
         case TIME_ELAPSED:
         {
             // Nothing allocated
+            break;
+        }
+        default:
+        case NUM_IF_OP_TYPES:
+        {
+            // Not real types
             break;
         }
     }
