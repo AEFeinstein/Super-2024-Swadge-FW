@@ -8,6 +8,7 @@
 #include "ray_map.h"
 #include "ray_player.h"
 #include "ray_dialog.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Function Prototypes
@@ -154,6 +155,9 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
             // If a wall is it
             if (CELL_IS_TYPE(cell->type, BG | WALL))
             {
+                // Check for shot wall scripts
+                checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY));
+
                 // Destroy this bullet
                 memset(obj, 0, sizeof(rayBullet_t));
                 obj->c.id = -1;
@@ -395,6 +399,9 @@ void checkRayCollisions(ray_t* ray)
         {
             // Touch the item
             rayPlayerTouchItem(ray, item->type, ray->mapId, item->id);
+            // Check scripts
+            checkScriptGet(ray, item->id, item->sprite);
+            // Mark this item for removal
             toRemove = currentNode;
         }
 
@@ -443,12 +450,18 @@ void checkRayCollisions(ray_t* ray)
         currentNode = currentNode->next;
     }
 
-    // Check if a bullet touches scenery
+    // Check if a bullet or the player touches scenery
     currentNode = ray->scenery.first;
     while (currentNode != NULL)
     {
         // Get a pointer from the linked list
         rayObjCommon_t* scenery = ((rayObjCommon_t*)currentNode->val);
+
+        // Check if the player touches scenery
+        if (objectsIntersect(&player, scenery))
+        {
+            checkScriptTouch(ray, scenery->id, scenery->sprite);
+        }
 
         // Iterate through all bullets
         for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
@@ -459,14 +472,11 @@ void checkRayCollisions(ray_t* ray)
                 // A player's bullet
                 if (objectsIntersect(scenery, &bullet->c))
                 {
-                    // Scenery was shot
-                    printf("SHOT SCENERY %d\n", scenery->type);
                     // De-allocate the bullet
                     bullet->c.id = -1;
 
-                    // Show a dummy dialog
-                    // TODO delete this!
-                    rayShowDialog(ray, lorem, scenery->sprite);
+                    // Scenery was shot
+                    checkScriptShootObjs(ray, scenery->id, scenery->sprite);
                 }
             }
         }

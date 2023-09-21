@@ -166,6 +166,7 @@ typedef enum
     SHOOT_WALLS  = 4, ///< Walls were shot
     ENTER        = 5, ///< Map cells were entered
     TIME_ELAPSED = 6, ///< Time elapsed
+    NUM_IF_OP_TYPES,  ///< The number of IF operation types
 } ifOp_t;
 
 /**
@@ -239,7 +240,8 @@ typedef struct
  */
 typedef struct
 {
-    ifOp_t ifOp; ///< The type of condition that triggers the script
+    bool isActive; ///< true if the script is active, false if it is not
+    ifOp_t ifOp;   ///< The type of condition that triggers the script
     /// A union of arguments for the condition that triggers the script
     union
     {
@@ -247,11 +249,12 @@ typedef struct
         /// A struct of arguments which is a list of IDs
         struct
         {
-            andOr_t andOr;    ///< Whether or not the IDs in the list should be AND'd or OR'd
-            order_t order;    ///< Whether or not the order of IDs in the list matters
-            repeat_t oneTime; ///< Whether or not the script triggers once or repeatedly
-            uint8_t numIds;   ///< The number of IDs in the list
-            uint8_t* ids;     ///< A list of IDs
+            andOr_t andOr;      ///< Whether or not the IDs in the list should be AND'd or OR'd
+            order_t order;      ///< Whether or not the order of IDs in the list matters
+            repeat_t oneTime;   ///< Whether or not the script triggers once or repeatedly
+            uint8_t numIds;     ///< The number of IDs in the list
+            uint8_t* ids;       ///< A list of IDs
+            bool* idsTriggered; ///< A list of triggered IDs
         } idList;
         /// A struct of arguments which is a list of map cells
         struct
@@ -261,6 +264,7 @@ typedef struct
             repeat_t oneTime;           ///< Whether or not the script triggers once or repeatedly
             uint8_t numCells;           ///< The number of cells in the list
             rayMapCoordinates_t* cells; ///< A list of cells
+            bool* cellsTriggered;       ///< A list of triggered cells
         } cellList;
     } ifArgs;
 
@@ -455,6 +459,7 @@ typedef struct
     namedTexture_t* loadedTextures; ///< A list of loaded textures
     uint8_t* typeToIdxMap;          ///< A map of rayMapCellType_t to respective textures
     wsg_t guns[NUM_LOADOUTS];       ///< Textures for the HUD guns
+    wsg_t portrait;                 ///< A portrait used for text dialogs
 
     rayEnemy_t eTemplates[6]; ///< Enemy type templates, copied when initializing enemies
 
@@ -467,7 +472,9 @@ typedef struct
     uint32_t pauseBlinkTimer; ///< A timer to blink things on the pause menu
     bool pauseBlink;          ///< Boolean for two draw states on the pause menu
 
-    list_t scriptList; ///< A list of scripts
+    list_t scripts[NUM_IF_OP_TYPES]; ///< An array of lists of scripts
+    uint32_t scriptTimer;            ///< A microsecond timer to check for time based scripts
+    uint32_t secondsSinceStart;      ///< The number of seconds since this map was loaded
 } ray_t;
 
 //==============================================================================

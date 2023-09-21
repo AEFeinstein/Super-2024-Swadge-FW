@@ -173,6 +173,9 @@ static void rayMainLoop(int64_t elapsedUs)
 
             // Check for collisions between the moved player, enemies, and bullets
             checkRayCollisions(ray);
+
+            // Check for time-based scripts
+            checkScriptTime(ray, elapsedUs);
             break;
         }
         case RAY_DIALOG:

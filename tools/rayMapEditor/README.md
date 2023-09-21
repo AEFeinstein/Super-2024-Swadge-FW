@@ -46,7 +46,7 @@ These are the conditions which can trigger scripts.
 | TOUCH        | 3     | AND_OR, \[IDs\], ORDER, ONE_TIME   | Triggered when one or all objects with the given ID are touched. If all, may be in the given order or any order. May reset after triggering. |
 | SHOOT_WALLS  | 4     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when one or all walls in the given cells are shot. If all, may be in the given order or any order. May reset after triggering.     |
 | ENTER        | 5     | AND_OR, \[CELLs\], ORDER, ONE_TIME | Triggered when the player enters one or all of the given cells. If all, may be in the given order or any order. May reset after triggering.  |
-| TIME_ELAPSED | 6     | TIME                               | Triggered after the given time, in milliseconds, elapses from the start of the level.                                                        |
+| TIME_ELAPSED | 6     | TIME                               | Triggered after the given time, in seconds, elapses from the start of the level.                                                        |
 
 ### THEN Operations
 
@@ -78,7 +78,7 @@ Arguments, arrays, CELLs, and SPAWNs all have different delimiters to make parsi
 | ORDER     | `abc`           | `IN_ORDER` or `ANY_ORDER`                                       |
 | ONE_TIME  | `abc`           | `ONCE` or `ALWAYS`                                              |
 | TEXT      | `abc`           | Not quoted, cannot use the characters `(` or `)`                |
-| TIME      | `0`             | Integer from 0 to 2147483647, in milliseconds                   |
+| TIME      | `0`             | Integer from 0 to 2147483647, in seconds                        |
 | MAP       | `0`             | Integer corresponding to the map, 0 to 5                        |
 
 ### Tile Types

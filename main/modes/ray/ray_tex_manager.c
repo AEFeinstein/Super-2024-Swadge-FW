@@ -33,6 +33,8 @@
  */
 void loadEnvTextures(ray_t* ray)
 {
+    loadWsg("CHO_PORTRAIT.wsg", &ray->portrait, true);
+
     // Load HUD textures
     loadWsg("GUN_NORMAL.wsg", &ray->guns[LO_NORMAL], true);
     loadWsg("GUN_MISSILE.wsg", &ray->guns[LO_MISSILE], true);
@@ -144,6 +146,7 @@ wsg_t* getTexByType(ray_t* ray, rayMapCellType_t type)
  */
 void freeAllTex(ray_t* ray)
 {
+    freeWsg(&ray->portrait);
     freeWsg(&ray->guns[LO_NORMAL]);
     freeWsg(&ray->guns[LO_MISSILE]);
     freeWsg(&ray->guns[LO_ICE]);

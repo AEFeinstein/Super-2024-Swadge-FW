@@ -9,6 +9,7 @@
 #include "ray_object.h"
 #include "ray_map.h"
 #include "ray_pause.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Functions
@@ -284,6 +285,9 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     {
         // Mark it on the map
         markTileVisited(&ray->map, newCellX, newCellY);
+
+        // Check scripts when entering cells
+        checkScriptEnter(ray, newCellX, newCellY);
     }
 
     // After moving position, recompute direction to targeted object
