@@ -321,8 +321,18 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
                     // Check if the ID matches
                     if (id == script->ifArgs.idList.ids[idx])
                     {
-                        // Mark it as triggered
-                        script->ifArgs.idList.idsTriggered[idx] = true;
+                        // If order is required and this ID has already been triggered
+                        if ((IN_ORDER == script->ifArgs.idList.order) && (script->ifArgs.idList.idsTriggered[idx]))
+                        {
+                            // Clear them all
+                            memset(script->ifArgs.idList.idsTriggered, false,
+                                   sizeof(bool) * script->ifArgs.idList.numIds);
+                        }
+                        else // Order doesn't matter, or ID isn't triggered
+                        {
+                            // Mark it as triggered
+                            script->ifArgs.idList.idsTriggered[idx] = true;
+                        }
                         break;
                     }
                 }
@@ -488,8 +498,19 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
                     // Check if the cell matches
                     if ((x == script->ifArgs.cellList.cells[idx].x) && (y == script->ifArgs.cellList.cells[idx].y))
                     {
-                        // Mark it as triggered
-                        script->ifArgs.cellList.cellsTriggered[idx] = true;
+                        // If order is required and this cell has already been triggered
+                        if ((IN_ORDER == script->ifArgs.cellList.order)
+                            && (script->ifArgs.cellList.cellsTriggered[idx]))
+                        {
+                            // Clear them all
+                            memset(script->ifArgs.cellList.cellsTriggered, false,
+                                   sizeof(bool) * script->ifArgs.cellList.numCells);
+                        }
+                        else // Order doesn't matter, or cell isn't triggered
+                        {
+                            // Mark it as triggered
+                            script->ifArgs.cellList.cellsTriggered[idx] = true;
+                        }
                         break;
                     }
                 }
