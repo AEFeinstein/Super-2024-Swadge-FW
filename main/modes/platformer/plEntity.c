@@ -7,10 +7,12 @@
 #include "plEntityManager.h"
 #include "plTilemap.h"
 #include "plGameData.h"
-#include "musical_buzzer.h"
-#include "btn.h"
+#include "hdw-bzr.h"
+#include "hdw-btn.h"
 #include "esp_random.h"
-#include "platformer_sounds.h"
+#include "aabb_utils.h"
+#include "trigonometry.h"
+#include <esp_log.h>
 
 //==============================================================================
 // Constants
@@ -29,11 +31,12 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t *tilemap, gameData_t *gameData)
+void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t *tilemap, gameData_t *gameData, soundManager_t * soundManager)
 {
     self->active = false;
     self->tilemap = tilemap;
     self->gameData = gameData;
+    self->soundManager = soundManager;
     self->homeTileX = 0;
     self->homeTileY = 0;
     self->gravity = false;
@@ -69,7 +72,7 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
 
 void updatePlayer(entity_t *self)
 {
-    if (self->gameData->btnState & BTN_B)
+    if (self->gameData->btnState & PB_B)
     {
         self->xMaxSpeed = 52;
     }
@@ -78,7 +81,7 @@ void updatePlayer(entity_t *self)
         self->xMaxSpeed = 30;
     }
 
-    if (self->gameData->btnState & LEFT)
+    if (self->gameData->btnState & PB_LEFT)
     {
         self->xspeed -= (self->falling && self->xspeed < 0) ? (self->xspeed < -24) ? 0 : 2 : 3;
 
@@ -87,7 +90,7 @@ void updatePlayer(entity_t *self)
             self->xspeed = -self->xMaxSpeed;
         }
     }
-    else if (self->gameData->btnState & RIGHT)
+    else if (self->gameData->btnState & PB_RIGHT)
     {
         self->xspeed += (self->falling && self->xspeed > 0) ? (self->xspeed > 24) ? 0 : 2 : 3;
 
@@ -98,7 +101,7 @@ void updatePlayer(entity_t *self)
     }
 
     if(!self->gravityEnabled){
-        if (self->gameData->btnState & UP)
+        if (self->gameData->btnState & PB_UP)
         {
             self->yspeed -= 8;
             self->falling = true;
@@ -108,7 +111,7 @@ void updatePlayer(entity_t *self)
                 self->yspeed = -16;
             }
         }
-        else if (self->gameData->btnState & DOWN)
+        else if (self->gameData->btnState & PB_DOWN)
         {
             self->yspeed += 8;
             self->falling = true;
@@ -120,15 +123,15 @@ void updatePlayer(entity_t *self)
         }
     }
 
-    if (self->gameData->btnState & BTN_A)
+    if (self->gameData->btnState & PB_A)
     {
-        if (!self->falling && !(self->gameData->prevBtnState & BTN_A))
+        if (!self->falling && !(self->gameData->prevBtnState & PB_A))
         {
             // initiate jump
             self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
             self->yspeed = -self->jumpPower;
             self->falling = true;
-            buzzer_play_sfx(&sndJump1);
+            bzrPlaySfx(&(self->soundManager->sndJump1), BZR_LEFT);
         }
         else if (self->jumpPower > 0 && self->yspeed < 0)
         {
@@ -137,11 +140,11 @@ void updatePlayer(entity_t *self)
             self->yspeed = -self->jumpPower;
             
             if(self->jumpPower > 35 && self->jumpPower < 37){
-                buzzer_play_sfx(&sndJump2);
+                bzrPlaySfx(&(self->soundManager->sndJump2), BZR_LEFT);
             }
 
             if(self->yspeed > -6 && self->yspeed < -2){
-                buzzer_play_sfx(&sndJump3);
+                bzrPlaySfx(&(self->soundManager->sndJump3), BZR_LEFT);
             }
 
             if (self->jumpPower < 0)
@@ -172,23 +175,23 @@ void updatePlayer(entity_t *self)
         self->animationTimer--;
     }
 
-    if (self->hp >2 && self->gameData->btnState & BTN_B && !(self->gameData->prevBtnState & BTN_B) && self->animationTimer == 0)
+    if (self->hp >2 && self->gameData->btnState & PB_B && !(self->gameData->prevBtnState & PB_B) && self->animationTimer == 0)
     {
         entity_t * createdEntity = createEntity(self->entityManager, ENTITY_WAVE_BALL, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
         if(createdEntity != NULL){
             createdEntity->xspeed= (self->spriteFlipHorizontal) ? -(128 + abs(self->xspeed) + abs(self->yspeed)):128 + abs(self->xspeed) + abs(self->yspeed);
             createdEntity->homeTileX = 0;
             createdEntity->homeTileY = 0;
-            buzzer_play_sfx(&sndWaveBall);
+            bzrPlaySfx(&(self->soundManager->sndWaveBall), BZR_LEFT);
         }
         self->animationTimer = 30;
     }
 
     if(
         (
-            (self->gameData->btnState & START)
+            (self->gameData->btnState & PB_START)
             &&
-            !(self->gameData->prevBtnState & START)
+            !(self->gameData->prevBtnState & PB_START)
         )
     ){
         self->gameData->changeState = ST_PAUSE;
@@ -292,7 +295,7 @@ void updateHitBlock(entity_t *self)
         if(self->jumpPower == TILE_BRICK_BLOCK && (self->yspeed > 0 || self->yDamping == 1) && createdEntity == NULL ) {
             self->jumpPower = TILE_EMPTY;
             scorePoints(self->gameData, 10);
-            buzzer_play_sfx(&sndBreak);
+            bzrPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
         }
 
         self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->jumpPower;
@@ -541,7 +544,7 @@ void animatePlayer(entity_t *self)
     }
     else if (self->xspeed != 0)
     {
-        if ( ((self->gameData->btnState & LEFT) && self->xspeed < 0) || ((self->gameData->btnState & RIGHT) && self->xspeed > 0))
+        if ( ((self->gameData->btnState & PB_LEFT) && self->xspeed < 0) || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
         {
             // Running
             self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
@@ -600,7 +603,7 @@ void playerCollisionHandler(entity_t *self, entity_t *other)
                 scorePoints(self->gameData, other->scoreValue);
 
                 killEnemy(other);
-                buzzer_play_sfx(&sndSquish);
+                bzrPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
 
                 self->yspeed = -180;
                 self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
@@ -626,7 +629,7 @@ void playerCollisionHandler(entity_t *self, entity_t *other)
                     self->yspeed = 0;
                     self->jumpPower = 0;
                     self->invincibilityFrames = 120;
-                    buzzer_play_sfx(&sndHurt);
+                    bzrPlaySfx(&(self->soundManager->sndHurt), BZR_LEFT);
                 }
             }
        
@@ -642,7 +645,7 @@ void playerCollisionHandler(entity_t *self, entity_t *other)
             unlockScrolling(self->tilemap);
             deactivateAllEntities(self->entityManager, true);
             self->tilemap->executeTileSpawnAll = true;
-            buzzer_play_sfx(&sndWarp);
+            bzrPlaySfx(&(self->soundManager->sndWarp), BZR_LEFT);
             break;
         }
         case ENTITY_POWERUP:{
@@ -651,7 +654,7 @@ void playerCollisionHandler(entity_t *self, entity_t *other)
                 self->hp = 3;
             }
             scorePoints(self->gameData, 1000);
-            buzzer_play_sfx(&sndPowerUp);
+            bzrPlaySfx(&(self->soundManager->sndPowerUp), BZR_LEFT);
             updateLedsHpMeter(self->entityManager, self->gameData);
             destroyEntity(other, false);
             break;
@@ -659,7 +662,7 @@ void playerCollisionHandler(entity_t *self, entity_t *other)
         case ENTITY_1UP:{
             self->gameData->lives++;
             scorePoints(self->gameData, 0);
-            buzzer_play_sfx(&snd1up);
+            bzrPlaySfx(&(self->soundManager->snd1up), BZR_LEFT);
             destroyEntity(other, false);
             break;
         }
@@ -671,7 +674,7 @@ void playerCollisionHandler(entity_t *self, entity_t *other)
                 if(aboveTile >= TILE_WARP_0 && aboveTile <= TILE_WARP_F) {
                     self->gameData->checkpoint = aboveTile - TILE_WARP_0;
                     other->xDamping = 1;
-                    buzzer_play_sfx(&sndCheckpoint);
+                    bzrPlaySfx(&(self->soundManager->sndCheckpoint), BZR_LEFT);
                 }
             }
             break;
@@ -707,14 +710,14 @@ void enemyCollisionHandler(entity_t *self, entity_t *other)
             self->xspeed = other->xspeed*2;
             self->yspeed = other->yspeed*2;
             scorePoints(self->gameData, self->scoreValue);
-            buzzer_play_sfx(&sndSquish);
+            bzrPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
             killEnemy(self);
             break;
         case ENTITY_WAVE_BALL:
             self->xspeed = other->xspeed >> 1;
             self->yspeed = -abs(other->xspeed >> 1);
             scorePoints(self->gameData, self->scoreValue);
-            buzzer_play_sfx(&sndBreak);
+            bzrPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
             killEnemy(self);
             destroyEntity(other, false);
             break;
@@ -784,7 +787,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
                 hitBlock->yspeed = (tileId == TILE_BRICK_BLOCK) ? 16 : 24;
                 if(tileId == TILE_BOUNCE_BLOCK){
                     self->yspeed = -64;
-                    if(self->gameData->btnState & BTN_A){
+                    if(self->gameData->btnState & PB_A){
                         self->jumpPower = 80 + ((abs(self->xspeed) + 16) >> 3);
                     }
                 }
@@ -793,7 +796,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
                 break;
             }
 
-            buzzer_play_sfx(&sndHit);
+            bzrPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
         }
         break;
     }
@@ -802,7 +805,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         if(direction == 4) {
             scorePoints(self->gameData, 100);
             buzzer_stop();
-            buzzer_play_sfx(&sndLevelClearD);
+            bzrPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &updateDummy;
             self->gameData->changeState = ST_LEVEL_CLEAR;
@@ -814,7 +817,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         if(direction == 4) {
             scorePoints(self->gameData, 500);
             buzzer_stop();
-            buzzer_play_sfx(&sndLevelClearC);
+            bzrPlaySfx(&(self->soundManager->sndLevelClearC), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &updateDummy;
             self->gameData->changeState = ST_LEVEL_CLEAR;
@@ -826,7 +829,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         if(direction == 4) {
             scorePoints(self->gameData, 1000);
             buzzer_stop();
-            buzzer_play_sfx(&sndLevelClearB);
+            bzrPlaySfx(&(self->soundManager->sndLevelClearB), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &updateDummy;
             self->gameData->changeState = ST_LEVEL_CLEAR;
@@ -838,7 +841,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         if(direction == 4) {
             scorePoints(self->gameData, 2000);
             buzzer_stop();
-            buzzer_play_sfx(&sndLevelClearA);
+            bzrPlaySfx(&(self->soundManager->sndLevelClearA), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &updateDummy;
             self->gameData->changeState = ST_LEVEL_CLEAR;
@@ -850,7 +853,7 @@ bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint
         if(direction == 4) {
             scorePoints(self->gameData, 5000);
             buzzer_stop();
-            buzzer_play_sfx(&sndLevelClearS);
+            bzrPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &updateDummy;
             self->gameData->changeState = ST_LEVEL_CLEAR;
@@ -1792,7 +1795,7 @@ void updateWaveBall(entity_t* self){
 void waveBallOverlapTileHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty){
     if(isSolid(tileId) || tileId == TILE_BOUNCE_BLOCK){
         destroyEntity(self, false);
-        buzzer_play_sfx(&sndHit);
+        bzrPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
     }
 }
 

@@ -6,11 +6,11 @@
 //==============================================================================
 
 #include <stdint.h>
-#include "led_util.h"
+#include "hdw-led.h"
 #include "platformer_typedef.h"
-#include "swadgeMode.h"
+//#include "swadgeMode.h"
 #include "palette.h"
-#include "musical_buzzer.h"
+//#include "musical_buzzer.h"
 
 //==============================================================================
 // Constants
@@ -54,7 +54,7 @@ typedef struct
     uint8_t levelDeaths;
     uint8_t initialHp;
     
-    led_t leds[NUM_LEDS];
+    led_t leds[CONFIG_NUM_LEDS];
 
     paletteColor_t bgColor;
 
@@ -67,12 +67,14 @@ typedef struct
 
     bool continuesUsed;
     uint32_t inGameTimer;
+
+    soundManager_t soundManager;
 } gameData_t;
 
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeGameData(gameData_t * gameData);
+void initializeGameData(gameData_t * gameData, soundManager_t * soundManager);
 void initializeGameDataFromTitleScreen(gameData_t * gameData);
 void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData);
 void scorePoints(gameData_t * gameData, uint16_t points);

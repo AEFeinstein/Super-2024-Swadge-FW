@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "display.h"
+#include "wsg.h"
 #include "platformer_typedef.h"
 #include "entityManager.h"
 
@@ -176,7 +176,7 @@ typedef struct {
 // Prototypes
 //==============================================================================
 void initializeTileMap(tilemap_t * tilemap);
-void drawTileMap(display_t * disp, tilemap_t * tilemap);
+void drawTileMap(tilemap_t * tilemap);
 void scrollTileMap(tilemap_t * tilemap, int16_t x, int16_t y);
 void drawTile(tilemap_t * tilemap, uint8_t tileId, int16_t x, int16_t y);
 bool loadMapFromFile(tilemap_t * tilemap, const char * name);

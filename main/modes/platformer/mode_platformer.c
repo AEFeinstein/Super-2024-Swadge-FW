@@ -1,3 +1,11 @@
+/**
+ * @file mode_platformer.c
+ * @author J.Vega (JVeg199X)
+ * @brief Super Swadge Land (port to Swadge 2024)
+ * @date 2023-09-22
+ *
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -7,13 +15,8 @@
 
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "swadge_esp32.h"
 
-#include "swadgeMode.h"
-#include "musical_buzzer.h"
 #include "mode_platformer.h"
-#include "aabb_utils.h"
-#include "bresenham.h"
 #include "esp_random.h"
 
 #include "platformer_typedef.h"
@@ -21,12 +24,14 @@
 #include "plGameData.h"
 #include "plEntityManager.h"
 #include "plLeveldef.h"
-#include "led_util.h"
+
+#include "hdw-led.h"
 #include "palette.h"
-#include "nvs_manager.h"
-#include "platformer_sounds.h"
+#include "hdw-nvs.h"
+#include "plSoundManager.h"
 #include "inttypes.h"
-#include "mode_main_menu.h"
+#include "mainMenu.h"
+#include "fill.h"
 
 //==============================================================================
 // Constants
@@ -44,13 +49,13 @@ static const paletteColor_t cyanColors[4] = {c055, c455, c055, c033};
 static const paletteColor_t purpleColors[4] = {c213, c535, c555, c535};
 static const paletteColor_t rgbColors[4] = {c500, c050, c005, c050};
 
-static const int16_t cheatCode[11] = {UP, UP, DOWN, DOWN, LEFT, RIGHT, LEFT, RIGHT, BTN_B, BTN_A, START};
+static const int16_t cheatCode[11] = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
 
-void platformerEnterMode(display_t *disp);
+void platformerEnterMode(void);
 void platformerExitMode(void);
 void platformerMainLoop(int64_t elapsedUs);
 void platformerButtonCb(buttonEvt_t *evt);
@@ -63,13 +68,13 @@ void platformerButtonCb(buttonEvt_t *evt);
 typedef void (*gameUpdateFuncton_t)(platformer_t *self);
 struct platformer_t
 {
-    display_t *disp;
-
     font_t radiostars;
 
     tilemap_t tilemap;
     entityManager_t entityManager;
     gameData_t gameData;
+
+    soundManager_t soundManager;
 
     uint8_t menuState;
     uint8_t menuSelection;
@@ -90,11 +95,11 @@ struct platformer_t
 //==============================================================================
 // Function Prototypes
 //==============================================================================
-void drawPlatformerHud(display_t *d, font_t *font, gameData_t *gameData);
-void drawPlatformerTitleScreen(display_t *d, font_t *font, gameData_t *gameData);
+void drawPlatformerHud(font_t *font, gameData_t *gameData);
+void drawPlatformerTitleScreen(font_t *font, gameData_t *gameData);
 void changeStateReadyScreen(platformer_t *self);
 void updateReadyScreen(platformer_t *self);
-void drawReadyScreen(display_t *d, font_t *font, gameData_t *gameData);
+void drawReadyScreen(font_t *font, gameData_t *gameData);
 void changeStateGame(platformer_t *self);
 void detectGameStateChange(platformer_t *self);
 void detectBgmChange(platformer_t *self);
@@ -102,55 +107,54 @@ void changeStateDead(platformer_t *self);
 void updateDead(platformer_t *self);
 void changeStateGameOver(platformer_t *self);
 void updateGameOver(platformer_t *self);
-void drawGameOver(display_t *d, font_t *font, gameData_t *gameData);
+void drawGameOver(font_t *font, gameData_t *gameData);
 void changeStateTitleScreen(platformer_t *self);
 void changeStateLevelClear(platformer_t *self);
 void updateLevelClear(platformer_t *self);
-void drawLevelClear(display_t *d, font_t *font, gameData_t *gameData);
+void drawLevelClear(font_t *font, gameData_t *gameData);
 void changeStateGameClear(platformer_t *self);
 void updateGameClear(platformer_t *self);
-void drawGameClear(display_t *d, font_t *font, gameData_t *gameData);
+void drawGameClear(font_t *font, gameData_t *gameData);
 void initializePlatformerHighScores(platformer_t* self);
 void loadPlatformerHighScores(platformer_t* self);
 void savePlatformerHighScores(platformer_t* self);
 void initializePlatformerUnlockables(platformer_t* self);
 void loadPlatformerUnlockables(platformer_t* self);
 void savePlatformerUnlockables(platformer_t* self);
-void drawPlatformerHighScores(display_t *d, font_t *font, platformerHighScores_t *highScores, gameData_t *gameData);
+void drawPlatformerHighScores(font_t *font, platformerHighScores_t *highScores, gameData_t *gameData);
 uint8_t getHighScoreRank(platformerHighScores_t *highScores, uint32_t newScore);
 void insertScoreIntoHighScores(platformerHighScores_t *highScores, uint32_t newScore, char newInitials[], uint8_t rank);
 void changeStateNameEntry(platformer_t *self);
 void updateNameEntry(platformer_t *self);
-void drawNameEntry(display_t *d, font_t *font, gameData_t *gameData, uint8_t currentInitial);
+void drawNameEntry(font_t *font, gameData_t *gameData, uint8_t currentInitial);
 void changeStateShowHighScores(platformer_t *self);
 void updateShowHighScores(platformer_t *self);
-void drawShowHighScores(display_t *d, font_t *font, uint8_t menuState);
+void drawShowHighScores(font_t *font, uint8_t menuState);
 void changeStatePause(platformer_t *self);
 void updatePause(platformer_t *self);
-void drawPause(display_t *d, font_t *font);
+void drawPause(font_t *font);
 uint16_t getLevelIndex(uint8_t world, uint8_t level);
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-platformer_t *platformer;
+platformer_t *platformer = NULL;
 
-swadgeMode modePlatformer =
-    {
+swadgeMode_t modePlatformer = {
         .modeName = "Swadge Land",
+        .wifiMode = NO_WIFI,
+        .overrideUsb = false,
+        .usesAccelerometer        = false,
+        .usesThermometer          = false,
         .fnEnterMode = platformerEnterMode,
         .fnExitMode = platformerExitMode,
         .fnMainLoop = platformerMainLoop,
-        .fnButtonCallback = platformerButtonCb,
-        .fnTouchCallback = NULL,
-        .wifiMode = NO_WIFI,
+        .fnAudioCallback          = NULL,
+        .fnBackgroundDrawCallback = NULL,
         .fnEspNowRecvCb = NULL,
         .fnEspNowSendCb = NULL,
-        .fnAccelerometerCallback = NULL,
-        .fnAudioCallback = NULL,
-        .fnTemperatureCallback = NULL,
-        .overrideUsb = false
+        .fnAudioCallback = NULL
 };
 
 #define NUM_LEVELS 16
@@ -208,7 +212,7 @@ static const leveldef_t leveldef[17] = {
      .timeLimit = 180,
      .checkpointTimeLimit = 90}};
 
-led_t platLeds[NUM_LEDS];
+led_t platLeds[CONFIG_NUM_LEDS];
 
 static const char str_get_ready[] = "Get Ready!";
 static const char str_time_up[] = "-Time Up!-";
@@ -232,14 +236,11 @@ static const char KEY_UNLOCKS[] = "pf_unlocks";
  * @brief TODO
  *
  */
-void platformerEnterMode(display_t *disp)
+void platformerEnterMode(void)
 {
     // Allocate memory for this mode
     platformer = (platformer_t *)calloc(1, sizeof(platformer_t));
     memset(platformer, 0, sizeof(platformer_t));
-
-    // Save a pointer to the display
-    platformer->disp = disp;
 
     platformer->menuState = 0;
     platformer->menuSelection = 0;
@@ -252,14 +253,15 @@ void platformerEnterMode(display_t *disp)
         platformer->easterEgg = true;
     }
 
-    loadFont("radiostars.font", &platformer->radiostars);
+    loadFont("radiostars.font", &platformer->radiostars, false);
 
     initializeTileMap(&(platformer->tilemap));
-
     loadMapFromFile(&(platformer->tilemap), leveldef[0].filename);
 
+    initializeSoundManager(&(platformer->soundManager));
+
     initializeGameData(&(platformer->gameData));
-    initializeEntityManager(&(platformer->entityManager), &(platformer->tilemap), &(platformer->gameData));
+    initializeEntityManager(&(platformer->entityManager), &(platformer->tilemap), &(platformer->gameData), &(platformer->soundManager));
 
     platformer->tilemap.entityManager = &(platformer->entityManager);
     platformer->tilemap.tileSpawnEnabled = true;
@@ -277,6 +279,7 @@ void platformerExitMode(void)
 {
     freeFont(&platformer->radiostars);
     freeTilemap(&(platformer->tilemap));
+    freeSoundManager(&(platformer->soundManager));
     freeEntityManager(&(platformer->entityManager));
     free(platformer);
 }
@@ -311,13 +314,13 @@ void platformerButtonCb(buttonEvt_t *evt)
                 platformer->cheatCodeIdx = 0;
                 platformer->menuState = 1;
                 platformer->gameData.debugMode = true;
-                buzzer_play_sfx(&sndLevelClearS);
+                bzrPlaySfx(&(platformer->soundManager.sndLevelClearS), BZR_STEREO);
             } else {
-                buzzer_play_sfx(&sndMenuSelect);
+                bzrPlaySfx(&(platformer->soundManager.sndMenuSelect), BZR_STEREO);
             }
 
             // Do not forward the A or START in the cheat code to the rest of the mode
-            if(evt->button == BTN_A || evt->button == START)
+            if(evt->button == PB_A || evt->button == PB_B)
             {
                 return;
             }
@@ -345,15 +348,15 @@ void platformerButtonCb(buttonEvt_t *evt)
 void updateGame(platformer_t *self)
 {
     // Clear the display
-    fillDisplayArea( self->disp, 0, 0, self->disp->w, self->disp->h, self->gameData.bgColor);
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     updateEntities(&(self->entityManager));
 
-    drawTileMap(self->disp, &(self->tilemap));
-    drawEntities(self->disp, &(self->entityManager));
+    drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
     detectGameStateChange(self);
     detectBgmChange(self);
-    drawPlatformerHud(self->disp, &(self->radiostars), &(self->gameData));
+    drawPlatformerHud(&(self->radiostars), &(self->gameData));
 
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 59){
@@ -362,7 +365,7 @@ void updateGame(platformer_t *self)
         self->gameData.inGameTimer++;
 
         if(self->gameData.countdown < 10){
-            buzzer_play_bgm(&sndOuttaTime);
+            bzrPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);
         }
 
         if(self->gameData.countdown < 0){
@@ -376,7 +379,7 @@ void updateGame(platformer_t *self)
     self->gameData.prevBtnState = self->prevBtnState;
 }
 
-void drawPlatformerHud(display_t *d, font_t *font, gameData_t *gameData)
+void drawPlatformerHud(font_t *font, gameData_t *gameData)
 {
     char coinStr[8];
     snprintf(coinStr, sizeof(coinStr) - 1, "C:%02d", gameData->coins);
@@ -394,27 +397,27 @@ void drawPlatformerHud(display_t *d, font_t *font, gameData_t *gameData)
     snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
 
     if(gameData->frameCount > 29) {
-        drawText(d, font, c500, "1UP", 24, 2);
+        drawText(font, c500, "1UP", 24, 2);
     }
     
-    drawText(d, font, c555, livesStr, 56, 2);
-    drawText(d, font, c555, coinStr, 160, 16);
-    drawText(d, font, c555, scoreStr, 8, 16);
-    drawText(d, font, c555, levelStr, 152, 2);
-    drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220, 16);
+    drawText(font, c555, livesStr, 56, 2);
+    drawText(font, c555, coinStr, 160, 16);
+    drawText(font, c555, scoreStr, 8, 16);
+    drawText(font, c555, levelStr, 152, 2);
+    drawText(font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220, 16);
 
     if(gameData->comboTimer == 0){
         return;
     }
 
     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-    drawText(d, font, (gameData->comboTimer < 60) ? c030: greenColors[(platformer->gameData.frameCount >> 3) % 4], scoreStr, 8, 30);
+    drawText(font, (gameData->comboTimer < 60) ? c030: greenColors[(platformer->gameData.frameCount >> 3) % 4], scoreStr, 8, 30);
 }
 
 void updateTitleScreen(platformer_t *self)
 {
     // Clear the display
-    fillDisplayArea( self->disp, 0, 0, self->disp->w, self->disp->h, self->gameData.bgColor);
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
     self->gameData.frameCount++;
    
@@ -429,19 +432,19 @@ void updateTitleScreen(platformer_t *self)
 
             if (
                 (
-                    (self->gameData.btnState & START)
+                    (self->gameData.btnState & PB_START)
                     &&
-                    !(self->gameData.prevBtnState & START)
+                    !(self->gameData.prevBtnState & PB_START)
                 )
                     ||
                 (
-                    (self->gameData.btnState & BTN_A)
+                    (self->gameData.btnState & PB_A)
                     &&
-                    !(self->gameData.prevBtnState & BTN_A)
+                    !(self->gameData.prevBtnState & PB_A)
                 )
             )
             {
-                buzzer_play_sfx(&sndMenuConfirm);
+                bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                 platformer->menuState = 1;
                 platformer->menuSelection = 0;
             }
@@ -451,15 +454,15 @@ void updateTitleScreen(platformer_t *self)
         case 1:{
             if (
                 (
-                    (self->gameData.btnState & START)
+                    (self->gameData.btnState & PB_START)
                     &&
-                    !(self->gameData.prevBtnState & START)
+                    !(self->gameData.prevBtnState & PB_START)
                 )
                     ||
                 (
-                    (self->gameData.btnState & BTN_A)
+                    (self->gameData.btnState & PB_A)
                     &&
-                    !(self->gameData.prevBtnState & BTN_A)
+                    !(self->gameData.prevBtnState & PB_A)
                 )
             )
             {
@@ -471,7 +474,7 @@ void updateTitleScreen(platformer_t *self)
                             ||
                             (!self->gameData.debugMode && levelIndex > self->unlockables.maxLevelIndexUnlocked)
                         ){
-                            buzzer_play_sfx(&sndMenuDeny);
+                            bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                             break;
                         }
 
@@ -488,14 +491,14 @@ void updateTitleScreen(platformer_t *self)
                         if(self->gameData.debugMode){
                             //Reset Progress
                             initializePlatformerUnlockables(self);
-                            buzzer_play_sfx(&sndBreak);
+                            bzrPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
                         } else {
                             //Show High Scores
                             self->menuSelection = 0;
                             self->menuState = 0;
 
                             changeStateShowHighScores(self);
-                            buzzer_play_sfx(&sndMenuConfirm);
+                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                         }
                         break;
                     }
@@ -503,12 +506,12 @@ void updateTitleScreen(platformer_t *self)
                         if(self->gameData.debugMode){
                             //Reset High Scores
                             initializePlatformerHighScores(self);
-                            buzzer_play_sfx(&sndBreak);
+                            bzrPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
                         } else {
                             //Show Achievements
                             self->menuSelection = 0;
                             self->menuState = 2;
-                            buzzer_play_sfx(&sndMenuConfirm);
+                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                         }
                         break;
                     }
@@ -517,24 +520,24 @@ void updateTitleScreen(platformer_t *self)
                             //Save & Quit
                             savePlatformerHighScores(self);
                             savePlatformerUnlockables(self);
-                            buzzer_play_sfx(&sndMenuConfirm);
-                            switchToSwadgeMode(&modeMainMenu);
+                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                            switchToSwadgeMode(&mainMenuMode);
                         } else {
-                            buzzer_play_sfx(&sndMenuConfirm);
-                            switchToSwadgeMode(&modeMainMenu);
+                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                            switchToSwadgeMode(&mainMenuMode);
                         }
                         break;
                     }
                     default: {
-                        buzzer_play_sfx(&sndMenuDeny);
+                        bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                         self->menuSelection = 0;
                     }
                 }
             } else if (
                     (
-                    self->gameData.btnState & UP
+                    self->gameData.btnState & PB_UP
                     &&
-                    !(self->gameData.prevBtnState & UP)
+                    !(self->gameData.prevBtnState & PB_UP)
                 )
             )
             {
@@ -545,13 +548,13 @@ void updateTitleScreen(platformer_t *self)
                         platformer->menuSelection--;
                     }
 
-                    buzzer_play_sfx(&sndMenuSelect);
+                    bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                 }
             } else if (
                     (
-                    self->gameData.btnState & DOWN
+                    self->gameData.btnState & PB_DOWN
                     &&
-                    !(self->gameData.prevBtnState & DOWN)
+                    !(self->gameData.prevBtnState & PB_DOWN)
                 )
             )
             {
@@ -562,21 +565,21 @@ void updateTitleScreen(platformer_t *self)
                         platformer->menuSelection++;
                     }
 
-                    buzzer_play_sfx(&sndMenuSelect);
+                    bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                 } else {
-                    buzzer_play_sfx(&sndMenuDeny);
+                    bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                 }
             } else if (
                 (
-                    self->gameData.btnState & LEFT
+                    self->gameData.btnState & PB_LEFT
                     &&
-                    !(self->gameData.prevBtnState & LEFT)
+                    !(self->gameData.prevBtnState & PB_LEFT)
                 )
             )
             {
                 if(platformer->menuSelection == 1){
                     if(platformer->gameData.level == 1 && platformer->gameData.world == 1){
-                        buzzer_play_sfx(&sndMenuDeny);
+                        bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                     } else {
                         platformer->gameData.level--;
                         if(platformer->gameData.level < 1){
@@ -585,14 +588,14 @@ void updateTitleScreen(platformer_t *self)
                                 platformer->gameData.world--;
                             }
                         }
-                        buzzer_play_sfx(&sndMenuSelect);
+                        bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                     }
                 }
             } else if (
                     (
-                    self->gameData.btnState & RIGHT
+                    self->gameData.btnState & PB_RIGHT
                     &&
-                    !(self->gameData.prevBtnState & RIGHT)
+                    !(self->gameData.prevBtnState & PB_RIGHT)
                 )
             )
             {
@@ -603,7 +606,7 @@ void updateTitleScreen(platformer_t *self)
                         (!platformer->gameData.debugMode && getLevelIndex(platformer->gameData.world, platformer->gameData.level + 1) > platformer->unlockables.maxLevelIndexUnlocked )
                     )
                     {
-                        buzzer_play_sfx(&sndMenuDeny);
+                        bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                     } else {
                         platformer->gameData.level++;
                         if(platformer->gameData.level > 4){
@@ -612,42 +615,42 @@ void updateTitleScreen(platformer_t *self)
                                 platformer->gameData.world++;
                             }
                         }
-                        buzzer_play_sfx(&sndMenuSelect);
+                        bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                     }
                     
                 }
             } else if (
                     (
-                    self->gameData.btnState & BTN_B
+                    self->gameData.btnState & PB_B
                     &&
-                    !(self->gameData.prevBtnState & BTN_B)
+                    !(self->gameData.prevBtnState & PB_B)
                 )
             )
             {
                 self->gameData.frameCount = 0;
                 platformer->menuState = 0;
-                buzzer_play_sfx(&sndMenuConfirm);
+                bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
             }
             break;
         }
         case 2:{
             if (
                     (
-                    self->gameData.btnState & BTN_B
+                    self->gameData.btnState & PB_B
                     &&
-                    !(self->gameData.prevBtnState & BTN_B)
+                    !(self->gameData.prevBtnState & PB_B)
                 )
             )
             {
                 self->gameData.frameCount = 0;
                 platformer->menuState = 1;
-                buzzer_play_sfx(&sndMenuConfirm);
+                bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
             }
             break;
         }
         default:
             platformer->menuState = 0;
-            buzzer_play_sfx(&sndMenuDeny);
+            bzrPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
             break;
     }
 
@@ -657,7 +660,7 @@ void updateTitleScreen(platformer_t *self)
         self->tilemap.mapOffsetX = 0;
     }
     
-    drawPlatformerTitleScreen(self->disp, &(self->radiostars), &(self->gameData));
+    drawPlatformerTitleScreen(&(self->radiostars), &(self->gameData));
 
     if(( (self->gameData.frameCount) % 10) == 0){
         for (int32_t i = 0; i < 8; i++)
@@ -670,81 +673,81 @@ void updateTitleScreen(platformer_t *self)
             platLeds[i].b += (esp_random() % 8);
         }
     }
-    setLeds(platLeds, NUM_LEDS);
+    setLeds(platLeds, CONFIG_NUM_LEDS);
 
     self->prevBtnState = self->btnState;
     self->gameData.prevBtnState = self->prevBtnState;
 }
 
-void drawPlatformerTitleScreen(display_t *d, font_t *font, gameData_t *gameData)
+void drawPlatformerTitleScreen(font_t *font, gameData_t *gameData)
 {
-    drawTileMap(d,&(platformer->tilemap));
+    drawTileMap(&(platformer->tilemap));
 
-    drawText(d, font, c555, "Super Swadge Land", 40, 32);
+    drawText(font, c555, "Super Swadge Land", 40, 32);
 
     if(platformer->gameData.debugMode){
-        drawText(d, font, c555, "Debug Mode", 80, 48);
+        drawText(font, c555, "Debug Mode", 80, 48);
     } 
 
     switch(platformer->menuState){
         case 0: {
             if ((gameData->frameCount % 60 ) < 30)
             {
-                drawText(d, font, c555, "- Press START button -", 20, 128);
+                drawText(font, c555, "- Press START button -", 20, 128);
             }
             break;
         }
          
         case 1: {
-            drawText(d, font, c555, "Start Game", 48, 128);
+            drawText(font, c555, "Start Game", 48, 128);
 
             if(platformer->gameData.debugMode || platformer->unlockables.maxLevelIndexUnlocked > 0){
                 char levelStr[24];
                 snprintf(levelStr, sizeof(levelStr) - 1, "Level Select: %d-%d", gameData->world, gameData->level);
-                drawText(d, font, c555, levelStr, 48, 144);
+                drawText(font, c555, levelStr, 48, 144);
             }
 
             if(platformer->gameData.debugMode){
-                drawText(d, font, c555, "Reset Progress", 48, 160);
-                drawText(d, font, c555, "Reset High Scores", 48, 176);
-                drawText(d, font, c555, "Save & Exit to Menu", 48, 192);
+                drawText(font, c555, "Reset Progress", 48, 160);
+                drawText(font, c555, "Reset High Scores", 48, 176);
+                drawText(font, c555, "Save & Exit to Menu", 48, 192);
             } else {
-                drawText(d, font, c555, "High Scores", 48, 160);
-                drawText(d, font, c555, "Achievements", 48, 176);
-                drawText(d, font, c555, "Exit to Menu", 48, 192);
+                drawText(font, c555, "High Scores", 48, 160);
+                drawText(font, c555, "Achievements", 48, 176);
+                drawText(font, c555, "Exit to Menu", 48, 192);
             }
 
-            drawText(d, font, c555, "->", 32, 128 + platformer->menuSelection * 16);
+            drawText(font, c555, "->", 32, 128 + platformer->menuSelection * 16);
 
             break;
         }
 
         case 2: {
             if(platformer->unlockables.gameCleared){
-                drawText(d, font, redColors[(gameData->frameCount >> 3) % 4], "Beat the game!", 48, 80);
+                drawText(font, redColors[(gameData->frameCount >> 3) % 4], "Beat the game!", 48, 80);
             }
 
             if(platformer->unlockables.oneCreditCleared){
-                drawText(d, font, yellowColors[(gameData->frameCount >> 3) % 4], "1 Credit Clear!", 48, 96);
+                drawText(font, yellowColors[(gameData->frameCount >> 3) % 4], "1 Credit Clear!", 48, 96);
             }
 
             if(platformer->unlockables.bigScore){
-                drawText(d, font, greenColors[(gameData->frameCount >> 3) % 4], "Got 4 million points!", 48, 112);
+                drawText(font, greenColors[(gameData->frameCount >> 3) % 4], "Got 4 million points!", 48, 112);
             }
 
             if(platformer->unlockables.biggerScore){
-                drawText(d, font, cyanColors[(gameData->frameCount >> 3) % 4], "Got 10 million points!", 48, 128);
+                drawText(font, cyanColors[(gameData->frameCount >> 3) % 4], "Got 10 million points!", 48, 128);
             }
 
             if(platformer->unlockables.fastTime){
-                drawText(d, font, purpleColors[(gameData->frameCount >> 3) % 4], "Beat within 25 min!", 48, 144);
+                drawText(font, purpleColors[(gameData->frameCount >> 3) % 4], "Beat within 25 min!", 48, 144);
             }
 
             if(platformer->unlockables.gameCleared && platformer->unlockables.oneCreditCleared && platformer->unlockables.bigScore && platformer->unlockables.biggerScore && platformer->unlockables.fastTime){
-                drawText(d, font, rgbColors[(gameData->frameCount >> 3) % 4], "100% 100% 100%", 48, 160);
+                drawText(font, rgbColors[(gameData->frameCount >> 3) % 4], "100% 100% 100%", 48, 160);
             }
 
-            drawText(d, font, c555, "Press B to Return", 48, 192);
+            drawText(font, c555, "Press B to Return", 48, 192);
             break;
         }
         
@@ -755,7 +758,7 @@ void drawPlatformerTitleScreen(display_t *d, font_t *font, gameData_t *gameData)
 
 void changeStateReadyScreen(platformer_t *self){
     self->gameData.frameCount = 0;
-    buzzer_play_bgm(&bgmIntro);
+    bbzrPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
     resetGameDataLeds(&(self->gameData));
     
     self->update=&updateReadyScreen;
@@ -763,25 +766,25 @@ void changeStateReadyScreen(platformer_t *self){
 
 void updateReadyScreen(platformer_t *self){
     // Clear the display
-    self->disp->clearPx();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 179){
         changeStateGame(self);
     }
 
-    drawReadyScreen(self->disp, &(self->radiostars), &(self->gameData));
+    drawReadyScreen(&(self->radiostars), &(self->gameData));
 }
 
-void drawReadyScreen(display_t *d, font_t *font, gameData_t *gameData){
-    drawPlatformerHud(d, font, gameData);
-    int16_t xOff = (d->w - textWidth(font, str_get_ready)) / 2;
-    drawText(d, font, c555, str_get_ready, xOff, 128);
+void drawReadyScreen(font_t *font, gameData_t *gameData){
+    drawPlatformerHud(font, gameData);
+    int16_t xOff = (TFT_WIDTH - textWidth(font, str_get_ready)) / 2;
+    drawText(font, c555, str_get_ready, xOff, 128);
 
     if(getLevelIndex(gameData->world, gameData->level) == 0)
     {
-        drawText(d, font, c555, "A: Jump", xOff, 128 + (font->h + 3) * 3);
-        drawText(d, font, c555, "B: Run / Fire", xOff, 128 + (font->h + 3) * 4);
+        drawText(font, c555, "A: Jump", xOff, 128 + (font->h + 3) * 3);
+        drawText(font, c555, "B: Run / Fire", xOff, 128 + (font->h + 3) * 4);
     }
 }
 
@@ -855,25 +858,25 @@ void detectBgmChange(platformer_t *self){
 
         case BGM_MAIN:
             if(self->gameData.currentBgm != BGM_MAIN){
-                buzzer_play_bgm(&bgmDemagio);
+                bzrPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
             }
             break;
         
         case BGM_ATHLETIC:
             if(self->gameData.currentBgm != BGM_ATHLETIC){
-                buzzer_play_bgm(&bgmSmooth);
+                bzrPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
             }
             break;
 
         case BGM_UNDERGROUND:
             if(self->gameData.currentBgm != BGM_UNDERGROUND){
-                buzzer_play_bgm(&bgmUnderground);
+                bzrPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
             }
             break;
 
         case BGM_FORTRESS:
             if(self->gameData.currentBgm != BGM_FORTRESS){
-                buzzer_play_bgm(&bgmCastle);
+                bzrPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
             }
             break;
 
@@ -894,14 +897,14 @@ void changeStateDead(platformer_t *self){
     self->gameData.initialHp = 1;
 
     buzzer_stop();
-    buzzer_play_bgm(&sndDie);
+    bzrPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
 
     self->update=&updateDead;
 }
 
 void updateDead(platformer_t *self){
     // Clear the display
-    fillDisplayArea( self->disp, 0, 0, self->disp->w, self->disp->h, self->gameData.bgColor);
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
     
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 179){
@@ -913,19 +916,19 @@ void updateDead(platformer_t *self){
     }
 
     updateEntities(&(self->entityManager));
-    drawTileMap(self->disp, &(self->tilemap));
-    drawEntities(self->disp, &(self->entityManager));
-    drawPlatformerHud(self->disp, &(self->radiostars), &(self->gameData));
+    drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
+    drawPlatformerHud(&(self->radiostars), &(self->gameData));
 
     if(self->gameData.countdown < 0){
-        drawText(self->disp, &(self->radiostars), c555, str_time_up, (self->disp->w - textWidth(&(self->radiostars), str_time_up)) / 2, 128);
+        drawText(&(self->radiostars), c555, str_time_up, (TFT_WIDTH - textWidth(&(self->radiostars), str_time_up)) / 2, 128);
     }
 }
 
 
 void updateGameOver(platformer_t *self){
     // Clear the display
-    self->disp->clearPx();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 179){
@@ -946,21 +949,21 @@ void updateGameOver(platformer_t *self){
         changeStateNameEntry(self);
     }
 
-    drawGameOver(self->disp, &(self->radiostars), &(self->gameData));
+    drawGameOver(&(self->radiostars), &(self->gameData));
     updateLedsGameOver(&(self->gameData));
 }
 
 void changeStateGameOver(platformer_t *self){
     self->gameData.frameCount = 0;
     resetGameDataLeds(&(self->gameData)); 
-    buzzer_play_bgm(&bgmGameOver);
+    bzrPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
     self->update=&updateGameOver;   
     
 }
 
-void drawGameOver(display_t *d, font_t *font, gameData_t *gameData){
-    drawPlatformerHud(d, font, gameData);
-    drawText(d, font, c555, str_game_over, (d->w - textWidth(font, str_game_over)) / 2, 128);
+void drawGameOver(font_t *font, gameData_t *gameData){
+    drawPlatformerHud(font, gameData);
+    drawText(font, c555, str_game_over, (TFT_WIDTH - textWidth(font, str_game_over)) / 2, 128);
 }
 
 void changeStateTitleScreen(platformer_t *self){
@@ -980,7 +983,7 @@ void changeStateLevelClear(platformer_t *self){
 
 void updateLevelClear(platformer_t *self){
     // Clear the display
-    fillDisplayArea( self->disp, 0, 0, self->disp->w, self->disp->h, self->gameData.bgColor);
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
     
     self->gameData.frameCount++;
 
@@ -989,7 +992,7 @@ void updateLevelClear(platformer_t *self){
             self->gameData.countdown--;
             
             if(self->gameData.countdown % 2){
-                buzzer_play_bgm(&sndTally);
+                bzrPlayBgm(&(self->soundManager.sndTally), BZR_STEREO);
             }
 
             uint16_t comboPoints = 50 * self->gameData.combo;
@@ -1054,28 +1057,28 @@ void updateLevelClear(platformer_t *self){
     }
 
     updateEntities(&(self->entityManager));
-    drawTileMap(self->disp, &(self->tilemap));
-    drawEntities(self->disp, &(self->entityManager));
-    drawPlatformerHud(self->disp, &(self->radiostars), &(self->gameData));
-    drawLevelClear(self->disp, &(self->radiostars), &(self->gameData));
+    drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
+    drawPlatformerHud(&(self->radiostars), &(self->gameData));
+    drawLevelClear(&(self->radiostars), &(self->gameData));
     updateLedsLevelClear(&(self->gameData));
 }
 
-void drawLevelClear(display_t *d, font_t *font, gameData_t *gameData){
-    drawPlatformerHud(d, font, gameData);
-    drawText(d, font, c555, str_well_done, (d->w - textWidth(font, str_well_done)) / 2, 128);
+void drawLevelClear(font_t *font, gameData_t *gameData){
+    drawPlatformerHud(font, gameData);
+    drawText(font, c555, str_well_done, (dTFT_WIDTH - textWidth(font, str_well_done)) / 2, 128);
 }
 
 void changeStateGameClear(platformer_t *self){
     self->gameData.frameCount = 0;
     self->update=&updateGameClear;
     resetGameDataLeds(&(self->gameData));
-    buzzer_play_bgm(&bgmSmooth);
+    bzrPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
 }
 
 void updateGameClear(platformer_t *self){
     // Clear the display
-    self->disp->clearPx();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     
     self->gameData.frameCount++;
 
@@ -1084,49 +1087,49 @@ void updateGameClear(platformer_t *self){
             if(self->gameData.frameCount % 60 == 0){
                 self->gameData.lives--;
                 self->gameData.score += 200000;
-                buzzer_play_sfx(&snd1up);
+                bzrPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
             }
         } else if(self->gameData.frameCount % 960 == 0) {
             changeStateGameOver(self);
         }
     }
 
-    drawPlatformerHud(self->disp, &(self->radiostars), &(self->gameData));
-    drawGameClear(self->disp, &(self->radiostars), &(self->gameData));
+    drawPlatformerHud(&(self->radiostars), &(self->gameData));
+    drawGameClear(&(self->radiostars), &(self->gameData));
     updateLedsGameClear(&(self->gameData));
 }
 
-void drawGameClear(display_t *d, font_t *font, gameData_t *gameData){
-    drawPlatformerHud(d, font, gameData);
+void drawGameClear( font_t *font, gameData_t *gameData){
+    drawPlatformerHud(font, gameData);
 
     char timeStr[32];
     snprintf(timeStr, sizeof(timeStr) - 1, "in %06" PRIu32 " seconds!", gameData->inGameTimer);
 
-    drawText(d, font, yellowColors[(gameData->frameCount >> 3) % 4], str_congrats, (d->w - textWidth(font, str_congrats)) / 2, 48);
+    drawText(font, yellowColors[(gameData->frameCount >> 3) % 4], str_congrats, (TFT_WIDTH - textWidth(font, str_congrats)) / 2, 48);
 
     if(gameData->frameCount > 120){
-        drawText(d, font, c555, "You've completed your", 8, 80);
-        drawText(d, font, c555, "trip across Swadge Land", 8, 96);
+        drawText(font, c555, "You've completed your", 8, 80);
+        drawText(font, c555, "trip across Swadge Land", 8, 96);
     }
     
     if(gameData->frameCount > 180){
-        drawText(d, font, (gameData->inGameTimer < FAST_TIME) ? cyanColors[(gameData->frameCount >> 3) % 4] : c555, timeStr, (d->w - textWidth(font, timeStr)) / 2, 112);
+        drawText(font, (gameData->inGameTimer < FAST_TIME) ? cyanColors[(gameData->frameCount >> 3) % 4] : c555, timeStr, (TFT_WIDTH - textWidth(font, timeStr)) / 2, 112);
     }
 
     if(gameData->frameCount > 300){
-        drawText(d, font, c555, "The Swadge staff", 8, 144);
-        drawText(d, font, c555, "thanks you for playing!", 8, 160);
+        drawText(font, c555, "The Swadge staff", 8, 144);
+        drawText(font, c555, "thanks you for playing!", 8, 160);
     }
 
     if(gameData->frameCount > 420){
-        drawText(d, font, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, "Bonus 200000pts per life!", (d->w - textWidth(font, "Bonus 100000pts per life!")) / 2, 192);
+        drawText(font, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, "Bonus 200000pts per life!", (dTFT_WIDTH - textWidth(font, "Bonus 100000pts per life!")) / 2, 192);
     }
 
     /*
-    drawText(d, font, c555, "Thanks for playing.", 24, 48);
-    drawText(d, font, c555, "Many more battle scenes", 8, 96);
-    drawText(d, font, c555, "will soon be available!", 8, 112);
-    drawText(d, font, c555, "Bonus 100000pts per life!", 8, 160);
+    drawText(font, c555, "Thanks for playing.", 24, 48);
+    drawText(font, c555, "Many more battle scenes", 8, 96);
+    drawText(font, c555, "will soon be available!", 8, 112);
+    drawText(font, c555, "Bonus 100000pts per life!", 8, 160);
     */
 }
 
@@ -1184,12 +1187,12 @@ void savePlatformerUnlockables(platformer_t* self){
     writeNvsBlob(KEY_UNLOCKS, &(self->unlockables), size);
 };
 
-void drawPlatformerHighScores(display_t *d, font_t *font, platformerHighScores_t *highScores, gameData_t *gameData){
-    drawText(d, font, c555, "RANK  SCORE  NAME", 48, 96);
+void drawPlatformerHighScores(font_t *font, platformerHighScores_t *highScores, gameData_t *gameData){
+    drawText(font, c555, "RANK  SCORE  NAME", 48, 96);
     for(uint8_t i=0; i<NUM_PLATFORMER_HIGH_SCORES; i++){
         char rowStr[32];
         snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06u   %c%c%c", i+1, highScores->scores[i], highScores->initials[i][0], highScores->initials[i][1], highScores->initials[i][2]);
-        drawText(d, font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 60, 128 + i*16);
+        drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 60, 128 + i*16);
     }
 }
 
@@ -1239,20 +1242,20 @@ void changeStateNameEntry(platformer_t *self){
         return;
     }
 
-    buzzer_play_bgm(&bgmNameEntry);
+    bzrPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update=&updateNameEntry;
 }
 
 void updateNameEntry(platformer_t *self){
-    self->disp->clearPx();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
 
     if(
-        self->gameData.btnState & LEFT
+        self->gameData.btnState & PB_LEFT
         &&
-        !(self->gameData.prevBtnState & LEFT)
+        !(self->gameData.prevBtnState & PB_LEFT)
     ) {
         self->menuSelection--;
 
@@ -1261,11 +1264,11 @@ void updateNameEntry(platformer_t *self){
         }
 
         self->gameData.initials[self->menuState]=self->menuSelection;
-        buzzer_play_sfx(&sndMenuSelect);
+        bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
     } else if(
-        self->gameData.btnState & RIGHT
+        self->gameData.btnState & PB_RIGHT
         &&
-        !(self->gameData.prevBtnState & RIGHT)
+        !(self->gameData.prevBtnState & PB_RIGHT)
     ) {
         self->menuSelection++;
 
@@ -1274,23 +1277,23 @@ void updateNameEntry(platformer_t *self){
         }
 
          self->gameData.initials[self->menuState]=self->menuSelection;
-         buzzer_play_sfx(&sndMenuSelect);
+         bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
     } else if(
-        self->gameData.btnState & BTN_B
+        self->gameData.btnState & PB_B
         &&
-        !(self->gameData.prevBtnState & BTN_B)
+        !(self->gameData.prevBtnState & PB_B)
     ) {
         if(self->menuState > 0){
             self->menuState--;
             self->menuSelection = self->gameData.initials[self->menuState];
-            buzzer_play_sfx(&sndMenuSelect);
+            bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
         } else {
-            buzzer_play_sfx(&sndMenuDeny);
+            bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
         }
     } else if(
-        self->gameData.btnState & BTN_A
+        self->gameData.btnState & PB_A
         &&
-        !(self->gameData.prevBtnState & BTN_A)
+        !(self->gameData.prevBtnState & PB_A)
     ) {
         self->menuState++;
         
@@ -1298,30 +1301,30 @@ void updateNameEntry(platformer_t *self){
             insertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials, self->gameData.rank);
             savePlatformerHighScores(self);
             changeStateShowHighScores(self);
-            buzzer_play_sfx(&sndPowerUp);
+            bzrPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
         } else {
             self->menuSelection = self->gameData.initials[self->menuState];
-            buzzer_play_sfx(&sndMenuSelect);
+            bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
         }
     }
     
-    drawNameEntry(self->disp, &(self->radiostars), &(self->gameData), self->menuState);
+    drawNameEntry(&(self->radiostars), &(self->gameData), self->menuState);
     updateLedsShowHighScores(&(self->gameData));
 
     self->prevBtnState = self->btnState;
     self->gameData.prevBtnState = self->prevBtnState;
 }
 
-void drawNameEntry(display_t *d, font_t *font, gameData_t *gameData, uint8_t currentInitial){
-    drawText(d, font, greenColors[(platformer->gameData.frameCount >> 3) % 4], str_initials, (d->w - textWidth(font, str_initials)) / 2, 64);
+void drawNameEntry(font_t *font, gameData_t *gameData, uint8_t currentInitial){
+    drawText(font, greenColors[(platformer->gameData.frameCount >> 3) % 4], str_initials, (d->w - textWidth(font, str_initials)) / 2, 64);
 
     char rowStr[32];
     snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06u", gameData->rank+1, gameData->score);
-    drawText(d, font, c555, rowStr, 64, 128);
+    drawText(font, c555, rowStr, 64, 128);
 
     for(uint8_t i=0; i<3; i++){
         snprintf(rowStr, sizeof(rowStr) - 1, "%c", gameData->initials[i]);
-        drawText(d, font, (currentInitial == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 192+16*i, 128);
+        drawText(font, (currentInitial == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 192+16*i, 128);
     }
 }
 
@@ -1331,20 +1334,21 @@ void changeStateShowHighScores(platformer_t *self){
 }
 
 void updateShowHighScores(platformer_t *self){
-    self->disp->clearPx();
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
+    
     self->gameData.frameCount++;
 
     if((self->gameData.frameCount > 300) || (
         (
-            (self->gameData.btnState & START)
+            (self->gameData.btnState & PB_START)
             &&
-            !(self->gameData.prevBtnState & START)
+            !(self->gameData.prevBtnState & PB_START)
         )
             ||
         (
-            (self->gameData.btnState & BTN_A)
+            (self->gameData.btnState & PB_A)
             &&
-            !(self->gameData.prevBtnState & BTN_A)
+            !(self->gameData.prevBtnState & PB_A)
         )
     )){
         self->menuState = 0;
@@ -1353,8 +1357,8 @@ void updateShowHighScores(platformer_t *self){
         changeStateTitleScreen(self);
     }
 
-    drawShowHighScores(self->disp, &(self->radiostars), self->menuState);
-    drawPlatformerHighScores(self->disp, &(self->radiostars), &(self->highScores), &(self->gameData));
+    drawShowHighScores(&(self->radiostars), self->menuState);
+    drawPlatformerHighScores(&(self->radiostars), &(self->highScores), &(self->gameData));
 
     updateLedsShowHighScores(&(self->gameData));
 
@@ -1362,44 +1366,44 @@ void updateShowHighScores(platformer_t *self){
     self->gameData.prevBtnState = self->prevBtnState;
 }
 
-void drawShowHighScores(display_t *d, font_t *font, uint8_t menuState){
+void drawShowHighScores(font_t *font, uint8_t menuState){
     if(platformer->easterEgg){
-        drawText(d, font, highScoreNewEntryColors[(platformer->gameData.frameCount >> 3) % 4], str_hbd, (d->w - textWidth(font, str_hbd)) / 2, 32);
+        drawText(font, highScoreNewEntryColors[(platformer->gameData.frameCount >> 3) % 4], str_hbd, (TFT_WIDTH - textWidth(font, str_hbd)) / 2, 32);
     } else if(menuState == 3){
-        drawText(d, font, redColors[(platformer->gameData.frameCount >> 3) % 4], str_registrated, (d->w - textWidth(font, str_registrated)) / 2, 32);
+        drawText(font, redColors[(platformer->gameData.frameCount >> 3) % 4], str_registrated, (TFT_WIDTH - textWidth(font, str_registrated)) / 2, 32);
     } else {
-        drawText(d, font, c555, str_do_your_best, (d->w - textWidth(font, str_do_your_best)) / 2, 32);
+        drawText(font, c555, str_do_your_best, (TFT_WIDTH - textWidth(font, str_do_your_best)) / 2, 32);
     }
 }
 
 void changeStatePause(platformer_t *self){
-    buzzer_play_bgm(&sndPause);
+    bzrPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
     self->update=&updatePause;
 }
 
 void updatePause(platformer_t *self){
     if((
-        (self->gameData.btnState & START)
+        (self->gameData.btnState & PB_START)
         &&
-        !(self->gameData.prevBtnState & START)
+        !(self->gameData.prevBtnState & PB_START)
     )){
-        buzzer_play_sfx(&sndPause);
+        bzrPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
         self->gameData.changeBgm = self->gameData.currentBgm;
         self->gameData.currentBgm = BGM_NULL;
         self->update=&updateGame;
     }
 
-    drawTileMap(self->disp, &(self->tilemap));
-    drawEntities(self->disp, &(self->entityManager));
-    drawPlatformerHud(self->disp, &(self->radiostars), &(self->gameData));
-    drawPause(self->disp, &(self->radiostars));
+    drawTileMap(&(self->tilemap));
+    drawEntities(&(self->entityManager));
+    drawPlatformerHud(&(self->radiostars), &(self->gameData));
+    drawPause(&(self->radiostars));
 
     self->prevBtnState = self->btnState;
     self->gameData.prevBtnState = self->prevBtnState;
 }
 
-void drawPause(display_t *d, font_t *font){
-    drawText(d, font, c555, str_pause, (d->w - textWidth(font, str_pause)) / 2, 128);
+void drawPause(font_t *font){
+    drawText(font, c555, str_pause, (TFT_WIDTH - textWidth(font, str_pause)) / 2, 128);
 }
 
 uint16_t getLevelIndex(uint8_t world, uint8_t level){

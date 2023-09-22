@@ -11,7 +11,8 @@
 #include "plEntity.h"
 #include "plTilemap.h"
 #include "plGameData.h"
-#include "display.h"
+#include "hdw-tft.h"
+//#include "soundManager.h"
 
 //==============================================================================
 // Constants
@@ -38,11 +39,11 @@ struct entityManager_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData);
+void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData, soundManager_t * soundManager);
 void loadSprites(entityManager_t * entityManager);
 void updateEntities(entityManager_t * entityManager);
 void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer);
-void drawEntities(display_t * disp, entityManager_t * entityManager);
+void drawEntities(entityManager_t * entityManager);
 entity_t * findInactiveEntity(entityManager_t * entityManager);
 
 void viewFollowEntity(tilemap_t * tilemap, entity_t * entity);

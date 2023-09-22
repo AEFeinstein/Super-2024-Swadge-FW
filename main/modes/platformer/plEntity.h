@@ -10,6 +10,7 @@
 #include "platformer_typedef.h"
 #include "plTilemap.h"
 #include "plGameData.h"
+#include "plSoundManager.h"
 
 //==============================================================================
 // Enums
@@ -53,7 +54,7 @@ typedef enum {
     ENTITY_BGM_CHANGE_3,
     ENTITY_BGM_CHANGE_4,
     ENTITY_BGM_CHANGE_5
-} entityIndex_t;
+} plEntityIndex_t;
 
 //==============================================================================
 // Structs
@@ -96,6 +97,7 @@ struct entity_t
 
     tilemap_t * tilemap;
     gameData_t * gameData;
+    soundManager_t * soundManager;
 
     uint8_t homeTileX;
     uint8_t homeTileY;
@@ -119,7 +121,7 @@ struct entity_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void initializeEntity(entity_t * self, entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData);
+void initializeEntity(entity_t * self, entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData, soundManager_t * soundManager);
 
 void updatePlayer(entity_t * self);
 void updateTestObject(entity_t * self);

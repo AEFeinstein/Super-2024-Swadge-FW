@@ -10,7 +10,8 @@
 #include "esp_random.h"
 #include "palette.h"
 
-#include "../../components/hdw-spiffs/spiffs_manager.h"
+#include "hdw-spiffs.h"
+#include "spiffs_wsg.h"
 
 //==============================================================================
 // Constants
@@ -20,14 +21,14 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData)
+void initializeEntityManager(entityManager_t * entityManager, tilemap_t * tilemap, gameData_t * gameData, soundManager_t * soundManager)
 {
     loadSprites(entityManager);
     entityManager->entities = calloc(MAX_ENTITIES, sizeof(entity_t));
     
     for(uint8_t i=0; i < MAX_ENTITIES; i++)
     {
-        initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData);
+        initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData, soundManager);
     }
 
     entityManager->activeEntities = 0;
