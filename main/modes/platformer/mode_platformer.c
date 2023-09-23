@@ -29,7 +29,7 @@
 #include "palette.h"
 #include "hdw-nvs.h"
 #include "plSoundManager.h"
-#include "inttypes.h"
+#include <inttypes.h>
 #include "mainMenu.h"
 #include "fill.h"
 
@@ -153,8 +153,7 @@ swadgeMode_t modePlatformer = {
         .fnAudioCallback          = NULL,
         .fnBackgroundDrawCallback = NULL,
         .fnEspNowRecvCb = NULL,
-        .fnEspNowSendCb = NULL,
-        .fnAudioCallback = NULL
+        .fnEspNowSendCb = NULL
 };
 
 #define NUM_LEVELS 16
@@ -1208,7 +1207,7 @@ void drawPlatformerHighScores(font_t *font, platformerHighScores_t *highScores, 
     drawText(font, c555, "RANK  SCORE  NAME", 48, 96);
     for(uint8_t i=0; i<NUM_PLATFORMER_HIGH_SCORES; i++){
         char rowStr[32];
-        snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06u   %c%c%c", i+1, highScores->scores[i], highScores->initials[i][0], highScores->initials[i][1], highScores->initials[i][2]);
+        snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06" PRIu32 "   %c%c%c", i+1, highScores->scores[i], highScores->initials[i][0], highScores->initials[i][1], highScores->initials[i][2]);
         drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 60, 128 + i*16);
     }
 }
@@ -1345,7 +1344,7 @@ void drawNameEntry(font_t *font, plGameData_t *gameData, uint8_t currentInitial)
     drawText(font, greenColors[(platformer->gameData.frameCount >> 3) % 4], str_initials, (TFT_WIDTH - textWidth(font, str_initials)) / 2, 64);
 
     char rowStr[32];
-    snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06u", gameData->rank+1, gameData->score);
+    snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06" PRIu32, gameData->rank+1, gameData->score);
     drawText(font, c555, rowStr, 64, 128);
 
     for(uint8_t i=0; i<3; i++){
