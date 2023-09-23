@@ -774,7 +774,10 @@ void drawPlatformerTitleScreen(font_t *font, plGameData_t *gameData)
 
 void changeStateReadyScreen(platformer_t *self){
     self->gameData.frameCount = 0;
-    bzrPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
+    
+    //TODO this song is glitched somehow
+    //bzrPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
+    
     pl_resetGameDataLeds(&(self->gameData));
     
     self->update=&updateReadyScreen;
