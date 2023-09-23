@@ -257,7 +257,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 /**
  * @brief Set TFT Backlight brightness.
  *
- * @param intensity Sets the brightness 0-7
+ * @param intensity The brightness, 0 to MAX_TFT_BRIGHTNESS
  *
  * @return value is 0 if OK nonzero if error.
  */
