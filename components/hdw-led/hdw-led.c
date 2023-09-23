@@ -20,9 +20,9 @@
 // Variables
 //==============================================================================
 
-static rmt_channel_handle_t led_chan    = NULL;
-static rmt_encoder_handle_t led_encoder = NULL;
-static uint8_t ledBrightness            = 0;
+static rmt_channel_handle_t led_chan        = NULL;
+static rmt_encoder_handle_t led_encoder     = NULL;
+static uint8_t ledBrightness                = 0;
 static led_t localLeds[CONFIG_NUM_LEDS + 1] = {0};
 
 //==============================================================================
@@ -122,13 +122,13 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
     }
 
     // If all eight LEDs are being set, but not the 9th
-    if(CONFIG_NUM_LEDS == numLeds)
+    if (CONFIG_NUM_LEDS == numLeds)
     {
         // Set the 9th LED to the average of the 6th, 7th, and 8th
         int32_t avgR = 0;
         int32_t avgG = 0;
         int32_t avgB = 0;
-        for(int32_t lIdx = 5; lIdx < 8; lIdx++)
+        for (int32_t lIdx = 5; lIdx < 8; lIdx++)
         {
             avgR += leds[lIdx].r;
             avgG += leds[lIdx].g;
