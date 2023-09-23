@@ -10,12 +10,22 @@
 //==============================================================================
 void pl_initializeSoundManager(plSoundManager_t *self){
     loadSong("bgmCastle.sng", &self->bgmCastle, false);
+    self->bgmCastle.shouldLoop = true;
+
     loadSong("bgmDeMAGio.sng", &self->bgmDemagio, false);
+    self->bgmDemagio.shouldLoop = true;
+
     loadSong("bgmGameStart.sng", &self->bgmGameStart, false);
     loadSong("bgmIntro.sng", &self->bgmIntro, false); 
     loadSong("bgmNameEntry.sng", &self->bgmNameEntry, false); 
+    self->bgmNameEntry.shouldLoop = true;
+
     loadSong("bgmSmooth.sng", &self->bgmSmooth, false);
-    loadSong("bgmUnderground.sng", &self->bgmUnderground, false); 
+    self->bgmSmooth.shouldLoop = true;
+
+    loadSong("bgmUnderground.sng", &self->bgmUnderground, false);
+    self->bgmUnderground.shouldLoop = true;
+
     loadSong("snd1up.sng", &self->snd1up, false);
     loadSong("sndBreak.sng", &self->sndBreak, false);
     loadSong("sndCheckpoint.sng", &self->sndCheckpoint, false);
@@ -26,6 +36,7 @@ void pl_initializeSoundManager(plSoundManager_t *self){
     loadSong("sndHurt.sng", &self->sndHurt, false);
     loadSong("sndJump1.sng", &self->sndJump1, false);
     loadSong("sndJump2.sng", &self->sndJump2, false);
+    loadSong("sndJump3.sng", &self->sndJump3, false);
     loadSong("sndLevelClearA.sng", &self->sndLevelClearA, false);
     loadSong("sndLevelClearB.sng", &self->sndLevelClearB, false);
     loadSong("sndLevelClearC.sng", &self->sndLevelClearC, false);

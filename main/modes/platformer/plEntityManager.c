@@ -28,7 +28,7 @@ void pl_initializeEntityManager(plEntityManager_t * entityManager, plTilemap_t *
     
     for(uint8_t i=0; i < MAX_ENTITIES; i++)
     {
-        initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData, soundManager);
+        pl_initializeEntity(&(entityManager->entities[i]), entityManager, tilemap, gameData, soundManager);
     }
 
     entityManager->activeEntities = 0;
@@ -342,7 +342,7 @@ plEntity_t* pl_createPlayer(plEntityManager_t * entityManager, uint16_t x, uint1
 
     entity->type = ENTITY_PLAYER;
     entity->spriteIndex = SP_PLAYER_IDLE;
-    entity->updateFunction = &updatePlayer;
+    entity->updateFunction = &pl_updatePlayer;
     entity->collisionHandler = &pl_playerCollisionHandler;
     entity->tileCollisionHandler = &pl_playerTileCollisionHandler;
     entity->fallOffTileHandler = &defaultFallOffTileHandler;

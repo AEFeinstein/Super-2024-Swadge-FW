@@ -347,6 +347,15 @@ void platformerButtonCb(buttonEvt_t *evt)
 
 void updateGame(platformer_t *self)
 {
+    //Check inputs
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        self->btnState = evt.state;
+        self->gameData.btnState = evt.state;
+    }
+    
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
@@ -421,6 +430,14 @@ void updateTitleScreen(platformer_t *self)
 
     self->gameData.frameCount++;
    
+    //Check inputs
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        self->btnState = evt.state;
+        self->gameData.btnState = evt.state;
+    }
 
     // Handle inputs
     switch(platformer->menuState){
@@ -1251,6 +1268,15 @@ void updateNameEntry(platformer_t *self){
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
 
     self->gameData.frameCount++;
+
+    //Check inputs
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        self->btnState = evt.state;
+        self->gameData.btnState = evt.state;
+    }
 
     if(
         self->gameData.btnState & PB_LEFT
