@@ -287,10 +287,8 @@ static void pushyMainLoop(int64_t elapsedUs)
     pushy->buttonPushedUs += elapsedUs;
 #if VIDEO
     pushy->audioTrackUs += elapsedUs;
-#endif
 
-#if VIDEO
-    uint32_t temp = pushy->counter;
+    uint32_t oldCounter = pushy->counter;
 
     if (pushy->audioTrackUs < (PUSHY_BEAT_DROP_AT_US + PUSHY_HOLD_US))
     {
@@ -341,9 +339,9 @@ static void pushyMainLoop(int64_t elapsedUs)
         // Do nothing, continue holding 69420
     }
 
-    pushy->fireCounter += pushy->counter - temp;
+    pushy->fireCounter += pushy->counter - oldCounter;
     pushy->buttonPushedUs = 0;
-    if ((uint32_t) (temp / SHUFFLE_AT_MOD) < (uint32_t) (pushy->counter / SHUFFLE_AT_MOD))
+    if ((uint32_t) (oldCounter / SHUFFLE_AT_MOD) < (uint32_t) (pushy->counter / SHUFFLE_AT_MOD))
     {
         shuffleColors();
     }
