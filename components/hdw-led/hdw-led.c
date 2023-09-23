@@ -23,7 +23,7 @@
 static rmt_channel_handle_t led_chan    = NULL;
 static rmt_encoder_handle_t led_encoder = NULL;
 static uint8_t ledBrightness            = 0;
-static led_t localLeds[CONFIG_NUM_LEDS] = {0};
+static led_t localLeds[CONFIG_NUM_LEDS + 1] = {0};
 
 //==============================================================================
 // Functions
@@ -108,9 +108,9 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
     };
 
     // Make sure to not overflow
-    if (numLeds > CONFIG_NUM_LEDS)
+    if (numLeds > CONFIG_NUM_LEDS + 1)
     {
-        numLeds = CONFIG_NUM_LEDS;
+        numLeds = CONFIG_NUM_LEDS + 1;
     }
 
     // Fill a local copy of LEDs with brightness applied
@@ -119,6 +119,27 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
         localLeds[i].r = (leds[i].r >> ledBrightness);
         localLeds[i].g = (leds[i].g >> ledBrightness);
         localLeds[i].b = (leds[i].b >> ledBrightness);
+    }
+
+    // If all eight LEDs are being set, but not the 9th
+    if(CONFIG_NUM_LEDS == numLeds)
+    {
+        // Set the 9th LED to the average of the 6th, 7th, and 8th
+        int32_t avgR = 0;
+        int32_t avgG = 0;
+        int32_t avgB = 0;
+        for(int32_t lIdx = 5; lIdx < 8; lIdx++)
+        {
+            avgR += leds[lIdx].r;
+            avgG += leds[lIdx].g;
+            avgB += leds[lIdx].b;
+        }
+        localLeds[CONFIG_NUM_LEDS].r = (avgR / 3) >> ledBrightness;
+        localLeds[CONFIG_NUM_LEDS].g = (avgG / 3) >> ledBrightness;
+        localLeds[CONFIG_NUM_LEDS].b = (avgB / 3) >> ledBrightness;
+
+        // Set the 9th LED too
+        numLeds = CONFIG_NUM_LEDS + 1;
     }
 
     // Write RGB values to LEDs
