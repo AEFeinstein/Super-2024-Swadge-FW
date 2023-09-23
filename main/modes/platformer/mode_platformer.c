@@ -1403,11 +1403,20 @@ void drawShowHighScores(font_t *font, uint8_t menuState){
 }
 
 void changeStatePause(platformer_t *self){
+    bzrStop();
     bzrPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
     self->update=&updatePause;
 }
 
 void updatePause(platformer_t *self){
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        self->btnState = evt.state;
+        self->gameData.btnState = evt.state;
+    }
+
     if((
         (self->gameData.btnState & PB_START)
         &&
