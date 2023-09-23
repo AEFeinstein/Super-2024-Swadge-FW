@@ -12,7 +12,7 @@
 //==============================================================================
 // Functions
 //==============================================================================
- void initializeGameData(gameData_t * gameData, soundManager_t * soundManager){
+ void pl_initializeGameData(plGameData_t * gameData, plSoundManager_t * soundManager){
     gameData->gameState = 0;
     gameData->btnState = 0;
     gameData->score = 0;
@@ -39,7 +39,7 @@
     gameData->soundManager = soundManager;
 }
 
- void initializeGameDataFromTitleScreen(gameData_t * gameData){
+ void pl_initializeGameDataFromTitleScreen(plGameData_t * gameData){
     gameData->gameState = 0;
     gameData->btnState = 0;
     gameData->score = 0;
@@ -59,10 +59,10 @@
     gameData->continuesUsed = (gameData->world == 1 && gameData->level == 1) ? false : true;
     gameData->inGameTimer = 0;
 
-    resetGameDataLeds(gameData);
+    pl_resetGameDataLeds(gameData);
 }
 
-void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData){
+void pl_updateLedsHpMeter(plEntityManager_t *entityManager, plGameData_t *gameData){
     if(entityManager->playerEntity == NULL){
         return;
     }
@@ -95,7 +95,7 @@ void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData){
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void scorePoints(gameData_t * gameData, uint16_t points){
+void pl_scorePoints(plGameData_t * gameData, uint16_t points){
     gameData->combo++;
     
     uint32_t comboPoints = points * gameData->combo;
@@ -106,7 +106,7 @@ void scorePoints(gameData_t * gameData, uint16_t points){
     gameData->comboTimer = (gameData->levelDeaths < 3) ? 240: 1;
 }
 
-void addCoins(gameData_t * gameData, uint8_t coins){
+void addCoins(plGameData_t * gameData, uint8_t coins){
     gameData->coins+=coins;
     if(gameData->coins > 99){
         gameData->lives++;
@@ -117,7 +117,7 @@ void addCoins(gameData_t * gameData, uint8_t coins){
     }
 }
 
-void updateComboTimer(gameData_t * gameData){
+void updateComboTimer(plGameData_t * gameData){
     gameData->comboTimer--;
 
     if(gameData->comboTimer < 0){
@@ -126,7 +126,7 @@ void updateComboTimer(gameData_t * gameData){
     }
 };
 
-void resetGameDataLeds(gameData_t * gameData)
+void pl_resetGameDataLeds(plGameData_t * gameData)
 {
     for(uint8_t i=0;i<CONFIG_NUM_LEDS; i++){
         gameData->leds[i].r = 0;
@@ -137,7 +137,7 @@ void resetGameDataLeds(gameData_t * gameData)
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void updateLedsShowHighScores(gameData_t * gameData){
+void pl_updateLedsShowHighScores(plGameData_t * gameData){
     if(( (gameData->frameCount) % 10) == 0){
         for (int32_t i = 0; i < 8; i++)
         {
@@ -165,7 +165,7 @@ void updateLedsShowHighScores(gameData_t * gameData){
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void updateLedsGameOver(gameData_t * gameData){
+void pl_updateLedsGameOver(plGameData_t * gameData){
     if(( (gameData->frameCount) % 10) == 0){
         for (int32_t i = 0; i < 8; i++)
         {
@@ -184,7 +184,7 @@ void updateLedsGameOver(gameData_t * gameData){
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void updateLedsLevelClear(gameData_t * gameData){
+void pl_updateLedsLevelClear(plGameData_t * gameData){
     if(( (gameData->frameCount) % 10) == 0){
         for (int32_t i = 0; i < 8; i++)
         {
@@ -210,7 +210,7 @@ void updateLedsLevelClear(gameData_t * gameData){
     setLeds(gameData->leds, CONFIG_NUM_LEDS);
 }
 
-void updateLedsGameClear(gameData_t * gameData){
+void pl_updateLedsGameClear(plGameData_t * gameData){
     if(( (gameData->frameCount) % 10) == 0){
         for (int32_t i = 0; i < 8; i++)
         {

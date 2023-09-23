@@ -8,7 +8,7 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeSoundManager(soundManager_t *self){
+void pl_initializeSoundManager(plSoundManager_t *self){
     loadSong("bgmCastle.sng", &self->bgmCastle, false);
     loadSong("bgmDeMAGio.sng", &self->bgmDemagio, false);
     loadSong("bgmGameStart.sng", &self->bgmGameStart, false);
@@ -43,7 +43,7 @@ void initializeSoundManager(soundManager_t *self){
     loadSong("sndWaveBall.sng", &self->sndWaveBall, false);
 }
 
-void freeSoundManager(soundManager_t *self){
+void pl_freeSoundManager(plSoundManager_t *self){
     freeSong(&self->bgmCastle);
     freeSong(&self->bgmDemagio);
     freeSong(&self->bgmGameStart);

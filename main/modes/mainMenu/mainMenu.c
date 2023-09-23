@@ -16,6 +16,7 @@
 #include "lumberjack.h"
 #include "marbles.h"
 #include "mode_paint.h"
+#include "mode_platformer.h"
 #include "mode_ray.h"
 #include "paint_share.h"
 #include "pong.h"
@@ -119,6 +120,7 @@ static void mainMenuEnterMode(void)
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modePlatformer.modeName);
     addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, marblesMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
@@ -258,6 +260,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modePaint.modeName)
         {
             switchToSwadgeMode(&modePaint);
+        }
+        else if (label == modePlatformer.modeName)
+        {
+            switchToSwadgeMode(&modePlatformer);
         }
         else if (label == pongMode.modeName)
         {

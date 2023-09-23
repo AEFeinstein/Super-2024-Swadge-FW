@@ -10,7 +10,7 @@
 #include "platformer_typedef.h"
 //#include "swadgeMode.h"
 #include "palette.h"
-//#include "musical_buzzer.h"
+#include "plSoundManager.h"
 
 //==============================================================================
 // Constants
@@ -68,22 +68,22 @@ typedef struct
     bool continuesUsed;
     uint32_t inGameTimer;
 
-    soundManager_t soundManager;
-} gameData_t;
+    plSoundManager_t* soundManager;
+} plGameData_t;
 
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeGameData(gameData_t * gameData, soundManager_t * soundManager);
-void initializeGameDataFromTitleScreen(gameData_t * gameData);
-void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData);
-void scorePoints(gameData_t * gameData, uint16_t points);
-void addCoins(gameData_t * gameData, uint8_t coins);
-void updateComboTimer(gameData_t * gameData);
-void resetGameDataLeds(gameData_t * gameData);
-void updateLedsShowHighScores(gameData_t * gameData);
-void updateLedsLevelClear(gameData_t * gameData);
-void updateLedsGameClear(gameData_t * gameData);
-void updateLedsGameOver(gameData_t * gameData);
+void pl_initializeGameData(plGameData_t * gameData, plSoundManager_t * soundManager);
+void pl_initializeGameDataFromTitleScreen(plGameData_t * gameData);
+void pl_updateLedsHpMeter(plEntityManager_t *entityManager, plGameData_t *gameData);
+void pl_scorePoints(plGameData_t * gameData, uint16_t points);
+void addCoins(plGameData_t * gameData, uint8_t coins);
+void updateComboTimer(plGameData_t * gameData);
+void pl_resetGameDataLeds(plGameData_t * gameData);
+void pl_updateLedsShowHighScores(plGameData_t * gameData);
+void pl_updateLedsLevelClear(plGameData_t * gameData);
+void pl_updateLedsGameClear(plGameData_t * gameData);
+void pl_updateLedsGameOver(plGameData_t * gameData);
 
 #endif

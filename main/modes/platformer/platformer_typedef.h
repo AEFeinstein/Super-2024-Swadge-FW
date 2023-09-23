@@ -2,33 +2,33 @@
 #define PLATFORMER_COMMON_TYPEDEF_INCLUDED
 
 typedef struct platformer_t platformer_t;
-typedef struct entityManager_t entityManager_t;
-typedef struct tilemap_t tilemap_t;
-typedef struct entity_t entity_t;
+typedef struct plEntityManager_t plEntityManager_t;
+typedef struct plTilemap_t plTilemap_t;
+typedef struct plEntity_t plEntity_t;
 
 typedef enum {
-    ST_NULL,
-    ST_TITLE_SCREEN,
-    ST_READY_SCREEN,
-    ST_GAME,
-    ST_DEAD,
-    ST_LEVEL_CLEAR,
-    ST_WORLD_CLEAR,
-    ST_GAME_CLEAR,
-    ST_GAME_OVER,
-    ST_HIGH_SCORE_ENTRY,
-    ST_HIGH_SCORE_TABLE,
-    ST_PAUSE
-} gameStateEnum_t;
+    PL_ST_NULL,
+    PL_ST_TITLE_SCREEN,
+    PL_ST_READY_SCREEN,
+    PL_ST_GAME,
+    PL_ST_DEAD,
+    PL_ST_LEVEL_CLEAR,
+    PL_ST_WORLD_CLEAR,
+    PL_ST_GAME_CLEAR,
+    PL_ST_GAME_OVER,
+    PL_ST_HIGH_SCORE_ENTRY,
+    PL_ST_HIGH_SCORE_TABLE,
+    PL_ST_PAUSE
+} pl_gameStateEnum_t;
 
 typedef enum {
-    BGM_NO_CHANGE,
-    BGM_MAIN,
-    BGM_ATHLETIC,
-    BGM_UNDERGROUND,
-    BGM_FORTRESS,
-    BGM_NULL
-} bgmEnum_t;
+    PL_BGM_NO_CHANGE,
+    PL_BGM_MAIN,
+    PL_BGM_ATHLETIC,
+    PL_BGM_UNDERGROUND,
+    PL_BGM_FORTRESS,
+    PL_BGM_NULL
+} pl_bgmEnum_t;
 
 typedef enum {
     SP_PLAYER_IDLE,
@@ -82,6 +82,6 @@ typedef enum {
     SP_CHECKPOINT_ACTIVE_1,
     SP_CHECKPOINT_ACTIVE_2,
     SP_BOUNCE_BLOCK
-} spriteDef_t;
+} pl_spriteDef_t;
 
 #endif

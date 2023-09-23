@@ -9,132 +9,132 @@
 #include <stdbool.h>
 #include "wsg.h"
 #include "platformer_typedef.h"
-#include "entityManager.h"
+#include "plEntityManager.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
 #define CLAMP(x, l, u) ((x) < l ? l : ((x) > u ? u : (x)))
 
-#define TILEMAP_DISPLAY_WIDTH_PIXELS 280  // The screen size
-#define TILEMAP_DISPLAY_HEIGHT_PIXELS 240 // The screen size
-#define TILEMAP_DISPLAY_WIDTH_TILES 19    // The screen size in tiles + 1
-#define TILEMAP_DISPLAY_HEIGHT_TILES 16   // The screen size in tiles + 1
+#define PL_TILEMAP_DISPLAY_WIDTH_PIXELS 280  // The screen size
+#define PL_TILEMAP_DISPLAY_HEIGHT_PIXELS 240 // The screen size
+#define PL_TILEMAP_DISPLAY_WIDTH_TILES 19    // The screen size in tiles + 1
+#define PL_TILEMAP_DISPLAY_HEIGHT_TILES 16   // The screen size in tiles + 1
 
-#define TILE_SIZE 16
-#define TILE_SIZE_IN_POWERS_OF_2 4
+#define PL_TILESIZE 16
+#define PL_TILESIZE_IN_POWERS_OF_2 4
 
-#define TILESET_SIZE 72
+#define PL_TILESET_SIZE 72
 
 //==============================================================================
 // Enums
 //==============================================================================
 typedef enum {
-    TILE_EMPTY,
-    TILE_WARP_0,
-    TILE_WARP_1,
-    TILE_WARP_2,
-    TILE_WARP_3,
-    TILE_WARP_4,
-    TILE_WARP_5,
-    TILE_WARP_6,
-    TILE_WARP_7,
-    TILE_WARP_8,
-    TILE_WARP_9,
-    TILE_WARP_A,
-    TILE_WARP_B,
-    TILE_WARP_C,
-    TILE_WARP_D,
-    TILE_WARP_E,
-    TILE_WARP_F,
-    TILE_CTNR_COIN,
-    TILE_CTNR_10COIN,
-    TILE_CTNR_POW1,
-    TILE_CTNR_POW2,
-    TILE_CTNR_LADDER,
-    TILE_CTNR_1UP,
-    TILE_CTRL_LEFT,
-    TILE_CTRL_RIGHT,
-    TILE_CTRL_UP,
-    TILE_CTRL_DOWN,
-    TILE_UNUSED_27,
-    TILE_UNUSED_28,
-    TILE_UNUSED_29,
-    TILE_INVISIBLE_BLOCK,
-    TILE_INVISIBLE_CONTAINER,
-    TILE_GRASS,
-    TILE_GROUND,
-    TILE_BRICK_BLOCK,
-    TILE_BLOCK,
-    TILE_METAL_BLOCK,
-    TILE_METAL_PIPE_H,
-    TILE_METAL_PIPE_V,
-    TILE_BOUNCE_BLOCK,
-    TILE_DIRT_PATH,
-    TILE_GIRDER,
-    TILE_SOLID_UNUSED_42,
-    TILE_SOLID_UNUSED_43,
-    TILE_SOLID_UNUSED_44,
-    TILE_SOLID_UNUSED_45,
-    TILE_SOLID_UNUSED_46,
-    TILE_SOLID_UNUSED_47,
-    TILE_SOLID_UNUSED_48,
-    TILE_SOLID_UNUSED_49,
-    TILE_SOLID_UNUSED_50,
-    TILE_SOLID_UNUSED_51,
-    TILE_SOLID_UNUSED_52,
-    TILE_SOLID_UNUSED_53,
-    TILE_SOLID_UNUSED_54,
-    TILE_SOLID_UNUSED_55,
-    TILE_SOLID_UNUSED_56,
-    TILE_SOLID_UNUSED_57,
-    TILE_SOLID_UNUSED_58,
-    TILE_GOAL_100PTS,
-    TILE_GOAL_500PTS,
-    TILE_GOAL_1000PTS,
-    TILE_GOAL_2000PTS,
-    TILE_GOAL_5000PTS,
-    TILE_CONTAINER_1,
-    TILE_CONTAINER_2,
-    TILE_CONTAINER_3,
-    TILE_COIN_1,
-    TILE_COIN_2,
-    TILE_COIN_3,
-    TILE_LADDER,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_71,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_72,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_73,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_74,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_75,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_76,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_77,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_78,
-    TILE_NONSOLID_INTERACTIVE_VISIBLE_79,
-    TILE_BG_GOAL_ZONE,
-    TILE_BG_ARROW_L,
-    TILE_BG_ARROW_R,
-    TILE_BG_ARROW_U,
-    TILE_BG_ARROW_D,
-    TILE_BG_ARROW_LU,
-    TILE_BG_ARROW_RU,
-    TILE_BG_ARROW_LD,
-    TILE_BG_ARROW_RD,
-    TILE_BG_CLOUD_LD,
-    TILE_BG_CLOUD_M,
-    TILE_BG_CLOUD_RD,
-    TILE_BG_CLOUD_LU,
-    TILE_BG_CLOUD_RU,
-    TILE_BG_CLOUD_D,
-    TILE_BG_CLOUD,
-    TILE_BG_TALL_GRASS,
-    TILE_BG_MOUNTAIN_L,
-    TILE_BG_MOUNTAIN_U,
-    TILE_BG_MOUNTAIN_R,
-    TILE_BG_MOUNTAIN,
-    TILE_BG_METAL,
-    TILE_BG_CHAINS,
-    TILE_BG_WALL
-} tileIndex_t;
+    PL_TILEEMPTY,
+    PL_TILEWARP_0,
+    PL_TILEWARP_1,
+    PL_TILEWARP_2,
+    PL_TILEWARP_3,
+    PL_TILEWARP_4,
+    PL_TILEWARP_5,
+    PL_TILEWARP_6,
+    PL_TILEWARP_7,
+    PL_TILEWARP_8,
+    PL_TILEWARP_9,
+    PL_TILEWARP_A,
+    PL_TILEWARP_B,
+    PL_TILEWARP_C,
+    PL_TILEWARP_D,
+    PL_TILEWARP_E,
+    PL_TILEWARP_F,
+    PL_TILECTNR_COIN,
+    PL_TILECTNR_10COIN,
+    PL_TILECTNR_POW1,
+    PL_TILECTNR_POW2,
+    PL_TILECTNR_LADDER,
+    PL_TILECTNR_1UP,
+    PL_TILECTRL_LEFT,
+    PL_TILECTRL_RIGHT,
+    PL_TILECTRL_UP,
+    PL_TILECTRL_DOWN,
+    PL_TILEUNUSED_27,
+    PL_TILEUNUSED_28,
+    PL_TILEUNUSED_29,
+    PL_TILEINVISIBLE_BLOCK,
+    PL_TILEINVISIBLE_CONTAINER,
+    PL_TILEGRASS,
+    PL_TILEGROUND,
+    PL_TILEBRICK_BLOCK,
+    PL_TILEBLOCK,
+    PL_TILEMETAL_BLOCK,
+    PL_TILEMETAL_PIPE_H,
+    PL_TILEMETAL_PIPE_V,
+    PL_TILEBOUNCE_BLOCK,
+    PL_TILEDIRT_PATH,
+    PL_TILEGIRDER,
+    PL_TILESOLID_UNUSED_42,
+    PL_TILESOLID_UNUSED_43,
+    PL_TILESOLID_UNUSED_44,
+    PL_TILESOLID_UNUSED_45,
+    PL_TILESOLID_UNUSED_46,
+    PL_TILESOLID_UNUSED_47,
+    PL_TILESOLID_UNUSED_48,
+    PL_TILESOLID_UNUSED_49,
+    PL_TILESOLID_UNUSED_50,
+    PL_TILESOLID_UNUSED_51,
+    PL_TILESOLID_UNUSED_52,
+    PL_TILESOLID_UNUSED_53,
+    PL_TILESOLID_UNUSED_54,
+    PL_TILESOLID_UNUSED_55,
+    PL_TILESOLID_UNUSED_56,
+    PL_TILESOLID_UNUSED_57,
+    PL_TILESOLID_UNUSED_58,
+    PL_TILEGOAL_100PTS,
+    PL_TILEGOAL_500PTS,
+    PL_TILEGOAL_1000PTS,
+    PL_TILEGOAL_2000PTS,
+    PL_TILEGOAL_5000PTS,
+    PL_TILECONTAINER_1,
+    PL_TILECONTAINER_2,
+    PL_TILECONTAINER_3,
+    PL_TILECOIN_1,
+    PL_TILECOIN_2,
+    PL_TILECOIN_3,
+    PL_TILELADDER,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_71,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_72,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_73,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_74,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_75,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_76,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_77,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_78,
+    PL_TILENONSOLID_INTERACTIVE_VISIBLE_79,
+    PL_TILEBG_GOAL_ZONE,
+    PL_TILEBG_ARROW_L,
+    PL_TILEBG_ARROW_R,
+    PL_TILEBG_ARROW_U,
+    PL_TILEBG_ARROW_D,
+    PL_TILEBG_ARROW_LU,
+    PL_TILEBG_ARROW_RU,
+    PL_TILEBG_ARROW_LD,
+    PL_TILEBG_ARROW_RD,
+    PL_TILEBG_CLOUD_LD,
+    PL_TILEBG_CLOUD_M,
+    PL_TILEBG_CLOUD_RD,
+    PL_TILEBG_CLOUD_LU,
+    PL_TILEBG_CLOUD_RU,
+    PL_TILEBG_CLOUD_D,
+    PL_TILEBG_CLOUD,
+    PL_TILEBG_TALL_GRASS,
+    PL_TILEBG_MOUNTAIN_L,
+    PL_TILEBG_MOUNTAIN_U,
+    PL_TILEBG_MOUNTAIN_R,
+    PL_TILEBG_MOUNTAIN,
+    PL_TILEBG_METAL,
+    PL_TILEBG_CHAINS,
+    PL_TILEBG_WALL
+} pl_tileIndex_t;
 
 //==============================================================================
 // Structs
@@ -142,16 +142,16 @@ typedef enum {
 typedef struct {
     uint8_t x;
     uint8_t y;
-} warp_t;
- struct tilemap_t
+} pl_warp_t;
+ struct plTilemap_t
 {
-    wsg_t tiles[TILESET_SIZE];
+    wsg_t tiles[PL_TILESET_SIZE];
 
     uint8_t * map;
     uint8_t mapWidth;
     uint8_t mapHeight;
     
-    warp_t warps[16];
+    pl_warp_t warps[16];
 
     int16_t mapOffsetX;
     int16_t mapOffsetY;
@@ -166,7 +166,7 @@ typedef struct {
     int16_t executeTileSpawnRow;
     bool executeTileSpawnAll;
 
-    entityManager_t *entityManager;
+    plEntityManager_t *entityManager;
 
     uint8_t animationFrame;
     int16_t animationTimer;
@@ -175,18 +175,18 @@ typedef struct {
 //==============================================================================
 // Prototypes
 //==============================================================================
-void initializeTileMap(tilemap_t * tilemap);
-void drawTileMap(tilemap_t * tilemap);
-void scrollTileMap(tilemap_t * tilemap, int16_t x, int16_t y);
-void drawTile(tilemap_t * tilemap, uint8_t tileId, int16_t x, int16_t y);
-bool loadMapFromFile(tilemap_t * tilemap, const char * name);
-bool loadTiles(tilemap_t * tilemap);
-void tileSpawnEntity(tilemap_t * tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
-uint8_t getTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty);
-void setTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
-bool isSolid(uint8_t tileId);
-void unlockScrolling(tilemap_t *tilemap);
-bool needsTransparency(uint8_t tileId);
-void freeTilemap(tilemap_t *tilemap);
+void pl_initializeTileMap(plTilemap_t * tilemap);
+void pl_drawTileMap(plTilemap_t * tilemap);
+void pl_scrollTileMap(plTilemap_t * tilemap, int16_t x, int16_t y);
+void pl_drawTile(plTilemap_t * tilemap, uint8_t tileId, int16_t x, int16_t y);
+bool pl_loadMapFromFile(plTilemap_t * tilemap, const char * name);
+bool pl_loadTiles(plTilemap_t * tilemap);
+void pl_tileSpawnEntity(plTilemap_t * tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
+uint8_t pl_getTile(plTilemap_t *tilemap, uint8_t tx, uint8_t ty);
+void pl_setTile(plTilemap_t *tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
+bool pl_isSolid(uint8_t tileId);
+void pl_unlockScrolling(plTilemap_t *tilemap);
+bool pl_needsTransparency(uint8_t tileId);
+void pl_freeTilemap(plTilemap_t *tilemap);
 
 #endif

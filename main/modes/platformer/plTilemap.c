@@ -24,7 +24,7 @@
 // Functions
 //==============================================================================
 
-void initializeTileMap(tilemap_t *tilemap)
+void pl_initializeTileMap(plTilemap_t *tilemap)
 {
     tilemap->mapOffsetX = 0;
     tilemap->mapOffsetY = 0;
@@ -36,10 +36,10 @@ void initializeTileMap(tilemap_t *tilemap)
     tilemap->animationFrame = 0;
     tilemap->animationTimer = 23;
 
-    loadTiles(tilemap);
+    pl_loadTiles(tilemap);
 }
 
-void drawTileMap(tilemap_t *tilemap)
+void pl_drawTileMap(plTilemap_t *tilemap)
 {
     tilemap->animationTimer--;
     if (tilemap->animationTimer < 0)
@@ -48,14 +48,14 @@ void drawTileMap(tilemap_t *tilemap)
         tilemap->animationTimer = 23;
     }
 
-    for (uint16_t y = (tilemap->mapOffsetY >> TILE_SIZE_IN_POWERS_OF_2); y < (tilemap->mapOffsetY >> TILE_SIZE_IN_POWERS_OF_2) + TILEMAP_DISPLAY_HEIGHT_TILES; y++)
+    for (uint16_t y = (tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2); y < (tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2) + PL_TILEMAP_DISPLAY_HEIGHT_TILES; y++)
     {
         if (y >= tilemap->mapHeight)
         {
             break;
         }
 
-        for (uint16_t x = (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2); x < (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2) + TILEMAP_DISPLAY_WIDTH_TILES; x++)
+        for (uint16_t x = (tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2); x < (tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2) + PL_TILEMAP_DISPLAY_WIDTH_TILES; x++)
         {
             if (x >= tilemap->mapWidth)
             {
@@ -64,7 +64,7 @@ void drawTileMap(tilemap_t *tilemap)
 
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
             
-            if(tile < TILE_GRASS){
+            if(tile < PL_TILEGRASS){
                 continue;
             }
 
@@ -77,16 +77,18 @@ void drawTileMap(tilemap_t *tilemap)
             // Draw only non-garbage tiles
             if (tile > 31 && tile < 104)
             {
-                if(needsTransparency(tile)){
-                    drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
+                if(pl_needsTransparency(tile)){
+                    //drawWsgSimpleFast(&tilemap->tiles[tile - 32], x * PL_TILESIZE - tilemap->mapOffsetX, y * PL_TILESIZE - tilemap->mapOffsetY);
+                    drawWsgSimple(&tilemap->tiles[tile - 32], x * PL_TILESIZE - tilemap->mapOffsetX, y * PL_TILESIZE - tilemap->mapOffsetY);
+                
                 }
                 else {
-                    drawWsgTile(&tilemap->tiles[tile - 32], x * TILE_SIZE - tilemap->mapOffsetX, y * TILE_SIZE - tilemap->mapOffsetY);
+                    drawWsgTile(&tilemap->tiles[tile - 32], x * PL_TILESIZE - tilemap->mapOffsetX, y * PL_TILESIZE - tilemap->mapOffsetY);
                 }
             }
             else if (tile > 127 && tilemap->tileSpawnEnabled && (tilemap->executeTileSpawnColumn == x || tilemap->executeTileSpawnRow == y || tilemap->executeTileSpawnAll))
             {
-                tileSpawnEntity(tilemap, tile - 128, x, y);
+                pl_tileSpawnEntity(tilemap, tile - 128, x, y);
             }
         }
     }
@@ -94,17 +96,17 @@ void drawTileMap(tilemap_t *tilemap)
     tilemap->executeTileSpawnAll = 0;
 }
 
-void scrollTileMap(tilemap_t *tilemap, int16_t x, int16_t y)
+void pl_scrollTileMap(plTilemap_t *tilemap, int16_t x, int16_t y)
 {
     if (x != 0)
     {
-        uint8_t oldTx = tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2;
+        uint8_t oldTx = tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2;
         tilemap->mapOffsetX = CLAMP(tilemap->mapOffsetX + x, tilemap->minMapOffsetX, tilemap->maxMapOffsetX);
-        uint8_t newTx = tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2;
+        uint8_t newTx = tilemap->mapOffsetX >> PL_TILESIZE_IN_POWERS_OF_2;
 
         if (newTx > oldTx)
         {
-            tilemap->executeTileSpawnColumn = oldTx + TILEMAP_DISPLAY_WIDTH_TILES;
+            tilemap->executeTileSpawnColumn = oldTx + PL_TILEMAP_DISPLAY_WIDTH_TILES;
         }
         else if (newTx < oldTx)
         {
@@ -118,13 +120,13 @@ void scrollTileMap(tilemap_t *tilemap, int16_t x, int16_t y)
 
     if (y != 0)
     {
-        uint8_t oldTy = tilemap->mapOffsetY >> TILE_SIZE_IN_POWERS_OF_2;
+        uint8_t oldTy = tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2;
         tilemap->mapOffsetY = CLAMP(tilemap->mapOffsetY + y, tilemap->minMapOffsetY, tilemap->maxMapOffsetY);
-        uint8_t newTy = tilemap->mapOffsetY >> TILE_SIZE_IN_POWERS_OF_2;
+        uint8_t newTy = tilemap->mapOffsetY >> PL_TILESIZE_IN_POWERS_OF_2;
 
         if (newTy > oldTy)
         {
-            tilemap->executeTileSpawnRow = oldTy + TILEMAP_DISPLAY_HEIGHT_TILES;
+            tilemap->executeTileSpawnRow = oldTy + PL_TILEMAP_DISPLAY_HEIGHT_TILES;
         }
         else if (newTy < oldTy)
         {
@@ -137,7 +139,7 @@ void scrollTileMap(tilemap_t *tilemap, int16_t x, int16_t y)
     }
 }
 
-bool loadMapFromFile(tilemap_t *tilemap, const char *name)
+bool pl_loadMapFromFile(plTilemap_t *tilemap, const char *name)
 {
     if (tilemap->map != NULL)
     {
@@ -163,10 +165,10 @@ bool loadMapFromFile(tilemap_t *tilemap, const char *name)
     tilemap->mapHeight = height;
 
     tilemap->minMapOffsetX = 0;
-    tilemap->maxMapOffsetX = width * TILE_SIZE - TILEMAP_DISPLAY_WIDTH_PIXELS;
+    tilemap->maxMapOffsetX = width * PL_TILESIZE - PL_TILEMAP_DISPLAY_WIDTH_PIXELS;
 
     tilemap->minMapOffsetY = 0;
-    tilemap->maxMapOffsetY = height * TILE_SIZE - TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    tilemap->maxMapOffsetY = height * PL_TILESIZE - PL_TILEMAP_DISPLAY_HEIGHT_PIXELS;
 
     for(uint16_t i=0; i<16; i++){
         tilemap->warps[i].x = buf[2 + width * height + i * 2];
@@ -178,7 +180,7 @@ bool loadMapFromFile(tilemap_t *tilemap, const char *name)
     return true;
 }
 
-bool loadTiles(tilemap_t *tilemap)
+bool pl_loadTiles(plTilemap_t *tilemap)
 {
     // tiles 0-31 are invisible tiles;
     // remember to subtract 32 from tile index before drawing tile
@@ -263,9 +265,9 @@ bool loadTiles(tilemap_t *tilemap)
     return true;
 }
 
-void tileSpawnEntity(tilemap_t *tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty)
+void pl_tileSpawnEntity(plTilemap_t *tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty)
 {
-    entity_t *entityCreated = createEntity(tilemap->entityManager, objectIndex, (tx << TILE_SIZE_IN_POWERS_OF_2) + 8, (ty << TILE_SIZE_IN_POWERS_OF_2) + 8);
+    plEntity_t *entityCreated = pl_createEntity(tilemap->entityManager, objectIndex, (tx << PL_TILESIZE_IN_POWERS_OF_2) + 8, (ty << PL_TILESIZE_IN_POWERS_OF_2) + 8);
 
     if (entityCreated != NULL)
     {
@@ -275,7 +277,7 @@ void tileSpawnEntity(tilemap_t *tilemap, uint8_t objectIndex, uint8_t tx, uint8_
     }
 }
 
-uint8_t getTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty)
+uint8_t pl_getTile(plTilemap_t *tilemap, uint8_t tx, uint8_t ty)
 {
     // ty = CLAMP(ty, 0, tilemap->mapHeight - 1);
 
@@ -293,7 +295,7 @@ uint8_t getTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty)
     return tilemap->map[ty * tilemap->mapWidth + tx];
 }
 
-void setTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId)
+void pl_setTile(plTilemap_t *tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId)
 {
     // ty = CLAMP(ty, 0, tilemap->mapHeight - 1);
 
@@ -305,20 +307,20 @@ void setTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId)
     tilemap->map[ty * tilemap->mapWidth + tx] = newTileId;
 }
 
-bool isSolid(uint8_t tileId)
+bool pl_isSolid(uint8_t tileId)
 {
     switch (tileId)
     {
-    case TILE_EMPTY ... TILE_UNUSED_29:
+    case PL_TILEEMPTY ... PL_TILEUNUSED_29:
         return false;
         break;
-    case TILE_INVISIBLE_BLOCK ... TILE_METAL_PIPE_V:
+    case PL_TILEINVISIBLE_BLOCK ... PL_TILEMETAL_PIPE_V:
         return true;
         break;
-    case TILE_BOUNCE_BLOCK:
+    case PL_TILEBOUNCE_BLOCK:
         return false;
         break;
-    case TILE_DIRT_PATH ... TILE_CONTAINER_3:
+    case PL_TILEDIRT_PATH ... PL_TILECONTAINER_3:
         return true;
         break;
     default:
@@ -328,47 +330,47 @@ bool isSolid(uint8_t tileId)
 
 // bool isInteractive(uint8_t tileId)
 // {
-//     return tileId > TILE_INVISIBLE_BLOCK && tileId < TILE_BG_GOAL_ZONE;
+//     return tileId > PL_TILEINVISIBLE_BLOCK && tileId < PL_TILEBG_GOAL_ZONE;
 // }
 
-void unlockScrolling(tilemap_t *tilemap){
+void pl_unlockScrolling(plTilemap_t *tilemap){
     tilemap->minMapOffsetX = 0;
-    tilemap->maxMapOffsetX = tilemap->mapWidth * TILE_SIZE - TILEMAP_DISPLAY_WIDTH_PIXELS;
+    tilemap->maxMapOffsetX = tilemap->mapWidth * PL_TILESIZE - PL_TILEMAP_DISPLAY_WIDTH_PIXELS;
 
     tilemap->minMapOffsetY = 0;
-    tilemap->maxMapOffsetY = tilemap->mapHeight * TILE_SIZE - TILEMAP_DISPLAY_HEIGHT_PIXELS;
+    tilemap->maxMapOffsetY = tilemap->mapHeight * PL_TILESIZE - PL_TILEMAP_DISPLAY_HEIGHT_PIXELS;
 }
 
-bool needsTransparency(uint8_t tileId){
+bool pl_needsTransparency(uint8_t tileId){
     switch(tileId) {
-        case TILE_BOUNCE_BLOCK:
-        case TILE_GIRDER:
-        case TILE_CONTAINER_1 ... TILE_CONTAINER_3:
-        case TILE_COIN_1 ... TILE_COIN_3:
-        case TILE_LADDER:
-        case TILE_BG_GOAL_ZONE ... TILE_BG_CLOUD_D:
+        case PL_TILEBOUNCE_BLOCK:
+        case PL_TILEGIRDER:
+        case PL_TILECONTAINER_1 ... PL_TILECONTAINER_3:
+        case PL_TILECOIN_1 ... PL_TILECOIN_3:
+        case PL_TILELADDER:
+        case PL_TILEBG_GOAL_ZONE ... PL_TILEBG_CLOUD_D:
             return true;
-        case TILE_BG_CLOUD:
+        case PL_TILEBG_CLOUD:
             return false;
-        case TILE_BG_TALL_GRASS ... TILE_BG_MOUNTAIN_R:
+        case PL_TILEBG_TALL_GRASS ... PL_TILEBG_MOUNTAIN_R:
             return true;
-        case TILE_BG_MOUNTAIN ... TILE_BG_METAL:
+        case PL_TILEBG_MOUNTAIN ... PL_TILEBG_METAL:
             return false;
-        case TILE_BG_CHAINS:
+        case PL_TILEBG_CHAINS:
             return true;
-        case TILE_BG_WALL:
+        case PL_TILEBG_WALL:
             return false;
         default:
             return false;
     }
 }
 
-void freeTilemap(tilemap_t *tilemap){
+void pl_freeTilemap(plTilemap_t *tilemap){
     free(tilemap->map);
-    for(uint8_t i=0; i<TILESET_SIZE; i++){
+    for(uint8_t i=0; i<PL_TILESET_SIZE; i++){
         switch(i){
             //Skip all placeholder tiles, since they reuse other tiles
-            //(see loadTiles)
+            //(see pl_loadTiles)
             case 10 ... 26:
             case 39 ... 47:
             {

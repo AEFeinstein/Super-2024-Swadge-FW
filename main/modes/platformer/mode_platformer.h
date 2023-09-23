@@ -38,6 +38,6 @@ typedef struct {
 void updateGame(platformer_t *platformer);
 void updateTitleScreen(platformer_t *platformer);
 
-extern swadgeMode modePlatformer;
+extern swadgeMode_t modePlatformer;
 
 #endif

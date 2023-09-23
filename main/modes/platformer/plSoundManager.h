@@ -52,12 +52,12 @@ typedef struct
     song_t bgmNameEntry;
     song_t bgmGameOver;
     song_t sndOuttaTime;
-} soundManager_t;
+} plSoundManager_t;
 
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeSoundManager(soundManager_t *self);
-void freeSoundManager(soundManager_t *self);
+void pl_initializeSoundManager(plSoundManager_t *self);
+void pl_freeSoundManager(plSoundManager_t *self);
 
 #endif
