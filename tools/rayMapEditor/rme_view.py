@@ -73,7 +73,7 @@ class view:
 
         # Set up the canvasses
         self.paletteCanvas: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 3, height=self.paletteCellSize * 8,
+            content, background=elemBgColor, width=self.paletteCellSize * 4, height=self.paletteCellSize * 8,
             highlightthickness=borderThickness, highlightbackground=borderColor)
         self.mapCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
@@ -89,7 +89,7 @@ class view:
                                                 undo=True, autoseparators=True, maxundo=-1,
                                                 background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
                                                 highlightthickness=borderThickness, highlightbackground=borderColor,
-                                                highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
+                                                highlightcolor=borderHighlightColor, borderwidth=0, bd=0, wrap='none')
 
         # Configure the main frame
         content.grid(column=0, row=0, sticky=(tk.NSEW))
@@ -167,6 +167,8 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_1, '../../assets/ray/BG_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_2, '../../assets/ray/BG_WALL_2.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_3, '../../assets/ray/BG_WALL_3.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_4, '../../assets/ray/BG_WALL_4.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_5, '../../assets/ray/BG_WALL_5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR, '../../assets/ray/BG_DOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_CHARGE, '../../assets/ray/BG_DOOR_CHARGE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_MISSILE, '../../assets/ray/BG_DOOR_MISSILE.png')
@@ -307,28 +309,30 @@ class view:
         self.mapCanvas.delete('all')
 
         # Draw backgrounds in the palette
+        x: int = 0
         y: int = 0
-        for bg in bgTiles:
-            if bg is not tileType.EMPTY:
-                self.paletteCanvas.create_image(
-                    0, y*self.paletteCellSize, image=self.texMapPalette[bg], anchor=tk.NW)
-            y = y+1
+        for col in bgTiles:
+            for bg in col:
+                if bg is not tileType.EMPTY:
+                    self.paletteCanvas.create_image(
+                        x*self.paletteCellSize, y*self.paletteCellSize, image=self.texMapPalette[bg], anchor=tk.NW)
+                y = y+1
+            x = x+1
+            y = 0
 
         # Draw objects in the palette into two columns
-        x: int = 1
-        y: int = 0
-        for obj in objTiles:
-            if obj is not tileType.EMPTY:
+        for col in objTiles:
+            for obj in col:
+                if obj is not tileType.EMPTY:
 
-                imgWidth: int = self.texMapPalette[obj].width()
-                hOffset = int((self.paletteCellSize - imgWidth) / 2)
+                    imgWidth: int = self.texMapPalette[obj].width()
+                    hOffset = int((self.paletteCellSize - imgWidth) / 2)
 
-                self.paletteCanvas.create_image(
-                    x*self.paletteCellSize + hOffset, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
-            y = y+1
-            if NUM_PALETTE_ROWS == y:
-                y = 0
-                x = x+1
+                    self.paletteCanvas.create_image(
+                        x*self.paletteCellSize + hOffset, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
+                y = y+1
+            x = x+1
+            y = 0
 
         # Draw the map
         for x in range(self.m.getMapWidth()):

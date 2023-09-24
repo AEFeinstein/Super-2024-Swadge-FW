@@ -54,6 +54,8 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_WALL_1);
     LOAD_TEXTURE(ray, BG_WALL_2);
     LOAD_TEXTURE(ray, BG_WALL_3);
+    LOAD_TEXTURE(ray, BG_WALL_4);
+    LOAD_TEXTURE(ray, BG_WALL_5);
     LOAD_TEXTURE(ray, BG_DOOR);
     LOAD_TEXTURE(ray, BG_DOOR_CHARGE);
     LOAD_TEXTURE(ray, BG_DOOR_MISSILE);

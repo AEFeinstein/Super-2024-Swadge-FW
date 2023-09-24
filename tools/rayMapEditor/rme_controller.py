@@ -19,10 +19,11 @@ class controller:
 
     def leftClickMap(self, x, y):
         self.isMapLeftClicked = True
-        if self.m.getSelectedTileType() in bgTiles:
-            self.m.setMapTileBg(x, y, self.m.selectedTileType)
-        elif self.m.getSelectedTileType() in objTiles:
-            self.m.setMapTileObj(x, y, self.m.selectedTileType)
+        type = self.m.getSelectedTileType()
+        if (type.value & OBJ) == type:
+            self.m.setMapTileObj(x, y, type)
+        else:
+            self.m.setMapTileBg(x, y, type)
 
     def releaseClick(self):
         self.isMapLeftClicked = False

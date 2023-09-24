@@ -91,6 +91,8 @@ typedef enum __attribute__((packed))
     BG_WALL_1       = (BG | WALL | 1),
     BG_WALL_2       = (BG | WALL | 2),
     BG_WALL_3       = (BG | WALL | 3),
+    BG_WALL_4       = (BG | WALL | 4),
+    BG_WALL_5       = (BG | WALL | 5),
     BG_DOOR         = (BG | DOOR | 1),
     BG_DOOR_CHARGE  = (BG | DOOR | 2),
     BG_DOOR_MISSILE = (BG | DOOR | 3),

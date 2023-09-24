@@ -29,6 +29,8 @@ class tileType(Enum):
     BG_WALL_1       = (BG | WALL  | 1)
     BG_WALL_2       = (BG | WALL  | 2)
     BG_WALL_3       = (BG | WALL  | 3)
+    BG_WALL_4       = (BG | WALL  | 4)
+    BG_WALL_5       = (BG | WALL  | 5)
     BG_DOOR         = (BG | DOOR  | 1)
     BG_DOOR_CHARGE  = (BG | DOOR  | 2)
     BG_DOOR_MISSILE = (BG | DOOR  | 3)
@@ -68,44 +70,54 @@ class tileType(Enum):
     # Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1)
 
-bgTiles: list[tileType] = [
-    tileType.BG_FLOOR,
-    tileType.BG_FLOOR_WATER,
-    tileType.BG_FLOOR_LAVA,
-    tileType.BG_WALL_1,
-    tileType.BG_WALL_2,
-    tileType.BG_WALL_3,
-    tileType.BG_DOOR,
-    tileType.BG_DOOR_CHARGE,
-    tileType.BG_DOOR_MISSILE,
-    tileType.BG_DOOR_ICE,
-    tileType.BG_DOOR_XRAY,
-    tileType.BG_DOOR_SCRIPT,
-    tileType.BG_DOOR_KEY
+bgTiles: list[list[tileType]] = [
+    [
+        tileType.BG_FLOOR,
+        tileType.BG_FLOOR_WATER,
+        tileType.BG_FLOOR_LAVA,
+        tileType.BG_WALL_1,
+        tileType.BG_WALL_2,
+        tileType.BG_WALL_3,
+        tileType.BG_WALL_4,
+        tileType.BG_WALL_5
+    ],
+    [
+        tileType.BG_DOOR,
+        tileType.BG_DOOR_CHARGE,
+        tileType.BG_DOOR_MISSILE,
+        tileType.BG_DOOR_ICE,
+        tileType.BG_DOOR_XRAY,
+        tileType.BG_DOOR_SCRIPT,
+        tileType.BG_DOOR_KEY
+    ]
 ]
 
-objTiles: list[tileType] = [
-    tileType.OBJ_ENEMY_START_POINT,
-    tileType.OBJ_ENEMY_NORMAL,
-    tileType.OBJ_ENEMY_STRONG,
-    tileType.OBJ_ENEMY_ARMORED,
-    tileType.OBJ_ENEMY_FLAMING,
-    tileType.OBJ_ENEMY_HIDDEN,
-    tileType.OBJ_ENEMY_BOSS,
-    tileType.OBJ_ITEM_BEAM,
-    tileType.OBJ_ITEM_CHARGE_BEAM,
-    tileType.OBJ_ITEM_MISSILE,
-    tileType.OBJ_ITEM_ICE,
-    tileType.OBJ_ITEM_XRAY,
-    tileType.OBJ_ITEM_SUIT_WATER,
-    tileType.OBJ_ITEM_SUIT_LAVA,
-    tileType.OBJ_ITEM_ENERGY_TANK,
-    tileType.OBJ_ITEM_KEY,
-    tileType.OBJ_ITEM_ARTIFACT,
-    tileType.OBJ_ITEM_PICKUP_ENERGY,
-    tileType.OBJ_ITEM_PICKUP_MISSILE,
-    tileType.OBJ_SCENERY_TERMINAL,
-    tileType.DELETE
+objTiles: list[list[tileType]] = [
+    [
+        tileType.OBJ_ENEMY_START_POINT,
+        tileType.OBJ_ENEMY_NORMAL,
+        tileType.OBJ_ENEMY_STRONG,
+        tileType.OBJ_ENEMY_ARMORED,
+        tileType.OBJ_ENEMY_FLAMING,
+        tileType.OBJ_ENEMY_HIDDEN,
+        tileType.OBJ_ENEMY_BOSS,
+        tileType.OBJ_ITEM_PICKUP_ENERGY,
+        tileType.OBJ_ITEM_PICKUP_MISSILE,
+        tileType.OBJ_SCENERY_TERMINAL
+    ],
+    [
+        tileType.OBJ_ITEM_BEAM,
+        tileType.OBJ_ITEM_CHARGE_BEAM,
+        tileType.OBJ_ITEM_MISSILE,
+        tileType.OBJ_ITEM_ICE,
+        tileType.OBJ_ITEM_XRAY,
+        tileType.OBJ_ITEM_SUIT_WATER,
+        tileType.OBJ_ITEM_SUIT_LAVA,
+        tileType.OBJ_ITEM_ENERGY_TANK,
+        tileType.OBJ_ITEM_KEY,
+        tileType.OBJ_ITEM_ARTIFACT,
+        tileType.DELETE
+    ]
 ]
 
 

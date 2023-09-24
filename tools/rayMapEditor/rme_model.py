@@ -74,15 +74,15 @@ class model:
                 self.currentId = (self.currentId + 1) % 256
 
     def getPaletteType(self, x, y):
-        if 0 == x:
-            # backgrounds in the first column
-            if 0 <= y and y < len(bgTiles):
-                return bgTiles[y]
+        if x < len(objTiles):
+            # backgrounds in the first columns
+            if 0 <= y and y < len(bgTiles[x]):
+                return bgTiles[x][y]
         else:
             # objects i the other columns
-            y = y + NUM_PALETTE_ROWS * (x - 1)
-            if 0 <= y and y < len(objTiles):
-                return objTiles[y]
+            x = x - len(objTiles)
+            if 0 <= y and y < len(objTiles[x]):
+                return objTiles[x][y]
         return None
 
     def setSelectedTileType(self, type, x, y):
