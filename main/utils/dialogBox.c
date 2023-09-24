@@ -55,6 +55,7 @@ dialogBox_t* initDialogBox(const char* title, const char* detail, const wsg_t* i
     dialogBox->title  = title;
     dialogBox->detail = detail;
     dialogBox->icon   = icon;
+    dialogBox->cbFn = cbFn;
 
     return dialogBox;
 }
@@ -534,11 +535,14 @@ void dialogBoxButton(dialogBox_t* dialogBox, const buttonEvt_t* evt)
                 }
                 else
                 {
-                    dialogBox->holdA = false;
-                    if (dialogBox->cbFn)
+                    if (dialogBox->holdA)
                     {
-                        dialogBox->cbFn(((dialogBoxOption_t*)dialogBox->selectedOption)->label);
-                        return;
+                        dialogBox->holdA = false;
+                        if (dialogBox->cbFn)
+                        {
+                            dialogBox->cbFn(((dialogBoxOption_t*)dialogBox->selectedOption->val)->label);
+                            return;
+                        }
                     }
                 }
             }
@@ -547,6 +551,18 @@ void dialogBoxButton(dialogBox_t* dialogBox, const buttonEvt_t* evt)
 
         case PB_B:
         {
+            if (dialogBox->holdA)
+            {
+                // Cancel a held A-press if B is then pressed
+                // But don't treat it as a B press, just return after the release
+                // and do nothing on the press to cancel normal B behavior
+                if (!evt->down)
+                {
+                    dialogBox->holdA = false;
+                }
+                return;
+            }
+
             if (dialogBox->selectedOption)
             {
                 dialogBoxOption_t* curOption = dialogBox->selectedOption->val;
@@ -561,21 +577,28 @@ void dialogBoxButton(dialogBox_t* dialogBox, const buttonEvt_t* evt)
                     }
                     else
                     {
-                        dialogBox->holdB = false;
-                        if (dialogBox->cbFn)
+                        if (dialogBox->holdB)
                         {
-                            dialogBox->cbFn(curOption->label);
-                            return;
+                            dialogBox->holdB = false;
+                            if (dialogBox->cbFn)
+                            {
+                                dialogBox->cbFn(curOption->label);
+                                return;
+                            }
                         }
                         break;
                     }
                 }
                 else
                 {
-                    dialogBox->holdB = false;
-                    // When B is released, go to the cancel option
-                    if (!evt->down)
+                    if (evt->down)
                     {
+                        dialogBox->holdB = true;
+                    }
+                    else if (dialogBox->holdB)
+                    {
+                        dialogBox->holdB = false;
+                        // When B is released, go to the cancel option
                         // Pick item with "CANCEL" option
                         for (node_t* node = dialogBox->options.first; NULL != node; node = node->next)
                         {
@@ -595,10 +618,5 @@ void dialogBoxButton(dialogBox_t* dialogBox, const buttonEvt_t* evt)
         case PB_SELECT:
         case PB_START:
             break;
-    }
-
-    if (dialogBox->selectedOption)
-    {
-        ESP_LOGI("Dialog", "Selected Option %s", ((dialogBoxOption_t*)dialogBox->selectedOption->val)->label);
     }
 }

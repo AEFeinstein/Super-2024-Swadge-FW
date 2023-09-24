@@ -2490,6 +2490,12 @@ void paintEnterSelectMode(void)
 
 void paintExitSelectMode(void)
 {
+    if (paintState->showDialogBox)
+    {
+        paintState->showDialogBox = false;
+        paintState->saveMenu = HIDDEN;
+    }
+
     if (paintState->buttonMode == BTN_MODE_DRAW && !paintState->showToolWheel)
     {
         return;
@@ -2627,10 +2633,51 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
             {
                 paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
+                paintState->saveMenu = CONFIRM_OVERWRITE;
             }
             else
             {
                 paintState->doSave = true;
+                paintExitSelectMode();
+            }
+        }
+        else if (toolWheelLoadStr == label)
+        {
+            if (paintState->unsaved)
+            {
+                paintSetupDialog(DIALOG_CONFIRM_UNSAVED_LOAD);
+                paintState->saveMenu = CONFIRM_UNSAVED;
+            }
+            else
+            {
+                paintState->doLoad = true;
+                paintExitSelectMode();
+            }
+        }
+        else if (toolWheelNewStr == label)
+        {
+            if (paintState->unsaved)
+            {
+                paintSetupDialog(DIALOG_CONFIRM_UNSAVED_CLEAR);
+                paintState->saveMenu = CONFIRM_CLEAR;
+            }
+            else
+            {
+                paintExitSelectMode();
+                paintStoreUndo(&paintState->canvas);
+                paintState->clearScreen = true;
+            }
+        }
+        else if (toolWheelExitStr == label)
+        {
+            if (paintState->unsaved)
+            {
+                paintSetupDialog(DIALOG_CONFIRM_UNSAVED_EXIT);
+                paintState->saveMenu = CONFIRM_EXIT;
+            }
+            else
+            {
+                paintReturnToMainMenu();
             }
         }
         // Check if the label is one of the color name strings
@@ -2718,7 +2765,9 @@ static void paintSetupDialog(paintDialog_t dialog)
 
     switch (dialog)
     {
-        case DIALOG_CONFIRM_UNSAVED:
+        case DIALOG_CONFIRM_UNSAVED_CLEAR:
+        case DIALOG_CONFIRM_UNSAVED_LOAD:
+        case DIALOG_CONFIRM_UNSAVED_EXIT:
         {
             title = dialogUnsavedTitleStr;
             detail = dialogUnsavedDetailStr;
@@ -2736,7 +2785,7 @@ static void paintSetupDialog(paintDialog_t dialog)
             title = dialogOverwriteTitleStr;
             detail = dialogOverwriteDetailStr;
 
-            // Already exists! Overwrite?
+            // Already exists! Overwrite? Cancel, Save As... Ok
             dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
             dialogBoxAddOption(paintState->dialogBox, dialogOptionSaveAsStr, NULL, OPTHINT_NORMAL);
             dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
@@ -2746,11 +2795,18 @@ static void paintSetupDialog(paintDialog_t dialog)
         case DIALOG_ERROR:
         default:
         {
+            // Error! Exit
             title = dialogErrorTitleStr;
             detail = dialogErrorDetailStr;
 
             dialogBoxAddOption(paintState->dialogBox, dialogOptionExitStr, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
             break;
+        }
+
+        case DIALOG_MESSAGE:
+        {
+            title = paintState->dialogMessageTitle;
+            detail = paintState->dialogMessageDetail;
         }
     }
 
@@ -2763,5 +2819,71 @@ static void paintSetupDialog(paintDialog_t dialog)
 static void paintDialogCb(const char* label)
 {
     PAINT_LOGI("Dialog option %s chosen!", label);
+    if (dialogOptionCancelStr == label)
+    {
+        // Cancel, so just go back to where we were
+        // TODO- Should this exit select mode or just go back to the tool wheel?
+        paintExitSelectMode();
+    }
+    else if (dialogOptionSaveStr == label)
+    {
+        if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
+        {
+            paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
+            paintState->saveMenu           = CONFIRM_OVERWRITE;
+        }
+        else
+        {
+            // Do actual save
+            paintState->doSave = true;
+        }
+    }
+    else if (dialogOptionSaveAsStr == label)
+    {
+        // TODO - use named slots, open a file picker /
+    }
+    else if (dialogOptionExitStr == label)
+    {
+        paintReturnToMainMenu();
+    }
+    else if (dialogOptionOkStr == label)
+    {
+        switch (paintState->dialog)
+        {
+            case DIALOG_CONFIRM_UNSAVED_CLEAR:
+            {
+                paintExitSelectMode();
+                paintStoreUndo(&paintState->canvas);
+                paintState->clearScreen = true;
+                break;
+            }
 
+            case DIALOG_CONFIRM_UNSAVED_LOAD:
+            {
+                paintState->doLoad = true;
+                paintExitSelectMode();
+                break;
+            }
+
+            case DIALOG_CONFIRM_UNSAVED_EXIT:
+            {
+                paintReturnToMainMenu();
+                break;
+            }
+
+            case DIALOG_CONFIRM_OVERWRITE:
+            {
+                paintState->doSave = true;
+                paintExitSelectMode();
+                break;
+            }
+
+            case DIALOG_MESSAGE:
+            case DIALOG_ERROR:
+            {
+                paintExitSelectMode();
+                break;
+            }
+        }
+    }
 }

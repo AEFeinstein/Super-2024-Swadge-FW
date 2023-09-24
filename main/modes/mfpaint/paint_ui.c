@@ -8,18 +8,6 @@
 #include "paint_util.h"
 #include "paint_nvs.h"
 
-static const char startMenuUndo[]           = "Undo";
-static const char startMenuRedo[]           = "Redo";
-static const char startMenuSave[]           = "Save";
-static const char startMenuLoad[]           = "Load";
-static const char startMenuSlot[]           = "Slot %d";
-static const char startMenuOverwrite[]      = "Overwrite?";
-static const char startMenuYes[]            = "Yes";
-static const char startMenuNo[]             = "No";
-static const char startMenuClearCanvas[]    = "New";
-static const char startMenuConfirmUnsaved[] = "Unsaved! OK?";
-static const char startMenuExit[]           = "Exit";
-static const char startMenuEditPalette[]    = "Edit Palette";
 static const char str_red[]                 = "Red";
 static const char str_green[]               = "Green";
 static const char str_blue[]                = "Blue";
@@ -108,216 +96,76 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
                  PAINT_COLORBOX_W, PAINT_COLORBOX_H, artist->fgColor, false, cTransparent,
                  PAINT_COLORBOX_SHADOW_BOTTOM);
 
-    uint16_t textX = 30, textY = (paintState->canvas.y - 1 - 2 * PAINT_TOOLBAR_TEXT_PADDING_Y) / 2;
+    // Draw the brush size, if applicable and not constant
+    char text[16];
 
-    // Up/down arrow logic, for all the options that have text at the top
-    if (paintState->saveMenu != HIDDEN && paintState->saveMenu != COLOR_PICKER)
+    uint16_t textX = PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + PAINT_COLORBOX_MARGIN_X + 1;
+    uint16_t textY = TFT_HEIGHT - paintState->toolbarFont.height - 4;
+
+    fillDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h,
+                    textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
+                    (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect]
+                                                                : artist->fgColor);
+    drawWsgSimple(&artist->brushDef->iconActive, textX + 1,
+                    textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
+    drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1,
+                textX + artist->brushDef->iconActive.w + 2, textY + paintState->toolbarFont.height + 1, c000);
+
+    textX += artist->brushDef->iconActive.w + PAINT_COLORBOX_MARGIN_X + 2;
+
+    // Draw the brush name
+    textX = drawText(&paintState->toolbarFont, c000, artist->brushDef->name, textX, textY);
+
+    if (artist->brushDef->minSize != artist->brushDef->maxSize)
     {
-        // Up arrow 1px above center of text
-        drawWsg(&paintState->smallArrowWsg, textX,
-                textY + paintState->saveMenuFont.height / 2 - paintState->smallArrowWsg.h - 1, false, false, 0);
-
-        // Down arrow 1px below center of text
-        drawWsg(&paintState->smallArrowWsg, textX, textY + paintState->saveMenuFont.height / 2 + 1, false, false, 180);
-
-        // Move the text over to accomodate the arrow, plus 4px spacing
-        textX += paintState->smallArrowWsg.w + 4;
-    }
-
-    bool drawYesNo = false;
-
-    if (paintState->saveMenu == HIDDEN)
-    {
-        //////// Tools
-
-        // Draw the brush icons
-        /*uint16_t iconOffset = 30;
-        for (const brush_t* curBrush = firstBrush; curBrush <= lastBrush; curBrush++)
+        if (artist->brushWidth == 0)
         {
-            const wsg_t* brushIcon = (curBrush == artist->brushDef) ? &curBrush->iconActive : &curBrush->iconInactive;
-            uint16_t iconY = (paintState->canvas.y - 1 - brushIcon->h) / 2;
-
-            uint16_t maxIconBottom = 0;
-            if (iconY + brushIcon->h > maxIconBottom)
-            {
-                maxIconBottom = iconY + brushIcon->h;
-            }
-
-            // if this is the active brush, draw the FG color underneath it first
-            if (curBrush == artist->brushDef)
-            {
-                fillDisplayArea(iconOffset, iconY, iconOffset + brushIcon->w, iconY + brushIcon->h,
-        (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect] : artist->fgColor);
-            }
-
-            drawWsg(brushIcon, iconOffset, iconY, false, false, 0);
-
-            iconOffset += brushIcon->w + 1;
-        }*/
-
-        // Draw the brush size, if applicable and not constant
-        char text[16];
-
-        textX = PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + PAINT_COLORBOX_MARGIN_X + 1;
-        textY = TFT_HEIGHT - paintState->toolbarFont.height - 4;
-
-        fillDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h,
-                        textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
-                        (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect]
-                                                                    : artist->fgColor);
-        drawWsgSimple(&artist->brushDef->iconActive, textX + 1,
-                      textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
-        drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1,
-                 textX + artist->brushDef->iconActive.w + 2, textY + paintState->toolbarFont.height + 1, c000);
-
-        textX += artist->brushDef->iconActive.w + PAINT_COLORBOX_MARGIN_X + 2;
-
-        // Draw the brush name
-        textX = drawText(&paintState->toolbarFont, c000, artist->brushDef->name, textX, textY);
-
-        if (artist->brushDef->minSize != artist->brushDef->maxSize)
+            snprintf(text, sizeof(text), "Auto");
+        }
+        else
         {
-            if (artist->brushWidth == 0)
-            {
-                snprintf(text, sizeof(text), "Auto");
-            }
-            else
-            {
-                snprintf(text, sizeof(text), "%d", artist->brushWidth);
-            }
-
-            textX += 4;
-            // Draw the icon on the text's baseline
-            drawWsg(&paintState->brushSizeWsg, textX,
-                    textY + paintState->toolbarFont.height - paintState->brushSizeWsg.h, false, false, 0);
-            textX += paintState->brushSizeWsg.w + 1;
-            textX = drawText(&paintState->toolbarFont, c000, text, textX, textY);
+            snprintf(text, sizeof(text), "%d", artist->brushWidth);
         }
 
-        if (artist->brushDef->mode == PICK_POINT && artist->brushDef->maxPoints > 1)
-        {
-            // Draw the number of picks made / total
-            snprintf(text, sizeof(text), "%" PRIu32 "/%d", (uint32_t)pxStackSize(&artist->pickPoints),
-                     artist->brushDef->maxPoints);
+        textX += 4;
+        // Draw the icon on the text's baseline
+        drawWsg(&paintState->brushSizeWsg, textX,
+                textY + paintState->toolbarFont.height - paintState->brushSizeWsg.h, false, false, 0);
+        textX += paintState->brushSizeWsg.w + 1;
+        textX = drawText(&paintState->toolbarFont, c000, text, textX, textY);
+    }
 
-            textX += 4;
-            drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
-                    false, false, 0);
-            textX += paintState->picksWsg.w + 1;
-            drawText(&paintState->toolbarFont, c000, text, textX, textY);
+    if (artist->brushDef->mode == PICK_POINT && artist->brushDef->maxPoints > 1)
+    {
+        // Draw the number of picks made / total
+        snprintf(text, sizeof(text), "%" PRIu32 "/%d", (uint32_t)pxStackSize(&artist->pickPoints),
+                    artist->brushDef->maxPoints);
+
+        textX += 4;
+        drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
+                false, false, 0);
+        textX += paintState->picksWsg.w + 1;
+        drawText(&paintState->toolbarFont, c000, text, textX, textY);
+    }
+    else if (artist->brushDef->mode == PICK_POINT_LOOP && artist->brushDef->maxPoints > 1)
+    {
+        // Draw the number of remaining picks
+        uint8_t maxPicks = artist->brushDef->maxPoints;
+
+        if (pxStackSize(&artist->pickPoints) + 1 == maxPicks - 1)
+        {
+            snprintf(text, sizeof(text), "Last");
         }
-        else if (artist->brushDef->mode == PICK_POINT_LOOP && artist->brushDef->maxPoints > 1)
+        else
         {
-            // Draw the number of remaining picks
-            uint8_t maxPicks = artist->brushDef->maxPoints;
-
-            if (pxStackSize(&artist->pickPoints) + 1 == maxPicks - 1)
-            {
-                snprintf(text, sizeof(text), "Last");
-            }
-            else
-            {
-                snprintf(text, sizeof(text), "%" PRIu32, (uint32_t)(maxPicks - pxStackSize(&artist->pickPoints) - 1));
-            }
-
-            textX += 4;
-            drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
-                    false, false, 0);
-            textX += paintState->picksWsg.w + 1;
-            drawText(&paintState->toolbarFont, c000, text, textX, textY);
-        }
-    }
-    else if (paintState->saveMenu == UNDO)
-    {
-        drawText(&paintState->saveMenuFont, c000, startMenuUndo, textX, textY);
-    }
-    else if (paintState->saveMenu == REDO)
-    {
-        drawText(&paintState->saveMenuFont, c000, startMenuRedo, textX, textY);
-    }
-    else if (paintState->saveMenu == PICK_SLOT_SAVE || paintState->saveMenu == PICK_SLOT_LOAD)
-    {
-        bool saving = paintState->saveMenu == PICK_SLOT_SAVE;
-        // Draw "Save" / "Load"
-        drawText(&paintState->saveMenuFont, c000, saving ? startMenuSave : startMenuLoad, textX, textY);
-
-        const wsg_t* fileIcon = NULL;
-
-        if (saving)
-        {
-            fileIcon = paintGetSlotInUse(paintState->index, paintState->selectedSlot) ? &paintState->overwriteWsg
-                                                                                      : &paintState->newfileWsg;
+            snprintf(text, sizeof(text), "%" PRIu32, (uint32_t)(maxPicks - pxStackSize(&artist->pickPoints) - 1));
         }
 
-        // Draw the slot number
-        char text[16];
-        snprintf(text, sizeof(text), startMenuSlot, paintState->selectedSlot + 1);
-        uint16_t textW = textWidth(&paintState->saveMenuFont, text);
-
-        // Text goes all the way to the right, minus 13px for the corner, then the arrow, arrow spacing, [icon and
-        // spacing,] and the text itself
-        textX = TFT_WIDTH - 13 - paintState->bigArrowWsg.w - 4 - (fileIcon ? fileIcon->w + 4 : 0) - textW;
-        drawText(&paintState->saveMenuFont, c000, text, textX, textY);
-
-        if (fileIcon)
-        {
-            drawWsgSimple(fileIcon, textX + textW + 4, textY);
-        }
-
-        // Left arrow
-        drawWsg(&paintState->bigArrowWsg, textX - 4 - paintState->bigArrowWsg.w,
-                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 270);
-        // Right arrow
-        drawWsg(&paintState->bigArrowWsg, textX + textW + 4 + (fileIcon ? fileIcon->w + 4 : 0),
-                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 90);
-    }
-    else if (paintState->saveMenu == CONFIRM_OVERWRITE)
-    {
-        // Draw "Overwrite?"
-        drawText(&paintState->saveMenuFont, c000, startMenuOverwrite, textX, textY);
-
-        drawYesNo = true;
-    }
-    else if (paintState->saveMenu == CLEAR)
-    {
-        drawText(&paintState->saveMenuFont, c000, startMenuClearCanvas, textX, textY);
-    }
-    else if (paintState->saveMenu == CONFIRM_CLEAR || paintState->saveMenu == CONFIRM_EXIT
-             || paintState->saveMenu == CONFIRM_UNSAVED)
-    {
-        // Draw "Unsaved! OK?"
-        drawText(&paintState->saveMenuFont, c000, startMenuConfirmUnsaved, textX, textY);
-
-        drawYesNo = true;
-    }
-    else if (paintState->saveMenu == EXIT)
-    {
-        drawText(&paintState->saveMenuFont, c000, startMenuExit, textX, textY);
-    }
-    else if (paintState->saveMenu == EDIT_PALETTE)
-    {
-        drawText(&paintState->saveMenuFont, c000, startMenuEditPalette, textX, textY);
-    }
-    else if (paintState->saveMenu == COLOR_PICKER)
-    {
-        paintRenderColorPicker(artist, canvas, paintState);
-    }
-
-    if (drawYesNo)
-    {
-        // Draw "Yes" / "No"
-        const char* optionText = (paintState->saveMenuBoolOption ? startMenuYes : startMenuNo);
-        uint16_t textW         = textWidth(&paintState->saveMenuFont, optionText);
-        textX                  = TFT_WIDTH - 13 - paintState->bigArrowWsg.w - 4 - textW;
-
-        drawText(&paintState->saveMenuFont, c000, optionText, textX, textY);
-
-        // Left arrow
-        drawWsg(&paintState->bigArrowWsg, textX - 4 - paintState->bigArrowWsg.w,
-                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 270);
-        // Right arrow
-        drawWsg(&paintState->bigArrowWsg, textX + textW + 4,
-                textY + (paintState->saveMenuFont.height - paintState->bigArrowWsg.h) / 2, false, false, 90);
+        textX += 4;
+        drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
+                false, false, 0);
+        textX += paintState->picksWsg.w + 1;
+        drawText(&paintState->toolbarFont, c000, text, textX, textY);
     }
 }
 

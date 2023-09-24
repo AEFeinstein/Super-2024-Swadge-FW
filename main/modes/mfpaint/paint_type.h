@@ -8,7 +8,9 @@
 // The number of colors in the palette and the max number of colors an image can be saved with
 #define PAINT_MAX_COLORS 16
 
+
 typedef paletteColor_t (*colorMapFn_t)(paletteColor_t col);
+
 
 /// @brief Defines each separate screen in the paint mode.
 typedef enum
@@ -27,11 +29,13 @@ typedef enum
     PAINT_RECEIVE,
 } paintScreen_t;
 
+
 /// @brief Represents the coordinates of a single pixel or point
 typedef struct
 {
     uint16_t x, y;
 } point_t;
+
 
 typedef enum
 {
@@ -93,6 +97,7 @@ typedef enum
 
     // All done!
     SHARE_SEND_COMPLETE,
+
 
     //////// Receiver States
 

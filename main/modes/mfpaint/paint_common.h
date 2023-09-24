@@ -26,6 +26,7 @@
 //////// Data Constants
 
 // The total number of save slots available
+// TODO: Replace with a space limit
 #define PAINT_SAVE_SLOTS 4
 
 // Whether to have the LEDs show the current colors
@@ -166,9 +167,12 @@ typedef struct
 
 typedef enum
 {
-    DIALOG_CONFIRM_UNSAVED,
+    DIALOG_CONFIRM_UNSAVED_CLEAR,
+    DIALOG_CONFIRM_UNSAVED_LOAD,
+    DIALOG_CONFIRM_UNSAVED_EXIT,
     DIALOG_CONFIRM_OVERWRITE,
     DIALOG_ERROR,
+    DIALOG_MESSAGE,
 } paintDialog_t;
 
 typedef struct
@@ -362,6 +366,12 @@ typedef struct
 
     /// @brief The actual dialog
     dialogBox_t* dialogBox;
+
+    /// @brief The title of the dialog for `DIALOG_MESSAGE`
+    const char* dialogMessageTitle;
+
+    /// @brief The detail message of the dialog for `DIALOG_MESSAGE`
+    const char* dialogMessageDetail;
 } paintDraw_t;
 
 typedef struct
