@@ -94,6 +94,8 @@ _TUNERNOME_H_
 | `getMicGain()`             | `getMicGainSetting()`      |
 | `setMicGain()`             | `setMicGainSetting()`      |
 | `setAndSaveLedBrightness(` | `setLedBrightnessSetting(` |
+| `getTestModePassed(`       | `getTestModePassedSetting(`|
+| `setTestModePassed(`       | `setTestModePassedSetting(`|
 | `meleeMenu_t`              | `menu_t`                   |
 | `deinitMeleeMenu(`         | `deinitMenu(`              |
 | `modeMainMenu`             | `mainMenuMode`             |
