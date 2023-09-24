@@ -20,17 +20,17 @@
 //==============================================================================
 
 #define BTN_RADIUS 10
-#define BTN_DIA (BTN_RADIUS * 2)
-#define AB_SEP 6
-#define DPAD_SEP 15
+#define BTN_DIA    (BTN_RADIUS * 2)
+#define AB_SEP     6
+#define DPAD_SEP   15
 
 #define ACCEL_BAR_HEIGHT 8
 #define ACCEL_BAR_SEP    1
-#define MAX_ACCEL_BAR_W 60
+#define MAX_ACCEL_BAR_W  60
 
 #define TOUCHBAR_WIDTH  100
-#define TOUCHBAR_HEIGHT  20
-#define TOUCHBAR_Y_OFF   32
+#define TOUCHBAR_HEIGHT 20
+#define TOUCHBAR_Y_OFF  32
 
 //==============================================================================
 // Enums
@@ -106,21 +106,21 @@ typedef struct
 
 factoryTest_t* test;
 
-swadgeMode_t factoryTestMode =
-{
-    .modeName = "Factory Test Mode",
-    .wifiMode = NO_WIFI,
-    .overrideUsb = false,
-    .usesAccelerometer = true,
-    .usesThermometer = true,
-    .fnEnterMode = testEnterMode,
-    .fnExitMode = testExitMode,
-    .fnMainLoop = testMainLoop,
-    .fnAudioCallback = testAudioCb,
+swadgeMode_t factoryTestMode = {
+    .modeName                 = "Factory Test Mode",
+    .wifiMode                 = NO_WIFI,
+    .overrideUsb              = false,
+    .usesAccelerometer        = true,
+    .usesThermometer          = true,
+    .overrideSelectBtn        = true,
+    .fnEnterMode              = testEnterMode,
+    .fnExitMode               = testExitMode,
+    .fnMainLoop               = testMainLoop,
+    .fnAudioCallback          = testAudioCb,
     .fnBackgroundDrawCallback = NULL,
-    .fnEspNowRecvCb = NULL,
-    .fnEspNowSendCb = NULL,
-    .fnAdvancedUSB = NULL,
+    .fnEspNowRecvCb           = NULL,
+    .fnEspNowSendCb           = NULL,
+    .fnAdvancedUSB            = NULL,
 };
 
 //==============================================================================
@@ -157,7 +157,7 @@ void testEnterMode(void)
     setMicGainSetting(MAX_MIC_GAIN);
 
     // Play a song
-    //bzrPlayBgm(&BlackDog, BZR_STEREO);
+    // bzrPlayBgm(&BlackDog, BZR_STEREO);
 }
 
 /**
@@ -190,15 +190,12 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     testReadAndValidateAccelerometer();
 
     // Check for a test pass
-    if(test->buttonsPassed &&
-            test->touchPassed &&
-            test->accelPassed &&
-            test->bzrMicPassed)
+    if (test->buttonsPassed && test->touchPassed && test->accelPassed && test->bzrMicPassed)
     {
         // Set NVM to indicate the test passed
         setTestModePassedSetting(true);
 
-        if(getTestModePassedSetting())
+        if (getTestModePassedSetting())
         {
             switchToSwadgeMode(&mainMenuMode);
         }
@@ -208,13 +205,13 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     clearPxTft();
 
     // Draw the spectrum as a bar graph. Figure out bar and margin size
-    int16_t binWidth = (TFT_WIDTH / FIX_BINS);
+    int16_t binWidth  = (TFT_WIDTH / FIX_BINS);
     int16_t binMargin = (TFT_WIDTH - (binWidth * FIX_BINS)) / 2;
 
     // Find the max value
-    for(uint16_t i = 0; i < FIX_BINS; i++)
+    for (uint16_t i = 0; i < FIX_BINS; i++)
     {
-        if(test->end.fuzzed_bins[i] > test->maxValue)
+        if (test->end.fuzzed_bins[i] > test->maxValue)
         {
             test->maxValue = test->end.fuzzed_bins[i];
         }
@@ -222,28 +219,26 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Plot the bars
     int32_t energy = 0;
-    for(uint16_t i = 0; i < FIX_BINS; i++)
+    for (uint16_t i = 0; i < FIX_BINS; i++)
     {
         energy += test->end.fuzzed_bins[i];
-        uint8_t height = ((TFT_HEIGHT / 2) * test->end.fuzzed_bins[i]) /
-                         test->maxValue;
-        paletteColor_t color = test->bzrMicPassed ? c050 : c500; //paletteHsvToHex((i * 256) / FIX_BINS, 255, 255);
-        int16_t x0 = binMargin + (i * binWidth);
-        int16_t x1 = binMargin + ((i + 1) * binWidth);
+        uint8_t height       = ((TFT_HEIGHT / 2) * test->end.fuzzed_bins[i]) / test->maxValue;
+        paletteColor_t color = test->bzrMicPassed ? c050 : c500; // paletteHsvToHex((i * 256) / FIX_BINS, 255, 255);
+        int16_t x0           = binMargin + (i * binWidth);
+        int16_t x1           = binMargin + ((i + 1) * binWidth);
         // Big enough, fill an area
-        fillDisplayArea(x0, TFT_HEIGHT - height,
-                        x1, TFT_HEIGHT, color);
+        fillDisplayArea(x0, TFT_HEIGHT - height, x1, TFT_HEIGHT, color);
     }
 
     // Check for a pass
-    if(energy > 100000)
+    if (energy > 100000)
     {
         test->bzrMicPassed = true;
     }
 
     // Draw button states
     int16_t centerLine = TFT_HEIGHT / 4;
-    int16_t btnX = BTN_DIA;
+    int16_t btnX       = BTN_DIA;
 
     // PB_LEFT
     plotButtonState(btnX, centerLine, test->buttonStates[2]);
@@ -271,31 +266,28 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     plotButtonState(btnX, centerLine - AB_SEP, test->buttonStates[4]);
 
     // Draw touch strip
-    int16_t tBarX = TFT_WIDTH - TOUCHBAR_WIDTH;
+    int16_t tBarX        = TFT_WIDTH - TOUCHBAR_WIDTH;
     uint8_t numTouchElem = (sizeof(test->touchStates) / sizeof(test->touchStates[0]));
-    for(uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
+    for (uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
     {
-        switch(test->touchStates[touchIdx])
+        switch (test->touchStates[touchIdx])
         {
             case BTN_NOT_PRESSED:
             {
-                drawRect(tBarX - 1, TOUCHBAR_Y_OFF,
-                         tBarX + (TOUCHBAR_WIDTH / numTouchElem), TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
-                         c500);
+                drawRect(tBarX - 1, TOUCHBAR_Y_OFF, tBarX + (TOUCHBAR_WIDTH / numTouchElem),
+                         TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c500);
                 break;
             }
             case BTN_PRESSED:
             {
-                fillDisplayArea(tBarX - 1, TOUCHBAR_Y_OFF,
-                                tBarX + (TOUCHBAR_WIDTH / numTouchElem), TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
-                                c005);
+                fillDisplayArea(tBarX - 1, TOUCHBAR_Y_OFF, tBarX + (TOUCHBAR_WIDTH / numTouchElem),
+                                TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c005);
                 break;
             }
             case BTN_RELEASED:
             {
-                fillDisplayArea(tBarX - 1, TOUCHBAR_Y_OFF,
-                                tBarX + (TOUCHBAR_WIDTH / numTouchElem), TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
-                                c050);
+                fillDisplayArea(tBarX - 1, TOUCHBAR_Y_OFF, tBarX + (TOUCHBAR_WIDTH / numTouchElem),
+                                TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c050);
                 break;
             }
         }
@@ -306,14 +298,14 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     int16_t barY = TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + 4;
 
     paletteColor_t accelColor = c500;
-    if(test->accelPassed)
+    if (test->accelPassed)
     {
         accelColor = c050;
     }
 
     // Plot X accel
     int16_t barWidth = ((test->x + 256) * MAX_ACCEL_BAR_W) / 512;
-    if(barWidth >= 0)
+    if (barWidth >= 0)
     {
         fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, accelColor);
     }
@@ -321,7 +313,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Plot Y accel
     barWidth = ((test->y + 256) * MAX_ACCEL_BAR_W) / 512;
-    if(barWidth >= 0)
+    if (barWidth >= 0)
     {
         fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, accelColor);
     }
@@ -329,7 +321,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Plot Z accel
     barWidth = ((test->z + 256) * MAX_ACCEL_BAR_W) / 512;
-    if(barWidth >= 0)
+    if (barWidth >= 0)
     {
         fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, accelColor);
     }
@@ -337,19 +329,19 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Plot some text depending on test status
     char dbgStr[32] = {0};
-    if(false == test->buttonsPassed)
+    if (false == test->buttonsPassed)
     {
         sprintf(dbgStr, "Test Buttons");
     }
-    else if(false == test->touchPassed)
+    else if (false == test->touchPassed)
     {
         sprintf(dbgStr, "Test Touch Strip");
     }
-    else if(false == test->accelPassed)
+    else if (false == test->accelPassed)
     {
         sprintf(dbgStr, "Test Accelerometer");
     }
-    else if(false == test->bzrMicPassed)
+    else if (false == test->bzrMicPassed)
     {
         sprintf(dbgStr, "Test Buzzer & Mic");
     }
@@ -367,14 +359,14 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Animate a sprite
     test->tSpriteElapsedUs += elapsedUs;
-    while(test->tSpriteElapsedUs >= 500000)
+    while (test->tSpriteElapsedUs >= 500000)
     {
         test->tSpriteElapsedUs -= 500000;
         test->spriteFrame = (test->spriteFrame + 1) % 2;
     }
 
     // Draw the sprite
-    if(0 == test->spriteFrame)
+    if (0 == test->spriteFrame)
     {
         drawWsg(&test->kd_idle0, 32, 4, false, false, 0);
     }
@@ -385,15 +377,15 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Pulse LEDs, each color for 1s
     test->tLedElapsedUs += elapsedUs;
-    while(test->tLedElapsedUs >= (1000000 / 512))
+    while (test->tLedElapsedUs >= (1000000 / 512))
     {
         test->tLedElapsedUs -= (1000000 / 512);
-        switch(test->ledState)
+        switch (test->ledState)
         {
             case R_RISING:
             {
                 test->cLed.r++;
-                if(255 == test->cLed.r)
+                if (255 == test->cLed.r)
                 {
                     test->ledState = R_FALLING;
                 }
@@ -402,7 +394,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
             case R_FALLING:
             {
                 test->cLed.r--;
-                if(0 == test->cLed.r)
+                if (0 == test->cLed.r)
                 {
                     test->ledState = G_RISING;
                 }
@@ -411,7 +403,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
             case G_RISING:
             {
                 test->cLed.g++;
-                if(255 == test->cLed.g)
+                if (255 == test->cLed.g)
                 {
                     test->ledState = G_FALLING;
                 }
@@ -420,7 +412,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
             case G_FALLING:
             {
                 test->cLed.g--;
-                if(0 == test->cLed.g)
+                if (0 == test->cLed.g)
                 {
                     test->ledState = B_RISING;
                 }
@@ -429,7 +421,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
             case B_RISING:
             {
                 test->cLed.b++;
-                if(255 == test->cLed.b)
+                if (255 == test->cLed.b)
                 {
                     test->ledState = B_FALLING;
                 }
@@ -438,7 +430,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
             case B_FALLING:
             {
                 test->cLed.b--;
-                if(0 == test->cLed.b)
+                if (0 == test->cLed.b)
                 {
                     test->ledState = R_RISING;
                 }
@@ -449,7 +441,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Display LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
-    for(uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
         leds[i].r = test->cLed.r;
         leds[i].g = test->cLed.g;
@@ -467,7 +459,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
  */
 void plotButtonState(int16_t x, int16_t y, testButtonState_t state)
 {
-    switch(state)
+    switch (state)
     {
         case BTN_NOT_PRESSED:
         {
@@ -496,7 +488,7 @@ void testProcessButtons(buttonEvt_t* evt)
 {
     // Find the button index based on bit
     uint8_t btnIdx = 0;
-    switch(evt->button)
+    switch (evt->button)
     {
         case PB_UP:
         {
@@ -545,16 +537,16 @@ void testProcessButtons(buttonEvt_t* evt)
     }
 
     // Transition states
-    if(evt->down)
+    if (evt->down)
     {
-        if(BTN_NOT_PRESSED == test->buttonStates[btnIdx])
+        if (BTN_NOT_PRESSED == test->buttonStates[btnIdx])
         {
             test->buttonStates[btnIdx] = BTN_PRESSED;
         }
     }
     else
     {
-        if(BTN_PRESSED == test->buttonStates[btnIdx])
+        if (BTN_PRESSED == test->buttonStates[btnIdx])
         {
             test->buttonStates[btnIdx] = BTN_RELEASED;
         }
@@ -562,9 +554,9 @@ void testProcessButtons(buttonEvt_t* evt)
 
     // Check if all buttons have passed
     test->buttonsPassed = true;
-    for(uint8_t i = 0; i < 8; i++)
+    for (uint8_t i = 0; i < 8; i++)
     {
-        if(BTN_RELEASED != test->buttonStates[i])
+        if (BTN_RELEASED != test->buttonStates[i])
         {
             test->buttonsPassed = false;
         }
@@ -618,14 +610,14 @@ void testReadAndValidateTouch(void)
                 return;
         }
 
-        if(BTN_NOT_PRESSED == test->touchStates[pad])
+        if (BTN_NOT_PRESSED == test->touchStates[pad])
         {
             test->touchStates[pad] = BTN_PRESSED;
         }
 
-        if(test->lastTouchStateIdx != UINT8_MAX && pad != test->lastTouchStateIdx)
+        if (test->lastTouchStateIdx != UINT8_MAX && pad != test->lastTouchStateIdx)
         {
-            if(BTN_PRESSED == test->touchStates[test->lastTouchStateIdx])
+            if (BTN_PRESSED == test->touchStates[test->lastTouchStateIdx])
             {
                 test->touchStates[test->lastTouchStateIdx] = BTN_RELEASED;
             }
@@ -633,9 +625,9 @@ void testReadAndValidateTouch(void)
 
         test->lastTouchStateIdx = pad;
     }
-    else
+    else if (test->lastTouchStateIdx != UINT8_MAX)
     {
-        if(BTN_PRESSED == test->touchStates[test->lastTouchStateIdx])
+        if (BTN_PRESSED == test->touchStates[test->lastTouchStateIdx])
         {
             test->touchStates[test->lastTouchStateIdx] = BTN_RELEASED;
         }
@@ -643,9 +635,9 @@ void testReadAndValidateTouch(void)
 
     // Check if all buttons have passed
     test->touchPassed = true;
-    for(uint8_t i = 0; i < 9; i++)
+    for (uint8_t i = 0; i < 9; i++)
     {
-        if(BTN_RELEASED != test->touchStates[i])
+        if (BTN_RELEASED != test->touchStates[i])
         {
             test->touchPassed = false;
         }
@@ -661,14 +653,14 @@ void testReadAndValidateTouch(void)
 void testAudioCb(uint16_t* samples, uint32_t sampleCnt)
 {
     // For each sample
-    for(uint32_t idx = 0; idx < sampleCnt; idx++)
+    for (uint32_t idx = 0; idx < sampleCnt; idx++)
     {
         // Push to test
         PushSample32(&test->dd, samples[idx]);
 
         // If 128 samples have been pushed
         test->samplesProcessed++;
-        if(test->samplesProcessed >= 128)
+        if (test->samplesProcessed >= 128)
         {
             // Update LEDs
             test->samplesProcessed = 0;
@@ -676,16 +668,16 @@ void testAudioCb(uint16_t* samples, uint32_t sampleCnt)
 
             // Keep track of max value for the spectrogram
             int16_t maxVal = 0;
-            for(uint16_t i = 0; i < FIX_BINS; i++)
+            for (uint16_t i = 0; i < FIX_BINS; i++)
             {
-                if(test->end.fuzzed_bins[i] > maxVal)
+                if (test->end.fuzzed_bins[i] > maxVal)
                 {
                     maxVal = test->end.fuzzed_bins[i];
                 }
             }
 
             // If already passed, just return
-            if(true == test->bzrMicPassed)
+            if (true == test->bzrMicPassed)
             {
                 return;
             }
@@ -709,10 +701,10 @@ void testReadAndValidateAccelerometer(void)
     test->z = z;
 
     // Make sure all values are nonzero
-    if((x != 0) && (y != 0) && (z != 0))
+    if ((x != 0) && (y != 0) && (z != 0))
     {
         // Make sure some value is shook
-        if((x > 500) || (y > 500) || (z > 500))
+        if ((x > 500) || (y > 500) || (z > 500))
         {
             // Pass!
             test->accelPassed = true;

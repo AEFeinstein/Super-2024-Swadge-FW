@@ -157,8 +157,8 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US  1000000
-#define PAUSE_TIME_US 500000
+#define EXIT_TIME_US          1000000
+#define PAUSE_TIME_US         500000
 #define DEFAULT_FRAME_RATE_US 40000
 
 //==============================================================================
@@ -203,10 +203,10 @@ void app_main(void)
 
 #if !defined(CONFIG_SWADGE_DEVKIT)
     // If test mode was passed
-    if(getTestModePassedSetting())
+    if (getTestModePassedSetting())
 #else
     // Ignore test mode for devkit
-    if(true)
+    if (true)
 #endif
     {
         // Show the main menu
@@ -550,9 +550,9 @@ static void setSwadgeMode(void* swadgeMode)
  */
 void switchToSwadgeMode(swadgeMode_t* mode)
 {
-    //Set the framerate back to default
+    // Set the framerate back to default
     setFrameRateUs(DEFAULT_FRAME_RATE_US);
-    
+
     pendingSwadgeMode = mode;
 }
 
@@ -609,9 +609,9 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
     bool retval = checkButtonQueue(evt);
 
     // Check for intercept
-    if (retval &&                         // If there was a button press
-        (cSwadgeMode != &mainMenuMode) && // And this isn't the main menu
-        (evt->button == PB_SELECT))       // And the button was PB_SELECT
+    if (retval &&                            // If there was a button press
+        (!cSwadgeMode->overrideSelectBtn) && // And this mode does not override PB_SELECT
+        (evt->button == PB_SELECT))          // And the button was PB_SELECT
     {
         if (evt->down)
         {
@@ -648,7 +648,7 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 
 /**
  * @brief Set the framerate, in microseconds
- * 
+ *
  * @param newFrameRateUs The time between frame draws, in microseconds
  */
 void setFrameRateUs(uint32_t newFrameRateUs)

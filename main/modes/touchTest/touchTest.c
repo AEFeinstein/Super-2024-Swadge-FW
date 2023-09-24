@@ -74,6 +74,7 @@ swadgeMode_t touchTestMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = touchTestEnterMode,
     .fnExitMode               = touchTestExitMode,
     .fnMainLoop               = touchTestMainLoop,

@@ -106,6 +106,7 @@ swadgeMode_t quickSettingsMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = true,
     .fnEnterMode              = quickSettingsEnterMode,
     .fnExitMode               = quickSettingsExitMode,
     .fnMainLoop               = quickSettingsMainLoop,
