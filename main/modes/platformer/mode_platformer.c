@@ -58,8 +58,6 @@ static const int16_t cheatCode[11] = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, P
 void platformerEnterMode(void);
 void platformerExitMode(void);
 void platformerMainLoop(int64_t elapsedUs);
-void platformerButtonCb(buttonEvt_t *evt);
-// void platformerCb(const char *opt);
 
 //==============================================================================
 // Structs
@@ -296,47 +294,6 @@ void platformerMainLoop(int64_t elapsedUs)
 /**
  * @brief TODO
  *
- * @param evt
- */
-void platformerButtonCb(buttonEvt_t *evt)
-{
-    if(evt->down)
-        {
-        if(platformer->menuState == 0 &&
-            (
-                (evt->state & cheatCode[platformer->cheatCodeIdx])
-            )
-        ) {
-            platformer->cheatCodeIdx++;
-
-            if(platformer->cheatCodeIdx > 10){
-                platformer->cheatCodeIdx = 0;
-                platformer->menuState = 1;
-                platformer->gameData.debugMode = true;
-                bzrPlaySfx(&(platformer->soundManager.sndLevelClearS), BZR_STEREO);
-            } else {
-                bzrPlaySfx(&(platformer->soundManager.sndMenuSelect), BZR_STEREO);
-            }
-
-            // Do not forward the A or START in the cheat code to the rest of the mode
-            if(evt->button == PB_A || evt->button == PB_B)
-            {
-                return;
-            }
-        }
-        else
-        {
-            platformer->cheatCodeIdx = 0;
-        }
-    }
-
-    platformer->btnState = evt->state;
-    platformer->gameData.btnState = evt->state;
-}
-
-/**
- * @brief TODO
- *
  * @param opt
  */
 // void platformerCb(const char *opt)
@@ -444,6 +401,31 @@ void updateTitleScreen(platformer_t *self)
             if(self->gameData.frameCount > 600){
                 pl_resetGameDataLeds(&(self->gameData));
                 changeStateShowHighScores(self);
+            }
+
+            if (
+                (self->gameData.btnState & cheatCode[platformer->cheatCodeIdx])
+                &&
+                !(self->gameData.prevBtnState & cheatCode[platformer->cheatCodeIdx])
+            ) {
+                platformer->cheatCodeIdx++;
+
+                if(platformer->cheatCodeIdx > 10){
+                    platformer->cheatCodeIdx = 0;
+                    platformer->menuState = 1;
+                    platformer->gameData.debugMode = true;
+                    bzrPlaySfx(&(platformer->soundManager.sndLevelClearS), BZR_STEREO);
+                    break;
+                } else {
+                    bzrPlaySfx(&(platformer->soundManager.sndMenuSelect), BZR_STEREO);
+                    break;
+                }
+            }
+            else
+            {
+                if( !(self->gameData.frameCount % 150 ) ){
+                    platformer->cheatCodeIdx = 0;
+                }
             }
 
             if (
@@ -775,8 +757,7 @@ void drawPlatformerTitleScreen(font_t *font, plGameData_t *gameData)
 void changeStateReadyScreen(platformer_t *self){
     self->gameData.frameCount = 0;
     
-    //TODO this song is glitched somehow
-    //bzrPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
+    bzrPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
     
     pl_resetGameDataLeds(&(self->gameData));
     
