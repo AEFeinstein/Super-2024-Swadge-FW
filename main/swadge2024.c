@@ -169,8 +169,12 @@ static swadgeMode_t* cSwadgeMode = &mainMenuMode;
 /// @brief A pending Swadge mode to use after a deep sleep
 static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
-/// @brief Whether or not the quick settings overlay mode is shown
-static bool showQuickSettings = false;
+/// @brief Flag set if the quick settings should be shown synchronously
+static bool shouldShowQuickSettings = false;
+/// @brief Flag set if the quick settings should be hidden synchronously
+static bool shouldHideQuickSettings = false;
+/// @brief A pointer to the Swadge mode under the quick settings
+static swadgeMode_t* modeBehindQuickSettings = NULL;
 
 /// 25 FPS by default
 static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
@@ -320,6 +324,27 @@ void app_main(void)
         int64_t tElapsedUs = tNowUs - tLastLoopUs;
         tLastLoopUs        = tNowUs;
 
+        // If quick settings should be shown or hidden, do that before calling other callbacks
+        if (shouldShowQuickSettings)
+        {
+            // Lower the flag
+            shouldShowQuickSettings = false;
+            // Save the current mode
+            modeBehindQuickSettings = cSwadgeMode;
+            cSwadgeMode             = &quickSettingsMode;
+            // Show the quick settings
+            quickSettingsMode.fnEnterMode();
+        }
+        else if (shouldHideQuickSettings)
+        {
+            // Lower the flag
+            shouldHideQuickSettings = false;
+            // Hide the quick settings
+            quickSettingsMode.fnExitMode();
+            // Restore the mode
+            cSwadgeMode = modeBehindQuickSettings;
+        }
+
         // Process ADC samples
         if (NULL != cSwadgeMode->fnAudioCallback)
         {
@@ -363,7 +388,7 @@ void app_main(void)
             tAccumDraw -= frameRateUs;
 
             // Call the mode's main loop
-            if (NULL != cSwadgeMode->fnMainLoop || showQuickSettings)
+            if (NULL != cSwadgeMode->fnMainLoop)
             {
                 // Keep track of the time between main loop calls
                 static uint64_t tLastMainLoopCall = 0;
@@ -372,21 +397,12 @@ void app_main(void)
                     tLastMainLoopCall = tNowUs;
                 }
 
-                if (showQuickSettings)
-                {
-                    // Call the overlay mode's main loop if there is one
-                    quickSettingsMode.fnMainLoop(tNowUs - tLastMainLoopCall);
-                }
-                else
-                {
-                    // Otherwise, call the regular swadge mode's main loop
-                    cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
-                }
+                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
                 tLastMainLoopCall = tNowUs;
             }
 
             // If the menu button is being held
-            if (0 != timeExitPressed && !showQuickSettings)
+            if (0 != timeExitPressed)
             {
                 // Figure out for how long
                 int64_t tHeldUs = esp_timer_get_time() - timeExitPressed;
@@ -407,7 +423,7 @@ void app_main(void)
             }
 
             // Draw to the TFT
-            drawDisplayTft(showQuickSettings ? NULL : cSwadgeMode->fnBackgroundDrawCallback);
+            drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
         }
 
         // If the mode should be switched, do it now
@@ -594,7 +610,7 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 
     // Check for intercept
     if (retval &&                            // If there was a button press
-        (!cSwadgeMode->overrideSelectBtn) && // And this mode does not override PB_SELECT
+        (!cSwadgeMode->overrideSelectBtn) && // And PB_SELECT isn't overridden
         (evt->button == PB_SELECT))          // And the button was PB_SELECT
     {
         if (evt->down)
@@ -608,17 +624,13 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
             timeExitPressed = 0;
 
             // If the mode hasn't exited yet, toggle quick settings
-            if (false == showQuickSettings)
+            if (cSwadgeMode != &quickSettingsMode)
             {
-                // Show the quick settings
-                quickSettingsMode.fnEnterMode();
-                showQuickSettings = true;
+                shouldShowQuickSettings = true;
             }
             else
             {
-                // Hide the quick settings
-                showQuickSettings = false;
-                quickSettingsMode.fnExitMode();
+                shouldHideQuickSettings = true;
             }
         }
 
