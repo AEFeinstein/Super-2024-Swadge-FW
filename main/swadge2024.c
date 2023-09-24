@@ -140,11 +140,13 @@
 #include <soc/rtc_cntl_reg.h>
 
 #include "advanced_usb_control.h"
-#include "swadge2024.h"
-#include "mainMenu.h"
-#include "lumberjack.h"
-#include "quickSettings.h"
 #include "shapes.h"
+#include "swadge2024.h"
+
+#include "factoryTest.h"
+#include "lumberjack.h"
+#include "mainMenu.h"
+#include "quickSettings.h"
 
 //==============================================================================
 // Defines
@@ -199,8 +201,22 @@ void app_main(void)
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
-    // Assume the main menu is shown
-    cSwadgeMode = &mainMenuMode;
+#if !defined(CONFIG_SWADGE_DEVKIT)
+    // If test mode was passed
+    if(getTestModePassedSetting())
+#else
+    // Ignore test mode for devkit
+    if(true)
+#endif
+    {
+        // Show the main menu
+        cSwadgeMode = &mainMenuMode;
+    }
+    else
+    {
+        // Otherwise enter test mode
+        cSwadgeMode = &factoryTestMode;
+    }
 
     // If the ESP woke from sleep, and there is a pending Swadge Mode
     if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
