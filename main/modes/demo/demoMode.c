@@ -41,6 +41,7 @@ swadgeMode_t demoMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = true,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = demoEnterMode,
     .fnExitMode               = demoExitMode,
     .fnMainLoop               = demoMainLoop,

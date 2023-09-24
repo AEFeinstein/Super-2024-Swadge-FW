@@ -51,6 +51,7 @@ swadgeMode_t lumberjackMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = lumberjackEnterMode,
     .fnExitMode               = lumberjackExitMode,
     .fnMainLoop               = lumberjackMainLoop,

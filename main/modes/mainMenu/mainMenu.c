@@ -60,6 +60,7 @@ swadgeMode_t mainMenuMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = true,
+    .overrideSelectBtn        = true,
     .fnEnterMode              = mainMenuEnterMode,
     .fnExitMode               = mainMenuExitMode,
     .fnMainLoop               = mainMenuMainLoop,

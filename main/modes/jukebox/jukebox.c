@@ -123,6 +123,7 @@ swadgeMode_t jukeboxMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = jukeboxEnterMode,
     .fnExitMode               = jukeboxExitMode,
     .fnMainLoop               = jukeboxMainLoop,
