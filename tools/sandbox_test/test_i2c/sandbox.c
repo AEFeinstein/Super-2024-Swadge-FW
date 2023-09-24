@@ -25,6 +25,7 @@ int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
 
 extern uint32_t frameRateUs;
 int frameno;
+int bQuit;
 
 #define LSM6DSL_ADDRESS						0x6a
 #define QMC6308_ADDRESS						0x2c
@@ -470,10 +471,20 @@ static void LMS6DS3Setup()
 		esp_rom_delay_us(10);
 	}
 	gpio_matrix_out( gpio_scl, 29, 0, 0 );
-	WRITE_PERI_REG( I2C_SCL_LOW_PERIOD_REG( 0 ), 3 );
-	WRITE_PERI_REG( I2C_SDA_HOLD_REG( 0 ), 3 );
-	WRITE_PERI_REG( I2C_SDA_SAMPLE_REG( 0 ), 3 );
-	WRITE_PERI_REG( I2C_SCL_HIGH_PERIOD_REG( 0 ), 3 );
+
+    esp_err_t ret_val = ESP_OK;
+
+    /* Install i2c driver */
+    i2c_config_t conf = {
+        .mode             = I2C_MODE_MASTER,
+        .sda_io_num       = GPIO_NUM_3,
+        .sda_pullup_en    = GPIO_PULLUP_ENABLE,
+        .scl_io_num       = GPIO_NUM_41,
+        .scl_pullup_en    = GPIO_PULLUP_ENABLE,
+        .master.clk_speed = 800000,
+        .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
+    };
+    ret_val |= i2c_param_config(I2C_NUM_0, &conf);
 
 	memset( &LSM6DSL, 0, sizeof(LSM6DSL) );
 	LSM6DSL.fqQuat[0] = 1;
@@ -531,6 +542,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 void sandbox_main(void)
 {
 	frameno = 0;
+	bQuit = 0;
 
     ESP_LOGI( "sandbox", "Running from IRAM. %d", global_i );
 
@@ -560,19 +572,21 @@ void sandbox_main(void)
 	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
 */
 	LMS6DS3Setup();
-	GeneralSet( QMC6308_ADDRESS, 0x0b, 0x80 );
-	GeneralSet( QMC6308_ADDRESS, 0x0b, 0x03 );
-	GeneralSet( QMC6308_ADDRESS, 0x0a, 0x83 );
+	//GeneralSet( QMC6308_ADDRESS, 0x0b, 0x80 );
+	//GeneralSet( QMC6308_ADDRESS, 0x0b, 0x03 );
+	//GeneralSet( QMC6308_ADDRESS, 0x0a, 0x83 );
 
     ESP_LOGI( "sandbox", "Loaded" );
 }
 
 void sandbox_exit()
 {
+	bQuit = 1;
 }
 
 void sandbox_tick()
 {
+	if( bQuit ) return;
 /*
     for( int mode = 0; mode < 8; mode++ )
     {
