@@ -329,6 +329,8 @@ void app_main(void)
         {
             // Lower the flag
             shouldShowQuickSettings = false;
+            // Pause the buzzer
+            bzrPause();
             // Save the current mode
             modeBehindQuickSettings = cSwadgeMode;
             cSwadgeMode             = &quickSettingsMode;
@@ -343,6 +345,8 @@ void app_main(void)
             quickSettingsMode.fnExitMode();
             // Restore the mode
             cSwadgeMode = modeBehindQuickSettings;
+            // Resume the buzzer
+            bzrResume();
         }
 
         // Process ADC samples
@@ -570,7 +574,7 @@ void softSwitchToPendingSwadge(void)
         }
 
         // Stop the buzzer
-        bzrStop();
+        bzrStop(true);
 
         // Switch the mode pointer
         cSwadgeMode       = pendingSwadgeMode;

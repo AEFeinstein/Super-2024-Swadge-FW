@@ -78,7 +78,7 @@ static void demoEnterMode(void)
     loadSong("ode.sng", &dv->ode_to_joy, true);
 
     bzrPlayBgm(&dv->ode_to_joy, BZR_STEREO);
-    bzrStop();
+    bzrStop(true);
 
     dv->menu = initMenu(demoName, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);

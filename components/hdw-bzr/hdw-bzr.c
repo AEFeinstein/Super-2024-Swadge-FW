@@ -26,7 +26,7 @@
  */
 typedef struct
 {
-    int64_t start_time;        ///< The time the current musicalNote_t started in the song
+    int32_t usAccum;           ///< Accumulated time for the current musicalNote_t
     int32_t note_index;        ///< The index of the current musicalNote_t in the song
     const songTrack_t* sTrack; ///< The song being played
     bool should_loop;          ///< Whether or not this track should loop when done
@@ -61,6 +61,9 @@ static buzzer_t buzzers[NUM_BUZZERS] = {0};
 static uint16_t bgmVolume = 0;
 /// @brief SFX volume
 static uint16_t sfxVolume = 0;
+
+/// @brief Track if the buzzer is paused or not
+static bool bzrPaused = false;
 
 //==============================================================================
 // Functions Prototypes
@@ -222,7 +225,6 @@ void bzrSetSfxVolume(uint16_t vol)
  */
 static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* song, buzzerPlayTrack_t track)
 {
-    int64_t startTime = esp_timer_get_time();
     if (1 == song->numTracks)
     {
         // Mono song, play it on the requested tracks
@@ -230,7 +232,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
         {
             trackL->sTrack      = &song->tracks[0];
             trackL->note_index  = -1;
-            trackL->start_time  = startTime;
+            trackL->usAccum     = 0;
             trackL->should_loop = song->shouldLoop;
         }
 
@@ -238,7 +240,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
         {
             trackR->sTrack      = &song->tracks[0];
             trackR->note_index  = -1;
-            trackR->start_time  = startTime;
+            trackR->usAccum     = 0;
             trackR->should_loop = song->shouldLoop;
         }
     }
@@ -247,12 +249,12 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
         // Stereo song, play it on both tracks
         trackL->sTrack      = &song->tracks[0];
         trackL->note_index  = -1;
-        trackL->start_time  = startTime;
+        trackL->usAccum     = 0;
         trackL->should_loop = song->shouldLoop;
 
         trackR->sTrack      = &song->tracks[1];
         trackR->note_index  = -1;
-        trackR->start_time  = startTime;
+        trackR->usAccum     = 0;
         trackR->should_loop = song->shouldLoop;
     }
 }
@@ -313,8 +315,10 @@ void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
 
 /**
  * @brief Stop the buzzer from playing anything
+ *
+ * @param resetTracks true to reset track data as well
  */
-void bzrStop(void)
+void bzrStop(bool resetTracks)
 {
     // Stop the timer to check notes
     gptimer_stop(bzrTimer);
@@ -324,11 +328,14 @@ void bzrStop(void)
     bzrStopNote(BZR_LEFT);
     bzrStopNote(BZR_RIGHT);
 
-    // Clear internal variables
-    for (uint8_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    if (resetTracks)
     {
-        memset(&(buzzers[bIdx].bgm), 0, sizeof(bzrTrack_t));
-        memset(&(buzzers[bIdx].sfx), 0, sizeof(bzrTrack_t));
+        // Clear internal variables
+        for (uint8_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+        {
+            memset(&(buzzers[bIdx].bgm), 0, sizeof(bzrTrack_t));
+            memset(&(buzzers[bIdx].sfx), 0, sizeof(bzrTrack_t));
+        }
     }
 }
 
@@ -402,28 +409,38 @@ void IRAM_ATTR bzrStopNote(buzzerPlayTrack_t track)
 static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata,
                                                  void* user_ctx)
 {
-    // Don't do much if muted
-    if ((0 == bgmVolume) && (0 == sfxVolume))
+    // Don't do much if muted or paused
+    if (bzrPaused || ((0 == bgmVolume) && (0 == sfxVolume)))
     {
         return false;
     }
 
-    // Get the current time
-    int64_t cTime = esp_timer_get_time();
-
-    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    // Track time between function calls
+    static int64_t tLastLoopUs = 0;
+    if (0 == tLastLoopUs)
     {
-        buzzer_t* bzr = &buzzers[bIdx];
-        // Try playing SFX first
-        bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, cTime);
-        // Then play BGM if SFX isn't active
-        bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, sfxVolume, !sfxIsActive, cTime);
+        tLastLoopUs = esp_timer_get_time();
+    }
+    else
+    {
+        int64_t tNowUs     = esp_timer_get_time();
+        int64_t tElapsedUs = tNowUs - tLastLoopUs;
+        tLastLoopUs        = tNowUs;
 
-        // If nothing is playing, but there is BGM (i.e. SFX finished)
-        if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bzr->bgm.sTrack))
+        for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
         {
-            // Immediately start playing BGM to get back on track faster
-            bzrPlayNote(bzr->bgm.sTrack->notes[bzr->bgm.note_index].note, bIdx, bgmVolume);
+            buzzer_t* bzr = &buzzers[bIdx];
+            // Try playing SFX first
+            bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, tElapsedUs);
+            // Then play BGM if SFX isn't active
+            bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, sfxVolume, !sfxIsActive, tElapsedUs);
+
+            // If nothing is playing, but there is BGM (i.e. SFX finished)
+            if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bzr->bgm.sTrack))
+            {
+                // Immediately start playing BGM to get back on track faster
+                bzrPlayNote(bzr->bgm.sTrack->notes[bzr->bgm.note_index].note, bIdx, bgmVolume);
+            }
         }
     }
     return false;
@@ -440,12 +457,12 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
  * @param volume The volume to play
  * @param isActive true if this is active and should set a note to be played
  *                 false to just advance notes without playing
- * @param cTime The current system time in microseconds
+ * @param tElapsedUs The elapsed time since this function was last called
  * @return true  if this track is playing a note
  *         false if this track is not playing a note
  */
 static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume,
-                                                   bool isActive, int64_t cTime)
+                                                   bool isActive, int64_t tElapsedUs)
 {
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
@@ -456,19 +473,20 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
         {
             // Index is negative, so the song is just starting
             track->note_index++;
-            track->start_time = cTime;
-            shouldAdvance     = true;
+            track->usAccum = 0;
+            shouldAdvance  = true;
         }
         else
         {
             // Get the current note length
             int32_t noteTimeUs = (1000 * track->sTrack->notes[track->note_index].timeMs);
             // If the note expired
-            if (cTime >= track->start_time + noteTimeUs)
+            if (track->usAccum >= noteTimeUs)
             {
-                // Move to the next, accumulating start_time for accuracy
+                // Decrement the count
+                track->usAccum -= noteTimeUs;
+                // Move to the next
                 track->note_index++;
-                track->start_time += noteTimeUs;
                 shouldAdvance = true;
             }
         }
@@ -499,7 +517,7 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
                 }
 
                 // Clear track data
-                track->start_time = 0;
+                track->usAccum    = 0;
                 track->note_index = 0;
                 track->sTrack     = NULL;
                 // Track isn't active
@@ -511,4 +529,41 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
     }
     // Track isn't active
     return false;
+}
+
+/**
+ * @brief Pause the buzzer but do not reset the song
+ */
+void bzrPause(void)
+{
+    if (!bzrPaused)
+    {
+        bzrPaused = true;
+        bzrStop(false);
+    }
+}
+
+/**
+ * @brief Resume the buzzer after being paused
+ */
+void bzrResume(void)
+{
+    if (bzrPaused)
+    {
+        bzrPaused = false;
+        for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+        {
+            buzzer_t* bzr = &buzzers[bIdx];
+
+            // Immediately resume the note
+            if (NULL != bzr->sfx.sTrack)
+            {
+                bzrPlayNote(bzr->sfx.sTrack->notes[bzr->sfx.note_index].note, bIdx, sfxVolume);
+            }
+            else if (NULL != bzr->bgm.sTrack)
+            {
+                bzrPlayNote(bzr->bgm.sTrack->notes[bzr->bgm.note_index].note, bIdx, bgmVolume);
+            }
+        }
+    }
 }
