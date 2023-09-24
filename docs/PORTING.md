@@ -77,6 +77,7 @@ _TUNERNOME_H_
 | `embeddednf_data`          | `embeddedNf_data`          |
 | `embeddedout_data`         | `embeddedOut_data`         |
 | `FIXBPERO`                 | `FIX_B_PER_O`              |
+| `FIXBINS`                  | `FIX_BINS`                 |
 | `UP`                       | `PB_UP`                    |
 | `DOWN`                     | `PB_DOWN`                  |
 | `LEFT`                     | `PB_LEFT`                  |
@@ -91,7 +92,10 @@ _TUNERNOME_H_
 | `incMicGain()`             | `incMicGainSetting()`      |
 | `decMicGain()`             | `decMicGainSetting()`      |
 | `getMicGain()`             | `getMicGainSetting()`      |
+| `setMicGain()`             | `setMicGainSetting()`      |
 | `setAndSaveLedBrightness(` | `setLedBrightnessSetting(` |
+| `getTestModePassed(`       | `getTestModePassedSetting(`|
+| `setTestModePassed(`       | `setTestModePassedSetting(`|
 | `meleeMenu_t`              | `menu_t`                   |
 | `deinitMeleeMenu(`         | `deinitMenu(`              |
 | `modeMainMenu`             | `mainMenuMode`             |

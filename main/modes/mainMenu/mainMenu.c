@@ -5,13 +5,24 @@
 #include "swadge2024.h"
 
 #include "mainMenu.h"
-#include "demoMode.h"
-#include "jukebox.h"
-#include "pong.h"
+
+#include "accelTest.h"
+#include "breakout.h"
 #include "colorchord.h"
 #include "dance.h"
-#include "tunernome.h"
+#include "demoMode.h"
+#include "gamepad.h"
+#include "jukebox.h"
+#include "lumberjack.h"
+#include "marbles.h"
+#include "mode_paint.h"
+#include "mode_ray.h"
+#include "paint_share.h"
+#include "pong.h"
+#include "pushy.h"
+#include "soko.h"
 #include "touchTest.h"
+#include "tunernome.h"
 
 #include "settingsManager.h"
 
@@ -106,13 +117,33 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
 
     // Add single items
-    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, marblesMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
+    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
+    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -188,13 +219,13 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     if (selected)
     {
         // These items enter other modes, so they must be selected
-        if (label == demoMode.modeName)
+        if (label == accelTestMode.modeName)
         {
-            switchToSwadgeMode(&demoMode);
+            switchToSwadgeMode(&accelTestMode);
         }
-        else if (label == pongMode.modeName)
+        else if (label == breakoutMode.modeName)
         {
-            switchToSwadgeMode(&pongMode);
+            switchToSwadgeMode(&breakoutMode);
         }
         else if (label == colorchordMode.modeName)
         {
@@ -204,17 +235,53 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&danceMode);
         }
-        else if (label == tunernomeMode.modeName)
+        else if (label == demoMode.modeName)
         {
-            switchToSwadgeMode(&tunernomeMode);
+            switchToSwadgeMode(&demoMode);
+        }
+        else if (label == gamepadMode.modeName)
+        {
+            switchToSwadgeMode(&gamepadMode);
         }
         else if (label == jukeboxMode.modeName)
         {
             switchToSwadgeMode(&jukeboxMode);
         }
+        else if (label == lumberjackMode.modeName)
+        {
+            switchToSwadgeMode(&lumberjackMode);
+        }
+        else if (label == marblesMode.modeName)
+        {
+            switchToSwadgeMode(&marblesMode);
+        }
+        else if (label == modePaint.modeName)
+        {
+            switchToSwadgeMode(&modePaint);
+        }
+        else if (label == pongMode.modeName)
+        {
+            switchToSwadgeMode(&pongMode);
+        }
+        else if (label == pushyMode.modeName)
+        {
+            switchToSwadgeMode(&pushyMode);
+        }
+        else if (label == rayMode.modeName)
+        {
+            switchToSwadgeMode(&rayMode);
+        }
+        else if (label == sokoMode.modeName)
+        {
+            switchToSwadgeMode(&sokoMode);
+        }
         else if (label == touchTestMode.modeName)
         {
             switchToSwadgeMode(&touchTestMode);
+        }
+        else if (label == tunernomeMode.modeName)
+        {
+            switchToSwadgeMode(&tunernomeMode);
         }
     }
     else

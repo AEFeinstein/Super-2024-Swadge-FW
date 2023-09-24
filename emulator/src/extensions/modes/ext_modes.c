@@ -17,12 +17,21 @@
     | grep -v quickSettings | awk '{printf "#include \"%s\"\n",$1 }' | sort
 */
 #include "accelTest.h"
+#include "breakout.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "demoMode.h"
+#include "gamepad.h"
 #include "jukebox.h"
+#include "lumberjack.h"
 #include "mainMenu.h"
+#include "marbles.h"
+#include "mode_paint.h"
+#include "mode_ray.h"
+#include "paint_share.h"
 #include "pong.h"
+#include "pushy.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -52,12 +61,20 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 // clang-format off
 static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
+    &breakoutMode,
     &colorchordMode,
     &danceMode,
     &demoMode,
+    &gamepadMode,
     &jukeboxMode,
+    &lumberjackMode,
     &mainMenuMode,
+    &marblesMode,
+    &modePaint,
     &pongMode,
+    &pushyMode,
+    &rayMode,
+    &sokoMode,
     &touchTestMode,
     &tunernomeMode,
 };
@@ -160,4 +177,19 @@ swadgeMode_t* emulatorFindSwadgeMode(const char* name)
 swadgeMode_t* getRandomSwadgeMode(void)
 {
     return allSwadgeModes[rand() % ARRAY_SIZE(allSwadgeModes)];
+}
+
+bool emulatorSetSwadgeModeByName(const char* name)
+{
+    swadgeMode_t* mode = emulatorFindSwadgeMode(name);
+
+    if (NULL != mode)
+    {
+        emulatorForceSwitchToSwadgeMode(mode);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }

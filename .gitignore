@@ -7,6 +7,10 @@
 *.obj
 *.elf
 
+# Coverage files
+*.gcda
+*.gcno
+
 # Linker output
 *.ilk
 *.map
@@ -54,6 +58,7 @@ dkms.conf
 build
 sdkconfig.old
 docs/html
+docs/*.pu
 
 .vscode/c_cpp_properties.json
 .vscode/settings.json
@@ -67,3 +72,12 @@ version.txt
 plantuml.jar
 swadge_emulator
 crash-*.txt
+screenshot-*.bmp
+rec-*.csv
+
+*.pyc
+tools/rayMapEditor/autosave.rmd
+perf.data
+*.stackdump
+coverage/
+coverage.info

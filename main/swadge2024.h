@@ -30,6 +30,21 @@
  *
  * \section swadgeMode_example Example
  *
+ * Adding a mode to the CMakeFile requires adding two separate lines in the idf_component_register section.
+ *
+ * \code{.c}
+ * "modes/pong/pong.c"
+ * \endcode
+ *
+ * under the SRCS section and
+ *
+ * \code{.c}
+ * "modes/pong"
+ * \endcode
+ *
+ * under the INCLUDES section.
+ *
+ *
  * Function prototypes must be declared before using them to initialize function pointers:
  * \code{.c}
  * // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
@@ -189,6 +204,7 @@
 #include "vector2d.h"
 #include "geometry.h"
 #include "settingsManager.h"
+#include "touchUtils.h"
 
 /**
  * @struct swadgeMode_t
@@ -305,5 +321,7 @@ void switchToSwadgeMode(swadgeMode_t* mode);
 void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
+
+void setFrameRateUs(uint32_t newFrameRateUs);
 
 #endif

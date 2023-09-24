@@ -243,7 +243,7 @@ typedef struct
 // Function Prototypes
 //==============================================================================
 
-void initExtensions(const emuArgs_t* args);
+void initExtensions(emuArgs_t* args);
 void deinitExtensions(void);
 bool enableExtension(const char* name);
 bool disableExtension(const char* name);

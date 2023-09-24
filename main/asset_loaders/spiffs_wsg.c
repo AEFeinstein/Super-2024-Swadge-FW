@@ -27,7 +27,7 @@
  * @return true if the WSG was loaded successfully,
  *         false if the WSG load failed and should not be used
  */
-bool loadWsg(char* name, wsg_t* wsg, bool spiRam)
+bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
 {
     // Read and decompress file
     uint32_t decompressedSize = 0;

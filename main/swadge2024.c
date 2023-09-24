@@ -118,7 +118,7 @@
  * developers to write modes and games for the Swadge without going too deep into Espressif's API. However, if you're
  * doing system development or writing a mode that requires a specific hardware peripheral, this Espressif documentation
  * is useful:
- * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.1/esp32s2/api-reference/index.html">ESP-IDF API
+ * - <a href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/index.html">ESP-IDF API
  * Reference</a>
  * - <a href="https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf">ESP32-­S2 Series
  * Datasheet</a>
@@ -142,6 +142,7 @@
 #include "advanced_usb_control.h"
 #include "swadge2024.h"
 #include "mainMenu.h"
+#include "lumberjack.h"
 #include "quickSettings.h"
 #include "shapes.h"
 
@@ -156,6 +157,7 @@
 
 #define EXIT_TIME_US  1000000
 #define PAUSE_TIME_US 500000
+#define DEFAULT_FRAME_RATE_US 40000
 
 //==============================================================================
 // Variables
@@ -167,17 +169,14 @@ static swadgeMode_t* cSwadgeMode = &mainMenuMode;
 /// @brief A pending Swadge mode to use after a deep sleep
 static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
-/// @brief Whether or not the quck settings overlay mode is shown
+/// @brief Whether or not the quick settings overlay mode is shown
 static bool showQuickSettings = false;
 
 /// 25 FPS by default
-static uint32_t frameRateUs = 40000;
+static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
-
-/// @brief Timer to open quick settings menu
-static int64_t timePausePressed = 0;
 
 //==============================================================================
 // Function declarations
@@ -281,7 +280,8 @@ void app_main(void)
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
     {
-        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX, ESP_NOW);
+        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX,
+                   cSwadgeMode->wifiMode);
     }
 
     // Init accelerometer
@@ -349,6 +349,11 @@ void app_main(void)
             }
         }
 
+        if (NO_WIFI != cSwadgeMode->wifiMode)
+        {
+            checkEspNowRxQueue();
+        }
+
         // Only draw to the TFT every frameRateUs
         static uint64_t tAccumDraw = 0;
         tAccumDraw += tElapsedUs;
@@ -384,7 +389,7 @@ void app_main(void)
             if (0 != timeExitPressed && !showQuickSettings)
             {
                 // Figure out for how long
-                int64_t tHeldUs = tNowUs - timeExitPressed;
+                int64_t tHeldUs = esp_timer_get_time() - timeExitPressed;
                 // If it has been held for more than the exit time
                 if (tHeldUs > EXIT_TIME_US)
                 {
@@ -398,37 +403,6 @@ void app_main(void)
                     // Draw 'progress' bar for exiting. This is done right before the TFT is drawn
                     int16_t numPx = (tHeldUs * TFT_WIDTH) / EXIT_TIME_US;
                     fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
-                }
-            }
-            else if (0 != timePausePressed)
-            {
-                int64_t tHeldUs = tNowUs - timePausePressed;
-
-                if (tHeldUs > PAUSE_TIME_US)
-                {
-                    if (showQuickSettings)
-                    {
-                        // Quick settings is active, just quit that
-                        quickSettingsMode.fnExitMode();
-                        showQuickSettings = false;
-                    }
-                    else
-                    {
-                        // Quick settings not active, set it up
-                        quickSettingsMode.fnEnterMode();
-                        showQuickSettings = true;
-                    }
-
-                    // Reset the count
-                    timePausePressed = 0;
-                }
-                else
-                {
-                    int16_t r     = QUICK_SETTINGS_PANEL_R;
-                    int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
-                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
-                    fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx, r + 1, c333);
-                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + numPx + r, 0, r, c333);
                 }
             }
 
@@ -560,6 +534,9 @@ static void setSwadgeMode(void* swadgeMode)
  */
 void switchToSwadgeMode(swadgeMode_t* mode)
 {
+    //Set the framerate back to default
+    setFrameRateUs(DEFAULT_FRAME_RATE_US);
+    
     pendingSwadgeMode = mode;
 }
 
@@ -612,46 +589,53 @@ void softSwitchToPendingSwadge(void)
  */
 bool checkButtonQueueWrapper(buttonEvt_t* evt)
 {
+    // Check the button queue
     bool retval = checkButtonQueue(evt);
 
-    // Intercept button presses for PB_SELECT
-    if (retval)
+    // Check for intercept
+    if (retval &&                         // If there was a button press
+        (cSwadgeMode != &mainMenuMode) && // And this isn't the main menu
+        (evt->button == PB_SELECT))       // And the button was PB_SELECT
     {
-        // Don't intercept the button on the main menu
-        if (cSwadgeMode != &mainMenuMode)
+        if (evt->down)
         {
-            if (evt->button == PB_SELECT && !showQuickSettings)
+            // Button was pressed, start the timer
+            timeExitPressed = esp_timer_get_time();
+        }
+        else
+        {
+            // Button was released, stop the timer
+            timeExitPressed = 0;
+
+            // If the mode hasn't exited yet, toggle quick settings
+            if (false == showQuickSettings)
             {
-                if (evt->down)
-                {
-                    // Button was pressed, start the timer
-                    timeExitPressed = esp_timer_get_time();
-                }
-                else
-                {
-                    // Button was released, stop the timer
-                    timeExitPressed = 0;
-                }
+                // Show the quick settings
+                quickSettingsMode.fnEnterMode();
+                showQuickSettings = true;
             }
-            else if (evt->button == PB_START && !timeExitPressed)
+            else
             {
-                // Handle the start button for the quick-settings menu,
-                // but only if we're not already handling select and the
-                // quick-settings menu is not already enabled
-                if (evt->down)
-                {
-                    // Button was pressed, start the timer
-                    timePausePressed = esp_timer_get_time();
-                }
-                else
-                {
-                    // Button was relesaed, stop the timer
-                    timePausePressed = 0;
-                }
+                // Hide the quick settings
+                showQuickSettings = false;
+                quickSettingsMode.fnExitMode();
             }
         }
+
+        // Don't pass this button to the mode
+        retval = false;
     }
 
     // Return if there was an event or not
     return retval;
+}
+
+/**
+ * @brief Set the framerate, in microseconds
+ * 
+ * @param newFrameRateUs The time between frame draws, in microseconds
+ */
+void setFrameRateUs(uint32_t newFrameRateUs)
+{
+    frameRateUs = newFrameRateUs;
 }
