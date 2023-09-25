@@ -72,6 +72,7 @@ void pl_freeSoundManager(plSoundManager_t *self){
     freeSong(&self->sndHurt);
     freeSong(&self->sndJump1);
     freeSong(&self->sndJump2);
+    freeSong(&self->sndJump3);
     freeSong(&self->sndLevelClearA);
     freeSong(&self->sndLevelClearB);
     freeSong(&self->sndLevelClearC);

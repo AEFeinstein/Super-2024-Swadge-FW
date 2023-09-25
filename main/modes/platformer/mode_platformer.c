@@ -288,7 +288,19 @@ void platformerExitMode(void)
  */
 void platformerMainLoop(int64_t elapsedUs)
 {
+    //Check inputs
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // Save the button state
+        platformer->btnState = evt.state;
+        platformer->gameData.btnState = evt.state;
+    }
+
     platformer->update(platformer);
+
+    platformer->prevBtnState = platformer->btnState;
+    platformer->gameData.prevBtnState = platformer->prevBtnState;
 }
 
 /**
@@ -302,16 +314,7 @@ void platformerMainLoop(int64_t elapsedUs)
 // }
 
 void updateGame(platformer_t *self)
-{
-    //Check inputs
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Save the button state
-        self->btnState = evt.state;
-        self->gameData.btnState = evt.state;
-    }
-    
+{    
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, self->gameData.bgColor);
 
@@ -339,9 +342,6 @@ void updateGame(platformer_t *self)
     }
 
     updateComboTimer(&(self->gameData));
-
-    self->prevBtnState = self->btnState;
-    self->gameData.prevBtnState = self->prevBtnState;
 }
 
 void drawPlatformerHud(font_t *font, plGameData_t *gameData)
@@ -386,15 +386,6 @@ void updateTitleScreen(platformer_t *self)
 
     self->gameData.frameCount++;
    
-    //Check inputs
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Save the button state
-        self->btnState = evt.state;
-        self->gameData.btnState = evt.state;
-    }
-
     // Handle inputs
     switch(platformer->menuState){
         case 0:{ 
@@ -672,9 +663,6 @@ void updateTitleScreen(platformer_t *self)
         }
     }
     setLeds(platLeds, CONFIG_NUM_LEDS);
-
-    self->prevBtnState = self->btnState;
-    self->gameData.prevBtnState = self->prevBtnState;
 }
 
 void drawPlatformerTitleScreen(font_t *font, plGameData_t *gameData)
@@ -770,6 +758,7 @@ void updateReadyScreen(platformer_t *self){
     
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 179){
+        bzrStop();
         changeStateGame(self);
     }
 
@@ -1252,15 +1241,6 @@ void updateNameEntry(platformer_t *self){
 
     self->gameData.frameCount++;
 
-    //Check inputs
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Save the button state
-        self->btnState = evt.state;
-        self->gameData.btnState = evt.state;
-    }
-
     if(
         self->gameData.btnState & PB_LEFT
         &&
@@ -1319,9 +1299,6 @@ void updateNameEntry(platformer_t *self){
     
     drawNameEntry(&(self->radiostars), &(self->gameData), self->menuState);
     pl_updateLedsShowHighScores(&(self->gameData));
-
-    self->prevBtnState = self->btnState;
-    self->gameData.prevBtnState = self->prevBtnState;
 }
 
 void drawNameEntry(font_t *font, plGameData_t *gameData, uint8_t currentInitial){
@@ -1370,9 +1347,6 @@ void updateShowHighScores(platformer_t *self){
     drawPlatformerHighScores(&(self->radiostars), &(self->highScores), &(self->gameData));
 
     pl_updateLedsShowHighScores(&(self->gameData));
-
-    self->prevBtnState = self->btnState;
-    self->gameData.prevBtnState = self->prevBtnState;
 }
 
 void drawShowHighScores(font_t *font, uint8_t menuState){
@@ -1392,14 +1366,6 @@ void changeStatePause(platformer_t *self){
 }
 
 void updatePause(platformer_t *self){
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Save the button state
-        self->btnState = evt.state;
-        self->gameData.btnState = evt.state;
-    }
-
     if((
         (self->gameData.btnState & PB_START)
         &&
@@ -1415,9 +1381,6 @@ void updatePause(platformer_t *self){
     pl_drawEntities(&(self->entityManager));
     drawPlatformerHud(&(self->radiostars), &(self->gameData));
     drawPause(&(self->radiostars));
-
-    self->prevBtnState = self->btnState;
-    self->gameData.prevBtnState = self->prevBtnState;
 }
 
 void drawPause(font_t *font){
