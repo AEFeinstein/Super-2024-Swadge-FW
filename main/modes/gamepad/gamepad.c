@@ -177,6 +177,7 @@ swadgeMode_t gamepadMode = {
     .overrideUsb              = true,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
+    .overrideSelectBtn        = true,
     .fnEnterMode              = gamepadEnterMode,
     .fnExitMode               = gamepadExitMode,
     .fnMainLoop               = gamepadMenuLoop,

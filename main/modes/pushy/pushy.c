@@ -138,6 +138,7 @@ swadgeMode_t pushyMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = pushyEnterMode,
     .fnExitMode               = pushyExitMode,
     .fnMainLoop               = pushyMainLoop,

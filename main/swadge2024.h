@@ -68,6 +68,7 @@
  *     .overrideUsb              = false,
  *     .usesAccelerometer        = true,
  *     .usesThermometer          = true,
+ *     .overrideSelectBtn        = false,
  *     .fnEnterMode              = demoEnterMode,
  *     .fnExitMode               = demoExitMode,
  *     .fnMainLoop               = demoMainLoop,
@@ -242,6 +243,13 @@ typedef struct
      * If this is true, then the swadge will be initialized.
      */
     bool usesThermometer;
+
+    /**
+     * @brief If this is false, then ::PB_SELECT events will only be used to return to the main menu or open the quick
+     * settings menu. If this is true then ::PB_SELECT events will be passed to the Swadge mode and ::PB_SELECT will not
+     * return to the main menu or open the quick settings menu.
+     */
+    bool overrideSelectBtn;
 
     /**
      * @brief This function is called when this mode is started. It should initialize variables and start the mode.

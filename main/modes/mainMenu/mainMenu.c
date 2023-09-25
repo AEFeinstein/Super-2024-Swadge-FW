@@ -61,6 +61,7 @@ swadgeMode_t mainMenuMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = true,
+    .overrideSelectBtn        = true,
     .fnEnterMode              = mainMenuEnterMode,
     .fnExitMode               = mainMenuExitMode,
     .fnMainLoop               = mainMenuMainLoop,
@@ -216,7 +217,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
-    bzrStop();
+    bzrStop(true);
 
     if (selected)
     {
