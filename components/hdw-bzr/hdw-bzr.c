@@ -409,12 +409,6 @@ void IRAM_ATTR bzrStopNote(buzzerPlayTrack_t track)
 static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata,
                                                  void* user_ctx)
 {
-    // Don't do much if muted or paused
-    if ((0 == bgmVolume) && (0 == sfxVolume))
-    {
-        return false;
-    }
-
     // Track time between function calls
     static int32_t tLastLoopUs = 0;
     if (0 == tLastLoopUs)
@@ -427,8 +421,8 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
         int32_t tElapsedUs = tNowUs - tLastLoopUs;
         tLastLoopUs        = tNowUs;
 
-        // If paused, return here so tElapsedUs stays sane
-        if (bzrPaused)
+        // Don't do much if muted or paused. Check here so that tElapsedUs stays sane
+        if (bzrPaused || ((0 == bgmVolume) && (0 == sfxVolume)))
         {
             return false;
         }
