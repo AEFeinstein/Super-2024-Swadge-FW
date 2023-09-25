@@ -274,19 +274,10 @@ typedef struct
     // Whether to perform a save or load on the next loop
     bool doSave, doLoad;
 
-    // True when a save has been started but not yet completed. Prevents input while saving.
-    bool saveInProgress;
-
     //// Save Menu Flags
-
-    // The current state of the save / load menu
-    paintSaveMenu_t saveMenu;
 
     // The save slot selected for PICK_SLOT_SAVE and PICK_SLOT_LOAD
     uint8_t selectedSlot;
-
-    // State for Yes/No options in the save menu.
-    bool saveMenuBoolOption;
 
     //////// Rendering flags
 

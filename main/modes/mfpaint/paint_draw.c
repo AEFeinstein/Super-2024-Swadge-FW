@@ -190,7 +190,6 @@ void paintDrawScreenSetup(void)
     paintState = calloc(sizeof(paintDraw_t), 1);
 
     loadFont(PAINT_TOOLBAR_FONT, &(paintState->toolbarFont), false);
-    loadFont(PAINT_SAVE_MENU_FONT, &(paintState->saveMenuFont), false);
     loadFont(PAINT_SMALL_FONT, &(paintState->smallFont), false);
     paintState->clearScreen = true;
     paintState->blinkOn     = true;
@@ -550,7 +549,6 @@ void paintDrawScreenCleanup(void)
     paintFreeUndos();
 
     freeFont(&paintState->smallFont);
-    freeFont(&paintState->saveMenuFont);
     freeFont(&paintState->toolbarFont);
     free(paintState);
 }
@@ -638,13 +636,13 @@ bool paintTutorialCheckTrigger(const paintHelpTrigger_t* trigger)
             return strcmp(getArtist()->brushDef->name, trigger->dataPtr) && paintHelp->curButtons == 0;
 
         case SELECT_MENU_ITEM:
-            return paintState->saveMenu == trigger->data;
+            //return paintState->saveMenu == trigger->data;
 
         case MENU_ITEM_NOT:
-            return paintState->saveMenu != trigger->data;
+            //return paintState->saveMenu != trigger->data;
 
         case MODE_NOT:
-            return paintState->buttonMode != trigger->data;
+            //return paintState->buttonMode != trigger->data;
 
         case NO_TRIGGER:
         default:
@@ -699,8 +697,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     // Save and Load
     if (paintState->doSave || paintState->doLoad)
     {
-        paintState->saveInProgress = true;
-
         if (paintState->doSave)
         {
             hideCursor(getCursor(), &paintState->canvas);
@@ -754,10 +750,8 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
         paintState->unsaved        = false;
         paintState->doSave         = false;
         paintState->doLoad         = false;
-        paintState->saveInProgress = false;
 
         paintState->buttonMode = BTN_MODE_DRAW;
-        paintState->saveMenu   = HIDDEN;
 
         paintState->redrawToolbar = true;
     }
@@ -876,214 +870,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
         {
             PAINT_LOGW("Some tutorial text didn't fit: %s", rest);
         }
-    }
-}
-
-void paintSaveModePrevItem(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case HIDDEN:
-            break;
-
-        case UNDO:
-            paintState->saveMenu = EXIT;
-            break;
-
-        case REDO:
-            paintState->saveMenu = UNDO;
-            break;
-
-        case PICK_SLOT_SAVE:
-        case CONFIRM_OVERWRITE:
-            paintState->saveMenu = REDO;
-            break;
-
-        case PICK_SLOT_LOAD:
-        case CONFIRM_UNSAVED:
-            paintState->saveMenu = PICK_SLOT_SAVE;
-            break;
-
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-            paintState->saveMenu = PICK_SLOT_LOAD;
-            break;
-
-        case CLEAR:
-        case CONFIRM_CLEAR:
-            paintState->saveMenu = EDIT_PALETTE;
-            break;
-
-        case EXIT:
-        case CONFIRM_EXIT:
-            paintState->saveMenu = CLEAR;
-            break;
-    }
-
-    paintState->saveMenuBoolOption = false;
-
-    // Check to make sure we can actually redo
-    if (paintState->saveMenu == REDO && !paintCanRedo())
-    {
-        // Nothing to redo, go to next
-        paintState->saveMenu = UNDO;
-    }
-
-    // Check to make sure we can actually undo
-    if (paintState->saveMenu == UNDO && !paintCanUndo())
-    {
-        paintState->saveMenu = EXIT;
-    }
-
-    // If we're selecting "Load", then make sure we can actually load a slot
-    if (paintState->saveMenu == PICK_SLOT_LOAD)
-    {
-        // If no slots are in use, skip again
-        if (!paintGetAnySlotInUse(paintState->index))
-        {
-            paintState->saveMenu = PICK_SLOT_SAVE;
-        }
-        else if (!paintGetSlotInUse(paintState->index, paintState->selectedSlot))
-        {
-            // Otherwise, make sure the selected slot is in use
-            paintState->selectedSlot = paintGetNextSlotInUse(paintState->index, paintState->selectedSlot);
-        }
-    }
-}
-
-void paintSaveModeNextItem(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case HIDDEN:
-            break;
-
-        case UNDO:
-            paintState->saveMenu = REDO;
-            break;
-
-        case REDO:
-            paintState->saveMenu = PICK_SLOT_SAVE;
-            break;
-
-        case PICK_SLOT_SAVE:
-        case CONFIRM_OVERWRITE:
-            paintState->saveMenu = PICK_SLOT_LOAD;
-            break;
-
-        case PICK_SLOT_LOAD:
-        case CONFIRM_UNSAVED:
-            paintState->saveMenu = EDIT_PALETTE;
-            break;
-
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-            paintState->saveMenu = CLEAR;
-            break;
-
-        case CLEAR:
-        case CONFIRM_CLEAR:
-            paintState->saveMenu = EXIT;
-            break;
-
-        case EXIT:
-        case CONFIRM_EXIT:
-            paintState->saveMenu = UNDO;
-            break;
-    }
-
-    paintState->saveMenuBoolOption = false;
-
-    // Check to make sure we can actually undo
-    if (paintState->saveMenu == UNDO && !paintCanUndo())
-    {
-        paintState->saveMenu = REDO;
-    }
-
-    // Check to make sure we can actually redo
-    if (paintState->saveMenu == REDO && !paintCanRedo())
-    {
-        // Nothing to redo, go to next
-        paintState->saveMenu = PICK_SLOT_SAVE;
-    }
-
-    // If we're selecting "Load", then make sure we can actually load a slot
-    if (paintState->saveMenu == PICK_SLOT_LOAD)
-    {
-        // If no slots are in use, skip again
-        if (!paintGetAnySlotInUse(paintState->index))
-        {
-            paintState->saveMenu = EDIT_PALETTE;
-        }
-        else if (!paintGetSlotInUse(paintState->index, paintState->selectedSlot))
-        {
-            // Otherwise, make sure the selected slot is in use
-            paintState->selectedSlot = paintGetNextSlotInUse(paintState->index, paintState->selectedSlot);
-        }
-    }
-}
-
-void paintSaveModePrevOption(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case PICK_SLOT_SAVE:
-            paintState->selectedSlot = PREV_WRAP(paintState->selectedSlot, PAINT_SAVE_SLOTS);
-            break;
-
-        case PICK_SLOT_LOAD:
-            paintState->selectedSlot = paintGetPrevSlotInUse(paintState->index, paintState->selectedSlot);
-            break;
-
-        case CONFIRM_OVERWRITE:
-        case CONFIRM_UNSAVED:
-        case CONFIRM_CLEAR:
-        case CONFIRM_EXIT:
-            // Just flip the state
-            paintState->saveMenuBoolOption = !paintState->saveMenuBoolOption;
-            break;
-
-        case HIDDEN:
-        case UNDO:
-        case REDO:
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-        case CLEAR:
-        case EXIT:
-            // Do nothing, there are no options here
-            break;
-    }
-}
-
-void paintSaveModeNextOption(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case PICK_SLOT_SAVE:
-            paintState->selectedSlot = NEXT_WRAP(paintState->selectedSlot, PAINT_SAVE_SLOTS);
-            break;
-
-        case PICK_SLOT_LOAD:
-            paintState->selectedSlot = paintGetNextSlotInUse(paintState->index, paintState->selectedSlot);
-            break;
-
-        case CONFIRM_OVERWRITE:
-        case CONFIRM_UNSAVED:
-        case CONFIRM_CLEAR:
-        case CONFIRM_EXIT:
-            // Just flip the state
-            paintState->saveMenuBoolOption = !paintState->saveMenuBoolOption;
-            break;
-
-        case HIDDEN:
-        case UNDO:
-        case REDO:
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-        case CLEAR:
-        case EXIT:
-            // Do nothing, there are no options here
-            break;
     }
 }
 
@@ -1238,7 +1024,6 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
                 {
                     paintState->paletteSelect = 0;
                     paintState->buttonMode    = BTN_MODE_DRAW;
-                    paintState->saveMenu      = HIDDEN;
                 }
                 break;
             }
@@ -1294,224 +1079,6 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
             // Return to draw mode
             paintState->paletteSelect = 0;
             paintState->buttonMode    = BTN_MODE_DRAW;
-            paintState->saveMenu      = HIDDEN;
-        }
-    }
-}
-
-void paintSaveModeButtonCb(const buttonEvt_t* evt)
-{
-    if (evt->down)
-    {
-        //////// Save menu button down
-        paintState->redrawToolbar = true;
-        switch (evt->button)
-        {
-            case PB_A:
-            {
-                switch (paintState->saveMenu)
-                {
-                    case UNDO:
-                    {
-                        paintUndo(&paintState->canvas);
-                        if (paintState->undoHead != NULL && paintState->undoHead->prev == NULL)
-                        {
-                            paintState->saveMenu = REDO;
-                        }
-                        break;
-                    }
-
-                    case REDO:
-                    {
-                        paintRedo(&paintState->canvas);
-                        if (paintState->undoHead != NULL && paintState->undoHead->next == NULL)
-                        {
-                            paintState->saveMenu = UNDO;
-                        }
-                        break;
-                    }
-
-                    case PICK_SLOT_SAVE:
-                    {
-                        if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_OVERWRITE;
-                        }
-                        else
-                        {
-                            paintState->doSave = true;
-                        }
-                        break;
-                    }
-
-                    case PICK_SLOT_LOAD:
-                    {
-                        if (paintState->unsaved)
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_UNSAVED;
-                        }
-                        else
-                        {
-                            paintState->doLoad = true;
-                        }
-                        break;
-                    }
-
-                    case CONFIRM_OVERWRITE:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintState->doSave   = true;
-                            paintState->saveMenu = HIDDEN;
-                        }
-                        else
-                        {
-                            paintState->saveMenu = PICK_SLOT_SAVE;
-                        }
-                        break;
-                    }
-
-                    case CONFIRM_UNSAVED:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintState->doLoad   = true;
-                            paintState->saveMenu = HIDDEN;
-                        }
-                        else
-                        {
-                            paintState->saveMenu = PICK_SLOT_LOAD;
-                        }
-                        break;
-                    }
-
-                    case EDIT_PALETTE:
-                    {
-                        paintState->saveMenu      = COLOR_PICKER;
-                        paintState->buttonMode    = BTN_MODE_PALETTE;
-                        paintState->paletteSelect = 0;
-                        paintEditPaletteSetupColor();
-                        break;
-                    }
-
-                    case CONFIRM_CLEAR:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintStoreUndo(&paintState->canvas);
-                            paintState->clearScreen = true;
-                            paintState->saveMenu    = HIDDEN;
-                            paintState->buttonMode  = BTN_MODE_DRAW;
-                        }
-                        else
-                        {
-                            paintState->saveMenu = CLEAR;
-                        }
-                        break;
-                    }
-
-                    case CONFIRM_EXIT:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintReturnToMainMenu();
-                        }
-                        else
-                        {
-                            paintState->saveMenu = EXIT;
-                        }
-                        break;
-                    }
-
-                    case CLEAR:
-                    {
-                        if (paintState->unsaved)
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_CLEAR;
-                        }
-                        else
-                        {
-                            paintStoreUndo(&paintState->canvas);
-                            paintState->clearScreen = true;
-                            paintState->saveMenu    = HIDDEN;
-                            paintState->buttonMode  = BTN_MODE_DRAW;
-                        }
-                        break;
-                    }
-                    case EXIT:
-                    {
-                        if (paintState->unsaved)
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_EXIT;
-                        }
-                        else
-                        {
-                            paintReturnToMainMenu();
-                        }
-                        break;
-                    }
-                    // These cases shouldn't actually happen
-                    case HIDDEN:
-                    case COLOR_PICKER:
-                    {
-                        paintState->buttonMode = BTN_MODE_DRAW;
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case PB_UP:
-            {
-                paintSaveModePrevItem();
-                break;
-            }
-
-            case PB_DOWN:
-            case PB_SELECT:
-            {
-                paintSaveModeNextItem();
-                break;
-            }
-
-            case PB_LEFT:
-            {
-                paintSaveModePrevOption();
-                break;
-            }
-
-            case PB_RIGHT:
-            {
-                paintSaveModeNextOption();
-                break;
-            }
-
-            case PB_B:
-            {
-                // Exit save menu
-                paintState->saveMenu   = HIDDEN;
-                paintState->buttonMode = BTN_MODE_DRAW;
-                break;
-            }
-
-            case PB_START:
-                // Handle this in button up
-                break;
-        }
-    }
-    else
-    {
-        //////// Save mode button release
-        if (evt->button == PB_START)
-        {
-            // Exit save menu
-            paintState->saveMenu      = HIDDEN;
-            paintState->buttonMode    = BTN_MODE_DRAW;
-            paintState->redrawToolbar = true;
         }
     }
 }
@@ -1671,9 +1238,6 @@ void paintDrawScreenPollTouch(void)
                 paintEditPaletteSetChannelValue(index);
                 break;
             }
-
-            case BTN_MODE_SAVE:
-                break;
         }
     }
     else
@@ -1764,9 +1328,6 @@ void paintDrawScreenPollTouch(void)
 
                     break;
                 }
-
-                case BTN_MODE_SAVE:
-                    break;
             }
         }
     }
@@ -1809,12 +1370,6 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case BTN_MODE_SAVE:
-            {
-                paintSaveModeButtonCb(evt);
-                break;
-            }
-
             case BTN_MODE_PALETTE:
             {
                 paintPaletteModeButtonCb(evt);
@@ -1836,9 +1391,8 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         // Draw mode buttons
         switch (evt->button)
         {
-            case PB_START:
-                // We're gonna enter the quick-save menu... save the canvas!
-                paintSaveCanvas(&paintState->canvas);
+            case PB_SELECT:
+                // Don't do anything until start is released to avoid conflicting with EXIT
                 break;
 
             case PB_A:
@@ -1869,9 +1423,12 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case PB_SELECT:
-                // Don't do anything until start is released to avoid conflicting with EXIT
+            case PB_START:
+            {
+                // We're gonna enter the quick-save menu... save the canvas!
+                paintSaveCanvas(&paintState->canvas);
                 break;
+            }
         }
     }
     else
@@ -1881,19 +1438,6 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         {
             case PB_SELECT:
             {
-                if (!paintState->saveInProgress)
-                {
-                    // Enter the save menu
-                    paintState->buttonMode    = BTN_MODE_SAVE;
-                    paintState->saveMenu      = PICK_SLOT_SAVE;
-                    paintState->redrawToolbar = true;
-
-                    // Don't let the cursor keep moving
-                    paintState->moveX       = 0;
-                    paintState->moveY       = 0;
-                    paintState->btnHoldTime = 0;
-                    paintState->aHeld       = false;
-                }
                 break;
             }
 
@@ -1918,6 +1462,7 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
             }
 
             case PB_START:
+                // Re-draw the canvas in case the quick-settings menu just closed
                 paintRestoreCanvas(&paintState->canvas);
                 break;
         }
@@ -2493,7 +2038,6 @@ void paintExitSelectMode(void)
     if (paintState->showDialogBox)
     {
         paintState->showDialogBox = false;
-        paintState->saveMenu = HIDDEN;
     }
 
     if (paintState->buttonMode == BTN_MODE_DRAW && !paintState->showToolWheel)
@@ -2633,7 +2177,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
             {
                 paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
-                paintState->saveMenu = CONFIRM_OVERWRITE;
             }
             else
             {
@@ -2646,7 +2189,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             if (paintState->unsaved)
             {
                 paintSetupDialog(DIALOG_CONFIRM_UNSAVED_LOAD);
-                paintState->saveMenu = CONFIRM_UNSAVED;
             }
             else
             {
@@ -2659,7 +2201,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             if (paintState->unsaved)
             {
                 paintSetupDialog(DIALOG_CONFIRM_UNSAVED_CLEAR);
-                paintState->saveMenu = CONFIRM_CLEAR;
             }
             else
             {
@@ -2673,7 +2214,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             if (paintState->unsaved)
             {
                 paintSetupDialog(DIALOG_CONFIRM_UNSAVED_EXIT);
-                paintState->saveMenu = CONFIRM_EXIT;
             }
             else
             {
@@ -2830,7 +2370,6 @@ static void paintDialogCb(const char* label)
         if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
         {
             paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
-            paintState->saveMenu           = CONFIRM_OVERWRITE;
         }
         else
         {

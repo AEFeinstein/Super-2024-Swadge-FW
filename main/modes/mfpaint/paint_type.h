@@ -41,7 +41,6 @@ typedef enum
 {
     BTN_MODE_DRAW,
     BTN_MODE_SELECT,
-    BTN_MODE_SAVE,
     BTN_MODE_PALETTE,
 } paintButtonMode_t;
 
