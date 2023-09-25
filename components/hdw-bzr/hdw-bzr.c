@@ -72,7 +72,7 @@ static bool bzrPaused = false;
 static void initSingleBuzzer(buzzer_t* buzzer, gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel);
 static bool buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 static bool buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume, bool isActive,
-                                         int64_t cTime);
+                                         int32_t tElapsedUs);
 static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* song, buzzerPlayTrack_t track);
 
 //==============================================================================
@@ -410,22 +410,28 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
                                                  void* user_ctx)
 {
     // Don't do much if muted or paused
-    if (bzrPaused || ((0 == bgmVolume) && (0 == sfxVolume)))
+    if ((0 == bgmVolume) && (0 == sfxVolume))
     {
         return false;
     }
 
     // Track time between function calls
-    static int64_t tLastLoopUs = 0;
+    static int32_t tLastLoopUs = 0;
     if (0 == tLastLoopUs)
     {
         tLastLoopUs = esp_timer_get_time();
     }
     else
     {
-        int64_t tNowUs     = esp_timer_get_time();
-        int64_t tElapsedUs = tNowUs - tLastLoopUs;
+        int32_t tNowUs     = esp_timer_get_time();
+        int32_t tElapsedUs = tNowUs - tLastLoopUs;
         tLastLoopUs        = tNowUs;
+
+        // If paused, return here so tElapsedUs stays sane
+        if (bzrPaused)
+        {
+            return false;
+        }
 
         for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
         {
@@ -462,7 +468,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
  *         false if this track is not playing a note
  */
 static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume,
-                                                   bool isActive, int64_t tElapsedUs)
+                                                   bool isActive, int32_t tElapsedUs)
 {
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
@@ -478,6 +484,8 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
         }
         else
         {
+            // Accumulate time
+            track->usAccum += tElapsedUs;
             // Get the current note length
             int32_t noteTimeUs = (1000 * track->sTrack->notes[track->note_index].timeMs);
             // If the note expired
@@ -550,20 +558,18 @@ void bzrResume(void)
 {
     if (bzrPaused)
     {
+        // Mark it as not paused
         bzrPaused = false;
+
+        // Restart timer stopped by bzrStop()
+        gptimer_start(bzrTimer);
+        bzrTimerActive = true;
+
+        // For each buzzer, resume playing the tone before pausing
         for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
         {
             buzzer_t* bzr = &buzzers[bIdx];
-
-            // Immediately resume the note
-            if (NULL != bzr->sfx.sTrack)
-            {
-                bzrPlayNote(bzr->sfx.sTrack->notes[bzr->sfx.note_index].note, bIdx, sfxVolume);
-            }
-            else if (NULL != bzr->bgm.sTrack)
-            {
-                bzrPlayNote(bzr->bgm.sTrack->notes[bzr->bgm.note_index].note, bIdx, bgmVolume);
-            }
+            bzrPlayNote(bzr->cFreq, bIdx, bzr->volume);
         }
     }
 }

@@ -71,7 +71,7 @@ static bool bzrPaused = false;
 //==============================================================================
 
 static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive,
-                                         int64_t tElapsedUs);
+                                         int32_t tElapsedUs);
 void buzzer_check_next_note(void* arg);
 void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
 
@@ -286,12 +286,7 @@ void bzrStopNote(buzzerPlayTrack_t track)
  */
 void buzzer_check_next_note(void* arg)
 {
-    if (bzrPaused)
-    {
-        return;
-    }
-
-    static int64_t tLastLoopUs = 0;
+    static int32_t tLastLoopUs = 0;
 
     if (0 == tLastLoopUs)
     {
@@ -299,9 +294,15 @@ void buzzer_check_next_note(void* arg)
     }
     else
     {
-        int64_t tNowUs     = esp_timer_get_time();
-        int64_t tElapsedUs = tNowUs - tLastLoopUs;
+        int32_t tNowUs     = esp_timer_get_time();
+        int32_t tElapsedUs = tNowUs - tLastLoopUs;
         tLastLoopUs        = tNowUs;
+
+        // If paused, return here so tElapsedUs stays sane
+        if (bzrPaused)
+        {
+            return;
+        }
 
         for (int16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
         {
@@ -333,7 +334,7 @@ void buzzer_check_next_note(void* arg)
  *         false if it is not
  */
 static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive,
-                                         int64_t tElapsedUs)
+                                         int32_t tElapsedUs)
 {
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
@@ -479,19 +480,11 @@ void bzrResume(void)
     {
         bzrPaused = false;
 
+        // For each buzzer, resume playing the tone before pausing
         for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
         {
             buzzer_t* bzr = &buzzers[bIdx];
-
-            // Immediately resume the note
-            if (NULL != bzr->sfx.sTrack)
-            {
-                bzrPlayNote(bzr->sfx.sTrack->notes[bzr->sfx.note_index].note, bIdx, sfxVolume);
-            }
-            else if (NULL != bzr->bgm.sTrack)
-            {
-                bzrPlayNote(bzr->bgm.sTrack->notes[bzr->bgm.note_index].note, bIdx, bgmVolume);
-            }
+            bzrPlayNote(bzr->cFreq, bIdx, bzr->vol);
         }
     }
 }

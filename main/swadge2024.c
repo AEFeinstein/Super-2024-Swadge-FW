@@ -324,31 +324,6 @@ void app_main(void)
         int64_t tElapsedUs = tNowUs - tLastLoopUs;
         tLastLoopUs        = tNowUs;
 
-        // If quick settings should be shown or hidden, do that before calling other callbacks
-        if (shouldShowQuickSettings)
-        {
-            // Lower the flag
-            shouldShowQuickSettings = false;
-            // Pause the buzzer
-            bzrPause();
-            // Save the current mode
-            modeBehindQuickSettings = cSwadgeMode;
-            cSwadgeMode             = &quickSettingsMode;
-            // Show the quick settings
-            quickSettingsMode.fnEnterMode();
-        }
-        else if (shouldHideQuickSettings)
-        {
-            // Lower the flag
-            shouldHideQuickSettings = false;
-            // Hide the quick settings
-            quickSettingsMode.fnExitMode();
-            // Restore the mode
-            cSwadgeMode = modeBehindQuickSettings;
-            // Resume the buzzer
-            bzrResume();
-        }
-
         // Process ADC samples
         if (NULL != cSwadgeMode->fnAudioCallback)
         {
@@ -424,6 +399,31 @@ void app_main(void)
                     int16_t numPx = (tHeldUs * TFT_WIDTH) / EXIT_TIME_US;
                     fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
                 }
+            }
+
+            // If quick settings should be shown or hidden, do that before drawing the TFT
+            if (shouldShowQuickSettings)
+            {
+                // Lower the flag
+                shouldShowQuickSettings = false;
+                // Pause the buzzer
+                bzrPause();
+                // Save the current mode
+                modeBehindQuickSettings = cSwadgeMode;
+                cSwadgeMode             = &quickSettingsMode;
+                // Show the quick settings
+                quickSettingsMode.fnEnterMode();
+            }
+            else if (shouldHideQuickSettings)
+            {
+                // Lower the flag
+                shouldHideQuickSettings = false;
+                // Hide the quick settings
+                quickSettingsMode.fnExitMode();
+                // Restore the mode
+                cSwadgeMode = modeBehindQuickSettings;
+                // Resume the buzzer
+                bzrResume();
             }
 
             // Draw to the TFT
