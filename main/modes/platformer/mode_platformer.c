@@ -758,7 +758,7 @@ void updateReadyScreen(platformer_t *self){
     
     self->gameData.frameCount++;
     if(self->gameData.frameCount > 179){
-        bzrStop();
+        bzrStop(true);
         changeStateGame(self);
     }
 
@@ -841,7 +841,7 @@ void detectBgmChange(platformer_t *self){
     {
         case PL_BGM_NULL:
             if(self->gameData.currentBgm != PL_BGM_NULL){
-                bzrStop();
+                bzrStop(true);
             }
             break;
 
@@ -885,7 +885,7 @@ void changeStateDead(platformer_t *self){
     self->gameData.comboTimer = 0;
     self->gameData.initialHp = 1;
 
-    bzrStop();
+    bzrStop(true);
     bzrPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
 
     self->update=&updateDead;
@@ -1339,7 +1339,7 @@ void updateShowHighScores(platformer_t *self){
     )){
         self->menuState = 0;
         self->menuSelection = 0;
-        bzrStop();
+        bzrStop(true);
         changeStateTitleScreen(self);
     }
 
@@ -1360,7 +1360,7 @@ void drawShowHighScores(font_t *font, uint8_t menuState){
 }
 
 void changeStatePause(platformer_t *self){
-    bzrStop();
+    bzrStop(true);
     bzrPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
     self->update=&updatePause;
 }

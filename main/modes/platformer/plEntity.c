@@ -804,7 +804,7 @@ bool pl_playerTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx,
     {
         if(direction == 4) {
             pl_scorePoints(self->gameData, 100);
-            bzrStop();
+            bzrStop(true);
             bzrPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &pl_updateDummy;
@@ -816,7 +816,7 @@ bool pl_playerTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx,
     {
         if(direction == 4) {
             pl_scorePoints(self->gameData, 500);
-            bzrStop();
+            bzrStop(true);
             bzrPlaySfx(&(self->soundManager->sndLevelClearC), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &pl_updateDummy;
@@ -828,7 +828,7 @@ bool pl_playerTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx,
     {
         if(direction == 4) {
             pl_scorePoints(self->gameData, 1000);
-            bzrStop();
+            bzrStop(true);
             bzrPlaySfx(&(self->soundManager->sndLevelClearB), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &pl_updateDummy;
@@ -840,7 +840,7 @@ bool pl_playerTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx,
     {
         if(direction == 4) {
             pl_scorePoints(self->gameData, 2000);
-            bzrStop();
+            bzrStop(true);
             bzrPlaySfx(&(self->soundManager->sndLevelClearA), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &pl_updateDummy;
@@ -852,7 +852,7 @@ bool pl_playerTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx,
     {
         if(direction == 4) {
             pl_scorePoints(self->gameData, 5000);
-            bzrStop();
+            bzrStop(true);
             bzrPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
             self->spriteIndex = SP_PLAYER_WIN;
             self->updateFunction = &pl_updateDummy;
