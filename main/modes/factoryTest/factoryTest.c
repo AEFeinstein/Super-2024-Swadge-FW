@@ -107,7 +107,7 @@ typedef struct
 factoryTest_t* test;
 
 swadgeMode_t factoryTestMode = {
-    .modeName                 = "Factory Test Mode",
+    .modeName                 = "Factory Test",
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
     .usesAccelerometer        = true,
@@ -265,7 +265,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     // PB_A
     plotButtonState(btnX, centerLine - AB_SEP, test->buttonStates[4]);
 
-    // Draw touch strip
+    // Draw touch pad
     int16_t tBarX        = TFT_WIDTH - TOUCHBAR_WIDTH;
     uint8_t numTouchElem = (sizeof(test->touchStates) / sizeof(test->touchStates[0]));
     for (uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
@@ -335,7 +335,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
     else if (false == test->touchPassed)
     {
-        sprintf(dbgStr, "Test Touch Strip");
+        sprintf(dbgStr, "Test Touch Pad");
     }
     else if (false == test->accelPassed)
     {

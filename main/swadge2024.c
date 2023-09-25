@@ -201,13 +201,11 @@ void app_main(void)
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
-#if !defined(CONFIG_SWADGE_DEVKIT)
+    // Read settings from NVS
+    readAllSettings();
+
     // If test mode was passed
     if (getTestModePassedSetting())
-#else
-    // Ignore test mode for devkit
-    if (true)
-#endif
     {
         // Show the main menu
         cSwadgeMode = &mainMenuMode;
@@ -318,9 +316,6 @@ void app_main(void)
     // Initialize the loop timer
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
-
-    // Read settings from NVS
-    readAllSettings();
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)
