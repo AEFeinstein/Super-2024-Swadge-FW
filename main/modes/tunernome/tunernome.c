@@ -173,6 +173,7 @@ swadgeMode_t tunernomeMode = {.modeName                 = "Tunernome",
                               .overrideUsb              = false,
                               .usesAccelerometer        = false,
                               .usesThermometer          = false,
+                              .overrideSelectBtn        = false,
                               .fnEnterMode              = tunernomeEnterMode,
                               .fnExitMode               = tunernomeExitMode,
                               .fnMainLoop               = tunernomeMainLoop,
@@ -351,7 +352,7 @@ void switchToSubmode(tnMode newMode)
         {
             tunernome->mode = newMode;
 
-            bzrStop();
+            bzrStop(true);
 
             led_t leds[CONFIG_NUM_LEDS] = {{0}};
             setLeds(leds, CONFIG_NUM_LEDS);
@@ -398,7 +399,7 @@ void switchToSubmode(tnMode newMode)
  */
 void tunernomeExitMode(void)
 {
-    bzrStop();
+    bzrStop(true);
 
     freeFont(&tunernome->ibm_vga8);
     freeFont(&tunernome->radiostars);

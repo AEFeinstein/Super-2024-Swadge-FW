@@ -189,6 +189,7 @@ swadgeMode_t breakoutMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = breakoutEnterMode,
     .fnExitMode               = breakoutExitMode,
     .fnMainLoop               = breakoutMainLoop,

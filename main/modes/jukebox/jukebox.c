@@ -123,6 +123,7 @@ swadgeMode_t jukeboxMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = jukeboxEnterMode,
     .fnExitMode               = jukeboxExitMode,
     .fnMainLoop               = jukeboxMainLoop,
@@ -240,7 +241,7 @@ void jukeboxEnterMode()
     portableDanceDisableDance(jukebox->portableDances, "Fire B");
     portableDanceDisableDance(jukebox->portableDances, "Flashlight");
 
-    bzrStop();
+    bzrStop(true);
 }
 
 /**
@@ -248,7 +249,7 @@ void jukeboxEnterMode()
  */
 void jukeboxExitMode(void)
 {
-    bzrStop();
+    bzrStop(true);
 
     freeFont(&jukebox->ibm_vga8);
     freeFont(&jukebox->radiostars);
@@ -297,7 +298,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_B:
         {
-            bzrStop();
+            bzrStop(true);
             break;
         }
         case PB_SELECT:
@@ -307,13 +308,13 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_START:
         {
-            bzrStop();
+            bzrStop(true);
             jukebox->screen = JUKEBOX_MENU;
             break;
         }
         case PB_UP:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -335,7 +336,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_DOWN:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -353,7 +354,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_LEFT:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -373,7 +374,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_RIGHT:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {

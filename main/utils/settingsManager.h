@@ -12,8 +12,9 @@
  *
  * Settings should immediately modify the hardware peripheral they control when changed.
  *
- * An example of a setting is TFT brightness. The brightness is an integer (0-7), which controls a hardware peripheral
- * (the TFT), and is persistent across reboots (once the brightness is set by the user, it should stay that way).
+ * An example of a setting is TFT brightness. The brightness is an integer (0-MAX_TFT_BRIGHTNESS), which controls a
+ * hardware peripheral (the TFT), and is persistent across reboots (once the brightness is set by the user, it should
+ * stay that way).
  *
  * Settings rely heavily on, and can be thought of a wrapper around, hdw-nvs.h.
  *

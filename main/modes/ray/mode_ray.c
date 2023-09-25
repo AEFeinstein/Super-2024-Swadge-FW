@@ -35,6 +35,7 @@ swadgeMode_t rayMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = rayEnterMode,
     .fnExitMode               = rayExitMode,
     .fnMainLoop               = rayMainLoop,
