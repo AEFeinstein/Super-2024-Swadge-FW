@@ -167,7 +167,7 @@ void pl_updateLedsShowHighScores(plGameData_t * gameData){
 
 void pl_updateLedsGameOver(plGameData_t * gameData){
     if(( (gameData->frameCount) % 10) == 0){
-        for (int32_t i = 0; i < 8; i++)
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
         
             if(( (gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i) {
@@ -186,7 +186,7 @@ void pl_updateLedsGameOver(plGameData_t * gameData){
 
 void pl_updateLedsLevelClear(plGameData_t * gameData){
     if(( (gameData->frameCount) % 10) == 0){
-        for (int32_t i = 0; i < 8; i++)
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
         
             if(( (gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i) {
@@ -212,7 +212,7 @@ void pl_updateLedsLevelClear(plGameData_t * gameData){
 
 void pl_updateLedsGameClear(plGameData_t * gameData){
     if(( (gameData->frameCount) % 10) == 0){
-        for (int32_t i = 0; i < 8; i++)
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
         
             if(( (gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i) {

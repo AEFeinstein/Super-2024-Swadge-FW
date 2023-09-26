@@ -652,7 +652,7 @@ void updateTitleScreen(platformer_t *self)
     drawPlatformerTitleScreen(&(self->radiostars), &(self->gameData));
 
     if(( (self->gameData.frameCount) % 10) == 0){
-        for (int32_t i = 0; i < 8; i++)
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
         
             //self->gameData.leds[i].r = (( (self->gameData.frameCount >> 4) % NUM_LEDS) == i) ? 0xFF : 0x00;
