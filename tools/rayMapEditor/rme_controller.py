@@ -20,7 +20,7 @@ class controller:
     def leftClickMap(self, x, y):
         self.isMapLeftClicked = True
         type = self.m.getSelectedTileType()
-        if (type.value & OBJ) == type:
+        if (type.value & OBJ) == OBJ or tileType.DELETE == type:
             self.m.setMapTileObj(x, y, type)
         else:
             self.m.setMapTileBg(x, y, type)
