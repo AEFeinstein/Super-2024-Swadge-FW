@@ -25,6 +25,10 @@
  * Brightness is adjusted per-color-channel, so dimming may produce different colors.
  * setLedBrightnessSetting() should be called instead if the brightness change should be persistent through reboots.
  *
+ * Even though \c CONFIG_NUM_LEDS declares eight LEDs, there is a ninth LED which is controllable. By default, setting
+ * \c CONFIG_NUM_LEDS LEDs will automatically set the ninth to the average of the sixth, seventh, and eighth, which
+ * surround it on the PCB. To set the ninth LED, set `CONFIG_NUM_LEDS + 1` LEDs.
+ *
  * \section led_example Example
  *
  * Set the LEDs to a rough rainbow:
