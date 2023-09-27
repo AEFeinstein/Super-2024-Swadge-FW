@@ -316,6 +316,12 @@ void updateBall(entity_t *self)
                 }
             }
         }
+
+        if(self->gameData->frameCount % 5 == 0) {
+            self->spriteIndex = SP_BALL_0 + ((self->spriteIndex + 1) % 3);
+        }
+
+        self->spriteFlipHorizontal = (self->xspeed >= 0) ? false : true;
     }
 
     if(self->y > 3840 || self->x > 4480) {

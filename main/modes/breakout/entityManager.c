@@ -89,13 +89,29 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.y1 = 27;
 
-    loadWsg("ball.wsg", &entityManager->sprites[SP_BALL].wsg, false);
-    entityManager->sprites[SP_BALL].originX=4;
-    entityManager->sprites[SP_BALL].originY=4;
-    entityManager->sprites[SP_BALL].collisionBox.x0 = 0;
-    entityManager->sprites[SP_BALL].collisionBox.x1 = 7;
-    entityManager->sprites[SP_BALL].collisionBox.y0 = 0;
-    entityManager->sprites[SP_BALL].collisionBox.y1 = 7;
+    loadWsg("ball000.wsg", &entityManager->sprites[SP_BALL_0].wsg, false);
+    entityManager->sprites[SP_BALL_0].originX=4;
+    entityManager->sprites[SP_BALL_0].originY=4;
+    entityManager->sprites[SP_BALL_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_0].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_0].collisionBox.y1 = 7;
+
+    loadWsg("ball001.wsg", &entityManager->sprites[SP_BALL_1].wsg, false);
+    entityManager->sprites[SP_BALL_1].originX=4;
+    entityManager->sprites[SP_BALL_1].originY=4;
+    entityManager->sprites[SP_BALL_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_1].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_1].collisionBox.y1 = 7;
+
+    loadWsg("ball002.wsg", &entityManager->sprites[SP_BALL_2].wsg, false);
+    entityManager->sprites[SP_BALL_2].originX=4;
+    entityManager->sprites[SP_BALL_2].originY=4;
+    entityManager->sprites[SP_BALL_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_2].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_2].collisionBox.y1 = 7;
 
     loadWsg("dbmb000.wsg", &entityManager->sprites[SP_BOMB_0].wsg, false);
     entityManager->sprites[SP_BOMB_0].originX=4;
@@ -427,7 +443,7 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->shouldAdvanceMultiplier = false;
 
     entity->type = ENTITY_PLAYER_BALL;
-    entity->spriteIndex = SP_BALL;
+    entity->spriteIndex = SP_BALL_0;
     entity->updateFunction = &updateBallAtStart;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &ballTileCollisionHandler;
