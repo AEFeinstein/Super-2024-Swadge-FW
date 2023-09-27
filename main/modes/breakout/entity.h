@@ -103,6 +103,7 @@ void updatePlayerVertical(entity_t * self);
 void updateBall(entity_t * self);
 void updateBallAtStart(entity_t *self);
 void updateBomb(entity_t * self);
+void explodeBomb(entity_t* self);
 void updateExplosion(entity_t * self);
 
 void moveEntityWithTileCollisions(entity_t * self);

@@ -300,12 +300,12 @@ void updateBall(entity_t *self)
                 //Drop bomb
                 entity_t* createdBomb = createEntity(self->entityManager, ENTITY_PLAYER_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
                 if(createdBomb != NULL){
-                    if(self->gameData->playerBombsCount == 0){
-                        self->gameData->nextBombToDetonate = self->gameData->nextBombSlot;
-                    }
+                    //if(self->gameData->playerBombsCount == 0){
+                    //    self->gameData->nextBombToDetonate = self->gameData->nextBombSlot;
+                    //}
 
-                    self->gameData->playerBombs[self->gameData->nextBombSlot] = createdBomb;
-                    self->gameData->nextBombSlot = (self->gameData->nextBombSlot + 1) % 3;
+                    //self->gameData->playerBombs[self->gameData->nextBombSlot] = createdBomb;
+                    //self->gameData->nextBombSlot = (self->gameData->nextBombSlot + 1) % 3;
                     self->gameData->playerBombsCount++;
 
                     bzrPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
@@ -341,7 +341,19 @@ void updateBallAtStart(entity_t *self){
 }
 
 void updateBomb(entity_t * self){
-    if(self->gameData->playerBombs[self->gameData->nextBombToDetonate] != self || self->gameData->bombDetonateCooldown > 0){
+    if(self->gameData->frameCount % 5 == 0) {
+        self->spriteIndex = SP_BOMB_0 + ((self->spriteIndex + 1) % 3);
+    }
+
+    self->animationTimer--;
+    
+    if(self->animationTimer == 0){
+        explodeBomb(self);
+    }
+
+
+    //updateRemoteBomb
+    /*if(self->gameData->playerBombs[self->gameData->nextBombToDetonate] != self || self->gameData->bombDetonateCooldown > 0){
         return;
     }
 
@@ -354,7 +366,14 @@ void updateBomb(entity_t * self){
         &&
         !(self->gameData->prevBtnState & PB_UP)
     ){
-        uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
+        explodeBomb(self);
+        self->gameData->nextBombToDetonate = (self->gameData->nextBombToDetonate + 1) % 3;
+        self->gameData->bombDetonateCooldown = 8;
+    }*/
+}
+
+void explodeBomb(entity_t* self){
+    uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
         uint8_t ty = TO_TILE_COORDS(self->y >> SUBPIXEL_RESOLUTION);
         uint8_t ctx, cty;
 
@@ -380,13 +399,8 @@ void updateBomb(entity_t * self){
 
         destroyEntity(self, false);
         createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-        
-        self->gameData->nextBombToDetonate = (self->gameData->nextBombToDetonate + 1) % 3;
         self->gameData->playerBombsCount--;
-        self->gameData->bombDetonateCooldown = 8;
-
         bzrPlaySfx(&(self->soundManager->detonate), BZR_LEFT);
-    }
 }
 
 void updateExplosion(entity_t * self){

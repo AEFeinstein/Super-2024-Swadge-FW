@@ -452,6 +452,7 @@ entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
     entity->scoreValue = 100;
+    entity->animationTimer = 48;
 
     entity->type = ENTITY_PLAYER_BOMB;
     entity->spriteIndex = SP_BOMB_0;
