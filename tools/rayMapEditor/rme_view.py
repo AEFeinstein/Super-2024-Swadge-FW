@@ -421,10 +421,13 @@ class view:
             ('Ray Map Data', '*.rmd'),
             ('All files', '*.*')
         )
-        loadFile: TextIOWrapper = askopenfile(mode='rb', filetypes=fts)
-        if loadFile is not None:
-            self.currentFilePath = os.path.abspath(loadFile.name)
-            self.m.load(loadFile)
+        fileToLoad: TextIOWrapper = askopenfile(mode='rb', filetypes=fts)
+        self.loadFile(fileToLoad)
+
+    def loadFile(self, fileToLoad):
+        if fileToLoad is not None:
+            self.currentFilePath = os.path.abspath(fileToLoad.name)
+            self.m.load(fileToLoad)
 
             # Redraw map
             self.redraw()
