@@ -1,7 +1,7 @@
 /**
  * @file breakout.c
  * @author J.Vega (JVeg199X)
- * @brief It's Galactic Breakdown.
+ * @brief It's Galactic Brickdown.
  * @date 2023-07-01
  *
  */
@@ -166,7 +166,7 @@ static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
  * Lengths are not explicitly given so the compiler can figure it out.
  */
 
-static const char breakoutName[] = "Galactic Breakdown";
+static const char breakoutName[] = "Galactic Brickdown";
 
 static const char breakoutNewGame[] = "New Game";
 static const char breakoutContinue[] = "Continue - Lv";
