@@ -368,7 +368,8 @@ static void breakoutDrawReadyScreen(font_t *logbook, font_t *ibm_vga8, gameData_
 
 static void breakoutChangeStateGame(breakout_t *self){
     self->gameData.frameCount = 0;
-    self->gameData.playerBombsCount = 0;
+    self->gameData.playerTimeBombsCount = 0;
+    self->gameData.playerRemoteBombPlaced = false;
     deactivateAllEntities(&(self->entityManager), false, true);
     self->tilemap.executeTileSpawnAll = true;
     self->update = &breakoutGameLoop;

@@ -285,29 +285,33 @@ void updateBall(entity_t *self)
         moveEntityWithTileCollisions(self);
         detectEntityCollisions(self);
 
-
-        if(self->gameData->bombDetonateCooldown > 0){
-            self->gameData->bombDetonateCooldown--;
-        }
-
         if(
             self->gameData->btnState & PB_DOWN
             &&
             !(self->gameData->prevBtnState & PB_DOWN)
         )
         {
-            if(self->gameData->playerBombsCount < 3){
-                //Drop bomb
-                entity_t* createdBomb = createEntity(self->entityManager, ENTITY_PLAYER_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            if(self->gameData->playerTimeBombsCount < 3){
+                //Drop time bomb
+                entity_t* createdBomb = createEntity(self->entityManager, ENTITY_PLAYER_TIME_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
                 if(createdBomb != NULL){
-                    //if(self->gameData->playerBombsCount == 0){
-                    //    self->gameData->nextBombToDetonate = self->gameData->nextBombSlot;
-                    //}
+                    self->gameData->playerTimeBombsCount++;
+                    bzrPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
+                }
+            }
+        }
 
-                    //self->gameData->playerBombs[self->gameData->nextBombSlot] = createdBomb;
-                    //self->gameData->nextBombSlot = (self->gameData->nextBombSlot + 1) % 3;
-                    self->gameData->playerBombsCount++;
-
+        if(
+            self->gameData->btnState & PB_RIGHT
+            &&
+            !(self->gameData->prevBtnState & PB_RIGHT)
+        )
+        {
+            if(!self->gameData->playerRemoteBombPlaced){
+                //Drop remote bomb
+                entity_t* createdBomb = createEntity(self->entityManager, ENTITY_PLAYER_REMOTE_BOMB, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+                if(createdBomb != NULL){
+                    self->gameData->playerRemoteBombPlaced = true;
                     bzrPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
                 }
             }
@@ -340,7 +344,7 @@ void updateBallAtStart(entity_t *self){
     }
 }
 
-void updateBomb(entity_t * self){
+void updateTimeBomb(entity_t * self){
     if(self->gameData->frameCount % 5 == 0) {
         self->spriteIndex = SP_BOMB_0 + ((self->spriteIndex + 1) % 3);
     }
@@ -349,27 +353,28 @@ void updateBomb(entity_t * self){
     
     if(self->animationTimer == 0){
         explodeBomb(self);
+        self->gameData->playerTimeBombsCount--;
     }
+}
 
-
-    //updateRemoteBomb
-    /*if(self->gameData->playerBombs[self->gameData->nextBombToDetonate] != self || self->gameData->bombDetonateCooldown > 0){
+void updateRemoteBomb(entity_t * self){    
+    if(self->animationTimer > 0){
+        self->animationTimer--;
         return;
     }
 
     if(self->gameData->frameCount % 5 == 0) {
-        self->spriteIndex = SP_BOMB_0 + ((self->spriteIndex + 1) % 2);
+        self->spriteIndex = SP_BOMB_0 + ((self->spriteIndex + 1) % 3);
     }
 
     if(
-        self->gameData->btnState & PB_UP
+        self->gameData->btnState & PB_RIGHT
         &&
-        !(self->gameData->prevBtnState & PB_UP)
+        !(self->gameData->prevBtnState & PB_RIGHT)
     ){
         explodeBomb(self);
-        self->gameData->nextBombToDetonate = (self->gameData->nextBombToDetonate + 1) % 3;
-        self->gameData->bombDetonateCooldown = 8;
-    }*/
+        self->gameData->playerRemoteBombPlaced = false;
+    }
 }
 
 void explodeBomb(entity_t* self){
@@ -399,7 +404,6 @@ void explodeBomb(entity_t* self){
 
         destroyEntity(self, false);
         createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
-        self->gameData->playerBombsCount--;
         bzrPlaySfx(&(self->soundManager->detonate), BZR_LEFT);
 }
 

@@ -34,8 +34,9 @@ typedef enum {
     ENTITY_UNUSED_14,
     ENTITY_UNUSED_15,
     ENTITY_PLAYER_BALL,
-    ENTITY_PLAYER_BOMB,
-    ENTITY_PLAYER_BOMB_EXPLOSION
+    ENTITY_PLAYER_TIME_BOMB,
+    ENTITY_PLAYER_BOMB_EXPLOSION,
+    ENTITY_PLAYER_REMOTE_BOMB
 } entityIndex_t;
 
 //==============================================================================
@@ -102,7 +103,8 @@ void updatePlayerVertical(entity_t * self);
 
 void updateBall(entity_t * self);
 void updateBallAtStart(entity_t *self);
-void updateBomb(entity_t * self);
+void updateTimeBomb(entity_t * self);
+void updateRemoteBomb(entity_t * self);
 void explodeBomb(entity_t* self);
 void updateExplosion(entity_t * self);
 
