@@ -680,6 +680,9 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                 }
             }
             break;
+        case ENTITY_PLAYER_BOMB_EXPLOSION:
+            setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), 63);
+            break;
         default:
         {
             break;
