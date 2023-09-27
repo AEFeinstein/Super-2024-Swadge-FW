@@ -84,6 +84,8 @@ typedef struct
     embeddedOut_data eod;
     uint8_t samplesProcessed;
     uint16_t maxValue;
+    // Buzzers
+    song_t song;
     // Button
     testButtonState_t buttonStates[8];
     // Touch, as an 8-way joystick with center deadzone
@@ -157,7 +159,8 @@ void testEnterMode(void)
     setMicGainSetting(MAX_MIC_GAIN);
 
     // Play a song
-    // bzrPlayBgm(&BlackDog, BZR_STEREO);
+    loadSong("stereo_test.sng", &test->song, false);
+    bzrPlayBgm(&test->song, BZR_STEREO);
 }
 
 /**
@@ -168,6 +171,7 @@ void testExitMode(void)
     freeFont(&test->ibm_vga8);
     freeWsg(&test->kd_idle0);
     freeWsg(&test->kd_idle1);
+    freeSong(&test->song);
     free(test);
 }
 
