@@ -137,6 +137,7 @@ typedef enum __attribute__((packed))
     OBJ_BULLET_XRAY    = (OBJ | BULLET | 19),
     // Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1),
+    OBJ_SCENERY_PORTAL   = (OBJ | SCENERY | 2),
 } rayMapCellType_t;
 
 /**

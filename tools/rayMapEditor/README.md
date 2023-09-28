@@ -108,6 +108,7 @@ These are the objects that can be spawned
 | `OBJ_ITEM_PICKUP_ENERGY`  | Pickup, energy                                     |
 | `OBJ_ITEM_PICKUP_MISSILE` | Pickup, missiles                                   |
 | `OBJ_SCENERY_TERMINAL`    | Scenery, computer terminal                         |
+| `OBJ_SCENERY_PORTAL`      | Scenery, portal                                    |
 
 ### Script Examples
 

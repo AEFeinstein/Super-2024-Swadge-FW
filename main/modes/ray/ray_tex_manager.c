@@ -85,6 +85,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_BULLET_MISSILE);
     LOAD_TEXTURE(ray, OBJ_BULLET_XRAY);
     LOAD_TEXTURE(ray, OBJ_SCENERY_TERMINAL);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_PORTAL);
 }
 
 /**

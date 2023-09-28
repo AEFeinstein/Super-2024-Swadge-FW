@@ -73,6 +73,7 @@ class tileType(Enum):
     OBJ_BULLET_XRAY    = (OBJ | BULLET | 19)
     # Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1)
+    OBJ_SCENERY_PORTAL   = (OBJ | SCENERY | 2)
 
 bgTiles: list[list[tileType]] = [
     [
@@ -124,6 +125,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_ENERGY_TANK,
         tileType.OBJ_ITEM_ARTIFACT,
         tileType.OBJ_SCENERY_TERMINAL,
+        tileType.OBJ_SCENERY_PORTAL,
         tileType.DELETE
     ]
 ]

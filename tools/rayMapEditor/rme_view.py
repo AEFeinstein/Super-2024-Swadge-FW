@@ -200,6 +200,7 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_ENERGY, '../../assets/ray/OBJ_ITEM_PICKUP_ENERGY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_MISSILE, '../../assets/ray/OBJ_ITEM_PICKUP_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/OBJ_SCENERY_TERMINAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_SCENERY_PORTAL, '../../assets/ray/OBJ_SCENERY_PORTAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.DELETE, 'imgs/DELETE.png')
 
         # Start maximized
