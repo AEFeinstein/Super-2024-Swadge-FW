@@ -101,7 +101,9 @@ These are the objects that can be spawned
 | `OBJ_ITEM_SUIT_WATER`     | Power-up, suit, water resistance                   |
 | `OBJ_ITEM_SUIT_LAVA`      | Power-up, suit, lava resistance                    |
 | `OBJ_ITEM_ENERGY_TANK`    | Power-up, energy tank                              |
-| `OBJ_ITEM_KEY`            | Access item, key                                   |
+| `OBJ_ITEM_KEY_A`          | Access item, key A                                 |
+| `OBJ_ITEM_KEY_B`          | Access item, key B                                 |
+| `OBJ_ITEM_KEY_C`          | Access item, key C                                 |
 | `OBJ_ITEM_ARTIFACT`       | Access item, artifact                              |
 | `OBJ_ITEM_PICKUP_ENERGY`  | Pickup, energy                                     |
 | `OBJ_ITEM_PICKUP_MISSILE` | Pickup, missiles                                   |

@@ -172,7 +172,9 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                     || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
                     || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)
                     || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type)
-                    || (BG_DOOR_KEY == cell->type && (ray->inventory.keys > 0)))
+                    || (BG_DOOR_KEY_A == cell->type && ray->inventory.keys[ray->mapId][0])
+                    || (BG_DOOR_KEY_B == cell->type && ray->inventory.keys[ray->mapId][1])
+                    || (BG_DOOR_KEY_C == cell->type && ray->inventory.keys[ray->mapId][2]))
                 {
                     // If the door is closed
                     if (0 == cell->doorOpen)
@@ -184,10 +186,12 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                         obj->c.id = -1;
 
                         // If this door requires a key
-                        if (BG_DOOR_KEY == cell->type)
+                        if ((BG_DOOR_KEY_A == cell->type) || //
+                            (BG_DOOR_KEY_B == cell->type) || //
+                            (BG_DOOR_KEY_C == cell->type))
                         {
                             // Use the key
-                            ray->inventory.keys--;
+                            ray->inventory.keys[ray->mapId][cell->type - BG_DOOR_KEY_A] = false;
                         }
                     }
                 }

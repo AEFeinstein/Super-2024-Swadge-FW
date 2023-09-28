@@ -950,8 +950,15 @@ void drawHud(ray_t* ray)
     }
 
     // Draw a count of Keys
-    char keyStr[16] = {0};
-    snprintf(keyStr, sizeof(keyStr) - 1, "K:%" PRId32, ray->inventory.keys);
+    char keyStr[16] = "K:";
+    for (int16_t kIdx = 0; kIdx < 3; kIdx++)
+    {
+        if (ray->inventory.keys[ray->mapId][kIdx])
+        {
+            char thisKeyStr[] = {'0' + kIdx, 0};
+            strcat(keyStr, thisKeyStr);
+        }
+    }
     drawText(&ray->ibm, c555, keyStr, 100, TFT_HEIGHT - ray->ibm.height);
 
 #define BAR_END_MARGIN  40

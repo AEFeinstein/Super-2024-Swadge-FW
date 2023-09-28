@@ -37,7 +37,9 @@ class tileType(Enum):
     BG_DOOR_ICE     = (BG | DOOR  | 4)
     BG_DOOR_XRAY    = (BG | DOOR  | 5)
     BG_DOOR_SCRIPT  = (BG | DOOR  | 6)
-    BG_DOOR_KEY     = (BG | DOOR  | 7)
+    BG_DOOR_KEY_A   = (BG | DOOR  | 7)
+    BG_DOOR_KEY_B   = (BG | DOOR  | 8)
+    BG_DOOR_KEY_C   = (BG | DOOR  | 9)
     # Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1)
     OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2)
@@ -56,17 +58,19 @@ class tileType(Enum):
     OBJ_ITEM_SUIT_LAVA   = (OBJ | ITEM | 7)
     OBJ_ITEM_ENERGY_TANK = (OBJ | ITEM | 8)
     # Permanent non-power-items
-    OBJ_ITEM_KEY         = (OBJ | ITEM |  9)
-    OBJ_ITEM_ARTIFACT    = (OBJ | ITEM | 10)
+    OBJ_ITEM_KEY_A       = (OBJ | ITEM |  9)
+    OBJ_ITEM_KEY_B       = (OBJ | ITEM | 10)
+    OBJ_ITEM_KEY_C       = (OBJ | ITEM | 11)
+    OBJ_ITEM_ARTIFACT    = (OBJ | ITEM | 12)
     # Transient items
-    OBJ_ITEM_PICKUP_ENERGY  = (OBJ | ITEM | 11)
-    OBJ_ITEM_PICKUP_MISSILE = (OBJ | ITEM | 12)
+    OBJ_ITEM_PICKUP_ENERGY  = (OBJ | ITEM | 13)
+    OBJ_ITEM_PICKUP_MISSILE = (OBJ | ITEM | 14)
     # Bullets
-    OBJ_BULLET_NORMAL  = (OBJ | BULLET | 13)
-    OBJ_BULLET_CHARGE  = (OBJ | BULLET | 14)
-    OBJ_BULLET_ICE     = (OBJ | BULLET | 15)
-    OBJ_BULLET_MISSILE = (OBJ | BULLET | 16)
-    OBJ_BULLET_XRAY    = (OBJ | BULLET | 17)
+    OBJ_BULLET_NORMAL  = (OBJ | BULLET | 15)
+    OBJ_BULLET_CHARGE  = (OBJ | BULLET | 16)
+    OBJ_BULLET_ICE     = (OBJ | BULLET | 17)
+    OBJ_BULLET_MISSILE = (OBJ | BULLET | 18)
+    OBJ_BULLET_XRAY    = (OBJ | BULLET | 19)
     # Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1)
 
@@ -88,7 +92,9 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_ICE,
         tileType.BG_DOOR_XRAY,
         tileType.BG_DOOR_SCRIPT,
-        tileType.BG_DOOR_KEY
+        tileType.BG_DOOR_KEY_A,
+        tileType.BG_DOOR_KEY_B,
+        tileType.BG_DOOR_KEY_C,
     ]
 ]
 
@@ -103,7 +109,9 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ENEMY_BOSS,
         tileType.OBJ_ITEM_PICKUP_ENERGY,
         tileType.OBJ_ITEM_PICKUP_MISSILE,
-        tileType.OBJ_SCENERY_TERMINAL
+        tileType.OBJ_ITEM_KEY_A,
+        tileType.OBJ_ITEM_KEY_B,
+        tileType.OBJ_ITEM_KEY_C,
     ],
     [
         tileType.OBJ_ITEM_BEAM,
@@ -114,8 +122,8 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_SUIT_WATER,
         tileType.OBJ_ITEM_SUIT_LAVA,
         tileType.OBJ_ITEM_ENERGY_TANK,
-        tileType.OBJ_ITEM_KEY,
         tileType.OBJ_ITEM_ARTIFACT,
+        tileType.OBJ_SCENERY_TERMINAL,
         tileType.DELETE
     ]
 ]

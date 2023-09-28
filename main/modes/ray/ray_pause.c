@@ -111,7 +111,9 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
                             color = c222;
                             break;
                         }
-                        case BG_DOOR_KEY:
+                        case BG_DOOR_KEY_A:
+                        case BG_DOOR_KEY_B:
+                        case BG_DOOR_KEY_C:
                         {
                             color = c440;
                             break;

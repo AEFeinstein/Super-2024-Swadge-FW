@@ -530,10 +530,12 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
             }
             break;
         }
-        case OBJ_ITEM_KEY:
+        case OBJ_ITEM_KEY_A:
+        case OBJ_ITEM_KEY_B:
+        case OBJ_ITEM_KEY_C:
         {
             // Pick up a key
-            inventory->keys++;
+            inventory->keys[ray->mapId][type - OBJ_ITEM_KEY_A] = true;
             break;
         }
         default:
