@@ -375,21 +375,25 @@ class view:
 
             # Get all the if cells and highlight them red
             for cell in self.m.scripts[scriptNum].getIfCells():
-                self.scriptRects.append(self.mapCanvas.create_rectangle(
-                    (cell[0] * self.mapCellSize),
-                    (cell[1] * self.mapCellSize),
-                    ((cell[0] + 1) * self.mapCellSize),
-                    ((cell[1] + 1) * self.mapCellSize),
-                    outline='red'))
+                if cell is not None:
+                    self.scriptRects.append(self.mapCanvas.create_rectangle(
+                        (cell[0] * self.mapCellSize),
+                        (cell[1] * self.mapCellSize),
+                        ((cell[0] + 1) * self.mapCellSize),
+                        ((cell[1] + 1) * self.mapCellSize),
+                        outline='red'))
 
             # Get all the then cells and highlight them blue
             for cell in self.m.scripts[scriptNum].getThenCells():
-                self.scriptRects.append(self.mapCanvas.create_rectangle(
-                    (cell[0] * self.mapCellSize),
-                    (cell[1] * self.mapCellSize),
-                    ((cell[0] + 1) * self.mapCellSize),
-                    ((cell[1] + 1) * self.mapCellSize),
-                    outline='blue'))
+                if cell is not None:
+                    self.scriptRects.append(self.mapCanvas.create_rectangle(
+                        (cell[0] * self.mapCellSize),
+                        (cell[1] * self.mapCellSize),
+                        ((cell[0] + 1) * self.mapCellSize),
+                        ((cell[1] + 1) * self.mapCellSize),
+                        outline='blue'))
+                    
+            # TODO highlight based on ID, not just cell
 
     def scriptTextChanged(self, event: tk.Event):
 
