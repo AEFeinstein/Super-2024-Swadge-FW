@@ -508,3 +508,21 @@ class rme_script:
         self.ifArgs = {}
         self.thenOp: thenOpType = None
         self.thenArgs = {}
+
+    def getIfCells(self) -> list[list[int]]:
+        allCells = []
+        if kCells in self.ifArgs.keys():
+            for cell in self.ifArgs[kCells]:
+                allCells.append(cell)
+        if kCell in self.ifArgs.keys():
+            allCells.append(self.ifArgs[kCell])
+        return allCells
+
+    def getThenCells(self) -> list[list[int]]:
+        allCells = []
+        if kCells in self.thenArgs.keys():
+            for cell in self.thenArgs[kCells]:
+                allCells.append(cell)
+        if kCell in self.thenArgs.keys():
+            allCells.append(self.thenArgs[kCell])
+        return allCells

@@ -1,6 +1,5 @@
 from rme_tiles import *
 from rme_script_editor import *
-from rme_view import NUM_PALETTE_ROWS
 from io import TextIOWrapper
 
 
