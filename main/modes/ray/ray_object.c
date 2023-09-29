@@ -156,7 +156,11 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
             if (CELL_IS_TYPE(cell->type, BG | WALL))
             {
                 // Check for shot wall scripts
-                checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY));
+                if (checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY)))
+                {
+                    // Script warped, return
+                    return;
+                }
 
                 // Destroy this bullet
                 memset(obj, 0, sizeof(rayBullet_t));
@@ -411,7 +415,12 @@ void checkRayCollisions(ray_t* ray)
             // Touch the item
             rayPlayerTouchItem(ray, item->type, ray->mapId, item->id);
             // Check scripts
-            checkScriptGet(ray, item->id, item->sprite);
+            if (checkScriptGet(ray, item->id, item->sprite))
+            {
+                // Script warped, return
+                return;
+            }
+
             // Mark this item for removal
             toRemove = currentNode;
         }
@@ -471,7 +480,11 @@ void checkRayCollisions(ray_t* ray)
         // Check if the player touches scenery
         if (objectsIntersect(&player, scenery))
         {
-            checkScriptTouch(ray, scenery->id, scenery->sprite);
+            if (checkScriptTouch(ray, scenery->id, scenery->sprite))
+            {
+                // Script warped, return
+                return;
+            }
         }
 
         // Iterate through all bullets
@@ -487,7 +500,11 @@ void checkRayCollisions(ray_t* ray)
                     bullet->c.id = -1;
 
                     // Scenery was shot
-                    checkScriptShootObjs(ray, scenery->id, scenery->sprite);
+                    if (checkScriptShootObjs(ray, scenery->id, scenery->sprite))
+                    {
+                        // Script warped, return
+                        return;
+                    }
                 }
             }
         }

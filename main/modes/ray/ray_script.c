@@ -1,10 +1,12 @@
 #include <esp_heap_caps.h>
 #include "ray_script.h"
 #include "ray_dialog.h"
+#include "ray_player.h"
+#include "ray_map.h"
 
-static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
-static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
-static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y);
+static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
+static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
+static bool checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y);
 static void freeScript(rayScript_t* script);
 
 /**
@@ -164,6 +166,9 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 newScript->thenArgs.warpDest.mapId = fileData[fileIdx++];
                 newScript->thenArgs.warpDest.pos.x = fileData[fileIdx++];
                 newScript->thenArgs.warpDest.pos.y = fileData[fileIdx++];
+
+                printf("WARP RULE, map %d, cell (%d, %d)\n", newScript->thenArgs.warpDest.mapId,
+                       newScript->thenArgs.warpDest.pos.x, newScript->thenArgs.warpDest.pos.y);
                 break;
             }
             case WIN:
@@ -282,8 +287,9 @@ static void freeScript(rayScript_t* script)
  * @param scriptList The list of scripts to check
  * @param id The ID to check
  * @param portrait A portrait to draw on dialogs
+ * @return true if the script warped and memory is unsafe to use
  */
-static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait)
+static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait)
 {
     // Iterate over all nodes
     node_t* currentNode = scriptList->first;
@@ -388,7 +394,11 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
             if (shouldExecute)
             {
                 // Do it
-                executeScriptEvent(ray, script, portrait);
+                if (executeScriptEvent(ray, script, portrait))
+                {
+                    // Script warped, return
+                    return true;
+                }
 
                 // Mark it as inactive if this is a one time script
                 script->isActive = (ALWAYS == script->ifArgs.idList.oneTime);
@@ -401,6 +411,7 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
         // Move to the next script
         currentNode = currentNode->next;
     }
+    return false;
 }
 
 /**
@@ -409,10 +420,11 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
  * @param ray The entire game state
  * @param id The ID of the shot object
  * @param portrait A portrait to draw on dialogs
+ * @return true if the script warped and memory is unsafe to use
  */
-void checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[SHOOT_OBJS], id, portrait);
+    return checkScriptId(ray, &ray->scripts[SHOOT_OBJS], id, portrait);
 }
 
 /**
@@ -422,10 +434,11 @@ void checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param ray The entire game state
  * @param id The ID of the dead enemy
  * @param portrait A portrait to draw on dialogs
+ * @return true if the script warped and memory is unsafe to use
  */
-void checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[KILL], id, portrait);
+    return checkScriptId(ray, &ray->scripts[KILL], id, portrait);
 }
 
 /**
@@ -434,10 +447,11 @@ void checkScriptKill(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param ray The entire game state
  * @param id The ID of the item obtained
  * @param portrait A portrait to draw on dialogs
+ * @return true if the script warped and memory is unsafe to use
  */
-void checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[GET], id, portrait);
+    return checkScriptId(ray, &ray->scripts[GET], id, portrait);
 }
 
 /**
@@ -446,10 +460,11 @@ void checkScriptGet(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param ray The entire game state
  * @param id The ID of the object touched
  * @param portrait A portrait to draw on dialogs
+ * @return true if the script warped and memory is unsafe to use
  */
-void checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait)
+bool checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait)
 {
-    checkScriptId(ray, &ray->scripts[TOUCH], id, portrait);
+    return checkScriptId(ray, &ray->scripts[TOUCH], id, portrait);
 }
 
 /**
@@ -459,8 +474,9 @@ void checkScriptTouch(ray_t* ray, int32_t id, wsg_t* portrait)
  * @param scriptList The list of scripts to check
  * @param x The X coordinate of the cell
  * @param y The Y coordinate of the cell
+ * @return true if the script warped and memory is unsafe to use
  */
-static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y)
+static bool checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y)
 {
     // Iterate over all nodes
     node_t* currentNode = scriptList->first;
@@ -567,7 +583,11 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
             if (shouldExecute)
             {
                 // Do it
-                executeScriptEvent(ray, script, &ray->portrait);
+                if (executeScriptEvent(ray, script, &ray->portrait))
+                {
+                    // Script warped, return
+                    return true;
+                }
 
                 // Mark it as inactive if this is a one time script
                 script->isActive = (ALWAYS == script->ifArgs.cellList.oneTime);
@@ -580,6 +600,7 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
         // Move to the next script
         currentNode = currentNode->next;
     }
+    return false;
 }
 
 /**
@@ -588,10 +609,11 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
  * @param ray The entire game state
  * @param x The X coordinate of the shot wall
  * @param y The Y coordinate of the shot wall
+ * @return true if the script warped and memory is unsafe to use
  */
-void checkScriptShootWall(ray_t* ray, int32_t x, int32_t y)
+bool checkScriptShootWall(ray_t* ray, int32_t x, int32_t y)
 {
-    checkScriptCell(ray, &ray->scripts[SHOOT_WALLS], x, y);
+    return checkScriptCell(ray, &ray->scripts[SHOOT_WALLS], x, y);
 }
 
 /**
@@ -600,10 +622,11 @@ void checkScriptShootWall(ray_t* ray, int32_t x, int32_t y)
  * @param ray The entire game state
  * @param x The X coordinate of the cell entered
  * @param y The Y coordinate of the cell entered
+ * @return true if the script warped and memory is unsafe to use
  */
-void checkScriptEnter(ray_t* ray, int32_t x, int32_t y)
+bool checkScriptEnter(ray_t* ray, int32_t x, int32_t y)
 {
-    checkScriptCell(ray, &ray->scripts[ENTER], x, y);
+    return checkScriptCell(ray, &ray->scripts[ENTER], x, y);
 }
 
 /**
@@ -611,8 +634,9 @@ void checkScriptEnter(ray_t* ray, int32_t x, int32_t y)
  *
  * @param ray The entire game state
  * @param elapsedUs The time since this function was called last, in microseconds
+ * @return true if the script warped and memory is unsafe to use
  */
-void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
+bool checkScriptTime(ray_t* ray, uint32_t elapsedUs)
 {
     // Keep track of elapsed microseconds
     ray->scriptTimer += elapsedUs;
@@ -637,8 +661,11 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
                 if (script->ifArgs.time <= ray->secondsSinceStart)
                 {
                     // Do it
-                    executeScriptEvent(ray, script, &ray->portrait);
-
+                    if (executeScriptEvent(ray, script, &ray->portrait))
+                    {
+                        // Script warped, return
+                        return true;
+                    }
                     // Mark it as inactive
                     script->isActive = false;
                 }
@@ -648,6 +675,7 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
             currentNode = currentNode->next;
         }
     }
+    return false;
 }
 
 /**
@@ -656,8 +684,9 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
  * @param ray The entire game state
  * @param script The script which should be executed
  * @param portrait A portrait to draw on dialogs
+ * @param true if the player warped and scripts reloaded, false if there was no warp
  */
-static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
+static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
 {
     switch (script->thenOp)
     {
@@ -741,7 +770,27 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             else
             {
                 // Warp to another map
-                // TODO unload current map, load new one, move player
+                // Save parameters because scripts will be freed in the process
+                uint8_t mapId           = script->thenArgs.warpDest.mapId;
+                rayMapCoordinates_t pos = script->thenArgs.warpDest.pos;
+
+                // Free the scripts
+                rayFreeCurrentState(ray);
+
+                // Construct the map name
+                char mapName[] = "0.rmh";
+                mapName[0]     = '0' + mapId;
+                // Load the new map
+                loadRayMap(mapName, ray, false);
+
+                // Set the player position after the map is loaded
+                ray->posX = ADD_FX(TO_FX(pos.x), TO_FX_FRAC(1, 2));
+                ray->posY = ADD_FX(TO_FX(pos.y), TO_FX_FRAC(1, 2));
+
+                // Initialize player angle
+                initializePlayer(ray, false);
+
+                return true;
             }
             break;
         }
@@ -751,4 +800,5 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             break;
         }
     }
+    return false;
 }

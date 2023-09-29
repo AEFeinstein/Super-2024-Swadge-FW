@@ -19,8 +19,9 @@
  * @brief Initialize the player
  *
  * @param ray The entire game state
+ * @param initialLoad true if the inventory should be read from NVM, false to leave it alone
  */
-void initializePlayer(ray_t* ray)
+void initializePlayer(ray_t* ray, bool initialLoad)
 {
     // ray->posX and ray->posY (position) are set by loadRayMap()
     // Set the direction
@@ -32,23 +33,28 @@ void initializePlayer(ray_t* ray)
     // Set the head-bob to centered
     ray->posZ = TO_FX(0);
 
-    // Empty out the inventory
-    // TODO only do this on first boot-up
-    memset(&ray->inventory, 0, sizeof(ray->inventory));
-    for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
+    // Clear any strafes
+    ray->isStrafing  = false;
+    ray->targetedObj = NULL;
+
+    if (initialLoad)
     {
-        for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
+        memset(&ray->inventory, 0, sizeof(ray->inventory));
+        for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
         {
-            ray->inventory.missilesPickUps[mapIdx][pIdx] = -1;
+            for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
+            {
+                ray->inventory.missilesPickUps[mapIdx][pIdx] = -1;
+            }
+            for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
+            {
+                ray->inventory.healthPickUps[mapIdx][pIdx] = -1;
+            }
         }
-        for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
-        {
-            ray->inventory.healthPickUps[mapIdx][pIdx] = -1;
-        }
+        // Set initial health
+        ray->inventory.maxHealth = GAME_START_HEALTH;
+        ray->inventory.health    = GAME_START_HEALTH;
     }
-    // Set initial health
-    ray->inventory.maxHealth = GAME_START_HEALTH;
-    ray->inventory.health    = GAME_START_HEALTH;
 }
 
 /**
@@ -287,7 +293,11 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
         markTileVisited(&ray->map, newCellX, newCellY);
 
         // Check scripts when entering cells
-        checkScriptEnter(ray, newCellX, newCellY);
+        if (checkScriptEnter(ray, newCellX, newCellY))
+        {
+            // Script warped, return
+            return;
+        }
     }
 
     // After moving position, recompute direction to targeted object

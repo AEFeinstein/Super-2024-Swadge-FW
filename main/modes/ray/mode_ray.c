@@ -81,7 +81,7 @@ static void rayEnterMode(void)
     loadRayMap("0.rmh", ray, false);
 
     // Set initial position and direction, centered on the tile
-    initializePlayer(ray);
+    initializePlayer(ray, true);
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->posX), FROM_FX(ray->posY));
@@ -99,29 +99,9 @@ static void rayEnterMode(void)
  */
 static void rayExitMode(void)
 {
-    // Empty all lists
-    rayEnemy_t* poppedEnemy = NULL;
-    while (NULL != (poppedEnemy = pop(&ray->enemies)))
-    {
-        free(poppedEnemy);
-    }
+    // Free map, scripts, enemies, scenery, bullets, etc.
+    rayFreeCurrentState(ray);
 
-    rayObjCommon_t* poppedItem = NULL;
-    while (NULL != (poppedItem = pop(&ray->items)))
-    {
-        free(poppedItem);
-    }
-
-    rayObjCommon_t* poppedScenery = NULL;
-    while (NULL != (poppedScenery = pop(&ray->scenery)))
-    {
-        free(poppedScenery);
-    }
-
-    // Free the scripts
-    freeScripts(ray);
-    // Free the map
-    freeRayMap(&ray->map);
     // Free the textures
     freeAllTex(ray);
 
@@ -130,6 +110,38 @@ static void rayExitMode(void)
 
     // Free the game state
     free(ray);
+}
+
+/**
+ * @brief Free allocated memory for the current state, but not assets like textures, fonts, or songs
+ *
+ * @param cRay The entire game state
+ */
+void rayFreeCurrentState(ray_t* cRay)
+{
+    // Empty all lists
+    rayEnemy_t* poppedEnemy = NULL;
+    while (NULL != (poppedEnemy = pop(&cRay->enemies)))
+    {
+        free(poppedEnemy);
+    }
+
+    rayObjCommon_t* poppedItem = NULL;
+    while (NULL != (poppedItem = pop(&cRay->items)))
+    {
+        free(poppedItem);
+    }
+
+    rayObjCommon_t* poppedScenery = NULL;
+    while (NULL != (poppedScenery = pop(&cRay->scenery)))
+    {
+        free(poppedScenery);
+    }
+
+    // Free the scripts
+    freeScripts(cRay);
+    // Free the map
+    freeRayMap(&cRay->map);
 }
 
 /**
@@ -175,7 +187,12 @@ static void rayMainLoop(int64_t elapsedUs)
             checkRayCollisions(ray);
 
             // Check for time-based scripts
-            checkScriptTime(ray, elapsedUs);
+            if (checkScriptTime(ray, elapsedUs))
+            {
+                // Script warped, return
+                return;
+            }
+
             break;
         }
         case RAY_DIALOG:

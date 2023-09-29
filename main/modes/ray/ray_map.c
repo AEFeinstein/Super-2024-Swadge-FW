@@ -38,6 +38,9 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
     // Convenience pointers
     rayMap_t* map = &ray->map;
 
+    // First char of the map name is the numeric ID
+    ray->mapId = name[0] - '0';
+
     // Read and decompress the file
     uint32_t decompressedSize = 0;
     uint8_t* fileData         = readHeatshrinkFile(name, &decompressedSize, spiRam);
