@@ -1,3 +1,6 @@
+//==============================================================================
+// Includes
+//==============================================================================
 #include "dialogBox.h"
 #include "font.h"
 #include "hdw-tft.h"
@@ -5,49 +8,123 @@
 #include "shapes.h"
 #include "palette.h"
 #include "fill.h"
-#include "esp_log.h"
 
 #include <malloc.h>
 #include <stdint.h>
 
-#define DIALOG_MARGIN      5
-#define DIALOG_PADDING     5
+//==============================================================================
+// Defines
+//==============================================================================
+///< The space between the dialog box and the edge of the screen
+#define DIALOG_MARGIN 5
+///< The space between the edge of the dialog box and the content inside
+#define DIALOG_PADDING 5
+///< The space around the
 #define DIALOG_ICON_MARGIN 5
 
-#define OPTION_PADDING     2
-#define OPTION_MARGIN      5
+///< The space between the edge of the button and the text or image inside
+#define OPTION_PADDING 2
+///< The space between each option
+#define OPTION_MARGIN 5
+///< The space between an option's icon and text
 #define OPTION_ICON_MARGIN 3
 
-#define COL_TITLE  c000
+///< The color of the dialog title text
+#define COL_TITLE c000
+///< The color of the dialog detail text
 #define COL_DETAIL c000
 
-#define COL_DIALOG_BG     c555
+///< The color of the dialog's background
+#define COL_DIALOG_BG c555
+///< The color of the dialog border outline
 #define COL_DIALOG_BORDER c000
 
-#define COL_OPTION_BG     c333
+///< The background color of non-selected options
+#define COL_OPTION_BG c333
+///< The background color of the selected option
 #define COL_OPTION_BG_SEL c455
+///< The color of the dialog's border outline
 #define COL_OPTION_BORDER c444
 
+//==============================================================================
+// Structs
+//==============================================================================
+/// @brief Holds information about how and where to draw the dialog box and its main components
 typedef struct
 {
-    uint16_t x, y, w, h;
-    uint16_t titleX, titleY;
+    /// @brief The X coordinate of left side of the dialog
+    uint16_t x;
+    /// @brief The Y coordinate of the top edge of the dialog
+    uint16_t y;
+    /// @brief The total width of the dialog box
+    uint16_t w;
+    /// @brief The total height of the dialog box
+    uint16_t h;
+
+    /// @brief The X coordinate to draw the dialog title text at
+    uint16_t titleX;
+    /// @brief The Y coordinate to draw the dialog title text at
+    uint16_t titleY;
+
+    /// @brief The Y coordinate for the horizontal rule between the title and detail
     uint16_t ruleY;
-    uint16_t detailX, detailY;
+
+    /// @brief The X coordinate to draw the dialog detail text at
+    uint16_t detailX;
+    /// @brief The Y coordinate to draw the dialog detail text at
+    uint16_t detailY;
+
+    /// @brief The X coordinate to draw the dialog icon at
+    uint16_t iconX
+    /// @brief The Y coordinate to draw the dialog icon at
+    uint16_t iconY;
 } dialogDrawInfo_t;
 
+/// @brief Holds information about how and where to draw a dialog box option
 typedef struct
 {
-    uint16_t x, y, w, h;
+    /// @brief The X coordinate of the option's left edge
+    uint16_t x;
+    /// @brief The Y coordinate of the option's top edge
+    uint16_t y;
+    /// @brief The total width of the option button
+    uint16_t w;
+    /// @brief The total height of the option button
+    uint16_t h;
+    /// @brief The row of buttons this option is in, starting at 0 for the top row
     uint8_t row;
-    bool disabled, selected, pressed;
+
+    /// @brief Whether this option button is disabled
+    bool disabled;
+    /// @brief Whether this option button is currently selected
+    bool selected;
+    /// @brief Whether this option button is currently being pressed
+    bool pressed;
+
     const dialogBoxOption_t* option;
 } optionDrawInfo_t;
 
+//==============================================================================
+// Static function declarations
+//==============================================================================
 static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const font_t* detailFont, uint16_t x,
                             uint16_t y, uint16_t w, uint16_t h, uint16_t r, dialogDrawInfo_t* dialogInfo,
                             optionDrawInfo_t* options);
 
+//==============================================================================
+// Function definitions
+//==============================================================================
+/**
+ * @brief Allocate and return a new dialogBox_t with the given settings.
+ *
+ * The result must be deallocated with deinitDialogBox().
+ *
+ * @param title The title text of the dialog box
+ * @param detail The body text of the dialog box
+ * @param icon   The icon to display in the dialog box, if not NULL
+ * @param cbFn   The callback function to be called when an option is selected
+ * @return dialogBox_t* The newly allocated dialog box
+ */
 dialogBox_t* initDialogBox(const char* title, const char* detail, const wsg_t* icon, dialogBoxCbFn_t cbFn)
 {
     dialogBox_t* dialogBox = calloc(1, sizeof(dialogBox_t));
@@ -55,17 +132,30 @@ dialogBox_t* initDialogBox(const char* title, const char* detail, const wsg_t* i
     dialogBox->title  = title;
     dialogBox->detail = detail;
     dialogBox->icon   = icon;
-    dialogBox->cbFn = cbFn;
+    dialogBox->cbFn   = cbFn;
 
     return dialogBox;
 }
 
+/**
+ * @brief Deallocate all memory associated with the given dialog box
+ *
+ * @param dialogBox The dialog box to deinitialize
+ */
 void deinitDialogBox(dialogBox_t* dialogBox)
 {
     dialogBoxReset(dialogBox);
     free(dialogBox);
 }
 
+/**
+ * @brief Add an option button to a dialog box
+ *
+ * @param dialogBox The dialog box to add the button to
+ * @param label     The text of the option button
+ * @param icon      The icon for this button, or NULL for no icon
+ * @param hints     Any number of ::dialogOptionHint_t, combined with bitwise OR for multiple
+ */
 void dialogBoxAddOption(dialogBox_t* dialogBox, const char* label, const wsg_t* icon, dialogOptionHint_t hints)
 {
     dialogBoxOption_t* option = malloc(sizeof(dialogBoxOption_t));
@@ -77,10 +167,16 @@ void dialogBoxAddOption(dialogBox_t* dialogBox, const char* label, const wsg_t* 
 
     if (NULL == dialogBox->selectedOption || OPTHINT_DEFAULT == (hints & OPTHINT_DEFAULT))
     {
+        // Mark the option as selected if it's the first option, or hinted as the default
         dialogBox->selectedOption = dialogBox->options.last;
     }
 }
 
+/**
+ * @brief Clear all options from the given dialog box
+ *
+ * @param dialogBox The dialog box to reset
+ */
 void dialogBoxReset(dialogBox_t* dialogBox)
 {
     dialogBox->selectedOption = NULL;
@@ -92,6 +188,22 @@ void dialogBoxReset(dialogBox_t* dialogBox)
     }
 }
 
+/**
+ * @brief Calculates the location of the dialog box and all its child elements, returning them via \c dialogInfo and \c
+ * options respectively.
+ *
+ * @param dialogBox The dialog box to arrange
+ * @param titleFont The font to use for the dialog box title text
+ * @param detailFont The font to use for the dialog box detail text
+ * @param x The location of the left edge of the dialog box, or \c DIALOG_CENTER to center it horizontally
+ * @param y The location of the top edge of the dialog box, or \c DIALOG_CENTER to center it vertically
+ * @param w The width of the dialog box. \c DIALOG_AUTO may be used to automatically calculate the width, and
+ *          optionally include a maximum width by bitwise-OR-ing it with the width.
+ * @param h The height of the dialog box. \c DIALOG_AUTO may be used to automatically calculate the height
+ * @param r The corner-radius of the dialog box.
+ * @param[out] dialogInfo
+ * @param[out] options
+ */
 static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const font_t* detailFont, uint16_t x,
                             uint16_t y, uint16_t w, uint16_t h, uint16_t r, dialogDrawInfo_t* dialogInfo,
                             optionDrawInfo_t* options)
@@ -101,8 +213,6 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
     bool centerX = (x & DIALOG_CENTER) == DIALOG_CENTER;
     bool centerY = (y & DIALOG_CENTER) == DIALOG_CENTER;
 
-    uint16_t minW = 0;
-    uint16_t minH = 0;
     uint16_t maxW = TFT_WIDTH - DIALOG_MARGIN * 2;
     uint16_t maxH = TFT_HEIGHT - DIALOG_MARGIN * 2;
 
@@ -112,19 +222,14 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
     w &= ~DIALOG_AUTO;
     h &= ~DIALOG_AUTO;
 
-    //ESP_LOGI("Dialog", "====================================================");
-    //ESP_LOGI("Dialog", "layoutDialogBox(x=%" PRIu16 ", y=%" PRIu16 ", w=%" PRIu16 ", h=%" PRIu16 ")", x, y, w, h);
-
     // If the width/height are given, use them as the max instead of the default
     if (w != 0)
     {
-        //ESP_LOGI("Dialog", "Using specified max width: %" PRIu16, w);
         maxW = w;
     }
 
     if (h != 0)
     {
-        //ESP_LOGI("Dialog", "Using specified max height: %" PRIu16, h);
         maxH = h;
     }
 
@@ -144,13 +249,7 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
     if (autoW)
     {
         // TODO maybe treat single-line texts differently here too?
-        uint16_t oldW = w;
-        w             = MIN(maxW, MAX(OPTION_MARGIN + textWidth(titleFont, dialogBox->title), w));
-
-        if (oldW != w)
-        {
-            // ESP_LOGI("Dialog", "  Auto-Width: %" PRIu16 " --> %" PRIu16, oldW, w);
-        }
+        w = MIN(maxW, MAX(OPTION_MARGIN + textWidth(titleFont, dialogBox->title), w));
     }
 
     curY += 3;
@@ -158,26 +257,39 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
 
     curY += 3;
 
+    uint16_t textOffset = 0;
+    if (dialogBox->icon)
+    {
+        // If there's an icon, we draw it on the left side, and the text next to it.
+        // If the text geoes past the icon, measure it... more...
+        dialogInfo->iconX = curX;
+        dialogInfo->iconY = curY;
+
+        textOffset = dialogBox->icon->w + DIALOG_ICON_MARGIN;
+
+        curX += textOffset;
+    }
+
     uint16_t detailH
-        = textWordWrapHeight(detailFont, dialogBox->detail, maxW - DIALOG_PADDING * 2, maxH - DIALOG_PADDING - curY);
+        = textWordWrapHeight(detailFont, dialogBox->detail, maxW - DIALOG_PADDING * 2 - textOffset, maxH - DIALOG_PADDING - curY);
     dialogInfo->detailX = curX;
     dialogInfo->detailY = curY;
     curY += detailH + 1;
 
     if (autoW)
     {
-        w = MIN(maxW, MAX(OPTION_MARGIN + textWidth(detailFont, dialogBox->detail), w));
+        w = MIN(maxW, MAX(OPTION_MARGIN + textOffset + textWidth(detailFont, dialogBox->detail), w));
     }
 
     curX = DIALOG_PADDING;
     curY += OPTION_MARGIN;
 
-    uint8_t row = 0;
+    uint8_t row                = 0;
     optionDrawInfo_t* drawInfo = options;
     for (node_t* node = dialogBox->options.first; NULL != node; node = node->next, ++drawInfo)
     {
         dialogBoxOption_t* option = node->val;
-        drawInfo->option = option;
+        drawInfo->option          = option;
         drawInfo->selected        = (node == dialogBox->selectedOption);
         drawInfo->pressed
             = drawInfo->selected
@@ -204,34 +316,25 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
 
         itemW += textWidth(detailFont, option->label);
 
-        // ESP_LOGI("Dialog", "  Width for option %s is %" PRIu16, option->label, itemW);
-
         // Now we're done calculating the item width, arrange it in the dialog
 
         if (curY + itemH > maxH - DIALOG_PADDING)
         {
-            // ESP_LOGI("Dialog", "  Won't fit!");
             /// Can't draw any more buttons, no room! Oh well
             break;
         }
 
         if (autoH)
         {
-            uint16_t oldH = h;
-            h             = MAX(h, curY + itemH + OPTION_MARGIN);
-
-            if (oldH != h)
-            {
-                // ESP_LOGI("Dialog", "  Auto-Height: %" PRIu16 " --> %" PRIu16, oldH, h);
-            }
+            h = MAX(h, curY + itemH + OPTION_MARGIN);
         }
 
         if (curX + itemW <= maxW - DIALOG_PADDING)
         {
-            drawInfo->x = curX;
-            drawInfo->y = curY;
-            drawInfo->h = itemH;
-            drawInfo->w = itemW;
+            drawInfo->x   = curX;
+            drawInfo->y   = curY;
+            drawInfo->h   = itemH;
+            drawInfo->w   = itemW;
             drawInfo->row = row;
 
             // The option fits on this line, advance X
@@ -239,13 +342,7 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
 
             if (autoW)
             {
-                uint16_t oldW = w;
                 w             = MAX(w, curX);
-
-                if (oldW != w)
-                {
-                    // ESP_LOGI("Dialog", "  Auto-Width: %" PRIu16 " --> %" PRIu16, oldW, w);
-                }
             }
 
             if (curX > maxW - DIALOG_PADDING)
@@ -253,8 +350,6 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
                 ++row;
                 curX = DIALOG_PADDING;
                 curY += itemH + OPTION_MARGIN * 2;
-
-                // ESP_LOGI("Dialog", "  Next line, now at %" PRIu16 ", %" PRIu16, curX, curY);
             }
         }
         else
@@ -264,33 +359,15 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
             curX = DIALOG_PADDING;
             curY += itemH + OPTION_MARGIN * 2;
 
-            drawInfo->x = curX;
-            drawInfo->y = curY;
+            drawInfo->x   = curX;
+            drawInfo->y   = curY;
             drawInfo->row = row;
-
-            // ESP_LOGI("Dialog", "  Next line, now at %" PRIu16 ", %" PRIu16, curX, curY);
         }
     }
-
-    // Account for horizontal rule under title
-    curY += 3 + DIALOG_PADDING;
 
     if (autoH)
     {
-        uint16_t oldH = h;
-        h             = MAX(h, curY);
-
-        if (oldH != h)
-        {
-            // ESP_LOGI("Dialog", "Text Auto-Height: %" PRIu16 " --> %" PRIu16, oldH, h);
-        }
-    }
-
-    if (dialogBox->icon)
-    {
-        // If there's an icon, we draw it on the left side, and the text next to it.
-        // If the text goes past the icon, measure it... more...
-        // TODO
+        h = MAX(h, curY);
     }
 
     //// Determine the final position and size of the dialog box, if not already decided
@@ -312,7 +389,6 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
     if (titleH <= titleFont->height + 1)
     {
         dialogInfo->titleX += (w - DIALOG_PADDING - textWidth(titleFont, dialogBox->title)) / 2;
-        //ESP_LOGI("Dialog", "Moved title over to %" PRIu16, dialogInfo->titleX);
     }
 
     // Adjust everything for the final X and Y
@@ -321,6 +397,8 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
     dialogInfo->ruleY += y;
     dialogInfo->detailX += x;
     dialogInfo->detailY += y;
+    dialogInfo->iconX += x;
+    dialogInfo->iconY += y;
 
     for (optionDrawInfo_t* optionInfo = options; optionInfo < (options + dialogBox->options.length); optionInfo++)
     {
@@ -329,6 +407,18 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
     }
 }
 
+/**
+ * @brief Draw the dialog box
+ *
+ * @param dialogBox The dialog box to draw
+ * @param titleFont The font to use for drawing the dialog box title text
+ * @param detailFont The font to use for drawing the dialog box detail text
+ * @param x The X coordinate of the left side of the dialog box, or \c DIALOG_CENTER to automatically center it
+ * @param y The Y coordinate of the top of the dialog box, or \c DIALOG_CENTER to automatically center it
+ * @param w The width of the dialog box, or if combined with \c DIALOG_AUTO, the maximum width of the dialog box
+ * @param h The height of the dialog box, or if combined with \c DIALOG_AUTO, the maximum height of the dialog box
+ * @param r The corner-radius of the dialog box
+ */
 void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const font_t* detailFont, uint16_t x,
                    uint16_t y, uint16_t w, uint16_t h, uint16_t r)
 {
@@ -389,6 +479,11 @@ void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const 
     textX = dialogInfo.detailX;
     textY = dialogInfo.detailY;
 
+    if (dialogBox->icon)
+    {
+        drawWsgSimple(dialogBox->icon, dialogInfo.iconX, dialogInfo.iconY);
+    }
+
     // Draw the detail text
     drawTextWordWrap(detailFont, COL_DETAIL, dialogBox->detail, &textX, &textY, x + w - DIALOG_PADDING,
                      y + h - DIALOG_PADDING);
@@ -427,10 +522,14 @@ void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const 
         drawText(detailFont, drawInfo->disabled ? c333 : (drawInfo->pressed ? COL_OPTION_BG : COL_DETAIL),
                  option->label, drawInfo->x + OPTION_PADDING, drawInfo->y + OPTION_PADDING);
     }
-
-    // ESP_LOGI("Dialog", "====================================================");
 }
 
+/**
+ * @brief Handle button presses for the dialog box
+ *
+ * @param dialogBox The dialog box to update
+ * @param evt       The button event to be handled by the dialog box
+ */
 void dialogBoxButton(dialogBox_t* dialogBox, const buttonEvt_t* evt)
 {
     switch (evt->button)
