@@ -22,15 +22,18 @@ class CustomText(tk.Text):
 
     def _proxy(self, *args):
         cmd = (self._orig,) + args
-        result = self.tk.call(cmd)
+        try:
+            result = self.tk.call(cmd)
 
-        # generate an event if something was added or deleted,
-        # or the cursor position changed
-        if (args[0] in ("insert", "delete") or
-                args[0:3] == ("mark", "set", "insert")):
-            self.event_generate("<<CursorChange>>", when="tail")
+            # generate an event if something was added or deleted,
+            # or the cursor position changed
+            if (args[0] in ("insert", "delete") or
+                    args[0:3] == ("mark", "set", "insert")):
+                self.event_generate("<<CursorChange>>", when="tail")
 
-        return result
+            return result
+        except:
+            pass
 
 
 class view:
