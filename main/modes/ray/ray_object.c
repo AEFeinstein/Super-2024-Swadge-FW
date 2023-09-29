@@ -180,7 +180,7 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                     if (0 == cell->doorOpen)
                     {
                         // Start opening the door
-                        cell->doorOpen = 1;
+                        cell->openingDirection = 1;
                         // Destroy this bullet
                         memset(obj, 0, sizeof(rayBullet_t));
                         obj->c.id = -1;

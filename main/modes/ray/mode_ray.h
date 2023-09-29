@@ -319,8 +319,10 @@ typedef struct
  */
 typedef struct
 {
-    rayMapCellType_t type; ///< The type of this cell
-    q24_8 doorOpen;        ///< A timer for this cell, if it happens to be a door
+    q8_8 doorOpen;           ///< A timer for this cell, if it happens to be a door
+    rayMapCellType_t type;   ///< The type of this cell
+    uint8_t closeTimer;      ///< Timer to close the door after opening
+    int8_t openingDirection; ///< If the door is opening or closing
 } rayMapCell_t;
 
 /**

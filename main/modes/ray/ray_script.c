@@ -668,12 +668,8 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             {
                 int32_t x = script->thenArgs.cellList.cells[cIdx].x;
                 int32_t y = script->thenArgs.cellList.cells[cIdx].y;
-                // If the door isn't open
-                if (0 == ray->map.tiles[x][y].doorOpen)
-                {
-                    // Start opening it
-                    ray->map.tiles[x][y].doorOpen = 1;
-                }
+                // Start opening the door
+                ray->map.tiles[x][y].openingDirection = 1;
             }
             break;
         }
@@ -683,12 +679,8 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             {
                 int32_t x = script->thenArgs.cellList.cells[cIdx].x;
                 int32_t y = script->thenArgs.cellList.cells[cIdx].y;
-                // If the door is open
-                if (0 != ray->map.tiles[x][y].doorOpen)
-                {
-                    // TODO how to close doors smoothly??
-                    ray->map.tiles[x][y].doorOpen = 0;
-                }
+                // Start closing the door
+                ray->map.tiles[x][y].openingDirection = -1;
             }
             break;
         }

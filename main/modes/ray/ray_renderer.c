@@ -418,6 +418,12 @@ void castWalls(ray_t* ray)
                     drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
                 }
 
+                // This would cause a divide by zero later
+                if (0 == lineHeight)
+                {
+                    continue;
+                }
+
                 // Sometimes textures wraparound b/c the math for wallX comes out to be like
                 // 19.003 -> 0
                 // 19.000 -> 0
@@ -1051,6 +1057,7 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
 
     // Run a timer to open and close doors
     ray->doorTimer += elapsedUs;
+    // Tick every 5ms
     while (ray->doorTimer >= 5000)
     {
         ray->doorTimer -= 5000;
@@ -1059,9 +1066,64 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
         {
             for (int32_t x = 0; x < ray->map.w; x++)
             {
-                if (ray->map.tiles[x][y].doorOpen > 0 && ray->map.tiles[x][y].doorOpen < TO_FX(1))
+                // Get a reference to this cell
+                rayMapCell_t* cell = &(ray->map.tiles[x][y]);
+
+                // If the timer to start closing the door is running
+                if (0 < cell->closeTimer)
                 {
-                    ray->map.tiles[x][y].doorOpen++;
+                    // Decrement it
+                    cell->closeTimer--;
+                    // If it expired
+                    if (0 == cell->closeTimer)
+                    {
+                        // When this elapses, start closing the door
+                        cell->openingDirection = -1;
+                    }
+                }
+
+                // If the door is opening
+                if (0 < cell->openingDirection)
+                {
+                    // And it isn't fully open
+                    if (cell->doorOpen < TO_FX(1))
+                    {
+                        // Open a little more
+                        cell->doorOpen++;
+                    }
+                    else
+                    {
+                        // Door is fully open
+                        cell->openingDirection = 0;
+                        // If the door is not a key or script door
+                        if ((BG_DOOR_KEY_A != cell->type) && //
+                            (BG_DOOR_KEY_B != cell->type) && //
+                            (BG_DOOR_KEY_C != cell->type) && //
+                            (BG_DOOR_SCRIPT != cell->type))
+                        {
+                            // Start a timer to close the door
+                            // 5s in units of 5ms (each tick of this timer)
+                            cell->closeTimer = 1000;
+                        }
+                    }
+                }
+                // Else if the door is closing
+                else if (0 > cell->openingDirection)
+                {
+                    // Make sure not to close on the player
+                    if (x != FROM_FX(ray->posX) || y != FROM_FX(ray->posY))
+                    {
+                        // Close it a little more
+                        if (cell->doorOpen > 0)
+                        {
+                            cell->doorOpen--;
+                        }
+                        else
+                        {
+                            // Door is fully closed
+                            cell->openingDirection = 0;
+                        }
+                    }
                 }
             }
         }
