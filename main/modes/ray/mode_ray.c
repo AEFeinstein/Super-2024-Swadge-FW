@@ -78,7 +78,7 @@ static void rayEnterMode(void)
     initEnemyTemplates(ray);
 
     // Load the map and object data
-    loadRayMap("demo.rmh", ray, false);
+    loadRayMap("0.rmh", ray, false);
 
     // Set initial position and direction, centered on the tile
     initializePlayer(ray);
