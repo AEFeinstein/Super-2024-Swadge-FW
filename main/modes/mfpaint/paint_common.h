@@ -349,6 +349,12 @@ typedef struct
 
     //////// Dialog Box
 
+    /// @brief Icon to use in the dialog box for an error message
+    wsg_t dialogErrorWsg;
+
+    /// @brief Icon to use in the dialog box for an informational message
+    wsg_t dialogInfoWsg;
+
     /// @brief Whether or not to show a dialog
     bool showDialogBox;
 
@@ -363,6 +369,12 @@ typedef struct
 
     /// @brief The detail message of the dialog for `DIALOG_MESSAGE`
     const char* dialogMessageDetail;
+
+    /// @brief If dialogMessageDetail should be freed once done, it will be stored here
+    char* dialogCustomDetail;
+
+    /// @brief True if a fatal error occurred, and we should only show the error dialog.
+    bool fatalError;
 } paintDraw_t;
 
 typedef struct

@@ -19,6 +19,34 @@
 
 #include "macros.h"
 
+#define PAINT_DIE(msg, ...) do \
+{ \
+    PAINT_LOGE(msg, __VA_ARGS__); \
+    char customMsg[128]; \
+    snprintf(customMsg, sizeof(customMsg), msg, __VA_ARGS__); \
+    if (paintState->dialogCustomDetail) \
+    { \
+        free(paintState->dialogCustomDetail); \
+    } \
+    paintState->dialogCustomDetail = malloc(strlen(customMsg) + 1); \
+    strcpy(paintState->dialogCustomDetail, customMsg); \
+    paintState->dialogMessageDetail = paintState->dialogCustomDetail; \
+    paintState->showDialogBox = true; \
+    paintState->fatalError = true; \
+    paintState->dialogBox->icon = &paintState->dialogErrorWsg; \
+    paintState->dialogMessageTitle = dialogErrorTitleStr; \
+    paintSetupDialog(DIALOG_ERROR); \
+} while(0)
+
+#define PAINT_WSG(fn, var) do \
+{ \
+    if (!loadWsg(fn, var, false)) \
+    { \
+        PAINT_DIE("%sLoading %s icon failed!!!", dialogErrorDetailStr, fn); \
+        return; \
+    } \
+} while (0)
+
 static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal);
 static void paintSetupColorWheel(void);
 static void paintSetupDialog(paintDialog_t dialog);
@@ -195,22 +223,26 @@ void paintDrawScreenSetup(void)
     paintState->blinkOn     = true;
     paintState->blinkTimer  = 0;
 
+    // Load icons for the dialog box
+    PAINT_WSG("error.wsg", &paintState->dialogErrorWsg);
+    PAINT_WSG("info.wsg", &paintState->dialogInfoWsg);
+
+    // Initialize with no icon to start, and default to error
+    paintState->dialogBox = initDialogBox(dialogErrorTitleStr, dialogErrorDetailStr, &paintState->dialogErrorWsg, paintDialogCb);
+    paintSetupDialog(DIALOG_ERROR);
+    paintState->showDialogBox = false;
+    paintState->fatalError = false;
+
     // Set up the brush icons
     uint16_t spriteH = 0;
     char iconName[32];
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
         snprintf(iconName, sizeof(iconName), activeIconStr, brush->iconName);
-        if (!loadWsg(iconName, &brush->iconActive, false))
-        {
-            PAINT_LOGE("Loading icon %s failed!!!", iconName);
-        }
+        PAINT_WSG(iconName, &brush->iconActive);
 
         snprintf(iconName, sizeof(iconName), inactiveIconStr, brush->iconName);
-        if (!loadWsg(iconName, &brush->iconInactive, false))
-        {
-            PAINT_LOGE("Loading icon %s failed!!!", iconName);
-        }
+        PAINT_WSG(iconName, &brush->iconInactive);
 
         // Keep track of the tallest sprite for layout purposes
         if (brush->iconActive.h > spriteH)
@@ -224,43 +256,17 @@ void paintDrawScreenSetup(void)
         }
     }
 
-    if (!loadWsg("pointer.wsg", &paintState->picksWsg, false))
-    {
-        PAINT_LOGE("Loading pointer.wsg icon failed!!!");
-    }
+    PAINT_WSG("pointer.wsg", &paintState->picksWsg);
+    PAINT_WSG("brush_size.wsg", &paintState->brushSizeWsg);
 
-    if (!loadWsg("brush_size.wsg", &paintState->brushSizeWsg, false))
-    {
-        PAINT_LOGE("Loading brush_size.wsg icon failed!!!");
-    }
+    PAINT_WSG("arrow9.wsg", &paintState->smallArrowWsg);
+    colorReplaceWsg(&paintState->smallArrowWsg, c555, c000);
 
-    if (!loadWsg("arrow9.wsg", &paintState->smallArrowWsg, false))
-    {
-        PAINT_LOGE("Loading arrow5.wsg icon failed!!!");
-    }
-    else
-    {
-        colorReplaceWsg(&paintState->smallArrowWsg, c555, c000);
-    }
+    PAINT_WSG("arrow12.wsg", &paintState->bigArrowWsg);
+    colorReplaceWsg(&paintState->bigArrowWsg, c555, c000);
 
-    if (!loadWsg("arrow12.wsg", &paintState->bigArrowWsg, false))
-    {
-        PAINT_LOGE("Loading arrow5.wsg icon failed!!!");
-    }
-    else
-    {
-        colorReplaceWsg(&paintState->bigArrowWsg, c555, c000);
-    }
-
-    if (!loadWsg("newfile.wsg", &paintState->newfileWsg, false))
-    {
-        PAINT_LOGE("Loading newfile.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("overwrite.wsg", &paintState->overwriteWsg, false))
-    {
-        PAINT_LOGE("Loading overwrite.wsg icon failed!!!");
-    }
+    PAINT_WSG("newfile.wsg", &paintState->newfileWsg);
+    PAINT_WSG("overwrite.wsg", &paintState->overwriteWsg);
 
     paintState->marginTop = TFT_CORNER_RADIUS * 2 / 3;
 
@@ -347,60 +353,17 @@ void paintDrawScreenSetup(void)
     paintState->toolWheelLabelBox.height = 20;
 
     // Tool wheel icons
-    if (!loadWsg("wheel_brush.wsg", &paintState->wheelBrushWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_brush.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_color.wsg", &paintState->wheelColorWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_color.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_size.wsg", &paintState->wheelSizeWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_size.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_options.wsg", &paintState->wheelSettingsWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_options.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_undo.wsg", &paintState->wheelUndoWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_undo.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_redo.wsg", &paintState->wheelRedoWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_redo.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_save.wsg", &paintState->wheelSaveWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_save.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_open.wsg", &paintState->wheelOpenWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_open.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_new.wsg", &paintState->wheelNewWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_new.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_exit.wsg", &paintState->wheelExitWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_exit.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_palette.wsg", &paintState->wheelPaletteWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_palette.wsg icon failed!!!");
-    }
+    PAINT_WSG("wheel_brush.wsg", &paintState->wheelBrushWsg);
+    PAINT_WSG("wheel_color.wsg", &paintState->wheelColorWsg);
+    PAINT_WSG("wheel_size.wsg", &paintState->wheelSizeWsg);
+    PAINT_WSG("wheel_options.wsg", &paintState->wheelSettingsWsg);
+    PAINT_WSG("wheel_undo.wsg", &paintState->wheelUndoWsg);
+    PAINT_WSG("wheel_redo.wsg", &paintState->wheelRedoWsg);
+    PAINT_WSG("wheel_save.wsg", &paintState->wheelSaveWsg);
+    PAINT_WSG("wheel_open.wsg", &paintState->wheelOpenWsg);
+    PAINT_WSG("wheel_new.wsg", &paintState->wheelNewWsg);
+    PAINT_WSG("wheel_exit.wsg", &paintState->wheelExitWsg);
+    PAINT_WSG("wheel_palette.wsg", &paintState->wheelPaletteWsg);
 
     // Top: Sub-menu for Brush
     paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelBrushStr);
@@ -493,18 +456,11 @@ void paintDrawScreenSetup(void)
     addSettingsItemToMenu(paintState->toolWheel, toolWheelSizeStr, &sizeBounds, sizeBounds.def);
     paintState->toolWheelBrushSizeItem = paintState->toolWheel->items->last->val;
     wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->wheelSizeWsg, 5, SCROLL_VERT);
-
-    // Initialize with no icon to start, and default to error
-    paintState->dialogBox = initDialogBox(dialogErrorTitleStr, dialogErrorDetailStr, NULL, paintDialogCb);
-    paintSetupDialog(DIALOG_ERROR);
-    paintState->showDialogBox = false;
 }
 
 void paintDrawScreenCleanup(void)
 {
     bzrStop(true);
-
-    deinitDialogBox(paintState->dialogBox);
 
     deinitWheelMenu(paintState->toolWheelRenderer);
     deinitMenu(paintState->toolWheel);
@@ -547,6 +503,17 @@ void paintDrawScreenCleanup(void)
 
     paintFreeCursorSprite(&paintState->cursorWsg);
     paintFreeUndos();
+
+    deinitDialogBox(paintState->dialogBox);
+    if (paintState->dialogCustomDetail)
+    {
+        free(paintState->dialogCustomDetail);
+        paintState->dialogMessageDetail = NULL;
+        paintState->dialogCustomDetail = NULL;
+    }
+
+    freeWsg(&paintState->dialogErrorWsg);
+    freeWsg(&paintState->dialogInfoWsg);
 
     freeFont(&paintState->smallFont);
     freeFont(&paintState->toolbarFont);
@@ -674,6 +641,16 @@ void paintPositionDrawCanvas(void)
 
 void paintDrawScreenMainLoop(int64_t elapsedUs)
 {
+    if (paintState->fatalError)
+    {
+        clearPxTft();
+        if (paintState->showDialogBox)
+        {
+            drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, DIALOG_CENTER, DIALOG_CENTER, DIALOG_AUTO, DIALOG_AUTO, 6);
+        }
+        return;
+    }
+
     if (!paintState->showDialogBox)
     {
         paintDrawScreenPollTouch();
@@ -1335,6 +1312,15 @@ void paintDrawScreenPollTouch(void)
 
 void paintDrawScreenButtonCb(const buttonEvt_t* evt)
 {
+    if (paintState->fatalError)
+    {
+        if (paintState->showDialogBox)
+        {
+            dialogBoxButton(paintState->dialogBox, evt);
+        }
+        return;
+    }
+
     if (paintHelp != NULL)
     {
         paintHelp->allButtons |= evt->state;
@@ -2289,7 +2275,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
 static void paintSetupDialog(paintDialog_t dialog)
 {
     paintState->showDialogBox = true;
-    if (paintState->dialog == dialog)
+    if (dialog != DIALOG_ERROR && paintState->dialog == dialog)
     {
         return;
     }
@@ -2336,8 +2322,9 @@ static void paintSetupDialog(paintDialog_t dialog)
         default:
         {
             // Error! Exit
-            title = dialogErrorTitleStr;
-            detail = dialogErrorDetailStr;
+            title = paintState->dialogMessageTitle ? paintState->dialogMessageTitle : dialogErrorTitleStr;
+            detail = paintState->dialogMessageDetail ? paintState->dialogMessageDetail : dialogErrorDetailStr;
+            icon = &paintState->dialogErrorWsg;
 
             dialogBoxAddOption(paintState->dialogBox, dialogOptionExitStr, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
             break;
