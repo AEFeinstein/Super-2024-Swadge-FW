@@ -165,19 +165,19 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
             // Else if a door is hit
             else if (CELL_IS_TYPE(cell->type, BG | DOOR))
             {
-                // Check if the bullet type can open the door
-                if ((BG_DOOR == cell->type) // Normal doors are openable by anything
-                    || (BG_DOOR_CHARGE == cell->type && OBJ_BULLET_CHARGE == obj->c.type)
-                    || (BG_DOOR_SCRIPT == cell->type) // TODO disable shooting script doors
-                    || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
-                    || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)
-                    || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type)
-                    || (BG_DOOR_KEY_A == cell->type && ray->inventory.keys[ray->mapId][0])
-                    || (BG_DOOR_KEY_B == cell->type && ray->inventory.keys[ray->mapId][1])
-                    || (BG_DOOR_KEY_C == cell->type && ray->inventory.keys[ray->mapId][2]))
+                // If the door is closed
+                if (0 == cell->doorOpen)
                 {
-                    // If the door is closed
-                    if (0 == cell->doorOpen)
+                    // Check if the bullet type can open the door
+                    if ((BG_DOOR == cell->type) // Normal doors are openable by anything
+                        || (BG_DOOR_CHARGE == cell->type && OBJ_BULLET_CHARGE == obj->c.type)
+                        // || (BG_DOOR_SCRIPT == cell->type) // Script doors aren't openable with bullets
+                        || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
+                        || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)
+                        || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type)
+                        || (BG_DOOR_KEY_A == cell->type && ray->inventory.keys[ray->mapId][0])
+                        || (BG_DOOR_KEY_B == cell->type && ray->inventory.keys[ray->mapId][1])
+                        || (BG_DOOR_KEY_C == cell->type && ray->inventory.keys[ray->mapId][2]))
                     {
                         // Start opening the door
                         cell->openingDirection = 1;
@@ -193,6 +193,13 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                             // Use the key
                             ray->inventory.keys[ray->mapId][cell->type - BG_DOOR_KEY_A] = false;
                         }
+                    }
+                    else
+                    {
+                        // Shot a closed door it couldn't open
+                        // destroy this bullet
+                        memset(obj, 0, sizeof(rayBullet_t));
+                        obj->c.id = -1;
                     }
                 }
             }
