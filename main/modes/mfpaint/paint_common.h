@@ -9,6 +9,7 @@
 #include "menu.h"
 #include "wheel_menu.h"
 #include "dialogBox.h"
+#include "paint_browser.h"
 #include "p2pConnection.h"
 #include "linked_list.h"
 #include "geometry.h"
@@ -279,6 +280,9 @@ typedef struct
     // The save slot selected for PICK_SLOT_SAVE and PICK_SLOT_LOAD
     uint8_t selectedSlot;
 
+    // The save/load slot selected from the picker
+    const char* selectedSlotKey;
+
     //////// Rendering flags
 
     // If set, the canvas will be cleared and the screen will be redrawn. Set on startup.
@@ -375,6 +379,11 @@ typedef struct
 
     /// @brief True if a fatal error occurred, and we should only show the error dialog.
     bool fatalError;
+
+    //////// File Browser
+    bool showBrowser;
+
+    imageBrowser_t browser;
 } paintDraw_t;
 
 typedef struct

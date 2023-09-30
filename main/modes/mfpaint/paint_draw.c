@@ -14,6 +14,7 @@
 #include "mode_paint.h"
 #include "paint_song.h"
 #include "paint_help.h"
+#include "paint_browser.h"
 
 #include "wheel_menu.h"
 
@@ -51,6 +52,8 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
 static void paintSetupColorWheel(void);
 static void paintSetupDialog(paintDialog_t dialog);
 static void paintDialogCb(const char* label);
+static void paintSetupBrowser(void);
+static void paintBrowserCb(const char* nvsKey);
 
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
@@ -232,6 +235,9 @@ void paintDrawScreenSetup(void)
     paintSetupDialog(DIALOG_ERROR);
     paintState->showDialogBox = false;
     paintState->fatalError = false;
+
+    paintState->browser.callback = paintBrowserCb;
+    paintState->browser.cols = 4;
 
     // Set up the brush icons
     uint16_t spriteH = 0;
@@ -504,6 +510,8 @@ void paintDrawScreenCleanup(void)
     paintFreeCursorSprite(&paintState->cursorWsg);
     paintFreeUndos();
 
+    resetImageBrowser(&paintState->browser);
+
     deinitDialogBox(paintState->dialogBox);
     if (paintState->dialogCustomDetail)
     {
@@ -651,7 +659,7 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
         return;
     }
 
-    if (!paintState->showDialogBox)
+    if (!paintState->showDialogBox && !paintState->showBrowser)
     {
         paintDrawScreenPollTouch();
     }
@@ -743,21 +751,29 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     // TODO render toolbar always
     // paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
 
-    if (paintState->showDialogBox || wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
+    if (paintState->showBrowser || paintState->showDialogBox || wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
     {
         paintEnterSelectMode();
 
         paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
-        paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
 
-        if (paintState->showDialogBox)
+        if (paintState->showBrowser)
         {
-            //drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, 30, 30, TFT_WIDTH - 60, TFT_HEIGHT - 60, 5);
-            drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, DIALOG_CENTER, DIALOG_CENTER, DIALOG_AUTO, DIALOG_AUTO, 6);
+            drawImageBrowser(&paintState->browser, &paintState->toolbarFont, false);
         }
         else
         {
-            drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
+            paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
+
+            if (paintState->showDialogBox)
+            {
+                //drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, 30, 30, TFT_WIDTH - 60, TFT_HEIGHT - 60, 5);
+                drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, DIALOG_CENTER, DIALOG_CENTER, DIALOG_AUTO, DIALOG_AUTO, 6);
+            }
+            else
+            {
+                drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
+            }
         }
     }
     else
@@ -1220,93 +1236,6 @@ void paintDrawScreenPollTouch(void)
     else
     {
         paintState->toolWheel = wheelMenuTouchRelease(paintState->toolWheel, paintState->toolWheelRenderer);
-        return;
-
-        /////////////////////////////// old code below, probs delete
-
-        // Bar is not touched
-        // Do not use centroid/intensity here
-        // And only do anything if paintState->touchDown is still true
-        if (paintState->touchDown)
-        {
-            paintState->touchDown = false;
-
-            switch (paintState->buttonMode)
-            {
-                case BTN_MODE_DRAW:
-                case BTN_MODE_SELECT:
-                {
-                    int32_t swipeMagnitude
-                        = ((paintState->firstTouch - paintState->lastTouch) * PAINT_MAX_BRUSH_SWIPE) / 1024;
-                    // PAINT_LOGD("End swipe: %d", swipeMagnitude);
-                    if (swipeMagnitude == 0)
-                    {
-                        // Tap! But only if we started on X or Y
-                        if (paintState->firstTouch < (1024 / 5))
-                        {
-                            paintDecBrushWidth(1);
-                        }
-                        else if (paintState->firstTouch > (1024 * 4 / 5))
-                        {
-                            paintIncBrushWidth(1);
-                        }
-                    }
-
-                    if (paintHelp != NULL)
-                    {
-                        paintHelp->curButtons
-                            = paintHelp->curButtons
-                              & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT);
-                        paintHelp->lastButtonDown = false;
-
-                        if (swipeMagnitude == 0)
-                        {
-                            if (paintState->firstTouch < (1024 / 5))
-                            {
-                                paintHelp->lastButton = TOUCH_Y;
-                            }
-                            else if (paintState->firstTouch > (1024 * 4 / 5))
-                            {
-                                paintHelp->lastButton = TOUCH_X;
-                            }
-                            else
-                            {
-                                paintHelp->lastButton = TOUCH_ANY;
-                            }
-                        }
-                        else if (swipeMagnitude > 0)
-                        {
-                            paintHelp->lastButton = SWIPE_RIGHT;
-                        }
-                        else // swipeMagnitude < 0
-                        {
-                            paintHelp->lastButton = SWIPE_LEFT;
-                        }
-
-                        paintTutorialOnEvent();
-                    }
-
-                    paintExitSelectMode();
-                    break;
-                }
-
-                case BTN_MODE_PALETTE:
-                {
-                    // Only do something in tutorial mode
-                    if (paintHelp != NULL)
-                    {
-                        paintHelp->curButtons
-                            = paintHelp->curButtons
-                              & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT);
-                        paintHelp->lastButtonDown = false;
-                        paintHelp->lastButton     = TOUCH_ANY;
-                        paintTutorialOnEvent();
-                    }
-
-                    break;
-                }
-            }
-        }
     }
 }
 
@@ -1331,7 +1260,11 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
             = evt->state | (paintHelp->curButtons & (TOUCH_ANY | TOUCH_X | TOUCH_Y | SWIPE_LEFT | SWIPE_RIGHT));
     }
 
-    if (paintState->showDialogBox)
+    if (paintState->showBrowser)
+    {
+        imageBrowserButton(&paintState->browser, evt);
+    }
+    else if (paintState->showDialogBox)
     {
         dialogBoxButton(paintState->dialogBox, evt);
     }
@@ -2021,6 +1954,11 @@ void paintEnterSelectMode(void)
 
 void paintExitSelectMode(void)
 {
+    if (paintState->showBrowser)
+    {
+        paintState->showBrowser = false;
+    }
+
     if (paintState->showDialogBox)
     {
         paintState->showDialogBox = false;
@@ -2178,8 +2116,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             }
             else
             {
-                paintState->doLoad = true;
-                paintExitSelectMode();
+                paintSetupBrowser();
             }
         }
         else if (toolWheelNewStr == label)
@@ -2354,6 +2291,7 @@ static void paintDialogCb(const char* label)
     }
     else if (dialogOptionSaveStr == label)
     {
+        // TODO switch to named slots
         if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
         {
             paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
@@ -2367,6 +2305,7 @@ static void paintDialogCb(const char* label)
     else if (dialogOptionSaveAsStr == label)
     {
         // TODO - use named slots, open a file picker /
+        paintSetupBrowser();
     }
     else if (dialogOptionExitStr == label)
     {
@@ -2386,8 +2325,7 @@ static void paintDialogCb(const char* label)
 
             case DIALOG_CONFIRM_UNSAVED_LOAD:
             {
-                paintState->doLoad = true;
-                paintExitSelectMode();
+                paintSetupBrowser();
                 break;
             }
 
@@ -2412,4 +2350,19 @@ static void paintDialogCb(const char* label)
             }
         }
     }
+}
+
+static void paintSetupBrowser(void)
+{
+    resetImageBrowser(&paintState->browser);
+    setupImageBrowser(&paintState->browser, "storage", "pnt");
+    paintState->showDialogBox = false;
+    paintState->showToolWheel = false;
+    paintState->showBrowser = true;
+}
+
+static void paintBrowserCb(const char* nvsKey)
+{
+    PAINT_LOGI("Selected %s", nvsKey);
+    //paintState->
 }

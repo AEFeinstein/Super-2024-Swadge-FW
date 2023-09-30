@@ -1,8 +1,11 @@
 #include <stddef.h>
 
 #include <esp_log.h>
+#include <esp_err.h>
 
 #include "hdw-spiffs.h"
+#include "hdw-nvs.h"
+#include <nvs.h>
 
 #include "heatshrink_decoder.h"
 #include "heatshrink_helper.h"
@@ -80,4 +83,72 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
 
     // Return the decompressed bytes
     return decompressedBuf;
+}
+
+uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* outsize, bool spiRam)
+{
+    // Read WSG from NVS
+    size_t sz;
+
+    readNvsBlob(key, NULL, &sz);
+
+    uint8_t* buf = (uint8_t*)heap_caps_malloc(sz, spiRam ? MALLOC_CAP_SPIRAM : 0);
+    if (!buf)
+    {
+        return NULL;
+    }
+
+    if (!readNvsBlob(key, buf, &sz))
+    {
+        free(buf);
+        return NULL;
+    }
+
+    // Pick out the decompresed size and create a space for it
+    (*outsize) = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
+    uint8_t* decompressedBuf = (uint8_t*)heap_caps_malloc((*outsize), spiRam ? MALLOC_CAP_SPIRAM : 0);
+
+    // Create the decoder
+    size_t copied           = 0;
+    heatshrink_decoder* hsd = heatshrink_decoder_alloc(256, 8, 4);
+    heatshrink_decoder_reset(hsd);
+
+    // The decompressed filesize is four bytes, so start after that
+    uint32_t inputIdx  = 4;
+    uint32_t outputIdx = 0;
+    // Decode the file in chunks
+    while (inputIdx < sz)
+    {
+        // Decode some data
+        copied = 0;
+        heatshrink_decoder_sink(hsd, &buf[inputIdx], sz - inputIdx, &copied);
+        inputIdx += copied;
+
+        // Save it to the output array
+        copied = 0;
+        heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], (*outsize) - outputIdx, &copied);
+        outputIdx += copied;
+    }
+
+    // Note that it's all done
+    heatshrink_decoder_finish(hsd);
+
+    // Flush any final output
+    copied = 0;
+    heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], (*outsize) - outputIdx, &copied);
+    outputIdx += copied;
+
+    // All done decoding
+    heatshrink_decoder_finish(hsd);
+    heatshrink_decoder_free(hsd);
+    // Free the bytes read from the file
+    free(buf);
+
+    // Return the decompressed bytes
+    return decompressedBuf;
+}
+
+bool writeHeatshrinkNvs(const char* namespace, const char* key, const uint8_t* data, uint32_t size)
+{
+    return false;
 }

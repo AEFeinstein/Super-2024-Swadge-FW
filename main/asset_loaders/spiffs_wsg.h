@@ -41,6 +41,7 @@
 #include "wsg.h"
 
 bool loadWsg(const char* name, wsg_t* wsg, bool spiRam);
+bool loadWsgNvs(char* namespace, const char* key, wsg_t* wsg, bool spiRam);
 void freeWsg(wsg_t* wsg);
 
 #endif

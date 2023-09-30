@@ -63,6 +63,42 @@ bool loadWsg(const char* name, wsg_t* wsg, bool spiRam)
     return false;
 }
 
+bool loadWsgNvs(char* namespace, const char* key, wsg_t* wsg, bool spiRam)
+{
+    // Read and decompress file
+    uint32_t decompressedSize = 0;
+    uint8_t* decompressedBuf  = readHeatshrinkNvs(namespace, key, &decompressedSize, spiRam);
+
+    if (NULL == decompressedBuf)
+    {
+        return false;
+    }
+
+    // Save the decompressed info to the wsg. The first four bytes are dimension
+    wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
+    wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
+    // The rest of the bytes are pixels
+    if (spiRam)
+    {
+        wsg->px = (paletteColor_t*)heap_caps_malloc(sizeof(paletteColor_t) * wsg->w * wsg->h, MALLOC_CAP_SPIRAM);
+    }
+    else
+    {
+        wsg->px = (paletteColor_t*)malloc(sizeof(paletteColor_t) * wsg->w * wsg->h);
+    }
+
+    if (NULL != wsg->px)
+    {
+        memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
+        free(decompressedBuf);
+        return true;
+    }
+
+    // all done
+    free(decompressedBuf);
+    return false;
+}
+
 /**
  * @brief Free the memory for a loaded WSG
  *
