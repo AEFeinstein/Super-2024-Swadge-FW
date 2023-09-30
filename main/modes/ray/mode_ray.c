@@ -22,12 +22,16 @@ static void rayEnterMode(void);
 static void rayExitMode(void);
 static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void rayMenuCb(const char* label, bool selected, uint32_t settingVal);
+static void rayStartGame(void);
 
 //==============================================================================
 // Const Variables
 //==============================================================================
 
-const char rayName[] = "Magtroid Pocket";
+const char rayName[]     = "Magtroid Pocket";
+const char rayPlayStr[]  = "Play";
+const char rayResetStr[] = "Reset";
 
 //==============================================================================
 // Variables
@@ -63,14 +67,18 @@ static void rayEnterMode(void)
     // Allocate memory
     ray = calloc(1, sizeof(ray_t));
 
-    // Set invalid IDs for all bullets
-    for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
-    {
-        ray->bullets[objIdx].c.id = -1;
-    }
-    // lists of enemies, items, and scenery are already cleared
+    // Initialize the menu
+    ray->menu = initMenu(rayName, rayMenuCb);
+    addSingleItemToMenu(ray->menu, rayPlayStr);
+    addSingleItemToMenu(ray->menu, rayResetStr);
+    addSingleItemToMenu(ray->menu, mnuBackStr);
 
+    // Load fonts
+    loadFont("logbook.font", &ray->logbook, true);
     loadFont("ibm_vga8.font", &ray->ibm, true);
+
+    // Initialize a renderer
+    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
 
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
@@ -78,21 +86,12 @@ static void rayEnterMode(void)
     // Initialize enemy templates and textures
     initEnemyTemplates(ray);
 
-    // Load the map and object data
-    loadRayMap("0.rmh", ray, false);
-
-    // Set initial position and direction, centered on the tile
-    initializePlayer(ray, true);
-
-    // Mark the starting tile as visited
-    markTileVisited(&ray->map, FROM_FX(ray->posX), FROM_FX(ray->posY));
+    // Set the menu as the screen
+    ray->screen = RAY_MENU;
 
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
-
-    // Set the initial screen
-    ray->screen = RAY_GAME;
 }
 
 /**
@@ -100,6 +99,10 @@ static void rayEnterMode(void)
  */
 static void rayExitMode(void)
 {
+    // Free menu
+    deinitMenu(ray->menu);
+    deinitMenuLogbookRenderer(ray->renderer);
+
     // Free map, scripts, enemies, scenery, bullets, etc.
     rayFreeCurrentState(ray);
 
@@ -108,6 +111,7 @@ static void rayExitMode(void)
 
     // Free the font
     freeFont(&ray->ibm);
+    freeFont(&ray->logbook);
 
     // Free the game state
     free(ray);
@@ -156,6 +160,14 @@ static void rayMainLoop(int64_t elapsedUs)
     {
         case RAY_MENU:
         {
+            // Check buttons
+            buttonEvt_t evt = {0};
+            while (checkButtonQueueWrapper(&evt))
+            {
+                ray->menu = menuButton(ray->menu, evt);
+            }
+            // Draw the menu
+            drawMenuLogbook(ray->menu, ray->renderer, elapsedUs);
             break;
         }
         case RAY_GAME:
@@ -270,4 +282,57 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
             break;
         }
     }
+}
+
+/**
+ * @brief Handle menu callbacks
+ *
+ * @param label The menu option selected or scrolled to
+ * @param selected if the menu option was selected
+ * @param settingVal The setting value, if this is a setting
+ */
+static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
+{
+    if (selected)
+    {
+        if (label == rayPlayStr)
+        {
+            rayStartGame();
+        }
+        else if (label == rayResetStr)
+        {
+            // TODO wipe NVM, but ask first
+        }
+        else if (label == mnuBackStr)
+        {
+            // TODO return to the main menu
+        }
+    }
+}
+
+/**
+ * @brief Start the game from the menu
+ */
+static void rayStartGame(void)
+{
+    // Set invalid IDs for all bullets
+    for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
+    {
+        ray->bullets[objIdx].c.id = -1;
+    }
+
+    // Clear all lists
+    rayFreeCurrentState(ray);
+
+    // Load the map and object data
+    loadRayMap("0.rmh", ray, false);
+
+    // Set initial position and direction, centered on the tile
+    initializePlayer(ray, true);
+
+    // Mark the starting tile as visited
+    markTileVisited(&ray->map, FROM_FX(ray->posX), FROM_FX(ray->posY));
+
+    // Set the initial screen
+    ray->screen = RAY_GAME;
 }

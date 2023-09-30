@@ -432,6 +432,9 @@ typedef struct
 {
     rayScreen_t screen; ///< The current screen being shown
 
+    menu_t* menu; ///< The main menu
+    menuLogbookRenderer_t* renderer;
+
     rayMap_t map;      ///< The loaded map
     int32_t mapId;     ///< The ID of the current map
     int32_t doorTimer; ///< A timer used to open doors
@@ -480,7 +483,8 @@ typedef struct
 
     rayEnemy_t eTemplates[6]; ///< Enemy type templates, copied when initializing enemies
 
-    font_t ibm; ///< A font to draw the HUD
+    font_t ibm;     ///< A font to draw the HUD
+    font_t logbook; ///< A font to draw the menu
 
     const char* dialogText;     ///< A pointer to the current dialog text
     const char* nextDialogText; ///< A pointer to the next dialog text, if it doesn't fit in one box

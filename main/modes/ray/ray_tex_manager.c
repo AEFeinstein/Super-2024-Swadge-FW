@@ -159,15 +159,18 @@ void freeAllTex(ray_t* ray)
     freeWsg(&ray->guns[LO_ICE]);
     freeWsg(&ray->guns[LO_XRAY]);
 
-    for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
+    if (ray->loadedTextures)
     {
-        // Check if the name is NULL
-        if (NULL != ray->loadedTextures[idx].name)
+        for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
         {
-            free(ray->loadedTextures[idx].name);
-            freeWsg(&ray->loadedTextures[idx].texture);
+            // Check if the name is NULL
+            if (NULL != ray->loadedTextures[idx].name)
+            {
+                free(ray->loadedTextures[idx].name);
+                freeWsg(&ray->loadedTextures[idx].texture);
+            }
         }
+        free(ray->loadedTextures);
+        free(ray->typeToIdxMap);
     }
-    free(ray->loadedTextures);
-    free(ray->typeToIdxMap);
 }
