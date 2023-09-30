@@ -6,6 +6,7 @@
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
+#include "spiffs_wsg.h"
 
 #include "paint_ui.h"
 #include "paint_brush.h"
@@ -2354,6 +2355,16 @@ static void paintDialogCb(const char* label)
 
 static void paintSetupBrowser(void)
 {
+    static bool done = false;
+
+    if (!done)
+    {
+        bool res = saveWsgNvs("storage", "pnt_tmp", &paintState->wheelColorWsg);
+        PAINT_LOGI("res: %s", res ? "true" : "false");
+        saveWsgNvs("storage", "pnt_tmp2", &paintState->wheelSettingsWsg);
+        done = true;
+    }
+
     resetImageBrowser(&paintState->browser);
     setupImageBrowser(&paintState->browser, "storage", "pnt");
     paintState->showDialogBox = false;
@@ -2364,5 +2375,4 @@ static void paintSetupBrowser(void)
 static void paintBrowserCb(const char* nvsKey)
 {
     PAINT_LOGI("Selected %s", nvsKey);
-    //paintState->
 }

@@ -1,6 +1,7 @@
 #include <stddef.h>
 
 #include <esp_log.h>
+#include <inttypes.h>
 #include <esp_err.h>
 
 #include "hdw-spiffs.h"
@@ -90,7 +91,10 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
     // Read WSG from NVS
     size_t sz;
 
+    // Get full size
     readNvsBlob(key, NULL, &sz);
+
+    ESP_LOGI("Heatshrink", "Compressed size is %" PRIu64, (uint64_t)sz);
 
     uint8_t* buf = (uint8_t*)heap_caps_malloc(sz, spiRam ? MALLOC_CAP_SPIRAM : 0);
     if (!buf)
@@ -106,6 +110,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
 
     // Pick out the decompresed size and create a space for it
     (*outsize) = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
+    ESP_LOGI("Heatshrink", "Outsize is %" PRIu64, (uint64_t)*outsize);
     uint8_t* decompressedBuf = (uint8_t*)heap_caps_malloc((*outsize), spiRam ? MALLOC_CAP_SPIRAM : 0);
 
     // Create the decoder

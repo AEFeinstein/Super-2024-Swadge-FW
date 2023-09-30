@@ -29,6 +29,9 @@ static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t*
     thumbnail->w = MIN(w, image->w);
     thumbnail->h = MIN(h, image->h);
 
+    ESP_LOGI("Paint", "Thumbnail is %" PRIu16 " x %" PRIu16, thumbnail->w, thumbnail->h);
+    ESP_LOGI("Paint", "Image is %" PRIu16 " x %" PRIu16, image->w, image->h);
+
     thumbnail->px
         = heap_caps_malloc(sizeof(paletteColor_t) * thumbnail->w * thumbnail->h, spiram ? MALLOC_CAP_SPIRAM : 0);
 
@@ -83,14 +86,14 @@ void setupImageBrowser(imageBrowser_t* browser, const char* namespace, const cha
                 {
                     if (!prefix || !memcmp(imageInfos[i].key, prefix, MIN(strlen(prefix), 16)))
                     {
-                        wsg_t fullImage;
-                        loadWsgNvs(imageInfos[i].namespace_name, imageInfos[i].key, &fullImage, true);
-
                         imageBrowserItem_t* newItem = calloc(1, sizeof(imageBrowserItem_t));
+
+                        bool result = loadWsgNvs(imageInfos[i].namespace_name, imageInfos[i].key, &newItem->preview, true);
+                        ESP_LOGI("Paint", "loadWsgNvs result is %s", result ? "true" : "false");
+
                         // Make a thumbnail
                         makeThumbnail(&newItem->thumb, THUMB_W, THUMB_H, &newItem->preview, false);
 
-                        newItem->preview = fullImage;
                         strncpy(newItem->nvsKey, imageInfos[i].key, sizeof(newItem->nvsKey) - 1);
 
                         push(&browser->items, newItem);
@@ -123,8 +126,11 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
     // Calculate the total number of full or partial rows
     uint8_t rows = (browser->items.length + (browser->cols - 1)) / browser->cols;
 
-    uint16_t marginTop    = 5;
-    uint16_t marginBottom = 5 + font->height + 1 + 5;
+    uint16_t marginTop    = 15;
+    uint16_t textMargin = 5;
+    uint16_t marginBottom = 15 + font->height + 1 + textMargin;
+    uint16_t marginLeft = 15;
+    uint16_t marginRight = 15;
     uint16_t thumbMargin  = 5;
     uint16_t thumbHeight  = THUMB_H + 4;
     uint16_t thumbWidth   = THUMB_W + 4;
@@ -167,8 +173,10 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
             bool selected            = (node == browser->currentItem);
 
             // TODO divide by 2 after ... `+ thumbMargin)`
+            // x = marginLeft + (lSpacing * (col + 1)) + (width) *
             uint16_t x
-                = 5 + col * (TFT_WIDTH - 10 - browser->cols * (thumbWidth + thumbMargin) + thumbWidth) / browser->cols;
+                = marginLeft + col * (TFT_WIDTH - marginLeft - marginRight - browser->cols * (thumbWidth + thumbMargin) + thumbWidth) / browser->cols;
+            x = marginLeft + col * (thumbWidth * thumbMargin);
             uint16_t y = marginTop
                          + row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
                                / visibleRows;
@@ -182,9 +190,15 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
             drawWsgSimple(&item->thumb, x + 2, y + 2);
 
             // Draw inner border
-            drawRect(x + 1, y + 1, x + 2 + THUMB_W + 1, y + 2 + THUMB_H + 1, selected ? c555 : c455);
+            drawRect(x + 1, y + 1, x + 2 + THUMB_W + 1, y + 2 + THUMB_H + 1, c555);
             // Draw outer border
-            drawRect(x, y, x + 2 + THUMB_W + 2, y + 2 + THUMB_H + 2, c000);
+            drawRect(x, y, x + 2 + THUMB_W + 2, y + 2 + THUMB_H + 2, selected ? c455 : c000);
+
+            // Draw the label of the selected item
+            if (selected)
+            {
+                drawText(font, c000, item->nvsKey, (TFT_WIDTH - textWidth(font, item->nvsKey)) / 2, TFT_HEIGHT - marginBottom + textMargin);
+            }
         }
     }
 }

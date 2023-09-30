@@ -75,7 +75,7 @@ typedef struct
     uint16_t detailY;
 
     /// @brief The X coordinate to draw the dialog icon at
-    uint16_t iconX
+    uint16_t iconX;
     /// @brief The Y coordinate to draw the dialog icon at
     uint16_t iconY;
 } dialogDrawInfo_t;
