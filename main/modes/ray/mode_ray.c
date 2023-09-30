@@ -12,6 +12,7 @@
 #include "ray_dialog.h"
 #include "ray_pause.h"
 #include "ray_script.h"
+#include "ray_warp_screen.h"
 
 //==============================================================================
 // Function Prototypes
@@ -193,6 +194,16 @@ static void rayMainLoop(int64_t elapsedUs)
                 return;
             }
 
+            // If the warp timer is active
+            if (ray->warpTimerUs > 0)
+            {
+                // Switch to showing the warp screen
+                ray->screen = RAY_WARP_SCREEN;
+                // Do the warp in the background
+                warpToDestination(ray);
+                break;
+            }
+
             break;
         }
         case RAY_DIALOG:
@@ -209,6 +220,12 @@ static void rayMainLoop(int64_t elapsedUs)
             rayPauseRender(ray, elapsedUs);
             // Then check buttons
             rayPauseCheckButtons(ray);
+            break;
+        }
+        case RAY_WARP_SCREEN:
+        {
+            // Only render
+            rayWarpScreenRender(ray, elapsedUs);
             break;
         }
     }
@@ -245,6 +262,12 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         {
             // Draw a black background
             fillDisplayArea(x, y, x + w, y + h, c000);
+            break;
+        }
+        case RAY_WARP_SCREEN:
+        {
+            drawWarpBackground(x, y, w, h);
+            break;
         }
     }
 }

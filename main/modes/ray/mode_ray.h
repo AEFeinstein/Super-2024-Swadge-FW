@@ -417,10 +417,11 @@ typedef struct
  */
 typedef enum
 {
-    RAY_MENU,   ///< The main menu is being shown
-    RAY_GAME,   ///< The game loop is being shown
-    RAY_DIALOG, ///< A dialog box is being shown
-    RAY_PAUSE,  ///< The pause menu is being shown
+    RAY_MENU,        ///< The main menu is being shown
+    RAY_GAME,        ///< The game loop is being shown
+    RAY_DIALOG,      ///< A dialog box is being shown
+    RAY_PAUSE,       ///< The pause menu is being shown
+    RAY_WARP_SCREEN, ///< The warp screen animation is being shown
 } rayScreen_t;
 
 /**
@@ -432,8 +433,13 @@ typedef struct
     rayScreen_t screen; ///< The current screen being shown
 
     rayMap_t map;      ///< The loaded map
-    int32_t mapId;     ///< The ID of the current map (TODO)
+    int32_t mapId;     ///< The ID of the current map
     int32_t doorTimer; ///< A timer used to open doors
+
+    int32_t warpDestMapId; ///< The ID of the current map
+    q24_8 warpDestPosX;    ///< The player's X position
+    q24_8 warpDestPosY;    ///< The player's Y position
+    int32_t warpTimerUs;   ///< Timer to display warp screen
 
     rayBullet_t bullets[MAX_RAY_BULLETS]; ///< A list of all bullets
     list_t enemies;                       ///< A list of all enemies (moves, can be shot)

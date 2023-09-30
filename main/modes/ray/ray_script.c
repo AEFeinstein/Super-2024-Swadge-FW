@@ -3,6 +3,7 @@
 #include "ray_dialog.h"
 #include "ray_player.h"
 #include "ray_map.h"
+#include "ray_warp_screen.h"
 
 static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
@@ -166,9 +167,6 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
                 newScript->thenArgs.warpDest.mapId = fileData[fileIdx++];
                 newScript->thenArgs.warpDest.pos.x = fileData[fileIdx++];
                 newScript->thenArgs.warpDest.pos.y = fileData[fileIdx++];
-
-                printf("WARP RULE, map %d, cell (%d, %d)\n", newScript->thenArgs.warpDest.mapId,
-                       newScript->thenArgs.warpDest.pos.x, newScript->thenArgs.warpDest.pos.y);
                 break;
             }
             case WIN:
@@ -771,25 +769,8 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             {
                 // Warp to another map
                 // Save parameters because scripts will be freed in the process
-                uint8_t mapId           = script->thenArgs.warpDest.mapId;
-                rayMapCoordinates_t pos = script->thenArgs.warpDest.pos;
-
-                // Free the scripts
-                rayFreeCurrentState(ray);
-
-                // Construct the map name
-                char mapName[] = "0.rmh";
-                mapName[0]     = '0' + mapId;
-                // Load the new map
-                loadRayMap(mapName, ray, false);
-
-                // Set the player position after the map is loaded
-                ray->posX = ADD_FX(TO_FX(pos.x), TO_FX_FRAC(1, 2));
-                ray->posY = ADD_FX(TO_FX(pos.y), TO_FX_FRAC(1, 2));
-
-                // Initialize player angle
-                initializePlayer(ray, false);
-
+                setWarpDestination(ray, script->thenArgs.warpDest.mapId, script->thenArgs.warpDest.pos.x,
+                                   script->thenArgs.warpDest.pos.y);
                 return true;
             }
             break;
