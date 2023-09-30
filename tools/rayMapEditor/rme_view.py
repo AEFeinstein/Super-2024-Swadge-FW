@@ -10,8 +10,12 @@ from collections.abc import Mapping
 
 from rme_tiles import *
 
-# This class is a tk.Text which can also report when the cursor moves
+
 class CustomText(tk.Text):
+    '''
+    This class is a tk.Text which can also report when the cursor moves
+    '''
+
     def __init__(self, *args, **kwargs):
         tk.Text.__init__(self, *args, **kwargs)
 
@@ -373,7 +377,10 @@ class view:
                 rect = self.scriptRects.pop()
                 self.mapCanvas.delete(rect)
 
-            # Get all the if cells and highlight them red
+            lineWidth = 4
+            dashPattern = (8, 8)
+
+            # Get all the if cells and highlight them yellow
             for cell in self.m.scripts[scriptNum].getIfCells():
                 if cell is not None:
                     self.scriptRects.append(self.mapCanvas.create_rectangle(
@@ -381,9 +388,21 @@ class view:
                         (cell[1] * self.mapCellSize),
                         ((cell[0] + 1) * self.mapCellSize),
                         ((cell[1] + 1) * self.mapCellSize),
-                        outline='red'))
+                        outline='yellow', width=lineWidth, dash=dashPattern))
 
-            # Get all the then cells and highlight them blue
+            # Get all object references and also highlight them yellow
+            for id in self.m.scripts[scriptNum].getIfIds():
+                for y in range(self.m.getMapHeight()):
+                    for x in range(self.m.getMapWidth()):
+                        if (id == self.m.tileMap[x][y].objectId):
+                            self.scriptRects.append(self.mapCanvas.create_rectangle(
+                                (x * self.mapCellSize),
+                                (y * self.mapCellSize),
+                                ((x + 1) * self.mapCellSize),
+                                ((y + 1) * self.mapCellSize),
+                                outline='yellow', width=lineWidth, dash=dashPattern))
+
+            # Get all the then cells and highlight them DeepPink
             for cell in self.m.scripts[scriptNum].getThenCells():
                 if cell is not None:
                     self.scriptRects.append(self.mapCanvas.create_rectangle(
@@ -391,9 +410,19 @@ class view:
                         (cell[1] * self.mapCellSize),
                         ((cell[0] + 1) * self.mapCellSize),
                         ((cell[1] + 1) * self.mapCellSize),
-                        outline='blue'))
-                    
-            # TODO highlight based on ID, not just cell
+                        outline='DeepPink', width=lineWidth, dash=dashPattern))
+
+            # Get all object references and also highlight them DeepPink
+            for id in self.m.scripts[scriptNum].getThenCells():
+                for y in range(self.m.getMapHeight()):
+                    for x in range(self.m.getMapWidth()):
+                        if (id == self.m.tileMap[x][y].objectId):
+                            self.scriptRects.append(self.mapCanvas.create_rectangle(
+                                (x * self.mapCellSize),
+                                (y * self.mapCellSize),
+                                ((x + 1) * self.mapCellSize),
+                                ((y + 1) * self.mapCellSize),
+                                outline='DeepPink', width=lineWidth, dash=dashPattern))
 
     def scriptTextChanged(self, event: tk.Event):
 

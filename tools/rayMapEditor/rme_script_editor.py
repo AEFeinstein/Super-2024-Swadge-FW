@@ -518,6 +518,11 @@ class rme_script:
             allCells.append(self.ifArgs[kCell])
         return allCells
 
+    def getIfIds(self) -> list[int]:
+        if kIds in self.ifArgs.keys():
+            return self.ifArgs[kIds]
+        return []
+
     def getThenCells(self) -> list[list[int]]:
         allCells = []
         if kCells in self.thenArgs.keys():
@@ -526,3 +531,8 @@ class rme_script:
         if kCell in self.thenArgs.keys():
             allCells.append(self.thenArgs[kCell])
         return allCells
+
+    def getThenIds(self) -> list[int]:
+        if kIds in self.thenArgs.keys():
+            return self.thenArgs[kIds]
+        return []
