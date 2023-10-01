@@ -74,24 +74,23 @@ void setupImageBrowser(imageBrowser_t* browser, const char* namespace, const cha
     }
 
     ESP_LOGI("Paint", "imageInfos is %" PRIu64 " bytes", (uint64_t)sizeof(imageInfos));
-    if (readAllNvsEntryInfos(NULL, &imagePtrs, &numInfos))
+    if (readNamespaceNvsEntryInfos(namespace, NULL, &imagePtrs, &numInfos))
     {
         ESP_LOGI("Paint", "readAll success");
         for (uint32_t i = 0; i < numInfos; ++i)
         {
             if (imageInfos[i].type == NVS_TYPE_BLOB)
             {
-                if (!namespace
-                    || !memcmp(namespace, imageInfos[i].namespace_name, MIN(strlen(namespace), 16)))
+                if (!prefix || !memcmp(imageInfos[i].key, prefix, MIN(strlen(prefix), 16)))
                 {
-                    if (!prefix || !memcmp(imageInfos[i].key, prefix, MIN(strlen(prefix), 16)))
+                    imageBrowserItem_t* newItem = calloc(1, sizeof(imageBrowserItem_t));
+
+                    bool result = loadWsgNvs(imageInfos[i].namespace_name, imageInfos[i].key, &newItem->preview, true);
+                    ESP_LOGI("Paint", "loadWsgNvs result is %s", result ? "true" : "false");
+
+                    // Make a thumbnail
+                    if (result)
                     {
-                        imageBrowserItem_t* newItem = calloc(1, sizeof(imageBrowserItem_t));
-
-                        bool result = loadWsgNvs(imageInfos[i].namespace_name, imageInfos[i].key, &newItem->preview, true);
-                        ESP_LOGI("Paint", "loadWsgNvs result is %s", result ? "true" : "false");
-
-                        // Make a thumbnail
                         makeThumbnail(&newItem->thumb, THUMB_W, THUMB_H, &newItem->preview, false);
 
                         strncpy(newItem->nvsKey, imageInfos[i].key, sizeof(newItem->nvsKey) - 1);
@@ -102,10 +101,16 @@ void setupImageBrowser(imageBrowser_t* browser, const char* namespace, const cha
                             browser->currentItem = browser->items.last;
                         }
                     }
+                    else
+                    {
+                        free(newItem);
+                    }
                 }
             }
         }
     }
+
+    ESP_LOGI("Paint", "Image browser has %d OK items", browser->items.length);
 }
 
 void resetImageBrowser(imageBrowser_t* browser)
@@ -143,6 +148,9 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
     uint16_t scrollHeight = rows ? visibleRows * SCROLL_HEIGHT / rows : SCROLL_HEIGHT;
     uint16_t scrollOffset = SCROLL_OFFSET + browser->firstRow * scrollHeight;
 
+    uint16_t extraW = (TFT_WIDTH - marginLeft - marginRight) - (browser->cols * thumbWidth + (browser->cols - 1) * thumbMargin);
+    uint16_t extraH = (TFT_HEIGHT - marginBottom - marginTop) - (visibleRows * thumbHeight + (visibleRows > 0 ? (visibleRows - 1) * thumbMargin : 0));
+
     // Fill the whole screen with a nice gray
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c444);
 
@@ -174,12 +182,10 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
 
             // TODO divide by 2 after ... `+ thumbMargin)`
             // x = marginLeft + (lSpacing * (col + 1)) + (width) *
-            uint16_t x
-                = marginLeft + col * (TFT_WIDTH - marginLeft - marginRight - browser->cols * (thumbWidth + thumbMargin) + thumbWidth) / browser->cols;
-            x = marginLeft + col * (thumbWidth * thumbMargin);
-            uint16_t y = marginTop
-                         + row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
-                               / visibleRows;
+            uint16_t x = marginLeft + col * (thumbWidth + thumbMargin) + extraW * col / browser->cols;
+            uint16_t y = marginTop + row * (thumbHeight + thumbMargin) + extraH * row / rows;
+                         //+ row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
+                           //    / visibleRows;
 
             // Background
             fillDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, c333);

@@ -2,6 +2,7 @@
 
 #include <string.h>
 #include "esp_heap_caps.h"
+#include "esp_random.h"
 
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
@@ -53,11 +54,13 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
 static void paintSetupColorWheel(void);
 static void paintSetupDialog(paintDialog_t dialog);
 static void paintDialogCb(const char* label);
-static void paintSetupBrowser(void);
+static void paintSetupBrowser(bool save);
 static void paintBrowserCb(const char* nvsKey);
 
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
+
+static const char paintDefaultFilename[] = "untitled_%02" PRIu8 ".mfp";
 
 static const char toolWheelTitleStr[]   = "Tool Wheel";
 static const char toolWheelBrushStr[]   = "Select Brush";
@@ -297,15 +300,39 @@ void paintDrawScreenSetup(void)
 
     paintLoadIndex(&paintState->index);
 
-    if (paintHelp == NULL && paintGetAnySlotInUse(paintState->index)
-        && paintGetRecentSlot(paintState->index) != PAINT_SAVE_SLOTS)
+    if (paintHelp == NULL && paintGetLastSlot(paintState->slotKey))
     {
         // If there's a saved image, load that (but not in the tutorial)
-        paintState->selectedSlot = paintGetRecentSlot(paintState->index);
-        paintState->doLoad       = true;
+        paintState->doLoad = true;
+        strncpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
+        PAINT_LOGI("Opening %s", paintState->selectedSlotKey);
     }
     else
     {
+        for (uint8_t i = 0; i <= UINT8_MAX; ++i)
+        {
+            snprintf(paintState->slotKey, sizeof(paintState->slotKey), paintDefaultFilename, i);
+
+            if (!paintSlotExists(paintState->slotKey))
+            {
+                PAINT_LOGI("Opening new file as %s", paintState->slotKey);
+                break;
+            }
+
+            // Give up and make a totally random one
+            if (i == UINT8_MAX)
+            {
+                for (uint8_t n = 0; n < sizeof(paintState->slotKey) - 5; ++n)
+                {
+                    uint8_t rng = esp_random() % 16;
+                    paintState->slotKey[n] = (rng > 9) ? ('a' + rng - 10) : '0' + rng;
+                }
+                paintState->slotKey[sizeof(paintState->slotKey) - 5] = '\0';
+                //memcpy(paintState->slotKey + sizeof(paintState->slotKey) - 5, ".mfp", 5);
+                break;
+            }
+        }
+
         // Set up a blank canvas with the default size
         paintState->canvas.w = PAINT_DEFAULT_CANVAS_WIDTH;
         paintState->canvas.h = PAINT_DEFAULT_CANVAS_HEIGHT;
@@ -646,6 +673,8 @@ void paintPositionDrawCanvas(void)
                            + (TFT_HEIGHT - paintState->marginTop - paintState->marginBottom
                               - paintState->canvas.h * paintState->canvas.yScale)
                                  / 2;
+
+    PAINT_LOGI("Scaled image to %" PRIu8, scale);
 }
 
 void paintDrawScreenMainLoop(int64_t elapsedUs)
@@ -681,28 +710,34 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     }
 
     // Save and Load
-    if (paintState->doSave || paintState->doLoad)
+    if (*paintState->selectedSlotKey && (paintState->doSave || paintState->doLoad))
     {
+        paintExitSelectMode();
+
         if (paintState->doSave)
         {
             hideCursor(getCursor(), &paintState->canvas);
             paintHidePickPoints();
-            paintSave(&paintState->index, &paintState->canvas, paintState->selectedSlot);
+
+            paintSaveNamed(paintState->selectedSlotKey, &paintState->canvas);
+            //paintSave(&paintState->index, &paintState->canvas, paintState->selectedSlot);
+
             paintDrawPickPoints();
             showCursor(getCursor(), &paintState->canvas);
         }
         else
         {
-            if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
+            if (paintSlotExists(paintState->selectedSlotKey))
             {
                 // Load from the selected slot if it's been used
                 hideCursor(getCursor(), &paintState->canvas);
                 paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
-                if (paintLoadDimensions(&paintState->canvas, paintState->selectedSlot))
+                if (paintLoadDimensionsNamed(paintState->selectedSlotKey, &paintState->canvas))
                 {
                     paintPositionDrawCanvas();
-                    paintLoad(&paintState->index, &paintState->canvas, paintState->selectedSlot);
-                    paintSetRecentSlot(&paintState->index, paintState->selectedSlot);
+                    paintLoadNamed(paintState->selectedSlotKey, &paintState->canvas);
+                    paintSetLastSlot(paintState->selectedSlotKey);
+                    strncpy(paintState->slotKey, paintState->selectedSlotKey, sizeof(paintState->slotKey));
 
                     paintFreeUndos();
 
@@ -720,9 +755,9 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    PAINT_LOGE("Slot %" PRIu8 " has 0 dimension! Stopping load and clearing slot",
-                               paintState->selectedSlot);
-                    paintClearSlot(&paintState->index, paintState->selectedSlot);
+                    PAINT_LOGE("Slot %s has 0 dimension! Stopping load and clearing slot",
+                               paintState->selectedSlotKey);
+                    //paintClearSlot(&paintState->index, paintState->selectedSlot);
                     paintReturnToMainMenu();
                 }
             }
@@ -1263,7 +1298,14 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
 
     if (paintState->showBrowser)
     {
-        imageBrowserButton(&paintState->browser, evt);
+        if (evt->down && evt->button == PB_B)
+        {
+            paintState->showBrowser = false;
+        }
+        else
+        {
+            imageBrowserButton(&paintState->browser, evt);
+        }
     }
     else if (paintState->showDialogBox)
     {
@@ -1802,9 +1844,13 @@ void paintSetupTool(void)
             }
 
             setCursorSprite(getCursor(), &paintState->canvas, &paintState->cursorWsg);
+
             // Center the cursor, accounting for even and odd cursor sizes
-            setCursorOffset(getCursor(), -(paintState->cursorWsg.w / 2) + getArtist()->brushWidth % 2,
-                            -(paintState->cursorWsg.h / 2) + getArtist()->brushWidth % 2);
+            setCursorOffset(
+                getCursor(),
+                -((paintState->cursorWsg.w) / 2) + getArtist()->brushWidth % 2 * paintState->canvas.xScale / 2,
+                -((paintState->cursorWsg.h) / 2) + getArtist()->brushWidth % 2 * paintState->canvas.yScale / 2
+            );
             break;
         }
 
@@ -2099,12 +2145,13 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         }
         else if (toolWheelSaveStr == label)
         {
-            if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
+            if (paintSlotExists(paintState->slotKey))
             {
                 paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
             }
             else
             {
+                strncpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
                 paintState->doSave = true;
                 paintExitSelectMode();
             }
@@ -2117,7 +2164,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             }
             else
             {
-                paintSetupBrowser();
+                paintSetupBrowser(false);
             }
         }
         else if (toolWheelNewStr == label)
@@ -2293,7 +2340,7 @@ static void paintDialogCb(const char* label)
     else if (dialogOptionSaveStr == label)
     {
         // TODO switch to named slots
-        if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
+        if (paintSlotExists(paintState->slotKey))
         {
             paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
         }
@@ -2305,8 +2352,7 @@ static void paintDialogCb(const char* label)
     }
     else if (dialogOptionSaveAsStr == label)
     {
-        // TODO - use named slots, open a file picker /
-        paintSetupBrowser();
+        paintSetupBrowser(true);
     }
     else if (dialogOptionExitStr == label)
     {
@@ -2326,7 +2372,7 @@ static void paintDialogCb(const char* label)
 
             case DIALOG_CONFIRM_UNSAVED_LOAD:
             {
-                paintSetupBrowser();
+                paintSetupBrowser(false);
                 break;
             }
 
@@ -2339,6 +2385,7 @@ static void paintDialogCb(const char* label)
             case DIALOG_CONFIRM_OVERWRITE:
             {
                 paintState->doSave = true;
+                strncpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
                 paintExitSelectMode();
                 break;
             }
@@ -2353,26 +2400,43 @@ static void paintDialogCb(const char* label)
     }
 }
 
-static void paintSetupBrowser(void)
+static void paintSetupBrowser(bool save)
 {
     static bool done = false;
 
     if (!done)
     {
-        bool res = saveWsgNvs("storage", "pnt_tmp", &paintState->wheelColorWsg);
-        PAINT_LOGI("res: %s", res ? "true" : "false");
-        saveWsgNvs("storage", "pnt_tmp2", &paintState->wheelSettingsWsg);
+        saveWsgNvs("paint_img", "color.mfp", &paintState->wheelColorWsg);
+        writeNamespaceNvsBlob("paint_pal", "color.mfp", paintState->canvas.palette, sizeof(paintState->canvas.palette));
+
+        //PAINT_LOGI("res: %s", res ? "true" : "false");
+        saveWsgNvs("paint_img", "settings.mfp", &paintState->wheelSettingsWsg);
+        writeNamespaceNvsBlob("paint_pal", "settings.mfp", paintState->canvas.palette, sizeof(paintState->canvas.palette));
+
+        saveWsgNvs("paint_img", "arrow.mfp", &paintState->bigArrowWsg);
+        writeNamespaceNvsBlob("paint_pal", "arrow.mfp", paintState->canvas.palette, sizeof(paintState->canvas.palette));
         done = true;
     }
 
     resetImageBrowser(&paintState->browser);
-    setupImageBrowser(&paintState->browser, "storage", "pnt");
+    setupImageBrowser(&paintState->browser, "paint_img", NULL);
     paintState->showDialogBox = false;
-    paintState->showToolWheel = false;
     paintState->showBrowser = true;
+    paintState->browserSave = save;
 }
 
 static void paintBrowserCb(const char* nvsKey)
 {
     PAINT_LOGI("Selected %s", nvsKey);
+    strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
+    PAINT_LOGI("selectedSlotKey is %s", paintState->selectedSlotKey);
+
+    if (paintState->browserSave)
+    {
+        paintState->doSave = true;
+    }
+    else
+    {
+        paintState->doLoad = true;
+    }
 }

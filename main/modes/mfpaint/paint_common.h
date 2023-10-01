@@ -275,13 +275,16 @@ typedef struct
     // Whether to perform a save or load on the next loop
     bool doSave, doLoad;
 
+    // The name of the currently opened slot
+    char slotKey[17];
+
     //// Save Menu Flags
 
     // The save slot selected for PICK_SLOT_SAVE and PICK_SLOT_LOAD
     uint8_t selectedSlot;
 
     // The save/load slot selected from the picker
-    const char* selectedSlotKey;
+    char selectedSlotKey[17];
 
     //////// Rendering flags
 
@@ -382,6 +385,8 @@ typedef struct
 
     //////// File Browser
     bool showBrowser;
+
+    bool browserSave;
 
     imageBrowser_t browser;
 } paintDraw_t;

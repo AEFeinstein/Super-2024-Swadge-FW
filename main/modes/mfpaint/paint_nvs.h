@@ -44,6 +44,14 @@ size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset,
 bool paintSave(int32_t* index, const paintCanvas_t* canvas, uint8_t slot);
 bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot);
 bool paintLoadDimensions(paintCanvas_t* canvas, uint8_t slot);
+
+bool paintSaveNamed(const char* name, const paintCanvas_t* canvas);
+bool paintLoadNamed(const char* name, paintCanvas_t* canvas);
+bool paintLoadDimensionsNamed(const char* name, paintCanvas_t* canvas);
+bool paintSlotExists(const char* name);
+bool paintGetLastSlot(char* out);
+void paintSetLastSlot(const char* name);
+
 uint8_t paintGetPrevSlotInUse(int32_t index, uint8_t slot);
 uint8_t paintGetNextSlotInUse(int32_t index, uint8_t slot);
 void paintDeleteSlot(int32_t* index, uint8_t slot);

@@ -6,6 +6,7 @@
 #include <inttypes.h>
 
 #include "settingsManager.h"
+#include "esp_heap_caps.h"
 #include "hdw-nvs.h"
 #include "macros.h"
 
@@ -13,6 +14,9 @@
 #include "paint_draw.h"
 #include "paint_ui.h"
 #include "paint_util.h"
+
+#define PAINT_NS_DATA "paint_img"
+#define PAINT_NS_PALETTE "paint_pal"
 
 #define PAINT_PARAM(m, x, k, d) \
     static const settingParam_t paint##k##Param = {.min = m, .max = x, .def = d, .key = "mfp." #k}
@@ -25,6 +29,7 @@ static const char KEY_PAINT_INDEX[]        = "pnt_idx";
 static const char KEY_PAINT_SLOT_PALETTE[] = "paint_%02" PRIu8 "_pal";
 static const char KEY_PAINT_SLOT_DIM[]     = "paint_%02" PRIu8 "_dim";
 static const char KEY_PAINT_SLOT_CHUNK[]   = "paint_%02" PRIu8 "c%05" PRIu32;
+static const char KEY_PAINT_LAST_SLOT[]    = "paint_last";
 
 /*static const settingParam_t paintOldIndex = {
     .min = INT32_MIN,
@@ -295,7 +300,7 @@ bool paintDeserialize(paintCanvas_t* dest, const uint8_t* data, size_t offset, s
 
 size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset, size_t count)
 {
-    uint8_t paletteIndex[cTransparent + 1];
+    uint8_t paletteIndex[cTransparent + 1] = {};
 
     // Build the reverse-palette map
     for (uint16_t i = 0; i < PAINT_MAX_COLORS; i++)
@@ -537,6 +542,103 @@ bool paintLoadDimensions(paintCanvas_t* canvas, uint8_t slot)
     }
 
     return true;
+}
+
+bool paintSaveNamed(const char* name, const paintCanvas_t* canvas)
+{
+    wsg_t tmpWsg;
+    tmpWsg.px = heap_caps_malloc(sizeof(paletteColor_t) * canvas->w * canvas->h, MALLOC_CAP_SPIRAM);
+    tmpWsg.w = canvas->w;
+    tmpWsg.h = canvas->h;
+
+    // Read pixels from the screen into the temp WSG
+    for (uint16_t r = 0; r < canvas->h; ++r)
+    {
+        for (uint16_t c = 0; c < canvas->w; ++c)
+        {
+            tmpWsg.px[r * canvas->w + c] = getPxTft(canvas->x + c * canvas->xScale, canvas->y + r * canvas->yScale);
+        }
+    }
+
+    bool result = saveWsgNvs(PAINT_NS_DATA, name, &tmpWsg);
+    free(tmpWsg.px);
+
+    return result && writeNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, sizeof(canvas->palette));
+}
+
+bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
+{
+    wsg_t tmpWsg;
+    bool result = loadWsgNvs(PAINT_NS_DATA, name, &tmpWsg, true);
+
+    if (result)
+    {
+        canvas->w = tmpWsg.w;
+        canvas->h = tmpWsg.h;
+
+        for (uint16_t y = 0; y < canvas->h; ++y)
+        {
+            for (uint16_t x = 0; x < canvas->w; ++x)
+            {
+                setPxScaled(x, y, cTransparent == tmpWsg.px[y * canvas->w + x] ? c555 : tmpWsg.px[y * canvas->w + x], canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+            }
+        }
+
+        // Canvas is now kind of optional at this point
+        size_t length = PAINT_MAX_COLORS;
+        if (!readNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, &length))
+        {
+            PAINT_LOGW("No palette found for image %s, that's weird right?", name);
+        }
+    }
+
+    free(tmpWsg.px);
+
+    return result;
+}
+
+bool paintLoadDimensionsNamed(const char* name, paintCanvas_t* canvas)
+{
+    // We have to load the whole image, mehhhh
+    wsg_t tmpWsg;
+    bool result = loadWsgNvs(PAINT_NS_DATA, name, &tmpWsg, true);
+
+    if (result)
+    {
+        canvas->w = tmpWsg.w;
+        canvas->h = tmpWsg.h;
+
+        free(tmpWsg.px);
+
+        return true;
+    }
+
+    return false;
+}
+
+bool paintSlotExists(const char* name)
+{
+    size_t blobSize;
+    return readNamespaceNvsBlob(PAINT_NS_DATA, name, NULL, &blobSize);
+}
+
+bool paintGetLastSlot(char* out)
+{
+    size_t len;
+    if (readNvsBlob(KEY_PAINT_LAST_SLOT, NULL, &len))
+    {
+        if (len <= 17)
+        {
+            return readNvsBlob(KEY_PAINT_LAST_SLOT, out, &len);
+        }
+    }
+
+    return false;
+}
+
+void paintSetLastSlot(const char* name)
+{
+    writeNvsBlob(KEY_PAINT_LAST_SLOT, name, strlen(name) + 1);
 }
 
 uint8_t paintGetPrevSlotInUse(int32_t index, uint8_t slot)
