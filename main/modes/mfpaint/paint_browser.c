@@ -62,7 +62,7 @@ static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t*
 void setupImageBrowser(imageBrowser_t* browser, const char* namespace, const char* prefix)
 {
     size_t numInfos = 0;
-    readAllNvsEntryInfos(NULL, NULL, &numInfos);
+    readNamespaceNvsEntryInfos(namespace, NULL, NULL, &numInfos);
     ESP_LOGI("Paint", "%" PRIu64 " NVS entries", (uint64_t)numInfos);
 
     nvs_entry_info_t imageInfos[numInfos] = {};

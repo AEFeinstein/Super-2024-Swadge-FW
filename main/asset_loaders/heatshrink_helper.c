@@ -92,7 +92,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
     size_t sz;
 
     // Get full size
-    readNvsBlob(key, NULL, &sz);
+    readNamespaceNvsBlob(namespace, key, NULL, &sz);
 
     ESP_LOGI("Heatshrink", "Compressed size is %" PRIu64, (uint64_t)sz);
 
@@ -102,7 +102,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
         return NULL;
     }
 
-    if (!readNvsBlob(key, buf, &sz))
+    if (!readNamespaceNvsBlob(namespace, key, buf, &sz))
     {
         free(buf);
         return NULL;

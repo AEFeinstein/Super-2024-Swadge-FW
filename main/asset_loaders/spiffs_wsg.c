@@ -261,7 +261,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
 
     ESP_LOGI("WSG", "Compressed size is %" PRIu32, outputIdx);
 
-    writeNvsBlob(key, output, outputIdx);
+    writeNamespaceNvsBlob(namespace, key, output, outputIdx);
 
     heatshrink_encoder_free(hse);
     return true;

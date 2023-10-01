@@ -792,7 +792,8 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
                                     break;
                                 }
                             }
-                            snprintf((&((*outEntryInfos)[i]))->namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s", namespace);
+                            snprintf((&((*outEntryInfos)[i]))->namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s",
+                                    namespace);
                             snprintf((&((*outEntryInfos)[i]))->key, NVS_KEY_NAME_MAX_SIZE, "%s", current_key);
                         }
                         i++;
