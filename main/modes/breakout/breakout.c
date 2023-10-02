@@ -1,7 +1,7 @@
 /**
  * @file breakout.c
  * @author J.Vega (JVeg199X)
- * @brief It's Galactic Breakdown.
+ * @brief It's Galactic Brickdown.
  * @date 2023-07-01
  *
  */
@@ -166,7 +166,7 @@ static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
  * Lengths are not explicitly given so the compiler can figure it out.
  */
 
-static const char breakoutName[] = "Galactic Breakdown";
+static const char breakoutName[] = "Galactic Brickdown";
 
 static const char breakoutNewGame[] = "New Game";
 static const char breakoutContinue[] = "Continue - Lv";
@@ -189,6 +189,7 @@ swadgeMode_t breakoutMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = breakoutEnterMode,
     .fnExitMode               = breakoutExitMode,
     .fnMainLoop               = breakoutMainLoop,
@@ -367,7 +368,8 @@ static void breakoutDrawReadyScreen(font_t *logbook, font_t *ibm_vga8, gameData_
 
 static void breakoutChangeStateGame(breakout_t *self){
     self->gameData.frameCount = 0;
-    self->gameData.playerBombsCount = 0;
+    self->gameData.playerTimeBombsCount = 0;
+    self->gameData.playerRemoteBombPlaced = false;
     deactivateAllEntities(&(self->entityManager), false, true);
     self->tilemap.executeTileSpawnAll = true;
     self->update = &breakoutGameLoop;

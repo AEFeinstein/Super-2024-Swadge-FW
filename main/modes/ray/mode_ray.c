@@ -43,6 +43,7 @@ swadgeMode_t rayMode = {
     .overrideUsb              = true, // Not actually doing anything, just don't init USB
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = rayEnterMode,
     .fnExitMode               = rayExitMode,
     .fnMainLoop               = rayMainLoop,

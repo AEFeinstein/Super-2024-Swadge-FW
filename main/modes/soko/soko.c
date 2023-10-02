@@ -28,6 +28,7 @@ swadgeMode_t sokoMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = sokoEnterMode,
     .fnExitMode               = sokoExitMode,
     .fnMainLoop               = sokoMainLoop,

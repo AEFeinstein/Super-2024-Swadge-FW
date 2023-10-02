@@ -41,7 +41,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
     loadFont("ibm_vga8.font", &lumv->ibm, false);
 
-    bzrStop(); // Stop the buzzer?
+    bzrStop(true); // Stop the buzzer?
 
     lumv->worldTimer           = 0;
     lumv->liquidAnimationFrame = 0;

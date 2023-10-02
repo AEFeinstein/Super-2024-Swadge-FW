@@ -26,7 +26,7 @@
  * // Play the song as background music
  * bzrPlayBgm(&ode_to_joy, BZR_STEREO);
  * // Free the song when done
- * bzrStop();
+ * bzrStop(true);
  * freeSong(&ode_to_joy);
  * \endcode
  */

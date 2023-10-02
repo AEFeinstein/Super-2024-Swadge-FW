@@ -59,7 +59,7 @@
  * ...
  *
  * // Free the song when done
- * bzrStop();
+ * bzrStop(true);
  * freeSong(&ode_to_joy);
  * \endcode
  */
@@ -263,8 +263,10 @@ void bzrSetBgmVolume(uint16_t vol);
 void bzrSetSfxVolume(uint16_t vol);
 void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track);
 void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track);
-void bzrStop(void);
+void bzrStop(bool resetTracks);
 void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume);
 void bzrStopNote(buzzerPlayTrack_t track);
+void bzrPause(void);
+void bzrResume(void);
 
 #endif

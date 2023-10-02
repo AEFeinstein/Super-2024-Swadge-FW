@@ -179,6 +179,7 @@ swadgeMode_t marblesMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = marblesEnterMode,
     .fnExitMode               = marblesExitMode,
     .fnMainLoop               = marblesMainLoop,
