@@ -5,6 +5,8 @@
 // Includes
 //==============================================================================
 #include <stdint.h>
+#include <stdbool.h>
+#include "palette.h"
 
 //==============================================================================
 // Defines
@@ -19,19 +21,20 @@ typedef struct {
     int16_t y;
     int16_t z;
 
-    uint8_t color;
+    paletteColor_t color;
 } star_t;
 
 typedef struct 
 {
-    star_t stars[NUM_STARS]
+    star_t stars[NUM_STARS];
+    bool randomColors;
 } starfield_t;
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
-void initializeStarfield(starfield_t *self);
-void updateStarfield(starfield_t *self);
+void initializeStarfield(starfield_t *self, bool randomColors);
+void updateStarfield(starfield_t *self, int32_t scale);
 int randomInt(int lowerBound, int upperBound);
 void drawStarfield(starfield_t *self);
 
