@@ -20,8 +20,8 @@
  */
 void drawWarpBackground(int16_t x, int16_t y, int16_t w, int16_t h)
 {
-    // TODO draw solid color for now
-    fillDisplayArea(x, y, x + w, y + h, c111);
+    // Draw black screen
+    fillDisplayArea(x, y, x + w, y + h, c000);
 }
 
 /**
@@ -32,8 +32,14 @@ void drawWarpBackground(int16_t x, int16_t y, int16_t w, int16_t h)
  */
 void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
 {
-    // TODO draw some text for now
-    drawText(&ray->ibm, c555, "Warping", 40, 40);
+    // Draw the starfield
+    updateStarfield(&ray->starfield, 32);
+    drawStarfield(&ray->starfield);
+
+    // Draw text over the starfield
+    // TODO use map destination name
+    int16_t tWidth = textWidth(&ray->logbook, "Warping");
+    drawText(&ray->logbook, c555, "Warping", (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
 
     // Decrement the timer
     ray->warpTimerUs -= elapsedUs;
@@ -73,6 +79,9 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
  */
 void warpToDestination(ray_t* ray)
 {
+    // Initialize the starfield
+    initializeStarfield(&ray->starfield, true);
+
     // Free the scripts
     rayFreeCurrentState(ray);
 

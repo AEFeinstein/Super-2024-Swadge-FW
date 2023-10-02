@@ -7,6 +7,7 @@
 
 #include "swadge2024.h"
 #include "fp_math.h"
+#include "starfield.h"
 
 //==============================================================================
 // Defines
@@ -496,6 +497,8 @@ typedef struct
     list_t scripts[NUM_IF_OP_TYPES]; ///< An array of lists of scripts
     uint32_t scriptTimer;            ///< A microsecond timer to check for time based scripts
     uint32_t secondsSinceStart;      ///< The number of seconds since this map was loaded
+
+    starfield_t starfield; ///< Starfield used for warp animation
 } ray_t;
 
 //==============================================================================
