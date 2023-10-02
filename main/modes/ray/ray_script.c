@@ -427,7 +427,6 @@ bool checkScriptShootObjs(ray_t* ray, int32_t id, wsg_t* portrait)
 
 /**
  * @brief Check scripts when an enemy is killed
- * TODO call from somewhere
  *
  * @param ray The entire game state
  * @param id The ID of the dead enemy

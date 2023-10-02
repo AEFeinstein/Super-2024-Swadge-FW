@@ -9,6 +9,7 @@
 #include "ray_player.h"
 #include "ray_dialog.h"
 #include "ray_script.h"
+#include "ray_enemy.h"
 
 //==============================================================================
 // Function Prototypes
@@ -16,9 +17,6 @@
 
 static bool objectsIntersect(const rayObjCommon_t* obj1, const rayObjCommon_t* obj2);
 static void moveRayBullets(ray_t* ray, int32_t elapsedUs);
-static void moveRayEnemies(ray_t* ray, int32_t elapsedUs);
-static void moveEnemyRook(ray_t* ray, rayEnemy_t* enemy, q24_8 pPosX, q24_8 pPosY, int32_t elapsedUs);
-static void animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -126,7 +124,7 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
 void moveRayObjects(ray_t* ray, int32_t elapsedUs)
 {
     moveRayBullets(ray, elapsedUs);
-    moveRayEnemies(ray, elapsedUs);
+    rayEnemiesMoveAnimate(ray, elapsedUs);
 }
 
 /**
@@ -206,151 +204,6 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                         obj->c.id = -1;
                     }
                 }
-            }
-        }
-    }
-}
-
-/**
- * @brief Move all enemies
- *
- * @param ray The entire game state
- * @param elapsedUs The elapsed time since this function was last called
- */
-static void moveRayEnemies(ray_t* ray, int32_t elapsedUs)
-{
-    // Iterate over the linked list
-    node_t* currentNode = ray->enemies.first;
-    while (currentNode != NULL)
-    {
-        // Get a pointer from the linked list
-        rayEnemy_t* obj = ((rayEnemy_t*)currentNode->val);
-
-        // Move enemies
-        moveEnemyRook(ray, obj, ray->posX, ray->posY, elapsedUs);
-        // Also animate enemies as they move
-        animateEnemy(obj, elapsedUs);
-
-        // Iterate to the next node
-        currentNode = currentNode->next;
-    }
-}
-
-/**
- * @brief Simple movement function which has the enemy walk towards the player on the X and Y axes only
- *
- * @param ray The entire game state
- * @param enemy The enemy to move
- * @param pPosX The X position of the player
- * @param pPosY The Y position of the player
- * @param elapsedUs The elapsed time since this function was last called
- */
-static void moveEnemyRook(ray_t* ray, rayEnemy_t* enemy, q24_8 pPosX, q24_8 pPosY, int32_t elapsedUs)
-{
-    q24_8 delX = SUB_FX(pPosX, enemy->c.posX); // positive if the player is to the right
-    q24_8 delY = SUB_FX(pPosY, enemy->c.posY); // positive if the player is above
-
-    q24_8 sqrDist = ADD_FX(MUL_FX(delX, delX), MUL_FX(delY, delY));
-    if (sqrDist > TO_FX(2))
-    {
-        if (ABS(delX) > ABS(delY))
-        {
-            q24_8 mDelX = 0;
-            if (delX > 0)
-            {
-                // Move rightward
-                // TODO scale with elapsedUs
-                mDelX = TO_FX_FRAC(1, 12);
-            }
-            else
-            {
-                // Move leftward
-                // TODO scale with elapsedUs
-                mDelX = -TO_FX_FRAC(1, 12);
-            }
-
-            // Bounds check
-            if (isPassableCell(&ray->map.tiles[FROM_FX(enemy->c.posX + mDelX)][FROM_FX(enemy->c.posY)]))
-            {
-                enemy->c.posX += mDelX;
-            }
-        }
-        else
-        {
-            q24_8 mDelY = 0;
-            if (delY > 0)
-            {
-                // Move up
-                // TODO scale with elapsedUs
-                mDelY = TO_FX_FRAC(1, 12);
-            }
-            else
-            {
-                // Move down
-                // TODO scale with elapsedUs
-                mDelY = -TO_FX_FRAC(1, 12);
-            }
-
-            // Bounds check
-            if (isPassableCell(&ray->map.tiles[FROM_FX(enemy->c.posX)][FROM_FX(enemy->c.posY + mDelY)]))
-            {
-                enemy->c.posY += mDelY;
-            }
-        }
-    }
-}
-
-/**
- * @brief Animate a single enemy
- *
- * @param enemy The enemy to animate
- * @param elapsedUs The elapsed time since this function was last called
- */
-static void animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs)
-{
-    // Accumulate time
-    enemy->animTimer += elapsedUs;
-    // Check if it's time to transition states
-    if (enemy->animTimer >= enemy->animTimerLimit)
-    {
-        // Decrement timer
-        enemy->animTimer -= enemy->animTimerLimit;
-
-        // Move to next frame
-        if (E_WALKING == enemy->state)
-        {
-            // TODO decide when to transition to shooting
-
-            // Walking has double the number of frames and cycles
-            enemy->animTimerFrame = (enemy->animTimerFrame + 1) % NUM_WALK_FRAMES;
-
-            // Pick the sprite accordingly, and mirror the back half
-            enemy->c.sprite         = enemy->walkSprites[enemy->animTimerFrame % NUM_NON_WALK_FRAMES];
-            enemy->c.spriteMirrored = (enemy->animTimerFrame >= NUM_NON_WALK_FRAMES);
-        }
-        else
-        {
-            // Move to the next frame
-            enemy->animTimerFrame++;
-
-            // If the sequence is over
-            if (enemy->animTimerFrame >= NUM_NON_WALK_FRAMES)
-            {
-                // Return to walking
-                enemy->state          = E_WALKING;
-                enemy->animTimerFrame = 0;
-                enemy->c.sprite       = enemy->walkSprites[0];
-            }
-            else if (E_SHOOTING == enemy->state)
-            {
-                // Pick the next shooting sprite
-                enemy->c.sprite = enemy->shootSprites[enemy->animTimerFrame];
-                // TODO spawn a bullet on the Nth frame
-            }
-            else // Must be E_HURT
-            {
-                // Pick the next hurt sprite
-                enemy->c.sprite = enemy->hurtSprites[enemy->animTimerFrame];
             }
         }
     }
@@ -449,6 +302,8 @@ void checkRayCollisions(ray_t* ray)
     {
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
+        // Used for iterating
+        bool enemyWasKilled = false;
 
         // Iterate through all bullets
         for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
@@ -459,15 +314,38 @@ void checkRayCollisions(ray_t* ray)
                 // A player's bullet
                 if (objectsIntersect(&enemy->c, &bullet->c))
                 {
-                    // TODO enemy got shot, apply damage
                     // De-allocate the bullet
                     bullet->c.id = -1;
+
+                    // Enemy got shot, apply damage
+                    if (rayEnemyGetShot(ray, enemy, bullet->c.type))
+                    {
+                        // Enemy was killed
+                        checkScriptKill(ray, enemy->c.id, enemy->walkSprites[0]);
+
+                        // save the next node
+                        node_t* nextNode = currentNode->next;
+
+                        // Unlink and free
+                        removeEntry(&ray->enemies, currentNode);
+                        free(enemy);
+
+                        // Set the next node
+                        currentNode    = nextNode;
+                        enemyWasKilled = true;
+
+                        break;
+                    }
                 }
             }
         }
 
-        // Iterate to the next node
-        currentNode = currentNode->next;
+        // If the enemy was killed, iteration already happened
+        if (!enemyWasKilled)
+        {
+            // Iterate to the next node
+            currentNode = currentNode->next;
+        }
     }
 
     // Check if a bullet or the player touches scenery
