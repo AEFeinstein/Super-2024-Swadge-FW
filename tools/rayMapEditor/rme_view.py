@@ -413,7 +413,7 @@ class view:
                         outline='DeepPink', width=lineWidth, dash=dashPattern))
 
             # Get all object references and also highlight them DeepPink
-            for id in self.m.scripts[scriptNum].getThenCells():
+            for id in self.m.scripts[scriptNum].getThenIds():
                 for y in range(self.m.getMapHeight()):
                     for x in range(self.m.getMapWidth()):
                         if (id == self.m.tileMap[x][y].objectId):

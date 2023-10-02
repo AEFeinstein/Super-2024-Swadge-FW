@@ -530,6 +530,9 @@ class rme_script:
                 allCells.append(cell)
         if kCell in self.thenArgs.keys():
             allCells.append(self.thenArgs[kCell])
+        if kSpawns in self.thenArgs.keys():
+            for spawn in self.thenArgs[kSpawns]:
+                allCells.append([spawn.x, spawn.y])
         return allCells
 
     def getThenIds(self) -> list[int]:
