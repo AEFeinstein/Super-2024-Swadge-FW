@@ -88,48 +88,12 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                     // Allocate a new object
                     if ((type & 0x60) == ENEMY)
                     {
-                        // Allocate the enemy
-                        rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
-
-                        // Copy enemy data from the template (sprite indices, type)
-                        memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
-
-                        // Set ID
-                        newObj->c.id = id;
-
-                        // Set spatial values
-                        newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-                        newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                        newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
-
-                        // Add it to the linked list
-                        push(&ray->enemies, newObj);
+                        rayCreateEnemy(ray, type, id, x, y);
                     }
                     else
                     {
                         // TODO check for persistent health & missile upgrades in the inventory before spawning
-                        rayObjCommon_t* newObj
-                            = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
-
-                        // Set type, sprite and ID
-                        newObj->type   = type;
-                        newObj->sprite = getTexByType(ray, type);
-                        newObj->id     = id;
-
-                        // Set spatial values
-                        newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-                        newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                        newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
-
-                        // Add it to the linked list
-                        if ((type & 0x60) == ITEM)
-                        {
-                            push(&ray->items, newObj);
-                        }
-                        else
-                        {
-                            push(&ray->scenery, newObj);
-                        }
+                        rayCreateCommonObj(ray, type, id, x, y);
                     }
                 }
             }
@@ -141,6 +105,69 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
 
     // Free the file data
     free(fileData);
+}
+
+/**
+ * @brief Create an enemy
+ *
+ * @param ray The entire game state
+ * @param type The type of enemy to spawn
+ * @param id The ID for this enemy
+ * @param x The X cell position for this enemy
+ * @param y The Y cell position for this enemy
+ */
+void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y)
+{
+    // Allocate the enemy
+    rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
+
+    // Copy enemy data from the template (sprite indices, type)
+    memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
+
+    // Set ID
+    newObj->c.id = id;
+
+    // Set spatial values
+    newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+    newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+    newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
+
+    // Add it to the linked list
+    push(&ray->enemies, newObj);
+}
+
+/**
+ * @brief Create an object, either scenery or item
+ *
+ * @param ray The entire game state
+ * @param type The type of object to spawn
+ * @param id The ID for this object
+ * @param x The X cell position for this object
+ * @param y The Y cell position for this object
+ */
+void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y)
+{
+    rayObjCommon_t* newObj = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
+
+    // Set type, sprite and ID
+    newObj->type   = type;
+    newObj->sprite = getTexByType(ray, type);
+    newObj->id     = id;
+
+    // Set spatial values
+    newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+    newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+    newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
+
+    // Add it to the linked list
+    if ((type & 0x60) == ITEM)
+    {
+        push(&ray->items, newObj);
+    }
+    else
+    {
+        push(&ray->scenery, newObj);
+    }
 }
 
 /**

@@ -712,7 +712,95 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case SPAWN:
         {
-            // TODO create objects
+            // Create objects
+            for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
+            {
+                // Get the type
+                rayMapCellType_t type = script->thenArgs.spawnList.spawns[sIdx].type;
+                int32_t id            = script->thenArgs.spawnList.spawns[sIdx].id;
+                int32_t x             = script->thenArgs.spawnList.spawns[sIdx].pos.x;
+                int32_t y             = script->thenArgs.spawnList.spawns[sIdx].pos.y;
+
+                // Create based on the type
+                if (ENEMY == (type & 0x60))
+                {
+                    bool enemyExists = false;
+
+                    // Iterate over all nodes to check if this enemy already exists
+                    node_t* currentNode = ray->enemies.first;
+                    while (currentNode != NULL)
+                    {
+                        // If the ID matches
+                        if (id == ((rayEnemy_t*)currentNode->val)->c.id)
+                        {
+                            enemyExists = true;
+                            break;
+                        }
+                        else
+                        {
+                            // Iterate to the next
+                            currentNode = currentNode->next;
+                        }
+                    }
+
+                    if (!enemyExists)
+                    {
+                        rayCreateEnemy(ray, type, id, x, y);
+                    }
+                }
+                else if (ITEM == (type & 0x60))
+                {
+                    bool itemExists = false;
+
+                    // Iterate over all nodes to check if this enemy already exists
+                    node_t* currentNode = ray->items.first;
+                    while (currentNode != NULL)
+                    {
+                        // If the ID matches
+                        if (id == ((rayObjCommon_t*)currentNode->val)->id)
+                        {
+                            itemExists = true;
+                            break;
+                        }
+                        else
+                        {
+                            // Iterate to the next
+                            currentNode = currentNode->next;
+                        }
+                    }
+
+                    if (!itemExists)
+                    {
+                        rayCreateCommonObj(ray, type, id, x, y);
+                    }
+                }
+                else if (SCENERY == (type & 0x60))
+                {
+                    bool sceneryExists = false;
+
+                    // Iterate over all nodes to check if this enemy already exists
+                    node_t* currentNode = ray->scenery.first;
+                    while (currentNode != NULL)
+                    {
+                        // If the ID matches
+                        if (id == ((rayObjCommon_t*)currentNode->val)->id)
+                        {
+                            sceneryExists = true;
+                            break;
+                        }
+                        else
+                        {
+                            // Iterate to the next
+                            currentNode = currentNode->next;
+                        }
+                    }
+
+                    if (!sceneryExists)
+                    {
+                        rayCreateCommonObj(ray, type, id, x, y);
+                    }
+                }
+            }
             break;
         }
         case DESPAWN:

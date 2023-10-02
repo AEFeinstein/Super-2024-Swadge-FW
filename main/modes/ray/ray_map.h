@@ -7,5 +7,7 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam);
 void freeRayMap(rayMap_t* map);
 bool isPassableCell(rayMapCell_t* cell);
 void markTileVisited(rayMap_t* map, int16_t x, int16_t y);
+void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y);
+void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y);
 
 #endif
