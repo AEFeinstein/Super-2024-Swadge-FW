@@ -91,11 +91,11 @@ static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH] = {
       2,         -1,        55,
       1,         -1,        59,
       1,         -1,        63,
-      1,         20,        67,
+      1,         30,        67,
       1,         40,        71,
-      1,         60,        75,
-      1,         80,        79,
-      1,         100,       80
+      1,         50,        75,
+      1,         60,        79,
+      1,         70,        80
 };
 
 //==============================================================================
@@ -350,6 +350,10 @@ void updateBall(entity_t *self)
         }
 
         self->spriteFlipHorizontal = (self->xspeed >= 0) ? false : true;
+
+        if(self->gameData->frameCount % 2 == 0) {
+            createEntity(self->entityManager, ENTITY_BALL_TRAIL, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+        }
     }
 
     if(self->y > 3840 || self->x > 4480) {
@@ -448,6 +452,21 @@ void updateExplosion(entity_t * self){
 
     if(self->spriteIndex > SP_EXPLOSION_3){
         destroyEntity(self, false);
+    }
+}
+
+void updateBallTrail(entity_t * self){
+    self->animationTimer--;
+    if(self->animationTimer < 1){
+        if(self->visible){
+            self->spriteIndex++;
+            if(self->spriteIndex > SP_BALL_TRAIL_3){
+                destroyEntity(self, false);
+            }
+        } else {
+            self->visible = true;
+        }
+        self->animationTimer = 2;
     }
 }
 

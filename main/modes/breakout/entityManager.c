@@ -168,6 +168,38 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_EXPLOSION_3].collisionBox.x1 = 39;
     entityManager->sprites[SP_EXPLOSION_3].collisionBox.y0 = 0;
     entityManager->sprites[SP_EXPLOSION_3].collisionBox.y1 = 39;
+
+    loadWsg("ballTrail000.wsg", &entityManager->sprites[SP_BALL_TRAIL_0].wsg, false);
+    entityManager->sprites[SP_BALL_TRAIL_0].originX=4;
+    entityManager->sprites[SP_BALL_TRAIL_0].originY=4;
+    entityManager->sprites[SP_BALL_TRAIL_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_0].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_TRAIL_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_0].collisionBox.y1 = 7;
+
+    loadWsg("ballTrail001.wsg", &entityManager->sprites[SP_BALL_TRAIL_1].wsg, false);
+    entityManager->sprites[SP_BALL_TRAIL_1].originX=4;
+    entityManager->sprites[SP_BALL_TRAIL_1].originY=4;
+    entityManager->sprites[SP_BALL_TRAIL_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_1].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_TRAIL_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_1].collisionBox.y1 = 7;
+
+    loadWsg("ballTrail002.wsg", &entityManager->sprites[SP_BALL_TRAIL_2].wsg, false);
+    entityManager->sprites[SP_BALL_TRAIL_2].originX=4;
+    entityManager->sprites[SP_BALL_TRAIL_2].originY=4;
+    entityManager->sprites[SP_BALL_TRAIL_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_2].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_TRAIL_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_2].collisionBox.y1 = 7;
+
+    loadWsg("ballTrail003.wsg", &entityManager->sprites[SP_BALL_TRAIL_3].wsg, false);
+    entityManager->sprites[SP_BALL_TRAIL_3].originX=4;
+    entityManager->sprites[SP_BALL_TRAIL_3].originY=4;
+    entityManager->sprites[SP_BALL_TRAIL_3].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_3].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_TRAIL_3].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_TRAIL_3].collisionBox.y1 = 7;
 };
 
 void updateEntities(entityManager_t * entityManager)
@@ -287,6 +319,9 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
             break;
         case ENTITY_PLAYER_REMOTE_BOMB:
             createdEntity = createRemoteBomb(entityManager, x, y);
+            break;
+        case ENTITY_BALL_TRAIL:
+            createdEntity = createBallTrail(entityManager, x, y);
             break;
         default:
             createdEntity = NULL;
@@ -538,6 +573,40 @@ entity_t* createRemoteBomb(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->type = ENTITY_PLAYER_REMOTE_BOMB;
     entity->spriteIndex = SP_BOMB_0;
     entity->updateFunction = &updateRemoteBomb;
+    entity->collisionHandler = &dummyCollisionHandler;
+    entity->tileCollisionHandler = &dummyTileCollisionHandler;
+    entity->overlapTileHandler = &defaultOverlapTileHandler;
+
+    //Entity cannot be respawned from the tilemap
+    entity->homeTileX = 0;
+    entity->homeTileY = 0;
+
+    return entity;
+}
+
+entity_t* createBallTrail(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = false;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+    
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical = false;
+    entity->spriteRotateAngle = 0;
+    entity->animationTimer = 4;
+
+    entity->type = ENTITY_BALL_TRAIL;
+    entity->spriteIndex = SP_BALL_TRAIL_0;
+    entity->updateFunction = &updateBallTrail;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;

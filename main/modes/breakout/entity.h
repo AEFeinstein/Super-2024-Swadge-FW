@@ -36,7 +36,8 @@ typedef enum {
     ENTITY_PLAYER_BALL,
     ENTITY_PLAYER_TIME_BOMB,
     ENTITY_PLAYER_BOMB_EXPLOSION,
-    ENTITY_PLAYER_REMOTE_BOMB
+    ENTITY_PLAYER_REMOTE_BOMB,
+    ENTITY_BALL_TRAIL
 } entityIndex_t;
 
 //==============================================================================
@@ -112,6 +113,7 @@ void updateTimeBomb(entity_t * self);
 void updateRemoteBomb(entity_t * self);
 void explodeBomb(entity_t* self);
 void updateExplosion(entity_t * self);
+void updateBallTrail(entity_t * self);
 
 void moveEntityWithTileCollisions(entity_t * self);
 

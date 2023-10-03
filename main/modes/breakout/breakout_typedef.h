@@ -45,7 +45,11 @@ typedef enum {
     SP_EXPLOSION_0,
     SP_EXPLOSION_1,
     SP_EXPLOSION_2,
-    SP_EXPLOSION_3
+    SP_EXPLOSION_3,
+    SP_BALL_TRAIL_0,
+    SP_BALL_TRAIL_1,
+    SP_BALL_TRAIL_2,
+    SP_BALL_TRAIL_3
 } spriteDef_t;
 
 #endif

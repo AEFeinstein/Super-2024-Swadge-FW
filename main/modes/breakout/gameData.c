@@ -80,7 +80,7 @@ void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData){
         return;
     }
 
-    uint8_t hp = entityManager->playerEntity->hp;
+    uint8_t hp = 0; //entityManager->playerEntity->hp;
     if(hp > 3){
         hp = 3;
     }
