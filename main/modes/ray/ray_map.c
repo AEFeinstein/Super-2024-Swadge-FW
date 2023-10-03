@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <esp_log.h>
 #include <esp_heap_caps.h>
 
 #include "hdw-spiffs.h"
@@ -39,7 +38,7 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
     rayMap_t* map = &ray->map;
 
     // First char of the map name is the numeric ID
-    ray->mapId = name[0] - '0';
+    ray->p.mapId = name[0] - '0';
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;
@@ -79,8 +78,8 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                 if (type == OBJ_ENEMY_START_POINT)
                 {
                     // Save the starting coordinates
-                    ray->posX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
-                    ray->posY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
+                    ray->p.posX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
+                    ray->p.posY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
                 }
                 // If it's an object
                 else if ((type & OBJ) == OBJ)

@@ -332,7 +332,7 @@ static void rayStartGame(void)
     initializePlayer(ray, true);
 
     // Mark the starting tile as visited
-    markTileVisited(&ray->map, FROM_FX(ray->posX), FROM_FX(ray->posY));
+    markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 
     // Set the initial screen
     ray->screen = RAY_GAME;

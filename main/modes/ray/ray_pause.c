@@ -166,14 +166,14 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
     if (ray->pauseBlink)
     {
         // Draw a circle for the player
-        int16_t cX = cellOffX + FROM_FX(cellSize * ray->posX);
-        int16_t cY = cellOffY + FROM_FX(cellSize * ray->posY);
+        int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);
+        int16_t cY = cellOffY + FROM_FX(cellSize * ray->p.posY);
         int16_t cR = cellSize / 2;
         drawCircle(cX, cY, cR, c145);
 
         // Draw a line for the player's direction
-        int16_t lineEndX = cX + FROM_FX(cR * ray->dirX);
-        int16_t lineEndY = cY + FROM_FX(cR * ray->dirY);
+        int16_t lineEndX = cX + FROM_FX(cR * ray->p.dirX);
+        int16_t lineEndY = cY + FROM_FX(cR * ray->p.dirY);
         drawLine(cX, cY, lineEndX, lineEndY, c552, 0);
     }
 

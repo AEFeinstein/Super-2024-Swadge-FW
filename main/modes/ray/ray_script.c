@@ -846,11 +846,11 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case WARP:
         {
-            if (ray->mapId == script->thenArgs.warpDest.mapId)
+            if (ray->p.mapId == script->thenArgs.warpDest.mapId)
             {
                 // Warp within the map
-                ray->posX = ADD_FX(TO_FX(script->thenArgs.warpDest.pos.x), TO_FX_FRAC(1, 2));
-                ray->posY = ADD_FX(TO_FX(script->thenArgs.warpDest.pos.y), TO_FX_FRAC(1, 2));
+                ray->p.posX = ADD_FX(TO_FX(script->thenArgs.warpDest.pos.x), TO_FX_FRAC(1, 2));
+                ray->p.posY = ADD_FX(TO_FX(script->thenArgs.warpDest.pos.y), TO_FX_FRAC(1, 2));
             }
             else
             {

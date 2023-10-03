@@ -135,6 +135,9 @@ void moveRayObjects(ray_t* ray, int32_t elapsedUs)
  */
 static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
 {
+    // For convenience
+    int32_t rayMapId = ray->p.mapId;
+
     // For each bullet slot
     for (uint32_t i = 0; i < MAX_RAY_BULLETS; i++)
     {
@@ -177,9 +180,9 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                         || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
                         || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)
                         || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type)
-                        || (BG_DOOR_KEY_A == cell->type && ray->inventory.keys[ray->mapId][0])
-                        || (BG_DOOR_KEY_B == cell->type && ray->inventory.keys[ray->mapId][1])
-                        || (BG_DOOR_KEY_C == cell->type && ray->inventory.keys[ray->mapId][2]))
+                        || (BG_DOOR_KEY_A == cell->type && ray->p.i.keys[rayMapId][0])
+                        || (BG_DOOR_KEY_B == cell->type && ray->p.i.keys[rayMapId][1])
+                        || (BG_DOOR_KEY_C == cell->type && ray->p.i.keys[rayMapId][2]))
                     {
                         // Start opening the door
                         cell->openingDirection = 1;
@@ -193,7 +196,7 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                             (BG_DOOR_KEY_C == cell->type))
                         {
                             // Use the key
-                            ray->inventory.keys[ray->mapId][cell->type - BG_DOOR_KEY_A] = false;
+                            ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = false;
                         }
                     }
                     else
@@ -233,8 +236,8 @@ void checkRayCollisions(ray_t* ray)
 {
     // Create a 'player' for collision comparison
     rayObjCommon_t player = {
-        .posX   = ray->posX,
-        .posY   = ray->posY,
+        .posX   = ray->p.posX,
+        .posY   = ray->p.posY,
         .radius = TO_FX_FRAC(32, 2 * TEX_WIDTH),
     };
 
@@ -266,7 +269,7 @@ void checkRayCollisions(ray_t* ray)
         if (objectsIntersect(&player, item))
         {
             // Touch the item
-            rayPlayerTouchItem(ray, item->type, ray->mapId, item->id);
+            rayPlayerTouchItem(ray, item->type, ray->p.mapId, item->id);
             // Check scripts
             if (checkScriptGet(ray, item->id, item->sprite))
             {

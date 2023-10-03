@@ -92,8 +92,8 @@ void warpToDestination(ray_t* ray)
     loadRayMap(mapName, ray, false);
 
     // Set the player position after the map is loaded
-    ray->posX = ray->warpDestPosX;
-    ray->posY = ray->warpDestPosY;
+    ray->p.posX = ray->warpDestPosX;
+    ray->p.posY = ray->warpDestPosY;
 
     // Initialize player angle
     initializePlayer(ray, false);

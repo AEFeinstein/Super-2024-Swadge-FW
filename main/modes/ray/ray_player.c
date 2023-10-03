@@ -11,6 +11,8 @@
 #include "ray_pause.h"
 #include "ray_script.h"
 
+#define RAY_NVS_KEY "ray"
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -23,38 +25,52 @@
  */
 void initializePlayer(ray_t* ray, bool initialLoad)
 {
-    // ray->posX and ray->posY (position) are set by loadRayMap()
-    // Set the direction
-    ray->dirX = TO_FX(0);
-    ray->dirY = -TO_FX(1);
-    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-    ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
-    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
-    // Set the head-bob to centered
-    ray->posZ = TO_FX(0);
-
-    // Clear any strafes
-    ray->isStrafing  = false;
-    ray->targetedObj = NULL;
-
-    if (initialLoad)
+    size_t len = sizeof(ray->p);
+    if (!readNvsBlob(RAY_NVS_KEY, &ray->p, &len))
     {
-        memset(&ray->inventory, 0, sizeof(ray->inventory));
-        for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
+        // ray->p.posX and ray->p.posY (position) are set by loadRayMap()
+        // Set the direction
+        ray->p.dirX = TO_FX(0);
+        ray->p.dirY = -TO_FX(1);
+        // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+        // Set the head-bob to centered
+        ray->posZ = TO_FX(0);
+
+        // Clear any strafes
+        ray->isStrafing  = false;
+        ray->targetedObj = NULL;
+
+        if (initialLoad)
         {
-            for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
+            memset(&ray->p.i, 0, sizeof(ray->p.i));
+            for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
             {
-                ray->inventory.missilesPickUps[mapIdx][pIdx] = -1;
+                for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
+                {
+                    ray->p.i.missilesPickUps[mapIdx][pIdx] = -1;
+                }
+                for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
+                {
+                    ray->p.i.healthPickUps[mapIdx][pIdx] = -1;
+                }
             }
-            for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
-            {
-                ray->inventory.healthPickUps[mapIdx][pIdx] = -1;
-            }
+            // Set initial health
+            ray->p.i.maxHealth = GAME_START_HEALTH;
+            ray->p.i.health    = GAME_START_HEALTH;
         }
-        // Set initial health
-        ray->inventory.maxHealth = GAME_START_HEALTH;
-        ray->inventory.health    = GAME_START_HEALTH;
     }
+}
+
+/**
+ * @brief Save the entire player state to NVM
+ *
+ * @param ray The entire game state
+ */
+void raySavePlayer(ray_t* ray)
+{
+    writeNvsBlob(RAY_NVS_KEY, &(ray->p), sizeof(ray->p));
 }
 
 /**
@@ -66,6 +82,12 @@ void initializePlayer(ray_t* ray, bool initialLoad)
  */
 void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t elapsedUs)
 {
+    // For convenience
+    q24_8 pPosX = ray->p.posX;
+    q24_8 pPosY = ray->p.posY;
+    q24_8 pDirX = ray->p.dirX;
+    q24_8 pDirY = ray->p.dirY;
+
     // Check all queued button events
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
@@ -117,10 +139,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 // Check ammo for the missile loadout
                 if (LO_MISSILE == ray->loadout)
                 {
-                    if (0 < ray->inventory.numMissiles)
+                    if (0 < ray->p.i.numMissiles)
                     {
                         // Decrement missile count
-                        ray->inventory.numMissiles--;
+                        ray->p.i.numMissiles--;
                         // Fire a missile
                         bullet = OBJ_BULLET_MISSILE;
                     }
@@ -128,7 +150,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 else
                 {
                     // Start charging if applicable
-                    if (LO_NORMAL == ray->loadout && ray->inventory.chargePowerUp)
+                    if (LO_NORMAL == ray->loadout && ray->p.i.chargePowerUp)
                     {
                         // Start charging
                         ray->chargeTimer = 1;
@@ -160,7 +182,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             if (EMPTY != bullet)
             {
                 // Fire a shot
-                rayCreateBullet(ray, bullet, ray->posX, ray->posY, ray->dirX, ray->dirY, true);
+                rayCreateBullet(ray, bullet, pPosX, pPosY, pDirX, pDirY, true);
             }
         }
     }
@@ -173,8 +195,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     }
 
     // If the player is in water without the water suit
-    bool isInWater = (!ray->inventory.waterSuit)
-                     && (BG_FLOOR_WATER == ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY)].type);
+    bool isInWater = (!ray->p.i.waterSuit) && (BG_FLOOR_WATER == ray->map.tiles[FROM_FX(pPosX)][FROM_FX(pPosY)].type);
 
     // Find move distances
     q24_8 deltaX = 0;
@@ -187,15 +208,15 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
         {
             // Strafe right
             // TODO scale with elapsed time
-            deltaX -= (ray->dirY / 6);
-            deltaY += (ray->dirX / 6);
+            deltaX -= (pDirY / 6);
+            deltaY += (pDirX / 6);
         }
         else if (ray->btnState & PB_LEFT)
         {
             // Strafe left
             // TODO scale with elapsed time
-            deltaX += (ray->dirY / 6);
-            deltaY -= (ray->dirX / 6);
+            deltaX += (pDirY / 6);
+            deltaY -= (pDirX / 6);
         }
     }
     else
@@ -223,16 +244,18 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             int32_t sinVal = getSin1024(rotateDeg);
             int32_t cosVal = getCos1024(rotateDeg);
             // Find the rotated X and Y vectors
-            q24_8 newX = (ray->dirX * cosVal) - (ray->dirY * sinVal);
-            q24_8 newY = (ray->dirX * sinVal) + (ray->dirY * cosVal);
-            ray->dirX  = newX;
-            ray->dirY  = newY;
+            q24_8 newX = (pDirX * cosVal) - (pDirY * sinVal);
+            q24_8 newY = (pDirX * sinVal) + (pDirY * cosVal);
             // Normalize the vector
-            fastNormVec(&ray->dirX, &ray->dirY);
+            fastNormVec(&newX, &newY);
 
             // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
-            ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
-            ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
+            ray->planeX = -MUL_FX(TO_FX(2) / 3, newY);
+            ray->planeY = MUL_FX(TO_FX(2) / 3, newX);
+
+            // Save new direction vector
+            ray->p.dirX = newX;
+            ray->p.dirY = newY;
         }
     }
 
@@ -241,16 +264,16 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     {
         // Move forward
         // TODO scale with elapsed time
-        deltaX += (ray->dirX / 6);
-        deltaY += (ray->dirY / 6);
+        deltaX += (pDirX / 6);
+        deltaY += (pDirY / 6);
     }
     // Else if the down button is held
     else if (ray->btnState & PB_DOWN)
     {
         // Move backwards
         // TODO scale with elapsed time
-        deltaX -= (ray->dirX / 6);
-        deltaY -= (ray->dirY / 6);
+        deltaX -= (pDirX / 6);
+        deltaY -= (pDirY / 6);
     }
 
     // TODO normalize deltaX and deltaY to something scaled with elapsed time
@@ -268,23 +291,23 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     q24_8 boundaryCheckY = deltaY * 2;
 
     // Save the old cell to check for crossing cell boundaries
-    int16_t oldCellX = FROM_FX(ray->posX);
-    int16_t oldCellY = FROM_FX(ray->posY);
+    int16_t oldCellX = FROM_FX(pPosX);
+    int16_t oldCellY = FROM_FX(pPosY);
 
     // Move forwards if no wall in front of you
-    if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX + boundaryCheckX)][FROM_FX(ray->posY)]))
+    if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + boundaryCheckX)][FROM_FX(pPosY)]))
     {
-        ray->posX += deltaX;
+        ray->p.posX += deltaX;
     }
 
-    if (isPassableCell(&ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY + boundaryCheckY)]))
+    if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX)][FROM_FX(pPosY + boundaryCheckY)]))
     {
-        ray->posY += deltaY;
+        ray->p.posY += deltaY;
     }
 
     // Get the new cell to check for crossing cell boundaries
-    int16_t newCellX = FROM_FX(ray->posX);
-    int16_t newCellY = FROM_FX(ray->posY);
+    int16_t newCellX = FROM_FX(pPosX);
+    int16_t newCellY = FROM_FX(pPosY);
 
     // If the cell changed
     if (oldCellX != newCellX || oldCellY != newCellY)
@@ -304,13 +327,13 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     if (ray->isStrafing && ray->targetedObj)
     {
         // Re-lock on the target after moving
-        ray->dirX = ray->targetedObj->posX - ray->posX;
-        ray->dirY = ray->targetedObj->posY - ray->posY;
-        fastNormVec(&ray->dirX, &ray->dirY);
+        ray->p.dirX = ray->targetedObj->posX - pPosX;
+        ray->p.dirY = ray->targetedObj->posY - pPosY;
+        fastNormVec(&pDirX, &pDirY);
 
         // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->dirY);
-        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->dirX);
+        ray->planeX = -MUL_FX(TO_FX(2) / 3, pDirY);
+        ray->planeY = MUL_FX(TO_FX(2) / 3, pDirX);
     }
 }
 
@@ -335,19 +358,19 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             {
                 // Get the loadout touched
                 rayLoadout_t nextLoadout = ray->loadout;
-                if ((tj & TB_UP) && (ray->inventory.beamLoadOut))
+                if ((tj & TB_UP) && (ray->p.i.beamLoadOut))
                 {
                     nextLoadout = LO_NORMAL;
                 }
-                else if ((tj & TB_RIGHT) && (ray->inventory.missileLoadOut))
+                else if ((tj & TB_RIGHT) && (ray->p.i.missileLoadOut))
                 {
                     nextLoadout = LO_MISSILE;
                 }
-                else if ((tj & TB_LEFT) && (ray->inventory.iceLoadOut))
+                else if ((tj & TB_LEFT) && (ray->p.i.iceLoadOut))
                 {
                     nextLoadout = LO_ICE;
                 }
-                else if ((tj & TB_DOWN) && (ray->inventory.xrayLoadOut))
+                else if ((tj & TB_DOWN) && (ray->p.i.xrayLoadOut))
                 {
                     nextLoadout = LO_XRAY;
                 }
@@ -409,7 +432,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
  */
 void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_t itemId)
 {
-    rayInventory_t* inventory = &ray->inventory;
+    rayInventory_t* inventory = &ray->p.i;
     switch (type)
     {
         case OBJ_ITEM_BEAM:
@@ -533,7 +556,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         }
         case OBJ_ITEM_PICKUP_MISSILE:
         {
-            if (ray->inventory.missileLoadOut)
+            if (ray->p.i.missileLoadOut)
             {
                 // Transient, add 5 missiles, not going over the max
                 inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
@@ -545,7 +568,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_KEY_C:
         {
             // Pick up a key
-            inventory->keys[ray->mapId][type - OBJ_ITEM_KEY_A] = true;
+            inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = true;
             break;
         }
         default:
@@ -565,17 +588,17 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
 void rayPlayerCheckLava(ray_t* ray, uint32_t elapsedUs)
 {
     //  If the player is in lava without the lava suit
-    if ((!ray->inventory.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->posX)][FROM_FX(ray->posY)].type))
+    if ((!ray->p.i.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type))
     {
         // Run a timer to take lava damage
         ray->lavaTimer += elapsedUs;
         if (ray->lavaTimer <= US_PER_LAVA_DAMAGE)
         {
             ray->lavaTimer -= US_PER_LAVA_DAMAGE;
-            if (ray->inventory.health)
+            if (ray->p.i.health)
             {
-                ray->inventory.health--;
-                if (0 == ray->inventory.health)
+                ray->p.i.health--;
+                if (0 == ray->p.i.health)
                 {
                     // TODO game over
                 }

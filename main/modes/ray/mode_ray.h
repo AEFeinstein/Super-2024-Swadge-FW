@@ -426,6 +426,19 @@ typedef enum
 } rayScreen_t;
 
 /**
+ * @brief A struct with all the player information saved to NVM
+ */
+typedef struct
+{
+    q24_8 posX;       ///< The player's X position
+    q24_8 posY;       ///< The player's Y position
+    q24_8 dirX;       ///< The player's X direction
+    q24_8 dirY;       ///< The player's Y direction
+    int32_t mapId;    ///< The ID of the current map
+    rayInventory_t i; ///< All the players items
+} rayPlayer_t;
+
+/**
  * @brief The entire game state
  *
  */
@@ -437,8 +450,9 @@ typedef struct
     menuLogbookRenderer_t* renderer;
 
     rayMap_t map;      ///< The loaded map
-    int32_t mapId;     ///< The ID of the current map
     int32_t doorTimer; ///< A timer used to open doors
+
+    rayPlayer_t p; ///< All the player's state, loaded from NVM
 
     int32_t warpDestMapId; ///< The ID of the current map
     q24_8 warpDestPosX;    ///< The player's X position
@@ -450,10 +464,6 @@ typedef struct
     list_t scenery;                       ///< A list of all scenery (doesn't move, can be shot)
     list_t items;                         ///< A list of all items (doesn't move, can be shot)
 
-    q24_8 posX;   ///< The player's X position
-    q24_8 posY;   ///< The player's Y position
-    q24_8 dirX;   ///< The player's X direction
-    q24_8 dirY;   ///< The player's Y direction
     q24_8 planeX; ///< The X camera plane, orthogonal to dir vector
     q24_8 planeY; ///< The Y camera plane, orthogonal to dir vector
 
@@ -466,8 +476,6 @@ typedef struct
     uint32_t btnState;           ///< The current button state
     bool isStrafing;             ///< true if the player is strafing, false if not
     rayObjCommon_t* targetedObj; ///< An object that is locked onto to strafe around
-
-    rayInventory_t inventory; ///< All the players items
 
     rayLoadout_t loadout;       ///< The player's current loadout
     rayLoadout_t nextLoadout;   ///< The player's next loadout, if touched
