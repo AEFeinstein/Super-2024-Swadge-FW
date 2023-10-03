@@ -88,7 +88,8 @@ struct entity_t
     bool shouldAdvanceMultiplier;
     int16_t baseSpeed;
     int16_t maxSpeed;
-    uint8_t bouncesToNextSpeedUp;
+    int16_t bouncesToNextSpeedUp;
+    uint8_t speedUpLookupIndex;
     
     entityManager_t *entityManager;
 

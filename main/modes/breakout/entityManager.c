@@ -435,7 +435,8 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->shouldAdvanceMultiplier = false;
     entity->baseSpeed = 39;
     entity->bouncesToNextSpeedUp = 5;
-    entity->maxSpeed = 63;
+    entity->speedUpLookupIndex = 0;
+    entity->maxSpeed = 127;
 
     entity->type = ENTITY_PLAYER_BALL;
     entity->spriteIndex = SP_BALL_0;

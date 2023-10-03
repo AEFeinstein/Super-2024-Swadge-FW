@@ -74,15 +74,21 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
      1,  3
 };
 
-#define BALL_SPEED_INCREASE_TABLE_LENGTH 36
-/*static const int16_t ballSpeedIncreases[36] = {
+#define BALL_SPEED_UP_TABLE_LENGTH 36
+#define BALL_SPEED_UP_TABLE_ROW_LENGTH 3
+
+#define BOUNCE_THRESHOLD_LOOKUP_OFFSET 0
+#define COMBO_THRESHOLD_LOOKUP_OFFSET 1
+#define NEW_SPEED_LOOKUP_OFFSET 2
+
+static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH] = {
     //bounce     combo      new
     //threshold  threshold  speed
       0,         -1,        39,
       5,         -1,        43,
-      1,         -1,        47,
-      1,         -1,        51,
-      1,         -1,        55,
+      4,         -1,        47,
+      3,         -1,        51,
+      2,         -1,        55,
       1,         -1,        59,
       1,         -1,        63,
       1,         20,        67,
@@ -90,7 +96,7 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
       1,         60,        75,
       1,         80,        79,
       1,         100,       80
-}*/
+};
 
 //==============================================================================
 // Functions
@@ -111,6 +117,7 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     self->shouldAdvanceMultiplier = false;
     self->baseSpeed = 0;
     self->bouncesToNextSpeedUp = 5;
+    self->speedUpLookupIndex = 0;
     self->maxSpeed = 63;
 
     // Fields not explicitly initialized
@@ -714,6 +721,13 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
         case ENTITY_PLAYER_BOMB_EXPLOSION:
             advanceBallSpeed(self);
             setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), self->baseSpeed);
+            other->spriteRotateAngle = esp_random() % 359;
+
+            if(self->shouldAdvanceMultiplier){
+                scorePoints(self->gameData, 0, 2 );
+                self->shouldAdvanceMultiplier = false;
+            }
+
             break;
         default:
         {
@@ -723,12 +737,17 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
 }
 
 void advanceBallSpeed(entity_t* self){
+    if(self->speedUpLookupIndex >= BALL_SPEED_UP_TABLE_LENGTH){
+        return;
+    }
+
     self->bouncesToNextSpeedUp--;
-    if(self->bouncesToNextSpeedUp < 1){
-        self->bouncesToNextSpeedUp = 1;
+    if(self->bouncesToNextSpeedUp < 0 && self->gameData->combo > ballSpeedUps[(self->speedUpLookupIndex * BALL_SPEED_UP_TABLE_ROW_LENGTH) + COMBO_THRESHOLD_LOOKUP_OFFSET]){
+        self->speedUpLookupIndex += BALL_SPEED_UP_TABLE_ROW_LENGTH;
 
-        self->baseSpeed += 4;
+        self->bouncesToNextSpeedUp = ballSpeedUps[(self->speedUpLookupIndex * BALL_SPEED_UP_TABLE_ROW_LENGTH) + BOUNCE_THRESHOLD_LOOKUP_OFFSET];
 
+        self->baseSpeed = ballSpeedUps[(self->speedUpLookupIndex * BALL_SPEED_UP_TABLE_ROW_LENGTH) + NEW_SPEED_LOOKUP_OFFSET];
         if(self->baseSpeed > self->maxSpeed){
             self->baseSpeed = self->maxSpeed;
         }
