@@ -104,10 +104,10 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
     uint32_t mapH = ray->map.h;
 
     // rayDir for leftmost ray (x = 0) and rightmost ray (x = w)
-    q24_8 rayDirX0 = SUB_FX(ray->dirX, ray->planeX);
-    q24_8 rayDirY0 = SUB_FX(ray->dirY, ray->planeY);
-    q24_8 rayDirX1 = ADD_FX(ray->dirX, ray->planeX);
-    q24_8 rayDirY1 = ADD_FX(ray->dirY, ray->planeY);
+    q24_8 rayDirX0 = SUB_FX(ray->p.dirX, ray->planeX);
+    q24_8 rayDirY0 = SUB_FX(ray->p.dirY, ray->planeY);
+    q24_8 rayDirX1 = ADD_FX(ray->p.dirX, ray->planeX);
+    q24_8 rayDirY1 = ADD_FX(ray->p.dirY, ray->planeY);
 
     // Loop through each horizontal row
     for (int32_t y = firstRow; y < lastRow; y++)
@@ -164,8 +164,8 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
         q24_8 rowDistance = camZ / p;
 
         // real world coordinates of the leftmost column. This will be updated as we step to the right.
-        q16_16 floorX = ADD_FX(ray->posX, MUL_FX(rowDistance, rayDirX0)) << EX_CEIL_PRECISION_BITS;
-        q16_16 floorY = ADD_FX(ray->posY, MUL_FX(rowDistance, rayDirY0)) << EX_CEIL_PRECISION_BITS;
+        q16_16 floorX = ADD_FX(ray->p.posX, MUL_FX(rowDistance, rayDirX0)) << EX_CEIL_PRECISION_BITS;
+        q16_16 floorY = ADD_FX(ray->p.posY, MUL_FX(rowDistance, rayDirY0)) << EX_CEIL_PRECISION_BITS;
 
         // calculate the real world step vector we have to add for each x (parallel to camera plane)
         // adding step by step avoids multiplications with a weight in the inner loop
@@ -255,17 +255,23 @@ void castWalls(ray_t* ray)
     // Boolean if the colors should be drawn inverted
     bool isXray = (LO_XRAY == ray->loadout);
 
+    // For convenience
+    q24_8 pPosX = ray->p.posX;
+    q24_8 pPosY = ray->p.posY;
+    q24_8 pDirX = ray->p.dirX;
+    q24_8 pDirY = ray->p.dirY;
+
     // For each ray
     for (int32_t x = 0; x < TFT_WIDTH; x++)
     {
         // calculate ray position and direction
         q24_8 cameraX = ((x * TO_FX(2)) / TFT_WIDTH) - TO_FX(1); // x-coordinate in camera space
-        q24_8 rayDirX = ADD_FX(ray->dirX, MUL_FX(ray->planeX, cameraX));
-        q24_8 rayDirY = ADD_FX(ray->dirY, MUL_FX(ray->planeY, cameraX));
+        q24_8 rayDirX = ADD_FX(pDirX, MUL_FX(ray->planeX, cameraX));
+        q24_8 rayDirY = ADD_FX(pDirY, MUL_FX(ray->planeY, cameraX));
 
         // which box of the map we're in
-        int32_t mapX = FROM_FX(ray->posX);
-        int32_t mapY = FROM_FX(ray->posY);
+        int32_t mapX = FROM_FX(pPosX);
+        int32_t mapY = FROM_FX(pPosY);
 
         // length of ray from one x or y-side to next x or y-side
         // these are derived as:
@@ -273,7 +279,7 @@ void castWalls(ray_t* ray)
         // deltaDistY = sqrt(1 + (rayDirX * rayDirX) / (rayDirY * rayDirY))
         // which can be simplified to abs(|rayDir| / rayDirX) and abs(|rayDir| / rayDirY)
         // where |rayDir| is the length of the vector (rayDirX, rayDirY). Its length,
-        // unlike (ray->dirX, ray->dirY) is not 1, however this does not matter, only the
+        // unlike (pDirX, pDirY) is not 1, however this does not matter, only the
         // ratio between deltaDistX and deltaDistY matters, due to the way the DDA
         // stepping further below works. So the values can be computed as below.
         // Division through zero is prevented
@@ -292,24 +298,24 @@ void castWalls(ray_t* ray)
         if (rayDirX < 0)
         {
             stepX     = -1;
-            sideDistX = MUL_FX(SUB_FX(ray->posX, TO_FX(mapX)), deltaDistX);
+            sideDistX = MUL_FX(SUB_FX(pPosX, TO_FX(mapX)), deltaDistX);
         }
         else if (rayDirX > 0)
         {
             stepX     = 1;
-            sideDistX = MUL_FX(SUB_FX(TO_FX(mapX + 1), ray->posX), deltaDistX);
+            sideDistX = MUL_FX(SUB_FX(TO_FX(mapX + 1), pPosX), deltaDistX);
         }
 
         // calculate step and initial sideDist (y)
         if (rayDirY < 0)
         {
             stepY     = -1;
-            sideDistY = MUL_FX(SUB_FX(ray->posY, TO_FX(mapY)), deltaDistY);
+            sideDistY = MUL_FX(SUB_FX(pPosY, TO_FX(mapY)), deltaDistY);
         }
         else if (rayDirY > 0)
         {
             stepY     = 1;
-            sideDistY = MUL_FX(SUB_FX(TO_FX(mapY + 1), ray->posY), deltaDistY);
+            sideDistY = MUL_FX(SUB_FX(TO_FX(mapY + 1), pPosY), deltaDistY);
         }
 
         bool hit  = false; // was there a wall hit?
@@ -365,8 +371,8 @@ void castWalls(ray_t* ray)
                 if (drawRecessedDoor)
                 {
                     // Check if the ray actually intersects the recessed door
-                    if (rayIntersectsDoor(side, mapX, mapY, ray->posX, ray->posY, rayDirX, rayDirY, deltaDistX,
-                                          deltaDistY, ray->map.tiles[mapX][mapY].doorOpen))
+                    if (rayIntersectsDoor(side, mapX, mapY, pPosX, pPosY, rayDirX, rayDirY, deltaDistX, deltaDistY,
+                                          ray->map.tiles[mapX][mapY].doorOpen))
                     {
                         // Add a half step to these values to recess the door
                         sideDistX = ADD_FX(sideDistX, deltaDistX / 2);
@@ -381,7 +387,7 @@ void castWalls(ray_t* ray)
 
                 // Calculate distance projected on camera direction. This is the shortest distance from the point
                 // where the wall is hit to the camera plane. Euclidean to center camera point would give fisheye
-                // effect! This can be computed as (mapX - ray->posX + (1 - stepX) / 2) / rayDirX for side == 0, or
+                // effect! This can be computed as (mapX - pPosX + (1 - stepX) / 2) / rayDirX for side == 0, or
                 // same formula with Y for size == 1, but can be simplified to the code below thanks to how sideDist
                 // and deltaDist are computed: because they were left scaled to |rayDir|. sideDist is the entire
                 // length of the ray above after the multiple steps, but we subtract deltaDist once because one step
@@ -418,6 +424,12 @@ void castWalls(ray_t* ray)
                     drawEnd   = (TFT_HEIGHT + lineHeight) / 2 + (ray->posZ / perpWallDist);
                 }
 
+                // This would cause a divide by zero later
+                if (0 == lineHeight)
+                {
+                    continue;
+                }
+
                 // Sometimes textures wraparound b/c the math for wallX comes out to be like
                 // 19.003 -> 0
                 // 19.000 -> 0
@@ -426,11 +438,11 @@ void castWalls(ray_t* ray)
                 // calculate value of wallX
                 if (false == side)
                 {
-                    wallX = ADD_FX(ray->posY, MUL_FX(perpWallDist, rayDirY));
+                    wallX = ADD_FX(pPosY, MUL_FX(perpWallDist, rayDirY));
                 }
                 else
                 {
-                    wallX = ADD_FX(ray->posX, MUL_FX(perpWallDist, rayDirX));
+                    wallX = ADD_FX(pPosX, MUL_FX(perpWallDist, rayDirX));
                 }
                 wallX = SUB_FX(wallX, FLOOR_FX(wallX));
 
@@ -663,8 +675,10 @@ rayObjCommon_t* castSprites(ray_t* ray)
     int32_t allObjsIdx = 0;
 
     // For convenience
-    q24_8 rayPosX = ray->posX;
-    q24_8 rayPosY = ray->posY;
+    q24_8 rayPosX = ray->p.posX;
+    q24_8 rayPosY = ray->p.posY;
+    q24_8 rayDirX = ray->p.dirX;
+    q24_8 rayDirY = ray->p.dirY;
 
     // Assign each bullet a distance from the player
     for (int i = 0; i < MAX_RAY_BULLETS; i++)
@@ -753,8 +767,8 @@ rayObjCommon_t* castSprites(ray_t* ray)
             uint32_t tHeight = obj->sprite->h;
 
             // translate sprite position to relative to camera
-            q24_8 spriteX = SUB_FX(obj->posX, ray->posX);
-            q24_8 spriteY = SUB_FX(obj->posY, ray->posY);
+            q24_8 spriteX = SUB_FX(obj->posX, rayPosX);
+            q24_8 spriteY = SUB_FX(obj->posY, rayPosY);
 
             // transform sprite with the inverse camera matrix
             //  [ planeX   dirX ] -1                                       [ dirY      -dirX ]
@@ -762,7 +776,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
             //  [ planeY   dirY ]                                          [ -planeY  planeX ]
 
             // required for correct matrix multiplication
-            q24_8 invDetDivisor = SUB_FX(MUL_FX(ray->planeX, ray->dirY), MUL_FX(ray->dirX, ray->planeY));
+            q24_8 invDetDivisor = SUB_FX(MUL_FX(ray->planeX, rayDirY), MUL_FX(rayDirX, ray->planeY));
 
             // this is actually the depth inside the screen, that what Z is in 3D
             q24_8 transformY
@@ -776,7 +790,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
             }
 
             // Do all the X math first to see if its on screen, then do Y math??
-            q24_8 transformX = DIV_FX(SUB_FX(MUL_FX(ray->dirY, spriteX), MUL_FX(ray->dirX, spriteY)), invDetDivisor);
+            q24_8 transformX = DIV_FX(SUB_FX(MUL_FX(rayDirY, spriteX), MUL_FX(rayDirX, spriteY)), invDetDivisor);
 
             // The center of the sprite in screen space
             //  The division here takes the number from q24_8 to int32_t
@@ -940,22 +954,34 @@ void drawHud(ray_t* ray)
     }
 
     // If the player has missiles
-    if (ray->inventory.missileLoadOut)
+    if (ray->p.i.missileLoadOut)
     {
         // Draw a count of missiles
         char missileStr[16] = {0};
-        snprintf(missileStr, sizeof(missileStr) - 1, "%03" PRId32 "/%03" PRId32, ray->inventory.numMissiles,
-                 ray->inventory.maxNumMissiles);
-        drawText(&ray->ibm, c555, missileStr, 64, TFT_HEIGHT - ray->ibm.height);
+        snprintf(missileStr, sizeof(missileStr) - 1, "M:%02" PRId32 "/%02" PRId32, ray->p.i.numMissiles,
+                 ray->p.i.maxNumMissiles);
+        drawText(&ray->ibm, c555, missileStr, 40, TFT_HEIGHT - ray->ibm.height);
     }
+
+    // Draw a count of Keys
+    char keyStr[16] = "K:";
+    for (int16_t kIdx = 0; kIdx < NUM_KEYS; kIdx++)
+    {
+        if (ray->p.i.keys[ray->p.mapId][kIdx])
+        {
+            char thisKeyStr[] = {'0' + kIdx, 0};
+            strcat(keyStr, thisKeyStr);
+        }
+    }
+    drawText(&ray->ibm, c555, keyStr, 100, TFT_HEIGHT - ray->ibm.height);
 
 #define BAR_END_MARGIN  40
 #define BAR_SIDE_MARGIN 8
 #define BAR_WIDTH       8
     // Find the width of the entire health bar
-    int32_t maxHealthWidth = (ray->inventory.maxHealth * (TFT_WIDTH - (BAR_END_MARGIN * 2))) / MAX_HEALTH_EVER;
+    int32_t maxHealthWidth = (ray->p.i.maxHealth * (TFT_WIDTH - (BAR_END_MARGIN * 2))) / MAX_HEALTH_EVER;
     // Find the width of the filled part of the health bar
-    int32_t currHealthWidth = (ray->inventory.health * (TFT_WIDTH - (BAR_END_MARGIN * 2))) / MAX_HEALTH_EVER;
+    int32_t currHealthWidth = (ray->p.i.health * (TFT_WIDTH - (BAR_END_MARGIN * 2))) / MAX_HEALTH_EVER;
     // Draw a health bar
     fillDisplayArea(BAR_END_MARGIN,                   //
                     BAR_SIDE_MARGIN,                  //
@@ -984,11 +1010,11 @@ void drawHud(ray_t* ray)
 
     // Draw side bars according to suit colors
     paletteColor_t sideBarColor = c432;
-    if (ray->inventory.waterSuit)
+    if (ray->p.i.waterSuit)
     {
         sideBarColor = c223;
     }
-    else if (ray->inventory.lavaSuit)
+    else if (ray->p.i.lavaSuit)
     {
         sideBarColor = c510;
     }
@@ -1039,6 +1065,7 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
 
     // Run a timer to open and close doors
     ray->doorTimer += elapsedUs;
+    // Tick every 5ms
     while (ray->doorTimer >= 5000)
     {
         ray->doorTimer -= 5000;
@@ -1047,9 +1074,64 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
         {
             for (int32_t x = 0; x < ray->map.w; x++)
             {
-                if (ray->map.tiles[x][y].doorOpen > 0 && ray->map.tiles[x][y].doorOpen < TO_FX(1))
+                // Get a reference to this cell
+                rayMapCell_t* cell = &(ray->map.tiles[x][y]);
+
+                // If the timer to start closing the door is running
+                if (0 < cell->closeTimer)
                 {
-                    ray->map.tiles[x][y].doorOpen++;
+                    // Decrement it
+                    cell->closeTimer--;
+                    // If it expired
+                    if (0 == cell->closeTimer)
+                    {
+                        // When this elapses, start closing the door
+                        cell->openingDirection = -1;
+                    }
+                }
+
+                // If the door is opening
+                if (0 < cell->openingDirection)
+                {
+                    // And it isn't fully open
+                    if (cell->doorOpen < TO_FX(1))
+                    {
+                        // Open a little more
+                        cell->doorOpen++;
+                    }
+                    else
+                    {
+                        // Door is fully open
+                        cell->openingDirection = 0;
+                        // If the door is not a key or script door
+                        if ((BG_DOOR_KEY_A != cell->type) && //
+                            (BG_DOOR_KEY_B != cell->type) && //
+                            (BG_DOOR_KEY_C != cell->type) && //
+                            (BG_DOOR_SCRIPT != cell->type))
+                        {
+                            // Start a timer to close the door
+                            // 5s in units of 5ms (each tick of this timer)
+                            cell->closeTimer = 1000;
+                        }
+                    }
+                }
+                // Else if the door is closing
+                else if (0 > cell->openingDirection)
+                {
+                    // Make sure not to close on the player
+                    if (x != FROM_FX(ray->p.posX) || y != FROM_FX(ray->p.posY))
+                    {
+                        // Close it a little more
+                        if (cell->doorOpen > 0)
+                        {
+                            cell->doorOpen--;
+                        }
+                        else
+                        {
+                            // Door is fully closed
+                            cell->openingDirection = 0;
+                        }
+                    }
                 }
             }
         }

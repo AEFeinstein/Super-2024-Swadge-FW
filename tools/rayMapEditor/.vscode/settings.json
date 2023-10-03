@@ -17,5 +17,8 @@
         "padx",
         "pady",
         "rowspan"
-    ]
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    }
 }

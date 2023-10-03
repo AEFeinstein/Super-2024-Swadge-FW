@@ -228,7 +228,7 @@ static void breakoutEnterMode(void)
     initializeTileMap(&(breakout->tilemap));
     initializeSoundManager(&(breakout->soundManager));
     initializeEntityManager(&(breakout->entityManager), &(breakout->tilemap), &(breakout->gameData), &(breakout->soundManager));
-    initializeStarfield(&(breakout->starfield));
+    initializeStarfield(&(breakout->starfield), false);
 
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
@@ -395,7 +395,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
     breakoutDetectGameStateChange(self);
     updateEntities(&(self->entityManager));
 
-    updateStarfield(&(self->starfield));
+    updateStarfield(&(self->starfield), 5);
 
     // Draw the field
     drawStarfield(&(self->starfield));
@@ -492,7 +492,7 @@ void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs){
     updateLedsInGame(&(self->gameData));
     updateEntities(&(self->entityManager));
 
-    updateStarfield(&(self->starfield));
+    updateStarfield(&(self->starfield), 5);
     drawStarfield(&(self->starfield));
     
     drawTileMap(&(self->tilemap));

@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include <esp_log.h>
 #include <esp_heap_caps.h>
 
 #include "hdw-spiffs.h"
@@ -15,6 +14,7 @@
 #include "ray_map.h"
 #include "ray_tex_manager.h"
 #include "ray_renderer.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Functions
@@ -37,6 +37,9 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
     // Convenience pointers
     rayMap_t* map = &ray->map;
 
+    // First char of the map name is the numeric ID
+    ray->p.mapId = name[0] - '0';
+
     // Read and decompress the file
     uint32_t decompressedSize = 0;
     uint8_t* fileData         = readHeatshrinkFile(name, &decompressedSize, spiRam);
@@ -52,6 +55,9 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
     {
         map->tiles[x] = (rayMapCell_t*)heap_caps_calloc(map->h, sizeof(rayMapCell_t), caps);
     }
+
+    // Allocate space to track what tiles have been visited
+    map->visitedTiles = (bool*)heap_caps_calloc(map->w * map->h, sizeof(bool), caps);
 
     // Read tile data
     for (uint32_t y = 0; y < map->h; y++)
@@ -72,8 +78,8 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                 if (type == OBJ_ENEMY_START_POINT)
                 {
                     // Save the starting coordinates
-                    ray->posX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
-                    ray->posY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
+                    ray->p.posX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
+                    ray->p.posY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
                 }
                 // If it's an object
                 else if ((type & OBJ) == OBJ)
@@ -81,58 +87,86 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                     // Allocate a new object
                     if ((type & 0x60) == ENEMY)
                     {
-                        // Allocate the enemy
-                        rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
-
-                        // Copy enemy data from the template (sprite indices, type)
-                        memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
-
-                        // Set ID
-                        newObj->c.id = id;
-
-                        // Set spatial values
-                        newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-                        newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                        newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
-
-                        // Add it to the linked list
-                        push(&ray->enemies, newObj);
+                        rayCreateEnemy(ray, type, id, x, y);
                     }
                     else
                     {
                         // TODO check for persistent health & missile upgrades in the inventory before spawning
-                        rayObjCommon_t* newObj
-                            = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
-
-                        // Set type, sprite and ID
-                        newObj->type   = type;
-                        newObj->sprite = getTexByType(ray, type);
-                        newObj->id     = id;
-
-                        // Set spatial values
-                        newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-                        newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-                        newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
-
-                        // Add it to the linked list
-                        if ((type & 0x60) == ITEM)
-                        {
-                            push(&ray->items, newObj);
-                        }
-                        else
-                        {
-                            push(&ray->scenery, newObj);
-                        }
+                        rayCreateCommonObj(ray, type, id, x, y);
                     }
                 }
             }
         }
     }
 
-    // TODO load rules!!
+    // Load Scripts
+    loadScripts(ray, &fileData[fileIdx], decompressedSize - fileIdx, caps);
 
     // Free the file data
     free(fileData);
+}
+
+/**
+ * @brief Create an enemy
+ *
+ * @param ray The entire game state
+ * @param type The type of enemy to spawn
+ * @param id The ID for this enemy
+ * @param x The X cell position for this enemy
+ * @param y The Y cell position for this enemy
+ */
+void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y)
+{
+    // Allocate the enemy
+    rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
+
+    // Copy enemy data from the template (sprite indices, type)
+    memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
+
+    // Set ID
+    newObj->c.id = id;
+
+    // Set spatial values
+    newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+    newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+    newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
+
+    // Add it to the linked list
+    push(&ray->enemies, newObj);
+}
+
+/**
+ * @brief Create an object, either scenery or item
+ *
+ * @param ray The entire game state
+ * @param type The type of object to spawn
+ * @param id The ID for this object
+ * @param x The X cell position for this object
+ * @param y The Y cell position for this object
+ */
+void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y)
+{
+    rayObjCommon_t* newObj = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
+
+    // Set type, sprite and ID
+    newObj->type   = type;
+    newObj->sprite = getTexByType(ray, type);
+    newObj->id     = id;
+
+    // Set spatial values
+    newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
+    newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+    newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
+
+    // Add it to the linked list
+    if ((type & 0x60) == ITEM)
+    {
+        push(&ray->items, newObj);
+    }
+    else
+    {
+        push(&ray->scenery, newObj);
+    }
 }
 
 /**
@@ -149,6 +183,8 @@ void freeRayMap(rayMap_t* map)
     }
     // Free the pointers
     free(map->tiles);
+    // Free visited tiles too
+    free(map->visitedTiles);
 }
 
 /**
@@ -173,5 +209,32 @@ bool isPassableCell(rayMapCell_t* cell)
     {
         // Always pass through everything else
         return true;
+    }
+}
+
+/**
+ * @brief Mark a tile, and surrounding tiles, as visited on the map.
+ * Visited tiles are drawn in the pause menu
+ *
+ * @param map The map to mark tiles visited for
+ * @param x The X coordinate of the tile that was visited
+ * @param y The Y coordinate of the tile that was visited
+ */
+void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
+{
+    // Find in-bounds loop indices
+    int16_t minX = MAX(0, x - 1);
+    int16_t maxX = MIN(map->w - 1, x + 1);
+    int16_t minY = MAX(0, y - 1);
+    int16_t maxY = MIN(map->h - 1, y + 1);
+
+    // For a 3x3 grid (inbounds)
+    for (int16_t yIdx = minY; yIdx <= maxY; yIdx++)
+    {
+        for (int16_t xIdx = minX; xIdx <= maxX; xIdx++)
+        {
+            // Mark these cells as visited
+            map->visitedTiles[(yIdx * map->w) + xIdx] = true;
+        }
     }
 }

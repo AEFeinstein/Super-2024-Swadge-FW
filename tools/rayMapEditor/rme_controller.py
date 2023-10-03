@@ -18,11 +18,14 @@ class controller:
             self.m.setSelectedTileType(type, x, y)
 
     def leftClickMap(self, x, y):
+        type = self.m.getSelectedTileType()
+        if None == type:
+            return
         self.isMapLeftClicked = True
-        if self.m.getSelectedTileType() in bgTiles:
-            self.m.setMapTileBg(x, y, self.m.selectedTileType)
-        elif self.m.getSelectedTileType() in objTiles:
-            self.m.setMapTileObj(x, y, self.m.selectedTileType)
+        if (type.value & OBJ) == OBJ or tileType.DELETE == type:
+            self.m.setMapTileObj(x, y, type)
+        else:
+            self.m.setMapTileBg(x, y, type)
 
     def releaseClick(self):
         self.isMapLeftClicked = False

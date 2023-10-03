@@ -9,15 +9,41 @@ import os
 from collections.abc import Mapping
 
 from rme_tiles import *
-from rme_script_editor import rme_scriptSplitter
-from rme_script_editor import rme_script
 
-NUM_PALETTE_ROWS = 11
+
+class CustomText(tk.Text):
+    '''
+    This class is a tk.Text which can also report when the cursor moves
+    '''
+
+    def __init__(self, *args, **kwargs):
+        tk.Text.__init__(self, *args, **kwargs)
+
+        # create a proxy for the underlying widget
+        self._orig = self._w + "_orig"
+        self.tk.call("rename", self._w, self._orig)
+        self.tk.createcommand(self._w, self._proxy)
+
+    def _proxy(self, *args):
+        cmd = (self._orig,) + args
+        try:
+            result = self.tk.call(cmd)
+
+            # generate an event if something was added or deleted,
+            # or the cursor position changed
+            if (args[0] in ("insert", "delete") or
+                    args[0:3] == ("mark", "set", "insert")):
+                self.event_generate("<<CursorChange>>", when="tail")
+
+            return result
+        except:
+            pass
+
+
 class view:
 
     def __init__(self):
 
-        self.splitter: rme_scriptSplitter = rme_scriptSplitter()
         self.currentFilePath: str = None
 
         self.paletteCellSize: int = 64
@@ -31,6 +57,8 @@ class view:
 
         self.highlightRect: int = -1
         self.paletteHighlightRect: int = -1
+
+        self.scriptRects = []
 
         frameBgColor: str = '#181818'
         elemBgColor: str = '#1F1F1F'
@@ -73,23 +101,25 @@ class view:
 
         # Set up the canvasses
         self.paletteCanvas: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 3, height=self.paletteCellSize * 8,
+            content, background=elemBgColor, width=self.paletteCellSize * 4, height=self.paletteCellSize * 8,
             highlightthickness=borderThickness, highlightbackground=borderColor)
         self.mapCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
 
         # Set up the text
-        self.cellMetaData: tk.Text = tk.Text(content, width=10, state="disabled",
-                                             undo=True, autoseparators=True, maxundo=-1,
-                                             background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
-                                             highlightthickness=borderThickness, highlightbackground=borderColor,
-                                             highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
+        self.cellMetaData: CustomText = CustomText(content, width=10, state="disabled",
+                                                   undo=True, autoseparators=True, maxundo=-1,
+                                                   background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
+                                                   highlightthickness=borderThickness, highlightbackground=borderColor,
+                                                   highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
 
-        self.scriptTextEntry: tk.Text = tk.Text(content, height=10,
-                                                undo=True, autoseparators=True, maxundo=-1,
-                                                background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
-                                                highlightthickness=borderThickness, highlightbackground=borderColor,
-                                                highlightcolor=borderHighlightColor, borderwidth=0, bd=0)
+        self.scriptTextEntry: CustomText = CustomText(content, height=10,
+                                                      undo=True, autoseparators=True, maxundo=-1,
+                                                      background=elemBgColor, foreground=fontColor, insertbackground=fontColor, font=fontStyle,
+                                                      highlightthickness=borderThickness, highlightbackground=borderColor,
+                                                      highlightcolor=borderHighlightColor, borderwidth=0, bd=0, wrap='none')
+        self.scriptTextEntry.bind(
+            "<<CursorChange>>", self.scriptTextCursorChange)
 
         # Configure the main frame
         content.grid(column=0, row=0, sticky=(tk.NSEW))
@@ -161,48 +191,97 @@ class view:
         self.texMapPalette: Mapping[tileType, ImageTk.PhotoImage] = {}
         self.texMapMap: Mapping[tileType, ImageTk.PhotoImage] = {}
 
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR, '../../assets/ray/BG_FLOOR.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_WATER, '../../assets/ray/BG_FLOOR_WATER.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_FLOOR_LAVA, '../../assets/ray/BG_FLOOR_LAVA.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_1, '../../assets/ray/BG_WALL_1.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_2, '../../assets/ray/BG_WALL_2.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_WALL_3, '../../assets/ray/BG_WALL_3.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR, '../../assets/ray/BG_DOOR.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_CHARGE, '../../assets/ray/BG_DOOR_CHARGE.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_MISSILE, '../../assets/ray/BG_DOOR_MISSILE.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_ICE, '../../assets/ray/BG_DOOR_ICE.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_XRAY, '../../assets/ray/BG_DOOR_XRAY.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.BG_DOOR_SCRIPT, '../../assets/ray/BG_DOOR_SCRIPT.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/E_NORMAL_WALK_0.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_STRONG, '../../assets/ray/E_STRONG_WALK_0.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/E_ARMORED_WALK_0.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/E_FLAMING_WALK_0.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/E_HIDDEN_WALK_0.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ENEMY_BOSS, '../../assets/ray/E_BOSS_WALK_0.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_BEAM, '../../assets/ray/OBJ_ITEM_BEAM.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_CHARGE_BEAM, '../../assets/ray/OBJ_ITEM_CHARGE_BEAM.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_MISSILE, '../../assets/ray/OBJ_ITEM_MISSILE.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_ICE, '../../assets/ray/OBJ_ITEM_ICE.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_XRAY, '../../assets/ray/OBJ_ITEM_XRAY.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_SUIT_WATER, '../../assets/ray/OBJ_ITEM_SUIT_WATER.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_SUIT_LAVA, '../../assets/ray/OBJ_ITEM_SUIT_LAVA.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_ENERGY_TANK, '../../assets/ray/OBJ_ITEM_ENERGY_TANK.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_KEY, '../../assets/ray/OBJ_ITEM_KEY.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_ARTIFACT, '../../assets/ray/OBJ_ITEM_ARTIFACT.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_ENERGY, '../../assets/ray/OBJ_ITEM_PICKUP_ENERGY.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_MISSILE, '../../assets/ray/OBJ_ITEM_PICKUP_MISSILE.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/OBJ_SCENERY_TERMINAL.png')
-        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.DELETE, 'imgs/DELETE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_FLOOR, '../../assets/ray/BG_FLOOR.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_FLOOR_WATER, '../../assets/ray/BG_FLOOR_WATER.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_FLOOR_LAVA, '../../assets/ray/BG_FLOOR_LAVA.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_WALL_1, '../../assets/ray/BG_WALL_1.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_WALL_2, '../../assets/ray/BG_WALL_2.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_WALL_3, '../../assets/ray/BG_WALL_3.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_WALL_4, '../../assets/ray/BG_WALL_4.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_WALL_5, '../../assets/ray/BG_WALL_5.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR, '../../assets/ray/BG_DOOR.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_CHARGE, '../../assets/ray/BG_DOOR_CHARGE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_MISSILE, '../../assets/ray/BG_DOOR_MISSILE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_ICE, '../../assets/ray/BG_DOOR_ICE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_XRAY, '../../assets/ray/BG_DOOR_XRAY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_SCRIPT, '../../assets/ray/BG_DOOR_SCRIPT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_KEY_A, '../../assets/ray/BG_DOOR_KEY_A.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_KEY_B, '../../assets/ray/BG_DOOR_KEY_B.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_KEY_C, '../../assets/ray/BG_DOOR_KEY_C.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/E_NORMAL_WALK_0.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/E_STRONG_WALK_0.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/E_ARMORED_WALK_0.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/E_FLAMING_WALK_0.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/E_HIDDEN_WALK_0.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/E_BOSS_WALK_0.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_BEAM, '../../assets/ray/OBJ_ITEM_BEAM.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_CHARGE_BEAM, '../../assets/ray/OBJ_ITEM_CHARGE_BEAM.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_MISSILE, '../../assets/ray/OBJ_ITEM_MISSILE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_ICE, '../../assets/ray/OBJ_ITEM_ICE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_XRAY, '../../assets/ray/OBJ_ITEM_XRAY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_SUIT_WATER, '../../assets/ray/OBJ_ITEM_SUIT_WATER.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_SUIT_LAVA, '../../assets/ray/OBJ_ITEM_SUIT_LAVA.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_ENERGY_TANK, '../../assets/ray/OBJ_ITEM_ENERGY_TANK.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_KEY_A, '../../assets/ray/OBJ_ITEM_KEY_A.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_KEY_B, '../../assets/ray/OBJ_ITEM_KEY_B.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_KEY_C, '../../assets/ray/OBJ_ITEM_KEY_C.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_ARTIFACT, '../../assets/ray/OBJ_ITEM_ARTIFACT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_ITEM_PICKUP_ENERGY, '../../assets/ray/OBJ_ITEM_PICKUP_ENERGY.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_MISSILE,
+                         '../../assets/ray/OBJ_ITEM_PICKUP_MISSILE.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/OBJ_SCENERY_TERMINAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_PORTAL, '../../assets/ray/OBJ_SCENERY_PORTAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.DELETE, 'imgs/DELETE.png')
 
         # Start maximized
-        self.root.wm_state('normal') # 'zoomed' works for windows
+        self.root.wm_state('normal')  # 'zoomed' works for windows
 
     def loadTexture(self, pMap, mMap, key, texFile):
         img = Image.open(texFile)
 
-        # Resize for the palette        
-        if(img.width < img.height):
+        # Resize for the palette
+        if (img.width < img.height):
             newHeight = self.paletteCellSize
             newWidth = img.width * (newHeight / img.height)
         else:
@@ -210,11 +289,11 @@ class view:
             newHeight = img.height * (newWidth / img.width)
         pResize = img.resize(
             size=(int(newWidth), int(newHeight)), resample=Image.LANCZOS)
-       
+
         pMap[key] = ImageTk.PhotoImage(pResize)
 
         # Resize for the map
-        if(img.width < img.height):
+        if (img.width < img.height):
             newHeight = self.mapCellSize
             newWidth = img.width * (newHeight / img.height)
         else:
@@ -281,6 +360,70 @@ class view:
         self.isMapRightClicked = False
         self.c.releaseClick()
 
+    def scriptTextCursorChange(self, event):
+        # Highlight script cells when the cursor changes
+        self.highlightScriptCells()
+
+    def highlightScriptCells(self):
+        # Get the currently selected line
+        line, char = self.scriptTextEntry.index("insert").split(".")
+        scriptNum = int(line) - 1
+
+        # If there are scripts
+        if scriptNum >= 0 and scriptNum < len(self.m.scripts):
+
+            # Clear highlight from old cell
+            while 0 != len(self.scriptRects):
+                rect = self.scriptRects.pop()
+                self.mapCanvas.delete(rect)
+
+            lineWidth = 4
+            dashPattern = (8, 8)
+
+            # Get all the if cells and highlight them yellow
+            for cell in self.m.scripts[scriptNum].getIfCells():
+                if cell is not None:
+                    self.scriptRects.append(self.mapCanvas.create_rectangle(
+                        (cell[0] * self.mapCellSize),
+                        (cell[1] * self.mapCellSize),
+                        ((cell[0] + 1) * self.mapCellSize),
+                        ((cell[1] + 1) * self.mapCellSize),
+                        outline='yellow', width=lineWidth, dash=dashPattern))
+
+            # Get all object references and also highlight them yellow
+            for id in self.m.scripts[scriptNum].getIfIds():
+                for y in range(self.m.getMapHeight()):
+                    for x in range(self.m.getMapWidth()):
+                        if (id == self.m.tileMap[x][y].objectId):
+                            self.scriptRects.append(self.mapCanvas.create_rectangle(
+                                (x * self.mapCellSize),
+                                (y * self.mapCellSize),
+                                ((x + 1) * self.mapCellSize),
+                                ((y + 1) * self.mapCellSize),
+                                outline='yellow', width=lineWidth, dash=dashPattern))
+
+            # Get all the then cells and highlight them DeepPink
+            for cell in self.m.scripts[scriptNum].getThenCells():
+                if cell is not None:
+                    self.scriptRects.append(self.mapCanvas.create_rectangle(
+                        (cell[0] * self.mapCellSize),
+                        (cell[1] * self.mapCellSize),
+                        ((cell[0] + 1) * self.mapCellSize),
+                        ((cell[1] + 1) * self.mapCellSize),
+                        outline='DeepPink', width=lineWidth, dash=dashPattern))
+
+            # Get all object references and also highlight them DeepPink
+            for id in self.m.scripts[scriptNum].getThenIds():
+                for y in range(self.m.getMapHeight()):
+                    for x in range(self.m.getMapWidth()):
+                        if (id == self.m.tileMap[x][y].objectId):
+                            self.scriptRects.append(self.mapCanvas.create_rectangle(
+                                (x * self.mapCellSize),
+                                (y * self.mapCellSize),
+                                ((x + 1) * self.mapCellSize),
+                                ((y + 1) * self.mapCellSize),
+                                outline='DeepPink', width=lineWidth, dash=dashPattern))
+
     def scriptTextChanged(self, event: tk.Event):
 
         self.m.setScripts(self.scriptTextEntry.get(
@@ -300,34 +443,37 @@ class view:
                 self.scriptTextEntry.tag_configure(
                     tag, background="red", foreground="black")
             line = line + 1
+        self.highlightScriptCells()
 
     def redraw(self):
         self.paletteCanvas.delete('all')
         self.mapCanvas.delete('all')
 
         # Draw backgrounds in the palette
+        x: int = 0
         y: int = 0
-        for bg in bgTiles:
-            if bg is not tileType.EMPTY:
-                self.paletteCanvas.create_image(
-                    0, y*self.paletteCellSize, image=self.texMapPalette[bg], anchor=tk.NW)
-            y = y+1
+        for col in bgTiles:
+            for bg in col:
+                if bg is not tileType.EMPTY:
+                    self.paletteCanvas.create_image(
+                        x*self.paletteCellSize, y*self.paletteCellSize, image=self.texMapPalette[bg], anchor=tk.NW)
+                y = y+1
+            x = x+1
+            y = 0
 
         # Draw objects in the palette into two columns
-        x: int = 1
-        y: int = 0
-        for obj in objTiles:
-            if obj is not tileType.EMPTY:
+        for col in objTiles:
+            for obj in col:
+                if obj is not tileType.EMPTY:
 
-                imgWidth: int = self.texMapPalette[obj].width()
-                hOffset = int((self.paletteCellSize - imgWidth) / 2)
+                    imgWidth: int = self.texMapPalette[obj].width()
+                    hOffset = int((self.paletteCellSize - imgWidth) / 2)
 
-                self.paletteCanvas.create_image(
-                    x*self.paletteCellSize + hOffset, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
-            y = y+1
-            if NUM_PALETTE_ROWS == y:
-                y = 0
-                x = x+1
+                    self.paletteCanvas.create_image(
+                        x*self.paletteCellSize + hOffset, y*self.paletteCellSize, image=self.texMapPalette[obj], anchor=tk.NW)
+                y = y+1
+            x = x+1
+            y = 0
 
         # Draw the map
         for x in range(self.m.getMapWidth()):
@@ -416,10 +562,13 @@ class view:
             ('Ray Map Data', '*.rmd'),
             ('All files', '*.*')
         )
-        loadFile: TextIOWrapper = askopenfile(mode='rb', filetypes=fts)
-        if loadFile is not None:
-            self.currentFilePath = os.path.abspath(loadFile.name)
-            self.m.load(loadFile)
+        fileToLoad: TextIOWrapper = askopenfile(mode='rb', filetypes=fts)
+        self.loadFile(fileToLoad)
+
+    def loadFile(self, fileToLoad):
+        if fileToLoad is not None:
+            self.currentFilePath = os.path.abspath(fileToLoad.name)
+            self.m.load(fileToLoad)
 
             # Redraw map
             self.redraw()

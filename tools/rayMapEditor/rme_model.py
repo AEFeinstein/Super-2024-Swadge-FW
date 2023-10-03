@@ -1,6 +1,5 @@
 from rme_tiles import *
 from rme_script_editor import *
-from rme_view import NUM_PALETTE_ROWS
 from io import TextIOWrapper
 
 
@@ -74,15 +73,15 @@ class model:
                 self.currentId = (self.currentId + 1) % 256
 
     def getPaletteType(self, x, y):
-        if 0 == x:
-            # backgrounds in the first column
-            if 0 <= y and y < len(bgTiles):
-                return bgTiles[y]
+        if x < len(objTiles):
+            # backgrounds in the first columns
+            if 0 <= y and y < len(bgTiles[x]):
+                return bgTiles[x][y]
         else:
             # objects i the other columns
-            y = y + NUM_PALETTE_ROWS * (x - 1)
-            if 0 <= y and y < len(objTiles):
-                return objTiles[y]
+            x = x - len(objTiles)
+            if 0 <= y and y < len(objTiles[x]):
+                return objTiles[x][y]
         return None
 
     def setSelectedTileType(self, type, x, y):
@@ -100,8 +99,9 @@ class model:
     def setScripts(self, scripts: list[str]) -> None:
         self.scripts: list[rme_script] = []
         for script in scripts:
-            self.scripts.append(rme_script(
-                string=script, splitter=self.splitter))
+            if script.strip():
+                self.scripts.append(rme_script(
+                    string=script, splitter=self.splitter))
 
     def save(self, outFile: TextIOWrapper) -> bool:
         # Construct file bytes
@@ -137,11 +137,12 @@ class model:
         for script in self.scripts:
             if script is not None and script.isValid():
                 sb = script.toBytes()
-                if (len(sb) > 255):
+                if (len(sb) > 65535):
                     # TODO display error
                     print("SCRIPT TOO BIG!!")
                     return False
-                fileBytes.append(len(sb))
+                fileBytes.append((len(sb) >> 8) & 0xFF)
+                fileBytes.append((len(sb) >> 0) & 0xFF)
                 fileBytes.extend(sb)
             else:
                 # TODO display warning
@@ -197,8 +198,8 @@ class model:
         # Read each script
         for si in range(numScripts):
             # Read script length
-            sLen: int = data[idx]
-            idx = idx + 1
+            sLen: int = (data[idx] << 8) | (data[idx + 1])
+            idx = idx + 2
             # Read script
             self.scripts.append(rme_script(bytes=data[idx: idx + sLen]))
             idx = idx + sLen
