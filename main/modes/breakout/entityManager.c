@@ -314,10 +314,8 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->jumpPower = 0;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->hp = 1;
     entity->animationTimer = 0;
 
     entity->type = ENTITY_PLAYER_PADDLE_BOTTOM;
@@ -344,10 +342,8 @@ entity_t* createPlayerPaddleTop(entityManager_t * entityManager, uint16_t x, uin
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->jumpPower = 0;
     entity->spriteFlipVertical = true;
     entity->spriteRotateAngle = 0;
-    entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
     entity->type = ENTITY_PLAYER_PADDLE_TOP;
@@ -374,11 +370,9 @@ entity_t* createPlayerPaddleLeft(entityManager_t * entityManager, uint16_t x, ui
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->jumpPower = 0;
     entity->spriteFlipHorizontal = true;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
     entity->type = ENTITY_PLAYER_PADDLE_LEFT;
@@ -405,11 +399,9 @@ entity_t* createPlayerPaddleRight(entityManager_t * entityManager, uint16_t x, u
 
     entity->xspeed = 0;
     entity->yspeed = 0;
-    entity->jumpPower = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->hp = 1;
     entity->animationTimer = 0; //Used as a cooldown for shooting square wave balls
 
     entity->type = ENTITY_PLAYER_PADDLE_RIGHT;
@@ -439,8 +431,11 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->scoreValue = 100;
+
     entity->shouldAdvanceMultiplier = false;
+    entity->baseSpeed = 39;
+    entity->bouncesToNextSpeedUp = 5;
+    entity->maxSpeed = 63;
 
     entity->type = ENTITY_PLAYER_BALL;
     entity->spriteIndex = SP_BALL_0;
@@ -470,7 +465,6 @@ entity_t* createTimeBomb(entityManager_t * entityManager, uint16_t x, uint16_t y
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->scoreValue = 100;
     entity->animationTimer = 48;
 
     entity->type = ENTITY_PLAYER_TIME_BOMB;
@@ -505,7 +499,6 @@ entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t 
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->scoreValue = 100;
 
     entity->type = ENTITY_PLAYER_BOMB_EXPLOSION;
     entity->spriteIndex = SP_EXPLOSION_0;
@@ -539,7 +532,6 @@ entity_t* createRemoteBomb(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->scoreValue = 100;
     entity->animationTimer = 48;
 
     entity->type = ENTITY_PLAYER_REMOTE_BOMB;

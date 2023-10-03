@@ -76,15 +76,19 @@ struct entity_t
     uint8_t homeTileX;
     uint8_t homeTileY;
 
-    int16_t jumpPower;
+    //int16_t jumpPower;
 
     bool visible;
-    uint8_t hp;
-    int8_t invincibilityFrames;
-    uint16_t scoreValue;
+    //uint8_t hp;
+    //int8_t invincibilityFrames;
+    //uint16_t scoreValue;
 
     entity_t *attachedToEntity;
+
     bool shouldAdvanceMultiplier;
+    int16_t baseSpeed;
+    int16_t maxSpeed;
+    uint8_t bouncesToNextSpeedUp;
     
     entityManager_t *entityManager;
 
@@ -118,6 +122,7 @@ void playerCollisionHandler(entity_t *self, entity_t* other);
 void enemyCollisionHandler(entity_t *self, entity_t *other);
 void dummyCollisionHandler(entity_t *self, entity_t *other);
 void ballCollisionHandler(entity_t *self, entity_t *other);
+void advanceBallSpeed(entity_t* self);
 
 bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool enemyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);

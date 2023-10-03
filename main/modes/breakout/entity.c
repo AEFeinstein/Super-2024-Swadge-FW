@@ -74,6 +74,24 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
      1,  3
 };
 
+#define BALL_SPEED_INCREASE_TABLE_LENGTH 36
+/*static const int16_t ballSpeedIncreases[36] = {
+    //bounce     combo      new
+    //threshold  threshold  speed
+      0,         -1,        39,
+      5,         -1,        43,
+      1,         -1,        47,
+      1,         -1,        51,
+      1,         -1,        55,
+      1,         -1,        59,
+      1,         -1,        63,
+      1,         20,        67,
+      1,         40,        71,
+      1,         60,        75,
+      1,         80,        79,
+      1,         100,       80
+}*/
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -91,6 +109,9 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     self->spriteRotateAngle = 0;
     self->attachedToEntity = NULL;
     self->shouldAdvanceMultiplier = false;
+    self->baseSpeed = 0;
+    self->bouncesToNextSpeedUp = 5;
+    self->maxSpeed = 63;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -224,7 +245,7 @@ void updateBall(entity_t *self)
                 )
                 {
                     //Launch ball
-                    setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), self->baseSpeed);
                     self->attachedToEntity = NULL;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -240,7 +261,7 @@ void updateBall(entity_t *self)
                 )
                 {
                     //Launch ball
-                    setVelocity(self, 270 + CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    setVelocity(self, 270 + CLAMP((self->attachedToEntity->xspeed)/SUBPIXEL_RESOLUTION,-60,60), self->baseSpeed);
                     self->attachedToEntity = NULL;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -256,7 +277,7 @@ void updateBall(entity_t *self)
                 )
                 {
                     //Launch ball
-                    setVelocity(self, 0 - CLAMP((self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    setVelocity(self, 0 - CLAMP((self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), self->baseSpeed);
                     self->attachedToEntity = NULL;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -272,7 +293,7 @@ void updateBall(entity_t *self)
                 )
                 {
                     //Launch ball
-                    setVelocity(self, 180 - CLAMP(-(self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), 63);
+                    setVelocity(self, 180 - CLAMP(-(self->attachedToEntity->yspeed)/SUBPIXEL_RESOLUTION,-60,60), self->baseSpeed);
                     self->attachedToEntity = NULL;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -640,7 +661,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
     {
         case ENTITY_PLAYER_PADDLE_BOTTOM:
             if(self->yspeed > 0){
-                setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, 63);
+                advanceBallSpeed(self);
+                setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
@@ -652,7 +674,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_TOP:
             if(self->yspeed < 0){
-                setVelocity(self, 270 + (self->x - other->x)/SUBPIXEL_RESOLUTION, 63);
+                advanceBallSpeed(self);
+                setVelocity(self, 270 + (self->x - other->x)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
@@ -664,7 +687,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_LEFT:
             if(self->xspeed < 0){
-                setVelocity(self, 0 + (other->y - self->y)/SUBPIXEL_RESOLUTION, 63);
+                advanceBallSpeed(self);
+                setVelocity(self, 0 + (other->y - self->y)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
@@ -676,7 +700,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_RIGHT:
             if(self->xspeed > 0){
-                setVelocity(self, 180 + (self->y - other->y)/SUBPIXEL_RESOLUTION, 63);
+                advanceBallSpeed(self);
+                setVelocity(self, 180 + (self->y - other->y)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
@@ -687,11 +712,25 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             }
             break;
         case ENTITY_PLAYER_BOMB_EXPLOSION:
-            setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), 63);
+            advanceBallSpeed(self);
+            setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), self->baseSpeed);
             break;
         default:
         {
             break;
+        }
+    }
+}
+
+void advanceBallSpeed(entity_t* self){
+    self->bouncesToNextSpeedUp--;
+    if(self->bouncesToNextSpeedUp < 1){
+        self->bouncesToNextSpeedUp = 1;
+
+        self->baseSpeed += 4;
+
+        if(self->baseSpeed > self->maxSpeed){
+            self->baseSpeed = self->maxSpeed;
         }
     }
 }
