@@ -32,7 +32,8 @@ bool initializePlayer(ray_t* ray)
         initFromScratch = true;
 
         // Start at map 0, loaded later
-        ray->p.mapId = 0;
+        ray->p.mapId          = 0;
+        ray->p.mapsVisited[0] = true;
 
         // ray->p.posX and ray->p.posY (starting position) are set by the map
 

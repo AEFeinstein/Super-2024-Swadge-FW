@@ -93,7 +93,8 @@ void warpToDestination(ray_t* ray)
     loadRayMap(mapName, ray, &pStartX, &pStartY, true);
 
     // Set the map ID
-    ray->p.mapId = ray->warpDestMapId;
+    ray->p.mapId                     = ray->warpDestMapId;
+    ray->p.mapsVisited[ray->p.mapId] = true;
 
     // Set the player position after the map is loaded
     ray->p.posX = ray->warpDestPosX;

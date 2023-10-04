@@ -56,6 +56,7 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
     }
 
     // Allocate space to track what tiles have been visited
+    // TODO save and load this from NVM
     map->visitedTiles = (bool*)heap_caps_calloc(map->w * map->h, sizeof(bool), caps);
 
     // Read tile data
