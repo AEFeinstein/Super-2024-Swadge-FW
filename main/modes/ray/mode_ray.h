@@ -392,8 +392,8 @@ typedef struct
 typedef struct
 {
     // Persistent pick-ups
-    int32_t missilesPickUps[NUM_MAPS][MISSILE_UPGRADES_PER_MAP]; ///< Coordinate list of acquired missile expansions
-    int32_t healthPickUps[NUM_MAPS][E_TANKS_PER_MAP];            ///< Coordinate list of acquired e.tanks
+    int32_t missilesPickUps[NUM_MAPS][MISSILE_UPGRADES_PER_MAP]; ///< ID list of acquired missile expansions
+    int32_t healthPickUps[NUM_MAPS][E_TANKS_PER_MAP];            ///< ID list of acquired e.tanks
     // Current status
     int32_t health;         ///< The player's current health
     int32_t maxHealth;      ///< The player's current max health.
@@ -430,12 +430,14 @@ typedef enum
  */
 typedef struct
 {
-    q24_8 posX;       ///< The player's X position
-    q24_8 posY;       ///< The player's Y position
-    q24_8 dirX;       ///< The player's X direction
-    q24_8 dirY;       ///< The player's Y direction
-    int32_t mapId;    ///< The ID of the current map
-    rayInventory_t i; ///< All the players items
+    q24_8 posX;                 ///< The player's X position
+    q24_8 posY;                 ///< The player's Y position
+    q24_8 dirX;                 ///< The player's X direction
+    q24_8 dirY;                 ///< The player's Y direction
+    rayLoadout_t loadout;       ///< The player's current loadout
+    int32_t mapId;              ///< The ID of the current map
+    bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
+    rayInventory_t i;           ///< All the players items
 } rayPlayer_t;
 
 /**
@@ -477,7 +479,6 @@ typedef struct
     bool isStrafing;             ///< true if the player is strafing, false if not
     rayObjCommon_t* targetedObj; ///< An object that is locked onto to strafe around
 
-    rayLoadout_t loadout;       ///< The player's current loadout
     rayLoadout_t nextLoadout;   ///< The player's next loadout, if touched
     int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input

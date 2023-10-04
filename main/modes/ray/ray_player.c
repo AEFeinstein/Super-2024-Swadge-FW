@@ -21,46 +21,49 @@
  * @brief Initialize the player
  *
  * @param ray The entire game state
- * @param initialLoad true if the inventory should be read from NVM, false to leave it alone
+ * @return true if the player was initialized from scratch, false if loaded from NVM
  */
-void initializePlayer(ray_t* ray, bool initialLoad)
+bool initializePlayer(ray_t* ray)
 {
-    size_t len = sizeof(ray->p);
+    bool initFromScratch = false;
+    size_t len           = sizeof(ray->p);
     if (!readNvsBlob(RAY_NVS_KEY, &ray->p, &len))
     {
-        // ray->p.posX and ray->p.posY (position) are set by loadRayMap()
+        initFromScratch = true;
+
+        // Start at map 0, loaded later
+        ray->p.mapId = 0;
+
+        // ray->p.posX and ray->p.posY (starting position) are set by the map
+
         // Set the direction
         ray->p.dirX = TO_FX(0);
         ray->p.dirY = -TO_FX(1);
-        // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
-        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
-        // Set the head-bob to centered
-        ray->posZ = TO_FX(0);
 
-        // Clear any strafes
-        ray->isStrafing  = false;
-        ray->targetedObj = NULL;
-
-        if (initialLoad)
+        // Zero the entire inventory
+        memset(&ray->p.i, 0, sizeof(ray->p.i));
+        // Set all pickup IDs to -1
+        for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
         {
-            memset(&ray->p.i, 0, sizeof(ray->p.i));
-            for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
+            for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
             {
-                for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
-                {
-                    ray->p.i.missilesPickUps[mapIdx][pIdx] = -1;
-                }
-                for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
-                {
-                    ray->p.i.healthPickUps[mapIdx][pIdx] = -1;
-                }
+                ray->p.i.missilesPickUps[mapIdx][pIdx] = -1;
             }
-            // Set initial health
-            ray->p.i.maxHealth = GAME_START_HEALTH;
-            ray->p.i.health    = GAME_START_HEALTH;
+            for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
+            {
+                ray->p.i.healthPickUps[mapIdx][pIdx] = -1;
+            }
         }
+        // Set initial health
+        ray->p.i.maxHealth = GAME_START_HEALTH;
+        ray->p.i.health    = GAME_START_HEALTH;
     }
+
+    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+    ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+
+    return initFromScratch;
 }
 
 /**
@@ -128,7 +131,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             }
         }
         // The A button shoots. Make sure there is a gun
-        else if ((LO_NONE != ray->loadout) && (PB_A == evt.button))
+        else if ((LO_NONE != ray->p.loadout) && (PB_A == evt.button))
         {
             // What, if any, bullet to fire
             rayMapCellType_t bullet = EMPTY;
@@ -137,7 +140,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             {
                 // A was pressed
                 // Check ammo for the missile loadout
-                if (LO_MISSILE == ray->loadout)
+                if (LO_MISSILE == ray->p.loadout)
                 {
                     if (0 < ray->p.i.numMissiles)
                     {
@@ -150,7 +153,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 else
                 {
                     // Start charging if applicable
-                    if (LO_NORMAL == ray->loadout && ray->p.i.chargePowerUp)
+                    if (LO_NORMAL == ray->p.loadout && ray->p.i.chargePowerUp)
                     {
                         // Start charging
                         ray->chargeTimer = 1;
@@ -164,7 +167,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                         OBJ_BULLET_ICE,     ///< Ice beam loadout
                         OBJ_BULLET_XRAY     ///< X-Ray loadout
                     };
-                    bullet = bulletMap[ray->loadout];
+                    bullet = bulletMap[ray->p.loadout];
                 }
             }
             else
@@ -357,7 +360,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             if (!(tj & TB_CENTER))
             {
                 // Get the loadout touched
-                rayLoadout_t nextLoadout = ray->loadout;
+                rayLoadout_t nextLoadout = ray->p.loadout;
                 if ((tj & TB_UP) && (ray->p.i.beamLoadOut))
                 {
                     nextLoadout = LO_NORMAL;
@@ -376,7 +379,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
                 }
 
                 // If a new loadout was touched
-                if (ray->loadout != nextLoadout)
+                if (ray->p.loadout != nextLoadout)
                 {
                     // Start a timer to switch to the next loadout
                     ray->loadoutChangeTimer = LOADOUT_TIMER_US;
@@ -388,11 +391,11 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
     else
     {
         // Button Not touched. If this was during a loadout change, cancel it
-        if ((ray->nextLoadout != ray->loadout) && !ray->forceLoadoutSwap)
+        if ((ray->nextLoadout != ray->p.loadout) && !ray->forceLoadoutSwap)
         {
             // Reset the timer to bring the gun up and set the next loadout to the current one
             ray->loadoutChangeTimer = LOADOUT_TIMER_US - ray->loadoutChangeTimer;
-            ray->nextLoadout        = ray->loadout;
+            ray->nextLoadout        = ray->p.loadout;
         }
     }
 
@@ -405,10 +408,10 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         // If the timer elapsed
         if (ray->loadoutChangeTimer <= 0)
         {
-            if (ray->loadout != ray->nextLoadout)
+            if (ray->p.loadout != ray->nextLoadout)
             {
                 // Swap the loadout
-                ray->loadout = ray->nextLoadout;
+                ray->p.loadout = ray->nextLoadout;
                 // Set the timer for the load in
                 ray->loadoutChangeTimer = LOADOUT_TIMER_US;
             }
@@ -432,6 +435,8 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
  */
 void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_t itemId)
 {
+    // Assume saving after picking up an item
+    bool saveAfterObtain      = true;
     rayInventory_t* inventory = &ray->p.i;
     switch (type)
     {
@@ -447,7 +452,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_CHARGE_BEAM:
         {
             inventory->chargePowerUp = true;
-            if (LO_NORMAL != ray->loadout)
+            if (LO_NORMAL != ray->p.loadout)
             {
                 // Switch to the normal loadout
                 ray->loadoutChangeTimer = LOADOUT_TIMER_US;
@@ -552,6 +557,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         {
             // Transient, add 20 health, not going over the max
             inventory->health = MIN(inventory->health + 20, inventory->maxHealth);
+            // Don't save after energy
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_PICKUP_MISSILE:
@@ -561,6 +568,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
                 // Transient, add 5 missiles, not going over the max
                 inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
             }
+            // Don't save after missile ammo
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_KEY_A:
@@ -574,8 +583,16 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         default:
         {
             // Don't care about other types
+            saveAfterObtain = false;
             break;
         }
+    }
+
+    // If a notable item was obtained
+    if (saveAfterObtain)
+    {
+        // Autosave
+        raySavePlayer(ray);
     }
 }
 

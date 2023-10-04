@@ -76,7 +76,7 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
     SETUP_FOR_TURBO();
 
     // Boolean if the colors should be drawn inverted
-    bool isXray = (LO_XRAY == ray->loadout);
+    bool isXray = (LO_XRAY == ray->p.loadout);
 
     // Track which cell the ceiling or floor is being drawn in
     uint32_t cellX = 0;
@@ -253,7 +253,7 @@ void castWalls(ray_t* ray)
     SETUP_FOR_TURBO();
 
     // Boolean if the colors should be drawn inverted
-    bool isXray = (LO_XRAY == ray->loadout);
+    bool isXray = (LO_XRAY == ray->p.loadout);
 
     // For convenience
     q24_8 pPosX = ray->p.posX;
@@ -350,7 +350,7 @@ void castWalls(ray_t* ray)
                 if (tileType == BG_DOOR_XRAY)
                 {
                     // X-Ray door, only draw recessed if the X-Ray loadout is active or the door is open
-                    if ((LO_XRAY == ray->loadout) || (TO_FX(1) == ray->map.tiles[mapX][mapY].doorOpen))
+                    if ((LO_XRAY == ray->p.loadout) || (TO_FX(1) == ray->map.tiles[mapX][mapY].doorOpen))
                     {
                         // Draw recessed door
                         drawRecessedDoor = true;
@@ -668,7 +668,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
     SETUP_FOR_TURBO();
 
     // Boolean if the colors should be drawn inverted
-    bool isXray = (LO_XRAY == ray->loadout);
+    bool isXray = (LO_XRAY == ray->p.loadout);
 
     // Put an array on the stack to sort all sprites
     objDist_t allObjs[MAX_RAY_BULLETS + ray->scenery.length + ray->enemies.length + ray->items.length];
@@ -930,15 +930,15 @@ rayObjCommon_t* castSprites(ray_t* ray)
  */
 void drawHud(ray_t* ray)
 {
-    if (LO_NONE != ray->loadout)
+    if (LO_NONE != ray->p.loadout)
     {
-        wsg_t* gun      = &ray->guns[ray->loadout];
+        wsg_t* gun      = &ray->guns[ray->p.loadout];
         int32_t yOffset = TFT_HEIGHT - gun->h;
         // If a loadout change is in progress
         if (ray->loadoutChangeTimer)
         {
             // Loadout is changing out
-            if (ray->loadout != ray->nextLoadout)
+            if (ray->p.loadout != ray->nextLoadout)
             {
                 // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves down
                 yOffset += (gun->h - ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US));

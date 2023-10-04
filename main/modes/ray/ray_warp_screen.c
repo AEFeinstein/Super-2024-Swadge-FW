@@ -89,12 +89,22 @@ void warpToDestination(ray_t* ray)
     char mapName[] = "0.rmh";
     mapName[0]     = '0' + ray->warpDestMapId;
     // Load the new map
-    loadRayMap(mapName, ray, false);
+    q24_8 pStartX = 0, pStartY = 0;
+    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+
+    // Set the map ID
+    ray->p.mapId = ray->warpDestMapId;
 
     // Set the player position after the map is loaded
     ray->p.posX = ray->warpDestPosX;
     ray->p.posY = ray->warpDestPosY;
 
     // Initialize player angle
-    initializePlayer(ray, false);
+    ray->p.dirX = TO_FX(0);
+    ray->p.dirY = -TO_FX(1);
+    ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+
+    // Save after warping
+    raySavePlayer(ray);
 }

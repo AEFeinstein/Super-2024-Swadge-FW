@@ -26,19 +26,18 @@
  *
  * @param name The filename of the RMH to load
  * @param ray The ray_t to load the map into
+ * @param pStartX The starting X coordinate for this map
+ * @param pStartY The starting Y coordinate for this map
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  */
-void loadRayMap(const char* name, ray_t* ray, bool spiRam)
+void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
 {
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
 
     // Convenience pointers
     rayMap_t* map = &ray->map;
-
-    // First char of the map name is the numeric ID
-    ray->p.mapId = name[0] - '0';
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;
@@ -78,8 +77,8 @@ void loadRayMap(const char* name, ray_t* ray, bool spiRam)
                 if (type == OBJ_ENEMY_START_POINT)
                 {
                     // Save the starting coordinates
-                    ray->p.posX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
-                    ray->p.posY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
+                    *pStartX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
+                    *pStartY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
                 }
                 // If it's an object
                 else if ((type & OBJ) == OBJ)

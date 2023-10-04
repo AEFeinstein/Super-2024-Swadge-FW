@@ -125,6 +125,12 @@ static void rayExitMode(void)
  */
 void rayFreeCurrentState(ray_t* cRay)
 {
+    // Set invalid IDs for all bullets
+    for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
+    {
+        ray->bullets[objIdx].c.id = -1;
+    }
+
     // Empty all lists
     rayEnemy_t* poppedEnemy = NULL;
     while (NULL != (poppedEnemy = pop(&cRay->enemies)))
@@ -214,7 +220,6 @@ static void rayMainLoop(int64_t elapsedUs)
                 ray->screen = RAY_WARP_SCREEN;
                 // Do the warp in the background
                 warpToDestination(ray);
-                break;
             }
 
             break;
@@ -316,20 +321,27 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
  */
 static void rayStartGame(void)
 {
-    // Set invalid IDs for all bullets
-    for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
-    {
-        ray->bullets[objIdx].c.id = -1;
-    }
-
     // Clear all lists
     rayFreeCurrentState(ray);
 
-    // Load the map and object data
-    loadRayMap("0.rmh", ray, false);
+    // Load player data from NVM
+    bool initFromScratch = initializePlayer(ray);
 
-    // Set initial position and direction, centered on the tile
-    initializePlayer(ray, true);
+    // Load the map and object data
+    // Construct the map name
+    char mapName[] = "0.rmh";
+    mapName[0]     = '0' + ray->p.mapId;
+    // Load the new map
+    q24_8 pStartX = 0, pStartY = 0;
+    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+
+    // If the player was initialized from scratch
+    if (initFromScratch)
+    {
+        // Set the starting position from the map
+        ray->p.posX = pStartX;
+        ray->p.posY = pStartY;
+    }
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
