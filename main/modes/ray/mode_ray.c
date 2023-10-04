@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <esp_heap_caps.h>
+#include "mainMenu.h"
 #include "mode_ray.h"
 #include "ray_map.h"
 #include "ray_renderer.h"
@@ -29,9 +30,15 @@ static void rayStartGame(void);
 // Const Variables
 //==============================================================================
 
-const char rayName[]     = "Magtroid Pocket";
-const char rayPlayStr[]  = "Play";
-const char rayResetStr[] = "Reset";
+const char rayName[]       = "Magtroid Pocket";
+const char rayPlayStr[]    = "Play";
+const char rayResetStr[]   = "Reset Data";
+const char rayConfirmStr[] = "Really Reset Data";
+const char rayExitStr[]    = "Exit";
+
+const char* const rayMapNames[] = {
+    "World 0", "World 1", "World 2", "World 3", "World 4", "World 5",
+};
 
 //==============================================================================
 // Variables
@@ -71,8 +78,10 @@ static void rayEnterMode(void)
     // Initialize the menu
     ray->menu = initMenu(rayName, rayMenuCb);
     addSingleItemToMenu(ray->menu, rayPlayStr);
-    addSingleItemToMenu(ray->menu, rayResetStr);
-    addSingleItemToMenu(ray->menu, mnuBackStr);
+    ray->menu = startSubMenu(ray->menu, rayResetStr);
+    addSingleItemToMenu(ray->menu, rayConfirmStr);
+    ray->menu = endSubMenu(ray->menu);
+    addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Load fonts
     loadFont("logbook.font", &ray->logbook, true);
@@ -172,6 +181,12 @@ static void rayMainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 ray->menu = menuButton(ray->menu, evt);
+                if (ray->wasReset)
+                {
+                    ray->wasReset = false;
+                    // Return up one level
+                    ray->menu = ray->menu->parentMenu;
+                }
             }
             // Draw the menu
             drawMenuLogbook(ray->menu, ray->renderer, elapsedUs);
@@ -305,13 +320,16 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             rayStartGame();
         }
-        else if (label == rayResetStr)
+        else if (label == rayConfirmStr)
         {
-            // TODO wipe NVM, but ask first
+            // Wipe NVM
+            eraseNvsKey(RAY_NVS_KEY);
+            // Return up one menu
+            ray->wasReset = true;
         }
-        else if (label == mnuBackStr)
+        else if (label == rayExitStr)
         {
-            // TODO return to the main menu
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
 }

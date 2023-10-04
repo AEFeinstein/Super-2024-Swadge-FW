@@ -36,10 +36,12 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
     updateStarfield(&ray->starfield, 32);
     drawStarfield(&ray->starfield);
 
-    // Draw text over the starfield
-    // TODO use map destination name
-    int16_t tWidth = textWidth(&ray->logbook, "Warping");
-    drawText(&ray->logbook, c555, "Warping", (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
+    // Draw text over the starfield with the destination name
+    static const char warpText[] = "Warping to";
+    int16_t tWidth               = textWidth(&ray->logbook, warpText);
+    drawText(&ray->logbook, c555, warpText, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) - ray->logbook.height - 4);
+    tWidth = textWidth(&ray->logbook, rayMapNames[ray->warpDestMapId]);
+    drawText(&ray->logbook, c555, rayMapNames[ray->warpDestMapId], (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT / 2) + 4);
 
     // Decrement the timer
     ray->warpTimerUs -= elapsedUs;

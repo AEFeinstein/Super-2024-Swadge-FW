@@ -220,6 +220,13 @@ typedef enum
     ALWAYS = 1, ///< The script resets after triggering
 } repeat_t;
 
+typedef enum
+{
+    NO_KEY,   ///< Key was not picked up
+    KEY,      ///< Key was picked up and not used yet
+    OPEN_KEY, ///< Key was both picked up and used
+} rayKeyState_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -387,7 +394,6 @@ typedef struct
 
 /**
  * @brief The player's inventory
- * TODO save to disk sometime
  */
 typedef struct
 {
@@ -409,8 +415,8 @@ typedef struct
     bool lavaSuit;  ///< True if the lava suit was acquired
     bool waterSuit; ///< True if the water suit was acquired
     // Key items
-    bool artifacts[NUM_MAPS];      ///< List of acquired artifacts
-    bool keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
+    bool artifacts[NUM_MAPS];               ///< List of acquired artifacts
+    rayKeyState_t keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
 } rayInventory_t;
 
 /**
@@ -448,8 +454,9 @@ typedef struct
 {
     rayScreen_t screen; ///< The current screen being shown
 
-    menu_t* menu; ///< The main menu
-    menuLogbookRenderer_t* renderer;
+    menu_t* menu;                    ///< The main menu
+    menuLogbookRenderer_t* renderer; ///< Renderer for the menu
+    bool wasReset;                   ///< Flag to return to the main menu after wiping NVM
 
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
@@ -515,6 +522,7 @@ typedef struct
 //==============================================================================
 
 extern swadgeMode_t rayMode;
+extern const char* const rayMapNames[];
 
 //==============================================================================
 // Functions

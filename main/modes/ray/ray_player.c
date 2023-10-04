@@ -11,7 +11,11 @@
 #include "ray_pause.h"
 #include "ray_script.h"
 
-#define RAY_NVS_KEY "ray"
+//==============================================================================
+// Variables
+//==============================================================================
+
+const char RAY_NVS_KEY[] = "ray";
 
 //==============================================================================
 // Functions
@@ -58,6 +62,15 @@ bool initializePlayer(ray_t* ray)
         // Set initial health
         ray->p.i.maxHealth = GAME_START_HEALTH;
         ray->p.i.health    = GAME_START_HEALTH;
+    }
+    else
+    {
+        // If there is no loadout but the player has the beam
+        if ((LO_NONE == ray->p.loadout) && (ray->p.i.beamLoadOut))
+        {
+            // Set the beam loadout
+            ray->p.loadout = LO_NORMAL;
+        }
     }
 
     // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
@@ -310,8 +323,8 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     }
 
     // Get the new cell to check for crossing cell boundaries
-    int16_t newCellX = FROM_FX(pPosX);
-    int16_t newCellY = FROM_FX(pPosY);
+    int16_t newCellX = FROM_FX(ray->p.posX);
+    int16_t newCellY = FROM_FX(ray->p.posY);
 
     // If the cell changed
     if (oldCellX != newCellX || oldCellY != newCellY)
@@ -578,7 +591,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_KEY_C:
         {
             // Pick up a key
-            inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = true;
+            inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = KEY;
             break;
         }
         default:

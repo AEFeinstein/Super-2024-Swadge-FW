@@ -33,6 +33,12 @@
  */
 void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
 {
+    // Convenience inventory to know what not to spawn
+    rayInventory_t* inv = &ray->p.i;
+
+    // Map ID is the first digit of the name
+    int16_t mapId = name[0] - '0';
+
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
 
@@ -67,32 +73,148 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
             // Each tile has a type and object
             map->tiles[x][y].type     = fileData[fileIdx++];
             map->tiles[x][y].doorOpen = 0;
-            rayMapCellType_t type     = fileData[fileIdx++];
+            rayMapCellType_t oType    = fileData[fileIdx++];
+            rayMapCellType_t cType    = map->tiles[x][y].type;
 
-            // If the type isn't empty
-            if (EMPTY != type)
+            // Open doors which were already unlocked
+            if ((cType == BG_DOOR_KEY_A && OPEN_KEY == ray->p.i.keys[mapId][0]) || //
+                (cType == BG_DOOR_KEY_B && OPEN_KEY == ray->p.i.keys[mapId][1]) || //
+                (cType == BG_DOOR_KEY_C && OPEN_KEY == ray->p.i.keys[mapId][2]))
             {
-                // Read the type's ID
+                // If the key was already used, open the door
+                map->tiles[x][y].doorOpen = TO_FX(1);
+            }
+
+            // If the oType isn't empty
+            if (EMPTY != oType)
+            {
+                // Read the oType's ID
                 uint8_t id = fileData[fileIdx++];
                 // If it's the starting point
-                if (type == OBJ_ENEMY_START_POINT)
+                if (oType == OBJ_ENEMY_START_POINT)
                 {
                     // Save the starting coordinates
                     *pStartX = ADD_FX(TO_FX(x), TO_FX_FRAC(1, 2));
                     *pStartY = ADD_FX(TO_FX(y), TO_FX_FRAC(1, 2));
                 }
                 // If it's an object
-                else if ((type & OBJ) == OBJ)
+                else if ((oType & OBJ) == OBJ)
                 {
                     // Allocate a new object
-                    if ((type & 0x60) == ENEMY)
+                    if ((oType & 0x60) == ENEMY)
                     {
-                        rayCreateEnemy(ray, type, id, x, y);
+                        rayCreateEnemy(ray, oType, id, x, y);
                     }
                     else
                     {
-                        // TODO check for persistent health & missile upgrades in the inventory before spawning
-                        rayCreateCommonObj(ray, type, id, x, y);
+                        // Check for persistent health & missile upgrades in the inventory before spawning
+                        bool shouldCreate = true;
+
+                        switch (oType)
+                        {
+                            case OBJ_ITEM_BEAM:
+                            {
+                                if (inv->beamLoadOut)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_CHARGE_BEAM:
+                            {
+                                if (inv->chargePowerUp)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_MISSILE:
+                            {
+                                for (int16_t idx = 0; idx < MISSILE_UPGRADES_PER_MAP; idx++)
+                                {
+                                    if (id == ray->p.i.missilesPickUps[mapId][idx])
+                                    {
+                                        shouldCreate = false;
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_ICE:
+                            {
+                                if (inv->iceLoadOut)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_XRAY:
+                            {
+                                if (inv->xrayLoadOut)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_SUIT_WATER:
+                            {
+                                if (inv->waterSuit)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_SUIT_LAVA:
+                            {
+                                if (inv->lavaSuit)
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_ENERGY_TANK:
+                            {
+                                for (int16_t idx = 0; idx < E_TANKS_PER_MAP; idx++)
+                                {
+                                    if (id == ray->p.i.healthPickUps[mapId][idx])
+                                    {
+                                        shouldCreate = false;
+                                        break;
+                                    }
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_KEY_A:
+                            case OBJ_ITEM_KEY_B:
+                            case OBJ_ITEM_KEY_C:
+                            {
+                                if (NO_KEY < inv->keys[mapId][oType - OBJ_ITEM_KEY_A])
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            case OBJ_ITEM_ARTIFACT:
+                            {
+                                if (inv->artifacts[mapId])
+                                {
+                                    shouldCreate = false;
+                                }
+                                break;
+                            }
+                            default:
+                            {
+                                // Don't create unknown items
+                                shouldCreate = false;
+                                break;
+                            }
+                        }
+
+                        // Create this object if it wasn't already picked up
+                        if (shouldCreate)
+                        {
+                            rayCreateCommonObj(ray, oType, id, x, y);
+                        }
                     }
                 }
             }

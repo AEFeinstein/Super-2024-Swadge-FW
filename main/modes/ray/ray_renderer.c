@@ -967,7 +967,7 @@ void drawHud(ray_t* ray)
     char keyStr[16] = "K:";
     for (int16_t kIdx = 0; kIdx < NUM_KEYS; kIdx++)
     {
-        if (ray->p.i.keys[ray->p.mapId][kIdx])
+        if (KEY == ray->p.i.keys[ray->p.mapId][kIdx])
         {
             char thisKeyStr[] = {'0' + kIdx, 0};
             strcat(keyStr, thisKeyStr);
