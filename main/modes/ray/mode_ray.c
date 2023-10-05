@@ -36,9 +36,12 @@ const char rayResetStr[]   = "Reset Data";
 const char rayConfirmStr[] = "Really Reset Data";
 const char rayExitStr[]    = "Exit";
 
+/// @brief A list of the map names
 const char* const rayMapNames[] = {
     "World 0", "World 1", "World 2", "World 3", "World 4", "World 5",
 };
+
+/// @brief A list of the map colors, in order
 const paletteColor_t rayMapColors[] = {
     c303, // Violet
     c005, // Blue
@@ -47,6 +50,11 @@ const paletteColor_t rayMapColors[] = {
     c530, // Orange
     c500, // Red
 };
+
+/// @brief The NVS key to save and load player data
+const char RAY_NVS_KEY[] = "ray";
+// The NVS key to save and load visited tiles
+const char* const RAY_NVS_VISITED_KEYS[] = {"rv0", "rv1", "rv2", "rv3", "rv4", "rv5"};
 
 //==============================================================================
 // Variables
@@ -332,6 +340,10 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // Wipe NVM
             eraseNvsKey(RAY_NVS_KEY);
+            for (int16_t kIdx = 0; kIdx < ARRAY_SIZE(RAY_NVS_VISITED_KEYS); kIdx++)
+            {
+                eraseNvsKey(RAY_NVS_VISITED_KEYS[kIdx]);
+            }
             // Return up one menu
             ray->wasReset = true;
         }

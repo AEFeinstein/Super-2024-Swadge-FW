@@ -12,12 +12,6 @@
 #include "ray_script.h"
 
 //==============================================================================
-// Variables
-//==============================================================================
-
-const char RAY_NVS_KEY[] = "ray";
-
-//==============================================================================
 // Functions
 //==============================================================================
 
@@ -88,6 +82,7 @@ bool initializePlayer(ray_t* ray)
 void raySavePlayer(ray_t* ray)
 {
     writeNvsBlob(RAY_NVS_KEY, &(ray->p), sizeof(ray->p));
+    writeNvsBlob(RAY_NVS_VISITED_KEYS[ray->p.mapId], ray->map.visitedTiles, sizeof(bool) * ray->map.w * ray->map.h);
 }
 
 /**

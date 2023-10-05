@@ -3,8 +3,6 @@
 
 #include "mode_ray.h"
 
-extern const char RAY_NVS_KEY[];
-
 bool initializePlayer(ray_t* ray);
 void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t elapsedUs);
 void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsesUs);
