@@ -273,6 +273,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             // Save new direction vector
             ray->p.dirX = newX;
             ray->p.dirY = newY;
+
+            // Also update the local copy
+            pDirX = newX;
+            pDirY = newY;
         }
     }
 
@@ -315,11 +319,15 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + boundaryCheckX)][FROM_FX(pPosY)]))
     {
         ray->p.posX += deltaX;
+        // Update local copy
+        pPosX = ray->p.posX;
     }
 
     if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX)][FROM_FX(pPosY + boundaryCheckY)]))
     {
         ray->p.posY += deltaY;
+        // Update local copy
+        pPosY = ray->p.posY;
     }
 
     // Get the new cell to check for crossing cell boundaries
@@ -344,9 +352,13 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     if (ray->isStrafing && ray->targetedObj)
     {
         // Re-lock on the target after moving
-        ray->p.dirX = ray->targetedObj->posX - pPosX;
-        ray->p.dirY = ray->targetedObj->posY - pPosY;
+        pDirX = ray->targetedObj->posX - pPosX;
+        pDirY = ray->targetedObj->posY - pPosY;
         fastNormVec(&pDirX, &pDirY);
+
+        // Set the player's direction
+        ray->p.dirX = pDirX;
+        ray->p.dirY = pDirY;
 
         // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
         ray->planeX = -MUL_FX(TO_FX(2) / 3, pDirY);

@@ -110,4 +110,7 @@ void warpToDestination(ray_t* ray)
 
     // Save after warping
     raySavePlayer(ray);
+
+    // Mark the starting tile as visited
+    markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 }

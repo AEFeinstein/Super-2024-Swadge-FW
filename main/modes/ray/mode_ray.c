@@ -39,6 +39,14 @@ const char rayExitStr[]    = "Exit";
 const char* const rayMapNames[] = {
     "World 0", "World 1", "World 2", "World 3", "World 4", "World 5",
 };
+const paletteColor_t rayMapColors[] = {
+    c303, // Violet
+    c005, // Blue
+    c030, // Green
+    c550, // Yellow
+    c530, // Orange
+    c500, // Red
+};
 
 //==============================================================================
 // Variables

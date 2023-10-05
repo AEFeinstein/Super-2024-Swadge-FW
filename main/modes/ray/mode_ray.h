@@ -227,6 +227,28 @@ typedef enum
     OPEN_KEY, ///< Key was both picked up and used
 } rayKeyState_t;
 
+/**
+ * @brief The different screens that can be displayed
+ */
+typedef enum
+{
+    RAY_MENU,        ///< The main menu is being shown
+    RAY_GAME,        ///< The game loop is being shown
+    RAY_DIALOG,      ///< A dialog box is being shown
+    RAY_PAUSE,       ///< The pause menu is being shown
+    RAY_WARP_SCREEN, ///< The warp screen animation is being shown
+} rayScreen_t;
+
+/**
+ * @brief The different pause screens that can be displayed
+ */
+typedef enum
+{
+    RP_LOCAL_MAP,   ///< The map the player is currently in
+    RP_WORLD_MAP,   ///< All the maps and how they connect
+    RP_NUM_SCREENS, ///< The number of pause screens
+} rayPauseScreen_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -420,18 +442,6 @@ typedef struct
 } rayInventory_t;
 
 /**
- * @brief The different screens that can be displayed
- */
-typedef enum
-{
-    RAY_MENU,        ///< The main menu is being shown
-    RAY_GAME,        ///< The game loop is being shown
-    RAY_DIALOG,      ///< A dialog box is being shown
-    RAY_PAUSE,       ///< The pause menu is being shown
-    RAY_WARP_SCREEN, ///< The warp screen animation is being shown
-} rayScreen_t;
-
-/**
  * @brief A struct with all the player information saved to NVM
  */
 typedef struct
@@ -452,7 +462,8 @@ typedef struct
  */
 typedef struct
 {
-    rayScreen_t screen; ///< The current screen being shown
+    rayScreen_t screen;           ///< The current screen being shown
+    rayPauseScreen_t pauseScreen; ///< The current pause screen being shown
 
     menu_t* menu;                    ///< The main menu
     menuLogbookRenderer_t* renderer; ///< Renderer for the menu
@@ -523,6 +534,7 @@ typedef struct
 
 extern swadgeMode_t rayMode;
 extern const char* const rayMapNames[];
+extern const paletteColor_t rayMapColors[];
 
 //==============================================================================
 // Functions

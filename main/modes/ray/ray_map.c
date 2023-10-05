@@ -204,8 +204,7 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
                             }
                             default:
                             {
-                                // Don't create unknown items
-                                shouldCreate = false;
+                                // Create all other objects that aren't obtainable
                                 break;
                             }
                         }
