@@ -81,6 +81,9 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
  */
 void warpToDestination(ray_t* ray)
 {
+    // Save the current map's visited tiles
+    raySaveVisitedTiles(ray);
+
     // Initialize the starfield
     initializeStarfield(&ray->starfield, true);
 

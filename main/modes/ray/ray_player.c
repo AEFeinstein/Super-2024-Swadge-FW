@@ -82,6 +82,15 @@ bool initializePlayer(ray_t* ray)
 void raySavePlayer(ray_t* ray)
 {
     writeNvsBlob(RAY_NVS_KEY, &(ray->p), sizeof(ray->p));
+}
+
+/**
+ * @brief Save the tiles the player has visited in this map
+ *
+ * @param ray The entire game state
+ */
+void raySaveVisitedTiles(ray_t* ray)
+{
     writeNvsBlob(RAY_NVS_VISITED_KEYS[ray->p.mapId], ray->map.visitedTiles, sizeof(bool) * ray->map.w * ray->map.h);
 }
 
@@ -624,6 +633,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
     {
         // Autosave
         raySavePlayer(ray);
+        raySaveVisitedTiles(ray);
     }
 }
 
