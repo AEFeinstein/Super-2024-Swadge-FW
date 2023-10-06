@@ -106,8 +106,18 @@ void warpToDestination(ray_t* ray)
     ray->p.posY = ray->warpDestPosY;
 
     // Initialize player angle
-    ray->p.dirX = TO_FX(0);
-    ray->p.dirY = -TO_FX(1);
+    if (ray->p.posX < TO_FX(ray->map.w) / 2)
+    {
+        // On the left side, look right
+        ray->p.dirX = TO_FX(1);
+        ray->p.dirY = TO_FX(0);
+    }
+    else
+    {
+        // On the right side, look left
+        ray->p.dirX = -TO_FX(1);
+        ray->p.dirY = TO_FX(0);
+    }
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
 
