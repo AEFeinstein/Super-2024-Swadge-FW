@@ -609,6 +609,7 @@ class view:
                 self.scriptTextEntry.insert(tk.END, script.toString() + '\n')
             # Highlight text
             self.scriptTextChanged(None)
+            self.root.title(os.path.basename(self.currentFilePath))
 
     def clickResizeMap(self):
         inputStr: str = str(self.m.getMapWidth()) + 'x' + \
