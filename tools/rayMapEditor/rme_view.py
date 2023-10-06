@@ -165,6 +165,9 @@ class view:
         self.mapCanvas.bind('<ButtonRelease-2>', self.clickRelease)
         self.mapCanvas.bind('<ButtonRelease-3>', self.clickRelease)
         self.mapCanvas.bind('<Motion>', self.mapMouseMotion)
+        self.mapCanvas.bind("<MouseWheel>", self.mapMouseWheel)
+        self.mapCanvas.bind("<Button-4>", self.mapMouseWheel)
+        self.mapCanvas.bind("<Button-5>", self.mapMouseWheel)
 
         # Place the cell metadata text window
         self.cellMetaData.grid(column=2, row=1, rowspan=2, sticky=(
@@ -188,9 +191,18 @@ class view:
         content.rowconfigure(2, weight=0)
         content.rowconfigure(3, weight=0)
 
+        self.loadAllTextures()
+
+        # Start maximized
+        self.root.wm_state('normal')  # 'zoomed' works for windows
+
+    def loadAllTextures(self):
+
+        # Empty these first
         self.texMapPalette: Mapping[tileType, ImageTk.PhotoImage] = {}
         self.texMapMap: Mapping[tileType, ImageTk.PhotoImage] = {}
 
+        # Load all textures
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_FLOOR, '../../assets/ray/BG_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
@@ -274,9 +286,6 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.DELETE, 'imgs/DELETE.png')
 
-        # Start maximized
-        self.root.wm_state('normal')  # 'zoomed' works for windows
-
     def loadTexture(self, pMap, mMap, key, texFile):
         img = Image.open(texFile)
 
@@ -314,6 +323,20 @@ class view:
 
     def mainloop(self):
         self.root.mainloop()
+
+    def setMapCellSize(self, newMapCellSize):
+        # Bound the cell size between 8 and 64px
+        if newMapCellSize > 64:
+            newMapCellSize = 64
+        elif newMapCellSize < 8:
+            newMapCellSize = 8
+
+        # Set the new cell size
+        self.mapCellSize = newMapCellSize
+        # Reload all textures
+        self.loadAllTextures()
+        # Redraw the UI
+        self.redraw()
 
     def paletteLeftClick(self, event: tk.Event):
         x: int = self.paletteCanvas.canvasx(event.x)
@@ -354,6 +377,13 @@ class view:
             y: int = self.mapCanvas.canvasy(event.y)
             self.c.moveMouseMap(int(x / self.mapCellSize),
                                 int(y / self.mapCellSize))
+
+    def mapMouseWheel(self, event: tk.Event):
+        if (4 == event.num) or (event.delta < 0):
+            self.setMapCellSize(self.mapCellSize + 4)
+        elif (5 == event.num) or (event.delta > 0):
+            self.setMapCellSize(self.mapCellSize - 4)
+        pass
 
     def clickRelease(self, event: tk.Event):
         self.isMapMiddleClicked = False
