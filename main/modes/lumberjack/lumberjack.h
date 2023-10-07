@@ -27,7 +27,6 @@ typedef struct
 {
     menu_t* menu;
     menuLogbookRenderer_t* menuLogbookRenderer;
-    font_t ibm;
     font_t logbook;
 
     uint8_t selected;
@@ -68,7 +67,7 @@ typedef struct
     bool loaded;
     bool onTitle;
     bool gameOver;
-    font_t ibm;
+    font_t arcade;
     lumberjack_t* lumberjackMain;
     menu_t* menu;
     uint16_t btnState; ///<-- The STOLEN! ;)
@@ -84,6 +83,11 @@ typedef struct
     int spawnTimer;
     int spawnIndex;
     int spawnSide;
+
+    int score;
+    int highscore;
+
+    int enemyAttackQueue;
 
     int waterLevel;
     int waterTimer;

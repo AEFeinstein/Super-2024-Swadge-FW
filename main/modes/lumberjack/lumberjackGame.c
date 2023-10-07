@@ -57,7 +57,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv                 = calloc(1, sizeof(lumberjackVars_t));
     lumv->lumberjackMain = main;
 
-    loadFont("ibm_vga8.font", &lumv->ibm, false);
+    loadFont("eightbit_atari_grube2.font", &lumv->arcade, false);
 
     bzrStop(); // Stop the buzzer?
 
@@ -455,7 +455,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
     }
 
     //if panic mode do water
-    if (lumv->gameOver == false)
+    if (lumv->gameOver == false && lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
         lumv->waterTimer -= elapsedUs/10000;
         if (lumv->waterTimer < 0)
@@ -837,6 +837,7 @@ void DrawGame(void)
     }
 
     //If playing panic mode draw water
+
     lumberjackDrawWaterLevel();
 
     for (int i = 0; i < lumv->localPlayer->lives; i++)
@@ -847,7 +848,7 @@ void DrawGame(void)
         {
             icon = 0;
         }
-        drawWsgSimple(&lumv->minicharacters[icon], (i * 17) + 10, 20);
+        drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 22, 32);
     }
 
     if (lumv->gameOver)
@@ -855,7 +856,13 @@ void DrawGame(void)
         drawWsgSimple(&lumv->gameoverSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
     }
 
-    drawText(&lumv->ibm, c555, "00000", 16, 16);
+    char* score_display = "000";
+
+    drawText(&lumv->arcade, c000, score_display, 26, 18);
+    drawText(&lumv->arcade, c000, score_display, 26, 15);
+    drawText(&lumv->arcade, c000, score_display, 25, 16);
+    drawText(&lumv->arcade, c000, score_display, 27, 16);
+    drawText(&lumv->arcade, c555, score_display, 26, 16);
     // Debug
 
     char debug[20] = {0};
@@ -863,27 +870,27 @@ void DrawGame(void)
     snprintf(debug, sizeof(debug), "Debug: %d %d %d", lumv->localPlayer->x, lumv->localPlayer->y,
              lumv->localPlayer->cH);
 
-    drawText(&lumv->ibm, c000, debug, 16, 16);
+    drawText(&lumv->arcade, c000, debug, 16, 16);
 
     // drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX +
     // lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
 
     if (lumv->localPlayer->jumpPressed)
     {
-        drawText(&lumv->ibm, c555, "A", 16, 32);
+        drawText(&lumv->arcade, c555, "A", 16, 32);
     }
     else
     {
-        drawText(&lumv->ibm, c000, "A", 16, 32);
+        drawText(&lumv->arcade, c000, "A", 16, 32);
     }
 
     if (lumv->localPlayer->attackPressed)
     {
-        drawText(&lumv->ibm, c555, "B", 48, 32);
+        drawText(&lumv->arcade, c555, "B", 48, 32);
     }
     else
     {
-        drawText(&lumv->ibm, c000, "B", 48, 32);
+        drawText(&lumv->arcade, c000, "B", 48, 32);
     }
     */
 }
@@ -1422,6 +1429,6 @@ void lumberjackExitGameMode(void)
 
     freeWsg(&lumv->alertSprite);
 
-    freeFont(&lumv->ibm);
+    freeFont(&lumv->arcade);
     free(lumv);
 }

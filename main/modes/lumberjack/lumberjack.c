@@ -69,7 +69,6 @@ static void lumberjackEnterMode(void)
     // Allocate and clear all memory for the menu mode.
     lumberjack = calloc(1, sizeof(lumberjack_t));
 
-    loadFont("ibm_vga8.font", &lumberjack->ibm, false);
     loadFont("logbook.font", &lumberjack->logbook, false);
 
     lumberjack->menu                = initMenu(lumberjackName, lumberjackMenuCb);
@@ -140,7 +139,6 @@ static void lumberjackExitMode(void)
     lumberjackExitGameMode();
 
     p2pDeinit(&lumberjack->p2p);
-    freeFont(&lumberjack->ibm); 
     freeFont(&lumberjack->logbook);
     deinitMenu(lumberjack->menu);
     free(lumberjack);
