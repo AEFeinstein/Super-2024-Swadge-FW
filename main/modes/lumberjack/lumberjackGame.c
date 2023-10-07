@@ -69,13 +69,12 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         lumv->axeBlocks[i]->active = false;
     }
 
-    lumv->gameOver             = false;
     lumv->worldTimer           = 0;
     lumv->liquidAnimationFrame = 0;
     lumv->stageAnimationFrame  = 0;
     lumv->loaded               = false;
     lumv->gameType             = main->gameMode;
-    lumv->onTitle              = true;
+    lumv->gameState            = LUMBERJACK_GAMESTATE_TITLE;
     lumv->enemyKillCount       = 0;
     lumv->totalEnemyCount      = 0;
 
@@ -430,7 +429,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
 
     if (lumv->btnState & PB_A)
     {
-        lumv->onTitle = false;
+        lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
     }
 
     //Update Animation
@@ -452,7 +451,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
 void lumberjackGameLoop(int64_t elapsedUs)
 {
 
-    if (lumv->onTitle == true)
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_TITLE)
     {
         lumberjackTitleLoop(elapsedUs);
         return;
@@ -460,7 +459,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
 
     baseMode(elapsedUs);
 
-    if (lumv->gameOver)
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
     {
         lumv->transitionTimer -= elapsedUs/10000;
 
@@ -472,7 +471,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
     }
 
     //if panic mode do water
-    if (lumv->gameOver == false && lumv->gameType == LUMBERJACK_MODE_PANIC)
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING && lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
         lumv->waterTimer -= elapsedUs/10000;
         if (lumv->waterTimer < 0)
@@ -547,7 +546,7 @@ void baseMode(int64_t elapsedUs)
         }
     }
 
-    if (!lumv->gameOver)
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
     {
         for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
         {
@@ -585,7 +584,7 @@ void baseMode(int64_t elapsedUs)
     // Check physics
     lumberjackUpdatePlayerCollision(lumv->localPlayer);
 
-    if (!lumv->gameOver)
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
     {
         // Enemy
         for (int eIdx = 0; eIdx < ARRAY_SIZE(lumv->enemy); eIdx++)
@@ -718,7 +717,7 @@ void baseMode(int64_t elapsedUs)
     }
 
     // Update animation
-    if (!lumv->gameOver)
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
     {        
         // Enemy Animation
         for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
@@ -761,7 +760,7 @@ void lumberjackOnLocalPlayerDeath(void)
     if (lumv->localPlayer->lives <= 0)
     {
         ESP_LOGI(LUM_TAG, "Game over!");
-        lumv->gameOver = true;
+        lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
         lumv->transitionTimer = 400;
     }
 }
@@ -872,7 +871,7 @@ void DrawGame(void)
         drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 22, 32);
     }
 
-    if (lumv->gameOver)
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
     {
         drawWsgSimple(&lumv->gameoverSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
     }

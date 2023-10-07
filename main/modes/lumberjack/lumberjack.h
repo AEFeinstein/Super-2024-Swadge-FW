@@ -73,12 +73,11 @@ typedef struct
 typedef struct
 {
     bool loaded;
-    bool onTitle; // TODO: Make these two one state machine
-    bool gameOver; // TODO: Make these two one state machine
     font_t arcade;
     lumberjack_t* lumberjackMain;
     menu_t* menu;
     uint16_t btnState; ///<-- The STOLEN! ;)
+    lumberjackGameState_t gameState;
 
     int yOffset;
 
