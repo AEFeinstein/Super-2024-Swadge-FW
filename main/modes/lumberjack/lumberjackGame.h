@@ -22,6 +22,8 @@ void lumberjackGameDebugLoop(int64_t elapsedUs);
 void lumberjackDetectBump(lumberjackTile_t* tile);
 void lumberjackSpawnCheck(int64_t elapseUs);
 
+void lumberjackScoreDisplay(int score, int locationX);
+
 void baseMode(int64_t elapsedUs);
 void lumberjackSendAttack(int number);
 

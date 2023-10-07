@@ -76,6 +76,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->loaded               = false;
     lumv->gameType             = main->gameMode;
     lumv->onTitle              = true;
+    lumv->enemyKillCount       = 0;
+    lumv->totalEnemyCount      = 0;
 
     ESP_LOGI(LUM_TAG, "Load Title");
     loadWsg("lumbers_title.wsg", &lumv->title, true);
@@ -218,6 +220,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_enemy_c5.wsg", &lumv->enemySprites[18], true);
     loadWsg("lumbers_enemy_c6.wsg", &lumv->enemySprites[19], true);
     loadWsg("lumbers_enemy_c7.wsg", &lumv->enemySprites[20], true);
+    loadWsg("lumbers_enemy_d1.wsg", &lumv->enemySprites[21], true);
+    loadWsg("lumbers_enemy_d2.wsg", &lumv->enemySprites[22], true);
 
     loadWsg("lumbers_green_ax_block1.wsg", &lumv->greenBlockSprite[0], true);
     loadWsg("lumbers_green_ax_block2.wsg", &lumv->greenBlockSprite[1], true);
@@ -243,6 +247,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_normal_ax_block6.wsg", &lumv->unusedBlockSprite[5], true);
     loadWsg("lumbers_normal_ax_block7.wsg", &lumv->unusedBlockSprite[6], true);
 
+    loadWsg("lumbers_item_ui.wsg", &lumv->ui[0], true);
+
     ESP_LOGI(LUM_TAG, "AXE %d", lumv->axeBlocks[0]->active);
 
     loadWsg("lumbers_alert.wsg", &lumv->alertSprite, true);
@@ -255,7 +261,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     {
         lumberjackSetupLevel(characterIndex);
     }
-
+    
     ESP_LOGI(LUM_TAG, "width %d height %d",TFT_WIDTH, TFT_HEIGHT);
 }
 
@@ -268,18 +274,26 @@ bool lumberjackLoadLevel(int index)
 
     ESP_LOGI(LUM_TAG, "HEIGHT = %d", (int)buffer[0]);
     // Buffer 0 = map height
-    lumv->tile = (lumberjackTile_t*)malloc((int)buffer[0] * LUMBERJACK_MAP_WIDTH * sizeof(lumberjackTile_t));
+    lumv->tile             = (lumberjackTile_t*)malloc((int)buffer[0] * LUMBERJACK_MAP_WIDTH * sizeof(lumberjackTile_t));
     lumv->currentMapHeight = (int)buffer[0];
+    lumv->levelTime        = 0;
 
-    lumv->enemy1Count = (int) buffer[1];
-    lumv->enemy2Count = (int) buffer[2];
-    lumv->enemy3Count = (int) buffer[3];
-    lumv->enemy4Count = (int) buffer[4];
-    lumv->enemy5Count = (int) buffer[5];
-    lumv->enemy6Count = (int) buffer[6];
-    lumv->enemy7Count = (int) buffer[7];
-    lumv->enemy8Count = (int) buffer[8];
-
+    lumv->enemy1Count      = (int) buffer[1];
+    lumv->enemy2Count      = (int) buffer[2];
+    lumv->enemy3Count      = (int) buffer[3];
+    lumv->enemy4Count      = (int) buffer[4];
+    lumv->enemy5Count      = (int) buffer[5];
+    lumv->enemy6Count      = (int) buffer[6];
+    lumv->enemy7Count      = (int) buffer[7];
+    lumv->enemy8Count      = (int) buffer[8];
+    lumv->totalEnemyCount = lumv->enemy1Count; 
+    lumv->totalEnemyCount += lumv->enemy2Count; 
+    lumv->totalEnemyCount += lumv->enemy3Count; 
+    lumv->totalEnemyCount += lumv->enemy4Count; 
+    lumv->totalEnemyCount += lumv->enemy5Count; 
+    lumv->totalEnemyCount += lumv->enemy6Count; 
+    lumv->totalEnemyCount += lumv->enemy7Count; 
+    lumv->totalEnemyCount += lumv->enemy8Count; 
 
     lumv->waterSpeed       = (int)buffer[11];
     lumv->waterTimer       = (int)buffer[11];
@@ -301,7 +315,7 @@ bool lumberjackLoadLevel(int index)
     }
     
     int offset = (lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH) + 12;
-    ESP_LOGI (LUM_TAG, "%d",((int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8)));
+    ESP_LOGI (LUM_TAG, "%d total enemies",lumv->totalEnemyCount);
     //lumv->tile = &level;
     lumv->playerSpawnX = (int)buffer[offset];
     lumv->playerSpawnY = (int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8);
@@ -326,7 +340,10 @@ void lumberjackSetupLevel(int characterIndex)
     lumv->waterDirection   = -1; // This needs to be taken in to account with the intro timer
 
     lumv->localPlayer  = calloc(1, sizeof(lumberjackEntity_t));
+    lumv->localPlayer->scoreValue       = 0;
+
     lumv->remotePlayer = calloc(1, sizeof(lumberjackEntity_t));
+    lumv->remotePlayer->scoreValue       = 0;
     lumberjackSetupPlayer(lumv->localPlayer, characterIndex);
     lumberjackSpawnPlayer(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY, 0);
 
@@ -525,6 +542,7 @@ void baseMode(int64_t elapsedUs)
         if (!attackThisFrame && lumv->localPlayer->attackPressed)
         {
             ESP_LOGI(LUM_TAG, "Attack this frame!");
+
             lumberjackSendAttack(0);
         }
     }
@@ -648,6 +666,8 @@ void baseMode(int64_t elapsedUs)
                     {
                         enemy->state = LUMBERJACK_DEAD; // Enemy Death
                         enemy->vy    = -30;
+                        lumv->score += enemy->scoreValue;
+
                         if (lumv->localPlayer->vx != 0)
                         {
                             enemy->direction = abs(lumv->localPlayer->vx) / lumv->localPlayer->vx;
@@ -836,6 +856,7 @@ void DrawGame(void)
                 lumv->remotePlayer->y - lumv->yOffset, false, false, 0);
     }
 
+    drawWsgSimple(&lumv->ui[0], (TFT_WIDTH / 2) - 12, 6);
     //If playing panic mode draw water
 
     lumberjackDrawWaterLevel();
@@ -856,13 +877,9 @@ void DrawGame(void)
         drawWsgSimple(&lumv->gameoverSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
     }
 
-    char* score_display = "000";
-
-    drawText(&lumv->arcade, c000, score_display, 26, 18);
-    drawText(&lumv->arcade, c000, score_display, 26, 15);
-    drawText(&lumv->arcade, c000, score_display, 25, 16);
-    drawText(&lumv->arcade, c000, score_display, 27, 16);
-    drawText(&lumv->arcade, c555, score_display, 26, 16);
+    //
+    lumberjackScoreDisplay(lumv->score, 26);
+    lumberjackScoreDisplay(9999, 206);
     // Debug
 
     char debug[20] = {0};
@@ -893,6 +910,26 @@ void DrawGame(void)
         drawText(&lumv->arcade, c000, "B", 48, 32);
     }
     */
+}
+
+void lumberjackScoreDisplay(int score, int locationX)
+{
+    char score_display[20] = {0};
+
+    if (score > 0)
+    {
+        snprintf(score_display, sizeof(score_display), "%d", score);
+    }
+    else
+    {
+        snprintf(score_display, sizeof(score_display), "000");
+    }
+
+    drawText(&lumv->arcade, c000, score_display, locationX, 18);
+    drawText(&lumv->arcade, c000, score_display, locationX, 15);
+    drawText(&lumv->arcade, c000, score_display, locationX - 1, 16);
+    drawText(&lumv->arcade, c000, score_display, locationX + 1, 16);
+    drawText(&lumv->arcade, c555, score_display, locationX, 16);
 }
 
 void lumberjackSpawnCheck(int64_t elapseUs)

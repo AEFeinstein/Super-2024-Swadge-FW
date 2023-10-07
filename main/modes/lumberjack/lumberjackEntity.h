@@ -32,6 +32,7 @@ typedef struct
     int type;
     int maxLevel;
     int respawn;
+    int scoreValue;
     int submergedTimer;
 
     int cX;

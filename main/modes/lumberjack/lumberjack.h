@@ -23,6 +23,14 @@ typedef enum
     LUMBERJACK_MODE_ATTACK
 } lumberjackGameType_t;
 
+typedef enum
+{
+    LUMBERJACK_GAMESTATE_TITLE,
+    LUMBERJACK_GAMESTATE_PLAYING,
+    LUMBERJACK_GAMESTATE_WINNING,
+    LUMBERJACK_GAMESTATE_GAMEOVER
+} lumberjackGameState_t;
+
 typedef struct
 {
     menu_t* menu;
@@ -65,8 +73,8 @@ typedef struct
 typedef struct
 {
     bool loaded;
-    bool onTitle;
-    bool gameOver;
+    bool onTitle; // TODO: Make these two one state machine
+    bool gameOver; // TODO: Make these two one state machine
     font_t arcade;
     lumberjack_t* lumberjackMain;
     menu_t* menu;
@@ -75,11 +83,14 @@ typedef struct
     int yOffset;
 
     int64_t worldTimer;
+    int64_t levelTime;
     int64_t transitionTimer;
     int64_t physicsTimer;
     int liquidAnimationFrame;
     int stageAnimationFrame;
     int currentMapHeight;
+    int totalEnemyCount;
+    int enemyKillCount;
     int spawnTimer;
     int spawnIndex;
     int spawnSide;
@@ -123,8 +134,10 @@ typedef struct
     wsg_t unknownBlockSprite[7];
     wsg_t unusedBlockSprite[7];
 
-    wsg_t enemySprites[21];
+    wsg_t enemySprites[23];
     wsg_t playerSprites[18];
+
+    wsg_t ui[6];
 
     wsg_t alertSprite;
 

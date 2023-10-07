@@ -78,6 +78,7 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->maxVX        = 4;
         enemy->spriteOffset = 0;
         enemy->maxLevel     = 2;
+        enemy->scoreValue   = 100;
 
         enemy->cW = 15;
         enemy->cH = 15;
@@ -91,6 +92,7 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->spriteOffset = 7;
         enemy->maxLevel     = 2;
         enemy->cW           = 15;
+        enemy->scoreValue   = 250;
         enemy->cH           = 15;
     }
     else if (newIndex == 2)
@@ -102,6 +104,7 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->spriteOffset = 14;
         enemy->maxLevel     = 2;
         enemy->cW           = 15;
+        enemy->scoreValue   = 500;
         enemy->cH           = 15;
     }
 }
