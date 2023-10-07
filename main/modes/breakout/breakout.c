@@ -348,16 +348,46 @@ static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
 
 static void breakoutChangeStateReadyScreen(breakout_t *self){
     self->gameData.frameCount = 0;
+
+    //Set up Cho Intro
+    deactivateAllEntities(&(self->entityManager), false, true);
+    self->tilemap.executeTileSpawnAll = true;
+    drawTileMap(&(self->tilemap));
+
+    self->entityManager.playerEntity = NULL;
+    self->entityManager.playerEntity = createEntity(&(self->entityManager), ENTITY_CHO_INTRO, 0,0);
+
     self->update = &breakoutUpdateReadyScreen;
 }
 
 static void breakoutUpdateReadyScreen(breakout_t *self, int64_t elapsedUs){    
     self->gameData.frameCount++;
-    if(self->gameData.frameCount > 179){
-        breakoutChangeStateGame(self);
-    }
 
     updateLedsInGame(&(self->gameData));
+    drawStarfield(&(self->starfield));
+
+
+
+    if(self->entityManager.playerEntity != NULL && self->entityManager.playerEntity->active){
+        self->entityManager.playerEntity->updateFunction(self->entityManager.playerEntity);
+
+        if(self->gameData.targetBlocksBroken > 0){
+            drawTileMap(&(self->tilemap));
+            updateStarfield(&(self->starfield), 1);
+        }
+    } else { 
+        if(!(self->gameData.frameCount % 60)){
+            breakoutChangeStateGame(self);
+        }
+
+        if(self->gameData.targetBlocksBroken > 0 || !(self->gameData.frameCount % 2)){
+            drawTileMap(&(self->tilemap));
+        }
+
+        updateStarfield(&(self->starfield), 1);
+    }
+
+    drawEntities(&(self->entityManager));
     breakoutDrawReadyScreen(&(self->logbook), &(self->ibm_vga8), &(self->gameData));
 }
 
@@ -370,8 +400,8 @@ static void breakoutChangeStateGame(breakout_t *self){
     self->gameData.frameCount = 0;
     self->gameData.playerTimeBombsCount = 0;
     self->gameData.playerRemoteBombPlaced = false;
-    deactivateAllEntities(&(self->entityManager), false, true);
-    self->tilemap.executeTileSpawnAll = true;
+    //deactivateAllEntities(&(self->entityManager), false, true);
+    //self->tilemap.executeTileSpawnAll = true;
     self->update = &breakoutGameLoop;
 }
 
@@ -441,6 +471,10 @@ void breakoutDetectGameStateChange(breakout_t *self){
 
     switch (self->gameData.changeState)
     {
+        case ST_GAME:
+            breakoutChangeStateGame(self);
+            return;
+
         case ST_DEAD:
             breakoutChangeStateDead(self);
             break;
@@ -484,8 +518,10 @@ void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs){
         resetGameDataLeds(&(self->gameData));
         if(self->gameData.lives > 0){
             breakoutChangeStateReadyScreen(self);
+            return;
         } else {
             breakoutChangeStateGameOver(self);
+            return;
         }
     }
 
@@ -657,13 +693,15 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             /*if(!self->gameData.debugMode){
                 savePlatformerUnlockables(self);
             }*/
-        }
+        } 
+    } else if(self->gameData.frameCount < 30 || !(self->gameData.frameCount % 2)){
+        drawTileMap(&(self->tilemap));
     }
 
     //updateEntities(&(self->entityManager));
 
     drawStarfield(&(self->starfield));
-    drawTileMap(&(self->tilemap));
+    //drawTileMap(&(self->tilemap));
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
     breakoutDrawLevelClear( &(self->logbook), &(self->gameData));

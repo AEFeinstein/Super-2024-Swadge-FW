@@ -49,7 +49,12 @@ typedef enum {
     SP_BALL_TRAIL_0,
     SP_BALL_TRAIL_1,
     SP_BALL_TRAIL_2,
-    SP_BALL_TRAIL_3
+    SP_BALL_TRAIL_3,
+    SP_CHO_WALK_0,
+    SP_CHO_WALK_1,
+    SP_CHO_WALK_2,
+    SP_CHO_WIN_0,
+    SP_CHO_WIN_1
 } spriteDef_t;
 
 #endif

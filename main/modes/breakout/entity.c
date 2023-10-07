@@ -370,9 +370,7 @@ void updateBallAtStart(entity_t *self){
         entity_t *checkEntity = &(self->entityManager->entities[i]);
         if (checkEntity->active && checkEntity != self && (checkEntity->type == ENTITY_PLAYER_PADDLE_BOTTOM || checkEntity->type == ENTITY_PLAYER_PADDLE_TOP || checkEntity->type == ENTITY_PLAYER_PADDLE_LEFT || checkEntity->type == ENTITY_PLAYER_PADDLE_RIGHT) )
         {
-            uint32_t dist = abs(self->x - checkEntity->x) + abs(self->y - checkEntity->y);
-
-            if (dist < 400)
+            if (getTaxiCabDistanceBetweenEntities(self, checkEntity) < 400)
             {
                 self->attachedToEntity = checkEntity;
                 self->updateFunction = &updateBall;
@@ -380,6 +378,10 @@ void updateBallAtStart(entity_t *self){
             }
         }
     }
+}
+
+uint32_t getTaxiCabDistanceBetweenEntities(entity_t* self, entity_t* other){
+    return abs(self->x - other->x) + abs(self->y - other->y);
 }
 
 void updateTimeBomb(entity_t * self){
@@ -467,6 +469,49 @@ void updateBallTrail(entity_t * self){
             self->visible = true;
         }
         self->animationTimer = 2;
+    }
+}
+
+void updateChoIntro(entity_t * self){
+    //This entity's state is determined by whether or not it found the ball.
+    if(self->attachedToEntity == NULL){
+        //Find the first ball and "attach" self to it
+        for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+        {
+            entity_t *checkEntity = &(self->entityManager->entities[i]);
+            if (checkEntity->active && checkEntity != self && (checkEntity->type == ENTITY_PLAYER_BALL))
+            {
+                self->attachedToEntity = checkEntity;
+                self->attachedToEntity->visible = false;
+
+                //If we found the ball, walk towards it
+                self->y = self->attachedToEntity->y;
+                self->xspeed = (self->attachedToEntity->x > self->x) ? 16 : -16;
+                self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
+                return;
+            }
+        }
+
+        //Couldn't find ball? Destroy self.
+        destroyEntity(self, false);
+        return;
+    }
+
+    self->x += self->xspeed;
+
+    if(self->gameData->frameCount % 5 == 0) {
+        self->spriteIndex++;
+        if(self->spriteIndex > SP_CHO_WALK_2){
+            self->spriteIndex = SP_CHO_WALK_0;
+        }
+    }
+
+    //Very close to ball? "Become" the ball
+    if(getTaxiCabDistanceBetweenEntities(self, self->attachedToEntity) < 32){
+        self->attachedToEntity->visible = true;
+
+        destroyEntity(self, false);
+        return;
     }
 }
 
@@ -586,6 +631,7 @@ void destroyEntity(entity_t *self, bool respawn)
         self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->type + 128;
     }
 
+    self->attachedToEntity = NULL;
     self->entityManager->activeEntities--;
     self->active = false;
 }

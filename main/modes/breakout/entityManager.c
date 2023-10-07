@@ -200,6 +200,46 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_BALL_TRAIL_3].collisionBox.x1 = 7;
     entityManager->sprites[SP_BALL_TRAIL_3].collisionBox.y0 = 0;
     entityManager->sprites[SP_BALL_TRAIL_3].collisionBox.y1 = 7;
+
+    loadWsg("cho000.wsg", &entityManager->sprites[SP_CHO_WALK_0].wsg, false);
+    entityManager->sprites[SP_CHO_WALK_0].originX=7;
+    entityManager->sprites[SP_CHO_WALK_0].originY=11;
+    entityManager->sprites[SP_CHO_WALK_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CHO_WALK_0].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CHO_WALK_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CHO_WALK_0].collisionBox.y1 = 15;
+
+    loadWsg("cho001.wsg", &entityManager->sprites[SP_CHO_WALK_1].wsg, false);
+    entityManager->sprites[SP_CHO_WALK_1].originX=7;
+    entityManager->sprites[SP_CHO_WALK_1].originY=11;
+    entityManager->sprites[SP_CHO_WALK_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CHO_WALK_1].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CHO_WALK_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CHO_WALK_1].collisionBox.y1 = 15;
+
+    loadWsg("cho002.wsg", &entityManager->sprites[SP_CHO_WALK_2].wsg, false);
+    entityManager->sprites[SP_CHO_WALK_2].originX=7;
+    entityManager->sprites[SP_CHO_WALK_2].originY=11;
+    entityManager->sprites[SP_CHO_WALK_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CHO_WALK_2].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CHO_WALK_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CHO_WALK_2].collisionBox.y1 = 15;
+
+    loadWsg("cho003.wsg", &entityManager->sprites[SP_CHO_WIN_0].wsg, false);
+    entityManager->sprites[SP_CHO_WIN_0].originX=7;
+    entityManager->sprites[SP_CHO_WIN_0].originY=7;
+    entityManager->sprites[SP_CHO_WIN_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CHO_WIN_0].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CHO_WIN_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CHO_WIN_0].collisionBox.y1 = 15;
+
+    loadWsg("cho004.wsg", &entityManager->sprites[SP_CHO_WIN_1].wsg, false);
+    entityManager->sprites[SP_CHO_WIN_1].originX=7;
+    entityManager->sprites[SP_CHO_WIN_1].originY=7;
+    entityManager->sprites[SP_CHO_WIN_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CHO_WIN_1].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CHO_WIN_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CHO_WIN_1].collisionBox.y1 = 15;
 };
 
 void updateEntities(entityManager_t * entityManager)
@@ -322,6 +362,9 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
             break;
         case ENTITY_BALL_TRAIL:
             createdEntity = createBallTrail(entityManager, x, y);
+            break;
+        case ENTITY_CHO_INTRO:
+            createdEntity = createChoIntro(entityManager, x, y);
             break;
         default:
             createdEntity = NULL;
@@ -607,6 +650,40 @@ entity_t* createBallTrail(entityManager_t * entityManager, uint16_t x, uint16_t 
     entity->type = ENTITY_BALL_TRAIL;
     entity->spriteIndex = SP_BALL_TRAIL_0;
     entity->updateFunction = &updateBallTrail;
+    entity->collisionHandler = &dummyCollisionHandler;
+    entity->tileCollisionHandler = &dummyTileCollisionHandler;
+    entity->overlapTileHandler = &defaultOverlapTileHandler;
+
+    //Entity cannot be respawned from the tilemap
+    entity->homeTileX = 0;
+    entity->homeTileY = 0;
+
+    return entity;
+}
+
+entity_t* createChoIntro(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = true;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+    
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical = false;
+    entity->spriteRotateAngle = 0;
+    entity->animationTimer = 0;
+
+    entity->type = ENTITY_CHO_INTRO;
+    entity->spriteIndex = SP_CHO_WALK_0;
+    entity->updateFunction = &updateChoIntro;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
