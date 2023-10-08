@@ -17,7 +17,7 @@ void initializeSoundManager(soundManager_t *self){
     loadSong("sndTally.sng", &self->tally, false);
     loadSong("sndDropBomb.sng", &self->dropBomb, false);
     loadSong("sndDetonate.sng", &self->detonate, false);
-    loadSong("snd1up.sng", &self->snd1up, false);
+    loadSong("sndBrk1up.sng", &self->snd1up, false);
 }
 
 void freeSoundManager(soundManager_t *self){
