@@ -73,6 +73,7 @@ typedef struct
 typedef struct
 {
     bool loaded;
+    bool hasWon;
     font_t arcade;
     lumberjack_t* lumberjackMain;
     menu_t* menu;
@@ -126,7 +127,6 @@ typedef struct
     wsg_t gameoverSprite;
 
     lumberjackTile_t* tile;
-    uint8_t anim[400];
 
     wsg_t greenBlockSprite[7];
     wsg_t redBlockSprite[7];
@@ -139,8 +139,6 @@ typedef struct
     wsg_t ui[6];
 
     wsg_t alertSprite;
-
-    wsg_t slowload[400];
 
     lumberjackEntity_t* enemy[64];
 
