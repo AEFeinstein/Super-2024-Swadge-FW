@@ -31,7 +31,6 @@
 
 #define LUMBERJACK_SCREEN_Y_OFFSET      140
 #define LUMBERJACK_SCREEN_Y_MIN         -16
-#define LUMBERJACK_SCREEN_Y_MAX         96 //336
 
 #define LUMBERJACK_MAP_WIDTH            18
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
@@ -45,7 +44,7 @@ static lumberjackTile_t* lumberjackGetTile(int x, int y);
 static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs);
 static bool lumberjackIsCollisionTile(int index);
 
-bool lumberjackLoadLevel(int index);
+bool lumberjackLoadLevel(void);
 void lumberjackOnLocalPlayerDeath(void);
 
 void DrawTitle(void);
@@ -77,6 +76,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->loaded               = false;
     lumv->gameType             = main->gameMode;
     lumv->gameState            = LUMBERJACK_GAMESTATE_TITLE;
+    lumv->levelIndex           = 0;
 
     ESP_LOGI(LUM_TAG, "Load Title");
     loadWsg("lumbers_title.wsg", &lumv->title, true);
@@ -264,9 +264,16 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     ESP_LOGI(LUM_TAG, "width %d height %d",TFT_WIDTH, TFT_HEIGHT);
 }
 
-bool lumberjackLoadLevel(int index)
+bool lumberjackLoadLevel()
 {
-    char* fname = "lumberjacks_panic_1.bin";
+    char* levelName[] =
+    {
+        "lumberjacks_panic_1.bin",
+        "lumberjacks_panic_2.bin",
+        "lumberjacks_panic_3.bin",
+        "lumberjacks_panic_4.bin"
+    };
+    char* fname = levelName[lumv->levelIndex % 4];
 
     size_t ms;
     uint8_t *buffer = spiffsReadFile(fname, &ms, false);
@@ -319,7 +326,7 @@ bool lumberjackLoadLevel(int index)
     //lumv->tile = &level;
     lumv->playerSpawnX = (int)buffer[offset];
     lumv->playerSpawnY = (int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8);
-    
+    ESP_LOGI(LUM_TAG, "%d %d", lumv->playerSpawnX, buffer[offset]);
 
     return true;
 }
@@ -332,7 +339,7 @@ void lumberjackSetupLevel(int characterIndex)
     lumv->hasWon               = false;
 
     ESP_LOGI(LUM_TAG, "LOADING LEVEL");
-    bool levelLoaded = lumberjackLoadLevel(0);
+    bool levelLoaded = lumberjackLoadLevel();
         
     // This all to be loaded externally
     lumv->yOffset          = 0;
@@ -419,7 +426,8 @@ void lumberjackSetupLevel(int characterIndex)
 void restartLevel(void)
 {
     lumv->localPlayer->lives--;
-    lumberjackRespawn(lumv->localPlayer);
+    lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX);
+
 }
 
 void lumberjackTitleLoop(int64_t elapsedUs)
@@ -583,6 +591,7 @@ void baseMode(int64_t elapsedUs)
             lumv->gameState          = LUMBERJACK_GAMESTATE_WINNING;
             lumv->localPlayer->state = LUMBERJACK_VICTORY;
             lumv->levelTime          = 0;
+            lumv->levelIndex++;
         }
     }
 
@@ -672,7 +681,8 @@ void baseMode(int64_t elapsedUs)
                 // Respawn player
                 lumv->localPlayer->respawn = 0;
                 lumv->localPlayer->lives--;
-                lumberjackRespawn(lumv->localPlayer);
+                
+                lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX);
             }
         }
         else if (lumv->localPlayer->state != LUMBERJACK_OFFSCREEN && lumv->localPlayer->state != LUMBERJACK_VICTORY)

@@ -45,9 +45,9 @@ void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
     hero->respawn          = 0;
 }
 
-void lumberjackRespawn(lumberjackEntity_t* hero)
+void lumberjackRespawn(lumberjackEntity_t* hero, int x)
 {
-    hero->x                = 130;
+    hero->x                = x;
     hero->maxVX            = 15;
     hero->y                = LUMBERJACK_SPAWN_Y;
     hero->active           = true;

@@ -81,6 +81,7 @@ typedef struct
     lumberjackGameState_t gameState;
 
     int yOffset;
+    int levelIndex;
 
     int64_t worldTimer;
     int64_t levelTime;
