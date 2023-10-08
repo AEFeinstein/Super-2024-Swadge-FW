@@ -124,7 +124,7 @@ uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 11
+#define NUM_LEVELS 24
 
 static const leveldef_t leveldef[NUM_LEVELS] = {
     {.filename = "intro.bin",
@@ -141,14 +141,40 @@ static const leveldef_t leveldef[NUM_LEVELS] = {
      .timeLimit = 180},
     {.filename = "mag02.bin",
      .timeLimit = 180},
+    {.filename = "m_attack.bin",
+     .timeLimit = 180},
+    {.filename = "flower.bin",
+     .timeLimit = 180},
     {.filename = "brkLvlChar1.bin",
+     .timeLimit = 180},
+    {.filename = "gaylordlogo.bin",
+     .timeLimit = 180},
+    {.filename = "trifecta.bin",
+     .timeLimit = 180},
+    {.filename = "xmarks.bin",
      .timeLimit = 180},
     {.filename = "bombtest.bin",
      .timeLimit = 180},
+    {.filename = "devito.bin",
+     .timeLimit = 180},
+    {.filename = "lumberjacks.bin",
+     .timeLimit = 180},
+    {.filename = "halloween.bin",
+     .timeLimit = 180},
+    {.filename = "snake.bin",
+     .timeLimit = 180},
+    {.filename = "flipflop.bin",
+     .timeLimit = 180},
     {.filename = "ponglike.bin",
      .timeLimit = 180},
-    {.filename = "starlite.bin",
+    {.filename = "tinyhuge.bin",
      .timeLimit = 180},
+    {.filename = "superhard.bin",
+     .timeLimit = 180},
+    {.filename = "firework.bin",
+     .timeLimit = 180},
+    {.filename = "starlite.bin",
+     .timeLimit = 180}
      };
     
 //==============================================================================
