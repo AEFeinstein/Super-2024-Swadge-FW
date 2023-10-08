@@ -118,6 +118,8 @@ void updateExplosion(entity_t * self);
 void updateBallTrail(entity_t * self);
 void updateChoIntro(entity_t * self);
 
+entity_t* findFirstEntityOfType(entityManager_t* entityManager, uint8_t type);
+void updateChoLevelClear(entity_t *self);
 
 void moveEntityWithTileCollisions(entity_t * self);
 

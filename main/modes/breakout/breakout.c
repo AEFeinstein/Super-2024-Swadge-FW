@@ -351,8 +351,7 @@ static void breakoutChangeStateReadyScreen(breakout_t *self){
 
     //Set up Cho Intro
     deactivateAllEntities(&(self->entityManager), false, true);
-    self->tilemap.executeTileSpawnAll = true;
-    drawTileMap(&(self->tilemap));
+    forceTileSpawnEntitiesWithinView(&(self->tilemap));
 
     self->entityManager.playerEntity = NULL;
     self->entityManager.playerEntity = createEntity(&(self->entityManager), ENTITY_CHO_INTRO, 0,0);
@@ -698,7 +697,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
         drawTileMap(&(self->tilemap));
     }
 
-    //updateEntities(&(self->entityManager));
+    updateEntities(&(self->entityManager));
 
     drawStarfield(&(self->starfield));
     //drawTileMap(&(self->tilemap));

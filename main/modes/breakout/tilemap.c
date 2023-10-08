@@ -444,3 +444,35 @@ void freeTilemap(tilemap_t *tilemap){
 
 
 }
+
+void forceTileSpawnEntitiesWithinView(tilemap_t *tilemap)
+{
+    for (uint16_t y = (tilemap->mapOffsetY >> TILE_SIZE_IN_POWERS_OF_2); y < (tilemap->mapOffsetY >> TILE_SIZE_IN_POWERS_OF_2) + TILEMAP_DISPLAY_HEIGHT_TILES; y++)
+    {
+        if (y >= tilemap->mapHeight)
+        {
+            break;
+        }
+
+        for (int32_t x = (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2); x < (tilemap->mapOffsetX >> TILE_SIZE_IN_POWERS_OF_2) + TILEMAP_DISPLAY_WIDTH_TILES; x++)
+        {
+            if (x >= tilemap->mapWidth)
+            {
+                break;
+            } 
+            else if (x < 0)
+            {
+                continue;
+            }
+
+            uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
+            
+            if(tile < 128){
+                continue;
+            } else if (tilemap->tileSpawnEnabled)
+            {
+                tileSpawnEntity(tilemap, tile - 128, x, y);
+            }
+        }
+    }
+}

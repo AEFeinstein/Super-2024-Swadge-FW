@@ -213,5 +213,6 @@ bool isBlock(uint8_t tileId);
 void unlockScrolling(tilemap_t *tilemap);
 bool needsTransparency(uint8_t tileId);
 void freeTilemap(tilemap_t *tilemap);
+void forceTileSpawnEntitiesWithinView(tilemap_t *tilemap);
 
 #endif

@@ -476,20 +476,17 @@ void updateChoIntro(entity_t * self){
     //This entity's state is determined by whether or not it found the ball.
     if(self->attachedToEntity == NULL){
         //Find the first ball and "attach" self to it
-        for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+        self->attachedToEntity = findFirstEntityOfType(self->entityManager, ENTITY_PLAYER_BALL);
+        if (self->attachedToEntity != NULL)
         {
-            entity_t *checkEntity = &(self->entityManager->entities[i]);
-            if (checkEntity->active && checkEntity != self && (checkEntity->type == ENTITY_PLAYER_BALL))
-            {
-                self->attachedToEntity = checkEntity;
-                self->attachedToEntity->visible = false;
+            self->attachedToEntity->visible = false;
 
-                //If we found the ball, walk towards it
-                self->y = self->attachedToEntity->y;
-                self->xspeed = (self->attachedToEntity->x > self->x) ? 16 : -16;
-                self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
-                return;
-            }
+            //If we found the ball, walk towards it from the far side of the screen
+            self->y = self->attachedToEntity->y;
+            self->x = ((self->attachedToEntity->x >> SUBPIXEL_RESOLUTION) > (TFT_WIDTH >> 1)) ? 0 : TFT_WIDTH << SUBPIXEL_RESOLUTION;
+            self->xspeed = (self->attachedToEntity->x > self->x) ? 32 : -32;
+            self->spriteFlipHorizontal = (self->xspeed > 0) ? false : true;
+            return;
         }
 
         //Couldn't find ball? Destroy self.
@@ -513,6 +510,31 @@ void updateChoIntro(entity_t * self){
         destroyEntity(self, false);
         return;
     }
+}
+
+entity_t* findFirstEntityOfType(entityManager_t* entityManager, uint8_t type){
+    for (uint8_t i = 0; i < MAX_ENTITIES; i++)
+    {
+        entity_t* checkEntity = &(entityManager->entities[i]);
+        if (checkEntity->active && (checkEntity->type == type))
+        {
+            return checkEntity;
+        }
+    }
+
+    return NULL;
+}
+
+void updateChoLevelClear(entity_t *self){
+    if(self->gameData->countdown > 20){
+        if(self->gameData->frameCount % 9 == 0) {
+            self->spriteIndex = SP_CHO_WIN_0 + (self->gameData->frameCount & 1);
+        }
+    } else {
+        self->spriteIndex = SP_EXPLOSION_0;
+        self->updateFunction = &updateExplosion;
+    }
+    
 }
 
 void moveEntityWithTileCollisions(entity_t *self)
@@ -1179,6 +1201,11 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
     setLedBreakBlock(gameData, tileId);
 
     if(gameData->targetBlocksBroken >= tilemap->totalTargetBlocks){
+        entity_t* playerBall = findFirstEntityOfType(tilemap->entityManager, ENTITY_PLAYER_BALL);
+        if(playerBall != NULL){
+            playerBall->updateFunction = &updateChoLevelClear;
+        }
+
         gameData->changeState = ST_LEVEL_CLEAR;
     }
 };
