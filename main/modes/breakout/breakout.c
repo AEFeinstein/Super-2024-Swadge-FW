@@ -224,7 +224,7 @@ static void breakoutEnterMode(void)
     breakout->menu = initMenu(breakoutName, breakoutMenuCb);
     breakout->mRenderer = initMenuLogbookRenderer(&breakout->logbook);
 
-    initializeGameData(&(breakout->gameData));
+    initializeGameData(&(breakout->gameData), &(breakout->soundManager));
     initializeTileMap(&(breakout->tilemap));
     initializeSoundManager(&(breakout->soundManager));
     initializeEntityManager(&(breakout->entityManager), &(breakout->tilemap), &(breakout->gameData), &(breakout->soundManager));
@@ -634,14 +634,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
                 bzrPlayBgm(&(self->soundManager.tally), BZR_STEREO);
             }
 
-            uint16_t comboPoints = 20 * self->gameData.combo;
-
-            self->gameData.score += comboPoints;
-            self->gameData.comboScore = comboPoints;
-
-            if(self->gameData.combo > 1){
-                self->gameData.combo--;
-            }
+            scorePoints(&(self->gameData), 20, -1);
         } else if(self->gameData.frameCount % 60 == 0) {
             //Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false);

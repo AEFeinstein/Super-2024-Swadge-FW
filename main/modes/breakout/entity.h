@@ -131,7 +131,7 @@ void playerCollisionHandler(entity_t *self, entity_t* other);
 void enemyCollisionHandler(entity_t *self, entity_t *other);
 void dummyCollisionHandler(entity_t *self, entity_t *other);
 void ballCollisionHandler(entity_t *self, entity_t *other);
-void advanceBallSpeed(entity_t* self);
+void advanceBallSpeed(entity_t* self, uint16_t factor);
 
 bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool enemyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);

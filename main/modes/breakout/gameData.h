@@ -10,6 +10,7 @@
 #include "hdw-led.h"
 #include "breakout_typedef.h"
 #include "palette.h"
+#include "soundManager.h"
 
 //==============================================================================
 // Constants
@@ -28,6 +29,8 @@ typedef struct
 
     uint32_t score;
     uint8_t lives;
+
+    uint32_t extraLifeScore;
 
     int16_t countdown;
     uint16_t frameCount;
@@ -54,7 +57,7 @@ typedef struct
     int32_t touchX;
     int32_t touchY;
 
-    led_t leds[8 /*CONFIG_NUM_LEDS*/];
+    led_t leds[CONFIG_NUM_LEDS];
 
     paletteColor_t bgColor;
 
@@ -67,12 +70,14 @@ typedef struct
 
     bool continuesUsed;
     uint32_t inGameTimer;
+
+    soundManager_t* soundManager;
 } gameData_t;
 
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeGameData(gameData_t * gameData);
+void initializeGameData(gameData_t * gameData, soundManager_t* soundManager);
 void initializeGameDataFromTitleScreen(gameData_t * gameData);
 void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData);
 void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo);

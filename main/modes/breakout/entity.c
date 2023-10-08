@@ -754,12 +754,12 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
     {
         case ENTITY_PLAYER_PADDLE_BOTTOM:
             if(self->yspeed > 0){
-                advanceBallSpeed(self);
+                advanceBallSpeed(self, 1);
                 setVelocity(self, 90 + (other->x - self->x)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 2 );
+                    scorePoints(self->gameData, 0, 1 );
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_0;
                 }
@@ -767,12 +767,12 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_TOP:
             if(self->yspeed < 0){
-                advanceBallSpeed(self);
+                advanceBallSpeed(self, 1);
                 setVelocity(self, 270 + (self->x - other->x)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 2 );
+                    scorePoints(self->gameData, 0, 1 );
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_0;
                 }
@@ -780,12 +780,12 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_LEFT:
             if(self->xspeed < 0){
-                advanceBallSpeed(self);
+                advanceBallSpeed(self, 1);
                 setVelocity(self, 0 + (other->y - self->y)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 2 );
+                    scorePoints(self->gameData, 0, 1 );
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_VERTICAL_0;
                 }
@@ -793,24 +793,27 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             break;
         case ENTITY_PLAYER_PADDLE_RIGHT:
             if(self->xspeed > 0){
-                advanceBallSpeed(self);
+                advanceBallSpeed(self, 1);
                 setVelocity(self, 180 + (self->y - other->y)/SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 2 );
+                    scorePoints(self->gameData, 0, 1 );
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_VERTICAL_0;
                 }
             }
             break;
         case ENTITY_PLAYER_BOMB_EXPLOSION:
-            advanceBallSpeed(self);
+            if(!other->spriteRotateAngle) {
+                advanceBallSpeed(self, 3);
+            }
+            
             setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), self->baseSpeed);
-            other->spriteRotateAngle = esp_random() % 359;
+            other->spriteRotateAngle = 1 + (self->x % 359);
 
             if(self->shouldAdvanceMultiplier){
-                scorePoints(self->gameData, 0, 2 );
+                scorePoints(self->gameData, 0, 1 );
                 self->shouldAdvanceMultiplier = false;
             }
 
@@ -822,12 +825,12 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
     }
 }
 
-void advanceBallSpeed(entity_t* self){
+void advanceBallSpeed(entity_t* self, uint16_t factor){
     if(self->speedUpLookupIndex >= BALL_SPEED_UP_TABLE_LENGTH){
         return;
     }
 
-    self->bouncesToNextSpeedUp--;
+    self->bouncesToNextSpeedUp -= factor;
     if(self->bouncesToNextSpeedUp < 0){
         self->speedUpLookupIndex += BALL_SPEED_UP_TABLE_ROW_LENGTH;
 
@@ -949,7 +952,7 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
         case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
             bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
-            scorePoints(self->gameData, 10, -1);
+            scorePoints(self->gameData, 10, (self->shouldAdvanceMultiplier) ? -1 : 0);
             self->shouldAdvanceMultiplier = true;
             break;
         }

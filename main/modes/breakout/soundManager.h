@@ -27,6 +27,7 @@ typedef struct
     song_t tally;
     song_t dropBomb;
     song_t detonate;
+    song_t snd1up;
 
 } soundManager_t;
 

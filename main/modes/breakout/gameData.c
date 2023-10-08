@@ -13,12 +13,14 @@
 //==============================================================================
 // Functions
 //==============================================================================
- void initializeGameData(gameData_t * gameData){
+ void initializeGameData(gameData_t * gameData, soundManager_t* soundManager){
     gameData->gameState = 0;
     gameData->btnState = 0;
     gameData->score = 0;
     gameData->lives = 3;
     gameData->countdown = 000;
+
+    gameData->extraLifeScore = 1500;
 
     gameData->level = 1;
     gameData->frameCount = 0;
@@ -47,6 +49,7 @@
     /*gameData->nextBombToDetonate = 0;
     gameData->nextBombSlot = 0;
     gameData->bombDetonateCooldown = 0;*/
+    gameData->soundManager = soundManager;
 }
 
  void initializeGameDataFromTitleScreen(gameData_t * gameData){
@@ -56,6 +59,8 @@
     gameData->lives = 3;
     gameData->countdown = 000;
     gameData->frameCount = 0;
+
+    gameData->extraLifeScore = 1500;
 
     gameData->combo = 0;
     //gameData->comboTimer = 0;
@@ -118,6 +123,12 @@ void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo){
 
     gameData->score += comboPoints;
     gameData->comboScore = comboPoints;
+
+    if(gameData->score >= gameData->extraLifeScore){
+        gameData->lives++;
+        gameData->extraLifeScore += (gameData->extraLifeScore + 500);
+        bzrPlaySfx(&(gameData->soundManager->snd1up), BZR_STEREO);
+    }
     
     //gameData->comboTimer = (gameData->levelDeaths < 3) ? 240: 1;
 }
