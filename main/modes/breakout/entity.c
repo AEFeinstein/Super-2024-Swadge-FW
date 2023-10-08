@@ -74,28 +74,27 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
      1,  3
 };
 
-#define BALL_SPEED_UP_TABLE_LENGTH 36
-#define BALL_SPEED_UP_TABLE_ROW_LENGTH 3
+#define BALL_SPEED_UP_TABLE_LENGTH 24
+#define BALL_SPEED_UP_TABLE_ROW_LENGTH 2
 
 #define BOUNCE_THRESHOLD_LOOKUP_OFFSET 0
-#define COMBO_THRESHOLD_LOOKUP_OFFSET 1
-#define NEW_SPEED_LOOKUP_OFFSET 2
+#define NEW_SPEED_LOOKUP_OFFSET 1
 
 static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH] = {
-    //bounce     combo      new
-    //threshold  threshold  speed
-      0,         -1,        39,
-      5,         -1,        43,
-      4,         -1,        47,
-      3,         -1,        51,
-      2,         -1,        55,
-      1,         -1,        59,
-      1,         -1,        63,
-      1,         30,        67,
-      1,         40,        71,
-      1,         50,        75,
-      1,         60,        79,
-      1,         70,        80
+    //bounce     new
+    //threshold  speed
+      0,         39,
+      5,         43,
+      4,         47,
+      4,         51,
+      3,         55,
+      3,         59,
+      3,         63,
+      2,         67,
+      20,        71,
+      30,        75,
+      40,        79,
+      50,        80
 };
 
 //==============================================================================
@@ -829,7 +828,7 @@ void advanceBallSpeed(entity_t* self){
     }
 
     self->bouncesToNextSpeedUp--;
-    if(self->bouncesToNextSpeedUp < 0 && self->gameData->combo > ballSpeedUps[(self->speedUpLookupIndex * BALL_SPEED_UP_TABLE_ROW_LENGTH) + COMBO_THRESHOLD_LOOKUP_OFFSET]){
+    if(self->bouncesToNextSpeedUp < 0){
         self->speedUpLookupIndex += BALL_SPEED_UP_TABLE_ROW_LENGTH;
 
         self->bouncesToNextSpeedUp = ballSpeedUps[(self->speedUpLookupIndex * BALL_SPEED_UP_TABLE_ROW_LENGTH) + BOUNCE_THRESHOLD_LOOKUP_OFFSET];
