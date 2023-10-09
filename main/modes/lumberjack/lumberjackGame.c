@@ -29,7 +29,7 @@
 #define LUMBERJACK_SCREEN_X_MAX         270
 
 #define LUMBERJACK_SCREEN_Y_OFFSET      140
-#define LUMBERJACK_SCREEN_Y_MIN         -16
+#define LUMBERJACK_SCREEN_Y_MIN         -36
 
 #define LUMBERJACK_MAP_WIDTH            18
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
@@ -273,7 +273,6 @@ bool lumberjackLoadLevel()
     lumv->upgrade = 0;
     if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
-
         char* levelName[] =
         {
             "lumberjacks_panic_1.bin",
@@ -350,7 +349,7 @@ bool lumberjackLoadLevel()
     int offset = (lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH) + 12;
     ESP_LOGI (LUM_TAG, "%d total enemies",lumv->totalEnemyCount);
     ESP_LOGI (LUM_TAG, "%d ", lumv->currentMapHeight* LUMBERJACK_TILE_SIZE);
-    //lumv->tile = &level;
+
     lumv->playerSpawnX = (int)buffer[offset];
     lumv->playerSpawnY = (int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8);
     ESP_LOGI(LUM_TAG, "%d %d", lumv->playerSpawnX, buffer[offset]);
