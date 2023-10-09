@@ -210,7 +210,7 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
         for (int16_t x = 0; x < ray->map.w; x++)
         {
             // If this cell was visited
-            if (ray->map.visitedTiles[(y * ray->map.w) + x])
+            if (ray->map.visitedTiles[(y * ray->map.w) + x] > NOT_VISITED)
             {
                 // Get the cell type and pick a color depending on the type
                 rayMapCellType_t type = ray->map.tiles[x][y].type;

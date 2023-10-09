@@ -62,10 +62,10 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
     }
 
     // Allocate space to track what tiles have been visited
-    map->visitedTiles = (bool*)heap_caps_calloc(map->w * map->h, sizeof(bool), caps);
+    map->visitedTiles = (rayTileState_t*)heap_caps_calloc(map->w * map->h, sizeof(rayTileState_t), caps);
 
     // Attempt to read visited tile data. It's fine if this fails
-    size_t visitedTilesLen = map->w * map->h * sizeof(bool);
+    size_t visitedTilesLen = map->w * map->h * sizeof(rayTileState_t);
     readNvsBlob(RAY_NVS_VISITED_KEYS[mapId], map->visitedTiles, &visitedTilesLen);
 
     // Read tile data
@@ -82,7 +82,8 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
             // Open doors which were already unlocked
             if ((cType == BG_DOOR_KEY_A && OPEN_KEY == ray->p.i.keys[mapId][0]) || //
                 (cType == BG_DOOR_KEY_B && OPEN_KEY == ray->p.i.keys[mapId][1]) || //
-                (cType == BG_DOOR_KEY_C && OPEN_KEY == ray->p.i.keys[mapId][2]))
+                (cType == BG_DOOR_KEY_C && OPEN_KEY == ray->p.i.keys[mapId][2]) || //
+                (SCRIPT_DOOR_OPEN == map->visitedTiles[(y * ray->map.w) + x]))
             {
                 // If the key was already used, open the door
                 map->tiles[x][y].doorOpen = TO_FX(1);
@@ -357,8 +358,12 @@ void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
     {
         for (int16_t xIdx = minX; xIdx <= maxX; xIdx++)
         {
-            // Mark these cells as visited
-            map->visitedTiles[(yIdx * map->w) + xIdx] = true;
+            // Mark these cells as visited, don't undo SCRIPT_DOOR_OPEN
+            rayTileState_t* ts = &map->visitedTiles[(yIdx * map->w) + xIdx];
+            if (*ts == NOT_VISITED)
+            {
+                *ts = VISITED;
+            }
         }
     }
 }

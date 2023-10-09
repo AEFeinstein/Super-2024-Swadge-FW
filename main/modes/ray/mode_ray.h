@@ -249,6 +249,16 @@ typedef enum
     RP_NUM_SCREENS, ///< The number of pause screens
 } rayPauseScreen_t;
 
+/**
+ * @brief Enum for visited tiles
+ */
+typedef enum __attribute__((packed))
+{
+    NOT_VISITED,      ///< This map tile has not been visited
+    VISITED,          ///< This map tile has been visited
+    SCRIPT_DOOR_OPEN, ///< This map tile has been visited and has a permanently-open door
+} rayTileState_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -360,10 +370,10 @@ typedef struct
  */
 typedef struct
 {
-    uint32_t w;           ///< The width of the map
-    uint32_t h;           ///< The height of the map
-    rayMapCell_t** tiles; ///< A 2D array of tiles in the map
-    bool* visitedTiles;   ///< A 1D array of all the visited tiles in the map, row-order
+    uint32_t w;                   ///< The width of the map
+    uint32_t h;                   ///< The height of the map
+    rayMapCell_t** tiles;         ///< A 2D array of tiles in the map
+    rayTileState_t* visitedTiles; ///< A 1D array of all the visited tiles in the map, row-order
 } rayMap_t;
 
 /**
