@@ -155,8 +155,9 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US  1000000
-#define PAUSE_TIME_US 500000
+#define EXIT_TIME_US          1000000
+#define PAUSE_TIME_US         500000
+#define DEFAULT_FRAME_RATE_US 40000
 
 //==============================================================================
 // Variables
@@ -168,17 +169,18 @@ static swadgeMode_t* cSwadgeMode = &mainMenuMode;
 /// @brief A pending Swadge mode to use after a deep sleep
 static RTC_DATA_ATTR swadgeMode_t* pendingSwadgeMode = NULL;
 
-/// @brief Whether or not the quck settings overlay mode is shown
-static bool showQuickSettings = false;
+/// @brief Flag set if the quick settings should be shown synchronously
+static bool shouldShowQuickSettings = false;
+/// @brief Flag set if the quick settings should be hidden synchronously
+static bool shouldHideQuickSettings = false;
+/// @brief A pointer to the Swadge mode under the quick settings
+static swadgeMode_t* modeBehindQuickSettings = NULL;
 
 /// 25 FPS by default
-static uint32_t frameRateUs = 40000;
+static uint32_t frameRateUs = DEFAULT_FRAME_RATE_US;
 
 /// @brief Timer to return to the main menu
 static int64_t timeExitPressed = 0;
-
-/// @brief Timer to open quick settings menu
-static int64_t timePausePressed = 0;
 
 //==============================================================================
 // Function declarations
@@ -365,7 +367,7 @@ void app_main(void)
             tAccumDraw -= frameRateUs;
 
             // Call the mode's main loop
-            if (NULL != cSwadgeMode->fnMainLoop || showQuickSettings)
+            if (NULL != cSwadgeMode->fnMainLoop)
             {
                 // Keep track of the time between main loop calls
                 static uint64_t tLastMainLoopCall = 0;
@@ -374,24 +376,15 @@ void app_main(void)
                     tLastMainLoopCall = tNowUs;
                 }
 
-                if (showQuickSettings)
-                {
-                    // Call the overlay mode's main loop if there is one
-                    quickSettingsMode.fnMainLoop(tNowUs - tLastMainLoopCall);
-                }
-                else
-                {
-                    // Otherwise, call the regular swadge mode's main loop
-                    cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
-                }
+                cSwadgeMode->fnMainLoop(tNowUs - tLastMainLoopCall);
                 tLastMainLoopCall = tNowUs;
             }
 
             // If the menu button is being held
-            if (0 != timeExitPressed && !showQuickSettings)
+            if (0 != timeExitPressed)
             {
                 // Figure out for how long
-                int64_t tHeldUs = tNowUs - timeExitPressed;
+                int64_t tHeldUs = esp_timer_get_time() - timeExitPressed;
                 // If it has been held for more than the exit time
                 if (tHeldUs > EXIT_TIME_US)
                 {
@@ -407,44 +400,34 @@ void app_main(void)
                     fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
                 }
             }
-            else if (0 != timePausePressed)
+
+            // If quick settings should be shown or hidden, do that before drawing the TFT
+            if (shouldShowQuickSettings)
             {
-                int64_t tHeldUs = tNowUs - timePausePressed;
-
-                if (tHeldUs > PAUSE_TIME_US)
-                {
-                    if (showQuickSettings)
-                    {
-                        // Quick settings is active, just quit that
-                        quickSettingsMode.fnExitMode();
-                        showQuickSettings = false;
-                    }
-                    else
-                    {
-                        // Quick settings not active, set it up
-                        quickSettingsMode.fnEnterMode();
-                        showQuickSettings = true;
-                    }
-
-                    // Reset the count
-                    timePausePressed = 0;
-                }
-                else
-                {
-                    int16_t r     = QUICK_SETTINGS_PANEL_R;
-                    int16_t numPx = (tHeldUs * (QUICK_SETTINGS_PANEL_W - r * 2)) / PAUSE_TIME_US;
-
-                    if (numPx < 0)
-                        numPx = abs(numPx);
-
-                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + r, 0, r, c333);
-                    fillDisplayArea(QUICK_SETTINGS_PANEL_X + r, 0, QUICK_SETTINGS_PANEL_X + r + numPx, r + 1, c333);
-                    drawCircleFilled(QUICK_SETTINGS_PANEL_X + numPx + r, 0, r, c333);
-                }
+                // Lower the flag
+                shouldShowQuickSettings = false;
+                // Pause the buzzer
+                bzrPause();
+                // Save the current mode
+                modeBehindQuickSettings = cSwadgeMode;
+                cSwadgeMode             = &quickSettingsMode;
+                // Show the quick settings
+                quickSettingsMode.fnEnterMode();
+            }
+            else if (shouldHideQuickSettings)
+            {
+                // Lower the flag
+                shouldHideQuickSettings = false;
+                // Hide the quick settings
+                quickSettingsMode.fnExitMode();
+                // Restore the mode
+                cSwadgeMode = modeBehindQuickSettings;
+                // Resume the buzzer
+                bzrResume();
             }
 
             // Draw to the TFT
-            drawDisplayTft(showQuickSettings ? NULL : cSwadgeMode->fnBackgroundDrawCallback);
+            drawDisplayTft(cSwadgeMode->fnBackgroundDrawCallback);
         }
 
         // If the mode should be switched, do it now
@@ -571,6 +554,9 @@ static void setSwadgeMode(void* swadgeMode)
  */
 void switchToSwadgeMode(swadgeMode_t* mode)
 {
+    // Set the framerate back to default
+    setFrameRateUs(DEFAULT_FRAME_RATE_US);
+
     pendingSwadgeMode = mode;
 }
 
@@ -588,7 +574,7 @@ void softSwitchToPendingSwadge(void)
         }
 
         // Stop the buzzer
-        bzrStop();
+        bzrStop(true);
 
         // Switch the mode pointer
         cSwadgeMode       = pendingSwadgeMode;
@@ -623,47 +609,49 @@ void softSwitchToPendingSwadge(void)
  */
 bool checkButtonQueueWrapper(buttonEvt_t* evt)
 {
+    // Check the button queue
     bool retval = checkButtonQueue(evt);
 
-    // Intercept button presses for PB_SELECT
-    if (retval)
+    // Check for intercept
+    if (retval &&                            // If there was a button press
+        (!cSwadgeMode->overrideSelectBtn) && // And PB_SELECT isn't overridden
+        (evt->button == PB_SELECT))          // And the button was PB_SELECT
     {
-        // Don't intercept the button on the main menu
-        if (cSwadgeMode != &mainMenuMode)
+        if (evt->down)
         {
-            if (evt->button == PB_SELECT && !showQuickSettings)
+            // Button was pressed, start the timer
+            timeExitPressed = esp_timer_get_time();
+        }
+        else
+        {
+            // Button was released, stop the timer
+            timeExitPressed = 0;
+
+            // If the mode hasn't exited yet, toggle quick settings
+            if (cSwadgeMode != &quickSettingsMode)
             {
-                if (evt->down)
-                {
-                    // Button was pressed, start the timer
-                    timeExitPressed = esp_timer_get_time();
-                }
-                else
-                {
-                    // Button was released, stop the timer
-                    timeExitPressed = 0;
-                }
+                shouldShowQuickSettings = true;
             }
-            else if (evt->button == PB_START && !timeExitPressed)
+            else
             {
-                ESP_LOGI("UTL", "START EVET");
-                // Handle the start button for the quick-settings menu,
-                // but only if we're not already handling select and the
-                // quick-settings menu is not already enabled
-                if (evt->down)
-                {
-                    // Button was pressed, start the timer
-                    timePausePressed = esp_timer_get_time();
-                }
-                else
-                {
-                    // Button was relesaed, stop the timer
-                    timePausePressed = 0;
-                }
+                shouldHideQuickSettings = true;
             }
         }
+
+        // Don't pass this button to the mode
+        retval = false;
     }
 
     // Return if there was an event or not
     return retval;
+}
+
+/**
+ * @brief Set the framerate, in microseconds
+ *
+ * @param newFrameRateUs The time between frame draws, in microseconds
+ */
+void setFrameRateUs(uint32_t newFrameRateUs)
+{
+    frameRateUs = newFrameRateUs;
 }
