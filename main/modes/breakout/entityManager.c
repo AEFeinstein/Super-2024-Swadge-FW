@@ -89,6 +89,14 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.y1 = 27;
 
+    loadWsg("ball.wsg", &entityManager->sprites[SP_BALL].wsg, false);
+    entityManager->sprites[SP_BALL].originX=4;
+    entityManager->sprites[SP_BALL].originY=4;
+    entityManager->sprites[SP_BALL].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL].collisionBox.y1 = 7;
+
     loadWsg("ball000.wsg", &entityManager->sprites[SP_BALL_0].wsg, false);
     entityManager->sprites[SP_BALL_0].originX=4;
     entityManager->sprites[SP_BALL_0].originY=4;
@@ -351,6 +359,9 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
         case ENTITY_PLAYER_BALL:
             createdEntity = createBall(entityManager, x, y);
             break;
+        case ENTITY_CAPTIVE_BALL:
+            createdEntity = createCaptiveBall(entityManager, x, y);
+            break;
         case ENTITY_PLAYER_TIME_BOMB:
             createdEntity = createTimeBomb(entityManager, x, y);
             break;
@@ -522,6 +533,42 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &ballTileCollisionHandler;
     entity->overlapTileHandler = &ballOverlapTileHandler;
+
+    entity->gameData->ballsInPlay++;
+    return entity;
+}
+
+entity_t* createCaptiveBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = true;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+    
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical = false;
+    entity->spriteRotateAngle = 0;
+
+    entity->shouldAdvanceMultiplier = false;
+    entity->baseSpeed = 39;
+    entity->bouncesToNextSpeedUp = 5;
+    entity->speedUpLookupIndex = 0;
+    entity->maxSpeed = 127;
+
+    entity->type = ENTITY_CAPTIVE_BALL;
+    entity->spriteIndex = SP_BALL;
+    entity->updateFunction = &updateCaptiveBallNotInPlay;
+    entity->collisionHandler = &captiveBallCollisionHandler;
+    entity->tileCollisionHandler = &captiveBallTileCollisionHandler;
+    entity->overlapTileHandler = &defaultOverlapTileHandler;
 
     return entity;
 }

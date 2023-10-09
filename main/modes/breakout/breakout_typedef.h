@@ -36,6 +36,7 @@ typedef enum {
     SP_PADDLE_VERTICAL_0,
     SP_PADDLE_VERTICAL_1,
     SP_PADDLE_VERTICAL_2,
+    SP_BALL,
     SP_BALL_0,
     SP_BALL_1,
     SP_BALL_2,

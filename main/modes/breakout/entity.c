@@ -74,13 +74,13 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
      1,  3
 };
 
-#define BALL_SPEED_UP_TABLE_LENGTH 24
+#define BALL_SPEED_UP_TABLE_LENGTH 12
 #define BALL_SPEED_UP_TABLE_ROW_LENGTH 2
 
 #define BOUNCE_THRESHOLD_LOOKUP_OFFSET 0
 #define NEW_SPEED_LOOKUP_OFFSET 1
 
-static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH] = {
+static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH * BALL_SPEED_UP_TABLE_ROW_LENGTH] = {
     //bounce     new
     //threshold  speed
       0,         39,
@@ -355,11 +355,7 @@ void updateBall(entity_t *self)
         }
     }
 
-    if(self->y > 3840 || self->x > 4480) {
-        self->gameData->changeState = ST_DEAD;
-        destroyEntity(self, true);
-        bzrPlaySfx(&(self->soundManager->die), BZR_STEREO);
-    }
+    detectLostBall(self);
 };
 
 void updateBallAtStart(entity_t *self){
@@ -377,6 +373,38 @@ void updateBallAtStart(entity_t *self){
             }
         }
     }
+}
+
+
+bool isOutsidePlayfield(entity_t* self){
+    return (self->y > 3840 || self->x > 4480);
+}
+
+void detectLostBall(entity_t* self){
+    if(isOutsidePlayfield(self)) {
+        destroyEntity(self, true);
+        self->gameData->ballsInPlay--;
+        
+        if(self->gameData->ballsInPlay <= 0){
+            self->gameData->changeState = ST_DEAD;
+            bzrPlaySfx(&(self->soundManager->die), BZR_STEREO);
+        }
+    }
+}
+
+void updateCaptiveBallNotInPlay(entity_t* self){
+    moveEntityWithTileCollisions(self);
+    detectEntityCollisions(self);
+
+    if(isOutsidePlayfield(self)) {
+        destroyEntity(self, true);
+    }
+}
+
+void updateCaptiveBallInPlay(entity_t* self){
+    moveEntityWithTileCollisions(self);
+    detectEntityCollisions(self);
+    detectLostBall(self);
 }
 
 uint32_t getTaxiCabDistanceBetweenEntities(entity_t* self, entity_t* other){
@@ -825,6 +853,37 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
     }
 }
 
+void captiveBallCollisionHandler(entity_t *self, entity_t *other)
+{
+    bool shouldChangeState = false;
+    switch (other->type)
+    {
+        case ENTITY_PLAYER_PADDLE_BOTTOM:
+        case ENTITY_PLAYER_PADDLE_TOP:
+        case ENTITY_PLAYER_PADDLE_LEFT:
+        case ENTITY_PLAYER_PADDLE_RIGHT:
+            shouldChangeState = true;
+            break;
+        case ENTITY_PLAYER_BOMB_EXPLOSION:
+            if(!other->spriteRotateAngle) {
+                shouldChangeState = true;
+            }
+            break;
+        default:
+        {
+            return;
+        }
+    }
+
+    if(shouldChangeState){
+        self->collisionHandler = &ballCollisionHandler;
+        self->tileCollisionHandler = &ballTileCollisionHandler;
+        self->overlapTileHandler = &ballOverlapTileHandler;
+        self->updateFunction = &updateCaptiveBallInPlay;
+        self->gameData->ballsInPlay++;
+    }
+}
+
 void advanceBallSpeed(entity_t* self, uint16_t factor){
     if(self->speedUpLookupIndex >= BALL_SPEED_UP_TABLE_LENGTH){
         return;
@@ -833,6 +892,9 @@ void advanceBallSpeed(entity_t* self, uint16_t factor){
     self->bouncesToNextSpeedUp -= factor;
     if(self->bouncesToNextSpeedUp < 0){
         self->speedUpLookupIndex += BALL_SPEED_UP_TABLE_ROW_LENGTH;
+        if(self->speedUpLookupIndex >= BALL_SPEED_UP_TABLE_LENGTH){
+            return;
+        }
 
         self->bouncesToNextSpeedUp = ballSpeedUps[(self->speedUpLookupIndex * BALL_SPEED_UP_TABLE_ROW_LENGTH) + BOUNCE_THRESHOLD_LOOKUP_OFFSET];
 
@@ -965,6 +1027,34 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
         }
     }
 
+    if (isSolid(tileId))
+    {
+        switch (direction)
+        {
+        case 0: // PB_LEFT
+            self->xspeed = -self->xspeed;
+            break;
+        case 1: // PB_RIGHT
+            self->xspeed = -self->xspeed;
+            break;
+        case 2: // PB_UP
+            self->yspeed = -self->yspeed;
+            break;
+        case 4: // PB_DOWN
+            self->yspeed = -self->yspeed;
+            break;
+        default: // Should never hit
+            return false;
+        }
+        // trigger tile collision resolution
+        return true;
+    }
+
+    return false;
+}
+
+bool captiveBallTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+{
     if (isSolid(tileId))
     {
         switch (direction)

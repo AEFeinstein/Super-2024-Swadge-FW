@@ -21,11 +21,11 @@ typedef enum {
     ENTITY_PLAYER_PADDLE_TOP,
     ENTITY_PLAYER_PADDLE_LEFT,
     ENTITY_PLAYER_PADDLE_RIGHT,
-    ENTITY_UNUSED_4,
-    ENTITY_UNUSED_5,
-    ENTITY_UNUSED_6,
-    ENTITY_UNUSED_7,
-    ENTITY_UNUSED_8,
+    ENTITY_PLAYER_TIME_BOMB,
+    ENTITY_PLAYER_REMOTE_BOMB,
+    ENTITY_PLAYER_BOMB_EXPLOSION,
+    ENTITY_BALL_TRAIL,
+    ENTITY_CHO_INTRO,
     ENTITY_UNUSED_9,
     ENTITY_UNUSED_10,
     ENTITY_UNUSED_11,
@@ -34,11 +34,11 @@ typedef enum {
     ENTITY_UNUSED_14,
     ENTITY_UNUSED_15,
     ENTITY_PLAYER_BALL,
-    ENTITY_PLAYER_TIME_BOMB,
-    ENTITY_PLAYER_BOMB_EXPLOSION,
-    ENTITY_PLAYER_REMOTE_BOMB,
-    ENTITY_BALL_TRAIL,
-    ENTITY_CHO_INTRO
+    ENTITY_CAPTIVE_BALL,
+    ENTITY_UNUSED_18,
+    ENTITY_UNUSED_19,
+    ENTITY_UNUSED_20,
+    ENTITY_UNUSED_21
 } entityIndex_t;
 
 //==============================================================================
@@ -110,6 +110,10 @@ void updatePlayerVertical(entity_t * self);
 
 void updateBall(entity_t * self);
 void updateBallAtStart(entity_t *self);
+bool isOutsidePlayfield(entity_t* self);
+void detectLostBall(entity_t* self);
+void updateCaptiveBallNotInPlay(entity_t* self);
+void updateCaptiveBallInPlay(entity_t* self);
 uint32_t getTaxiCabDistanceBetweenEntities(entity_t* self, entity_t* other);
 void updateTimeBomb(entity_t * self);
 void updateRemoteBomb(entity_t * self);
@@ -131,12 +135,14 @@ void playerCollisionHandler(entity_t *self, entity_t* other);
 void enemyCollisionHandler(entity_t *self, entity_t *other);
 void dummyCollisionHandler(entity_t *self, entity_t *other);
 void ballCollisionHandler(entity_t *self, entity_t *other);
+void captiveBallCollisionHandler(entity_t *self, entity_t *other);
 void advanceBallSpeed(entity_t* self, uint16_t factor);
 
 bool playerTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool enemyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool dummyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool captiveBallTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
 void defaultOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 void playerOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);

@@ -377,8 +377,9 @@ static void breakoutChangeStateReadyScreen(breakout_t *self){
 
     //Set up Cho Intro
     deactivateAllEntities(&(self->entityManager), false, true);
+    self->gameData.ballsInPlay = 0;
     forceTileSpawnEntitiesWithinView(&(self->tilemap));
-
+        
     self->entityManager.playerEntity = NULL;
     self->entityManager.playerEntity = createEntity(&(self->entityManager), ENTITY_CHO_INTRO, 0,0);
 
@@ -427,6 +428,9 @@ static void breakoutChangeStateGame(breakout_t *self){
     self->gameData.playerRemoteBombPlaced = false;
     //deactivateAllEntities(&(self->entityManager), false, true);
     //self->tilemap.executeTileSpawnAll = true;
+
+    //TODO: State change functions should probably always reset this.
+    self->gameData.changeState = 0;
     self->update = &breakoutGameLoop;
 }
 

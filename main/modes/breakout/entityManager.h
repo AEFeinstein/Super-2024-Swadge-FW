@@ -19,7 +19,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 32
-#define SPRITESET_SIZE 25
+#define SPRITESET_SIZE 26
 
 //==============================================================================
 // Structs
@@ -55,6 +55,7 @@ entity_t* createPlayerPaddleLeft(entityManager_t * entityManager, uint16_t x, ui
 entity_t* createPlayerPaddleRight(entityManager_t * entityManager, uint16_t x, uint16_t y);
 
 entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y);
+entity_t* createCaptiveBall(entityManager_t * entityManager, uint16_t x, uint16_t y);
 entity_t* createTimeBomb(entityManager_t * entityManager, uint16_t x, uint16_t y);
 entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t y);
 entity_t* createRemoteBomb(entityManager_t * entityManager, uint16_t x, uint16_t y);

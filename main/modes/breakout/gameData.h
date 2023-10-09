@@ -29,6 +29,7 @@ typedef struct
 
     uint32_t score;
     uint8_t lives;
+    int8_t ballsInPlay;
 
     uint32_t extraLifeScore;
 

@@ -18,6 +18,7 @@
     gameData->btnState = 0;
     gameData->score = 0;
     gameData->lives = 3;
+    gameData->ballsInPlay = 0;
     gameData->countdown = 000;
 
     gameData->extraLifeScore = 1500;
@@ -57,6 +58,7 @@
     gameData->btnState = 0;
     gameData->score = 0;
     gameData->lives = 3;
+    gameData->ballsInPlay = 0;
     gameData->countdown = 000;
     gameData->frameCount = 0;
 
