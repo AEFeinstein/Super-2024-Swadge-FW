@@ -5,6 +5,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex);
 
 void lumberjackExitGameMode(void);
 void lumberjackSetupLevel(int index);
+void lumberjackUnloadLevel(void);
 void lumberjackDoControls(void);
 void lumberjackTileMap(void);
 void lumberjackDrawWaterLevel(void);

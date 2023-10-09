@@ -25,7 +25,6 @@ void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character)
     hero->maxLevel     = character;
     hero->type         = character;
     hero->state        = LUMBERJACK_UNSPAWNED;
-    hero->lives        = 3;
 
 }
 

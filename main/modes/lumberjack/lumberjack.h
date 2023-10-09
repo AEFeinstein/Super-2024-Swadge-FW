@@ -82,6 +82,8 @@ typedef struct
 
     int yOffset;
     int levelIndex;
+    int upgrade;
+    int lives;
 
     int64_t worldTimer;
     int64_t levelTime;

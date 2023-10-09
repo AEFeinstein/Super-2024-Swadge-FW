@@ -35,6 +35,8 @@
 #define LUMBERJACK_MAP_WIDTH            18
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
 #define LUMBERJACK_RESPAWN_TIMER        3750
+#define LUMBERJACK_RESPAWN_MIN          1250
+#define LUMBERJACK_UPGRADE_TIMER_OFFSET 250
 #define LUMBERJACK_SUBMERGE_TIMER       300
 
 #define LUMBERJACK_TILE_SIZE            16
@@ -77,6 +79,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->gameType             = main->gameMode;
     lumv->gameState            = LUMBERJACK_GAMESTATE_TITLE;
     lumv->levelIndex           = 0;
+    lumv->lives                = 3;
 
     ESP_LOGI(LUM_TAG, "Load Title");
     loadWsg("lumbers_title.wsg", &lumv->title, true);
@@ -266,19 +269,35 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
 bool lumberjackLoadLevel()
 {
-    char* levelName[] =
+    char* fname = "lumberjacks_panic_4.bin";
+    
+    lumv->upgrade = 0;
+    if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
-        "lumberjacks_panic_1.bin",
-        "lumberjacks_panic_2.bin",
-        "lumberjacks_panic_3.bin",
-        "lumberjacks_panic_4.bin"
-    };
-    char* fname = levelName[lumv->levelIndex % 4];
+
+        char* levelName[] =
+        {
+            "lumberjacks_panic_1.bin",
+            "lumberjacks_panic_2.bin",
+            "lumberjacks_panic_3.bin",
+            "lumberjacks_panic_4.bin"
+        };
+        ESP_LOGI(LUM_TAG, "Level # %d", (int)(lumv->levelIndex % ARRAY_SIZE(levelName)));
+        fname = levelName[lumv->levelIndex % ARRAY_SIZE(levelName)];
+
+        if (!lumv->lumberjackMain->networked)
+        {
+            lumv->upgrade = (int)(lumv->levelIndex / ARRAY_SIZE(levelName));
+        }
+    }
+
+
+
 
     size_t ms;
     uint8_t *buffer = spiffsReadFile(fname, &ms, false);
 
-    ESP_LOGI(LUM_TAG, "HEIGHT = %d", (int)buffer[0]);
+    ESP_LOGI(LUM_TAG, "Level = %s", fname);
     // Buffer 0 = map height
     lumv->tile             = (lumberjackTile_t*)malloc((int)buffer[0] * LUMBERJACK_MAP_WIDTH * sizeof(lumberjackTile_t));
     lumv->currentMapHeight = (int)buffer[0];
@@ -292,7 +311,7 @@ bool lumberjackLoadLevel()
     lumv->enemy6Count      = (int) buffer[6];
     lumv->enemy7Count      = (int) buffer[7];
     lumv->enemy8Count      = (int) buffer[8];
-    lumv->totalEnemyCount = lumv->enemy1Count; 
+    lumv->totalEnemyCount  = lumv->enemy1Count; 
     lumv->totalEnemyCount += lumv->enemy2Count; 
     lumv->totalEnemyCount += lumv->enemy3Count; 
     lumv->totalEnemyCount += lumv->enemy4Count; 
@@ -300,6 +319,20 @@ bool lumberjackLoadLevel()
     lumv->totalEnemyCount += lumv->enemy6Count; 
     lumv->totalEnemyCount += lumv->enemy7Count; 
     lumv->totalEnemyCount += lumv->enemy8Count; 
+
+
+    if (lumv->upgrade == 1)
+    {
+        lumv->enemy3Count += lumv->enemy2Count;
+        lumv->enemy2Count = lumv->enemy1Count;
+        lumv->enemy1Count = 0; // 
+    }
+    else if (lumv->upgrade >= 2)
+    {
+        lumv->enemy3Count += lumv->enemy2Count + lumv->enemy1Count;
+        lumv->enemy2Count = 0;
+        lumv->enemy1Count = 0;
+    }
 
     lumv->waterSpeed       = (int)buffer[11];
     lumv->waterTimer       = (int)buffer[11];
@@ -312,12 +345,7 @@ bool lumberjackLoadLevel()
         lumv->tile[i].type        = (int)buffer[i+12];
         lumv->tile[i].offset      = 0;
         lumv->tile[i].offset_time = 0;
-        
-        if (i < 10)
-        {
-            ESP_LOGI(LUM_TAG, "Tile = %d", lumv->tile[i].x);
-        }
-        
+                
     }
     
     int offset = (lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH) + 12;
@@ -361,9 +389,13 @@ void lumberjackSetupLevel(int characterIndex)
     strcpy(lumv->localPlayer->name, " Dennis"); // If you see this... this name means nothing
 
     int offset = 0;
+
     //Load enemies
+
+    // START ENEMY 1
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy1Count; eSpawnIndex++)
     {
+        ESP_LOGI(LUM_TAG, ":D %d %d", eSpawnIndex, lumv->enemy1Count);
         lumv->enemy[eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
         lumberjackSetupEnemy(lumv->enemy[eSpawnIndex], 0);
     } 
@@ -372,15 +404,17 @@ void lumberjackSetupLevel(int characterIndex)
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy2Count; eSpawnIndex++)
     {
         lumv->enemy[offset + eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
-        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 0);
+        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 1);
     } 
 
     offset += lumv->enemy2Count;
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy3Count; eSpawnIndex++)
     {
         lumv->enemy[offset + eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
-        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 0);
+        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 2);
     } 
+    //END ENEMY 1
+
 
     offset += lumv->enemy3Count;
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy4Count; eSpawnIndex++)
@@ -420,12 +454,24 @@ void lumberjackSetupLevel(int characterIndex)
     ESP_LOGI(LUM_TAG, "LOADED");
 }
 
+void lumberjackUnloadLevel(void)
+{
+    free(lumv->tile);
+
+    //Unload previous enemies
+    for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+    {
+        free(lumv->enemy[i]);
+        lumv->enemy[i] = NULL;
+    }
+}
+
 /**
  * @brief TODO use this somewhere
  */
 void restartLevel(void)
 {
-    lumv->localPlayer->lives--;
+    lumv->lives--;
     lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX);
 
 }
@@ -476,7 +522,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
         if (lumv->levelTime > 3000)
         {
             ESP_LOGI(LUM_TAG, "Next level");
-            free(lumv->tile);
+            lumberjackUnloadLevel();
 
             lumberjackSetupLevel(0);
 
@@ -505,7 +551,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
         if (lumv->waterTimer < 0)
         {
             lumv->waterTimer += lumv->waterSpeed;
-            lumv->waterLevel += lumv->waterDirection;
+            lumv->waterLevel += lumv->waterDirection * (lumv->upgrade + 1);
 
             if (lumv->waterLevel > lumv->currentMapHeight * LUMBERJACK_TILE_SIZE)
             {
@@ -675,12 +721,12 @@ void baseMode(int64_t elapsedUs)
         {
             lumv->localPlayer->respawn -= elapsedUs / 10000;
 
-            if (lumv->localPlayer->respawn <= 0 && lumv->localPlayer->lives > 0)
+            if (lumv->localPlayer->respawn <= 0 && lumv->lives > 0)
             {
                 ESP_LOGI(LUM_TAG, "RESPAWN PLAYER!");
                 // Respawn player
                 lumv->localPlayer->respawn = 0;
-                lumv->localPlayer->lives--;
+                lumv->lives--;
                 
                 lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX);
             }
@@ -814,7 +860,7 @@ void lumberjackOnLocalPlayerDeath(void)
     lumv->localPlayer->jumping   = false;
     lumv->localPlayer->jumpTimer = 0;
 
-    if (lumv->localPlayer->lives <= 0)
+    if (lumv->lives <= 0)
     {
         ESP_LOGI(LUM_TAG, "Game over!");
         lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
@@ -917,7 +963,7 @@ void DrawGame(void)
 
     lumberjackDrawWaterLevel();
 
-    for (int i = 0; i < lumv->localPlayer->lives; i++)
+    for (int i = 0; i < lumv->lives; i++)
     {
         int icon = lumv->localPlayer->type;
 
@@ -936,6 +982,29 @@ void DrawGame(void)
     //
     lumberjackScoreDisplay(lumv->score, 26);
     lumberjackScoreDisplay(9999, 206);
+
+
+
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING && lumv->levelTime < 5000)
+    {
+        char level_display[20] = {0};
+
+        if (lumv->levelIndex < 9)
+        {
+            snprintf(level_display, sizeof(level_display), "Level 0%d", (lumv->levelIndex + 1));
+        }
+        else
+        {
+            snprintf(level_display, sizeof(level_display), "Level %d", (lumv->levelIndex + 1));
+        }
+
+        drawText(&lumv->arcade, c000, level_display, (TFT_WIDTH/2) - 36, TFT_HEIGHT - 18);
+        drawText(&lumv->arcade, c000, level_display, (TFT_WIDTH/2) - 36, TFT_HEIGHT - 21);
+        drawText(&lumv->arcade, c000, level_display, (TFT_WIDTH/2) - 36 - 1, TFT_HEIGHT - 20);
+        drawText(&lumv->arcade, c000, level_display, (TFT_WIDTH/2) - 36 + 1, TFT_HEIGHT - 20);
+        drawText(&lumv->arcade, c555, level_display, (TFT_WIDTH/2) - 36, TFT_HEIGHT - 20);
+    }
+
     // Debug
 
     char debug[20] = {0};
@@ -1009,7 +1078,12 @@ void lumberjackSpawnCheck(int64_t elapseUs)
                     lumv->spawnSide++;
                     lumv->spawnSide %= 2;
 
-                    lumv->spawnTimer = LUMBERJACK_RESPAWN_TIMER;
+                    lumv->spawnTimer = LUMBERJACK_RESPAWN_TIMER - (lumv->upgrade * LUMBERJACK_UPGRADE_TIMER_OFFSET);
+
+                    if (lumv->spawnTimer < LUMBERJACK_RESPAWN_MIN)
+                    {
+                        lumv->spawnTimer = LUMBERJACK_RESPAWN_MIN;
+                    }
 
                     lumberjackRespawnEnemy(lumv->enemy[enemyIndex], lumv->spawnSide);
                     spawnReady = false;
@@ -1040,7 +1114,14 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
     if (entity->state == LUMBERJACK_BUMPED)
     {
         entity->vy -= 2;
-        entity->respawn = 1500;
+        entity->respawn = 1500 - (lumv->upgrade * LUMBERJACK_UPGRADE_TIMER_OFFSET);
+
+        if (entity->respawn < LUMBERJACK_UPGRADE_TIMER_OFFSET)
+        {
+            entity->respawn = LUMBERJACK_UPGRADE_TIMER_OFFSET;
+        }
+
+
 
         if (entity->vy >= 0)
         {
@@ -1205,7 +1286,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
                 if (entity->respawn == 0)
                 {
                     // ESP_LOGI(LUM_TAG, "DEAD & hit the ground %d", entity->respawn);
-                    entity->respawn = 250;
+                    entity->respawn = LUMBERJACK_UPGRADE_TIMER_OFFSET;
                     entity->ready   = true;
                     return;
                 }
@@ -1231,8 +1312,16 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
                 entity->ready  = true;
             }
         }
-        if (entity->state != LUMBERJACK_DEAD)
+        if (entity->state != LUMBERJACK_DEAD && !lumv->hasWon)
             entity->state = LUMBERJACK_OFFSCREEN;
+
+        if (entity->state != LUMBERJACK_DEAD && entity->state != LUMBERJACK_OFFSCREEN && lumv->hasWon)
+        {
+            lumv->gameState          = LUMBERJACK_GAMESTATE_WINNING;
+            lumv->localPlayer->state = LUMBERJACK_VICTORY;
+            lumv->levelTime          = 0;
+            lumv->levelIndex++;
+        }
     }
 }
 
