@@ -26,7 +26,6 @@
 #define LUMBERJACK_TILEANIMATION_SPEED  150500
 
 #define LUMBERJACK_SCREEN_X_OFFSET      299
-#define LUMBERJACK_SCREEN_X_MIN         0
 #define LUMBERJACK_SCREEN_X_MAX         270
 
 #define LUMBERJACK_SCREEN_Y_OFFSET      140
@@ -356,18 +355,19 @@ bool lumberjackLoadLevel()
     lumv->playerSpawnY = (int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8);
     ESP_LOGI(LUM_TAG, "%d %d", lumv->playerSpawnX, buffer[offset]);
 
+    free(buffer);    
+
     return true;
 }
 
 void lumberjackSetupLevel(int characterIndex)
-{
-    
+{    
     lumv->enemyKillCount       = 0;
     lumv->totalEnemyCount      = 0;
     lumv->hasWon               = false;
 
     ESP_LOGI(LUM_TAG, "LOADING LEVEL");
-    bool levelLoaded = lumberjackLoadLevel();
+    lumberjackLoadLevel();
         
     // This all to be loaded externally
     lumv->yOffset          = 0;
@@ -381,8 +381,6 @@ void lumberjackSetupLevel(int characterIndex)
     lumv->localPlayer  = calloc(1, sizeof(lumberjackEntity_t));
     lumv->localPlayer->scoreValue       = 0;
 
-    lumv->remotePlayer = calloc(1, sizeof(lumberjackEntity_t));
-    lumv->remotePlayer->scoreValue       = 0;
     lumberjackSetupPlayer(lumv->localPlayer, characterIndex);
     lumberjackSpawnPlayer(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY, 0);
 
@@ -572,14 +570,6 @@ void lumberjackGameLoop(int64_t elapsedUs)
             lumberjackUpdateLocation(lumv->localPlayer->x, lumv->localPlayer->y, lumv->localPlayer->drawFrame);
     }
     DrawGame();
-}
-
-void lumberjackUpdateRemote(int remoteX, int remoteY, int remoteFrame)
-{
-    lumv->remotePlayer->x         = remoteX;
-    lumv->remotePlayer->y         = remoteY;
-    lumv->remotePlayer->drawFrame = remoteFrame;
-    lumv->remotePlayer->active    = true;
 }
 
 void baseMode(int64_t elapsedUs)
@@ -952,12 +942,6 @@ void DrawGame(void)
                 lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
     }
 
-    if (lumv->remotePlayer->active)
-    {
-        drawWsg(&lumv->playerSprites[lumv->remotePlayer->drawFrame], lumv->remotePlayer->x - 4,
-                lumv->remotePlayer->y - lumv->yOffset, false, false, 0);
-    }
-
     drawWsgSimple(&lumv->ui[0], (TFT_WIDTH / 2) - 12, 6);
     //If playing panic mode draw water
 
@@ -1007,8 +991,8 @@ void DrawGame(void)
 
     // Debug
 
-    char debug[20] = {0};
     /*
+    char debug[20] = {0};
     snprintf(debug, sizeof(debug), "Debug: %d %d %d", lumv->localPlayer->x, lumv->localPlayer->y,
              lumv->localPlayer->cH);
 
@@ -1610,6 +1594,11 @@ void lumberjackExitGameMode(void)
     }
 
     freeWsg(&lumv->alertSprite);
+
+    for (int i = 0; i < ARRAY_SIZE(lumv->axeBlocks); i++)
+    {
+        free(lumv->axeBlocks[i]);
+    }
 
     freeFont(&lumv->arcade);
     free(lumv);

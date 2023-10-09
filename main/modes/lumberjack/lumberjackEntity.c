@@ -168,7 +168,7 @@ uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy)
     if (animation == LUMBERJACK_BUMPED)
     {
         const int anim[] = {4};
-        return anim[enemy->currentFrame % 2];
+        return anim[0];
     }
 
     if (animation == LUMBERJACK_BUMPED_IDLE)

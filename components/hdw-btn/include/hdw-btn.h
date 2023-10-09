@@ -100,8 +100,8 @@
 typedef enum __attribute__((packed))
 {
     PB_UP     = 0x0001, //!< The up button's bit
-    PB_DOWN   = 0x0002, //!< The down button's bit
-    PB_LEFT   = 0x0004, //!< The left button's bit
+    PB_DOWN   = 0x0004, //!< The down button's bit
+    PB_LEFT   = 0x0002, //!< The left button's bit
     PB_RIGHT  = 0x0008, //!< The right button's bit
     PB_A      = 0x0010, //!< The A button's bit
     PB_B      = 0x0020, //!< The B button's bit

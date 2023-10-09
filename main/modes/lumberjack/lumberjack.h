@@ -147,7 +147,6 @@ typedef struct
 
     lumberjackAxeBlock_t* axeBlocks[8];
     lumberjackEntity_t* localPlayer;
-    lumberjackEntity_t* remotePlayer;
 
     lumberjackGameType_t gameType;
 
