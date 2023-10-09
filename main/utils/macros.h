@@ -56,8 +56,14 @@
 /**
  * @brief Returns (a + b) % d, but with negative values converted to equivalent positive values.
  * The resulting value will always be in the range [0, d), assuming d > 0.
+ *
+ * The first modulo, (b % d) will return e.g. -90 for (-270 % 360)
+ *
+ * @param a One number to sum
+ * @param b Another number to sum
+ * @param d The number to mod the sum by
+ * @return (a + b) % d
  */
-// The first modulo, (b % d) will return e.g. -90 for (-270 % 360)
 #define POS_MODULO_ADD(a, b, d) ((a + (b % d) + d) % d)
 
 #endif

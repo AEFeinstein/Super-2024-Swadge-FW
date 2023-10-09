@@ -16,8 +16,8 @@
     #define NERF_NOTE_PORP 15 // value from 0 to 255
 #endif
 
-#ifndef USE_NUM_LIN_LEDS
-    #define USE_NUM_LIN_LEDS CONFIG_NUM_LEDS
+#ifndef USE_CONFIG_NUM_LEDS
+    #define USE_CONFIG_NUM_LEDS CONFIG_NUM_LEDS
 #endif
 
 #ifndef LIN_WRAPAROUND

@@ -29,22 +29,22 @@
  * \c demo in the example below.
  *
  * \section swadgeMode_example Example
- * 
+ *
  * Adding a mode to the CMakeFile requires adding two separate lines in the idf_component_register section.
- * 
- * \c
+ *
+ * \code{.c}
  * "modes/pong/pong.c"
  * \endcode
  *
  * under the SRCS section and
- * 
- * \c
+ *
+ * \code{.c}
  * "modes/pong"
  * \endcode
- * 
+ *
  * under the INCLUDES section.
- * 
- * 
+ *
+ *
  * Function prototypes must be declared before using them to initialize function pointers:
  * \code{.c}
  * // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
@@ -68,6 +68,7 @@
  *     .overrideUsb              = false,
  *     .usesAccelerometer        = true,
  *     .usesThermometer          = true,
+ *     .overrideSelectBtn        = false,
  *     .fnEnterMode              = demoEnterMode,
  *     .fnExitMode               = demoExitMode,
  *     .fnMainLoop               = demoMainLoop,
@@ -204,6 +205,7 @@
 #include "vector2d.h"
 #include "geometry.h"
 #include "settingsManager.h"
+#include "touchUtils.h"
 
 /**
  * @struct swadgeMode_t
@@ -241,6 +243,13 @@ typedef struct
      * If this is true, then the swadge will be initialized.
      */
     bool usesThermometer;
+
+    /**
+     * @brief If this is false, then ::PB_SELECT events will only be used to return to the main menu or open the quick
+     * settings menu. If this is true then ::PB_SELECT events will be passed to the Swadge mode and ::PB_SELECT will not
+     * return to the main menu or open the quick settings menu.
+     */
+    bool overrideSelectBtn;
 
     /**
      * @brief This function is called when this mode is started. It should initialize variables and start the mode.
@@ -320,5 +329,7 @@ void switchToSwadgeMode(swadgeMode_t* mode);
 void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
+
+void setFrameRateUs(uint32_t newFrameRateUs);
 
 #endif

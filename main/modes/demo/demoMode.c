@@ -41,6 +41,7 @@ swadgeMode_t demoMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = true,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = demoEnterMode,
     .fnExitMode               = demoExitMode,
     .fnMainLoop               = demoMainLoop,
@@ -79,7 +80,7 @@ static void demoEnterMode(void)
     loadSong("ode.sng", &dv->ode_to_joy, true);
 
     bzrPlayBgm(&dv->ode_to_joy, BZR_STEREO);
-    bzrStop();
+    bzrStop(true);
 
     dv->menu = initMenu(demoName, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);

@@ -15,6 +15,10 @@
 #include <string.h>
 #include <stdio.h>
 
+#ifdef ENABLE_GCOV
+    #include <gcov.h>
+#endif
+
 #include "hdw-tft.h"
 #include "hdw-tft_emu.h"
 #include "hdw-led.h"
@@ -46,10 +50,8 @@
 // Defines
 //==============================================================================
 
-#define BG_COLOR   0x191919FF // This color isn't parjt of the palette
-#define DIV_WIDTH  1
-#define DIV_HEIGHT 1
-#define DIV_COLOR  0x808080FF
+#define BG_COLOR  0x191919FF // This color isn't parjt of the palette
+#define DIV_COLOR 0x808080FF
 
 //==============================================================================
 // Variables
@@ -143,8 +145,8 @@ int main(int argc, char** argv)
         calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
-        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
-        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
+        int32_t winW            = (TFT_WIDTH) * 2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT) * 2 + topBottomPanesH;
 
         if (emulatorArgs.headless)
         {
@@ -217,6 +219,12 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
+        CNFGTearDown();
+
+#ifdef ENABLE_GCOV
+        __gcov_dump();
+#endif
+
         exit(0);
         return;
     }

@@ -65,8 +65,8 @@ static inline uint32_t get_cCount()
     #define MIRROR_X           false
     #define MIRROR_Y           true
 #elif defined(CONFIG_ST7735_128x160)
-    // Mixture of docs + experimentation
-    // This is the RB027D25N05A / RB017D14N05A (Actually the ST7735S, so in between a ST7735 and ST7789)
+// Mixture of docs + experimentation
+// This is the RB027D25N05A / RB017D14N05A (Actually the ST7735S, so in between a ST7735 and ST7789)
     #define LCD_PIXEL_CLOCK_HZ (40 * 1000 * 1000)
     #define X_OFFSET           0
     #define Y_OFFSET           0
@@ -88,7 +88,7 @@ static inline uint32_t get_cCount()
     #define MIRROR_X           true
     #define MIRROR_Y           true
 #elif defined(CONFIG_GC9307_240x280)
-    // A beautiful rounded edges LCD RB017A1505A
+// A beautiful rounded edges LCD RB017A1505A
     #define LCD_PIXEL_CLOCK_HZ (80 * 1000 * 1000)
     #define X_OFFSET           20
     #define Y_OFFSET           0

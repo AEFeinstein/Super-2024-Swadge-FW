@@ -73,6 +73,7 @@ swadgeMode_t colorchordMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = colorchordEnterMode,
     .fnExitMode               = colorchordExitMode,
     .fnMainLoop               = colorchordMainLoop,

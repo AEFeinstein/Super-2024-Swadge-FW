@@ -154,6 +154,7 @@ swadgeMode_t pongMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = pongEnterMode,
     .fnExitMode               = pongExitMode,
     .fnMainLoop               = pongMainLoop,

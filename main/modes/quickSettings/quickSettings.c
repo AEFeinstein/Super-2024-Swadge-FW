@@ -106,6 +106,7 @@ swadgeMode_t quickSettingsMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = quickSettingsEnterMode,
     .fnExitMode               = quickSettingsExitMode,
     .fnMainLoop               = quickSettingsMainLoop,
@@ -240,6 +241,7 @@ static void quickSettingsExitMode(void)
     freeWsg(&quickSettings->iconTftOff);
 
     free(quickSettings);
+    quickSettings = NULL;
 }
 
 /**
@@ -309,8 +311,12 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
         quickSettings->menu = menuButton(quickSettings->menu, evt);
     }
 
-    // Draw the menu
-    drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
+    // If the button press didn't cause the menu to deinit
+    if (NULL != quickSettings)
+    {
+        // Draw the menu
+        drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
+    }
 }
 
 /**

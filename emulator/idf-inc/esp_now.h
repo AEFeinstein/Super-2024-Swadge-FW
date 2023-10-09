@@ -31,7 +31,7 @@ typedef struct
     signed noise_floor : 8; /**< noise floor of Radio Frequency Module(RF). unit: dBm*/
 #elif defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3) \
     || defined(CONFIG_IDF_TARGET_ESP32C2)
-    unsigned           : 8;  /**< reserved */
+    unsigned : 8; /**< reserved */
 #endif
     unsigned ampdu_cnt : 8; /**< ampdu cnt */
     unsigned channel   : 4; /**< primary channel on which this packet is received */
@@ -54,9 +54,9 @@ typedef struct
     signed noise_floor : 8;  /**< noise floor of Radio Frequency Module(RF). unit: dBm*/
     unsigned           : 24; /**< reserved */
 #elif defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C2)
-    unsigned           : 32; /**< reserved */
-    unsigned           : 32; /**< reserved */
-    unsigned           : 32; /**< reserved */
+    unsigned : 32; /**< reserved */
+    unsigned : 32; /**< reserved */
+    unsigned : 32; /**< reserved */
 #endif
     unsigned sig_len  : 12; /**< length of packet including Frame Check Sequence(FCS) */
     unsigned          : 12; /**< reserved */

@@ -62,7 +62,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
     loadFont("eightbit_atari_grube2.font", &lumv->arcade, false);
 
-    bzrStop(); // Stop the buzzer?
+    bzrStop(true); // Stop the buzzer?
 
     for (int i = 0; i < ARRAY_SIZE(lumv->axeBlocks); i++)
     {

@@ -51,6 +51,7 @@ swadgeMode_t lumberjackMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = lumberjackEnterMode,
     .fnExitMode               = lumberjackExitMode,
     .fnMainLoop               = lumberjackMainLoop,
@@ -109,7 +110,7 @@ static void lumberjackEnterMode(void)
     // Lumberjack. Game 19
     //  Init menu :(
 
-    bzrStop(); // Stop the buzzer?
+    bzrStop(true); // Stop the buzzer?
 
     // High score stuff?
     // Unlockables ? Save data?

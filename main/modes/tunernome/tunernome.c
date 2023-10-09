@@ -173,6 +173,7 @@ swadgeMode_t tunernomeMode = {.modeName                 = "Tunernome",
                               .overrideUsb              = false,
                               .usesAccelerometer        = false,
                               .usesThermometer          = false,
+                              .overrideSelectBtn        = false,
                               .fnEnterMode              = tunernomeEnterMode,
                               .fnExitMode               = tunernomeExitMode,
                               .fnMainLoop               = tunernomeMainLoop,
@@ -284,7 +285,7 @@ static songTrack_t metronome_primary_tracks[]  = {{
      .loopStartNote = 0,
      .notes         = metronome_primary_notes,
 }};
-const song_t metronome_primary
+song_t metronome_primary
     = {.numTracks = ARRAY_SIZE(metronome_primary_tracks), .shouldLoop = false, .tracks = metronome_primary_tracks};
 
 static musicalNote_t metronome_secondary_notes[] = {{
@@ -296,7 +297,7 @@ static songTrack_t metronome_secondary_tracks[]  = {{
      .loopStartNote = 0,
      .notes         = metronome_secondary_notes,
 }};
-const song_t metronome_secondary
+song_t metronome_secondary
     = {.numTracks = ARRAY_SIZE(metronome_secondary_tracks), .shouldLoop = false, .tracks = metronome_secondary_tracks};
 
 /*============================================================================
@@ -351,7 +352,7 @@ void switchToSubmode(tnMode newMode)
         {
             tunernome->mode = newMode;
 
-            bzrStop();
+            bzrStop(true);
 
             led_t leds[CONFIG_NUM_LEDS] = {{0}};
             setLeds(leds, CONFIG_NUM_LEDS);
@@ -398,7 +399,7 @@ void switchToSubmode(tnMode newMode)
  */
 void tunernomeExitMode(void)
 {
-    bzrStop();
+    bzrStop(true);
 
     freeFont(&tunernome->ibm_vga8);
     freeFont(&tunernome->radiostars);
@@ -599,7 +600,7 @@ void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led
             {
                 // Note too sharp, make it red
                 red = 255;
-                grn = blu = 255 - (tonalDiff)*15;
+                grn = blu = 255 - (tonalDiff) * 15;
             }
             else
             {
