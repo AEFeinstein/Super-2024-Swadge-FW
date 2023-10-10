@@ -9,6 +9,15 @@ import os
 from collections.abc import Mapping
 
 from rme_tiles import *
+from rme_script_editor import spawn
+
+from enum import Enum
+
+
+class clickMode(Enum):
+    NORMAL_EDIT = 1
+    SET_SPAWN_TRIGGER_ZONE = 2
+    SET_ENEMIES = 3
 
 
 class CustomText(tk.Text):
@@ -69,34 +78,39 @@ class view:
         borderThickness: int = 2
         padding: int = 4
 
-        buttonColor: str = '#2B79D7'
-        buttonPressedColor: str = '#5191DE'
-        buttonFontColor: str = '#FFFFFF'
+        self.buttonColor: str = '#2B79D7'
+        self.buttonPressedColor: str = '#5191DE'
+        self.buttonFontColor: str = '#FFFFFF'
         buttonWidth: int = 12
 
         # Setup the root and main frames
         self.root: tk.Tk = tk.Tk()
         self.root.title("Ray Map Editor")
+        self.root.bind('<KeyPress>', self.key_press)
         content = tk.Frame(self.root, background=frameBgColor)
         frame = tk.Frame(content, background=frameBgColor)
 
         # Setup the button frame and buttons
         self.buttonFrame: tk.Frame = tk.Frame(content, height=0, background=elemBgColor,
                                               highlightthickness=borderThickness, highlightbackground=borderColor, padx=padding, pady=padding)
-        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Load", font=fontStyle, background=buttonColor,
-                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+        self.loadButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Load", font=fontStyle, background=self.buttonColor,
+                                               foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
                                                command=self.clickLoad)
-        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save", font=fontStyle, background=buttonColor,
-                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+        self.saveButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save", font=fontStyle, background=self.buttonColor,
+                                               foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
                                                command=self.clickSave)
-        self.saveAsButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save As", font=fontStyle, background=buttonColor,
-                                                 foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+        self.saveAsButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Save As", font=fontStyle, background=self.buttonColor,
+                                                 foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
                                                  command=self.clickSaveAs)
-        self.resizeMap: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Resize Map", font=fontStyle, background=buttonColor,
-                                              foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+        self.resizeMap: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Resize Map", font=fontStyle, background=self.buttonColor,
+                                              foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
                                               command=self.clickResizeMap)
-        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", font=fontStyle, background=buttonColor,
-                                               foreground=buttonFontColor, activebackground=buttonPressedColor, activeforeground=buttonFontColor, bd=0,
+        self.scriptSpawn: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Set E.Triggers", font=fontStyle, background=self.buttonColor,
+                                                foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
+                                                command=self.clickScriptSpawn)
+        self.scriptSpawnState: clickMode = clickMode.NORMAL_EDIT
+        self.exitButton: tk.Button = tk.Button(self.buttonFrame, height=1, width=buttonWidth, text="Exit", font=fontStyle, background=self.buttonColor,
+                                               foreground=self.buttonFontColor, activebackground=self.buttonPressedColor, activeforeground=self.buttonFontColor, bd=0,
                                                command=self.clickExit)
 
         # Set up the canvasses
@@ -138,15 +152,18 @@ class view:
                                padx=padding, pady=padding)
         self.resizeMap.grid(column=3, row=0, sticky=tk.NW,
                             padx=padding, pady=padding)
+        self.scriptSpawn.grid(column=4, row=0, sticky=tk.NW,
+                              padx=padding, pady=padding)
         # Place this button in the top right
-        self.exitButton.grid(column=4, row=0, sticky=tk.NE,
+        self.exitButton.grid(column=5, row=0, sticky=tk.NE,
                              padx=padding, pady=padding)
 
         # Configure button column weights
         self.buttonFrame.columnconfigure(0, weight=0)
         self.buttonFrame.columnconfigure(1, weight=0)
         self.buttonFrame.columnconfigure(2, weight=0)
-        self.buttonFrame.columnconfigure(3, weight=1)
+        self.buttonFrame.columnconfigure(3, weight=0)
+        self.buttonFrame.columnconfigure(4, weight=1)
 
         # Place the palette and bind events
         self.paletteCanvas.grid(column=0, row=1, sticky=(
@@ -338,6 +355,11 @@ class view:
         # Redraw the UI
         self.redraw()
 
+    def key_press(self, e):
+        # Keyboard shortcut, s is the same as the script button
+        if e.char == 's':
+            self.clickScriptSpawn()
+
     def paletteLeftClick(self, event: tk.Event):
         x: int = self.paletteCanvas.canvasx(event.x)
         y: int = self.paletteCanvas.canvasy(event.y)
@@ -354,7 +376,7 @@ class view:
         x: int = self.mapCanvas.canvasx(event.x)
         y: int = self.mapCanvas.canvasy(event.y)
         self.c.leftClickMap(int(x / self.mapCellSize),
-                            int(y / self.mapCellSize))
+                            int(y / self.mapCellSize), self.scriptSpawnState)
 
     def mapRightClick(self, event: tk.Event):
         self.isMapRightClicked = True
@@ -376,7 +398,7 @@ class view:
             x: int = self.mapCanvas.canvasx(event.x)
             y: int = self.mapCanvas.canvasy(event.y)
             self.c.moveMouseMap(int(x / self.mapCellSize),
-                                int(y / self.mapCellSize))
+                                int(y / self.mapCellSize), self.scriptSpawnState)
 
     def mapMouseWheel(self, event: tk.Event):
         if (4 == event.num) or (event.delta < 0):
@@ -399,13 +421,13 @@ class view:
         line, char = self.scriptTextEntry.index("insert").split(".")
         scriptNum = int(line) - 1
 
+        # Clear highlight from old cell
+        while 0 != len(self.scriptRects):
+            rect = self.scriptRects.pop()
+            self.mapCanvas.delete(rect)
+
         # If there are scripts
         if scriptNum >= 0 and scriptNum < len(self.m.scripts):
-
-            # Clear highlight from old cell
-            while 0 != len(self.scriptRects):
-                rect = self.scriptRects.pop()
-                self.mapCanvas.delete(rect)
 
             lineWidth = 4
             dashPattern = (8, 8)
@@ -453,6 +475,30 @@ class view:
                                 ((x + 1) * self.mapCellSize),
                                 ((y + 1) * self.mapCellSize),
                                 outline='DeepPink', width=lineWidth, dash=dashPattern))
+
+            for spawn in self.m.scripts[scriptNum].getThenSpawns():
+                imgWidth: int = self.texMapMap[spawn.type].width()
+                hOffset = int((self.mapCellSize - imgWidth) / 2)
+                self.scriptRects.append(self.mapCanvas.create_image(
+                    (spawn.x * self.mapCellSize) + hOffset, (spawn.y * self.mapCellSize), image=self.texMapMap[spawn.type], anchor=tk.NW))
+
+        # If the enemy script is being built
+        if self.m.enemyScript is not None:
+            # Highlight the trigger cells
+            for cell in self.m.enemyScript.getIfCells():
+                if cell is not None:
+                    self.scriptRects.append(self.mapCanvas.create_rectangle(
+                        (cell[0] * self.mapCellSize),
+                        (cell[1] * self.mapCellSize),
+                        ((cell[0] + 1) * self.mapCellSize),
+                        ((cell[1] + 1) * self.mapCellSize),
+                        outline='blue', width=4))
+            # Draw the spawns
+            for spawn in self.m.enemyScript.getThenSpawns():
+                imgWidth: int = self.texMapMap[spawn.type].width()
+                hOffset = int((self.mapCellSize - imgWidth) / 2)
+                self.scriptRects.append(self.mapCanvas.create_image(
+                    (spawn.x * self.mapCellSize) + hOffset, (spawn.y * self.mapCellSize), image=self.texMapMap[spawn.type], anchor=tk.NW))
 
     def scriptTextChanged(self, event: tk.Event):
 
@@ -603,13 +649,18 @@ class view:
             # Redraw map
             self.redraw()
 
-            # Clear and set script text
-            self.scriptTextEntry.delete('1.0', tk.END)
-            for script in self.m.scripts:
-                self.scriptTextEntry.insert(tk.END, script.toString() + '\n')
-            # Highlight text
-            self.scriptTextChanged(None)
+            # Redraw scripts
+            self.reloadScriptText()
+
             self.root.title(os.path.basename(self.currentFilePath))
+
+    def reloadScriptText(self):
+        # Clear and set script text
+        self.scriptTextEntry.delete('1.0', tk.END)
+        for script in self.m.scripts:
+            self.scriptTextEntry.insert(tk.END, script.toString() + '\n')
+        # Highlight text
+        self.scriptTextChanged(None)
 
     def clickResizeMap(self):
         inputStr: str = str(self.m.getMapWidth()) + 'x' + \
@@ -645,6 +696,25 @@ class view:
             except:
                 # Validation failed, try again
                 validInput = False
+
+    def clickScriptSpawn(self):
+        if clickMode.NORMAL_EDIT == self.scriptSpawnState:
+            self.scriptSpawnState = clickMode.SET_SPAWN_TRIGGER_ZONE
+            self.scriptSpawn.config(text="Set Enemies")
+            self.scriptSpawn.config(background='green')
+            self.scriptSpawn.config(activebackground='green')
+            self.m.startScriptCreation()
+        elif clickMode.SET_SPAWN_TRIGGER_ZONE == self.scriptSpawnState:
+            self.scriptSpawnState = clickMode.SET_ENEMIES
+            self.scriptSpawn.config(text="Finish Script")
+            self.scriptSpawn.config(background='red')
+            self.scriptSpawn.config(activebackground='red')
+        elif clickMode.SET_ENEMIES == self.scriptSpawnState:
+            self.scriptSpawnState = clickMode.NORMAL_EDIT
+            self.scriptSpawn.config(text="Set E.Triggers")
+            self.scriptSpawn.config(background=self.buttonColor)
+            self.scriptSpawn.config(activebackground=self.buttonPressedColor)
+            self.m.finishScriptCreation()
 
     def clickExit(self):
         if self.currentFilePath is not None:
