@@ -359,15 +359,19 @@ void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
     {
         for (int16_t xIdx = minX; xIdx <= maxX; xIdx++)
         {
-#endif
             // Mark these cells as visited, don't undo SCRIPT_DOOR_OPEN
             rayTileState_t* ts = &map->visitedTiles[(yIdx * map->w) + xIdx];
             if (*ts == NOT_VISITED)
             {
                 *ts = VISITED;
             }
-#ifdef SPATIAL_VISIT
         }
+    }
+#else
+    rayTileState_t* ts = &map->visitedTiles[(y * map->w) + x];
+    if (*ts < VISITED)
+    {
+        *ts = VISITED;
     }
 #endif
 }
