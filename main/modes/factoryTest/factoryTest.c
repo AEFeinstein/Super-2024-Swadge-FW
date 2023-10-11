@@ -308,10 +308,9 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
 
     // Draw the 8-direction touchpad with center circle
-    int16_t tBarX        = TFT_WIDTH - TOUCHBAR_WIDTH;
-    int16_t tBarY        = barY + 4 + TOUCHBAR_HEIGHT / 2 + test->ibm_vga8.height + 15;
-    touchDrawCircle(&test->ibm_vga8, "Touch Pad", tBarX, tBarY, 35, 8, true,
-                    test->touched, test->touchJoystick);
+    int16_t tBarX = TFT_WIDTH - TOUCHBAR_WIDTH;
+    int16_t tBarY = barY + 4 + TOUCHBAR_HEIGHT / 2 + test->ibm_vga8.height + 15;
+    touchDrawCircle(&test->ibm_vga8, "Touch Pad", tBarX, tBarY, 35, 8, true, test->touched, test->touchJoystick);
     touchFillCircleSegments(tBarX, tBarY, 35, 8, true);
 
     // Plot some text depending on test status
@@ -617,8 +616,8 @@ void testReadAndValidateTouch(void)
     if (test->touched)
     {
         test->touchJoystick = getTouchJoystickZones(phi, r, true, true);
-        uint8_t pad = touchJoystickToTouchIdx(test->touchJoystick);
-        if(pad == UINT8_MAX)
+        uint8_t pad         = touchJoystickToTouchIdx(test->touchJoystick);
+        if (pad == UINT8_MAX)
         {
             return;
         }
@@ -796,7 +795,7 @@ static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t seg
         {
             // Fill in the segment
             floodFill(x + getCos1024(angle) * fillR / 1024, y - getSin1024(angle) * fillR / 1024, color, x - r - 1,
-                    y - r - 1, x + r + 1, y + r + 1);
+                      y - r - 1, x + r + 1, y + r + 1);
         }
     }
 }

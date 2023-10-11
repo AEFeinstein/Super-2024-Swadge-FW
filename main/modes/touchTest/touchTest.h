@@ -16,8 +16,7 @@ extern swadgeMode_t touchTestMode;
 static void touchDrawCircle(font_t* font, const char* label, int16_t x, int16_t y, int16_t r, int16_t segs, bool center,
                             bool touched, touchJoystick_t val)
 {
-    drawText(font, c555, label, x - textWidth(font, label) / 2,
-             y - r - font->height - 5);
+    drawText(font, c555, label, x - textWidth(font, label) / 2, y - r - font->height - 5);
 
     // Draw outer circle
     drawCircle(x, y, r, c222);

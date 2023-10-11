@@ -325,10 +325,10 @@ static void touchTestDraw(void)
                     getTouchJoystickZones(touchTest->angle, touchTest->radius, false, true));
 
     // Draw the 4-direction touchpad with center circle
-    touchDrawCircle(&touchTest->ibm, "4+Center", TFT_WIDTH / 2, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 4, true, touchTest->touch,
-                    getTouchJoystickZones(touchTest->angle, touchTest->radius, true, false));
+    touchDrawCircle(&touchTest->ibm, "4+Center", TFT_WIDTH / 2, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 4, true,
+                    touchTest->touch, getTouchJoystickZones(touchTest->angle, touchTest->radius, true, false));
 
     // Draw the 8-direction touchpad with center circle
-    touchDrawCircle(&touchTest->ibm, "8+Center", TFT_WIDTH - 60, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 8, true, touchTest->touch,
-                    getTouchJoystickZones(touchTest->angle, touchTest->radius, true, true));
+    touchDrawCircle(&touchTest->ibm, "8+Center", TFT_WIDTH - 60, TFT_HEIGHT - TFT_HEIGHT / 4, 35, 8, true,
+                    touchTest->touch, getTouchJoystickZones(touchTest->angle, touchTest->radius, true, true));
 }
