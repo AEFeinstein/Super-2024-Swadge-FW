@@ -53,7 +53,7 @@ typedef struct
 DECL_SETTING(test, 0, 1, 0);
 DECL_SETTING(bgm, 0, 13, 13);
 DECL_SETTING(sfx, 0, 13, 13);
-DECL_SETTING(tft_br, 0, 7, 5);
+DECL_SETTING(tft_br, 0, 7, 7);
 DECL_SETTING(led_br, 0, 8, 5);
 DECL_SETTING(mic, 0, 7, 7);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
