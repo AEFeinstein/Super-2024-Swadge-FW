@@ -6,7 +6,6 @@
 
 #include <string.h>
 #include <malloc.h>
-#include <esp_log.h>
 
 #include "font.h"
 #include "hdw-btn.h"
@@ -360,6 +359,17 @@ void freeTextEntry(textEntry_t* textEntry)
 }
 
 /**
+ * @brief Sets the data pointer to be passed along to the callback function
+ *
+ * @param textEntry The text entry to update the data for
+ * @param data The void pointer to be passed when the callback is called
+ */
+void textEntrySetData(textEntry_t* textEntry, void* data)
+{
+    textEntry->data = data;
+}
+
+/**
  * @brief Copy the given text into the text entry, replacing any text that was there and moving the cursor to the end of the new text
  *
  * @param textEntry The text entry to update the text for
@@ -578,19 +588,9 @@ void textEntryButton(textEntry_t* textEntry, buttonEvt_t* evt)
             }
 
             case PB_START:
-            {
-                if (textEntry->cbFn && strlen(textEntry->value) >= textEntry->minLength)
-                {
-                    textEntry->cbFn(textEntry->value);
-                }
-                break;
-            }
-
             case PB_SELECT:
-            {
-                textEntry->overtype = !textEntry->overtype;
-                break;
-            }
+            // Both handled on key up instead
+            break;
         }
 
         if ((evt->button & REPEATABLE_BUTTONS) == evt->button)
@@ -605,9 +605,36 @@ void textEntryButton(textEntry_t* textEntry, buttonEvt_t* evt)
     }
     else
     {
-        if (textEntry->heldButton == evt->button)
+        switch (evt->button)
         {
-            textEntry->heldButton = 0;
+            case PB_UP:
+            case PB_DOWN:
+            case PB_LEFT:
+            case PB_RIGHT:
+            case PB_A:
+            case PB_B:
+            {
+                if (textEntry->heldButton == evt->button)
+                {
+                    textEntry->heldButton = 0;
+                }
+                break;
+            }
+
+            case PB_START:
+            {
+                if (textEntry->cbFn && strlen(textEntry->value) >= textEntry->minLength)
+                {
+                    textEntry->cbFn(textEntry->value, textEntry->data);
+                }
+                break;
+            }
+
+            case PB_SELECT:
+            {
+                textEntry->overtype = !textEntry->overtype;
+                break;
+            }
         }
     }
 }

@@ -5,33 +5,32 @@
 #include "font.h"
 #include "wsg.h"
 #include "hdw-btn.h"
+#include "textEntry.h"
 #include <nvs.h>
 
-typedef void (*imageBrowserCbFn_t)(const char* nvsKey);
+typedef void (*imageBrowserCbFn)(const char* nvsKey);
 
 typedef struct
 {
     node_t* currentItem;
     list_t items;
 
-    imageBrowserCbFn_t callback;
+    const font_t* font;
+
+    textEntry_t* textEntry;
+    bool showTextEntry;
+    int64_t prevUpdateTime;
+
+    imageBrowserCbFn callback;
 
     uint8_t cols;
 
     uint8_t firstRow;
 } imageBrowser_t;
 
-typedef struct
-{
-    wsg_t thumb;
-    wsg_t preview;
-
-    char nvsKey[NVS_KEY_NAME_MAX_SIZE];
-} imageBrowserItem_t;
-
-void setupImageBrowser(imageBrowser_t* browser, const char* namespace, const char* prefix);
+void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix, bool addNewButton);
 void resetImageBrowser(imageBrowser_t* browser);
-void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool showPreview);
+void drawImageBrowser(imageBrowser_t* browser);
 void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt);
 
 #endif

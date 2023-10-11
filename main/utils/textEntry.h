@@ -3,7 +3,7 @@
  * \section textEntry_design Design Philosophy
  *
  * The text entry utility provides a minimal interface for editing a single line of text of unlimited length.
-
+ * It can easily be adapted to any interface
  *
  * \section textEntry_usage Usage
  *
@@ -50,9 +50,10 @@ typedef enum
 /**
  * @brief A callback which is called once text entry is complete.
  * @param text The final text value. This value should be copied if it will be saved.
+ * @param data The void pointer passed to textEntrySetData(), or NULL if no data was set
  *
  */
-typedef void (*textEntryCb)(const char* text);
+typedef void (*textEntryCb)(const char* text, void* data);
 
 /**
  * @brief Struct to store all state for a text entry
@@ -126,6 +127,8 @@ typedef struct
     /// @brief The font to use for text entry
     const font_t* font;
 
+    void* data;
+
     /// @brief The function to call when the text entry is completed
     textEntryCb cbFn;
 } textEntry_t;
@@ -133,6 +136,7 @@ typedef struct
 textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, const font_t* font, textEntryCharMask_t mask, textEntryCb cbFn);
 void freeTextEntry(textEntry_t* textEntry);
 
+void textEntrySetData(textEntry_t* textEntry, void* data);
 void textEntrySetText(textEntry_t* textEntry, const char* text);
 void textEntryMainLoop(textEntry_t* textEntry, int64_t elapsedUs);
 void textEntryButton(textEntry_t* textEntry, buttonEvt_t* evt);

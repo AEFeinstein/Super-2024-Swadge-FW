@@ -3,6 +3,7 @@
 #include <inttypes.h>
 
 #include "paint_browser.h"
+#include "paint_common.h"
 #include "linked_list.h"
 #include "spiffs_wsg.h"
 #include "hdw-nvs.h"
@@ -14,7 +15,10 @@
 #include "hdw-btn.h"
 #include "shapes.h"
 #include "fill.h"
-#include "esp_log.h"
+#include "esp_timer.h"
+
+static const char saveAsNewStr[] = "New...";
+static const char textEntryTitleStr[] = "File Name";
 
 #define THUMB_W 35
 #define THUMB_H 30
@@ -22,15 +26,25 @@
 #define SCROLL_OFFSET 30
 #define SCROLL_HEIGHT (TFT_HEIGHT - SCROLL_OFFSET * 2)
 
+#define ENTRY_W 160
+#define ENTRY_Y 60
+#define ENTRY_TITLE_Y 40
+
+typedef struct
+{
+    bool isNewButton;
+    wsg_t thumb;
+
+    char nvsKey[NVS_KEY_NAME_MAX_SIZE];
+} imageBrowserItem_t;
+
 static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t* image, bool spiram);
+static void imageBrowserTextEntryCb(const char* text, void* data);
 
 static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t* image, bool spiram)
 {
     thumbnail->w = MIN(w, image->w);
     thumbnail->h = MIN(h, image->h);
-
-    ESP_LOGI("Paint", "Thumbnail is %" PRIu16 " x %" PRIu16, thumbnail->w, thumbnail->h);
-    ESP_LOGI("Paint", "Image is %" PRIu16 " x %" PRIu16, image->w, image->h);
 
     thumbnail->px
         = heap_caps_malloc(sizeof(paletteColor_t) * thumbnail->w * thumbnail->h, spiram ? MALLOC_CAP_SPIRAM : 0);
@@ -59,11 +73,22 @@ static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t*
     return true;
 }
 
-void setupImageBrowser(imageBrowser_t* browser, const char* namespace, const char* prefix)
+static void imageBrowserTextEntryCb(const char* text, void* data)
+{
+    imageBrowser_t* browser = (imageBrowser_t*)data;
+    if (browser && browser->callback)
+    {
+        browser->callback(text);
+    }
+}
+
+void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix, bool addNewButton)
 {
     size_t numInfos = 0;
     readNamespaceNvsEntryInfos(namespace, NULL, NULL, &numInfos);
-    ESP_LOGI("Paint", "%" PRIu64 " NVS entries", (uint64_t)numInfos);
+
+    browser->font = font;
+    browser->prevUpdateTime = 0;
 
     nvs_entry_info_t imageInfos[numInfos] = {};
 
@@ -73,44 +98,57 @@ void setupImageBrowser(imageBrowser_t* browser, const char* namespace, const cha
         imagePtrs[i] = &imageInfos[i];
     }
 
-    ESP_LOGI("Paint", "imageInfos is %" PRIu64 " bytes", (uint64_t)sizeof(imageInfos));
-    if (readNamespaceNvsEntryInfos(namespace, NULL, &imagePtrs, &numInfos))
+    if (addNewButton)
     {
-        ESP_LOGI("Paint", "readAll success");
+        imageBrowserItem_t* newButton = calloc(1, sizeof(imageBrowserItem_t));
+        newButton->isNewButton = true;
+        loadWsg("wheel_new.wsg", &newButton->thumb, false);
+        push(&browser->items, newButton);
+
+        browser->showTextEntry = false;
+
+        if (NULL == browser->textEntry)
+        {
+            browser->textEntry = initTextEntry((TFT_WIDTH - ENTRY_W) / 2, ENTRY_Y, ENTRY_W, 16, font, ENTRY_WORD | ENTRY_WHITESPACE, imageBrowserTextEntryCb);
+            textEntrySetData(browser->textEntry, browser);
+        }
+
+        browser->currentItem = browser->items.last;
+    }
+
+    if (readNamespaceNvsEntryInfos(namespace, NULL, &imagePtrs[0], &numInfos))
+    {
         for (uint32_t i = 0; i < numInfos; ++i)
         {
             if (imageInfos[i].type == NVS_TYPE_BLOB)
             {
                 if (!prefix || !memcmp(imageInfos[i].key, prefix, MIN(strlen(prefix), 16)))
                 {
-                    imageBrowserItem_t* newItem = calloc(1, sizeof(imageBrowserItem_t));
-
-                    bool result = loadWsgNvs(imageInfos[i].namespace_name, imageInfos[i].key, &newItem->preview, true);
-                    ESP_LOGI("Paint", "loadWsgNvs result is %s", result ? "true" : "false");
-
-                    // Make a thumbnail
-                    if (result)
+                    // Load the image from NVS
+                    wsg_t fullImage;
+                    if (loadWsgNvs(imageInfos[i].namespace_name, imageInfos[i].key, &fullImage, true))
                     {
-                        makeThumbnail(&newItem->thumb, THUMB_W, THUMB_H, &newItem->preview, false);
+                        imageBrowserItem_t* newItem = calloc(1, sizeof(imageBrowserItem_t));
+
+                        // Make a thumbnail and add it to the info
+                        makeThumbnail(&newItem->thumb, THUMB_W, THUMB_H, &fullImage, false);
 
                         strncpy(newItem->nvsKey, imageInfos[i].key, sizeof(newItem->nvsKey) - 1);
 
                         push(&browser->items, newItem);
+
                         if (!browser->currentItem)
                         {
                             browser->currentItem = browser->items.last;
                         }
-                    }
-                    else
-                    {
-                        free(newItem);
+
+                        // Free the full image
+                        freeWsg(&fullImage);
                     }
                 }
             }
         }
     }
-
-    ESP_LOGI("Paint", "Image browser has %d OK items", browser->items.length);
 }
 
 void resetImageBrowser(imageBrowser_t* browser)
@@ -121,19 +159,25 @@ void resetImageBrowser(imageBrowser_t* browser)
     while (NULL != (item = pop(&browser->items)))
     {
         free(item->thumb.px);
-        free(item->preview.px);
         free(item);
+    }
+
+    if (NULL != browser->textEntry)
+    {
+        freeTextEntry(browser->textEntry);
+        browser->textEntry = NULL;
+        browser->showTextEntry = false;
     }
 }
 
-void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool showPreview)
+void drawImageBrowser(imageBrowser_t* browser)
 {
     // Calculate the total number of full or partial rows
     uint8_t rows = (browser->items.length + (browser->cols - 1)) / browser->cols;
 
     uint16_t marginTop    = 15;
     uint16_t textMargin = 5;
-    uint16_t marginBottom = 15 + font->height + 1 + textMargin;
+    uint16_t marginBottom = 15 + browser->font->height + 1 + textMargin;
     uint16_t marginLeft = 15;
     uint16_t marginRight = 15;
     uint16_t thumbMargin  = 5;
@@ -153,6 +197,23 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
 
     // Fill the whole screen with a nice gray
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c444);
+
+    if (browser->textEntry && browser->showTextEntry)
+    {
+        if (0 == browser->prevUpdateTime)
+        {
+            browser->prevUpdateTime = esp_timer_get_time();
+        }
+
+        int64_t now = esp_timer_get_time();
+
+        textEntryMainLoop(browser->textEntry, now - browser->prevUpdateTime);
+        drawText(browser->font, c000, textEntryTitleStr, (TFT_WIDTH - textWidth(browser->font, textEntryTitleStr)) / 2, ENTRY_TITLE_Y);
+        drawTextEntry(browser->textEntry, c000, c555, false);
+
+        browser->prevUpdateTime = now;
+        return;
+    }
 
     // Draw the scroll bar on the right side
     // Border
@@ -189,8 +250,12 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
 
             // Background
             fillDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, c333);
-            // Make a checkerboard for any transparency
-            shadeDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, 2, c111);
+
+            if (!item->isNewButton)
+            {
+                // Make a checkerboard for any transparency
+                shadeDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, 2, c111);
+            }
 
             // Draw thumb
             drawWsgSimple(&item->thumb, x + 2, y + 2);
@@ -203,7 +268,8 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
             // Draw the label of the selected item
             if (selected)
             {
-                drawText(font, c000, item->nvsKey, (TFT_WIDTH - textWidth(font, item->nvsKey)) / 2, TFT_HEIGHT - marginBottom + textMargin);
+                const char* text = item->isNewButton ? saveAsNewStr : item->nvsKey;
+                drawText(browser->font, c000, text, (TFT_WIDTH - textWidth(browser->font, text)) / 2, TFT_HEIGHT - marginBottom + textMargin);
             }
         }
     }
@@ -211,7 +277,19 @@ void drawImageBrowser(const imageBrowser_t* browser, const font_t* font, bool sh
 
 void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
 {
-    if (evt->down)
+    if (browser->textEntry && browser->showTextEntry)
+    {
+        if (evt->down && evt->button == PB_B && '\0' == *(browser->textEntry->value))
+        {
+            // Text entry is empty, B was pressed, go back
+            browser->showTextEntry = false;
+        }
+        else
+        {
+            textEntryButton(browser->textEntry, evt);
+        }
+    }
+    else if (evt->down)
     {
         switch (evt->button)
         {
@@ -275,15 +353,29 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
 
             case PB_A:
             {
-                if (browser->callback && browser->currentItem)
+                if (browser->currentItem)
                 {
-                    browser->callback(((imageBrowserItem_t*)browser->currentItem->val)->nvsKey);
+                    imageBrowserItem_t* item = browser->currentItem->val;
+
+                    if (item->isNewButton)
+                    {
+                        // Open text dialog
+                        browser->showTextEntry = true;
+                    }
+                    else if (browser->callback)
+                    {
+                        browser->callback(item->nvsKey);
+                    }
                 }
                 break;
             }
 
             case PB_B:
             {
+                if (browser->callback)
+                {
+                    browser->callback(NULL);
+                }
                 break;
             }
 

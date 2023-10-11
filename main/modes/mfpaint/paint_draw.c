@@ -720,7 +720,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             paintHidePickPoints();
 
             paintSaveNamed(paintState->selectedSlotKey, &paintState->canvas);
-            //paintSave(&paintState->index, &paintState->canvas, paintState->selectedSlot);
 
             paintDrawPickPoints();
             showCursor(getCursor(), &paintState->canvas);
@@ -795,7 +794,7 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
 
         if (paintState->showBrowser)
         {
-            drawImageBrowser(&paintState->browser, &paintState->toolbarFont, false);
+            drawImageBrowser(&paintState->browser);
         }
         else
         {
@@ -1298,14 +1297,7 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
 
     if (paintState->showBrowser)
     {
-        if (evt->down && evt->button == PB_B)
-        {
-            paintState->showBrowser = false;
-        }
-        else
-        {
-            imageBrowserButton(&paintState->browser, evt);
-        }
+        imageBrowserButton(&paintState->browser, evt);
     }
     else if (paintState->showDialogBox)
     {
@@ -1313,7 +1305,6 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
     }
     else if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
     {
-        PAINT_LOGI("Menu is active, sending it a button press");
         wheelMenuButton(paintState->toolWheel, paintState->toolWheelRenderer, evt);
     }
     else
@@ -2419,7 +2410,7 @@ static void paintSetupBrowser(bool save)
     }
 
     resetImageBrowser(&paintState->browser);
-    setupImageBrowser(&paintState->browser, "paint_img", NULL);
+    setupImageBrowser(&paintState->browser, &paintState->toolbarFont, "paint_img", NULL, save);
     paintState->showDialogBox = false;
     paintState->showBrowser = true;
     paintState->browserSave = save;
@@ -2427,16 +2418,20 @@ static void paintSetupBrowser(bool save)
 
 static void paintBrowserCb(const char* nvsKey)
 {
-    PAINT_LOGI("Selected %s", nvsKey);
-    strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
-    PAINT_LOGI("selectedSlotKey is %s", paintState->selectedSlotKey);
+    PAINT_LOGI("CB Called wow");
+    if (NULL != nvsKey)
+    {
+        strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
 
-    if (paintState->browserSave)
-    {
-        paintState->doSave = true;
+        if (paintState->browserSave)
+        {
+            paintState->doSave = true;
+        }
+        else
+        {
+            paintState->doLoad = true;
+        }
     }
-    else
-    {
-        paintState->doLoad = true;
-    }
+
+    paintState->showBrowser = false;
 }
