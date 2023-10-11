@@ -42,10 +42,11 @@
     gameData->playerBombs[1] = NULL;
     gameData->playerBombs[2] = NULL;
 
-    gameData->playerBombsCount = 0;
-    gameData->nextBombToDetonate = 0;
+    gameData->playerTimeBombsCount = 0;
+    gameData->playerRemoteBombPlaced  = false;
+    /*gameData->nextBombToDetonate = 0;
     gameData->nextBombSlot = 0;
-    gameData->bombDetonateCooldown = 0;
+    gameData->bombDetonateCooldown = 0;*/
 }
 
  void initializeGameDataFromTitleScreen(gameData_t * gameData){
@@ -67,10 +68,11 @@
 
     resetGameDataLeds(gameData);
 
-    gameData->playerBombsCount = 0;
-    gameData->nextBombToDetonate = 0;
-    gameData->nextBombSlot = 0;
-    gameData->bombDetonateCooldown = 0;
+    gameData->playerTimeBombsCount = 0;
+    gameData->playerRemoteBombPlaced = false;
+    //gameData->nextBombToDetonate = 0;
+    //gameData->nextBombSlot = 0;
+    //gameData->bombDetonateCooldown = 0;
 }
 
 void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData){
