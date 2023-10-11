@@ -327,8 +327,8 @@ bool isPassableCell(rayMapCell_t* cell)
     }
     else if (CELL_IS_TYPE(cell->type, BG | DOOR))
     {
-        // Only pass through open doors
-        return (TO_FX(1) == cell->doorOpen);
+        // Only pass through at least half open doors
+        return (TO_FX_FRAC(1, 2) < cell->doorOpen);
     }
     else
     {

@@ -39,7 +39,7 @@
 #define US_PER_LAVA_DAMAGE 500000
 
 /** Microseconds to charge the charge beam */
-#define CHARGE_TIME_US 2097152
+#define CHARGE_TIME_US 1048576
 
 /** The number of bullets tracked at a given point in time */
 #define MAX_RAY_BULLETS 32
