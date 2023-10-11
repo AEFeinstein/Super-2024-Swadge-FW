@@ -222,85 +222,85 @@ class view:
 
         # Load all textures
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR, '../../assets/ray/BG_FLOOR.png')
+                         tileType.BG_FLOOR, '../../assets/ray/env/BG_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR_WATER, '../../assets/ray/BG_FLOOR_WATER.png')
+                         tileType.BG_FLOOR_WATER, '../../assets/ray/env/BG_FLOOR_WATER.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR_LAVA, '../../assets/ray/BG_FLOOR_LAVA.png')
+                         tileType.BG_FLOOR_LAVA, '../../assets/ray/env/BG_FLOOR_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_1, '../../assets/ray/BG_WALL_1.png')
+                         tileType.BG_WALL_1, '../../assets/ray/env/BG_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_2, '../../assets/ray/BG_WALL_2.png')
+                         tileType.BG_WALL_2, '../../assets/ray/env/BG_WALL_2.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_3, '../../assets/ray/BG_WALL_3.png')
+                         tileType.BG_WALL_3, '../../assets/ray/env/BG_WALL_3.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_4, '../../assets/ray/BG_WALL_4.png')
+                         tileType.BG_WALL_4, '../../assets/ray/env/BG_WALL_4.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_5, '../../assets/ray/BG_WALL_5.png')
+                         tileType.BG_WALL_5, '../../assets/ray/env/BG_WALL_5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR, '../../assets/ray/BG_DOOR.png')
+                         tileType.BG_DOOR, '../../assets/ray/doors/BG_DOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_CHARGE, '../../assets/ray/BG_DOOR_CHARGE.png')
+                         tileType.BG_DOOR_CHARGE, '../../assets/ray/doors/BG_DOOR_CHARGE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_MISSILE, '../../assets/ray/BG_DOOR_MISSILE.png')
+                         tileType.BG_DOOR_MISSILE, '../../assets/ray/doors/BG_DOOR_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_ICE, '../../assets/ray/BG_DOOR_ICE.png')
+                         tileType.BG_DOOR_ICE, '../../assets/ray/doors/BG_DOOR_ICE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_XRAY, '../../assets/ray/BG_DOOR_XRAY.png')
+                         tileType.BG_DOOR_XRAY, '../../assets/ray/doors/BG_DOOR_XRAY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_SCRIPT, '../../assets/ray/BG_DOOR_SCRIPT.png')
+                         tileType.BG_DOOR_SCRIPT, '../../assets/ray/doors/BG_DOOR_SCRIPT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_KEY_A, '../../assets/ray/BG_DOOR_KEY_A.png')
+                         tileType.BG_DOOR_KEY_A, '../../assets/ray/doors/BG_DOOR_KEY_A.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_KEY_B, '../../assets/ray/BG_DOOR_KEY_B.png')
+                         tileType.BG_DOOR_KEY_B, '../../assets/ray/doors/BG_DOOR_KEY_B.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_DOOR_KEY_C, '../../assets/ray/BG_DOOR_KEY_C.png')
+                         tileType.BG_DOOR_KEY_C, '../../assets/ray/doors/BG_DOOR_KEY_C.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/E_NORMAL_WALK_0.png')
+                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/enemies/NORMAL/E_NORMAL_WALK_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/E_STRONG_WALK_0.png')
+                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/enemies/STRONG/E_STRONG_WALK_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/E_ARMORED_WALK_0.png')
+                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/enemies/ARMORED/E_ARMORED_WALK_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/E_FLAMING_WALK_0.png')
+                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/enemies/FLAMING/E_FLAMING_WALK_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/E_HIDDEN_WALK_0.png')
+                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/enemies/HIDDEN/E_HIDDEN_WALK_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/E_BOSS_WALK_0.png')
+                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/enemies/BOSS/E_BOSS_WALK_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_BEAM, '../../assets/ray/OBJ_ITEM_BEAM.png')
+                         tileType.OBJ_ITEM_BEAM, '../../assets/ray/items/OBJ_ITEM_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_CHARGE_BEAM, '../../assets/ray/OBJ_ITEM_CHARGE_BEAM.png')
+                         tileType.OBJ_ITEM_CHARGE_BEAM, '../../assets/ray/items/OBJ_ITEM_CHARGE_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_MISSILE, '../../assets/ray/OBJ_ITEM_MISSILE.png')
+                         tileType.OBJ_ITEM_MISSILE, '../../assets/ray/items/OBJ_ITEM_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_ICE, '../../assets/ray/OBJ_ITEM_ICE.png')
+                         tileType.OBJ_ITEM_ICE, '../../assets/ray/items/OBJ_ITEM_ICE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_XRAY, '../../assets/ray/OBJ_ITEM_XRAY.png')
+                         tileType.OBJ_ITEM_XRAY, '../../assets/ray/items/OBJ_ITEM_XRAY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_SUIT_WATER, '../../assets/ray/OBJ_ITEM_SUIT_WATER.png')
+                         tileType.OBJ_ITEM_SUIT_WATER, '../../assets/ray/items/OBJ_ITEM_SUIT_WATER.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_SUIT_LAVA, '../../assets/ray/OBJ_ITEM_SUIT_LAVA.png')
+                         tileType.OBJ_ITEM_SUIT_LAVA, '../../assets/ray/items/OBJ_ITEM_SUIT_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_ENERGY_TANK, '../../assets/ray/OBJ_ITEM_ENERGY_TANK.png')
+                         tileType.OBJ_ITEM_ENERGY_TANK, '../../assets/ray/items/OBJ_ITEM_ENERGY_TANK.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_KEY_A, '../../assets/ray/OBJ_ITEM_KEY_A.png')
+                         tileType.OBJ_ITEM_KEY_A, '../../assets/ray/items/OBJ_ITEM_KEY_A.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_KEY_B, '../../assets/ray/OBJ_ITEM_KEY_B.png')
+                         tileType.OBJ_ITEM_KEY_B, '../../assets/ray/items/OBJ_ITEM_KEY_B.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_KEY_C, '../../assets/ray/OBJ_ITEM_KEY_C.png')
+                         tileType.OBJ_ITEM_KEY_C, '../../assets/ray/items/OBJ_ITEM_KEY_C.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_ARTIFACT, '../../assets/ray/OBJ_ITEM_ARTIFACT.png')
+                         tileType.OBJ_ITEM_ARTIFACT, '../../assets/ray/items/OBJ_ITEM_ARTIFACT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ITEM_PICKUP_ENERGY, '../../assets/ray/OBJ_ITEM_PICKUP_ENERGY.png')
+                         tileType.OBJ_ITEM_PICKUP_ENERGY, '../../assets/ray/items/OBJ_ITEM_PICKUP_ENERGY.png')
         self.loadTexture(self.texMapPalette, self.texMapMap, tileType.OBJ_ITEM_PICKUP_MISSILE,
-                         '../../assets/ray/OBJ_ITEM_PICKUP_MISSILE.png')
+                         '../../assets/ray/items/OBJ_ITEM_PICKUP_MISSILE.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/OBJ_SCENERY_TERMINAL.png')
+                         tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/scenery/OBJ_SCENERY_TERMINAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_SCENERY_PORTAL, '../../assets/ray/OBJ_SCENERY_PORTAL.png')
+                         tileType.OBJ_SCENERY_PORTAL, '../../assets/ray/scenery/OBJ_SCENERY_PORTAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.DELETE, 'imgs/DELETE.png')
 
