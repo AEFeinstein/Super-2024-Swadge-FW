@@ -247,8 +247,16 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                         }
                         case BG_DOOR_XRAY:
                         {
-                            // TODO hide XRAY doors on the map?
-                            color = c020;
+                            // Hide XRAY doors until the player gets the xrayLoadOut
+                            if (ray->p.i.xrayLoadOut)
+                            {
+                                color = c020;
+                            }
+                            else
+                            {
+                                // Wall color
+                                color = c001;
+                            }
                             break;
                         }
                         case BG_DOOR_SCRIPT:
