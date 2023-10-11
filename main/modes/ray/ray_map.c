@@ -347,6 +347,7 @@ bool isPassableCell(rayMapCell_t* cell)
  */
 void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
 {
+#ifdef SPATIAL_VISIT // Uncomment to mark adjacent tiles as visited
     // Find in-bounds loop indices
     int16_t minX = MAX(0, x - 1);
     int16_t maxX = MIN(map->w - 1, x + 1);
@@ -358,12 +359,15 @@ void markTileVisited(rayMap_t* map, int16_t x, int16_t y)
     {
         for (int16_t xIdx = minX; xIdx <= maxX; xIdx++)
         {
+#endif
             // Mark these cells as visited, don't undo SCRIPT_DOOR_OPEN
             rayTileState_t* ts = &map->visitedTiles[(yIdx * map->w) + xIdx];
             if (*ts == NOT_VISITED)
             {
                 *ts = VISITED;
             }
+#ifdef SPATIAL_VISIT
         }
     }
+#endif
 }

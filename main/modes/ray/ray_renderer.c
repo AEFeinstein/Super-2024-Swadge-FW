@@ -353,6 +353,14 @@ void castWalls(ray_t* ray)
 
             // Check if ray has hit a wall or door
             rayMapCellType_t tileType = ray->map.tiles[mapX][mapY].type;
+
+            // Mark this tile as seen
+            rayTileState_t* vTile = &ray->map.visitedTiles[(mapY * ray->map.w) + mapX];
+            if (*vTile < VISITED)
+            {
+                *vTile = VISITED;
+            }
+
             if (CELL_IS_TYPE(tileType, BG | WALL) || CELL_IS_TYPE(tileType, BG | DOOR))
             {
                 // Check if the door should be drawn recessed or not
