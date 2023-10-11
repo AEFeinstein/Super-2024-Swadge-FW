@@ -7,10 +7,11 @@
 #include <esp_log.h>
 #include <esp_timer.h>
 
-#include "settingsManager.h"
 #include "embeddedOut.h"
 #include "hdw-bzr.h"
 #include "hdw-led.h"
+#include "settingsManager.h"
+#include "touchTest.h"
 
 #include "factoryTest.h"
 #include "mainMenu.h"
@@ -28,8 +29,8 @@
 #define ACCEL_BAR_SEP    1
 #define MAX_ACCEL_BAR_W  60
 
-#define TOUCHBAR_WIDTH  100
-#define TOUCHBAR_HEIGHT 20
+#define TOUCHBAR_WIDTH  60
+#define TOUCHBAR_HEIGHT 60
 #define TOUCHBAR_Y_OFF  32
 
 //==============================================================================
@@ -62,10 +63,13 @@ void testExitMode(void);
 void testMainLoop(int64_t elapsedUs);
 void testAudioCb(uint16_t* samples, uint32_t sampleCnt);
 void testProcessButtons(buttonEvt_t* evt);
+uint8_t touchJoystickToTouchIdx(touchJoystick_t touchJoystick);
+touchJoystick_t touchIdxToTouchJoystick(uint8_t touchIdx);
 void testReadAndValidateTouch(void);
 void testReadAndValidateAccelerometer(void);
 
 void plotButtonState(int16_t x, int16_t y, testButtonState_t state);
+static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center);
 
 //==============================================================================
 // Variables
@@ -91,6 +95,8 @@ typedef struct
     // Touch, as an 8-way joystick with center deadzone
     testButtonState_t touchStates[9];
     uint8_t lastTouchStateIdx;
+    touchJoystick_t touchJoystick;
+    bool touched;
     // Accelerometer
     int16_t x;
     int16_t y;
@@ -190,7 +196,6 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     testReadAndValidateTouch();
-
     testReadAndValidateAccelerometer();
 
     // Check for a test pass
@@ -269,37 +274,8 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     // PB_A
     plotButtonState(btnX, centerLine - AB_SEP, test->buttonStates[4]);
 
-    // Draw touch pad
-    int16_t tBarX        = TFT_WIDTH - TOUCHBAR_WIDTH;
-    uint8_t numTouchElem = (sizeof(test->touchStates) / sizeof(test->touchStates[0]));
-    for (uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
-    {
-        switch (test->touchStates[touchIdx])
-        {
-            case BTN_NOT_PRESSED:
-            {
-                drawRect(tBarX - 1, TOUCHBAR_Y_OFF, tBarX + (TOUCHBAR_WIDTH / numTouchElem),
-                         TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c500);
-                break;
-            }
-            case BTN_PRESSED:
-            {
-                fillDisplayArea(tBarX - 1, TOUCHBAR_Y_OFF, tBarX + (TOUCHBAR_WIDTH / numTouchElem),
-                                TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c005);
-                break;
-            }
-            case BTN_RELEASED:
-            {
-                fillDisplayArea(tBarX - 1, TOUCHBAR_Y_OFF, tBarX + (TOUCHBAR_WIDTH / numTouchElem),
-                                TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c050);
-                break;
-            }
-        }
-        tBarX += (TOUCHBAR_WIDTH / numTouchElem);
-    }
-
     // Set up drawing accel bars
-    int16_t barY = TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + 4;
+    int16_t barY = TOUCHBAR_Y_OFF;
 
     paletteColor_t accelColor = c500;
     if (test->accelPassed)
@@ -331,6 +307,13 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
     barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
 
+    // Draw the 8-direction touchpad with center circle
+    int16_t tBarX        = TFT_WIDTH - TOUCHBAR_WIDTH;
+    int16_t tBarY        = barY + 4 + TOUCHBAR_HEIGHT / 2 + test->ibm_vga8.height + 15;
+    touchDrawCircle(&test->ibm_vga8, "Touch Pad", tBarX, tBarY, 35, 8, true,
+                    test->touched, test->touchJoystick);
+    touchFillCircleSegments(tBarX, tBarY, 35, 8, true);
+
     // Plot some text depending on test status
     char dbgStr[32] = {0};
     if (false == test->buttonsPassed)
@@ -357,7 +340,7 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     int16_t tWidth = textWidth(&test->ibm_vga8, dbgStr);
     drawText(&test->ibm_vga8, c555, dbgStr, (TFT_WIDTH - tWidth) / 2, 0);
 
-    sprintf(dbgStr, "Verify RGB LEDs & Song");
+    sprintf(dbgStr, "Verify RGB LEDs & Tunes");
     tWidth = textWidth(&test->ibm_vga8, dbgStr);
     drawText(&test->ibm_vga8, c555, dbgStr, 70, test->ibm_vga8.height + 8);
 
@@ -567,6 +550,60 @@ void testProcessButtons(buttonEvt_t* evt)
     }
 }
 
+uint8_t touchJoystickToTouchIdx(touchJoystick_t touchJoystick)
+{
+    switch (touchJoystick)
+    {
+        case TB_CENTER:
+            return 0;
+        case TB_RIGHT:
+            return 1;
+        case TB_UP:
+            return 2;
+        case TB_LEFT:
+            return 3;
+        case TB_DOWN:
+            return 4;
+        case TB_UP_RIGHT:
+            return 5;
+        case TB_UP_LEFT:
+            return 6;
+        case TB_DOWN_LEFT:
+            return 7;
+        case TB_DOWN_RIGHT:
+            return 8;
+        default:
+            return UINT8_MAX;
+    }
+}
+
+touchJoystick_t touchIdxToTouchJoystick(uint8_t touchIdx)
+{
+    switch (touchIdx)
+    {
+        case 0:
+            return TB_CENTER;
+        case 1:
+            return TB_RIGHT;
+        case 2:
+            return TB_UP;
+        case 3:
+            return TB_LEFT;
+        case 4:
+            return TB_DOWN;
+        case 5:
+            return TB_UP_RIGHT;
+        case 6:
+            return TB_UP_LEFT;
+        case 7:
+            return TB_DOWN_LEFT;
+        case 8:
+            return TB_DOWN_RIGHT;
+        default:
+            return UINT8_MAX;
+    }
+}
+
 /**
  * @brief Read, save, and validate touch
  *
@@ -574,44 +611,16 @@ void testProcessButtons(buttonEvt_t* evt)
 void testReadAndValidateTouch(void)
 {
     int32_t phi, r, intensity;
-    bool down = getTouchJoystick(&phi, &r, &intensity);
+    test->touched = getTouchJoystick(&phi, &r, &intensity);
 
     // Transition states
-    if (down)
+    if (test->touched)
     {
-        touchJoystick_t stickPos = getTouchJoystickZones(phi, r, true, true);
-        uint8_t pad;
-        switch (stickPos)
+        test->touchJoystick = getTouchJoystickZones(phi, r, true, true);
+        uint8_t pad = touchJoystickToTouchIdx(test->touchJoystick);
+        if(pad == UINT8_MAX)
         {
-            case TB_CENTER:
-                pad = 0;
-                break;
-            case TB_RIGHT:
-                pad = 1;
-                break;
-            case TB_UP:
-                pad = 2;
-                break;
-            case TB_LEFT:
-                pad = 3;
-                break;
-            case TB_DOWN:
-                pad = 4;
-                break;
-            case TB_UP_RIGHT:
-                pad = 5;
-                break;
-            case TB_UP_LEFT:
-                pad = 6;
-                break;
-            case TB_DOWN_LEFT:
-                pad = 7;
-                break;
-            case TB_DOWN_RIGHT:
-                pad = 8;
-                break;
-            default:
-                return;
+            return;
         }
 
         if (BTN_NOT_PRESSED == test->touchStates[pad])
@@ -712,6 +721,82 @@ void testReadAndValidateAccelerometer(void)
         {
             // Pass!
             test->accelPassed = true;
+        }
+    }
+}
+
+static void touchFillCircleSegments(int16_t x, int16_t y, int16_t r, int16_t segs, bool center)
+{
+    uint8_t numTouchElem = (sizeof(test->touchStates) / sizeof(test->touchStates[0]));
+    for (uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
+    {
+        paletteColor_t color;
+        switch (test->touchStates[touchIdx])
+        {
+            case BTN_PRESSED:
+            {
+                color = c005;
+                break;
+            }
+            case BTN_RELEASED:
+            {
+                color = c050;
+                break;
+            }
+            case BTN_NOT_PRESSED:
+            default:
+            {
+                color = cTransparent;
+            }
+        }
+
+        int16_t angle = 0;
+        int16_t fillR = r / 2;
+        switch (touchIdxToTouchJoystick(touchIdx))
+        {
+            case TB_CENTER:
+                angle = 0;
+                fillR = 0;
+                break;
+
+            case TB_RIGHT:
+                angle = 0;
+                break;
+
+            case TB_UP | TB_RIGHT:
+                angle = 45;
+                break;
+
+            case TB_UP:
+                angle = 90;
+                break;
+
+            case TB_UP | TB_LEFT:
+                angle = 135;
+                break;
+
+            case TB_LEFT:
+                angle = 180;
+                break;
+
+            case TB_DOWN | TB_LEFT:
+                angle = 225;
+                break;
+
+            case TB_DOWN:
+                angle = 270;
+                break;
+
+            case TB_DOWN | TB_RIGHT:
+                angle = 315;
+                break;
+        }
+
+        if (color != cTransparent)
+        {
+            // Fill in the segment
+            floodFill(x + getCos1024(angle) * fillR / 1024, y - getSin1024(angle) * fillR / 1024, color, x - r - 1,
+                    y - r - 1, x + r + 1, y + r + 1);
         }
     }
 }
