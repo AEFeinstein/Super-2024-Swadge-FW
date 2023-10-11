@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import simpledialog
+from tkinter import Event
 from tkinter.filedialog import askopenfile
 from tkinter.filedialog import asksaveasfile
 from PIL import Image, ImageTk
@@ -355,10 +356,22 @@ class view:
         # Redraw the UI
         self.redraw()
 
-    def key_press(self, e):
-        # Keyboard shortcut, s is the same as the script button
-        if e.char == 's':
+    def key_press(self, e: Event):
+        # Keyboard shortcut, Ctrl+E is the same as the script button
+        if (e.state == 20) and (e.keycode == 26):
             self.clickScriptSpawn()
+        # ctrl+S saves
+        if (e.state == 20) and (e.keycode == 39):
+            self.clickSave()
+        # ctrl+shift+S save as
+        if (e.state == 21) and (e.keycode == 39):
+            self.clickSaveAs()
+        # ctrl+o opens
+        if (e.state == 20) and (e.keycode == 32):
+            self.clickLoad()
+        # ctrl+r resize
+        if (e.state == 20) and (e.keycode == 27):
+            self.clickResizeMap()
 
     def paletteLeftClick(self, event: tk.Event):
         x: int = self.paletteCanvas.canvasx(event.x)
