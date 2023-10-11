@@ -329,6 +329,12 @@ void checkRayCollisions(ray_t* ray)
                         // save the next node
                         node_t* nextNode = currentNode->next;
 
+                        // Remove the lock
+                        if (ray->targetedObj == enemy)
+                        {
+                            ray->targetedObj = NULL;
+                        }
+
                         // Unlink and free
                         removeEntry(&ray->enemies, currentNode);
                         free(enemy);

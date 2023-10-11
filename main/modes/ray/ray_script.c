@@ -641,7 +641,7 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 int32_t x = script->thenArgs.cellList.cells[cIdx].x;
                 int32_t y = script->thenArgs.cellList.cells[cIdx].y;
                 // Start opening the door
-                ray->map.tiles[x][y].openingDirection       = 1;
+                ray->map.tiles[x][y].openingDirection = 1;
                 // Mark it as permanently open
                 ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
             }
@@ -773,6 +773,11 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                             node_t* oldNode = currentNode;
                             // Iterate to the next
                             currentNode = currentNode->next;
+                            // Remove the lock
+                            if (ray->targetedObj == oldNode->val)
+                            {
+                                ray->targetedObj = NULL;
+                            }
                             // Remove the node that was iterated past
                             free(oldNode->val);
                             removeEntry(lists[lIdx], oldNode);
