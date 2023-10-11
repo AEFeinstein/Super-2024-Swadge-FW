@@ -26,6 +26,11 @@
 // Functions
 //==============================================================================
 
+#ifdef TEST_TEX
+const char* const testTexNames[] = {"ICE_FLOOR.wsg", "ICE_WALL.wsg", "JUN_FLOOR.wsg", "JUN_WALL.wsg",
+                                    "LAV_FLOOR.wsg", "LAV_WALL.wsg", "SPA_FLOOR.wsg", "SPA_WALL.wsg"};
+#endif
+
 /**
  * @brief Allocate memory and preload all environment textures
  *
@@ -40,6 +45,13 @@ void loadEnvTextures(ray_t* ray)
     loadWsg("GUN_MISSILE.wsg", &ray->guns[LO_MISSILE], true);
     loadWsg("GUN_ICE.wsg", &ray->guns[LO_ICE], true);
     loadWsg("GUN_XRAY.wsg", &ray->guns[LO_XRAY], true);
+
+#ifdef TEST_TEX
+    for (int tIdx = 0; tIdx < ARRAY_SIZE(testTexNames); tIdx++)
+    {
+        loadWsg(testTexNames[tIdx], &ray->testTextures[tIdx], true);
+    }
+#endif
 
     // Allocate space for the textures
     ray->loadedTextures = heap_caps_calloc(MAX_LOADED_TEXTURES, sizeof(namedTexture_t), MALLOC_CAP_SPIRAM);
@@ -158,6 +170,13 @@ void freeAllTex(ray_t* ray)
     freeWsg(&ray->guns[LO_MISSILE]);
     freeWsg(&ray->guns[LO_ICE]);
     freeWsg(&ray->guns[LO_XRAY]);
+
+#ifdef TEST_TEX
+    for (int tIdx = 0; tIdx < ARRAY_SIZE(testTexNames); tIdx++)
+    {
+        freeWsg(&ray->testTextures[tIdx]);
+    }
+#endif
 
     if (ray->loadedTextures)
     {

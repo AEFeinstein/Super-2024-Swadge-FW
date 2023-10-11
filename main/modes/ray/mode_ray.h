@@ -13,6 +13,9 @@
 // Defines
 //==============================================================================
 
+/** Use test textures. TODO: DELETE THIS */
+#define TEST_TEX 1
+
 /** The number of total maps */
 #define NUM_MAPS 6
 /** The number of keys per map */
@@ -514,6 +517,9 @@ typedef struct
     int32_t lavaTimer;   ///< Timer to apply lava damage
     int32_t chargeTimer; ///< Timer to charge shots
 
+#ifdef TEST_TEX
+    wsg_t testTextures[8]; ///< Test textures, TODO DELETE THESE
+#endif
     namedTexture_t* loadedTextures; ///< A list of loaded textures
     uint8_t* typeToIdxMap;          ///< A map of rayMapCellType_t to respective textures
     wsg_t guns[NUM_LOADOUTS];       ///< Textures for the HUD guns

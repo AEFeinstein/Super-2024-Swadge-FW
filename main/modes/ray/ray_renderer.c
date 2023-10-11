@@ -202,7 +202,17 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
                         {
                             type = BG_FLOOR;
                         }
-                        texture = getTexByType(ray, type)->px;
+
+#ifdef TEST_TEX
+                        if ((ray->p.mapId < 4) && (BG_FLOOR_LAVA != type) && (BG_FLOOR_WATER != type))
+                        {
+                            texture = ray->testTextures[ray->p.mapId * 2].px;
+                        }
+                        else
+#endif
+                        {
+                            texture = getTexByType(ray, type)->px;
+                        }
                     }
                     else
                     {
@@ -501,7 +511,16 @@ void castWalls(ray_t* ray)
         }
         else
         {
-            tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
+#ifdef TEST_TEX
+            if (ray->p.mapId < 4 && !CELL_IS_TYPE(ray->map.tiles[mapX][mapY].type, BG | DOOR))
+            {
+                tex = ray->testTextures[ray->p.mapId * 2 + 1].px;
+            }
+            else
+#endif
+            {
+                tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
+            }
         }
 
         // Draw a vertical strip
