@@ -152,6 +152,8 @@ typedef enum
     E_WALKING,  ///< The enemy is walking
     E_SHOOTING, ///< The enemy is shooting (may move while shooting)
     E_HURT,     ///< The enemy was shot
+    E_BLOCKING, ///< The enemy is blocking
+    E_DEAD,     ///< The enemy is dead
 } rayEnemyState_t;
 
 /**
@@ -425,6 +427,8 @@ typedef struct
     wsg_t* walkSprites[NUM_NON_WALK_FRAMES];  ///< The walking sprites for this enemy
     wsg_t* shootSprites[NUM_NON_WALK_FRAMES]; ///< The shooting sprites for this enemy
     wsg_t* hurtSprites[NUM_NON_WALK_FRAMES];  ///< The getting shot sprites for this enemy
+    wsg_t* blockSprites[NUM_NON_WALK_FRAMES]; ///< The blocking sprites for this enemy
+    wsg_t* deadSprites[NUM_NON_WALK_FRAMES];  ///< The dying sprites for this enemy
 } rayEnemy_t;
 
 /**

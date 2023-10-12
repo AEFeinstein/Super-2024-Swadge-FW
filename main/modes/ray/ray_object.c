@@ -61,6 +61,10 @@ void initEnemyTemplates(ray_t* ray)
             ray->eTemplates[eIdx].shootSprites[frIdx] = loadTexture(ray, buf, EMPTY);
             snprintf(buf, sizeof(buf) - 1, "E_%s_HURT_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
             ray->eTemplates[eIdx].hurtSprites[frIdx] = loadTexture(ray, buf, EMPTY);
+            snprintf(buf, sizeof(buf) - 1, "E_%s_BLOCK_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
+            ray->eTemplates[eIdx].blockSprites[frIdx] = loadTexture(ray, buf, EMPTY);
+            snprintf(buf, sizeof(buf) - 1, "E_%s_DEAD_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
+            ray->eTemplates[eIdx].deadSprites[frIdx] = loadTexture(ray, buf, EMPTY);
         }
         // Set initial texture
         ray->eTemplates[eIdx].c.sprite = ray->eTemplates[eIdx].walkSprites[0];
@@ -305,8 +309,6 @@ void checkRayCollisions(ray_t* ray)
     {
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
-        // Used for iterating
-        bool enemyWasKilled = false;
 
         // Iterate through all bullets
         for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
@@ -317,44 +319,16 @@ void checkRayCollisions(ray_t* ray)
                 // A player's bullet
                 if (objectsIntersect(&enemy->c, &bullet->c))
                 {
+                    // Decrease HP based on the shot and enemy type
+                    rayEnemyGetShot(ray, enemy, bullet->c.type);
                     // De-allocate the bullet
                     bullet->c.id = -1;
-
-                    // Enemy got shot, apply damage
-                    if (rayEnemyGetShot(ray, enemy, bullet->c.type))
-                    {
-                        // Enemy was killed
-                        checkScriptKill(ray, enemy->c.id, enemy->walkSprites[0]);
-
-                        // save the next node
-                        node_t* nextNode = currentNode->next;
-
-                        // Remove the lock
-                        if (ray->targetedObj == enemy)
-                        {
-                            ray->targetedObj = NULL;
-                        }
-
-                        // Unlink and free
-                        removeEntry(&ray->enemies, currentNode);
-                        free(enemy);
-
-                        // Set the next node
-                        currentNode    = nextNode;
-                        enemyWasKilled = true;
-
-                        break;
-                    }
                 }
             }
         }
 
-        // If the enemy was killed, iteration already happened
-        if (!enemyWasKilled)
-        {
-            // Iterate to the next node
-            currentNode = currentNode->next;
-        }
+        // Iterate to the next
+        currentNode = currentNode->next;
     }
 
     // Check if a bullet or the player touches scenery

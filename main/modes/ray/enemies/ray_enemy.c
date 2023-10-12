@@ -22,35 +22,41 @@
 static const enemyFuncs_t enemyFuncs[] = {
     {
         // OBJ_ENEMY_NORMAL
-        .moveAnimate = rayEnemyNormalMoveAnimate,
-        .getShot     = rayEnemyNormalGetShot,
+        .move    = rayEnemyNormalMove,
+        .getShot = rayEnemyNormalGetShot,
     },
     {
         // OBJ_ENEMY_STRONG
-        .moveAnimate = rayEnemyStrongMoveAnimate,
-        .getShot     = rayEnemyStrongGetShot,
+        .move    = rayEnemyStrongMove,
+        .getShot = rayEnemyStrongGetShot,
     },
     {
         // OBJ_ENEMY_ARMORED
-        .moveAnimate = rayEnemyArmoredMoveAnimate,
-        .getShot     = rayEnemyArmoredGetShot,
+        .move    = rayEnemyArmoredMove,
+        .getShot = rayEnemyArmoredGetShot,
     },
     {
         // OBJ_ENEMY_FLAMING
-        .moveAnimate = rayEnemyFlamingMoveAnimate,
-        .getShot     = rayEnemyFlamingGetShot,
+        .move    = rayEnemyFlamingMove,
+        .getShot = rayEnemyFlamingGetShot,
     },
     {
         // OBJ_ENEMY_HIDDEN
-        .moveAnimate = rayEnemyHiddenMoveAnimate,
-        .getShot     = rayEnemyHiddenGetShot,
+        .move    = rayEnemyHiddenMove,
+        .getShot = rayEnemyHiddenGetShot,
     },
     {
         // OBJ_ENEMY_BOSS
-        .moveAnimate = rayEnemyBossMoveAnimate,
-        .getShot     = rayEnemyBossGetShot,
+        .move    = rayEnemyBossMove,
+        .getShot = rayEnemyBossGetShot,
     },
 };
+
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
+static bool animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -71,11 +77,36 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
 
-        // Move enemies and run timers like animation
-        enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].moveAnimate(ray, enemy, elapsedUs);
+        // Move enemies and run timers
+        enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, elapsedUs);
 
-        // Iterate to the next node
-        currentNode = currentNode->next;
+        // Animate the enemy
+        if (animateEnemy(enemy, elapsedUs))
+        {
+            // Enemy was killed
+            checkScriptKill(ray, enemy->c.id, enemy->walkSprites[0]);
+
+            // save the next node
+            node_t* nextNode = currentNode->next;
+
+            // Remove the lock
+            if (ray->targetedObj == &(enemy->c))
+            {
+                ray->targetedObj = NULL;
+            }
+
+            // Unlink and free
+            removeEntry(&ray->enemies, currentNode);
+            free(enemy);
+
+            // Set the next node
+            currentNode = nextNode;
+        }
+        else
+        {
+            // Iterate to the next node
+            currentNode = currentNode->next;
+        }
     }
 }
 
@@ -86,9 +117,102 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
  * @param ray The entire game state
  * @param enemy The enemy which was shot
  * @param bullet The type of bullet it was shot by
- * @return true if the enemy was killed, false if it's still alive
  */
-bool rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
+void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet);
+    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet))
+    {
+        // Transition to dying
+        enemy->state          = E_DEAD;
+        enemy->c.sprite       = enemy->deadSprites[0];
+        enemy->animTimer      = 0;
+        enemy->animTimerFrame = 0;
+    }
+}
+
+/**
+ * @brief Animate a single enemy
+ *
+ * @param enemy The enemy to animate
+ * @param elapsedUs The elapsed time since this function was last called
+ * @return True if the enemy died, false if not
+ */
+static bool animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs)
+{
+    // Accumulate time
+    enemy->animTimer += elapsedUs;
+    // Check if it's time to transition states
+    if (enemy->animTimer >= enemy->animTimerLimit)
+    {
+        // Decrement timer
+        enemy->animTimer -= enemy->animTimerLimit;
+
+        // Pick the sprites and limits based on the state
+        int32_t limit   = NUM_WALK_FRAMES;
+        wsg_t** sprites = enemy->walkSprites;
+        switch (enemy->state)
+        {
+            case E_WALKING:
+            {
+                limit   = NUM_WALK_FRAMES;
+                sprites = enemy->walkSprites;
+                break;
+            }
+            case E_SHOOTING:
+            {
+                limit   = NUM_NON_WALK_FRAMES;
+                sprites = enemy->shootSprites;
+                break;
+            }
+            case E_BLOCKING:
+            {
+                limit   = NUM_NON_WALK_FRAMES;
+                sprites = enemy->blockSprites;
+                break;
+            }
+            case E_HURT:
+            {
+                limit   = NUM_NON_WALK_FRAMES;
+                sprites = enemy->hurtSprites;
+                break;
+            }
+            case E_DEAD:
+            {
+                limit   = NUM_NON_WALK_FRAMES;
+                sprites = enemy->deadSprites;
+                break;
+            }
+        }
+
+        // Increment to the next frame
+        enemy->animTimerFrame++;
+        // If the animation is over
+        if (enemy->animTimerFrame >= limit)
+        {
+            if (E_DEAD == enemy->state)
+            {
+                // Dead, caller unlinks and frees the enemy
+                return true;
+            }
+            else
+            {
+                // Return to walking
+                enemy->state          = E_WALKING;
+                enemy->animTimerFrame = 0;
+            }
+        }
+        else
+        {
+            // Not past the limit, but If the frame is past the number of frames
+            if (enemy->animTimerFrame >= NUM_NON_WALK_FRAMES)
+            {
+                // Mirror it and start over
+                enemy->c.spriteMirrored = !enemy->c.spriteMirrored;
+                enemy->animTimerFrame   = 0;
+            }
+            // Pick the next sprite
+            enemy->c.sprite = sprites[enemy->animTimerFrame];
+        }
+    }
+    return false;
 }

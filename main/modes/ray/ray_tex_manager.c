@@ -17,7 +17,7 @@
  * The maximum number of loaded sprites.
  * TODO pick a better number for all textures
  */
-#define MAX_LOADED_TEXTURES 128
+#define MAX_LOADED_TEXTURES 192
 
 /// Helper macro to load textures
 #define LOAD_TEXTURE(r, t) loadTexture(r, #t ".wsg", t)
