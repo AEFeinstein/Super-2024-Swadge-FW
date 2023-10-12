@@ -6,12 +6,15 @@
 extern swadgeMode_t touchTestMode;
 
 /**
- * @brief
+ * @brief Draw a circular representation of the touchpad
  *
- * @param x
- * @param y
- * @param r
- * @param segs
+ * @param x X coordinate on the TFT for the center of the circle
+ * @param y Y coordinate on the TFT for the center of the circle
+ * @param r Radius of the circle
+ * @param segs Number of directional segments to split the touchpad into
+ * @param center True to include a center zone, false to only use directional segments
+ * @param touched Whether the touchpad is currently being touched
+ * @param val The output you received from a prior call to `getTouchJoystickZones`
  */
 static void touchDrawCircle(font_t* font, const char* label, int16_t x, int16_t y, int16_t r, int16_t segs, bool center,
                             bool touched, touchJoystick_t val)
