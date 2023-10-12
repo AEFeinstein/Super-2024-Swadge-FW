@@ -167,6 +167,9 @@ void testEnterMode(void)
     // Play a song
     loadSong("stereo_test.sng", &test->song, false);
     bzrPlayBgm(&test->song, BZR_STEREO);
+
+    // Set NVM to indicate test not passed yet
+    // setTestModePassedSetting(false);
 }
 
 /**
