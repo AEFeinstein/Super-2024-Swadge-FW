@@ -625,7 +625,7 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 
     // Check for intercept
     if (retval &&                            // If there was a button press
-        (!cSwadgeMode->overrideSelectBtn) && // And this mode does not override PB_SELECT
+        (!cSwadgeMode->overrideSelectBtn) && // And PB_SELECT isn't overridden
         (evt->button == PB_SELECT))          // And the button was PB_SELECT
     {
         if (evt->down)
