@@ -107,7 +107,7 @@ static void lumberjackEnterMode(void)
     // Lumberjack. Game 19
     //  Init menu :(
 
-    bzrStop(); // Stop the buzzer?
+    bzrStop(true); // Stop the buzzer?
 
     // High score stuff?
     // Unlockables ? Save data?

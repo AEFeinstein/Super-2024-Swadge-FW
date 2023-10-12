@@ -26,6 +26,11 @@
 // Functions
 //==============================================================================
 
+#ifdef TEST_TEX
+const char* const testTexNames[] = {"ICE_FLOOR.wsg", "ICE_WALL.wsg", "JUN_FLOOR.wsg", "JUN_WALL.wsg",
+                                    "LAV_FLOOR.wsg", "LAV_WALL.wsg", "SPA_FLOOR.wsg", "SPA_WALL.wsg"};
+#endif
+
 /**
  * @brief Allocate memory and preload all environment textures
  *
@@ -33,11 +38,20 @@
  */
 void loadEnvTextures(ray_t* ray)
 {
+    loadWsg("CHO_PORTRAIT.wsg", &ray->portrait, true);
+
     // Load HUD textures
     loadWsg("GUN_NORMAL.wsg", &ray->guns[LO_NORMAL], true);
     loadWsg("GUN_MISSILE.wsg", &ray->guns[LO_MISSILE], true);
     loadWsg("GUN_ICE.wsg", &ray->guns[LO_ICE], true);
     loadWsg("GUN_XRAY.wsg", &ray->guns[LO_XRAY], true);
+
+#ifdef TEST_TEX
+    for (int tIdx = 0; tIdx < ARRAY_SIZE(testTexNames); tIdx++)
+    {
+        loadWsg(testTexNames[tIdx], &ray->testTextures[tIdx], true);
+    }
+#endif
 
     // Allocate space for the textures
     ray->loadedTextures = heap_caps_calloc(MAX_LOADED_TEXTURES, sizeof(namedTexture_t), MALLOC_CAP_SPIRAM);
@@ -52,12 +66,17 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, BG_WALL_1);
     LOAD_TEXTURE(ray, BG_WALL_2);
     LOAD_TEXTURE(ray, BG_WALL_3);
+    LOAD_TEXTURE(ray, BG_WALL_4);
+    LOAD_TEXTURE(ray, BG_WALL_5);
     LOAD_TEXTURE(ray, BG_DOOR);
     LOAD_TEXTURE(ray, BG_DOOR_CHARGE);
     LOAD_TEXTURE(ray, BG_DOOR_MISSILE);
     LOAD_TEXTURE(ray, BG_DOOR_ICE);
     LOAD_TEXTURE(ray, BG_DOOR_XRAY);
     LOAD_TEXTURE(ray, BG_DOOR_SCRIPT);
+    LOAD_TEXTURE(ray, BG_DOOR_KEY_A);
+    LOAD_TEXTURE(ray, BG_DOOR_KEY_B);
+    LOAD_TEXTURE(ray, BG_DOOR_KEY_C);
     LOAD_TEXTURE(ray, OBJ_ITEM_BEAM);
     LOAD_TEXTURE(ray, OBJ_ITEM_CHARGE_BEAM);
     LOAD_TEXTURE(ray, OBJ_ITEM_MISSILE);
@@ -66,7 +85,9 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_ITEM_SUIT_WATER);
     LOAD_TEXTURE(ray, OBJ_ITEM_SUIT_LAVA);
     LOAD_TEXTURE(ray, OBJ_ITEM_ENERGY_TANK);
-    LOAD_TEXTURE(ray, OBJ_ITEM_KEY);
+    LOAD_TEXTURE(ray, OBJ_ITEM_KEY_A);
+    LOAD_TEXTURE(ray, OBJ_ITEM_KEY_B);
+    LOAD_TEXTURE(ray, OBJ_ITEM_KEY_C);
     LOAD_TEXTURE(ray, OBJ_ITEM_ARTIFACT);
     LOAD_TEXTURE(ray, OBJ_ITEM_PICKUP_ENERGY);
     LOAD_TEXTURE(ray, OBJ_ITEM_PICKUP_MISSILE);
@@ -76,6 +97,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_BULLET_MISSILE);
     LOAD_TEXTURE(ray, OBJ_BULLET_XRAY);
     LOAD_TEXTURE(ray, OBJ_SCENERY_TERMINAL);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_PORTAL);
 }
 
 /**
@@ -143,20 +165,31 @@ wsg_t* getTexByType(ray_t* ray, rayMapCellType_t type)
  */
 void freeAllTex(ray_t* ray)
 {
+    freeWsg(&ray->portrait);
     freeWsg(&ray->guns[LO_NORMAL]);
     freeWsg(&ray->guns[LO_MISSILE]);
     freeWsg(&ray->guns[LO_ICE]);
     freeWsg(&ray->guns[LO_XRAY]);
 
-    for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
+#ifdef TEST_TEX
+    for (int tIdx = 0; tIdx < ARRAY_SIZE(testTexNames); tIdx++)
     {
-        // Check if the name is NULL
-        if (NULL != ray->loadedTextures[idx].name)
-        {
-            free(ray->loadedTextures[idx].name);
-            freeWsg(&ray->loadedTextures[idx].texture);
-        }
+        freeWsg(&ray->testTextures[tIdx]);
     }
-    free(ray->loadedTextures);
-    free(ray->typeToIdxMap);
+#endif
+
+    if (ray->loadedTextures)
+    {
+        for (int32_t idx = 0; idx < MAX_LOADED_TEXTURES; idx++)
+        {
+            // Check if the name is NULL
+            if (NULL != ray->loadedTextures[idx].name)
+            {
+                free(ray->loadedTextures[idx].name);
+                freeWsg(&ray->loadedTextures[idx].texture);
+            }
+        }
+        free(ray->loadedTextures);
+        free(ray->typeToIdxMap);
+    }
 }

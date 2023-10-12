@@ -1,6 +1,5 @@
 from rme_tiles import *
 from rme_script_editor import *
-from rme_view import NUM_PALETTE_ROWS
 from io import TextIOWrapper
 
 
@@ -14,6 +13,7 @@ class model:
         self.splitter: rme_scriptSplitter = rme_scriptSplitter()
         self.currentId: int = 0
         self.usedIds: list[int] = []
+        self.enemyScript = None
 
     def setView(self, v):
         from rme_view import view
@@ -74,15 +74,15 @@ class model:
                 self.currentId = (self.currentId + 1) % 256
 
     def getPaletteType(self, x, y):
-        if 0 == x:
-            # backgrounds in the first column
-            if 0 <= y and y < len(bgTiles):
-                return bgTiles[y]
+        if x < len(objTiles):
+            # backgrounds in the first columns
+            if 0 <= y and y < len(bgTiles[x]):
+                return bgTiles[x][y]
         else:
             # objects i the other columns
-            y = y + NUM_PALETTE_ROWS * (x - 1)
-            if 0 <= y and y < len(objTiles):
-                return objTiles[y]
+            x = x - len(objTiles)
+            if 0 <= y and y < len(objTiles[x]):
+                return objTiles[x][y]
         return None
 
     def setSelectedTileType(self, type, x, y):
@@ -100,8 +100,9 @@ class model:
     def setScripts(self, scripts: list[str]) -> None:
         self.scripts: list[rme_script] = []
         for script in scripts:
-            self.scripts.append(rme_script(
-                string=script, splitter=self.splitter))
+            if script.strip():
+                self.scripts.append(rme_script(
+                    string=script, splitter=self.splitter))
 
     def save(self, outFile: TextIOWrapper) -> bool:
         # Construct file bytes
@@ -137,11 +138,12 @@ class model:
         for script in self.scripts:
             if script is not None and script.isValid():
                 sb = script.toBytes()
-                if (len(sb) > 255):
+                if (len(sb) > 65535):
                     # TODO display error
                     print("SCRIPT TOO BIG!!")
                     return False
-                fileBytes.append(len(sb))
+                fileBytes.append((len(sb) >> 8) & 0xFF)
+                fileBytes.append((len(sb) >> 0) & 0xFF)
                 fileBytes.extend(sb)
             else:
                 # TODO display warning
@@ -197,11 +199,49 @@ class model:
         # Read each script
         for si in range(numScripts):
             # Read script length
-            sLen: int = data[idx]
-            idx = idx + 1
+            sLen: int = (data[idx] << 8) | (data[idx + 1])
+            idx = idx + 2
             # Read script
-            self.scripts.append(rme_script(bytes=data[idx: idx + sLen]))
+            newScript = rme_script(bytes=data[idx: idx + sLen])
+            self.scripts.append(newScript)
+            # Mark spawned IDs as used
+            for sp in newScript.getThenSpawns():
+                self.usedIds.append(sp.id)
             idx = idx + sLen
 
         # Everything loaded
         return True
+
+    def startScriptCreation(self):
+        self.enemyScript: rme_script = rme_script()
+
+    def addTileTriggerToScript(self, x: int, y: int, delete: bool):
+        self.enemyScript.addTileTrigger(x, y, delete)
+        self.v.highlightScriptCells()
+
+    def addEnemyToScript(self, x: int, y: int, eType: tileType):
+        if tileType.DELETE == eType:
+            idToRemove = self.enemyScript.addEnemy(x, y, 0, eType)
+            if idToRemove in self.usedIds:
+                self.usedIds.remove(idToRemove)
+        else:
+            occupied = False
+            sp: spawn
+            for sp in self.enemyScript.getThenSpawns():
+                if sp.x == x and sp.y == y:
+                    occupied = True
+                    break
+            if not occupied:
+                self.enemyScript.addEnemy(x, y, self.getNextId(), eType)
+        self.v.highlightScriptCells()
+
+    def finishScriptCreation(self):
+        if self.enemyScript.isValid() and 0 < len(self.enemyScript.getIfCells()) and 0 < len(self.enemyScript.getThenSpawns()):
+            self.scripts.append(self.enemyScript)
+            self.enemyScript = None
+            self.v.reloadScriptText()
+        else:
+            sp: spawn
+            for sp in self.enemyScript.getThenSpawns():
+                self.usedIds.remove(sp.id)
+            self.enemyScript = None

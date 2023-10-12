@@ -315,7 +315,7 @@ void paintDrawScreenSetup(void)
     // Might not be necessary here
     paintUpdateLeds();
 
-    bzrStop();
+    bzrStop(true);
     bzrPlayBgm(&paintBgm, BZR_LEFT);
 
     // Set up the tool wheel
@@ -444,7 +444,7 @@ void paintDrawScreenSetup(void)
 
 void paintDrawScreenCleanup(void)
 {
-    bzrStop();
+    bzrStop(true);
 
     deinitWheelMenu(paintState->toolWheelRenderer);
     deinitMenu(paintState->toolWheel);
