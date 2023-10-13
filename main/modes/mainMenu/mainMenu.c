@@ -11,6 +11,7 @@
 #include "colorchord.h"
 #include "dance.h"
 #include "demoMode.h"
+#include "factoryTest.h"
 #include "gamepad.h"
 #include "jukebox.h"
 #include "lumberjack.h"
@@ -146,6 +147,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Start a submenu for settings
@@ -241,6 +243,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == demoMode.modeName)
         {
             switchToSwadgeMode(&demoMode);
+        }
+        else if (label == factoryTestMode.modeName)
+        {
+            switchToSwadgeMode(&factoryTestMode);
         }
         else if (label == gamepadMode.modeName)
         {

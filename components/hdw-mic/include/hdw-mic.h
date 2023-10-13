@@ -74,6 +74,8 @@
 /// The maximum number of bytes read by the ADC in one go
 #define ADC_READ_LEN 512
 
+#define MAX_MIC_GAIN 7
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
