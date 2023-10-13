@@ -113,6 +113,7 @@ const rayWorldMapLine_t warpLines[] = {
 
 static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs);
 static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs);
+static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
 
 //==============================================================================
 // Functions
@@ -316,12 +317,24 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
     }
 
     // The player's location blinks, so draw it when appropriate
+    int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);
+    int16_t cY = cellOffY + FROM_FX(cellSize * ray->p.posY);
+    drawPlayerIndicator(ray, cX, cY);
+}
+
+/**
+ * @brief Draw the blinking player indicator on the pause screen
+ *
+ * @param ray The entire game state
+ * @param cX The X pixel to center on
+ * @param cY The Y pixel to center on
+ */
+static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY)
+{
     if (ray->pauseBlink)
     {
         // Draw a circle for the player
-        int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);
-        int16_t cY = cellOffY + FROM_FX(cellSize * ray->p.posY);
-        int16_t cR = cellSize / 2;
+        int16_t cR = 6;
         drawCircle(cX, cY, cR, c145);
 
         // Draw a line for the player's direction
@@ -398,6 +411,14 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 
                 warpCoords[mapId][BOTTOM_LEFT][0] = startX + WARP_POINT_INDENT;
                 warpCoords[mapId][BOTTOM_LEFT][1] = endY - WARP_POINT_INDENT - 1;
+
+                if (ray->p.mapId == mapId)
+                {
+                    int16_t pPosX = startX + (MAP_SIZE * ray->p.posX) / TO_FX(ray->map.w);
+                    int16_t pPosY = startY + (MAP_SIZE * ray->p.posY) / TO_FX(ray->map.h);
+
+                    drawPlayerIndicator(ray, pPosX, pPosY);
+                }
             }
         }
     }
