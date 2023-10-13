@@ -69,8 +69,11 @@ bool readNvs32(const char* key, int32_t* outVal);
 bool writeNvs32(const char* key, int32_t val);
 bool readNvsBlob(const char* key, void* out_value, size_t* length);
 bool writeNvsBlob(const char* key, const void* value, size_t length);
+bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_value, size_t* length);
+bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* value, size_t length);
 bool eraseNvsKey(const char* key);
 bool readNvsStats(nvs_stats_t* outStats);
 bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos);
+bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos);
 
 #endif

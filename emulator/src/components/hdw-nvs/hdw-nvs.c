@@ -147,20 +147,25 @@ bool readNvs32(const char* key, int32_t* outVal)
             cJSON* json = cJSON_Parse(fbuf);
             cJSON* jsonIter;
 
-            // Find the requested key
-            char* current_key = NULL;
-            cJSON_ArrayForEach(jsonIter, json)
+            cJSON* namespace = cJSON_GetObjectItemCaseSensitive(json, NVS_NAMESPACE_NAME);
+
+            if (cJSON_IsObject(namespace))
             {
-                current_key = jsonIter->string;
-                if (current_key != NULL)
+                // Find the requested key
+                char* current_key = NULL;
+                cJSON_ArrayForEach(jsonIter, namespace)
                 {
-                    // If the key matches
-                    if (0 == strcmp(current_key, key))
+                    current_key = jsonIter->string;
+                    if (current_key != NULL)
                     {
-                        // Return the value
-                        *outVal = (int32_t)cJSON_GetNumberValue(jsonIter);
-                        cJSON_Delete(json);
-                        return true;
+                        // If the key matches
+                        if (0 == strcmp(current_key, key))
+                        {
+                            // Return the value
+                            *outVal = (int32_t)cJSON_GetNumberValue(jsonIter);
+                            cJSON_Delete(json);
+                            return true;
+                        }
                     }
                 }
             }
@@ -203,10 +208,18 @@ bool writeNvs32(const char* key, int32_t val)
             // Parse the JSON
             cJSON* json = cJSON_Parse(fbuf);
 
+            cJSON* namespace = cJSON_GetObjectItemCaseSensitive(json, NVS_NAMESPACE_NAME);
+
+            if (NULL == namespace)
+            {
+                namespace = cJSON_CreateObject();
+                cJSON_AddItemToObject(json, NVS_NAMESPACE_NAME, namespace);
+            }
+
             // Check if the key alredy exists
             cJSON* jsonIter;
             bool keyExists = false;
-            cJSON_ArrayForEach(jsonIter, json)
+            cJSON_ArrayForEach(jsonIter, namespace)
             {
                 if (0 == strcmp(jsonIter->string, key))
                 {
@@ -218,11 +231,184 @@ bool writeNvs32(const char* key, int32_t val)
             cJSON* jsonVal = cJSON_CreateNumber(val);
             if (keyExists)
             {
-                cJSON_ReplaceItemInObject(json, key, jsonVal);
+                cJSON_ReplaceItemInObject(namespace, key, jsonVal);
             }
             else
             {
-                cJSON_AddItemToObject(json, key, jsonVal);
+                cJSON_AddItemToObject(namespace, key, jsonVal);
+            }
+
+            // Write the new JSON back to the file
+            FILE* nvsFileW = fopen(NVS_JSON_FILE, "wb");
+            if (NULL != nvsFileW)
+            {
+                char* jsonStr = cJSON_Print(json);
+                fprintf(nvsFileW, "%s", jsonStr);
+                fclose(nvsFileW);
+
+                free(jsonStr);
+                cJSON_Delete(json);
+
+                return true;
+            }
+            else
+            {
+                // Couldn't open file to write
+            }
+            cJSON_Delete(json);
+        }
+        else
+        {
+            // Couldn't read file
+            fclose(nvsFile);
+        }
+    }
+    else
+    {
+        // couldn't open file to read
+    }
+    return false;
+}
+
+/**
+ * @brief Read a blob from NVS with a given string key. Typically, this should be called once with NULL passed for
+ * out_value, to get the value for length, then memory for out_value should be allocated, then this should be called
+ * again.
+ *
+ * @param namespace The NVS namespace to use
+ * @param key The key for the value to read
+ * @param out_value The value will be written to this memory. It must be allocated before calling readNvsBlob()
+ * @param length If out_value is `NULL`, this will be set to the length of the given key. Otherwise, it is the length of
+ * the blob to read.
+ * @return true if the value was read, false if it was not
+ */
+bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_value, size_t* length)
+{
+    // Open the file
+    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    if (NULL != nvsFile)
+    {
+        // Get the file size
+        fseek(nvsFile, 0L, SEEK_END);
+        size_t fsize = ftell(nvsFile);
+        fseek(nvsFile, 0L, SEEK_SET);
+
+        // Read the file
+        char fbuf[fsize + 1];
+        fbuf[fsize] = 0;
+        if (fsize == fread(fbuf, 1, fsize, nvsFile))
+        {
+            // Close the file
+            fclose(nvsFile);
+
+            // Parse the JSON
+            cJSON* json = cJSON_Parse(fbuf);
+            cJSON* jsonIter;
+
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
+
+            if (NULL != jsonNs && cJSON_IsObject(jsonNs))
+            {
+                // Find the requested key
+                char* current_key = NULL;
+                cJSON_ArrayForEach(jsonIter, jsonNs)
+                {
+                    current_key = jsonIter->string;
+                    if (current_key != NULL)
+                    {
+                        // If the key matches
+                        if (0 == strcmp(current_key, key))
+                        {
+                            // Return the value
+                            char* strBlob = cJSON_GetStringValue(jsonIter);
+
+                            if (out_value != NULL)
+                            {
+                                // The call to read, using returned length
+                                strToBlob(strBlob, out_value, *length);
+                            }
+                            else
+                            {
+                                // The call to get length of blob
+                                *length = strlen(strBlob) / 2;
+                            }
+                            cJSON_Delete(json);
+                            return true;
+                        }
+                    }
+                }
+            }
+            cJSON_Delete(json);
+        }
+        else
+        {
+            fclose(nvsFile);
+        }
+    }
+    return false;
+}
+
+/**
+ * @brief Write a blob to NVS with a given string key
+ *
+ * @param namespace The NVS namespace to use
+ * @param key The key for the value to write
+ * @param value The blob value to write
+ * @param length The length of the blob
+ * @return true if the value was written, false if it was not
+ */
+bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* value, size_t length)
+{
+    // Open the file
+    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+    if (NULL != nvsFile)
+    {
+        // Get the file size
+        fseek(nvsFile, 0L, SEEK_END);
+        size_t fsize = ftell(nvsFile);
+        fseek(nvsFile, 0L, SEEK_SET);
+
+        // Read the file
+        char fbuf[fsize + 1];
+        fbuf[fsize] = 0;
+        if (fsize == fread(fbuf, 1, fsize, nvsFile))
+        {
+            // Close the file
+            fclose(nvsFile);
+
+            // Parse the JSON
+            cJSON* json = cJSON_Parse(fbuf);
+
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
+
+            if (NULL == jsonNs)
+            {
+                jsonNs = cJSON_CreateObject();
+                cJSON_AddItemToObject(json, namespace, jsonNs);
+            }
+
+            // Check if the key alredy exists
+            cJSON* jsonIter;
+            bool keyExists = false;
+            cJSON_ArrayForEach(jsonIter, jsonNs)
+            {
+                if (0 == strcmp(jsonIter->string, key))
+                {
+                    keyExists = true;
+                }
+            }
+
+            // Add or replace the item
+            char* blobStr  = blobToStr(value, length);
+            cJSON* jsonVal = cJSON_CreateString(blobStr);
+            free(blobStr);
+            if (keyExists)
+            {
+                cJSON_ReplaceItemInObject(jsonNs, key, jsonVal);
+            }
+            else
+            {
+                cJSON_AddItemToObject(jsonNs, key, jsonVal);
             }
 
             // Write the new JSON back to the file
@@ -270,63 +456,7 @@ bool writeNvs32(const char* key, int32_t val)
  */
 bool readNvsBlob(const char* key, void* out_value, size_t* length)
 {
-    // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
-    if (NULL != nvsFile)
-    {
-        // Get the file size
-        fseek(nvsFile, 0L, SEEK_END);
-        size_t fsize = ftell(nvsFile);
-        fseek(nvsFile, 0L, SEEK_SET);
-
-        // Read the file
-        char fbuf[fsize + 1];
-        fbuf[fsize] = 0;
-        if (fsize == fread(fbuf, 1, fsize, nvsFile))
-        {
-            // Close the file
-            fclose(nvsFile);
-
-            // Parse the JSON
-            cJSON* json = cJSON_Parse(fbuf);
-            cJSON* jsonIter;
-
-            // Find the requested key
-            char* current_key = NULL;
-            cJSON_ArrayForEach(jsonIter, json)
-            {
-                current_key = jsonIter->string;
-                if (current_key != NULL)
-                {
-                    // If the key matches
-                    if (0 == strcmp(current_key, key))
-                    {
-                        // Return the value
-                        char* strBlob = cJSON_GetStringValue(jsonIter);
-
-                        if (out_value != NULL)
-                        {
-                            // The call to read, using returned length
-                            strToBlob(strBlob, out_value, *length);
-                        }
-                        else
-                        {
-                            // The call to get length of blob
-                            *length = strlen(strBlob) / 2;
-                        }
-                        cJSON_Delete(json);
-                        return true;
-                    }
-                }
-            }
-            cJSON_Delete(json);
-        }
-        else
-        {
-            fclose(nvsFile);
-        }
-    }
-    return false;
+    return readNamespaceNvsBlob(NVS_NAMESPACE_NAME, key, out_value, length);
 }
 
 /**
@@ -339,80 +469,7 @@ bool readNvsBlob(const char* key, void* out_value, size_t* length)
  */
 bool writeNvsBlob(const char* key, const void* value, size_t length)
 {
-    // Open the file
-    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
-    if (NULL != nvsFile)
-    {
-        // Get the file size
-        fseek(nvsFile, 0L, SEEK_END);
-        size_t fsize = ftell(nvsFile);
-        fseek(nvsFile, 0L, SEEK_SET);
-
-        // Read the file
-        char fbuf[fsize + 1];
-        fbuf[fsize] = 0;
-        if (fsize == fread(fbuf, 1, fsize, nvsFile))
-        {
-            // Close the file
-            fclose(nvsFile);
-
-            // Parse the JSON
-            cJSON* json = cJSON_Parse(fbuf);
-
-            // Check if the key alredy exists
-            cJSON* jsonIter;
-            bool keyExists = false;
-            cJSON_ArrayForEach(jsonIter, json)
-            {
-                if (0 == strcmp(jsonIter->string, key))
-                {
-                    keyExists = true;
-                }
-            }
-
-            // Add or replace the item
-            char* blobStr  = blobToStr(value, length);
-            cJSON* jsonVal = cJSON_CreateString(blobStr);
-            free(blobStr);
-            if (keyExists)
-            {
-                cJSON_ReplaceItemInObject(json, key, jsonVal);
-            }
-            else
-            {
-                cJSON_AddItemToObject(json, key, jsonVal);
-            }
-
-            // Write the new JSON back to the file
-            FILE* nvsFileW = fopen(NVS_JSON_FILE, "wb");
-            if (NULL != nvsFileW)
-            {
-                char* jsonStr = cJSON_Print(json);
-                fprintf(nvsFileW, "%s", jsonStr);
-                fclose(nvsFileW);
-
-                free(jsonStr);
-                cJSON_Delete(json);
-
-                return true;
-            }
-            else
-            {
-                // Couldn't open file to write
-            }
-            cJSON_Delete(json);
-        }
-        else
-        {
-            // Couldn't read file
-            fclose(nvsFile);
-        }
-    }
-    else
-    {
-        // couldn't open file to read
-    }
-    return false;
+    return writeNamespaceNvsBlob(NVS_NAMESPACE_NAME, key, value, length);
 }
 
 /**
@@ -446,18 +503,24 @@ bool eraseNvsKey(const char* key)
             // Check if the key exists
             cJSON* jsonIter;
             bool keyExists = false;
-            cJSON_ArrayForEach(jsonIter, json)
+
+            cJSON* namespace = cJSON_GetObjectItemCaseSensitive(json, NVS_NAMESPACE_NAME);
+
+            if (NULL != namespace)
             {
-                if (0 == strcmp(jsonIter->string, key))
+                cJSON_ArrayForEach(jsonIter, namespace)
                 {
-                    keyExists = true;
+                    if (0 == strcmp(jsonIter->string, key))
+                    {
+                        keyExists = true;
+                    }
                 }
             }
 
             // Remove the key if it exists
             if (keyExists)
             {
-                cJSON_DeleteItemFromObject(json, key);
+                cJSON_DeleteItemFromObject(namespace, key);
             }
 
             // Write the new JSON back to the file
@@ -521,60 +584,64 @@ bool readNvsStats(nvs_stats_t* outStats)
             // Parse the JSON
             cJSON* json = cJSON_Parse(fbuf);
             cJSON* jsonIter;
+            cJSON* namespace;
 
-            // 1 entry is always used by each namespace, and there should only ever be 1 namespace
-            outStats->used_entries = 1;
-            // TODO: I just checked a Swadge and it said it was using 5 namespaces. Why?
-            outStats->namespace_count = 1;
-            /**
-             * When running readNvsStats() on an actual Swadge, the total NVS
-             * size is displayed as 12 entries less than the partition size.
-             *
-             * It's unknown if this is a percentage of total size,
-             * or a fixed number of overhead/control entries.
-             * I'm assuming it's a fixed number here.
-             */
-            outStats->total_entries = NVS_PARTITION_SIZE / NVS_ENTRY_BYTES - NVS_OVERHEAD_ENTRIES;
-
-            cJSON_ArrayForEach(jsonIter, json)
+            cJSON_ArrayForEach(namespace, json)
             {
-                if (jsonIter->string != NULL)
-                {
-                    switch (jsonIter->type)
-                    {
-                        case cJSON_Number:
-                        {
-                            outStats->used_entries += 1;
-                            break;
-                        }
-                        case cJSON_String:
-                        {
-                            char* strBlob = cJSON_GetStringValue(jsonIter);
+                // 1 entry is always used by each namespace, and there should only ever be 1 namespace
+                outStats->used_entries++;
+                // TODO: I just checked a Swadge and it said it was using 5 namespaces. Why?
+                outStats->namespace_count++;
+                /**
+                 * When running readNvsStats() on an actual Swadge, the total NVS
+                 * size is displayed as 12 entries less than the partition size.
+                 *
+                 * It's unknown if this is a percentage of total size,
+                 * or a fixed number of overhead/control entries.
+                 * I'm assuming it's a fixed number here.
+                 */
+                outStats->total_entries = NVS_PARTITION_SIZE / NVS_ENTRY_BYTES - NVS_OVERHEAD_ENTRIES;
 
-                            /**
-                             * Get length of blob
-                             *
-                             * When the ESP32 is storing blobs, it uses 1 entry to index chunks,
-                             * 1 entry per chunk, then 1 entry for every 32 bytes of data, rounding up.
-                             *
-                             * I don't know how to find out how many chunks the ESP32 would split
-                             * certain length blobs into, so for now I'm assuming 1 chunk per blob.
-                             *
-                             * Blobs in the JSON are encoded as hexadecimal, so every 2 characters are
-                             * 1 byte of data. Then, every 32 bytes of data is an entry.
-                             */
-                            outStats->used_entries += 2 + ceil(strlen(strBlob) / 2.0f / NVS_ENTRY_BYTES);
-                            break;
-                        }
-                        default:
+                cJSON_ArrayForEach(jsonIter, namespace)
+                {
+                    if (jsonIter->string != NULL)
+                    {
+                        switch (jsonIter->type)
                         {
-                            break;
+                            case cJSON_Number:
+                            {
+                                outStats->used_entries += 1;
+                                break;
+                            }
+                            case cJSON_String:
+                            {
+                                char* strBlob = cJSON_GetStringValue(jsonIter);
+
+                                /**
+                                 * Get length of blob
+                                 *
+                                 * When the ESP32 is storing blobs, it uses 1 entry to index chunks,
+                                 * 1 entry per chunk, then 1 entry for every 32 bytes of data, rounding up.
+                                 *
+                                 * I don't know how to find out how many chunks the ESP32 would split
+                                 * certain length blobs into, so for now I'm assuming 1 chunk per blob.
+                                 *
+                                 * Blobs in the JSON are encoded as hexadecimal, so every 2 characters are
+                                 * 1 byte of data. Then, every 32 bytes of data is an entry.
+                                 */
+                                outStats->used_entries += 2 + ceil(strlen(strBlob) / 2.0f / NVS_ENTRY_BYTES);
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
                         }
                     }
                 }
             }
-            outStats->free_entries = outStats->total_entries - outStats->used_entries;
 
+            outStats->free_entries = outStats->total_entries - outStats->used_entries;
             cJSON_Delete(json);
             return true;
         }
@@ -587,10 +654,11 @@ bool readNvsStats(nvs_stats_t* outStats)
 }
 
 /**
- * @brief Read info about each used entry in NVS. Typically, this should be called once with NULL passed for
+ * @brief Read info about each used entry in a specific NVS namespace. Typically, this should be called once with NULL passed for
  * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
  * should be called again
  *
+ * @param namespace The name of the NVS namespace to use
  * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
  * calling readAllNvsEntryInfos()
  * @param outEntryInfos A pointer to an array of NVS entry info structs will be written to this memory
@@ -598,7 +666,7 @@ bool readNvsStats(nvs_stats_t* outStats)
  * the number of entry infos to read
  * @return true if the entry infos were read, false if they were not
  */
-bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
+bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
 {
     // Open the file
     FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
@@ -638,64 +706,70 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfo
                 return false;
             }
 
-            int i = 0;
-            char* current_key;
-            cJSON_ArrayForEach(jsonIter, json)
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
+
+            if (NULL != jsonNs && cJSON_IsObject(jsonNs))
             {
-                if (outEntryInfos != NULL && i >= *numEntryInfos)
+                int i = 0;
+                char* current_key;
+                cJSON_ArrayForEach(jsonIter, jsonNs)
                 {
-                    break;
+                    if (outEntryInfos != NULL && i >= *numEntryInfos)
+                    {
+                        break;
+                    }
+
+                    current_key = jsonIter->string;
+                    if (current_key != NULL)
+                    {
+                        if (outEntryInfos != NULL)
+                        {
+                            switch (jsonIter->type)
+                            {
+                                case cJSON_Number:
+                                {
+#ifdef USING_U32
+                                    // cJSON cannot store any integer larger than 2^53 or smaller than -(2^53), since those
+                                    // are the limits of a double
+                                    int64_t val = (int64_t)cJSON_GetNumberValue(jsonIter);
+                                    if (val > INT32_MAX)
+                                    {
+                                        (&((*outEntryInfos)[i]))->type = NVS_TYPE_U32;
+                                    }
+                                    else
+#endif
+                                    {
+                                        (&((*outEntryInfos)[i]))->type = NVS_TYPE_I32;
+                                    }
+                                    break;
+                                }
+                                case cJSON_String:
+                                {
+                                    (&((*outEntryInfos)[i]))->type = NVS_TYPE_BLOB;
+                                    break;
+                                }
+                                default:
+                                {
+                                    break;
+                                }
+                            }
+                            snprintf((&((*outEntryInfos)[i]))->namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s",
+                                    namespace);
+                            snprintf((&((*outEntryInfos)[i]))->key, NVS_KEY_NAME_MAX_SIZE, "%s", current_key);
+                        }
+                        i++;
+                    }
                 }
 
-                current_key = jsonIter->string;
-                if (current_key != NULL)
+                if (outEntryInfos == NULL)
                 {
-                    if (outEntryInfos != NULL)
-                    {
-                        switch (jsonIter->type)
-                        {
-                            case cJSON_Number:
-                            {
-#ifdef USING_U32
-                                // cJSON cannot store any integer larger than 2^53 or smaller than -(2^53), since those
-                                // are the limits of a double
-                                int64_t val = (int64_t)cJSON_GetNumberValue(jsonIter);
-                                if (val > INT32_MAX)
-                                {
-                                    (&((*outEntryInfos)[i]))->type = NVS_TYPE_U32;
-                                }
-                                else
-#endif
-                                {
-                                    (&((*outEntryInfos)[i]))->type = NVS_TYPE_I32;
-                                }
-                                break;
-                            }
-                            case cJSON_String:
-                            {
-                                (&((*outEntryInfos)[i]))->type = NVS_TYPE_BLOB;
-                                break;
-                            }
-                            default:
-                            {
-                                break;
-                            }
-                        }
-                        snprintf((&((*outEntryInfos)[i]))->namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s",
-                                 NVS_NAMESPACE_NAME);
-                        snprintf((&((*outEntryInfos)[i]))->key, NVS_KEY_NAME_MAX_SIZE, "%s", current_key);
-                    }
-                    i++;
+                    *numEntryInfos = i;
                 }
             }
+
             if (freeOutStats)
             {
                 free(outStats);
-            }
-
-            if (outEntryInfos == NULL)
-            {
-                *numEntryInfos = i;
             }
 
             cJSON_Delete(json);
@@ -707,6 +781,23 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfo
         }
     }
     return false;
+}
+
+/**
+ * @brief Read info about each used entry in NVS. Typically, this should be called once with NULL passed for
+ * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
+ * should be called again
+ *
+ * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
+ * calling readAllNvsEntryInfos()
+ * @param outEntryInfos A pointer to an array of NVS entry info structs will be written to this memory
+ * @param numEntryInfos If outEntryInfos is `NULL`, this will be set to the length of the given key. Otherwise, it is
+ * the number of entry infos to read
+ * @return true if the entry infos were read, false if they were not
+ */
+bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
+{
+    return readNamespaceNvsEntryInfos(NVS_NAMESPACE_NAME, outStats, outEntryInfos, numEntryInfos);
 }
 
 /**
