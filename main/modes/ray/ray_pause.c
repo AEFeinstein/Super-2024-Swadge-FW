@@ -198,12 +198,15 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
  */
 static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
 {
+    int16_t tWidth = textWidth(&ray->ibm, rayMapNames[ray->p.mapId]);
+    drawText(&ray->ibm, rayMapColors[ray->p.mapId], rayMapNames[ray->p.mapId], (TFT_WIDTH - tWidth) / 2, 2);
+
     // Figure out the largest cell size to draw the whole map centered on the screen
     int16_t cellSizeW = TFT_WIDTH / ray->map.w;
-    int16_t cellSizeH = TFT_HEIGHT / ray->map.h;
+    int16_t cellSizeH = (TFT_HEIGHT - (ray->ibm.height + 4)) / ray->map.h;
     int16_t cellSize  = MIN(cellSizeW, cellSizeH);
     int16_t cellOffX  = (TFT_WIDTH - (ray->map.w * cellSize)) / 2;
-    int16_t cellOffY  = (TFT_HEIGHT - (ray->map.h * cellSize)) / 2;
+    int16_t cellOffY  = (ray->ibm.height + 4) + (((TFT_HEIGHT - (ray->ibm.height + 4)) - (ray->map.h * cellSize)) / 2);
 
     // For each cell
     for (int16_t y = 0; y < ray->map.h; y++)
@@ -353,8 +356,6 @@ static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY)
  */
 static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
-
 #define MAP_X_MARGIN 16
 #define MAP_Y_MARGIN 36
 #define MAP_Y_MIDGAP 24
@@ -385,8 +386,8 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
                 int16_t endX   = startX + MAP_SIZE;
                 int16_t endY   = startY + MAP_SIZE;
 
-                // Draw the black box, outlined
-                fillDisplayArea(startX + 1, startY + 1, endX - 1, endY - 1, c000);
+                // Draw the dark red box, outlined
+                fillDisplayArea(startX + 1, startY + 1, endX - 1, endY - 1, c100);
                 drawRect(startX, startY, endX, endY, rayMapColors[mapId]);
 
                 // Draw the name, either above or below the box
