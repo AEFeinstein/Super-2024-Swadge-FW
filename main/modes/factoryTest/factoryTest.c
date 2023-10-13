@@ -97,6 +97,8 @@ typedef struct
     uint8_t lastTouchStateIdx;
     touchJoystick_t touchJoystick;
     bool touched;
+    int32_t touchAngle;
+    int32_t touchRadius;
     // Accelerometer
     int16_t x;
     int16_t y;
@@ -313,8 +315,14 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     // Draw the 8-direction touchpad with center circle
     int16_t tBarX = TFT_WIDTH - TOUCHBAR_WIDTH;
     int16_t tBarY = barY + 4 + TOUCHBAR_HEIGHT / 2 + test->ibm_vga8.height + 15;
-    touchDrawCircle(&test->ibm_vga8, "Touch Pad", tBarX, tBarY, 35, 8, true, test->touched, test->touchJoystick);
-    touchFillCircleSegments(tBarX, tBarY, 35, 8, true);
+    int16_t rSize = 35;
+    touchDrawCircle(&test->ibm_vga8, "Touch Pad", tBarX, tBarY, rSize, 8, true, test->touched, test->touchJoystick);
+    touchFillCircleSegments(tBarX, tBarY, rSize, 8, true);
+
+    // Draw a dot indicating the analog touch spot
+    drawCircleFilled(tBarX + getCos1024(test->touchAngle) * test->touchRadius / 1024 * rSize / 1024,
+                     tBarY - getSin1024(test->touchAngle) * test->touchRadius / 1024 * rSize / 1024, 3,
+                     test->touched ? c500 : c333);
 
     // Plot some text depending on test status
     char dbgStr[32] = {0};
@@ -612,13 +620,13 @@ touchJoystick_t touchIdxToTouchJoystick(uint8_t touchIdx)
  */
 void testReadAndValidateTouch(void)
 {
-    int32_t phi, r, intensity;
-    test->touched = getTouchJoystick(&phi, &r, &intensity);
+    int32_t intensity;
+    test->touched = getTouchJoystick(&test->touchAngle, &test->touchRadius, &intensity);
 
     // Transition states
     if (test->touched)
     {
-        test->touchJoystick = getTouchJoystickZones(phi, r, true, true);
+        test->touchJoystick = getTouchJoystickZones(test->touchAngle, test->touchRadius, true, true);
         uint8_t pad         = touchJoystickToTouchIdx(test->touchJoystick);
         if (pad == UINT8_MAX)
         {
