@@ -126,6 +126,31 @@ bool eraseNvs(void)
  */
 bool readNvs32(const char* key, int32_t* outVal)
 {
+    return readNamespaceNvs32(NVS_NAMESPACE_NAME, key, outVal);
+}
+
+/**
+ * @brief Write a 32 bit value to NVS with a given string key
+ *
+ * @param key The key for the value to write
+ * @param val The value to write
+ * @return true if the value was written, false if it was not
+ */
+bool writeNvs32(const char* key, int32_t val)
+{
+    return writeNamespaceNvs32(NVS_NAMESPACE_NAME, key, val);
+}
+
+/**
+ * @brief Read a 32 bit value from NVS with a given string key
+ *
+ * @param namespace The NVS namespace to use
+ * @param key The key for the value to read
+ * @param outVal The value that was read
+ * @return true if the value was read, false if it was not
+ */
+bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
+{
     // Open the file
     FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
     if (NULL != nvsFile)
@@ -147,13 +172,13 @@ bool readNvs32(const char* key, int32_t* outVal)
             cJSON* json = cJSON_Parse(fbuf);
             cJSON* jsonIter;
 
-            cJSON* namespace = cJSON_GetObjectItemCaseSensitive(json, NVS_NAMESPACE_NAME);
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
 
-            if (cJSON_IsObject(namespace))
+            if (cJSON_IsObject(jsonNs))
             {
                 // Find the requested key
                 char* current_key = NULL;
-                cJSON_ArrayForEach(jsonIter, namespace)
+                cJSON_ArrayForEach(jsonIter, jsonNs)
                 {
                     current_key = jsonIter->string;
                     if (current_key != NULL)
@@ -182,11 +207,12 @@ bool readNvs32(const char* key, int32_t* outVal)
 /**
  * @brief Write a 32 bit value to NVS with a given string key
  *
+ * @param namespace The NVS namespace to use
  * @param key The key for the value to write
  * @param val The value to write
  * @return true if the value was written, false if it was not
  */
-bool writeNvs32(const char* key, int32_t val)
+bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
 {
     // Open the file
     FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
@@ -208,18 +234,18 @@ bool writeNvs32(const char* key, int32_t val)
             // Parse the JSON
             cJSON* json = cJSON_Parse(fbuf);
 
-            cJSON* namespace = cJSON_GetObjectItemCaseSensitive(json, NVS_NAMESPACE_NAME);
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
 
-            if (NULL == namespace)
+            if (NULL == jsonNs)
             {
-                namespace = cJSON_CreateObject();
-                cJSON_AddItemToObject(json, NVS_NAMESPACE_NAME, namespace);
+                jsonNs = cJSON_CreateObject();
+                cJSON_AddItemToObject(json, namespace, jsonNs);
             }
 
             // Check if the key alredy exists
             cJSON* jsonIter;
             bool keyExists = false;
-            cJSON_ArrayForEach(jsonIter, namespace)
+            cJSON_ArrayForEach(jsonIter, jsonNs)
             {
                 if (0 == strcmp(jsonIter->string, key))
                 {
@@ -231,11 +257,11 @@ bool writeNvs32(const char* key, int32_t val)
             cJSON* jsonVal = cJSON_CreateNumber(val);
             if (keyExists)
             {
-                cJSON_ReplaceItemInObject(namespace, key, jsonVal);
+                cJSON_ReplaceItemInObject(jsonNs, key, jsonVal);
             }
             else
             {
-                cJSON_AddItemToObject(namespace, key, jsonVal);
+                cJSON_AddItemToObject(jsonNs, key, jsonVal);
             }
 
             // Write the new JSON back to the file
@@ -480,6 +506,18 @@ bool writeNvsBlob(const char* key, const void* value, size_t length)
  */
 bool eraseNvsKey(const char* key)
 {
+    return eraseNamespaceNvsKey(NVS_NAMESPACE_NAME, key);
+}
+
+/**
+ * @brief Delete the value with the given key from NVS
+ *
+ * @param namespace The NVS namespace to use
+ * @param key The NVS key to be deleted
+ * @return true if the value was deleted, false if it was not
+ */
+bool eraseNamespaceNvsKey(const char* namespace, const char* key)
+{
     // Open the file
     FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
     if (NULL != nvsFile)
@@ -504,11 +542,11 @@ bool eraseNvsKey(const char* key)
             cJSON* jsonIter;
             bool keyExists = false;
 
-            cJSON* namespace = cJSON_GetObjectItemCaseSensitive(json, NVS_NAMESPACE_NAME);
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
 
-            if (NULL != namespace)
+            if (NULL != jsonNs)
             {
-                cJSON_ArrayForEach(jsonIter, namespace)
+                cJSON_ArrayForEach(jsonIter, jsonNs)
                 {
                     if (0 == strcmp(jsonIter->string, key))
                     {
@@ -520,7 +558,7 @@ bool eraseNvsKey(const char* key)
             // Remove the key if it exists
             if (keyExists)
             {
-                cJSON_DeleteItemFromObject(namespace, key);
+                cJSON_DeleteItemFromObject(jsonNs, key);
             }
 
             // Write the new JSON back to the file

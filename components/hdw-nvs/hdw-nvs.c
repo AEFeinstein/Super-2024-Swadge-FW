@@ -114,8 +114,33 @@ bool eraseNvs(void)
  */
 bool readNvs32(const char* key, int32_t* outVal)
 {
+    return readNamespaceNvs32(NVS_NAMESPACE_NAME, key, outVal);
+}
+
+/**
+ * @brief Write a 32 bit value to NVS with a given string key
+ *
+ * @param key The key for the value to write
+ * @param val The value to write
+ * @return true if the value was written, false if it was not
+ */
+bool writeNvs32(const char* key, int32_t val)
+{
+    return writeNamespaceNvs32(NVS_NAMESPACE_NAME, key, val);
+}
+
+/**
+ * @brief Read a 32 bit value from NVS with a given string key
+ *
+ * @param namespace The NVS namespace to use
+ * @param key The key for the value to read
+ * @param outVal The value that was read
+ * @return true if the value was read, false if it was not
+ */
+bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
+{
     nvs_handle_t handle;
-    esp_err_t openErr = nvs_open(NVS_NAMESPACE_NAME, NVS_READONLY, &handle);
+    esp_err_t openErr = nvs_open(namespace, NVS_READONLY, &handle);
     switch (openErr)
     {
         case ESP_OK:
@@ -162,14 +187,15 @@ bool readNvs32(const char* key, int32_t* outVal)
 /**
  * @brief Write a 32 bit value to NVS with a given string key
  *
+ * @param namespace The NVS namespace to use
  * @param key The key for the value to write
  * @param val The value to write
  * @return true if the value was written, false if it was not
  */
-bool writeNvs32(const char* key, int32_t val)
+bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
 {
     nvs_handle_t handle;
-    esp_err_t openErr = nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle);
+    esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
     switch (openErr)
     {
         case ESP_OK:
@@ -371,8 +397,20 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
  */
 bool eraseNvsKey(const char* key)
 {
+    return eraseNamespaceNvsKey(NVS_NAMESPACE_NAME, key);
+}
+
+/**
+ * @brief Delete the value with the given key from NVS
+ *
+ * @param namespace The NVS namespace to use
+ * @param key The NVS key to be deleted
+ * @return true if the value was deleted, false if it was not
+ */
+bool eraseNamespaceNvsKey(const char* namespace, const char* key)
+{
     nvs_handle_t handle;
-    esp_err_t openErr = nvs_open(NVS_NAMESPACE_NAME, NVS_READWRITE, &handle);
+    esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
     switch (openErr)
     {
         case ESP_OK:
@@ -446,6 +484,23 @@ bool readNvsStats(nvs_stats_t* outStats)
 }
 
 /**
+ * @brief Read info about each used entry in the default NVS namespace. Typically, this should be called once with NULL passed for
+ * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
+ * should be called again
+ *
+ * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
+ * calling readAllNvsEntryInfos()
+ * @param outEntryInfos A pointer to an array of NVS entry info structs will be written to this memory
+ * @param numEntryInfos If outEntryInfos is `NULL`, this will be set to the length of the given key. Otherwise, it is
+ * the number of entry infos to read
+ * @return true if the entry infos were read, false if they were not
+ */
+bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
+{
+    return readNamespaceNvsEntryInfos(NVS_NAMESPACE_NAME, outStats, outEntryInfos, numEntryInfos);
+}
+
+/**
  * @brief Read info about each used entry in a specific NVS namespace. Typically, this should be called once with NULL passed for
  * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
  * should be called again
@@ -502,21 +557,4 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
         *numEntryInfos = i;
     }
     return true;
-}
-
-/**
- * @brief Read info about each used entry in the default NVS namespace. Typically, this should be called once with NULL passed for
- * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
- * should be called again
- *
- * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
- * calling readAllNvsEntryInfos()
- * @param outEntryInfos A pointer to an array of NVS entry info structs will be written to this memory
- * @param numEntryInfos If outEntryInfos is `NULL`, this will be set to the length of the given key. Otherwise, it is
- * the number of entry infos to read
- * @return true if the entry infos were read, false if they were not
- */
-bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
-{
-    return readNamespaceNvsEntryInfos(NVS_NAMESPACE_NAME, outStats, outEntryInfos, numEntryInfos);
 }

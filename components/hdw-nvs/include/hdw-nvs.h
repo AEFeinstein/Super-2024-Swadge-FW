@@ -56,7 +56,7 @@
 
 #define NVS_PART_NAME_MAX_SIZE 16        /*!< maximum length of partition name (excluding null terminator) */
 #define NVS_KEY_NAME_MAX_SIZE  16        /*!< Maximal length of NVS key name (including null terminator) */
-#define NVS_NAMESPACE_NAME     "storage" /*!< The namespace used for NVS */
+#define NVS_NAMESPACE_NAME     "storage" /*!< The default namespace used for NVS */
 
 //==============================================================================
 // Function Prototypes
@@ -67,11 +67,14 @@ bool deinitNvs(void);
 bool eraseNvs(void);
 bool readNvs32(const char* key, int32_t* outVal);
 bool writeNvs32(const char* key, int32_t val);
+bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal);
+bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val);
 bool readNvsBlob(const char* key, void* out_value, size_t* length);
 bool writeNvsBlob(const char* key, const void* value, size_t length);
 bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_value, size_t* length);
 bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* value, size_t length);
 bool eraseNvsKey(const char* key);
+bool eraseNamespaceNvsKey(const char* namespace, const char* key);
 bool readNvsStats(nvs_stats_t* outStats);
 bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos);
 bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos);
