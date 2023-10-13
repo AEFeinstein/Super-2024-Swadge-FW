@@ -16,7 +16,7 @@
 //==============================================================================
 
 static bool objectsIntersect(const rayObjCommon_t* obj1, const rayObjCommon_t* obj2);
-static void moveRayBullets(ray_t* ray, int32_t elapsedUs);
+static void moveRayBullets(ray_t* ray, uint32_t elapsedUs);
 
 //==============================================================================
 // Functions
@@ -125,7 +125,7 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-void moveRayObjects(ray_t* ray, int32_t elapsedUs)
+void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
 {
     moveRayBullets(ray, elapsedUs);
     rayEnemiesMoveAnimate(ray, elapsedUs);
@@ -137,7 +137,7 @@ void moveRayObjects(ray_t* ray, int32_t elapsedUs)
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
+static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
 {
     // For convenience
     int32_t rayMapId = ray->p.mapId;
@@ -151,8 +151,8 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
         {
             // Update the bullet's position
             // TODO justify the scaling factor, assuming velXY is a unit vector
-            obj->c.posX += (obj->velX * elapsedUs) / 100000;
-            obj->c.posY += (obj->velY * elapsedUs) / 100000;
+            obj->c.posX += (obj->velX * (int32_t)elapsedUs) / 100000;
+            obj->c.posY += (obj->velY * (int32_t)elapsedUs) / 100000;
 
             // Get the cell the bullet is in now
             rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->c.posX)][FROM_FX(obj->c.posY)];
