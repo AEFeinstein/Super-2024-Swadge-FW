@@ -85,6 +85,9 @@
 
 #include "palette.h"
 
+/// The maximum brightness setting of the TFT
+#define MAX_TFT_BRIGHTNESS 7
+
 #if defined(CONFIG_ST7735_160x80)
     #define TFT_WIDTH  160
     #define TFT_HEIGHT 80
