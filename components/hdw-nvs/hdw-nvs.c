@@ -484,9 +484,9 @@ bool readNvsStats(nvs_stats_t* outStats)
 }
 
 /**
- * @brief Read info about each used entry in the default NVS namespace. Typically, this should be called once with NULL passed for
- * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
- * should be called again
+ * @brief Read info about each used entry in the default NVS namespace. Typically, this should be called once with NULL
+ * passed for outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then
+ * this should be called again
  *
  * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
  * calling readAllNvsEntryInfos()
@@ -501,9 +501,9 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfo
 }
 
 /**
- * @brief Read info about each used entry in a specific NVS namespace. Typically, this should be called once with NULL passed for
- * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
- * should be called again
+ * @brief Read info about each used entry in a specific NVS namespace. Typically, this should be called once with NULL
+ * passed for outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then
+ * this should be called again
  *
  * @param namespace The name of the NVS namespace to use
  * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
@@ -513,7 +513,8 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfo
  * the number of entry infos to read
  * @return true if the entry infos were read, false if they were not
  */
-bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
+bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos,
+                                size_t* numEntryInfos)
 {
     // If the user doesn't want to receive the stats, only use them internally
     bool freeOutStats = false;

@@ -77,6 +77,7 @@ bool eraseNvsKey(const char* key);
 bool eraseNamespaceNvsKey(const char* namespace, const char* key);
 bool readNvsStats(nvs_stats_t* outStats);
 bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos);
-bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos);
+bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos,
+                                size_t* numEntryInfos);
 
 #endif

@@ -692,9 +692,9 @@ bool readNvsStats(nvs_stats_t* outStats)
 }
 
 /**
- * @brief Read info about each used entry in a specific NVS namespace. Typically, this should be called once with NULL passed for
- * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
- * should be called again
+ * @brief Read info about each used entry in a specific NVS namespace. Typically, this should be called once with NULL
+ * passed for outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then
+ * this should be called again
  *
  * @param namespace The name of the NVS namespace to use
  * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
@@ -704,7 +704,8 @@ bool readNvsStats(nvs_stats_t* outStats)
  * the number of entry infos to read
  * @return true if the entry infos were read, false if they were not
  */
-bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
+bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos,
+                                size_t* numEntryInfos)
 {
     // Open the file
     FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
@@ -767,8 +768,8 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
                                 case cJSON_Number:
                                 {
 #ifdef USING_U32
-                                    // cJSON cannot store any integer larger than 2^53 or smaller than -(2^53), since those
-                                    // are the limits of a double
+                                    // cJSON cannot store any integer larger than 2^53 or smaller than -(2^53), since
+                                    // those are the limits of a double
                                     int64_t val = (int64_t)cJSON_GetNumberValue(jsonIter);
                                     if (val > INT32_MAX)
                                     {
@@ -791,8 +792,7 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
                                     break;
                                 }
                             }
-                            snprintf((&((*outEntryInfos)[i]))->namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s",
-                                    namespace);
+                            snprintf((&((*outEntryInfos)[i]))->namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s", namespace);
                             snprintf((&((*outEntryInfos)[i]))->key, NVS_KEY_NAME_MAX_SIZE, "%s", current_key);
                         }
                         i++;
