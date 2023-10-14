@@ -126,6 +126,7 @@ swadgeMode_t accelTestMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = accelTestEnterMode,
     .fnExitMode               = accelTestExitMode,
     .fnMainLoop               = accelTestMainLoop,

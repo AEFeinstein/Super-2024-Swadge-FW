@@ -218,6 +218,7 @@ swadgeMode_t sandbox_mode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = sandbox_main,
     .fnExitMode               = sandbox_exit,
     .fnMainLoop               = sandbox_tick,

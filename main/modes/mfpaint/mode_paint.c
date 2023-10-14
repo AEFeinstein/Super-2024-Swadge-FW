@@ -59,6 +59,7 @@ swadgeMode_t modePaint = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = paintEnterMode,
     .fnExitMode               = paintExitMode,
     .fnMainLoop               = paintMainLoop,

@@ -41,10 +41,11 @@ typedef struct
     uint32_t comboScore;
 
     entity_t* playerBombs[3];
-    uint8_t playerBombsCount;
-    uint8_t nextBombToDetonate;
-    uint8_t nextBombSlot;
-    uint8_t bombDetonateCooldown;
+    uint8_t playerTimeBombsCount;
+    bool playerRemoteBombPlaced;
+    //uint8_t nextBombToDetonate;
+    //uint8_t nextBombSlot;
+    //uint8_t bombDetonateCooldown;
 
     int32_t touchPhi;
     int32_t touchRadius;
