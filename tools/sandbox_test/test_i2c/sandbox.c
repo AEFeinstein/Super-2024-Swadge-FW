@@ -22,8 +22,6 @@
 
 int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
 
-
-extern uint32_t frameRateUs;
 int frameno;
 int bQuit;
 
@@ -75,7 +73,7 @@ int bQuit;
 struct LSM6DSLData
 {
 	int32_t temp;
-	uint32_t caltime;
+	uint32_t computetime;
 
 	// Quats are wxyz.
 	// You can take a vector, in controller space, rotate by this quat, and you get it in world space.
@@ -121,7 +119,7 @@ float rsqrtf ( float x )
 
 float mathsqrtf( float x )
 {
-	// Trick to do approximate, fast square roots.
+	// Trick to do approximate, fast square roots. (Though it is surprisingly fast)
 	int sign = x < 0;
 	if( sign ) x = -x;
 	if( x < 0.0000001 ) return 0.0001;
@@ -201,6 +199,7 @@ void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p
 
 void mathRotateVectorByInverseOfQuaternion(float * pout, const float * q, const float * p )
 {
+	// General note: Performing a transform this way can be about 20-30% slower than a well formed 3x3 matrix.
 	// return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
 	float iqo[3];
 	mathCrossProduct( iqo, p, q + 1 /*.xyz*/ );
@@ -287,6 +286,8 @@ static void LSM6DSLIntegrate()
 	struct LSM6DSLData * ld = &LSM6DSL;
 
 	int16_t data[6*16];
+
+	// Get temperature sensor... Why?  Yolo?
 	int r = GeneralI2CGet( LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2 );
 	if( r < 0 ) return;
 	if( r == 2 ) ld->temp = data[0];
@@ -452,7 +453,7 @@ static void LSM6DSLIntegrate()
 		ld->accellast[2] = cdata[-1];
 	}
 
-    ld->caltime = getCycleCount() - start;
+    ld->computetime = getCycleCount() - start;
 }
 
 static void LMS6DS3Setup()
@@ -474,6 +475,9 @@ static void LMS6DS3Setup()
 
     esp_err_t ret_val = ESP_OK;
 
+	i2c_driver_delete( I2C_NUM_0 );
+
+
     /* Install i2c driver */
     i2c_config_t conf = {
         .mode             = I2C_MODE_MASTER,
@@ -481,10 +485,12 @@ static void LMS6DS3Setup()
         .sda_pullup_en    = GPIO_PULLUP_ENABLE,
         .scl_io_num       = GPIO_NUM_41,
         .scl_pullup_en    = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 800000,
+        .master.clk_speed = 800000, //tested upto 1.4Mbit/s
         .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
     };
+	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
     ret_val |= i2c_param_config(I2C_NUM_0, &conf);
+
 
 	memset( &LSM6DSL, 0, sizeof(LSM6DSL) );
 	LSM6DSL.fqQuat[0] = 1;
@@ -496,7 +502,7 @@ static void LMS6DS3Setup()
 	vTaskDelay( 1 );
 	LSM6DSLSet( LSM6DSL_CTRL3_C, 0x44 ); // unforce reset
 	LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR
-	LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices in FIFO.
+	LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices (Accel + Gyro) in FIFO.
 	LSM6DSLSet( LSM6DSL_CTRL1_XL, 0b01011001 ); // Setup accel (16 g's FS)
 	LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01011100 ); // Setup gyro, 2000dps
 	LSM6DSLSet( LSM6DSL_CTRL4_C, 0x00 ); // Disable all filtering.
@@ -554,7 +560,7 @@ void sandbox_main(void)
 
     loadWsg("kid0.wsg", &example_sprite, true);
 
-	frameRateUs = 0;
+	setFrameRateUs(0);
 /*
 	// Try to reinstall, just in case.
     i2c_config_t conf = {
@@ -567,7 +573,7 @@ void sandbox_main(void)
         .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
     };
 
-//	i2c_driver_delete( I2C_NUM_0 );
+	i2c_driver_delete( I2C_NUM_0 );
     ESP_LOGI( "sandbox", "i2c_param_config=%d", i2c_param_config(I2C_NUM_0, &conf) );
 	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
 */
@@ -667,53 +673,43 @@ void sandbox_tick()
 	LSM6DSLIntegrate();
 /*
 	cts += sprintf( cts, "%ld %ld / %5d %5d %5d / %5d %5d %5d / %ld %ld %ld / %f %f %f %f",
-		LSM6DSL.caltime, LSM6DSL.temp, 
+		LSM6DSL.computetime, LSM6DSL.temp, 
 		LSM6DSL.accellast[0], LSM6DSL.accellast[1], LSM6DSL.accellast[2],
 		LSM6DSL.gyrolast[0], LSM6DSL.gyrolast[1], LSM6DSL.gyrolast[2], 
 		LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3]  );
 */
 
 	float plusy[3] = { 0, 1, 0 };
-	float plusy_out[3] = { 0, 1, 0 };
-	mathRotateVectorByQuaternion( plusy, LSM6DSL.fqQuat, plusy );
-//	mathRotateVectorByInverseOfQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
 
-	mathRotateVectorByQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
-
+	// Produce a model matrix from a quaternion.
 	float plusx_out[3] = { 1, 0, 0 };
-	mathRotateVectorByQuaternion( plusx_out, LSM6DSL.fqQuat, plusx_out );
-
+	float plusy_out[3] = { 0, 1, 0 };
 	float plusz_out[3] = { 0, 0, 1 };
+	mathRotateVectorByQuaternion( plusy, LSM6DSL.fqQuat, plusy );
+	mathRotateVectorByQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
+	mathRotateVectorByQuaternion( plusx_out, LSM6DSL.fqQuat, plusx_out );
 	mathRotateVectorByQuaternion( plusz_out, LSM6DSL.fqQuat, plusz_out );
+
+
+    uint32_t cycStart = getCycleCount();
 
 	int i, vertices = 0;
 	for( i = 0; i < sizeof(bunny_verts)/2; i+= 3 )
 	{
-		float bz = -bunny_verts[i+0];
-		float by = bunny_verts[i+1];
+		// Performingthe transform this way is about 700us.
 		float bx = bunny_verts[i+2];
-
-		float box = bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2];
-		float boy = bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2];
-		float boz = bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2];
-
-		bunny_verts_out[vertices*3+0] = box/250 + 280/2; 
-		bunny_verts_out[vertices*3+1] = -boy/250 + 240/2;  // Convert from right-handed to left-handed coordinate frame.
-		bunny_verts_out[vertices*3+2] = boz;
-
+		float by = bunny_verts[i+1];
+		float bz =-bunny_verts[i+0];
+		float bunnyvert[3] = {
+			bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
+			bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
+			bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2] };
+		bunny_verts_out[vertices*3+0] = bunnyvert[0]/250 + 280/2; 
+		bunny_verts_out[vertices*3+1] = -bunnyvert[1]/250 + 240/2;  // Convert from right-handed to left-handed coordinate frame.
+		bunny_verts_out[vertices*3+2] = bunnyvert[2];
 		vertices++;
 	}
-/*
-	int centerX = 280/2;
-	int centerY = 240/2;
-	float xcomp = -plusy_out[0];
-	float ycomp = plusy_out[1];
-	int v0x = xcomp * 90;
-	int v0y = ycomp * 90;
-	drawLineFast(centerX-v0x, centerY-v0y, centerX+v0x, centerY+v0y, 215 );
-*/
 
-#if 1
 	int lines = 0;
 	for( i = 0; i < sizeof(bunny_lines); i+= 2 )
 	{
@@ -725,15 +721,17 @@ void sandbox_tick()
 		drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1+1],bunny_verts_out[v2], bunny_verts_out[v2+1], col);
 		lines++;
 	}
-#endif
 
-	cts += sprintf( cts, "%ld %d %f %f %f / %f %f %f / %3d %3d %3d / %4d %4d %4d / %d %d",
-		LSM6DSL.caltime, LSM6DSL.lastreadr,
+
+    uint32_t renderTime = getCycleCount() - cycStart;
+
+
+	cts += sprintf( cts, "%ld %ld %d %f %f %f / %f %f %f / %3d %3d %3d / %4d %4d %4d",
+		LSM6DSL.computetime, renderTime, LSM6DSL.lastreadr,
 		LSM6DSL.fCorrectLast[0], LSM6DSL.fCorrectLast[1], LSM6DSL.fCorrectLast[2],
 		LSM6DSL.fvBias[0],		LSM6DSL.fvBias[1],		LSM6DSL.fvBias[2],
 		LSM6DSL.gyrolast[0], LSM6DSL.gyrolast[1], LSM6DSL.gyrolast[2],
-		LSM6DSL.accellast[0], LSM6DSL.accellast[1], LSM6DSL.accellast[2],
-		 vertices, lines );
+		LSM6DSL.accellast[0], LSM6DSL.accellast[1], LSM6DSL.accellast[2] );
 
 	ESP_LOGI( "I2C", "%s", ctsbuffer );
 }
