@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include "ray_pause.h"
+#include "ray_tex_manager.h"
 
 //==============================================================================
 // Defines
@@ -275,6 +276,11 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                             color = c440;
                             break;
                         }
+                        case BG_DOOR_ARTIFACT:
+                        {
+                            color = c531;
+                            break;
+                        }
                         default:
                         {
                             // Can't reach here
@@ -369,6 +375,11 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
     // Save coordinates for where to draw warp lines
     int16_t warpCoords[NUM_MAPS][NUM_MAP_CORNERS][2];
 
+    // A texture to draw after artifacts are acquired
+    wsg_t* artifactWsg = getTexByType(ray, OBJ_ITEM_ARTIFACT);
+    int16_t aAOffX     = (MAP_SIZE - artifactWsg->w) / 2;
+    int16_t aAOffY     = (MAP_SIZE - artifactWsg->h) / 2;
+
     // For all six maps in a 3x2 grid
     for (int16_t mapY = 0; mapY < MAP_ROWS; mapY++)
     {
@@ -389,6 +400,12 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
                 // Draw the dark red box, outlined
                 fillDisplayArea(startX + 1, startY + 1, endX - 1, endY - 1, c100);
                 drawRect(startX, startY, endX, endY, rayMapColors[mapId]);
+
+                // Draw an artifact if was acquired here
+                if (ray->p.i.artifacts[mapId])
+                {
+                    drawWsgSimple(artifactWsg, startX + aAOffX, startY + aAOffY);
+                }
 
                 // Draw the name, either above or below the box
                 int16_t tWidth = textWidth(&ray->ibm, rayMapNames[mapId]);

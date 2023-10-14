@@ -40,6 +40,7 @@ class tileType(Enum):
     BG_DOOR_KEY_A   = (BG | DOOR  | 7)
     BG_DOOR_KEY_B   = (BG | DOOR  | 8)
     BG_DOOR_KEY_C   = (BG | DOOR  | 9)
+    BG_DOOR_ARTIFACT = (BG | DOOR | 10)
     # Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1)
     OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2)
@@ -96,6 +97,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_KEY_A,
         tileType.BG_DOOR_KEY_B,
         tileType.BG_DOOR_KEY_C,
+        tileType.BG_DOOR_ARTIFACT,
     ]
 ]
 

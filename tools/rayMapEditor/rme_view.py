@@ -256,6 +256,8 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_DOOR_KEY_C, '../../assets/ray/doors/BG_DOOR_KEY_C.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_ARTIFACT, '../../assets/ray/doors/BG_DOOR_ARTIFACT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/enemies/NORMAL/E_NORMAL_WALK_0.png')
