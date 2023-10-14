@@ -24,26 +24,27 @@
  * @brief Load a RMH from ROM to RAM. RMHs placed in the spiffs_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the RMH to load
+ * @param mapId The map ID to load
  * @param ray The ray_t to load the map into
  * @param pStartX The starting X coordinate for this map
  * @param pStartY The starting Y coordinate for this map
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  */
-void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
+void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
 {
     // Convenience inventory to know what not to spawn
     rayInventory_t* inv = &ray->p.i;
-
-    // Map ID is the first digit of the name
-    int16_t mapId = name[0] - '0';
 
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
 
     // Convenience pointers
     rayMap_t* map = &ray->map;
+
+    // Construct map name
+    char name[] = "0.rmh";
+    name[0]     = '0' + mapId;
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;

@@ -14,6 +14,7 @@
 #include "ray_pause.h"
 #include "ray_script.h"
 #include "ray_warp_screen.h"
+#include "ray_death_screen.h"
 
 //==============================================================================
 // Function Prototypes
@@ -24,7 +25,6 @@ static void rayExitMode(void);
 static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void rayMenuCb(const char* label, bool selected, uint32_t settingVal);
-static void rayStartGame(void);
 
 //==============================================================================
 // Const Variables
@@ -277,6 +277,11 @@ static void rayMainLoop(int64_t elapsedUs)
             rayWarpScreenRender(ray, elapsedUs);
             break;
         }
+        case RAY_DEATH_SCREEN:
+        {
+            rayDeathScreenRender(ray, elapsedUs);
+            break;
+        }
     }
 }
 
@@ -297,6 +302,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     {
         case RAY_MENU:
         case RAY_DIALOG:
+        case RAY_DEATH_SCREEN:
         {
             // Do nothing
             break;
@@ -357,7 +363,7 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
 /**
  * @brief Start the game from the menu
  */
-static void rayStartGame(void)
+void rayStartGame(void)
 {
     // Clear all lists
     rayFreeCurrentState(ray);
@@ -366,12 +372,8 @@ static void rayStartGame(void)
     bool initFromScratch = initializePlayer(ray);
 
     // Load the map and object data
-    // Construct the map name
-    char mapName[] = "0.rmh";
-    mapName[0]     = '0' + ray->p.mapId;
-    // Load the new map
     q24_8 pStartX = 0, pStartY = 0;
-    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+    loadRayMap(ray->p.mapId, ray, &pStartX, &pStartY, true);
 
     // If the player was initialized from scratch
     if (initFromScratch)
@@ -380,6 +382,9 @@ static void rayStartGame(void)
         ray->p.posX = pStartX;
         ray->p.posY = pStartY;
     }
+
+    // Save a backup of the player state to restore in case of death
+    memcpy(&ray->p_backup, &ray->p, sizeof(rayPlayer_t));
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));

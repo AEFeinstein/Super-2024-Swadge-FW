@@ -90,12 +90,9 @@ void warpToDestination(ray_t* ray)
     // Free the scripts
     rayFreeCurrentState(ray);
 
-    // Construct the map name
-    char mapName[] = "0.rmh";
-    mapName[0]     = '0' + ray->warpDestMapId;
     // Load the new map
     q24_8 pStartX = 0, pStartY = 0;
-    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+    loadRayMap(ray->warpDestMapId, ray, &pStartX, &pStartY, true);
 
     // Set the map ID
     ray->p.mapId                     = ray->warpDestMapId;
@@ -123,6 +120,9 @@ void warpToDestination(ray_t* ray)
 
     // Save after warping
     raySavePlayer(ray);
+
+    // Save a backup of the player state to restore in case of death
+    memcpy(&ray->p_backup, &ray->p, sizeof(rayPlayer_t));
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));

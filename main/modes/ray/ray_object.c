@@ -299,6 +299,7 @@ void checkRayCollisions(ray_t* ray)
             if (objectsIntersect(&player, &bullet->c))
             {
                 // TODO Player got shot, apply damage
+                rayPlayerDecrementHealth(ray, 1);
                 // De-allocate the bullet
                 bullet->c.id = -1;
             }

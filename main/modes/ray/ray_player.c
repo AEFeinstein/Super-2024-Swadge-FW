@@ -654,14 +654,41 @@ void rayPlayerCheckLava(ray_t* ray, uint32_t elapsedUs)
         if (ray->lavaTimer <= US_PER_LAVA_DAMAGE)
         {
             ray->lavaTimer -= US_PER_LAVA_DAMAGE;
-            if (ray->p.i.health)
-            {
-                ray->p.i.health--;
-                if (0 == ray->p.i.health)
-                {
-                    // TODO game over
-                }
-            }
+            rayPlayerDecrementHealth(ray, 1);
         }
+    }
+}
+
+/**
+ * @brief Decrement player health and check for death
+ *
+ * @param ray The entire game state
+ * @param health The amount of health to decrement
+ */
+void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
+{
+    // Decrement health
+    ray->p.i.health -= health;
+    // Check for death
+    if (0 >= ray->p.i.health)
+    {
+        // If the player already has the artifact
+        if (ray->p.i.artifacts[ray->p.mapId])
+        {
+            // load the last save
+            rayStartGame();
+        }
+        else
+        {
+            // Player does not have this artifact, load the backup from when the map was entered
+            mempcpy(&ray->p, &ray->p_backup, sizeof(rayPlayer_t));
+            raySavePlayer(ray);
+            // Clear visited tiles too
+            memset(ray->map.visitedTiles, NOT_VISITED, ray->map.w * ray->map.h * sizeof(rayTileState_t));
+            raySaveVisitedTiles(ray);
+        }
+
+        // Show the death screen
+        ray->screen = RAY_DEATH_SCREEN;
     }
 }

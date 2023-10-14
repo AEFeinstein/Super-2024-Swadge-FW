@@ -238,11 +238,12 @@ typedef enum
  */
 typedef enum
 {
-    RAY_MENU,        ///< The main menu is being shown
-    RAY_GAME,        ///< The game loop is being shown
-    RAY_DIALOG,      ///< A dialog box is being shown
-    RAY_PAUSE,       ///< The pause menu is being shown
-    RAY_WARP_SCREEN, ///< The warp screen animation is being shown
+    RAY_MENU,         ///< The main menu is being shown
+    RAY_GAME,         ///< The game loop is being shown
+    RAY_DIALOG,       ///< A dialog box is being shown
+    RAY_PAUSE,        ///< The pause menu is being shown
+    RAY_WARP_SCREEN,  ///< The warp screen animation is being shown
+    RAY_DEATH_SCREEN, ///< The player has died
 } rayScreen_t;
 
 /**
@@ -490,7 +491,8 @@ typedef struct
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
 
-    rayPlayer_t p; ///< All the player's state, loaded from NVM
+    rayPlayer_t p;        ///< All the player's state, loaded from NVM
+    rayPlayer_t p_backup; ///< All the player's state at the beginning of the map
 
     int32_t warpDestMapId; ///< The ID of the current map
     q24_8 warpDestPosX;    ///< The player's X position
@@ -565,5 +567,6 @@ extern const char* const RAY_NVS_VISITED_KEYS[];
 //==============================================================================
 
 void rayFreeCurrentState(ray_t* ray);
+void rayStartGame(void);
 
 #endif
