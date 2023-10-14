@@ -174,6 +174,7 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/uart/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/nvs_flash/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/FreeRTOS-Kernel/include/freertos", idf_path ); appendcflag( temp );
 
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/components/hdw-battmon/include", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components", argv[2] ); appendcflag( temp );
@@ -204,7 +205,8 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/mainMenu", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/colorchord", argv[2] ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/build/config", argv[2] ); appendcflag( temp );
-			appendcflag( "-DTUP_DCD_ENDPOINT_MAX=8" );
+
+			appendcflag( "-DTUP_DCD_ENDPOINT_MAX=8 -DESP_PLATFORM=1" );
 		}
 
 		int r;
