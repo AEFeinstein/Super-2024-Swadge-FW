@@ -45,6 +45,7 @@ void loadEnvTextures(ray_t* ray)
     loadWsg("GUN_MISSILE.wsg", &ray->guns[LO_MISSILE], true);
     loadWsg("GUN_ICE.wsg", &ray->guns[LO_ICE], true);
     loadWsg("GUN_XRAY.wsg", &ray->guns[LO_XRAY], true);
+    loadWsg("HUD_MISSILE.wsg", &ray->missileHUDicon, true);
 
 #ifdef TEST_TEX
     for (int tIdx = 0; tIdx < ARRAY_SIZE(testTexNames); tIdx++)
@@ -171,6 +172,7 @@ void freeAllTex(ray_t* ray)
     freeWsg(&ray->guns[LO_MISSILE]);
     freeWsg(&ray->guns[LO_ICE]);
     freeWsg(&ray->guns[LO_XRAY]);
+    freeWsg(&ray->missileHUDicon);
 
 #ifdef TEST_TEX
     for (int tIdx = 0; tIdx < ARRAY_SIZE(testTexNames); tIdx++)

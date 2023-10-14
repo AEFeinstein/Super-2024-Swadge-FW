@@ -980,27 +980,36 @@ void drawHud(ray_t* ray)
         drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
     }
 
-    // If the player has missiles
-    if (ray->p.i.missileLoadOut)
-    {
-        // Draw a count of missiles
-        char missileStr[16] = {0};
-        snprintf(missileStr, sizeof(missileStr) - 1, "M:%02" PRId32 "/%02" PRId32, ray->p.i.numMissiles,
-                 ray->p.i.maxNumMissiles);
-        drawText(&ray->ibm, c555, missileStr, 40, TFT_HEIGHT - ray->ibm.height);
-    }
-
-    // Draw a count of Keys
-    char keyStr[16] = "K:";
+    // Draw Keys
+    int16_t xOff                    = 40;
+    const rayMapCellType_t kTypes[] = {OBJ_ITEM_KEY_A, OBJ_ITEM_KEY_B, OBJ_ITEM_KEY_C};
     for (int16_t kIdx = 0; kIdx < NUM_KEYS; kIdx++)
     {
         if (KEY == ray->p.i.keys[ray->p.mapId][kIdx])
         {
-            char thisKeyStr[] = {'0' + kIdx, 0};
-            strcat(keyStr, thisKeyStr);
+            wsg_t* keyTex = getTexByType(ray, kTypes[kIdx]);
+            drawWsgSimpleHalf(keyTex, xOff, TFT_HEIGHT - (keyTex->h / 2));
+            xOff += (keyTex->w / 2) - 4;
         }
     }
-    drawText(&ray->ibm, c555, keyStr, 100, TFT_HEIGHT - ray->ibm.height);
+
+    // If the player has missiles
+    if (ray->p.i.missileLoadOut)
+    {
+        xOff = 103;
+        // Get texture and string
+        wsg_t* mTex         = &ray->missileHUDicon;
+        char missileStr[16] = {0};
+        snprintf(missileStr, sizeof(missileStr) - 1, "%02" PRId32, ray->p.i.numMissiles);
+        int16_t tWidth = textWidth(&ray->ibm, missileStr);
+
+        fillDisplayArea(xOff - 1, TFT_HEIGHT - (mTex->h) - 1, xOff + (mTex->w) + 2 + tWidth + 1, TFT_HEIGHT, c000);
+        // Draw missile icon
+        drawWsgSimple(mTex, xOff, TFT_HEIGHT - mTex->h);
+        xOff += (mTex->w) + 2;
+        // Draw a count of missiles
+        drawText(&ray->ibm, c555, missileStr, xOff, TFT_HEIGHT - ray->ibm.height);
+    }
 
 #define BAR_END_MARGIN  40
 #define BAR_SIDE_MARGIN 8
