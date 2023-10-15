@@ -140,11 +140,13 @@
 #include <soc/rtc_cntl_reg.h>
 
 #include "advanced_usb_control.h"
-#include "swadge2024.h"
-#include "mainMenu.h"
-#include "lumberjack.h"
-#include "quickSettings.h"
 #include "shapes.h"
+#include "swadge2024.h"
+
+#include "factoryTest.h"
+#include "lumberjack.h"
+#include "mainMenu.h"
+#include "quickSettings.h"
 
 //==============================================================================
 // Defines
@@ -203,8 +205,20 @@ void app_main(void)
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
-    // Assume the main menu is shown
-    cSwadgeMode = &mainMenuMode;
+    // Read settings from NVS
+    readAllSettings();
+
+    // If test mode was passed
+    if (getTestModePassedSetting())
+    {
+        // Show the main menu
+        cSwadgeMode = &mainMenuMode;
+    }
+    else
+    {
+        // Otherwise enter test mode
+        cSwadgeMode = &factoryTestMode;
+    }
 
     // If the ESP woke from sleep, and there is a pending Swadge Mode
     if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
@@ -306,9 +320,6 @@ void app_main(void)
     // Initialize the loop timer
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
-
-    // Read settings from NVS
-    readAllSettings();
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)

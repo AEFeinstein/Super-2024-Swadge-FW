@@ -89,13 +89,29 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.y0 = 0;
     entityManager->sprites[SP_PADDLE_VERTICAL_2].collisionBox.y1 = 27;
 
-    loadWsg("ball.wsg", &entityManager->sprites[SP_BALL].wsg, false);
-    entityManager->sprites[SP_BALL].originX=4;
-    entityManager->sprites[SP_BALL].originY=4;
-    entityManager->sprites[SP_BALL].collisionBox.x0 = 0;
-    entityManager->sprites[SP_BALL].collisionBox.x1 = 7;
-    entityManager->sprites[SP_BALL].collisionBox.y0 = 0;
-    entityManager->sprites[SP_BALL].collisionBox.y1 = 7;
+    loadWsg("ball000.wsg", &entityManager->sprites[SP_BALL_0].wsg, false);
+    entityManager->sprites[SP_BALL_0].originX=4;
+    entityManager->sprites[SP_BALL_0].originY=4;
+    entityManager->sprites[SP_BALL_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_0].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_0].collisionBox.y1 = 7;
+
+    loadWsg("ball001.wsg", &entityManager->sprites[SP_BALL_1].wsg, false);
+    entityManager->sprites[SP_BALL_1].originX=4;
+    entityManager->sprites[SP_BALL_1].originY=4;
+    entityManager->sprites[SP_BALL_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_1].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_1].collisionBox.y1 = 7;
+
+    loadWsg("ball002.wsg", &entityManager->sprites[SP_BALL_2].wsg, false);
+    entityManager->sprites[SP_BALL_2].originX=4;
+    entityManager->sprites[SP_BALL_2].originY=4;
+    entityManager->sprites[SP_BALL_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_BALL_2].collisionBox.x1 = 7;
+    entityManager->sprites[SP_BALL_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_BALL_2].collisionBox.y1 = 7;
 
     loadWsg("dbmb000.wsg", &entityManager->sprites[SP_BOMB_0].wsg, false);
     entityManager->sprites[SP_BOMB_0].originX=4;
@@ -263,11 +279,14 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
         case ENTITY_PLAYER_BALL:
             createdEntity = createBall(entityManager, x, y);
             break;
-        case ENTITY_PLAYER_BOMB:
-            createdEntity = createBomb(entityManager, x, y);
+        case ENTITY_PLAYER_TIME_BOMB:
+            createdEntity = createTimeBomb(entityManager, x, y);
             break;
         case ENTITY_PLAYER_BOMB_EXPLOSION:
             createdEntity = createExplosion(entityManager, x, y);
+            break;
+        case ENTITY_PLAYER_REMOTE_BOMB:
+            createdEntity = createRemoteBomb(entityManager, x, y);
             break;
         default:
             createdEntity = NULL;
@@ -424,7 +443,7 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->shouldAdvanceMultiplier = false;
 
     entity->type = ENTITY_PLAYER_BALL;
-    entity->spriteIndex = SP_BALL;
+    entity->spriteIndex = SP_BALL_0;
     entity->updateFunction = &updateBallAtStart;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &ballTileCollisionHandler;
@@ -433,7 +452,7 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
     return entity;
 }
 
-entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
+entity_t* createTimeBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
 {
     entity_t * entity = findInactiveEntity(entityManager);
 
@@ -452,10 +471,11 @@ entity_t* createBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
     entity->scoreValue = 100;
+    entity->animationTimer = 48;
 
-    entity->type = ENTITY_PLAYER_BOMB;
+    entity->type = ENTITY_PLAYER_TIME_BOMB;
     entity->spriteIndex = SP_BOMB_0;
-    entity->updateFunction = &updateBomb;
+    entity->updateFunction = &updateTimeBomb;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
@@ -490,6 +510,41 @@ entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t 
     entity->type = ENTITY_PLAYER_BOMB_EXPLOSION;
     entity->spriteIndex = SP_EXPLOSION_0;
     entity->updateFunction = &updateExplosion;
+    entity->collisionHandler = &dummyCollisionHandler;
+    entity->tileCollisionHandler = &dummyTileCollisionHandler;
+    entity->overlapTileHandler = &defaultOverlapTileHandler;
+
+    //Entity cannot be respawned from the tilemap
+    entity->homeTileX = 0;
+    entity->homeTileY = 0;
+
+    return entity;
+}
+
+entity_t* createRemoteBomb(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = true;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+    
+    entity->xspeed = 0;
+    entity->yspeed = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical = false;
+    entity->spriteRotateAngle = 0;
+    entity->scoreValue = 100;
+    entity->animationTimer = 48;
+
+    entity->type = ENTITY_PLAYER_REMOTE_BOMB;
+    entity->spriteIndex = SP_BOMB_0;
+    entity->updateFunction = &updateRemoteBomb;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;

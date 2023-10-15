@@ -197,7 +197,7 @@ void deinitBuzzer(void)
  * @brief Set the buzzer's bgm volume. setBgmVolumeSetting() should be called instead if the new volume should be
  * persistent through a reboot.
  *
- * @param vol The background volume, 0 to 13
+ * @param vol The background volume, 0 to MAX_VOLUME
  */
 void bzrSetBgmVolume(uint16_t vol)
 {
@@ -208,7 +208,7 @@ void bzrSetBgmVolume(uint16_t vol)
  * @brief Set the buzzer's sfx volume. setSfxVolumeSetting() should be called instead if the new volume should be
  * persistent through a reboot.
  *
- * @param vol The background volume, 0 to 13
+ * @param vol The background volume, 0 to MAX_VOLUME
  */
 void bzrSetSfxVolume(uint16_t vol)
 {

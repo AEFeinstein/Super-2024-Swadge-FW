@@ -136,7 +136,7 @@ void deinitBuzzer(void)
 /**
  * @brief Set the buzzer's bgm volume
  *
- * @param vol The background volume, 0 to 13
+ * @param vol The background volume, 0 to MAX_VOLUME
  */
 void bzrSetBgmVolume(uint16_t vol)
 {
@@ -146,7 +146,7 @@ void bzrSetBgmVolume(uint16_t vol)
 /**
  * @brief Set the buzzer's sfx volume
  *
- * @param vol The background volume, 0 to 13
+ * @param vol The background volume, 0 to MAX_VOLUME
  */
 void bzrSetSfxVolume(uint16_t vol)
 {
