@@ -53,20 +53,24 @@ typedef struct
 
 	// Quats are wxyz.
 	// You can take a vector, in controller space, rotate by this quat, and you get it in world space.
-	float fqQuatLast[4];
-	float fqQuat[4];  // Quats are wxyz
+	float fqQuatLast[4]; // Delta
+	float fqQuat[4];  // Absolute
+
+	// The last raw accelerometer (NOT FUSED)
+	float fvLastAccelRaw[3];
 
 	// Bias for all of the euler angles.
 	float fvBias[3];
 
+	uint32_t sampCount;
+
 	// For debug
 	int lastreadr;
 	int32_t gyroaccum[3];
-	uint32_t gyrocount;
 	int16_t gyrolast[3];
 	int16_t accellast[3];
 	float fCorrectLast[3];
-} __attribute((packed)) LSM6DSLData __attribute__((aligned(4)));
+} LSM6DSLData;
 
 extern LSM6DSLData LSM6DSL;
 

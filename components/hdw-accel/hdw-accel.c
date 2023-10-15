@@ -118,7 +118,7 @@ esp_err_t accelIntegrate();
  */
 float rsqrtf(float x)
 {
-	typedef union { int32_t i; float f; } fiunion; 
+	typedef union { int32_t i; float f; } fiunion;
     const float xhalf = 0.5f * x;
     fiunion i = { .f = x };
     i.i = 0x5f375a86 - ( i.i >> 1 );
@@ -164,7 +164,7 @@ void mathEulerToQuat(float * q, const float * euler)
 	float roll = euler[2];
     float cr = cosf(pitch * 0.5);
     float sr = sinf(pitch * 0.5); // Pitch: About X
-    float cp = cosf(yaw * 0.5); 
+    float cp = cosf(yaw * 0.5);
     float sp = sinf(yaw * 0.5);   // Yaw:   About Y
     float cy = cosf(roll * 0.5);
     float sy = sinf(roll * 0.5);  // Roll:  About Z
@@ -338,10 +338,13 @@ int GeneralI2CGet( int device, int reg, uint8_t * data, int data_len )
     i2c_master_stop(cmdHandle);
     esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
     i2c_cmd_link_delete(cmdHandle);
-	if( err ) return -1;
+	if( err )
+	{
+		ESP_LOGE( "accel", "Error on link: %d", err );
+		return -1;
+	}
 	else return data_len;
 }
-
 
 /**
  * @brief Read the FIFO out of the LSM6DSL
@@ -365,9 +368,18 @@ int ReadLSM6DSL( uint8_t * data, int data_len )
     i2c_cmd_link_delete(cmdHandle);
 	if( err < 0 ) return -1;
 
-	if( fifolen == 0 ) return 0;
+	if( fifolen & 0x4000 )
+	{
+		// reset fifo.
+		// If we overflow, and we don't do this, bad things happen.
+		LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000 ); // Disable fifo
+		LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR
+		LSM6DSL.sampCount = 0;
+		return 0;
+	}
 
-	fifolen &= 0x3ff;
+	fifolen &= 0x7ff;
+	if( fifolen == 0 ) return 0;
 	if( fifolen > data_len / 2 ) fifolen = data_len / 2;
 
 	cmdHandle = i2c_cmd_link_create();
@@ -413,7 +425,7 @@ esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl
 	memset( &LSM6DSL, 0, sizeof(LSM6DSL) );
 	LSM6DSL.fqQuat[0] = 1;
 	LSM6DSL.fqQuatLast[0] = 1;
-
+	LSM6DSL.sampCount = 0;
 
 do_retry:
 
@@ -459,35 +471,36 @@ do_retry:
 	int r = GeneralI2CGet( LSM6DSL_ADDRESS, LMS6DS3_WHO_AM_I, &who, 1 );
 	if( r != 1 || who != 0x6a )
 	{
-		ESP_LOGW( "LSM6DSL", "WHOAMI Failed (%02x), %d\n", who, r ); 
+		ESP_LOGW( "accel", "WHOAMI Failed (%02x), %d", who, r );
 		if( retry++ < 10 ) goto do_retry;
-		ESP_LOGE( "LSM6DSL", "Init failed on 1" ); 
+		ESP_LOGE( "accel", "Init failed on 1" );
 		return ESP_FAIL;
 	}
-	ESP_LOGI( "LSM6DSL", "Init Start" ); 
+	ESP_LOGI( "accel", "Init Start" );
+
+	LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR, Continuous mode. Bypass mode until trigger is deasserted, then Continuous mode.
+	LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices (Accel + Gyro) in FIFO.
+	LSM6DSLSet( LSM6DSL_CTRL1_XL, 0b01011001 ); // Setup accel (16 g's FS)
+	LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01011100 ); // Setup gyro, 2000dps
+	LSM6DSLSet( LSM6DSL_CTRL4_C, 0x00 ); // Disable all filtering.
+	LSM6DSLSet( LSM6DSL_CTRL7_G, 0b00000000 ); // Setup gyro, not high performance mode = 0x80.  High perf = 0x00
+	LSM6DSLSet( LSM6DSL_FIFO_CTRL2, 0b00000000 ); //Temp not in fifo  (Why no work?)
 
 	for( i = 0; i < 2; i++ )
 	{
-		LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR
-		LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices (Accel + Gyro) in FIFO.
-		LSM6DSLSet( LSM6DSL_CTRL1_XL, 0b01011001 ); // Setup accel (16 g's FS)
-		LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01011100 ); // Setup gyro, 2000dps
-		LSM6DSLSet( LSM6DSL_CTRL4_C, 0x00 ); // Disable all filtering.
-		LSM6DSLSet( LSM6DSL_CTRL7_G, 0b00000000 ); // Setup gyro, not high performance mode = 0x80.  High perf = 0x00
-		LSM6DSLSet( LSM6DSL_FIFO_CTRL2, 0b00000000 ); //Temp not in fifo  (Why no work?)
-
-		vTaskDelay( 5 );
-
-		if( accelIntegrate() != ESP_OK )
+		vTaskDelay( 1 );
+		int check = accelIntegrate();
+		if( check != ESP_OK )
 		{
-			ESP_LOGI( "LSM6DSL", "Init Fault Retry" ); 
+			ESP_LOGI( "accel", "Init Fault Retry" );
 			if( retry++ < 10 ) goto do_retry;
-			ESP_LOGI( "LSM6DSL", "Init failed on 2" ); 
+			ESP_LOGI( "accel", "Init failed on 2" );
 			return ESP_FAIL;
 		}
+		ESP_LOGI( "accel", "Check %d", check );
 	}
 
-	ESP_LOGI( "LSM6DSL", "Init Ok" ); 
+	ESP_LOGI( "accel", "Init Ok" );
 	return ESP_OK;
 }
 
@@ -519,7 +532,6 @@ esp_err_t accelIntegrate()
 	if( r == 2 ) ld->temp = data[0];
 	int readr = ReadLSM6DSL( (uint8_t*)data, sizeof( data ) );
 	if( readr < 0 ) return readr;
-
 	int samp;
 	int16_t * cdata = data;
 
@@ -545,10 +557,10 @@ esp_err_t accelIntegrate()
 	//	euler_deltas[2] += 4;
 
 		// We can sum rotations to understand the amount of counts in a full circle.
+		// Note: this is actually more of a debug mechanism.
 		ld->gyroaccum[0] += euler_deltas[0];
 		ld->gyroaccum[1] += euler_deltas[1];
 		ld->gyroaccum[2] += euler_deltas[2];
-		ld->gyrocount++;
 
 		// STEP 1:  Visually inspect the gyro values.
 		// STEP 2:  Integrate the gyro values, verify they are correct.
@@ -559,7 +571,7 @@ esp_err_t accelIntegrate()
 		// convert to radians. ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );  
 		// Measured = 560,000 counts per scale (Measured by looking at sum)
 		// Testing -> 3.14159 * 2.0 / 566000;
-		float fFudge = 1.1; //XXX TODO: Investigate.
+		float fFudge = 1.125; //XXX TODO: Investigate.
 		float fScale = ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f ) * fFudge;
 
 		// STEP 3:  Integrate gyro values into a quaternion.
@@ -602,7 +614,9 @@ esp_err_t accelIntegrate()
 		accel_up[1] *= accel_inverse_mag;
 		accel_up[2] *= accel_inverse_mag;
 
-		//ESP_LOGI( "SB", "%ld %ld %ld", raw_up[0], raw_up[1], raw_up[2] );
+		ld->fvLastAccelRaw[0] = accel_up[0];
+		ld->fvLastAccelRaw[1] = accel_up[1];
+		ld->fvLastAccelRaw[2] = accel_up[2];
 
 		// Step 6B: Next, compute what we think "up" should be from our point of view.  We will use +Y Up.
 		float what_we_think_is_up[3] = { 0, 1, 0 };
@@ -620,16 +634,17 @@ esp_err_t accelIntegrate()
 		// First, we can compute what the drift values of our axes are, to anti-drift them.
 		// If you do only this, you will always end up in an unstable oscillation. 
 		memcpy( ld->fCorrectLast, corrective_quaternion+1, 12 );
+
 		// XXX TODO: We need to multiply by amount the accelerometer gives us assurance.
 		ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
 		ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
 		ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
 
+		float corrective_force = (ld->sampCount++ == 0) ? 0.5f : 0.0005f;
 
 		// Second, we can apply a very small corrective tug.  This helps prevent oscillation
 		// about the correct answer.  This acts sort of like a P term to a PID loop.
 		// This is actually the **primary**, or fastest responding thing.
-		const float corrective_force = 0.001f;
 		corrective_quaternion[1] *= corrective_force;
 		corrective_quaternion[2] *= corrective_force;
 		corrective_quaternion[3] *= corrective_force;
@@ -639,11 +654,8 @@ esp_err_t accelIntegrate()
 			- corrective_quaternion[1]*corrective_quaternion[1]
 			- corrective_quaternion[2]*corrective_quaternion[2]
 			- corrective_quaternion[3]*corrective_quaternion[3] );
-//		ESP_LOGI( "x", "%f %f %f %f\n", corrective_quaternion[0], corrective_quaternion[1], corrective_quaternion[2], corrective_quaternion[3] );
-		mathQuatApply( ld->fqQuat, ld->fqQuat, corrective_quaternion );
 
-		// Magnitude of correction angle = inverse_sin( magntiude( axis_of_correction ) );
-		// We want to significantly reduce that. To mute any effect.
+		mathQuatApply( ld->fqQuat, ld->fqQuat, corrective_quaternion );
 
 		cdata += 6;
 	}

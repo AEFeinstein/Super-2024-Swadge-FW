@@ -27,271 +27,6 @@ int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
 int frameno;
 int bQuit;
 
-#if 0
-
-#define LSM6DSL_ADDRESS						0x6a
-#define QMC6308_ADDRESS						0x2c
-
-#define LSM6DSL_FUNC_CFG_ACCESS				0x01
-#define LSM6DSL_SENSOR_SYNC_TIME_FRAME		0x04
-#define LSM6DSL_FIFO_CTRL1					0x06
-#define LSM6DSL_FIFO_CTRL2					0x07
-#define LSM6DSL_FIFO_CTRL3					0x08
-#define LSM6DSL_FIFO_CTRL4					0x09
-#define LSM6DSL_FIFO_CTRL5					0x0a
-#define LSM6DSL_ORIENT_CFG_G				0x0b
-#define LSM6DSL_INT1_CTRL					0x0d
-#define LSM6DSL_INT2_CTRL					0x0e
-#define LMS6DS3_WHO_AM_I					0x0f
-#define LSM6DSL_CTRL1_XL					0x10
-#define LSM6DSL_CTRL2_G						0x11
-#define LSM6DSL_CTRL3_C						0x12
-#define LSM6DSL_CTRL4_C						0x13
-#define LSM6DSL_CTRL5_C						0x14
-#define LSM6DSL_CTRL6_C						0x15
-#define LSM6DSL_CTRL7_G						0x16
-#define LSM6DSL_CTRL8_XL					0x17
-#define LSM6DSL_CTRL9_XL					0x18
-#define LSM6DSL_CTRL10_C					0x19
-#define LSM6DSL_MASTER_CONFIG				0x1a
-#define LSM6DSL_WAKE_UP_SRC					0x1b
-#define LSM6DSL_TAP_SRC						0x1c
-#define LSM6DSL_D6D_SRC						0x1d
-#define LSM6DSL_STATUS_REG					0x1e
-#define LSM6DSL_OUT_TEMP_L					0x20
-#define LSM6DSL_OUT_TEMP_H					0x21
-#define LMS6DS3_OUTX_L_G					0x22
-#define LMS6DS3_OUTX_H_G					0x23
-#define LMS6DS3_OUTY_L_G					0x24
-#define LMS6DS3_OUTY_H_G					0x25
-#define LMS6DS3_OUTZ_L_G					0x26
-#define LMS6DS3_OUTZ_H_G					0x27
-#define LMS6DS3_OUTX_L_XL					0x28
-#define LMS6DS3_OUTX_H_XL					0x29
-#define LMS6DS3_OUTY_L_XL					0x2a
-#define LMS6DS3_OUTY_H_XL					0x2b
-#define LMS6DS3_OUTZ_L_XL					0x2c
-#define LMS6DS3_OUTZ_H_XL					0x2d
-
-
-struct LSM6DSLData
-{
-	int32_t temp;
-	uint32_t computetime;
-
-	// Quats are wxyz.
-	// You can take a vector, in controller space, rotate by this quat, and you get it in world space.
-	float fqQuatLast[4];
-	float fqQuat[4];  // Quats are wxyz
-
-	// Bias for all of the euler angles.
-	float fvBias[3];
-
-	// For debug
-	int lastreadr;
-	int32_t gyroaccum[3];
-	uint32_t gyrocount;
-	int16_t gyrolast[3];
-	int16_t accellast[3];
-	float fCorrectLast[3];
-
-} LSM6DSL;
-
-#include <math.h>
-
-/* Coordinate frame:
-	OpenGL / OpenVR / Godot / Etc...
-
-	+X goes right.
-	+Y comes out top of controller.
-	+Z comes toward user (Into User's Eyes)
-*/
-
-float rsqrtf ( float x )
-{
-	typedef union { int32_t i; float f; } fiunion; 
-    const float xhalf = 0.5f * x;
-    fiunion i = { .f = x };
-
-    i.i = 0x5f375a86 - ( i.i >> 1 );
-    x = i.f;
-    x = x * ( 1.5f - xhalf * x * x );
-    x = x * ( 1.5f - xhalf * x * x );
-
-    return x;
-}
-
-float mathsqrtf( float x )
-{
-	// Trick to do approximate, fast square roots. (Though it is surprisingly fast)
-	int sign = x < 0;
-	if( sign ) x = -x;
-	if( x < 0.0000001 ) return 0.0001;
-	float o = x;
-	o = (o+x/o)/2;
-	o = (o+x/o)/2;
-	o = (o+x/o)/2;
-	o = (o+x/o)/2;
-	if( sign )
-		return -o;
-	else
-		return o;
-}
-
-void mathEulerToQuat( float * q, const float * euler )
-{
-	float pitch = euler[0];
-	float yaw = euler[1];
-	float roll = euler[2];
-    float cr = cosf(pitch * 0.5);
-    float sr = sinf(pitch * 0.5); // Pitch: About X
-    float cp = cosf(yaw * 0.5); 
-    float sp = sinf(yaw * 0.5);   // Yaw:   About Y
-    float cy = cosf(roll * 0.5);
-    float sy = sinf(roll * 0.5);  // Roll:  About Z
-    q[0] = cr * cp * cy + sr * sp * sy;
-    q[1] = sr * cp * cy - cr * sp * sy;
-    q[2] = cr * sp * cy + sr * cp * sy;
-    q[3] = cr * cp * sy - sr * sp * cy;
-}
-
-void mathQuatApply(float * qout, const float * q1, const float * q2) {
-	// NOTE: Does not normalize
-	float tmpw, tmpx, tmpy;
-	tmpw = (q1[0] * q2[0]) - (q1[1] * q2[1]) - (q1[2] * q2[2]) - (q1[3] * q2[3]);
-	tmpx = (q1[0] * q2[1]) + (q1[1] * q2[0]) + (q1[2] * q2[3]) - (q1[3] * q2[2]);
-	tmpy = (q1[0] * q2[2]) - (q1[1] * q2[3]) + (q1[2] * q2[0]) + (q1[3] * q2[1]);
-	qout[3] = (q1[0] * q2[3]) + (q1[1] * q2[2]) - (q1[2] * q2[1]) + (q1[3] * q2[0]);
-	qout[2] = tmpy;
-	qout[1] = tmpx;
-	qout[0] = tmpw;
-}
-
-void mathQuatNormalize(float * qout, const float * qin )
-{
-	float qmag = qin[0] * qin[0] + qin[1] * qin[1] + qin[2] * qin[2] + qin[3] * qin[3];
-	qmag = rsqrtf( qmag );
-	qout[0] = qin[0] * qmag;
-	qout[1] = qin[1] * qmag;
-	qout[2] = qin[2] * qmag;
-	qout[3] = qin[3] * qmag;
-}
-
-void mathCrossProduct(float * p, const float * a, const float * b)
-{
-	float tx = a[1] * b[2] - a[2] * b[1];
-    float ty = a[2] * b[0] - a[0] * b[2];
-    p[2] = a[0] * b[1] - a[1] * b[0];
-	p[1] = ty;
-	p[0] = tx;
-}
-
-void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p )
-{
-	// return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
-	float iqo[3];
-	mathCrossProduct( iqo, q + 1 /*.xyz*/, p );
-	iqo[0] += q[0] * p[0];
-	iqo[1] += q[0] * p[1];
-	iqo[2] += q[0] * p[2];
-	float ret[3];
-	mathCrossProduct( ret, q + 1 /*.xyz*/, iqo );
-	pout[0] = ret[0] * 2.0 + p[0];
-	pout[1] = ret[1] * 2.0 + p[1];
-	pout[2] = ret[2] * 2.0 + p[2];
-}
-
-void mathRotateVectorByInverseOfQuaternion(float * pout, const float * q, const float * p )
-{
-	// General note: Performing a transform this way can be about 20-30% slower than a well formed 3x3 matrix.
-	// return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
-	float iqo[3];
-	mathCrossProduct( iqo, p, q + 1 /*.xyz*/ );
-	iqo[0] += q[0] * p[0];
-	iqo[1] += q[0] * p[1];
-	iqo[2] += q[0] * p[2];
-	float ret[3];
-	mathCrossProduct( ret, iqo, q + 1 /*.xyz*/ );
-	pout[0] = ret[0] * 2.0 + p[0];
-	pout[1] = ret[1] * 2.0 + p[1];
-	pout[2] = ret[2] * 2.0 + p[2];
-}
-
-static esp_err_t GeneralSet( int dev, int reg, int val )
-{
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, dev << 1, false);
-    i2c_master_write_byte(cmdHandle, reg, false);
-    i2c_master_write_byte(cmdHandle, val, true);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-	return err;
-}
-
-static esp_err_t LSM6DSLSet( int reg, int val )
-{
-	return GeneralSet( LSM6DSL_ADDRESS, reg, val );
-}
-
-static int GeneralI2CGet( int device, int reg, uint8_t * data, int data_len )
-{
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, device << 1, false);
-    i2c_master_write_byte(cmdHandle, reg, false);
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, device << 1 | I2C_MASTER_READ, false);
-    i2c_master_read(cmdHandle, data, data_len, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-	if( err ) return err;
-	else return data_len;
-}
-
-
-static int ReadLSM6DSL( uint8_t * data, int data_len )
-{
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1, false);
-    i2c_master_write_byte(cmdHandle, 0x3A, false);
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1 | I2C_MASTER_READ, false);
-	uint32_t fifolen = 0;
-    i2c_master_read(cmdHandle, (uint8_t*)&fifolen, 3, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-	if( err < 0 ) return err;
-
-	if( fifolen == 0 ) return 0;
-
-	fifolen &= 0x3ff;
-	if( fifolen > data_len / 2 ) fifolen = data_len / 2;
-
-	cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1 | I2C_MASTER_READ, false);
-    i2c_master_read(cmdHandle, data, fifolen * 2, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-
-    i2c_cmd_link_delete(cmdHandle);
-	if( err < 0 ) return err;
-
-	return fifolen;
-}
-
-
-
-
-
-#endif
-
-
 #define LSM6DSL_ADDRESS						0x6a
 
 typedef enum __attribute__((packed))
@@ -356,12 +91,12 @@ static void LSM6DSLIntegrate()
 
 	int16_t data[6*16];
 
-	// Get temperature sensor... Why?  Yolo?
+	// Get temperature sensor (in case we ever want to use it)
 	int r = GeneralI2CGet( LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2 );
-	ESP_LOGI( "x", "rrl %d", r );
 	if( r < 0 ) return;
 	if( r == 2 ) ld->temp = data[0];
 	int readr = ReadLSM6DSL( (uint8_t*)data, sizeof( data ) );
+	if( readr < 0 ) return;
 	int samp;
 	int16_t * cdata = data;
 
@@ -387,10 +122,10 @@ static void LSM6DSLIntegrate()
 	//	euler_deltas[2] += 4;
 
 		// We can sum rotations to understand the amount of counts in a full circle.
+		// Note: this is actually more of a debug mechanism.
 		ld->gyroaccum[0] += euler_deltas[0];
 		ld->gyroaccum[1] += euler_deltas[1];
 		ld->gyroaccum[2] += euler_deltas[2];
-		ld->gyrocount++;
 
 		// STEP 1:  Visually inspect the gyro values.
 		// STEP 2:  Integrate the gyro values, verify they are correct.
@@ -401,7 +136,7 @@ static void LSM6DSLIntegrate()
 		// convert to radians. ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );  
 		// Measured = 560,000 counts per scale (Measured by looking at sum)
 		// Testing -> 3.14159 * 2.0 / 566000;
-		float fFudge = 1.1;
+		float fFudge = 1.125; //XXX TODO: Investigate.
 		float fScale = ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f ) * fFudge;
 
 		// STEP 3:  Integrate gyro values into a quaternion.
@@ -444,7 +179,6 @@ static void LSM6DSLIntegrate()
 		accel_up[1] *= accel_inverse_mag;
 		accel_up[2] *= accel_inverse_mag;
 
-		//ESP_LOGI( "SB", "%ld %ld %ld", raw_up[0], raw_up[1], raw_up[2] );
 
 		// Step 6B: Next, compute what we think "up" should be from our point of view.  We will use +Y Up.
 		float what_we_think_is_up[3] = { 0, 1, 0 };
@@ -467,11 +201,11 @@ static void LSM6DSLIntegrate()
 		ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
 		ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
 
+		float corrective_force = (ld->sampCount++ == 0) ? 0.5f : 0.0005f;
 
 		// Second, we can apply a very small corrective tug.  This helps prevent oscillation
 		// about the correct answer.  This acts sort of like a P term to a PID loop.
 		// This is actually the **primary**, or fastest responding thing.
-		const float corrective_force = 0.001f;
 		corrective_quaternion[1] *= corrective_force;
 		corrective_quaternion[2] *= corrective_force;
 		corrective_quaternion[3] *= corrective_force;
@@ -481,7 +215,7 @@ static void LSM6DSLIntegrate()
 			- corrective_quaternion[1]*corrective_quaternion[1]
 			- corrective_quaternion[2]*corrective_quaternion[2]
 			- corrective_quaternion[3]*corrective_quaternion[3] );
-//		ESP_LOGI( "x", "%f %f %f %f\n", corrective_quaternion[0], corrective_quaternion[1], corrective_quaternion[2], corrective_quaternion[3] );
+
 		mathQuatApply( ld->fqQuat, ld->fqQuat, corrective_quaternion );
 
 		// Magnitude of correction angle = inverse_sin( magntiude( axis_of_correction ) );
@@ -525,68 +259,6 @@ static void LSM6DSLIntegrate()
 #endif
 
 
-#if 0
-static void LMS6DS3Setup()
-{
-
-	// Shake any device off the bus.
-	int i;
-	int gpio_scl = 41;
-	for( i = 0; i < 16; i++ )
-	{
-		gpio_matrix_out( gpio_scl, 256, 1, 0 );
-		GPIO.out1_w1tc.val = (1<<(gpio_scl-32));
-		esp_rom_delay_us(10);
-		gpio_matrix_out( gpio_scl, 256, 1, 0 );
-		GPIO.out1_w1ts.val = (1<<(gpio_scl-32));
-		esp_rom_delay_us(10);
-	}
-	gpio_matrix_out( gpio_scl, 29, 0, 0 );
-
-    esp_err_t ret_val = ESP_OK;
-
-	i2c_driver_delete( I2C_NUM_0 );
-
-
-    /* Install i2c driver */
-    i2c_config_t conf = {
-        .mode             = I2C_MODE_MASTER,
-        .sda_io_num       = GPIO_NUM_3,
-        .sda_pullup_en    = GPIO_PULLUP_ENABLE,
-        .scl_io_num       = GPIO_NUM_41,
-        .scl_pullup_en    = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 800000, //tested upto 1.4Mbit/s
-        .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
-    };
-	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
-    ret_val |= i2c_param_config(I2C_NUM_0, &conf);
-
-
-	memset( &LSM6DSL, 0, sizeof(LSM6DSL) );
-	LSM6DSL.fqQuat[0] = 1;
-	LSM6DSL.fqQuatLast[0] = 1;
-
-	// Enable access
-	LSM6DSLSet( LSM6DSL_FUNC_CFG_ACCESS, 0x20 );
-	LSM6DSLSet( LSM6DSL_CTRL3_C, 0x81 ); // Force reset
-	vTaskDelay( 1 );
-	LSM6DSLSet( LSM6DSL_CTRL3_C, 0x44 ); // unforce reset
-	LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR
-	LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices (Accel + Gyro) in FIFO.
-	LSM6DSLSet( LSM6DSL_CTRL1_XL, 0b01011001 ); // Setup accel (16 g's FS)
-	LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01011100 ); // Setup gyro, 2000dps
-	LSM6DSLSet( LSM6DSL_CTRL4_C, 0x00 ); // Disable all filtering.
-	LSM6DSLSet( LSM6DSL_CTRL7_G, 0b00000000 ); // Setup gyro, not high performance mode = 0x80.  High perf = 0x00
-	LSM6DSLSet( LSM6DSL_FIFO_CTRL2, 0b00000000 ); //Temp not in fifo  (Why no work?)
-
-	uint8_t who = 0xaa;
-	int r = GeneralI2CGet( LSM6DSL_ADDRESS, LMS6DS3_WHO_AM_I, &who, 1 );
-	if( r != 1 || who != 0x6a )
-	{
-		ESP_LOGE( "LSM6DSL", "WHOAMI Failed (%02x), %d. Cannot start part.\n", who, r ); 
-	}
-}
-#endif
 
 int global_i = 100;
 menu_t * menu;
@@ -630,39 +302,9 @@ void sandbox_main(void)
 
     loadWsg("kid0.wsg", &example_sprite, true);
 
+	LSM6DSL.sampCount = 0;
+
 	setFrameRateUs(0);
-
-
-
-
-		LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR
-		LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices (Accel + Gyro) in FIFO.
-		LSM6DSLSet( LSM6DSL_CTRL1_XL, 0b01011001 ); // Setup accel (16 g's FS)
-		LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01011100 ); // Setup gyro, 2000dps
-		LSM6DSLSet( LSM6DSL_CTRL4_C, 0x00 ); // Disable all filtering.
-		LSM6DSLSet( LSM6DSL_CTRL7_G, 0b00000000 ); // Setup gyro, not high performance mode = 0x80.  High perf = 0x00
-		LSM6DSLSet( LSM6DSL_FIFO_CTRL2, 0b00000000 ); //Temp not in fifo  (Why no work?)
-
-/*
-	// Try to reinstall, just in case.
-    i2c_config_t conf = {
-        .mode             = I2C_MODE_MASTER,
-        .sda_io_num       = GPIO_NUM_3,
-        .sda_pullup_en    = GPIO_PULLUP_DISABLE,
-        .scl_io_num       = GPIO_NUM_41,
-        .scl_pullup_en    = GPIO_PULLUP_DISABLE,
-        .master.clk_speed = 1000000,
-        .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
-    };
-
-	i2c_driver_delete( I2C_NUM_0 );
-    ESP_LOGI( "sandbox", "i2c_param_config=%d", i2c_param_config(I2C_NUM_0, &conf) );
-	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
-*/
-	//LMS6DS3Setup();
-	//GeneralSet( QMC6308_ADDRESS, 0x0b, 0x80 );
-	//GeneralSet( QMC6308_ADDRESS, 0x0b, 0x03 );
-	//GeneralSet( QMC6308_ADDRESS, 0x0a, 0x83 );
 
     ESP_LOGI( "sandbox", "Loaded" );
 }
@@ -752,9 +394,8 @@ void sandbox_tick()
 	}
 #endif
 
-//	accelIntegrate();
-	LSM6DSLIntegrate();
-
+	int r = accelIntegrate();
+//	LSM6DSLIntegrate();
 
 /*
 	cts += sprintf( cts, "%ld %ld / %5d %5d %5d / %5d %5d %5d / %ld %ld %ld / %f %f %f %f",
