@@ -151,6 +151,10 @@ typedef struct
     //Ghost
     lumberjackGhost_t* ghost;
     int ghostSpawnTime;
+
+    //Item Block
+    int itemBlockTime;
+    bool itemBlockReady;
     
     lumberjackGameType_t gameType;
 

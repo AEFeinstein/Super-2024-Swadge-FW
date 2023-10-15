@@ -27,4 +27,6 @@ void lumberjackScoreDisplay(int score, int locationX);
 void baseMode(int64_t elapsedUs);
 void lumberjackSendAttack(int number);
 
+void lumberjackUseBlock(void);
+
 #endif
