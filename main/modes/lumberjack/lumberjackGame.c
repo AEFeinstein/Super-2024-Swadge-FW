@@ -11,6 +11,9 @@
 #include "lumberjackEntity.h"
 #include "lumberjackPlayer.h"
 
+#include "esp_random.h"
+
+
 //redundancy
 #include "hdw-spiffs.h"
 
@@ -37,6 +40,12 @@
 #define LUMBERJACK_RESPAWN_MIN          1250
 #define LUMBERJACK_UPGRADE_TIMER_OFFSET 250
 #define LUMBERJACK_SUBMERGE_TIMER       300
+
+#define LUMBERJACK_GHOST_SPAWNTIME_MIN  10000
+#define LUMBERJACK_GHOST_SPEED_NORMAL   3
+#define LUMBERJACK_GHOST_SPEED_FAST     3
+#define LUMBERJACK_GHOST_BOX            28
+#define LUMBERJACK_GHOST_ANIMATION      2500
 
 #define LUMBERJACK_TILE_SIZE            16
 
@@ -71,6 +80,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         lumv->axeBlocks[i]->active = false;
     }
 
+    lumv->ghost                = NULL;
     lumv->worldTimer           = 0;
     lumv->liquidAnimationFrame = 0;
     lumv->stageAnimationFrame  = 0;
@@ -309,10 +319,13 @@ bool lumberjackLoadLevel()
     lumv->enemy6Count      = (int) buffer[6];
     lumv->enemy7Count      = (int) buffer[7];
     lumv->enemy8Count      = (int) buffer[8];
+    ESP_LOGI(LUM_TAG, "Enemy count %d", lumv->enemy4Count);
+    if (lumv->enemy4Count > 1) lumv->enemy4Count = 1; //Only one ghost
+
     lumv->totalEnemyCount  = lumv->enemy1Count; 
     lumv->totalEnemyCount += lumv->enemy2Count; 
     lumv->totalEnemyCount += lumv->enemy3Count; 
-    lumv->totalEnemyCount += lumv->enemy4Count; 
+    //lumv->totalEnemyCount += lumv->enemy4Count; //Ghost don't count
     lumv->totalEnemyCount += lumv->enemy5Count; 
     lumv->totalEnemyCount += lumv->enemy6Count; 
     lumv->totalEnemyCount += lumv->enemy7Count; 
@@ -330,6 +343,14 @@ bool lumberjackLoadLevel()
         lumv->enemy3Count += lumv->enemy2Count + lumv->enemy1Count;
         lumv->enemy2Count = 0;
         lumv->enemy1Count = 0;
+    }
+
+    if (lumv->enemy4Count > 0)
+    {
+        lumv->ghostSpawnTime   = (int)buffer[9] * 1000;
+
+        if (lumv->ghostSpawnTime < LUMBERJACK_GHOST_SPAWNTIME_MIN) lumv->ghostSpawnTime = LUMBERJACK_GHOST_SPAWNTIME_MIN; //Make sure if the ghost is active at least 10 seconds must past before spawning
+
     }
 
     lumv->waterSpeed       = (int)buffer[11];
@@ -392,7 +413,6 @@ void lumberjackSetupLevel(int characterIndex)
     // START ENEMY 1
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy1Count; eSpawnIndex++)
     {
-        ESP_LOGI(LUM_TAG, ":D %d %d", eSpawnIndex, lumv->enemy1Count);
         lumv->enemy[eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
         lumberjackSetupEnemy(lumv->enemy[eSpawnIndex], 0);
     } 
@@ -414,11 +434,20 @@ void lumberjackSetupLevel(int characterIndex)
 
 
     offset += lumv->enemy3Count;
-    for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy4Count; eSpawnIndex++)
+
+    //GHOST
+    if (lumv->enemy4Count > 0)
     {
-        lumv->enemy[offset + eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
-        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 0);
-    } 
+        lumv->enemy4Count = 1;
+        lumv->ghost = calloc(1, sizeof(lumberjackGhost_t));
+        lumv->ghost->spawnTime = lumv->ghostSpawnTime ;
+    }
+
+    // for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy4Count; eSpawnIndex++)
+    // {
+    //     lumv->enemy[offset + eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
+    //     lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 0);
+    // } 
 
     offset += lumv->enemy4Count;
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy5Count; eSpawnIndex++)
@@ -448,6 +477,8 @@ void lumberjackSetupLevel(int characterIndex)
         lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 0);
     } 
 
+    //Ghost is separate for reasons
+
     ESP_LOGI(LUM_TAG, "LOADED");
 }
 
@@ -461,6 +492,9 @@ void lumberjackUnloadLevel(void)
         free(lumv->enemy[i]);
         lumv->enemy[i] = NULL;
     }
+
+    free(lumv->ghost);    
+    lumv->ghost = NULL;
 }
 
 /**
@@ -617,7 +651,30 @@ void baseMode(int64_t elapsedUs)
             if (lumv->enemy[enemyIndex] == NULL)
                 continue;
 
-            lumberjackDoEnemyControls(lumv->enemy[enemyIndex]);
+        }
+
+        //Do Ghost Controls
+        if (lumv->ghost != NULL && lumv->ghost->active)
+        {
+            if (lumv->localPlayer->state != LUMBERJACK_DEAD)
+            {
+                lumv->ghost->x += LUMBERJACK_GHOST_SPEED_NORMAL * -lumv->ghost->startSide *  elapsedUs / 100000.0; 
+            }
+            else
+            {
+                lumv->ghost->x += LUMBERJACK_GHOST_SPEED_FAST * -lumv->ghost->startSide *  elapsedUs / 100000.0; 
+            }
+           
+            if (lumv->localPlayer->y < lumv->ghost->y)
+            {
+                lumv->ghost->y -= 1;
+
+            }
+            if (lumv->localPlayer->y > lumv->ghost->y)
+            {
+                lumv->ghost->y += 1;
+            }
+
         }
 
         if (lumv->localPlayer->onGround && lumv->hasWon)
@@ -832,6 +889,17 @@ void baseMode(int64_t elapsedUs)
         lumv->localPlayer->timerFrameUpdate = 0; //;
     }
 
+    if (NULL != lumv->ghost && lumv->ghost->active)
+    {
+        lumv->ghost->timerFrameUpdate += elapsedUs;
+        if (lumv->ghost->timerFrameUpdate > LUMBERJACK_GHOST_ANIMATION)
+        {
+            lumv->ghost->timerFrameUpdate -= LUMBERJACK_GHOST_ANIMATION;
+            lumv->ghost->currentFrame++;
+            lumv->ghost->currentFrame %= 4;
+        }
+    }
+
     lumv->yOffset = lumv->localPlayer->y - LUMBERJACK_SCREEN_Y_OFFSET;
     if (lumv->yOffset < LUMBERJACK_SCREEN_Y_MIN)
         lumv->yOffset = LUMBERJACK_SCREEN_Y_MIN;
@@ -941,6 +1009,15 @@ void DrawGame(void)
                 lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
     }
 
+    //This is where we draw the ghost
+    if (NULL != lumv->ghost && true == lumv->ghost->active && lumv->ghost->currentFrame % 2  == 0)
+    {
+        if (lumv->ghost->currentFrame == 2)
+            drawWsg(&lumv->enemySprites[21], lumv->ghost->x, lumv->ghost->y  - lumv->yOffset, (lumv->ghost->startSide == 1), false, 0);
+        else
+            drawWsg(&lumv->enemySprites[22], lumv->ghost->x, lumv->ghost->y  - lumv->yOffset, (lumv->ghost->startSide == 1), false, 0);
+    }
+
     drawWsgSimple(&lumv->ui[0], (TFT_WIDTH / 2) - 12, 6);
     //If playing panic mode draw water
 
@@ -1042,11 +1119,46 @@ void lumberjackScoreDisplay(int score, int locationX)
 
 void lumberjackSpawnCheck(int64_t elapseUs)
 {
+    float elapse = (elapseUs / 1000);
+    if (lumv->ghost != NULL && lumv->ghost->active == false)
+    {
+        lumv->ghost->spawnTime -= elapse;
+
+        if (lumv->ghost->spawnTime <= 0)
+        {
+            lumv->ghost->spawnTime = lumv->ghostSpawnTime;
+
+            lumv->ghost->active = true;
+            
+            if (esp_random() % 2 > 0)
+            {
+                lumv->ghost->startSide = -1;
+                lumv->ghost->x = -5;
+            }
+            else
+            {
+                lumv->ghost->startSide = 1;
+                lumv->ghost->x = 280;
+            }
+
+            lumv->ghost->y = lumv->localPlayer->y;
+
+            if (esp_random() % 2 > 0)
+            {
+                lumv->ghost->y -= 32;
+            }
+            else
+            {
+                lumv->ghost->y += 32;
+            }
+        }
+
+    }
+
     if (lumv->spawnTimer >= 0)
     {
         bool spawnReady = true;
 
-        float elapse = (elapseUs / 1000);
         lumv->spawnTimer -= elapse;
 
         if (lumv->spawnTimer < 0)
@@ -1306,6 +1418,19 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
             lumv->levelIndex++;
         }
     }
+
+    if (entity == lumv->localPlayer && lumv->ghost != NULL && lumv->ghost->active)
+    {
+        if (lumv->localPlayer->x < lumv->ghost->x + LUMBERJACK_GHOST_BOX && lumv->localPlayer->x + lumv->localPlayer->width > lumv->ghost->x
+        && lumv->localPlayer->y < lumv->ghost->y + LUMBERJACK_GHOST_BOX && lumv->localPlayer->y + lumv->localPlayer->height > lumv->ghost->y
+        && lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_DUCK && lumv->localPlayer->state != LUMBERJACK_INVINCIBLE)
+        {
+            lumberjackOnLocalPlayerDeath();
+        }
+
+        /*return (AA->x < BB->x + BB->width && AA->x + AA->width > BB->x && AA->y < BB->y + BB->height
+            && AA->y + AA->height > BB->y);*/
+    }
 }
 
 void lumberjackUpdate(int64_t elapseUs)
@@ -1320,6 +1445,15 @@ void lumberjackUpdate(int64_t elapseUs)
                 lumv->tile[tileIndex].offset_time += 2500;
                 lumv->tile[tileIndex].offset--;
             }
+        }
+    }
+
+    if (lumv->ghost != NULL && lumv->ghost->active)
+    {
+        if ((lumv->ghost->x < -28 && lumv->ghost->startSide > 0) || (lumv->ghost->x > 290 && lumv->ghost->startSide < 0 ))
+        {
+            ESP_LOGI(LUM_TAG, "Remove ghost!");
+            lumv->ghost->active = false;
         }
     }
 }

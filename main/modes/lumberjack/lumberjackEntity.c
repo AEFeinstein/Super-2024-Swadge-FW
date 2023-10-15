@@ -114,12 +114,6 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
     }
 }
 
-void lumberjackDoEnemyControls(lumberjackEntity_t* enemy)
-{
-    // pick between types I guess
-    // if enemy->type 1, 2, or 3... continue
-    // enemy->direction = -1;
-}
 
 void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy)
 {

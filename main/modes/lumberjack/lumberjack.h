@@ -148,6 +148,10 @@ typedef struct
     lumberjackAxeBlock_t* axeBlocks[8];
     lumberjackEntity_t* localPlayer;
 
+    //Ghost
+    lumberjackGhost_t* ghost;
+    int ghostSpawnTime;
+    
     lumberjackGameType_t gameType;
 
 } lumberjackVars_t;
