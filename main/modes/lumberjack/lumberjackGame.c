@@ -378,7 +378,7 @@ bool lumberjackLoadLevel()
 
     lumv->playerSpawnX = (int)buffer[offset];
     lumv->playerSpawnY = (int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8);
-    ESP_LOGI(LUM_TAG, "%d %d", lumv->playerSpawnX, buffer[offset]);
+    ESP_LOGI(LUM_TAG, "%d %d", lumv->playerSpawnY, buffer[offset]);
 
     free(buffer);    
 
@@ -508,7 +508,7 @@ void lumberjackUnloadLevel(void)
 void restartLevel(void)
 {
     lumv->lives--;
-    lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX);
+    lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY);
 
 }
 
@@ -628,7 +628,7 @@ void baseMode(int64_t elapsedUs)
     {
         lumv->loaded = true;
 
-        ESP_LOGI(LUM_TAG, "Load Time %ld", (long)elapsedUs);
+        //ESP_LOGI(LUM_TAG, "Load Time %ld", (long)elapsedUs);
 
         // If networked, send "Loaded complete!" ?
 
@@ -788,8 +788,7 @@ void baseMode(int64_t elapsedUs)
                 // Respawn player
                 lumv->localPlayer->respawn = 0;
                 lumv->lives--;
-                
-                lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX);
+                lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY);
             }
         }
         else if (lumv->localPlayer->state != LUMBERJACK_OFFSCREEN && lumv->localPlayer->state != LUMBERJACK_VICTORY)

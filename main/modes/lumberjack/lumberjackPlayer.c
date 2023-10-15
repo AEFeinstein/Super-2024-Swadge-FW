@@ -7,7 +7,6 @@
 
 #define LUMBERJACK_DEFAULT_ANIMATION_SPEED 150000
 #define LUMBERJACK_INVINCIBLE_ANIMATION_SPEED 25000
-#define LUMBERJACK_SPAWN_Y                 270
 #define LUMBERJACK_HERO_WIDTH              24
 #define LUMBERJACK_HERO_HEIGHT             31
 #define LUMBERJACK_HERO_DUCK_HEIGHT        31
@@ -31,7 +30,7 @@ void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character)
 void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
 {
     hero->x                = x;
-    hero->y                = LUMBERJACK_SPAWN_Y;
+    hero->y                = y;
     hero->vx               = 0;
     hero->maxVX            = 15;
     hero->vy               = 0;
@@ -44,11 +43,11 @@ void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
     hero->respawn          = 0;
 }
 
-void lumberjackRespawn(lumberjackEntity_t* hero, int x)
+void lumberjackRespawn(lumberjackEntity_t* hero, int x, int y)
 {
     hero->x                = x;
     hero->maxVX            = 15;
-    hero->y                = LUMBERJACK_SPAWN_Y;
+    hero->y                = y;
     hero->active           = true;
     hero->ready            = false;
     hero->vx               = 0;
