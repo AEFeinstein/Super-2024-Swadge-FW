@@ -237,17 +237,17 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                         }
                         case BG_DOOR_CHARGE:
                         {
-                            color = c234;
+                            color = c404;
                             break;
                         }
                         case BG_DOOR_MISSILE:
                         {
-                            color = c400;
+                            color = c500;
                             break;
                         }
                         case BG_DOOR_ICE:
                         {
-                            color = c004;
+                            color = c005;
                             break;
                         }
                         case BG_DOOR_XRAY:
@@ -255,7 +255,7 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                             // Hide XRAY doors until the player gets the xrayLoadOut
                             if (ray->p.i.xrayLoadOut)
                             {
-                                color = c020;
+                                color = c050;
                             }
                             else
                             {
@@ -270,15 +270,23 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                             break;
                         }
                         case BG_DOOR_KEY_A:
+                        {
+                            color = c541;
+                            break;
+                        }
                         case BG_DOOR_KEY_B:
+                        {
+                            color = c423;
+                            break;
+                        }
                         case BG_DOOR_KEY_C:
                         {
-                            color = c440;
+                            color = c234;
                             break;
                         }
                         case BG_DOOR_ARTIFACT:
                         {
-                            color = c531;
+                            color = c245;
                             break;
                         }
                         default:
@@ -323,6 +331,45 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                                 color);
             }
         }
+    }
+
+    // Look through scenery for warp points
+    node_t* currentNode = ray->scenery.first;
+    while (currentNode != NULL)
+    {
+        // Get a pointer from the linked list
+        rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
+
+        // Look for portals
+        if (OBJ_SCENERY_PORTAL == obj->type)
+        {
+            // Found a portal, look for corresponding script
+            node_t* scriptNode = ray->scripts[TOUCH].first;
+            while (NULL != scriptNode)
+            {
+                rayScript_t* scr = scriptNode->val;
+                // If this is the right script for this object
+                if ((TOUCH == scr->ifOp) && (WARP == scr->thenOp) && (scr->ifArgs.idList.ids[0] == obj->id))
+                {
+                    // And the player has visited the other end of the warp
+                    if (ray->p.mapsVisited[scr->thenArgs.warpDest.mapId])
+                    {
+                        // Draw a number indicating the warp destination
+                        char num[8];
+                        snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
+                        int16_t tWidth = textWidth(&ray->ibm, num);
+                        drawText(&ray->ibm, c555, num,
+                                 cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
+                                 cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);
+                    }
+                    break;
+                }
+                scriptNode = scriptNode->next;
+            }
+        }
+
+        // Iterate to the next node
+        currentNode = currentNode->next;
     }
 
     // The player's location blinks, so draw it when appropriate
