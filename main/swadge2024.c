@@ -208,6 +208,8 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
+	ESP_LOGI( "test", "%p %p %p %p %p\n", &i2c_driver_delete, &LSM6DSLSet, &rsqrtf, &mathCrossProduct, &accelIntegrate );
+
     // If test mode was passed
     if (getTestModePassedSetting())
     {
@@ -308,7 +310,8 @@ void app_main(void)
         initAccelerometer(I2C_NUM_0,
                           GPIO_NUM_3,  // SDA
                           GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
+                          GPIO_PULLUP_ENABLE, 1000000 );
+		accelIntegrate();
     }
 
     // Init the temperature sensor

@@ -20,10 +20,14 @@
 
 #include "bunny.h"
 
+#include "hdw-accel.h"
+
 int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
 
 int frameno;
 int bQuit;
+
+#if 0
 
 #define LSM6DSL_ADDRESS						0x6a
 #define QMC6308_ADDRESS						0x2c
@@ -281,18 +285,83 @@ static int ReadLSM6DSL( uint8_t * data, int data_len )
 	return fifolen;
 }
 
+
+
+
+
+#endif
+
+
+#define LSM6DSL_ADDRESS						0x6a
+
+typedef enum __attribute__((packed))
+{
+	LSM6DSL_FUNC_CFG_ACCESS				= 0x01,
+	LSM6DSL_SENSOR_SYNC_TIME_FRAME		= 0x04,
+	LSM6DSL_FIFO_CTRL1					= 0x06,
+	LSM6DSL_FIFO_CTRL2					= 0x07,
+	LSM6DSL_FIFO_CTRL3					= 0x08,
+	LSM6DSL_FIFO_CTRL4					= 0x09,
+	LSM6DSL_FIFO_CTRL5					= 0x0a,
+	LSM6DSL_ORIENT_CFG_G				= 0x0b,
+	LSM6DSL_INT1_CTRL					= 0x0d,
+	LSM6DSL_INT2_CTRL					= 0x0e,
+	LMS6DS3_WHO_AM_I					= 0x0f,
+	LSM6DSL_CTRL1_XL					= 0x10,
+	LSM6DSL_CTRL2_G						= 0x11,
+	LSM6DSL_CTRL3_C						= 0x12,
+	LSM6DSL_CTRL4_C						= 0x13,
+	LSM6DSL_CTRL5_C						= 0x14,
+	LSM6DSL_CTRL6_C						= 0x15,
+	LSM6DSL_CTRL7_G						= 0x16,
+	LSM6DSL_CTRL8_XL					= 0x17,
+	LSM6DSL_CTRL9_XL					= 0x18,
+	LSM6DSL_CTRL10_C					= 0x19,
+	LSM6DSL_MASTER_CONFIG				= 0x1a,
+	LSM6DSL_WAKE_UP_SRC					= 0x1b,
+	LSM6DSL_TAP_SRC						= 0x1c,
+	LSM6DSL_D6D_SRC						= 0x1d,
+	LSM6DSL_STATUS_REG					= 0x1e,
+	LSM6DSL_OUT_TEMP_L					= 0x20,
+	LSM6DSL_OUT_TEMP_H					= 0x21,
+	LMS6DS3_OUTX_L_G					= 0x22,
+	LMS6DS3_OUTX_H_G					= 0x23,
+	LMS6DS3_OUTY_L_G					= 0x24,
+	LMS6DS3_OUTY_H_G					= 0x25,
+	LMS6DS3_OUTZ_L_G					= 0x26,
+	LMS6DS3_OUTZ_H_G					= 0x27,
+	LMS6DS3_OUTX_L_XL					= 0x28,
+	LMS6DS3_OUTX_H_XL					= 0x29,
+	LMS6DS3_OUTY_L_XL					= 0x2a,
+	LMS6DS3_OUTY_H_XL					= 0x2b,
+	LMS6DS3_OUTZ_L_XL					= 0x2c,
+	LMS6DS3_OUTZ_H_XL					= 0x2d,
+} lsm6dslReg_t;
+float rsqrtf(float x);
+float mathsqrtf(float x);
+void mathEulerToQuat(float * q, const float * euler);
+void mathQuatApply(float * qout, const float * q1, const float * q2);
+void mathQuatNormalize(float * qout, const float * qin );
+void mathCrossProduct(float * p, const float * a, const float * b);
+void mathRotateVectorByInverseOfQuaternion(float * pout, const float * q, const float * p );
+void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p);
+esp_err_t LSM6DSLSet( int reg, int val );
+int GeneralI2CGet( int device, int reg, uint8_t * data, int data_len );
+int ReadLSM6DSL( uint8_t * data, int data_len );
+
+#if 1
 static void LSM6DSLIntegrate()
 {
-	struct LSM6DSLData * ld = &LSM6DSL;
+	LSM6DSLData * ld = &LSM6DSL;
 
 	int16_t data[6*16];
 
 	// Get temperature sensor... Why?  Yolo?
 	int r = GeneralI2CGet( LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2 );
+	ESP_LOGI( "x", "rrl %d", r );
 	if( r < 0 ) return;
 	if( r == 2 ) ld->temp = data[0];
 	int readr = ReadLSM6DSL( (uint8_t*)data, sizeof( data ) );
-
 	int samp;
 	int16_t * cdata = data;
 
@@ -418,8 +487,6 @@ static void LSM6DSLIntegrate()
 		// Magnitude of correction angle = inverse_sin( magntiude( axis_of_correction ) );
 		// We want to significantly reduce that. To mute any effect.
 
-
-		// TODO which directon of frame of reference?  Up relative to controller? OR controller relative to world?
 		cdata += 6;
 	}
 
@@ -455,7 +522,10 @@ static void LSM6DSLIntegrate()
 
     ld->computetime = getCycleCount() - start;
 }
+#endif
 
+
+#if 0
 static void LMS6DS3Setup()
 {
 
@@ -516,7 +586,7 @@ static void LMS6DS3Setup()
 		ESP_LOGE( "LSM6DSL", "WHOAMI Failed (%02x), %d. Cannot start part.\n", who, r ); 
 	}
 }
-
+#endif
 
 int global_i = 100;
 menu_t * menu;
@@ -561,6 +631,18 @@ void sandbox_main(void)
     loadWsg("kid0.wsg", &example_sprite, true);
 
 	setFrameRateUs(0);
+
+
+
+
+		LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR
+		LSM6DSLSet( LSM6DSL_FIFO_CTRL3, 0b00001001 ); // Put both devices (Accel + Gyro) in FIFO.
+		LSM6DSLSet( LSM6DSL_CTRL1_XL, 0b01011001 ); // Setup accel (16 g's FS)
+		LSM6DSLSet( LSM6DSL_CTRL2_G, 0b01011100 ); // Setup gyro, 2000dps
+		LSM6DSLSet( LSM6DSL_CTRL4_C, 0x00 ); // Disable all filtering.
+		LSM6DSLSet( LSM6DSL_CTRL7_G, 0b00000000 ); // Setup gyro, not high performance mode = 0x80.  High perf = 0x00
+		LSM6DSLSet( LSM6DSL_FIFO_CTRL2, 0b00000000 ); //Temp not in fifo  (Why no work?)
+
 /*
 	// Try to reinstall, just in case.
     i2c_config_t conf = {
@@ -577,7 +659,7 @@ void sandbox_main(void)
     ESP_LOGI( "sandbox", "i2c_param_config=%d", i2c_param_config(I2C_NUM_0, &conf) );
 	ESP_LOGI( "sandbox", "i2c_driver_install=%d", i2c_driver_install(I2C_NUM_0, conf.mode, 0, 0, 0) );
 */
-	LMS6DS3Setup();
+	//LMS6DS3Setup();
 	//GeneralSet( QMC6308_ADDRESS, 0x0b, 0x80 );
 	//GeneralSet( QMC6308_ADDRESS, 0x0b, 0x03 );
 	//GeneralSet( QMC6308_ADDRESS, 0x0a, 0x83 );
@@ -670,7 +752,10 @@ void sandbox_tick()
 	}
 #endif
 
+//	accelIntegrate();
 	LSM6DSLIntegrate();
+
+
 /*
 	cts += sprintf( cts, "%ld %ld / %5d %5d %5d / %5d %5d %5d / %ld %ld %ld / %f %f %f %f",
 		LSM6DSL.computetime, LSM6DSL.temp, 
@@ -738,8 +823,6 @@ void sandbox_tick()
 
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
 {
-    int i;
-
     fillDisplayArea(x, y, x+w, y+h, 0 );
 }
 
@@ -748,7 +831,7 @@ swadgeMode_t sandbox_mode = {
     .modeName                 = "sandbox",
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
-    .usesAccelerometer        = false,
+    .usesAccelerometer        = true,
     .usesThermometer          = false,
     .fnEnterMode              = sandbox_main,
     .fnExitMode               = sandbox_exit,
