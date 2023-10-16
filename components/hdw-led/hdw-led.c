@@ -54,9 +54,6 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt)
 
     ESP_ERROR_CHECK(rmt_enable(led_chan));
 
-    // Set to max brightness by default
-    ledBrightness = 0;
-
     // Mirror the output to another GPIO
     // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
     // really a (rmt_channel_t *), and that struct has a private definition in
