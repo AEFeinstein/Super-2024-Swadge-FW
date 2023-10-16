@@ -84,7 +84,7 @@ esp_err_t LSM6DSLSet( int reg, int val );
 int GeneralI2CGet( int device, int reg, uint8_t * data, int data_len );
 int ReadLSM6DSL( uint8_t * data, int data_len );
 
-#if 0
+#if 1
 
 // For main add 	ESP_LOGI( "test", "%p %p %p %p %p\n", &i2c_driver_delete, &LSM6DSLSet, &rsqrtf, &mathCrossProduct, &accelIntegrate );
 
@@ -99,6 +99,7 @@ static void LSM6DSLIntegrate()
 	if( r < 0 ) return;
 	if( r == 2 ) ld->temp = data[0];
 	int readr = ReadLSM6DSL( (uint8_t*)data, sizeof( data ) );
+
 	if( readr < 0 ) return;
 	int samp;
 	int16_t * cdata = data;
@@ -113,7 +114,7 @@ static void LSM6DSLIntegrate()
 
 	ld->lastreadr = readr;
 
-	for( samp = 0; samp < readr; samp+=12 )
+	for( samp = 0; samp < readr; samp+=6 )
 	{
 		// Extract data from IMU
 		int16_t * euler_deltas = cdata; // Euler angles, from gyro.
@@ -139,7 +140,7 @@ static void LSM6DSLIntegrate()
 		// convert to radians. ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );  
 		// Measured = 560,000 counts per scale (Measured by looking at sum)
 		// Testing -> 3.14159 * 2.0 / 566000;
-		float fFudge = 1.125; //XXX TODO: Investigate.
+		float fFudge = 0.5 * 1.15; //XXX TODO: Investigate.
 		float fScale = ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f ) * fFudge;
 
 		// STEP 3:  Integrate gyro values into a quaternion.
@@ -365,7 +366,7 @@ void sandbox_main(void)
 
 	accelSetRegistersAndReset();
 
-	setFrameRateUs(0);
+	setFrameRateUs(5000);
 
     ESP_LOGI( "sandbox", "Loaded" );
 }
@@ -454,10 +455,6 @@ void sandbox_tick()
 		cts += sprintf( cts, " %04x", data[i] );
 	}
 #endif
-
-	accelIntegrate();
-//	LSM6DSLIntegrate();
-
 /*
 	cts += sprintf( cts, "%ld %ld / %5d %5d %5d / %5d %5d %5d / %ld %ld %ld / %f %f %f %f",
 		LSM6DSL.computetime, LSM6DSL.temp, 
@@ -533,7 +530,10 @@ void sandbox_tick()
 
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
 {
-	accelIntegrate();
+//	accelIntegrate();
+	if( up + 1 == upNum ) 
+		LSM6DSLIntegrate();
+
     fillDisplayArea(x, y, x+w, y+h, 0 );
 }
 

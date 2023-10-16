@@ -539,7 +539,7 @@ esp_err_t accelIntegrate()
 
     ld->lastreadr = readr;
 
-    for( samp = 0; samp < readr; samp+=12 )
+    for( samp = 0; samp < readr; samp+=6 )
     {
         // Extract data from IMU
         int16_t * euler_deltas = cdata; // Euler angles, from gyro.
@@ -565,7 +565,7 @@ esp_err_t accelIntegrate()
         // convert to radians. ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f );  
         // Measured = 560,000 counts per scale (Measured by looking at sum)
         // Testing -> 3.14159 * 2.0 / 566000;
-        float fFudge = 1.125/2.0; //XXX TODO: Investigate.
+        float fFudge = 0.5625; //XXX TODO: Investigate.
         float fScale = ( 2000.0f / 32768.0f / 208.0f * 2.0 * 3.14159f / 180.0f ) * fFudge;
 
         // STEP 3:  Integrate gyro values into a quaternion.
