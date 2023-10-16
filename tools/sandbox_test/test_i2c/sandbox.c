@@ -20,7 +20,7 @@
 
 #include "bunny.h"
 
-#include "hdw-accel.h"
+#include "hdw-imu.h"
 
 int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
 

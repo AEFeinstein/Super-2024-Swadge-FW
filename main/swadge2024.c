@@ -71,7 +71,7 @@
  * - hdw-battmon.h: Learn how to check the battery voltage!
  * - hdw-btn.h: Learn how to use both push and touch button input!
  * - hdw-bzr.h: Learn how to use the buzzer!
- * - hdw-accel.h: Learn how to use the accelerometer!
+ * - hdw-imu.h: Learn how to use the inertial measurement unit!
  * - hdw-led.h: Learn how to use the LEDs!
  * - hdw-mic.h: Learn how to use the microphone!
  * - hdw-temperature.h: Learn how to use the temperature sensor!

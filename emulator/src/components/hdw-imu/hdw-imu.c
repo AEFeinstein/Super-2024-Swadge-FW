@@ -2,8 +2,8 @@
 // Includes
 //==============================================================================
 
-#include "hdw-accel.h"
-#include "hdw-accel_emu.h"
+#include "hdw-imu.h"
+#include "hdw-imu_emu.h"
 #include "trigonometry.h"
 #include "esp_random.h"
 #include "emu_args.h"

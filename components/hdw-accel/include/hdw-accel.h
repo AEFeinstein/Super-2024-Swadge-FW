@@ -1,38 +1,42 @@
 /*! \file hdw-accel.h
  *
- * \section imu_design Design Philosophy
+ * \section accel_design Design Philosophy
  *
- * Originally swadges were planned to use a LSM6DSL and a QMC6308, however, because the batteries are so close to the
- * magnetometer, the quality of the data was low enough we dcided to proceed with with a LSM6DSL-only IMU.
+ * The accelerometer used is a QMA7981.
+ * The datasheet can be found here: <a href="https://datasheet.lcsc.com/lcsc/2004281102_QST-QMA7981_C457290.pdf">QMA7981
+ * Datasheet</a>.
  *
- * Unlike the accelerometer process, the IMU fuses the gyroscope and accelerometer data from the LMS6DSL.  By fusing
- * both sensors, we are able to produce a quaternion to represent the rotation of the swadge.  The idea is that
- * we run the IMU at 208 Hz, and we use the hardware FIFO built into the LSM6DSL to queue up events.  Then, every
- * frame, we empty out the FIFO.
+ * The accelerometer component does not automatically poll the accelerometer.
+ * All it does is set up and configure the accelerometer, then it is up to the Swadge mode to query for acceleration as
+ * appropriate.
+ *
+ * This component requires the I2C bus to be initialized, so it does that as well.
+ * If other I2C peripherals are added in the future, common I2C bus initialization should be moved to a more common
+ * location.
  *
  * \section accel_usage Usage
  *
- * The core system will call initAccelerometer() and deInitAccelerometer() appropriately.  And you can at any point
- * call any of the proper IMU / accel functions.
+ * You don't need to call initAccelerometer() or deInitAccelerometer(). The system does this the appropriate time.
  *
- * The functions you can use are:
- *  esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z);
- *  esp_err_t accelGetQuaternion( float * quaternion );
+ * You do need to call accelGetAccelVec() to get the current acceleration vector.
+ * If you want to poll this from your Swadge mode's main function, you may.
  *
- * You can, of course at any time call:
- *  esp_err_t accelIntegrate();
+ * You may call accelSetRange() if you want to adjust the measurement range.
+ *
+ * accelGetStep() exists, but it has not been tested, so use it with caution.
+ * You may need to configure parameters related to step counting.
  *
  * \section accel_example Example
  *
  * \code{.c}
- * // Declare variables to receive rotation
- * float q[4];
+ * // Declare variables to receive acceleration
+ * int16_t a_x, a_y, a_z;
  *
- * // Get the current rotation
- * if(ESP_OK == accelGetQuaternion( q ))
+ * // Get the current acceleration
+ * if(ESP_OK == accelGetAccelVec(&a_x, &a_y, &a_z))
  * {
  *     // Print data to debug logs
- *     printf( "%f %f %f %f\n", q[0], q[1], q[2], q[3] );
+ *     printf("x: %"PRId16", y: %"PRId16", z:%"PRId16, a_x, a_y, a_z);
  * }
  * \endcode
  */
@@ -46,62 +50,33 @@
 #include <hal/gpio_types.h>
 #include <esp_err.h>
 
-typedef struct
+/**
+ * @brief The ranges for acceleration measurement from 2G to 32G (Earth gravity)
+ */
+typedef enum
 {
-    int32_t temp;
-    uint32_t computetime;
-    uint32_t performCal; // 1 if expecting a zero cal.
+    QMA_RANGE_2G  = 0b0001, ///< Two G's of measurement range
+    QMA_RANGE_4G  = 0b0010, ///< Four G's of measurement range
+    QMA_RANGE_8G  = 0b0100, ///< Eight G's of measurement range
+    QMA_RANGE_16G = 0b1000, ///< Sixteen G's of measurement range
+    QMA_RANGE_32G = 0b1111, ///< Thirty-two G's of measurement range
+} qma_range_t;
 
-    // Quats are wxyz.
-    // You can take a vector, in controller space, rotate by this quat, and you get it in world space.
-    float fqQuatLast[4]; // Delta
-    float fqQuat[4];     // Absolute
+/**
+ * @brief The bandwidth for acceleration measurement
+ */
+typedef enum
+{
+    QMA_BANDWIDTH_128_HZ  = 0b111, ///< 128Hz bandwidth
+    QMA_BANDWIDTH_256_HZ  = 0b110, ///< 256Hz bandwidth
+    QMA_BANDWIDTH_1024_HZ = 0b101, ///< 1024Hz bandwidth
+} qma_bandwidth_t;
 
-    // The last raw accelerometer (NOT FUSED)
-    float fvLastAccelRaw[3];
-
-    // Bias for all of the euler angles.
-    float fvBias[3];
-
-    // Used for calibration
-    float fvDeviation[3];
-    float fvAverage[3];
-
-    uint32_t sampCount;
-
-    // For debug
-    int lastreadr;
-    int32_t gyroaccum[3];
-    int16_t gyrolast[3];
-    int16_t accellast[3];
-    float fCorrectLast[3];
-} LSM6DSLData;
-
-extern LSM6DSLData LSM6DSL;
-
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz);
+esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
+                            qma_range_t range, qma_bandwidth_t bandwidth);
 esp_err_t deInitAccelerometer(void);
-esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t accelGetQuaternion(float* q);
-esp_err_t accelIntegrate(void);
-esp_err_t accelPerformCal(void);
-float accelGetStdDevInCal(void);
-void accelSetRegistersAndReset(void);
-
-// Utility functions (to replace at a later time)
-
-float rsqrtf(float x);
-float mathsqrtf(float x);
-void mathEulerToQuat(float* q, const float* euler);
-void mathQuatApply(float* qout, const float* q1, const float* q2);
-void mathQuatNormalize(float* qout, const float* qin);
-void mathCrossProduct(float* p, const float* a, const float* b);
-void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const float* p);
-void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p);
-esp_err_t GeneralSet(int dev, int reg, int val);
-esp_err_t LSM6DSLSet(int reg, int val);
-int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
-int ReadLSM6DSL(uint8_t* data, int data_len);
+esp_err_t accelSetRange(qma_range_t range);
+esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z);
+esp_err_t accelGetStep(uint16_t* data);
 
 #endif
