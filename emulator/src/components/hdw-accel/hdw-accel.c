@@ -9,7 +9,7 @@
 #include "emu_args.h"
 #include "macros.h"
 
-#define ONE_G 242
+#define ONE_G 256
 
 #define ACCEL_MIN -512
 #define ACCEL_MAX 512
@@ -19,6 +19,8 @@ static int16_t _accelX = 0;
 static int16_t _accelY = 0;
 static int16_t _accelZ = 0;
 
+LSM6DSLData LSM6DSL;
+
 /**
  * @brief Initialize the accelerometer
  *
@@ -27,8 +29,7 @@ static int16_t _accelZ = 0;
  * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
-                            qma_range_t range, qma_bandwidth_t bandwidth)
+esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz )
 {
     // Default to the swadge sitting still, face-up on a table somewhere on earth
     _accelX = 0;
@@ -73,24 +74,6 @@ esp_err_t accelGetStep(uint16_t* data)
 }
 
 /**
- * @brief Set the accelerometer's measurement range
- *
- * @param range The range to measure, from ::QMA_RANGE_2G to ::QMA_RANGE_32G
- * @return ESP_OK if the range was set, or a non-zero value if it was not
- */
-esp_err_t accelSetRange(qma_range_t range)
-{
-    if (accelInit)
-    {
-        return ESP_OK;
-    }
-    else
-    {
-        return ESP_ERR_INVALID_STATE;
-    }
-}
-
-/**
  * @brief Read the current acceleration vector from the accelerometer and return
  * the vector through arguments. If the read fails, the last known values are
  * returned instead.
@@ -100,7 +83,7 @@ esp_err_t accelSetRange(qma_range_t range)
  * @param z The Z component of the acceleration vector is written here
  * @return ESP_OK if the acceleration was read, or a non-zero value if it was not
  */
-esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
+esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z)
 {
     if (accelInit)
     {
@@ -114,6 +97,11 @@ esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
     {
         return ESP_ERR_INVALID_STATE;
     }
+}
+
+esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
+{
+	return accelGetAccelVecRaw( x, y, z );
 }
 
 /**
@@ -170,3 +158,66 @@ void emulatorSetAccelerometerRotation(int16_t value, uint16_t yaw, uint16_t pitc
     _accelY = CLAMP(value * getSin1024(yaw % 360) / 1024 * getSin1024(pitch % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
     _accelZ = CLAMP(value * getCos1024(yaw % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
 }
+
+esp_err_t accelIntegrate()
+{
+	// Do nothing (is stub function)
+	return ESP_OK;
+}
+
+/**
+ * @brief Rotate a 3D vector by a quaternion
+ *
+ * @param pout Pointer to the float[3] output of the rotation
+ * @param q Pointer to the wzyz quaternion (float[4]) of the rotation.
+ * @param p Pointer to the float[3] of the vector to rotates.
+ */
+void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p)
+{
+    // return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
+    float iqo[3];
+    mathCrossProduct( iqo, q + 1 /*.xyz*/, p );
+    iqo[0] += q[0] * p[0];
+    iqo[1] += q[0] * p[1];
+    iqo[2] += q[0] * p[2];
+    float ret[3];
+    mathCrossProduct( ret, q + 1 /*.xyz*/, iqo );
+    pout[0] = ret[0] * 2.0 + p[0];
+    pout[1] = ret[1] * 2.0 + p[1];
+    pout[2] = ret[2] * 2.0 + p[2];
+}
+
+
+/**
+ * @brief Perform a 3D cross product
+ *
+ * @param p Pointer to the float[3] output of the cross product (p = a x b)
+ * @param a Pointer to the float[3] of the cross product a vector.
+ * @param a Pointer to the float[3] of the cross product b vector.
+ */
+void mathCrossProduct(float * p, const float * a, const float * b)
+{
+    float tx = a[1] * b[2] - a[2] * b[1];
+    float ty = a[2] * b[0] - a[0] * b[2];
+    p[2] = a[0] * b[1] - a[1] * b[0];
+    p[1] = ty;
+    p[0] = tx;
+}
+
+// stub
+void accelSetRegistersAndReset()
+{
+}
+
+// stub
+esp_err_t accelPerformCal()
+{
+	return ESP_OK;
+}
+
+// stub
+float accelGetStdDevInCal()
+{
+    return 0.0f;
+}
+

@@ -760,7 +760,7 @@ void testReadAndValidateAccelerometer(void)
     if( accelIntegrate() < 0 )
         return;
 
-    accelGetAccelVec(&x, &y, &z);
+    accelGetAccelVecRaw(&x, &y, &z);
     accelGetOrientVec(&ox, &oy, &oz);
 
     // Save accel values
@@ -773,19 +773,19 @@ void testReadAndValidateAccelerometer(void)
     float fStab = accelGetStdDevInCal();
     test->stability = fStab * 200.0f;
 
-    if (x > 180) test->accelFlags |= 1;
-    if (y > 180) test->accelFlags |= 2;
-    if (z > 180) test->accelFlags |= 4;
-    if (x <-180) test->accelFlags |= 8;
-    if (y <-180) test->accelFlags |= 16;
-    if (z <-180) test->accelFlags |= 32;
+    if (x > 150) test->accelFlags |= 1;
+    if (y > 150) test->accelFlags |= 2;
+    if (z > 150) test->accelFlags |= 4;
+    if (x <-150) test->accelFlags |= 8;
+    if (y <-150) test->accelFlags |= 16;
+    if (z <-150) test->accelFlags |= 32;
 
-    if (ox > 180) test->accelFlags |= 64;
-    if (oy > 180) test->accelFlags |= 128;
-    if (oz > 180) test->accelFlags |= 256;
-    if (ox <-180) test->accelFlags |= 512;
-    if (oy <-180) test->accelFlags |= 1024;
-    if (oz <-180) test->accelFlags |= 2048;
+    if (ox > 150) test->accelFlags |= 64;
+    if (oy > 150) test->accelFlags |= 128;
+    if (oz > 150) test->accelFlags |= 256;
+    if (ox <-150) test->accelFlags |= 512;
+    if (oy <-150) test->accelFlags |= 1024;
+    if (oz <-150) test->accelFlags |= 2048;
     if (fStab < 0.00001f ) test->accelFlags |= 4096;
 
     // Make sure all values are nonzero

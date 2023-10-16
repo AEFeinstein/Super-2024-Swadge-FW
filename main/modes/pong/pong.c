@@ -491,10 +491,10 @@ static void pongControlPlayerPaddle(void)
             // Declare variables to receive acceleration
             int16_t a_x, a_y, a_z;
             // Get the current acceleration
-            if (ESP_OK == accelGetAccelVec(&a_x, &a_y, &a_z))
+            if (ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
             {
                 // Move the paddle to the current tilt location
-                pong->paddleL.y = CLAMP(((a_x + 100) * (FIELD_HEIGHT - pong->paddleL.height)) / 350, 0,
+                pong->paddleL.y = CLAMP(((a_x + 120) * (FIELD_HEIGHT - pong->paddleL.height)) / 350, 0,
                                         (FIELD_HEIGHT - pong->paddleL.height));
             }
             break;
@@ -721,6 +721,8 @@ static void pongIncreaseBallVelocity(int16_t magnitude)
  */
 static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
+	accelIntegrate();
+
     // Use TURBO drawing mode to draw individual pixels fast
     SETUP_FOR_TURBO();
 

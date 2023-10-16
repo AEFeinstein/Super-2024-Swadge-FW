@@ -81,13 +81,13 @@ extern LSM6DSLData LSM6DSL;
 
 esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz );
 esp_err_t deInitAccelerometer(void);
-esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z);
+esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetQuaternion(float * q);
-esp_err_t accelIntegrate();
-esp_err_t accelPerformCal();
-float accelGetStdDevInCal();
-void accelSetRegistersAndReset();
+esp_err_t accelIntegrate(void);
+esp_err_t accelPerformCal(void);
+float accelGetStdDevInCal(void);
+void accelSetRegistersAndReset(void);
 
 // Utility functions (to replace at a later time)
 

@@ -247,7 +247,7 @@ static void accelTestHandleInput(void)
 {
     // Declare variables to receive acceleration
     // Get the current acceleration
-    if (ESP_OK == accelGetAccelVec(&(accelTest->x), &(accelTest->y), &(accelTest->z)))
+    if (ESP_OK == accelGetAccelVecRaw(&(accelTest->x), &(accelTest->y), &(accelTest->z)))
     {
         accelTestSample(accelTest->x, accelTest->y, accelTest->z);
     }

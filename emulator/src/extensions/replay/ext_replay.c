@@ -199,7 +199,7 @@ static void replayRecordFrame(uint64_t frame)
     }
 
     int16_t accelX, accelY, accelZ;
-    accelGetAccelVec(&accelX, &accelY, &accelZ);
+    accelGetOrientVec(&accelX, &accelY, &accelZ);
 
     buttonBit_t curButtons = emulatorGetButtonState();
 

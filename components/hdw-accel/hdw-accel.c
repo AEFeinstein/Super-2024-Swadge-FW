@@ -102,12 +102,12 @@ int ReadLSM6DSL( uint8_t * data, int data_len );
 
 esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz );
 esp_err_t deInitAccelerometer(void);
-esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z);
+esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetQuaternion(float * q);
-esp_err_t accelIntegrate();
-float accelGetStdDevInCal();
-void accelSetRegistersAndReset();
+esp_err_t accelIntegrate(void);
+float accelGetStdDevInCal(void);
+void accelSetRegistersAndReset(void);
 
 //==============================================================================
 // Utility Functions
@@ -627,9 +627,15 @@ esp_err_t accelIntegrate()
                 ld->fvBias[0] = -ld->fvAverage[0];
                 ld->fvBias[1] = -ld->fvAverage[1];
                 ld->fvBias[2] = -ld->fvAverage[2];
-                writeNvs32( "gyrocalx", *(int32_t*)(&ld->fvBias[0]) );
-                writeNvs32( "gyrocaly", *(int32_t*)(&ld->fvBias[1]) );
-                writeNvs32( "gyrocalz", *(int32_t*)(&ld->fvBias[2]) );
+				struct fiunion { union { int32_t i; float f; } u; };
+				struct fiunion x, y, z;
+				x.u.f = ld->fvBias[0];
+				y.u.f = ld->fvBias[1];
+				z.u.f = ld->fvBias[2];
+                writeNvs32( "gyrocalx", x.u.i );
+                writeNvs32( "gyrocaly", y.u.i );
+                writeNvs32( "gyrocalz", z.u.i );
+
                 ld->performCal = 0;
                 ld->fvDeviation[0] = 0;
                 ld->fvDeviation[0] = 1;
@@ -754,7 +760,7 @@ esp_err_t accelIntegrate()
  *
  * @return ESP_OK
  */
-esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
+esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z)
 {
     *x = LSM6DSL.fvLastAccelRaw[0] * 256;
     *y = LSM6DSL.fvLastAccelRaw[1] * 256;
@@ -770,7 +776,7 @@ esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
 {
     float plusy[3] = { 0, 1, 0 };
-    mathRotateVectorByQuaternion( plusy, LSM6DSL.fqQuat, plusy );
+    mathRotateVectorByInverseOfQuaternion( plusy, LSM6DSL.fqQuat, plusy );
     *x = plusy[0] * 256;
     *y = plusy[1] * 256;
     *z = plusy[2] * 256;
@@ -836,7 +842,7 @@ float accelGetStdDevInCal()
  * @brief Reset the IMU's core registers. Should be done any time you are entering a mode with the IMU.
  *
  */
-void accelSetRegistersAndReset()
+void accelSetRegistersAndReset( void )
 {
     LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000 ); // Reset FIFO
     LSM6DSLSet( LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110 ); // 208 Hz ODR, Continuous mode. If the FIFO is full, the new sample overwrites the older one.
