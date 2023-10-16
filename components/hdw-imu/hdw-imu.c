@@ -224,7 +224,7 @@ void mathQuatNormalize(float* qout, const float* qin)
  *
  * @param p Pointer to the float[3] output of the cross product (p = a x b)
  * @param a Pointer to the float[3] of the cross product a vector.
- * @param a Pointer to the float[3] of the cross product b vector.
+ * @param b Pointer to the float[3] of the cross product b vector.
  */
 void mathCrossProduct(float* p, const float* a, const float* b)
 {

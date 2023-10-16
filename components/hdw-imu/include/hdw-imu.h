@@ -10,7 +10,7 @@
  * we run the IMU at 208 Hz, and we use the hardware FIFO built into the LSM6DSL to queue up events.  Then, every
  * frame, we empty out the FIFO.
  *
- * \section accel_usage Usage
+ * \section imu_usage Usage
  *
  * The core system will call initAccelerometer() and deInitAccelerometer() appropriately.  And you can at any point
  * call any of the proper IMU / accel functions.
@@ -22,7 +22,7 @@
  * You can, of course at any time call:
  *  esp_err_t accelIntegrate();
  *
- * \section accel_example Example
+ * \section imu_example Example
  *
  * \code{.c}
  * // Declare variables to receive rotation
