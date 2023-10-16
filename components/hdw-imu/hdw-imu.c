@@ -10,9 +10,21 @@
 #include "soc/gpio_reg.h"
 #include "soc/io_mux_reg.h"
 #include "rom/gpio.h"
-#include "soc/i2c_reg.h"
 #include "soc/gpio_struct.h"
 #include "hdw-nvs.h"
+
+#define DSCL_OUTPUT	{ GPIO.enable1_w1ts.val = 1<<(41-32); }
+#define DSCL_INPUT	{ GPIO.enable1_w1tc.val = 1<<(41-32); }
+#define DSDA_OUTPUT	{ GPIO.enable_w1ts = 1<<(3); }
+#define DSDA_INPUT	{ GPIO.enable_w1tc = 1<<(3); }
+#define READ_DSDA	  ( ( GPIO.in >> 3 ) & 1 )
+
+// 14 counts (1MHz) works most of the time, but no hurries, let's slow it down to ~800k.
+void i2c_delay( int x ) { int i; for( i = 0; i < 19*x; i++ ) asm volatile( "nop" ); }
+#define DELAY1 i2c_delay(1);
+#define DELAY2 i2c_delay(2);
+
+#include "static_i2c.h"
 
 //==============================================================================
 // Enums
@@ -48,18 +60,7 @@ typedef enum __attribute__((packed))
     LSM6DSL_STATUS_REG             = 0x1e,
     LSM6DSL_OUT_TEMP_L             = 0x20,
     LSM6DSL_OUT_TEMP_H             = 0x21,
-    LMS6DS3_OUTX_L_G               = 0x22,
-    LMS6DS3_OUTX_H_G               = 0x23,
-    LMS6DS3_OUTY_L_G               = 0x24,
-    LMS6DS3_OUTY_H_G               = 0x25,
-    LMS6DS3_OUTZ_L_G               = 0x26,
-    LMS6DS3_OUTZ_H_G               = 0x27,
-    LMS6DS3_OUTX_L_XL              = 0x28,
-    LMS6DS3_OUTX_H_XL              = 0x29,
-    LMS6DS3_OUTY_L_XL              = 0x2a,
-    LMS6DS3_OUTY_H_XL              = 0x2b,
-    LMS6DS3_OUTZ_L_XL              = 0x2c,
-    LMS6DS3_OUTZ_H_XL              = 0x2d,
+	LSM6DSL_FIFO_STATUS1           = 0x3A,
 } lsm6dslReg_t;
 
 //==============================================================================
@@ -73,7 +74,6 @@ typedef enum __attribute__((packed))
 // Variables
 //==============================================================================
 
-static i2c_port_t i2c_port;
 LSM6DSLData LSM6DSL;
 
 //==============================================================================
@@ -100,7 +100,7 @@ int ReadLSM6DSL(uint8_t* data, int data_len);
 // Function Prototypes
 //==============================================================================
 
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz);
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz);
 esp_err_t deInitAccelerometer(void);
 esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
@@ -301,15 +301,12 @@ static inline uint32_t getCycleCount()
  */
 esp_err_t GeneralSet(int dev, int reg, int val)
 {
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, dev << 1, false);
-    i2c_master_write_byte(cmdHandle, reg, false);
-    i2c_master_write_byte(cmdHandle, val, true);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-    return err;
+	SendStart();
+	SendByte( dev << 1 );
+	SendByte( reg );
+	SendByte( val );
+	SendStop();
+	return ESP_OK;
 }
 
 /**
@@ -335,23 +332,19 @@ esp_err_t LSM6DSLSet(int reg, int val)
  */
 int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
 {
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, device << 1, false);
-    i2c_master_write_byte(cmdHandle, reg, false);
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, device << 1 | I2C_MASTER_READ, false);
-    i2c_master_read(cmdHandle, data, data_len, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-    if (err)
-    {
-        ESP_LOGE("accel", "Error on link: %d", err);
-        return -1;
-    }
-    else
-        return data_len;
+
+	SendStart();
+	SendByte(device << 1);
+	SendByte(reg);
+	SendStart();
+	SendByte(( device << 1 ) | 1);
+	int i;
+	for(i = 0; i < data_len; i++)
+	{
+		data[i] = GetByte(i == data_len - 1);
+	}
+	SendStop();
+	return data_len;
 }
 
 /**
@@ -363,49 +356,58 @@ int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
  */
 int ReadLSM6DSL(uint8_t* data, int data_len)
 {
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1, false);
-    i2c_master_write_byte(cmdHandle, 0x3A, false);
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1 | I2C_MASTER_READ, false);
-    uint32_t fifolen = 0;
-    i2c_master_read(cmdHandle, (uint8_t*)&fifolen, 3, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-    if (err < 0)
-        return -1;
+	uint32_t fifolen = 0;
+	SendStart();
+	SendByte(LSM6DSL_ADDRESS << 1);
+	SendByte(LSM6DSL_FIFO_STATUS1);
+	SendStart();
+	SendByte(( LSM6DSL_ADDRESS << 1 ) | 1);
+	int i;
 
-    // Is fifo overflow.
-    if (fifolen & 0x4000)
-    {
-        // reset fifo.
-        // If we overflow, and we don't do this, bad things happen.
-        LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Disable fifo
-        LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110); // 208 Hz ODR
-        LSM6DSL.sampCount = 0;
-        return 0;
-    }
+	// Read first 3 bytes, the 4th byte might be a nak.
+	for( i = 0; i < 3; i++ )
+	{
+		((uint8_t*)&fifolen)[i] = GetByte(0);
+	}
 
-    fifolen &= 0x7ff;
-    if (fifolen == 0)
-        return 0;
-    if (fifolen > data_len / 2)
-        fifolen = data_len / 2;
+	// Is fifo overflow.
+	if (fifolen & 0x4000)
+	{
+		// reset fifo.
+		// If we overflow, and we don't do this, bad things happen.
+		GetByte( 1 );
+		SendStop();
+		LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Disable fifo
+		LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110); // 208 Hz ODR
+		LSM6DSL.sampCount = 0;
+		return 0;
+	}
 
-    cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1 | I2C_MASTER_READ, false);
-    i2c_master_read(cmdHandle, data, fifolen * 2, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
+	fifolen &= 0x7ff;
 
-    i2c_cmd_link_delete(cmdHandle);
-    if (err < 0)
-        return -2;
+	if (fifolen > data_len / 2)
+		fifolen = data_len / 2;
 
-    return fifolen;
+	// Make sure we only read out full data segments.
+	int read_len = fifolen / 6 * 12;
+
+	if (read_len == 0)
+	{
+		// No bytes? nak!
+		GetByte(1);
+		SendStop();
+		return 0;
+	}
+
+	GetByte(0); // Ignoring FIFO Status 4
+
+	// Read out all bytes.
+	for (i = 0; i < read_len; i++)
+	{
+		data[i] = GetByte(i == read_len - 1);
+	}
+	SendStop();
+	return fifolen;
 }
 
 //==============================================================================
@@ -423,50 +425,55 @@ int ReadLSM6DSL(uint8_t* data, int data_len)
  * @param clkHz The frequency of the I2C clock
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
 {
-    int retry = 0;
-    i2c_port  = _i2c_port;
-    esp_err_t ret_val;
+
+	int i;
+	int retry = 0;
+	esp_err_t ret_val;
 
 do_retry:
 
-    // Shake any device off the bus.
-    int i;
-    int gpio_scl = 41;
-    for (i = 0; i < 16; i++)
-    {
-        gpio_matrix_out(gpio_scl, 256, 1, 0);
-        GPIO.out1_w1tc.val = (1 << (gpio_scl - 32));
-        esp_rom_delay_us(10);
-        gpio_matrix_out(gpio_scl, 256, 1, 0);
-        GPIO.out1_w1ts.val = (1 << (gpio_scl - 32));
-        esp_rom_delay_us(10);
-    }
-    gpio_matrix_out(gpio_scl, 29, 0, 0);
+	gpio_config_t gsetup = {
+		.pin_bit_mask = (1ULL<<sda) | (1ULL<<scl),
+		.mode = GPIO_MODE_INPUT_OUTPUT,
+		.pull_up_en = GPIO_PULLUP_ENABLE,
+	};
 
-    ret_val = ESP_OK;
+	ret_val = gpio_config( &gsetup );
 
-    i2c_driver_delete(_i2c_port);
+	// This will "shake loose" any devices stuck on the bus.
+	GPIO.enable_w1ts = 1<<(3);
+	GPIO.enable1_w1ts.val = 1<<(41-32);
+	esp_rom_delay_us(10);
+	GPIO.out_w1tc = 1<<(3);
+	for (i = 0; i < 16; i++)
+	{
+		esp_rom_delay_us(10);
+		GPIO.out1_w1ts.val = 1<<(41-32);
+		esp_rom_delay_us(10);
+		GPIO.out1_w1tc.val = 1<<(41-32);
+	}
+	esp_rom_delay_us(10);
+	GPIO.out1_w1ts.val = 1<<(41-32);
+	esp_rom_delay_us(10);
+	GPIO.out_w1ts = 1<<(3);
+	esp_rom_delay_us(10);
+	GPIO.out1_w1ts.val = 1<<(41-32);  // Send final stop
 
-    /* Install i2c driver */
-    i2c_config_t conf = {
-        .mode             = I2C_MODE_MASTER,
-        .sda_io_num       = sda,
-        .sda_pullup_en    = pullup,
-        .scl_io_num       = scl,
-        .scl_pullup_en    = pullup,
-        .master.clk_speed = clkHz, // tested upto 1.4Mbit/s
-        .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
-    };
-    ESP_LOGI("accel", "i2c_driver_install=%d", i2c_driver_install(_i2c_port, conf.mode, 0, 0, 0));
-    ret_val |= i2c_param_config(i2c_port, &conf);
+	ret_val = ESP_OK;
 
-    // Enable access
-    LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
-    LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
-    vTaskDelay(1);
-    LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
+	// Prepare for normal open drain functionality.
+	GPIO.enable1_w1tc.val = 1<<(41-32);
+	GPIO.enable_w1tc = 1<<(3);
+	GPIO.out1_w1tc.val = 1<<(41-32);
+	GPIO.out_w1tc = 1<<(3);
+
+	// Enable access
+	LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
+	LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
+	esp_rom_delay_us(100);
+	LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
 
     uint8_t who = 0xaa;
     int r       = GeneralI2CGet(LSM6DSL_ADDRESS, LMS6DS3_WHO_AM_I, &who, 1);
@@ -523,11 +530,11 @@ esp_err_t accelIntegrate()
     int16_t data[6 * 16];
 
     // Get temperature sensor (in case we ever want to use it)
-    int r = GeneralI2CGet(LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2);
-    if (r < 0)
-        return r;
-    if (r == 2)
-        ld->temp = data[0];
+    //int r = GeneralI2CGet(LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2);
+    //if (r < 0)
+    //    return r;
+    //if (r == 2)
+    //    ld->temp = data[0];
     int readr = ReadLSM6DSL((uint8_t*)data, sizeof(data));
     if (readr < 0)
         return readr;
@@ -875,3 +882,4 @@ void accelSetRegistersAndReset(void)
         LSM6DSL.fvBias[2]  = 0;
     }
 }
+
