@@ -100,7 +100,7 @@ int ReadLSM6DSL(uint8_t* data, int data_len);
 // Function Prototypes
 //==============================================================================
 
-esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz);
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
 esp_err_t deInitAccelerometer(void);
 esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
@@ -425,7 +425,7 @@ int ReadLSM6DSL(uint8_t* data, int data_len)
  * @param clkHz The frequency of the I2C clock
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 {
 
     int i;
