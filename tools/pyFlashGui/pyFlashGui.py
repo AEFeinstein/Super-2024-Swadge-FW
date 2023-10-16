@@ -46,7 +46,7 @@ class LabelThread(threading.Thread):
                 "--flash_freq", "80m",
                 "--flash_size", "4MB",
                 "0x1000",   "bootloader.bin",
-                "0x10000",  "swadge-esp32.bin",
+                "0x10000",  "swadge2024.bin",
                 "0x8000",   "partition-table.bin",
                 "0x110000", "storage.bin"])
 
