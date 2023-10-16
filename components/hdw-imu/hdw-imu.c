@@ -13,11 +13,11 @@
 #include "soc/gpio_struct.h"
 #include "hdw-nvs.h"
 
-#define DSCL_OUTPUT	{ GPIO.enable1_w1ts.val = 1<<(41-32); }
-#define DSCL_INPUT	{ GPIO.enable1_w1tc.val = 1<<(41-32); }
-#define DSDA_OUTPUT	{ GPIO.enable_w1ts = 1<<(3); }
-#define DSDA_INPUT	{ GPIO.enable_w1tc = 1<<(3); }
-#define READ_DSDA	  ( ( GPIO.in >> 3 ) & 1 )
+#define DSCL_OUTPUT    { GPIO.enable1_w1ts.val = 1<<(41-32); }
+#define DSCL_INPUT    { GPIO.enable1_w1tc.val = 1<<(41-32); }
+#define DSDA_OUTPUT    { GPIO.enable_w1ts = 1<<(3); }
+#define DSDA_INPUT    { GPIO.enable_w1tc = 1<<(3); }
+#define READ_DSDA      ( ( GPIO.in >> 3 ) & 1 )
 
 // 14 counts (1MHz) works most of the time, but no hurries, let's slow it down to ~800k.
 void i2c_delay( int x ) { int i; for( i = 0; i < 19*x; i++ ) asm volatile( "nop" ); }
@@ -60,7 +60,7 @@ typedef enum __attribute__((packed))
     LSM6DSL_STATUS_REG             = 0x1e,
     LSM6DSL_OUT_TEMP_L             = 0x20,
     LSM6DSL_OUT_TEMP_H             = 0x21,
-	LSM6DSL_FIFO_STATUS1           = 0x3A,
+    LSM6DSL_FIFO_STATUS1           = 0x3A,
 } lsm6dslReg_t;
 
 //==============================================================================
@@ -301,12 +301,12 @@ static inline uint32_t getCycleCount()
  */
 esp_err_t GeneralSet(int dev, int reg, int val)
 {
-	SendStart();
-	SendByte( dev << 1 );
-	SendByte( reg );
-	SendByte( val );
-	SendStop();
-	return ESP_OK;
+    SendStart();
+    SendByte( dev << 1 );
+    SendByte( reg );
+    SendByte( val );
+    SendStop();
+    return ESP_OK;
 }
 
 /**
@@ -333,18 +333,18 @@ esp_err_t LSM6DSLSet(int reg, int val)
 int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
 {
 
-	SendStart();
-	SendByte(device << 1);
-	SendByte(reg);
-	SendStart();
-	SendByte(( device << 1 ) | 1);
-	int i;
-	for(i = 0; i < data_len; i++)
-	{
-		data[i] = GetByte(i == data_len - 1);
-	}
-	SendStop();
-	return data_len;
+    SendStart();
+    SendByte(device << 1);
+    SendByte(reg);
+    SendStart();
+    SendByte((device << 1) | 1);
+    int i;
+    for(i = 0; i < data_len; i++)
+    {
+        data[i] = GetByte(i == data_len - 1);
+    }
+    SendStop();
+    return data_len;
 }
 
 /**
@@ -356,58 +356,58 @@ int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
  */
 int ReadLSM6DSL(uint8_t* data, int data_len)
 {
-	uint32_t fifolen = 0;
-	SendStart();
-	SendByte(LSM6DSL_ADDRESS << 1);
-	SendByte(LSM6DSL_FIFO_STATUS1);
-	SendStart();
-	SendByte(( LSM6DSL_ADDRESS << 1 ) | 1);
-	int i;
+    uint32_t fifolen = 0;
+    SendStart();
+    SendByte(LSM6DSL_ADDRESS << 1);
+    SendByte(LSM6DSL_FIFO_STATUS1);
+    SendStart();
+    SendByte(( LSM6DSL_ADDRESS << 1 ) | 1);
+    int i;
 
-	// Read first 3 bytes, the 4th byte might be a nak.
-	for( i = 0; i < 3; i++ )
-	{
-		((uint8_t*)&fifolen)[i] = GetByte(0);
-	}
+    // Read first 3 bytes, the 4th byte might be a nak.
+    for( i = 0; i < 3; i++ )
+    {
+        ((uint8_t*)&fifolen)[i] = GetByte(0);
+    }
 
-	// Is fifo overflow.
-	if (fifolen & 0x4000)
-	{
-		// reset fifo.
-		// If we overflow, and we don't do this, bad things happen.
-		GetByte( 1 );
-		SendStop();
-		LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Disable fifo
-		LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110); // 208 Hz ODR
-		LSM6DSL.sampCount = 0;
-		return 0;
-	}
+    // Is fifo overflow.
+    if (fifolen & 0x4000)
+    {
+        // reset fifo.
+        // If we overflow, and we don't do this, bad things happen.
+        GetByte( 1 );
+        SendStop();
+        LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Disable fifo
+        LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110); // 208 Hz ODR
+        LSM6DSL.sampCount = 0;
+        return 0;
+    }
 
-	fifolen &= 0x7ff;
+    fifolen &= 0x7ff;
 
-	if (fifolen > data_len / 2)
-		fifolen = data_len / 2;
+    if (fifolen > data_len / 2)
+        fifolen = data_len / 2;
 
-	// Make sure we only read out full data segments.
-	int read_len = fifolen / 6 * 12;
+    // Make sure we only read out full data segments.
+    int read_len = fifolen / 6 * 12;
 
-	if (read_len == 0)
-	{
-		// No bytes? nak!
-		GetByte(1);
-		SendStop();
-		return 0;
-	}
+    if (read_len == 0)
+    {
+        // No bytes? nak!
+        GetByte(1);
+        SendStop();
+        return 0;
+    }
 
-	GetByte(0); // Ignoring FIFO Status 4
+    GetByte(0); // Ignoring FIFO Status 4
 
-	// Read out all bytes.
-	for (i = 0; i < read_len; i++)
-	{
-		data[i] = GetByte(i == read_len - 1);
-	}
-	SendStop();
-	return fifolen;
+    // Read out all bytes.
+    for (i = 0; i < read_len; i++)
+    {
+        data[i] = GetByte(i == read_len - 1);
+    }
+    SendStop();
+    return fifolen;
 }
 
 //==============================================================================
@@ -428,52 +428,52 @@ int ReadLSM6DSL(uint8_t* data, int data_len)
 esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
 {
 
-	int i;
-	int retry = 0;
-	esp_err_t ret_val;
+    int i;
+    int retry = 0;
+    esp_err_t ret_val;
 
 do_retry:
 
-	gpio_config_t gsetup = {
-		.pin_bit_mask = (1ULL<<sda) | (1ULL<<scl),
-		.mode = GPIO_MODE_INPUT_OUTPUT,
-		.pull_up_en = GPIO_PULLUP_ENABLE,
-	};
+    gpio_config_t gsetup = {
+        .pin_bit_mask = (1ULL<<sda) | (1ULL<<scl),
+        .mode = GPIO_MODE_INPUT_OUTPUT,
+        .pull_up_en = GPIO_PULLUP_ENABLE,
+    };
 
-	ret_val = gpio_config( &gsetup );
+    ret_val = gpio_config( &gsetup );
 
-	// This will "shake loose" any devices stuck on the bus.
-	GPIO.enable_w1ts = 1<<(3);
-	GPIO.enable1_w1ts.val = 1<<(41-32);
-	esp_rom_delay_us(10);
-	GPIO.out_w1tc = 1<<(3);
-	for (i = 0; i < 16; i++)
-	{
-		esp_rom_delay_us(10);
-		GPIO.out1_w1ts.val = 1<<(41-32);
-		esp_rom_delay_us(10);
-		GPIO.out1_w1tc.val = 1<<(41-32);
-	}
-	esp_rom_delay_us(10);
-	GPIO.out1_w1ts.val = 1<<(41-32);
-	esp_rom_delay_us(10);
-	GPIO.out_w1ts = 1<<(3);
-	esp_rom_delay_us(10);
-	GPIO.out1_w1ts.val = 1<<(41-32);  // Send final stop
+    // This will "shake loose" any devices stuck on the bus.
+    GPIO.enable_w1ts = 1<<(3);
+    GPIO.enable1_w1ts.val = 1<<(41-32);
+    esp_rom_delay_us(10);
+    GPIO.out_w1tc = 1<<(3);
+    for (i = 0; i < 16; i++)
+    {
+        esp_rom_delay_us(10);
+        GPIO.out1_w1ts.val = 1<<(41-32);
+        esp_rom_delay_us(10);
+        GPIO.out1_w1tc.val = 1<<(41-32);
+    }
+    esp_rom_delay_us(10);
+    GPIO.out1_w1ts.val = 1<<(41-32);
+    esp_rom_delay_us(10);
+    GPIO.out_w1ts = 1<<(3);
+    esp_rom_delay_us(10);
+    GPIO.out1_w1ts.val = 1<<(41-32);  // Send final stop
 
-	ret_val = ESP_OK;
+    ret_val = ESP_OK;
 
-	// Prepare for normal open drain functionality.
-	GPIO.enable1_w1tc.val = 1<<(41-32);
-	GPIO.enable_w1tc = 1<<(3);
-	GPIO.out1_w1tc.val = 1<<(41-32);
-	GPIO.out_w1tc = 1<<(3);
+    // Prepare for normal open drain functionality.
+    GPIO.enable1_w1tc.val = 1<<(41-32);
+    GPIO.enable_w1tc = 1<<(3);
+    GPIO.out1_w1tc.val = 1<<(41-32);
+    GPIO.out_w1tc = 1<<(3);
 
-	// Enable access
-	LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
-	LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
-	esp_rom_delay_us(100);
-	LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
+    // Enable access
+    LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
+    LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
+    esp_rom_delay_us(100);
+    LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
 
     uint8_t who = 0xaa;
     int r       = GeneralI2CGet(LSM6DSL_ADDRESS, LMS6DS3_WHO_AM_I, &who, 1);
