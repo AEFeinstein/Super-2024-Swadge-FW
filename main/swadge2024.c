@@ -208,8 +208,6 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
-	ESP_LOGI( "test", "%p %p %p %p %p\n", &i2c_driver_delete, &LSM6DSLSet, &rsqrtf, &mathCrossProduct, &accelIntegrate );
-
     // If test mode was passed
     if (getTestModePassedSetting())
     {

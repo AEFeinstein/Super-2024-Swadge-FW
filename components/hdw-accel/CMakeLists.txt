@@ -1,3 +1,4 @@
 idf_component_register(SRCS "hdw-accel.c"
                     INCLUDE_DIRS "include"
-                    REQUIRES driver)
+                    REQUIRES driver
+					PRIV_REQUIRES hdw-nvs)

@@ -84,7 +84,10 @@ esp_err_t LSM6DSLSet( int reg, int val );
 int GeneralI2CGet( int device, int reg, uint8_t * data, int data_len );
 int ReadLSM6DSL( uint8_t * data, int data_len );
 
-#if 1
+#if 0
+
+// For main add 	ESP_LOGI( "test", "%p %p %p %p %p\n", &i2c_driver_delete, &LSM6DSLSet, &rsqrtf, &mathCrossProduct, &accelIntegrate );
+
 static void LSM6DSLIntegrate()
 {
 	LSM6DSLData * ld = &LSM6DSL;
@@ -117,9 +120,9 @@ static void LSM6DSLIntegrate()
 		int16_t * accel_data   = cdata + 3;
 
 		// Manual cal, used only for Steps 2..8
-	//	euler_deltas[0] -= 12;
-	//	euler_deltas[1] += 22;
-	//	euler_deltas[2] += 4;
+		//	euler_deltas[0] -= 12;
+		//	euler_deltas[1] += 22;
+		//	euler_deltas[2] += 4;
 
 		// We can sum rotations to understand the amount of counts in a full circle.
 		// Note: this is actually more of a debug mechanism.
@@ -149,10 +152,68 @@ static void LSM6DSLIntegrate()
 			-fScale };
 
 		float fEulers[3] = {
-			euler_deltas[0] * fEulerScales[0] + ld->fvBias[0],
-			euler_deltas[1] * fEulerScales[1] + ld->fvBias[1],
-			euler_deltas[2] * fEulerScales[2] + ld->fvBias[2] };
+			euler_deltas[0] * fEulerScales[0],
+			euler_deltas[1] * fEulerScales[1],
+			euler_deltas[2] * fEulerScales[2] };
 
+		// Used for calibration
+		if( ld->performCal )
+		{
+			float diff[3] = {
+				fEulers[0] - ld->fvAverage[0],
+				fEulers[1] - ld->fvAverage[1],
+				fEulers[2] - ld->fvAverage[2] };
+
+			float diffsq[3] = {
+				(diff[0]<0)?-diff[0]:diff[0],
+				(diff[1]<0)?-diff[1]:diff[1],
+				(diff[2]<0)?-diff[2]:diff[2] };
+
+			diffsq[0] *= 1000.0;
+			diffsq[1] *= 1000.0;
+			diffsq[2] *= 1000.0;
+
+			ld->fvDeviation[0] -= 0.004;
+			ld->fvDeviation[1] -= 0.004;
+			ld->fvDeviation[2] -= 0.004;
+
+			if( ld->fvDeviation[0] < diffsq[0] ) ld->fvDeviation[0] = diffsq[0];
+			if( ld->fvDeviation[1] < diffsq[1] ) ld->fvDeviation[1] = diffsq[1];
+			if( ld->fvDeviation[2] < diffsq[2] ) ld->fvDeviation[2] = diffsq[2];
+
+			if( ld->fvDeviation[0] > 0.8 ) ld->fvDeviation[0] = 0.8;
+			if( ld->fvDeviation[1] > 0.8 ) ld->fvDeviation[1] = 0.8;
+			if( ld->fvDeviation[2] > 0.8 ) ld->fvDeviation[2] = 0.8;
+
+			diff[0] *= mathsqrtf( ld->fvDeviation[0] ) * 0.5;
+			diff[1] *= mathsqrtf( ld->fvDeviation[1] ) * 0.5;
+			diff[2] *= mathsqrtf( ld->fvDeviation[2] ) * 0.5;
+
+			ld->fvAverage[0] += diff[0];
+			ld->fvAverage[1] += diff[1];
+			ld->fvAverage[2] += diff[2];
+
+			// Compute the running RMS error.
+			float fvEuler = (
+				ld->fvDeviation[0] * ld->fvDeviation[0] +
+				ld->fvDeviation[1] * ld->fvDeviation[1] +
+				ld->fvDeviation[2] * ld->fvDeviation[2] );
+
+			if( fvEuler < 0.00015f )
+			{
+				ld->fvBias[0] = -ld->fvAverage[0];
+				ld->fvBias[1] = -ld->fvAverage[1];
+				ld->fvBias[2] = -ld->fvAverage[2];
+				writeNvs32( "gyrocalx", *(int32_t*)(&ld->fvBias[0]) );
+				writeNvs32( "gyrocaly", *(int32_t*)(&ld->fvBias[1]) );
+				writeNvs32( "gyrocalz", *(int32_t*)(&ld->fvBias[2]) );
+				ld->performCal = 0;
+			}
+		}
+
+		fEulers[0] += ld->fvBias[0];
+		fEulers[1] += ld->fvBias[1];
+		fEulers[2] += ld->fvBias[2];
 		mathEulerToQuat( ld->fqQuatLast, fEulers );
 		mathQuatApply( ld->fqQuat, ld->fqQuat, ld->fqQuatLast );
 
@@ -197,9 +258,9 @@ static void LSM6DSLIntegrate()
 		// If you do only this, you will always end up in an unstable oscillation. 
 		memcpy( ld->fCorrectLast, corrective_quaternion+1, 12 );
 		// XXX TODO: We need to multiply by amount the accelerometer gives us assurance.
-		ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
-		ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
-		ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
+		//ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
+		//ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
+		//ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
 
 		float corrective_force = (ld->sampCount++ == 0) ? 0.5f : 0.0005f;
 
@@ -302,7 +363,7 @@ void sandbox_main(void)
 
     loadWsg("kid0.wsg", &example_sprite, true);
 
-	LSM6DSL.sampCount = 0;
+	accelSetRegistersAndReset();
 
 	setFrameRateUs(0);
 
@@ -394,7 +455,7 @@ void sandbox_tick()
 	}
 #endif
 
-	int r = accelIntegrate();
+	accelIntegrate();
 //	LSM6DSLIntegrate();
 
 /*
@@ -452,6 +513,13 @@ void sandbox_tick()
     uint32_t renderTime = getCycleCount() - cycStart;
 
 
+	ESP_LOGI( "I2C", "%d %d  %f %f %f   %f %f %f   %f %f %f",
+		(int)LSM6DSL.sampCount, (int)LSM6DSL.performCal,
+		LSM6DSL.fvBias[0], LSM6DSL.fvBias[1], LSM6DSL.fvBias[2], 
+		LSM6DSL.fvDeviation[0], LSM6DSL.fvDeviation[1], LSM6DSL.fvDeviation[2],
+		LSM6DSL.fvAverage[0], LSM6DSL.fvAverage[1], LSM6DSL.fvAverage[2] );
+
+/*
 	cts += sprintf( cts, "%ld %ld %d %f %f %f / %f %f %f / %3d %3d %3d / %4d %4d %4d",
 		LSM6DSL.computetime, renderTime, LSM6DSL.lastreadr,
 		LSM6DSL.fCorrectLast[0], LSM6DSL.fCorrectLast[1], LSM6DSL.fCorrectLast[2],
@@ -460,10 +528,12 @@ void sandbox_tick()
 		LSM6DSL.accellast[0], LSM6DSL.accellast[1], LSM6DSL.accellast[2] );
 
 	ESP_LOGI( "I2C", "%s", ctsbuffer );
+*/
 }
 
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
 {
+	accelIntegrate();
     fillDisplayArea(x, y, x+w, y+h, 0 );
 }
 

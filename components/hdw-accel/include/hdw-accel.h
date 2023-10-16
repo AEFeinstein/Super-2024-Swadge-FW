@@ -48,28 +48,33 @@
 
 typedef struct 
 {
-	int32_t temp;
-	uint32_t computetime;
+    int32_t temp;
+    uint32_t computetime;
+    uint32_t performCal; // 1 if expecting a zero cal.
 
-	// Quats are wxyz.
-	// You can take a vector, in controller space, rotate by this quat, and you get it in world space.
-	float fqQuatLast[4]; // Delta
-	float fqQuat[4];  // Absolute
+    // Quats are wxyz.
+    // You can take a vector, in controller space, rotate by this quat, and you get it in world space.
+    float fqQuatLast[4]; // Delta
+    float fqQuat[4];  // Absolute
 
-	// The last raw accelerometer (NOT FUSED)
-	float fvLastAccelRaw[3];
+    // The last raw accelerometer (NOT FUSED)
+    float fvLastAccelRaw[3];
 
-	// Bias for all of the euler angles.
-	float fvBias[3];
+    // Bias for all of the euler angles.
+    float fvBias[3];
 
-	uint32_t sampCount;
+    // Used for calibration
+    float fvDeviation[3];
+    float fvAverage[3];
 
-	// For debug
-	int lastreadr;
-	int32_t gyroaccum[3];
-	int16_t gyrolast[3];
-	int16_t accellast[3];
-	float fCorrectLast[3];
+    uint32_t sampCount;
+
+    // For debug
+    int lastreadr;
+    int32_t gyroaccum[3];
+    int16_t gyrolast[3];
+    int16_t accellast[3];
+    float fCorrectLast[3];
 } LSM6DSLData;
 
 extern LSM6DSLData LSM6DSL;
@@ -77,9 +82,12 @@ extern LSM6DSLData LSM6DSL;
 esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz );
 esp_err_t deInitAccelerometer(void);
 esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z);
+esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetQuaternion(float * q);
 esp_err_t accelIntegrate();
-
+esp_err_t accelPerformCal();
+float accelGetStdDevInCal();
+void accelSetRegistersAndReset();
 
 // Utility functions (to replace at a later time)
 
