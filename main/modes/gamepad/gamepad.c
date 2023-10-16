@@ -424,6 +424,8 @@ void gamepadMenuLoop(int64_t elapsedUs)
         }
             // No wifi mode stuff
     }
+
+    accelIntegrate();
 }
 
 /**
@@ -676,7 +678,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
             // Declare variables to receive acceleration
             int16_t a_x, a_y, a_z;
             // Get the current acceleration
-            if (ESP_OK == accelGetAccelVec(&a_x, &a_y, &a_z))
+            if (ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
             {
                 // Values are roughly -256 to 256, so divide, clamp, and save
                 gamepad->gpState.rx = CLAMP((a_x) / 2, -128, 127);

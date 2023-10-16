@@ -22,7 +22,8 @@
 // Logging can cause issues in operation, so by default it should remain off.
 #define ULOG(x...) // ESP_LOGI( "advanced_usb_control", x )
 
-#define AUPB_SIZE 2048
+// Size of printf buffer.
+#define AUPB_SIZE 4096
 
 //==============================================================================
 // Variables
@@ -138,9 +139,9 @@ int handle_advanced_usb_terminal_get(uint8_t* data, int reqLen)
     int mark = 1;
     if (togo)
     {
-        if (togo > reqLen - 2)
+        if (togo > reqLen - 3)
         {
-            togo = reqLen - 2;
+            togo = reqLen - 3;
         }
         while (mark <= togo)
         {

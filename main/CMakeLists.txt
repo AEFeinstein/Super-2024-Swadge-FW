@@ -101,7 +101,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "utils/trigonometry.c"
                             "utils/vector2d.c"
                             "utils/wheel_menu.c"
-                    PRIV_REQUIRES hdw-accel
+                    PRIV_REQUIRES hdw-imu
                                   hdw-battmon
                                   hdw-btn
                                   hdw-bzr

@@ -48,7 +48,7 @@ touchJoystick_t getTouchJoystickZones(int32_t angle, int32_t radius, bool useCen
     int16_t offset = 360 - (360 / sectors) / 2;
 
     // Check if we're too close to the center, and return just TB_CENTER
-    if (useCenter && radius < 64)
+    if (useCenter && radius < 128)
     {
         // TODO is this an OK value for the "center pad" position?
         return TB_CENTER;

@@ -71,7 +71,7 @@
  * - hdw-battmon.h: Learn how to check the battery voltage!
  * - hdw-btn.h: Learn how to use both push and touch button input!
  * - hdw-bzr.h: Learn how to use the buzzer!
- * - hdw-accel.h: Learn how to use the accelerometer!
+ * - hdw-imu.h: Learn how to use the inertial measurement unit!
  * - hdw-led.h: Learn how to use the LEDs!
  * - hdw-mic.h: Learn how to use the microphone!
  * - hdw-temperature.h: Learn how to use the temperature sensor!
@@ -308,7 +308,8 @@ void app_main(void)
         initAccelerometer(I2C_NUM_0,
                           GPIO_NUM_3,  // SDA
                           GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
+                          GPIO_PULLUP_ENABLE, 1000000);
+        accelIntegrate();
     }
 
     // Init the temperature sensor
