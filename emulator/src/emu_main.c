@@ -26,7 +26,7 @@
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
-#include "hdw-accel_emu.h"
+#include "hdw-imu_emu.h"
 #include "swadge2024.h"
 #include "macros.h"
 #include "trigonometry.h"

@@ -3,8 +3,8 @@
 #include "esp_timer.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
-#include "hdw-accel.h"
-#include "hdw-accel_emu.h"
+#include "hdw-imu.h"
+#include "hdw-imu_emu.h"
 #include "macros.h"
 #include "emu_main.h"
 #include "ext_modes.h"
@@ -199,7 +199,7 @@ static void replayRecordFrame(uint64_t frame)
     }
 
     int16_t accelX, accelY, accelZ;
-    accelGetAccelVec(&accelX, &accelY, &accelZ);
+    accelGetOrientVec(&accelX, &accelY, &accelZ);
 
     buttonBit_t curButtons = emulatorGetButtonState();
 
