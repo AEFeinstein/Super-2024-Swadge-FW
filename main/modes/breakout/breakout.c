@@ -124,7 +124,7 @@ uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 24
+#define NUM_LEVELS 25
 
 static const leveldef_t leveldef[NUM_LEVELS] = {
     {.filename = "intro.bin",
@@ -174,6 +174,8 @@ static const leveldef_t leveldef[NUM_LEVELS] = {
     {.filename = "firework.bin",
      .timeLimit = 180},
     {.filename = "starlite.bin",
+     .timeLimit = 180},
+    {.filename = "jailbreak.bin",
      .timeLimit = 180}
      };
     
