@@ -25,9 +25,9 @@
 #define AB_SEP     6
 #define DPAD_SEP   15
 
-#define ACCEL_BAR_WIDTH 8
-#define ACCEL_BAR_CENT  150
-#define MAX_ACCEL_BAR_SIZE  40
+#define ACCEL_BAR_WIDTH    8
+#define ACCEL_BAR_CENT     150
+#define MAX_ACCEL_BAR_SIZE 40
 
 #define TOUCHBAR_WIDTH  60
 #define TOUCHBAR_HEIGHT 60
@@ -175,7 +175,7 @@ void testEnterMode(void)
     loadSong("stereo_test.sng", &test->song, false);
     bzrPlayBgm(&test->song, BZR_STEREO);
 
-    // Clear out accel setting. 
+    // Clear out accel setting.
     accelPerformCal();
 
     // Set NVM to indicate test not passed yet
@@ -297,59 +297,78 @@ void testMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Plot X accel
-    int16_t barDelta = ((test->x) * MAX_ACCEL_BAR_SIZE) / 256;
+    int16_t barDelta    = ((test->x) * MAX_ACCEL_BAR_SIZE) / 256;
     int16_t barDeltaInv = -barDelta;
-    if( barDelta < 0 ) barDelta = 0;
-    if( barDeltaInv < 0 ) barDeltaInv = 0;
-    accelColor = ((test->accelFlags & 0b1001) == 0b1001)?c050:c500;
-    fillDisplayArea(ACCEL_BAR_WIDTH, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH*2, ACCEL_BAR_CENT + barDelta, accelColor);
+    if (barDelta < 0)
+        barDelta = 0;
+    if (barDeltaInv < 0)
+        barDeltaInv = 0;
+    accelColor = ((test->accelFlags & 0b1001) == 0b1001) ? c050 : c500;
+    fillDisplayArea(ACCEL_BAR_WIDTH, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH * 2, ACCEL_BAR_CENT + barDelta,
+                    accelColor);
 
     // Plot Y accel
-    barDelta = ((test->y) * MAX_ACCEL_BAR_SIZE) / 256;
+    barDelta    = ((test->y) * MAX_ACCEL_BAR_SIZE) / 256;
     barDeltaInv = -barDelta;
-    if( barDelta < 0 ) barDelta = 0;
-    if( barDeltaInv < 0 ) barDeltaInv = 0;
-    accelColor = ((test->accelFlags & 0b10010) == 0b10010)?c050:c500;
-    fillDisplayArea(ACCEL_BAR_WIDTH*3, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH*4, ACCEL_BAR_CENT + barDelta, accelColor);
+    if (barDelta < 0)
+        barDelta = 0;
+    if (barDeltaInv < 0)
+        barDeltaInv = 0;
+    accelColor = ((test->accelFlags & 0b10010) == 0b10010) ? c050 : c500;
+    fillDisplayArea(ACCEL_BAR_WIDTH * 3, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH * 4, ACCEL_BAR_CENT + barDelta,
+                    accelColor);
 
     // Plot Z accel
-    barDelta = ((test->z) * MAX_ACCEL_BAR_SIZE) / 256;
+    barDelta    = ((test->z) * MAX_ACCEL_BAR_SIZE) / 256;
     barDeltaInv = -barDelta;
-    if( barDelta < 0 ) barDelta = 0;
-    if( barDeltaInv < 0 ) barDeltaInv = 0;
-    accelColor = ((test->accelFlags & 0b100100) == 0b100100)?c050:c500;
-    fillDisplayArea(ACCEL_BAR_WIDTH*5, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH*6, ACCEL_BAR_CENT + barDelta, accelColor);
+    if (barDelta < 0)
+        barDelta = 0;
+    if (barDeltaInv < 0)
+        barDeltaInv = 0;
+    accelColor = ((test->accelFlags & 0b100100) == 0b100100) ? c050 : c500;
+    fillDisplayArea(ACCEL_BAR_WIDTH * 5, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH * 6, ACCEL_BAR_CENT + barDelta,
+                    accelColor);
 
     // Plot orient X
-    barDelta = ((test->ox) * MAX_ACCEL_BAR_SIZE) / 256;
+    barDelta    = ((test->ox) * MAX_ACCEL_BAR_SIZE) / 256;
     barDeltaInv = -barDelta;
-    if( barDelta < 0 ) barDelta = 0;
-    if( barDeltaInv < 0 ) barDeltaInv = 0;
-    accelColor = ((test->accelFlags & 0b1001000000) == 0b1001000000)?c050:c500;
-    fillDisplayArea(ACCEL_BAR_WIDTH*7, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH*8, ACCEL_BAR_CENT + barDelta, accelColor);
+    if (barDelta < 0)
+        barDelta = 0;
+    if (barDeltaInv < 0)
+        barDeltaInv = 0;
+    accelColor = ((test->accelFlags & 0b1001000000) == 0b1001000000) ? c050 : c500;
+    fillDisplayArea(ACCEL_BAR_WIDTH * 7, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH * 8, ACCEL_BAR_CENT + barDelta,
+                    accelColor);
 
     // Plot orient Y accel
-    barDelta = ((test->oy) * MAX_ACCEL_BAR_SIZE) / 256;
+    barDelta    = ((test->oy) * MAX_ACCEL_BAR_SIZE) / 256;
     barDeltaInv = -barDelta;
-    if( barDelta < 0 ) barDelta = 0;
-    if( barDeltaInv < 0 ) barDeltaInv = 0;
-    accelColor = ((test->accelFlags & 0b10010000000) == 0b10010000000)?c050:c500;
-    fillDisplayArea(ACCEL_BAR_WIDTH*9, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH*10, ACCEL_BAR_CENT + barDelta, accelColor);
+    if (barDelta < 0)
+        barDelta = 0;
+    if (barDeltaInv < 0)
+        barDeltaInv = 0;
+    accelColor = ((test->accelFlags & 0b10010000000) == 0b10010000000) ? c050 : c500;
+    fillDisplayArea(ACCEL_BAR_WIDTH * 9, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH * 10, ACCEL_BAR_CENT + barDelta,
+                    accelColor);
 
     // Plot orientZ accel
-    barDelta = ((test->oz) * MAX_ACCEL_BAR_SIZE) / 256;
+    barDelta    = ((test->oz) * MAX_ACCEL_BAR_SIZE) / 256;
     barDeltaInv = -barDelta;
-    if( barDelta < 0 ) barDelta = 0;
-    if( barDeltaInv < 0 ) barDeltaInv = 0;
-    accelColor = ((test->accelFlags & 0b100100000000) == 0b100100000000)?c050:c500;
-    fillDisplayArea(ACCEL_BAR_WIDTH*11, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH*12, ACCEL_BAR_CENT + barDelta, accelColor);
-
+    if (barDelta < 0)
+        barDelta = 0;
+    if (barDeltaInv < 0)
+        barDeltaInv = 0;
+    accelColor = ((test->accelFlags & 0b100100000000) == 0b100100000000) ? c050 : c500;
+    fillDisplayArea(ACCEL_BAR_WIDTH * 11, ACCEL_BAR_CENT - barDeltaInv, ACCEL_BAR_WIDTH * 12, ACCEL_BAR_CENT + barDelta,
+                    accelColor);
 
     // Plot stability accel
     barDelta = MAX_ACCEL_BAR_SIZE - (test->stability);
-    if( barDelta < -MAX_ACCEL_BAR_SIZE ) barDelta = -MAX_ACCEL_BAR_SIZE;
-    accelColor = ((test->accelFlags & 0b1000000000000) == 0b1000000000000)?c050:c500;
-    fillDisplayArea(ACCEL_BAR_WIDTH*13, ACCEL_BAR_CENT + barDelta, ACCEL_BAR_WIDTH*14, ACCEL_BAR_CENT + MAX_ACCEL_BAR_SIZE, accelColor);
+    if (barDelta < -MAX_ACCEL_BAR_SIZE)
+        barDelta = -MAX_ACCEL_BAR_SIZE;
+    accelColor = ((test->accelFlags & 0b1000000000000) == 0b1000000000000) ? c050 : c500;
+    fillDisplayArea(ACCEL_BAR_WIDTH * 13, ACCEL_BAR_CENT + barDelta, ACCEL_BAR_WIDTH * 14,
+                    ACCEL_BAR_CENT + MAX_ACCEL_BAR_SIZE, accelColor);
 
     // Draw the 8-direction touchpad with center circle
     int16_t tBarX = TFT_WIDTH - TOUCHBAR_WIDTH;
@@ -757,39 +776,52 @@ void testReadAndValidateAccelerometer(void)
     int16_t x, y, z;
     int16_t ox, oy, oz;
 
-    if( accelIntegrate() < 0 )
+    if (accelIntegrate() < 0)
         return;
 
     accelGetAccelVecRaw(&x, &y, &z);
     accelGetOrientVec(&ox, &oy, &oz);
 
     // Save accel values
-    test->x = x;
-    test->y = y;
-    test->z = z;
-    test->ox = ox;
-    test->oy = oy;
-    test->oz = oz;
-    float fStab = accelGetStdDevInCal();
+    test->x         = x;
+    test->y         = y;
+    test->z         = z;
+    test->ox        = ox;
+    test->oy        = oy;
+    test->oz        = oz;
+    float fStab     = accelGetStdDevInCal();
     test->stability = fStab * 200.0f;
 
-    if (x > 150) test->accelFlags |= 1;
-    if (y > 150) test->accelFlags |= 2;
-    if (z > 150) test->accelFlags |= 4;
-    if (x <-150) test->accelFlags |= 8;
-    if (y <-150) test->accelFlags |= 16;
-    if (z <-150) test->accelFlags |= 32;
+    if (x > 150)
+        test->accelFlags |= 1;
+    if (y > 150)
+        test->accelFlags |= 2;
+    if (z > 150)
+        test->accelFlags |= 4;
+    if (x < -150)
+        test->accelFlags |= 8;
+    if (y < -150)
+        test->accelFlags |= 16;
+    if (z < -150)
+        test->accelFlags |= 32;
 
-    if (ox > 150) test->accelFlags |= 64;
-    if (oy > 150) test->accelFlags |= 128;
-    if (oz > 150) test->accelFlags |= 256;
-    if (ox <-150) test->accelFlags |= 512;
-    if (oy <-150) test->accelFlags |= 1024;
-    if (oz <-150) test->accelFlags |= 2048;
-    if (fStab < 0.00001f ) test->accelFlags |= 4096;
+    if (ox > 150)
+        test->accelFlags |= 64;
+    if (oy > 150)
+        test->accelFlags |= 128;
+    if (oz > 150)
+        test->accelFlags |= 256;
+    if (ox < -150)
+        test->accelFlags |= 512;
+    if (oy < -150)
+        test->accelFlags |= 1024;
+    if (oz < -150)
+        test->accelFlags |= 2048;
+    if (fStab < 0.00001f)
+        test->accelFlags |= 4096;
 
     // Make sure all values are nonzero
-    if ( test->accelFlags == 0b1111111111111 )
+    if (test->accelFlags == 0b1111111111111)
     {
         test->accelPassed = true;
     }

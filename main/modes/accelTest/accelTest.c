@@ -258,54 +258,54 @@ static void accelTestHandleInput(void)
  */
 static void accelDrawBunny(void)
 {
-
     // Produce a model matrix from a quaternion.
-    float plusx_out[3] = { 1, 0, 0 };
-    float plusy_out[3] = { 0, 1, 0 };
-    float plusz_out[3] = { 0, 0, 1 };
+    float plusx_out[3] = {1, 0, 0};
+    float plusy_out[3] = {0, 1, 0};
+    float plusz_out[3] = {0, 0, 1};
 
-    mathRotateVectorByQuaternion( plusy_out, LSM6DSL.fqQuat, plusy_out );
-    mathRotateVectorByQuaternion( plusx_out, LSM6DSL.fqQuat, plusx_out );
-    mathRotateVectorByQuaternion( plusz_out, LSM6DSL.fqQuat, plusz_out );
+    mathRotateVectorByQuaternion(plusy_out, LSM6DSL.fqQuat, plusy_out);
+    mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
+    mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
 
-    int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
+    int16_t bunny_verts_out[sizeof(bunny_verts) / 3 / 2 * 3];
     int i, vertices = 0;
-    for( i = 0; i < sizeof(bunny_verts)/2; i+= 3 )
+    for (i = 0; i < sizeof(bunny_verts) / 2; i += 3)
     {
         // Performingthe transform this way is about 700us.
-        float bx = bunny_verts[i+2];
-        float by = bunny_verts[i+1];
-        float bz =-bunny_verts[i+0];
-        float bunnyvert[3] = {
-            bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
-            bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
-            bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2] };
-        bunny_verts_out[vertices*3+0] = bunnyvert[0]/250 + 280/2; 
-        bunny_verts_out[vertices*3+1] = -bunnyvert[1]/250 + 240/2;  // Convert from right-handed to left-handed coordinate frame.
-        bunny_verts_out[vertices*3+2] = bunnyvert[2];
+        float bx                          = bunny_verts[i + 2];
+        float by                          = bunny_verts[i + 1];
+        float bz                          = -bunny_verts[i + 0];
+        float bunnyvert[3]                = {bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
+                                             bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
+                                             bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]};
+        bunny_verts_out[vertices * 3 + 0] = bunnyvert[0] / 250 + 280 / 2;
+        bunny_verts_out[vertices * 3 + 1]
+            = -bunnyvert[1] / 250 + 240 / 2; // Convert from right-handed to left-handed coordinate frame.
+        bunny_verts_out[vertices * 3 + 2] = bunnyvert[2];
         vertices++;
     }
 
     int lines = 0;
-    for( i = 0; i < sizeof(bunny_lines); i+= 2 )
+    for (i = 0; i < sizeof(bunny_lines); i += 2)
     {
-        int v1 = bunny_lines[i]*3;
-        int v2 = bunny_lines[i+1]*3;
-        float col = bunny_verts_out[v1+2]/2000 + 8;
-        if( col > 5 ) col = 5;
-        else if( col < 0 ) continue;
-        drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1+1],bunny_verts_out[v2], bunny_verts_out[v2+1], col);
+        int v1    = bunny_lines[i] * 3;
+        int v2    = bunny_lines[i + 1] * 3;
+        float col = bunny_verts_out[v1 + 2] / 2000 + 8;
+        if (col > 5)
+            col = 5;
+        else if (col < 0)
+            continue;
+        drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1 + 1], bunny_verts_out[v2], bunny_verts_out[v2 + 1], col);
         lines++;
     }
 }
-
 
 /**
  * @brief Reset the accelerometer test mode variables
  */
 static void accelTestReset(void)
 {
-	accelSetRegistersAndReset();
+    accelSetRegistersAndReset();
 
     accelTest->first = 0;
     accelTest->last  = 0;
@@ -337,7 +337,7 @@ static void accelTestReset(void)
 static void accelTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     accelIntegrate();
-    fillDisplayArea(x, y, x+w, y+h, GRAPH_BG_COLOR );
+    fillDisplayArea(x, y, x + w, y + h, GRAPH_BG_COLOR);
 }
 
 /**

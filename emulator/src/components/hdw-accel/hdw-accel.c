@@ -29,7 +29,7 @@ LSM6DSLData LSM6DSL;
  * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz )
+esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
 {
     // Default to the swadge sitting still, face-up on a table somewhere on earth
     _accelX = 0;
@@ -101,7 +101,7 @@ esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z)
 
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
 {
-	return accelGetAccelVecRaw( x, y, z );
+    return accelGetAccelVecRaw(x, y, z);
 }
 
 /**
@@ -161,8 +161,8 @@ void emulatorSetAccelerometerRotation(int16_t value, uint16_t yaw, uint16_t pitc
 
 esp_err_t accelIntegrate()
 {
-	// Do nothing (is stub function)
-	return ESP_OK;
+    // Do nothing (is stub function)
+    return ESP_OK;
 }
 
 /**
@@ -172,21 +172,20 @@ esp_err_t accelIntegrate()
  * @param q Pointer to the wzyz quaternion (float[4]) of the rotation.
  * @param p Pointer to the float[3] of the vector to rotates.
  */
-void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p)
+void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p)
 {
     // return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
     float iqo[3];
-    mathCrossProduct( iqo, q + 1 /*.xyz*/, p );
+    mathCrossProduct(iqo, q + 1 /*.xyz*/, p);
     iqo[0] += q[0] * p[0];
     iqo[1] += q[0] * p[1];
     iqo[2] += q[0] * p[2];
     float ret[3];
-    mathCrossProduct( ret, q + 1 /*.xyz*/, iqo );
+    mathCrossProduct(ret, q + 1 /*.xyz*/, iqo);
     pout[0] = ret[0] * 2.0 + p[0];
     pout[1] = ret[1] * 2.0 + p[1];
     pout[2] = ret[2] * 2.0 + p[2];
 }
-
 
 /**
  * @brief Perform a 3D cross product
@@ -195,13 +194,13 @@ void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p
  * @param a Pointer to the float[3] of the cross product a vector.
  * @param a Pointer to the float[3] of the cross product b vector.
  */
-void mathCrossProduct(float * p, const float * a, const float * b)
+void mathCrossProduct(float* p, const float* a, const float* b)
 {
     float tx = a[1] * b[2] - a[2] * b[1];
     float ty = a[2] * b[0] - a[0] * b[2];
-    p[2] = a[0] * b[1] - a[1] * b[0];
-    p[1] = ty;
-    p[0] = tx;
+    p[2]     = a[0] * b[1] - a[1] * b[0];
+    p[1]     = ty;
+    p[0]     = tx;
 }
 
 // stub
@@ -212,7 +211,7 @@ void accelSetRegistersAndReset()
 // stub
 esp_err_t accelPerformCal()
 {
-	return ESP_OK;
+    return ESP_OK;
 }
 
 // stub
@@ -220,4 +219,3 @@ float accelGetStdDevInCal()
 {
     return 0.0f;
 }
-

@@ -721,7 +721,7 @@ static void pongIncreaseBallVelocity(int16_t magnitude)
  */
 static void pongBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-	accelIntegrate();
+    accelIntegrate();
 
     // Use TURBO drawing mode to draw individual pixels fast
     SETUP_FOR_TURBO();

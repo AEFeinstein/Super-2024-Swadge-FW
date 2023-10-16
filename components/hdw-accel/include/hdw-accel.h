@@ -46,7 +46,7 @@
 #include <hal/gpio_types.h>
 #include <esp_err.h>
 
-typedef struct 
+typedef struct
 {
     int32_t temp;
     uint32_t computetime;
@@ -55,7 +55,7 @@ typedef struct
     // Quats are wxyz.
     // You can take a vector, in controller space, rotate by this quat, and you get it in world space.
     float fqQuatLast[4]; // Delta
-    float fqQuat[4];  // Absolute
+    float fqQuat[4];     // Absolute
 
     // The last raw accelerometer (NOT FUSED)
     float fvLastAccelRaw[3];
@@ -79,11 +79,11 @@ typedef struct
 
 extern LSM6DSLData LSM6DSL;
 
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz );
+esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz);
 esp_err_t deInitAccelerometer(void);
 esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t accelGetQuaternion(float * q);
+esp_err_t accelGetQuaternion(float* q);
 esp_err_t accelIntegrate(void);
 esp_err_t accelPerformCal(void);
 float accelGetStdDevInCal(void);
@@ -93,16 +93,15 @@ void accelSetRegistersAndReset(void);
 
 float rsqrtf(float x);
 float mathsqrtf(float x);
-void mathEulerToQuat(float * q, const float * euler);
-void mathQuatApply(float * qout, const float * q1, const float * q2);
-void mathQuatNormalize(float * qout, const float * qin );
-void mathCrossProduct(float * p, const float * a, const float * b);
-void mathRotateVectorByInverseOfQuaternion(float * pout, const float * q, const float * p );
-void mathRotateVectorByQuaternion(float * pout, const float * q, const float * p);
-esp_err_t GeneralSet( int dev, int reg, int val );
-esp_err_t LSM6DSLSet( int reg, int val );
-int GeneralI2CGet( int device, int reg, uint8_t * data, int data_len );
-int ReadLSM6DSL( uint8_t * data, int data_len );
-
+void mathEulerToQuat(float* q, const float* euler);
+void mathQuatApply(float* qout, const float* q1, const float* q2);
+void mathQuatNormalize(float* qout, const float* qin);
+void mathCrossProduct(float* p, const float* a, const float* b);
+void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const float* p);
+void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p);
+esp_err_t GeneralSet(int dev, int reg, int val);
+esp_err_t LSM6DSLSet(int reg, int val);
+int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
+int ReadLSM6DSL(uint8_t* data, int data_len);
 
 #endif

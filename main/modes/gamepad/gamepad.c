@@ -425,7 +425,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
             // No wifi mode stuff
     }
 
-	accelIntegrate();
+    accelIntegrate();
 }
 
 /**

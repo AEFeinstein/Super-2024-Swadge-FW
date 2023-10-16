@@ -308,8 +308,8 @@ void app_main(void)
         initAccelerometer(I2C_NUM_0,
                           GPIO_NUM_3,  // SDA
                           GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_ENABLE, 1000000 );
-		accelIntegrate();
+                          GPIO_PULLUP_ENABLE, 1000000);
+        accelIntegrate();
     }
 
     // Init the temperature sensor
