@@ -93,8 +93,8 @@ idf_component_register(SRCS "swadge2024.c"
                             "modes/soko/soko.c"
                             "modes/touchTest/touchTest.c"
                             "modes/tunernome/tunernome.c"
-                            "../tools/spiffs_file_preprocesor/src-lib/heatshrink_encoder.c"
                             "utils/color_utils.c"
+                            "utils/dialogBox.c"
                             "utils/geometry.c"
                             "utils/linked_list.c"
                             "utils/p2pConnection.c"
@@ -147,8 +147,7 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./modes/touchTest"
                                 "./modes/tunernome"
                                 "./modes/demo"
-                                "./modes/quickSettings"
-                                "../tools/spiffs_file_preprocesor/src-lib")
+                                "./modes/quickSettings")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL

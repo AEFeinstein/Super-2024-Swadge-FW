@@ -207,6 +207,20 @@
 #include "settingsManager.h"
 #include "touchUtils.h"
 
+typedef enum
+{
+    QUICK_SETTINGS_SHOW,
+    QUICK_SETTINGS_HIDE,
+} swadgeEvtType_t;
+
+typedef struct
+{
+    swadgeEvtType_t type;
+    union {
+        void* generic;
+    };
+} swadgeEvt_t;
+
 /**
  * @struct swadgeMode_t
  * @brief A struct of all the function pointers necessary for a swadge mode. If a mode does not need a particular
@@ -321,6 +335,12 @@ typedef struct
      * @return The number of bytes returned to the host
      */
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
+
+    /**
+     * @brief Generic system events callback
+     *
+     */
+    void (*fnSwadgeEventCb)(const swadgeEvt_t* evt);
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);

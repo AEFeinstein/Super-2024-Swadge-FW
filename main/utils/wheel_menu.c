@@ -167,7 +167,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     drawCircleFilled(renderer->x, renderer->y, renderer->unselR, renderer->unselBgColor);
 
     uint16_t centerR          = renderer->centerR;
-    uint16_t fillAngle        = 0;
     paletteColor_t selBgColor = renderer->selBgColor;
 
     // If we haven't customized the back option to be around the ring, then we use the center
@@ -204,15 +203,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
             uint16_t r = (renderer->touched && menu->currentItem == node) ? renderer->selR : renderer->unselR;
 
-            drawLine(renderer->x + getCos1024(startAngle) * centerR / 1024,
-                     renderer->y - getSin1024(startAngle) * centerR / 1024,
-                     renderer->x + getCos1024(startAngle) * r / 1024, renderer->y - getSin1024(startAngle) * r / 1024,
-                     renderer->borderColor, 0);
-
-            drawLine(renderer->x + getCos1024(endAngle) * centerR / 1024,
-                     renderer->y - getSin1024(endAngle) * centerR / 1024, renderer->x + getCos1024(endAngle) * r / 1024,
-                     renderer->y - getSin1024(endAngle) * r / 1024, renderer->borderColor, 0);
-
             // If there's an icon, or the item's eventual color doesn't match the normal BG color
             if (info->icon
                 || ((renderer->touched && menu->currentItem == node) ? (info->selectedBg != selBgColor)
@@ -228,13 +218,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 ++wsgs;
             }
 
-            for (uint16_t ang = startAngle; ang != endAngle; ang = (ang + 1) % 360)
-            {
-                drawLine(renderer->x + getCos1024(ang) * (r + 1) / 1024, renderer->y - getSin1024(ang) * (r + 1) / 1024,
-                         renderer->x + getCos1024((ang + 1) % 360) * (r + 1) / 1024,
-                         renderer->y - getSin1024((ang + 1) % 360) * (r + 1) / 1024, renderer->borderColor, 0);
-            }
-
             if (renderer->touched && menu->currentItem == node)
             {
                 if (info->selectedBg != selBgColor)
@@ -242,7 +225,32 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                     selBgColor = info->selectedBg;
                 }
 
-                fillAngle = centerAngle;
+                fillCircleSector(renderer->x, renderer->y, centerR, r, startAngle, endAngle, selBgColor);
+            }
+            else if (info->unselectedBg != renderer->unselBgColor)
+            {
+                fillCircleSector(renderer->x, renderer->y, centerR, r, startAngle, endAngle, info->unselectedBg);
+            }
+
+            drawLine(renderer->x + getCos1024(startAngle) * centerR / 1024,
+                     renderer->y - getSin1024(startAngle) * centerR / 1024,
+                     renderer->x + getCos1024(startAngle) * r / 1024, renderer->y - getSin1024(startAngle) * r / 1024,
+                     renderer->borderColor, 0);
+
+            drawLine(renderer->x + getCos1024(endAngle) * centerR / 1024,
+                     renderer->y - getSin1024(endAngle) * centerR / 1024,
+                     renderer->x + getCos1024(endAngle) * r / 1024,
+                     renderer->y - getSin1024(endAngle) * r / 1024,
+                     renderer->borderColor, 0);
+
+            for (uint16_t ang = startAngle; ang != endAngle; ang = (ang + 1) % 360)
+            {
+                // Fill in the whole thing
+                drawLine(renderer->x + getCos1024(ang) * (r + 1) / 1024,
+                         renderer->y - getSin1024(ang) * (r + 1) / 1024,
+                         renderer->x + getCos1024((ang + 1) % 360) * (r + 1) / 1024,
+                         renderer->y - getSin1024((ang + 1) % 360) * (r + 1) / 1024,
+                         renderer->borderColor, 0);
             }
         }
 
@@ -264,21 +272,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     }
     else
     {
+        //
+        drawCircleFilled(renderer->x, renderer->y, centerR, renderer->unselBgColor);
+
         // Draw the center circle first to establish bounds for the fill
         drawCircle(renderer->x, renderer->y, centerR, renderer->borderColor);
-
-        // Color the background under the selected item, first the inner part
-        floodFill(renderer->x + getCos1024(fillAngle) * (centerR + (renderer->unselR - centerR) / 2) / 1024,
-                  renderer->y - getSin1024(fillAngle) * (centerR + (renderer->unselR - centerR) / 2) / 1024, selBgColor,
-                  renderer->x - renderer->selR, renderer->y - renderer->selR, renderer->x + renderer->selR,
-                  renderer->y + renderer->selR);
-
-        // And then color the outer part of the selected item
-        floodFill(
-            renderer->x + getCos1024(fillAngle) * (renderer->unselR + (renderer->selR - renderer->unselR) / 2) / 1024,
-            renderer->y - getSin1024(fillAngle) * (renderer->unselR + (renderer->selR - renderer->unselR) / 2) / 1024,
-            selBgColor, renderer->x - renderer->selR, renderer->y - renderer->selR, renderer->x + renderer->selR,
-            renderer->y + renderer->selR);
     }
 
     for (uint8_t i = 0; i < wsgs; i++)
@@ -286,8 +284,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         if (iconsToDraw[i].bgColor != renderer->unselBgColor)
         {
             // Fill in the background
-            floodFill(iconsToDraw[i].x, iconsToDraw[i].y, iconsToDraw[i].bgColor, renderer->x - renderer->selR,
-                      renderer->y - renderer->selR, renderer->x + renderer->selR, renderer->y + renderer->selR);
+            /*floodFill(iconsToDraw[i].x, iconsToDraw[i].y, iconsToDraw[i].bgColor, renderer->x - renderer->selR,
+                      renderer->y - renderer->selR, renderer->x + renderer->selR, renderer->y + renderer->selR);*/
         }
 
         if (iconsToDraw[i].wsg)

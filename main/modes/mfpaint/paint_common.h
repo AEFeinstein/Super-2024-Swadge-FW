@@ -389,6 +389,8 @@ typedef struct
     bool browserSave;
 
     imageBrowser_t browser;
+
+    bool exiting;
 } paintDraw_t;
 
 typedef struct

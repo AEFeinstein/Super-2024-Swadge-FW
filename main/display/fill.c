@@ -3,9 +3,12 @@
 //==============================================================================
 
 #include <string.h>
+#include <stdbool.h>
 
 #include "hdw-tft.h"
 #include "macros.h"
+#include "shapes.h"
+#include "trigonometry.h"
 #include "fill.h"
 
 //==============================================================================
@@ -459,4 +462,33 @@ static void _floodFillInner(uint16_t x, uint16_t y, paletteColor_t search, palet
         }
         lastRowLength = rowLength;              // record the new row length
     } while (lastRowLength != 0 && ++y < yMax); // if we get to a full row or to the bottom, we're done
+}
+
+/**
+ * @brief Helper function to draw a filled circle with translation and scaling
+ *
+ * @param x The X coordinate of the center of the circle
+ * @param y The Y coordinate of the center of the circle
+ * @param innerR The radius of the inside of the sector, or 0 for the whole circle
+ * @param outerR The radius of the circle
+ * @param startAngle The starting angle of the sector, in degrees CCW
+ * @param endAngle   The ending angle of the sector, in degrees CCW
+ * @param col The color to fill
+ */
+void fillCircleSector(uint16_t x, uint16_t y, uint16_t innerR, uint16_t outerR, uint16_t startAngle, uint16_t endAngle, paletteColor_t col)
+{
+    for (uint16_t deg = startAngle; deg != endAngle; deg = (deg + 1) % 360)
+    {
+        uint16_t inStartX = x + getCos1024(deg) * innerR / 1024;
+        uint16_t inStartY = y - getSin1024(deg) * innerR / 1024;
+        uint16_t outStartX = x + getCos1024(deg) * outerR / 1024;
+        uint16_t outStartY = y - getSin1024(deg) * outerR / 1024;
+        uint16_t inEndX = x + getCos1024((deg + 1) % 360) * innerR / 1024;
+        uint16_t inEndY = y - getSin1024((deg + 1) % 360) * innerR / 1024;
+        uint16_t outEndX = x + getCos1024((deg + 1) % 360) * outerR / 1024;
+        uint16_t outEndY = y - getSin1024((deg + 1) % 360) * outerR / 1024;
+
+        drawTriangleOutlined(inStartX, inStartY, outStartX, outStartY, outEndX, outEndY, col, col);
+        drawTriangleOutlined(inEndX, inEndY, outEndX, outEndY, inStartX, inStartY, col, col);
+    }
 }

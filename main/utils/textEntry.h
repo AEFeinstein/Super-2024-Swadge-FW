@@ -127,6 +127,7 @@ typedef struct
     /// @brief The font to use for text entry
     const font_t* font;
 
+    /// @brief A pointer to be passed back into the 
     void* data;
 
     /// @brief The function to call when the text entry is completed

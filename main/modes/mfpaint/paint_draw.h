@@ -27,7 +27,7 @@ void paintEditPaletteIncChannel(void);
 void paintEditPaletteNextChannel(void);
 
 void paintEditPalettePrevChannel(void);
-void paintEditPaletteSetupColor(void);
+void paintEditPaletteSetupColor(uint8_t index);
 void paintEditPalettePrevColor(void);
 void paintEditPaletteNextColor(void);
 void paintEditPaletteConfirm(void);

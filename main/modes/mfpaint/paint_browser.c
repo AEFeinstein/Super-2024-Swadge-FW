@@ -90,9 +90,9 @@ void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* 
     browser->font = font;
     browser->prevUpdateTime = 0;
 
-    nvs_entry_info_t imageInfos[numInfos] = {};
+    nvs_entry_info_t imageInfos[numInfos];
 
-    nvs_entry_info_t* imagePtrs[numInfos] = {};
+    nvs_entry_info_t* imagePtrs[numInfos];
     for (size_t i = 0; i < numInfos; i++)
     {
         imagePtrs[i] = &imageInfos[i];

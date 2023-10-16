@@ -269,6 +269,11 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
 
         curX += textOffset;
     }
+    else
+    {
+        dialogInfo->iconX = 0;
+        dialogInfo->iconY = 0;
+    }
 
     uint16_t detailH
         = textWordWrapHeight(detailFont, dialogBox->detail, maxW - DIALOG_PADDING * 2 - textOffset, maxH - DIALOG_PADDING - curY);
@@ -491,7 +496,7 @@ void drawDialogBox(const dialogBox_t* dialogBox, const font_t* titleFont, const 
     // Loop over buttons and draw them
     for (optionDrawInfo_t* drawInfo = optionInfos; drawInfo < (optionInfos + dialogBox->options.length); ++drawInfo)
     {
-        dialogBoxOption_t* option = drawInfo->option;
+        const dialogBoxOption_t* option = drawInfo->option;
 
         // Button background
         if (drawInfo->disabled)
