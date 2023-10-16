@@ -111,7 +111,7 @@ void updatePlayerVertical(entity_t * self);
 void updateBall(entity_t * self);
 void updateBallAtStart(entity_t *self);
 bool isOutsidePlayfield(entity_t* self);
-void detectLostBall(entity_t* self);
+void detectLostBall(entity_t* self, bool respawn);
 void updateCaptiveBallNotInPlay(entity_t* self);
 void updateCaptiveBallInPlay(entity_t* self);
 uint32_t getTaxiCabDistanceBetweenEntities(entity_t* self, entity_t* other);

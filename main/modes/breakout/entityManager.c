@@ -551,8 +551,7 @@ entity_t* createCaptiveBall(entityManager_t * entityManager, uint16_t x, uint16_
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->xspeed = 0;
-    entity->yspeed = 0;
+    
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
@@ -562,6 +561,11 @@ entity_t* createCaptiveBall(entityManager_t * entityManager, uint16_t x, uint16_
     entity->bouncesToNextSpeedUp = 5;
     entity->speedUpLookupIndex = 0;
     entity->maxSpeed = 127;
+    setVelocity(entity, (x + y) % 360, 39);
+
+    if(entity->yspeed == 0){
+        entity->yspeed = -16;
+    }
 
     entity->type = ENTITY_CAPTIVE_BALL;
     entity->spriteIndex = SP_BALL;

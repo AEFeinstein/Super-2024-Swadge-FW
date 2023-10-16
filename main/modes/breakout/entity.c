@@ -355,7 +355,7 @@ void updateBall(entity_t *self)
         }
     }
 
-    detectLostBall(self);
+    detectLostBall(self, true);
 };
 
 void updateBallAtStart(entity_t *self){
@@ -380,9 +380,9 @@ bool isOutsidePlayfield(entity_t* self){
     return (self->y > 3840 || self->x > 4480);
 }
 
-void detectLostBall(entity_t* self){
+void detectLostBall(entity_t* self, bool respawn){
     if(isOutsidePlayfield(self)) {
-        destroyEntity(self, true);
+        destroyEntity(self, respawn);
         self->gameData->ballsInPlay--;
         
         if(self->gameData->ballsInPlay <= 0){
@@ -397,14 +397,18 @@ void updateCaptiveBallNotInPlay(entity_t* self){
     detectEntityCollisions(self);
 
     if(isOutsidePlayfield(self)) {
-        destroyEntity(self, true);
+        destroyEntity(self, false);
     }
 }
 
 void updateCaptiveBallInPlay(entity_t* self){
     moveEntityWithTileCollisions(self);
     detectEntityCollisions(self);
-    detectLostBall(self);
+    detectLostBall(self, false);
+
+    if(self->gameData->frameCount % 2 == 0) {
+        createEntity(self->entityManager, ENTITY_BALL_TRAIL, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+    }
 }
 
 uint32_t getTaxiCabDistanceBetweenEntities(entity_t* self, entity_t* other){
@@ -787,7 +791,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 1 );
+                    scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_0;
                 }
@@ -800,7 +804,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 1 );
+                    scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_0;
                 }
@@ -813,7 +817,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 1 );
+                    scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_VERTICAL_0;
                 }
@@ -826,7 +830,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if(self->shouldAdvanceMultiplier){
-                    scorePoints(self->gameData, 0, 1 );
+                    scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_VERTICAL_0;
                 }
@@ -841,7 +845,7 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             other->spriteRotateAngle = 1 + (self->x % 359);
 
             if(self->shouldAdvanceMultiplier){
-                scorePoints(self->gameData, 0, 1 );
+                scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
                 self->shouldAdvanceMultiplier = false;
             }
 
@@ -881,6 +885,7 @@ void captiveBallCollisionHandler(entity_t *self, entity_t *other)
         self->overlapTileHandler = &ballOverlapTileHandler;
         self->updateFunction = &updateCaptiveBallInPlay;
         self->gameData->ballsInPlay++;
+        bzrPlaySfx(&(self->soundManager->launch), BZR_LEFT);
     }
 }
 
