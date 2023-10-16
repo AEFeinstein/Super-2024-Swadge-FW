@@ -77,8 +77,11 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
 
-        // Move enemies and run timers
-        enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, elapsedUs);
+        // Move enemies and run timers if not dying
+        if (E_DEAD != enemy->state)
+        {
+            enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, elapsedUs);
+        }
 
         // Animate the enemy
         if (animateEnemy(enemy, elapsedUs))
@@ -123,10 +126,60 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet))
     {
         // Transition to dying
-        enemy->state          = E_DEAD;
-        enemy->c.sprite       = enemy->deadSprites[0];
+        rayEnemyTransitionState(enemy, E_DEAD);
+    }
+}
+
+/**
+ * @brief Transition from the current animation state to the next
+ *
+ * @param enemy The enemy to transition
+ * @param newState The new state to transition to
+ */
+void rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
+{
+    if (E_DEAD == enemy->state)
+    {
+        // Never transition away from the death state
+        return;
+    }
+    else
+    {
+        // Switch to the new state
+        enemy->state          = newState;
         enemy->animTimer      = 0;
         enemy->animTimerFrame = 0;
+        enemy->animTimerLimit = 250000;
+        // Pick the sprites
+        switch (newState)
+        {
+            case E_WALKING:
+            {
+                enemy->c.sprite = enemy->walkSprites[0];
+                break;
+            }
+            case E_SHOOTING:
+            {
+                enemy->c.sprite       = enemy->shootSprites[0];
+                enemy->animTimerLimit = 100000;
+                break;
+            }
+            case E_HURT:
+            {
+                enemy->c.sprite = enemy->hurtSprites[0];
+                break;
+            }
+            case E_BLOCKING:
+            {
+                enemy->c.sprite = enemy->blockSprites[0];
+                break;
+            }
+            case E_DEAD:
+            {
+                enemy->c.sprite = enemy->deadSprites[0];
+                break;
+            }
+        }
     }
 }
 
@@ -197,8 +250,7 @@ static bool animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs)
             else
             {
                 // Return to walking
-                enemy->state          = E_WALKING;
-                enemy->animTimerFrame = 0;
+                rayEnemyTransitionState(enemy, E_WALKING);
             }
         }
         else

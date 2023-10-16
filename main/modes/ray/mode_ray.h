@@ -157,6 +157,15 @@ typedef enum
     E_DEAD,     ///< The enemy is dead
 } rayEnemyState_t;
 
+typedef enum
+{
+    DOING_NOTHING,
+    MOVE_POS_X,
+    MOVE_NEG_X,
+    MOVE_POS_Y,
+    MOVE_NEG_Y,
+} rayEnemyBehavior_t;
+
 /**
  * @brief All the possible loadouts
  */
@@ -422,7 +431,10 @@ typedef struct
 typedef struct
 {
     rayObjCommon_t c;                         ///< Common object properties
+    int32_t health;                           ///< The enemy's health
     rayEnemyState_t state;                    ///< This enemy's current state
+    rayEnemyBehavior_t behavior;              ///< What the enemy is currently doing
+    uint32_t behaviorTimer;                   ///< A timer used for this enemy's behaviors
     uint32_t animTimer;                       ///< A timer used for this enemy's animations
     uint32_t animTimerLimit;                  ///< The time at which the texture should switch
     uint32_t animTimerFrame;                  ///< The current animation frame

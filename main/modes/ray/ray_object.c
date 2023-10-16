@@ -48,6 +48,13 @@ void initEnemyTemplates(ray_t* ray)
         // Set the type
         ray->eTemplates[eIdx].c.type = types[eIdx];
 
+        // Set the health
+        ray->eTemplates[eIdx].health = 100;
+
+        // Set the state and behavior
+        rayEnemyTransitionState(&ray->eTemplates[eIdx], E_WALKING);
+        ray->eTemplates[eIdx].behavior = DOING_NOTHING;
+
         // Set the time for each animation state
         ray->eTemplates[eIdx].animTimerLimit = 250000;
 
