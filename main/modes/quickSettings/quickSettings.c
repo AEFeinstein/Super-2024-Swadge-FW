@@ -15,6 +15,7 @@
 #include "menu_utils.h"
 #include "menuQuickSettingsRenderer.h"
 #include "macros.h"
+#include "hdw-bzr.h"
 
 #include "settingsManager.h"
 
@@ -39,6 +40,8 @@ typedef struct
     menuQuickSettingsRenderer_t* renderer; ///< Renderer for the menu
     font_t font;                           ///< The font used for menu text
     int64_t ledTimer;
+    song_t jingle;
+    void* buzzerState;
 
     wsg_t iconGeneric;
     wsg_t iconSfxOn;
@@ -52,9 +55,11 @@ typedef struct
 
     int32_t lastOnSfxValue;
     int32_t minSfxValue;
+    int32_t prevSfxValue;
 
     int32_t lastOnBgmValue;
     int32_t minBgmValue;
+    int32_t prevBgmValue;
 
     int32_t lastOnLedsValue;
     int32_t minLedsValue;
@@ -168,6 +173,13 @@ static void quickSettingsEnterMode(void)
     // Load a font
     loadFont("ibm_vga8.font", &quickSettings->font, true);
 
+    // Save the buzzer state
+    quickSettings->buzzerState = bzrSave();
+    bzrStop(true);
+
+    // Load the buzzer song
+    loadSong("jingle.sng", &quickSettings->jingle, true);
+
     // Load graphics
     // Use SPI because we're not the only mode, I guess?
     loadWsg("defaultSetting.wsg", &quickSettings->iconGeneric, true);
@@ -202,6 +214,9 @@ static void quickSettingsEnterMode(void)
     int32_t bgmValue  = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue,
                                                 &quickSettings->minBgmValue);
 
+    quickSettings->prevSfxValue = sfxValue;
+    quickSettings->prevBgmValue = bgmValue;
+
     // Add the actual items to the menu
     addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsBacklight, tftBounds, tftValue);
@@ -228,6 +243,12 @@ static void quickSettingsExitMode(void)
     // Deinitialize the menu
     deinitMenu(quickSettings->menu);
     deinitMenuQuickSettingsRenderer(quickSettings->renderer);
+
+    // Free the buzzer song
+    freeSong(&quickSettings->jingle);
+
+    // Restore the buzzer state
+    bzrRestore(quickSettings->buzzerState);
 
     // Free the font
     freeFont(&quickSettings->font);
@@ -367,6 +388,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
 {
     if (label == quickSettingsLeds)
     {
+        bzrStop(true);
         setLedBrightnessSetting(value);
         if (value > quickSettings->minLedsValue)
         {
@@ -375,6 +397,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
     else if (label == quickSettingsBacklight)
     {
+        bzrStop(true);
         setTftBrightnessSetting(value);
         if (value > quickSettings->minTftValue)
         {
@@ -383,7 +406,14 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
     else if (label == quickSettingsSfx)
     {
-        setSfxVolumeSetting(value);
+        if (value != quickSettings->prevSfxValue)
+        {
+            bzrStop(true);
+            setSfxVolumeSetting(value);
+            bzrPlaySfx(&quickSettings->jingle, BZR_STEREO);
+            quickSettings->prevSfxValue = value;
+        }
+
         if (value > quickSettings->minSfxValue)
         {
             quickSettings->lastOnSfxValue = value;
@@ -391,7 +421,14 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
     else if (label == quickSettingsBgm)
     {
-        setBgmVolumeSetting(value);
+        if (value != quickSettings->prevBgmValue)
+        {
+            bzrStop(true);
+            setBgmVolumeSetting(value);
+            bzrPlayBgm(&quickSettings->jingle, BZR_STEREO);
+            quickSettings->prevBgmValue = value;
+        }
+
         if (value > quickSettings->minBgmValue)
         {
             quickSettings->lastOnBgmValue = value;
