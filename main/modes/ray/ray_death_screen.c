@@ -23,6 +23,7 @@ void rayDeathScreenRender(ray_t* ray, uint32_t elapsedUs)
         // If A was pressed
         if (evt.down)
         {
+            // TODO wait a few secs before accepting buttons
             if ((PB_A == evt.button) || (PB_B == evt.button))
             {
                 // Return to the menu

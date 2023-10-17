@@ -1,3 +1,4 @@
+#include "ray_enemy.h"
 #include "ray_enemy_strong.h"
 
 /**
@@ -9,6 +10,101 @@
  */
 void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
+    // Find the vector from the enemy to the player and normalize it
+    q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
+    q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
+    fastNormVec(&xDiff, &yDiff);
+
+    // Pick a new direction every 2s
+    enemy->behaviorTimer += elapsedUs;
+    if (enemy->behaviorTimer > 2000000)
+    {
+        enemy->behaviorTimer -= 2000000;
+
+        // Randomize movement
+        switch (esp_random() % 8)
+        {
+            case 0:
+            {
+                enemy->behavior = MOVE_AWAY_PLAYER;
+                break;
+            }
+            case 1 ... 2:
+            {
+                enemy->behavior = MOVE_STRAFE_R;
+                break;
+            }
+            case 3 ... 4:
+            {
+                enemy->behavior = MOVE_STRAFE_L;
+                break;
+            }
+            case 5 ... 7:
+            {
+                enemy->behavior = MOVE_TOWARDS_PLAYER;
+                break;
+            }
+        }
+
+        // Shoot at the player
+        rayEnemyTransitionState(enemy, E_SHOOTING);
+        // TODO spawn on some other frame
+        rayCreateBullet(ray, OBJ_BULLET_NORMAL, enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
+    }
+
+    // Reverse behavior if too close to the player
+    q24_8 xDist        = SUB_FX(ray->p.posX, enemy->c.posX);
+    q24_8 yDist        = SUB_FX(ray->p.posY, enemy->c.posY);
+    q24_8 distToPlayer = ADD_FX(MUL_FX(xDist, xDist), MUL_FX(yDist, yDist));
+    if (distToPlayer < TO_FX(4) && (MOVE_TOWARDS_PLAYER == enemy->behavior))
+    {
+        enemy->behavior = MOVE_AWAY_PLAYER;
+    }
+
+// Player is 40000 * 6
+#define SPEED_DENOM (int32_t)(40000 * 18)
+
+    q24_8 delX = 0;
+    q24_8 delY = 0;
+    switch (enemy->behavior)
+    {
+        case MOVE_AWAY_PLAYER:
+        {
+            delX = -(xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            delY = -(yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        case MOVE_TOWARDS_PLAYER:
+        {
+            delX = (xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            delY = (yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        case MOVE_STRAFE_L:
+        {
+            delX = (yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            delY = -(xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        case MOVE_STRAFE_R:
+        {
+            delX = -(yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            delY = (xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        default:
+        {
+            // Do nothing
+            break;
+        }
+    }
+
+    // Move if in bounds
+    if (isPassableCell(&ray->map.tiles[FROM_FX(enemy->c.posX + delX)][FROM_FX(enemy->c.posY + delY)]))
+    {
+        enemy->c.posX += delX;
+        enemy->c.posY += delY;
+    }
 }
 
 /**
@@ -22,9 +118,41 @@ void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  */
 bool rayEnemyStrongGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    if (OBJ_BULLET_CHARGE == bullet)
+    // Health starts at 100
+    bool hurt = false;
+    switch (bullet)
     {
-        return true;
+        case OBJ_BULLET_NORMAL:
+        {
+            // Invincible to normal bullets
+            break;
+        }
+        case OBJ_BULLET_CHARGE:
+        {
+            // One shot, one kill
+            enemy->health -= 100;
+            hurt = true;
+            break;
+        }
+        case OBJ_BULLET_ICE:
+        case OBJ_BULLET_MISSILE:
+        case OBJ_BULLET_XRAY:
+        {
+            // Five shots to kill
+            enemy->health -= 20;
+            hurt = true;
+            break;
+        }
+        default:
+        {
+            // Not a bullet
+            break;
+        }
     }
-    return false;
+
+    if (hurt)
+    {
+        rayEnemyTransitionState(enemy, E_HURT);
+    }
+    return enemy->health <= 0;
 }

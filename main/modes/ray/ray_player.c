@@ -226,6 +226,14 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     // Strafing is either locked or unlocked
     if (ray->isStrafing)
     {
+        if (NULL != ray->targetedObj)
+        {
+            // lock on the target before moving
+            pDirX = ray->targetedObj->posX - pPosX;
+            pDirY = ray->targetedObj->posY - pPosY;
+            fastNormVec(&pDirX, &pDirY);
+        }
+
         if (ray->btnState & PB_RIGHT)
         {
             // Strafe right

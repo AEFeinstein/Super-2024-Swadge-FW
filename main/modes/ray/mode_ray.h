@@ -8,6 +8,7 @@
 #include "swadge2024.h"
 #include "fp_math.h"
 #include "starfield.h"
+#include "esp_random.h"
 
 //==============================================================================
 // Defines
@@ -164,6 +165,10 @@ typedef enum
     MOVE_NEG_X,
     MOVE_POS_Y,
     MOVE_NEG_Y,
+    MOVE_STRAFE_L,
+    MOVE_STRAFE_R,
+    MOVE_TOWARDS_PLAYER,
+    MOVE_AWAY_PLAYER,
 } rayEnemyBehavior_t;
 
 /**

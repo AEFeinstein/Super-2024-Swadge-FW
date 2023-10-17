@@ -248,6 +248,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, in
 
     // Copy enemy data from the template (sprite indices, type)
     memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
+    // TODO randomize offset timer to not all move and shoot in lockstep
 
     // Set ID
     newObj->c.id = id;

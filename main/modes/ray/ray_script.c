@@ -660,6 +660,7 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case SPAWN:
         {
+            // TODO start timer to not do this infinitely
             // Create objects
             for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
             {
