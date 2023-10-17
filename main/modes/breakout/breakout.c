@@ -353,7 +353,24 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
  */
 static void breakoutMainLoop(int64_t elapsedUs)
 {
+    // Process button events
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if(breakout->update == &breakoutUpdateTitleScreen){
+            // Pass button events to the menu
+            breakout->menu = menuButton(breakout->menu, evt);
+        }
+
+        // Save the button state
+        breakout->btnState = evt.state;
+        breakout->gameData.btnState = evt.state;
+    }
+
     breakout->update(breakout, elapsedUs);
+
+    breakout->prevBtnState = breakout->btnState;
+    breakout->gameData.prevBtnState = breakout->prevBtnState;
 }
 
 void breakoutChangeStateTitleScreen(breakout_t *self){
@@ -362,14 +379,6 @@ void breakoutChangeStateTitleScreen(breakout_t *self){
 }
 
 static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
-    // Process button events
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Pass button events to the menu
-        breakout->menu = menuButton(breakout->menu, evt);
-    }
-
     // Draw the menu
     drawMenuLogbook(breakout->menu, breakout->mRenderer, elapsedUs);
 }
@@ -444,13 +453,17 @@ static void breakoutChangeStateGame(breakout_t *self){
  */
 static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
 {
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Save the button state
-        self->gameData.btnState = evt.state;
-    }
     updateTouchInput(&(self->gameData));
+    
+    if(
+        (
+            (breakout->gameData.btnState & PB_START)
+            &&
+            !(breakout->gameData.prevBtnState & PB_START)
+        )
+    ){
+        breakout->gameData.changeState = ST_PAUSE;
+    }
 
     updateLedsInGame(&(self->gameData));
     breakoutDetectGameStateChange(self);
@@ -474,8 +487,6 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs)
         
         self->gameData.inGameTimer++;
     }
-
-    self->gameData.prevBtnState = self->gameData.btnState;
 }
 
 /**
@@ -786,13 +797,6 @@ void breakoutChangeStatePause(breakout_t *self){
 }
 
 void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        // Save the button state
-        breakout->gameData.btnState = evt.state;
-    }
-
     if((
         (self->gameData.btnState & PB_START)
         &&
@@ -810,8 +814,6 @@ void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs){
     drawEntities(&(self->entityManager));
     drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
     breakoutDrawPause(&(self->logbook));
-
-    self->gameData.prevBtnState = self->prevBtnState;
 }
 
 void breakoutDrawPause(font_t *font){

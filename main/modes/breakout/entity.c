@@ -173,21 +173,6 @@ void updatePlayer(entity_t *self)
     if(self->gameData->frameCount % 10 == 0 && self->spriteIndex < SP_PADDLE_2){
         self->spriteIndex++;
     }
-
-    /*
-        TODO:
-        Move this. Doesn't need to be repeated across every paddle.
-    */
-    if(
-        (
-            (self->gameData->btnState & PB_START)
-            &&
-            !(self->gameData->prevBtnState & PB_START)
-        )
-    ){
-        self->gameData->changeState = ST_PAUSE;
-    }
-    
 };
 
 void updatePlayerVertical(entity_t *self)
@@ -218,21 +203,6 @@ void updatePlayerVertical(entity_t *self)
     if(self->gameData->frameCount % 10 == 0 && self->spriteIndex < SP_PADDLE_VERTICAL_2){
         self->spriteIndex++;
     }
-
-    /*
-        TODO:
-        Move this. Doesn't need to be repeated across every paddle.
-    */
-    if(
-        (
-            (self->gameData->btnState & PB_START)
-            &&
-            !(self->gameData->prevBtnState & PB_START)
-        )
-    ){
-        self->gameData->changeState = ST_PAUSE;
-    }
-
 };
 
 void updateBall(entity_t *self)
