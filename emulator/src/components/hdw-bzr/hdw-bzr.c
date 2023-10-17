@@ -488,3 +488,42 @@ void bzrResume(void)
         }
     }
 }
+
+/**
+ * @brief Save the state of the buzzer so that it can be restored later, perhaps
+ * after playing a different sound.
+ *
+ * @return A void-pointer which can be passed back to bzrRestore()
+ */
+void* bzrSave(void)
+{
+    bzrPause();
+
+    bzrTrack_t* result = malloc(sizeof(bzrTrack_t) * NUM_BUZZERS * 2);
+    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    {
+        memcpy(result + bIdx * 2, &buzzers[bIdx].bgm, sizeof(bzrTrack_t));
+        memcpy(result + bIdx * 2 + 1, &buzzers[bIdx].sfx, sizeof(bzrTrack_t));
+    }
+
+    return (void*)result;
+}
+
+/**
+ * @brief Restore the state of the buzzer from a void-pointer returned by bzrSave()
+ *
+ * The data passed pointer will be freed by this call.
+ *
+ * @param data The saved state of the buzzer, returned by bzrSave()
+ */
+void bzrRestore(void* data)
+{
+    bzrTrack_t* buzzerState = (bzrTrack_t*)data;
+    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    {
+        memcpy(&buzzers[bIdx].bgm, buzzerState + bIdx * 2, sizeof(bzrTrack_t));
+        memcpy(&buzzers[bIdx].sfx, buzzerState + bIdx * 2 + 1, sizeof(bzrTrack_t));
+    }
+
+    free(data);
+}
