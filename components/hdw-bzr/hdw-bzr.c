@@ -433,7 +433,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
             // Try playing SFX first
             bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, tElapsedUs);
             // Then play BGM if SFX isn't active
-            bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, sfxVolume, !sfxIsActive, tElapsedUs);
+            bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, bgmVolume, !sfxIsActive, tElapsedUs);
 
             // If nothing is playing, but there is BGM (i.e. SFX finished)
             if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bzr->bgm.sTrack))
