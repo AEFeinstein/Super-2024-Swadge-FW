@@ -855,7 +855,7 @@ void captiveBallCollisionHandler(entity_t *self, entity_t *other)
         self->overlapTileHandler = &ballOverlapTileHandler;
         self->updateFunction = &updateCaptiveBallInPlay;
         self->gameData->ballsInPlay++;
-        bzrPlaySfx(&(self->soundManager->launch), BZR_LEFT);
+        bzrPlaySfx(&(self->soundManager->launch), BZR_RIGHT);
     }
 }
 
