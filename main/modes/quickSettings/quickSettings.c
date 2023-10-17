@@ -14,6 +14,7 @@
 #include "menu.h"
 #include "menu_utils.h"
 #include "menuQuickSettingsRenderer.h"
+#include "macros.h"
 
 #include "settingsManager.h"
 
@@ -37,6 +38,7 @@ typedef struct
     menu_t* menu;                          ///< The menu structure
     menuQuickSettingsRenderer_t* renderer; ///< Renderer for the menu
     font_t font;                           ///< The font used for menu text
+    int64_t ledTimer;
 
     wsg_t iconGeneric;
     wsg_t iconSfxOn;
@@ -74,6 +76,7 @@ static void quickSettingsMenuCb(const char* label, bool selected, uint32_t setti
 static int32_t quickSettingsFlipValue(const char* label, int32_t value);
 static void quickSettingsOnChange(const char* label, int32_t value);
 static int32_t quickSettingsMenuFlipItem(const char* label);
+static void quickSettingsSetLeds(int64_t elapsedUs);
 
 //==============================================================================
 // Strings
@@ -316,6 +319,9 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
     {
         // Draw the menu
         drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
+
+        // Update the LEDs
+        quickSettingsSetLeds(elapsedUs);
     }
 }
 
@@ -443,4 +449,26 @@ static int32_t quickSettingsMenuFlipItem(const char* label)
     }
 
     return item->currentSetting;
+}
+
+static void quickSettingsSetLeds(int64_t elapsedUs)
+{
+    int64_t period = 3600000; // 3.6s
+    int64_t rOffset = (period * 2 / 3);
+    int64_t gOffset = (period * 1 / 3);
+    int64_t bOffset = 0;
+    uint8_t rSpeed = 1, gSpeed = 1, bSpeed = 2;
+
+
+    quickSettings->ledTimer = (quickSettings->ledTimer + elapsedUs) % period;
+
+    led_t leds[CONFIG_NUM_LEDS];
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i].r = MAX(0, getSin1024((quickSettings->ledTimer * rSpeed + rOffset + i * period / CONFIG_NUM_LEDS) % period * 360 / period)) * 255 / 1024;
+        leds[i].g = MAX(0, getSin1024((quickSettings->ledTimer * gSpeed + gOffset + i * period / CONFIG_NUM_LEDS) % period * 360 / period)) * 255 / 1024;
+        leds[i].b = MAX(0, getSin1024((quickSettings->ledTimer * bSpeed + bOffset + i * period / CONFIG_NUM_LEDS) % period * 360 / period)) * 255 / 1024;
+    }
+
+    setLeds(leds, ARRAY_SIZE(leds));
 }
