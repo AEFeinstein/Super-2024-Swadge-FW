@@ -260,7 +260,7 @@ static void breakoutEnterMode(void)
 
     breakout->tilemap.entityManager = &(breakout->entityManager);
     breakout->tilemap.executeTileSpawnAll = true;
-    breakout->tilemap.mapOffsetX = -4;
+    breakout->tilemap.mapOffsetX = 0;
 
     loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
 
@@ -646,6 +646,10 @@ static void drawBreakoutHud(font_t *font, gameData_t *gameData){
     //snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
     snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
     drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4], scoreStr, 144, 2);
+
+    //Draw centering lines, for paddle control debug
+    //drawLine(TFT_WIDTH >> 1, 0, TFT_WIDTH >> 1, TFT_HEIGHT, c500, 0);
+    //drawLine(0, (TFT_HEIGHT >> 1)+8, TFT_WIDTH, (TFT_HEIGHT >> 1)+8, c005, 0);
 }
 
 void breakoutChangeStateLevelClear(breakout_t *self){

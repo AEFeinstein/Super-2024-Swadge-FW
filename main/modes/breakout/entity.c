@@ -151,7 +151,7 @@ void updatePlayer(entity_t *self)
 
         //TODO: tune these values some more!!!
 
-        int32_t touchIntoLevel = (self->gameData->touchX << 2) + 128; // play with this value until center touch moves paddle to center
+        int32_t touchIntoLevel = (self->gameData->touchX << 2) + 192; // play with this value until center touch moves paddle to center
 
         //                                    the leftmost coordinate that the originX point of the paddle sprite can occupy
         //                                    |   the rightmost coordinate that the originX point of the paddle sprite can occupy
