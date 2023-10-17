@@ -40,6 +40,7 @@ typedef struct
     menuQuickSettingsRenderer_t* renderer; ///< Renderer for the menu
     font_t font;                           ///< The font used for menu text
     int64_t ledTimer;
+    bool showLeds;
     song_t jingle;
     void* buzzerState;
 
@@ -216,6 +217,7 @@ static void quickSettingsEnterMode(void)
 
     quickSettings->prevSfxValue = sfxValue;
     quickSettings->prevBgmValue = bgmValue;
+    quickSettings->showLeds = true;
 
     // Add the actual items to the menu
     addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
@@ -342,7 +344,15 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
         drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
 
         // Update the LEDs
-        quickSettingsSetLeds(elapsedUs);
+        if (quickSettings->showLeds)
+        {
+            quickSettingsSetLeds(elapsedUs);
+        }
+        else
+        {
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, ARRAY_SIZE(leds));
+        }
     }
 }
 
@@ -386,6 +396,8 @@ static int32_t quickSettingsFlipValue(const char* label, int32_t value)
  */
 static void quickSettingsOnChange(const char* label, int32_t value)
 {
+    quickSettings->showLeds = false;
+
     if (label == quickSettingsLeds)
     {
         bzrStop(true);
@@ -394,6 +406,8 @@ static void quickSettingsOnChange(const char* label, int32_t value)
         {
             quickSettings->lastOnLedsValue = value;
         }
+
+        quickSettings->showLeds = true;
     }
     else if (label == quickSettingsBacklight)
     {
