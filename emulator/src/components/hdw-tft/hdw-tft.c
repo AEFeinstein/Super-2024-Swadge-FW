@@ -71,7 +71,8 @@ static uint8_t tftBrightness         = CONFIG_TFT_MAX_BRIGHTNESS;
  * @param ledcTimer The LEDC timer to use for the PWM backlight
  */
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
-             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer, uint8_t brightness)
+             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer,
+             uint8_t brightness)
 {
     // ARGB pixels
     bitmapWidth  = TFT_WIDTH;
@@ -229,7 +230,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 
                     uint32_t color = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
 
-                    uint8_t a = (color) & 0xFF;
+                    uint8_t a = (color)&0xFF;
                     uint8_t r = (color >> 8) & 0xFF;
                     r         = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
                     uint8_t g = (color >> 16) & 0xFF;

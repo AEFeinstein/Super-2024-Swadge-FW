@@ -282,15 +282,15 @@ void app_main(void)
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
-            GPIO_NUM_36,    // sclk
-            GPIO_NUM_37,    // mosi
-            GPIO_NUM_21,    // dc
-            GPIO_NUM_34,    // cs
-            GPIO_NUM_38,    // rst
-            GPIO_NUM_35,    // backlight
-            true,           // PWM backlight
-            LEDC_CHANNEL_2, // Channel to use for PWM backlight
-            LEDC_TIMER_2,   // Timer to use for PWM backlight
+            GPIO_NUM_36,                // sclk
+            GPIO_NUM_37,                // mosi
+            GPIO_NUM_21,                // dc
+            GPIO_NUM_34,                // cs
+            GPIO_NUM_38,                // rst
+            GPIO_NUM_35,                // backlight
+            true,                       // PWM backlight
+            LEDC_CHANNEL_2,             // Channel to use for PWM backlight
+            LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
 
     // Initialize the RGB LEDs

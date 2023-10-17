@@ -490,21 +490,26 @@ static int32_t quickSettingsMenuFlipItem(const char* label)
 
 static void quickSettingsSetLeds(int64_t elapsedUs)
 {
-    int64_t period = 3600000; // 3.6s
+    int64_t period  = 3600000; // 3.6s
     int64_t rOffset = (period * 2 / 3);
     int64_t gOffset = (period * 1 / 3);
     int64_t bOffset = 0;
     uint8_t rSpeed = 1, gSpeed = 1, bSpeed = 2;
-
 
     quickSettings->ledTimer = (quickSettings->ledTimer + elapsedUs) % period;
 
     led_t leds[CONFIG_NUM_LEDS];
     for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
     {
-        leds[i].r = MAX(0, getSin1024((quickSettings->ledTimer * rSpeed + rOffset + i * period / CONFIG_NUM_LEDS) % period * 360 / period)) * 255 / 1024;
-        leds[i].g = MAX(0, getSin1024((quickSettings->ledTimer * gSpeed + gOffset + i * period / CONFIG_NUM_LEDS) % period * 360 / period)) * 255 / 1024;
-        leds[i].b = MAX(0, getSin1024((quickSettings->ledTimer * bSpeed + bOffset + i * period / CONFIG_NUM_LEDS) % period * 360 / period)) * 255 / 1024;
+        leds[i].r = MAX(0, getSin1024((quickSettings->ledTimer * rSpeed + rOffset + i * period / CONFIG_NUM_LEDS)
+                                      % period * 360 / period))
+                    * 255 / 1024;
+        leds[i].g = MAX(0, getSin1024((quickSettings->ledTimer * gSpeed + gOffset + i * period / CONFIG_NUM_LEDS)
+                                      % period * 360 / period))
+                    * 255 / 1024;
+        leds[i].b = MAX(0, getSin1024((quickSettings->ledTimer * bSpeed + bOffset + i * period / CONFIG_NUM_LEDS)
+                                      % period * 360 / period))
+                    * 255 / 1024;
     }
 
     setLeds(leds, ARRAY_SIZE(leds));
