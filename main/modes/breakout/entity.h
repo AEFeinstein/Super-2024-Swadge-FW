@@ -78,16 +78,14 @@ struct entity_t
     uint8_t homeTileX;
     uint8_t homeTileY;
 
-    //int16_t jumpPower;
-
     bool visible;
-    //uint8_t hp;
-    //int8_t invincibilityFrames;
-    //uint16_t scoreValue;
 
     entity_t *attachedToEntity;
 
     bool shouldAdvanceMultiplier;
+    int16_t bouncesOffUnbreakableBlocks;
+    int16_t breakInfiniteLoopBounceThreshold;
+
     int16_t baseSpeed;
     int16_t maxSpeed;
     int16_t bouncesToNextSpeedUp;

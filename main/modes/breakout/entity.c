@@ -118,6 +118,8 @@ void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t 
     self->bouncesToNextSpeedUp = 5;
     self->speedUpLookupIndex = 0;
     self->maxSpeed = 63;
+    self->bouncesOffUnbreakableBlocks = 0;
+    self->breakInfiniteLoopBounceThreshold = -1;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -765,6 +767,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_0;
                 }
+
+                self->bouncesOffUnbreakableBlocks = 0;
             }
             break;
         case ENTITY_PLAYER_PADDLE_TOP:
@@ -778,6 +782,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_0;
                 }
+
+                self->bouncesOffUnbreakableBlocks = 0;
             }
             break;
         case ENTITY_PLAYER_PADDLE_LEFT:
@@ -791,6 +797,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_VERTICAL_0;
                 }
+
+                self->bouncesOffUnbreakableBlocks = 0;
             }
             break;
         case ENTITY_PLAYER_PADDLE_RIGHT:
@@ -804,6 +812,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                     self->shouldAdvanceMultiplier = false;
                     other->spriteIndex = SP_PADDLE_VERTICAL_0;
                 }
+
+                self->bouncesOffUnbreakableBlocks = 0;
             }
             break;
         case ENTITY_PLAYER_BOMB_EXPLOSION:
@@ -818,6 +828,8 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
                 scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
                 self->shouldAdvanceMultiplier = false;
             }
+
+            self->bouncesOffUnbreakableBlocks = 0;
 
             break;
         default:
@@ -991,10 +1003,12 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
             bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
             scorePoints(self->gameData, 10, (self->shouldAdvanceMultiplier) ? -1 : 0);
             self->shouldAdvanceMultiplier = true;
+            self->bouncesOffUnbreakableBlocks = 0;
             break;
         }
         case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
             bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
+            self->bouncesOffUnbreakableBlocks++;
             break;
         }
         default: {         
@@ -1006,16 +1020,22 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
     {
         switch (direction)
         {
-        case 0: // PB_LEFT
+        case 0: // LEFT
+        case 1: // RIGHT
+            if(self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold){
+                //Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
+                self->xspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->xspeed);
+                self->bouncesOffUnbreakableBlocks = 0;
+            }
             self->xspeed = -self->xspeed;
             break;
-        case 1: // PB_RIGHT
-            self->xspeed = -self->xspeed;
-            break;
-        case 2: // PB_UP
-            self->yspeed = -self->yspeed;
-            break;
-        case 4: // PB_DOWN
+        case 2: // UP
+        case 4: // DOWN
+            if(self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold){
+                //Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
+                self->yspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->yspeed);
+                self->bouncesOffUnbreakableBlocks = 0;
+            }
             self->yspeed = -self->yspeed;
             break;
         default: // Should never hit
