@@ -372,8 +372,8 @@ static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
                     return true;
                 }
 
-                // Mark it as inactive if this is a one time script
-                script->isActive = (ALWAYS == script->ifArgs.idList.oneTime);
+                // Mark it as inactive if this is a one time script and the reset timer is inactive
+                script->isActive = (ALWAYS == script->ifArgs.idList.oneTime) && (0 == script->resetTimerSec);
 
                 // Reset the triggered IDs
                 memset(script->ifArgs.idList.idsTriggered, false, sizeof(bool) * script->ifArgs.idList.numIds);
@@ -532,8 +532,8 @@ static bool checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
                     return true;
                 }
 
-                // Mark it as inactive if this is a one time script
-                script->isActive = (ALWAYS == script->ifArgs.cellList.oneTime);
+                // Mark it as inactive if this is a one time script and the reset timer is inactive
+                script->isActive = (ALWAYS == script->ifArgs.cellList.oneTime) && (0 == script->resetTimerSec);
 
                 // Reset the triggered cells
                 memset(script->ifArgs.cellList.cellsTriggered, false, sizeof(bool) * script->ifArgs.cellList.numCells);
@@ -617,6 +617,36 @@ bool checkScriptTime(ray_t* ray, uint32_t elapsedUs)
             // Move to the next
             currentNode = currentNode->next;
         }
+
+        // For all script types
+        for (int16_t sIdx = 0; sIdx < ARRAY_SIZE(ray->scripts); sIdx++)
+        {
+            // For all scripts
+            currentNode = ray->scripts[sIdx].first;
+            while (currentNode != NULL)
+            {
+                // Get the script
+                rayScript_t* script = currentNode->val;
+
+                // If there is time on the timer
+                if (0 < script->resetTimerSec)
+                {
+                    // Decrement
+                    script->resetTimerSec--;
+                    // If it expired
+                    if (0 == script->resetTimerSec)
+                    {
+                        // Reactivate the script
+                        script->isActive = true;
+                    }
+                }
+
+                // Move to the next
+                currentNode = currentNode->next;
+            }
+        }
+
+        // Check for executions. Iterate over all nodes
     }
     return false;
 }
@@ -660,7 +690,8 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case SPAWN:
         {
-            // TODO start timer to not do this infinitely
+            // Start timer to not re-trigger immediately
+            script->resetTimerSec = 30;
             // Create objects
             for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
             {

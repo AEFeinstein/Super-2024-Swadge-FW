@@ -310,8 +310,9 @@ typedef struct
  */
 typedef struct
 {
-    bool isActive; ///< true if the script is active, false if it is not
-    ifOp_t ifOp;   ///< The type of condition that triggers the script
+    bool isActive;         ///< true if the script is active, false if it is not
+    int32_t resetTimerSec; ///< Timer to not re-trigger the script immediately
+    ifOp_t ifOp;           ///< The type of condition that triggers the script
     /// A union of arguments for the condition that triggers the script
     union
     {
