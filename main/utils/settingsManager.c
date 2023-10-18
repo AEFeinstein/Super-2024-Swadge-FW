@@ -140,19 +140,15 @@ void readAllSettings(void)
     // Read the test mode setting
     readSetting(&test_setting);
 
-    // Read and set buzzer settings
+    // Read the buzzer settings
     readSetting(&bgm_setting);
-    bzrSetBgmVolume(getBgmVolumeSetting());
     readSetting(&sfx_setting);
-    bzrSetSfxVolume(getSfxVolumeSetting());
 
-    // Read and apply TFT settings
+    // Read the TFT settings
     readSetting(&tft_br_setting);
-    setTFTBacklightBrightness(getTftBrightnessSetting());
 
-    // Read and apply LED settings
+    // Read the LED settings
     readSetting(&led_br_setting);
-    setLedBrightness(getLedBrightnessSetting());
 
     // Read the mic setting
     readSetting(&mic_setting);

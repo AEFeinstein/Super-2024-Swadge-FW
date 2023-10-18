@@ -267,7 +267,7 @@ void app_main(void)
 
     // Init buzzer. This must be called before initMic()
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
-               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, false, false);
+               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
 
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
@@ -282,18 +282,19 @@ void app_main(void)
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
-            GPIO_NUM_36,    // sclk
-            GPIO_NUM_37,    // mosi
-            GPIO_NUM_21,    // dc
-            GPIO_NUM_34,    // cs
-            GPIO_NUM_38,    // rst
-            GPIO_NUM_35,    // backlight
-            true,           // PWM backlight
-            LEDC_CHANNEL_2, // Channel to use for PWM backlight
-            LEDC_TIMER_2);  // Timer to use for PWM backlight
+            GPIO_NUM_36,                // sclk
+            GPIO_NUM_37,                // mosi
+            GPIO_NUM_21,                // dc
+            GPIO_NUM_34,                // cs
+            GPIO_NUM_38,                // rst
+            GPIO_NUM_35,                // backlight
+            true,                       // PWM backlight
+            LEDC_CHANNEL_2,             // Channel to use for PWM backlight
+            LEDC_TIMER_2,               // Timer to use for PWM backlight
+            getTftBrightnessSetting()); // TFT Brightness
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39, GPIO_NUM_18);
+    initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
 
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
