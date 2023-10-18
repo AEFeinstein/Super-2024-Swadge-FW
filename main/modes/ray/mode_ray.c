@@ -115,6 +115,9 @@ static void rayEnterMode(void)
     // Set the menu as the screen
     ray->screen = RAY_MENU;
 
+    // Start a blink for dialog and pause and such
+    ray->blinkTimer = BLINK_US;
+
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
@@ -188,6 +191,30 @@ void rayFreeCurrentState(ray_t* cRay)
  */
 static void rayMainLoop(int64_t elapsedUs)
 {
+    // Run a button lockout, regardless of mode
+    if (0 < ray->btnLockoutUs)
+    {
+        ray->btnLockoutUs -= elapsedUs;
+        if (0 >= ray->btnLockoutUs)
+        {
+            ray->btnLockoutUs = 0;
+            // Restart blinks when the lockout ends
+            ray->blink      = true;
+            ray->blinkTimer = BLINK_US;
+        }
+    }
+
+    // Run a timer to blink things
+    if (0 < ray->blinkTimer)
+    {
+        ray->blinkTimer -= elapsedUs;
+        if (0 >= ray->blinkTimer)
+        {
+            ray->blink      = !ray->blink;
+            ray->blinkTimer = BLINK_US;
+        }
+    }
+
     switch (ray->screen)
     {
         case RAY_MENU:
@@ -238,11 +265,7 @@ static void rayMainLoop(int64_t elapsedUs)
             checkRayCollisions(ray);
 
             // Check for time-based scripts
-            if (checkScriptTime(ray, elapsedUs))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptTime(ray, elapsedUs);
 
             // If the warp timer is active
             if (ray->warpTimerUs > 0)

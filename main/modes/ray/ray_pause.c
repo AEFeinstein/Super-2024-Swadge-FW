@@ -175,14 +175,6 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
             break;
         }
     }
-
-    // Run a timer to blink things
-    ray->blinkTimer += elapsedUs;
-    if (ray->blinkTimer > BLINK_US)
-    {
-        ray->blinkTimer -= BLINK_US;
-        ray->blink = !ray->blink;
-    }
 }
 
 /**
@@ -351,7 +343,7 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                         // Draw a number indicating the warp destination
                         char num[8];
                         snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
-                        int16_t tWidth = textWidth(&ray->ibm, num);
+                        tWidth = textWidth(&ray->ibm, num);
                         drawText(&ray->ibm, c555, num,
                                  cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
                                  cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);

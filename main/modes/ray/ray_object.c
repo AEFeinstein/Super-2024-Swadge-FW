@@ -164,22 +164,21 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
             // Get the cell the bullet is in now
             rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->c.posX)][FROM_FX(obj->c.posY)];
 
-            // If a wall is it
+            // If a wall is it by a bullet
             if (CELL_IS_TYPE(cell->type, BG | WALL))
             {
-                // Check for shot wall scripts
-                if (checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY)))
+                // If this was a player's bullet, check scripts
+                if (1 == obj->c.id)
                 {
-                    // Script warped, return
-                    return;
+                    checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY));
                 }
 
                 // Destroy this bullet
                 memset(obj, 0, sizeof(rayBullet_t));
                 obj->c.id = -1;
             }
-            // Else if a door is hit
-            else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+            // Else if a door is hit by a player's bullet
+            else if ((1 == obj->c.id) && CELL_IS_TYPE(cell->type, BG | DOOR))
             {
                 // If the door is closed
                 if (0 == cell->doorOpen)
@@ -327,11 +326,7 @@ void checkRayCollisions(ray_t* ray)
             // Touch the item
             rayPlayerTouchItem(ray, item->type, ray->p.mapId, item->id);
             // Check scripts
-            if (checkScriptGet(ray, item->id, item->sprite))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptGet(ray, item->id, item->sprite);
 
             // Mark this item for removal
             toRemove = currentNode;
@@ -393,11 +388,7 @@ void checkRayCollisions(ray_t* ray)
         // Check if the player touches scenery
         if (objectsIntersect(&player, scenery))
         {
-            if (checkScriptTouch(ray, scenery->id, scenery->sprite))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptTouch(ray, scenery->id, scenery->sprite);
         }
 
         // Iterate through all bullets
@@ -413,11 +404,7 @@ void checkRayCollisions(ray_t* ray)
                     bullet->c.id = -1;
 
                     // Scenery was shot
-                    if (checkScriptShootObjs(ray, scenery->id, scenery->sprite))
-                    {
-                        // Script warped, return
-                        return;
-                    }
+                    checkScriptShootObjs(ray, scenery->id, scenery->sprite);
                 }
             }
         }

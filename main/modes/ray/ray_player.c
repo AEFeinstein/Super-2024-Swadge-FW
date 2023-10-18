@@ -10,6 +10,7 @@
 #include "ray_map.h"
 #include "ray_pause.h"
 #include "ray_script.h"
+#include "ray_death_screen.h"
 
 //==============================================================================
 // Functions
@@ -363,11 +364,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             markTileVisited(&ray->map, newCellX, newCellY);
 
             // Check scripts when entering cells
-            if (checkScriptEnter(ray, newCellX, newCellY))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptEnter(ray, newCellX, newCellY);
         }
 
         // After moving position, recompute direction to targeted object
@@ -697,6 +694,6 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
         }
 
         // Show the death screen
-        ray->screen = RAY_DEATH_SCREEN;
+        rayShowDeathScreen(ray);
     }
 }

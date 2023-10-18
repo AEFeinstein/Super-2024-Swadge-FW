@@ -3,6 +3,7 @@
 
 #include "mode_ray.h"
 
+void rayShowDeathScreen(ray_t* ray);
 void rayDeathScreenRender(ray_t* ray, uint32_t elapsedUs);
 
 #endif

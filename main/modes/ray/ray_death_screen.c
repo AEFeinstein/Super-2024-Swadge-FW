@@ -9,6 +9,17 @@
 //==============================================================================
 
 /**
+ * @brief Show the death screen and set up the button lockout
+ *
+ * @param ray The entire game state
+ */
+void rayShowDeathScreen(ray_t* ray)
+{
+    ray->btnLockoutUs = 2000000;
+    ray->screen       = RAY_DEATH_SCREEN;
+}
+
+/**
  * @brief Draw the foreground for the death screen and run the timer
  *
  * @param ray The entire game state
@@ -20,14 +31,16 @@ void rayDeathScreenRender(ray_t* ray, uint32_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        // If A was pressed
-        if (evt.down)
+        if (0 == ray->btnLockoutUs)
         {
-            // TODO wait a few secs before accepting buttons
-            if ((PB_A == evt.button) || (PB_B == evt.button))
+            // If A was pressed
+            if (evt.down)
             {
-                // Return to the menu
-                ray->screen = RAY_MENU;
+                if ((PB_A == evt.button) || (PB_B == evt.button))
+                {
+                    // Return to the menu
+                    ray->screen = RAY_MENU;
+                }
             }
         }
     }
@@ -39,4 +52,13 @@ void rayDeathScreenRender(ray_t* ray, uint32_t elapsedUs)
     static const char deathText[] = "GG scrub git gud";
     int16_t tWidth                = textWidth(&ray->logbook, deathText);
     drawText(&ray->logbook, c542, deathText, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
+
+    // Blink an arrow to show there's more dialog
+    if (ray->blink && 0 == ray->btnLockoutUs)
+    {
+#define TRIANGLE_OFFSET 20
+        drawTriangleOutlined(TFT_WIDTH - TRIANGLE_OFFSET - 16, TFT_HEIGHT - TRIANGLE_OFFSET - 4,
+                             TFT_WIDTH - TRIANGLE_OFFSET - 4, TFT_HEIGHT - TRIANGLE_OFFSET - 10,
+                             TFT_WIDTH - TRIANGLE_OFFSET - 16, TFT_HEIGHT - TRIANGLE_OFFSET - 16, c100, c542);
+    }
 }
