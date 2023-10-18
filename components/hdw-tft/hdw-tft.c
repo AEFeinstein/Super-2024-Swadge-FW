@@ -115,7 +115,7 @@ static ledc_timer_t tftLedcTimer;
 static ledc_channel_t tftLedcChannel;
 static gpio_num_t tftBacklightPin;
 static bool tftBacklightIsPwm;
-static uint8_t tftBacklightIntensity;
+static uint8_t tftBacklightIntensity = MAX_TFT_BRIGHTNESS;
 
 static esp_lcd_panel_io_handle_t tft_io_handle = NULL;
 
