@@ -34,10 +34,13 @@ static led_t localLeds[CONFIG_NUM_LEDS + 1] = {0};
  *
  * @param gpio The GPIO the LEDs are attached to
  * @param gpioAlt A GPIO to mirror the LED output to
+ * @param brightness The brightness to start the LEDs at
  * @return ESP_OK if the LEDs initialized, or a nonzero value if they did not
  */
-esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt)
+esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 {
+    setLedBrightness(brightness);
+
     rmt_tx_channel_config_t tx_chan_config = {
         .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
         .gpio_num          = gpio,

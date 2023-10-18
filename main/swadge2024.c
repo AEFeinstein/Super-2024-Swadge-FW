@@ -267,7 +267,7 @@ void app_main(void)
 
     // Init buzzer. This must be called before initMic()
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
-               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, false, false);
+               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
 
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
@@ -294,7 +294,7 @@ void app_main(void)
             getTftBrightnessSetting()); // TFT Brightness
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39, GPIO_NUM_18);
+    initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
 
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))

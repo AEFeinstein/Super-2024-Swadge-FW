@@ -103,8 +103,8 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
                 ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t _bgmVolume, uint16_t _sfxVolume)
 {
     // Set initial volume
-    bgmVolume = _bgmVolume;
-    sfxVolume = _sfxVolume;
+    bzrSetBgmVolume(_bgmVolume);
+    bzrSetSfxVolume(_sfxVolume);
 
     // Save the LEDC timers and channels
     initSingleBuzzer(&buzzers[BZR_LEFT], bzrGpioL, ledcTimerL, ledcChannelL);

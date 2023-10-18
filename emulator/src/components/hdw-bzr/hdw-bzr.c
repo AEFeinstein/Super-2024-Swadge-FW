@@ -102,8 +102,8 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
     }
 
     memset(&buzzers, 0, sizeof(buzzers));
-    bgmVolume = _bgmVolume;
-    sfxVolume = _sfxVolume;
+    bzrSetBgmVolume(_bgmVolume);
+    bzrSetSfxVolume(_sfxVolume);
 
     const esp_timer_create_args_t checkNoteTimeArgs = {
         .arg                   = NULL,
