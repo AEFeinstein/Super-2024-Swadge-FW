@@ -6,12 +6,6 @@
 #include "ray_tex_manager.h"
 
 //==============================================================================
-// Defines
-//==============================================================================
-
-#define PAUSE_BLINK_US 500000
-
-//==============================================================================
 // Enums
 //==============================================================================
 
@@ -183,11 +177,11 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
     }
 
     // Run a timer to blink things
-    ray->pauseBlinkTimer += elapsedUs;
-    if (ray->pauseBlinkTimer > PAUSE_BLINK_US)
+    ray->blinkTimer += elapsedUs;
+    if (ray->blinkTimer > BLINK_US)
     {
-        ray->pauseBlinkTimer -= PAUSE_BLINK_US;
-        ray->pauseBlink = !ray->pauseBlink;
+        ray->blinkTimer -= BLINK_US;
+        ray->blink = !ray->blink;
     }
 }
 
@@ -387,7 +381,7 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
  */
 static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY)
 {
-    if (ray->pauseBlink)
+    if (ray->blink)
     {
         // Draw a circle for the player
         int16_t cR = 6;

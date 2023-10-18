@@ -53,6 +53,9 @@
 /** The time to swap out and swap in a gun, in microseconds */
 #define LOADOUT_TIMER_US (1 << 18)
 
+/** THe blink time for pause and dialog items */
+#define BLINK_US 500000
+
 /**
  * @brief Helper macro to check if a cell is of a given type
  * The type is the top three bits of the type
@@ -559,9 +562,10 @@ typedef struct
     const char* dialogText;     ///< A pointer to the current dialog text
     const char* nextDialogText; ///< A pointer to the next dialog text, if it doesn't fit in one box
     wsg_t* dialogPortrait;      ///< A portrait to draw above the dialog text
+    int32_t dialogBtnLockoutUs; ///< A timer to block buttons when first showing a dialog
 
-    uint32_t pauseBlinkTimer; ///< A timer to blink things on the pause menu
-    bool pauseBlink;          ///< Boolean for two draw states on the pause menu
+    uint32_t blinkTimer; ///< A timer to blink things on the pause menu
+    bool blink;          ///< Boolean for two draw states on the pause menu
 
     list_t scripts[NUM_IF_OP_TYPES]; ///< An array of lists of scripts
     uint32_t scriptTimer;            ///< A microsecond timer to check for time based scripts

@@ -1,5 +1,5 @@
 //==============================================================================
-// Inclues
+// Includes
 //==============================================================================
 
 #include "fill.h"
@@ -30,9 +30,10 @@
  */
 void rayShowDialog(ray_t* ray, const char* dialogText, wsg_t* dialogPortrait)
 {
-    ray->screen         = RAY_DIALOG;
-    ray->dialogText     = dialogText;
-    ray->dialogPortrait = dialogPortrait;
+    ray->screen             = RAY_DIALOG;
+    ray->dialogText         = dialogText;
+    ray->dialogPortrait     = dialogPortrait;
+    ray->dialogBtnLockoutUs = 2000000;
 }
 
 /**
@@ -47,19 +48,22 @@ void rayDialogCheckButtons(ray_t* ray)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        // If A was pressed
-        if (PB_A == evt.button && evt.down)
+        if (0 == ray->dialogBtnLockoutUs)
         {
-            // If there is more dialog
-            if (NULL != ray->nextDialogText)
+            // If A was pressed
+            if (PB_A == evt.button && evt.down)
             {
-                // Show the next part of the dialog
-                ray->dialogText = ray->nextDialogText;
-            }
-            else
-            {
-                // Dialog over, return to game
-                ray->screen = RAY_GAME;
+                // If there is more dialog
+                if (NULL != ray->nextDialogText)
+                {
+                    // Show the next part of the dialog
+                    ray->dialogText = ray->nextDialogText;
+                }
+                else
+                {
+                    // Dialog over, return to game
+                    ray->screen = RAY_GAME;
+                }
             }
         }
     }
@@ -69,9 +73,30 @@ void rayDialogCheckButtons(ray_t* ray)
  * @brief Render the current dialog box
  *
  * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
  */
-void rayDialogRender(ray_t* ray)
+void rayDialogRender(ray_t* ray, uint32_t elapsedUs)
 {
+    // Run button lockout timer
+    if (0 < ray->dialogBtnLockoutUs)
+    {
+        ray->dialogBtnLockoutUs -= elapsedUs;
+        if (0 >= ray->dialogBtnLockoutUs)
+        {
+            ray->dialogBtnLockoutUs = 0;
+            ray->blink              = true;
+            ray->blinkTimer         = 0;
+        }
+    }
+
+    // Run a timer to blink things
+    ray->blinkTimer += elapsedUs;
+    if (ray->blinkTimer > BLINK_US)
+    {
+        ray->blinkTimer -= BLINK_US;
+        ray->blink = !ray->blink;
+    }
+
     // Draw the background text box, outline
     drawRect(DIALOG_MARGIN,              //
              DIALOG_START_Y,             //
@@ -113,4 +138,13 @@ void rayDialogRender(ray_t* ray)
                                            &yOff,                                   //
                                            TFT_WIDTH - DIALOG_MARGIN - TEXT_MARGIN, //
                                            TFT_HEIGHT - DIALOG_MARGIN - TEXT_MARGIN);
+
+    // Blink an arrow to show there's more dialog
+    if (ray->blink && 0 == ray->dialogBtnLockoutUs)
+    {
+        drawTriangleOutlined(TFT_WIDTH - DIALOG_MARGIN - 16, TFT_HEIGHT - DIALOG_MARGIN - 4,
+                             TFT_WIDTH - DIALOG_MARGIN - 4, TFT_HEIGHT - DIALOG_MARGIN - 10,
+                             TFT_WIDTH - DIALOG_MARGIN - 16, TFT_HEIGHT - DIALOG_MARGIN - 16, DIALOG_BG_COLOR,
+                             DIALOG_TEXT_COLOR);
+    }
 }

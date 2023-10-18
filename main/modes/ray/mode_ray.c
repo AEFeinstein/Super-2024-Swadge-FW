@@ -258,7 +258,7 @@ static void rayMainLoop(int64_t elapsedUs)
         case RAY_DIALOG:
         {
             // Render first
-            rayDialogRender(ray);
+            rayDialogRender(ray, elapsedUs);
             // Then check buttons
             rayDialogCheckButtons(ray);
             break;
