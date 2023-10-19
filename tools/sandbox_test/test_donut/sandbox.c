@@ -394,6 +394,18 @@ void _drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, i
 }
 
 
+static unsigned julery_isqrt(unsigned long val) {
+    unsigned long temp, g=0, b = 0x8000, bshft = 15;
+    do {
+        if (val >= (temp = (((g << 1) + b)<<bshft--))) {
+           g += b;
+           val -= temp;
+        }
+    } while (b >>= 1);
+    return g;
+}
+
+
 
 int global_i = 100;
 menu_t * menu;
@@ -512,7 +524,7 @@ void sandbox_tick()
 
 	int totalTrisThisFrame = 0;
 	// ID, Z
-	static int16_t trimap[sizeof(donut_tris)/4][2];
+	static int16_t trimap[sizeof(donut_tris)/4][3];
 
 
 	for( i = 0; i < sizeof(donut_tris); i+= 4)
@@ -520,19 +532,50 @@ void sandbox_tick()
 		int tv1 = donut_tris[i]*3;
 		int tv2 = donut_tris[i+1]*3;
 		int tv3 = donut_tris[i+2]*3;
+		int col = donut_tris[i+3];
 
-		int diff1[2] = {
+		int diff1[3] = {
 			verts_out[tv3+0] - verts_out[tv1+0],
-			verts_out[tv3+1] - verts_out[tv1+1] };
-		int diff2[2] = {
+			verts_out[tv3+1] - verts_out[tv1+1],
+			verts_out[tv3+2] - verts_out[tv1+2] };
+		int diff2[3] = {
 			verts_out[tv2+0] - verts_out[tv1+0],
-			verts_out[tv2+1] - verts_out[tv1+1] };
+			verts_out[tv2+1] - verts_out[tv1+1],
+			verts_out[tv2+2] - verts_out[tv1+2] };
 
-		int crossproduct = diff1[1] * diff2[0] - diff1[0] * diff2[1];
+		// If we didn't need the normal, could do cross faster. int crossproduct = diff1[1] * diff2[0] - diff1[0] * diff2[1];
+
+		int icrp[3];
+		intcross( icrp, diff1, diff2 );
+		if( icrp[2] < 0 ) continue;
 		int z = verts_out[tv1+2] + verts_out[tv2+2] + verts_out[tv3+2];
-		if( crossproduct > 0 ) continue;
+
+		int b = col % 6;
+		int g = ( col / 6 ) % 6;
+		int r = ( col / 36 ) % 6;
+
+		//float fcrp[3] = { icrp[0], icrp[1], icrp[2] };
+		int crpscalar = julery_isqrt( icrp[0] * icrp[0] + icrp[1] * icrp[1] + icrp[2] * icrp[2] );
+		icrp[0] = ( 1024 * icrp[0] ) / crpscalar;
+		icrp[1] = ( 1024 * icrp[1] ) / crpscalar;
+		icrp[2] = ( 1024 * icrp[2] ) / crpscalar;
+
+		int isum = icrp[0] - icrp[1] + icrp[2];
+
+		r = ( r * ( ( isum ) + 600 ) * 200 ) >> 18;
+		g = ( g * ( ( isum ) + 600 ) * 200 ) >> 18;
+		b = ( b * ( ( isum ) + 600 ) * 200 ) >> 18;
+
+		if( r < 0 ) r = 0;
+		if( g < 0 ) g = 0;
+		if( b < 0 ) b = 0;
+		if( r > 5 ) r = 5;
+		if( g > 5 ) g = 5;
+		if( b > 5 ) b = 5;
+
 		trimap[totalTrisThisFrame][0] = z;
 		trimap[totalTrisThisFrame][1] = i;
+		trimap[totalTrisThisFrame][2] = r * 36 + g * 6 + b;
 		totalTrisThisFrame++;
 	}
 
@@ -545,7 +588,7 @@ void sandbox_tick()
 		int tv1 = donut_tris[j]*3;
 		int tv2 = donut_tris[j+1]*3;
 		int tv3 = donut_tris[j+2]*3;
-		int tcol = donut_tris[j+3];
+		int tcol = trimap[i][2];
 
 		_drawTriangleOutlined(
 			verts_out[tv1+0], verts_out[tv1+1],
