@@ -362,12 +362,12 @@ static void displayCounter(char const* counterStr)
 
 static void checkSubStr(char const* counterStr, char const* const subStr, bool digitBitmap[NUM_DIGITS], int64_t* timer)
 {
-    bool found = false;
+    bool found                = false;
     char const* curCounterStr = counterStr;
     memset(digitBitmap, false, NUM_DIGITS);
 
     char const* subStrInCounterStr = strstr(curCounterStr, subStr);
-    while(NULL != subStrInCounterStr)
+    while (NULL != subStrInCounterStr)
     {
         uint8_t startDigit = subStrInCounterStr - counterStr;
         for (uint8_t i = 0; i < strlen(subStr); i++)
@@ -376,7 +376,7 @@ static void checkSubStr(char const* counterStr, char const* const subStr, bool d
         }
 
         *timer = 0;
-        found = true;
+        found  = true;
 
         // Move curCounterStr to be one after the found str
         curCounterStr = &subStrInCounterStr[1];
@@ -384,7 +384,7 @@ static void checkSubStr(char const* counterStr, char const* const subStr, bool d
         subStrInCounterStr = strstr(curCounterStr, subStr);
     }
 
-    if(!found)
+    if (!found)
     {
         *timer = EFFECT_MAX;
     }
