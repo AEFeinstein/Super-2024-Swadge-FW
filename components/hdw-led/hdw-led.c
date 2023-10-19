@@ -34,10 +34,13 @@ static led_t localLeds[CONFIG_NUM_LEDS + 1] = {0};
  *
  * @param gpio The GPIO the LEDs are attached to
  * @param gpioAlt A GPIO to mirror the LED output to
+ * @param brightness The brightness to start the LEDs at
  * @return ESP_OK if the LEDs initialized, or a nonzero value if they did not
  */
-esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt)
+esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 {
+    setLedBrightness(brightness);
+
     rmt_tx_channel_config_t tx_chan_config = {
         .clk_src           = RMT_CLK_SRC_DEFAULT, // select source clock
         .gpio_num          = gpio,
@@ -53,9 +56,6 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt)
     ESP_ERROR_CHECK(rmt_new_led_strip_encoder(&encoder_config, &led_encoder));
 
     ESP_ERROR_CHECK(rmt_enable(led_chan));
-
-    // Set to max brightness by default
-    ledBrightness = 0;
 
     // Mirror the output to another GPIO
     // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is

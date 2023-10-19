@@ -115,6 +115,7 @@ static ledc_timer_t tftLedcTimer;
 static ledc_channel_t tftLedcChannel;
 static gpio_num_t tftBacklightPin;
 static bool tftBacklightIsPwm;
+static uint8_t tftBacklightIntensity;
 
 static esp_lcd_panel_io_handle_t tft_io_handle = NULL;
 
@@ -132,6 +133,9 @@ static esp_lcd_panel_io_handle_t tft_io_handle = NULL;
  */
 esp_err_t setTFTBacklightBrightness(uint8_t intensity)
 {
+    // Save the value we can pass back into this function
+    tftBacklightIntensity = intensity;
+
     intensity
         = (CONFIG_TFT_MIN_BRIGHTNESS + (((CONFIG_TFT_MAX_BRIGHTNESS - CONFIG_TFT_MIN_BRIGHTNESS) * intensity) / 7));
 
@@ -161,9 +165,11 @@ esp_err_t setTFTBacklightBrightness(uint8_t intensity)
  * @param isPwmBacklight true to set up the backlight as PWM, false to have it be on/off
  * @param ledcChannel The LEDC channel to use for the PWM backlight
  * @param ledcTimer The LEDC timer to use for the PWM backlight
+ * @param brightness The initial backlight brightness
  */
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
-             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer)
+             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer,
+             uint8_t brightness)
 {
     tftSpiHost        = spiHost;
     tftBacklightPin   = backlight;
@@ -255,6 +261,7 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
 #endif
 
     // Enable the backlight
+    setTFTBacklightBrightness(brightness);
     enableTFTBacklight();
 
     if (NULL == pixels)
@@ -354,7 +361,7 @@ void enableTFTBacklight(void)
             .duty       = 255, // Disable to start.
         };
         ESP_ERROR_CHECK(ledc_channel_config(&ledc_config_backlight));
-        setTFTBacklightBrightness(CONFIG_TFT_DEFAULT_BRIGHTNESS);
+        setTFTBacklightBrightness(tftBacklightIntensity);
     }
 }
 

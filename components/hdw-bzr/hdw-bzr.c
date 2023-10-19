@@ -103,8 +103,8 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
                 ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t _bgmVolume, uint16_t _sfxVolume)
 {
     // Set initial volume
-    bgmVolume = _bgmVolume;
-    sfxVolume = _sfxVolume;
+    bzrSetBgmVolume(_bgmVolume);
+    bzrSetSfxVolume(_sfxVolume);
 
     // Save the LEDC timers and channels
     initSingleBuzzer(&buzzers[BZR_LEFT], bzrGpioL, ledcTimerL, ledcChannelL);
@@ -433,7 +433,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
             // Try playing SFX first
             bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, tElapsedUs);
             // Then play BGM if SFX isn't active
-            bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, sfxVolume, !sfxIsActive, tElapsedUs);
+            bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, bgmVolume, !sfxIsActive, tElapsedUs);
 
             // If nothing is playing, but there is BGM (i.e. SFX finished)
             if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bzr->bgm.sTrack))
@@ -566,4 +566,43 @@ void bzrResume(void)
             bzrPlayNote(bzr->cFreq, bIdx, bzr->volume);
         }
     }
+}
+
+/**
+ * @brief Save the state of the buzzer so that it can be restored later, perhaps
+ * after playing a different sound.
+ *
+ * @return A void-pointer which can be passed back to bzrRestore()
+ */
+void* bzrSave(void)
+{
+    bzrPause();
+
+    bzrTrack_t* result = malloc(sizeof(bzrTrack_t) * NUM_BUZZERS * 2);
+    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    {
+        memcpy(&result[bIdx * 2], &buzzers[bIdx].bgm, sizeof(bzrTrack_t));
+        memcpy(&result[bIdx * 2 + 1], &buzzers[bIdx].sfx, sizeof(bzrTrack_t));
+    }
+
+    return (void*)result;
+}
+
+/**
+ * @brief Restore the state of the buzzer from a void-pointer returned by bzrSave()
+ *
+ * The data passed pointer will be freed by this call.
+ *
+ * @param data The saved state of the buzzer, returned by bzrSave()
+ */
+void bzrRestore(void* data)
+{
+    bzrTrack_t* buzzerState = (bzrTrack_t*)data;
+    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    {
+        memcpy(&buzzers[bIdx].bgm, &buzzerState[bIdx * 2], sizeof(bzrTrack_t));
+        memcpy(&buzzers[bIdx].sfx, &buzzerState[bIdx * 2 + 1], sizeof(bzrTrack_t));
+    }
+
+    free(data);
 }
