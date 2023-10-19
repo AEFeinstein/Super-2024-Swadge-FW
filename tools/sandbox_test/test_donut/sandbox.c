@@ -559,7 +559,6 @@ void sandbox_tick()
 		icrp[0] = ( 1024 * icrp[0] ) / crpscalar;
 		icrp[1] = ( 1024 * icrp[1] ) / crpscalar;
 		icrp[2] = ( 1024 * icrp[2] ) / crpscalar;
-		if( i == 0 ) ESP_LOGI( "x", "%d %d\n", icrp[1], icrp[0] );
 
 		int isum = icrp[0] - icrp[1] + icrp[2];
 
