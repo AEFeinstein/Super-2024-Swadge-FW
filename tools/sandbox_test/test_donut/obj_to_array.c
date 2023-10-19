@@ -101,7 +101,7 @@ int main( int argc, char ** argv )
 
 	printf( "BB: [%f %f %f] [%f %f %f] ME %f\n", minB[0], minB[1], minB[2], maxB[0], maxB[1], maxB[2], maxextent );
 	printf( "Tris: %d\n", ivc );
-	float scale = 255.9 / maxextent;
+	float scale = 127.9 / maxextent;
 
 	int ivR[MAXVTS][4];
 
@@ -112,7 +112,7 @@ int main( int argc, char ** argv )
 		int i2 = ivS[i][2];
 
 		float * color = &fvVerts[i0][3];
-		int fc = ((int)(color[0] * 6.9)) + ((int)(color[1] * 6.9)) * 6 + ((int)(color[2] * 6.9)) * 36;
+		int fc = ((int)(color[2] * 5.9)) + ((int)(color[1] * 5.9)) * 6 + ((int)(color[0] * 5.9)) * 36;
 		int * face = ivR[i];
 		face[0] = iAliasedVert[i0];
 		face[1] = iAliasedVert[i1];
@@ -125,7 +125,7 @@ int main( int argc, char ** argv )
 	{
 		fprintf( bh, "\t%d, %d, %d,\n", (int)(compverts[i][0]*scale), (int)(compverts[i][1]*scale), (int)(compverts[i][2]*scale) );		
 	}
-	fprintf( bh, "};\nuint8_t %s_lines[] = {\n", argv[1] );
+	fprintf( bh, "};\nuint8_t %s_tris[] = {\n", argv[1] );
 	for( i = 0; i < ivc; i++ )
 	{
 		fprintf( bh, "\t%d, %d, %d, %d,\n", ivR[i][0], ivR[i][1], ivR[i][2], ivR[i][3] );
