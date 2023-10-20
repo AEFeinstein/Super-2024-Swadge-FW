@@ -92,19 +92,6 @@ typedef enum
 // Structs
 //==============================================================================
 
-/// HID Switch Gamepad Protocol Report.
-typedef struct TU_ATTR_PACKED
-{
-    uint16_t buttons; ///< Buttons mask for currently pressed buttons
-    uint8_t hat;      ///< Buttons mask for currently pressed buttons in the DPad/hat
-    int8_t x;         ///< Delta x  movement of left analog-stick
-    int8_t y;         ///< Delta y  movement of left analog-stick
-    int8_t rx;        ///< Delta Rx movement of analog left trigger
-    int8_t ry;        ///< Delta Ry movement of analog right trigger
-    int8_t z;         ///< Delta z  movement of right analog-joystick
-    int8_t rz;        ///< Delta Rz movement of right analog-joystick
-} hid_gamepad_ns_report_t;
-
 typedef struct // 4 bools = 4 bytes = 32 bits
 {
     bool touchAnalogOn; // Least significant byte
@@ -217,9 +204,6 @@ static const tusb_desc_device_t nsDescriptor = {
     .bNumConfigurations = 0x01,
 };
 
-/// @brief  Switch tusb configuration
-static const tinyusb_config_t ns_tusb_cfg = {.descriptor = &nsDescriptor};
-
 /// @brief PC string Descriptor
 static const char* hid_string_descriptor[5] = {
     // array of pointer to string descriptors
@@ -255,6 +239,60 @@ static const uint8_t hid_configuration_descriptor[] = {
 static const tinyusb_config_t pc_tusb_cfg = {
     .device_descriptor        = NULL,
     .string_descriptor        = hid_string_descriptor,
+    .external_phy             = false,
+    .configuration_descriptor = hid_configuration_descriptor,
+};
+
+// @brief Switch report descriptor by touchgadget
+uint8_t const switch_hid_report_descriptor[] =
+{
+  // Gamepad for Nintendo Switch
+  // 14 buttons, 1 8-way dpad, 2 analog sticks (4 axes)
+  0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
+  0x09, 0x05,        // Usage (Game Pad)
+  0xA1, 0x01,        // Collection (Application)
+  0x15, 0x00,        //   Logical Minimum (0)
+  0x25, 0x01,        //   Logical Maximum (1)
+  0x35, 0x00,        //   Physical Minimum (0)
+  0x45, 0x01,        //   Physical Maximum (1)
+  0x75, 0x01,        //   Report Size (1)
+  0x95, 0x0E,        //   Report Count (14)
+  0x05, 0x09,        //   Usage Page (Button)
+  0x19, 0x01,        //   Usage Minimum (0x01)
+  0x29, 0x0E,        //   Usage Maximum (0x0E)
+  0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x95, 0x02,        //   Report Count (2)
+  0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
+  0x25, 0x07,        //   Logical Maximum (7)
+  0x46, 0x3B, 0x01,  //   Physical Maximum (315)
+  0x75, 0x04,        //   Report Size (4)
+  0x95, 0x01,        //   Report Count (1)
+  0x65, 0x14,        //   Unit (System: English Rotation, Length: Centimeter)
+  0x09, 0x39,        //   Usage (Hat switch)
+  0x81, 0x42,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,Null State)
+  0x65, 0x00,        //   Unit (None)
+  0x95, 0x01,        //   Report Count (1)
+  0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x26, 0xFF, 0x00,  //   Logical Maximum (255)
+  0x46, 0xFF, 0x00,  //   Physical Maximum (255)
+  0x09, 0x30,        //   Usage (X)
+  0x09, 0x31,        //   Usage (Y)
+  0x09, 0x32,        //   Usage (Z)
+  0x09, 0x35,        //   Usage (Rz)
+  0x75, 0x08,        //   Report Size (8)
+  0x95, 0x04,        //   Report Count (4)
+  0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0x75, 0x08,        //   Report Size (8)
+  0x95, 0x01,        //   Report Count (1)
+  0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+  0xC0,              // End Collection
+};
+
+// @brief  Switch tusb configuration
+static const tinyusb_config_t ns_tusb_cfg = {
+    .device_descriptor        = &nsDescriptor,
+    .string_descriptor        = NULL,
     .external_phy             = false,
     .configuration_descriptor = hid_configuration_descriptor,
 };
@@ -376,7 +414,7 @@ void gamepadStart(gamepadType_t type)
 
     if (gamepad->gamepadType == GAMEPAD_NS)
     {
-        initTusb(&ns_tusb_cfg, (const uint8_t*)&nsDescriptor);
+        initTusb(&ns_tusb_cfg, switch_hid_report_descriptor);
     }
     else
     {
@@ -936,9 +974,9 @@ void gamepadReportStateToHost(void)
             {
                 // TODO check this
                 // tud_gamepad_ns_report(&gamepad->gpNsState);
-                tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, gamepad->gpState.x, gamepad->gpState.y,
-                                       gamepad->gpState.z, gamepad->gpState.rx, gamepad->gpState.ry,
-                                       gamepad->gpState.rz, gamepad->gpState.hat, gamepad->gpState.buttons);
+                tud_hid_gamepad_report_ns(HID_ITF_PROTOCOL_NONE, gamepad->gpNsState.x, gamepad->gpNsState.y,
+                                       gamepad->gpNsState.z, gamepad->gpNsState.rz, gamepad->gpNsState.rx,
+                                       gamepad->gpNsState.ry, gamepad->gpNsState.hat, gamepad->gpNsState.buttons);
 
                 break;
             }
