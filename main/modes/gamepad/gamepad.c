@@ -847,7 +847,7 @@ void gamepadButtonCb(buttonEvt_t* evt)
         case GAMEPAD_NS:
         {
             // Build a list of all independent buttons held down
-            gamepad->gpState.buttons
+            gamepad->gpNsState.buttons
                 &= ~(GAMEPAD_NS_BUTTON_A | GAMEPAD_NS_BUTTON_B | GAMEPAD_NS_BUTTON_PLUS | GAMEPAD_NS_BUTTON_MINUS | GAMEPAD_NS_BUTTON_HOME | GAMEPAD_NS_BUTTON_CAPTURE);
 
             if (evt->state & PB_A)
