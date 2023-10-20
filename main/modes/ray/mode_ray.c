@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <esp_heap_caps.h>
+#include "mainMenu.h"
 #include "mode_ray.h"
 #include "ray_map.h"
 #include "ray_renderer.h"
@@ -29,9 +30,31 @@ static void rayStartGame(void);
 // Const Variables
 //==============================================================================
 
-const char rayName[]     = "Magtroid Pocket";
-const char rayPlayStr[]  = "Play";
-const char rayResetStr[] = "Reset";
+const char rayName[]       = "Magtroid Pocket";
+const char rayPlayStr[]    = "Play";
+const char rayResetStr[]   = "Reset Data";
+const char rayConfirmStr[] = "Really Reset Data";
+const char rayExitStr[]    = "Exit";
+
+/// @brief A list of the map names
+const char* const rayMapNames[] = {
+    "World 0", "World 1", "World 2", "World 3", "World 4", "World 5",
+};
+
+/// @brief A list of the map colors, in order
+const paletteColor_t rayMapColors[] = {
+    c303, // Violet
+    c005, // Blue
+    c030, // Green
+    c550, // Yellow
+    c530, // Orange
+    c500, // Red
+};
+
+/// @brief The NVS key to save and load player data
+const char RAY_NVS_KEY[] = "ray";
+// The NVS key to save and load visited tiles
+const char* const RAY_NVS_VISITED_KEYS[] = {"rv0", "rv1", "rv2", "rv3", "rv4", "rv5"};
 
 //==============================================================================
 // Variables
@@ -71,8 +94,10 @@ static void rayEnterMode(void)
     // Initialize the menu
     ray->menu = initMenu(rayName, rayMenuCb);
     addSingleItemToMenu(ray->menu, rayPlayStr);
-    addSingleItemToMenu(ray->menu, rayResetStr);
-    addSingleItemToMenu(ray->menu, mnuBackStr);
+    ray->menu = startSubMenu(ray->menu, rayResetStr);
+    addSingleItemToMenu(ray->menu, rayConfirmStr);
+    ray->menu = endSubMenu(ray->menu);
+    addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Load fonts
     loadFont("logbook.font", &ray->logbook, true);
@@ -125,6 +150,12 @@ static void rayExitMode(void)
  */
 void rayFreeCurrentState(ray_t* cRay)
 {
+    // Set invalid IDs for all bullets
+    for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
+    {
+        ray->bullets[objIdx].c.id = -1;
+    }
+
     // Empty all lists
     rayEnemy_t* poppedEnemy = NULL;
     while (NULL != (poppedEnemy = pop(&cRay->enemies)))
@@ -166,6 +197,12 @@ static void rayMainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 ray->menu = menuButton(ray->menu, evt);
+                if (ray->wasReset)
+                {
+                    ray->wasReset = false;
+                    // Return up one level
+                    ray->menu = ray->menu->parentMenu;
+                }
             }
             // Draw the menu
             drawMenuLogbook(ray->menu, ray->renderer, elapsedUs);
@@ -214,7 +251,6 @@ static void rayMainLoop(int64_t elapsedUs)
                 ray->screen = RAY_WARP_SCREEN;
                 // Do the warp in the background
                 warpToDestination(ray);
-                break;
             }
 
             break;
@@ -300,13 +336,20 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             rayStartGame();
         }
-        else if (label == rayResetStr)
+        else if (label == rayConfirmStr)
         {
-            // TODO wipe NVM, but ask first
+            // Wipe NVM
+            eraseNvsKey(RAY_NVS_KEY);
+            for (int16_t kIdx = 0; kIdx < ARRAY_SIZE(RAY_NVS_VISITED_KEYS); kIdx++)
+            {
+                eraseNvsKey(RAY_NVS_VISITED_KEYS[kIdx]);
+            }
+            // Return up one menu
+            ray->wasReset = true;
         }
-        else if (label == mnuBackStr)
+        else if (label == rayExitStr)
         {
-            // TODO return to the main menu
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
 }
@@ -316,20 +359,27 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
  */
 static void rayStartGame(void)
 {
-    // Set invalid IDs for all bullets
-    for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
-    {
-        ray->bullets[objIdx].c.id = -1;
-    }
-
     // Clear all lists
     rayFreeCurrentState(ray);
 
-    // Load the map and object data
-    loadRayMap("0.rmh", ray, false);
+    // Load player data from NVM
+    bool initFromScratch = initializePlayer(ray);
 
-    // Set initial position and direction, centered on the tile
-    initializePlayer(ray, true);
+    // Load the map and object data
+    // Construct the map name
+    char mapName[] = "0.rmh";
+    mapName[0]     = '0' + ray->p.mapId;
+    // Load the new map
+    q24_8 pStartX = 0, pStartY = 0;
+    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+
+    // If the player was initialized from scratch
+    if (initFromScratch)
+    {
+        // Set the starting position from the map
+        ray->p.posX = pStartX;
+        ray->p.posY = pStartY;
+    }
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));

@@ -26,7 +26,7 @@
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
-#include "hdw-accel_emu.h"
+#include "hdw-imu_emu.h"
 #include "swadge2024.h"
 #include "macros.h"
 #include "trigonometry.h"
@@ -145,8 +145,8 @@ int main(int argc, char** argv)
         calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
-        int32_t winW            = (TFT_WIDTH) * 2 + sidePanesW;
-        int32_t winH            = (TFT_HEIGHT) * 2 + topBottomPanesH;
+        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
 
         if (emulatorArgs.headless)
         {

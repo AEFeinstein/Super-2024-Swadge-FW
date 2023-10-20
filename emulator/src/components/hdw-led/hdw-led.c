@@ -25,10 +25,10 @@ static uint8_t ledBrightness         = 0;
  * @param gpioAlt The GPIO to mirror the LEDs to
  * @return ESP_OK if the LEDs initialized, or a nonzero value if they did not
  */
-esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt)
+esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 {
     memset(rdLeds, 0, sizeof(rdLeds));
-    ledBrightness = 0;
+    setLedBrightness(brightness);
     return ESP_OK;
 }
 

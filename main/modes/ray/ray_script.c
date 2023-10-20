@@ -319,52 +319,26 @@ static bool checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
             }
             else
             {
-                // AND - check if all of the IDs are triggered
+                // For each id in the script list
                 for (int32_t idx = 0; idx < script->ifArgs.idList.numIds; idx++)
                 {
-                    // Check if the ID matches
-                    if (id == script->ifArgs.idList.ids[idx])
+                    // If this hasn't been triggered yet
+                    if (false == script->ifArgs.idList.idsTriggered[idx])
                     {
-                        // If order is required and this ID has already been triggered
-                        if ((IN_ORDER == script->ifArgs.idList.order) && (script->ifArgs.idList.idsTriggered[idx]))
-                        {
-                            // Clear them all
-                            memset(script->ifArgs.idList.idsTriggered, false,
-                                   sizeof(bool) * script->ifArgs.idList.numIds);
-                        }
-                        else // Order doesn't matter, or ID isn't triggered
+                        // Check if the id matches
+                        if (id == script->ifArgs.idList.ids[idx])
                         {
                             // Mark it as triggered
                             script->ifArgs.idList.idsTriggered[idx] = true;
-                        }
-                        break;
-                    }
-                }
-
-                // Make sure they were triggered in order
-                if (IN_ORDER == script->ifArgs.idList.order)
-                {
-                    // Check if a 'true' is found after a 'false'
-                    bool falseFound = false;
-                    bool inOrder    = true;
-                    for (int32_t idx = 0; idx < script->ifArgs.idList.numIds; idx++)
-                    {
-                        if (false == script->ifArgs.idList.idsTriggered[idx])
-                        {
-                            falseFound = true;
-                        }
-                        else if (falseFound) // idsTriggered[idx] is true
-                        {
-                            inOrder = false;
                             break;
                         }
-                    }
-
-                    // If the triggers are not in order
-                    if (false == inOrder)
-                    {
-                        // Clear them all
-                        memset(script->ifArgs.idList.idsTriggered, false, sizeof(bool) * script->ifArgs.idList.numIds);
+                        else if (IN_ORDER == script->ifArgs.idList.order)
+                        {
+                            // Not triggered in order, clear them all
+                            memset(script->ifArgs.idList.idsTriggered, false,
+                                   sizeof(bool) * script->ifArgs.idList.numIds);
+                            break;
+                        }
                     }
                 }
 
@@ -505,54 +479,26 @@ static bool checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
             }
             else
             {
-                // AND - check if all of the cells are triggered
+                // For each cell in the script list
                 for (int32_t idx = 0; idx < script->ifArgs.cellList.numCells; idx++)
                 {
-                    // Check if the cell matches
-                    if ((x == script->ifArgs.cellList.cells[idx].x) && (y == script->ifArgs.cellList.cells[idx].y))
+                    // If this hasn't been triggered yet
+                    if (false == script->ifArgs.cellList.cellsTriggered[idx])
                     {
-                        // If order is required and this cell has already been triggered
-                        if ((IN_ORDER == script->ifArgs.cellList.order)
-                            && (script->ifArgs.cellList.cellsTriggered[idx]))
-                        {
-                            // Clear them all
-                            memset(script->ifArgs.cellList.cellsTriggered, false,
-                                   sizeof(bool) * script->ifArgs.cellList.numCells);
-                        }
-                        else // Order doesn't matter, or cell isn't triggered
+                        // Check if the cell matches
+                        if ((x == script->ifArgs.cellList.cells[idx].x) && (y == script->ifArgs.cellList.cells[idx].y))
                         {
                             // Mark it as triggered
                             script->ifArgs.cellList.cellsTriggered[idx] = true;
-                        }
-                        break;
-                    }
-                }
-
-                // Make sure they were triggered in order
-                if (IN_ORDER == script->ifArgs.cellList.order)
-                {
-                    // Check if a 'true' is found after a 'false'
-                    bool falseFound = false;
-                    bool inOrder    = true;
-                    for (int32_t idx = 0; idx < script->ifArgs.cellList.numCells; idx++)
-                    {
-                        if (false == script->ifArgs.cellList.cellsTriggered[idx])
-                        {
-                            falseFound = true;
-                        }
-                        else if (falseFound) // cellsTriggered[idx] is true
-                        {
-                            inOrder = false;
                             break;
                         }
-                    }
-
-                    // If the triggers are not in order
-                    if (false == inOrder)
-                    {
-                        // Clear them all
-                        memset(script->ifArgs.cellList.cellsTriggered, false,
-                               sizeof(bool) * script->ifArgs.cellList.numCells);
+                        else if (IN_ORDER == script->ifArgs.cellList.order)
+                        {
+                            // Not triggered in order, clear them all
+                            memset(script->ifArgs.cellList.cellsTriggered, false,
+                                   sizeof(bool) * script->ifArgs.cellList.numCells);
+                            break;
+                        }
                     }
                 }
 
@@ -696,6 +642,8 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 int32_t y = script->thenArgs.cellList.cells[cIdx].y;
                 // Start opening the door
                 ray->map.tiles[x][y].openingDirection = 1;
+                // Mark it as permanently open
+                ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
             }
             break;
         }
@@ -825,6 +773,11 @@ static bool executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                             node_t* oldNode = currentNode;
                             // Iterate to the next
                             currentNode = currentNode->next;
+                            // Remove the lock
+                            if (ray->targetedObj == oldNode->val)
+                            {
+                                ray->targetedObj = NULL;
+                            }
                             // Remove the node that was iterated past
                             free(oldNode->val);
                             removeEntry(lists[lIdx], oldNode);

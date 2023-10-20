@@ -19,6 +19,7 @@
 #include "fill.h"
 #include "linked_list.h"
 #include "font.h"
+#include "bunny.h"
 
 //==============================================================================
 // Defines
@@ -99,6 +100,7 @@ static void accelTestExitMode(void);
 static void accelTestReset(void);
 static void accelTestSample(int16_t x, int16_t y, int16_t z);
 static void accelTestHandleInput(void);
+static void accelDrawBunny(void);
 
 static void accelTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void accelTestDrawGraph(void);
@@ -160,6 +162,9 @@ static void accelTestEnterMode(void)
     // writeTextlabels doesn't get reset by accelTestReset(), so initialize that here
     accelTest->writeTextLabels = true;
 
+    // We shold go as fast as we can.
+    setFrameRateUs(0);
+
     // Then, accelTestReset() takes care of everything else
     accelTestReset();
 }
@@ -203,6 +208,9 @@ static void accelTestMainLoop(int64_t elapsedUs)
     // Do update each loop
     accelTestHandleInput();
 
+    // Draw the bunny
+    accelDrawBunny();
+
     // Draw the field
     accelTestDrawGraph();
 }
@@ -239,9 +247,56 @@ static void accelTestHandleInput(void)
 {
     // Declare variables to receive acceleration
     // Get the current acceleration
-    if (ESP_OK == accelGetAccelVec(&(accelTest->x), &(accelTest->y), &(accelTest->z)))
+    if (ESP_OK == accelGetAccelVecRaw(&(accelTest->x), &(accelTest->y), &(accelTest->z)))
     {
         accelTestSample(accelTest->x, accelTest->y, accelTest->z);
+    }
+}
+
+/**
+ * @brief Draw the bunny
+ */
+static void accelDrawBunny(void)
+{
+    // Produce a model matrix from a quaternion.
+    float plusx_out[3] = {1, 0, 0};
+    float plusy_out[3] = {0, 1, 0};
+    float plusz_out[3] = {0, 0, 1};
+
+    mathRotateVectorByQuaternion(plusy_out, LSM6DSL.fqQuat, plusy_out);
+    mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
+    mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
+
+    int16_t bunny_verts_out[sizeof(bunny_verts) / 3 / 2 * 3];
+    int i, vertices = 0;
+    for (i = 0; i < sizeof(bunny_verts) / 2; i += 3)
+    {
+        // Performingthe transform this way is about 700us.
+        float bx                          = bunny_verts[i + 2];
+        float by                          = bunny_verts[i + 1];
+        float bz                          = -bunny_verts[i + 0];
+        float bunnyvert[3]                = {bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
+                                             bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
+                                             bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]};
+        bunny_verts_out[vertices * 3 + 0] = bunnyvert[0] / 250 + 280 / 2;
+        bunny_verts_out[vertices * 3 + 1]
+            = -bunnyvert[1] / 250 + 240 / 2; // Convert from right-handed to left-handed coordinate frame.
+        bunny_verts_out[vertices * 3 + 2] = bunnyvert[2];
+        vertices++;
+    }
+
+    int lines = 0;
+    for (i = 0; i < sizeof(bunny_lines); i += 2)
+    {
+        int v1    = bunny_lines[i] * 3;
+        int v2    = bunny_lines[i + 1] * 3;
+        float col = bunny_verts_out[v1 + 2] / 2000 + 8;
+        if (col > 5)
+            col = 5;
+        else if (col < 0)
+            continue;
+        drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1 + 1], bunny_verts_out[v2], bunny_verts_out[v2 + 1], col);
+        lines++;
     }
 }
 
@@ -250,6 +305,8 @@ static void accelTestHandleInput(void)
  */
 static void accelTestReset(void)
 {
+    accelSetRegistersAndReset();
+
     accelTest->first = 0;
     accelTest->last  = 0;
 
@@ -279,17 +336,8 @@ static void accelTestReset(void)
  */
 static void accelTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    // Use TURBO drawing mode to draw individual pixels fast
-    SETUP_FOR_TURBO();
-
-    // Blank the display
-    for (int16_t yp = y; yp < y + h; yp++)
-    {
-        for (int16_t xp = x; xp < x + w; xp++)
-        {
-            TURBO_SET_PIXEL(xp, yp, GRAPH_BG_COLOR);
-        }
-    }
+    accelIntegrate();
+    fillDisplayArea(x, y, x + w, y + h, GRAPH_BG_COLOR);
 }
 
 /**

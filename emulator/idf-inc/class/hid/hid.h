@@ -75,6 +75,19 @@ typedef struct TU_ATTR_PACKED
     uint32_t buttons; ///< Buttons mask for currently pressed buttons
 } hid_gamepad_report_t;
 
+/// HID Switch Gamepad Protocol Report.
+typedef struct TU_ATTR_PACKED
+{
+    uint16_t buttons; ///< Buttons mask for currently pressed buttons
+    uint8_t hat;      ///< Buttons mask for currently pressed buttons in the DPad/hat
+    int8_t x;         ///< Delta x  movement of left analog-stick
+    int8_t y;         ///< Delta y  movement of left analog-stick
+    int8_t rx;        ///< Delta Rx movement of analog left trigger
+    int8_t ry;        ///< Delta Ry movement of analog right trigger
+    int8_t z;         ///< Delta z  movement of right analog-joystick
+    int8_t rz;        ///< Delta Rz movement of right analog-joystick
+} hid_gamepad_ns_report_t;
+
 /// Standard Gamepad Buttons Bitmap
 typedef enum
 {

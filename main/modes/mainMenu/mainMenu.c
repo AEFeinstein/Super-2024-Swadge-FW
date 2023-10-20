@@ -11,6 +11,7 @@
 #include "colorchord.h"
 #include "dance.h"
 #include "demoMode.h"
+#include "factoryTest.h"
 #include "gamepad.h"
 #include "jukebox.h"
 #include "lumberjack.h"
@@ -37,6 +38,8 @@ typedef struct
     menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
+    int32_t lastBgmVol;
+    int32_t lastSfxVol;
 } mainMenu_t;
 
 //==============================================================================
@@ -146,6 +149,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Start a submenu for settings
@@ -156,6 +160,10 @@ static void mainMenuEnterMode(void)
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
+
+    // These are just used for playing the sound only when the setting changes
+    mainMenu->lastBgmVol = getBgmVolumeSetting();
+    mainMenu->lastSfxVol = getSfxVolumeSetting();
 
     addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
                                  screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
@@ -217,6 +225,8 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
+
+    // Always stop the buzzer unless we're on one of the SFX settings
     bzrStop(true);
 
     if (selected)
@@ -241,6 +251,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == demoMode.modeName)
         {
             switchToSwadgeMode(&demoMode);
+        }
+        else if (label == factoryTestMode.modeName)
+        {
+            switchToSwadgeMode(&factoryTestMode);
         }
         else if (label == gamepadMode.modeName)
         {
@@ -304,13 +318,21 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (bgmVolSettingLabel == label)
         {
-            setBgmVolumeSetting(settingVal);
-            bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+            if (settingVal != mainMenu->lastBgmVol)
+            {
+                mainMenu->lastBgmVol = settingVal;
+                setBgmVolumeSetting(settingVal);
+                bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+            }
         }
         else if (sfxVolSettingLabel == label)
         {
-            setSfxVolumeSetting(settingVal);
-            bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+            if (settingVal != mainMenu->lastSfxVol)
+            {
+                mainMenu->lastSfxVol = settingVal;
+                setSfxVolumeSetting(settingVal);
+                bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+            }
         }
         else if (micSettingLabel == label)
         {

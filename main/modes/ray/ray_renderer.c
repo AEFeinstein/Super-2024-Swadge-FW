@@ -76,7 +76,7 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
     SETUP_FOR_TURBO();
 
     // Boolean if the colors should be drawn inverted
-    bool isXray = (LO_XRAY == ray->loadout);
+    bool isXray = (LO_XRAY == ray->p.loadout);
 
     // Track which cell the ceiling or floor is being drawn in
     uint32_t cellX = 0;
@@ -202,7 +202,17 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
                         {
                             type = BG_FLOOR;
                         }
-                        texture = getTexByType(ray, type)->px;
+
+#ifdef TEST_TEX
+                        if ((ray->p.mapId < 4) && (BG_FLOOR_LAVA != type) && (BG_FLOOR_WATER != type))
+                        {
+                            texture = ray->testTextures[ray->p.mapId * 2].px;
+                        }
+                        else
+#endif
+                        {
+                            texture = getTexByType(ray, type)->px;
+                        }
                     }
                     else
                     {
@@ -253,7 +263,7 @@ void castWalls(ray_t* ray)
     SETUP_FOR_TURBO();
 
     // Boolean if the colors should be drawn inverted
-    bool isXray = (LO_XRAY == ray->loadout);
+    bool isXray = (LO_XRAY == ray->p.loadout);
 
     // For convenience
     q24_8 pPosX = ray->p.posX;
@@ -343,6 +353,14 @@ void castWalls(ray_t* ray)
 
             // Check if ray has hit a wall or door
             rayMapCellType_t tileType = ray->map.tiles[mapX][mapY].type;
+
+            // Mark this tile as seen
+            rayTileState_t* vTile = &ray->map.visitedTiles[(mapY * ray->map.w) + mapX];
+            if (*vTile < VISITED)
+            {
+                *vTile = VISITED;
+            }
+
             if (CELL_IS_TYPE(tileType, BG | WALL) || CELL_IS_TYPE(tileType, BG | DOOR))
             {
                 // Check if the door should be drawn recessed or not
@@ -350,7 +368,7 @@ void castWalls(ray_t* ray)
                 if (tileType == BG_DOOR_XRAY)
                 {
                     // X-Ray door, only draw recessed if the X-Ray loadout is active or the door is open
-                    if ((LO_XRAY == ray->loadout) || (TO_FX(1) == ray->map.tiles[mapX][mapY].doorOpen))
+                    if ((LO_XRAY == ray->p.loadout) || (TO_FX(1) == ray->map.tiles[mapX][mapY].doorOpen))
                     {
                         // Draw recessed door
                         drawRecessedDoor = true;
@@ -501,7 +519,16 @@ void castWalls(ray_t* ray)
         }
         else
         {
-            tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
+#ifdef TEST_TEX
+            if (ray->p.mapId < 4 && !CELL_IS_TYPE(ray->map.tiles[mapX][mapY].type, BG | DOOR))
+            {
+                tex = ray->testTextures[ray->p.mapId * 2 + 1].px;
+            }
+            else
+#endif
+            {
+                tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
+            }
         }
 
         // Draw a vertical strip
@@ -668,7 +695,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
     SETUP_FOR_TURBO();
 
     // Boolean if the colors should be drawn inverted
-    bool isXray = (LO_XRAY == ray->loadout);
+    bool isXray = (LO_XRAY == ray->p.loadout);
 
     // Put an array on the stack to sort all sprites
     objDist_t allObjs[MAX_RAY_BULLETS + ray->scenery.length + ray->enemies.length + ray->items.length];
@@ -930,15 +957,15 @@ rayObjCommon_t* castSprites(ray_t* ray)
  */
 void drawHud(ray_t* ray)
 {
-    if (LO_NONE != ray->loadout)
+    if (LO_NONE != ray->p.loadout)
     {
-        wsg_t* gun      = &ray->guns[ray->loadout];
+        wsg_t* gun      = &ray->guns[ray->p.loadout];
         int32_t yOffset = TFT_HEIGHT - gun->h;
         // If a loadout change is in progress
         if (ray->loadoutChangeTimer)
         {
             // Loadout is changing out
-            if (ray->loadout != ray->nextLoadout)
+            if (ray->p.loadout != ray->nextLoadout)
             {
                 // Timer goes from LOADOUT_TIMER_US to 0, as it gets smaller the gun moves down
                 yOffset += (gun->h - ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US));
@@ -967,7 +994,7 @@ void drawHud(ray_t* ray)
     char keyStr[16] = "K:";
     for (int16_t kIdx = 0; kIdx < NUM_KEYS; kIdx++)
     {
-        if (ray->p.i.keys[ray->p.mapId][kIdx])
+        if (KEY == ray->p.i.keys[ray->p.mapId][kIdx])
         {
             char thisKeyStr[] = {'0' + kIdx, 0};
             strcat(keyStr, thisKeyStr);

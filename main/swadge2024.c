@@ -71,7 +71,7 @@
  * - hdw-battmon.h: Learn how to check the battery voltage!
  * - hdw-btn.h: Learn how to use both push and touch button input!
  * - hdw-bzr.h: Learn how to use the buzzer!
- * - hdw-accel.h: Learn how to use the accelerometer!
+ * - hdw-imu.h: Learn how to use the inertial measurement unit!
  * - hdw-led.h: Learn how to use the LEDs!
  * - hdw-mic.h: Learn how to use the microphone!
  * - hdw-temperature.h: Learn how to use the temperature sensor!
@@ -140,11 +140,13 @@
 #include <soc/rtc_cntl_reg.h>
 
 #include "advanced_usb_control.h"
-#include "swadge2024.h"
-#include "mainMenu.h"
-#include "lumberjack.h"
-#include "quickSettings.h"
 #include "shapes.h"
+#include "swadge2024.h"
+
+#include "factoryTest.h"
+#include "lumberjack.h"
+#include "mainMenu.h"
+#include "quickSettings.h"
 
 //==============================================================================
 // Defines
@@ -203,8 +205,20 @@ void app_main(void)
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
-    // Assume the main menu is shown
-    cSwadgeMode = &mainMenuMode;
+    // Read settings from NVS
+    readAllSettings();
+
+    // If test mode was passed
+    if (getTestModePassedSetting())
+    {
+        // Show the main menu
+        cSwadgeMode = &mainMenuMode;
+    }
+    else
+    {
+        // Otherwise enter test mode
+        cSwadgeMode = &factoryTestMode;
+    }
 
     // If the ESP woke from sleep, and there is a pending Swadge Mode
     if ((ESP_SLEEP_WAKEUP_TIMER == esp_sleep_get_wakeup_cause()) && (NULL != pendingSwadgeMode))
@@ -253,7 +267,7 @@ void app_main(void)
 
     // Init buzzer. This must be called before initMic()
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
-               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, false, false);
+               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
 
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
@@ -268,18 +282,19 @@ void app_main(void)
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
-            GPIO_NUM_36,    // sclk
-            GPIO_NUM_37,    // mosi
-            GPIO_NUM_21,    // dc
-            GPIO_NUM_34,    // cs
-            GPIO_NUM_38,    // rst
-            GPIO_NUM_35,    // backlight
-            true,           // PWM backlight
-            LEDC_CHANNEL_2, // Channel to use for PWM backlight
-            LEDC_TIMER_2);  // Timer to use for PWM backlight
+            GPIO_NUM_36,                // sclk
+            GPIO_NUM_37,                // mosi
+            GPIO_NUM_21,                // dc
+            GPIO_NUM_34,                // cs
+            GPIO_NUM_38,                // rst
+            GPIO_NUM_35,                // backlight
+            true,                       // PWM backlight
+            LEDC_CHANNEL_2,             // Channel to use for PWM backlight
+            LEDC_TIMER_2,               // Timer to use for PWM backlight
+            getTftBrightnessSetting()); // TFT Brightness
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39, GPIO_NUM_18);
+    initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
 
     // Init esp-now if requested by the mode
     if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
@@ -294,7 +309,8 @@ void app_main(void)
         initAccelerometer(I2C_NUM_0,
                           GPIO_NUM_3,  // SDA
                           GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_DISABLE, 1000000, QMA_RANGE_2G, QMA_BANDWIDTH_1024_HZ);
+                          GPIO_PULLUP_ENABLE, 1000000);
+        accelIntegrate();
     }
 
     // Init the temperature sensor
@@ -306,9 +322,6 @@ void app_main(void)
     // Initialize the loop timer
     static int64_t tLastLoopUs = 0;
     tLastLoopUs                = esp_timer_get_time();
-
-    // Read settings from NVS
-    readAllSettings();
 
     // Initialize the swadge mode
     if (NULL != cSwadgeMode->fnEnterMode)

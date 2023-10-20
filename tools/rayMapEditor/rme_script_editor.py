@@ -57,6 +57,9 @@ class spawn:
         self.x = x
         self.y = y
 
+    def __eq__(self, __value: object) -> bool:
+        return (__value is not None) and (type(__value) == type(self)) and (self.x == __value.x) and (self.y == __value.y)
+
 
 class rme_scriptSplitter:
 
@@ -111,6 +114,15 @@ class rme_script:
             else:
                 # Failure, reset the script
                 self.resetScript()
+        else:
+            # Default to spawning enemies when entering a space
+            self.ifOp = ifOpType.ENTER
+            self.ifArgs[kAndOr] = andOrType.OR
+            self.ifArgs[kOrder] = orderType.ANY_ORDER
+            self.ifArgs[kOneTime] = oneTimeType.ALWAYS
+            self.ifArgs[kCells] = []
+            self.thenOp = thenOpType.SPAWN
+            self.thenArgs[kSpawns] = []
         pass
 
     def __parseArgs(self, args: str) -> list[str]:
@@ -539,3 +551,31 @@ class rme_script:
         if kIds in self.thenArgs.keys():
             return self.thenArgs[kIds]
         return []
+
+    def getThenSpawns(self) -> list[spawn]:
+        if kSpawns in self.thenArgs.keys():
+            return self.thenArgs[kSpawns]
+        return []
+
+    def addTileTrigger(self, x: int, y: int, delete: bool):
+        cell = [x, y]
+        if delete:
+            if cell in self.ifArgs[kCells]:
+                self.ifArgs[kCells].remove(cell)
+        else:
+            if cell not in self.ifArgs[kCells]:
+                self.ifArgs[kCells].append(cell)
+
+    def addEnemy(self, x: int, y: int, id: int, eType: tileType) -> int:
+        if tileType.DELETE == eType:
+            sp: spawn
+            for sp in self.thenArgs[kSpawns]:
+                if sp.x == x and sp.y == y:
+                    idToRemove = sp.id
+                    self.thenArgs[kSpawns].remove(sp)
+                    return idToRemove
+        else:
+            newEnemy = spawn(eType, id, x, y)
+            if newEnemy not in self.thenArgs[kSpawns]:
+                self.thenArgs[kSpawns].append(newEnemy)
+        return -1

@@ -102,8 +102,8 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
     }
 
     memset(&buzzers, 0, sizeof(buzzers));
-    bgmVolume = _bgmVolume;
-    sfxVolume = _sfxVolume;
+    bzrSetBgmVolume(_bgmVolume);
+    bzrSetSfxVolume(_sfxVolume);
 
     const esp_timer_create_args_t checkNoteTimeArgs = {
         .arg                   = NULL,
@@ -136,7 +136,7 @@ void deinitBuzzer(void)
 /**
  * @brief Set the buzzer's bgm volume
  *
- * @param vol The background volume, 0 to 13
+ * @param vol The background volume, 0 to MAX_VOLUME
  */
 void bzrSetBgmVolume(uint16_t vol)
 {
@@ -146,7 +146,7 @@ void bzrSetBgmVolume(uint16_t vol)
 /**
  * @brief Set the buzzer's sfx volume
  *
- * @param vol The background volume, 0 to 13
+ * @param vol The background volume, 0 to MAX_VOLUME
  */
 void bzrSetSfxVolume(uint16_t vol)
 {
@@ -487,4 +487,43 @@ void bzrResume(void)
             bzrPlayNote(bzr->cFreq, bIdx, bzr->vol);
         }
     }
+}
+
+/**
+ * @brief Save the state of the buzzer so that it can be restored later, perhaps
+ * after playing a different sound.
+ *
+ * @return A void-pointer which can be passed back to bzrRestore()
+ */
+void* bzrSave(void)
+{
+    bzrPause();
+
+    bzrTrack_t* result = malloc(sizeof(bzrTrack_t) * NUM_BUZZERS * 2);
+    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    {
+        memcpy(&result[bIdx * 2], &buzzers[bIdx].bgm, sizeof(bzrTrack_t));
+        memcpy(&result[bIdx * 2 + 1], &buzzers[bIdx].sfx, sizeof(bzrTrack_t));
+    }
+
+    return (void*)result;
+}
+
+/**
+ * @brief Restore the state of the buzzer from a void-pointer returned by bzrSave()
+ *
+ * The data passed pointer will be freed by this call.
+ *
+ * @param data The saved state of the buzzer, returned by bzrSave()
+ */
+void bzrRestore(void* data)
+{
+    bzrTrack_t* buzzerState = (bzrTrack_t*)data;
+    for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
+    {
+        memcpy(&buzzers[bIdx].bgm, &buzzerState[bIdx * 2], sizeof(bzrTrack_t));
+        memcpy(&buzzers[bIdx].sfx, &buzzerState[bIdx * 2 + 1], sizeof(bzrTrack_t));
+    }
+
+    free(data);
 }

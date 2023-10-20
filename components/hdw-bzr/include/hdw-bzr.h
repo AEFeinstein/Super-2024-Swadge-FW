@@ -75,6 +75,8 @@
 /** @brief The number of physical buzzers */
 #define NUM_BUZZERS 2
 
+#define MAX_VOLUME 13
+
 /**
  * @brief Frequencies for all the notes, in hertz.
  *
@@ -268,5 +270,7 @@ void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume)
 void bzrStopNote(buzzerPlayTrack_t track);
 void bzrPause(void);
 void bzrResume(void);
+void* bzrSave(void);
+void bzrRestore(void* data);
 
 #endif

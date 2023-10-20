@@ -13,6 +13,7 @@ class model:
         self.splitter: rme_scriptSplitter = rme_scriptSplitter()
         self.currentId: int = 0
         self.usedIds: list[int] = []
+        self.enemyScript = None
 
     def setView(self, v):
         from rme_view import view
@@ -201,8 +202,46 @@ class model:
             sLen: int = (data[idx] << 8) | (data[idx + 1])
             idx = idx + 2
             # Read script
-            self.scripts.append(rme_script(bytes=data[idx: idx + sLen]))
+            newScript = rme_script(bytes=data[idx: idx + sLen])
+            self.scripts.append(newScript)
+            # Mark spawned IDs as used
+            for sp in newScript.getThenSpawns():
+                self.usedIds.append(sp.id)
             idx = idx + sLen
 
         # Everything loaded
         return True
+
+    def startScriptCreation(self):
+        self.enemyScript: rme_script = rme_script()
+
+    def addTileTriggerToScript(self, x: int, y: int, delete: bool):
+        self.enemyScript.addTileTrigger(x, y, delete)
+        self.v.highlightScriptCells()
+
+    def addEnemyToScript(self, x: int, y: int, eType: tileType):
+        if tileType.DELETE == eType:
+            idToRemove = self.enemyScript.addEnemy(x, y, 0, eType)
+            if idToRemove in self.usedIds:
+                self.usedIds.remove(idToRemove)
+        else:
+            occupied = False
+            sp: spawn
+            for sp in self.enemyScript.getThenSpawns():
+                if sp.x == x and sp.y == y:
+                    occupied = True
+                    break
+            if not occupied:
+                self.enemyScript.addEnemy(x, y, self.getNextId(), eType)
+        self.v.highlightScriptCells()
+
+    def finishScriptCreation(self):
+        if self.enemyScript.isValid() and 0 < len(self.enemyScript.getIfCells()) and 0 < len(self.enemyScript.getThenSpawns()):
+            self.scripts.append(self.enemyScript)
+            self.enemyScript = None
+            self.v.reloadScriptText()
+        else:
+            sp: spawn
+            for sp in self.enemyScript.getThenSpawns():
+                self.usedIds.remove(sp.id)
+            self.enemyScript = None

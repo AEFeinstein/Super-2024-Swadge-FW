@@ -13,6 +13,9 @@
 // Defines
 //==============================================================================
 
+/** Use test textures. TODO: DELETE THIS */
+#define TEST_TEX 1
+
 /** The number of total maps */
 #define NUM_MAPS 6
 /** The number of keys per map */
@@ -36,7 +39,7 @@
 #define US_PER_LAVA_DAMAGE 500000
 
 /** Microseconds to charge the charge beam */
-#define CHARGE_TIME_US 2097152
+#define CHARGE_TIME_US 1048576
 
 /** The number of bullets tracked at a given point in time */
 #define MAX_RAY_BULLETS 32
@@ -220,6 +223,45 @@ typedef enum
     ALWAYS = 1, ///< The script resets after triggering
 } repeat_t;
 
+typedef enum
+{
+    NO_KEY,   ///< Key was not picked up
+    KEY,      ///< Key was picked up and not used yet
+    OPEN_KEY, ///< Key was both picked up and used
+} rayKeyState_t;
+
+/**
+ * @brief The different screens that can be displayed
+ */
+typedef enum
+{
+    RAY_MENU,        ///< The main menu is being shown
+    RAY_GAME,        ///< The game loop is being shown
+    RAY_DIALOG,      ///< A dialog box is being shown
+    RAY_PAUSE,       ///< The pause menu is being shown
+    RAY_WARP_SCREEN, ///< The warp screen animation is being shown
+} rayScreen_t;
+
+/**
+ * @brief The different pause screens that can be displayed
+ */
+typedef enum
+{
+    RP_LOCAL_MAP,   ///< The map the player is currently in
+    RP_WORLD_MAP,   ///< All the maps and how they connect
+    RP_NUM_SCREENS, ///< The number of pause screens
+} rayPauseScreen_t;
+
+/**
+ * @brief Enum for visited tiles
+ */
+typedef enum __attribute__((packed))
+{
+    NOT_VISITED,      ///< This map tile has not been visited
+    VISITED,          ///< This map tile has been visited
+    SCRIPT_DOOR_OPEN, ///< This map tile has been visited and has a permanently-open door
+} rayTileState_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -331,10 +373,10 @@ typedef struct
  */
 typedef struct
 {
-    uint32_t w;           ///< The width of the map
-    uint32_t h;           ///< The height of the map
-    rayMapCell_t** tiles; ///< A 2D array of tiles in the map
-    bool* visitedTiles;   ///< A 1D array of all the visited tiles in the map, row-order
+    uint32_t w;                   ///< The width of the map
+    uint32_t h;                   ///< The height of the map
+    rayMapCell_t** tiles;         ///< A 2D array of tiles in the map
+    rayTileState_t* visitedTiles; ///< A 1D array of all the visited tiles in the map, row-order
 } rayMap_t;
 
 /**
@@ -387,13 +429,12 @@ typedef struct
 
 /**
  * @brief The player's inventory
- * TODO save to disk sometime
  */
 typedef struct
 {
     // Persistent pick-ups
-    int32_t missilesPickUps[NUM_MAPS][MISSILE_UPGRADES_PER_MAP]; ///< Coordinate list of acquired missile expansions
-    int32_t healthPickUps[NUM_MAPS][E_TANKS_PER_MAP];            ///< Coordinate list of acquired e.tanks
+    int32_t missilesPickUps[NUM_MAPS][MISSILE_UPGRADES_PER_MAP]; ///< ID list of acquired missile expansions
+    int32_t healthPickUps[NUM_MAPS][E_TANKS_PER_MAP];            ///< ID list of acquired e.tanks
     // Current status
     int32_t health;         ///< The player's current health
     int32_t maxHealth;      ///< The player's current max health.
@@ -409,33 +450,23 @@ typedef struct
     bool lavaSuit;  ///< True if the lava suit was acquired
     bool waterSuit; ///< True if the water suit was acquired
     // Key items
-    bool artifacts[NUM_MAPS];      ///< List of acquired artifacts
-    bool keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
+    bool artifacts[NUM_MAPS];               ///< List of acquired artifacts
+    rayKeyState_t keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
 } rayInventory_t;
-
-/**
- * @brief The different screens that can be displayed
- */
-typedef enum
-{
-    RAY_MENU,        ///< The main menu is being shown
-    RAY_GAME,        ///< The game loop is being shown
-    RAY_DIALOG,      ///< A dialog box is being shown
-    RAY_PAUSE,       ///< The pause menu is being shown
-    RAY_WARP_SCREEN, ///< The warp screen animation is being shown
-} rayScreen_t;
 
 /**
  * @brief A struct with all the player information saved to NVM
  */
 typedef struct
 {
-    q24_8 posX;       ///< The player's X position
-    q24_8 posY;       ///< The player's Y position
-    q24_8 dirX;       ///< The player's X direction
-    q24_8 dirY;       ///< The player's Y direction
-    int32_t mapId;    ///< The ID of the current map
-    rayInventory_t i; ///< All the players items
+    q24_8 posX;                 ///< The player's X position
+    q24_8 posY;                 ///< The player's Y position
+    q24_8 dirX;                 ///< The player's X direction
+    q24_8 dirY;                 ///< The player's Y direction
+    rayLoadout_t loadout;       ///< The player's current loadout
+    int32_t mapId;              ///< The ID of the current map
+    bool mapsVisited[NUM_MAPS]; ///< Booleans for each map visited
+    rayInventory_t i;           ///< All the players items
 } rayPlayer_t;
 
 /**
@@ -444,10 +475,12 @@ typedef struct
  */
 typedef struct
 {
-    rayScreen_t screen; ///< The current screen being shown
+    rayScreen_t screen;           ///< The current screen being shown
+    rayPauseScreen_t pauseScreen; ///< The current pause screen being shown
 
-    menu_t* menu; ///< The main menu
-    menuLogbookRenderer_t* renderer;
+    menu_t* menu;                    ///< The main menu
+    menuLogbookRenderer_t* renderer; ///< Renderer for the menu
+    bool wasReset;                   ///< Flag to return to the main menu after wiping NVM
 
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
@@ -477,7 +510,6 @@ typedef struct
     bool isStrafing;             ///< true if the player is strafing, false if not
     rayObjCommon_t* targetedObj; ///< An object that is locked onto to strafe around
 
-    rayLoadout_t loadout;       ///< The player's current loadout
     rayLoadout_t nextLoadout;   ///< The player's next loadout, if touched
     int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
@@ -485,6 +517,9 @@ typedef struct
     int32_t lavaTimer;   ///< Timer to apply lava damage
     int32_t chargeTimer; ///< Timer to charge shots
 
+#ifdef TEST_TEX
+    wsg_t testTextures[8]; ///< Test textures, TODO DELETE THESE
+#endif
     namedTexture_t* loadedTextures; ///< A list of loaded textures
     uint8_t* typeToIdxMap;          ///< A map of rayMapCellType_t to respective textures
     wsg_t guns[NUM_LOADOUTS];       ///< Textures for the HUD guns
@@ -514,6 +549,11 @@ typedef struct
 //==============================================================================
 
 extern swadgeMode_t rayMode;
+
+extern const char* const rayMapNames[];
+extern const paletteColor_t rayMapColors[];
+extern const char RAY_NVS_KEY[];
+extern const char* const RAY_NVS_VISITED_KEYS[];
 
 //==============================================================================
 // Functions

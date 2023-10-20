@@ -180,9 +180,9 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                         || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
                         || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)
                         || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type)
-                        || (BG_DOOR_KEY_A == cell->type && ray->p.i.keys[rayMapId][0])
-                        || (BG_DOOR_KEY_B == cell->type && ray->p.i.keys[rayMapId][1])
-                        || (BG_DOOR_KEY_C == cell->type && ray->p.i.keys[rayMapId][2]))
+                        || (BG_DOOR_KEY_A == cell->type && KEY == ray->p.i.keys[rayMapId][0])
+                        || (BG_DOOR_KEY_B == cell->type && KEY == ray->p.i.keys[rayMapId][1])
+                        || (BG_DOOR_KEY_C == cell->type && KEY == ray->p.i.keys[rayMapId][2]))
                     {
                         // Start opening the door
                         cell->openingDirection = 1;
@@ -196,7 +196,7 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
                             (BG_DOOR_KEY_C == cell->type))
                         {
                             // Use the key
-                            ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = false;
+                            ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
                         }
                     }
                     else
@@ -328,6 +328,12 @@ void checkRayCollisions(ray_t* ray)
 
                         // save the next node
                         node_t* nextNode = currentNode->next;
+
+                        // Remove the lock
+                        if (ray->targetedObj == enemy)
+                        {
+                            ray->targetedObj = NULL;
+                        }
 
                         // Unlink and free
                         removeEntry(&ray->enemies, currentNode);

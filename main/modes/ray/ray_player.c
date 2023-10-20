@@ -11,8 +11,6 @@
 #include "ray_pause.h"
 #include "ray_script.h"
 
-#define RAY_NVS_KEY "ray"
-
 //==============================================================================
 // Functions
 //==============================================================================
@@ -21,46 +19,59 @@
  * @brief Initialize the player
  *
  * @param ray The entire game state
- * @param initialLoad true if the inventory should be read from NVM, false to leave it alone
+ * @return true if the player was initialized from scratch, false if loaded from NVM
  */
-void initializePlayer(ray_t* ray, bool initialLoad)
+bool initializePlayer(ray_t* ray)
 {
-    size_t len = sizeof(ray->p);
+    bool initFromScratch = false;
+    size_t len           = sizeof(ray->p);
     if (!readNvsBlob(RAY_NVS_KEY, &ray->p, &len))
     {
-        // ray->p.posX and ray->p.posY (position) are set by loadRayMap()
+        initFromScratch = true;
+
+        // Start at map 0, loaded later
+        ray->p.mapId          = 0;
+        ray->p.mapsVisited[0] = true;
+
+        // ray->p.posX and ray->p.posY (starting position) are set by the map
+
         // Set the direction
         ray->p.dirX = TO_FX(0);
         ray->p.dirY = -TO_FX(1);
-        // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
-        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
-        // Set the head-bob to centered
-        ray->posZ = TO_FX(0);
 
-        // Clear any strafes
-        ray->isStrafing  = false;
-        ray->targetedObj = NULL;
-
-        if (initialLoad)
+        // Zero the entire inventory
+        memset(&ray->p.i, 0, sizeof(ray->p.i));
+        // Set all pickup IDs to -1
+        for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
         {
-            memset(&ray->p.i, 0, sizeof(ray->p.i));
-            for (int32_t mapIdx = 0; mapIdx < NUM_MAPS; mapIdx++)
+            for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
             {
-                for (int32_t pIdx = 0; pIdx < MISSILE_UPGRADES_PER_MAP; pIdx++)
-                {
-                    ray->p.i.missilesPickUps[mapIdx][pIdx] = -1;
-                }
-                for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
-                {
-                    ray->p.i.healthPickUps[mapIdx][pIdx] = -1;
-                }
+                ray->p.i.missilesPickUps[mapIdx][pIdx] = -1;
             }
-            // Set initial health
-            ray->p.i.maxHealth = GAME_START_HEALTH;
-            ray->p.i.health    = GAME_START_HEALTH;
+            for (int32_t pIdx = 0; pIdx < E_TANKS_PER_MAP; pIdx++)
+            {
+                ray->p.i.healthPickUps[mapIdx][pIdx] = -1;
+            }
+        }
+        // Set initial health
+        ray->p.i.maxHealth = GAME_START_HEALTH;
+        ray->p.i.health    = GAME_START_HEALTH;
+    }
+    else
+    {
+        // If there is no loadout but the player has the beam
+        if ((LO_NONE == ray->p.loadout) && (ray->p.i.beamLoadOut))
+        {
+            // Set the beam loadout
+            ray->p.loadout = LO_NORMAL;
         }
     }
+
+    // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+    ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+    ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+
+    return initFromScratch;
 }
 
 /**
@@ -71,6 +82,17 @@ void initializePlayer(ray_t* ray, bool initialLoad)
 void raySavePlayer(ray_t* ray)
 {
     writeNvsBlob(RAY_NVS_KEY, &(ray->p), sizeof(ray->p));
+}
+
+/**
+ * @brief Save the tiles the player has visited in this map
+ *
+ * @param ray The entire game state
+ */
+void raySaveVisitedTiles(ray_t* ray)
+{
+    writeNvsBlob(RAY_NVS_VISITED_KEYS[ray->p.mapId], ray->map.visitedTiles,
+                 sizeof(rayTileState_t) * ray->map.w * ray->map.h);
 }
 
 /**
@@ -128,7 +150,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             }
         }
         // The A button shoots. Make sure there is a gun
-        else if ((LO_NONE != ray->loadout) && (PB_A == evt.button))
+        else if ((LO_NONE != ray->p.loadout) && (PB_A == evt.button))
         {
             // What, if any, bullet to fire
             rayMapCellType_t bullet = EMPTY;
@@ -137,7 +159,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             {
                 // A was pressed
                 // Check ammo for the missile loadout
-                if (LO_MISSILE == ray->loadout)
+                if (LO_MISSILE == ray->p.loadout)
                 {
                     if (0 < ray->p.i.numMissiles)
                     {
@@ -150,7 +172,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 else
                 {
                     // Start charging if applicable
-                    if (LO_NORMAL == ray->loadout && ray->p.i.chargePowerUp)
+                    if (LO_NORMAL == ray->p.loadout && ray->p.i.chargePowerUp)
                     {
                         // Start charging
                         ray->chargeTimer = 1;
@@ -164,7 +186,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                         OBJ_BULLET_ICE,     ///< Ice beam loadout
                         OBJ_BULLET_XRAY     ///< X-Ray loadout
                     };
-                    bullet = bulletMap[ray->loadout];
+                    bullet = bulletMap[ray->p.loadout];
                 }
             }
             else
@@ -207,34 +229,33 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
         if (ray->btnState & PB_RIGHT)
         {
             // Strafe right
-            // TODO scale with elapsed time
-            deltaX -= (pDirY / 6);
-            deltaY += (pDirX / 6);
+            deltaX -= pDirY;
+            deltaY += pDirX;
         }
         else if (ray->btnState & PB_LEFT)
         {
             // Strafe left
-            // TODO scale with elapsed time
-            deltaX += (pDirY / 6);
-            deltaY -= (pDirX / 6);
+            deltaX += pDirY;
+            deltaY -= pDirX;
         }
     }
     else
     {
-        // Assume no rotation
-        int32_t rotateDeg = 0;
-
+        // Assume rightward rotation, 5 degrees every 40000uS
+        int32_t rotateDeg = ((5 * (int32_t)elapsedUs) / 40000) % 360;
         if (ray->btnState & PB_RIGHT)
         {
-            // Rotate right
-            // TODO scale with elapsed time
-            rotateDeg = 5;
+            // Rotate right, leave as-is
         }
         else if (ray->btnState & PB_LEFT)
         {
-            // Rotate left
-            // TODO scale with elapsed time
-            rotateDeg = 355;
+            // Rotate left, reverse direction
+            rotateDeg = 360 - rotateDeg;
+        }
+        else
+        {
+            // No rotation, zero it out
+            rotateDeg = 0;
         }
 
         // If we should rotate
@@ -256,6 +277,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             // Save new direction vector
             ray->p.dirX = newX;
             ray->p.dirY = newY;
+
+            // Also update the local copy
+            pDirX = newX;
+            pDirY = newY;
         }
     }
 
@@ -263,77 +288,96 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     if (ray->btnState & PB_UP)
     {
         // Move forward
-        // TODO scale with elapsed time
-        deltaX += (pDirX / 6);
-        deltaY += (pDirY / 6);
+        deltaX += pDirX;
+        deltaY += pDirY;
     }
     // Else if the down button is held
     else if (ray->btnState & PB_DOWN)
     {
         // Move backwards
-        // TODO scale with elapsed time
-        deltaX -= (pDirX / 6);
-        deltaY -= (pDirY / 6);
+        deltaX -= pDirX;
+        deltaY -= pDirY;
     }
 
-    // TODO normalize deltaX and deltaY to something scaled with elapsed time
-
-    // If the player is in water
-    if (isInWater)
+    // If there is movement
+    if (deltaX || deltaY)
     {
-        // Slow down movement by a fourth
-        deltaX /= 4;
-        deltaY /= 4;
-    }
+        // Normalize deltaX and deltaY before scaling with elapsedUs
+        fastNormVec(&deltaX, &deltaY);
 
-    // Boundary checks are longer than the move dist to not get right up on the wall
-    q24_8 boundaryCheckX = deltaX * 2;
-    q24_8 boundaryCheckY = deltaY * 2;
+        // Save normalized vector before scaling for boundary checks later
+        q24_8 normX = deltaX;
+        q24_8 normY = deltaY;
 
-    // Save the old cell to check for crossing cell boundaries
-    int16_t oldCellX = FROM_FX(pPosX);
-    int16_t oldCellY = FROM_FX(pPosY);
+        // Should move 1/6 units every 40000uS
+        deltaX = (int32_t)(deltaX * elapsedUs) / (int32_t)(40000 * 6);
+        deltaY = (int32_t)(deltaY * elapsedUs) / (int32_t)(40000 * 6);
 
-    // Move forwards if no wall in front of you
-    if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + boundaryCheckX)][FROM_FX(pPosY)]))
-    {
-        ray->p.posX += deltaX;
-    }
-
-    if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX)][FROM_FX(pPosY + boundaryCheckY)]))
-    {
-        ray->p.posY += deltaY;
-    }
-
-    // Get the new cell to check for crossing cell boundaries
-    int16_t newCellX = FROM_FX(pPosX);
-    int16_t newCellY = FROM_FX(pPosY);
-
-    // If the cell changed
-    if (oldCellX != newCellX || oldCellY != newCellY)
-    {
-        // Mark it on the map
-        markTileVisited(&ray->map, newCellX, newCellY);
-
-        // Check scripts when entering cells
-        if (checkScriptEnter(ray, newCellX, newCellY))
+        // If the player is in water
+        if (isInWater)
         {
-            // Script warped, return
-            return;
+            // Slow down movement by a fourth
+            deltaX /= 4;
+            deltaY /= 4;
         }
-    }
 
-    // After moving position, recompute direction to targeted object
-    if (ray->isStrafing && ray->targetedObj)
-    {
-        // Re-lock on the target after moving
-        ray->p.dirX = ray->targetedObj->posX - pPosX;
-        ray->p.dirY = ray->targetedObj->posY - pPosY;
-        fastNormVec(&pDirX, &pDirY);
+        // Boundary checks are longer than the move dist to not get right up on the wall
+        q24_8 boundaryCheckX = (2 * normX) / 3;
+        q24_8 boundaryCheckY = (2 * normY) / 3;
 
-        // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-        ray->planeX = -MUL_FX(TO_FX(2) / 3, pDirY);
-        ray->planeY = MUL_FX(TO_FX(2) / 3, pDirX);
+        // Save the old cell to check for crossing cell boundaries
+        int16_t oldCellX = FROM_FX(pPosX);
+        int16_t oldCellY = FROM_FX(pPosY);
+
+        // Move forwards if no wall in front of you
+        if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX + boundaryCheckX)][FROM_FX(pPosY)]))
+        {
+            ray->p.posX += deltaX;
+            // Update local copy
+            pPosX = ray->p.posX;
+        }
+
+        if (isPassableCell(&ray->map.tiles[FROM_FX(pPosX)][FROM_FX(pPosY + boundaryCheckY)]))
+        {
+            ray->p.posY += deltaY;
+            // Update local copy
+            pPosY = ray->p.posY;
+        }
+
+        // Get the new cell to check for crossing cell boundaries
+        int16_t newCellX = FROM_FX(ray->p.posX);
+        int16_t newCellY = FROM_FX(ray->p.posY);
+
+        // If the cell changed
+        if (oldCellX != newCellX || oldCellY != newCellY)
+        {
+            // Mark it on the map
+            markTileVisited(&ray->map, newCellX, newCellY);
+
+            // Check scripts when entering cells
+            if (checkScriptEnter(ray, newCellX, newCellY))
+            {
+                // Script warped, return
+                return;
+            }
+        }
+
+        // After moving position, recompute direction to targeted object
+        if (ray->isStrafing && ray->targetedObj)
+        {
+            // Re-lock on the target after moving
+            pDirX = ray->targetedObj->posX - pPosX;
+            pDirY = ray->targetedObj->posY - pPosY;
+            fastNormVec(&pDirX, &pDirY);
+
+            // Set the player's direction
+            ray->p.dirX = pDirX;
+            ray->p.dirY = pDirY;
+
+            // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+            ray->planeX = -MUL_FX(TO_FX(2) / 3, pDirY);
+            ray->planeY = MUL_FX(TO_FX(2) / 3, pDirX);
+        }
     }
 }
 
@@ -357,7 +401,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
             if (!(tj & TB_CENTER))
             {
                 // Get the loadout touched
-                rayLoadout_t nextLoadout = ray->loadout;
+                rayLoadout_t nextLoadout = ray->p.loadout;
                 if ((tj & TB_UP) && (ray->p.i.beamLoadOut))
                 {
                     nextLoadout = LO_NORMAL;
@@ -376,7 +420,7 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
                 }
 
                 // If a new loadout was touched
-                if (ray->loadout != nextLoadout)
+                if (ray->p.loadout != nextLoadout)
                 {
                     // Start a timer to switch to the next loadout
                     ray->loadoutChangeTimer = LOADOUT_TIMER_US;
@@ -388,11 +432,11 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
     else
     {
         // Button Not touched. If this was during a loadout change, cancel it
-        if ((ray->nextLoadout != ray->loadout) && !ray->forceLoadoutSwap)
+        if ((ray->nextLoadout != ray->p.loadout) && !ray->forceLoadoutSwap)
         {
             // Reset the timer to bring the gun up and set the next loadout to the current one
             ray->loadoutChangeTimer = LOADOUT_TIMER_US - ray->loadoutChangeTimer;
-            ray->nextLoadout        = ray->loadout;
+            ray->nextLoadout        = ray->p.loadout;
         }
     }
 
@@ -405,10 +449,10 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         // If the timer elapsed
         if (ray->loadoutChangeTimer <= 0)
         {
-            if (ray->loadout != ray->nextLoadout)
+            if (ray->p.loadout != ray->nextLoadout)
             {
                 // Swap the loadout
-                ray->loadout = ray->nextLoadout;
+                ray->p.loadout = ray->nextLoadout;
                 // Set the timer for the load in
                 ray->loadoutChangeTimer = LOADOUT_TIMER_US;
             }
@@ -432,6 +476,8 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
  */
 void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_t itemId)
 {
+    // Assume saving after picking up an item
+    bool saveAfterObtain      = true;
     rayInventory_t* inventory = &ray->p.i;
     switch (type)
     {
@@ -447,7 +493,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_CHARGE_BEAM:
         {
             inventory->chargePowerUp = true;
-            if (LO_NORMAL != ray->loadout)
+            if (LO_NORMAL != ray->p.loadout)
             {
                 // Switch to the normal loadout
                 ray->loadoutChangeTimer = LOADOUT_TIMER_US;
@@ -552,6 +598,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         {
             // Transient, add 20 health, not going over the max
             inventory->health = MIN(inventory->health + 20, inventory->maxHealth);
+            // Don't save after energy
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_PICKUP_MISSILE:
@@ -561,6 +609,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
                 // Transient, add 5 missiles, not going over the max
                 inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
             }
+            // Don't save after missile ammo
+            saveAfterObtain = false;
             break;
         }
         case OBJ_ITEM_KEY_A:
@@ -568,14 +618,23 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_KEY_C:
         {
             // Pick up a key
-            inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = true;
+            inventory->keys[ray->p.mapId][type - OBJ_ITEM_KEY_A] = KEY;
             break;
         }
         default:
         {
             // Don't care about other types
+            saveAfterObtain = false;
             break;
         }
+    }
+
+    // If a notable item was obtained
+    if (saveAfterObtain)
+    {
+        // Autosave
+        raySavePlayer(ray);
+        raySaveVisitedTiles(ray);
     }
 }
 
