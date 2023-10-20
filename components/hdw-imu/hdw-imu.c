@@ -430,8 +430,6 @@ esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup
 
     int i;
     int retry = 0;
-    esp_err_t ret_val;
-
 do_retry:
 
     gpio_config_t gsetup = {
@@ -440,7 +438,7 @@ do_retry:
         .pull_up_en = GPIO_PULLUP_ENABLE,
     };
 
-    ret_val = gpio_config( &gsetup );
+    gpio_config( &gsetup );
 
     // This will "shake loose" any devices stuck on the bus.
     GPIO.enable_w1ts = 1<<(3);
@@ -460,8 +458,6 @@ do_retry:
     GPIO.out_w1ts = 1<<(3);
     esp_rom_delay_us(10);
     GPIO.out1_w1ts.val = 1<<(41-32);  // Send final stop
-
-    ret_val = ESP_OK;
 
     // Prepare for normal open drain functionality.
     GPIO.enable1_w1tc.val = 1<<(41-32);
@@ -690,44 +686,69 @@ esp_err_t accelIntegrate()
         ld->fvLastAccelRaw[1] = accel_up[1];
         ld->fvLastAccelRaw[2] = accel_up[2];
 
-        // Step 6B: Next, compute what we think "up" should be from our point of view.  We will use +Y Up.
-        float what_we_think_is_up[3] = {0, 1, 0};
-        mathRotateVectorByInverseOfQuaternion(what_we_think_is_up, LSM6DSL.fqQuat, what_we_think_is_up);
+        if (ld->sampCount++ == 0)
+        {
+            // set fqQuat to be the rotation to go from our "up" from the
+			// accelerometer to the nominal "up"
+			float ideal_up[3] = {0, 1, 0};
 
-        // Step 6C: Next, we determine how far off we are.  This will tell us our error.
-        float corrective_quaternion[4];
+			float half[3] = { accel_up[0] + ideal_up[0],
+                              accel_up[1] + ideal_up[1],
+                              accel_up[2] + ideal_up[2] };
+			float halfnormreq = rsqrtf( half[0] * half[0] +
+                                        half[1] * half[1] +
+                                        half[2] * half[2] );
+            half[0] *= halfnormreq;
+            half[1] *= halfnormreq;
+            half[2] *= halfnormreq;
 
-        // TRICKY: The ouput of this is actually the axis of rotation, which is ironically
-        // in vector-form the same as a quaternion.  So we can write directly into the quat.
-        mathCrossProduct(corrective_quaternion + 1, accel_up, what_we_think_is_up);
+			float * q = ld->fqQuat;
+		    mathCrossProduct(q + 1, accel_up, half );
+            float dotdiff = accel_up[0] * half[0] +
+                            accel_up[1] * half[1] +
+                            accel_up[2] * half[2];
+			q[0] = dotdiff;
+        }
+        else
+        {
+		    // Step 6B: Next, compute what we think "up" should be from our point of view.  We will use +Y Up.
+		    float what_we_think_is_up[3] = {0, 1, 0};
+		    mathRotateVectorByInverseOfQuaternion(what_we_think_is_up, LSM6DSL.fqQuat, what_we_think_is_up);
 
-        // Now, we apply this in step 7.
+		    // Step 6C: Next, we determine how far off we are.  This will tell us our error.
+		    float corrective_quaternion[4];
 
-        // First, we can compute what the drift values of our axes are, to anti-drift them.
-        // If you do only this, you will always end up in an unstable oscillation.
-        memcpy(ld->fCorrectLast, corrective_quaternion + 1, 12);
+		    // TRICKY: The ouput of this is actually the axis of rotation, which is ironically
+		    // in vector-form the same as a quaternion.  So we can write directly into the quat.
+		    mathCrossProduct(corrective_quaternion + 1, accel_up, what_we_think_is_up);
 
-        // XXX TODO: We need to multiply by amount the accelerometer gives us assurance.
-        ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
-        ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
-        ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
+		    // Now, we apply this in step 7.
 
-        float corrective_force = (ld->sampCount++ == 0) ? 0.5f : 0.0005f;
+		    // First, we can compute what the drift values of our axes are, to anti-drift them.
+		    // If you do only this, you will always end up in an unstable oscillation.
+		    memcpy(ld->fCorrectLast, corrective_quaternion + 1, 12);
 
-        // Second, we can apply a very small corrective tug.  This helps prevent oscillation
-        // about the correct answer.  This acts sort of like a P term to a PID loop.
-        // This is actually the **primary**, or fastest responding thing.
-        corrective_quaternion[1] *= corrective_force;
-        corrective_quaternion[2] *= corrective_force;
-        corrective_quaternion[3] *= corrective_force;
+		    // XXX TODO: We need to multiply by amount the accelerometer gives us assurance.
+		    ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
+		    ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
+		    ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
 
-        // x^2+y^2+z^2+q^2 -> ALGEBRA! -> sqrt( 1-x^2-y^2-z^2 ) = w
-        corrective_quaternion[0] = mathsqrtf(1 - corrective_quaternion[1] * corrective_quaternion[1]
-                                             - corrective_quaternion[2] * corrective_quaternion[2]
-                                             - corrective_quaternion[3] * corrective_quaternion[3]);
+            float corrective_force = 0.0005f;
 
-        mathQuatApply(ld->fqQuat, ld->fqQuat, corrective_quaternion);
+            // Second, we can apply a very small corrective tug.  This helps prevent oscillation
+            // about the correct answer.  This acts sort of like a P term to a PID loop.
+            // This is actually the **primary**, or fastest responding thing.
+            corrective_quaternion[1] *= corrective_force;
+            corrective_quaternion[2] *= corrective_force;
+            corrective_quaternion[3] *= corrective_force;
 
+            // x^2+y^2+z^2+q^2 -> ALGEBRA! -> sqrt( 1-x^2-y^2-z^2 ) = w
+            corrective_quaternion[0] = mathsqrtf(1 - corrective_quaternion[1] * corrective_quaternion[1]
+                                                 - corrective_quaternion[2] * corrective_quaternion[2]
+                                                 - corrective_quaternion[3] * corrective_quaternion[3]);
+
+            mathQuatApply(ld->fqQuat, ld->fqQuat, corrective_quaternion);
+        }
         cdata += 6;
     }
 

@@ -502,7 +502,6 @@ void sandbox_tick()
 	mathRotateVectorByQuaternion( plusx_out, LSM6DSL.fqQuat, plusx_out );
 	mathRotateVectorByQuaternion( plusz_out, LSM6DSL.fqQuat, plusz_out );
 
-
 	uint32_t cycStart = getCycleCount();
 
 	int i, vertices = 0;
@@ -618,8 +617,8 @@ void sandbox_tick()
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
 {
 //	accelIntegrate();
-	//if( up + 1 == upNum || up == 0 || up == 8 ) 
-	accelIntegrate();
+	if( up == 2 || up == 8 || up == 13 ) 
+		accelIntegrate();
 
 	fillDisplayArea(x, y, x+w, y+h, 2 );
 }
