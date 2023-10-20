@@ -119,9 +119,13 @@ typedef struct
     int enemy7Count;
     int enemy8Count;
 
+    int attackQueue[8];
+    int receiveQueue[8];
+
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
     wsg_t minicharacters[3];
+    
 
     wsg_t title;
     wsg_t subtitle_red;

@@ -36,6 +36,7 @@
 
 #define LUMBERJACK_MAP_WIDTH            18
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
+#define LUMBERJACK_ROTATE_ANIMATION_MAX  4
 #define LUMBERJACK_RESPAWN_TIMER        3750
 #define LUMBERJACK_RESPAWN_MIN          1250
 #define LUMBERJACK_UPGRADE_TIMER_OFFSET 250
@@ -123,6 +124,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("bottom_floor9.wsg", &lumv->floorTiles[8], true);
     loadWsg("bottom_floor10.wsg", &lumv->floorTiles[9], true);
     loadWsg("lumbers_itemused_block.wsg", &lumv->floorTiles[10], true);
+    loadWsg("lumbers_rtile_1.wsg", &lumv->floorTiles[11], true);
     ESP_LOGI(LUM_TAG, "Loading Animation Tiles");
 
     loadWsg("water_floor1.wsg", &lumv->animationTiles[0], true);
@@ -137,6 +139,11 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("water_floor_b2.wsg", &lumv->animationTiles[9], true);
     loadWsg("water_floor_b3.wsg", &lumv->animationTiles[10], true);
     loadWsg("water_floor_b4.wsg", &lumv->animationTiles[11], true);
+    loadWsg("lumbers_rtile_1.wsg", &lumv->animationTiles[12], true);
+    loadWsg("lumbers_rtile_2.wsg", &lumv->animationTiles[13], true);
+    loadWsg("lumbers_rtile_3.wsg", &lumv->animationTiles[14], true);
+    loadWsg("lumbers_rtile_4.wsg", &lumv->animationTiles[15], true);
+    
 
 
     ESP_LOGI(LUM_TAG, "Loading Characters");
@@ -288,20 +295,39 @@ bool lumberjackLoadLevel()
     {
         char* levelName[] =
         {
-            "lumberjacks_panic_1.bin",
+            "lumberjacks_panic_5.bin",
             "lumberjacks_panic_2.bin",
             "lumberjacks_panic_3.bin",
-            "lumberjacks_panic_4.bin"
+            "lumberjacks_panic_4.bin",
+            "lumberjacks_panic_5.bin",
+            "lumberjacks_panic_10.bin",
         };
         ESP_LOGI(LUM_TAG, "Level # %d", (int)(lumv->levelIndex % ARRAY_SIZE(levelName)));
         fname = levelName[lumv->levelIndex % ARRAY_SIZE(levelName)];
 
-        if (!lumv->lumberjackMain->networked)
-        {
-            lumv->upgrade = (int)(lumv->levelIndex / ARRAY_SIZE(levelName));
-        }
     }
 
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        char* attackLevelName[] = 
+        {
+            "lumberjacks_attack_1.bin"
+        };
+
+        fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
+
+        if (!lumv->lumberjackMain->networked)
+        {
+            lumv->upgrade = (int)(lumv->levelIndex / ARRAY_SIZE(attackLevelName));
+        }
+
+        for (int i = 0; i < 8; i++)
+        {
+            lumv->attackQueue[i] = 0;
+            lumv->receiveQueue[i] = 0;
+        }
+        
+    }
 
 
 
@@ -706,7 +732,16 @@ void baseMode(int64_t elapsedUs)
     lumberjackUpdate(elapsedUs);
 
     // Check spawn
-    lumberjackSpawnCheck(elapsedUs);
+
+    if (lumv->gameType == LUMBERJACK_MODE_PANIC)
+    {
+        lumberjackSpawnCheck(elapsedUs);
+    }
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+
+    }
+
 
     for (int colTileIndex = 0; colTileIndex < ARRAY_SIZE(lumberjackCollisionCheckTiles); colTileIndex++)
     {
@@ -1032,7 +1067,11 @@ void DrawGame(void)
             drawWsg(&lumv->enemySprites[22], lumv->ghost->x, lumv->ghost->y  - lumv->yOffset, (lumv->ghost->startSide == 1), false, 0);
     }
 
-    drawWsgSimple(&lumv->ui[0], (TFT_WIDTH / 2) - 12, 6);
+
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        drawWsgSimple(&lumv->ui[0], (TFT_WIDTH / 2) - 12, 6);
+    }
     //If playing panic mode draw water
 
     lumberjackDrawWaterLevel();
@@ -1168,6 +1207,51 @@ void lumberjackSpawnCheck(int64_t elapseUs)
         }
 
     }
+
+    if (lumv->spawnTimer >= 0)
+    {
+        bool spawnReady = true;
+
+        lumv->spawnTimer -= elapse;
+
+        if (lumv->spawnTimer < 0)
+        {
+            for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
+            {
+                if (lumv->enemy[enemyIndex] == NULL)
+                    continue;
+
+                if (lumv->enemy[enemyIndex]->ready && lumv->enemy[enemyIndex]->state != LUMBERJACK_DEAD)
+                {
+                    lumv->spawnSide++;
+                    lumv->spawnSide %= 2;
+
+                    lumv->spawnTimer = LUMBERJACK_RESPAWN_TIMER - (lumv->upgrade * LUMBERJACK_UPGRADE_TIMER_OFFSET);
+
+                    if (lumv->spawnTimer < LUMBERJACK_RESPAWN_MIN)
+                    {
+                        lumv->spawnTimer = LUMBERJACK_RESPAWN_MIN;
+                    }
+
+                    lumberjackRespawnEnemy(lumv->enemy[enemyIndex], lumv->spawnSide);
+                    spawnReady = false;
+                    break;
+                }
+            }
+
+            if (spawnReady)
+            {
+                // No one was spawned.
+                lumv->spawnTimer = 500;
+            }
+        }
+    }
+}
+
+
+void lumberjackAttackCheck(int64_t elapseUs)
+{
+    float elapse = (elapseUs / 1000);
 
     if (lumv->spawnTimer >= 0)
     {
@@ -1349,7 +1433,14 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
                     lumv->tile[tileA->index].offset      = 10;
                     lumv->tile[tileA->index].offset_time = 100;
 
-                    lumberjackDetectBump(tileA);
+                    if (tileA->type == 12)
+                    {
+                        lumv->tile[tileA->index].type = 13;
+                        lumv->tile[tileA->index].offset      *= 10;
+                        lumv->tile[tileA->index].offset_time *= 10;
+                    }
+
+                    if (lumv->tile[tileA->index].type != 13) lumberjackDetectBump(tileA);
                     if (tileA->type == 11)
                     {
                         lumberjackUseBlock();
@@ -1360,19 +1451,27 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
 
             if (lumberjackIsCollisionTile(tileB->type))
             {
+
                 if (tileB->type != 11 || lumv->itemBlockReady == true)
                 {
 
-                    lumberjackDetectBump(tileB);
 
                     lumv->tile[tileB->index].offset      = 10;
                     lumv->tile[tileB->index].offset_time = 100;
+                    if (tileB->type == 12)
+                    {
+                        lumv->tile[tileB->index].type = 13;
+                        lumv->tile[tileB->index].offset      *= 10;
+                        lumv->tile[tileB->index].offset_time *= 10;
+                    }
 
+                    if (lumv->tile[tileB->index].type != 13) lumberjackDetectBump(tileB);
                     if (tileB->type == 11)
                     {
                         lumberjackUseBlock();                        
                     }
                 }
+
             }
         }
     }
@@ -1475,6 +1574,11 @@ void lumberjackUpdate(int64_t elapseUs)
             {
                 lumv->tile[tileIndex].offset_time += 2500;
                 lumv->tile[tileIndex].offset--;
+
+                if (lumv->tile[tileIndex].type == 13 && lumv->tile[tileIndex].offset <= 0)
+                {
+                    lumv->tile[tileIndex].type = 12;
+                }
             }
         }
     }
@@ -1502,7 +1606,7 @@ void lumberjackTileMap(void)
 
             if ((y * LUMBERJACK_TILE_SIZE) - lumv->yOffset >= -16)
             {
-                if (tileIndex > 0 && tileIndex < 13)
+                if (tileIndex > 0 && tileIndex < 15)
                 {
                     if (tileIndex < 11)
                     {
@@ -1518,6 +1622,14 @@ void lumberjackTileMap(void)
                         {
                             drawWsgSimple(&lumv->floorTiles[tileIndex - 1], x * LUMBERJACK_TILE_SIZE, (y * LUMBERJACK_TILE_SIZE) - lumv->yOffset - offset);
                         }
+                    }
+                    else if (tileIndex == 12)
+                    {
+                        drawWsgSimple(&lumv->animationTiles[12], x * LUMBERJACK_TILE_SIZE, (y * LUMBERJACK_TILE_SIZE) - lumv->yOffset);
+                    }
+                    else if (tileIndex == 13)
+                    {
+                        drawWsgSimple(&lumv->animationTiles[12 + (offset % LUMBERJACK_ROTATE_ANIMATION_MAX)], x * LUMBERJACK_TILE_SIZE, (y * LUMBERJACK_TILE_SIZE) - lumv->yOffset);
                     }
                 }
 
@@ -1659,8 +1771,10 @@ static lumberjackTile_t* lumberjackGetTile(int x, int y)
 
 static bool lumberjackIsCollisionTile(int index)
 {
-    if (index == 0 || index == 1 || index == 6 || index == 5 || index == 10)
+    if (index == 0 || index == 1 || index == 6 || index == 5 || index == 10 || index == 13)
         return false;
+
+  
 
     return true;
 }
@@ -1708,7 +1822,8 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
                 if (enemy->state == LUMBERJACK_BUMPED_IDLE)
                 {
                     enemy->state     = LUMBERJACK_RUN;
-                    enemy->direction = enemy->flipped ? -1 : 1;
+                    enemy->direction = enemy->flipped ? 1 : -1; // Go opposite direction
+                    enemy->flipped = !enemy->flipped;
                 }
                 else
                 {
