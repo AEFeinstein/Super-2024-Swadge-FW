@@ -9,6 +9,7 @@
 #include "esp_timer.h"
 #include "esp_log.h"
 
+#include "touchTest.h"
 #include "touchUtils.h"
 #include "gamepad.h"
 #include "mainMenu.h"
@@ -21,22 +22,24 @@
 
 #define DPAD_BTN_RADIUS     16
 #define DPAD_CLUSTER_RADIUS 45
+#define DPAD_CLUSTER_Y_OFF  30
 
 #define START_BTN_RADIUS 10
+#define START_BTN_Y_OFF  50
 #define START_BTN_SEP    2
 
 #define AB_BTN_RADIUS 25
-#define AB_BTN_Y_OFF  8
+#define AB_BTN_Y_OFF  15
+#define AB_BTN_Y_SEP  8
 #define AB_BTN_SEP    2
 
 #define ACCEL_BAR_HEIGHT 8
 #define ACCEL_BAR_SEP    1
 #define MAX_ACCEL_BAR_W  100
 
-#define TOUCHBAR_WIDTH  100
-#define TOUCHBAR_HEIGHT 20
-#define TOUCHBAR_Y_OFF  55
-// #define TOUCHBAR_ANALOG_HEIGHT 8
+#define TOUCHPAD_DIAM  80
+#define TOUCHPAD_Y_OFF 8
+#define TOUCHPAD_X_OFF 10
 
 //==============================================================================
 // Enums
@@ -485,7 +488,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
             int16_t deg = i * 45;
             // The center of the cluster
             int16_t xc = TFT_WIDTH / 4;
-            int16_t yc = (TFT_HEIGHT / 2) + Y_OFF;
+            int16_t yc = (TFT_HEIGHT / 2) - DPAD_CLUSTER_Y_OFF + Y_OFF;
             // Draw the button around the cluster
             xc += ((getSin1024(deg) * DPAD_CLUSTER_RADIUS) / 1024);
             yc += ((-getCos1024(deg) * DPAD_CLUSTER_RADIUS) / 1024);
@@ -525,7 +528,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
             }
         }
         int16_t x = (TFT_WIDTH / 2) - START_BTN_RADIUS - START_BTN_SEP;
-        int16_t y = (TFT_HEIGHT / 4) + Y_OFF;
+        int16_t y = ((3 * TFT_WIDTH) / 4) - START_BTN_Y_OFF + Y_OFF;
         drawFunc(x, y, START_BTN_RADIUS, c333);
 
         if (gamepad->gamepadType == GAMEPAD_NS)
@@ -575,7 +578,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 break;
             }
         }
-        drawFunc(((3 * TFT_WIDTH) / 4) + AB_BTN_RADIUS + AB_BTN_SEP, (TFT_HEIGHT / 2) - AB_BTN_Y_OFF + Y_OFF,
+        drawFunc(((3 * TFT_WIDTH) / 4) + AB_BTN_RADIUS + AB_BTN_SEP, (TFT_HEIGHT / 4) - AB_BTN_Y_SEP - AB_BTN_Y_OFF + Y_OFF,
                  AB_BTN_RADIUS, c243);
 
         // Button B
@@ -593,11 +596,11 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 break;
             }
         }
-        drawFunc(((3 * TFT_WIDTH) / 4) - AB_BTN_RADIUS - AB_BTN_SEP, (TFT_HEIGHT / 2) + AB_BTN_Y_OFF + Y_OFF,
+        drawFunc(((3 * TFT_WIDTH) / 4) - AB_BTN_RADIUS - AB_BTN_SEP, (TFT_HEIGHT / 4) + AB_BTN_Y_SEP - AB_BTN_Y_OFF + Y_OFF,
                  AB_BTN_RADIUS, c401);
 
-        // Draw touch strip
-        int16_t tBarX = TFT_WIDTH - TOUCHBAR_WIDTH;
+        // Draw touch pad
+        int16_t tBarX = TFT_WIDTH - TOUCHPAD_DIAM / 2 - TOUCHPAD_X_OFF;
 
         // TODO: translate new touchpad data into 4-way or 8-way joystick
         // switch(gamepad->gamepadType){
@@ -627,51 +630,18 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
         //     }
         // }
 
-        // If we're on the generic gamepad and touch analog is enabled, plot the extra indicator on the screen
-        if (gamepad->gamepadType == GAMEPAD_GENERIC && gamepad->gamepadToggleSettings.settings.touchAnalogOn)
-        {
-            int32_t phi, r, intensity;
-            if (getTouchJoystick(&phi, &r, &intensity))
-            {
-                // TODO: rebuild this for new touchpad
-            }
+        bool touched;
+        int32_t phi, r, intensity;
+        touched = getTouchJoystick(&phi, &r, &intensity);
 
-            // drawRect(
-            //          tBarX - 1       , TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT                          - 1,
-            //          TFT_WIDTH, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + TOUCHBAR_ANALOG_HEIGHT + 1,
-            //          c111);
-            // fillDisplayArea(
-            //                 tBarX + center - 1, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT,
-            //                 tBarX + center + 1, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT + TOUCHBAR_ANALOG_HEIGHT,
-            //                 c444);
+        if (!touched)
+        {
+            phi = 0;
+            r = 0;
+            intensity = 0;
         }
 
-        uint8_t numTouchElem = ARRAY_SIZE(touchMap);
-        for (uint8_t touchIdx = 0; touchIdx < numTouchElem; touchIdx++)
-        {
-            int16_t x1 = tBarX - 1;
-            int16_t x2 = tBarX + (TOUCHBAR_WIDTH / numTouchElem);
-
-            if ((gamepad->gamepadType == GAMEPAD_GENERIC) ? gamepad->gpState.buttons & touchMap[touchIdx]
-                                                          : gamepad->gpNsState.buttons & touchMapNs[touchIdx])
-            {
-                fillDisplayArea(x1, TOUCHBAR_Y_OFF, x2, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c111);
-            }
-            else
-            {
-                drawRect(x1, TOUCHBAR_Y_OFF, x2, TOUCHBAR_Y_OFF + TOUCHBAR_HEIGHT, c111);
-            }
-
-            if (gamepad->gamepadType == GAMEPAD_NS)
-            {
-                const char* buttonName = getButtonName(touchMapNs[touchIdx]);
-                drawText(&gamepad->ibmFont, c444, buttonName,
-                         x1 + (x2 - x1 - textWidth(&gamepad->ibmFont, buttonName)) / 2,
-                         TOUCHBAR_Y_OFF + (TOUCHBAR_HEIGHT - gamepad->ibmFont.height) / 2);
-            }
-
-            tBarX += (TOUCHBAR_WIDTH / numTouchElem);
-        }
+        touchDrawVector(&gamepad->ibmFont, "", c333, tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF, TOUCHPAD_DIAM / 2, touched, phi, r);
 
         if (gamepad->gamepadToggleSettings.settings.accelOn && gamepad->gamepadType == GAMEPAD_GENERIC)
         {
@@ -903,26 +873,31 @@ void gamepadReportStateToHost(void)
         {
             case GAMEPAD_GENERIC:
             {
-                // TODO: handle 8-way joystick
-                if (gamepad->gamepadToggleSettings.settings.touchAnalogOn
-                    && gamepad->gpState.buttons
-                           & ((touchMap[0] | touchMap[1] | touchMap[2]
-                               | touchMap[3]))) // | touchMap[4] | touchMap[5] | touchMap[6] | touchMap[7])))
+                if (gamepad->gamepadToggleSettings.settings.touchAnalogOn)
                 {
+                    bool touched;
                     int32_t phi, r, intensity;
-                    if (getTouchJoystick(&phi, &r, &intensity))
+                    touched = getTouchJoystick(&phi, &r, &intensity);
+                    if (touched)
                     {
                         int32_t x, y;
                         getTouchCartesian(phi, r, &x, &y);
-                        gamepad->gpState.z = (127 * (phi - 180)) / 360;
+                        gamepad->gpState.x = (255 * x) / 1024 - 128;
+                        gamepad->gpState.y = (-255 * y) / 1024 - 128;
+                        //gamepad->gpState.z = (127 * (phi - 180)) / 360;
+                        gamepad->gpState.z = 0;
                     }
                     else
                     {
+                        gamepad->gpState.x = 0;
+                        gamepad->gpState.y = 0;
                         gamepad->gpState.z = 0;
                     }
                 }
                 else
                 {
+                    gamepad->gpState.x = 0;
+                    gamepad->gpState.y = 0;
                     gamepad->gpState.z = 0;
                 }
                 // Send the state over USB
