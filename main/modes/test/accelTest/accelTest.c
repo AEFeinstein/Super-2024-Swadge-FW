@@ -76,7 +76,9 @@ typedef struct
     model_t bunny; ///< The bunny 3D model
     model_t donut; ///< The donut 3D model
 
-    bool drawDonut;
+    bool translateY;
+    float scale;
+    float translate[3];
 
     uint16_t btnState; ///< The button state
 
@@ -167,6 +169,11 @@ static void accelTestEnterMode(void)
     ESP_LOGI("Model", "loadModel(bunny.mdl) returned %s", loadModel("bunny.mdl", &accelTest->bunny, true) ? "true" : "false");
     loadModel("donut.mdl", &accelTest->donut, true);
 
+    accelTest->scale = 1.0;
+    accelTest->translate[0] = 0.0;
+    accelTest->translate[1] = 0.0;
+    accelTest->translate[2] = 0.0;
+
     // Ensure there's sufficient space to draw either model
     initRendererCustom(MAX(accelTest->bunny.vertCount, accelTest->donut.vertCount), MAX(accelTest->bunny.triCount, accelTest->donut.triCount));
 
@@ -226,8 +233,47 @@ static void accelTestMainLoop(int64_t elapsedUs)
 
         if (evt.down && (PB_B == evt.button))
         {
-            accelTest->drawDonut = !accelTest->drawDonut;
+            accelTest->translateY = !accelTest->translateY;
         }
+
+        if (evt.down && (PB_UP == evt.button))
+        {
+            accelTest->scale += .1;
+        }
+
+        if (evt.down && (PB_DOWN == evt.button))
+        {
+            if (accelTest->scale > .15)
+            {
+                accelTest->scale -= .1;
+            }
+        }
+
+        if (evt.down && (PB_LEFT == evt.button))
+        {
+            if (accelTest->translateY)
+            {
+                accelTest->translate[1] -= 5.0;
+            }
+            else
+            {
+                accelTest->translate[0] -= 5.0;
+            }
+        }
+
+        if (evt.down && (PB_RIGHT == evt.button))
+        {
+            if (accelTest->translateY)
+            {
+                accelTest->translate[1] += 5.0;
+            }
+            else
+            {
+                accelTest->translate[0] += 5.0;
+            }
+        }
+
+        ESP_LOGI("Accel", "Scale: %f", accelTest->scale);
     }
 
     // Do update each loop
@@ -283,17 +329,12 @@ static void accelTestHandleInput(void)
  */
 static void accelDrawBunny(void)
 {
+    // Get the orientation from the accelerometer
     float orient[4];
     memcpy(orient, LSM6DSL.fqQuat, sizeof(orient));
 
-    if (accelTest->drawDonut)
-    {
-        drawModel(&accelTest->donut, orient);
-    }
-    else
-    {
-        drawModel(&accelTest->bunny, orient);
-    }
+    drawModel(&accelTest->donut, orient, accelTest->scale / 2, accelTest->translate, 0, TFT_HEIGHT / 2, TFT_WIDTH / 2, TFT_HEIGHT / 2);
+    drawModel(&accelTest->bunny, orient, accelTest->scale / 2, accelTest->translate, TFT_WIDTH / 2, TFT_HEIGHT / 2, TFT_WIDTH / 2, TFT_HEIGHT / 2);
 }
 
 /**
@@ -317,6 +358,12 @@ static void accelTestReset(void)
     accelTest->max.x = 1;
     accelTest->max.y = 1;
     accelTest->max.z = 1;
+
+    accelTest->scale = 1.0;
+
+    accelTest->translate[0] = 0.0;
+    accelTest->translate[1] = 0.0;
+    accelTest->translate[2] = 0.0;
 }
 
 /**
