@@ -19,8 +19,24 @@
 #include "hdw-btn.h"
 
 #include "bunny.h"
-
 #include "hdw-imu.h"
+
+
+// GPIO_NUM_3,  // SDA
+// GPIO_NUM_41, // SCL
+
+#define DSCL_OUTPUT	{ GPIO.enable1_w1ts.val = 1<<(41-32); }
+#define DSCL_INPUT	{ GPIO.enable1_w1tc.val = 1<<(41-32); }
+#define DSDA_OUTPUT	{ GPIO.enable_w1ts = 1<<(3); }
+#define DSDA_INPUT	{ GPIO.enable_w1tc = 1<<(3); }
+#define READ_DSDA	  ( ( GPIO.in >> 3 ) & 1 )
+
+// 14 counts (1MHz) works most of the time, but no hurries, let's slow it down to ~800k.
+void i2c_delay( int x ) { int i; for( i = 0; i < 19*x; i++ ) asm volatile( "nop" ); }
+#define DELAY1 i2c_delay(1);
+#define DELAY2 i2c_delay(2);
+
+#include "static_i2c.h"
 
 int16_t bunny_verts_out[ sizeof(bunny_verts)/3/2*3 ];
 
@@ -59,18 +75,8 @@ typedef enum __attribute__((packed))
 	LSM6DSL_STATUS_REG					= 0x1e,
 	LSM6DSL_OUT_TEMP_L					= 0x20,
 	LSM6DSL_OUT_TEMP_H					= 0x21,
-	LMS6DS3_OUTX_L_G					= 0x22,
-	LMS6DS3_OUTX_H_G					= 0x23,
-	LMS6DS3_OUTY_L_G					= 0x24,
-	LMS6DS3_OUTY_H_G					= 0x25,
-	LMS6DS3_OUTZ_L_G					= 0x26,
-	LMS6DS3_OUTZ_H_G					= 0x27,
-	LMS6DS3_OUTX_L_XL					= 0x28,
-	LMS6DS3_OUTX_H_XL					= 0x29,
-	LMS6DS3_OUTY_L_XL					= 0x2a,
-	LMS6DS3_OUTY_H_XL					= 0x2b,
-	LMS6DS3_OUTZ_L_XL					= 0x2c,
-	LMS6DS3_OUTZ_H_XL					= 0x2d,
+
+	LSM6DSL_FIFO_STATUS1                = 0x3A,
 } lsm6dslReg_t;
 float rsqrtf(float x);
 float mathsqrtf(float x);
@@ -84,27 +90,150 @@ esp_err_t LSM6DSLSet( int reg, int val );
 int GeneralI2CGet( int device, int reg, uint8_t * data, int data_len );
 int ReadLSM6DSL( uint8_t * data, int data_len );
 
+
+static int _accelIntegrate();
+
 #if 1
 
 // For main add 	ESP_LOGI( "test", "%p %p %p %p %p\n", &i2c_driver_delete, &LSM6DSLSet, &rsqrtf, &mathCrossProduct, &accelIntegrate );
 
-static void LSM6DSLIntegrate()
+
+
+float rsqrtf(float x)
+{
+    typedef union
+    {
+        int32_t i;
+        float f;
+    } fiunion;
+    const float xhalf = 0.5f * x;
+    fiunion i         = {.f = x};
+    i.i               = 0x5f375a86 - (i.i >> 1);
+    x                 = i.f;
+    x                 = x * (1.5f - xhalf * x * x);
+    x                 = x * (1.5f - xhalf * x * x);
+    return x;
+}
+
+void mathCrossProduct(float* p, const float* a, const float* b)
+{
+    float tx = a[1] * b[2] - a[2] * b[1];
+    float ty = a[2] * b[0] - a[0] * b[2];
+    p[2]     = a[0] * b[1] - a[1] * b[0];
+    p[1]     = ty;
+    p[0]     = tx;
+}
+
+esp_err_t _GeneralSet(int dev, int reg, int val)
+{
+	SendStart();
+	SendByte( dev << 1 );
+	SendByte( reg );
+	SendByte( val );
+	SendStop();
+	return ESP_OK;
+}
+
+esp_err_t _LSM6DSLSet(int reg, int val)
+{
+	return _GeneralSet(LSM6DSL_ADDRESS, reg, val);
+}
+
+
+int _GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
+{
+	SendStart();
+	SendByte( device << 1 );
+	SendByte( reg );
+	SendStart();
+	SendByte( ( device << 1 ) | 1 );
+	int i;
+	for( i = 0; i < data_len; i++ )
+	{
+		data[i] = GetByte( i == data_len - 1 );
+	}
+	SendStop();
+	return data_len;
+}
+
+/**
+ * @brief Read the FIFO out of the LSM6DSL
+ *
+ * @param data The buffer to write the FIFO data into.
+ * @param data_len The maximum size (in words) to read.
+ * @return positive number if operation was successful, or esp_err_t if failure.
+ */
+int _ReadLSM6DSL(uint8_t* data, int data_len)
+{
+	uint32_t fifolen = 0;
+//	_GeneralI2CGet( LSM6DSL_ADDRESS, 0x3A, (uint8_t*)&fifolen, 3 );
+
+	SendStart();
+	SendByte( LSM6DSL_ADDRESS << 1 );
+	SendByte( LSM6DSL_FIFO_STATUS1 );
+	SendStart();
+	SendByte( ( LSM6DSL_ADDRESS << 1 ) | 1 );
+	int i;
+	for( i = 0; i < 3; i++ )
+	{
+		((uint8_t*)&fifolen)[i] = GetByte( 0 );
+	}
+
+	// Is fifo overflow.
+	if (fifolen & 0x4000)
+	{
+		// reset fifo.
+		// If we overflow, and we don't do this, bad things happen.
+		GetByte( 1 );
+		SendStop();
+		_LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Disable fifo
+		_LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110); // 208 Hz ODR
+		LSM6DSL.sampCount = 0;
+		return 0;
+	}
+
+	fifolen &= 0x7ff;
+
+	if (fifolen > data_len / 2)
+		fifolen = data_len / 2;
+
+	int read_len = fifolen / 6 * 12;
+
+	if (read_len == 0)
+	{
+		GetByte( 1 );
+		SendStop();
+		return 0;
+	}
+
+	GetByte( 0 ); // Ignoring FIFO Status 4
+	for( i = 0; i < read_len; i++ )
+	{
+		data[i] = GetByte( i == read_len - 1 );
+	}
+	SendStop();
+	return fifolen;
+}
+
+
+static int _accelIntegrate()
 {
 	LSM6DSLData * ld = &LSM6DSL;
 
-	int16_t data[6*16];
+	int16_t data[6*32];
 
 	// Get temperature sensor (in case we ever want to use it)
-	int r = GeneralI2CGet( LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2 );
-	if( r < 0 ) return;
-	if( r == 2 ) ld->temp = data[0];
-	int readr = ReadLSM6DSL( (uint8_t*)data, sizeof( data ) );
+	//int r = _GeneralI2CGet( LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2 );
+	//if( r < 0 ) return -1;
+	//if( r == 2 ) ld->temp = data[0];
 
-	if( readr < 0 ) return;
+	int readr = _ReadLSM6DSL( (uint8_t*)data, sizeof( data ) );
+
+	if( readr < 0 ) return -2;
 	int samp;
 	int16_t * cdata = data;
 
-    uint32_t start = getCycleCount();
+	uint32_t start = getCycleCount();
 
 	// STEP 0:  Decide your coordinate frame.
 
@@ -316,7 +445,9 @@ static void LSM6DSLIntegrate()
 		ld->accellast[2] = cdata[-1];
 	}
 
-    ld->computetime = getCycleCount() - start;
+	ld->computetime = getCycleCount() - start;
+
+	return ESP_OK;
 }
 #endif
 
@@ -335,18 +466,137 @@ wsg_t example_sprite;
 
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    if( label == mainMenuMode.modeName )
-    {
-        switchToSwadgeMode( &mainMenuMode );
-    }
-    else if( label == menu_Bootload )
-    {
-        // Uncomment this to reboot the chip into the bootloader.
-        // This is to test to make sure we can call ROM functions.
-        REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
-        void software_reset( uint32_t x );
-        software_reset( 0 );
-    }
+	if( label == mainMenuMode.modeName )
+	{
+		switchToSwadgeMode( &mainMenuMode );
+	}
+	else if( label == menu_Bootload )
+	{
+		// Uncomment this to reboot the chip into the bootloader.
+		// This is to test to make sure we can call ROM functions.
+		REG_WRITE(RTC_CNTL_OPTION1_REG, RTC_CNTL_FORCE_DOWNLOAD_BOOT);
+		void software_reset( uint32_t x );
+		software_reset( 0 );
+	}
+}
+
+void _accelSetRegistersAndReset(void)
+{
+	_LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Reset FIFO
+	_LSM6DSLSet(
+		LSM6DSL_FIFO_CTRL5,
+		(0b0101 << 3)
+			| 0b110); // 208 Hz ODR, Continuous mode. If the FIFO is full, the new sample overwrites the older one.
+	_LSM6DSLSet(LSM6DSL_FIFO_CTRL3, 0b00001001); // Put both devices (Accel + Gyro) in FIFO.
+	_LSM6DSLSet(LSM6DSL_CTRL1_XL, 0b01011001);   // Setup accel (16 g's FS)
+	_LSM6DSLSet(LSM6DSL_CTRL2_G, 0b01011100);	// Setup gyro, 2000dps
+	_LSM6DSLSet(LSM6DSL_CTRL4_C, 0x00);		  // Disable all filtering.
+	_LSM6DSLSet(LSM6DSL_CTRL7_G, 0b00000000);	// Setup gyro, not high performance mode = 0x80.  High perf = 0x00
+	_LSM6DSLSet(LSM6DSL_FIFO_CTRL2, 0b00000000); // Temp not in fifo  (Why no work?)
+
+	memset(&LSM6DSL, 0, sizeof(LSM6DSL));
+	LSM6DSL.fqQuat[0]	 = 1;
+	LSM6DSL.fqQuatLast[0] = 1;
+	LSM6DSL.sampCount	 = 0;
+	if (!readNvs32("gyrocalx", (int32_t*)&LSM6DSL.fvBias[0]))
+	{
+		LSM6DSL.performCal = 1;
+		LSM6DSL.fvBias[0]  = 0;
+	}
+	if (!readNvs32("gyrocaly", (int32_t*)&LSM6DSL.fvBias[1]))
+	{
+		LSM6DSL.performCal = 1;
+		LSM6DSL.fvBias[1]  = 0;
+	}
+	if (!readNvs32("gyrocalz", (int32_t*)&LSM6DSL.fvBias[2]))
+	{
+		LSM6DSL.performCal = 1;
+		LSM6DSL.fvBias[2]  = 0;
+	}
+}
+
+esp_err_t _initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
+{
+	int i;
+	int retry = 0;
+	esp_err_t ret_val;
+	i2c_driver_delete(_i2c_port);
+do_retry:
+
+	gpio_config_t gsetup = {
+		.pin_bit_mask = (1ULL<<sda) | (1ULL<<scl),
+		.mode = GPIO_MODE_INPUT_OUTPUT,
+		.pull_up_en = GPIO_PULLUP_ENABLE,
+	};
+
+	ret_val = gpio_config( &gsetup );
+	ESP_LOGE( "sandbox", "RET: %d", ret_val );
+
+	// This will "shake loose" any devices stuck on the bus.
+	GPIO.enable_w1ts = 1<<(3);
+	GPIO.enable1_w1ts.val = 1<<(41-32);
+	esp_rom_delay_us(10);
+	GPIO.out_w1tc = 1<<(3);
+	for (i = 0; i < 16; i++)
+	{
+		esp_rom_delay_us(10);
+		GPIO.out1_w1ts.val = 1<<(41-32);
+		esp_rom_delay_us(10);
+		GPIO.out1_w1tc.val = 1<<(41-32);
+	}
+	esp_rom_delay_us(10);
+	GPIO.out1_w1ts.val = 1<<(41-32);
+	esp_rom_delay_us(10);
+	GPIO.out_w1ts = 1<<(3);
+	esp_rom_delay_us(10);
+	GPIO.out1_w1ts.val = 1<<(41-32);  // Send final stop
+
+	ret_val = ESP_OK;
+
+	// Prepare for normal open drain functionality.
+	GPIO.enable1_w1tc.val = 1<<(41-32);
+	GPIO.enable_w1tc = 1<<(3);
+	GPIO.out1_w1tc.val = 1<<(41-32);
+	GPIO.out_w1tc = 1<<(3);
+
+
+	// Enable access
+	_LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
+	_LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
+	esp_rom_delay_us(100);
+	_LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
+
+	uint8_t who = 0xaa;
+	int r	   = _GeneralI2CGet(LSM6DSL_ADDRESS, LMS6DS3_WHO_AM_I, &who, 1);
+	if (r != 1 || who != 0x6a)
+	{
+		ESP_LOGW("accel", "WHOAMI Failed (%02x), %d", who, r);
+		if (retry++ < 10)
+			goto do_retry;
+		ESP_LOGE("accel", "Init failed on 1");
+		return ESP_FAIL;
+	}
+	ESP_LOGI("accel", "Init Start");
+
+	_accelSetRegistersAndReset();
+
+	for (i = 0; i < 2; i++)
+	{
+		vTaskDelay(1);
+		int check = _accelIntegrate();
+		if (check != ESP_OK)
+		{
+			ESP_LOGI("accel", "Init Fault Retry");
+			if (retry++ < 10)
+				goto do_retry;
+			ESP_LOGI("accel", "Init failed on 2");
+			return ESP_FAIL;
+		}
+		ESP_LOGI("accel", "Check %d", check);
+	}
+
+	ESP_LOGI("accel", "Init Ok");
+	return ESP_OK;
 }
 
 void sandbox_main(void)
@@ -354,21 +604,27 @@ void sandbox_main(void)
 	frameno = 0;
 	bQuit = 0;
 
-    ESP_LOGI( "sandbox", "Running from IRAM. %d", global_i );
+	ESP_LOGI( "sandbox", "Running from IRAM. %d", global_i );
 
-    REG_WRITE( GPIO_FUNC7_OUT_SEL_CFG_REG,4 ); // select ledc_ls_sig_out0
+	REG_WRITE( GPIO_FUNC7_OUT_SEL_CFG_REG,4 ); // select ledc_ls_sig_out0
 
-    menu = initMenu("USB Sandbox", mainMenuCb);
-    addSingleItemToMenu(menu, mainMenuMode.modeName);
-    addSingleItemToMenu(menu, menu_Bootload);
+	menu = initMenu("USB Sandbox", mainMenuCb);
+	addSingleItemToMenu(menu, mainMenuMode.modeName);
+	addSingleItemToMenu(menu, menu_Bootload);
 
-    loadWsg("kid0.wsg", &example_sprite, true);
+	loadWsg("kid0.wsg", &example_sprite, true);
 
-	accelSetRegistersAndReset();
+
+    _initAccelerometer(I2C_NUM_0,
+                      GPIO_NUM_3,  // SDA
+                      GPIO_NUM_41, // SCL
+                      GPIO_PULLUP_ENABLE, 1000000);
+
+	_accelSetRegistersAndReset();
 
 	setFrameRateUs(5000);
 
-    ESP_LOGI( "sandbox", "Loaded" );
+	ESP_LOGI( "sandbox", "Loaded" );
 }
 
 void sandbox_exit()
@@ -380,48 +636,48 @@ void sandbox_tick()
 {
 	if( bQuit ) return;
 /*
-    for( int mode = 0; mode < 8; mode++ )
-    {
-        drawWsg( &example_sprite, 50+mode*20, (global_i%20)-10, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsg( &example_sprite, 50+mode*20, (global_i%20)+230, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsg( &example_sprite, (global_i%20)-10, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsg( &example_sprite, (global_i%20)+270, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-    }
+	for( int mode = 0; mode < 8; mode++ )
+	{
+		drawWsg( &example_sprite, 50+mode*20, (global_i%20)-10, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+		drawWsg( &example_sprite, 50+mode*20, (global_i%20)+230, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+		drawWsg( &example_sprite, (global_i%20)-10, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+		drawWsg( &example_sprite, (global_i%20)+270, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+	}
 */
 
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
-    {
-        menu = menuButton(menu, evt);
-    }
+	buttonEvt_t evt = {0};
+	while (checkButtonQueueWrapper(&evt))
+	{
+		menu = menuButton(menu, evt);
+	}
 
 
-    char ctsbuffer[1024];
-    char *cts = ctsbuffer;
+	char ctsbuffer[1024];
+	char *cts = ctsbuffer;
 
 #if 0
-    int i;
+	int i;
 	// 0x12 = QMA7981
 	// 0x2c = QMC6308 
 	// 0x6a = LSM6DSL
-    for( i = 0; i < 128; i++ )
-    {
-        if( !(i & 0xf) )
-        {
-            cts+=sprintf( cts, "\n%02x: ", i );
-        }
+	for( i = 0; i < 128; i++ )
+	{
+		if( !(i & 0xf) )
+		{
+			cts+=sprintf( cts, "\n%02x: ", i );
+		}
 
-        i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-        i2c_master_start(cmdHandle);
-        i2c_master_write_byte(cmdHandle, i << 1, false);
-        i2c_master_write_byte(cmdHandle, 0, true);
-        i2c_master_stop(cmdHandle);
-        esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-        i2c_cmd_link_delete(cmdHandle);
+		i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
+		i2c_master_start(cmdHandle);
+		i2c_master_write_byte(cmdHandle, i << 1, false);
+		i2c_master_write_byte(cmdHandle, 0, true);
+		i2c_master_stop(cmdHandle);
+		esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
+		i2c_cmd_link_delete(cmdHandle);
 
-        cts+=sprintf( cts, "%2x ", (err>=0)?i:0 );
-    }
-    ESP_LOGI( "sandbox", "%s", ctsbuffer );
+		cts+=sprintf( cts, "%2x ", (err>=0)?i:0 );
+	}
+	ESP_LOGI( "sandbox", "%s", ctsbuffer );
 #endif
 
 #if 0
@@ -475,7 +731,7 @@ void sandbox_tick()
 	mathRotateVectorByQuaternion( plusz_out, LSM6DSL.fqQuat, plusz_out );
 
 
-    uint32_t cycStart = getCycleCount();
+	uint32_t cycStart = getCycleCount();
 
 	int i, vertices = 0;
 	for( i = 0; i < sizeof(bunny_verts)/2; i+= 3 )
@@ -507,7 +763,7 @@ void sandbox_tick()
 	}
 
 
-    uint32_t renderTime = getCycleCount() - cycStart;
+	uint32_t renderTime = getCycleCount() - cycStart;
 
 
 	ESP_LOGI( "I2C", "%d %d  %f %f %f   %f %f %f   %f %f %f",
@@ -531,27 +787,27 @@ void sandbox_tick()
 void sandboxBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum )
 {
 //	accelIntegrate();
-	if( up + 1 == upNum ) 
-		LSM6DSLIntegrate();
+	//if( up + 1 == upNum || up == 0 || up == 8 ) 
+	_accelIntegrate();
 
-    fillDisplayArea(x, y, x+w, y+h, 0 );
+	fillDisplayArea(x, y, x+w, y+h, 0 );
 }
 
 
 swadgeMode_t sandbox_mode = {
-    .modeName                 = "sandbox",
-    .wifiMode                 = NO_WIFI,
-    .overrideUsb              = false,
-    .usesAccelerometer        = true,
-    .usesThermometer          = false,
-    .fnEnterMode              = sandbox_main,
-    .fnExitMode               = sandbox_exit,
-    .fnMainLoop               = sandbox_tick,
-    .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = sandboxBackgroundDrawCallback,
-    .fnEspNowRecvCb           = NULL,
-    .fnEspNowSendCb           = NULL,
-    .fnAdvancedUSB            = NULL
+	.modeName				 = "sandbox",
+	.wifiMode				 = NO_WIFI,
+	.overrideUsb			  = false,
+	.usesAccelerometer		= false,
+	.usesThermometer		  = false,
+	.fnEnterMode			  = sandbox_main,
+	.fnExitMode			   = sandbox_exit,
+	.fnMainLoop			   = sandbox_tick,
+	.fnAudioCallback		  = NULL,
+	.fnBackgroundDrawCallback = sandboxBackgroundDrawCallback,
+	.fnEspNowRecvCb		   = NULL,
+	.fnEspNowSendCb		   = NULL,
+	.fnAdvancedUSB			= NULL
 };
 
 

@@ -10,9 +10,38 @@
 #include "soc/gpio_reg.h"
 #include "soc/io_mux_reg.h"
 #include "rom/gpio.h"
-#include "soc/i2c_reg.h"
 #include "soc/gpio_struct.h"
 #include "hdw-nvs.h"
+
+#define DSCL_OUTPUT                             \
+    {                                           \
+        GPIO.enable1_w1ts.val = 1 << (41 - 32); \
+    }
+#define DSCL_INPUT                              \
+    {                                           \
+        GPIO.enable1_w1tc.val = 1 << (41 - 32); \
+    }
+#define DSDA_OUTPUT                  \
+    {                                \
+        GPIO.enable_w1ts = 1 << (3); \
+    }
+#define DSDA_INPUT                   \
+    {                                \
+        GPIO.enable_w1tc = 1 << (3); \
+    }
+#define READ_DSDA ((GPIO.in >> 3) & 1)
+
+// 14 counts (1MHz) works most of the time, but no hurries, let's slow it down to ~800k.
+void i2c_delay(int x)
+{
+    int i;
+    for (i = 0; i < 19 * x; i++)
+        asm volatile("nop");
+}
+#define DELAY1 i2c_delay(1);
+#define DELAY2 i2c_delay(2);
+
+#include "static_i2c.h"
 
 //==============================================================================
 // Enums
@@ -48,18 +77,7 @@ typedef enum __attribute__((packed))
     LSM6DSL_STATUS_REG             = 0x1e,
     LSM6DSL_OUT_TEMP_L             = 0x20,
     LSM6DSL_OUT_TEMP_H             = 0x21,
-    LMS6DS3_OUTX_L_G               = 0x22,
-    LMS6DS3_OUTX_H_G               = 0x23,
-    LMS6DS3_OUTY_L_G               = 0x24,
-    LMS6DS3_OUTY_H_G               = 0x25,
-    LMS6DS3_OUTZ_L_G               = 0x26,
-    LMS6DS3_OUTZ_H_G               = 0x27,
-    LMS6DS3_OUTX_L_XL              = 0x28,
-    LMS6DS3_OUTX_H_XL              = 0x29,
-    LMS6DS3_OUTY_L_XL              = 0x2a,
-    LMS6DS3_OUTY_H_XL              = 0x2b,
-    LMS6DS3_OUTZ_L_XL              = 0x2c,
-    LMS6DS3_OUTZ_H_XL              = 0x2d,
+    LSM6DSL_FIFO_STATUS1           = 0x3A,
 } lsm6dslReg_t;
 
 //==============================================================================
@@ -73,7 +91,6 @@ typedef enum __attribute__((packed))
 // Variables
 //==============================================================================
 
-static i2c_port_t i2c_port;
 LSM6DSLData LSM6DSL;
 
 //==============================================================================
@@ -95,19 +112,6 @@ esp_err_t GeneralSet(int dev, int reg, int val);
 esp_err_t LSM6DSLSet(int reg, int val);
 int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
 int ReadLSM6DSL(uint8_t* data, int data_len);
-
-//==============================================================================
-// Function Prototypes
-//==============================================================================
-
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz);
-esp_err_t deInitAccelerometer(void);
-esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t accelGetQuaternion(float* q);
-esp_err_t accelIntegrate(void);
-float accelGetStdDevInCal(void);
-void accelSetRegistersAndReset(void);
 
 //==============================================================================
 // Utility Functions
@@ -239,7 +243,7 @@ void mathCrossProduct(float* p, const float* a, const float* b)
  * @brief Rotate a 3D vector by a quaternion
  *
  * @param pout Pointer to the float[3] output of the rotation
- * @param q Pointer to the wzyz quaternion (float[4]) of the rotation.
+ * @param q Pointer to the wxyz quaternion (float[4]) of the rotation.
  * @param p Pointer to the float[3] of the vector to rotates.
  */
 void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p)
@@ -261,7 +265,7 @@ void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p)
  * @brief Rotate a 3D vector by the inverse of a quaternion
  *
  * @param pout Pointer to the float[3] output of the antirotation.
- * @param q Pointer to the wzyz quaternion (float[4]) opposite of the rotation.
+ * @param q Pointer to the wxyz quaternion (float[4]) opposite of the rotation.
  * @param p Pointer to the float[3] of the vector to antirotates.
  */
 void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const float* p)
@@ -301,15 +305,12 @@ static inline uint32_t getCycleCount()
  */
 esp_err_t GeneralSet(int dev, int reg, int val)
 {
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, dev << 1, false);
-    i2c_master_write_byte(cmdHandle, reg, false);
-    i2c_master_write_byte(cmdHandle, val, true);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-    return err;
+    SendStart();
+    SendByte(dev << 1);
+    SendByte(reg);
+    SendByte(val);
+    SendStop();
+    return ESP_OK;
 }
 
 /**
@@ -335,23 +336,18 @@ esp_err_t LSM6DSLSet(int reg, int val)
  */
 int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
 {
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, device << 1, false);
-    i2c_master_write_byte(cmdHandle, reg, false);
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, device << 1 | I2C_MASTER_READ, false);
-    i2c_master_read(cmdHandle, data, data_len, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-    if (err)
+    SendStart();
+    SendByte(device << 1);
+    SendByte(reg);
+    SendStart();
+    SendByte((device << 1) | 1);
+    int i;
+    for (i = 0; i < data_len; i++)
     {
-        ESP_LOGE("accel", "Error on link: %d", err);
-        return -1;
+        data[i] = GetByte(i == data_len - 1);
     }
-    else
-        return data_len;
+    SendStop();
+    return data_len;
 }
 
 /**
@@ -363,25 +359,27 @@ int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len)
  */
 int ReadLSM6DSL(uint8_t* data, int data_len)
 {
-    i2c_cmd_handle_t cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1, false);
-    i2c_master_write_byte(cmdHandle, 0x3A, false);
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1 | I2C_MASTER_READ, false);
     uint32_t fifolen = 0;
-    i2c_master_read(cmdHandle, (uint8_t*)&fifolen, 3, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
-    i2c_cmd_link_delete(cmdHandle);
-    if (err < 0)
-        return -1;
+    SendStart();
+    SendByte(LSM6DSL_ADDRESS << 1);
+    SendByte(LSM6DSL_FIFO_STATUS1);
+    SendStart();
+    SendByte((LSM6DSL_ADDRESS << 1) | 1);
+    int i;
+
+    // Read first 3 bytes, the 4th byte might be a nak.
+    for (i = 0; i < 3; i++)
+    {
+        ((uint8_t*)&fifolen)[i] = GetByte(0);
+    }
 
     // Is fifo overflow.
     if (fifolen & 0x4000)
     {
         // reset fifo.
         // If we overflow, and we don't do this, bad things happen.
+        GetByte(1);
+        SendStop();
         LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b000); // Disable fifo
         LSM6DSLSet(LSM6DSL_FIFO_CTRL5, (0b0101 << 3) | 0b110); // 208 Hz ODR
         LSM6DSL.sampCount = 0;
@@ -389,22 +387,29 @@ int ReadLSM6DSL(uint8_t* data, int data_len)
     }
 
     fifolen &= 0x7ff;
-    if (fifolen == 0)
-        return 0;
+
     if (fifolen > data_len / 2)
         fifolen = data_len / 2;
 
-    cmdHandle = i2c_cmd_link_create();
-    i2c_master_start(cmdHandle);
-    i2c_master_write_byte(cmdHandle, LSM6DSL_ADDRESS << 1 | I2C_MASTER_READ, false);
-    i2c_master_read(cmdHandle, data, fifolen * 2, I2C_MASTER_LAST_NACK);
-    i2c_master_stop(cmdHandle);
-    err = i2c_master_cmd_begin(I2C_NUM_0, cmdHandle, 100);
+    // Make sure we only read out full data segments.
+    int read_len = fifolen / 6 * 12;
 
-    i2c_cmd_link_delete(cmdHandle);
-    if (err < 0)
-        return -2;
+    if (read_len == 0)
+    {
+        // No bytes? nak!
+        GetByte(1);
+        SendStop();
+        return 0;
+    }
 
+    GetByte(0); // Ignoring FIFO Status 4
+
+    // Read out all bytes.
+    for (i = 0; i < read_len; i++)
+    {
+        data[i] = GetByte(i == read_len - 1);
+    }
+    SendStop();
     return fifolen;
 }
 
@@ -415,57 +420,55 @@ int ReadLSM6DSL(uint8_t* data, int data_len)
 /**
  * @brief Initialize the IMU
  *
- * @param _i2c_port The i2c port to use for the IMU
  * @param sda The GPIO for the Serial DAta line
  * @param scl The GPIO for the Serial CLock line
  * @param pullup Either \c GPIO_PULLUP_DISABLE if there are external pullup resistors on SDA and SCL or \c
  * GPIO_PULLUP_ENABLE if internal pull-ups should be used
- * @param clkHz The frequency of the I2C clock
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 {
+    int i;
     int retry = 0;
-    i2c_port  = _i2c_port;
-    esp_err_t ret_val;
-
 do_retry:
 
-    // Shake any device off the bus.
-    int i;
-    int gpio_scl = 41;
+    gpio_config_t gsetup = {
+        .pin_bit_mask = (1ULL << sda) | (1ULL << scl),
+        .mode         = GPIO_MODE_INPUT_OUTPUT,
+        .pull_up_en   = GPIO_PULLUP_ENABLE,
+    };
+
+    gpio_config(&gsetup);
+
+    // This will "shake loose" any devices stuck on the bus.
+    GPIO.enable_w1ts      = 1 << (3);
+    GPIO.enable1_w1ts.val = 1 << (41 - 32);
+    esp_rom_delay_us(10);
+    GPIO.out_w1tc = 1 << (3);
     for (i = 0; i < 16; i++)
     {
-        gpio_matrix_out(gpio_scl, 256, 1, 0);
-        GPIO.out1_w1tc.val = (1 << (gpio_scl - 32));
         esp_rom_delay_us(10);
-        gpio_matrix_out(gpio_scl, 256, 1, 0);
-        GPIO.out1_w1ts.val = (1 << (gpio_scl - 32));
+        GPIO.out1_w1ts.val = 1 << (41 - 32);
         esp_rom_delay_us(10);
+        GPIO.out1_w1tc.val = 1 << (41 - 32);
     }
-    gpio_matrix_out(gpio_scl, 29, 0, 0);
+    esp_rom_delay_us(10);
+    GPIO.out1_w1ts.val = 1 << (41 - 32);
+    esp_rom_delay_us(10);
+    GPIO.out_w1ts = 1 << (3);
+    esp_rom_delay_us(10);
+    GPIO.out1_w1ts.val = 1 << (41 - 32); // Send final stop
 
-    ret_val = ESP_OK;
-
-    i2c_driver_delete(_i2c_port);
-
-    /* Install i2c driver */
-    i2c_config_t conf = {
-        .mode             = I2C_MODE_MASTER,
-        .sda_io_num       = sda,
-        .sda_pullup_en    = pullup,
-        .scl_io_num       = scl,
-        .scl_pullup_en    = pullup,
-        .master.clk_speed = clkHz, // tested upto 1.4Mbit/s
-        .clk_flags        = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
-    };
-    ESP_LOGI("accel", "i2c_driver_install=%d", i2c_driver_install(_i2c_port, conf.mode, 0, 0, 0));
-    ret_val |= i2c_param_config(i2c_port, &conf);
+    // Prepare for normal open drain functionality.
+    GPIO.enable1_w1tc.val = 1 << (41 - 32);
+    GPIO.enable_w1tc      = 1 << (3);
+    GPIO.out1_w1tc.val    = 1 << (41 - 32);
+    GPIO.out_w1tc         = 1 << (3);
 
     // Enable access
     LSM6DSLSet(LSM6DSL_FUNC_CFG_ACCESS, 0x20);
     LSM6DSLSet(LSM6DSL_CTRL3_C, 0x81); // Force reset
-    vTaskDelay(1);
+    esp_rom_delay_us(100);
     LSM6DSLSet(LSM6DSL_CTRL3_C, 0x44); // unforce reset
 
     uint8_t who = 0xaa;
@@ -523,11 +526,11 @@ esp_err_t accelIntegrate()
     int16_t data[6 * 16];
 
     // Get temperature sensor (in case we ever want to use it)
-    int r = GeneralI2CGet(LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2);
-    if (r < 0)
-        return r;
-    if (r == 2)
-        ld->temp = data[0];
+    // int r = GeneralI2CGet(LSM6DSL_ADDRESS, 0x20, (uint8_t*)data, 2);
+    // if (r < 0)
+    //    return r;
+    // if (r == 2)
+    //    ld->temp = data[0];
     int readr = ReadLSM6DSL((uint8_t*)data, sizeof(data));
     if (readr < 0)
         return readr;
@@ -683,44 +686,63 @@ esp_err_t accelIntegrate()
         ld->fvLastAccelRaw[1] = accel_up[1];
         ld->fvLastAccelRaw[2] = accel_up[2];
 
-        // Step 6B: Next, compute what we think "up" should be from our point of view.  We will use +Y Up.
-        float what_we_think_is_up[3] = {0, 1, 0};
-        mathRotateVectorByInverseOfQuaternion(what_we_think_is_up, LSM6DSL.fqQuat, what_we_think_is_up);
+        if (ld->sampCount++ == 0)
+        {
+            // set fqQuat to be the rotation to go from our "up" from the
+            // accelerometer to the nominal "up"
+            float ideal_up[3] = {0, 1, 0};
 
-        // Step 6C: Next, we determine how far off we are.  This will tell us our error.
-        float corrective_quaternion[4];
+            float half[3]     = {accel_up[0] + ideal_up[0], accel_up[1] + ideal_up[1], accel_up[2] + ideal_up[2]};
+            float halfnormreq = rsqrtf(half[0] * half[0] + half[1] * half[1] + half[2] * half[2]);
+            half[0] *= halfnormreq;
+            half[1] *= halfnormreq;
+            half[2] *= halfnormreq;
 
-        // TRICKY: The ouput of this is actually the axis of rotation, which is ironically
-        // in vector-form the same as a quaternion.  So we can write directly into the quat.
-        mathCrossProduct(corrective_quaternion + 1, accel_up, what_we_think_is_up);
+            float* q = ld->fqQuat;
+            mathCrossProduct(q + 1, accel_up, half);
+            float dotdiff = accel_up[0] * half[0] + accel_up[1] * half[1] + accel_up[2] * half[2];
+            q[0]          = dotdiff;
+        }
+        else
+        {
+            // Step 6B: Next, compute what we think "up" should be from our point of view.  We will use +Y Up.
+            float what_we_think_is_up[3] = {0, 1, 0};
+            mathRotateVectorByInverseOfQuaternion(what_we_think_is_up, LSM6DSL.fqQuat, what_we_think_is_up);
 
-        // Now, we apply this in step 7.
+            // Step 6C: Next, we determine how far off we are.  This will tell us our error.
+            float corrective_quaternion[4];
 
-        // First, we can compute what the drift values of our axes are, to anti-drift them.
-        // If you do only this, you will always end up in an unstable oscillation.
-        memcpy(ld->fCorrectLast, corrective_quaternion + 1, 12);
+            // TRICKY: The ouput of this is actually the axis of rotation, which is ironically
+            // in vector-form the same as a quaternion.  So we can write directly into the quat.
+            mathCrossProduct(corrective_quaternion + 1, accel_up, what_we_think_is_up);
 
-        // XXX TODO: We need to multiply by amount the accelerometer gives us assurance.
-        ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
-        ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
-        ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
+            // Now, we apply this in step 7.
 
-        float corrective_force = (ld->sampCount++ == 0) ? 0.5f : 0.0005f;
+            // First, we can compute what the drift values of our axes are, to anti-drift them.
+            // If you do only this, you will always end up in an unstable oscillation.
+            memcpy(ld->fCorrectLast, corrective_quaternion + 1, 12);
 
-        // Second, we can apply a very small corrective tug.  This helps prevent oscillation
-        // about the correct answer.  This acts sort of like a P term to a PID loop.
-        // This is actually the **primary**, or fastest responding thing.
-        corrective_quaternion[1] *= corrective_force;
-        corrective_quaternion[2] *= corrective_force;
-        corrective_quaternion[3] *= corrective_force;
+            // XXX TODO: We need to multiply by amount the accelerometer gives us assurance.
+            ld->fvBias[0] += mathsqrtf(corrective_quaternion[1]) * 0.0000002;
+            ld->fvBias[1] += mathsqrtf(corrective_quaternion[2]) * 0.0000002;
+            ld->fvBias[2] += mathsqrtf(corrective_quaternion[3]) * 0.0000002;
 
-        // x^2+y^2+z^2+q^2 -> ALGEBRA! -> sqrt( 1-x^2-y^2-z^2 ) = w
-        corrective_quaternion[0] = mathsqrtf(1 - corrective_quaternion[1] * corrective_quaternion[1]
-                                             - corrective_quaternion[2] * corrective_quaternion[2]
-                                             - corrective_quaternion[3] * corrective_quaternion[3]);
+            float corrective_force = 0.0005f;
 
-        mathQuatApply(ld->fqQuat, ld->fqQuat, corrective_quaternion);
+            // Second, we can apply a very small corrective tug.  This helps prevent oscillation
+            // about the correct answer.  This acts sort of like a P term to a PID loop.
+            // This is actually the **primary**, or fastest responding thing.
+            corrective_quaternion[1] *= corrective_force;
+            corrective_quaternion[2] *= corrective_force;
+            corrective_quaternion[3] *= corrective_force;
 
+            // x^2+y^2+z^2+q^2 -> ALGEBRA! -> sqrt( 1-x^2-y^2-z^2 ) = w
+            corrective_quaternion[0] = mathsqrtf(1 - corrective_quaternion[1] * corrective_quaternion[1]
+                                                 - corrective_quaternion[2] * corrective_quaternion[2]
+                                                 - corrective_quaternion[3] * corrective_quaternion[3]);
+
+            mathQuatApply(ld->fqQuat, ld->fqQuat, corrective_quaternion);
+        }
         cdata += 6;
     }
 
