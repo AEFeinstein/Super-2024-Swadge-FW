@@ -306,10 +306,9 @@ void app_main(void)
     // Init accelerometer
     if (cSwadgeMode->usesAccelerometer)
     {
-        initAccelerometer(I2C_NUM_0,
-                          GPIO_NUM_3,  // SDA
+        initAccelerometer(GPIO_NUM_3,  // SDA
                           GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_ENABLE, 1000000);
+                          GPIO_PULLUP_ENABLE);
         accelIntegrate();
     }
 

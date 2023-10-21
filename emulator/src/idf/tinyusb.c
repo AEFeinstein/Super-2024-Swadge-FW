@@ -19,10 +19,3 @@ bool tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y, int8_t z, int
     WARN_UNIMPLEMENTED();
     return true;
 }
-
-bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry,
-                            uint8_t hat, uint16_t buttons)
-{
-    WARN_UNIMPLEMENTED();
-    return true;
-}

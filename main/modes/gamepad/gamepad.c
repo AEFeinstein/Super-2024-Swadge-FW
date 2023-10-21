@@ -54,40 +54,6 @@ typedef enum
     GAMEPAD_NS
 } gamepadType_t;
 
-/// Switch Gamepad Buttons Bitmap
-typedef enum
-{
-    GAMEPAD_NS_BUTTON_Y       = 0x01,
-    GAMEPAD_NS_BUTTON_B       = 0x02,
-    GAMEPAD_NS_BUTTON_A       = 0x04,
-    GAMEPAD_NS_BUTTON_X       = 0x08,
-    GAMEPAD_NS_BUTTON_TL      = 0x10,
-    GAMEPAD_NS_BUTTON_TR      = 0x20,
-    GAMEPAD_NS_BUTTON_TL2     = 0x40,
-    GAMEPAD_NS_BUTTON_TR2     = 0x80,
-    GAMEPAD_NS_BUTTON_MINUS   = 0x100,
-    GAMEPAD_NS_BUTTON_PLUS    = 0x200,
-    GAMEPAD_NS_BUTTON_THUMBL  = 0x400,
-    GAMEPAD_NS_BUTTON_THUMBR  = 0x800,
-    GAMEPAD_NS_BUTTON_HOME    = 0x1000,
-    GAMEPAD_NS_BUTTON_CAPTURE = 0x2000,
-    GAMEPAD_NS_BUTTON_Z       = 0x4000, /// UNUSED?
-} hid_gamepad_ns_button_bm_t;
-
-/// Switch Gamepad HAT/DPAD Buttons (from Linux input event codes)
-typedef enum
-{
-    GAMEPAD_NS_HAT_CENTERED   = 8, ///< DPAD_CENTERED
-    GAMEPAD_NS_HAT_UP         = 0, ///< DPAD_UP
-    GAMEPAD_NS_HAT_UP_RIGHT   = 1, ///< DPAD_UP_RIGHT
-    GAMEPAD_NS_HAT_RIGHT      = 2, ///< DPAD_RIGHT
-    GAMEPAD_NS_HAT_DOWN_RIGHT = 3, ///< DPAD_DOWN_RIGHT
-    GAMEPAD_NS_HAT_DOWN       = 4, ///< DPAD_DOWN
-    GAMEPAD_NS_HAT_DOWN_LEFT  = 5, ///< DPAD_DOWN_LEFT
-    GAMEPAD_NS_HAT_LEFT       = 6, ///< DPAD_LEFT
-    GAMEPAD_NS_HAT_UP_LEFT    = 7, ///< DPAD_UP_LEFT
-} hid_gamepad_ns_hat_t;
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -244,49 +210,48 @@ static const tinyusb_config_t pc_tusb_cfg = {
 };
 
 // @brief Switch report descriptor by touchgadget
-uint8_t const switch_hid_report_descriptor[] =
-{
-  // Gamepad for Nintendo Switch
-  // 14 buttons, 1 8-way dpad, 2 analog sticks (4 axes)
-  0x05, 0x01,        // Usage Page (Generic Desktop Ctrls)
-  0x09, 0x05,        // Usage (Game Pad)
-  0xA1, 0x01,        // Collection (Application)
-  0x15, 0x00,        //   Logical Minimum (0)
-  0x25, 0x01,        //   Logical Maximum (1)
-  0x35, 0x00,        //   Physical Minimum (0)
-  0x45, 0x01,        //   Physical Maximum (1)
-  0x75, 0x01,        //   Report Size (1)
-  0x95, 0x0E,        //   Report Count (14)
-  0x05, 0x09,        //   Usage Page (Button)
-  0x19, 0x01,        //   Usage Minimum (0x01)
-  0x29, 0x0E,        //   Usage Maximum (0x0E)
-  0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-  0x95, 0x02,        //   Report Count (2)
-  0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-  0x05, 0x01,        //   Usage Page (Generic Desktop Ctrls)
-  0x25, 0x07,        //   Logical Maximum (7)
-  0x46, 0x3B, 0x01,  //   Physical Maximum (315)
-  0x75, 0x04,        //   Report Size (4)
-  0x95, 0x01,        //   Report Count (1)
-  0x65, 0x14,        //   Unit (System: English Rotation, Length: Centimeter)
-  0x09, 0x39,        //   Usage (Hat switch)
-  0x81, 0x42,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,Null State)
-  0x65, 0x00,        //   Unit (None)
-  0x95, 0x01,        //   Report Count (1)
-  0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-  0x26, 0xFF, 0x00,  //   Logical Maximum (255)
-  0x46, 0xFF, 0x00,  //   Physical Maximum (255)
-  0x09, 0x30,        //   Usage (X)
-  0x09, 0x31,        //   Usage (Y)
-  0x09, 0x32,        //   Usage (Z)
-  0x09, 0x35,        //   Usage (Rz)
-  0x75, 0x08,        //   Report Size (8)
-  0x95, 0x04,        //   Report Count (4)
-  0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-  0x75, 0x08,        //   Report Size (8)
-  0x95, 0x01,        //   Report Count (1)
-  0x81, 0x01,        //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
-  0xC0,              // End Collection
+uint8_t const switch_hid_report_descriptor[] = {
+    // Gamepad for Nintendo Switch
+    // 14 buttons, 1 8-way dpad, 2 analog sticks (4 axes)
+    0x05, 0x01,       // Usage Page (Generic Desktop Ctrls)
+    0x09, 0x05,       // Usage (Game Pad)
+    0xA1, 0x01,       // Collection (Application)
+    0x15, 0x00,       //   Logical Minimum (0)
+    0x25, 0x01,       //   Logical Maximum (1)
+    0x35, 0x00,       //   Physical Minimum (0)
+    0x45, 0x01,       //   Physical Maximum (1)
+    0x75, 0x01,       //   Report Size (1)
+    0x95, 0x0E,       //   Report Count (14)
+    0x05, 0x09,       //   Usage Page (Button)
+    0x19, 0x01,       //   Usage Minimum (0x01)
+    0x29, 0x0E,       //   Usage Maximum (0x0E)
+    0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x95, 0x02,       //   Report Count (2)
+    0x81, 0x01,       //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x05, 0x01,       //   Usage Page (Generic Desktop Ctrls)
+    0x25, 0x07,       //   Logical Maximum (7)
+    0x46, 0x3B, 0x01, //   Physical Maximum (315)
+    0x75, 0x04,       //   Report Size (4)
+    0x95, 0x01,       //   Report Count (1)
+    0x65, 0x14,       //   Unit (System: English Rotation, Length: Centimeter)
+    0x09, 0x39,       //   Usage (Hat switch)
+    0x81, 0x42,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,Null State)
+    0x65, 0x00,       //   Unit (None)
+    0x95, 0x01,       //   Report Count (1)
+    0x81, 0x01,       //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x26, 0xFF, 0x00, //   Logical Maximum (255)
+    0x46, 0xFF, 0x00, //   Physical Maximum (255)
+    0x09, 0x30,       //   Usage (X)
+    0x09, 0x31,       //   Usage (Y)
+    0x09, 0x32,       //   Usage (Z)
+    0x09, 0x35,       //   Usage (Rz)
+    0x75, 0x08,       //   Report Size (8)
+    0x95, 0x04,       //   Report Count (4)
+    0x81, 0x02,       //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0x75, 0x08,       //   Report Size (8)
+    0x95, 0x01,       //   Report Count (1)
+    0x81, 0x01,       //   Input (Const,Array,Abs,No Wrap,Linear,Preferred State,No Null Position)
+    0xC0,             // End Collection
 };
 
 // @brief  Switch tusb configuration
@@ -848,7 +813,8 @@ void gamepadButtonCb(buttonEvt_t* evt)
         {
             // Build a list of all independent buttons held down
             gamepad->gpNsState.buttons
-                &= ~(GAMEPAD_NS_BUTTON_A | GAMEPAD_NS_BUTTON_B | GAMEPAD_NS_BUTTON_PLUS | GAMEPAD_NS_BUTTON_MINUS | GAMEPAD_NS_BUTTON_HOME | GAMEPAD_NS_BUTTON_CAPTURE);
+                &= ~(GAMEPAD_NS_BUTTON_A | GAMEPAD_NS_BUTTON_B | GAMEPAD_NS_BUTTON_PLUS | GAMEPAD_NS_BUTTON_MINUS
+                     | GAMEPAD_NS_BUTTON_HOME | GAMEPAD_NS_BUTTON_CAPTURE);
 
             if (evt->state & PB_A)
             {
@@ -976,8 +942,8 @@ void gamepadReportStateToHost(void)
                 // TODO check this
                 // tud_gamepad_ns_report(&gamepad->gpNsState);
                 tud_hid_gamepad_report_ns(HID_ITF_PROTOCOL_NONE, gamepad->gpNsState.x, gamepad->gpNsState.y,
-                                       gamepad->gpNsState.z, gamepad->gpNsState.rz, gamepad->gpNsState.rx,
-                                       gamepad->gpNsState.ry, gamepad->gpNsState.hat, gamepad->gpNsState.buttons);
+                                          gamepad->gpNsState.z, gamepad->gpNsState.rz, gamepad->gpNsState.rx,
+                                          gamepad->gpNsState.ry, gamepad->gpNsState.hat, gamepad->gpNsState.buttons);
 
                 break;
             }

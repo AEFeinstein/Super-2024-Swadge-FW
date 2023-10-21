@@ -217,7 +217,7 @@ static void quickSettingsEnterMode(void)
 
     quickSettings->prevSfxValue = sfxValue;
     quickSettings->prevBgmValue = bgmValue;
-    quickSettings->showLeds = true;
+    quickSettings->showLeds     = true;
 
     // Add the actual items to the menu
     addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
