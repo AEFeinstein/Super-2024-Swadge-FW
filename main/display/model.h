@@ -79,11 +79,13 @@ void deinitRenderer(void);
  * @param model The 3D model to draw
  * @param offset The location within the world
  * @param orient A quaternion representing the orientation of the model
+ * @param scale The scale factor to apply to the model
+ * @param translate A vector representing the x, y, and z translation of the model
  * @param x The X coordinate of the left side of the window to draw the model within
  * @param y The Y coordinate of the top side of the window to draw the model within
  * @param w The width of the window to draw the model within
  * @param h The height of the window to draw the model within
  */
-void drawModel(const model_t* model, float orient[4]);
+void drawModel(const model_t* model, float orient[4], float scale, float translate[3], uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 
 #endif

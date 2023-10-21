@@ -87,46 +87,37 @@ void deinitRenderer(void)
     }
 }
 
-void drawModel(const model_t* model, float orient[4])
+void drawModel(const model_t* model, float orient[4], float scale, float translate[3], uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-    // TODO: add translate parameter
-    // TODO: add x, y, w, and h as parameters for the drawing area
-    // TODO: not sure if lines work
-
-    uint16_t w = TFT_WIDTH;
-    uint16_t h = TFT_HEIGHT;
-
     float plusy[3] = { 0, 1, 0 };
 
 	// Produce a model matrix from a quaternion.
-	float plusx_out[3] = { 0.9, 0, 0 };
-	float plusy_out[3] = { 0, 0.9, 0 };
-	float plusz_out[3] = { 0, 0, 0.9 };
+	float plusx_out[3] = { 0.9 * scale, 0, 0 };
+	float plusy_out[3] = { 0, 0.9 * scale, 0 };
+	float plusz_out[3] = { 0, 0, 0.9 * scale };
 	mathRotateVectorByQuaternion( plusy, orient, plusy );
 	mathRotateVectorByQuaternion( plusy_out, orient, plusy_out );
 	mathRotateVectorByQuaternion( plusx_out, orient, plusx_out );
 	mathRotateVectorByQuaternion( plusz_out, orient, plusz_out );
 
-	//uint32_t cycStart = getCycleCount();
-
 	int i, vertices = 0;
     for( i = 0; i < model->vertCount; i++ )
 	{
 		// Performing the transform this way is about 700us.
-        float bx = 1.0 * model->verts[i][0];
-		float by = 1.0 * model->verts[i][1];
-		float bz = 1.0 * model->verts[i][2];
+        float bx = 1.0 * model->verts[i][0] + translate[0];
+		float by = 1.0 * model->verts[i][1] + translate[1];
+		float bz = 1.0 * model->verts[i][2] + translate[2];
 
-		float bunnyvert[3] = {
+		float xlvert[3] = {
 			bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
 			bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
 			bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]
         };
 
-		verts_out[vertices*3+0] = bunnyvert[0] + w/2;
+		verts_out[vertices*3+0] = x + xlvert[0] + w/2;
         // Convert from right-handed to left-handed coordinate frame.
-		verts_out[vertices*3+1] =-bunnyvert[1] + h/2;
-		verts_out[vertices*3+2] = bunnyvert[2];
+		verts_out[vertices*3+1] = y - xlvert[1] + h/2;
+		verts_out[vertices*3+2] = xlvert[2];
 		vertices++;
 	}
 
