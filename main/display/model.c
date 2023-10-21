@@ -12,6 +12,13 @@
 #include "shapes.h"
 #include "palette.h"
 
+// do a funky typedef so we can still define trimap as a 2D array
+typedef uint16_t trimap_t[3];
+
+// Variables
+static uint16_t* verts_out = NULL;
+static trimap_t* trimap = NULL;
+
 // Static Function Prototypes
 static void intcross(int* p, const int* a, const int* b);
 static int zcompare(const int16_t *a, const int16_t* b);
@@ -43,6 +50,43 @@ static unsigned julery_isqrt(unsigned long val) {
     return g;
 }
 
+void initRenderer(const model_t* model)
+{
+    initRendererCustom(model->vertCount, model->triCount);
+}
+
+void initRendererCustom(uint16_t maxVerts, uint16_t maxFaces)
+{
+    // Free any existing buffers
+    deinitRenderer();
+
+    ESP_LOGI("Model", "Allocating %" PRIu64 " bytes for verts and faces", (uint64_t)((maxVerts + maxFaces) * 3 * sizeof(uint16_t)));
+
+    // Allocate the new buffers
+    verts_out = malloc(maxVerts * 3 * sizeof(uint16_t));
+    trimap = malloc(maxFaces * 3 * sizeof(uint16_t));
+
+    if (verts_out == NULL || trimap == NULL)
+    {
+        ESP_LOGI("Model", "Renderer could not allocate the buffers :(");
+    }
+}
+
+void deinitRenderer(void)
+{
+    if (NULL != verts_out)
+    {
+        free(verts_out);
+        verts_out = NULL;
+    }
+
+    if (NULL != trimap)
+    {
+        free(trimap);
+        trimap = NULL;
+    }
+}
+
 void drawModel(const model_t* model, float orient[4])
 {
     // TODO: add translate parameter
@@ -51,9 +95,6 @@ void drawModel(const model_t* model, float orient[4])
 
     uint16_t w = TFT_WIDTH;
     uint16_t h = TFT_HEIGHT;
-    uint16_t verts_out[model->vertCount * 3];
-    char ctsbuffer[1024];
-	char *cts = ctsbuffer;
 
     float plusy[3] = { 0, 1, 0 };
 
@@ -93,9 +134,6 @@ void drawModel(const model_t* model, float orient[4])
     {
         // Draw model with shaded triangles
         int totalTrisThisFrame = 0;
-
-        // Z, Index, Color
-        int16_t trimap[model->triCount][3];
 
         for( i = 0; i < model->triCount; i++)
         {
