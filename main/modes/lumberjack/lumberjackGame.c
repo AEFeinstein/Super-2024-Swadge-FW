@@ -152,6 +152,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_red_lives.wsg", &lumv->minicharacters[0], true);
     loadWsg("lumbers_green_lives.wsg", &lumv->minicharacters[1], true);
     loadWsg("secret_swadgeland_lives.wsg", &lumv->minicharacters[2], true);
+    loadWsg("lumbers_cho_lives.wsg", &lumv->minicharacters[3], true);
 
     ESP_LOGI(LUM_TAG, "*Loading character sprites");
     if (characterIndex == 0)
@@ -217,6 +218,27 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("secret_swadgeland_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("secret_swadgeland_17.wsg", &lumv->playerSprites[16], true);
         loadWsg("secret_swadgeland_22.wsg", &lumv->playerSprites[17], true);
+    } 
+    else if (characterIndex == 3)
+    {
+        loadWsg("lumbers_cho_1.wsg", &lumv->playerSprites[0], true);
+        loadWsg("lumbers_cho_2.wsg", &lumv->playerSprites[1], true);
+        loadWsg("lumbers_cho_3.wsg", &lumv->playerSprites[2], true);
+        loadWsg("lumbers_cho_4.wsg", &lumv->playerSprites[3], true);
+        loadWsg("lumbers_cho_5.wsg", &lumv->playerSprites[4], true);
+        loadWsg("lumbers_cho_6.wsg", &lumv->playerSprites[5], true);
+        loadWsg("lumbers_cho_7.wsg", &lumv->playerSprites[6], true);
+        loadWsg("lumbers_cho_8.wsg", &lumv->playerSprites[7], true);
+        loadWsg("lumbers_cho_9.wsg", &lumv->playerSprites[8], true);
+        loadWsg("lumbers_cho_10.wsg", &lumv->playerSprites[9], true);
+        loadWsg("lumbers_cho_11.wsg", &lumv->playerSprites[10], true);
+        loadWsg("lumbers_cho_12.wsg", &lumv->playerSprites[11], true);
+        loadWsg("lumbers_cho_13.wsg", &lumv->playerSprites[12], true);
+        loadWsg("lumbers_cho_14.wsg", &lumv->playerSprites[13], true);
+        loadWsg("lumbers_cho_15.wsg", &lumv->playerSprites[14], true);
+        loadWsg("lumbers_cho_16.wsg", &lumv->playerSprites[15], true);
+        loadWsg("lumbers_cho_17.wsg", &lumv->playerSprites[16], true);
+        loadWsg("lumbers_cho_18.wsg", &lumv->playerSprites[17], true);
     } 
 
     ESP_LOGI(LUM_TAG, "Loading Enemies");
@@ -584,7 +606,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
             ESP_LOGI(LUM_TAG, "Next level");
             lumberjackUnloadLevel();
 
-            lumberjackSetupLevel(0);
+            lumberjackSetupLevel(lumv->localPlayer->type); //Troy
 
             lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
         }
@@ -985,6 +1007,11 @@ void DrawTitle(void)
     else if (lumv->localPlayer->type == 1)
     {
         drawWsgSimple(&lumv->subtitle_green, (TFT_WIDTH/2)- 36, (TFT_HEIGHT/2) -9);
+    }
+    else
+    {
+        drawWsgSimple(&lumv->subtitle_white, (TFT_WIDTH/2)- 36, (TFT_HEIGHT/2) -9);
+        
     }
     
     for (int i = 0; i < LUMBERJACK_MAP_WIDTH; i++)
@@ -1558,8 +1585,6 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
             lumberjackOnLocalPlayerDeath();
         }
 
-        /*return (AA->x < BB->x + BB->width && AA->x + AA->width > BB->x && AA->y < BB->y + BB->height
-            && AA->y + AA->height > BB->y);*/
     }
 }
 

@@ -124,7 +124,7 @@ typedef struct
 
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
-    wsg_t minicharacters[3];
+    wsg_t minicharacters[4];
     
 
     wsg_t title;

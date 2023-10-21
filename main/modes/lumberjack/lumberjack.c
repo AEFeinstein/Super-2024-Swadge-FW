@@ -36,8 +36,9 @@ static const char lumberjackBack[]   = "Back";
 
 // static const char lumberjackNone[]    = "None";
 static const char lumberjackRedCharacter[]     = "Character: Red";
-static const char lumberjackGreen[]            = "Character: Green";
+static const char lumberjackGreenCharacter[]            = "Character: Green";
 static const char lumberjackSpecialCharacter[] = "Character: Special";
+static const char lumberjackChoCharacter[] = "Character: Cho";
 
 static const char lumberjackMenuSinglePlayer[]      = "Single Player";
 static const char lumberjackMenuMultiPlayerHost[]   = "Multi-Player";
@@ -91,16 +92,18 @@ static void lumberjackEnterMode(void)
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerClient);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
-    if (true) // Ignore this line
+
+    // TODO: Make this a dynamic array that reads what characters have been unlocked.
+    if (false) // Ignore this line
     {
-        static const char* defaultCharacters[] = {lumberjackRedCharacter, lumberjackGreen};
+        static const char* defaultCharacters[] = {lumberjackRedCharacter, lumberjackGreenCharacter};
 
         addMultiItemToMenu(lumberjack->menu, defaultCharacters, ARRAY_SIZE(defaultCharacters), 0);
     }
     else
     {
         static const char* defaultCharacterswUnlocks[]
-            = {lumberjackRedCharacter, lumberjackGreen, lumberjackSpecialCharacter};
+            = {lumberjackRedCharacter, lumberjackGreenCharacter, lumberjackSpecialCharacter, lumberjackChoCharacter};
 
         addMultiItemToMenu(lumberjack->menu, defaultCharacterswUnlocks, ARRAY_SIZE(defaultCharacterswUnlocks), 0);
     }
@@ -319,13 +322,17 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         {
             lumberjack->selected = 0;
         }
-        else if (label == lumberjackGreen)
+        else if (label == lumberjackGreenCharacter)
         {
             lumberjack->selected = 1;
         }
         else if (label == lumberjackSpecialCharacter)
         {
             lumberjack->selected = 2;
+        }
+        else if (label == lumberjackChoCharacter)
+        {
+            lumberjack->selected = 3;
         }
 
         if (label == lumberjackBack)
@@ -339,13 +346,17 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         {
             lumberjack->selected = 0;
         }
-        else if (label == lumberjackGreen)
+        else if (label == lumberjackGreenCharacter)
         {
             lumberjack->selected = 1;
         }
         else if (label == lumberjackSpecialCharacter)
         {
             lumberjack->selected = 2;
+        }else if (label == lumberjackChoCharacter)
+        {
+            lumberjack->selected = 3;
+
         }
     }
 }
