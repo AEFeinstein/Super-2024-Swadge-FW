@@ -37,8 +37,33 @@
 #ifndef _HDW_USB_
 #define _HDW_USB_
 
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include <class/hid/hid.h>
 #include "tinyusb.h"
+
+//==============================================================================
+// Structs
+//==============================================================================
+
+/// HID Switch Gamepad Protocol Report.
+typedef struct TU_ATTR_PACKED
+{
+    uint16_t buttons; ///< Buttons mask for currently pressed buttons
+    uint8_t hat;      ///< Buttons mask for currently pressed buttons in the DPad/hat
+    int8_t x;         ///< Delta x  movement of left analog-stick
+    int8_t y;         ///< Delta y  movement of left analog-stick
+    int8_t rx;        ///< Delta Rx movement of analog left trigger
+    int8_t ry;        ///< Delta Ry movement of analog right trigger
+    int8_t z;         ///< Delta z  movement of right analog-joystick
+    int8_t rz;        ///< Delta Rz movement of right analog-joystick
+} hid_gamepad_ns_report_t;
+
+//==============================================================================
+// Function typedefs
+//==============================================================================
 
 /**
  * @brief Function typedef for a callback which will send USB SET_REPORT and GET_REPORT messages to a Swadge mode
@@ -49,16 +74,23 @@
  * @return The number of bytes returned to the host
  */
 typedef int16_t (*fnAdvancedUsbHandler)(uint8_t* buffer, uint16_t length, uint8_t isGet);
+
 /**
  * @brief Function typedef for a function which will switch the Swadge mode
  * @param mode A pointer to the new Swadge mode. Be very careful with this, it will execute whatever's at this address.
  */
 typedef void (*fnSetSwadgeMode)(void* mode);
 
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
 void initUsb(fnSetSwadgeMode setSwadgeMode, fnAdvancedUsbHandler advancedUsbHandler);
 void deinitUsb(void);
 void sendUsbGamepadReport(hid_gamepad_report_t* report);
 void usbSetSwadgeMode(void* newMode);
 void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor);
+bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx,
+                                             int8_t ry, uint8_t hat, uint16_t buttons);
 
 #endif

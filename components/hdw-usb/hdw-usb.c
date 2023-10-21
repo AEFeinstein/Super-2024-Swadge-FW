@@ -113,6 +113,13 @@ static const uint8_t hid_configuration_descriptor[] = {
                        16,                            // size
                        10),                           // polling interval
 };
+                                 
+//==============================================================================
+// Function declarations
+//==============================================================================
+
+static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz,
+                                 int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons);
 
 //==============================================================================
 // Variables
@@ -189,6 +196,60 @@ void sendUsbGamepadReport(hid_gamepad_report_t* report)
         tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, report->x, report->y, report->z, report->rx, report->ry,
                                report->rz, report->hat, report->buttons);
     }
+}
+
+/**
+ * @brief TODO
+ * 
+ * @param instance 
+ * @param report_id 
+ * @param x 
+ * @param y 
+ * @param z 
+ * @param rz 
+ * @param rx 
+ * @param ry 
+ * @param hat 
+ * @param buttons 
+ * @return true 
+ * @return false 
+ */
+static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz,
+                                 int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons)
+{
+    hid_gamepad_ns_report_t report = {
+        .buttons = buttons,
+        .hat     = hat,
+        .x       = x,
+        .y       = y,
+        .rx      = rx,
+        .ry      = ry,
+        .z       = z,
+        .rz      = rz,
+    };
+
+    return tud_hid_n_report(instance, report_id, &report, sizeof(report));
+}
+
+/**
+ * @brief TODO
+ * 
+ * @param report_id 
+ * @param x 
+ * @param y 
+ * @param z 
+ * @param rz 
+ * @param rx 
+ * @param ry 
+ * @param hat 
+ * @param buttons 
+ * @return true 
+ * @return false 
+ */
+bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx,
+                                             int8_t ry, uint8_t hat, uint16_t buttons)
+{
+    return tud_hid_n_gamepad_report_ns(0, report_id, x, y, z, rz, rx, ry, hat, buttons);
 }
 
 //==============================================================================
