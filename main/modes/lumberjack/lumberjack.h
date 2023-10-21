@@ -74,6 +74,7 @@ typedef struct
 {
     bool loaded;
     bool hasWon;
+    bool gameReady;
     font_t arcade;
     lumberjack_t* lumberjackMain;
     menu_t* menu;
