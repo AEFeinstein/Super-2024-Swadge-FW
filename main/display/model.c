@@ -155,6 +155,13 @@ void drawModel(const model_t* model, float orient[4], float scale, float transla
 
             //float fcrp[3] = { icrp[0], icrp[1], icrp[2] };
             int crpscalar = julery_isqrt( icrp[0] * icrp[0] + icrp[1] * icrp[1] + icrp[2] * icrp[2] );
+
+            // TODO: This is probably not the root cause of the issue
+            if (crpscalar == 0)
+            {
+                crpscalar = 1;
+            }
+
             icrp[0] = ( 1024 * icrp[0] ) / crpscalar;
             icrp[1] = ( 1024 * icrp[1] ) / crpscalar;
             icrp[2] = ( 1024 * icrp[2] ) / crpscalar;
