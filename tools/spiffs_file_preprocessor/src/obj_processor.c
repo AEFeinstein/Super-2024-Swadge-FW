@@ -11,7 +11,7 @@
 #include "heatshrink_util.h"
 
 
-#define DEBUG_OBJ
+//#define DEBUG_OBJ
 #define BUFLEN_DEFAULT 1024
 
 typedef float fvVert_t[6];
@@ -99,7 +99,7 @@ void process_obj(const char* infile, const char* outdir)
 			memcpy( &fvVerts[fvc++], fv, sizeof( fv ) );
 		}
 
-        /* Read triangle line */
+        /* Read face line */
 		if( line[0] == 'f' )
 		{
             // Make sure the ivS array has enough room for another one
