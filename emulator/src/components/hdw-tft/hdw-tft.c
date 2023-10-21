@@ -231,7 +231,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 
                     uint32_t color = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
 
-                    uint8_t a = (color)&0xFF;
+                    uint8_t a = (color) & 0xFF;
                     uint8_t r = (color >> 8) & 0xFF;
                     r         = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
                     uint8_t g = (color >> 16) & 0xFF;
