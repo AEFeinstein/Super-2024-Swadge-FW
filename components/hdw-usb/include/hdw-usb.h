@@ -45,6 +45,44 @@
 #include "tinyusb.h"
 
 //==============================================================================
+// Enums
+//==============================================================================
+
+/// Switch Gamepad Buttons Bitmap
+typedef enum
+{
+    GAMEPAD_NS_BUTTON_Y       = 0x01,
+    GAMEPAD_NS_BUTTON_B       = 0x02,
+    GAMEPAD_NS_BUTTON_A       = 0x04,
+    GAMEPAD_NS_BUTTON_X       = 0x08,
+    GAMEPAD_NS_BUTTON_TL      = 0x10,
+    GAMEPAD_NS_BUTTON_TR      = 0x20,
+    GAMEPAD_NS_BUTTON_TL2     = 0x40,
+    GAMEPAD_NS_BUTTON_TR2     = 0x80,
+    GAMEPAD_NS_BUTTON_MINUS   = 0x100,
+    GAMEPAD_NS_BUTTON_PLUS    = 0x200,
+    GAMEPAD_NS_BUTTON_THUMBL  = 0x400,
+    GAMEPAD_NS_BUTTON_THUMBR  = 0x800,
+    GAMEPAD_NS_BUTTON_HOME    = 0x1000,
+    GAMEPAD_NS_BUTTON_CAPTURE = 0x2000,
+    GAMEPAD_NS_BUTTON_Z       = 0x4000, /// UNUSED?
+} hid_gamepad_ns_button_bm_t;
+
+/// Switch Gamepad HAT/DPAD Buttons (from Linux input event codes)
+typedef enum
+{
+    GAMEPAD_NS_HAT_CENTERED   = 8, ///< DPAD_CENTERED
+    GAMEPAD_NS_HAT_UP         = 0, ///< DPAD_UP
+    GAMEPAD_NS_HAT_UP_RIGHT   = 1, ///< DPAD_UP_RIGHT
+    GAMEPAD_NS_HAT_RIGHT      = 2, ///< DPAD_RIGHT
+    GAMEPAD_NS_HAT_DOWN_RIGHT = 3, ///< DPAD_DOWN_RIGHT
+    GAMEPAD_NS_HAT_DOWN       = 4, ///< DPAD_DOWN
+    GAMEPAD_NS_HAT_DOWN_LEFT  = 5, ///< DPAD_DOWN_LEFT
+    GAMEPAD_NS_HAT_LEFT       = 6, ///< DPAD_LEFT
+    GAMEPAD_NS_HAT_UP_LEFT    = 7, ///< DPAD_UP_LEFT
+} hid_gamepad_ns_hat_t;
+
+//==============================================================================
 // Structs
 //==============================================================================
 
@@ -90,7 +128,7 @@ void deinitUsb(void);
 void sendUsbGamepadReport(hid_gamepad_report_t* report);
 void usbSetSwadgeMode(void* newMode);
 void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor);
-bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx,
-                                             int8_t ry, uint8_t hat, uint16_t buttons);
+bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry,
+                               uint8_t hat, uint16_t buttons);
 
 #endif

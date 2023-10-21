@@ -54,40 +54,6 @@ typedef enum
     GAMEPAD_NS
 } gamepadType_t;
 
-/// Switch Gamepad Buttons Bitmap
-typedef enum
-{
-    GAMEPAD_NS_BUTTON_Y       = 0x01,
-    GAMEPAD_NS_BUTTON_B       = 0x02,
-    GAMEPAD_NS_BUTTON_A       = 0x04,
-    GAMEPAD_NS_BUTTON_X       = 0x08,
-    GAMEPAD_NS_BUTTON_TL      = 0x10,
-    GAMEPAD_NS_BUTTON_TR      = 0x20,
-    GAMEPAD_NS_BUTTON_TL2     = 0x40,
-    GAMEPAD_NS_BUTTON_TR2     = 0x80,
-    GAMEPAD_NS_BUTTON_MINUS   = 0x100,
-    GAMEPAD_NS_BUTTON_PLUS    = 0x200,
-    GAMEPAD_NS_BUTTON_THUMBL  = 0x400,
-    GAMEPAD_NS_BUTTON_THUMBR  = 0x800,
-    GAMEPAD_NS_BUTTON_HOME    = 0x1000,
-    GAMEPAD_NS_BUTTON_CAPTURE = 0x2000,
-    GAMEPAD_NS_BUTTON_Z       = 0x4000, /// UNUSED?
-} hid_gamepad_ns_button_bm_t;
-
-/// Switch Gamepad HAT/DPAD Buttons (from Linux input event codes)
-typedef enum
-{
-    GAMEPAD_NS_HAT_CENTERED   = 8, ///< DPAD_CENTERED
-    GAMEPAD_NS_HAT_UP         = 0, ///< DPAD_UP
-    GAMEPAD_NS_HAT_UP_RIGHT   = 1, ///< DPAD_UP_RIGHT
-    GAMEPAD_NS_HAT_RIGHT      = 2, ///< DPAD_RIGHT
-    GAMEPAD_NS_HAT_DOWN_RIGHT = 3, ///< DPAD_DOWN_RIGHT
-    GAMEPAD_NS_HAT_DOWN       = 4, ///< DPAD_DOWN
-    GAMEPAD_NS_HAT_DOWN_LEFT  = 5, ///< DPAD_DOWN_LEFT
-    GAMEPAD_NS_HAT_LEFT       = 6, ///< DPAD_LEFT
-    GAMEPAD_NS_HAT_UP_LEFT    = 7, ///< DPAD_UP_LEFT
-} hid_gamepad_ns_hat_t;
-
 //==============================================================================
 // Structs
 //==============================================================================
