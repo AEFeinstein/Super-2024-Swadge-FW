@@ -19,7 +19,8 @@
 #include "fill.h"
 #include "linked_list.h"
 #include "font.h"
-#include "bunny.h"
+#include "model.h"
+#include "spiffs_model.h"
 
 //==============================================================================
 // Defines
@@ -71,6 +72,8 @@ typedef struct
 typedef struct
 {
     font_t ibm; ///< The font used to display text
+
+    model_t bunny; ///< The bunny 3D model
 
     uint16_t btnState; ///< The button state
 
@@ -158,6 +161,7 @@ static void accelTestEnterMode(void)
 
     // Load a font
     loadFont("ibm_vga8.font", &accelTest->ibm, false);
+    ESP_LOGI("Model", "loadModel(bunny.mdl) returned %s", loadModel("donut.mdl", &accelTest->bunny, true) ? "true" : "false");
 
     // writeTextlabels doesn't get reset by accelTestReset(), so initialize that here
     accelTest->writeTextLabels = true;
@@ -174,6 +178,9 @@ static void accelTestEnterMode(void)
  */
 static void accelTestExitMode(void)
 {
+    // Free the bunny 3D model
+    freeModel(&accelTest->bunny);
+
     // Free the font
     freeFont(&accelTest->ibm);
     free(accelTest);
@@ -258,46 +265,9 @@ static void accelTestHandleInput(void)
  */
 static void accelDrawBunny(void)
 {
-    // Produce a model matrix from a quaternion.
-    float plusx_out[3] = {1, 0, 0};
-    float plusy_out[3] = {0, 1, 0};
-    float plusz_out[3] = {0, 0, 1};
-
-    mathRotateVectorByQuaternion(plusy_out, LSM6DSL.fqQuat, plusy_out);
-    mathRotateVectorByQuaternion(plusx_out, LSM6DSL.fqQuat, plusx_out);
-    mathRotateVectorByQuaternion(plusz_out, LSM6DSL.fqQuat, plusz_out);
-
-    int16_t bunny_verts_out[sizeof(bunny_verts) / 3 / 2 * 3];
-    int i, vertices = 0;
-    for (i = 0; i < sizeof(bunny_verts) / 2; i += 3)
-    {
-        // Performingthe transform this way is about 700us.
-        float bx                          = bunny_verts[i + 2];
-        float by                          = bunny_verts[i + 1];
-        float bz                          = -bunny_verts[i + 0];
-        float bunnyvert[3]                = {bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
-                                             bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
-                                             bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]};
-        bunny_verts_out[vertices * 3 + 0] = bunnyvert[0] / 250 + 280 / 2;
-        bunny_verts_out[vertices * 3 + 1]
-            = -bunnyvert[1] / 250 + 240 / 2; // Convert from right-handed to left-handed coordinate frame.
-        bunny_verts_out[vertices * 3 + 2] = bunnyvert[2];
-        vertices++;
-    }
-
-    int lines = 0;
-    for (i = 0; i < sizeof(bunny_lines); i += 2)
-    {
-        int v1    = bunny_lines[i] * 3;
-        int v2    = bunny_lines[i + 1] * 3;
-        float col = bunny_verts_out[v1 + 2] / 2000 + 8;
-        if (col > 5)
-            col = 5;
-        else if (col < 0)
-            continue;
-        drawLineFast(bunny_verts_out[v1], bunny_verts_out[v1 + 1], bunny_verts_out[v2], bunny_verts_out[v2 + 1], col);
-        lines++;
-    }
+    float orient[4];
+    memcpy(orient, LSM6DSL.fqQuat, sizeof(orient));
+    drawModel(&accelTest->bunny, orient);
 }
 
 /**
