@@ -74,6 +74,9 @@ typedef struct
     font_t ibm; ///< The font used to display text
 
     model_t bunny; ///< The bunny 3D model
+    model_t donut; ///< The donut 3D model
+
+    bool drawDonut;
 
     uint16_t btnState; ///< The button state
 
@@ -161,7 +164,11 @@ static void accelTestEnterMode(void)
 
     // Load a font
     loadFont("ibm_vga8.font", &accelTest->ibm, false);
-    ESP_LOGI("Model", "loadModel(bunny.mdl) returned %s", loadModel("donut.mdl", &accelTest->bunny, true) ? "true" : "false");
+    ESP_LOGI("Model", "loadModel(bunny.mdl) returned %s", loadModel("bunny.mdl", &accelTest->bunny, true) ? "true" : "false");
+    loadModel("donut.mdl", &accelTest->donut, true);
+
+    // Ensure there's sufficient space to draw either model
+    initRendererCustom(MAX(accelTest->bunny.vertCount, accelTest->donut.vertCount), MAX(accelTest->bunny.triCount, accelTest->donut.triCount));
 
     // writeTextlabels doesn't get reset by accelTestReset(), so initialize that here
     accelTest->writeTextLabels = true;
@@ -178,8 +185,14 @@ static void accelTestEnterMode(void)
  */
 static void accelTestExitMode(void)
 {
+    // Free renderer memory
+    deinitRenderer();
+
     // Free the bunny 3D model
     freeModel(&accelTest->bunny);
+
+    // Free the king donut 3D model
+    freeModel(&accelTest->donut);
 
     // Free the font
     freeFont(&accelTest->ibm);
@@ -209,6 +222,11 @@ static void accelTestMainLoop(int64_t elapsedUs)
         if (evt.down && (PB_A == evt.button))
         {
             accelTest->writeTextLabels = !accelTest->writeTextLabels;
+        }
+
+        if (evt.down && (PB_B == evt.button))
+        {
+            accelTest->drawDonut = !accelTest->drawDonut;
         }
     }
 
@@ -267,7 +285,15 @@ static void accelDrawBunny(void)
 {
     float orient[4];
     memcpy(orient, LSM6DSL.fqQuat, sizeof(orient));
-    drawModel(&accelTest->bunny, orient);
+
+    if (accelTest->drawDonut)
+    {
+        drawModel(&accelTest->donut, orient);
+    }
+    else
+    {
+        drawModel(&accelTest->bunny, orient);
+    }
 }
 
 /**

@@ -46,7 +46,35 @@ typedef struct
 } model_t;
 
 /**
+ * @brief Initializes the renderer, allocating temporary buffers needed to draw efficiently.
+ *
+ * Enough space will be allocated for drawing the given model based on its number of elements.
+ * Other models may be rendered, as long as they do not have more vertices or triangles. If
+ * multiple models with varying numbers of vertices and faces will be drawn, initRendererCustom()
+ * should be called with the maximum numbe of vertices and maximum number of faces for any single
+ * model.
+ *
+ */
+void initRenderer(const model_t* model);
+
+/**
+ * @brief Initializes the renderer, allocating temporary buffers needed to draw efficiently.
+ *
+ * @param maxVerts The maximum number of vertices in a model that will be drawn
+ * @param maxFaces The maximum number of lines in a model that will be drawn
+ */
+void initRendererCustom(uint16_t maxVerts, uint16_t maxFaces);
+
+/**
+ * @brief Deinitializes the renderer, clearing any temporary buffers that were allocated
+ *
+ */
+void deinitRenderer(void);
+
+/**
  * @brief Render a 3D model to the screen
+ *
+ * initRenderer() or initRendererCustom() must be called once before rendering anything.
  *
  * @param model The 3D model to draw
  * @param offset The location within the world
