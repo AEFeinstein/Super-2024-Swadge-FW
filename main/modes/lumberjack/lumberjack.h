@@ -100,6 +100,7 @@ typedef struct
 
     int score;
     int highscore;
+    int localPlayerType;
 
     int enemyAttackQueue;
 

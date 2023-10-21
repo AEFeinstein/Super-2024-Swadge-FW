@@ -63,7 +63,6 @@ void lumberjackRespawn(lumberjackEntity_t* hero, int x, int y)
 
 int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
 {
-    // int animationNone[] = {0};
 
     int animation        = hero->state;
     hero->animationSpeed = LUMBERJACK_DEFAULT_ANIMATION_SPEED;

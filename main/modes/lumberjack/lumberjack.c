@@ -28,6 +28,8 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
 static void lumberjackMenuCb(const char*, bool selected, uint32_t settingVal);
 
 static void lumberjackJoinGame(void);
+static bool lumberjackChoUnlocked(void);
+static bool lumberjackSpecialUnlocked(void);
 
 static const char lumberjackName[]   = "Lumber Jack";
 static const char lumberjackPanic[]  = "Panic";
@@ -92,22 +94,37 @@ static void lumberjackEnterMode(void)
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerClient);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
+    int characters = 2;
 
-    // TODO: Make this a dynamic array that reads what characters have been unlocked.
-    if (false) // Ignore this line
+    if (lumberjackChoUnlocked())
     {
-        static const char* defaultCharacters[] = {lumberjackRedCharacter, lumberjackGreenCharacter};
-
-        addMultiItemToMenu(lumberjack->menu, defaultCharacters, ARRAY_SIZE(defaultCharacters), 0);
-    }
-    else
-    {
-        static const char* defaultCharacterswUnlocks[]
-            = {lumberjackRedCharacter, lumberjackGreenCharacter, lumberjackSpecialCharacter, lumberjackChoCharacter};
-
-        addMultiItemToMenu(lumberjack->menu, defaultCharacterswUnlocks, ARRAY_SIZE(defaultCharacterswUnlocks), 0);
+        characters++;
     }
 
+    if (lumberjackSpecialUnlocked())
+    {
+        characters++;
+    }
+
+    char** charactersArray = calloc(characters, sizeof(char*));
+
+    charactersArray[0] = lumberjackRedCharacter;
+    charactersArray[1] = lumberjackGreenCharacter;
+
+    int index = 2;
+
+    if (lumberjackChoUnlocked())
+    {
+        charactersArray[index++] = lumberjackChoCharacter;
+    }
+
+    if (lumberjackSpecialUnlocked())
+    {
+        charactersArray[index++] = lumberjackSpecialCharacter;
+    }
+
+    addMultiItemToMenu(lumberjack->menu, charactersArray, characters, 0);
+ 
     lumberjack->screen = LUMBERJACK_MENU;
 
     // Lumberjack. Game 19
@@ -186,6 +203,21 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
     fillDisplayArea(x, y, x + w, y + h, c145);
 
     // Are we drawing the game here?
+}
+
+
+//==============================================================================
+// UNLOCKS
+//==============================================================================
+
+static bool lumberjackChoUnlocked()
+{
+    return false;
+}
+
+static bool lumberjackSpecialUnlocked()
+{
+    return true;
 }
 
 //==============================================================================
