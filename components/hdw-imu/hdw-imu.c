@@ -97,19 +97,6 @@ int GeneralI2CGet(int device, int reg, uint8_t* data, int data_len);
 int ReadLSM6DSL(uint8_t* data, int data_len);
 
 //==============================================================================
-// Function Prototypes
-//==============================================================================
-
-esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
-esp_err_t deInitAccelerometer(void);
-esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
-esp_err_t accelGetQuaternion(float* q);
-esp_err_t accelIntegrate(void);
-float accelGetStdDevInCal(void);
-void accelSetRegistersAndReset(void);
-
-//==============================================================================
 // Utility Functions
 //==============================================================================
 
@@ -239,7 +226,7 @@ void mathCrossProduct(float* p, const float* a, const float* b)
  * @brief Rotate a 3D vector by a quaternion
  *
  * @param pout Pointer to the float[3] output of the rotation
- * @param q Pointer to the wzyz quaternion (float[4]) of the rotation.
+ * @param q Pointer to the wxyz quaternion (float[4]) of the rotation.
  * @param p Pointer to the float[3] of the vector to rotates.
  */
 void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p)
@@ -261,7 +248,7 @@ void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p)
  * @brief Rotate a 3D vector by the inverse of a quaternion
  *
  * @param pout Pointer to the float[3] output of the antirotation.
- * @param q Pointer to the wzyz quaternion (float[4]) opposite of the rotation.
+ * @param q Pointer to the wxyz quaternion (float[4]) opposite of the rotation.
  * @param p Pointer to the float[3] of the vector to antirotates.
  */
 void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const float* p)
@@ -417,12 +404,10 @@ int ReadLSM6DSL(uint8_t* data, int data_len)
 /**
  * @brief Initialize the IMU
  *
- * @param _i2c_port The i2c port to use for the IMU
  * @param sda The GPIO for the Serial DAta line
  * @param scl The GPIO for the Serial CLock line
  * @param pullup Either \c GPIO_PULLUP_DISABLE if there are external pullup resistors on SDA and SCL or \c
  * GPIO_PULLUP_ENABLE if internal pull-ups should be used
- * @param clkHz The frequency of the I2C clock
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
 esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
