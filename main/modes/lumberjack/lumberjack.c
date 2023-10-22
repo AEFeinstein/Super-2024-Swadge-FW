@@ -223,7 +223,7 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 
 static bool lumberjackChoUnlocked()
 {
-    return false;
+    return true;
 }
 
 static bool lumberjackSpecialUnlocked()
@@ -307,6 +307,11 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             lumberjackOnReceiveAttack(&payload);
         }
 
+        if (payload[0] == DEATH_MSG)
+        {
+            lumberjackOnReceiveDeath(payload[1] != 0x00);
+        }
+
         if (payload[0] == 0x19)
         {
             int locX      = (int)payload[1] << 0 | (uint32_t)payload[2] << 8;
@@ -340,6 +345,15 @@ void lumberjackSendAttack(uint8_t* number)
         uint8_t payload[9] = {ATTACK_MSG};
         memcpy(&payload[1], number, 8);
 
+        p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
+    }
+}
+
+void lumberjackSendDeath(bool gameover)
+{
+    if (lumberjack->networked)
+    {
+        const uint8_t payload[2] = {DEATH_MSG, (gameover ? 0x01 : 0x00)};
         p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
     }
 }

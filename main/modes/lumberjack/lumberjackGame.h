@@ -28,9 +28,12 @@ void lumberjackTitleDisplayText(char* string, int locationX, int locationY);
 void baseMode(int64_t elapsedUs);
 void lumberjackSendAttack(uint8_t* number);
 void lumberjackOnReceiveAttack(uint8_t* attack);
+void lumberjackOnReceiveDeath(bool gameover);
 void lumberjackGameReady(void);
 void lumberjackPlayGame(void);
 void lumberjackSendGo(void);
+void lumberjackSendDeath(bool gameover);
+
 
 void lumberjackUseBlock(void);
 

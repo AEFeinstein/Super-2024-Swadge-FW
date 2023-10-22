@@ -121,8 +121,8 @@ typedef struct
     int enemy7Count;
     int enemy8Count;
 
-    int attackQueue[8];
-    int receiveQueue[8];
+    uint8_t attackQueue[8];
+    uint8_t receiveQueue[8];
 
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
@@ -134,6 +134,7 @@ typedef struct
     wsg_t subtitle_green;
     wsg_t subtitle_white;
     wsg_t gameoverSprite;
+    wsg_t gamewinSprite;
 
     lumberjackTile_t* tile;
 

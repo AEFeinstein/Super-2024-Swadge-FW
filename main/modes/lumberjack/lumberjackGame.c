@@ -120,6 +120,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     }
 
     loadWsg("lumbers_game_over.wsg", &lumv->gameoverSprite, true);
+    if (lumv->lumberjackMain->networked) loadWsg("lumbers_game_over_win.wsg", &lumv->gamewinSprite, true);
 
     //ESP_LOGI(LUM_TAG, "Loading floor Tiles");
     loadWsg("bottom_floor1.wsg", &lumv->floorTiles[0], true);
@@ -646,7 +647,6 @@ void lumberjackGameLoop(int64_t elapsedUs)
             switchToSwadgeMode(&lumberjackMode);                 
         }
     }
-    ESP_LOGI(LUM_TAG, "Time remaining %d %d",lumv->itemBlockTime, lumv->waterSpeed);
 
     //if panic mode do water
     if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING && lumv->gameType == LUMBERJACK_MODE_PANIC)
@@ -762,11 +762,22 @@ void baseMode(int64_t elapsedUs)
 
         if (lumv->localPlayer->onGround && lumv->hasWon)
         {
-            ESP_LOGI(LUM_TAG, "%ld ", (long)lumv->levelTime);
-            lumv->gameState          = LUMBERJACK_GAMESTATE_WINNING;
-            lumv->localPlayer->state = LUMBERJACK_VICTORY;
-            lumv->levelTime          = 0;
-            lumv->levelIndex++;
+            lumv->localPlayer->flipped = 1;
+            if (lumv->lumberjackMain->networked)
+            {
+                lumv->localPlayer->state = LUMBERJACK_VICTORY;
+                lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
+                lumv->transitionTimer = 400;
+            }
+            else
+            {
+                lumv->gameState          = LUMBERJACK_GAMESTATE_WINNING;
+                lumv->localPlayer->state = LUMBERJACK_VICTORY;
+                lumv->levelTime          = 0;
+                lumv->levelIndex++;
+            }
+
+
         }
     }
 
@@ -777,7 +788,7 @@ void baseMode(int64_t elapsedUs)
 
     if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
-        lumberjackSpawnCheck(elapsedUs);
+        if (false == lumv->hasWon) lumberjackSpawnCheck(elapsedUs);
     }
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
@@ -1019,11 +1030,17 @@ void lumberjackOnLocalPlayerDeath(void)
         if (lumv->ghost != NULL && lumv->ghost->active)
             lumv->ghost->currentFrame = 0;
 
-        ESP_LOGI(LUM_TAG, "Game over!");
         lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
         lumv->transitionTimer = 400;
     }
+
+    if (lumv->lumberjackMain->networked)
+    {
+        lumberjackSendDeath(lumv->lives <= 0);
+
+    }
 }
+
 
 void DrawTitle(void)
 {
@@ -1163,7 +1180,14 @@ void DrawGame(void)
 
     if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
     {
-        drawWsgSimple(&lumv->gameoverSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
+        if (lumv->hasWon)
+        {
+            drawWsgSimple(&lumv->gamewinSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
+        }
+        else
+        {
+            drawWsgSimple(&lumv->gameoverSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
+        }
     }
 
     //
@@ -1349,6 +1373,23 @@ void lumberjackOnReceiveAttack(uint8_t* attack)
     }
 }
 
+void lumberjackOnReceiveDeath(bool gameover)
+{
+    ESP_LOGI(LUM_TAG, "Player died! Haha");
+
+    if (gameover)
+    {
+        lumv->hasWon = true;
+
+        for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++ )
+        {
+            if (lumv->enemy[i] == NULL) continue;
+
+            lumv->enemy[i]->state = LUMBERJACK_DEAD;
+        }
+
+    }
+}
 
 void lumberjackAttackCheck(int64_t elapseUs)
 {
@@ -1964,6 +2005,10 @@ void lumberjackExitGameMode(void)
     //** FREE THE SPRITES **//
 
     freeWsg(&lumv->gameoverSprite);
+
+    if (lumv->lumberjackMain->networked) 
+        freeWsg(&lumv->gamewinSprite);
+    
 
     // Free the enemies
     for (int i = 0; i < ARRAY_SIZE(lumv->enemySprites); i++)
