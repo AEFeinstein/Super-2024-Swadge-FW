@@ -362,22 +362,32 @@ static void displayCounter(char const* counterStr)
 
 static void checkSubStr(char const* counterStr, char const* const subStr, bool digitBitmap[NUM_DIGITS], int64_t* timer)
 {
+    bool found                = false;
+    char const* curCounterStr = counterStr;
     memset(digitBitmap, false, NUM_DIGITS);
 
-    char const* subStrInCounterStr = strstr(counterStr, subStr);
-    if (subStrInCounterStr == NULL)
+    char const* subStrInCounterStr = strstr(curCounterStr, subStr);
+    while (NULL != subStrInCounterStr)
+    {
+        uint8_t startDigit = subStrInCounterStr - counterStr;
+        for (uint8_t i = 0; i < strlen(subStr); i++)
+        {
+            digitBitmap[startDigit + i] = true;
+        }
+
+        *timer = 0;
+        found  = true;
+
+        // Move curCounterStr to be one after the found str
+        curCounterStr = &subStrInCounterStr[1];
+        // Continue searching
+        subStrInCounterStr = strstr(curCounterStr, subStr);
+    }
+
+    if (!found)
     {
         *timer = EFFECT_MAX;
-        return;
     }
-
-    uint8_t startDigit = subStrInCounterStr - counterStr;
-    for (uint8_t i = 0; i < strlen(subStr); i++)
-    {
-        digitBitmap[startDigit + i] = true;
-    }
-
-    *timer = 0;
 }
 
 static void checkRainbow(char const* counterStr)

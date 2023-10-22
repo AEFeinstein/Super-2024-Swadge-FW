@@ -49,3 +49,10 @@ void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor)
 {
     WARN_UNIMPLEMENTED();
 }
+
+bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry,
+                               uint8_t hat, uint16_t buttons)
+{
+    WARN_UNIMPLEMENTED();
+    return true;
+}
