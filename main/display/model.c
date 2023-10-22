@@ -12,17 +12,23 @@
 #include "shapes.h"
 #include "palette.h"
 
+// If defined, the stack will be used to allocate vert/tri buffers, otherwise heap is used
+//#define MODEL_USE_STACK
+
 // do a funky typedef so we can still define trimap as a 2D array
 typedef uint16_t trimap_t[3];
 
 // Variables
-static uint16_t* verts_out = NULL;
+#ifndef MODEL_USE_STACK
+static int16_t* verts_out = NULL;
 static trimap_t* trimap = NULL;
+#endif
 
 // Static Function Prototypes
 static void intcross(int* p, const int* a, const int* b);
 static int zcompare(const int16_t *a, const int16_t* b);
 static unsigned julery_isqrt(unsigned long val);
+static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces);
 
 // Function Definitions
 static void intcross(int* p, const int* a, const int* b)
@@ -36,7 +42,7 @@ static void intcross(int* p, const int* a, const int* b)
 
 static int zcompare(const int16_t *a, const int16_t* b)
 {
-	return a[0] - b[0];
+	return (a[0] - b[0]) ? (a[0] - b[0]) : ((a[2] >> 8) - (b[2] >> 8));
 }
 
 static unsigned julery_isqrt(unsigned long val) {
@@ -50,6 +56,45 @@ static unsigned julery_isqrt(unsigned long val) {
     return g;
 }
 
+/**
+ * @brief Count and return the total number of vertices and faces in a scene
+ *
+ * @param scene The scene to count
+ * @param[out] verts A pointer to a uint16_t to be set to the total number of vertices
+ * @param[out] faces A pointer to a uint16_t to be set to the total number of faces
+ */
+static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces)
+{
+    uint16_t totalVerts = 0;
+    uint16_t totalTris = 0;
+
+    for (uint8_t i = 0; i < scene->modelCount; i++)
+    {
+        const modelPos_t* modelPos = &scene->models[i];
+        if (NULL != modelPos->model)
+        {
+            uint16_t prevVerts = totalVerts;
+            uint16_t prevTris = totalTris;
+            totalVerts += modelPos->model->vertCount;
+            totalTris += modelPos->model->triCount;
+
+            if (totalVerts < prevVerts || totalTris < prevTris)
+            {
+                // Detect integer rollover and abort
+                ESP_LOGE("Model",
+                         "Too many verts/faces in scene: %" PRIu16 " + %" PRIu16 " verts"
+                         " or %" PRIu16 " + %" PRIu16 " faces rolled over",
+                         prevVerts, modelPos->model->vertCount,
+                         prevTris, modelPos->model->triCount);
+                return;
+            }
+        }
+    }
+
+    *verts = totalVerts;
+    *faces = totalTris;
+}
+
 void initRenderer(const model_t* model)
 {
     initRendererCustom(model->vertCount, model->triCount);
@@ -57,23 +102,36 @@ void initRenderer(const model_t* model)
 
 void initRendererCustom(uint16_t maxVerts, uint16_t maxFaces)
 {
+#ifdef MODEL_USE_STACK
+    ESP_LOGI("Model", "Using stack for verts and faces! Woo");
+#else
     // Free any existing buffers
     deinitRenderer();
 
     ESP_LOGI("Model", "Allocating %" PRIu64 " bytes for verts and faces", (uint64_t)((maxVerts + maxFaces) * 3 * sizeof(uint16_t)));
 
     // Allocate the new buffers
-    verts_out = malloc(maxVerts * 3 * sizeof(uint16_t));
+    verts_out = malloc(maxVerts * 3 * sizeof(int16_t));
     trimap = malloc(maxFaces * 3 * sizeof(uint16_t));
 
     if (verts_out == NULL || trimap == NULL)
     {
         ESP_LOGI("Model", "Renderer could not allocate the buffers :(");
     }
+#endif
+}
+
+void initRendererScene(const scene_t* scene)
+{
+    uint16_t totalVerts = 0;
+    uint16_t totalTris = 0;
+    countScene(scene, &totalVerts, &totalTris);
+    initRendererCustom(totalVerts, totalTris);
 }
 
 void deinitRenderer(void)
 {
+#ifndef MODEL_USE_STACK
     if (NULL != verts_out)
     {
         free(verts_out);
@@ -85,137 +143,181 @@ void deinitRenderer(void)
         free(trimap);
         trimap = NULL;
     }
+#endif
 }
 
 void drawModel(const model_t* model, float orient[4], float scale, float translate[3], uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
-    float plusy[3] = { 0, 1, 0 };
+    scene_t scene;
+    scene.models[0].model = model;
+    scene.modelCount = 1;
+    memcpy(scene.models[0].orient, orient, sizeof(float) * 4);
+    scene.models[0].scale = scale;
+    memcpy(scene.models[0].translate, translate, sizeof(float) * 3);
 
-	// Produce a model matrix from a quaternion.
-	float plusx_out[3] = { 0.9 * scale, 0, 0 };
-	float plusy_out[3] = { 0, 0.9 * scale, 0 };
-	float plusz_out[3] = { 0, 0, 0.9 * scale };
-	mathRotateVectorByQuaternion( plusy, orient, plusy );
-	mathRotateVectorByQuaternion( plusy_out, orient, plusy_out );
-	mathRotateVectorByQuaternion( plusx_out, orient, plusx_out );
-	mathRotateVectorByQuaternion( plusz_out, orient, plusz_out );
+    drawScene(&scene, x, y, w, h);
+}
 
-	int i, vertices = 0;
-    for( i = 0; i < model->vertCount; i++ )
-	{
-		// Performing the transform this way is about 700us.
-        float bx = 1.0 * model->verts[i][0] + translate[0];
-		float by = 1.0 * model->verts[i][1] + translate[1];
-		float bz = 1.0 * model->verts[i][2] + translate[2];
+void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+{
+#ifdef MODEL_USE_STACK
+    uint16_t maxVerts, maxTris;
+    countScene(scene, &maxVerts, &maxTris);
+    int16_t verts_out[maxVerts * 3];
+    trimap_t trimap[maxTris];
+#endif
 
-		float xlvert[3] = {
-			bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
-			bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
-			bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]
-        };
+    int vertices = 0;
+    int totalTrisThisFrame = 0;
+    int i;
 
-		verts_out[vertices*3+0] = x + xlvert[0] + w/2;
-        // Convert from right-handed to left-handed coordinate frame.
-		verts_out[vertices*3+1] = y - xlvert[1] + h/2;
-		verts_out[vertices*3+2] = xlvert[2];
-		vertices++;
-	}
-
-    if (model->triCount > 0)
+    for (uint8_t modelNum = 0; modelNum < scene->modelCount; modelNum++)
     {
-        // Draw model with shaded triangles
-        int totalTrisThisFrame = 0;
+        const modelPos_t* modelPos = &scene->models[modelNum];
+        const model_t* model = modelPos->model;
+        ESP_LOGI("Model", "modelNum = %" PRIu8 " and translate is %.2f, %.2f, %.2f", modelNum, modelPos->translate[0], modelPos->translate[1], modelPos->translate[2]);
 
-        for( i = 0; i < model->triCount; i++)
+        if (NULL == model)
         {
-            int tv1 = model->tris[i].verts[0] * 3;
-            int tv2 = model->tris[i].verts[1] * 3;
-            int tv3 = model->tris[i].verts[2] * 3;
-            int col = model->tris[i].color;
-
-            int diff1[3] = {
-                verts_out[tv3+0] - verts_out[tv1+0],
-                verts_out[tv3+1] - verts_out[tv1+1],
-                verts_out[tv3+2] - verts_out[tv1+2] };
-            int diff2[3] = {
-                verts_out[tv2+0] - verts_out[tv1+0],
-                verts_out[tv2+1] - verts_out[tv1+1],
-                verts_out[tv2+2] - verts_out[tv1+2] };
-
-            // If we didn't need the normal, could do cross faster. int crossproduct = diff1[1] * diff2[0] - diff1[0] * diff2[1];
-
-            int icrp[3];
-            intcross( icrp, diff1, diff2 );
-            if( icrp[2] < 0 ) continue;
-            int z = verts_out[tv1+2] + verts_out[tv2+2] + verts_out[tv3+2];
-
-            int b = col % 6;
-            int g = ( col / 6 ) % 6;
-            int r = ( col / 36 ) % 6;
-
-            //float fcrp[3] = { icrp[0], icrp[1], icrp[2] };
-            int crpscalar = julery_isqrt( icrp[0] * icrp[0] + icrp[1] * icrp[1] + icrp[2] * icrp[2] );
-
-            // TODO: This is probably not the root cause of the issue
-            if (crpscalar == 0)
-            {
-                crpscalar = 1;
-            }
-
-            icrp[0] = ( 1024 * icrp[0] ) / crpscalar;
-            icrp[1] = ( 1024 * icrp[1] ) / crpscalar;
-            icrp[2] = ( 1024 * icrp[2] ) / crpscalar;
-
-            int isum = icrp[0] - icrp[1] + icrp[2];
-
-            r = ( r * ( ( isum ) + 1200 ) * 100 ) >> 18;
-            g = ( g * ( ( isum ) + 1200 ) * 100 ) >> 18;
-            b = ( b * ( ( isum ) + 1200 ) * 100 ) >> 18;
-
-            if( r < 0 ) r = 0;
-            if( g < 0 ) g = 0;
-            if( b < 0 ) b = 0;
-            if( r > 5 ) r = 5;
-            if( g > 5 ) g = 5;
-            if( b > 5 ) b = 5;
-
-            trimap[totalTrisThisFrame][0] = z;
-            trimap[totalTrisThisFrame][1] = i;
-            trimap[totalTrisThisFrame][2] = r * 36 + g * 6 + b;
-            totalTrisThisFrame++;
+            // no model no render!
+            continue;
         }
 
-        qsort(trimap, totalTrisThisFrame, sizeof( trimap[0] ), (void*)zcompare );
+        float plusy[3] = { 0, 1, 0 };
 
-        for( i = 0; i < totalTrisThisFrame; i++)
+        // Produce a model matrix from a quaternion.
+        float plusx_out[3] = { 0.9 * modelPos->scale, 0, 0 };
+        float plusy_out[3] = { 0, 0.9 * modelPos->scale, 0 };
+        float plusz_out[3] = { 0, 0, 0.9 * modelPos->scale };
+        mathRotateVectorByQuaternion( plusy, modelPos->orient, plusy );
+        mathRotateVectorByQuaternion( plusy_out, modelPos->orient, plusy_out );
+        mathRotateVectorByQuaternion( plusx_out, modelPos->orient, plusx_out );
+        mathRotateVectorByQuaternion( plusz_out, modelPos->orient, plusz_out );
+
+        for( i = 0; i < model->vertCount; i++ )
         {
-            int j = trimap[i][1];
-            int tv1 = model->tris[j].verts[0]*3;
-            int tv2 = model->tris[j].verts[1]*3;
-            int tv3 = model->tris[j].verts[2]*3;
-            int tcol = trimap[i][2];
+            // Performing the transform this way is about 700us.
+            float bx = 1.0 * model->verts[i][0] + modelPos->translate[0];
+            float by = 1.0 * model->verts[i][1] + modelPos->translate[1];
+            float bz = 1.0 * model->verts[i][2] + modelPos->translate[2];
 
-            drawTriangleOutlined(
-                verts_out[tv1+0], verts_out[tv1+1],
-                verts_out[tv2+0], verts_out[tv2+1],
-                verts_out[tv3+0], verts_out[tv3+1],
-                tcol, tcol );
+            float xlvert[3] = {
+                bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
+                bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
+                bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]
+            };
+
+            verts_out[vertices*3+0] = x + xlvert[0] + w/2;
+            // Convert from right-handed to left-handed coordinate frame.
+            verts_out[vertices*3+1] = y - xlvert[1] + h/2;
+            verts_out[vertices*3+2] = xlvert[2];
+            vertices++;
+        }
+
+        if (model->triCount > 0)
+        {
+            // Draw model with shaded triangles
+            for( i = 0; i < model->triCount; i++)
+            {
+                int tv1 = model->tris[i].verts[0] * 3;
+                int tv2 = model->tris[i].verts[1] * 3;
+                int tv3 = model->tris[i].verts[2] * 3;
+                int col = model->tris[i].color;
+
+                int diff1[3] = {
+                    verts_out[tv3+0] - verts_out[tv1+0],
+                    verts_out[tv3+1] - verts_out[tv1+1],
+                    verts_out[tv3+2] - verts_out[tv1+2] };
+                int diff2[3] = {
+                    verts_out[tv2+0] - verts_out[tv1+0],
+                    verts_out[tv2+1] - verts_out[tv1+1],
+                    verts_out[tv2+2] - verts_out[tv1+2] };
+
+                // If we didn't need the normal, could do cross faster. int crossproduct = diff1[1] * diff2[0] - diff1[0] * diff2[1];
+
+                int icrp[3];
+                intcross( icrp, diff1, diff2 );
+                if( icrp[2] < 0 ) continue;
+                int z = verts_out[tv1+2] + verts_out[tv2+2] + verts_out[tv3+2];
+
+                int b = col % 6;
+                int g = ( col / 6 ) % 6;
+                int r = ( col / 36 ) % 6;
+
+                //float fcrp[3] = { icrp[0], icrp[1], icrp[2] };
+                int crpscalar = julery_isqrt( icrp[0] * icrp[0] + icrp[1] * icrp[1] + icrp[2] * icrp[2] );
+
+                // TODO: This is probably not the root cause of the issue
+                if (crpscalar == 0)
+                {
+                    crpscalar = 1;
+                }
+
+                icrp[0] = ( 1024 * icrp[0] ) / crpscalar;
+                icrp[1] = ( 1024 * icrp[1] ) / crpscalar;
+                icrp[2] = ( 1024 * icrp[2] ) / crpscalar;
+
+                int isum = icrp[0] - icrp[1] + icrp[2];
+
+                r = ( r * ( ( isum ) + 1200 ) * 100 ) >> 18;
+                g = ( g * ( ( isum ) + 1200 ) * 100 ) >> 18;
+                b = ( b * ( ( isum ) + 1200 ) * 100 ) >> 18;
+
+                if( r < 0 ) r = 0;
+                if( g < 0 ) g = 0;
+                if( b < 0 ) b = 0;
+                if( r > 5 ) r = 5;
+                if( g > 5 ) g = 5;
+                if( b > 5 ) b = 5;
+
+                trimap[totalTrisThisFrame][0] = z;
+                trimap[totalTrisThisFrame][1] = i;
+                // Pack the model number into the unused top byte of trimap[][2] for now
+                trimap[totalTrisThisFrame][2] = (modelNum << 8) | ((r * 36 + g * 6 + b) & 0xFF);
+                totalTrisThisFrame++;
+            }
+        }
+        else if (model->lineCount > 0)
+        {
+            // Draw wireframe with lines
+            for (i = 0; i < model->lineCount; i++)
+            {
+                uint16_t v1 = model->lines[i][0] * 3;
+                uint16_t v2 = model->lines[i][1] * 3;
+
+                float col = verts_out[v1 + 2] / 2000 + 8;
+                if (col > 5)
+                    col = 5;
+                else if (col < 0)
+                    continue;
+                drawLineFast(verts_out[v1], verts_out[v1 + 1], verts_out[v2], verts_out[v2 + 1], col);
+            }
         }
     }
-    else if (model->lineCount > 0)
-    {
-        // Draw wireframe with lines
-        for (i = 0; i < model->lineCount; i++)
-        {
-            uint16_t v1 = model->lines[i][0] * 3;
-            uint16_t v2 = model->lines[i][1] * 3;
 
-            float col = verts_out[v1 + 2] / 2000 + 8;
-            if (col > 5)
-                col = 5;
-            else if (col < 0)
-                continue;
-            drawLineFast(verts_out[v1], verts_out[v1 + 1], verts_out[v2], verts_out[v2 + 1], col);
-        }
+    // Sort all faces by Z-index, then by model number
+    qsort(trimap, totalTrisThisFrame, sizeof( trimap[0] ), (void*)zcompare );
+
+    for( i = 0; i < totalTrisThisFrame; i++)
+    {
+        // Get the face index
+        int j = trimap[i][1];
+
+        // Extract the model number from the top byte of trimap[][2]
+        const model_t* model = scene->models[(trimap[i][2] >> 8) & 0xFF].model;
+        //ESP_LOGI("Model", "modelNum is %" PRIu16, (trimap[i][2] >> 8) & 0xFF);
+
+        int tv1 = model->tris[j].verts[0]*3;
+        int tv2 = model->tris[j].verts[1]*3;
+        int tv3 = model->tris[j].verts[2]*3;
+
+        // Use only the low byte of trimap[][2] for color
+        int tcol = trimap[i][2] & 0xFF;
+
+        drawTriangleOutlined(
+            verts_out[tv1+0], verts_out[tv1+1],
+            verts_out[tv2+0], verts_out[tv2+1],
+            verts_out[tv3+0], verts_out[tv3+1],
+            tcol, tcol );
     }
 }
