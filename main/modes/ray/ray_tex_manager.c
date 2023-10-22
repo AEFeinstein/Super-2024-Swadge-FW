@@ -33,6 +33,7 @@
  */
 void loadEnvTextures(ray_t* ray)
 {
+    // Load a portrait for dialogs
     loadWsg("CHO_PORTRAIT.wsg", &ray->portrait, true);
 
     // Load HUD textures
@@ -47,17 +48,14 @@ void loadEnvTextures(ray_t* ray)
     // Types are 8 bit, non sequential, so allocate a 256 element array. Probably too many
     ray->typeToIdxMap = heap_caps_calloc(256, sizeof(uint8_t), MALLOC_CAP_SPIRAM);
 
-    // Load everything by type!
-
-    // Environments
-    LOAD_TEXTURE(ray, BG_FLOOR_WATER);
-    LOAD_TEXTURE(ray, BG_FLOOR_LAVA);
+    // String buffer to load filenames
+    char fName[32];
 
     // MUST be in the same order as rayEnv_t
     const char* const env_types[] = {"BASE", "CAVE", "JUNGLE"};
     // MUST be in the same order as rayEnvTex_t
     const char* const env_texes[] = {"WALL_1", "WALL_2", "WALL_3", "WALL_4", "WALL_5", "FLOOR", "CEILING"};
-    char fName[32];
+    // Load all environment textures
     for (rayEnv_t e = 0; e < NUM_ENVS; e++)
     {
         for (rayEnvTex_t t = 0; t < NUM_ENV_TEXES; t++)
@@ -66,6 +64,29 @@ void loadEnvTextures(ray_t* ray)
             loadWsg(fName, &ray->envTex[e][t], true);
         }
     }
+
+    // MUST be in teh same order as rayMapCellType_t
+    const char* const enemyTypes[] = {"NORMAL", "STRONG", "ARMORED", "FLAMING", "HIDDEN", "BOSS"};
+    // MUST be int the same order as rayEnemyState_t
+    const char* const enemyAnimations[] = {"WALK", "SHOOT", "HURT", "BLOCK", "DEAD"};
+    // Load all enemy textures
+    for (int32_t eIdx = 0; eIdx < NUM_ENEMIES; eIdx++)
+    {
+        for (rayEnemyState_t aIdx = 0; aIdx < E_NUM_STATES; aIdx++)
+        {
+            for (int32_t fIdx = 0; fIdx < NUM_NON_WALK_FRAMES; fIdx++)
+            {
+                snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%d.wsg", enemyTypes[eIdx], enemyAnimations[aIdx], fIdx);
+                loadWsg(fName, &ray->enemyTex[eIdx][aIdx][fIdx], true);
+            }
+        }
+    }
+
+    // Load textures by
+
+    // Special floor tiles
+    LOAD_TEXTURE(ray, BG_FLOOR_WATER);
+    LOAD_TEXTURE(ray, BG_FLOOR_LAVA);
 
     // Doors
     LOAD_TEXTURE(ray, BG_DOOR);
@@ -185,6 +206,18 @@ void freeAllTex(ray_t* ray)
         for (rayEnvTex_t t = 0; t < NUM_ENV_TEXES; t++)
         {
             freeWsg(&ray->envTex[e][t]);
+        }
+    }
+
+    // Free all enemy textures
+    for (int32_t eIdx = 0; eIdx < NUM_ENEMIES; eIdx++)
+    {
+        for (int32_t aIdx = 0; aIdx < E_NUM_STATES; aIdx++)
+        {
+            for (int32_t fIdx = 0; fIdx < NUM_NON_WALK_FRAMES; fIdx++)
+            {
+                freeWsg(&ray->enemyTex[eIdx][aIdx][fIdx]);
+            }
         }
     }
 

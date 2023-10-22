@@ -246,17 +246,26 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, in
     // Allocate the enemy
     rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
 
-    // Copy enemy data from the template (sprite indices, type)
-    memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
+    // Set initial enemy state
+    newObj->health         = 100;
+    newObj->state          = E_WALKING;
+    newObj->behavior       = DOING_NOTHING;
+    newObj->behaviorTimer  = 0;
+    newObj->animTimer      = 0;
+    newObj->animTimerLimit = 250000;
+    newObj->animFrame      = 0;
+    newObj->sprites        = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
+
+    // Set initial common state
+    newObj->c.sprite         = newObj->sprites[E_WALKING][0];
+    newObj->c.posX           = TO_FX(x) + TO_FX_FRAC(1, 2);
+    newObj->c.posY           = TO_FX(y) + TO_FX_FRAC(1, 2);
+    newObj->c.radius         = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
+    newObj->c.type           = type;
+    newObj->c.id             = id;
+    newObj->c.spriteMirrored = false;
+
     // TODO randomize offset timer to not all move and shoot in lockstep
-
-    // Set ID
-    newObj->c.id = id;
-
-    // Set spatial values
-    newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-    newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-    newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
 
     // Add it to the linked list
     push(&ray->enemies, newObj);

@@ -87,7 +87,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         if (animateEnemy(enemy, elapsedUs))
         {
             // Enemy was killed
-            checkScriptKill(ray, enemy->c.id, enemy->walkSprites[0]);
+            checkScriptKill(ray, enemy->c.id, &enemy->sprites[0][E_WALKING][0]);
 
             // save the next node
             node_t* nextNode = currentNode->next;
@@ -148,37 +148,13 @@ void rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
         // Switch to the new state
         enemy->state          = newState;
         enemy->animTimer      = 0;
-        enemy->animTimerFrame = 0;
+        enemy->animFrame      = 0;
         enemy->animTimerLimit = 250000;
         // Pick the sprites
-        switch (newState)
+        enemy->c.sprite = &enemy->sprites[0][newState][0];
+        if (E_SHOOTING == newState)
         {
-            case E_WALKING:
-            {
-                enemy->c.sprite = enemy->walkSprites[0];
-                break;
-            }
-            case E_SHOOTING:
-            {
-                enemy->c.sprite       = enemy->shootSprites[0];
-                enemy->animTimerLimit = 100000;
-                break;
-            }
-            case E_HURT:
-            {
-                enemy->c.sprite = enemy->hurtSprites[0];
-                break;
-            }
-            case E_BLOCKING:
-            {
-                enemy->c.sprite = enemy->blockSprites[0];
-                break;
-            }
-            case E_DEAD:
-            {
-                enemy->c.sprite = enemy->deadSprites[0];
-                break;
-            }
+            enemy->animTimerLimit = 100000;
         }
     }
 }
@@ -201,46 +177,16 @@ static bool animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs)
         enemy->animTimer -= enemy->animTimerLimit;
 
         // Pick the sprites and limits based on the state
-        int32_t limit   = NUM_WALK_FRAMES;
-        wsg_t** sprites = enemy->walkSprites;
-        switch (enemy->state)
+        int32_t limit = NUM_NON_WALK_FRAMES;
+        if (E_WALKING == enemy->state)
         {
-            case E_WALKING:
-            {
-                limit   = NUM_WALK_FRAMES;
-                sprites = enemy->walkSprites;
-                break;
-            }
-            case E_SHOOTING:
-            {
-                limit   = NUM_NON_WALK_FRAMES;
-                sprites = enemy->shootSprites;
-                break;
-            }
-            case E_BLOCKING:
-            {
-                limit   = NUM_NON_WALK_FRAMES;
-                sprites = enemy->blockSprites;
-                break;
-            }
-            case E_HURT:
-            {
-                limit   = NUM_NON_WALK_FRAMES;
-                sprites = enemy->hurtSprites;
-                break;
-            }
-            case E_DEAD:
-            {
-                limit   = NUM_NON_WALK_FRAMES;
-                sprites = enemy->deadSprites;
-                break;
-            }
+            limit = NUM_WALK_FRAMES;
         }
 
         // Increment to the next frame
-        enemy->animTimerFrame++;
+        enemy->animFrame++;
         // If the animation is over
-        if (enemy->animTimerFrame >= limit)
+        if (enemy->animFrame >= limit)
         {
             if (E_DEAD == enemy->state)
             {
@@ -256,14 +202,14 @@ static bool animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs)
         else
         {
             // Not past the limit, but If the frame is past the number of frames
-            if (enemy->animTimerFrame >= NUM_NON_WALK_FRAMES)
+            if (enemy->animFrame >= NUM_NON_WALK_FRAMES)
             {
                 // Mirror it and start over
                 enemy->c.spriteMirrored = !enemy->c.spriteMirrored;
-                enemy->animTimerFrame   = 0;
+                enemy->animFrame        = 0;
             }
             // Pick the next sprite
-            enemy->c.sprite = sprites[enemy->animTimerFrame];
+            enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
         }
     }
     return false;

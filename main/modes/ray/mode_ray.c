@@ -109,9 +109,6 @@ static void rayEnterMode(void)
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
 
-    // Initialize enemy templates and textures
-    initEnemyTemplates(ray);
-
     // Set the menu as the screen
     ray->screen = RAY_MENU;
 

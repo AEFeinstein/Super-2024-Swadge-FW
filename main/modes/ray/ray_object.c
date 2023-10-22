@@ -23,62 +23,6 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs);
 //==============================================================================
 
 /**
- * @brief Initialize templates for enemy creation. This also loads enemy sprites
- *
- * @param ray The entire game state
- */
-void initEnemyTemplates(ray_t* ray)
-{
-    // The names of the different types of enemies
-    const char* eTypes[] = {
-        "NORMAL", "STRONG", "ARMORED", "FLAMING", "HIDDEN", "BOSS",
-    };
-
-    // The types of enemies
-    const rayMapCellType_t types[] = {
-        OBJ_ENEMY_NORMAL, OBJ_ENEMY_STRONG, OBJ_ENEMY_ARMORED, OBJ_ENEMY_FLAMING, OBJ_ENEMY_HIDDEN, OBJ_ENEMY_BOSS,
-    };
-
-    // An empty buffer to build strings
-    char buf[64] = {0};
-
-    // For each enemy type
-    for (int32_t eIdx = 0; eIdx < ARRAY_SIZE(ray->eTemplates); eIdx++)
-    {
-        // Set the type
-        ray->eTemplates[eIdx].c.type = types[eIdx];
-
-        // Set the health
-        ray->eTemplates[eIdx].health = 100;
-
-        // Set the state and behavior
-        rayEnemyTransitionState(&ray->eTemplates[eIdx], E_WALKING);
-        ray->eTemplates[eIdx].behavior = DOING_NOTHING;
-
-        // Set the time for each animation state
-        ray->eTemplates[eIdx].animTimerLimit = 250000;
-
-        // Load textures for all states
-        for (int32_t frIdx = 0; frIdx < ARRAY_SIZE(ray->eTemplates->hurtSprites); frIdx++)
-        {
-            // Load the textures
-            snprintf(buf, sizeof(buf) - 1, "E_%s_WALK_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].walkSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_SHOOT_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].shootSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_HURT_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].hurtSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_BLOCK_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].blockSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_DEAD_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].deadSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-        }
-        // Set initial texture
-        ray->eTemplates[eIdx].c.sprite = ray->eTemplates[eIdx].walkSprites[0];
-    }
-}
-
-/**
  * @brief Create a bullet with an owner, type, position, and velocity
  *
  * @param ray The entire game state

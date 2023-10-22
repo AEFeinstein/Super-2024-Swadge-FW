@@ -50,8 +50,11 @@
 /** The time to swap out and swap in a gun, in microseconds */
 #define LOADOUT_TIMER_US (1 << 18)
 
-/** THe blink time for pause and dialog items */
+/** The blink time for pause and dialog items */
 #define BLINK_US 500000
+
+/** The number of distinct enemies */
+#define NUM_ENEMIES (OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL + 1)
 
 /**
  * @brief Helper macro to check if a cell is of a given type
@@ -151,11 +154,12 @@ typedef enum __attribute__((packed))
  */
 typedef enum
 {
-    E_WALKING,  ///< The enemy is walking
-    E_SHOOTING, ///< The enemy is shooting (may move while shooting)
-    E_HURT,     ///< The enemy was shot
-    E_BLOCKING, ///< The enemy is blocking
-    E_DEAD,     ///< The enemy is dead
+    E_WALKING,    ///< The enemy is walking
+    E_SHOOTING,   ///< The enemy is shooting (may move while shooting)
+    E_HURT,       ///< The enemy was shot
+    E_BLOCKING,   ///< The enemy is blocking
+    E_DEAD,       ///< The enemy is dead
+    E_NUM_STATES, ///< The number of enemy states
 } rayEnemyState_t;
 
 typedef enum
@@ -462,19 +466,15 @@ typedef struct
  */
 typedef struct
 {
-    rayObjCommon_t c;                         ///< Common object properties
-    int32_t health;                           ///< The enemy's health
-    rayEnemyState_t state;                    ///< This enemy's current state
-    rayEnemyBehavior_t behavior;              ///< What the enemy is currently doing
-    uint32_t behaviorTimer;                   ///< A timer used for this enemy's behaviors
-    uint32_t animTimer;                       ///< A timer used for this enemy's animations
-    uint32_t animTimerLimit;                  ///< The time at which the texture should switch
-    uint32_t animTimerFrame;                  ///< The current animation frame
-    wsg_t* walkSprites[NUM_NON_WALK_FRAMES];  ///< The walking sprites for this enemy
-    wsg_t* shootSprites[NUM_NON_WALK_FRAMES]; ///< The shooting sprites for this enemy
-    wsg_t* hurtSprites[NUM_NON_WALK_FRAMES];  ///< The getting shot sprites for this enemy
-    wsg_t* blockSprites[NUM_NON_WALK_FRAMES]; ///< The blocking sprites for this enemy
-    wsg_t* deadSprites[NUM_NON_WALK_FRAMES];  ///< The dying sprites for this enemy
+    rayObjCommon_t c;                                    ///< Common object properties
+    int32_t health;                                      ///< The enemy's health
+    rayEnemyState_t state;                               ///< This enemy's current state
+    rayEnemyBehavior_t behavior;                         ///< What the enemy is currently doing
+    uint32_t behaviorTimer;                              ///< A timer used for this enemy's behaviors
+    uint32_t animTimer;                                  ///< A timer used for this enemy's animations
+    uint32_t animTimerLimit;                             ///< The time at which the texture should switch
+    uint32_t animFrame;                                  ///< The current animation frame
+    wsg_t (*sprites)[E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< All of this enemy's sprites
 } rayEnemy_t;
 
 /**
@@ -574,8 +574,7 @@ typedef struct
     wsg_t guns[NUM_LOADOUTS];              ///< Textures for the HUD guns
     wsg_t portrait;                        ///< A portrait used for text dialogs
     wsg_t missileHUDicon;                  ///< A missile icon drawn in the HUD
-
-    rayEnemy_t eTemplates[6]; ///< Enemy type templates, copied when initializing enemies
+    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< The enemy textures
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu
