@@ -97,15 +97,6 @@ LSM6DSLData LSM6DSL;
 // Utility Prototypes
 //==============================================================================
 
-float rsqrtf(float x);
-float mathsqrtf(float x);
-void mathEulerToQuat(float* q, const float* euler);
-void mathQuatApply(float* qout, const float* q1, const float* q2);
-void mathQuatNormalize(float* qout, const float* qin);
-void mathCrossProduct(float* p, const float* a, const float* b);
-void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const float* p);
-void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p);
-
 static inline uint32_t getCycleCount();
 
 esp_err_t GeneralSet(int dev, int reg, int val);
