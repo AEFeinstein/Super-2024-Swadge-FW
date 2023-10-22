@@ -14,9 +14,6 @@
 // Defines
 //==============================================================================
 
-/** Use test textures. TODO: DELETE THIS */
-#define TEST_TEX 1
-
 /** The number of total maps */
 #define NUM_MAPS 6
 /** The number of keys per map */
@@ -186,6 +183,32 @@ typedef enum
     LO_XRAY,     ///< X-Ray loadout
     NUM_LOADOUTS ///< The number of loadouts
 } rayLoadout_t;
+
+/**
+ * @brief All the possible environments
+ */
+typedef enum
+{
+    V_BASE,   ///< Sci-fi base / space station
+    V_CAVE,   ///< Cave with lava
+    V_JUNGLE, ///< Jungle with alien ruins
+    NUM_ENVS, ///< The number of environments
+} rayEnv_t;
+
+/**
+ * @brief All the possible textures per-environments
+ */
+typedef enum
+{
+    TX_WALL_1,     ///< Wall 1
+    TX_WALL_2,     ///< Wall 2
+    TX_WALL_3,     ///< Wall 3
+    TX_WALL_4,     ///< Wall 4
+    TX_WALL_5,     ///< Wall 5
+    TX_FLOOR,      ///< The floor texture
+    TX_CEILING,    ///< The ceiling texture
+    NUM_ENV_TEXES, ///< The number of per-environment textures
+} rayEnvTex_t;
 
 /**
  * @brief Types of events that trigger scripts
@@ -545,14 +568,12 @@ typedef struct
     int32_t lavaTimer;   ///< Timer to apply lava damage
     int32_t chargeTimer; ///< Timer to charge shots
 
-#ifdef TEST_TEX
-    wsg_t testTextures[8]; ///< Test textures, TODO DELETE THESE
-#endif
-    namedTexture_t* loadedTextures; ///< A list of loaded textures
-    uint8_t* typeToIdxMap;          ///< A map of rayMapCellType_t to respective textures
-    wsg_t guns[NUM_LOADOUTS];       ///< Textures for the HUD guns
-    wsg_t portrait;                 ///< A portrait used for text dialogs
-    wsg_t missileHUDicon;           ///< A missile icon drawn in the HUD
+    namedTexture_t* loadedTextures;        ///< A list of loaded textures
+    uint8_t* typeToIdxMap;                 ///< A map of rayMapCellType_t to respective textures
+    wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES]; ///< The environment textures
+    wsg_t guns[NUM_LOADOUTS];              ///< Textures for the HUD guns
+    wsg_t portrait;                        ///< A portrait used for text dialogs
+    wsg_t missileHUDicon;                  ///< A missile icon drawn in the HUD
 
     rayEnemy_t eTemplates[6]; ///< Enemy type templates, copied when initializing enemies
 

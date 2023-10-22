@@ -97,7 +97,7 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
     // Set a pointer for textures later
     paletteColor_t* texture = NULL;
     // The ceiling texture is always this
-    paletteColor_t* ceilTexture = getTexByType(ray, BG_CEILING)->px;
+    paletteColor_t* ceilTexture = ray->envTex[ray->p.mapId % NUM_ENVS][TX_CEILING].px;
 
     // Save these to not resolve pointers later
     uint32_t mapW = ray->map.w;
@@ -197,21 +197,16 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
                     {
                         // Get the next cell texture
                         rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
-                        // Always draw floor under doors
-                        if (CELL_IS_TYPE(type, BG | DOOR))
-                        {
-                            type = BG_FLOOR;
-                        }
 
-#ifdef TEST_TEX
-                        if ((ray->p.mapId < 4) && (BG_FLOOR_LAVA != type) && (BG_FLOOR_WATER != type))
-                        {
-                            texture = ray->testTextures[ray->p.mapId * 2].px;
-                        }
-                        else
-#endif
+                        // Water and lava are special
+                        if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type))
                         {
                             texture = getTexByType(ray, type)->px;
+                        }
+                        else
+                        {
+                            // Otherwise draw normal floor for this map
+                            texture = ray->envTex[ray->p.mapId % NUM_ENVS][TX_FLOOR].px;
                         }
                     }
                     else
@@ -513,22 +508,18 @@ void castWalls(ray_t* ray)
 
         // Pick the texture based on the map tile
         paletteColor_t* tex;
+        rayMapCellType_t type = ray->map.tiles[mapX][mapY].type;
         if (xrayOverride)
         {
-            tex = getTexByType(ray, BG_WALL_1)->px;
+            tex = ray->envTex[ray->p.mapId % NUM_ENVS][TX_WALL_1].px;
+        }
+        else if (BG_WALL_1 <= type && type <= BG_WALL_5)
+        {
+            tex = ray->envTex[ray->p.mapId % NUM_ENVS][type - BG_WALL_1].px;
         }
         else
         {
-#ifdef TEST_TEX
-            if (ray->p.mapId < 4 && !CELL_IS_TYPE(ray->map.tiles[mapX][mapY].type, BG | DOOR))
-            {
-                tex = ray->testTextures[ray->p.mapId * 2 + 1].px;
-            }
-            else
-#endif
-            {
-                tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
-            }
+            tex = getTexByType(ray, type)->px;
         }
 
         // Draw a vertical strip

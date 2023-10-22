@@ -222,21 +222,21 @@ class view:
 
         # Load all textures
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR, '../../assets/ray/env/BG_FLOOR.png')
+                         tileType.BG_FLOOR, '../../assets/ray/env/BASE/BG_BASE_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_FLOOR_WATER, '../../assets/ray/env/BG_FLOOR_WATER.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_FLOOR_LAVA, '../../assets/ray/env/BG_FLOOR_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_1, '../../assets/ray/env/BG_WALL_1.png')
+                         tileType.BG_WALL_1, '../../assets/ray/env/BASE/BG_BASE_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_2, '../../assets/ray/env/BG_WALL_2.png')
+                         tileType.BG_WALL_2, '../../assets/ray/env/BASE/BG_BASE_WALL_2.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_3, '../../assets/ray/env/BG_WALL_3.png')
+                         tileType.BG_WALL_3, '../../assets/ray/env/BASE/BG_BASE_WALL_3.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_4, '../../assets/ray/env/BG_WALL_4.png')
+                         tileType.BG_WALL_4, '../../assets/ray/env/BASE/BG_BASE_WALL_4.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_5, '../../assets/ray/env/BG_WALL_5.png')
+                         tileType.BG_WALL_5, '../../assets/ray/env/BASE/BG_BASE_WALL_5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_DOOR, '../../assets/ray/doors/BG_DOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
