@@ -16,3 +16,4 @@ typedef struct ray_enemy
 void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs);
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet);
 void rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState);
+void switchEnemiesToXray(ray_t* ray, bool isXray);

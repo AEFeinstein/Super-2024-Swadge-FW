@@ -575,6 +575,7 @@ typedef struct
     wsg_t portrait;                        ///< A portrait used for text dialogs
     wsg_t missileHUDicon;                  ///< A missile icon drawn in the HUD
     wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< The enemy textures
+    wsg_t hiddenXRTex[E_NUM_STATES][NUM_NON_WALK_FRAMES];           ///< The textures for X-Ray hidden enemies
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu

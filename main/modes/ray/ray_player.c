@@ -11,6 +11,7 @@
 #include "ray_pause.h"
 #include "ray_script.h"
 #include "ray_death_screen.h"
+#include "ray_enemy.h"
 
 //==============================================================================
 // Functions
@@ -456,6 +457,16 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         {
             if (ray->p.loadout != ray->nextLoadout)
             {
+                // If swapping to or from XRAY, also swap hidden enemy sprites
+                if (LO_XRAY == ray->nextLoadout)
+                {
+                    switchEnemiesToXray(ray, true);
+                }
+                else if (LO_XRAY == ray->p.loadout)
+                {
+                    switchEnemiesToXray(ray, false);
+                }
+
                 // Swap the loadout
                 ray->p.loadout = ray->nextLoadout;
                 // Set the timer for the load in

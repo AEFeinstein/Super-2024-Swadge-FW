@@ -214,3 +214,40 @@ static bool animateEnemy(rayEnemy_t* enemy, uint32_t elapsedUs)
     }
     return false;
 }
+
+/**
+ * @brief Switch sprites for all enemies to the X-Ray alternate
+ *
+ * @param ray The entire game state
+ * @param isXray true to switch to X-Ray sprites, false to switch to normal sprites
+ */
+void switchEnemiesToXray(ray_t* ray, bool isXray)
+{
+    // Assign each enemy a distance from the player
+    node_t* currentNode = ray->enemies.first;
+    while (currentNode != NULL)
+    {
+        // Get a pointer from the linked list
+        rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
+
+        // If this is a hidden enemy
+        if (OBJ_ENEMY_HIDDEN == enemy->c.type)
+        {
+            // Switch all the sprites
+            if (isXray)
+            {
+                enemy->sprites = &ray->hiddenXRTex;
+            }
+            else
+            {
+                enemy->sprites = &ray->enemyTex[OBJ_ENEMY_HIDDEN - OBJ_ENEMY_NORMAL];
+            }
+
+            // Switch the current sprite
+            enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
+        }
+
+        // Iterate to the next node
+        currentNode = currentNode->next;
+    }
+}

@@ -78,6 +78,14 @@ void loadEnvTextures(ray_t* ray)
             {
                 snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%d.wsg", enemyTypes[eIdx], enemyAnimations[aIdx], fIdx);
                 loadWsg(fName, &ray->enemyTex[eIdx][aIdx][fIdx], true);
+
+                // Also load alt-textures for the hidden enemy
+                if (eIdx == (OBJ_ENEMY_HIDDEN - OBJ_ENEMY_NORMAL))
+                {
+                    snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%d_X.wsg", enemyTypes[eIdx], enemyAnimations[aIdx],
+                             fIdx);
+                    loadWsg(fName, &ray->hiddenXRTex[aIdx][fIdx], true);
+                }
             }
         }
     }
@@ -217,6 +225,12 @@ void freeAllTex(ray_t* ray)
             for (int32_t fIdx = 0; fIdx < NUM_NON_WALK_FRAMES; fIdx++)
             {
                 freeWsg(&ray->enemyTex[eIdx][aIdx][fIdx]);
+
+                // Also free alt-textures for the hidden enemy
+                if (eIdx == (OBJ_ENEMY_HIDDEN - OBJ_ENEMY_NORMAL))
+                {
+                    freeWsg(&ray->hiddenXRTex[aIdx][fIdx]);
+                }
             }
         }
     }
