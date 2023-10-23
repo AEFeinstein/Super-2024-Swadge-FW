@@ -86,6 +86,10 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             }
             break;
         }
+        default:
+        {
+            break;
+        }
     }
 
     if (hurt)
