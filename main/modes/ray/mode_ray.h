@@ -215,6 +215,18 @@ typedef enum
 } rayEnvTex_t;
 
 /**
+ * @brief All the possible boss states
+ */
+typedef enum
+{
+    B_MISSILE,       ///< Weak to missiles
+    B_ICE,           ///< Weak to ice
+    B_XRAY,          ///< Weak to xray
+    B_NORMAL,        ///< Weak to normal
+    NUM_BOSS_STATES, ///< The number of boss states
+} rayBossState_t;
+
+/**
  * @brief Types of events that trigger scripts
  */
 typedef enum
@@ -470,6 +482,7 @@ typedef struct
     int32_t health;                                      ///< The enemy's health
     rayEnemyState_t state;                               ///< This enemy's current state
     rayEnemyBehavior_t behavior;                         ///< What the enemy is currently doing
+    rayBossState_t bossState;                            ///< The current boss state, unused for non-boss
     uint32_t behaviorTimer;                              ///< A timer used for this enemy's behaviors
     uint32_t animTimer;                                  ///< A timer used for this enemy's animations
     uint32_t animTimerLimit;                             ///< The time at which the texture should switch
@@ -574,8 +587,9 @@ typedef struct
     wsg_t guns[NUM_LOADOUTS];              ///< Textures for the HUD guns
     wsg_t portrait;                        ///< A portrait used for text dialogs
     wsg_t missileHUDicon;                  ///< A missile icon drawn in the HUD
-    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< The enemy textures
-    wsg_t hiddenXRTex[E_NUM_STATES][NUM_NON_WALK_FRAMES];           ///< The textures for X-Ray hidden enemies
+    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_NON_WALK_FRAMES];        ///< The enemy textures
+    wsg_t hiddenXRTex[E_NUM_STATES][NUM_NON_WALK_FRAMES];                  ///< The textures for X-Ray hidden enemies
+    wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< The textures for the boss
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu
