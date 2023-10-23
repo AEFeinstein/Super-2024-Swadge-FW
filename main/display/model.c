@@ -29,6 +29,7 @@ static void intcross(int* p, const int* a, const int* b);
 static int zcompare(const int16_t *a, const int16_t* b);
 static unsigned julery_isqrt(unsigned long val);
 static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces);
+static void convertQuatToMatrix(float transform[4][4], const float rotate[4]);
 
 // Function Definitions
 static void intcross(int* p, const int* a, const int* b)
@@ -146,7 +147,8 @@ void deinitRenderer(void)
 #endif
 }
 
-void drawModel(const model_t* model, float orient[4], float scale, float translate[3], uint16_t x, uint16_t y, uint16_t w, uint16_t h)
+
+void drawModel(const model_t* model, const float orient[4], float scale, const float translate[3], uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
     scene_t scene;
     scene.models[0].model = model;
@@ -171,11 +173,26 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
     int totalTrisThisFrame = 0;
     int i;
 
+    float plusy[3] = { 0, 1, 0 };
+
+    // Produce a model matrix from a quaternion.
+    float plusx_out[3] = { 0.9, 0, 0 };
+    float plusy_out[3] = { 0, 0.9, 0 };
+    float plusz_out[3] = { 0, 0, 0.9 };
+    const float sceneOrient[4] = {1, 0, 0, 0};
+    mathRotateVectorByQuaternion( plusy, sceneOrient, plusy );
+    mathRotateVectorByQuaternion( plusy_out, sceneOrient, plusy_out );
+    mathRotateVectorByQuaternion( plusx_out, sceneOrient, plusx_out );
+    mathRotateVectorByQuaternion( plusz_out, sceneOrient, plusz_out );
+
+    // where in the vert map each model's vertices starts
+    uint16_t vertOffsets[16] = {0};
+
     for (uint8_t modelNum = 0; modelNum < scene->modelCount; modelNum++)
     {
         const modelPos_t* modelPos = &scene->models[modelNum];
         const model_t* model = modelPos->model;
-        ESP_LOGI("Model", "modelNum = %" PRIu8 " and translate is %.2f, %.2f, %.2f", modelNum, modelPos->translate[0], modelPos->translate[1], modelPos->translate[2]);
+        vertOffsets[modelNum] = vertices;
 
         if (NULL == model)
         {
@@ -219,9 +236,9 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
             // Draw model with shaded triangles
             for( i = 0; i < model->triCount; i++)
             {
-                int tv1 = model->tris[i].verts[0] * 3;
-                int tv2 = model->tris[i].verts[1] * 3;
-                int tv3 = model->tris[i].verts[2] * 3;
+                int tv1 = (vertOffsets[modelNum] + model->tris[i].verts[0]) * 3;
+                int tv2 = (vertOffsets[modelNum] + model->tris[i].verts[1]) * 3;
+                int tv3 = (vertOffsets[modelNum] + model->tris[i].verts[2]) * 3;
                 int col = model->tris[i].color;
 
                 int diff1[3] = {
@@ -282,8 +299,8 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
             // Draw wireframe with lines
             for (i = 0; i < model->lineCount; i++)
             {
-                uint16_t v1 = model->lines[i][0] * 3;
-                uint16_t v2 = model->lines[i][1] * 3;
+                uint16_t v1 = (vertOffsets[modelNum] + model->lines[i][0]) * 3;
+                uint16_t v2 = (vertOffsets[modelNum] + model->lines[i][1]) * 3;
 
                 float col = verts_out[v1 + 2] / 2000 + 8;
                 if (col > 5)
@@ -304,12 +321,13 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
         int j = trimap[i][1];
 
         // Extract the model number from the top byte of trimap[][2]
-        const model_t* model = scene->models[(trimap[i][2] >> 8) & 0xFF].model;
+        int modelNum = (trimap[i][2] >> 8) & 0xFF;
+        const model_t* model = scene->models[modelNum].model;
         //ESP_LOGI("Model", "modelNum is %" PRIu16, (trimap[i][2] >> 8) & 0xFF);
 
-        int tv1 = model->tris[j].verts[0]*3;
-        int tv2 = model->tris[j].verts[1]*3;
-        int tv3 = model->tris[j].verts[2]*3;
+        int tv1 = (vertOffsets[modelNum] + model->tris[j].verts[0])*3;
+        int tv2 = (vertOffsets[modelNum] + model->tris[j].verts[1])*3;
+        int tv3 = (vertOffsets[modelNum] + model->tris[j].verts[2])*3;
 
         // Use only the low byte of trimap[][2] for color
         int tcol = trimap[i][2] & 0xFF;
