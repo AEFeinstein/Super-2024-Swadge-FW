@@ -197,7 +197,7 @@ void deinitRenderer(void);
  * @param w The width of the window to draw the model within
  * @param h The height of the window to draw the model within
  */
-void drawModel(const model_t* model, float orient[4], float scale, float translate[3], uint16_t x, uint16_t y,
+void drawModel(const model_t* model, const float orient[4], float scale, const float translate[3], uint16_t x, uint16_t y,
                uint16_t w, uint16_t h);
 
 /**
