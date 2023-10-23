@@ -108,103 +108,104 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
             // Get the cell the bullet is in now
             rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->c.posX)][FROM_FX(obj->c.posY)];
 
-            // If a wall is it by a bullet
-            if (CELL_IS_TYPE(cell->type, BG | WALL))
+            // If the bullet hit something
+            if (!isPassableCell(cell))
             {
-                // If this was a player's bullet, check scripts
+                // If this is a player's bullet
                 if (1 == obj->c.id)
                 {
-                    checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY));
+                    // If it hit a wall
+                    if (CELL_IS_TYPE(cell->type, BG | WALL))
+                    {
+                        // Check wall scripts
+                        checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY));
+                    }
+                    // If it hit a door
+                    else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+                    {
+                        // If the door is closed
+                        if (0 == cell->doorOpen)
+                        {
+                            bool opened = false;
+                            switch (cell->type)
+                            {
+                                case BG_DOOR:
+                                {
+                                    opened = true;
+                                    break;
+                                }
+                                case BG_DOOR_CHARGE:
+                                {
+                                    opened = (OBJ_BULLET_CHARGE == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_MISSILE:
+                                {
+                                    opened = (OBJ_BULLET_MISSILE == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_ICE:
+                                {
+                                    opened = (OBJ_BULLET_ICE == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_XRAY:
+                                {
+                                    opened = (OBJ_BULLET_XRAY == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_SCRIPT:
+                                {
+                                    // Script doors aren't openable by bullets
+                                    break;
+                                }
+                                case BG_DOOR_KEY_A:
+                                case BG_DOOR_KEY_B:
+                                case BG_DOOR_KEY_C:
+                                {
+                                    // Open the door if the player has the appropriate key
+                                    opened = (KEY == ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A]);
+                                    if (opened)
+                                    {
+                                        // Mark the key as used
+                                        ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
+                                    }
+                                    break;
+                                }
+                                case BG_DOOR_ARTIFACT:
+                                {
+                                    // Check if all artifacts have been collected
+                                    opened = true;
+                                    for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(ray->p.i.artifacts); aIdx++)
+                                    {
+                                        if (!ray->p.i.artifacts[aIdx])
+                                        {
+                                            opened = false;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                }
+                                default:
+                                {
+                                    // Not a door, somehow
+                                    break;
+                                }
+                            }
+
+                            // If the door was opened
+                            if (opened)
+                            {
+                                // Start opening the door
+                                cell->openingDirection = 1;
+                            }
+                        }
+                    }
                 }
 
                 // Destroy this bullet
                 memset(obj, 0, sizeof(rayBullet_t));
                 obj->c.id = -1;
-            }
-            // Else if a door is hit by a player's bullet
-            else if ((1 == obj->c.id) && CELL_IS_TYPE(cell->type, BG | DOOR))
-            {
-                // If the door is closed
-                if (0 == cell->doorOpen)
-                {
-                    bool opened = false;
-                    switch (cell->type)
-                    {
-                        case BG_DOOR:
-                        {
-                            opened = true;
-                            break;
-                        }
-                        case BG_DOOR_CHARGE:
-                        {
-                            opened = (OBJ_BULLET_CHARGE == obj->c.type);
-                            break;
-                        }
-                        case BG_DOOR_MISSILE:
-                        {
-                            opened = (OBJ_BULLET_MISSILE == obj->c.type);
-                            break;
-                        }
-                        case BG_DOOR_ICE:
-                        {
-                            opened = (OBJ_BULLET_ICE == obj->c.type);
-                            break;
-                        }
-                        case BG_DOOR_XRAY:
-                        {
-                            opened = (OBJ_BULLET_XRAY == obj->c.type);
-                            break;
-                        }
-                        case BG_DOOR_SCRIPT:
-                        {
-                            // Script doors aren't openable by bullets
-                            break;
-                        }
-                        case BG_DOOR_KEY_A:
-                        case BG_DOOR_KEY_B:
-                        case BG_DOOR_KEY_C:
-                        {
-                            // Open the door if the player has the appropriate key
-                            opened = (KEY == ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A]);
-                            if (opened)
-                            {
-                                // Mark the key as used
-                                ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
-                            }
-                            break;
-                        }
-                        case BG_DOOR_ARTIFACT:
-                        {
-                            // Check if all artifacts have been collected
-                            opened = true;
-                            for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(ray->p.i.artifacts); aIdx++)
-                            {
-                                if (!ray->p.i.artifacts[aIdx])
-                                {
-                                    opened = false;
-                                    break;
-                                }
-                            }
-                            break;
-                        }
-                        default:
-                        {
-                            // Not a door, somehow
-                            break;
-                        }
-                    }
-
-                    // If the door was opened
-                    if (opened)
-                    {
-                        // Start opening the door
-                        cell->openingDirection = 1;
-                    }
-
-                    // Destroy this bullet, doesn't matter if the door was opened or not
-                    memset(obj, 0, sizeof(rayBullet_t));
-                    obj->c.id = -1;
-                }
             }
         }
     }
