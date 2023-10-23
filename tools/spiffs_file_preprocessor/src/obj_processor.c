@@ -105,8 +105,46 @@ void process_obj(const char* infile, const char* outdir)
             // Make sure the ivS array has enough room for another one
             CHECK_ARR(ivS, ivc, ivSize, sizeof(iv_t));
 
+            // try to scan for face/texture/normal, then face/texture, then just face
+
+            // vertex IDs
 			int vv[3];
-			sscanf( line + 2, "%d %d %d", vv+0, vv+1, vv+2 );
+            // texture IDs (unused)
+            int vt[3];
+            // IDs (unused)
+            int vn[3];
+
+            int v4[3];
+
+            // unused
+            int _ = -1;
+
+            if (12 != sscanf(line + 2, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d %d", vv+0, vt+0, vn+0, vv+1, vt+1, vn+1, vv+2, vt+2, vn+2, v4+0, v4+1, v4+2, &_))
+            {
+                if (9 != sscanf(line + 2, "%d/%d/%d %d/%d/%d %d/%d/%d", vv+0, vt+0, vn+0, vv+1, vt+1, vn+1, vv+2, vt+2, vn+2))
+                {
+                    if (6 != sscanf(line + 2, "%d/%d %d/%d %d/%d", vv+0, vt+0, vv+1, vt+1, vv+2, vt+2))
+                    {
+                        if (3 != sscanf( line + 2, "%d %d %d", vv+0, vv+1, vv+2 ))
+                        {
+                            fprintf(stderr, "obj_processor.c: Can't parse faces line: %s\n", line);
+                        }
+                    }
+                }
+            }
+            else if (_ == -1)
+            {
+                // Okay, this is a quad... vv[0,1,2] will cover half of it, then we can just add vv[0,2,v4[0]]
+                // Convert fourth vertex to
+                v4[0]--;
+
+                ivS[ivc][0] = vv[0];
+                ivS[ivc][1] = vv[2];
+                ivS[ivc++][2] = v4[0];
+
+                // And now we need to check che buffer size again!
+                CHECK_ARR(ivS, ivc, ivSize, sizeof(iv_t));
+            }
 
             // read values are 1-indexed, decrement to make them 0-indexed
 			vv[0]--;
@@ -289,7 +327,7 @@ void process_obj(const char* infile, const char* outdir)
         *bp++ = lines[i][1] & 0xFF;
     }
 
-    printf("Writing compressed model to %s\n", outFilePath);
+    DEBUG_PRINT("Writing compressed model to %s\n", outFilePath);
     // Write compressed output file
     writeHeatshrinkFile(outBuf, outBufSize, outFilePath);
 }
