@@ -112,6 +112,21 @@ esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
 }
 
 /**
+ * @brief Get the current estimated quaternion of the IMU.
+ *
+ * @return ESP_OK
+ */
+esp_err_t accelGetQuaternion(float* q)
+{
+    float* fq = LSM6DSL.fqQuat;
+    q[0]      = fq[0];
+    q[1]      = fq[1];
+    q[2]      = fq[2];
+    q[3]      = fq[3];
+    return ESP_OK;
+}
+
+/**
  * @brief Sets the raw accelerometer reading to be returned by the emulator
  *
  * @param x The x axis value, from -512 to 512, inclusive
