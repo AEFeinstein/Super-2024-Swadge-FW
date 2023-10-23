@@ -38,6 +38,8 @@ typedef struct
     menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
+    int32_t lastBgmVol;
+    int32_t lastSfxVol;
 } mainMenu_t;
 
 //==============================================================================
@@ -159,6 +161,10 @@ static void mainMenuEnterMode(void)
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
 
+    // These are just used for playing the sound only when the setting changes
+    mainMenu->lastBgmVol = getBgmVolumeSetting();
+    mainMenu->lastSfxVol = getSfxVolumeSetting();
+
     addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
                                  screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
                                  getScreensaverTimeSettingBounds(), getScreensaverTimeSetting());
@@ -219,6 +225,8 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
+
+    // Always stop the buzzer unless we're on one of the SFX settings
     bzrStop(true);
 
     if (selected)
@@ -310,13 +318,21 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (bgmVolSettingLabel == label)
         {
-            setBgmVolumeSetting(settingVal);
-            bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+            if (settingVal != mainMenu->lastBgmVol)
+            {
+                mainMenu->lastBgmVol = settingVal;
+                setBgmVolumeSetting(settingVal);
+                bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+            }
         }
         else if (sfxVolSettingLabel == label)
         {
-            setSfxVolumeSetting(settingVal);
-            bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+            if (settingVal != mainMenu->lastSfxVol)
+            {
+                mainMenu->lastSfxVol = settingVal;
+                setSfxVolumeSetting(settingVal);
+                bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+            }
         }
         else if (micSettingLabel == label)
         {

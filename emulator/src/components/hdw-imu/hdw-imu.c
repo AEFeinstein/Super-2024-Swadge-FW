@@ -22,14 +22,15 @@ static int16_t _accelZ = 0;
 LSM6DSLData LSM6DSL;
 
 /**
- * @brief Initialize the accelerometer
+ * @brief Initialize the IMU
  *
- * @param _i2c_port The i2c port to use for the accelerometer
- * @param range The range to measure, between ::QMA_RANGE_2G and ::QMA_RANGE_32G
- * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
+ * @param sda The GPIO for the Serial DAta line
+ * @param scl The GPIO for the Serial CLock line
+ * @param pullup Either \c GPIO_PULLUP_DISABLE if there are external pullup resistors on SDA and SCL or \c
+ * GPIO_PULLUP_ENABLE if internal pull-ups should be used
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz)
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 {
     // Default to the swadge sitting still, face-up on a table somewhere on earth
     _accelX = 0;
@@ -59,19 +60,19 @@ esp_err_t deInitAccelerometer(void)
  * @param data The step counter value is written here
  * @return ESP_OK if the step count was read, or a non-zero value if it was not
  */
-esp_err_t accelGetStep(uint16_t* data)
-{
-    if (accelInit)
-    {
-        // TODO emulate step better
-        *data = 0;
-        return ESP_OK;
-    }
-    else
-    {
-        return ESP_ERR_INVALID_STATE;
-    }
-}
+// esp_err_t accelGetStep(uint16_t* data)
+// {
+//     if (accelInit)
+//     {
+//         // TODO emulate step better
+//         *data = 0;
+//         return ESP_OK;
+//     }
+//     else
+//     {
+//         return ESP_ERR_INVALID_STATE;
+//     }
+// }
 
 /**
  * @brief Read the current acceleration vector from the accelerometer and return
@@ -169,7 +170,7 @@ esp_err_t accelIntegrate()
  * @brief Rotate a 3D vector by a quaternion
  *
  * @param pout Pointer to the float[3] output of the rotation
- * @param q Pointer to the wzyz quaternion (float[4]) of the rotation.
+ * @param q Pointer to the wxyz quaternion (float[4]) of the rotation.
  * @param p Pointer to the float[3] of the vector to rotates.
  */
 void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p)

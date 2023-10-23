@@ -115,6 +115,13 @@ static const uint8_t hid_configuration_descriptor[] = {
 };
 
 //==============================================================================
+// Function declarations
+//==============================================================================
+
+static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz,
+                                        int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons);
+
+//==============================================================================
 // Variables
 //==============================================================================
 
@@ -189,6 +196,58 @@ void sendUsbGamepadReport(hid_gamepad_report_t* report)
         tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, report->x, report->y, report->z, report->rx, report->ry,
                                report->rz, report->hat, report->buttons);
     }
+}
+
+/**
+ * @brief Send a USB gamepad report to a Switch, with instance
+ *
+ * @param instance Should be 0
+ * @param report_id Should be HID_ITF_PROTOCOL_NONE
+ * @param x Unsure
+ * @param y Unsure
+ * @param z Unsure
+ * @param rz Unsure
+ * @param rx Unsure
+ * @param ry Unsure
+ * @param hat A bitmask of ::hid_gamepad_ns_hat_t
+ * @param buttons A bitmask of ::hid_gamepad_ns_button_bm_t
+ * @return Unsure
+ */
+static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz,
+                                        int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons)
+{
+    hid_gamepad_ns_report_t report = {
+        .buttons = buttons,
+        .hat     = hat,
+        .x       = x,
+        .y       = y,
+        .rx      = rx,
+        .ry      = ry,
+        .z       = z,
+        .rz      = rz,
+    };
+
+    return tud_hid_n_report(instance, report_id, &report, sizeof(report));
+}
+
+/**
+ * @brief Send a USB gamepad report to a Switch
+ *
+ * @param report_id Should be HID_ITF_PROTOCOL_NONE
+ * @param x Unsure
+ * @param y Unsure
+ * @param z Unsure
+ * @param rz Unsure
+ * @param rx Unsure
+ * @param ry Unsure
+ * @param hat A bitmask of ::hid_gamepad_ns_hat_t
+ * @param buttons A bitmask of ::hid_gamepad_ns_button_bm_t
+ * @return Unsure
+ */
+bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry,
+                               uint8_t hat, uint16_t buttons)
+{
+    return tud_hid_n_gamepad_report_ns(0, report_id, x, y, z, rz, rx, ry, hat, buttons);
 }
 
 //==============================================================================
