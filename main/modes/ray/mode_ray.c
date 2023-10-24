@@ -106,6 +106,13 @@ static void rayEnterMode(void)
     // Initialize a renderer
     ray->renderer = initMenuLogbookRenderer(&ray->logbook);
 
+    // Force draw a loading screen
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
+    const char loadingStr[] = "Loading...";
+    int32_t tWidth          = textWidth(&ray->logbook, loadingStr);
+    drawText(&ray->logbook, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
+    drawDisplayTft(NULL);
+
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
 
