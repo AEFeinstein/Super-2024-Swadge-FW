@@ -138,7 +138,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 // Set strafe to true
                 ray->isStrafing = true;
                 // If there is a centered sprite
-                if (centeredSprite)
+                if (centeredSprite && !CELL_IS_TYPE(centeredSprite->type, (OBJ | BULLET)))
                 {
                     // Lock onto it
                     ray->targetedObj = centeredSprite;
