@@ -281,3 +281,20 @@ void updateTouchInput(gameData_t * gameData){
         gameData->isTouched = false;
     }
 }
+
+void updateLedsTitleScreen(gameData_t * gameData){
+
+        if(( (gameData->frameCount) % 10) == 0){
+        for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+        
+            //self->gameData.leds[i].r = (( (self->gameData.frameCount >> 4) % NUM_LEDS) == i) ? 0xFF : 0x00;
+
+            gameData->leds[i].r += (esp_random() % 6);
+            gameData->leds[i].g += (esp_random() % 1);
+            gameData->leds[i].b += (esp_random() % 8);
+        }
+    }
+
+    setLeds(gameData->leds, CONFIG_NUM_LEDS);
+}

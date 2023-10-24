@@ -89,5 +89,6 @@ void updateLedsGameClear(gameData_t * gameData);
 void updateLedsGameOver(gameData_t * gameData);
 void updateLedsInGame(gameData_t * gameData);
 void updateTouchInput(gameData_t * gameData);
+void updateLedsTitleScreen(gameData_t * gameData);
 
 #endif
