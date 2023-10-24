@@ -280,13 +280,13 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             // Normalize the vector
             fastNormVec(&newX, &newY);
 
-            // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
-            ray->planeX = -MUL_FX(TO_FX(2) / 3, newY);
-            ray->planeY = MUL_FX(TO_FX(2) / 3, newX);
-
             // Save new direction vector
             ray->p.dirX = newX;
             ray->p.dirY = newY;
+
+            // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
+            ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+            ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
 
             // Also update the local copy
             pDirX = newX;
@@ -367,23 +367,23 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             // Check scripts when entering cells
             checkScriptEnter(ray, newCellX, newCellY);
         }
+    }
 
-        // After moving position, recompute direction to targeted object
-        if (ray->isStrafing && ray->targetedObj)
-        {
-            // Re-lock on the target after moving
-            pDirX = ray->targetedObj->posX - pPosX;
-            pDirY = ray->targetedObj->posY - pPosY;
-            fastNormVec(&pDirX, &pDirY);
+    // Finally, if there is a targeted object, orient towards it
+    if (ray->targetedObj)
+    {
+        // Re-lock on the target
+        pDirX = ray->targetedObj->posX - pPosX;
+        pDirY = ray->targetedObj->posY - pPosY;
+        fastNormVec(&pDirX, &pDirY);
 
-            // Set the player's direction
-            ray->p.dirX = pDirX;
-            ray->p.dirY = pDirY;
+        // Set the player's direction
+        ray->p.dirX = pDirX;
+        ray->p.dirY = pDirY;
 
-            // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-            ray->planeX = -MUL_FX(TO_FX(2) / 3, pDirY);
-            ray->planeY = MUL_FX(TO_FX(2) / 3, pDirX);
-        }
+        // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
     }
 }
 
