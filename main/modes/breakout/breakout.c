@@ -96,7 +96,7 @@ static void breakoutChangeStateGameClear(breakout_t *self);
 static void breakoutUpdateGameClear(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawGameClear(font_t *ibm_vga8, font_t *logbook, gameData_t *gameData);
 static void breakoutChangeStateTitleScreen(breakout_t *self);
-static void breakoutUpdateTitleScreen(breakout_t *self);
+static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawTitleScreen(font_t *font, gameData_t *gameData);
 
 
@@ -187,7 +187,9 @@ static const leveldef_t leveldef[NUM_LEVELS] = {
 // Look Up Tables
 //==============================================================================
 
+static const paletteColor_t redColors[4] = {c510, c440, c050, c440};
 static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
+static const paletteColor_t purpleColors[4] = {c405, c440, c055, c440}; //{c405, c214, c055, c134};
 
 //==============================================================================
 // Strings
@@ -199,6 +201,9 @@ static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
  */
 
 static const char breakoutName[] = "Galactic Brickdown";
+static const char breakoutTitleGalactic[] = "Galactic";
+static const char breakoutTitleBrickdown[] = "Brickdown";
+static const char breakoutPressStart[] = "Press Start";
 
 static const char breakoutNewGame[] = "New Game";
 static const char breakoutContinue[] = "Continue - Lv";
@@ -291,7 +296,8 @@ static void breakoutEnterMode(void)
     setFrameRateUs(16666);
 
     // Set the mode to menu mode
-    breakout->update = &breakoutUpdateMainMenu;
+    //breakout->update = &breakoutUpdateTitleScreen;
+    breakoutChangeStateTitleScreen(breakout);
 }
 
 /**
@@ -329,14 +335,14 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
     {
         if (label == breakoutNewGame)
         {
-            initializeGameDataFromMainMenu(&(breakout->gameData));
+            initializeGameDataFromTitleScreen(&(breakout->gameData));
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
             breakout->gameData.countdown = leveldef[0].timeLimit;
             breakoutChangeStateReadyScreen(breakout);   
         } else if (label == breakoutContinue)
         {
-            initializeGameDataFromMainMenu(&(breakout->gameData));
+            initializeGameDataFromTitleScreen(&(breakout->gameData));
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level - 1].filename);
             breakout->gameData.countdown = leveldef[breakout->gameData.level -1].timeLimit;
@@ -612,7 +618,7 @@ void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs){
 
         changeStateNameEntry(self);*/
         deactivateAllEntities(&(self->entityManager), false, false);
-        breakoutChangeStateMainMenu(self);
+        breakoutChangeStateTitleScreen(self);
     }
 
     breakoutDrawGameOver(&(self->logbook), &(self->ibm_vga8), &(self->gameData));
@@ -826,4 +832,47 @@ void breakoutDrawPause(font_t *font){
 
 uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level){
     return (world-1) * 4 + (level-1);
+}
+
+static void breakoutChangeStateTitleScreen(breakout_t *self){
+    self->gameData.frameCount = 0;
+    self->update = &breakoutUpdateTitleScreen;
+    deactivateAllEntities(&(self->entityManager), false, false);
+}
+
+static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
+    self->gameData.frameCount++;
+
+    if((
+        (self->gameData.btnState & PB_START)
+        &&
+        !(self->gameData.prevBtnState & PB_START)
+    )){
+        self->gameData.btnState = 0;
+        self->update=&breakoutUpdateMainMenu;
+    }
+
+    /*
+    if(!(self->gameData.frameCount % 180)) {
+         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+    }
+    */
+
+    updateStarfield(&(self->starfield), 8);
+    updateEntities(&(self->entityManager));
+    drawStarfield(&(self->starfield));
+    breakoutDrawTitleScreen(&(self->logbook), &(self->gameData));
+    
+    drawEntities(&(self->entityManager));
+}
+
+static void breakoutDrawTitleScreen(font_t *font, gameData_t *gameData){
+    drawText(font, purpleColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleGalactic, 48, 96);
+    drawText(font, redColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleBrickdown, 96, 120);
+
+    if ((gameData->frameCount % 60 ) < 30)
+    {
+        drawText(font, c555, breakoutPressStart, (TFT_WIDTH - textWidth(font, breakoutPressStart)) >> 1, 192);
+    }
+    
 }
