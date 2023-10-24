@@ -173,6 +173,10 @@ typedef enum
     MOVE_STRAFE_R,
     MOVE_TOWARDS_PLAYER,
     MOVE_AWAY_PLAYER,
+    MOVE_NE,
+    MOVE_SE,
+    MOVE_SW,
+    MOVE_NW,
 } rayEnemyBehavior_t;
 
 /**
