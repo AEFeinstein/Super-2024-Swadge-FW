@@ -76,8 +76,7 @@ static void breakoutGameLoop(breakout_t *self, int64_t elapsedUs);
 static void breakoutBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static void drawBreakoutHud(font_t *font, gameData_t *gameData);
-static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs);
-static void drawBreakoutTitleScreen(font_t *font, gameData_t *gameData);
+static void breakoutUpdateMainMenu(breakout_t *self, int64_t elapsedUs);
 static void breakoutChangeStateReadyScreen(breakout_t *self);
 static void breakoutUpdateReadyScreen(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawReadyScreen(font_t *logbook, font_t *ibm_vga8, gameData_t *gameData);
@@ -89,13 +88,18 @@ static void breakoutUpdateDead(breakout_t *self, int64_t elapsedUs);
 static void breakoutChangeStateGameOver(breakout_t *self);
 static void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawGameOver(font_t *logbook, font_t *ibm_vga8, gameData_t *gameData);
-static void breakoutChangeStateTitleScreen(breakout_t *self);
+static void breakoutChangeStateMainMenu(breakout_t *self);
 static void breakoutChangeStateLevelClear(breakout_t *self);
 static void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawLevelClear(font_t *font, gameData_t *gameData);
 static void breakoutChangeStateGameClear(breakout_t *self);
 static void breakoutUpdateGameClear(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawGameClear(font_t *ibm_vga8, font_t *logbook, gameData_t *gameData);
+static void breakoutChangeStateTitleScreen(breakout_t *self);
+static void breakoutUpdateTitleScreen(breakout_t *self);
+static void breakoutDrawTitleScreen(font_t *font, gameData_t *gameData);
+
+
 static void breakoutInitializeBreakoutHighScores(breakout_t* self);
 static void breakoutLoadBreakoutHighScores(breakout_t* self);
 static void breakoutSaveBreakoutHighScores(breakout_t* self);
@@ -287,7 +291,7 @@ static void breakoutEnterMode(void)
     setFrameRateUs(16666);
 
     // Set the mode to menu mode
-    breakout->update = &breakoutUpdateTitleScreen;
+    breakout->update = &breakoutUpdateMainMenu;
 }
 
 /**
@@ -325,14 +329,14 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
     {
         if (label == breakoutNewGame)
         {
-            initializeGameDataFromTitleScreen(&(breakout->gameData));
+            initializeGameDataFromMainMenu(&(breakout->gameData));
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
             breakout->gameData.countdown = leveldef[0].timeLimit;
             breakoutChangeStateReadyScreen(breakout);   
         } else if (label == breakoutContinue)
         {
-            initializeGameDataFromTitleScreen(&(breakout->gameData));
+            initializeGameDataFromMainMenu(&(breakout->gameData));
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level - 1].filename);
             breakout->gameData.countdown = leveldef[breakout->gameData.level -1].timeLimit;
@@ -357,7 +361,7 @@ static void breakoutMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        if(breakout->update == &breakoutUpdateTitleScreen){
+        if(breakout->update == &breakoutUpdateMainMenu){
             // Pass button events to the menu
             breakout->menu = menuButton(breakout->menu, evt);
         }
@@ -373,12 +377,12 @@ static void breakoutMainLoop(int64_t elapsedUs)
     breakout->gameData.prevBtnState = breakout->prevBtnState;
 }
 
-void breakoutChangeStateTitleScreen(breakout_t *self){
+void breakoutChangeStateMainMenu(breakout_t *self){
     self->gameData.frameCount = 0;
-    self->update=&breakoutUpdateTitleScreen;
+    self->update=&breakoutUpdateMainMenu;
 }
 
-static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
+static void breakoutUpdateMainMenu(breakout_t *self, int64_t elapsedUs){
     // Draw the menu
     drawMenuLogbook(breakout->menu, breakout->mRenderer, elapsedUs);
 }
@@ -608,7 +612,7 @@ void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs){
 
         changeStateNameEntry(self);*/
         deactivateAllEntities(&(self->entityManager), false, false);
-        breakoutChangeStateTitleScreen(self);
+        breakoutChangeStateMainMenu(self);
     }
 
     breakoutDrawGameOver(&(self->logbook), &(self->ibm_vga8), &(self->gameData));
