@@ -55,6 +55,9 @@ void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOri
                     int yScale);
 void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
                           paletteColor_t fillColor, paletteColor_t outlineColor);
+void drawTriangleOutlinedBounded(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
+        paletteColor_t fillColor, paletteColor_t outlineColor, int16_t minX, int16_t minY,
+        int16_t maxX, int16_t maxY);
 void drawEllipse(int xm, int ym, int a, int b, paletteColor_t col);
 void drawEllipseScaled(int xm, int ym, int a, int b, paletteColor_t col, int xOrigin, int yOrigin, int xScale,
                        int yScale);
