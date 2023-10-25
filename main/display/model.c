@@ -241,6 +241,17 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
                 int tv3 = (vertOffsets[modelNum] + model->tris[i].verts[2]) * 3;
                 int col = model->tris[i].color;
 
+                // Cull out-of-bounds faces
+                // We consider a face out of bounds if the X or Y coordinates of all three vertices
+                //   are outside of the bounds in the same direction.
+                if ((verts_out[tv1+0] < x && verts_out[tv2+0] < x && verts_out[tv3+0] < x)
+                    || (verts_out[tv1+0] > (x+w) && verts_out[tv2+0] > (x+w) && verts_out[tv3+0] > (x+w))
+                    || (verts_out[tv1+1] < y && verts_out[tv2+1] < y && verts_out[tv3+1] < y)
+                    || (verts_out[tv1+1] > (y+h) && verts_out[tv2+1] > (y+h) && verts_out[tv3+1] > (y+h)))
+                {
+                    continue;
+                }
+
                 int diff1[3] = {
                     verts_out[tv3+0] - verts_out[tv1+0],
                     verts_out[tv3+1] - verts_out[tv1+1],
@@ -254,6 +265,7 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
 
                 int icrp[3];
                 intcross( icrp, diff1, diff2 );
+                // skip inside-out faces
                 if( icrp[2] < 0 ) continue;
                 int z = verts_out[tv1+2] + verts_out[tv2+2] + verts_out[tv3+2];
 
@@ -332,10 +344,11 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
         // Use only the low byte of trimap[][2] for color
         int tcol = trimap[i][2] & 0xFF;
 
-        drawTriangleOutlined(
+        drawTriangleOutlinedBounded(
             verts_out[tv1+0], verts_out[tv1+1],
             verts_out[tv2+0], verts_out[tv2+1],
             verts_out[tv3+0], verts_out[tv3+1],
-            tcol, tcol );
+            tcol, tcol,
+            x, y, x + w, y + h );
     }
 }
