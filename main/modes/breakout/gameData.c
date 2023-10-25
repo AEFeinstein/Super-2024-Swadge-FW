@@ -154,7 +154,6 @@ void updateLedsShowHighScores(gameData_t * gameData){
             if(( (gameData->frameCount >> 4) % CONFIG_NUM_LEDS) == i) {
                 gameData->leds[i].r =  0xF0;
                 gameData->leds[i].g = 0xF0;
-                gameData->leds[i].b = 0x00;
             }
 
             if(gameData->leds[i].r > 0){
@@ -166,7 +165,7 @@ void updateLedsShowHighScores(gameData_t * gameData){
             }
 
             if(gameData->leds[i].b > 0){
-                gameData->leds[i].b = 0x00;
+                gameData->leds[i].b = gameData->leds[i].b >> 1;
             }
             
         }
@@ -283,15 +282,17 @@ void updateTouchInput(gameData_t * gameData){
 }
 
 void updateLedsTitleScreen(gameData_t * gameData){
-
-        if(( (gameData->frameCount) % 10) == 0){
+    if(!((gameData->frameCount) % 10) /*|| gameData->frameCount < 20*/){
         for (int32_t i = 0; i < CONFIG_NUM_LEDS; i++)
         {
-        
-            //self->gameData.leds[i].r = (( (self->gameData.frameCount >> 4) % NUM_LEDS) == i) ? 0xFF : 0x00;
-
             gameData->leds[i].r += (esp_random() % 6);
-            gameData->leds[i].g += (esp_random() % 1);
+            
+            /*if(gameData->frameCount < 4){
+                gameData->leds[i].g = gameData->leds[i].g >> 1;
+            } else*/ {
+                gameData->leds[i].g += (esp_random() % 1);
+            }
+
             gameData->leds[i].b += (esp_random() % 8);
         }
     }

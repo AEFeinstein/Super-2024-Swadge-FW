@@ -15,6 +15,7 @@
 
 #include "gameData.h"
 #include "tilemap.h"
+#include "hdw-nvs.h"
 #include "soundManager.h"
 #include "entityManager.h"
 
@@ -60,6 +61,8 @@ struct breakout_t
     starfield_t starfield;
 
     gameUpdateFunction_t update;
+
+    breakoutHighScores_t highScores;
 };
 
 //==============================================================================
@@ -100,18 +103,17 @@ static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawTitleScreen(font_t *font, gameData_t *gameData);
 
 
-static void breakoutInitializeBreakoutHighScores(breakout_t* self);
-static void breakoutLoadBreakoutHighScores(breakout_t* self);
-static void breakoutSaveBreakoutHighScores(breakout_t* self);
+static void breakoutInitializeHighScores(breakout_t* self);
+static void breakoutLoadHighScores(breakout_t* self);
+static void breakoutSaveHighScores(breakout_t* self);
+
 static void breakoutInitializeBreakoutUnlockables(breakout_t* self);
 static void breakoutLoadBreakoutUnlockables(breakout_t* self);
 static void breakoutSaveBreakoutUnlockables(breakout_t* self);
 
-/*
-static void drawBreakoutHighScores(font_t *font, breakoutHighScores_t *highScores, gameData_t *gameData);
-uint8_t getHighScoreRank(breakoutHighScores_t *highScores, uint32_t newScore);
-static void insertScoreIntoHighScores(breakoutHighScores_t *highScores, uint32_t newScore, char newInitials[], uint8_t rank);
-*/
+static void breakoutDrawHighScores(font_t *font, breakoutHighScores_t *highScores, gameData_t *gameData);
+uint8_t breakoutGetHighScoreRank(breakoutHighScores_t *highScores, uint32_t newScore);
+static void breakoutInsertScoreIntoHighScores(breakoutHighScores_t *highScores, uint32_t newScore, char newInitials[], uint8_t rank);
 
 static void breakoutChangeStateNameEntry(breakout_t *self);
 static void breakoutUpdateNameEntry(breakout_t *self, int64_t elapsedUs);
@@ -187,6 +189,7 @@ static const leveldef_t leveldef[NUM_LEVELS] = {
 // Look Up Tables
 //==============================================================================
 
+static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055};
 static const paletteColor_t redColors[4] = {c510, c440, c050, c440};
 static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
 static const paletteColor_t purpleColors[4] = {c405, c440, c055, c440}; //{c405, c214, c055, c134};
@@ -214,6 +217,10 @@ static const char breakoutGameOver[] = "Game Over!";
 
 static const char breakoutLevelClear[] = "Cleared!";
 static const char breakoutPause[] = "Paused";
+
+static const char breakoutHighScoreDisplayTitle[] = "Cosmic Players";
+
+static const char breakoutNvsKey_scores[] = "brk_scores";
 
 //==============================================================================
 // Variables
@@ -291,6 +298,8 @@ static void breakoutEnterMode(void)
     push(breakout->menu->items, breakout->levelSelectMenuItem);
 
     addSingleItemToMenu(breakout->menu, breakoutExit);
+
+    breakoutLoadHighScores(breakout);
 
     //Set frame rate to 60 FPS
     setFrameRateUs(16666);
@@ -843,13 +852,21 @@ static void breakoutChangeStateTitleScreen(breakout_t *self){
 static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
     self->gameData.frameCount++;
 
+    if(self->gameData.frameCount > 600){
+        //resetGameDataLeds(&(self->gameData));
+        breakoutChangeStateShowHighScores(self);
+        
+        return;
+    }
+
     if((
         (self->gameData.btnState & PB_START)
         &&
         !(self->gameData.prevBtnState & PB_START)
     )){
         self->gameData.btnState = 0;
-        self->update=&breakoutUpdateMainMenu;
+        breakoutChangeStateMainMenu(self);
+        return;
     }
 
     /*
@@ -875,4 +892,123 @@ static void breakoutDrawTitleScreen(font_t *font, gameData_t *gameData){
         drawText(font, c555, breakoutPressStart, (TFT_WIDTH - textWidth(font, breakoutPressStart)) >> 1, 192);
     }
     
+}
+
+void breakoutInitializeHighScores(breakout_t* self){
+    self->highScores.scores[0] = 100000;
+    self->highScores.scores[1] = 80000;
+    self->highScores.scores[2] = 40000;
+    self->highScores.scores[3] = 20000;
+    self->highScores.scores[4] = 10000;
+
+    for(uint8_t i=0; i<NUM_BREAKOUT_HIGH_SCORES; i++){
+        self->highScores.initials[i][0] = 'J' + i;
+        self->highScores.initials[i][1] = 'P' - i;
+        self->highScores.initials[i][2] = 'V' + i;
+    }
+}
+
+void breakoutLoadHighScores(breakout_t* self)
+{
+    size_t size = sizeof(breakoutHighScores_t);
+    // Try reading the value
+    if(false == readNvsBlob(breakoutNvsKey_scores, &(self->highScores), &(size)))
+    {
+        // Value didn't exist, so write the default
+        breakoutInitializeHighScores(self);
+    }
+}
+
+void breakoutSaveHighScores(breakout_t* self){
+    size_t size = sizeof(breakoutHighScores_t);
+    writeNvsBlob(breakoutNvsKey_scores, &(self->highScores), size);
+}
+
+void breakoutDrawHighScores(font_t *font, breakoutHighScores_t *highScores, gameData_t *gameData){
+    drawText(font, c555, "Rank Score  Name", 10, 96);
+    for(uint8_t i=0; i<NUM_BREAKOUT_HIGH_SCORES; i++){
+        char rowStr[32];
+        snprintf(rowStr, sizeof(rowStr) - 1, " %d   %06" PRIu32 " %c%c%c", i+1, highScores->scores[i], highScores->initials[i][0], highScores->initials[i][1], highScores->initials[i][2]);
+        drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 16, 128 + i*20);
+    }
+}
+
+uint8_t breakoutGetHighScoreRank(breakoutHighScores_t *highScores, uint32_t newScore){
+    uint8_t i;
+    for(i=0; i<NUM_BREAKOUT_HIGH_SCORES; i++){
+        if(highScores->scores[i] < newScore){
+            break;
+        }
+    }
+
+    return i;
+}
+
+void breakoutInsertScoreIntoHighScores(breakoutHighScores_t *highScores, uint32_t newScore, char newInitials[], uint8_t rank){
+
+    if(rank >= NUM_BREAKOUT_HIGH_SCORES){
+        return;
+    }
+
+    for(uint8_t i=NUM_BREAKOUT_HIGH_SCORES - 1; i>rank; i--){
+        highScores->scores[i] = highScores->scores[i-1];
+        highScores->initials[i][0] = highScores->initials[i-1][0];
+        highScores->initials[i][1] = highScores->initials[i-1][1];
+        highScores->initials[i][2] = highScores->initials[i-1][2];
+    }
+
+    highScores->scores[rank] = newScore;
+    highScores->initials[rank][0] = newInitials[0];
+    highScores->initials[rank][1] = newInitials[1];
+    highScores->initials[rank][2] = newInitials[2];
+
+}
+
+
+//--------------
+
+
+void breakoutChangeStateShowHighScores(breakout_t *self){
+    self->gameData.frameCount = 0;
+    self->update=&breakoutUpdateShowHighScores;
+}
+
+void breakoutUpdateShowHighScores(breakout_t *self, int64_t elapsedUs){
+    self->gameData.frameCount++;
+
+    if((self->gameData.frameCount > 300) || (
+        (
+            (self->gameData.btnState & PB_START)
+            &&
+            !(self->gameData.prevBtnState & PB_START)
+        )
+            ||
+        (
+            (self->gameData.btnState & PB_A)
+            &&
+            !(self->gameData.prevBtnState & PB_A)
+        )
+    )){
+        bzrStop(true);
+        breakoutChangeStateTitleScreen(self);
+    }
+
+    updateStarfield(&(self->starfield), 8);
+    drawStarfield(&(self->starfield));
+
+    breakoutDrawShowHighScores(&(self->logbook), 0);
+    breakoutDrawHighScores(&(self->logbook), &(self->highScores), &(self->gameData));
+
+    updateLedsTitleScreen(&(self->gameData));
+    //updateLedsShowHighScores(&(self->gameData));
+}
+
+void breakoutDrawShowHighScores(font_t *font, uint8_t menuState){
+    /*if(platformer->easterEgg){
+        drawText(font, highScoreNewEntryColors[(platformer->gameData.frameCount >> 3) % 4], str_hbd, (TFT_WIDTH - textWidth(font, str_hbd)) / 2, 32);
+    } else if(menuState == 3){
+        drawText(font, redColors[(platformer->gameData.frameCount >> 3) % 4], str_registrated, (TFT_WIDTH - textWidth(font, str_registrated)) / 2, 32);
+    } else*/ {
+        drawText(font, c555, breakoutHighScoreDisplayTitle, (TFT_WIDTH - textWidth(font, breakoutHighScoreDisplayTitle)) / 2, 32);
+    }
 }
