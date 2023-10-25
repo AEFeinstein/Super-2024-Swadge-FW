@@ -22,6 +22,7 @@
 #include "factoryTest.h"
 #include "gamepad.h"
 #include "introMode.h"
+#include "graphicsTest.h"
 #include "jukebox.h"
 #include "mainMenu.h"
 #include "modeTimer.h"
@@ -62,6 +63,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &factoryTestMode,
     &gamepadMode,
     &introMode,
+    &graphicsTestMode,
     &jukeboxMode,
     &mainMenuMode,
     &modeCredits,
