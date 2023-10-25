@@ -515,6 +515,30 @@ void drawRectScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xOri
 void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
                           paletteColor_t fillColor, paletteColor_t outlineColor)
 {
+    drawTriangleOutlinedBounded(v0x, v0y, v1x, v1y, v2x, v2y, fillColor, outlineColor, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+}
+
+/**
+ * @brief Optimized method to draw a triangle with outline, bounded to a rectangular area.
+ * The interior color may be ::cTransparent to draw just an outline.
+ *
+ * @param v0x Vertex 0's X coordinate
+ * @param v0y Vertex 0's Y coordinate
+ * @param v1x Vertex 1's X coordinate
+ * @param v1y Vertex 1's Y coordinate
+ * @param v2x Vertex 2's X coordinate
+ * @param v2y Vertex 2's Y coordinate
+ * @param fillColor filled area color
+ * @param outlineColor outline color
+ * @param minX Minimum X bound to draw in
+ * @param minY Minimum Y bound to draw in
+ * @param maxX Maximum X bound to draw in
+ * @param maxY Maximum Y bound to draw in
+ */
+void drawTriangleOutlinedBounded(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, int16_t v2x, int16_t v2y,
+                                 paletteColor_t fillColor, paletteColor_t outlineColor, int16_t minX, int16_t minY,
+                                 int16_t maxX, int16_t maxY)
+{
     SETUP_FOR_TURBO();
 
     int16_t i16tmp;
@@ -644,20 +668,20 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             int endx     = x0B;
             int suppress = 1;
 
-            if (y >= 0 && y < (int)TFT_HEIGHT)
+            if (y >= (int)(minY) && y < (int)(maxY))
             {
                 suppress = 0;
-                if (x < 0)
+                if (x < (int)minX)
                 {
-                    x = 0;
+                    x = (int)minX;
                 }
-                if (endx > (int)(TFT_WIDTH))
+                if (endx > (int)(maxX))
                 {
-                    endx = (int)(TFT_WIDTH);
+                    endx = (int)(maxX);
                 }
 
                 // Draw left line
-                if (x0A >= 0 && x0A < (int)TFT_WIDTH)
+                if (x0A >= (int)(minX) && x0A < (int)maxX)
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                     x++;
@@ -673,7 +697,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw right line
-                if (x0B < (int)TFT_WIDTH && x0B >= 0)
+                if (x0B < (int)(maxX) && x0B >= (int)(minX))
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
@@ -685,8 +709,8 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             while (errA >= (1 << FIXEDPOINT) && x0A != v1x)
             {
                 x0A += sdxA;
-                // if( x0A < 0 || x0A > (TFT_WIDTH-1) ) break;
-                if (x0A >= 0 && x0A < (int)TFT_WIDTH && !suppress)
+                // if( x0A < 0 || x0A > (maxX-1) ) break;
+                if (x0A >= (int)(minX) && x0A < (int)(maxX) && !suppress)
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                 }
@@ -695,8 +719,8 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             while (errB >= (1 << FIXEDPOINT) && x0B != v2x)
             {
                 x0B += sdxB;
-                // if( x0B < 0 || x0B > (TFT_WIDTH-1) ) break;
-                if (x0B >= 0 && x0B < (int)TFT_WIDTH && !suppress)
+                // if( x0B < 0 || x0B > (maxX-1) ) break;
+                if (x0B >= (int)(minX) && x0B < (int)(maxX) && !suppress)
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
@@ -745,9 +769,9 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             errB = 1 << FIXEDPOINTD2;
         }
 
-        if (yend > (int)(TFT_HEIGHT - 1))
+        if (yend > (int)(maxY - 1))
         {
-            yend = (int)TFT_HEIGHT - 1;
+            yend = (int)maxY - 1;
         }
 
         if (xerrnumeratorA > 1000000 || xerrnumeratorB > 1000000)
@@ -764,7 +788,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             }
             if (x0A == x0B)
             {
-                if (x0A >= 0 && x0A < (int)TFT_WIDTH && y >= 0 && y < (int)TFT_HEIGHT)
+                if (x0A >= (int)(minX) && x0A < (int)maxX && y >= (int)(minY) && y < (int)(maxY))
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                 }
@@ -778,20 +802,20 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             int endx     = x0B;
             int suppress = 1;
 
-            if (y >= 0 && y <= (int)(TFT_HEIGHT - 1))
+            if (y >= (int)(minY) && y <= (int)(maxY - 1))
             {
                 suppress = 0;
-                if (x < 0)
+                if (x < (int)minX)
                 {
-                    x = 0;
+                    x = (int)minX;
                 }
-                if (endx >= (int)(TFT_WIDTH))
+                if (endx >= (int)(maxX))
                 {
-                    endx = (TFT_WIDTH);
+                    endx = (maxX);
                 }
 
                 // Draw left line
-                if (x0A >= 0 && x0A < (int)(TFT_WIDTH))
+                if (x0A >= (int)(minX) && x0A < (int)(maxX))
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                     x++;
@@ -807,7 +831,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
                 }
 
                 // Draw right line
-                if (x0B < (int)(TFT_WIDTH) && x0B >= 0)
+                if (x0B < (int)(maxX) && x0B >= (int)(minX))
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
@@ -819,8 +843,8 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             while (errA >= (1 << FIXEDPOINT))
             {
                 x0A += sdxA;
-                // if( x0A < 0 || x0A > (TFT_WIDTH-1) ) break;
-                if (x0A >= 0 && x0A < (int)(TFT_WIDTH) && !suppress)
+                // if( x0A < 0 || x0A > (maxX-1) ) break;
+                if (x0A >= (int)(minX) && x0A < (int)(maxX) && !suppress)
                 {
                     TURBO_SET_PIXEL(x0A, y, outlineColor);
                 }
@@ -833,7 +857,7 @@ void drawTriangleOutlined(int16_t v0x, int16_t v0y, int16_t v1x, int16_t v1y, in
             while (errB >= (1 << FIXEDPOINT))
             {
                 x0B += sdxB;
-                if (x0B >= 0 && x0B < (int)(TFT_WIDTH) && !suppress)
+                if (x0B >= (int)(minX) && x0B < (int)(maxX) && !suppress)
                 {
                     TURBO_SET_PIXEL(x0B, y, outlineColor);
                 }
