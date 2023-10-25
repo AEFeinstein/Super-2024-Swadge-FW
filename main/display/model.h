@@ -75,6 +75,9 @@
 
 #include "palette.h"
 
+// Defines
+#define SCENE_MAX_OBJECTS 12
+
 //==============================================================================
 // Types
 //==============================================================================
@@ -132,7 +135,7 @@ typedef struct
 typedef struct
 {
     uint8_t modelCount;
-    modelPos_t models[16];
+    modelPos_t models[SCENE_MAX_OBJECTS];
 } scene_t;
 
 //==============================================================================

@@ -11,6 +11,7 @@
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
+#include "graphicsTest.h"
 #include "introMode.h"
 #include "jukebox.h"
 #include "mainMenu.h"
@@ -328,6 +329,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&gamepadMode);
         }
+        else if (label == graphicsTestMode.modeName)
+        {
+            switchToSwadgeMode(&graphicsTestMode);
+	}
         else if (label == introMode.modeName)
         {
             switchToSwadgeMode(&introMode);
@@ -443,6 +448,7 @@ void addSecretsMenu(void)
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, graphicsTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryResetName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 }
