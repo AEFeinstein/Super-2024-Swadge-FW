@@ -249,8 +249,42 @@ void checkRayCollisions(ray_t* ray)
             // An enemy's bullet
             if (objectsIntersect(&player, &bullet->c))
             {
-                // TODO Player got shot, apply damage
-                rayPlayerDecrementHealth(ray, 1);
+                // Determine the damage per-bullet
+                int32_t dmg = 0;
+                switch (bullet->c.type)
+                {
+                    case OBJ_BULLET_NORMAL:
+                    {
+                        dmg = 5;
+                        break;
+                    }
+                    case OBJ_BULLET_CHARGE:
+                    {
+                        dmg = 10;
+                        break;
+                    }
+                    case OBJ_BULLET_MISSILE:
+                    {
+                        dmg = 15;
+                        break;
+                    }
+                    case OBJ_BULLET_ICE:
+                    {
+                        dmg = 20;
+                        break;
+                    }
+                    case OBJ_BULLET_XRAY:
+                    {
+                        dmg = 25;
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                // Player got shot, apply damage
+                rayPlayerDecrementHealth(ray, dmg);
                 // De-allocate the bullet
                 bullet->c.id = -1;
             }

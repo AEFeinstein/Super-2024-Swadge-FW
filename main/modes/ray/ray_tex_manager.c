@@ -14,10 +14,9 @@
 //==============================================================================
 
 /**
- * The maximum number of loaded sprites.
- * TODO pick a better number for all textures
+ * The maximum number of loaded named textures
  */
-#define MAX_LOADED_TEXTURES 192
+#define MAX_LOADED_TEXTURES 32
 
 /// Helper macro to load textures
 #define LOAD_TEXTURE(r, t) loadTexture(r, #t ".wsg", t)
@@ -87,6 +86,7 @@ void loadEnvTextures(ray_t* ray)
                              enemyAnimations[aIdx], fIdx);
                     loadWsg(fName, &ray->hiddenXRTex[aIdx][fIdx], true);
                 }
+                // Also load alt-textures for the boss
                 else if (eIdx == (OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL))
                 {
                     snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%" PRId32 "_M.wsg", enemyTypes[eIdx],
@@ -104,8 +104,6 @@ void loadEnvTextures(ray_t* ray)
             }
         }
     }
-
-    // Load textures by
 
     // Special floor tiles
     LOAD_TEXTURE(ray, BG_FLOOR_WATER);
