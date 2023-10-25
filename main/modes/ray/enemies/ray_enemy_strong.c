@@ -10,11 +10,6 @@
  */
 void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
-    // Find the vector from the enemy to the player and normalize it
-    q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
-    q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
-    fastNormVec(&xDiff, &yDiff);
-
     // Pick a new direction every 2s
     enemy->behaviorTimer += elapsedUs;
     if (enemy->behaviorTimer > 2000000)
@@ -45,11 +40,6 @@ void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 break;
             }
         }
-
-        // Shoot at the player
-        rayEnemyTransitionState(enemy, E_SHOOTING);
-        // TODO spawn on some other frame
-        rayCreateBullet(ray, OBJ_BULLET_NORMAL, enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
     }
 
     // Reverse behavior if too close to the player
@@ -60,6 +50,11 @@ void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     {
         enemy->behavior = MOVE_AWAY_PLAYER;
     }
+
+    // Find the vector from the enemy to the player and normalize it
+    q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
+    q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
+    fastNormVec(&xDiff, &yDiff);
 
 // Player is 40000 * 6
 #define SPEED_DENOM (int32_t)(40000 * 18)
@@ -155,4 +150,26 @@ bool rayEnemyStrongGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         rayEnemyTransitionState(enemy, E_HURT);
     }
     return enemy->health <= 0;
+}
+
+/**
+ * @brief Get the time until the next shot is taken
+ *
+ * @param enemy The enemy taking the shot
+ * @return The time, in uS, until the next shot
+ */
+int32_t rayEnemyStrongGetShotTimer(rayEnemy_t* enemy)
+{
+    return 2000000 + (esp_random() % 2000000);
+}
+
+/**
+ * @brief Get the bullet this enemy fires
+ *
+ * @param enemy The shooting enemy
+ * @return The bullet type
+ */
+rayMapCellType_t rayEnemyStrongGetBullet(rayEnemy_t* enemy)
+{
+    return OBJ_BULLET_CHARGE;
 }

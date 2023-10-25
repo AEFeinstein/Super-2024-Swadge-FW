@@ -181,3 +181,25 @@ bool rayEnemyFlamingGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
     }
     return enemy->health <= 0;
 }
+
+/**
+ * @brief Get the time until the next shot is taken
+ *
+ * @param enemy The enemy taking the shot
+ * @return The time, in uS, until the next shot
+ */
+int32_t rayEnemyFlamingGetShotTimer(rayEnemy_t* enemy)
+{
+    return 2000000 + (esp_random() % 2000000);
+}
+
+/**
+ * @brief Get the bullet this enemy fires
+ *
+ * @param enemy The shooting enemy
+ * @return The bullet type
+ */
+rayMapCellType_t rayEnemyFlamingGetBullet(rayEnemy_t* enemy)
+{
+    return OBJ_BULLET_ICE;
+}

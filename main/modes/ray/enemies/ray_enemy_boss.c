@@ -99,3 +99,47 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 
     return (enemy->health <= 0);
 }
+
+/**
+ * @brief Get the time until the next shot is taken
+ *
+ * @param enemy The enemy taking the shot
+ * @return The time, in uS, until the next shot
+ */
+int32_t rayEnemyBossGetShotTimer(rayEnemy_t* enemy)
+{
+    return 2000000 + (esp_random() % 2000000);
+}
+
+/**
+ * @brief Get the bullet this enemy fires
+ *
+ * @param enemy The shooting enemy
+ * @return The bullet type
+ */
+rayMapCellType_t rayEnemyBossGetBullet(rayEnemy_t* enemy)
+{
+    switch (enemy->bossState)
+    {
+        case B_NORMAL:
+        {
+            return OBJ_BULLET_NORMAL;
+        }
+        case B_MISSILE:
+        {
+            return OBJ_BULLET_MISSILE;
+        }
+        case B_ICE:
+        {
+            return OBJ_BULLET_ICE;
+        }
+        case B_XRAY:
+        {
+            return OBJ_BULLET_XRAY;
+        }
+        default:
+        {
+            return OBJ_BULLET_NORMAL;
+        }
+    }
+}

@@ -107,16 +107,6 @@ void rayEnemyNormalMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             }
         }
     }
-
-    // Shoot every 2s
-    enemy->behaviorTimer += elapsedUs;
-    if (enemy->behaviorTimer > 2000000)
-    {
-        enemy->behaviorTimer -= 2000000;
-        // TODO spawn on some other frame
-        fastNormVec(&xDiff, &yDiff);
-        rayCreateBullet(ray, OBJ_BULLET_NORMAL, enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
-    }
 }
 
 /**
@@ -169,4 +159,26 @@ bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         rayEnemyTransitionState(enemy, E_HURT);
     }
     return enemy->health <= 0;
+}
+
+/**
+ * @brief Get the time until the next shot is taken
+ *
+ * @param enemy The enemy taking the shot
+ * @return The time, in uS, until the next shot
+ */
+int32_t rayEnemyNormalGetShotTimer(rayEnemy_t* enemy)
+{
+    return 2000000 + (esp_random() % 2000000);
+}
+
+/**
+ * @brief Get the bullet this enemy fires
+ *
+ * @param enemy The shooting enemy
+ * @return The bullet type
+ */
+rayMapCellType_t rayEnemyNormalGetBullet(rayEnemy_t* enemy)
+{
+    return OBJ_BULLET_NORMAL;
 }

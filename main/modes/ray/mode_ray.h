@@ -487,10 +487,11 @@ typedef struct
     rayEnemyState_t state;                               ///< This enemy's current state
     rayEnemyBehavior_t behavior;                         ///< What the enemy is currently doing
     rayBossState_t bossState;                            ///< The current boss state, unused for non-boss
-    uint32_t behaviorTimer;                              ///< A timer used for this enemy's behaviors
-    uint32_t animTimer;                                  ///< A timer used for this enemy's animations
-    uint32_t animTimerLimit;                             ///< The time at which the texture should switch
-    uint32_t animFrame;                                  ///< The current animation frame
+    int32_t behaviorTimer;                               ///< A timer used for this enemy's behaviors
+    int32_t shootTimer;                                  ///< A timer used for this enemy's shooting
+    int32_t animTimer;                                   ///< A timer used for this enemy's animations
+    int32_t animTimerLimit;                              ///< The time at which the texture should switch
+    int32_t animFrame;                                   ///< The current animation frame
     wsg_t (*sprites)[E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< All of this enemy's sprites
 } rayEnemy_t;
 

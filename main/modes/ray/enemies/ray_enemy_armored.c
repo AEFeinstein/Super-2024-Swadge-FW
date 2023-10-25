@@ -19,7 +19,6 @@ void rayEnemyArmoredMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         // Find the vector from the enemy to the player and normalize it
         q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
         q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
-        fastNormVec(&xDiff, &yDiff);
 
         // Pick the movement direction on the grid
         if (ABS(xDiff) > ABS(yDiff))
@@ -44,11 +43,6 @@ void rayEnemyArmoredMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 enemy->behavior = MOVE_NEG_Y;
             }
         }
-
-        // Shoot at the player
-        rayEnemyTransitionState(enemy, E_SHOOTING);
-        // TODO spawn on some other frame
-        rayCreateBullet(ray, OBJ_BULLET_NORMAL, enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
     }
 
     // Reverse behavior if too close to the player
@@ -173,4 +167,26 @@ bool rayEnemyArmoredGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
         rayEnemyTransitionState(enemy, E_HURT);
     }
     return enemy->health <= 0;
+}
+
+/**
+ * @brief Get the time until the next shot is taken
+ *
+ * @param enemy The enemy taking the shot
+ * @return The time, in uS, until the next shot
+ */
+int32_t rayEnemyArmoredGetShotTimer(rayEnemy_t* enemy)
+{
+    return 2000000 + (esp_random() % 2000000);
+}
+
+/**
+ * @brief Get the bullet this enemy fires
+ *
+ * @param enemy The shooting enemy
+ * @return The bullet type
+ */
+rayMapCellType_t rayEnemyArmoredGetBullet(rayEnemy_t* enemy)
+{
+    return OBJ_BULLET_MISSILE;
 }
