@@ -24,6 +24,7 @@
 #define ITEMS_PER_PAGE      5
 #define PAGE_ARROW_X_OFFSET 60
 #define PAGE_ARROW_Y_OFFSET 5
+#define X_SECTION_MARGIN    16
 #define Y_SECTION_MARGIN    20
 
 #define MENU_LED_BRIGHTNESS_MIN     128
@@ -276,7 +277,7 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     }
 
     // Where to start drawing
-    int16_t x = 20;
+    int16_t x = X_SECTION_MARGIN;
     int16_t y = Y_SECTION_MARGIN;
 
     // Draw a title
