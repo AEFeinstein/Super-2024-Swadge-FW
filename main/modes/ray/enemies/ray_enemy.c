@@ -157,7 +157,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
                 case 0:
                 {
                     // 25%
-                    rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, -1, enemy->c.posX, enemy->c.posY);
+                    rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
                     break;
                 }
                 case 1:
@@ -165,7 +165,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
                     // 25%, if missiles are unlocked
                     if (ray->p.i.missileLoadOut)
                     {
-                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, -1, enemy->c.posX, enemy->c.posY);
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
                     }
                     break;
                 }
