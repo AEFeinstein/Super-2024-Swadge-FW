@@ -10,74 +10,47 @@
  */
 void rayEnemyNormalMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
-    // Pick an initial direction to move in
-    q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
-    q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
-
-    // If the enemy is doing nothing
-    if (DOING_NOTHING == enemy->behavior)
+    // Pick a new direction every 1s
+    enemy->behaviorTimer += elapsedUs;
+    if (enemy->behaviorTimer > 1000000)
     {
-        // Move orthogonal to the player
+        enemy->behaviorTimer -= 1000000;
+
+        // Find the vector from the enemy to the player and normalize it
+        q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
+        q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
+
+        // Pick the movement direction on the grid
         if (ABS(xDiff) > ABS(yDiff))
         {
-            enemy->behavior = MOVE_POS_Y;
+            if (xDiff > 0)
+            {
+                enemy->behavior = MOVE_POS_X;
+            }
+            else
+            {
+                enemy->behavior = MOVE_NEG_X;
+            }
         }
         else
         {
-            enemy->behavior = MOVE_POS_X;
+            if (yDiff > 0)
+            {
+                enemy->behavior = MOVE_POS_Y;
+            }
+            else
+            {
+                enemy->behavior = MOVE_NEG_Y;
+            }
         }
     }
 
-// Player is 40000 * 6
-#define SPEED_DENOM (int32_t)(40000 * 18)
-
-    q24_8 delX    = 0;
-    q24_8 delY    = 0;
-    q24_8 marginX = 0;
-    q24_8 marginY = 0;
-    switch (enemy->behavior)
+    // Reverse behavior if too close to the player
+    q24_8 xDist        = SUB_FX(ray->p.posX, enemy->c.posX);
+    q24_8 yDist        = SUB_FX(ray->p.posY, enemy->c.posY);
+    q24_8 distToPlayer = ADD_FX(MUL_FX(xDist, xDist), MUL_FX(yDist, yDist));
+    if (distToPlayer < TO_FX(4))
     {
-        case MOVE_POS_X:
-        {
-            delX    = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginX = TO_FX_FRAC(1, 2);
-            break;
-        }
-        case MOVE_NEG_X:
-        {
-            delX    = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginX = -TO_FX_FRAC(1, 2);
-            break;
-        }
-        case MOVE_POS_Y:
-        {
-            delY    = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginY = TO_FX_FRAC(1, 2);
-            break;
-        }
-        case MOVE_NEG_Y:
-        {
-            delY    = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginY = -TO_FX_FRAC(1, 2);
-            break;
-        }
-        default:
-        {
-            // Do nothing
-            break;
-        }
-    }
-
-    // Move if in bounds
-    if (isPassableCell(
-            &ray->map.tiles[FROM_FX(enemy->c.posX + delX + marginX)][FROM_FX(enemy->c.posY + delY + marginY)]))
-    {
-        enemy->c.posX += delX;
-        enemy->c.posY += delY;
-    }
-    else
-    {
-        // Bounce off walls
         switch (enemy->behavior)
         {
             case MOVE_POS_X:
@@ -106,6 +79,47 @@ void rayEnemyNormalMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 break;
             }
         }
+    }
+
+// Player is 40000 * 6
+#define SPEED_DENOM (int32_t)(40000 * 18)
+
+    q24_8 delX = 0;
+    q24_8 delY = 0;
+    switch (enemy->behavior)
+    {
+        case MOVE_POS_X:
+        {
+            delX = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        case MOVE_NEG_X:
+        {
+            delX = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        case MOVE_POS_Y:
+        {
+            delY = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        case MOVE_NEG_Y:
+        {
+            delY = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
+            break;
+        }
+        default:
+        {
+            // Do nothing
+            break;
+        }
+    }
+
+    // Move if in bounds
+    if (isPassableCell(&ray->map.tiles[FROM_FX(enemy->c.posX + delX)][FROM_FX(enemy->c.posY + delY)]))
+    {
+        enemy->c.posX += delX;
+        enemy->c.posY += delY;
     }
 }
 
