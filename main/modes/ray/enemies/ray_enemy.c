@@ -17,14 +17,14 @@
 
 typedef void (*rayEnemyMove_t)(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
 typedef bool (*rayEnemyGetShot_t)(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet);
-typedef int32_t (*rayEnemyGetShotTimer_t)(rayEnemy_t* enemy);
+typedef int32_t (*rayEnemyGetTimer_t)(rayEnemy_t* enemy, rayEnemyTimerType_t type);
 typedef rayMapCellType_t (*rayEnemyGetBullet_t)(rayEnemy_t* enemy);
 
 typedef struct ray_enemy
 {
     rayEnemyMove_t move;
     rayEnemyGetShot_t getShot;
-    rayEnemyGetShotTimer_t getShotTimer;
+    rayEnemyGetTimer_t getTimer;
     rayEnemyGetBullet_t getBullet;
 } enemyFuncs_t;
 
@@ -39,45 +39,45 @@ typedef struct ray_enemy
 static const enemyFuncs_t enemyFuncs[] = {
     {
         // OBJ_ENEMY_NORMAL
-        .move         = rayEnemyNormalMove,
-        .getShot      = rayEnemyNormalGetShot,
-        .getShotTimer = rayEnemyNormalGetShotTimer,
-        .getBullet    = rayEnemyNormalGetBullet,
+        .move      = rayEnemyNormalMove,
+        .getShot   = rayEnemyNormalGetShot,
+        .getTimer  = rayEnemyNormalGetTimer,
+        .getBullet = rayEnemyNormalGetBullet,
     },
     {
         // OBJ_ENEMY_STRONG
-        .move         = rayEnemyStrongMove,
-        .getShot      = rayEnemyStrongGetShot,
-        .getShotTimer = rayEnemyStrongGetShotTimer,
-        .getBullet    = rayEnemyStrongGetBullet,
+        .move      = rayEnemyStrongMove,
+        .getShot   = rayEnemyStrongGetShot,
+        .getTimer  = rayEnemyStrongGetTimer,
+        .getBullet = rayEnemyStrongGetBullet,
     },
     {
         // OBJ_ENEMY_ARMORED
-        .move         = rayEnemyArmoredMove,
-        .getShot      = rayEnemyArmoredGetShot,
-        .getShotTimer = rayEnemyArmoredGetShotTimer,
-        .getBullet    = rayEnemyArmoredGetBullet,
+        .move      = rayEnemyArmoredMove,
+        .getShot   = rayEnemyArmoredGetShot,
+        .getTimer  = rayEnemyArmoredGetTimer,
+        .getBullet = rayEnemyArmoredGetBullet,
     },
     {
         // OBJ_ENEMY_FLAMING
-        .move         = rayEnemyFlamingMove,
-        .getShot      = rayEnemyFlamingGetShot,
-        .getShotTimer = rayEnemyFlamingGetShotTimer,
-        .getBullet    = rayEnemyFlamingGetBullet,
+        .move      = rayEnemyFlamingMove,
+        .getShot   = rayEnemyFlamingGetShot,
+        .getTimer  = rayEnemyFlamingGetTimer,
+        .getBullet = rayEnemyFlamingGetBullet,
     },
     {
         // OBJ_ENEMY_HIDDEN
-        .move         = rayEnemyHiddenMove,
-        .getShot      = rayEnemyHiddenGetShot,
-        .getShotTimer = rayEnemyHiddenGetShotTimer,
-        .getBullet    = rayEnemyHiddenGetBullet,
+        .move      = rayEnemyHiddenMove,
+        .getShot   = rayEnemyHiddenGetShot,
+        .getTimer  = rayEnemyHiddenGetTimer,
+        .getBullet = rayEnemyHiddenGetBullet,
     },
     {
         // OBJ_ENEMY_BOSS
-        .move         = rayEnemyBossMove,
-        .getShot      = rayEnemyBossGetShot,
-        .getShotTimer = rayEnemyBossGetShotTimer,
-        .getBullet    = rayEnemyBossGetBullet,
+        .move      = rayEnemyBossMove,
+        .getShot   = rayEnemyBossGetShot,
+        .getTimer  = rayEnemyBossGetTimer,
+        .getBullet = rayEnemyBossGetBullet,
     },
 };
 
@@ -131,7 +131,19 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
                 if (rayEnemyTransitionState(enemy, E_SHOOTING))
                 {
                     // If successful, restart the shot timer
-                    enemy->shootTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShotTimer(enemy);
+                    enemy->shootTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, SHOT);
+                }
+            }
+
+            // Run the block timer down to zero
+            enemy->blockTimer -= eElapsedUs;
+            if (enemy->blockTimer <= 0)
+            {
+                // Try to transition to blocking
+                if (rayEnemyTransitionState(enemy, E_BLOCKING))
+                {
+                    // If successful, restart the block timer
+                    enemy->blockTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, BLOCK);
                 }
             }
         }
@@ -197,9 +209,9 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
  * @param enemy The shooting enemy
  * @return int32_t The time in uS until the next shot
  */
-int32_t getShotTimerForEnemy(rayEnemy_t* enemy)
+int32_t getTimerForEnemy(rayEnemy_t* enemy, rayEnemyTimerType_t type)
 {
-    return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShotTimer(enemy);
+    return enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, type);
 }
 
 /**

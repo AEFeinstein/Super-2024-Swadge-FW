@@ -104,9 +104,10 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
  * @brief Get the time until the next shot is taken
  *
  * @param enemy The enemy taking the shot
+ * @param type the timer of timer to get
  * @return The time, in uS, until the next shot
  */
-int32_t rayEnemyBossGetShotTimer(rayEnemy_t* enemy)
+int32_t rayEnemyBossGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
 {
     return 2000000 + (esp_random() % 2000000);
 }
