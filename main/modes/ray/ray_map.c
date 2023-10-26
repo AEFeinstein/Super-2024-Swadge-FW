@@ -232,6 +232,10 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
 
     // Free the file data
     free(fileData);
+
+    // Play this map's music
+    ray->songs[ray->p.mapId].shouldLoop = true;
+    bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
 }
 
 /**

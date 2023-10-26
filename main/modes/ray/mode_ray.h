@@ -612,6 +612,8 @@ typedef struct
     uint32_t secondsSinceStart;      ///< The number of seconds since this map was loaded
 
     starfield_t starfield; ///< Starfield used for warp animation
+
+    song_t songs[NUM_MAPS]; ///< Per-map background music
 } ray_t;
 
 //==============================================================================

@@ -51,6 +51,10 @@ const paletteColor_t rayMapColors[] = {
     c500, // Red
 };
 
+/// @brief The songs to play, must be in map order
+const char* const songFiles[]
+    = {"base_0.mid", "jungle_0.mid", "cave_0.mid", "base_0.mid", "jungle_0.mid", "cave_0.mid"};
+
 /// @brief The NVS key to save and load player data
 const char RAY_NVS_KEY[] = "ray";
 // The NVS key to save and load visited tiles
@@ -116,6 +120,12 @@ static void rayEnterMode(void)
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
 
+    // Load songs
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
+    {
+        loadSong(songFiles[sIdx], &ray->songs[sIdx], true);
+    }
+
     // Set the menu as the screen
     ray->screen = RAY_MENU;
 
@@ -141,6 +151,12 @@ static void rayExitMode(void)
 
     // Free the textures
     freeAllTex(ray);
+
+    // Free songs
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
+    {
+        freeSong(&ray->songs[sIdx]);
+    }
 
     // Free the font
     freeFont(&ray->ibm);
