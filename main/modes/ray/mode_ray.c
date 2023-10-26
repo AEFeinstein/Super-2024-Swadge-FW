@@ -53,7 +53,7 @@ const paletteColor_t rayMapColors[] = {
 
 /// @brief The songs to play, must be in map order
 const char* const songFiles[]
-    = {"base_0.mid", "jungle_0.mid", "cave_0.mid", "base_0.mid", "jungle_0.mid", "cave_0.mid"};
+    = {"base_0.sng", "jungle_0.sng", "cave_0.sng", "base_0.sng", "jungle_0.sng", "cave_0.sng"};
 
 /// @brief The NVS key to save and load player data
 const char RAY_NVS_KEY[] = "ray";
