@@ -108,50 +108,121 @@ void process_obj(const char* infile, const char* outdir)
             // try to scan for face/texture/normal, then face/texture, then just face
 
             // vertex IDs
-			int vv[3];
-            // texture IDs (unused)
-            int vt[3];
-            // IDs (unused)
-            int vn[3];
+			int vv[4];
 
-            int v4[3];
+            // We need to support any of these formats
+            // f v1 v2 v3 ...
+            // f v1//vn1 v2//vn2 v3//vn3 ...
+            // f v1/vt1/vn1 v2/vt2/vn2 v3/vt3/vn3 ...
+            // Set the position to right at the first value
+            const char* cur = line + 1;
+            int vertFaces = 0;
+            int fieldNum = 0;
 
-            // unused
-            int _ = -1;
-
-            if (12 != sscanf(line + 2, "%d/%d/%d %d/%d/%d %d/%d/%d %d/%d/%d %d", vv+0, vt+0, vn+0, vv+1, vt+1, vn+1, vv+2, vt+2, vn+2, v4+0, v4+1, v4+2, &_))
+            while (0 != *cur && '\n' != *cur && vertFaces < 4)
             {
-                if (9 != sscanf(line + 2, "%d/%d/%d %d/%d/%d %d/%d/%d", vv+0, vt+0, vn+0, vv+1, vt+1, vn+1, vv+2, vt+2, vn+2))
+                // Skip whitespace
+                if (*cur == ' ')
                 {
-                    if (6 != sscanf(line + 2, "%d/%d %d/%d %d/%d", vv+0, vt+0, vv+1, vt+1, vv+2, vt+2))
+                    fieldNum = 0;
+                    // Skip any more whitespace
+                    while (*++cur == ' ');
+                }
+
+                if (*cur == 'v')
+                {
+                    cur++;
+                    continue;
+                }
+
+                if (*cur == '/')
+                {
+                    // Vert/Texture/Normal separator
+                    cur++;
+                    fieldNum++;
+                    continue;
+                }
+
+                if ('0' <= *cur && *cur <= '9')
+                {
+                    // Number found, save it
+                    int val = atoi(cur);
+                    if (val == 0)
                     {
-                        if (3 != sscanf( line + 2, "%d %d %d", vv+0, vv+1, vv+2 ))
+                        printf("obj_processor.c: Bad int value in line '%s': ---> '%s'\n", line, cur);
+                    }
+                    else
+                    {
+                        if (fieldNum == 0)
                         {
-                            fprintf(stderr, "obj_processor.c: Can't parse faces line: %s\n", line);
+                            // Vert
+                            vv[vertFaces++] = val;
+                        }
+                        else if (fieldNum == 1)
+                        {
+                            // Texture
+                            // (Ignored)
+                        }
+                        else if (fieldNum == 2)
+                        {
+                            // Normal
+                            // (Ignored)
                         }
                     }
+
+                    // either way, advance past the number
+                    while ('0' <= *cur && *cur <= '9')
+                    {
+                        ++cur;
+                    }
+
+                    continue;
                 }
             }
-            else if (_ == -1)
+
+            if (vertFaces == 3 || vertFaces == 4)
             {
-                // Okay, this is a quad... vv[0,1,2] will cover half of it, then we can just add vv[0,2,v4[0]]
-                // Convert fourth vertex to
-                v4[0]--;
+                if ((ivc + (vertFaces - 2)) > 16383)
+                {
+                    fprintf(stderr, "obj_processor.c: ERR! Object too large with >= 16384 faces\n");
+                }
 
-                ivS[ivc][0] = vv[0];
-                ivS[ivc][1] = vv[2];
-                ivS[ivc++][2] = v4[0];
+                // read values are 1-indexed, decrement to make them 0-indexed
+                vv[0]--;
+                vv[1]--;
+                vv[2]--;
 
-                // And now we need to check che buffer size again!
-                CHECK_ARR(ivS, ivc, ivSize, sizeof(iv_t));
+                if (vertFaces == 4)
+                {
+                    // Special case: We will split the face into 2 triangles here
+                    // Wikipedia tells of a "slow" algorithm that can triangulate arbitrary faces...
+
+                    // Make the fourth vertex index 0-indexed as well
+                    vv[3]--;
+
+                    // vv[0, 2, 3] will cover the other half of the quad face
+                    // TODO woops, does this work for a concave quad?
+                    ivS[ivc][0] = vv[0];
+                    ivS[ivc][1] = vv[2];
+                    ivS[ivc][2] = vv[3];
+
+                    // And now we need to check the buffer size again, for the next vert
+                    CHECK_ARR(ivS, ++ivc, ivSize, sizeof(iv_t));
+                }
+
+                // Copy the vert to the new one
+                memcpy( ivS[ivc++], vv, sizeof( vv ) );
             }
-
-            // read values are 1-indexed, decrement to make them 0-indexed
-			vv[0]--;
-			vv[1]--;
-			vv[2]--;
-
-			memcpy( ivS[ivc++], vv, sizeof( vv ) );
+            else if (vertFaces > 4)
+            {
+                printf("obj_processor.c: Ignoring face with >4 verts: '%s'\n", line);
+                // go to next line
+                continue;
+            }
+            else
+            {
+                printf("obj_processor.c: Ignoring face with %d verts: '%s'\n", vertFaces, line);
+            }
 		}
 
         /* Read line entry */
@@ -168,6 +239,7 @@ void process_obj(const char* infile, const char* outdir)
 
             memcpy(lines[lnc++], ln, sizeof(ln));
         }
+
         /* Ignore comments and also everything else */
 	}
 
