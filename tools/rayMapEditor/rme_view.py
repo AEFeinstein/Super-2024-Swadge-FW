@@ -260,17 +260,17 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/enemies/NORMAL/E_NORMAL_WALK_0.png')
+                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/enemies/NORMAL/E_NORMAL_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/enemies/STRONG/E_STRONG_WALK_0.png')
+                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/enemies/STRONG/E_STRONG_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/enemies/ARMORED/E_ARMORED_WALK_0.png')
+                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/enemies/ARMORED/E_ARMORED_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/enemies/FLAMING/E_FLAMING_WALK_0.png')
+                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/enemies/FLAMING/E_FLAMING_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/enemies/HIDDEN/E_HIDDEN_WALK_0.png')
+                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/enemies/HIDDEN/E_HIDDEN_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/enemies/BOSS/E_BOSS_WALK_0.png')
+                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/enemies/BOSS/E_BOSS_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ITEM_BEAM, '../../assets/ray/items/OBJ_ITEM_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
