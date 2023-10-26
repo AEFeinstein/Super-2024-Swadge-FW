@@ -106,13 +106,25 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
 
+        // Copy the elapsed time in case the enemy is frozen
+        uint32_t eElapsedUs = elapsedUs;
+
+        // If the enemy is frozen
+        if (0 < enemy->freezeTimer)
+        {
+            // Decrement the timer
+            enemy->freezeTimer -= eElapsedUs;
+            // Slow time for other timers
+            eElapsedUs /= 3;
+        }
+
         // Move enemies and run timers if not dying
         if (E_DEAD != enemy->state)
         {
-            enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, elapsedUs);
+            enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, eElapsedUs);
 
             // Run the shot timer down to zero
-            enemy->shootTimer -= elapsedUs;
+            enemy->shootTimer -= eElapsedUs;
             if (enemy->shootTimer <= 0)
             {
                 // Try to transition to shooting
@@ -125,7 +137,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         }
 
         // Animate the enemy
-        if (animateEnemy(ray, enemy, elapsedUs))
+        if (animateEnemy(ray, enemy, eElapsedUs))
         {
             // Enemy was killed
             checkScriptKill(ray, enemy->c.id, &enemy->sprites[0][E_WALKING_1][0]);
@@ -211,10 +223,23 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
+    // TODO check I-Frames here
+
+    // Save old health to see if the enemy took damage
+    int32_t oldHealth = enemy->health;
+
+    // Apply damage
     if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet))
     {
         // Transition to dying
         rayEnemyTransitionState(enemy, E_DEAD);
+    }
+
+    // If the enemy took ice damage
+    if ((OBJ_BULLET_ICE == bullet) && (oldHealth != enemy->health))
+    {
+        // Slow it for a moment
+        enemy->freezeTimer = 2000000;
     }
 }
 
