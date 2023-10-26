@@ -42,10 +42,8 @@
 /** The number of bullets tracked at a given point in time */
 #define MAX_RAY_BULLETS 32
 
-/** The number of non-walking frames in an animation */
-#define NUM_NON_WALK_FRAMES 4
-/** The number of walking frames in an animation (non-walking doubled) */
-#define NUM_WALK_FRAMES (NUM_NON_WALK_FRAMES * 2)
+/** The number of frames in an animation */
+#define NUM_ANIM_FRAMES 4
 
 /** The time to swap out and swap in a gun, in microseconds */
 #define LOADOUT_TIMER_US (1 << 18)
@@ -154,7 +152,8 @@ typedef enum __attribute__((packed))
  */
 typedef enum
 {
-    E_WALKING,    ///< The enemy is walking
+    E_WALKING_1,  ///< The enemy is walking, half cycle
+    E_WALKING_2,  ///< The enemy is walking, the other half
     E_SHOOTING,   ///< The enemy is shooting (may move while shooting)
     E_HURT,       ///< The enemy was shot
     E_BLOCKING,   ///< The enemy is blocking
@@ -492,7 +491,7 @@ typedef struct
     int32_t animTimer;                                   ///< A timer used for this enemy's animations
     int32_t animTimerLimit;                              ///< The time at which the texture should switch
     int32_t animFrame;                                   ///< The current animation frame
-    wsg_t (*sprites)[E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< All of this enemy's sprites
+    wsg_t (*sprites)[E_NUM_STATES][NUM_ANIM_FRAMES]; ///< All of this enemy's sprites
 } rayEnemy_t;
 
 /**
@@ -592,9 +591,9 @@ typedef struct
     wsg_t guns[NUM_LOADOUTS];              ///< Textures for the HUD guns
     wsg_t portrait;                        ///< A portrait used for text dialogs
     wsg_t missileHUDicon;                  ///< A missile icon drawn in the HUD
-    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_NON_WALK_FRAMES];        ///< The enemy textures
-    wsg_t hiddenXRTex[E_NUM_STATES][NUM_NON_WALK_FRAMES];                  ///< The textures for X-Ray hidden enemies
-    wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_NON_WALK_FRAMES]; ///< The textures for the boss
+    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES];        ///< The enemy textures
+    wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];                  ///< The textures for X-Ray hidden enemies
+    wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The textures for the boss
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu

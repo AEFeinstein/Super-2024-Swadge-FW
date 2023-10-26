@@ -128,7 +128,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         if (animateEnemy(ray, enemy, elapsedUs))
         {
             // Enemy was killed
-            checkScriptKill(ray, enemy->c.id, &enemy->sprites[0][E_WALKING][0]);
+            checkScriptKill(ray, enemy->c.id, &enemy->sprites[0][E_WALKING_1][0]);
 
             // save the next node
             node_t* nextNode = currentNode->next;
@@ -242,17 +242,10 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         // Decrement timer
         enemy->animTimer -= enemy->animTimerLimit;
 
-        // Pick the sprites and limits based on the state
-        int32_t limit = NUM_NON_WALK_FRAMES;
-        if (E_WALKING == enemy->state)
-        {
-            limit = NUM_WALK_FRAMES;
-        }
-
         // Increment to the next frame
         enemy->animFrame++;
         // If the animation is over
-        if (enemy->animFrame >= limit)
+        if (enemy->animFrame >= NUM_ANIM_FRAMES)
         {
             if (E_DEAD == enemy->state)
             {
@@ -261,19 +254,20 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             }
             else
             {
-                // Return to walking
-                rayEnemyTransitionState(enemy, E_WALKING);
+                if (E_WALKING_1 == enemy->state)
+                {
+                    // Return to walking
+                    rayEnemyTransitionState(enemy, E_WALKING_2);
+                }
+                else
+                {
+                    // Return to walking
+                    rayEnemyTransitionState(enemy, E_WALKING_1);
+                }
             }
         }
         else
         {
-            // Not past the limit, but If the frame is past the number of frames
-            if (enemy->animFrame >= NUM_NON_WALK_FRAMES)
-            {
-                // Mirror it and start over
-                enemy->c.spriteMirrored = !enemy->c.spriteMirrored;
-                enemy->animFrame        = 0;
-            }
             // Pick the next sprite
             enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
 

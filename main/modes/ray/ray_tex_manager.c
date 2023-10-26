@@ -16,7 +16,7 @@
 /**
  * The maximum number of loaded named textures
  */
-#define MAX_LOADED_TEXTURES 32
+#define MAX_LOADED_TEXTURES 64
 
 /// Helper macro to load textures
 #define LOAD_TEXTURE(r, t) loadTexture(r, #t ".wsg", t)
@@ -67,13 +67,13 @@ void loadEnvTextures(ray_t* ray)
     // MUST be in teh same order as rayMapCellType_t
     const char* const enemyTypes[] = {"NORMAL", "STRONG", "ARMORED", "FLAMING", "HIDDEN", "BOSS"};
     // MUST be int the same order as rayEnemyState_t
-    const char* const enemyAnimations[] = {"WALK", "SHOOT", "HURT", "BLOCK", "DEAD"};
+    const char* const enemyAnimations[] = {"WALK_0", "WALK_1", "SHOOT", "HURT", "BLOCK", "DEAD"};
     // Load all enemy textures
     for (int32_t eIdx = 0; eIdx < NUM_ENEMIES; eIdx++)
     {
         for (rayEnemyState_t aIdx = 0; aIdx < E_NUM_STATES; aIdx++)
         {
-            for (int32_t fIdx = 0; fIdx < NUM_NON_WALK_FRAMES; fIdx++)
+            for (int32_t fIdx = 0; fIdx < NUM_ANIM_FRAMES; fIdx++)
             {
                 snprintf(fName, sizeof(fName) - 1, "E_%s_%s_%" PRId32 ".wsg", enemyTypes[eIdx], enemyAnimations[aIdx],
                          fIdx);
@@ -235,7 +235,7 @@ void freeAllTex(ray_t* ray)
     {
         for (int32_t aIdx = 0; aIdx < E_NUM_STATES; aIdx++)
         {
-            for (int32_t fIdx = 0; fIdx < NUM_NON_WALK_FRAMES; fIdx++)
+            for (int32_t fIdx = 0; fIdx < NUM_ANIM_FRAMES; fIdx++)
             {
                 freeWsg(&ray->enemyTex[eIdx][aIdx][fIdx]);
 

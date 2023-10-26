@@ -253,7 +253,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, in
 
     // Set initial enemy state
     newObj->health         = 100;
-    newObj->state          = E_WALKING;
+    newObj->state          = E_WALKING_1;
     newObj->behavior       = DOING_NOTHING;
     newObj->behaviorTimer  = 0;
     newObj->shootTimer     = getShotTimerForEnemy(newObj);
@@ -263,7 +263,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, in
     newObj->sprites        = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
 
     // Set initial common state
-    newObj->c.sprite         = newObj->sprites[E_WALKING][0];
+    newObj->c.sprite         = newObj->sprites[newObj->state][0];
     newObj->c.posX           = TO_FX(x) + TO_FX_FRAC(1, 2);
     newObj->c.posY           = TO_FX(y) + TO_FX_FRAC(1, 2);
     newObj->c.radius         = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
