@@ -173,7 +173,8 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
     int totalTrisThisFrame = 0;
     int i;
 
-    float plusy[3] = { 0, 1, 0 };
+    // were not used really
+    /*float plusy[3] = { 0, 1, 0 };
 
     // Produce a model matrix from a quaternion.
     float plusx_out[3] = { 0.9, 0, 0 };
@@ -183,7 +184,7 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
     mathRotateVectorByQuaternion( plusy, sceneOrient, plusy );
     mathRotateVectorByQuaternion( plusy_out, sceneOrient, plusy_out );
     mathRotateVectorByQuaternion( plusx_out, sceneOrient, plusx_out );
-    mathRotateVectorByQuaternion( plusz_out, sceneOrient, plusz_out );
+    mathRotateVectorByQuaternion( plusz_out, sceneOrient, plusz_out );*/
 
     // where in the vert map each model's vertices starts
     uint16_t vertOffsets[16] = {0};
