@@ -699,7 +699,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
 
                     if (!enemyExists)
                     {
-                        rayCreateEnemy(ray, type, id, x, y);
+                        rayCreateEnemy(ray, type, id, TO_FX(x) + TO_FX_FRAC(1, 2), TO_FX(y) + TO_FX_FRAC(1, 2));
                     }
                 }
                 else if (ITEM == (type & 0x60))
@@ -725,7 +725,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
 
                     if (!itemExists)
                     {
-                        rayCreateCommonObj(ray, type, id, x, y);
+                        rayCreateCommonObj(ray, type, id, TO_FX(x) + TO_FX_FRAC(1, 2), TO_FX(y) + TO_FX_FRAC(1, 2));
                     }
                 }
                 else if (SCENERY == (type & 0x60))
@@ -751,7 +751,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
 
                     if (!sceneryExists)
                     {
-                        rayCreateCommonObj(ray, type, id, x, y);
+                        rayCreateCommonObj(ray, type, id, TO_FX(x) + TO_FX_FRAC(1, 2), TO_FX(y) + TO_FX_FRAC(1, 2));
                     }
                 }
             }

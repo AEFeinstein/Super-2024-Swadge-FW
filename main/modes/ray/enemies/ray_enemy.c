@@ -139,6 +139,31 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
                 ray->targetedObj = NULL;
             }
 
+            // Randomly drop a pickup where the enemy was
+            switch (esp_random() % 4)
+            {
+                case 0:
+                {
+                    // 25%
+                    rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, -1, enemy->c.posX, enemy->c.posY);
+                    break;
+                }
+                case 1:
+                {
+                    // 25%, if missiles are unlocked
+                    if (ray->p.i.missileLoadOut)
+                    {
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, -1, enemy->c.posX, enemy->c.posY);
+                    }
+                    break;
+                }
+                default:
+                {
+                    // No drop
+                    break;
+                }
+            }
+
             // Unlink and free
             removeEntry(&ray->enemies, currentNode);
             free(enemy);
@@ -216,9 +241,9 @@ bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
         enemy->animTimerLimit = 250000;
         // Pick the sprites
         enemy->c.sprite = &enemy->sprites[0][newState][0];
-        if (E_SHOOTING == newState)
+        if ((E_WALKING_1 == newState) || (E_WALKING_2 == newState))
         {
-            enemy->animTimerLimit = 100000;
+            enemy->animTimerLimit = 125000;
         }
     }
     return true;

@@ -481,16 +481,16 @@ typedef struct
  */
 typedef struct
 {
-    rayObjCommon_t c;                                    ///< Common object properties
-    int32_t health;                                      ///< The enemy's health
-    rayEnemyState_t state;                               ///< This enemy's current state
-    rayEnemyBehavior_t behavior;                         ///< What the enemy is currently doing
-    rayBossState_t bossState;                            ///< The current boss state, unused for non-boss
-    int32_t behaviorTimer;                               ///< A timer used for this enemy's behaviors
-    int32_t shootTimer;                                  ///< A timer used for this enemy's shooting
-    int32_t animTimer;                                   ///< A timer used for this enemy's animations
-    int32_t animTimerLimit;                              ///< The time at which the texture should switch
-    int32_t animFrame;                                   ///< The current animation frame
+    rayObjCommon_t c;                                ///< Common object properties
+    int32_t health;                                  ///< The enemy's health
+    rayEnemyState_t state;                           ///< This enemy's current state
+    rayEnemyBehavior_t behavior;                     ///< What the enemy is currently doing
+    rayBossState_t bossState;                        ///< The current boss state, unused for non-boss
+    int32_t behaviorTimer;                           ///< A timer used for this enemy's behaviors
+    int32_t shootTimer;                              ///< A timer used for this enemy's shooting
+    int32_t animTimer;                               ///< A timer used for this enemy's animations
+    int32_t animTimerLimit;                          ///< The time at which the texture should switch
+    int32_t animFrame;                               ///< The current animation frame
     wsg_t (*sprites)[E_NUM_STATES][NUM_ANIM_FRAMES]; ///< All of this enemy's sprites
 } rayEnemy_t;
 
@@ -585,14 +585,14 @@ typedef struct
     int32_t lavaTimer;   ///< Timer to apply lava damage
     int32_t chargeTimer; ///< Timer to charge shots
 
-    namedTexture_t* loadedTextures;        ///< A list of loaded textures
-    uint8_t* typeToIdxMap;                 ///< A map of rayMapCellType_t to respective textures
-    wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES]; ///< The environment textures
-    wsg_t guns[NUM_LOADOUTS];              ///< Textures for the HUD guns
-    wsg_t portrait;                        ///< A portrait used for text dialogs
-    wsg_t missileHUDicon;                  ///< A missile icon drawn in the HUD
-    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES];        ///< The enemy textures
-    wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];                  ///< The textures for X-Ray hidden enemies
+    namedTexture_t* loadedTextures;                             ///< A list of loaded textures
+    uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
+    wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES];                      ///< The environment textures
+    wsg_t guns[NUM_LOADOUTS];                                   ///< Textures for the HUD guns
+    wsg_t portrait;                                             ///< A portrait used for text dialogs
+    wsg_t missileHUDicon;                                       ///< A missile icon drawn in the HUD
+    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
+    wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies
     wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The textures for the boss
 
     font_t ibm;     ///< A font to draw the HUD

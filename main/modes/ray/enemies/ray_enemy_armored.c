@@ -10,7 +10,6 @@
  */
 void rayEnemyArmoredMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
-
     // Pick an initial direction to move in
     q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
     q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
