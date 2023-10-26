@@ -73,6 +73,15 @@ bool initializePlayer(ray_t* ray)
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
 
+    // Always start with at least one missile to not get locked behind doors
+    if (ray->p.i.missileLoadOut)
+    {
+        if (0 == ray->p.i.numMissiles)
+        {
+            ray->p.i.numMissiles++;
+        }
+    }
+
     return initFromScratch;
 }
 
