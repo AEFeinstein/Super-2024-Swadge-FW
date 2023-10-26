@@ -13,6 +13,7 @@
 #include "touchUtils.h"
 #include "gamepad.h"
 #include "mainMenu.h"
+#include "settingsManager.h"
 
 //==============================================================================
 // Defines
@@ -61,20 +62,6 @@ typedef enum
 // Structs
 //==============================================================================
 
-typedef struct // 4 bools = 4 bytes = 32 bits
-{
-    bool touchAnalogOn; // Least significant byte
-    bool accelOn;
-    bool _reserved1;
-    bool _reserved2; // Most significant byte
-} gamepadToggleSettings_t;
-
-union gamepadToggleSettings_u
-{
-    int32_t i;
-    gamepadToggleSettings_t settings;
-};
-
 typedef struct
 {
     font_t ibmFont;
@@ -89,8 +76,6 @@ typedef struct
 
     uint8_t gamepadType;
     bool isPluggedIn;
-
-    union gamepadToggleSettings_u gamepadToggleSettings;
 } gamepad_t;
 
 //==============================================================================
@@ -107,23 +92,25 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void gamepadMenuLoop(int64_t elapsedUs);
 void gamepadStart(gamepadType_t type);
 
-static bool saveGamepadToggleSettings(union gamepadToggleSettings_u* toggleSettings);
-static bool loadGamepadToggleSettings(union gamepadToggleSettings_u* toggleSettings);
-
 static const char* getButtonName(hid_gamepad_button_bm_t button);
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-static const char str_pc[]               = "PC";
+static const char str_pc[]               = "Computer";
 static const char str_ns[]               = "Switch";
-static const char str_touch_analog_on[]  = "Touch: Digi+Analog";
-static const char str_touch_analog_off[] = "Touch: Digital Only";
-static const char str_accel_on[]         = "Accel: On";
-static const char str_accel_off[]        = "Accel: Off";
+static const char str_accel[]            = "Accel: ";
 static const char str_exit[]             = "Exit";
-static const char KEY_GAMEPAD_SETTINGS[] = "gp_settings";
+
+static const int32_t accelSettingsValues[] = {
+    0,
+    1
+};
+
+static const char* const accelSettingsOptions[] = {
+    "Off", "On",
+};
 
 gamepad_t* gamepad;
 
@@ -145,12 +132,10 @@ swadgeMode_t gamepadMode = {
 
 };
 
-// TODO: handle 8-way joystick
 const hid_gamepad_button_bm_t touchMap[] = {
     GAMEPAD_BUTTON_C, GAMEPAD_BUTTON_X, GAMEPAD_BUTTON_Y, GAMEPAD_BUTTON_Z, GAMEPAD_BUTTON_TL,
 };
 
-// TODO: handle 8-way joystick?
 const hid_gamepad_button_bm_t touchMapNs[] = {
     GAMEPAD_NS_BUTTON_Y, GAMEPAD_NS_BUTTON_TL, GAMEPAD_NS_BUTTON_Z, GAMEPAD_NS_BUTTON_TR, GAMEPAD_NS_BUTTON_X,
 };
@@ -285,12 +270,9 @@ void gamepadEnterMode(void)
     gamepad->menu = initMenu(gamepadMode.modeName, gamepadMainMenuCb);
     addSingleItemToMenu(gamepad->menu, str_pc);
     addSingleItemToMenu(gamepad->menu, str_ns);
-    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.touchAnalogOn ? str_touch_analog_on
-                                                                                             : str_touch_analog_off);
-    addSingleItemToMenu(gamepad->menu, gamepad->gamepadToggleSettings.settings.accelOn ? str_accel_on : str_accel_off);
+    addSettingsOptionsItemToMenu(gamepad->menu, str_accel, accelSettingsOptions, accelSettingsValues, ARRAY_SIZE(accelSettingsOptions),
+        getGamepadAccelSettingBounds(), getGamepadAccelSetting());
     addSingleItemToMenu(gamepad->menu, str_exit);
-
-    loadGamepadToggleSettings(&gamepad->gamepadToggleSettings);
 
     // Initialize menu renderer
     gamepad->renderer = initMenuLogbookRenderer(&gamepad->logbookFont);
@@ -332,46 +314,11 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
             return;
         }
     }
-    else // TODO: verify this is the proper way to use `selected`
+    else
     {
-        bool needRedraw = false;
-
-        if (label == str_touch_analog_on)
+        if (label == str_accel)
         {
-            // Touch analog is on, turn it off
-            gamepad->gamepadToggleSettings.settings.touchAnalogOn = false;
-            saveGamepadToggleSettings(&gamepad->gamepadToggleSettings);
-
-            needRedraw = true;
-        }
-        else if (label == str_touch_analog_off)
-        {
-            // Touch analog is off, turn it on
-            gamepad->gamepadToggleSettings.settings.touchAnalogOn = true;
-            saveGamepadToggleSettings(&gamepad->gamepadToggleSettings);
-
-            needRedraw = true;
-        }
-        else if (label == str_accel_on)
-        {
-            // Accel is on, turn it off
-            gamepad->gamepadToggleSettings.settings.accelOn = false;
-            saveGamepadToggleSettings(&gamepad->gamepadToggleSettings);
-
-            needRedraw = true;
-        }
-        else if (label == str_accel_off)
-        {
-            // Accel is off, turn it on
-            gamepad->gamepadToggleSettings.settings.accelOn = true;
-            saveGamepadToggleSettings(&gamepad->gamepadToggleSettings);
-
-            needRedraw = true;
-        }
-
-        if (needRedraw)
-        {
-            gamepad->screen = GAMEPAD_MENU;
+            setGamepadAccelSetting(settingVal);
         }
     }
 }
@@ -605,34 +552,6 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
         // Draw touch pad
         int16_t tBarX = TFT_WIDTH - TOUCHPAD_DIAM / 2 - TOUCHPAD_X_OFF;
 
-        // TODO: translate new touchpad data into 4-way or 8-way joystick
-        // switch(gamepad->gamepadType){
-        //     case GAMEPAD_GENERIC: {
-        //         if(evt->down)
-        //         {
-        //             gamepad->gpState.buttons |= touchMap[evt->pad];
-        //         }
-        //         else
-        //         {
-        //             gamepad->gpState.buttons &= ~touchMap[evt->pad];
-        //         }
-
-        //         break;
-        //     }
-        //     case GAMEPAD_NS: {
-        //         if(evt->down)
-        //         {
-        //             gamepad->gpNsState.buttons |= touchMapNs[evt->pad];
-        //         }
-        //         else
-        //         {
-        //             gamepad->gpNsState.buttons &= ~touchMapNs[evt->pad];
-        //         }
-
-        //         break;
-        //     }
-        // }
-
         bool touched;
         int32_t phi, r, intensity;
         touched = getTouchJoystick(&phi, &r, &intensity);
@@ -646,7 +565,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         touchDrawVector(&gamepad->ibmFont, "", c333, tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF, TOUCHPAD_DIAM / 2, touched, phi, r);
 
-        if (gamepad->gamepadToggleSettings.settings.accelOn && gamepad->gamepadType == GAMEPAD_GENERIC)
+        if (getGamepadAccelSetting() && gamepad->gamepadType == GAMEPAD_GENERIC)
         {
             // Declare variables to receive acceleration
             int16_t a_x, a_y, a_z;
@@ -878,26 +797,17 @@ void gamepadReportStateToHost(void)
         {
             case GAMEPAD_GENERIC:
             {
-                if (gamepad->gamepadToggleSettings.settings.touchAnalogOn)
+                bool touched;
+                int32_t phi, r, intensity;
+                touched = getTouchJoystick(&phi, &r, &intensity);
+                if (touched)
                 {
-                    bool touched;
-                    int32_t phi, r, intensity;
-                    touched = getTouchJoystick(&phi, &r, &intensity);
-                    if (touched)
-                    {
-                        int32_t x, y;
-                        getTouchCartesian(phi, r, &x, &y);
-                        gamepad->gpState.x = (255 * x) / 1024 - 128;
-                        gamepad->gpState.y = (-255 * y) / 1024 - 128;
-                        //gamepad->gpState.z = (127 * (phi - 180)) / 360;
-                        gamepad->gpState.z = 0;
-                    }
-                    else
-                    {
-                        gamepad->gpState.x = 0;
-                        gamepad->gpState.y = 0;
-                        gamepad->gpState.z = 0;
-                    }
+                    int32_t x, y;
+                    getTouchCartesian(phi, r, &x, &y);
+                    gamepad->gpState.x = (255 * x) / 1024 - 128;
+                    gamepad->gpState.y = (-255 * y) / 1024 - 128;
+                    //gamepad->gpState.z = (127 * (phi - 180)) / 360;
+                    gamepad->gpState.z = 0;
                 }
                 else
                 {
@@ -905,6 +815,7 @@ void gamepadReportStateToHost(void)
                     gamepad->gpState.y = 0;
                     gamepad->gpState.z = 0;
                 }
+
                 // Send the state over USB
                 tud_hid_gamepad_report(HID_ITF_PROTOCOL_NONE, gamepad->gpState.x, gamepad->gpState.y,
                                        gamepad->gpState.z, gamepad->gpState.rx, gamepad->gpState.ry,
@@ -914,6 +825,7 @@ void gamepadReportStateToHost(void)
             }
             case GAMEPAD_NS:
             {
+                // TODO: accel
                 // TODO check this
                 // tud_gamepad_ns_report(&gamepad->gpNsState);
                 tud_hid_gamepad_report_ns(HID_ITF_PROTOCOL_NONE, gamepad->gpNsState.x, gamepad->gpNsState.y,
@@ -924,24 +836,6 @@ void gamepadReportStateToHost(void)
             }
         }
     }
-}
-
-static bool saveGamepadToggleSettings(union gamepadToggleSettings_u* toggleSettings)
-{
-    return writeNvs32(KEY_GAMEPAD_SETTINGS, toggleSettings->i);
-}
-
-static bool loadGamepadToggleSettings(union gamepadToggleSettings_u* toggleSettings)
-{
-    bool r = readNvs32(KEY_GAMEPAD_SETTINGS, &toggleSettings->i);
-    if (!r)
-    {
-        memset(toggleSettings, 0, sizeof(union gamepadToggleSettings_u));
-        toggleSettings->settings.accelOn       = true;
-        toggleSettings->settings.touchAnalogOn = true;
-        return saveGamepadToggleSettings(toggleSettings);
-    }
-    return true;
 }
 
 static const char* getButtonName(hid_gamepad_button_bm_t button)
