@@ -197,8 +197,8 @@ typedef enum
 typedef enum
 {
     V_BASE,   ///< Sci-fi base / space station
-    V_CAVE,   ///< Cave with lava
     V_JUNGLE, ///< Jungle with alien ruins
+    V_CAVE,   ///< Cave with lava
     NUM_ENVS, ///< The number of environments
 } rayEnv_t;
 

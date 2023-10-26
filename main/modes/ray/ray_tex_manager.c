@@ -51,7 +51,7 @@ void loadEnvTextures(ray_t* ray)
     char fName[32];
 
     // MUST be in the same order as rayEnv_t
-    const char* const env_types[] = {"BASE", "CAVE", "JUNGLE"};
+    const char* const env_types[] = {"BASE", "JUNGLE", "CAVE"};
     // MUST be in the same order as rayEnvTex_t
     const char* const env_texes[] = {"WALL_1", "WALL_2", "WALL_3", "WALL_4", "WALL_5", "FLOOR", "CEILING"};
     // Load all environment textures

@@ -38,7 +38,7 @@ const char rayExitStr[]    = "Exit";
 
 /// @brief A list of the map names
 const char* const rayMapNames[] = {
-    "World 0", "World 1", "World 2", "World 3", "World 4", "World 5",
+    "Station Zero", "Vinegrasp", "Floriss", "Station One", "Mosspire", "Scalderia",
 };
 
 /// @brief A list of the map colors, in order
