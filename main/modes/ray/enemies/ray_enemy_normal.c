@@ -10,18 +10,18 @@
  */
 void rayEnemyNormalMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
-    // Pick a new direction every 1s
-    enemy->behaviorTimer += elapsedUs;
-    if (enemy->behaviorTimer > 1000000)
+    // Pick a new direction every 2s
+    enemy->behaviorTimer -= elapsedUs;
+    if (enemy->behaviorTimer <= 0)
     {
-        enemy->behaviorTimer -= 1000000;
+        enemy->behaviorTimer += 2000000;
 
         // Find the vector from the enemy to the player and normalize it
         q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
         q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
 
         // Pick the movement direction on the grid
-        if (ABS(xDiff) > ABS(yDiff))
+        if (esp_random() % 2 == 0)
         {
             if (xDiff > 0)
             {

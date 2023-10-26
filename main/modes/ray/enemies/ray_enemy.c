@@ -118,11 +118,15 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             eElapsedUs /= 3;
         }
 
-        // Move enemies and run timers if not dying
-        if (E_DEAD != enemy->state)
+        // Move enemies in the walking tate
+        if ((E_WALKING_1 == enemy->state) || (E_WALKING_2 == enemy->state))
         {
             enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, eElapsedUs);
+        }
 
+        // Run other timers if not dead
+        if (E_DEAD != enemy->state)
+        {
             // Run the shot timer down to zero
             enemy->shootTimer -= eElapsedUs;
             if (enemy->shootTimer <= 0)
@@ -275,7 +279,7 @@ bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
         enemy->state          = newState;
         enemy->animTimer      = 0;
         enemy->animFrame      = 0;
-        enemy->animTimerLimit = 250000;
+        enemy->animTimerLimit = 200000;
         // Pick the sprites
         enemy->c.sprite = &enemy->sprites[0][newState][0];
         if ((E_WALKING_1 == newState) || (E_WALKING_2 == newState))

@@ -11,10 +11,10 @@
 void rayEnemyBossMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
     // Pick a new weakness every 4s
-    enemy->behaviorTimer += elapsedUs;
-    if (enemy->behaviorTimer > 4000000)
+    enemy->behaviorTimer -= elapsedUs;
+    if (enemy->behaviorTimer <= 0)
     {
-        enemy->behaviorTimer -= 4000000;
+        enemy->behaviorTimer += 4000000;
 
         enemy->bossState = (enemy->bossState + (1 + esp_random() % (NUM_BOSS_STATES - 1))) % NUM_BOSS_STATES;
 

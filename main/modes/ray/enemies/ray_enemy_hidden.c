@@ -10,11 +10,11 @@
  */
 void rayEnemyHiddenMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
-    // Pick a new direction every s
-    enemy->behaviorTimer += elapsedUs;
-    if (enemy->behaviorTimer > 1000000)
+    // Pick a new direction every 1s
+    enemy->behaviorTimer -= elapsedUs;
+    if (enemy->behaviorTimer <= 0)
     {
-        enemy->behaviorTimer -= 1000000;
+        enemy->behaviorTimer += 1000000;
 
         // Randomize Strafe
         if (esp_random() % 2)

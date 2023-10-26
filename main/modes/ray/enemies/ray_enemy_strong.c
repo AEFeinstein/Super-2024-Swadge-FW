@@ -11,10 +11,10 @@
 void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 {
     // Pick a new direction every 2s
-    enemy->behaviorTimer += elapsedUs;
-    if (enemy->behaviorTimer > 2000000)
+    enemy->behaviorTimer -= elapsedUs;
+    if (enemy->behaviorTimer <= 0)
     {
-        enemy->behaviorTimer -= 2000000;
+        enemy->behaviorTimer += 2000000;
 
         // Randomize movement
         switch (esp_random() % 8)
