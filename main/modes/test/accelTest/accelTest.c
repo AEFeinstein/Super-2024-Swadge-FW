@@ -74,16 +74,7 @@ typedef struct
 {
     font_t ibm; ///< The font used to display text
 
-    model_t bunny; ///< The bunny 3D model
     model_t donut; ///< The donut 3D model
-
-    scene_t scene;
-
-    bool translateY;
-    float scale;
-    float translate[3];
-
-    uint8_t selectedModel;
 
     uint16_t btnState; ///< The button state
 
@@ -113,7 +104,7 @@ static void accelTestExitMode(void);
 static void accelTestReset(void);
 static void accelTestSample(int16_t x, int16_t y, int16_t z);
 static void accelTestHandleInput(void);
-static void accelDrawBunny(void);
+static void accelDrawModel(void);
 
 static void accelTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void accelTestDrawGraph(void);
@@ -171,27 +162,11 @@ static void accelTestEnterMode(void)
 
     // Load a font
     loadFont("ibm_vga8.font", &accelTest->ibm, false);
-    ESP_LOGI("Model", "loadModel(bunny.mdl) returned %s", loadModel("bunny.mdl", &accelTest->bunny, true) ? "true" : "false");
+
     loadModel("donut.mdl", &accelTest->donut, true);
 
-    accelTest->scene.modelCount = 2;
-    accelTest->scene.models[0].model = &accelTest->donut;
-    accelTest->scene.models[0].scale = 0.5;
-    accelTest->scene.models[0].translate[0] = -25.0;
-    accelTest->scene.models[0].translate[1] = -25.0;
-    accelTest->scene.models[0].translate[2] = 0.0;
-
-    accelTest->scene.models[1].model = &accelTest->donut;
-    accelTest->scene.models[1].scale = 0.1;
-    accelTest->scene.models[1].translate[0] = 25.0;
-    accelTest->scene.models[1].translate[1] = 25.0;
-    accelTest->scene.models[1].translate[2] = -1.0;
-
-    // Ensure there's sufficient space to draw both models
-    initRendererScene(&accelTest->scene);
-
-    // Ensure there's sufficient space to draw either model
-    //initRendererCustom(MAX(accelTest->bunny.vertCount, accelTest->donut.vertCount), MAX(accelTest->bunny.triCount, accelTest->donut.triCount));
+    // Ensure there's sufficient space to draw the models
+    initRenderer(&accelTest->donut);
 
     // writeTextlabels doesn't get reset by accelTestReset(), so initialize that here
     accelTest->writeTextLabels = true;
@@ -211,9 +186,6 @@ static void accelTestExitMode(void)
     // Free renderer memory
     deinitRenderer();
 
-    // Free the bunny 3D model
-    freeModel(&accelTest->bunny);
-
     // Free the king donut 3D model
     freeModel(&accelTest->donut);
 
@@ -229,20 +201,6 @@ static void accelTestExitMode(void)
  */
 static void accelTestMainLoop(int64_t elapsedUs)
 {
-    int32_t angle, radius, intensity;
-    if (getTouchJoystick(&angle, &radius, &intensity))
-    {
-        int32_t x, y;
-        getTouchCartesian(angle, radius, &x, &y);
-
-        float minX = -126.0;
-        float maxX = 126.0;
-        float minY = -126.0;
-        float maxY = 126.0;
-
-        accelTest->scene.models[accelTest->selectedModel].translate[0] = minX + ((maxX - minX) * x / 1023.0);
-        accelTest->scene.models[accelTest->selectedModel].translate[1] = minY + ((maxY - minY) * y / 1023.0);
-    }
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -260,40 +218,13 @@ static void accelTestMainLoop(int64_t elapsedUs)
         {
             accelTest->writeTextLabels = !accelTest->writeTextLabels;
         }
-
-        if (evt.down && (PB_B == evt.button))
-        {
-            accelTest->selectedModel = (accelTest->selectedModel + 1) % accelTest->scene.modelCount;
-        }
-
-        if (evt.down && (PB_UP == evt.button))
-        {
-            accelTest->scene.models[accelTest->selectedModel].scale += .1;
-        }
-
-        if (evt.down && (PB_DOWN == evt.button))
-        {
-            accelTest->scene.models[accelTest->selectedModel].scale -= .1;
-        }
-
-        if (evt.down && (PB_LEFT == evt.button))
-        {
-            accelTest->scene.models[accelTest->selectedModel].translate[0] -= 5.0;
-        }
-
-        if (evt.down && (PB_RIGHT == evt.button))
-        {
-            accelTest->scene.models[accelTest->selectedModel].translate[0] += 5.0;
-        }
-
-        ESP_LOGI("Accel", "Scale: %f", accelTest->scale);
     }
 
     // Do update each loop
     accelTestHandleInput();
 
-    // Draw the bunny
-    accelDrawBunny();
+    // Draw the model
+    accelDrawModel();
 
     // Draw the field
     accelTestDrawGraph();
@@ -340,25 +271,14 @@ static void accelTestHandleInput(void)
 /**
  * @brief Draw the bunny
  */
-static void accelDrawBunny(void)
+static void accelDrawModel(void)
 {
+    float translate[3] = {0};
+    float orient[4];
+    float scale = 1.0;
     // Get the orientation from the accelerometer
-    for (uint8_t i = 0; i < accelTest->scene.modelCount; i++)
-    {
-        memcpy(accelTest->scene.models[i].orient, LSM6DSL.fqQuat, sizeof(float) * 4);
-
-        if (i == 0)
-        {
-            float objRot[4] = {0};
-            objRot[3] = 600.0;
-            mathQuatApply(accelTest->scene.models[i].orient, accelTest->scene.models[i].orient, objRot);
-        }
-    }
-
-    drawScene(&accelTest->scene, 0, 0, TFT_WIDTH, TFT_HEIGHT);
-
-    //drawModel(&accelTest->donut, orient, accelTest->scale / 2, accelTest->translate, 0, TFT_HEIGHT / 2, TFT_WIDTH / 2, TFT_HEIGHT / 2);
-    //drawModel(&accelTest->bunny, orient, accelTest->scale / 2, accelTest->translate, TFT_WIDTH / 2, TFT_HEIGHT / 2, TFT_WIDTH / 2, TFT_HEIGHT / 2);
+    accelGetQuaternion(orient);
+    drawModel(&accelTest->donut, orient, scale, translate, 0, 0, TFT_WIDTH, TFT_HEIGHT);
 }
 
 /**
@@ -382,12 +302,6 @@ static void accelTestReset(void)
     accelTest->max.x = 1;
     accelTest->max.y = 1;
     accelTest->max.z = 1;
-
-    accelTest->scale = 1.0;
-
-    accelTest->translate[0] = 0.0;
-    accelTest->translate[1] = 0.0;
-    accelTest->translate[2] = 0.0;
 }
 
 /**
