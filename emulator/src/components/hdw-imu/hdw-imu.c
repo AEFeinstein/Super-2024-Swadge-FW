@@ -4,6 +4,7 @@
 
 #include "hdw-imu.h"
 #include "hdw-imu_emu.h"
+#include "quaternions.h"
 #include "trigonometry.h"
 #include "esp_random.h"
 #include "emu_args.h"
@@ -36,6 +37,11 @@ esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup
     _accelX = 0;
     _accelY = 0;
     _accelZ = ONE_G;
+
+    LSM6DSL.fqQuat[0] = 0.0;
+    LSM6DSL.fqQuat[1] = 0.0;
+    LSM6DSL.fqQuat[2] = 0.0;
+    LSM6DSL.fqQuat[3] = 1.0;
 
     accelInit = true;
     return ESP_OK;
@@ -158,50 +164,20 @@ void emulatorSetAccelerometerRotation(int16_t value, uint16_t yaw, uint16_t pitc
     _accelX = CLAMP(value * getSin1024(yaw % 360) / 1024 * getCos1024(pitch % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
     _accelY = CLAMP(value * getSin1024(yaw % 360) / 1024 * getSin1024(pitch % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
     _accelZ = CLAMP(value * getCos1024(yaw % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
+
+    float eulerAngles[3] = {
+        _accelX * 3.1415925635 / 180,
+        _accelY * 3.1415925635 / 180,
+        _accelZ * 3.1415925635 / 180,
+    };
+
+    mathEulerToQuat(LSM6DSL.fqQuat, eulerAngles);
 }
 
 esp_err_t accelIntegrate()
 {
     // Do nothing (is stub function)
     return ESP_OK;
-}
-
-/**
- * @brief Rotate a 3D vector by a quaternion
- *
- * @param pout Pointer to the float[3] output of the rotation
- * @param q Pointer to the wxyz quaternion (float[4]) of the rotation.
- * @param p Pointer to the float[3] of the vector to rotates.
- */
-void mathRotateVectorByQuaternion(float* pout, const float* q, const float* p)
-{
-    // return v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);
-    float iqo[3];
-    mathCrossProduct(iqo, q + 1 /*.xyz*/, p);
-    iqo[0] += q[0] * p[0];
-    iqo[1] += q[0] * p[1];
-    iqo[2] += q[0] * p[2];
-    float ret[3];
-    mathCrossProduct(ret, q + 1 /*.xyz*/, iqo);
-    pout[0] = ret[0] * 2.0 + p[0];
-    pout[1] = ret[1] * 2.0 + p[1];
-    pout[2] = ret[2] * 2.0 + p[2];
-}
-
-/**
- * @brief Perform a 3D cross product
- *
- * @param p Pointer to the float[3] output of the cross product (p = a x b)
- * @param a Pointer to the float[3] of the cross product a vector.
- * @param a Pointer to the float[3] of the cross product b vector.
- */
-void mathCrossProduct(float* p, const float* a, const float* b)
-{
-    float tx = a[1] * b[2] - a[2] * b[1];
-    float ty = a[2] * b[0] - a[0] * b[2];
-    p[2]     = a[0] * b[1] - a[1] * b[0];
-    p[1]     = ty;
-    p[0]     = tx;
 }
 
 // stub
