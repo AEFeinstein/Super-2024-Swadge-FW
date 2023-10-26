@@ -8,6 +8,7 @@
 #include <inttypes.h>
 
 #include "hdw-imu.h"
+#include "quaternions.h"
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "palette.h"
@@ -20,6 +21,7 @@ typedef uint16_t trimap_t[3];
 
 // Variables
 #ifndef MODEL_USE_STACK
+static uint16_t maxTris = 0;
 static int16_t* verts_out = NULL;
 static trimap_t* trimap = NULL;
 #endif
@@ -112,6 +114,7 @@ void initRendererCustom(uint16_t maxVerts, uint16_t maxFaces)
     ESP_LOGI("Model", "Allocating %" PRIu64 " bytes for verts and faces", (uint64_t)((maxVerts + maxFaces) * 3 * sizeof(uint16_t)));
 
     // Allocate the new buffers
+    maxTris = maxFaces;
     verts_out = malloc(maxVerts * 3 * sizeof(int16_t));
     trimap = malloc(maxFaces * 3 * sizeof(uint16_t));
 
@@ -143,6 +146,7 @@ void deinitRenderer(void)
     {
         free(trimap);
         trimap = NULL;
+        maxTris = 0;
     }
 #endif
 }
@@ -232,10 +236,10 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
             vertices++;
         }
 
-        if (model->triCount > 0)
+        if (model->triCount > 0 && totalTrisThisFrame < maxTris)
         {
             // Draw model with shaded triangles
-            for( i = 0; i < model->triCount; i++)
+            for( i = 0; i < model->triCount && totalTrisThisFrame < maxTris; i++)
             {
                 int tv1 = (vertOffsets[modelNum] + model->tris[i].verts[0]) * 3;
                 int tv2 = (vertOffsets[modelNum] + model->tris[i].verts[1]) * 3;
@@ -305,6 +309,12 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
                 // Pack the model number into the unused top byte of trimap[][2] for now
                 trimap[totalTrisThisFrame][2] = (modelNum << 8) | ((r * 36 + g * 6 + b) & 0xFF);
                 totalTrisThisFrame++;
+            }
+
+            if (totalTrisThisFrame == maxTris)
+            {
+                ESP_LOGE("Model", "Not enough space for all triangles in scene after model %" PRIu8 ", vert %d. "
+                        "Skipping the rest, stuff may look weird!", modelNum, i);
             }
         }
         else if (model->lineCount > 0)
