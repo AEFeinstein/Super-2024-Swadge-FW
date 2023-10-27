@@ -68,34 +68,31 @@ static unsigned julery_isqrt(unsigned long val) {
  */
 static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces)
 {
-    uint16_t totalVerts = 0;
-    uint16_t totalTris = 0;
+    uint32_t totalVerts = 0;
+    uint32_t totalTris = 0;
 
-    for (uint8_t i = 0; i < scene->modelCount; i++)
+    for (int i = 0; i < scene->modelCount; i++)
     {
         const modelPos_t* modelPos = &scene->models[i];
-        if (NULL != modelPos->model)
+        if (NULL != modelPos && NULL != modelPos->model)
         {
-            uint16_t prevVerts = totalVerts;
-            uint16_t prevTris = totalTris;
             totalVerts += modelPos->model->vertCount;
             totalTris += modelPos->model->triCount;
 
-            if (totalVerts < prevVerts || totalTris < prevTris)
+            if (totalVerts > UINT16_MAX || totalTris > UINT16_MAX)
             {
-                // Detect integer rollover and abort
                 ESP_LOGE("Model",
-                         "Too many verts/faces in scene: %" PRIu16 " + %" PRIu16 " verts"
-                         " or %" PRIu16 " + %" PRIu16 " faces rolled over",
-                         prevVerts, modelPos->model->vertCount,
-                         prevTris, modelPos->model->triCount);
+                         "Too many verts/faces in scene: %" PRIu32 " verts"
+                         " or %" PRIu32 " faces exceeds max of 65535",
+                         totalVerts,
+                         totalTris);
                 return;
             }
         }
     }
 
-    *verts = totalVerts;
-    *faces = totalTris;
+    *verts = (uint16_t)totalVerts;
+    *faces = (uint16_t)totalTris;
 }
 
 void initRenderer(const model_t* model)
