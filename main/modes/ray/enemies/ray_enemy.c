@@ -292,12 +292,16 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
  */
 bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
 {
-    if (E_DEAD == enemy->state)
-    {
-        // Never transition away from the death state
-        return false;
-    }
-    else
+    const bool transitionTable[E_NUM_STATES][E_NUM_STATES] = {
+        {false, true, true, true, true, false},    // E_WALKING_1, don't transition to E_DEAD
+        {true, false, true, true, true, false},    // E_WALKING_2, don't transition to E_DEAD
+        {true, true, false, false, false, false},  // E_SHOOTING, transition to E_WALKING
+        {true, true, false, false, false, true},   // E_HURT, transition to E_WALKING or E_DEAD
+        {true, true, false, false, false, false},  // E_BLOCKING, transition to E_WALKING
+        {false, false, false, false, false, false} // E_DEAD, don't transition to anything
+    };
+
+    if (transitionTable[enemy->state][newState])
     {
         // Switch to the new state
         enemy->state          = newState;
@@ -310,8 +314,9 @@ bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
         {
             enemy->animTimerLimit = 125000;
         }
+        return true;
     }
-    return true;
+    return false;
 }
 
 /**

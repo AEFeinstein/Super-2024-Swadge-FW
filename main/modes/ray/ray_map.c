@@ -265,6 +265,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->sprites       = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
 
     // This sets state, animTimer, animTimerLimit, animFrame, and c.sprite
+    newObj->state = E_WALKING_2;
     rayEnemyTransitionState(newObj, E_WALKING_1);
 
     // Set initial common state
