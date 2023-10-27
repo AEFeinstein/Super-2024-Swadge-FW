@@ -152,26 +152,30 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
                 }
             }
 
-            // Special boss timer, pick a new weakness every 4s
-            enemy->bossTimer -= elapsedUs;
-            if (enemy->bossTimer <= 0)
+            if (OBJ_ENEMY_BOSS == enemy->c.type)
             {
-                enemy->bossTimer += 4000000;
-
-                // Pick a new boss state
-                enemy->bossState = (enemy->bossState + (1 + esp_random() % (NUM_BOSS_STATES - 1))) % NUM_BOSS_STATES;
-
-                // Update all sprites the boss uses
-                if (B_NORMAL == enemy->bossState)
+                // Special boss timer, pick a new weakness every 4s
+                enemy->bossTimer -= elapsedUs;
+                if (enemy->bossTimer <= 0)
                 {
-                    enemy->sprites = &ray->enemyTex[OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL];
+                    enemy->bossTimer += 4000000;
+
+                    // Pick a new boss state
+                    enemy->bossState
+                        = (enemy->bossState + (1 + esp_random() % (NUM_BOSS_STATES - 1))) % NUM_BOSS_STATES;
+
+                    // Update all sprites the boss uses
+                    if (B_NORMAL == enemy->bossState)
+                    {
+                        enemy->sprites = &ray->enemyTex[OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL];
+                    }
+                    else
+                    {
+                        enemy->sprites = &ray->bossTex[enemy->bossState];
+                    }
+                    // Update the current sprite
+                    enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
                 }
-                else
-                {
-                    enemy->sprites = &ray->bossTex[enemy->bossState];
-                }
-                // Update the current sprite
-                enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
             }
 
             // Run the invincible timer down to zero
