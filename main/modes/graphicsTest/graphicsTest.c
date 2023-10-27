@@ -14,6 +14,7 @@
 #include "hdw-imu.h"
 #include "esp_log.h"
 #include "trigonometry.h"
+#include "quaternions.h"
 #include "shapes.h"
 #include "fill.h"
 #include "linked_list.h"
@@ -23,6 +24,7 @@
 #include "buttonUtils.h"
 #include "menu.h"
 #include "menuLogbookRenderer.h"
+#include "macros.h"
 
 //==============================================================================
 // Enums
@@ -32,14 +34,30 @@ typedef enum
 {
     TRANSLATE_XY,
     TRANSLATE_ZY,
-    ROTATE_Z,
-    ROTATE_Y,
     ROTATE_X,
+    ROTATE_Y,
+    ROTATE_Z,
 } touchAction_t;
 
 //==============================================================================
 // Structs
 //==============================================================================
+
+typedef struct
+{
+    const char* label;
+    const char* filename;
+} testModelInfo_t;
+
+static const testModelInfo_t graphicsTestModels[] =
+{
+    {"Donut",  "donut.mdl"},
+    {"Funkus", "bigfunkus.mdl"},
+    {"Bunny",  "bunny.mdl"},
+    //{"Cube", "cube.mdl"},
+    //{"Beetle", "beetle.mdl"},
+    //{"Cow", "cow.mdl"},
+};
 
 /// @brief The struct that holds all the state for the graphics test mode
 typedef struct
@@ -51,10 +69,8 @@ typedef struct
     menuLogbookRenderer_t* menuRenderer; ///< The menu's renderer
     bool showMenu; ///< Whether or not the menu is active
 
-    model_t bunny; ///< The bunny 3D model
-    model_t donut; ///< The donut 3D model
-    model_t funkus; ///< The big funkus 3D model
-    model_t cube;
+    model_t models[ARRAY_SIZE(graphicsTestModels)];
+    bool modelLoaded[ARRAY_SIZE(graphicsTestModels)];
 
     scene_t scene; ///< The 3D scene for the renderer
 
@@ -68,6 +84,8 @@ typedef struct
     int32_t touchDragStartX;
     int32_t touchDragStartY;
     float touchDragStartPos[3];
+    touchSpinState_t touchSpinState;
+    float touchSpinStartOrient[4];
 } graphicsTest_t;
 
 //==============================================================================
@@ -85,6 +103,8 @@ static void graphicsTestDrawScene(void);
 static void graphicsTestSetupMenu(void);
 static void graphicsTestReset(void);
 
+static const char* getTouchActionDesc(touchAction_t action);
+
 static void graphicsTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 //==============================================================================
@@ -94,11 +114,14 @@ static void graphicsTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, 
 static const char graphicsTestName[] = "Graphics Test";
 
 static const char graphicsMenuItemCopy[] = "Copy";
-static const char graphicsMenuItemDonut[] = "Donut";
-static const char graphicsMenuItemFunkus[] = "Funkus";
-static const char graphicsMenuItemBunny[] = "Bunny";;
-static const char graphicsMenuItemBox[] = "Cube";
+static const char graphicsMenuItemReset[] = "Reset";
+static const char graphicsMenuItemCancel[] = "Cancel";
 
+static const char actionTranslateXYStr[] = "Move XY";
+static const char actionTranslateZYStr[] = "Move ZY";
+static const char actionRotateZStr[] = "Spin Z";
+static const char actionRotateYStr[] = "Spin Y";
+static const char actionRotateXStr[] = "Spin Z";
 
 //==============================================================================
 // Variables
@@ -149,31 +172,34 @@ static void graphicsTestEnterMode(void)
     // and the menu renderer
     graphicsTest->menuRenderer = initMenuLogbookRenderer(&graphicsTest->ibm);
 
-    // Load all the 3D models!
-#define LOAD_MODEL(name, var) ESP_LOGI("Model", "loadModel(" name ") returned %s", \
-                                       loadModel(name, &graphicsTest->var, true) \
-                                       ? "true" : "false")
-    LOAD_MODEL("bigfunkus.mdl", funkus);
-    LOAD_MODEL("donut.mdl", donut);
-    LOAD_MODEL("bunny.mdl", bunny);
-    LOAD_MODEL("cube.mdl", cube);
-#undef LOAD_MODEL
+    // Load (some of) the 3D models!
+    for (int i = 0; i < 3; i++)
+    {
+        ESP_LOGI("Model", "loadModel(%s) returned %s",
+                 graphicsTestModels[i].filename,
+                 loadModel(graphicsTestModels[i].filename, &graphicsTest->models[i], true) ? "true" : "false");
+        graphicsTest->modelLoaded[i] = true;
+    }
 
+    graphicsTest->scene.orient[3] = 1.0;
     graphicsTest->scene.modelCount = 3;
-    graphicsTest->scene.models[0].model = &graphicsTest->donut;
+    graphicsTest->scene.models[0].model = &graphicsTest->models[0];
     graphicsTest->scene.models[0].scale = 1.0;
+    graphicsTest->scene.models[0].orient[3] = 1.0;
     graphicsTest->scene.models[0].translate[0] = -25.0;
     graphicsTest->scene.models[0].translate[1] = -25.0;
     graphicsTest->scene.models[0].translate[2] = 0.0;
 
-    graphicsTest->scene.models[1].model = &graphicsTest->funkus;
+    graphicsTest->scene.models[1].model = &graphicsTest->models[1];
     graphicsTest->scene.models[1].scale = 1.0;
+    graphicsTest->scene.models[1].orient[3] = 1.0;
     graphicsTest->scene.models[1].translate[0] = 25.0;
     graphicsTest->scene.models[1].translate[1] = 25.0;
     graphicsTest->scene.models[1].translate[2] = 0.0;
 
-    graphicsTest->scene.models[2].model = &graphicsTest->bunny;
+    graphicsTest->scene.models[2].model = &graphicsTest->models[2];
     graphicsTest->scene.models[2].scale = 1.0;
+    graphicsTest->scene.models[2].orient[3] = 1.0;
     graphicsTest->scene.models[2].translate[0] = 60.0;
     graphicsTest->scene.models[2].translate[1] = 60.0;
     graphicsTest->scene.models[2].translate[2] = 0.0;
@@ -198,17 +224,14 @@ static void graphicsTestExitMode(void)
     // Free renderer memory
     deinitRenderer();
 
-    // Free the bunny 3D model
-    freeModel(&graphicsTest->bunny);
-
-    // Free the big funkus 3D model
-    freeModel(&graphicsTest->funkus);
-
-    // Free the king donut 3D model
-    freeModel(&graphicsTest->donut);
-
-    // Free the cube model
-    freeModel(&graphicsTest->cube);
+    // Free the 3D models
+    for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
+    {
+        if (graphicsTest->modelLoaded[i])
+        {
+            freeModel(&graphicsTest->models[i]);
+        }
+    }
 
     // Free menu related things
     deinitMenuLogbookRenderer(graphicsTest->menuRenderer);
@@ -244,8 +267,8 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
         // Draw control type
         if (graphicsTest->scene.modelCount > 0)
         {
-            const char* touchActionStr = (graphicsTest->touchAction == TRANSLATE_XY) ? "X/Y" : "Z/Y";
-            snprintf(buffer, sizeof(buffer), "Touch: Move #%" PRIu8 " %s", graphicsTest->selectedModel, touchActionStr);
+            const char* touchActionStr = getTouchActionDesc(graphicsTest->touchAction);
+            snprintf(buffer, sizeof(buffer), "Sel: #%" PRIu8 "/%" PRIu8 "  Touch: %s", graphicsTest->selectedModel + 1, graphicsTest->scene.modelCount, touchActionStr);
             drawText(&graphicsTest->ibm, c555, buffer, 30, 5);
         }
 
@@ -256,13 +279,27 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
         int32_t tenthFramesPerSecond = (10000000 / (graphicsTest->avgFrameTime + 1)) % 10;
 
         snprintf(buffer, sizeof(buffer), "%" PRId32 ".%" PRId32, framesPerSecond, tenthFramesPerSecond);
-        drawText(&graphicsTest->ibm, c550, buffer, TFT_WIDTH - 30 - textWidth(&graphicsTest->ibm, buffer), 5);
+        int16_t textX = drawText(&graphicsTest->ibm, c550, buffer, TFT_WIDTH - 30 - textWidth(&graphicsTest->ibm, buffer), 5);
+
+        if (triOverflow)
+        {
+            drawText(&graphicsTest->ibm, c500, "!", textX, 5);
+        }
     }
 }
 
 static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
-    if (selected && graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
+    if (selected && label == graphicsMenuItemReset)
+    {
+        graphicsTestReset();
+        graphicsTest->showMenu = false;
+    }
+    else if (selected && label == graphicsMenuItemCancel)
+    {
+        graphicsTest->showMenu = false;
+    }
+    else if (selected && graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
     {
         model_t* model = NULL;
         bool copy = false;
@@ -274,25 +311,32 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
                     sizeof(modelPos_t));
             copy = true;
         }
-        else if (label == graphicsMenuItemDonut)
-        {
-            model = &graphicsTest->donut;
-        }
-        else if (label == graphicsMenuItemFunkus)
-        {
-            model = &graphicsTest->funkus;
-        }
-        else if (label == graphicsMenuItemBunny)
-        {
-            model = &graphicsTest->bunny;
-        }
-        else if (label == graphicsMenuItemBox)
-        {
-            model = &graphicsTest->cube;
-        }
         else
         {
-            return;
+            for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
+            {
+                if (label == graphicsTestModels[i].label)
+                {
+                    if (!graphicsTest->modelLoaded[i])
+                    {
+                        if (loadModel(graphicsTestModels[i].filename, &graphicsTest->models[i], true))
+                        {
+                            graphicsTest->modelLoaded[i] = true;
+                        }
+                    }
+
+                    if (graphicsTest->modelLoaded[i])
+                    {
+                        model = &graphicsTest->models[i];
+                    }
+                    break;
+                }
+            }
+
+            if (NULL == model)
+            {
+                return;
+            }
         }
 
         if (!copy)
@@ -325,7 +369,14 @@ static void graphicsTestHandleInput(void)
         buttonEvt_t evt;
         while (checkButtonQueueWrapper(&evt))
         {
-            graphicsTest->menu = menuButton(graphicsTest->menu, evt);
+            if (evt.down && evt.button == PB_B)
+            {
+                graphicsTest->showMenu = false;
+            }
+            else
+            {
+                graphicsTest->menu = menuButton(graphicsTest->menu, evt);
+            }
         }
         return;
     }
@@ -337,13 +388,12 @@ static void graphicsTestHandleInput(void)
             int32_t angle, radius, intensity;
             if (getTouchJoystick(&angle, &radius, &intensity))
             {
+                modelPos_t* curModel = &graphicsTest->scene.models[graphicsTest->selectedModel];
                 if (graphicsTest->touchAction == TRANSLATE_XY || graphicsTest->touchAction == TRANSLATE_ZY)
                 {
                     // Handle Translate Modes
                     int32_t x, y;
                     getTouchCartesian(angle, radius, &x, &y);
-
-                    modelPos_t* curModel = &graphicsTest->scene.models[graphicsTest->selectedModel];
 
                     if (!graphicsTest->touchState)
                     {
@@ -367,12 +417,36 @@ static void graphicsTestHandleInput(void)
                 else
                 {
                     // Rotation Actions
-                    // TODO
+                    getTouchSpins(&graphicsTest->touchSpinState, angle, radius);
+
+                    if (!graphicsTest->touchState)
+                    {
+                        // Save the selected model's orientation on the first touch
+                        graphicsTest->touchState = true;
+                        memcpy(graphicsTest->touchSpinStartOrient, curModel->orient, sizeof(float[4]));
+                        //memcpy(graphicsTest->touchSpinStartOrient, graphicsTest->scene.orient, sizeof(float[4]));
+                    }
+
+                    // Apply the rotation to the saved orientation
+                    float eulerRot[3] = {0};
+                    float newRot[4];
+
+                    // Construct an euler angle vector for the single axis we are rotating
+                    float rot = graphicsTest->touchSpinState.remainder * 3.1415926535 / 180;
+                    eulerRot[graphicsTest->touchAction - ROTATE_X] = rot;
+
+                    // Convert euler angle to quaternion
+                    mathEulerToQuat(newRot, eulerRot);
+
+                    // Update the object's orient to its original orient rotated by the new rotation
+                    mathQuatApply(curModel->orient, graphicsTest->touchSpinStartOrient, newRot);
+                    //mathQuatApply(graphicsTest->scene.orient, graphicsTest->touchSpinStartOrient, newRot);
                 }
             }
             else if (graphicsTest->touchState)
             {
                 graphicsTest->touchState = false;
+                graphicsTest->touchSpinState.startSet = false;
             }
         }
 
@@ -405,16 +479,24 @@ static void graphicsTestHandleInput(void)
                         {
                             case TRANSLATE_XY:
                                 graphicsTest->touchAction = TRANSLATE_ZY;
-                            break;
+                                break;
+
                             case TRANSLATE_ZY:
-                                graphicsTest->touchAction = TRANSLATE_XY;
-                            break;
+                                graphicsTest->touchAction = ROTATE_Z;
+                                break;
 
                             case ROTATE_Z:
+                                graphicsTest->touchAction = ROTATE_Y;
+                                break;
+
                             case ROTATE_Y:
+                                graphicsTest->touchAction = ROTATE_X;
+                                break;
+
                             case ROTATE_X:
                             default:
-                            break;
+                                graphicsTest->touchAction = TRANSLATE_XY;
+                                break;
                         }
                         graphicsTest->touchState = false;
                         break;
@@ -425,6 +507,8 @@ static void graphicsTestHandleInput(void)
                         // Delete object
                         if (graphicsTest->scene.modelCount > 0)
                         {
+                            const model_t* modelToUnload = graphicsTest->scene.models[graphicsTest->selectedModel].model;
+
                             for (int i = graphicsTest->selectedModel; i < graphicsTest->scene.modelCount - 1; i++)
                             {
                                 // Shift down any models afterwards in the array
@@ -433,6 +517,34 @@ static void graphicsTestHandleInput(void)
 
                             // We can leave the last one there, who cares
                             graphicsTest->scene.modelCount--;
+                            if (graphicsTest->selectedModel > 0)
+                            {
+                                graphicsTest->selectedModel--;
+                            }
+
+                            bool unloadModel = true;
+                            for (int i = 0; i < graphicsTest->scene.modelCount; i++)
+                            {
+                                if (graphicsTest->scene.models[i].model == modelToUnload)
+                                {
+                                    unloadModel = false;
+                                    break;
+                                }
+                            }
+
+                            if (unloadModel)
+                            {
+                                for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
+                                {
+                                    if (modelToUnload == &graphicsTest->models[i])
+                                    {
+                                        ESP_LOGI("Model", "Unloading model %s", graphicsTestModels[i].filename);
+                                        freeModel(&graphicsTest->models[i]);
+                                        graphicsTest->modelLoaded[i] = false;
+                                        break;
+                                    }
+                                }
+                            }
 
                             // Reset the touch so weird stuff doesn't happen
                             graphicsTest->touchState = false;
@@ -448,7 +560,10 @@ static void graphicsTestHandleInput(void)
 
                     case PB_DOWN:
                     {
-                        graphicsTest->scene.models[graphicsTest->selectedModel].scale -= .1;
+                        if (graphicsTest->scene.models[graphicsTest->selectedModel].scale > .1001)
+                        {
+                            graphicsTest->scene.models[graphicsTest->selectedModel].scale -= .1;
+                        }
                         break;
                     }
 
@@ -531,14 +646,20 @@ static void graphicsTestSetupMenu(void)
     }
 
     // Add back the items
-    if (graphicsTest->scene.modelCount > 0)
+    if (graphicsTest->scene.modelCount > 0 && graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
     {
         addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemCopy);
     }
-    addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemDonut);
-    addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemFunkus);
-    addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemBunny);
-    addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemBox);
+
+    if (graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
+    {
+        for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
+        {
+            addSingleItemToMenu(graphicsTest->menu, graphicsTestModels[i].label);
+        }
+    }
+    addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemReset);
+    addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemCancel);
 }
 
 /**
@@ -547,6 +668,31 @@ static void graphicsTestSetupMenu(void)
 static void graphicsTestReset(void)
 {
     graphicsTest->scene.modelCount = 0;
+    graphicsTest->selectedModel = 0;
+}
+
+static const char* getTouchActionDesc(touchAction_t action)
+{
+    switch (action)
+    {
+        case TRANSLATE_XY:
+            return actionTranslateXYStr;
+
+        case TRANSLATE_ZY:
+            return actionTranslateZYStr;
+
+        case ROTATE_Z:
+            return actionRotateZStr;
+
+        case ROTATE_Y:
+            return actionRotateYStr;
+
+        case ROTATE_X:
+            return actionRotateXStr;
+
+        default:
+            return NULL;
+    }
 }
 
 /**
