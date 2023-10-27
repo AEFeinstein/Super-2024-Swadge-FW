@@ -486,6 +486,7 @@ typedef struct
     rayEnemyState_t state;                           ///< This enemy's current state
     rayEnemyBehavior_t behavior;                     ///< What the enemy is currently doing
     rayBossState_t bossState;                        ///< The current boss state, unused for non-boss
+    int32_t bossTimer;                               ///< A timer for changing bossState, unused for non-boss
     int32_t behaviorTimer;                           ///< A timer used for this enemy's behaviors
     int32_t shootTimer;                              ///< A timer used for this enemy's shooting
     int32_t blockTimer;                              ///< A timer used for this enemy's blocking

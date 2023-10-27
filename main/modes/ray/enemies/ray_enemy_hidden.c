@@ -36,10 +36,8 @@ void rayEnemyHiddenMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 #define SPEED_DENOM_RETREAT (int32_t)(40000 * 6)
 #define SPEED_DENOM_STRAFE  (int32_t)(40000 * 16)
 
-    q24_8 delX    = 0;
-    q24_8 delY    = 0;
-    q24_8 marginX = 0;
-    q24_8 marginY = 0;
+    q24_8 delX = 0;
+    q24_8 delY = 0;
 
     // Try to stay a constant-ish distance away
     q24_8 xDist        = SUB_FX(ray->p.posX, enemy->c.posX);
@@ -49,15 +47,11 @@ void rayEnemyHiddenMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     {
         delX -= (xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_RETREAT;
         delY -= (yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_RETREAT;
-        marginX -= xDiff;
-        marginY -= yDiff;
     }
     else if (distToPlayer > TO_FX(17))
     {
         delX += (xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_RETREAT;
         delY += (yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_RETREAT;
-        marginX += xDiff;
-        marginY += yDiff;
     }
 
     // Do some strafing
@@ -65,21 +59,15 @@ void rayEnemyHiddenMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
     {
         delX += (yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_STRAFE;
         delY -= (xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_STRAFE;
-        marginX += yDiff;
-        marginY -= xDiff;
     }
     else
     {
         delX -= (yDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_STRAFE;
         delY += (xDiff * (int32_t)(elapsedUs)) / SPEED_DENOM_STRAFE;
-        marginX -= yDiff;
-        marginY += xDiff;
     }
 
-    // Scale the margin
-    fastNormVec(&marginX, &marginY);
-    marginX /= 2;
-    marginY /= 2;
+    q24_8 marginX = (delX > 0 ? 1 : -1) * TO_FX_FRAC(1, 2);
+    q24_8 marginY = (delY > 0 ? 1 : -1) * TO_FX_FRAC(1, 2);
 
     // Move if in bounds
     if (isPassableCell(

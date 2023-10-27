@@ -94,8 +94,12 @@ void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
         }
     }
 
+    q24_8 marginX = (delX > 0 ? 1 : -1) * TO_FX_FRAC(1, 2);
+    q24_8 marginY = (delY > 0 ? 1 : -1) * TO_FX_FRAC(1, 2);
+
     // Move if in bounds
-    if (isPassableCell(&ray->map.tiles[FROM_FX(enemy->c.posX + delX)][FROM_FX(enemy->c.posY + delY)]))
+    if (isPassableCell(
+            &ray->map.tiles[FROM_FX(enemy->c.posX + delX + marginX)][FROM_FX(enemy->c.posY + delY + marginY)]))
     {
         enemy->c.posX += delX;
         enemy->c.posY += delY;

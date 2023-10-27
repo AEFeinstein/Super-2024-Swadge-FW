@@ -118,8 +118,9 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             eElapsedUs /= 3;
         }
 
-        // Move enemies in the walking tate
-        if ((E_WALKING_1 == enemy->state) || (E_WALKING_2 == enemy->state))
+        // Move enemies in the walking state, or if it's a non-dead boss
+        if ((E_WALKING_1 == enemy->state) || (E_WALKING_2 == enemy->state)
+            || ((OBJ_ENEMY_BOSS == enemy->c.type) && (E_DEAD != enemy->state)))
         {
             enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].move(ray, enemy, eElapsedUs);
         }
@@ -149,6 +150,28 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
                     // If successful, restart the block timer
                     enemy->blockTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, BLOCK);
                 }
+            }
+
+            // Special boss timer, pick a new weakness every 4s
+            enemy->bossTimer -= elapsedUs;
+            if (enemy->bossTimer <= 0)
+            {
+                enemy->bossTimer += 4000000;
+
+                // Pick a new boss state
+                enemy->bossState = (enemy->bossState + (1 + esp_random() % (NUM_BOSS_STATES - 1))) % NUM_BOSS_STATES;
+
+                // Update all sprites the boss uses
+                if (B_NORMAL == enemy->bossState)
+                {
+                    enemy->sprites = &ray->enemyTex[OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL];
+                }
+                else
+                {
+                    enemy->sprites = &ray->bossTex[enemy->bossState];
+                }
+                // Update the current sprite
+                enemy->c.sprite = &enemy->sprites[0][enemy->state][enemy->animFrame];
             }
 
             // Run the invincible timer down to zero
@@ -339,6 +362,7 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 
         // Increment to the next frame
         enemy->animFrame++;
+
         // If the animation is over
         if (enemy->animFrame >= NUM_ANIM_FRAMES)
         {
@@ -373,7 +397,7 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 q24_8 xDiff = SUB_FX(ray->p.posX, enemy->c.posX);
                 q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
                 fastNormVec(&xDiff, &yDiff);
-                rayCreateBullet(ray, OBJ_BULLET_NORMAL, enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
+                rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
             }
         }
     }

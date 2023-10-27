@@ -31,34 +31,28 @@ void rayEnemyArmoredMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 // Player is 40000 * 6
 #define SPEED_DENOM (int32_t)(40000 * 18)
 
-    q24_8 delX    = 0;
-    q24_8 delY    = 0;
-    q24_8 marginX = 0;
-    q24_8 marginY = 0;
+    q24_8 delX = 0;
+    q24_8 delY = 0;
     switch (enemy->behavior)
     {
         case MOVE_POS_X:
         {
-            delX    = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginX = TO_FX_FRAC(1, 2);
+            delX = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
             break;
         }
         case MOVE_NEG_X:
         {
-            delX    = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginX = -TO_FX_FRAC(1, 2);
+            delX = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
             break;
         }
         case MOVE_POS_Y:
         {
-            delY    = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginY = TO_FX_FRAC(1, 2);
+            delY = (TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
             break;
         }
         case MOVE_NEG_Y:
         {
-            delY    = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
-            marginY = -TO_FX_FRAC(1, 2);
+            delY = -(TO_FX(1) * (int32_t)(elapsedUs)) / SPEED_DENOM;
             break;
         }
         default:
@@ -67,6 +61,9 @@ void rayEnemyArmoredMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
             break;
         }
     }
+
+    q24_8 marginX = (delX > 0 ? 1 : -1) * TO_FX_FRAC(1, 2);
+    q24_8 marginY = (delY > 0 ? 1 : -1) * TO_FX_FRAC(1, 2);
 
     // Move if in bounds
     if (isPassableCell(
