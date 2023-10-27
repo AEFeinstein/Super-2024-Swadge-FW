@@ -1055,6 +1055,73 @@ void drawHud(ray_t* ray)
                     TFT_WIDTH - BAR_SIDE_MARGIN,             //
                     chargeIndicatorStart,                    //
                     sideBarColor);
+
+    // Draw target if locked on
+    if (NULL != ray->targetedObj)
+    {
+        // Pick color based on loadout
+        paletteColor_t color = c114;
+        switch (ray->p.loadout)
+        {
+            default:
+            case LO_NORMAL:
+            {
+                color = c114;
+                break;
+            }
+            case LO_MISSILE:
+            {
+                color = c401;
+                break;
+            }
+            case LO_ICE:
+            {
+                color = c135;
+                break;
+            }
+            case LO_XRAY:
+            {
+                color = c130;
+                break;
+            }
+        }
+#define T_SIZE  20
+#define T_THICK 3
+#define T_ARM   7
+        // Draw some brackets
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE,           //
+                        TFT_HEIGHT / 2 - T_SIZE,          //
+                        TFT_WIDTH / 2 - T_SIZE + T_THICK, //
+                        TFT_HEIGHT / 2 + T_SIZE,          //
+                        color);
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK, //
+                        TFT_HEIGHT / 2 - T_SIZE,          //
+                        TFT_WIDTH / 2 + T_SIZE,           //
+                        TFT_HEIGHT / 2 + T_SIZE,          //
+                        color);
+
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE + T_THICK,         //
+                        TFT_HEIGHT / 2 - T_SIZE,                  //
+                        TFT_WIDTH / 2 - T_SIZE + T_THICK + T_ARM, //
+                        TFT_HEIGHT / 2 - T_SIZE + T_THICK,        //
+                        color);
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE + T_THICK,         //
+                        TFT_HEIGHT / 2 + T_SIZE - T_THICK,        //
+                        TFT_WIDTH / 2 - T_SIZE + T_THICK + T_ARM, //
+                        TFT_HEIGHT / 2 + T_SIZE,                  //
+                        color);
+
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK - T_ARM, //
+                        TFT_HEIGHT / 2 - T_SIZE,                  //
+                        TFT_WIDTH / 2 + T_SIZE - T_THICK,         //
+                        TFT_HEIGHT / 2 - T_SIZE + T_THICK,        //
+                        color);
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK - T_ARM, //
+                        TFT_HEIGHT / 2 + T_SIZE - T_THICK,        //
+                        TFT_WIDTH / 2 + T_SIZE - T_THICK,         //
+                        TFT_HEIGHT / 2 + T_SIZE,                  //
+                        color);
+    }
 }
 
 /**
