@@ -489,6 +489,7 @@ typedef struct
     int32_t behaviorTimer;                           ///< A timer used for this enemy's behaviors
     int32_t shootTimer;                              ///< A timer used for this enemy's shooting
     int32_t blockTimer;                              ///< A timer used for this enemy's blocking
+    int32_t invincibleTimer;                         ///< Timer for being invincible
     int32_t freezeTimer;                             ///< Timer for slowdown after ice beam
     int32_t animTimer;                               ///< A timer used for this enemy's animations
     int32_t animTimerLimit;                          ///< The time at which the texture should switch

@@ -150,6 +150,12 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
                     enemy->blockTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, BLOCK);
                 }
             }
+
+            // Run the invincible timer down to zero
+            if (0 < enemy->invincibleTimer)
+            {
+                enemy->invincibleTimer -= eElapsedUs;
+            }
         }
 
         // Animate the enemy
@@ -239,7 +245,18 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    // TODO check I-Frames here
+    // Don't get shot when blocking
+    if ((E_BLOCKING == enemy->state) || (E_HURT == enemy->state))
+    {
+        return;
+    }
+
+    // Don't get shot when invincible
+    // Ignore this for now, being invincible when in E_HURT is enough
+    // if (0 < enemy->invincibleTimer)
+    // {
+    //     return;
+    // }
 
     // Save old health to see if the enemy took damage
     int32_t oldHealth = enemy->health;
@@ -251,11 +268,18 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         rayEnemyTransitionState(enemy, E_DEAD);
     }
 
-    // If the enemy took ice damage
-    if ((OBJ_BULLET_ICE == bullet) && (oldHealth != enemy->health))
+    // If the enemy took
+    if (oldHealth != enemy->health)
     {
-        // Slow it for a moment
-        enemy->freezeTimer = 2000000;
+        // Don't get stun-locked. Hurt animation is 200000*4, so double that
+        // enemy->invincibleTimer = 200000 * 8;
+
+        // If it was ice damage
+        if (OBJ_BULLET_ICE == bullet)
+        {
+            // Slow it for a moment
+            enemy->freezeTimer = 2000000;
+        }
     }
 }
 

@@ -259,7 +259,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     // Set initial enemy state
     newObj->health        = 100;
     newObj->behavior      = DOING_NOTHING;
-    newObj->behaviorTimer = 0;
+    newObj->behaviorTimer = esp_random() % 1000000;
     newObj->shootTimer    = getTimerForEnemy(newObj, SHOT);
     newObj->blockTimer    = getTimerForEnemy(newObj, BLOCK);
     newObj->sprites       = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
