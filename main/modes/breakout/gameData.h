@@ -64,6 +64,7 @@ typedef struct
 
     char initials[3];
     uint8_t rank;
+
     bool debugMode;
 
     uint8_t changeBgm;

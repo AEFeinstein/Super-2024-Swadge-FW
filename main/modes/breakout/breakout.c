@@ -63,6 +63,8 @@ struct breakout_t
     gameUpdateFunction_t update;
 
     breakoutHighScores_t highScores;
+    uint8_t menuState;
+    uint8_t menuSelection;
 };
 
 //==============================================================================
@@ -192,7 +194,7 @@ static const leveldef_t leveldef[NUM_LEVELS] = {
 static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055};
 static const paletteColor_t redColors[4] = {c510, c440, c050, c440};
 static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
-static const paletteColor_t purpleColors[4] = {c405, c440, c055, c440}; //{c405, c214, c055, c134};
+static const paletteColor_t purpleColors[4] = {c405, c440, c055, c440};
 
 //==============================================================================
 // Strings
@@ -219,6 +221,8 @@ static const char breakoutLevelClear[] = "Cleared!";
 static const char breakoutPause[] = "Paused";
 
 static const char breakoutHighScoreDisplayTitle[] = "Cosmic Players";
+static const char breakoutNameEntryTitle[] = "Enter your initials!";
+static const char breakoutNameEnteredTitle[] = "Name registrated.";
 
 static const char breakoutNvsKey_scores[] = "brk_scores";
 
@@ -624,10 +628,9 @@ void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs){
         if(!self->gameData.debugMode){
             savePlatformerUnlockables(self);
         }
-
-        changeStateNameEntry(self);*/
+        */
         deactivateAllEntities(&(self->entityManager), false, false);
-        breakoutChangeStateTitleScreen(self);
+        breakoutChangeStateNameEntry(self);
     }
 
     breakoutDrawGameOver(&(self->logbook), &(self->ibm_vga8), &(self->gameData));
@@ -989,6 +992,8 @@ void breakoutUpdateShowHighScores(breakout_t *self, int64_t elapsedUs){
             !(self->gameData.prevBtnState & PB_A)
         )
     )){
+        self->menuState = 0;
+        self->menuSelection = 0;
         bzrStop(true);
         breakoutChangeStateTitleScreen(self);
     }
@@ -996,7 +1001,7 @@ void breakoutUpdateShowHighScores(breakout_t *self, int64_t elapsedUs){
     updateStarfield(&(self->starfield), 8);
     drawStarfield(&(self->starfield));
 
-    breakoutDrawShowHighScores(&(self->logbook), 0);
+    breakoutDrawShowHighScores(&(self->logbook), self->menuState);
     breakoutDrawHighScores(&(self->logbook), &(self->highScores), &(self->gameData));
 
     updateLedsTitleScreen(&(self->gameData));
@@ -1006,9 +1011,110 @@ void breakoutUpdateShowHighScores(breakout_t *self, int64_t elapsedUs){
 void breakoutDrawShowHighScores(font_t *font, uint8_t menuState){
     /*if(platformer->easterEgg){
         drawText(font, highScoreNewEntryColors[(platformer->gameData.frameCount >> 3) % 4], str_hbd, (TFT_WIDTH - textWidth(font, str_hbd)) / 2, 32);
-    } else if(menuState == 3){
-        drawText(font, redColors[(platformer->gameData.frameCount >> 3) % 4], str_registrated, (TFT_WIDTH - textWidth(font, str_registrated)) / 2, 32);
-    } else*/ {
+    } else*/ if(menuState == 3){
+        drawText(font, redColors[(breakout->gameData.frameCount >> 3) % 4], breakoutNameEnteredTitle, (TFT_WIDTH - textWidth(font, breakoutNameEnteredTitle)) / 2, 32);
+    } else {
         drawText(font, c555, breakoutHighScoreDisplayTitle, (TFT_WIDTH - textWidth(font, breakoutHighScoreDisplayTitle)) / 2, 32);
+    }
+}
+
+void breakoutChangeStateNameEntry(breakout_t *self){
+    self->gameData.frameCount = 0;
+    uint8_t rank = breakoutGetHighScoreRank(&(self->highScores),self->gameData.score);
+    self->gameData.rank = rank;
+    self->menuState = 0;
+
+    resetGameDataLeds(&(self->gameData));
+
+    if(rank >= NUM_BREAKOUT_HIGH_SCORES || self->gameData.debugMode){
+        self->menuSelection = 0;
+        self->gameData.rank = NUM_BREAKOUT_HIGH_SCORES;
+        breakoutChangeStateShowHighScores(self);
+        return;
+    }
+
+    //bzrPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
+    self->menuSelection = self->gameData.initials[0];
+    self->update=&breakoutUpdateNameEntry;
+}
+
+void breakoutUpdateNameEntry(breakout_t *self, int64_t elapsedUs){
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+
+    self->gameData.frameCount++;
+
+    if(
+        self->gameData.btnState & PB_LEFT
+        &&
+        !(self->gameData.prevBtnState & PB_LEFT)
+    ) {
+        self->menuSelection--;
+
+        if(self->menuSelection < 32){
+            self->menuSelection = 90;
+        }
+
+        self->gameData.initials[self->menuState]=self->menuSelection;
+        bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+    } else if(
+        self->gameData.btnState & PB_RIGHT
+        &&
+        !(self->gameData.prevBtnState & PB_RIGHT)
+    ) {
+        self->menuSelection++;
+
+        if(self->menuSelection > 90){
+            self->menuSelection = 32;
+        }
+
+         self->gameData.initials[self->menuState]=self->menuSelection;
+         bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+    } else if(
+        self->gameData.btnState & PB_B
+        &&
+        !(self->gameData.prevBtnState & PB_B)
+    ) {
+        if(self->menuState > 0){
+            self->menuState--;
+            self->menuSelection = self->gameData.initials[self->menuState];
+            bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+        } else {
+            bzrPlaySfx(&(self->soundManager.hit2), BZR_STEREO);
+        }
+    } else if(
+        self->gameData.btnState & PB_A
+        &&
+        !(self->gameData.prevBtnState & PB_A)
+    ) {
+        self->menuState++;
+        
+        if(self->menuState >2){
+            breakoutInsertScoreIntoHighScores(&(self->highScores), self->gameData.score, self->gameData.initials, self->gameData.rank);
+            breakoutSaveHighScores(self);
+            breakoutChangeStateShowHighScores(self);
+            bzrPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
+            return;
+        } else {
+            self->menuSelection = self->gameData.initials[self->menuState];
+            bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+        }
+    }
+    
+    updateStarfield(&(self->starfield), 8);
+    drawStarfield(&(self->starfield));
+    breakoutDrawNameEntry(&(self->logbook), &(self->gameData), self->menuState);
+    updateLedsShowHighScores(&(self->gameData));
+}
+
+void breakoutDrawNameEntry(font_t *font, gameData_t *gameData, uint8_t currentInitial){
+    drawText(font, greenColors[(breakout->gameData.frameCount >> 3) % 4], breakoutNameEntryTitle, (TFT_WIDTH - textWidth(font, breakoutNameEntryTitle)) / 2, 64);
+
+    char rowStr[32];
+    snprintf(rowStr, sizeof(rowStr) - 1, "%d   %06" PRIu32, gameData->rank+1, gameData->score);
+    drawText(font, c555, rowStr, 16, 128);
+
+    for(uint8_t i=0; i<3; i++){
+        snprintf(rowStr, sizeof(rowStr) - 1, "%c", gameData->initials[i]);
+        drawText(font, (currentInitial == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 200+16*i, 128);
     }
 }
