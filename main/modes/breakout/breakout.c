@@ -971,11 +971,11 @@ void breakoutSaveHighScores(breakout_t* self){
 }
 
 void breakoutDrawHighScores(font_t *font, breakoutHighScores_t *highScores, gameData_t *gameData){
-    drawText(font, c555, "Rank Score  Name", 10, 96);
+    drawText(font, redColors[(gameData->frameCount >> 3) % 4], "Rank Score  Name", 10, 88);
     for(uint8_t i=0; i<NUM_BREAKOUT_HIGH_SCORES; i++){
         char rowStr[32];
         snprintf(rowStr, sizeof(rowStr) - 1, " %d   %06" PRIu32 " %c%c%c", i+1, highScores->scores[i], highScores->initials[i][0], highScores->initials[i][1], highScores->initials[i][2]);
-        drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 16, 128 + i*20);
+        drawText(font, (gameData->rank == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 16, 120 + i*22);
     }
 }
 
@@ -1057,7 +1057,7 @@ void breakoutDrawShowHighScores(font_t *font, uint8_t menuState){
     } else*/ if(menuState == 3){
         drawText(font, redColors[(breakout->gameData.frameCount >> 3) % 4], breakoutNameEnteredTitle, (TFT_WIDTH - textWidth(font, breakoutNameEnteredTitle)) / 2, 32);
     } else {
-        drawText(font, c555, breakoutHighScoreDisplayTitle, (TFT_WIDTH - textWidth(font, breakoutHighScoreDisplayTitle)) / 2, 32);
+        drawText(font, purpleColors[(breakout->gameData.frameCount >> 3) % 4], breakoutHighScoreDisplayTitle, (TFT_WIDTH - textWidth(font, breakoutHighScoreDisplayTitle)) / 2, 32);
     }
 }
 
