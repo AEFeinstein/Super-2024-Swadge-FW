@@ -200,6 +200,8 @@ static const paletteColor_t redColors[4] = {c510, c440, c050, c440};
 static const paletteColor_t greenColors[4] = {c555, c051, c030, c051};
 static const paletteColor_t purpleColors[4] = {c405, c440, c055, c440};
 
+static const int16_t cheatCode[9] = {PB_UP, PB_B, PB_DOWN, PB_B, PB_LEFT, PB_B, PB_RIGHT, PB_B, PB_START};
+
 //==============================================================================
 // Strings
 //==============================================================================
@@ -228,7 +230,7 @@ static const char breakoutGameOver[] = "Game Over!";
 static const char breakoutLevelClear[] = "Cleared!";
 static const char breakoutPause[] = "Paused";
 
-static const char breakoutHighScoreDisplayTitle[] = "Cosmic Players";
+static const char breakoutHighScoreDisplayTitle[] = "Cosmic Scores";
 static const char breakoutNameEntryTitle[] = "Enter your initials!";
 static const char breakoutNameEnteredTitle[] = "Name registrated.";
 
@@ -313,7 +315,7 @@ static void breakoutExitMode(void)
     // Deinitialize the menu.
     // This will also free the "level select" menu item.
         deinitMenu(breakout->menu);
-        
+
     }
     deinitMenuLogbookRenderer(breakout->mRenderer);
     
@@ -879,9 +881,27 @@ static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
 
     if(self->gameData.frameCount > 600){
         //resetGameDataLeds(&(self->gameData));
+        breakout->menuSelection = 0;
         breakoutChangeStateShowHighScores(self);
         
         return;
+    }
+
+    if (
+        (self->gameData.btnState & cheatCode[breakout->menuSelection])
+        &&
+        !(self->gameData.prevBtnState & cheatCode[breakout->menuSelection])
+    ) {
+        breakout->menuSelection++;
+
+        if(breakout->menuSelection > 8){
+            breakout->menuSelection = 0;
+            breakout->menuState = 1;
+            breakout->gameData.debugMode = true;
+            bzrPlaySfx(&(breakout->soundManager.snd1up), BZR_STEREO);
+        } else {
+            bzrPlaySfx(&(breakout->soundManager.hit3), BZR_STEREO);
+        }
     }
 
     if((
@@ -890,6 +910,7 @@ static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
         !(self->gameData.prevBtnState & PB_START)
     )){
         self->gameData.btnState = 0;
+        breakout->menuSelection = 0;
         breakoutChangeStateMainMenu(self);
         return;
     }
@@ -1061,8 +1082,6 @@ void breakoutChangeStateNameEntry(breakout_t *self){
 }
 
 void breakoutUpdateNameEntry(breakout_t *self, int64_t elapsedUs){
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-
     self->gameData.frameCount++;
 
     if(
@@ -1174,11 +1193,11 @@ void breakoutBuildMainMenu(breakout_t* self){
         Manually allocate and build "level select" menu item
         because the max setting will have to change as levels are unlocked
     */
-    if(breakout->unlockables.maxLevelIndexUnlocked > 0) {
+    if(breakout->unlockables.maxLevelIndexUnlocked > 0 || breakout->gameData.debugMode) {
         breakout->levelSelectMenuItem = calloc(1,sizeof(menuItem_t));
         breakout->levelSelectMenuItem->label = breakoutContinue;
         breakout->levelSelectMenuItem->minSetting = 1;
-        breakout->levelSelectMenuItem->maxSetting = breakout->unlockables.maxLevelIndexUnlocked + 1;
+        breakout->levelSelectMenuItem->maxSetting = (breakout->gameData.debugMode) ? NUM_LEVELS : breakout->unlockables.maxLevelIndexUnlocked + 1;
         breakout->levelSelectMenuItem->currentSetting = (breakout->gameData.level == 0) ?  breakout->levelSelectMenuItem->maxSetting : breakout->gameData.level;
         breakout->levelSelectMenuItem->options = NULL;
         breakout->levelSelectMenuItem->subMenu = NULL;
