@@ -70,13 +70,17 @@
 #ifndef _MODEL_H_
 #define _MODEL_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <float.h>
 
 #include "palette.h"
 
+//==============================================================================
 // Defines
-#define SCENE_MAX_OBJECTS 12
+//==============================================================================
+
+#define SCENE_MAX_OBJECTS 16
 
 //==============================================================================
 // Types
@@ -127,16 +131,20 @@ typedef struct
 typedef struct
 {
     const model_t* model;
-    float orient[4];
-    float scale;
-    float translate[3];
-} modelPos_t;
+    // 4x4 transform matrix
+    float transform[4][4];
+} obj3d_t;
 
 typedef struct
 {
-    uint8_t modelCount;
-    modelPos_t models[SCENE_MAX_OBJECTS];
+    uint8_t objectCount;
+    float transform[4][4];
+    obj3d_t objects[SCENE_MAX_OBJECTS];
 } scene_t;
+
+// Variables
+
+extern bool triOverflow;
 
 //==============================================================================
 // Function Prototypes

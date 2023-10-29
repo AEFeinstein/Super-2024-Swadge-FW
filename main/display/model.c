@@ -71,13 +71,13 @@ static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces)
     uint32_t totalVerts = 0;
     uint32_t totalTris = 0;
 
-    for (int i = 0; i < scene->modelCount; i++)
+    for (int i = 0; i < scene->objectCount; i++)
     {
-        const modelPos_t* modelPos = &scene->models[i];
-        if (NULL != modelPos && NULL != modelPos->model)
+        const obj3d_t* object = &scene->objects[i];
+        if (NULL != object && NULL != object->model)
         {
-            totalVerts += modelPos->model->vertCount;
-            totalTris += modelPos->model->triCount;
+            totalVerts += object->model->vertCount;
+            totalTris += object->model->triCount;
 
             if (totalVerts > UINT16_MAX || totalTris > UINT16_MAX)
             {
@@ -151,12 +151,13 @@ void deinitRenderer(void)
 
 void drawModel(const model_t* model, const float orient[4], float scale, const float translate[3], uint16_t x, uint16_t y, uint16_t w, uint16_t h)
 {
+    float scale3[3] = {scale, scale, scale};
+
     scene_t scene;
-    scene.models[0].model = model;
-    scene.modelCount = 1;
-    memcpy(scene.models[0].orient, orient, sizeof(float) * 4);
-    scene.models[0].scale = scale;
-    memcpy(scene.models[0].translate, translate, sizeof(float) * 3);
+    scene.objects[0].model = model;
+    scene.objectCount = 1;
+
+    createTransformMatrix(&scene.objects[0].transform, translate, orient, scale3);
 
     drawScene(&scene, x, y, w, h);
 }
@@ -174,26 +175,13 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
     int totalTrisThisFrame = 0;
     int i;
 
-    // were not used really
-    /*float plusy[3] = { 0, 1, 0 };
-
-    // Produce a model matrix from a quaternion.
-    float plusx_out[3] = { 0.9, 0, 0 };
-    float plusy_out[3] = { 0, 0.9, 0 };
-    float plusz_out[3] = { 0, 0, 0.9 };
-    const float sceneOrient[4] = {1, 0, 0, 0};
-    mathRotateVectorByQuaternion( plusy, sceneOrient, plusy );
-    mathRotateVectorByQuaternion( plusy_out, sceneOrient, plusy_out );
-    mathRotateVectorByQuaternion( plusx_out, sceneOrient, plusx_out );
-    mathRotateVectorByQuaternion( plusz_out, sceneOrient, plusz_out );*/
-
     // where in the vert map each model's vertices starts
     uint16_t vertOffsets[16] = {0};
 
-    for (uint8_t modelNum = 0; modelNum < scene->modelCount; modelNum++)
+    for (uint8_t modelNum = 0; modelNum < scene->objectCount; modelNum++)
     {
-        const modelPos_t* modelPos = &scene->models[modelNum];
-        const model_t* model = modelPos->model;
+        const obj3d_t* object = &scene->objects[modelNum];
+        const model_t* model = object->model;
         vertOffsets[modelNum] = vertices;
 
         if (NULL == model)
@@ -202,30 +190,22 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
             continue;
         }
 
-        float plusy[3] = { 0, 1, 0 };
-
-        // Produce a model matrix from a quaternion.
-        float plusx_out[3] = { 0.9 * modelPos->scale, 0, 0 };
-        float plusy_out[3] = { 0, 0.9 * modelPos->scale, 0 };
-        float plusz_out[3] = { 0, 0, 0.9 * modelPos->scale };
-        mathRotateVectorByQuaternion( plusy, modelPos->orient, plusy );
-        mathRotateVectorByQuaternion( plusy_out, modelPos->orient, plusy_out );
-        mathRotateVectorByQuaternion( plusx_out, modelPos->orient, plusx_out );
-        mathRotateVectorByQuaternion( plusz_out, modelPos->orient, plusz_out );
+        DEBUG_MATRIX(scene->transform);
+        DEBUG_MATRIX(object->transform);
 
         for( i = 0; i < model->vertCount; i++ )
         {
-            // Performing the transform this way is about 700us.
-            float bx = 1.0 * model->verts[i][0] + modelPos->translate[0];
-            float by = 1.0 * model->verts[i][1] + modelPos->translate[1];
-            float bz = 1.0 * model->verts[i][2] + modelPos->translate[2];
+            // (probably no longer accurate) Performing the transform this way is about 700us.
+            float bx = 1.0 * model->verts[i][0];
+            float by = 1.0 * model->verts[i][1];
+            float bz = 1.0 * model->verts[i][2];
 
-            float xlvert[3] = {
-                bx * plusx_out[0] + by * plusx_out[1] + bz * plusx_out[2],
-                bx * plusy_out[0] + by * plusy_out[1] + bz * plusy_out[2],
-                bx * plusz_out[0] + by * plusz_out[1] + bz * plusz_out[2]
-            };
+            float xlvert[4] = {bx, by, bz, 1};
+            multiplyMatrixVector(xlvert, object->transform, xlvert);
+            multiplyMatrixVector(xlvert, scene->transform, xlvert);
 
+            // TODO: Shouldn't this be part of the matrix?
+            // Project the vert onto the screen
             verts_out[vertices*3+0] = x + xlvert[0] + w/2;
             // Convert from right-handed to left-handed coordinate frame.
             verts_out[vertices*3+1] = y - xlvert[1] + h/2;
@@ -342,7 +322,7 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
 
         // Extract the model number from the top byte of trimap[][2]
         int modelNum = (trimap[i][2] >> 8) & 0xFF;
-        const model_t* model = scene->models[modelNum].model;
+        const model_t* model = scene->objects[modelNum].model;
         //ESP_LOGI("Model", "modelNum is %" PRIu16, (trimap[i][2] >> 8) & 0xFF);
 
         int tv1 = (vertOffsets[modelNum] + model->tris[j].verts[0])*3;
