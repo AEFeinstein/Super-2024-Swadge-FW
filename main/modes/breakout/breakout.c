@@ -65,6 +65,8 @@ struct breakout_t
     breakoutHighScores_t highScores;
     uint8_t menuState;
     uint8_t menuSelection;
+
+    breakoutUnlockables_t unlockables;
 };
 
 //==============================================================================
@@ -109,9 +111,9 @@ static void breakoutInitializeHighScores(breakout_t* self);
 static void breakoutLoadHighScores(breakout_t* self);
 static void breakoutSaveHighScores(breakout_t* self);
 
-static void breakoutInitializeBreakoutUnlockables(breakout_t* self);
-static void breakoutLoadBreakoutUnlockables(breakout_t* self);
-static void breakoutSaveBreakoutUnlockables(breakout_t* self);
+static void breakoutInitializeUnlockables(breakout_t* self);
+static void breakoutLoadUnlockables(breakout_t* self);
+static void breakoutSaveUnlockables(breakout_t* self);
 
 static void breakoutDrawHighScores(font_t *font, breakoutHighScores_t *highScores, gameData_t *gameData);
 uint8_t breakoutGetHighScoreRank(breakoutHighScores_t *highScores, uint32_t newScore);
@@ -127,6 +129,8 @@ static void breakoutChangeStatePause(breakout_t *self);
 static void breakoutUpdatePause(breakout_t *self, int64_t elapsedUs);
 static void breakoutDrawPause(font_t *font);
 uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
+
+void breakoutBuildMainMenu(breakout_t* self);
 
 //==============================================================================
 // Level Definitions
@@ -212,7 +216,11 @@ static const char breakoutPressStart[] = "Press Start";
 
 static const char breakoutNewGame[] = "New Game";
 static const char breakoutContinue[] = "Continue - Lv";
+static const char breakoutHighScores[] = "High Scores";
+static const char breakoutResetScores[] = "Reset Scores";
+static const char breakoutResetProgress[] = "Reset Progress";
 static const char breakoutExit[] = "Exit";
+static const char breakoutSaveAndExit[] = "Save & Exit";
 
 static const char breakoutReady[] = "Get Ready!";
 static const char breakoutGameOver[] = "Game Over!";
@@ -225,6 +233,7 @@ static const char breakoutNameEntryTitle[] = "Enter your initials!";
 static const char breakoutNameEnteredTitle[] = "Name registrated.";
 
 static const char breakoutNvsKey_scores[] = "brk_scores";
+static const char breakoutNvsKey_unlocks[] = "brk_unlocks";
 
 //==============================================================================
 // Variables
@@ -268,8 +277,6 @@ static void breakoutEnterMode(void)
     loadFont("logbook.font", &breakout->logbook, false);
     loadFont("ibm_vga8.font", &breakout->ibm_vga8, false);
 
-    // Initialize the menu
-    breakout->menu = initMenu(breakoutName, breakoutMenuCb);
     breakout->mRenderer = initMenuLogbookRenderer(&breakout->logbook);
 
     initializeGameData(&(breakout->gameData), &(breakout->soundManager));
@@ -283,33 +290,14 @@ static void breakoutEnterMode(void)
     breakout->tilemap.mapOffsetX = 0;
 
     loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
-
-    addSingleItemToMenu(breakout->menu, breakoutNewGame);
-
-    /*
-        Manually allocate and build "level select" menu item
-        because the max setting will have to change as levels are unlocked
-    */
-
-    breakout->levelSelectMenuItem = calloc(1,sizeof(menuItem_t));
-    breakout->levelSelectMenuItem->label = breakoutContinue;
-    breakout->levelSelectMenuItem->minSetting = 1;
-    breakout->levelSelectMenuItem->maxSetting = NUM_LEVELS;
-    breakout->levelSelectMenuItem->currentSetting = 1;
-    breakout->levelSelectMenuItem->options = NULL;
-    breakout->levelSelectMenuItem->subMenu = NULL;
-
-    push(breakout->menu->items, breakout->levelSelectMenuItem);
-
-    addSingleItemToMenu(breakout->menu, breakoutExit);
-
+    
     breakoutLoadHighScores(breakout);
+    breakoutLoadUnlockables(breakout);
 
     //Set frame rate to 60 FPS
     setFrameRateUs(16666);
 
-    // Set the mode to menu mode
-    //breakout->update = &breakoutUpdateTitleScreen;
+    breakout->menu = NULL;
     breakoutChangeStateTitleScreen(breakout);
 }
 
@@ -318,11 +306,17 @@ static void breakoutEnterMode(void)
  */
 static void breakoutExitMode(void)
 {
+    //deinitMenu can't set menu pointer to NULL,
+    //so this is the only way to know that the menu has not been previously freed.
+    if(breakout->update == &breakoutUpdateMainMenu){
+
     // Deinitialize the menu.
     // This will also free the "level select" menu item.
-    deinitMenu(breakout->menu);
+        deinitMenu(breakout->menu);
+        
+    }
     deinitMenuLogbookRenderer(breakout->mRenderer);
-
+    
     // Free the fonts
     freeFont(&breakout->logbook);
     freeFont(&breakout->ibm_vga8);
@@ -353,18 +347,44 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
             breakout->gameData.countdown = leveldef[0].timeLimit;
             breakoutChangeStateReadyScreen(breakout);   
+            deinitMenu(breakout->menu);
         } else if (label == breakoutContinue)
         {
             initializeGameDataFromTitleScreen(&(breakout->gameData));
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level - 1].filename);
             breakout->gameData.countdown = leveldef[breakout->gameData.level -1].timeLimit;
-            breakoutChangeStateReadyScreen(breakout);   
+            breakoutChangeStateReadyScreen(breakout);
+            deinitMenu(breakout->menu);   
+        }
+        else if (label == breakoutHighScores)
+        {
+            breakoutChangeStateShowHighScores(breakout);
+            breakout->gameData.btnState = 0;
+            deinitMenu(breakout->menu);
+        }
+        else if (label == breakoutResetScores)
+        {
+            breakoutInitializeHighScores(breakout);
+            bzrPlaySfx(&(breakout->soundManager.detonate), BZR_STEREO);
+        }
+        else if (label == breakoutResetProgress)
+        {
+            breakoutInitializeHighScores(breakout);
+            bzrPlaySfx(&(breakout->soundManager.die), BZR_STEREO);
+        }
+        else if (label == breakoutSaveAndExit)
+        {
+            breakoutSaveHighScores(breakout);
+            breakoutSaveUnlockables(breakout);
+            switchToSwadgeMode(&mainMenuMode);
         }
         else if (label == breakoutExit)
         {
             switchToSwadgeMode(&mainMenuMode);
         }
+    } else{
+        bzrPlaySfx(&(breakout->soundManager.hit3), BZR_STEREO);
     }
 }
 
@@ -380,14 +400,15 @@ static void breakoutMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        // Save the button state
+        breakout->btnState = evt.state;
+        breakout->gameData.btnState = evt.state;
+
         if(breakout->update == &breakoutUpdateMainMenu){
             // Pass button events to the menu
             breakout->menu = menuButton(breakout->menu, evt);
         }
 
-        // Save the button state
-        breakout->btnState = evt.state;
-        breakout->gameData.btnState = evt.state;
     }
 
     breakout->update(breakout, elapsedUs);
@@ -399,6 +420,7 @@ static void breakoutMainLoop(int64_t elapsedUs)
 void breakoutChangeStateMainMenu(breakout_t *self){
     self->gameData.frameCount = 0;
     self->update=&breakoutUpdateMainMenu;
+    breakoutBuildMainMenu(breakout);
 }
 
 static void breakoutUpdateMainMenu(breakout_t *self, int64_t elapsedUs){
@@ -742,18 +764,18 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
 
                 //Unlock the next level
                 levelIndex++;
-                /*if(levelIndex > self->unlockables.maxLevelIndexUnlocked){
+                if(levelIndex > self->unlockables.maxLevelIndexUnlocked){
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
-                }*/
+                }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
                 breakout->gameData.countdown = leveldef[levelIndex].timeLimit;
                 breakoutChangeStateReadyScreen(self);
                 return;
             }
 
-            /*if(!self->gameData.debugMode){
-                savePlatformerUnlockables(self);
-            }*/
+            if(!self->gameData.debugMode){
+                breakoutSaveUnlockables(self);
+            }
         } 
     } else if(self->gameData.frameCount < 30 || !(self->gameData.frameCount % 2)){
         drawTileMap(&(self->tilemap));
@@ -1116,5 +1138,61 @@ void breakoutDrawNameEntry(font_t *font, gameData_t *gameData, uint8_t currentIn
     for(uint8_t i=0; i<3; i++){
         snprintf(rowStr, sizeof(rowStr) - 1, "%c", gameData->initials[i]);
         drawText(font, (currentInitial == i) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, rowStr, 200+16*i, 128);
+    }
+}
+
+void breakoutInitializeUnlockables(breakout_t* self){
+    self->unlockables.maxLevelIndexUnlocked = 0;
+    self->unlockables.gameCleared = false;
+    /*self->unlockables.oneCreditCleared = false;
+    self->unlockables.bigScore = false;
+    self->unlockables.fastTime = false;
+    self->unlockables.biggerScore = false;*/
+}
+
+void breakoutLoadUnlockables(breakout_t* self){
+    size_t size = sizeof(breakoutUnlockables_t);
+    // Try reading the value
+    if(false == readNvsBlob(breakoutNvsKey_unlocks, &(self->unlockables), &(size)))
+    {
+        // Value didn't exist, so write the default
+        breakoutInitializeUnlockables(self);
+    }
+};
+
+void breakoutSaveUnlockables(breakout_t* self){
+    size_t size = sizeof(breakoutUnlockables_t);
+    writeNvsBlob(breakoutNvsKey_unlocks, &(self->unlockables), size);
+};
+
+void breakoutBuildMainMenu(breakout_t* self){
+    // Initialize the menu
+    breakout->menu = initMenu(breakoutName, breakoutMenuCb);
+    addSingleItemToMenu(breakout->menu, breakoutNewGame);
+
+    /*
+        Manually allocate and build "level select" menu item
+        because the max setting will have to change as levels are unlocked
+    */
+    if(breakout->unlockables.maxLevelIndexUnlocked > 0) {
+        breakout->levelSelectMenuItem = calloc(1,sizeof(menuItem_t));
+        breakout->levelSelectMenuItem->label = breakoutContinue;
+        breakout->levelSelectMenuItem->minSetting = 1;
+        breakout->levelSelectMenuItem->maxSetting = breakout->unlockables.maxLevelIndexUnlocked + 1;
+        breakout->levelSelectMenuItem->currentSetting = (breakout->gameData.level == 0) ?  breakout->levelSelectMenuItem->maxSetting : breakout->gameData.level;
+        breakout->levelSelectMenuItem->options = NULL;
+        breakout->levelSelectMenuItem->subMenu = NULL;
+
+        push(breakout->menu->items, breakout->levelSelectMenuItem);
+    }
+
+    addSingleItemToMenu(breakout->menu, breakoutHighScores);
+
+    if(breakout->gameData.debugMode){
+        addSingleItemToMenu(breakout->menu, breakoutResetScores);
+        addSingleItemToMenu(breakout->menu, breakoutResetProgress);
+        addSingleItemToMenu(breakout->menu, breakoutSaveAndExit);
+    } else {
+        addSingleItemToMenu(breakout->menu, breakoutExit);
     }
 }

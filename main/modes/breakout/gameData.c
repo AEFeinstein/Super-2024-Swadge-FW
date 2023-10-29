@@ -37,7 +37,7 @@
     gameData->checkpoint = 0;
     gameData->levelDeaths = 0;
     gameData->initialHp = 1;*/
-    gameData->debugMode = false;
+    gameData->debugMode = true;
     gameData->continuesUsed = false;
     gameData->inGameTimer = 0;
 

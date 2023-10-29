@@ -20,4 +20,13 @@ typedef struct {
     char initials[NUM_BREAKOUT_HIGH_SCORES][3];
 } breakoutHighScores_t;
 
+typedef struct {
+    uint8_t maxLevelIndexUnlocked;
+    bool gameCleared;
+    /*bool oneCreditCleared;
+    bool bigScore;
+    bool fastTime;
+    bool biggerScore;*/
+} breakoutUnlockables_t;
+
 #endif
