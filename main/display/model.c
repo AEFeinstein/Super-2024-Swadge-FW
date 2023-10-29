@@ -9,6 +9,7 @@
 
 #include "hdw-imu.h"
 #include "quaternions.h"
+#include "matrixMath.h"
 #include "hdw-tft.h"
 #include "shapes.h"
 #include "palette.h"
@@ -31,7 +32,6 @@ static void intcross(int* p, const int* a, const int* b);
 static int zcompare(const int16_t *a, const int16_t* b);
 static unsigned julery_isqrt(unsigned long val);
 static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces);
-static void convertQuatToMatrix(float transform[4][4], const float rotate[4]);
 
 // Function Definitions
 static void intcross(int* p, const int* a, const int* b)
