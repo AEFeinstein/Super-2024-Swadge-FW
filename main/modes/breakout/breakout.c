@@ -136,7 +136,7 @@ void breakoutBuildMainMenu(breakout_t* self);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 25
+#define NUM_LEVELS 38
 
 static const leveldef_t leveldef[NUM_LEVELS] = {
     {.filename = "intro.bin",
@@ -187,7 +187,33 @@ static const leveldef_t leveldef[NUM_LEVELS] = {
      .timeLimit = 180},
     {.filename = "starlite.bin",
      .timeLimit = 180},
-    {.filename = "jailbreak.bin",
+    {.filename = "jailbreak.bin", /*Starting here, the levels are NOT in order!*/
+     .timeLimit = 180},
+    {.filename = "getMorGet.bin",
+     .timeLimit = 180},
+    {.filename = "outtaMyWay.bin",
+     .timeLimit = 180},
+    {.filename = "bombrings.bin",
+     .timeLimit = 180},
+    {.filename = "angles.bin",
+     .timeLimit = 180},
+    {.filename = "themaze.bin",
+     .timeLimit = 180},
+    {.filename = "intersection.bin",
+     .timeLimit = 180},
+    {.filename = "foosball.bin",
+     .timeLimit = 180},
+    {.filename = "paddles.bin",
+     .timeLimit = 180},
+    {.filename = "corner.bin",
+     .timeLimit = 180},
+    {.filename = "b.bin",
+     .timeLimit = 180},
+    {.filename = "wtf.bin",
+     .timeLimit = 180},
+    {.filename = "mag03.bin",
+     .timeLimit = 180},
+    {.filename = "wallball.bin",
      .timeLimit = 180}
      };
     
@@ -911,6 +937,11 @@ static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
     )){
         self->gameData.btnState = 0;
         breakout->menuSelection = 0;
+        
+        if(!breakout->gameData.debugMode) {
+            bzrPlaySfx(&(breakout->soundManager.launch), BZR_STEREO);
+        }
+        
         breakoutChangeStateMainMenu(self);
         return;
     }
