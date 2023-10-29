@@ -268,7 +268,7 @@ void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track);
 void bzrStop(bool resetTracks);
 void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume);
 void bzrStopNote(buzzerPlayTrack_t track);
-void bzrPause(void);
+bool bzrPause(void);
 void bzrResume(void);
 void* bzrSave(void);
 void bzrRestore(void* data);
