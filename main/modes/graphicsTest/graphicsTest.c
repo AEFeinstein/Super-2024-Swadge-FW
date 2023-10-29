@@ -377,7 +377,7 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
             obj3d_t* obj = &graphicsTest->scene.objects[graphicsTest->scene.objectCount];
             obj->model = model;
             const float translate[3] = {0};
-            const float rotate[4];
+            float rotate[4];
             const float scale[3] = {1.0, 1.0, 1.0};
             accelGetQuaternion(rotate);
             createTransformMatrix(obj->transform, translate, rotate, scale);
@@ -593,9 +593,9 @@ static void graphicsTestHandleInput(void)
 
                     case PB_UP:
                     {
-                        curTransform->scale[0] += .1;
-                        curTransform->scale[1] += .1;
-                        curTransform->scale[2] += .1;
+                        curTransform->scale[0] += .05;
+                        curTransform->scale[1] += .05;
+                        curTransform->scale[2] += .05;
                         transformUpdated = true;
                         break;
                     }
