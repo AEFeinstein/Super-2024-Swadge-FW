@@ -15,6 +15,7 @@
 #include "esp_log.h"
 #include "trigonometry.h"
 #include "quaternions.h"
+#include "matrixMath.h"
 #include "shapes.h"
 #include "fill.h"
 #include "linked_list.h"
