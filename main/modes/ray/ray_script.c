@@ -665,7 +665,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         case SPAWN:
         {
             // Start timer to not re-trigger immediately
-            script->resetTimerSec = 30;
+            script->resetTimerSec = 60;
             // Create objects
             for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
             {

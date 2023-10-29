@@ -335,9 +335,9 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
         // If the player is in water
         if (isInWater)
         {
-            // Slow down movement by a fourth
-            deltaX /= 4;
-            deltaY /= 4;
+            // Slow down movement by a 8x
+            deltaX /= 8;
+            deltaY /= 8;
         }
 
         // Boundary checks are longer than the move dist to not get right up on the wall
