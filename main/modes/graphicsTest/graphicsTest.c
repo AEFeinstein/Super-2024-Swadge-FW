@@ -60,6 +60,14 @@ static const testModelInfo_t graphicsTestModels[] =
     //{"Cow", "cow.mdl"},
 };
 
+/// @brief Struct defining separated translation, rotation, and scaling
+typedef struct
+{
+    float translate[3];
+    float rotate[4];
+    float scale[3];
+} transformBase_t;
+
 /// @brief The struct that holds all the state for the graphics test mode
 typedef struct
 {
@@ -73,9 +81,16 @@ typedef struct
     model_t models[ARRAY_SIZE(graphicsTestModels)];
     bool modelLoaded[ARRAY_SIZE(graphicsTestModels)];
 
+    float worldTranslate[3];
+    float worldOrient[4];
+    float worldScale[3];
+
+    transformBase_t worldTransform;
+    transformBase_t objTransforms[SCENE_MAX_OBJECTS];
+
     scene_t scene; ///< The 3D scene for the renderer
 
-    uint8_t selectedModel; ///< The index of the selected model
+    int8_t selectedModel; ///< The index of the selected model
 
     uint16_t btnState; ///< The button state
     buttonRepeatState_t repeatState; ///< The button repeat state
@@ -105,6 +120,7 @@ static void graphicsTestSetupMenu(void);
 static void graphicsTestReset(void);
 
 static const char* getTouchActionDesc(touchAction_t action);
+static void transformBaseToMatrix(float mat[4][4], const transformBase_t* base);
 
 static void graphicsTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
@@ -182,28 +198,42 @@ static void graphicsTestEnterMode(void)
         graphicsTest->modelLoaded[i] = true;
     }
 
-    graphicsTest->scene.orient[3] = 1.0;
-    graphicsTest->scene.modelCount = 3;
-    graphicsTest->scene.models[0].model = &graphicsTest->models[0];
-    graphicsTest->scene.models[0].scale = 1.0;
-    graphicsTest->scene.models[0].orient[3] = 1.0;
-    graphicsTest->scene.models[0].translate[0] = -25.0;
-    graphicsTest->scene.models[0].translate[1] = -25.0;
-    graphicsTest->scene.models[0].translate[2] = 0.0;
+    graphicsTest->worldTransform.scale[0] = 1.0;
+    graphicsTest->worldTransform.scale[1] = 1.0;
+    graphicsTest->worldTransform.scale[2] = 1.0;
+    graphicsTest->worldTransform.rotate[3] = 1.0;
+    transformBaseToMatrix(graphicsTest->scene.transform, &graphicsTest->worldTransform);
 
-    graphicsTest->scene.models[1].model = &graphicsTest->models[1];
-    graphicsTest->scene.models[1].scale = 1.0;
-    graphicsTest->scene.models[1].orient[3] = 1.0;
-    graphicsTest->scene.models[1].translate[0] = 25.0;
-    graphicsTest->scene.models[1].translate[1] = 25.0;
-    graphicsTest->scene.models[1].translate[2] = 0.0;
+    graphicsTest->scene.objectCount = 3;
+    graphicsTest->scene.objects[0].model = &graphicsTest->models[0];
+    graphicsTest->objTransforms[0].scale[0] = 1.0;
+    graphicsTest->objTransforms[0].scale[1] = 1.0;
+    graphicsTest->objTransforms[0].scale[2] = 1.0;
+    graphicsTest->objTransforms[0].rotate[3] = 1.0;
+    graphicsTest->objTransforms[0].translate[0] = -25.0;
+    graphicsTest->objTransforms[0].translate[1] = -25.0;
+    graphicsTest->objTransforms[0].translate[2] = 0.0;
+    transformBaseToMatrix(graphicsTest->scene.objects[0].transform, &graphicsTest->objTransforms[0]);
 
-    graphicsTest->scene.models[2].model = &graphicsTest->models[2];
-    graphicsTest->scene.models[2].scale = 1.0;
-    graphicsTest->scene.models[2].orient[3] = 1.0;
-    graphicsTest->scene.models[2].translate[0] = 60.0;
-    graphicsTest->scene.models[2].translate[1] = 60.0;
-    graphicsTest->scene.models[2].translate[2] = 0.0;
+    graphicsTest->scene.objects[1].model = &graphicsTest->models[1];
+    graphicsTest->objTransforms[1].scale[0] = 1.0;
+    graphicsTest->objTransforms[1].scale[1] = 1.0;
+    graphicsTest->objTransforms[1].scale[2] = 1.0;
+    graphicsTest->objTransforms[1].rotate[3] = 1.0;
+    graphicsTest->objTransforms[1].translate[0] = 25.0;
+    graphicsTest->objTransforms[1].translate[1] = 25.0;
+    graphicsTest->objTransforms[1].translate[2] = 0.0;
+    transformBaseToMatrix(graphicsTest->scene.objects[1].transform, &graphicsTest->objTransforms[1]);
+
+    graphicsTest->scene.objects[2].model = &graphicsTest->models[2];
+    graphicsTest->objTransforms[2].scale[0] = 1.0;
+    graphicsTest->objTransforms[2].scale[1] = 1.0;
+    graphicsTest->objTransforms[2].scale[2] = 1.0;
+    graphicsTest->objTransforms[2].rotate[3] = 1.0;
+    graphicsTest->objTransforms[2].translate[0] = 60.0;
+    graphicsTest->objTransforms[2].translate[1] = 60.0;
+    graphicsTest->objTransforms[2].translate[2] = 0.0;
+    transformBaseToMatrix(graphicsTest->scene.objects[2].transform, &graphicsTest->objTransforms[2]);
 
     // Repeat any of the arrow buttons every .1s after first holding for .3s
     graphicsTest->repeatState.repeatMask = PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
@@ -266,10 +296,15 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
         char buffer[32];
 
         // Draw control type
-        if (graphicsTest->scene.modelCount > 0)
+        const char* touchActionStr = getTouchActionDesc(graphicsTest->touchAction);
+        if (graphicsTest->selectedModel == -1)
         {
-            const char* touchActionStr = getTouchActionDesc(graphicsTest->touchAction);
-            snprintf(buffer, sizeof(buffer), "Sel: #%" PRIu8 "/%" PRIu8 "  Touch: %s", graphicsTest->selectedModel + 1, graphicsTest->scene.modelCount, touchActionStr);
+            snprintf(buffer, sizeof(buffer), "Sel: World  Touch: %s", touchActionStr);
+            drawText(&graphicsTest->ibm, c555, buffer, 30, 5);
+        }
+        else if (graphicsTest->scene.objectCount > 0)
+        {
+            snprintf(buffer, sizeof(buffer), "Sel: #%" PRIu8 "/%" PRIu8 "  Touch: %s", graphicsTest->selectedModel + 1, graphicsTest->scene.objectCount, touchActionStr);
             drawText(&graphicsTest->ibm, c555, buffer, 30, 5);
         }
 
@@ -282,10 +317,6 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
         snprintf(buffer, sizeof(buffer), "%" PRId32 ".%" PRId32, framesPerSecond, tenthFramesPerSecond);
         int16_t textX = drawText(&graphicsTest->ibm, c550, buffer, TFT_WIDTH - 30 - textWidth(&graphicsTest->ibm, buffer), 5);
 
-        if (triOverflow)
-        {
-            drawText(&graphicsTest->ibm, c500, "!", textX, 5);
-        }
     }
 }
 
@@ -300,16 +331,16 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
     {
         graphicsTest->showMenu = false;
     }
-    else if (selected && graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
+    else if (selected && graphicsTest->scene.objectCount < SCENE_MAX_OBJECTS)
     {
         model_t* model = NULL;
         bool copy = false;
-        if (label == graphicsMenuItemCopy && graphicsTest->scene.modelCount > 0)
+        if (label == graphicsMenuItemCopy && graphicsTest->scene.objectCount > 0)
         {
             // Copy the current model data to a new one
-            memcpy(&graphicsTest->scene.models[graphicsTest->scene.modelCount],
-                    &graphicsTest->scene.models[graphicsTest->selectedModel],
-                    sizeof(modelPos_t));
+            memcpy(&graphicsTest->scene.objects[graphicsTest->scene.objectCount],
+                    &graphicsTest->scene.objects[graphicsTest->selectedModel],
+                    sizeof(obj3d_t));
             copy = true;
         }
         else
@@ -320,6 +351,7 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
                 {
                     if (!graphicsTest->modelLoaded[i])
                     {
+                        ESP_LOGI("Model", "Loading unloaded model %s", graphicsTestModels[i].filename);
                         if (loadModel(graphicsTestModels[i].filename, &graphicsTest->models[i], true))
                         {
                             graphicsTest->modelLoaded[i] = true;
@@ -342,17 +374,17 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
 
         if (!copy)
         {
-            modelPos_t* obj = &graphicsTest->scene.models[graphicsTest->scene.modelCount];
+            obj3d_t* obj = &graphicsTest->scene.objects[graphicsTest->scene.objectCount];
             obj->model = model;
-            accelGetQuaternion(obj->orient);
-            obj->scale = 1.0;
-            obj->translate[0] = 0;
-            obj->translate[1] = 0;
-            obj->translate[2] = 0;
+            const float translate[3] = {0};
+            const float rotate[4];
+            const float scale[3] = {1.0, 1.0, 1.0};
+            accelGetQuaternion(rotate);
+            createTransformMatrix(obj->transform, translate, rotate, scale);
         }
 
         // Switch to the newly created model
-        graphicsTest->selectedModel = graphicsTest->scene.modelCount++;
+        graphicsTest->selectedModel = graphicsTest->scene.objectCount++;
 
         // And reallocate the scene
         initRendererScene(&graphicsTest->scene);
@@ -383,13 +415,17 @@ static void graphicsTestHandleInput(void)
     }
     else
     {
+        transformBase_t* curTransform = (graphicsTest->scene.objectCount == 0 || graphicsTest->selectedModel == -1)
+                                        ? &graphicsTest->worldTransform
+                                        : &graphicsTest->objTransforms[graphicsTest->selectedModel];
+        bool transformUpdated = false;
+
         // Handle Touchpad Input
-        if (graphicsTest->scene.modelCount > 0)
+        if (graphicsTest->scene.objectCount > 0)
         {
             int32_t angle, radius, intensity;
             if (getTouchJoystick(&angle, &radius, &intensity))
             {
-                modelPos_t* curModel = &graphicsTest->scene.models[graphicsTest->selectedModel];
                 if (graphicsTest->touchAction == TRANSLATE_XY || graphicsTest->touchAction == TRANSLATE_ZY)
                 {
                     // Handle Translate Modes
@@ -402,18 +438,20 @@ static void graphicsTestHandleInput(void)
                         graphicsTest->touchState = true;
                         graphicsTest->touchDragStartX = x;
                         graphicsTest->touchDragStartY = y;
-                        memcpy(graphicsTest->touchDragStartPos, curModel->translate, sizeof(float[3]));
+                        memcpy(graphicsTest->touchDragStartPos, curTransform->translate, sizeof(float[3]));
                     }
 
-                    float minX = -126.0 / curModel->scale;
-                    float maxX = 126.0 / curModel->scale;
-                    float minY = -126.0 / curModel->scale;
-                    float maxY = 126.0 / curModel->scale;
+                    float minX = -126.0 / curTransform->scale[0];
+                    float maxX = 126.0 / curTransform->scale[0];
+                    float minY = -126.0 / curTransform->scale[1];
+                    float maxY = 126.0 / curTransform->scale[1];
 
                     int otherAxis = (graphicsTest->touchAction == TRANSLATE_XY) ? 1 : 2;
-
-                    curModel->translate[0] = graphicsTest->touchDragStartPos[0] + ((maxX - minX) * (x - graphicsTest->touchDragStartX) / 1023.0);
-                    curModel->translate[otherAxis] = graphicsTest->touchDragStartPos[otherAxis] + ((maxY - minY) * (y - graphicsTest->touchDragStartY) / 1023.0);
+                    if (otherAxis != 2)
+                    {
+                        curTransform->translate[0] = graphicsTest->touchDragStartPos[0] + ((maxX - minX) * (x - graphicsTest->touchDragStartX) / 1023.0);
+                    }
+                    curTransform->translate[otherAxis] = graphicsTest->touchDragStartPos[otherAxis] + ((maxY - minY) * (y - graphicsTest->touchDragStartY) / 1023.0);
                 }
                 else
                 {
@@ -424,8 +462,7 @@ static void graphicsTestHandleInput(void)
                     {
                         // Save the selected model's orientation on the first touch
                         graphicsTest->touchState = true;
-                        memcpy(graphicsTest->touchSpinStartOrient, curModel->orient, sizeof(float[4]));
-                        //memcpy(graphicsTest->touchSpinStartOrient, graphicsTest->scene.orient, sizeof(float[4]));
+                        memcpy(graphicsTest->touchSpinStartOrient, curTransform->rotate, sizeof(float[4]));
                     }
 
                     // Apply the rotation to the saved orientation
@@ -439,10 +476,14 @@ static void graphicsTestHandleInput(void)
                     // Convert euler angle to quaternion
                     mathEulerToQuat(newRot, eulerRot);
 
+                    ESP_LOGI("GraphicsTest", "Rotating by %.2f, %.2f, %.2f",
+                             eulerRot[0], eulerRot[1], eulerRot[2]);
+
                     // Update the object's orient to its original orient rotated by the new rotation
-                    mathQuatApply(curModel->orient, graphicsTest->touchSpinStartOrient, newRot);
-                    //mathQuatApply(graphicsTest->scene.orient, graphicsTest->touchSpinStartOrient, newRot);
+                    mathQuatApply(curTransform->rotate, graphicsTest->touchSpinStartOrient, newRot);
                 }
+
+                transformUpdated = true;
             }
             else if (graphicsTest->touchState)
             {
@@ -506,27 +547,24 @@ static void graphicsTestHandleInput(void)
                     case PB_B:
                     {
                         // Delete object
-                        if (graphicsTest->scene.modelCount > 0)
+                        if (graphicsTest->selectedModel != -1 && graphicsTest->scene.objectCount > 0)
                         {
-                            const model_t* modelToUnload = graphicsTest->scene.models[graphicsTest->selectedModel].model;
+                            const model_t* modelToUnload = graphicsTest->scene.objects[graphicsTest->selectedModel].model;
 
-                            for (int i = graphicsTest->selectedModel; i < graphicsTest->scene.modelCount - 1; i++)
+                            for (int i = graphicsTest->selectedModel; i < graphicsTest->scene.objectCount - 1; i++)
                             {
                                 // Shift down any models afterwards in the array
-                                memcpy(&graphicsTest->scene.models[i], &graphicsTest->scene.models[i + 1], sizeof(modelPos_t));
+                                memcpy(&graphicsTest->scene.objects[i], &graphicsTest->scene.objects[i + 1], sizeof(obj3d_t));
                             }
 
                             // We can leave the last one there, who cares
-                            graphicsTest->scene.modelCount--;
-                            if (graphicsTest->selectedModel > 0)
-                            {
-                                graphicsTest->selectedModel--;
-                            }
+                            graphicsTest->scene.objectCount--;
+                            graphicsTest->selectedModel--;
 
                             bool unloadModel = true;
-                            for (int i = 0; i < graphicsTest->scene.modelCount; i++)
+                            for (int i = 0; i < graphicsTest->scene.objectCount; i++)
                             {
-                                if (graphicsTest->scene.models[i].model == modelToUnload)
+                                if (graphicsTest->scene.objects[i].model == modelToUnload)
                                 {
                                     unloadModel = false;
                                     break;
@@ -555,30 +593,36 @@ static void graphicsTestHandleInput(void)
 
                     case PB_UP:
                     {
-                        graphicsTest->scene.models[graphicsTest->selectedModel].scale += .1;
+                        curTransform->scale[0] += .1;
+                        curTransform->scale[1] += .1;
+                        curTransform->scale[2] += .1;
+                        transformUpdated = true;
                         break;
                     }
 
                     case PB_DOWN:
                     {
-                        if (graphicsTest->scene.models[graphicsTest->selectedModel].scale > .1001)
+                        if (curTransform->scale[0] > .0501)
                         {
-                            graphicsTest->scene.models[graphicsTest->selectedModel].scale -= .1;
+                            curTransform->scale[0] -= .05;
+                            curTransform->scale[1] -= .05;
+                            curTransform->scale[2] -= .05;
+                            transformUpdated = true;
                         }
                         break;
                     }
 
                     case PB_LEFT:
                     {
-                        if (graphicsTest->scene.modelCount > 0)
+                        if (graphicsTest->scene.objectCount > 0)
                         {
-                            if (graphicsTest->selectedModel > 0)
+                            if (graphicsTest->selectedModel >= 0)
                             {
                                 graphicsTest->selectedModel--;
                             }
                             else
                             {
-                                graphicsTest->selectedModel = graphicsTest->scene.modelCount - 1;
+                                graphicsTest->selectedModel = graphicsTest->scene.objectCount - 1;
                             }
                         }
                         break;
@@ -587,9 +631,9 @@ static void graphicsTestHandleInput(void)
                     case PB_RIGHT:
                     {
                         // Next object
-                        if (graphicsTest->scene.modelCount > 0)
+                        if (graphicsTest->scene.objectCount > 0)
                         {
-                            graphicsTest->selectedModel = (graphicsTest->selectedModel + 1) % graphicsTest->scene.modelCount;
+                            graphicsTest->selectedModel = (graphicsTest->selectedModel + 2) % (graphicsTest->scene.objectCount + 1) - 1;
 
                             // Reset the touch so weird stuff doesn't happen
                             graphicsTest->touchState = false;
@@ -604,6 +648,14 @@ static void graphicsTestHandleInput(void)
                 }
             }
         }
+
+        if (transformUpdated)
+        {
+            transformBaseToMatrix((graphicsTest->selectedModel == -1)
+                                  ? graphicsTest->scene.transform
+                                  : graphicsTest->scene.objects[graphicsTest->selectedModel].transform,
+                                  curTransform);
+        }
     }
 }
 
@@ -613,17 +665,14 @@ static void graphicsTestHandleInput(void)
 static void graphicsTestDrawScene(void)
 {
     // Get the orientation from the accelerometer
-    for (uint8_t i = 0; i < graphicsTest->scene.modelCount; i++)
-    {
-        accelGetQuaternion(graphicsTest->scene.models[i].orient);
+    float finalOrient[4] = {1, 0, 0, 0};
+    accelGetQuaternion(finalOrient);
+    mathQuatApply(finalOrient, graphicsTest->worldTransform.rotate, finalOrient);
+    mathQuatNormalize(finalOrient, finalOrient);
 
-        /*if (i == 0)
-        {
-            float objRot[4] = {0};
-            objRot[3] = 600.0;
-            mathQuatApply(graphicsTest->scene.models[i].orient, graphicsTest->scene.models[i].orient, objRot);
-        }*/
-    }
+    // FIXME this is definitely band-aiding something that's fundamentally incorrect
+    finalOrient[0] *= -1;
+    createViewMatrix(graphicsTest->scene.transform, graphicsTest->worldTransform.translate, finalOrient, graphicsTest->worldTransform.scale);
 
     drawScene(&graphicsTest->scene, 0, 0, TFT_WIDTH, TFT_HEIGHT);
 }
@@ -647,12 +696,12 @@ static void graphicsTestSetupMenu(void)
     }
 
     // Add back the items
-    if (graphicsTest->scene.modelCount > 0 && graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
+    if (graphicsTest->selectedModel != -1 && graphicsTest->scene.objectCount > 0 && graphicsTest->scene.objectCount < SCENE_MAX_OBJECTS)
     {
         addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemCopy);
     }
 
-    if (graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
+    if (graphicsTest->scene.objectCount < SCENE_MAX_OBJECTS)
     {
         for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
         {
@@ -664,12 +713,25 @@ static void graphicsTestSetupMenu(void)
 }
 
 /**
- * @brief Reset the accelerometer test mode variables
+ * @brief Reset the graphics test scene
  */
 static void graphicsTestReset(void)
 {
-    graphicsTest->scene.modelCount = 0;
-    graphicsTest->selectedModel = 0;
+    graphicsTest->scene.objectCount = 0;
+    graphicsTest->selectedModel = -1;
+
+    graphicsTest->worldTransform.translate[0] = 0.0;
+    graphicsTest->worldTransform.translate[1] = 0.0;
+    graphicsTest->worldTransform.translate[2] = 0.0;
+
+    graphicsTest->worldTransform.rotate[0] = 0.0;
+    graphicsTest->worldTransform.rotate[1] = 0.0;
+    graphicsTest->worldTransform.rotate[2] = 0.0;
+    graphicsTest->worldTransform.rotate[3] = 1.0;
+
+    graphicsTest->worldTransform.scale[0] = 1.0;
+    graphicsTest->worldTransform.scale[1] = 1.0;
+    graphicsTest->worldTransform.scale[2] = 1.0;
 }
 
 static const char* getTouchActionDesc(touchAction_t action)
@@ -694,6 +756,11 @@ static const char* getTouchActionDesc(touchAction_t action)
         default:
             return NULL;
     }
+}
+
+static void transformBaseToMatrix(float mat[4][4], const transformBase_t* base)
+{
+    createTransformMatrix(mat, base->translate, base->rotate, base->scale);
 }
 
 /**
