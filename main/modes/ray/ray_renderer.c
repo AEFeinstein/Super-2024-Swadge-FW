@@ -882,6 +882,25 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
             // Find the pixel Y coordinate where the sprite draw starts. It may be negative
             int32_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
+
+            // If this is an enemy
+            bool drawWarpLine = false;
+            if (CELL_IS_TYPE(obj->type, OBJ | ENEMY))
+            {
+                rayEnemy_t* enemy = (rayEnemy_t*)obj;
+                // And the enemy is warping in
+                if (0 < enemy->warpTimer)
+                {
+                    // Start drawing at an offset Y
+                    int32_t offset = ((enemy->warpTimer * spriteHeight) / E_WARP_TIME);
+                    drawStartY += offset;
+                    // Start drawing within the sprite
+                    initialTexY = texYDelta * (offset);
+
+                    drawWarpLine = true;
+                }
+            }
+
             if (drawStartY < 0)
             {
                 // Advance the initial texture Y coordinate by the difference
@@ -913,6 +932,20 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
                     // Reset the texture Y coordinate
                     q16_16 texY = initialTexY;
+
+                    // If an enemy is warping in
+                    if (drawWarpLine)
+                    {
+                        // Draw a line above the partial sprite
+                        if (0 <= drawStartY - 1)
+                        {
+                            TURBO_SET_PIXEL(stripe, drawStartY - 1, c303);
+                            if (0 <= drawStartY - 2)
+                            {
+                                TURBO_SET_PIXEL(stripe, drawStartY - 2, c550);
+                            }
+                        }
+                    }
 
                     // for every pixel of the current stripe
                     for (int32_t y = drawStartY; y < drawEndY; y++)

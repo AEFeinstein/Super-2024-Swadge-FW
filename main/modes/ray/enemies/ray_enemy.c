@@ -106,6 +106,16 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
 
+        // If this enemy is warping in
+        if (0 < enemy->warpTimer)
+        {
+            // Run down the warp timer
+            enemy->warpTimer -= elapsedUs;
+            // Iterate to the next node and continue
+            currentNode = currentNode->next;
+            continue;
+        }
+
         // Copy the elapsed time in case the enemy is frozen
         uint32_t eElapsedUs = elapsedUs;
 

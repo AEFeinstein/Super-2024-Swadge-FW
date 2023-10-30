@@ -54,6 +54,9 @@
 /** The number of distinct enemies */
 #define NUM_ENEMIES (OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL + 1)
 
+/** The time in uS for an enemy to warp in*/
+#define E_WARP_TIME 1000000
+
 /**
  * @brief Helper macro to check if a cell is of a given type
  * The type is the top three bits of the type
@@ -485,6 +488,7 @@ typedef struct
     int32_t health;                                  ///< The enemy's health
     rayEnemyState_t state;                           ///< This enemy's current state
     rayEnemyBehavior_t behavior;                     ///< What the enemy is currently doing
+    int32_t warpTimer;                               ///< A timer for warping in
     rayBossState_t bossState;                        ///< The current boss state, unused for non-boss
     int32_t bossTimer;                               ///< A timer for changing bossState, unused for non-boss
     int32_t behaviorTimer;                           ///< A timer used for this enemy's behaviors
