@@ -121,6 +121,9 @@ typedef struct
     int enemy7Count;
     int enemy8Count;
 
+    int comboTime;
+    int comboAmount;
+
     uint8_t attackQueue[8];
     uint8_t receiveQueue[8];
 

@@ -54,6 +54,7 @@
 #define LUMBERJACK_WATER_INCREASE       10
 
 #define LUMBERJACK_ITEM_RESETTIME       2500
+#define LUMBERJACK_COMBO_RESET_TIME     1500
 
 #define LUMBERJACK_TILE_SIZE            16
 
@@ -445,6 +446,8 @@ void lumberjackSetupLevel(int characterIndex)
 {    
     lumv->enemyKillCount       = 0;
     lumv->totalEnemyCount      = 0;
+    lumv->comboTime            = 0;
+    lumv->comboAmount          = 0;
     lumv->hasWon               = false;
 
     ESP_LOGI(LUM_TAG, "LOADING LEVEL");
@@ -715,6 +718,21 @@ void baseMode(int64_t elapsedUs)
     {
         lumv->levelTime += elapsedUs / 1000;
 
+        if (lumv->comboTime > 0)
+        {
+            lumv->comboTime -= elapsedUs / 1000;
+            
+            if (lumv->comboTime < 0)
+            {
+                lumv->comboTime = 0;
+                ESP_LOGI(LUM_TAG, "Combo end!");
+
+                lumv->comboAmount = 0;
+            }
+
+            ESP_LOGI(LUM_TAG, "Combo Time: %d", lumv->comboTime);
+        }
+
         // Check Controls
         if (lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_UNSPAWNED)
         {
@@ -900,7 +918,16 @@ void baseMode(int64_t elapsedUs)
                         {
                             enemy->state = LUMBERJACK_DEAD; // Enemy Death
                             enemy->vy    = -30;
-                            lumv->score += enemy->scoreValue;
+
+                            if (lumv->comboTime > 0)
+                            {
+                                ESP_LOGI(LUM_TAG, "COMBO!");
+                                ++lumv->comboAmount;
+                            }
+
+                            lumv->score += enemy->scoreValue * (lumv->comboAmount + 1);
+
+                            lumv->comboTime = LUMBERJACK_COMBO_RESET_TIME;
 
                             if (lumv->score > lumv->highscore)
                             {
@@ -1024,6 +1051,7 @@ void lumberjackOnLocalPlayerDeath(void)
     lumv->localPlayer->active    = false;
     lumv->localPlayer->jumping   = false;
     lumv->localPlayer->jumpTimer = 0;
+    lumv->comboTime              = 0;
 
     if (lumv->lives <= 0)
     {
