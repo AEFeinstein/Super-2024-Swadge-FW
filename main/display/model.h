@@ -128,17 +128,30 @@ typedef struct
     modelLine_t* lines;
 } model_t;
 
+/**
+ * @brief Structure representing an object within a scene
+ */
 typedef struct
 {
+    /// @brief The 3D model to render
     const model_t* model;
-    // 4x4 transform matrix
+
+    /// @brief The 4x4 transform matrix for this object's model
     float transform[4][4];
 } obj3d_t;
 
+/**
+ * @brief Structure representing a scene
+ */
 typedef struct
 {
+    /// @brief The number of objects in \c objects to render
     uint8_t objectCount;
+
+    /// @brief The transform matrix for the overall scene. This will be performed after the model transform.
     float transform[4][4];
+
+    /// @brief An array of up to \c SCENE_MAX_OBJECTS objects to be rendered in the scene
     obj3d_t objects[SCENE_MAX_OBJECTS];
 } scene_t;
 
@@ -181,6 +194,10 @@ void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces);
 /**
  * @brief Initializes the renderer, allocating temporary buffers needed to draw efficiently.
  *
+ * This function can be used to allocate slightly less memory than the maximum amount possible,
+ * which means larger and/or a greater number of models could be rendered than normally possible.
+ * Depending on the models used, around 20-40% of vertices are not actually drawn
+ *
  * Each initRenderer*() function may be called multiple times without calling deinitRenderer()
  * in-between each call.
  *
@@ -196,7 +213,7 @@ void initRendererCustom(uint16_t maxVerts, uint16_t maxFaces);
  * Each initRenderer*() function may be called multiple times without calling deinitRenderer()
  * in-between each call.
  *
- * @param scene
+ * @param scene The scene to allocate enough memory for
  */
 void initRendererScene(const scene_t* scene);
 
@@ -226,7 +243,7 @@ void drawModel(const model_t* model, const float orient[4], float scale, const f
 /**
  * @brief Render a scene with multiple 3D models
  *
- * initRendererScene() must be called once first before drawing the scene.
+ * initRendererScene() or initRendererCustom() must be called once first before drawing the scene.
  *
  * @param scene The scene to draw
  * @param x The X coordinate of the left side of the location to draw the scene within
