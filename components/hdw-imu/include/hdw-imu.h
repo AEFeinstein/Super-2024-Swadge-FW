@@ -37,8 +37,8 @@
  * \endcode
  */
 
-#ifndef _HDW_ACCEL_H_
-#define _HDW_ACCEL_H_
+#ifndef _HDW_IMU_H_
+#define _HDW_IMU_H_
 
 #include <stdint.h>
 
