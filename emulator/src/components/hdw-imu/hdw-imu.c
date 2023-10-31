@@ -38,10 +38,11 @@ esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup
     _accelY = 0;
     _accelZ = ONE_G;
 
-    LSM6DSL.fqQuat[0] = 0.0;
+    // 1,0,0,0 is holding the swadge upright
+    LSM6DSL.fqQuat[0] = 1.0;
     LSM6DSL.fqQuat[1] = 0.0;
     LSM6DSL.fqQuat[2] = 0.0;
-    LSM6DSL.fqQuat[3] = 1.0;
+    LSM6DSL.fqQuat[3] = 0.0;
 
     accelInit = true;
     return ESP_OK;
