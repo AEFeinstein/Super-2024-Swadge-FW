@@ -35,6 +35,11 @@
 // do a funky typedef so we can still define trimap as a 2D array
 typedef uint16_t trimap_t[3];
 
+// private variable
+bool _frameClipped = false;
+// read-only access to _frameClipped
+const bool* const frameClipped = &_frameClipped;
+
 // Variables
 #ifndef MODEL_USE_STACK
 static uint16_t maxTris = 0;
@@ -46,7 +51,6 @@ static trimap_t* trimap = NULL;
 static void intcross(int* p, const int* a, const int* b);
 static int zcompare(const int16_t *a, const int16_t* b);
 static unsigned julery_isqrt(unsigned long val);
-static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces);
 
 // Function Definitions
 static void intcross(int* p, const int* a, const int* b)
@@ -74,14 +78,7 @@ static unsigned julery_isqrt(unsigned long val) {
     return g;
 }
 
-/**
- * @brief Count and return the total number of vertices and faces in a scene
- *
- * @param scene The scene to count
- * @param[out] verts A pointer to a uint16_t to be set to the total number of vertices
- * @param[out] faces A pointer to a uint16_t to be set to the total number of faces
- */
-static void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces)
+void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces)
 {
     uint32_t totalVerts = 0;
     uint32_t totalTris = 0;
@@ -189,6 +186,9 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
     int vertices = 0;
     int totalTrisThisFrame = 0;
     int i;
+
+    // Reset triangle overflow flag
+    _frameClipped = false;
 
     // where in the vert map each model's vertices starts
     uint16_t vertOffsets[16] = {0};
@@ -305,6 +305,7 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
 
             if (totalTrisThisFrame == maxTris)
             {
+                _frameClipped = true;
                 ESP_LOGE("Model", "Not enough space for all triangles in scene after model %" PRIu8 ", vert %d. "
                         "Skipping the rest, stuff may look weird!", modelNum, i);
             }

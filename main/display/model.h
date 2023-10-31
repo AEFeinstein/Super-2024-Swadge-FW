@@ -144,7 +144,10 @@ typedef struct
 
 // Variables
 
-extern bool triOverflow;
+/**
+ * @brief Pointer to a boolean value which is true when the last-drawn frame was clipped due to lack of memory
+ */
+extern const bool* const frameClipped;
 
 //==============================================================================
 // Function Prototypes
@@ -165,6 +168,15 @@ extern bool triOverflow;
  * @param A model to use to determine the buffer space needed
  */
 void initRenderer(const model_t* model);
+
+/**
+ * @brief Count and return the total number of vertices and faces in a scene
+ *
+ * @param scene The scene to count
+ * @param[out] verts A pointer to a uint16_t to be set to the total number of vertices
+ * @param[out] faces A pointer to a uint16_t to be set to the total number of faces
+ */
+void countScene(const scene_t* scene, uint16_t* verts, uint16_t* faces);
 
 /**
  * @brief Initializes the renderer, allocating temporary buffers needed to draw efficiently.
