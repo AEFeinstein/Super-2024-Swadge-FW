@@ -16,7 +16,9 @@
 
 // If defined, the stack will be used to allocate vert/tri buffers, otherwise heap is used
 //#define MODEL_USE_STACK
+//#define MODEL_DEBUG
 
+#ifdef MODEL_DEBUG
 #define DEBUG_MATRIX(m) do { \
     printf(#m "[4][4]:\n"); \
     for (int r = 0; r < 4; r++) \
@@ -26,6 +28,9 @@
     } \
     printf("\n"); \
 } while (false)
+#else
+#define DEBUG_MATRIX(m)
+#endif
 
 // do a funky typedef so we can still define trimap as a 2D array
 typedef uint16_t trimap_t[3];
@@ -327,6 +332,16 @@ void drawScene(const scene_t* scene, uint16_t x, uint16_t y, uint16_t w, uint16_
     // Doing that would also allow us to do a sort of memory-constrained culling of faces based on distance
     // And we could just draw as many of the closest tris as we have space for
     qsort(trimap, totalTrisThisFrame, sizeof( trimap[0] ), (void*)zcompare );
+
+#ifdef MODEL_DEBUG
+    static int maxTotalTris = 0;
+    if (totalTrisThisFrame > maxTotalTris)
+    {
+        maxTotalTris = totalTrisThisFrame;
+    }
+
+    ESP_LOGI("Model", "Tris this frame: %d / %d, %d culled (%d%% used, max=%d%%)", totalTrisThisFrame, maxTris, (maxTris - totalTrisThisFrame), 100 * totalTrisThisFrame / maxTris, 100 * maxTotalTris / maxTris);
+#endif
 
     for( i = 0; i < totalTrisThisFrame; i++)
     {
