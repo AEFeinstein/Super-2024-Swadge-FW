@@ -260,46 +260,46 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     }
     else
     {
-        // Assume rightward rotation, 5 degrees every 40000uS
-        int32_t rotateDeg = ((5 * (int32_t)elapsedUs) / 40000) % 360;
-        if (ray->btnState & PB_RIGHT)
+        if (ray->btnState & (PB_RIGHT | PB_LEFT))
         {
-            // Rotate right, leave as-is
-        }
-        else if (ray->btnState & PB_LEFT)
-        {
-            // Rotate left, reverse direction
-            rotateDeg = 360 - rotateDeg;
-        }
-        else
-        {
-            // No rotation, zero it out
-            rotateDeg = 0;
-        }
+            // Assume rightward rotation, 1 degree every 8000uS
+            int32_t rotateDeg = 0;
+            ray->pRotationTimer -= elapsedUs;
+            while (0 >= ray->pRotationTimer)
+            {
+                ray->pRotationTimer += 8000;
+                rotateDeg++;
+            }
 
-        // If we should rotate
-        if (rotateDeg)
-        {
-            // Do trig functions, only once
-            int32_t sinVal = getSin1024(rotateDeg);
-            int32_t cosVal = getCos1024(rotateDeg);
-            // Find the rotated X and Y vectors
-            q24_8 newX = (pDirX * cosVal) - (pDirY * sinVal);
-            q24_8 newY = (pDirX * sinVal) + (pDirY * cosVal);
-            // Normalize the vector
-            fastNormVec(&newX, &newY);
+            if (0 != rotateDeg)
+            {
+                if (ray->btnState & PB_LEFT)
+                {
+                    // Rotate left, reverse direction
+                    rotateDeg = 360 - rotateDeg;
+                }
 
-            // Save new direction vector
-            ray->p.dirX = newX;
-            ray->p.dirY = newY;
+                // Do trig functions, only once
+                int32_t sinVal = getSin1024(rotateDeg);
+                int32_t cosVal = getCos1024(rotateDeg);
+                // Find the rotated X and Y vectors
+                q24_8 newX = (pDirX * cosVal) - (pDirY * sinVal);
+                q24_8 newY = (pDirX * sinVal) + (pDirY * cosVal);
+                // Normalize the vector
+                fastNormVec(&newX, &newY);
 
-            // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
-            ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
-            ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+                // Save new direction vector
+                ray->p.dirX = newX;
+                ray->p.dirY = newY;
 
-            // Also update the local copy
-            pDirX = newX;
-            pDirY = newY;
+                // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
+                ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+                ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+
+                // Also update the local copy
+                pDirX = newX;
+                pDirY = newY;
+            }
         }
     }
 
