@@ -183,8 +183,6 @@ void invertMatrixTo(float out[4][4], const float in[4][4])
  */
 void createTransformMatrix(float transform[4][4], const float translate[3], const float rotate[4], const float scale[3])
 {
-    ESP_LOGI("Model", "createTransformMatrix(translate=[%+03.2f, %+03.2f, %+03.2f], orient=[%+03.2f %+03.2f %+03.2f %+03.2f], scale=[%+03.2f %+03.2f %+03.2f])",
-             translate[0], translate[1], translate[2], rotate[0], rotate[1], rotate[2], rotate[3], scale[0], scale[1], scale[2]);
     // Get rotation matrix first
     identityMatrix(transform);
 
@@ -214,8 +212,6 @@ void createTransformMatrix(float transform[4][4], const float translate[3], cons
 void createViewMatrix(float transform[4][4], const float translate[3], const float rotate[4], const float scale[3])
 {
     // TODO this is not how a view matrix works
-    ESP_LOGI("Model", "createViewMatrix(translate=[%+03.2f, %+03.2f, %+03.2f], orient=[%+03.2f %+03.2f %+03.2f %+03.2f], scale=[%+03.2f %+03.2f %+03.2f])",
-             translate[0], translate[1], translate[2], rotate[0], rotate[1], rotate[2], rotate[3], scale[0], scale[1], scale[2]);
     // Get rotation matrix first
     identityMatrix(transform);
 
