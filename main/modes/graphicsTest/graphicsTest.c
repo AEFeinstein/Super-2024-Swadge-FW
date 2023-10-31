@@ -317,6 +317,13 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
         snprintf(buffer, sizeof(buffer), "%" PRId32 ".%" PRId32, framesPerSecond, tenthFramesPerSecond);
         int16_t textX = drawText(&graphicsTest->ibm, c550, buffer, TFT_WIDTH - 30 - textWidth(&graphicsTest->ibm, buffer), 5);
 
+        // Draw a '!' after the FPS if we ran out of memory for drawing triangles
+        // This should only happen if we used initRendererCustom() with fewer than
+        // the total number of triangles to draw a bunch of objects
+        if (*frameClipped)
+        {
+            drawText(&graphicsTest->ibm, c500, "!", textX, 5);
+        }
     }
 }
 
