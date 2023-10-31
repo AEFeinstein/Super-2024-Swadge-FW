@@ -275,8 +275,6 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->c.radius         = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
     newObj->c.spriteMirrored = false;
 
-    // TODO randomize offset timer to not all move and shoot in lockstep
-
     // Add it to the linked list
     push(&ray->enemies, newObj);
 }
