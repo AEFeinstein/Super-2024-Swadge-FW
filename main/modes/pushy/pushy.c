@@ -33,7 +33,7 @@
 #define VIDEO                false
 #define GENERATE_COLOR_WHEEL false
 
-#ifdef VIDEO
+#if VIDEO
 #define PUSHY_BPM             80
 #define PUSHY_HOLD_BEATS      0.5
 #define PUSHY_HOLD_US         ((int64_t)(PUSHY_HOLD_BEATS     / (PUSHY_BPM / 60.0) * 1000 * 1000))
@@ -220,7 +220,7 @@ static void pushyEnterMode(void)
 #if GENERATE_COLOR_WHEEL
     for (int i = 0; i < 255; i++)
     {
-        printf("%" PRIu8 "\n", (uint8_t) paletteHsvToHex(i, 255, 255));
+        printf("%" PRIu8 "\n", (uint8_t)paletteHsvToHex(i, 255, 255));
     }
 #endif
 
@@ -278,7 +278,8 @@ static void pushyExitMode(void)
  * @brief This function is called periodically and frequently. It will either draw the menu or play the game, depending
  * on which screen is currently being displayed
  *
- * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds. First call is nonzero
+ * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds. First call is
+ * nonzero
  */
 static void pushyMainLoop(int64_t elapsedUs)
 {
@@ -288,6 +289,7 @@ static void pushyMainLoop(int64_t elapsedUs)
 
     uint32_t oldCounter = pushy->counter;
 
+    // clang-format off
     if (pushy->audioTrackUs < (PUSHY_BEAT_DROP_AT_US + PUSHY_HOLD_US))
     {
         pushy->counter = 0;
@@ -336,20 +338,21 @@ static void pushyMainLoop(int64_t elapsedUs)
     {
         // Do nothing, continue holding 69420
     }
+    // clang-format on
 
     pushy->fireCounter += pushy->counter - oldCounter;
     pushy->buttonPushedUs = 0;
-    if ((uint32_t) (oldCounter / SHUFFLE_AT_MOD) < (uint32_t) (pushy->counter / SHUFFLE_AT_MOD))
+    if ((uint32_t)(oldCounter / SHUFFLE_AT_MOD) < (uint32_t)(pushy->counter / SHUFFLE_AT_MOD))
     {
         shuffleColors();
     }
 
     // if (pushy->lockoutUs == 0)
-    // {
 #endif
+    {
         readButton();
+    }
 #if VIDEO
-    // }
     // else
     // {
     //     pushy->lockoutUs = MAX(pushy->lockoutUs - elapsedUs, 0);
