@@ -23,6 +23,7 @@
 #include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "mode_credits.h"
 
 #include "settingsManager.h"
 
@@ -140,6 +141,8 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
@@ -291,6 +294,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == tunernomeMode.modeName)
         {
             switchToSwadgeMode(&tunernomeMode);
+        }
+        else if (label == modeCredits.modeName)
+        {
+            switchToSwadgeMode(&modeCredits);
         }
     }
     else

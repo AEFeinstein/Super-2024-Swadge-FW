@@ -32,6 +32,7 @@
 #include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "mode_credits.h"
 
 //==============================================================================
 // Defines
@@ -73,6 +74,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &sokoMode,
     &touchTestMode,
     &tunernomeMode,
+    &modeCredits,
 };
 // clang-format on
 
