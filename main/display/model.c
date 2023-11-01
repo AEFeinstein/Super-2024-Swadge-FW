@@ -170,6 +170,7 @@ void drawModel(const model_t* model, const float orient[4], float scale, const f
     scene.objectCount = 1;
 
     createTransformMatrix(scene.objects[0].transform, translate, orient, scale3);
+    identityMatrix(scene.transform);
 
     drawScene(&scene, x, y, w, h);
 }
