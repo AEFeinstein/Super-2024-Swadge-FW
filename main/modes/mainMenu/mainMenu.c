@@ -15,12 +15,10 @@
 #include "gamepad.h"
 #include "jukebox.h"
 #include "lumberjack.h"
-#include "marbles.h"
 #include "mode_paint.h"
 #include "mode_platformer.h"
 #include "mode_ray.h"
 #include "paint_share.h"
-#include "pong.h"
 #include "pushy.h"
 #include "soko.h"
 #include "touchTest.h"
@@ -126,8 +124,6 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modePlatformer.modeName);
     addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, marblesMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
     addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
@@ -268,10 +264,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&lumberjackMode);
         }
-        else if (label == marblesMode.modeName)
-        {
-            switchToSwadgeMode(&marblesMode);
-        }
         else if (label == modePaint.modeName)
         {
             switchToSwadgeMode(&modePaint);
@@ -279,10 +271,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modePlatformer.modeName)
         {
             switchToSwadgeMode(&modePlatformer);
-        }
-        else if (label == pongMode.modeName)
-        {
-            switchToSwadgeMode(&pongMode);
         }
         else if (label == pushyMode.modeName)
         {
