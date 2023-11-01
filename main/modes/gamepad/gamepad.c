@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "hdw-imu.h"
 #include "tinyusb.h"
 #include "esp_timer.h"
 #include "esp_log.h"
@@ -276,6 +277,9 @@ void gamepadEnterMode(void)
 
     // Initialize menu renderer
     gamepad->renderer = initMenuLogbookRenderer(&gamepad->logbookFont);
+
+    // We shold go as fast as we can
+    setFrameRateUs(0);
 }
 
 /**
@@ -570,7 +574,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
             // Declare variables to receive acceleration
             int16_t a_x, a_y, a_z;
             // Get the current acceleration
-            if (ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
+            if (ESP_OK == accelIntegrate() && ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
             {
                 // Values are roughly -256 to 256, so divide, clamp, and save
                 gamepad->gpState.rx = CLAMP((a_x) / 2, -128, 127);
