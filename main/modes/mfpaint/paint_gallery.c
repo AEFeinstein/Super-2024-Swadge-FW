@@ -181,7 +181,7 @@ void paintGalleryDrawUi(void)
     snprintf(text, sizeof(text), "A: Next Slide      B: Exit");
     paintGalleryAddInfoText(text, 0, false, 0, 0);
 
-    snprintf(text, sizeof(text), "Select: Scale: %dx", paintGallery->galleryScale);
+    snprintf(text, sizeof(text), "Menu: Scale: %dx", paintGallery->galleryScale);
     paintGalleryAddInfoText(text, 1, false, 0, 0);
 
     // Draw the controls

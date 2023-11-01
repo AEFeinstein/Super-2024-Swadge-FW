@@ -132,6 +132,7 @@ typedef struct
     uint32_t blinkAccumulatedUs;
     bool isBlinking;
     bool isSilent;
+    bool isTouched;
 } tunernome_t;
 
 // typedef struct
@@ -265,9 +266,9 @@ static const char theWordBanjo[]      = "Banjo";
 static const char playStringsText[]   = "Play all open strings";
 static const char listeningText[]     = "Listening for a note";
 static const char leftStr[]           = ": ";
-static const char rightStrTuner1[]    = "Select: Beep";
-static const char rightStrTuner2[]    = "Start: Tuner";
-static const char rightStrMetronome[] = "Start: Metronome";
+static const char rightStrTuner1[]    = "Touch: Beep";
+static const char rightStrTuner2[]    = "Pause: Tuner";
+static const char rightStrMetronome[] = "Pause: Metronome";
 static const char inTuneStr[]         = "In-Tune";
 static const char sharpStr[]          = "Sharp";
 
@@ -641,6 +642,19 @@ void tunernomeMainLoop(int64_t elapsedUs)
     {
         tunernomeProcessButtons(&evt);
     }
+
+    // Check for touch events
+    int32_t phi, r, intensity;
+    bool touched = getTouchJoystick(&phi, &r, &intensity);
+    if (!tunernome->isTouched && touched)
+    {
+        if (TN_METRONOME == tunernome->mode)
+        {
+            // On any tap, toggle silence
+            tunernome->isSilent = !tunernome->isSilent;
+        }
+    }
+    tunernome->isTouched = touched;
 
     clearPxTft();
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
@@ -1150,10 +1164,6 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         break;
                     }
                     case PB_SELECT:
-                    {
-                        tunernome->isSilent = !tunernome->isSilent;
-                        break;
-                    }
                     case PB_A:
                     case PB_B:
                     default:

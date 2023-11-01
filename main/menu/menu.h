@@ -174,11 +174,13 @@ typedef struct
  */
 typedef struct _menu_t
 {
-    const char* title;   ///< The title for this menu
-    menuCb cbFunc;       ///< The callback function to call when menu items are selected
-    list_t* items;       ///< A list_t of menu items to display
-    node_t* currentItem; ///< The currently selected menu item
-    menu_t* parentMenu;  ///< The parent menu, may be NULL if this is not a submenu
+    const char* title;        ///< The title for this menu
+    menuCb cbFunc;            ///< The callback function to call when menu items are selected
+    list_t* items;            ///< A list_t of menu items to display
+    node_t* currentItem;      ///< The currently selected menu item
+    menu_t* parentMenu;       ///< The parent menu, may be NULL if this is not a submenu
+    int32_t batteryReadTimer; ///< A timer to read the battery every 10s
+    int batteryLevel;         ///< The current battery measurement
 } menu_t;
 
 /// @brief A string used to return to super-menus that says "Back"
