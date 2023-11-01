@@ -37,8 +37,11 @@ typedef struct
     menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
+    song_t fanfare;
     int32_t lastBgmVol;
     int32_t lastSfxVol;
+    int32_t cheatCodeIdx;
+    bool debugMode;
 } mainMenu_t;
 
 //==============================================================================
@@ -99,6 +102,10 @@ static const char* const screenSaverSettingsOptions[] = {
     "Off", "10s", "20s", "30s", "1m", "2m", "5m",
 };
 
+static const int16_t cheatCode[] = {
+    PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START, PB_SELECT,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -116,6 +123,7 @@ static void mainMenuEnterMode(void)
 
     // Load a song for when the volume changes
     loadSong("jingle.sng", &mainMenu->jingle, false);
+    loadSong("item.sng", &mainMenu->fanfare, false);
 
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
@@ -143,13 +151,6 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
-
-    mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
-    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
-    mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -190,6 +191,7 @@ static void mainMenuExitMode(void)
 
     // Free the song
     freeSong(&mainMenu->jingle);
+    freeSong(&mainMenu->fanfare);
 
     // Free mode memory
     free(mainMenu);
@@ -206,6 +208,46 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        if ((!mainMenu->debugMode) && (evt.down))
+        {
+            if (evt.button == cheatCode[mainMenu->cheatCodeIdx])
+            {
+                mainMenu->cheatCodeIdx++;
+
+                if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
+                {
+                    mainMenu->cheatCodeIdx = 0;
+                    mainMenu->debugMode    = true;
+                    bzrPlayBgm(&mainMenu->fanfare, BZR_STEREO);
+
+                    // Return to the top level menu
+                    while (mainMenu->menu->parentMenu)
+                    {
+                        mainMenu->menu = mainMenu->menu->parentMenu;
+                    }
+
+                    // Add the tests menu
+                    mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
+                    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
+                    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+                    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+                    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+                    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+                    return;
+                }
+
+                // Do not forward the A or START in the cheat code to the rest of the mode
+                if (evt.button == PB_A || evt.button == PB_B)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                mainMenu->cheatCodeIdx = 0;
+            }
+        }
         mainMenu->menu = menuButton(mainMenu->menu, evt);
     }
 
