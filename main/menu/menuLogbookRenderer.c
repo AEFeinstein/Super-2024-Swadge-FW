@@ -295,12 +295,15 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     }
 
     // Where to start drawing
-    int16_t x = 20;
+    int16_t x = 16;
     int16_t y = Y_SECTION_MARGIN;
 
     // Draw a title
     drawText(renderer->font, c542, menu->title, x, y);
     y += renderer->font->height + Y_SECTION_MARGIN;
+
+    // Shift the text a little after drawing the title
+    x = 10;
 
     if (menu->items->length > ITEMS_PER_PAGE)
     {
