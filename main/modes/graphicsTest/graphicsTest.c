@@ -448,10 +448,10 @@ static void graphicsTestHandleInput(void)
                         memcpy(graphicsTest->touchDragStartPos, curTransform->translate, sizeof(float[3]));
                     }
 
-                    float minX = -126.0 / curTransform->scale[0];
-                    float maxX = 126.0 / curTransform->scale[0];
-                    float minY = -126.0 / curTransform->scale[1];
-                    float maxY = 126.0 / curTransform->scale[1];
+                    float minX = -126.0;
+                    float maxX = 126.0;
+                    float minY = -126.0;
+                    float maxY = 126.0;
 
                     int otherAxis = (graphicsTest->touchAction == TRANSLATE_XY) ? 1 : 2;
                     if (otherAxis != 2)
