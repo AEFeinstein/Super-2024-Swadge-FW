@@ -250,9 +250,6 @@ static void pushyEnterMode(void)
     pushy->rainbowHues[10] = RAINBOW_HUE_STEP * 10; // never actually used, as this is redirected to pushy->colors[10]
     // clang-format on
 
-    printf("69 at %" PRIi64 "\n", (int64_t)PUSHY_69_AT_US);
-    printf("beat drop at %" PRIi64 "\n", (int64_t)PUSHY_BEAT_DROP_AT_US);
-    printf("hold for %" PRIi64 "\n", (int64_t)PUSHY_HOLD_US);
     shuffleColors();
 }
 
@@ -438,9 +435,15 @@ static void saveMemory(void)
 
 static void shuffleColors(void)
 {
+#if !VIDEO
+    for (uint8_t i = 0; i < NUM_PUSHY_COLORS - 1; i++)
+    {
+        uint8_t n = esp_random() % (NUM_PUSHY_COLORS - 1);
+#else
     for (uint8_t i = (pushy->counter == 0); i < NUM_PUSHY_COLORS - 1; i++)
     {
-        uint8_t n = esp_random() % (NUM_PUSHY_COLORS - (pushy->counter == 0) - 1) + (pushy->counter == 0);
+        uint8_t n = esp_random() % (NUM_PUSHY_COLORS - pushy->counter - 1) + (pushy->counter == 0);
+#endif
 #if LOGPUSHY
         printf("gonna swap the next two colors: %" PRIu8 ", %" PRIu8 "\n", i, n);
 #endif
@@ -460,7 +463,7 @@ static void readButton(void)
         pushy->btnState = evt.state;
 
         // Check if the A button was pressed
-        if (evt.down && evt.state == evt.button)
+        if (evt.down && PB_A == evt.button)
         {
             pushy->counter++;
             pushy->fireCounter++;
@@ -531,57 +534,11 @@ static void checkSubStr(char const* counterStr, char const* const subStr, bool d
 {
     memset(digitBitmap, false, NUM_DIGITS);
 
-    // TODO: fix second instance of 69 not getting rainbow
-    // char const* subStrInCounterStr;
-    // char* remainingCounterStr = counterStr;
-    // while ((subStrInCounterStr = strstr(remainingCounterStr, subStr)) != NULL)
-    // {
-    //     if(pushy->counter == 6969)
-    //         printf("%p %lli\n", remainingCounterStr, subStrInCounterStr - counterStr);
-    //     uint8_t startDigit = subStrInCounterStr - counterStr;
-    //     remainingCounterStr = subStr + strlen(subStr);
-    //     for (uint8_t i = 0; i < strlen(subStr); i++)
-    //     {
-    //         digitBitmap[startDigit + i] = true;
-    //     }
-
-    //     *timer = 0;
-    // }
-
-    // this implementation is even more fucked
-    char const* subStrInCounterStr = strstr(counterStr, subStr);
-    if (subStrInCounterStr == NULL)
-    {
-        *timer = EFFECT_MAX;
-        return;
-    }
-
-    uint8_t startDigit = subStrInCounterStr - counterStr;
-    for (uint8_t i = 0; i < strlen(subStr); i++)
-    {
-        digitBitmap[startDigit + i] = true;
-    }
-
-    *timer = 0;
 }
 
 static void checkRainbow(char const* counterStr)
 {
     checkSubStr(counterStr, rainbowStr, pushy->rainbowDigits, &pushy->rainbowTimer);
-
-    // fuck strstr
-    memset(pushy->rainbowDigits, false, NUM_DIGITS);
-    pushy->rainbowTimer = EFFECT_MAX;
-
-    for (int i = 0; i < NUM_DIGITS - 1; i++)
-    {
-        if (counterStr[i] == '6' && counterStr[i + 1] == '9')
-        {
-            pushy->rainbowDigits[i] = true;
-            pushy->rainbowDigits[i + 1] = true;
-            pushy->rainbowTimer = 0;
-        }
-    }
 }
 
 static void checkWeed(char const* counterStr)
