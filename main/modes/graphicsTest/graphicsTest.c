@@ -201,7 +201,7 @@ static void graphicsTestEnterMode(void)
     graphicsTest->worldTransform.scale[0] = 1.0;
     graphicsTest->worldTransform.scale[1] = 1.0;
     graphicsTest->worldTransform.scale[2] = 1.0;
-    graphicsTest->worldTransform.rotate[3] = 1.0;
+    graphicsTest->worldTransform.rotate[0] = 1.0;
     transformBaseToMatrix(graphicsTest->scene.transform, &graphicsTest->worldTransform);
 
     graphicsTest->scene.objectCount = 3;
@@ -209,7 +209,7 @@ static void graphicsTestEnterMode(void)
     graphicsTest->objTransforms[0].scale[0] = 1.0;
     graphicsTest->objTransforms[0].scale[1] = 1.0;
     graphicsTest->objTransforms[0].scale[2] = 1.0;
-    graphicsTest->objTransforms[0].rotate[3] = 1.0;
+    graphicsTest->objTransforms[0].rotate[0] = 1.0;
     graphicsTest->objTransforms[0].translate[0] = -25.0;
     graphicsTest->objTransforms[0].translate[1] = -25.0;
     graphicsTest->objTransforms[0].translate[2] = 0.0;
@@ -219,7 +219,7 @@ static void graphicsTestEnterMode(void)
     graphicsTest->objTransforms[1].scale[0] = 1.0;
     graphicsTest->objTransforms[1].scale[1] = 1.0;
     graphicsTest->objTransforms[1].scale[2] = 1.0;
-    graphicsTest->objTransforms[1].rotate[3] = 1.0;
+    graphicsTest->objTransforms[1].rotate[0] = 1.0;
     graphicsTest->objTransforms[1].translate[0] = 25.0;
     graphicsTest->objTransforms[1].translate[1] = 25.0;
     graphicsTest->objTransforms[1].translate[2] = 0.0;
@@ -229,7 +229,7 @@ static void graphicsTestEnterMode(void)
     graphicsTest->objTransforms[2].scale[0] = 1.0;
     graphicsTest->objTransforms[2].scale[1] = 1.0;
     graphicsTest->objTransforms[2].scale[2] = 1.0;
-    graphicsTest->objTransforms[2].rotate[3] = 1.0;
+    graphicsTest->objTransforms[2].rotate[0] = 1.0;
     graphicsTest->objTransforms[2].translate[0] = 60.0;
     graphicsTest->objTransforms[2].translate[1] = 60.0;
     graphicsTest->objTransforms[2].translate[2] = 0.0;
@@ -731,10 +731,10 @@ static void graphicsTestReset(void)
     graphicsTest->worldTransform.translate[1] = 0.0;
     graphicsTest->worldTransform.translate[2] = 0.0;
 
-    graphicsTest->worldTransform.rotate[0] = 0.0;
+    graphicsTest->worldTransform.rotate[0] = 1.0;
     graphicsTest->worldTransform.rotate[1] = 0.0;
     graphicsTest->worldTransform.rotate[2] = 0.0;
-    graphicsTest->worldTransform.rotate[3] = 1.0;
+    graphicsTest->worldTransform.rotate[3] = 0.0;
 
     graphicsTest->worldTransform.scale[0] = 1.0;
     graphicsTest->worldTransform.scale[1] = 1.0;
