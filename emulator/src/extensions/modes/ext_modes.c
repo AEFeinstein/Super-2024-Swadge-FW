@@ -17,14 +17,22 @@
     | grep -v quickSettings | awk '{printf "#include \"%s\"\n",$1 }' | sort
 */
 #include "accelTest.h"
+#include "breakout.h"
 #include "colorchord.h"
 #include "dance.h"
 #include "demoMode.h"
+#include "gamepad.h"
 #include "jukebox.h"
+#include "lumberjack.h"
 #include "mainMenu.h"
-#include "pong.h"
+#include "mode_paint.h"
+#include "mode_ray.h"
+#include "paint_share.h"
+#include "pushy.h"
+#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "mode_credits.h"
 
 //==============================================================================
 // Defines
@@ -52,14 +60,21 @@ static swadgeMode_t* getRandomSwadgeMode(void);
 // clang-format off
 static swadgeMode_t* allSwadgeModes[] = {
     &accelTestMode,
+    &breakoutMode,
     &colorchordMode,
     &danceMode,
     &demoMode,
+    &gamepadMode,
     &jukeboxMode,
+    &lumberjackMode,
     &mainMenuMode,
-    &pongMode,
+    &modePaint,
+    &pushyMode,
+    &rayMode,
+    &sokoMode,
     &touchTestMode,
     &tunernomeMode,
+    &modeCredits,
 };
 // clang-format on
 

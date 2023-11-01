@@ -166,6 +166,7 @@ swadgeMode_t pushyMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = pushyEnterMode,
     .fnExitMode               = pushyExitMode,
     .fnMainLoop               = pushyMainLoop,
@@ -532,8 +533,32 @@ static void displayCounter(char const* counterStr)
 
 static void checkSubStr(char const* counterStr, char const* const subStr, bool digitBitmap[NUM_DIGITS], int64_t* timer)
 {
+    bool found                = false;
+    char const* curCounterStr = counterStr;
     memset(digitBitmap, false, NUM_DIGITS);
 
+    char const* subStrInCounterStr = strstr(curCounterStr, subStr);
+    while (NULL != subStrInCounterStr)
+    {
+        uint8_t startDigit = subStrInCounterStr - counterStr;
+        for (uint8_t i = 0; i < strlen(subStr); i++)
+        {
+            digitBitmap[startDigit + i] = true;
+        }
+
+        *timer = 0;
+        found  = true;
+
+        // Move curCounterStr to be one after the found str
+        curCounterStr = &subStrInCounterStr[1];
+        // Continue searching
+        subStrInCounterStr = strstr(curCounterStr, subStr);
+    }
+
+    if (!found)
+    {
+        *timer = EFFECT_MAX;
+    }
 }
 
 static void checkRainbow(char const* counterStr)
@@ -650,8 +675,8 @@ void showDigit(uint8_t number, uint8_t colorIndex, uint8_t digitIndexFromLeastSi
 
     // Convert the number to a string
     paletteColor_t color;
-    char numberAsStr[2];
-    snprintf(numberAsStr, 2, "%1" PRIu8, number);
+    char numberAsStr[4];
+    snprintf(numberAsStr, sizeof(numberAsStr), "%1" PRIu8, number);
 
     // Apply weed and rainbow effects, or if no effects, get the current color for this digit
     if (pushy->weedDigits[NUM_DIGITS - 1 - digitIndexFromLeastSignificant])

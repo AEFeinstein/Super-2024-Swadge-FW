@@ -52,9 +52,9 @@ int main( int argc, char ** argv )
 		return -5;
 	}
 
-	if( argc != 2 )
+	if( argc != 3 )
 	{
-		fprintf( stderr, "Error: Usage: [tool] [ESP32 .elf file]\n" );
+		fprintf( stderr, "Error: Usage: [tool] [ESP32 .elf file] [relative exec path]\n" );
 		return -1;
 	}
 
@@ -174,36 +174,39 @@ int main( int argc, char ** argv )
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/driver/uart/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/nvs_flash/include", idf_path ); appendcflag( temp );
 			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/soc/esp32s2/include", idf_path ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/freertos/FreeRTOS-Kernel/include/freertos", idf_path ); appendcflag( temp );
 
-			appendcflag( "-I../../components/hdw-battmon/include" );
-			appendcflag( "-I../../components" );
-			appendcflag( "-I../../components/hdw-qma6981" );
-			appendcflag( "-I../../main/display" );
-			appendcflag( "-I../../components/hdw-btn/include" );
-			appendcflag( "-I../../components/hdw-bzr/include" );
-			appendcflag( "-I../../components/crashwrap/include" );
-			appendcflag( "-I../../components/hdw-touch/include" );
-			appendcflag( "-I../../components/hdw-esp-now/include" );
-			appendcflag( "-I../../components/hdw-temperature/include" );
-			appendcflag( "-I../../components/hdw-accel/include" );
-			appendcflag( "-I../../components/hdw-mic/include" );
-			appendcflag( "-I../../components/hdw-spiffs/include" );
-			appendcflag( "-I../../components/hdw-led/include" );
-			appendcflag( "-I../../components/hdw-usb/include" );
-			appendcflag( "-I../../components/hdw-tft/include" );
-			appendcflag( "-I../../components/hdw-led/include" );
-			appendcflag( "-I../../components/hdw-nvs/include" );
-			appendcflag( "-I../../managed_components/espressif__tinyusb/src" );
-			appendcflag( "-I../../managed_components/espressif__esp_tinyusb/include" );
-			appendcflag( "-I../../main" );
-			appendcflag( "-I../../main/utils" );
-			appendcflag( "-I../../main/menu" );
-			appendcflag( "-I../../main/modes" );
-			appendcflag( "-I../../main/asset_loaders" );
-			appendcflag( "-I../../main/modes/mainMenu" );
-			appendcflag( "-I../../main/modes/colorchord" );
-			appendcflag( "-I../../build/config" );
-			appendcflag( "-DTUP_DCD_ENDPOINT_MAX=8" );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/components/hdw-battmon/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-qma6981", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/display", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-btn/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-bzr/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/crashwrap/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-touch/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-esp-now/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-temperature/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-imu/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-mic/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-spiffs/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-led/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-usb/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-battmon/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-tft/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-led/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/components/hdw-nvs/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/managed_components/espressif__tinyusb/src", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/managed_components/espressif__esp_tinyusb/include", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/utils", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/menu", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/asset_loaders", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/mainMenu", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/main/modes/colorchord", argv[2] ); appendcflag( temp );
+			snprintf( temp, sizeof( temp ) - 1, "-I%s/build/config", argv[2] ); appendcflag( temp );
+
+			appendcflag( "-DTUP_DCD_ENDPOINT_MAX=8 -DESP_PLATFORM=1" );
 		}
 
 		int r;
@@ -216,6 +219,22 @@ int main( int argc, char ** argv )
 			r = system( dump_buffer );
 			if( r ) { fprintf( stderr, "Error shelling symbols. Error: %d\n", r ); return -6; }
 		}
+
+
+		// Count
+		{
+			int i = 0;
+			FILE * f = fopen( "build/count.txt", "r" );
+			if( f ) { fscanf( f, "%d", &i ); fclose( f ); }
+			i++;
+			f = fopen( "build/count.txt", "w" );
+			if( f )
+			{
+				fprintf( f, "%d\n", i );
+				fclose( f );
+			}
+		}
+
 
 		{
 			FILE * provided = fopen( "build/provided.lds", "w" );

@@ -69,9 +69,11 @@ static uint8_t tftBrightness         = CONFIG_TFT_MAX_BRIGHTNESS;
  * @param isPwmBacklight true to set up the backlight as PWM, false to have it be on/off
  * @param ledcChannel The LEDC channel to use for the PWM backlight
  * @param ledcTimer The LEDC timer to use for the PWM backlight
+ * @param brightness The initial backlight brightness
  */
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
-             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer)
+             gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer,
+             uint8_t brightness)
 {
     // ARGB pixels
     bitmapWidth  = TFT_WIDTH;
@@ -89,6 +91,8 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
         displayMult         = 1;
         scaledBitmapDisplay = calloc(TFT_WIDTH * TFT_HEIGHT, sizeof(uint32_t));
     }
+
+    setTFTBacklightBrightness(brightness);
 }
 
 /**
@@ -227,7 +231,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 
                     uint32_t color = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
 
-                    uint8_t a = (color)&0xFF;
+                    uint8_t a = (color) & 0xFF;
                     uint8_t r = (color >> 8) & 0xFF;
                     r         = (r * tftBrightness) / CONFIG_TFT_MAX_BRIGHTNESS;
                     uint8_t g = (color >> 16) & 0xFF;
@@ -257,7 +261,7 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
 /**
  * @brief Set TFT Backlight brightness.
  *
- * @param intensity Sets the brightness 0-7
+ * @param intensity The brightness, 0 to MAX_TFT_BRIGHTNESS
  *
  * @return value is 0 if OK nonzero if error.
  */

@@ -8,13 +8,13 @@
 #include "ext_fuzzer.h"
 #include "emu_args.h"
 #include "hdw-btn_emu.h"
-#include "hdw-accel_emu.h"
+#include "hdw-imu_emu.h"
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
-static bool fuzzerInitCb(const emuArgs_t* emuArgs);
+static bool fuzzerInitCb(emuArgs_t* emuArgs);
 static void fuzzerPreFrameCb(uint64_t frame);
 
 //==============================================================================
@@ -49,7 +49,7 @@ static fuzzer_t fuzzer = {0};
 // Functions
 //==============================================================================
 
-static bool fuzzerInitCb(const emuArgs_t* emuArgs)
+static bool fuzzerInitCb(emuArgs_t* emuArgs)
 {
     // Save the options in our own struct for convenience
     fuzzer.buttons = emuArgs->fuzzButtons;

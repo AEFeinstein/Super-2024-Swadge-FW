@@ -18,7 +18,7 @@
 // Defines
 //==============================================================================
 
-#define RGB_2_ARG(r, g, b) ((((r)&0xFF) << 16) | (((g)&0xFF) << 8) | (((b)&0xFF)))
+#define RGB_2_ARG(r, g, b) ((((r) & 0xFF) << 16) | (((g) & 0xFF) << 8) | (((b) & 0xFF)))
 #define ARG_R(arg)         (((arg) >> 16) & 0xFF)
 #define ARG_G(arg)         (((arg) >> 8) & 0xFF)
 #define ARG_B(arg)         (((arg) >> 0) & 0xFF)
@@ -66,7 +66,7 @@ void selectPrevDance(void);
 // Variables
 //==============================================================================
 
-static const char ledDancesExitText[] = "Hold Select To Exit";
+static const char ledDancesExitText[] = "Hold Menu To Exit";
 
 static const uint8_t danceSpeeds[] = {
     64, // 1/8x

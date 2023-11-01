@@ -96,6 +96,7 @@ typedef struct
     bool inMusicSubmode;
 
     jukeboxScreen_t screen;
+    bool isPlaying;
 } jukebox_t;
 
 jukebox_t* jukebox;
@@ -123,6 +124,7 @@ swadgeMode_t jukeboxMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = jukeboxEnterMode,
     .fnExitMode               = jukeboxExitMode,
     .fnMainLoop               = jukeboxMainLoop,
@@ -144,8 +146,8 @@ static const char str_sfx_muted[]  = "Swadge SFX are muted!";
 static const char str_bgm[]        = "Music";
 static const char str_sfx[]        = "SFX";
 static const char str_exit[]       = "Exit";
-static const char str_leds[]       = "Sel: LEDs:";
-static const char str_back[]       = "Start: Back";
+static const char str_leds[]       = "B: LEDs:";
+static const char str_back[]       = "Pause: Back";
 static const char str_brightness[] = "Touch: LED Brightness:";
 static const char str_stop[]       = ": Stop";
 static const char str_play[]       = ": Play";
@@ -240,7 +242,7 @@ void jukeboxEnterMode()
     portableDanceDisableDance(jukebox->portableDances, "Fire B");
     portableDanceDisableDance(jukebox->portableDances, "Flashlight");
 
-    bzrStop();
+    bzrStop(true);
 }
 
 /**
@@ -248,7 +250,7 @@ void jukeboxEnterMode()
  */
 void jukeboxExitMode(void)
 {
-    bzrStop();
+    bzrStop(true);
 
     freeFont(&jukebox->ibm_vga8);
     freeFont(&jukebox->radiostars);
@@ -285,35 +287,43 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
     {
         case PB_A:
         {
-            if (jukebox->inMusicSubmode)
+            if (jukebox->isPlaying)
             {
-                bzrPlayBgm(musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO);
+                bzrStop(true);
+                jukebox->isPlaying = false;
             }
             else
             {
-                bzrPlaySfx(sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO);
+                if (jukebox->inMusicSubmode)
+                {
+                    bzrPlayBgm(musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO);
+                }
+                else
+                {
+                    bzrPlaySfx(sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO);
+                }
+                jukebox->isPlaying = true;
             }
             break;
         }
         case PB_B:
         {
-            bzrStop();
+            portableDanceNext(jukebox->portableDances);
             break;
         }
         case PB_SELECT:
         {
-            portableDanceNext(jukebox->portableDances);
             break;
         }
         case PB_START:
         {
-            bzrStop();
+            bzrStop(true);
             jukebox->screen = JUKEBOX_MENU;
             break;
         }
         case PB_UP:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -335,7 +345,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_DOWN:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -353,7 +363,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_LEFT:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -373,7 +383,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_RIGHT:
         {
-            bzrStop();
+            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -457,18 +467,21 @@ void jukeboxMainLoop(int64_t elapsedUs)
                      TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
                      CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
 
-            // Stop
-            int16_t afterText = drawText(&jukebox->radiostars, c511, "B", CORNER_OFFSET,
-                                         TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
-            drawText(&jukebox->radiostars, c555, str_stop, afterText,
-                     TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
+            // Assume not playing
+            paletteColor_t color = c141;
+            const char* btnText  = str_play;
+            if (jukebox->isPlaying)
+            {
+                color   = c511;
+                btnText = str_stop;
+            }
 
-            // Play
-            afterText = drawText(&jukebox->radiostars, c151, "A",
-                                 TFT_WIDTH - textWidth(&jukebox->radiostars, str_play)
-                                     - textWidth(&jukebox->radiostars, "A") - CORNER_OFFSET,
-                                 TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
-            drawText(&jukebox->radiostars, c555, str_play, afterText,
+            // Draw A text (play or stop)
+            int16_t afterText = drawText(&jukebox->radiostars, color, "A",
+                                         TFT_WIDTH - textWidth(&jukebox->radiostars, btnText)
+                                             - textWidth(&jukebox->radiostars, "A") - CORNER_OFFSET,
+                                         TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
+            drawText(&jukebox->radiostars, c555, btnText, afterText,
                      TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
             char* categoryName;

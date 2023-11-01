@@ -5,14 +5,25 @@
 #include "swadge2024.h"
 
 #include "mainMenu.h"
-#include "demoMode.h"
-#include "jukebox.h"
-#include "pushy.h"
-#include "pong.h"
+
+#include "accelTest.h"
+#include "breakout.h"
 #include "colorchord.h"
 #include "dance.h"
-#include "tunernome.h"
+#include "demoMode.h"
+#include "factoryTest.h"
+#include "gamepad.h"
+#include "jukebox.h"
+#include "lumberjack.h"
+#include "mode_paint.h"
+#include "mode_platformer.h"
+#include "mode_ray.h"
+#include "paint_share.h"
+#include "pushy.h"
+#include "soko.h"
 #include "touchTest.h"
+#include "tunernome.h"
+#include "mode_credits.h"
 
 #include "settingsManager.h"
 
@@ -26,6 +37,11 @@ typedef struct
     menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
+    song_t fanfare;
+    int32_t lastBgmVol;
+    int32_t lastSfxVol;
+    int32_t cheatCodeIdx;
+    bool debugMode;
 } mainMenu_t;
 
 //==============================================================================
@@ -42,7 +58,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char mainMenuName[] = "MAIN MENU";
+static const char mainMenuName[] = "Main Menu";
 
 swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
@@ -50,6 +66,7 @@ swadgeMode_t mainMenuMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = true,
     .usesThermometer          = true,
+    .overrideSelectBtn        = true,
     .fnEnterMode              = mainMenuEnterMode,
     .fnExitMode               = mainMenuExitMode,
     .fnMainLoop               = mainMenuMainLoop,
@@ -85,6 +102,10 @@ static const char* const screenSaverSettingsOptions[] = {
     "Off", "10s", "20s", "30s", "1m", "2m", "5m",
 };
 
+static const int16_t cheatCode[] = {
+    PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START, PB_SELECT,
+};
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -102,19 +123,34 @@ static void mainMenuEnterMode(void)
 
     // Load a song for when the volume changes
     loadSong("jingle.sng", &mainMenu->jingle, false);
+    loadSong("item.sng", &mainMenu->fanfare, false);
 
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
 
     // Add single items
-    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modePlatformer.modeName);
+    addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
+    addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
+    addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+    addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
 
     // Start a submenu for settings
     mainMenu->menu = startSubMenu(mainMenu->menu, settingsLabel);
@@ -124,6 +160,10 @@ static void mainMenuEnterMode(void)
     addSettingsItemToMenu(mainMenu->menu, bgmVolSettingLabel, getBgmVolumeSettingBounds(), getBgmVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, sfxVolSettingLabel, getSfxVolumeSettingBounds(), getSfxVolumeSetting());
     addSettingsItemToMenu(mainMenu->menu, micSettingLabel, getMicGainSettingBounds(), getMicGainSetting());
+
+    // These are just used for playing the sound only when the setting changes
+    mainMenu->lastBgmVol = getBgmVolumeSetting();
+    mainMenu->lastSfxVol = getSfxVolumeSetting();
 
     addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
                                  screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
@@ -151,6 +191,7 @@ static void mainMenuExitMode(void)
 
     // Free the song
     freeSong(&mainMenu->jingle);
+    freeSong(&mainMenu->fanfare);
 
     // Free mode memory
     free(mainMenu);
@@ -167,6 +208,46 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        if ((!mainMenu->debugMode) && (evt.down))
+        {
+            if (evt.button == cheatCode[mainMenu->cheatCodeIdx])
+            {
+                mainMenu->cheatCodeIdx++;
+
+                if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
+                {
+                    mainMenu->cheatCodeIdx = 0;
+                    mainMenu->debugMode    = true;
+                    bzrPlayBgm(&mainMenu->fanfare, BZR_STEREO);
+
+                    // Return to the top level menu
+                    while (mainMenu->menu->parentMenu)
+                    {
+                        mainMenu->menu = mainMenu->menu->parentMenu;
+                    }
+
+                    // Add the tests menu
+                    mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
+                    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
+                    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+                    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+                    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+                    mainMenu->menu = endSubMenu(mainMenu->menu);
+
+                    return;
+                }
+
+                // Do not forward the A or START in the cheat code to the rest of the mode
+                if (evt.button == PB_A || evt.button == PB_B)
+                {
+                    return;
+                }
+            }
+            else
+            {
+                mainMenu->cheatCodeIdx = 0;
+            }
+        }
         mainMenu->menu = menuButton(mainMenu->menu, evt);
     }
 
@@ -185,18 +266,20 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
-    bzrStop();
+
+    // Always stop the buzzer unless we're on one of the SFX settings
+    bzrStop(true);
 
     if (selected)
     {
         // These items enter other modes, so they must be selected
-        if (label == demoMode.modeName)
+        if (label == accelTestMode.modeName)
         {
-            switchToSwadgeMode(&demoMode);
+            switchToSwadgeMode(&accelTestMode);
         }
-        else if (label == pongMode.modeName)
+        else if (label == breakoutMode.modeName)
         {
-            switchToSwadgeMode(&pongMode);
+            switchToSwadgeMode(&breakoutMode);
         }
         else if (label == colorchordMode.modeName)
         {
@@ -206,21 +289,57 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&danceMode);
         }
-        else if (label == pushyMode.modeName)
+        else if (label == demoMode.modeName)
         {
-            switchToSwadgeMode(&pushyMode);
+            switchToSwadgeMode(&demoMode);
         }
-        else if (label == tunernomeMode.modeName)
+        else if (label == factoryTestMode.modeName)
         {
-            switchToSwadgeMode(&tunernomeMode);
+            switchToSwadgeMode(&factoryTestMode);
+        }
+        else if (label == gamepadMode.modeName)
+        {
+            switchToSwadgeMode(&gamepadMode);
         }
         else if (label == jukeboxMode.modeName)
         {
             switchToSwadgeMode(&jukeboxMode);
         }
+        else if (label == lumberjackMode.modeName)
+        {
+            switchToSwadgeMode(&lumberjackMode);
+        }
+        else if (label == modePaint.modeName)
+        {
+            switchToSwadgeMode(&modePaint);
+        }
+        else if (label == modePlatformer.modeName)
+        {
+            switchToSwadgeMode(&modePlatformer);
+        }
+        else if (label == pushyMode.modeName)
+        {
+            switchToSwadgeMode(&pushyMode);
+        }
+        else if (label == rayMode.modeName)
+        {
+            switchToSwadgeMode(&rayMode);
+        }
+        else if (label == sokoMode.modeName)
+        {
+            switchToSwadgeMode(&sokoMode);
+        }
         else if (label == touchTestMode.modeName)
         {
             switchToSwadgeMode(&touchTestMode);
+        }
+        else if (label == tunernomeMode.modeName)
+        {
+            switchToSwadgeMode(&tunernomeMode);
+        }
+        else if (label == modeCredits.modeName)
+        {
+            switchToSwadgeMode(&modeCredits);
         }
     }
     else
@@ -236,13 +355,21 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (bgmVolSettingLabel == label)
         {
-            setBgmVolumeSetting(settingVal);
-            bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+            if (settingVal != mainMenu->lastBgmVol)
+            {
+                mainMenu->lastBgmVol = settingVal;
+                setBgmVolumeSetting(settingVal);
+                bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+            }
         }
         else if (sfxVolSettingLabel == label)
         {
-            setSfxVolumeSetting(settingVal);
-            bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+            if (settingVal != mainMenu->lastSfxVol)
+            {
+                mainMenu->lastSfxVol = settingVal;
+                setSfxVolumeSetting(settingVal);
+                bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+            }
         }
         else if (micSettingLabel == label)
         {

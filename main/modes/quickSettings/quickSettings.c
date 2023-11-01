@@ -14,6 +14,8 @@
 #include "menu.h"
 #include "menu_utils.h"
 #include "menuQuickSettingsRenderer.h"
+#include "macros.h"
+#include "hdw-bzr.h"
 
 #include "settingsManager.h"
 
@@ -37,6 +39,10 @@ typedef struct
     menu_t* menu;                          ///< The menu structure
     menuQuickSettingsRenderer_t* renderer; ///< Renderer for the menu
     font_t font;                           ///< The font used for menu text
+    int64_t ledTimer;
+    bool showLeds;
+    song_t jingle;
+    void* buzzerState;
 
     wsg_t iconGeneric;
     wsg_t iconSfxOn;
@@ -50,9 +56,11 @@ typedef struct
 
     int32_t lastOnSfxValue;
     int32_t minSfxValue;
+    int32_t prevSfxValue;
 
     int32_t lastOnBgmValue;
     int32_t minBgmValue;
+    int32_t prevBgmValue;
 
     int32_t lastOnLedsValue;
     int32_t minLedsValue;
@@ -74,6 +82,7 @@ static void quickSettingsMenuCb(const char* label, bool selected, uint32_t setti
 static int32_t quickSettingsFlipValue(const char* label, int32_t value);
 static void quickSettingsOnChange(const char* label, int32_t value);
 static int32_t quickSettingsMenuFlipItem(const char* label);
+static void quickSettingsSetLeds(int64_t elapsedUs);
 
 //==============================================================================
 // Strings
@@ -106,6 +115,7 @@ swadgeMode_t quickSettingsMode = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
+    .overrideSelectBtn        = false,
     .fnEnterMode              = quickSettingsEnterMode,
     .fnExitMode               = quickSettingsExitMode,
     .fnMainLoop               = quickSettingsMainLoop,
@@ -164,6 +174,13 @@ static void quickSettingsEnterMode(void)
     // Load a font
     loadFont("ibm_vga8.font", &quickSettings->font, true);
 
+    // Save the buzzer state
+    quickSettings->buzzerState = bzrSave();
+    bzrStop(true);
+
+    // Load the buzzer song
+    loadSong("jingle.sng", &quickSettings->jingle, true);
+
     // Load graphics
     // Use SPI because we're not the only mode, I guess?
     loadWsg("defaultSetting.wsg", &quickSettings->iconGeneric, true);
@@ -198,6 +215,10 @@ static void quickSettingsEnterMode(void)
     int32_t bgmValue  = setupQuickSettingParams(bgmBounds, getBgmVolumeSetting(), &quickSettings->lastOnBgmValue,
                                                 &quickSettings->minBgmValue);
 
+    quickSettings->prevSfxValue = sfxValue;
+    quickSettings->prevBgmValue = bgmValue;
+    quickSettings->showLeds     = true;
+
     // Add the actual items to the menu
     addSettingsItemToMenu(quickSettings->menu, quickSettingsLeds, ledsBounds, ledsValue);
     addSettingsItemToMenu(quickSettings->menu, quickSettingsBacklight, tftBounds, tftValue);
@@ -225,6 +246,12 @@ static void quickSettingsExitMode(void)
     deinitMenu(quickSettings->menu);
     deinitMenuQuickSettingsRenderer(quickSettings->renderer);
 
+    // Free the buzzer song
+    freeSong(&quickSettings->jingle);
+
+    // Restore the buzzer state
+    bzrRestore(quickSettings->buzzerState);
+
     // Free the font
     freeFont(&quickSettings->font);
 
@@ -240,6 +267,7 @@ static void quickSettingsExitMode(void)
     freeWsg(&quickSettings->iconTftOff);
 
     free(quickSettings);
+    quickSettings = NULL;
 }
 
 /**
@@ -309,8 +337,23 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
         quickSettings->menu = menuButton(quickSettings->menu, evt);
     }
 
-    // Draw the menu
-    drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
+    // If the button press didn't cause the menu to deinit
+    if (NULL != quickSettings)
+    {
+        // Draw the menu
+        drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
+
+        // Update the LEDs
+        if (quickSettings->showLeds)
+        {
+            quickSettingsSetLeds(elapsedUs);
+        }
+        else
+        {
+            led_t leds[CONFIG_NUM_LEDS] = {0};
+            setLeds(leds, ARRAY_SIZE(leds));
+        }
+    }
 }
 
 /**
@@ -353,16 +396,22 @@ static int32_t quickSettingsFlipValue(const char* label, int32_t value)
  */
 static void quickSettingsOnChange(const char* label, int32_t value)
 {
+    quickSettings->showLeds = false;
+
     if (label == quickSettingsLeds)
     {
+        bzrStop(true);
         setLedBrightnessSetting(value);
         if (value > quickSettings->minLedsValue)
         {
             quickSettings->lastOnLedsValue = value;
         }
+
+        quickSettings->showLeds = true;
     }
     else if (label == quickSettingsBacklight)
     {
+        bzrStop(true);
         setTftBrightnessSetting(value);
         if (value > quickSettings->minTftValue)
         {
@@ -371,7 +420,14 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
     else if (label == quickSettingsSfx)
     {
-        setSfxVolumeSetting(value);
+        if (value != quickSettings->prevSfxValue)
+        {
+            bzrStop(true);
+            setSfxVolumeSetting(value);
+            bzrPlaySfx(&quickSettings->jingle, BZR_STEREO);
+            quickSettings->prevSfxValue = value;
+        }
+
         if (value > quickSettings->minSfxValue)
         {
             quickSettings->lastOnSfxValue = value;
@@ -379,7 +435,14 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
     else if (label == quickSettingsBgm)
     {
-        setBgmVolumeSetting(value);
+        if (value != quickSettings->prevBgmValue)
+        {
+            bzrStop(true);
+            setBgmVolumeSetting(value);
+            bzrPlayBgm(&quickSettings->jingle, BZR_STEREO);
+            quickSettings->prevBgmValue = value;
+        }
+
         if (value > quickSettings->minBgmValue)
         {
             quickSettings->lastOnBgmValue = value;
@@ -437,4 +500,31 @@ static int32_t quickSettingsMenuFlipItem(const char* label)
     }
 
     return item->currentSetting;
+}
+
+static void quickSettingsSetLeds(int64_t elapsedUs)
+{
+    int64_t period  = 3600000; // 3.6s
+    int64_t rOffset = (period * 2 / 3);
+    int64_t gOffset = (period * 1 / 3);
+    int64_t bOffset = 0;
+    uint8_t rSpeed = 1, gSpeed = 1, bSpeed = 2;
+
+    quickSettings->ledTimer = (quickSettings->ledTimer + elapsedUs) % period;
+
+    led_t leds[CONFIG_NUM_LEDS];
+    for (uint8_t i = 0; i < CONFIG_NUM_LEDS; i++)
+    {
+        leds[i].r = MAX(0, getSin1024((quickSettings->ledTimer * rSpeed + rOffset + i * period / CONFIG_NUM_LEDS)
+                                      % period * 360 / period))
+                    * 255 / 1024;
+        leds[i].g = MAX(0, getSin1024((quickSettings->ledTimer * gSpeed + gOffset + i * period / CONFIG_NUM_LEDS)
+                                      % period * 360 / period))
+                    * 255 / 1024;
+        leds[i].b = MAX(0, getSin1024((quickSettings->ledTimer * bSpeed + bOffset + i * period / CONFIG_NUM_LEDS)
+                                      % period * 360 / period))
+                    * 255 / 1024;
+    }
+
+    setLeds(leds, ARRAY_SIZE(leds));
 }

@@ -62,7 +62,7 @@ void initMic(gpio_num_t gpio)
         adc_digi_pattern_config_t adc_pattern[SOC_ADC_PATT_LEN_MAX] = {0};
 
         // Configure the ADC pattern. We only configure a single channel
-        adc_pattern[0].atten     = ADC_ATTEN_DB_0;
+        adc_pattern[0].atten     = ADC_ATTEN_DB_11;
         adc_pattern[0].channel   = channel;
         adc_pattern[0].unit      = unit;
         adc_pattern[0].bit_width = SOC_ADC_DIGI_MAX_BITWIDTH;

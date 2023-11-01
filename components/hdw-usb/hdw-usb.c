@@ -5,7 +5,6 @@
 #include <esp_log.h>
 #include <class/hid/hid_device.h>
 
-#include "tinyusb.h"
 #include "hdw-usb.h"
 #include "advanced_usb_control.h"
 
@@ -116,11 +115,19 @@ static const uint8_t hid_configuration_descriptor[] = {
 };
 
 //==============================================================================
+// Function declarations
+//==============================================================================
+
+static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz,
+                                        int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons);
+
+//==============================================================================
 // Variables
 //==============================================================================
 
 static fnAdvancedUsbHandler advancedUsbHandler;
 static fnSetSwadgeMode setSwadgeMode;
+static const uint8_t* c_descriptor;
 
 //==============================================================================
 // Functions
@@ -147,12 +154,25 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
         .configuration_descriptor = hid_configuration_descriptor,
     };
 
-    ESP_ERROR_CHECK(tinyusb_driver_install(&tusb_cfg));
+    // Initialize TinyUSB with the default descriptor
+    initTusb(&tusb_cfg, hid_report_descriptor);
 
     // Set the log to print with advanced_usb_write_log_printf()
     esp_log_set_vprintf(advanced_usb_write_log_printf);
 
     ESP_LOGI(TAG, "USB initialization DONE");
+}
+
+/**
+ * @brief Initialize TinyUSB
+ *
+ * @param tusb_cfg The TinyUSB configuration
+ * @param descriptor The descriptor to use for this configuration
+ */
+void initTusb(const tinyusb_config_t* tusb_cfg, const uint8_t* descriptor)
+{
+    c_descriptor = descriptor;
+    ESP_ERROR_CHECK(tinyusb_driver_install(tusb_cfg));
 }
 
 /**
@@ -178,6 +198,58 @@ void sendUsbGamepadReport(hid_gamepad_report_t* report)
     }
 }
 
+/**
+ * @brief Send a USB gamepad report to a Switch, with instance
+ *
+ * @param instance Should be 0
+ * @param report_id Should be HID_ITF_PROTOCOL_NONE
+ * @param x Unsure
+ * @param y Unsure
+ * @param z Unsure
+ * @param rz Unsure
+ * @param rx Unsure
+ * @param ry Unsure
+ * @param hat A bitmask of ::hid_gamepad_ns_hat_t
+ * @param buttons A bitmask of ::hid_gamepad_ns_button_bm_t
+ * @return Unsure
+ */
+static bool tud_hid_n_gamepad_report_ns(uint8_t instance, uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz,
+                                        int8_t rx, int8_t ry, uint8_t hat, uint16_t buttons)
+{
+    hid_gamepad_ns_report_t report = {
+        .buttons = buttons,
+        .hat     = hat,
+        .x       = x,
+        .y       = y,
+        .rx      = rx,
+        .ry      = ry,
+        .z       = z,
+        .rz      = rz,
+    };
+
+    return tud_hid_n_report(instance, report_id, &report, sizeof(report));
+}
+
+/**
+ * @brief Send a USB gamepad report to a Switch
+ *
+ * @param report_id Should be HID_ITF_PROTOCOL_NONE
+ * @param x Unsure
+ * @param y Unsure
+ * @param z Unsure
+ * @param rz Unsure
+ * @param rx Unsure
+ * @param ry Unsure
+ * @param hat A bitmask of ::hid_gamepad_ns_hat_t
+ * @param buttons A bitmask of ::hid_gamepad_ns_button_bm_t
+ * @return Unsure
+ */
+bool tud_hid_gamepad_report_ns(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry,
+                               uint8_t hat, uint16_t buttons)
+{
+    return tud_hid_n_gamepad_report_ns(0, report_id, x, y, z, rz, rx, ry, hat, buttons);
+}
+
 //==============================================================================
 // TinyUSB HID callbacks
 //==============================================================================
@@ -192,7 +264,7 @@ void sendUsbGamepadReport(hid_gamepad_report_t* report)
 uint8_t const* tud_hid_descriptor_report_cb(uint8_t instance __attribute__((unused)))
 {
     // We use only one interface and one HID report descriptor, so we can ignore parameter 'instance'
-    return hid_report_descriptor;
+    return c_descriptor;
 }
 
 /**

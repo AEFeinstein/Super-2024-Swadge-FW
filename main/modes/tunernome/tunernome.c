@@ -132,6 +132,7 @@ typedef struct
     uint32_t blinkAccumulatedUs;
     bool isBlinking;
     bool isSilent;
+    bool isTouched;
 } tunernome_t;
 
 // typedef struct
@@ -173,6 +174,7 @@ swadgeMode_t tunernomeMode = {.modeName                 = "Tunernome",
                               .overrideUsb              = false,
                               .usesAccelerometer        = false,
                               .usesThermometer          = false,
+                              .overrideSelectBtn        = false,
                               .fnEnterMode              = tunernomeEnterMode,
                               .fnExitMode               = tunernomeExitMode,
                               .fnMainLoop               = tunernomeMainLoop,
@@ -264,9 +266,9 @@ static const char theWordBanjo[]      = "Banjo";
 static const char playStringsText[]   = "Play all open strings";
 static const char listeningText[]     = "Listening for a note";
 static const char leftStr[]           = ": ";
-static const char rightStrTuner1[]    = "Select: Beep";
-static const char rightStrTuner2[]    = "Start: Tuner";
-static const char rightStrMetronome[] = "Start: Metronome";
+static const char rightStrTuner1[]    = "Touch: Beep";
+static const char rightStrTuner2[]    = "Pause: Tuner";
+static const char rightStrMetronome[] = "Pause: Metronome";
 static const char inTuneStr[]         = "In-Tune";
 static const char sharpStr[]          = "Sharp";
 
@@ -284,7 +286,7 @@ static songTrack_t metronome_primary_tracks[]  = {{
      .loopStartNote = 0,
      .notes         = metronome_primary_notes,
 }};
-const song_t metronome_primary
+song_t metronome_primary
     = {.numTracks = ARRAY_SIZE(metronome_primary_tracks), .shouldLoop = false, .tracks = metronome_primary_tracks};
 
 static musicalNote_t metronome_secondary_notes[] = {{
@@ -296,7 +298,7 @@ static songTrack_t metronome_secondary_tracks[]  = {{
      .loopStartNote = 0,
      .notes         = metronome_secondary_notes,
 }};
-const song_t metronome_secondary
+song_t metronome_secondary
     = {.numTracks = ARRAY_SIZE(metronome_secondary_tracks), .shouldLoop = false, .tracks = metronome_secondary_tracks};
 
 /*============================================================================
@@ -351,7 +353,7 @@ void switchToSubmode(tnMode newMode)
         {
             tunernome->mode = newMode;
 
-            bzrStop();
+            bzrStop(true);
 
             led_t leds[CONFIG_NUM_LEDS] = {{0}};
             setLeds(leds, CONFIG_NUM_LEDS);
@@ -398,7 +400,7 @@ void switchToSubmode(tnMode newMode)
  */
 void tunernomeExitMode(void)
 {
-    bzrStop();
+    bzrStop(true);
 
     freeFont(&tunernome->ibm_vga8);
     freeFont(&tunernome->radiostars);
@@ -599,7 +601,7 @@ void instrumentTunerMagic(const uint16_t freqBinIdxs[], uint16_t numStrings, led
             {
                 // Note too sharp, make it red
                 red = 255;
-                grn = blu = 255 - (tonalDiff)*15;
+                grn = blu = 255 - (tonalDiff) * 15;
             }
             else
             {
@@ -640,6 +642,19 @@ void tunernomeMainLoop(int64_t elapsedUs)
     {
         tunernomeProcessButtons(&evt);
     }
+
+    // Check for touch events
+    int32_t phi, r, intensity;
+    bool touched = getTouchJoystick(&phi, &r, &intensity);
+    if (!tunernome->isTouched && touched)
+    {
+        if (TN_METRONOME == tunernome->mode)
+        {
+            // On any tap, toggle silence
+            tunernome->isSilent = !tunernome->isSilent;
+        }
+    }
+    tunernome->isTouched = touched;
 
     clearPxTft();
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c001);
@@ -1149,10 +1164,6 @@ void tunernomeProcessButtons(buttonEvt_t* evt)
                         break;
                     }
                     case PB_SELECT:
-                    {
-                        tunernome->isSilent = !tunernome->isSilent;
-                        break;
-                    }
                     case PB_A:
                     case PB_B:
                     default:

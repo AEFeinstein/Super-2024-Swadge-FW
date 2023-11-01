@@ -247,6 +247,8 @@ void process_midi(const char* inFile, const char* outDir)
 
                 /* For each note */
                 unsigned long int lastNoteStart = track->notes[0].timeBeforeAppear;
+                unsigned long int introRest     = lastNoteStart;
+
                 for (int midiNoteIdx = 0; midiNoteIdx < track->nbOfNotes; midiNoteIdx++)
                 {
                     /* Get a reference to this note */
@@ -254,6 +256,20 @@ void process_midi(const char* inFile, const char* outDir)
 
                     /* Before processing the note, check for events*/
                     checkMidiEvents(midiParser, lastNoteStart, note->timeBeforeAppear, &params);
+
+                    /* If this song should start with a rest */
+                    if (0 != introRest)
+                    {
+                        /* Save the rest */
+                        notes[trackIdx][noteIdxs[trackIdx]].note = SILENCE;
+                        notes[trackIdx][noteIdxs[trackIdx]].timeMs
+                            = (params.tempo * introRest) / (1000 * midiParser->ticks);
+                        totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
+                        noteIdxs[trackIdx]++;
+
+                        /* Don't do this again */
+                        introRest = 0;
+                    }
 
                     /* Get a reference to the next note, if it exists */
                     Note* nextNote = NULL;

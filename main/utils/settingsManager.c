@@ -51,11 +51,11 @@ typedef struct
 //==============================================================================
 
 DECL_SETTING(test, 0, 1, 0);
-DECL_SETTING(bgm, 0, 13, 13);
-DECL_SETTING(sfx, 0, 13, 13);
-DECL_SETTING(tft_br, 0, 7, 5);
-DECL_SETTING(led_br, 0, 8, 5);
-DECL_SETTING(mic, 0, 7, 7);
+DECL_SETTING(bgm, 0, MAX_VOLUME, MAX_VOLUME);
+DECL_SETTING(sfx, 0, MAX_VOLUME, MAX_VOLUME);
+DECL_SETTING(tft_br, 0, MAX_TFT_BRIGHTNESS, MAX_TFT_BRIGHTNESS);
+DECL_SETTING(led_br, 0, MAX_LED_BRIGHTNESS, 5);
+DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
 DECL_SETTING(scrn_sv, 0, 300, 20);
 
@@ -140,19 +140,15 @@ void readAllSettings(void)
     // Read the test mode setting
     readSetting(&test_setting);
 
-    // Read and set buzzer settings
+    // Read the buzzer settings
     readSetting(&bgm_setting);
-    bzrSetBgmVolume(getBgmVolumeSetting());
     readSetting(&sfx_setting);
-    bzrSetSfxVolume(getSfxVolumeSetting());
 
-    // Read and apply TFT settings
+    // Read the TFT settings
     readSetting(&tft_br_setting);
-    setTFTBacklightBrightness(getTftBrightnessSetting());
 
-    // Read and apply LED settings
+    // Read the LED settings
     readSetting(&led_br_setting);
-    setLedBrightness(getLedBrightnessSetting());
 
     // Read the mic setting
     readSetting(&mic_setting);
@@ -189,7 +185,7 @@ const settingParam_t* getBgmVolumeSettingBounds(void)
 /**
  * @brief Set the current background music volume setting. This calls bzrSetBgmVolume() after writing to NVS.
  *
- * @param vol The new volume setting
+ * @param vol The new volume setting, 0 to MAX_VOLUME
  * @return true if the setting was written, false if it wasn't
  */
 bool setBgmVolumeSetting(uint16_t vol)
@@ -227,7 +223,7 @@ const settingParam_t* getSfxVolumeSettingBounds(void)
 /**
  * @brief Set the current sound effects volume setting. This calls bzrSetSfxVolume() after writing to NVS.
  *
- * @param vol The new volume setting
+ * @param vol The new volume setting, 0 to MAX_VOLUME
  * @return true if the setting was written, false if it wasn't
  */
 bool setSfxVolumeSetting(uint16_t vol)
@@ -265,7 +261,7 @@ const settingParam_t* getTftBrightnessSettingBounds(void)
 /**
  * @brief Set the current TFT brightness setting. This calls setTFTBacklightBrightness() after writing to NVS.
  *
- * @param newVal the new TFT brightness setting
+ * @param newVal the new TFT brightness setting, 0 to MAX_TFT_BRIGHTNESS
  * @return true if the setting was written, false if it wasn't
  */
 bool setTftBrightnessSetting(uint8_t newVal)
@@ -303,7 +299,7 @@ const settingParam_t* getLedBrightnessSettingBounds(void)
 /**
  * @brief Set the current LED brightness setting. This calls setLedBrightness() after writing to NVS.
  *
- * @param brightness The new LED brightness setting
+ * @param brightness The new LED brightness setting, 0 to MAX_LED_BRIGHTNESS
  * @return true if the setting was written, false if it was not
  */
 bool setLedBrightnessSetting(uint8_t brightness)
@@ -371,7 +367,7 @@ const settingParam_t* getMicGainSettingBounds(void)
 /**
  * @brief Set the current microphone gain setting. The new value is immediately used when sampling the microphone.
  *
- * @param newGain The new microphone gain setting
+ * @param newGain The new microphone gain setting, 0 to MAX_MIC_GAIN
  * @return true if the setting was written, false if it wasn't
  */
 bool setMicGainSetting(uint8_t newGain)

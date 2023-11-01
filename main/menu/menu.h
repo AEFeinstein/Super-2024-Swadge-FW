@@ -166,7 +166,7 @@ typedef struct
     uint8_t minSetting;         ///< The minimum value for settings items
     uint8_t maxSetting;         ///< The maximum value for settings items
     const int32_t* settingVals; ///< The setting value options for settings-options items
-    uint8_t currentSetting;     // The current value for settings items
+    uint8_t currentSetting;     ///< The current value for settings items
 } menuItem_t;
 
 /**
@@ -174,11 +174,13 @@ typedef struct
  */
 typedef struct _menu_t
 {
-    const char* title;   ///< The title for this menu
-    menuCb cbFunc;       ///< The callback function to call when menu items are selected
-    list_t* items;       ///< A list_t of menu items to display
-    node_t* currentItem; ///< The currently selected menu item
-    menu_t* parentMenu;  ///< The parent menu, may be NULL if this is not a submenu
+    const char* title;        ///< The title for this menu
+    menuCb cbFunc;            ///< The callback function to call when menu items are selected
+    list_t* items;            ///< A list_t of menu items to display
+    node_t* currentItem;      ///< The currently selected menu item
+    menu_t* parentMenu;       ///< The parent menu, may be NULL if this is not a submenu
+    int32_t batteryReadTimer; ///< A timer to read the battery every 10s
+    int batteryLevel;         ///< The current battery measurement
 } menu_t;
 
 /// @brief A string used to return to super-menus that says "Back"
@@ -196,8 +198,16 @@ void addSettingsItemToMenu(menu_t* menu, const char* label, const settingParam_t
 void removeSettingsItemFromMenu(menu_t* menu, const char* label);
 void addSettingsOptionsItemToMenu(menu_t* menu, const char* settingLabel, const char* const* optionLabels,
                                   const int32_t* optionValues, uint8_t numOptions, const settingParam_t* bounds,
-                                  int32_t currentOption);
+                                  int32_t currentValue);
 void removeSettingsOptionsItemFromMenu(menu_t* menu, const char* const* optionLabels);
+
+menu_t* menuNavigateToItem(menu_t* menu, const char* label);
+menu_t* menuNavigateToPrevItem(menu_t* menu);
+menu_t* menuNavigateToNextItem(menu_t* menu);
+menu_t* menuNavigateToPrevOption(menu_t* menu);
+menu_t* menuNavigateToNextOption(menu_t* menu);
+menu_t* menuSelectCurrentItem(menu_t* menu);
+
 menu_t* menuButton(menu_t* menu, buttonEvt_t evt) __attribute__((warn_unused_result));
 
 #endif

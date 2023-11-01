@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/swadge_emulator",
-            "args": [],
+            "args": ["-t", "-m", "Main Menu"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
