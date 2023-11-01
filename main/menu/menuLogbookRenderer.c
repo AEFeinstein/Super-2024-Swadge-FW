@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <esp_random.h>
+#include "hdw-battmon.h"
 #include "menuLogbookRenderer.h"
 #include "menu_utils.h"
 #include "hdw-tft.h"
@@ -57,6 +58,12 @@ menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
     loadWsg("mnuArrow.wsg", &renderer->arrow, false);
     loadWsg("mnuArrowS.wsg", &renderer->arrowS, false);
 
+    // Load battery images
+    loadWsg("batt1.wsg", &renderer->batt[0], false);
+    loadWsg("batt2.wsg", &renderer->batt[1], false);
+    loadWsg("batt3.wsg", &renderer->batt[2], false);
+    loadWsg("batt4.wsg", &renderer->batt[3], false);
+
     // Initialize LEDs
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -78,6 +85,10 @@ void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
 {
     freeWsg(&renderer->arrow);
     freeWsg(&renderer->arrowS);
+    freeWsg(&renderer->batt[0]);
+    freeWsg(&renderer->batt[1]);
+    freeWsg(&renderer->batt[2]);
+    freeWsg(&renderer->batt[3]);
     free(renderer);
 }
 
@@ -207,6 +218,14 @@ static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int1
  */
 void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elapsedUs)
 {
+    // Read battery every 10s
+    menu->batteryReadTimer -= elapsedUs;
+    if (0 >= menu->batteryReadTimer)
+    {
+        menu->batteryReadTimer += 10000000;
+        menu->batteryLevel = readBattmon();
+    }
+
     // For each LED
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -284,6 +303,9 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     drawText(renderer->font, c542, menu->title, x, y);
     y += renderer->font->height + Y_SECTION_MARGIN;
 
+    // Shift the text a little after drawing the title
+    x = 10;
+
     if (menu->items->length > ITEMS_PER_PAGE)
     {
         // Draw UP page indicator
@@ -325,4 +347,26 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
         int16_t arrowY = y + PAGE_ARROW_Y_OFFSET;
         drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 90);
     }
+
+    // Draw the battery indicator depending on the last read value
+    wsg_t* toDraw = NULL;
+    // 872 is full
+    if (menu->batteryLevel == 0 || menu->batteryLevel > 741)
+    {
+        toDraw = &renderer->batt[3];
+    }
+    else if (menu->batteryLevel > 695)
+    {
+        toDraw = &renderer->batt[2];
+    }
+    else if (menu->batteryLevel > 652)
+    {
+        toDraw = &renderer->batt[1];
+    }
+    else // 452 is dead
+    {
+        toDraw = &renderer->batt[0];
+    }
+
+    drawWsg(toDraw, 212, 3, false, false, 0);
 }

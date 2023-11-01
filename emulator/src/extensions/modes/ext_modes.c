@@ -25,15 +25,14 @@
 #include "jukebox.h"
 #include "lumberjack.h"
 #include "mainMenu.h"
-#include "marbles.h"
 #include "mode_paint.h"
 #include "mode_ray.h"
 #include "paint_share.h"
-#include "pong.h"
 #include "pushy.h"
 #include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "mode_credits.h"
 
 //==============================================================================
 // Defines
@@ -69,14 +68,13 @@ static swadgeMode_t* allSwadgeModes[] = {
     &jukeboxMode,
     &lumberjackMode,
     &mainMenuMode,
-    &marblesMode,
     &modePaint,
-    &pongMode,
     &pushyMode,
     &rayMode,
     &sokoMode,
     &touchTestMode,
     &tunernomeMode,
+    &modeCredits,
 };
 // clang-format on
 

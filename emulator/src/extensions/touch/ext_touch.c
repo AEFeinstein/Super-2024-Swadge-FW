@@ -67,6 +67,7 @@ static void calculateTouch(int32_t x, int32_t y, int32_t* angle, int32_t* radius
 static bool updateTouch(int32_t x, int32_t y, bool clicked);
 
 static bool touchInit(emuArgs_t* emuArgs);
+static int32_t touchKey(uint32_t key, bool down);
 static bool touchMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
 static bool touchMouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
 static void touchRender(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
@@ -87,10 +88,11 @@ typedef struct
     int32_t lastHoverX;
     int32_t lastHoverY;
 
+    uint32_t keyState;
+
     int32_t lastTouchPhi;
     int32_t lastTouchRadius;
     int32_t lastTouchIntensity;
-    buttonBit_t lastTouchButtons;
 
     uint32_t paneX;
     uint32_t paneY;
@@ -107,7 +109,7 @@ emuExtension_t touchEmuCallback = {
     .fnInitCb        = touchInit,
     .fnPreFrameCb    = NULL,
     .fnPostFrameCb   = NULL,
-    .fnKeyCb         = NULL,
+    .fnKeyCb         = touchKey,
     .fnMouseMoveCb   = touchMouseMove,
     .fnMouseButtonCb = touchMouseButton,
     .fnRenderCb      = touchRender,
@@ -252,6 +254,47 @@ static bool touchInit(emuArgs_t* emuArgs)
     {
         return false;
     }
+}
+
+static int32_t touchKey(uint32_t key, bool down)
+{
+    const int32_t phiMap[] = {90, 0, 180, 270};
+
+    if (key < '1' || key > '4')
+    {
+        // Do not consume event, we only want 1 to 4
+        return 0;
+    }
+
+    int keyNum = (key - '1');
+    // Handle the key states separately so rolling over them works more or less how one might expect
+    if (down && !(emuTouch.keyState & (1 << keyNum)))
+    {
+        emuTouch.keyState |= (1 << keyNum);
+    }
+    else if (!down && (emuTouch.keyState & (1 << keyNum)))
+    {
+        emuTouch.keyState &= ~(1 << keyNum);
+    }
+
+    if (emuTouch.keyState)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            if (emuTouch.keyState & (1 << i))
+            {
+                emulatorSetTouchJoystick(phiMap[i], 1024, emuTouch.lastTouchIntensity);
+                break;
+            }
+        }
+    }
+    else
+    {
+        emulatorSetTouchJoystick(0, 0, 0);
+    }
+
+    // Consume event
+    return -1;
 }
 
 static bool touchMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask)

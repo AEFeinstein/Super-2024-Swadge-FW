@@ -54,6 +54,7 @@ typedef struct
     font_t* font;                         ///< The font to render the menu with
     led_t leds[CONFIG_NUM_LEDS];          ///< An array with the RGB LED state to be output
     menuLed_t ledTimers[CONFIG_NUM_LEDS]; ///< An array with the LED timers for animation
+    wsg_t batt[4];
 } menuLogbookRenderer_t;
 
 menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont);
