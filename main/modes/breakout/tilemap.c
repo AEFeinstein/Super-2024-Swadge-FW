@@ -68,7 +68,7 @@ void drawTileMap(tilemap_t *tilemap)
 
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
             
-            if(tile < TILE_BOUNDARY_1){
+            if(tile < TILE_BOUNDARY_1 || tile == TILE_INVISIBLE_BLOCK){
                 continue;
             }
 

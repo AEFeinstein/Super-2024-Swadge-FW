@@ -136,9 +136,15 @@ void breakoutBuildMainMenu(breakout_t* self);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 38
+#define NUM_LEVELS 39
+
+//The index into leveldef[] where the actual game levels start
+//As opposed to utility levels like titlescreen, debug, etc.
+#define GAME_LEVEL_START_INDEX 1
 
 static const leveldef_t leveldef[NUM_LEVELS] = {
+    {.filename = "titlescreen.bin",
+     .timeLimit = 180},
     {.filename = "intro.bin",
      .timeLimit = 180},
     {.filename = "rightside.bin",
@@ -317,7 +323,7 @@ static void breakoutEnterMode(void)
     breakout->tilemap.executeTileSpawnAll = true;
     breakout->tilemap.mapOffsetX = 0;
 
-    loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
+    //loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
     
     breakoutLoadHighScores(breakout);
     breakoutLoadUnlockables(breakout);
@@ -372,16 +378,16 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         {
             initializeGameDataFromTitleScreen(&(breakout->gameData));
             breakout->gameData.level = 1;
-            loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
-            breakout->gameData.countdown = leveldef[0].timeLimit;
+            loadMapFromFile(&(breakout->tilemap), leveldef[GAME_LEVEL_START_INDEX].filename);
+            breakout->gameData.countdown = leveldef[GAME_LEVEL_START_INDEX].timeLimit;
             breakoutChangeStateReadyScreen(breakout);   
             deinitMenu(breakout->menu);
         } else if (label == breakoutContinue)
         {
             initializeGameDataFromTitleScreen(&(breakout->gameData));
             breakout->gameData.level = settingVal;
-            loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level - 1].filename);
-            breakout->gameData.countdown = leveldef[breakout->gameData.level -1].timeLimit;
+            loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level].filename);
+            breakout->gameData.countdown = leveldef[breakout->gameData.level].timeLimit;
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);   
         }
@@ -515,6 +521,7 @@ static void breakoutChangeStateGame(breakout_t *self){
 
     //TODO: State change functions should probably always reset this.
     self->gameData.changeState = 0;
+    self->gameData.gameState = ST_GAME;
     self->update = &breakoutGameLoop;
 }
 
@@ -758,7 +765,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             //Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false);
 
-            uint16_t levelIndex = self->gameData.level - 1;
+            uint16_t levelIndex = self->gameData.level;
             
             if(levelIndex >= NUM_LEVELS - 1){
                 //Game Cleared!
@@ -898,8 +905,18 @@ uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level){
 
 static void breakoutChangeStateTitleScreen(breakout_t *self){
     self->gameData.frameCount = 0;
+    
     self->update = &breakoutUpdateTitleScreen;
-    deactivateAllEntities(&(self->entityManager), false, false);
+
+    if(self->gameData.gameState != ST_TITLE_SCREEN){ 
+        deactivateAllEntities(&(self->entityManager), false, false);
+        loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+    }
+
+    self->gameData.gameState = ST_TITLE_SCREEN;
 }
 
 static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
@@ -955,12 +972,15 @@ static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
     updateStarfield(&(self->starfield), 8);
     updateEntities(&(self->entityManager));
     drawStarfield(&(self->starfield));
+    drawTileMap(&(self->tilemap));
     breakoutDrawTitleScreen(&(self->logbook), &(self->gameData));
     drawEntities(&(self->entityManager));
     updateLedsTitleScreen(&(self->gameData));
 }
 
 static void breakoutDrawTitleScreen(font_t *font, gameData_t *gameData){
+    drawText(font, c000, breakoutTitleGalactic, 52, 100);
+    drawText(font, c000, breakoutTitleBrickdown, 100, 124);
     drawText(font, purpleColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleGalactic, 48, 96);
     drawText(font, redColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleBrickdown, 96, 120);
 
