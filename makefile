@@ -357,10 +357,41 @@ CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 cppcheck:
 	cppcheck $(CPPCHECK_FLAGS) $(DEFINES) $(INC) $(CPPCHECK_DIRS) $(CPPCHECK_IGNORE_FLAGS)
 
+################################################################################
+# gcov targets
+################################################################################
+
 gen-coverage:
 	lcov --capture --directory ./emulator/obj/ --output-file ./coverage.info
 	genhtml ./coverage.info --output-directory ./coverage
 	firefox ./coverage/index.html &
+
+################################################################################
+# misc targets
+################################################################################
+
+PROPERTIES_FILE=./.vscode/c_cpp_properties.json
+
+gen-vs-properties:
+	@echo "{"                                                                                      >> $(PROPERTIES_FILE)
+	@echo "    \"configurations\": ["                                                              >> $(PROPERTIES_FILE)
+	@echo "        {"                                                                              >> $(PROPERTIES_FILE)
+	@echo "            \"name\": \"esp32s2\","                                                     >> $(PROPERTIES_FILE)
+	@echo "            \"includePath\": ["                                                         >> $(PROPERTIES_FILE)
+	@echo "                \"\$${workspaceFolder}/main/**\","                                      >> $(PROPERTIES_FILE)
+	@echo "                \"\$${workspaceFolder}/components/**\","                                >> $(PROPERTIES_FILE)
+	@echo "                \"${IDF_PATH}/components/**\""                                          >> $(PROPERTIES_FILE)
+	@echo "            ],"                                                                         >> $(PROPERTIES_FILE)
+	@echo "            \"defines\": [],"                                                           >> $(PROPERTIES_FILE)
+	@echo "            \"compilerPath\": \"$(shell which xtensa-esp32s2-elf-gcc)\","               >> $(PROPERTIES_FILE)
+	@echo "            \"compileCommands\": \"\$${workspaceFolder}/build/compile_commands.json\"," >> $(PROPERTIES_FILE)
+	@echo "            \"cStandard\": \"c17\","                                                    >> $(PROPERTIES_FILE)
+	@echo "            \"cppStandard\": \"c++17\","                                                >> $(PROPERTIES_FILE)
+	@echo "            \"intelliSenseMode\": \"gcc-x86\""                                          >> $(PROPERTIES_FILE)
+	@echo "        }"                                                                              >> $(PROPERTIES_FILE)
+	@echo "    ],"                                                                                 >> $(PROPERTIES_FILE)
+	@echo "    \"version\": 4"                                                                     >> $(PROPERTIES_FILE)
+	@echo "}"                                                                                      >> $(PROPERTIES_FILE)
 
 # Print any value from this makefile
 print-%  : ; @echo $* = $($*)
