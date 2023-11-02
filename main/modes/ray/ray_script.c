@@ -27,8 +27,8 @@ void loadScripts(ray_t* ray, const uint8_t* fileData, uint32_t fileSize, uint32_
     // For each script
     for (int sIdx = 0; sIdx < numScripts; sIdx++)
     {
-        // Read the script length
-        uint8_t scriptLen = (fileData[fileIdx] << 8) | (fileData[fileIdx + 1]);
+        // Read the script length (don't actually care)
+        // uint8_t scriptLen = (fileData[fileIdx] << 8) | (fileData[fileIdx + 1]);
         fileIdx += 2;
 
         // Allocate a script

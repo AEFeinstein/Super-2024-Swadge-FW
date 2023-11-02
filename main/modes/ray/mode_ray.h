@@ -623,6 +623,10 @@ typedef struct
     song_t songs[NUM_MAPS]; ///< Per-map background music
 
     int32_t pRotationTimer; ///< timer for player rotation
+
+    int32_t itemRotateTimer; ///< A timer to 'rotate' items by scaling the X direction
+    int32_t itemRotateDeg;   ///< The number of degrees all items are 'rotated' by
+    bool itemRotateMirror;   ///< If items should be drawn mirrored
 } ray_t;
 
 //==============================================================================

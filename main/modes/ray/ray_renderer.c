@@ -771,6 +771,9 @@ rayObjCommon_t* castSprites(ray_t* ray)
     // Sort the sprites by distance
     qsort(allObjs, allObjsIdx, sizeof(objDist_t), objDistComparator);
 
+    // Calculate the width modifier for 'rotated' items
+    int32_t widthMod = getSin1024(ray->itemRotateDeg);
+
     // after sorting the sprites, do the projection and draw them
     for (int i = 0; i < allObjsIdx; i++)
     {
@@ -825,6 +828,21 @@ rayObjCommon_t* castSprites(ray_t* ray)
             if (spriteWidth < 0)
             {
                 spriteWidth = -spriteWidth;
+            }
+
+            // If this is an item
+            if (CELL_IS_TYPE(obj->type, OBJ | ITEM))
+            {
+                // Scale this item's width according to current rotation
+                spriteWidth = (spriteWidth * widthMod) / 1024;
+                // If this scales to 0, don't draw it
+                if (0 == spriteWidth)
+                {
+                    // If this sprite has zero width, don't draw it
+                    continue;
+                }
+                // Copy the global mirror to this object
+                obj->spriteMirrored = ray->itemRotateMirror;
             }
 
             // This is the texture step per-screen-pixel
@@ -1025,7 +1043,6 @@ void drawHud(ray_t* ray)
         wsg_t* mTex         = &ray->missileHUDicon;
         char missileStr[16] = {0};
         snprintf(missileStr, sizeof(missileStr) - 1, "%02" PRId32, ray->p.i.numMissiles);
-        int16_t tWidth = textWidth(&ray->ibm, missileStr);
 
         // Draw missile icon
         drawWsgSimple(mTex, xOff, TFT_HEIGHT - mTex->h);
@@ -1260,6 +1277,21 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
                     }
                 }
             }
+        }
+    }
+
+    // "Rotate" item renders by one degree every 16384uS
+    ray->itemRotateTimer -= elapsedUs;
+    while (ray->itemRotateTimer <= 0)
+    {
+        ray->itemRotateTimer += 16384;
+        ray->itemRotateDeg++;
+        // Only rotate between 0 and 179 degrees
+        if (180 <= ray->itemRotateDeg)
+        {
+            ray->itemRotateDeg = 0;
+            // Mirror sprites every rotation to account for asymmetry
+            ray->itemRotateMirror = !ray->itemRotateMirror;
         }
     }
 }

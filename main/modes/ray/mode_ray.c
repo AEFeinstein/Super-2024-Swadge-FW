@@ -135,6 +135,9 @@ static void rayEnterMode(void)
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Set frame rate to 60 FPS
+    setFrameRateUs(16666);
 }
 
 /**

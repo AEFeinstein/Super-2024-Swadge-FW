@@ -395,10 +395,10 @@ static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY)
  */
 static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 {
-#define MAP_X_MARGIN 16
-#define MAP_Y_MARGIN 36
-#define MAP_Y_MIDGAP 24
-#define MAP_SIZE     72
+#define MAP_X_MARGIN  16
+#define MAP_Y_MARGIN  36
+#define MAP_Y_MID_GAP 24
+#define MAP_SIZE      72
 
 #define MAP_ROWS 2
 #define MAP_COLS 3
@@ -426,7 +426,7 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
             {
                 // Find the box coordinates
                 int16_t startX = MAP_X_MARGIN + mapX * (MAP_SIZE + MAP_X_MARGIN);
-                int16_t startY = MAP_Y_MARGIN + mapY * (MAP_SIZE + MAP_Y_MIDGAP);
+                int16_t startY = MAP_Y_MARGIN + mapY * (MAP_SIZE + MAP_Y_MID_GAP);
                 int16_t endX   = startX + MAP_SIZE;
                 int16_t endY   = startY + MAP_SIZE;
 
