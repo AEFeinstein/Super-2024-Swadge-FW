@@ -1027,12 +1027,11 @@ void drawHud(ray_t* ray)
         snprintf(missileStr, sizeof(missileStr) - 1, "%02" PRId32, ray->p.i.numMissiles);
         int16_t tWidth = textWidth(&ray->ibm, missileStr);
 
-        fillDisplayArea(xOff - 1, TFT_HEIGHT - (mTex->h) - 1, xOff + (mTex->w) + 2 + tWidth + 1, TFT_HEIGHT, c000);
         // Draw missile icon
         drawWsgSimple(mTex, xOff, TFT_HEIGHT - mTex->h);
         xOff += (mTex->w) + 2;
         // Draw a count of missiles
-        drawText(&ray->ibm, c555, missileStr, xOff, TFT_HEIGHT - ray->ibm.height);
+        drawText(&ray->ibm, c555, missileStr, xOff, TFT_HEIGHT - (mTex->h + ray->ibm.height) / 2);
     }
 
 #define BAR_END_MARGIN  40
