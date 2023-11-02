@@ -66,7 +66,7 @@ void selectPrevDance(void);
 // Variables
 //==============================================================================
 
-static const char ledDancesExitText[] = "Hold Select To Exit";
+static const char ledDancesExitText[] = "Hold Menu To Exit";
 
 static const uint8_t danceSpeeds[] = {
     64, // 1/8x

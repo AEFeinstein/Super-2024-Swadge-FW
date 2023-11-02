@@ -2,14 +2,15 @@
 // Includes
 //==============================================================================
 
-#include "hdw-accel.h"
-#include "hdw-accel_emu.h"
+#include "hdw-imu.h"
+#include "hdw-imu_emu.h"
+#include "quaternions.h"
 #include "trigonometry.h"
 #include "esp_random.h"
 #include "emu_args.h"
 #include "macros.h"
 
-#define ONE_G 242
+#define ONE_G 256
 
 #define ACCEL_MIN -512
 #define ACCEL_MAX 512
@@ -19,21 +20,28 @@ static int16_t _accelX = 0;
 static int16_t _accelY = 0;
 static int16_t _accelZ = 0;
 
+LSM6DSLData LSM6DSL;
+
 /**
- * @brief Initialize the accelerometer
+ * @brief Initialize the IMU
  *
- * @param _i2c_port The i2c port to use for the accelerometer
- * @param range The range to measure, between ::QMA_RANGE_2G and ::QMA_RANGE_32G
- * @param bandwidth The bandwidth to measure at, between ::QMA_BANDWIDTH_128_HZ and ::QMA_BANDWIDTH_1024_HZ
+ * @param sda The GPIO for the Serial DAta line
+ * @param scl The GPIO for the Serial CLock line
+ * @param pullup Either \c GPIO_PULLUP_DISABLE if there are external pullup resistors on SDA and SCL or \c
+ * GPIO_PULLUP_ENABLE if internal pull-ups should be used
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(i2c_port_t _i2c_port, gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, uint32_t clkHz,
-                            qma_range_t range, qma_bandwidth_t bandwidth)
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
 {
     // Default to the swadge sitting still, face-up on a table somewhere on earth
     _accelX = 0;
     _accelY = 0;
     _accelZ = ONE_G;
+
+    LSM6DSL.fqQuat[0] = 0.0;
+    LSM6DSL.fqQuat[1] = 0.0;
+    LSM6DSL.fqQuat[2] = 0.0;
+    LSM6DSL.fqQuat[3] = 1.0;
 
     accelInit = true;
     return ESP_OK;
@@ -58,37 +66,19 @@ esp_err_t deInitAccelerometer(void)
  * @param data The step counter value is written here
  * @return ESP_OK if the step count was read, or a non-zero value if it was not
  */
-esp_err_t accelGetStep(uint16_t* data)
-{
-    if (accelInit)
-    {
-        // TODO emulate step better
-        *data = 0;
-        return ESP_OK;
-    }
-    else
-    {
-        return ESP_ERR_INVALID_STATE;
-    }
-}
-
-/**
- * @brief Set the accelerometer's measurement range
- *
- * @param range The range to measure, from ::QMA_RANGE_2G to ::QMA_RANGE_32G
- * @return ESP_OK if the range was set, or a non-zero value if it was not
- */
-esp_err_t accelSetRange(qma_range_t range)
-{
-    if (accelInit)
-    {
-        return ESP_OK;
-    }
-    else
-    {
-        return ESP_ERR_INVALID_STATE;
-    }
-}
+// esp_err_t accelGetStep(uint16_t* data)
+// {
+//     if (accelInit)
+//     {
+//         // TODO emulate step better
+//         *data = 0;
+//         return ESP_OK;
+//     }
+//     else
+//     {
+//         return ESP_ERR_INVALID_STATE;
+//     }
+// }
 
 /**
  * @brief Read the current acceleration vector from the accelerometer and return
@@ -100,7 +90,7 @@ esp_err_t accelSetRange(qma_range_t range)
  * @param z The Z component of the acceleration vector is written here
  * @return ESP_OK if the acceleration was read, or a non-zero value if it was not
  */
-esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
+esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z)
 {
     if (accelInit)
     {
@@ -114,6 +104,11 @@ esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z)
     {
         return ESP_ERR_INVALID_STATE;
     }
+}
+
+esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
+{
+    return accelGetAccelVecRaw(x, y, z);
 }
 
 /**
@@ -169,4 +164,35 @@ void emulatorSetAccelerometerRotation(int16_t value, uint16_t yaw, uint16_t pitc
     _accelX = CLAMP(value * getSin1024(yaw % 360) / 1024 * getCos1024(pitch % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
     _accelY = CLAMP(value * getSin1024(yaw % 360) / 1024 * getSin1024(pitch % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
     _accelZ = CLAMP(value * getCos1024(yaw % 360) / 1024, ACCEL_MIN, ACCEL_MAX);
+
+    float eulerAngles[3] = {
+        _accelX * 3.1415925635 / 180,
+        _accelY * 3.1415925635 / 180,
+        _accelZ * 3.1415925635 / 180,
+    };
+
+    mathEulerToQuat(LSM6DSL.fqQuat, eulerAngles);
+}
+
+esp_err_t accelIntegrate()
+{
+    // Do nothing (is stub function)
+    return ESP_OK;
+}
+
+// stub
+void accelSetRegistersAndReset()
+{
+}
+
+// stub
+esp_err_t accelPerformCal()
+{
+    return ESP_OK;
+}
+
+// stub
+float accelGetStdDevInCal()
+{
+    return 0.0f;
 }

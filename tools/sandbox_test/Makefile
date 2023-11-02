@@ -18,7 +18,7 @@ build :
 	mkdir -p build
 
 sandbox.o : buildhelp sandbox.c $(SYSELF) build
-	./buildhelp $(SYSELF)
+	./buildhelp $(SYSELF) ../..
 	xtensa-esp32s2-elf-objdump -s build/sandbox.o > build/debug_sandbox_s.txt
 	xtensa-esp32s2-elf-objdump -t build/sandbox.o > build/debug_sandbox_t.txt
 	xtensa-esp32s2-elf-objdump -S build/sandbox.o > build/debug_sandbox_S.txt
