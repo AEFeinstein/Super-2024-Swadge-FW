@@ -28,8 +28,29 @@
 
 // clang-format off
 
-#define LOGFIRE  false
-#define LOGPUSHY false
+#define LOGFIRE              false
+#define LOGPUSHY             false
+#define VIDEO                false
+#define GENERATE_COLOR_WHEEL false
+
+#if VIDEO
+#define PUSHY_BPM             80
+#define PUSHY_HOLD_BEATS      0.5
+#define PUSHY_HOLD_US         ((int64_t)(PUSHY_HOLD_BEATS     / (PUSHY_BPM / 60.0) * 1000 * 1000))
+
+#define PUSHY_69_AT_BEATS     8
+#define PUSHY_420_AT_BEATS    16
+#define PUSHY_6969_AT_BEATS   24
+#define PUSHY_42069_AT_BEATS  32
+#define PUSHY_69420_AT_BEATS  36
+
+#define PUSHY_BEAT_DROP_AT_US ((int64_t)((15 + 35776 / 44100.0) * 1000 * 1000))
+#define PUSHY_69_AT_US        ((int64_t)(PUSHY_69_AT_BEATS    / (PUSHY_BPM / 60.0) * 1000 * 1000 + PUSHY_BEAT_DROP_AT_US))
+#define PUSHY_420_AT_US       ((int64_t)(PUSHY_420_AT_BEATS   / (PUSHY_BPM / 60.0) * 1000 * 1000 + PUSHY_BEAT_DROP_AT_US))
+#define PUSHY_6969_AT_US      ((int64_t)(PUSHY_6969_AT_BEATS  / (PUSHY_BPM / 60.0) * 1000 * 1000 + PUSHY_BEAT_DROP_AT_US))
+#define PUSHY_42069_AT_US     ((int64_t)(PUSHY_42069_AT_BEATS / (PUSHY_BPM / 60.0) * 1000 * 1000 + PUSHY_BEAT_DROP_AT_US))
+#define PUSHY_69420_AT_US     ((int64_t)(PUSHY_69420_AT_BEATS / (PUSHY_BPM / 60.0) * 1000 * 1000 + PUSHY_BEAT_DROP_AT_US))
+#endif
 
 #define NUM_DIGITS        8
 #define NUM_PUSHY_COLORS 11 // 0-9 and "off"
@@ -83,6 +104,13 @@ typedef struct
     bool rainbowDigits[NUM_DIGITS];          ///< A bitmap of digits that should be rainbow, from most significant digit at [0] to least significant digit at [NUM_DIGITS]
     bool weedDigits[NUM_DIGITS];             ///< A bitmap of digits that should be weed colored, from most significant digit at [0] to least significant digit at [NUM_DIGITS]
     float weedHue;                           ///< The hue to display on digits that are weed colored
+#if VIDEO
+    int64_t lockoutUs;
+    bool reachedRainbow;
+    bool reachedWeed;
+    bool reachedDoubleRainbow;               ///< All the way
+    int64_t audioTrackUs;
+#endif
 
     paletteColor_t colors[NUM_PUSHY_COLORS]; ///< Colors for each digit 0-9
     uint8_t rainbowHues[NUM_PUSHY_COLORS];   ///< Hues to display on digits that are rainbow
@@ -185,6 +213,17 @@ static void pushyEnterMode(void)
     pushy->rainbowTimer = EFFECT_MAX;
     pushy->weedTimer    = EFFECT_MAX;
 
+#if VIDEO
+    pushy->audioTrackUs = PUSHY_BEAT_DROP_AT_US;
+#endif
+
+#if GENERATE_COLOR_WHEEL
+    for (int i = 0; i < 255; i++)
+    {
+        printf("%" PRIu8 "\n", (uint8_t)paletteHsvToHex(i, 255, 255));
+    }
+#endif
+
     // Initialize default color values
     // clang-format off
     pushy->colors[0]  = paletteHsvToHex(           0,          0, BRIGHTNESS); // white
@@ -223,7 +262,9 @@ static void pushyExitMode(void)
     // Save score to NVS
     if (pushy->lastSaveCounter != pushy->counter)
     {
+#if !VIDEO
         writeNvs32(pushyCounterKey, (int32_t)pushy->counter);
+#endif
     }
 
     // Free the font
@@ -237,13 +278,105 @@ static void pushyExitMode(void)
  * @brief This function is called periodically and frequently. It will either draw the menu or play the game, depending
  * on which screen is currently being displayed
  *
- * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
+ * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds. First call is
+ * nonzero
  */
 static void pushyMainLoop(int64_t elapsedUs)
 {
     pushy->buttonPushedUs += elapsedUs;
+#if VIDEO
+    pushy->audioTrackUs += elapsedUs;
 
-    readButton();
+    uint32_t oldCounter = pushy->counter;
+
+    // clang-format off
+    if (pushy->audioTrackUs < (PUSHY_BEAT_DROP_AT_US + PUSHY_HOLD_US))
+    {
+        pushy->counter = 0;
+    }
+    else if (pushy->audioTrackUs < PUSHY_69_AT_US)
+    {
+        pushy->counter = (0 + (69 - 0) * (pushy->audioTrackUs - (PUSHY_BEAT_DROP_AT_US + PUSHY_HOLD_US)) / (double)(PUSHY_69_AT_US - (PUSHY_BEAT_DROP_AT_US + PUSHY_HOLD_US)));
+    }
+    else if (pushy->audioTrackUs < (PUSHY_69_AT_US + PUSHY_HOLD_US))
+    {
+        pushy->counter = 69;
+    }
+    else if (pushy->audioTrackUs < PUSHY_420_AT_US)
+    {
+        pushy->counter = (69 + (420 - 69) * (pushy->audioTrackUs - (PUSHY_69_AT_US + PUSHY_HOLD_US)) / (double)(PUSHY_420_AT_US - (PUSHY_69_AT_US + PUSHY_HOLD_US)));
+    }
+    else if (pushy->audioTrackUs < (PUSHY_420_AT_US + PUSHY_HOLD_US))
+    {
+        pushy->counter = 420;
+    }
+    else if (pushy->audioTrackUs < PUSHY_6969_AT_US)
+    {
+        pushy->counter = (420 + (6969 - 420) * ((pushy->audioTrackUs - (PUSHY_420_AT_US + PUSHY_HOLD_US)) / (double)(PUSHY_6969_AT_US - (PUSHY_420_AT_US + PUSHY_HOLD_US))));
+    }
+    else if (pushy->audioTrackUs < (PUSHY_6969_AT_US + PUSHY_HOLD_US))
+    {
+        pushy->counter = 6969;
+    }
+    else if (pushy->audioTrackUs < PUSHY_42069_AT_US)
+    {
+        pushy->counter = (6969 + (42069 - 6969) * ((pushy->audioTrackUs - (PUSHY_6969_AT_US + PUSHY_HOLD_US)) / (double)(PUSHY_42069_AT_US - (PUSHY_6969_AT_US + PUSHY_HOLD_US))));
+    }
+    else if (pushy->audioTrackUs < (PUSHY_42069_AT_US + PUSHY_HOLD_US))
+    {
+        pushy->counter = 42069;
+    }
+    else if (pushy->audioTrackUs < PUSHY_69420_AT_US)
+    {
+        pushy->counter = (42069 + (69420 - 42069) * ((pushy->audioTrackUs - (PUSHY_42069_AT_US + PUSHY_HOLD_US)) / (double)(PUSHY_69420_AT_US - (PUSHY_42069_AT_US + PUSHY_HOLD_US))));
+    }
+    else if (pushy->audioTrackUs < (PUSHY_69420_AT_US + PUSHY_HOLD_US))
+    {
+        pushy->counter = 69420;
+    }
+    else
+    {
+        // Do nothing, continue holding 69420
+    }
+    // clang-format on
+
+    pushy->fireCounter += pushy->counter - oldCounter;
+    pushy->buttonPushedUs = 0;
+    if ((uint32_t)(oldCounter / SHUFFLE_AT_MOD) < (uint32_t)(pushy->counter / SHUFFLE_AT_MOD))
+    {
+        shuffleColors();
+    }
+
+    // if (pushy->lockoutUs == 0)
+#endif
+    {
+        readButton();
+    }
+#if VIDEO
+    // else
+    // {
+    //     pushy->lockoutUs = MAX(pushy->lockoutUs - elapsedUs, 0);
+    // }
+
+    // if (!pushy->reachedRainbow && pushy->counter >= 69)
+    // {
+    //     pushy->lockoutUs = 1 * 1000 * 1000;
+    //     pushy->reachedRainbow = true;
+    //     pushy->counter = 69;
+    // }
+    // else if (!pushy->reachedWeed && pushy->counter >= 420)
+    // {
+    //     pushy->lockoutUs = 5 * 1000 * 1000;
+    //     pushy->reachedWeed = true;
+    //     pushy->counter = 420;
+    // }
+    // else if (!pushy->reachedDoubleRainbow && pushy->counter >= 6969)
+    // {
+    //     pushy->lockoutUs = 5 * 1000 * 1000;
+    //     pushy->reachedDoubleRainbow = true;
+    //     pushy->counter = 6969;
+    // }
+#endif
 
     // If score has changed, save if last input was longer ago than our threshold or if score is a multiple of 100
     if (pushy->lastSaveCounter != pushy->counter && pushy->buttonPushedUs > IDLE_SECONDS_UNTIL_SAVE * 1000 * 1000)
@@ -298,15 +431,23 @@ static void pushyBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
 // Save score to NVS
 static void saveMemory(void)
 {
+#if !VIDEO
     writeNvs32(pushyCounterKey, (int32_t)pushy->counter);
+#endif
     pushy->lastSaveCounter = pushy->counter;
 }
 
 static void shuffleColors(void)
 {
+#if !VIDEO
     for (uint8_t i = 0; i < NUM_PUSHY_COLORS - 1; i++)
     {
         uint8_t n = esp_random() % (NUM_PUSHY_COLORS - 1);
+#else
+    for (uint8_t i = (pushy->counter == 0); i < NUM_PUSHY_COLORS - 1; i++)
+    {
+        uint8_t n = esp_random() % (NUM_PUSHY_COLORS - pushy->counter - 1) + (pushy->counter == 0);
+#endif
 #if LOGPUSHY
         printf("gonna swap the next two colors: %" PRIu8 ", %" PRIu8 "\n", i, n);
 #endif
@@ -326,7 +467,7 @@ static void readButton(void)
         pushy->btnState = evt.state;
 
         // Check if the A button was pressed
-        if (evt.down && (PB_A == evt.button))
+        if (evt.down && PB_A == evt.button)
         {
             pushy->counter++;
             pushy->fireCounter++;
@@ -341,6 +482,39 @@ static void readButton(void)
             }
         }
     }
+
+#if VIDEO
+    if (pushy->btnState & PB_LEFT)
+    {
+        pushy->counter++;
+        pushy->fireCounter++;
+        pushy->buttonPushedUs = 0;
+        if (pushy->counter % SHUFFLE_AT_MOD == 0)
+        {
+            shuffleColors();
+        }
+    }
+    if (pushy->btnState & PB_DOWN)
+    {
+        pushy->counter += 10;
+        pushy->fireCounter += 10;
+        pushy->buttonPushedUs = 0;
+        if (pushy->counter % SHUFFLE_AT_MOD == 0)
+        {
+            shuffleColors();
+        }
+    }
+    if (pushy->btnState & PB_RIGHT)
+    {
+        pushy->counter += 100;
+        pushy->fireCounter += 100;
+        pushy->buttonPushedUs = 0;
+        if (pushy->counter % SHUFFLE_AT_MOD == 0)
+        {
+            shuffleColors();
+        }
+    }
+#endif
 }
 
 static void displayCounter(char const* counterStr)
@@ -412,7 +586,11 @@ static void updateEffects(char const* counterStr)
     {
         for (int i = 0; i < NUM_PUSHY_COLORS; i++)
         {
+#if !VIDEO
             pushy->rainbowHues[i] = (pushy->rainbowHues[i] + 2 % 255);
+#else
+            pushy->rainbowHues[i] = (pushy->rainbowHues[i] + 8 % 255);
+#endif
         }
     }
 
@@ -461,7 +639,7 @@ static void displayFire(void)
 
     int count = getFireCount();
 
-    led_t color = LedEHSVtoHEXhelper((uint8_t)(count / 2.5), 255, 250, true);
+    led_t color = LedEHSVtoHEXhelper((uint8_t)(count / 2.5), 255, 255, true);
 
     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
     {

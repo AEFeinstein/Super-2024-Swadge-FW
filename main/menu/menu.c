@@ -219,7 +219,6 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
         menuItem_t* item = listNode->val;
         if (item->label == label)
         {
-            removeEntry(menu->items, listNode);
             if (menu->currentItem == listNode)
             {
                 if (NULL != listNode->next)
@@ -231,6 +230,7 @@ void removeSingleItemFromMenu(menu_t* menu, const char* label)
                     menu->currentItem = listNode->prev;
                 }
             }
+            removeEntry(menu->items, listNode);
             free(item);
             return;
         }
