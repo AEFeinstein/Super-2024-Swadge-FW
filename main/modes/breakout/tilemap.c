@@ -187,10 +187,10 @@ bool loadTiles(tilemap_t *tilemap)
     loadWsg("brkTile001.wsg", &tilemap->tiles[0], false);
     loadWsg("brkTile002.wsg", &tilemap->tiles[1], false);
     loadWsg("brkTile003.wsg", &tilemap->tiles[2], false);
-    tilemap->tiles[3] = tilemap->tiles[0];
-    tilemap->tiles[4] = tilemap->tiles[0];
-    tilemap->tiles[5] = tilemap->tiles[0];
-    tilemap->tiles[6] = tilemap->tiles[0];
+    loadWsg("brkTile004.wsg", &tilemap->tiles[3], false);
+    loadWsg("brkTile005.wsg", &tilemap->tiles[4], false);
+    loadWsg("brkTile006.wsg", &tilemap->tiles[5], false);
+    loadWsg("brkTile007.wsg", &tilemap->tiles[6], false);
     tilemap->tiles[7] = tilemap->tiles[0];
     tilemap->tiles[8] = tilemap->tiles[0];
     tilemap->tiles[9] = tilemap->tiles[0];
@@ -211,8 +211,8 @@ bool loadTiles(tilemap_t *tilemap)
     loadWsg("brkTile025.wsg", &tilemap->tiles[24], false);
     loadWsg("brkTile026.wsg", &tilemap->tiles[25], false);
     loadWsg("brkTile027.wsg", &tilemap->tiles[26], false);
+    loadWsg("brkTile028.wsg", &tilemap->tiles[27], false);
 
-    tilemap->tiles[27] = tilemap->tiles[0];
     tilemap->tiles[28] = tilemap->tiles[0];
     tilemap->tiles[29] = tilemap->tiles[0];
     tilemap->tiles[30] = tilemap->tiles[0];
@@ -242,22 +242,16 @@ bool loadTiles(tilemap_t *tilemap)
     loadWsg("brkTile053.wsg", &tilemap->tiles[52], false);
     loadWsg("brkTile054.wsg", &tilemap->tiles[53], false);
     loadWsg("brkTile055.wsg", &tilemap->tiles[54], false);
-    /*loadWsg("brkTile056.wsg", &tilemap->tiles[55], false);
+    loadWsg("brkTile056.wsg", &tilemap->tiles[55], false);
     loadWsg("brkTile057.wsg", &tilemap->tiles[56], false);
-    loadWsg("brkTile058.wsg", &tilemap->tiles[57], false);
-    loadWsg("brkTile059.wsg", &tilemap->tiles[58], false);
-    loadWsg("brkTile060.wsg", &tilemap->tiles[59], false);
-    loadWsg("brkTile061.wsg", &tilemap->tiles[60], false);
-    loadWsg("brkTile062.wsg", &tilemap->tiles[61], false);
-    loadWsg("brkTile063.wsg", &tilemap->tiles[62], false);*/
-    tilemap->tiles[55] = tilemap->tiles[0];
-    tilemap->tiles[56] = tilemap->tiles[0];
+
     tilemap->tiles[57] = tilemap->tiles[0];
     tilemap->tiles[58] = tilemap->tiles[0];
     tilemap->tiles[59] = tilemap->tiles[0];
     tilemap->tiles[60] = tilemap->tiles[0];
     tilemap->tiles[61] = tilemap->tiles[0];
     tilemap->tiles[62] = tilemap->tiles[0];
+    
     loadWsg("brkTile064.wsg", &tilemap->tiles[63], false);
     loadWsg("brkTile065.wsg", &tilemap->tiles[64], false);
     loadWsg("brkTile066.wsg", &tilemap->tiles[65], false);
