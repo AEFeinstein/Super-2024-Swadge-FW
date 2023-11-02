@@ -18,6 +18,7 @@
 
 #include "hdw-tft.h"
 #include "mainMenu.h"
+#include "breakout.h"
 #include "portableDance.h"
 #include "tunernome.h"
 #include "settingsManager.h"
@@ -80,7 +81,7 @@ typedef struct
     // Midis
     song_t pongHit1;
     song_t pongHit2;
-    song_t pongBgm;
+    song_t breakoutBgm;
 
     // Touch
     int32_t touchAngle;
@@ -109,7 +110,7 @@ typedef struct
 
 typedef struct
 {
-    char* categoryName;
+    const char* categoryName;
     uint8_t numSongs;
     const jukeboxSong* songs;
 } jukeboxCategory;
@@ -164,18 +165,18 @@ static const char str_play[]       = ": Play";
 //     {.name = "Banana", .song = &bananaphone},
 // };
 
-static jukeboxSong pongMusic[] = {
-    {.name = "BGM", .song = NULL},
+static jukeboxSong breakoutMusic[] = {
+    {.name = "???", .song = NULL}, // TODO
 };
 
 static const jukeboxCategory musicCategories[] = {
     //{.categoryName = "Jukebox", .numSongs = ARRAY_SIZE(jukeboxMusic), .songs = jukeboxMusic},
-    {.categoryName = "Pong", .numSongs = ARRAY_SIZE(pongMusic), .songs = pongMusic},
+    {.categoryName = breakoutMode.modeName, .numSongs = ARRAY_SIZE(breakoutMusic), .songs = breakoutMusic},
 };
 
-static jukeboxSong pongSfx[] = {
-    {.name = "Block 1", .song = NULL},
-    {.name = "Block 2", .song = NULL},
+static const jukeboxSong breakoutSfx[] = {
+    {.name = "Primary", .song = &metronome_primary},
+    {.name = "Secondary", .song = &metronome_secondary},
 };
 
 static const jukeboxSong tunernomeSfx[] = {
@@ -184,7 +185,7 @@ static const jukeboxSong tunernomeSfx[] = {
 };
 
 static const jukeboxCategory sfxCategories[] = {
-    {.categoryName = "Pong", .numSongs = ARRAY_SIZE(pongSfx), .songs = pongSfx},
+    {.categoryName = breakoutMode.modeName, .numSongs = ARRAY_SIZE(breakoutSfx), .songs = breakoutSfx},
     {.categoryName = "Tunernome", .numSongs = ARRAY_SIZE(tunernomeSfx), .songs = tunernomeSfx},
 };
 
@@ -210,13 +211,9 @@ void jukeboxEnterMode()
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
     // Load midis
-    loadSong("block1.sng", &jukebox->pongHit1, false);
-    loadSong("block2.sng", &jukebox->pongHit2, false);
-    loadSong("stereo.sng", &jukebox->pongBgm, false);
-    jukebox->pongBgm.shouldLoop = true;
-    pongMusic[0].song           = &jukebox->pongBgm;
-    pongSfx[0].song             = &jukebox->pongHit1;
-    pongSfx[1].song             = &jukebox->pongHit2;
+    loadSong("gmcc.sng", &jukebox->breakoutBgm, false); // TODO: use correct sng
+    jukebox->breakoutBgm.shouldLoop = true;
+    breakoutMusic[0].song           = &jukebox->breakoutBgm;
 
     // Initialize menu
     jukebox->menu                = initMenu(str_jukebox, &jukeboxMainMenuCb);
@@ -259,9 +256,10 @@ void jukeboxExitMode(void)
     freeWsg(&jukebox->arrow);
     freeWsg(&jukebox->jukeboxSprite);
 
+    freeSong(&jukebox->breakoutBgm);
     freeSong(&jukebox->pongHit1);
     freeSong(&jukebox->pongHit2);
-    freeSong(&jukebox->pongBgm);
+    // TODO: free allocated songs
 
     freePortableDance(jukebox->portableDances);
 
@@ -484,7 +482,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
             drawText(&jukebox->radiostars, c555, btnText, afterText,
                      TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
-            char* categoryName;
+            const char* categoryName;
             char* songName;
             char* songTypeName;
             uint8_t numSongs;
