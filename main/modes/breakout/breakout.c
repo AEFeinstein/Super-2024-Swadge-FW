@@ -973,8 +973,8 @@ static void breakoutUpdateTitleScreen(breakout_t *self, int64_t elapsedUs){
     updateEntities(&(self->entityManager));
     drawStarfield(&(self->starfield));
     drawTileMap(&(self->tilemap));
-    breakoutDrawTitleScreen(&(self->logbook), &(self->gameData));
     drawEntities(&(self->entityManager));
+    breakoutDrawTitleScreen(&(self->logbook), &(self->gameData));
     updateLedsTitleScreen(&(self->gameData));
 }
 
