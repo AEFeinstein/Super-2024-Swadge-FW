@@ -70,7 +70,6 @@ void DrawTitle(void);
 void DrawGame(void);
 
 lumberjackVars_t* lumv;
-lumberjackTile_t lumberjackCollisionCheckTiles[64] = {};
 
 void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 {
@@ -428,7 +427,7 @@ bool lumberjackLoadLevel()
 
     for (int i = 0; i < lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH; i++)
     {
-        lumv->tile[i].index       = -1;
+        lumv->tile[i].index       = i;
         lumv->tile[i].x           = i % LUMBERJACK_MAP_WIDTH;
         lumv->tile[i].y           = i / LUMBERJACK_MAP_WIDTH;
         lumv->tile[i].type        = (int)buffer[i+12];
@@ -840,17 +839,6 @@ void baseMode(int64_t elapsedUs)
                 lumv->spawnTimer = LUMBERJACK_RESPAWN_PANIC_MIN; 
             }
         }
-    }
-
-
-    for (int colTileIndex = 0; colTileIndex < ARRAY_SIZE(lumberjackCollisionCheckTiles); colTileIndex++)
-    {
-        lumberjackCollisionCheckTiles[colTileIndex].type        = -1;
-        lumberjackCollisionCheckTiles[colTileIndex].x           = -1;
-        lumberjackCollisionCheckTiles[colTileIndex].y           = -1;
-        lumberjackCollisionCheckTiles[colTileIndex].index       = -1;
-        lumberjackCollisionCheckTiles[colTileIndex].offset      = 0;
-        lumberjackCollisionCheckTiles[colTileIndex].offset_time = 0;
     }
 
     if (lumv->localPlayer->onGround && !lumv->localPlayer->jumpReady)
@@ -1628,13 +1616,15 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
             entity->jumping   = false;
             entity->vy        = 0;
 
-            if (lumberjackIsCollisionTile(tileA->type))
+            if (tileA != NULL && lumberjackIsCollisionTile(tileA->type))
             {
                 if (tileA->type != 11 || lumv->itemBlockReady == true)
                 {
+                    ESP_LOGI(LUM_TAG, "BUMP A %d", tileA->index);
                     lumv->tile[tileA->index].offset      = 10;
                     lumv->tile[tileA->index].offset_time = 100;
 
+                
                     if (tileA->type == 12)
                     {
                         lumv->tile[tileA->index].type = 13;
@@ -1647,13 +1637,14 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
                     {
                         lumberjackUseBlock();
                     }
+                
                 }
 
             }
 
-            if (lumberjackIsCollisionTile(tileB->type))
+            if (tileB!= NULL && lumberjackIsCollisionTile(tileB->type))
             {
-
+                
                 if (tileB->type != 11 || lumv->itemBlockReady == true)
                 {
 
@@ -1933,35 +1924,16 @@ static lumberjackTile_t* lumberjackGetTile(int x, int y)
         tx = 0;
 
     if (ty < 0)
-        ty = 0;
-    if (ty >= lumv->currentMapHeight)
-        ty = lumv->currentMapHeight - 1;
-
-    // int test = -1;
-    for (int colTileIndex = 0; colTileIndex < ARRAY_SIZE(lumberjackCollisionCheckTiles); colTileIndex++)
     {
-        if ((ty * LUMBERJACK_MAP_WIDTH) + tx >= lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH)
-        {
-            //Don't calculate if entity is going off screen
-            continue;
-        }
-
-        if (lumberjackCollisionCheckTiles[colTileIndex].type == -1)
-        {
-            if (lumberjackCollisionCheckTiles[colTileIndex].index == (ty * LUMBERJACK_MAP_WIDTH) + tx)
-                return &lumberjackCollisionCheckTiles[colTileIndex];
-
-            lumberjackCollisionCheckTiles[colTileIndex].index = (ty * LUMBERJACK_MAP_WIDTH) + tx;
-            lumberjackCollisionCheckTiles[colTileIndex].x     = tx;
-            lumberjackCollisionCheckTiles[colTileIndex].y     = ty;
-            lumberjackCollisionCheckTiles[colTileIndex].type  = lumv->tile[(ty * LUMBERJACK_MAP_WIDTH) + tx].type;
-
-            return &lumberjackCollisionCheckTiles[colTileIndex];
-        }
-        
+        return NULL;
     }
-    
-    return NULL;
+    if (ty >= lumv->currentMapHeight)
+    {
+        return NULL;
+    }   
+
+    return &lumv->tile[(ty * LUMBERJACK_MAP_WIDTH) + tx];
+
 }
 
 static bool lumberjackIsCollisionTile(int index)
