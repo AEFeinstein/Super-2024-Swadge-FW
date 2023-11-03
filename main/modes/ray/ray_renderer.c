@@ -830,8 +830,9 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 spriteWidth = -spriteWidth;
             }
 
-            // If this is an item
-            if (CELL_IS_TYPE(obj->type, OBJ | ITEM))
+            // If this is an item that should rotate
+            if (CELL_IS_TYPE(obj->type, OBJ | ITEM) && (OBJ_ITEM_ENERGY_TANK != obj->type)
+                && (OBJ_ITEM_PICKUP_ENERGY != obj->type) && (OBJ_ITEM_PICKUP_MISSILE != obj->type))
             {
                 // Scale this item's width according to current rotation
                 spriteWidth = (spriteWidth * widthMod) / 1024;
