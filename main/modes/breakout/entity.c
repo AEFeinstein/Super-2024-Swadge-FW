@@ -541,95 +541,220 @@ void updateChoLevelClear(entity_t *self){
 }
 
 void updateCrawler(entity_t * self){
+    if(self->gameData->frameCount % 10 == 0) {
+       self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+    }
+
     uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
     uint8_t ty = TO_TILE_COORDS(self->y >> SUBPIXEL_RESOLUTION);
     uint8_t t;
 
     switch(self->animationTimer){
+        //CLOCKWISE
+
+        //On top of a block, going right
         case 0:
-            if((((self->x >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+            if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx, ty+1);
             if(!isSolid(t)){
-                self->yspeed = self->xspeed;
+                self->yspeed = self->baseSpeed;
                 self->xspeed = 0;
                 self->animationTimer = 1;
                 self->spriteRotateAngle = 90;
+                self->spriteIndex = SP_CRAWLER_RIGHT;
             }
 
             t = getTile(self->tilemap, tx+1, ty);
             if(isSolid(t)){
-                self->yspeed = -self->xspeed;
+                self->yspeed = -self->baseSpeed;
                 self->xspeed = 0;
                 self->animationTimer = 3;
                 self->spriteRotateAngle = 270;
+                self->spriteIndex = SP_CRAWLER_LEFT;
             }
             break;
+
+        //On the right side of a block, going down
         case 1:
-            if((((self->y >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+            if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx-1, ty);
             if(!isSolid(t)){
-                self->xspeed = -self->yspeed;
+                self->xspeed = -self->baseSpeed;
                 self->yspeed = 0;
                 self->animationTimer = 2;
                 self->spriteRotateAngle = 180;
+                self->spriteIndex = SP_CRAWLER_BOTTOM;
             }
 
             t = getTile(self->tilemap, tx, ty+1);
             if(isSolid(t)){
-                self->xspeed = self->yspeed;
+                self->xspeed = self->baseSpeed;
                 self->yspeed = 0;
                 self->animationTimer = 0;
                 self->spriteRotateAngle = 0;
+                self->spriteIndex = SP_CRAWLER_TOP;
             }
 
             break;
+
+        //On the bottom of a block, going left
         case 2:
-            if((((self->x >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+            if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx, ty-1);
             if(!isSolid(t)){
-                self->yspeed = self->xspeed;
+                self->yspeed = -self->baseSpeed;
                 self->xspeed = 0;
                 self->animationTimer = 3;
                 self->spriteRotateAngle = 270;
+                self->spriteIndex = SP_CRAWLER_LEFT;
             }
 
             t = getTile(self->tilemap, tx-1, ty);
             if(isSolid(t)){
-                self->yspeed = -self->xspeed;
+                self->yspeed = self->baseSpeed;
                 self->xspeed = 0;
                 self->animationTimer = 1;
                 self->spriteRotateAngle = 90;
+                self->spriteIndex = SP_CRAWLER_RIGHT;
             }
 
             break;
+        
+        //On the left side of a block, going up
         case 3:
-            if((((self->y >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+            if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx+1, ty);
             if(!isSolid(t)){
-                self->xspeed = -self->yspeed;
+                self->xspeed = self->baseSpeed;
                 self->yspeed = 0;
                 self->animationTimer = 0;
                 self->spriteRotateAngle = 0;
+                self->spriteIndex = SP_CRAWLER_TOP;
             }
 
             t = getTile(self->tilemap, tx, ty-1);
             if(isSolid(t)){
-                self->xspeed = self->yspeed;
+                self->xspeed = -self->baseSpeed;
                 self->yspeed = 0;
                 self->animationTimer = 2;
                 self->spriteRotateAngle = 180;
+                self->spriteIndex = SP_CRAWLER_BOTTOM;
+            }
+            break;
+        
+        //COUNTER-CLOCKWISE
+
+        //On top of a block, going left
+        case 4:
+            if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx, ty+1);
+            if(!isSolid(t)){
+                self->yspeed = self->baseSpeed;
+                self->xspeed = 0;
+                self->animationTimer = 5;
+                self->spriteRotateAngle = 270;
+                self->spriteIndex = SP_CRAWLER_LEFT;
+            }
+
+            t = getTile(self->tilemap, tx-1, ty);
+            if(isSolid(t)){
+                self->yspeed = -self->baseSpeed;
+                self->xspeed = 0;
+                self->animationTimer = 7;
+                self->spriteRotateAngle = 90;
+                self->spriteIndex = SP_CRAWLER_RIGHT;
+            }
+            break;
+
+        //On the left side of a block, going down
+        case 5:
+            if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx+1, ty);
+            if(!isSolid(t)){
+                self->xspeed = self->baseSpeed;
+                self->yspeed = 0;
+                self->animationTimer = 6;
+                self->spriteRotateAngle = 180;
+                self->spriteIndex = SP_CRAWLER_BOTTOM;
+            }
+
+            t = getTile(self->tilemap, tx, ty+1);
+            if(isSolid(t)){
+                self->xspeed = -self->baseSpeed;
+                self->yspeed = 0;
+                self->animationTimer = 4;
+                self->spriteRotateAngle = 0;
+                self->spriteIndex = SP_CRAWLER_TOP;
+            }
+
+            break;
+
+        //On the bottom of a block, going right
+        case 6:
+            if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx, ty-1);
+            if(!isSolid(t)){
+                self->yspeed = -self->baseSpeed;
+                self->xspeed = 0;
+                self->animationTimer = 7;
+                self->spriteRotateAngle = 90;
+                self->spriteIndex = SP_CRAWLER_RIGHT;
+            }
+
+            t = getTile(self->tilemap, tx+1, ty);
+            if(isSolid(t)){
+                self->yspeed = self->baseSpeed;
+                self->xspeed = 0;
+                self->animationTimer = 5;
+                self->spriteRotateAngle = 270;
+                self->spriteIndex = SP_CRAWLER_LEFT;
+            }
+
+            break;
+        
+        //On the right side of a block, going up
+        case 7:
+            if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx-1, ty);
+            if(!isSolid(t)){
+                self->xspeed = -self->baseSpeed;
+                self->yspeed = 0;
+                self->animationTimer = 4;
+                self->spriteRotateAngle = 0;
+                self->spriteIndex = SP_CRAWLER_TOP;
+            }
+
+            t = getTile(self->tilemap, tx, ty-1);
+            if(isSolid(t)){
+                self->xspeed = self->baseSpeed;
+                self->yspeed = 0;
+                self->animationTimer = 6;
+                self->spriteRotateAngle = 180;
+                self->spriteIndex = SP_CRAWLER_BOTTOM;
             }
             break;
         default:

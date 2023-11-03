@@ -56,7 +56,10 @@ typedef enum {
     SP_CHO_WALK_2,
     SP_CHO_WIN_0,
     SP_CHO_WIN_1,
-    SP_CRAWLER
+    SP_CRAWLER_TOP,
+    SP_CRAWLER_RIGHT,
+    SP_CRAWLER_BOTTOM,
+    SP_CRAWLER_LEFT
 } spriteDef_t;
 
 #endif

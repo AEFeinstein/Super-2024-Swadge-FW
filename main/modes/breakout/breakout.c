@@ -377,6 +377,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         if (label == breakoutNewGame)
         {
             initializeGameDataFromTitleScreen(&(breakout->gameData));
+            deactivateAllEntities(&(breakout->entityManager), false, false);
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[GAME_LEVEL_START_INDEX].filename);
             breakout->gameData.countdown = leveldef[GAME_LEVEL_START_INDEX].timeLimit;
@@ -385,6 +386,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         } else if (label == breakoutContinue)
         {
             initializeGameDataFromTitleScreen(&(breakout->gameData));
+            deactivateAllEntities(&(breakout->entityManager), false, false);
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level].filename);
             breakout->gameData.countdown = leveldef[breakout->gameData.level].timeLimit;

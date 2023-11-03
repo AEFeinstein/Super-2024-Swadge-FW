@@ -249,13 +249,38 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_CHO_WIN_1].collisionBox.y0 = 0;
     entityManager->sprites[SP_CHO_WIN_1].collisionBox.y1 = 15;
 
-    loadWsg("sprite009.wsg", &entityManager->sprites[SP_CRAWLER].wsg, false);
-    entityManager->sprites[SP_CRAWLER].originX=7;
-    entityManager->sprites[SP_CRAWLER].originY=7;
-    entityManager->sprites[SP_CRAWLER].collisionBox.x0 = 0;
-    entityManager->sprites[SP_CRAWLER].collisionBox.x1 = 15;
-    entityManager->sprites[SP_CRAWLER].collisionBox.y0 = 0;
-    entityManager->sprites[SP_CRAWLER].collisionBox.y1 = 15;
+    loadWsg("sprite009.wsg", &entityManager->sprites[SP_CRAWLER_TOP].wsg, false);
+    entityManager->sprites[SP_CRAWLER_TOP].originX=7;
+    entityManager->sprites[SP_CRAWLER_TOP].originY=12;
+    entityManager->sprites[SP_CRAWLER_TOP].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CRAWLER_TOP].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CRAWLER_TOP].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CRAWLER_TOP].collisionBox.y1 = 15;
+
+    //TODO: don't need to allocate this same sprite 3 more times...
+    loadWsg("sprite009.wsg", &entityManager->sprites[SP_CRAWLER_RIGHT].wsg, false);
+    entityManager->sprites[SP_CRAWLER_RIGHT].originX=4;
+    entityManager->sprites[SP_CRAWLER_RIGHT].originY=7;
+    entityManager->sprites[SP_CRAWLER_RIGHT].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CRAWLER_RIGHT].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CRAWLER_RIGHT].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CRAWLER_RIGHT].collisionBox.y1 = 15;
+
+    loadWsg("sprite009.wsg", &entityManager->sprites[SP_CRAWLER_BOTTOM].wsg, false);
+    entityManager->sprites[SP_CRAWLER_BOTTOM].originX=7;
+    entityManager->sprites[SP_CRAWLER_BOTTOM].originY=4;
+    entityManager->sprites[SP_CRAWLER_BOTTOM].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CRAWLER_BOTTOM].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CRAWLER_BOTTOM].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CRAWLER_BOTTOM].collisionBox.y1 = 15;
+
+    loadWsg("sprite009.wsg", &entityManager->sprites[SP_CRAWLER_LEFT].wsg, false);
+    entityManager->sprites[SP_CRAWLER_LEFT].originX=12;
+    entityManager->sprites[SP_CRAWLER_LEFT].originY=7;
+    entityManager->sprites[SP_CRAWLER_LEFT].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CRAWLER_LEFT].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CRAWLER_LEFT].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CRAWLER_LEFT].collisionBox.y1 = 15;
 };
 
 void updateEntities(entityManager_t * entityManager)
@@ -775,7 +800,8 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
-    entity->xspeed = 16;
+    entity->baseSpeed = 8;
+    entity->xspeed = 8;
     entity->yspeed = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
@@ -783,7 +809,7 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->animationTimer = 0;
 
     entity->type = ENTITY_CRAWLER;
-    entity->spriteIndex = SP_CRAWLER;
+    entity->spriteIndex = SP_CRAWLER_TOP;
     entity->updateFunction = &updateCrawler;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
