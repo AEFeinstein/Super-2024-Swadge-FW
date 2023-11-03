@@ -4,6 +4,7 @@
 
 #include "fill.h"
 #include "ray_dialog.h"
+#include "esp_wifi.h"
 
 //==============================================================================
 // Defines
@@ -18,6 +19,17 @@
 #define DIALOG_TEXT_COLOR c240
 
 //==============================================================================
+// Constant text
+//==============================================================================
+
+const char* const macPuzzleText[] = {
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\nHint 1\n[=/+._?@\n}+&)(/&?\n+[:&${)}",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n.?%?-}{;\nHint 2\n&,?:)/&:\n:/{#_!&,",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n:#:$/{)]\n{?$-}*].\nHint 3\n/}%-%?}%",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n{@#??_[!\n#,;{(;-{\n]#_!]=,.\nHint 4",
+};
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -30,8 +42,17 @@
  */
 void rayShowDialog(ray_t* ray, const char* dialogText, wsg_t* dialogPortrait)
 {
-    ray->screen         = RAY_DIALOG;
-    ray->dialogText     = dialogText;
+    ray->screen = RAY_DIALOG;
+    if (0 == strcmp("MAC_PZL", dialogText))
+    {
+        uint8_t macAddr[6];
+        esp_wifi_get_mac(WIFI_IF_STA, macAddr);
+        ray->dialogText = macPuzzleText[macAddr[5] % 4];
+    }
+    else
+    {
+        ray->dialogText = dialogText;
+    }
     ray->dialogPortrait = dialogPortrait;
     ray->btnLockoutUs   = 2000000;
 }
