@@ -217,12 +217,16 @@ static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int1
  */
 void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elapsedUs)
 {
-    // Read battery every 10s
-    menu->batteryReadTimer -= elapsedUs;
-    if (0 >= menu->batteryReadTimer)
+    // Only poll the battery if requested
+    if (menu->showBattery)
     {
-        menu->batteryReadTimer += 10000000;
-        menu->batteryLevel = readBattmon();
+        // Read battery every 10s
+        menu->batteryReadTimer -= elapsedUs;
+        if (0 >= menu->batteryReadTimer)
+        {
+            menu->batteryReadTimer += 10000000;
+            menu->batteryLevel = readBattmon();
+        }
     }
 
     // For each LED
@@ -347,25 +351,29 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
         drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 90);
     }
 
-    // Draw the battery indicator depending on the last read value
-    wsg_t* toDraw = NULL;
-    // 872 is full
-    if (menu->batteryLevel == 0 || menu->batteryLevel > 741)
+    // Only draw the battery if requested
+    if (menu->showBattery)
     {
-        toDraw = &renderer->batt[3];
-    }
-    else if (menu->batteryLevel > 695)
-    {
-        toDraw = &renderer->batt[2];
-    }
-    else if (menu->batteryLevel > 652)
-    {
-        toDraw = &renderer->batt[1];
-    }
-    else // 452 is dead
-    {
-        toDraw = &renderer->batt[0];
-    }
+        // Draw the battery indicator depending on the last read value
+        wsg_t* toDraw = NULL;
+        // 872 is full
+        if (menu->batteryLevel == 0 || menu->batteryLevel > 741)
+        {
+            toDraw = &renderer->batt[3];
+        }
+        else if (menu->batteryLevel > 695)
+        {
+            toDraw = &renderer->batt[2];
+        }
+        else if (menu->batteryLevel > 652)
+        {
+            toDraw = &renderer->batt[1];
+        }
+        else // 452 is dead
+        {
+            toDraw = &renderer->batt[0];
+        }
 
-    drawWsg(toDraw, 212, 3, false, false, 0);
+        drawWsg(toDraw, 212, 3, false, false, 0);
+    }
 }
