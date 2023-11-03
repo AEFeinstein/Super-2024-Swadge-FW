@@ -19,7 +19,7 @@ void restartLevel(void);
 void lumberjackGameDebugLoop(int64_t elapsedUs);
 
 void lumberjackDetectBump(lumberjackTile_t* tile);
-void lumberjackSpawnCheck(int64_t elapseUs);
+bool lumberjackSpawnCheck(int64_t elapseUs);
 void lumberjackAttackCheck(int64_t elapseUs);
 
 void lumberjackScoreDisplay(int score, int locationX);
@@ -27,7 +27,7 @@ void lumberjackTitleDisplayText(char* string, int locationX, int locationY);
 
 void baseMode(int64_t elapsedUs);
 void lumberjackSendAttack(uint8_t* number);
-void lumberjackOnReceiveAttack(uint8_t* attack);
+void lumberjackOnReceiveAttack(const uint8_t* attack);
 void lumberjackOnReceiveDeath(bool gameover);
 void lumberjackGameReady(void);
 void lumberjackPlayGame(void);

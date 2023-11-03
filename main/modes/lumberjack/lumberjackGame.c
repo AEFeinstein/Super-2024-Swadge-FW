@@ -37,8 +37,9 @@
 #define LUMBERJACK_MAP_WIDTH            18
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
 #define LUMBERJACK_ROTATE_ANIMATION_MAX  4
-#define LUMBERJACK_RESPAWN_TIMER        3750
-#define LUMBERJACK_RESPAWN_MIN          1250
+#define LUMBERJACK_RESPAWN_PANIC_MIN    3750
+#define LUMBERJACK_RESPAWN_ATTACK_MIN   500
+#define LUMBERJACK_RESPAWN_VS_MIN       250
 #define LUMBERJACK_UPGRADE_TIMER_OFFSET 250
 #define LUMBERJACK_SUBMERGE_TIMER       300
 #define LUMBERJACK_WORLD_WRAP           295
@@ -69,7 +70,7 @@ void DrawTitle(void);
 void DrawGame(void);
 
 lumberjackVars_t* lumv;
-lumberjackTile_t lumberjackCollisionCheckTiles[32] = {};
+lumberjackTile_t lumberjackCollisionCheckTiles[64] = {};
 
 void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 {
@@ -110,6 +111,9 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_title_panic_red.wsg", &lumv->subtitle_red, true);
         loadWsg("lumbers_title_panic_green.wsg", &lumv->subtitle_green, true);
         loadWsg("lumbers_title_panic_white.wsg", &lumv->subtitle_white, true);
+        lumv->enemySpawnTime        = LUMBERJACK_RESPAWN_PANIC_MIN;
+        lumv->enemyReceiveSpawnTime = LUMBERJACK_RESPAWN_VS_MIN;
+        lumv->enemySpawnAmount      = 1;
     }
 
     if (main->screen == LUMBERJACK_B)
@@ -118,6 +122,9 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_title_attack_red.wsg", &lumv->subtitle_red, true);
         loadWsg("lumbers_title_attack_green.wsg", &lumv->subtitle_green, true);    
         loadWsg("lumbers_title_attack_white.wsg", &lumv->subtitle_white, true);    
+        lumv->enemySpawnTime        = LUMBERJACK_RESPAWN_ATTACK_MIN;
+        lumv->enemyReceiveSpawnTime = LUMBERJACK_RESPAWN_VS_MIN;
+        lumv->enemySpawnAmount      = 4;
     }
 
     loadWsg("lumbers_game_over.wsg", &lumv->gameoverSprite, true);
@@ -334,14 +341,16 @@ bool lumberjackLoadLevel()
         {
             fname = "lumberjacks_panic_vs.bin";
         }
-
+        
+        lumv->enemySpawnAmount      = 1;    
     }
 
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
         char* attackLevelName[] = 
         {
-            "lumberjacks_attack_1.bin"
+            "lumberjacks_attack_1.bin",
+            "lumberjacks_attack_2.bin",
         };
 
         fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
@@ -357,6 +366,7 @@ bool lumberjackLoadLevel()
             lumv->receiveQueue[i] = 0;
         }
         
+        lumv->enemySpawnAmount      = 4;    
     }
 
 
@@ -468,8 +478,6 @@ void lumberjackSetupLevel(int characterIndex)
     lumberjackSetupPlayer(lumv->localPlayer, characterIndex);
     lumberjackSpawnPlayer(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY, 0);
 
-    strcpy(lumv->localPlayer->name, " Dennis"); // If you see this... this name means nothing
-
     int offset = 0;
 
     //Load enemies
@@ -575,7 +583,15 @@ void lumberjackTitleLoop(int64_t elapsedUs)
         lumv->btnState = evt.state;
     }
 
-    if (lumv->btnState & PB_A && lumv->gameReady) // And Game Ready!
+    if (lumv->lumberjackMain->networked)
+    {
+        if (lumv->btnState & PB_A && lumv->gameReady && lumv->lumberjackMain->host && lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // And Game Ready!
+        {
+            lumberjackPlayGame();      
+            lumberjackSendGo();
+        }
+
+    } else if (lumv->btnState & PB_A && lumv->gameReady) // And Game Ready!
     {
         lumberjackPlayGame();      
 
@@ -727,10 +743,11 @@ void baseMode(int64_t elapsedUs)
                 lumv->comboTime = 0;
                 ESP_LOGI(LUM_TAG, "Combo end!");
 
+                
+
                 lumv->comboAmount = 0;
             }
 
-            ESP_LOGI(LUM_TAG, "Combo Time: %d", lumv->comboTime);
         }
 
         // Check Controls
@@ -803,14 +820,26 @@ void baseMode(int64_t elapsedUs)
     lumberjackUpdate(elapsedUs);
 
     // Check spawn
+    bool spawnedEnemy = false;
+    if (false == lumv->hasWon) spawnedEnemy = lumberjackSpawnCheck(elapsedUs);
 
-    if (lumv->gameType == LUMBERJACK_MODE_PANIC)
+    if (spawnedEnemy)
     {
-        if (false == lumv->hasWon) lumberjackSpawnCheck(elapsedUs);
-    }
-    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
-    {
-
+        lumv->enemySpawnAmount --;
+        if (lumv->enemySpawnAmount <= 0)
+        {
+            lumv->spawnSide++;
+            lumv->spawnSide %= 2;
+            if (lumv->gameType == LUMBERJACK_MODE_PANIC)
+            {
+                lumv->enemySpawnAmount = 1;
+            }
+            if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+            {
+                lumv->enemySpawnAmount = 4;
+                lumv->spawnTimer = LUMBERJACK_RESPAWN_PANIC_MIN; 
+            }
+        }
     }
 
 
@@ -923,6 +952,11 @@ void baseMode(int64_t elapsedUs)
                             {
                                 ESP_LOGI(LUM_TAG, "COMBO!");
                                 ++lumv->comboAmount;
+
+                                if (lumv->lumberjackMain->networked)
+                                {
+                                    lumv->attackQueue[enemy->type]++;
+                                }
                             }
 
                             lumv->score += enemy->scoreValue * (lumv->comboAmount + 1);
@@ -1244,15 +1278,15 @@ void DrawGame(void)
 
     // Debug
 
-    /*
+    
     char debug[20] = {0};
     snprintf(debug, sizeof(debug), "Debug: %d %d %d", lumv->localPlayer->x, lumv->localPlayer->y,
              lumv->localPlayer->cH);
 
     drawText(&lumv->arcade, c000, debug, 16, 16);
 
-    // drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX +
-    // lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
+    drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX +
+     lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
 
     if (lumv->localPlayer->jumpPressed)
     {
@@ -1271,7 +1305,19 @@ void DrawGame(void)
     {
         drawText(&lumv->arcade, c000, "B", 48, 32);
     }
-    */
+
+    if (lumv->localPlayer->onGround)
+    {
+        drawText(&lumv->arcade, c555, "G", 80, 32);
+    }
+    else
+    {
+        drawText(&lumv->arcade, c000, "G", 80, 32);
+    } //lumv->spawnTimer
+
+    snprintf(debug, sizeof(debug), "%d", lumv->spawnTimer);
+    drawText(&lumv->arcade, c555, debug,  122, 32);
+    
 }
 
 void lumberjackTitleDisplayText(char* string, int locationX, int locationY)
@@ -1304,7 +1350,7 @@ void lumberjackScoreDisplay(int score, int locationX)
     drawText(&lumv->arcade, c555, score_display, locationX, 16);
 }
 
-void lumberjackSpawnCheck(int64_t elapseUs)
+bool lumberjackSpawnCheck(int64_t elapseUs)
 {
     float elapse = (elapseUs / 1000);
     if (lumv->ghost != NULL && lumv->ghost->active == false)
@@ -1342,9 +1388,9 @@ void lumberjackSpawnCheck(int64_t elapseUs)
 
     }
 
+    bool spawnReady = false;
     if (lumv->spawnTimer >= 0)
     {
-        bool spawnReady = true;
 
         lumv->spawnTimer -= elapse;
 
@@ -1357,35 +1403,52 @@ void lumberjackSpawnCheck(int64_t elapseUs)
 
                 if (lumv->enemy[enemyIndex]->ready && lumv->enemy[enemyIndex]->state != LUMBERJACK_DEAD)
                 {
-                    lumv->spawnSide++;
-                    lumv->spawnSide %= 2;
 
-                    lumv->spawnTimer = LUMBERJACK_RESPAWN_TIMER - (lumv->upgrade * LUMBERJACK_UPGRADE_TIMER_OFFSET);
+                    //lumv->spawnTimer = LUMBERJACK_RESPAWN_TIMER - (lumv->upgrade * LUMBERJACK_UPGRADE_TIMER_OFFSET);
+                    lumv->spawnTimer = lumv->enemySpawnTime;
 
-                    if (lumv->spawnTimer < LUMBERJACK_RESPAWN_MIN)
+                    /*
+                    if (lumv->spawnTimer < lumv->enemySpawnTime)
                     {
-                        lumv->spawnTimer = LUMBERJACK_RESPAWN_MIN;
-                    }
+
+                        if ((lumv->lumberjackMain->networked && lumv->enemyAttackQueue > 0))
+                        {
+                            lumv->spawnTimer = lumv->enemyReceiveSpawnTime;
+
+                            if (lumv->enemyAttackQueue > 0)
+                            {
+                                lumv->enemyAttackQueue--;
+                            }
+                        }
+                        else
+                        {
+                            lumv->spawnTimer = LUMBERJACK_RESPAWN_PANIC_MIN;
+                            ESP_LOGI(LUM_TAG, "Hi!");
+                        }
+                    }*/
 
                     lumberjackRespawnEnemy(lumv->enemy[enemyIndex], lumv->spawnSide);
-                    spawnReady = false;
+                    spawnReady = true;
                     break;
                 }
             }
 
-            if (spawnReady)
+            if (!spawnReady)
             {
                 // No one was spawned.
                 lumv->spawnTimer = 500;
             }
         }
     }
+
+    return spawnReady;
 }
 
-void lumberjackOnReceiveAttack(uint8_t* attack)
+void lumberjackOnReceiveAttack(const uint8_t* attack)
 {
     if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
+        ESP_LOGI(LUM_TAG, "Being attacked %ld", sizeof(attack));
 
         lumv->waterDirection = -1; //Even if it is draining
         lumv->waterSpeed -= 5;
@@ -1403,7 +1466,7 @@ void lumberjackOnReceiveAttack(uint8_t* attack)
 
 void lumberjackOnReceiveDeath(bool gameover)
 {
-    ESP_LOGI(LUM_TAG, "Player died! Haha");
+    ESP_LOGI(LUM_TAG, "Player died!  Haha %d", (gameover));
 
     if (gameover)
     {
@@ -1421,46 +1484,6 @@ void lumberjackOnReceiveDeath(bool gameover)
 
 void lumberjackAttackCheck(int64_t elapseUs)
 {
-    float elapse = (elapseUs / 1000);
-
-    if (lumv->spawnTimer >= 0)
-    {
-        bool spawnReady = true;
-
-        lumv->spawnTimer -= elapse;
-
-        if (lumv->spawnTimer < 0)
-        {
-            for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
-            {
-                if (lumv->enemy[enemyIndex] == NULL)
-                    continue;
-
-                if (lumv->enemy[enemyIndex]->ready && lumv->enemy[enemyIndex]->state != LUMBERJACK_DEAD)
-                {
-                    lumv->spawnSide++;
-                    lumv->spawnSide %= 2;
-
-                    lumv->spawnTimer = LUMBERJACK_RESPAWN_TIMER - (lumv->upgrade * LUMBERJACK_UPGRADE_TIMER_OFFSET);
-
-                    if (lumv->spawnTimer < LUMBERJACK_RESPAWN_MIN)
-                    {
-                        lumv->spawnTimer = LUMBERJACK_RESPAWN_MIN;
-                    }
-
-                    lumberjackRespawnEnemy(lumv->enemy[enemyIndex], lumv->spawnSide);
-                    spawnReady = false;
-                    break;
-                }
-            }
-
-            if (spawnReady)
-            {
-                // No one was spawned.
-                lumv->spawnTimer = 500;
-            }
-        }
-    }
 }
 
 static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs)
@@ -1589,7 +1612,16 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
         lumberjackTile_t* tileA = lumberjackGetTile(destinationX, destinationY);
         lumberjackTile_t* tileB = lumberjackGetTile(destinationX + 16, destinationY);
 
-        if (lumberjackIsCollisionTile(tileA->type) || lumberjackIsCollisionTile(tileB->type))
+        if (tileA == NULL)
+        {
+            ESP_LOGI(LUM_TAG, "ERROR GETTING TILE A at %d,%d", destinationX , destinationY);
+        }        
+        if (tileB == NULL)
+        {
+            ESP_LOGI(LUM_TAG, "ERROR GETTING TILE B at %d, %d", destinationX + 16, destinationY);
+        }
+
+        if ((tileA != NULL && lumberjackIsCollisionTile(tileA->type)) || (tileB != NULL && lumberjackIsCollisionTile(tileB->type)))
         {
             destinationY      = ((tileA->y + 1) * LUMBERJACK_TILE_SIZE);
             entity->jumpTimer = 0;
@@ -1902,11 +1934,11 @@ static lumberjackTile_t* lumberjackGetTile(int x, int y)
 
     if (ty < 0)
         ty = 0;
-    if (ty > lumv->currentMapHeight)
-        ty = lumv->currentMapHeight;
+    if (ty >= lumv->currentMapHeight)
+        ty = lumv->currentMapHeight - 1;
 
     // int test = -1;
-    for (int colTileIndex = 0; colTileIndex < 32; colTileIndex++)
+    for (int colTileIndex = 0; colTileIndex < ARRAY_SIZE(lumberjackCollisionCheckTiles); colTileIndex++)
     {
         if ((ty * LUMBERJACK_MAP_WIDTH) + tx >= lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH)
         {
@@ -1926,10 +1958,9 @@ static lumberjackTile_t* lumberjackGetTile(int x, int y)
 
             return &lumberjackCollisionCheckTiles[colTileIndex];
         }
-        // test = i;
+        
     }
-
-    // ESP_LOGI(LUM_TAG,"NO TILE at %d %d!", test, ty);
+    
     return NULL;
 }
 
@@ -2017,6 +2048,11 @@ void lumberjackUseBlock()
         {
             //Increase speed of opponent's water!
             lumberjackSendAttack(lumv->attackQueue);
+
+            for (int i = 0; i < ARRAY_SIZE(lumv->attackQueue); i++)
+            {
+                lumv->attackQueue[i] = 0;
+            }
         }
     }
 }

@@ -12,7 +12,7 @@
 #include "lumberjackGame.h"
 
 #define LUMBERJACK_VLEN             7
-#define LUMBERJACK_VERSION          "231020a"
+#define LUMBERJACK_VERSION          "23110a"
 
 
 static void lumberjackEnterMode(void);
@@ -41,10 +41,10 @@ static const char lumberjackAttack[] = "Attack";
 static const char lumberjackBack[]   = "Back";
 
 // static const char lumberjackNone[]    = "None";
-static const char lumberjackRedCharacter[]     = "Character: Red";
-static const char lumberjackGreenCharacter[]            = "Character: Green";
-static const char lumberjackSpecialCharacter[] = "Character: Special";
-static const char lumberjackChoCharacter[] = "Character: Cho";
+static char lumberjackRedCharacter[]          = "Character: Red";
+static char lumberjackGreenCharacter[]        = "Character: Green";
+static char lumberjackSpecialCharacter[]      = "Character: Special";
+static char lumberjackChoCharacter[]          = "Character: Cho";
 
 static const char lumberjackMenuSinglePlayer[]      = "Single Player";
 static const char lumberjackMenuMultiPlayerHost[]   = "Multi-Player";
@@ -117,7 +117,7 @@ static void lumberjackEnterMode(void)
         characters++;
     }
 
-    char** charactersArray = calloc(characters, sizeof(char*));
+    const char** charactersArray = calloc(characters, sizeof(char*));
 
     charactersArray[0] = lumberjackRedCharacter;
     charactersArray[1] = lumberjackGreenCharacter;
@@ -237,12 +237,17 @@ static bool lumberjackSpecialUnlocked()
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    ESP_LOGI(LUM_TAG, "Getting: %d %d", (uint8_t)&data, len);
-    p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, data, len, rssi);
+    /*ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
+    for (int i = 0; i < len; i++)
+    {
+        ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
+    }*/
+    p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
 
 static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
+    //ESP_LOGI(LUM_TAG, "STATUS %d", status);
     p2pSendCb(&lumberjack->p2p, mac_addr, status);
 }
 
@@ -256,6 +261,7 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
         memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
 
+        /*
         if (GOING_FIRST == p2pGetPlayOrder(p2p))
         {
             const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
@@ -265,7 +271,7 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         {
             const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
             p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);                    
-        }
+        }*/
 
         p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
         lumberjackGameReady();
@@ -283,7 +289,7 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
 static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
     // Do anything
-    ESP_LOGI(LUM_TAG, "Ya boi got something! %d", len);
+    ESP_LOGI(LUM_TAG, "Ya boi got something! %d", (uint8_t)payload[0]);
 
     if (len > 0)
     {
@@ -304,11 +310,12 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
         if (payload[0] == ATTACK_MSG)
         {
-            lumberjackOnReceiveAttack(&payload);
+            lumberjackOnReceiveAttack(payload);
         }
 
         if (payload[0] == DEATH_MSG)
         {
+            ESP_LOGI(LUM_TAG, "Playher died!");
             lumberjackOnReceiveDeath(payload[1] != 0x00);
         }
 
@@ -339,12 +346,12 @@ void lumberjackSendAttack(uint8_t* number)
 {
     if (lumberjack->networked)
     {
-        const uint8_t testMsg[] = {ATTACK_MSG};
-
-
         uint8_t payload[9] = {ATTACK_MSG};
         memcpy(&payload[1], number, 8);
-
+        for (int i = 0; i < ARRAY_SIZE(payload); i++)
+        {
+            ESP_LOGI(LUM_TAG, "SENDING %d) %d", i, payload[i]);
+        }
         p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
     }
 }
@@ -368,7 +375,7 @@ void lumberjackSendDeath(bool gameover)
  */
 static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
-    ESP_LOGI(LUM_TAG, "Ya boi sent something! %d", status);
+    
 }
 
 static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingVal)

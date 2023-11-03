@@ -51,7 +51,6 @@ typedef struct
     int direction;
     int animationSpeed;
     int64_t timerFrameUpdate;
-    char name[16];
 
 } lumberjackEntity_t;
 

@@ -117,9 +117,13 @@ typedef struct
     int enemy3Count;
     int enemy4Count;
     int enemy5Count;
-    int enemy6Count;
+    int enemy6Count;    
     int enemy7Count;
     int enemy8Count;
+
+    int enemySpawnTime;
+    int enemyReceiveSpawnTime;
+    int enemySpawnAmount;
 
     int comboTime;
     int comboAmount;
@@ -153,7 +157,7 @@ typedef struct
 
     wsg_t alertSprite;
 
-    lumberjackEntity_t* enemy[64];
+    lumberjackEntity_t* enemy[32];
 
     lumberjackAxeBlock_t* axeBlocks[8];
     lumberjackEntity_t* localPlayer;
