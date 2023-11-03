@@ -26,7 +26,7 @@ typedef enum {
     ENTITY_PLAYER_BOMB_EXPLOSION,
     ENTITY_BALL_TRAIL,
     ENTITY_CHO_INTRO,
-    ENTITY_UNUSED_9,
+    ENTITY_CRAWLER,
     ENTITY_UNUSED_10,
     ENTITY_UNUSED_11,
     ENTITY_UNUSED_12,
@@ -119,6 +119,7 @@ void explodeBomb(entity_t* self);
 void updateExplosion(entity_t * self);
 void updateBallTrail(entity_t * self);
 void updateChoIntro(entity_t * self);
+void updateCrawler(entity_t * self);
 
 entity_t* findFirstEntityOfType(entityManager_t* entityManager, uint8_t type);
 void updateChoLevelClear(entity_t *self);

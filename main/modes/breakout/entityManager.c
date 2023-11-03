@@ -248,6 +248,14 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_CHO_WIN_1].collisionBox.x1 = 15;
     entityManager->sprites[SP_CHO_WIN_1].collisionBox.y0 = 0;
     entityManager->sprites[SP_CHO_WIN_1].collisionBox.y1 = 15;
+
+    loadWsg("sprite009.wsg", &entityManager->sprites[SP_CRAWLER].wsg, false);
+    entityManager->sprites[SP_CRAWLER].originX=7;
+    entityManager->sprites[SP_CRAWLER].originY=7;
+    entityManager->sprites[SP_CRAWLER].collisionBox.x0 = 0;
+    entityManager->sprites[SP_CRAWLER].collisionBox.x1 = 15;
+    entityManager->sprites[SP_CRAWLER].collisionBox.y0 = 0;
+    entityManager->sprites[SP_CRAWLER].collisionBox.y1 = 15;
 };
 
 void updateEntities(entityManager_t * entityManager)
@@ -376,6 +384,9 @@ entity_t* createEntity(entityManager_t *entityManager, uint8_t objectIndex, uint
             break;
         case ENTITY_CHO_INTRO:
             createdEntity = createChoIntro(entityManager, x, y);
+            break;
+        case ENTITY_CRAWLER:
+            createdEntity = createCrawler(entityManager, x, y);
             break;
         default:
             createdEntity = NULL;
@@ -740,6 +751,40 @@ entity_t* createChoIntro(entityManager_t * entityManager, uint16_t x, uint16_t y
     entity->type = ENTITY_CHO_INTRO;
     entity->spriteIndex = SP_CHO_WALK_0;
     entity->updateFunction = &updateChoIntro;
+    entity->collisionHandler = &dummyCollisionHandler;
+    entity->tileCollisionHandler = &dummyTileCollisionHandler;
+    entity->overlapTileHandler = &defaultOverlapTileHandler;
+
+    //Entity cannot be respawned from the tilemap
+    entity->homeTileX = 0;
+    entity->homeTileY = 0;
+
+    return entity;
+}
+
+entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
+{
+    entity_t * entity = findInactiveEntity(entityManager);
+
+    if(entity == NULL) {
+        return NULL;
+    }
+
+    entity->active = true;
+    entity->visible = true;
+    entity->x = x << SUBPIXEL_RESOLUTION;
+    entity->y = y << SUBPIXEL_RESOLUTION;
+    
+    entity->xspeed = 16;
+    entity->yspeed = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical = false;
+    entity->spriteRotateAngle = 0;
+    entity->animationTimer = 0;
+
+    entity->type = ENTITY_CRAWLER;
+    entity->spriteIndex = SP_CRAWLER;
+    entity->updateFunction = &updateCrawler;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;

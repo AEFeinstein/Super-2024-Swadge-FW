@@ -540,6 +540,107 @@ void updateChoLevelClear(entity_t *self){
     
 }
 
+void updateCrawler(entity_t * self){
+    uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
+    uint8_t ty = TO_TILE_COORDS(self->y >> SUBPIXEL_RESOLUTION);
+    uint8_t t;
+
+    switch(self->animationTimer){
+        case 0:
+            if((((self->x >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx, ty+1);
+            if(!isSolid(t)){
+                self->yspeed = self->xspeed;
+                self->xspeed = 0;
+                self->animationTimer = 1;
+                self->spriteRotateAngle = 90;
+            }
+
+            t = getTile(self->tilemap, tx+1, ty);
+            if(isSolid(t)){
+                self->yspeed = -self->xspeed;
+                self->xspeed = 0;
+                self->animationTimer = 3;
+                self->spriteRotateAngle = 270;
+            }
+            break;
+        case 1:
+            if((((self->y >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx-1, ty);
+            if(!isSolid(t)){
+                self->xspeed = -self->yspeed;
+                self->yspeed = 0;
+                self->animationTimer = 2;
+                self->spriteRotateAngle = 180;
+            }
+
+            t = getTile(self->tilemap, tx, ty+1);
+            if(isSolid(t)){
+                self->xspeed = self->yspeed;
+                self->yspeed = 0;
+                self->animationTimer = 0;
+                self->spriteRotateAngle = 0;
+            }
+
+            break;
+        case 2:
+            if((((self->x >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx, ty-1);
+            if(!isSolid(t)){
+                self->yspeed = self->xspeed;
+                self->xspeed = 0;
+                self->animationTimer = 3;
+                self->spriteRotateAngle = 270;
+            }
+
+            t = getTile(self->tilemap, tx-1, ty);
+            if(isSolid(t)){
+                self->yspeed = -self->xspeed;
+                self->xspeed = 0;
+                self->animationTimer = 1;
+                self->spriteRotateAngle = 90;
+            }
+
+            break;
+        case 3:
+            if((((self->y >> SUBPIXEL_RESOLUTION) % TILE_SIZE) - HALF_TILE_SIZE)){
+                break;
+            }
+
+            t = getTile(self->tilemap, tx+1, ty);
+            if(!isSolid(t)){
+                self->xspeed = -self->yspeed;
+                self->yspeed = 0;
+                self->animationTimer = 0;
+                self->spriteRotateAngle = 0;
+            }
+
+            t = getTile(self->tilemap, tx, ty-1);
+            if(isSolid(t)){
+                self->xspeed = self->yspeed;
+                self->yspeed = 0;
+                self->animationTimer = 2;
+                self->spriteRotateAngle = 180;
+            }
+            break;
+        default:
+            break;
+    }
+    
+    
+    self->x += self->xspeed;
+    self->y += self->yspeed;
+}
+
 void moveEntityWithTileCollisions(entity_t *self)
 {
 

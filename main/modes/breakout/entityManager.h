@@ -19,7 +19,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES 32
-#define SPRITESET_SIZE 26
+#define SPRITESET_SIZE 27
 
 //==============================================================================
 // Structs
@@ -62,6 +62,7 @@ entity_t* createRemoteBomb(entityManager_t * entityManager, uint16_t x, uint16_t
 entity_t* createBallTrail(entityManager_t * entityManager, uint16_t x, uint16_t y);
 
 entity_t* createChoIntro(entityManager_t * entityManager, uint16_t x, uint16_t y);
+entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y);
 
 void freeEntityManager(entityManager_t * entityManager);
 
