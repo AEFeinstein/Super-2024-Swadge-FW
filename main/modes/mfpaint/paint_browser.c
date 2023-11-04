@@ -215,11 +215,6 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint8_t visibleRows    = (TFT_HEIGHT - marginTop - marginBottom - thumbMargin) / (thumbHeight + thumbMargin);
     uint8_t lastVisibleRow = browser->firstRow + visibleRows - 1;
 
-    // Calculate the scrollbar height
-    // height = (proportion of rows visible) * (total height)
-    uint16_t scrollHeight = rows ? visibleRows * SCROLL_HEIGHT / rows : SCROLL_HEIGHT;
-    uint16_t scrollOffset = rows ? SCROLL_OFFSET + SCROLL_HEIGHT - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight : SCROLL_OFFSET;
-
     uint16_t extraW = (TFT_WIDTH - marginLeft - marginRight) - (browser->cols * thumbWidth + (browser->cols - 1) * thumbMargin);
     uint16_t extraH = (TFT_HEIGHT - marginBottom - marginTop) - (visibleRows * thumbHeight + (visibleRows > 0 ? (visibleRows - 1) * thumbMargin : 0));
 
@@ -243,12 +238,20 @@ void drawImageBrowser(imageBrowser_t* browser)
         return;
     }
 
-    // Draw the scroll bar on the right side
-    // Border
-    drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight, TFT_HEIGHT - SCROLL_OFFSET, c000);
+    if (rows > visibleRows)
+    {
+        // Calculate the scrollbar height
+        // height = (proportion of rows visible) * (total height)
+        uint16_t scrollHeight = rows ? visibleRows * SCROLL_HEIGHT / rows : SCROLL_HEIGHT;
+        uint16_t scrollOffset = rows ? SCROLL_OFFSET + SCROLL_HEIGHT - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight : SCROLL_OFFSET;
 
-    // Scrollbar
-    fillDisplayArea(TFT_WIDTH - 3 - marginRight, scrollOffset, TFT_WIDTH - 1 - marginRight, scrollOffset + scrollHeight, c000);
+        // Draw the scroll bar on the right side
+        // Border
+        drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight, TFT_HEIGHT - SCROLL_OFFSET, c000);
+
+        // Scrollbar
+        fillDisplayArea(TFT_WIDTH - 3 - marginRight, scrollOffset, TFT_WIDTH - 1 - marginRight, scrollOffset + scrollHeight, c000);
+    }
 
     node_t* node = browser->items.first;
 
