@@ -103,6 +103,7 @@ static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH * BALL_SPEED_UP_TAB
 void initializeEntity(entity_t *self, entityManager_t *entityManager, tilemap_t *tilemap, gameData_t *gameData, soundManager_t *soundManager)
 {
     self->active = false;
+    self->persistent = false;
     self->tilemap = tilemap;
     self->gameData = gameData;
     self->soundManager = soundManager;
@@ -545,6 +546,10 @@ void updateCrawler(entity_t * self){
        self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
     }
 
+    if(self->breakInfiniteLoopBounceThreshold > 0){
+        self->breakInfiniteLoopBounceThreshold--;
+    }
+
     detectEntityCollisions(self);
 
     uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
@@ -981,7 +986,12 @@ void crawlerCollisionHandler(entity_t *self, entity_t *other)
     {
         case ENTITY_CRAWLER:
         {
+            if(self->breakInfiniteLoopBounceThreshold){
+                break;
+            }
+
             crawlerSetMoveState(self, (self->animationTimer + 4) % 8);
+            self->breakInfiniteLoopBounceThreshold = 30;
         }
         default:
         {
@@ -1535,6 +1545,8 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         entity_t* playerBall = findFirstEntityOfType(tilemap->entityManager, ENTITY_PLAYER_BALL);
         if(playerBall != NULL){
             playerBall->updateFunction = &updateChoLevelClear;
+            playerBall->entityManager->playerEntity = playerBall;
+            deactivateAllEntities(playerBall->entityManager, true, false, false);
         }
 
         gameData->changeState = ST_LEVEL_CLEAR;

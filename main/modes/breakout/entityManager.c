@@ -298,11 +298,11 @@ void updateEntities(entityManager_t * entityManager)
     }
 };
 
-void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer, bool respawn){
+void deactivateAllEntities(entityManager_t * entityManager, bool excludePlayer, bool excludePersistent, bool respawn){
     for(uint8_t i=0; i < MAX_ENTITIES; i++)
     {
         entity_t* currentEntity = &(entityManager->entities[i]);
-        if(!currentEntity->active){
+        if(!currentEntity->active || (excludePersistent && currentEntity->persistent)){
             continue;
         }
         
@@ -434,6 +434,7 @@ entity_t* createPlayer(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
 
@@ -462,6 +463,7 @@ entity_t* createPlayerPaddleTop(entityManager_t * entityManager, uint16_t x, uin
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
 
@@ -490,6 +492,7 @@ entity_t* createPlayerPaddleLeft(entityManager_t * entityManager, uint16_t x, ui
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
 
@@ -519,6 +522,7 @@ entity_t* createPlayerPaddleRight(entityManager_t * entityManager, uint16_t x, u
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
 
@@ -548,6 +552,7 @@ entity_t* createBall(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -586,6 +591,7 @@ entity_t* createCaptiveBall(entityManager_t * entityManager, uint16_t x, uint16_
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -628,6 +634,7 @@ entity_t* createTimeBomb(entityManager_t * entityManager, uint16_t x, uint16_t y
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -662,6 +669,7 @@ entity_t* createExplosion(entityManager_t * entityManager, uint16_t x, uint16_t 
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -695,6 +703,7 @@ entity_t* createRemoteBomb(entityManager_t * entityManager, uint16_t x, uint16_t
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -729,6 +738,7 @@ entity_t* createBallTrail(entityManager_t * entityManager, uint16_t x, uint16_t 
 
     entity->active = true;
     entity->visible = false;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -763,6 +773,7 @@ entity_t* createChoIntro(entityManager_t * entityManager, uint16_t x, uint16_t y
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = false;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -797,6 +808,7 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     entity->active = true;
     entity->visible = true;
+    entity->persistent = true;
     entity->x = x << SUBPIXEL_RESOLUTION;
     entity->y = y << SUBPIXEL_RESOLUTION;
     
@@ -822,6 +834,9 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     //This will be reused to track defeat condition
     entity->bouncesOffUnbreakableBlocks = 0;
+
+    //This will be reused as a cooldown for collisions with other crawlers.
+    entity->breakInfiniteLoopBounceThreshold = 0;
 
     return entity;
 }

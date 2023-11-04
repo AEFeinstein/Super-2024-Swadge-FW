@@ -377,7 +377,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         if (label == breakoutNewGame)
         {
             initializeGameDataFromTitleScreen(&(breakout->gameData));
-            deactivateAllEntities(&(breakout->entityManager), false, false);
+            deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[GAME_LEVEL_START_INDEX].filename);
             breakout->gameData.countdown = leveldef[GAME_LEVEL_START_INDEX].timeLimit;
@@ -386,7 +386,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         } else if (label == breakoutContinue)
         {
             initializeGameDataFromTitleScreen(&(breakout->gameData));
-            deactivateAllEntities(&(breakout->entityManager), false, false);
+            deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level].filename);
             breakout->gameData.countdown = leveldef[breakout->gameData.level].timeLimit;
@@ -468,7 +468,7 @@ static void breakoutChangeStateReadyScreen(breakout_t *self){
     self->gameData.frameCount = 0;
 
     //Set up Cho Intro
-    deactivateAllEntities(&(self->entityManager), false, true);
+    deactivateAllEntities(&(self->entityManager), false, true, true);
     self->gameData.ballsInPlay = 0;
     forceTileSpawnEntitiesWithinView(&(self->tilemap));
         
@@ -688,7 +688,7 @@ void breakoutUpdateGameOver(breakout_t *self, int64_t elapsedUs){
             savePlatformerUnlockables(self);
         }
         */
-        deactivateAllEntities(&(self->entityManager), false, false);
+        deactivateAllEntities(&(self->entityManager), false, false, false);
         breakoutChangeStateNameEntry(self);
     }
 
@@ -765,7 +765,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
             scorePoints(&(self->gameData), 20, -1);
         } else if(self->gameData.frameCount % 60 == 0) {
             //Hey look, it's a frame rule!
-            deactivateAllEntities(&(self->entityManager), false, false);
+            deactivateAllEntities(&(self->entityManager), false, false, false);
 
             uint16_t levelIndex = self->gameData.level;
             
@@ -911,7 +911,7 @@ static void breakoutChangeStateTitleScreen(breakout_t *self){
     self->update = &breakoutUpdateTitleScreen;
 
     if(self->gameData.gameState != ST_TITLE_SCREEN){ 
-        deactivateAllEntities(&(self->entityManager), false, false);
+        deactivateAllEntities(&(self->entityManager), false, false, false);
         loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);

@@ -65,6 +65,7 @@ typedef void(*overlapTileHandler_t)(struct entity_t *self, uint8_t tileId, uint8
 struct entity_t
 {
     bool active;
+    bool persistent;
 
     uint8_t type;
     updateFunction_t updateFunction;
