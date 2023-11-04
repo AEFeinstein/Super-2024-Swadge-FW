@@ -116,7 +116,7 @@ class view:
 
         # Set up the canvasses
         self.paletteCanvas: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 4, height=self.paletteCellSize * 8,
+            content, background=elemBgColor, width=self.paletteCellSize * 5, height=self.paletteCellSize * 8,
             highlightthickness=borderThickness, highlightbackground=borderColor)
         self.mapCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
@@ -303,6 +303,18 @@ class view:
                          tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/scenery/OBJ_SCENERY_TERMINAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_SCENERY_PORTAL, '../../assets/ray/scenery/OBJ_SCENERY_PORTAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F1, '../../assets/ray/friends/OBJ_SCENERY_F1.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F2, '../../assets/ray/friends/OBJ_SCENERY_F2.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F3, '../../assets/ray/friends/OBJ_SCENERY_F3.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F4, '../../assets/ray/friends/OBJ_SCENERY_F4.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F5, '../../assets/ray/friends/OBJ_SCENERY_F5.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F6, '../../assets/ray/friends/OBJ_SCENERY_F6.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.DELETE, 'imgs/DELETE.png')
 

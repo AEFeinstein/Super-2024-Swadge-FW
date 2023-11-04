@@ -148,6 +148,12 @@ typedef enum __attribute__((packed))
     // Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1),
     OBJ_SCENERY_PORTAL   = (OBJ | SCENERY | 2),
+    OBJ_SCENERY_F1       = (OBJ | SCENERY | 3),
+    OBJ_SCENERY_F2       = (OBJ | SCENERY | 4),
+    OBJ_SCENERY_F3       = (OBJ | SCENERY | 5),
+    OBJ_SCENERY_F4       = (OBJ | SCENERY | 6),
+    OBJ_SCENERY_F5       = (OBJ | SCENERY | 7),
+    OBJ_SCENERY_F6       = (OBJ | SCENERY | 8),
 } rayMapCellType_t;
 
 /**

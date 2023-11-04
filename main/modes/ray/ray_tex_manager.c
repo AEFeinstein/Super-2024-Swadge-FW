@@ -147,6 +147,14 @@ void loadEnvTextures(ray_t* ray)
     // Scenery
     LOAD_TEXTURE(ray, OBJ_SCENERY_TERMINAL);
     LOAD_TEXTURE(ray, OBJ_SCENERY_PORTAL);
+
+    // Friends
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F1);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F2);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F3);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F4);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F5);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F6);
 }
 
 /**
