@@ -63,6 +63,9 @@ menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
     loadWsg("batt3.wsg", &renderer->batt[2], false);
     loadWsg("batt4.wsg", &renderer->batt[3], false);
 
+    // Load a background
+    loadWsg("menu_bg.wsg", &renderer->menu_bg, true);
+
     // Initialize LEDs
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -88,6 +91,7 @@ void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
     freeWsg(&renderer->batt[1]);
     freeWsg(&renderer->batt[2]);
     freeWsg(&renderer->batt[3]);
+    freeWsg(&renderer->menu_bg);
     free(renderer);
 }
 
@@ -108,12 +112,12 @@ static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int1
 {
     // Pick colors based on selection
     paletteColor_t cornerColor  = c411;
-    paletteColor_t textColor    = c511;
+    paletteColor_t textColor    = c553;
     paletteColor_t topLineColor = c211;
     if (isSelected)
     {
         cornerColor  = c532;
-        textColor    = c554;
+        textColor    = c555;
         topLineColor = c422;
     }
 
@@ -271,8 +275,8 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     // Light the LEDs
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
-    // Clear the TFT
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
+    // Clear the TFT with a background
+    drawWsgTile(&renderer->menu_bg, 0, 0);
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
