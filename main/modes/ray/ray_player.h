@@ -10,5 +10,6 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
 void rayPlayerCheckLava(ray_t* ray, uint32_t elapsedUs);
 void raySavePlayer(ray_t* ray);
 void raySaveVisitedTiles(ray_t* ray);
+void rayPlayerDecrementHealth(ray_t* ray, int32_t health);
 
 #endif
