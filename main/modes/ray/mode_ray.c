@@ -381,6 +381,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         case RAY_MENU:
         case RAY_DIALOG:
         case RAY_DEATH_SCREEN:
+        case RAY_PAUSE:
         {
             // Do nothing
             break;
@@ -389,12 +390,6 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         {
             // Draw a portion of the background
             castFloorCeiling(ray, y, y + h);
-            break;
-        }
-        case RAY_PAUSE:
-        {
-            // Draw a black background
-            fillDisplayArea(x, y, x + w, y + h, c000);
             break;
         }
         case RAY_WARP_SCREEN:

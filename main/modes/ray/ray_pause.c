@@ -160,6 +160,9 @@ void rayPauseCheckButtons(ray_t* ray)
  */
 void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
 {
+    // Clear to black first
+    clearPxTft();
+
     // Render based on the displayed screen
     switch (ray->pauseScreen)
     {
