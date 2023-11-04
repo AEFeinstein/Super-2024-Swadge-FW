@@ -545,7 +545,7 @@ void updateCrawler(entity_t * self){
        self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
     }
 
-    //detectEntityCollisions(self);
+    detectEntityCollisions(self);
 
     uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
     uint8_t ty = TO_TILE_COORDS(self->y >> SUBPIXEL_RESOLUTION);
@@ -690,30 +690,6 @@ void updateCrawler(entity_t * self){
             break;
 
         default:
-            t = getTile(self->tilemap, tx, ty+1);
-            if(isSolid(t)){
-                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_TOP_TO_RIGHT : CRAWLER_TOP_TO_LEFT);
-                break;
-            }
-
-            t = getTile(self->tilemap, tx-1, ty);
-            if(isSolid(t)){
-                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_LEFT_TO_BOTTOM : CRAWLER_LEFT_TO_TOP);
-                break;
-            }
-
-            t = getTile(self->tilemap, tx, ty-1);
-            if(isSolid(t)){
-                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_BOTTOM_TO_LEFT : CRAWLER_BOTTOM_TO_RIGHT);
-                break;
-            }
-
-            t = getTile(self->tilemap, tx+1, ty);
-            if(isSolid(t)){
-                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_LEFT_TO_TOP : CRAWLER_LEFT_TO_BOTTOM);
-                break;
-            }
-
             break;
     }
     
@@ -724,50 +700,50 @@ void updateCrawler(entity_t * self){
 void crawlerSetMoveState(entity_t* self, uint8_t state){
     switch(state){
         //CLOCKWISE
-        case 0: //On top of a block, going right
+        case CRAWLER_TOP_TO_RIGHT: //On top of a block, going right
             self->xspeed = self->baseSpeed;
             self->yspeed = 0;
             self->spriteRotateAngle = 0;
             self->spriteIndex = SP_CRAWLER_TOP;
             break;
-        case 1: //On the right side of a block, going down
+        case CRAWLER_RIGHT_TO_BOTTOM: //On the right side of a block, going down
             self->yspeed = self->baseSpeed;
             self->xspeed = 0;
             self->spriteRotateAngle = 90;
             self->spriteIndex = SP_CRAWLER_RIGHT;
             break;
-        case 2: //On the bottom of a block, going left
+        case CRAWLER_BOTTOM_TO_LEFT: //On the bottom of a block, going left
             self->xspeed = -self->baseSpeed;
             self->yspeed = 0;
             self->spriteRotateAngle = 180;
             self->spriteIndex = SP_CRAWLER_BOTTOM;
             break;
-        case 3: //On the left side of a block, going up
+        case CRAWLER_LEFT_TO_TOP: //On the left side of a block, going up
             self->yspeed = -self->baseSpeed;
             self->xspeed = 0;
             self->spriteRotateAngle = 270;
             self->spriteIndex = SP_CRAWLER_LEFT;
             break;
         //COUNTER-CLOCKWISE
-        case 4: //On top of a block, going left
+        case CRAWLER_TOP_TO_LEFT: //On top of a block, going left
             self->xspeed = -self->baseSpeed;
             self->yspeed = 0;
             self->spriteRotateAngle = 0;
             self->spriteIndex = SP_CRAWLER_TOP;
             break;
-        case 5: //On the left side of a block, going down
+        case CRAWLER_LEFT_TO_BOTTOM: //On the left side of a block, going down
             self->yspeed = self->baseSpeed;
             self->xspeed = 0;
             self->spriteRotateAngle = 270;
             self->spriteIndex = SP_CRAWLER_LEFT;
             break;
-        case 6: //On the bottom of a block, going right
+        case CRAWLER_BOTTOM_TO_RIGHT: //On the bottom of a block, going right
             self->xspeed = self->baseSpeed;
             self->yspeed = 0;
             self->spriteRotateAngle = 180;
             self->spriteIndex = SP_CRAWLER_BOTTOM;
             break;
-        case 7: //On the right side of a block, going up
+        case CRAWLER_RIGHT_TO_TOP: //On the right side of a block, going up
             self->yspeed = -self->baseSpeed;
             self->xspeed = 0;
             self->spriteRotateAngle = 90;
@@ -778,6 +754,36 @@ void crawlerSetMoveState(entity_t* self, uint8_t state){
     }
 
     self->animationTimer = state;
+}
+
+void crawlerInitMoveState(entity_t* self){
+    uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
+    uint8_t ty = TO_TILE_COORDS(self->y >> SUBPIXEL_RESOLUTION);
+    uint8_t t;
+
+    t = getTile(self->tilemap, tx, ty+1);
+    if(isSolid(t)){
+        crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_TOP_TO_RIGHT : CRAWLER_TOP_TO_LEFT);
+        return;
+    }
+
+    t = getTile(self->tilemap, tx-1, ty);
+    if(isSolid(t)){
+        crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_RIGHT_TO_BOTTOM : CRAWLER_RIGHT_TO_TOP);
+        return;
+    }
+
+    t = getTile(self->tilemap, tx, ty-1);
+    if(isSolid(t)){
+        crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_BOTTOM_TO_LEFT : CRAWLER_BOTTOM_TO_RIGHT);
+        return;
+    }
+
+    t = getTile(self->tilemap, tx+1, ty);
+    if(isSolid(t)){
+        crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_LEFT_TO_TOP : CRAWLER_LEFT_TO_BOTTOM);
+        return;
+    }
 }
 
 void moveEntityWithTileCollisions(entity_t *self)
@@ -950,9 +956,7 @@ void crawlerCollisionHandler(entity_t *self, entity_t *other)
     {
         case ENTITY_CRAWLER:
         {
-            self->animationTimer = (self->animationTimer + 4) % 8;
-            self->xspeed = -self->xspeed;
-            self->yspeed = -self->yspeed;
+            crawlerSetMoveState(self, (self->animationTimer + 4) % 8);
         }
         default:
         {

@@ -47,10 +47,9 @@ typedef enum {
     CRAWLER_BOTTOM_TO_LEFT,
     CRAWLER_LEFT_TO_TOP,
     CRAWLER_TOP_TO_LEFT,
-    CRAWLER_LEFT_TO_BOTTOM,
-    CRAWLER_BOTTOM_TO_RIGHT,
     CRAWLER_RIGHT_TO_TOP,
-    CRAWLER_FIND_GROUND
+    CRAWLER_BOTTOM_TO_RIGHT,
+    CRAWLER_LEFT_TO_BOTTOM
 } crawlerMoveState_t;
 
 //==============================================================================
@@ -133,6 +132,7 @@ void updateBallTrail(entity_t * self);
 void updateChoIntro(entity_t * self);
 void updateCrawler(entity_t * self);
 void crawlerSetMoveState(entity_t* self, uint8_t state);
+void crawlerInitMoveState(entity_t* self);
 
 entity_t* findFirstEntityOfType(entityManager_t* entityManager, uint8_t type);
 void updateChoLevelClear(entity_t *self);

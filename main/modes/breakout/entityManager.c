@@ -801,7 +801,6 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->y = y << SUBPIXEL_RESOLUTION;
     
     entity->baseSpeed = 8;
-    entity->animationTimer = CRAWLER_FIND_GROUND;
     entity->xspeed = 0;
     entity->yspeed = 0;
     entity->spriteFlipHorizontal = false;
@@ -818,6 +817,8 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
     //Entity cannot be respawned from the tilemap
     entity->homeTileX = 0;
     entity->homeTileY = 0;
+
+    crawlerInitMoveState(entity);
 
     return entity;
 }
