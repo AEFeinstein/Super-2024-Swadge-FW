@@ -23,10 +23,14 @@
 //==============================================================================
 
 const char* const macPuzzleText[] = {
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\nHint 1\n[=/+._?@\n}+&)(/&?\n+[:&${)}",
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n.?%?-}{;\nHint 2\n&,?:)/&:\n:/{#_!&,",
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n:#:$/{)]\n{?$-}*].\nHint 3\n/}%-%?}%",
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n{@#??_[!\n#,;{(;-{\n]#_!]=,.\nHint 4",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n4! is too excited, subtract 12 from "
+    "it\n[=/+._?@\n}+&)(/&?\n+[:&${)}",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n.?%?-}{;\nTake the next answer, like a "
+    "tree find the square\n&,?:)/&:\n:/{#_!&,",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n:#:$/{)]\n{?$-}*].\nArgon's number is "
+    "nice, but in two it must split\n/}%-%?}%",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n{@#??_[!\n#,;{(;-{\n]#_!]=,.\nAverage "
+    "two prior, that's it, almost there",
 };
 
 //==============================================================================
