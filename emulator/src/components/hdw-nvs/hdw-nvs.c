@@ -704,7 +704,7 @@ bool readNvsStats(nvs_stats_t* outStats)
  * the number of entry infos to read
  * @return true if the entry infos were read, false if they were not
  */
-bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos,
+bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos,
                                 size_t* numEntryInfos)
 {
     // Open the file
@@ -753,11 +753,6 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
                 char* current_key;
                 cJSON_ArrayForEach(jsonIter, jsonNs)
                 {
-                    if (outEntryInfos != NULL && i >= *numEntryInfos)
-                    {
-                        break;
-                    }
-
                     current_key = jsonIter->string;
                     if (current_key != NULL)
                     {
@@ -773,18 +768,18 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
                                     int64_t val = (int64_t)cJSON_GetNumberValue(jsonIter);
                                     if (val > INT32_MAX)
                                     {
-                                        (&((*outEntryInfos)[i]))->type = NVS_TYPE_U32;
+                                        outEntryInfos[i].type = NVS_TYPE_U32;
                                     }
                                     else
 #endif
                                     {
-                                        (&((*outEntryInfos)[i]))->type = NVS_TYPE_I32;
+                                        outEntryInfos[i].type = NVS_TYPE_I32;
                                     }
                                     break;
                                 }
                                 case cJSON_String:
                                 {
-                                    (&((*outEntryInfos)[i]))->type = NVS_TYPE_BLOB;
+                                    outEntryInfos[i].type = NVS_TYPE_BLOB;
                                     break;
                                 }
                                 default:
@@ -792,9 +787,8 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
                                     break;
                                 }
                             }
-                            snprintf((&((*outEntryInfos)[i]))->namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s",
-                                    namespace);
-                            snprintf((&((*outEntryInfos)[i]))->key, NVS_KEY_NAME_MAX_SIZE, "%s", current_key);
+                            snprintf(outEntryInfos[i].namespace_name, NVS_KEY_NAME_MAX_SIZE, "%s", namespace);
+                            snprintf(outEntryInfos[i].key, NVS_KEY_NAME_MAX_SIZE, "%s", current_key);
                         }
                         i++;
                     }
@@ -834,7 +828,7 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
  * the number of entry infos to read
  * @return true if the entry infos were read, false if they were not
  */
-bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
+bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos, size_t* numEntryInfos)
 {
     return readNamespaceNvsEntryInfos(NVS_NAMESPACE_NAME, outStats, outEntryInfos, numEntryInfos);
 }
