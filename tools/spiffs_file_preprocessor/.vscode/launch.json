@@ -11,16 +11,15 @@
             "program": "${workspaceFolder}/spiffs_file_preprocessor",
             "args": [
                 "-i",
-                "../../assets",
+                "./in",
                 "-o",
-                "../../spiffs_image"
+                "./out"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "C:/msys64/mingw64/bin/gdb.exe",
             "setupCommands": [
                 {
                     "description": "Enable pretty-printing for gdb",
