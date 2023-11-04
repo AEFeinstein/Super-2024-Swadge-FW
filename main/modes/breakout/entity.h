@@ -120,6 +120,7 @@ void updateExplosion(entity_t * self);
 void updateBallTrail(entity_t * self);
 void updateChoIntro(entity_t * self);
 void updateCrawler(entity_t * self);
+void crawlerSetMoveState(entity_t* self, uint8_t state);
 
 entity_t* findFirstEntityOfType(entityManager_t* entityManager, uint8_t type);
 void updateChoLevelClear(entity_t *self);
@@ -131,7 +132,7 @@ void destroyEntity(entity_t *self, bool respawn);
 void detectEntityCollisions(entity_t *self);
 
 void playerCollisionHandler(entity_t *self, entity_t* other);
-void enemyCollisionHandler(entity_t *self, entity_t *other);
+void crawlerCollisionHandler(entity_t *self, entity_t *other);
 void dummyCollisionHandler(entity_t *self, entity_t *other);
 void ballCollisionHandler(entity_t *self, entity_t *other);
 void captiveBallCollisionHandler(entity_t *self, entity_t *other);

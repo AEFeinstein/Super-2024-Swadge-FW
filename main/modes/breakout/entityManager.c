@@ -801,17 +801,17 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->y = y << SUBPIXEL_RESOLUTION;
     
     entity->baseSpeed = 8;
-    entity->xspeed = 8;
+    entity->animationTimer = (((x >> TILE_SIZE_IN_POWERS_OF_2) + (y >> TILE_SIZE_IN_POWERS_OF_2)) % 2) ? 0 : 4;
+    entity->xspeed = (entity->animationTimer == 0) ? entity->baseSpeed : -entity->baseSpeed;
     entity->yspeed = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;
     entity->spriteRotateAngle = 0;
-    entity->animationTimer = 0;
-
+    
     entity->type = ENTITY_CRAWLER;
     entity->spriteIndex = SP_CRAWLER_TOP;
     entity->updateFunction = &updateCrawler;
-    entity->collisionHandler = &dummyCollisionHandler;
+    entity->collisionHandler = &crawlerCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;
     entity->overlapTileHandler = &defaultOverlapTileHandler;
 
