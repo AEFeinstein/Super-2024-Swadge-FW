@@ -545,7 +545,7 @@ void updateCrawler(entity_t * self){
        self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
     }
 
-    detectEntityCollisions(self);
+    //detectEntityCollisions(self);
 
     uint8_t tx = TO_TILE_COORDS(self->x >> SUBPIXEL_RESOLUTION);
     uint8_t ty = TO_TILE_COORDS(self->y >> SUBPIXEL_RESOLUTION);
@@ -553,144 +553,167 @@ void updateCrawler(entity_t * self){
 
     switch(self->animationTimer){
         //CLOCKWISE
-        case 0: //On top of a block, going right
+        case CRAWLER_TOP_TO_RIGHT: //On top of a block, going right
             if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx, ty+1);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 1);
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_BOTTOM);
             }
 
             t = getTile(self->tilemap, tx+1, ty);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 3);
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_TOP);
             }
-            
+
             break;
 
-        case 1: //On the right side of a block, going down
+        case CRAWLER_RIGHT_TO_BOTTOM: //On the right side of a block, going down
             if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx-1, ty);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 2);
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_LEFT);
             }
 
             t = getTile(self->tilemap, tx, ty+1);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 0);
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_RIGHT);
             }
 
             break;
         
-        case 2: //On the bottom of a block, going left
+        case CRAWLER_BOTTOM_TO_LEFT: //On the bottom of a block, going left
             if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx, ty-1);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 3);
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_TOP);
             }
 
             t = getTile(self->tilemap, tx-1, ty);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 1);
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_BOTTOM);
             }
 
             break;
         
-        case 3: //On the left side of a block, going up
+        case CRAWLER_LEFT_TO_TOP: //On the left side of a block, going up
             if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx+1, ty);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 0);
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_RIGHT);
             }
 
             t = getTile(self->tilemap, tx, ty-1);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 2);
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_LEFT);
             }
 
             break;
         
         //COUNTER-CLOCKWISE
-        case 4: //On top of a block, going left
+        case CRAWLER_TOP_TO_LEFT: //On top of a block, going left
             if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx, ty+1);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 5);
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_BOTTOM);
             }
 
             t = getTile(self->tilemap, tx-1, ty);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 7);
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_TOP);
             }
 
             break;
 
-        case 5: //On the left side of a block, going down
+        case CRAWLER_LEFT_TO_BOTTOM: //On the left side of a block, going down
             if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx+1, ty);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 6);
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_RIGHT);
             }
 
             t = getTile(self->tilemap, tx, ty+1);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 4);
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_LEFT);
             }
 
             break;
 
-        case 6:  //On the bottom of a block, going right
+        case CRAWLER_BOTTOM_TO_RIGHT:  //On the bottom of a block, going right
             if(((self->x % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx, ty-1);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 7);
+                crawlerSetMoveState(self, CRAWLER_RIGHT_TO_TOP);
             }
 
             t = getTile(self->tilemap, tx+1, ty);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 5);
+                crawlerSetMoveState(self, CRAWLER_LEFT_TO_BOTTOM);
             }
 
             break;    
 
-        case 7:  //On the right side of a block, going up
+        case CRAWLER_RIGHT_TO_TOP:  //On the right side of a block, going up
             if(((self->y % (TILE_SIZE << SUBPIXEL_RESOLUTION)) - (HALF_TILE_SIZE << SUBPIXEL_RESOLUTION))){
                 break;
             }
 
             t = getTile(self->tilemap, tx-1, ty);
             if(!isSolid(t)){
-                crawlerSetMoveState(self, 4);
+                crawlerSetMoveState(self, CRAWLER_TOP_TO_LEFT);
             }
 
             t = getTile(self->tilemap, tx, ty-1);
             if(isSolid(t)){
-                crawlerSetMoveState(self, 6);
+                crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_RIGHT);
             }
-
             break;
 
         default:
+            t = getTile(self->tilemap, tx, ty+1);
+            if(isSolid(t)){
+                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_TOP_TO_RIGHT : CRAWLER_TOP_TO_LEFT);
+                break;
+            }
+
+            t = getTile(self->tilemap, tx-1, ty);
+            if(isSolid(t)){
+                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_LEFT_TO_BOTTOM : CRAWLER_LEFT_TO_TOP);
+                break;
+            }
+
+            t = getTile(self->tilemap, tx, ty-1);
+            if(isSolid(t)){
+                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_BOTTOM_TO_LEFT : CRAWLER_BOTTOM_TO_RIGHT);
+                break;
+            }
+
+            t = getTile(self->tilemap, tx+1, ty);
+            if(isSolid(t)){
+                crawlerSetMoveState(self, ((tx + ty) % 2) ? CRAWLER_LEFT_TO_TOP : CRAWLER_LEFT_TO_BOTTOM);
+                break;
+            }
+
             break;
     }
     
@@ -747,7 +770,6 @@ void crawlerSetMoveState(entity_t* self, uint8_t state){
         case 7: //On the right side of a block, going up
             self->yspeed = -self->baseSpeed;
             self->xspeed = 0;
-            self->animationTimer = 7;
             self->spriteRotateAngle = 90;
             self->spriteIndex = SP_CRAWLER_RIGHT;
             break;

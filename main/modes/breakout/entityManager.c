@@ -801,8 +801,8 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
     entity->y = y << SUBPIXEL_RESOLUTION;
     
     entity->baseSpeed = 8;
-    entity->animationTimer = (((x >> TILE_SIZE_IN_POWERS_OF_2) + (y >> TILE_SIZE_IN_POWERS_OF_2)) % 2) ? 0 : 4;
-    entity->xspeed = (entity->animationTimer == 0) ? entity->baseSpeed : -entity->baseSpeed;
+    entity->animationTimer = CRAWLER_FIND_GROUND;
+    entity->xspeed = 0;
     entity->yspeed = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical = false;

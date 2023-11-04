@@ -41,6 +41,18 @@ typedef enum {
     ENTITY_UNUSED_21
 } entityIndex_t;
 
+typedef enum {
+    CRAWLER_TOP_TO_RIGHT,
+    CRAWLER_RIGHT_TO_BOTTOM,
+    CRAWLER_BOTTOM_TO_LEFT,
+    CRAWLER_LEFT_TO_TOP,
+    CRAWLER_TOP_TO_LEFT,
+    CRAWLER_LEFT_TO_BOTTOM,
+    CRAWLER_BOTTOM_TO_RIGHT,
+    CRAWLER_RIGHT_TO_TOP,
+    CRAWLER_FIND_GROUND
+} crawlerMoveState_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
