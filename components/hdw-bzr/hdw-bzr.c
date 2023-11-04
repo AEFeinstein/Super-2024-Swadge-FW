@@ -268,12 +268,6 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
  */
 void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
 {
-    // Don't play if muted
-    if (0 == bgmVolume)
-    {
-        return;
-    }
-
     // Play this song on the BGM track
     bzrPlayTrack(&buzzers[0].bgm, &buzzers[1].bgm, song, track);
 
@@ -295,12 +289,6 @@ void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
  */
 void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
 {
-    // Don't play if muted
-    if (0 == sfxVolume)
-    {
-        return;
-    }
-
     // Play this song on the SFX track
     bzrPlayTrack(&buzzers[0].sfx, &buzzers[1].sfx, song, track);
 
@@ -421,8 +409,8 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
         int32_t tElapsedUs = tNowUs - tLastLoopUs;
         tLastLoopUs        = tNowUs;
 
-        // Don't do much if muted or paused. Check here so that tElapsedUs stays sane
-        if (bzrPaused || ((0 == bgmVolume) && (0 == sfxVolume)))
+        // Don't do much if paused. Check here so that tElapsedUs stays sane
+        if (bzrPaused)
         {
             return false;
         }
