@@ -626,7 +626,7 @@ typedef struct
 
     starfield_t starfield; ///< Starfield used for warp animation
 
-    song_t songs[NUM_MAPS]; ///< Per-map background music
+    song_t songs[NUM_MAPS + 1]; ///< Per-map background music, plus a boss theme
 
     int32_t pRotationTimer; ///< timer for player rotation
 

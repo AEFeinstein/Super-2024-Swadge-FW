@@ -281,6 +281,12 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
 
     // Add it to the linked list
     push(&ray->enemies, newObj);
+
+    // If the boss was spawned, play the theme
+    if (OBJ_ENEMY_BOSS == type)
+    {
+        bzrPlayBgm(&ray->songs[6], BZR_STEREO);
+    }
 }
 
 /**
