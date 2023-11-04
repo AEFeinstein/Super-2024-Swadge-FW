@@ -176,6 +176,38 @@ static void rayExitMode(void)
  */
 void rayFreeCurrentState(ray_t* cRay)
 {
+    // Zero and NULL the door timer
+    ray->doorTimer = 0;
+    // Warp variables
+    ray->warpDestMapId = 0;
+    ray->warpDestPosX  = 0;
+    ray->warpDestPosY  = 0;
+    ray->warpTimerUs   = 0;
+    memset(&ray->starfield, 0, sizeof(starfield_t));
+    // Head bob
+    ray->posZ     = 0;
+    ray->bobTimer = 0;
+    ray->bobCount = 0;
+    // Strafe and lock
+    ray->isStrafing  = false;
+    ray->targetedObj = NULL;
+    // Player timers
+    ray->lavaTimer      = 0;
+    ray->chargeTimer    = 0;
+    ray->pRotationTimer = 0;
+    // Dialog variables
+    ray->dialogText     = NULL;
+    ray->nextDialogText = NULL;
+    ray->dialogPortrait = NULL;
+    ray->btnLockoutUs   = 0;
+    // Pause menu variables
+    ray->blinkTimer = 0;
+    ray->blink      = false;
+    // Item rotation
+    ray->itemRotateTimer  = 0;
+    ray->itemRotateDeg    = 0;
+    ray->itemRotateMirror = false;
+
     // Set invalid IDs for all bullets
     for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
     {

@@ -82,6 +82,11 @@ bool initializePlayer(ray_t* ray)
         }
     }
 
+    // Set the next loadout to current, to not swap
+    ray->nextLoadout        = ray->p.loadout;
+    ray->loadoutChangeTimer = 0;
+    ray->forceLoadoutSwap   = 0;
+
     return initFromScratch;
 }
 

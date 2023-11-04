@@ -227,6 +227,10 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
         }
     }
 
+    // Reset script timers
+    ray->scriptTimer       = 0;
+    ray->secondsSinceStart = 0;
+
     // Load Scripts
     loadScripts(ray, &fileData[fileIdx], decompressedSize - fileIdx, caps);
 
