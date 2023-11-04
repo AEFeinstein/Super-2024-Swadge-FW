@@ -8,7 +8,15 @@
 #include "textEntry.h"
 #include <nvs.h>
 
-typedef void (*imageBrowserCbFn)(const char* nvsKey);
+typedef enum
+{
+    BROWSER_EXIT,
+    BROWSER_OPEN,
+    BROWSER_SAVE,
+    BROWSER_DELETE,
+} imageBrowserAction_t;
+
+typedef void (*imageBrowserCbFn)(const char* nvsKey, imageBrowserAction_t action);
 
 typedef struct
 {
@@ -22,13 +30,15 @@ typedef struct
     int64_t prevUpdateTime;
 
     imageBrowserCbFn callback;
+    imageBrowserAction_t primaryAction;
+    imageBrowserAction_t secondaryAction;
 
     uint8_t cols;
 
     uint8_t firstRow;
 } imageBrowser_t;
 
-void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix, bool addNewButton);
+void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix, imageBrowserAction_t action, imageBrowserAction_t secondaryAction);
 void resetImageBrowser(imageBrowser_t* browser);
 void drawImageBrowser(imageBrowser_t* browser);
 void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt);

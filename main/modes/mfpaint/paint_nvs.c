@@ -15,9 +15,6 @@
 #include "paint_ui.h"
 #include "paint_util.h"
 
-#define PAINT_NS_DATA "paint_img"
-#define PAINT_NS_PALETTE "paint_pal"
-
 #define PAINT_PARAM(m, x, k, d) \
     static const settingParam_t paint##k##Param = {.min = m, .max = x, .def = d, .key = "mfp." #k}
 
@@ -551,6 +548,12 @@ bool paintSaveNamed(const char* name, const paintCanvas_t* canvas)
     tmpWsg.w = canvas->w;
     tmpWsg.h = canvas->h;
 
+    if (NULL == tmpWsg.px)
+    {
+        PAINT_LOGE("Not able to allocate pixels for saving");
+        return false;
+    }
+
     // Read pixels from the screen into the temp WSG
     for (uint16_t r = 0; r < canvas->h; ++r)
     {
@@ -589,6 +592,7 @@ bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
         if (!readNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, &length))
         {
             PAINT_LOGW("No palette found for image %s, that's weird right?", name);
+            result = false;
         }
     }
 
@@ -614,6 +618,12 @@ bool paintLoadDimensionsNamed(const char* name, paintCanvas_t* canvas)
     }
 
     return false;
+}
+
+void paintDeleteNamed(const char* name)
+{
+    eraseNamespaceNvsKey(PAINT_NS_DATA, name);
+    eraseNamespaceNvsKey(PAINT_NS_PALETTE, name);
 }
 
 bool paintSlotExists(const char* name)

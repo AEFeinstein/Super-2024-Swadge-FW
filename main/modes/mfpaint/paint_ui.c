@@ -86,6 +86,19 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         // Draw border around canvas
         drawRect(canvas->x - 1, canvas->y - 1, canvas->x + canvas->w * canvas->xScale + 1,
                  canvas->y + canvas->h * canvas->yScale + 1, c000);
+
+        // Draw image title, if there's room
+        if (paintState->toolbarFont.height + 1 < canvas->y && *(paintState->slotKey))
+        {
+            uint16_t pos = (TFT_WIDTH - textWidth(&paintState->toolbarFont, paintState->slotKey)) / 2;
+            drawText(&paintState->toolbarFont, c000, paintState->slotKey, pos,
+                     (canvas->y - paintState->toolbarFont.height - 1) / 2);
+            if (paintState->unsaved)
+            {
+                drawText(&paintState->toolbarFont, c500, "*", pos - textWidth(&paintState->toolbarFont, "*") - 1,
+                         (canvas->y - paintState->toolbarFont.height - 1) / 2);
+            }
+        }
     }
 
     //////// Active Colors

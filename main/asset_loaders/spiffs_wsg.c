@@ -132,8 +132,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
 
     ESP_LOGI("WSG", "Uncompressed space is %" PRIu32, outputSize);
 
-    // TODO this may be too big for stack?
-    uint8_t output[outputSize];
+    uint8_t *output = heap_caps_malloc(outputSize, MALLOC_CAP_SPIRAM);
 
     // Write the total
     output[0] = (imageSize >> 24) & 0xFF;
@@ -262,14 +261,19 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
     ESP_LOGI("WSG", "Compressed size is %" PRIu32, outputIdx);
 
     writeNamespaceNvsBlob(namespace, key, output, outputIdx);
-
     heatshrink_encoder_free(hse);
+    free(output);
     return true;
 
 heatshrink_error:
     if (NULL != hse)
     {
         heatshrink_encoder_free(hse);
+    }
+
+    if (NULL != output)
+    {
+        free(output);
     }
 
     return false;

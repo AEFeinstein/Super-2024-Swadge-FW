@@ -127,7 +127,7 @@ typedef struct
     /// @brief The font to use for text entry
     const font_t* font;
 
-    /// @brief A pointer to be passed back into the 
+    /// @brief A pointer to be passed back into the callback
     void* data;
 
     /// @brief The function to call when the text entry is completed
@@ -140,7 +140,7 @@ void freeTextEntry(textEntry_t* textEntry);
 void textEntrySetData(textEntry_t* textEntry, void* data);
 void textEntrySetText(textEntry_t* textEntry, const char* text);
 void textEntryMainLoop(textEntry_t* textEntry, int64_t elapsedUs);
-void textEntryButton(textEntry_t* textEntry, buttonEvt_t* evt);
+void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt);
 void drawTextEntry(textEntry_t* textEntry, paletteColor_t fg, paletteColor_t bg, bool drawBox);
 
 #endif

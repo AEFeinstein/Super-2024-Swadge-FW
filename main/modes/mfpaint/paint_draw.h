@@ -9,6 +9,10 @@
 #include "paint_help.h"
 
 extern paintDraw_t* paintState;
+extern const char* dialogErrorTitleStr;
+
+// Mostly for PAINT_DIE
+void paintSetupDialog(paintDialog_t dialog);
 
 // Mode callback delegates
 void paintDrawScreenMainLoop(int64_t elapsedUs);

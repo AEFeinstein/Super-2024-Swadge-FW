@@ -24,6 +24,25 @@
 #define PAINT_LOGW(...) ESP_LOGW("Paint", __VA_ARGS__)
 #define PAINT_LOGE(...) ESP_LOGE("Paint", __VA_ARGS__)
 
+#define PAINT_DIE(msg, ...) do \
+{ \
+    PAINT_LOGE(msg, __VA_ARGS__); \
+    char customMsg[128]; \
+    snprintf(customMsg, sizeof(customMsg), msg, __VA_ARGS__); \
+    if (paintState->dialogCustomDetail) \
+    { \
+        free(paintState->dialogCustomDetail); \
+    } \
+    paintState->dialogCustomDetail = malloc(strlen(customMsg) + 1); \
+    strcpy(paintState->dialogCustomDetail, customMsg); \
+    paintState->dialogMessageDetail = paintState->dialogCustomDetail; \
+    paintState->showDialogBox = true; \
+    paintState->fatalError = true; \
+    paintState->dialogBox->icon = &paintState->dialogErrorWsg; \
+    paintState->dialogMessageTitle = dialogErrorTitleStr; \
+    paintSetupDialog(DIALOG_ERROR); \
+} while(0)
+
 //////// Data Constants
 
 // The total number of save slots available
@@ -172,7 +191,9 @@ typedef enum
     DIALOG_CONFIRM_UNSAVED_LOAD,
     DIALOG_CONFIRM_UNSAVED_EXIT,
     DIALOG_CONFIRM_OVERWRITE,
+    DIALOG_CONFIRM_DELETE,
     DIALOG_ERROR,
+    DIALOG_ERROR_NONFATAL,
     DIALOG_MESSAGE,
 } paintDialog_t;
 
@@ -272,8 +293,8 @@ typedef struct
     // True if the canvas has been modified since last save
     bool unsaved;
 
-    // Whether to perform a save or load on the next loop
-    bool doSave, doLoad;
+    // Whether to perform a save/load/delete on the next loop
+    bool doSave, doLoad, doDelete;
 
     // The name of the currently opened slot
     char slotKey[17];

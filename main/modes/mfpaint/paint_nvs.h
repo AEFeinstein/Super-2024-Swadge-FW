@@ -11,6 +11,9 @@
 #include "paint_common.h"
 #include "paint_type.h"
 
+#define PAINT_NS_DATA "paint_img"
+#define PAINT_NS_PALETTE "paint_pal"
+
 // Settings bounds for the menu
 const settingParam_t* paintGetInUseSlotBounds(void);
 const settingParam_t* paintGetRecentSlotBounds(void);
@@ -48,6 +51,7 @@ bool paintLoadDimensions(paintCanvas_t* canvas, uint8_t slot);
 bool paintSaveNamed(const char* name, const paintCanvas_t* canvas);
 bool paintLoadNamed(const char* name, paintCanvas_t* canvas);
 bool paintLoadDimensionsNamed(const char* name, paintCanvas_t* canvas);
+void paintDeleteNamed(const char* name);
 bool paintSlotExists(const char* name);
 bool paintGetLastSlot(char* out);
 void paintSetLastSlot(const char* name);

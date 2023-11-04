@@ -494,7 +494,7 @@ void textEntryMainLoop(textEntry_t* textEntry, int64_t elapsedUs)
  * @param textEntry The text entry to handle the button event
  * @param evt A pointer to the button event to be handled
  */
-void textEntryButton(textEntry_t* textEntry, buttonEvt_t* evt)
+void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt)
 {
     if (evt->down)
     {

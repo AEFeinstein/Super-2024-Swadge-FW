@@ -22,25 +22,6 @@
 
 #include "macros.h"
 
-#define PAINT_DIE(msg, ...) do \
-{ \
-    PAINT_LOGE(msg, __VA_ARGS__); \
-    char customMsg[128]; \
-    snprintf(customMsg, sizeof(customMsg), msg, __VA_ARGS__); \
-    if (paintState->dialogCustomDetail) \
-    { \
-        free(paintState->dialogCustomDetail); \
-    } \
-    paintState->dialogCustomDetail = malloc(strlen(customMsg) + 1); \
-    strcpy(paintState->dialogCustomDetail, customMsg); \
-    paintState->dialogMessageDetail = paintState->dialogCustomDetail; \
-    paintState->showDialogBox = true; \
-    paintState->fatalError = true; \
-    paintState->dialogBox->icon = &paintState->dialogErrorWsg; \
-    paintState->dialogMessageTitle = dialogErrorTitleStr; \
-    paintSetupDialog(DIALOG_ERROR); \
-} while(0)
-
 #define PAINT_WSG(fn, var) do \
 { \
     if (!loadWsg(fn, var, false)) \
@@ -52,10 +33,9 @@
 
 static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal);
 static void paintSetupColorWheel(void);
-static void paintSetupDialog(paintDialog_t dialog);
 static void paintDialogCb(const char* label);
 static void paintSetupBrowser(bool save);
-static void paintBrowserCb(const char* nvsKey);
+static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action);
 
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
@@ -79,10 +59,14 @@ static const char toolWheelExitStr[]    = "Quit Drawing";
 
 static const char dialogUnsavedTitleStr[] = "Unsaved Changes!";
 static const char dialogOverwriteTitleStr[] = "Overwrite Existing?";
-static const char dialogErrorTitleStr[] = "Error!";
+static const char dialogDeleteTitleStr[] = "Really Delete?";
+static const char dialogOutOfSpaceTitleStr[] = "Save Failed!";
+const char* dialogErrorTitleStr = "Error!";
 
 static const char dialogUnsavedDetailStr[] = "There are unsaved changes to the current drawing! Continue without saving?";
 static const char dialogOverwriteDetailStr[] = "This file already exists! Overwrite it with the current drawing?";
+static const char dialogDeleteDetailStr[] = "Are you sure you want to delete '%s'?";
+static const char dialogOutOfSpaceDetailStr[] = "Out of storage space! Delete something and try again, or overwrite an existing file.";
 static const char dialogErrorDetailStr[] = "Fatal Error! ";
 
 static const char dialogOptionCancelStr[] = "Cancel";
@@ -300,7 +284,7 @@ void paintDrawScreenSetup(void)
 
     paintLoadIndex(&paintState->index);
 
-    if (paintHelp == NULL && paintGetLastSlot(paintState->slotKey))
+    if (paintHelp == NULL && paintGetLastSlot(paintState->slotKey) && paintSlotExists(paintState->slotKey))
     {
         // If there's a saved image, load that (but not in the tutorial)
         paintState->doLoad = true;
@@ -309,7 +293,7 @@ void paintDrawScreenSetup(void)
     }
     else
     {
-        for (uint8_t i = 0; i <= UINT8_MAX; ++i)
+        for (uint8_t i = 0; i < UINT8_MAX; ++i)
         {
             snprintf(paintState->slotKey, sizeof(paintState->slotKey), paintDefaultFilename, i);
 
@@ -320,7 +304,7 @@ void paintDrawScreenSetup(void)
             }
 
             // Give up and make a totally random one
-            if (i == UINT8_MAX)
+            if (i == UINT8_MAX - 1)
             {
                 for (uint8_t n = 0; n < sizeof(paintState->slotKey) - 5; ++n)
                 {
@@ -717,7 +701,7 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     }
 
     // Save and Load
-    if (*paintState->selectedSlotKey && (paintState->doSave || paintState->doLoad))
+    if (*paintState->selectedSlotKey && (paintState->doSave || paintState->doLoad || paintState->doDelete))
     {
         paintExitSelectMode();
 
@@ -726,12 +710,21 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             hideCursor(getCursor(), &paintState->canvas);
             paintHidePickPoints();
 
-            paintSaveNamed(paintState->selectedSlotKey, &paintState->canvas);
-
-            paintDrawPickPoints();
-            showCursor(getCursor(), &paintState->canvas);
+            if (!paintSaveNamed(paintState->selectedSlotKey, &paintState->canvas))
+            {
+                PAINT_LOGE("Error saving to slot named %s!", paintState->selectedSlotKey);
+                paintState->dialogMessageTitle = dialogOutOfSpaceTitleStr;
+                paintState->dialogMessageDetail = dialogOutOfSpaceDetailStr;
+                paintSetupDialog(DIALOG_ERROR_NONFATAL);
+            }
+            else
+            {
+                strncpy(paintState->slotKey, paintState->selectedSlotKey, sizeof(paintState->slotKey));
+                paintDrawPickPoints();
+                showCursor(getCursor(), &paintState->canvas);
+            }
         }
-        else
+        else if (paintState->doLoad)
         {
             if (paintSlotExists(paintState->selectedSlotKey))
             {
@@ -774,10 +767,18 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
                 paintState->clearScreen = true;
             }
         }
+        else if (paintState->doDelete)
+        {
+            if (paintSlotExists(paintState->selectedSlotKey))
+            {
+                paintDeleteNamed(paintState->selectedSlotKey);
+            }
+        }
 
         paintState->unsaved        = false;
         paintState->doSave         = false;
         paintState->doLoad         = false;
+        paintState->doDelete       = false;
 
         paintState->buttonMode = BTN_MODE_DRAW;
 
@@ -2164,10 +2165,10 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
     }
 }
 
-static void paintSetupDialog(paintDialog_t dialog)
+void paintSetupDialog(paintDialog_t dialog)
 {
     paintState->showDialogBox = true;
-    if (dialog != DIALOG_ERROR && paintState->dialog == dialog)
+    if (dialog != DIALOG_ERROR && dialog != DIALOG_ERROR_NONFATAL && paintState->dialog == dialog)
     {
         return;
     }
@@ -2180,6 +2181,12 @@ static void paintSetupDialog(paintDialog_t dialog)
 
     // Clear any previous options
     dialogBoxReset(paintState->dialogBox);
+
+    if (paintState->dialogCustomDetail != NULL)
+    {
+        free(paintState->dialogCustomDetail);
+        paintState->dialogCustomDetail = NULL;
+    }
 
     switch (dialog)
     {
@@ -2210,7 +2217,24 @@ static void paintSetupDialog(paintDialog_t dialog)
             break;
         }
 
+        case DIALOG_CONFIRM_DELETE:
+        {
+            title = dialogDeleteTitleStr;
+            char buf[64];
+            snprintf(buf, sizeof(buf), dialogDeleteDetailStr, paintState->selectedSlotKey);
+            buf[63] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
+
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
         case DIALOG_ERROR:
+        case DIALOG_ERROR_NONFATAL:
         default:
         {
             // Error! Exit
@@ -2218,7 +2242,7 @@ static void paintSetupDialog(paintDialog_t dialog)
             detail = paintState->dialogMessageDetail ? paintState->dialogMessageDetail : dialogErrorDetailStr;
             icon = &paintState->dialogErrorWsg;
 
-            dialogBoxAddOption(paintState->dialogBox, dialogOptionExitStr, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, (dialog == DIALOG_ERROR) ? dialogOptionExitStr : dialogOptionOkStr, NULL, OPTHINT_OK | OPTHINT_DEFAULT);
             break;
         }
 
@@ -2297,8 +2321,16 @@ static void paintDialogCb(const char* label)
                 break;
             }
 
+            case DIALOG_CONFIRM_DELETE:
+            {
+                paintState->doDelete = true;
+                paintExitSelectMode();
+                break;
+            }
+
             case DIALOG_MESSAGE:
             case DIALOG_ERROR:
+            case DIALOG_ERROR_NONFATAL:
             {
                 paintExitSelectMode();
                 break;
@@ -2309,34 +2341,40 @@ static void paintDialogCb(const char* label)
 
 static void paintSetupBrowser(bool save)
 {
-    static bool done = false;
-
-    if (!done)
-    {
-        done = true;
-    }
-
     resetImageBrowser(&paintState->browser);
-    setupImageBrowser(&paintState->browser, &paintState->toolbarFont, "paint_img", NULL, save);
+    setupImageBrowser(&paintState->browser, &paintState->toolbarFont, PAINT_NS_DATA, NULL, save ? BROWSER_SAVE : BROWSER_OPEN, BROWSER_DELETE);
     paintState->showDialogBox = false;
     paintState->showBrowser = true;
     paintState->browserSave = save;
 }
 
-static void paintBrowserCb(const char* nvsKey)
+static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action)
 {
-    PAINT_LOGI("CB Called wow");
     if (NULL != nvsKey)
     {
         strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
 
-        if (paintState->browserSave)
+        switch (action)
         {
-            paintState->doSave = true;
-        }
-        else
-        {
-            paintState->doLoad = true;
+            case BROWSER_EXIT:
+            break;
+
+            case BROWSER_OPEN:
+            {
+                paintState->doLoad = true;
+                break;
+            }
+            case BROWSER_SAVE:
+            {
+                paintState->doSave = true;
+                break;
+            }
+            case BROWSER_DELETE:
+            {
+                paintSetupDialog(DIALOG_CONFIRM_DELETE);
+                paintState->showBrowser = false;
+                break;
+            }
         }
     }
 
