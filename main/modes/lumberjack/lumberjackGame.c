@@ -346,17 +346,22 @@ bool lumberjackLoadLevel()
 
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
-        char* attackLevelName[] = 
-        {
-            "lumberjacks_attack_1.bin",
-            "lumberjacks_attack_2.bin",
-        };
-
-        fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
-
         if (!lumv->lumberjackMain->networked)
         {
+            char* attackLevelName[] = 
+            {
+                "lumberjacks_attack_1.bin",
+                "lumberjacks_attack_2.bin",
+                "lumberjacks_attack_3.bin",
+            };
+
+
+            fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
             lumv->upgrade = (int)(lumv->levelIndex / ARRAY_SIZE(attackLevelName));
+        }
+        else 
+        {
+            fname = "lumberjacks_attack_vs.bin";
         }
 
         for (int i = 0; i < 8; i++)
@@ -1119,7 +1124,7 @@ void DrawTitle(void)
     if (lumv->gameReady)
     {
         //Press A To Start
-        lumberjackTitleDisplayText("Press A to start", (TFT_WIDTH/2) - 70, 180);
+        lumberjackTitleDisplayText(((lumv->lumberjackMain->host || !lumv->lumberjackMain->networked ) ? "Press A to start": "Host must start"), (TFT_WIDTH/2) - 70, 180);
     }
     else if (lumv->lumberjackMain->networked && lumv->lumberjackMain->host)
     {
@@ -1266,7 +1271,7 @@ void DrawGame(void)
 
     // Debug
 
-    
+    /*
     char debug[20] = {0};
     snprintf(debug, sizeof(debug), "Debug: %d %d %d", lumv->localPlayer->x, lumv->localPlayer->y,
              lumv->localPlayer->cH);
@@ -1305,7 +1310,7 @@ void DrawGame(void)
 
     snprintf(debug, sizeof(debug), "%d", lumv->spawnTimer);
     drawText(&lumv->arcade, c555, debug,  122, 32);
-    
+    */
 }
 
 void lumberjackTitleDisplayText(char* string, int locationX, int locationY)

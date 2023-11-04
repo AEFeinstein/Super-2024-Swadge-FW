@@ -237,17 +237,17 @@ static bool lumberjackSpecialUnlocked()
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    /*ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
+    ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
     for (int i = 0; i < len; i++)
     {
         ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
-    }*/
+    }
     p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
 
 static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
-    //ESP_LOGI(LUM_TAG, "STATUS %d", status);
+    ESP_LOGI(LUM_TAG, "STATUS %d", status);
     p2pSendCb(&lumberjack->p2p, mac_addr, status);
 }
 
@@ -400,7 +400,8 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
 
         if (label == lumberjackMenuMultiPlayerHost)
         {
-            p2pInitialize(&lumberjack->p2p, 0x13, lumberjackConCb, lumberjackMsgRxCb, -70);
+            p2pInitialize(&lumberjack->p2p,(lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x13 : 0x15), lumberjackConCb, lumberjackMsgRxCb, -70);
+            p2pSetAsymmetric(&lumberjack->p2p, (lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x14 : 0x16));
             p2pStartConnection(&lumberjack->p2p);
             lumberjack->networked = true;
             lumberjack->host      = true;
@@ -408,7 +409,8 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         }
         else if (label == lumberjackMenuMultiPlayerClient)
         {
-            p2pInitialize(&lumberjack->p2p, 0x13, lumberjackConCb, lumberjackMsgRxCb, -70);
+            p2pInitialize(&lumberjack->p2p, (lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x14 : 0x16), lumberjackConCb, lumberjackMsgRxCb, -70);
+            p2pSetAsymmetric(&lumberjack->p2p, (lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x13 : 0x15));
             p2pStartConnection(&lumberjack->p2p);
             lumberjack->networked = true;
             lumberjack->host      = false;
