@@ -178,12 +178,6 @@ void rayFreeCurrentState(ray_t* cRay)
 {
     // Zero and NULL the door timer
     ray->doorTimer = 0;
-    // Warp variables
-    ray->warpDestMapId = 0;
-    ray->warpDestPosX  = 0;
-    ray->warpDestPosY  = 0;
-    ray->warpTimerUs   = 0;
-    memset(&ray->starfield, 0, sizeof(starfield_t));
     // Head bob
     ray->posZ     = 0;
     ray->bobTimer = 0;

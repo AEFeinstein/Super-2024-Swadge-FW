@@ -52,6 +52,8 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
         ray->screen = RAY_GAME;
         // Don't warp again
         ray->warpTimerUs = 0;
+        // Play music
+        bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
     }
 }
 
@@ -72,6 +74,9 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
 
     // Set the warp timer
     ray->warpTimerUs = 4000000;
+
+    // Stop BGM when warping
+    bzrStop(true);
 }
 
 /**
@@ -93,6 +98,9 @@ void warpToDestination(ray_t* ray)
     // Load the new map
     q24_8 pStartX = 0, pStartY = 0;
     loadRayMap(ray->warpDestMapId, ray, &pStartX, &pStartY, true);
+
+    // Stop BGM when warping
+    bzrStop(true);
 
     // Set the map ID
     ray->p.mapId                     = ray->warpDestMapId;

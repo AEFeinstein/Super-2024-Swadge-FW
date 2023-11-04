@@ -17,6 +17,8 @@ void rayShowDeathScreen(ray_t* ray)
 {
     ray->btnLockoutUs = 2000000;
     ray->screen       = RAY_DEATH_SCREEN;
+    // Stop BGM when dead
+    bzrStop(true);
 }
 
 /**
