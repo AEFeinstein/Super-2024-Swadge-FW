@@ -820,6 +820,9 @@ entity_t* createCrawler(entityManager_t * entityManager, uint16_t x, uint16_t y)
 
     crawlerInitMoveState(entity);
 
+    //This will be reused to track defeat condition
+    entity->bouncesOffUnbreakableBlocks = 0;
+
     return entity;
 }
 

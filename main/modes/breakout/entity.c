@@ -561,6 +561,9 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx, ty+1);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_RIGHT_TO_BOTTOM);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
 
             t = getTile(self->tilemap, tx+1, ty);
@@ -578,8 +581,10 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx-1, ty);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_LEFT);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
-
             t = getTile(self->tilemap, tx, ty+1);
             if(isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_TOP_TO_RIGHT);
@@ -595,8 +600,10 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx, ty-1);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_LEFT_TO_TOP);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
-
             t = getTile(self->tilemap, tx-1, ty);
             if(isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_RIGHT_TO_BOTTOM);
@@ -612,8 +619,10 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx+1, ty);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_TOP_TO_RIGHT);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
-
             t = getTile(self->tilemap, tx, ty-1);
             if(isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_LEFT);
@@ -630,8 +639,10 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx, ty+1);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_LEFT_TO_BOTTOM);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
-
             t = getTile(self->tilemap, tx-1, ty);
             if(isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_RIGHT_TO_TOP);
@@ -647,8 +658,10 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx+1, ty);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_BOTTOM_TO_RIGHT);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
-
             t = getTile(self->tilemap, tx, ty+1);
             if(isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_TOP_TO_LEFT);
@@ -664,6 +677,9 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx, ty-1);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_RIGHT_TO_TOP);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
 
             t = getTile(self->tilemap, tx+1, ty);
@@ -681,6 +697,9 @@ void updateCrawler(entity_t * self){
             t = getTile(self->tilemap, tx-1, ty);
             if(!isSolid(t)){
                 crawlerSetMoveState(self, CRAWLER_TOP_TO_LEFT);
+                self->bouncesOffUnbreakableBlocks++;
+            } else {
+                self->bouncesOffUnbreakableBlocks = 0;
             }
 
             t = getTile(self->tilemap, tx, ty-1);
@@ -691,6 +710,12 @@ void updateCrawler(entity_t * self){
 
         default:
             break;
+    }
+
+    if(self->bouncesOffUnbreakableBlocks > 7){
+        scorePoints(self->gameData, 500, 1);
+        destroyEntity(self, false);
+        createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
     }
     
     self->x += self->xspeed;
