@@ -540,8 +540,9 @@ class view:
             self.scriptTextEntry.tag_add(
                 tag, str(line) + '.0', str(line) + '.0 lineend')
             if script.isValid():
-                self.scriptTextEntry.tag_configure(
-                    tag, background="green", foreground="black")
+                # self.scriptTextEntry.tag_configure(
+                #     tag, background="green", foreground="black")
+                pass
             else:
                 self.scriptTextEntry.tag_configure(
                     tag, background="red", foreground="black")
