@@ -115,10 +115,10 @@ void raySaveVisitedTiles(ray_t* ray)
  * @brief Check button inputs for the player. This will move the player and shoot bullets
  *
  * @param ray The entire game state
- * @param centeredSprite The sprite currently centered in the view
+ * @param centeredEnemy The enemy currently centered in the view, may be NULL
  * @param elapsedUs The elapsed time since this function was last called
  */
-void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t elapsedUs)
+void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t elapsedUs)
 {
     // For convenience
     q24_8 pPosX = ray->p.posX;
@@ -152,10 +152,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 // Set strafe to true
                 ray->isStrafing = true;
                 // If there is a centered sprite
-                if (centeredSprite && !CELL_IS_TYPE(centeredSprite->type, (OBJ | BULLET)))
+                if (centeredEnemy)
                 {
                     // Lock onto it
-                    ray->targetedObj = centeredSprite;
+                    ray->targetedObj = centeredEnemy;
                 }
             }
             else

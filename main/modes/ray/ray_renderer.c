@@ -675,12 +675,12 @@ static int objDistComparator(const void* obj1, const void* obj2)
  * This is called from the main loop.
  *
  * @param ray The entire game state
- * @return The closest sprite in the lock zone, i.e. center of the display. This may be NULL if there are no centered
- * sprites.
+ * @return The closest enemy in the lock zone, i.e. center of the display. This may be NULL if there are no centered
+ * enemies.
  */
 rayObjCommon_t* castSprites(ray_t* ray)
 {
-    rayObjCommon_t* lockedObj = NULL;
+    rayObjCommon_t* lockedEnemy = NULL;
 
     // Setup to draw
     SETUP_FOR_TURBO();
@@ -943,10 +943,11 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
                     // Check if this should be locked onto
-                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE))
+                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE)
+                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY))
                     {
                         // Closest sprites are drawn last, so override the lock
-                        lockedObj = obj;
+                        lockedEnemy = obj;
                     }
 
                     // Reset the texture Y coordinate
@@ -989,7 +990,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
             }
         }
     }
-    return lockedObj;
+    return lockedEnemy;
 }
 
 /**

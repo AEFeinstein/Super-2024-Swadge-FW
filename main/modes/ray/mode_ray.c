@@ -291,7 +291,7 @@ static void rayMainLoop(int64_t elapsedUs)
             // Draw the walls after floor & ceiling
             castWalls(ray);
             // Draw sprites after walls
-            rayObjCommon_t* centeredSprite = castSprites(ray);
+            rayObjCommon_t* centeredEnemy = castSprites(ray);
             // Draw the HUD after sprites
             drawHud(ray);
 
@@ -299,7 +299,7 @@ static void rayMainLoop(int64_t elapsedUs)
             runEnvTimers(ray, elapsedUs);
 
             // Check buttons for the player and move player accordingly
-            rayPlayerCheckButtons(ray, centeredSprite, elapsedUs);
+            rayPlayerCheckButtons(ray, centeredEnemy, elapsedUs);
 
             // Check the joystick for the player and update loadout accordingly
             rayPlayerCheckJoystick(ray, elapsedUs);
