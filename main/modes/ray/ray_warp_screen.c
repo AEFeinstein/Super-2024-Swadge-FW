@@ -138,9 +138,6 @@ void warpToDestination(ray_t* ray)
     // Save after warping
     raySavePlayer(ray);
 
-    // Save a backup of the player state to restore in case of death
-    memcpy(&ray->p_backup, &ray->p, sizeof(rayPlayer_t));
-
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 }

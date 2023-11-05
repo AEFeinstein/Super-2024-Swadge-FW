@@ -566,8 +566,7 @@ typedef struct
     rayMap_t map;      ///< The loaded map
     int32_t doorTimer; ///< A timer used to open doors
 
-    rayPlayer_t p;        ///< All the player's state, loaded from NVM
-    rayPlayer_t p_backup; ///< All the player's state at the beginning of the map
+    rayPlayer_t p; ///< All the player's state, loaded from NVM
 
     int32_t warpDestMapId; ///< The ID of the current map
     q24_8 warpDestPosX;    ///< The player's X position

@@ -702,21 +702,8 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
     // Check for death
     if (0 >= ray->p.i.health)
     {
-        // If the player already has the artifact
-        if (ray->p.i.artifacts[ray->p.mapId])
-        {
-            // load the last save
-            rayStartGame();
-        }
-        else
-        {
-            // Player does not have this artifact, load the backup from when the map was entered
-            mempcpy(&ray->p, &ray->p_backup, sizeof(rayPlayer_t));
-            raySavePlayer(ray);
-            // Clear visited tiles too
-            memset(ray->map.visitedTiles, NOT_VISITED, ray->map.w * ray->map.h * sizeof(rayTileState_t));
-            raySaveVisitedTiles(ray);
-        }
+        // load the last save
+        rayStartGame();
 
         // Show the death screen
         rayShowDeathScreen(ray);
