@@ -437,7 +437,7 @@ void explodeBomb(entity_t* self){
                     scorePoints(self->gameData, 10, 0);
                     break;
                 }
-                case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
+                case TILE_BOUNDARY_1 ... TILE_UNUSED_F:{
                     break;
                 }
                 default: {         
@@ -1277,7 +1277,11 @@ bool dummyTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8
 bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
      switch(tileId){
-        case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
+        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_BLACK:
+        case TILE_BLOCK_2x1_RED_L ... TILE_BLOCK_2x1_BLACK_R:
+        case TILE_BLOCK_2x2_RED_UL ... TILE_BLOCK_2x2_BLACK_UR:
+        case TILE_BLOCK_2x2_WHITE_DL ... TILE_BLOCK_2x2_BLACK_DR:
+         {
             breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
             bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
             scorePoints(self->gameData, 10, (self->shouldAdvanceMultiplier) ? -1 : 0);
@@ -1285,7 +1289,7 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
             self->bouncesOffUnbreakableBlocks = 0;
             break;
         }
-        case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
+        case TILE_BOUNDARY_1 ... TILE_UNUSED_F:{
             bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
             self->bouncesOffUnbreakableBlocks++;
             break;
@@ -1375,7 +1379,7 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
 
 void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty){
     switch(tileId){
-        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_BLACK: {
+        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_STONE: {
            setTile(tilemap, tx, ty, TILE_EMPTY);
            gameData->targetBlocksBroken++;
            break;
@@ -1392,6 +1396,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x1_TAN_L:
         case TILE_BLOCK_2x1_BROWN_L:
         case TILE_BLOCK_2x1_BLACK_L:
+        case TILE_BLOCK_2x1_STONE_L:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
            gameData->targetBlocksBroken++;
@@ -1415,6 +1420,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x1_TAN_R:
         case TILE_BLOCK_2x1_BROWN_R:
         case TILE_BLOCK_2x1_BLACK_R:
+        case TILE_BLOCK_2x1_STONE_R:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
            gameData->targetBlocksBroken++;
@@ -1438,6 +1444,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_TAN_UL:
         case TILE_BLOCK_2x2_BROWN_UL:
         case TILE_BLOCK_2x2_BLACK_UL:
+        case TILE_BLOCK_2x2_STONE_UL:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
            gameData->targetBlocksBroken++;
@@ -1471,6 +1478,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_TAN_UR:
         case TILE_BLOCK_2x2_BROWN_UR:
         case TILE_BLOCK_2x2_BLACK_UR:
+        case TILE_BLOCK_2x2_STONE_UR:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
            gameData->targetBlocksBroken++;
@@ -1504,6 +1512,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_TAN_DL:
         case TILE_BLOCK_2x2_BROWN_DL:
         case TILE_BLOCK_2x2_BLACK_DL:
+        case TILE_BLOCK_2x2_STONE_DL:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
            gameData->targetBlocksBroken++;
@@ -1537,6 +1546,7 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_TAN_DR:
         case TILE_BLOCK_2x2_BROWN_DR:
         case TILE_BLOCK_2x2_BLACK_DR:
+        case TILE_BLOCK_2x2_STONE_DR:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
            gameData->targetBlocksBroken++;
