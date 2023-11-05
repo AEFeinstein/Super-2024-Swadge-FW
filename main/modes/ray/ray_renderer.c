@@ -1021,7 +1021,7 @@ void drawHud(ray_t* ray)
                 yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
             }
         }
-        drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
+        drawWsgSimple(gun, TFT_WIDTH - gun->w - 5 + ray->gunShakeX, yOffset);
     }
 
     // Draw Keys
@@ -1295,5 +1295,37 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
             // Mirror sprites every rotation to account for asymmetry
             ray->itemRotateMirror = !ray->itemRotateMirror;
         }
+    }
+
+    // If the gun is charged
+    if (ray->chargeTimer >= CHARGE_TIME_US)
+    {
+        // Run a timer to shake it left and right
+        ray->gunShakeTimer -= elapsedUs;
+        while (ray->gunShakeTimer <= 0)
+        {
+            ray->gunShakeTimer += 10000;
+            if (true == ray->gunShakeL)
+            {
+                ray->gunShakeX++;
+                if (10 <= ray->gunShakeX)
+                {
+                    ray->gunShakeL = false;
+                }
+            }
+            else
+            {
+                ray->gunShakeX--;
+                if (0 >= ray->gunShakeX)
+                {
+                    ray->gunShakeL = true;
+                }
+            }
+        }
+    }
+    else
+    {
+        // If the gun is not charged, make sure this is reset
+        ray->gunShakeX = 0;
     }
 }

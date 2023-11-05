@@ -182,6 +182,10 @@ void rayFreeCurrentState(ray_t* cRay)
     ray->posZ     = 0;
     ray->bobTimer = 0;
     ray->bobCount = 0;
+    // Gun shake
+    ray->gunShakeL     = false;
+    ray->gunShakeTimer = 0;
+    ray->gunShakeX     = 0;
     // Strafe and lock
     ray->isStrafing  = false;
     ray->targetedObj = NULL;
