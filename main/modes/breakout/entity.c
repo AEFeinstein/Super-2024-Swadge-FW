@@ -1368,8 +1368,9 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
             scorePoints(self->gameData, 10 * breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty), (self->shouldAdvanceMultiplier) ? -1 : 0);
             self->shouldAdvanceMultiplier = true;
             self->bouncesOffUnbreakableBlocks = 0;
+            break;
         }
-        case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
+        case TILE_BOUNDARY_1 ... TILE_UNUSED_F:{
             bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
             break;
         }
@@ -1596,9 +1597,9 @@ int16_t breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId,
 
 void setLedBreakBlock(gameData_t *gameData, uint8_t tileId){
     uint8_t ledIndex = esp_random() % CONFIG_NUM_LEDS;
-    uint16_t nr = 0;
-    uint16_t ng = 0;
-    uint16_t nb = 0;
+    int16_t nr = 0;
+    int16_t ng = 0;
+    int16_t nb = 0;
 
     switch(tileId){
         case TILE_BLOCK_1x1_RED:
