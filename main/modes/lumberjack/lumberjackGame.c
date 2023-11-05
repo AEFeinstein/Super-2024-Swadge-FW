@@ -36,7 +36,7 @@
 
 #define LUMBERJACK_MAP_WIDTH            18
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
-#define LUMBERJACK_ROTATE_ANIMATION_MAX  4
+#define LUMBERJACK_ROTATE_ANIMATION_MAX 4
 #define LUMBERJACK_RESPAWN_PANIC_MIN    3750
 #define LUMBERJACK_RESPAWN_ATTACK_MIN   500
 #define LUMBERJACK_RESPAWN_VS_MIN       250
@@ -49,6 +49,8 @@
 #define LUMBERJACK_GHOST_SPEED_FAST     3
 #define LUMBERJACK_GHOST_BOX            28
 #define LUMBERJACK_GHOST_ANIMATION      2500
+
+#define LUMBERJACK_BONUS_DISPLAYDURATI  4000
 
 #define LUMBERJACK_WATER_FAST_DRAIN     6
 #define LUMBERJACK_WATER_SLOW_DRAIN     3
@@ -282,6 +284,20 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_enemy_c7.wsg", &lumv->enemySprites[20], true);
     loadWsg("lumbers_enemy_d1.wsg", &lumv->enemySprites[21], true);
     loadWsg("lumbers_enemy_d2.wsg", &lumv->enemySprites[22], true);
+    loadWsg("lumbers_enemy_e1.wsg", &lumv->enemySprites[23], true);
+    loadWsg("lumbers_enemy_e2.wsg", &lumv->enemySprites[24], true);
+    loadWsg("lumbers_enemy_e3.wsg", &lumv->enemySprites[25], true);
+    loadWsg("lumbers_enemy_e4.wsg", &lumv->enemySprites[26], true);
+    loadWsg("lumbers_enemy_e5.wsg", &lumv->enemySprites[27], true);
+    loadWsg("lumbers_enemy_e6.wsg", &lumv->enemySprites[28], true);
+    loadWsg("lumbers_enemy_e7.wsg", &lumv->enemySprites[29], true);
+    loadWsg("lumbers_enemy_f1.wsg", &lumv->enemySprites[30], true);
+    loadWsg("lumbers_enemy_f2.wsg", &lumv->enemySprites[31], true);
+    loadWsg("lumbers_enemy_f3.wsg", &lumv->enemySprites[32], true);
+    loadWsg("lumbers_enemy_f4.wsg", &lumv->enemySprites[33], true);
+    loadWsg("lumbers_enemy_f5.wsg", &lumv->enemySprites[34], true);
+    loadWsg("lumbers_enemy_f6.wsg", &lumv->enemySprites[35], true);
+    loadWsg("lumbers_enemy_f7.wsg", &lumv->enemySprites[36], true);
 
     loadWsg("lumbers_green_ax_block1.wsg", &lumv->greenBlockSprite[0], true);
     loadWsg("lumbers_green_ax_block2.wsg", &lumv->greenBlockSprite[1], true);
@@ -307,8 +323,27 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_normal_ax_block6.wsg", &lumv->unusedBlockSprite[5], true);
     loadWsg("lumbers_normal_ax_block7.wsg", &lumv->unusedBlockSprite[6], true);
 
+    loadWsg("lumbers_bonus_x.wsg", &lumv->bonusSprites[0], true);
+    loadWsg("lumbers_bonus_1.wsg", &lumv->bonusSprites[1], true);
+    loadWsg("lumbers_bonus_2.wsg", &lumv->bonusSprites[2], true);
+    loadWsg("lumbers_bonus_3.wsg", &lumv->bonusSprites[3], true);
+    loadWsg("lumbers_bonus_4.wsg", &lumv->bonusSprites[4], true);
+    loadWsg("lumbers_bonus_5.wsg", &lumv->bonusSprites[5], true);
+    loadWsg("lumbers_bonus_6.wsg", &lumv->bonusSprites[6], true);
+    loadWsg("lumbers_bonus_7.wsg", &lumv->bonusSprites[7], true);
+    loadWsg("lumbers_bonus_8.wsg", &lumv->bonusSprites[8], true);
+    loadWsg("lumbers_bonus_9.wsg", &lumv->bonusSprites[9], true);
+
+    
+
     loadWsg("lumbers_item_ui.wsg", &lumv->ui[0], true);
     loadWsg("lumbers_alert.wsg", &lumv->alertSprite, true);
+
+    for (int i = 0; i < ARRAY_SIZE(lumv->bonusDisplay); i++)
+    {
+        lumv->bonusDisplay[i] = calloc(1, sizeof(lumberjackBonus_t));
+    }
+    lumv->activeBonusIndex = 0;
 
 }
 
@@ -353,8 +388,8 @@ bool lumberjackLoadLevel()
                 "lumberjacks_attack_1.bin",
                 "lumberjacks_attack_2.bin",
                 "lumberjacks_attack_3.bin",
+                "lumberjacks_attack_4.bin",
             };
-
 
             fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
             lumv->upgrade = (int)(lumv->levelIndex / ARRAY_SIZE(attackLevelName));
@@ -449,7 +484,7 @@ bool lumberjackLoadLevel()
     lumv->playerSpawnY = (int)buffer[offset + 1] + ((int)buffer[offset + 2] << 8);
     //lumv->yOffset = lumv->playerSpawnY - LUMBERJACK_SCREEN_Y_OFFSET;
 
-    ESP_LOGI(LUM_TAG, "%d %d", lumv->playerSpawnY, buffer[offset]);
+    ESP_LOGI(LUM_TAG, "SPAWN %d %d", lumv->playerSpawnY, buffer[offset]);
 
     free(buffer);    
 
@@ -745,9 +780,7 @@ void baseMode(int64_t elapsedUs)
             if (lumv->comboTime < 0)
             {
                 lumv->comboTime = 0;
-                ESP_LOGI(LUM_TAG, "Combo end!");
-
-                
+                ESP_LOGI(LUM_TAG, "Combo end!");               
 
                 lumv->comboAmount = 0;
             }
@@ -945,6 +978,16 @@ void baseMode(int64_t elapsedUs)
                             {
                                 ESP_LOGI(LUM_TAG, "COMBO!");
                                 ++lumv->comboAmount;
+                                
+                                lumv->activeBonusIndex++;
+                                lumv->activeBonusIndex %= ARRAY_SIZE(lumv->bonusDisplay);
+                                lumberjackBonus_t* currentBonus = lumv->bonusDisplay[lumv->activeBonusIndex];
+
+                                currentBonus->x = enemy->x;
+                                currentBonus->y = enemy->y;
+                                currentBonus->active = true;
+                                currentBonus->time = 0;
+                                currentBonus->bonusAmount = lumv->comboAmount + 1;
 
                                 if (lumv->lumberjackMain->networked)
                                 {
@@ -967,8 +1010,21 @@ void baseMode(int64_t elapsedUs)
                             if (lumv->enemyKillCount >= lumv->totalEnemyCount)
                             {
                                 //And game mode == blah
-                                //lumv->gameState = LUMBERJACK_GAMESTATE_WINNING;
-                                lumv->hasWon = true;
+                                if (lumv->lumberjackMain->networked)
+                                {
+                                    for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+                                    {
+                                        if (lumv->enemy[i] == NULL) continue;
+
+                                        lumv->enemy[i]->state = LUMBERJACK_RUN;
+                                        lumberjackResetEnemy(lumv->enemy[i]);
+                                        lumberjackUpdateEnemy(lumv->enemy[i], lumv->enemy[i]->type+1);
+                                    }
+                                }
+                                else
+                                {
+                                    lumv->hasWon = true;
+                                }
                             }
 
                             if (lumv->localPlayer->vx != 0)
@@ -1069,6 +1125,20 @@ void baseMode(int64_t elapsedUs)
     //
     if (lumv->yOffset > (lumv->currentMapHeight * LUMBERJACK_TILE_SIZE) - TFT_HEIGHT)
         lumv->yOffset = (lumv->currentMapHeight * LUMBERJACK_TILE_SIZE) - TFT_HEIGHT;
+
+
+    for (int i = 0; i < ARRAY_SIZE(lumv->bonusDisplay); i++)
+    {
+        lumberjackBonus_t* currentBonus = lumv->bonusDisplay[i];
+        if (false == currentBonus->active ) continue;
+
+        currentBonus->time += elapsedUs / 1000;
+        if (currentBonus->time > LUMBERJACK_BONUS_DISPLAYDURATI)
+        {
+            currentBonus->active = false;
+        }
+    }
+
 }
 
 void lumberjackOnLocalPlayerDeath(void)
@@ -1268,6 +1338,30 @@ void DrawGame(void)
         drawText(&lumv->arcade, c000, level_display, (TFT_WIDTH/2) - 36 + 1, TFT_HEIGHT - 20);
         drawText(&lumv->arcade, c555, level_display, (TFT_WIDTH/2) - 36, TFT_HEIGHT - 20);
     }
+
+    for (int i = 0; i < ARRAY_SIZE(lumv->bonusDisplay); i++)
+    {
+        lumberjackBonus_t* currentBonus = lumv->bonusDisplay[i];
+        if (false == currentBonus->active ) continue;
+
+        float offsetTime = (((float)currentBonus->time)/LUMBERJACK_BONUS_DISPLAYDURATI) + .9f;
+
+        if (offsetTime > 1) offsetTime = 1;
+
+        drawWsgSimple(&lumv->bonusSprites[0], currentBonus->x, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
+        if (currentBonus->bonusAmount < 10)
+        {
+            drawWsgSimple(&lumv->bonusSprites[currentBonus->bonusAmount], currentBonus->x+8, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
+        }
+
+        if (i == 1)
+        {
+            ESP_LOGI(LUM_TAG, "COMBO 1 %d %f", currentBonus->time , offsetTime);
+        }
+        //currentBonus->time += ;
+        //currentBonus->bonusAmount = lumv->comboAmount;
+    }
+    
 
     // Debug
 
@@ -1625,7 +1719,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
             {
                 if (tileA->type != 11 || lumv->itemBlockReady == true)
                 {
-                    ESP_LOGI(LUM_TAG, "BUMP A %d", tileA->index);
+                    //ESP_LOGI(LUM_TAG, "BUMP A %d", tileA->index);
                     lumv->tile[tileA->index].offset      = 10;
                     lumv->tile[tileA->index].offset_time = 100;
 
@@ -2050,6 +2144,12 @@ void lumberjackExitGameMode(void)
     if (lumv->lumberjackMain->networked) 
         freeWsg(&lumv->gamewinSprite);
     
+
+    // Free the bonus
+    for (int i = 0; i < ARRAY_SIZE(lumv->bonusDisplay); i++)
+    {
+        freeWsg(&lumv->bonusDisplay[i]);
+    }
 
     // Free the enemies
     for (int i = 0; i < ARRAY_SIZE(lumv->enemySprites); i++)

@@ -72,6 +72,15 @@ typedef struct
 
 typedef struct
 {
+    int x;
+    int y;
+    int time;
+    bool active;
+    int bonusAmount;
+} lumberjackBonus_t;
+
+typedef struct
+{
     bool loaded;
     bool hasWon;
     bool gameReady;
@@ -134,7 +143,9 @@ typedef struct
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
     wsg_t minicharacters[4];
-    
+
+    lumberjackBonus_t* bonusDisplay[16];
+    uint8_t activeBonusIndex;
 
     wsg_t title;
     wsg_t subtitle_red;
@@ -150,8 +161,9 @@ typedef struct
     wsg_t unknownBlockSprite[7];
     wsg_t unusedBlockSprite[7];
 
-    wsg_t enemySprites[23];
+    wsg_t enemySprites[37];
     wsg_t playerSprites[18];
+    wsg_t bonusSprites[10];
 
     wsg_t ui[6];
 

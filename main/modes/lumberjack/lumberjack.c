@@ -240,7 +240,7 @@ static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
     ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
     for (int i = 0; i < len; i++)
     {
-        ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
+        //ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
     }
     p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
