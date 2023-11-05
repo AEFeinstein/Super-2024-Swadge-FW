@@ -433,8 +433,7 @@ void explodeBomb(entity_t* self){
 
             switch(tileId){
                 case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
-                    breakBlockTile(self->tilemap, self->gameData, tileId, ctx, cty);
-                    scorePoints(self->gameData, 10, 0);
+                    scorePoints(self->gameData, 10 * breakBlockTile(self->tilemap, self->gameData, tileId, ctx, cty), 0);
                     break;
                 }
                 case TILE_BOUNDARY_1 ... TILE_UNUSED_F:{
@@ -1282,9 +1281,9 @@ bool ballTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx, uint8_
         case TILE_BLOCK_2x2_RED_UL ... TILE_BLOCK_2x2_BLACK_UR:
         case TILE_BLOCK_2x2_WHITE_DL ... TILE_BLOCK_2x2_BLACK_DR:
          {
-            breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
+            //breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
             bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
-            scorePoints(self->gameData, 10, (self->shouldAdvanceMultiplier) ? -1 : 0);
+            scorePoints(self->gameData, 10 * breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty), (self->shouldAdvanceMultiplier) ? -1 : 0);
             self->shouldAdvanceMultiplier = true;
             self->bouncesOffUnbreakableBlocks = 0;
             break;
@@ -1361,11 +1360,14 @@ bool captiveBallTileCollisionHandler(entity_t *self, uint8_t tileId, uint8_t tx,
 
 void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty){
     switch(tileId){
-        case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127: {
-            breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
+        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_BLACK:
+        case TILE_BLOCK_2x1_RED_L ... TILE_BLOCK_2x1_BLACK_R:
+        case TILE_BLOCK_2x2_RED_UL ... TILE_BLOCK_2x2_BLACK_UR:
+        case TILE_BLOCK_2x2_WHITE_DL ... TILE_BLOCK_2x2_BLACK_DR: {
             bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
-            scorePoints(self->gameData, 1, -1);
-            break;
+            scorePoints(self->gameData, 10 * breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty), (self->shouldAdvanceMultiplier) ? -1 : 0);
+            self->shouldAdvanceMultiplier = true;
+            self->bouncesOffUnbreakableBlocks = 0;
         }
         case TILE_BOUNDARY_1 ... TILE_BOUNDARY_3:{
             bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
@@ -1377,11 +1379,13 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
     }
 }
 
-void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty){
+int16_t breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty){
+    int16_t blockBreakCount = 0;
+
     switch(tileId){
         case TILE_BLOCK_1x1_RED ... TILE_BLOCK_1x1_STONE: {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-           gameData->targetBlocksBroken++;
+           blockBreakCount++;
            break;
         }
         case TILE_BLOCK_2x1_RED_L:
@@ -1399,11 +1403,11 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x1_STONE_L:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-           gameData->targetBlocksBroken++;
+           blockBreakCount++;
            
            if(isBlock(getTile(tilemap, tx+1, ty))){
             setTile(tilemap, tx+1, ty, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            break;
@@ -1423,11 +1427,11 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x1_STONE_R:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-           gameData->targetBlocksBroken++;
+           blockBreakCount++;
 
            if(isBlock(getTile(tilemap, tx-1, ty))){
             setTile(tilemap, tx-1, ty, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            break;
@@ -1447,21 +1451,21 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_STONE_UL:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-           gameData->targetBlocksBroken++;
+           blockBreakCount++;
            
            if(isBlock(getTile(tilemap, tx+1, ty))){
             setTile(tilemap, tx+1, ty, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            if(isBlock(getTile(tilemap, tx,ty+1))){
             setTile(tilemap, tx, ty+1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
             if(isBlock(getTile(tilemap, tx+1,ty+1))){
             setTile(tilemap, tx+1, ty+1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            break;
@@ -1481,21 +1485,21 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_STONE_UR:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-           gameData->targetBlocksBroken++;
+           blockBreakCount++;
            
            if(isBlock(getTile(tilemap, tx-1, ty))){
             setTile(tilemap, tx-1, ty, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            if(isBlock(getTile(tilemap, tx,ty+1))){
             setTile(tilemap, tx, ty+1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
             if(isBlock(getTile(tilemap, tx-1,ty+1))){
             setTile(tilemap, tx-1, ty+1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            break;
@@ -1515,21 +1519,21 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_STONE_DL:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-           gameData->targetBlocksBroken++;
+           blockBreakCount++;
            
            if(isBlock(getTile(tilemap, tx+1, ty))){
             setTile(tilemap, tx+1, ty, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            if(isBlock(getTile(tilemap, tx,ty-1))){
             setTile(tilemap, tx, ty-1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
-            if(isBlock(getTile(tilemap, tx+1,ty-1))){
+           if(isBlock(getTile(tilemap, tx+1,ty-1))){
             setTile(tilemap, tx+1, ty-1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            break;
@@ -1549,21 +1553,21 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
         case TILE_BLOCK_2x2_STONE_DR:
         {
            setTile(tilemap, tx, ty, TILE_EMPTY);
-           gameData->targetBlocksBroken++;
+           blockBreakCount++;
            
            if(isBlock(getTile(tilemap, tx-1, ty))){
             setTile(tilemap, tx-1, ty, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            if(isBlock(getTile(tilemap, tx,ty-1))){
             setTile(tilemap, tx, ty-1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
-            if(isBlock(getTile(tilemap, tx-1,ty-1))){
+           if(isBlock(getTile(tilemap, tx-1,ty-1))){
             setTile(tilemap, tx-1, ty-1, TILE_EMPTY);
-            gameData->targetBlocksBroken++;
+            blockBreakCount++;
            }
 
            break;
@@ -1586,6 +1590,8 @@ void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, ui
 
         gameData->changeState = ST_LEVEL_CLEAR;
     }
+
+    return blockBreakCount;
 };
 
 void setLedBreakBlock(gameData_t *gameData, uint8_t tileId){

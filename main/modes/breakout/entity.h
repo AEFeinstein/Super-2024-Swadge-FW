@@ -161,7 +161,7 @@ void defaultOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8
 void playerOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 
-void breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty);
+int16_t breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId, uint8_t tx, uint8_t ty);
 void setLedBreakBlock(gameData_t *gameData, uint8_t tileId);
 
 void updateDummy(entity_t* self);
