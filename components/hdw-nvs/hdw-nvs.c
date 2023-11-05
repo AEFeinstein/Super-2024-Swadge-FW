@@ -8,6 +8,7 @@
 #include <nvs.h>
 
 #include "hdw-nvs.h"
+#include "hdw-bzr.h"
 
 //==============================================================================
 // Functions
@@ -89,20 +90,31 @@ bool deinitNvs(void)
  */
 bool eraseNvs(void)
 {
+    bool bzrPaused = bzrPause();
+    bool retVal    = false;
+
     switch (nvs_flash_erase())
     {
         case ESP_OK:
         {
             // NVS erased successfully, need to re-initialize
-            return initNvs(true);
+            retVal = initNvs(true);
+            break;
         }
         default:
         case ESP_ERR_NOT_FOUND:
         {
             // Couldn't erase flash
-            return false;
+            break;
         }
     }
+
+    // Resume the buzzer if it was paused
+    if (bzrPaused)
+    {
+        bzrResume();
+    }
+    return retVal;
 }
 
 /**
@@ -139,14 +151,16 @@ bool writeNvs32(const char* key, int32_t val)
  */
 bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
 {
+    // Pause the buzzer before NVS operations
+    bool bzrPaused = bzrPause();
+    bool retVal    = false;
+
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READONLY, &handle);
     switch (openErr)
     {
         case ESP_OK:
         {
-            // Assume the commit is bad
-            bool readOk = false;
             // Write the NVS
             esp_err_t readErr = nvs_get_i32(handle, key, outVal);
             // Check the write error
@@ -154,7 +168,7 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
             {
                 case ESP_OK:
                 {
-                    readOk = true;
+                    retVal = true;
                     break;
                 }
                 default:
@@ -169,7 +183,7 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
             }
             // Close the handle
             nvs_close(handle);
-            return readOk;
+            break;
         }
         default:
         case ESP_ERR_NVS_NOT_INITIALIZED:
@@ -179,9 +193,16 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
         case ESP_ERR_NO_MEM:
         {
             ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
-            return false;
+            break;
         }
     }
+
+    // Resume the buzzer if it was paused
+    if (bzrPaused)
+    {
+        bzrResume();
+    }
+    return retVal;
 }
 
 /**
@@ -194,14 +215,15 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
  */
 bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
 {
+    bool bzrPaused = bzrPause();
+    bool retVal    = false;
+
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
     switch (openErr)
     {
         case ESP_OK:
         {
-            // Assume the commit is bad
-            bool commitOk = false;
             // Write the NVS
             esp_err_t writeErr = nvs_set_i32(handle, key, val);
             // Check the write error
@@ -210,7 +232,7 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
                 case ESP_OK:
                 {
                     // Commit NVS
-                    commitOk = (ESP_OK == nvs_commit(handle));
+                    retVal = (ESP_OK == nvs_commit(handle));
                     break;
                 }
                 default:
@@ -227,7 +249,7 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
 
             // Close the handle
             nvs_close(handle);
-            return commitOk;
+            break;
         }
         default:
         case ESP_ERR_NVS_NOT_INITIALIZED:
@@ -237,9 +259,16 @@ bool writeNamespaceNvs32(const char* namespace, const char* key, int32_t val)
         case ESP_ERR_NO_MEM:
         {
             ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
-            return false;
+            break;
         }
     }
+
+    // Resume the buzzer if it was paused
+    if (bzrPaused)
+    {
+        bzrResume();
+    }
+    return retVal;
 }
 
 /**
@@ -285,14 +314,15 @@ bool writeNvsBlob(const char* key, const void* value, size_t length)
  */
 bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_value, size_t* length)
 {
+    bool bzrPaused = bzrPause();
+    bool retVal    = false;
+
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READONLY, &handle);
     switch (openErr)
     {
         case ESP_OK:
         {
-            // Assume the commit is bad
-            bool readOk = false;
             // Write the NVS
             esp_err_t readErr = nvs_get_blob(handle, key, out_value, length);
             // Check the write error
@@ -300,7 +330,7 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
             {
                 case ESP_OK:
                 {
-                    readOk = true;
+                    retVal = true;
                     break;
                 }
                 default:
@@ -315,7 +345,7 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
             }
             // Close the handle
             nvs_close(handle);
-            return readOk;
+            break;
         }
         default:
         case ESP_ERR_NVS_NOT_INITIALIZED:
@@ -325,9 +355,16 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
         case ESP_ERR_NO_MEM:
         {
             ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
-            return false;
+            break;
         }
     }
+
+    // Resume the buzzer if it was paused
+    if (bzrPaused)
+    {
+        bzrResume();
+    }
+    return retVal;
 }
 
 /**
@@ -341,14 +378,15 @@ bool readNamespaceNvsBlob(const char* namespace, const char* key, void* out_valu
  */
 bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* value, size_t length)
 {
+    bool bzrPaused = bzrPause();
+    bool retVal    = false;
+
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
     switch (openErr)
     {
         case ESP_OK:
         {
-            // Assume the commit is bad
-            bool commitOk = false;
             // Write the NVS
             esp_err_t writeErr = nvs_set_blob(handle, key, value, length);
             // Check the write error
@@ -357,7 +395,7 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
                 case ESP_OK:
                 {
                     // Commit NVS
-                    commitOk = (ESP_OK == nvs_commit(handle));
+                    retVal = (ESP_OK == nvs_commit(handle));
                     break;
                 }
                 default:
@@ -374,7 +412,7 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
 
             // Close the handle
             nvs_close(handle);
-            return commitOk;
+            break;
         }
         default:
         case ESP_ERR_NVS_NOT_INITIALIZED:
@@ -384,9 +422,16 @@ bool writeNamespaceNvsBlob(const char* namespace, const char* key, const void* v
         case ESP_ERR_NO_MEM:
         {
             ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
-            return false;
+            break;
         }
     }
+
+    // Resume the buzzer if it was paused
+    if (bzrPaused)
+    {
+        bzrResume();
+    }
+    return retVal;
 }
 
 /**
@@ -409,14 +454,15 @@ bool eraseNvsKey(const char* key)
  */
 bool eraseNamespaceNvsKey(const char* namespace, const char* key)
 {
+    bool bzrPaused = bzrPause();
+    bool retVal    = false;
+
     nvs_handle_t handle;
     esp_err_t openErr = nvs_open(namespace, NVS_READWRITE, &handle);
     switch (openErr)
     {
         case ESP_OK:
         {
-            // Assume the commit is bad
-            bool commitOk = false;
             // Write the NVS
             esp_err_t writeErr = nvs_erase_key(handle, key);
             // Check the write error
@@ -425,7 +471,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
                 case ESP_OK:
                 {
                     // Commit NVS
-                    commitOk = (ESP_OK == nvs_commit(handle));
+                    retVal = (ESP_OK == nvs_commit(handle));
                     break;
                 }
                 default:
@@ -442,7 +488,7 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
 
             // Close the handle
             nvs_close(handle);
-            return commitOk;
+            break;
         }
         default:
         case ESP_ERR_NVS_NOT_INITIALIZED:
@@ -452,9 +498,16 @@ bool eraseNamespaceNvsKey(const char* namespace, const char* key)
         case ESP_ERR_NO_MEM:
         {
             ESP_LOGE("NVS", "%s openErr %s", __func__, esp_err_to_name(openErr));
-            return false;
+            break;
         }
     }
+
+    // Resume the buzzer if it was paused
+    if (bzrPaused)
+    {
+        bzrResume();
+    }
+    return retVal;
 }
 
 /**

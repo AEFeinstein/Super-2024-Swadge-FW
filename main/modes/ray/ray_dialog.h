@@ -5,6 +5,6 @@
 
 void rayShowDialog(ray_t* ray, const char* dialogText, wsg_t* dialogPortrait);
 void rayDialogCheckButtons(ray_t* ray);
-void rayDialogRender(ray_t* ray);
+void rayDialogRender(ray_t* ray, uint32_t elapsedUs);
 
 #endif

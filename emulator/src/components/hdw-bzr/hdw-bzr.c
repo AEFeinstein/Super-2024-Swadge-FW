@@ -461,14 +461,18 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
 
 /**
  * @brief Pause the buzzer but do not reset the song
+ *
+ * @return true if the buzzer was running and paused, false if it was not running to begin with
  */
-void bzrPause(void)
+bool bzrPause(void)
 {
     if (!bzrPaused)
     {
         bzrPaused = true;
         bzrStop(false);
+        return true;
     }
+    return false;
 }
 
 /**

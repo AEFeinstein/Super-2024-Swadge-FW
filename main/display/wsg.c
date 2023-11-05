@@ -324,6 +324,54 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
 }
 
 /**
+ * @brief Draw a WSG to the display without flipping or rotation at half size
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ */
+void drawWsgSimpleHalf(const wsg_t* wsg, int16_t xOff, int16_t yOff)
+{
+    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
+    //  esp-2021r2-patch3)
+
+    if (NULL == wsg->px)
+    {
+        return;
+    }
+
+    // Only draw in bounds
+    int dWidth                   = TFT_WIDTH;
+    int wWidth                   = wsg->w;
+    int xMin                     = CLAMP(xOff, 0, dWidth);
+    int xMax                     = CLAMP(xOff + (wWidth / 2), 0, dWidth);
+    int yMin                     = CLAMP(yOff, 0, TFT_HEIGHT);
+    int yMax                     = CLAMP(yOff + (wsg->h / 2), 0, TFT_HEIGHT);
+    paletteColor_t* px           = getPxTftFramebuffer();
+    int numX                     = xMax - xMin;
+    int wsgY                     = (yMin - yOff);
+    int wsgX                     = (xMin - xOff);
+    paletteColor_t* lineout      = &px[(yMin * dWidth) + xMin];
+    const paletteColor_t* linein = &wsg->px[wsgY * wWidth + wsgX];
+
+    // Draw each pixel
+    for (int y = yMin; y < yMax; y++)
+    {
+        for (int x = 0; x < numX; x++)
+        {
+            int color = linein[x * 2];
+            if (color != cTransparent)
+            {
+                lineout[x] = color;
+            }
+        }
+        lineout += dWidth;
+        linein += (2 * wWidth);
+        wsgY++;
+    }
+}
+
+/**
  * @brief Quickly copy a WSG to the display without flipping or rotation or transparency
  *
  * If the source WSG does have transparency, an indeterminate color will be drawn to the TFT
