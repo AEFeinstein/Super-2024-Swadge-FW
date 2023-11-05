@@ -73,12 +73,19 @@ bool initializePlayer(ray_t* ray)
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
 
-    // Always start with at least one missile to not get locked behind doors
+    // Always start with at most ten missiles to not get locked behind doors
     if (ray->p.i.missileLoadOut)
     {
-        if (0 == ray->p.i.numMissiles)
+        if (10 > ray->p.i.numMissiles)
         {
-            ray->p.i.numMissiles++;
+            if (10 > ray->p.i.maxNumMissiles)
+            {
+                ray->p.i.numMissiles = ray->p.i.maxNumMissiles;
+            }
+            else
+            {
+                ray->p.i.maxNumMissiles = 10;
+            }
         }
     }
 
@@ -86,6 +93,9 @@ bool initializePlayer(ray_t* ray)
     ray->nextLoadout        = ray->p.loadout;
     ray->loadoutChangeTimer = 0;
     ray->forceLoadoutSwap   = 0;
+
+    // Always reload with full health
+    ray->p.i.health = ray->p.i.maxHealth;
 
     return initFromScratch;
 }
