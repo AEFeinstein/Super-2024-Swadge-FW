@@ -717,10 +717,15 @@ void updateCrawler(entity_t * self){
             break;
     }
 
-    if(self->bouncesOffUnbreakableBlocks > 7){
-        scorePoints(self->gameData, 500, 1);
+    if(self->bouncesOffUnbreakableBlocks > 4){
+        scorePoints(self->gameData, 100, 1);
         destroyEntity(self, false);
         createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+        bzrPlaySfx(&(self->soundManager->detonate), BZR_LEFT); 
+    }
+
+    if(isOutsidePlayfield(self)) {
+        destroyEntity(self, false);
     }
     
     self->x += self->xspeed;
@@ -728,6 +733,19 @@ void updateCrawler(entity_t * self){
 }
 
 void crawlerSetMoveState(entity_t* self, uint8_t state){
+    uint16_t blocksLeft = self->tilemap->totalTargetBlocks - self->gameData->targetBlocksBroken;
+    if(blocksLeft < 100){
+        self->baseSpeed = 16;
+    } else if(blocksLeft < 80) {
+        self->baseSpeed = 24;
+    } else if(blocksLeft < 60) {
+        self->baseSpeed = 32;
+    } else if(blocksLeft < 20) {
+        self->baseSpeed = 48;
+    } else if(blocksLeft < 10) {
+        self->baseSpeed = 64;
+    }
+
     switch(state){
         //CLOCKWISE
         case CRAWLER_TOP_TO_RIGHT: //On top of a block, going right
@@ -1084,7 +1102,11 @@ void ballCollisionHandler(entity_t *self, entity_t *other)
             }
 
             self->bouncesOffUnbreakableBlocks = 0;
-
+            break;
+        case ENTITY_CRAWLER:
+            setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), self->baseSpeed);
+            advanceBallSpeed(self, 1);
+            bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
             break;
         default:
         {
@@ -1108,6 +1130,9 @@ void captiveBallCollisionHandler(entity_t *self, entity_t *other)
             if(!other->spriteRotateAngle) {
                 shouldChangeState = true;
             }
+            break;
+        case ENTITY_CRAWLER:
+            setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), self->baseSpeed);
             break;
         default:
         {
