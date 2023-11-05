@@ -1580,6 +1580,7 @@ int16_t breakBlockTile(tilemap_t *tilemap, gameData_t *gameData, uint8_t tileId,
     }
 
     setLedBreakBlock(gameData, tileId);
+    gameData->targetBlocksBroken += blockBreakCount;
 
     if(gameData->targetBlocksBroken >= tilemap->totalTargetBlocks){
         entity_t* playerBall = findFirstEntityOfType(tilemap->entityManager, ENTITY_PLAYER_BALL);
