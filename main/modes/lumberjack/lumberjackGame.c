@@ -57,6 +57,8 @@
 #define LUMBERJACK_WATER_INCREASE       10
 
 #define LUMBERJACK_ITEM_RESETTIME       2500
+#define LUMBERJACK_INVINCIBLE_TIME      7000
+#define LUMBERJACK_INVINCIBLE_SPEED     100000
 #define LUMBERJACK_COMBO_RESET_TIME     1500
 
 #define LUMBERJACK_TILE_SIZE            16
@@ -103,6 +105,11 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->levelIndex           = 0;
     lumv->lives                = 3;
     lumv->gameReady            = !(main->networked);
+
+    lumv->itemBlockAnimationTime = 0;
+    lumv->itemBlockItemFrame = 0;
+    lumv->itemBlockIndex = -1;
+    lumv->itemBlockItemAnimation = 0;
 
     //ESP_LOGI(LUM_TAG, "Load Title");
     loadWsg("lumbers_title.wsg", &lumv->title, true);
@@ -333,7 +340,6 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_bonus_7.wsg", &lumv->bonusSprites[7], true);
     loadWsg("lumbers_bonus_8.wsg", &lumv->bonusSprites[8], true);
     loadWsg("lumbers_bonus_9.wsg", &lumv->bonusSprites[9], true);
-
     
 
     loadWsg("lumbers_item_ui.wsg", &lumv->ui[0], true);
@@ -344,6 +350,30 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         lumv->bonusDisplay[i] = calloc(1, sizeof(lumberjackBonus_t));
     }
     lumv->activeBonusIndex = 0;
+
+
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        loadWsg("lumbers_items_grapes1.wsg", &lumv->itemIcons[0], true);
+        loadWsg("lumbers_items_grapes2.wsg", &lumv->itemIcons[1], true);
+        loadWsg("lumbers_items_grapes3.wsg", &lumv->itemIcons[2], true);
+        loadWsg("lumbers_items_grapes4.wsg", &lumv->itemIcons[3], true);
+        loadWsg("lumbers_items_grapes5.wsg", &lumv->itemIcons[4], true);
+        loadWsg("lumbers_items_grapes6.wsg", &lumv->itemIcons[5], true);
+        loadWsg("lumbers_items_orange1.wsg", &lumv->itemIcons[6], true);
+        loadWsg("lumbers_items_orange2.wsg", &lumv->itemIcons[7], true);
+        loadWsg("lumbers_items_orange3.wsg", &lumv->itemIcons[8], true);
+        loadWsg("lumbers_items_orange4.wsg", &lumv->itemIcons[9], true);
+        loadWsg("lumbers_items_orange5.wsg", &lumv->itemIcons[10], true);
+        loadWsg("lumbers_items_orange6.wsg", &lumv->itemIcons[11], true);
+        loadWsg("lumbers_items_pear1.wsg", &lumv->itemIcons[12], true);
+        loadWsg("lumbers_items_pear2.wsg", &lumv->itemIcons[13], true);
+        loadWsg("lumbers_items_pear3.wsg", &lumv->itemIcons[14], true);
+        loadWsg("lumbers_items_pear4.wsg", &lumv->itemIcons[15], true);
+        loadWsg("lumbers_items_pear5.wsg", &lumv->itemIcons[16], true);
+        loadWsg("lumbers_items_pear6.wsg", &lumv->itemIcons[17], true);
+
+    }
 
 }
 
@@ -513,6 +543,7 @@ void lumberjackSetupLevel(int characterIndex)
 
     lumv->localPlayer  = calloc(1, sizeof(lumberjackEntity_t));
     lumv->localPlayer->scoreValue       = 0;
+    lumv->invincibleTimer               = LUMBERJACK_INVINCIBLE_TIME;
 
     lumberjackSetupPlayer(lumv->localPlayer, characterIndex);
     lumberjackSpawnPlayer(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY, 0);
@@ -706,6 +737,21 @@ void lumberjackGameLoop(int64_t elapsedUs)
         }
     }
 
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING && lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        if (lumv->itemBlockTime > 0 && lumv->itemBlockIndex == -1)
+        {
+            lumv->itemBlockTime -= elapsedUs/10000;
+
+            if (lumv->itemBlockTime <= 0)
+            {
+                lumv->itemBlockReady = true;
+                lumv->itemBlockTime = 0;
+            }
+        }
+        
+    }
+
     //if panic mode do water
     if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING && lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
@@ -741,6 +787,26 @@ void lumberjackGameLoop(int64_t elapsedUs)
             
         }
 
+    }
+
+    //if attack mode animate item
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING && lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        if (lumv->itemBlockIndex != -1)
+        {
+            lumv->itemBlockAnimationTime += elapsedUs;
+
+            if (lumv->itemBlockAnimationTime > 80000)
+            {
+                lumv->itemBlockAnimationTime -= 80000;
+                lumv->itemBlockItemAnimation++;
+                lumv->itemBlockItemAnimation %= 6;
+
+                lumv->itemBlockItemFrame = (lumv->itemBlockIndex * 6) + lumv->itemBlockItemAnimation;
+                
+            }
+        }
+        
     }
 
     DrawGame();
@@ -797,7 +863,56 @@ void baseMode(int64_t elapsedUs)
             {
                 ESP_LOGI(LUM_TAG, "Attack this frame!");
 
-                lumberjackSendAttack(lumv->attackQueue);
+                //lumberjackSendAttack(lumv->attackQueue);
+
+                if (lumv->gameType == LUMBERJACK_MODE_ATTACK && lumv->itemBlockIndex != -1)
+                {
+                    if (lumv->itemBlockIndex == 0)
+                    {
+                        if (lumv->enemy4Count > 0)
+                        {
+                            lumv->ghost->spawnTime = lumv->ghostSpawnTime ;
+                            lumv->ghost->x = 400;                               
+                        }
+
+                        for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+                        {
+                            lumberjackEntity_t* enemy = lumv->enemy[i];
+
+                            if (enemy == NULL || enemy->state == LUMBERJACK_DEAD) continue;
+
+
+                            enemy->vy = -20;
+                            enemy->onGround = false;
+                            if (enemy->state == LUMBERJACK_BUMPED || enemy->state == LUMBERJACK_BUMPED_IDLE)
+                            {
+                                enemy->state = LUMBERJACK_RUN;
+                                enemy->direction = enemy->flipped ? 1 : -1; // Go opposite direction
+                                enemy->flipped = !enemy->flipped;
+                            }
+                            else
+                            {
+                                enemy->direction = 0;
+                                enemy->state = LUMBERJACK_BUMPED;
+                            }
+
+                        }
+                    }
+
+                    if (lumv->itemBlockIndex == 1)
+                    {
+                        ESP_LOGI(LUM_TAG, "%d", 1); //Orange
+                        lumv->invincibleTimer = LUMBERJACK_INVINCIBLE_TIME;
+                    }
+
+                    if (lumv->itemBlockIndex >= 2)
+                    {
+                        ESP_LOGI(LUM_TAG, "2" ); //Pear - Invincible
+                        lumv->invincibleTimer = LUMBERJACK_INVINCIBLE_TIME;
+                    }
+
+                    lumv->itemBlockIndex = -1;
+                }
             }
         }
 
@@ -961,7 +1076,7 @@ void baseMode(int64_t elapsedUs)
             {
                 lumberjackEntity_t* enemy = lumv->enemy[enemyIndex];
 
-                if (enemy == NULL || lumv->localPlayer->state == LUMBERJACK_DEAD || lumv->localPlayer->state == LUMBERJACK_INVINCIBLE)
+                if (enemy == NULL || lumv->localPlayer->state == LUMBERJACK_DEAD)
                     continue;
 
                 if (enemy->state != LUMBERJACK_DEAD && enemy->state != LUMBERJACK_OFFSCREEN)
@@ -1038,7 +1153,7 @@ void baseMode(int64_t elapsedUs)
                             enemy->vx     = enemy->direction * 10;
                             enemy->active = false;
                         }
-                        else
+                        else if (lumv->invincibleTimer <= 0)
                         {
                             // Kill player
                             // ESP_LOGI(LUM_TAG, "KILL PLAYER");
@@ -1060,7 +1175,11 @@ void baseMode(int64_t elapsedUs)
         lumv->stageAnimationFrame++;
     }
 
-    
+    //Check invincibility timer
+    if (lumv->invincibleTimer > 0)
+    {
+        lumv->invincibleTimer -= elapsedUs / 1000;
+    }
 
     // Update animation
     if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
@@ -1148,6 +1267,7 @@ void lumberjackOnLocalPlayerDeath(void)
     lumv->localPlayer->active    = false;
     lumv->localPlayer->jumping   = false;
     lumv->localPlayer->jumpTimer = 0;
+    lumv->comboAmount            = 0;
     lumv->comboTime              = 0;
 
     if (lumv->lives <= 0)
@@ -1165,6 +1285,7 @@ void lumberjackOnLocalPlayerDeath(void)
 
     }
 }
+
 
 
 void DrawTitle(void)
@@ -1265,8 +1386,19 @@ void DrawGame(void)
     lumv->localPlayer->drawFrame = currentFrame;
 
     // This is where it breaks. When it tries to play frame 3 or 4 it crashes.
+    if (lumv->invincibleTimer <= 0 || (lumv->invincibleTimer % 4) == 0)
+    {
+
     drawWsg(&lumv->playerSprites[lumv->localPlayer->drawFrame], lumv->localPlayer->x - 4,
             lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
+    }
+    else
+    {
+
+    drawSolidWsg(&lumv->playerSprites[lumv->localPlayer->drawFrame], lumv->localPlayer->x - 4,
+            lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, c500);
+    }
+    
 
     if (lumv->localPlayer->x > LUMBERJACK_SCREEN_X_MAX)
     {
@@ -1287,6 +1419,11 @@ void DrawGame(void)
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
         drawWsgSimple(&lumv->ui[0], (TFT_WIDTH / 2) - 12, 6);
+
+        if (lumv->itemBlockIndex != -1)
+        {
+            drawWsgSimple(&lumv->itemIcons[lumv->itemBlockItemFrame], (TFT_WIDTH / 2) - 8, 10);
+        }
     }
     //If playing panic mode draw water
 
@@ -1841,7 +1978,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
     {
         if (lumv->localPlayer->x < lumv->ghost->x + LUMBERJACK_GHOST_BOX && lumv->localPlayer->x + lumv->localPlayer->width > lumv->ghost->x
         && lumv->localPlayer->y < lumv->ghost->y + LUMBERJACK_GHOST_BOX && lumv->localPlayer->y + lumv->localPlayer->height > lumv->ghost->y
-        && lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_DUCK && lumv->localPlayer->state != LUMBERJACK_INVINCIBLE)
+        && lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_DUCK && lumv->invincibleTimer > 0)
         {
             lumberjackOnLocalPlayerDeath();
         }
@@ -2001,8 +2138,7 @@ void lumberjackDoControls(void)
 
     if (buttonPressed == false && lumv->localPlayer->active)
     {
-        if (lumv->localPlayer->state != LUMBERJACK_INVINCIBLE)
-            lumv->localPlayer->state = LUMBERJACK_IDLE; // Do a ton of other checks here
+        lumv->localPlayer->state = LUMBERJACK_IDLE; // Do a ton of other checks here
     }
 
     if (lumv->localPlayer->state != previousState)
@@ -2126,7 +2262,149 @@ void lumberjackUseBlock()
             }
         }
     }
+
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        lumv->itemBlockIndex = esp_random() % 3;
+        lumv->itemBlockTime = LUMBERJACK_ITEM_RESETTIME;
+
+        if (lumv->itemBlockIndex == 0)
+        {
+
+        }
+        else if (lumv->itemBlockIndex == 1)
+        {
+
+        }
+        else {
+
+        }
+
+    }
 }
+
+/// CODE ++
+
+/**
+ * @brief Draw solid color of a WSG to the display
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ * @param flipLR true to flip the image across the Y axis
+ * @param flipUD true to flip the image across the X axis
+ * @param color The color we're sending instead
+ */
+void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, uint8_t inColor)
+{
+
+    if (NULL == wsg->px)
+    {
+        return;
+    }
+
+    // Draw the image's pixels (no rotation or transformation)
+    uint32_t w         = TFT_WIDTH;
+    paletteColor_t* px = getPxTftFramebuffer();
+
+    uint16_t wsgw = wsg->w;
+    uint16_t wsgh = wsg->h;
+
+    int32_t xstart = 0;
+    int16_t xend   = wsgw;
+    int32_t xinc   = 1;
+
+    // Reflect over Y axis?
+    if (flipLR)
+    {
+        xstart = wsgw - 1;
+        xend   = -1;
+        xinc   = -1;
+    }
+
+    if (xOff < 0)
+    {
+        if (xinc > 0)
+        {
+            xstart -= xOff;
+            if (xstart >= xend)
+            {
+                return;
+            }
+        }
+        else
+        {
+            xstart += xOff;
+            if (xend >= xstart)
+            {
+                return;
+            }
+        }
+        xOff = 0;
+    }
+
+    if (xOff + wsgw > w)
+    {
+        int32_t peelBack = (xOff + wsgw) - w;
+        if (xinc > 0)
+        {
+            xend -= peelBack;
+            if (xstart >= xend)
+            {
+                return;
+            }
+        }
+        else
+        {
+            xend += peelBack;
+            if (xend >= xstart)
+            {
+                return;
+            }
+        }
+    }
+
+    for (int16_t srcY = 0; srcY < wsgh; srcY++)
+    {
+        int32_t usey = srcY;
+
+        // Reflect over X axis?
+        if (flipUD)
+        {
+            usey = wsgh - 1 - usey;
+        }
+
+        const paletteColor_t* linein = &wsg->px[usey * wsgw];
+
+        // Transform this pixel's draw location as necessary
+        uint32_t dstY = srcY + yOff;
+
+        // It is too complicated to detect both directions and backoff correctly, so we just do this here.
+        // It does slow things down a "tiny" bit.  People in the future could optimze out this check.
+        if (dstY >= TFT_HEIGHT)
+        {
+            continue;
+        }
+
+        int32_t lineOffset = dstY * w;
+        int32_t dstx       = xOff + lineOffset;
+
+        for (int32_t srcX = xstart; srcX != xend; srcX += xinc)
+        {
+            // Draw if not transparent
+            uint8_t color = linein[srcX];
+            if (cTransparent != color)
+            {
+                px[dstx] = inColor;
+            }
+            dstx++;
+        }
+    }
+    
+}
+
+
+
 
 ///
 ///
@@ -2192,6 +2470,15 @@ void lumberjackExitGameMode(void)
     for (int i = 0; i < ARRAY_SIZE(lumv->axeBlocks); i++)
     {
         free(lumv->axeBlocks[i]);
+    }
+
+
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        for (int i = 0; i < ARRAY_SIZE(lumv->itemIcons); i++)
+        {
+            freeWsg(&lumv->itemIcons[i]);
+        }
     }
 
     freeFont(&lumv->arcade);

@@ -33,6 +33,7 @@ void lumberjackGameReady(void);
 void lumberjackPlayGame(void);
 void lumberjackSendGo(void);
 void lumberjackSendDeath(bool gameover);
+void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, uint8_t inColor);
 
 
 void lumberjackUseBlock(void);

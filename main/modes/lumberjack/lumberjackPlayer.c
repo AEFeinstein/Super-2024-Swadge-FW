@@ -6,7 +6,6 @@
 #include <esp_log.h>
 
 #define LUMBERJACK_DEFAULT_ANIMATION_SPEED 150000
-#define LUMBERJACK_INVINCIBLE_ANIMATION_SPEED 100000
 #define LUMBERJACK_HERO_WIDTH              24
 #define LUMBERJACK_HERO_HEIGHT             31
 #define LUMBERJACK_HERO_DUCK_HEIGHT        31
@@ -35,7 +34,7 @@ void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
     hero->maxVX            = 15;
     hero->vy               = 0;
     hero->flipped          = (facing == 0);
-    hero->state            = LUMBERJACK_INVINCIBLE;
+    hero->state            = LUMBERJACK_IDLE;
     hero->timerFrameUpdate = 0;
     hero->active           = true;
     hero->onGround         = true;
@@ -53,7 +52,7 @@ void lumberjackRespawn(lumberjackEntity_t* hero, int x, int y)
     hero->vx               = 0;
     hero->vy               = 0;
     hero->flipped          = 0;
-    hero->state            = LUMBERJACK_INVINCIBLE;
+    hero->state            = LUMBERJACK_IDLE;
     hero->timerFrameUpdate = 0;
     hero->onGround         = true;
     hero->maxLevel         = 0;
@@ -108,12 +107,6 @@ int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
         const int animationVictory[] = {15};
         hero->animationSpeed         = LUMBERJACK_DEFAULT_ANIMATION_SPEED;
         return animationVictory[hero->currentFrame % ARRAY_SIZE(animationVictory)];
-    }
-    if (animation == LUMBERJACK_INVINCIBLE)
-    {
-        const int animationInvincible[] = {0, 17};
-        hero->animationSpeed       = LUMBERJACK_INVINCIBLE_ANIMATION_SPEED;
-        return animationInvincible[hero->currentFrame % ARRAY_SIZE(animationInvincible)];
     }
 
     return 0;

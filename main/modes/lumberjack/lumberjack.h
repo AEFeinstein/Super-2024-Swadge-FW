@@ -121,6 +121,8 @@ typedef struct
     int playerSpawnX;
     int playerSpawnY;
 
+    int invincibleTimer;
+
     int enemy1Count;
     int enemy2Count;
     int enemy3Count;
@@ -143,6 +145,7 @@ typedef struct
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
     wsg_t minicharacters[4];
+    wsg_t itemIcons[18];
 
     lumberjackBonus_t* bonusDisplay[16];
     uint8_t activeBonusIndex;
@@ -181,6 +184,10 @@ typedef struct
     //Item Block
     int itemBlockTime;
     bool itemBlockReady;
+    int itemBlockIndex;
+    int itemBlockItemAnimation;
+    int itemBlockAnimationTime;
+    int itemBlockItemFrame;
     
     lumberjackGameType_t gameType;
 

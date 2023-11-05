@@ -14,7 +14,6 @@ enum lumberjackPlayerState
     LUMBERJACK_OFFSCREEN   = 7, // reserved for enemies only
     LUMBERJACK_BUMPED      = 8,
     LUMBERJACK_BUMPED_IDLE = 9,
-    LUMBERJACK_INVINCIBLE  = 10,
 };
 
 // Animation speeds
