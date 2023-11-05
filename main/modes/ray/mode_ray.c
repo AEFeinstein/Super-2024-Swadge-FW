@@ -258,14 +258,11 @@ static void rayMainLoop(int64_t elapsedUs)
     }
 
     // Run a timer to blink things
-    if (0 < ray->blinkTimer)
+    ray->blinkTimer -= elapsedUs;
+    while (0 >= ray->blinkTimer)
     {
-        ray->blinkTimer -= elapsedUs;
-        if (0 >= ray->blinkTimer)
-        {
-            ray->blink      = !ray->blink;
-            ray->blinkTimer = BLINK_US;
-        }
+        ray->blink      = !ray->blink;
+        ray->blinkTimer += BLINK_US;
     }
 
     switch (ray->screen)
