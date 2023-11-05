@@ -136,7 +136,7 @@ void breakoutBuildMainMenu(breakout_t* self);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 39
+#define NUM_LEVELS 41
 
 //The index into leveldef[] where the actual game levels start
 //As opposed to utility levels like titlescreen, debug, etc.
@@ -220,6 +220,10 @@ static const leveldef_t leveldef[NUM_LEVELS] = {
     {.filename = "mag03.bin",
      .timeLimit = 180},
     {.filename = "wallball.bin",
+     .timeLimit = 180},
+    {.filename = "introenemy.bin",
+     .timeLimit = 180},
+    {.filename = "stormcastle.bin",
      .timeLimit = 180}
      };
     
@@ -762,7 +766,7 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
                 bzrPlayBgm(&(self->soundManager.tally), BZR_STEREO);
             }
 
-            scorePoints(&(self->gameData), 20, -1);
+            scorePoints(&(self->gameData), 80, -1);
         } else if(self->gameData.frameCount % 60 == 0) {
             //Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false, false);
@@ -1250,7 +1254,7 @@ void breakoutBuildMainMenu(breakout_t* self){
         breakout->levelSelectMenuItem = calloc(1,sizeof(menuItem_t));
         breakout->levelSelectMenuItem->label = breakoutContinue;
         breakout->levelSelectMenuItem->minSetting = 1;
-        breakout->levelSelectMenuItem->maxSetting = (breakout->gameData.debugMode) ? NUM_LEVELS : breakout->unlockables.maxLevelIndexUnlocked + 1;
+        breakout->levelSelectMenuItem->maxSetting = (breakout->gameData.debugMode) ? NUM_LEVELS - 1 : breakout->unlockables.maxLevelIndexUnlocked + 1;
         breakout->levelSelectMenuItem->currentSetting = (breakout->gameData.level == 0) ?  breakout->levelSelectMenuItem->maxSetting : breakout->gameData.level;
         breakout->levelSelectMenuItem->options = NULL;
         breakout->levelSelectMenuItem->subMenu = NULL;
