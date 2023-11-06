@@ -229,11 +229,12 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked)
 }
 
 /**
- * @brief Initializes the touchpad extension.
+ * @brief Initializes the touchpad extension. If emulateTouch is enabled, the touchpad will display.
+ *
+ * Using keys 1-4 to control the touchpad 1-4 is always enabled.
  *
  * @param emuArgs
- * @return true
- * @return false
+ * @return true If touchpad emulation is enabled (it is)
  */
 static bool touchInit(emuArgs_t* emuArgs)
 {
@@ -248,12 +249,9 @@ static bool touchInit(emuArgs_t* emuArgs)
     if (emuArgs->emulateTouch)
     {
         requestPane(&touchEmuCallback, PANE_BOTTOM, PANE_MIN_SIZE, PANE_MIN_SIZE);
-        return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return true;
 }
 
 static int32_t touchKey(uint32_t key, bool down)
