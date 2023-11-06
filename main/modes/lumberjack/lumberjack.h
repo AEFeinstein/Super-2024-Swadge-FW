@@ -121,7 +121,7 @@ typedef struct
     int playerSpawnX;
     int playerSpawnY;
 
-    int invincibleTimer;
+    
 
     int enemy1Count;
     int enemy2Count;
@@ -188,6 +188,11 @@ typedef struct
     int itemBlockItemAnimation;
     int itemBlockAnimationTime;
     int itemBlockItemFrame;
+
+    uint8_t invincibleColor;
+    int invincibleTimer;
+    int invincibleFlicker;
+    bool invincibleFlickerOn;
     
     lumberjackGameType_t gameType;
 

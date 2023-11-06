@@ -38,7 +38,7 @@
 #define LUMBERJACK_BLOCK_ANIMATION_MAX  7
 #define LUMBERJACK_ROTATE_ANIMATION_MAX 4
 #define LUMBERJACK_RESPAWN_PANIC_MIN    3750
-#define LUMBERJACK_RESPAWN_ATTACK_MIN   500
+#define LUMBERJACK_RESPAWN_ATTACK_MIN   1000
 #define LUMBERJACK_RESPAWN_VS_MIN       250
 #define LUMBERJACK_UPGRADE_TIMER_OFFSET 250
 #define LUMBERJACK_SUBMERGE_TIMER       300
@@ -105,6 +105,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->levelIndex           = 0;
     lumv->lives                = 3;
     lumv->gameReady            = !(main->networked);
+    lumv->invincibleColor      = c000;
 
     lumv->itemBlockAnimationTime = 0;
     lumv->itemBlockItemFrame = 0;
@@ -201,6 +202,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_red_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("lumbers_red_17.wsg", &lumv->playerSprites[16], true);
         loadWsg("lumbers_red_22.wsg", &lumv->playerSprites[17], true);
+        lumv->invincibleColor      = c500;
+
     }
     else if (characterIndex == 1)
     {
@@ -222,6 +225,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_green_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("lumbers_green_17.wsg", &lumv->playerSprites[16], true);
         loadWsg("lumbers_green_22.wsg", &lumv->playerSprites[17], true);
+        lumv->invincibleColor      = c050;
+
     }
     else if (characterIndex == 2)
     {
@@ -244,6 +249,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("secret_swadgeland_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("secret_swadgeland_17.wsg", &lumv->playerSprites[16], true);
         loadWsg("secret_swadgeland_22.wsg", &lumv->playerSprites[17], true);
+        lumv->invincibleColor      = c305;
+
     } 
     else if (characterIndex == 3)
     {
@@ -265,6 +272,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_cho_16.wsg", &lumv->playerSprites[15], true);
         loadWsg("lumbers_cho_17.wsg", &lumv->playerSprites[16], true);
         loadWsg("lumbers_cho_18.wsg", &lumv->playerSprites[17], true);
+        lumv->invincibleColor      = c103;
+
     } 
 
     //ESP_LOGI(LUM_TAG, "Loading Enemies");
@@ -419,6 +428,7 @@ bool lumberjackLoadLevel()
                 "lumberjacks_attack_2.bin",
                 "lumberjacks_attack_3.bin",
                 "lumberjacks_attack_4.bin",
+                "lumberjacks_attack_5.bin",
             };
 
             fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
@@ -505,6 +515,12 @@ bool lumberjackLoadLevel()
         lumv->tile[i].offset_time = 0;
                 
     }
+
+
+    for (int i = 0; i < ARRAY_SIZE(lumv->bonusDisplay); i++)
+    {
+        lumv->bonusDisplay[i]->active = false;
+    }
     
     int offset = (lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH) + 12;
     ESP_LOGI (LUM_TAG, "%d total enemies",lumv->totalEnemyCount);
@@ -589,14 +605,14 @@ void lumberjackSetupLevel(int characterIndex)
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy5Count; eSpawnIndex++)
     {
         lumv->enemy[offset + eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
-        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 0);
+        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 4);
     } 
 
     offset += lumv->enemy5Count;
     for (int eSpawnIndex = 0; eSpawnIndex < lumv->enemy6Count; eSpawnIndex++)
     {
         lumv->enemy[offset + eSpawnIndex] = calloc(1, sizeof(lumberjackEntity_t));
-        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 0);
+        lumberjackSetupEnemy(lumv->enemy[offset + eSpawnIndex], 5);
     } 
 
     offset += lumv->enemy6Count;
@@ -1064,6 +1080,7 @@ void baseMode(int64_t elapsedUs)
                 // Respawn player
                 lumv->localPlayer->respawn = 0;
                 lumv->lives--;
+                lumv->invincibleTimer = LUMBERJACK_INVINCIBLE_TIME;
                 lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY);
             }
         }
@@ -1179,6 +1196,13 @@ void baseMode(int64_t elapsedUs)
     if (lumv->invincibleTimer > 0)
     {
         lumv->invincibleTimer -= elapsedUs / 1000;
+        lumv->invincibleFlicker -= elapsedUs/1000;
+
+        if (lumv->invincibleFlicker <= 0)
+        {
+            lumv->invincibleFlicker = 250;
+            lumv->invincibleFlickerOn = !lumv->invincibleFlickerOn;
+        }
     }
 
     // Update animation
@@ -1386,8 +1410,9 @@ void DrawGame(void)
     lumv->localPlayer->drawFrame = currentFrame;
 
     // This is where it breaks. When it tries to play frame 3 or 4 it crashes.
-    if (lumv->invincibleTimer <= 0 || (lumv->invincibleTimer % 4) == 0)
+    if (lumv->invincibleTimer <= 0 || !lumv->invincibleFlickerOn)
     {
+
 
     drawWsg(&lumv->playerSprites[lumv->localPlayer->drawFrame], lumv->localPlayer->x - 4,
             lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, 0);
@@ -1396,7 +1421,7 @@ void DrawGame(void)
     {
 
     drawSolidWsg(&lumv->playerSprites[lumv->localPlayer->drawFrame], lumv->localPlayer->x - 4,
-            lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, c500);
+            lumv->localPlayer->y - lumv->yOffset, lumv->localPlayer->flipped, false, lumv->invincibleColor);
     }
     
 
@@ -1491,10 +1516,6 @@ void DrawGame(void)
             drawWsgSimple(&lumv->bonusSprites[currentBonus->bonusAmount], currentBonus->x+8, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
         }
 
-        if (i == 1)
-        {
-            ESP_LOGI(LUM_TAG, "COMBO 1 %d %f", currentBonus->time , offsetTime);
-        }
         //currentBonus->time += ;
         //currentBonus->bonusAmount = lumv->comboAmount;
     }
@@ -1978,7 +1999,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
     {
         if (lumv->localPlayer->x < lumv->ghost->x + LUMBERJACK_GHOST_BOX && lumv->localPlayer->x + lumv->localPlayer->width > lumv->ghost->x
         && lumv->localPlayer->y < lumv->ghost->y + LUMBERJACK_GHOST_BOX && lumv->localPlayer->y + lumv->localPlayer->height > lumv->ghost->y
-        && lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_DUCK && lumv->invincibleTimer > 0)
+        && lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_DUCK && lumv->invincibleTimer <= 0)
         {
             lumberjackOnLocalPlayerDeath();
         }
@@ -2231,6 +2252,14 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
                 {
                     enemy->direction = 0;
                     enemy->state     = LUMBERJACK_BUMPED;
+            
+                    if (enemy->type == 4)
+                    {
+                        lumberjackUpdateEnemy(enemy, enemy->type + 1);
+                        enemy->state = LUMBERJACK_RUN;
+                        enemy->direction = enemy->flipped ? 1 : -1; // Go opposite direction
+                        enemy->flipped = !enemy->flipped;
+                    }
                 }
             }
         }
