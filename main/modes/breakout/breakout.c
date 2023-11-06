@@ -811,12 +811,14 @@ void breakoutUpdateLevelClear(breakout_t *self, int64_t elapsedUs){
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
                 breakout->gameData.countdown = leveldef[levelIndex].timeLimit;
                 breakoutChangeStateReadyScreen(self);
+                if(!self->gameData.debugMode){
+                    breakoutSaveUnlockables(self);
+                }
+                
                 return;
             }
 
-            if(!self->gameData.debugMode){
-                breakoutSaveUnlockables(self);
-            }
+
         } 
     } else if(self->gameData.frameCount < 30 || !(self->gameData.frameCount % 2)){
         drawTileMap(&(self->tilemap));
@@ -1218,7 +1220,7 @@ void breakoutDrawNameEntry(font_t *font, gameData_t *gameData, uint8_t currentIn
 }
 
 void breakoutInitializeUnlockables(breakout_t* self){
-    self->unlockables.maxLevelIndexUnlocked = 0;
+    self->unlockables.maxLevelIndexUnlocked = 1;
     self->unlockables.gameCleared = false;
     /*self->unlockables.oneCreditCleared = false;
     self->unlockables.bigScore = false;
@@ -1254,7 +1256,7 @@ void breakoutBuildMainMenu(breakout_t* self){
         breakout->levelSelectMenuItem = calloc(1,sizeof(menuItem_t));
         breakout->levelSelectMenuItem->label = breakoutContinue;
         breakout->levelSelectMenuItem->minSetting = 1;
-        breakout->levelSelectMenuItem->maxSetting = (breakout->gameData.debugMode) ? NUM_LEVELS - 1 : breakout->unlockables.maxLevelIndexUnlocked + 1;
+        breakout->levelSelectMenuItem->maxSetting = (breakout->gameData.debugMode) ? NUM_LEVELS - 1 : breakout->unlockables.maxLevelIndexUnlocked;
         breakout->levelSelectMenuItem->currentSetting = (breakout->gameData.level == 0) ?  breakout->levelSelectMenuItem->maxSetting : breakout->gameData.level;
         breakout->levelSelectMenuItem->options = NULL;
         breakout->levelSelectMenuItem->subMenu = NULL;
