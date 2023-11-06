@@ -124,6 +124,7 @@ static void rayEnterMode(void)
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
     {
         loadSong(songFiles[sIdx], &ray->songs[sIdx], true);
+        ray->songs[sIdx].shouldLoop = true;
     }
 
     // Set the menu as the screen
