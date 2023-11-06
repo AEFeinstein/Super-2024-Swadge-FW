@@ -904,7 +904,8 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
             // If this is an enemy
             bool drawWarpLine = false;
-            if (CELL_IS_TYPE(obj->type, OBJ | ENEMY))
+            bool isEnemy      = CELL_IS_TYPE(obj->type, OBJ | ENEMY);
+            if (isEnemy)
             {
                 rayEnemy_t* enemy = (rayEnemy_t*)obj;
                 // And the enemy is warping in
@@ -987,6 +988,42 @@ rayObjCommon_t* castSprites(ray_t* ray)
                     }
                 }
                 texX += texXDelta;
+            }
+
+            // If this is a blocking enemy
+            if ((isEnemy) && (E_BLOCKING == ((rayEnemy_t*)obj)->state))
+            {
+                // Draw a circle shield with wallDistBuffer checks
+                // Drawing is largely copied from drawCircleInner()
+                int32_t r  = spriteHeight / 2;
+                int32_t xm = spriteScreenX;
+                int32_t ym = (TFT_HEIGHT / 2) + spritePosZ;
+                int32_t x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+                do
+                {
+                    int32_t cdX = xm - x;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + y), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - y), c550);
+                    }
+                    cdX = xm - y;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - x), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + x), c550);
+                    }
+
+                    r = err;
+                    if (r <= y)
+                    {
+                        err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+                    }
+                    if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+                    {
+                        err += ++x * 2 + 1; /* -> x-step now */
+                    }
+                } while (x < 0);
             }
         }
     }
