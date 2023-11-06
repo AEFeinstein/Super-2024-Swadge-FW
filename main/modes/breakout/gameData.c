@@ -21,7 +21,7 @@
     gameData->ballsInPlay = 0;
     gameData->countdown = 000;
 
-    gameData->extraLifeScore = 3000;
+    gameData->extraLifeScore = 8000;
 
     gameData->level = 1;
     gameData->frameCount = 0;
@@ -62,7 +62,7 @@
     gameData->countdown = 000;
     gameData->frameCount = 0;
 
-    gameData->extraLifeScore = 3000;
+    gameData->extraLifeScore = 8000;
 
     gameData->combo = 0;
     //gameData->comboTimer = 0;
