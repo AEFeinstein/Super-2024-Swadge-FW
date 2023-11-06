@@ -188,5 +188,5 @@ int32_t rayEnemyFlamingGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyFlamingGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_ICE;
+    return OBJ_BULLET_E_FLAMING;
 }

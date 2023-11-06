@@ -253,27 +253,27 @@ void checkRayCollisions(ray_t* ray)
                 int32_t dmg = 0;
                 switch (bullet->c.type)
                 {
-                    case OBJ_BULLET_NORMAL:
+                    case OBJ_BULLET_E_NORMAL:
                     {
                         dmg = 5;
                         break;
                     }
-                    case OBJ_BULLET_CHARGE:
+                    case OBJ_BULLET_E_STRONG:
                     {
                         dmg = 10;
                         break;
                     }
-                    case OBJ_BULLET_MISSILE:
+                    case OBJ_BULLET_E_ARMOR:
                     {
                         dmg = 15;
                         break;
                     }
-                    case OBJ_BULLET_ICE:
+                    case OBJ_BULLET_E_FLAMING:
                     {
                         dmg = 20;
                         break;
                     }
-                    case OBJ_BULLET_XRAY:
+                    case OBJ_BULLET_E_HIDDEN:
                     {
                         dmg = 25;
                         break;

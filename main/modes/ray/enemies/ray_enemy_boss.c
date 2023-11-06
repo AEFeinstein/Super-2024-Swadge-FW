@@ -186,25 +186,22 @@ rayMapCellType_t rayEnemyBossGetBullet(rayEnemy_t* enemy)
 {
     switch (enemy->bossState)
     {
+        default:
         case B_NORMAL:
         {
-            return OBJ_BULLET_NORMAL;
+            return OBJ_BULLET_E_NORMAL;
         }
         case B_MISSILE:
         {
-            return OBJ_BULLET_MISSILE;
+            return OBJ_BULLET_E_ARMOR;
         }
         case B_ICE:
         {
-            return OBJ_BULLET_ICE;
+            return OBJ_BULLET_E_FLAMING;
         }
         case B_XRAY:
         {
-            return OBJ_BULLET_XRAY;
-        }
-        default:
-        {
-            return OBJ_BULLET_NORMAL;
+            return OBJ_BULLET_E_HIDDEN;
         }
     }
 }

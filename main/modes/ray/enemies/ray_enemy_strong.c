@@ -169,5 +169,5 @@ int32_t rayEnemyStrongGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyStrongGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_CHARGE;
+    return OBJ_BULLET_E_STRONG;
 }

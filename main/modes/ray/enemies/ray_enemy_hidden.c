@@ -144,5 +144,5 @@ int32_t rayEnemyHiddenGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyHiddenGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_XRAY;
+    return OBJ_BULLET_E_HIDDEN;
 }

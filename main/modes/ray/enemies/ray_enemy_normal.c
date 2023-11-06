@@ -191,5 +191,5 @@ int32_t rayEnemyNormalGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyNormalGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_NORMAL;
+    return OBJ_BULLET_E_NORMAL;
 }

@@ -164,5 +164,5 @@ int32_t rayEnemyArmoredGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyArmoredGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_MISSILE;
+    return OBJ_BULLET_E_ARMOR;
 }
