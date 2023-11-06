@@ -118,14 +118,12 @@ void rayEnemyArmoredMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 bool rayEnemyArmoredGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
     // Health starts at 100
-    bool hurt = false;
     switch (bullet)
     {
         case OBJ_BULLET_MISSILE:
         {
             // Two shots to kill
             enemy->health -= 50;
-            hurt = true;
             break;
         }
         case OBJ_BULLET_NORMAL:
@@ -135,7 +133,6 @@ bool rayEnemyArmoredGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
         {
             // Five shots to kill
             enemy->health -= 20;
-            hurt = true;
             break;
         }
         default:
@@ -143,11 +140,6 @@ bool rayEnemyArmoredGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
             // Not a bullet
             break;
         }
-    }
-
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
     }
     return enemy->health <= 0;
 }

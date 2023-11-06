@@ -261,7 +261,7 @@ static void rayMainLoop(int64_t elapsedUs)
     ray->blinkTimer -= elapsedUs;
     while (0 >= ray->blinkTimer)
     {
-        ray->blink      = !ray->blink;
+        ray->blink = !ray->blink;
         ray->blinkTimer += BLINK_US;
     }
 

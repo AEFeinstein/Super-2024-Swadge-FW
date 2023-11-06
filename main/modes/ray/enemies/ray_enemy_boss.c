@@ -117,7 +117,6 @@ void rayEnemyBossMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  */
 bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    bool hurt = false;
     switch (enemy->bossState)
     {
         case B_NORMAL:
@@ -125,12 +124,10 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             if (OBJ_BULLET_NORMAL == bullet)
             {
                 enemy->health -= 5;
-                hurt = true;
             }
             else if (OBJ_BULLET_CHARGE == BULLET)
             {
                 enemy->health -= 10;
-                hurt = true;
             }
             break;
         }
@@ -139,7 +136,6 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             if (OBJ_BULLET_MISSILE == bullet)
             {
                 enemy->health -= 5;
-                hurt = true;
             }
             break;
         }
@@ -148,7 +144,6 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             if (OBJ_BULLET_ICE == bullet)
             {
                 enemy->health -= 5;
-                hurt = true;
             }
             break;
         }
@@ -157,7 +152,6 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             if (OBJ_BULLET_XRAY == bullet)
             {
                 enemy->health -= 5;
-                hurt = true;
             }
             break;
         }
@@ -165,11 +159,6 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         {
             break;
         }
-    }
-
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
     }
 
     return (enemy->health <= 0);

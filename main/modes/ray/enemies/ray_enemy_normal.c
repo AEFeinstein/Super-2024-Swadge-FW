@@ -139,21 +139,18 @@ void rayEnemyNormalMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
     // Health starts at 100
-    bool hurt = false;
     switch (bullet)
     {
         case OBJ_BULLET_NORMAL:
         {
             // Three shots to kill
             enemy->health -= 34;
-            hurt = true;
             break;
         }
         case OBJ_BULLET_CHARGE:
         {
             // Two shots to kill
             enemy->health -= 50;
-            hurt = true;
             break;
         }
         case OBJ_BULLET_ICE:
@@ -162,7 +159,6 @@ bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         {
             // Five shots to kill
             enemy->health -= 20;
-            hurt = true;
             break;
         }
         default:
@@ -172,10 +168,6 @@ bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         }
     }
 
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
-    }
     return enemy->health <= 0;
 }
 

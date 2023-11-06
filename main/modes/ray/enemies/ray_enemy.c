@@ -282,8 +282,8 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    // Don't get shot when blocking
-    if ((E_BLOCKING == enemy->state) || (E_HURT == enemy->state))
+    // Don't get shot when blocking or dying
+    if ((E_BLOCKING == enemy->state) || (E_DEAD == enemy->state))
     {
         return;
     }
@@ -308,6 +308,9 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     // If the enemy took
     if (oldHealth != enemy->health)
     {
+        // Transition to hurt
+        rayEnemyTransitionState(enemy, E_HURT);
+
         // Don't get stun-locked. Hurt animation is 200000*4, so double that
         // enemy->invincibleTimer = 200000 * 8;
 
@@ -329,14 +332,16 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
  */
 bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
 {
+    // clang-format off
     const bool transitionTable[E_NUM_STATES][E_NUM_STATES] = {
-        {false, true, true, true, true, false},    // E_WALKING_1, don't transition to E_DEAD
-        {true, false, true, true, true, false},    // E_WALKING_2, don't transition to E_DEAD
-        {true, true, false, false, false, false},  // E_SHOOTING, transition to E_WALKING
-        {true, true, false, false, false, true},   // E_HURT, transition to E_WALKING or E_DEAD
-        {true, true, false, false, false, false},  // E_BLOCKING, transition to E_WALKING
-        {false, false, false, false, false, false} // E_DEAD, don't transition to anything
+        {false, true,  true,  true,  true,  false}, // E_WALKING_1, don't transition to E_DEAD
+        {true,  false, true,  true,  true,  false}, // E_WALKING_2, don't transition to E_DEAD
+        {true,  true,  false, true , false, false}, // E_SHOOTING, transition to E_WALKING or E_HURT
+        {true,  true,  false, false, false, true }, // E_HURT, transition to E_WALKING or E_DEAD
+        {true,  true,  false, false, false, false}, // E_BLOCKING, transition to E_WALKING
+        {false, false, false, false, false, false}  // E_DEAD, don't transition to anything
     };
+    // clang-format on
 
     if (transitionTable[enemy->state][newState])
     {
