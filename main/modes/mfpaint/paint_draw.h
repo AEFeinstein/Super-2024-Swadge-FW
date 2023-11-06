@@ -55,7 +55,7 @@ void paintPositionDrawCanvas(void);
 
 void paintHandleDpad(uint16_t state);
 void paintFreeUndos(void);
-void paintStoreUndo(paintCanvas_t* canvas);
+void paintStoreUndo(paintCanvas_t* canvas, paletteColor_t fg, paletteColor_t bg);
 bool paintMaybeSacrificeUndoForHeap(void);
 bool paintCanUndo(void);
 bool paintCanRedo(void);

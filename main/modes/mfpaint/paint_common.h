@@ -333,6 +333,7 @@ typedef struct
     paintUndo_t* storedCanvas;
 
     //////// Tool Wheel
+    bool canvasHidden;
 
     bool showToolWheel;
 

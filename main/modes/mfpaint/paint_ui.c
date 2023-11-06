@@ -56,9 +56,7 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
                         const brush_t* firstBrush, const brush_t* lastBrush)
 {
     //////// Background
-    bool toolWheelVisible = wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer);
-
-    if (toolWheelVisible || paintState->showDialogBox)
+    if (paintState->canvasHidden)
     {
         // Clear whole screen
         fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
@@ -117,8 +115,7 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
 
     fillDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h,
                     textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
-                    (paintState->buttonMode == BTN_MODE_SELECT) ? canvas->palette[paintState->paletteSelect]
-                                                                : artist->fgColor);
+                    artist->fgColor);
     drawWsgSimple(&artist->brushDef->iconActive, textX + 1,
                     textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
     drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1,

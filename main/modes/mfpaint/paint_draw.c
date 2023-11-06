@@ -31,6 +31,8 @@
     } \
 } while (0)
 
+static void paintGetUnusedFilename(char* out, size_t n);
+
 static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal);
 static void paintSetupColorWheel(void);
 static void paintDialogCb(const char* label);
@@ -189,6 +191,38 @@ const char inactiveIconStr[] = "%s_inactive.wsg";
 const brush_t* firstBrush = brushes;
 const brush_t* lastBrush  = brushes + sizeof(brushes) / sizeof(brushes[0]) - 1;
 
+static void paintGetUnusedFilename(char* out, size_t outsize)
+{
+    // Create a new default filename
+    for (uint8_t i = 0; i < UINT8_MAX; ++i)
+    {
+        snprintf(out, outsize, paintDefaultFilename, i);
+
+        if (!paintSlotExists(out))
+        {
+            PAINT_LOGI("Next unused file as %s", out);
+            break;
+        }
+
+        // Give up and make a totally random one
+        if (i == (UINT8_MAX - 1))
+        {
+            const char suffix[] = ".mfp";
+            for (uint8_t n = 0; n < outsize - sizeof(suffix); ++n)
+            {
+                uint8_t rng = esp_random() % 16;
+                out[n] = (rng > 9) ? ('a' + rng - 10) : '0' + rng;
+            }
+            // Add null terminator
+            out[outsize - sizeof(suffix)] = '\0';
+
+            // Add the suffix
+            strcat(out, suffix);
+            break;
+        }
+    }
+}
+
 static void paintSetupColorWheel(void)
 {
     for (uint8_t i = 0; i < PAINT_MAX_COLORS; ++i)
@@ -293,29 +327,6 @@ void paintDrawScreenSetup(void)
     }
     else
     {
-        for (uint8_t i = 0; i < UINT8_MAX; ++i)
-        {
-            snprintf(paintState->slotKey, sizeof(paintState->slotKey), paintDefaultFilename, i);
-
-            if (!paintSlotExists(paintState->slotKey))
-            {
-                PAINT_LOGI("Opening new file as %s", paintState->slotKey);
-                break;
-            }
-
-            // Give up and make a totally random one
-            if (i == UINT8_MAX - 1)
-            {
-                for (uint8_t n = 0; n < sizeof(paintState->slotKey) - 5; ++n)
-                {
-                    uint8_t rng = esp_random() % 16;
-                    paintState->slotKey[n] = (rng > 9) ? ('a' + rng - 10) : '0' + rng;
-                }
-                paintState->slotKey[sizeof(paintState->slotKey) - 5] = '\0';
-                //memcpy(paintState->slotKey + sizeof(paintState->slotKey) - 5, ".mfp", 5);
-                break;
-            }
-        }
 
         // Set up a blank canvas with the default size
         paintState->canvas.w = PAINT_DEFAULT_CANVAS_WIDTH;
@@ -385,7 +396,7 @@ void paintDrawScreenSetup(void)
 
     // Top: Sub-menu for Brush
     paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelBrushStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &paintState->wheelBrushWsg, 0, SCROLL_HORIZ);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &paintState->wheelBrushWsg, 0, NO_SCROLL);
 
     for (const brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
@@ -820,6 +831,12 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             }
         }
     }
+    else if (paintState->buttonMode == BTN_MODE_PALETTE)
+    {
+        paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
+        paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
+        paintRenderColorPicker(getArtist(), &paintState->canvas, paintState);
+    }
     else
     {
         paintExitSelectMode();
@@ -923,11 +940,11 @@ void paintEditPaletteSetChannelValue(uint8_t val)
     paintEditPaletteUpdate();
 }
 
-// void paintEditPaletteDecChannel(void)
-// {
-//     *(paintState->editPaletteCur) = PREV_WRAP(*(paintState->editPaletteCur), 6);
-//     paintEditPaletteUpdate();
-// }
+void paintEditPaletteDecChannel(void)
+{
+    *(paintState->editPaletteCur) = PREV_WRAP(*(paintState->editPaletteCur), 6);
+    paintEditPaletteUpdate();
+}
 
 void paintEditPaletteIncChannel(void)
 {
@@ -975,6 +992,15 @@ void paintEditPaletteSetupColor(uint8_t index)
     paintState->editPaletteG   = (col / 6) % 6;
     paintState->editPaletteB   = col % 6;
     paintState->newColor       = col;
+
+    paintState->buttonMode = BTN_MODE_PALETTE;
+    paintState->showToolWheel = false;
+    if (!paintState->canvasHidden)
+    {
+        paintSaveCanvas(&paintState->canvas);
+        paintState->canvasHidden = true;
+    }
+
     paintEditPaletteUpdate();
 }
 
@@ -992,7 +1018,13 @@ void paintEditPaletteNextColor(void)
 
 void paintEditPaletteConfirm(void)
 {
-    paintStoreUndo(&paintState->canvas);
+    if (paintState->canvasHidden)
+    {
+        paintRestoreCanvas(&paintState->canvas);
+        paintState->canvasHidden = false;
+    }
+    paintState->buttonMode = BTN_MODE_DRAW;
+    paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
 
     // Save the old color, and update the palette with the new color
     paletteColor_t old                                    = paintState->canvas.palette[paintState->paletteSelect];
@@ -1061,6 +1093,11 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
                 {
                     paintState->paletteSelect = 0;
                     paintState->buttonMode    = BTN_MODE_DRAW;
+                    if (paintState->canvasHidden)
+                    {
+                        paintRestoreCanvas(&paintState->canvas);
+                        paintState->canvasHidden = false;
+                    }
                 }
                 break;
             }
@@ -1082,14 +1119,14 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
             case PB_UP:
             {
                 // Prev color
-                paintEditPalettePrevColor();
+                paintEditPaletteIncChannel();
                 break;
             }
 
             case PB_DOWN:
             {
                 // Next color
-                paintEditPaletteNextColor();
+                paintEditPaletteDecChannel();
                 break;
             }
 
@@ -1382,7 +1419,7 @@ void paintFreeUndos(void)
     clear(&paintState->undoList);
 }
 
-void paintStoreUndo(paintCanvas_t* canvas)
+void paintStoreUndo(paintCanvas_t* canvas, paletteColor_t fg, paletteColor_t bg)
 {
     // If paintState->undoHead is set, we need to clear all the previous undos to delete the alternate timeline
     uint8_t deleted = 0;
@@ -1434,15 +1471,32 @@ void paintStoreUndo(paintCanvas_t* canvas)
     // Save the palette
     memcpy(undoData->palette, canvas->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
 
+    // Just in case we don't find the colors somehow
+    undoData->fgIdx = 0;
+    undoData->bgIdx = 1;
+
+    // Search through the
+    for (int i = 0; i < PAINT_MAX_COLORS; i++)
+    {
+        if (undoData->palette[i] == fg)
+        {
+            undoData->fgIdx = i;
+        }
+        if (undoData->palette[i] == bg)
+        {
+            undoData->bgIdx = i;
+        }
+    }
+
     bool cursorVisible = getCursor()->show;
-    if (cursorVisible)
+    if (cursorVisible && !canvas->buffered)
     {
         hideCursor(getCursor(), canvas);
     }
     // Save the pixel data
     paintSerialize(undoData->px, canvas, 0, pxSize);
 
-    if (cursorVisible)
+    if (cursorVisible && !canvas->buffered)
     {
         showCursor(getCursor(), canvas);
     }
@@ -1503,8 +1557,8 @@ void paintApplyUndo(paintCanvas_t* canvas)
     paintUndo_t* undo = paintState->undoHead->val;
 
     memcpy(canvas->palette, undo->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
-    getArtist()->fgColor = canvas->palette[0];
-    getArtist()->bgColor = canvas->palette[1];
+    getArtist()->fgColor = canvas->palette[undo->fgIdx];
+    getArtist()->bgColor = canvas->palette[undo->bgIdx];
 
     size_t pxSize = paintGetStoredSize(canvas);
     paintDeserialize(canvas, undo->px, 0, pxSize);
@@ -1523,7 +1577,7 @@ void paintUndo(paintCanvas_t* canvas)
         node_t* head = paintState->undoList.last;
 
         // Also, since this is the first undo, save the current state so that we can return to it with redo
-        paintStoreUndo(canvas);
+        paintStoreUndo(canvas, getArtist()->fgColor, getArtist()->bgColor);
 
         paintState->undoHead = head;
     }
@@ -1700,7 +1754,7 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
         // Save the current state before we draw, but only do it on the first press if we're using a HOLD_DRAW pen
         if (getArtist()->brushDef->mode != HOLD_DRAW || paintState->aPress)
         {
-            paintStoreUndo(&paintState->canvas);
+            paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
         }
 
         paintState->unsaved = true;
@@ -1855,31 +1909,7 @@ void paintIncBrushWidth(uint8_t inc)
 
 void paintSwapFgBgColors(void)
 {
-    uint8_t fgIndex = 0, bgIndex = 0;
     swap(&getArtist()->fgColor, &getArtist()->bgColor);
-
-    for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
-    {
-        if (paintState->canvas.palette[i] == getArtist()->fgColor)
-        {
-            fgIndex = i;
-        }
-        else if (paintState->canvas.palette[i] == getArtist()->bgColor)
-        {
-            bgIndex = i;
-        }
-    }
-
-    for (uint8_t i = fgIndex; i > 0; i--)
-    {
-        if (i == bgIndex)
-        {
-            continue;
-        }
-        paintState->canvas.palette[i] = paintState->canvas.palette[i - 1 + ((i < bgIndex) ? 1 : 0)];
-    }
-
-    paintState->canvas.palette[0] = getArtist()->fgColor;
 
     paintUpdateLeds();
     paintDrawPickPoints();
@@ -1887,17 +1917,13 @@ void paintSwapFgBgColors(void)
 
 void paintEnterSelectMode(void)
 {
-    if (paintState->buttonMode == BTN_MODE_SELECT && paintState->showToolWheel)
-    {
-        return;
-    }
-
-    if (!paintState->showToolWheel)
+    if (!paintState->canvasHidden)
     {
         paintSaveCanvas(&paintState->canvas);
-        paintState->showToolWheel = true;
+        paintState->canvasHidden = true;
     }
 
+    paintState->showToolWheel = true;
     paintState->buttonMode    = BTN_MODE_SELECT;
     paintState->redrawToolbar = true;
     paintState->aHeld         = false;
@@ -1919,23 +1945,22 @@ void paintExitSelectMode(void)
         paintState->showDialogBox = false;
     }
 
-    if (paintState->buttonMode == BTN_MODE_DRAW && !paintState->showToolWheel)
+    if (paintState->showToolWheel)
     {
-        return;
+        paintState->showToolWheel = false;
     }
 
     // Exit select mode
     paintState->buttonMode = BTN_MODE_DRAW;
 
-    if (paintState->showToolWheel)
+    if (paintState->canvasHidden)
     {
         paintRestoreCanvas(&paintState->canvas);
-        paintState->showToolWheel = false;
+        paintState->canvasHidden = false;
     }
 
     // Set the current selection as the FG color and rearrange the rest
     paintUpdateRecents(paintState->paletteSelect);
-    paintState->paletteSelect = 0;
 
     paintState->redrawToolbar = true;
 }
@@ -2084,7 +2109,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             else
             {
                 paintExitSelectMode();
-                paintStoreUndo(&paintState->canvas);
+                paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
                 paintState->clearScreen = true;
             }
         }
@@ -2100,7 +2125,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             }
         }
         // Check if the label is one of the color name strings
-        else if (NULL != label && paintState->colorNames[0] <= label
+        else if (paintState->colorNames[0] <= label
                  && label <= paintState->colorNames[PAINT_MAX_COLORS - 1])
         {
             uint8_t colorIndex        = (label - *paintState->colorNames) / sizeof(*paintState->colorNames);
@@ -2108,41 +2133,15 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             if (paintState->toolWheel == paintState->editPaletteWheel)
             {
                 // Edit palette color
+                PAINT_LOGI("Editing color with index %" PRIu8, colorIndex);
                 paintEditPaletteSetupColor(colorIndex);
             }
             else
             {
                 // Select palette color
+                PAINT_LOGI("Color selected with index %" PRIu8, colorIndex);
                 paintState->paletteSelect = colorIndex;
             }
-        }
-    }
-    else
-    {
-        if (toolWheelBrushStr == label)
-        {
-            paintEnterSelectMode();
-
-            getArtist()->brushDef = (firstBrush + settingVal);
-            paintSetupTool();
-            paintState->redrawToolbar = true;
-        }
-        else if (toolWheelColorStr == label)
-        {
-            paintEnterSelectMode();
-            // Select previous color
-            paintState->redrawToolbar = true;
-            paintState->paletteSelect = settingVal;
-            paintUpdateLeds();
-        }
-        else if (toolWheelSizeStr == label)
-        {
-            paintEnterSelectMode();
-            paintSetBrushWidth(settingVal);
-        }
-        else if (paintState->colorNames[0] <= label && label <= paintState->colorNames[PAINT_MAX_COLORS - 1])
-        {
-            //
         }
         else
         {
@@ -2158,8 +2157,29 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
                     break;
                 }
             }
-
-            // Something else:
+        }
+    }
+    else
+    {
+        if (toolWheelBrushStr == label)
+        {
+            //paintEnterSelectMode();
+            //getArtist()->brushDef = (firstBrush + settingVal);
+            //paintSetupTool();
+            //paintState->redrawToolbar = true;
+        }
+        else if (toolWheelColorStr == label)
+        {
+            paintEnterSelectMode();
+            // Select previous color
+            paintState->redrawToolbar = true;
+            //paintState->paletteSelect = settingVal;
+            paintUpdateLeds();
+        }
+        else if (toolWheelSizeStr == label)
+        {
+            paintEnterSelectMode();
+            paintSetBrushWidth(settingVal);
         }
         PAINT_LOGI("Moved to tool wheel item %s", label);
     }
@@ -2168,11 +2188,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
 void paintSetupDialog(paintDialog_t dialog)
 {
     paintState->showDialogBox = true;
-    if (dialog != DIALOG_ERROR && dialog != DIALOG_ERROR_NONFATAL && paintState->dialog == dialog)
-    {
-        return;
-    }
-
     paintState->dialog = dialog;
 
     const char* title;
@@ -2270,7 +2285,6 @@ static void paintDialogCb(const char* label)
     }
     else if (dialogOptionSaveStr == label)
     {
-        // TODO switch to named slots
         if (paintSlotExists(paintState->slotKey))
         {
             paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
@@ -2296,7 +2310,7 @@ static void paintDialogCb(const char* label)
             case DIALOG_CONFIRM_UNSAVED_CLEAR:
             {
                 paintExitSelectMode();
-                paintStoreUndo(&paintState->canvas);
+                paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
                 paintState->clearScreen = true;
                 break;
             }

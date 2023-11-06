@@ -126,11 +126,18 @@ typedef struct
     uint8_t xScale, yScale;
 
     paletteColor_t palette[PAINT_MAX_COLORS];
+
+    // Whether this canvas is backed off-screen in a buffer
+    bool buffered;
+    // The buffer, if this canvas has one
+    uint8_t* buffer;
+
 } paintCanvas_t;
 
 typedef struct
 {
     paletteColor_t palette[PAINT_MAX_COLORS];
+    uint8_t fgIdx, bgIdx;
     uint8_t* px;
 } paintUndo_t;
 
