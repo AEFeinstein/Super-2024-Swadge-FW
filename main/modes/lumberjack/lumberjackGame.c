@@ -403,6 +403,8 @@ bool lumberjackLoadLevel()
                 "lumberjacks_panic_3.bin",
                 "lumberjacks_panic_4.bin",
                 "lumberjacks_panic_5.bin",
+                "lumberjacks_panic_6.bin",
+                "lumberjacks_panic_7.bin",
                 "lumberjacks_panic_10.bin",
             };
             
@@ -1057,18 +1059,23 @@ void baseMode(int64_t elapsedUs)
 
             lumberjackUpdateEntity(enemy, elapsedUs);
 
-            for (int oeIdx = 0; oeIdx < ARRAY_SIZE(lumv->enemy); oeIdx++)
+
+            if (enemy->direction != 0)
             {
-                if (lumv->enemy[oeIdx] == NULL)
-                    continue;
 
-                lumberjackUpdateEnemyCollision(lumv->enemy[oeIdx]);
+                lumberjackTile_t* facingTile = lumberjackGetTile(enemy->x + (enemy->direction > 0 ? 28 : -8) , enemy->y + 2);
+
+                if (facingTile != NULL && facingTile->type != 0 &&  lumberjackIsCollisionTile(facingTile))
+                {
+                    enemy->direction = enemy->flipped ? 1 : -1; // Go opposite direction
+                    enemy->flipped = !enemy->flipped; //Debug
+                    enemy->vx = (enemy->direction == 1) ? enemy->maxVX : -enemy->maxVX;
+                }
             }
-        }
-    }
 
-    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
-    {
+            lumberjackUpdateEnemyCollision(enemy);
+        }
+    
         // Player
         if (lumv->localPlayer->ready)
         {
@@ -1521,6 +1528,7 @@ void DrawGame(void)
     }
     
 
+    //drawRect()
     // Debug
 
     /*
@@ -1668,7 +1676,6 @@ bool lumberjackSpawnCheck(int64_t elapseUs)
                         else
                         {
                             lumv->spawnTimer = LUMBERJACK_RESPAWN_PANIC_MIN;
-                            ESP_LOGI(LUM_TAG, "Hi!");
                         }
                     }*/
 
@@ -1856,15 +1863,6 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
     {
         lumberjackTile_t* tileA = lumberjackGetTile(destinationX, destinationY);
         lumberjackTile_t* tileB = lumberjackGetTile(destinationX + 16, destinationY);
-
-        if (tileA == NULL)
-        {
-            ESP_LOGI(LUM_TAG, "ERROR GETTING TILE A at %d,%d", destinationX , destinationY);
-        }        
-        if (tileB == NULL)
-        {
-            ESP_LOGI(LUM_TAG, "ERROR GETTING TILE B at %d, %d", destinationX + 16, destinationY);
-        }
 
         if ((tileA != NULL && lumberjackIsCollisionTile(tileA->type)) || (tileB != NULL && lumberjackIsCollisionTile(tileB->type)))
         {
