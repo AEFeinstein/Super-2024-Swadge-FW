@@ -246,7 +246,7 @@ void process_midi(const char* inFile, const char* outDir)
                 notes[trackIdx] = calloc((2 * track->nbOfNotes) + 1, sizeof(musicalNote_t));
 
                 /* For each note */
-                unsigned long int lastNoteStart = track->notes[0].timeBeforeAppear;
+                unsigned long int lastNoteStart = 0; // track->notes[0].timeBeforeAppear;
                 unsigned long int introRest     = lastNoteStart;
 
                 for (int midiNoteIdx = 0; midiNoteIdx < track->nbOfNotes; midiNoteIdx++)
@@ -414,10 +414,10 @@ static void checkMidiEvents(MidiParser* midiParser, unsigned long int lastNoteSt
         for (int evtIdx = 0; evtIdx < track->nbOfEvents; evtIdx++)
         {
             Event* evt = &track->events[evtIdx];
-            // printf("%5d: %s\n", evt->timeToAppear, evt->type);
+            // printf("%5d: %d\n", evt->timeToAppear, evt->type);
 
             // If this event occurs between the notes we're at, process it
-            if ((0 == lastNoteStart && 0 == thisNoteStart && 0 == evt->timeToAppear)
+            if ((0 == lastNoteStart && 0 == evt->timeToAppear)
                 || (lastNoteStart < evt->timeToAppear && evt->timeToAppear <= thisNoteStart))
             {
                 switch (evt->type)
@@ -426,7 +426,7 @@ static void checkMidiEvents(MidiParser* midiParser, unsigned long int lastNoteSt
                     {
                         // printf(
                         // "        Tempo infos: time signature %i/%i 1/4 note is %i ticks %i\n",
-                        //     ,
+                        //     ((unsigned char *)evt->infos)[0],
                         //     ((unsigned char *)evt->infos)[1],
                         //     ((unsigned char *)evt->infos)[2],
                         //     ((unsigned char *)evt->infos)[3]

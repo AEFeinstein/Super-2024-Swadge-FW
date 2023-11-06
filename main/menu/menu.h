@@ -174,11 +174,14 @@ typedef struct
  */
 typedef struct _menu_t
 {
-    const char* title;   ///< The title for this menu
-    menuCb cbFunc;       ///< The callback function to call when menu items are selected
-    list_t* items;       ///< A list_t of menu items to display
-    node_t* currentItem; ///< The currently selected menu item
-    menu_t* parentMenu;  ///< The parent menu, may be NULL if this is not a submenu
+    const char* title;        ///< The title for this menu
+    menuCb cbFunc;            ///< The callback function to call when menu items are selected
+    list_t* items;            ///< A list_t of menu items to display
+    node_t* currentItem;      ///< The currently selected menu item
+    menu_t* parentMenu;       ///< The parent menu, may be NULL if this is not a submenu
+    bool showBattery;         ///< true if the battery measurement should be shown. false by default
+    int32_t batteryReadTimer; ///< A timer to read the battery every 10s
+    int batteryLevel;         ///< The current battery measurement
 } menu_t;
 
 /// @brief A string used to return to super-menus that says "Back"
@@ -207,5 +210,6 @@ menu_t* menuNavigateToNextOption(menu_t* menu);
 menu_t* menuSelectCurrentItem(menu_t* menu);
 
 menu_t* menuButton(menu_t* menu, buttonEvt_t evt) __attribute__((warn_unused_result));
+void setShowBattery(menu_t* menu, bool showBattery);
 
 #endif

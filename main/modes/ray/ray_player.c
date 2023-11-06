@@ -10,6 +10,8 @@
 #include "ray_map.h"
 #include "ray_pause.h"
 #include "ray_script.h"
+#include "ray_death_screen.h"
+#include "ray_enemy.h"
 
 //==============================================================================
 // Functions
@@ -70,6 +72,20 @@ bool initializePlayer(ray_t* ray)
     // the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+
+    // Always start with at least one missile to not get locked behind doors
+    if (ray->p.i.missileLoadOut)
+    {
+        if (0 == ray->p.i.numMissiles)
+        {
+            ray->p.i.numMissiles++;
+        }
+    }
+
+    // Set the next loadout to current, to not swap
+    ray->nextLoadout        = ray->p.loadout;
+    ray->loadoutChangeTimer = 0;
+    ray->forceLoadoutSwap   = 0;
 
     return initFromScratch;
 }
@@ -136,7 +152,7 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 // Set strafe to true
                 ray->isStrafing = true;
                 // If there is a centered sprite
-                if (centeredSprite)
+                if (centeredSprite && !CELL_IS_TYPE(centeredSprite->type, (OBJ | BULLET)))
                 {
                     // Lock onto it
                     ray->targetedObj = centeredSprite;
@@ -226,6 +242,14 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     // Strafing is either locked or unlocked
     if (ray->isStrafing)
     {
+        if (NULL != ray->targetedObj)
+        {
+            // lock on the target before moving
+            pDirX = ray->targetedObj->posX - pPosX;
+            pDirY = ray->targetedObj->posY - pPosY;
+            fastNormVec(&pDirX, &pDirY);
+        }
+
         if (ray->btnState & PB_RIGHT)
         {
             // Strafe right
@@ -241,46 +265,46 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
     }
     else
     {
-        // Assume rightward rotation, 5 degrees every 40000uS
-        int32_t rotateDeg = ((5 * (int32_t)elapsedUs) / 40000) % 360;
-        if (ray->btnState & PB_RIGHT)
+        if (ray->btnState & (PB_RIGHT | PB_LEFT))
         {
-            // Rotate right, leave as-is
-        }
-        else if (ray->btnState & PB_LEFT)
-        {
-            // Rotate left, reverse direction
-            rotateDeg = 360 - rotateDeg;
-        }
-        else
-        {
-            // No rotation, zero it out
-            rotateDeg = 0;
-        }
+            // Assume rightward rotation, 1 degree every 8000uS
+            int32_t rotateDeg = 0;
+            ray->pRotationTimer -= elapsedUs;
+            while (0 >= ray->pRotationTimer)
+            {
+                ray->pRotationTimer += 8000;
+                rotateDeg++;
+            }
 
-        // If we should rotate
-        if (rotateDeg)
-        {
-            // Do trig functions, only once
-            int32_t sinVal = getSin1024(rotateDeg);
-            int32_t cosVal = getCos1024(rotateDeg);
-            // Find the rotated X and Y vectors
-            q24_8 newX = (pDirX * cosVal) - (pDirY * sinVal);
-            q24_8 newY = (pDirX * sinVal) + (pDirY * cosVal);
-            // Normalize the vector
-            fastNormVec(&newX, &newY);
+            if (0 != rotateDeg)
+            {
+                if (ray->btnState & PB_LEFT)
+                {
+                    // Rotate left, reverse direction
+                    rotateDeg = 360 - rotateDeg;
+                }
 
-            // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
-            ray->planeX = -MUL_FX(TO_FX(2) / 3, newY);
-            ray->planeY = MUL_FX(TO_FX(2) / 3, newX);
+                // Do trig functions, only once
+                int32_t sinVal = getSin1024(rotateDeg);
+                int32_t cosVal = getCos1024(rotateDeg);
+                // Find the rotated X and Y vectors
+                q24_8 newX = (pDirX * cosVal) - (pDirY * sinVal);
+                q24_8 newY = (pDirX * sinVal) + (pDirY * cosVal);
+                // Normalize the vector
+                fastNormVec(&newX, &newY);
 
-            // Save new direction vector
-            ray->p.dirX = newX;
-            ray->p.dirY = newY;
+                // Save new direction vector
+                ray->p.dirX = newX;
+                ray->p.dirY = newY;
 
-            // Also update the local copy
-            pDirX = newX;
-            pDirY = newY;
+                // Recompute the camera plane, orthogonal to the direction vector and scaled to 2/3
+                ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+                ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+
+                // Also update the local copy
+                pDirX = newX;
+                pDirY = newY;
+            }
         }
     }
 
@@ -316,9 +340,9 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
         // If the player is in water
         if (isInWater)
         {
-            // Slow down movement by a fourth
-            deltaX /= 4;
-            deltaY /= 4;
+            // Slow down movement by a 8x
+            deltaX /= 8;
+            deltaY /= 8;
         }
 
         // Boundary checks are longer than the move dist to not get right up on the wall
@@ -355,29 +379,25 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             markTileVisited(&ray->map, newCellX, newCellY);
 
             // Check scripts when entering cells
-            if (checkScriptEnter(ray, newCellX, newCellY))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptEnter(ray, newCellX, newCellY);
         }
+    }
 
-        // After moving position, recompute direction to targeted object
-        if (ray->isStrafing && ray->targetedObj)
-        {
-            // Re-lock on the target after moving
-            pDirX = ray->targetedObj->posX - pPosX;
-            pDirY = ray->targetedObj->posY - pPosY;
-            fastNormVec(&pDirX, &pDirY);
+    // Finally, if there is a targeted object, orient towards it
+    if (ray->targetedObj)
+    {
+        // Re-lock on the target
+        pDirX = ray->targetedObj->posX - pPosX;
+        pDirY = ray->targetedObj->posY - pPosY;
+        fastNormVec(&pDirX, &pDirY);
 
-            // Set the player's direction
-            ray->p.dirX = pDirX;
-            ray->p.dirY = pDirY;
+        // Set the player's direction
+        ray->p.dirX = pDirX;
+        ray->p.dirY = pDirY;
 
-            // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
-            ray->planeX = -MUL_FX(TO_FX(2) / 3, pDirY);
-            ray->planeY = MUL_FX(TO_FX(2) / 3, pDirX);
-        }
+        // Recompute the 2d rayCaster version of camera plane, orthogonal to the direction vector and scaled to 2/3
+        ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
+        ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
     }
 }
 
@@ -451,6 +471,16 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
         {
             if (ray->p.loadout != ray->nextLoadout)
             {
+                // If swapping to or from XRAY, also swap hidden enemy sprites
+                if (LO_XRAY == ray->nextLoadout)
+                {
+                    switchEnemiesToXray(ray, true);
+                }
+                else if (LO_XRAY == ray->p.loadout)
+                {
+                    switchEnemiesToXray(ray, false);
+                }
+
                 // Swap the loadout
                 ray->p.loadout = ray->nextLoadout;
                 // Set the timer for the load in
@@ -654,14 +684,41 @@ void rayPlayerCheckLava(ray_t* ray, uint32_t elapsedUs)
         if (ray->lavaTimer <= US_PER_LAVA_DAMAGE)
         {
             ray->lavaTimer -= US_PER_LAVA_DAMAGE;
-            if (ray->p.i.health)
-            {
-                ray->p.i.health--;
-                if (0 == ray->p.i.health)
-                {
-                    // TODO game over
-                }
-            }
+            rayPlayerDecrementHealth(ray, 1);
         }
+    }
+}
+
+/**
+ * @brief Decrement player health and check for death
+ *
+ * @param ray The entire game state
+ * @param health The amount of health to decrement
+ */
+void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
+{
+    // Decrement health
+    ray->p.i.health -= health;
+    // Check for death
+    if (0 >= ray->p.i.health)
+    {
+        // If the player already has the artifact
+        if (ray->p.i.artifacts[ray->p.mapId])
+        {
+            // load the last save
+            rayStartGame();
+        }
+        else
+        {
+            // Player does not have this artifact, load the backup from when the map was entered
+            mempcpy(&ray->p, &ray->p_backup, sizeof(rayPlayer_t));
+            raySavePlayer(ray);
+            // Clear visited tiles too
+            memset(ray->map.visitedTiles, NOT_VISITED, ray->map.w * ray->map.h * sizeof(rayTileState_t));
+            raySaveVisitedTiles(ray);
+        }
+
+        // Show the death screen
+        rayShowDeathScreen(ray);
     }
 }

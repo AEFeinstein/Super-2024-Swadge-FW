@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <esp_random.h>
+#include "hdw-battmon.h"
 #include "menuLogbookRenderer.h"
 #include "menu_utils.h"
 #include "hdw-tft.h"
@@ -56,6 +57,15 @@ menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
     loadWsg("mnuArrow.wsg", &renderer->arrow, false);
     loadWsg("mnuArrowS.wsg", &renderer->arrowS, false);
 
+    // Load battery images
+    loadWsg("batt1.wsg", &renderer->batt[0], false);
+    loadWsg("batt2.wsg", &renderer->batt[1], false);
+    loadWsg("batt3.wsg", &renderer->batt[2], false);
+    loadWsg("batt4.wsg", &renderer->batt[3], false);
+
+    // Load a background
+    loadWsg("menu_bg.wsg", &renderer->menu_bg, true);
+
     // Initialize LEDs
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -77,6 +87,11 @@ void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
 {
     freeWsg(&renderer->arrow);
     freeWsg(&renderer->arrowS);
+    freeWsg(&renderer->batt[0]);
+    freeWsg(&renderer->batt[1]);
+    freeWsg(&renderer->batt[2]);
+    freeWsg(&renderer->batt[3]);
+    freeWsg(&renderer->menu_bg);
     free(renderer);
 }
 
@@ -97,12 +112,12 @@ static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int1
 {
     // Pick colors based on selection
     paletteColor_t cornerColor  = c411;
-    paletteColor_t textColor    = c511;
+    paletteColor_t textColor    = c553;
     paletteColor_t topLineColor = c211;
     if (isSelected)
     {
         cornerColor  = c532;
-        textColor    = c554;
+        textColor    = c555;
         topLineColor = c422;
     }
 
@@ -206,6 +221,18 @@ static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int1
  */
 void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elapsedUs)
 {
+    // Only poll the battery if requested
+    if (menu->showBattery)
+    {
+        // Read battery every 10s
+        menu->batteryReadTimer -= elapsedUs;
+        if (0 >= menu->batteryReadTimer)
+        {
+            menu->batteryReadTimer += 10000000;
+            menu->batteryLevel = readBattmon();
+        }
+    }
+
     // For each LED
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -248,8 +275,8 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     // Light the LEDs
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
-    // Clear the TFT
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
+    // Clear the TFT with a background
+    drawWsgTile(&renderer->menu_bg, 0, 0);
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -276,12 +303,15 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     }
 
     // Where to start drawing
-    int16_t x = 20;
+    int16_t x = 16;
     int16_t y = Y_SECTION_MARGIN;
 
     // Draw a title
     drawText(renderer->font, c542, menu->title, x, y);
     y += renderer->font->height + Y_SECTION_MARGIN;
+
+    // Shift the text a little after drawing the title
+    x = 10;
 
     if (menu->items->length > ITEMS_PER_PAGE)
     {
@@ -323,5 +353,31 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
         int16_t arrowX = PAGE_ARROW_X_OFFSET;
         int16_t arrowY = y + PAGE_ARROW_Y_OFFSET;
         drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 90);
+    }
+
+    // Only draw the battery if requested
+    if (menu->showBattery)
+    {
+        // Draw the battery indicator depending on the last read value
+        wsg_t* toDraw = NULL;
+        // 872 is full
+        if (menu->batteryLevel == 0 || menu->batteryLevel > 741)
+        {
+            toDraw = &renderer->batt[3];
+        }
+        else if (menu->batteryLevel > 695)
+        {
+            toDraw = &renderer->batt[2];
+        }
+        else if (menu->batteryLevel > 652)
+        {
+            toDraw = &renderer->batt[1];
+        }
+        else // 452 is dead
+        {
+            toDraw = &renderer->batt[0];
+        }
+
+        drawWsg(toDraw, 212, 3, false, false, 0);
     }
 }

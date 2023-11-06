@@ -39,7 +39,7 @@
 
 #include "hdw-bzr.h"
 
-bool loadSong(char* name, song_t* song, bool spiRam);
+bool loadSong(const char* name, song_t* song, bool spiRam);
 void freeSong(song_t* song);
 
 #endif

@@ -109,6 +109,12 @@ These are the objects that can be spawned
 | `OBJ_ITEM_PICKUP_MISSILE` | Pickup, missiles                                   |
 | `OBJ_SCENERY_TERMINAL`    | Scenery, computer terminal                         |
 | `OBJ_SCENERY_PORTAL`      | Scenery, portal                                    |
+| `OBJ_SCENERY_F1`          | Scenery, a friend                                  |
+| `OBJ_SCENERY_F2`          | Scenery, a friend                                  |
+| `OBJ_SCENERY_F3`          | Scenery, a friend                                  |
+| `OBJ_SCENERY_F4`          | Scenery, a friend                                  |
+| `OBJ_SCENERY_F5`          | Scenery, a friend                                  |
+| `OBJ_SCENERY_F6`          | Scenery, a friend                                  |
 
 ### Script Examples
 
