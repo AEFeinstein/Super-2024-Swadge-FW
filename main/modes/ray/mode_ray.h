@@ -22,9 +22,9 @@
 #define MISSILE_UPGRADES_PER_MAP 3
 
 /** The player's starting max health */
-#define GAME_START_HEALTH 50
+#define GAME_START_HEALTH 100
 /** How much health is gained for each energy tank found */
-#define HEALTH_PER_E_TANK 25
+#define HEALTH_PER_E_TANK 100
 /** The number of energy tank pickups per map */
 #define E_TANKS_PER_MAP 1
 /** The player's total maximum possible health */
