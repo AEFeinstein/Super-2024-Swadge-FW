@@ -304,9 +304,8 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         // Transition to dying
         rayEnemyTransitionState(enemy, E_DEAD);
     }
-
     // If the enemy took
-    if (oldHealth != enemy->health)
+    else if (oldHealth != enemy->health)
     {
         // Transition to hurt
         rayEnemyTransitionState(enemy, E_HURT);
@@ -334,9 +333,9 @@ bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
 {
     // clang-format off
     const bool transitionTable[E_NUM_STATES][E_NUM_STATES] = {
-        {false, true,  true,  true,  true,  false}, // E_WALKING_1, don't transition to E_DEAD
-        {true,  false, true,  true,  true,  false}, // E_WALKING_2, don't transition to E_DEAD
-        {true,  true,  false, true , false, false}, // E_SHOOTING, transition to E_WALKING or E_HURT
+        {false, true,  true,  true,  true,  true }, // E_WALKING_1, don't transition to self
+        {true,  false, true,  true,  true,  true }, // E_WALKING_2, don't transition to self
+        {true,  true,  false, true , false, true }, // E_SHOOTING, transition to E_WALKING or E_HURT
         {true,  true,  false, false, false, true }, // E_HURT, transition to E_WALKING or E_DEAD
         {true,  true,  false, false, false, false}, // E_BLOCKING, transition to E_WALKING
         {false, false, false, false, false, false}  // E_DEAD, don't transition to anything
