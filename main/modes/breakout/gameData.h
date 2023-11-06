@@ -20,7 +20,7 @@
 // Structs
 //==============================================================================
 
-typedef struct 
+typedef struct
 {
     int16_t btnState;
     int16_t prevBtnState;
@@ -37,19 +37,19 @@ typedef struct
     uint16_t frameCount;
 
     uint16_t targetBlocksBroken;
-    
+
     uint8_t level;
 
     int16_t combo;
-    //int16_t comboTimer;
+    // int16_t comboTimer;
     uint32_t comboScore;
 
     entity_t* playerBombs[3];
     uint8_t playerTimeBombsCount;
     bool playerRemoteBombPlaced;
-    //uint8_t nextBombToDetonate;
-    //uint8_t nextBombSlot;
-    //uint8_t bombDetonateCooldown;
+    // uint8_t nextBombToDetonate;
+    // uint8_t nextBombSlot;
+    // uint8_t bombDetonateCooldown;
 
     int32_t touchPhi;
     int32_t touchRadius;
@@ -79,17 +79,17 @@ typedef struct
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeGameData(gameData_t * gameData, soundManager_t* soundManager);
-void initializeGameDataFromTitleScreen(gameData_t * gameData);
-void updateLedsHpMeter(entityManager_t *entityManager, gameData_t *gameData);
-void scorePoints(gameData_t * gameData, uint16_t points, int16_t incCombo);
-void resetGameDataLeds(gameData_t * gameData);
-void updateLedsShowHighScores(gameData_t * gameData);
-void updateLedsLevelClear(gameData_t * gameData);
-void updateLedsGameClear(gameData_t * gameData);
-void updateLedsGameOver(gameData_t * gameData);
-void updateLedsInGame(gameData_t * gameData);
-void updateTouchInput(gameData_t * gameData);
-void updateLedsTitleScreen(gameData_t * gameData);
+void initializeGameData(gameData_t* gameData, soundManager_t* soundManager);
+void initializeGameDataFromTitleScreen(gameData_t* gameData);
+void updateLedsHpMeter(entityManager_t* entityManager, gameData_t* gameData);
+void scorePoints(gameData_t* gameData, uint16_t points, int16_t incCombo);
+void resetGameDataLeds(gameData_t* gameData);
+void updateLedsShowHighScores(gameData_t* gameData);
+void updateLedsLevelClear(gameData_t* gameData);
+void updateLedsGameClear(gameData_t* gameData);
+void updateLedsGameOver(gameData_t* gameData);
+void updateLedsInGame(gameData_t* gameData);
+void updateTouchInput(gameData_t* gameData);
+void updateLedsTitleScreen(gameData_t* gameData);
 
 #endif

@@ -8,7 +8,8 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeSoundManager(soundManager_t *self){
+void initializeSoundManager(soundManager_t* self)
+{
     loadSong("sndBreak2.sng", &self->hit1, false);
     loadSong("sndBreak3.sng", &self->hit2, false);
     loadSong("sndBounce.sng", &self->hit3, false);
@@ -20,7 +21,8 @@ void initializeSoundManager(soundManager_t *self){
     loadSong("sndBrk1up.sng", &self->snd1up, false);
 }
 
-void freeSoundManager(soundManager_t *self){
+void freeSoundManager(soundManager_t* self)
+{
     freeSong(&self->hit1);
     freeSong(&self->hit2);
     freeSong(&self->hit3);

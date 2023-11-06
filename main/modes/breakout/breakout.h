@@ -15,12 +15,14 @@ extern swadgeMode_t breakoutMode;
 // Structs
 //==============================================================================
 
-typedef struct {
+typedef struct
+{
     uint32_t scores[NUM_BREAKOUT_HIGH_SCORES];
     char initials[NUM_BREAKOUT_HIGH_SCORES][3];
 } breakoutHighScores_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t maxLevelIndexUnlocked;
     bool gameCleared;
     /*bool oneCreditCleared;

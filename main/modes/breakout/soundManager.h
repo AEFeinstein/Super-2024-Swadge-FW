@@ -17,7 +17,7 @@
 // Structs
 //==============================================================================
 
-typedef struct 
+typedef struct
 {
     song_t hit1;
     song_t hit2;
@@ -34,7 +34,7 @@ typedef struct
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeSoundManager(soundManager_t *self);
-void freeSoundManager(soundManager_t *self);
+void initializeSoundManager(soundManager_t* self);
+void freeSoundManager(soundManager_t* self);
 
 #endif

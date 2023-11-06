@@ -16,12 +16,12 @@
 //==============================================================================
 #define CLAMP(x, l, u) ((x) < l ? l : ((x) > u ? u : (x)))
 
-#define TILEMAP_DISPLAY_WIDTH_PIXELS 280  // The screen size
+#define TILEMAP_DISPLAY_WIDTH_PIXELS  280 // The screen size
 #define TILEMAP_DISPLAY_HEIGHT_PIXELS 240 // The screen size
-#define TILEMAP_DISPLAY_WIDTH_TILES 36    // The screen size in tiles + 1
-#define TILEMAP_DISPLAY_HEIGHT_TILES 31   // The screen size in tiles + 1
+#define TILEMAP_DISPLAY_WIDTH_TILES   36  // The screen size in tiles + 1
+#define TILEMAP_DISPLAY_HEIGHT_TILES  31  // The screen size in tiles + 1
 
-#define TILE_SIZE 8
+#define TILE_SIZE                8
 #define TILE_SIZE_IN_POWERS_OF_2 3
 
 #define TILESET_SIZE 128
@@ -29,7 +29,8 @@
 //==============================================================================
 // Enums
 //==============================================================================
-typedef enum {
+typedef enum
+{
     TILE_EMPTY,
     TILE_BOUNDARY_1,
     TILE_BOUNDARY_2,
@@ -163,23 +164,24 @@ typedef enum {
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct {
+typedef struct
+{
     uint8_t x;
     uint8_t y;
 } warp_t;
- struct tilemap_t
+struct tilemap_t
 {
     wsg_t tiles[TILESET_SIZE];
 
-    uint8_t * map;
+    uint8_t* map;
     uint8_t mapWidth;
     uint8_t mapHeight;
-    
+
     uint16_t totalTargetBlocks;
 
     int16_t mapOffsetX;
     int16_t mapOffsetY;
-    
+
     int16_t minMapOffsetX;
     int16_t maxMapOffsetX;
     int16_t minMapOffsetY;
@@ -190,7 +192,7 @@ typedef struct {
     int16_t executeTileSpawnRow;
     bool executeTileSpawnAll;
 
-    entityManager_t *entityManager;
+    entityManager_t* entityManager;
 
     uint8_t animationFrame;
     int16_t animationTimer;
@@ -199,20 +201,20 @@ typedef struct {
 //==============================================================================
 // Prototypes
 //==============================================================================
-void initializeTileMap(tilemap_t * tilemap);
-void drawTileMap(tilemap_t * tilemap);
-void scrollTileMap(tilemap_t * tilemap, int16_t x, int16_t y);
-void drawTile(tilemap_t * tilemap, uint8_t tileId, int16_t x, int16_t y);
-bool loadMapFromFile(tilemap_t * tilemap, const char * name);
-bool loadTiles(tilemap_t * tilemap);
-void tileSpawnEntity(tilemap_t * tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
-uint8_t getTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty);
-void setTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
+void initializeTileMap(tilemap_t* tilemap);
+void drawTileMap(tilemap_t* tilemap);
+void scrollTileMap(tilemap_t* tilemap, int16_t x, int16_t y);
+void drawTile(tilemap_t* tilemap, uint8_t tileId, int16_t x, int16_t y);
+bool loadMapFromFile(tilemap_t* tilemap, const char* name);
+bool loadTiles(tilemap_t* tilemap);
+void tileSpawnEntity(tilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
+uint8_t getTile(tilemap_t* tilemap, uint8_t tx, uint8_t ty);
+void setTile(tilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
 bool isSolid(uint8_t tileId);
 bool isBlock(uint8_t tileId);
-void unlockScrolling(tilemap_t *tilemap);
+void unlockScrolling(tilemap_t* tilemap);
 bool needsTransparency(uint8_t tileId);
-void freeTilemap(tilemap_t *tilemap);
-void forceTileSpawnEntitiesWithinView(tilemap_t *tilemap);
+void freeTilemap(tilemap_t* tilemap);
+void forceTileSpawnEntitiesWithinView(tilemap_t* tilemap);
 
 #endif
