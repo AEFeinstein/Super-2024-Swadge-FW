@@ -655,6 +655,7 @@ extern const char* const rayMapNames[];
 extern const paletteColor_t rayMapColors[];
 extern const char RAY_NVS_KEY[];
 extern const char* const RAY_NVS_VISITED_KEYS[];
+extern const char MAGTROID_UNLOCK_KEY[];
 
 //==============================================================================
 // Functions

@@ -60,6 +60,9 @@ const char RAY_NVS_KEY[] = "ray";
 // The NVS key to save and load visited tiles
 const char* const RAY_NVS_VISITED_KEYS[] = {"rv0", "rv1", "rv2", "rv3", "rv4", "rv5"};
 
+/// @brief The NVS key to unlock Sip on the menu
+const char MAGTROID_UNLOCK_KEY[] = "zip_unlock";
+
 //==============================================================================
 // Variables
 //==============================================================================
