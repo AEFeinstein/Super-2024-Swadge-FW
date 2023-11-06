@@ -281,6 +281,30 @@ void loadSprites(entityManager_t * entityManager)
     entityManager->sprites[SP_CRAWLER_LEFT].collisionBox.x1 = 15;
     entityManager->sprites[SP_CRAWLER_LEFT].collisionBox.y0 = 0;
     entityManager->sprites[SP_CRAWLER_LEFT].collisionBox.y1 = 15;
+
+    loadWsg("rbmb000.wsg", &entityManager->sprites[SP_RBOMB_0].wsg, false);
+    entityManager->sprites[SP_RBOMB_0].originX=4;
+    entityManager->sprites[SP_RBOMB_0].originY=4;
+    entityManager->sprites[SP_RBOMB_0].collisionBox.x0 = 0;
+    entityManager->sprites[SP_RBOMB_0].collisionBox.x1 = 7;
+    entityManager->sprites[SP_RBOMB_0].collisionBox.y0 = 0;
+    entityManager->sprites[SP_RBOMB_0].collisionBox.y1 = 7;
+
+    loadWsg("rbmb001.wsg", &entityManager->sprites[SP_RBOMB_1].wsg, false);
+    entityManager->sprites[SP_RBOMB_1].originX=4;
+    entityManager->sprites[SP_RBOMB_1].originY=4;
+    entityManager->sprites[SP_RBOMB_1].collisionBox.x0 = 0;
+    entityManager->sprites[SP_RBOMB_1].collisionBox.x1 = 7;
+    entityManager->sprites[SP_RBOMB_1].collisionBox.y0 = 0;
+    entityManager->sprites[SP_RBOMB_1].collisionBox.y1 = 7;
+
+    loadWsg("rbmb002.wsg", &entityManager->sprites[SP_RBOMB_2].wsg, false);
+    entityManager->sprites[SP_RBOMB_2].originX=4;
+    entityManager->sprites[SP_RBOMB_2].originY=4;
+    entityManager->sprites[SP_RBOMB_2].collisionBox.x0 = 0;
+    entityManager->sprites[SP_RBOMB_2].collisionBox.x1 = 7;
+    entityManager->sprites[SP_RBOMB_2].collisionBox.y0 = 0;
+    entityManager->sprites[SP_RBOMB_2].collisionBox.y1 = 7;
 };
 
 void updateEntities(entityManager_t * entityManager)
@@ -715,7 +739,7 @@ entity_t* createRemoteBomb(entityManager_t * entityManager, uint16_t x, uint16_t
     entity->animationTimer = 48;
 
     entity->type = ENTITY_PLAYER_REMOTE_BOMB;
-    entity->spriteIndex = SP_BOMB_0;
+    entity->spriteIndex = SP_RBOMB_0;
     entity->updateFunction = &updateRemoteBomb;
     entity->collisionHandler = &dummyCollisionHandler;
     entity->tileCollisionHandler = &dummyTileCollisionHandler;

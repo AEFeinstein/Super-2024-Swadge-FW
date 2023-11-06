@@ -408,7 +408,7 @@ void updateRemoteBomb(entity_t * self){
     }
 
     if(self->gameData->frameCount % 5 == 0) {
-        self->spriteIndex = SP_BOMB_0 + ((self->spriteIndex + 1) % 3);
+        self->spriteIndex = SP_RBOMB_0 + ((self->spriteIndex + 1) % 3);
     }
 
     if(

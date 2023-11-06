@@ -59,7 +59,10 @@ typedef enum {
     SP_CRAWLER_TOP,
     SP_CRAWLER_RIGHT,
     SP_CRAWLER_BOTTOM,
-    SP_CRAWLER_LEFT
+    SP_CRAWLER_LEFT,
+    SP_RBOMB_0,
+    SP_RBOMB_1,
+    SP_RBOMB_2
 } spriteDef_t;
 
 #endif
