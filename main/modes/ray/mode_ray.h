@@ -540,6 +540,7 @@ typedef struct
     // Key items
     bool artifacts[NUM_MAPS];               ///< List of acquired artifacts
     rayKeyState_t keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
+    int32_t damageMult;                     ///< A damage multiplier
 } rayInventory_t;
 
 /**

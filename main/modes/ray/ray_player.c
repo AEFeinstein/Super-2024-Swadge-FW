@@ -58,6 +58,9 @@ bool initializePlayer(ray_t* ray)
         // Set initial health
         ray->p.i.maxHealth = GAME_START_HEALTH;
         ray->p.i.health    = GAME_START_HEALTH;
+
+        // Set damage multiplier to 1;
+        ray->p.i.damageMult = 1;
     }
     else
     {
@@ -632,6 +635,24 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_ARTIFACT:
         {
             inventory->artifacts[mapId] = true;
+
+            // Check if all artifacts have been collected
+            bool collected = true;
+            for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(inventory->artifacts); aIdx++)
+            {
+                if (!inventory->artifacts[aIdx])
+                {
+                    collected = false;
+                    break;
+                }
+            }
+
+            // If all were collected
+            if (collected)
+            {
+                // Increase damage output by 2
+                inventory->damageMult = 2;
+            }
             break;
         }
         case OBJ_ITEM_PICKUP_ENERGY:
