@@ -14,6 +14,7 @@
 #include "hdw-spiffs.h"
 #include "hdw-nvs.h"
 #include "spiffs_wsg.h"
+#include "macros.h"
 
 //==============================================================================
 // Functions
@@ -119,164 +120,43 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
     uint32_t wsgHeaderSize = 4;
 
     // imageSize is the total image data size; header + pixels
-    uint32_t imageSize = pixelSize + wsgHeaderSize;
+    uint32_t imageSize = wsgHeaderSize + pixelSize;
 
-    uint8_t wsgHeader[4];
-    wsgHeader[0] = (wsg->w >> 8) & 0xFF;
-    wsgHeader[1] = (wsg->w) & 0xFF;
-    wsgHeader[2] = (wsg->h >> 8) & 0xFF;
-    wsgHeader[3] = (wsg->h) & 0xFF;
+    // Create an output buffer big enough to hold the uncompressed image
+    uint8_t* output = heap_caps_malloc(imageSize, MALLOC_CAP_SPIRAM);
 
-    // The image size, plus the heatshrink header for total size
-    uint32_t outputSize = 4 + imageSize;
-
-    ESP_LOGI("WSG", "Uncompressed space is %" PRIu32, outputSize);
-
-    uint8_t *output = heap_caps_malloc(outputSize, MALLOC_CAP_SPIRAM);
-
-    // Write the total
-    output[0] = (imageSize >> 24) & 0xFF;
-    output[1] = (imageSize >> 16) & 0xFF;
-    output[2] = (imageSize >> 8) & 0xFF;
-    output[3] = (imageSize) & 0xFF;
-
-    // move output buffer to account for header
-    uint32_t outputIdx  = 4;
-    uint32_t inputIdx   = 0;
-    size_t copied       = 0;
-
-    heatshrink_encoder* hse = heatshrink_encoder_alloc(8, 4);
-    heatshrink_encoder_reset(hse);
-
-    bool headerDone = false;
-
-    while (inputIdx < pixelSize)
+    if (!output)
     {
-        copied = 0;
-        HSE_sink_res result;
-
-        if (!headerDone)
-        {
-            // So just send 4 bytes of the WSG header first to avoid making another huge buffer
-            result = heatshrink_encoder_sink(hse, wsgHeader, 4, &copied);
-            if (copied == 4)
-            {
-                headerDone = true;
-            }
-        }
-        else
-        {
-            // Then send the rest of the data
-            result = heatshrink_encoder_sink(hse, &wsg->px[inputIdx], pixelSize - inputIdx, &copied);
-            inputIdx += copied;
-        }
-
-        switch (result)
-        {
-            case HSER_SINK_OK:
-            {
-                // Continue
-                break;
-            }
-
-            case HSER_SINK_ERROR_NULL:
-            case HSER_SINK_ERROR_MISUSE:
-            {
-                goto heatshrink_error;
-            }
-        }
-
-        bool stillEncoding = true;
-        while (stillEncoding)
-        {
-            copied = 0;
-            switch (heatshrink_encoder_poll(hse, &output[outputIdx], outputSize - outputIdx, &copied))
-            {
-                case HSER_POLL_EMPTY:
-                {
-                    stillEncoding = false;
-                    break;
-                }
-                case HSER_POLL_MORE:
-                {
-                    stillEncoding = true;
-                    break;
-                }
-                case HSER_POLL_ERROR_NULL:
-                case HSER_POLL_ERROR_MISUSE:
-                {
-                    // Error handling
-                    goto heatshrink_error;
-                }
-            }
-            outputIdx += copied;
-        }
+        ESP_LOGI("WSG", "Failed to allocate output buffer for image");
+        return false;
     }
 
-    /* Mark all input as processed */
-    switch (heatshrink_encoder_finish(hse))
+    // Write the WSG header to the buffer
+    output[0] = (wsg->w >> 8) & 0xFF;
+    output[1] = (wsg->w) & 0xFF;
+    output[2] = (wsg->h >> 8) & 0xFF;
+    output[3] = (wsg->h) & 0xFF;
+
+    // Copy the pixels into the input buffer after the
+    memcpy(output + 4, wsg->px, pixelSize);
+
+    // Compress the buffer in-place
+    uint32_t outputSize = heatshrinkCompress(output, output, imageSize);
+
+    bool result;
+    if (outputSize == 0)
     {
-        case HSER_FINISH_DONE:
-        {
-            // Continue
-            break;
-        }
-        case HSER_FINISH_MORE:
-        {
-            /* Flush the last bits of output */
-            copied             = 0;
-            bool stillEncoding = true;
-            while (stillEncoding)
-            {
-                switch (heatshrink_encoder_poll(hse, &output[outputIdx], outputSize - outputIdx, &copied))
-                {
-                    case HSER_POLL_EMPTY:
-                    {
-                        stillEncoding = false;
-                        break;
-                    }
-                    case HSER_POLL_MORE:
-                    {
-                        stillEncoding = true;
-                        break;
-                    }
-                    case HSER_POLL_ERROR_NULL:
-                    case HSER_POLL_ERROR_MISUSE:
-                    {
-                        // Error handling
-                        goto heatshrink_error;
-                    }
-                }
-                outputIdx += copied;
-            }
-            break;
-        }
-        case HSER_FINISH_ERROR_NULL:
-        {
-            // Error handling
-            goto heatshrink_error;
-        }
+        ESP_LOGE("WSG", "Failed to save WSG to NVS");
+        result = false;
+    }
+    else
+    {
+        ESP_LOGI("WSG", "Compressed image from %" PRIu32 " bytes to %" PRIu32, imageSize, outputSize);
+        result = writeNamespaceNvsBlob(namespace, key, output, outputSize);
     }
 
-    ESP_LOGI("WSG", "Compressed size is %" PRIu32, outputIdx);
-
-    writeNamespaceNvsBlob(namespace, key, output, outputIdx);
-    heatshrink_encoder_free(hse);
     free(output);
-    return true;
-
-heatshrink_error:
-    if (NULL != hse)
-    {
-        heatshrink_encoder_free(hse);
-    }
-
-    if (NULL != output)
-    {
-        free(output);
-    }
-
-    return false;
+    return result;
 }
 
 /**

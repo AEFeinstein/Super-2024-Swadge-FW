@@ -6,6 +6,7 @@
 
 uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpiRam);
 uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* outsize, bool spiRam);
+uint32_t heatshrinkCompress(uint8_t* dest, const uint8_t* src, uint32_t size);
 bool writeHeatshrinkNvs(const char* namespace, const char* key, const uint8_t* data, uint32_t size);
 
 #endif

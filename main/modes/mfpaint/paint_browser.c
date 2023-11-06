@@ -158,7 +158,7 @@ void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* 
                         else
                         {
                             PAINT_LOGE("Unable to load blob %s", imageInfos[i].key);
-                            continue;
+                            loadWsg("error.wsg", &newItem->thumb, false);
                         }
 
                         snprintf(newItem->nvsKey, sizeof(newItem->nvsKey), "%s", imageInfos[i].key);
