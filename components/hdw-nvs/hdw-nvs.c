@@ -608,20 +608,3 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
     // Only return true if the error code was the expected one
     return res == ESP_ERR_NVS_NOT_FOUND;
 }
-
-/**
- * @brief Read info about each used entry in the default NVS namespace. Typically, this should be called once with NULL passed for
- * outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then this
- * should be called again
- *
- * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
- * calling readAllNvsEntryInfos()
- * @param outEntryInfos A pointer to an array of NVS entry info structs will be written to this memory
- * @param numEntryInfos If outEntryInfos is `NULL`, this will be set to the length of the given key. Otherwise, it is
- * the number of entry infos to read
- * @return true if the entry infos were read, false if they were not
- */
-bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
-{
-    return readNamespaceNvsEntryInfos(NVS_NAMESPACE_NAME, outStats, outEntryInfos, numEntryInfos);
-}
