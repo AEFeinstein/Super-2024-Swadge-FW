@@ -469,6 +469,8 @@ static void breakoutUpdateReadyScreen(breakout_t* self, int64_t elapsedUs)
         if (!(self->gameData.frameCount % 60))
         {
             breakoutChangeStateGame(self);
+            setLevelBgm(&(self->soundManager), BRK_BGM_SKILL);
+            bzrPlayBgm(&(self->soundManager.levelBgm), BZR_STEREO);
         }
 
         if (self->gameData.targetBlocksBroken > 0 || !(self->gameData.frameCount % 2))
@@ -738,6 +740,7 @@ void breakoutChangeStateLevelClear(breakout_t* self)
     self->gameData.frameCount = 0;
     resetGameDataLeds(&(self->gameData));
     self->update = &breakoutUpdateLevelClear;
+    bzrPlaySfx(&(self->soundManager.levelClear), BZR_STEREO);
 }
 
 void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)

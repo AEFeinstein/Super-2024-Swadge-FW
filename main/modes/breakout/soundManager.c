@@ -19,6 +19,8 @@ void initializeSoundManager(soundManager_t* self)
     loadSong("sndDropBomb.sng", &self->dropBomb, false);
     loadSong("sndDetonate.sng", &self->detonate, false);
     loadSong("sndBrk1up.sng", &self->snd1up, false);
+    loadSong("brkLvlClear.sng", &self->levelClear, false);
+    self->currentBgmIndex = BRK_BGM_NULL;
 }
 
 void freeSoundManager(soundManager_t* self)
@@ -32,4 +34,25 @@ void freeSoundManager(soundManager_t* self)
     freeSong(&self->dropBomb);
     freeSong(&self->detonate);
     freeSong(&self->snd1up);
+    freeSong(&self->levelClear);
+
+    if(self->currentBgmIndex != BRK_BGM_NULL){
+        freeSong(&self->levelBgm);
+    }
+}
+
+void setLevelBgm(soundManager_t* self, uint16_t newBgmIndex){
+    if(self->currentBgmIndex == newBgmIndex){
+        return;
+    }
+
+    if(self->currentBgmIndex != BRK_BGM_NULL){
+        freeSong(&self->levelBgm);
+    }
+
+    if(newBgmIndex != BRK_BGM_NULL){
+        loadSong(LEVEL_BGMS[newBgmIndex - 1], &self->levelBgm, false);
+    }
+
+    self->currentBgmIndex = newBgmIndex;
 }

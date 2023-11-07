@@ -13,6 +13,17 @@
 // Constants
 //==============================================================================
 
+static const char* const LEVEL_BGMS[] = {
+    "brkBgmSkill.sng", "brkBgmPixel.sng", "brkBgmCrazy.sng"
+};
+
+typedef enum {
+    BRK_BGM_NULL,
+    BRK_BGM_SKILL,
+    BRK_BGM_PIXEL,
+    BRK_BGM_CRAZY
+} breakoutBgmIndex_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -28,7 +39,9 @@ typedef struct
     song_t dropBomb;
     song_t detonate;
     song_t snd1up;
-
+    song_t levelClear;
+    song_t levelBgm;
+    uint16_t currentBgmIndex;
 } soundManager_t;
 
 //==============================================================================
@@ -36,5 +49,6 @@ typedef struct
 //==============================================================================
 void initializeSoundManager(soundManager_t* self);
 void freeSoundManager(soundManager_t* self);
+void setLevelBgm(soundManager_t* self, uint16_t newBgmIndex);
 
 #endif

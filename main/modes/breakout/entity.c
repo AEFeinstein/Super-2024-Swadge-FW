@@ -339,6 +339,7 @@ void detectLostBall(entity_t* self, bool respawn)
         if (self->gameData->ballsInPlay <= 0)
         {
             self->gameData->changeState = ST_DEAD;
+            bzrStop(true);
             bzrPlaySfx(&(self->soundManager->die), BZR_STEREO);
         }
     }

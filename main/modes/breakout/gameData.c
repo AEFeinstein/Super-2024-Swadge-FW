@@ -137,7 +137,7 @@ void scorePoints(gameData_t* gameData, uint16_t points, int16_t incCombo)
     {
         gameData->lives++;
         gameData->extraLifeScore += (gameData->extraLifeScore + 1000);
-        bzrPlaySfx(&(gameData->soundManager->snd1up), BZR_STEREO);
+        bzrPlaySfx(&(gameData->soundManager->snd1up), BZR_RIGHT);
     }
 
     // gameData->comboTimer = (gameData->levelDeaths < 3) ? 240: 1;
