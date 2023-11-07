@@ -13,7 +13,7 @@
 // Const variables
 //==============================================================================
 
-static const uint32_t paletteColorsEmu[217] = {
+static const uint32_t paletteColorsEmu[216] = {
     0x000000FF, 0x000033FF, 0x000066FF, 0x000099FF, 0x0000CCFF, 0x0000FFFF, 0x003300FF, 0x003333FF, 0x003366FF,
     0x003399FF, 0x0033CCFF, 0x0033FFFF, 0x006600FF, 0x006633FF, 0x006666FF, 0x006699FF, 0x0066CCFF, 0x0066FFFF,
     0x009900FF, 0x009933FF, 0x009966FF, 0x009999FF, 0x0099CCFF, 0x0099FFFF, 0x00CC00FF, 0x00CC33FF, 0x00CC66FF,
@@ -229,7 +229,12 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
                     int dstY  = ((y * displayMult) + mY);
                     int pxIdx = (dstY * (TFT_WIDTH * displayMult)) + dstX;
 
-                    uint32_t color = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
+                    int colorolor = frameBuffer[(y * TFT_WIDTH) + x];
+                    if(colorolor == 216){
+                        colorolor = c500;
+                    }
+
+                    uint32_t color = paletteColorsEmu[colorolor];
 
                     uint8_t a = (color) & 0xFF;
                     uint8_t r = (color >> 8) & 0xFF;
