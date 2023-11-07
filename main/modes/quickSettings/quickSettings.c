@@ -257,8 +257,11 @@ static void quickSettingsExitMode(void)
     // Free the buzzer song
     freeSong(&quickSettings->jingle);
 
+    bzrStop(true);
+
     // Restore the buzzer state
     bzrRestore(quickSettings->buzzerState);
+    bzrResume();
 
     // Restore the LED state
     setLeds(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
