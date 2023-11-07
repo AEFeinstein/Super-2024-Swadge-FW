@@ -86,6 +86,7 @@ class tileType(Enum):
     OBJ_SCENERY_F4       = (OBJ | SCENERY | 6)
     OBJ_SCENERY_F5       = (OBJ | SCENERY | 7)
     OBJ_SCENERY_F6       = (OBJ | SCENERY | 8)
+    OBJ_SCENERY_F7       = (OBJ | SCENERY | 9)
 
 bgTiles: list[list[tileType]] = [
     [
@@ -147,6 +148,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_SCENERY_F4,
         tileType.OBJ_SCENERY_F5,
         tileType.OBJ_SCENERY_F6,
+        tileType.OBJ_SCENERY_F7,
         tileType.DELETE
     ]
 ]

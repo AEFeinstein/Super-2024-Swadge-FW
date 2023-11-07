@@ -160,6 +160,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_SCENERY_F4);
     LOAD_TEXTURE(ray, OBJ_SCENERY_F5);
     LOAD_TEXTURE(ray, OBJ_SCENERY_F6);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F7);
 }
 
 /**

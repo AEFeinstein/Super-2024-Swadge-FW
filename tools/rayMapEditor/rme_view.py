@@ -316,6 +316,8 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_SCENERY_F6, '../../assets/ray/friends/OBJ_SCENERY_F6.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F7, '../../assets/ray/friends/OBJ_SCENERY_F7.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.DELETE, 'imgs/DELETE.png')
 
     def loadTexture(self, pMap, mMap, key, texFile):
