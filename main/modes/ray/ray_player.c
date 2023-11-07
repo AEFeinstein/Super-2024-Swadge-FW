@@ -234,6 +234,26 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
             {
                 // Fire a shot
                 rayCreateBullet(ray, bullet, pPosX, pPosY, pDirX, pDirY, true);
+
+                // Play SFX depending on bullet
+                switch (bullet)
+                {
+                    case OBJ_BULLET_CHARGE:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_charge, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_MISSILE:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_missile, BZR_RIGHT);
+                        break;
+                    }
+                    default:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_shoot, BZR_RIGHT);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -696,6 +716,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         // Autosave
         raySavePlayer(ray);
         raySaveVisitedTiles(ray);
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_item_get, BZR_RIGHT);
     }
 }
 
@@ -730,6 +752,10 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
 {
     // Decrement health
     ray->p.i.health -= health;
+
+    // Play SFX
+    bzrPlaySfx(&ray->sfx_p_damage, BZR_RIGHT);
+
     // Check for death
     if (0 >= ray->p.i.health)
     {

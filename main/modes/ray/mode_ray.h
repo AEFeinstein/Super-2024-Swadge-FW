@@ -638,6 +638,18 @@ typedef struct
     starfield_t starfield; ///< Starfield used for warp animation
 
     song_t songs[NUM_MAPS + 1]; ///< Per-map background music, plus a boss theme
+    song_t sfx_door_open;       ///< SFX when a door opens
+    song_t sfx_e_damage;        ///< SFX when an enemy takes damage
+    song_t sfx_e_freeze;        ///< SFX when an enemy is frozen
+    song_t sfx_p_charge;        ///< SFX when the charge beam is shot
+    song_t sfx_p_damage;        ///< SFX when the player takes damage
+    song_t sfx_p_shoot;         ///< SFX when the a normal beam is shot
+    song_t sfx_e_block;         ///< SFX when an enemy blocks a shot
+    song_t sfx_e_dead;          ///< SFX when an enemy dies
+    song_t sfx_item_get;        ///< SFX when an item is obtained
+    song_t sfx_p_charge_start;  ///< SFX when the charge beam starts to charge
+    song_t sfx_p_missile;       ///< SFX when a missile is shot
+    song_t sfx_warp;            ///< SFX when the player warps
 
     int32_t pRotationTimer; ///< timer for player rotation
 

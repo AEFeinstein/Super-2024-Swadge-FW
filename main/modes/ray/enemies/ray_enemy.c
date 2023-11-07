@@ -283,8 +283,15 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
     // Don't get shot when blocking or dying
-    if ((E_BLOCKING == enemy->state) || (E_DEAD == enemy->state))
+    if (E_BLOCKING == enemy->state)
     {
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
+        return;
+    }
+    else if (E_DEAD == enemy->state)
+    {
+        // No SFX
         return;
     }
 
@@ -303,6 +310,15 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     {
         // Transition to dying
         rayEnemyTransitionState(enemy, E_DEAD);
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_e_dead, BZR_RIGHT);
+
+        // If the boss died
+        if (OBJ_ENEMY_BOSS == enemy->c.type)
+        {
+            // Resume normal music
+            bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
+        }
     }
     // If the enemy took
     else if (oldHealth != enemy->health)
@@ -318,6 +334,13 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         {
             // Slow it for a moment
             enemy->freezeTimer = 2000000;
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_e_freeze, BZR_RIGHT);
+        }
+        else
+        {
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_e_damage, BZR_RIGHT);
         }
     }
 }
