@@ -11,7 +11,7 @@
 // Variables
 //==============================================================================
 
-static led_t rdLeds[CONFIG_NUM_LEDS] = {0};
+static led_t rdLeds[CONFIG_NUM_LEDS + 1] = {0};
 static uint8_t ledBrightness         = 0;
 
 //==============================================================================
