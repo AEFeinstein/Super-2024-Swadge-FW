@@ -418,9 +418,9 @@ bool needsTransparency(uint8_t tileId)
 {
     switch (tileId)
     {
-        case TILE_BOUNDARY_1 ... TILE_UNUSED_31:
+        case TILE_BOUNDARY_1 ... TILE_BLOCK_1x1_BLACK:
             return false;
-        case TILE_BLOCK_2x1_RED_L ... TILE_UNUSED_127:
+        case TILE_BLOCK_1x1_STONE ... TILE_UNUSED_127:
             return true;
         default:
             return false;
