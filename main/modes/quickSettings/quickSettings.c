@@ -43,6 +43,7 @@ typedef struct
     bool showLeds;
     song_t jingle;
     void* buzzerState;
+    led_t ledState[CONFIG_NUM_LEDS + 1];
 
     wsg_t iconGeneric;
     wsg_t iconSfxOn;
@@ -171,12 +172,19 @@ static void quickSettingsEnterMode(void)
     // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
     quickSettings = calloc(1, sizeof(quickSettingsMenu_t));
 
-    // Load a font
-    loadFont("ibm_vga8.font", &quickSettings->font, true);
-
     // Save the buzzer state
     quickSettings->buzzerState = bzrSave();
     bzrStop(true);
+
+    // Save the LED state
+    getLedState(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
+
+    // Clear the LEDs
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    setLeds(leds, ARRAY_SIZE(leds));
+
+    // Load a font
+    loadFont("ibm_vga8.font", &quickSettings->font, true);
 
     // Load the buzzer song
     loadSong("jingle.sng", &quickSettings->jingle, true);
@@ -249,8 +257,14 @@ static void quickSettingsExitMode(void)
     // Free the buzzer song
     freeSong(&quickSettings->jingle);
 
+    bzrStop(true);
+
     // Restore the buzzer state
     bzrRestore(quickSettings->buzzerState);
+    bzrResume();
+
+    // Restore the LED state
+    setLeds(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
 
     // Free the font
     freeFont(&quickSettings->font);
