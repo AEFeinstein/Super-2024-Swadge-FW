@@ -10,21 +10,24 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void initializeStarfield(starfield_t *self, bool randomColors){
-    for(uint16_t i=0; i<NUM_STARS; i++){
-        self->stars[i].x = randomInt(-TFT_WIDTH / 2, TFT_WIDTH / 2);
-        self->stars[i].y = randomInt(-TFT_HEIGHT / 2, TFT_HEIGHT / 2);
-        self->stars[i].z = 1 + esp_random() % 1023;
-        self->randomColors = randomColors;
+void initializeStarfield(starfield_t* self, bool randomColors)
+{
+    for (uint16_t i = 0; i < NUM_STARS; i++)
+    {
+        self->stars[i].x     = randomInt(-TFT_WIDTH / 2, TFT_WIDTH / 2);
+        self->stars[i].y     = randomInt(-TFT_HEIGHT / 2, TFT_HEIGHT / 2);
+        self->stars[i].z     = 1 + esp_random() % 1023;
+        self->randomColors   = randomColors;
         self->stars[i].color = esp_random() % cTransparent;
     }
 }
 
-void updateStarfield(starfield_t *self, int32_t scale){
-    for(uint16_t i = 0; i < NUM_STARS; i++)
-    {   
+void updateStarfield(starfield_t* self, int32_t scale)
+{
+    for (uint16_t i = 0; i < NUM_STARS; i++)
+    {
         self->stars[i].z -= scale;
-        if(self->stars[i].z <= 0)
+        if (self->stars[i].z <= 0)
         {
             self->stars[i].x = randomInt(-TFT_WIDTH / 2, TFT_WIDTH / 2);
             self->stars[i].y = randomInt(-TFT_HEIGHT / 2, TFT_HEIGHT / 2);
@@ -39,11 +42,12 @@ int randomInt(int lowerBound, int upperBound)
     return esp_random() % (upperBound - lowerBound + 1) + lowerBound;
 }
 
-void drawStarfield(starfield_t *self){
-    //clearDisplay();
+void drawStarfield(starfield_t* self)
+{
+    // clearDisplay();
 
     /* rendering */
-    for(uint16_t i = 0; i < NUM_STARS; i++)
+    for (uint16_t i = 0; i < NUM_STARS; i++)
     {
         /* Move and size the star */
         int temp[2];
@@ -51,13 +55,13 @@ void drawStarfield(starfield_t *self){
         temp[0] = ((1024 * self->stars[i].x) / self->stars[i].z) + TFT_WIDTH / 2;
         temp[1] = ((1024 * self->stars[i].y) / self->stars[i].z) + TFT_HEIGHT / 2;
 
-        //translate(&temp, TFT_WIDTH / 2, TFT_HEIGHT / 2);
+        // translate(&temp, TFT_WIDTH / 2, TFT_HEIGHT / 2);
 
         /* Draw the star */
         paletteColor_t col = self->stars[i].color;
-        if( self->stars[i].z < 205)
+        if (self->stars[i].z < 205)
         {
-            if(!self->randomColors)
+            if (!self->randomColors)
             {
                 col = c555;
             }
@@ -68,7 +72,7 @@ void drawStarfield(starfield_t *self){
         }
         else if (self->stars[i].z < 410)
         {
-            if(!self->randomColors)
+            if (!self->randomColors)
             {
                 col = c444;
             }
@@ -78,7 +82,7 @@ void drawStarfield(starfield_t *self){
         }
         else if (self->stars[i].z < 614)
         {
-            if(!self->randomColors)
+            if (!self->randomColors)
             {
                 col = c333;
             }
@@ -87,7 +91,7 @@ void drawStarfield(starfield_t *self){
         }
         else if (self->stars[i].z < 819)
         {
-            if(!self->randomColors)
+            if (!self->randomColors)
             {
                 col = c222;
             }
@@ -95,7 +99,7 @@ void drawStarfield(starfield_t *self){
         }
         else
         {
-            if(!self->randomColors)
+            if (!self->randomColors)
             {
                 col = c222;
             }
