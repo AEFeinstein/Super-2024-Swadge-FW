@@ -117,20 +117,18 @@ void rayEnemyBossMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  */
 bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    bool hurt = false;
+    int32_t damage = 0;
     switch (enemy->bossState)
     {
         case B_NORMAL:
         {
             if (OBJ_BULLET_NORMAL == bullet)
             {
-                enemy->health -= 5;
-                hurt = true;
+                damage = 5;
             }
             else if (OBJ_BULLET_CHARGE == BULLET)
             {
-                enemy->health -= 10;
-                hurt = true;
+                damage = 10;
             }
             break;
         }
@@ -138,8 +136,7 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         {
             if (OBJ_BULLET_MISSILE == bullet)
             {
-                enemy->health -= 5;
-                hurt = true;
+                damage = 5;
             }
             break;
         }
@@ -147,8 +144,7 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         {
             if (OBJ_BULLET_ICE == bullet)
             {
-                enemy->health -= 5;
-                hurt = true;
+                damage = 5;
             }
             break;
         }
@@ -156,8 +152,7 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         {
             if (OBJ_BULLET_XRAY == bullet)
             {
-                enemy->health -= 5;
-                hurt = true;
+                damage = 5;
             }
             break;
         }
@@ -167,11 +162,7 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         }
     }
 
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
-    }
-
+    enemy->health -= (damage * ray->p.i.damageMult);
     return (enemy->health <= 0);
 }
 
@@ -197,25 +188,22 @@ rayMapCellType_t rayEnemyBossGetBullet(rayEnemy_t* enemy)
 {
     switch (enemy->bossState)
     {
+        default:
         case B_NORMAL:
         {
-            return OBJ_BULLET_NORMAL;
+            return OBJ_BULLET_E_NORMAL;
         }
         case B_MISSILE:
         {
-            return OBJ_BULLET_MISSILE;
+            return OBJ_BULLET_E_ARMOR;
         }
         case B_ICE:
         {
-            return OBJ_BULLET_ICE;
+            return OBJ_BULLET_E_FLAMING;
         }
         case B_XRAY:
         {
-            return OBJ_BULLET_XRAY;
-        }
-        default:
-        {
-            return OBJ_BULLET_NORMAL;
+            return OBJ_BULLET_E_HIDDEN;
         }
     }
 }

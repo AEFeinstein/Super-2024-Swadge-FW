@@ -10,6 +10,8 @@
 #include "shapes.h"
 #include "fill.h"
 #include "color_utils.h"
+#include "hdw-nvs.h"
+#include "mode_ray.h"
 
 //==============================================================================
 // Defines
@@ -66,6 +68,10 @@ menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
     // Load a background
     loadWsg("menu_bg.wsg", &renderer->menu_bg, true);
 
+    // Load Zip and check if it should be displayed
+    loadWsg("zip.wsg", &renderer->zip, false);
+    readNvs32(MAGTROID_UNLOCK_KEY, &renderer->magtroidUnlocked);
+
     // Initialize LEDs
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -92,6 +98,7 @@ void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
     freeWsg(&renderer->batt[2]);
     freeWsg(&renderer->batt[3]);
     freeWsg(&renderer->menu_bg);
+    freeWsg(&renderer->zip);
     free(renderer);
 }
 
@@ -277,6 +284,13 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
 
     // Clear the TFT with a background
     drawWsgTile(&renderer->menu_bg, 0, 0);
+
+    // If Zip was unlocked
+    if (renderer->magtroidUnlocked)
+    {
+        // Draw to the TFT
+        drawWsgSimple(&renderer->zip, TFT_WIDTH - renderer->zip.w, TFT_HEIGHT - renderer->zip.h);
+    }
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;

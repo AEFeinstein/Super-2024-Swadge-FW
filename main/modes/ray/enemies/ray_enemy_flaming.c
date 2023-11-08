@@ -141,14 +141,13 @@ void rayEnemyFlamingMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 bool rayEnemyFlamingGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
     // Health starts at 100
-    bool hurt = false;
+    int32_t damage = 0;
     switch (bullet)
     {
         case OBJ_BULLET_ICE:
         {
             // Two shots to kill
-            enemy->health -= 50;
-            hurt = true;
+            damage = 50;
             break;
         }
         case OBJ_BULLET_NORMAL:
@@ -157,8 +156,7 @@ bool rayEnemyFlamingGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
         case OBJ_BULLET_MISSILE:
         {
             // Five shots to kill
-            enemy->health -= 20;
-            hurt = true;
+            damage = 20;
             break;
         }
         default:
@@ -168,10 +166,7 @@ bool rayEnemyFlamingGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
         }
     }
 
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
-    }
+    enemy->health -= (damage * ray->p.i.damageMult);
     return enemy->health <= 0;
 }
 
@@ -195,5 +190,5 @@ int32_t rayEnemyFlamingGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyFlamingGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_ICE;
+    return OBJ_BULLET_E_FLAMING;
 }

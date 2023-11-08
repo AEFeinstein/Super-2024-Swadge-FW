@@ -118,7 +118,7 @@ void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 bool rayEnemyStrongGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
     // Health starts at 100
-    bool hurt = false;
+    int32_t damage = 0;
     switch (bullet)
     {
         case OBJ_BULLET_NORMAL:
@@ -129,8 +129,7 @@ bool rayEnemyStrongGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         case OBJ_BULLET_CHARGE:
         {
             // One shot, one kill
-            enemy->health -= 100;
-            hurt = true;
+            damage = 100;
             break;
         }
         case OBJ_BULLET_ICE:
@@ -138,8 +137,7 @@ bool rayEnemyStrongGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         case OBJ_BULLET_XRAY:
         {
             // Five shots to kill
-            enemy->health -= 20;
-            hurt = true;
+            damage = 20;
             break;
         }
         default:
@@ -149,10 +147,7 @@ bool rayEnemyStrongGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         }
     }
 
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
-    }
+    enemy->health -= (damage * ray->p.i.damageMult);
     return enemy->health <= 0;
 }
 
@@ -176,5 +171,5 @@ int32_t rayEnemyStrongGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyStrongGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_CHARGE;
+    return OBJ_BULLET_E_STRONG;
 }

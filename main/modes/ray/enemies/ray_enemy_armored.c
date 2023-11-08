@@ -118,14 +118,13 @@ void rayEnemyArmoredMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 bool rayEnemyArmoredGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
     // Health starts at 100
-    bool hurt = false;
+    int32_t damage = 0;
     switch (bullet)
     {
         case OBJ_BULLET_MISSILE:
         {
             // Two shots to kill
-            enemy->health -= 50;
-            hurt = true;
+            damage = 50;
             break;
         }
         case OBJ_BULLET_NORMAL:
@@ -134,8 +133,7 @@ bool rayEnemyArmoredGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
         case OBJ_BULLET_XRAY:
         {
             // Five shots to kill
-            enemy->health -= 20;
-            hurt = true;
+            damage = 20;
             break;
         }
         default:
@@ -144,11 +142,7 @@ bool rayEnemyArmoredGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bull
             break;
         }
     }
-
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
-    }
+    enemy->health -= (damage * ray->p.i.damageMult);
     return enemy->health <= 0;
 }
 
@@ -172,5 +166,5 @@ int32_t rayEnemyArmoredGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyArmoredGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_MISSILE;
+    return OBJ_BULLET_E_ARMOR;
 }

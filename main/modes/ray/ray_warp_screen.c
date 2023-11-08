@@ -74,9 +74,6 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
 
     // Set the warp timer
     ray->warpTimerUs = 4000000;
-
-    // Stop BGM when warping
-    bzrStop(true);
 }
 
 /**
@@ -101,6 +98,9 @@ void warpToDestination(ray_t* ray)
 
     // Stop BGM when warping
     bzrStop(true);
+    // Loop SFX
+    ray->sfx_warp.shouldLoop = true;
+    bzrPlaySfx(&ray->sfx_warp, BZR_RIGHT);
 
     // Set the map ID
     ray->p.mapId                     = ray->warpDestMapId;
@@ -137,9 +137,6 @@ void warpToDestination(ray_t* ray)
 
     // Save after warping
     raySavePlayer(ray);
-
-    // Save a backup of the player state to restore in case of death
-    memcpy(&ray->p_backup, &ray->p, sizeof(rayPlayer_t));
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));

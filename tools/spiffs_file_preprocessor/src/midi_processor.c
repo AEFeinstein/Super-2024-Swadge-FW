@@ -246,8 +246,8 @@ void process_midi(const char* inFile, const char* outDir)
                 notes[trackIdx] = calloc((2 * track->nbOfNotes) + 1, sizeof(musicalNote_t));
 
                 /* For each note */
-                unsigned long int lastNoteStart = 0; // track->notes[0].timeBeforeAppear;
-                unsigned long int introRest     = lastNoteStart;
+                unsigned long int lastNoteStart = 0;
+                unsigned long int introRest     = track->notes[0].timeBeforeAppear;
 
                 for (int midiNoteIdx = 0; midiNoteIdx < track->nbOfNotes; midiNoteIdx++)
                 {

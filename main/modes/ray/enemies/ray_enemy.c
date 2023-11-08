@@ -282,9 +282,16 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
-    // Don't get shot when blocking
-    if ((E_BLOCKING == enemy->state) || (E_HURT == enemy->state))
+    // Don't get shot when blocking or dying
+    if (E_BLOCKING == enemy->state)
     {
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
+        return;
+    }
+    else if (E_DEAD == enemy->state)
+    {
+        // No SFX
         return;
     }
 
@@ -303,11 +310,22 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     {
         // Transition to dying
         rayEnemyTransitionState(enemy, E_DEAD);
-    }
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_e_dead, BZR_RIGHT);
 
+        // If the boss died
+        if (OBJ_ENEMY_BOSS == enemy->c.type)
+        {
+            // Resume normal music
+            bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
+        }
+    }
     // If the enemy took
-    if (oldHealth != enemy->health)
+    else if (oldHealth != enemy->health)
     {
+        // Transition to hurt
+        rayEnemyTransitionState(enemy, E_HURT);
+
         // Don't get stun-locked. Hurt animation is 200000*4, so double that
         // enemy->invincibleTimer = 200000 * 8;
 
@@ -316,6 +334,13 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         {
             // Slow it for a moment
             enemy->freezeTimer = 2000000;
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_e_freeze, BZR_RIGHT);
+        }
+        else
+        {
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_e_damage, BZR_RIGHT);
         }
     }
 }
@@ -329,14 +354,16 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
  */
 bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
 {
+    // clang-format off
     const bool transitionTable[E_NUM_STATES][E_NUM_STATES] = {
-        {false, true, true, true, true, false},    // E_WALKING_1, don't transition to E_DEAD
-        {true, false, true, true, true, false},    // E_WALKING_2, don't transition to E_DEAD
-        {true, true, false, false, false, false},  // E_SHOOTING, transition to E_WALKING
-        {true, true, false, false, false, true},   // E_HURT, transition to E_WALKING or E_DEAD
-        {true, true, false, false, false, false},  // E_BLOCKING, transition to E_WALKING
-        {false, false, false, false, false, false} // E_DEAD, don't transition to anything
+        {false, true,  true,  true,  true,  true }, // E_WALKING_1, don't transition to self
+        {true,  false, true,  true,  true,  true }, // E_WALKING_2, don't transition to self
+        {true,  true,  false, true , false, true }, // E_SHOOTING, transition to E_WALKING or E_HURT
+        {true,  true,  false, false, false, true }, // E_HURT, transition to E_WALKING or E_DEAD
+        {true,  true,  false, false, false, false}, // E_BLOCKING, transition to E_WALKING
+        {false, false, false, false, false, false}  // E_DEAD, don't transition to anything
     };
+    // clang-format on
 
     if (transitionTable[enemy->state][newState])
     {

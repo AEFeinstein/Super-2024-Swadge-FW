@@ -675,12 +675,12 @@ static int objDistComparator(const void* obj1, const void* obj2)
  * This is called from the main loop.
  *
  * @param ray The entire game state
- * @return The closest sprite in the lock zone, i.e. center of the display. This may be NULL if there are no centered
- * sprites.
+ * @return The closest enemy in the lock zone, i.e. center of the display. This may be NULL if there are no centered
+ * enemies.
  */
 rayObjCommon_t* castSprites(ray_t* ray)
 {
-    rayObjCommon_t* lockedObj = NULL;
+    rayObjCommon_t* lockedEnemy = NULL;
 
     // Setup to draw
     SETUP_FOR_TURBO();
@@ -904,7 +904,8 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
             // If this is an enemy
             bool drawWarpLine = false;
-            if (CELL_IS_TYPE(obj->type, OBJ | ENEMY))
+            bool isEnemy      = CELL_IS_TYPE(obj->type, OBJ | ENEMY);
+            if (isEnemy)
             {
                 rayEnemy_t* enemy = (rayEnemy_t*)obj;
                 // And the enemy is warping in
@@ -943,10 +944,11 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
                     // Check if this should be locked onto
-                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE))
+                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE)
+                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY))
                     {
                         // Closest sprites are drawn last, so override the lock
-                        lockedObj = obj;
+                        lockedEnemy = obj;
                     }
 
                     // Reset the texture Y coordinate
@@ -987,9 +989,45 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 }
                 texX += texXDelta;
             }
+
+            // If this is a blocking enemy
+            if ((isEnemy) && (E_BLOCKING == ((rayEnemy_t*)obj)->state))
+            {
+                // Draw a circle shield with wallDistBuffer checks
+                // Drawing is largely copied from drawCircleInner()
+                int32_t r  = spriteHeight / 2;
+                int32_t xm = spriteScreenX;
+                int32_t ym = (TFT_HEIGHT / 2) + spritePosZ;
+                int32_t x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+                do
+                {
+                    int32_t cdX = xm - x;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + y), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - y), c550);
+                    }
+                    cdX = xm - y;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - x), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + x), c550);
+                    }
+
+                    r = err;
+                    if (r <= y)
+                    {
+                        err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+                    }
+                    if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+                    {
+                        err += ++x * 2 + 1; /* -> x-step now */
+                    }
+                } while (x < 0);
+            }
         }
     }
-    return lockedObj;
+    return lockedEnemy;
 }
 
 /**
@@ -1020,7 +1058,7 @@ void drawHud(ray_t* ray)
                 yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
             }
         }
-        drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
+        drawWsgSimple(gun, TFT_WIDTH - gun->w - 5 + ray->gunShakeX, yOffset);
     }
 
     // Draw Keys
@@ -1294,5 +1332,37 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
             // Mirror sprites every rotation to account for asymmetry
             ray->itemRotateMirror = !ray->itemRotateMirror;
         }
+    }
+
+    // If the gun is charged
+    if (ray->chargeTimer >= CHARGE_TIME_US)
+    {
+        // Run a timer to shake it left and right
+        ray->gunShakeTimer -= elapsedUs;
+        while (ray->gunShakeTimer <= 0)
+        {
+            ray->gunShakeTimer += 10000;
+            if (true == ray->gunShakeL)
+            {
+                ray->gunShakeX++;
+                if (10 <= ray->gunShakeX)
+                {
+                    ray->gunShakeL = false;
+                }
+            }
+            else
+            {
+                ray->gunShakeX--;
+                if (0 >= ray->gunShakeX)
+                {
+                    ray->gunShakeL = true;
+                }
+            }
+        }
+    }
+    else
+    {
+        // If the gun is not charged, make sure this is reset
+        ray->gunShakeX = 0;
     }
 }

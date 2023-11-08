@@ -60,6 +60,9 @@ const char RAY_NVS_KEY[] = "ray";
 // The NVS key to save and load visited tiles
 const char* const RAY_NVS_VISITED_KEYS[] = {"rv0", "rv1", "rv2", "rv3", "rv4", "rv5"};
 
+/// @brief The NVS key to unlock Sip on the menu
+const char MAGTROID_UNLOCK_KEY[] = "zip_unlock";
+
 //==============================================================================
 // Variables
 //==============================================================================
@@ -123,8 +126,25 @@ static void rayEnterMode(void)
     // Load songs
     for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
     {
-        loadSong(songFiles[sIdx], &ray->songs[sIdx], true);
+        loadSong(songFiles[sIdx], &ray->songs[sIdx], false);
+        ray->songs[sIdx].shouldLoop = true;
     }
+
+    // Load SFX
+    loadSong("r_door_open.sng", &ray->sfx_door_open, false);
+    loadSong("r_e_damage.sng", &ray->sfx_e_damage, false);
+    loadSong("r_e_freeze.sng", &ray->sfx_e_freeze, false);
+    loadSong("r_p_charge.sng", &ray->sfx_p_charge, false);
+    loadSong("r_p_damage.sng", &ray->sfx_p_damage, false);
+    loadSong("r_p_shoot.sng", &ray->sfx_p_shoot, false);
+    loadSong("r_e_block.sng", &ray->sfx_e_block, false);
+    loadSong("r_e_dead.sng", &ray->sfx_e_dead, false);
+    loadSong("r_item_get.sng", &ray->sfx_item_get, false);
+    loadSong("r_p_charge_start.sng", &ray->sfx_p_charge_start, false);
+    loadSong("r_p_missile.sng", &ray->sfx_p_missile, false);
+    loadSong("r_p_ice.sng", &ray->sfx_p_ice, false);
+    loadSong("r_p_xray.sng", &ray->sfx_p_xray, false);
+    loadSong("r_warp.sng", &ray->sfx_warp, false);
 
     // Set the menu as the screen
     ray->screen = RAY_MENU;
@@ -161,6 +181,22 @@ static void rayExitMode(void)
         freeSong(&ray->songs[sIdx]);
     }
 
+    // Free SFX
+    freeSong(&ray->sfx_door_open);
+    freeSong(&ray->sfx_e_damage);
+    freeSong(&ray->sfx_e_freeze);
+    freeSong(&ray->sfx_p_charge);
+    freeSong(&ray->sfx_p_damage);
+    freeSong(&ray->sfx_p_shoot);
+    freeSong(&ray->sfx_e_block);
+    freeSong(&ray->sfx_e_dead);
+    freeSong(&ray->sfx_item_get);
+    freeSong(&ray->sfx_p_charge_start);
+    freeSong(&ray->sfx_p_missile);
+    freeSong(&ray->sfx_p_ice);
+    freeSong(&ray->sfx_p_xray);
+    freeSong(&ray->sfx_warp);
+
     // Free the font
     freeFont(&ray->ibm);
     freeFont(&ray->logbook);
@@ -182,6 +218,10 @@ void rayFreeCurrentState(ray_t* cRay)
     ray->posZ     = 0;
     ray->bobTimer = 0;
     ray->bobCount = 0;
+    // Gun shake
+    ray->gunShakeL     = false;
+    ray->gunShakeTimer = 0;
+    ray->gunShakeX     = 0;
     // Strafe and lock
     ray->isStrafing  = false;
     ray->targetedObj = NULL;
@@ -254,14 +294,11 @@ static void rayMainLoop(int64_t elapsedUs)
     }
 
     // Run a timer to blink things
-    if (0 < ray->blinkTimer)
+    ray->blinkTimer -= elapsedUs;
+    while (0 >= ray->blinkTimer)
     {
-        ray->blinkTimer -= elapsedUs;
-        if (0 >= ray->blinkTimer)
-        {
-            ray->blink      = !ray->blink;
-            ray->blinkTimer = BLINK_US;
-        }
+        ray->blink = !ray->blink;
+        ray->blinkTimer += BLINK_US;
     }
 
     switch (ray->screen)
@@ -291,7 +328,7 @@ static void rayMainLoop(int64_t elapsedUs)
             // Draw the walls after floor & ceiling
             castWalls(ray);
             // Draw sprites after walls
-            rayObjCommon_t* centeredSprite = castSprites(ray);
+            rayObjCommon_t* centeredEnemy = castSprites(ray);
             // Draw the HUD after sprites
             drawHud(ray);
 
@@ -299,7 +336,7 @@ static void rayMainLoop(int64_t elapsedUs)
             runEnvTimers(ray, elapsedUs);
 
             // Check buttons for the player and move player accordingly
-            rayPlayerCheckButtons(ray, centeredSprite, elapsedUs);
+            rayPlayerCheckButtons(ray, centeredEnemy, elapsedUs);
 
             // Check the joystick for the player and update loadout accordingly
             rayPlayerCheckJoystick(ray, elapsedUs);
@@ -449,9 +486,6 @@ void rayStartGame(void)
         ray->p.posX = pStartX;
         ray->p.posY = pStartY;
     }
-
-    // Save a backup of the player state to restore in case of death
-    memcpy(&ray->p_backup, &ray->p, sizeof(rayPlayer_t));
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));

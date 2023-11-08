@@ -58,6 +58,9 @@ bool initializePlayer(ray_t* ray)
         // Set initial health
         ray->p.i.maxHealth = GAME_START_HEALTH;
         ray->p.i.health    = GAME_START_HEALTH;
+
+        // Set damage multiplier to 1;
+        ray->p.i.damageMult = 1;
     }
     else
     {
@@ -73,12 +76,19 @@ bool initializePlayer(ray_t* ray)
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
 
-    // Always start with at least one missile to not get locked behind doors
+    // Always start with at most ten missiles to not get locked behind doors
     if (ray->p.i.missileLoadOut)
     {
-        if (0 == ray->p.i.numMissiles)
+        if (10 > ray->p.i.numMissiles)
         {
-            ray->p.i.numMissiles++;
+            if (10 > ray->p.i.maxNumMissiles)
+            {
+                ray->p.i.numMissiles = ray->p.i.maxNumMissiles;
+            }
+            else
+            {
+                ray->p.i.maxNumMissiles = 10;
+            }
         }
     }
 
@@ -86,6 +96,9 @@ bool initializePlayer(ray_t* ray)
     ray->nextLoadout        = ray->p.loadout;
     ray->loadoutChangeTimer = 0;
     ray->forceLoadoutSwap   = 0;
+
+    // Always reload with full health
+    ray->p.i.health = ray->p.i.maxHealth;
 
     return initFromScratch;
 }
@@ -115,10 +128,10 @@ void raySaveVisitedTiles(ray_t* ray)
  * @brief Check button inputs for the player. This will move the player and shoot bullets
  *
  * @param ray The entire game state
- * @param centeredSprite The sprite currently centered in the view
+ * @param centeredEnemy The enemy currently centered in the view, may be NULL
  * @param elapsedUs The elapsed time since this function was last called
  */
-void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t elapsedUs)
+void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t elapsedUs)
 {
     // For convenience
     q24_8 pPosX = ray->p.posX;
@@ -152,10 +165,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 // Set strafe to true
                 ray->isStrafing = true;
                 // If there is a centered sprite
-                if (centeredSprite && !CELL_IS_TYPE(centeredSprite->type, (OBJ | BULLET)))
+                if (centeredEnemy)
                 {
                     // Lock onto it
-                    ray->targetedObj = centeredSprite;
+                    ray->targetedObj = centeredEnemy;
                 }
             }
             else
@@ -221,6 +234,36 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             {
                 // Fire a shot
                 rayCreateBullet(ray, bullet, pPosX, pPosY, pDirX, pDirY, true);
+
+                // Play SFX depending on bullet
+                switch (bullet)
+                {
+                    case OBJ_BULLET_CHARGE:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_charge, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_MISSILE:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_missile, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_ICE:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_ice, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_XRAY:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_xray, BZR_RIGHT);
+                        break;
+                    }
+                    default:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_shoot, BZR_RIGHT);
+                        break;
+                    }
+                }
             }
         }
     }
@@ -622,6 +665,24 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_ARTIFACT:
         {
             inventory->artifacts[mapId] = true;
+
+            // Check if all artifacts have been collected
+            bool collected = true;
+            for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(inventory->artifacts); aIdx++)
+            {
+                if (!inventory->artifacts[aIdx])
+                {
+                    collected = false;
+                    break;
+                }
+            }
+
+            // If all were collected
+            if (collected)
+            {
+                // Increase damage output by 2
+                inventory->damageMult = 2;
+            }
             break;
         }
         case OBJ_ITEM_PICKUP_ENERGY:
@@ -665,6 +726,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         // Autosave
         raySavePlayer(ray);
         raySaveVisitedTiles(ray);
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_item_get, BZR_RIGHT);
     }
 }
 
@@ -699,24 +762,15 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
 {
     // Decrement health
     ray->p.i.health -= health;
+
+    // Play SFX
+    bzrPlaySfx(&ray->sfx_p_damage, BZR_RIGHT);
+
     // Check for death
     if (0 >= ray->p.i.health)
     {
-        // If the player already has the artifact
-        if (ray->p.i.artifacts[ray->p.mapId])
-        {
-            // load the last save
-            rayStartGame();
-        }
-        else
-        {
-            // Player does not have this artifact, load the backup from when the map was entered
-            mempcpy(&ray->p, &ray->p_backup, sizeof(rayPlayer_t));
-            raySavePlayer(ray);
-            // Clear visited tiles too
-            memset(ray->map.visitedTiles, NOT_VISITED, ray->map.w * ray->map.h * sizeof(rayTileState_t));
-            raySaveVisitedTiles(ray);
-        }
+        // load the last save
+        rayStartGame();
 
         // Show the death screen
         rayShowDeathScreen(ray);

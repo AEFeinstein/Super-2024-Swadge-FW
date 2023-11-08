@@ -4,6 +4,7 @@
 #include "ray_player.h"
 #include "ray_map.h"
 #include "ray_warp_screen.h"
+#include "hdw-nvs.h"
 
 static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
@@ -665,7 +666,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         case SPAWN:
         {
             // Start timer to not re-trigger immediately
-            script->resetTimerSec = 60;
+            script->resetTimerSec = 90;
             // Create objects
             for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
             {
@@ -822,7 +823,8 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case WIN:
         {
-            // TODO unlock something or whatever.
+            // Unlock zip on the menu
+            writeNvs32(MAGTROID_UNLOCK_KEY, 1);
             break;
         }
     }
