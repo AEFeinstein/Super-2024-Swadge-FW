@@ -693,8 +693,8 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
-    char levelStr[15];
-    snprintf(levelStr, sizeof(levelStr) - 1, "Level %d", gameData->level);
+    char levelStr[11];
+    snprintf(levelStr, sizeof(levelStr)-1, "L%02" PRIu8, gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
@@ -710,7 +710,7 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     drawText(font, c555, livesStr, 48, 2);
     // drawText(font, c555, coinStr, 160, 16);
     drawText(font, c555, scoreStr, 80, 2);
-    drawText(font, c555, levelStr, 184, 2);
+    drawText(font, c555, levelStr, 224, 2);
     // drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220,
     // 16);
 
@@ -720,15 +720,35 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     drawText(font, c555, "U", 271, 68);
     drawText(font, c555, "S", 271, 80);
     drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);
+    
 
+    char vdispStr[3];
+    /*for(uint16_t i=0; i<sizeof(levelStr); i++){
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", levelStr[i]);
+        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
+    }*/
+
+    char extraLifeStr[15];
+    snprintf(extraLifeStr, sizeof(extraLifeStr) - 1, "NEXT %0" PRIu32, gameData->extraLifeScore);
+    
+    for(uint16_t i=0; i<sizeof(extraLifeStr) - 1; i++){
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", extraLifeStr[i]);
+        if(vdispStr[0] == '\0'){
+            break;
+        }
+        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
+    }
+    
     // if(gameData->comboTimer == 0){
     //     return;
     // }
 
-    // snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
+    if(gameData->comboScore > 0){
+     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+    //snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
     drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4],
              scoreStr, 144, 2);
+    }
 
     // Draw centering lines, for paddle control debug
     // drawLine(TFT_WIDTH >> 1, 0, TFT_WIDTH >> 1, TFT_HEIGHT, c500, 0);
@@ -759,7 +779,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                 bzrPlayBgm(&(self->soundManager.tally), BZR_STEREO);
             }
 
-            scorePoints(&(self->gameData), 80, -1);
+            scorePoints(&(self->gameData), 80, -1000);
         }
         else if (self->gameData.frameCount % 60 == 0)
         {
@@ -962,7 +982,7 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
             breakout->menuSelection      = 0;
             breakout->menuState          = 1;
             breakout->gameData.debugMode = true;
-            bzrPlaySfx(&(breakout->soundManager.snd1up), BZR_STEREO);
+            bzrPlaySfx(&(breakout->soundManager.levelClear), BZR_STEREO);
         }
         else
         {
