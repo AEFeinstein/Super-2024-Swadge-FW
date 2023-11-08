@@ -142,6 +142,8 @@ static void rayEnterMode(void)
     loadSong("r_item_get.sng", &ray->sfx_item_get, false);
     loadSong("r_p_charge_start.sng", &ray->sfx_p_charge_start, false);
     loadSong("r_p_missile.sng", &ray->sfx_p_missile, false);
+    loadSong("r_p_ice.sng", &ray->sfx_p_ice, false);
+    loadSong("r_p_xray.sng", &ray->sfx_p_xray, false);
     loadSong("r_warp.sng", &ray->sfx_warp, false);
 
     // Set the menu as the screen
@@ -191,6 +193,8 @@ static void rayExitMode(void)
     freeSong(&ray->sfx_item_get);
     freeSong(&ray->sfx_p_charge_start);
     freeSong(&ray->sfx_p_missile);
+    freeSong(&ray->sfx_p_ice);
+    freeSong(&ray->sfx_p_xray);
     freeSong(&ray->sfx_warp);
 
     // Free the font

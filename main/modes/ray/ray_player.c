@@ -248,6 +248,16 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
                         bzrPlaySfx(&ray->sfx_p_missile, BZR_RIGHT);
                         break;
                     }
+                    case OBJ_BULLET_ICE:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_ice, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_XRAY:
+                    {
+                        bzrPlaySfx(&ray->sfx_p_xray, BZR_RIGHT);
+                        break;
+                    }
                     default:
                     {
                         bzrPlaySfx(&ray->sfx_p_shoot, BZR_RIGHT);

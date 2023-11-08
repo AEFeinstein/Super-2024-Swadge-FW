@@ -649,6 +649,8 @@ typedef struct
     song_t sfx_item_get;        ///< SFX when an item is obtained
     song_t sfx_p_charge_start;  ///< SFX when the charge beam starts to charge
     song_t sfx_p_missile;       ///< SFX when a missile is shot
+    song_t sfx_p_ice;           ///< SFX when the ice beam is shot
+    song_t sfx_p_xray;          ///< SFX when th xray beam is shot
     song_t sfx_warp;            ///< SFX when the player warps
 
     int32_t pRotationTimer; ///< timer for player rotation
