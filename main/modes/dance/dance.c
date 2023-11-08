@@ -18,7 +18,7 @@
 // Defines
 //==============================================================================
 
-#define RGB_2_ARG(r, g, b) ((((r) & 0xFF) << 16) | (((g) & 0xFF) << 8) | (((b) & 0xFF)))
+#define RGB_2_ARG(r, g, b) ((((r)&0xFF) << 16) | (((g)&0xFF) << 8) | (((b)&0xFF)))
 #define ARG_R(arg)         (((arg) >> 16) & 0xFF)
 #define ARG_G(arg)         (((arg) >> 8) & 0xFF)
 #define ARG_B(arg)         (((arg) >> 0) & 0xFF)
@@ -306,12 +306,9 @@ void dancePollTouch(void)
         // Make sure we are pressing on the edge.
 
         int32_t speeds = ARRAY_SIZE(danceSpeeds);
-        int32_t diff = CLAMP((
-            (
-                (danceState->spinState.spins * 360 + danceState->spinState.remainder)
-                * (speeds - 1)
-            ) / -360),
-        -speeds, speeds);
+        int32_t diff
+            = CLAMP((((danceState->spinState.spins * 360 + danceState->spinState.remainder) * (speeds - 1)) / -360),
+                    -speeds, speeds);
 
         danceState->danceSpeed         = CLAMP(danceState->startDanceSpeed + diff, 0, speeds - 1);
         danceState->buttonPressedTimer = 0;
