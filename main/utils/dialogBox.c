@@ -275,8 +275,8 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
         dialogInfo->iconY = 0;
     }
 
-    uint16_t detailH
-        = textWordWrapHeight(detailFont, dialogBox->detail, maxW - DIALOG_PADDING * 2 - textOffset, maxH - DIALOG_PADDING - curY);
+    uint16_t detailH    = textWordWrapHeight(detailFont, dialogBox->detail, maxW - DIALOG_PADDING * 2 - textOffset,
+                                             maxH - DIALOG_PADDING - curY);
     dialogInfo->detailX = curX;
     dialogInfo->detailY = curY;
     curY += detailH + 1;
@@ -347,7 +347,7 @@ static void layoutDialogBox(const dialogBox_t* dialogBox, const font_t* titleFon
 
             if (autoW)
             {
-                w             = MAX(w, curX);
+                w = MAX(w, curX);
             }
 
             if (curX > maxW - DIALOG_PADDING)

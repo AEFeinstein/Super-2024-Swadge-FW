@@ -11,7 +11,7 @@
 #include "paint_common.h"
 #include "paint_type.h"
 
-#define PAINT_NS_DATA "paint_img"
+#define PAINT_NS_DATA    "paint_img"
 #define PAINT_NS_PALETTE "paint_pal"
 
 // Settings bounds for the menu

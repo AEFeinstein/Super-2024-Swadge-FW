@@ -35,13 +35,12 @@
 #define IS_PRINTABLE(chr) BTWN(chr, ' ', '~')
 
 /// @brief Macro to match a character against any mask value
-#define MATCH_CHAR(chr, mask) ( \
-     (((mask & ENTRY_UPPERCASE) == ENTRY_UPPERCASE) && IS_UPPER(chr)) \
+#define MATCH_CHAR(chr, mask)                                            \
+    ((((mask & ENTRY_UPPERCASE) == ENTRY_UPPERCASE) && IS_UPPER(chr))    \
      || (((mask & ENTRY_LOWERCASE) == ENTRY_LOWERCASE) && IS_LOWER(chr)) \
-     || (((mask & ENTRY_NUMBERS) == ENTRY_NUMBERS) && IS_NUMBER(chr)) \
-     || (((mask & ENTRY_SYMBOLS) == ENTRY_SYMBOLS) && IS_SYMBOL(chr)) \
-     || (((mask & ENTRY_WHITESPACE) == ENTRY_WHITESPACE) && IS_WHITESPACE(chr)) \
-)
+     || (((mask & ENTRY_NUMBERS) == ENTRY_NUMBERS) && IS_NUMBER(chr))    \
+     || (((mask & ENTRY_SYMBOLS) == ENTRY_SYMBOLS) && IS_SYMBOL(chr))    \
+     || (((mask & ENTRY_WHITESPACE) == ENTRY_WHITESPACE) && IS_WHITESPACE(chr)))
 
 //==============================================================================
 // Defines
@@ -96,8 +95,7 @@ static char prevChar(char cur, textEntryCharMask_t mask)
         {
             cur--;
         }
-    }
-    while (!MATCH_CHAR(cur, mask));
+    } while (!MATCH_CHAR(cur, mask));
 
     return cur;
 }
@@ -121,8 +119,7 @@ static char nextChar(char cur, textEntryCharMask_t mask)
         {
             cur++;
         }
-    }
-    while (!MATCH_CHAR(cur, mask));
+    } while (!MATCH_CHAR(cur, mask));
 
     return cur;
 }
@@ -187,7 +184,8 @@ static void cursorLeft(textEntry_t* entry)
  */
 static void cursorRight(textEntry_t* entry)
 {
-    if (entry->heldButton != PB_RIGHT && (entry->maxLength == 0 || entry->cursor < entry->maxLength) && (entry->mask & ENTRY_WHITESPACE) == ENTRY_WHITESPACE && !entry->value[entry->cursor])
+    if (entry->heldButton != PB_RIGHT && (entry->maxLength == 0 || entry->cursor < entry->maxLength)
+        && (entry->mask & ENTRY_WHITESPACE) == ENTRY_WHITESPACE && !entry->value[entry->cursor])
     {
         // Add a space, if allowed and at the end
         entry->value[entry->cursor] = ' ';
@@ -195,7 +193,8 @@ static void cursorRight(textEntry_t* entry)
         entry->blinkTimer = BLINK_TIME;
         entry->blinkState = true;
     }
-    else if (entry->cursor < entry->size && (entry->maxLength == 0 || entry->cursor < entry->maxLength) && entry->cursor < strlen(entry->value))
+    else if (entry->cursor < entry->size && (entry->maxLength == 0 || entry->cursor < entry->maxLength)
+             && entry->cursor < strlen(entry->value))
     {
         entry->cursor++;
 
@@ -220,7 +219,8 @@ static void cursorRight(textEntry_t* entry)
 }
 
 /**
- * @brief Replace the character at the text entry's cursor with the current pending character and advance the cursor by one character
+ * @brief Replace the character at the text entry's cursor with the current pending character and advance the cursor by
+ * one character
  *
  * @param entry The text entry to update the character for
  */
@@ -319,7 +319,8 @@ static void deleteChar(textEntry_t* entry)
  * @param cbFn The function to call once text entry is complete
  * @return textEntry_t*
  */
-textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, const font_t* font, textEntryCharMask_t mask, textEntryCb cbFn)
+textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, const font_t* font,
+                           textEntryCharMask_t mask, textEntryCb cbFn)
 {
     textEntry_t* entry = calloc(1, sizeof(textEntry_t));
 
@@ -331,15 +332,15 @@ textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, 
     entry->w = w;
 
     entry->value = calloc(1, 32);
-    entry->size = 32;
+    entry->size  = 32;
 
     entry->cursor = 0;
-    entry->font = font;
+    entry->font   = font;
 
     entry->mask = (mask != 0) ? mask : ENTRY_ALL;
 
     // Try to set the character to 'A', but respect the mask
-    entry->cur = nextChar('A' - 1, entry->mask);
+    entry->cur         = nextChar('A' - 1, entry->mask);
     entry->pendingChar = true;
 
     entry->cbFn = cbFn;
@@ -370,7 +371,8 @@ void textEntrySetData(textEntry_t* textEntry, void* data)
 }
 
 /**
- * @brief Copy the given text into the text entry, replacing any text that was there and moving the cursor to the end of the new text
+ * @brief Copy the given text into the text entry, replacing any text that was there and moving the cursor to the end of
+ * the new text
  *
  * @param textEntry The text entry to update the text for
  * @param text The text to set as the text entry's value
@@ -397,8 +399,8 @@ void textEntrySetText(textEntry_t* textEntry, const char* text)
         *chr = '\0';
     }
 
-    textEntry->offset = 0;
-    textEntry->cursor = strlen(text);
+    textEntry->offset      = 0;
+    textEntry->cursor      = strlen(text);
     textEntry->pendingChar = false;
 }
 
@@ -419,9 +421,9 @@ void textEntryMainLoop(textEntry_t* textEntry, int64_t elapsedUs)
         else
         {
             buttonEvt_t evt;
-            evt.state = textEntry->heldButton;
+            evt.state  = textEntry->heldButton;
             evt.button = textEntry->heldButton;
-            evt.down = true;
+            evt.down   = true;
 
             textEntryButton(textEntry, &evt);
 
@@ -440,7 +442,8 @@ void textEntryMainLoop(textEntry_t* textEntry, int64_t elapsedUs)
         textEntry->blinkTimer = BLINK_TIME - (elapsedUs - textEntry->blinkTimer);
     }
 
-    if (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value)))
+    if (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength
+        || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value)))
     {
         int32_t phi, r, intensity;
         if (getTouchJoystick(&phi, &r, &intensity))
@@ -458,7 +461,8 @@ void textEntryMainLoop(textEntry_t* textEntry, int64_t elapsedUs)
             }
 
             char chr = textEntry->spinCharStart;
-            int16_t charChange = (textEntry->spinState.spins * 360 + textEntry->spinState.remainder) / SPIN_DEG_PER_CHAR;
+            int16_t charChange
+                = (textEntry->spinState.spins * 360 + textEntry->spinState.remainder) / SPIN_DEG_PER_CHAR;
 
             for (uint16_t i = 0; i < ABS(charChange); i++)
             {
@@ -483,7 +487,7 @@ void textEntryMainLoop(textEntry_t* textEntry, int64_t elapsedUs)
         else
         {
             textEntry->spinState.startSet = false;
-            textEntry->spinCharStart = 0;
+            textEntry->spinCharStart      = 0;
         }
     }
 }
@@ -508,7 +512,8 @@ void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt)
                 {
                     textEntry->cur = prevChar(textEntry->cur, textEntry->mask);
                 }
-                else if (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value)))
+                else if (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength
+                         || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value)))
                 {
                     textEntry->pendingChar = true;
                     if (textEntry->overtype)
@@ -528,7 +533,8 @@ void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt)
                 {
                     textEntry->cur = nextChar(textEntry->cur, textEntry->mask);
                 }
-                else if (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value)))
+                else if (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength
+                         || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value)))
                 {
                     textEntry->pendingChar = true;
                     if (textEntry->overtype)
@@ -544,14 +550,14 @@ void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt)
 
             case PB_LEFT:
             {
-                //textEntry->cur = textEntry->value[textEntry->cursor];
+                // textEntry->cur = textEntry->value[textEntry->cursor];
                 cursorLeft(textEntry);
                 break;
             }
 
             case PB_RIGHT:
             {
-                //textEntry->value[textEntry->cursor] = textEntry->cur;
+                // textEntry->value[textEntry->cursor] = textEntry->cur;
                 cursorRight(textEntry);
                 break;
             }
@@ -589,8 +595,8 @@ void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt)
 
             case PB_START:
             case PB_SELECT:
-            // Both handled on key up instead
-            break;
+                // Both handled on key up instead
+                break;
         }
 
         if ((evt->button & REPEATABLE_BUTTONS) == evt->button)
@@ -650,19 +656,24 @@ void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt)
 void drawTextEntry(textEntry_t* textEntry, paletteColor_t fg, paletteColor_t bg, bool drawBox)
 {
     uint16_t letterSpacing = 2;
-    uint16_t x = textEntry->x + 5;
-    uint16_t y = textEntry->y;
+    uint16_t x             = textEntry->x + 5;
+    uint16_t y             = textEntry->y;
 
     if (drawBox)
     {
-        fillDisplayArea(textEntry->x - 2, textEntry->y - 2, textEntry->x + textEntry->w + 2, textEntry->y + textEntry->font->height + 3, bg);
+        fillDisplayArea(textEntry->x - 2, textEntry->y - 2, textEntry->x + textEntry->w + 2,
+                        textEntry->y + textEntry->font->height + 3, bg);
     }
 
     // This is where we start drawing, by default at the beginning of the string, sensibly
     const char* startChr = textEntry->value + textEntry->offset;
-    uint16_t curWidth = (textEntry->pendingChar && IS_PRINTABLE(textEntry->cur)) ? (letterSpacing + textEntry->font->chars[textEntry->cur - ' '].width) : 0;
+    uint16_t curWidth    = (textEntry->pendingChar && IS_PRINTABLE(textEntry->cur))
+                               ? (letterSpacing + textEntry->font->chars[textEntry->cur - ' '].width)
+                               : 0;
 
-    while (textEntry->offset < textEntry->cursor && textWidth(textEntry->font, startChr) + letterSpacing * (MAX(1, strlen(startChr)) - 1) + curWidth >= MIN(TFT_WIDTH, textEntry->x + textEntry->w - 5))
+    while (textEntry->offset < textEntry->cursor
+           && textWidth(textEntry->font, startChr) + letterSpacing * (MAX(1, strlen(startChr)) - 1) + curWidth
+                  >= MIN(TFT_WIDTH, textEntry->x + textEntry->w - 5))
     {
         textEntry->offset++;
         startChr++;
@@ -671,19 +682,23 @@ void drawTextEntry(textEntry_t* textEntry, paletteColor_t fg, paletteColor_t bg,
     // Draw a ... at the beginning
     if (textEntry->offset > 0)
     {
-        fillDisplayArea(textEntry->x - 1, textEntry->y + textEntry->font->height / 2 - 1, textEntry->x + 1, textEntry->y + textEntry->font->height / 2 + 1, fg);
-        fillDisplayArea(textEntry->x + 2, textEntry->y + textEntry->font->height / 2 - 1, textEntry->x + 4, textEntry->y + textEntry->font->height / 2 + 1, fg);
+        fillDisplayArea(textEntry->x - 1, textEntry->y + textEntry->font->height / 2 - 1, textEntry->x + 1,
+                        textEntry->y + textEntry->font->height / 2 + 1, fg);
+        fillDisplayArea(textEntry->x + 2, textEntry->y + textEntry->font->height / 2 - 1, textEntry->x + 4,
+                        textEntry->y + textEntry->font->height / 2 + 1, fg);
     }
 
     // TODO handle shifting the display over if the text doesn't fit
     for (const char* chr = startChr; chr <= textEntry->value + strlen(textEntry->value); ++chr)
     {
-        bool invert = false;
+        bool invert      = false;
         bool drawPending = false;
 
         if (textEntry->cursor == (chr - textEntry->value))
         {
-            drawPending = (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value))) && textEntry->pendingChar && IS_PRINTABLE(textEntry->cur);
+            drawPending = (textEntry->maxLength == 0 || strlen(textEntry->value) < textEntry->maxLength
+                           || (textEntry->overtype && textEntry->cursor < strlen(textEntry->value)))
+                          && textEntry->pendingChar && IS_PRINTABLE(textEntry->cur);
             if (textEntry->overtype)
             {
                 // Overtype: Highlight this character, draw pending char instead if enabled
@@ -699,31 +714,35 @@ void drawTextEntry(textEntry_t* textEntry, paletteColor_t fg, paletteColor_t bg,
             }
         }
 
-        if (!IS_PRINTABLE((drawPending ? textEntry->cur : *chr)) || x + textEntry->font->chars[(drawPending ? textEntry->cur : *chr) - ' '].width >= textEntry->x + textEntry->w - 5)
+        if (!IS_PRINTABLE((drawPending ? textEntry->cur : *chr))
+            || x + textEntry->font->chars[(drawPending ? textEntry->cur : *chr) - ' '].width
+                   >= textEntry->x + textEntry->w - 5)
         {
             if (IS_PRINTABLE((drawPending ? textEntry->cur : *chr)))
             {
                 // Overflow!
-                fillDisplayArea(x, textEntry->y + textEntry->font->height / 2 - 1, x + 2, textEntry->y + textEntry->font->height / 2 + 1, fg);
-                fillDisplayArea(x + 3, textEntry->y + textEntry->font->height / 2 - 1, x + 5, textEntry->y + textEntry->font->height / 2 + 1, fg);
+                fillDisplayArea(x, textEntry->y + textEntry->font->height / 2 - 1, x + 2,
+                                textEntry->y + textEntry->font->height / 2 + 1, fg);
+                fillDisplayArea(x + 3, textEntry->y + textEntry->font->height / 2 - 1, x + 5,
+                                textEntry->y + textEntry->font->height / 2 + 1, fg);
             }
             break;
         }
 
         if (invert && IS_PRINTABLE((drawPending ? textEntry->cur : *chr)))
         {
-            fillDisplayArea(x - 1,
-                            y - 1,
-                            x + textEntry->font->chars[(drawPending ? textEntry->cur : *chr) - ' '].width + letterSpacing - 1,
-                            y + textEntry->font->height + 1,
-                            fg);
+            fillDisplayArea(x - 1, y - 1,
+                            x + textEntry->font->chars[(drawPending ? textEntry->cur : *chr) - ' '].width
+                                + letterSpacing - 1,
+                            y + textEntry->font->height + 1, fg);
         }
 
         if (drawPending)
         {
             if (textEntry->blinkState)
             {
-                drawChar(invert ? bg : fg, textEntry->font->height, &textEntry->font->chars[textEntry->cur - ' '], x, y);
+                drawChar(invert ? bg : fg, textEntry->font->height, &textEntry->font->chars[textEntry->cur - ' '], x,
+                         y);
             }
             x += textEntry->font->chars[textEntry->cur - ' '].width + letterSpacing;
             invert = false;

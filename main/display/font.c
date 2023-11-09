@@ -21,8 +21,8 @@
 // Static Function Declarations
 //==============================================================================
 
-static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
-                                        int16_t xMax, int16_t yMax, uint16_t flags);
+static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
+                                         int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags);
 
 //==============================================================================
 // Functions
@@ -187,8 +187,8 @@ uint16_t textWidth(const font_t* font, const char* text)
     return width;
 }
 
-static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff, int16_t* yOff,
-                                        int16_t xMax, int16_t yMax, uint16_t flags)
+static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t color, const char* text, int16_t* xOff,
+                                         int16_t* yOff, int16_t xMax, int16_t yMax, uint16_t flags)
 {
     const char* textPtr = text;
     int16_t textX = *xOff, textY = *yOff;

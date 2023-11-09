@@ -1,4 +1,3 @@
-//#include <nvs.h>
 #include <string.h>
 #include <inttypes.h>
 
@@ -19,9 +18,9 @@
 #include "paint_draw.h"
 #include "paint_ui.h"
 
-static const char saveAsNewStr[] = "New...";
+static const char saveAsNewStr[]      = "New...";
 static const char textEntryTitleStr[] = "File Name";
-static const char noItemsStr[] = "No Items";
+static const char noItemsStr[]        = "No Items";
 
 #define THUMB_W 35
 #define THUMB_H 30
@@ -29,8 +28,8 @@ static const char noItemsStr[] = "No Items";
 #define SCROLL_OFFSET 30
 #define SCROLL_HEIGHT (TFT_HEIGHT - SCROLL_OFFSET * 2)
 
-#define ENTRY_W 160
-#define ENTRY_Y 60
+#define ENTRY_W       160
+#define ENTRY_Y       60
 #define ENTRY_TITLE_Y 40
 
 typedef struct
@@ -93,7 +92,8 @@ static void imageBrowserTextEntryCb(const char* text, void* data)
     }
 }
 
-void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix, imageBrowserAction_t action, imageBrowserAction_t secondaryAction)
+void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix,
+                       imageBrowserAction_t action, imageBrowserAction_t secondaryAction)
 {
     size_t numInfos = 0;
     if (!readNamespaceNvsEntryInfos(namespace, NULL, NULL, &numInfos))
@@ -102,15 +102,14 @@ void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* 
         return;
     }
 
-    browser->font = font;
-    browser->prevUpdateTime = 0;
-    browser->primaryAction = action;
+    browser->font            = font;
+    browser->prevUpdateTime  = 0;
+    browser->primaryAction   = action;
     browser->secondaryAction = secondaryAction;
 
     if (BROWSER_SAVE == action)
     {
         imageBrowserItem_t* newButton = calloc(1, sizeof(imageBrowserItem_t));
-
 
         newButton->isNewButton = true;
 
@@ -121,7 +120,8 @@ void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* 
 
         if (NULL == browser->textEntry)
         {
-            browser->textEntry = initTextEntry((TFT_WIDTH - ENTRY_W) / 2, ENTRY_Y, ENTRY_W, 16, font, ENTRY_WORD | ENTRY_WHITESPACE, imageBrowserTextEntryCb);
+            browser->textEntry = initTextEntry((TFT_WIDTH - ENTRY_W) / 2, ENTRY_Y, ENTRY_W, 16, font,
+                                               ENTRY_WORD | ENTRY_WHITESPACE, imageBrowserTextEntryCb);
             textEntrySetData(browser->textEntry, browser);
         }
 
@@ -192,7 +192,7 @@ void resetImageBrowser(imageBrowser_t* browser)
     if (NULL != browser->textEntry)
     {
         freeTextEntry(browser->textEntry);
-        browser->textEntry = NULL;
+        browser->textEntry     = NULL;
         browser->showTextEntry = false;
     }
 }
@@ -203,10 +203,10 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint8_t rows = (browser->items.length + (browser->cols - 1)) / browser->cols;
 
     uint16_t marginTop    = 15;
-    uint16_t textMargin = 5;
+    uint16_t textMargin   = 5;
     uint16_t marginBottom = 15 + browser->font->height + 1 + textMargin;
-    uint16_t marginLeft = 18;
-    uint16_t marginRight = 18;
+    uint16_t marginLeft   = 18;
+    uint16_t marginRight  = 18;
     uint16_t thumbMargin  = 5;
     uint16_t thumbHeight  = THUMB_H + 4;
     uint16_t thumbWidth   = THUMB_W + 4;
@@ -215,8 +215,10 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint8_t visibleRows    = (TFT_HEIGHT - marginTop - marginBottom - thumbMargin) / (thumbHeight + thumbMargin);
     uint8_t lastVisibleRow = browser->firstRow + visibleRows - 1;
 
-    uint16_t extraW = (TFT_WIDTH - marginLeft - marginRight) - (browser->cols * thumbWidth + (browser->cols - 1) * thumbMargin);
-    uint16_t extraH = (TFT_HEIGHT - marginBottom - marginTop) - (visibleRows * thumbHeight + (visibleRows > 0 ? (visibleRows - 1) * thumbMargin : 0));
+    uint16_t extraW
+        = (TFT_WIDTH - marginLeft - marginRight) - (browser->cols * thumbWidth + (browser->cols - 1) * thumbMargin);
+    uint16_t extraH = (TFT_HEIGHT - marginBottom - marginTop)
+                      - (visibleRows * thumbHeight + (visibleRows > 0 ? (visibleRows - 1) * thumbMargin : 0));
 
     // Fill the whole screen with a nice gray
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c444);
@@ -231,7 +233,8 @@ void drawImageBrowser(imageBrowser_t* browser)
         int64_t now = esp_timer_get_time();
 
         textEntryMainLoop(browser->textEntry, now - browser->prevUpdateTime);
-        drawText(browser->font, c000, textEntryTitleStr, (TFT_WIDTH - textWidth(browser->font, textEntryTitleStr)) / 2, ENTRY_TITLE_Y);
+        drawText(browser->font, c000, textEntryTitleStr, (TFT_WIDTH - textWidth(browser->font, textEntryTitleStr)) / 2,
+                 ENTRY_TITLE_Y);
         drawTextEntry(browser->textEntry, c000, c555, false);
 
         browser->prevUpdateTime = now;
@@ -243,21 +246,26 @@ void drawImageBrowser(imageBrowser_t* browser)
         // Calculate the scrollbar height
         // height = (proportion of rows visible) * (total height)
         uint16_t scrollHeight = rows ? visibleRows * SCROLL_HEIGHT / rows : SCROLL_HEIGHT;
-        uint16_t scrollOffset = rows ? SCROLL_OFFSET + SCROLL_HEIGHT - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight : SCROLL_OFFSET;
+        uint16_t scrollOffset
+            = rows ? SCROLL_OFFSET + SCROLL_HEIGHT - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight
+                   : SCROLL_OFFSET;
 
         // Draw the scroll bar on the right side
         // Border
-        drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight, TFT_HEIGHT - SCROLL_OFFSET, c000);
+        drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight, TFT_HEIGHT - SCROLL_OFFSET,
+                 c000);
 
         // Scrollbar
-        fillDisplayArea(TFT_WIDTH - 3 - marginRight, scrollOffset, TFT_WIDTH - 1 - marginRight, scrollOffset + scrollHeight, c000);
+        fillDisplayArea(TFT_WIDTH - 3 - marginRight, scrollOffset, TFT_WIDTH - 1 - marginRight,
+                        scrollOffset + scrollHeight, c000);
     }
 
     node_t* node = browser->items.first;
 
     if (NULL == node)
     {
-        drawText(browser->font, c000, noItemsStr, (TFT_WIDTH - textWidth(browser->font, noItemsStr)) / 2, (TFT_HEIGHT - browser->font->height) / 2);
+        drawText(browser->font, c000, noItemsStr, (TFT_WIDTH - textWidth(browser->font, noItemsStr)) / 2,
+                 (TFT_HEIGHT - browser->font->height) / 2);
     }
     else
     {
@@ -282,9 +290,10 @@ void drawImageBrowser(imageBrowser_t* browser)
                 // TODO divide by 2 after ... `+ thumbMargin)`
                 // x = marginLeft + (lSpacing * (col + 1)) + (width) *
                 uint16_t x = marginLeft + col * (thumbWidth + thumbMargin) + extraW * col / browser->cols;
-                uint16_t y = marginTop + (row - browser->firstRow) * (thumbHeight + thumbMargin) + extraH * (row - browser->firstRow) / rows;
-                            //+ row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
-                            //    / visibleRows;
+                uint16_t y = marginTop + (row - browser->firstRow) * (thumbHeight + thumbMargin)
+                             + extraH * (row - browser->firstRow) / rows;
+                //+ row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
+                //    / visibleRows;
 
                 // Background
                 fillDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, c333);
@@ -313,7 +322,8 @@ void drawImageBrowser(imageBrowser_t* browser)
                 if (selected)
                 {
                     const char* text = item->isNewButton ? saveAsNewStr : item->nvsKey;
-                    drawText(browser->font, c000, text, (TFT_WIDTH - textWidth(browser->font, text)) / 2, TFT_HEIGHT - marginBottom + textMargin);
+                    drawText(browser->font, c000, text, (TFT_WIDTH - textWidth(browser->font, text)) / 2,
+                             TFT_HEIGHT - marginBottom + textMargin);
                 }
             }
         }
@@ -447,19 +457,19 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
 
         // TODO un-copy-paste this
         uint16_t marginTop    = 15;
-        uint16_t textMargin = 5;
+        uint16_t textMargin   = 5;
         uint16_t marginBottom = 15 + browser->font->height + 1 + textMargin;
         uint16_t thumbMargin  = 5;
         uint16_t thumbHeight  = THUMB_H + 4;
 
         // The last visible row is the first row, plus the number of rows (== spaceForRows / spacePerRow)
-        uint8_t visibleRows    = (TFT_HEIGHT - marginTop - marginBottom - thumbMargin) / (thumbHeight + thumbMargin);
+        uint8_t visibleRows = (TFT_HEIGHT - marginTop - marginBottom - thumbMargin) / (thumbHeight + thumbMargin);
 
         // Loop over the nodes to find the current one's index
         uint32_t curIndex = 0;
-        for (node_t* node = browser->items.first;
-             node != NULL && node != browser->currentItem;
-             node = node->next, curIndex++);
+        for (node_t* node = browser->items.first; node != NULL && node != browser->currentItem;
+             node         = node->next, curIndex++)
+            ;
 
         // If we're past the final row, advance the first row until it's visible
         while (curIndex / browser->cols >= (browser->firstRow + visibleRows))

@@ -216,7 +216,8 @@ typedef enum
 typedef struct
 {
     swadgeEvtType_t type;
-    union {
+    union
+    {
         void* generic;
     };
 } swadgeEvt_t;

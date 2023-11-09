@@ -39,10 +39,7 @@ PAINT_BIT_PARAM(InUseSlot);
 PAINT_BIT_PARAM(RecentSlot);
 PAINT_BOOL_PARAM(EnableLeds, true);
 PAINT_BOOL_PARAM(EnableBlink, true);
-PAINT_BOOL_PARAM(Migrated, false);
 
-static void migrateIndex(int32_t index);
-static void migrateSlot(uint8_t slot);
 static int32_t paintReadParam(const settingParam_t* param);
 static bool paintWriteParam(const settingParam_t* param, int32_t val);
 
@@ -97,11 +94,6 @@ const settingParam_t* paintGetEnableBlinkBounds(void)
     return &paintEnableBlinkParam;
 }
 
-const settingParam_t* paintGetMigratedBounds(void)
-{
-    return &paintMigratedParam;
-}
-
 int32_t paintGetInUseSlots(void)
 {
     return paintReadParam(&paintInUseSlotParam);
@@ -142,33 +134,6 @@ void paintSetEnableBlink(bool enableBlink)
     paintWriteParam(&paintEnableBlinkParam, enableBlink);
 }
 
-void migrateIndex(int32_t index)
-{
-    // TODO: Migrate the index to separate bitfields/bools per setting
-    // Sure, it wastes a few bytes, but... ok
-    // (32 bits for files in use / recent)
-    // 1. Check if the index has already been migrated
-    // 2. Read each bitfield within the old index
-    // 3. Write each value to its new setting
-    // 4. Update the index value to indicate it was migrated
-    // 5. Save the index
-    // 6. Never touch it again
-
-    // if (!(index & PAINT_INDEX_MIGRATED)) {
-    //  Index has not been migrated, do it here
-
-    // index |= PAINT_INDEX_MIGRATED;
-    //}
-}
-
-void migrateSlot(uint8_t slot)
-{
-    // TODO: Migrate slots to a compressed storage format / one that just uses a single chunk
-    // blobs can be much bigger than the size of a max image, but there should probably be a
-    // somewhat robust check to make sure we don't go below some threshold of available space.
-    // Compression -- check if we can use miniz.h in here (don't see why not).
-}
-
 static int32_t paintReadParam(const settingParam_t* param)
 {
     int32_t out;
@@ -194,8 +159,6 @@ void paintLoadIndex(int32_t* index)
     //        \|/
     // |xxxxxvvv  |Recent?|  |Inuse? |
     // 0000 0000  0000 0000  0000 0000
-
-    // TODO: First, try to read our new index, and if that fails, see if the old index is around and migrate that
 
     // if (paintReadParam(&index))
     if (!readNvs32(KEY_PAINT_INDEX, index))
@@ -545,8 +508,8 @@ bool paintSaveNamed(const char* name, const paintCanvas_t* canvas)
 {
     wsg_t tmpWsg;
     tmpWsg.px = heap_caps_malloc(sizeof(paletteColor_t) * canvas->w * canvas->h, MALLOC_CAP_SPIRAM);
-    tmpWsg.w = canvas->w;
-    tmpWsg.h = canvas->h;
+    tmpWsg.w  = canvas->w;
+    tmpWsg.h  = canvas->h;
 
     if (NULL == tmpWsg.px)
     {
@@ -583,7 +546,8 @@ bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
         {
             for (uint16_t x = 0; x < canvas->w; ++x)
             {
-                setPxScaled(x, y, cTransparent == tmpWsg.px[y * canvas->w + x] ? c555 : tmpWsg.px[y * canvas->w + x], canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+                setPxScaled(x, y, cTransparent == tmpWsg.px[y * canvas->w + x] ? c555 : tmpWsg.px[y * canvas->w + x],
+                            canvas->x, canvas->y, canvas->xScale, canvas->yScale);
             }
         }
 

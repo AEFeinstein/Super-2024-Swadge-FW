@@ -38,7 +38,8 @@ typedef struct
     uint8_t firstRow;
 } imageBrowser_t;
 
-void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix, imageBrowserAction_t action, imageBrowserAction_t secondaryAction);
+void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix,
+                       imageBrowserAction_t action, imageBrowserAction_t secondaryAction);
 void resetImageBrowser(imageBrowser_t* browser);
 void drawImageBrowser(imageBrowser_t* browser);
 void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt);

@@ -419,7 +419,7 @@ void app_main(void)
                 if (NULL != cSwadgeMode->fnSwadgeEventCb)
                 {
                     swadgeEvt_t event = {0};
-                    event.type = QUICK_SETTINGS_SHOW;
+                    event.type        = QUICK_SETTINGS_SHOW;
                     cSwadgeMode->fnSwadgeEventCb(&event);
                 }
 
@@ -446,7 +446,7 @@ void app_main(void)
                 if (NULL != cSwadgeMode->fnSwadgeEventCb)
                 {
                     swadgeEvt_t event = {0};
-                    event.type = QUICK_SETTINGS_HIDE;
+                    event.type        = QUICK_SETTINGS_HIDE;
                     cSwadgeMode->fnSwadgeEventCb(&event);
                 }
 

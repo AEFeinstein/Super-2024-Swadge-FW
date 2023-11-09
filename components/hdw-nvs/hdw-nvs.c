@@ -541,7 +541,6 @@ bool readNvsStats(nvs_stats_t* outStats)
  * passed for outEntryInfos, to get the value for numEntryInfos, then memory for outEntryInfos should be allocated, then
  * this should be called again
  *
- * @param namespace The name of the NVS namespace to use
  * @param outStats If not `NULL`, the NVS stats struct will be written to this memory. It must be allocated before
  * calling readAllNvsEntryInfos()
  * @param outEntryInfos A pointer to an array of NVS entry info structs will be written to this memory

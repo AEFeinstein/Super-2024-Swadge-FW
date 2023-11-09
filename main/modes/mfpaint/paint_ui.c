@@ -8,9 +8,9 @@
 #include "paint_util.h"
 #include "paint_nvs.h"
 
-static const char str_red[]                 = "Red";
-static const char str_green[]               = "Green";
-static const char str_blue[]                = "Blue";
+static const char str_red[]   = "Red";
+static const char str_green[] = "Green";
+static const char str_blue[]  = "Blue";
 
 void drawColorBox(uint16_t xOffset, uint16_t yOffset, uint16_t w, uint16_t h, paletteColor_t col, bool selected,
                   paletteColor_t topBorder, paletteColor_t bottomBorder)
@@ -117,9 +117,9 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
                     textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
                     artist->fgColor);
     drawWsgSimple(&artist->brushDef->iconActive, textX + 1,
-                    textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
+                  textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
     drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1,
-                textX + artist->brushDef->iconActive.w + 2, textY + paintState->toolbarFont.height + 1, c000);
+             textX + artist->brushDef->iconActive.w + 2, textY + paintState->toolbarFont.height + 1, c000);
 
     textX += artist->brushDef->iconActive.w + PAINT_COLORBOX_MARGIN_X + 2;
 
@@ -139,8 +139,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
 
         textX += 4;
         // Draw the icon on the text's baseline
-        drawWsg(&paintState->brushSizeWsg, textX,
-                textY + paintState->toolbarFont.height - paintState->brushSizeWsg.h, false, false, 0);
+        drawWsg(&paintState->brushSizeWsg, textX, textY + paintState->toolbarFont.height - paintState->brushSizeWsg.h,
+                false, false, 0);
         textX += paintState->brushSizeWsg.w + 1;
         textX = drawText(&paintState->toolbarFont, c000, text, textX, textY);
     }
@@ -149,11 +149,11 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
     {
         // Draw the number of picks made / total
         snprintf(text, sizeof(text), "%" PRIu32 "/%d", (uint32_t)pxStackSize(&artist->pickPoints),
-                    artist->brushDef->maxPoints);
+                 artist->brushDef->maxPoints);
 
         textX += 4;
-        drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
-                false, false, 0);
+        drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h, false,
+                false, 0);
         textX += paintState->picksWsg.w + 1;
         drawText(&paintState->toolbarFont, c000, text, textX, textY);
     }
@@ -172,8 +172,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
         }
 
         textX += 4;
-        drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h,
-                false, false, 0);
+        drawWsg(&paintState->picksWsg, textX, textY + paintState->toolbarFont.height - paintState->picksWsg.h, false,
+                false, 0);
         textX += paintState->picksWsg.w + 1;
         drawText(&paintState->toolbarFont, c000, text, textX, textY);
     }

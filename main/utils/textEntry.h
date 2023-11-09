@@ -27,13 +27,13 @@
 typedef enum
 {
     /// @brief Mask for allowing uppercase alphabet characters
-    ENTRY_UPPERCASE  = 0x01,
+    ENTRY_UPPERCASE = 0x01,
     /// @brief Mask for allowing lowercase alphabet characters
-    ENTRY_LOWERCASE  = 0x02,
+    ENTRY_LOWERCASE = 0x02,
     /// @brief Mask for allowing numeric characters
-    ENTRY_NUMBERS    = 0x04,
+    ENTRY_NUMBERS = 0x04,
     /// @brief Mask for allowing symbol characters (printable, non-alphanumeric, and non-whitespace)
-    ENTRY_SYMBOLS    = 0x08,
+    ENTRY_SYMBOLS = 0x08,
     /// @brief Mask for allowing whitespace characters (space)
     ENTRY_WHITESPACE = 0x10,
 } textEntryCharMask_t;
@@ -87,7 +87,6 @@ typedef struct
     /// @brief The number of nanoseconds remaining before the blink state changes
     int64_t blinkTimer;
 
-
     /// @brief The minimum length of text that will be accepted
     uint16_t minLength;
 
@@ -97,20 +96,17 @@ typedef struct
     /// @brief The mask of character types that are allowed
     textEntryCharMask_t mask;
 
-
     /// @brief Struct to track the state of the touchpad for spins
     touchSpinState_t spinState;
 
     /// @brief The selected character at the start of the touchpad spin
     char spinCharStart;
 
-
     /// @brief The button that is currently being held, or 0 if none
     buttonBit_t heldButton;
 
     /// @brief The number of nanoseconds remaining before the held button repeats
     int64_t repeatTimer;
-
 
     /// @brief The first character to be drawn on-screen, if the whole value doesn't fit
     uint16_t offset;
@@ -134,7 +130,8 @@ typedef struct
     textEntryCb cbFn;
 } textEntry_t;
 
-textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, const font_t* font, textEntryCharMask_t mask, textEntryCb cbFn);
+textEntry_t* initTextEntry(uint16_t x, uint16_t y, uint16_t w, uint16_t length, const font_t* font,
+                           textEntryCharMask_t mask, textEntryCb cbFn);
 void freeTextEntry(textEntry_t* textEntry);
 
 void textEntrySetData(textEntry_t* textEntry, void* data);

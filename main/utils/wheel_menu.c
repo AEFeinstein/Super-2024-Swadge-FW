@@ -238,19 +238,15 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                      renderer->borderColor, 0);
 
             drawLine(renderer->x + getCos1024(endAngle) * centerR / 1024,
-                     renderer->y - getSin1024(endAngle) * centerR / 1024,
-                     renderer->x + getCos1024(endAngle) * r / 1024,
-                     renderer->y - getSin1024(endAngle) * r / 1024,
-                     renderer->borderColor, 0);
+                     renderer->y - getSin1024(endAngle) * centerR / 1024, renderer->x + getCos1024(endAngle) * r / 1024,
+                     renderer->y - getSin1024(endAngle) * r / 1024, renderer->borderColor, 0);
 
             for (uint16_t ang = startAngle; ang != endAngle; ang = (ang + 1) % 360)
             {
                 // Fill in the whole thing
-                drawLine(renderer->x + getCos1024(ang) * (r + 1) / 1024,
-                         renderer->y - getSin1024(ang) * (r + 1) / 1024,
+                drawLine(renderer->x + getCos1024(ang) * (r + 1) / 1024, renderer->y - getSin1024(ang) * (r + 1) / 1024,
                          renderer->x + getCos1024((ang + 1) % 360) * (r + 1) / 1024,
-                         renderer->y - getSin1024((ang + 1) % 360) * (r + 1) / 1024,
-                         renderer->borderColor, 0);
+                         renderer->y - getSin1024((ang + 1) % 360) * (r + 1) / 1024, renderer->borderColor, 0);
             }
         }
 

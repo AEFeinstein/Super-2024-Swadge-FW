@@ -48,7 +48,8 @@
  * else
  * {
  *     const char* message = confirmed ? "Confirmed" : "Cancelled";
- *     drawText(&dialogFont, c555, message, (TFT_WIDTH - textWidth(&dialogFont, message)) / 2, (TFT_HEIGHT - dialogFont.height) / 2);
+ *     drawText(&dialogFont, c555, message, (TFT_WIDTH - textWidth(&dialogFont, message)) / 2, (TFT_HEIGHT -
+ * dialogFont.height) / 2);
  * }
  * \endcode
  *
