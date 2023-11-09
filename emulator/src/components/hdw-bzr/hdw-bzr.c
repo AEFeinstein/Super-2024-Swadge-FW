@@ -207,6 +207,7 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
 void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
 {
     bzrPlayTrack(&buzzers[0].bgm, &buzzers[1].bgm, song, track);
+    bzrResume();
 }
 
 /**
@@ -219,6 +220,7 @@ void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
 void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
 {
     bzrPlayTrack(&buzzers[0].sfx, &buzzers[1].sfx, song, track);
+    bzrResume();
 }
 
 /**
@@ -461,14 +463,18 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
 
 /**
  * @brief Pause the buzzer but do not reset the song
+ *
+ * @return true if the buzzer was running and paused, false if it was not running to begin with
  */
-void bzrPause(void)
+bool bzrPause(void)
 {
     if (!bzrPaused)
     {
         bzrPaused = true;
         bzrStop(false);
+        return true;
     }
+    return false;
 }
 
 /**

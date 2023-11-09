@@ -40,6 +40,7 @@ class tileType(Enum):
     BG_DOOR_KEY_A   = (BG | DOOR  | 7)
     BG_DOOR_KEY_B   = (BG | DOOR  | 8)
     BG_DOOR_KEY_C   = (BG | DOOR  | 9)
+    BG_DOOR_ARTIFACT = (BG | DOOR | 10)
     # Self and Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1)
     OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2)
@@ -66,14 +67,26 @@ class tileType(Enum):
     OBJ_ITEM_PICKUP_ENERGY  = (OBJ | ITEM | 13)
     OBJ_ITEM_PICKUP_MISSILE = (OBJ | ITEM | 14)
     # Bullets
-    OBJ_BULLET_NORMAL  = (OBJ | BULLET | 15)
-    OBJ_BULLET_CHARGE  = (OBJ | BULLET | 16)
-    OBJ_BULLET_ICE     = (OBJ | BULLET | 17)
-    OBJ_BULLET_MISSILE = (OBJ | BULLET | 18)
-    OBJ_BULLET_XRAY    = (OBJ | BULLET | 19)
+    OBJ_BULLET_NORMAL    = (OBJ | BULLET | 1)
+    OBJ_BULLET_CHARGE    = (OBJ | BULLET | 2)
+    OBJ_BULLET_ICE       = (OBJ | BULLET | 3)
+    OBJ_BULLET_MISSILE   = (OBJ | BULLET | 4)
+    OBJ_BULLET_XRAY      = (OBJ | BULLET | 5)
+    OBJ_BULLET_E_NORMAL  = (OBJ | BULLET | 6)
+    OBJ_BULLET_E_STRONG  = (OBJ | BULLET | 7)
+    OBJ_BULLET_E_ARMOR   = (OBJ | BULLET | 8)
+    OBJ_BULLET_E_FLAMING = (OBJ | BULLET | 9)
+    OBJ_BULLET_E_HIDDEN  = (OBJ | BULLET | 10)
     # Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1)
     OBJ_SCENERY_PORTAL   = (OBJ | SCENERY | 2)
+    OBJ_SCENERY_F1       = (OBJ | SCENERY | 3)
+    OBJ_SCENERY_F2       = (OBJ | SCENERY | 4)
+    OBJ_SCENERY_F3       = (OBJ | SCENERY | 5)
+    OBJ_SCENERY_F4       = (OBJ | SCENERY | 6)
+    OBJ_SCENERY_F5       = (OBJ | SCENERY | 7)
+    OBJ_SCENERY_F6       = (OBJ | SCENERY | 8)
+    OBJ_SCENERY_F7       = (OBJ | SCENERY | 9)
 
 bgTiles: list[list[tileType]] = [
     [
@@ -96,6 +109,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_DOOR_KEY_A,
         tileType.BG_DOOR_KEY_B,
         tileType.BG_DOOR_KEY_C,
+        tileType.BG_DOOR_ARTIFACT,
     ]
 ]
 
@@ -124,8 +138,17 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_ITEM_SUIT_LAVA,
         tileType.OBJ_ITEM_ENERGY_TANK,
         tileType.OBJ_ITEM_ARTIFACT,
+    ],
+    [
         tileType.OBJ_SCENERY_TERMINAL,
         tileType.OBJ_SCENERY_PORTAL,
+        tileType.OBJ_SCENERY_F1,
+        tileType.OBJ_SCENERY_F2,
+        tileType.OBJ_SCENERY_F3,
+        tileType.OBJ_SCENERY_F4,
+        tileType.OBJ_SCENERY_F5,
+        tileType.OBJ_SCENERY_F6,
+        tileType.OBJ_SCENERY_F7,
         tileType.DELETE
     ]
 ]

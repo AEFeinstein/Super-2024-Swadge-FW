@@ -116,7 +116,7 @@ class view:
 
         # Set up the canvasses
         self.paletteCanvas: tk.Canvas = tk.Canvas(
-            content, background=elemBgColor, width=self.paletteCellSize * 4, height=self.paletteCellSize * 8,
+            content, background=elemBgColor, width=self.paletteCellSize * 5, height=self.paletteCellSize * 8,
             highlightthickness=borderThickness, highlightbackground=borderColor)
         self.mapCanvas: tk.Canvas = tk.Canvas(
             content, background=elemBgColor, highlightthickness=borderThickness, highlightbackground=borderColor)
@@ -222,21 +222,21 @@ class view:
 
         # Load all textures
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_FLOOR, '../../assets/ray/env/BG_FLOOR.png')
+                         tileType.BG_FLOOR, '../../assets/ray/env/BASE/BG_BASE_FLOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_FLOOR_WATER, '../../assets/ray/env/BG_FLOOR_WATER.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_FLOOR_LAVA, '../../assets/ray/env/BG_FLOOR_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_1, '../../assets/ray/env/BG_WALL_1.png')
+                         tileType.BG_WALL_1, '../../assets/ray/env/BASE/BG_BASE_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_2, '../../assets/ray/env/BG_WALL_2.png')
+                         tileType.BG_WALL_2, '../../assets/ray/env/BASE/BG_BASE_WALL_2.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_3, '../../assets/ray/env/BG_WALL_3.png')
+                         tileType.BG_WALL_3, '../../assets/ray/env/BASE/BG_BASE_WALL_3.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_4, '../../assets/ray/env/BG_WALL_4.png')
+                         tileType.BG_WALL_4, '../../assets/ray/env/BASE/BG_BASE_WALL_4.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.BG_WALL_5, '../../assets/ray/env/BG_WALL_5.png')
+                         tileType.BG_WALL_5, '../../assets/ray/env/BASE/BG_BASE_WALL_5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_DOOR, '../../assets/ray/doors/BG_DOOR.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
@@ -256,19 +256,21 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_DOOR_KEY_C, '../../assets/ray/doors/BG_DOOR_KEY_C.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_DOOR_ARTIFACT, '../../assets/ray/doors/BG_DOOR_ARTIFACT.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ENEMY_START_POINT, 'imgs/OBJ_ENEMY_START_POINT.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/enemies/NORMAL/E_NORMAL_WALK_0.png')
+                         tileType.OBJ_ENEMY_NORMAL, '../../assets/ray/enemies/NORMAL/E_NORMAL_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/enemies/STRONG/E_STRONG_WALK_0.png')
+                         tileType.OBJ_ENEMY_STRONG, '../../assets/ray/enemies/STRONG/E_STRONG_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/enemies/ARMORED/E_ARMORED_WALK_0.png')
+                         tileType.OBJ_ENEMY_ARMORED, '../../assets/ray/enemies/ARMORED/E_ARMORED_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/enemies/FLAMING/E_FLAMING_WALK_0.png')
+                         tileType.OBJ_ENEMY_FLAMING, '../../assets/ray/enemies/FLAMING/E_FLAMING_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/enemies/HIDDEN/E_HIDDEN_WALK_0.png')
+                         tileType.OBJ_ENEMY_HIDDEN, '../../assets/ray/enemies/HIDDEN/E_HIDDEN_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
-                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/enemies/BOSS/E_BOSS_WALK_0.png')
+                         tileType.OBJ_ENEMY_BOSS, '../../assets/ray/enemies/BOSS/E_BOSS_WALK_0_0.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_ITEM_BEAM, '../../assets/ray/items/OBJ_ITEM_BEAM.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
@@ -301,6 +303,20 @@ class view:
                          tileType.OBJ_SCENERY_TERMINAL, '../../assets/ray/scenery/OBJ_SCENERY_TERMINAL.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_SCENERY_PORTAL, '../../assets/ray/scenery/OBJ_SCENERY_PORTAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F1, '../../assets/ray/friends/OBJ_SCENERY_F1.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F2, '../../assets/ray/friends/OBJ_SCENERY_F2.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F3, '../../assets/ray/friends/OBJ_SCENERY_F3.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F4, '../../assets/ray/friends/OBJ_SCENERY_F4.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F5, '../../assets/ray/friends/OBJ_SCENERY_F5.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F6, '../../assets/ray/friends/OBJ_SCENERY_F6.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F7, '../../assets/ray/friends/OBJ_SCENERY_F7.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.DELETE, 'imgs/DELETE.png')
 
@@ -526,8 +542,9 @@ class view:
             self.scriptTextEntry.tag_add(
                 tag, str(line) + '.0', str(line) + '.0 lineend')
             if script.isValid():
-                self.scriptTextEntry.tag_configure(
-                    tag, background="green", foreground="black")
+                # self.scriptTextEntry.tag_configure(
+                #     tag, background="green", foreground="black")
+                pass
             else:
                 self.scriptTextEntry.tag_configure(
                     tag, background="red", foreground="black")

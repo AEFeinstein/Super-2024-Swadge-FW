@@ -229,7 +229,12 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
                     int dstY  = ((y * displayMult) + mY);
                     int pxIdx = (dstY * (TFT_WIDTH * displayMult)) + dstX;
 
-                    uint32_t color = paletteColorsEmu[frameBuffer[(y * TFT_WIDTH) + x]];
+                    int colorolor = frameBuffer[(y * TFT_WIDTH) + x];
+                    if(colorolor == 216){
+                        colorolor = c500;
+                    }
+
+                    uint32_t color = paletteColorsEmu[colorolor];
 
                     uint8_t a = (color) & 0xFF;
                     uint8_t r = (color >> 8) & 0xFF;

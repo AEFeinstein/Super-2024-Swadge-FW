@@ -11,12 +11,12 @@
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct {
+typedef struct
+{
     wsg_t wsg;
     int16_t originX;
     int16_t originY;
     box_t collisionBox;
 } sprite_t;
-
 
 #endif

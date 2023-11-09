@@ -52,6 +52,8 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
         ray->screen = RAY_GAME;
         // Don't warp again
         ray->warpTimerUs = 0;
+        // Play music
+        bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
     }
 }
 
@@ -90,12 +92,15 @@ void warpToDestination(ray_t* ray)
     // Free the scripts
     rayFreeCurrentState(ray);
 
-    // Construct the map name
-    char mapName[] = "0.rmh";
-    mapName[0]     = '0' + ray->warpDestMapId;
     // Load the new map
     q24_8 pStartX = 0, pStartY = 0;
-    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+    loadRayMap(ray->warpDestMapId, ray, &pStartX, &pStartY, true);
+
+    // Stop BGM when warping
+    bzrStop(true);
+    // Loop SFX
+    ray->sfx_warp.shouldLoop = true;
+    bzrPlaySfx(&ray->sfx_warp, BZR_RIGHT);
 
     // Set the map ID
     ray->p.mapId                     = ray->warpDestMapId;
@@ -120,6 +125,15 @@ void warpToDestination(ray_t* ray)
     }
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
+
+    // Give the player one missile after warping to not get stuck behind doors
+    if (ray->p.i.missileLoadOut)
+    {
+        if (0 == ray->p.i.numMissiles)
+        {
+            ray->p.i.numMissiles++;
+        }
+    }
 
     // Save after warping
     raySavePlayer(ray);

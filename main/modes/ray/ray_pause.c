@@ -3,12 +3,7 @@
 //==============================================================================
 
 #include "ray_pause.h"
-
-//==============================================================================
-// Defines
-//==============================================================================
-
-#define PAUSE_BLINK_US 500000
+#include "ray_tex_manager.h"
 
 //==============================================================================
 // Enums
@@ -113,6 +108,7 @@ const rayWorldMapLine_t warpLines[] = {
 
 static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs);
 static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs);
+static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
 
 //==============================================================================
 // Functions
@@ -164,6 +160,9 @@ void rayPauseCheckButtons(ray_t* ray)
  */
 void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
 {
+    // Clear to black first
+    clearPxTft();
+
     // Render based on the displayed screen
     switch (ray->pauseScreen)
     {
@@ -179,14 +178,6 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
             break;
         }
     }
-
-    // Run a timer to blink things
-    ray->pauseBlinkTimer += elapsedUs;
-    if (ray->pauseBlinkTimer > PAUSE_BLINK_US)
-    {
-        ray->pauseBlinkTimer -= PAUSE_BLINK_US;
-        ray->pauseBlink = !ray->pauseBlink;
-    }
 }
 
 /**
@@ -197,12 +188,15 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
  */
 static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
 {
+    int16_t tWidth = textWidth(&ray->ibm, rayMapNames[ray->p.mapId]);
+    drawText(&ray->ibm, rayMapColors[ray->p.mapId], rayMapNames[ray->p.mapId], (TFT_WIDTH - tWidth) / 2, 2);
+
     // Figure out the largest cell size to draw the whole map centered on the screen
     int16_t cellSizeW = TFT_WIDTH / ray->map.w;
-    int16_t cellSizeH = TFT_HEIGHT / ray->map.h;
+    int16_t cellSizeH = (TFT_HEIGHT - (ray->ibm.height + 4)) / ray->map.h;
     int16_t cellSize  = MIN(cellSizeW, cellSizeH);
     int16_t cellOffX  = (TFT_WIDTH - (ray->map.w * cellSize)) / 2;
-    int16_t cellOffY  = (TFT_HEIGHT - (ray->map.h * cellSize)) / 2;
+    int16_t cellOffY  = (ray->ibm.height + 4) + (((TFT_HEIGHT - (ray->ibm.height + 4)) - (ray->map.h * cellSize)) / 2);
 
     // For each cell
     for (int16_t y = 0; y < ray->map.h; y++)
@@ -232,17 +226,17 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                         }
                         case BG_DOOR_CHARGE:
                         {
-                            color = c234;
+                            color = c404;
                             break;
                         }
                         case BG_DOOR_MISSILE:
                         {
-                            color = c400;
+                            color = c500;
                             break;
                         }
                         case BG_DOOR_ICE:
                         {
-                            color = c004;
+                            color = c005;
                             break;
                         }
                         case BG_DOOR_XRAY:
@@ -250,7 +244,7 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                             // Hide XRAY doors until the player gets the xrayLoadOut
                             if (ray->p.i.xrayLoadOut)
                             {
-                                color = c020;
+                                color = c050;
                             }
                             else
                             {
@@ -265,10 +259,23 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                             break;
                         }
                         case BG_DOOR_KEY_A:
+                        {
+                            color = c541;
+                            break;
+                        }
                         case BG_DOOR_KEY_B:
+                        {
+                            color = c423;
+                            break;
+                        }
                         case BG_DOOR_KEY_C:
                         {
-                            color = c440;
+                            color = c234;
+                            break;
+                        }
+                        case BG_DOOR_ARTIFACT:
+                        {
+                            color = c245;
                             break;
                         }
                         default:
@@ -315,13 +322,64 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
         }
     }
 
+    // Look through scenery for warp points
+    node_t* currentNode = ray->scenery.first;
+    while (currentNode != NULL)
+    {
+        // Get a pointer from the linked list
+        rayObjCommon_t* obj = ((rayObjCommon_t*)currentNode->val);
+
+        // Look for portals
+        if (OBJ_SCENERY_PORTAL == obj->type)
+        {
+            // Found a portal, look for corresponding script
+            node_t* scriptNode = ray->scripts[TOUCH].first;
+            while (NULL != scriptNode)
+            {
+                rayScript_t* scr = scriptNode->val;
+                // If this is the right script for this object
+                if ((TOUCH == scr->ifOp) && (WARP == scr->thenOp) && (scr->ifArgs.idList.ids[0] == obj->id))
+                {
+                    // And the player has visited the other end of the warp
+                    if (ray->p.mapsVisited[scr->thenArgs.warpDest.mapId])
+                    {
+                        // Draw a number indicating the warp destination
+                        char num[8];
+                        snprintf(num, sizeof(num) - 1, "%1d", scr->thenArgs.warpDest.mapId + 1);
+                        tWidth = textWidth(&ray->ibm, num);
+                        drawText(&ray->ibm, c555, num,
+                                 cellOffX + (cellSize * FROM_FX(obj->posX)) + (cellSize - tWidth) / 2,
+                                 cellOffY + (cellSize * FROM_FX(obj->posY)) + (cellSize - ray->ibm.height) / 2);
+                    }
+                    break;
+                }
+                scriptNode = scriptNode->next;
+            }
+        }
+
+        // Iterate to the next node
+        currentNode = currentNode->next;
+    }
+
     // The player's location blinks, so draw it when appropriate
-    if (ray->pauseBlink)
+    int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);
+    int16_t cY = cellOffY + FROM_FX(cellSize * ray->p.posY);
+    drawPlayerIndicator(ray, cX, cY);
+}
+
+/**
+ * @brief Draw the blinking player indicator on the pause screen
+ *
+ * @param ray The entire game state
+ * @param cX The X pixel to center on
+ * @param cY The Y pixel to center on
+ */
+static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY)
+{
+    if (ray->blink)
     {
         // Draw a circle for the player
-        int16_t cX = cellOffX + FROM_FX(cellSize * ray->p.posX);
-        int16_t cY = cellOffY + FROM_FX(cellSize * ray->p.posY);
-        int16_t cR = cellSize / 2;
+        int16_t cR = 6;
         drawCircle(cX, cY, cR, c145);
 
         // Draw a line for the player's direction
@@ -340,12 +398,10 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
  */
 static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 {
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
-
-#define MAP_X_MARGIN 16
-#define MAP_Y_MARGIN 36
-#define MAP_Y_MIDGAP 24
-#define MAP_SIZE     72
+#define MAP_X_MARGIN  16
+#define MAP_Y_MARGIN  36
+#define MAP_Y_MID_GAP 24
+#define MAP_SIZE      72
 
 #define MAP_ROWS 2
 #define MAP_COLS 3
@@ -354,6 +410,11 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 
     // Save coordinates for where to draw warp lines
     int16_t warpCoords[NUM_MAPS][NUM_MAP_CORNERS][2];
+
+    // A texture to draw after artifacts are acquired
+    wsg_t* artifactWsg = getTexByType(ray, OBJ_ITEM_ARTIFACT);
+    int16_t aAOffX     = (MAP_SIZE - artifactWsg->w) / 2;
+    int16_t aAOffY     = (MAP_SIZE - artifactWsg->h) / 2;
 
     // For all six maps in a 3x2 grid
     for (int16_t mapY = 0; mapY < MAP_ROWS; mapY++)
@@ -368,13 +429,19 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
             {
                 // Find the box coordinates
                 int16_t startX = MAP_X_MARGIN + mapX * (MAP_SIZE + MAP_X_MARGIN);
-                int16_t startY = MAP_Y_MARGIN + mapY * (MAP_SIZE + MAP_Y_MIDGAP);
+                int16_t startY = MAP_Y_MARGIN + mapY * (MAP_SIZE + MAP_Y_MID_GAP);
                 int16_t endX   = startX + MAP_SIZE;
                 int16_t endY   = startY + MAP_SIZE;
 
-                // Draw the black box, outlined
-                fillDisplayArea(startX + 1, startY + 1, endX - 1, endY - 1, c000);
+                // Draw the dark red box, outlined
+                fillDisplayArea(startX + 1, startY + 1, endX - 1, endY - 1, c100);
                 drawRect(startX, startY, endX, endY, rayMapColors[mapId]);
+
+                // Draw an artifact if was acquired here
+                if (ray->p.i.artifacts[mapId])
+                {
+                    drawWsgSimple(artifactWsg, startX + aAOffX, startY + aAOffY);
+                }
 
                 // Draw the name, either above or below the box
                 int16_t tWidth = textWidth(&ray->ibm, rayMapNames[mapId]);
@@ -398,6 +465,14 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 
                 warpCoords[mapId][BOTTOM_LEFT][0] = startX + WARP_POINT_INDENT;
                 warpCoords[mapId][BOTTOM_LEFT][1] = endY - WARP_POINT_INDENT - 1;
+
+                if (ray->p.mapId == mapId)
+                {
+                    int16_t pPosX = startX + (MAP_SIZE * ray->p.posX) / TO_FX(ray->map.w);
+                    int16_t pPosY = startY + (MAP_SIZE * ray->p.posY) / TO_FX(ray->map.h);
+
+                    drawPlayerIndicator(ray, pPosX, pPosY);
+                }
             }
         }
     }

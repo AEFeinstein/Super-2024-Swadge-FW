@@ -14,6 +14,7 @@
 #include "ray_pause.h"
 #include "ray_script.h"
 #include "ray_warp_screen.h"
+#include "ray_death_screen.h"
 
 //==============================================================================
 // Function Prototypes
@@ -24,7 +25,6 @@ static void rayExitMode(void);
 static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void rayMenuCb(const char* label, bool selected, uint32_t settingVal);
-static void rayStartGame(void);
 
 //==============================================================================
 // Const Variables
@@ -38,7 +38,7 @@ const char rayExitStr[]    = "Exit";
 
 /// @brief A list of the map names
 const char* const rayMapNames[] = {
-    "World 0", "World 1", "World 2", "World 3", "World 4", "World 5",
+    "Station Zero", "Vinegrasp", "Floriss", "Station One", "Mosspire", "Scalderia",
 };
 
 /// @brief A list of the map colors, in order
@@ -51,10 +51,17 @@ const paletteColor_t rayMapColors[] = {
     c500, // Red
 };
 
+/// @brief The songs to play, must be in map order
+const char* const songFiles[]
+    = {"base_0.sng", "jungle_0.sng", "cave_0.sng", "base_1.sng", "jungle_1.sng", "cave_1.sng", "ray_boss.sng"};
+
 /// @brief The NVS key to save and load player data
 const char RAY_NVS_KEY[] = "ray";
 // The NVS key to save and load visited tiles
 const char* const RAY_NVS_VISITED_KEYS[] = {"rv0", "rv1", "rv2", "rv3", "rv4", "rv5"};
+
+/// @brief The NVS key to unlock Sip on the menu
+const char MAGTROID_UNLOCK_KEY[] = "zip_unlock";
 
 //==============================================================================
 // Variables
@@ -106,18 +113,51 @@ static void rayEnterMode(void)
     // Initialize a renderer
     ray->renderer = initMenuLogbookRenderer(&ray->logbook);
 
+    // Force draw a loading screen
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
+    const char loadingStr[] = "Loading...";
+    int32_t tWidth          = textWidth(&ray->logbook, loadingStr);
+    drawText(&ray->logbook, c542, loadingStr, (TFT_WIDTH - tWidth) / 2, (TFT_HEIGHT - ray->logbook.height) / 2);
+    drawDisplayTft(NULL);
+
     // Initialize texture manager and environment textures
     loadEnvTextures(ray);
 
-    // Initialize enemy templates and textures
-    initEnemyTemplates(ray);
+    // Load songs
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
+    {
+        loadSong(songFiles[sIdx], &ray->songs[sIdx], false);
+        ray->songs[sIdx].shouldLoop = true;
+    }
+
+    // Load SFX
+    loadSong("r_door_open.sng", &ray->sfx_door_open, false);
+    loadSong("r_e_damage.sng", &ray->sfx_e_damage, false);
+    loadSong("r_e_freeze.sng", &ray->sfx_e_freeze, false);
+    loadSong("r_p_charge.sng", &ray->sfx_p_charge, false);
+    loadSong("r_p_damage.sng", &ray->sfx_p_damage, false);
+    loadSong("r_p_shoot.sng", &ray->sfx_p_shoot, false);
+    loadSong("r_e_block.sng", &ray->sfx_e_block, false);
+    loadSong("r_e_dead.sng", &ray->sfx_e_dead, false);
+    loadSong("r_item_get.sng", &ray->sfx_item_get, false);
+    loadSong("r_p_charge_start.sng", &ray->sfx_p_charge_start, false);
+    loadSong("r_p_missile.sng", &ray->sfx_p_missile, false);
+    loadSong("r_p_ice.sng", &ray->sfx_p_ice, false);
+    loadSong("r_p_xray.sng", &ray->sfx_p_xray, false);
+    loadSong("r_warp.sng", &ray->sfx_warp, false);
 
     // Set the menu as the screen
     ray->screen = RAY_MENU;
 
+    // Start a blink for dialog and pause and such
+    ray->blinkTimer = BLINK_US;
+
     // Turn off LEDs
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
+
+    // Set frame rate to 60 FPS
+    setFrameRateUs(16666);
 }
 
 /**
@@ -135,6 +175,28 @@ static void rayExitMode(void)
     // Free the textures
     freeAllTex(ray);
 
+    // Free songs
+    for (int32_t sIdx = 0; sIdx < ARRAY_SIZE(songFiles); sIdx++)
+    {
+        freeSong(&ray->songs[sIdx]);
+    }
+
+    // Free SFX
+    freeSong(&ray->sfx_door_open);
+    freeSong(&ray->sfx_e_damage);
+    freeSong(&ray->sfx_e_freeze);
+    freeSong(&ray->sfx_p_charge);
+    freeSong(&ray->sfx_p_damage);
+    freeSong(&ray->sfx_p_shoot);
+    freeSong(&ray->sfx_e_block);
+    freeSong(&ray->sfx_e_dead);
+    freeSong(&ray->sfx_item_get);
+    freeSong(&ray->sfx_p_charge_start);
+    freeSong(&ray->sfx_p_missile);
+    freeSong(&ray->sfx_p_ice);
+    freeSong(&ray->sfx_p_xray);
+    freeSong(&ray->sfx_warp);
+
     // Free the font
     freeFont(&ray->ibm);
     freeFont(&ray->logbook);
@@ -150,6 +212,36 @@ static void rayExitMode(void)
  */
 void rayFreeCurrentState(ray_t* cRay)
 {
+    // Zero and NULL the door timer
+    ray->doorTimer = 0;
+    // Head bob
+    ray->posZ     = 0;
+    ray->bobTimer = 0;
+    ray->bobCount = 0;
+    // Gun shake
+    ray->gunShakeL     = false;
+    ray->gunShakeTimer = 0;
+    ray->gunShakeX     = 0;
+    // Strafe and lock
+    ray->isStrafing  = false;
+    ray->targetedObj = NULL;
+    // Player timers
+    ray->lavaTimer      = 0;
+    ray->chargeTimer    = 0;
+    ray->pRotationTimer = 0;
+    // Dialog variables
+    ray->dialogText     = NULL;
+    ray->nextDialogText = NULL;
+    ray->dialogPortrait = NULL;
+    ray->btnLockoutUs   = 0;
+    // Pause menu variables
+    ray->blinkTimer = 0;
+    ray->blink      = false;
+    // Item rotation
+    ray->itemRotateTimer  = 0;
+    ray->itemRotateDeg    = 0;
+    ray->itemRotateMirror = false;
+
     // Set invalid IDs for all bullets
     for (uint16_t objIdx = 0; objIdx < MAX_RAY_BULLETS; objIdx++)
     {
@@ -188,6 +280,27 @@ void rayFreeCurrentState(ray_t* cRay)
  */
 static void rayMainLoop(int64_t elapsedUs)
 {
+    // Run a button lockout, regardless of mode
+    if (0 < ray->btnLockoutUs)
+    {
+        ray->btnLockoutUs -= elapsedUs;
+        if (0 >= ray->btnLockoutUs)
+        {
+            ray->btnLockoutUs = 0;
+            // Restart blinks when the lockout ends
+            ray->blink      = true;
+            ray->blinkTimer = BLINK_US;
+        }
+    }
+
+    // Run a timer to blink things
+    ray->blinkTimer -= elapsedUs;
+    while (0 >= ray->blinkTimer)
+    {
+        ray->blink = !ray->blink;
+        ray->blinkTimer += BLINK_US;
+    }
+
     switch (ray->screen)
     {
         case RAY_MENU:
@@ -215,7 +328,7 @@ static void rayMainLoop(int64_t elapsedUs)
             // Draw the walls after floor & ceiling
             castWalls(ray);
             // Draw sprites after walls
-            rayObjCommon_t* centeredSprite = castSprites(ray);
+            rayObjCommon_t* centeredEnemy = castSprites(ray);
             // Draw the HUD after sprites
             drawHud(ray);
 
@@ -223,7 +336,7 @@ static void rayMainLoop(int64_t elapsedUs)
             runEnvTimers(ray, elapsedUs);
 
             // Check buttons for the player and move player accordingly
-            rayPlayerCheckButtons(ray, centeredSprite, elapsedUs);
+            rayPlayerCheckButtons(ray, centeredEnemy, elapsedUs);
 
             // Check the joystick for the player and update loadout accordingly
             rayPlayerCheckJoystick(ray, elapsedUs);
@@ -238,11 +351,7 @@ static void rayMainLoop(int64_t elapsedUs)
             checkRayCollisions(ray);
 
             // Check for time-based scripts
-            if (checkScriptTime(ray, elapsedUs))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptTime(ray, elapsedUs);
 
             // If the warp timer is active
             if (ray->warpTimerUs > 0)
@@ -258,7 +367,7 @@ static void rayMainLoop(int64_t elapsedUs)
         case RAY_DIALOG:
         {
             // Render first
-            rayDialogRender(ray);
+            rayDialogRender(ray, elapsedUs);
             // Then check buttons
             rayDialogCheckButtons(ray);
             break;
@@ -275,6 +384,11 @@ static void rayMainLoop(int64_t elapsedUs)
         {
             // Only render
             rayWarpScreenRender(ray, elapsedUs);
+            break;
+        }
+        case RAY_DEATH_SCREEN:
+        {
+            rayDeathScreenRender(ray, elapsedUs);
             break;
         }
     }
@@ -297,6 +411,8 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
     {
         case RAY_MENU:
         case RAY_DIALOG:
+        case RAY_DEATH_SCREEN:
+        case RAY_PAUSE:
         {
             // Do nothing
             break;
@@ -305,12 +421,6 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         {
             // Draw a portion of the background
             castFloorCeiling(ray, y, y + h);
-            break;
-        }
-        case RAY_PAUSE:
-        {
-            // Draw a black background
-            fillDisplayArea(x, y, x + w, y + h, c000);
             break;
         }
         case RAY_WARP_SCREEN:
@@ -357,7 +467,7 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
 /**
  * @brief Start the game from the menu
  */
-static void rayStartGame(void)
+void rayStartGame(void)
 {
     // Clear all lists
     rayFreeCurrentState(ray);
@@ -366,12 +476,8 @@ static void rayStartGame(void)
     bool initFromScratch = initializePlayer(ray);
 
     // Load the map and object data
-    // Construct the map name
-    char mapName[] = "0.rmh";
-    mapName[0]     = '0' + ray->p.mapId;
-    // Load the new map
     q24_8 pStartX = 0, pStartY = 0;
-    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+    loadRayMap(ray->p.mapId, ray, &pStartX, &pStartY, true);
 
     // If the player was initialized from scratch
     if (initFromScratch)

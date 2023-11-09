@@ -16,56 +16,11 @@
 //==============================================================================
 
 static bool objectsIntersect(const rayObjCommon_t* obj1, const rayObjCommon_t* obj2);
-static void moveRayBullets(ray_t* ray, int32_t elapsedUs);
+static void moveRayBullets(ray_t* ray, uint32_t elapsedUs);
 
 //==============================================================================
 // Functions
 //==============================================================================
-
-/**
- * @brief Initialize templates for enemy creation. This also loads enemy sprites
- *
- * @param ray The entire game state
- */
-void initEnemyTemplates(ray_t* ray)
-{
-    // The names of the different types of enemies
-    const char* eTypes[] = {
-        "NORMAL", "STRONG", "ARMORED", "FLAMING", "HIDDEN", "BOSS",
-    };
-
-    // The types of enemies
-    const rayMapCellType_t types[] = {
-        OBJ_ENEMY_NORMAL, OBJ_ENEMY_STRONG, OBJ_ENEMY_ARMORED, OBJ_ENEMY_FLAMING, OBJ_ENEMY_HIDDEN, OBJ_ENEMY_BOSS,
-    };
-
-    // An empty buffer to build strings
-    char buf[64] = {0};
-
-    // For each enemy type
-    for (int32_t eIdx = 0; eIdx < ARRAY_SIZE(ray->eTemplates); eIdx++)
-    {
-        // Set the type
-        ray->eTemplates[eIdx].c.type = types[eIdx];
-
-        // Set the time for each animation state
-        ray->eTemplates[eIdx].animTimerLimit = 250000;
-
-        // Load textures for all states
-        for (int32_t frIdx = 0; frIdx < ARRAY_SIZE(ray->eTemplates->hurtSprites); frIdx++)
-        {
-            // Load the textures
-            snprintf(buf, sizeof(buf) - 1, "E_%s_WALK_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].walkSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_SHOOT_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].shootSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-            snprintf(buf, sizeof(buf) - 1, "E_%s_HURT_%" PRId32 ".wsg", eTypes[eIdx], frIdx);
-            ray->eTemplates[eIdx].hurtSprites[frIdx] = loadTexture(ray, buf, EMPTY);
-        }
-        // Set initial texture
-        ray->eTemplates[eIdx].c.sprite = ray->eTemplates[eIdx].walkSprites[0];
-    }
-}
 
 /**
  * @brief Create a bullet with an owner, type, position, and velocity
@@ -121,7 +76,7 @@ void rayCreateBullet(ray_t* ray, rayMapCellType_t bulletType, q24_8 posX, q24_8 
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-void moveRayObjects(ray_t* ray, int32_t elapsedUs)
+void moveRayObjects(ray_t* ray, uint32_t elapsedUs)
 {
     moveRayBullets(ray, elapsedUs);
     rayEnemiesMoveAnimate(ray, elapsedUs);
@@ -133,7 +88,7 @@ void moveRayObjects(ray_t* ray, int32_t elapsedUs)
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
+static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
 {
     // For convenience
     int32_t rayMapId = ray->p.mapId;
@@ -147,66 +102,113 @@ static void moveRayBullets(ray_t* ray, int32_t elapsedUs)
         {
             // Update the bullet's position
             // TODO justify the scaling factor, assuming velXY is a unit vector
-            obj->c.posX += (obj->velX * elapsedUs) / 100000;
-            obj->c.posY += (obj->velY * elapsedUs) / 100000;
+            obj->c.posX += (obj->velX * (int32_t)elapsedUs) / 100000;
+            obj->c.posY += (obj->velY * (int32_t)elapsedUs) / 100000;
 
             // Get the cell the bullet is in now
             rayMapCell_t* cell = &ray->map.tiles[FROM_FX(obj->c.posX)][FROM_FX(obj->c.posY)];
 
-            // If a wall is it
-            if (CELL_IS_TYPE(cell->type, BG | WALL))
+            // If the bullet hit something
+            if (!isPassableCell(cell))
             {
-                // Check for shot wall scripts
-                if (checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY)))
+                // If this is a player's bullet
+                if (1 == obj->c.id)
                 {
-                    // Script warped, return
-                    return;
+                    // If it hit a wall
+                    if (CELL_IS_TYPE(cell->type, BG | WALL))
+                    {
+                        // Check wall scripts
+                        checkScriptShootWall(ray, FROM_FX(obj->c.posX), FROM_FX(obj->c.posY));
+                    }
+                    // If it hit a door
+                    else if (CELL_IS_TYPE(cell->type, BG | DOOR))
+                    {
+                        // If the door is closed
+                        if (0 == cell->doorOpen)
+                        {
+                            bool opened = false;
+                            switch (cell->type)
+                            {
+                                case BG_DOOR:
+                                {
+                                    opened = true;
+                                    break;
+                                }
+                                case BG_DOOR_CHARGE:
+                                {
+                                    opened = (OBJ_BULLET_CHARGE == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_MISSILE:
+                                {
+                                    opened = (OBJ_BULLET_MISSILE == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_ICE:
+                                {
+                                    opened = (OBJ_BULLET_ICE == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_XRAY:
+                                {
+                                    opened = (OBJ_BULLET_XRAY == obj->c.type);
+                                    break;
+                                }
+                                case BG_DOOR_SCRIPT:
+                                {
+                                    // Script doors aren't openable by bullets
+                                    break;
+                                }
+                                case BG_DOOR_KEY_A:
+                                case BG_DOOR_KEY_B:
+                                case BG_DOOR_KEY_C:
+                                {
+                                    // Open the door if the player has the appropriate key
+                                    opened = (KEY == ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A]);
+                                    if (opened)
+                                    {
+                                        // Mark the key as used
+                                        ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
+                                    }
+                                    break;
+                                }
+                                case BG_DOOR_ARTIFACT:
+                                {
+                                    // Check if all artifacts have been collected
+                                    opened = true;
+                                    for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(ray->p.i.artifacts); aIdx++)
+                                    {
+                                        if (!ray->p.i.artifacts[aIdx])
+                                        {
+                                            opened = false;
+                                            break;
+                                        }
+                                    }
+                                    break;
+                                }
+                                default:
+                                {
+                                    // Not a door, somehow
+                                    break;
+                                }
+                            }
+
+                            // If the door was opened
+                            if (opened)
+                            {
+                                // Start opening the door
+                                cell->openingDirection = 1;
+
+                                // Play SFX
+                                bzrPlaySfx(&ray->sfx_door_open, BZR_RIGHT);
+                            }
+                        }
+                    }
                 }
 
                 // Destroy this bullet
                 memset(obj, 0, sizeof(rayBullet_t));
                 obj->c.id = -1;
-            }
-            // Else if a door is hit
-            else if (CELL_IS_TYPE(cell->type, BG | DOOR))
-            {
-                // If the door is closed
-                if (0 == cell->doorOpen)
-                {
-                    // Check if the bullet type can open the door
-                    if ((BG_DOOR == cell->type) // Normal doors are openable by anything
-                        || (BG_DOOR_CHARGE == cell->type && OBJ_BULLET_CHARGE == obj->c.type)
-                        // || (BG_DOOR_SCRIPT == cell->type) // Script doors aren't openable with bullets
-                        || (BG_DOOR_MISSILE == cell->type && OBJ_BULLET_MISSILE == obj->c.type)
-                        || (BG_DOOR_ICE == cell->type && OBJ_BULLET_ICE == obj->c.type)
-                        || (BG_DOOR_XRAY == cell->type && OBJ_BULLET_XRAY == obj->c.type)
-                        || (BG_DOOR_KEY_A == cell->type && KEY == ray->p.i.keys[rayMapId][0])
-                        || (BG_DOOR_KEY_B == cell->type && KEY == ray->p.i.keys[rayMapId][1])
-                        || (BG_DOOR_KEY_C == cell->type && KEY == ray->p.i.keys[rayMapId][2]))
-                    {
-                        // Start opening the door
-                        cell->openingDirection = 1;
-                        // Destroy this bullet
-                        memset(obj, 0, sizeof(rayBullet_t));
-                        obj->c.id = -1;
-
-                        // If this door requires a key
-                        if ((BG_DOOR_KEY_A == cell->type) || //
-                            (BG_DOOR_KEY_B == cell->type) || //
-                            (BG_DOOR_KEY_C == cell->type))
-                        {
-                            // Use the key
-                            ray->p.i.keys[rayMapId][cell->type - BG_DOOR_KEY_A] = OPEN_KEY;
-                        }
-                    }
-                    else
-                    {
-                        // Shot a closed door it couldn't open
-                        // destroy this bullet
-                        memset(obj, 0, sizeof(rayBullet_t));
-                        obj->c.id = -1;
-                    }
-                }
             }
         }
     }
@@ -250,7 +252,42 @@ void checkRayCollisions(ray_t* ray)
             // An enemy's bullet
             if (objectsIntersect(&player, &bullet->c))
             {
-                // TODO Player got shot, apply damage
+                // Determine the damage per-bullet
+                int32_t dmg = 0;
+                switch (bullet->c.type)
+                {
+                    case OBJ_BULLET_E_NORMAL:
+                    {
+                        dmg = 5;
+                        break;
+                    }
+                    case OBJ_BULLET_E_STRONG:
+                    {
+                        dmg = 10;
+                        break;
+                    }
+                    case OBJ_BULLET_E_ARMOR:
+                    {
+                        dmg = 15;
+                        break;
+                    }
+                    case OBJ_BULLET_E_FLAMING:
+                    {
+                        dmg = 20;
+                        break;
+                    }
+                    case OBJ_BULLET_E_HIDDEN:
+                    {
+                        dmg = 25;
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                // Player got shot, apply damage
+                rayPlayerDecrementHealth(ray, dmg);
                 // De-allocate the bullet
                 bullet->c.id = -1;
             }
@@ -271,11 +308,7 @@ void checkRayCollisions(ray_t* ray)
             // Touch the item
             rayPlayerTouchItem(ray, item->type, ray->p.mapId, item->id);
             // Check scripts
-            if (checkScriptGet(ray, item->id, item->sprite))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptGet(ray, item->id, item->sprite);
 
             // Mark this item for removal
             toRemove = currentNode;
@@ -305,8 +338,6 @@ void checkRayCollisions(ray_t* ray)
     {
         // Get a pointer from the linked list
         rayEnemy_t* enemy = ((rayEnemy_t*)currentNode->val);
-        // Used for iterating
-        bool enemyWasKilled = false;
 
         // Iterate through all bullets
         for (uint16_t bIdx = 0; bIdx < MAX_RAY_BULLETS; bIdx++)
@@ -317,44 +348,16 @@ void checkRayCollisions(ray_t* ray)
                 // A player's bullet
                 if (objectsIntersect(&enemy->c, &bullet->c))
                 {
+                    // Decrease HP based on the shot and enemy type
+                    rayEnemyGetShot(ray, enemy, bullet->c.type);
                     // De-allocate the bullet
                     bullet->c.id = -1;
-
-                    // Enemy got shot, apply damage
-                    if (rayEnemyGetShot(ray, enemy, bullet->c.type))
-                    {
-                        // Enemy was killed
-                        checkScriptKill(ray, enemy->c.id, enemy->walkSprites[0]);
-
-                        // save the next node
-                        node_t* nextNode = currentNode->next;
-
-                        // Remove the lock
-                        if (ray->targetedObj == enemy)
-                        {
-                            ray->targetedObj = NULL;
-                        }
-
-                        // Unlink and free
-                        removeEntry(&ray->enemies, currentNode);
-                        free(enemy);
-
-                        // Set the next node
-                        currentNode    = nextNode;
-                        enemyWasKilled = true;
-
-                        break;
-                    }
                 }
             }
         }
 
-        // If the enemy was killed, iteration already happened
-        if (!enemyWasKilled)
-        {
-            // Iterate to the next node
-            currentNode = currentNode->next;
-        }
+        // Iterate to the next
+        currentNode = currentNode->next;
     }
 
     // Check if a bullet or the player touches scenery
@@ -367,11 +370,7 @@ void checkRayCollisions(ray_t* ray)
         // Check if the player touches scenery
         if (objectsIntersect(&player, scenery))
         {
-            if (checkScriptTouch(ray, scenery->id, scenery->sprite))
-            {
-                // Script warped, return
-                return;
-            }
+            checkScriptTouch(ray, scenery->id, scenery->sprite);
         }
 
         // Iterate through all bullets
@@ -387,11 +386,7 @@ void checkRayCollisions(ray_t* ray)
                     bullet->c.id = -1;
 
                     // Scenery was shot
-                    if (checkScriptShootObjs(ray, scenery->id, scenery->sprite))
-                    {
-                        // Script warped, return
-                        return;
-                    }
+                    checkScriptShootObjs(ray, scenery->id, scenery->sprite);
                 }
             }
         }

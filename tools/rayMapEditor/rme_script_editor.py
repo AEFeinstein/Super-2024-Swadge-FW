@@ -382,10 +382,11 @@ class rme_script:
             for id in self.thenArgs[kIds]:
                 bytes.append(id)
         if kText in self.thenArgs.keys():
-            textLen = len(self.thenArgs[kText])
+            unescapedText = self.thenArgs[kText].replace('\\n', '\n').encode()
+            textLen = len(unescapedText)
             bytes.append((textLen >> 8) & 255)
             bytes.append((textLen >> 0) & 255)
-            bytes.extend(self.thenArgs[kText].encode())
+            bytes.extend(unescapedText)
         if kMap in self.thenArgs.keys():
             bytes.append(self.thenArgs[kMap])
         if kCell in self.thenArgs.keys():
@@ -494,7 +495,8 @@ class rme_script:
                 (bytes[idx + 1])
             idx = idx + 2
             # Read text
-            self.thenArgs[kText] = str(bytes[idx:idx + textLen], 'ascii')
+            self.thenArgs[kText] = str(
+                bytes[idx:idx + textLen], 'ascii').replace('\n', '\\n')
             idx = idx + textLen
         elif thenOpType.WARP == self.thenOp:
             # Read the map
