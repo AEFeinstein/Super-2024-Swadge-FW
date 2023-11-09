@@ -447,6 +447,18 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
     }
     else
     {
+
+        if (label == lumberjackPanic)
+        {
+            ESP_LOGI(LUM_TAG, "Panic");
+            lumberjack->gameMode = LUMBERJACK_MODE_PANIC;
+        }
+        else if (label == lumberjackAttack)
+        {
+            ESP_LOGI(LUM_TAG, "Attack");
+            lumberjack->gameMode = LUMBERJACK_MODE_ATTACK;
+        }
+        
         if (label == lumberjackRedCharacter)
         {
             lumberjack->selected = 0;

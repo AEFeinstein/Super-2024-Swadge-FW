@@ -448,6 +448,7 @@ bool lumberjackLoadLevel()
         }
         
         lumv->enemySpawnAmount      = 4;    
+        lumv->itemBlockIndex        = -1;
     }
 
 
@@ -919,8 +920,20 @@ void baseMode(int64_t elapsedUs)
 
                     if (lumv->itemBlockIndex == 1)
                     {
-                        ESP_LOGI(LUM_TAG, "%d", 1); //Orange
-                        lumv->invincibleTimer = LUMBERJACK_INVINCIBLE_TIME;
+                        for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+                        {
+                            lumberjackEntity_t* enemy = lumv->enemy[i];
+
+                            if (enemy == NULL || enemy->state == LUMBERJACK_DEAD) continue;
+
+                            if (enemy->active)
+                            {
+                                enemy->vy = -20;
+                                lumberjackUpdateEnemy(enemy, enemy->type + 1);
+                            }
+
+
+                        }
                     }
 
                     if (lumv->itemBlockIndex >= 2)
