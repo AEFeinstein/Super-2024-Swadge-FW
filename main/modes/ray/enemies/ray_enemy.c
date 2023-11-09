@@ -16,7 +16,7 @@
 //==============================================================================
 
 typedef void (*rayEnemyMove_t)(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
-typedef bool (*rayEnemyGetShot_t)(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet);
+typedef bool (*rayEnemyGetShot_t)(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet, int32_t damageDivide);
 typedef int32_t (*rayEnemyGetTimer_t)(rayEnemy_t* enemy, rayEnemyTimerType_t type);
 typedef rayMapCellType_t (*rayEnemyGetBullet_t)(rayEnemy_t* enemy);
 
@@ -282,12 +282,22 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
+    int32_t damageDivide = 1;
     // Don't get shot when blocking or dying
     if (E_BLOCKING == enemy->state)
     {
-        // Play SFX
-        bzrPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
-        return;
+        if (OBJ_BULLET_MISSILE != bullet)
+        {
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
+            return;
+        }
+        else
+        {
+            // Missiles break the block, but do half damage
+            damageDivide = 2;
+            rayEnemyTransitionState(enemy, E_WALKING_1);
+        }
     }
     else if (E_DEAD == enemy->state)
     {
@@ -306,7 +316,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     int32_t oldHealth = enemy->health;
 
     // Apply damage
-    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet))
+    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet, damageDivide))
     {
         // Transition to dying
         rayEnemyTransitionState(enemy, E_DEAD);

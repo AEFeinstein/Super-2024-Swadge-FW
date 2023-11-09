@@ -134,9 +134,10 @@ void rayEnemyNormalMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
  * @param ray The entire game state
  * @param enemy The enemy which was shot
  * @param bullet The type of bullet it was shot by
+ * @param damageDivide A divisor for damage
  * @return true if the enemy was killed, false if it's still alive
  */
-bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
+bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet, int32_t damageDivide)
 {
     // Health starts at 100
     int32_t damage = 0;
@@ -169,7 +170,7 @@ bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bulle
         }
     }
 
-    enemy->health -= (damage * ray->p.i.damageMult);
+    enemy->health -= ((damage * ray->p.i.damageMult) / damageDivide);
     return enemy->health <= 0;
 }
 
