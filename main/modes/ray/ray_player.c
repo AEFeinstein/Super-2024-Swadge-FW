@@ -186,36 +186,39 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
 
             if (evt.down)
             {
-                // A was pressed
-                // Check ammo for the missile loadout
-                if (LO_MISSILE == ray->p.loadout)
+                if (0 >= ray->playerShotCooldown)
                 {
-                    if (0 < ray->p.i.numMissiles)
+                    // A was pressed
+                    // Check ammo for the missile loadout
+                    if (LO_MISSILE == ray->p.loadout)
                     {
-                        // Decrement missile count
-                        ray->p.i.numMissiles--;
-                        // Fire a missile
-                        bullet = OBJ_BULLET_MISSILE;
+                        if (0 < ray->p.i.numMissiles)
+                        {
+                            // Decrement missile count
+                            ray->p.i.numMissiles--;
+                            // Fire a missile
+                            bullet = OBJ_BULLET_MISSILE;
+                        }
                     }
-                }
-                else
-                {
-                    // Start charging if applicable
-                    if (LO_NORMAL == ray->p.loadout && ray->p.i.chargePowerUp)
+                    else
                     {
-                        // Start charging
-                        ray->chargeTimer = 1;
-                    }
+                        // Start charging if applicable
+                        if (LO_NORMAL == ray->p.loadout && ray->p.i.chargePowerUp)
+                        {
+                            // Start charging
+                            ray->chargeTimer = 1;
+                        }
 
-                    // Fire according to loadout
-                    const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
-                        EMPTY,
-                        OBJ_BULLET_NORMAL,  ///< Normal loadout
-                        OBJ_BULLET_MISSILE, ///< Missile loadout
-                        OBJ_BULLET_ICE,     ///< Ice beam loadout
-                        OBJ_BULLET_XRAY     ///< X-Ray loadout
-                    };
-                    bullet = bulletMap[ray->p.loadout];
+                        // Fire according to loadout
+                        const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
+                            EMPTY,
+                            OBJ_BULLET_NORMAL,  ///< Normal loadout
+                            OBJ_BULLET_MISSILE, ///< Missile loadout
+                            OBJ_BULLET_ICE,     ///< Ice beam loadout
+                            OBJ_BULLET_XRAY     ///< X-Ray loadout
+                        };
+                        bullet = bulletMap[ray->p.loadout];
+                    }
                 }
             }
             else
@@ -240,32 +243,44 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
                 {
                     case OBJ_BULLET_CHARGE:
                     {
+                        ray->playerShotCooldown = 240000;
                         bzrPlaySfx(&ray->sfx_p_charge, BZR_RIGHT);
                         break;
                     }
                     case OBJ_BULLET_MISSILE:
                     {
+                        ray->playerShotCooldown = 240000;
                         bzrPlaySfx(&ray->sfx_p_missile, BZR_RIGHT);
                         break;
                     }
                     case OBJ_BULLET_ICE:
                     {
+                        ray->playerShotCooldown = 480000;
                         bzrPlaySfx(&ray->sfx_p_ice, BZR_RIGHT);
                         break;
                     }
                     case OBJ_BULLET_XRAY:
                     {
+                        ray->playerShotCooldown = 240000;
                         bzrPlaySfx(&ray->sfx_p_xray, BZR_RIGHT);
                         break;
                     }
+                    case OBJ_BULLET_NORMAL:
                     default:
                     {
+                        ray->playerShotCooldown = 120000;
                         bzrPlaySfx(&ray->sfx_p_shoot, BZR_RIGHT);
                         break;
                     }
                 }
             }
         }
+    }
+
+    // Count down shot cooldown
+    if (0 < ray->playerShotCooldown)
+    {
+        ray->playerShotCooldown -= elapsedUs;
     }
 
     // If charging the beam

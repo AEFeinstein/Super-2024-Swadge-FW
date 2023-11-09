@@ -604,11 +604,12 @@ typedef struct
     int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
 
-    int32_t lavaTimer;     ///< Timer to apply lava damage
-    int32_t chargeTimer;   ///< Timer to charge shots
-    int32_t gunShakeTimer; ///< Timer to shake the gun when charged
-    int32_t gunShakeX;     ///< Offset to draw gun at when shaking
-    bool gunShakeL;        ///< true if the gun is shaking to the left, false otherwise
+    int32_t lavaTimer;          ///< Timer to apply lava damage
+    int32_t chargeTimer;        ///< Timer to charge shots
+    int32_t playerShotCooldown; ///< Cooldown timer between shots
+    int32_t gunShakeTimer;      ///< Timer to shake the gun when charged
+    int32_t gunShakeX;          ///< Offset to draw gun at when shaking
+    bool gunShakeL;             ///< true if the gun is shaking to the left, false otherwise
 
     namedTexture_t* loadedTextures;                             ///< A list of loaded textures
     uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures

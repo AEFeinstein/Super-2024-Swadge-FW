@@ -343,7 +343,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         if (OBJ_BULLET_ICE == bullet)
         {
             // Slow it for a moment
-            enemy->freezeTimer = 2000000;
+            enemy->freezeTimer = 3200000;
             // Play SFX
             bzrPlaySfx(&ray->sfx_e_freeze, BZR_RIGHT);
         }
