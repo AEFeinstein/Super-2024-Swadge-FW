@@ -122,6 +122,7 @@ static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
 void rayShowPause(ray_t* ray)
 {
     ray->screen = RAY_PAUSE;
+    bzrPause();
 }
 
 /**
@@ -142,6 +143,7 @@ void rayPauseCheckButtons(ray_t* ray)
             {
                 // Pause over, return to game
                 ray->screen = RAY_GAME;
+                bzrResume();
             }
             if ((PB_A == evt.button) || (PB_B == evt.button))
             {
