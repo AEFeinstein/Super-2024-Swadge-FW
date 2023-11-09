@@ -215,16 +215,29 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             {
                 case 0:
                 {
-                    // 25%
-                    rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
+                    // 25% health first
+                    if (ray->p.i.health != ray->p.i.maxHealth)
+                    {
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
+                    }
+                    // Only create if missiles are unlocked and health is at max
+                    else if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
+                    {
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
+                    }
                     break;
                 }
                 case 1:
                 {
-                    // 25%, if missiles are unlocked
-                    if (ray->p.i.missileLoadOut)
+                    // 25% missiles first, if unlocked
+                    if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
                     {
                         rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
+                    }
+                    // Only create if missiles are at max
+                    else if (ray->p.i.health != ray->p.i.maxHealth)
+                    {
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
                     }
                     break;
                 }
