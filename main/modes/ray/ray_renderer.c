@@ -675,12 +675,14 @@ static int objDistComparator(const void* obj1, const void* obj2)
  * This is called from the main loop.
  *
  * @param ray The entire game state
+ * @param closestEnemy Return pointer to the closest enemy to the player. The return may be NULL
  * @return The closest enemy in the lock zone, i.e. center of the display. This may be NULL if there are no centered
  * enemies.
  */
-rayObjCommon_t* castSprites(ray_t* ray)
+rayObjCommon_t* castSprites(ray_t* ray, rayEnemy_t** closestEnemy)
 {
     rayObjCommon_t* lockedEnemy = NULL;
+    *closestEnemy               = NULL;
 
     // Setup to draw
     SETUP_FOR_TURBO();
@@ -783,6 +785,12 @@ rayObjCommon_t* castSprites(ray_t* ray)
         // Make sure this object slot is occupied
         if (-1 != obj->id)
         {
+            bool isEnemy = CELL_IS_TYPE(obj->type, OBJ | ENEMY);
+            if (isEnemy)
+            {
+                *closestEnemy = (rayEnemy_t*)obj;
+            }
+
             // Get WSG dimensions for convenience
             uint32_t tWidth  = obj->sprite->w;
             uint32_t tHeight = obj->sprite->h;
@@ -904,7 +912,6 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
             // If this is an enemy
             bool drawWarpLine = false;
-            bool isEnemy      = CELL_IS_TYPE(obj->type, OBJ | ENEMY);
             if (isEnemy)
             {
                 rayEnemy_t* enemy = (rayEnemy_t*)obj;
@@ -1364,5 +1371,68 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
     {
         // If the gun is not charged, make sure this is reset
         ray->gunShakeX = 0;
+    }
+}
+
+/**
+ * @brief Draw LEDs as a radar pointing to the closest enemy
+ *
+ * @param ray The entire game state
+ * @param closestEnemy The closest enemy, may be NULL
+ */
+void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy)
+{
+    if (NULL != closestEnemy)
+    {
+        // Angles around a circle at 45 degree increments (one per LED)
+        // clang-format off
+        const q24_8 normLedAngles[CONFIG_NUM_LEDS][2] = {
+            {0xFFFFFF9E, 0x000000EC},
+            {0xFFFFFF14, 0x00000062},
+            {0xFFFFFF14, 0xFFFFFF9E},
+            {0xFFFFFF9E, 0xFFFFFF14},
+            {0x00000062, 0xFFFFFF14},
+            {0x000000EC, 0xFFFFFF9E},
+            {0x000000EC, 0x00000062},
+            {0x00000062, 0x000000EC},
+        };
+        // clang-format on
+
+        // Find the player's view angle
+        int32_t pDegrees = cordicAtan2(ray->p.dirX, -ray->p.dirY);
+        // Negate it
+        if (pDegrees != 0)
+        {
+            pDegrees = 360 - pDegrees;
+        }
+
+        // Get a vector from the player to the enemy
+        q24_8 xDiff = SUB_FX(closestEnemy->c.posX, ray->p.posX);
+        q24_8 yDiff = SUB_FX(closestEnemy->c.posY, ray->p.posY);
+
+        // Get a magnitude, for brightness
+        q24_8 dist = (xDiff * xDiff) + (yDiff * yDiff);
+
+        // Rotate the enemy vector in relation to the player
+        int32_t pSin     = getSin1024(pDegrees);
+        int32_t pCos     = getCos1024(pDegrees);
+        q24_8 eRotAngleX = ((xDiff * pCos) - (yDiff * pSin)) / 1024;
+        q24_8 eRotAngleY = ((xDiff * pSin) + (yDiff * pCos)) / 1024;
+
+        // Normalize the vector
+        fastNormVec(&eRotAngleX, &eRotAngleY);
+
+        // Calculate each LED's brightness
+        led_t leds[CONFIG_NUM_LEDS] = {0};
+        for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+        {
+            // The brighness is the dot product between the LED's vector and the vector to the enemy
+            q24_8 dotProd = ADD_FX(TO_FX(1), ADD_FX(MUL_FX(normLedAngles[lIdx][0], eRotAngleX),
+                                                    MUL_FX(normLedAngles[lIdx][1], eRotAngleY)))
+                            / 2;
+            leds[lIdx].b = CLAMP(dotProd, 0, 0xFF);
+        }
+        // Set the LEDs
+        setLeds(leds, CONFIG_NUM_LEDS);
     }
 }

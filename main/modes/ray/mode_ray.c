@@ -328,9 +328,13 @@ static void rayMainLoop(int64_t elapsedUs)
             // Draw the walls after floor & ceiling
             castWalls(ray);
             // Draw sprites after walls
-            rayObjCommon_t* centeredEnemy = castSprites(ray);
+            rayEnemy_t* closestEnemy      = NULL;
+            rayObjCommon_t* centeredEnemy = castSprites(ray, &closestEnemy);
             // Draw the HUD after sprites
             drawHud(ray);
+
+            // Light LEDs, radar to the closest enemy
+            rayLightLeds(ray, closestEnemy);
 
             // Run timers for head-bob, doors, etc.
             runEnvTimers(ray, elapsedUs);
