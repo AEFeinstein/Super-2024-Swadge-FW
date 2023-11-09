@@ -46,7 +46,7 @@
 #define NUM_ANIM_FRAMES 4
 
 /** The time to swap out and swap in a gun, in microseconds */
-#define LOADOUT_TIMER_US (1 << 18)
+#define LOADOUT_TIMER_US (1 << 17)
 
 /** The blink time for pause and dialog items */
 #define BLINK_US 500000
