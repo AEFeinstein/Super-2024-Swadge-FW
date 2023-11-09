@@ -337,7 +337,7 @@ void process_midi(const char* inFile, const char* outDir)
         {
             // Pad out track 1 to be the same length as track 0
             notes[1][noteIdxs[1]].note   = SILENCE;
-            notes[1][noteIdxs[1]].timeMs = totalLength[1] - totalLength[0];
+            notes[1][noteIdxs[1]].timeMs = totalLength[0] - totalLength[1];
             noteIdxs[1]++;
         }
     }
