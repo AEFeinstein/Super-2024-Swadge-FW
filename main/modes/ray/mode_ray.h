@@ -33,8 +33,8 @@
 /** The maximum number of missiles possible */
 #define MAX_MISSILES_EVER 99
 
-/** Microseconds per one damage when standing in lava */
-#define US_PER_LAVA_DAMAGE 500000
+/** Microseconds per effect when standing in lava or on heal */
+#define US_PER_FLOOR_EFFECT 500000
 
 /** Microseconds to charge the charge beam */
 #define CHARGE_TIME_US 1048576
@@ -99,6 +99,7 @@ typedef enum __attribute__((packed))
     BG_FLOOR_WATER = (BG | FLOOR | 2),
     BG_FLOOR_LAVA  = (BG | FLOOR | 3),
     BG_CEILING     = (BG | FLOOR | 4),
+    BG_FLOOR_HEAL  = (BG | FLOOR | 5),
     // Walls
     BG_WALL_1 = (BG | WALL | 1),
     BG_WALL_2 = (BG | WALL | 2),
@@ -604,7 +605,7 @@ typedef struct
     int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
 
-    int32_t lavaTimer;          ///< Timer to apply lava damage
+    int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
     int32_t chargeTimer;        ///< Timer to charge shots
     int32_t playerShotCooldown; ///< Cooldown timer between shots
     int32_t gunShakeTimer;      ///< Timer to shake the gun when charged

@@ -304,6 +304,11 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                             color = c113;
                             break;
                         }
+                        case BG_FLOOR_HEAL:
+                        {
+                            color = c030;
+                            break;
+                        }
                         default:
                         {
                             // Can't reach here

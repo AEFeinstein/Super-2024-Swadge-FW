@@ -752,17 +752,27 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-void rayPlayerCheckLava(ray_t* ray, uint32_t elapsedUs)
+void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
 {
     //  If the player is in lava without the lava suit
     if ((!ray->p.i.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type))
     {
         // Run a timer to take lava damage
-        ray->lavaTimer += elapsedUs;
-        if (ray->lavaTimer <= US_PER_LAVA_DAMAGE)
+        ray->floorEffectTimer += elapsedUs;
+        if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
         {
-            ray->lavaTimer -= US_PER_LAVA_DAMAGE;
+            ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
             rayPlayerDecrementHealth(ray, 1);
+        }
+    }
+    else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
+    {
+        // Run a timer to heal
+        ray->floorEffectTimer += elapsedUs;
+        if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
+        {
+            ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
+            rayPlayerDecrementHealth(ray, -1);
         }
     }
 }
@@ -778,8 +788,11 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
     // Decrement health
     ray->p.i.health -= health;
 
-    // Play SFX
-    bzrPlaySfx(&ray->sfx_p_damage, BZR_RIGHT);
+    if (health > 0)
+    {
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_p_damage, BZR_RIGHT);
+    }
 
     // Check for death
     if (0 >= ray->p.i.health)
@@ -789,5 +802,10 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
 
         // Show the death screen
         rayShowDeathScreen(ray);
+    }
+    else if (ray->p.i.health > ray->p.i.maxHealth)
+    {
+        // Never go over the max health
+        ray->p.i.health = ray->p.i.maxHealth;
     }
 }

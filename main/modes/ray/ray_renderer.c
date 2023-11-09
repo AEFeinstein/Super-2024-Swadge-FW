@@ -198,8 +198,8 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
                         // Get the next cell texture
                         rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
 
-                        // Water and lava are special
-                        if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type))
+                        // Water, lava, and heal are special
+                        if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type) || (BG_FLOOR_HEAL == type))
                         {
                             texture = getTexByType(ray, type)->px;
                         }

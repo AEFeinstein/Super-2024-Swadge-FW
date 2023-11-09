@@ -226,9 +226,9 @@ void rayFreeCurrentState(ray_t* cRay)
     ray->isStrafing  = false;
     ray->targetedObj = NULL;
     // Player timers
-    ray->lavaTimer      = 0;
-    ray->chargeTimer    = 0;
-    ray->pRotationTimer = 0;
+    ray->floorEffectTimer = 0;
+    ray->chargeTimer      = 0;
+    ray->pRotationTimer   = 0;
     // Dialog variables
     ray->dialogText     = NULL;
     ray->nextDialogText = NULL;
@@ -345,8 +345,8 @@ static void rayMainLoop(int64_t elapsedUs)
             // Check the joystick for the player and update loadout accordingly
             rayPlayerCheckJoystick(ray, elapsedUs);
 
-            // Check for lava damage
-            rayPlayerCheckLava(ray, elapsedUs);
+            // Check for floor effects
+            rayPlayerCheckFloorEffect(ray, elapsedUs);
 
             // Move objects including enemies and bullets
             moveRayObjects(ray, elapsedUs);
