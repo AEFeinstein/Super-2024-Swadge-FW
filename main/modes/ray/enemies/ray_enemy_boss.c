@@ -125,11 +125,11 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet,
         {
             if (OBJ_BULLET_NORMAL == bullet)
             {
-                damage = 5;
+                damage = 2;
             }
             else if (OBJ_BULLET_CHARGE == BULLET)
             {
-                damage = 10;
+                damage = 4;
             }
             break;
         }
@@ -137,7 +137,7 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet,
         {
             if (OBJ_BULLET_MISSILE == bullet)
             {
-                damage = 5;
+                damage = 2;
             }
             break;
         }
@@ -145,7 +145,7 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet,
         {
             if (OBJ_BULLET_ICE == bullet)
             {
-                damage = 5;
+                damage = 2;
             }
             break;
         }
@@ -153,7 +153,7 @@ bool rayEnemyBossGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet,
         {
             if (OBJ_BULLET_XRAY == bullet)
             {
-                damage = 5;
+                damage = 2;
             }
             break;
         }
