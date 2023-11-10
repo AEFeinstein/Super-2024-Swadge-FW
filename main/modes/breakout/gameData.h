@@ -32,6 +32,7 @@ typedef struct
     int8_t ballsInPlay;
 
     uint32_t extraLifeScore;
+    uint32_t levelScore;
 
     int16_t countdown;
     uint16_t frameCount;

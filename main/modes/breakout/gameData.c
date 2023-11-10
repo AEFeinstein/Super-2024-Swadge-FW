@@ -23,6 +23,7 @@ void initializeGameData(gameData_t* gameData, soundManager_t* soundManager)
     gameData->countdown   = 000;
 
     gameData->extraLifeScore = 8000;
+    gameData->levelScore = 0;
 
     gameData->level      = 1;
     gameData->frameCount = 0;
@@ -65,6 +66,7 @@ void initializeGameDataFromTitleScreen(gameData_t* gameData)
     gameData->frameCount  = 0;
 
     gameData->extraLifeScore = 8000;
+    gameData->levelScore = 0;
 
     gameData->combo = 0;
     // gameData->comboTimer = 0;
@@ -132,6 +134,7 @@ void scorePoints(gameData_t* gameData, uint16_t points, int16_t incCombo)
 
     gameData->score += comboPoints;
     gameData->comboScore = comboPoints;
+    gameData->levelScore += comboPoints;
 
     if (gameData->score >= gameData->extraLifeScore)
     {

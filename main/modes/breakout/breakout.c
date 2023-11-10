@@ -768,6 +768,7 @@ void breakoutChangeStateLevelClear(breakout_t* self)
     self->gameData.frameCount = 0;
     resetGameDataLeds(&(self->gameData));
     self->update = &breakoutUpdateLevelClear;
+    bzrStop(true);
     bzrPlaySfx(&(self->soundManager.levelClear), BZR_STEREO);
 }
 
@@ -776,7 +777,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
     self->gameData.frameCount++;
     self->gameData.targetBlocksBroken = 0;
 
-    if (self->gameData.frameCount > 60)
+    if (self->gameData.frameCount > 100)
     {
         if (self->gameData.countdown > 0)
         {
@@ -784,12 +785,12 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
 
             if (self->gameData.countdown % 2)
             {
-                bzrPlayBgm(&(self->soundManager.tally), BZR_STEREO);
+                bzrPlayBgm(&(self->soundManager.tally), BZR_LEFT);
             }
 
             scorePoints(&(self->gameData), 80, -1000);
         }
-        else if (self->gameData.frameCount % 60 == 0)
+        else if (self->gameData.frameCount % 120 == 0)
         {
             // Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false, false);
@@ -837,6 +838,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                 }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
                 breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;//leveldef[levelIndex].timeLimit;
+                breakout->gameData.levelScore = 0;
                 breakoutChangeStateReadyScreen(self);
                 if (!self->gameData.debugMode)
                 {
@@ -864,7 +866,16 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
 
 void breakoutDrawLevelClear(font_t* font, gameData_t* gameData)
 {
-    drawText(font, c555, breakoutLevelClear, (TFT_WIDTH - textWidth(font, breakoutLevelClear)) / 2, 128);
+    drawText(font, c555, breakoutLevelClear, (TFT_WIDTH - textWidth(font, breakoutLevelClear)) / 2, 96);
+
+    char levelScoreStr[15];
+
+
+    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Bonus %06" PRIu32, gameData->countdown * 100);
+    drawText(font, c555, levelScoreStr, (TFT_WIDTH - textWidth(font, levelScoreStr)) / 2, 128);
+
+    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Total  %06" PRIu32, gameData->levelScore);
+    drawText(font, c555, levelScoreStr, (TFT_WIDTH - textWidth(font, levelScoreStr)) / 2, 152);
 }
 
 void breakoutChangeStateGameClear(breakout_t* self)
