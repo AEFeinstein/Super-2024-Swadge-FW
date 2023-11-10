@@ -1040,8 +1040,8 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
 
 static void breakoutDrawTitleScreen(font_t* font, gameData_t* gameData)
 {
-    drawText(font, c000, breakoutTitleGalactic, 52, 100);
-    drawText(font, c000, breakoutTitleBrickdown, 100, 124);
+    drawText(font, redColors[(breakout->gameData.frameCount >> 2) % 4], breakoutTitleGalactic, 49, 97);
+    drawText(font, purpleColors[(breakout->gameData.frameCount >> 2) % 4], breakoutTitleBrickdown, 97, 121);
     drawText(font, purpleColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleGalactic, 48, 96);
     drawText(font, redColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleBrickdown, 96, 120);
 
