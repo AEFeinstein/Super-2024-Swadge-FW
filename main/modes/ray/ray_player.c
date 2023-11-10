@@ -704,6 +704,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         {
             // Transient, add 20 health, not going over the max
             inventory->health = MIN(inventory->health + 20, inventory->maxHealth);
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_health, BZR_RIGHT);
             // Don't save after energy
             saveAfterObtain = false;
             break;
@@ -754,7 +756,7 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
  */
 void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
 {
-    //  If the player is in lava without the lava suit
+    // If the player is in lava without the lava suit
     if ((!ray->p.i.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type))
     {
         // Run a timer to take lava damage
@@ -763,6 +765,15 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
         {
             ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
             rayPlayerDecrementHealth(ray, 1);
+        }
+
+        // If the player is entering lava
+        if (false == ray->playerInLava)
+        {
+            ray->playerInLava = true;
+            // Start looping SFX
+            ray->sfx_lava_dmg.shouldLoop = true;
+            bzrPlaySfx(&ray->sfx_lava_dmg, BZR_RIGHT);
         }
     }
     else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
@@ -774,6 +785,12 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
             ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
             rayPlayerDecrementHealth(ray, -1);
         }
+    }
+    else if (true == ray->playerInLava)
+    {
+        ray->playerInLava = false;
+        // Stop looping SFX
+        ray->sfx_lava_dmg.shouldLoop = true;
     }
 }
 

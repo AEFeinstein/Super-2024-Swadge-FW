@@ -145,6 +145,9 @@ static void rayEnterMode(void)
     loadSong("r_p_ice.sng", &ray->sfx_p_ice, false);
     loadSong("r_p_xray.sng", &ray->sfx_p_xray, false);
     loadSong("r_warp.sng", &ray->sfx_warp, false);
+    loadSong("r_lava_dmg.sng", &ray->sfx_lava_dmg, false);
+    loadSong("r_health.sng", &ray->sfx_health, false);
+    loadSong("r_game_over.sng", &ray->sfx_game_over, false);
 
     // Set the menu as the screen
     ray->screen = RAY_MENU;
@@ -196,6 +199,9 @@ static void rayExitMode(void)
     freeSong(&ray->sfx_p_ice);
     freeSong(&ray->sfx_p_xray);
     freeSong(&ray->sfx_warp);
+    freeSong(&ray->sfx_lava_dmg);
+    freeSong(&ray->sfx_health);
+    freeSong(&ray->sfx_game_over);
 
     // Free the font
     freeFont(&ray->ibm);
@@ -229,6 +235,7 @@ void rayFreeCurrentState(ray_t* cRay)
     ray->floorEffectTimer = 0;
     ray->chargeTimer      = 0;
     ray->pRotationTimer   = 0;
+    ray->playerInLava     = false;
     // Dialog variables
     ray->dialogText     = NULL;
     ray->nextDialogText = NULL;

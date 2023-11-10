@@ -606,11 +606,13 @@ typedef struct
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
 
     int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
+    bool playerInLava;          ///< Track if the player is standing in lava
     int32_t chargeTimer;        ///< Timer to charge shots
     int32_t playerShotCooldown; ///< Cooldown timer between shots
     int32_t gunShakeTimer;      ///< Timer to shake the gun when charged
     int32_t gunShakeX;          ///< Offset to draw gun at when shaking
     bool gunShakeL;             ///< true if the gun is shaking to the left, false otherwise
+    int32_t pRotationTimer;     ///< timer for player rotation
 
     namedTexture_t* loadedTextures;                             ///< A list of loaded textures
     uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
@@ -654,8 +656,9 @@ typedef struct
     song_t sfx_p_ice;           ///< SFX when the ice beam is shot
     song_t sfx_p_xray;          ///< SFX when th xray beam is shot
     song_t sfx_warp;            ///< SFX when the player warps
-
-    int32_t pRotationTimer; ///< timer for player rotation
+    song_t sfx_lava_dmg;        ///< SFX when standing in lava
+    song_t sfx_health;          ///< SFX when picking up health
+    song_t sfx_game_over;       ///< SFX when the game is over
 
     int32_t itemRotateTimer; ///< A timer to 'rotate' items by scaling the X direction
     int32_t itemRotateDeg;   ///< The number of degrees all items are 'rotated' by

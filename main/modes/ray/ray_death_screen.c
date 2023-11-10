@@ -19,6 +19,7 @@ void rayShowDeathScreen(ray_t* ray)
     ray->screen       = RAY_DEATH_SCREEN;
     // Stop BGM when dead
     bzrStop(true);
+    bzrPlaySfx(&ray->sfx_game_over, BZR_RIGHT);
 }
 
 /**
