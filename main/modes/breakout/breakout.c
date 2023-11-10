@@ -343,7 +343,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[GAME_LEVEL_START_INDEX].filename);
-            breakout->gameData.countdown = leveldef[GAME_LEVEL_START_INDEX].timeLimit;
+            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -353,7 +353,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level].filename);
-            breakout->gameData.countdown = leveldef[breakout->gameData.level].timeLimit;
+            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -699,8 +699,8 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
 
-    // char timeStr[10];
-    // snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
+    char timeStr[16];
+    snprintf(timeStr, sizeof(timeStr) - 1, "BONUS %0" PRId16, gameData->countdown);
 
     if (gameData->frameCount > 29)
     {
@@ -714,12 +714,12 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     // drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220,
     // 16);
 
-    drawText(font, c555, "B", 271, 32);
+    /*drawText(font, c555, "B", 271, 32);
     drawText(font, c555, "O", 271, 44);
     drawText(font, c555, "N", 271, 56);
     drawText(font, c555, "U", 271, 68);
     drawText(font, c555, "S", 271, 80);
-    drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);
+    drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);*/
     
 
     char vdispStr[3];
@@ -737,6 +737,14 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
             break;
         }
         drawText(font, c555, vdispStr, 4, 32 + 12 * i);
+    }
+
+     for(uint16_t i=0; i<sizeof(timeStr) - 1; i++){
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", timeStr[i]);
+        if(vdispStr[0] == '\0'){
+            break;
+        }
+        drawText(font, c555, vdispStr, 268, 32 + 12 * i);
     }
     
     // if(gameData->comboTimer == 0){
@@ -828,7 +836,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
-                breakout->gameData.countdown = leveldef[levelIndex].timeLimit;
+                breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;//leveldef[levelIndex].timeLimit;
                 breakoutChangeStateReadyScreen(self);
                 if (!self->gameData.debugMode)
                 {
