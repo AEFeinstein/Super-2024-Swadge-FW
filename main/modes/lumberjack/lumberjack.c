@@ -43,7 +43,7 @@ static const char lumberjackBack[]   = "Back";
 // static const char lumberjackNone[]    = "None";
 static char lumberjackRedCharacter[]          = "Character: Red";
 static char lumberjackGreenCharacter[]        = "Character: Green";
-static char lumberjackSpecialCharacter[]      = "Character: Special";
+static char lumberjackSpecialCharacter[]      = "Character: Guy";
 static char lumberjackChoCharacter[]          = "Character: Cho";
 
 static const char lumberjackMenuSinglePlayer[]      = "Single Player";

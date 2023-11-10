@@ -1713,7 +1713,7 @@ void lumberjackOnReceiveAttack(const uint8_t* attack)
 {
     if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
-        ESP_LOGI(LUM_TAG, "Being attacked %ld", sizeof(attack));
+//        ESP_LOGI(LUM_TAG, "Being attacked %ld", sizeof(attack));
 
         lumv->waterDirection = -1; //Even if it is draining
         lumv->waterSpeed -= 5;
