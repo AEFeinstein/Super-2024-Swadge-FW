@@ -34,6 +34,11 @@
 //==============================================================================
 // Enums
 //==============================================================================
+static const char breakoutHintTextLevel1[] = "Slide left/right on the touchpad to aim.\nPress UP button to launch.\nPress DOWN button to drop bombs!";
+static const char breakoutHintTextLevel2[] = "Slide up/down on the touchpad to aim.\nPress UP button to launch.\nPress DOWN button to drop bombs!";
+static const char breakoutHintTextLevel5[] = "Slide left/right to control both paddles!";
+static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to control all paddles!";
+//static const char breakoutHintTextLevelB[] = "Press DOWN button to time bombs.\nPress RIGHT button to drop a remote bomb";
 
 //==============================================================================
 // Structs
@@ -143,48 +148,48 @@ void breakoutBuildMainMenu(breakout_t* self);
 #define GAME_LEVEL_START_INDEX 1
 
 static const leveldef_t leveldef[NUM_LEVELS]
-    = {{.filename = "titlescreen.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_NULL},
-       {.filename = "intro.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "rightside.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "upsidedown.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "leftside.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "split.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "mag01.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "mag02.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "m_attack.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "flower.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "brkLvlChar1.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "gaylordlogo.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "trifecta.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "xmarks.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "bombtest.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "devito.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "lumberjacks.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "halloween.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "snake.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "flipflop.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "ponglike.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "tinyhuge.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "superhard.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "firework.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "starlite.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
+    = {{.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_NULL},
+       {.filename = "intro.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "rightside.bin", .hintTextPtr = breakoutHintTextLevel2, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "upsidedown.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "leftside.bin", .hintTextPtr = breakoutHintTextLevel2, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "split.bin", .hintTextPtr = breakoutHintTextLevel5, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "mag01.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "mag02.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "m_attack.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "flower.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "brkLvlChar1.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "gaylordlogo.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "trifecta.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "xmarks.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "bombtest.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "devito.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "lumberjacks.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "snake.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "flipflop.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "ponglike.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "tinyhuge.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "starlite.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
        {.filename  = "jailbreak.bin", /*Starting here, the levels are NOT in order!*/
-        .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "getMorGet.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "outtaMyWay.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "bombrings.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "angles.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "themaze.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "intersection.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "foosball.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "paddles.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "corner.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "b.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "wtf.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "mag03.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "wallball.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "introenemy.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "stormcastle.bin", .timeLimit = 180, .bgmIndex = BRK_BGM_CRAZY}};
+        .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "getMorGet.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "outtaMyWay.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "bombrings.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "angles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "themaze.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "intersection.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "foosball.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "paddles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "corner.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "b.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "wtf.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "mag03.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "wallball.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "introenemy.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "stormcastle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY}};
 
 //==============================================================================
 // Look Up Tables
@@ -231,6 +236,8 @@ static const char breakoutNameEnteredTitle[]      = "Name registrated.";
 
 static const char breakoutNvsKey_scores[]  = "brk_scores";
 static const char breakoutNvsKey_unlocks[] = "brk_unlocks";
+
+
 
 //==============================================================================
 // Variables
@@ -435,6 +442,7 @@ static void breakoutUpdateMainMenu(breakout_t* self, int64_t elapsedUs)
 static void breakoutChangeStateReadyScreen(breakout_t* self)
 {
     self->gameData.frameCount = 0;
+    self->gameData.ballLaunched = false;
 
     // Set up Cho Intro
     deactivateAllEntities(&(self->entityManager), false, true, true);
@@ -761,6 +769,13 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     // Draw centering lines, for paddle control debug
     // drawLine(TFT_WIDTH >> 1, 0, TFT_WIDTH >> 1, TFT_HEIGHT, c500, 0);
     // drawLine(0, (TFT_HEIGHT >> 1)+8, TFT_WIDTH, (TFT_HEIGHT >> 1)+8, c005, 0);
+
+    if(!gameData->ballLaunched){
+        char* hintText = leveldef[gameData->level].hintTextPtr;
+        int16_t x1 = 24;
+        int16_t y1 = 160;
+        drawTextWordWrap(font, c555, hintText, &x1, &y1, 256, 240);
+    }
 }
 
 void breakoutChangeStateLevelClear(breakout_t* self)

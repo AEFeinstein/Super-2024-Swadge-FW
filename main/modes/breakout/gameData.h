@@ -45,6 +45,8 @@ typedef struct
     // int16_t comboTimer;
     uint32_t comboScore;
 
+    bool ballLaunched;
+
     entity_t* playerBombs[3];
     uint8_t playerTimeBombsCount;
     bool playerRemoteBombPlaced;

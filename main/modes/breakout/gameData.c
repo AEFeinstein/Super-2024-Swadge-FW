@@ -24,6 +24,7 @@ void initializeGameData(gameData_t* gameData, soundManager_t* soundManager)
 
     gameData->extraLifeScore = 8000;
     gameData->levelScore = 0;
+    gameData->ballLaunched = false;
 
     gameData->level      = 1;
     gameData->frameCount = 0;
@@ -67,6 +68,7 @@ void initializeGameDataFromTitleScreen(gameData_t* gameData)
 
     gameData->extraLifeScore = 8000;
     gameData->levelScore = 0;
+    gameData->ballLaunched = false;
 
     gameData->combo = 0;
     // gameData->comboTimer = 0;

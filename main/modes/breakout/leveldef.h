@@ -12,7 +12,7 @@
 typedef struct
 {
     char filename[16];
-    uint16_t timeLimit;
+    const char* hintTextPtr;
     uint16_t bgmIndex;
 } leveldef_t;
 
