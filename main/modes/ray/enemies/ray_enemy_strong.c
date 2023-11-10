@@ -107,52 +107,6 @@ void rayEnemyStrongMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 }
 
 /**
- * @brief This is called when a strong enemy is shot. It adds damage based on bullet type, checks scripts, and handles
- * freeing defeated enemies
- *
- * @param ray The entire game state
- * @param enemy The enemy which was shot
- * @param bullet The type of bullet it was shot by
- * @param damageDivide A divisor for damage
- * @return true if the enemy was killed, false if it's still alive
- */
-bool rayEnemyStrongGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet, int32_t damageDivide)
-{
-    // Health starts at 100
-    int32_t damage = 0;
-    switch (bullet)
-    {
-        case OBJ_BULLET_NORMAL:
-        {
-            // Invincible to normal bullets
-            break;
-        }
-        case OBJ_BULLET_CHARGE:
-        {
-            // One shot, one kill
-            damage = 100;
-            break;
-        }
-        case OBJ_BULLET_ICE:
-        case OBJ_BULLET_MISSILE:
-        case OBJ_BULLET_XRAY:
-        {
-            // Five shots to kill
-            damage = 20;
-            break;
-        }
-        default:
-        {
-            // Not a bullet
-            break;
-        }
-    }
-
-    enemy->health -= ((damage * ray->p.i.damageMult) / damageDivide);
-    return enemy->health <= 0;
-}
-
-/**
  * @brief Get the time until the next shot is taken
  *
  * @param enemy The enemy taking the shot

@@ -16,14 +16,12 @@
 //==============================================================================
 
 typedef void (*rayEnemyMove_t)(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
-typedef bool (*rayEnemyGetShot_t)(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet, int32_t damageDivide);
 typedef int32_t (*rayEnemyGetTimer_t)(rayEnemy_t* enemy, rayEnemyTimerType_t type);
 typedef rayMapCellType_t (*rayEnemyGetBullet_t)(rayEnemy_t* enemy);
 
 typedef struct ray_enemy
 {
     rayEnemyMove_t move;
-    rayEnemyGetShot_t getShot;
     rayEnemyGetTimer_t getTimer;
     rayEnemyGetBullet_t getBullet;
 } enemyFuncs_t;
@@ -40,46 +38,52 @@ static const enemyFuncs_t enemyFuncs[] = {
     {
         // OBJ_ENEMY_NORMAL
         .move      = rayEnemyNormalMove,
-        .getShot   = rayEnemyNormalGetShot,
         .getTimer  = rayEnemyNormalGetTimer,
         .getBullet = rayEnemyNormalGetBullet,
     },
     {
         // OBJ_ENEMY_STRONG
         .move      = rayEnemyStrongMove,
-        .getShot   = rayEnemyStrongGetShot,
         .getTimer  = rayEnemyStrongGetTimer,
         .getBullet = rayEnemyStrongGetBullet,
     },
     {
         // OBJ_ENEMY_ARMORED
         .move      = rayEnemyArmoredMove,
-        .getShot   = rayEnemyArmoredGetShot,
         .getTimer  = rayEnemyArmoredGetTimer,
         .getBullet = rayEnemyArmoredGetBullet,
     },
     {
         // OBJ_ENEMY_FLAMING
         .move      = rayEnemyFlamingMove,
-        .getShot   = rayEnemyFlamingGetShot,
         .getTimer  = rayEnemyFlamingGetTimer,
         .getBullet = rayEnemyFlamingGetBullet,
     },
     {
         // OBJ_ENEMY_HIDDEN
         .move      = rayEnemyHiddenMove,
-        .getShot   = rayEnemyHiddenGetShot,
         .getTimer  = rayEnemyHiddenGetTimer,
         .getBullet = rayEnemyHiddenGetBullet,
     },
     {
         // OBJ_ENEMY_BOSS
         .move      = rayEnemyBossMove,
-        .getShot   = rayEnemyBossGetShot,
         .getTimer  = rayEnemyBossGetTimer,
         .getBullet = rayEnemyBossGetBullet,
     },
 };
+
+// clang-format off
+/** @brief Table of damage taken per enemy, per bullet, BOSS is not in here */
+static const uint32_t eDamageTable[5][5] = {
+    // OBJ_BULLET_NORMAL, OBJ_BULLET_CHARGE, OBJ_BULLET_ICE, OBJ_BULLET_MISSILE, OBJ_BULLET_XRAY
+    {  25,                100,               34,             100,                25,}, // OBJ_ENEMY_NORMAL
+    {  10,                100,               34,              50,                25,}, // OBJ_ENEMY_STRONG
+    {  10,                 50,               25,             100,                25,}, // OBJ_ENEMY_ARMORED
+    {  10,                 34,               50,              25,                25,}, // OBJ_ENEMY_FLAMING
+    {  0,                   0,                0,               0,                50,}, // OBJ_ENEMY_HIDDEN
+};
+// clang-format on
 
 //==============================================================================
 // Function Prototypes
@@ -325,11 +329,21 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     //     return;
     // }
 
-    // Save old health to see if the enemy took damage
-    int32_t oldHealth = enemy->health;
+    // Figure out the damage for this shot
+    int32_t damage = 0;
+    if (OBJ_ENEMY_BOSS == enemy->c.type)
+    {
+        damage = rayEnemyBossGetShot(ray, enemy, bullet);
+    }
+    else
+    {
+        damage = eDamageTable[enemy->c.type - OBJ_ENEMY_NORMAL][bullet - OBJ_BULLET_NORMAL];
+    }
 
     // Apply damage
-    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet, damageDivide))
+    enemy->health -= ((damage * ray->p.i.damageMult) / damageDivide);
+
+    if (enemy->health <= 0)
     {
         // Transition to dying
         rayEnemyTransitionState(enemy, E_DEAD);
@@ -344,7 +358,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         }
     }
     // If the enemy took
-    else if (oldHealth != enemy->health)
+    else if (0 < damage)
     {
         // Transition to hurt
         rayEnemyTransitionState(enemy, E_HURT);
