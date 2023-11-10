@@ -825,6 +825,10 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         {
             // Unlock zip on the menu
             writeNvs32(MAGTROID_UNLOCK_KEY, 1);
+            // Return to menu
+            // TODO jump to credits?
+            ray->screen = RAY_MENU;
+            bzrStop(true);
             break;
         }
     }

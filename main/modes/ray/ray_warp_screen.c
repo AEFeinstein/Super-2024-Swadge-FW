@@ -83,6 +83,9 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
  */
 void warpToDestination(ray_t* ray)
 {
+    // Stop BGM when manipulating data
+    bzrStop(true);
+
     // Save the current map's visited tiles
     raySaveVisitedTiles(ray);
 
@@ -95,12 +98,6 @@ void warpToDestination(ray_t* ray)
     // Load the new map
     q24_8 pStartX = 0, pStartY = 0;
     loadRayMap(ray->warpDestMapId, ray, &pStartX, &pStartY, true);
-
-    // Stop BGM when warping
-    bzrStop(true);
-    // Loop SFX
-    ray->sfx_warp.shouldLoop = true;
-    bzrPlaySfx(&ray->sfx_warp, BZR_RIGHT);
 
     // Set the map ID
     ray->p.mapId                     = ray->warpDestMapId;
@@ -140,4 +137,8 @@ void warpToDestination(ray_t* ray)
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
+    // Loop SFX after saving
+    ray->sfx_warp.shouldLoop = true;
+    bzrPlaySfx(&ray->sfx_warp, BZR_RIGHT);
 }
