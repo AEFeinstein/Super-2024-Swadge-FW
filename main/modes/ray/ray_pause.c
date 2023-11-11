@@ -407,7 +407,7 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 {
 #define MAP_X_MARGIN  16
 #define MAP_Y_MARGIN  36
-#define MAP_Y_MID_GAP 24
+#define MAP_Y_MID_GAP 16
 #define MAP_SIZE      72
 
 #define MAP_ROWS 2
@@ -504,4 +504,60 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
                      6);
         }
     }
+
+    // Count all the possible items in the game
+    int32_t numTotalItems = 6 +             // energy tanks
+                            ((2 * 6) + 1) + // Missile expansions;
+                            6 +             // Artifacts
+                            2 +             // Suits
+                            5;              // Beams
+
+    // Start counting what the player has
+    int32_t numAcquiredItems = 0;
+
+    // For each map
+    for (int32_t mIdx = 0; mIdx < NUM_MAPS; mIdx++)
+    {
+        // Count energy tanks
+        for (int32_t eIdx = 0; eIdx < E_TANKS_PER_MAP; eIdx++)
+        {
+            if (-1 != ray->p.i.healthPickUps[mIdx][eIdx])
+            {
+                numAcquiredItems++;
+            }
+        }
+
+        // Count missile upgrades
+        for (int32_t sIdx = 0; sIdx < MISSILE_UPGRADES_PER_MAP; sIdx++)
+        {
+            if (-1 != ray->p.i.missilesPickUps[mIdx][sIdx])
+            {
+                numAcquiredItems++;
+            }
+        }
+
+        // Count artifacts
+        if (ray->p.i.artifacts[mIdx])
+        {
+            numAcquiredItems++;
+        }
+    }
+
+    // Count beams
+    numAcquiredItems += (ray->p.i.beamLoadOut ? 1 : 0);
+    numAcquiredItems += (ray->p.i.chargePowerUp ? 1 : 0);
+    numAcquiredItems += (ray->p.i.missileLoadOut ? 1 : 0);
+    numAcquiredItems += (ray->p.i.iceLoadOut ? 1 : 0);
+    numAcquiredItems += (ray->p.i.xrayLoadOut ? 1 : 0);
+
+    // Count suits
+    numAcquiredItems += (ray->p.i.lavaSuit ? 1 : 0);
+    numAcquiredItems += (ray->p.i.waterSuit ? 1 : 0);
+
+    // Draw the string
+    char collectionStr[32] = {0};
+    snprintf(collectionStr, sizeof(collectionStr) - 1, "Item collection %d%%",
+             (100 * numAcquiredItems) / numTotalItems);
+    int16_t tWidth = textWidth(&ray->ibm, collectionStr);
+    drawText(&ray->ibm, c555, collectionStr, (TFT_WIDTH - tWidth) / 2, TFT_HEIGHT - ray->ibm.height - 10);
 }
