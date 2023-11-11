@@ -7,6 +7,7 @@
 #include "hdw-tft.h"
 #include "macros.h"
 #include "trigonometry.h"
+#include "fill.h"
 #include "wsg.h"
 
 //==============================================================================
@@ -320,6 +321,82 @@ void drawWsgSimple(const wsg_t* wsg, int16_t xOff, int16_t yOff)
         lineout += dWidth;
         linein += wWidth;
         wsgY++;
+    }
+}
+
+/**
+ * @brief Draw a WSG to the display without flipping or rotation
+ *
+ * @param wsg  The WSG to draw to the display
+ * @param xOff The x offset to draw the WSG at
+ * @param yOff The y offset to draw the WSG at
+ * @param xScale The amount to scale the image horizontally
+ * @param yScale The amount to scale the image vertically
+ */
+void drawWsgSimpleScaled(const wsg_t* wsg, int16_t xOff, int16_t yOff, int16_t xScale, int16_t yScale)
+{
+    //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
+    //  esp-2021r2-patch3)
+
+    if (NULL == wsg->px)
+    {
+        return;
+    }
+
+    // Only draw in bounds
+    int dWidth                   = TFT_WIDTH;
+    int dHeight                  = TFT_HEIGHT;
+    int wWidth                   = wsg->w;
+    int xMax                     = CLAMP(xOff + wWidth * yScale, 0, dWidth);
+    int yMax                     = CLAMP(yOff + wsg->h * yScale, 0, dHeight);
+    const paletteColor_t* linein = wsg->px;
+
+    int x1;
+    int y1;
+
+    int ix = 0;
+    int iy = 0;
+
+    // Draw each pixel, scaled
+    for (int y = yOff; y < yMax; y += yScale, iy++)
+    {
+        if (y >= TFT_HEIGHT)
+        {
+            return;
+        }
+
+        y1 = y + yScale;
+
+        // Entire "pixel" is off-screen
+        if (y1 <= 0)
+        {
+            continue;
+        }
+
+        ix = 0;
+        for (int x = xOff; x < xMax; x += xScale, ix++)
+        {
+            if (x >= TFT_WIDTH)
+            {
+                // next line
+                break;
+            }
+
+            x1 = x + xScale;
+
+            if (x1 <= 0)
+            {
+                // next pixel
+                continue;
+            }
+
+            int color = linein[ix];
+            if (color != cTransparent)
+            {
+                fillDisplayArea(MAX(x, 0), MAX(y, 0), MIN(x1, dWidth), MIN(y1, dHeight), color);
+            }
+        }
+        linein += wWidth;
     }
 }
 
