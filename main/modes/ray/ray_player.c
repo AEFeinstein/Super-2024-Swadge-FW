@@ -12,6 +12,24 @@
 #include "ray_script.h"
 #include "ray_death_screen.h"
 #include "ray_enemy.h"
+#include "ray_dialog.h"
+
+//==============================================================================
+// Const data
+//==============================================================================
+
+/** @brief random dialog when a missile expansion is acquired*/
+const char* const missilePickupDialog[] = {
+    "Hey, you can hold more missiles now! Where? ...You don't want to know!",
+    "Hey, this wasn't the critical path, but at least you can express your frustration with "
+    "these additional missiles!",
+    "Watch, these five missiles are going to come in SO handy, just you wait.",
+    "Look at you, overachiever! Have some missiles for being such a good completionist.",
+    "Wow, who just leaves a bunch of missiles lying around? This is an all-ages event, come on.",
+    "Did you know that missiles go through enemy shields? Bet you thought we made them have "
+    "limited ammo for nothing, huh!",
+    "Why yes, this is a missile expansion! Mazel Tov!",
+};
 
 //==============================================================================
 // Functions
@@ -558,12 +576,14 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
  * @brief This handles what happens when a player touches an item
  *
  * @param ray The whole game state
- * @param type The type of item touched
+ * @param item The item that was touched
  * @param mapId The current map ID, used to track non-unique persistent pick-ups
- * @param itemId The item's ID
  */
-void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_t itemId)
+void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
 {
+    rayMapCellType_t type = item->type;
+    int32_t itemId        = item->id;
+
     // Assume saving after picking up an item
     bool saveAfterObtain      = true;
     rayInventory_t* inventory = &ray->p.i;
@@ -646,6 +666,10 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
 
                     // Save the coordinates
                     inventory->missilesPickUps[mapId][idx] = itemId;
+
+                    // Show random dialog
+                    int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog);
+                    rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
                     break;
                 }
             }

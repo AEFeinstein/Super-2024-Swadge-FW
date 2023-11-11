@@ -306,7 +306,7 @@ void checkRayCollisions(ray_t* ray)
         if (objectsIntersect(&player, item))
         {
             // Touch the item
-            rayPlayerTouchItem(ray, item->type, ray->p.mapId, item->id);
+            rayPlayerTouchItem(ray, item, ray->p.mapId);
             // Check scripts
             checkScriptGet(ray, item->id, item->sprite);
 
