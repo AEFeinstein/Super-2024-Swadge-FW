@@ -584,7 +584,7 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 
     // Draw the string
     char collectionStr[32] = {0};
-    snprintf(collectionStr, sizeof(collectionStr) - 1, "Item collection %d%%",
+    snprintf(collectionStr, sizeof(collectionStr) - 1, "Item collection %" PRId32 "%%",
              (100 * numAcquiredItems) / numTotalItems);
     int16_t tWidth = textWidth(&ray->ibm, collectionStr);
     drawText(&ray->ibm, c555, collectionStr, (TFT_WIDTH - tWidth) / 2, TFT_HEIGHT - ray->ibm.height - 10);
