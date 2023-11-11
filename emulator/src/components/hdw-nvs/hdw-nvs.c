@@ -834,6 +834,54 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos
 }
 
 /**
+ * @brief Quickly return whether or not any entries exist in a given NVS namespace.
+ *
+ * @param namespace The namespace to check for any entries
+ * @return true If there is one or more entry in the namespace
+ * @return false If there are no entries in the namespace
+ */
+bool nvsNamespaceInUse(const char* namespace)
+{
+    // Open the file
+    FILE* nvsFile = fopen(NVS_JSON_FILE, "rb");
+
+    if (NULL != nvsFile)
+    {
+        // Get the file size
+        fseek(nvsFile, 0L, SEEK_END);
+        size_t fsize = ftell(nvsFile);
+        fseek(nvsFile, 0L, SEEK_SET);
+
+        // Read the file
+        char fbuf[fsize + 1];
+        fbuf[fsize] = 0;
+        if (fsize == fread(fbuf, 1, fsize, nvsFile))
+        {
+            // Close the file
+            fclose(nvsFile);
+
+            // Parse the JSON
+            cJSON* json = cJSON_Parse(fbuf);
+            cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
+            bool result = false;
+
+            if (NULL != jsonNs && cJSON_IsObject(jsonNs))
+            {
+                result = (cJSON_GetArraySize(jsonNs) != 0);
+            }
+
+            cJSON_Delete(json);
+            return result;
+        }
+        else
+        {
+            fclose(nvsFile);
+        }
+    }
+    return false;
+}
+
+/**
  * @brief Convert a blob to a hex string
  *
  * @param value The blob

@@ -607,3 +607,26 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
     // Only return true if the error code was the expected one
     return res == ESP_ERR_NVS_NOT_FOUND;
 }
+
+/**
+ * @brief Quickly return whether or not any entries exist in a given NVS namespace.
+ *
+ * @param namespace The namespace to check for any entries
+ * @return true If there is one or more entry in the namespace
+ * @return false If there are no entries in the namespace
+ */
+bool nvsNamespaceInUse(const char* namespace)
+{
+    nvs_iterator_t it = NULL;
+    esp_err_t res = nvs_entry_find(NVS_DEFAULT_PART_NAME, namespace, NVS_TYPE_ANY, &it);
+    nvs_entry_info_t info;
+
+    if (ESP_OK == res)
+    {
+        res = nvs_entry_info(it, &info);
+    }
+
+    nvs_release_iterator(it);
+
+    return (res == ESP_OK);
+}
