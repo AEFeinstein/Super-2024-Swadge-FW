@@ -206,7 +206,7 @@ void paintSetSlotInUse(int32_t* index, uint8_t slot)
 
 bool paintGetAnySlotInUse(int32_t index)
 {
-    return (index & ((1 << PAINT_SAVE_SLOTS) - 1)) != 0;
+    return nvsNamespaceInUse(PAINT_NS_DATA);
 }
 
 /**
@@ -617,23 +617,23 @@ void paintSetLastSlot(const char* name)
 
 uint8_t paintGetPrevSlotInUse(int32_t index, uint8_t slot)
 {
-    do
+    /*do
     {
         // Switch to the previous slot, wrapping back to the end
         slot = PREV_WRAP(slot, PAINT_SAVE_SLOTS);
     }
     // If we're loading, and there's actually a slot we can load from, skip empty slots until we find one that is in use
-    while (paintGetAnySlotInUse(index) && !paintGetSlotInUse(index, slot));
+    while (paintGetAnySlotInUse(index) && !paintGetSlotInUse(index, slot));*/
 
     return slot;
 }
 
 uint8_t paintGetNextSlotInUse(int32_t index, uint8_t slot)
 {
-    do
+    /*do
     {
         slot = NEXT_WRAP(slot, PAINT_SAVE_SLOTS);
-    } while (paintGetAnySlotInUse(index) && !paintGetSlotInUse(index, slot));
+    } while (paintGetAnySlotInUse(index) && !paintGetSlotInUse(index, slot));*/
 
     return slot;
 }

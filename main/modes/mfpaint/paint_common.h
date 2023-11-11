@@ -13,6 +13,7 @@
 #include "p2pConnection.h"
 #include "linked_list.h"
 #include "geometry.h"
+#include "touchUtils.h"
 
 #include "px_stack.h"
 #include "paint_type.h"
@@ -460,13 +461,25 @@ typedef struct
     bool clearScreen;
 } paintShare_t;
 
+typedef enum
+{
+    GALLERY_INFO_SPEED = 0x01,
+    GALLERY_INFO_BRIGHTNESS = 0x02,
+    GALLERY_INFO_DANCE = 0x04,
+    GALLERY_INFO_NEXT = 0x08,
+    GALLERY_INFO_EXIT = 0x10,
+    GALLERY_INFO_VIEW = 0x20,
+    GALLERY_INFO_CONTROLS = 0xFF,
+} paintGalleryInfoView_t;
+
 typedef struct
 {
-    paintCanvas_t canvas;
-    int32_t index;
-
     font_t infoFont;
     wsg_t arrow;
+    wsg_t aWsg;
+    wsg_t bWsg;
+    wsg_t pauseWsg;
+    wsg_t spinWsg;
 
     // TODO rename these to better things now that they're in their own struct
 
@@ -483,12 +496,17 @@ typedef struct
     int64_t infoTimeRemaining;
 
     // Current image used in gallery
-    uint8_t gallerySlot;
+    char gallerySlotKey[16];
+
+    imageBrowser_t browser;
 
     bool showUi;
-    bool galleryLoadNew;
     bool screensaverMode;
     paintScreen_t returnScreen;
+    paintGalleryInfoView_t infoView;
+
+    int startBrightness;
+    touchSpinState_t spinState;
 
     uint8_t galleryScale;
 } paintGallery_t;
