@@ -35,8 +35,8 @@
 // Enums
 //==============================================================================
 static const char breakoutHintTextLevel1[] = "Slide left/right on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
-static const char breakoutHintTextLevel2[] = "Slide up/down on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
-//static const char breakoutHintTextLevel5[] = "Press DOWN BUTTON to drop time bombs.\nTime it right to destroy many blocks at once!";
+static const char breakoutHintTextLevel2[] = "Press DOWN BUTTON to drop time bombs.\nTime it right to destroy many blocks at once!";
+static const char breakoutHintTextLevel3[] = "Slide up/down on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
 static const char breakoutHintTextLevel5[] = "Slide left/right to control both paddles!";
 static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to control all paddles!";
 
@@ -141,18 +141,19 @@ void breakoutBuildMainMenu(breakout_t* self);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 41
+#define NUM_LEVELS 42
 
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
 #define GAME_LEVEL_START_INDEX 1
 
 static const leveldef_t leveldef[NUM_LEVELS]
-    = {{.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_NULL},
-       {.filename = "intro.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "rightside.bin", .hintTextPtr = breakoutHintTextLevel2, .bgmIndex = BRK_BGM_SKILL},
+    = {{.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_TITLE},
+       {.filename = "reintro.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "intro.bin", .hintTextPtr = breakoutHintTextLevel2, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "rightside.bin", .hintTextPtr = breakoutHintTextLevel3, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "upsidedown.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "leftside.bin", .hintTextPtr = breakoutHintTextLevel2, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "leftside.bin", .hintTextPtr = breakoutHintTextLevel3, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "split.bin", .hintTextPtr = breakoutHintTextLevel5, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "mag01.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "mag02.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
@@ -453,14 +454,12 @@ static void breakoutChangeStateReadyScreen(breakout_t* self)
     self->entityManager.playerEntity = createEntity(&(self->entityManager), ENTITY_CHO_INTRO, 0, 0);
 
     bzrPlayBgm(&self->soundManager.getReady, BZR_STEREO);
-
     self->update = &breakoutUpdateReadyScreen;
 }
 
 static void breakoutUpdateReadyScreen(breakout_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
-
     updateLedsInGame(&(self->gameData));
     drawStarfield(&(self->starfield));
 
@@ -740,7 +739,7 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     }*/
 
     char extraLifeStr[15];
-    snprintf(extraLifeStr, sizeof(extraLifeStr) - 1, "NEXT %0" PRIu32, gameData->extraLifeScore);
+    snprintf(extraLifeStr, sizeof(extraLifeStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
     
     for(uint16_t i=0; i<sizeof(extraLifeStr) - 1; i++){
         snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", extraLifeStr[i]);
@@ -859,12 +858,12 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
                 breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;//leveldef[levelIndex].timeLimit;
                 breakout->gameData.levelScore = 0;
-                breakoutChangeStateReadyScreen(self);
                 if (!self->gameData.debugMode)
                 {
                     breakoutSaveUnlockables(self);
                 }
 
+                breakoutChangeStateReadyScreen(self);
                 return;
             }
         }
@@ -888,10 +887,10 @@ void breakoutDrawLevelClear(font_t* font, gameData_t* gameData)
 {
     drawText(font, c555, breakoutLevelClear, (TFT_WIDTH - textWidth(font, breakoutLevelClear)) / 2, 96);
 
-    char levelScoreStr[15];
+    char levelScoreStr[32];
 
 
-    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Bonus %06" PRIu32, gameData->countdown * 100);
+    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Bonus %06" PRIi16, gameData->countdown * 100);
     drawText(font, c555, levelScoreStr, (TFT_WIDTH - textWidth(font, levelScoreStr)) / 2, 128);
 
     snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Total  %06" PRIu32, gameData->levelScore);
@@ -1103,8 +1102,10 @@ void breakoutLoadHighScores(breakout_t* self)
 
 void breakoutSaveHighScores(breakout_t* self)
 {
+    bzrPause();
     size_t size = sizeof(breakoutHighScores_t);
     writeNvsBlob(breakoutNvsKey_scores, &(self->highScores), size);
+    bzrResume();
 }
 
 void breakoutDrawHighScores(font_t* font, breakoutHighScores_t* highScores, gameData_t* gameData)
@@ -1335,8 +1336,10 @@ void breakoutLoadUnlockables(breakout_t* self)
 
 void breakoutSaveUnlockables(breakout_t* self)
 {
+    bzrPause();
     size_t size = sizeof(breakoutUnlockables_t);
     writeNvsBlob(breakoutNvsKey_unlocks, &(self->unlockables), size);
+    bzrResume();
 }
 
 void breakoutBuildMainMenu(breakout_t* self)
