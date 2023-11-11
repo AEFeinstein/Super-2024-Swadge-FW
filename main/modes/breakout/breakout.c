@@ -377,7 +377,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         }
         else if (label == breakoutResetProgress)
         {
-            breakoutInitializeHighScores(breakout);
+            breakoutInitializeUnlockables(breakout);
             bzrPlaySfx(&(breakout->soundManager.die), BZR_STEREO);
         }
         else if (label == breakoutSaveAndExit)
