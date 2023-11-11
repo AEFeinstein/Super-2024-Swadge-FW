@@ -139,16 +139,31 @@ void rayPauseCheckButtons(ray_t* ray)
         // If A was pressed
         if (evt.down)
         {
-            if (PB_START == evt.button)
+            switch (evt.button)
             {
-                // Pause over, return to game
-                ray->screen = RAY_GAME;
-                bzrResume();
-            }
-            if ((PB_A == evt.button) || (PB_B == evt.button))
-            {
-                // Switch between local map and world map
-                ray->pauseScreen = (ray->pauseScreen + 1) % RP_NUM_SCREENS;
+                case PB_UP:
+                case PB_DOWN:
+                case PB_LEFT:
+                case PB_RIGHT:
+                case PB_A:
+                case PB_B:
+                {
+                    // Switch between local map and world map
+                    ray->pauseScreen = (ray->pauseScreen + 1) % RP_NUM_SCREENS;
+                    break;
+                }
+                case PB_START:
+                {
+                    // Pause over, return to game
+                    ray->screen = RAY_GAME;
+                    bzrResume();
+                    break;
+                }
+                default:
+                case PB_SELECT:
+                {
+                    break;
+                }
             }
         }
     }
@@ -179,6 +194,19 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
             rayPauseRenderWorldMap(ray, elapsedUs);
             break;
         }
+    }
+
+    if (ray->blink)
+    {
+#define TRIANGLE_OFFSET_X 20
+#define TRIANGLE_OFFSET_Y 0
+        drawTriangleOutlined(TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4,
+                             TFT_WIDTH - TRIANGLE_OFFSET_X - 4, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10,
+                             TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
+
+        drawTriangleOutlined(TRIANGLE_OFFSET_X + 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4, TRIANGLE_OFFSET_X + 4,
+                             TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10, TRIANGLE_OFFSET_X + 16,
+                             TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
     }
 }
 
