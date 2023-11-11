@@ -42,6 +42,7 @@ PAINT_BOOL_PARAM(EnableBlink, true);
 
 static int32_t paintReadParam(const settingParam_t* param);
 static bool paintWriteParam(const settingParam_t* param, int32_t val);
+static void paintRebuildPalette(paintCanvas_t* canvas, const paletteColor_t* img);
 
 // void paintDebugIndex(int32_t index)
 // {
@@ -150,6 +151,43 @@ static int32_t paintReadParam(const settingParam_t* param)
 static bool paintWriteParam(const settingParam_t* param, int32_t val)
 {
     return writeNvs32(param->key, CLAMP(val, param->min, param->max));
+}
+
+static void paintRebuildPalette(paintCanvas_t* canvas, const paletteColor_t* img)
+{
+    uint8_t paletteIndex[cTransparent + 1] = {0};
+
+    int max = canvas->w * canvas->h;
+    for (int i = 0; i < max; i++)
+    {
+        paletteIndex[img[i]] = 1;
+    }
+
+    int pOut = 0;
+    for (int i = 0; i < ARRAY_SIZE(paletteIndex); i++)
+    {
+        if (paletteIndex[i])
+        {
+            canvas->palette[pOut++] = i;
+
+            if (pOut == PAINT_MAX_COLORS)
+            {
+                break;
+            }
+        }
+    }
+
+    // If, somehow, the image had no colors?
+    if (pOut == 0)
+    {
+        canvas->palette[0] = c000;
+    }
+
+    while (pOut < PAINT_MAX_COLORS)
+    {
+        // Fill in any unused colors if there were fewer than the max
+        canvas->palette[pOut++] = canvas->palette[0];
+    }
 }
 
 void paintLoadIndex(int32_t* index)
@@ -555,6 +593,7 @@ bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
         size_t length = PAINT_MAX_COLORS;
         if (!readNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, &length))
         {
+            paintRebuildPalette(canvas, tmpWsg.px);
             PAINT_LOGW("No palette found for image %s, that's weird right?", name);
             result = false;
         }
