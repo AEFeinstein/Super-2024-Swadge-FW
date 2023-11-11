@@ -15,6 +15,7 @@ void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character)
     enemy->cW               = 15;
     enemy->cH               = 15;
     enemy->submergedTimer   = 0;
+    enemy->queueable        = true;
     lumberjackUpdateEnemy(enemy, character);
 }
 

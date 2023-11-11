@@ -29,7 +29,7 @@ void baseMode(int64_t elapsedUs);
 void lumberjackSendAttack(uint8_t* number);
 void lumberjackSendScore(int score);
 
-void lumberjackOnReceiveAttack(const uint8_t* attack);
+void lumberjackOnReceiveAttack(const uint8_t* attack, int len);
 void lumberjackOnReceiveScore(const uint8_t* score);
 void lumberjackOnReceiveDeath(bool gameover);
 void lumberjackGameReady(void);

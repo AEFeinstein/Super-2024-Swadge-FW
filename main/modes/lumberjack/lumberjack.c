@@ -12,7 +12,7 @@
 #include "lumberjackGame.h"
 
 #define LUMBERJACK_VLEN             7
-#define LUMBERJACK_VERSION          "23110a"
+#define LUMBERJACK_VERSION          "231111a"
 
 
 static void lumberjackEnterMode(void);
@@ -238,10 +238,10 @@ static bool lumberjackSpecialUnlocked()
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
+    //ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
     for (int i = 0; i < len; i++)
     {
-        ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
+        //ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
     }
     p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
@@ -311,7 +311,8 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
         if (payload[0] == ATTACK_MSG)
         {
-            lumberjackOnReceiveAttack(payload);
+            ESP_LOGI(LUM_TAG, "Incoming attack!");
+            lumberjackOnReceiveAttack(payload, len);
         }
 
         if (payload[0] == SCORE_MSG)

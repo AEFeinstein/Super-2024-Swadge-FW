@@ -8,6 +8,7 @@ typedef struct
     bool flipped;
     bool onGround;
     bool active;
+    bool queueable;
 
     bool flying;
 
