@@ -51,6 +51,7 @@ void setLevelBgm(soundManager_t* self, uint16_t newBgmIndex){
     }
 
     if(self->currentBgmIndex != BRK_BGM_NULL){
+        bzrStop(true);
         freeSong(&self->levelBgm);
     }
 
