@@ -43,6 +43,7 @@ typedef struct
 
 static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t* image, bool spiram);
 static void imageBrowserTextEntryCb(const char* text, void* data);
+static int compareEntryInfoAlpha(const void* obj1, const void* obj2);
 
 static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t* image, bool spiram)
 {
@@ -93,6 +94,11 @@ static void imageBrowserTextEntryCb(const char* text, void* data)
     }
 }
 
+static int compareEntryInfoAlpha(const void* obj1, const void* obj2)
+{
+    return strncasecmp(((const nvs_entry_info_t*)obj1)->key, ((const nvs_entry_info_t*)obj2)->key, 16);
+}
+
 void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* namespace, const char* prefix,
                        imageBrowserAction_t action, imageBrowserAction_t secondaryAction)
 {
@@ -136,6 +142,11 @@ void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* 
         nvs_entry_info_t* imageInfos = calloc(numInfos, sizeof(nvs_entry_info_t));
         if (readNamespaceNvsEntryInfos(namespace, NULL, imageInfos, NULL))
         {
+            if (numInfos > 0)
+            {
+                qsort(imageInfos, numInfos, sizeof(nvs_entry_info_t), compareEntryInfoAlpha);
+            }
+
             for (uint32_t i = 0; i < numInfos; ++i)
             {
                 if (imageInfos[i].type == NVS_TYPE_BLOB)
