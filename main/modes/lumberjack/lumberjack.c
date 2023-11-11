@@ -74,7 +74,8 @@ typedef enum
     VERSION_MSG,
     READY_MSG,
     ATTACK_MSG,
-    DEATH_MSG
+    DEATH_MSG,
+    SCORE_MSG
 } lumberjackMessageType_t;
 
 lumberjack_t* lumberjack = NULL;
@@ -240,7 +241,7 @@ static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
     ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
     for (int i = 0; i < len; i++)
     {
-        //ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
+        ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
     }
     p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
@@ -313,6 +314,11 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             lumberjackOnReceiveAttack(payload);
         }
 
+        if (payload[0] == SCORE_MSG)
+        {
+            lumberjackOnReceiveScore(payload);
+        }
+
         if (payload[0] == DEATH_MSG)
         {
             ESP_LOGI(LUM_TAG, "Playher died!");
@@ -352,6 +358,20 @@ void lumberjackSendAttack(uint8_t* number)
         {
             ESP_LOGI(LUM_TAG, "SENDING %d) %d", i, payload[i]);
         }
+        p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
+    }
+}
+
+void lumberjackSendScore(int score)
+{
+    if (lumberjack->networked)
+    {
+
+        uint8_t payload[4] = {SCORE_MSG};
+
+        payload[3] = score >> 16 & 0xFF;
+        payload[2] = score >> 8  & 0xFF;
+        payload[1] = score       & 0xFF;
         p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
     }
 }

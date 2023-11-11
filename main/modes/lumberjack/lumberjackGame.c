@@ -679,6 +679,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
             lumberjackPlayGame();      
             lumberjackSendGo();
         }
+        lumv->highscore = 0;
 
     } else if (lumv->btnState & PB_A && lumv->gameReady) // And Game Ready!
     {
@@ -1073,7 +1074,7 @@ void baseMode(int64_t elapsedUs)
             lumberjackUpdateEntity(enemy, elapsedUs);
 
 
-            if (enemy->direction != 0)
+            if (enemy->direction != 0 && enemy->onGround)
             {
 
                 lumberjackTile_t* facingTile = lumberjackGetTile(enemy->x + (enemy->direction > 0 ? 28 : -8) , enemy->y + 2);
@@ -1149,12 +1150,20 @@ void baseMode(int64_t elapsedUs)
 
                             lumv->score += enemy->scoreValue * (lumv->comboAmount + 1);
 
+                            if (lumv->lumberjackMain->networked)
+                            {
+                                lumberjackSendScore(lumv->score);
+                            }
+                            else
+                            {
+                                if (lumv->score > lumv->highscore)
+                                {
+                                    lumv->highscore = lumv->score;
+                                }
+                            }
+
                             lumv->comboTime = LUMBERJACK_COMBO_RESET_TIME;
 
-                            if (lumv->score > lumv->highscore)
-                            {
-                                lumv->highscore = lumv->score;
-                            }
 
                             //if game mode is single player decide if you're going to clear the level
                             lumv->enemyKillCount ++;
@@ -1727,6 +1736,13 @@ void lumberjackOnReceiveAttack(const uint8_t* attack)
     {
         
     }
+}
+
+void lumberjackOnReceiveScore(const uint8_t* score)
+{
+    int locX      = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
+    ESP_LOGI(LUM_TAG, "SCORE: %d", locX);
+    lumv->highscore = locX;
 }
 
 void lumberjackOnReceiveDeath(bool gameover)
