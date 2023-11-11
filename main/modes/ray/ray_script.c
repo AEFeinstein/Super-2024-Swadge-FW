@@ -649,6 +649,8 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 ray->map.tiles[x][y].openingDirection = 1;
                 // Mark it as permanently open
                 ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
+                // Play SFX
+                bzrPlaySfx(ray->sfx_door_open, BZR_RIGHT);
             }
             break;
         }
