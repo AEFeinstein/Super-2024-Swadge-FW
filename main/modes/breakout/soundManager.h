@@ -14,14 +14,16 @@
 //==============================================================================
 
 static const char* const LEVEL_BGMS[] = {
-    "brkBgmSkill.sng", "brkBgmPixel.sng", "brkBgmCrazy.sng"
+    "brkBgmSkill.sng", "brkBgmPixel.sng", "brkBgmCrazy.sng", "brkBgmCrazy.sng", "brkHighScore.sng"
 };
 
 typedef enum {
     BRK_BGM_NULL,
     BRK_BGM_SKILL,
     BRK_BGM_PIXEL,
-    BRK_BGM_CRAZY
+    BRK_BGM_CRAZY,
+    BRK_BGM_4,
+    BRK_BGM_NAME_ENTRY
 } breakoutBgmIndex_t;
 
 //==============================================================================
@@ -39,7 +41,9 @@ typedef struct
     song_t dropBomb;
     song_t detonate;
     song_t snd1up;
+    song_t getReady;
     song_t levelClear;
+    song_t gameOver;
     song_t levelBgm;
     uint16_t currentBgmIndex;
 } soundManager_t;
