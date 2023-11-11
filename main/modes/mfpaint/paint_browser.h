@@ -16,6 +16,13 @@ typedef enum
     BROWSER_DELETE,
 } imageBrowserAction_t;
 
+typedef enum
+{
+    BROWSER_GRID = 0,
+    BROWSER_GALLERY,
+    BROWSER_FULLSCREEN,
+} imageBrowserView_t;
+
 typedef void (*imageBrowserCbFn)(const char* nvsKey, imageBrowserAction_t action);
 
 typedef struct
@@ -29,9 +36,15 @@ typedef struct
     bool showTextEntry;
     int64_t prevUpdateTime;
 
+    char namespace[16];
+    char mainImageKey[16];
+    wsg_t mainImage;
+
     imageBrowserCbFn callback;
     imageBrowserAction_t primaryAction;
     imageBrowserAction_t secondaryAction;
+    imageBrowserView_t viewStyle;
+    bool wraparound;
 
     uint8_t cols;
 

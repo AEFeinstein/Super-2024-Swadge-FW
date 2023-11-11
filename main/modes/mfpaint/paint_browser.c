@@ -3,6 +3,7 @@
 
 #include "paint_browser.h"
 #include "paint_common.h"
+#include "paint_util.h"
 #include "linked_list.h"
 #include "spiffs_wsg.h"
 #include "hdw-nvs.h"
@@ -106,6 +107,8 @@ void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* 
     browser->prevUpdateTime  = 0;
     browser->primaryAction   = action;
     browser->secondaryAction = secondaryAction;
+    strncpy(browser->namespace, namespace, 15);
+    browser->namespace[15] = '\0';
 
     if (BROWSER_SAVE == action)
     {
@@ -195,10 +198,18 @@ void resetImageBrowser(imageBrowser_t* browser)
         browser->textEntry     = NULL;
         browser->showTextEntry = false;
     }
+
+    if (NULL != browser->mainImage.px)
+    {
+        freeWsg(&browser->mainImage);
+        browser->mainImage.px = NULL;
+    }
 }
 
 void drawImageBrowser(imageBrowser_t* browser)
 {
+    bool drawList       = (browser->viewStyle == BROWSER_GRID || browser->viewStyle == BROWSER_GALLERY);
+    bool drawLargeImage = (browser->viewStyle == BROWSER_GALLERY || browser->viewStyle == BROWSER_FULLSCREEN);
     // Calculate the total number of full or partial rows
     uint8_t rows = (browser->items.length + (browser->cols - 1)) / browser->cols;
 
@@ -210,9 +221,43 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint16_t thumbMargin  = 5;
     uint16_t thumbHeight  = THUMB_H + 4;
     uint16_t thumbWidth   = THUMB_W + 4;
+    uint16_t imageTop = 5;
+    uint16_t imageBottom = 5;
+
+    uint8_t visibleRows = 0;
+
+    switch (browser->viewStyle)
+    {
+        case BROWSER_GRID:
+        {
+            visibleRows = (TFT_HEIGHT - marginTop - marginBottom - thumbMargin) / (thumbHeight + thumbMargin);
+            break;
+        }
+
+        case BROWSER_GALLERY:
+        {
+            // Move the margin to just 1 row above the bottom
+            marginTop = TFT_HEIGHT - marginBottom - textMargin - thumbHeight - thumbMargin;
+            imageTop = 5;
+            imageBottom = TFT_HEIGHT - marginTop + 5;
+            visibleRows = 1;
+            break;
+        }
+
+        case BROWSER_FULLSCREEN:
+        {
+            marginTop = TFT_HEIGHT;
+            imageTop = 0;
+            imageBottom = 0;
+            marginBottom = 0;
+            marginLeft = 0;
+            marginRight = 0;
+            visibleRows = 0;
+            break;
+        }
+    }
 
     // The last visible row is the first row, plus the number of rows (== spaceForRows / spacePerRow)
-    uint8_t visibleRows    = (TFT_HEIGHT - marginTop - marginBottom - thumbMargin) / (thumbHeight + thumbMargin);
     uint8_t lastVisibleRow = browser->firstRow + visibleRows - 1;
 
     uint16_t extraW
@@ -241,90 +286,145 @@ void drawImageBrowser(imageBrowser_t* browser)
         return;
     }
 
-    if (rows > visibleRows)
+    if (drawList)
     {
-        // Calculate the scrollbar height
-        // height = (proportion of rows visible) * (total height)
-        uint16_t scrollHeight = rows ? visibleRows * SCROLL_HEIGHT / rows : SCROLL_HEIGHT;
-        uint16_t scrollOffset
-            = rows ? SCROLL_OFFSET + SCROLL_HEIGHT - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight
-                   : SCROLL_OFFSET;
-
-        // Draw the scroll bar on the right side
-        // Border
-        drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight, TFT_HEIGHT - SCROLL_OFFSET,
-                 c000);
-
-        // Scrollbar
-        fillDisplayArea(TFT_WIDTH - 3 - marginRight, scrollOffset, TFT_WIDTH - 1 - marginRight,
-                        scrollOffset + scrollHeight, c000);
-    }
-
-    node_t* node = browser->items.first;
-
-    if (NULL == node)
-    {
-        drawText(browser->font, c000, noItemsStr, (TFT_WIDTH - textWidth(browser->font, noItemsStr)) / 2,
-                 (TFT_HEIGHT - browser->font->height) / 2);
-    }
-    else
-    {
-        for (uint8_t row = 0; row < rows; ++row)
+        if (visibleRows > 0 && rows > visibleRows)
         {
-            if (row > lastVisibleRow)
+            // Calculate the scrollbar height
+            // height = (proportion of rows visible) * (total height)
+            uint16_t scrollHeight = rows ? visibleRows * SCROLL_HEIGHT / rows : SCROLL_HEIGHT;
+            uint16_t scrollOffset
+                = rows ? SCROLL_OFFSET + SCROLL_HEIGHT - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight
+                    : SCROLL_OFFSET;
+
+            // Draw the scroll bar on the right side
+            // Border
+            drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight, TFT_HEIGHT - SCROLL_OFFSET,
+                    c000);
+
+            // Scrollbar
+            fillDisplayArea(TFT_WIDTH - 3 - marginRight, scrollOffset, TFT_WIDTH - 1 - marginRight,
+                            scrollOffset + scrollHeight, c000);
+        }
+        node_t* node = browser->items.first;
+
+        if (NULL == node)
+        {
+            drawText(browser->font, c000, noItemsStr, (TFT_WIDTH - textWidth(browser->font, noItemsStr)) / 2,
+                    (TFT_HEIGHT - browser->font->height) / 2);
+        }
+        else
+        {
+            for (uint8_t row = 0; row < rows; ++row)
             {
-                break;
+                if (row > lastVisibleRow)
+                {
+                    break;
+                }
+
+                for (uint8_t col = 0; col < browser->cols && NULL != node; ++col, node = node->next)
+                {
+                    // Skip through the items until we are on a visible row
+                    if (row < browser->firstRow)
+                    {
+                        continue;
+                    }
+
+                    imageBrowserItem_t* item = (imageBrowserItem_t*)node->val;
+                    bool selected            = (node == browser->currentItem);
+
+                    // TODO divide by 2 after ... `+ thumbMargin)`
+                    // x = marginLeft + (lSpacing * (col + 1)) + (width) *
+                    uint16_t x = marginLeft + col * (thumbWidth + thumbMargin) + extraW * col / browser->cols;
+                    uint16_t y = marginTop + (row - browser->firstRow) * (thumbHeight + thumbMargin)
+                                + extraH * (row - browser->firstRow) / rows;
+                    //+ row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
+                    //    / visibleRows;
+
+                    // Background
+                    fillDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, c333);
+
+                    if (!item->isNewButton)
+                    {
+                        // Make a checkerboard for any transparency
+                        shadeDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, 2, c111);
+                    }
+
+                    // Draw thumb if set
+                    if (item->thumb.px)
+                    {
+                        drawWsgSimple(&item->thumb, x + 2, y + 2);
+                    }
+
+                    // Draw multiple levels of border - 4 for a selected item, 2 otherwise
+                    for (int i = 0; i < (selected ? 4 : 2); i++)
+                    {
+                        // Draw a white border first, then either black or blue depending on if it's selected
+                        paletteColor_t color = (i == 0) ? c555 : (selected ? c335 : c000);
+                        drawRect(x + 1 - i, y + 1 - i, x + 2 + THUMB_W + 1 + i, y + 2 + THUMB_H + 1 + i, color);
+                    }
+
+                    // Draw the label of the selected item
+                    if (selected)
+                    {
+                        const char* text = item->isNewButton ? saveAsNewStr : item->nvsKey;
+                        drawText(browser->font, c000, text, (TFT_WIDTH - textWidth(browser->font, text)) / 2,
+                                TFT_HEIGHT - marginBottom + textMargin);
+                    }
+                }
+            }
+        }
+    }
+
+    if (drawLargeImage && browser->currentItem)
+    {
+        imageBrowserItem_t* curItem = browser->currentItem->val;
+
+        // Check if displayed image is different than the selected one
+        if (strncmp(browser->mainImageKey, curItem->nvsKey, sizeof(curItem->nvsKey)))
+        {
+            // If there's still an image loaded, unload it
+            if (browser->mainImage.px)
+            {
+                freeWsg(&browser->mainImage);
+                browser->mainImage.px = NULL;
             }
 
-            for (uint8_t col = 0; col < browser->cols && NULL != node; ++col, node = node->next)
+            // Attempt to load the new image
+            if (loadWsgNvs(browser->namespace, curItem->nvsKey, &browser->mainImage, true))
             {
-                // Skip through the items until we are on a visible row
-                if (row < browser->firstRow)
-                {
-                    continue;
-                }
+                // Save the new image's key so we can check it later
+                strncpy(browser->mainImageKey, curItem->nvsKey, 16);
+            }
+            else
+            {
+                // Error, just load the error image
+                PAINT_LOGE("Unable to load image %s", curItem->nvsKey);
+                loadWsg("error.wsg", &browser->mainImage, false);
+            }
+        }
 
-                imageBrowserItem_t* item = (imageBrowserItem_t*)node->val;
-                bool selected            = (node == browser->currentItem);
+        // If there's actually an image after all that, get the biggest
+        if (browser->mainImage.px)
+        {
+            uint8_t scale = paintGetMaxScale(browser->mainImage.w, browser->mainImage.h, marginLeft + marginRight, imageTop + imageBottom);
 
-                // TODO divide by 2 after ... `+ thumbMargin)`
-                // x = marginLeft + (lSpacing * (col + 1)) + (width) *
-                uint16_t x = marginLeft + col * (thumbWidth + thumbMargin) + extraW * col / browser->cols;
-                uint16_t y = marginTop + (row - browser->firstRow) * (thumbHeight + thumbMargin)
-                             + extraH * (row - browser->firstRow) / rows;
-                //+ row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
-                //    / visibleRows;
+            uint16_t imgX, imgY;
+            if ((browser->mainImage.w * scale > TFT_WIDTH) || (browser->mainImage.h * scale > marginTop))
+            {
+                // Image too big, draw at half size
+                imgX = marginLeft + (TFT_WIDTH - marginLeft - marginRight - (browser->mainImage.w / 2)) / 2;
+                imgY = imageTop + (TFT_HEIGHT - imageTop - imageBottom - (browser->mainImage.h / 2)) / 2;
 
-                // Background
-                fillDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, c333);
+                drawWsgSimpleHalf(&browser->mainImage, imgX, imgY);
+            }
+            else
+            {
+                // Image fits, scale
+                imgX = marginLeft + (TFT_WIDTH - marginLeft - marginRight - scale * browser->mainImage.w) / 2;
+                imgY = imageTop + (TFT_HEIGHT - imageTop - imageBottom - scale * browser->mainImage.h) / 2;
 
-                if (!item->isNewButton)
-                {
-                    // Make a checkerboard for any transparency
-                    shadeDisplayArea(x + 2, y + 2, x + 2 + THUMB_W, y + 2 + THUMB_H, 2, c111);
-                }
-
-                // Draw thumb if set
-                if (item->thumb.px)
-                {
-                    drawWsgSimple(&item->thumb, x + 2, y + 2);
-                }
-
-                // Draw multiple levels of border - 4 for a selected item, 2 otherwise
-                for (int i = 0; i < (selected ? 4 : 2); i++)
-                {
-                    // Draw a white border first, then either black or blue depending on if it's selected
-                    paletteColor_t color = (i == 0) ? c555 : (selected ? c335 : c000);
-                    drawRect(x + 1 - i, y + 1 - i, x + 2 + THUMB_W + 1 + i, y + 2 + THUMB_H + 1 + i, color);
-                }
-
-                // Draw the label of the selected item
-                if (selected)
-                {
-                    const char* text = item->isNewButton ? saveAsNewStr : item->nvsKey;
-                    drawText(browser->font, c000, text, (TFT_WIDTH - textWidth(browser->font, text)) / 2,
-                             TFT_HEIGHT - marginBottom + textMargin);
-                }
+                drawWsgSimpleScaled(&browser->mainImage, imgX, imgY, scale, scale);
             }
         }
     }
@@ -360,6 +460,10 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
                     {
                         browser->currentItem = browser->currentItem->prev;
                     }
+                    else if (browser->wraparound)
+                    {
+                        browser->currentItem = browser->items.last;
+                    }
                 }
                 break;
             }
@@ -376,6 +480,10 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
                     {
                         browser->currentItem = browser->currentItem->next;
                     }
+                    else if (browser->wraparound)
+                    {
+                        browser->currentItem = browser->items.first;
+                    }
                 }
                 break;
             }
@@ -390,6 +498,10 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
                 {
                     browser->currentItem = browser->currentItem->prev;
                 }
+                else if (browser->wraparound)
+                {
+                    browser->currentItem = browser->items.last;
+                }
                 break;
             }
 
@@ -402,6 +514,10 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
                 else if (NULL != browser->currentItem->next)
                 {
                     browser->currentItem = browser->currentItem->next;
+                }
+                else if (browser->wraparound)
+                {
+                    browser->currentItem = browser->items.first;
                 }
                 break;
             }
@@ -464,23 +580,34 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
 
         // The last visible row is the first row, plus the number of rows (== spaceForRows / spacePerRow)
         uint8_t visibleRows = (TFT_HEIGHT - marginTop - marginBottom - thumbMargin) / (thumbHeight + thumbMargin);
-
-        // Loop over the nodes to find the current one's index
-        uint32_t curIndex = 0;
-        for (node_t* node = browser->items.first; node != NULL && node != browser->currentItem;
-             node         = node->next, curIndex++)
-            ;
-
-        // If we're past the final row, advance the first row until it's visible
-        while (curIndex / browser->cols >= (browser->firstRow + visibleRows))
+        if (browser->viewStyle == BROWSER_GALLERY)
         {
-            browser->firstRow++;
+            visibleRows = 1;
+        }
+        else if (browser->viewStyle == BROWSER_FULLSCREEN)
+        {
+            visibleRows = 0;
         }
 
-        // If we're before the first row, decrease the first row until it's visible
-        while (browser->firstRow > 0 && curIndex / browser->cols < browser->firstRow)
+        if (visibleRows > 0)
         {
-            browser->firstRow--;
+            // Loop over the nodes to find the current one's index
+            uint32_t curIndex = 0;
+            for (node_t* node = browser->items.first; node != NULL && node != browser->currentItem;
+                node         = node->next, curIndex++)
+                ;
+
+            // If we're past the final row, advance the first row until it's visible
+            while (curIndex / browser->cols >= (browser->firstRow + visibleRows))
+            {
+                browser->firstRow++;
+            }
+
+            // If we're before the first row, decrease the first row until it's visible
+            while (browser->firstRow > 0 && curIndex / browser->cols < browser->firstRow)
+            {
+                browser->firstRow--;
+            }
         }
     }
 }
