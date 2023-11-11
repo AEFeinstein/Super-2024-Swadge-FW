@@ -34,8 +34,8 @@
 //==============================================================================
 // Enums
 //==============================================================================
-static const char breakoutHintTextLevel1[] = "Slide left/right on the touchpad to aim.\nPress UP button to launch.\nPress DOWN button to drop bombs!";
-static const char breakoutHintTextLevel2[] = "Slide up/down on the touchpad to aim.\nPress UP button to launch.\nPress DOWN button to drop bombs!";
+static const char breakoutHintTextLevel1[] = "Slide left/right on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
+static const char breakoutHintTextLevel2[] = "Slide up/down on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
 static const char breakoutHintTextLevel5[] = "Slide left/right to control both paddles!";
 static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to control all paddles!";
 //static const char breakoutHintTextLevelB[] = "Press DOWN button to time bombs.\nPress RIGHT button to drop a remote bomb";
