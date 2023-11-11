@@ -36,9 +36,9 @@
 //==============================================================================
 static const char breakoutHintTextLevel1[] = "Slide left/right on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
 static const char breakoutHintTextLevel2[] = "Slide up/down on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
+//static const char breakoutHintTextLevel5[] = "Press DOWN BUTTON to drop time bombs.\nTime it right to destroy many blocks at once!";
 static const char breakoutHintTextLevel5[] = "Slide left/right to control both paddles!";
 static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to control all paddles!";
-//static const char breakoutHintTextLevelB[] = "Press DOWN button to time bombs.\nPress RIGHT button to drop a remote bomb";
 
 //==============================================================================
 // Structs
@@ -993,6 +993,9 @@ static void breakoutChangeStateTitleScreen(breakout_t* self)
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+        
+        setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
+        bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
     }
 
     self->gameData.gameState = ST_TITLE_SCREEN;
@@ -1171,7 +1174,7 @@ void breakoutUpdateShowHighScores(breakout_t* self, int64_t elapsedUs)
     {
         self->menuState     = 0;
         self->menuSelection = 0;
-        bzrStop(true);
+        //bzrStop(true);
         breakoutChangeStateTitleScreen(self);
     }
 

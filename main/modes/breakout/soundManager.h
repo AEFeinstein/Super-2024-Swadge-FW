@@ -14,7 +14,7 @@
 //==============================================================================
 
 static const char* const LEVEL_BGMS[] = {
-    "brkBgmSkill.sng", "brkBgmPixel.sng", "brkBgmCrazy.sng", "brkBgmCrazy.sng", "brkHighScore.sng"
+    "brkBgmSkill.sng", "brkBgmPixel.sng", "brkBgmCrazy.sng", "brkBgmCrazy.sng", "brkHighScore.sng","brkBgmTitle.sng"
 };
 
 typedef enum {
@@ -23,7 +23,8 @@ typedef enum {
     BRK_BGM_PIXEL,
     BRK_BGM_CRAZY,
     BRK_BGM_4,
-    BRK_BGM_NAME_ENTRY
+    BRK_BGM_NAME_ENTRY,
+    BRK_BGM_TITLE
 } breakoutBgmIndex_t;
 
 //==============================================================================
