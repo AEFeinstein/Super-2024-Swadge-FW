@@ -71,45 +71,45 @@ void drawCredits(credits_t* credits, uint32_t elapsedUs)
 
         // This static var tracks the vertical scrolling offset
         credits->yOffset -= (credits->scrollMod > 0) ? 1 : -1;
+    }
 
-        // Clear first
-        clearPxTft();
+    // Clear first
+    clearPxTft();
 
-        // Draw names until the cursor is off the screen
-        int16_t yPos = 0;
-        int16_t idx  = 0;
-        while ((yPos + credits->yOffset) < TFT_HEIGHT)
+    // Draw names until the cursor is off the screen
+    int16_t yPos = 0;
+    int16_t idx  = 0;
+    while ((yPos + credits->yOffset) < TFT_HEIGHT)
+    {
+        // Only draw names with negative offsets if they're a little on screen
+        if ((yPos + credits->yOffset) >= -credits->font->height)
         {
-            // Only draw names with negative offsets if they're a little on screen
-            if ((yPos + credits->yOffset) >= -credits->font->height)
+            // If the names have scrolled back to the start, reset the scroll vars
+            if (0 == (yPos + credits->yOffset) && 0 == idx)
             {
-                // If the names have scrolled back to the start, reset the scroll vars
-                if (0 == (yPos + credits->yOffset) && 0 == idx)
-                {
-                    credits->yOffset = 0;
-                    yPos             = 0;
-                }
-
-                // Center and draw the text
-                int16_t tWidth = textWidth(credits->font, credits->names[idx]);
-                drawText(credits->font, credits->colors[idx], credits->names[idx], (TFT_WIDTH - tWidth) / 2,
-                         (yPos + credits->yOffset));
+                credits->yOffset = 0;
+                yPos             = 0;
             }
 
-            // Add more space if the credits end in a newline
-            size_t nameLen = strlen(credits->names[idx]);
-            if ((nameLen > 0) && ('\n' == credits->names[idx][nameLen - 1]))
-            {
-                yPos += credits->font->height + 8;
-            }
-            else
-            {
-                yPos += credits->font->height + 1;
-            }
-
-            // Always update the idx and cursor position, even if the text wasn't drawn
-            idx = (idx + 1) % credits->numElements;
+            // Center and draw the text
+            int16_t tWidth = textWidth(credits->font, credits->names[idx]);
+            drawText(credits->font, credits->colors[idx], credits->names[idx], (TFT_WIDTH - tWidth) / 2,
+                     (yPos + credits->yOffset));
         }
+
+        // Add more space if the credits end in a newline
+        size_t nameLen = strlen(credits->names[idx]);
+        if ((nameLen > 0) && ('\n' == credits->names[idx][nameLen - 1]))
+        {
+            yPos += credits->font->height + 8;
+        }
+        else
+        {
+            yPos += credits->font->height + 1;
+        }
+
+        // Always update the idx and cursor position, even if the text wasn't drawn
+        idx = (idx + 1) % credits->numElements;
     }
 }
 
