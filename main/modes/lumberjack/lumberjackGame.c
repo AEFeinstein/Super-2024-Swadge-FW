@@ -109,7 +109,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
     lumv->itemBlockAnimationTime = 0;
     lumv->itemBlockItemFrame = 0;
-    lumv->itemBlockIndex = -1;
+    lumv->itemBlockIndex     = -1;
     lumv->itemBlockItemAnimation = 0;
 
     //ESP_LOGI(LUM_TAG, "Load Title");
@@ -137,7 +137,11 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     }
 
     loadWsg("lumbers_game_over.wsg", &lumv->gameoverSprite, true);
-    if (lumv->lumberjackMain->networked) loadWsg("lumbers_game_over_win.wsg", &lumv->gamewinSprite, true);
+    if (lumv->lumberjackMain->networked) 
+    {
+        loadWsg("lumbers_game_over_win.wsg", &lumv->gamewinSprite, true);
+        loadWsg("lumbers_conn_lost.wsg", &lumv->connectLostSprite, true);
+    }
 
     //ESP_LOGI(LUM_TAG, "Loading floor Tiles");
     loadWsg("lumbers_bottom_floor1.wsg", &lumv->floorTiles[0], true);
@@ -339,7 +343,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_normal_ax_block6.wsg", &lumv->unusedBlockSprite[5], true);
     loadWsg("lumbers_normal_ax_block7.wsg", &lumv->unusedBlockSprite[6], true);
 
-    loadWsg("lumbers_bonus_x.wsg", &lumv->bonusSprites[0], true);
+    loadWsg("lumbers_bonus_0.wsg", &lumv->bonusSprites[0], true);
     loadWsg("lumbers_bonus_1.wsg", &lumv->bonusSprites[1], true);
     loadWsg("lumbers_bonus_2.wsg", &lumv->bonusSprites[2], true);
     loadWsg("lumbers_bonus_3.wsg", &lumv->bonusSprites[3], true);
@@ -349,6 +353,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_bonus_7.wsg", &lumv->bonusSprites[7], true);
     loadWsg("lumbers_bonus_8.wsg", &lumv->bonusSprites[8], true);
     loadWsg("lumbers_bonus_9.wsg", &lumv->bonusSprites[9], true);
+    loadWsg("lumbers_bonus_x.wsg", &lumv->bonusSprites[10], true);
     
 
     loadWsg("lumbers_item_ui.wsg", &lumv->ui[0], true);
@@ -547,6 +552,8 @@ void lumberjackSetupLevel(int characterIndex)
     lumv->comboTime            = 0;
     lumv->comboAmount          = 0;
     lumv->hasWon               = false;
+    lumv->wakeupSignal         = 0;
+    lumv->lastResponseSignal   = 1000;
 
     ESP_LOGI(LUM_TAG, "LOADING LEVEL");
     lumberjackLoadLevel();
@@ -808,6 +815,28 @@ void lumberjackGameLoop(int64_t elapsedUs)
 
     baseMode(elapsedUs);
 
+    if (lumv->lumberjackMain->networked && lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
+    {
+        //Check for connection lost
+        lumv->wakeupSignal -= elapsedUs/10000;
+        lumv->lastResponseSignal -= elapsedUs/10000;
+
+        if (lumv->wakeupSignal < 0)
+        {
+            lumv->wakeupSignal = 100;
+            lumberjackSendScore(lumv->score); //Send score just to ping
+
+        }
+
+        if (lumv->lastResponseSignal <= 0)
+        {
+            ESP_LOGI(LUM_TAG, "Connection lost!");
+            lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
+            lumv->transitionTimer = 500;
+            lumv->localPlayer->state = LUMBERJACK_DEAD;
+        }
+    }
+
     if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
     {
         lumv->transitionTimer -= elapsedUs/10000;
@@ -1015,8 +1044,11 @@ void baseMode(int64_t elapsedUs)
                                 enemy->vy = -20;
                                 lumberjackUpdateEnemy(enemy, enemy->type + 1);
                             }
+                        }
 
-
+                        if (lumv->lumberjackMain->networked)
+                        {
+                            lumberjackSendBump();
                         }
                     }
 
@@ -1088,7 +1120,12 @@ void baseMode(int64_t elapsedUs)
 
     // Check spawn
     bool spawnedEnemy = false;
-    if (false == lumv->hasWon) spawnedEnemy = lumberjackSpawnCheck(elapsedUs);
+    //if (false == lumv->hasWon) spawnedEnemy = lumberjackSpawnCheck(elapsedUs);
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING && !lumv->hasWon)
+    {
+        spawnedEnemy = lumberjackSpawnCheck(elapsedUs);
+    }
+
 
     if (spawnedEnemy)
     {
@@ -1267,8 +1304,11 @@ void baseMode(int64_t elapsedUs)
                                         if (lumv->enemy[i] == NULL || lumv->enemy[i]->state != LUMBERJACK_DEAD || lumv->enemy[i]->queueable == false) continue;
 
                                         lumv->enemy[i]->state = LUMBERJACK_RUN;
-                                        lumberjackResetEnemy(lumv->enemy[i]);
-                                        lumberjackUpdateEnemy(lumv->enemy[i], lumv->enemy[i]->type+1);
+                                        if (lumv->enemy[i]->active == false && lumv->enemy[i]->state == LUMBERJACK_OFFSCREEN) 
+                                        {
+                                            lumberjackResetEnemy(lumv->enemy[i]);
+                                            lumberjackUpdateEnemy(lumv->enemy[i], lumv->enemy[i]->type+1);
+                                        }
                                     }
 
                                     lumv->enemyKillCount = 0;
@@ -1599,8 +1639,14 @@ void DrawGame(void)
 
     if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
     {
-        if (lumv->hasWon)
+        if (lumv->lumberjackMain->networked && lumv->lastResponseSignal <= 0)
         {
+            
+            drawWsgSimple(&lumv->connectLostSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
+
+        } else if (lumv->hasWon)
+        {
+            ESP_LOGI(LUM_TAG, "%d lrs", lumv->lastResponseSignal);
             drawWsgSimple(&lumv->gamewinSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
         }
         else
@@ -1642,10 +1688,22 @@ void DrawGame(void)
 
         if (offsetTime > 1) offsetTime = 1;
 
-        drawWsgSimple(&lumv->bonusSprites[0], currentBonus->x, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
+        drawWsgSimple(&lumv->bonusSprites[10], currentBonus->x, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
         if (currentBonus->bonusAmount < 10)
         {
             drawWsgSimple(&lumv->bonusSprites[currentBonus->bonusAmount], currentBonus->x+8, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
+        }
+        else
+        {
+            int tenDigit = (int)(currentBonus->bonusAmount / 10);
+            if (tenDigit > 9) tenDigit = 9;
+            int oneDigit = currentBonus->bonusAmount  % 10;
+
+            drawWsgSimple(&lumv->bonusSprites[tenDigit], currentBonus->x+8, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
+            drawWsgSimple(&lumv->bonusSprites[oneDigit], currentBonus->x+16, currentBonus->y - lumv->yOffset - (20 - (20 * offsetTime)));
+
+
+
         }
 
         //currentBonus->time += ;
@@ -1821,6 +1879,12 @@ bool lumberjackSpawnCheck(int64_t elapseUs)
     return spawnReady;
 }
 
+void lumberjackQualityCheck()
+{
+    lumv->wakeupSignal = 100;
+    lumv->lastResponseSignal = 1000;
+}
+
 void lumberjackOnReceiveAttack(const uint8_t* attack, int len)
 {
     ESP_LOGI(LUM_TAG, "Being attacked %ld", sizeof(attack));
@@ -1873,6 +1937,37 @@ void lumberjackOnReceiveScore(const uint8_t* score)
     int locX      = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
     ESP_LOGI(LUM_TAG, "SCORE: %d", locX);
     lumv->highscore = locX;
+}
+
+void lumberjackOnReceiveBump(void)
+{
+    ESP_LOGI(LUM_TAG, "BUMP!");
+    if (lumv->localPlayer->onGround)
+    {
+        lumv->localPlayer->vy = -20; //HERE
+
+        if (lumv->localPlayer->state == LUMBERJACK_DUCK)
+        {
+            lumv->localPlayer->vy = -40;
+            lumv->localPlayer->state = LUMBERJACK_BUMPED;
+            lumv->invincibleTimer = 0;
+
+            if (lumv->ghost != NULL && lumv->ghost->active)
+            {
+                if (lumv->localPlayer->x < lumv->ghost->x + LUMBERJACK_GHOST_BOX && lumv->localPlayer->x + lumv->localPlayer->width > lumv->ghost->x
+                && lumv->localPlayer->y < lumv->ghost->y + LUMBERJACK_GHOST_BOX && lumv->localPlayer->y + lumv->localPlayer->height > lumv->ghost->y
+                )
+                {
+                    lumberjackOnLocalPlayerDeath();
+                }
+
+            }
+        }
+
+        
+    }
+
+    lumv->itemBlockIndex = -1;
 }
 
 void lumberjackOnReceiveDeath(bool gameover)
@@ -2606,7 +2701,11 @@ void lumberjackExitGameMode(void)
     freeWsg(&lumv->gameoverSprite);
 
     if (lumv->lumberjackMain->networked) 
-        freeWsg(&lumv->gamewinSprite);
+    {
+     freeWsg(&lumv->gamewinSprite);
+     freeWsg(&lumv->connectLostSprite);
+
+    }   
     
 
     // Free the bonus

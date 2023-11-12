@@ -75,7 +75,8 @@ typedef enum
     READY_MSG,
     ATTACK_MSG,
     DEATH_MSG,
-    SCORE_MSG
+    SCORE_MSG,
+    BUMP_MSG
 } lumberjackMessageType_t;
 
 lumberjack_t* lumberjack = NULL;
@@ -262,18 +263,6 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
         memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
 
-        /*
-        if (GOING_FIRST == p2pGetPlayOrder(p2p))
-        {
-            const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
-            p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);
-        }
-        else
-        {
-            const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
-            p2pSendMsg(&lumberjack->p2p, testMsg, ARRAY_SIZE(testMsg), lumberjackMsgTxCbFn);                    
-        }*/
-
         p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
         lumberjackGameReady();
     }
@@ -291,6 +280,8 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
     // Do anything
     ESP_LOGI(LUM_TAG, "Ya boi got something! %d", (uint8_t)payload[0]);
+
+    lumberjackQualityCheck();
 
     if (len > 0)
     {
@@ -318,6 +309,11 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         if (payload[0] == SCORE_MSG)
         {
             lumberjackOnReceiveScore(payload);
+        }
+
+        if (payload[0] == BUMP_MSG)
+        {
+            lumberjackOnReceiveBump();
         }
 
         if (payload[0] == DEATH_MSG)
@@ -359,6 +355,15 @@ void lumberjackSendAttack(uint8_t* number)
         {
             ESP_LOGI(LUM_TAG, "SENDING %d) %d", i, payload[i]);
         }
+        p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
+    }
+}
+
+void lumberjackSendBump(void)
+{
+    if (lumberjack->networked)
+    {
+        uint8_t payload[1] = {BUMP_MSG};
         p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
     }
 }

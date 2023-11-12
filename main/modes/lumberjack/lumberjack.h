@@ -142,6 +142,9 @@ typedef struct
     uint8_t attackQueue[8];
     uint8_t receiveQueue[8];
 
+    int wakeupSignal;
+    int lastResponseSignal;
+
     wsg_t floorTiles[20];
     wsg_t animationTiles[20];
     wsg_t minicharacters[4];
@@ -156,6 +159,7 @@ typedef struct
     wsg_t subtitle_white;
     wsg_t gameoverSprite;
     wsg_t gamewinSprite;
+    wsg_t connectLostSprite;
 
     lumberjackTile_t* tile;
 
@@ -166,7 +170,7 @@ typedef struct
 
     wsg_t enemySprites[37];
     wsg_t playerSprites[18];
-    wsg_t bonusSprites[10];
+    wsg_t bonusSprites[11];
 
     wsg_t ui[6];
 
