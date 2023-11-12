@@ -9,6 +9,7 @@
 #include "fp_math.h"
 #include "starfield.h"
 #include "esp_random.h"
+#include "credits_utils.h"
 
 //==============================================================================
 // Defines
@@ -321,6 +322,7 @@ typedef enum
     RAY_PAUSE,        ///< The pause menu is being shown
     RAY_WARP_SCREEN,  ///< The warp screen animation is being shown
     RAY_DEATH_SCREEN, ///< The player has died
+    RAY_CREDITS,      ///< Showing the credits for the game
 } rayScreen_t;
 
 /**
@@ -667,6 +669,8 @@ typedef struct
     int32_t ledTimer;     ///< A timer to change LED hue
     int32_t ledHue;       ///< The current LED hue
     int32_t targetLedHue; ///< The target LED hue
+
+    credits_t credits; ///< Credits shown when the game is won
 } ray_t;
 
 //==============================================================================
@@ -687,5 +691,6 @@ extern const char MAGTROID_UNLOCK_KEY[];
 
 void rayFreeCurrentState(ray_t* ray);
 void rayStartGame(void);
+void raySwitchToScreen(rayScreen_t newScreen);
 
 #endif

@@ -16,7 +16,7 @@
 void rayShowDeathScreen(ray_t* ray)
 {
     ray->btnLockoutUs = 2000000;
-    ray->screen       = RAY_DEATH_SCREEN;
+    raySwitchToScreen(RAY_DEATH_SCREEN);
     // Stop BGM when dead
     bzrStop(true);
     bzrPlaySfx(&ray->sfx_game_over, BZR_RIGHT);
@@ -42,7 +42,7 @@ void rayDeathScreenRender(ray_t* ray, uint32_t elapsedUs)
                 if ((PB_A == evt.button) || (PB_B == evt.button))
                 {
                     // Return to the menu
-                    ray->screen = RAY_MENU;
+                    raySwitchToScreen(RAY_MENU);
                 }
             }
         }

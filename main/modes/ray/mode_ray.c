@@ -15,6 +15,7 @@
 #include "ray_script.h"
 #include "ray_warp_screen.h"
 #include "ray_death_screen.h"
+#include "ray_credits.h"
 
 //==============================================================================
 // Function Prototypes
@@ -25,6 +26,7 @@ static void rayExitMode(void);
 static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void rayMenuCb(const char* label, bool selected, uint32_t settingVal);
+static void rayInitMenu(void);
 
 //==============================================================================
 // Const Variables
@@ -34,6 +36,7 @@ const char rayName[]       = "Magtroid Pocket";
 const char rayPlayStr[]    = "Play";
 const char rayResetStr[]   = "Reset Data";
 const char rayConfirmStr[] = "Really Reset Data";
+const char rayCreditsStr[] = "Credits";
 const char rayExitStr[]    = "Exit";
 
 /// @brief A list of the map names
@@ -98,20 +101,12 @@ static void rayEnterMode(void)
     // Allocate memory
     ray = calloc(1, sizeof(ray_t));
 
-    // Initialize the menu
-    ray->menu = initMenu(rayName, rayMenuCb);
-    addSingleItemToMenu(ray->menu, rayPlayStr);
-    ray->menu = startSubMenu(ray->menu, rayResetStr);
-    addSingleItemToMenu(ray->menu, rayConfirmStr);
-    ray->menu = endSubMenu(ray->menu);
-    addSingleItemToMenu(ray->menu, rayExitStr);
-
     // Load fonts
     loadFont("logbook.font", &ray->logbook, true);
     loadFont("ibm_vga8.font", &ray->ibm, true);
 
-    // Initialize a renderer
-    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
+    // Initialize the menu
+    rayInitMenu();
 
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
@@ -150,7 +145,7 @@ static void rayEnterMode(void)
     loadSong("r_game_over.sng", &ray->sfx_game_over, false);
 
     // Set the menu as the screen
-    ray->screen = RAY_MENU;
+    raySwitchToScreen(RAY_MENU);
 
     // Start a blink for dialog and pause and such
     ray->blinkTimer = BLINK_US;
@@ -424,7 +419,7 @@ static void rayMainLoop(int64_t elapsedUs)
             if (ray->warpTimerUs > 0)
             {
                 // Switch to showing the warp screen
-                ray->screen = RAY_WARP_SCREEN;
+                raySwitchToScreen(RAY_WARP_SCREEN);
                 // Do the warp in the background
                 warpToDestination(ray);
             }
@@ -458,6 +453,11 @@ static void rayMainLoop(int64_t elapsedUs)
             rayDeathScreenRender(ray, elapsedUs);
             break;
         }
+        case RAY_CREDITS:
+        {
+            rayCreditsRender(ray, elapsedUs);
+            break;
+        }
     }
 }
 
@@ -480,6 +480,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         case RAY_DIALOG:
         case RAY_DEATH_SCREEN:
         case RAY_PAUSE:
+        case RAY_CREDITS:
         {
             // Do nothing
             break;
@@ -524,6 +525,10 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Return up one menu
             ray->wasReset = true;
         }
+        else if (label == rayCreditsStr)
+        {
+            rayShowCredits(ray);
+        }
         else if (label == rayExitStr)
         {
             switchToSwadgeMode(&mainMenuMode);
@@ -561,5 +566,73 @@ void rayStartGame(void)
     ray->targetLedHue = 170;
 
     // Set the initial screen
-    ray->screen = RAY_GAME;
+    raySwitchToScreen(RAY_GAME);
+}
+
+/**
+ * @brief Switch to a new ray screen, initialize as necessary
+ *
+ * @param newScreen The new screen to switch to
+ */
+void raySwitchToScreen(rayScreen_t newScreen)
+{
+    // Set the new screen
+    ray->screen = newScreen;
+
+    // Initialize depending on the screen
+    switch (newScreen)
+    {
+        case RAY_MENU:
+        {
+            // Reinit menu
+            rayInitMenu();
+            break;
+        }
+        case RAY_GAME:
+        case RAY_DIALOG:
+        case RAY_PAUSE:
+        case RAY_WARP_SCREEN:
+        case RAY_DEATH_SCREEN:
+        case RAY_CREDITS:
+        default:
+        {
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Initialize the main menu
+ */
+static void rayInitMenu(void)
+{
+    // Tear down old menu, if it exists
+    if (NULL != ray->renderer)
+    {
+        deinitMenuLogbookRenderer(ray->renderer);
+    }
+    if (NULL != ray->menu)
+    {
+        deinitMenu(ray->menu);
+    }
+
+    // Initialize new one
+    ray->menu = initMenu(rayName, rayMenuCb);
+    addSingleItemToMenu(ray->menu, rayPlayStr);
+    ray->menu = startSubMenu(ray->menu, rayResetStr);
+    addSingleItemToMenu(ray->menu, rayConfirmStr);
+    ray->menu = endSubMenu(ray->menu);
+
+    // Only show credits if the game was beaten
+    int32_t magtroidUnlocked = false;
+    readNvs32(MAGTROID_UNLOCK_KEY, &magtroidUnlocked);
+    if (magtroidUnlocked)
+    {
+        addSingleItemToMenu(ray->menu, rayCreditsStr);
+    }
+
+    addSingleItemToMenu(ray->menu, rayExitStr);
+
+    // Initialize a renderer
+    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
 }

@@ -5,6 +5,7 @@
 #include "ray_map.h"
 #include "ray_warp_screen.h"
 #include "hdw-nvs.h"
+#include "ray_credits.h"
 
 static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
@@ -827,10 +828,8 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         {
             // Unlock zip on the menu
             writeNvs32(MAGTROID_UNLOCK_KEY, 1);
-            // Return to menu
-            // TODO jump to credits?
-            ray->screen = RAY_MENU;
-            bzrStop(true);
+            // Jump to credits!
+            rayShowCredits(ray);
             break;
         }
     }

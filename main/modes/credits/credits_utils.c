@@ -39,6 +39,7 @@ void initCredits(credits_t* credits, font_t* font, const char* const* names, con
 
     // Load and play song
     loadSong("credits.sng", &credits->song, false);
+    credits->song.shouldLoop = true;
     bzrPlayBgm(&credits->song, BZR_STEREO);
 }
 
