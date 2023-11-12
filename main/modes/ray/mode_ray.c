@@ -541,6 +541,9 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
  */
 void rayStartGame(void)
 {
+    // Stop the buzzer to not interfere with loading data
+    bzrStop(true);
+
     // Clear all lists
     rayFreeCurrentState(ray);
 
