@@ -188,7 +188,7 @@ menu_t* endSubMenu(menu_t* menu)
  * @param label The label for this item. The underlying memory isn't copied, so
  *              this string must persist for the lifetime of the menu
  */
-void addSingleItemToMenu(menu_t* menu, const char* label)
+menuItem_t * addSingleItemToMenu(menu_t* menu, const char* label)
 {
     menuItem_t* newItem = calloc(1, sizeof(menuItem_t));
     newItem->label      = label;
@@ -203,6 +203,7 @@ void addSingleItemToMenu(menu_t* menu, const char* label)
     {
         menu->currentItem = menu->items->first;
     }
+	return newItem;
 }
 
 /**

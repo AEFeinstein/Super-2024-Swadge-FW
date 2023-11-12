@@ -191,7 +191,7 @@ menu_t* initMenu(const char* title, menuCb cbFunc) __attribute__((warn_unused_re
 void deinitMenu(menu_t* menu);
 menu_t* startSubMenu(menu_t* menu, const char* label) __attribute__((warn_unused_result));
 menu_t* endSubMenu(menu_t* menu) __attribute__((warn_unused_result));
-void addSingleItemToMenu(menu_t* menu, const char* label);
+menuItem_t * addSingleItemToMenu(menu_t* menu, const char* label);
 void removeSingleItemFromMenu(menu_t* menu, const char* label);
 void addMultiItemToMenu(menu_t* menu, const char* const* labels, uint8_t numLabels, uint8_t currentLabel);
 void removeMultiItemFromMenu(menu_t* menu, const char* const* labels);
