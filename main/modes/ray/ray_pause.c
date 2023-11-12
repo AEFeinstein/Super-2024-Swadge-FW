@@ -533,6 +533,20 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
         }
     }
 
+    // Draw the string
+    char collectionStr[32] = {0};
+    snprintf(collectionStr, sizeof(collectionStr) - 1, "Percentage Complete: %" PRId32 "%%", getItemCompletePct(ray));
+    int16_t tWidth = textWidth(&ray->ibm, collectionStr);
+    drawText(&ray->ibm, c555, collectionStr, (TFT_WIDTH - tWidth) / 2, TFT_HEIGHT - ray->ibm.height - 10);
+}
+
+/**
+ * @brief Get the percentage of items collected, 0 to 100
+ *
+ * @return The percentage of items collected
+ */
+int32_t getItemCompletePct(ray_t* ray)
+{
     // Count all the possible items in the game
     int32_t numTotalItems = 6 +             // energy tanks
                             ((2 * 6) + 1) + // Missile expansions;
@@ -582,10 +596,5 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
     numAcquiredItems += (ray->p.i.lavaSuit ? 1 : 0);
     numAcquiredItems += (ray->p.i.waterSuit ? 1 : 0);
 
-    // Draw the string
-    char collectionStr[32] = {0};
-    snprintf(collectionStr, sizeof(collectionStr) - 1, "Item collection %" PRId32 "%%",
-             (100 * numAcquiredItems) / numTotalItems);
-    int16_t tWidth = textWidth(&ray->ibm, collectionStr);
-    drawText(&ray->ibm, c555, collectionStr, (TFT_WIDTH - tWidth) / 2, TFT_HEIGHT - ray->ibm.height - 10);
+    return (numAcquiredItems * 100) / numTotalItems;
 }

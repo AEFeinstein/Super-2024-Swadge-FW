@@ -560,6 +560,8 @@ void rayStartGame(void)
         // Set the starting position from the map
         ray->p.posX = pStartX;
         ray->p.posY = pStartY;
+        // Save the starting position
+        raySavePlayer(ray);
     }
 
     // Mark the starting tile as visited
