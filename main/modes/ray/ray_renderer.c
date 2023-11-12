@@ -1382,6 +1382,9 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
  */
 void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy)
 {
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    bool ledsSet                = false;
+
     if (NULL != closestEnemy)
     {
         // Angles around a circle at 45 degree increments (one per LED)
@@ -1411,7 +1414,7 @@ void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy)
         q24_8 yDiff = SUB_FX(closestEnemy->c.posY, ray->p.posY);
 
         // Get a magnitude, for brightness
-        q24_8 dist = (xDiff * xDiff) + (yDiff * yDiff);
+        q24_8 dist = ADD_FX(MUL_FX(xDiff, xDiff), MUL_FX(yDiff, yDiff));
 
         // Rotate the enemy vector in relation to the player
         int32_t pSin     = getSin1024(pDegrees);
@@ -1422,17 +1425,40 @@ void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy)
         // Normalize the vector
         fastNormVec(&eRotAngleX, &eRotAngleY);
 
+#define MAX_RADAR_DIST 32768
+
         // Calculate each LED's brightness
-        led_t leds[CONFIG_NUM_LEDS] = {0};
+        if (dist < MAX_RADAR_DIST)
+        {
+            int32_t brightness = MAX_RADAR_DIST - dist;
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+            {
+                // The brightness is the dot product between the LED's vector and the vector to the enemy
+                // dotProd of two normalized vectors is between -1 and 1
+                q24_8 dotProd = ADD_FX(MUL_FX(normLedAngles[lIdx][0], eRotAngleX), //
+                                       MUL_FX(normLedAngles[lIdx][1], eRotAngleY));
+                // Shift dotProd to the range 0 to 1, which is actually 0 to 256
+                dotProd = ADD_FX(TO_FX(1), dotProd) / 2;
+
+                // Light the LED
+                int32_t ledVal = (dotProd * brightness) / MAX_RADAR_DIST;
+                leds[lIdx]     = LedEHSVtoHEXhelper(ray->ledHue, 0xFF, CLAMP(ledVal, 0, 0xFF), true);
+            }
+            // Note the LEDs are set
+            ledsSet = true;
+        }
+    }
+
+    // If the LEDs are not set (no enemy or out of range)
+    if (!ledsSet)
+    {
+        // Light all evenly
         for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
         {
-            // The brighness is the dot product between the LED's vector and the vector to the enemy
-            q24_8 dotProd = ADD_FX(TO_FX(1), ADD_FX(MUL_FX(normLedAngles[lIdx][0], eRotAngleX),
-                                                    MUL_FX(normLedAngles[lIdx][1], eRotAngleY)))
-                            / 2;
-            leds[lIdx].b = CLAMP(dotProd, 0, 0xFF);
+            leds[lIdx] = LedEHSVtoHEXhelper(ray->ledHue, 0xFF, 0x80, true);
         }
-        // Set the LEDs
-        setLeds(leds, CONFIG_NUM_LEDS);
     }
+
+    // Set the LEDs
+    setLeds(leds, CONFIG_NUM_LEDS);
 }

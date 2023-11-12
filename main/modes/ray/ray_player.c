@@ -835,6 +835,9 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
         bzrPlaySfx(&ray->sfx_p_damage, BZR_RIGHT);
     }
 
+    // Make LEDs red
+    ray->ledHue = 0;
+
     // Check for death
     if (0 >= ray->p.i.health)
     {

@@ -350,6 +350,9 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         // Play SFX
         bzrPlaySfx(&ray->sfx_e_dead, BZR_RIGHT);
 
+        // Make LEDs green
+        ray->ledHue = 85;
+
         // If the boss died
         if (OBJ_ENEMY_BOSS == enemy->c.type)
         {
@@ -379,6 +382,9 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             // Play SFX
             bzrPlaySfx(&ray->sfx_e_damage, BZR_RIGHT);
         }
+
+        // Make LEDs green
+        ray->ledHue = 85;
     }
 }
 

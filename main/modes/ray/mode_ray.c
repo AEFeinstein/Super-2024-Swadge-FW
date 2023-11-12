@@ -308,6 +308,62 @@ static void rayMainLoop(int64_t elapsedUs)
         ray->blinkTimer += BLINK_US;
     }
 
+    // 0 is red
+    // 85 is green
+    // 170 is blue
+    // If the LED is not at the target hue
+    if (ray->ledHue != ray->targetLedHue)
+    {
+        ray->ledTimer -= elapsedUs;
+        while (0 >= ray->ledTimer)
+        {
+            ray->ledTimer += 7812;
+
+            // Find the decision point to either increment or decrement to the target
+            int32_t decisionPoint = (ray->targetLedHue + 128) % 256;
+            bool shouldIncrement  = false;
+            if (decisionPoint < ray->targetLedHue)
+            {
+                if ((decisionPoint < ray->ledHue) && (ray->ledHue < ray->targetLedHue))
+                {
+                    shouldIncrement = true;
+                }
+                else
+                {
+                    shouldIncrement = false;
+                }
+            }
+            else
+            {
+                if ((ray->targetLedHue < ray->ledHue) && (ray->ledHue < decisionPoint))
+                {
+                    shouldIncrement = false;
+                }
+                else
+                {
+                    shouldIncrement = true;
+                }
+            }
+
+            // Adjust the hue with wraparound
+            if (shouldIncrement)
+            {
+                ray->ledHue = (ray->ledHue + 1) % 255;
+            }
+            else
+            {
+                if (0 == ray->ledHue)
+                {
+                    ray->ledHue = 255;
+                }
+                else
+                {
+                    ray->ledHue--;
+                }
+            }
+        }
+    }
+
     switch (ray->screen)
     {
         case RAY_MENU:
@@ -500,6 +556,9 @@ void rayStartGame(void)
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
+    // Set the default hue (blue)
+    ray->targetLedHue = 170;
 
     // Set the initial screen
     ray->screen = RAY_GAME;

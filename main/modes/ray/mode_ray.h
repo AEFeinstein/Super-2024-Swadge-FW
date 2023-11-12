@@ -663,6 +663,10 @@ typedef struct
     int32_t itemRotateTimer; ///< A timer to 'rotate' items by scaling the X direction
     int32_t itemRotateDeg;   ///< The number of degrees all items are 'rotated' by
     bool itemRotateMirror;   ///< If items should be drawn mirrored
+
+    int32_t ledTimer;     ///< A timer to change LED hue
+    int32_t ledHue;       ///< The current LED hue
+    int32_t targetLedHue; ///< The target LED hue
 } ray_t;
 
 //==============================================================================
