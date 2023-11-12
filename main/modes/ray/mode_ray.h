@@ -671,6 +671,8 @@ typedef struct
     int32_t targetLedHue; ///< The target LED hue
 
     credits_t credits; ///< Credits shown when the game is won
+
+    const char* deathText; ///< Text shown on the death screen
 } ray_t;
 
 //==============================================================================
