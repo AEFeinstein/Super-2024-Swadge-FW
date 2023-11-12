@@ -11,6 +11,7 @@ void lumberjackTileMap(void);
 void lumberjackDrawWaterLevel(void);
 void lumberjackUpdate(int64_t elapseUs);
 
+
 void lumberjackTitleLoop(int64_t elapsedUs);
 void lumberjackGameLoop(int64_t elapsedUs);
 
@@ -46,5 +47,7 @@ void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, boo
 
 
 void lumberjackUseBlock(void);
+void lumberjackSaveSave(void);
+
 
 #endif

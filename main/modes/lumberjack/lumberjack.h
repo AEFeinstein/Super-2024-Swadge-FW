@@ -33,6 +33,15 @@ typedef enum
 
 typedef struct
 {
+    int highScore;
+    int attackHighScore;
+    int panicHighScore;
+    bool swadgeGuyUnlocked;
+    bool choUnlocked;
+}lumberjackUnlock_t;
+
+typedef struct
+{
     menu_t* menu;
     menuLogbookRenderer_t* menuLogbookRenderer;
     font_t logbook;
@@ -46,6 +55,7 @@ typedef struct
     connectionEvt_t conStatus;
     lumberjackScreen_t screen;
     lumberjackGameType_t gameMode;
+    lumberjackUnlock_t save;
 
 } lumberjack_t;
 
@@ -69,6 +79,8 @@ typedef struct
     bool active;
 
 } lumberjackAxeBlock_t;
+
+
 
 typedef struct
 {
@@ -140,7 +152,6 @@ typedef struct
     int comboAmount;
 
     uint8_t attackQueue[8];
-    uint8_t receiveQueue[8];
 
     int wakeupSignal;
     int lastResponseSignal;

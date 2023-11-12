@@ -31,16 +31,16 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
 
 static void lumberjackMenuCb(const char*, bool selected, uint32_t settingVal);
 
+static void lumberjackLoadSave(void);
 static void lumberjackJoinGame(void);
 static bool lumberjackChoUnlocked(void);
-static bool lumberjackSpecialUnlocked(void);
+static bool lumberjackSwadgeGuyUnlocked(void);
 
 static const char lumberjackName[]   = "Lumber Jack";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
 static const char lumberjackBack[]   = "Back";
 
-// static const char lumberjackNone[]    = "None";
 static char lumberjackRedCharacter[]          = "Character: Red";
 static char lumberjackGreenCharacter[]        = "Character: Green";
 static char lumberjackSpecialCharacter[]      = "Character: Guy";
@@ -50,7 +50,10 @@ static const char lumberjackMenuSinglePlayer[]      = "Single Player";
 static const char lumberjackMenuMultiPlayerHost[]   = "Multi-Player";
 static const char lumberjackMenuMultiPlayerClient[] = "Multi-Player Join";
 
+static const char lumberjackPlatformerUnlock[]      = "pf_unlocks";
+static const char lumberjackChoUnlock[]             = "ray";
 const char* LUM_TAG = "LUM";
+const char  LUMBERJACK_SAVE[] = "lumberjackdata";
 
 swadgeMode_t lumberjackMode = {
     .modeName                 = lumberjackName,
@@ -86,6 +89,8 @@ static void lumberjackEnterMode(void)
     // Allocate and clear all memory for the menu mode.
     lumberjack = calloc(1, sizeof(lumberjack_t));
 
+    lumberjackLoadSave();
+
     loadFont("logbook.font", &lumberjack->logbook, false);
 
     lumberjack->menu                = initMenu(lumberjackName, lumberjackMenuCb);
@@ -109,12 +114,12 @@ static void lumberjackEnterMode(void)
 
     int characters = 2;
 
-    if (lumberjackChoUnlocked())
+    if (lumberjack->save.choUnlocked)
     {
         characters++;
     }
 
-    if (lumberjackSpecialUnlocked())
+    if (lumberjack->save.swadgeGuyUnlocked)
     {
         characters++;
     }
@@ -126,12 +131,12 @@ static void lumberjackEnterMode(void)
 
     int index = 2;
 
-    if (lumberjackChoUnlocked())
+    if (lumberjack->save.choUnlocked)
     {
         charactersArray[index++] = lumberjackChoCharacter;
     }
 
-    if (lumberjackSpecialUnlocked())
+    if (lumberjack->save.swadgeGuyUnlocked)
     {
         charactersArray[index++] = lumberjackSpecialCharacter;
     }
@@ -149,11 +154,53 @@ static void lumberjackEnterMode(void)
     // Unlockables ? Save data?
 }
 
+static void lumberjackLoadSave(void) 
+{
+    size_t len = sizeof(lumberjack->save);
+    readNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, &len);
+    if (lumberjack->save.choUnlocked == false)
+    {
+        lumberjack->save.choUnlocked = lumberjackChoUnlocked();
+    }
+
+    if (lumberjack->save.swadgeGuyUnlocked == false)
+    {
+        lumberjack->save.swadgeGuyUnlocked = lumberjackSwadgeGuyUnlocked();
+    }
+    //writeNvsBlob(breakoutNvsKey_scores, &(self->highScores), size);
+    
+    int highscore = lumberjack->save.highScore;
+
+    if (highscore < 5000)
+    {
+        lumberjack->save.highScore = 5000;
+    }
+
+    if (lumberjack->save.attackHighScore < 5000)
+    {
+        lumberjack->save.attackHighScore = 5000;
+    }
+
+    if (lumberjack->save.panicHighScore < 5000)
+    {
+        lumberjack->save.panicHighScore = 5000;
+    }
+
+    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
+}
+
+void lumberjackSaveSave(void)
+{
+    size_t len = sizeof(lumberjack->save);
+    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
+}
+
 static void lumberjackJoinGame(void)
 {
     if (lumberjack->gameMode == LUMBERJACK_MODE_PANIC)
     {
         lumberjack->screen = LUMBERJACK_A;
+        lumberjack->save.highScore = lumberjack->save.panicHighScore;
         lumberjackStartGameMode(lumberjack, lumberjack->selected);
         return;
     }
@@ -161,6 +208,7 @@ static void lumberjackJoinGame(void)
     if (lumberjack->gameMode == LUMBERJACK_MODE_ATTACK)
     {
         lumberjack->screen = LUMBERJACK_B;
+        lumberjack->save.highScore = lumberjack->save.attackHighScore;
         lumberjackStartGameMode(lumberjack, lumberjack->selected);
         return;
     }
@@ -225,12 +273,14 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 
 static bool lumberjackChoUnlocked()
 {
-    return true;
+    int32_t kei;
+    return readNvs32(lumberjackChoUnlock, &kei);
 }
 
-static bool lumberjackSpecialUnlocked()
+static bool lumberjackSwadgeGuyUnlocked()
 {
-    return true;
+    int32_t kei;
+    return readNvs32(lumberjackPlatformerUnlock, &kei);
 }
 
 //==============================================================================
@@ -249,7 +299,7 @@ static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
 
 static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
-    ESP_LOGI(LUM_TAG, "STATUS %d", status);
+    //ESP_LOGI(LUM_TAG, "STATUS %d", status);
     p2pSendCb(&lumberjack->p2p, mac_addr, status);
 }
 
@@ -351,10 +401,7 @@ void lumberjackSendAttack(uint8_t* number)
     {
         uint8_t payload[9] = {ATTACK_MSG};
         memcpy(&payload[1], number, 8);
-        for (int i = 0; i < ARRAY_SIZE(payload); i++)
-        {
-            ESP_LOGI(LUM_TAG, "SENDING %d) %d", i, payload[i]);
-        }
+        
         p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
     }
 }
@@ -415,12 +462,10 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
 
         if (label == lumberjackPanic)
         {
-            ESP_LOGI(LUM_TAG, "Panic");
             lumberjack->gameMode = LUMBERJACK_MODE_PANIC;
         }
         else if (label == lumberjackAttack)
         {
-            ESP_LOGI(LUM_TAG, "Attack");
             lumberjack->gameMode = LUMBERJACK_MODE_ATTACK;
         }
 
@@ -476,12 +521,10 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
 
         if (label == lumberjackPanic)
         {
-            ESP_LOGI(LUM_TAG, "Panic");
             lumberjack->gameMode = LUMBERJACK_MODE_PANIC;
         }
         else if (label == lumberjackAttack)
         {
-            ESP_LOGI(LUM_TAG, "Attack");
             lumberjack->gameMode = LUMBERJACK_MODE_ATTACK;
         }
         
