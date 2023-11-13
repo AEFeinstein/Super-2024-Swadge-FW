@@ -726,8 +726,8 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
         }
         case OBJ_ITEM_PICKUP_ENERGY:
         {
-            // Transient, add 20 health, not going over the max
-            inventory->health = MIN(inventory->health + 20, inventory->maxHealth);
+            // Transient, add (GAME_START_HEALTH / 2) health, not going over the max
+            inventory->health = MIN(inventory->health + (GAME_START_HEALTH / 2), inventory->maxHealth);
             // Play SFX
             bzrPlaySfx(&ray->sfx_health, BZR_RIGHT);
             // Don't save after energy

@@ -258,27 +258,27 @@ void checkRayCollisions(ray_t* ray)
                 {
                     case OBJ_BULLET_E_NORMAL:
                     {
-                        dmg = 5;
+                        dmg = 10;
                         break;
                     }
                     case OBJ_BULLET_E_STRONG:
                     {
-                        dmg = 10;
+                        dmg = 15;
                         break;
                     }
                     case OBJ_BULLET_E_ARMOR:
                     {
-                        dmg = 15;
+                        dmg = 20;
                         break;
                     }
                     case OBJ_BULLET_E_FLAMING:
                     {
-                        dmg = 20;
+                        dmg = 25;
                         break;
                     }
                     case OBJ_BULLET_E_HIDDEN:
                     {
-                        dmg = 25;
+                        dmg = 30;
                         break;
                     }
                     default:
