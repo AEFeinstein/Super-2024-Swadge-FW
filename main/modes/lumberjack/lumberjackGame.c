@@ -389,6 +389,25 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
     }
 
+    //Sounds?
+    loadSong("r_p_shoot.sng", &lumv->sfx_item_get, false);
+
+    if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
+    {
+        loadSong("l_sfx_upgrade.sng", &lumv->sfx_item_use, false);
+    }
+    else
+    {        
+        loadSong("l_sfx_water.sng", &lumv->sfx_item_use, false);
+    }
+
+    loadSong("l_sfx_jump.sng", &lumv->sfx_jump, false);
+    loadSong("l_sfx_brick.sng", &lumv->sfx_bump, false);
+    loadSong("l_sfx_enemy_flip.sng", &lumv->sfx_flip, false);
+    loadSong("r_e_dead.sng", &lumv->sfx_player_death, false);
+    loadSong("l_sfx_enemy_death.sng", &lumv->sfx_enemy_death, false);
+
+
 }
 
 bool lumberjackLoadLevel()
@@ -410,6 +429,8 @@ bool lumberjackLoadLevel()
                 "lumberjacks_panic_5.bin",
                 "lumberjacks_panic_6.bin",
                 "lumberjacks_panic_7.bin",
+                "lumberjacks_panic_8.bin",
+                "lumberjacks_panic_9.bin",
                 "lumberjacks_panic_10.bin",
             };
             
@@ -436,6 +457,7 @@ bool lumberjackLoadLevel()
                 "lumberjacks_attack_3.bin",
                 "lumberjacks_attack_4.bin",
                 "lumberjacks_attack_5.bin",
+                "lumberjacks_attack_10.bin",
             };
 
             fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
@@ -994,6 +1016,7 @@ void baseMode(int64_t elapsedUs)
                 ESP_LOGI(LUM_TAG, "%d", x);
 
                 //lumberjackSendAttack(lumv->attackQueue);
+                
 
                 if (lumv->gameType == LUMBERJACK_MODE_ATTACK && lumv->itemBlockIndex != -1)
                 {
@@ -1343,6 +1366,7 @@ void baseMode(int64_t elapsedUs)
                             }
 
                             lumv->comboTime = LUMBERJACK_COMBO_RESET_TIME;
+                            bzrPlaySfx(&lumv->sfx_enemy_death, BZR_RIGHT);
 
 
                             //if game mode is single player decide if you're going to clear the level
@@ -1354,6 +1378,12 @@ void baseMode(int64_t elapsedUs)
                                 if (!lumv->lumberjackMain->networked)
                                 {
                                     lumv->hasWon = true;
+                                    lumv->invincibleTimer = 0;
+
+                                    if (NULL != lumv->ghost && lumv->ghost->active)
+                                    {
+                                        lumv->ghost->x = 1000;
+                                    }
                                 }
                             }
 
@@ -1373,6 +1403,7 @@ void baseMode(int64_t elapsedUs)
                             // Kill player
                             // ESP_LOGI(LUM_TAG, "KILL PLAYER");
                             lumberjackOnLocalPlayerDeath();
+
                         }
                     }
                 }
@@ -1500,6 +1531,8 @@ void lumberjackOnLocalPlayerDeath(void)
         lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
         lumv->transitionTimer = 400;
     }
+
+    bzrPlaySfx(&lumv->sfx_player_death, BZR_RIGHT);
 
     if (lumv->lumberjackMain->networked)
     {
@@ -1952,9 +1985,12 @@ void lumberjackOnReceiveBump(void)
     if (lumv->localPlayer->onGround)
     {
         lumv->localPlayer->vy = -20; //HERE
+        bzrPlaySfx(&lumv->sfx_bump, BZR_RIGHT);
 
         if (lumv->localPlayer->state == LUMBERJACK_DUCK)
         {
+            bzrPlaySfx(&lumv->sfx_flip, BZR_RIGHT);
+
             lumv->localPlayer->vy = -40;
             lumv->localPlayer->state = LUMBERJACK_BUMPED;
             lumv->invincibleTimer = 0;
@@ -2039,6 +2075,9 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
             entity->vy        = -15;
             entity->jumpTimer = 225000;
             entity->onGround  = false;
+
+            bzrPlaySfx(&lumv->sfx_jump, BZR_RIGHT);
+
         }
         else if (entity->jumping)
         {
@@ -2124,7 +2163,8 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
     {
         lumberjackTile_t* tileA = lumberjackGetTile(destinationX, destinationY);
         lumberjackTile_t* tileB = lumberjackGetTile(destinationX + 16, destinationY);
-
+        bool flipOpponent = false;
+        bool bump = false;
         if ((tileA != NULL && lumberjackIsCollisionTile(tileA->type)) || (tileB != NULL && lumberjackIsCollisionTile(tileB->type)))
         {
             destinationY      = ((tileA->y + 1) * LUMBERJACK_TILE_SIZE);
@@ -2134,9 +2174,10 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
 
             if (tileA != NULL && lumberjackIsCollisionTile(tileA->type))
             {
+                bump = true;
                 if (tileA->type != 11 || lumv->itemBlockReady == true)
                 {
-                    //ESP_LOGI(LUM_TAG, "BUMP A %d", tileA->index);
+
                     lumv->tile[tileA->index].offset      = 10;
                     lumv->tile[tileA->index].offset_time = 100;
 
@@ -2148,10 +2189,18 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
                         lumv->tile[tileA->index].offset_time *= 10;
                     }
 
-                    if (lumv->tile[tileA->index].type != 13) lumberjackDetectBump(tileA);
+                    if (lumv->tile[tileA->index].type != 13)
+                    {
+                        if(lumberjackDetectBump(tileA)) 
+                        {
+                            flipOpponent = true;
+                        }
+
+                    } 
                     if (tileA->type == 11)
                     {
                         lumberjackUseBlock();
+                        bump = false;
                     }
                 
                 }
@@ -2160,7 +2209,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
 
             if (tileB!= NULL && lumberjackIsCollisionTile(tileB->type))
             {
-                
+                bump = true;
                 if (tileB->type != 11 || lumv->itemBlockReady == true)
                 {
 
@@ -2174,14 +2223,31 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
                         lumv->tile[tileB->index].offset_time *= 10;
                     }
 
-                    if (lumv->tile[tileB->index].type != 13) lumberjackDetectBump(tileB);
+                    if (lumv->tile[tileB->index].type != 13) 
+                    {
+                        if (lumberjackDetectBump(tileB)) 
+                        {
+                            flipOpponent = true;
+                        }
+                    }
                     if (tileB->type == 11)
                     {
                         lumberjackUseBlock();                        
+                        bump = false;
                     }
                 }
-
             }
+
+
+            if (flipOpponent)
+            {
+                bzrPlaySfx(&lumv->sfx_flip, BZR_RIGHT);
+            }
+            else if (bump)
+            {
+                bzrPlaySfx(&lumv->sfx_bump, BZR_RIGHT);
+            }
+
         }
     }
     else if (entity->vy > 0 && entity->active)
@@ -2469,8 +2535,9 @@ static bool lumberjackIsCollisionTile(int index)
     return true;
 }
 
-void lumberjackDetectBump(lumberjackTile_t* tile)
+bool lumberjackDetectBump(lumberjackTile_t* tile)
 {
+    bool bump = false;
     if (lumv->localPlayer->state != LUMBERJACK_BUMPED && lumv->localPlayer->state != LUMBERJACK_DEAD)
     {
         // TODO put in bump the player
@@ -2508,7 +2575,7 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
             {
                 enemy->vy       = -20;
                 enemy->onGround = false;
-
+                bump = true;
                 if (enemy->state == LUMBERJACK_BUMPED_IDLE)
                 {
                     enemy->state     = LUMBERJACK_RUN;
@@ -2531,6 +2598,8 @@ void lumberjackDetectBump(lumberjackTile_t* tile)
             }
         }
     }
+
+    return bump;
 }
 
 void lumberjackUseBlock()
@@ -2540,6 +2609,8 @@ void lumberjackUseBlock()
 
     if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
+        bzrPlaySfx(&lumv->sfx_item_use, BZR_RIGHT);
+
         
         lumv->waterDirection = LUMBERJACK_WATER_FAST_DRAIN;
         lumv->waterTimer = lumv->waterSpeed;

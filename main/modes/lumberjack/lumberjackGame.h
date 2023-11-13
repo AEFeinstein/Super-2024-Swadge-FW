@@ -19,7 +19,7 @@ void restartLevel(void);
 
 void lumberjackGameDebugLoop(int64_t elapsedUs);
 
-void lumberjackDetectBump(lumberjackTile_t* tile);
+bool lumberjackDetectBump(lumberjackTile_t* tile);
 bool lumberjackSpawnCheck(int64_t elapseUs);
 void lumberjackAttackCheck(int64_t elapseUs);
 

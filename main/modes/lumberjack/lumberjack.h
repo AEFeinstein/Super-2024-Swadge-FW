@@ -211,6 +211,15 @@ typedef struct
     
     lumberjackGameType_t gameType;
 
+    //sounds
+    song_t sfx_item_get;
+    song_t sfx_item_use;
+    song_t sfx_jump;
+    song_t sfx_bump;
+    song_t sfx_flip;
+    song_t sfx_player_death;
+    song_t sfx_enemy_death;
+
 } lumberjackVars_t;
 
 #endif

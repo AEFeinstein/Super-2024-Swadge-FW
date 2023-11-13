@@ -368,7 +368,6 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
         if (payload[0] == DEATH_MSG)
         {
-            ESP_LOGI(LUM_TAG, "Playher died!");
             lumberjackOnReceiveDeath(payload[1] != 0x00);
         }
 
