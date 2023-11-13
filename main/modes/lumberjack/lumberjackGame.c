@@ -390,23 +390,28 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     }
 
     //Sounds?
-    loadSong("r_p_shoot.sng", &lumv->sfx_item_get, false);
 
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
         loadSong("l_sfx_upgrade.sng", &lumv->sfx_item_use, false);
+        loadSong("l_song_panic.sng", &lumv->song_theme, false);
     }
     else
     {        
+        loadSong("l_song_panic.sng", &lumv->song_theme, false);
         loadSong("l_sfx_water.sng", &lumv->sfx_item_use, false);
     }
 
+    loadSong("r_p_shoot.sng", &lumv->sfx_item_get, false);
     loadSong("l_sfx_jump.sng", &lumv->sfx_jump, false);
     loadSong("l_sfx_brick.sng", &lumv->sfx_bump, false);
     loadSong("l_sfx_enemy_flip.sng", &lumv->sfx_flip, false);
     loadSong("r_e_dead.sng", &lumv->sfx_player_death, false);
     loadSong("l_sfx_enemy_death.sng", &lumv->sfx_enemy_death, false);
 
+    loadSong("l_song_respawn.sng", &lumv->song_respawn, false);
+    loadSong("l_song_gameover.sng", &lumv->song_gameover, false);
+    lumv->song_theme.shouldLoop = true;
 
 }
 
@@ -725,6 +730,12 @@ void lumberjackSetupLevel(int characterIndex)
     //Ghost is separate for reasons
 
     ESP_LOGI(LUM_TAG, "LOADED");
+    if (!lumv->levelMusic)
+    {
+        bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
+        lumv->levelMusic = true;
+    }
+
 }
 
 void lumberjackUnloadLevel(void)
@@ -850,6 +861,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
 
         if (lumv->lastResponseSignal <= 0)
         {
+            bzrStop(true);
             ESP_LOGI(LUM_TAG, "Connection lost!");
             lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
             lumv->transitionTimer = 500;
@@ -969,6 +981,16 @@ void baseMode(int64_t elapsedUs)
     if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
     {
         lumv->levelTime += elapsedUs / 1000;
+
+        if (lumv->resume > 0)
+        {
+            lumv->resume -= elapsedUs / 1000;
+
+            if (lumv->resume <= 0)
+            {
+                bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
+            }
+        }
 
         if (lumv->comboTime > 0)
         {
@@ -1294,9 +1316,14 @@ void baseMode(int64_t elapsedUs)
 
             if (lumv->localPlayer->respawn <= 0 && lumv->lives > 0)
             {
+
                 ESP_LOGI(LUM_TAG, "RESPAWN PLAYER!");
+                bzrStop(true);
+                bzrPlaySfx(&lumv->song_respawn, BZR_RIGHT);
+
                 // Respawn player
                 lumv->localPlayer->respawn = 0;
+                lumv->resume = 2000;
                 lumv->lives--;
                 lumv->invincibleTimer = LUMBERJACK_INVINCIBLE_TIME;
                 lumberjackRespawn(lumv->localPlayer, lumv->playerSpawnX, lumv->playerSpawnY);
@@ -1530,6 +1557,9 @@ void lumberjackOnLocalPlayerDeath(void)
 
         lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
         lumv->transitionTimer = 400;
+        bzrStop(true);
+
+        bzrPlayBgm(&lumv->song_gameover, BZR_STEREO);
     }
 
     bzrPlaySfx(&lumv->sfx_player_death, BZR_RIGHT);
@@ -2288,6 +2318,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
                     // ESP_LOGI(LUM_TAG, "DEAD & hit the ground %d", entity->respawn);
                     entity->respawn = LUMBERJACK_UPGRADE_TIMER_OFFSET;
                     entity->ready   = true;
+
                     return;
                 }
             } else if (entity->upgrading)
@@ -2778,6 +2809,8 @@ void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, boo
 
 void lumberjackExitGameMode(void)
 {
+    bzrStop(true);
+
     if (lumv->lumberjackMain->networked == false)
     {
         
@@ -2807,6 +2840,21 @@ void lumberjackExitGameMode(void)
      freeWsg(&lumv->connectLostSprite);
 
     }   
+
+    freeSong(&lumv->sfx_item_use);
+    freeSong(&lumv->sfx_item_get);
+    freeSong(&lumv->sfx_jump);
+    freeSong(&lumv->sfx_bump);
+    freeSong(&lumv->sfx_flip);
+    freeSong(&lumv->sfx_player_death);
+    freeSong(&lumv->sfx_enemy_death);
+
+    freeSong(&lumv->song_theme);
+    freeSong(&lumv->song_respawn);
+    freeSong(&lumv->song_gameover);
+
+
+
     
 
     // Free the bonus
