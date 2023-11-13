@@ -1065,7 +1065,7 @@ void drawHud(ray_t* ray)
                 yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
             }
         }
-        drawWsgSimple(gun, TFT_WIDTH - gun->w - 5 + ray->gunShakeX, yOffset);
+        drawWsgSimple(gun, TFT_WIDTH - gun->w + ray->gunShakeX, yOffset);
     }
 
     // Draw Keys
