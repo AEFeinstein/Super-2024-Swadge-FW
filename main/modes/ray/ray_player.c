@@ -18,7 +18,7 @@
 // Const data
 //==============================================================================
 
-/** @brief random dialog when a missile expansion is acquired*/
+/** @brief random dialog when a missile expansion is acquired */
 const char* const missilePickupDialog[] = {
     "Hey, you can hold more missiles now! Where? ...You don't want to know!",
     "Hey, this wasn't the critical path, but at least you can express your frustration with "
@@ -30,6 +30,9 @@ const char* const missilePickupDialog[] = {
     "limited ammo for nothing, huh!",
     "Why yes, this is a missile expansion! Mazel Tov!",
 };
+
+/** @brief special dialog for one missile */
+const char* missileSwimDialog = "All that swimming just for a missile upgrade? LAME.";
 
 //==============================================================================
 // Functions
@@ -667,9 +670,17 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                     // Save the coordinates
                     inventory->missilesPickUps[mapId][idx] = itemId;
 
-                    // Show random dialog
-                    int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog);
-                    rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
+                    // World 3, Missile ID 12 gets special dialog
+                    if (3 == ray->p.mapId && 12 == item->id)
+                    {
+                        rayShowDialog(ray, missileSwimDialog, item->sprite);
+                    }
+                    else
+                    {
+                        // Show random dialog
+                        int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog); // TODO dont double dip
+                        rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
+                    }
                     break;
                 }
             }
