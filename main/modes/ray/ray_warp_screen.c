@@ -49,9 +49,14 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
     if (ray->warpTimerUs <= 0)
     {
         // Return to the game
-        ray->screen = RAY_GAME;
+        raySwitchToScreen(RAY_GAME);
         // Don't warp again
         ray->warpTimerUs = 0;
+        // Stop warp SFX
+        ray->sfx_warp.shouldLoop = false;
+        bzrStop(true);
+        // Play music
+        bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
     }
 }
 
@@ -81,6 +86,9 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
  */
 void warpToDestination(ray_t* ray)
 {
+    // Stop BGM when manipulating data
+    bzrStop(true);
+
     // Save the current map's visited tiles
     raySaveVisitedTiles(ray);
 
@@ -90,12 +98,11 @@ void warpToDestination(ray_t* ray)
     // Free the scripts
     rayFreeCurrentState(ray);
 
-    // Construct the map name
-    char mapName[] = "0.rmh";
-    mapName[0]     = '0' + ray->warpDestMapId;
     // Load the new map
     q24_8 pStartX = 0, pStartY = 0;
-    loadRayMap(mapName, ray, &pStartX, &pStartY, true);
+    loadRayMap(ray->warpDestMapId, ray, &pStartX, &pStartY, true);
+    // Stop again after loading the map starts
+    bzrStop(true);
 
     // Set the map ID
     ray->p.mapId                     = ray->warpDestMapId;
@@ -121,9 +128,22 @@ void warpToDestination(ray_t* ray)
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
 
+    // Give the player one missile after warping to not get stuck behind doors
+    if (ray->p.i.missileLoadOut)
+    {
+        if (0 == ray->p.i.numMissiles)
+        {
+            ray->p.i.numMissiles++;
+        }
+    }
+
     // Save after warping
     raySavePlayer(ray);
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
+
+    // Loop SFX after saving
+    ray->sfx_warp.shouldLoop = true;
+    bzrPlaySfx(&ray->sfx_warp, BZR_RIGHT);
 }

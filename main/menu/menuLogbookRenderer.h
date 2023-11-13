@@ -54,7 +54,10 @@ typedef struct
     font_t* font;                         ///< The font to render the menu with
     led_t leds[CONFIG_NUM_LEDS];          ///< An array with the RGB LED state to be output
     menuLed_t ledTimers[CONFIG_NUM_LEDS]; ///< An array with the LED timers for animation
-    wsg_t batt[4];
+    wsg_t batt[4];                        ///< Images for the battery levels
+    wsg_t menu_bg;                        ///< Background image for the menu
+    wsg_t zip;                            ///< Unlockable image of Zip
+    int32_t magtroidUnlocked;             ///< Whether or not Zip should be drawn
 } menuLogbookRenderer_t;
 
 menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont);

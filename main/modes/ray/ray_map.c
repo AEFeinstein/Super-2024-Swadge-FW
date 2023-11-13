@@ -15,6 +15,7 @@
 #include "ray_tex_manager.h"
 #include "ray_renderer.h"
 #include "ray_script.h"
+#include "ray_enemy.h"
 
 //==============================================================================
 // Functions
@@ -24,26 +25,27 @@
  * @brief Load a RMH from ROM to RAM. RMHs placed in the spiffs_image folder
  * before compilation will be automatically flashed to ROM
  *
- * @param name The filename of the RMH to load
+ * @param mapId The map ID to load
  * @param ray The ray_t to load the map into
  * @param pStartX The starting X coordinate for this map
  * @param pStartY The starting Y coordinate for this map
  * @param spiRam true to load to SPI RAM, false to load to normal RAM. SPI RAM is more plentiful but slower to access
  * than normal RAM
  */
-void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
+void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool spiRam)
 {
     // Convenience inventory to know what not to spawn
     rayInventory_t* inv = &ray->p.i;
-
-    // Map ID is the first digit of the name
-    int16_t mapId = name[0] - '0';
 
     // Pick the allocation type
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
 
     // Convenience pointers
     rayMap_t* map = &ray->map;
+
+    // Construct map name
+    char name[] = "0.rmh";
+    name[0]     = '0' + mapId;
 
     // Read and decompress the file
     uint32_t decompressedSize = 0;
@@ -107,7 +109,7 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
                     // Allocate a new object
                     if ((oType & 0x60) == ENEMY)
                     {
-                        rayCreateEnemy(ray, oType, id, x, y);
+                        rayCreateEnemy(ray, oType, id, TO_FX(x) + TO_FX_FRAC(1, 2), TO_FX(y) + TO_FX_FRAC(1, 2));
                     }
                     else
                     {
@@ -216,7 +218,8 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
                         // Create this object if it wasn't already picked up
                         if (shouldCreate)
                         {
-                            rayCreateCommonObj(ray, oType, id, x, y);
+                            rayCreateCommonObj(ray, oType, id, TO_FX(x) + TO_FX_FRAC(1, 2),
+                                               TO_FX(y) + TO_FX_FRAC(1, 2));
                         }
                     }
                 }
@@ -224,11 +227,18 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
         }
     }
 
+    // Reset script timers
+    ray->scriptTimer       = 0;
+    ray->secondsSinceStart = 0;
+
     // Load Scripts
     loadScripts(ray, &fileData[fileIdx], decompressedSize - fileIdx, caps);
 
     // Free the file data
     free(fileData);
+
+    // Play this map's music
+    bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
 }
 
 /**
@@ -237,27 +247,45 @@ void loadRayMap(const char* name, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bo
  * @param ray The entire game state
  * @param type The type of enemy to spawn
  * @param id The ID for this enemy
- * @param x The X cell position for this enemy
- * @param y The Y cell position for this enemy
+ * @param x The X position for this enemy
+ * @param y The Y position for this enemy
  */
-void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y)
+void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_8 y)
 {
     // Allocate the enemy
     rayEnemy_t* newObj = (rayEnemy_t*)heap_caps_calloc(1, sizeof(rayEnemy_t), MALLOC_CAP_SPIRAM);
 
-    // Copy enemy data from the template (sprite indices, type)
-    memcpy(newObj, &(ray->eTemplates[type - OBJ_ENEMY_NORMAL]), sizeof(rayEnemy_t));
+    // Set type and ID first
+    newObj->c.type = type;
+    newObj->c.id   = id;
 
-    // Set ID
-    newObj->c.id = id;
+    // Set initial enemy state
+    newObj->health        = 100;
+    newObj->behavior      = DOING_NOTHING;
+    newObj->behaviorTimer = esp_random() % 1000000;
+    newObj->shootTimer    = getTimerForEnemy(newObj, SHOT);
+    newObj->blockTimer    = getTimerForEnemy(newObj, BLOCK);
+    newObj->sprites       = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
+    newObj->warpTimer     = E_WARP_TIME;
 
-    // Set spatial values
-    newObj->c.posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-    newObj->c.posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
-    newObj->c.radius = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
+    // This sets state, animTimer, animTimerLimit, animFrame, and c.sprite
+    newObj->state = E_WALKING_2;
+    rayEnemyTransitionState(newObj, E_WALKING_1);
+
+    // Set initial common state
+    newObj->c.posX           = x;
+    newObj->c.posY           = y;
+    newObj->c.radius         = TO_FX_FRAC(newObj->c.sprite->w, 2 * TEX_WIDTH);
+    newObj->c.spriteMirrored = false;
 
     // Add it to the linked list
     push(&ray->enemies, newObj);
+
+    // If the boss was spawned, play the theme
+    if (OBJ_ENEMY_BOSS == type)
+    {
+        bzrPlayBgm(&ray->songs[6], BZR_STEREO);
+    }
 }
 
 /**
@@ -266,10 +294,10 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, in
  * @param ray The entire game state
  * @param type The type of object to spawn
  * @param id The ID for this object
- * @param x The X cell position for this object
- * @param y The Y cell position for this object
+ * @param x The X position for this object
+ * @param y The Y position for this object
  */
-void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x, int32_t y)
+void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_8 y)
 {
     rayObjCommon_t* newObj = (rayObjCommon_t*)heap_caps_calloc(1, sizeof(rayObjCommon_t), MALLOC_CAP_SPIRAM);
 
@@ -279,8 +307,8 @@ void rayCreateCommonObj(ray_t* ray, rayMapCellType_t type, int32_t id, int32_t x
     newObj->id     = id;
 
     // Set spatial values
-    newObj->posX   = TO_FX(x) + TO_FX_FRAC(1, 2);
-    newObj->posY   = TO_FX(y) + TO_FX_FRAC(1, 2);
+    newObj->posX   = x;
+    newObj->posY   = y;
     newObj->radius = TO_FX_FRAC(newObj->sprite->w, 2 * TEX_WIDTH);
 
     // Add it to the linked list

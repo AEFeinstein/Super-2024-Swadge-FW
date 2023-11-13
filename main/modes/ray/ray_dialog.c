@@ -1,9 +1,10 @@
 //==============================================================================
-// Inclues
+// Includes
 //==============================================================================
 
 #include "fill.h"
 #include "ray_dialog.h"
+#include "esp_wifi.h"
 
 //==============================================================================
 // Defines
@@ -18,6 +19,21 @@
 #define DIALOG_TEXT_COLOR c240
 
 //==============================================================================
+// Constant text
+//==============================================================================
+
+const char* const macPuzzleText[] = {
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n4! is too excited, subtract 12 from "
+    "it\n[=/+._?@\n}+&)(/&?\n+[:&${)}",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n.?%?-}{;\nTake the next answer, like a "
+    "tree find the square\n&,?:)/&:\n:/{#_!&,",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n:#:$/{)]\n{?$-}*].\nArgon's number is "
+    "nice, but in two it must split\n/}%-%?}%",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n{@#??_[!\n#,;{(;-{\n]#_!]=,.\nAverage "
+    "two prior, that's it, almost there",
+};
+
+//==============================================================================
 // Functions
 //==============================================================================
 
@@ -30,9 +46,19 @@
  */
 void rayShowDialog(ray_t* ray, const char* dialogText, wsg_t* dialogPortrait)
 {
-    ray->screen         = RAY_DIALOG;
-    ray->dialogText     = dialogText;
+    raySwitchToScreen(RAY_DIALOG);
+    if (0 == strcmp("MAC_PZL", dialogText))
+    {
+        uint8_t macAddr[6];
+        esp_wifi_get_mac(WIFI_IF_STA, macAddr);
+        ray->dialogText = macPuzzleText[macAddr[5] % 4];
+    }
+    else
+    {
+        ray->dialogText = dialogText;
+    }
     ray->dialogPortrait = dialogPortrait;
+    ray->btnLockoutUs   = 2000000;
 }
 
 /**
@@ -47,19 +73,22 @@ void rayDialogCheckButtons(ray_t* ray)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        // If A was pressed
-        if (PB_A == evt.button && evt.down)
+        if (0 == ray->btnLockoutUs)
         {
-            // If there is more dialog
-            if (NULL != ray->nextDialogText)
+            // If A was pressed
+            if (PB_A == evt.button && evt.down)
             {
-                // Show the next part of the dialog
-                ray->dialogText = ray->nextDialogText;
-            }
-            else
-            {
-                // Dialog over, return to game
-                ray->screen = RAY_GAME;
+                // If there is more dialog
+                if (NULL != ray->nextDialogText)
+                {
+                    // Show the next part of the dialog
+                    ray->dialogText = ray->nextDialogText;
+                }
+                else
+                {
+                    // Dialog over, return to game
+                    raySwitchToScreen(RAY_GAME);
+                }
             }
         }
     }
@@ -69,8 +98,9 @@ void rayDialogCheckButtons(ray_t* ray)
  * @brief Render the current dialog box
  *
  * @param ray The entire game state
+ * @param elapsedUs The elapsed time since this function was last called
  */
-void rayDialogRender(ray_t* ray)
+void rayDialogRender(ray_t* ray, uint32_t elapsedUs)
 {
     // Draw the background text box, outline
     drawRect(DIALOG_MARGIN,              //
@@ -113,4 +143,13 @@ void rayDialogRender(ray_t* ray)
                                            &yOff,                                   //
                                            TFT_WIDTH - DIALOG_MARGIN - TEXT_MARGIN, //
                                            TFT_HEIGHT - DIALOG_MARGIN - TEXT_MARGIN);
+
+    // Blink an arrow to show there's more dialog
+    if (ray->blink && 0 == ray->btnLockoutUs)
+    {
+        drawTriangleOutlined(TFT_WIDTH - DIALOG_MARGIN - 16, TFT_HEIGHT - DIALOG_MARGIN - 4,
+                             TFT_WIDTH - DIALOG_MARGIN - 4, TFT_HEIGHT - DIALOG_MARGIN - 10,
+                             TFT_WIDTH - DIALOG_MARGIN - 16, TFT_HEIGHT - DIALOG_MARGIN - 16, DIALOG_BG_COLOR,
+                             DIALOG_TEXT_COLOR);
+    }
 }

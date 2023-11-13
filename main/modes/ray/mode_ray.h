@@ -8,13 +8,12 @@
 #include "swadge2024.h"
 #include "fp_math.h"
 #include "starfield.h"
+#include "esp_random.h"
+#include "credits_utils.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
-
-/** Use test textures. TODO: DELETE THIS */
-#define TEST_TEX 1
 
 /** The number of total maps */
 #define NUM_MAPS 6
@@ -24,9 +23,9 @@
 #define MISSILE_UPGRADES_PER_MAP 3
 
 /** The player's starting max health */
-#define GAME_START_HEALTH 50
+#define GAME_START_HEALTH 100
 /** How much health is gained for each energy tank found */
-#define HEALTH_PER_E_TANK 25
+#define HEALTH_PER_E_TANK 100
 /** The number of energy tank pickups per map */
 #define E_TANKS_PER_MAP 1
 /** The player's total maximum possible health */
@@ -35,8 +34,8 @@
 /** The maximum number of missiles possible */
 #define MAX_MISSILES_EVER 99
 
-/** Microseconds per one damage when standing in lava */
-#define US_PER_LAVA_DAMAGE 500000
+/** Microseconds per effect when standing in lava or on heal */
+#define US_PER_FLOOR_EFFECT 500000
 
 /** Microseconds to charge the charge beam */
 #define CHARGE_TIME_US 1048576
@@ -44,13 +43,20 @@
 /** The number of bullets tracked at a given point in time */
 #define MAX_RAY_BULLETS 32
 
-/** The number of non-walking frames in an animation */
-#define NUM_NON_WALK_FRAMES 4
-/** The number of walking frames in an animation (non-walking doubled) */
-#define NUM_WALK_FRAMES (NUM_NON_WALK_FRAMES * 2)
+/** The number of frames in an animation */
+#define NUM_ANIM_FRAMES 4
 
 /** The time to swap out and swap in a gun, in microseconds */
-#define LOADOUT_TIMER_US (1 << 18)
+#define LOADOUT_TIMER_US (1 << 17)
+
+/** The blink time for pause and dialog items */
+#define BLINK_US 500000
+
+/** The number of distinct enemies */
+#define NUM_ENEMIES (OBJ_ENEMY_BOSS - OBJ_ENEMY_NORMAL + 1)
+
+/** The time in uS for an enemy to warp in*/
+#define E_WARP_TIME 1000000
 
 /**
  * @brief Helper macro to check if a cell is of a given type
@@ -89,25 +95,29 @@ typedef enum __attribute__((packed))
     EMPTY = 0, // Equivalent to (BG | META | 0),
                // Special delete tile, only used in map editor
     DELETE = (BG | META | 1),
-    // Background tiles
-    BG_FLOOR        = (BG | FLOOR | 1),
-    BG_FLOOR_WATER  = (BG | FLOOR | 2),
-    BG_FLOOR_LAVA   = (BG | FLOOR | 3),
-    BG_CEILING      = (BG | FLOOR | 4),
-    BG_WALL_1       = (BG | WALL | 1),
-    BG_WALL_2       = (BG | WALL | 2),
-    BG_WALL_3       = (BG | WALL | 3),
-    BG_WALL_4       = (BG | WALL | 4),
-    BG_WALL_5       = (BG | WALL | 5),
-    BG_DOOR         = (BG | DOOR | 1),
-    BG_DOOR_CHARGE  = (BG | DOOR | 2),
-    BG_DOOR_MISSILE = (BG | DOOR | 3),
-    BG_DOOR_ICE     = (BG | DOOR | 4),
-    BG_DOOR_XRAY    = (BG | DOOR | 5),
-    BG_DOOR_SCRIPT  = (BG | DOOR | 6),
-    BG_DOOR_KEY_A   = (BG | DOOR | 7),
-    BG_DOOR_KEY_B   = (BG | DOOR | 8),
-    BG_DOOR_KEY_C   = (BG | DOOR | 9),
+    // Background tiles, floor
+    BG_FLOOR       = (BG | FLOOR | 1),
+    BG_FLOOR_WATER = (BG | FLOOR | 2),
+    BG_FLOOR_LAVA  = (BG | FLOOR | 3),
+    BG_CEILING     = (BG | FLOOR | 4),
+    BG_FLOOR_HEAL  = (BG | FLOOR | 5),
+    // Walls
+    BG_WALL_1 = (BG | WALL | 1),
+    BG_WALL_2 = (BG | WALL | 2),
+    BG_WALL_3 = (BG | WALL | 3),
+    BG_WALL_4 = (BG | WALL | 4),
+    BG_WALL_5 = (BG | WALL | 5),
+    // Doors
+    BG_DOOR          = (BG | DOOR | 1),
+    BG_DOOR_CHARGE   = (BG | DOOR | 2),
+    BG_DOOR_MISSILE  = (BG | DOOR | 3),
+    BG_DOOR_ICE      = (BG | DOOR | 4),
+    BG_DOOR_XRAY     = (BG | DOOR | 5),
+    BG_DOOR_SCRIPT   = (BG | DOOR | 6),
+    BG_DOOR_KEY_A    = (BG | DOOR | 7),
+    BG_DOOR_KEY_B    = (BG | DOOR | 8),
+    BG_DOOR_KEY_C    = (BG | DOOR | 9),
+    BG_DOOR_ARTIFACT = (BG | DOOR | 10),
     // Enemies
     OBJ_ENEMY_START_POINT = (OBJ | ENEMY | 1),
     OBJ_ENEMY_NORMAL      = (OBJ | ENEMY | 2),
@@ -134,14 +144,26 @@ typedef enum __attribute__((packed))
     OBJ_ITEM_PICKUP_ENERGY  = (OBJ | ITEM | 13),
     OBJ_ITEM_PICKUP_MISSILE = (OBJ | ITEM | 14),
     // Bullets
-    OBJ_BULLET_NORMAL  = (OBJ | BULLET | 15),
-    OBJ_BULLET_CHARGE  = (OBJ | BULLET | 16),
-    OBJ_BULLET_ICE     = (OBJ | BULLET | 17),
-    OBJ_BULLET_MISSILE = (OBJ | BULLET | 18),
-    OBJ_BULLET_XRAY    = (OBJ | BULLET | 19),
+    OBJ_BULLET_NORMAL    = (OBJ | BULLET | 1),
+    OBJ_BULLET_CHARGE    = (OBJ | BULLET | 2),
+    OBJ_BULLET_ICE       = (OBJ | BULLET | 3),
+    OBJ_BULLET_MISSILE   = (OBJ | BULLET | 4),
+    OBJ_BULLET_XRAY      = (OBJ | BULLET | 5),
+    OBJ_BULLET_E_NORMAL  = (OBJ | BULLET | 6),
+    OBJ_BULLET_E_STRONG  = (OBJ | BULLET | 7),
+    OBJ_BULLET_E_ARMOR   = (OBJ | BULLET | 8),
+    OBJ_BULLET_E_FLAMING = (OBJ | BULLET | 9),
+    OBJ_BULLET_E_HIDDEN  = (OBJ | BULLET | 10),
     // Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1),
     OBJ_SCENERY_PORTAL   = (OBJ | SCENERY | 2),
+    OBJ_SCENERY_F1       = (OBJ | SCENERY | 3),
+    OBJ_SCENERY_F2       = (OBJ | SCENERY | 4),
+    OBJ_SCENERY_F3       = (OBJ | SCENERY | 5),
+    OBJ_SCENERY_F4       = (OBJ | SCENERY | 6),
+    OBJ_SCENERY_F5       = (OBJ | SCENERY | 7),
+    OBJ_SCENERY_F6       = (OBJ | SCENERY | 8),
+    OBJ_SCENERY_F7       = (OBJ | SCENERY | 9),
 } rayMapCellType_t;
 
 /**
@@ -149,10 +171,31 @@ typedef enum __attribute__((packed))
  */
 typedef enum
 {
-    E_WALKING,  ///< The enemy is walking
-    E_SHOOTING, ///< The enemy is shooting (may move while shooting)
-    E_HURT,     ///< The enemy was shot
+    E_WALKING_1,  ///< The enemy is walking, half cycle
+    E_WALKING_2,  ///< The enemy is walking, the other half
+    E_SHOOTING,   ///< The enemy is shooting (may move while shooting)
+    E_HURT,       ///< The enemy was shot
+    E_BLOCKING,   ///< The enemy is blocking
+    E_DEAD,       ///< The enemy is dead
+    E_NUM_STATES, ///< The number of enemy states
 } rayEnemyState_t;
+
+typedef enum
+{
+    DOING_NOTHING,
+    MOVE_POS_X,
+    MOVE_NEG_X,
+    MOVE_POS_Y,
+    MOVE_NEG_Y,
+    MOVE_STRAFE_L,
+    MOVE_STRAFE_R,
+    MOVE_TOWARDS_PLAYER,
+    MOVE_AWAY_PLAYER,
+    MOVE_NE,
+    MOVE_SE,
+    MOVE_SW,
+    MOVE_NW,
+} rayEnemyBehavior_t;
 
 /**
  * @brief All the possible loadouts
@@ -166,6 +209,44 @@ typedef enum
     LO_XRAY,     ///< X-Ray loadout
     NUM_LOADOUTS ///< The number of loadouts
 } rayLoadout_t;
+
+/**
+ * @brief All the possible environments
+ */
+typedef enum
+{
+    V_BASE,   ///< Sci-fi base / space station
+    V_JUNGLE, ///< Jungle with alien ruins
+    V_CAVE,   ///< Cave with lava
+    NUM_ENVS, ///< The number of environments
+} rayEnv_t;
+
+/**
+ * @brief All the possible textures per-environments
+ */
+typedef enum
+{
+    TX_WALL_1,     ///< Wall 1
+    TX_WALL_2,     ///< Wall 2
+    TX_WALL_3,     ///< Wall 3
+    TX_WALL_4,     ///< Wall 4
+    TX_WALL_5,     ///< Wall 5
+    TX_FLOOR,      ///< The floor texture
+    TX_CEILING,    ///< The ceiling texture
+    NUM_ENV_TEXES, ///< The number of per-environment textures
+} rayEnvTex_t;
+
+/**
+ * @brief All the possible boss states
+ */
+typedef enum
+{
+    B_MISSILE,       ///< Weak to missiles
+    B_ICE,           ///< Weak to ice
+    B_XRAY,          ///< Weak to xray
+    B_NORMAL,        ///< Weak to normal
+    NUM_BOSS_STATES, ///< The number of boss states
+} rayBossState_t;
 
 /**
  * @brief Types of events that trigger scripts
@@ -235,11 +316,13 @@ typedef enum
  */
 typedef enum
 {
-    RAY_MENU,        ///< The main menu is being shown
-    RAY_GAME,        ///< The game loop is being shown
-    RAY_DIALOG,      ///< A dialog box is being shown
-    RAY_PAUSE,       ///< The pause menu is being shown
-    RAY_WARP_SCREEN, ///< The warp screen animation is being shown
+    RAY_MENU,         ///< The main menu is being shown
+    RAY_GAME,         ///< The game loop is being shown
+    RAY_DIALOG,       ///< A dialog box is being shown
+    RAY_PAUSE,        ///< The pause menu is being shown
+    RAY_WARP_SCREEN,  ///< The warp screen animation is being shown
+    RAY_DEATH_SCREEN, ///< The player has died
+    RAY_CREDITS,      ///< Showing the credits for the game
 } rayScreen_t;
 
 /**
@@ -292,8 +375,9 @@ typedef struct
  */
 typedef struct
 {
-    bool isActive; ///< true if the script is active, false if it is not
-    ifOp_t ifOp;   ///< The type of condition that triggers the script
+    bool isActive;         ///< true if the script is active, false if it is not
+    int32_t resetTimerSec; ///< Timer to not re-trigger the script immediately
+    ifOp_t ifOp;           ///< The type of condition that triggers the script
     /// A union of arguments for the condition that triggers the script
     union
     {
@@ -417,14 +501,22 @@ typedef struct
  */
 typedef struct
 {
-    rayObjCommon_t c;                         ///< Common object properties
-    rayEnemyState_t state;                    ///< This enemy's current state
-    uint32_t animTimer;                       ///< A timer used for this enemy's animations
-    uint32_t animTimerLimit;                  ///< The time at which the texture should switch
-    uint32_t animTimerFrame;                  ///< The current animation frame
-    wsg_t* walkSprites[NUM_NON_WALK_FRAMES];  ///< The walking sprites for this enemy
-    wsg_t* shootSprites[NUM_NON_WALK_FRAMES]; ///< The shooting sprites for this enemy
-    wsg_t* hurtSprites[NUM_NON_WALK_FRAMES];  ///< The getting shot sprites for this enemy
+    rayObjCommon_t c;                                ///< Common object properties
+    int32_t health;                                  ///< The enemy's health
+    rayEnemyState_t state;                           ///< This enemy's current state
+    rayEnemyBehavior_t behavior;                     ///< What the enemy is currently doing
+    int32_t warpTimer;                               ///< A timer for warping in
+    rayBossState_t bossState;                        ///< The current boss state, unused for non-boss
+    int32_t bossTimer;                               ///< A timer for changing bossState, unused for non-boss
+    int32_t behaviorTimer;                           ///< A timer used for this enemy's behaviors
+    int32_t shootTimer;                              ///< A timer used for this enemy's shooting
+    int32_t blockTimer;                              ///< A timer used for this enemy's blocking
+    int32_t invincibleTimer;                         ///< Timer for being invincible
+    int32_t freezeTimer;                             ///< Timer for slowdown after ice beam
+    int32_t animTimer;                               ///< A timer used for this enemy's animations
+    int32_t animTimerLimit;                          ///< The time at which the texture should switch
+    int32_t animFrame;                               ///< The current animation frame
+    wsg_t (*sprites)[E_NUM_STATES][NUM_ANIM_FRAMES]; ///< All of this enemy's sprites
 } rayEnemy_t;
 
 /**
@@ -452,6 +544,7 @@ typedef struct
     // Key items
     bool artifacts[NUM_MAPS];               ///< List of acquired artifacts
     rayKeyState_t keys[NUM_MAPS][NUM_KEYS]; ///< The number of small keys the player currently has
+    int32_t damageMult;                     ///< A damage multiplier
 } rayInventory_t;
 
 /**
@@ -514,18 +607,24 @@ typedef struct
     int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
 
-    int32_t lavaTimer;   ///< Timer to apply lava damage
-    int32_t chargeTimer; ///< Timer to charge shots
+    int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
+    bool playerInLava;          ///< Track if the player is standing in lava
+    int32_t chargeTimer;        ///< Timer to charge shots
+    int32_t playerShotCooldown; ///< Cooldown timer between shots
+    int32_t gunShakeTimer;      ///< Timer to shake the gun when charged
+    int32_t gunShakeX;          ///< Offset to draw gun at when shaking
+    bool gunShakeL;             ///< true if the gun is shaking to the left, false otherwise
+    int32_t pRotationTimer;     ///< timer for player rotation
 
-#ifdef TEST_TEX
-    wsg_t testTextures[8]; ///< Test textures, TODO DELETE THESE
-#endif
-    namedTexture_t* loadedTextures; ///< A list of loaded textures
-    uint8_t* typeToIdxMap;          ///< A map of rayMapCellType_t to respective textures
-    wsg_t guns[NUM_LOADOUTS];       ///< Textures for the HUD guns
-    wsg_t portrait;                 ///< A portrait used for text dialogs
-
-    rayEnemy_t eTemplates[6]; ///< Enemy type templates, copied when initializing enemies
+    namedTexture_t* loadedTextures;                             ///< A list of loaded textures
+    uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
+    wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES];                      ///< The environment textures
+    wsg_t guns[NUM_LOADOUTS];                                   ///< Textures for the HUD guns
+    wsg_t portrait;                                             ///< A portrait used for text dialogs
+    wsg_t missileHUDicon;                                       ///< A missile icon drawn in the HUD
+    wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
+    wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies
+    wsg_t bossTex[NUM_BOSS_STATES - 1][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The textures for the boss
 
     font_t ibm;     ///< A font to draw the HUD
     font_t logbook; ///< A font to draw the menu
@@ -534,14 +633,46 @@ typedef struct
     const char* nextDialogText; ///< A pointer to the next dialog text, if it doesn't fit in one box
     wsg_t* dialogPortrait;      ///< A portrait to draw above the dialog text
 
-    uint32_t pauseBlinkTimer; ///< A timer to blink things on the pause menu
-    bool pauseBlink;          ///< Boolean for two draw states on the pause menu
+    int32_t btnLockoutUs; ///< A timer to block buttons when first showing a dialog
+    int32_t blinkTimer;   ///< A timer to blink things on the pause menu
+    bool blink;           ///< Boolean for two draw states on the pause menu
 
     list_t scripts[NUM_IF_OP_TYPES]; ///< An array of lists of scripts
     uint32_t scriptTimer;            ///< A microsecond timer to check for time based scripts
     uint32_t secondsSinceStart;      ///< The number of seconds since this map was loaded
 
     starfield_t starfield; ///< Starfield used for warp animation
+
+    song_t songs[NUM_MAPS + 1]; ///< Per-map background music, plus a boss theme
+    song_t sfx_door_open;       ///< SFX when a door opens
+    song_t sfx_e_damage;        ///< SFX when an enemy takes damage
+    song_t sfx_e_freeze;        ///< SFX when an enemy is frozen
+    song_t sfx_p_charge;        ///< SFX when the charge beam is shot
+    song_t sfx_p_damage;        ///< SFX when the player takes damage
+    song_t sfx_p_shoot;         ///< SFX when the a normal beam is shot
+    song_t sfx_e_block;         ///< SFX when an enemy blocks a shot
+    song_t sfx_e_dead;          ///< SFX when an enemy dies
+    song_t sfx_item_get;        ///< SFX when an item is obtained
+    song_t sfx_p_charge_start;  ///< SFX when the charge beam starts to charge
+    song_t sfx_p_missile;       ///< SFX when a missile is shot
+    song_t sfx_p_ice;           ///< SFX when the ice beam is shot
+    song_t sfx_p_xray;          ///< SFX when th xray beam is shot
+    song_t sfx_warp;            ///< SFX when the player warps
+    song_t sfx_lava_dmg;        ///< SFX when standing in lava
+    song_t sfx_health;          ///< SFX when picking up health
+    song_t sfx_game_over;       ///< SFX when the game is over
+
+    int32_t itemRotateTimer; ///< A timer to 'rotate' items by scaling the X direction
+    int32_t itemRotateDeg;   ///< The number of degrees all items are 'rotated' by
+    bool itemRotateMirror;   ///< If items should be drawn mirrored
+
+    int32_t ledTimer;     ///< A timer to change LED hue
+    int32_t ledHue;       ///< The current LED hue
+    int32_t targetLedHue; ///< The target LED hue
+
+    credits_t credits; ///< Credits shown when the game is won
+
+    const char* deathText; ///< Text shown on the death screen
 } ray_t;
 
 //==============================================================================
@@ -554,11 +685,14 @@ extern const char* const rayMapNames[];
 extern const paletteColor_t rayMapColors[];
 extern const char RAY_NVS_KEY[];
 extern const char* const RAY_NVS_VISITED_KEYS[];
+extern const char MAGTROID_UNLOCK_KEY[];
 
 //==============================================================================
 // Functions
 //==============================================================================
 
 void rayFreeCurrentState(ray_t* ray);
+void rayStartGame(void);
+void raySwitchToScreen(rayScreen_t newScreen);
 
 #endif

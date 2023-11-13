@@ -27,7 +27,7 @@
  * @return true if the SNG was loaded successfully,
  *         false if the SNG load failed and should not be used
  */
-bool loadSong(char* name, song_t* song, bool spiRam)
+bool loadSong(const char* name, song_t* song, bool spiRam)
 {
     uint32_t caps = spiRam ? MALLOC_CAP_SPIRAM : MALLOC_CAP_DEFAULT;
 

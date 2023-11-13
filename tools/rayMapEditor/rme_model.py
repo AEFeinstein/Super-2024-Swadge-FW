@@ -74,13 +74,13 @@ class model:
                 self.currentId = (self.currentId + 1) % 256
 
     def getPaletteType(self, x, y):
-        if x < len(objTiles):
+        if x < len(bgTiles):
             # backgrounds in the first columns
             if 0 <= y and y < len(bgTiles[x]):
                 return bgTiles[x][y]
         else:
             # objects i the other columns
-            x = x - len(objTiles)
+            x = x - len(bgTiles)
             if 0 <= y and y < len(objTiles[x]):
                 return objTiles[x][y]
         return None

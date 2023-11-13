@@ -280,6 +280,9 @@ void gamepadEnterMode(void)
 
     // We shold go as fast as we can
     setFrameRateUs(0);
+
+    // Set up the IMU
+    accelSetRegistersAndReset();
 }
 
 /**

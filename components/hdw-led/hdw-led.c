@@ -5,6 +5,7 @@
 #include <driver/rmt_tx.h>
 #include <esp_rom_gpio.h>
 #include <soc/gpio_sig_map.h>
+#include <string.h>
 
 #include "led_strip_encoder.h"
 #include "hdw-led.h"
@@ -144,4 +145,27 @@ esp_err_t setLeds(led_t* leds, uint8_t numLeds)
 
     // Write RGB values to LEDs
     return rmt_transmit(led_chan, led_encoder, (uint8_t*)localLeds, numLeds * sizeof(led_t), &tx_config);
+}
+
+/**
+ * @brief Write the current LED state into the given array
+ *
+ * @param[out] leds The LED array to write the state into
+ * @param numLeds The maximum number of LEDs to write
+ * @return uint8_t The number of LEDs actually written to the array
+ */
+uint8_t getLedState(led_t* leds, uint8_t numLeds)
+{
+    if (NULL != leds && numLeds > 0)
+    {
+        if (numLeds > CONFIG_NUM_LEDS + 1)
+        {
+            numLeds = CONFIG_NUM_LEDS + 1;
+        }
+
+        memcpy(leds, localLeds, sizeof(led_t) * numLeds);
+        return numLeds;
+    }
+
+    return 0;
 }

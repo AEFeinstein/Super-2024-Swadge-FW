@@ -53,6 +53,7 @@ menu_t* initMenu(const char* title, menuCb cbFunc)
     menu->currentItem = NULL;
     menu->items       = calloc(1, sizeof(list_t));
     menu->parentMenu  = NULL;
+    menu->showBattery = false;
     return menu;
 }
 
@@ -793,4 +794,34 @@ menu_t* menuButton(menu_t* menu, buttonEvt_t evt)
         }
     }
     return menu;
+}
+
+/**
+ * @brief Show or hide the battery on the menu. This should be called from the
+ * root menu after the menu is constructed
+ *
+ * @param menu The menu to show a battery indicator on
+ * @param showBattery true to show the battery, false to hide it
+ */
+void setShowBattery(menu_t* menu, bool showBattery)
+{
+    // Set this menu
+    menu->showBattery = showBattery;
+
+    // For each item
+    node_t* itemNode = menu->items->first;
+    while (itemNode)
+    {
+        menuItem_t* item = (menuItem_t*)itemNode->val;
+
+        // If this item has a submenu
+        if (NULL != item->subMenu)
+        {
+            // Set the battery there too (recursive)
+            setShowBattery(item->subMenu, showBattery);
+        }
+
+        // Move to the next item
+        itemNode = itemNode->next;
+    }
 }

@@ -12,15 +12,18 @@
  *
  * \section imu_usage Usage
  *
- * The core system will call initAccelerometer() and deInitAccelerometer() appropriately.  And you can at any point
+ * The core system will call initAccelerometer() and deInitAccelerometer() appropriately. And you can at any point
  * call any of the proper IMU / accel functions.
  *
- * The functions you can use are:
- *  esp_err_t accelGetAccelVec(int16_t* x, int16_t* y, int16_t* z);
- *  esp_err_t accelGetQuaternion( float * quaternion );
+ * accelSetRegistersAndReset() \b must be called when entering a Swadge mode that uses the IMU.
  *
- * You can, of course at any time call:
- *  esp_err_t accelIntegrate();
+ * accelIntegrate() \b should be called periodically. This can be done either in the mode's main loop or in the
+ * background draw callback. If this is called from the background draw callback, make sure to only call it once per
+ * frame, since multiple callbacks are called per-frame.
+ *
+ * The functions you can use to get acceleration data are:
+ *  - accelGetAccelVecRaw()
+ *  - accelGetQuaternion()
  *
  * \section imu_example Example
  *

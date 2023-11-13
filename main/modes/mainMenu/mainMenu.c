@@ -171,6 +171,9 @@ static void mainMenuEnterMode(void)
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
+    // Show the battery on the main menu
+    setShowBattery(mainMenu->menu, true);
+
     // Initialize menu renderer
     mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
 }

@@ -97,7 +97,7 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
     // Set a pointer for textures later
     paletteColor_t* texture = NULL;
     // The ceiling texture is always this
-    paletteColor_t* ceilTexture = getTexByType(ray, BG_CEILING)->px;
+    paletteColor_t* ceilTexture = ray->envTex[ray->p.mapId % NUM_ENVS][TX_CEILING].px;
 
     // Save these to not resolve pointers later
     uint32_t mapW = ray->map.w;
@@ -197,21 +197,16 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
                     {
                         // Get the next cell texture
                         rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
-                        // Always draw floor under doors
-                        if (CELL_IS_TYPE(type, BG | DOOR))
-                        {
-                            type = BG_FLOOR;
-                        }
 
-#ifdef TEST_TEX
-                        if ((ray->p.mapId < 4) && (BG_FLOOR_LAVA != type) && (BG_FLOOR_WATER != type))
-                        {
-                            texture = ray->testTextures[ray->p.mapId * 2].px;
-                        }
-                        else
-#endif
+                        // Water, lava, and heal are special
+                        if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type) || (BG_FLOOR_HEAL == type))
                         {
                             texture = getTexByType(ray, type)->px;
+                        }
+                        else
+                        {
+                            // Otherwise draw normal floor for this map
+                            texture = ray->envTex[ray->p.mapId % NUM_ENVS][TX_FLOOR].px;
                         }
                     }
                     else
@@ -513,22 +508,18 @@ void castWalls(ray_t* ray)
 
         // Pick the texture based on the map tile
         paletteColor_t* tex;
+        rayMapCellType_t type = ray->map.tiles[mapX][mapY].type;
         if (xrayOverride)
         {
-            tex = getTexByType(ray, BG_WALL_1)->px;
+            tex = ray->envTex[ray->p.mapId % NUM_ENVS][TX_WALL_1].px;
+        }
+        else if (BG_WALL_1 <= type && type <= BG_WALL_5)
+        {
+            tex = ray->envTex[ray->p.mapId % NUM_ENVS][type - BG_WALL_1].px;
         }
         else
         {
-#ifdef TEST_TEX
-            if (ray->p.mapId < 4 && !CELL_IS_TYPE(ray->map.tiles[mapX][mapY].type, BG | DOOR))
-            {
-                tex = ray->testTextures[ray->p.mapId * 2 + 1].px;
-            }
-            else
-#endif
-            {
-                tex = getTexByType(ray, ray->map.tiles[mapX][mapY].type)->px;
-            }
+            tex = getTexByType(ray, type)->px;
         }
 
         // Draw a vertical strip
@@ -684,12 +675,14 @@ static int objDistComparator(const void* obj1, const void* obj2)
  * This is called from the main loop.
  *
  * @param ray The entire game state
- * @return The closest sprite in the lock zone, i.e. center of the display. This may be NULL if there are no centered
- * sprites.
+ * @param closestEnemy Return pointer to the closest enemy to the player. The return may be NULL
+ * @return The closest enemy in the lock zone, i.e. center of the display. This may be NULL if there are no centered
+ * enemies.
  */
-rayObjCommon_t* castSprites(ray_t* ray)
+rayObjCommon_t* castSprites(ray_t* ray, rayEnemy_t** closestEnemy)
 {
-    rayObjCommon_t* lockedObj = NULL;
+    rayObjCommon_t* lockedEnemy = NULL;
+    *closestEnemy               = NULL;
 
     // Setup to draw
     SETUP_FOR_TURBO();
@@ -780,6 +773,9 @@ rayObjCommon_t* castSprites(ray_t* ray)
     // Sort the sprites by distance
     qsort(allObjs, allObjsIdx, sizeof(objDist_t), objDistComparator);
 
+    // Calculate the width modifier for 'rotated' items
+    int32_t widthMod = getSin1024(ray->itemRotateDeg);
+
     // after sorting the sprites, do the projection and draw them
     for (int i = 0; i < allObjsIdx; i++)
     {
@@ -789,6 +785,12 @@ rayObjCommon_t* castSprites(ray_t* ray)
         // Make sure this object slot is occupied
         if (-1 != obj->id)
         {
+            bool isEnemy = CELL_IS_TYPE(obj->type, OBJ | ENEMY);
+            if (isEnemy)
+            {
+                *closestEnemy = (rayEnemy_t*)obj;
+            }
+
             // Get WSG dimensions for convenience
             uint32_t tWidth  = obj->sprite->w;
             uint32_t tHeight = obj->sprite->h;
@@ -834,6 +836,22 @@ rayObjCommon_t* castSprites(ray_t* ray)
             if (spriteWidth < 0)
             {
                 spriteWidth = -spriteWidth;
+            }
+
+            // If this is an item that should rotate
+            if (CELL_IS_TYPE(obj->type, OBJ | ITEM) && (OBJ_ITEM_ENERGY_TANK != obj->type)
+                && (OBJ_ITEM_PICKUP_ENERGY != obj->type) && (OBJ_ITEM_PICKUP_MISSILE != obj->type))
+            {
+                // Scale this item's width according to current rotation
+                spriteWidth = (spriteWidth * widthMod) / 1024;
+                // If this scales to 0, don't draw it
+                if (0 == spriteWidth)
+                {
+                    // If this sprite has zero width, don't draw it
+                    continue;
+                }
+                // Copy the global mirror to this object
+                obj->spriteMirrored = ray->itemRotateMirror;
             }
 
             // This is the texture step per-screen-pixel
@@ -891,6 +909,25 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
             // Find the pixel Y coordinate where the sprite draw starts. It may be negative
             int32_t drawStartY = (-spriteHeight + TFT_HEIGHT) / 2 + spritePosZ;
+
+            // If this is an enemy
+            bool drawWarpLine = false;
+            if (isEnemy)
+            {
+                rayEnemy_t* enemy = (rayEnemy_t*)obj;
+                // And the enemy is warping in
+                if (0 < enemy->warpTimer)
+                {
+                    // Start drawing at an offset Y
+                    int32_t offset = ((enemy->warpTimer * spriteHeight) / E_WARP_TIME);
+                    drawStartY += offset;
+                    // Start drawing within the sprite
+                    initialTexY = texYDelta * (offset);
+
+                    drawWarpLine = true;
+                }
+            }
+
             if (drawStartY < 0)
             {
                 // Advance the initial texture Y coordinate by the difference
@@ -914,14 +951,29 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
                     // Check if this should be locked onto
-                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE))
+                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE)
+                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY))
                     {
                         // Closest sprites are drawn last, so override the lock
-                        lockedObj = obj;
+                        lockedEnemy = obj;
                     }
 
                     // Reset the texture Y coordinate
                     q16_16 texY = initialTexY;
+
+                    // If an enemy is warping in
+                    if (drawWarpLine)
+                    {
+                        // Draw a line above the partial sprite
+                        if (0 <= drawStartY - 1)
+                        {
+                            TURBO_SET_PIXEL(stripe, drawStartY - 1, c303);
+                            if (0 <= drawStartY - 2)
+                            {
+                                TURBO_SET_PIXEL(stripe, drawStartY - 2, c550);
+                            }
+                        }
+                    }
 
                     // for every pixel of the current stripe
                     for (int32_t y = drawStartY; y < drawEndY; y++)
@@ -944,9 +996,45 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 }
                 texX += texXDelta;
             }
+
+            // If this is a blocking enemy
+            if ((isEnemy) && (E_BLOCKING == ((rayEnemy_t*)obj)->state))
+            {
+                // Draw a circle shield with wallDistBuffer checks
+                // Drawing is largely copied from drawCircleInner()
+                int32_t r  = spriteHeight / 2;
+                int32_t xm = spriteScreenX;
+                int32_t ym = (TFT_HEIGHT / 2) + spritePosZ;
+                int32_t x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+                do
+                {
+                    int32_t cdX = xm - x;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + y), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - y), c550);
+                    }
+                    cdX = xm - y;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - x), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + x), c550);
+                    }
+
+                    r = err;
+                    if (r <= y)
+                    {
+                        err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+                    }
+                    if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+                    {
+                        err += ++x * 2 + 1; /* -> x-step now */
+                    }
+                } while (x < 0);
+            }
         }
     }
-    return lockedObj;
+    return lockedEnemy;
 }
 
 /**
@@ -977,30 +1065,37 @@ void drawHud(ray_t* ray)
                 yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
             }
         }
-        drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
+        drawWsgSimple(gun, TFT_WIDTH - gun->w + ray->gunShakeX, yOffset);
+    }
+
+    // Draw Keys
+    int16_t xOff                    = 40;
+    const rayMapCellType_t kTypes[] = {OBJ_ITEM_KEY_A, OBJ_ITEM_KEY_B, OBJ_ITEM_KEY_C};
+    for (int16_t kIdx = 0; kIdx < NUM_KEYS; kIdx++)
+    {
+        if (KEY == ray->p.i.keys[ray->p.mapId][kIdx])
+        {
+            wsg_t* keyTex = getTexByType(ray, kTypes[kIdx]);
+            drawWsgSimpleHalf(keyTex, xOff, TFT_HEIGHT - (keyTex->h / 2));
+            xOff += (keyTex->w / 2) - 4;
+        }
     }
 
     // If the player has missiles
     if (ray->p.i.missileLoadOut)
     {
-        // Draw a count of missiles
+        xOff = 103;
+        // Get texture and string
+        wsg_t* mTex         = &ray->missileHUDicon;
         char missileStr[16] = {0};
-        snprintf(missileStr, sizeof(missileStr) - 1, "M:%02" PRId32 "/%02" PRId32, ray->p.i.numMissiles,
-                 ray->p.i.maxNumMissiles);
-        drawText(&ray->ibm, c555, missileStr, 40, TFT_HEIGHT - ray->ibm.height);
-    }
+        snprintf(missileStr, sizeof(missileStr) - 1, "%02" PRId32, ray->p.i.numMissiles);
 
-    // Draw a count of Keys
-    char keyStr[16] = "K:";
-    for (int16_t kIdx = 0; kIdx < NUM_KEYS; kIdx++)
-    {
-        if (KEY == ray->p.i.keys[ray->p.mapId][kIdx])
-        {
-            char thisKeyStr[] = {'0' + kIdx, 0};
-            strcat(keyStr, thisKeyStr);
-        }
+        // Draw missile icon
+        drawWsgSimple(mTex, xOff, TFT_HEIGHT - mTex->h);
+        xOff += (mTex->w) + 2;
+        // Draw a count of missiles
+        drawText(&ray->ibm, c555, missileStr, xOff, TFT_HEIGHT - (mTex->h + ray->ibm.height) / 2);
     }
-    drawText(&ray->ibm, c555, keyStr, 100, TFT_HEIGHT - ray->ibm.height);
 
 #define BAR_END_MARGIN  40
 #define BAR_SIDE_MARGIN 8
@@ -1028,22 +1123,22 @@ void drawHud(ray_t* ray)
                     chargeIndicatorStart,        //
                     BAR_SIDE_MARGIN + BAR_WIDTH, //
                     TFT_HEIGHT - BAR_END_MARGIN, //
-                    c550);
+                    c420);
     fillDisplayArea(TFT_WIDTH - BAR_SIDE_MARGIN - BAR_WIDTH, //
                     chargeIndicatorStart,                    //
                     TFT_WIDTH - BAR_SIDE_MARGIN,             //
                     TFT_HEIGHT - BAR_END_MARGIN,             //
-                    c550);
+                    c420);
 
     // Draw side bars according to suit colors
-    paletteColor_t sideBarColor = c432;
+    paletteColor_t sideBarColor = c552;
     if (ray->p.i.waterSuit)
     {
-        sideBarColor = c223;
+        sideBarColor = c125;
     }
     else if (ray->p.i.lavaSuit)
     {
-        sideBarColor = c510;
+        sideBarColor = c500;
     }
     fillDisplayArea(BAR_SIDE_MARGIN,             //
                     BAR_END_MARGIN,              //
@@ -1055,6 +1150,73 @@ void drawHud(ray_t* ray)
                     TFT_WIDTH - BAR_SIDE_MARGIN,             //
                     chargeIndicatorStart,                    //
                     sideBarColor);
+
+    // Draw target if locked on
+    if (NULL != ray->targetedObj)
+    {
+        // Pick color based on loadout
+        paletteColor_t color = c114;
+        switch (ray->p.loadout)
+        {
+            default:
+            case LO_NORMAL:
+            {
+                color = c114;
+                break;
+            }
+            case LO_MISSILE:
+            {
+                color = c401;
+                break;
+            }
+            case LO_ICE:
+            {
+                color = c135;
+                break;
+            }
+            case LO_XRAY:
+            {
+                color = c130;
+                break;
+            }
+        }
+#define T_SIZE  20
+#define T_THICK 3
+#define T_ARM   7
+        // Draw some brackets
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE,           //
+                        TFT_HEIGHT / 2 - T_SIZE,          //
+                        TFT_WIDTH / 2 - T_SIZE + T_THICK, //
+                        TFT_HEIGHT / 2 + T_SIZE,          //
+                        color);
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK, //
+                        TFT_HEIGHT / 2 - T_SIZE,          //
+                        TFT_WIDTH / 2 + T_SIZE,           //
+                        TFT_HEIGHT / 2 + T_SIZE,          //
+                        color);
+
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE + T_THICK,         //
+                        TFT_HEIGHT / 2 - T_SIZE,                  //
+                        TFT_WIDTH / 2 - T_SIZE + T_THICK + T_ARM, //
+                        TFT_HEIGHT / 2 - T_SIZE + T_THICK,        //
+                        color);
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE + T_THICK,         //
+                        TFT_HEIGHT / 2 + T_SIZE - T_THICK,        //
+                        TFT_WIDTH / 2 - T_SIZE + T_THICK + T_ARM, //
+                        TFT_HEIGHT / 2 + T_SIZE,                  //
+                        color);
+
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK - T_ARM, //
+                        TFT_HEIGHT / 2 - T_SIZE,                  //
+                        TFT_WIDTH / 2 + T_SIZE - T_THICK,         //
+                        TFT_HEIGHT / 2 - T_SIZE + T_THICK,        //
+                        color);
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK - T_ARM, //
+                        TFT_HEIGHT / 2 + T_SIZE - T_THICK,        //
+                        TFT_WIDTH / 2 + T_SIZE - T_THICK,         //
+                        TFT_HEIGHT / 2 + T_SIZE,                  //
+                        color);
+    }
 }
 
 /**
@@ -1163,4 +1325,140 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
             }
         }
     }
+
+    // "Rotate" item renders by one degree every 16384uS
+    ray->itemRotateTimer -= elapsedUs;
+    while (ray->itemRotateTimer <= 0)
+    {
+        ray->itemRotateTimer += 16384;
+        ray->itemRotateDeg++;
+        // Only rotate between 0 and 179 degrees
+        if (180 <= ray->itemRotateDeg)
+        {
+            ray->itemRotateDeg = 0;
+            // Mirror sprites every rotation to account for asymmetry
+            ray->itemRotateMirror = !ray->itemRotateMirror;
+        }
+    }
+
+    // If the gun is charged
+    if (ray->chargeTimer >= CHARGE_TIME_US)
+    {
+        // Run a timer to shake it left and right
+        ray->gunShakeTimer -= elapsedUs;
+        while (ray->gunShakeTimer <= 0)
+        {
+            ray->gunShakeTimer += 10000;
+            if (true == ray->gunShakeL)
+            {
+                ray->gunShakeX++;
+                if (10 <= ray->gunShakeX)
+                {
+                    ray->gunShakeL = false;
+                }
+            }
+            else
+            {
+                ray->gunShakeX--;
+                if (0 >= ray->gunShakeX)
+                {
+                    ray->gunShakeL = true;
+                }
+            }
+        }
+    }
+    else
+    {
+        // If the gun is not charged, make sure this is reset
+        ray->gunShakeX = 0;
+    }
+}
+
+/**
+ * @brief Draw LEDs as a radar pointing to the closest enemy
+ *
+ * @param ray The entire game state
+ * @param closestEnemy The closest enemy, may be NULL
+ */
+void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy)
+{
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    bool ledsSet                = false;
+
+    if (NULL != closestEnemy)
+    {
+        // Angles around a circle at 45 degree increments (one per LED)
+        // clang-format off
+        const q24_8 normLedAngles[CONFIG_NUM_LEDS][2] = {
+            {0xFFFFFF9E, 0x000000EC},
+            {0xFFFFFF14, 0x00000062},
+            {0xFFFFFF14, 0xFFFFFF9E},
+            {0xFFFFFF9E, 0xFFFFFF14},
+            {0x00000062, 0xFFFFFF14},
+            {0x000000EC, 0xFFFFFF9E},
+            {0x000000EC, 0x00000062},
+            {0x00000062, 0x000000EC},
+        };
+        // clang-format on
+
+        // Find the player's view angle
+        int32_t pDegrees = cordicAtan2(ray->p.dirX, -ray->p.dirY);
+        // Negate it
+        if (pDegrees != 0)
+        {
+            pDegrees = 360 - pDegrees;
+        }
+
+        // Get a vector from the player to the enemy
+        q24_8 xDiff = SUB_FX(closestEnemy->c.posX, ray->p.posX);
+        q24_8 yDiff = SUB_FX(closestEnemy->c.posY, ray->p.posY);
+
+        // Get a magnitude, for brightness
+        q24_8 dist = ADD_FX(MUL_FX(xDiff, xDiff), MUL_FX(yDiff, yDiff));
+
+        // Rotate the enemy vector in relation to the player
+        int32_t pSin     = getSin1024(pDegrees);
+        int32_t pCos     = getCos1024(pDegrees);
+        q24_8 eRotAngleX = ((xDiff * pCos) - (yDiff * pSin)) / 1024;
+        q24_8 eRotAngleY = ((xDiff * pSin) + (yDiff * pCos)) / 1024;
+
+        // Normalize the vector
+        fastNormVec(&eRotAngleX, &eRotAngleY);
+
+#define MAX_RADAR_DIST 32768
+
+        // Calculate each LED's brightness
+        if (dist < MAX_RADAR_DIST)
+        {
+            int32_t brightness = MAX_RADAR_DIST - dist;
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+            {
+                // The brightness is the dot product between the LED's vector and the vector to the enemy
+                // dotProd of two normalized vectors is between -1 and 1
+                q24_8 dotProd = ADD_FX(MUL_FX(normLedAngles[lIdx][0], eRotAngleX), //
+                                       MUL_FX(normLedAngles[lIdx][1], eRotAngleY));
+                // Shift dotProd to the range 0 to 1, which is actually 0 to 256
+                dotProd = ADD_FX(TO_FX(1), dotProd) / 2;
+
+                // Light the LED
+                int32_t ledVal = (dotProd * brightness) / MAX_RADAR_DIST;
+                leds[lIdx]     = LedEHSVtoHEXhelper(ray->ledHue, 0xFF, CLAMP(ledVal, 0, 0xFF), true);
+            }
+            // Note the LEDs are set
+            ledsSet = true;
+        }
+    }
+
+    // If the LEDs are not set (no enemy or out of range)
+    if (!ledsSet)
+    {
+        // Light all evenly
+        for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+        {
+            leds[lIdx] = LedEHSVtoHEXhelper(ray->ledHue, 0xFF, 0x80, true);
+        }
+    }
+
+    // Set the LEDs
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
