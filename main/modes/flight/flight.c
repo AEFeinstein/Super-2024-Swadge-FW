@@ -66,10 +66,24 @@
 
 #define flightGetCourseTimeUs() ( flight->paused ? (flight->timeOfPause - flight->timeOfStart) : ((uint32_t)esp_timer_get_time() - flight->timeOfStart) )
 
+
+#define PROFILING
+
 /*============================================================================
  * Structs, Enums
  *==========================================================================*/
 
+
+#ifndef EMULATOR  
+static inline uint32_t getCycleCount()
+{
+    uint32_t ccount;
+    asm volatile("rsr %0,ccount" : "=a"(ccount));
+    return ccount;
+}
+#else
+static inline uint32_t getCycleCount() { return 0; }
+#endif
 
 typedef enum
 {
@@ -293,7 +307,7 @@ static const char fl_title[]  = "Flyin Donut";
 static const char fl_flight_env[] = "Atrium Course";
 static const char fl_flight_invertY0_env[] = "Y Invert: Off";
 static const char fl_flight_invertY1_env[] = "Y Invert: On";
-static const char fl_flight_perf[] = "Free Solo/VS";
+static const char fl_flight_perf[] = "Free / VS";
 static const char fl_100_percent[] = "100% 100% 100%";
 static const char fl_turn_around[] = "TURN AROUND";
 static const char fl_you_win[] = "YOU   WIN!";
@@ -307,7 +321,11 @@ swadgeMode_t flightMode =
     .fnEnterMode = flightEnterMode,
     .fnExitMode = flightExitMode,
     .fnBackgroundDrawCallback = flightBackground,
+#ifdef PROFILING
+    .wifiMode = NO_WIFI,
+#else
     .wifiMode = ESP_NOW_IMMEDIATE,
+#endif
     .fnEspNowRecvCb = FlightfnEspNowRecvCb,
     .fnEspNowSendCb = FlightfnEspNowSendCb,
     .fnMainLoop = flightRender,
@@ -1027,6 +1045,10 @@ int tdModelVisibilitycheck( const tdModel * m )
         return -2;
     }
 }
+/* Profiling notes
+     Start = 245500 / 80000 / 1802000
+
+*/
 
 void tdDrawModel( const tdModel * m )
 {
@@ -1118,6 +1140,8 @@ static void flightRender(int64_t elapsedUs)
 //#ifndef EMULATOR
 //    if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('R');
 //#endif
+	uint32_t t0 = getCycleCount();
+
     flightUpdate( 0, elapsedUs );
 
     flight_t * tflight = flight;
@@ -1207,9 +1231,12 @@ static void flightRender(int64_t elapsedUs)
 
     int mdlct = mrptr - mrp;
 
+	uint32_t t1 = getCycleCount();
 
     //Painter's algorithm
     qsort( mrp, mdlct, sizeof( modelRangePair_t ), mdlctcmp );
+
+	uint32_t t2 = getCycleCount();
 
 // #ifndef EMULATOR
 //     if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('3');
@@ -1393,6 +1420,19 @@ static void flightRender(int64_t elapsedUs)
 //#ifndef EMULATOR  
 //    if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('5');
 //#endif
+
+// For profiling.
+	uint32_t t3 = getCycleCount();
+	char cts[128];
+    fillDisplayArea( 0, 210, 280, 235, 0 );
+	sprintf( cts, "%d", (int)(t1-t0) );
+    drawText(&flight->ibm, CNDRAW_WHITE, cts, 15,210);
+	sprintf( cts, "%d", (int)(t2-t1) );
+    drawText(&flight->ibm, CNDRAW_WHITE, cts, 65,210);
+	sprintf( cts, "%d", (int)(t3-t2) );
+    drawText(&flight->ibm, CNDRAW_WHITE, cts, 115,210);
+
+	//ESP_LOGI( "RENDER", "%d %d %d", (int)(t1-t0), (int)(t2-t1), (int)(t3-t2) );
     return;
 }
 
@@ -1400,7 +1440,6 @@ static void flightGameUpdate( flight_t * tflight )
 {
     uint32_t now = esp_timer_get_time();
     uint32_t delta = now - tflight->lastFlightUpdate;
-ESP_LOGI( "DELTA", "%d", (int)delta );
     tflight->lastFlightUpdate = now;
     uint8_t bs = tflight->buttonState;
 
@@ -2184,6 +2223,7 @@ static void FlightNetworkFrameCall( flight_t * tflight, uint32_t now, modelRange
         }while(1);
     }
 
+#ifndef PROFILING
     // Only update at 10Hz.
     if( now > tflight->lastNetUpdate + 100000 )
     {
@@ -2245,7 +2285,7 @@ static void FlightNetworkFrameCall( flight_t * tflight, uint32_t now, modelRange
         espNowSend((char*)espnow_buffer, len); //Don't enable yet.
         // uprintf( "ESPNow Send: %d\n", len );
     }
-
+#endif
 /*
     //XTOS_SET_INTLEVEL(XCHAL_EXCM_LEVEL);   // Disable Interrupts
     //XTOS_SET_INTLEVEL(0);  //re-enable interrupts.
