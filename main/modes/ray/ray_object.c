@@ -100,8 +100,7 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
         rayBullet_t* obj = &(ray->bullets[i]);
         if (-1 != obj->c.id)
         {
-            // Update the bullet's position
-            // TODO justify the scaling factor, assuming velXY is a unit vector
+            // Update the bullet's position. 100000 was picked out of a hat!
             obj->c.posX += (obj->velX * (int32_t)elapsedUs) / 100000;
             obj->c.posY += (obj->velY * (int32_t)elapsedUs) / 100000;
 

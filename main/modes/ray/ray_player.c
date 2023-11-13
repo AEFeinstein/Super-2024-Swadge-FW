@@ -678,7 +678,7 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                     else
                     {
                         // Show random dialog
-                        int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog); // TODO dont double dip
+                        int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog);
                         rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
                     }
                     break;
