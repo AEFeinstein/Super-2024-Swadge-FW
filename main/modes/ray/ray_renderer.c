@@ -1123,22 +1123,22 @@ void drawHud(ray_t* ray)
                     chargeIndicatorStart,        //
                     BAR_SIDE_MARGIN + BAR_WIDTH, //
                     TFT_HEIGHT - BAR_END_MARGIN, //
-                    c550);
+                    c420);
     fillDisplayArea(TFT_WIDTH - BAR_SIDE_MARGIN - BAR_WIDTH, //
                     chargeIndicatorStart,                    //
                     TFT_WIDTH - BAR_SIDE_MARGIN,             //
                     TFT_HEIGHT - BAR_END_MARGIN,             //
-                    c550);
+                    c420);
 
     // Draw side bars according to suit colors
-    paletteColor_t sideBarColor = c432;
+    paletteColor_t sideBarColor = c552;
     if (ray->p.i.waterSuit)
     {
-        sideBarColor = c223;
+        sideBarColor = c125;
     }
     else if (ray->p.i.lavaSuit)
     {
-        sideBarColor = c510;
+        sideBarColor = c500;
     }
     fillDisplayArea(BAR_SIDE_MARGIN,             //
                     BAR_END_MARGIN,              //
