@@ -401,21 +401,24 @@ void drawImageBrowser(imageBrowser_t* browser)
                 browser->mainImage.px = NULL;
             }
 
-            // Attempt to load the new image
-            if (loadWsgNvs(browser->namespace, curItem->nvsKey, &browser->mainImage, true))
+            if (browser->namespace[0] && curItem->nvsKey[0])
             {
-                // Save the new image's key so we can check it later
-                strncpy(browser->mainImageKey, curItem->nvsKey, 16);
-            }
-            else
-            {
-                // Error, just load the error image
-                PAINT_LOGE("Unable to load image %s", curItem->nvsKey);
-                loadWsg("error.wsg", &browser->mainImage, false);
+                // Attempt to load the new image
+                if (loadWsgNvs(browser->namespace, curItem->nvsKey, &browser->mainImage, true))
+                {
+                    // Save the new image's key so we can check it later
+                    strncpy(browser->mainImageKey, curItem->nvsKey, 16);
+                }
+                else
+                {
+                    // Error, just load the error image
+                    PAINT_LOGE("Unable to load image %s", curItem->nvsKey);
+                    loadWsg("error.wsg", &browser->mainImage, false);
+                }
             }
         }
 
-        // If there's actually an image after all that, get the biggest
+        // If there's actually an image after all that, get the biggest scale for it and draw it
         if (browser->mainImage.px)
         {
             uint8_t scale = paintGetMaxScale(browser->mainImage.w, browser->mainImage.h, marginLeft + marginRight, imageTop + imageBottom);
@@ -428,6 +431,9 @@ void drawImageBrowser(imageBrowser_t* browser)
                 imgY = imageTop + (TFT_HEIGHT - imageTop - imageBottom - (browser->mainImage.h / 2)) / 2;
 
                 drawWsgSimpleHalf(&browser->mainImage, imgX, imgY);
+
+                // Draw border
+                drawRect(imgX - 1, imgY - 1, imgX + browser->mainImage.w / 2 + 1, imgY + browser->mainImage.h / 2 + 1, c000);
             }
             else
             {
@@ -436,6 +442,9 @@ void drawImageBrowser(imageBrowser_t* browser)
                 imgY = imageTop + (TFT_HEIGHT - imageTop - imageBottom - scale * browser->mainImage.h) / 2;
 
                 drawWsgSimpleScaled(&browser->mainImage, imgX, imgY, scale, scale);
+
+                // Draw border
+                drawRect(imgX - 1, imgY - 1, imgX + browser->mainImage.w * scale + 1, imgY + browser->mainImage.h * scale + 1, c000);
             }
         }
     }
@@ -467,6 +476,7 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
                     {
                         browser->currentItem = browser->items.last;
                     }
+
                     else if (NULL != browser->currentItem->prev)
                     {
                         browser->currentItem = browser->currentItem->prev;

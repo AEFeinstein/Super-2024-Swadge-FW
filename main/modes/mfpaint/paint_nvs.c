@@ -42,7 +42,8 @@ PAINT_BOOL_PARAM(EnableBlink, true);
 
 static int32_t paintReadParam(const settingParam_t* param);
 static bool paintWriteParam(const settingParam_t* param, int32_t val);
-static void paintRebuildPalette(paintCanvas_t* canvas, const paletteColor_t* img);
+static void paintRebuildPalette(paletteColor_t palette[16], const paletteColor_t* img, uint16_t w, uint16_t h);
+static size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count, paletteColor_t palette[16]);
 
 // void paintDebugIndex(int32_t index)
 // {
@@ -153,11 +154,11 @@ static bool paintWriteParam(const settingParam_t* param, int32_t val)
     return writeNvs32(param->key, CLAMP(val, param->min, param->max));
 }
 
-static void paintRebuildPalette(paintCanvas_t* canvas, const paletteColor_t* img)
+static void paintRebuildPalette(paletteColor_t palette[16], const paletteColor_t* img, uint16_t w, uint16_t h)
 {
     uint8_t paletteIndex[cTransparent + 1] = {0};
 
-    int max = canvas->w * canvas->h;
+    int max = w * h;
     for (int i = 0; i < max; i++)
     {
         paletteIndex[img[i]] = 1;
@@ -168,7 +169,7 @@ static void paintRebuildPalette(paintCanvas_t* canvas, const paletteColor_t* img
     {
         if (paletteIndex[i])
         {
-            canvas->palette[pOut++] = i;
+            palette[pOut++] = i;
 
             if (pOut == PAINT_MAX_COLORS)
             {
@@ -180,13 +181,13 @@ static void paintRebuildPalette(paintCanvas_t* canvas, const paletteColor_t* img
     // If, somehow, the image had no colors?
     if (pOut == 0)
     {
-        canvas->palette[0] = c000;
+        palette[pOut++] = c000;
     }
 
     while (pOut < PAINT_MAX_COLORS)
     {
         // Fill in any unused colors if there were fewer than the max
-        canvas->palette[pOut++] = canvas->palette[0];
+        palette[pOut++] = palette[0];
     }
 }
 
@@ -296,7 +297,21 @@ bool paintDeserialize(paintCanvas_t* dest, const uint8_t* data, size_t offset, s
     return offset * 2 + (count * 2) < dest->w * dest->h;
 }
 
+size_t paintSerializeWsg(uint8_t* dest, const wsg_t* wsg)
+{
+    // WSG has no palette, build it
+    paletteColor_t palette[16];
+    paintRebuildPalette(palette, wsg->px, wsg->w, wsg->h);
+
+    return _paintSerialize(dest, NULL, wsg, 0, (wsg->w * wsg->h + 1) / 2, palette);
+}
+
 size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset, size_t count)
+{
+    return _paintSerialize(dest, canvas, NULL, offset, count, canvas->palette);
+}
+
+size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count, paletteColor_t palette[16])
 {
     uint8_t paletteIndex[cTransparent + 1] = {};
 
@@ -310,23 +325,31 @@ size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset,
     // build the chunk
     for (uint16_t n = 0; n < count; n++)
     {
-        if (offset * 2 + (n * 2) >= canvas->w * canvas->h)
+        if (offset * 2 + (n * 2) >= (wsg ? (wsg->w * wsg->h) : (canvas->w * canvas->h)))
         {
             // If we've just stored the last pixel, return false to indicate that we're done
             return n;
         }
 
-        // calculate the real coordinates given the pixel indices
-        // (we store 2 pixels in each byte)
-        // that's 100% more pixel, per pixel!
-        x0 = canvas->x + (offset * 2 + (n * 2)) % canvas->w * canvas->xScale;
-        y0 = canvas->y + (offset * 2 + (n * 2)) / canvas->w * canvas->yScale;
-        x1 = canvas->x + (offset * 2 + (n * 2 + 1)) % canvas->w * canvas->xScale;
-        y1 = canvas->y + (offset * 2 + (n * 2 + 1)) / canvas->w * canvas->yScale;
+        if (canvas)
+        {
+            // calculate the real coordinates given the pixel indices
+            // (we store 2 pixels in each byte)
+            // that's 100% more pixel, per pixel!
+            x0 = canvas->x + (offset * 2 + (n * 2)) % canvas->w * canvas->xScale;
+            y0 = canvas->y + (offset * 2 + (n * 2)) / canvas->w * canvas->yScale;
+            x1 = canvas->x + (offset * 2 + (n * 2 + 1)) % canvas->w * canvas->xScale;
+            y1 = canvas->y + (offset * 2 + (n * 2 + 1)) / canvas->w * canvas->yScale;
 
-        // we only need to save the top-left pixel of each scaled pixel, since they're the same unless something is very
-        // broken
-        dest[n] = paletteIndex[(uint8_t)getPxTft(x0, y0)] << 4 | paletteIndex[(uint8_t)getPxTft(x1, y1)];
+            // we only need to save the top-left pixel of each scaled pixel, since they're the same unless something is very
+            // broken
+            dest[n] = paletteIndex[(uint8_t)getPxTft(x0, y0)] << 4 | paletteIndex[(uint8_t)getPxTft(x1, y1)];
+        }
+
+        if (wsg)
+        {
+            dest[n] = paletteIndex[(uint8_t)wsg->px[offset * 2 + n * 2]] << 4 | paletteIndex[(uint8_t)wsg->px[offset * 2 + n * 2 + 1]];
+        }
     }
 
     return count;
@@ -560,7 +583,24 @@ bool paintSaveNamed(const char* name, const paintCanvas_t* canvas)
     {
         for (uint16_t c = 0; c < canvas->w; ++c)
         {
-            tmpWsg.px[r * canvas->w + c] = getPxTft(canvas->x + c * canvas->xScale, canvas->y + r * canvas->yScale);
+            paletteColor_t col;
+            if (canvas->buffered && canvas->buffer)
+            {
+                if (((r * canvas->w + c) % 2) == 0)
+                {
+                    col = canvas->palette[(canvas->buffer[(r * canvas->w + c) / 2] >> 4) & 0x0F];
+                }
+                else
+                {
+                    col = canvas->palette[(canvas->buffer[(r * canvas->w + c) / 2] >> 0) & 0x0F];
+                }
+            }
+            else
+            {
+                col = getPxTft(canvas->x + c * canvas->xScale, canvas->y + r * canvas->yScale);
+            }
+
+            tmpWsg.px[r * canvas->w + c] = col;
         }
     }
 
@@ -580,26 +620,36 @@ bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
         canvas->w = tmpWsg.w;
         canvas->h = tmpWsg.h;
 
-        for (uint16_t y = 0; y < canvas->h; ++y)
+        if (canvas->buffered)
         {
-            for (uint16_t x = 0; x < canvas->w; ++x)
-            {
-                setPxScaled(x, y, cTransparent == tmpWsg.px[y * canvas->w + x] ? c555 : tmpWsg.px[y * canvas->w + x],
-                            canvas->x, canvas->y, canvas->xScale, canvas->yScale);
-            }
-        }
+            canvas->buffer = (uint8_t*)(tmpWsg.px);
 
-        // Canvas is now kind of optional at this point
-        size_t length = PAINT_MAX_COLORS;
-        if (!readNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, &length))
+            // So we don't free the new buffer
+            tmpWsg.px = NULL;
+        }
+        else
         {
-            paintRebuildPalette(canvas, tmpWsg.px);
-            PAINT_LOGW("No palette found for image %s, that's weird right?", name);
-            result = false;
+            for (uint16_t y = 0; y < canvas->h; ++y)
+            {
+                for (uint16_t x = 0; x < canvas->w; ++x)
+                {
+                    setPxScaled(x, y, cTransparent == tmpWsg.px[y * canvas->w + x] ? c555 : tmpWsg.px[y * canvas->w + x],
+                                canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+                }
+            }
+
+            // Canvas is now kind of optional at this point
+            size_t length = PAINT_MAX_COLORS;
+            if (!readNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, &length))
+            {
+                paintRebuildPalette(canvas->palette, tmpWsg.px, tmpWsg.w, tmpWsg.h);
+                PAINT_LOGW("No palette found for image %s, that's weird right?", name);
+                result = false;
+            }
+
+            freeWsg(&tmpWsg);
         }
     }
-
-    free(tmpWsg.px);
 
     return result;
 }

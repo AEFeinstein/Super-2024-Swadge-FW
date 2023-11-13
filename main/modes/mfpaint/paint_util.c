@@ -193,6 +193,11 @@ uint8_t paintGetMaxScale(uint16_t imgW, uint16_t imgH, uint16_t xMargin, uint16_
         return 1;
     }
 
+    if (imgW == 0 || imgH == 0)
+    {
+        return 0;
+    }
+
     uint16_t maxW = TFT_WIDTH - xMargin;
     uint16_t maxH = TFT_HEIGHT - yMargin;
 

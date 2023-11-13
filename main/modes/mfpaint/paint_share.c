@@ -63,12 +63,11 @@ const uint8_t SHARE_PACKET_ABORT            = 4;
 // The canvas data packet has PAINT_MAX_COLORS bytes of palette, plus 2 uint16_ts of width/height. Also 1 for size
 const uint8_t PACKET_LEN_CANVAS_DATA = sizeof(uint8_t) * PAINT_MAX_COLORS + sizeof(uint16_t) * 2;
 
-static const char strOverwriteSlot[]  = "Overwrite Slot %d";
-static const char strEmptySlot[]      = "Save in Slot %d";
-static const char strShareSlot[]      = "Share Slot %d";
-static const char strControlsShare[]  = "A to Share";
-static const char strControlsSave[]   = "A to Save";
-static const char strControlsCancel[] = "B to Cancel";
+static const char strShareSlot[]     = "Share Slot %d";
+static const char strControlsShare[] = "A to Share";
+static const char strControlsCancel[]  = "B to Cancel";
+static const char strSelectShareSlot[] = "Select Drawing to Share";
+static const char strSelectSaveSlot[]  = "Select Destination";
 
 paintShare_t* paintShare;
 
@@ -84,6 +83,7 @@ void paintShareSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 void paintShareP2pConnCb(p2pInfo* p2p, connectionEvt_t evt);
 void paintShareP2pSendCb(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 void paintShareP2pMsgRecvCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
+static void paintShareBrowserCb(const char* key, imageBrowserAction_t action);
 
 void paintShareRenderProgressBar(int64_t elapsedUs, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
 void paintRenderShareMode(int64_t elapsedUs);
@@ -187,7 +187,7 @@ swadgeMode_t modePaintShare = {
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
-    .overrideSelectBtn        = false,
+    .overrideSelectBtn        = true,
     .fnEnterMode              = paintShareEnterMode,
     .fnExitMode               = paintShareExitMode,
     .fnMainLoop               = paintShareMainLoop,
@@ -199,19 +199,20 @@ swadgeMode_t modePaintShare = {
 };
 
 swadgeMode_t modePaintReceive = {
-    .modeName          = "MFPaint.net Recv",
-    .wifiMode          = ESP_NOW,
-    .overrideUsb       = false,
-    .usesAccelerometer = false,
-    .usesThermometer   = false,
-    .overrideSelectBtn = false,
-    .fnEnterMode       = paintReceiveEnterMode,
-    .fnExitMode        = paintShareExitMode,
-    .fnMainLoop        = paintShareMainLoop,
-    .fnAudioCallback   = NULL,
-    .fnEspNowRecvCb    = paintShareRecvCb,
-    .fnEspNowSendCb    = paintShareSendCb,
-    .fnAdvancedUSB     = NULL,
+    .modeName                 = "MFPaint.net Recv",
+    .wifiMode                 = ESP_NOW,
+    .overrideUsb              = false,
+    .usesAccelerometer        = false,
+    .usesThermometer          = false,
+    .overrideSelectBtn        = true,
+    .fnEnterMode              = paintReceiveEnterMode,
+    .fnExitMode               = paintShareExitMode,
+    .fnMainLoop               = paintShareMainLoop,
+    .fnAudioCallback          = NULL,
+    .fnBackgroundDrawCallback = NULL,
+    .fnEspNowRecvCb           = paintShareRecvCb,
+    .fnEspNowSendCb           = paintShareSendCb,
+    .fnAdvancedUSB            = NULL,
 };
 
 static bool isSender(void)
@@ -226,6 +227,17 @@ void paintShareInitP2p(void)
     paintShare->shareNewPacket    = false;
 
     p2pDeinit(&paintShare->p2pInfo);
+
+    // Support using cable
+    if (paintShare->useCable)
+    {
+        espNowUseSerial(isSender());
+    }
+    else
+    {
+        espNowUseWireless();
+    }
+
     p2pInitialize(&paintShare->p2pInfo, isSender() ? 'P' : 'Q', paintShareP2pConnCb, paintShareP2pMsgRecvCb, -35);
     p2pSetAsymmetric(&paintShare->p2pInfo, isSender() ? 'Q' : 'P');
     p2pStartConnection(&paintShare->p2pInfo);
@@ -247,6 +259,8 @@ void paintShareCommonSetup(void)
     PAINT_LOGD("Entering Share Mode");
     paintLoadIndex(&paintShare->index);
 
+    paintShare->dialog = initDialogBox("hello", "test", NULL, NULL);
+
     paintShare->connectionStarted = false;
 
     if (!loadFont(PAINT_SHARE_TOOLBAR_FONT, &paintShare->toolbarFont, false))
@@ -254,15 +268,15 @@ void paintShareCommonSetup(void)
         PAINT_LOGE("Unable to load font!");
     }
 
-    if (!loadWsg("arrow12.wsg", &paintShare->arrowWsg, false))
+    if (!loadWsg("button_up.wsg", &paintShare->arrowWsg, false))
     {
         PAINT_LOGE("Unable to load arrow WSG!");
     }
-    else
-    {
-        // Recolor the arrow to black
-        colorReplaceWsg(&paintShare->arrowWsg, c555, c000);
-    }
+
+    paintShare->browser.callback   = paintShareBrowserCb;
+    paintShare->browser.wraparound = true;
+    paintShare->browser.cols       = 4;
+    paintShare->browser.viewStyle  = BROWSER_GALLERY;
 
     // Set the display
     paintShare->shareNewPacket    = false;
@@ -275,6 +289,10 @@ void paintReceiveEnterMode(void)
     paintShareCommonSetup();
     paintShare->isSender = false;
 
+    paintShare->browser.title = strSelectSaveSlot;
+    setupImageBrowser(&paintShare->browser, &paintShare->toolbarFont, PAINT_NS_DATA, NULL, BROWSER_SAVE, BROWSER_SAVE);
+    paintShare->browserVisible = false;
+
     PAINT_LOGD("Receiver: Waiting for connection");
     paintShare->shareState = SHARE_RECV_WAIT_FOR_CONN;
 }
@@ -284,12 +302,17 @@ void paintShareEnterMode(void)
     paintShareCommonSetup();
     paintShare->isSender = true;
 
+    paintShare->browser.title = strSelectShareSlot;
+    paintShare->browser.viewStyle = BROWSER_GALLERY;
+    setupImageBrowser(&paintShare->browser, &paintShare->toolbarFont, PAINT_NS_DATA, NULL, BROWSER_OPEN, BROWSER_OPEN);
+    paintShare->browserVisible = true;
+
     //////// Load an image...
 
     PAINT_LOGD("Sender: Selecting slot");
     paintShare->shareState = SHARE_SEND_SELECT_SLOT;
 
-    if (!paintGetAnySlotInUse(paintShare->index))
+    if (!paintGetAnySlotInUse(0))
     {
         PAINT_LOGE("Share mode started without any saved images. Exiting");
         switchToSwadgeMode(&modePaint);
@@ -297,12 +320,7 @@ void paintShareEnterMode(void)
     }
 
     // Start on the most recently saved slot
-    paintShare->shareSaveSlot = paintGetRecentSlot(paintShare->index);
-    if (paintShare->shareSaveSlot == PAINT_SAVE_SLOTS)
-    {
-        // If there was no recently saved slot, find the first slot in use instead
-        paintShare->shareSaveSlot = paintGetNextSlotInUse(paintShare->index, PAINT_SAVE_SLOTS - 1);
-    }
+    paintGetLastSlot(paintShare->shareSaveSlotKey);
 
     PAINT_LOGD("paintShare->shareSaveSlot = %d", paintShare->shareSaveSlot);
 
@@ -459,11 +477,14 @@ void paintRenderShareMode(int64_t elapsedUs)
     {
         case SHARE_RECV_SELECT_SLOT:
         {
-            arrows     = true;
-            bottomText = strControlsSave;
-            snprintf(text, sizeof(text),
+            if (!paintShare->browserVisible)
+            {
+                snprintf(text, sizeof(text), "Press A to Continue");
+            }
+
+            /*snprintf(text, sizeof(text),
                      paintGetSlotInUse(paintShare->index, paintShare->shareSaveSlot) ? strOverwriteSlot : strEmptySlot,
-                     paintShare->shareSaveSlot + 1);
+                     paintShare->shareSaveSlot + 1);*/
             break;
         }
         case SHARE_SEND_SELECT_SLOT:
@@ -506,7 +527,7 @@ void paintRenderShareMode(int64_t elapsedUs)
     }
 
 #ifdef SHARE_NET_DEBUG
-    static char debugText[32] = {{0}};
+    static char debugText[32] = {0};
     paintShareLogState(debugText, sizeof(debugText));
     bottomText = debugText;
 #endif
@@ -548,6 +569,11 @@ void paintRenderShareMode(int64_t elapsedUs)
 
         w = textWidth(&paintShare->toolbarFont, bottomText);
         drawText(&paintShare->toolbarFont, c000, bottomText, (TFT_WIDTH - w) / 2, y);
+    }
+
+    if (paintShare->browserVisible)
+    {
+        drawImageBrowser(&paintShare->browser);
     }
 }
 
@@ -615,6 +641,9 @@ void paintShareHandleCanvas(void)
         = SHARE_TOP_MARGIN
           + (TFT_HEIGHT - SHARE_TOP_MARGIN - SHARE_BOTTOM_MARGIN - paintShare->canvas.h * paintShare->canvas.yScale)
                 / 2;
+
+    paintShare->canvas.buffer   = malloc(paintGetStoredSize(&paintShare->canvas));
+    paintShare->canvas.buffered = true;
 
     clearPxTft();
     drawRectFilledScaled(0, 0, paintShare->canvas.w, paintShare->canvas.h, c555, paintShare->canvas.x,
@@ -701,6 +730,12 @@ void paintShareHandlePixels(void)
     PAINT_LOGD("Packet seqnum is %d (%x << 8 | %x)", paintShare->shareSeqNum, paintShare->sharePacket[1],
                paintShare->sharePacket[2]);
 
+    if (paintShare->canvas.buffered)
+    {
+        memcpy(&paintShare->canvas.buffer[PAINT_SHARE_PX_PACKET_LEN * paintShare->shareSeqNum], &paintShare->sharePacket[3],
+            paintShare->sharePacketLen - 3);
+    }
+
     for (uint8_t i = 0; i < paintShare->sharePacketLen - 3; i++)
     {
         uint16_t x0 = ((PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum) + (i * 2)) % paintShare->canvas.w;
@@ -748,6 +783,7 @@ void paintShareSendReceiveComplete(void)
     paintShare->sharePacketLen = 1;
     p2pSendMsg(&paintShare->p2pInfo, paintShare->sharePacket, paintShare->sharePacketLen, paintShareP2pSendCb);
     paintShare->shareUpdateScreen = true;
+    paintShare->browserVisible    = false;
 }
 
 // void paintShareSendAbort(void)
@@ -829,6 +865,7 @@ void paintShareMsgSendFail(void)
 
 void paintBeginShare(void)
 {
+    memcpy(&paintShare->canvas, &paintShare->browser.mainImage, sizeof(paintCanvas_t));
     paintShareInitP2p();
     paintShare->shareState = SHARE_SEND_WAIT_FOR_CONN;
 
@@ -842,6 +879,13 @@ void paintShareExitMode(void)
     p2pDeinit(&paintShare->p2pInfo);
     freeFont(&paintShare->toolbarFont);
     freeWsg(&paintShare->arrowWsg);
+
+    if (paintShare->canvas.buffered && paintShare->canvas.buffer)
+    {
+        free(paintShare->canvas.buffer);
+    }
+    resetImageBrowser(&paintShare->browser);
+    deinitDialogBox(paintShare->dialog);
 
     free(paintShare);
 
@@ -917,13 +961,6 @@ void paintShareMainLoop(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         paintShareButtonCb(&evt);
-    }
-    // Handle the sending of the packets and the other things
-    if (paintShare->clearScreen)
-    {
-        PAINT_LOGD("Redrawing!!!");
-        paintShareDoLoad();
-        paintShare->clearScreen = false;
     }
 
     paintShare->shareTime += elapsedUs;
@@ -1056,131 +1093,91 @@ void paintShareMainLoop(int64_t elapsedUs)
         }
     }
 
-    if (paintShare->shareUpdateScreen)
-    {
-        paintRenderShareMode(paintShare->shareTime);
-        paintShare->shareUpdateScreen = false;
-    }
+    paintRenderShareMode(paintShare->shareTime);
 }
 
 void paintShareButtonCb(buttonEvt_t* evt)
 {
     if (paintShare->shareState == SHARE_SEND_SELECT_SLOT)
     {
-        if (evt->down)
+        switch (evt->button)
         {
-            switch (evt->button)
+            case PB_UP:
+            case PB_DOWN:
+            case PB_LEFT:
+            case PB_RIGHT:
+            case PB_A:
+            case PB_SELECT:
             {
-                case PB_LEFT:
-                {
-                    // Load previous image
-                    paintShare->shareSaveSlot     = paintGetPrevSlotInUse(paintShare->index, paintShare->shareSaveSlot);
-                    paintShare->clearScreen       = true;
-                    paintShare->shareUpdateScreen = true;
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    // Load next image
-                    paintShare->shareSaveSlot     = paintGetNextSlotInUse(paintShare->index, paintShare->shareSaveSlot);
-                    paintShare->clearScreen       = true;
-                    paintShare->shareUpdateScreen = true;
-                    break;
-                }
+                imageBrowserButton(&paintShare->browser, evt);
+                break;
+            }
 
-                case PB_A:
+            case PB_B:
+            {
+                if (paintShare->browserVisible)
                 {
-                    // Begin sharing!
-                    paintBeginShare();
-                    paintShare->shareUpdateScreen = true;
-                    break;
+                    imageBrowserButton(&paintShare->browser, evt);
                 }
-
-                case PB_B:
+                else if (evt->down)
                 {
+                    // Exit without saving
                     switchToSwadgeMode(&modePaint);
-                    break;
                 }
+                break;
+            }
 
-                case PB_UP:
-                case PB_DOWN:
-                // Do Nothing!
-                case PB_SELECT:
-                case PB_START:
-                    // Or do something on button up to avoid conflict with exit mode
-                    break;
-            }
-        }
-        else
-        {
-            if (evt->button == PB_SELECT)
-            {
-                paintShare->shareSaveSlot     = paintGetNextSlotInUse(paintShare->index, paintShare->shareSaveSlot);
-                paintShare->clearScreen       = true;
-                paintShare->shareUpdateScreen = true;
-            }
-            else if (evt->button == PB_START)
-            {
-                paintBeginShare();
-                paintShare->shareUpdateScreen = true;
-            }
+            // Do Nothing!
+            case PB_START:
+                // Or do something on button up to avoid conflict with exit mode
+                break;
         }
     }
     else if (paintShare->shareState == SHARE_RECV_SELECT_SLOT)
     {
-        if (evt->down)
+        switch (evt->button)
         {
-            switch (evt->button)
+            case PB_UP:
+            case PB_DOWN:
+            case PB_LEFT:
+            case PB_RIGHT:
+            case PB_SELECT:
             {
-                case PB_LEFT:
-                {
-                    paintShare->shareSaveSlot     = PREV_WRAP(paintShare->shareSaveSlot, PAINT_SAVE_SLOTS);
-                    paintShare->shareUpdateScreen = true;
-                    break;
-                }
+                imageBrowserButton(&paintShare->browser, evt);
+                break;
+            }
 
-                case PB_RIGHT:
+            case PB_A:
+            {
+                if (paintShare->browserVisible)
                 {
-                    paintShare->shareSaveSlot     = NEXT_WRAP(paintShare->shareSaveSlot, PAINT_SAVE_SLOTS);
-                    paintShare->shareUpdateScreen = true;
-                    break;
+                    imageBrowserButton(&paintShare->browser, evt);
                 }
-
-                case PB_A:
+                else if (!evt->down)
                 {
-                    paintShareDoSave();
-                    switchToSwadgeMode(&modePaint);
-                    break;
+                    paintShare->browserVisible = true;
                 }
+                break;
+            }
 
-                case PB_B:
+            case PB_B:
+            {
+                if (paintShare->browserVisible)
+                {
+                    imageBrowserButton(&paintShare->browser, evt);
+                }
+                else if (evt->down)
                 {
                     // Exit without saving
                     switchToSwadgeMode(&modePaint);
-                    break;
                 }
+                break;
+            }
 
-                case PB_UP:
-                case PB_DOWN:
-                // Do Nothing!
-                case PB_SELECT:
-                case PB_START:
-                    // Or do something on button-up instead, to avoid overlap with SELECT+START
-                    break;
-            }
-        }
-        else
-        {
-            if (evt->button == PB_START)
-            {
-                paintShareDoSave();
-                switchToSwadgeMode(&modePaint);
-            }
-            else if (evt->button == PB_SELECT)
-            {
-                paintShare->shareSaveSlot     = NEXT_WRAP(paintShare->shareSaveSlot, PAINT_SAVE_SLOTS);
-                paintShare->shareUpdateScreen = true;
-            }
+            // Do Nothing!
+            case PB_START:
+                // Or do something on button-up instead, to avoid overlap with SELECT+START
+                break;
         }
         // Does the receiver get any buttons?
         // Yes! They need to pick their destination slot before starting P2P
@@ -1195,6 +1192,7 @@ void paintShareButtonCb(buttonEvt_t* evt)
         {
             paintShare->shareState        = SHARE_SEND_SELECT_SLOT;
             paintShare->shareUpdateScreen = true;
+            paintShare->browserVisible    = true;
         }
     }
     else if (paintShare->shareState == SHARE_SEND_WAIT_FOR_CONN || paintShare->shareState == SHARE_RECV_WAIT_FOR_CONN)
@@ -1292,12 +1290,47 @@ void paintShareP2pMsgRecvCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
     paintShare->shareNewPacket = true;
 }
 
+static void paintShareBrowserCb(const char* key, imageBrowserAction_t action)
+{
+    switch (action)
+    {
+        case BROWSER_EXIT:
+        {
+            paintShare->browserVisible = false;
+            break;
+        }
+
+        case BROWSER_OPEN:
+        {
+            strncpy(paintShare->shareSaveSlotKey, key, sizeof(paintShare->shareSaveSlotKey) - 1);
+            // Begin sharing!
+            paintBeginShare();
+            paintShare->shareUpdateScreen = true;
+            paintShare->browserVisible    = false;
+            break;
+        }
+
+        case BROWSER_SAVE:
+        {
+            strncpy(paintShare->shareSaveSlotKey, key, sizeof(paintShare->shareSaveSlotKey) - 1);
+            paintShareDoSave();
+            switchToSwadgeMode(&modePaint);
+            break;
+        }
+
+        case BROWSER_DELETE:
+        break;
+    }
+
+    PAINT_LOGI("Share Key: %s", key);
+}
+
 void paintShareDoLoad(void)
 {
     clearPxTft();
-    // Load just image dimensions;
 
-    if (!paintLoadDimensions(&paintShare->canvas, paintShare->shareSaveSlot))
+    paintShare->canvas.buffered = true;
+    if (!paintLoadNamed(paintShare->shareSaveSlotKey, &paintShare->canvas))
     {
         PAINT_LOGE("Failed to load dimensions, stopping load");
         return;
@@ -1319,10 +1352,6 @@ void paintShareDoLoad(void)
           + (TFT_HEIGHT - SHARE_TOP_MARGIN - SHARE_BOTTOM_MARGIN - paintShare->canvas.h * paintShare->canvas.yScale)
                 / 2;
 
-    // Load the actual image!
-    // If all goes well, it will be drawn centered and as big as possible
-    paintLoad(&paintShare->index, &paintShare->canvas, paintShare->shareSaveSlot);
-
     for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
     {
         paintShare->sharePaletteMap[(uint8_t)(paintShare->canvas.palette[i])] = i;
@@ -1331,5 +1360,6 @@ void paintShareDoLoad(void)
 
 void paintShareDoSave(void)
 {
-    paintSave(&paintShare->index, &paintShare->canvas, paintShare->shareSaveSlot);
+    //paintSave(&paintShare->index, &paintShare->canvas, paintShare->shareSaveSlot);
+    paintSaveNamed(paintShare->shareSaveSlotKey, &paintShare->canvas);
 }

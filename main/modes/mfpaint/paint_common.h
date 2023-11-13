@@ -427,8 +427,14 @@ typedef struct
 
     // The save slot being displayed / shared
     uint8_t shareSaveSlot;
+    char shareSaveSlotKey[16];
 
     paintShareState_t shareState;
+
+    imageBrowser_t browser;
+    bool browserVisible;
+
+    dialogBox_t* dialog;
 
     bool shareAcked;
     bool connectionStarted;
@@ -448,6 +454,7 @@ typedef struct
     bool shareUpdateScreen;
 
     // TODO rename this so it's not the same as the global one
+    bool useCable;
     p2pInfo p2pInfo;
 
     // Time for the progress bar timer

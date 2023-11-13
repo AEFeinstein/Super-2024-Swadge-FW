@@ -31,6 +31,7 @@ typedef struct
     list_t items;
 
     const font_t* font;
+    const char* title;
 
     textEntry_t* textEntry;
     bool showTextEntry;
