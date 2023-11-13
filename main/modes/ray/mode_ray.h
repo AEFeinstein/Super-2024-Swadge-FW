@@ -9,6 +9,7 @@
 #include "fp_math.h"
 #include "starfield.h"
 #include "esp_random.h"
+#include "credits_utils.h"
 
 //==============================================================================
 // Defines
@@ -33,8 +34,8 @@
 /** The maximum number of missiles possible */
 #define MAX_MISSILES_EVER 99
 
-/** Microseconds per one damage when standing in lava */
-#define US_PER_LAVA_DAMAGE 500000
+/** Microseconds per effect when standing in lava or on heal */
+#define US_PER_FLOOR_EFFECT 500000
 
 /** Microseconds to charge the charge beam */
 #define CHARGE_TIME_US 1048576
@@ -46,7 +47,7 @@
 #define NUM_ANIM_FRAMES 4
 
 /** The time to swap out and swap in a gun, in microseconds */
-#define LOADOUT_TIMER_US (1 << 18)
+#define LOADOUT_TIMER_US (1 << 17)
 
 /** The blink time for pause and dialog items */
 #define BLINK_US 500000
@@ -99,6 +100,7 @@ typedef enum __attribute__((packed))
     BG_FLOOR_WATER = (BG | FLOOR | 2),
     BG_FLOOR_LAVA  = (BG | FLOOR | 3),
     BG_CEILING     = (BG | FLOOR | 4),
+    BG_FLOOR_HEAL  = (BG | FLOOR | 5),
     // Walls
     BG_WALL_1 = (BG | WALL | 1),
     BG_WALL_2 = (BG | WALL | 2),
@@ -320,6 +322,7 @@ typedef enum
     RAY_PAUSE,        ///< The pause menu is being shown
     RAY_WARP_SCREEN,  ///< The warp screen animation is being shown
     RAY_DEATH_SCREEN, ///< The player has died
+    RAY_CREDITS,      ///< Showing the credits for the game
 } rayScreen_t;
 
 /**
@@ -604,11 +607,14 @@ typedef struct
     int32_t loadoutChangeTimer; ///< A timer used for swapping loadouts
     bool forceLoadoutSwap;      ///< Force the loadout to change without touch input
 
-    int32_t lavaTimer;     ///< Timer to apply lava damage
-    int32_t chargeTimer;   ///< Timer to charge shots
-    int32_t gunShakeTimer; ///< Timer to shake the gun when charged
-    int32_t gunShakeX;     ///< Offset to draw gun at when shaking
-    bool gunShakeL;        ///< true if the gun is shaking to the left, false otherwise
+    int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
+    bool playerInLava;          ///< Track if the player is standing in lava
+    int32_t chargeTimer;        ///< Timer to charge shots
+    int32_t playerShotCooldown; ///< Cooldown timer between shots
+    int32_t gunShakeTimer;      ///< Timer to shake the gun when charged
+    int32_t gunShakeX;          ///< Offset to draw gun at when shaking
+    bool gunShakeL;             ///< true if the gun is shaking to the left, false otherwise
+    int32_t pRotationTimer;     ///< timer for player rotation
 
     namedTexture_t* loadedTextures;                             ///< A list of loaded textures
     uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
@@ -652,12 +658,21 @@ typedef struct
     song_t sfx_p_ice;           ///< SFX when the ice beam is shot
     song_t sfx_p_xray;          ///< SFX when th xray beam is shot
     song_t sfx_warp;            ///< SFX when the player warps
-
-    int32_t pRotationTimer; ///< timer for player rotation
+    song_t sfx_lava_dmg;        ///< SFX when standing in lava
+    song_t sfx_health;          ///< SFX when picking up health
+    song_t sfx_game_over;       ///< SFX when the game is over
 
     int32_t itemRotateTimer; ///< A timer to 'rotate' items by scaling the X direction
     int32_t itemRotateDeg;   ///< The number of degrees all items are 'rotated' by
     bool itemRotateMirror;   ///< If items should be drawn mirrored
+
+    int32_t ledTimer;     ///< A timer to change LED hue
+    int32_t ledHue;       ///< The current LED hue
+    int32_t targetLedHue; ///< The target LED hue
+
+    credits_t credits; ///< Credits shown when the game is won
+
+    const char* deathText; ///< Text shown on the death screen
 } ray_t;
 
 //==============================================================================
@@ -678,5 +693,6 @@ extern const char MAGTROID_UNLOCK_KEY[];
 
 void rayFreeCurrentState(ray_t* ray);
 void rayStartGame(void);
+void raySwitchToScreen(rayScreen_t newScreen);
 
 #endif

@@ -16,14 +16,12 @@
 //==============================================================================
 
 typedef void (*rayEnemyMove_t)(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs);
-typedef bool (*rayEnemyGetShot_t)(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet);
 typedef int32_t (*rayEnemyGetTimer_t)(rayEnemy_t* enemy, rayEnemyTimerType_t type);
 typedef rayMapCellType_t (*rayEnemyGetBullet_t)(rayEnemy_t* enemy);
 
 typedef struct ray_enemy
 {
     rayEnemyMove_t move;
-    rayEnemyGetShot_t getShot;
     rayEnemyGetTimer_t getTimer;
     rayEnemyGetBullet_t getBullet;
 } enemyFuncs_t;
@@ -40,46 +38,52 @@ static const enemyFuncs_t enemyFuncs[] = {
     {
         // OBJ_ENEMY_NORMAL
         .move      = rayEnemyNormalMove,
-        .getShot   = rayEnemyNormalGetShot,
         .getTimer  = rayEnemyNormalGetTimer,
         .getBullet = rayEnemyNormalGetBullet,
     },
     {
         // OBJ_ENEMY_STRONG
         .move      = rayEnemyStrongMove,
-        .getShot   = rayEnemyStrongGetShot,
         .getTimer  = rayEnemyStrongGetTimer,
         .getBullet = rayEnemyStrongGetBullet,
     },
     {
         // OBJ_ENEMY_ARMORED
         .move      = rayEnemyArmoredMove,
-        .getShot   = rayEnemyArmoredGetShot,
         .getTimer  = rayEnemyArmoredGetTimer,
         .getBullet = rayEnemyArmoredGetBullet,
     },
     {
         // OBJ_ENEMY_FLAMING
         .move      = rayEnemyFlamingMove,
-        .getShot   = rayEnemyFlamingGetShot,
         .getTimer  = rayEnemyFlamingGetTimer,
         .getBullet = rayEnemyFlamingGetBullet,
     },
     {
         // OBJ_ENEMY_HIDDEN
         .move      = rayEnemyHiddenMove,
-        .getShot   = rayEnemyHiddenGetShot,
         .getTimer  = rayEnemyHiddenGetTimer,
         .getBullet = rayEnemyHiddenGetBullet,
     },
     {
         // OBJ_ENEMY_BOSS
         .move      = rayEnemyBossMove,
-        .getShot   = rayEnemyBossGetShot,
         .getTimer  = rayEnemyBossGetTimer,
         .getBullet = rayEnemyBossGetBullet,
     },
 };
+
+// clang-format off
+/** @brief Table of damage taken per enemy, per bullet, BOSS is not in here */
+static const uint32_t eDamageTable[5][5] = {
+    // OBJ_BULLET_NORMAL, OBJ_BULLET_CHARGE, OBJ_BULLET_ICE, OBJ_BULLET_MISSILE, OBJ_BULLET_XRAY
+    {  25,                100,               34,             100,                25,}, // OBJ_ENEMY_NORMAL
+    {  10,                100,               34,              50,                25,}, // OBJ_ENEMY_STRONG
+    {  10,                 50,               25,             100,                25,}, // OBJ_ENEMY_ARMORED
+    {  10,                 34,               50,              25,                25,}, // OBJ_ENEMY_FLAMING
+    {  0,                   0,                0,               0,                50,}, // OBJ_ENEMY_HIDDEN
+};
+// clang-format on
 
 //==============================================================================
 // Function Prototypes
@@ -215,16 +219,29 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             {
                 case 0:
                 {
-                    // 25%
-                    rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
+                    // 25% health first
+                    if (ray->p.i.health != ray->p.i.maxHealth)
+                    {
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
+                    }
+                    // Only create if missiles are unlocked and health is at max
+                    else if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
+                    {
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
+                    }
                     break;
                 }
                 case 1:
                 {
-                    // 25%, if missiles are unlocked
-                    if (ray->p.i.missileLoadOut)
+                    // 25% missiles first, if unlocked
+                    if ((ray->p.i.missileLoadOut) && (ray->p.i.numMissiles != ray->p.i.maxNumMissiles))
                     {
                         rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_MISSILE, 0x100, enemy->c.posX, enemy->c.posY);
+                    }
+                    // Only create if missiles are at max
+                    else if (ray->p.i.health != ray->p.i.maxHealth)
+                    {
+                        rayCreateCommonObj(ray, OBJ_ITEM_PICKUP_ENERGY, 0x100, enemy->c.posX, enemy->c.posY);
                     }
                     break;
                 }
@@ -282,12 +299,22 @@ rayMapCellType_t getBulletForEnemy(rayEnemy_t* enemy)
  */
 void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 {
+    int32_t damageDivide = 1;
     // Don't get shot when blocking or dying
     if (E_BLOCKING == enemy->state)
     {
-        // Play SFX
-        bzrPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
-        return;
+        if (OBJ_BULLET_MISSILE != bullet)
+        {
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
+            return;
+        }
+        else
+        {
+            // Missiles break the block, but do half damage
+            damageDivide = 2;
+            rayEnemyTransitionState(enemy, E_WALKING_1);
+        }
     }
     else if (E_DEAD == enemy->state)
     {
@@ -302,16 +329,29 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     //     return;
     // }
 
-    // Save old health to see if the enemy took damage
-    int32_t oldHealth = enemy->health;
+    // Figure out the damage for this shot
+    int32_t damage = 0;
+    if (OBJ_ENEMY_BOSS == enemy->c.type)
+    {
+        damage = rayEnemyBossGetShot(ray, enemy, bullet);
+    }
+    else
+    {
+        damage = eDamageTable[enemy->c.type - OBJ_ENEMY_NORMAL][bullet - OBJ_BULLET_NORMAL];
+    }
 
     // Apply damage
-    if (enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getShot(ray, enemy, bullet))
+    enemy->health -= ((damage * ray->p.i.damageMult) / damageDivide);
+
+    if (enemy->health <= 0)
     {
         // Transition to dying
         rayEnemyTransitionState(enemy, E_DEAD);
         // Play SFX
         bzrPlaySfx(&ray->sfx_e_dead, BZR_RIGHT);
+
+        // Make LEDs green
+        ray->ledHue = 85;
 
         // If the boss died
         if (OBJ_ENEMY_BOSS == enemy->c.type)
@@ -321,7 +361,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         }
     }
     // If the enemy took
-    else if (oldHealth != enemy->health)
+    else if (0 < damage)
     {
         // Transition to hurt
         rayEnemyTransitionState(enemy, E_HURT);
@@ -333,7 +373,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         if (OBJ_BULLET_ICE == bullet)
         {
             // Slow it for a moment
-            enemy->freezeTimer = 2000000;
+            enemy->freezeTimer = 3200000;
             // Play SFX
             bzrPlaySfx(&ray->sfx_e_freeze, BZR_RIGHT);
         }
@@ -342,6 +382,9 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             // Play SFX
             bzrPlaySfx(&ray->sfx_e_damage, BZR_RIGHT);
         }
+
+        // Make LEDs green
+        ray->ledHue = 85;
     }
 }
 

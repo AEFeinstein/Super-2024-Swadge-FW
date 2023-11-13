@@ -100,8 +100,7 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
         rayBullet_t* obj = &(ray->bullets[i]);
         if (-1 != obj->c.id)
         {
-            // Update the bullet's position
-            // TODO justify the scaling factor, assuming velXY is a unit vector
+            // Update the bullet's position. 100000 was picked out of a hat!
             obj->c.posX += (obj->velX * (int32_t)elapsedUs) / 100000;
             obj->c.posY += (obj->velY * (int32_t)elapsedUs) / 100000;
 
@@ -258,27 +257,27 @@ void checkRayCollisions(ray_t* ray)
                 {
                     case OBJ_BULLET_E_NORMAL:
                     {
-                        dmg = 5;
+                        dmg = 10;
                         break;
                     }
                     case OBJ_BULLET_E_STRONG:
                     {
-                        dmg = 10;
+                        dmg = 15;
                         break;
                     }
                     case OBJ_BULLET_E_ARMOR:
                     {
-                        dmg = 15;
+                        dmg = 20;
                         break;
                     }
                     case OBJ_BULLET_E_FLAMING:
                     {
-                        dmg = 20;
+                        dmg = 25;
                         break;
                     }
                     case OBJ_BULLET_E_HIDDEN:
                     {
-                        dmg = 25;
+                        dmg = 30;
                         break;
                     }
                     default:
@@ -306,7 +305,7 @@ void checkRayCollisions(ray_t* ray)
         if (objectsIntersect(&player, item))
         {
             // Touch the item
-            rayPlayerTouchItem(ray, item->type, ray->p.mapId, item->id);
+            rayPlayerTouchItem(ray, item, ray->p.mapId);
             // Check scripts
             checkScriptGet(ray, item->id, item->sprite);
 

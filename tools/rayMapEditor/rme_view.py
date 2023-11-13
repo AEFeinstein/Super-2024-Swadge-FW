@@ -228,6 +228,8 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_FLOOR_LAVA, '../../assets/ray/env/BG_FLOOR_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_FLOOR_HEAL, '../../assets/ray/env/BG_FLOOR_HEAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_WALL_1, '../../assets/ray/env/BASE/BG_BASE_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_WALL_2, '../../assets/ray/env/BASE/BG_BASE_WALL_2.png')

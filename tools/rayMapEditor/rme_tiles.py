@@ -26,6 +26,7 @@ class tileType(Enum):
     BG_FLOOR_WATER  = (BG | FLOOR | 2)
     BG_FLOOR_LAVA   = (BG | FLOOR | 3)
     BG_CEILING      = (BG | FLOOR | 4)
+    BG_FLOOR_HEAL   = (BG | FLOOR | 5)
     BG_WALL_1       = (BG | WALL  | 1)
     BG_WALL_2       = (BG | WALL  | 2)
     BG_WALL_3       = (BG | WALL  | 3)
@@ -93,6 +94,7 @@ bgTiles: list[list[tileType]] = [
         tileType.BG_FLOOR,
         tileType.BG_FLOOR_WATER,
         tileType.BG_FLOOR_LAVA,
+        tileType.BG_FLOOR_HEAL,
         tileType.BG_WALL_1,
         tileType.BG_WALL_2,
         tileType.BG_WALL_3,

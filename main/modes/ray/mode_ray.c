@@ -15,6 +15,7 @@
 #include "ray_script.h"
 #include "ray_warp_screen.h"
 #include "ray_death_screen.h"
+#include "ray_credits.h"
 
 //==============================================================================
 // Function Prototypes
@@ -25,6 +26,7 @@ static void rayExitMode(void);
 static void rayMainLoop(int64_t elapsedUs);
 static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void rayMenuCb(const char* label, bool selected, uint32_t settingVal);
+static void rayInitMenu(void);
 
 //==============================================================================
 // Const Variables
@@ -34,6 +36,7 @@ const char rayName[]       = "Magtroid Pocket";
 const char rayPlayStr[]    = "Play";
 const char rayResetStr[]   = "Reset Data";
 const char rayConfirmStr[] = "Really Reset Data";
+const char rayCreditsStr[] = "Credits";
 const char rayExitStr[]    = "Exit";
 
 /// @brief A list of the map names
@@ -98,20 +101,12 @@ static void rayEnterMode(void)
     // Allocate memory
     ray = calloc(1, sizeof(ray_t));
 
-    // Initialize the menu
-    ray->menu = initMenu(rayName, rayMenuCb);
-    addSingleItemToMenu(ray->menu, rayPlayStr);
-    ray->menu = startSubMenu(ray->menu, rayResetStr);
-    addSingleItemToMenu(ray->menu, rayConfirmStr);
-    ray->menu = endSubMenu(ray->menu);
-    addSingleItemToMenu(ray->menu, rayExitStr);
-
     // Load fonts
     loadFont("logbook.font", &ray->logbook, true);
     loadFont("ibm_vga8.font", &ray->ibm, true);
 
-    // Initialize a renderer
-    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
+    // Initialize the menu
+    rayInitMenu();
 
     // Force draw a loading screen
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
@@ -145,9 +140,12 @@ static void rayEnterMode(void)
     loadSong("r_p_ice.sng", &ray->sfx_p_ice, false);
     loadSong("r_p_xray.sng", &ray->sfx_p_xray, false);
     loadSong("r_warp.sng", &ray->sfx_warp, false);
+    loadSong("r_lava_dmg.sng", &ray->sfx_lava_dmg, false);
+    loadSong("r_health.sng", &ray->sfx_health, false);
+    loadSong("r_game_over.sng", &ray->sfx_game_over, false);
 
     // Set the menu as the screen
-    ray->screen = RAY_MENU;
+    raySwitchToScreen(RAY_MENU);
 
     // Start a blink for dialog and pause and such
     ray->blinkTimer = BLINK_US;
@@ -196,6 +194,9 @@ static void rayExitMode(void)
     freeSong(&ray->sfx_p_ice);
     freeSong(&ray->sfx_p_xray);
     freeSong(&ray->sfx_warp);
+    freeSong(&ray->sfx_lava_dmg);
+    freeSong(&ray->sfx_health);
+    freeSong(&ray->sfx_game_over);
 
     // Free the font
     freeFont(&ray->ibm);
@@ -226,9 +227,10 @@ void rayFreeCurrentState(ray_t* cRay)
     ray->isStrafing  = false;
     ray->targetedObj = NULL;
     // Player timers
-    ray->lavaTimer      = 0;
-    ray->chargeTimer    = 0;
-    ray->pRotationTimer = 0;
+    ray->floorEffectTimer = 0;
+    ray->chargeTimer      = 0;
+    ray->pRotationTimer   = 0;
+    ray->playerInLava     = false;
     // Dialog variables
     ray->dialogText     = NULL;
     ray->nextDialogText = NULL;
@@ -301,6 +303,62 @@ static void rayMainLoop(int64_t elapsedUs)
         ray->blinkTimer += BLINK_US;
     }
 
+    // 0 is red
+    // 85 is green
+    // 170 is blue
+    // If the LED is not at the target hue
+    if (ray->ledHue != ray->targetLedHue)
+    {
+        ray->ledTimer -= elapsedUs;
+        while (0 >= ray->ledTimer)
+        {
+            ray->ledTimer += 7812;
+
+            // Find the decision point to either increment or decrement to the target
+            int32_t decisionPoint = (ray->targetLedHue + 128) % 256;
+            bool shouldIncrement  = false;
+            if (decisionPoint < ray->targetLedHue)
+            {
+                if ((decisionPoint < ray->ledHue) && (ray->ledHue < ray->targetLedHue))
+                {
+                    shouldIncrement = true;
+                }
+                else
+                {
+                    shouldIncrement = false;
+                }
+            }
+            else
+            {
+                if ((ray->targetLedHue < ray->ledHue) && (ray->ledHue < decisionPoint))
+                {
+                    shouldIncrement = false;
+                }
+                else
+                {
+                    shouldIncrement = true;
+                }
+            }
+
+            // Adjust the hue with wraparound
+            if (shouldIncrement)
+            {
+                ray->ledHue = (ray->ledHue + 1) % 255;
+            }
+            else
+            {
+                if (0 == ray->ledHue)
+                {
+                    ray->ledHue = 255;
+                }
+                else
+                {
+                    ray->ledHue--;
+                }
+            }
+        }
+    }
+
     switch (ray->screen)
     {
         case RAY_MENU:
@@ -328,9 +386,13 @@ static void rayMainLoop(int64_t elapsedUs)
             // Draw the walls after floor & ceiling
             castWalls(ray);
             // Draw sprites after walls
-            rayObjCommon_t* centeredEnemy = castSprites(ray);
+            rayEnemy_t* closestEnemy      = NULL;
+            rayObjCommon_t* centeredEnemy = castSprites(ray, &closestEnemy);
             // Draw the HUD after sprites
             drawHud(ray);
+
+            // Light LEDs, radar to the closest enemy
+            rayLightLeds(ray, closestEnemy);
 
             // Run timers for head-bob, doors, etc.
             runEnvTimers(ray, elapsedUs);
@@ -341,8 +403,8 @@ static void rayMainLoop(int64_t elapsedUs)
             // Check the joystick for the player and update loadout accordingly
             rayPlayerCheckJoystick(ray, elapsedUs);
 
-            // Check for lava damage
-            rayPlayerCheckLava(ray, elapsedUs);
+            // Check for floor effects
+            rayPlayerCheckFloorEffect(ray, elapsedUs);
 
             // Move objects including enemies and bullets
             moveRayObjects(ray, elapsedUs);
@@ -357,7 +419,7 @@ static void rayMainLoop(int64_t elapsedUs)
             if (ray->warpTimerUs > 0)
             {
                 // Switch to showing the warp screen
-                ray->screen = RAY_WARP_SCREEN;
+                raySwitchToScreen(RAY_WARP_SCREEN);
                 // Do the warp in the background
                 warpToDestination(ray);
             }
@@ -391,6 +453,11 @@ static void rayMainLoop(int64_t elapsedUs)
             rayDeathScreenRender(ray, elapsedUs);
             break;
         }
+        case RAY_CREDITS:
+        {
+            rayCreditsRender(ray, elapsedUs);
+            break;
+        }
     }
 }
 
@@ -413,6 +480,7 @@ static void rayBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
         case RAY_DIALOG:
         case RAY_DEATH_SCREEN:
         case RAY_PAUSE:
+        case RAY_CREDITS:
         {
             // Do nothing
             break;
@@ -457,6 +525,10 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
             // Return up one menu
             ray->wasReset = true;
         }
+        else if (label == rayCreditsStr)
+        {
+            rayShowCredits(ray);
+        }
         else if (label == rayExitStr)
         {
             switchToSwadgeMode(&mainMenuMode);
@@ -469,6 +541,9 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
  */
 void rayStartGame(void)
 {
+    // Stop the buzzer to not interfere with loading data
+    bzrStop(true);
+
     // Clear all lists
     rayFreeCurrentState(ray);
 
@@ -485,11 +560,84 @@ void rayStartGame(void)
         // Set the starting position from the map
         ray->p.posX = pStartX;
         ray->p.posY = pStartY;
+        // Save the starting position
+        raySavePlayer(ray);
     }
 
     // Mark the starting tile as visited
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 
+    // Set the default hue (blue)
+    ray->targetLedHue = 170;
+
     // Set the initial screen
-    ray->screen = RAY_GAME;
+    raySwitchToScreen(RAY_GAME);
+}
+
+/**
+ * @brief Switch to a new ray screen, initialize as necessary
+ *
+ * @param newScreen The new screen to switch to
+ */
+void raySwitchToScreen(rayScreen_t newScreen)
+{
+    // Set the new screen
+    ray->screen = newScreen;
+
+    // Initialize depending on the screen
+    switch (newScreen)
+    {
+        case RAY_MENU:
+        {
+            // Reinit menu
+            rayInitMenu();
+            break;
+        }
+        case RAY_GAME:
+        case RAY_DIALOG:
+        case RAY_PAUSE:
+        case RAY_WARP_SCREEN:
+        case RAY_DEATH_SCREEN:
+        case RAY_CREDITS:
+        default:
+        {
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Initialize the main menu
+ */
+static void rayInitMenu(void)
+{
+    // Tear down old menu, if it exists
+    if (NULL != ray->renderer)
+    {
+        deinitMenuLogbookRenderer(ray->renderer);
+    }
+    if (NULL != ray->menu)
+    {
+        deinitMenu(ray->menu);
+    }
+
+    // Initialize new one
+    ray->menu = initMenu(rayName, rayMenuCb);
+    addSingleItemToMenu(ray->menu, rayPlayStr);
+    ray->menu = startSubMenu(ray->menu, rayResetStr);
+    addSingleItemToMenu(ray->menu, rayConfirmStr);
+    ray->menu = endSubMenu(ray->menu);
+
+    // Only show credits if the game was beaten
+    int32_t magtroidUnlocked = false;
+    readNvs32(MAGTROID_UNLOCK_KEY, &magtroidUnlocked);
+    if (magtroidUnlocked)
+    {
+        addSingleItemToMenu(ray->menu, rayCreditsStr);
+    }
+
+    addSingleItemToMenu(ray->menu, rayExitStr);
+
+    // Initialize a renderer
+    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
 }
