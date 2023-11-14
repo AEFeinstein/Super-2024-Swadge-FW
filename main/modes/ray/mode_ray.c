@@ -423,6 +423,11 @@ static void rayMainLoop(int64_t elapsedUs)
                 // Do the warp in the background
                 warpToDestination(ray);
             }
+            else if (ray->shouldShowCredits)
+            {
+                ray->shouldShowCredits = false;
+                rayShowCredits(ray);
+            }
 
             break;
         }

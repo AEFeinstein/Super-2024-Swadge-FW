@@ -585,6 +585,8 @@ typedef struct
     q24_8 warpDestPosY;    ///< The player's Y position
     int32_t warpTimerUs;   ///< Timer to display warp screen
 
+    bool shouldShowCredits; ///< Set to true to show credits from the game
+
     rayBullet_t bullets[MAX_RAY_BULLETS]; ///< A list of all bullets
     list_t enemies;                       ///< A list of all enemies (moves, can be shot)
     list_t scenery;                       ///< A list of all scenery (doesn't move, can be shot)
