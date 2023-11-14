@@ -68,16 +68,13 @@ static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t*
     }
     else
     {
-        uint16_t hScale = MIN(1, image->w / thumbnail->w);
-        uint16_t vScale = MIN(1, image->h / thumbnail->h);
-
         // Sample for the thumbnail pixels
         for (uint16_t r = 0; r < thumbnail->h; ++r)
         {
             for (uint16_t c = 0; c < thumbnail->w; ++c)
             {
                 // TODO average the surrounding pixels instead of doing nothing
-                thumbnail->px[r * thumbnail->w + c] = image->px[r * image->w * vScale + c * hScale];
+                thumbnail->px[r * thumbnail->w + c] = image->px[(r * image->h / thumbnail->h) * image->w + (c * image->w / thumbnail->w)];
             }
         }
     }
