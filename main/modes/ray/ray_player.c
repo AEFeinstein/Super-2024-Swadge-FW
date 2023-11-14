@@ -752,6 +752,8 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                 // Transient, add 5 missiles, not going over the max
                 inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
             }
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_health, BZR_RIGHT);
             // Don't save after missile ammo
             saveAfterObtain = false;
             break;
