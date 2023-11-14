@@ -392,7 +392,7 @@ static void rayMainLoop(int64_t elapsedUs)
             drawHud(ray);
 
             // Light LEDs, radar to the closest enemy
-            rayLightLeds(ray, closestEnemy);
+            rayLightLeds(ray, closestEnemy, elapsedUs);
 
             // Run timers for head-bob, doors, etc.
             runEnvTimers(ray, elapsedUs);
@@ -589,6 +589,7 @@ void raySwitchToScreen(rayScreen_t newScreen)
     {
         case RAY_MENU:
         {
+            bzrStop(true);
             // Reinit menu
             rayInitMenu();
             break;

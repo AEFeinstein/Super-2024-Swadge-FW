@@ -809,8 +809,8 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
         {
             ray->playerInLava = true;
             // Start looping SFX
-            ray->sfx_lava_dmg.shouldLoop = true;
-            bzrPlaySfx(&ray->sfx_lava_dmg, BZR_RIGHT);
+            // ray->sfx_lava_dmg.shouldLoop = true;
+            // bzrPlaySfx(&ray->sfx_lava_dmg, BZR_RIGHT);
         }
     }
     else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
@@ -827,7 +827,7 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
     {
         ray->playerInLava = false;
         // Stop looping SFX
-        ray->sfx_lava_dmg.shouldLoop = true;
+        // ray->sfx_lava_dmg.shouldLoop = true;
     }
 }
 
