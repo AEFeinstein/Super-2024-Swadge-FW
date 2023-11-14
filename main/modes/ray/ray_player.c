@@ -822,12 +822,21 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
             ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
             rayPlayerDecrementHealth(ray, -1);
         }
+
+        if (false == ray->playerInHealth)
+        {
+            ray->playerInHealth = true;
+        }
     }
     else if (true == ray->playerInLava)
     {
         ray->playerInLava = false;
         // Stop looping SFX
         // ray->sfx_lava_dmg.shouldLoop = true;
+    }
+    else if (true == ray->playerInHealth)
+    {
+        ray->playerInHealth = false;
     }
 }
 

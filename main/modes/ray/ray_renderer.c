@@ -1387,7 +1387,7 @@ void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy, uint32_t elapsedUs)
     bool ledsSet                = false;
 
     // If the player is in lava
-    if (ray->playerInLava)
+    if (ray->playerInLava || ray->playerInHealth)
     {
         // Run a timer to blink warning LEDS. this overrides the radar
         ray->lavaTimer -= elapsedUs;
@@ -1401,7 +1401,14 @@ void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy, uint32_t elapsedUs)
         {
             for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
             {
-                leds[lIdx].r = 0xFF;
+                if (ray->playerInLava)
+                {
+                    leds[lIdx].r = 0xFF;
+                }
+                else if (ray->playerInHealth)
+                {
+                    leds[lIdx].g = 0xFF;
+                }
             }
         }
         ledsSet = true;

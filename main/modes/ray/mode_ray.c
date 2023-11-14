@@ -231,6 +231,7 @@ void rayFreeCurrentState(ray_t* cRay)
     ray->chargeTimer      = 0;
     ray->pRotationTimer   = 0;
     ray->playerInLava     = false;
+    ray->playerInHealth   = false;
     // Dialog variables
     ray->dialogText     = NULL;
     ray->nextDialogText = NULL;

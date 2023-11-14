@@ -611,6 +611,7 @@ typedef struct
 
     int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
     bool playerInLava;          ///< Track if the player is standing in lava
+    bool playerInHealth;        ///< Track if the player is standing in a health pad
     int32_t lavaTimer;          ///< Timer to blink lava LEDs
     bool lavaLedBlink;          ///< LED state when showing lava effect
     int32_t chargeTimer;        ///< Timer to charge shots
