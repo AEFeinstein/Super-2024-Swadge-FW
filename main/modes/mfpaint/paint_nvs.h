@@ -31,6 +31,10 @@ void paintSetEnableLeds(bool enableLeds);
 bool paintGetEnableBlink(void);
 void paintSetEnableBlink(bool enableBlink);
 
+// buffered canvas utilities
+void paintBlitCanvas(const paintCanvas_t* canvas);
+void paintSyncCanvas(paintCanvas_t* canvas);
+
 // void paintDebugIndex(int32_t index);
 void paintLoadIndex(int32_t* dest);
 void paintSaveIndex(int32_t index);
@@ -42,7 +46,7 @@ bool paintGetAnySlotInUse(int32_t index);
 uint8_t paintGetRecentSlot(int32_t index);
 void paintSetRecentSlot(int32_t* index, uint8_t slot);
 size_t paintGetStoredSize(const paintCanvas_t* canvas);
-bool paintDeserialize(paintCanvas_t* dest, const uint8_t* data, size_t offset, size_t count);
+bool paintDeserialize(const paintCanvas_t* dest, const uint8_t* data, size_t offset, size_t count);
 size_t paintSerializeWsg(uint8_t* dest, const wsg_t* wsg);
 size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset, size_t count);
 bool paintSave(int32_t* index, const paintCanvas_t* canvas, uint8_t slot);

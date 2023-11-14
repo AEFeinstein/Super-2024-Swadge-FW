@@ -435,9 +435,16 @@ typedef struct
     bool browserVisible;
 
     dialogBox_t* dialog;
+    size_t dataOffset;
 
     bool shareAcked;
     bool connectionStarted;
+
+    // The version of the protocol to use
+    // 0 is the original
+    // 1 is the next one, only difference is packet length and
+    uint8_t version;
+    bool versionSent;
 
     // For the sender, the sequence number of the current packet being sent / waiting for ack
     uint16_t shareSeqNum;

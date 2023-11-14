@@ -416,6 +416,10 @@ void drawImageBrowser(imageBrowser_t* browser)
                     loadWsg("error.wsg", &browser->mainImage, false);
                 }
             }
+            else
+            {
+                browser->mainImageKey[0] = '\0';
+            }
         }
 
         // If there's actually an image after all that, get the biggest scale for it and draw it

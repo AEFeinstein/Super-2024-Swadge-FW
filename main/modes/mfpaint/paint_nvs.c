@@ -43,7 +43,8 @@ PAINT_BOOL_PARAM(EnableBlink, true);
 static int32_t paintReadParam(const settingParam_t* param);
 static bool paintWriteParam(const settingParam_t* param, int32_t val);
 static void paintRebuildPalette(paletteColor_t palette[16], const paletteColor_t* img, uint16_t w, uint16_t h);
-static size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count, paletteColor_t palette[16]);
+static size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count,
+                              paletteColor_t palette[16]);
 
 // void paintDebugIndex(int32_t index)
 // {
@@ -265,6 +266,43 @@ void paintSetRecentSlot(int32_t* index, uint8_t slot)
 }
 
 /**
+ * @brief Draw a buffered canvas to the screen, overwriting whatever was drawn previously
+ *
+ * Does nothing on a canvas with \c{buffered == false}
+ *
+ * @param canvas The buffered canvas to draw to the screen
+ */
+void paintBlitCanvas(const paintCanvas_t* canvas)
+{
+    if (!canvas->buffered || !canvas->buffer)
+    {
+        PAINT_LOGE("Attempting to blit from a non-buffered canvas! Doing nothing!");
+        return;
+    }
+
+    // Super simple
+    paintDeserialize(canvas, canvas->buffer, 0, paintGetStoredSize(canvas));
+}
+
+/**
+ * @brief Copy a canvas from the screen into the buffer, overwriting whatever was stored previously
+ *
+ * Does nothing on a canvas with \c{buffered == false}
+ *
+ * @param canvas The buffered canvas to copy from the screen
+ */
+void paintSyncCanvas(paintCanvas_t* canvas)
+{
+    if (!canvas->buffered || !canvas->buffer)
+    {
+        PAINT_LOGE("Attempting to sync to a non-buffered canvas! Doing nothing!");
+        return;
+    }
+    // Also super simple, come to think of it
+    paintSerialize(canvas->buffer, canvas, 0, paintGetStoredSize(canvas));
+}
+
+/**
  * Returns the number of bytes needed to store the image pixel data
  */
 size_t paintGetStoredSize(const paintCanvas_t* canvas)
@@ -272,7 +310,17 @@ size_t paintGetStoredSize(const paintCanvas_t* canvas)
     return (canvas->w * canvas->h + 1) / 2;
 }
 
-bool paintDeserialize(paintCanvas_t* dest, const uint8_t* data, size_t offset, size_t count)
+/**
+ * @brief Draw a segment of a serialized paint image onto the screen
+ *
+ * @param dest The canvas defining the draw destination
+ * @param data The buffer to be drawn
+ * @param offset The offset of this data segment within the image
+ * @param count The length of the segment
+ * @return true If there is more image to be drawn
+ * @return false If the image was completely drawn
+ */
+bool paintDeserialize(const paintCanvas_t* dest, const uint8_t* data, size_t offset, size_t count)
 {
     uint16_t x0, y0, x1, y1;
     for (uint16_t n = 0; n < count; n++)
@@ -311,14 +359,15 @@ size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset,
     return _paintSerialize(dest, canvas, NULL, offset, count, canvas->palette);
 }
 
-size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count, paletteColor_t palette[16])
+size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count,
+                       paletteColor_t palette[16])
 {
     uint8_t paletteIndex[cTransparent + 1] = {};
 
     // Build the reverse-palette map
     for (uint16_t i = 0; i < PAINT_MAX_COLORS; i++)
     {
-        paletteIndex[((uint8_t)canvas->palette[i])] = i;
+        paletteIndex[((uint8_t)palette[i])] = i;
     }
 
     uint16_t x0, y0, x1, y1;
@@ -341,14 +390,15 @@ size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* 
             x1 = canvas->x + (offset * 2 + (n * 2 + 1)) % canvas->w * canvas->xScale;
             y1 = canvas->y + (offset * 2 + (n * 2 + 1)) / canvas->w * canvas->yScale;
 
-            // we only need to save the top-left pixel of each scaled pixel, since they're the same unless something is very
-            // broken
+            // we only need to save the top-left pixel of each scaled pixel, since they're the same unless something is
+            // very broken
             dest[n] = paletteIndex[(uint8_t)getPxTft(x0, y0)] << 4 | paletteIndex[(uint8_t)getPxTft(x1, y1)];
         }
 
         if (wsg)
         {
-            dest[n] = paletteIndex[(uint8_t)wsg->px[offset * 2 + n * 2]] << 4 | paletteIndex[(uint8_t)wsg->px[offset * 2 + n * 2 + 1]];
+            dest[n] = paletteIndex[(uint8_t)wsg->px[offset * 2 + n * 2]] << 4
+                      | paletteIndex[(uint8_t)wsg->px[offset * 2 + n * 2 + 1]];
         }
     }
 
@@ -620,12 +670,23 @@ bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
         canvas->w = tmpWsg.w;
         canvas->h = tmpWsg.h;
 
+        // Canvas is now kind of optional at this point
+        size_t length = PAINT_MAX_COLORS;
+        if (!readNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, &length))
+        {
+            paintRebuildPalette(canvas->palette, tmpWsg.px, canvas->w, canvas->h);
+            PAINT_LOGW("No palette found for image %s, that's weird right?", name);
+        }
+
         if (canvas->buffered)
         {
-            canvas->buffer = (uint8_t*)(tmpWsg.px);
-
-            // So we don't free the new buffer
-            tmpWsg.px = NULL;
+            if (canvas->buffer)
+            {
+                free(canvas->buffer);
+            }
+            canvas->buffer = malloc(paintGetStoredSize(canvas));
+            _paintSerialize(canvas->buffer, NULL, &tmpWsg, 0, paintGetStoredSize(canvas), canvas->palette);
+            //paintSerializeWsg(canvas->buffer, &tmpWsg);
         }
         else
         {
@@ -633,22 +694,13 @@ bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
             {
                 for (uint16_t x = 0; x < canvas->w; ++x)
                 {
-                    setPxScaled(x, y, cTransparent == tmpWsg.px[y * canvas->w + x] ? c555 : tmpWsg.px[y * canvas->w + x],
+                    setPxScaled(x, y,
+                                cTransparent == tmpWsg.px[y * canvas->w + x] ? c555 : tmpWsg.px[y * canvas->w + x],
                                 canvas->x, canvas->y, canvas->xScale, canvas->yScale);
                 }
             }
-
-            // Canvas is now kind of optional at this point
-            size_t length = PAINT_MAX_COLORS;
-            if (!readNamespaceNvsBlob(PAINT_NS_PALETTE, name, canvas->palette, &length))
-            {
-                paintRebuildPalette(canvas->palette, tmpWsg.px, tmpWsg.w, tmpWsg.h);
-                PAINT_LOGW("No palette found for image %s, that's weird right?", name);
-                result = false;
-            }
-
-            freeWsg(&tmpWsg);
         }
+        freeWsg(&tmpWsg);
     }
 
     return result;

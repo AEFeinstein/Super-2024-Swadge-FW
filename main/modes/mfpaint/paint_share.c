@@ -52,19 +52,23 @@
 #define SHARE_PROGRESS_FG     c350
 
 // Uncomment to display extra connection debugging info on screen
-// #define SHARE_NET_DEBUG
+//#define SHARE_NET_DEBUG
 
 const uint8_t SHARE_PACKET_CANVAS_DATA      = 0;
 const uint8_t SHARE_PACKET_PIXEL_DATA       = 1;
 const uint8_t SHARE_PACKET_PIXEL_REQUEST    = 2;
 const uint8_t SHARE_PACKET_RECEIVE_COMPLETE = 3;
 const uint8_t SHARE_PACKET_ABORT            = 4;
+// yes there is a version in the canvas data, but we also need it on the other side
+const uint8_t SHARE_PACKET_VERSION          = 5;
 
 // The canvas data packet has PAINT_MAX_COLORS bytes of palette, plus 2 uint16_ts of width/height. Also 1 for size
-const uint8_t PACKET_LEN_CANVAS_DATA = sizeof(uint8_t) * PAINT_MAX_COLORS + sizeof(uint16_t) * 2;
+const uint8_t PACKET_LEN_CANVAS_DATA_V0 = sizeof(uint8_t) * PAINT_MAX_COLORS + sizeof(uint16_t) * 2;
+// v1 adds another byte at the end for version
+const uint8_t PACKET_LEN_CANVAS_DATA_V1 = sizeof(uint8_t) * PAINT_MAX_COLORS + sizeof(uint16_t) * 2 + sizeof(uint8_t);
 
-static const char strShareSlot[]     = "Share Slot %d";
 static const char strControlsShare[] = "A to Share";
+static const char strControlsSave[]   = "A to Save";
 static const char strControlsCancel[]  = "B to Cancel";
 static const char strSelectShareSlot[] = "Select Drawing to Share";
 static const char strSelectSaveSlot[]  = "Select Destination";
@@ -95,6 +99,8 @@ void paintShareDeinitP2p(void);
 
 void paintShareMsgSendOk(void);
 void paintShareMsgSendFail(void);
+
+void paintShareSendVersion(void);
 
 void paintShareSendPixelRequest(void);
 void paintShareSendReceiveComplete(void);
@@ -479,7 +485,7 @@ void paintRenderShareMode(int64_t elapsedUs)
         {
             if (!paintShare->browserVisible)
             {
-                snprintf(text, sizeof(text), "Press A to Continue");
+                snprintf(text, sizeof(text), strControlsSave);
             }
 
             /*snprintf(text, sizeof(text),
@@ -489,9 +495,8 @@ void paintRenderShareMode(int64_t elapsedUs)
         }
         case SHARE_SEND_SELECT_SLOT:
         {
-            arrows     = true;
             bottomText = strControlsShare;
-            snprintf(text, sizeof(text), strShareSlot, paintShare->shareSaveSlot + 1);
+            snprintf(text, sizeof(text), "%s", paintShare->shareSaveSlotKey);
             break;
         }
         case SHARE_SEND_WAIT_FOR_CONN:
@@ -575,13 +580,25 @@ void paintRenderShareMode(int64_t elapsedUs)
     {
         drawImageBrowser(&paintShare->browser);
     }
+    else
+    {
+        paintBlitCanvas(&paintShare->canvas);
+
+        // Flash the pixel we're waiting for / last sent
+        if (paintShare->dataOffset != 0 && paintShare->dataOffset * 2 < paintShare->canvas.w * paintShare->canvas.h)
+        {
+            uint16_t x = (paintShare->dataOffset * 2) % paintShare->canvas.w;
+            uint16_t y = (paintShare->dataOffset * 2) / paintShare->canvas.w;
+            setPxScaled(x, y, ((paintShare->shareTime % 1000000) > 500000) ? c000 : c555, paintShare->canvas.x, paintShare->canvas.y, paintShare->canvas.xScale, paintShare->canvas.yScale);
+        }
+    }
 }
 
 void paintShareSendCanvas(void)
 {
     PAINT_LOGI("Sending canvas metadata...");
     // Set the length to the canvas data packet length, plus one for the packet type
-    paintShare->sharePacketLen = PACKET_LEN_CANVAS_DATA + 1;
+    paintShare->sharePacketLen = PACKET_LEN_CANVAS_DATA_V1 + 1;
     paintShare->sharePacket[0] = SHARE_PACKET_CANVAS_DATA;
 
     for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
@@ -598,6 +615,9 @@ void paintShareSendCanvas(void)
     paintShare->sharePacket[PAINT_MAX_COLORS + 3] = ((uint8_t)((paintShare->canvas.w >> 8) & 0xFF));
     // Height LSB
     paintShare->sharePacket[PAINT_MAX_COLORS + 4] = ((uint8_t)((paintShare->canvas.w >> 0) & 0xFF));
+
+    // Version (v1)
+    paintShare->sharePacket[PAINT_MAX_COLORS + 5] = 1;
 
     paintShare->shareState     = SHARE_SEND_WAIT_CANVAS_DATA_ACK;
     paintShare->shareNewPacket = false;
@@ -627,7 +647,15 @@ void paintShareHandleCanvas(void)
     paintShare->canvas.w
         = (paintShare->sharePacket[PAINT_MAX_COLORS + 3] << 8) | (paintShare->sharePacket[PAINT_MAX_COLORS + 4]);
 
-    PAINT_LOGD("Canvas dimensions: %d x %d", paintShare->canvas.w, paintShare->canvas.h);
+    if (paintShare->sharePacketLen > PAINT_MAX_COLORS + 5)
+    {
+        paintShare->version = paintShare->sharePacket[PAINT_MAX_COLORS + 5];
+    }
+    else
+    {
+        paintShare->version = 0;
+    }
+
 
     uint8_t scale = paintGetMaxScale(paintShare->canvas.w, paintShare->canvas.h, SHARE_LEFT_MARGIN + SHARE_RIGHT_MARGIN,
                                      SHARE_TOP_MARGIN + SHARE_BOTTOM_MARGIN);
@@ -642,8 +670,11 @@ void paintShareHandleCanvas(void)
           + (TFT_HEIGHT - SHARE_TOP_MARGIN - SHARE_BOTTOM_MARGIN - paintShare->canvas.h * paintShare->canvas.yScale)
                 / 2;
 
-    paintShare->canvas.buffer   = malloc(paintGetStoredSize(&paintShare->canvas));
     paintShare->canvas.buffered = true;
+    paintShare->canvas.buffer   = malloc(paintGetStoredSize(&paintShare->canvas));
+    // make a sorta stripey background while we load the image
+    memset(paintShare->canvas.buffer, (uint8_t)(0x10), (paintShare->canvas.w * paintShare->canvas.h + 1) / 2);
+    paintShare->dataOffset = 0;
 
     clearPxTft();
     drawRectFilledScaled(0, 0, paintShare->canvas.w, paintShare->canvas.h, c555, paintShare->canvas.x,
@@ -655,7 +686,6 @@ void paintShareHandleCanvas(void)
 
 void paintShareSendPixels(void)
 {
-    paintShare->sharePacketLen = PAINT_SHARE_PX_PACKET_LEN + 3;
     // Packet type header
     paintShare->sharePacket[0] = SHARE_PACKET_PIXEL_DATA;
 
@@ -663,37 +693,52 @@ void paintShareSendPixels(void)
     paintShare->sharePacket[1] = (uint8_t)((paintShare->shareSeqNum >> 8) & 0xFF);
     paintShare->sharePacket[2] = (uint8_t)((paintShare->shareSeqNum >> 0) & 0xFF);
 
-    for (uint8_t i = 0; i < PAINT_SHARE_PX_PACKET_LEN; i++)
-    {
-        if (PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum + i * 2
-            >= (paintShare->canvas.w * paintShare->canvas.h))
-        {
-            PAINT_LOGD("Breaking on last packet because %d * %d + %d * 2 >= %d * %d ---> %d >= %d",
-                       PAINT_SHARE_PX_PER_PACKET, paintShare->shareSeqNum, i, paintShare->canvas.w,
-                       paintShare->canvas.h, PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum + i * 2,
-                       paintShare->canvas.w * paintShare->canvas.h);
-            paintShare->sharePacketLen = i + 3;
-            break;
-        }
-        // TODO dedupe this and the nvs functions into a paintSerialize() or something
-        uint16_t x0 = paintShare->canvas.x
-                      + ((PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum) + (i * 2)) % paintShare->canvas.w
-                            * paintShare->canvas.xScale;
-        uint16_t y0 = paintShare->canvas.y
-                      + ((PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum) + (i * 2)) / paintShare->canvas.w
-                            * paintShare->canvas.yScale;
-        uint16_t x1 = paintShare->canvas.x
-                      + ((PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum) + (i * 2 + 1)) % paintShare->canvas.w
-                            * paintShare->canvas.xScale;
-        uint16_t y1 = paintShare->canvas.y
-                      + ((PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum) + (i * 2 + 1)) / paintShare->canvas.w
-                            * paintShare->canvas.yScale;
+    uint8_t compatOffset = (paintShare->version == 0) ? (paintShare->shareSeqNum * 2) : 0;
+    paintShare->sharePacketLen = 3 + MIN(PAINT_SHARE_PX_PACKET_LEN, (paintShare->canvas.h * paintShare->canvas.w + 1) / 2 - paintShare->dataOffset - compatOffset);
 
-        // PAINT_LOGD("Mapping px(%d, %d) (%d) --> %x", x0, y0, paintShare->disp->getPx(x0, y0),
-        // paintShare->sharePaletteMap[(uint8_t)(paintShare->disp->getPx(x0, y0))]);
-        paintShare->sharePacket[i + 3] = paintShare->sharePaletteMap[(uint8_t)getPxTft(x0, y0)] << 4
-                                         | paintShare->sharePaletteMap[(uint8_t)getPxTft(x1, y1)];
+    // This will be the last packet
+    if (paintShare->dataOffset + compatOffset + paintShare->sharePacketLen - 3
+        >= (paintShare->canvas.w * paintShare->canvas.h))
+    {
+        PAINT_LOGI("This is the last packet because %d * %d + %d * 2 >= %d * %d ---> %d >= %d",
+                PAINT_SHARE_PX_PER_PACKET, paintShare->shareSeqNum, PAINT_SHARE_PX_PER_PACKET, paintShare->canvas.w,
+                paintShare->canvas.h, PAINT_SHARE_PX_PER_PACKET * paintShare->shareSeqNum + (paintShare->sharePacketLen - 3) * 2,
+                paintShare->canvas.w * paintShare->canvas.h);
     }
+
+
+    if (paintShare->canvas.buffered && paintShare->canvas.buffer)
+    {
+        PAINT_LOGI("Using the memcpy path with length %" PRIu8, paintShare->sharePacketLen);
+        memcpy(&paintShare->sharePacket[3], &paintShare->canvas.buffer[paintShare->dataOffset + compatOffset], paintShare->sharePacketLen - 3);
+    }
+    else
+    {
+        for (uint8_t i = 0; i < paintShare->sharePacketLen - 3; i++)
+        {
+            // TODO dedupe this and the nvs functions into a paintSerialize() or something
+            uint16_t x0 = paintShare->canvas.x
+                        + ((paintShare->dataOffset * 2) + (i * 2)) % paintShare->canvas.w
+                                * paintShare->canvas.xScale;
+            uint16_t y0 = paintShare->canvas.y
+                        + ((paintShare->dataOffset * 2) + (i * 2)) / paintShare->canvas.w
+                                * paintShare->canvas.yScale;
+            uint16_t x1 = paintShare->canvas.x
+                        + ((paintShare->dataOffset * 2) + (i * 2 + 1)) % paintShare->canvas.w
+                                * paintShare->canvas.xScale;
+            uint16_t y1 = paintShare->canvas.y
+                        + ((paintShare->dataOffset * 2) + (i * 2 + 1)) / paintShare->canvas.w
+                                * paintShare->canvas.yScale;
+
+            PAINT_LOGD("Mapping px(%d, %d) (%d) --> %x", x0, y0, getPxTft(x0, y0),
+                    paintShare->sharePaletteMap[(uint8_t)(getPxTft(x0, y0))]);
+
+            paintShare->sharePacket[i + 3] = paintShare->sharePaletteMap[(uint8_t)getPxTft(x0, y0)] << 4
+                                            | paintShare->sharePaletteMap[(uint8_t)getPxTft(x1, y1)];
+        }
+    }
+
+    paintShare->dataOffset += (paintShare->sharePacketLen - 3);
 
     paintShare->shareState = SHARE_SEND_WAIT_PIXEL_DATA_ACK;
     PAINT_LOGD("p2pSendMsg(%p, %d)", paintShare->sharePacket, paintShare->sharePacketLen);
@@ -715,6 +760,8 @@ void paintShareHandlePixels(void)
     if (paintShare->sharePacket[0] != ((uint8_t)SHARE_PACKET_PIXEL_DATA))
     {
         PAINT_LOGE("Received pixel data with incorrect type %d", paintShare->sharePacket[0]);
+        return;
+    }
         PAINT_LOGE("First 16 bytes: %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x %02x%02x%02x%02x",
                    paintShare->sharePacket[0], paintShare->sharePacket[1], paintShare->sharePacket[2],
                    paintShare->sharePacket[3], paintShare->sharePacket[4], paintShare->sharePacket[5],
@@ -722,17 +769,17 @@ void paintShareHandlePixels(void)
                    paintShare->sharePacket[9], paintShare->sharePacket[10], paintShare->sharePacket[11],
                    paintShare->sharePacket[12], paintShare->sharePacket[13], paintShare->sharePacket[14],
                    paintShare->sharePacket[15]);
-        return;
-    }
+        //return;
+    //}
 
     paintShare->shareSeqNum = (paintShare->sharePacket[1] << 8) | paintShare->sharePacket[2];
 
-    PAINT_LOGD("Packet seqnum is %d (%x << 8 | %x)", paintShare->shareSeqNum, paintShare->sharePacket[1],
+    PAINT_LOGI("Packet seqnum is %d (%x << 8 | %x)", paintShare->shareSeqNum, paintShare->sharePacket[1],
                paintShare->sharePacket[2]);
 
     if (paintShare->canvas.buffered)
     {
-        memcpy(&paintShare->canvas.buffer[PAINT_SHARE_PX_PACKET_LEN * paintShare->shareSeqNum], &paintShare->sharePacket[3],
+        memcpy(&paintShare->canvas.buffer[paintShare->dataOffset], &paintShare->sharePacket[3],
             paintShare->sharePacketLen - 3);
     }
 
@@ -749,14 +796,16 @@ void paintShareHandlePixels(void)
                     paintShare->canvas.y, paintShare->canvas.xScale, paintShare->canvas.yScale);
     }
 
-    PAINT_LOGD("We've received %d / %d pixels",
-               paintShare->shareSeqNum * PAINT_SHARE_PX_PER_PACKET + (paintShare->sharePacketLen - 3) * 2,
+    PAINT_LOGI("We've received %d / %d pixels",
+               (int)paintShare->dataOffset * 2 + (paintShare->sharePacketLen - 3) * 2,
                paintShare->canvas.h * paintShare->canvas.w);
 
-    if (paintShare->shareSeqNum * PAINT_SHARE_PX_PER_PACKET + (paintShare->sharePacketLen - 3) * 2
+    paintShare->dataOffset += paintShare->sharePacketLen - 3;
+
+    if (paintShare->dataOffset * 2
         >= paintShare->canvas.h * paintShare->canvas.w)
     {
-        PAINT_LOGD("I think we're done receiving");
+        PAINT_LOGI("I think we're done receiving");
         // We don't reeeally care if the sender acks this packet.
         // I mean, it would be polite to make sure it gets there, but there's not really a point
         paintShare->shareState = SHARE_RECV_SELECT_SLOT;
@@ -764,15 +813,23 @@ void paintShareHandlePixels(void)
     }
     else
     {
-        PAINT_LOGD("Done handling pixel packet, may we please have some more?");
+        PAINT_LOGI("Done handling pixel packet, may we please have some more?");
         paintShareSendPixelRequest();
     }
+}
+
+void paintShareSendVersion(void)
+{
+    paintShare->sharePacket[0] = SHARE_PACKET_VERSION;
+    paintShare->sharePacket[1] = 1;
+    p2pSendMsg(&paintShare->p2pInfo, paintShare->sharePacket, paintShare->sharePacketLen, paintShareP2pSendCb);
 }
 
 void paintShareSendPixelRequest(void)
 {
     paintShare->sharePacket[0] = SHARE_PACKET_PIXEL_REQUEST;
-    paintShare->sharePacketLen = 1;
+    paintShare->sharePacket[1] = 1;
+    paintShare->sharePacketLen = 2;
     p2pSendMsg(&paintShare->p2pInfo, paintShare->sharePacket, paintShare->sharePacketLen, paintShareP2pSendCb);
     paintShare->shareUpdateScreen = true;
 }
@@ -843,6 +900,10 @@ void paintShareMsgSendOk(void)
 
         case SHARE_RECV_WAIT_CANVAS_DATA:
         {
+            if (!paintShare->versionSent)
+            {
+                paintShare->versionSent = true;
+            }
             break;
         }
 
@@ -865,7 +926,6 @@ void paintShareMsgSendFail(void)
 
 void paintBeginShare(void)
 {
-    memcpy(&paintShare->canvas, &paintShare->browser.mainImage, sizeof(paintCanvas_t));
     paintShareInitP2p();
     paintShare->shareState = SHARE_SEND_WAIT_FOR_CONN;
 
@@ -984,7 +1044,7 @@ void paintShareMainLoop(int64_t elapsedUs)
             paintShare->shareUpdateScreen = true;
             if (!paintShare->connectionStarted)
             {
-                paintSetRecentSlot(&paintShare->index, paintShare->shareSaveSlot);
+                // paintSetRecentSlot(&paintShare->index, paintShare->shareSaveSlot);
                 paintShareInitP2p();
             }
             break;
@@ -1010,6 +1070,15 @@ void paintShareMainLoop(int64_t elapsedUs)
             {
                 if (paintShare->sharePacket[0] == SHARE_PACKET_PIXEL_REQUEST)
                 {
+                    if (paintShare->sharePacketLen > 1)
+                    {
+                        paintShare->version = paintShare->sharePacket[1];
+                    }
+                    else
+                    {
+                        paintShare->version = 0;
+                    }
+
                     paintShare->shareNewPacket = false;
                     paintShare->shareState     = SHARE_SEND_PIXEL_DATA;
                 }
@@ -1106,10 +1175,22 @@ void paintShareButtonCb(buttonEvt_t* evt)
             case PB_DOWN:
             case PB_LEFT:
             case PB_RIGHT:
-            case PB_A:
             case PB_SELECT:
             {
                 imageBrowserButton(&paintShare->browser, evt);
+                break;
+            }
+
+            case PB_A:
+            {
+                if (paintShare->browserVisible)
+                {
+                    imageBrowserButton(&paintShare->browser, evt);
+                }
+                else if (evt->down)
+                {
+                    paintBeginShare();
+                }
                 break;
             }
 
@@ -1282,6 +1363,14 @@ void paintShareP2pConnCb(p2pInfo* p2p, connectionEvt_t evt)
 
 void paintShareP2pMsgRecvCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
+    if (len > 1 && payload[0] == SHARE_PACKET_VERSION)
+    {
+        // Handle the version packet immediately
+        PAINT_LOGI("Got version packet: %" PRIu8, payload[1]);
+        paintShare->version = payload[1];
+        return;
+    }
+
     // no buffer overruns for me thanks
     PAINT_LOGV("Receiving %d bytes via P2P callback", len);
     memcpy(paintShare->sharePacket, payload, len);
@@ -1303,8 +1392,9 @@ static void paintShareBrowserCb(const char* key, imageBrowserAction_t action)
         case BROWSER_OPEN:
         {
             strncpy(paintShare->shareSaveSlotKey, key, sizeof(paintShare->shareSaveSlotKey) - 1);
-            // Begin sharing!
-            paintBeginShare();
+            // Wait for confirm to share!
+            paintShareDoLoad();
+            paintBlitCanvas(&paintShare->canvas);
             paintShare->shareUpdateScreen = true;
             paintShare->browserVisible    = false;
             break;
