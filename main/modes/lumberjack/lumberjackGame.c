@@ -394,7 +394,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
         loadSong("l_sfx_upgrade.sng", &lumv->sfx_item_use, false);
-        loadSong("l_song_panic.sng", &lumv->song_theme, false);
+        loadSong("l_song_attack.sng", &lumv->song_theme, false);
     }
     else
     {        
@@ -462,7 +462,11 @@ bool lumberjackLoadLevel()
                 "lumberjacks_attack_3.bin",
                 "lumberjacks_attack_4.bin",
                 "lumberjacks_attack_5.bin",
-                "lumberjacks_attack_10.bin",
+                "lumberjacks_attack_6.bin",
+                "lumberjacks_attack_7.bin",
+                "lumberjacks_attack_8.bin",
+                "lumberjacks_attack_9.bin",
+                "lumberjacks_attack_10.bin",    
             };
 
             fname = attackLevelName[lumv->levelIndex % ARRAY_SIZE(attackLevelName)];
