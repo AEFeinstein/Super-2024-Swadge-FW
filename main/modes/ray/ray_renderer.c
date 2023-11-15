@@ -952,7 +952,7 @@ rayObjCommon_t* castSprites(ray_t* ray, rayEnemy_t** closestEnemy)
                 {
                     // Check if this should be locked onto
                     if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE)
-                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY))
+                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY) && (E_DEAD != ((rayEnemy_t*)obj)->state))
                     {
                         // Closest sprites are drawn last, so override the lock
                         lockedEnemy = obj;
