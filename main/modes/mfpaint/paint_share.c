@@ -263,7 +263,6 @@ void paintShareCommonSetup(void)
     paintShare = calloc(1, sizeof(paintShare_t));
 
     PAINT_LOGD("Entering Share Mode");
-    paintLoadIndex(&paintShare->index);
 
     paintShare->dialog = initDialogBox("hello", "test", NULL, NULL);
 
@@ -318,7 +317,7 @@ void paintShareEnterMode(void)
     PAINT_LOGD("Sender: Selecting slot");
     paintShare->shareState = SHARE_SEND_SELECT_SLOT;
 
-    if (!paintGetAnySlotInUse(0))
+    if (!paintGetAnySlotInUse())
     {
         PAINT_LOGE("Share mode started without any saved images. Exiting");
         switchToSwadgeMode(&modePaint);
@@ -487,10 +486,6 @@ void paintRenderShareMode(int64_t elapsedUs)
             {
                 snprintf(text, sizeof(text), strControlsSave);
             }
-
-            /*snprintf(text, sizeof(text),
-                     paintGetSlotInUse(paintShare->index, paintShare->shareSaveSlot) ? strOverwriteSlot : strEmptySlot,
-                     paintShare->shareSaveSlot + 1);*/
             break;
         }
         case SHARE_SEND_SELECT_SLOT:
@@ -1044,7 +1039,6 @@ void paintShareMainLoop(int64_t elapsedUs)
             paintShare->shareUpdateScreen = true;
             if (!paintShare->connectionStarted)
             {
-                // paintSetRecentSlot(&paintShare->index, paintShare->shareSaveSlot);
                 paintShareInitP2p();
             }
             break;
@@ -1450,6 +1444,5 @@ void paintShareDoLoad(void)
 
 void paintShareDoSave(void)
 {
-    //paintSave(&paintShare->index, &paintShare->canvas, paintShare->shareSaveSlot);
     paintSaveNamed(paintShare->shareSaveSlotKey, &paintShare->canvas);
 }

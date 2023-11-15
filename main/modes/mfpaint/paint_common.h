@@ -47,34 +47,6 @@
 
 //////// Data Constants
 
-// The total number of save slots available
-// TODO: Replace with a space limit
-#define PAINT_SAVE_SLOTS 4
-
-// Whether to have the LEDs show the current colors
-#define PAINT_ENABLE_LEDS (0x0001 << (PAINT_SAVE_SLOTS * 2))
-
-// Whether to play SFX on drawing, etc.
-#define PAINT_ENABLE_SFX (0x0002 << (PAINT_SAVE_SLOTS * 2))
-
-// Whether to play background music
-#define PAINT_ENABLE_BGM (0x0004 << (PAINT_SAVE_SLOTS * 2))
-
-// Whether to enable blinking pick points, and any other potentilaly annoying things
-#define PAINT_ENABLE_BLINK (0x0008 << (PAINT_SAVE_SLOTS * 2))
-
-// Default to LEDs, SFX, and music on, with slot 0 marked as most recent
-#define PAINT_DEFAULTS                                                            \
-    (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK \
-     | (PAINT_SAVE_SLOTS << PAINT_SAVE_SLOTS))
-
-// Mask for the index that includes everything except the most-recent index
-#define PAINT_MASK_NOT_RECENT \
-    (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK | ((1 << PAINT_SAVE_SLOTS) - 1))
-
-// The size of the buffer for loading/saving the image. Each chunk is saved as a separate blob in NVS
-#define PAINT_SAVE_CHUNK_SIZE 1024
-
 #define PAINT_SHARE_PX_PACKET_LEN (P2P_MAX_DATA_LEN - 3 - 11)
 #define PAINT_SHARE_PX_PER_PACKET PAINT_SHARE_PX_PACKET_LEN * 2
 
@@ -214,9 +186,6 @@ typedef struct
     font_t saveMenuFont;
     // Small font for small things (text above color picker gradient bars)
     font_t smallFont;
-
-    // Index keeping track of which slots are in use and the most recent slot
-    int32_t index;
 
     // All shared state for 1 or 2 players
     paintArtist_t artist[2];
@@ -420,7 +389,6 @@ typedef struct
 typedef struct
 {
     paintCanvas_t canvas;
-    int32_t index;
 
     font_t toolbarFont;
     wsg_t arrowWsg;

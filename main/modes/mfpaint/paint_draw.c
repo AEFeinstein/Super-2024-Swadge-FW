@@ -319,8 +319,6 @@ void paintDrawScreenSetup(void)
         paintState->marginBottom += paintHelp->helpH;
     }
 
-    paintLoadIndex(&paintState->index);
-
     if (paintHelp == NULL && paintGetLastSlot(paintState->slotKey) && paintSlotExists(paintState->slotKey))
     {
         // If there's a saved image, load that (but not in the tutorial)
@@ -745,10 +743,13 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
                 // Load from the selected slot if it's been used
                 hideCursor(getCursor(), &paintState->canvas);
                 paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
-                if (paintLoadDimensionsNamed(paintState->selectedSlotKey, &paintState->canvas))
+
+                // Load the image into the buffer so we can orient it properly
+                paintState->canvas.buffered = true;
+                if (paintLoadNamed(paintState->selectedSlotKey, &paintState->canvas))
                 {
                     paintPositionDrawCanvas();
-                    paintLoadNamed(paintState->selectedSlotKey, &paintState->canvas);
+                    paintBlitCanvas(&paintState->canvas);
                     paintSetLastSlot(paintState->selectedSlotKey);
                     strncpy(paintState->slotKey, paintState->selectedSlotKey, sizeof(paintState->slotKey));
 
@@ -887,7 +888,7 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             }
         }
 
-        if (paintState->index & PAINT_ENABLE_BLINK)
+        if (paintGetEnableBlink())
         {
             if (paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_ON)
             {
@@ -1984,7 +1985,7 @@ void paintUpdateLeds(void)
     uint32_t rgb = 0;
 
     // Only set the LED color if LEDs are enabled
-    if (paintState->index & PAINT_ENABLE_LEDS)
+    if (paintGetEnableLeds())
     {
         if (paintState->buttonMode == BTN_MODE_PALETTE)
         {

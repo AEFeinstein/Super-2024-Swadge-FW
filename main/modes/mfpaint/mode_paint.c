@@ -52,7 +52,6 @@ void paintEnterMode(void);
 void paintExitMode(void);
 void paintMainLoop(int64_t elapsedUs);
 void paintButtonCb(buttonEvt_t* evt);
-void paintEventCb(const swadgeEvt_t* evt);
 
 swadgeMode_t modePaint = {
     .modeName                 = paintTitle,
@@ -78,8 +77,6 @@ void paintMenuCb(const char* label, bool selected, uint32_t value);
 
 void paintDeleteAllData(void);
 void paintMenuInitialize(void);
-void paintMenuPrevEraseOption(void);
-void paintMenuNextEraseOption(void);
 void paintSetupMainMenu(void);
 
 // Mode struct function implemetations
@@ -199,48 +196,6 @@ void paintButtonCb(buttonEvt_t* evt)
     }
 }
 
-void paintEventCb(const swadgeEvt_t* evt)
-{
-    switch (paintMenu->screen)
-    {
-        case PAINT_DRAW:
-        case PAINT_HELP:
-        {
-            switch (evt->type)
-            {
-                case QUICK_SETTINGS_SHOW:
-                {
-                    if (paintState->buttonMode == BTN_MODE_DRAW)
-                    {
-                        paintSaveCanvas(&paintState->canvas);
-                    }
-                    break;
-                }
-
-                case QUICK_SETTINGS_HIDE:
-                {
-                    if (paintState->buttonMode == BTN_MODE_DRAW)
-                    {
-                        paintRestoreCanvas(&paintState->canvas);
-                    }
-                    break;
-                }
-            }
-            break;
-        }
-
-        case PAINT_GALLERY:
-        {
-            break;
-        }
-
-        case PAINT_MENU:
-        case PAINT_SHARE:
-        case PAINT_RECEIVE:
-            break;
-    }
-}
-
 // Util function implementations
 
 void paintMenuInitialize(void)
@@ -253,12 +208,9 @@ void paintMenuInitialize(void)
 
 void paintSetupMainMenu(void)
 {
-    int32_t index;
-    paintLoadIndex(&index);
-
     addSingleItemToMenu(paintMenu->menu, menuOptDraw);
 
-    if (paintGetAnySlotInUse(index))
+    if (paintGetAnySlotInUse())
     {
         // Only add "gallery" if there's something to view
         paintMenu->enableScreensaver = true;
@@ -270,7 +222,7 @@ void paintSetupMainMenu(void)
     }
 
     paintMenu->menu = startSubMenu(paintMenu->menu, menuOptNetwork);
-    if (paintGetAnySlotInUse(index))
+    if (paintGetAnySlotInUse())
     {
         addSingleItemToMenu(paintMenu->menu, menuOptShare);
     }
@@ -286,64 +238,6 @@ void paintSetupMainMenu(void)
     paintMenu->menu = endSubMenu(paintMenu->menu);
 
     addSingleItemToMenu(paintMenu->menu, menuOptExit);
-}
-
-void paintMenuPrevEraseOption(void)
-{
-    int32_t index;
-    paintLoadIndex(&index);
-
-    if (paintGetAnySlotInUse(index))
-    {
-        PAINT_LOGD("A slot is in use");
-        uint8_t prevSlot = paintGetPrevSlotInUse(index, paintMenu->eraseSlot);
-
-        PAINT_LOGD("Current eraseSlot: %d, prev: %d", paintMenu->eraseSlot, prevSlot);
-        if (paintMenu->eraseSlot != PAINT_SAVE_SLOTS && prevSlot >= paintMenu->eraseSlot)
-        {
-            PAINT_LOGD("Wrapped, moving to All");
-            // we wrapped around
-            paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-        }
-        else
-        {
-            paintMenu->eraseSlot = prevSlot;
-        }
-    }
-    else
-    {
-        PAINT_LOGD("No in-use slots, moving to All");
-        paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-    }
-}
-
-void paintMenuNextEraseOption(void)
-{
-    int32_t index;
-    paintLoadIndex(&index);
-
-    if (paintGetAnySlotInUse(index))
-    {
-        PAINT_LOGD("A slot is in use");
-        uint8_t nextSlot = paintGetNextSlotInUse(
-            index, (paintMenu->eraseSlot == PAINT_SAVE_SLOTS) ? PAINT_SAVE_SLOTS - 1 : paintMenu->eraseSlot);
-        PAINT_LOGD("Current eraseSlot: %d, next: %d", paintMenu->eraseSlot, nextSlot);
-        if (paintMenu->eraseSlot != PAINT_SAVE_SLOTS && nextSlot <= paintMenu->eraseSlot)
-        {
-            PAINT_LOGD("Wrapped, moving to All");
-            // we wrapped around
-            paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-        }
-        else
-        {
-            paintMenu->eraseSlot = nextSlot;
-        }
-    }
-    else
-    {
-        PAINT_LOGD("No in-use slots, moving to All");
-        paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-    }
 }
 
 void paintMenuCb(const char* opt, bool selected, uint32_t value)
@@ -443,13 +337,14 @@ void paintReturnToMainMenu(void)
 
 void paintDeleteAllData(void)
 {
-    int32_t index;
-    paintLoadIndex(&index);
+    size_t count;
+    readNamespaceNvsEntryInfos(PAINT_NS_DATA, NULL, NULL, &count);
 
-    for (uint8_t i = 0; i < PAINT_SAVE_SLOTS; i++)
+    nvs_entry_info_t infos[count];
+    readNamespaceNvsEntryInfos(PAINT_NS_DATA, NULL, infos, NULL);
+
+    for (int i = 0; i < count; i++)
     {
-        paintDeleteSlot(&index, i);
+        paintDeleteNamed(infos[i].key);
     }
-
-    paintDeleteIndex();
 }

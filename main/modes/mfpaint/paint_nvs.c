@@ -20,23 +20,8 @@
 
 #define PAINT_BOOL_PARAM(k, d) PAINT_PARAM((0), (1), k, d)
 
-#define PAINT_BIT_PARAM(k) PAINT_PARAM(INT32_MIN, INT32_MAX, k, 0)
-
-static const char KEY_PAINT_INDEX[]        = "pnt_idx";
-static const char KEY_PAINT_SLOT_PALETTE[] = "paint_%02" PRIu8 "_pal";
-static const char KEY_PAINT_SLOT_DIM[]     = "paint_%02" PRIu8 "_dim";
-static const char KEY_PAINT_SLOT_CHUNK[]   = "paint_%02" PRIu8 "c%05" PRIu32;
 static const char KEY_PAINT_LAST_SLOT[]    = "paint_last";
 
-/*static const settingParam_t paintOldIndex = {
-    .min = INT32_MIN,
-    .max = INT32_MAX,
-    .def = 0,
-    .key = KEY_PAINT_INDEX,
-};*/
-
-PAINT_BIT_PARAM(InUseSlot);
-PAINT_BIT_PARAM(RecentSlot);
 PAINT_BOOL_PARAM(EnableLeds, true);
 PAINT_BOOL_PARAM(EnableBlink, true);
 
@@ -45,47 +30,6 @@ static bool paintWriteParam(const settingParam_t* param, int32_t val);
 static void paintRebuildPalette(paletteColor_t palette[16], const paletteColor_t* img, uint16_t w, uint16_t h);
 static size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count,
                               paletteColor_t palette[16]);
-
-// void paintDebugIndex(int32_t index)
-// {
-//     char bintext[33];
-
-//     for (uint8_t i = 0; i < 32; i++)
-//     {
-//         bintext[31 - i] = (index & (1 << i)) ? '1' : '0';
-//     }
-
-//     bintext[32] = '\0';
-
-//     PAINT_LOGD("PAINT INDEX:");
-//     PAINT_LOGD("  Raw: %s", bintext);
-//     PAINT_LOGD("  Slots:");
-//     PAINT_LOGD("  - [%c] Slot 1", paintGetSlotInUse(index, 0) ? 'X' : ' ');
-//     PAINT_LOGD("  - [%c] Slot 2", paintGetSlotInUse(index, 1) ? 'X' : ' ');
-//     PAINT_LOGD("  - [%c] Slot 3", paintGetSlotInUse(index, 2) ? 'X' : ' ');
-//     PAINT_LOGD("  - [%c] Slot 4", paintGetSlotInUse(index, 3) ? 'X' : ' ');
-//     if (paintGetRecentSlot(index) == PAINT_SAVE_SLOTS)
-//     {
-//         PAINT_LOGD("  Recent Slot: None");
-//     }
-//     else
-//     {
-//         PAINT_LOGD("  Recent Slot: %d", paintGetRecentSlot(index) + 1);
-//     }
-//     PAINT_LOGD("  LEDs: %s", (index & PAINT_ENABLE_LEDS) ? "Yes" : "No");
-//     PAINT_LOGD("  Blink: %s", (index & PAINT_ENABLE_BLINK) ? "Yes" : "No");
-//     PAINT_LOGD("===========");
-// }
-
-const settingParam_t* paintGetInUseSlotBounds(void)
-{
-    return &paintInUseSlotParam;
-}
-
-const settingParam_t* paintGetRecentSlotBounds(void)
-{
-    return &paintRecentSlotParam;
-}
 
 const settingParam_t* paintGetEnableLedsBounds(void)
 {
@@ -96,26 +40,6 @@ const settingParam_t* paintGetEnableBlinkBounds(void)
 {
     return &paintEnableBlinkParam;
 }
-
-int32_t paintGetInUseSlots(void)
-{
-    return paintReadParam(&paintInUseSlotParam);
-}
-
-void paintSetInUseSlots(int32_t inUseSlots)
-{
-    paintWriteParam(&paintInUseSlotParam, inUseSlots);
-}
-
-/*int32_t paintGetRecentSlot(void)
-{
-
-}*/
-
-/*void paintSetRecentSlot(int32_t recentSlot)
-{
-
-}*/
 
 bool paintGetEnableLeds(void)
 {
@@ -192,77 +116,9 @@ static void paintRebuildPalette(paletteColor_t palette[16], const paletteColor_t
     }
 }
 
-void paintLoadIndex(int32_t* index)
-{
-    //       SFX?
-    //     BGM | Lights?
-    //        \|/
-    // |xxxxxvvv  |Recent?|  |Inuse? |
-    // 0000 0000  0000 0000  0000 0000
-
-    // if (paintReadParam(&index))
-    if (!readNvs32(KEY_PAINT_INDEX, index))
-    {
-        PAINT_LOGW("No metadata! Setting defaults");
-        *index = PAINT_DEFAULTS;
-        paintSaveIndex(*index);
-    }
-}
-
-void paintSaveIndex(int32_t index)
-{
-    if (writeNvs32(KEY_PAINT_INDEX, index))
-    {
-        PAINT_LOGD("Saved index: %04" PRIx32, index);
-    }
-    else
-    {
-        PAINT_LOGE("Failed to save index :(");
-    }
-}
-
-// void paintResetStorage(int32_t* index)
-// {
-//     *index = PAINT_DEFAULTS;
-//     paintSaveIndex(*index);
-// }
-
-bool paintGetSlotInUse(int32_t index, uint8_t slot)
-{
-    return (index & (1 << slot)) != 0;
-}
-
-void paintClearSlot(int32_t* index, uint8_t slot)
-{
-    *index &= ~(1 << slot);
-    paintSaveIndex(*index);
-}
-
-void paintSetSlotInUse(int32_t* index, uint8_t slot)
-{
-    *index |= (1 << slot);
-    paintSaveIndex(*index);
-}
-
-bool paintGetAnySlotInUse(int32_t index)
+bool paintGetAnySlotInUse(void)
 {
     return nvsNamespaceInUse(PAINT_NS_DATA);
-}
-
-/**
- * Returns the most recent save slot used, or PAINT_SAVE_SLOTS if there is none set
- */
-uint8_t paintGetRecentSlot(int32_t index)
-{
-    return (index >> PAINT_SAVE_SLOTS) & 0b111;
-}
-
-void paintSetRecentSlot(int32_t* index, uint8_t slot)
-{
-    // TODO if we change the number of slots this will totally not work anymore
-    // I mean, we could just do & 0xFF and waste 5 whole bits
-    *index = (*index & PAINT_MASK_NOT_RECENT) | ((slot & 0b111) << PAINT_SAVE_SLOTS);
-    paintSaveIndex(*index);
 }
 
 /**
@@ -405,216 +261,6 @@ size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* 
     return count;
 }
 
-bool paintSave(int32_t* index, const paintCanvas_t* canvas, uint8_t slot)
-{
-    // NVS blob key name
-    char key[16];
-
-    // pointer to converted image segment
-    uint8_t* imgChunk = NULL;
-
-    if ((imgChunk = malloc(sizeof(uint8_t) * PAINT_SAVE_CHUNK_SIZE)) != NULL)
-    {
-        PAINT_LOGD("Allocated %d bytes for image chunk", PAINT_SAVE_CHUNK_SIZE);
-    }
-    else
-    {
-        PAINT_LOGE("malloc failed for %d bytes", PAINT_SAVE_CHUNK_SIZE);
-        return false;
-    }
-
-    // Save the palette map, this lets us compact the image by 50%
-    snprintf(key, 16, KEY_PAINT_SLOT_PALETTE, slot);
-    PAINT_LOGD("paletteColor_t size: %" PRIu32 ", max colors: %d", (uint32_t)sizeof(paletteColor_t), PAINT_MAX_COLORS);
-    PAINT_LOGD("Palette will take up %" PRIu32 " bytes", (uint32_t)sizeof(canvas->palette));
-    if (writeNvsBlob(key, canvas->palette, sizeof(canvas->palette)))
-    {
-        PAINT_LOGD("Saved palette to slot %s", key);
-    }
-    else
-    {
-        PAINT_LOGE("Could't save palette to slot %s", key);
-        free(imgChunk);
-        return false;
-    }
-
-    // Save the canvas dimensions
-    uint32_t packedSize = canvas->w << 16 | canvas->h;
-    snprintf(key, 16, KEY_PAINT_SLOT_DIM, slot);
-    if (writeNvs32(key, packedSize))
-    {
-        PAINT_LOGD("Saved dimensions to slot %s", key);
-    }
-    else
-    {
-        PAINT_LOGE("Couldn't save dimensions to slot %s", key);
-        free(imgChunk);
-        return false;
-    }
-
-    size_t offset        = 0;
-    size_t written       = 0;
-    uint32_t chunkNumber = 0;
-
-    // Write until we're done
-    while (0 != (written = paintSerialize(imgChunk, canvas, offset, PAINT_SAVE_CHUNK_SIZE)))
-    {
-        // save the chunk
-        snprintf(key, 16, KEY_PAINT_SLOT_CHUNK, slot, chunkNumber);
-        if (writeNvsBlob(key, imgChunk, written))
-        {
-            PAINT_LOGD("Saved blob %" PRIu32 " with %" PRIu32 " bytes", chunkNumber, (uint32_t)written);
-        }
-        else
-        {
-            PAINT_LOGE("Unable to save blob %" PRIu32, chunkNumber);
-            free(imgChunk);
-            return false;
-        }
-
-        offset += written;
-        chunkNumber++;
-    }
-
-    paintSetSlotInUse(index, slot);
-    paintSetRecentSlot(index, slot);
-    paintSaveIndex(*index);
-
-    free(imgChunk);
-    imgChunk = NULL;
-
-    return true;
-}
-
-bool paintLoad(int32_t* index, paintCanvas_t* canvas, uint8_t slot)
-{
-    // NVS blob key name
-    char key[16];
-
-    // pointer to converted image segment
-    uint8_t* imgChunk = NULL;
-
-    // Allocate space for the chunk
-    if ((imgChunk = malloc(PAINT_SAVE_CHUNK_SIZE)) != NULL)
-    {
-        PAINT_LOGD("Allocated %d bytes for image chunk", PAINT_SAVE_CHUNK_SIZE);
-    }
-    else
-    {
-        PAINT_LOGE("malloc failed for %d bytes", PAINT_SAVE_CHUNK_SIZE);
-        return false;
-    }
-
-    // read the palette and load it into the recentColors
-    // read the dimensions and do the math
-    // read the pixels
-
-    size_t paletteSize;
-
-    if (!paintGetSlotInUse(*index, slot))
-    {
-        PAINT_LOGW("Attempted to load from uninitialized slot %" PRIu8, slot);
-        free(imgChunk);
-        return false;
-    }
-
-    // Load the palette map
-    snprintf(key, 16, KEY_PAINT_SLOT_PALETTE, slot);
-
-    if (!readNvsBlob(key, NULL, &paletteSize))
-    {
-        PAINT_LOGE("Couldn't read size of palette in slot %s", key);
-        free(imgChunk);
-        return false;
-    }
-
-    // TODO Move this outside of this function
-    if (readNvsBlob(key, canvas->palette, &paletteSize))
-    {
-        PAINT_LOGD("Read %" PRIu32 " bytes of palette from slot %s", (uint32_t)paletteSize, key);
-    }
-    else
-    {
-        PAINT_LOGE("Could't read palette from slot %s", key);
-        free(imgChunk);
-        return false;
-    }
-
-    if (!paintLoadDimensions(canvas, slot))
-    {
-        PAINT_LOGE("Slot %" PRIu8 " has 0 dimension! Stopping load and clearing slot", slot);
-        paintClearSlot(index, slot);
-        free(imgChunk);
-        return false;
-    }
-
-    // Read all the chunks
-    size_t lastChunkSize = 0;
-    uint32_t chunkNumber = 0;
-    size_t offset        = 0;
-
-    do
-    {
-        offset += lastChunkSize;
-        snprintf(key, 16, KEY_PAINT_SLOT_CHUNK, slot, chunkNumber);
-        // panic
-        if (!readNvsBlob(key, NULL, &lastChunkSize) || lastChunkSize > PAINT_SAVE_CHUNK_SIZE)
-        {
-            PAINT_LOGE("Unable to read size of blob %" PRIu32 " in slot %s", chunkNumber, key);
-            free(imgChunk);
-            return false;
-        }
-
-        // read the chunk
-        if (readNvsBlob(key, imgChunk, &lastChunkSize))
-        {
-            PAINT_LOGD("Read blob %" PRIu32 " (%" PRIu32 " bytes)", (uint32_t)chunkNumber, (uint32_t)lastChunkSize);
-        }
-        else
-        {
-            PAINT_LOGE("Unable to read blob %" PRIu32, chunkNumber);
-            // do panic if we miss one chunk, it's probably not ok...
-            free(imgChunk);
-            return false;
-        }
-
-        chunkNumber++;
-        // paintDeserialize() will return true if there's more to be read
-    } while (paintDeserialize(canvas, imgChunk, offset, lastChunkSize));
-
-    free(imgChunk);
-    imgChunk = NULL;
-
-    return true;
-}
-
-bool paintLoadDimensions(paintCanvas_t* canvas, uint8_t slot)
-{
-    char key[16];
-    // Read the canvas dimensions
-    PAINT_LOGD("Reading dimensions");
-    int32_t packedSize;
-    snprintf(key, 16, KEY_PAINT_SLOT_DIM, slot);
-    if (readNvs32(key, &packedSize))
-    {
-        canvas->h = (uint32_t)packedSize & 0xFFFF;
-        canvas->w = (((uint32_t)packedSize) >> 16) & 0xFFFF;
-        PAINT_LOGD("Read dimensions from slot %s: %d x %d", key, canvas->w, canvas->h);
-
-        if (canvas->h == 0 || canvas->w == 0)
-        {
-            return false;
-        }
-    }
-    else
-    {
-        PAINT_LOGE("Couldn't read dimensions from slot %s", key);
-        return false;
-    }
-
-    return true;
-}
-
 bool paintSaveNamed(const char* name, const paintCanvas_t* canvas)
 {
     wsg_t tmpWsg;
@@ -706,25 +352,6 @@ bool paintLoadNamed(const char* name, paintCanvas_t* canvas)
     return result;
 }
 
-bool paintLoadDimensionsNamed(const char* name, paintCanvas_t* canvas)
-{
-    // We have to load the whole image, mehhhh
-    wsg_t tmpWsg;
-    bool result = loadWsgNvs(PAINT_NS_DATA, name, &tmpWsg, true);
-
-    if (result)
-    {
-        canvas->w = tmpWsg.w;
-        canvas->h = tmpWsg.h;
-
-        free(tmpWsg.px);
-
-        return true;
-    }
-
-    return false;
-}
-
 void paintDeleteNamed(const char* name)
 {
     eraseNamespaceNvsKey(PAINT_NS_DATA, name);
@@ -754,87 +381,4 @@ bool paintGetLastSlot(char* out)
 void paintSetLastSlot(const char* name)
 {
     writeNvsBlob(KEY_PAINT_LAST_SLOT, name, strlen(name) + 1);
-}
-
-uint8_t paintGetPrevSlotInUse(int32_t index, uint8_t slot)
-{
-    /*do
-    {
-        // Switch to the previous slot, wrapping back to the end
-        slot = PREV_WRAP(slot, PAINT_SAVE_SLOTS);
-    }
-    // If we're loading, and there's actually a slot we can load from, skip empty slots until we find one that is in use
-    while (paintGetAnySlotInUse(index) && !paintGetSlotInUse(index, slot));*/
-
-    return slot;
-}
-
-uint8_t paintGetNextSlotInUse(int32_t index, uint8_t slot)
-{
-    /*do
-    {
-        slot = NEXT_WRAP(slot, PAINT_SAVE_SLOTS);
-    } while (paintGetAnySlotInUse(index) && !paintGetSlotInUse(index, slot));*/
-
-    return slot;
-}
-
-void paintDeleteSlot(int32_t* index, uint8_t slot)
-{
-    // NVS blob key name
-    char key[16];
-
-    if (slot >= PAINT_SAVE_SLOTS)
-    {
-        PAINT_LOGE("Attempt to delete invalid slto %d", slot);
-        return;
-    }
-
-    if (!paintGetSlotInUse(*index, slot))
-    {
-        PAINT_LOGW("Attempting to delete allegedly unused slot %d", slot);
-    }
-
-    // Delete the palette
-    snprintf(key, 16, KEY_PAINT_SLOT_PALETTE, slot);
-    if (!eraseNvsKey(key))
-    {
-        PAINT_LOGE("Couldn't delete palette of slot %d", slot);
-    }
-
-    snprintf(key, 16, KEY_PAINT_SLOT_DIM, slot);
-    if (!eraseNvsKey(key))
-    {
-        PAINT_LOGE("Couldn't delete dimensions of slot %d", slot);
-    }
-
-    // Erase chunks until we fail to find one
-    uint32_t i = 0;
-    do
-    {
-        snprintf(key, 16, KEY_PAINT_SLOT_CHUNK, slot, i++);
-    } while (eraseNvsKey(key));
-
-    PAINT_LOGI("Erased %" PRIu32 " chunks of slot %" PRIu8, i - 1, slot);
-    paintClearSlot(index, slot);
-
-    if (paintGetRecentSlot(*index) == slot)
-    {
-        // Unset the most recent slot if we're deleting it
-        paintSetRecentSlot(index, PAINT_SAVE_SLOTS);
-    }
-}
-
-bool paintDeleteIndex(void)
-{
-    if (eraseNvsKey(KEY_PAINT_INDEX))
-    {
-        PAINT_LOGI("Erased index!");
-        return true;
-    }
-    else
-    {
-        PAINT_LOGE("Failed to erase index!");
-        return false;
-    }
 }

@@ -207,21 +207,6 @@
 #include "settingsManager.h"
 #include "touchUtils.h"
 
-typedef enum
-{
-    QUICK_SETTINGS_SHOW,
-    QUICK_SETTINGS_HIDE,
-} swadgeEvtType_t;
-
-typedef struct
-{
-    swadgeEvtType_t type;
-    union
-    {
-        void* generic;
-    };
-} swadgeEvt_t;
-
 /**
  * @struct swadgeMode_t
  * @brief A struct of all the function pointers necessary for a swadge mode. If a mode does not need a particular
