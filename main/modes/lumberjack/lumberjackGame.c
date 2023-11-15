@@ -742,18 +742,21 @@ void lumberjackSetupLevel(int characterIndex)
 
 void lumberjackUnloadLevel(void)
 {
-    free(lumv->tile);
-    free(lumv->localPlayer);
-
-    //Unload previous enemies
-    for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+    if(NULL != lumv)
     {
-        free(lumv->enemy[i]);
-        lumv->enemy[i] = NULL;
-    }
+        free(lumv->tile);
+        free(lumv->localPlayer);
 
-    free(lumv->ghost);    
-    lumv->ghost = NULL;
+        //Unload previous enemies
+        for (int i = 0; i < ARRAY_SIZE(lumv->enemy); i++)
+        {
+            free(lumv->enemy[i]);
+            lumv->enemy[i] = NULL;
+        }
+
+        free(lumv->ghost);    
+        lumv->ghost = NULL;
+    }
 }
 
 /**
@@ -2914,4 +2917,5 @@ void lumberjackExitGameMode(void)
 
     freeFont(&lumv->arcade);
     free(lumv);
+    lumv = NULL;
 }

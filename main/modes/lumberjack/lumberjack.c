@@ -129,24 +129,24 @@ static void lumberjackEnterMode(void)
         characters++;
     }
 
-    const char** charactersArray = calloc(characters, sizeof(char*));
+    lumberjack->charactersArray = calloc(characters, sizeof(char*));
 
-    charactersArray[0] = lumberjackRedCharacter;
-    charactersArray[1] = lumberjackGreenCharacter;
+    lumberjack->charactersArray[0] = lumberjackRedCharacter;
+    lumberjack->charactersArray[1] = lumberjackGreenCharacter;
 
     int index = 2;
 
     if (lumberjack->save.choUnlocked)
     {
-        charactersArray[index++] = lumberjackChoCharacter;
+        lumberjack->charactersArray[index++] = lumberjackChoCharacter;
     }
 
     if (lumberjack->save.swadgeGuyUnlocked)
     {
-        charactersArray[index++] = lumberjackSpecialCharacter;
+        lumberjack->charactersArray[index++] = lumberjackSpecialCharacter;
     }
 
-    addMultiItemToMenu(lumberjack->menu, charactersArray, characters, 0);
+    addMultiItemToMenu(lumberjack->menu, lumberjack->charactersArray, characters, 0);
     addSingleItemToMenu(lumberjack->menu, lumberjackExit);
  
     lumberjack->screen = LUMBERJACK_MENU;
