@@ -415,14 +415,6 @@ void app_main(void)
             // If quick settings should be shown or hidden, do that before drawing the TFT
             if (shouldShowQuickSettings)
             {
-                // Call the event callback if the mode has one
-                if (NULL != cSwadgeMode->fnSwadgeEventCb)
-                {
-                    swadgeEvt_t event = {0};
-                    event.type        = QUICK_SETTINGS_SHOW;
-                    cSwadgeMode->fnSwadgeEventCb(&event);
-                }
-
                 // Lower the flag
                 shouldShowQuickSettings = false;
                 // Pause the buzzer
@@ -441,15 +433,6 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
-
-                // Call the event callback if the mode has one
-                if (NULL != cSwadgeMode->fnSwadgeEventCb)
-                {
-                    swadgeEvt_t event = {0};
-                    event.type        = QUICK_SETTINGS_HIDE;
-                    cSwadgeMode->fnSwadgeEventCb(&event);
-                }
-
                 // Resume the buzzer
                 bzrResume();
             }

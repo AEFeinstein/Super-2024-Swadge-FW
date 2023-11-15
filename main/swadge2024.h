@@ -336,12 +336,6 @@ typedef struct
      * @return The number of bytes returned to the host
      */
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
-
-    /**
-     * @brief Generic system events callback
-     *
-     */
-    void (*fnSwadgeEventCb)(const swadgeEvt_t* evt);
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);

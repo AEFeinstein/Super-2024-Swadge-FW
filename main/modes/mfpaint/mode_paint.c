@@ -69,7 +69,6 @@ swadgeMode_t modePaint = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
-    .fnSwadgeEventCb          = paintEventCb,
 };
 
 // Menu callback declaration
