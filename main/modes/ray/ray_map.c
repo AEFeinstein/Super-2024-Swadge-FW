@@ -265,8 +265,15 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     newObj->behaviorTimer = esp_random() % 1000000;
     newObj->shootTimer    = getTimerForEnemy(newObj, SHOT);
     newObj->blockTimer    = getTimerForEnemy(newObj, BLOCK);
-    newObj->sprites       = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
-    newObj->warpTimer     = E_WARP_TIME;
+    if ((OBJ_ENEMY_HIDDEN == type) && (LO_XRAY == ray->p.loadout))
+    {
+        newObj->sprites = &ray->hiddenXRTex;
+    }
+    else
+    {
+        newObj->sprites = &ray->enemyTex[type - OBJ_ENEMY_NORMAL];
+    }
+    newObj->warpTimer = E_WARP_TIME;
 
     // This sets state, animTimer, animTimerLimit, animFrame, and c.sprite
     newObj->state = E_WALKING_2;
