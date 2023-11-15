@@ -225,6 +225,7 @@ typedef struct
     song_t song_theme;
     song_t song_respawn;
     song_t song_gameover;
+    song_t song_title;
 
 } lumberjackVars_t;
 

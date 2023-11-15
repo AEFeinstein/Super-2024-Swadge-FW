@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <esp_log.h>
 
+#include "mainMenu.h"
 #include "menu.h"
 
 // For lumberjack
@@ -12,7 +13,7 @@
 #include "lumberjackGame.h"
 
 #define LUMBERJACK_VLEN             7
-#define LUMBERJACK_VERSION          "231111a"
+#define LUMBERJACK_VERSION          "231114a"
 
 
 static void lumberjackEnterMode(void);
@@ -39,7 +40,9 @@ static bool lumberjackSwadgeGuyUnlocked(void);
 static const char lumberjackName[]   = "Lumber Jack";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
+// static const char lumberjackSmack[] = "Smack";
 static const char lumberjackBack[]   = "Back";
+static const char lumberjackExit[]   = "Exit";
 
 static char lumberjackRedCharacter[]          = "Character: Red";
 static char lumberjackGreenCharacter[]        = "Character: Green";
@@ -112,6 +115,8 @@ static void lumberjackEnterMode(void)
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayerClient);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
+    //addSingleItemToMenu(lumberjack->menu, lumberjackSmack);
+
     int characters = 2;
 
     if (lumberjack->save.choUnlocked)
@@ -142,16 +147,12 @@ static void lumberjackEnterMode(void)
     }
 
     addMultiItemToMenu(lumberjack->menu, charactersArray, characters, 0);
+    addSingleItemToMenu(lumberjack->menu, lumberjackExit);
  
     lumberjack->screen = LUMBERJACK_MENU;
 
-    // Lumberjack. Game 19
-    //  Init menu :(
-
     bzrStop(true); // Stop the buzzer?
 
-    // High score stuff?
-    // Unlockables ? Save data?
 }
 
 static void lumberjackLoadSave(void) 
@@ -289,10 +290,10 @@ static bool lumberjackSwadgeGuyUnlocked()
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    //ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
+    ESP_LOGI(LUM_TAG, "Getting: %d %d", len, rssi);
     for (int i = 0; i < len; i++)
     {
-        //ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
+        ESP_LOGI(LUM_TAG, "data %d) %d", i, data[i]);
     }
     p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
@@ -491,6 +492,10 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
             lumberjack->networked = false;
             lumberjack->host      = false;
             lumberjackJoinGame();
+        }
+        else if (label == lumberjackExit)
+        {
+            switchToSwadgeMode(&mainMenuMode);
         }
 
         if (label == lumberjackRedCharacter)

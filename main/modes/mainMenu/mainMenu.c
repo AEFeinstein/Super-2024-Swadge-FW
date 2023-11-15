@@ -330,7 +330,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (label == sokoMode.modeName)
         {
-            switchToSwadgeMode(&sokoMode);
+            switchToSwadgeMode(&demoMode);
         }
         else if (label == touchTestMode.modeName)
         {

@@ -394,11 +394,13 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
     {
         loadSong("l_sfx_upgrade.sng", &lumv->sfx_item_use, false);
+        loadSong("l_song_attack_title.sng", &lumv->song_title, false);
         loadSong("l_song_attack.sng", &lumv->song_theme, false);
     }
     else
     {        
         loadSong("l_song_panic.sng", &lumv->song_theme, false);
+        loadSong("l_song_panic_title.sng", &lumv->song_title, false);
         loadSong("l_sfx_water.sng", &lumv->sfx_item_use, false);
     }
 
@@ -412,7 +414,10 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadSong("l_song_respawn.sng", &lumv->song_respawn, false);
     loadSong("l_song_gameover.sng", &lumv->song_gameover, false);
     lumv->song_theme.shouldLoop = true;
+    lumv->song_title.shouldLoop = true;
 
+    bzrPlayBgm(&lumv->song_title, BZR_STEREO);
+    
 }
 
 bool lumberjackLoadLevel()
@@ -2815,6 +2820,11 @@ void lumberjackExitGameMode(void)
 {
     bzrStop(true);
 
+    // Everything crashes if you don't load it first
+    if (lumv == NULL)
+        return;
+
+
     if (lumv->lumberjackMain->networked == false)
     {
         
@@ -2829,11 +2839,6 @@ void lumberjackExitGameMode(void)
         }
         lumberjackSaveSave();
     }
-
-    // Everything crashes if you don't load it first
-    if (lumv == NULL)
-        return;
-
     //** FREE THE SPRITES **//
 
     freeWsg(&lumv->gameoverSprite);
@@ -2854,6 +2859,7 @@ void lumberjackExitGameMode(void)
     freeSong(&lumv->sfx_enemy_death);
 
     freeSong(&lumv->song_theme);
+    freeSong(&lumv->song_title);
     freeSong(&lumv->song_respawn);
     freeSong(&lumv->song_gameover);
 
