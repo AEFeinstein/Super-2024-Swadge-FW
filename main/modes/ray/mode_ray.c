@@ -424,7 +424,9 @@ static void rayMainLoop(int64_t elapsedUs)
                 // Do the warp in the background
                 warpToDestination(ray);
             }
-            else if (ray->shouldShowCredits)
+            // Show credits if it's in the game state and it should
+            // It may switch to the dialog state while credits are pending
+            else if ((RAY_GAME == ray->screen) && (ray->shouldShowCredits))
             {
                 ray->shouldShowCredits = false;
                 rayShowCredits(ray);
