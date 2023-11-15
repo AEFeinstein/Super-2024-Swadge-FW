@@ -55,7 +55,7 @@ void paintButtonCb(buttonEvt_t* evt);
 
 swadgeMode_t modePaint = {
     .modeName                 = paintTitle,
-    .wifiMode                 = ESP_NOW,
+    .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
