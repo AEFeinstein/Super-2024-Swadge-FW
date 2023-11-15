@@ -37,7 +37,7 @@ static void lumberjackJoinGame(void);
 static bool lumberjackChoUnlocked(void);
 static bool lumberjackSwadgeGuyUnlocked(void);
 
-static const char lumberjackName[]   = "Lumber Jack";
+static const char lumberjackName[]   = "Lumber Jacks";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
 // static const char lumberjackSmack[] = "Smack";
@@ -219,11 +219,13 @@ static void lumberjackJoinGame(void)
 
 static void lumberjackExitMode(void)
 {
+    lumberjackUnloadLevel();
     lumberjackExitGameMode();
-
+    free(lumberjack->charactersArray);
     p2pDeinit(&lumberjack->p2p);
     freeFont(&lumberjack->logbook);
     deinitMenu(lumberjack->menu);
+    deinitMenuLogbookRenderer(lumberjack->menuLogbookRenderer);
     free(lumberjack);
 }
 

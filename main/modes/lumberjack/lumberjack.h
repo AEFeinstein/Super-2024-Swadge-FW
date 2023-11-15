@@ -57,6 +57,7 @@ typedef struct
     lumberjackGameType_t gameMode;
     lumberjackUnlock_t save;
 
+    const char** charactersArray;
 } lumberjack_t;
 
 typedef struct
