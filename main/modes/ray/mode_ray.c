@@ -231,6 +231,7 @@ void rayFreeCurrentState(ray_t* cRay)
     ray->chargeTimer      = 0;
     ray->pRotationTimer   = 0;
     ray->playerInLava     = false;
+    ray->playerInHealth   = false;
     // Dialog variables
     ray->dialogText     = NULL;
     ray->nextDialogText = NULL;
@@ -392,7 +393,7 @@ static void rayMainLoop(int64_t elapsedUs)
             drawHud(ray);
 
             // Light LEDs, radar to the closest enemy
-            rayLightLeds(ray, closestEnemy);
+            rayLightLeds(ray, closestEnemy, elapsedUs);
 
             // Run timers for head-bob, doors, etc.
             runEnvTimers(ray, elapsedUs);
@@ -422,6 +423,13 @@ static void rayMainLoop(int64_t elapsedUs)
                 raySwitchToScreen(RAY_WARP_SCREEN);
                 // Do the warp in the background
                 warpToDestination(ray);
+            }
+            // Show credits if it's in the game state and it should
+            // It may switch to the dialog state while credits are pending
+            else if ((RAY_GAME == ray->screen) && (ray->shouldShowCredits))
+            {
+                ray->shouldShowCredits = false;
+                rayShowCredits(ray);
             }
 
             break;
@@ -589,6 +597,7 @@ void raySwitchToScreen(rayScreen_t newScreen)
     {
         case RAY_MENU:
         {
+            bzrStop(true);
             // Reinit menu
             rayInitMenu();
             break;

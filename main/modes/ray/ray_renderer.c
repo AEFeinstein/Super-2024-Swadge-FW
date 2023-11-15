@@ -952,7 +952,7 @@ rayObjCommon_t* castSprites(ray_t* ray, rayEnemy_t** closestEnemy)
                 {
                     // Check if this should be locked onto
                     if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE)
-                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY))
+                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY) && (E_DEAD != ((rayEnemy_t*)obj)->state))
                     {
                         // Closest sprites are drawn last, so override the lock
                         lockedEnemy = obj;
@@ -1379,13 +1379,41 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
  *
  * @param ray The entire game state
  * @param closestEnemy The closest enemy, may be NULL
+ * @param elapsedUs The elapsed time since this function was last called
  */
-void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy)
+void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy, uint32_t elapsedUs)
 {
     led_t leds[CONFIG_NUM_LEDS] = {0};
     bool ledsSet                = false;
 
-    if (NULL != closestEnemy)
+    // If the player is in lava
+    if (ray->playerInLava || ray->playerInHealth)
+    {
+        // Run a timer to blink warning LEDS. this overrides the radar
+        ray->lavaTimer -= elapsedUs;
+        while (0 > ray->lavaTimer)
+        {
+            ray->lavaTimer += 200000;
+            ray->lavaLedBlink = !ray->lavaLedBlink;
+        }
+
+        if (ray->lavaLedBlink)
+        {
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+            {
+                if (ray->playerInLava)
+                {
+                    leds[lIdx].r = 0xFF;
+                }
+                else if (ray->playerInHealth)
+                {
+                    leds[lIdx].g = 0xFF;
+                }
+            }
+        }
+        ledsSet = true;
+    }
+    else if (NULL != closestEnemy)
     {
         // Angles around a circle at 45 degree increments (one per LED)
         // clang-format off
