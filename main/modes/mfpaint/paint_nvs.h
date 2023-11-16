@@ -10,6 +10,7 @@
 
 #include "paint_common.h"
 #include "paint_type.h"
+#include "paint_canvas.h"
 
 #define PAINT_NS_DATA    "paint_img"
 #define PAINT_NS_PALETTE "paint_pal"
@@ -24,16 +25,7 @@ void paintSetEnableLeds(bool enableLeds);
 bool paintGetEnableBlink(void);
 void paintSetEnableBlink(bool enableBlink);
 
-// buffered canvas utilities
-void paintBlitCanvas(const paintCanvas_t* canvas);
-void paintSyncCanvas(paintCanvas_t* canvas);
-
 bool paintGetAnySlotInUse(void);
-size_t paintGetStoredSize(const paintCanvas_t* canvas);
-bool paintDeserialize(const paintCanvas_t* dest, const uint8_t* data, size_t offset, size_t count);
-size_t paintSerializeWsg(uint8_t* dest, const wsg_t* wsg);
-size_t paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, size_t offset, size_t count);
-
 bool paintSaveNamed(const char* name, const paintCanvas_t* canvas);
 bool paintLoadNamed(const char* name, paintCanvas_t* canvas);
 void paintDeleteNamed(const char* name);

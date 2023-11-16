@@ -4,9 +4,7 @@
 #include <stdint.h>
 
 #include "palette.h"
-
-// The number of colors in the palette and the max number of colors an image can be saved with
-#define PAINT_MAX_COLORS 16
+#include "paint_canvas.h"
 
 typedef paletteColor_t (*colorMapFn_t)(paletteColor_t col);
 
@@ -107,27 +105,6 @@ typedef enum
     // Receiver has all pixel data and must pick save slot
     SHARE_RECV_SELECT_SLOT,
 } paintShareState_t;
-
-/// @brief Definition for a paintable screen region
-typedef struct
-{
-    // The X and Y offset of the canvas's top-left pixel
-    uint16_t x, y;
-
-    // The canvas's width and height, in "canvas pixels"
-    uint16_t w, h;
-
-    // The X and Y scale of the canvas. Each "canvas pixel" will be drawn as [xScale x yScale]
-    uint8_t xScale, yScale;
-
-    paletteColor_t palette[PAINT_MAX_COLORS];
-
-    // Whether this canvas is backed off-screen in a buffer
-    bool buffered;
-    // The buffer, if this canvas has one
-    uint8_t* buffer;
-
-} paintCanvas_t;
 
 typedef struct
 {
