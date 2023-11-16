@@ -629,16 +629,16 @@ void textEntryButton(textEntry_t* textEntry, const buttonEvt_t* evt)
 
             case PB_SELECT:
             {
-                if (textEntry->cbFn && strlen(textEntry->value) >= textEntry->minLength)
-                {
-                    textEntry->cbFn(textEntry->value, textEntry->data);
-                }
+                textEntry->overtype = !textEntry->overtype;
                 break;
             }
 
             case PB_START:
             {
-                textEntry->overtype = !textEntry->overtype;
+                if (textEntry->cbFn && strlen(textEntry->value) >= textEntry->minLength)
+                {
+                    textEntry->cbFn(textEntry->value, textEntry->data);
+                }
                 break;
             }
         }
