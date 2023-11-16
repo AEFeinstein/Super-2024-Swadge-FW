@@ -153,27 +153,12 @@ bool paintDrawWsgTemp(const wsg_t* wsg, pxStack_t* saveTo, uint16_t xOffset, uin
 {
     size_t i = 0;
 
-    // Make sure there's enough space to save the pixels to the stack
-    if (!maybeGrowPxStack(saveTo, wsg->h * wsg->w))
-    {
-        return false;
-    }
-
     for (uint16_t y = 0; y < wsg->h; y++)
     {
         for (uint16_t x = 0; x < wsg->w; x++, i++)
         {
             if (wsg->px[i] != cTransparent)
             {
-                if (!pushPx(saveTo, xOffset + x, yOffset + y))
-                {
-                    // There wasn't enough space to save the pixel!!!
-                    // This definitely shouldn't have happened because we already
-                    // reserved the space for it...
-                    // Oh well. Stop drawing pixels that we can't take back!
-                    return false;
-                }
-
                 setPxTft(xOffset + x, yOffset + y,
                          colorSwap ? colorSwap(getPxTft(xOffset + x, yOffset + y)) : wsg->px[i]);
             }

@@ -700,14 +700,12 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     // Screen Reset
     if (paintState->clearScreen)
     {
-        hideCursor(getCursor(), &paintState->canvas);
         memcpy(paintState->canvas.palette, defaultPalette, PAINT_MAX_COLORS * sizeof(paletteColor_t));
         getArtist()->fgColor = paintState->canvas.palette[0];
         getArtist()->bgColor = paintState->canvas.palette[1];
         paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
         paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
         paintUpdateLeds();
-        showCursor(getCursor(), &paintState->canvas);
         paintState->unsaved     = false;
         paintState->clearScreen = false;
     }
@@ -719,9 +717,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
 
         if (paintState->doSave)
         {
-            hideCursor(getCursor(), &paintState->canvas);
-            paintHidePickPoints();
-
             if (!paintSaveNamed(paintState->selectedSlotKey, &paintState->canvas))
             {
                 PAINT_LOGE("Error saving to slot named %s!", paintState->selectedSlotKey);
@@ -732,8 +727,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             else
             {
                 strncpy(paintState->slotKey, paintState->selectedSlotKey, sizeof(paintState->slotKey));
-                paintDrawPickPoints();
-                showCursor(getCursor(), &paintState->canvas);
             }
         }
         else if (paintState->doLoad)
@@ -741,7 +734,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             if (paintSlotExists(paintState->selectedSlotKey))
             {
                 // Load from the selected slot if it's been used
-                hideCursor(getCursor(), &paintState->canvas);
                 paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
 
                 // Load the image into the buffer so we can orient it properly
@@ -749,7 +741,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
                 if (paintLoadNamed(paintState->selectedSlotKey, &paintState->canvas))
                 {
                     paintPositionDrawCanvas();
-                    paintBlitCanvas(&paintState->canvas);
                     paintSetLastSlot(paintState->selectedSlotKey);
                     strncpy(paintState->slotKey, paintState->selectedSlotKey, sizeof(paintState->slotKey));
 
@@ -764,7 +755,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
                     // Put the cursor in the middle of the screen
                     moveCursorAbsolute(getCursor(), &paintState->canvas, paintState->canvas.w / 2,
                                        paintState->canvas.h / 2);
-                    showCursor(getCursor(), &paintState->canvas);
                     paintUpdateLeds();
                 }
                 else
@@ -846,12 +836,14 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     else
     {
         paintExitSelectMode();
+        paintBlitCanvas(&paintState->canvas);
         paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
         // Don't remember why we only do this when redrawToolbar is true
         // Oh, it's because `paintState->redrawToolbar` is mostly only set in select mode unless you press B?
         if (paintState->aHeld || paintState->aPress)
         {
             paintDoTool(getCursor()->x, getCursor()->y, getArtist()->fgColor);
+            paintSyncCanvas(&paintState->canvas);
 
             if (getArtist()->brushDef->mode != HOLD_DRAW)
             {
@@ -894,7 +886,6 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             {
                 paintState->blinkTimer %= BLINK_TIME_ON;
                 paintState->blinkOn = false;
-                paintHidePickPoints();
             }
             else if (!paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_OFF)
             {
@@ -1001,11 +992,7 @@ void paintEditPaletteSetupColor(uint8_t index)
 
     paintState->buttonMode    = BTN_MODE_PALETTE;
     paintState->showToolWheel = false;
-    if (!paintState->canvasHidden)
-    {
-        paintSaveCanvas(&paintState->canvas);
-        paintState->canvasHidden = true;
-    }
+    paintState->canvasHidden = true;
 
     paintEditPaletteUpdate();
 }
@@ -1024,11 +1011,7 @@ void paintEditPaletteNextColor(void)
 
 void paintEditPaletteConfirm(void)
 {
-    if (paintState->canvasHidden)
-    {
-        paintRestoreCanvas(&paintState->canvas);
-        paintState->canvasHidden = false;
-    }
+    paintState->canvasHidden = false;
     paintState->buttonMode = BTN_MODE_DRAW;
     paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
 
@@ -1062,15 +1045,11 @@ void paintEditPaletteConfirm(void)
             getArtist()->bgColor = new;
         }
 
-        hideCursor(getCursor(), &paintState->canvas);
-        paintHidePickPoints();
-
         // And replace it within the canvas
         paintColorReplace(&paintState->canvas, old, new);
         paintState->unsaved = true;
 
         paintDrawPickPoints();
-        showCursor(getCursor(), &paintState->canvas);
     }
 }
 
@@ -1099,11 +1078,7 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
                 {
                     paintState->paletteSelect = 0;
                     paintState->buttonMode    = BTN_MODE_DRAW;
-                    if (paintState->canvasHidden)
-                    {
-                        paintRestoreCanvas(&paintState->canvas);
-                        paintState->canvasHidden = false;
-                    }
+                    paintState->canvasHidden = false;
                 }
                 break;
             }
@@ -1494,17 +1469,14 @@ void paintStoreUndo(paintCanvas_t* canvas, paletteColor_t fg, paletteColor_t bg)
         }
     }
 
-    bool cursorVisible = getCursor()->show;
-    if (cursorVisible && !canvas->buffered)
+    if (canvas->buffered)
     {
-        hideCursor(getCursor(), canvas);
+        memcpy(undoData->px, canvas->buffer, pxSize);
     }
-    // Save the pixel data
-    paintSerialize(undoData->px, canvas, 0, pxSize);
-
-    if (cursorVisible && !canvas->buffered)
+    else
     {
-        showCursor(getCursor(), canvas);
+        // Save the pixel data
+        paintSerialize(undoData->px, canvas, 0, pxSize);
     }
 
     push(&paintState->undoList, undoData);
@@ -1558,21 +1530,23 @@ void paintApplyUndo(paintCanvas_t* canvas)
         return;
     }
 
-    hideCursor(getCursor(), canvas);
-
     paintUndo_t* undo = paintState->undoHead->val;
 
     memcpy(canvas->palette, undo->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
     getArtist()->fgColor = canvas->palette[undo->fgIdx];
     getArtist()->bgColor = canvas->palette[undo->bgIdx];
 
-    size_t pxSize = paintGetStoredSize(canvas);
-    paintDeserialize(canvas, undo->px, 0, pxSize);
-
-    PAINT_LOGD("Undid %" PRIu32 " bytes!", (uint32_t)pxSize);
-
-    // feels weird to do this inside the undo functions... but it's probably ok? we've already undone anyway
-    showCursor(getCursor(), canvas);
+    if (canvas->buffered && canvas->buffer)
+    {
+        // Copy the undo data into the canvas buffer
+        memcpy(canvas->buffer, undo->px, paintGetStoredSize(canvas));
+    }
+    else
+    {
+        size_t pxSize = paintGetStoredSize(canvas);
+        paintDeserialize(canvas, undo->px, 0, pxSize);
+        PAINT_LOGD("Undid %" PRIu32 " bytes!", (uint32_t)pxSize);
+    }
 }
 
 void paintUndo(paintCanvas_t* canvas)
@@ -1611,80 +1585,8 @@ void paintRedo(paintCanvas_t* canvas)
     paintApplyUndo(canvas);
 }
 
-bool paintSaveCanvas(paintCanvas_t* canvas)
-{
-    // Allocate a new paintUndo_t to store the canvas
-    paintUndo_t* undoData = paintState->storedCanvas;
-
-    // Calculate the amount of space we wolud need to store the canvas pixels
-    size_t pxSize = paintGetStoredSize(canvas);
-
-    if (!undoData)
-    {
-        // Allocate memory for the undo data struct and its pixel data in one go
-        void* undoMem = heap_caps_malloc(sizeof(paintUndo_t) + pxSize, MALLOC_CAP_SPIRAM);
-        if (undoMem != NULL)
-        {
-            // Alloc succeeded, use the data
-            undoData     = undoMem;
-            undoData->px = (uint8_t*)undoMem + sizeof(paintUndo_t);
-        }
-        else
-        {
-            // Alloc failed, reuse the first undo data
-            undoData = shift(&paintState->undoList);
-        }
-    }
-
-    if (!undoData)
-    {
-        PAINT_LOGD("Failed to allocate or reuse undo data! Can't save canvas");
-        // There's no data at all! We're completely out of space!
-        return false;
-    }
-
-    // Save the palette
-    memcpy(undoData->palette, canvas->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
-
-    bool cursorVisible = getCursor()->show;
-    if (cursorVisible)
-    {
-        hideCursor(getCursor(), canvas);
-    }
-    // Save the pixel data
-    paintSerialize(undoData->px, canvas, 0, pxSize);
-
-    if (cursorVisible)
-    {
-        showCursor(getCursor(), canvas);
-    }
-
-    paintState->storedCanvas = undoData;
-
-    return true;
-}
-
-void paintRestoreCanvas(paintCanvas_t* canvas)
-{
-    if (NULL == paintState->storedCanvas)
-    {
-        return;
-    }
-
-    // Don't restore palette
-    hideCursor(getCursor(), canvas);
-
-    size_t pxSize = paintGetStoredSize(canvas);
-    paintDeserialize(canvas, paintState->storedCanvas->px, 0, pxSize);
-    memcpy(paintState->canvas.palette, paintState->storedCanvas->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
-
-    // feels weird to do this inside the undo functions... but it's probably ok? we've already undone anyway
-    showCursor(getCursor(), canvas);
-}
-
 void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
 {
-    hideCursor(getCursor(), &paintState->canvas);
     bool drawNow    = false;
     bool isLastPick = false;
 
@@ -1778,7 +1680,6 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
         paintState->blinkOn    = false;
     }
 
-    showCursor(getCursor(), &paintState->canvas);
     paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
 }
 
@@ -1796,8 +1697,6 @@ void paintSetupTool(void)
         paintState->startBrushWidth = getArtist()->brushWidth;
     }
 
-    hideCursor(getCursor(), &paintState->canvas);
-    paintHidePickPoints();
     switch (getArtist()->brushDef->mode)
     {
         case HOLD_DRAW:
@@ -1834,7 +1733,6 @@ void paintSetupTool(void)
     // Undraw and hide any stored temporary pixels
     while (popPxScaled(&getArtist()->pickPoints, paintState->canvas.xScale, paintState->canvas.yScale))
         ;
-    showCursor(getCursor(), &paintState->canvas);
 }
 
 void paintPrevTool(void)
@@ -1922,12 +1820,7 @@ void paintSwapFgBgColors(void)
 
 void paintEnterSelectMode(void)
 {
-    if (!paintState->canvasHidden)
-    {
-        paintSaveCanvas(&paintState->canvas);
-        paintState->canvasHidden = true;
-    }
-
+    paintState->canvasHidden = true;
     paintState->showToolWheel = true;
     paintState->buttonMode    = BTN_MODE_SELECT;
     paintState->redrawToolbar = true;
@@ -1957,12 +1850,7 @@ void paintExitSelectMode(void)
 
     // Exit select mode
     paintState->buttonMode = BTN_MODE_DRAW;
-
-    if (paintState->canvasHidden)
-    {
-        paintRestoreCanvas(&paintState->canvas);
-        paintState->canvasHidden = false;
-    }
+    paintState->canvasHidden = false;
 
     // Set the current selection as the FG color and rearrange the rest
     paintUpdateRecents(paintState->paletteSelect);
@@ -2026,19 +1914,6 @@ void paintDrawPickPoints(void)
             drawRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1,
                            point.y + paintState->canvas.yScale + 1,
                            invert ? getContrastingColor(point.col) : getArtist()->fgColor);
-        }
-    }
-}
-
-void paintHidePickPoints(void)
-{
-    pxVal_t point;
-    for (size_t i = 0; i < pxStackSize(&getArtist()->pickPoints); i++)
-    {
-        if (getPx(&getArtist()->pickPoints, i, &point))
-        {
-            drawRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1,
-                           point.y + paintState->canvas.yScale + 1, point.col);
         }
     }
 }

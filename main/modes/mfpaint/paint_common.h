@@ -127,17 +127,8 @@ typedef struct
     /// @brief The position of the top-left corner of the sprite, relative to the cursor position
     int8_t spriteOffsetX, spriteOffsetY;
 
-    /// @brief A pixel stack of all pixels covered up by the cursor in its current position
-    pxStack_t underPxs;
-
     /// @brief The canvas X and Y coordinates of the cursor
     int16_t x, y;
-
-    /// @brief True if the cursor should be drawn, false if not
-    bool show;
-
-    /// @brief True when the cursor state has changed and it needs to be redrawn
-    bool redraw;
 } paintCursor_t;
 
 /// @brief Struct encapsulating all info for a single player

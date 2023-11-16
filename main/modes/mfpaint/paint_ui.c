@@ -363,76 +363,23 @@ void initCursor(paintCursor_t* cursor, paintCanvas_t* canvas, const wsg_t* sprit
 {
     cursor->sprite = sprite;
 
-    cursor->show = false;
-    cursor->x    = 0;
-    cursor->y    = 0;
-
-    cursor->redraw = true;
-
-    initPxStack(&cursor->underPxs);
+    cursor->x = 0;
+    cursor->y = 0;
 }
 
 void deinitCursor(paintCursor_t* cursor)
 {
-    freePxStack(&cursor->underPxs);
 }
 
 void setCursorSprite(paintCursor_t* cursor, paintCanvas_t* canvas, const wsg_t* sprite)
 {
-    undrawCursor(cursor, canvas);
-
     cursor->sprite = sprite;
-    cursor->redraw = true;
-
-    drawCursor(cursor, canvas);
 }
 
 void setCursorOffset(paintCursor_t* cursor, int16_t x, int16_t y)
 {
     cursor->spriteOffsetX = x;
     cursor->spriteOffsetY = y;
-    cursor->redraw        = true;
-}
-
-/// @brief Undraws the cursor and removes its pixels from the stack
-/// @param cursor The cursor to hide
-/// @param canvas The canvas to hide the cursor pixels from
-void undrawCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
-{
-    while (popPx(&cursor->underPxs))
-        ;
-
-    cursor->redraw = true;
-}
-
-/// @brief Hides the cursor without removing its stored pixels from the stack
-/// @param cursor The cursor to hide
-/// @param canvas The canvas to hide the cursor pixels from
-void hideCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
-{
-    if (cursor->show)
-    {
-        undrawCursor(cursor, canvas);
-
-        cursor->show   = false;
-        cursor->redraw = true;
-    }
-}
-
-/// @brief Shows the cursor without saving the pixels under it
-/// @param cursor The cursor to show
-/// @param canvas The canvas to draw the cursor on
-/// @return true if the cursor was shown, or false if it could not due to memory constraints
-bool showCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
-{
-    if (!cursor->show)
-    {
-        cursor->show   = true;
-        cursor->redraw = true;
-        return drawCursor(cursor, canvas);
-    }
-
-    return true;
 }
 
 /// @brief If not hidden, draws the cursor on the canvas and saves the pixels for later. If hidden, does nothing.
@@ -441,27 +388,9 @@ bool showCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
 /// @return true if the cursor was drawn, or false if it could not be due to memory constraints
 bool drawCursor(paintCursor_t* cursor, paintCanvas_t* canvas)
 {
-    bool cursorIsNearEdge = (canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX < canvas->x
-                             || canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX + cursor->sprite->w
-                                    > canvas->x + canvas->w * canvas->xScale
-                             || canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY < canvas->y
-                             || canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY + cursor->sprite->h
-                                    > canvas->y + canvas->h * canvas->yScale);
-    if (cursor->show && (cursor->redraw || cursorIsNearEdge))
-    {
-        // Undraw the previous cursor pixels, if there are any
-        undrawCursor(cursor, canvas);
-        if (!paintDrawWsgTemp(cursor->sprite, &cursor->underPxs,
-                              canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX,
-                              canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY, getContrastingColor))
-        {
-            // Return false if we couldn't draw/save the cursor
-            return false;
-        }
-        cursor->redraw = false;
-    }
-
-    return true;
+    // Return false if we couldn't draw/save the cursor
+    return paintDrawWsgTemp(cursor->sprite, NULL, canvasToDispX(canvas, cursor->x) + cursor->spriteOffsetX,
+                            canvasToDispY(canvas, cursor->y) + cursor->spriteOffsetY, getContrastingColor);
 }
 
 /// @brief Moves the cursor by the given relative x and y offsets, staying within the canvas bounds. Does not draw.
@@ -494,22 +423,15 @@ void moveCursorRelative(paintCursor_t* cursor, paintCanvas_t* canvas, int16_t xD
         newY = 0;
     }
 
-    // Only update the position if it would be different from the current position.
-    // TODO: Does this actually matter?
-    if (newX != cursor->x || newY != cursor->y)
-    {
-        cursor->redraw = true;
-        cursor->x      = newX;
-        cursor->y      = newY;
-    }
+    cursor->x = newX;
+    cursor->y = newY;
 }
 
 void moveCursorAbsolute(paintCursor_t* cursor, paintCanvas_t* canvas, uint16_t x, uint16_t y)
 {
     if (x < canvas->w && y < canvas->h)
     {
-        cursor->redraw = true;
-        cursor->x      = x;
-        cursor->y      = y;
+        cursor->x = x;
+        cursor->y = y;
     }
 }
