@@ -5,6 +5,7 @@
 #include "fill.h"
 #include "ray_dialog.h"
 #include "esp_wifi.h"
+#include "ray_script.h"
 
 //==============================================================================
 // Defines
@@ -22,16 +23,40 @@
 // Constant text
 //==============================================================================
 
+/// @brief Replacement text for the MAC-randomized puzzle
 const char* const macPuzzleText[] = {
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n4! is too excited, subtract 12 from "
-    "it\n[=/+._?@\n}+&)(/&?\n+[:&${)}",
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n.?%?-}{;\nTake the next answer, like a "
-    "tree find the square\n&,?:)/&:\n:/{#_!&,",
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n:#:$/{)]\n{?$-}*].\nArgon's number is "
-    "nice, but in two it must split\n/}%-%?}%",
-    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n{@#??_[!\n#,;{(;-{\n]#_!]=,.\nAverage "
-    "two prior, that's it, almost there",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n"
+    "4! is too excited, subtract 12 from it\n"
+    "[=/+._?@\n"
+    "}+&)(/&?\n"
+    "+[:&${)}",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n"
+    ".?%?-}{;\n"
+    "Take the next answer, like a tree find the square\n"
+    "&,?:)/&:\n"
+    ":/{#_!&,",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n"
+    ":#:$/{)]\n"
+    "{?$-}*].\n"
+    "Argon's number is nice, but in two it must split\n"
+    "/}%-%?}%",
+    "WARNING DATA CORRUPTED. Seek other bounty hunters to reconstruct data.\n\n"
+    "{@#??_[!\n"
+    "#,;{(;-{\n"
+    "]#_!]=,.\n"
+    "Average two prior, that's it, almost there",
 };
+
+/// @brief First part of the 100% dialog
+const char* finalDialog100_0 = "C - cc - chh - CHO - do you read me? Good, glad this channel works.\n\n...";
+
+/// @brief Second part of the 100% dialog
+const char* finalDialog100_1
+    = "Hank Waddle here, your lawyer-turned-ex-lawyer-turned-megalomaniacal super villain. Looks like Meta Studley "
+      "wasn't able to take you out, eh? He should have taken a few more reps at the space gym...\nAnyway, I'm with "
+      "the baddies now. They took my brain and fused it with some supercomputer they were building, which is kinda "
+      "weird, but hey - now I can shoot lasers out of my eyes. What a twist, right? Anyway, nice job getting 100% "
+      "completion, you NERD. I'll get you next time, Cho!";
 
 //==============================================================================
 // Functions
@@ -86,8 +111,16 @@ void rayDialogCheckButtons(ray_t* ray)
                 }
                 else
                 {
-                    // Dialog over, return to game
-                    raySwitchToScreen(RAY_GAME);
+                    // If this is the first part of the 100% dialog, show the second
+                    if (finalDialog100_0 == ray->dialogText)
+                    {
+                        rayShowDialog(ray, finalDialog100_1, &ray->hw_portrait);
+                    }
+                    // Otherwise the dialog is over, return to game mode
+                    else
+                    {
+                        raySwitchToScreen(RAY_GAME);
+                    }
                 }
             }
         }

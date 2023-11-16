@@ -33,7 +33,9 @@
 void loadEnvTextures(ray_t* ray)
 {
     // Load a portrait for dialogs
-    loadWsg("CHO_PORTRAIT.wsg", &ray->portrait, true);
+    loadWsg("CHO_PORTRAIT.wsg", &ray->cho_portrait, true);
+    loadWsg("HW_PORTRAIT.wsg", &ray->hw_portrait, true);
+    loadWsg("HW_PORTRAIT_S.wsg", &ray->hw_s_portrait, true);
 
     // Load HUD textures
     loadWsg("GUN_NORMAL.wsg", &ray->guns[LO_NORMAL], true);
@@ -229,7 +231,9 @@ wsg_t* getTexByType(ray_t* ray, rayMapCellType_t type)
  */
 void freeAllTex(ray_t* ray)
 {
-    freeWsg(&ray->portrait);
+    freeWsg(&ray->cho_portrait);
+    freeWsg(&ray->hw_portrait);
+    freeWsg(&ray->hw_s_portrait);
     freeWsg(&ray->guns[LO_NORMAL]);
     freeWsg(&ray->guns[LO_MISSILE]);
     freeWsg(&ray->guns[LO_ICE]);
