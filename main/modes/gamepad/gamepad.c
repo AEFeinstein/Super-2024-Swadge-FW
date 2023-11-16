@@ -291,6 +291,9 @@ void gamepadEnterMode(void)
 
     // Initialize menu renderer
     gamepad->renderer = initMenuLogbookRenderer(&gamepad->logbookFont);
+
+    // Set up the IMU
+    accelSetRegistersAndReset();
 }
 
 /**
