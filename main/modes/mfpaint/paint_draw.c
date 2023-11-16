@@ -535,6 +535,12 @@ void paintDrawScreenCleanup(void)
 
     resetImageBrowser(&paintState->browser);
 
+    if (paintState->canvas.buffered && paintState->canvas.buffer)
+    {
+        free(paintState->canvas.buffer);
+        paintState->canvas.buffer = NULL;
+    }
+
     deinitDialogBox(paintState->dialogBox);
     if (paintState->dialogCustomDetail)
     {
@@ -759,7 +765,7 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    PAINT_LOGE("Slot %s has 0 dimension! Stopping load and clearing slot", paintState->selectedSlotKey);
+                    PAINT_LOGE("Slot %s has 0 dimension! Stopping load", paintState->selectedSlotKey);
                     // paintClearSlot(&paintState->index, paintState->selectedSlot);
                     //  TODO: Use a dialog here
                     paintState->fatalError = true;
