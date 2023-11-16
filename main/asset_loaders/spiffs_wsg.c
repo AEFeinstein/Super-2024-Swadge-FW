@@ -78,13 +78,13 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
         return false;
     }
 
-    ESP_LOGI("WSG", "decompressedBuf size is %" PRIu32, decompressedSize);
+    ESP_LOGD("WSG", "decompressedBuf size is %" PRIu32, decompressedSize);
 
     // Save the decompressed info to the wsg. The first four bytes are dimension
     wsg->w = (decompressedBuf[0] << 8) | decompressedBuf[1];
     wsg->h = (decompressedBuf[2] << 8) | decompressedBuf[3];
 
-    ESP_LOGI("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", wsg->w, wsg->h, wsg->w * wsg->h);
+    ESP_LOGD("WSG", "full WSG is %" PRIu16 " x %" PRIu16 ", or %d pixels", wsg->w, wsg->h, wsg->w * wsg->h);
 
     // The rest of the bytes are pixels
     if (spiRam)
@@ -98,13 +98,13 @@ bool loadWsgNvs(const char* namespace, const char* key, wsg_t* wsg, bool spiRam)
 
     if (NULL != wsg->px)
     {
-        ESP_LOGI("WSG", "Copying %" PRIu32 " pixels into WSG now", decompressedSize - 4);
+        ESP_LOGD("WSG", "Copying %" PRIu32 " pixels into WSG now", decompressedSize - 4);
         memcpy(wsg->px, &decompressedBuf[4], decompressedSize - 4);
         free(decompressedBuf);
         return true;
     }
 
-    ESP_LOGI("WSG", "Allocating pixels failed");
+    ESP_LOGE("WSG", "Allocating pixels failed");
 
     // all done
     free(decompressedBuf);
@@ -127,7 +127,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
 
     if (!output)
     {
-        ESP_LOGI("WSG", "Failed to allocate output buffer for image");
+        ESP_LOGE("WSG", "Failed to allocate output buffer for image");
         return false;
     }
 
@@ -151,7 +151,7 @@ bool saveWsgNvs(const char* namespace, const char* key, const wsg_t* wsg)
     }
     else
     {
-        ESP_LOGI("WSG", "Compressed image from %" PRIu32 " bytes to %" PRIu32, imageSize, outputSize);
+        ESP_LOGD("WSG", "Compressed image from %" PRIu32 " bytes to %" PRIu32, imageSize, outputSize);
         result = writeNamespaceNvsBlob(namespace, key, output, outputSize);
     }
 

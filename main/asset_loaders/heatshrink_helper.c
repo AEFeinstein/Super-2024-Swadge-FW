@@ -96,7 +96,7 @@ uint8_t* readHeatshrinkNvs(const char* namespace, const char* key, uint32_t* out
     // Get full size
     readNamespaceNvsBlob(namespace, key, NULL, &sz);
 
-    ESP_LOGI("Heatshrink", "Compressed size is %" PRIu64, (uint64_t)sz);
+    ESP_LOGD("Heatshrink", "Compressed size is %" PRIu64, (uint64_t)sz);
 
     uint8_t* buf = (uint8_t*)heap_caps_malloc(sz, spiRam ? MALLOC_CAP_SPIRAM : 0);
     if (!buf)
