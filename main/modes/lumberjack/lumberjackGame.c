@@ -731,7 +731,7 @@ void lumberjackSetupLevel(int characterIndex)
 
     //Ghost is separate for reasons
 
-    //ESP_LOGI(LUM_TAG, "LOADED");
+    //ESP_LOGD(LUM_TAG, "LOADED");
     if (!lumv->levelMusic)
     {
         bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
@@ -867,7 +867,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
         if (lumv->lastResponseSignal <= 0)
         {
             bzrStop(true);
-            //ESP_LOGI(LUM_TAG, "Connection lost!");
+            //ESP_LOGD(LUM_TAG, "Connection lost!");
             lumv->gameState = LUMBERJACK_GAMESTATE_GAMEOVER;
             lumv->transitionTimer = 500;
             lumv->localPlayer->state = LUMBERJACK_DEAD;
@@ -968,7 +968,7 @@ void baseMode(int64_t elapsedUs)
     {
         lumv->loaded = true;
 
-        //ESP_LOGI(LUM_TAG, "Load Time %ld", (long)elapsedUs);
+        //ESP_LOGD(LUM_TAG, "Load Time %ld", (long)elapsedUs);
 
         // If networked, send "Loaded complete!" ?
 
@@ -1029,7 +1029,7 @@ void baseMode(int64_t elapsedUs)
 
             if (!attackThisFrame && lumv->localPlayer->attackPressed)
             {
-                // ESP_LOGI(LUM_TAG, "Attack this frame!");
+                // ESP_LOGD(LUM_TAG, "Attack this frame!");
                 int x = 0;
                 for (int i = 0; i < 32; i ++)
                 {
@@ -1314,7 +1314,7 @@ void baseMode(int64_t elapsedUs)
             if (lumv->localPlayer->respawn <= 0 && lumv->lives > 0)
             {
 
-                //ESP_LOGI(LUM_TAG, "RESPAWN PLAYER!");
+                //ESP_LOGD(LUM_TAG, "RESPAWN PLAYER!");
                 bzrStop(true);
                 bzrPlaySfx(&lumv->song_respawn, BZR_RIGHT);
 
@@ -1594,18 +1594,33 @@ void DrawTitle(void)
 
     if (lumv->gameReady)
     {
-        //Press A To Start
-        lumberjackTitleDisplayText(((lumv->lumberjackMain->host || !lumv->lumberjackMain->networked ) ? "Press A to start": "Host must start"), (TFT_WIDTH/2) - 70, 180);
-    }
-    else if (lumv->lumberjackMain->networked && lumv->lumberjackMain->host)
-    {
-        lumberjackTitleDisplayText("Waiting for client", (TFT_WIDTH/2) - 80, 180);
-    }
-    else if (lumv->lumberjackMain->networked && !lumv->lumberjackMain->host)
-    {
-        lumberjackTitleDisplayText("Looking for host", (TFT_WIDTH/2) - 80, 180);
-    }
+        const char* hostText = "Press A to start";
+        const char* clientText = "Host must start";
+        int16_t tWidthH = textWidth(&lumv->arcade, hostText);
+        int16_t tWidthC = textWidth(&lumv->arcade, clientText);
 
+        if(lumv->lumberjackMain->networked)
+        {
+            if(lumv->lumberjackMain->host)
+            {
+                lumberjackTitleDisplayText(hostText, (TFT_WIDTH - tWidthH) / 2, 180);
+            }
+            else
+            {
+                lumberjackTitleDisplayText(clientText, (TFT_WIDTH - tWidthC) / 2, 180);
+            }
+        }
+        else
+        {
+            lumberjackTitleDisplayText(hostText, (TFT_WIDTH - tWidthH) / 2, 180);
+        }
+    }
+    else if (lumv->lumberjackMain->networked)
+    {
+        const char* connText = "Looking for connection";
+        int16_t tWidth = textWidth(&lumv->arcade, connText);
+        lumberjackTitleDisplayText(connText, (TFT_WIDTH - tWidth)/2, 180);
+    }
 
     drawWsgSimple(&lumv->unusedBlockSprite[lumv->stageAnimationFrame % LUMBERJACK_BLOCK_ANIMATION_MAX], 8.5 * 16, 208 - 64);
 }
@@ -1838,7 +1853,7 @@ void DrawGame(void)
     */
 }
 
-void lumberjackTitleDisplayText(char* string, int locationX, int locationY)
+void lumberjackTitleDisplayText(const char* string, int locationX, int locationY)
 {
 
     drawText(&lumv->arcade, c000, string, locationX, locationY + 2);
