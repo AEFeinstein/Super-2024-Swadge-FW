@@ -24,7 +24,7 @@ bool lumberjackSpawnCheck(int64_t elapseUs);
 void lumberjackAttackCheck(int64_t elapseUs);
 
 void lumberjackScoreDisplay(int score, int locationX);
-void lumberjackTitleDisplayText(char* string, int locationX, int locationY);
+void lumberjackTitleDisplayText(const char* string, int locationX, int locationY);
 
 void baseMode(int64_t elapsedUs);
 

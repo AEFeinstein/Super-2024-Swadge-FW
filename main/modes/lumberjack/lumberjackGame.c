@@ -76,6 +76,8 @@ lumberjackVars_t* lumv;
 
 void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 {
+
+    drawRect(0, 0, 280, 220, c050);
     lumv                   = calloc(1, sizeof(lumberjackVars_t));
     lumv->lumberjackMain   = main;
     lumv->localPlayerType  = characterIndex;
@@ -575,6 +577,8 @@ bool lumberjackLoadLevel()
 
 void lumberjackSetupLevel(int characterIndex)
 {    
+    bzrStop(true); // Stop the buzzer?
+
     lumv->enemyKillCount       = 0;
     lumv->totalEnemyCount      = 0;
     lumv->comboTime            = 0;
@@ -734,9 +738,9 @@ void lumberjackSetupLevel(int characterIndex)
     //ESP_LOGI(LUM_TAG, "LOADED");
     if (!lumv->levelMusic)
     {
-        bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
         lumv->levelMusic = true;
     }
+    bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
 
 }
 
@@ -1594,18 +1598,33 @@ void DrawTitle(void)
 
     if (lumv->gameReady)
     {
-        //Press A To Start
-        lumberjackTitleDisplayText(((lumv->lumberjackMain->host || !lumv->lumberjackMain->networked ) ? "Press A to start": "Host must start"), (TFT_WIDTH/2) - 70, 180);
-    }
-    else if (lumv->lumberjackMain->networked && lumv->lumberjackMain->host)
-    {
-        lumberjackTitleDisplayText("Waiting for client", (TFT_WIDTH/2) - 80, 180);
-    }
-    else if (lumv->lumberjackMain->networked && !lumv->lumberjackMain->host)
-    {
-        lumberjackTitleDisplayText("Looking for host", (TFT_WIDTH/2) - 80, 180);
-    }
+        const char* hostText = "Press A to start";
+        const char* clientText = "Host must start";
+        int16_t tWidthH = textWidth(&lumv->arcade, hostText);
+        int16_t tWidthC = textWidth(&lumv->arcade, clientText);
 
+        if(lumv->lumberjackMain->networked)
+        {
+            if(lumv->lumberjackMain->host)
+            {
+                lumberjackTitleDisplayText(hostText, (TFT_WIDTH - tWidthH) / 2, 180);
+            }
+            else
+            {
+                lumberjackTitleDisplayText(clientText, (TFT_WIDTH - tWidthC) / 2, 180);
+            }
+        }
+        else
+        {
+            lumberjackTitleDisplayText(hostText, (TFT_WIDTH - tWidthH) / 2, 180);
+        }
+    }
+    else if (lumv->lumberjackMain->networked)
+    {
+        const char* connText = "Looking for connection";
+        int16_t tWidth = textWidth(&lumv->arcade, connText);
+        lumberjackTitleDisplayText(connText, (TFT_WIDTH - tWidth)/2, 180);
+    }
 
     drawWsgSimple(&lumv->unusedBlockSprite[lumv->stageAnimationFrame % LUMBERJACK_BLOCK_ANIMATION_MAX], 8.5 * 16, 208 - 64);
 }
@@ -1838,7 +1857,7 @@ void DrawGame(void)
     */
 }
 
-void lumberjackTitleDisplayText(char* string, int locationX, int locationY)
+void lumberjackTitleDisplayText(const char* string, int locationX, int locationY)
 {
 
     drawText(&lumv->arcade, c000, string, locationX, locationY + 2);
