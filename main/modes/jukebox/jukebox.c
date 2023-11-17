@@ -461,7 +461,7 @@ void jukeboxEnterMode()
     songIdx++;
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "OuttaTime";
-    loadSong("sndOuttatime.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    loadSong("sndOuttaTime.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
