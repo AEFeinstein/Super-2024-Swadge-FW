@@ -206,7 +206,7 @@ void jukeboxEnterMode()
     // Jukebox category
     songIdx = 0;
     jukebox->musicCategories[catIdx].categoryName = jukeboxMode.modeName;
-    jukebox->musicCategories[catIdx].numSongs = 5;
+    jukebox->musicCategories[catIdx].numSongs = 7;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Jukebox songs
@@ -249,7 +249,7 @@ void jukeboxEnterMode()
 
     // Initialize array of music categories
     catIdx = 0;
-    jukebox->numSfxCategories = 10;
+    jukebox->numSfxCategories = 3;
     // TODO: change this number ^ as categories (modes) with SFX are added
     jukebox->sfxCategories = calloc(2, sizeof(jukeboxCategory));
 
@@ -338,6 +338,131 @@ void jukeboxEnterMode()
     catIdx++;
 
     // TODO: remainder of categories (modes) with SFX
+    
+    // Platformer category
+    songIdx = 0;
+    jukebox->sfxCategories[catIdx].categoryName = platformerMode.modeName;
+    jukebox->sfxCategories[catIdx].numSongs = 23;
+    jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
+
+    // Platformer SFX
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "1 Up";
+    loadSong("snd1up.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Checkpoint";
+    loadSong("sndCheckpoint.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Coin";
+    loadSong("sndCoin.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Die";
+    loadSong("sndDie.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Hit";
+    loadSong("sndHit.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Hurt";
+    loadSong("sndHurt.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump1";
+    loadSong("sndJump1.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump2";
+    loadSong("sndJump2.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump3";
+    loadSong("sndJump3.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearA";
+    loadSong("sndLevelClearA.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearB";
+    loadSong("sndLevelClearB.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearC";
+    loadSong("sndLevelClearC.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearD";
+    loadSong("sndLevelClearD.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearS";
+    loadSong("sndLevelClearS.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "MenuConfirm";
+    loadSong("sndMenuConfirm.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "MenuDeny";
+    loadSong("sndMenuDeny.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "MenuSelect";
+    loadSong("sndMenuSelect.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Outtatime";
+    loadSong("sndOuttatime.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Pause";
+    loadSong("sndPause.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "PowerUp";
+    loadSong("sndPowerUp.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Squish";
+    loadSong("sndSquish.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Warp";
+    loadSong("sndWarp.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "WaveBall";
+    loadSong("sndWaveBall.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    catIdx++;
 
     ///// Initialize menu /////
     jukebox->menu                = initMenu(str_jukebox, &jukeboxMainMenuCb);
