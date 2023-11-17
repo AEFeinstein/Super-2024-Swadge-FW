@@ -2207,6 +2207,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
         bool bump = false;
         if ((tileA != NULL && lumberjackIsCollisionTile(tileA->type)) || (tileB != NULL && lumberjackIsCollisionTile(tileB->type)))
         {
+            // TODO fix this cppcheck warning. It always dereferences tileA, but it can be reached if tileA is NULL and tileB is not NULL
             destinationY      = ((tileA->y + 1) * LUMBERJACK_TILE_SIZE);
             entity->jumpTimer = 0;
             entity->jumping   = false;
