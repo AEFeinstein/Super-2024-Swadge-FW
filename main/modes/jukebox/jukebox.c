@@ -177,7 +177,7 @@ void jukeboxEnterMode()
     loadFont("logbook.font", &jukebox->logbook, false);
 
     ///// Load images /////
-    loadWsg("arrow12.wsg", &jukebox->arrow, false);
+    loadWsg("arrow10.wsg", &jukebox->arrow, false);
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
     ///// Load music midis /////
@@ -614,22 +614,28 @@ void jukeboxMainLoop(int64_t elapsedUs)
             if (drawNames)
             {
                 // Draw the mode name
+                const font_t* nameFont = &(jukebox->radiostars);
+                uint8_t arrowOffsetFromText = 8;
+                if (categoryName == breakoutMode.modeName)
+                {
+                    arrowOffsetFromText = 1;
+                }
                 snprintf(text, sizeof(text), "Mode: %s", categoryName);
-                int16_t width = textWidth(&(jukebox->radiostars), text);
-                int16_t yOff  = (TFT_HEIGHT - jukebox->radiostars.height) / 2 - jukebox->radiostars.height * 0;
-                drawText(&(jukebox->radiostars), c313, text, (TFT_WIDTH - width) / 2, yOff);
+                int16_t width = textWidth(nameFont, text);
+                int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - nameFont->height * 0;
+                drawText(nameFont, c311, text, (TFT_WIDTH - width) / 2, yOff);
                 // Draw category arrows if this submode has more than 1 category
                 if ((jukebox->inMusicSubmode && jukebox->numMusicCategories > 1) || jukebox->numSfxCategories > 1)
                 {
-                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - 8 - jukebox->arrow.w, yOff, false, false, 0);
-                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 180);
+                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - arrowOffsetFromText - jukebox->arrow.w, yOff, false, false, 0);
+                    drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + arrowOffsetFromText, yOff, false, false, 180);
                 }
 
                 // Draw the song name
                 snprintf(text, sizeof(text), "%s: %s", songTypeName, songName);
-                yOff  = (TFT_HEIGHT - jukebox->radiostars.height) / 2 + jukebox->radiostars.height * 2.5f;
-                width = textWidth(&(jukebox->radiostars), text);
-                drawText(&(jukebox->radiostars), c113, text, (TFT_WIDTH - width) / 2, yOff);
+                yOff  = (TFT_HEIGHT - nameFont->height) / 2 + nameFont->height * 2.5f;
+                width = textWidth(nameFont, text);
+                drawText(nameFont, c113, text, (TFT_WIDTH - width) / 2, yOff);
                 // Draw song arrows if this category has more than 1 song
                 if (numSongs > 1)
                 {
@@ -692,17 +698,7 @@ void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
         }
         case JUKEBOX_PLAYER:
         {
-            // Use TURBO drawing mode to draw individual pixels fast
-            SETUP_FOR_TURBO();
-
-            // Draw a grid
-            for (int16_t yp = y; yp < y + h; yp++)
-            {
-                for (int16_t xp = x; xp < x + w; xp++)
-                {
-                    TURBO_SET_PIXEL(xp, yp, c234);
-                }
-            }
+            fillDisplayArea(x, y, x + w, y+h, c235);
             break;
         }
     }
