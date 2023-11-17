@@ -112,6 +112,11 @@ static void lumberjackEnterMode(void)
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayer);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
+    // TODO add instructions menu item & screen. Can be a simple synopsis that uses drawTextWordWrap() to draw a paragraph to the screen
+    // Should explain difference between panic and attack, maybe item usage, how to dodge ghost, etc.
+    // You can also do multi-page, because drawTextWordWrap() returns a pointer to any off-screen text.
+    // For reference, see rayDialogRender()
+
     //addSingleItemToMenu(lumberjack->menu, lumberjackSmack);
 
     int characters = 2;
@@ -305,23 +310,33 @@ static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_
 
 static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
-    // Do anything
-    if (evt == CON_ESTABLISHED)
+    switch(evt)
     {
-        ESP_LOGD(LUM_TAG, "LumberJack.Net ready! %d", (int)p2pGetPlayOrder(p2p));
-        lumberjack->host = (GOING_FIRST == p2pGetPlayOrder(p2p));
+        case CON_STARTED:
+        case RX_GAME_START_ACK:
+        case RX_GAME_START_MSG:
+        {
+            // TODO, optional, update menu to indicate connection progress
+            break;
+        }
+        case CON_ESTABLISHED:
+        {
+            ESP_LOGD(LUM_TAG, "LumberJack.Net ready! %d", (int)p2pGetPlayOrder(p2p));
+            lumberjack->host = (GOING_FIRST == p2pGetPlayOrder(p2p));
 
-        uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
-        memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
+            uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
+            memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
 
-        p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
-        lumberjackGameReady();
-    }
-
-    if (evt == CON_LOST)
-    {
-        // Do we attempt to get it back?
-        ESP_LOGD(LUM_TAG, "We lost connection!");
+            p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
+            lumberjackGameReady();
+            break;
+        }
+        case CON_LOST:
+        {
+            // TODO drop back to main menu or show an error or something, its not recoverable
+            ESP_LOGD(LUM_TAG, "We lost connection!");
+            break;
+        }
     }
 
     lumberjack->conStatus = evt;
@@ -341,7 +356,7 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             ESP_LOGD(LUM_TAG, "Version received!");
             if (memcmp(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN))
             {
-                ESP_LOGI("LUM_TAG", "We're in!");
+                ESP_LOGD("LUM_TAG", "We're in!");
             }
         }
 
@@ -439,7 +454,7 @@ void lumberjackSendDeath(bool gameover)
 }
 
 /**
- * @brief TODO use this somewhere
+ * @brief This is called after transmitting a p2p packet and receiving (or not receiving) an ack
  *
  * @param p2p
  * @param status
@@ -448,7 +463,19 @@ void lumberjackSendDeath(bool gameover)
  */
 static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
-    
+    switch(status)
+    {
+        case MSG_ACKED:
+        {
+            // All good
+            break;
+        }
+        case MSG_FAILED:
+        {
+            // TODO figure out what to do if a message fails to transmit (i.e. no ack). Retry?
+            break;
+        }
+    }
 }
 
 static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingVal)

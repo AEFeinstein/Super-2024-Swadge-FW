@@ -790,6 +790,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
             lumberjackPlayGame();      
             lumberjackSendGo();
         }
+        // TODO add an else here to back out to the main menu with PB_B
         lumv->highscore = 0;
 
     } else if (lumv->btnState & PB_A && lumv->gameReady) // And Game Ready!
@@ -800,6 +801,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
         {
             lumberjackSendGo();
         }
+        // TODO add an else here to back out to the main menu with PB_B
     }
 
     //Update Animation
@@ -1466,7 +1468,7 @@ void baseMode(int64_t elapsedUs)
         //if Panic mode... check to see if player's head is under water.
         if (lumv->localPlayer->y > lumv->waterLevel && lumv->localPlayer->state != LUMBERJACK_DEAD && lumv->localPlayer->state != LUMBERJACK_OFFSCREEN)
         {
-            //ESP_LOGW(LUM_TAG, "UNDER WATER! %d", lumv->localPlayer->submergedTimer);
+            //ESP_LOGD(LUM_TAG, "UNDER WATER! %d", lumv->localPlayer->submergedTimer);
             lumv->localPlayer->submergedTimer -= elapsedUs / 10000;
 
             if (lumv->localPlayer->submergedTimer <= 0)
