@@ -364,6 +364,9 @@ void app_main(void)
             }
         }
 
+        // Check for buzzer callback flags from the ISR
+        bzrCheckSongDone();
+
         if (NO_WIFI != cSwadgeMode->wifiMode)
         {
             checkEspNowRxQueue();

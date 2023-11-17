@@ -65,6 +65,17 @@ static uint16_t sfxVolume = 0;
 /// @brief Track if the buzzer is paused or not
 static bool bzrPaused = false;
 
+/// @brief A flag to set if bgmDoneCb should be called from the main loop
+static bool bgmDoneFlag = false;
+/// @brief A flag to set if sfxDoneCb should be called from the main loop
+static bool sfxDoneFlag = false;
+/// @brief A callback function to call after SFX finishes. This is not called if the song is manually stopped or another
+/// song starts before this one finishes
+static songFinishedCbFn sfxDoneCb = NULL;
+/// @brief A callback function to call after BGM finishes. This is not called if the song is manually stopped or another
+/// song starts before this one finishes
+static songFinishedCbFn bgmDoneCb = NULL;
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -72,7 +83,7 @@ static bool bzrPaused = false;
 static void initSingleBuzzer(buzzer_t* buzzer, gpio_num_t bzrGpio, ledc_timer_t ledcTimer, ledc_channel_t ledcChannel);
 static bool buzzer_check_next_note_isr(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 static bool buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume, bool isActive,
-                                         int32_t tElapsedUs);
+                                         bool isBgm, int32_t tElapsedUs);
 static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* song, buzzerPlayTrack_t track);
 
 //==============================================================================
@@ -281,6 +292,8 @@ void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
         gptimer_start(bzrTimer);
         bzrTimerActive = true;
     }
+    // Called without a callback, so null it out
+    bgmDoneCb = NULL;
 }
 
 /**
@@ -302,6 +315,36 @@ void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
         gptimer_start(bzrTimer);
         bzrTimerActive = true;
     }
+    // Called without a callback, so null it out
+    sfxDoneCb = NULL;
+}
+
+/**
+ * @brief Start playing a background music on the buzzer. This has lower priority
+ * than sound effects. cbFn will be called when the music finishes playing
+ *
+ * @param song The song to play as a sequence of notes
+ * @param track The track to play on if the song is mono. This is ignored if the song is stereo
+ * @param cbFn
+ */
+void bzrPlayBgmCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn)
+{
+    bzrPlayBgm(song, track);
+    bgmDoneCb = cbFn;
+}
+
+/**
+ * @brief Start playing a sound effect on the buzzer. This has higher priority
+ * than background music. cbFn will be called when the effect finishes playing
+ *
+ * @param song The song to play as a sequence of notes
+ * @param track The track to play on if the song is mono. This is ignored if the song is stereo
+ * @param cbFn A callback function to call when the effect finishes playing
+ */
+void bzrPlaySfxCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn)
+{
+    bzrPlaySfx(song, track);
+    sfxDoneCb = cbFn;
 }
 
 /**
@@ -422,9 +465,9 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
         {
             buzzer_t* bzr = &buzzers[bIdx];
             // Try playing SFX first
-            bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, tElapsedUs);
+            bool sfxIsActive = buzzer_track_check_next_note(&bzr->sfx, bIdx, sfxVolume, true, false, tElapsedUs);
             // Then play BGM if SFX isn't active
-            bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, bgmVolume, !sfxIsActive, tElapsedUs);
+            bool bgmIsActive = buzzer_track_check_next_note(&bzr->bgm, bIdx, bgmVolume, !sfxIsActive, true, tElapsedUs);
 
             // If nothing is playing, but there is BGM (i.e. SFX finished)
             if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != bzr->bgm.sTrack))
@@ -448,12 +491,13 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
  * @param volume The volume to play
  * @param isActive true if this is active and should set a note to be played
  *                 false to just advance notes without playing
+ * @param isBgm true if this is BGM, false if this is SFX
  * @param tElapsedUs The elapsed time since this function was last called
  * @return true  if this track is playing a note
  *         false if this track is not playing a note
  */
 static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlayTrack_t bIdx, uint16_t volume,
-                                                   bool isActive, int32_t tElapsedUs)
+                                                   bool isActive, bool isBgm, int32_t tElapsedUs)
 {
     // Check if there is a song and there are still notes
     if ((NULL != track->sTrack) && (track->note_index < track->sTrack->numNotes))
@@ -513,6 +557,18 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
                 track->usAccum    = 0;
                 track->note_index = 0;
                 track->sTrack     = NULL;
+
+                // Raise a flag here but do not directly call the callback because this
+                // is in an interrupt. The callback should be called from the main loop
+                if (isBgm)
+                {
+                    bgmDoneFlag = true;
+                }
+                else
+                {
+                    sfxDoneFlag = true;
+                }
+
                 // Track isn't active
                 return false;
             }
@@ -522,6 +578,32 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
     }
     // Track isn't active
     return false;
+}
+
+/**
+ * @brief Check if a song has finished playing and call the appropriate callback if applicable
+ */
+void bzrCheckSongDone(void)
+{
+    if (true == bgmDoneFlag)
+    {
+        bgmDoneFlag = false;
+        if (NULL != bgmDoneCb)
+        {
+            bgmDoneCb();
+            bgmDoneCb = NULL;
+        }
+    }
+
+    if (true == sfxDoneFlag)
+    {
+        sfxDoneFlag = false;
+        if (NULL != sfxDoneCb)
+        {
+            sfxDoneCb();
+            sfxDoneCb = NULL;
+        }
+    }
 }
 
 /**
