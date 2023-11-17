@@ -76,6 +76,8 @@ lumberjackVars_t* lumv;
 
 void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 {
+
+    drawRect(0, 0, 280, 220, c050);
     lumv                   = calloc(1, sizeof(lumberjackVars_t));
     lumv->lumberjackMain   = main;
     lumv->localPlayerType  = characterIndex;
@@ -575,6 +577,8 @@ bool lumberjackLoadLevel()
 
 void lumberjackSetupLevel(int characterIndex)
 {    
+    bzrStop(true); // Stop the buzzer?
+
     lumv->enemyKillCount       = 0;
     lumv->totalEnemyCount      = 0;
     lumv->comboTime            = 0;
@@ -734,9 +738,9 @@ void lumberjackSetupLevel(int characterIndex)
     //ESP_LOGD(LUM_TAG, "LOADED");
     if (!lumv->levelMusic)
     {
-        bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
         lumv->levelMusic = true;
     }
+    bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
 
 }
 

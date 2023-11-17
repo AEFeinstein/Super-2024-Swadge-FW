@@ -108,6 +108,7 @@ void loadEnvTextures(ray_t* ray)
     // Special floor tiles
     LOAD_TEXTURE(ray, BG_FLOOR_WATER);
     LOAD_TEXTURE(ray, BG_FLOOR_LAVA);
+    LOAD_TEXTURE(ray, BG_FLOOR_HEAL);
 
     // Doors
     LOAD_TEXTURE(ray, BG_DOOR);
