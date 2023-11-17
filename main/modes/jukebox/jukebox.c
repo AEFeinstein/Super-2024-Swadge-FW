@@ -231,6 +231,15 @@ void jukeboxEnterMode()
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "Banana";
     // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->bananaphone;
     // songIdx++;
+    
+     jukebox->musicCategories[catIdx].songs[songIdx].name = "Credits"; // I Have No Idea If This Is Right Or Not To Be Honest
+     jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->credits;
+     songIdx++;
+         
+     jukebox->musicCategories[catIdx].songs[songIdx].name = "Menu Jingle"; // I Have No Idea If This Is Right Or Not To Be Honest
+     jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->jingle;
+     songIdx++;
+    
 
     catIdx++;
 
@@ -240,7 +249,7 @@ void jukeboxEnterMode()
 
     // Initialize array of music categories
     catIdx = 0;
-    jukebox->numSfxCategories = 2;
+    jukebox->numSfxCategories = 10;
     // TODO: change this number ^ as categories (modes) with SFX are added
     jukebox->sfxCategories = calloc(2, sizeof(jukeboxCategory));
 
@@ -262,7 +271,47 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    // TODO: remainder of breakout SFX
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Break2";
+    loadSong("sndBreak2.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Break3";
+    loadSong("sndBreak3.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Brk1up";
+    loadSong("sndBrk1up.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "BrkDie";
+    loadSong("sndBrkDie.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Detonate";
+    loadSong("sndDetonate.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "DropBomb";
+    loadSong("sndDropBomb.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Tally";
+    loadSong("sndTally.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+    
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "WaveBall";
+    loadSong("sndWaveBall.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    // TODO: remainder of breakout SFX // May be Done by VanillyNeko
 
     catIdx++;
     
