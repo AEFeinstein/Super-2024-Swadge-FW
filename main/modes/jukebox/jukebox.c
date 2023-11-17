@@ -256,7 +256,7 @@ void jukeboxEnterMode()
     // Breakout category
     songIdx = 0;
     jukebox->sfxCategories[catIdx].categoryName = breakoutMode.modeName;
-    jukebox->sfxCategories[catIdx].numSongs = 10;
+    jukebox->sfxCategories[catIdx].numSongs = 12;
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Breakout SFX
@@ -310,35 +310,19 @@ void jukeboxEnterMode()
     loadSong("sndWaveBall.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-
-    // TODO: remainder of breakout SFX // May be Done by VanillyNeko
-
-    catIdx++;
     
-    // Tunernome category
-    songIdx = 0;
-    jukebox->sfxCategories[catIdx].categoryName = tunernomeMode.modeName;
-    jukebox->sfxCategories[catIdx].numSongs = 2;
-    jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
-    // Special handling so we can easily clean this up later
-    jukebox->tunernomeSfxCategory = &jukebox->sfxCategories[catIdx];
-
-    // Tunernome SFX
-
-    // Special handling since these SFX are defined in code, not loaded from .sng files
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Primary";
-    memcpy(&jukebox->sfxCategories[catIdx].songs[songIdx].song, &metronome_primary, sizeof(song_t));
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Block1";
+    loadSong("block1.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-
-    // Special handling since these SFX are defined in code, not loaded from .sng files
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Secondary";
-    memcpy(&jukebox->sfxCategories[catIdx].songs[songIdx].song, &metronome_secondary, sizeof(song_t));
+        
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Block2";
+    loadSong("block2.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
     catIdx++;
-
-    // TODO: remainder of categories (modes) with SFX
-    
+            
     // Platformer category
     songIdx = 0;
     jukebox->sfxCategories[catIdx].categoryName = platformerMode.modeName;
@@ -556,8 +540,35 @@ void jukeboxEnterMode()
     loadSong("r_warp.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    
+    catIdx++;
+
+    // TODO: remainder of All SFX // May be Done by VanillyNeko
+    
+    // Tunernome category
+    songIdx = 0;
+    jukebox->sfxCategories[catIdx].categoryName = tunernomeMode.modeName;
+    jukebox->sfxCategories[catIdx].numSongs = 2;
+    jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
+    // Special handling so we can easily clean this up later
+    jukebox->tunernomeSfxCategory = &jukebox->sfxCategories[catIdx];
+
+    // Tunernome SFX
+
+    // Special handling since these SFX are defined in code, not loaded from .sng files
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Primary";
+    memcpy(&jukebox->sfxCategories[catIdx].songs[songIdx].song, &metronome_primary, sizeof(song_t));
+    songIdx++;
+
+    // Special handling since these SFX are defined in code, not loaded from .sng files
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Secondary";
+    memcpy(&jukebox->sfxCategories[catIdx].songs[songIdx].song, &metronome_secondary, sizeof(song_t));
+    songIdx++;
 
     catIdx++;
+
+    // TODO: remainder of categories (modes) with SFX
+
 
     ///// Initialize menu /////
     jukebox->menu                = initMenu(str_jukebox, &jukeboxMainMenuCb);
