@@ -176,6 +176,7 @@ void testEnterMode(void)
     bzrPlayBgm(&test->song, BZR_STEREO);
 
     // Clear out accel setting.
+    accelSetRegistersAndReset();
     accelPerformCal();
 
     // Set NVM to indicate test not passed yet
