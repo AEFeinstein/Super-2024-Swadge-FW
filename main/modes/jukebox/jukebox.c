@@ -249,7 +249,7 @@ void jukeboxEnterMode()
 
     // Initialize array of music categories
     catIdx = 0;
-    jukebox->numSfxCategories = 4;
+    jukebox->numSfxCategories = 5;
     // TODO: change this number ^ as categories (modes) with SFX are added
     jukebox->sfxCategories = calloc(2, sizeof(jukeboxCategory));
 
@@ -541,6 +541,26 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
     
+    catIdx++;
+
+    // Menu category
+    songIdx = 0;
+    jukebox->sfxCategories[catIdx].categoryName = menuMode.modeName;
+    jukebox->sfxCategories[catIdx].numSongs = 2;
+    jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
+
+    // Menu SFX
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "item";
+    loadSong("item.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "jingle";
+    loadSong("jingle.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
     catIdx++;
 
     // TODO: remainder of All SFX // May be Done by VanillyNeko
