@@ -625,7 +625,9 @@ typedef struct
     uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
     wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES];                      ///< The environment textures
     wsg_t guns[NUM_LOADOUTS];                                   ///< Textures for the HUD guns
-    wsg_t portrait;                                             ///< A portrait used for text dialogs
+    wsg_t cho_portrait;                                         ///< A portrait used for text dialogs
+    wsg_t hw_portrait;                                          ///< A portrait used for text dialogs
+    wsg_t hw_s_portrait;                                        ///< A portrait used for text dialogs
     wsg_t missileHUDicon;                                       ///< A missile icon drawn in the HUD
     wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
     wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies

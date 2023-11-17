@@ -42,6 +42,7 @@ typedef struct
     int32_t lastSfxVol;
     int32_t cheatCodeIdx;
     bool debugMode;
+    bool fanfarePlaying;
 } mainMenu_t;
 
 //==============================================================================
@@ -222,6 +223,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                     mainMenu->cheatCodeIdx = 0;
                     mainMenu->debugMode    = true;
                     bzrPlayBgm(&mainMenu->fanfare, BZR_STEREO);
+                    mainMenu->fanfarePlaying = true;
 
                     // Return to the top level menu
                     while (mainMenu->menu->parentMenu)
@@ -270,8 +272,11 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     // Stop the buzzer first no matter what, so that it turns off
     // if we scroll away from the BGM or SFX settings.
 
-    // Always stop the buzzer unless we're on one of the SFX settings
-    bzrStop(true);
+    // Stop the buzzer when changing volume, not for fanfare
+    if (false == mainMenu->fanfarePlaying)
+    {
+        bzrStop(true);
+    }
 
     if (selected)
     {
@@ -363,6 +368,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
                 mainMenu->lastBgmVol = settingVal;
                 setBgmVolumeSetting(settingVal);
                 bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+                mainMenu->fanfarePlaying = false;
             }
         }
         else if (sfxVolSettingLabel == label)
@@ -372,6 +378,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
                 mainMenu->lastSfxVol = settingVal;
                 setSfxVolumeSetting(settingVal);
                 bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+                mainMenu->fanfarePlaying = false;
             }
         }
         else if (micSettingLabel == label)
