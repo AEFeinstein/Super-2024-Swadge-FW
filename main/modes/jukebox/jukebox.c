@@ -184,7 +184,7 @@ void jukeboxEnterMode()
 
     // Initialize array of music categories
     int catIdx = 0;
-    jukebox->numMusicCategories = 2;
+    jukebox->numMusicCategories = 3;
     // TODO: change this number   ^ as categories (modes) with music are added
     jukebox->musicCategories = calloc(jukebox->numMusicCategories, sizeof(jukeboxCategory));
 
@@ -197,7 +197,57 @@ void jukeboxEnterMode()
     // Breakout songs
 
     jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM";
-    loadSong("gmcc.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false); // TODO: use correct sng once it's done being composed
+    loadSong("gmcc.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    catIdx++;
+
+    // Platformer category
+    int songIdx = 0;
+    jukebox->musicCategories[catIdx].categoryName = platformerMode.modeName;
+    jukebox->musicCategories[catIdx].numSongs = 1;
+    jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
+
+    // Platformer songs
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Castle BGM";
+    loadSong("bgmCastle.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "DeMAGio BGM";
+    loadSong("bgmDeMAGio.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Game Over BGM";
+    loadSong("bgmGameOver.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Game Start BGM";
+    loadSong("bgmGameStart.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Intro BGM";
+    loadSong("bgmIntro.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Name Entry BGM";
+    loadSong("bgmNameEntry.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Smooth BGM";
+    loadSong("bgmSmooth.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Underground BGM";
+    loadSong("bgmUnderground.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
     jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     songIdx++;
 
@@ -206,7 +256,7 @@ void jukeboxEnterMode()
     // Jukebox category
     songIdx = 0;
     jukebox->musicCategories[catIdx].categoryName = jukeboxMode.modeName;
-    jukebox->musicCategories[catIdx].numSongs = 7;
+    jukebox->musicCategories[catIdx].numSongs = 5;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Jukebox songs
@@ -231,14 +281,6 @@ void jukeboxEnterMode()
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "Banana";
     // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->bananaphone;
     // songIdx++;
-    
-     jukebox->musicCategories[catIdx].songs[songIdx].name = "Credits"; // I Have No Idea If This Is Right Or Not To Be Honest
-     jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->credits;
-     songIdx++;
-         
-     jukebox->musicCategories[catIdx].songs[songIdx].name = "Menu Jingle"; // I Have No Idea If This Is Right Or Not To Be Honest
-     jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->jingle;
-     songIdx++;
     
 
     catIdx++;
