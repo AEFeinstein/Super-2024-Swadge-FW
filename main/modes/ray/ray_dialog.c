@@ -6,6 +6,7 @@
 #include "ray_dialog.h"
 #include "esp_wifi.h"
 #include "ray_script.h"
+#include "ray_pause.h"
 
 //==============================================================================
 // Defines
@@ -53,10 +54,18 @@ const char* finalDialog100_0 = "C - cc - chh - CHO - do you read me? Good, glad 
 /// @brief Second part of the 100% dialog
 const char* finalDialog100_1
     = "Hank Waddle here, your lawyer-turned-ex-lawyer-turned-megalomaniacal super villain. Looks like Meta Studley "
-      "wasn't able to take you out, eh? He should have taken a few more reps at the space gym...\nAnyway, I'm with "
-      "the baddies now. They took my brain and fused it with some supercomputer they were building, which is kinda "
-      "weird, but hey - now I can shoot lasers out of my eyes. What a twist, right? Anyway, nice job getting 100% "
-      "completion, you NERD. I'll get you next time, Cho!";
+      "wasn't able to take you out, eh? He should have taken a few more reps at the space gym...\nAnyway, I'm with the "
+      "baddies now. They took my brain and fused it with some supercomputer they were building, which is kinda weird, "
+      "but hey - now I can shoot lasers out of my eyes. What a twist, right? Anyway, nice job getting 100% completion, "
+      "you NERD. I'll get you next time, Cho!";
+
+/// @brief Second part of the 50% dialog
+const char* finalDialog50_1
+    = "Hank Waddle here, your lawyer-turned-ex-lawyer-turned-megalomaniacal super villain. Looks like Meta Studley "
+      "wasn't able to take you out, eh? He should have taken a few more reps at the space gym...\nAnyway, I'm with the "
+      "baddies now. They took my brain and fused it with some supercomputer they were building, which is kinda weird, "
+      "but hey - now I can shoot lasers out of my eye. What a twist, right? Anyway, nice job getting through the game "
+      "with so few upgrades, you MASOCHIST. I'll get you next time, Cho!";
 
 //==============================================================================
 // Functions
@@ -114,7 +123,14 @@ void rayDialogCheckButtons(ray_t* ray)
                     // If this is the first part of the 100% dialog, show the second
                     if (finalDialog100_0 == ray->dialogText)
                     {
-                        rayShowDialog(ray, finalDialog100_1, &ray->hw_portrait);
+                        if (100 == getItemCompletePct(ray))
+                        {
+                            rayShowDialog(ray, finalDialog100_1, &ray->hw_portrait);
+                        }
+                        else if (50 > getItemCompletePct(ray))
+                        {
+                            rayShowDialog(ray, finalDialog50_1, &ray->hw_portrait);
+                        }
                     }
                     // Otherwise the dialog is over, return to game mode
                     else
