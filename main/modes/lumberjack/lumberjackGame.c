@@ -783,11 +783,16 @@ void lumberjackTitleLoop(int64_t elapsedUs)
         lumv->btnState = evt.state;
     }
 
-    if (lumv->lumberjackMain->networked)
+
+    if (lumv->btnState & PB_B)
+    {
+        switchToSwadgeMode(&lumberjackMode);
+    }
+    else if (lumv->lumberjackMain->networked)
     {
         if (lumv->btnState & PB_A && lumv->gameReady && lumv->lumberjackMain->host && lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // And Game Ready!
         {
-            lumberjackPlayGame();      
+            lumberjackPlayGame();     
             lumberjackSendGo();
         }
         // TODO add an else here to back out to the main menu with PB_B
@@ -801,8 +806,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
         {
             lumberjackSendGo();
         }
-        // TODO add an else here to back out to the main menu with PB_B
-    }
+    } 
 
     //Update Animation
     lumv->worldTimer += elapsedUs;
@@ -2207,8 +2211,15 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
         bool bump = false;
         if ((tileA != NULL && lumberjackIsCollisionTile(tileA->type)) || (tileB != NULL && lumberjackIsCollisionTile(tileB->type)))
         {
-            // TODO fix this cppcheck warning. It always dereferences tileA, but it can be reached if tileA is NULL and tileB is not NULL
-            destinationY      = ((tileA->y + 1) * LUMBERJACK_TILE_SIZE);
+            // Put in the full if statement because cppcheck wasn't happy with ternary
+            if (tileA != NULL)
+            {
+                destinationY  = (tileA->y + 1) * LUMBERJACK_TILE_SIZE;
+            }
+            else{
+                destinationY  =  ((tileB->y + 1) * LUMBERJACK_TILE_SIZE);
+            }
+
             entity->jumpTimer = 0;
             entity->jumping   = false;
             entity->vy        = 0;

@@ -40,7 +40,7 @@ static bool lumberjackSwadgeGuyUnlocked(void);
 static const char lumberjackName[]   = "Lumber Jacks";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
-// static const char lumberjackSmack[] = "Smack";
+static const char lumberjackInstructions[] = "How to Play";
 static const char lumberjackBack[]   = "Back";
 static const char lumberjackExit[]   = "Exit";
 
@@ -105,11 +105,13 @@ static void lumberjackEnterMode(void)
     lumberjack->menu = startSubMenu(lumberjack->menu, lumberjackPanic);
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuSinglePlayer);
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayer);
+    addSingleItemToMenu(lumberjack->menu, lumberjackInstructions);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
     lumberjack->menu = startSubMenu(lumberjack->menu, lumberjackAttack);
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuSinglePlayer);
     addSingleItemToMenu(lumberjack->menu, lumberjackMenuMultiPlayer);
+    addSingleItemToMenu(lumberjack->menu, lumberjackInstructions);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
     // TODO add instructions menu item & screen. Can be a simple synopsis that uses drawTextWordWrap() to draw a paragraph to the screen
@@ -117,7 +119,6 @@ static void lumberjackEnterMode(void)
     // You can also do multi-page, because drawTextWordWrap() returns a pointer to any off-screen text.
     // For reference, see rayDialogRender()
 
-    //addSingleItemToMenu(lumberjack->menu, lumberjackSmack);
 
     int characters = 2;
 
@@ -254,7 +255,18 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        lumberjack->menu = menuButton(lumberjack->menu, evt);
+        if (lumberjack->instructions)
+        {
+            if (evt.state & PB_B)
+            {
+                ESP_LOGD(LUM_TAG, "Mac Daddy!");
+                lumberjack->instructions = false;
+            }
+        }
+        else
+        {
+            lumberjack->menu = menuButton(lumberjack->menu, evt);
+        }
     }
 
     drawMenuLogbook(lumberjack->menu, lumberjack->menuLogbookRenderer, elapsedUs);
@@ -494,6 +506,22 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         else if (label == lumberjackAttack)
         {
             lumberjack->gameMode = LUMBERJACK_MODE_ATTACK;
+        }
+
+        if (label == lumberjackInstructions)
+        {
+            if (lumberjack->gameMode == LUMBERJACK_MODE_PANIC)
+            {
+                lumberjack->instructions = true;
+            }
+            else if (lumberjack->gameMode == LUMBERJACK_MODE_ATTACK)
+            {
+                lumberjack->instructions = true;
+                
+            }
+
+            //There was a 3rd game mode planned but... I don't want to take any chances
+
         }
 
         if (label == lumberjackMenuMultiPlayer)
