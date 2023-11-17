@@ -32,7 +32,7 @@
         }                                                                       \
     } while (0)
 
-static void paintGetUnusedFilename(char* out, size_t n);
+static void paintGetUnusedFilename(char* out);
 
 static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal);
 static void paintSetupColorWheel(void);
@@ -40,10 +40,15 @@ static void paintDialogCb(const char* label);
 static void paintSetupBrowser(bool save);
 static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action);
 
+static void doSave(const char* key);
+static void doLoad(const char* key);
+static void doDelete(const char* key);
+
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
 
-static const char paintDefaultFilename[] = "untitled_%02" PRIu8 ".mfp";
+static const char paintFilenamePrefix[] = "untitled_";
+static const char paintFilenameSuffix[] = ".mfp";
 
 static const char toolWheelTitleStr[]   = "Tool Wheel";
 static const char toolWheelBrushStr[]   = "Select Brush";
@@ -63,14 +68,16 @@ static const char dialogUnsavedTitleStr[]    = "Unsaved Changes!";
 static const char dialogOverwriteTitleStr[]  = "Overwrite Existing?";
 static const char dialogDeleteTitleStr[]     = "Really Delete?";
 static const char dialogOutOfSpaceTitleStr[] = "Save Failed!";
+static const char dialogLoadErrorTitleStr[]  = "Load Failed!";
 const char* dialogErrorTitleStr              = "Error!";
 
 static const char dialogUnsavedDetailStr[]
-    = "There are unsaved changes to the current drawing! Continue without saving?";
-static const char dialogOverwriteDetailStr[] = "This file already exists! Overwrite it with the current drawing?";
+    = "There are unsaved changes to '%s'! Continue without saving?";
+static const char dialogOverwriteDetailStr[] = "The file '%s' already exists! Overwrite it with the current drawing?";
 static const char dialogDeleteDetailStr[]    = "Are you sure you want to delete '%s'?";
 static const char dialogOutOfSpaceDetailStr[]
     = "Out of storage space! Delete something and try again, or overwrite an existing file.";
+static const char dialogLoadErrorDetailStr[] = "Error loading '%s'! This shouldn't have happened, sorry.";
 static const char dialogErrorDetailStr[] = "Fatal Error! ";
 
 static const char dialogOptionCancelStr[] = "Cancel";
@@ -193,12 +200,18 @@ const char inactiveIconStr[] = "%s_inactive.wsg";
 const brush_t* firstBrush = brushes;
 const brush_t* lastBrush  = brushes + sizeof(brushes) / sizeof(brushes[0]) - 1;
 
-static void paintGetUnusedFilename(char* out, size_t outsize)
+static void paintGetUnusedFilename(char* out)
 {
     // Create a new default filename
-    for (uint8_t i = 0; i < UINT8_MAX; ++i)
+    for (uint8_t i = 0; i < 100; ++i)
     {
-        snprintf(out, outsize, paintDefaultFilename, i);
+        char* ptr = out;
+        strcpy(ptr, paintFilenamePrefix);
+        ptr += strlen(paintFilenamePrefix);
+        *(ptr++) = '0' + (i / 10);
+        *(ptr++) = '0' + (i % 10);
+        strcpy(ptr, paintFilenameSuffix);
+        out[15] = '\0';
 
         if (!paintSlotExists(out))
         {
@@ -207,19 +220,18 @@ static void paintGetUnusedFilename(char* out, size_t outsize)
         }
 
         // Give up and make a totally random one
-        if (i == (UINT8_MAX - 1))
+        if (i == 99)
         {
-            const char suffix[] = ".mfp";
-            for (uint8_t n = 0; n < outsize - sizeof(suffix); ++n)
+            for (uint8_t n = 0; n < 16 - strlen(paintFilenameSuffix); n++)
             {
                 uint8_t rng = esp_random() % 16;
                 out[n]      = (rng > 9) ? ('a' + rng - 10) : '0' + rng;
             }
             // Add null terminator
-            out[outsize - sizeof(suffix)] = '\0';
+            out[15] = '\0';
 
             // Add the suffix
-            strcat(out, suffix);
+            strcat(out, paintFilenameSuffix);
             break;
         }
     }
@@ -246,7 +258,6 @@ void paintDrawScreenSetup(void)
 
     loadFont(PAINT_TOOLBAR_FONT, &(paintState->toolbarFont), false);
     loadFont(PAINT_SMALL_FONT, &(paintState->smallFont), false);
-    paintState->clearScreen = true;
     paintState->blinkOn     = true;
     paintState->blinkTimer  = 0;
 
@@ -322,24 +333,32 @@ void paintDrawScreenSetup(void)
     if (paintHelp == NULL && paintGetLastSlot(paintState->slotKey) && paintSlotExists(paintState->slotKey))
     {
         // If there's a saved image, load that (but not in the tutorial)
-        paintState->doLoad = true;
-        strncpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
-        PAINT_LOGI("Opening %s", paintState->selectedSlotKey);
+        PAINT_LOGI("Opening %s", paintState->slotKey);
+        doLoad(paintState->slotKey);
     }
     else
     {
+        if (paintHelp == NULL)
+        {
+            paintGetUnusedFilename(paintState->slotKey);
+        }
+
         // Set up a blank canvas with the default size
         paintState->canvas.w = PAINT_DEFAULT_CANVAS_WIDTH;
         paintState->canvas.h = PAINT_DEFAULT_CANVAS_HEIGHT;
-
-        // Automatically position the canvas in the center of the drawable area at the max scale that will fit
-        paintPositionDrawCanvas();
 
         // load the default palette
         memcpy(paintState->canvas.palette, defaultPalette, PAINT_MAX_COLORS * sizeof(paletteColor_t));
         getArtist()->fgColor = paintState->canvas.palette[0];
         getArtist()->bgColor = paintState->canvas.palette[1];
+
+        paintState->canvas.buffered = true;
+        paintState->canvas.buffer = malloc(paintGetStoredSize(&paintState->canvas));
+        memset(paintState->canvas.buffer, 0x11, paintGetStoredSize(&paintState->canvas));
     }
+
+    // Automatically position the canvas in the center of the drawable area at the max scale that will fit
+    paintPositionDrawCanvas();
 
     // This assumes the first brush is a pen brush, which it always will be unless we rearrange the brush array
     paintGenerateCursorSprite(&paintState->cursorWsg, &paintState->canvas, firstBrush->minSize);
@@ -675,7 +694,7 @@ void paintPositionDrawCanvas(void)
                               - paintState->canvas.h * paintState->canvas.yScale)
                                  / 2;
 
-    PAINT_LOGI("Scaled image to %" PRIu8, scale);
+    PAINT_LOGI("Scaled image to %" PRIu8 " (dimensions are %" PRIu16 " x %" PRIu16 ")", scale, paintState->canvas.w, paintState->canvas.h);
 }
 
 void paintDrawScreenMainLoop(int64_t elapsedUs)
@@ -711,95 +730,8 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
         getArtist()->bgColor = paintState->canvas.palette[1];
         paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
         paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
-        paintUpdateLeds();
         paintState->unsaved     = false;
         paintState->clearScreen = false;
-    }
-
-    // Save and Load
-    if (*paintState->selectedSlotKey && (paintState->doSave || paintState->doLoad || paintState->doDelete))
-    {
-        paintExitSelectMode();
-
-        if (paintState->doSave)
-        {
-            if (!paintSaveNamed(paintState->selectedSlotKey, &paintState->canvas))
-            {
-                PAINT_LOGE("Error saving to slot named %s!", paintState->selectedSlotKey);
-                paintState->dialogMessageTitle  = dialogOutOfSpaceTitleStr;
-                paintState->dialogMessageDetail = dialogOutOfSpaceDetailStr;
-                paintSetupDialog(DIALOG_ERROR_NONFATAL);
-            }
-            else
-            {
-                strncpy(paintState->slotKey, paintState->selectedSlotKey, sizeof(paintState->slotKey));
-            }
-        }
-        else if (paintState->doLoad)
-        {
-            if (paintSlotExists(paintState->selectedSlotKey))
-            {
-                // Load from the selected slot if it's been used
-                paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
-
-                // Load the image into the buffer so we can orient it properly
-                paintState->canvas.buffered = true;
-                if (paintLoadNamed(paintState->selectedSlotKey, &paintState->canvas))
-                {
-                    paintPositionDrawCanvas();
-                    paintSetLastSlot(paintState->selectedSlotKey);
-                    strncpy(paintState->slotKey, paintState->selectedSlotKey, sizeof(paintState->slotKey));
-
-                    paintFreeUndos();
-
-                    getArtist()->fgColor = paintState->canvas.palette[0];
-                    getArtist()->bgColor = paintState->canvas.palette[1];
-
-                    // Do the tool setup, which will also setup the cursor
-                    paintSetupTool();
-
-                    // Put the cursor in the middle of the screen
-                    moveCursorAbsolute(getCursor(), &paintState->canvas, paintState->canvas.w / 2,
-                                       paintState->canvas.h / 2);
-                    paintUpdateLeds();
-                }
-                else
-                {
-                    PAINT_LOGE("Slot %s has 0 dimension! Stopping load", paintState->selectedSlotKey);
-                    // paintClearSlot(&paintState->index, paintState->selectedSlot);
-                    //  TODO: Use a dialog here
-                    paintState->fatalError = true;
-                }
-            }
-            else
-            {
-                // If the slot hasn't been used yet, just clear the screen
-                paintState->clearScreen = true;
-            }
-        }
-        else if (paintState->doDelete)
-        {
-            if (paintSlotExists(paintState->selectedSlotKey))
-            {
-                paintDeleteNamed(paintState->selectedSlotKey);
-            }
-        }
-
-        paintState->unsaved  = false;
-        paintState->doSave   = false;
-        paintState->doLoad   = false;
-        paintState->doDelete = false;
-
-        paintState->buttonMode = BTN_MODE_DRAW;
-
-        paintState->redrawToolbar = true;
-    }
-
-    if (paintState->recolorPickPoints)
-    {
-        paintDrawPickPoints();
-        paintUpdateLeds();
-        paintState->recolorPickPoints = false;
     }
 
     // TODO render toolbar always
@@ -810,7 +742,7 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
     {
         paintEnterSelectMode();
 
-        paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
 
         if (paintState->showBrowser)
         {
@@ -928,13 +860,15 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             PAINT_LOGW("Some tutorial text didn't fit: %s", rest);
         }
     }
+
+    paintUpdateLeds();
+
 }
 
 void paintEditPaletteUpdate(void)
 {
     paintState->newColor = (paintState->editPaletteR * 36 + paintState->editPaletteG * 6 + paintState->editPaletteB);
     paintState->redrawToolbar = true;
-    paintUpdateLeds();
 }
 
 void paintEditPaletteSetChannelValue(uint8_t val)
@@ -1054,8 +988,6 @@ void paintEditPaletteConfirm(void)
         // And replace it within the canvas
         paintColorReplace(&paintState->canvas, old, new);
         paintState->unsaved = true;
-
-        paintDrawPickPoints();
     }
 }
 
@@ -1160,7 +1092,6 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 // Select previous color
                 paintState->redrawToolbar = true;
                 paintState->paletteSelect = PREV_WRAP(paintState->paletteSelect, PAINT_MAX_COLORS);
-                paintUpdateLeds();
                 break;
             }
 
@@ -1169,7 +1100,6 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
                 // Select next color
                 paintState->redrawToolbar = true;
                 paintState->paletteSelect = NEXT_WRAP(paintState->paletteSelect, PAINT_MAX_COLORS);
-                paintUpdateLeds();
                 break;
             }
 
@@ -1819,9 +1749,6 @@ void paintIncBrushWidth(uint8_t inc)
 void paintSwapFgBgColors(void)
 {
     swap(&getArtist()->fgColor, &getArtist()->bgColor);
-
-    paintUpdateLeds();
-    paintDrawPickPoints();
 }
 
 void paintEnterSelectMode(void)
@@ -1839,20 +1766,9 @@ void paintEnterSelectMode(void)
 
 void paintExitSelectMode(void)
 {
-    if (paintState->showBrowser)
-    {
-        paintState->showBrowser = false;
-    }
-
-    if (paintState->showDialogBox)
-    {
-        paintState->showDialogBox = false;
-    }
-
-    if (paintState->showToolWheel)
-    {
-        paintState->showToolWheel = false;
-    }
+    paintState->showBrowser = false;
+    paintState->showDialogBox = false;
+    paintState->showToolWheel = false;
 
     // Exit select mode
     paintState->buttonMode = BTN_MODE_DRAW;
@@ -1867,11 +1783,6 @@ void paintExitSelectMode(void)
 void paintUpdateRecents(uint8_t selectedIndex)
 {
     getArtist()->fgColor = paintState->canvas.palette[selectedIndex];
-
-    paintUpdateLeds();
-
-    // If there are any pick points, update their color to reduce confusion
-    paintDrawPickPoints();
 }
 
 void paintUpdateLeds(void)
@@ -1966,12 +1877,12 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         {
             if (paintSlotExists(paintState->slotKey))
             {
+                memcpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
                 paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
             }
             else
             {
-                strncpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
-                paintState->doSave = true;
+                doSave(paintState->slotKey);
                 paintExitSelectMode();
             }
         }
@@ -1996,7 +1907,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             {
                 paintExitSelectMode();
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
-                paintState->clearScreen = true;
+                paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
             }
         }
         else if (toolWheelExitStr == label)
@@ -2059,7 +1970,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             // Select previous color
             paintState->redrawToolbar = true;
             // paintState->paletteSelect = settingVal;
-            paintUpdateLeds();
         }
         else if (toolWheelSizeStr == label)
         {
@@ -2095,7 +2005,13 @@ void paintSetupDialog(paintDialog_t dialog)
         case DIALOG_CONFIRM_UNSAVED_EXIT:
         {
             title  = dialogUnsavedTitleStr;
-            detail = dialogUnsavedDetailStr;
+            char buf[128];
+            snprintf(buf, sizeof(buf), dialogUnsavedDetailStr, paintState->selectedSlotKey);
+            buf[127] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
 
             // Unsaved! Continue? Cancel, Save, Save as... OK
             dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
@@ -2107,8 +2023,14 @@ void paintSetupDialog(paintDialog_t dialog)
 
         case DIALOG_CONFIRM_OVERWRITE:
         {
-            title  = dialogOverwriteTitleStr;
-            detail = dialogOverwriteDetailStr;
+            title = dialogOverwriteTitleStr;
+            char buf[128];
+            snprintf(buf, sizeof(buf), dialogOverwriteDetailStr, paintState->selectedSlotKey);
+            buf[127] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
 
             // Already exists! Overwrite? Cancel, Save As... Ok
             dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
@@ -2123,6 +2045,22 @@ void paintSetupDialog(paintDialog_t dialog)
             char buf[64];
             snprintf(buf, sizeof(buf), dialogDeleteDetailStr, paintState->selectedSlotKey);
             buf[63] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
+
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
+        case DIALOG_ERROR_LOAD:
+        {
+            title = dialogLoadErrorTitleStr;
+            char buf[128];
+            snprintf(buf, sizeof(buf), dialogLoadErrorDetailStr, paintState->selectedSlotKey);
+            buf[127] = '\0';
 
             paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
             strcpy(paintState->dialogCustomDetail, buf);
@@ -2172,14 +2110,14 @@ static void paintDialogCb(const char* label)
     }
     else if (dialogOptionSaveStr == label)
     {
-        if (paintSlotExists(paintState->slotKey))
+        if (paintSlotExists(paintState->selectedSlotKey))
         {
             paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
         }
         else
         {
             // Do actual save
-            paintState->doSave = true;
+            doSave(paintState->slotKey);
         }
     }
     else if (dialogOptionSaveAsStr == label)
@@ -2216,15 +2154,14 @@ static void paintDialogCb(const char* label)
 
             case DIALOG_CONFIRM_OVERWRITE:
             {
-                paintState->doSave = true;
-                strncpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
+                doSave(paintState->selectedSlotKey);
                 paintExitSelectMode();
                 break;
             }
 
             case DIALOG_CONFIRM_DELETE:
             {
-                paintState->doDelete = true;
+                doDelete(paintState->selectedSlotKey);
                 paintExitSelectMode();
                 break;
             }
@@ -2254,8 +2191,6 @@ static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action)
 {
     if (NULL != nvsKey)
     {
-        strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
-
         switch (action)
         {
             case BROWSER_EXIT:
@@ -2263,16 +2198,18 @@ static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action)
 
             case BROWSER_OPEN:
             {
-                paintState->doLoad = true;
+                doLoad(nvsKey);
+                paintSetupTool();
                 break;
             }
             case BROWSER_SAVE:
             {
-                paintState->doSave = true;
+                doSave(nvsKey);
                 break;
             }
             case BROWSER_DELETE:
             {
+                strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
                 paintSetupDialog(DIALOG_CONFIRM_DELETE);
                 paintState->showBrowser = false;
                 break;
@@ -2281,4 +2218,86 @@ static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action)
     }
 
     paintState->showBrowser = false;
+}
+
+static void doSave(const char* key)
+{
+    if (paintSaveNamed(key, &paintState->canvas))
+    {
+        // Update current slot name
+        if (key != paintState->slotKey)
+        {
+            strncpy(paintState->slotKey, key, sizeof(paintState->slotKey) - 1);
+        }
+        paintState->selectedSlotKey[0] = '\0';
+    }
+    else
+    {
+        PAINT_LOGE("Error saving to slot named %s!", key);
+        paintState->dialogMessageTitle  = dialogOutOfSpaceTitleStr;
+        paintState->dialogMessageDetail = dialogOutOfSpaceDetailStr;
+        paintSetupDialog(DIALOG_ERROR_NONFATAL);
+    }
+}
+
+static void doLoad(const char* key)
+{
+    if (paintSlotExists(key))
+    {
+        // Load from the selected slot if it's been used
+        paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
+
+        // Load the image into the buffer so we can orient it properly
+        paintState->canvas.buffered = true;
+        if (paintLoadNamed(key, &paintState->canvas))
+        {
+            paintPositionDrawCanvas();
+            paintSetLastSlot(key);
+            if (key != paintState->slotKey)
+            {
+                strncpy(paintState->slotKey, key, sizeof(paintState->slotKey) - 1);
+            }
+
+            paintFreeUndos();
+
+            getArtist()->fgColor = paintState->canvas.palette[0];
+            getArtist()->bgColor = paintState->canvas.palette[1];
+
+            // Put the cursor in the middle of the screen
+            moveCursorAbsolute(getCursor(), &paintState->canvas, paintState->canvas.w / 2,
+                                paintState->canvas.h / 2);
+        }
+        else
+        {
+            PAINT_LOGE("Slot %s has 0 dimension! Stopping load", key);
+            paintState->dialogMessageTitle  = dialogOutOfSpaceTitleStr;
+            paintState->dialogMessageDetail = dialogOutOfSpaceDetailStr;
+            paintSetupDialog(DIALOG_ERROR_NONFATAL);
+            paintState->fatalError = true;
+        }
+    }
+    else
+    {
+        strncpy(paintState->slotKey, key, sizeof(paintState->slotKey) - 1);
+        paintState->canvas.w = PAINT_DEFAULT_CANVAS_WIDTH;
+        paintState->canvas.h = PAINT_DEFAULT_CANVAS_HEIGHT;
+
+        paintState->canvas.buffered = true;
+        if (!paintState->canvas.buffer)
+        {
+            paintState->canvas.buffer = malloc(paintGetStoredSize(&paintState->canvas));
+        }
+
+        memset(paintState->canvas.buffer, 0x11, paintGetStoredSize(&paintState->canvas));
+        // If the slot hasn't been used yet, just clear the screen
+        paintState->clearScreen = true;
+    }
+}
+
+static void doDelete(const char* key)
+{
+    if (paintSlotExists(key))
+    {
+        paintDeleteNamed(key);
+    }
 }

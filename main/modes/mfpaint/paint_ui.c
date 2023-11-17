@@ -1,6 +1,7 @@
 #include "paint_ui.h"
 
 #include <malloc.h>
+#include <string.h>
 
 #include "shapes.h"
 
@@ -307,8 +308,28 @@ void paintRenderColorPicker(paintArtist_t* artist, paintCanvas_t* canvas, paintD
 
 void paintClearCanvas(const paintCanvas_t* canvas, paletteColor_t bgColor)
 {
-    fillDisplayArea(canvas->x, canvas->y, canvas->x + canvas->w * canvas->xScale,
-                    canvas->y + canvas->h * canvas->yScale, bgColor);
+    /*if (canvas->buffered && canvas->buffer)
+    {
+        uint8_t bgIdx = 0;
+        for (int i = 0; i < PAINT_MAX_COLORS; i++)
+        {
+            if (canvas->palette[i] == bgColor)
+            {
+                bgIdx = i;
+                break;
+            }
+        }
+        memset(canvas->buffer, ((bgIdx & 0x0F) << 4) | (bgIdx & 0x0F), paintGetStoredSize(canvas));
+    }*/
+    int8_t bgIndex = paintGetPaletteIndex(canvas->palette, bgColor);
+    if (bgIndex != -1)
+    {
+        uint8_t bgBytes = ((bgIndex & 0x0F) << 4) | (bgIndex & 0x0F);
+        memset(canvas->buffer, bgBytes, paintGetStoredSize(canvas));
+        //paintBlitCanvas(canvas);
+    }
+    /*fillDisplayArea(canvas->x, canvas->y, canvas->x + canvas->w * canvas->xScale,
+                    canvas->y + canvas->h * canvas->yScale, bgColor);*/
 }
 
 // Generates a cursor sprite that's a box

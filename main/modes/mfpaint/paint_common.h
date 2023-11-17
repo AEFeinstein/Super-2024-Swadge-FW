@@ -158,6 +158,7 @@ typedef enum
     DIALOG_CONFIRM_OVERWRITE,
     DIALOG_CONFIRM_DELETE,
     DIALOG_ERROR,
+    DIALOG_ERROR_LOAD,
     DIALOG_ERROR_NONFATAL,
     DIALOG_MESSAGE,
 } paintDialog_t;
@@ -243,10 +244,6 @@ typedef struct
     int64_t blinkTimer;
     bool blinkOn;
 
-    bool touchDown;
-    int32_t firstTouch;
-    int32_t lastTouch;
-
     // The brush width
     uint8_t startBrushWidth;
 
@@ -255,16 +252,10 @@ typedef struct
     // True if the canvas has been modified since last save
     bool unsaved;
 
-    // Whether to perform a save/load/delete on the next loop
-    bool doSave, doLoad, doDelete;
-
     // The name of the currently opened slot
     char slotKey[17];
 
     //// Save Menu Flags
-
-    // The save slot selected for PICK_SLOT_SAVE and PICK_SLOT_LOAD
-    uint8_t selectedSlot;
 
     // The save/load slot selected from the picker
     char selectedSlotKey[17];

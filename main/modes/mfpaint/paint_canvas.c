@@ -65,6 +65,26 @@ size_t paintGetStoredSizeDim(uint16_t w, uint16_t h)
 }
 
 /**
+ * @brief Finds the index of the given color within the palette
+ *
+ * @param palette The palette
+ * @param color The color to search for in the palette
+ * @return int8_t The index of the color, from 0 to 15, or -1 if it was not found.
+ */
+int8_t paintGetPaletteIndex(const paletteColor_t palette[16], paletteColor_t color)
+{
+    for (int i = 0; i < 16; i++)
+    {
+        if (palette[i] == color)
+        {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+/**
  * @brief Construct a palette from the given image data.
  *
  * If the image contains more than 16 colors, some color data will be lost

@@ -37,6 +37,7 @@ void paintSyncCanvas(paintCanvas_t* canvas);
 
 size_t paintGetStoredSize(const paintCanvas_t* canvas);
 size_t paintGetStoredSizeDim(uint16_t w, uint16_t h);
+int8_t paintGetPaletteIndex(const paletteColor_t palette[16], paletteColor_t color);
 void paintRebuildPalette(paletteColor_t palette[16], const paletteColor_t* img, uint16_t w, uint16_t h);
 
 bool paintDeserialize(const paintCanvas_t* dest, const uint8_t* data, size_t offset, size_t count);
