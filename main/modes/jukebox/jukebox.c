@@ -19,7 +19,9 @@
 #include "hdw-tft.h"
 #include "mainMenu.h"
 #include "breakout.h"
+#include "platformer/mode_platformer.h"
 #include "portableDance.h"
+#include "ray/mode_ray.h"
 #include "tunernome.h"
 #include "settingsManager.h"
 #include "swadge2024.h"
@@ -204,8 +206,8 @@ void jukeboxEnterMode()
     catIdx++;
 
     // Platformer category
-    int songIdx = 0;
-    jukebox->musicCategories[catIdx].categoryName = platformerMode.modeName;
+    songIdx = 0;
+    jukebox->musicCategories[catIdx].categoryName = modePlatformer.modeName;
     jukebox->musicCategories[catIdx].numSongs = 1;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
@@ -367,7 +369,7 @@ void jukeboxEnterMode()
             
     // Platformer category
     songIdx = 0;
-    jukebox->sfxCategories[catIdx].categoryName = platformerMode.modeName;
+    jukebox->sfxCategories[catIdx].categoryName = modePlatformer.modeName;
     jukebox->sfxCategories[catIdx].numSongs = 23;
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
@@ -587,18 +589,18 @@ void jukeboxEnterMode()
 
     // Menu category
     songIdx = 0;
-    jukebox->sfxCategories[catIdx].categoryName = menuMode.modeName;
+    jukebox->sfxCategories[catIdx].categoryName = mainMenuMode.modeName;
     jukebox->sfxCategories[catIdx].numSongs = 2;
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Menu SFX
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "item";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Item";
     loadSong("item.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "jingle";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jingle";
     loadSong("jingle.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
