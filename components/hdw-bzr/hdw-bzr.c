@@ -257,6 +257,9 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
         trackR->usAccum     = 0;
         trackR->should_loop = song->shouldLoop;
     }
+
+    // Un-pause if paused
+    bzrResume();
 }
 
 /**
@@ -542,14 +545,17 @@ bool bzrPause(void)
  */
 void bzrResume(void)
 {
-    if (bzrPaused)
+    if (bzrPaused || !bzrTimerActive)
     {
         // Mark it as not paused
         bzrPaused = false;
 
-        // Restart timer stopped by bzrStop()
-        gptimer_start(bzrTimer);
-        bzrTimerActive = true;
+        if (!bzrTimerActive)
+        {
+            // Restart timer stopped by bzrStop()
+            gptimer_start(bzrTimer);
+            bzrTimerActive = true;
+        }
 
         // For each buzzer, resume playing the tone before pausing
         for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)

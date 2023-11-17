@@ -128,58 +128,6 @@ void rayEnemyNormalMove(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
 }
 
 /**
- * @brief This is called when a normal enemy is shot. It adds damage based on bullet type, checks scripts, and handles
- * freeing defeated enemies
- *
- * @param ray The entire game state
- * @param enemy The enemy which was shot
- * @param bullet The type of bullet it was shot by
- * @return true if the enemy was killed, false if it's still alive
- */
-bool rayEnemyNormalGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
-{
-    // Health starts at 100
-    bool hurt = false;
-    switch (bullet)
-    {
-        case OBJ_BULLET_NORMAL:
-        {
-            // Three shots to kill
-            enemy->health -= 34;
-            hurt = true;
-            break;
-        }
-        case OBJ_BULLET_CHARGE:
-        {
-            // Two shots to kill
-            enemy->health -= 50;
-            hurt = true;
-            break;
-        }
-        case OBJ_BULLET_ICE:
-        case OBJ_BULLET_MISSILE:
-        case OBJ_BULLET_XRAY:
-        {
-            // Five shots to kill
-            enemy->health -= 20;
-            hurt = true;
-            break;
-        }
-        default:
-        {
-            // Not a bullet
-            break;
-        }
-    }
-
-    if (hurt)
-    {
-        rayEnemyTransitionState(enemy, E_HURT);
-    }
-    return enemy->health <= 0;
-}
-
-/**
  * @brief Get the time until the next shot is taken
  *
  * @param enemy The enemy taking the shot
@@ -199,5 +147,5 @@ int32_t rayEnemyNormalGetTimer(rayEnemy_t* enemy, rayEnemyTimerType_t type)
  */
 rayMapCellType_t rayEnemyNormalGetBullet(rayEnemy_t* enemy)
 {
-    return OBJ_BULLET_NORMAL;
+    return OBJ_BULLET_E_NORMAL;
 }

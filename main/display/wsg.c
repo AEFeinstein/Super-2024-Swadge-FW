@@ -149,7 +149,7 @@ void drawWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool fli
             uint32_t advanceX = 1;
             if (flipLR)
             {
-                readX    = wsgw;
+                readX    = wsgw - 1;
                 advanceX = -1;
             }
 

@@ -108,6 +108,7 @@ void loadEnvTextures(ray_t* ray)
     // Special floor tiles
     LOAD_TEXTURE(ray, BG_FLOOR_WATER);
     LOAD_TEXTURE(ray, BG_FLOOR_LAVA);
+    LOAD_TEXTURE(ray, BG_FLOOR_HEAL);
 
     // Doors
     LOAD_TEXTURE(ray, BG_DOOR);
@@ -143,6 +144,11 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_BULLET_ICE);
     LOAD_TEXTURE(ray, OBJ_BULLET_MISSILE);
     LOAD_TEXTURE(ray, OBJ_BULLET_XRAY);
+    LOAD_TEXTURE(ray, OBJ_BULLET_E_NORMAL);
+    LOAD_TEXTURE(ray, OBJ_BULLET_E_STRONG);
+    LOAD_TEXTURE(ray, OBJ_BULLET_E_ARMOR);
+    LOAD_TEXTURE(ray, OBJ_BULLET_E_FLAMING);
+    LOAD_TEXTURE(ray, OBJ_BULLET_E_HIDDEN);
 
     // Scenery
     LOAD_TEXTURE(ray, OBJ_SCENERY_TERMINAL);
@@ -155,6 +161,7 @@ void loadEnvTextures(ray_t* ray)
     LOAD_TEXTURE(ray, OBJ_SCENERY_F4);
     LOAD_TEXTURE(ray, OBJ_SCENERY_F5);
     LOAD_TEXTURE(ray, OBJ_SCENERY_F6);
+    LOAD_TEXTURE(ray, OBJ_SCENERY_F7);
 }
 
 /**

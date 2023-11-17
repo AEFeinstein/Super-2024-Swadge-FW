@@ -4,6 +4,10 @@
 #include "ray_player.h"
 #include "ray_map.h"
 #include "ray_warp_screen.h"
+#include "hdw-nvs.h"
+#include "ray_credits.h"
+#include "ray_pause.h"
+#include "ray_tex_manager.h"
 
 static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
@@ -648,6 +652,8 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
                 ray->map.tiles[x][y].openingDirection = 1;
                 // Mark it as permanently open
                 ray->map.visitedTiles[(y * ray->map.w) + x] = SCRIPT_DOOR_OPEN;
+                // Play SFX
+                bzrPlaySfx(&ray->sfx_door_open, BZR_RIGHT);
             }
             break;
         }
@@ -665,7 +671,7 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         case SPAWN:
         {
             // Start timer to not re-trigger immediately
-            script->resetTimerSec = 60;
+            script->resetTimerSec = 90;
             // Create objects
             for (int32_t sIdx = 0; sIdx < script->thenArgs.spawnList.numSpawns; sIdx++)
             {
@@ -822,7 +828,23 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case WIN:
         {
-            // TODO unlock something or whatever.
+            // Unlock zip on the menu
+            writeNvs32(MAGTROID_UNLOCK_KEY, 1);
+            // Show bonus dialog for 100%
+            if (100 == getItemCompletePct(ray))
+            {
+                rayShowDialog(ray,
+                              "\"C - cc - chh - CHO - do you read me? Good, glad this channel works.\n\n...\n\nHank "
+                              "Waddle here, your lawyer-turned-ex-lawyer-turned-megalomaniacal super villain. Looks "
+                              "like Meta Studley wasn't able to take you out, eh? I should have listened to the "
+                              "testers who kept saying to make him harder...\n\nAnyway, I'm with the baddies now. They "
+                              "took my brain and fused it with some supercomputer they were building, which is kinda "
+                              "weird, but hey - now I can shoot lasers out of my eye. What a twist, right? Anyway, "
+                              "nice job getting 100% completion, you NERD. I'll get you next time, Cho!\"",
+                              getTexByType(ray, OBJ_SCENERY_TERMINAL));
+            }
+            // Jump to credits! This is either immediate or after the aforementioned dialog
+            ray->shouldShowCredits = true;
             break;
         }
     }

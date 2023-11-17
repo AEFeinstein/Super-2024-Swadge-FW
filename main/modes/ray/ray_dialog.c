@@ -46,7 +46,7 @@ const char* const macPuzzleText[] = {
  */
 void rayShowDialog(ray_t* ray, const char* dialogText, wsg_t* dialogPortrait)
 {
-    ray->screen = RAY_DIALOG;
+    raySwitchToScreen(RAY_DIALOG);
     if (0 == strcmp("MAC_PZL", dialogText))
     {
         uint8_t macAddr[6];
@@ -87,7 +87,7 @@ void rayDialogCheckButtons(ray_t* ray)
                 else
                 {
                     // Dialog over, return to game
-                    ray->screen = RAY_GAME;
+                    raySwitchToScreen(RAY_GAME);
                 }
             }
         }

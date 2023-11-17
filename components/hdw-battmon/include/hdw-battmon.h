@@ -1,3 +1,6 @@
+#ifndef _HDW_BATTMON_H_
+#define _HDW_BATTMON_H_
+
 /*! \file hdw-battmon.h
  *
  * \section battmon_design Design Philosophy
@@ -31,3 +34,5 @@
 void initBattmon(gpio_num_t gpio);
 void deinitBattmon(void);
 int readBattmon(void);
+
+#endif

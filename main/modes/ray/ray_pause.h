@@ -6,5 +6,6 @@
 void rayShowPause(ray_t* ray);
 void rayPauseCheckButtons(ray_t* ray);
 void rayPauseRender(ray_t* ray, uint32_t elapsedUs);
+int32_t getItemCompletePct(ray_t* ray);
 
 #endif

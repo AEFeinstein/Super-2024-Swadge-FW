@@ -6,7 +6,8 @@ typedef struct entityManager_t entityManager_t;
 typedef struct tilemap_t tilemap_t;
 typedef struct entity_t entity_t;
 
-typedef enum {
+typedef enum
+{
     ST_NULL,
     ST_TITLE_SCREEN,
     ST_READY_SCREEN,
@@ -20,7 +21,8 @@ typedef enum {
     ST_PAUSE
 } gameStateEnum_t;
 
-typedef enum {
+typedef enum
+{
     BGM_NO_CHANGE,
     BGM_MAIN,
     BGM_ATHLETIC,
@@ -29,13 +31,15 @@ typedef enum {
     BGM_NULL
 } bgmEnum_t;
 
-typedef enum {
+typedef enum
+{
     SP_PADDLE_0,
     SP_PADDLE_1,
     SP_PADDLE_2,
     SP_PADDLE_VERTICAL_0,
     SP_PADDLE_VERTICAL_1,
     SP_PADDLE_VERTICAL_2,
+    SP_BALL,
     SP_BALL_0,
     SP_BALL_1,
     SP_BALL_2,
@@ -45,7 +49,23 @@ typedef enum {
     SP_EXPLOSION_0,
     SP_EXPLOSION_1,
     SP_EXPLOSION_2,
-    SP_EXPLOSION_3
+    SP_EXPLOSION_3,
+    SP_BALL_TRAIL_0,
+    SP_BALL_TRAIL_1,
+    SP_BALL_TRAIL_2,
+    SP_BALL_TRAIL_3,
+    SP_CHO_WALK_0,
+    SP_CHO_WALK_1,
+    SP_CHO_WALK_2,
+    SP_CHO_WIN_0,
+    SP_CHO_WIN_1,
+    SP_CRAWLER_TOP,
+    SP_CRAWLER_RIGHT,
+    SP_CRAWLER_BOTTOM,
+    SP_CRAWLER_LEFT,
+    SP_RBOMB_0,
+    SP_RBOMB_1,
+    SP_RBOMB_2
 } spriteDef_t;
 
 #endif
