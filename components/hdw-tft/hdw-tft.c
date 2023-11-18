@@ -109,6 +109,7 @@ static spi_host_device_t tftSpiHost;
 
 static esp_lcd_panel_handle_t panel_handle = NULL;
 static paletteColor_t* pixels              = NULL;
+paletteColor_t* pFrameBuffer               = NULL;
 static uint16_t* s_lines[NUM_S_LINES]      = {0};
 
 static ledc_timer_t tftLedcTimer;
@@ -268,6 +269,9 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
     {
         pixels = (paletteColor_t*)malloc(sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
     }
+    pFrameBuffer = pixels;
+    void SetCachedDPXShapes( uint32_t );
+    SetCachedDPXShapes( (uint32_t)pixels );
 }
 
 /**

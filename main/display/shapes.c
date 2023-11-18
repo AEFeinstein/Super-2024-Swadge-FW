@@ -41,6 +41,15 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
 static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
                                  int xOrigin, int yOrigin, int xScale, int yScale);
 
+
+// Tricky - update values for local use.
+static uint32_t dispPxL;
+void SetCachedDPXShapes( uint32_t d ) { dispPxL = d; }
+#undef SETUP_FOR_TURBO
+#define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)dispPxL;
+
+
+
 //==============================================================================
 // Functions
 //==============================================================================
