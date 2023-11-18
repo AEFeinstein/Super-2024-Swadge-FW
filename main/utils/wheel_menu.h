@@ -56,14 +56,14 @@ typedef struct
     uint16_t anchorAngle;        ///< The angle around which the 0th menu item will be centered
     uint16_t x;                  ///< The X position of the center of the menu
     uint16_t y;                  ///< The Y position of the center of the menu
-    uint16_t centerR;            ///< The radius of the center circle of the menu, or 0 if none
+    uint16_t spokeR;             ///< The radial offset of the ring items
     uint16_t unselR;             ///< The radius of unselected items' sectors
     uint16_t selR;               ///< The radius of the selected sector
-    paletteColor_t textColor;    ///< TODO doc
-    paletteColor_t unselBgColor; ///< TODO doc
-    paletteColor_t selBgColor;   ///< TODO doc
-    paletteColor_t borderColor;  ///< TODO doc
-    bool customBack;             ///< TODO doc
+    paletteColor_t textColor;    ///< Color of the selected menu item text label
+    paletteColor_t unselBgColor; ///< Default background color of unselected items
+    paletteColor_t selBgColor;   ///< Default background color of selected items
+    paletteColor_t borderColor;  ///< Color of
+    bool customBack;             ///< Whether the center "back" circle has been customized
     bool touched;                ///< TODO doc
     bool active;                 ///< TODO doc
 } wheelMenuRenderer_t;

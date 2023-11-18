@@ -17,13 +17,10 @@
 
 // Settings bounds for the menu
 const settingParam_t* paintGetEnableLedsBounds(void);
-const settingParam_t* paintGetEnableBlinkBounds(void);
 
 // Getters / setters for the new separated values
 bool paintGetEnableLeds(void);
 void paintSetEnableLeds(bool enableLeds);
-bool paintGetEnableBlink(void);
-void paintSetEnableBlink(bool enableBlink);
 
 bool paintGetAnySlotInUse(void);
 bool paintSaveNamed(const char* name, const paintCanvas_t* canvas);

@@ -34,8 +34,10 @@ typedef struct
 typedef enum
 {
     BTN_MODE_DRAW,
-    BTN_MODE_SELECT,
+    BTN_MODE_WHEEL,
     BTN_MODE_PALETTE,
+    BTN_MODE_BROWSER,
+    BTN_MODE_DIALOG,
 } paintButtonMode_t;
 
 typedef enum

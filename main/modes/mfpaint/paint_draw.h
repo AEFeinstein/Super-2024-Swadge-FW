@@ -62,14 +62,11 @@ bool paintCanRedo(void);
 void paintApplyUndo(paintCanvas_t* canvas);
 void paintUndo(paintCanvas_t* canvas);
 void paintRedo(paintCanvas_t* canvas);
-void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col);
+void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col, bool partial);
 void paintSwapFgBgColors(void);
-void paintEnterSelectMode(void);
-void paintExitSelectMode(void);
+void paintResetButtons(void);
 void paintUpdateRecents(uint8_t selectedIndex);
 void paintUpdateLeds(void);
-void paintDrawPickPoints(void);
-void paintHidePickPoints(void);
 
 // Brush Helper Functions
 void paintSetupTool(void);

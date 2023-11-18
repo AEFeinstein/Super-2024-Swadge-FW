@@ -66,12 +66,14 @@ typedef struct
      * @brief Called when all necessary points have been selected and the final shape should be drawn
      */
     void (*fnDraw)(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col);
+    void (*fnPartial)(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col);
 } brush_t;
 
 void paintDrawSquarePen(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);
 void paintDrawCirclePen(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);
 void paintDrawLine(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);
 void paintDrawCurve(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);
+void paintDrawCurvePartial(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);
 void paintDrawRectangle(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);
 void paintDrawFilledRectangle(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);
 void paintDrawCircle(paintCanvas_t*, point_t*, uint8_t, uint16_t, paletteColor_t);

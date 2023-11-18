@@ -33,12 +33,9 @@ const char menuOptReceive[]  = "Receive";
 const char menuOptSettings[] = "Settings";
 
 const char menuOptLeds[]  = "LEDs";
-const char menuOptBlink[] = "Blink Picks";
 
 const char menuOptLedsOn[]       = "LEDs: On";
 const char menuOptLedsOff[]      = "LEDs: Off";
-const char menuOptBlinkOn[]      = "Blink Picks: On";
-const char menuOptBlinkOff[]     = "Blink Picks: Off";
 const char menuOptEraseData[]    = "Erase: All";
 char menuOptEraseSlot[]          = "Erase: Slot 1";
 const char menuOptCancelErase[]  = "Confirm: No!";
@@ -233,7 +230,6 @@ void paintSetupMainMenu(void)
 
     paintMenu->menu = startSubMenu(paintMenu->menu, menuOptSettings);
     addSettingsItemToMenu(paintMenu->menu, menuOptLeds, paintGetEnableLedsBounds(), paintGetEnableLeds());
-    addSettingsItemToMenu(paintMenu->menu, menuOptBlink, paintGetEnableBlinkBounds(), paintGetEnableBlink());
 
     paintMenu->menu = endSubMenu(paintMenu->menu);
 
@@ -286,10 +282,6 @@ void paintMenuCb(const char* opt, bool selected, uint32_t value)
         if (opt == menuOptLeds)
         {
             paintSetEnableLeds(value);
-        }
-        else if (opt == menuOptBlink)
-        {
-            paintSetEnableBlink(value);
         }
     }
 }

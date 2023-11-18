@@ -50,6 +50,27 @@ void paintDrawCurve(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, u
     }
 }
 
+void paintDrawCurvePartial(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
+{
+    for (int16_t x = -size / 2; x < (size + 1) / 2; x++)
+    {
+        for (int16_t y = -size / 2; y < (size + 1) / 2; y++)
+        {
+            if (numPoints < 4)
+            {
+                paintDrawPolygon(canvas, points, numPoints, size, col);
+            }
+            else
+            {
+                drawCubicBezierScaled(points[0].x + x, points[0].y + y, points[1].x + x, points[1].y + y, points[2].x + x,
+                                    points[2].y + y, points[3].x + x, points[3].y + y, col, canvas->x, canvas->y,
+                                    canvas->xScale, canvas->yScale);
+            }
+        }
+    }
+}
+
+
 void paintDrawRectangle(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
 {
     uint16_t x0 = (points[0].x > points[1].x) ? points[1].x : points[0].x;

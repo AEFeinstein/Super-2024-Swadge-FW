@@ -61,9 +61,9 @@ wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, con
     renderer->unselBgColor = c333;
     renderer->selBgColor   = c555;
 
-    renderer->centerR = TFT_HEIGHT / 12;
-    renderer->unselR  = TFT_HEIGHT / 4;
-    renderer->selR    = TFT_HEIGHT / 3;
+    renderer->spokeR = TFT_HEIGHT / 4;
+    renderer->unselR  = TFT_HEIGHT / 10;
+    renderer->selR    = TFT_HEIGHT / 7;
 
     renderer->x = TFT_WIDTH / 2;
     renderer->y = TFT_HEIGHT / 2;
@@ -164,9 +164,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     node_t* node = menu->items->first;
 
     // Draw background circle for the unselected area
-    drawCircleFilled(renderer->x, renderer->y, renderer->unselR, renderer->unselBgColor);
+    //drawCircleFilled(renderer->x, renderer->y, renderer->unselR, renderer->unselBgColor);
 
-    uint16_t centerR          = renderer->centerR;
+    // Add one for the convenience of looping
+    uint16_t spokeR          = renderer->spokeR;
     paletteColor_t selBgColor = renderer->selBgColor;
 
     // If we haven't customized the back option to be around the ring, then we use the center
@@ -174,15 +175,59 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     uint8_t ringItems    = menu->items->length - ((menu->parentMenu && !renderer->customBack) ? 1 : 0);
     uint16_t anchorAngle = (360 + renderer->anchorAngle - (360 / ringItems / 2)) % 360;
 
-    // We need to draw the WSGs after all the fills, so just store the locations to avoid calculating twice
-    struct
+    uint16_t itemGapSq = 0;
+    uint16_t altGapSq = 0;
+    uint16_t targetSq = ((renderer->unselR * 2) * (renderer->unselR * 2));
+    int16_t inR = renderer->unselR;
+    int16_t outR = -renderer->unselR;
+    uint16_t minAlt = UINT16_MAX;
+    uint16_t minReg = UINT16_MAX;
+
+    /*while ((itemGapSq < targetSq || altGapSq < targetSq) && (spokeR + renderer->unselR < TFT_HEIGHT))
     {
-        uint16_t x;
-        uint16_t y;
-        const wsg_t* wsg;
-        paletteColor_t bgColor;
-    } iconsToDraw[ringItems];
-    uint8_t wsgs = 0;
+        spokeR++;
+        for (int n = 0; n < 2; n++)
+        {
+            bool alt = n;
+            if ((alt && altGapSq < targetSq) || (!alt && itemGapSq < targetSq))
+            {
+                continue;
+            }
+            uint16_t r0 = alt ? spokeR + inR : spokeR;
+            uint16_t r1 = alt ? spokeR + outR : spokeR;
+
+            uint16_t x0 = getCos1024(anchorAngle) * r0 / 1024;
+            uint16_t y0 = getSin1024(anchorAngle) * r0 / 1024;
+            uint16_t x1 = getCos1024((anchorAngle + 360 / ringItems) % 360) * r1 / 1024;
+            uint16_t y1 = getSin1024((anchorAngle + 360 / ringItems) % 360) * r1 / 1024;
+
+            uint16_t sq = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0);
+            if (alt)
+            {
+                altGapSq = sq;
+                ESP_LOGI("Wheel", "Alternating gap is %" PRIu16 " wtith spokeR=%" PRIu16, altGapSq, spokeR);
+                minAlt = spokeR;
+            }
+            else
+            {
+                itemGapSq = sq;
+                ESP_LOGI("Wheel", "Regular gap is %" PRIu16 " wtith spokeR=%" PRIu16, itemGapSq, spokeR);
+                minReg = spokeR;
+            }
+        }
+    }
+
+    bool alternate = (minAlt < minReg);
+    spokeR = (alternate ? minAlt : minReg);*/
+    bool alternate = false;
+
+    wheelItemInfo_t* backInfo = NULL;
+
+    bool foundSelected = false;
+    wsg_t* selIcon = NULL;
+    paletteColor_t selItemBg = renderer->selBgColor;
+    uint16_t selX = 0;
+    uint16_t selY = 0;
 
     while (node != NULL)
     {
@@ -192,102 +237,69 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
         if (info != NULL)
         {
-            // Calculate where this sector starts
-            uint16_t startAngle = (anchorAngle + info->position * 360 / ringItems) % 360;
-            uint16_t endAngle   = (anchorAngle + (info->position + 1) * 360 / ringItems) % 360;
-
-            // We'll use the center angle for drawing icons, filling in, etc.
-            uint16_t centerAngle = ((startAngle < endAngle) ? (startAngle + (endAngle - startAngle) / 2)
-                                                            : (startAngle + ((endAngle + 360) - startAngle) / 2))
-                                   % 360;
-
-            uint16_t r = (renderer->touched && menu->currentItem == node) ? renderer->selR : renderer->unselR;
-
-            // If there's an icon, or the item's eventual color doesn't match the normal BG color
-            if (info->icon
-                || ((renderer->touched && menu->currentItem == node) ? (info->selectedBg != selBgColor)
-                                                                     : (info->unselectedBg != renderer->unselBgColor)))
+            if (menuItemIsBack(item))
             {
-                iconsToDraw[wsgs].x = renderer->x + getCos1024(centerAngle) * (centerR + (r - centerR) / 2) / 1024
-                                      - (info->icon ? info->icon->w / 2 : 0);
-                iconsToDraw[wsgs].y = renderer->y - getSin1024(centerAngle) * (centerR + (r - centerR) / 2) / 1024
-                                      - (info->icon ? info->icon->h / 2 : 0);
-                iconsToDraw[wsgs].wsg = info->icon;
-                iconsToDraw[wsgs].bgColor
-                    = (renderer->touched && menu->currentItem == node) ? info->selectedBg : info->unselectedBg;
-                ++wsgs;
+                // This is the center "back" circle, so don't draw it as a circle
+                // But, do save the info for later
+                backInfo = info;
+
+                // Next item!
+                node = node->next;
+                continue;
             }
+
+            // Calculate where this sector starts
+            uint16_t centerAngle = (anchorAngle + info->position * 360 / ringItems + (180 / ringItems)) % 360;
+
+            bool cur = (renderer->touched && menu->currentItem == node);
+            paletteColor_t bg = cur ? info->selectedBg : info->unselectedBg;
+
+            uint16_t itemSpokeR = alternate ? (((info->position % 2) == 0) ? spokeR + inR : spokeR + outR) : spokeR;
+
+            uint16_t centerX = renderer->x + getCos1024(centerAngle) * itemSpokeR / 1024;
+            uint16_t centerY = renderer->y - getSin1024(centerAngle) * itemSpokeR / 1024;
 
             if (renderer->touched && menu->currentItem == node)
             {
-                if (info->selectedBg != selBgColor)
+                // Don't draw the selected item yet
+                foundSelected = true;
+                selItemBg = info->selectedBg;
+                selIcon = info->icon;
+                selX = centerX;
+                selY = centerY;
+            }
+            else
+            {
+                drawCircleFilled(centerX, centerY, renderer->unselR, bg);
+                if (info->icon)
                 {
-                    selBgColor = info->selectedBg;
+                    drawWsgSimple(info->icon, centerX - info->icon->w / 2, centerY - info->icon->h / 2);
                 }
-
-                fillCircleSector(renderer->x, renderer->y, centerR, r, startAngle, endAngle, selBgColor);
-            }
-            else if (info->unselectedBg != renderer->unselBgColor)
-            {
-                fillCircleSector(renderer->x, renderer->y, centerR, r, startAngle, endAngle, info->unselectedBg);
-            }
-
-            drawLine(renderer->x + getCos1024(startAngle) * centerR / 1024,
-                     renderer->y - getSin1024(startAngle) * centerR / 1024,
-                     renderer->x + getCos1024(startAngle) * r / 1024, renderer->y - getSin1024(startAngle) * r / 1024,
-                     renderer->borderColor, 0);
-
-            drawLine(renderer->x + getCos1024(endAngle) * centerR / 1024,
-                     renderer->y - getSin1024(endAngle) * centerR / 1024, renderer->x + getCos1024(endAngle) * r / 1024,
-                     renderer->y - getSin1024(endAngle) * r / 1024, renderer->borderColor, 0);
-
-            for (uint16_t ang = startAngle; ang != endAngle; ang = (ang + 1) % 360)
-            {
-                // Fill in the whole thing
-                drawLine(renderer->x + getCos1024(ang) * (r + 1) / 1024, renderer->y - getSin1024(ang) * (r + 1) / 1024,
-                         renderer->x + getCos1024((ang + 1) % 360) * (r + 1) / 1024,
-                         renderer->y - getSin1024((ang + 1) % 360) * (r + 1) / 1024, renderer->borderColor, 0);
+                drawCircle(centerX, centerY, renderer->unselR, renderer->borderColor);
             }
         }
 
         node = node->next;
     }
 
-    if (!renderer->touched || !menu->currentItem || (!renderer->customBack && menuItemIsBack(menu->currentItem->val)))
+    bool centerSel = renderer->touched && (!menu->currentItem || menuItemIsBack(menu->currentItem));
+    paletteColor_t backSelBg = backInfo ? backInfo->selectedBg : renderer->selBgColor;
+    paletteColor_t backUnselBg = backInfo ? backInfo->unselectedBg : renderer->unselBgColor;
+    drawCircleFilled(renderer->x, renderer->y, centerSel ? renderer->selR : renderer->unselR, centerSel ? backSelBg : backUnselBg);
+    if (backInfo && backInfo->icon)
     {
-        // Here, we handle the case that the
-
-        if (renderer->touched)
-        {
-            // This special case is just to fill faster than flood fill, it should work fine
-            drawCircleFilled(renderer->x, renderer->y, centerR, selBgColor);
-        }
-
-        // draw the center circle border after
-        drawCircle(renderer->x, renderer->y, centerR, renderer->borderColor);
+        drawWsgSimple(backInfo->icon, renderer->x - backInfo->icon->w / 2, renderer->y - backInfo->icon->h / 2);
     }
-    else
+    drawCircle(renderer->x, renderer->y, centerSel ? renderer->selR : renderer->unselR, renderer->borderColor);
+
+    if (foundSelected)
     {
-        //
-        drawCircleFilled(renderer->x, renderer->y, centerR, renderer->unselBgColor);
-
-        // Draw the center circle first to establish bounds for the fill
-        drawCircle(renderer->x, renderer->y, centerR, renderer->borderColor);
-    }
-
-    for (uint8_t i = 0; i < wsgs; i++)
-    {
-        if (iconsToDraw[i].bgColor != renderer->unselBgColor)
+        drawCircleFilled(selX, selY, renderer->selR, selItemBg);
+        if (selIcon)
         {
-            // Fill in the background
-            /*floodFill(iconsToDraw[i].x, iconsToDraw[i].y, iconsToDraw[i].bgColor, renderer->x - renderer->selR,
-                      renderer->y - renderer->selR, renderer->x + renderer->selR, renderer->y + renderer->selR);*/
+            drawWsgSimple(selIcon, selX - selIcon->w / 2, selY - selIcon->h / 2);
         }
-
-        if (iconsToDraw[i].wsg)
-        {
-            drawWsgSimple(iconsToDraw[i].wsg, iconsToDraw[i].x, iconsToDraw[i].y);
-        }
+        drawCircle(selX, selY, renderer->selR, renderer->borderColor);
     }
 
     if (renderer->textBox && menu->currentItem && renderer->touched)
@@ -338,7 +350,7 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
     renderer->touched = true;
     renderer->active  = true;
 
-    if (radius <= (renderer->centerR * 1024 / renderer->selR))
+    if (radius <= 512)
     {
         if (!renderer->customBack && menu->parentMenu)
         {

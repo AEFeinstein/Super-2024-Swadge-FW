@@ -1,6 +1,7 @@
 #include "paint_util.h"
 
 #include "paint_common.h"
+#include "paint_nvs.h"
 
 #include "shapes.h"
 
@@ -55,12 +56,12 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
 
     uint16_t x = x0;
     uint16_t y = y0;
-    uint16_t stop, extra;
+    uint16_t stop;
 
     int16_t xDir = (x0 < x1) ? 1 : -1;
     int16_t yDir = (y0 < y1) ? 1 : -1;
 
-    if (waveHeight < 2 && waveLength < 2)
+    if (waveHeight < 1 && waveLength < 1)
     {
         // (a 2xN square wave is just a 2-thick line)
         return;
@@ -69,10 +70,7 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
     if (xDiff > yDiff)
     {
         // Horizontal -- waveHeight is on Y axis
-        PAINT_LOGD("This wave is %d wide and %d tall, which means it will contain %d complete waves plus %d extra",
-                   xDiff, yDiff, xDiff / (waveLength * 2), xDiff % (waveLength * 2));
-        extra = xDiff % (waveLength * 2);
-        stop  = x + waveLength * xDir - extra / 2;
+        stop  = x + waveLength * xDir;
 
         while (x != x1)
         {
@@ -92,8 +90,7 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
     else
     {
         // Vertical -- waveHeight is on X axis
-        extra = yDiff % (waveLength * 2);
-        stop  = y + waveLength * yDir - extra / 2;
+        stop  = y + waveLength * yDir;
 
         while (y != y1)
         {
@@ -132,13 +129,50 @@ void drawRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, in
 void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColor_t replace)
 {
     // super inefficient dumb color replace, maybe do iterated color fill later?
-    for (uint8_t x = 0; x < canvas->w; x++)
+    if (canvas->buffered)
     {
-        for (uint8_t y = 0; y < canvas->h; y++)
+        uint8_t searchHigh = 0xF0;
+        uint8_t searchLow  = 0x0F;
+        uint8_t replHigh = 0xF0;
+        uint8_t replLow = 0x0F;
+        for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
         {
-            if (getPxTft(canvas->x + x * canvas->xScale, canvas->y + y * canvas->yScale) == search)
+            if (canvas->palette[i] == search)
             {
-                setPxScaled(x, y, replace, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+                searchHigh = (i & 0x0F) << 4;
+                searchLow = (i & 0x0F);
+            }
+            else if (canvas->palette[i] == replace)
+            {
+                replHigh = (i & 0x0F) << 4;
+                replLow = (i & 0x0F);
+            }
+        }
+
+        for (int n = 0; n < (canvas->w * canvas->h + 1) / 2; n++)
+        {
+            uint8_t val = canvas->buffer[n];
+            if ((val & 0xF0) == searchHigh)
+            {
+                canvas->buffer[n] = (canvas->buffer[n] & 0x0F) | replHigh;
+            }
+            if ((val & 0x0F) == searchLow)
+            {
+                canvas->buffer[n] = (canvas->buffer[n] & 0xF0) | replLow;
+            }
+        }
+        paintBlitCanvas(canvas);
+    }
+    else
+    {
+        for (uint8_t x = 0; x < canvas->w; x++)
+        {
+            for (uint8_t y = 0; y < canvas->h; y++)
+            {
+                if (getPxTft(canvas->x + x * canvas->xScale, canvas->y + y * canvas->yScale) == search)
+                {
+                    setPxScaled(x, y, replace, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
+                }
             }
         }
     }

@@ -24,7 +24,6 @@
 static const char KEY_PAINT_LAST_SLOT[]    = "paint_last";
 
 PAINT_BOOL_PARAM(EnableLeds, true);
-PAINT_BOOL_PARAM(EnableBlink, true);
 
 static int32_t paintReadParam(const settingParam_t* param);
 static bool paintWriteParam(const settingParam_t* param, int32_t val);
@@ -32,11 +31,6 @@ static bool paintWriteParam(const settingParam_t* param, int32_t val);
 const settingParam_t* paintGetEnableLedsBounds(void)
 {
     return &paintEnableLedsParam;
-}
-
-const settingParam_t* paintGetEnableBlinkBounds(void)
-{
-    return &paintEnableBlinkParam;
 }
 
 bool paintGetEnableLeds(void)
@@ -47,16 +41,6 @@ bool paintGetEnableLeds(void)
 void paintSetEnableLeds(bool enableLeds)
 {
     paintWriteParam(&paintEnableLedsParam, enableLeds);
-}
-
-bool paintGetEnableBlink(void)
-{
-    return paintReadParam(&paintEnableBlinkParam);
-}
-
-void paintSetEnableBlink(bool enableBlink)
-{
-    paintWriteParam(&paintEnableBlinkParam, enableBlink);
 }
 
 static int32_t paintReadParam(const settingParam_t* param)

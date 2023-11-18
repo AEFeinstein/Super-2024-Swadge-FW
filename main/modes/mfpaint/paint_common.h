@@ -265,14 +265,6 @@ typedef struct
     // If set, the canvas will be cleared and the screen will be redrawn. Set on startup.
     bool clearScreen;
 
-    // Set to redraw the toolbar on the next loop, when a brush or color is being selected
-    bool redrawToolbar;
-
-    // Whether all pick points should be redrawn with the current fgColor, for when the color changes while we're
-    // picking
-    // TODO: This might not be necessary any more since we redraw those constantly.
-    bool recolorPickPoints;
-
     //////// Undo Data
 
     // The linked list of undo data
@@ -281,17 +273,6 @@ typedef struct
     // After an undo is performed, this points to the action that was undone.
     // This allows redo to work. If the image is edited, this and all following items are removed.
     node_t* undoHead;
-
-    /// @brief Canvas stored so we can draw over it
-    paintUndo_t* storedCanvas;
-
-    //////// Tool Wheel
-    bool canvasHidden;
-
-    bool showToolWheel;
-
-    // Tool wheel shown even though touch released
-    bool toolWheelWaiting;
 
     // The menu for the tool wheel
     menu_t* toolWheel;
