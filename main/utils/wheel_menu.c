@@ -175,56 +175,14 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     uint8_t ringItems    = menu->items->length - ((menu->parentMenu && !renderer->customBack) ? 1 : 0);
     uint16_t anchorAngle = (360 + renderer->anchorAngle - (360 / ringItems / 2)) % 360;
 
-    uint16_t itemGapSq = 0;
-    uint16_t altGapSq  = 0;
-    uint16_t targetSq  = ((renderer->unselR * 2) * (renderer->unselR * 2));
-    int16_t inR        = renderer->unselR / 3;
-    int16_t outR       = -renderer->unselR / 3;
-    uint16_t minAlt    = UINT16_MAX;
-    uint16_t minReg    = UINT16_MAX;
-
-    /*while ((itemGapSq < targetSq || altGapSq < targetSq) && (spokeR + renderer->unselR < TFT_HEIGHT))
-    {
-        spokeR++;
-        for (int n = 0; n < 2; n++)
-        {
-            bool alt = n;
-            if ((alt && altGapSq < targetSq) || (!alt && itemGapSq < targetSq))
-            {
-                continue;
-            }
-            uint16_t r0 = alt ? spokeR + inR : spokeR;
-            uint16_t r1 = alt ? spokeR + outR : spokeR;
-
-            uint16_t x0 = getCos1024(anchorAngle) * r0 / 1024;
-            uint16_t y0 = getSin1024(anchorAngle) * r0 / 1024;
-            uint16_t x1 = getCos1024((anchorAngle + 360 / ringItems) % 360) * r1 / 1024;
-            uint16_t y1 = getSin1024((anchorAngle + 360 / ringItems) % 360) * r1 / 1024;
-
-            uint16_t sq = (x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0);
-            if (alt)
-            {
-                altGapSq = sq;
-                ESP_LOGI("Wheel", "Alternating gap is %" PRIu16 " wtith spokeR=%" PRIu16, altGapSq, spokeR);
-                minAlt = spokeR;
-            }
-            else
-            {
-                itemGapSq = sq;
-                ESP_LOGI("Wheel", "Regular gap is %" PRIu16 " wtith spokeR=%" PRIu16, itemGapSq, spokeR);
-                minReg = spokeR;
-            }
-        }
-    }
-
-    bool alternate = (minAlt < minReg);
-    spokeR = (alternate ? minAlt : minReg);*/
+    int16_t inR    = renderer->unselR / 3;
+    int16_t outR   = -renderer->unselR / 3;
     bool alternate = false;
 
     wheelItemInfo_t* backInfo = NULL;
 
     bool foundSelected       = false;
-    wsg_t* selIcon           = NULL;
+    const wsg_t* selIcon     = NULL;
     paletteColor_t selItemBg = renderer->selBgColor;
     uint16_t selX            = 0;
     uint16_t selY            = 0;
