@@ -58,6 +58,7 @@ DECL_SETTING(led_br, 0, MAX_LED_BRIGHTNESS, 5);
 DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
 DECL_SETTING(scrn_sv, 0, 300, 20);
+DECL_SETTING(flip, 0, 1, 0);
 
 //==============================================================================
 // Static Function Prototypes
@@ -158,6 +159,9 @@ void readAllSettings(void)
 
     // Read the screensaver setting
     readSetting(&scrn_sv_setting);
+
+    // Read the flip setting
+    readSetting(&flip_setting);
 }
 
 //==============================================================================
@@ -473,4 +477,19 @@ bool getTestModePassedSetting(void)
 bool setTestModePassedSetting(bool status)
 {
     return setSetting(&test_setting, status);
+}
+
+bool getFlipSwadgeSetting(void)
+{
+    return flip_setting.val;
+}
+
+const settingParam_t* getFlipSwadgeSettingBounds(void)
+{
+    return &flip_param;
+}
+
+bool setFlipSwadgeSetting(bool val)
+{
+    return setSetting(&flip_setting, val);
 }

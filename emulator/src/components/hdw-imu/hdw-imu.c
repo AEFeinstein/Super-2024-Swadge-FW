@@ -31,7 +31,7 @@ LSM6DSLData LSM6DSL;
  * GPIO_PULLUP_ENABLE if internal pull-ups should be used
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, bool flip)
 {
     // Default to the swadge sitting still, face-up on a table somewhere on earth
     _accelX = 0;

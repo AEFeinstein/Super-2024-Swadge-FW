@@ -127,4 +127,8 @@ bool setColorchordModeSetting(colorchordMode_t);
 bool getTestModePassedSetting(void);
 bool setTestModePassedSetting(bool status);
 
+bool getFlipSwadgeSetting(void);
+const settingParam_t* getFlipSwadgeSettingBounds(void);
+bool setFlipSwadgeSetting(bool val);
+
 #endif

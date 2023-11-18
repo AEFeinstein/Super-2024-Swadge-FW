@@ -26,6 +26,7 @@
 #include "mode_credits.h"
 
 #include "settingsManager.h"
+#include "hdw-nvs.h"
 
 //==============================================================================
 // Structs
@@ -89,6 +90,7 @@ static const char bgmVolSettingLabel[]       = "BGM";
 static const char sfxVolSettingLabel[]       = "SFX";
 static const char micSettingLabel[]          = "MIC";
 static const char screenSaverSettingsLabel[] = "Screensaver: ";
+static const char flipSwadgeLabel[]          = "Reverse Thrust!";
 
 static const int32_t screenSaverSettingsValues[] = {
     0,   // Off
@@ -170,11 +172,34 @@ static void mainMenuEnterMode(void)
     addSettingsOptionsItemToMenu(mainMenu->menu, screenSaverSettingsLabel, screenSaverSettingsOptions,
                                  screenSaverSettingsValues, ARRAY_SIZE(screenSaverSettingsValues),
                                  getScreensaverTimeSettingBounds(), getScreensaverTimeSetting());
+    addSingleItemToMenu(mainMenu->menu, flipSwadgeLabel);
+
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     // Show the battery on the main menu
     setShowBattery(mainMenu->menu, true);
+
+    // If this flag is set, the user just clicked "Flip Screen"
+    // So, go back to the menu item they were on previously
+    int32_t justFlipped;
+    if (readNvs32("justFlipped", &justFlipped))
+    {
+        if (justFlipped)
+        {
+            menu_t* menu = menuNavigateToItem(mainMenu->menu, settingsLabel);
+            if (NULL != menu)
+            {
+                menu = menuSelectCurrentItem(menu);
+                menu = menuNavigateToItem(menu, flipSwadgeLabel);
+                if (NULL != menu)
+                {
+                    mainMenu->menu = menu;
+                }
+            }
+            writeNvs32("justFlipped", 0);
+        }
+    }
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
@@ -362,6 +387,12 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modeCredits.modeName)
         {
             switchToSwadgeMode(&modeCredits);
+        }
+        else if (flipSwadgeLabel == label)
+        {
+            setFlipSwadgeSetting(!getFlipSwadgeSetting());
+            writeNvs32("justFlipped", 1);
+            switchToSwadgeMode(&mainMenuMode);
         }
     }
     else

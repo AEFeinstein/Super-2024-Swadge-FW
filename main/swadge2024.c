@@ -206,6 +206,8 @@ void app_main(void)
     // Read settings from NVS
     readAllSettings();
 
+    bool flip = getFlipSwadgeSetting();
+
     // If test mode was passed
     if (getTestModePassedSetting())
     {
@@ -252,6 +254,16 @@ void app_main(void)
         GPIO_NUM_8,  // Start
         GPIO_NUM_5   // Select
     };
+    gpio_num_t pushButtonsFlip[] = {
+        GPIO_NUM_4,  // Down
+        GPIO_NUM_0,  // Up
+        GPIO_NUM_1,  // Right
+        GPIO_NUM_2,  // Left
+        GPIO_NUM_15, // B
+        GPIO_NUM_16, // A
+        GPIO_NUM_5,  // Select
+        GPIO_NUM_8,  // Start
+    };
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM9,  // GPIO_NUM_9
         TOUCH_PAD_NUM10, // GPIO_NUM_10
@@ -260,8 +272,8 @@ void app_main(void)
         TOUCH_PAD_NUM13, // GPIO_NUM_13
         TOUCH_PAD_NUM14, // GPIO_NUM_14
     };
-    initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
-                sizeof(touchPads) / sizeof(touchPads[0]));
+    initButtons(flip ? pushButtonsFlip : pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
+                sizeof(touchPads) / sizeof(touchPads[0]), flip);
 
     // Init buzzer. This must be called before initMic()
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
@@ -289,7 +301,8 @@ void app_main(void)
             true,                       // PWM backlight
             LEDC_CHANNEL_2,             // Channel to use for PWM backlight
             LEDC_TIMER_2,               // Timer to use for PWM backlight
-            getTftBrightnessSetting()); // TFT Brightness
+            getTftBrightnessSetting(),  // TFT Brightness
+            flip);                      // Flip Display
 
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
@@ -306,7 +319,8 @@ void app_main(void)
     {
         initAccelerometer(GPIO_NUM_3,  // SDA
                           GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_ENABLE);
+                          GPIO_PULLUP_ENABLE,
+                          flip);
         accelIntegrate();
     }
 
