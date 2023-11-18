@@ -12,6 +12,7 @@ void lumberjackDrawWaterLevel(void);
 void lumberjackUpdate(int64_t elapseUs);
 
 
+
 void lumberjackTitleLoop(int64_t elapsedUs);
 void lumberjackGameLoop(int64_t elapsedUs);
 

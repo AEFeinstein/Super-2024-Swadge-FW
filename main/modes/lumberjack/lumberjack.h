@@ -45,10 +45,12 @@ typedef struct
     menu_t* menu;
     menuLogbookRenderer_t* menuLogbookRenderer;
     font_t logbook;
+    font_t arcade;
 
     uint8_t selected;
     bool networked;
     bool host;
+    bool instructions;
 
     // The pass throughs
     p2pInfo p2p;

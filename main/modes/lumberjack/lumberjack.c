@@ -13,8 +13,9 @@
 #include "lumberjackGame.h"
 
 #define LUMBERJACK_VLEN             7
-#define LUMBERJACK_VERSION          "231114a"
+#define LUMBERJACK_VERSION          "2311174a"
 
+#define DEFAULT_HIGHSCORE           5000
 
 static void lumberjackEnterMode(void);
 static void lumberjackExitMode(void);
@@ -22,6 +23,7 @@ static void lumberjackMainLoop(int64_t elapsedUs);
 static void lumberjackMenuLoop(int64_t elapsedUs);
 static void lumberjackAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void lumberjackInstructionText(const char* string, paletteColor_t color, int locationX, int locationY);
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi);
 static void lumberjackEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
@@ -37,11 +39,11 @@ static void lumberjackJoinGame(void);
 static bool lumberjackChoUnlocked(void);
 static bool lumberjackSwadgeGuyUnlocked(void);
 
+
 static const char lumberjackName[]   = "Lumber Jacks";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
 static const char lumberjackInstructions[] = "How to Play";
-static const char lumberjackBack[]   = "Back";
 static const char lumberjackExit[]   = "Exit";
 
 static char lumberjackRedCharacter[]          = "Character: Red";
@@ -59,7 +61,7 @@ const char  LUMBERJACK_SAVE[] = "lumberjackdata";
 
 swadgeMode_t lumberjackMode = {
     .modeName                 = lumberjackName,
-    .wifiMode                 = ESP_NOW_IMMEDIATE,
+    .wifiMode                 = ESP_NOW,
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
@@ -94,7 +96,7 @@ static void lumberjackEnterMode(void)
     lumberjackLoadSave();
 
     loadFont("logbook.font", &lumberjack->logbook, false);
-
+    loadFont("eightbit_atari_grube2.font", &lumberjack->arcade, false);
     lumberjack->menu                = initMenu(lumberjackName, lumberjackMenuCb);
     lumberjack->menuLogbookRenderer = initMenuLogbookRenderer(&lumberjack->logbook);
 
@@ -175,19 +177,19 @@ static void lumberjackLoadSave(void)
     
     int highscore = lumberjack->save.highScore;
 
-    if (highscore < 5000)
+    if (highscore < DEFAULT_HIGHSCORE)
     {
-        lumberjack->save.highScore = 5000;
+        lumberjack->save.highScore = DEFAULT_HIGHSCORE;
     }
 
-    if (lumberjack->save.attackHighScore < 5000)
+    if (lumberjack->save.attackHighScore < DEFAULT_HIGHSCORE)
     {
-        lumberjack->save.attackHighScore = 5000;
+        lumberjack->save.attackHighScore = DEFAULT_HIGHSCORE;
     }
 
-    if (lumberjack->save.panicHighScore < 5000)
+    if (lumberjack->save.panicHighScore < DEFAULT_HIGHSCORE)
     {
-        lumberjack->save.panicHighScore = 5000;
+        lumberjack->save.panicHighScore = DEFAULT_HIGHSCORE;
     }
 
     writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
@@ -227,6 +229,7 @@ static void lumberjackExitMode(void)
     free(lumberjack->charactersArray);
     p2pDeinit(&lumberjack->p2p);
     freeFont(&lumberjack->logbook);
+    freeFont(&lumberjack->arcade);
     deinitMenu(lumberjack->menu);
     deinitMenuLogbookRenderer(lumberjack->menuLogbookRenderer);
     free(lumberjack);
@@ -259,7 +262,6 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
         {
             if (evt.state & PB_B)
             {
-                ESP_LOGD(LUM_TAG, "Mac Daddy!");
                 lumberjack->instructions = false;
             }
         }
@@ -268,8 +270,103 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
             lumberjack->menu = menuButton(lumberjack->menu, evt);
         }
     }
-
     drawMenuLogbook(lumberjack->menu, lumberjack->menuLogbookRenderer, elapsedUs);
+    if (lumberjack->instructions)
+    {
+        fillDisplayArea(0, 0, TFT_WIDTH , TFT_HEIGHT , c145);
+
+        
+        const char* closeText = "Press B to close";
+        int16_t cWidthH = textWidth(&lumberjack->arcade, closeText);
+        int16_t dOffset = 15;
+        int16_t dyOffset = 50;
+        int16_t iWidth = 10;
+        
+        
+        if (lumberjack->gameMode == LUMBERJACK_MODE_PANIC)
+        {
+
+            const char* titleText = "Panic";
+            int16_t tWidthH = textWidth(&lumberjack->arcade, titleText);
+            lumberjackInstructionText(titleText, c555, (TFT_WIDTH-tWidthH)/2, 15);
+
+            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAx blocks lowers water\nDon't drown";
+            /*
+            lumberjackInstructionText("Press A to jump", c355, dOffset, 50);
+            lumberjackInstructionText("Avoid upright baddies", c355, dOffset, 70);
+            lumberjackInstructionText("Hit baddies from under", c355, dOffset, 90);
+            lumberjackInstructionText("Then go kick them off", c355, dOffset, 110);
+            lumberjackInstructionText("Duck Down to avoid ghost", c355, dOffset, 130);
+            lumberjackInstructionText("Ax blocks lowers water", c355, dOffset, 150);
+            */
+            dOffset = 15; dyOffset = 49;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+            
+            dOffset = 15; dyOffset = 52;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+
+            dOffset = 14; dyOffset = 50;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+            
+            dOffset = 16; dyOffset = 50;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth + 1, TFT_HEIGHT - dOffset);
+
+            dOffset = 15; dyOffset = 50;
+            drawTextWordWrap(&lumberjack->arcade, c355, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+            
+        }
+        else if (lumberjack->gameMode == LUMBERJACK_MODE_ATTACK)
+        {
+            const char* titleText = "Attack";
+            int16_t tWidthH = textWidth(&lumberjack->arcade, titleText);
+            lumberjackInstructionText(titleText, c555, (TFT_WIDTH-tWidthH)/2, 15);
+
+            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAx blocks give item\nPress B uses item\n  Upgrange: Harder baddies\n  Impearvious: Invincible\n  Grapes O' Wrath: Flip baddies";
+        /*
+            lumberjackInstructionText("Press A to jump", c355, dOffset, 50);
+            lumberjackInstructionText("Avoid upright baddies", c355, dOffset, 70);
+            lumberjackInstructionText("Hit baddies from under", c355, dOffset, 90);
+            lumberjackInstructionText("Then go kick them off", c355, dOffset, 110);
+            lumberjackInstructionText("Duck Down to avoid ghost", c355, dOffset, 130);
+            lumberjackInstructionText("Ax blocks give items", c355, dOffset, 150);
+            lumberjackInstructionText("Press B uses item", c355, dOffset, 170);
+        */
+            dOffset = 15; dyOffset = 49;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+            
+            dOffset = 15; dyOffset = 52;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+
+            dOffset = 14; dyOffset = 50;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+            
+            dOffset = 16; dyOffset = 50;
+            drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth + 1, TFT_HEIGHT - dOffset);
+
+            dOffset = 15; dyOffset = 50;
+            drawTextWordWrap(&lumberjack->arcade, c355, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
+            
+        }
+
+        dOffset = 15; dyOffset = 50;
+
+        //dOffset = 20;
+        //drawText(&lumberjack->arcade, c555, closeText, (TFT_WIDTH-cWidthH)/2,(TFT_HEIGHT - dOffset - 5));
+        lumberjackInstructionText(closeText, c555, (TFT_WIDTH-cWidthH)/2,(TFT_HEIGHT - dOffset - 5));
+        
+    }
+}
+
+static void lumberjackInstructionText(const char* string, paletteColor_t color, int locationX, int locationY)
+{
+    drawText(&lumberjack->arcade, c000, string, locationX, locationY-1);
+    drawText(&lumberjack->arcade, c000, string, locationX, locationY+2);
+    drawText(&lumberjack->arcade, c000, string, locationX -1, locationY);
+    drawText(&lumberjack->arcade, c000, string, locationX + 1, locationY);
+    drawText(&lumberjack->arcade, color, string, locationX, locationY);
+
+    //drawTextWordWrap(&lumberjack->arcade, c555, string, &dOffset, &dOffset, TFT_WIDTH - dOffset, TFT_HEIGHT - dOffset);
+
 }
 
 static void lumberjackAudioCallback(uint16_t* samples, uint32_t sampleCnt)
@@ -510,6 +607,7 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
 
         if (label == lumberjackInstructions)
         {
+            
             if (lumberjack->gameMode == LUMBERJACK_MODE_PANIC)
             {
                 lumberjack->instructions = true;
@@ -562,10 +660,6 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
             lumberjack->selected = 3;
         }
 
-        if (label == lumberjackBack)
-        {
-            //.switchToSwadgeMode(&mainMenuMode);
-        }
     }
     else
     {
