@@ -1,6 +1,6 @@
 /**
  * @file jukebox.c
- * @author Brycey92
+ * @author Brycey92 & VanillyNeko
  * @brief Equivalent to a sound-test mode from older games
  * @date 2023-08-26
  */
