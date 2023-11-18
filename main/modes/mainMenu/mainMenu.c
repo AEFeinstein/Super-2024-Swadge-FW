@@ -136,7 +136,6 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, slideWhistleMode.modeName);
     addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
@@ -144,6 +143,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, slideWhistleMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
@@ -178,6 +178,9 @@ static void mainMenuEnterMode(void)
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
+
+    // Reset the accelerometer
+    accelSetRegistersAndReset();
 }
 
 /**

@@ -102,7 +102,7 @@ typedef enum
 void  slideWhistleEnterMode(void);
 void  slideWhistleExitMode(void);
 void  slideWhistleButtonCallback(buttonEvt_t* evt);
-//void  slideWhistleTouchCallback(touch_event_t* evt);
+void  slideWhistleTouchCallback(void);
 void  slideWhistleAccelerometerHandler(int16_t x, int16_t y, int16_t z);
 void  slideWhistleMainLoop(int64_t elapsedUs);
 void  slideWhistleBeatTimerFunc(void* arg __attribute__((unused)));
@@ -161,7 +161,7 @@ typedef struct
 // The swadge mode
 swadgeMode_t slideWhistleMode =
 {
-    .modeName = "TechnoSlideWhistle",
+    .modeName = "Midi Slide Whistle",
     .wifiMode = NO_WIFI,
     .overrideUsb = false,
     .usesAccelerometer = true,
@@ -1226,17 +1226,24 @@ void  slideWhistleExitMode(void)
  * handled by interrupts and queued up for this callback, so there are no
  * strict timing restrictions for this function.
  *
- * @param evt The button event that occurred
  */
-//TODO: replace/refactor this
-/*void  slideWhistleTouchCallback(touch_event_t* evt)
+void  slideWhistleTouchCallback(void)
 {
-    slideWhistle->rhythmNoteIdx = 0;
-    slideWhistle->lastCallTimeUs = 0;
-    slideWhistle->touchHeld = evt->state != 0;
-    slideWhistle->shouldPlay = evt->state != 0 || slideWhistle->aHeld;
-    //slideWhistle->touchPosition = roundf((evt->position * BAR_X_WIDTH) / 255);
-}*/
+    int32_t phi, r, intensity;
+    if (getTouchJoystick(&phi, &r, &intensity))
+    {
+        slideWhistle->rhythmNoteIdx = 0;
+        slideWhistle->lastCallTimeUs = 0;
+        slideWhistle->touchHeld = true;//evt->state != 0;
+        slideWhistle->shouldPlay = true;//evt->state != 0 || slideWhistle->aHeld;
+        slideWhistle->touchPosition = phi;//roundf((evt->position * BAR_X_WIDTH) / 255);
+    }
+    else
+    {
+        slideWhistle->touchHeld = false;
+        slideWhistle->shouldPlay = slideWhistle->aHeld;
+    }
+}
 
 /**
  * @brief Button callback function, plays notes and switches parameters
@@ -1340,7 +1347,6 @@ void  slideWhistleButtonCallback(buttonEvt_t* evt)
 void  slideWhistleAccelerometerHandler(int16_t x, int16_t y, int16_t z)
 {
     // Get the centroid at the same rate at the accel for smoothness
-    //TODO: replace/refactor this
     //getTouchCentroid(&slideWhistle->touchPosition, &slideWhistle->touchIntensity);
     slideWhistle->touchPosition = (slideWhistle->touchPosition * BAR_X_WIDTH) / 1023;
     slideWhistle->touchPosition = CLAMP(BAR_X_MARGIN + slideWhistle->touchPosition, BAR_X_MARGIN,
@@ -1380,13 +1386,17 @@ void  slideWhistleAccelerometerHandler(int16_t x, int16_t y, int16_t z)
  */
 void  slideWhistleMainLoop(int64_t elapsedUs)
 {
-    //TODO: migrate additional input callback types
-    //.fnTouchCallback = slideWhistleTouchCallback,
     int16_t a_x, a_y, a_z;
-    if (ESP_OK == accelGetAccelVecRaw(&a_x, &a_y, &a_z))
+    if (ESP_OK == accelIntegrate() && ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
     {
+        // Values are roughly -256 to 256, so divide, clamp, and save
+        a_x = CLAMP((a_x) / 2, -128, 127);
+        a_y = CLAMP((a_y) / 2, -128, 127);
+        a_z = CLAMP((a_z) / 2, -128, 127);
         slideWhistleAccelerometerHandler(a_x, a_y, a_z);
     }
+
+    slideWhistleTouchCallback();
 
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
