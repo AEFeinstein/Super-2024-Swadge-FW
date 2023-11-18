@@ -17,6 +17,7 @@
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
+#include "modeDice.h"
 #include "mode_pinball.h"
 #include "ultimateTTT.h"
 #include "touchTest.h"
@@ -161,6 +162,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, diceMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     addSingleItemToMenu(mainMenu->menu, introMode.modeName);
@@ -357,9 +359,9 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&tttMode);
         }
-        else if (label == timerMode.modeName)
+        else if (label == diceMode.modeName)
         {
-            switchToSwadgeMode(&timerMode);
+            switchToSwadgeMode(&diceMode);
         }
         else if (label == touchTestMode.modeName)
         {
