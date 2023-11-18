@@ -81,6 +81,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv                   = calloc(1, sizeof(lumberjackVars_t));
     lumv->lumberjackMain   = main;
     lumv->localPlayerType  = characterIndex;
+    lumv->netPlayerType    = 1;
     lumv->score            = 0;
     lumv->highscore        = lumv->lumberjackMain->save.highScore;
 
@@ -105,6 +106,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->gameState            = LUMBERJACK_GAMESTATE_TITLE;
     lumv->levelIndex           = 0;
     lumv->lives                = 3;
+    lumv->nLives               = 3;
     lumv->gameReady            = !(main->networked);
     lumv->invincibleColor      = c000;
 
@@ -112,6 +114,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->itemBlockItemFrame = 0;
     lumv->itemBlockIndex     = -1;
     lumv->itemBlockItemAnimation = 0;
+
 
     loadWsg("lumbers_title.wsg", &lumv->title, true);
 
@@ -416,14 +419,15 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->song_theme.shouldLoop = true;
     lumv->song_title.shouldLoop = true;
 
+    
+
+    bzrPlayBgm(&lumv->song_title, BZR_STEREO);
+    
     if (lumv->lumberjackMain->networked)
     {
 
         lumberjackInitp2p();
     }
-
-    bzrPlayBgm(&lumv->song_title, BZR_STEREO);
-    
 }
 
 bool lumberjackLoadLevel()
@@ -497,6 +501,7 @@ bool lumberjackLoadLevel()
         lumv->itemBlockIndex        = -1;
     }
 
+    ESP_LOGI(LUM_TAG, "Loading level!");
 
     size_t ms;
     uint8_t *buffer = spiffsReadFile(fname, &ms, false);
@@ -552,6 +557,8 @@ bool lumberjackLoadLevel()
 
     lumv->waterSpeed       = (int)buffer[11];
     lumv->waterTimer       = (int)buffer[11];
+    
+    //return false;
 
     for (int i = 0; i < lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH; i++)
     {
@@ -583,7 +590,7 @@ bool lumberjackLoadLevel()
 
 void lumberjackSetupLevel(int characterIndex)
 {    
-    bzrStop(true); // Stop the buzzer?
+    //bzrStop(true); // Stop the buzzer?
 
     lumv->enemyKillCount       = 0;
     lumv->totalEnemyCount      = 0;
@@ -744,9 +751,9 @@ void lumberjackSetupLevel(int characterIndex)
     //ESP_LOGD(LUM_TAG, "LOADED");
     if (!lumv->levelMusic)
     {
+        bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
         lumv->levelMusic = true;
     }
-    bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
 
 }
 
@@ -789,26 +796,30 @@ void lumberjackTitleLoop(int64_t elapsedUs)
 
     if (lumv->btnState & PB_B)
     {
+        p2pDeinit(&lumv->lumberjackMain->p2p);
+
         switchToSwadgeMode(&lumberjackMode);
     }
     else if (lumv->lumberjackMain->networked)
     {
         if (lumv->btnState & PB_A && lumv->gameReady && lumv->lumberjackMain->host && lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // And Game Ready!
         {
-            lumberjackPlayGame();     
+            lumberjackSendCharacter(lumv->localPlayerType);     
             lumberjackSendGo();
+            lumberjackPlayGame();            
+
+        }
+
+        if (lumv->lumberjackMain->host == false && lumv->btnState & PB_START)
+        {
+            lumberjackSendHostRequest();
         }
 
         lumv->highscore = 0;
 
     } else if (lumv->btnState & PB_A && lumv->gameReady) // And Game Ready!
     {
-        lumberjackPlayGame();      
-
-        if (lumv->lumberjackMain->networked && lumv->lumberjackMain->conStatus == CON_ESTABLISHED)
-        {
-            lumberjackSendGo();
-        }
+        lumberjackPlayGame();
     } 
 
     //Update Animation
@@ -827,8 +838,18 @@ void lumberjackTitleLoop(int64_t elapsedUs)
 
 void lumberjackPlayGame()
 {
+    if (lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
+    {
+        return;
+    }
+
     lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
     lumberjackSetupLevel(lumv->localPlayerType); 
+
+    if (lumv->lumberjackMain->networked)
+    {
+        lumberjackSendCharacter(lumv->localPlayerType);
+    }
 }
 
 void lumberjackGameReady(void)
@@ -875,6 +896,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
         {
             lumv->wakeupSignal = 100;
             lumberjackSendScore(lumv->score); //Send score just to ping               
+
         }
 
         if (lumv->lastResponseSignal <= 0)
@@ -1574,7 +1596,7 @@ void lumberjackOnLocalPlayerDeath(void)
 
     if (lumv->lumberjackMain->networked)
     {
-        lumberjackSendDeath(lumv->lives <= 0);
+        lumberjackSendDeath(lumv->lives);
 
     }
 }
@@ -1746,6 +1768,18 @@ void DrawGame(void)
             icon = 0;
         }
         drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 22, 32);
+    }
+
+    for (int i = 0; i < lumv->nLives; i++)
+    {
+        
+        int icon = lumv->netPlayerType;
+
+        if (icon > ARRAY_SIZE(lumv->minicharacters))
+        {
+            icon = 0;
+        }
+        drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 206, 32);
     }
 
     if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
@@ -2028,6 +2062,11 @@ void lumberjackOnReceiveScore(const uint8_t* score)
     lumv->highscore = locX;
 }
 
+void lumberjackOnReceiveCharacter(uint8_t character)
+{
+    lumv->netPlayerType = character;
+}
+
 void lumberjackOnReceiveBump(void)
 {
     if (lumv->localPlayer->onGround)
@@ -2061,10 +2100,10 @@ void lumberjackOnReceiveBump(void)
     lumv->itemBlockIndex = -1;
 }
 
-void lumberjackOnReceiveDeath(bool gameover)
+void lumberjackOnReceiveDeath(uint8_t lives)
 {
 
-    if (gameover)
+    if (lives < 1)
     {
         lumv->hasWon = true;
 
@@ -2076,6 +2115,8 @@ void lumberjackOnReceiveDeath(bool gameover)
         }
 
     }
+    ESP_LOGI(LUM_TAG, "Lives: %d", lives);
+    lumv->nLives = lives - 1;
 }
 
 void lumberjackAttackCheck(int64_t elapseUs)

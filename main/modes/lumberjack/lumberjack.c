@@ -83,6 +83,9 @@ typedef enum
     ATTACK_MSG,
     DEATH_MSG,
     SCORE_MSG,
+    WATER_MSG,
+    HOST_MSG,
+    CHARACTER_MSG,
     BUMP_MSG
 } lumberjackMessageType_t;
 
@@ -397,11 +400,11 @@ static bool lumberjackSwadgeGuyUnlocked()
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
                                    int8_t rssi)
 {
-    ESP_LOGD(LUM_TAG, "Getting: %d %d", len, rssi);
+    /*ESP_LOGD(LUM_TAG, "Getting: %d %d", len, rssi);
     for (int i = 0; i < len; i++)
     {
         ESP_LOGD(LUM_TAG, "data %d) %d", i, data[i]);
-    }
+    }*/
     p2pRecvCb(&lumberjack->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
 
@@ -420,12 +423,15 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         case RX_GAME_START_MSG:
         {
             // TODO, optional, update menu to indicate connection progress
+            ESP_LOGI(LUM_TAG, "LumberJack.Net ack! ");
+
             break;
         }
         case CON_ESTABLISHED:
         {
-            ESP_LOGD(LUM_TAG, "LumberJack.Net ready! %d", (int)p2pGetPlayOrder(p2p));
-            lumberjack->host = (GOING_FIRST == p2pGetPlayOrder(p2p));
+            int index = (int)p2pGetPlayOrder(p2p);
+            ESP_LOGI(LUM_TAG, "LumberJack.Net ready! %d", index);
+            lumberjack->host = (GOING_FIRST == index);
 
             uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
             memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
@@ -438,7 +444,7 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         {
             // TODO drop back to main menu or show an error or something, its not recoverable
             ESP_LOGI(LUM_TAG, "We lost connection!");
-
+            lumberjackInitp2p();
             break;
         }
     }
@@ -481,6 +487,12 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             lumberjackOnReceiveScore(payload);
         }
 
+        if (payload[0] == CHARACTER_MSG)
+        {
+            ESP_LOGI(LUM_TAG, "CH");
+            lumberjackOnReceiveCharacter(payload[1]);
+        }
+
         if (payload[0] == BUMP_MSG)
         {
             lumberjackOnReceiveBump();
@@ -488,17 +500,26 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 
         if (payload[0] == DEATH_MSG)
         {
-            lumberjackOnReceiveDeath(payload[1] != 0x00);
+            lumberjackOnReceiveDeath(payload[1]);
         }
 
+        if (payload[0] == HOST_MSG)
+        {
+            if (lumberjack->host == false)
+            {
+                lumberjack->host = true;
+            }    
+        }
+
+        /*
         if (payload[0] == 0x19)
         {
-            int locX      = (int)payload[1] << 0 | (uint32_t)payload[2] << 8;
-            int locY      = (int)payload[3] << 0 | (uint32_t)payload[4] << 8;
-            uint8_t frame = (uint8_t)payload[5];
+            //int locX      = (int)payload[1] << 0 | (uint32_t)payload[2] << 8;
+            //int locY      = (int)payload[3] << 0 | (uint32_t)payload[4] << 8;
+            //uint8_t frame = (uint8_t)payload[5];
             //ESP_LOGD(LUM_TAG,"Got %d,%d %d|", locX, locY, frame);
 
-        }
+        }*/
     }
 
 
@@ -510,6 +531,15 @@ void lumberjackSendGo(void)
     if (lumberjack->networked)
     {
         const uint8_t msg[] = {READY_MSG};
+        p2pSendMsg(&lumberjack->p2p, msg, ARRAY_SIZE(msg), lumberjackMsgTxCbFn);
+    }
+}
+
+void lumberjackSendHostRequest(void)
+{
+    if (lumberjack->networked)
+    {
+        const uint8_t msg[] = {HOST_MSG};
         p2pSendMsg(&lumberjack->p2p, msg, ARRAY_SIZE(msg), lumberjackMsgTxCbFn);
     }
 }
@@ -548,11 +578,20 @@ void lumberjackSendScore(int score)
     }
 }
 
-void lumberjackSendDeath(bool gameover)
+void lumberjackSendCharacter(uint8_t character)
 {
     if (lumberjack->networked)
     {
-        const uint8_t payload[2] = {DEATH_MSG, (gameover ? 0x01 : 0x00)};
+        uint8_t payload[2] = {CHARACTER_MSG, character};
+        p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);    
+    }
+}
+
+void lumberjackSendDeath(uint8_t lives)
+{
+    if (lumberjack->networked)
+    {
+        const uint8_t payload[2] = {DEATH_MSG, lives};
         p2pSendMsg(&lumberjack->p2p, payload, ARRAY_SIZE(payload), lumberjackMsgTxCbFn);
     }
 }
@@ -577,6 +616,7 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
         case MSG_FAILED:
         {
             // TODO figure out what to do if a message fails to transmit (i.e. no ack). Retry?
+            ESP_LOGI(LUM_TAG, "Failed?");
             break;
         }
     }
@@ -584,9 +624,10 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
 
 void lumberjackInitp2p()
 {
-    //ESP_LOGD(LUM_TAG, "Init connection!");
+    ESP_LOGI(LUM_TAG, "Init connection!");
 
     p2pDeinit(&lumberjack->p2p);
+    lumberjack->conStatus = CON_LOST;
     p2pInitialize(&lumberjack->p2p,(lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x13 : 0x15), lumberjackConCb, lumberjackMsgRxCb, -70);
     p2pStartConnection(&lumberjack->p2p);
 }

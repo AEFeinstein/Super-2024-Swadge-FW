@@ -111,6 +111,8 @@ typedef struct
     int upgrade;
     int resume;
     int lives;
+    uint8_t nLives;
+
 
     int64_t worldTimer;
     int64_t levelTime;
@@ -128,6 +130,7 @@ typedef struct
     int score;
     int highscore;
     int localPlayerType;
+    uint8_t netPlayerType;
 
     int enemyAttackQueue;
 

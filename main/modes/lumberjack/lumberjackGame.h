@@ -33,17 +33,21 @@ void lumberjackQualityCheck(void);
 
 void lumberjackSendAttack(uint8_t* number);
 void lumberjackSendScore(int score);
-void lumberjackSendDeath(bool gameover);
+void lumberjackSendCharacter(uint8_t character);
+void lumberjackSendDeath(uint8_t lives);
 void lumberjackSendBump(void);
 
 void lumberjackOnReceiveAttack(const uint8_t* attack, int len);
 void lumberjackOnReceiveScore(const uint8_t* score);
-void lumberjackOnReceiveDeath(bool gameover);
+void lumberjackOnReceiveCharacter(uint8_t character);
+void lumberjackOnReceiveDeath(uint8_t lives);
 void lumberjackOnReceiveBump(void);
 
 void lumberjackGameReady(void);
 void lumberjackPlayGame(void);
 void lumberjackSendGo(void);
+void lumberjackSendHostRequest(void);
+
 void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, uint8_t inColor);
 
 
