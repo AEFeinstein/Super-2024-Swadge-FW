@@ -226,7 +226,7 @@ void paintSetupMainMenu(void)
     addSingleItemToMenu(paintMenu->menu, menuOptReceive);
     paintMenu->menu = endSubMenu(paintMenu->menu);
 
-    addSingleItemToMenu(paintMenu->menu, menuOptHelp);
+    //addSingleItemToMenu(paintMenu->menu, menuOptHelp);
 
     paintMenu->menu = startSubMenu(paintMenu->menu, menuOptSettings);
     addSettingsItemToMenu(paintMenu->menu, menuOptLeds, paintGetEnableLedsBounds(), paintGetEnableLeds());
