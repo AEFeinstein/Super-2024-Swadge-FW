@@ -105,3 +105,12 @@ led_t* getLedMemory(uint8_t* numLeds)
     *numLeds = CONFIG_NUM_LEDS;
     return rdLeds;
 }
+
+/**
+ * @brief Wait until any pending LED transactions are finished, then return
+ * Immediately returns on the emulator
+ */
+void flushLeds(void)
+{
+    return;
+}
