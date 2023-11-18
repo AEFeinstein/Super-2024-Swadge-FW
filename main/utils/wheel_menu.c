@@ -178,8 +178,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     uint16_t itemGapSq = 0;
     uint16_t altGapSq = 0;
     uint16_t targetSq = ((renderer->unselR * 2) * (renderer->unselR * 2));
-    int16_t inR = renderer->unselR;
-    int16_t outR = -renderer->unselR;
+    int16_t inR = renderer->unselR / 3;
+    int16_t outR = -renderer->unselR / 3;
     uint16_t minAlt = UINT16_MAX;
     uint16_t minReg = UINT16_MAX;
 
@@ -254,7 +254,13 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             bool cur = (renderer->touched && menu->currentItem == node);
             paletteColor_t bg = cur ? info->selectedBg : info->unselectedBg;
 
-            uint16_t itemSpokeR = alternate ? (((info->position % 2) == 0) ? spokeR + inR : spokeR + outR) : spokeR;
+
+
+            if (ringItems > 8)
+            {
+                alternate = true;
+            }
+            uint16_t itemSpokeR = alternate ? (((info->position % 2) == 1) ? spokeR + inR : spokeR + outR) : spokeR;
 
             uint16_t centerX = renderer->x + getCos1024(centerAngle) * itemSpokeR / 1024;
             uint16_t centerY = renderer->y - getSin1024(centerAngle) * itemSpokeR / 1024;
