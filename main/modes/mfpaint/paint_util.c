@@ -163,16 +163,17 @@ void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColo
         }
         paintBlitCanvas(canvas);
     }
-    else
+}
+
+void paintColorReplaceScreen(paintCanvas_t* canvas, paletteColor_t search, paletteColor_t replace)
+{
+    for (uint8_t x = 0; x < canvas->w; x++)
     {
-        for (uint8_t x = 0; x < canvas->w; x++)
+        for (uint8_t y = 0; y < canvas->h; y++)
         {
-            for (uint8_t y = 0; y < canvas->h; y++)
+            if (getPxTft(canvas->x + x * canvas->xScale, canvas->y + y * canvas->yScale) == search)
             {
-                if (getPxTft(canvas->x + x * canvas->xScale, canvas->y + y * canvas->yScale) == search)
-                {
-                    setPxScaled(x, y, replace, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
-                }
+                setPxScaled(x, y, replace, canvas->x, canvas->y, canvas->xScale, canvas->yScale);
             }
         }
     }

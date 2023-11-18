@@ -87,7 +87,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
                  canvas->y + canvas->h * canvas->yScale + 1, c000);
 
         // Draw image title, if there's room
-        if (paintState->toolbarFont.height + 1 < canvas->y && *(paintState->slotKey))
+        if (paintState->toolbarFont.height + 1 < canvas->y && *(paintState->slotKey)
+            && paintState->buttonMode != BTN_MODE_PALETTE)
         {
             uint16_t pos = (TFT_WIDTH - textWidth(&paintState->toolbarFont, paintState->slotKey)) / 2;
             drawText(&paintState->toolbarFont, c000, paintState->slotKey, pos,
@@ -123,9 +124,9 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
     uint16_t textX = PAINT_ACTIVE_COLOR_X + PAINT_COLORBOX_W + PAINT_COLORBOX_W / 2 + PAINT_COLORBOX_MARGIN_X + 1;
     uint16_t textY = TFT_HEIGHT - paintState->toolbarFont.height - 4;
 
-    fillDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h,
+    shadeDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h,
                     textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
-                    artist->fgColor);
+                    2, artist->fgColor);
     drawWsgSimple(&artist->brushDef->iconActive, textX + 1,
                   textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
     drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1,

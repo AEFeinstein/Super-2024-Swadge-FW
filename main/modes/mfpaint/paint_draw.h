@@ -34,6 +34,7 @@ void paintEditPalettePrevChannel(void);
 void paintEditPaletteSetupColor(uint8_t index);
 void paintEditPalettePrevColor(void);
 void paintEditPaletteNextColor(void);
+void paintEditPaletteUpdateCanvas(void);
 void paintEditPaletteConfirm(void);
 
 // Save menu helpers

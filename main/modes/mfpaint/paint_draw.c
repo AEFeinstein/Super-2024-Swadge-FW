@@ -453,7 +453,7 @@ void paintDrawScreenSetup(void)
     for (const brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
         addSingleItemToMenu(paintState->toolWheel, brush->name);
-        wheelMenuSetItemInfo(paintState->toolWheelRenderer, brush->name, &brush->iconInactive, brush - brushes,
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, brush->name, &brush->iconActive, brush - brushes,
                              NO_SCROLL);
     }
 
@@ -822,6 +822,7 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
             paintRenderColorPicker(getArtist(), &paintState->canvas, paintState);
             paintBlitCanvas(&paintState->canvas);
+            paintEditPaletteUpdateCanvas();
             break;
         }
 
@@ -922,6 +923,7 @@ void paintEditPaletteSetupColor(uint8_t index)
     paintState->editPaletteG   = (col / 6) % 6;
     paintState->editPaletteB   = col % 6;
     paintState->newColor       = col;
+    paintState->paletteSelect = index;
 
     paintState->buttonMode = BTN_MODE_PALETTE;
 
@@ -938,6 +940,30 @@ void paintEditPaletteNextColor(void)
 {
     paintState->paletteSelect = NEXT_WRAP(paintState->paletteSelect, PAINT_MAX_COLORS);
     paintEditPaletteSetupColor(paintState->paletteSelect);
+}
+
+void paintEditPaletteUpdateCanvas(void)
+{
+    // Save the old color, and update the palette with the new color
+    paletteColor_t old                                    = paintState->canvas.palette[paintState->paletteSelect];
+    paletteColor_t new                                    = paintState->newColor;
+
+    // Only replace the color on the canvas if the old color is no longer in the palette
+    int count = 0;
+    for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
+    {
+        if (paintState->canvas.palette[i] == old)
+        {
+            count++;
+        }
+    }
+
+    // This color is no longer in the palette, so replace it with the new one
+    if (count < 2)
+    {
+        // And replace it within the canvas
+        paintColorReplaceScreen(&paintState->canvas, old, new);
+    }
 }
 
 void paintEditPaletteConfirm(void)
@@ -1140,6 +1166,7 @@ void paintDrawScreenPollTouch(void)
         bool active = wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer);
         if (active && paintState->buttonMode != BTN_MODE_WHEEL)
         {
+            paintSetupColorWheel();
             paintState->buttonMode = BTN_MODE_WHEEL;
         }
         else if (!active && paintState->buttonMode == BTN_MODE_WHEEL)
