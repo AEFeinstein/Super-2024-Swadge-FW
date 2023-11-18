@@ -62,8 +62,8 @@ wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, con
     renderer->selBgColor   = c555;
 
     renderer->spokeR = TFT_HEIGHT / 4;
-    renderer->unselR  = TFT_HEIGHT / 10;
-    renderer->selR    = TFT_HEIGHT / 7;
+    renderer->unselR = TFT_HEIGHT / 10;
+    renderer->selR   = TFT_HEIGHT / 7;
 
     renderer->x = TFT_WIDTH / 2;
     renderer->y = TFT_HEIGHT / 2;
@@ -164,10 +164,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     node_t* node = menu->items->first;
 
     // Draw background circle for the unselected area
-    //drawCircleFilled(renderer->x, renderer->y, renderer->unselR, renderer->unselBgColor);
+    // drawCircleFilled(renderer->x, renderer->y, renderer->unselR, renderer->unselBgColor);
 
     // Add one for the convenience of looping
-    uint16_t spokeR          = renderer->spokeR;
+    uint16_t spokeR           = renderer->spokeR;
     paletteColor_t selBgColor = renderer->selBgColor;
 
     // If we haven't customized the back option to be around the ring, then we use the center
@@ -176,12 +176,12 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     uint16_t anchorAngle = (360 + renderer->anchorAngle - (360 / ringItems / 2)) % 360;
 
     uint16_t itemGapSq = 0;
-    uint16_t altGapSq = 0;
-    uint16_t targetSq = ((renderer->unselR * 2) * (renderer->unselR * 2));
-    int16_t inR = renderer->unselR / 3;
-    int16_t outR = -renderer->unselR / 3;
-    uint16_t minAlt = UINT16_MAX;
-    uint16_t minReg = UINT16_MAX;
+    uint16_t altGapSq  = 0;
+    uint16_t targetSq  = ((renderer->unselR * 2) * (renderer->unselR * 2));
+    int16_t inR        = renderer->unselR / 3;
+    int16_t outR       = -renderer->unselR / 3;
+    uint16_t minAlt    = UINT16_MAX;
+    uint16_t minReg    = UINT16_MAX;
 
     /*while ((itemGapSq < targetSq || altGapSq < targetSq) && (spokeR + renderer->unselR < TFT_HEIGHT))
     {
@@ -223,11 +223,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
     wheelItemInfo_t* backInfo = NULL;
 
-    bool foundSelected = false;
-    wsg_t* selIcon = NULL;
+    bool foundSelected       = false;
+    wsg_t* selIcon           = NULL;
     paletteColor_t selItemBg = renderer->selBgColor;
-    uint16_t selX = 0;
-    uint16_t selY = 0;
+    uint16_t selX            = 0;
+    uint16_t selY            = 0;
 
     while (node != NULL)
     {
@@ -251,10 +251,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             // Calculate where this sector starts
             uint16_t centerAngle = (anchorAngle + info->position * 360 / ringItems + (180 / ringItems)) % 360;
 
-            bool cur = (renderer->touched && menu->currentItem == node);
+            bool cur          = (renderer->touched && menu->currentItem == node);
             paletteColor_t bg = cur ? info->selectedBg : info->unselectedBg;
-
-
 
             if (ringItems > 8)
             {
@@ -269,10 +267,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             {
                 // Don't draw the selected item yet
                 foundSelected = true;
-                selItemBg = info->selectedBg;
-                selIcon = info->icon;
-                selX = centerX;
-                selY = centerY;
+                selItemBg     = info->selectedBg;
+                selIcon       = info->icon;
+                selX          = centerX;
+                selY          = centerY;
             }
             else
             {
@@ -288,10 +286,11 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         node = node->next;
     }
 
-    bool centerSel = renderer->touched && (!menu->currentItem || menuItemIsBack(menu->currentItem->val));
-    paletteColor_t backSelBg = backInfo ? backInfo->selectedBg : renderer->selBgColor;
+    bool centerSel             = renderer->touched && (!menu->currentItem || menuItemIsBack(menu->currentItem->val));
+    paletteColor_t backSelBg   = backInfo ? backInfo->selectedBg : renderer->selBgColor;
     paletteColor_t backUnselBg = backInfo ? backInfo->unselectedBg : renderer->unselBgColor;
-    drawCircleFilled(renderer->x, renderer->y, centerSel ? renderer->selR : renderer->unselR, centerSel ? backSelBg : backUnselBg);
+    drawCircleFilled(renderer->x, renderer->y, centerSel ? renderer->selR : renderer->unselR,
+                     centerSel ? backSelBg : backUnselBg);
     if (backInfo && backInfo->icon)
     {
         drawWsgSimple(backInfo->icon, renderer->x - backInfo->icon->w / 2, renderer->y - backInfo->icon->h / 2);

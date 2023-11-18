@@ -923,7 +923,7 @@ void paintEditPaletteSetupColor(uint8_t index)
     paintState->editPaletteG   = (col / 6) % 6;
     paintState->editPaletteB   = col % 6;
     paintState->newColor       = col;
-    paintState->paletteSelect = index;
+    paintState->paletteSelect  = index;
 
     paintState->buttonMode = BTN_MODE_PALETTE;
 
@@ -945,8 +945,8 @@ void paintEditPaletteNextColor(void)
 void paintEditPaletteUpdateCanvas(void)
 {
     // Save the old color, and update the palette with the new color
-    paletteColor_t old                                    = paintState->canvas.palette[paintState->paletteSelect];
-    paletteColor_t new                                    = paintState->newColor;
+    paletteColor_t old = paintState->canvas.palette[paintState->paletteSelect];
+    paletteColor_t new = paintState->newColor;
 
     // Only replace the color on the canvas if the old color is no longer in the palette
     int count = 0;
@@ -1617,7 +1617,8 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col, bool partial)
 
         if (partial)
         {
-            getArtist()->brushDef->fnPartial(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth, col);
+            getArtist()->brushDef->fnPartial(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth,
+                                             col);
 
             // Drop the pixel we added
             dropPx(&getArtist()->pickPoints);
@@ -1639,7 +1640,8 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col, bool partial)
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
             }
             paintState->unsaved = true;
-            getArtist()->brushDef->fnDraw(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth, col);
+            getArtist()->brushDef->fnDraw(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth,
+                                          col);
 
             if (paintHelp != NULL)
             {
@@ -2190,7 +2192,7 @@ static void doSave(const char* key)
             strncpy(paintState->slotKey, key, sizeof(paintState->slotKey) - 1);
         }
         paintState->selectedSlotKey[0] = '\0';
-        paintState->buttonMode = BTN_MODE_DRAW;
+        paintState->buttonMode         = BTN_MODE_DRAW;
     }
     else
     {

@@ -21,7 +21,7 @@
 
 #define PAINT_BOOL_PARAM(k, d) PAINT_PARAM((0), (1), k, d)
 
-static const char KEY_PAINT_LAST_SLOT[]    = "paint_last";
+static const char KEY_PAINT_LAST_SLOT[] = "paint_last";
 
 PAINT_BOOL_PARAM(EnableLeds, true);
 

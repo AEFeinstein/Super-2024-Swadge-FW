@@ -70,7 +70,7 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
     if (xDiff > yDiff)
     {
         // Horizontal -- waveHeight is on Y axis
-        stop  = x + waveLength * xDir;
+        stop = x + waveLength * xDir;
 
         while (x != x1)
         {
@@ -90,7 +90,7 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
     else
     {
         // Vertical -- waveHeight is on X axis
-        stop  = y + waveLength * yDir;
+        stop = y + waveLength * yDir;
 
         while (y != y1)
         {
@@ -133,19 +133,19 @@ void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColo
     {
         uint8_t searchHigh = 0xF0;
         uint8_t searchLow  = 0x0F;
-        uint8_t replHigh = 0xF0;
-        uint8_t replLow = 0x0F;
+        uint8_t replHigh   = 0xF0;
+        uint8_t replLow    = 0x0F;
         for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
         {
             if (canvas->palette[i] == search)
             {
                 searchHigh = (i & 0x0F) << 4;
-                searchLow = (i & 0x0F);
+                searchLow  = (i & 0x0F);
             }
             else if (canvas->palette[i] == replace)
             {
                 replHigh = (i & 0x0F) << 4;
-                replLow = (i & 0x0F);
+                replLow  = (i & 0x0F);
             }
         }
 

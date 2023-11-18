@@ -125,8 +125,8 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
     uint16_t textY = TFT_HEIGHT - paintState->toolbarFont.height - 4;
 
     shadeDisplayArea(textX + 1, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h,
-                    textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height,
-                    2, artist->fgColor);
+                     textX + 1 + artist->brushDef->iconActive.w, textY + paintState->toolbarFont.height, 2,
+                     artist->fgColor);
     drawWsgSimple(&artist->brushDef->iconActive, textX + 1,
                   textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h);
     drawRect(textX, textY + paintState->toolbarFont.height - artist->brushDef->iconActive.h - 1,

@@ -32,7 +32,7 @@ const char menuOptShare[]    = "Share";
 const char menuOptReceive[]  = "Receive";
 const char menuOptSettings[] = "Settings";
 
-const char menuOptLeds[]  = "LEDs";
+const char menuOptLeds[] = "LEDs";
 
 const char menuOptLedsOn[]       = "LEDs: On";
 const char menuOptLedsOff[]      = "LEDs: Off";
@@ -226,7 +226,7 @@ void paintSetupMainMenu(void)
     addSingleItemToMenu(paintMenu->menu, menuOptReceive);
     paintMenu->menu = endSubMenu(paintMenu->menu);
 
-    //addSingleItemToMenu(paintMenu->menu, menuOptHelp);
+    // addSingleItemToMenu(paintMenu->menu, menuOptHelp);
 
     paintMenu->menu = startSubMenu(paintMenu->menu, menuOptSettings);
     addSettingsItemToMenu(paintMenu->menu, menuOptLeds, paintGetEnableLedsBounds(), paintGetEnableLeds());

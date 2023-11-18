@@ -62,14 +62,13 @@ void paintDrawCurvePartial(paintCanvas_t* canvas, point_t* points, uint8_t numPo
             }
             else
             {
-                drawCubicBezierScaled(points[0].x + x, points[0].y + y, points[1].x + x, points[1].y + y, points[2].x + x,
-                                    points[2].y + y, points[3].x + x, points[3].y + y, col, canvas->x, canvas->y,
-                                    canvas->xScale, canvas->yScale);
+                drawCubicBezierScaled(points[0].x + x, points[0].y + y, points[1].x + x, points[1].y + y,
+                                      points[2].x + x, points[2].y + y, points[3].x + x, points[3].y + y, col,
+                                      canvas->x, canvas->y, canvas->xScale, canvas->yScale);
             }
         }
     }
 }
-
 
 void paintDrawRectangle(paintCanvas_t* canvas, point_t* points, uint8_t numPoints, uint16_t size, paletteColor_t col)
 {

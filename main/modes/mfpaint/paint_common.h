@@ -408,13 +408,13 @@ typedef struct
 
 typedef enum
 {
-    GALLERY_INFO_SPEED = 0x01,
+    GALLERY_INFO_SPEED      = 0x01,
     GALLERY_INFO_BRIGHTNESS = 0x02,
-    GALLERY_INFO_DANCE = 0x04,
-    GALLERY_INFO_NEXT = 0x08,
-    GALLERY_INFO_EXIT = 0x10,
-    GALLERY_INFO_VIEW = 0x20,
-    GALLERY_INFO_CONTROLS = 0xFF,
+    GALLERY_INFO_DANCE      = 0x04,
+    GALLERY_INFO_NEXT       = 0x08,
+    GALLERY_INFO_EXIT       = 0x10,
+    GALLERY_INFO_VIEW       = 0x20,
+    GALLERY_INFO_CONTROLS   = 0xFF,
 } paintGalleryInfoView_t;
 
 typedef struct

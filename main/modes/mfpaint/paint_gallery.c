@@ -48,9 +48,9 @@ void paintGallerySetup(bool screensaver)
     paintGallery->galleryTime     = 0;
     paintGallery->screensaverMode = screensaver;
     // Show the UI at the start if we're a screensaver
-    paintGallery->showUi = !screensaver;
+    paintGallery->showUi            = !screensaver;
     paintGallery->infoTimeRemaining = paintGallery->showUi ? GALLERY_INFO_TIME * 2 : 0;
-    paintGallery->infoView = GALLERY_INFO_CONTROLS;
+    paintGallery->infoView          = GALLERY_INFO_CONTROLS;
     loadFont("ibm_vga8.font", &paintGallery->infoFont, false);
     loadWsg("button_up.wsg", &paintGallery->arrow, false);
     loadWsg("button_a.wsg", &paintGallery->aWsg, false);
@@ -83,9 +83,9 @@ void paintGallerySetup(bool screensaver)
 
     paintGallery->gallerySpeed = US_PER_MS * transitionTimeMap[paintGallery->gallerySpeedIndex];
 
-    paintGallery->browser.callback = paintGalleryBrowserCb;
+    paintGallery->browser.callback   = paintGalleryBrowserCb;
     paintGallery->browser.wraparound = true;
-    paintGallery->browser.cols = 4;
+    paintGallery->browser.cols       = 4;
     setupImageBrowser(&paintGallery->browser, &paintGallery->infoFont, PAINT_NS_DATA, NULL, BROWSER_OPEN,
                       BROWSER_DELETE);
 
@@ -137,20 +137,18 @@ void paintGalleryMainLoop(int64_t elapsedUs)
     {
         if (paintGallery->gallerySpeed != 0 && paintGallery->galleryTime >= paintGallery->gallerySpeed)
         {
-            buttonEvt_t fakeEvent = {
-                .button = PB_RIGHT, .down = true, .state = PB_RIGHT
-            };
+            buttonEvt_t fakeEvent = {.button = PB_RIGHT, .down = true, .state = PB_RIGHT};
             imageBrowserButton(&paintGallery->browser, &fakeEvent);
             paintGallery->galleryTime %= paintGallery->gallerySpeed;
 
             // reset info time if we're going to transition and clear the screen
-            //paintGallery->infoTimeRemaining = 0;
+            // paintGallery->infoTimeRemaining = 0;
         }
 
         paintGallery->galleryTime += elapsedUs;
-        paintGallery->showUi = false;
+        paintGallery->showUi            = false;
         paintGallery->infoTimeRemaining = 0;
-        paintGallery->infoView = 0;
+        paintGallery->infoView          = 0;
     }
 
     drawImageBrowser(&paintGallery->browser);
@@ -215,14 +213,14 @@ static wsg_t* iconCharToWsg(char icon)
             return &paintGallery->bWsg;
 
         default:
-        return NULL;
+            return NULL;
     }
 }
 
 void paintGalleryDrawUi(void)
 {
     char text[32];
-    int row = 0;
+    int row     = 0;
     bool center = false;
 
     if ((paintGallery->infoView & GALLERY_INFO_CONTROLS) == GALLERY_INFO_CONTROLS)
@@ -253,7 +251,8 @@ void paintGalleryDrawUi(void)
             snprintf(text, sizeof(text), transitionTime, (1.0 * paintGallery->gallerySpeed / US_PER_SEC));
             paintGalleryAddInfoText(
                 text, row++, center,
-                (paintGallery->gallerySpeedIndex + 1 < sizeof(transitionTimeMap) / sizeof(*transitionTimeMap)) ? 'U' : 0,
+                (paintGallery->gallerySpeedIndex + 1 < sizeof(transitionTimeMap) / sizeof(*transitionTimeMap)) ? 'U'
+                                                                                                               : 0,
                 'D');
         }
     }
@@ -266,19 +265,20 @@ void paintGalleryDrawUi(void)
 
     if (paintGallery->infoView & GALLERY_INFO_DANCE)
     {
-        //snprintf(text, sizeof(text), "LEDs: %s", portableDanceGetName(paintGallery->portableDances));
-        //paintGalleryAddInfoText(text, row++, center, 'L', 'R');
+        // snprintf(text, sizeof(text), "LEDs: %s", portableDanceGetName(paintGallery->portableDances));
+        // paintGalleryAddInfoText(text, row++, center, 'L', 'R');
     }
 }
 
 void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char leftIcon, char rightIcon)
 {
-    wsg_t* lWsg = iconCharToWsg(leftIcon);
-    wsg_t* rWsg = iconCharToWsg(rightIcon);
+    wsg_t* lWsg      = iconCharToWsg(leftIcon);
+    wsg_t* rWsg      = iconCharToWsg(rightIcon);
     uint16_t padding = 5;
-    uint16_t width   = textWidth(&paintGallery->infoFont, text) + (lWsg ? padding + lWsg->w : 0) + (rWsg ? padding + rWsg->w : 0);
+    uint16_t width
+        = textWidth(&paintGallery->infoFont, text) + (lWsg ? padding + lWsg->w : 0) + (rWsg ? padding + rWsg->w : 0);
     int16_t yOffset;
-    int16_t xOffset = center ? ((TFT_WIDTH - width) / 2) : GALLERY_INFO_X_MARGIN;// - (lWsg ? padding + lWsg->w : 0);
+    int16_t xOffset = center ? ((TFT_WIDTH - width) / 2) : GALLERY_INFO_X_MARGIN; // - (lWsg ? padding + lWsg->w : 0);
 
     if (row < 0)
     {
@@ -294,8 +294,7 @@ void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char lef
     if (leftIcon != 0 && lWsg != NULL)
     {
         // assumes arrows are always square, flip between W and H if that's ever the case
-        drawWsg(lWsg, xOffset,
-                yOffset + padding + (paintGallery->infoFont.height - lWsg->h) / 2, false, false,
+        drawWsg(lWsg, xOffset, yOffset + padding + (paintGallery->infoFont.height - lWsg->h) / 2, false, false,
                 arrowCharToRot(leftIcon));
     }
 
@@ -307,7 +306,8 @@ void paintGalleryAddInfoText(const char* text, int8_t row, bool center, char lef
                 arrowCharToRot(rightIcon));
     }
 
-    drawText(&paintGallery->infoFont, c000, text, xOffset + (lWsg ? padding + lWsg->w : 0) + (rWsg ? padding + rWsg->w : 0), yOffset + padding);
+    drawText(&paintGallery->infoFont, c000, text,
+             xOffset + (lWsg ? padding + lWsg->w : 0) + (rWsg ? padding + rWsg->w : 0), yOffset + padding);
 }
 
 void paintGalleryDecreaseSpeed(void)
@@ -387,8 +387,8 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
                 else
                 {
                     paintGallery->infoTimeRemaining = GALLERY_INFO_TIME * 2;
-                    paintGallery->infoView = GALLERY_INFO_CONTROLS;
-                    paintGallery->showUi = true;
+                    paintGallery->infoView          = GALLERY_INFO_CONTROLS;
+                    paintGallery->showUi            = true;
                 }
                 // Return so the normal info view logic doesn't run
                 return;
@@ -412,7 +412,7 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
         }
 
         paintGallery->infoTimeRemaining = GALLERY_INFO_TIME;
-        paintGallery->showUi = true;
+        paintGallery->showUi            = true;
     }
 }
 
@@ -431,13 +431,12 @@ void paintGalleryModePollTouch(void)
         getTouchSpins(&paintGallery->spinState, phi, r);
 
         int32_t diff
-            = CLAMP((((paintGallery->spinState.spins * 360 + paintGallery->spinState.remainder) * (7)) / -360),
-                    -7, 7);
+            = CLAMP((((paintGallery->spinState.spins * 360 + paintGallery->spinState.remainder) * (7)) / -360), -7, 7);
 
         setLedBrightnessSetting(CLAMP(paintGallery->startBrightness + diff, 0, 7));
 
         paintGallery->infoTimeRemaining = GALLERY_INFO_TIME;
-        paintGallery->showUi = true;
+        paintGallery->showUi            = true;
         paintGallery->infoView |= GALLERY_INFO_BRIGHTNESS;
     }
     else

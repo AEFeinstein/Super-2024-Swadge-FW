@@ -186,7 +186,7 @@ size_t paintSerializeWsgPalette(uint8_t* dest, const wsg_t* wsg, const paletteCo
 }
 
 static size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const wsg_t* wsg, size_t offset, size_t count,
-                       const paletteColor_t palette[16])
+                              const paletteColor_t palette[16])
 {
     uint8_t paletteIndex[cTransparent + 1] = {};
 

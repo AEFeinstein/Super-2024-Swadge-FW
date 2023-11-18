@@ -74,7 +74,8 @@ static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t*
             for (uint16_t c = 0; c < thumbnail->w; ++c)
             {
                 // TODO average the surrounding pixels instead of doing nothing
-                thumbnail->px[r * thumbnail->w + c] = image->px[(r * image->h / thumbnail->h) * image->w + (c * image->w / thumbnail->w)];
+                thumbnail->px[r * thumbnail->w + c]
+                    = image->px[(r * image->h / thumbnail->h) * image->w + (c * image->w / thumbnail->w)];
             }
         }
     }
@@ -229,8 +230,8 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint16_t thumbMargin  = 5;
     uint16_t thumbHeight  = THUMB_H + 4;
     uint16_t thumbWidth   = THUMB_W + 4;
-    uint16_t imageTop = 5;
-    uint16_t imageBottom = 5;
+    uint16_t imageTop     = 5;
+    uint16_t imageBottom  = 5;
 
     uint8_t visibleRows = 0;
 
@@ -245,8 +246,8 @@ void drawImageBrowser(imageBrowser_t* browser)
         case BROWSER_GALLERY:
         {
             // Move the margin to just 1 row above the bottom
-            marginTop = TFT_HEIGHT - marginBottom - textMargin - thumbHeight - thumbMargin;
-            imageTop = 5;
+            marginTop   = TFT_HEIGHT - marginBottom - textMargin - thumbHeight - thumbMargin;
+            imageTop    = 5;
             imageBottom = TFT_HEIGHT - marginTop + 5;
             visibleRows = 1;
             break;
@@ -254,13 +255,13 @@ void drawImageBrowser(imageBrowser_t* browser)
 
         case BROWSER_FULLSCREEN:
         {
-            marginTop = TFT_HEIGHT;
-            imageTop = 0;
-            imageBottom = 0;
+            marginTop    = TFT_HEIGHT;
+            imageTop     = 0;
+            imageBottom  = 0;
             marginBottom = 0;
-            marginLeft = 0;
-            marginRight = 0;
-            visibleRows = 0;
+            marginLeft   = 0;
+            marginRight  = 0;
+            visibleRows  = 0;
             break;
         }
     }
@@ -301,14 +302,14 @@ void drawImageBrowser(imageBrowser_t* browser)
             // Calculate the scrollbar height
             // height = (proportion of rows visible) * (total height)
             uint16_t scrollHeight = rows ? visibleRows * SCROLL_HEIGHT / rows : SCROLL_HEIGHT;
-            uint16_t scrollOffset
-                = rows ? SCROLL_OFFSET + SCROLL_HEIGHT - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight
-                    : SCROLL_OFFSET;
+            uint16_t scrollOffset = rows ? SCROLL_OFFSET + SCROLL_HEIGHT
+                                               - (rows - lastVisibleRow - 1) * SCROLL_HEIGHT / rows - scrollHeight
+                                         : SCROLL_OFFSET;
 
             // Draw the scroll bar on the right side
             // Border
-            drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight, TFT_HEIGHT - SCROLL_OFFSET,
-                    c000);
+            drawRect(TFT_WIDTH - 4 - marginRight, SCROLL_OFFSET, TFT_WIDTH - 1 - marginRight,
+                     TFT_HEIGHT - SCROLL_OFFSET, c000);
 
             // Scrollbar
             fillDisplayArea(TFT_WIDTH - 3 - marginRight, scrollOffset, TFT_WIDTH - 1 - marginRight,
@@ -319,7 +320,7 @@ void drawImageBrowser(imageBrowser_t* browser)
         if (NULL == node)
         {
             drawText(browser->font, c000, noItemsStr, (TFT_WIDTH - textWidth(browser->font, noItemsStr)) / 2,
-                    (TFT_HEIGHT - browser->font->height) / 2);
+                     (TFT_HEIGHT - browser->font->height) / 2);
         }
         else
         {
@@ -345,7 +346,7 @@ void drawImageBrowser(imageBrowser_t* browser)
                     // x = marginLeft + (lSpacing * (col + 1)) + (width) *
                     uint16_t x = marginLeft + col * (thumbWidth + thumbMargin) + extraW * col / browser->cols;
                     uint16_t y = marginTop + (row - browser->firstRow) * (thumbHeight + thumbMargin)
-                                + extraH * (row - browser->firstRow) / rows;
+                                 + extraH * (row - browser->firstRow) / rows;
                     //+ row * (TFT_HEIGHT - marginTop - marginBottom - visibleRows * (thumbHeight + thumbMargin))
                     //    / visibleRows;
 
@@ -377,7 +378,7 @@ void drawImageBrowser(imageBrowser_t* browser)
                     {
                         const char* text = item->isNewButton ? saveAsNewStr : item->nvsKey;
                         drawText(browser->font, c000, text, (TFT_WIDTH - textWidth(browser->font, text)) / 2,
-                                TFT_HEIGHT - marginBottom + textMargin);
+                                 TFT_HEIGHT - marginBottom + textMargin);
                     }
                 }
             }
@@ -422,7 +423,8 @@ void drawImageBrowser(imageBrowser_t* browser)
         // If there's actually an image after all that, get the biggest scale for it and draw it
         if (browser->mainImage.px)
         {
-            uint8_t scale = paintGetMaxScale(browser->mainImage.w, browser->mainImage.h, marginLeft + marginRight, imageTop + imageBottom);
+            uint8_t scale = paintGetMaxScale(browser->mainImage.w, browser->mainImage.h, marginLeft + marginRight,
+                                             imageTop + imageBottom);
 
             uint16_t imgX, imgY;
             if ((browser->mainImage.w * scale > TFT_WIDTH) || (browser->mainImage.h * scale > marginTop))
@@ -434,7 +436,8 @@ void drawImageBrowser(imageBrowser_t* browser)
                 drawWsgSimpleHalf(&browser->mainImage, imgX, imgY);
 
                 // Draw border
-                drawRect(imgX - 1, imgY - 1, imgX + browser->mainImage.w / 2 + 1, imgY + browser->mainImage.h / 2 + 1, c000);
+                drawRect(imgX - 1, imgY - 1, imgX + browser->mainImage.w / 2 + 1, imgY + browser->mainImage.h / 2 + 1,
+                         c000);
             }
             else
             {
@@ -445,7 +448,8 @@ void drawImageBrowser(imageBrowser_t* browser)
                 drawWsgSimpleScaled(&browser->mainImage, imgX, imgY, scale, scale);
 
                 // Draw border
-                drawRect(imgX - 1, imgY - 1, imgX + browser->mainImage.w * scale + 1, imgY + browser->mainImage.h * scale + 1, c000);
+                drawRect(imgX - 1, imgY - 1, imgX + browser->mainImage.w * scale + 1,
+                         imgY + browser->mainImage.h * scale + 1, c000);
             }
         }
     }
@@ -616,7 +620,7 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
             // Loop over the nodes to find the current one's index
             uint32_t curIndex = 0;
             for (node_t* node = browser->items.first; node != NULL && node != browser->currentItem;
-                node         = node->next, curIndex++)
+                 node         = node->next, curIndex++)
                 ;
 
             // If we're past the final row, advance the first row until it's visible
