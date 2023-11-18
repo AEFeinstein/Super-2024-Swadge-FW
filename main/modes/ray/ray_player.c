@@ -12,6 +12,27 @@
 #include "ray_script.h"
 #include "ray_death_screen.h"
 #include "ray_enemy.h"
+#include "ray_dialog.h"
+
+//==============================================================================
+// Const data
+//==============================================================================
+
+/** @brief random dialog when a missile expansion is acquired */
+const char* const missilePickupDialog[] = {
+    "Hey, you can hold more missiles now! Where? ...You don't want to know!",
+    "Hey, this wasn't the critical path, but at least you can express your frustration with "
+    "these additional missiles!",
+    "Watch, these five missiles are going to come in SO handy, just you wait.",
+    "Look at you, overachiever! Have some missiles for being such a good completionist.",
+    "Wow, who just leaves a bunch of missiles lying around? This is an all-ages event, come on.",
+    "Did you know that missiles go through enemy shields? Bet you thought we made them have "
+    "limited ammo for nothing, huh!",
+    "Why yes, this is a missile expansion! Mazel Tov!",
+};
+
+/** @brief special dialog for one missile */
+const char* missileSwimDialog = "All that swimming just for a missile upgrade? LAME.";
 
 //==============================================================================
 // Functions
@@ -58,6 +79,9 @@ bool initializePlayer(ray_t* ray)
         // Set initial health
         ray->p.i.maxHealth = GAME_START_HEALTH;
         ray->p.i.health    = GAME_START_HEALTH;
+
+        // Set damage multiplier to 1;
+        ray->p.i.damageMult = 1;
     }
     else
     {
@@ -73,12 +97,19 @@ bool initializePlayer(ray_t* ray)
     ray->planeX = -MUL_FX(TO_FX(2) / 3, ray->p.dirY);
     ray->planeY = MUL_FX(TO_FX(2) / 3, ray->p.dirX);
 
-    // Always start with at least one missile to not get locked behind doors
+    // Always start with at most ten missiles to not get locked behind doors
     if (ray->p.i.missileLoadOut)
     {
-        if (0 == ray->p.i.numMissiles)
+        if (10 > ray->p.i.numMissiles)
         {
-            ray->p.i.numMissiles++;
+            if (10 > ray->p.i.maxNumMissiles)
+            {
+                ray->p.i.numMissiles = ray->p.i.maxNumMissiles;
+            }
+            else
+            {
+                ray->p.i.maxNumMissiles = 10;
+            }
         }
     }
 
@@ -86,6 +117,9 @@ bool initializePlayer(ray_t* ray)
     ray->nextLoadout        = ray->p.loadout;
     ray->loadoutChangeTimer = 0;
     ray->forceLoadoutSwap   = 0;
+
+    // Always reload with full health
+    ray->p.i.health = ray->p.i.maxHealth;
 
     return initFromScratch;
 }
@@ -115,10 +149,10 @@ void raySaveVisitedTiles(ray_t* ray)
  * @brief Check button inputs for the player. This will move the player and shoot bullets
  *
  * @param ray The entire game state
- * @param centeredSprite The sprite currently centered in the view
+ * @param centeredEnemy The enemy currently centered in the view, may be NULL
  * @param elapsedUs The elapsed time since this function was last called
  */
-void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t elapsedUs)
+void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t elapsedUs)
 {
     // For convenience
     q24_8 pPosX = ray->p.posX;
@@ -152,10 +186,10 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
                 // Set strafe to true
                 ray->isStrafing = true;
                 // If there is a centered sprite
-                if (centeredSprite && !CELL_IS_TYPE(centeredSprite->type, (OBJ | BULLET)))
+                if (centeredEnemy)
                 {
                     // Lock onto it
-                    ray->targetedObj = centeredSprite;
+                    ray->targetedObj = centeredEnemy;
                 }
             }
             else
@@ -173,36 +207,39 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
 
             if (evt.down)
             {
-                // A was pressed
-                // Check ammo for the missile loadout
-                if (LO_MISSILE == ray->p.loadout)
+                if (0 >= ray->playerShotCooldown)
                 {
-                    if (0 < ray->p.i.numMissiles)
+                    // A was pressed
+                    // Check ammo for the missile loadout
+                    if (LO_MISSILE == ray->p.loadout)
                     {
-                        // Decrement missile count
-                        ray->p.i.numMissiles--;
-                        // Fire a missile
-                        bullet = OBJ_BULLET_MISSILE;
+                        if (0 < ray->p.i.numMissiles)
+                        {
+                            // Decrement missile count
+                            ray->p.i.numMissiles--;
+                            // Fire a missile
+                            bullet = OBJ_BULLET_MISSILE;
+                        }
                     }
-                }
-                else
-                {
-                    // Start charging if applicable
-                    if (LO_NORMAL == ray->p.loadout && ray->p.i.chargePowerUp)
+                    else
                     {
-                        // Start charging
-                        ray->chargeTimer = 1;
-                    }
+                        // Start charging if applicable
+                        if (LO_NORMAL == ray->p.loadout && ray->p.i.chargePowerUp)
+                        {
+                            // Start charging
+                            ray->chargeTimer = 1;
+                        }
 
-                    // Fire according to loadout
-                    const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
-                        EMPTY,
-                        OBJ_BULLET_NORMAL,  ///< Normal loadout
-                        OBJ_BULLET_MISSILE, ///< Missile loadout
-                        OBJ_BULLET_ICE,     ///< Ice beam loadout
-                        OBJ_BULLET_XRAY     ///< X-Ray loadout
-                    };
-                    bullet = bulletMap[ray->p.loadout];
+                        // Fire according to loadout
+                        const rayMapCellType_t bulletMap[NUM_LOADOUTS] = {
+                            EMPTY,
+                            OBJ_BULLET_NORMAL,  ///< Normal loadout
+                            OBJ_BULLET_MISSILE, ///< Missile loadout
+                            OBJ_BULLET_ICE,     ///< Ice beam loadout
+                            OBJ_BULLET_XRAY     ///< X-Ray loadout
+                        };
+                        bullet = bulletMap[ray->p.loadout];
+                    }
                 }
             }
             else
@@ -221,8 +258,50 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredSprite, uint32_t 
             {
                 // Fire a shot
                 rayCreateBullet(ray, bullet, pPosX, pPosY, pDirX, pDirY, true);
+
+                // Play SFX depending on bullet
+                switch (bullet)
+                {
+                    case OBJ_BULLET_CHARGE:
+                    {
+                        ray->playerShotCooldown = 240000;
+                        bzrPlaySfx(&ray->sfx_p_charge, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_MISSILE:
+                    {
+                        ray->playerShotCooldown = 240000;
+                        bzrPlaySfx(&ray->sfx_p_missile, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_ICE:
+                    {
+                        ray->playerShotCooldown = 480000;
+                        bzrPlaySfx(&ray->sfx_p_ice, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_XRAY:
+                    {
+                        ray->playerShotCooldown = 240000;
+                        bzrPlaySfx(&ray->sfx_p_xray, BZR_RIGHT);
+                        break;
+                    }
+                    case OBJ_BULLET_NORMAL:
+                    default:
+                    {
+                        ray->playerShotCooldown = 120000;
+                        bzrPlaySfx(&ray->sfx_p_shoot, BZR_RIGHT);
+                        break;
+                    }
+                }
             }
         }
+    }
+
+    // Count down shot cooldown
+    if (0 < ray->playerShotCooldown)
+    {
+        ray->playerShotCooldown -= elapsedUs;
     }
 
     // If charging the beam
@@ -500,12 +579,14 @@ void rayPlayerCheckJoystick(ray_t* ray, uint32_t elapsedUs)
  * @brief This handles what happens when a player touches an item
  *
  * @param ray The whole game state
- * @param type The type of item touched
+ * @param item The item that was touched
  * @param mapId The current map ID, used to track non-unique persistent pick-ups
- * @param itemId The item's ID
  */
-void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_t itemId)
+void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
 {
+    rayMapCellType_t type = item->type;
+    int32_t itemId        = item->id;
+
     // Assume saving after picking up an item
     bool saveAfterObtain      = true;
     rayInventory_t* inventory = &ray->p.i;
@@ -588,6 +669,18 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
 
                     // Save the coordinates
                     inventory->missilesPickUps[mapId][idx] = itemId;
+
+                    // World 3, Missile ID 12 gets special dialog
+                    if (3 == ray->p.mapId && 12 == item->id)
+                    {
+                        rayShowDialog(ray, missileSwimDialog, item->sprite);
+                    }
+                    else
+                    {
+                        // Show random dialog
+                        int32_t dialogIdx = esp_random() % ARRAY_SIZE(missilePickupDialog);
+                        rayShowDialog(ray, missilePickupDialog[dialogIdx], item->sprite);
+                    }
                     break;
                 }
             }
@@ -622,12 +715,32 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         case OBJ_ITEM_ARTIFACT:
         {
             inventory->artifacts[mapId] = true;
+
+            // Check if all artifacts have been collected
+            bool collected = true;
+            for (int16_t aIdx = 0; aIdx < ARRAY_SIZE(inventory->artifacts); aIdx++)
+            {
+                if (!inventory->artifacts[aIdx])
+                {
+                    collected = false;
+                    break;
+                }
+            }
+
+            // If all were collected
+            if (collected)
+            {
+                // Increase damage output by 2
+                inventory->damageMult = 2;
+            }
             break;
         }
         case OBJ_ITEM_PICKUP_ENERGY:
         {
-            // Transient, add 20 health, not going over the max
-            inventory->health = MIN(inventory->health + 20, inventory->maxHealth);
+            // Transient, add (GAME_START_HEALTH / 2) health, not going over the max
+            inventory->health = MIN(inventory->health + (GAME_START_HEALTH / 2), inventory->maxHealth);
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_health, BZR_RIGHT);
             // Don't save after energy
             saveAfterObtain = false;
             break;
@@ -639,6 +752,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
                 // Transient, add 5 missiles, not going over the max
                 inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
             }
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_health, BZR_RIGHT);
             // Don't save after missile ammo
             saveAfterObtain = false;
             break;
@@ -665,6 +780,8 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
         // Autosave
         raySavePlayer(ray);
         raySaveVisitedTiles(ray);
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_item_get, BZR_RIGHT);
     }
 }
 
@@ -674,18 +791,52 @@ void rayPlayerTouchItem(ray_t* ray, rayMapCellType_t type, int32_t mapId, int32_
  * @param ray The entire game state
  * @param elapsedUs The elapsed time since this function was last called
  */
-void rayPlayerCheckLava(ray_t* ray, uint32_t elapsedUs)
+void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
 {
-    //  If the player is in lava without the lava suit
+    // If the player is in lava without the lava suit
     if ((!ray->p.i.lavaSuit) && (BG_FLOOR_LAVA == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type))
     {
         // Run a timer to take lava damage
-        ray->lavaTimer += elapsedUs;
-        if (ray->lavaTimer <= US_PER_LAVA_DAMAGE)
+        ray->floorEffectTimer += elapsedUs;
+        if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
         {
-            ray->lavaTimer -= US_PER_LAVA_DAMAGE;
+            ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
             rayPlayerDecrementHealth(ray, 1);
         }
+
+        // If the player is entering lava
+        if (false == ray->playerInLava)
+        {
+            ray->playerInLava = true;
+            // Start looping SFX
+            // ray->sfx_lava_dmg.shouldLoop = true;
+            // bzrPlaySfx(&ray->sfx_lava_dmg, BZR_RIGHT);
+        }
+    }
+    else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
+    {
+        // Run a timer to heal
+        ray->floorEffectTimer += elapsedUs;
+        if (ray->floorEffectTimer <= US_PER_FLOOR_EFFECT)
+        {
+            ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
+            rayPlayerDecrementHealth(ray, -1);
+        }
+
+        if (false == ray->playerInHealth)
+        {
+            ray->playerInHealth = true;
+        }
+    }
+    else if (true == ray->playerInLava)
+    {
+        ray->playerInLava = false;
+        // Stop looping SFX
+        // ray->sfx_lava_dmg.shouldLoop = true;
+    }
+    else if (true == ray->playerInHealth)
+    {
+        ray->playerInHealth = false;
     }
 }
 
@@ -699,26 +850,28 @@ void rayPlayerDecrementHealth(ray_t* ray, int32_t health)
 {
     // Decrement health
     ray->p.i.health -= health;
+
+    if (health > 0)
+    {
+        // Play SFX
+        bzrPlaySfx(&ray->sfx_p_damage, BZR_RIGHT);
+    }
+
+    // Make LEDs red
+    ray->ledHue = 0;
+
     // Check for death
     if (0 >= ray->p.i.health)
     {
-        // If the player already has the artifact
-        if (ray->p.i.artifacts[ray->p.mapId])
-        {
-            // load the last save
-            rayStartGame();
-        }
-        else
-        {
-            // Player does not have this artifact, load the backup from when the map was entered
-            mempcpy(&ray->p, &ray->p_backup, sizeof(rayPlayer_t));
-            raySavePlayer(ray);
-            // Clear visited tiles too
-            memset(ray->map.visitedTiles, NOT_VISITED, ray->map.w * ray->map.h * sizeof(rayTileState_t));
-            raySaveVisitedTiles(ray);
-        }
+        // load the last save
+        rayStartGame();
 
         // Show the death screen
         rayShowDeathScreen(ray);
+    }
+    else if (ray->p.i.health > ray->p.i.maxHealth)
+    {
+        // Never go over the max health
+        ray->p.i.health = ray->p.i.maxHealth;
     }
 }

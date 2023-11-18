@@ -100,8 +100,7 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
         rayBullet_t* obj = &(ray->bullets[i]);
         if (-1 != obj->c.id)
         {
-            // Update the bullet's position
-            // TODO justify the scaling factor, assuming velXY is a unit vector
+            // Update the bullet's position. 100000 was picked out of a hat!
             obj->c.posX += (obj->velX * (int32_t)elapsedUs) / 100000;
             obj->c.posY += (obj->velY * (int32_t)elapsedUs) / 100000;
 
@@ -198,6 +197,9 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
                             {
                                 // Start opening the door
                                 cell->openingDirection = 1;
+
+                                // Play SFX
+                                bzrPlaySfx(&ray->sfx_door_open, BZR_RIGHT);
                             }
                         }
                     }
@@ -253,29 +255,29 @@ void checkRayCollisions(ray_t* ray)
                 int32_t dmg = 0;
                 switch (bullet->c.type)
                 {
-                    case OBJ_BULLET_NORMAL:
-                    {
-                        dmg = 5;
-                        break;
-                    }
-                    case OBJ_BULLET_CHARGE:
+                    case OBJ_BULLET_E_NORMAL:
                     {
                         dmg = 10;
                         break;
                     }
-                    case OBJ_BULLET_MISSILE:
+                    case OBJ_BULLET_E_STRONG:
                     {
                         dmg = 15;
                         break;
                     }
-                    case OBJ_BULLET_ICE:
+                    case OBJ_BULLET_E_ARMOR:
                     {
                         dmg = 20;
                         break;
                     }
-                    case OBJ_BULLET_XRAY:
+                    case OBJ_BULLET_E_FLAMING:
                     {
                         dmg = 25;
+                        break;
+                    }
+                    case OBJ_BULLET_E_HIDDEN:
+                    {
+                        dmg = 30;
                         break;
                     }
                     default:
@@ -303,7 +305,7 @@ void checkRayCollisions(ray_t* ray)
         if (objectsIntersect(&player, item))
         {
             // Touch the item
-            rayPlayerTouchItem(ray, item->type, ray->p.mapId, item->id);
+            rayPlayerTouchItem(ray, item, ray->p.mapId);
             // Check scripts
             checkScriptGet(ray, item->id, item->sprite);
 

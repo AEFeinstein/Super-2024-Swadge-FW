@@ -228,6 +228,8 @@ class view:
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_FLOOR_LAVA, '../../assets/ray/env/BG_FLOOR_LAVA.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.BG_FLOOR_HEAL, '../../assets/ray/env/BG_FLOOR_HEAL.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_WALL_1, '../../assets/ray/env/BASE/BG_BASE_WALL_1.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.BG_WALL_2, '../../assets/ray/env/BASE/BG_BASE_WALL_2.png')
@@ -315,6 +317,8 @@ class view:
                          tileType.OBJ_SCENERY_F5, '../../assets/ray/friends/OBJ_SCENERY_F5.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.OBJ_SCENERY_F6, '../../assets/ray/friends/OBJ_SCENERY_F6.png')
+        self.loadTexture(self.texMapPalette, self.texMapMap,
+                         tileType.OBJ_SCENERY_F7, '../../assets/ray/friends/OBJ_SCENERY_F7.png')
         self.loadTexture(self.texMapPalette, self.texMapMap,
                          tileType.DELETE, 'imgs/DELETE.png')
 
@@ -540,8 +544,9 @@ class view:
             self.scriptTextEntry.tag_add(
                 tag, str(line) + '.0', str(line) + '.0 lineend')
             if script.isValid():
-                self.scriptTextEntry.tag_configure(
-                    tag, background="green", foreground="black")
+                # self.scriptTextEntry.tag_configure(
+                #     tag, background="green", foreground="black")
+                pass
             else:
                 self.scriptTextEntry.tag_configure(
                     tag, background="red", foreground="black")

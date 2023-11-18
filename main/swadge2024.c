@@ -157,8 +157,7 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US          1000000
-#define DEFAULT_FRAME_RATE_US 40000
+#define EXIT_TIME_US 1000000
 
 //==============================================================================
 // Variables

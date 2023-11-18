@@ -25,6 +25,11 @@
  * Brightness is adjusted per-color-channel, so dimming may produce different colors.
  * setLedBrightnessSetting() should be called instead if the brightness change should be persistent through reboots.
  *
+ * flushLeds() may be called to wait until all pending LED transactions are completed. This does not need to be called
+ * under normal operation. The RMT peripheral handles updating LEDs in the background automatically, but transactions
+ * must be flushed before entering light sleep. If they are not, garbage data may be sent after light sleep begins,
+ * resulting in indeterminate LED behavior.
+ *
  * Even though \c CONFIG_NUM_LEDS declares eight LEDs, there is a ninth LED which is controllable. By default, setting
  * \c CONFIG_NUM_LEDS LEDs will automatically set the ninth to the average of the sixth, seventh, and eighth, which
  * surround it on the PCB. To set the ninth LED, set `CONFIG_NUM_LEDS + 1` LEDs.
@@ -69,5 +74,7 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness);
 esp_err_t deinitLeds(void);
 esp_err_t setLeds(led_t* leds, uint8_t numLeds);
 void setLedBrightness(uint8_t brightness);
+uint8_t getLedState(led_t* leds, uint8_t numLeds);
+void flushLeds(void);
 
 #endif

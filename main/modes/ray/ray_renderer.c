@@ -198,8 +198,8 @@ void castFloorCeiling(ray_t* ray, int32_t firstRow, int32_t lastRow)
                         // Get the next cell texture
                         rayMapCellType_t type = ray->map.tiles[cellX][cellY].type;
 
-                        // Water and lava are special
-                        if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type))
+                        // Water, lava, and heal are special
+                        if ((BG_FLOOR_LAVA == type) || (BG_FLOOR_WATER == type) || (BG_FLOOR_HEAL == type))
                         {
                             texture = getTexByType(ray, type)->px;
                         }
@@ -675,12 +675,14 @@ static int objDistComparator(const void* obj1, const void* obj2)
  * This is called from the main loop.
  *
  * @param ray The entire game state
- * @return The closest sprite in the lock zone, i.e. center of the display. This may be NULL if there are no centered
- * sprites.
+ * @param closestEnemy Return pointer to the closest enemy to the player. The return may be NULL
+ * @return The closest enemy in the lock zone, i.e. center of the display. This may be NULL if there are no centered
+ * enemies.
  */
-rayObjCommon_t* castSprites(ray_t* ray)
+rayObjCommon_t* castSprites(ray_t* ray, rayEnemy_t** closestEnemy)
 {
-    rayObjCommon_t* lockedObj = NULL;
+    rayObjCommon_t* lockedEnemy = NULL;
+    *closestEnemy               = NULL;
 
     // Setup to draw
     SETUP_FOR_TURBO();
@@ -783,6 +785,12 @@ rayObjCommon_t* castSprites(ray_t* ray)
         // Make sure this object slot is occupied
         if (-1 != obj->id)
         {
+            bool isEnemy = CELL_IS_TYPE(obj->type, OBJ | ENEMY);
+            if (isEnemy)
+            {
+                *closestEnemy = (rayEnemy_t*)obj;
+            }
+
             // Get WSG dimensions for convenience
             uint32_t tWidth  = obj->sprite->w;
             uint32_t tHeight = obj->sprite->h;
@@ -904,7 +912,7 @@ rayObjCommon_t* castSprites(ray_t* ray)
 
             // If this is an enemy
             bool drawWarpLine = false;
-            if (CELL_IS_TYPE(obj->type, OBJ | ENEMY))
+            if (isEnemy)
             {
                 rayEnemy_t* enemy = (rayEnemy_t*)obj;
                 // And the enemy is warping in
@@ -943,10 +951,11 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 if (transformY < ray->wallDistBuffer[stripe])
                 {
                     // Check if this should be locked onto
-                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE))
+                    if (((TFT_WIDTH / 2) - LOCK_ZONE) <= stripe && stripe <= ((TFT_WIDTH / 2) + LOCK_ZONE)
+                        && CELL_IS_TYPE(obj->type, OBJ | ENEMY) && (E_DEAD != ((rayEnemy_t*)obj)->state))
                     {
                         // Closest sprites are drawn last, so override the lock
-                        lockedObj = obj;
+                        lockedEnemy = obj;
                     }
 
                     // Reset the texture Y coordinate
@@ -987,9 +996,45 @@ rayObjCommon_t* castSprites(ray_t* ray)
                 }
                 texX += texXDelta;
             }
+
+            // If this is a blocking enemy
+            if ((isEnemy) && (E_BLOCKING == ((rayEnemy_t*)obj)->state))
+            {
+                // Draw a circle shield with wallDistBuffer checks
+                // Drawing is largely copied from drawCircleInner()
+                int32_t r  = spriteHeight / 2;
+                int32_t xm = spriteScreenX;
+                int32_t ym = (TFT_HEIGHT / 2) + spritePosZ;
+                int32_t x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+                do
+                {
+                    int32_t cdX = xm - x;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + y), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - y), c550);
+                    }
+                    cdX = xm - y;
+                    if ((0 <= cdX) && (cdX < TFT_WIDTH) && (transformY < ray->wallDistBuffer[cdX]))
+                    {
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym - x), c550);
+                        TURBO_SET_PIXEL_BOUNDS((cdX), (ym + x), c550);
+                    }
+
+                    r = err;
+                    if (r <= y)
+                    {
+                        err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+                    }
+                    if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+                    {
+                        err += ++x * 2 + 1; /* -> x-step now */
+                    }
+                } while (x < 0);
+            }
         }
     }
-    return lockedObj;
+    return lockedEnemy;
 }
 
 /**
@@ -1020,7 +1065,7 @@ void drawHud(ray_t* ray)
                 yOffset += ((ray->loadoutChangeTimer * gun->h) / LOADOUT_TIMER_US);
             }
         }
-        drawWsgSimple(gun, TFT_WIDTH - gun->w, yOffset);
+        drawWsgSimple(gun, TFT_WIDTH - gun->w + ray->gunShakeX, yOffset);
     }
 
     // Draw Keys
@@ -1078,22 +1123,22 @@ void drawHud(ray_t* ray)
                     chargeIndicatorStart,        //
                     BAR_SIDE_MARGIN + BAR_WIDTH, //
                     TFT_HEIGHT - BAR_END_MARGIN, //
-                    c550);
+                    c420);
     fillDisplayArea(TFT_WIDTH - BAR_SIDE_MARGIN - BAR_WIDTH, //
                     chargeIndicatorStart,                    //
                     TFT_WIDTH - BAR_SIDE_MARGIN,             //
                     TFT_HEIGHT - BAR_END_MARGIN,             //
-                    c550);
+                    c420);
 
     // Draw side bars according to suit colors
-    paletteColor_t sideBarColor = c432;
+    paletteColor_t sideBarColor = c552;
     if (ray->p.i.waterSuit)
     {
-        sideBarColor = c223;
+        sideBarColor = c125;
     }
     else if (ray->p.i.lavaSuit)
     {
-        sideBarColor = c510;
+        sideBarColor = c500;
     }
     fillDisplayArea(BAR_SIDE_MARGIN,             //
                     BAR_END_MARGIN,              //
@@ -1295,4 +1340,153 @@ void runEnvTimers(ray_t* ray, uint32_t elapsedUs)
             ray->itemRotateMirror = !ray->itemRotateMirror;
         }
     }
+
+    // If the gun is charged
+    if (ray->chargeTimer >= CHARGE_TIME_US)
+    {
+        // Run a timer to shake it left and right
+        ray->gunShakeTimer -= elapsedUs;
+        while (ray->gunShakeTimer <= 0)
+        {
+            ray->gunShakeTimer += 10000;
+            if (true == ray->gunShakeL)
+            {
+                ray->gunShakeX++;
+                if (10 <= ray->gunShakeX)
+                {
+                    ray->gunShakeL = false;
+                }
+            }
+            else
+            {
+                ray->gunShakeX--;
+                if (0 >= ray->gunShakeX)
+                {
+                    ray->gunShakeL = true;
+                }
+            }
+        }
+    }
+    else
+    {
+        // If the gun is not charged, make sure this is reset
+        ray->gunShakeX = 0;
+    }
+}
+
+/**
+ * @brief Draw LEDs as a radar pointing to the closest enemy
+ *
+ * @param ray The entire game state
+ * @param closestEnemy The closest enemy, may be NULL
+ * @param elapsedUs The elapsed time since this function was last called
+ */
+void rayLightLeds(ray_t* ray, rayEnemy_t* closestEnemy, uint32_t elapsedUs)
+{
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    bool ledsSet                = false;
+
+    // If the player is in lava
+    if (ray->playerInLava || ray->playerInHealth)
+    {
+        // Run a timer to blink warning LEDS. this overrides the radar
+        ray->lavaTimer -= elapsedUs;
+        while (0 > ray->lavaTimer)
+        {
+            ray->lavaTimer += 200000;
+            ray->lavaLedBlink = !ray->lavaLedBlink;
+        }
+
+        if (ray->lavaLedBlink)
+        {
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+            {
+                if (ray->playerInLava)
+                {
+                    leds[lIdx].r = 0xFF;
+                }
+                else if (ray->playerInHealth)
+                {
+                    leds[lIdx].g = 0xFF;
+                }
+            }
+        }
+        ledsSet = true;
+    }
+    else if (NULL != closestEnemy)
+    {
+        // Angles around a circle at 45 degree increments (one per LED)
+        // clang-format off
+        const q24_8 normLedAngles[CONFIG_NUM_LEDS][2] = {
+            {0xFFFFFF9E, 0x000000EC},
+            {0xFFFFFF14, 0x00000062},
+            {0xFFFFFF14, 0xFFFFFF9E},
+            {0xFFFFFF9E, 0xFFFFFF14},
+            {0x00000062, 0xFFFFFF14},
+            {0x000000EC, 0xFFFFFF9E},
+            {0x000000EC, 0x00000062},
+            {0x00000062, 0x000000EC},
+        };
+        // clang-format on
+
+        // Find the player's view angle
+        int32_t pDegrees = cordicAtan2(ray->p.dirX, -ray->p.dirY);
+        // Negate it
+        if (pDegrees != 0)
+        {
+            pDegrees = 360 - pDegrees;
+        }
+
+        // Get a vector from the player to the enemy
+        q24_8 xDiff = SUB_FX(closestEnemy->c.posX, ray->p.posX);
+        q24_8 yDiff = SUB_FX(closestEnemy->c.posY, ray->p.posY);
+
+        // Get a magnitude, for brightness
+        q24_8 dist = ADD_FX(MUL_FX(xDiff, xDiff), MUL_FX(yDiff, yDiff));
+
+        // Rotate the enemy vector in relation to the player
+        int32_t pSin     = getSin1024(pDegrees);
+        int32_t pCos     = getCos1024(pDegrees);
+        q24_8 eRotAngleX = ((xDiff * pCos) - (yDiff * pSin)) / 1024;
+        q24_8 eRotAngleY = ((xDiff * pSin) + (yDiff * pCos)) / 1024;
+
+        // Normalize the vector
+        fastNormVec(&eRotAngleX, &eRotAngleY);
+
+#define MAX_RADAR_DIST 32768
+
+        // Calculate each LED's brightness
+        if (dist < MAX_RADAR_DIST)
+        {
+            int32_t brightness = MAX_RADAR_DIST - dist;
+            for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+            {
+                // The brightness is the dot product between the LED's vector and the vector to the enemy
+                // dotProd of two normalized vectors is between -1 and 1
+                q24_8 dotProd = ADD_FX(MUL_FX(normLedAngles[lIdx][0], eRotAngleX), //
+                                       MUL_FX(normLedAngles[lIdx][1], eRotAngleY));
+                // Shift dotProd to the range 0 to 1, which is actually 0 to 256
+                dotProd = ADD_FX(TO_FX(1), dotProd) / 2;
+
+                // Light the LED
+                int32_t ledVal = (dotProd * brightness) / MAX_RADAR_DIST;
+                leds[lIdx]     = LedEHSVtoHEXhelper(ray->ledHue, 0xFF, CLAMP(ledVal, 0, 0xFF), true);
+            }
+            // Note the LEDs are set
+            ledsSet = true;
+        }
+    }
+
+    // If the LEDs are not set (no enemy or out of range)
+    if (!ledsSet)
+    {
+        // Light all evenly
+        for (int32_t lIdx = 0; lIdx < ARRAY_SIZE(leds); lIdx++)
+        {
+            leds[lIdx] = LedEHSVtoHEXhelper(ray->ledHue, 0xFF, 0x80, true);
+        }
+    }
+
+    // Set the LEDs
+    setLeds(leds, CONFIG_NUM_LEDS);
 }

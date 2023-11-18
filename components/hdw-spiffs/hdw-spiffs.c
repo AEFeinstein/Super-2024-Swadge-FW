@@ -12,6 +12,7 @@
 #include <spiffs_config.h>
 
 #include "hdw-spiffs.h"
+#include "hdw-bzr.h"
 
 //==============================================================================
 // Variables
@@ -74,6 +75,9 @@ bool deinitSpiffs(void)
  */
 uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
+    // Pause the buzzer before SPIFFS reads
+    bool bzrPaused = bzrPause();
+
     uint8_t* output;
 
     // Read and display the contents of a small text file
@@ -86,31 +90,38 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
     if (f == NULL)
     {
         ESP_LOGE("SPIFFS", "Failed to open %s", fnameFull);
-        return NULL;
-    }
-
-    // Get the file size
-    fseek(f, 0L, SEEK_END);
-    *outsize = ftell(f);
-    fseek(f, 0L, SEEK_SET);
-
-    // Read the file into an array
-    if (readToSpiRam)
-    {
-        output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        output = NULL;
     }
     else
     {
-        output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+        // Get the file size
+        fseek(f, 0L, SEEK_END);
+        *outsize = ftell(f);
+        fseek(f, 0L, SEEK_SET);
+
+        // Read the file into an array
+        if (readToSpiRam)
+        {
+            output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+        }
+        else
+        {
+            output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+        }
+        fread(output, *outsize, 1, f);
+        // Add null terminator
+        (output)[*outsize] = 0;
+
+        // Close the file
+        fclose(f);
+
+        // Display the read contents from the file
+        ESP_LOGI("SPIFFS", "Read from %s: %u bytes", fname, *outsize);
     }
-    fread(output, *outsize, 1, f);
-    // Add null terminator
-    (output)[*outsize] = 0;
-
-    // Close the file
-    fclose(f);
-
-    // Display the read contents from the file
-    ESP_LOGI("SPIFFS", "Read from %s: %u bytes", fname, *outsize);
+    // Resume the buzzer if it was paused
+    if (bzrPaused)
+    {
+        bzrResume();
+    }
     return output;
 }

@@ -16,12 +16,12 @@
 //==============================================================================
 #define CLAMP(x, l, u) ((x) < l ? l : ((x) > u ? u : (x)))
 
-#define TILEMAP_DISPLAY_WIDTH_PIXELS 280  // The screen size
+#define TILEMAP_DISPLAY_WIDTH_PIXELS  280 // The screen size
 #define TILEMAP_DISPLAY_HEIGHT_PIXELS 240 // The screen size
-#define TILEMAP_DISPLAY_WIDTH_TILES 36    // The screen size in tiles + 1
-#define TILEMAP_DISPLAY_HEIGHT_TILES 31   // The screen size in tiles + 1
+#define TILEMAP_DISPLAY_WIDTH_TILES   36  // The screen size in tiles + 1
+#define TILEMAP_DISPLAY_HEIGHT_TILES  31  // The screen size in tiles + 1
 
-#define TILE_SIZE 8
+#define TILE_SIZE                8
 #define TILE_SIZE_IN_POWERS_OF_2 3
 
 #define TILESET_SIZE 128
@@ -29,16 +29,17 @@
 //==============================================================================
 // Enums
 //==============================================================================
-typedef enum {
+typedef enum
+{
     TILE_EMPTY,
     TILE_BOUNDARY_1,
     TILE_BOUNDARY_2,
     TILE_BOUNDARY_3,
-    TILE_UNUSED_4,
-    TILE_UNUSED_5,
-    TILE_UNUSED_6,
-    TILE_UNUSED_7,
-    TILE_UNUSED_8,
+    TILE_BOUNDARY_4,
+    TILE_BOUNDARY_5,
+    TILE_BOUNDARY_6,
+    TILE_BOUNDARY_7,
+    TILE_INVISIBLE_BLOCK,
     TILE_UNUSED_9,
     TILE_UNUSED_A,
     TILE_UNUSED_B,
@@ -58,7 +59,7 @@ typedef enum {
     TILE_BLOCK_1x1_TAN,
     TILE_BLOCK_1x1_BROWN,
     TILE_BLOCK_1x1_BLACK,
-    TILE_UNUSED_28,
+    TILE_BLOCK_1x1_STONE,
     TILE_UNUSED_29,
     TILE_UNUSED_30,
     TILE_UNUSED_31,
@@ -86,8 +87,8 @@ typedef enum {
     TILE_BLOCK_2x1_BROWN_R,
     TILE_BLOCK_2x1_BLACK_L,
     TILE_BLOCK_2x1_BLACK_R,
-    TILE_SOLID_UNUSED_56,
-    TILE_SOLID_UNUSED_57,
+    TILE_BLOCK_2x1_STONE_L,
+    TILE_BLOCK_2x1_STONE_R,
     TILE_SOLID_UNUSED_58,
     TILE_SOLID_UNUSED_59,
     TILE_SOLID_UNUSED_60,
@@ -134,8 +135,8 @@ typedef enum {
     TILE_BLOCK_2x2_BROWN_UR,
     TILE_BLOCK_2x2_BLACK_UL,
     TILE_BLOCK_2x2_BLACK_UR,
-    TILE_UNUSED_104,
-    TILE_UNUSED_105,
+    TILE_BLOCK_2x2_STONE_UL,
+    TILE_BLOCK_2x2_STONE_UR,
     TILE_UNUSED_106,
     TILE_UNUSED_107,
     TILE_UNUSED_108,
@@ -150,8 +151,8 @@ typedef enum {
     TILE_BLOCK_2x2_BROWN_DR,
     TILE_BLOCK_2x2_BLACK_DL,
     TILE_BLOCK_2x2_BLACK_DR,
-    TILE_UNUSED_120,
-    TILE_UNUSED_121,
+    TILE_BLOCK_2x2_STONE_DL,
+    TILE_BLOCK_2x2_STONE_DR,
     TILE_UNUSED_122,
     TILE_UNUSED_123,
     TILE_UNUSED_124,
@@ -163,23 +164,24 @@ typedef enum {
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct {
+typedef struct
+{
     uint8_t x;
     uint8_t y;
 } warp_t;
- struct tilemap_t
+struct tilemap_t
 {
     wsg_t tiles[TILESET_SIZE];
 
-    uint8_t * map;
+    uint8_t* map;
     uint8_t mapWidth;
     uint8_t mapHeight;
-    
+
     uint16_t totalTargetBlocks;
 
     int16_t mapOffsetX;
     int16_t mapOffsetY;
-    
+
     int16_t minMapOffsetX;
     int16_t maxMapOffsetX;
     int16_t minMapOffsetY;
@@ -190,7 +192,7 @@ typedef struct {
     int16_t executeTileSpawnRow;
     bool executeTileSpawnAll;
 
-    entityManager_t *entityManager;
+    entityManager_t* entityManager;
 
     uint8_t animationFrame;
     int16_t animationTimer;
@@ -199,19 +201,20 @@ typedef struct {
 //==============================================================================
 // Prototypes
 //==============================================================================
-void initializeTileMap(tilemap_t * tilemap);
-void drawTileMap(tilemap_t * tilemap);
-void scrollTileMap(tilemap_t * tilemap, int16_t x, int16_t y);
-void drawTile(tilemap_t * tilemap, uint8_t tileId, int16_t x, int16_t y);
-bool loadMapFromFile(tilemap_t * tilemap, const char * name);
-bool loadTiles(tilemap_t * tilemap);
-void tileSpawnEntity(tilemap_t * tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
-uint8_t getTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty);
-void setTile(tilemap_t *tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
+void initializeTileMap(tilemap_t* tilemap);
+void drawTileMap(tilemap_t* tilemap);
+void scrollTileMap(tilemap_t* tilemap, int16_t x, int16_t y);
+void drawTile(tilemap_t* tilemap, uint8_t tileId, int16_t x, int16_t y);
+bool loadMapFromFile(tilemap_t* tilemap, const char* name);
+bool loadTiles(tilemap_t* tilemap);
+void tileSpawnEntity(tilemap_t* tilemap, uint8_t objectIndex, uint8_t tx, uint8_t ty);
+uint8_t getTile(tilemap_t* tilemap, uint8_t tx, uint8_t ty);
+void setTile(tilemap_t* tilemap, uint8_t tx, uint8_t ty, uint8_t newTileId);
 bool isSolid(uint8_t tileId);
 bool isBlock(uint8_t tileId);
-void unlockScrolling(tilemap_t *tilemap);
+void unlockScrolling(tilemap_t* tilemap);
 bool needsTransparency(uint8_t tileId);
-void freeTilemap(tilemap_t *tilemap);
+void freeTilemap(tilemap_t* tilemap);
+void forceTileSpawnEntitiesWithinView(tilemap_t* tilemap);
 
 #endif

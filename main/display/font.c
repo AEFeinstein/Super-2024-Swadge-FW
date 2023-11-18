@@ -39,6 +39,12 @@ static const char* drawTextWordWrapFlags(const font_t* font, paletteColor_t colo
  */
 void drawChar(paletteColor_t color, int h, const font_ch_t* ch, int16_t xOff, int16_t yOff)
 {
+    // Do not draw transparent chars
+    if (cTransparent == color)
+    {
+        return;
+    }
+
     //  This function has been micro optimized by cnlohr on 2022-09-07, using gcc version 8.4.0 (crosstool-NG
     //  esp-2021r2-patch3)
     int bitIdx            = 0;

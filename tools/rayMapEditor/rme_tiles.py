@@ -26,6 +26,7 @@ class tileType(Enum):
     BG_FLOOR_WATER  = (BG | FLOOR | 2)
     BG_FLOOR_LAVA   = (BG | FLOOR | 3)
     BG_CEILING      = (BG | FLOOR | 4)
+    BG_FLOOR_HEAL   = (BG | FLOOR | 5)
     BG_WALL_1       = (BG | WALL  | 1)
     BG_WALL_2       = (BG | WALL  | 2)
     BG_WALL_3       = (BG | WALL  | 3)
@@ -67,11 +68,16 @@ class tileType(Enum):
     OBJ_ITEM_PICKUP_ENERGY  = (OBJ | ITEM | 13)
     OBJ_ITEM_PICKUP_MISSILE = (OBJ | ITEM | 14)
     # Bullets
-    OBJ_BULLET_NORMAL  = (OBJ | BULLET | 15)
-    OBJ_BULLET_CHARGE  = (OBJ | BULLET | 16)
-    OBJ_BULLET_ICE     = (OBJ | BULLET | 17)
-    OBJ_BULLET_MISSILE = (OBJ | BULLET | 18)
-    OBJ_BULLET_XRAY    = (OBJ | BULLET | 19)
+    OBJ_BULLET_NORMAL    = (OBJ | BULLET | 1)
+    OBJ_BULLET_CHARGE    = (OBJ | BULLET | 2)
+    OBJ_BULLET_ICE       = (OBJ | BULLET | 3)
+    OBJ_BULLET_MISSILE   = (OBJ | BULLET | 4)
+    OBJ_BULLET_XRAY      = (OBJ | BULLET | 5)
+    OBJ_BULLET_E_NORMAL  = (OBJ | BULLET | 6)
+    OBJ_BULLET_E_STRONG  = (OBJ | BULLET | 7)
+    OBJ_BULLET_E_ARMOR   = (OBJ | BULLET | 8)
+    OBJ_BULLET_E_FLAMING = (OBJ | BULLET | 9)
+    OBJ_BULLET_E_HIDDEN  = (OBJ | BULLET | 10)
     # Scenery
     OBJ_SCENERY_TERMINAL = (OBJ | SCENERY | 1)
     OBJ_SCENERY_PORTAL   = (OBJ | SCENERY | 2)
@@ -81,12 +87,14 @@ class tileType(Enum):
     OBJ_SCENERY_F4       = (OBJ | SCENERY | 6)
     OBJ_SCENERY_F5       = (OBJ | SCENERY | 7)
     OBJ_SCENERY_F6       = (OBJ | SCENERY | 8)
+    OBJ_SCENERY_F7       = (OBJ | SCENERY | 9)
 
 bgTiles: list[list[tileType]] = [
     [
         tileType.BG_FLOOR,
         tileType.BG_FLOOR_WATER,
         tileType.BG_FLOOR_LAVA,
+        tileType.BG_FLOOR_HEAL,
         tileType.BG_WALL_1,
         tileType.BG_WALL_2,
         tileType.BG_WALL_3,
@@ -142,6 +150,7 @@ objTiles: list[list[tileType]] = [
         tileType.OBJ_SCENERY_F4,
         tileType.OBJ_SCENERY_F5,
         tileType.OBJ_SCENERY_F6,
+        tileType.OBJ_SCENERY_F7,
         tileType.DELETE
     ]
 ]
