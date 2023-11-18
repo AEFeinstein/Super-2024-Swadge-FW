@@ -2082,6 +2082,7 @@ static void paintDialogCb(const char* label)
             }
 
             case DIALOG_CONFIRM_UNSAVED_EXIT:
+            case DIALOG_ERROR_LOAD:
             {
                 paintState->exiting = true;
                 break;

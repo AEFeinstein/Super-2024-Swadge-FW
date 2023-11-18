@@ -282,7 +282,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
         node = node->next;
     }
 
-    bool centerSel = renderer->touched && (!menu->currentItem || menuItemIsBack(menu->currentItem));
+    bool centerSel = renderer->touched && (!menu->currentItem || menuItemIsBack(menu->currentItem->val));
     paletteColor_t backSelBg = backInfo ? backInfo->selectedBg : renderer->selBgColor;
     paletteColor_t backUnselBg = backInfo ? backInfo->unselectedBg : renderer->unselBgColor;
     drawCircleFilled(renderer->x, renderer->y, centerSel ? renderer->selR : renderer->unselR, centerSel ? backSelBg : backUnselBg);
