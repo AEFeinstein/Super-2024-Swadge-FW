@@ -120,7 +120,7 @@ typedef struct
     bool down;          //!< True if the button was pressed, false if it was released
 } buttonEvt_t;
 
-void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads);
+void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads, bool flipTouch);
 void deinitButtons(void);
 bool checkButtonQueue(buttonEvt_t*);
 

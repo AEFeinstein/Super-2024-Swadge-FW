@@ -97,6 +97,8 @@ typedef enum __attribute__((packed))
 
 LSM6DSLData LSM6DSL;
 
+static bool flipImu;
+
 //==============================================================================
 // Static Function Prototypes
 //==============================================================================
@@ -262,8 +264,9 @@ static int ReadLSM6DSL(uint8_t* data, int data_len)
  * GPIO_PULLUP_ENABLE if internal pull-ups should be used
  * @return ESP_OK if the accelerometer initialized, or a non-zero value if it did not
  */
-esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup)
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, bool flip)
 {
+    flipImu = flip;
     int i;
     int retry = 0;
 do_retry:
@@ -516,7 +519,7 @@ esp_err_t accelIntegrate()
 
         // STEP 6A: Examine vectors.  Generally speaking, we want an "up" vector, not a gravity vector.
         // this is "up" in the controller's point of view.
-        float accel_up[3] = {-accel_data[0], accel_data[1], -accel_data[2]};
+        float accel_up[3] = {-accel_data[0], flipImu?-accel_data[1]:accel_data[1], -accel_data[2]};
 
         float accel_inverse_mag
             = rsqrtf(accel_up[0] * accel_up[0] + accel_up[1] * accel_up[1] + accel_up[2] * accel_up[2]);

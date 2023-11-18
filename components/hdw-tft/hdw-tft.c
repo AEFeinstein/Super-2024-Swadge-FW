@@ -170,7 +170,7 @@ esp_err_t setTFTBacklightBrightness(uint8_t intensity)
  */
 void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_num_t dc, gpio_num_t cs, gpio_num_t rst,
              gpio_num_t backlight, bool isPwmBacklight, ledc_channel_t ledcChannel, ledc_timer_t ledcTimer,
-             uint8_t brightness)
+             uint8_t brightness, bool flip180)
 {
     tftSpiHost        = spiHost;
     tftBacklightPin   = backlight;
@@ -233,14 +233,14 @@ void initTFT(spi_host_device_t spiHost, gpio_num_t sclk, gpio_num_t mosi, gpio_n
 
     // Config the TFT
     esp_lcd_panel_swap_xy(panel_handle, SWAP_XY);
-    esp_lcd_panel_mirror(panel_handle, MIRROR_X, MIRROR_Y);
+    esp_lcd_panel_mirror(panel_handle, flip180 ? !MIRROR_X : MIRROR_X, flip180 ? !MIRROR_Y : MIRROR_Y);
     esp_lcd_panel_set_gap(panel_handle, X_OFFSET, Y_OFFSET);
 
 #if defined(CONFIG_GC9307_240x280)
     esp_lcd_panel_invert_color(panel_handle, false);
     // NOTE: the following call would override settings set by esp_lcd_panel_swap_xy() and esp_lcd_panel_mirror()
     // Both of the prior functions write to the 0x36 register
-    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0xE8}, 1); // MX, MY, RGB mode  (MAD CTL)
+    esp_lcd_panel_io_tx_param(tft_io_handle, 0x36, (uint8_t[]){0x28 | (flip180 ? 0x00 : 0xC0)}, 1); // MX, MY, RGB mode  (MAD CTL)
     esp_lcd_panel_io_tx_param(tft_io_handle, 0x35, (uint8_t[]){0x00}, 1); // "tear effect" testing sync pin.
 #elif defined(CONFIG_ST7735_128x160)
     esp_lcd_panel_io_tx_param(tft_io_handle, 0xB1, (uint8_t[]){0x05, 0x3C, 0x3C}, 3);

@@ -218,7 +218,7 @@ static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
                                    int8_t rssi);
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static void setSwadgeMode(void* swadgeMode);
-static void initOptionalPeripherals(void);
+static void initOptionalPeripherals(bool flip);
 static void dacCallback(uint8_t* samples, int16_t len);
 
 //==============================================================================
@@ -240,6 +240,8 @@ void app_main(void)
 
     // Read settings from NVS
     readAllSettings();
+
+    bool flip = getFlipSwadgeSetting();
 
     // If test mode was passed
     if (getTutorialCompletedSetting())
@@ -298,6 +300,16 @@ void app_main(void)
         GPIO_NUM_8,  // Start
         GPIO_NUM_5   // Select
     };
+    gpio_num_t pushButtonsFlip[] = {
+        GPIO_NUM_4,  // Down
+        GPIO_NUM_0,  // Up
+        GPIO_NUM_1,  // Right
+        GPIO_NUM_2,  // Left
+        GPIO_NUM_15, // B
+        GPIO_NUM_16, // A
+        GPIO_NUM_5,  // Select
+        GPIO_NUM_8,  // Start
+    };
     touch_pad_t touchPads[] = {
         TOUCH_PAD_NUM9,  // GPIO_NUM_9
         TOUCH_PAD_NUM10, // GPIO_NUM_10
@@ -306,8 +318,8 @@ void app_main(void)
         TOUCH_PAD_NUM13, // GPIO_NUM_13
         TOUCH_PAD_NUM14, // GPIO_NUM_14
     };
-    initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
-                sizeof(touchPads) / sizeof(touchPads[0]));
+    initButtons(flip ? pushButtonsFlip : pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
+                sizeof(touchPads) / sizeof(touchPads[0]), flip);
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
@@ -320,7 +332,8 @@ void app_main(void)
             true,                       // PWM backlight
             LEDC_CHANNEL_2,             // Channel to use for PWM backlight
             LEDC_TIMER_2,               // Timer to use for PWM backlight
-            getTftBrightnessSetting()); // TFT Brightness
+            getTftBrightnessSetting(),  // TFT Brightness
+            flip);                      // Flip Display
 
     initShapes();
 
@@ -334,7 +347,7 @@ void app_main(void)
              getLedBrightnessSetting());
 
     // Initialize optional peripherals, depending on the mode's requests
-    initOptionalPeripherals();
+    initOptionalPeripherals(flip);
 
     // Initialize the loop timer
     static int64_t tLastLoopUs = 0;
@@ -504,7 +517,7 @@ void app_main(void)
 /**
  * @brief Initialize optional hardware peripherals for this Swadge mode
  */
-static void initOptionalPeripherals(void)
+static void initOptionalPeripherals(bool flip)
 {
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
@@ -544,7 +557,8 @@ static void initOptionalPeripherals(void)
     {
         initAccelerometer(GPIO_NUM_3,  // SDA
                           GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_ENABLE);
+                          GPIO_PULLUP_ENABLE,
+                          flip);
         accelIntegrate();
     }
 
@@ -678,7 +692,7 @@ void softSwitchToPendingSwadge(void)
         pendingSwadgeMode = NULL;
 
         // Initialize optional peripherals for this mode
-        initOptionalPeripherals();
+        initOptionalPeripherals(getFlipSwadgeSetting());
 
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)

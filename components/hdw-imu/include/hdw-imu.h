@@ -44,6 +44,7 @@
 #define _HDW_IMU_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include <hal/gpio_types.h>
 #include <esp_err.h>
@@ -83,7 +84,7 @@ typedef struct
 
 extern LSM6DSLData LSM6DSL;
 
-esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup);
+esp_err_t initAccelerometer(gpio_num_t sda, gpio_num_t scl, gpio_pullup_t pullup, bool flip);
 esp_err_t deInitAccelerometer(void);
 esp_err_t accelGetAccelVecRaw(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);

@@ -42,6 +42,8 @@ static int numTouchPads;
 static touch_pad_t* touchPads;
 // Used in getBaseTouchVals() to get zeroed touch sensor values
 static int32_t* baseOffsets = NULL;
+// Used to rotate touches by 180 degrees if needed
+static bool flipTouch;
 
 /// Timer handle used to periodically poll buttons
 static gptimer_handle_t btnTimer = NULL;
@@ -54,7 +56,7 @@ static void initPushButtons(gpio_num_t* pushButtons, uint8_t numPushButtons);
 static bool btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t* edata, void* user_ctx);
 
 static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity,
-                            bool denoiseEnable);
+                            bool denoiseEnable, bool flipTouch);
 
 static int getTouchRawValues(uint32_t* rawValues, int maxPads);
 static int getBaseTouchVals(int32_t* data, int count);
@@ -72,13 +74,13 @@ static int getBaseTouchVals(int32_t* data, int count);
  * @param touchPads A list of touch areas that make up a touchpad to initialize.
  * @param numTouchPads The number of touch buttons to initialize
  */
-void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
+void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads, bool _flipTouch)
 {
     // create a queue to handle polling GPIO from ISR
     btn_evt_queue = xQueueCreate(3 * (numPushButtons + numTouchPads), sizeof(uint32_t));
 
     initPushButtons(pushButtons, numPushButtons);
-    initTouchSensor(touchPads, numTouchPads, 0.2f, true);
+    initTouchSensor(touchPads, numTouchPads, 0.2f, true, _flipTouch);
 }
 
 /**
@@ -276,7 +278,7 @@ static bool IRAM_ATTR btn_timer_isr_cb(gptimer_handle_t timer, const gptimer_ala
  * @param denoiseEnable true to denoise the input, false to use it raw
  */
 static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, float touchPadSensitivity,
-                            bool denoiseEnable)
+                            bool denoiseEnable, bool _flipTouch)
 {
     ESP_LOGD("TOUCH", "Initializing touch pad");
 
@@ -351,6 +353,8 @@ static void initTouchSensor(touch_pad_t* _touchPads, uint8_t _numTouchPads, floa
         ESP_LOGD("TOUCH", "touch pad [%d] base %lu, thresh %lu", touchPads[i], touch_value,
                  (uint32_t)(touch_value * touchPadSensitivity));
     }
+
+    flipTouch = _flipTouch;
 
     getTouchJoystick(0, 0, 0);
 }
@@ -527,7 +531,7 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
     ringPh = (ringPh * 9) >> 5;
     if (phi)
     {
-        *phi = ringPh;
+        *phi = (flipTouch ? ((ringPh + 180) % 360) : ringPh);
     }
 
     // Find ratio of ring to inner.

@@ -158,4 +158,8 @@ showSecrets_t getShowSecretsMenuSetting(void);
 const settingParam_t* getShowSecretsMenuSettingBounds(void);
 bool setShowSecretsMenuSetting(showSecrets_t status);
 
+bool getFlipSwadgeSetting(void);
+const settingParam_t* getFlipSwadgeSettingBounds(void);
+bool setFlipSwadgeSetting(bool val);
+
 #endif

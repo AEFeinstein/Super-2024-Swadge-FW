@@ -57,7 +57,7 @@ static int32_t lastTouchIntensity = 0;
  * @param touchPads A list of touch areas that make up a touchpad to initialize.
  * @param numTouchPads The number of touch buttons to initialize
  */
-void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads)
+void initButtons(gpio_num_t* pushButtons, uint8_t numPushButtons, touch_pad_t* touchPads, uint8_t numTouchPads, bool flipTouch)
 {
     buttonState = 0;
     buttonQueue = calloc(1, sizeof(list_t));

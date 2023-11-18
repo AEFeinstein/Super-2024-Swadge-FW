@@ -62,6 +62,7 @@ DECL_SETTING(scrn_sv, 0, 300, 20);
 DECL_SETTING(gp_accel, 0, 1, 1);
 DECL_SETTING(gp_touch, GAMEPAD_TOUCH_L_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING);
 DECL_SETTING(show_secrets, SHOW_SECRETS, HIDE_SECRETS, HIDE_SECRETS);
+DECL_SETTING(flip, 0, 1, 0);
 
 //==============================================================================
 // Static Function Prototypes
@@ -174,6 +175,9 @@ void readAllSettings(void)
 
     // Read the setting to show Secrets menu on the main menu
     readSetting(&show_secrets_setting);
+
+    // Read the flip setting
+    readSetting(&flip_setting);
 }
 
 //==============================================================================
@@ -604,4 +608,19 @@ const settingParam_t* getShowSecretsMenuSettingBounds(void)
 bool setShowSecretsMenuSetting(showSecrets_t status)
 {
     return setSetting(&show_secrets_setting, status);
+}
+
+bool getFlipSwadgeSetting(void)
+{
+    return flip_setting.val;
+}
+
+const settingParam_t* getFlipSwadgeSettingBounds(void)
+{
+    return &flip_param;
+}
+
+bool setFlipSwadgeSetting(bool val)
+{
+    return setSetting(&flip_setting, val);
 }
