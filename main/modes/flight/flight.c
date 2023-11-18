@@ -1047,7 +1047,7 @@ int tdModelVisibilitycheck( const tdModel * m )
 }
 /* Profiling notes
      Start = 245500 / 80000 / 1802000
-
+	 Using static local vars = 245500 / 80000 / 1753200
 */
 
 void tdDrawModel( const tdModel * m )
