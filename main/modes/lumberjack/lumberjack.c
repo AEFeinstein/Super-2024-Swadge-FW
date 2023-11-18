@@ -116,12 +116,6 @@ static void lumberjackEnterMode(void)
     addSingleItemToMenu(lumberjack->menu, lumberjackInstructions);
     lumberjack->menu = endSubMenu(lumberjack->menu);
 
-    // TODO add instructions menu item & screen. Can be a simple synopsis that uses drawTextWordWrap() to draw a paragraph to the screen
-    // Should explain difference between panic and attack, maybe item usage, how to dodge ghost, etc.
-    // You can also do multi-page, because drawTextWordWrap() returns a pointer to any off-screen text.
-    // For reference, see rayDialogRender()
-
-
     int characters = 2;
 
     if (lumberjack->save.choUnlocked)
@@ -290,14 +284,14 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
             int16_t tWidthH = textWidth(&lumberjack->arcade, titleText);
             lumberjackInstructionText(titleText, c555, (TFT_WIDTH-tWidthH)/2, 15);
 
-            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAx blocks lowers water\nDon't drown";
+            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAxe blocks lowers water\nDon't drown";
             /*
             lumberjackInstructionText("Press A to jump", c355, dOffset, 50);
             lumberjackInstructionText("Avoid upright baddies", c355, dOffset, 70);
             lumberjackInstructionText("Hit baddies from under", c355, dOffset, 90);
             lumberjackInstructionText("Then go kick them off", c355, dOffset, 110);
             lumberjackInstructionText("Duck Down to avoid ghost", c355, dOffset, 130);
-            lumberjackInstructionText("Ax blocks lowers water", c355, dOffset, 150);
+            lumberjackInstructionText("Axe blocks lowers water", c355, dOffset, 150);
             */
             dOffset = 15; dyOffset = 49;
             drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
@@ -321,14 +315,14 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
             int16_t tWidthH = textWidth(&lumberjack->arcade, titleText);
             lumberjackInstructionText(titleText, c555, (TFT_WIDTH-tWidthH)/2, 15);
 
-            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAx blocks give item\nPress B uses item\n  Upgrange: Harder baddies\n  Impearvious: Invincible\n  Grapes O' Wrath: Flip baddies";
+            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAxe blocks give item\nPress B uses item\n  Upgrange: Harder baddies\n  Impearvious: Invincible\n  Grapes O' Wrath: Flip baddies";
         /*
             lumberjackInstructionText("Press A to jump", c355, dOffset, 50);
             lumberjackInstructionText("Avoid upright baddies", c355, dOffset, 70);
             lumberjackInstructionText("Hit baddies from under", c355, dOffset, 90);
             lumberjackInstructionText("Then go kick them off", c355, dOffset, 110);
             lumberjackInstructionText("Duck Down to avoid ghost", c355, dOffset, 130);
-            lumberjackInstructionText("Ax blocks give items", c355, dOffset, 150);
+            lumberjackInstructionText("Axe blocks give items", c355, dOffset, 150);
             lumberjackInstructionText("Press B uses item", c355, dOffset, 170);
         */
             dOffset = 15; dyOffset = 49;
@@ -443,7 +437,8 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         case CON_LOST:
         {
             // TODO drop back to main menu or show an error or something, its not recoverable
-            ESP_LOGD(LUM_TAG, "We lost connection!");
+            ESP_LOGI(LUM_TAG, "We lost connection!");
+
             break;
         }
     }
@@ -501,7 +496,7 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
             int locX      = (int)payload[1] << 0 | (uint32_t)payload[2] << 8;
             int locY      = (int)payload[3] << 0 | (uint32_t)payload[4] << 8;
             uint8_t frame = (uint8_t)payload[5];
-            ESP_LOGD(LUM_TAG,"Got %d,%d %d|", locX, locY, frame);
+            //ESP_LOGD(LUM_TAG,"Got %d,%d %d|", locX, locY, frame);
 
         }
     }
@@ -587,6 +582,15 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
     }
 }
 
+void lumberjackInitp2p()
+{
+    //ESP_LOGD(LUM_TAG, "Init connection!");
+
+    p2pDeinit(&lumberjack->p2p);
+    p2pInitialize(&lumberjack->p2p,(lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x13 : 0x15), lumberjackConCb, lumberjackMsgRxCb, -70);
+    p2pStartConnection(&lumberjack->p2p);
+}
+
 static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
@@ -628,9 +632,6 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
             // lumberjack->host is filled in after connection is established
             lumberjackJoinGame();
             // Start p2p after loading sprites, which takes time
-            p2pDeinit(&lumberjack->p2p);
-            p2pInitialize(&lumberjack->p2p,(lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x13 : 0x15), lumberjackConCb, lumberjackMsgRxCb, -70);
-            p2pStartConnection(&lumberjack->p2p);
         }
         else if (label == lumberjackMenuSinglePlayer)
         {

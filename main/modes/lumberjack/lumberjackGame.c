@@ -416,6 +416,12 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->song_theme.shouldLoop = true;
     lumv->song_title.shouldLoop = true;
 
+    if (lumv->lumberjackMain->networked)
+    {
+
+        lumberjackInitp2p();
+    }
+
     bzrPlayBgm(&lumv->song_title, BZR_STEREO);
     
 }
@@ -763,9 +769,6 @@ void lumberjackUnloadLevel(void)
     }
 }
 
-/**
- * @brief TODO use this somewhere
- */
 void restartLevel(void)
 {
     lumv->lives--;
@@ -795,7 +798,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
             lumberjackPlayGame();     
             lumberjackSendGo();
         }
-        // TODO add an else here to back out to the main menu with PB_B
+
         lumv->highscore = 0;
 
     } else if (lumv->btnState & PB_A && lumv->gameReady) // And Game Ready!
@@ -2516,7 +2519,6 @@ void lumberjackDoControls(void)
         buttonPressed = true;
     }
 
-    // TODO: This is sloppy Troy
     if (lumv->btnState & PB_A)
     {
         lumv->localPlayer->jumpPressed = true;
@@ -2526,7 +2528,6 @@ void lumberjackDoControls(void)
         lumv->localPlayer->jumpPressed = false;
     }
 
-    // TODO: This is sloppy too Troy
     if (lumv->btnState & PB_B)
     {
         lumv->localPlayer->attackPressed = true;
@@ -2584,10 +2585,6 @@ static bool lumberjackIsCollisionTile(int index)
 bool lumberjackDetectBump(lumberjackTile_t* tile)
 {
     bool bump = false;
-    if (lumv->localPlayer->state != LUMBERJACK_BUMPED && lumv->localPlayer->state != LUMBERJACK_DEAD)
-    {
-        // TODO put in bump the player
-    }
 
     for (int enemyIndex = 0; enemyIndex < ARRAY_SIZE(lumv->enemy); enemyIndex++)
     {
