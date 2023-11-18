@@ -20,7 +20,7 @@
 #include "mode_paint.h"
 #include "mode_platformer.h"
 #include "mode_ray.h"
-#include "modeTimer.h"
+#include "modeDice.h"
 #include "paint_share.h"
 #include "pong.h"
 #include "pushy.h"
@@ -145,7 +145,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
-    addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, diceMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
@@ -284,9 +284,9 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&modePaint);
         }
-        else if (label == timerMode.modeName)
+        else if (label == diceMode.modeName)
         {
-            switchToSwadgeMode(&timerMode);
+            switchToSwadgeMode(&diceMode);
         }
         else if (label == modePlatformer.modeName)
         {
