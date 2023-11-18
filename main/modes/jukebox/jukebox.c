@@ -352,7 +352,7 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
     
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Breah 1-Up";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Break 1-Up";
     loadSong("sndBrk1up.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
@@ -392,7 +392,7 @@ void jukeboxEnterMode()
 
     // Swadge Land SFX
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "1 Up";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "1-Up";
     loadSong("snd1up.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
@@ -422,62 +422,62 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
     
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump1";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump 1";
     loadSong("sndJump1.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump2";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump 2";
     loadSong("sndJump2.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump3";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Jump 3";
     loadSong("sndJump3.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
     
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearA";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Level Clear A";
     loadSong("sndLevelClearA.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
     
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearB";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Level Clear B";
     loadSong("sndLevelClearB.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
     
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearC";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Level Clear C";
     loadSong("sndLevelClearC.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
     
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearD";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Level Clear D";
     loadSong("sndLevelClearD.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "LevelClearS";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Level Clear S";
     loadSong("sndLevelClearS.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "MenuConfirm";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Menu Confirm";
     loadSong("sndMenuConfirm.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "MenuDeny";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Menu Deny";
     loadSong("sndMenuDeny.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "MenuSelect";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Menu Select";
     loadSong("sndMenuSelect.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "OuttaTime";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Outta Time";
     loadSong("sndOuttaTime.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
@@ -487,7 +487,7 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "PowerUp";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Power Up";
     loadSong("sndPowerUp.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
