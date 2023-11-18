@@ -318,18 +318,10 @@ void paintDrawScreenSetup(void)
         snprintf(iconName, sizeof(iconName), activeIconStr, brush->iconName);
         PAINT_WSG(iconName, &brush->iconActive);
 
-        snprintf(iconName, sizeof(iconName), inactiveIconStr, brush->iconName);
-        PAINT_WSG(iconName, &brush->iconInactive);
-
         // Keep track of the tallest sprite for layout purposes
         if (brush->iconActive.h > spriteH)
         {
             spriteH = brush->iconActive.h;
-        }
-
-        if (brush->iconInactive.h > spriteH)
-        {
-            spriteH = brush->iconInactive.h;
         }
     }
 
@@ -561,7 +553,6 @@ void paintDrawScreenCleanup(void)
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
         freeWsg(&brush->iconActive);
-        freeWsg(&brush->iconInactive);
     }
 
     freeWsg(&paintState->brushSizeWsg);

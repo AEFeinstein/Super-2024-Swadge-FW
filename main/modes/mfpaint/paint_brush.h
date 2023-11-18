@@ -59,9 +59,6 @@ typedef struct
     /// @brief The icon to be shown in the toolbar when the tool is selected
     wsg_t iconActive;
 
-    /// @brief The icon to be shown in the toolbar when the tool is not selected
-    wsg_t iconInactive;
-
     /**
      * @brief Called when all necessary points have been selected and the final shape should be drawn
      */
