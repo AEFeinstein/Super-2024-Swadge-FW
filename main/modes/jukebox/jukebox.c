@@ -197,30 +197,30 @@ void jukeboxEnterMode()
     jukebox->musicCategories[catIdx].numSongs = 5;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
-    // Galactic Brickdown songs
+    // Galactic Brickdown songs // TODO: replace this with breakout's actual music //Prepared ahead with list from JVeg199X
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Crazy";
-    // loadSong("brkBgmCrazy.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); // TODO: replace this with breakout's actual music
+    // loadSong("brkBgmCrazy.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
     // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Finale";
-    // loadSong("brkBgmFinale.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); // TODO: replace this with breakout's actual music
+    // loadSong("brkBgmFinale.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
     // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Pixel";
-    // loadSong("brkBgmPixel.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); // TODO: replace this with breakout's actual music
+    // loadSong("brkBgmPixel.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
     // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Skill";
-    // loadSong("brkBgmSkill.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); // TODO: replace this with breakout's actual music
+    // loadSong("brkBgmSkill.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
     // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Title";
-    // loadSong("brkBgmTitle.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); // TODO: replace this with breakout's actual music
+    // loadSong("brkBgmTitle.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
     // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
