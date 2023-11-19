@@ -8,6 +8,7 @@ typedef struct
     bool flipped;
     bool onGround;
     bool active;
+    bool queueable;
 
     bool flying;
 
@@ -26,11 +27,14 @@ typedef struct
     int y;
     int spriteOffset;
     int vx;
+    int lives;
     float vy;
     int maxVX;
     int type;
     int maxLevel;
     int respawn;
+    int scoreValue;
+    int submergedTimer;
 
     int cX;
     int cY;
@@ -48,9 +52,19 @@ typedef struct
     int direction;
     int animationSpeed;
     int64_t timerFrameUpdate;
-    char name[16];
 
 } lumberjackEntity_t;
+
+typedef struct {
+    bool active;
+    int x;
+    int y;
+    int startSide;
+    int currentFrame;
+    int64_t spawnTime;
+    int64_t timerFrameUpdate;
+} lumberjackGhost_t;
+
 
 void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character);
 uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy);
@@ -58,7 +72,6 @@ void lumberjackResetEnemy(lumberjackEntity_t* enemy);
 void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side);
 bool checkCollision(lumberjackEntity_t* AA, lumberjackEntity_t* BB);
 void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex);
-void lumberjackDoEnemyControls(lumberjackEntity_t* enemy);
 
 void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy);
 void lumberjackUpdatePlayerCollision(lumberjackEntity_t* player);

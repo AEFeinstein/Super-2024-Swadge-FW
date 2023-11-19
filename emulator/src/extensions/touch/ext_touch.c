@@ -229,11 +229,12 @@ static bool updateTouch(int32_t x, int32_t y, bool clicked)
 }
 
 /**
- * @brief Initializes the touchpad extension.
+ * @brief Initializes the touchpad extension. If emulateTouch is enabled, the touchpad will display.
+ *
+ * Using keys 1-4 to control the touchpad 1-4 is always enabled.
  *
  * @param emuArgs
- * @return true
- * @return false
+ * @return true If touchpad emulation is enabled (it is)
  */
 static bool touchInit(emuArgs_t* emuArgs)
 {
@@ -248,17 +249,32 @@ static bool touchInit(emuArgs_t* emuArgs)
     if (emuArgs->emulateTouch)
     {
         requestPane(&touchEmuCallback, PANE_BOTTOM, PANE_MIN_SIZE, PANE_MIN_SIZE);
-        return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return true;
 }
 
 static int32_t touchKey(uint32_t key, bool down)
 {
-    const int32_t phiMap[] = {90, 0, 180, 270};
+    // Map from state to touchpad rotation. Button bits are in URLD order
+    const int32_t phiMap[] = {
+        0,   // 0b0000 ____ (0 radius)
+        270, // 0b0001 ___D
+        180, // 0b0010 __L_
+        225, // 0b0011 __LD
+        0,   // 0b0100 _R__
+        315, // 0b0101 _R_D
+        0,   // 0b0110 _RL_ (0 radius)
+        270, // 0b0111 _RLD
+        90,  // 0b1000 U___
+        0,   // 0b1001 U__D (0 radius)
+        135, // 0b1010 U_L_
+        180, // 0b1011 U_LD
+        45,  // 0b1100 UR__
+        0,   // 0b1101 UR_D
+        90,  // 0b1110 URL_
+        0,   // 0b1111 URLD (0 radius)
+    };
 
     if (key < '1' || key > '4')
     {
@@ -266,7 +282,7 @@ static int32_t touchKey(uint32_t key, bool down)
         return 0;
     }
 
-    int keyNum = (key - '1');
+    int keyNum = (3 - (key - '1'));
     // Handle the key states separately so rolling over them works more or less how one might expect
     if (down && !(emuTouch.keyState & (1 << keyNum)))
     {
@@ -277,21 +293,24 @@ static int32_t touchKey(uint32_t key, bool down)
         emuTouch.keyState &= ~(1 << keyNum);
     }
 
-    if (emuTouch.keyState)
+    int32_t radius    = 1024;
+    int32_t intensity = emuTouch.lastTouchIntensity;
+    // Check for the canceled-out positions where
+    switch (emuTouch.keyState)
     {
-        for (int i = 0; i < 4; i++)
-        {
-            if (emuTouch.keyState & (1 << i))
-            {
-                emulatorSetTouchJoystick(phiMap[i], 1024, emuTouch.lastTouchIntensity);
-                break;
-            }
-        }
+        case 0:  // All un-pressed
+        case 6:  // LR pressed
+        case 9:  // UD pressed
+        case 15: // All pressed
+            radius    = 0;
+            intensity = 0;
+            break;
+
+        default:
+            break;
     }
-    else
-    {
-        emulatorSetTouchJoystick(0, 0, 0);
-    }
+
+    emulatorSetTouchJoystick(phiMap[emuTouch.keyState], radius, intensity);
 
     // Consume event
     return -1;

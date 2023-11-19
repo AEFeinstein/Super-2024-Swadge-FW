@@ -43,6 +43,9 @@ typedef struct
 
     uint64_t buttonPressedTimer;
 
+    touchSpinState_t spinState;
+    uint8_t startDanceSpeed;
+
     font_t infoFont;
     wsg_t arrow;
 } danceMode_t;
@@ -220,11 +223,14 @@ void danceMainLoop(int64_t elapsedUs)
     // Only sleep with a blank screen, otherwise the screen flickers
     if (danceState->blankScreen)
     {
-        // Light sleep for 4ms. The longer the sleep, the choppier the LED animations
-        // 4ms looks pretty good, though some LED timers do run faster (like 'rise')
-        // TODO this isn't working, but it used to?
-        // esp_sleep_enable_timer_wakeup(4000);
-        // esp_light_sleep_start();
+        // Wait for any LED transactions to finish, otherwise RMT will do weird things during CPU sleep
+        flushLeds();
+        /* Light sleep for 40ms (see DEFAULT_FRAME_RATE_US).
+         * The longer the sleep, the choppier the LED animations.
+         * Sleeping longer than the current framerate will look worse
+         */
+        esp_sleep_enable_timer_wakeup(DEFAULT_FRAME_RATE_US);
+        esp_light_sleep_start();
     }
 }
 
@@ -293,14 +299,26 @@ void dancePollTouch(void)
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
     {
-        // Make sure we are pressing on the edge.
-        if (intensity > 5000 && r > 512)
+        if (!danceState->spinState.startSet)
         {
-            uint8_t index = ((phi * (sizeof(danceSpeeds) / sizeof(*danceSpeeds) - 1) + 640) / 1280);
-
-            danceState->danceSpeed         = index;
-            danceState->buttonPressedTimer = 0;
+            danceState->startDanceSpeed = danceState->danceSpeed;
         }
+
+        getTouchSpins(&danceState->spinState, phi, r);
+
+        // Make sure we are pressing on the edge.
+
+        int32_t speeds = ARRAY_SIZE(danceSpeeds);
+        int32_t diff
+            = CLAMP((((danceState->spinState.spins * 360 + danceState->spinState.remainder) * (speeds - 1)) / -360),
+                    -speeds, speeds);
+
+        danceState->danceSpeed         = CLAMP(danceState->startDanceSpeed + diff, 0, speeds - 1);
+        danceState->buttonPressedTimer = 0;
+    }
+    else
+    {
+        danceState->spinState.startSet = false;
     }
 }
 
@@ -322,7 +340,7 @@ void danceRedrawScreen(void)
         drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 90);
 
         // Draw the brightness at the top
-        char text[18];
+        char text[19];
         snprintf(text, sizeof(text), "Brightness: %d", getLedBrightnessSetting());
         width = textWidth(&(danceState->infoFont), text);
         yOff  = 16;
@@ -335,11 +353,11 @@ void danceRedrawScreen(void)
         yOff += danceState->infoFont.height + 16;
         if (danceSpeeds[danceState->danceSpeed] > DANCE_SPEED_MULT)
         {
-            snprintf(text, sizeof(text), "Y~X: Speed: 1/%dx", danceSpeeds[danceState->danceSpeed] / DANCE_SPEED_MULT);
+            snprintf(text, sizeof(text), "Spin: Speed: 1/%dx", danceSpeeds[danceState->danceSpeed] / DANCE_SPEED_MULT);
         }
         else
         {
-            snprintf(text, sizeof(text), "Y~X: Speed: %dx", DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed]);
+            snprintf(text, sizeof(text), "Spin: Speed: %dx", DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed]);
         }
         width = textWidth(&(danceState->infoFont), text);
         drawText(&(danceState->infoFont), c555, text, (TFT_WIDTH - width) / 2, yOff);

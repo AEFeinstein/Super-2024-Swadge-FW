@@ -121,7 +121,8 @@ static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
  */
 void rayShowPause(ray_t* ray)
 {
-    ray->screen = RAY_PAUSE;
+    raySwitchToScreen(RAY_PAUSE);
+    bzrPause();
 }
 
 /**
@@ -138,15 +139,31 @@ void rayPauseCheckButtons(ray_t* ray)
         // If A was pressed
         if (evt.down)
         {
-            if (PB_START == evt.button)
+            switch (evt.button)
             {
-                // Pause over, return to game
-                ray->screen = RAY_GAME;
-            }
-            if ((PB_A == evt.button) || (PB_B == evt.button))
-            {
-                // Switch between local map and world map
-                ray->pauseScreen = (ray->pauseScreen + 1) % RP_NUM_SCREENS;
+                case PB_UP:
+                case PB_DOWN:
+                case PB_LEFT:
+                case PB_RIGHT:
+                case PB_A:
+                case PB_B:
+                {
+                    // Switch between local map and world map
+                    ray->pauseScreen = (ray->pauseScreen + 1) % RP_NUM_SCREENS;
+                    break;
+                }
+                case PB_START:
+                {
+                    // Pause over, return to game
+                    raySwitchToScreen(RAY_GAME);
+                    bzrResume();
+                    break;
+                }
+                default:
+                case PB_SELECT:
+                {
+                    break;
+                }
             }
         }
     }
@@ -177,6 +194,19 @@ void rayPauseRender(ray_t* ray, uint32_t elapsedUs)
             rayPauseRenderWorldMap(ray, elapsedUs);
             break;
         }
+    }
+
+    if (ray->blink)
+    {
+#define TRIANGLE_OFFSET_X 20
+#define TRIANGLE_OFFSET_Y 0
+        drawTriangleOutlined(TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4,
+                             TFT_WIDTH - TRIANGLE_OFFSET_X - 4, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10,
+                             TFT_WIDTH - TRIANGLE_OFFSET_X - 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
+
+        drawTriangleOutlined(TRIANGLE_OFFSET_X + 16, TFT_HEIGHT - TRIANGLE_OFFSET_Y - 4, TRIANGLE_OFFSET_X + 4,
+                             TFT_HEIGHT - TRIANGLE_OFFSET_Y - 10, TRIANGLE_OFFSET_X + 16,
+                             TFT_HEIGHT - TRIANGLE_OFFSET_Y - 16, c100, c542);
     }
 }
 
@@ -304,6 +334,11 @@ static void rayPauseRenderLocalMap(ray_t* ray, uint32_t elapsedUs)
                             color = c113;
                             break;
                         }
+                        case BG_FLOOR_HEAL:
+                        {
+                            color = c030;
+                            break;
+                        }
                         default:
                         {
                             // Can't reach here
@@ -400,7 +435,7 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
 {
 #define MAP_X_MARGIN  16
 #define MAP_Y_MARGIN  36
-#define MAP_Y_MID_GAP 24
+#define MAP_Y_MID_GAP 16
 #define MAP_SIZE      72
 
 #define MAP_ROWS 2
@@ -497,4 +532,69 @@ static void rayPauseRenderWorldMap(ray_t* ray, uint32_t elapsedUs)
                      6);
         }
     }
+
+    // Draw the string
+    char collectionStr[32] = {0};
+    snprintf(collectionStr, sizeof(collectionStr) - 1, "Percentage Complete: %" PRId32 "%%", getItemCompletePct(ray));
+    int16_t tWidth = textWidth(&ray->ibm, collectionStr);
+    drawText(&ray->ibm, c555, collectionStr, (TFT_WIDTH - tWidth) / 2, TFT_HEIGHT - ray->ibm.height - 10);
+}
+
+/**
+ * @brief Get the percentage of items collected, 0 to 100
+ *
+ * @return The percentage of items collected
+ */
+int32_t getItemCompletePct(ray_t* ray)
+{
+    // Count all the possible items in the game
+    int32_t numTotalItems = 6 +             // energy tanks
+                            ((2 * 6) + 1) + // Missile expansions;
+                            6 +             // Artifacts
+                            2 +             // Suits
+                            5;              // Beams
+
+    // Start counting what the player has
+    int32_t numAcquiredItems = 0;
+
+    // For each map
+    for (int32_t mIdx = 0; mIdx < NUM_MAPS; mIdx++)
+    {
+        // Count energy tanks
+        for (int32_t eIdx = 0; eIdx < E_TANKS_PER_MAP; eIdx++)
+        {
+            if (-1 != ray->p.i.healthPickUps[mIdx][eIdx])
+            {
+                numAcquiredItems++;
+            }
+        }
+
+        // Count missile upgrades
+        for (int32_t sIdx = 0; sIdx < MISSILE_UPGRADES_PER_MAP; sIdx++)
+        {
+            if (-1 != ray->p.i.missilesPickUps[mIdx][sIdx])
+            {
+                numAcquiredItems++;
+            }
+        }
+
+        // Count artifacts
+        if (ray->p.i.artifacts[mIdx])
+        {
+            numAcquiredItems++;
+        }
+    }
+
+    // Count beams
+    numAcquiredItems += (ray->p.i.beamLoadOut ? 1 : 0);
+    numAcquiredItems += (ray->p.i.chargePowerUp ? 1 : 0);
+    numAcquiredItems += (ray->p.i.missileLoadOut ? 1 : 0);
+    numAcquiredItems += (ray->p.i.iceLoadOut ? 1 : 0);
+    numAcquiredItems += (ray->p.i.xrayLoadOut ? 1 : 0);
+
+    // Count suits
+    numAcquiredItems += (ray->p.i.lavaSuit ? 1 : 0);
+    numAcquiredItems += (ray->p.i.waterSuit ? 1 : 0);
+
+    return (numAcquiredItems * 100) / numTotalItems;
 }

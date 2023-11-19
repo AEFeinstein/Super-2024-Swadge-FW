@@ -6,7 +6,6 @@
 #include <esp_log.h>
 
 #define LUMBERJACK_DEFAULT_ANIMATION_SPEED 150000
-#define LUMBERJACK_SPAWN_Y                 270
 #define LUMBERJACK_HERO_WIDTH              24
 #define LUMBERJACK_HERO_HEIGHT             31
 #define LUMBERJACK_HERO_DUCK_HEIGHT        31
@@ -25,24 +24,12 @@ void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character)
     hero->type         = character;
     hero->state        = LUMBERJACK_UNSPAWNED;
 
-    if (character == 0)
-    {
-        hero->spriteOffset = 0;
-    }
-    else if (character == 1)
-    {
-        hero->spriteOffset = 17;
-    }
-    else
-    {
-        hero->spriteOffset = 34;
-    }
 }
 
 void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
 {
     hero->x                = x;
-    hero->y                = LUMBERJACK_SPAWN_Y;
+    hero->y                = y;
     hero->vx               = 0;
     hero->maxVX            = 15;
     hero->vy               = 0;
@@ -55,11 +42,11 @@ void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
     hero->respawn          = 0;
 }
 
-void lumberjackRespawn(lumberjackEntity_t* hero)
+void lumberjackRespawn(lumberjackEntity_t* hero, int x, int y)
 {
-    hero->x                = 130;
+    hero->x                = x;
     hero->maxVX            = 15;
-    hero->y                = LUMBERJACK_SPAWN_Y;
+    hero->y                = y;
     hero->active           = true;
     hero->ready            = false;
     hero->vx               = 0;
@@ -69,11 +56,12 @@ void lumberjackRespawn(lumberjackEntity_t* hero)
     hero->timerFrameUpdate = 0;
     hero->onGround         = true;
     hero->maxLevel         = 0;
+    hero->submergedTimer   = 5000;
+
 }
 
 int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
 {
-    // int animationNone[] = {0};
 
     int animation        = hero->state;
     hero->animationSpeed = LUMBERJACK_DEFAULT_ANIMATION_SPEED;
@@ -119,12 +107,6 @@ int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
         const int animationVictory[] = {15};
         hero->animationSpeed         = LUMBERJACK_DEFAULT_ANIMATION_SPEED;
         return animationVictory[hero->currentFrame % ARRAY_SIZE(animationVictory)];
-    }
-    if (animation == LUMBERJACK_CLIMB)
-    {
-        const int animationClimb[] = {17, 18, 19, 20};
-        hero->animationSpeed       = LUMBERJACK_DEFAULT_ANIMATION_SPEED;
-        return animationClimb[hero->currentFrame % ARRAY_SIZE(animationClimb)];
     }
 
     return 0;

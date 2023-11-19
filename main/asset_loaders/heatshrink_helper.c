@@ -58,6 +58,16 @@ uint8_t* readHeatshrinkFile(const char* fname, uint32_t* outsize, bool readToSpi
         heatshrink_decoder_sink(hsd, &buf[inputIdx], sz - inputIdx, &copied);
         inputIdx += copied;
 
+        if (copied == 0)
+        {
+            ESP_LOGE("WSG", "Failed to read %s fault on decode", fname);
+            heatshrink_decoder_finish(hsd);
+            heatshrink_decoder_free(hsd);
+            free(buf);
+            free(decompressedBuf);
+            return 0;
+        }
+
         // Save it to the output array
         copied = 0;
         heatshrink_decoder_poll(hsd, &decompressedBuf[outputIdx], (*outsize) - outputIdx, &copied);

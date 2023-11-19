@@ -157,9 +157,6 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US          1000000
-#define DEFAULT_FRAME_RATE_US 40000
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -191,6 +188,7 @@ static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
                                    int8_t rssi);
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static void setSwadgeMode(void* swadgeMode);
+static void initOptionalPeripherals(void);
 
 //==============================================================================
 // Functions
@@ -268,17 +266,6 @@ void app_main(void)
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
                GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
 
-    // Init mic if it is used by the mode
-    if (NULL != cSwadgeMode->fnAudioCallback)
-    {
-        initMic(GPIO_NUM_7);
-        startMic();
-    }
-    else
-    {
-        initBattmon(GPIO_NUM_6);
-    }
-
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
             GPIO_NUM_36,                // sclk
@@ -292,30 +279,13 @@ void app_main(void)
             LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
 
+    initShapes();
+
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
 
-    // Init esp-now if requested by the mode
-    if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
-    {
-        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX,
-                   cSwadgeMode->wifiMode);
-    }
-
-    // Init accelerometer
-    if (cSwadgeMode->usesAccelerometer)
-    {
-        initAccelerometer(GPIO_NUM_3,  // SDA
-                          GPIO_NUM_41, // SCL
-                          GPIO_PULLUP_ENABLE);
-        accelIntegrate();
-    }
-
-    // Init the temperature sensor
-    if (cSwadgeMode->usesThermometer)
-    {
-        initTemperatureSensor();
-    }
+    // Initialize optional peripherals, depending on the mode's requests
+    initOptionalPeripherals();
 
     // Initialize the loop timer
     static int64_t tLastLoopUs = 0;
@@ -474,6 +444,45 @@ void app_main(void)
 }
 
 /**
+ * @brief Initialize optional hardware peripherals for this Swadge mode
+ */
+static void initOptionalPeripherals(void)
+{
+    // Init mic if it is used by the mode
+    if (NULL != cSwadgeMode->fnAudioCallback)
+    {
+        initMic(GPIO_NUM_7);
+        startMic();
+    }
+    else
+    {
+        initBattmon(GPIO_NUM_6);
+    }
+
+    // Init esp-now if requested by the mode
+    if ((ESP_NOW == cSwadgeMode->wifiMode) || (ESP_NOW_IMMEDIATE == cSwadgeMode->wifiMode))
+    {
+        initEspNow(&swadgeModeEspNowRecvCb, &swadgeModeEspNowSendCb, GPIO_NUM_NC, GPIO_NUM_NC, UART_NUM_MAX,
+                   cSwadgeMode->wifiMode);
+    }
+
+    // Init accelerometer
+    if (cSwadgeMode->usesAccelerometer)
+    {
+        initAccelerometer(GPIO_NUM_3,  // SDA
+                          GPIO_NUM_41, // SCL
+                          GPIO_PULLUP_ENABLE);
+        accelIntegrate();
+    }
+
+    // Init the temperature sensor
+    if (cSwadgeMode->usesThermometer)
+    {
+        initTemperatureSensor();
+    }
+}
+
+/**
  * @brief Deinitialize all components in the system
  */
 void deinitSystem(void)
@@ -591,11 +600,8 @@ void softSwitchToPendingSwadge(void)
         cSwadgeMode       = pendingSwadgeMode;
         pendingSwadgeMode = NULL;
 
-        // Start mic if requested
-        if (NULL != cSwadgeMode->fnAudioCallback)
-        {
-            startMic();
-        }
+        // Initialize optional peripherals for this mode
+        initOptionalPeripherals();
 
         // Enter the next mode
         if (NULL != cSwadgeMode->fnEnterMode)

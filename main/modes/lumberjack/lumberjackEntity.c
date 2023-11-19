@@ -5,15 +5,17 @@
 
 void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character)
 {
-    enemy->direction    = 1;
-    enemy->state        = LUMBERJACK_RUN;
-    enemy->maxVX        = 0;
-    enemy->active       = false;
-    enemy->ready        = true;
-    enemy->showAlert    = false;
-    enemy->spriteOffset = 0;
-    enemy->cW           = 15;
-    enemy->cH           = 15;
+    enemy->direction        = 1;
+    enemy->state            = LUMBERJACK_RUN;
+    enemy->maxVX            = 0;
+    enemy->active           = false;
+    enemy->ready            = true;
+    enemy->showAlert        = false;
+    enemy->spriteOffset     = 0;
+    enemy->cW               = 15;
+    enemy->cH               = 15;
+    enemy->submergedTimer   = 0;
+    enemy->queueable        = true;
     lumberjackUpdateEnemy(enemy, character);
 }
 
@@ -39,6 +41,7 @@ void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side)
     enemy->active     = true;
     enemy->ready      = false;
     enemy->y          = 0;
+    enemy->lives      = 1;
 
     // I need to figure out why when moving right he appears to move faster
     if (side == 1)
@@ -76,6 +79,8 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->maxVX        = 4;
         enemy->spriteOffset = 0;
         enemy->maxLevel     = 2;
+        enemy->scoreValue   = 100;
+        enemy->type         = newIndex;
 
         enemy->cW = 15;
         enemy->cH = 15;
@@ -89,7 +94,10 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->spriteOffset = 7;
         enemy->maxLevel     = 2;
         enemy->cW           = 15;
+        enemy->scoreValue   = 250;
         enemy->cH           = 15;
+        enemy->type         = newIndex;
+
     }
     else if (newIndex == 2)
     {
@@ -100,16 +108,41 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->spriteOffset = 14;
         enemy->maxLevel     = 2;
         enemy->cW           = 15;
+        enemy->scoreValue   = 500;
         enemy->cH           = 15;
+        enemy->type         = newIndex;
+
     }
+    else if (newIndex == 4)
+    {
+        enemy->width        = 15;
+        enemy->height       = 15;
+        enemy->tileHeight   = 1;
+        enemy->maxVX        = 10;
+        enemy->spriteOffset = 23;
+        enemy->maxLevel     = 6;
+        enemy->cW           = 15;
+        enemy->scoreValue   = 500;
+        enemy->cH           = 15;
+        enemy->type         = newIndex;
+    }
+    else if (newIndex == 5)
+    {
+        enemy->width        = 15;
+        enemy->height       = 15;
+        enemy->tileHeight   = 1;
+        enemy->maxVX        = 10;
+        enemy->spriteOffset = 30;
+        enemy->maxLevel     = 6;
+        enemy->cW           = 15;
+        enemy->scoreValue   = 500;
+        enemy->cH           = 15;
+        enemy->type         = newIndex;
+    }
+
+
 }
 
-void lumberjackDoEnemyControls(lumberjackEntity_t* enemy)
-{
-    // pick between types I guess
-    // if enemy->type 1, 2, or 3... continue
-    // enemy->direction = -1;
-}
 
 void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy)
 {
@@ -158,7 +191,7 @@ uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy)
     if (animation == LUMBERJACK_BUMPED)
     {
         const int anim[] = {4};
-        return anim[enemy->currentFrame % 2];
+        return anim[0];
     }
 
     if (animation == LUMBERJACK_BUMPED_IDLE)

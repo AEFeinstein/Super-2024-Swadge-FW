@@ -230,7 +230,8 @@ void drawDisplayTft(fnBackgroundDrawCallback_t fnBackgroundDrawCallback)
                     int pxIdx = (dstY * (TFT_WIDTH * displayMult)) + dstX;
 
                     int colorolor = frameBuffer[(y * TFT_WIDTH) + x];
-                    if(colorolor == 216){
+                    if (colorolor == 216)
+                    {
                         colorolor = c500;
                     }
 

@@ -115,6 +115,7 @@ These are the objects that can be spawned
 | `OBJ_SCENERY_F4`          | Scenery, a friend                                  |
 | `OBJ_SCENERY_F5`          | Scenery, a friend                                  |
 | `OBJ_SCENERY_F6`          | Scenery, a friend                                  |
+| `OBJ_SCENERY_F7`          | Scenery, a friend                                  |
 
 ### Script Examples
 

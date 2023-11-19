@@ -10,6 +10,8 @@
 #include "shapes.h"
 #include "fill.h"
 #include "color_utils.h"
+#include "hdw-nvs.h"
+#include "mode_ray.h"
 
 //==============================================================================
 // Defines
@@ -25,6 +27,7 @@
 #define ITEMS_PER_PAGE      5
 #define PAGE_ARROW_X_OFFSET 60
 #define PAGE_ARROW_Y_OFFSET 5
+#define X_SECTION_MARGIN    16
 #define Y_SECTION_MARGIN    20
 
 #define MENU_LED_BRIGHTNESS_MIN     128
@@ -66,6 +69,10 @@ menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
     // Load a background
     loadWsg("menu_bg.wsg", &renderer->menu_bg, true);
 
+    // Load Zip and check if it should be displayed
+    loadWsg("zip.wsg", &renderer->zip, false);
+    readNvs32(MAGTROID_UNLOCK_KEY, &renderer->magtroidUnlocked);
+
     // Initialize LEDs
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
     {
@@ -92,6 +99,7 @@ void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
     freeWsg(&renderer->batt[2]);
     freeWsg(&renderer->batt[3]);
     freeWsg(&renderer->menu_bg);
+    freeWsg(&renderer->zip);
     free(renderer);
 }
 
@@ -278,6 +286,13 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     // Clear the TFT with a background
     drawWsgTile(&renderer->menu_bg, 0, 0);
 
+    // If Zip was unlocked
+    if (renderer->magtroidUnlocked)
+    {
+        // Draw to the TFT
+        drawWsgSimple(&renderer->zip, TFT_WIDTH - renderer->zip.w, TFT_HEIGHT - renderer->zip.h);
+    }
+
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
     uint8_t pageIdx   = 0;
@@ -303,7 +318,7 @@ void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elap
     }
 
     // Where to start drawing
-    int16_t x = 16;
+    int16_t x = X_SECTION_MARGIN;
     int16_t y = Y_SECTION_MARGIN;
 
     // Draw a title
