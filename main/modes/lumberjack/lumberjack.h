@@ -237,4 +237,14 @@ typedef struct
 
 } lumberjackVars_t;
 
+#define NUM_PLATFORMER_HIGH_SCORES 5
+
+typedef struct {
+    uint32_t scores[NUM_PLATFORMER_HIGH_SCORES];
+    char initials[NUM_PLATFORMER_HIGH_SCORES][3];
+} pfHighScores_t;
+
+typedef struct
+{           ///< All the players items
+} pfRay_t;
 #endif

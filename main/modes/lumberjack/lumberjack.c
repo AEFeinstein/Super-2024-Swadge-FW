@@ -7,6 +7,7 @@
 
 #include "mainMenu.h"
 #include "menu.h"
+#include "mode_ray.h"
 
 // For lumberjack
 #include "lumberjack.h"
@@ -54,7 +55,7 @@ static char lumberjackChoCharacter[]          = "Character: Cho";
 static const char lumberjackMenuSinglePlayer[]  = "Single Player";
 static const char lumberjackMenuMultiPlayer[]   = "Multi-Player";
 
-static const char lumberjackPlatformerUnlock[]      = "pf_unlocks";
+static const char lumberjackPlatformerUnlock[]      = "pf_scores";
 static const char lumberjackChoUnlock[]             = "ray";
 const char* LUM_TAG = "LUM";
 const char  LUMBERJACK_SAVE[] = "lumberjackdata";
@@ -385,14 +386,20 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 
 static bool lumberjackChoUnlocked()
 {
-    int32_t kei;
-    return readNvs32(lumberjackChoUnlock, &kei);
+    rayPlayer_t cho;
+    size_t size = sizeof(cho);
+    
+    return readNvsBlob(lumberjackChoUnlock, &cho, &(size));
 }
 
 static bool lumberjackSwadgeGuyUnlocked()
 {
-    int32_t kei;
-    return readNvs32(lumberjackPlatformerUnlock, &kei);
+    pfHighScores_t highScores;
+    size_t size = sizeof(pfHighScores_t);
+    // Try reading the value
+
+    return readNvsBlob(lumberjackPlatformerUnlock, &(highScores), &(size));
+
 }
 
 //==============================================================================
