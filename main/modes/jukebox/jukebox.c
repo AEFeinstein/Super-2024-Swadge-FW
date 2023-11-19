@@ -361,11 +361,11 @@ void jukeboxEnterMode()
     ///// Load SFX midis /////
     printf("Loading SFX\n");
 
-    // Initialize array of music categories
+    // Initialize array of sfx categories
     catIdx = 0;
     jukebox->numSfxCategories = 7;
     // TODO: change this number ^ as categories (modes) with SFX are added
-    jukebox->sfxCategories = calloc(2, sizeof(jukeboxCategory));
+    jukebox->sfxCategories = calloc(jukebox->numSfxCategories, sizeof(jukeboxCategory));
 
     // Galactic Brickdown category
     songIdx = 0;
