@@ -140,7 +140,7 @@ static const char str_sfx_muted[]  = "Swadge SFX are muted!";
 static const char str_bgm[]        = "Music";
 static const char str_sfx[]        = "SFX";
 static const char str_leds[]       = "B: LEDs:";
-static const char str_music_sfx[]       = "Pause: Music/SFX";
+static const char str_music_sfx[]  = "Pause: Music/SFX";
 static const char str_brightness[] = "Touch: LED Brightness:";
 static const char str_stop[]       = ": Stop";
 static const char str_play[]       = ": Play";
@@ -881,7 +881,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         case PB_START:
         {
             bzrStop(true);
-            jukebox->isPlaying = false;
+            jukebox->isPlaying      = false;
             jukebox->categoryIdx    = 0;
             jukebox->songIdx        = 0;
             jukebox->inMusicSubmode = !jukebox->inMusicSubmode;
@@ -1016,26 +1016,25 @@ void jukeboxMainLoop(int64_t elapsedUs)
     drawText(&jukebox->radiostars, c555, str_leds, CORNER_OFFSET, CORNER_OFFSET);
     // Light dance name
     drawText(&(jukebox->radiostars), c111, portableDanceGetName(jukebox->portableDances),
-                TFT_WIDTH - CORNER_OFFSET
-                    - textWidth(&jukebox->radiostars, portableDanceGetName(jukebox->portableDances)),
-                CORNER_OFFSET);
+             TFT_WIDTH - CORNER_OFFSET - textWidth(&jukebox->radiostars, portableDanceGetName(jukebox->portableDances)),
+             CORNER_OFFSET);
 
     // Music/SFX
     drawText(&jukebox->radiostars, c555, str_music_sfx, CORNER_OFFSET,
-                CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
+             CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
     // "Music" or "SFX"
     const char* curMusicSfxStr = jukebox->inMusicSubmode ? str_bgm : str_sfx;
     drawText(&(jukebox->radiostars), c111, curMusicSfxStr,
-                TFT_WIDTH - CORNER_OFFSET - textWidth(&jukebox->radiostars, curMusicSfxStr), CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
+             TFT_WIDTH - CORNER_OFFSET - textWidth(&jukebox->radiostars, curMusicSfxStr),
+             CORNER_OFFSET + LINE_BREAK_Y + jukebox->radiostars.height);
 
     // LED Brightness
     drawText(&jukebox->radiostars, c555, str_brightness, CORNER_OFFSET,
-                CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
+             CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
     char text[32];
     snprintf(text, sizeof(text), "%d", getLedBrightnessSetting());
-    drawText(&jukebox->radiostars, c111, text,
-                TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
-                CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
+    drawText(&jukebox->radiostars, c111, text, TFT_WIDTH - textWidth(&jukebox->radiostars, text) - CORNER_OFFSET,
+             CORNER_OFFSET + (LINE_BREAK_Y + jukebox->radiostars.height) * 2);
 
     // Assume not playing
     paletteColor_t color = c141;
@@ -1048,11 +1047,10 @@ void jukeboxMainLoop(int64_t elapsedUs)
 
     // Draw A text (play or stop)
     int16_t afterText = drawText(&jukebox->radiostars, color, "A",
-                                    TFT_WIDTH - textWidth(&jukebox->radiostars, btnText)
-                                        - textWidth(&jukebox->radiostars, "A") - CORNER_OFFSET,
-                                    TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
-    drawText(&jukebox->radiostars, c555, btnText, afterText,
-                TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
+                                 TFT_WIDTH - textWidth(&jukebox->radiostars, btnText)
+                                     - textWidth(&jukebox->radiostars, "A") - CORNER_OFFSET,
+                                 TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
+    drawText(&jukebox->radiostars, c555, btnText, afterText, TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
     const char* categoryName;
     char* songName;
@@ -1065,7 +1063,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
         if (getBgmVolumeSetting() == getBgmVolumeSettingBounds()->min)
         {
             drawText(&jukebox->radiostars, c551, str_bgm_muted,
-                        (TFT_WIDTH - textWidth(&jukebox->radiostars, str_bgm_muted)) / 2, TFT_HEIGHT / 2);
+                     (TFT_WIDTH - textWidth(&jukebox->radiostars, str_bgm_muted)) / 2, TFT_HEIGHT / 2);
         }
         else
         {
@@ -1082,7 +1080,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
         if (getSfxVolumeSetting() == getSfxVolumeSettingBounds()->min)
         {
             drawText(&jukebox->radiostars, c551, str_sfx_muted,
-                        (TFT_WIDTH - textWidth(&jukebox->radiostars, str_sfx_muted)) / 2, TFT_HEIGHT / 2);
+                     (TFT_WIDTH - textWidth(&jukebox->radiostars, str_sfx_muted)) / 2, TFT_HEIGHT / 2);
         }
         else
         {
@@ -1110,10 +1108,9 @@ void jukeboxMainLoop(int64_t elapsedUs)
         // Draw category arrows if this submode has more than 1 category
         if ((jukebox->inMusicSubmode && jukebox->numMusicCategories > 1) || jukebox->numSfxCategories > 1)
         {
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - arrowOffsetFromText - jukebox->arrow.w, yOff,
-                    false, false, 0);
-            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + arrowOffsetFromText, yOff, false,
-                    false, 180);
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - arrowOffsetFromText - jukebox->arrow.w, yOff, false,
+                    false, 0);
+            drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) + width + arrowOffsetFromText, yOff, false, false, 180);
         }
 
         // Draw the song name
