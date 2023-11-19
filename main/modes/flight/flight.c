@@ -257,6 +257,9 @@ typedef struct
     int imuiirX;
     int imuiirY;
     int inittedIMU;
+
+	float fqQuatLast[4];
+	int32_t accumx, accumy;
 } flight_t;
 
 /*============================================================================
@@ -1550,10 +1553,19 @@ static void flightGameUpdate( flight_t * tflight )
     {
         if( flight->savedata.flightEnableIMU )
         {
-            float plusy[3] = {0, 0, 1};
-            mathRotateVectorByInverseOfQuaternion(plusy, LSM6DSL.fqQuat, plusy);
-            int x = plusy[0] * 1024;
-            int y = plusy[1] * 1024;
+			float mathsqrtf(float x);
+			float * quat = LSM6DSL.fqQuat;
+			float qDiff[4];
+			mathComputeQuaternionDeltaBetweenQuaternions( qDiff, quat, tflight->fqQuatLast );
+			memcpy( tflight->fqQuatLast, quat, sizeof( tflight->fqQuatLast ) );
+			// Output is Q,  Delta-X, Delta-Y, Delta-Z in hamiltonian units ( large changes are muted, small changes are 1:1)
+			int deltax =-qDiff[2]*3072;
+			int deltay = qDiff[1]*3072;
+
+			int x = tflight->accumx += deltax;
+			int y = tflight->accumy += deltay;
+
+			//ESP_LOGI( "_", "%5d %5d %5d %5d", (int)(qDiff[0]*1024), (int)(qDiff[1]*1024), (int)(qDiff[2]*1024), (int)(qDiff[3]*1024) );
 
             #define IMUIIR 7
 
@@ -1571,22 +1583,20 @@ static void flightGameUpdate( flight_t * tflight )
             tflight->imuiirY = y + tflight->imuiirY - (tflight->imuiirY >> IMUIIR);
 
             // Add a tiiiny dead zone.
-            if( setx > 0 ) { setx-=10; if( setx < 0 ) setx = 0; }
-            if( setx < 0 ) { setx+=10; if( setx > 0 ) setx = 0; }
-            if( sety > 0 ) { sety-=10; if( sety < 0 ) sety = 0; }
-            if( sety < 0 ) { sety+=10; if( sety > 0 ) sety = 0; }
+            if( setx > 0 ) { setx-=20; if( setx < 0 ) setx = 0; }
+            if( setx < 0 ) { setx+=20; if( setx > 0 ) setx = 0; }
+            if( sety > 0 ) { sety-=20; if( sety < 0 ) sety = 0; }
+            if( sety < 0 ) { sety+=20; if( sety > 0 ) sety = 0; }
 
             if( tflight->savedata.flightInvertY ) y *= -1;
 
             // TODO: Make this dependent on framerate maybe?
-            //ESP_LOGI( "_", "%d %d  %d %d  %d %d   %d %d    n", (int)x, (int)y, (int)tflight->imuiirX, (int)tflight->imuiirY, (int)setx, (int)sety, (int)(setx*delta), (int)(sety*delta) );
-
 
             // Handle upside down flight.
             if( tflight->hpr[1] >= 990 && tflight->hpr[1] < 2970 ) setx *= -1;
 
-            tflight->pitchmoment = -((int)(setx)*(int)delta)>>17;  //17 = de-sensitivity
-            tflight->yawmoment = -((int)sety*(int)delta)>>17;
+            tflight->pitchmoment = (((int)(setx)*(int)delta)>>18);  //18 = de-sensitivity
+            tflight->yawmoment = (((int)sety*(int)delta)>>18);
         }
         else
         {
