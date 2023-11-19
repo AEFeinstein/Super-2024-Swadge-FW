@@ -187,6 +187,7 @@ menu_t* endSubMenu(menu_t* menu)
  * @param menu The menu to add a single item to
  * @param label The label for this item. The underlying memory isn't copied, so
  *              this string must persist for the lifetime of the menu
+ * @return The new menuItem_t that was added to the menu
  */
 menuItem_t * addSingleItemToMenu(menu_t* menu, const char* label)
 {
