@@ -61,7 +61,7 @@ const char  LUMBERJACK_SAVE[] = "lumberjackdata";
 
 swadgeMode_t lumberjackMode = {
     .modeName                 = lumberjackName,
-    .wifiMode                 = ESP_NOW,
+    .wifiMode                 = ESP_NOW_IMMEDIATE,
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
@@ -248,6 +248,7 @@ static void lumberjackMainLoop(int64_t elapsedUs)
             break;
         }
     }
+
 }
 
 static void lumberjackMenuLoop(int64_t elapsedUs)
@@ -444,7 +445,9 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         {
             // TODO drop back to main menu or show an error or something, its not recoverable
             ESP_LOGI(LUM_TAG, "We lost connection!");
-            lumberjackInitp2p();
+
+            lumberjack->connLost = true;
+            //lumberjack->menuReturn = 3000;
             break;
         }
     }
@@ -624,8 +627,6 @@ static void lumberjackMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint
 
 void lumberjackInitp2p()
 {
-    ESP_LOGI(LUM_TAG, "Init connection!");
-
     p2pDeinit(&lumberjack->p2p);
     lumberjack->conStatus = CON_LOST;
     p2pInitialize(&lumberjack->p2p,(lumberjack->gameMode == LUMBERJACK_MODE_PANIC ? 0x13 : 0x15), lumberjackConCb, lumberjackMsgRxCb, -70);

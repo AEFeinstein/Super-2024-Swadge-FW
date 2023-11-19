@@ -418,14 +418,12 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadSong("l_song_gameover.sng", &lumv->song_gameover, false);
     lumv->song_theme.shouldLoop = true;
     lumv->song_title.shouldLoop = true;
-
-    
+ 
 
     bzrPlayBgm(&lumv->song_title, BZR_STEREO);
     
     if (lumv->lumberjackMain->networked)
     {
-
         lumberjackInitp2p();
     }
 }
@@ -892,11 +890,12 @@ void lumberjackGameLoop(int64_t elapsedUs)
         lumv->wakeupSignal -= elapsedUs/10000;
         lumv->lastResponseSignal -= elapsedUs/10000;
 
+        if (lumv->lumberjackMain->connLost) lumv->lastResponseSignal = 0;
+
         if (lumv->wakeupSignal < 0)
         {
             lumv->wakeupSignal = 100;
             lumberjackSendScore(lumv->score); //Send score just to ping               
-
         }
 
         if (lumv->lastResponseSignal <= 0)
@@ -1627,7 +1626,14 @@ void DrawTitle(void)
         drawWsgSimple(&lumv->floorTiles[7], i * LUMBERJACK_TILE_SIZE, 224);
     }
 
-    if (lumv->gameReady)
+    if (lumv->lumberjackMain->connLost)
+    {
+        drawWsgSimple(&lumv->connectLostSprite, (TFT_WIDTH/2) - 90, (TFT_HEIGHT/2) - 9);
+        const char* error = "Press B";
+        int16_t tWidthC = textWidth(&lumv->arcade, error);
+
+        lumberjackTitleDisplayText(error, (TFT_WIDTH - tWidthC) / 2, 180);
+    } else if (lumv->gameReady)
     {
         const char* hostText = "Press A to start";
         const char* clientText = "Host must start";
@@ -1782,13 +1788,15 @@ void DrawGame(void)
         drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 206, 32);
     }
 
-    if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
+    if (lumv->lumberjackMain->connLost)
+    {
+        drawWsgSimple(&lumv->connectLostSprite, (TFT_WIDTH/2) -80, (TFT_HEIGHT/2) - 9);
+    }
+    else if (lumv->gameState == LUMBERJACK_GAMESTATE_GAMEOVER)
     {
         if (lumv->lumberjackMain->networked && lumv->lastResponseSignal <= 0)
-        {
-            
-            drawWsgSimple(&lumv->connectLostSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
-
+        {            
+            drawWsgSimple(&lumv->connectLostSprite, (TFT_WIDTH/2) -80, (TFT_HEIGHT/2) - 9);
         } else if (lumv->hasWon)
         {
             drawWsgSimple(&lumv->gamewinSprite, (TFT_WIDTH/2) -72, (TFT_HEIGHT/2) - 9);
@@ -1850,54 +1858,9 @@ void DrawGame(void)
 
         }
 
-        //currentBonus->time += ;
-        //currentBonus->bonusAmount = lumv->comboAmount;
     }
-    
+   
 
-    //drawRect()
-    // Debug
-
-    /*
-    char debug[20] = {0};
-    snprintf(debug, sizeof(debug), "Enemy: %d ",
-             lumv->totalEnemyCount);
-    drawText(&lumv->arcade, c000, debug, 16, 16);
-
-
-    drawRect(lumv->localPlayer->cX, lumv->localPlayer->cY - lumv->yOffset, lumv->localPlayer->cX +
-     lumv->localPlayer->cW, lumv->localPlayer->cY - lumv->yOffset + lumv->localPlayer->cH, c050);
-
-    if (lumv->localPlayer->jumpPressed)
-    {
-        drawText(&lumv->arcade, c555, "A", 16, 32);
-    }
-    else
-    {
-        drawText(&lumv->arcade, c000, "A", 16, 32);
-    }
-
-    if (lumv->localPlayer->attackPressed)
-    {
-        drawText(&lumv->arcade, c555, "B", 48, 32);
-    }
-    else
-    {
-        drawText(&lumv->arcade, c000, "B", 48, 32);
-    }
-
-    if (lumv->localPlayer->onGround)
-    {
-        drawText(&lumv->arcade, c555, "G", 80, 32);
-    }
-    else
-    {
-        drawText(&lumv->arcade, c000, "G", 80, 32);
-    } //lumv->spawnTimer
-
-    snprintf(debug, sizeof(debug), "%d", lumv->spawnTimer);
-    drawText(&lumv->arcade, c555, debug,  122, 32);
-    */
 }
 
 void lumberjackTitleDisplayText(const char* string, int locationX, int locationY)

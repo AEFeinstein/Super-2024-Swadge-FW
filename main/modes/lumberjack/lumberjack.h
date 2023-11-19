@@ -48,9 +48,11 @@ typedef struct
     font_t arcade;
 
     uint8_t selected;
-    bool networked;
     bool host;
     bool instructions;
+
+    bool networked;
+    bool connLost;
 
     // The pass throughs
     p2pInfo p2p;
