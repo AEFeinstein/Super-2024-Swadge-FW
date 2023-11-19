@@ -191,40 +191,40 @@ void jukeboxEnterMode()
     // TODO: change this number   ^ as categories (modes) with music are added
     jukebox->musicCategories = calloc(jukebox->numMusicCategories, sizeof(jukeboxCategory));
 
-    // Galactic Brickdown category
-    uint8_t songIdx = 0;
-    jukebox->musicCategories[catIdx].categoryName = breakoutMode.modeName;
-    jukebox->musicCategories[catIdx].numSongs = 5;
-    jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
+    // // Galactic Brickdown category
+    // uint8_t songIdx = 0;
+    // jukebox->musicCategories[catIdx].categoryName = breakoutMode.modeName;
+    // jukebox->musicCategories[catIdx].numSongs = 5;
+    // jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
-    // Galactic Brickdown songs // TODO: replace this with breakout's actual music //Prepared ahead with list from JVeg199X
+    // // Galactic Brickdown songs // TODO: replace this with breakout's actual music //Prepared ahead with list from JVeg199X
 
-    // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Crazy";
-    // loadSong("brkBgmCrazy.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
-    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    // songIdx++;
+    // // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Crazy";
+    // // loadSong("brkBgmCrazy.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
+    // // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    // // songIdx++;
 
-    // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Finale";
-    // loadSong("brkBgmFinale.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
-    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    // songIdx++;
+    // // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Finale";
+    // // loadSong("brkBgmFinale.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
+    // // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    // // songIdx++;
 
-    // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Pixel";
-    // loadSong("brkBgmPixel.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
-    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    // songIdx++;
+    // // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Pixel";
+    // // loadSong("brkBgmPixel.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
+    // // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    // // songIdx++;
 
-    // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Skill";
-    // loadSong("brkBgmSkill.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
-    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    // songIdx++;
+    // // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Skill";
+    // // loadSong("brkBgmSkill.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true); 
+    // // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    // // songIdx++;
 
-    // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Title";
-    // loadSong("brkBgmTitle.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
-    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    // songIdx++;
+    // // jukebox->musicCategories[catIdx].songs[songIdx].name = "BGM Title";
+    // // loadSong("brkBgmTitle.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
+    // // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    // // songIdx++;
 
-    catIdx++;
+    // catIdx++;
 
     // Swadge Land category
     songIdx = 0;
@@ -319,9 +319,9 @@ void jukeboxEnterMode()
     // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->hotrod;
     // songIdx++;
     
-    // jukebox->musicCategories[catIdx].songs[songIdx].name = "Fauxrio Kart";
-    // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->fauxrio_kart;
-    // songIdx++;
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Fauxrio Kart";
+    jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->Fauxrio_Kart;
+    songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "The Lake";
     // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->the_lake;
