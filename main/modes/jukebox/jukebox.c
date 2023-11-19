@@ -442,6 +442,26 @@ void jukeboxEnterMode()
     loadSong("sndWaveBall.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    
+    // jukebox->sfxCategories[catIdx].songs[songIdx].name = "Game Over";
+    // loadSong("brkGameOver.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    // songIdx++;    
+    
+    // jukebox->sfxCategories[catIdx].songs[songIdx].name = "Get Ready";
+    // loadSong("brkGetReady.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    // songIdx++;    
+    
+    // jukebox->sfxCategories[catIdx].songs[songIdx].name = "High Score";
+    // loadSong("brkHighScore.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    // songIdx++;    
+    
+    // jukebox->sfxCategories[catIdx].songs[songIdx].name = "Level Clear";
+    // loadSong("brkLvlClear.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    // songIdx++;
 
     catIdx++;
             
