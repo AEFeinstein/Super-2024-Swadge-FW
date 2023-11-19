@@ -184,7 +184,6 @@ void jukeboxEnterMode()
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
     ///// Load music midis /////
-    printf("Loading music\n");
 
     // Initialize array of music categories
     uint8_t catIdx = 0;
@@ -359,7 +358,6 @@ void jukeboxEnterMode()
     // TODO: remainder of categories (modes) with music
 
     ///// Load SFX midis /////
-    printf("Loading SFX\n");
 
     // Initialize array of sfx categories
     catIdx = 0;
@@ -374,7 +372,6 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Galactic Brickdown SFX
-    printf("Loading GB SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Bounce";
     loadSong("sndBounce.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
@@ -435,7 +432,6 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Swadge Land SFX
-    printf("Loading SL SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Intro";
     loadSong("bgmIntro.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
@@ -576,110 +572,92 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Magtroid Pocket SFX
-    printf("Loading MP SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_door_open";
     loadSong("r_door_open.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_block";
     loadSong("r_e_block.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_damage";
     loadSong("r_e_damage.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
         
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_dead";
     loadSong("r_e_dead.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_freeze";
     loadSong("r_e_freeze.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_game_over";
     loadSong("r_game_over.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_health";
     loadSong("r_health.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_item_get";
     loadSong("r_item_get.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_lava_dmg";
     loadSong("r_lava_dmg.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_charge";
     loadSong("r_p_charge.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_charge_start";
     loadSong("r_p_charge_start.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     // TODO: broken .mid file
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_damage";
     loadSong("r_p_damage.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_ice";
     loadSong("r_p_ice.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_missile";
     loadSong("r_p_missile.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_shoot";
     loadSong("r_p_shoot.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_xray";
     loadSong("r_p_xray.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_warp";
     loadSong("r_warp.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
-    printf("%"PRIu8"\n", songIdx);
     
     catIdx++;
 
@@ -692,7 +670,6 @@ void jukeboxEnterMode()
     jukebox->tunernomeSfxCategory = &jukebox->sfxCategories[catIdx];
 
     // Tunernome SFX
-    printf("Loading TN SFX\n");
 
     // Special handling since these SFX are defined in code, not loaded from .sng files
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Primary";
@@ -715,7 +692,6 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Menu SFX
-    printf("Loading Menu SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Item";
     loadSong("item.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
@@ -736,7 +712,6 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Factory Test SFX
-    printf("Loading FT SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Stereo Check";
     loadSong("stereo_test.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
@@ -752,7 +727,6 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Unused SFX
-    printf("Loading Unused SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Pong Block 1";
     loadSong("block1.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
@@ -767,8 +741,6 @@ void jukeboxEnterMode()
     catIdx++;
 
     // TODO: remainder of categories (modes) with SFX
-
-    printf("Done loading midis\n");
 
     ///// Initialize menu /////
     jukebox->menu                = initMenu(str_jukebox, &jukeboxMainMenuCb);
