@@ -66,8 +66,7 @@
 
 #define flightGetCourseTimeUs() ( flight->paused ? (flight->timeOfPause - flight->timeOfStart) : ((uint32_t)esp_timer_get_time() - flight->timeOfStart) )
 
-
-#define PROFILING
+//#define PROFILING
 
 /*============================================================================
  * Structs, Enums
@@ -135,7 +134,7 @@ typedef enum
 #define BOOLETSPERPLAYER 4
 #define MAX_BOOLETS_FROM_HOST 96 //96 = 24(guns)*4 boolets each.
 #define MAX_BOOLETS (MAX_PEERS*BOOLETSPERPLAYER+MAX_BOOLETS_FROM_HOST) 
-#define MAX_NETWORK_MODELS 108 //84 + 24(guns)
+#define MAX_NETWORK_MODELS 172 //84 + 24(guns) = 108 + 48 = baddies too.
 
 typedef struct  // 32 bytes.
 {
@@ -212,6 +211,8 @@ typedef struct
     uint32_t timeOfPause;
     int wintime;
     menuItem_t * menuEntryForInvertY;
+    menuItem_t * menuEntryForEnableIMU;
+    menuItem_t * menuEntryForEnableTouch;
 
     flLEDAnimation ledAnimation;
     uint8_t        ledAnimationTime;
@@ -251,6 +252,12 @@ typedef struct
 
     uint8_t bgcolor;
     uint8_t was_hit_by_boolet;
+
+	char nettext[24]; // NOTE: First char is color.
+
+	int imuiirX;
+	int imuiirY;
+	int inittedIMU;
 } flight_t;
 
 /*============================================================================
@@ -307,6 +314,13 @@ static const char fl_title[]  = "Flyin Donut";
 static const char fl_flight_env[] = "Atrium Course";
 static const char fl_flight_invertY0_env[] = "Y Invert: Off";
 static const char fl_flight_invertY1_env[] = "Y Invert: On";
+
+static const char fl_flight_gyro0_env[] = "Gyro: Off";
+static const char fl_flight_gyro1_env[] = "Gyro: On";
+
+static const char fl_flight_touch0_env[] = "Touch: Off";
+static const char fl_flight_touch1_env[] = "Touch: On";
+
 static const char fl_flight_perf[] = "Free / VS";
 static const char fl_100_percent[] = "100% 100% 100%";
 static const char fl_turn_around[] = "TURN AROUND";
@@ -330,8 +344,8 @@ swadgeMode_t flightMode =
     .fnEspNowSendCb = FlightfnEspNowSendCb,
     .fnMainLoop = flightRender,
     .fnAudioCallback = NULL,
+	.usesAccelerometer = true,
     .overrideUsb = false,
-    .usesAccelerometer = false,
     .overrideSelectBtn = false
 };
 flight_t* flight;
@@ -373,6 +387,10 @@ static void flightBackground(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
     }
 
     fillDisplayArea( x, y, x+w, h+y, flight->bgcolor );
+
+	if( flight->savedata.flightEnableIMU )
+		if( up == 0 || up == upNum-2 )
+			accelIntegrate();
 }
 
 /**
@@ -419,6 +437,9 @@ static void flightEnterMode( void )
     addSingleItemToMenu(flight->menu, fl_flight_env);
     addSingleItemToMenu(flight->menu, fl_flight_perf);
     flight->menuEntryForInvertY = addSingleItemToMenu( flight->menu, flight->savedata.flightInvertY?fl_flight_invertY1_env:fl_flight_invertY0_env );
+    flight->menuEntryForEnableIMU = addSingleItemToMenu( flight->menu, flight->savedata.flightEnableIMU?fl_flight_gyro1_env:fl_flight_gyro0_env );
+    flight->menuEntryForEnableTouch = addSingleItemToMenu( flight->menu, flight->savedata.flightEnableTouch?fl_flight_touch1_env:fl_flight_touch0_env );
+
     addSingleItemToMenu(flight->menu, str_high_scores);
     addSingleItemToMenu(flight->menu, str_quit);
 }
@@ -480,6 +501,38 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
 
         setFlightSaveData( &flight->savedata );
     }
+
+    else if ( fl_flight_gyro0_env == menuItem )
+    {
+        flight->savedata.flightEnableIMU = 1;
+        flight->menuEntryForEnableIMU->label = fl_flight_gyro1_env;
+
+        setFlightSaveData( &flight->savedata );
+    }
+    else if ( fl_flight_gyro1_env == menuItem )
+    {
+        flight->savedata.flightEnableIMU = 0;
+        flight->menuEntryForEnableIMU->label = fl_flight_gyro0_env;
+
+        setFlightSaveData( &flight->savedata );
+    }
+
+    else if ( fl_flight_touch1_env == menuItem )
+    {
+        flight->savedata.flightEnableTouch = 1;
+        flight->menuEntryForEnableTouch->label = fl_flight_touch0_env;
+
+        setFlightSaveData( &flight->savedata );
+    }
+    else if ( fl_flight_touch0_env == menuItem )
+    {
+        flight->savedata.flightEnableTouch  = 0;
+        flight->menuEntryForEnableTouch->label = fl_flight_touch1_env;
+
+        setFlightSaveData( &flight->savedata );
+    }
+
+
     else if ( str_high_scores == menuItem )
     {
         flight->mode = FLIGHT_SHOW_HIGH_SCORES;
@@ -619,13 +672,21 @@ static void flightStartGame( flightModeScreen mode )
     flight->wintime = 0;
     flight->speed = 0;
 
+	flight->inittedIMU = 0;
+
     //Starting location/orientation
     if( mode == FLIGHT_FREEFLIGHT )
     {
         srand( flight->timeOfStart );
+#ifndef PROFILING
         flight->planeloc[0] = (int16_t)(((rand()%1500)-200)*OOBMUX);
         flight->planeloc[1] = (int16_t)(((rand()%500)+500)*OOBMUX);
         flight->planeloc[2] = (int16_t)(((rand()%900)+2000)*OOBMUX);
+#else
+        flight->planeloc[0] = (int16_t)((-200)*OOBMUX);
+        flight->planeloc[1] = (int16_t)(( 500)*OOBMUX);
+        flight->planeloc[2] = (int16_t)((2000)*OOBMUX);
+#endif
         flight->hpr[0] = 2061;
         flight->hpr[1] = 190;
         flight->hpr[2] = 0;
@@ -649,7 +710,9 @@ static void flightStartGame( flightModeScreen mode )
     flight->pitchmoment = 0;
     flight->yawmoment = 0;
 
-    memset(flight->beangotmask, 0, sizeof( flight->beangotmask) );
+    memset(flight->beangotmask, 0, sizeof(flight->beangotmask));
+
+	memset(flight->nettext, 0, sizeof(flight->nettext));
 
     flightLEDAnimate( FLIGHT_LED_GAME_START );
 }
@@ -1045,10 +1108,6 @@ int tdModelVisibilitycheck( const tdModel * m )
         return -2;
     }
 }
-/* Profiling notes
-     Start = 245500 / 80000 / 1802000
-	 Using static local vars = 245500 / 80000 / 1753200
-*/
 
 void tdDrawModel( const tdModel * m )
 {
@@ -1068,7 +1127,7 @@ void tdDrawModel( const tdModel * m )
 
     //This looks a little odd, but what we're doing is caching our vertex computations
     //so we don't have to re-compute every time round.
-    //f( "%d\n", nrv );
+    //f( "%d    n", nrv );
     int16_t cached_verts[nrv];
 
     for( i = 0; i < nrv; i+=3 )
@@ -1105,7 +1164,7 @@ void tdDrawModel( const tdModel * m )
             int16_t * cv1 = &cached_verts[i1];
             int16_t * cv2 = &cached_verts[i2];
             int16_t * cv3 = &cached_verts[i3];
-            //printf( "%d/%d/%d  %d %d %d\n", i1, i2, i3, cv1[2], cv2[2], cv3[2] );
+            //printf( "%d/%d/%d  %d %d %d    n", i1, i2, i3, cv1[2], cv2[2], cv3[2] );
 
             if( cv1[2] != 2 && cv2[2] != 2 && cv3[2] != 2 )
             {
@@ -1135,12 +1194,25 @@ int mdlctcmp( const void * va, const void * vb )
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+/* Profiling notes
+     Start = 1000 / 253 / 7442 / 22920
+	 Using static local vars = 1000 / 253 / 7319 / 22811  B1
+	 Passing the parameter in: 1000 / 253 / 7218 / 22735  << Leaving this on the table.
+		Back to B1
+	 Using int32_t instead of int16_t: 1000 / 254 / 7329 / 22760  (No benefit)
+		Back to B1
+	 Enabling accelerometer: 1000 / 254 / 7315 / 22818
+*/
+
 static void flightRender(int64_t elapsedUs)
 {
 //#ifndef EMULATOR
 //    if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('R');
 //#endif
+#ifdef PROFILING
 	uint32_t t0 = getCycleCount();
+#endif
 
     flightUpdate( 0, elapsedUs );
 
@@ -1230,13 +1302,15 @@ static void flightRender(int64_t elapsedUs)
 // #endif
 
     int mdlct = mrptr - mrp;
-
+#ifdef PROFILING
 	uint32_t t1 = getCycleCount();
-
+#endif
     //Painter's algorithm
     qsort( mrp, mdlct, sizeof( modelRangePair_t ), mdlctcmp );
 
+#ifdef PROFILING
 	uint32_t t2 = getCycleCount();
+#endif
 
 // #ifndef EMULATOR
 //     if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('3');
@@ -1421,16 +1495,43 @@ static void flightRender(int64_t elapsedUs)
 //    if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('5');
 //#endif
 
-// For profiling.
+#ifdef PROFILING
+	// For profiling.
 	uint32_t t3 = getCycleCount();
+	static uint32_t tlast = 0;
+
 	char cts[128];
-    fillDisplayArea( 0, 210, 280, 235, 0 );
-	sprintf( cts, "%d", (int)(t1-t0) );
+    fillDisplayArea( 0, 210, 280, 240, 0 );
+	sprintf( cts, "%d", (int)(t1-t0)/240 );
     drawText(&flight->ibm, CNDRAW_WHITE, cts, 15,210);
-	sprintf( cts, "%d", (int)(t2-t1) );
-    drawText(&flight->ibm, CNDRAW_WHITE, cts, 65,210);
-	sprintf( cts, "%d", (int)(t3-t2) );
-    drawText(&flight->ibm, CNDRAW_WHITE, cts, 115,210);
+	sprintf( cts, "%d", (int)(t2-t1)/240 );
+    drawText(&flight->ibm, CNDRAW_WHITE, cts, 70,210);
+	sprintf( cts, "%d", (int)(t3-t2)/240 );
+    drawText(&flight->ibm, CNDRAW_WHITE, cts, 125,210);
+	sprintf( cts, "%d", (int)(t3-tlast)/240 );
+    drawText(&flight->ibm, CNDRAW_WHITE, cts, 185,210);
+
+/*
+    float plusy[3] = {0, 0, 1};
+    mathRotateVectorByInverseOfQuaternion(plusy, LSM6DSL.fqQuat, plusy);
+
+    int16_t x = plusy[0] * 256;
+    int16_t y = plusy[1] * 256;
+    int16_t z = plusy[2] * 256;
+	sprintf( cts, "%4d %4d %4d", x, y, z );
+    drawText(&flight->ibm, CNDRAW_WHITE, cts, 15,225);
+*/
+
+	tlast = t3;
+#else
+	if( tflight->nettext[1] )
+	{
+		int yend = TFT_HEIGHT - flight->radiostars.height - 1;
+		int ystart = yend - flight->radiostars.height - 1;
+	    fillDisplayArea( 0, ystart-1, 280, yend, 0 );
+    	drawText(&flight->radiostars, tflight->nettext[0], tflight->nettext+1, 10, ystart);
+	}
+#endif
 
 	//ESP_LOGI( "RENDER", "%d %d %d", (int)(t1-t0), (int)(t2-t1), (int)(t3-t2) );
     return;
@@ -1470,42 +1571,86 @@ static void flightGameUpdate( flight_t * tflight )
 
     if( ( tflight->mode == FLIGHT_GAME || tflight->mode == FLIGHT_FREEFLIGHT ) && !dead )
     {
-        int dpitch = 0;
-        int dyaw = 0;
+		if( flight->savedata.flightEnableIMU )
+		{
+			float plusy[3] = {0, 0, 1};
+			mathRotateVectorByInverseOfQuaternion(plusy, LSM6DSL.fqQuat, plusy);
+			int x = plusy[0] * 1024;
+			int y = plusy[1] * 1024;
 
-        if( bs & 4 ) dpitch += THRUSTER_ACCEL;
-        if( bs & 8 ) dpitch -= THRUSTER_ACCEL;
-        if( bs & 1 ) dyaw += THRUSTER_ACCEL;
-        if( bs & 2 ) dyaw -= THRUSTER_ACCEL;
+			#define IMUIIR 7
 
-        if( tflight->savedata.flightInvertY ) dyaw *= -1;
+			if(!tflight->inittedIMU)
+			{
+				tflight->inittedIMU = 8;
+				tflight->imuiirX = x<<IMUIIR;
+				tflight->imuiirY = y<<IMUIIR;
+			}
 
-        // If flying upside down, invert left/right. (Optional see flip note below)
-        if( tflight->hpr[1] >= 990 && tflight->hpr[1] < 2970 ) dpitch *= -1;
+			// Perform a high-pass-filter on the gyro location.
+			int setx = x - (tflight->imuiirX >> IMUIIR);
+			int sety = y - (tflight->imuiirY >> IMUIIR);
+			tflight->imuiirX = x + tflight->imuiirX - (tflight->imuiirX >> IMUIIR);
+			tflight->imuiirY = y + tflight->imuiirY - (tflight->imuiirY >> IMUIIR);
 
-        if( dpitch )
-        {
-            tflight->pitchmoment += dpitch;
-            if( tflight->pitchmoment > THRUSTER_MAX ) tflight->pitchmoment = THRUSTER_MAX;
-            if( tflight->pitchmoment < -THRUSTER_MAX ) tflight->pitchmoment = -THRUSTER_MAX;
-        }
-        else
-        {
-            if( tflight->pitchmoment > 0 ) tflight->pitchmoment-=THRUSTER_DECAY;
-            if( tflight->pitchmoment < 0 ) tflight->pitchmoment+=THRUSTER_DECAY;
-        }
+			// Add a tiiiny dead zone.
+			if( setx > 0 ) { setx-=10; if( setx < 0 ) setx = 0; }
+			if( setx < 0 ) { setx+=10; if( setx > 0 ) setx = 0; }
+			if( sety > 0 ) { sety-=10; if( sety < 0 ) sety = 0; }
+			if( sety < 0 ) { sety+=10; if( sety > 0 ) sety = 0; }
 
-        if( dyaw )
-        {
-            tflight->yawmoment += dyaw;
-            if( tflight->yawmoment > THRUSTER_MAX ) tflight->yawmoment = THRUSTER_MAX;
-            if( tflight->yawmoment < -THRUSTER_MAX ) tflight->yawmoment = -THRUSTER_MAX;
-        }
-        else
-        {
-            if( tflight->yawmoment > 0 ) tflight->yawmoment-=THRUSTER_DECAY;
-            if( tflight->yawmoment < 0 ) tflight->yawmoment+=THRUSTER_DECAY;
-        }
+			if( tflight->savedata.flightInvertY ) y *= -1;
+
+			// TODO: Make this dependent on framerate maybe?
+			//ESP_LOGI( "_", "%d %d  %d %d  %d %d   %d %d    n", (int)x, (int)y, (int)tflight->imuiirX, (int)tflight->imuiirY, (int)setx, (int)sety, (int)(setx*delta), (int)(sety*delta) );
+
+
+			// Handle upside down flight.
+	        if( tflight->hpr[1] >= 990 && tflight->hpr[1] < 2970 ) setx *= -1;
+
+			tflight->pitchmoment = -((int)(setx)*(int)delta)>>17;  //17 = de-sensitivity
+			tflight->yawmoment = -((int)sety*(int)delta)>>17;
+		}
+		else
+		{
+		    int dpitch = 0;
+		    int dyaw = 0;
+
+		    if( bs & 4 ) dpitch += THRUSTER_ACCEL;
+		    if( bs & 8 ) dpitch -= THRUSTER_ACCEL;
+		    if( bs & 1 ) dyaw += THRUSTER_ACCEL;
+		    if( bs & 2 ) dyaw -= THRUSTER_ACCEL;
+
+		    if( tflight->savedata.flightInvertY ) dyaw *= -1;
+
+		    // If flying upside down, invert left/right. (Optional see flip note below)
+		    if( tflight->hpr[1] >= 990 && tflight->hpr[1] < 2970 ) dpitch *= -1;
+
+
+		    if( dpitch )
+		    {
+		        tflight->pitchmoment += dpitch;
+		        if( tflight->pitchmoment > THRUSTER_MAX ) tflight->pitchmoment = THRUSTER_MAX;
+		        if( tflight->pitchmoment < -THRUSTER_MAX ) tflight->pitchmoment = -THRUSTER_MAX;
+		    }
+		    else
+		    {
+		        if( tflight->pitchmoment > 0 ) tflight->pitchmoment-=THRUSTER_DECAY;
+		        if( tflight->pitchmoment < 0 ) tflight->pitchmoment+=THRUSTER_DECAY;
+		    }
+
+		    if( dyaw )
+		    {
+		        tflight->yawmoment += dyaw;
+		        if( tflight->yawmoment > THRUSTER_MAX ) tflight->yawmoment = THRUSTER_MAX;
+		        if( tflight->yawmoment < -THRUSTER_MAX ) tflight->yawmoment = -THRUSTER_MAX;
+		    }
+		    else
+		    {
+		        if( tflight->yawmoment > 0 ) tflight->yawmoment-=THRUSTER_DECAY;
+		        if( tflight->yawmoment < 0 ) tflight->yawmoment+=THRUSTER_DECAY;
+		    }
+		}
 
         tflight->hpr[0] += tflight->pitchmoment;
         tflight->hpr[1] += tflight->yawmoment;
@@ -1519,19 +1664,32 @@ static void flightGameUpdate( flight_t * tflight )
         // if( tflight->hpr[1] > 1040 && tflight->hpr[1] < 1980 ) tflight->hpr[1] = 1040;
         // if( tflight->hpr[1] < 2990 && tflight->hpr[1] > 1980 ) tflight->hpr[1] = 2990;
 
-        if( bs & 16 ) tflight->speed++;
-        else tflight->speed--;
-        if( tflight->speed < flight_min_speed ) tflight->speed = flight_min_speed;
+		if( flight->savedata.flightEnableIMU )
+		{
+			if( (bs & 1) || (bs & 16) ) tflight->speed+=2;
+			if( bs & 2 ) tflight->speed-=2;
+			if( tflight->speed > 0 ) tflight->speed--;
+			if( tflight->speed < 0 ) tflight->speed++;
+		}
+		else
+		{
+			if( bs & 16 ) tflight->speed++;
+	        else tflight->speed--;
+	        if( tflight->speed < flight_min_speed ) tflight->speed = flight_min_speed;
+		}
 
-        if( tflight->mode == FLIGHT_FREEFLIGHT )
-        {
-            if( tflight->speed > FLIGHT_MAX_SPEED_FREE ) tflight->speed = FLIGHT_MAX_SPEED_FREE;
-        }
-        else
-        {
-            if( tflight->speed > FLIGHT_MAX_SPEED ) tflight->speed = FLIGHT_MAX_SPEED;
-        }
+		if( tflight->mode == FLIGHT_FREEFLIGHT )
+		{
+		    if( tflight->speed > FLIGHT_MAX_SPEED_FREE ) tflight->speed = FLIGHT_MAX_SPEED_FREE;
+		    if( tflight->speed <-FLIGHT_MAX_SPEED_FREE ) tflight->speed =-FLIGHT_MAX_SPEED_FREE;
+		}
+		else
+		{
+		    if( tflight->speed > FLIGHT_MAX_SPEED ) tflight->speed = FLIGHT_MAX_SPEED;
+		    if( tflight->speed <-FLIGHT_MAX_SPEED ) tflight->speed =-FLIGHT_MAX_SPEED;
+		}
     }
+
 
     //If game over, just keep status quo.
 
@@ -1989,6 +2147,7 @@ static void TModOrDrawPlayer( flight_t * tflight, tdModel * tmod, int16_t * mat,
         }
         int backupColor = flight->renderlinecolor;
         flight->renderlinecolor = p->reqColor;
+
         tdDrawModel( m );
         flight->renderlinecolor = backupColor;
     }
@@ -2283,7 +2442,7 @@ static void FlightNetworkFrameCall( flight_t * tflight, uint32_t now, modelRange
 
         int len = pp - espnow_buffer;
         espNowSend((char*)espnow_buffer, len); //Don't enable yet.
-        // uprintf( "ESPNow Send: %d\n", len );
+        // uprintf( "ESPNow Send: %d    n", len );
     }
 #endif
 /*
@@ -2388,6 +2547,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     int modelCount = ReadUEQ( &assetCounts );
     int shipCount = ReadUEQ( &assetCounts );
     int booletCount = ReadUEQ( &assetCounts );
+	int textLength = ReadUEQ( &assetCounts );
     // If we get a server packet, switch to server mode for a while.
     if( !isPeer )
     {
@@ -2465,7 +2625,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
             memcpy( &tp->auxPeerFlags, data, sizeof( tp->auxPeerFlags ) ); data+=sizeof( tp->auxPeerFlags );
             tp->reqColor = *(data++);
 
-            //uprintf( "%d %d %d - %d %d %d - %d %d %d %08x %08x\n", tp->posAt[0],tp->posAt[1],tp->posAt[2],tp->velAt[0], tp->velAt[1], tp->velAt[2], 
+            //uprintf( "%d %d %d - %d %d %d - %d %d %d %08x %08x    n", tp->posAt[0],tp->posAt[1],tp->posAt[2],tp->velAt[0], tp->velAt[1], tp->velAt[2], 
             //    tp->rotAt[0], tp->rotAt[1], tp->rotAt[2], tp->basePeerFlags, tp->auxPeerFlags );
 
             if( tp->basePeerFlags & 2 )
@@ -2530,13 +2690,21 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
             data += sizeof(b->flags);
         }
     }
-
+	if( textLength )
+	{
+		// NOTE: First char is color.
+		if( textLength < sizeof(flt->nettext) )
+		{
+			memcpy( flt->nettext, data, textLength );
+			data += textLength;
+		}
+	}
 
 }
 
 static void FlightfnEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
-    //uprintf( "SEND OK %d\n", status );
+    //uprintf( "SEND OK %d    n", status );
     // Do nothing.
 }
 
