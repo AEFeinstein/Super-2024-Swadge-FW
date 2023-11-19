@@ -41,6 +41,10 @@
 #define BAR_X_WIDTH (TFT_WIDTH - (2 * BAR_X_MARGIN) - 1)
 #define BAR_Y_SPACING (2 * CURSOR_HEIGHT + 5)
 
+#define ACCEL_BAR_HEIGHT 8
+#define ACCEL_BAR_SEP    1
+#define MAX_ACCEL_BAR_W  100
+
 #define REST_BIT 0x10000 // Largest note is 144, which is 0b10010000
 
 #define DEFAULT_PAUSE 5
@@ -161,7 +165,7 @@ typedef struct
 // The swadge mode
 swadgeMode_t slideWhistleMode =
 {
-    .modeName = "Midi Slide Whistle",
+    .modeName = "Techo SlideWhistle",
     .wifiMode = NO_WIFI,
     .overrideUsb = false,
     .usesAccelerometer = true,
@@ -187,7 +191,6 @@ typedef struct
 
     // Track motion
     int16_t roll;
-    int16_t pitch;
     char accelStr[32];
     char accelStr2[32];
 
@@ -1201,6 +1204,12 @@ void  slideWhistleEnterMode(void)
     {
         esp_timer_start_periodic(slideWhistle->beatTimer, 1000);
     }
+
+    // We shold go as fast as we can
+    setFrameRateUs(0);
+
+    // Set up the IMU
+    accelSetRegistersAndReset();
 }
 
 /**
@@ -1342,7 +1351,6 @@ void  slideWhistleButtonCallback(buttonEvt_t* evt)
  * @brief Callback function for accelerometer values
  * Use the current vector to find pitch and roll, then update the display
  *
- * @param accel The freshly read accelerometer values
  */
 void  slideWhistleAccelerometerHandler(int16_t x, int16_t y, int16_t z)
 {
@@ -1353,32 +1361,41 @@ void  slideWhistleAccelerometerHandler(int16_t x, int16_t y, int16_t z)
                                         TFT_WIDTH - 1 - BAR_X_MARGIN);
 
     // Only find values when the swadge is pointed up
-    if(x <= 0)
+    /*if(x <= 0)
     {
         return;
+    }*/
+
+    /*x = (x + 256) * 180 / 512;
+    y = (y + 256) * 180 / 512;
+    z = (z + 256) * 180 / 512;*/
+
+
+    //256 <-> -256
+    //0 <-> 180
+
+    //q1 -.5 <-> .5
+
+    float q[4];
+    float rollF = 0.5f;
+    if (ESP_OK == accelGetQuaternion(q))
+    {
+        // Print data to debug logs
+        snprintf(slideWhistle->accelStr, sizeof(slideWhistle->accelStr), "q %.2f %.2f %.2f %.2f",
+            q[0], q[1], q[2], q[3]);
+        rollF = q[3]+0.5f;
     }
 
-    // Find the roll and pitch in radians
-    float rollF = atanf(y / (float)x);
-    float pitchF = atanf((-1 * z) / sqrtf((y * y) + (x * x)));
-
-    // Normalize the values to [0,1]
-    rollF = ((rollF) / M_PI) + 0.5f;
-    pitchF = ((pitchF) / M_PI) + 0.5f;
+    slideWhistle->roll = roundf(rollF * TFT_WIDTH);
 
     // Round and scale to BAR_X_WIDTH
     // this maps 30 degrees to the far left and 150 degrees to the far right
     // (30 / 180) == 0.167, (180 - (2 * 30)) / 180 == 0.666
-    slideWhistle->roll = BAR_X_MARGIN + roundf(((rollF - 0.167f) * BAR_X_WIDTH) / 0.666f);
-    slideWhistle->roll = CLAMP(slideWhistle->roll, BAR_X_MARGIN, TFT_WIDTH - 1 - BAR_X_MARGIN);
+    //slideWhistle->roll = BAR_X_MARGIN + roundf(((rollF - 0.167f) * BAR_X_WIDTH) / 0.666f);
+    //slideWhistle->roll = CLAMP(slideWhistle->roll, BAR_X_MARGIN, TFT_WIDTH - 1 - BAR_X_MARGIN);
 
-    slideWhistle->pitch = BAR_X_MARGIN + roundf(pitchF * BAR_X_WIDTH);
-    slideWhistle->pitch = CLAMP(slideWhistle->pitch, BAR_X_MARGIN, TFT_WIDTH - 1 - BAR_X_MARGIN);
-
-    // snprintf(slideWhistle->accelStr, sizeof(slideWhistle->accelStr), "roll %5d pitch %5d",
-    //          slideWhistle->roll, slideWhistle->pitch);
-    // snprintf(slideWhistle->accelStr2, sizeof(slideWhistle->accelStr2), "x %4d, y %4d, z %4d",
-    //          accel->x, accel->y, accel->z);
+    snprintf(slideWhistle->accelStr2, sizeof(slideWhistle->accelStr2), "x %4d, y %4d, z %4d",
+             x, y, z);
 }
 
 /**
@@ -1386,13 +1403,9 @@ void  slideWhistleAccelerometerHandler(int16_t x, int16_t y, int16_t z)
  */
 void  slideWhistleMainLoop(int64_t elapsedUs)
 {
-    int16_t a_x, a_y, a_z;
+    int16_t a_x, a_y, a_z = 0;
     if (ESP_OK == accelIntegrate() && ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
     {
-        // Values are roughly -256 to 256, so divide, clamp, and save
-        a_x = CLAMP((a_x) / 2, -128, 127);
-        a_y = CLAMP((a_y) / 2, -128, 127);
-        a_z = CLAMP((a_z) / 2, -128, 127);
         slideWhistleAccelerometerHandler(a_x, a_y, a_z);
     }
 
@@ -1516,9 +1529,9 @@ void  slideWhistleMainLoop(int64_t elapsedUs)
 
     afterText = drawText(
                     &slideWhistle->radiostars, c444,
-                    "Y~X/",
+                    "PAD/",
                     TFT_WIDTH - textWidth(&slideWhistle->radiostars, playText) - textWidth(&slideWhistle->radiostars,
-                            "Y~X/A") - CORNER_OFFSET,
+                            "PAD/A") - CORNER_OFFSET,
                     TFT_HEIGHT - slideWhistle->radiostars.height - CORNER_OFFSET);
     afterText = drawText(
                     &slideWhistle->radiostars, c151,
@@ -1530,6 +1543,26 @@ void  slideWhistleMainLoop(int64_t elapsedUs)
         playText,
         afterText,
         TFT_HEIGHT - slideWhistle->radiostars.height - CORNER_OFFSET);
+
+    // Set up drawing accel bars
+    // Values are roughly -256 to 256, so divide, clamp, and save
+    a_x = CLAMP((a_x) / 2, -128, 127);
+    a_y = CLAMP((a_y) / 2, -128, 127);
+    a_z = CLAMP((a_z) / 2, -128, 127);
+
+    int16_t barY = (TFT_HEIGHT * 3) / 4;
+    // Plot X accel
+    int16_t barWidth = ((a_x + 128) * MAX_ACCEL_BAR_W) / 256;
+    fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, c500);
+    barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
+    // Plot Y accel
+    barWidth = ((a_y + 128) * MAX_ACCEL_BAR_W) / 256;
+    fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, c050);
+    barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
+    // Plot Z accel
+    barWidth = ((a_z + 128) * MAX_ACCEL_BAR_W) / 256;
+    fillDisplayArea(TFT_WIDTH - barWidth, barY, TFT_WIDTH, barY + ACCEL_BAR_HEIGHT, c005);
+    // barY += (ACCEL_BAR_HEIGHT + ACCEL_BAR_SEP);
 }
 
 /**
