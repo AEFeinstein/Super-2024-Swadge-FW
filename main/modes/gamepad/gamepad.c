@@ -103,18 +103,16 @@ static const char* getButtonName(hid_gamepad_button_bm_t button);
 // Variables
 //==============================================================================
 
-static const char str_pc[]               = "Computer";
-static const char str_ns[]               = "Switch";
-static const char str_accel[]            = "Accel: ";
-static const char str_exit[]             = "Exit";
+static const char str_pc[]    = "Computer";
+static const char str_ns[]    = "Switch";
+static const char str_accel[] = "Accel: ";
+static const char str_exit[]  = "Exit";
 
-static const int32_t accelSettingsValues[] = {
-    0,
-    1
-};
+static const int32_t accelSettingsValues[] = {0, 1};
 
 static const char* const accelSettingsOptions[] = {
-    "Off", "On",
+    "Off",
+    "On",
 };
 
 gamepad_t* gamepad;
@@ -275,8 +273,9 @@ void gamepadEnterMode(void)
     gamepad->menu = initMenu(gamepadMode.modeName, gamepadMainMenuCb);
     addSingleItemToMenu(gamepad->menu, str_pc);
     addSingleItemToMenu(gamepad->menu, str_ns);
-    addSettingsOptionsItemToMenu(gamepad->menu, str_accel, accelSettingsOptions, accelSettingsValues, ARRAY_SIZE(accelSettingsOptions),
-        getGamepadAccelSettingBounds(), getGamepadAccelSetting());
+    addSettingsOptionsItemToMenu(gamepad->menu, str_accel, accelSettingsOptions, accelSettingsValues,
+                                 ARRAY_SIZE(accelSettingsOptions), getGamepadAccelSettingBounds(),
+                                 getGamepadAccelSetting());
     addSingleItemToMenu(gamepad->menu, str_exit);
 
     // Initialize menu renderer
@@ -557,8 +556,8 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 break;
             }
         }
-        drawFunc(((3 * TFT_WIDTH) / 4) + AB_BTN_RADIUS + AB_BTN_SEP, (TFT_HEIGHT / 4) - AB_BTN_Y_SEP - AB_BTN_Y_OFF + Y_OFF,
-                 AB_BTN_RADIUS, c243);
+        drawFunc(((3 * TFT_WIDTH) / 4) + AB_BTN_RADIUS + AB_BTN_SEP,
+                 (TFT_HEIGHT / 4) - AB_BTN_Y_SEP - AB_BTN_Y_OFF + Y_OFF, AB_BTN_RADIUS, c243);
 
         // Button B
         switch (gamepad->gamepadType)
@@ -575,8 +574,8 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
                 break;
             }
         }
-        drawFunc(((3 * TFT_WIDTH) / 4) - AB_BTN_RADIUS - AB_BTN_SEP, (TFT_HEIGHT / 4) + AB_BTN_Y_SEP - AB_BTN_Y_OFF + Y_OFF,
-                 AB_BTN_RADIUS, c401);
+        drawFunc(((3 * TFT_WIDTH) / 4) - AB_BTN_RADIUS - AB_BTN_SEP,
+                 (TFT_HEIGHT / 4) + AB_BTN_Y_SEP - AB_BTN_Y_OFF + Y_OFF, AB_BTN_RADIUS, c401);
 
         // Draw touch pad
         int16_t tBarX = TFT_WIDTH - TOUCHPAD_DIAM / 2 - TOUCHPAD_X_OFF;
@@ -587,12 +586,13 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
 
         if (!touched)
         {
-            phi = 0;
-            r = 0;
+            phi       = 0;
+            r         = 0;
             intensity = 0;
         }
 
-        touchDrawVector(&gamepad->ibmFont, "", c333, tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF, TOUCHPAD_DIAM / 2, touched, phi, r);
+        touchDrawVector(&gamepad->ibmFont, "", c333, tBarX, TFT_HEIGHT / 2 - TOUCHPAD_Y_OFF + Y_OFF, TOUCHPAD_DIAM / 2,
+                        touched, phi, r);
 
         if (getGamepadAccelSetting() && gamepad->gamepadType == GAMEPAD_GENERIC)
         {
@@ -847,7 +847,7 @@ void gamepadReportStateToHost(void)
                     getTouchCartesian(phi, r, &x, &y);
                     gamepad->gpState.x = (255 * x) / 1024 - 128;
                     gamepad->gpState.y = (-255 * y) / 1024 - 128;
-                    //gamepad->gpState.z = (127 * (phi - 180)) / 360;
+                    // gamepad->gpState.z = (127 * (phi - 180)) / 360;
                     gamepad->gpState.z = 0;
                 }
                 else
