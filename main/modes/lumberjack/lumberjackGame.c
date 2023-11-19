@@ -179,8 +179,6 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadWsg("lumbers_rtile_4.wsg", &lumv->animationTiles[15], true);
     
 
-
-
     //Loading Characters
     //*Loading character icons
     loadWsg("lumbers_red_lives.wsg", &lumv->minicharacters[0], true);
@@ -389,8 +387,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_items_pear4.wsg", &lumv->itemIcons[15], true);
         loadWsg("lumbers_items_pear5.wsg", &lumv->itemIcons[16], true);
         loadWsg("lumbers_items_pear6.wsg", &lumv->itemIcons[17], true);
-
     }
+
 
     //Sounds?
 
@@ -1776,16 +1774,19 @@ void DrawGame(void)
         drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 22, 32);
     }
 
-    for (int i = 0; i < lumv->nLives; i++)
+    if (lumv->lumberjackMain->networked)
     {
-        
-        int icon = lumv->netPlayerType;
-
-        if (icon > ARRAY_SIZE(lumv->minicharacters))
+        for (int i = 0; i < lumv->nLives; i++)
         {
-            icon = 0;
+            
+            int icon = lumv->netPlayerType;
+
+            if (icon > ARRAY_SIZE(lumv->minicharacters))
+            {
+                icon = 0;
+            }
+            drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 206, 32);
         }
-        drawWsgSimple(&lumv->minicharacters[icon], (i * 14) + 206, 32);
     }
 
     if (lumv->lumberjackMain->connLost)

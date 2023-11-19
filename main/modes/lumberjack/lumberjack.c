@@ -13,7 +13,7 @@
 #include "lumberjackGame.h"
 
 #define LUMBERJACK_VLEN             7
-#define LUMBERJACK_VERSION          "2311174a"
+#define LUMBERJACK_VERSION          "231118a"
 
 #define DEFAULT_HIGHSCORE           5000
 
@@ -684,24 +684,7 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         else if (label == lumberjackExit)
         {
             switchToSwadgeMode(&mainMenuMode);
-        }
-
-        if (label == lumberjackRedCharacter)
-        {
-            lumberjack->selected = 0;
-        }
-        else if (label == lumberjackGreenCharacter)
-        {
-            lumberjack->selected = 1;
-        }
-        else if (label == lumberjackSpecialCharacter)
-        {
-            lumberjack->selected = 2;
-        }
-        else if (label == lumberjackChoCharacter)
-        {
-            lumberjack->selected = 3;
-        }
+        }        
 
     }
     else
