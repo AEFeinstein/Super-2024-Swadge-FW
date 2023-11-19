@@ -426,7 +426,7 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
     }
 
     // Always Draw some reminder text, centered
-    const char reminderText[] = "Start + Select to Exit";
+    const char reminderText[] = "Menu + Pause to Exit";
     int16_t tWidth            = textWidth(&gamepad->ibmFont, reminderText);
     drawText(&gamepad->ibmFont, c555, reminderText, (TFT_WIDTH - tWidth) / 2, 10);
 
