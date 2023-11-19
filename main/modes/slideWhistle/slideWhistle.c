@@ -210,6 +210,7 @@ typedef struct
     int16_t heldCursorY;
     uint8_t rhythmIdx;
     uint8_t scaleIdx;
+    led_t led;
 } slideWhistle_t;
 
 slideWhistle_t* slideWhistle;
@@ -799,7 +800,7 @@ void slideWhistleEnterMode(void)
     }
 
     // We shold go as fast as we can
-    setFrameRateUs(0);
+    // setFrameRateUs(0);
 
     // Set up the IMU
     accelSetRegistersAndReset();
@@ -1061,6 +1062,16 @@ void slideWhistleMainLoop(int64_t elapsedUs)
                          TFT_HEIGHT - slideWhistle->radiostars.height - CORNER_OFFSET);
     drawText(&slideWhistle->radiostars, c444, playText, afterText,
              TFT_HEIGHT - slideWhistle->radiostars.height - CORNER_OFFSET);
+
+    // Copy LED color from the first LED to all of them
+    led_t leds[CONFIG_NUM_LEDS] = {{0}};
+    for (uint8_t ledIdx = 1; ledIdx < CONFIG_NUM_LEDS; ledIdx++)
+    {
+        leds[ledIdx].r = slideWhistle->led.r;
+        leds[ledIdx].g = slideWhistle->led.g;
+        leds[ledIdx].b = slideWhistle->led.b;
+    }
+    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
@@ -1136,13 +1147,12 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
         }
     }
 
-    led_t leds[CONFIG_NUM_LEDS] = {{0}};
     // If this is an internote pause
     if (isInterNotePause)
     {
         // Turn off the buzzer and set the LEDs to dim
         bzrStopNote(BZR_STEREO);
-        noteToColor(&leds[0], getCurrentNote(), 0x20);
+        noteToColor(&slideWhistle->led, getCurrentNote(), 0x20);
     }
     else if (true == shouldPlayNote)
     {
@@ -1160,7 +1170,7 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
         {
             // Turn off the buzzer and set the LEDs to dim
             bzrStopNote(BZR_STEREO);
-            noteToColor(&leds[0], getCurrentNote(), 0x20);
+            noteToColor(&slideWhistle->led, getCurrentNote(), 0x20);
         }
         else
         {
@@ -1170,22 +1180,13 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
                 BZR_STEREO, getSfxVolumeSetting());
 
             // Set LEDs to bright
-            noteToColor(&leds[0], getCurrentNote(), 0x40);
+            noteToColor(&slideWhistle->led, getCurrentNote(), 0x40);
         }
     }
     else
     {
         return;
     }
-
-    // Copy LED color from the first LED to all of them
-    for (uint8_t ledIdx = 1; ledIdx < CONFIG_NUM_LEDS; ledIdx++)
-    {
-        leds[ledIdx].r = leds[0].r;
-        leds[ledIdx].g = leds[0].g;
-        leds[ledIdx].b = leds[0].b;
-    }
-    setLeds(leds, CONFIG_NUM_LEDS);
 }
 
 /**
