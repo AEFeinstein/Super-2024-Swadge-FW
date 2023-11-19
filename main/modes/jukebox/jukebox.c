@@ -247,7 +247,7 @@ void jukeboxExitMode(void)
     // Free allocated SFX midis, song arrays, and category arrays
 
     // Tunernome's SFX are declared in code, not loaded as .sng files, so we need to prevent them from being freed
-    for (int i = 0; i < jukebox->tunernomeSfxCategory->numSongs; i++)
+    for (int i = 0; i < ARRAY_SIZE(jukebox->tunernomeSfxCategory); i++)
     {
         memset(&jukebox->tunernomeSfxCategory->songs[i].song, 0, sizeof(song_t));
     }
@@ -369,11 +369,11 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
-                length = jukebox->musicCategories[jukebox->categoryIdx].numSongs;
+                length = ARRAY_SIZE(jukebox->musicCategories[jukebox->categoryIdx]);
             }
             else
             {
-                length = jukebox->sfxCategories[jukebox->categoryIdx].numSongs;
+                length = ARRAY_SIZE(jukebox->sfxCategories[jukebox->categoryIdx]);
             }
 
             uint8_t before = jukebox->songIdx;
@@ -394,11 +394,11 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
-                length = jukebox->musicCategories[jukebox->categoryIdx].numSongs;
+                length = ARRAY_SIZE(jukebox->musicCategories[jukebox->categoryIdx]);
             }
             else
             {
-                length = jukebox->sfxCategories[jukebox->categoryIdx].numSongs;
+                length = ARRAY_SIZE(jukebox->sfxCategories[jukebox->categoryIdx]);
             }
 
             uint8_t before   = jukebox->songIdx;
@@ -481,7 +481,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
                                  TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
     drawText(&jukebox->radiostars, c555, btnText, afterText, TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
-    const char* categoryName;
+    const char* catName;
     char* songName;
     char* songTypeName;
     uint8_t numSongs;
@@ -496,10 +496,10 @@ void jukeboxMainLoop(int64_t elapsedUs)
         }
         else
         {
-            categoryName = jukebox->musicCategories[jukebox->categoryIdx].categoryName;
+            catName = jukebox->musicCategories[jukebox->categoryIdx].catName;
             songName     = jukebox->musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
             songTypeName = "Music";
-            numSongs     = jukebox->musicCategories[jukebox->categoryIdx].numSongs;
+            numSongs     = ARRAY_SIZE(jukebox->musicCategories[jukebox->categoryIdx]);
             drawNames    = true;
         }
     }
@@ -513,10 +513,10 @@ void jukeboxMainLoop(int64_t elapsedUs)
         }
         else
         {
-            categoryName = jukebox->sfxCategories[jukebox->categoryIdx].categoryName;
+            catName = jukebox->sfxCategories[jukebox->categoryIdx].catName;
             songName     = jukebox->sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
             songTypeName = "SFX";
-            numSongs     = jukebox->sfxCategories[jukebox->categoryIdx].numSongs;
+            numSongs     = ARRAY_SIZE(jukebox->sfxCategories[jukebox->categoryIdx]);
             drawNames    = true;
         }
     }
@@ -526,11 +526,11 @@ void jukeboxMainLoop(int64_t elapsedUs)
         // Draw the mode name
         const font_t* nameFont      = &(jukebox->radiostars);
         uint8_t arrowOffsetFromText = 8;
-        if (categoryName == breakoutMode.modeName)
+        if (catName == breakoutMode.modeName)
         {
             arrowOffsetFromText = 1;
         }
-        snprintf(text, sizeof(text), "Mode: %s", categoryName);
+        snprintf(text, sizeof(text), "Mode: %s", catName);
         int16_t width = textWidth(nameFont, text);
         int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - nameFont->height * 0;
         drawText(nameFont, c311, text, (TFT_WIDTH - width) / 2, yOff);
@@ -594,7 +594,7 @@ void jukeboxFreeCategories(jukeboxCategory_t** categoryArray, uint8_t numCategor
 {
     for (uint8_t catIdx = 0; catIdx < numCategories; catIdx++)
     {
-        for (uint8_t songIdx = 0; songIdx < categoryArray[catIdx]->numSongs; songIdx++)
+        for (uint8_t songIdx = 0; songIdx < ARRAY_SIZE(categoryArray[catIdx]); songIdx++)
         {
             // Avoid freeing songs we never loaded
             if (categoryArray[catIdx]->songs[songIdx].song.tracks != NULL)
