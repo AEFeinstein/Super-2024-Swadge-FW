@@ -321,15 +321,7 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
             lumberjackInstructionText(titleText, c555, (TFT_WIDTH-tWidthH)/2, 15);
 
             const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAxe blocks give item\nPress B uses item\n  Upgrange: Harder baddies\n  Impearvious: Invincible\n  Grapes O' Wrath: Flip baddies";
-        /*
-            lumberjackInstructionText("Press A to jump", c355, dOffset, 50);
-            lumberjackInstructionText("Avoid upright baddies", c355, dOffset, 70);
-            lumberjackInstructionText("Hit baddies from under", c355, dOffset, 90);
-            lumberjackInstructionText("Then go kick them off", c355, dOffset, 110);
-            lumberjackInstructionText("Duck Down to avoid ghost", c355, dOffset, 130);
-            lumberjackInstructionText("Axe blocks give items", c355, dOffset, 150);
-            lumberjackInstructionText("Press B uses item", c355, dOffset, 170);
-        */
+      
             dOffset = 15; dyOffset = 49;
             drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
             
@@ -432,7 +424,7 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         {
             // TODO, optional, update menu to indicate connection progress
             ESP_LOGI(LUM_TAG, "LumberJack.Net ack! ");
-
+            lumberjackQualityCheck();
             break;
         }
         case CON_ESTABLISHED:
@@ -454,7 +446,6 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
             ESP_LOGI(LUM_TAG, "We lost connection!");
 
             lumberjack->connLost = true;
-            //lumberjack->menuReturn = 3000;
             break;
         }
     }

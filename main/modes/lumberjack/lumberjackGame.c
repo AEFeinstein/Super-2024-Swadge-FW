@@ -880,6 +880,23 @@ void lumberjackGameLoop(int64_t elapsedUs)
 
     }
 
+    if (lumv->paused)
+    {
+        
+        buttonEvt_t evt = {0};
+        while (checkButtonQueueWrapper(&evt))
+        {
+            lumv->btnState = evt.state;
+            if (evt.down && (PB_START == evt.button))
+            {
+                lumv->paused = false;
+            }
+        }
+
+        DrawGame();
+        return;
+    }
+
     baseMode(elapsedUs);
 
     if (lumv->lumberjackMain->networked && lumv->gameState == LUMBERJACK_GAMESTATE_PLAYING)
@@ -1012,6 +1029,12 @@ void baseMode(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         lumv->btnState = evt.state;
+
+        if (evt.down && (PB_START == evt.button) && false == lumv->lumberjackMain->networked)
+        {
+            ESP_LOGI(LUM_TAG,"PAUSE PLEASE");
+            lumv->paused = true;
+        }
     }
 
     // return;
@@ -1598,8 +1621,6 @@ void lumberjackOnLocalPlayerDeath(void)
     }
 }
 
-
-
 void DrawTitle(void)
 {
     drawWsgSimple(&lumv->title, (TFT_WIDTH / 2) - 51, (TFT_HEIGHT / 2) - 48);
@@ -1776,6 +1797,8 @@ void DrawGame(void)
 
     if (lumv->lumberjackMain->networked)
     {
+        if (lumv->nLives > 10) lumv->nLives = 0; //Make sure nLives is never negative
+        
         for (int i = 0; i < lumv->nLives; i++)
         {
             
@@ -1859,6 +1882,19 @@ void DrawGame(void)
 
         }
 
+    }
+
+    if (lumv->paused)
+    {
+        const char* paused = "Paused";
+        int16_t tWidthH = textWidth(&lumv->arcade, paused);
+
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2), (TFT_HEIGHT/2) + 2);
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2), (TFT_HEIGHT/2) - 1);
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2) - 1, (TFT_HEIGHT/2));
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2) + 1, (TFT_HEIGHT/2));
+        drawText(&lumv->arcade, c555, paused, ((TFT_WIDTH - tWidthH)/2), (TFT_HEIGHT/2));
+    
     }
    
 
@@ -2532,6 +2568,7 @@ void lumberjackDoControls(void)
     {
         lumv->localPlayer->jumpPressed = false;
     }
+
 
     if (lumv->btnState & PB_B)
     {

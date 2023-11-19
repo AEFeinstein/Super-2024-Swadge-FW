@@ -102,6 +102,7 @@ typedef struct
     bool loaded;
     bool hasWon;
     bool gameReady;
+    bool paused;
     font_t arcade;
     lumberjack_t* lumberjackMain;
     menu_t* menu;
