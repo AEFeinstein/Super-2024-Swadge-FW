@@ -113,7 +113,7 @@ esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
 
 esp_err_t accelGetQuaternion(float* q)
 {
-    //TODO: implement proper emulation of this function.
+    // TODO: implement proper emulation of this function.
     return ESP_OK;
 }
 
