@@ -110,7 +110,7 @@ static const char* const screenSaverSettingsOptions[] = {
 };
 
 static const int16_t cheatCode[] = {
-    PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START, PB_SELECT,
+    PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A,
 };
 
 //==============================================================================
