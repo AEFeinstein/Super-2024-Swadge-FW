@@ -660,6 +660,18 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
  */
 void gamepadButtonCb(buttonEvt_t* evt)
 {
+    if (evt->button == PB_START || evt->button == PB_SELECT)
+    {
+        if ((evt->state & PB_START) && (evt->state & PB_SELECT))
+        {
+            gamepad->exitTimer = 1;
+        }
+        else
+        {
+            gamepad->exitTimer = 0;
+        }
+    }
+
     switch (gamepad->gamepadType)
     {
         case GAMEPAD_GENERIC:
@@ -723,18 +735,6 @@ void gamepadButtonCb(buttonEvt_t* evt)
             else if (evt->state & PB_LEFT)
             {
                 gamepad->gpState.hat = GAMEPAD_HAT_LEFT;
-            }
-
-            if (evt->button == PB_START || evt->button == PB_SELECT)
-            {
-                if ((evt->state & PB_START) && (evt->state & PB_SELECT))
-                {
-                    gamepad->exitTimer = 1;
-                }
-                else
-                {
-                    gamepad->exitTimer = 0;
-                }
             }
 
             break;
