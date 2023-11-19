@@ -585,6 +585,8 @@ typedef struct
     q24_8 warpDestPosY;    ///< The player's Y position
     int32_t warpTimerUs;   ///< Timer to display warp screen
 
+    bool shouldShowCredits; ///< Set to true to show credits from the game
+
     rayBullet_t bullets[MAX_RAY_BULLETS]; ///< A list of all bullets
     list_t enemies;                       ///< A list of all enemies (moves, can be shot)
     list_t scenery;                       ///< A list of all scenery (doesn't move, can be shot)
@@ -609,6 +611,9 @@ typedef struct
 
     int32_t floorEffectTimer;   ///< Timer for effects when standing on a tile
     bool playerInLava;          ///< Track if the player is standing in lava
+    bool playerInHealth;        ///< Track if the player is standing in a health pad
+    int32_t lavaTimer;          ///< Timer to blink lava LEDs
+    bool lavaLedBlink;          ///< LED state when showing lava effect
     int32_t chargeTimer;        ///< Timer to charge shots
     int32_t playerShotCooldown; ///< Cooldown timer between shots
     int32_t gunShakeTimer;      ///< Timer to shake the gun when charged
@@ -620,7 +625,9 @@ typedef struct
     uint8_t* typeToIdxMap;                                      ///< A map of rayMapCellType_t to respective textures
     wsg_t envTex[NUM_ENVS][NUM_ENV_TEXES];                      ///< The environment textures
     wsg_t guns[NUM_LOADOUTS];                                   ///< Textures for the HUD guns
-    wsg_t portrait;                                             ///< A portrait used for text dialogs
+    wsg_t cho_portrait;                                         ///< A portrait used for text dialogs
+    wsg_t hw_portrait;                                          ///< A portrait used for text dialogs
+    wsg_t hw_s_portrait;                                        ///< A portrait used for text dialogs
     wsg_t missileHUDicon;                                       ///< A missile icon drawn in the HUD
     wsg_t enemyTex[NUM_ENEMIES][E_NUM_STATES][NUM_ANIM_FRAMES]; ///< The enemy textures
     wsg_t hiddenXRTex[E_NUM_STATES][NUM_ANIM_FRAMES];           ///< The textures for X-Ray hidden enemies

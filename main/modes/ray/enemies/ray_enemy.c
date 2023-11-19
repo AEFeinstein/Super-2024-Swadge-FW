@@ -147,7 +147,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             if (enemy->shootTimer <= 0)
             {
                 // Try to transition to shooting
-                if (rayEnemyTransitionState(enemy, E_SHOOTING))
+                if (rayEnemyTransitionState(ray, enemy, E_SHOOTING))
                 {
                     // If successful, restart the shot timer
                     enemy->shootTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, SHOT);
@@ -159,7 +159,7 @@ void rayEnemiesMoveAnimate(ray_t* ray, uint32_t elapsedUs)
             if (enemy->blockTimer <= 0)
             {
                 // Try to transition to blocking
-                if (rayEnemyTransitionState(enemy, E_BLOCKING))
+                if (rayEnemyTransitionState(ray, enemy, E_BLOCKING))
                 {
                     // If successful, restart the block timer
                     enemy->blockTimer = enemyFuncs[enemy->c.type - OBJ_ENEMY_NORMAL].getTimer(enemy, BLOCK);
@@ -313,7 +313,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         {
             // Missiles break the block, but do half damage
             damageDivide = 2;
-            rayEnemyTransitionState(enemy, E_WALKING_1);
+            rayEnemyTransitionState(ray, enemy, E_WALKING_1);
         }
     }
     else if (E_DEAD == enemy->state)
@@ -346,7 +346,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     if (enemy->health <= 0)
     {
         // Transition to dying
-        rayEnemyTransitionState(enemy, E_DEAD);
+        rayEnemyTransitionState(ray, enemy, E_DEAD);
         // Play SFX
         bzrPlaySfx(&ray->sfx_e_dead, BZR_RIGHT);
 
@@ -364,7 +364,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
     else if (0 < damage)
     {
         // Transition to hurt
-        rayEnemyTransitionState(enemy, E_HURT);
+        rayEnemyTransitionState(ray, enemy, E_HURT);
 
         // Don't get stun-locked. Hurt animation is 200000*4, so double that
         // enemy->invincibleTimer = 200000 * 8;
@@ -391,11 +391,12 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
 /**
  * @brief Transition from the current animation state to the next
  *
+ * @param ray The entire game state
  * @param enemy The enemy to transition
  * @param newState The new state to transition to
  * @return true if the transition was allowed, false if it was not
  */
-bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
+bool rayEnemyTransitionState(ray_t* ray, rayEnemy_t* enemy, rayEnemyState_t newState)
 {
     // clang-format off
     const bool transitionTable[E_NUM_STATES][E_NUM_STATES] = {
@@ -403,7 +404,7 @@ bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
         {true,  false, true,  true,  true,  true }, // E_WALKING_2, don't transition to self
         {true,  true,  false, true , false, true }, // E_SHOOTING, transition to E_WALKING or E_HURT
         {true,  true,  false, false, false, true }, // E_HURT, transition to E_WALKING or E_DEAD
-        {true,  true,  false, false, false, false}, // E_BLOCKING, transition to E_WALKING
+        {true,  true,  false, false, false, true }, // E_BLOCKING, transition to E_WALKING
         {false, false, false, false, false, false}  // E_DEAD, don't transition to anything
     };
     // clang-format on
@@ -420,6 +421,14 @@ bool rayEnemyTransitionState(rayEnemy_t* enemy, rayEnemyState_t newState)
         if ((E_WALKING_1 == newState) || (E_WALKING_2 == newState))
         {
             enemy->animTimerLimit = 125000;
+        }
+        else if (E_DEAD == newState)
+        {
+            // Remove the lock
+            if (ray->targetedObj == &(enemy->c))
+            {
+                ray->targetedObj = NULL;
+            }
         }
         return true;
     }
@@ -460,12 +469,12 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 if (E_WALKING_1 == enemy->state)
                 {
                     // Return to walking
-                    rayEnemyTransitionState(enemy, E_WALKING_2);
+                    rayEnemyTransitionState(ray, enemy, E_WALKING_2);
                 }
                 else
                 {
                     // Return to walking
-                    rayEnemyTransitionState(enemy, E_WALKING_1);
+                    rayEnemyTransitionState(ray, enemy, E_WALKING_1);
                 }
             }
         }
@@ -482,6 +491,12 @@ static bool animateEnemy(ray_t* ray, rayEnemy_t* enemy, uint32_t elapsedUs)
                 q24_8 yDiff = SUB_FX(ray->p.posY, enemy->c.posY);
                 fastNormVec(&xDiff, &yDiff);
                 rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, xDiff, yDiff, false);
+                if (OBJ_ENEMY_BOSS == enemy->c.type)
+                {
+                    // double bullets for the boss
+                    rayCreateBullet(ray, getBulletForEnemy(enemy), enemy->c.posX, enemy->c.posY, (xDiff * 3) / 4,
+                                    (yDiff * 3) / 4, false);
+                }
             }
         }
     }

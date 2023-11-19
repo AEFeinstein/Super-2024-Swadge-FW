@@ -752,6 +752,8 @@ void rayPlayerTouchItem(ray_t* ray, rayObjCommon_t* item, int32_t mapId)
                 // Transient, add 5 missiles, not going over the max
                 inventory->numMissiles = MIN(inventory->numMissiles + 5, inventory->maxNumMissiles);
             }
+            // Play SFX
+            bzrPlaySfx(&ray->sfx_health, BZR_RIGHT);
             // Don't save after missile ammo
             saveAfterObtain = false;
             break;
@@ -807,8 +809,8 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
         {
             ray->playerInLava = true;
             // Start looping SFX
-            ray->sfx_lava_dmg.shouldLoop = true;
-            bzrPlaySfx(&ray->sfx_lava_dmg, BZR_RIGHT);
+            // ray->sfx_lava_dmg.shouldLoop = true;
+            // bzrPlaySfx(&ray->sfx_lava_dmg, BZR_RIGHT);
         }
     }
     else if (BG_FLOOR_HEAL == ray->map.tiles[FROM_FX(ray->p.posX)][FROM_FX(ray->p.posY)].type)
@@ -820,12 +822,21 @@ void rayPlayerCheckFloorEffect(ray_t* ray, uint32_t elapsedUs)
             ray->floorEffectTimer -= US_PER_FLOOR_EFFECT;
             rayPlayerDecrementHealth(ray, -1);
         }
+
+        if (false == ray->playerInHealth)
+        {
+            ray->playerInHealth = true;
+        }
     }
     else if (true == ray->playerInLava)
     {
         ray->playerInLava = false;
         // Stop looping SFX
-        ray->sfx_lava_dmg.shouldLoop = true;
+        // ray->sfx_lava_dmg.shouldLoop = true;
+    }
+    else if (true == ray->playerInHealth)
+    {
+        ray->playerInHealth = false;
     }
 }
 
