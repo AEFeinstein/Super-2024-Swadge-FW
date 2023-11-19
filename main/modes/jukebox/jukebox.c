@@ -194,7 +194,7 @@ void jukeboxEnterMode()
     // Galactic Brickdown category
     uint8_t songIdx = 0;
     jukebox->musicCategories[catIdx].categoryName = breakoutMode.modeName;
-    jukebox->musicCategories[catIdx].numSongs = 1;
+    jukebox->musicCategories[catIdx].numSongs = 5;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Galactic Brickdown songs
