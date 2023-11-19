@@ -178,9 +178,6 @@ static void mainMenuEnterMode(void)
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
-
-    // Reset the accelerometer
-    accelSetRegistersAndReset();
 }
 
 /**
