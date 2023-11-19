@@ -103,7 +103,7 @@ emuArgs_t emulatorArgs = {
     .motionJitterAmount = 5,
     .motionDrift        = false,
 
-    .emulateTouch = false,
+    .emulateTouch = true,
 
     .record   = false,
     .playback = false,
