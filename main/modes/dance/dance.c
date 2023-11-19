@@ -223,11 +223,14 @@ void danceMainLoop(int64_t elapsedUs)
     // Only sleep with a blank screen, otherwise the screen flickers
     if (danceState->blankScreen)
     {
-        // Light sleep for 4ms. The longer the sleep, the choppier the LED animations
-        // 4ms looks pretty good, though some LED timers do run faster (like 'rise')
-        // TODO this isn't working, but it used to?
-        // esp_sleep_enable_timer_wakeup(4000);
-        // esp_light_sleep_start();
+        // Wait for any LED transactions to finish, otherwise RMT will do weird things during CPU sleep
+        flushLeds();
+        /* Light sleep for 40ms (see DEFAULT_FRAME_RATE_US).
+         * The longer the sleep, the choppier the LED animations.
+         * Sleeping longer than the current framerate will look worse
+         */
+        esp_sleep_enable_timer_wakeup(DEFAULT_FRAME_RATE_US);
+        esp_light_sleep_start();
     }
 }
 

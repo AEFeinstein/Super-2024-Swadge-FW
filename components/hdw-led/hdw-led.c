@@ -169,3 +169,11 @@ uint8_t getLedState(led_t* leds, uint8_t numLeds)
 
     return 0;
 }
+
+/**
+ * @brief Wait until any pending LED transactions are finished, then return
+ */
+void flushLeds(void)
+{
+    rmt_tx_wait_all_done(led_chan, -1);
+}

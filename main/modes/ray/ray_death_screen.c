@@ -11,7 +11,7 @@
 static const char* const deathTexts[] = {
     "GG no re",
     "Skill Issue",
-    "F",
+    "Press F",
     "YOUR HEAD ASPLODE",
     "You may have died, but you are not safe from taxes",
     "Pro Tip: Shoot the enemies until they die",

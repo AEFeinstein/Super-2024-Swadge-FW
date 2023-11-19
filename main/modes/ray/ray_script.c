@@ -519,7 +519,7 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
             if (shouldExecute)
             {
                 // Do it
-                executeScriptEvent(ray, script, &ray->portrait);
+                executeScriptEvent(ray, script, &ray->cho_portrait);
 
                 // Mark it as inactive if this is a one time script and the reset timer is inactive
                 script->isActive = (ALWAYS == script->ifArgs.cellList.oneTime) && (0 == script->resetTimerSec);
@@ -589,7 +589,7 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
                 if (script->ifArgs.time <= ray->secondsSinceStart)
                 {
                     // Do it
-                    executeScriptEvent(ray, script, &ray->portrait);
+                    executeScriptEvent(ray, script, &ray->cho_portrait);
 
                     // Mark it as inactive
                     script->isActive = false;
@@ -831,17 +831,9 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
             // Unlock zip on the menu
             writeNvs32(MAGTROID_UNLOCK_KEY, 1);
             // Show bonus dialog for 100%
-            if (100 == getItemCompletePct(ray))
+            if ((100 == getItemCompletePct(ray)) || (50 > getItemCompletePct(ray)))
             {
-                rayShowDialog(ray,
-                              "\"C - cc - chh - CHO - do you read me? Good, glad this channel works.\n\n...\n\nHank "
-                              "Waddle here, your lawyer-turned-ex-lawyer-turned-megalomaniacal super villain. Looks "
-                              "like Meta Studley wasn't able to take you out, eh? I should have listened to the "
-                              "testers who kept saying to make him harder...\n\nAnyway, I'm with the baddies now. They "
-                              "took my brain and fused it with some supercomputer they were building, which is kinda "
-                              "weird, but hey - now I can shoot lasers out of my eye. What a twist, right? Anyway, "
-                              "nice job getting 100% completion, you NERD. I'll get you next time, Cho!\"",
-                              getTexByType(ray, OBJ_SCENERY_TERMINAL));
+                rayShowDialog(ray, finalDialog100_0, &ray->hw_s_portrait);
             }
             // Jump to credits! This is either immediate or after the aforementioned dialog
             ray->shouldShowCredits = true;
