@@ -81,4 +81,6 @@ void drawCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x
 void drawQuadSpline(int n, int x[], int y[], paletteColor_t col);
 void drawCubicSpline(int n, int x[], int y[], paletteColor_t col);
 
+void initShapes(void);
+
 #endif /* SRC_BRESENHAM_H_ */

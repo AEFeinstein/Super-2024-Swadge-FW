@@ -42,9 +42,14 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
                                  int xOrigin, int yOrigin, int xScale, int yScale);
 
 
-// Tricky - update values for local use.
+// Tricky - update values for local use.  Static-local is faster.
 static uint32_t dispPxL;
-void SetCachedDPXShapes( uint32_t d ) { dispPxL = d; }
+
+void initShapes(void)
+{
+	dispPxL = getPxTftFramebuffer();
+}
+
 #undef SETUP_FOR_TURBO
 #define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)dispPxL;
 
