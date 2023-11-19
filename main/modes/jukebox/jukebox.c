@@ -442,6 +442,8 @@ void jukeboxEnterMode()
     loadSong("sndWaveBall.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+
+    // TODO: Uncomment these when it is time and the sounds have been added
     
     // jukebox->sfxCategories[catIdx].songs[songIdx].name = "Game Over";
     // loadSong("brkGameOver.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, true);
