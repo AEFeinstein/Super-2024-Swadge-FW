@@ -7,14 +7,16 @@
 
 #include "hdw-imu.h"
 #include "tinyusb.h"
-#include "esp_timer.h"
 #include "esp_log.h"
+#include "esp_timer.h"
+#include "esp_wifi.h"
 
 #include "touchTest.h"
 #include "touchUtils.h"
 #include "gamepad.h"
 #include "mainMenu.h"
 #include "settingsManager.h"
+#include "swadge2024.h"
 
 //==============================================================================
 // Defines
@@ -77,6 +79,8 @@ typedef struct
 
     uint8_t gamepadType;
     bool isPluggedIn;
+
+    int64_t exitTimer;
 } gamepad_t;
 
 //==============================================================================
@@ -160,7 +164,7 @@ static const tusb_desc_device_t nsDescriptor = {
 };
 
 /// @brief PC string Descriptor
-static const char* hid_string_descriptor[5] = {
+static char* hid_string_descriptor[5] = {
     // array of pointer to string descriptors
     (char[]){0x09, 0x04},   // 0: is supported language is English (0x0409)
     "Magfest",              // 1: Manufacturer
@@ -340,6 +344,12 @@ void gamepadStart(gamepadType_t type)
     }
     else
     {
+        const uint8_t macBytes = 6; // This is part of the ESP API's design, and cannot be changed here
+        uint8_t mac[macBytes];
+        if (ESP_OK == esp_wifi_get_mac(WIFI_IF_STA, mac))
+        {
+            memcpy(&hid_string_descriptor[3], mac, macBytes);
+        }
         initTusb(&pc_tusb_cfg, hid_report_descriptor);
     }
 
@@ -403,6 +413,18 @@ void gamepadMainLoop(int64_t elapsedUs __attribute__((unused)))
 
     // Clear the display
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c213);
+
+    if (gamepad->exitTimer > 0)
+    {
+        gamepad->exitTimer += elapsedUs;
+        int16_t numPx = (gamepad->exitTimer * TFT_WIDTH) / EXIT_TIME_US;
+        fillDisplayArea(0, TFT_HEIGHT - 10, numPx, TFT_HEIGHT, c333);
+
+        if (gamepad->exitTimer > EXIT_TIME_US)
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
+    }
 
     // Always Draw some reminder text, centered
     const char reminderText[] = "Start + Select to Exit";
@@ -701,6 +723,18 @@ void gamepadButtonCb(buttonEvt_t* evt)
             else if (evt->state & PB_LEFT)
             {
                 gamepad->gpState.hat = GAMEPAD_HAT_LEFT;
+            }
+
+            if (evt->button == PB_START || evt->button == PB_SELECT)
+            {
+                if ((evt->state & PB_START) && (evt->state & PB_SELECT))
+                {
+                    gamepad->exitTimer = 1;
+                }
+                else
+                {
+                    gamepad->exitTimer = 0;
+                }
             }
 
             break;
