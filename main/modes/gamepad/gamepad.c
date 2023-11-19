@@ -9,7 +9,6 @@
 #include "tinyusb.h"
 #include "esp_log.h"
 #include "esp_timer.h"
-#include "esp_wifi.h"
 
 #include "touchTest.h"
 #include "touchUtils.h"
@@ -167,7 +166,7 @@ static char* hid_string_descriptor[5] = {
     (char[]){0x09, 0x04},   // 0: is supported language is English (0x0409)
     "Magfest",              // 1: Manufacturer
     "Swadge Controller",    // 2: Product
-    "123456",               // 3: Serials, should use chip ID
+    "123456",               // 3: Serials
     "Swadge HID interface", // 4: HID
 };
 
@@ -343,12 +342,14 @@ void gamepadStart(gamepadType_t type)
     }
     else
     {
-        const uint8_t macBytes = 6; // This is part of the ESP API's design, and cannot be changed here
-        uint8_t mac[macBytes];
-        if (ESP_OK == esp_wifi_get_mac(WIFI_IF_STA, mac))
-        {
-            memcpy(&hid_string_descriptor[3], mac, macBytes);
-        }
+        // Unused code for unique HID serials
+        // If there are device conflicts with 2+ Swadges, uncomment and figure out if we need to convert the MAC to alphaneumeric
+        // const uint8_t macBytes = 6; // This is part of the ESP API's design, and cannot be changed here
+        // uint8_t mac[macBytes];
+        // if (ESP_OK == esp_wifi_get_mac(WIFI_IF_STA, mac))
+        // {
+        //     memcpy(&hid_string_descriptor[3], mac, macBytes);
+        // }
         initTusb(&pc_tusb_cfg, hid_report_descriptor);
     }
 
