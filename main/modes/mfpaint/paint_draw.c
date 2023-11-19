@@ -1847,6 +1847,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         {
             if (paintState->unsaved)
             {
+                memcpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
                 paintSetupDialog(DIALOG_CONFIRM_UNSAVED_LOAD);
             }
             else
@@ -1872,6 +1873,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         {
             if (paintState->unsaved)
             {
+                memcpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
                 paintSetupDialog(DIALOG_CONFIRM_UNSAVED_EXIT);
             }
             else
