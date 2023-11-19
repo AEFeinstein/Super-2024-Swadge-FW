@@ -36,6 +36,7 @@
 typedef struct
 {
     menu_t* menu;
+    menu_t* secretsMenu;
     menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
@@ -63,6 +64,8 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 static const char mainMenuName[] = "Main Menu";
+static const char factoryResetName[] = "Factory Reset";
+static const char confirmResetName[] = "! Confirm Reset !";
 
 swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
@@ -249,12 +252,14 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                         mainMenu->menu = mainMenu->menu->parentMenu;
                     }
 
-                    // Add the tests menu
-                    mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
+                    // Add the secrets menu
+                    mainMenu->menu = startSubMenu(mainMenu->menu, "Secrets");
+                    mainMenu->secretsMenu = mainMenu->menu;
                     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
                     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
                     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
                     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+                    addSingleItemToMenu(mainMenu->menu, factoryResetName);
                     mainMenu->menu = endSubMenu(mainMenu->menu);
 
                     return;
@@ -322,6 +327,21 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == factoryTestMode.modeName)
         {
             switchToSwadgeMode(&factoryTestMode);
+        }
+        else if (label == factoryResetName)
+        {
+            addSingleItemToMenu(mainMenu->secretsMenu, confirmResetName);
+        }
+        else if (label == confirmResetName)
+        {
+            if(eraseNvs())
+            {
+                switchToSwadgeMode(&factoryTestMode);
+            }
+            else
+            {
+                switchToSwadgeMode(&mainMenuMode);
+            }
         }
         else if (label == gamepadMode.modeName)
         {
