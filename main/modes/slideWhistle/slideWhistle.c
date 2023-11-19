@@ -211,6 +211,7 @@ typedef struct
     uint8_t rhythmIdx;
     uint8_t scaleIdx;
     led_t led;
+    noteFrequency_t note;
 } slideWhistle_t;
 
 slideWhistle_t* slideWhistle;
@@ -783,6 +784,7 @@ void slideWhistleEnterMode(void)
     loadFont("logbook.font", &slideWhistle->logbook, false);
 
     bzrStopNote(BZR_STEREO);
+    slideWhistle->note = SILENCE;
 
     // Set default BPM to default
     slideWhistle->bpmIdx = rhythms[slideWhistle->rhythmIdx].defaultBpm;
@@ -812,6 +814,7 @@ void slideWhistleEnterMode(void)
 void slideWhistleExitMode(void)
 {
     bzrStopNote(BZR_STEREO);
+    slideWhistle->note = SILENCE;
 
     freeFont(&slideWhistle->ibm_vga8);
     freeFont(&slideWhistle->radiostars);
@@ -1152,6 +1155,7 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
     {
         // Turn off the buzzer and set the LEDs to dim
         bzrStopNote(BZR_STEREO);
+        slideWhistle->note = SILENCE;
         noteToColor(&slideWhistle->led, getCurrentNote(), 0x20);
     }
     else if (true == shouldPlayNote)
@@ -1170,15 +1174,19 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
         {
             // Turn off the buzzer and set the LEDs to dim
             bzrStopNote(BZR_STEREO);
+            slideWhistle->note = SILENCE;
             noteToColor(&slideWhistle->led, getCurrentNote(), 0x20);
         }
         else
         {
             // Arpeggiate as necessary
-            bzrPlayNote(
-                arpModify(getCurrentNote(), rhythms[slideWhistle->rhythmIdx].rhythm[slideWhistle->rhythmNoteIdx].arp),
-                BZR_STEREO, getSfxVolumeSetting());
-
+            noteFrequency_t nextNote
+                = arpModify(getCurrentNote(), rhythms[slideWhistle->rhythmIdx].rhythm[slideWhistle->rhythmNoteIdx].arp);
+            if (nextNote != slideWhistle->note)
+            {
+                bzrPlayNote(nextNote, BZR_STEREO, volLevelFromSetting(getSfxVolumeSetting()));
+                slideWhistle->note = nextNote;
+            }
             // Set LEDs to bright
             noteToColor(&slideWhistle->led, getCurrentNote(), 0x40);
         }
