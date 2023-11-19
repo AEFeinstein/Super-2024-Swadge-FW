@@ -20,6 +20,7 @@
 #include "mode_ray.h"
 #include "paint_share.h"
 #include "pushy.h"
+#include "slideWhistle.h"
 #include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -144,6 +145,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, slideWhistleMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
@@ -350,6 +352,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == sokoMode.modeName)
         {
             switchToSwadgeMode(&sokoMode);
+        }
+        else if (label == slideWhistleMode.modeName)
+        {
+            switchToSwadgeMode(&slideWhistleMode);
         }
         else if (label == touchTestMode.modeName)
         {
