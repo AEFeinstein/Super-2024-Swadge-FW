@@ -153,13 +153,13 @@ void breakoutBuildMainMenu(breakout_t* self);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 63
+#define NUM_LEVELS 64
 
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
 #define GAME_LEVEL_START_INDEX 1
 #define GAME_LEVEL_END_INDEX 51
-#define POSTGAME_LEVEL_START_INDEX 52
+//#define POSTGAME_LEVEL_START_INDEX 52
 
 static const leveldef_t leveldef[NUM_LEVELS]
     = {
@@ -178,7 +178,7 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "mag01.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
 
        {.filename = "mag02.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "getMorGet.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "getMorGet.bin", .hintTextPtr = breakoutHintTextRBomb, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "bombtest.bin", .hintTextPtr = breakoutHintTextBombTest, .bgmIndex = BRK_BGM_SKILL},
        
        {.filename = "gaylordlogo.bin", .hintTextPtr = breakoutHintTextGotThis, .bgmIndex = BRK_BGM_PIXEL},
@@ -228,19 +228,20 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "paddles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
     
-       {.filename = "stormcastle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "starlite.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "themaze.bin", .hintTextPtr = breakoutHintTextFinal, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "stormcastle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
+       {.filename = "starlite.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
+       {.filename = "themaze.bin", .hintTextPtr = breakoutHintTextFinal, .bgmIndex = BRK_BGM_FINALE},
        
        //Postgame
        {.filename = "heart.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "coffee.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "shiftersam.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "heart2.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "kevinsleep.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "SPACESHIP.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "zip.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "phone.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "metroid.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "shiftersmil.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "sandsoftime.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "42069.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
@@ -871,7 +872,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
 
             uint16_t levelIndex = self->gameData.level;
 
-            if (levelIndex >= NUM_LEVELS - 1)
+            if (levelIndex >= GAME_LEVEL_END_INDEX - 1)
             {
                 // Game Cleared!
 
@@ -957,7 +958,9 @@ void breakoutChangeStateGameClear(breakout_t* self)
     self->gameData.frameCount = 0;
     self->update              = &breakoutUpdateGameClear;
     resetGameDataLeds(&(self->gameData));
-    // buzzer_play_bgm(&bgmSmooth);
+    
+    setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
+    bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
 }
 
 void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
@@ -1407,7 +1410,7 @@ void breakoutBuildMainMenu(breakout_t* self)
         Manually allocate and build "level select" menu item
         because the max setting will have to change as levels are unlocked
     */
-    if (breakout->unlockables.maxLevelIndexUnlocked > 0 || breakout->gameData.debugMode)
+    if (breakout->unlockables.maxLevelIndexUnlocked > 1 || breakout->gameData.debugMode)
     {
         breakout->levelSelectMenuItem             = calloc(1, sizeof(menuItem_t));
         breakout->levelSelectMenuItem->label      = breakoutContinue;
