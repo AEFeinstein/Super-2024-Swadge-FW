@@ -189,7 +189,7 @@ menu_t* endSubMenu(menu_t* menu)
  *              this string must persist for the lifetime of the menu
  * @return The new menuItem_t that was added to the menu
  */
-menuItem_t * addSingleItemToMenu(menu_t* menu, const char* label)
+menuItem_t* addSingleItemToMenu(menu_t* menu, const char* label)
 {
     menuItem_t* newItem = calloc(1, sizeof(menuItem_t));
     newItem->label      = label;
@@ -204,7 +204,7 @@ menuItem_t * addSingleItemToMenu(menu_t* menu, const char* label)
     {
         menu->currentItem = menu->items->first;
     }
-	return newItem;
+    return newItem;
 }
 
 /**

@@ -20,6 +20,9 @@
  *
  * \section shapes_usage Usage
  *
+ * initShapes() is called automatically before the Swadge mode is run. It should not be called from within a Swadge
+ * Mode.
+ *
  * Draw shapes and curves with the given functions. Each function has it's own description below that won't be copied
  * here.
  *

@@ -5,9 +5,9 @@
 #include <stdbool.h>
 #include "display/font.h"
 
-void textEntryStart( font_t * usefont, int max_len, char* buffer );
-bool textEntryDraw( void );
-void textEntryEnd( void );
-bool textEntryInput( uint8_t down, uint8_t button );
+void textEntryStart(font_t* usefont, int max_len, char* buffer);
+bool textEntryDraw(void);
+void textEntryEnd(void);
+bool textEntryInput(uint8_t down, uint8_t button);
 
 #endif

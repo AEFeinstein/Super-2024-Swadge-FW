@@ -169,13 +169,12 @@ void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const fl
     pout[2] = ret[2] * 2.0 + p[2];
 }
 
-void mathComputeQuaternionDeltaBetweenQuaternions(float * qOut, const float * q1, const float * b)
+void mathComputeQuaternionDeltaBetweenQuaternions(float* qOut, const float* q1, const float* b)
 {
-    float a[4] = { q1[0], -q1[1], -q1[2], -q1[3] };
-    qOut[0] = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
-    qOut[1] = a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2];
-    qOut[2] = a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1];
-    qOut[3] = a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0];
+    float a[4] = {q1[0], -q1[1], -q1[2], -q1[3]};
+    qOut[0]    = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
+    qOut[1]    = a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2];
+    qOut[2]    = a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1];
+    qOut[3]    = a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0];
     // Diff= quatmultiply(quatconj(x),y)
 }
-

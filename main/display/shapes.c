@@ -16,6 +16,9 @@
 #define FIXEDPOINT   16
 #define FIXEDPOINTD2 15
 
+#undef SETUP_FOR_TURBO
+#define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)dispPxL;
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
@@ -41,23 +44,25 @@ static void drawCubicBezierSegInner(int x0, int y0, float x1, float y1, float x2
 static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, paletteColor_t col,
                                  int xOrigin, int yOrigin, int xScale, int yScale);
 
+//==============================================================================
+// Variables
+//==============================================================================
 
-// Tricky - update values for local use.  Static-local is faster.
-static uint32_t dispPxL;
-
-void initShapes(void)
-{
-	dispPxL = getPxTftFramebuffer();
-}
-
-#undef SETUP_FOR_TURBO
-#define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)dispPxL;
-
-
+/// @brief Static local pointer to the framebuffer. Using this, for some reason, is faster than normal draw calls.
+static uint32_t dispPxL = NULL;
 
 //==============================================================================
 // Functions
 //==============================================================================
+
+/**
+ * @brief Initialize shape drawing by making a static local pointer to the framebuffer
+ * This is done for speed reasons
+ */
+void initShapes(void)
+{
+    dispPxL = getPxTftFramebuffer();
+}
 
 /**
  * @brief Helper function to draw a one pixel wide line that that is translated and scaled. Only a single
