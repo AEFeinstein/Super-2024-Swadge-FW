@@ -178,3 +178,20 @@ void mathComputeQuaternionDeltaBetweenQuaternions(float* qOut, const float* q1, 
     qOut[3]    = a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0];
     // Diff= quatmultiply(quatconj(x),y)
 }
+
+void mathQuatFromTwoVectors( float * qOut, const float * v1, const float * v2 )
+{
+    float ideal_up[3] = {v1[0], v1[1], v1[2]};
+    float target_up[3] = {v2[0], v2[1], v2[2]};
+    float half[3]     = {target_up[0] + ideal_up[0], target_up[1] + ideal_up[1], target_up[2] + ideal_up[2]};
+    float halfnormreq = rsqrtf(half[0] * half[0] + half[1] * half[1] + half[2] * half[2]);
+    half[0] *= halfnormreq;
+    half[1] *= halfnormreq;
+    half[2] *= halfnormreq;
+
+    mathCrossProduct(qOut + 1, target_up, half);
+    float dotdiff = target_up[0] * half[0] + target_up[1] * half[1] + target_up[2] * half[2];
+    qOut[0]          = dotdiff;
+}
+
+

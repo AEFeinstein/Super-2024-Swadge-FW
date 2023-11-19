@@ -524,17 +524,7 @@ esp_err_t accelIntegrate()
             // set fqQuat to be the rotation to go from our "up" from the
             // accelerometer to the nominal "up"
             float ideal_up[3] = {0, 1, 0};
-
-            float half[3]     = {accel_up[0] + ideal_up[0], accel_up[1] + ideal_up[1], accel_up[2] + ideal_up[2]};
-            float halfnormreq = rsqrtf(half[0] * half[0] + half[1] * half[1] + half[2] * half[2]);
-            half[0] *= halfnormreq;
-            half[1] *= halfnormreq;
-            half[2] *= halfnormreq;
-
-            float* q = ld->fqQuat;
-            mathCrossProduct(q + 1, accel_up, half);
-            float dotdiff = accel_up[0] * half[0] + accel_up[1] * half[1] + accel_up[2] * half[2];
-            q[0]          = dotdiff;
+            mathQuatFromTwoVectors( ld->fqQuat, ideal_up, accel_up );
         }
         else
         {
