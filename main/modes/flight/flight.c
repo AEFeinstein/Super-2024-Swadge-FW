@@ -258,8 +258,8 @@ typedef struct
     int imuiirY;
     int inittedIMU;
 
-	float fqQuatLast[4];
-	int32_t accumx, accumy;
+    float fqQuatLast[4];
+    int32_t accumx, accumy;
 } flight_t;
 
 /*============================================================================
@@ -1553,19 +1553,19 @@ static void flightGameUpdate( flight_t * tflight )
     {
         if( flight->savedata.flightEnableIMU )
         {
-			float mathsqrtf(float x);
-			float * quat = LSM6DSL.fqQuat;
-			float qDiff[4];
-			mathComputeQuaternionDeltaBetweenQuaternions( qDiff, quat, tflight->fqQuatLast );
-			memcpy( tflight->fqQuatLast, quat, sizeof( tflight->fqQuatLast ) );
-			// Output is Q,  Delta-X, Delta-Y, Delta-Z in hamiltonian units ( large changes are muted, small changes are 1:1)
-			int deltax =-qDiff[2]*3072;
-			int deltay = qDiff[1]*3072;
+            float mathsqrtf(float x);
+            float * quat = LSM6DSL.fqQuat;
+            float qDiff[4];
+            mathComputeQuaternionDeltaBetweenQuaternions( qDiff, quat, tflight->fqQuatLast );
+            memcpy( tflight->fqQuatLast, quat, sizeof( tflight->fqQuatLast ) );
+            // Output is Q,  Delta-X, Delta-Y, Delta-Z in hamiltonian units ( large changes are muted, small changes are 1:1)
+            int deltax =-qDiff[2]*3072;
+            int deltay = qDiff[1]*3072;
 
-			int x = tflight->accumx += deltax;
-			int y = tflight->accumy += deltay;
+            int x = tflight->accumx += deltax;
+            int y = tflight->accumy += deltay;
 
-			//ESP_LOGI( "_", "%5d %5d %5d %5d", (int)(qDiff[0]*1024), (int)(qDiff[1]*1024), (int)(qDiff[2]*1024), (int)(qDiff[3]*1024) );
+            //ESP_LOGI( "_", "%5d %5d %5d %5d", (int)(qDiff[0]*1024), (int)(qDiff[1]*1024), (int)(qDiff[2]*1024), (int)(qDiff[3]*1024) );
 
             #define IMUIIR 7
 
