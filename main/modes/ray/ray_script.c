@@ -6,6 +6,8 @@
 #include "ray_warp_screen.h"
 #include "hdw-nvs.h"
 #include "ray_credits.h"
+#include "ray_pause.h"
+#include "ray_tex_manager.h"
 
 static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait);
 static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* portrait);
@@ -517,7 +519,7 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
             if (shouldExecute)
             {
                 // Do it
-                executeScriptEvent(ray, script, &ray->portrait);
+                executeScriptEvent(ray, script, &ray->cho_portrait);
 
                 // Mark it as inactive if this is a one time script and the reset timer is inactive
                 script->isActive = (ALWAYS == script->ifArgs.cellList.oneTime) && (0 == script->resetTimerSec);
@@ -587,7 +589,7 @@ void checkScriptTime(ray_t* ray, uint32_t elapsedUs)
                 if (script->ifArgs.time <= ray->secondsSinceStart)
                 {
                     // Do it
-                    executeScriptEvent(ray, script, &ray->portrait);
+                    executeScriptEvent(ray, script, &ray->cho_portrait);
 
                     // Mark it as inactive
                     script->isActive = false;
@@ -828,8 +830,13 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         {
             // Unlock zip on the menu
             writeNvs32(MAGTROID_UNLOCK_KEY, 1);
-            // Jump to credits!
-            rayShowCredits(ray);
+            // Show bonus dialog for 100%
+            if ((100 == getItemCompletePct(ray)) || (50 > getItemCompletePct(ray)))
+            {
+                rayShowDialog(ray, finalDialog100_0, &ray->hw_s_portrait);
+            }
+            // Jump to credits! This is either immediate or after the aforementioned dialog
+            ray->shouldShowCredits = true;
             break;
         }
     }

@@ -10,6 +10,9 @@
 #include "midi_processor.h"
 #include "fileUtils.h"
 
+/* Minimum time for a note or rest */
+#define MIN_TIME_MS 5
+
 /* Frequencies of notes */
 typedef enum __attribute__((packed))
 {
@@ -249,6 +252,9 @@ void process_midi(const char* inFile, const char* outDir)
                 unsigned long int lastNoteStart = 0;
                 unsigned long int introRest     = track->notes[0].timeBeforeAppear;
 
+                /* Extra time used if a note or rest is less than MIN_TIME_MS */
+                int32_t extraTimeUsed = 0;
+
                 for (int midiNoteIdx = 0; midiNoteIdx < track->nbOfNotes; midiNoteIdx++)
                 {
                     /* Get a reference to this note */
@@ -260,13 +266,15 @@ void process_midi(const char* inFile, const char* outDir)
                     /* If this song should start with a rest */
                     if (0 != introRest)
                     {
-                        /* Save the rest */
-                        notes[trackIdx][noteIdxs[trackIdx]].note = SILENCE;
-                        notes[trackIdx][noteIdxs[trackIdx]].timeMs
-                            = (params.tempo * introRest) / (1000 * midiParser->ticks);
-                        totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
-                        noteIdxs[trackIdx]++;
-
+                        int32_t silenceTimeMs = (params.tempo * introRest) / (1000 * midiParser->ticks);
+                        if (0 < silenceTimeMs)
+                        {
+                            /* Save the rest */
+                            notes[trackIdx][noteIdxs[trackIdx]].note   = SILENCE;
+                            notes[trackIdx][noteIdxs[trackIdx]].timeMs = silenceTimeMs;
+                            totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
+                            noteIdxs[trackIdx]++;
+                        }
                         /* Don't do this again */
                         introRest = 0;
                     }
@@ -289,12 +297,27 @@ void process_midi(const char* inFile, const char* outDir)
                         }
                     }
 
-                    /* Save this note */
-                    notes[trackIdx][noteIdxs[trackIdx]].note = midiFrequencies[note->pitch];
-                    notes[trackIdx][noteIdxs[trackIdx]].timeMs
-                        = (params.tempo * note->duration) / (1000 * midiParser->ticks);
-                    totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
-                    noteIdxs[trackIdx]++;
+                    /* Get the time for this note */
+                    int32_t noteTimeMs = (params.tempo * note->duration) / (1000 * midiParser->ticks);
+                    /* Decrement any extra time used by prior notes */
+                    noteTimeMs -= extraTimeUsed;
+                    extraTimeUsed = 0;
+                    /* If this note has any duration */
+                    if (0 < noteTimeMs)
+                    {
+                        /* Make sure that it's at least MIN_TIME_MS long */
+                        if (MIN_TIME_MS > noteTimeMs)
+                        {
+                            /* Steal the time from the next note */
+                            extraTimeUsed = MIN_TIME_MS - noteTimeMs;
+                            noteTimeMs    = MIN_TIME_MS;
+                        }
+                        /* Save this note */
+                        notes[trackIdx][noteIdxs[trackIdx]].note   = midiFrequencies[note->pitch];
+                        notes[trackIdx][noteIdxs[trackIdx]].timeMs = noteTimeMs;
+                        totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
+                        noteIdxs[trackIdx]++;
+                    }
 
                     /* If there is a note after this one */
                     if (NULL != nextNote)
@@ -302,14 +325,34 @@ void process_midi(const char* inFile, const char* outDir)
                         /* Check if this note ends before the next begins */
                         if (note->timeBeforeAppear + note->duration < nextNote->timeBeforeAppear)
                         {
-                            /* If it does, add a rest to the output between notes */
-                            notes[trackIdx][noteIdxs[trackIdx]].note = SILENCE;
-                            notes[trackIdx][noteIdxs[trackIdx]].timeMs
+                            /* Get the time for this rest */
+                            int32_t silenceTimeMs
                                 = (params.tempo
                                    * (nextNote->timeBeforeAppear - (note->timeBeforeAppear + note->duration)))
                                   / (1000 * midiParser->ticks);
-                            totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
-                            noteIdxs[trackIdx]++;
+
+                            /* Decrement any extra time used by prior notes */
+                            silenceTimeMs -= extraTimeUsed;
+                            extraTimeUsed = 0;
+
+                            /* If this rest has any duration */
+                            if (0 < silenceTimeMs)
+                            {
+                                /* Make sure that it's at least MIN_TIME_MS long */
+                                if (MIN_TIME_MS > silenceTimeMs)
+                                {
+                                    /* Steal the time from the next note */
+                                    extraTimeUsed = MIN_TIME_MS - silenceTimeMs;
+                                    silenceTimeMs = MIN_TIME_MS;
+                                }
+
+                                /* If the note ends before the next begins, add a rest to the output between notes */
+                                notes[trackIdx][noteIdxs[trackIdx]].note   = SILENCE;
+                                notes[trackIdx][noteIdxs[trackIdx]].timeMs = silenceTimeMs;
+
+                                totalLength[trackIdx] += notes[trackIdx][noteIdxs[trackIdx]].timeMs;
+                                noteIdxs[trackIdx]++;
+                            }
                         }
                     }
 
