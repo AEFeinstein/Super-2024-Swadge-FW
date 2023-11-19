@@ -279,6 +279,8 @@ void app_main(void)
             LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
 
+    initShapes();
+
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
 
