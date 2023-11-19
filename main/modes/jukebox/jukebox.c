@@ -188,7 +188,7 @@ void jukeboxEnterMode()
     // Initialize array of music categories
     uint8_t catIdx = 0;
     uint8_t songIdx = 0;
-    jukebox->numMusicCategories = 6;
+    jukebox->numMusicCategories = 5;
     // TODO: change this number   ^ as categories (modes) with music are added
     jukebox->musicCategories = calloc(jukebox->numMusicCategories, sizeof(jukeboxCategory));
 
@@ -309,30 +309,35 @@ void jukeboxEnterMode()
     // Jukebox category
     songIdx = 0;
     jukebox->musicCategories[catIdx].categoryName = jukeboxMode.modeName;
-    jukebox->musicCategories[catIdx].numSongs = 5;
+    jukebox->musicCategories[catIdx].numSongs = 1;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Jukebox songs
 
     // TODO: get these midis from Dac
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "Hot Rod";
-    // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->hotrod;
+    // loadSong("hotrod.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
     
-    // jukebox->musicCategories[catIdx].songs[songIdx].name = "Fauxrio Kart";
-    // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->Fauxrio_Kart;
-    // songIdx++;
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Fauxrio Kart";
+    loadSong("Fauxrio_Kart.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "The Lake";
-    // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->the_lake;
+    // loadSong("thelake.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "Ya like jazz?";
-    // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->herecomesthesun;
+    // loadSong("yalikejazz.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "Banana";
-    // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->bananaphone;
+    // loadSong("banana.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, true);
+    // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
     catIdx++;
