@@ -119,6 +119,7 @@ void jukeboxMainLoop(int64_t elapsedUs);
 void jukeboxMainMenuCb(const char* label, bool selected, uint32_t settingVal);
 void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
+void jukeboxBzrDoneCb(void);
 void jukeboxFreeCategories(jukeboxCategory** categoryArray, uint8_t numCategories);
 
 /*==============================================================================
@@ -183,15 +184,16 @@ void jukeboxEnterMode()
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
     ///// Load music midis /////
+    printf("Loading music\n");
 
     // Initialize array of music categories
-    int catIdx = 0;
-    jukebox->numMusicCategories = 3;
+    uint8_t catIdx = 0;
+    jukebox->numMusicCategories = 5;
     // TODO: change this number   ^ as categories (modes) with music are added
     jukebox->musicCategories = calloc(jukebox->numMusicCategories, sizeof(jukeboxCategory));
 
     // Galactic Brickdown category
-    int songIdx = 0;
+    uint8_t songIdx = 0;
     jukebox->musicCategories[catIdx].categoryName = breakoutMode.modeName;
     jukebox->musicCategories[catIdx].numSongs = 1;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
@@ -208,38 +210,13 @@ void jukeboxEnterMode()
     // Swadge Land category
     songIdx = 0;
     jukebox->musicCategories[catIdx].categoryName = modePlatformer.modeName;
-    jukebox->musicCategories[catIdx].numSongs = 1;
+    jukebox->musicCategories[catIdx].numSongs = 5;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Swadge Land songs
 
-    jukebox->musicCategories[catIdx].songs[songIdx].name = "Castle BGM";
-    loadSong("bgmCastle.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
-    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    songIdx++;
-
     jukebox->musicCategories[catIdx].songs[songIdx].name = "DeMAGio BGM";
     loadSong("bgmDeMAGio.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
-    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    songIdx++;
-
-    jukebox->musicCategories[catIdx].songs[songIdx].name = "Game Over BGM";
-    loadSong("bgmGameOver.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
-    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    songIdx++;
-
-    jukebox->musicCategories[catIdx].songs[songIdx].name = "Game Start BGM";
-    loadSong("bgmGameStart.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
-    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    songIdx++;
-
-    jukebox->musicCategories[catIdx].songs[songIdx].name = "Intro BGM";
-    loadSong("bgmIntro.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
-    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
-    songIdx++;
-
-    jukebox->musicCategories[catIdx].songs[songIdx].name = "Name Entry BGM";
-    loadSong("bgmNameEntry.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
     jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     songIdx++;
 
@@ -250,6 +227,61 @@ void jukeboxEnterMode()
 
     jukebox->musicCategories[catIdx].songs[songIdx].name = "Underground BGM";
     loadSong("bgmUnderground.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Castle BGM";
+    loadSong("bgmCastle.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+    
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Name Entry BGM";
+    loadSong("bgmNameEntry.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    catIdx++;
+
+    // Magtroid Pocket category
+    songIdx = 0;
+    jukebox->musicCategories[catIdx].categoryName = rayMode.modeName;
+    jukebox->musicCategories[catIdx].numSongs = 7;
+    jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
+
+    // Magtroid Pocket songs
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Base 0";
+    loadSong("base_0.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Base 1";
+    loadSong("base_1.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Cave 0";
+    loadSong("cave_0.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Cave 1";
+    loadSong("cave_1.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+    
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Jungle 0";
+    loadSong("jungle_0.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Jungle 1";
+    loadSong("jungle_1.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
+    jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
+    songIdx++;
+
+    jukebox->musicCategories[catIdx].songs[songIdx].name = "Boss";
+    loadSong("ray_boss.sng", &jukebox->musicCategories[catIdx].songs[songIdx].song, false);
     jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     songIdx++;
 
@@ -289,7 +321,7 @@ void jukeboxEnterMode()
     // Misc category
     songIdx = 0;
     jukebox->musicCategories[catIdx].categoryName = "Misc";
-    jukebox->musicCategories[catIdx].numSongs = 1;
+    jukebox->musicCategories[catIdx].numSongs = 4;
     jukebox->musicCategories[catIdx].songs = calloc(jukebox->musicCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Misc songs
@@ -317,20 +349,22 @@ void jukeboxEnterMode()
     // TODO: remainder of categories (modes) with music
 
     ///// Load SFX midis /////
+    printf("Loading SFX\n");
 
     // Initialize array of music categories
     catIdx = 0;
-    jukebox->numSfxCategories = 5;
+    jukebox->numSfxCategories = 6;
     // TODO: change this number ^ as categories (modes) with SFX are added
     jukebox->sfxCategories = calloc(2, sizeof(jukeboxCategory));
 
     // Galactic Brickdown category
     songIdx = 0;
     jukebox->sfxCategories[catIdx].categoryName = breakoutMode.modeName;
-    jukebox->sfxCategories[catIdx].numSongs = 12;
+    jukebox->sfxCategories[catIdx].numSongs = 10;
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Galactic Brickdown SFX
+    printf("Loading GB SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Bounce";
     loadSong("sndBounce.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
@@ -387,10 +421,26 @@ void jukeboxEnterMode()
     // Swadge Land category
     songIdx = 0;
     jukebox->sfxCategories[catIdx].categoryName = modePlatformer.modeName;
-    jukebox->sfxCategories[catIdx].numSongs = 23;
+    jukebox->sfxCategories[catIdx].numSongs = 26;
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Swadge Land SFX
+    printf("Loading SL SFX\n");
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Intro";
+    loadSong("bgmIntro.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Game Start";
+    loadSong("bgmGameStart.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
+
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Game Over";
+    loadSong("bgmGameOver.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
+    songIdx++;
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "1-Up";
     loadSong("snd1up.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
@@ -516,91 +566,110 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Magtroid Pocket SFX
+    printf("Loading MP SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_door_open";
     loadSong("r_door_open.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_block";
     loadSong("r_e_block.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_damage";
     loadSong("r_e_damage.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
         
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_dead";
     loadSong("r_e_dead.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_e_freeze";
     loadSong("r_e_freeze.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_game_over";
     loadSong("r_game_over.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_health";
     loadSong("r_health.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_item_get";
     loadSong("r_item_get.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_lava_dmg";
     loadSong("r_lava_dmg.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_charge";
     loadSong("r_p_charge.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_charge_start";
     loadSong("r_p_charge_start.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
+    // TODO: broken .mid file
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_damage";
     loadSong("r_p_damage.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_ice";
     loadSong("r_p_ice.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_missile";
     loadSong("r_p_missile.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_shoot";
     loadSong("r_p_shoot.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_p_xray";
     loadSong("r_p_xray.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "r_warp";
     loadSong("r_warp.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
+    printf("%"PRIu8"\n", songIdx);
     
     catIdx++;
 
@@ -613,15 +682,18 @@ void jukeboxEnterMode()
     jukebox->tunernomeSfxCategory = &jukebox->sfxCategories[catIdx];
 
     // Tunernome SFX
+    printf("Loading TN SFX\n");
 
     // Special handling since these SFX are defined in code, not loaded from .sng files
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Primary";
     memcpy(&jukebox->sfxCategories[catIdx].songs[songIdx].song, &metronome_primary, sizeof(song_t));
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
     // Special handling since these SFX are defined in code, not loaded from .sng files
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Secondary";
     memcpy(&jukebox->sfxCategories[catIdx].songs[songIdx].song, &metronome_secondary, sizeof(song_t));
+    jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
     catIdx++;
@@ -633,6 +705,7 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Menu SFX
+    printf("Loading Menu SFX\n");
 
     jukebox->sfxCategories[catIdx].songs[songIdx].name = "Item";
     loadSong("item.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
@@ -653,8 +726,9 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs = calloc(jukebox->sfxCategories[catIdx].numSongs, sizeof(jukeboxSong));
 
     // Misc SFX
+    printf("Loading Misc SFX\n");
 
-    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Factory Test Stereo Check";
+    jukebox->sfxCategories[catIdx].songs[songIdx].name = "Factory Test";
     loadSong("stereo_test.sng", &jukebox->sfxCategories[catIdx].songs[songIdx].song, false);
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
@@ -672,6 +746,8 @@ void jukeboxEnterMode()
     catIdx++;
 
     // TODO: remainder of categories (modes) with SFX
+
+    printf("Done loading midis\n");
 
     ///// Initialize menu /////
     jukebox->menu                = initMenu(str_jukebox, &jukeboxMainMenuCb);
@@ -766,11 +842,11 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             {
                 if (jukebox->inMusicSubmode)
                 {
-                    bzrPlayBgm(&jukebox->musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO);
+                    bzrPlayBgmCb(&jukebox->musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO, jukeboxBzrDoneCb);
                 }
                 else
                 {
-                    bzrPlaySfx(&jukebox->sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO);
+                    bzrPlaySfxCb(&jukebox->sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO, jukeboxBzrDoneCb);
                 }
                 jukebox->isPlaying = true;
             }
@@ -788,12 +864,12 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         case PB_START:
         {
             bzrStop(true);
+            jukebox->isPlaying = false;
             jukebox->screen = JUKEBOX_MENU;
             break;
         }
         case PB_UP:
         {
-            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -804,18 +880,22 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                 length = jukebox->numSfxCategories;
             }
 
+            uint8_t before = jukebox->categoryIdx;
             if (jukebox->categoryIdx == 0)
             {
                 jukebox->categoryIdx = length;
             }
             jukebox->categoryIdx = jukebox->categoryIdx - 1;
-
-            jukebox->songIdx = 0;
+            if (jukebox->categoryIdx != before)
+            {
+                bzrStop(true);
+                jukebox->isPlaying = false;
+                jukebox->songIdx = 0;
+            }
             break;
         }
         case PB_DOWN:
         {
-            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -826,14 +906,18 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                 length = jukebox->numSfxCategories;
             }
 
+            uint8_t before = jukebox->categoryIdx;
             jukebox->categoryIdx = (jukebox->categoryIdx + 1) % length;
-
-            jukebox->songIdx = 0;
+            if (jukebox->categoryIdx != before)
+            {
+                bzrStop(true);
+                jukebox->isPlaying = false;
+                jukebox->songIdx = 0;
+            }
             break;
         }
         case PB_LEFT:
         {
-            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -844,16 +928,21 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                 length = jukebox->sfxCategories[jukebox->categoryIdx].numSongs;
             }
 
+            uint8_t before = jukebox->songIdx;
             if (jukebox->songIdx == 0)
             {
                 jukebox->songIdx = length;
             }
             jukebox->songIdx = jukebox->songIdx - 1;
+            if (jukebox->songIdx != before)
+            {
+                bzrStop(true);
+                jukebox->isPlaying = false;
+            }
             break;
         }
         case PB_RIGHT:
         {
-            bzrStop(true);
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
@@ -864,7 +953,13 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                 length = jukebox->sfxCategories[jukebox->categoryIdx].numSongs;
             }
 
+            uint8_t before = jukebox->songIdx;
             jukebox->songIdx = (jukebox->songIdx + 1) % length;
+            if (jukebox->songIdx != before)
+            {
+                bzrStop(true);
+                jukebox->isPlaying = false;
+            }
             break;
         }
         default:
@@ -1087,21 +1182,39 @@ void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
     }
 }
 
+void jukeboxBzrDoneCb(void)
+{
+    jukeboxCategory* category;
+    if (jukebox->inMusicSubmode)
+    {
+        category = jukebox->musicCategories;
+    }
+    else
+    {
+        category = jukebox->sfxCategories;
+    }
+
+    if (!category[jukebox->categoryIdx].songs[jukebox->songIdx].song.shouldLoop)
+    {
+        jukebox->isPlaying = false;
+    }
+}
+
 void jukeboxFreeCategories(jukeboxCategory** categoryArray, uint8_t numCategories)
 {
-    for(int categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
+    for(uint8_t catIdx = 0; catIdx < numCategories; catIdx++)
     {
-        for(int songIdx = 0; songIdx < categoryArray[categoryIdx]->numSongs; songIdx++)
+        for(uint8_t songIdx = 0; songIdx < categoryArray[catIdx]->numSongs; songIdx++)
         {
             // Avoid freeing songs we never loaded
-            if(categoryArray[categoryIdx]->songs[songIdx].song.tracks != NULL)
+            if(categoryArray[catIdx]->songs[songIdx].song.tracks != NULL)
             {
-                freeSong(&categoryArray[categoryIdx]->songs[songIdx].song);
+                freeSong(&categoryArray[catIdx]->songs[songIdx].song);
             }
         }
 
-        free(categoryArray[categoryIdx]->songs);
-        free(categoryArray[categoryIdx]);
+        free(categoryArray[catIdx]->songs);
+        free(categoryArray[catIdx]);
     }
 
     free(categoryArray);
