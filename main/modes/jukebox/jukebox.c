@@ -319,9 +319,9 @@ void jukeboxEnterMode()
     // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->hotrod;
     // songIdx++;
     
-    jukebox->musicCategories[catIdx].songs[songIdx].name = "Fauxrio Kart";
-    jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->Fauxrio_Kart;
-    songIdx++;
+    // jukebox->musicCategories[catIdx].songs[songIdx].name = "Fauxrio Kart";
+    // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->Fauxrio_Kart;
+    // songIdx++;
 
     // jukebox->musicCategories[catIdx].songs[songIdx].name = "The Lake";
     // jukebox->musicCategories[catIdx].songs[songIdx].song = &jukebox->the_lake;
