@@ -118,7 +118,7 @@ static void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs);
 static void breakoutDrawLevelClear(font_t* font, gameData_t* gameData);
 static void breakoutChangeStateGameClear(breakout_t* self);
 static void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs);
-static void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData);
+static void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData, uint8_t page);
 static void breakoutChangeStateTitleScreen(breakout_t* self);
 static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs);
 static void breakoutDrawTitleScreen(font_t* font, gameData_t* gameData);
@@ -158,8 +158,8 @@ void breakoutBuildMainMenu(breakout_t* self);
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
 #define GAME_LEVEL_START_INDEX 1
-#define GAME_LEVEL_END_INDEX 51
-//#define POSTGAME_LEVEL_START_INDEX 52
+#define GAME_LEVEL_END_INDEX 50
+#define POSTGAME_LEVEL_START_INDEX 51
 
 static const leveldef_t leveldef[NUM_LEVELS]
     = {
@@ -872,14 +872,13 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
 
             uint16_t levelIndex = self->gameData.level;
 
-            if (levelIndex >= GAME_LEVEL_END_INDEX - 1)
+            if (levelIndex == GAME_LEVEL_END_INDEX || levelIndex >= (NUM_LEVELS - 1))
             {
                 // Game Cleared!
 
                 // if(!self->gameData.debugMode){
                 // Determine achievements
-                /*self->unlockables.gameCleared = true;
-
+                /*
                 if(!self->gameData.continuesUsed){
                     self->unlockables.oneCreditCleared = true;
 
@@ -896,6 +895,17 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.biggerScore = true;
                 }
             }*/
+                self->unlockables.gameCleared = true;
+
+                if (self->unlockables.maxLevelIndexUnlocked < POSTGAME_LEVEL_START_INDEX)
+                {
+                    self->unlockables.maxLevelIndexUnlocked = POSTGAME_LEVEL_START_INDEX;
+                }
+
+                if (!self->gameData.debugMode)
+                {
+                    breakoutSaveUnlockables(self);
+                }
 
                 breakoutChangeStateGameClear(self);
                 return;
@@ -912,7 +922,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
-                breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;//leveldef[levelIndex].timeLimit;
+                breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
                 breakout->gameData.levelScore = 0;
                 if (!self->gameData.debugMode)
                 {
@@ -956,6 +966,9 @@ void breakoutDrawLevelClear(font_t* font, gameData_t* gameData)
 void breakoutChangeStateGameClear(breakout_t* self)
 {
     self->gameData.frameCount = 0;
+    self->gameData.ballLaunched = true;
+    self->menuState           = 0;
+    self->starfield.randomColors = true;
     self->update              = &breakoutUpdateGameClear;
     resetGameDataLeds(&(self->gameData));
     
@@ -967,39 +980,99 @@ void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
 
-    if (self->gameData.frameCount > 450)
-    {
-        if (self->gameData.lives > 0)
-        {
-            if (self->gameData.frameCount % 60 == 0)
+    switch(self->menuState) {
+        case 0:
+            if (self->gameData.frameCount > 540)
             {
-                self->gameData.lives--;
-                self->gameData.score += 200000;
-                // buzzer_play_sfx(&snd1up);
+                if (self->gameData.lives > 0)
+                {
+                    if (self->gameData.frameCount % 60 == 0)
+                    {
+                        self->gameData.lives--;
+                        self->gameData.score += 100000;
+                        bzrPlaySfx(&(breakout->soundManager.snd1up), BZR_LEFT);
+                    }
+                }
+                else if (self->gameData.frameCount % 960 == 0)
+                {
+                    self->menuState = 1;
+                    self->gameData.frameCount = 0;
+                }
             }
-        }
-        else if (self->gameData.frameCount % 960 == 0)
-        {
-            breakoutChangeStateGameOver(self);
-        }
+            break;
+        case 1:
+        default:
+            if (self->gameData.frameCount % 960 == 0)
+            {
+                breakoutChangeStateGameOver(self);
+            }
+            break;
     }
 
-    drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
-    breakoutDrawGameClear(&(self->ibm_vga8), &(self->logbook), &(self->gameData));
+    updateStarfield(&(self->starfield), 8);    
+    drawStarfield(&(self->starfield));
+
+    breakoutDrawGameClear(&(self->ibm_vga8), &(self->logbook), &(self->gameData), self->menuState);
     updateLedsGameClear(&(self->gameData));
 }
 
-void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData)
+void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData, uint8_t page)
 {
-    drawBreakoutHud(ibm_vga8, gameData);
+    char scoreStr[32];
 
-    drawText(logbook, c555, "Thanks for playing!", 16, 48);
+    switch(page){
+        case 0:
+            drawBreakoutHud(ibm_vga8, gameData);
+            drawText(logbook, redColors[(breakout->gameData.frameCount >> 2) % 4], "Congratulations!", 32, 24);
 
-    if (gameData->frameCount > 300)
+            if(gameData->frameCount > 60) {
+                drawText(ibm_vga8, c555, "You've broken down the Space", 24, 64);
+                drawText(ibm_vga8, c555, "Pirates' blockade in", 24, 76);
+
+                snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32 " seconds!", gameData->inGameTimer);
+                drawText(ibm_vga8, c555, scoreStr, 24, 88);
+            }
+
+            if(gameData->frameCount > 240) {
+                drawText(ibm_vga8, c555, "Space transportation is", 24, 112);
+                drawText(ibm_vga8, c555, "restored to the galaxy.", 24, 124);
+            }
+
+            if(gameData->frameCount > 480) {
+                drawText(ibm_vga8, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, "Bonus 100000 points for", 24, 148);
+                drawText(ibm_vga8, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, "each ball remaining!", 24, 160);
+            }
+            break;
+        case 1:
+        default:
+            drawText(logbook, purpleColors[(breakout->gameData.frameCount >> 2) % 4], "Thanks for playing!", 8, 24);
+
+            if(gameData->frameCount > 60) {
+                drawText(logbook, c555, "Total bounty",24, 64);
+
+                snprintf(scoreStr, sizeof(scoreStr) - 1, "%08" PRIu32 " pts", gameData->score);
+                drawText(logbook, c555, scoreStr, 64, 96);
+            }
+
+            if(gameData->frameCount > 240) {
+                drawText(logbook, c555, "See you", 24, 136);
+                drawText(logbook, c555, "next MAGFest!", 64, 168);
+            }
+
+            if(gameData->level == GAME_LEVEL_END_INDEX && gameData->frameCount > 480) {
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], "Use the Continue option to", 24, 200);
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], "check out a few extra levels!", 24, 212);
+            }
+
+            break;
+    }
+    
+
+    /*if (gameData->frameCount > 300)
     {
         drawText(logbook, c555, "See you next", 8, 112);
         drawText(logbook, c555, "debug mission!", 8, 160);
-    }
+    }*/
 }
 
 void breakoutChangeStatePause(breakout_t* self)
