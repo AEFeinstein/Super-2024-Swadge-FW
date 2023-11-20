@@ -45,7 +45,7 @@ void pl_initializeSoundManager(plSoundManager_t *self){
     loadSong("sndMenuConfirm.sng", &self->sndMenuConfirm, false);
     loadSong("sndMenuDeny.sng", &self->sndMenuDeny, false);
     loadSong("sndMenuSelect.sng", &self->sndMenuSelect, false);
-    loadSong("sndOuttaTime.sng", &self->sndOuttaTime, false);
+    loadSong("sndOutOfTime.sng", &self->sndOuttaTime, false);
     loadSong("sndPause.sng", &self->sndPause, false);
     loadSong("sndPowerUp.sng", &self->sndPowerUp, false);
     loadSong("sndSquish.sng", &self->sndSquish, false);
