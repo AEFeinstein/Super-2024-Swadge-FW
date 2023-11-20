@@ -275,7 +275,7 @@ static void insertChar(textEntry_t* entry)
 /**
  * @brief Delete the character at the text entry's cursor, shifting any later characters
  *
- * @param entry The text entry to delete the character in
+ * @param entry The text entry to delete the character within
  */
 static void deleteChar(textEntry_t* entry)
 {

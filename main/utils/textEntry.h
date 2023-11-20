@@ -3,11 +3,99 @@
  * \section textEntry_design Design Philosophy
  *
  * The text entry utility provides a minimal interface for editing a single line of text of unlimited length.
- * It can easily be adapted to any interface
+ * The entered text is kept in an internal buffer that automatically grows if needed. The string is returned via
+ * a callback, and should be copied to an external buffer with strncpy() or strdup() for later access.
+ *
+ * Characters can be selected using either touchpad spins or up and down on the D-pad. Once selected, a character
+ * can be confirmed and entered with the A button. The B button erases the previous charater, and the left and
+ * right arrows move the cursor within the text. The right arrow will also create one space if used at the end
+ * of the text. The pause button confirms the text entry and calls the callback.
  *
  * \section textEntry_usage Usage
  *
- * \section textEntry_
+ * The text entry was made as generic as possible to enable using it in various modes. The only thing it draws
+ * to the screen is the text and, optionally, a box around the text area's bounds. When the text entry is being
+ * used, the mode should pass all button input to the text entry until the callback is called. The text entry
+ * provides support for allowing certain sets of characters individually, or for combined multiple classes by
+ *  performing a logical OR of values in textEntryCharMask_t. The classes that can be used are:
+ *
+ * - Uppercase Letters
+ * - Lowercase Letters
+ * - Numbers
+ * - Whitespace
+ * - Symbols, which includes everything not covered by the other categories
+ *
+ *
+ * \section textEntry_example Example
+ *
+ * \code{.c}
+ *
+ * typedef struct {
+ *     textEntry_t* textEntry;
+ *     font_t font;
+ *     char* textData;
+ * } modeData_t;
+ *
+ * static modeData_t* modeData;
+ *
+ * void textEntryCb(const char* text, void* data)
+ * {
+ *     ESP_LOGI("Text", "Text entered was %s!", text);
+ *     modeData_t* mode = (modeData_t*) data;
+ *
+ *     if (mode->textData != NULL)
+ *     {
+ *         free(mode->textData);
+ *     }
+ *     mode->textData = strdup(text);
+ * }
+ *
+ * void setup(void)
+ * {
+ *     modeData = calloc(1, sizeof(modeData_t));
+ *     // Setup function
+ *     uint16_t entryW = 160;
+ *     uint16_t entryH = 16;
+ *     uint16_t entryX = (TFT_WIDTH - entryW) / 2;
+ *     uint16_t entryY = (TFT_HEIGHT - entryH) / 2;
+ *
+ *     loadFont("ibm_vga8.font", &modeData->font);
+ *
+ *     modeData->textEntry = initTextEntry(entryX, entryY, entryW, entryH, &font, ENTRY_ALPHANUM, textEntryCb);
+ *
+ *     // If needed, a data pointer can be set that will be passed back to the callback
+ *     textEntrySetData(textEntry, &modeData);
+ * }
+ *
+ * void cleanUp(void)
+ * {
+ *     freeTextEntry(textEntry);
+ *     freeFont(&font);
+ *
+ *     if (modeData->textData != NULL)
+ *     {
+ *         free(modeData->textData);
+ *     }
+ * }
+ *
+ * // Main loop
+ * void mainLoop(int64_t elapsedUs)
+ * {
+ *     // Handle buttons for text entry
+ *     buttonEvt_t evt;
+ *     while (checkButtonQueueWrapper(&evt))
+ *     {
+ *         textEntryButton(textEntry, &evt);
+ *     }
+ *
+ *     // Handle touchpad, button repeating, and other logic
+ *     textEntryMainLoop(textEntry, elapsedUs);
+ *
+ *     // Draw the text entry with a white background, black text, and a box around the text itself
+ *     drawTextEntry(textEntry, c000, c555, true);
+ * }
+ *
+ * \endcode
  *
  */
 #ifndef _TEXT_ENTRY_H_
