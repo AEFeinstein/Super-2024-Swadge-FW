@@ -35,6 +35,9 @@ typedef struct
 
     textEntry_t* textEntry;
     bool showTextEntry;
+    /// Timer used to prevent accidentally closing the text entry wth backspace
+    int64_t textEntryCloseTimer;
+
     int64_t prevUpdateTime;
 
     char namespace[16];

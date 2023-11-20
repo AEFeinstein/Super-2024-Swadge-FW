@@ -33,6 +33,9 @@ static const char noItemsStr[]        = "No Items";
 #define ENTRY_Y       60
 #define ENTRY_TITLE_Y 40
 
+// Make them wait half a second before closing with backspace?
+#define ENTRY_EXIT_TIMER 500000
+
 typedef struct
 {
     bool isNewButton;
@@ -461,11 +464,18 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
     {
         if (evt->down && evt->button == PB_B && '\0' == *(browser->textEntry->value))
         {
-            // Text entry is empty, B was pressed, go back
-            browser->showTextEntry = false;
+            if (browser->textEntryCloseTimer < esp_timer_get_time())
+            {
+                // Text entry is empty, B was pressed, go back
+                browser->showTextEntry = false;
+            }
         }
         else
         {
+            if (evt->down && evt->button == PB_B)
+            {
+                browser->textEntryCloseTimer = esp_timer_get_time() + ENTRY_EXIT_TIMER;
+            }
             textEntryButton(browser->textEntry, evt);
         }
     }
