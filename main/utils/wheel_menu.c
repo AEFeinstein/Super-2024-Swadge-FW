@@ -698,25 +698,33 @@ menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer)
 
     if (menu->currentItem)
     {
-        if (!renderer->zoomed && (menuItemHasOptions(menu->currentItem->val) || menuItemIsSetting(menu->currentItem->val)))
+        menuItem_t* cur = menu->currentItem->val;
+        if (!renderer->zoomed && (menuItemHasOptions(cur) || menuItemIsSetting(cur)))
         {
             menuSelectCurrentItem(menu);
             renderer->zoomed    = true;
-            renderer->zoomValue = UINT8_MAX;
+            if (menuItemHasOptions(cur))
+            {
+                renderer->zoomValue = cur->currentOpt;
+            }
+            else if (menuItemIsSetting(cur))
+            {
+                renderer->zoomValue = cur->currentSetting;
+            }
             return menu;
         }
-        else if (!menuItemHasSubMenu(menu->currentItem->val) && !menuItemIsBack(menu->currentItem->val))
+        else if (!menuItemHasSubMenu(cur) && !menuItemIsBack(cur))
         {
 
             if (renderer->zoomed && renderer->zoomValue != UINT8_MAX)
             {
-                if (menuItemHasOptions(menu->currentItem->val))
+                if (menuItemHasOptions(cur))
                 {
-                    ((menuItem_t*)menu->currentItem->val)->currentOpt = renderer->zoomValue;
+                    cur->currentOpt = renderer->zoomValue;
                 }
-                else if (menuItemIsSetting(menu->currentItem->val))
+                else if (menuItemIsSetting(cur))
                 {
-                    ((menuItem_t*)menu->currentItem->val)->currentSetting = renderer->zoomValue;
+                    cur->currentSetting = renderer->zoomValue;
                 }
             }
             // Don't stay active after the touch is released
