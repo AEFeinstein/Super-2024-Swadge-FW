@@ -3,4 +3,6 @@
 
 extern swadgeMode_t modeCredits;
 
+extern const char creditsName[];
+
 #endif

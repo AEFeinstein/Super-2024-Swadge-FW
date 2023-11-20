@@ -20,6 +20,7 @@
 #include "mainMenu.h"
 #include "breakout.h"
 #include "mode_platformer.h"
+#include "mode_credits.h"
 #include "portableDance.h"
 #include "mode_ray.h"
 #include "tunernome.h"
@@ -249,6 +250,28 @@ const jukeboxSong_t songs_jukebox[] = {
     },
 };
 
+const jukeboxSong_t songs_credits[] = {
+    {
+        .fname = "credits.sng",
+        .name  = creditsName,
+    },
+};
+
+const jukeboxSong_t songs_unused[] = {
+    {
+        .fname = "Pong BGM",
+        .name  = "gmcc.sng",
+    },
+    {
+        .fname = "Ode to Joy",
+        .name  = "ode.sng",
+    },
+    {
+        .fname = "Stereo",
+        .name  = "stereo.sng",
+    },
+};
+
 const jukeboxCategory_t categories[] = {
     {
         .catName  = breakoutName,
@@ -266,6 +289,10 @@ const jukeboxCategory_t categories[] = {
         .catName  = jukeboxName,
         .songs = songs_jukebox
     },
+    {
+        .catName = "(Unused)",
+        .songs = songs_unused,
+    }
 };
 
 /*============================================================================
