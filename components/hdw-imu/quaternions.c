@@ -169,16 +169,33 @@ void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const fl
     pout[2] = ret[2] * 2.0 + p[2];
 }
 
-void mathComputeQuaternionDeltaBetweenQuaternions(float* qOut, const float* q1, const float* b)
+/**
+ * @brief Compute the difference between two quaternions
+ *
+ * @param qOut Pointer to the float[4] (wxyz) output of the rotation between qFrom and qTo.
+ * @param qFrom is the Quaterntion that you are rotating FROM
+ * @param qTo is the Quaternion that you are rotating TO 
+ */
+void mathComputeQuaternionDeltaBetweenQuaternions(float* qOut, const float* qFrom, const float* qTo)
 {
-    float a[4] = {q1[0], -q1[1], -q1[2], -q1[3]};
-    qOut[0]    = a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3];
-    qOut[1]    = a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2];
-    qOut[2]    = a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1];
-    qOut[3]    = a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0];
-    // Diff= quatmultiply(quatconj(x),y)
+    // Diff= quatmultiply(quatconj(x),y) 
+	float qtmp[3];
+    qtmp[0] = qFrom[0] * qTo[0] + qFrom[1] * qTo[1] + qFrom[2] * qTo[2] + qFrom[3] * qTo[3];
+    qtmp[1] = qFrom[0] * qTo[1] - qFrom[1] * qTo[0] - qFrom[2] * qTo[3] + qFrom[3] * qTo[2];
+    qtmp[2] = qFrom[0] * qTo[2] + qFrom[1] * qTo[3] - qFrom[2] * qTo[0] - qFrom[3] * qTo[1];
+    qOut[3] = qFrom[0] * qTo[3] - qFrom[1] * qTo[2] + qFrom[2] * qTo[1] - qFrom[3] * qTo[0];
+	qOut[0] = qtmp[0];
+	qOut[1] = qtmp[1];
+	qOut[2] = qtmp[2];
 }
 
+/**
+ * @brief Compute the quaterntion rotation between two vectors, from v1 to v2
+ *
+ * @param qOut Pointer to the float[4] (wxyz) output of the rotation defined by v1 to v2
+ * @param v1 is the vector you are rotating FROM. THIS MUST BE NORMALIZED.
+ * @param v2 is the vector you are rotating TO. THIS MUST BE NORMALIZED.
+ */
 void mathQuatFromTwoVectors( float * qOut, const float * v1, const float * v2 )
 {
     float ideal_up[3] = {v1[0], v1[1], v1[2]};
