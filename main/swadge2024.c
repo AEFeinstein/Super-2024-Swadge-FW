@@ -157,8 +157,6 @@
     #define RTC_DATA_ATTR
 #endif
 
-#define EXIT_TIME_US 1000000
-
 //==============================================================================
 // Variables
 //==============================================================================
@@ -280,6 +278,8 @@ void app_main(void)
             LEDC_CHANNEL_2,             // Channel to use for PWM backlight
             LEDC_TIMER_2,               // Timer to use for PWM backlight
             getTftBrightnessSetting()); // TFT Brightness
+
+    initShapes();
 
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());

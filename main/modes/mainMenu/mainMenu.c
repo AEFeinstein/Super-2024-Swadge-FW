@@ -20,7 +20,8 @@
 #include "mode_ray.h"
 #include "paint_share.h"
 #include "pushy.h"
-#include "soko.h"
+#include "slideWhistle.h"
+#include "flight.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "mode_credits.h"
@@ -137,13 +138,14 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, flightMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, slideWhistleMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
@@ -347,9 +349,13 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&rayMode);
         }
-        else if (label == sokoMode.modeName)
+        else if (label == flightMode.modeName)
         {
-            switchToSwadgeMode(&demoMode);
+            switchToSwadgeMode(&flightMode);
+        }
+        else if (label == slideWhistleMode.modeName)
+        {
+            switchToSwadgeMode(&slideWhistleMode);
         }
         else if (label == touchTestMode.modeName)
         {

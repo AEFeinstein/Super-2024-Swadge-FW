@@ -111,6 +111,12 @@ esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
     return accelGetAccelVecRaw(x, y, z);
 }
 
+esp_err_t accelGetQuaternion(float* q)
+{
+    // TODO: implement proper emulation of this function.
+    return ESP_OK;
+}
+
 /**
  * @brief Sets the raw accelerometer reading to be returned by the emulator
  *

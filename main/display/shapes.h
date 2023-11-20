@@ -20,6 +20,9 @@
  *
  * \section shapes_usage Usage
  *
+ * initShapes() is called automatically before the Swadge mode is run. It should not be called from within a Swadge
+ * Mode.
+ *
  * Draw shapes and curves with the given functions. Each function has it's own description below that won't be copied
  * here.
  *
@@ -80,5 +83,7 @@ void drawCubicBezierScaled(int x0, int y0, int x1, int y1, int x2, int y2, int x
                            int xOrigin, int yOrigin, int xScale, int yScale);
 void drawQuadSpline(int n, int x[], int y[], paletteColor_t col);
 void drawCubicSpline(int n, int x[], int y[], paletteColor_t col);
+
+void initShapes(void);
 
 #endif /* SRC_BRESENHAM_H_ */
