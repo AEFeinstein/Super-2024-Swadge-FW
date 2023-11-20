@@ -258,6 +258,8 @@ typedef struct
     songTrack_t* tracks; ///< The tracks for this song
 } song_t;
 
+typedef void (*songFinishedCbFn)(void);
+
 void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t ledcChannelL, gpio_num_t bzrGpioR,
                 ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t _bgmVolume, uint16_t _sfxVolume);
 void deinitBuzzer(void);
@@ -265,6 +267,8 @@ void bzrSetBgmVolume(uint16_t vol);
 void bzrSetSfxVolume(uint16_t vol);
 void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track);
 void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track);
+void bzrPlayBgmCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn);
+void bzrPlaySfxCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn);
 void bzrStop(bool resetTracks);
 void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume);
 void bzrStopNote(buzzerPlayTrack_t track);
@@ -272,6 +276,7 @@ bool bzrPause(void);
 void bzrResume(void);
 void* bzrSave(void);
 void bzrRestore(void* data);
+void bzrCheckSongDone(void);
 uint16_t volLevelFromSetting(uint16_t setting);
 
 #endif
