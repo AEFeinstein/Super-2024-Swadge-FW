@@ -21,7 +21,6 @@
 #include "paint_share.h"
 #include "pushy.h"
 #include "slideWhistle.h"
-#include "soko.h"
 #include "flight.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -155,7 +154,6 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, sokoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, flightMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
@@ -391,10 +389,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == rayMode.modeName)
         {
             switchToSwadgeMode(&rayMode);
-        }
-        else if (label == sokoMode.modeName)
-        {
-            switchToSwadgeMode(&demoMode);
         }
         else if (label == flightMode.modeName)
         {
