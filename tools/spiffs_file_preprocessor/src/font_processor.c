@@ -139,9 +139,9 @@ void process_font(const char* infile, const char* outdir)
     }
 
     /* Error check */
-    if (95 != charsWritten)
+    if (95 != charsWritten && 96 != charsWritten)
     {
-        fprintf(stderr, "ERROR: font %s isnt 95 chars (%d chars)\n", infile, charsWritten);
+        fprintf(stderr, "ERROR: font %s isnt 95 or 96 chars (%d chars)\n", infile, charsWritten);
     }
 
     /* Cleanup */

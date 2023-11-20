@@ -54,6 +54,7 @@ swadgeMode_t demoMode = {
 
 typedef struct
 {
+    bool inMenu;
     font_t ibm;
     wsg_t king_donut;
     song_t ode_to_joy;
@@ -62,6 +63,7 @@ typedef struct
     uint16_t recvPackets;
     connectionEvt_t conStatus;
     menu_t* menu;
+    menuLogbookRenderer_t* menuLogbookRenderer;
 } demoVars_t;
 
 demoVars_t* dv;
@@ -99,6 +101,8 @@ static void demoEnterMode(void)
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
 
+    dv->menuLogbookRenderer = initMenuLogbookRenderer(&dv->ibm);
+
     dv->conStatus = CON_LOST;
 
     p2pInitialize(&dv->p2p, 'p', demoConCb, demoMsgRxCb, -70);
@@ -114,6 +118,8 @@ static void demoEnterMode(void)
             printf("High score in NVS is %" PRId32 "\n", highScoreToRead);
         }
     }
+
+    dv->inMenu = true;
 }
 
 /**
@@ -145,22 +151,39 @@ static void demoMainLoop(int64_t elapsedUs)
     static uint32_t lastBtnState = 0;
     while (checkButtonQueueWrapper(&evt))
     {
-        dv->menu = menuButton(dv->menu, evt);
-
-        // printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
         lastBtnState = evt.state;
-        // drawScreen = evt.down;
 
-        if (evt.button == PB_B && evt.down && dv->conStatus == CON_ESTABLISHED)
+        if (dv->inMenu)
         {
-            printf("Sending packet\n");
-            const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
-            p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
-        }
+            dv->menu = menuButton(dv->menu, evt);
 
-        static hid_gamepad_report_t report;
-        report.buttons = lastBtnState;
-        sendUsbGamepadReport(&report);
+            if (evt.button == PB_A && evt.down)
+            {
+                dv->inMenu = false;
+            }
+        }
+        else
+        {
+            // printf("state: %04X, button: %d, down: %s\n", evt.state, evt.button, evt.down ? "down" : "up");
+            // drawScreen = evt.down;
+
+            if (evt.button == PB_B && evt.down && dv->conStatus == CON_ESTABLISHED)
+            {
+                printf("Sending packet\n");
+                const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
+                p2pSendMsg(&dv->p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
+            }
+
+            static hid_gamepad_report_t report;
+            report.buttons = lastBtnState;
+            sendUsbGamepadReport(&report);
+        }
+    }
+
+    if (dv->inMenu)
+    {
+        drawMenuLogbook(dv->menu, dv->menuLogbookRenderer, elapsedUs);
+        return;
     }
 
     // Fill the display area with a dark cyan
@@ -420,4 +443,8 @@ static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* d
 static void demoMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
     printf("%s %s\n", label, selected ? "selected" : "scrolled to");
+
+    if (selected)
+    {
+    }
 }

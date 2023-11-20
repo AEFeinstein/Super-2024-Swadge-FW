@@ -73,6 +73,17 @@
 #include "colorchordTypes.h"
 
 //==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    NOT_OPENED_SECRETS,
+    SHOW_SECRETS,
+    HIDE_SECRETS,
+} showSecrets_t;
+
+//==============================================================================
 // Structs
 //==============================================================================
 
@@ -126,5 +137,13 @@ bool setColorchordModeSetting(colorchordMode_t);
 
 bool getTestModePassedSetting(void);
 bool setTestModePassedSetting(bool status);
+
+bool getGamepadAccelSetting(void);
+const settingParam_t* getGamepadAccelSettingBounds(void);
+bool setGamepadAccelSetting(bool status);
+
+uint8_t getShowSecretsMenuSetting(void);
+const settingParam_t* getShowSecretsMenuSettingBounds(void);
+bool setShowSecretsMenuSetting(uint8_t status);
 
 #endif

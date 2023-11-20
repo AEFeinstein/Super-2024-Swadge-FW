@@ -58,6 +58,8 @@ DECL_SETTING(led_br, 0, MAX_LED_BRIGHTNESS, 5);
 DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
 DECL_SETTING(scrn_sv, 0, 300, 20);
+DECL_SETTING(gp_accel, 0, 1, 1);
+DECL_SETTING(show_secrets, NOT_OPENED_SECRETS, HIDE_SECRETS, NOT_OPENED_SECRETS);
 
 //==============================================================================
 // Static Function Prototypes
@@ -158,6 +160,12 @@ void readAllSettings(void)
 
     // Read the screensaver setting
     readSetting(&scrn_sv_setting);
+
+    // Read the Gamepad accelerometer setting
+    readSetting(&gp_accel_setting);
+
+    // Read the setting to show Secrets menu on the main menu
+    readSetting(&show_secrets_setting);
 }
 
 //==============================================================================
@@ -465,7 +473,7 @@ bool getTestModePassedSetting(void)
 }
 
 /**
- * @brief Set the current test mode passed setting. The new value is immediately used when sampling the microphone.
+ * @brief Set the current test mode passed setting.
  *
  * @param status The new test mode passed setting
  * @return true if the setting was written, false if it wasn't
@@ -473,4 +481,67 @@ bool getTestModePassedSetting(void)
 bool setTestModePassedSetting(bool status)
 {
     return setSetting(&test_setting, status);
+}
+
+/**
+ * @brief Get the current Gamepad accel setting
+ *
+ * @return true if Gamepad accel is enabled, false if not
+ */
+bool getGamepadAccelSetting(void)
+{
+    return gp_accel_setting.val;
+}
+
+/**
+ * @brief Get the bounds for the Gamepad accel setting. Useful for initializing settings items in menus.
+ *
+ * @return the bounds for the Gamepad accel setting
+ */
+const settingParam_t* getGamepadAccelSettingBounds(void)
+{
+    return &gp_accel_param;
+}
+
+/**
+ * @brief Set the current Gamepad accel setting.
+ *
+ * @param status The new Gamepad accel setting
+ * @return true if the setting was written, false if it wasn't
+ */
+bool setGamepadAccelSetting(bool status)
+{
+    return setSetting(&gp_accel_setting, status);
+}
+
+/**
+ * @brief Get the current setting to show Secrets menu on the main menu
+ *
+ * @return true if showing Secrets menu on the main menu is enabled, false if not
+ */
+uint8_t getShowSecretsMenuSetting(void)
+{
+    return show_secrets_setting.val;
+}
+
+/**
+ * @brief Get the bounds for the setting to show Secrets menu on the main menu. Useful for initializing settings items
+ * in menus.
+ *
+ * @return the bounds for the setting to show Secrets menu on the main menu
+ */
+const settingParam_t* getShowSecretsMenuSettingBounds(void)
+{
+    return &show_secrets_param;
+}
+
+/**
+ * @brief Set the current setting to show Secrets menu on the main menu.
+ *
+ * @param status The new setting to show Secrets menu on the main menu
+ * @return true if the setting was written, false if it wasn't
+ */
+bool setShowSecretsMenuSetting(uint8_t status)
+{
+    return setSetting(&show_secrets_setting, status);
 }

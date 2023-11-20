@@ -177,7 +177,7 @@ bool readNamespaceNvs32(const char* namespace, const char* key, int32_t* outVal)
                 case ESP_ERR_NVS_INVALID_NAME:
                 case ESP_ERR_NVS_INVALID_LENGTH:
                 {
-                    ESP_LOGE("NVS", "%s readErr %s", __func__, esp_err_to_name(readErr));
+                    ESP_LOGE("NVS", "%s readErr %s on %s", __func__, esp_err_to_name(readErr), namespace);
                     break;
                 }
             }
