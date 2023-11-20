@@ -35,6 +35,7 @@
 typedef struct
 {
     menu_t* menu;
+    menu_t* secretsMenu;
     menuLogbookRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
@@ -44,6 +45,7 @@ typedef struct
     int32_t cheatCodeIdx;
     bool debugMode;
     bool fanfarePlaying;
+    bool resetConfirmShown;
     int32_t autoLightDanceTimer;
 } mainMenu_t;
 
@@ -55,13 +57,17 @@ static void mainMenuEnterMode(void);
 static void mainMenuExitMode(void);
 static void mainMenuMainLoop(int64_t elapsedUs);
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal);
+void addSecretsMenu(void);
 
 //==============================================================================
 // Variables
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char mainMenuName[] = "Main Menu";
+static const char mainMenuName[]                = "Main Menu";
+static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
+static const char factoryResetName[]            = "Factory Reset";
+static const char confirmResetName[]            = "! Confirm Reset !";
 
 swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
@@ -106,7 +112,17 @@ static const char* const screenSaverSettingsOptions[] = {
 };
 
 static const int16_t cheatCode[] = {
-    PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START, PB_SELECT,
+    PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A,
+};
+
+static const int32_t showSecretsMenuSettingValues[] = {
+    SHOW_SECRETS,
+    HIDE_SECRETS,
+};
+
+static const char* const showSecretsMenuSettingOptions[] = {
+    "Show",
+    "Hide",
 };
 
 //==============================================================================
@@ -175,6 +191,11 @@ static void mainMenuEnterMode(void)
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
+    if (getShowSecretsMenuSetting() == SHOW_SECRETS)
+    {
+        addSecretsMenu();
+    }
+
     // Show the battery on the main menu
     setShowBattery(mainMenu->menu, true);
 
@@ -237,7 +258,10 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
                 {
                     mainMenu->cheatCodeIdx = 0;
-                    mainMenu->debugMode    = true;
+                    if (getShowSecretsMenuSetting() == NOT_OPENED_SECRETS)
+                    {
+                        setShowSecretsMenuSetting(SHOW_SECRETS);
+                    }
                     bzrPlayBgm(&mainMenu->fanfare, BZR_STEREO);
                     mainMenu->fanfarePlaying = true;
 
@@ -247,13 +271,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                         mainMenu->menu = mainMenu->menu->parentMenu;
                     }
 
-                    // Add the tests menu
-                    mainMenu->menu = startSubMenu(mainMenu->menu, "Tests");
-                    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
-                    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
-                    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
-                    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
-                    mainMenu->menu = endSubMenu(mainMenu->menu);
+                    addSecretsMenu();
 
                     return;
                 }
@@ -320,6 +338,27 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == factoryTestMode.modeName)
         {
             switchToSwadgeMode(&factoryTestMode);
+        }
+        else if (label == factoryResetName)
+        {
+            if (!mainMenu->resetConfirmShown)
+            {
+                mainMenu->resetConfirmShown = true;
+                removeSingleItemFromMenu(mainMenu->menu, mnuBackStr);
+                addSingleItemToMenu(mainMenu->secretsMenu, confirmResetName);
+                addSingleItemToMenu(mainMenu->menu, mnuBackStr);
+            }
+        }
+        else if (label == confirmResetName)
+        {
+            if (eraseNvs())
+            {
+                switchToSwadgeMode(&factoryTestMode);
+            }
+            else
+            {
+                switchToSwadgeMode(&mainMenuMode);
+            }
         }
         else if (label == gamepadMode.modeName)
         {
@@ -410,4 +449,22 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             setScreensaverTimeSetting(settingVal);
         }
     }
+}
+
+void addSecretsMenu(void)
+{
+    mainMenu->debugMode = true;
+
+    // Add the secrets menu
+    mainMenu->menu        = startSubMenu(mainMenu->menu, "Secrets");
+    mainMenu->secretsMenu = mainMenu->menu;
+    addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions,
+                                 showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
+                                 getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
+    addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, factoryResetName);
+    mainMenu->menu = endSubMenu(mainMenu->menu);
 }
