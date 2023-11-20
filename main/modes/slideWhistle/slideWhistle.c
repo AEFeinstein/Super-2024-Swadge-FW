@@ -46,9 +46,9 @@
 #define DEFAULT_PAUSE 5
 
 // 270<-180->90
-#define EDGE_OFFSET_DEGREES 45
-#define LEFT_BOUND_DEGREES (270 - EDGE_OFFSET_DEGREES)
-#define RIGHT_BOUND_DEGREES (90 + EDGE_OFFSET_DEGREES)
+#define EDGE_OFFSET_DEGREES    45
+#define LEFT_BOUND_DEGREES     (270 - EDGE_OFFSET_DEGREES)
+#define RIGHT_BOUND_DEGREES    (90 + EDGE_OFFSET_DEGREES)
 #define STEERING_RANGE_DEGREES (LEFT_BOUND_DEGREES - RIGHT_BOUND_DEGREES)
 
 #define lengthof(x) (sizeof(x) / sizeof(x[0]))
@@ -959,7 +959,7 @@ void slideWhistleProcessAccelerometer(void)
     int16_t steeringAngleDegrees = 180;
     if (ESP_OK == accelIntegrate() && ESP_OK == accelGetSteeringAngleDegrees(&xcomp, &ycomp))
     {
-        steeringAngleDegrees = getAtan2( xcomp, ycomp );
+        steeringAngleDegrees = getAtan2(xcomp, ycomp);
         // snprintf(slideWhistle->accelStr, sizeof(slideWhistle->accelStr), "%d %d %d\n",
         //     steeringAngleDegrees, xcomp, ycomp);
     }

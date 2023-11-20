@@ -117,7 +117,7 @@ esp_err_t accelGetQuaternion(float* q)
     return ESP_OK;
 }
 
-esp_err_t accelGetSteeringAngleDegrees(int16_t * xcomp, int16_t * ycomp)
+esp_err_t accelGetSteeringAngleDegrees(int16_t* xcomp, int16_t* ycomp)
 {
     // TODO: implement proper emulation of this function.
     return ESP_OK;
