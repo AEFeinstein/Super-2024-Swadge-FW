@@ -272,7 +272,7 @@ const jukeboxSong_t songs_unused[] = {
     },
 };
 
-const jukeboxCategory_t categories[] = {
+const jukeboxCategory_t musicCategories[] = {
     {
         .catName  = breakoutName,
         .songs = songs_galacticBrickdown
@@ -292,6 +292,314 @@ const jukeboxCategory_t categories[] = {
     {
         .catName = "(Unused)",
         .songs = songs_unused,
+    }
+};
+
+const jukeboxSong_t sounds_galacticBrickdown[] = {
+    {
+        .fname = "sndBounce.sng",
+        .name  = "Bounce",
+    },
+    {
+        .fname = "sndBreak.sng",
+        .name  = "Break",
+    },        
+    {
+        .fname = "sndBreak2.sng",
+        .name  = "Break 2",
+    },        
+    {
+        .fname = "sndBreak3.sng",
+        .name  = "Break 3",
+    },        
+    {
+        .fname = "sndBrk1up.sng",
+        .name  = "Break 1-Up",
+    },        
+    {
+        .fname = "sndBrkDie.sng",
+        .name  = "Break Die",
+    },        
+    {
+        .fname = "sndDetonate.sng",
+        .name  = "Detonate",
+    },        
+    {
+        .fname = "sndDropBomb.sng",
+        .name  = "Drop Bomb",
+    },        
+    {
+        .fname = "sndTally.sng",
+        .name  = "Tally",
+    },        
+    {
+        .fname = "sndWaveBall.sng",
+        .name  = "Wave Ball",
+    },        
+    {
+        .fname = "brkGameOver.sng",
+        .name  = "Game Over",
+    },        
+    {
+        .fname = "brkGetReady.sng",
+        .name  = "Get Ready",
+    },        
+    {
+        .fname = "brkHighScore.sng",
+        .name  = "High Score",
+    },        
+    {
+        .fname = "brkLvlClear.sng",
+        .name  = "Level Clear",
+    },
+};
+
+const jukeboxSong_t sounds_swadgeland[] = {
+    {
+        .fname = "bgmIntro.sng",
+        .name  = "Into",
+    },
+    {
+        .fname = "bgmGameStart.sng",
+        .name  = "Game Start",
+    },        
+    {
+        .fname = "bgmGameOver.sng",
+        .name  = "Game Over",
+    },        
+    {
+        .fname = "snd1up.sng",
+        .name  = "1-Up",
+    },        
+    {
+        .fname = "sndCheckpoint.sng",
+        .name  = "Checkpoint",
+    },        
+    {
+        .fname = "sndCoin.sng",
+        .name  = "Coin",
+    },        
+    {
+        .fname = "sndDie.sng",
+        .name  = "Die",
+    },        
+    {
+        .fname = "sndHit.sng",
+        .name  = "Hit",
+    },        
+    {
+        .fname = "sndHurt.sng",
+        .name  = "Hurt",
+    },        
+    {
+        .fname = "sndJump1.sng",
+        .name  = "Jump 1",
+    },        
+    {
+        .fname = "sndJump2.sng",
+        .name  = "Jump 2",
+    },        
+    {
+        .fname = "sndJump3.sng",
+        .name  = "Jump 3",
+    },        
+    {
+        .fname = "sndLevelClearA.sng",
+        .name  = "Level Clear A",
+    },        
+    {
+        .fname = "sndLevelClearB.sng",
+        .name  = "Level Clear B",
+    },        
+    {
+        .fname = "sndLevelClearC.sng",
+        .name  = "Level Clear C",
+    },        
+    {
+        .fname = "sndLevelClearD.sng",
+        .name  = "Level Clear D",
+    },        
+    {
+        .fname = "sndLevelClearS.sng",
+        .name  = "Level Clear S",
+    },        
+    {
+        .fname = "sndMenuConfirm.sng",
+        .name  = "Menu Confirm",
+    },        
+    {
+        .fname = "sndMenuDeny.sng",
+        .name  = "Menu Deny",
+    },        
+    {
+        .fname = "sndMenuSelect.sng",
+        .name  = "Menu Select",
+    },        
+    {
+        .fname = "sndOuttaTime.sng",
+        .name  = "Outta Time",
+    },        
+    {
+        .fname = "sndPause.sng",
+        .name  = "Pause",
+    },        
+    {
+        .fname = "sndPowerUp.sng",
+        .name  = "Power Up",
+    },        
+    {
+        .fname = "sndSquish.sng",
+        .name  = "Squish",
+    },        
+    {
+        .fname = "sndWarp.sng",
+        .name  = "Warp",
+    },        
+    {
+        .fname = "sndWaveBall.sng",
+        .name  = "Wave Ball",
+    },
+};
+
+const jukeboxSong_t sounds_magtroid[] = {
+    {
+        .fname = "r_door_open.sng",
+        .name  = "Door Open",
+    },
+    {
+        .fname = "r_e_block.sng",
+        .name  = "Block",
+    },
+    {
+        .fname = "r_e_damage.sng",
+        .name  = "Damage",
+    },
+    {
+        .fname = "r_e_dead.sng",
+        .name  = "Dead",
+    },
+    {
+        .fname = "r_e_freeze.sng",
+        .name  = "Freeze",
+    },
+    {
+        .fname = "r_game_over.sng",
+        .name  = "Game Over",
+    },
+    {
+        .fname = "r_health.sng",
+        .name  = "Health",
+    },
+    {
+        .fname = "r_item_get.sng",
+        .name  = "Item Get",
+    },
+    {
+        .fname = "r_lava_dmg.sng",
+        .name  = "Lava Damage",
+    },
+    {
+        .fname = "r_p_charge.sng",
+        .name  = "Charge",
+    },
+    {
+        .fname = "r_p_charge_start.sng",
+        .name  = "Charge Start",
+    },
+    {
+        .fname = "r_p_damage.sng",
+        .name  = "Damage",
+    },
+    {
+        .fname = "r_p_ice.sng",
+        .name  = "Ice",
+    },
+    {
+        .fname = "r_p_missile.sng",
+        .name  = "Missile",
+    },
+    {
+        .fname = "r_p_shoot.sng",
+        .name  = "Shoot",
+    },
+    {
+        .fname = "r_p_xray.sng",
+        .name  = "X-Ray",
+    },
+    {
+        .fname = "r_warp.sng",
+        .name  = "Warp",
+    },
+};
+
+const jukeboxSong_t sounds_unused[] = {
+    {
+        .fname = "Pong Block 1",
+        .name  = "block1.sng",
+    },
+    {
+        .fname = "Pong Block 2",
+        .name  = "block2.sng",
+    },
+};
+
+const jukeboxSong_t sounds_mainMenu[] = {
+    {
+        .fname = "item.sng",
+        .name  = "Item",
+    },
+    {
+        .fname = "jingle.sng",
+        .name  = "Jingle",
+    },
+};
+
+const jukeboxSong_t sounds_tunernome[] = {
+    {
+        .fname = "item.sng",
+        .name  = "Item",
+    },
+    {
+        .fname = "jingle.sng",
+        .name  = "Jingle",
+    },
+};
+
+const jukeboxSong_t sounds_FactoryTest[] = {
+    {
+        .fname = "stereo_test.sng",
+        .name  = "Stereo Check",
+    },
+};
+
+const jukeboxCategory_t sfxCategories[] = {
+    {
+        .catName  = breakoutName,
+        .songs = sounds_galacticBrickdown
+    },
+    {
+        .catName  = platformerName,
+        .songs = sounds_swadgeland
+    },
+    {
+        .catName  = rayName,
+        .songs = sounds_magtroid
+    },
+    {
+        .catName  = tunernomeMode,
+        .songs = sounds_tunernome
+    },
+    {
+        .catName  = "Factory Test",
+        .songs = sounds_FactoryTest
+    },
+    {
+        .catName  = mainMenuName,
+        .songs = sounds_mainMenu
+    },
+    {
+        .catName = "(Unused)",
+        .songs = sounds_unused,
     }
 };
 
