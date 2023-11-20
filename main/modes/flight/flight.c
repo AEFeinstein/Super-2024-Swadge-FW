@@ -193,6 +193,7 @@ typedef struct
     int16_t speed;
     int16_t pitchmoment;
     int16_t yawmoment;
+    int16_t rollmoment;
     int8_t lastSpeed[3];
     bool perfMotion;
     bool oob;
@@ -264,7 +265,9 @@ typedef struct
     int inittedIMU;
 
     float fqQuatLast[4];
-    int32_t accumx, accumy;
+    float fqQuatAccum[4];
+    float fqQuatAccelAccum[4];
+    int32_t accumx, accumy, accumz;
 } flight_t;
 
 /*============================================================================
@@ -322,6 +325,10 @@ static const char fl_flight_invertY1_env[] = "Y Invert: On";
 
 static const char fl_flight_gyro0_env[] = "Gyro: Off";
 static const char fl_flight_gyro1_env[] = "Gyro: On";
+static const char fl_flight_gyro2_env[] = "Gyro: Full";
+static const char fl_flight_gyro3_env[] = "Gyro: Joy";
+static const char* gyro_titles[4]
+    = {fl_flight_gyro0_env, fl_flight_gyro1_env, fl_flight_gyro2_env, fl_flight_gyro3_env};
 
 static const char fl_flight_perf[]  = "Free / VS";
 static const char fl_100_percent[]  = "100% 100% 100%";
@@ -387,7 +394,7 @@ static void flightBackground(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
 
     fillDisplayArea(x, y, x + w, h + y, flight->bgcolor);
 
-    if (flight->savedata.flightEnableIMU)
+    if (flight->savedata.flightIMU)
         if (up == 0 || up == upNum - 2)
             accelIntegrate();
 }
@@ -438,8 +445,7 @@ static void flightEnterMode(void)
     addSingleItemToMenu(flight->menu, fl_flight_perf);
     flight->menuEntryForInvertY = addSingleItemToMenu(
         flight->menu, flight->savedata.flightInvertY ? fl_flight_invertY1_env : fl_flight_invertY0_env);
-    flight->menuEntryForEnableIMU = addSingleItemToMenu(
-        flight->menu, flight->savedata.flightEnableIMU ? fl_flight_gyro1_env : fl_flight_gyro0_env);
+    flight->menuEntryForEnableIMU = addSingleItemToMenu(flight->menu, gyro_titles[flight->savedata.flightIMU]);
 
     addSingleItemToMenu(flight->menu, str_high_scores);
     addSingleItemToMenu(flight->menu, str_quit);
@@ -505,16 +511,26 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
     }
     else if (fl_flight_gyro0_env == menuItem)
     {
-        flight->savedata.flightEnableIMU     = 1;
+        flight->savedata.flightIMU           = 1;
         flight->menuEntryForEnableIMU->label = fl_flight_gyro1_env;
-
         setFlightSaveData(&flight->savedata);
     }
     else if (fl_flight_gyro1_env == menuItem)
     {
-        flight->savedata.flightEnableIMU     = 0;
+        flight->savedata.flightIMU           = 2;
+        flight->menuEntryForEnableIMU->label = fl_flight_gyro2_env;
+        setFlightSaveData(&flight->savedata);
+    }
+    else if (fl_flight_gyro2_env == menuItem)
+    {
+        flight->savedata.flightIMU           = 3;
+        flight->menuEntryForEnableIMU->label = fl_flight_gyro3_env;
+        setFlightSaveData(&flight->savedata);
+    }
+    else if (fl_flight_gyro3_env == menuItem)
+    {
+        flight->savedata.flightIMU           = 0;
         flight->menuEntryForEnableIMU->label = fl_flight_gyro0_env;
-
         setFlightSaveData(&flight->savedata);
     }
     else if (str_high_scores == menuItem)
@@ -667,7 +683,21 @@ static void flightStartGame(flightModeScreen mode)
     flight->speed             = 0;
 
     accelSetRegistersAndReset();
-    flight->inittedIMU = 0;
+    flight->inittedIMU     = 0;
+    flight->fqQuatAccum[0] = 0;
+    flight->fqQuatAccum[1] = 0;
+    flight->fqQuatAccum[2] = 1; // Default should be pointing into the game.
+    flight->fqQuatAccum[3] = 0;
+
+    flight->fqQuatAccelAccum[0] = 1;
+    flight->fqQuatAccelAccum[1] = 0;
+    flight->fqQuatAccelAccum[2] = 0;
+    flight->fqQuatAccelAccum[3] = 0;
+
+    flight->fqQuatLast[0] = 1;
+    flight->fqQuatLast[1] = 0;
+    flight->fqQuatLast[2] = 0;
+    flight->fqQuatLast[3] = 0;
 
     // Starting location/orientation
     if (mode == FLIGHT_FREEFLIGHT)
@@ -704,6 +734,7 @@ static void flightStartGame(flightModeScreen mode)
 
     flight->pitchmoment = 0;
     flight->yawmoment   = 0;
+    flight->rollmoment  = 0;
 
     memset(flight->beangotmask, 0, sizeof(flight->beangotmask));
 
@@ -1267,7 +1298,30 @@ static void flightRender(int64_t elapsedUs)
 
     uint32_t now = esp_timer_get_time();
 
-    tdRotateEA(flight->ProjectionMatrix, tflight->hpr[1] / 11, tflight->hpr[0] / 11, 0);
+    if (flight->savedata.flightIMU == 2 || flight->savedata.flightIMU == 3)
+    {
+        // Quat to rotmat.
+        int16_t rotmat[16] = {0};
+        float q0           = tflight->fqQuatAccum[0];
+        float q1           = -tflight->fqQuatAccum[1];
+        float q2           = -tflight->fqQuatAccum[2];
+        float q3           = -tflight->fqQuatAccum[3];
+        rotmat[0 * 4 + 0]  = (2 * (q0 * q0 + q1 * q1) - 1) * 256;
+        rotmat[0 * 4 + 1]  = (2 * (q1 * q2 - q0 * q3)) * 256;
+        rotmat[0 * 4 + 2]  = (2 * (q1 * q3 + q0 * q2)) * 256;
+        rotmat[1 * 4 + 0]  = (2 * (q1 * q2 + q0 * q3)) * 256;
+        rotmat[1 * 4 + 1]  = (2 * (q0 * q0 + q2 * q2) - 1) * 256;
+        rotmat[1 * 4 + 2]  = (2 * (q2 * q3 - q0 * q1)) * 256;
+        rotmat[2 * 4 + 0]  = (2 * (q1 * q3 - q0 * q2)) * 256;
+        rotmat[2 * 4 + 1]  = (2 * (q2 * q3 + q0 * q1)) * 256;
+        rotmat[2 * 4 + 2]  = (2 * (q0 * q0 + q3 * q3) - 1) * 256;
+        rotmat[3 * 4 + 3]  = 1 * 256;
+        tdMultiply(flight->ProjectionMatrix, rotmat, flight->ProjectionMatrix);
+    }
+    else
+    {
+        tdRotateEA(flight->ProjectionMatrix, tflight->hpr[1] / 11, tflight->hpr[0] / 11, 0);
+    }
     tdTranslate(flight->ModelviewMatrix, -tflight->planeloc[0], -tflight->planeloc[1], -tflight->planeloc[2]);
 
     modelRangePair_t* mrp   = tflight->mrp;
@@ -1630,9 +1684,41 @@ static void flightGameUpdate(flight_t* tflight)
 
     if ((tflight->mode == FLIGHT_GAME || tflight->mode == FLIGHT_FREEFLIGHT) && !dead)
     {
-        if (flight->savedata.flightEnableIMU)
+        if (flight->savedata.flightIMU == 3)
         {
-            float mathsqrtf(float x);
+            float qThisQuat[4]      = {LSM6DSL.fqQuat[0], -LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], -LSM6DSL.fqQuat[3]};
+            float qRotIntoScreen[4] = {1, 0, 0, 0};
+            float* acc              = flight->fqQuatAccelAccum;
+            mathQuatApply(acc, qThisQuat, qRotIntoScreen);
+
+            mathComputeQuaternionDeltaBetweenQuaternions(acc, tflight->fqQuatLast, acc);
+
+            if (tflight->inittedIMU < 2)
+            {
+                tflight->inittedIMU++;
+                memcpy(tflight->fqQuatLast, acc, sizeof(tflight->fqQuatLast));
+            }
+
+            // Reduce impact of joystick.
+            acc[1] *= delta * 0.000001f * 4.0f;
+            acc[2] *= delta * 0.000001f * 4.0f;
+            acc[3] *= delta * 0.000001f * 4.0f;
+            acc[0] = mathsqrtf(1.0 - acc[1] * acc[1] + acc[2] * acc[2] + acc[3] * acc[3]);
+            // ESP_LOGI( "_", "%d %5d %5d %5d %5d / %5d %5d %5d %5d", tflight->inittedIMU,((int)(acc[0]*1024)),
+            // ((int)(acc[1]*1024)), ((int)(acc[2]*1024)), ((int)(acc[3]*1024)),
+            //     ((int)(flight->fqQuatLast[0]*1024)),((int)(flight->fqQuatLast[1]*1024)),((int)(flight->fqQuatLast[2]*1024)),((int)(flight->fqQuatLast[3]*1024))
+            //     );
+            mathQuatApply(flight->fqQuatAccum, flight->fqQuatAccum, acc);
+            mathQuatNormalize(flight->fqQuatAccum, flight->fqQuatAccum);
+        }
+        else if (flight->savedata.flightIMU == 2)
+        {
+            float qThisQuat[4]      = {LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3]};
+            float qRotIntoScreen[4] = {0, 0, 1, 0};
+            mathQuatApply(flight->fqQuatAccum, qThisQuat, qRotIntoScreen);
+        }
+        else if (flight->savedata.flightIMU == 1)
+        {
             float* quat = LSM6DSL.fqQuat;
             float qDiff[4];
             mathComputeQuaternionDeltaBetweenQuaternions(qDiff, quat, tflight->fqQuatLast);
@@ -1641,23 +1727,25 @@ static void flightGameUpdate(flight_t* tflight)
             // 1:1)
             int deltax = -qDiff[2] * 3072;
             int deltay = qDiff[1] * 3072;
+            int deltaz = -qDiff[3] * 3072;
 
-
-            // ESP_LOGI( "_", "%5d %5d %d", (int)(deltax), (int)(deltay), tflight->inittedIMU );
+            // ESP_LOGI( "_", "%5d %5d %5d %d", (int)(deltax), (int)(deltay), (int)(deltaz),
+            // (int)flight->savedata.flightIMU );
 
             // Hold off for two frames.  Need fqQuatLast to work.
             if (tflight->inittedIMU < 2)
             {
                 tflight->inittedIMU++;
-                deltax = 0;
-                deltay = 0;
+                deltax          = 0;
+                deltay          = 0;
                 tflight->accumx = 0;
                 tflight->accumy = 0;
+                tflight->accumz = 0;
             }
 
             int setx = tflight->accumx += deltax;
             int sety = tflight->accumy += deltay;
-
+            int setz = tflight->accumz += deltaz;
 
             // Add a tiiiny dead zone.
             if (setx > 0)
@@ -1685,6 +1773,19 @@ static void flightGameUpdate(flight_t* tflight)
                     sety = 0;
             }
 
+            if (setz > 0)
+            {
+                setz -= 20;
+                if (setz < 0)
+                    setz = 0;
+            }
+            if (setz < 0)
+            {
+                setz += 20;
+                if (setz > 0)
+                    setz = 0;
+            }
+
             if (tflight->savedata.flightInvertY)
                 sety *= -1;
 
@@ -1694,6 +1795,7 @@ static void flightGameUpdate(flight_t* tflight)
 
             tflight->pitchmoment = (((int)(setx) * (int)delta) >> 18); // 18 = de-sensitivity
             tflight->yawmoment   = (((int)sety * (int)delta) >> 18);
+            tflight->rollmoment  = (((int)setz * (int)delta) >> 18);
         }
         else
         {
@@ -1761,11 +1863,20 @@ static void flightGameUpdate(flight_t* tflight)
         if (tflight->hpr[1] < 0)
             tflight->hpr[1] += 3960;
 
+        if (flight->savedata.flightIMU == 2 || flight->savedata.flightIMU == 3)
+        {
+            tflight->hpr[2] += tflight->rollmoment;
+            if (tflight->hpr[2] >= 3960)
+                tflight->hpr[2] -= 3960;
+            if (tflight->hpr[2] < 0)
+                tflight->hpr[2] += 3960;
+        }
+
         // Optional: Prevent us from doing a flip.
         // if( tflight->hpr[1] > 1040 && tflight->hpr[1] < 1980 ) tflight->hpr[1] = 1040;
         // if( tflight->hpr[1] < 2990 && tflight->hpr[1] > 1980 ) tflight->hpr[1] = 2990;
 
-        if (flight->savedata.flightEnableIMU)
+        if (flight->savedata.flightIMU)
         {
             if ((bs & 1) || (bs & 16))
                 tflight->speed += 2;
@@ -1810,16 +1921,27 @@ static void flightGameUpdate(flight_t* tflight)
     int rspeed = (tflight->speed);
 
     int32_t speedPU[3];
-    speedPU[0] = (((rspeed * getSin1024(tflight->hpr[0] / 11) * yawDivisor)) >> 10) >> 7; // >>7 is "to taste"
-    speedPU[2] = (((rspeed * getCos1024(tflight->hpr[0] / 11) * yawDivisor)) >> 10) >> 7;
-    speedPU[1] = (rspeed * -getSin1024(tflight->hpr[1] / 11)) >> 7;
+    if (flight->savedata.flightIMU == 2 || flight->savedata.flightIMU == 3)
+    {
+        float vecIntoScreen[3] = {0, 0, 1};
+        mathRotateVectorByQuaternion(vecIntoScreen, flight->fqQuatAccum, vecIntoScreen);
+        speedPU[0] = ((int)(rspeed * vecIntoScreen[0] * 1024)) >> 7;
+        speedPU[1] = ((int)(rspeed * vecIntoScreen[1] * 1024)) >> 7;
+        speedPU[2] = ((int)(rspeed * vecIntoScreen[2] * 1024)) >> 7;
+    }
+    else
+    {
+        speedPU[0] = (((rspeed * getSin1024(tflight->hpr[0] / 11) * yawDivisor)) >> 10) >> 7; // >>7 is "to taste"
+        speedPU[2] = (((rspeed * getCos1024(tflight->hpr[0] / 11) * yawDivisor)) >> 10) >> 7;
+        speedPU[1] = (rspeed * -getSin1024(tflight->hpr[1] / 11)) >> 7;
+    }
 
     flight->planeloc_fine[0] += ((int32_t)delta * speedPU[0]) >> 8; // Also, to taste.
     flight->planeloc_fine[1] += ((int32_t)delta * speedPU[1]) >> 8;
     flight->planeloc_fine[2] += ((int32_t)delta * speedPU[2]) >> 8;
 
-    flight->lastSpeed[0]
-        = speedPU[0] >> 4; // This is crucial.  It's the difference between the divisor above and FLIGHT_SPEED_DEC!
+    // This is crucial.  It's the difference between the divisor above and FLIGHT_SPEED_DEC!
+    flight->lastSpeed[0] = speedPU[0] >> 4;
     flight->lastSpeed[1] = speedPU[1] >> 4;
     flight->lastSpeed[2] = speedPU[2] >> 4;
 
