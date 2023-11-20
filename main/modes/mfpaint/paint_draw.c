@@ -2,10 +2,12 @@
 
 #include <string.h>
 #include "esp_heap_caps.h"
+#include "esp_random.h"
 
 #include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
+#include "spiffs_wsg.h"
 
 #include "paint_ui.h"
 #include "paint_brush.h"
@@ -14,29 +16,74 @@
 #include "mode_paint.h"
 #include "paint_song.h"
 #include "paint_help.h"
+#include "paint_browser.h"
 
 #include "wheel_menu.h"
 
 #include "macros.h"
 
+#define PAINT_WSG(fn, var)                                                      \
+    do                                                                          \
+    {                                                                           \
+        if (!loadWsg(fn, var, false))                                           \
+        {                                                                       \
+            PAINT_DIE("%sLoading %s icon failed!!!", dialogErrorDetailStr, fn); \
+            return;                                                             \
+        }                                                                       \
+    } while (0)
+
+static void paintGetUnusedFilename(char* out);
+
 static void paintToolWheelCb(const char* label, bool selected, uint32_t settingVal);
 static void paintSetupColorWheel(void);
+static void paintDialogCb(const char* label);
+static void paintSetupBrowser(bool save);
+static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action);
+
+static void doSave(const char* key);
+static void doLoad(const char* key);
+static void doDelete(const char* key);
 
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
 
+static const char paintFilenamePrefix[] = "untitled_";
+static const char paintFilenameSuffix[] = ".mfp";
+
 static const char toolWheelTitleStr[]   = "Tool Wheel";
-static const char toolWheelBrushStr[]   = "Brush";
-static const char toolWheelColorStr[]   = "Color";
+static const char toolWheelBrushStr[]   = "Select Brush";
+static const char toolWheelColorStr[]   = "Select Color";
 static const char toolWheelSizeStr[]    = "Brush Size";
 static const char toolWheelOptionsStr[] = "More";
 static const char toolWheelUndoStr[]    = "Undo";
 static const char toolWheelRedoStr[]    = "Redo";
 
-static const char toolWheelSaveStr[] = "Save";
-static const char toolWheelLoadStr[] = "Load";
-static const char toolWheelNewStr[]  = "New";
-static const char toolWheelExitStr[] = "Stop Drawing";
+static const char toolWheelSaveStr[]    = "Save";
+static const char toolWheelLoadStr[]    = "Load";
+static const char toolWheelNewStr[]     = "New";
+static const char toolWheelPaletteStr[] = "Edit Colors";
+static const char toolWheelExitStr[]    = "Quit Drawing";
+
+static const char dialogUnsavedTitleStr[]    = "Unsaved Changes!";
+static const char dialogOverwriteTitleStr[]  = "Overwrite Existing?";
+static const char dialogDeleteTitleStr[]     = "Really Delete?";
+static const char dialogOutOfSpaceTitleStr[] = "Save Failed!";
+static const char dialogLoadErrorTitleStr[]  = "Load Failed!";
+const char* dialogErrorTitleStr              = "Error!";
+
+static const char dialogUnsavedDetailStr[]   = "There are unsaved changes to '%s'! Continue without saving?";
+static const char dialogOverwriteDetailStr[] = "The file '%s' already exists! Overwrite it with the current drawing?";
+static const char dialogDeleteDetailStr[]    = "Are you sure you want to delete '%s'?";
+static const char dialogOutOfSpaceDetailStr[]
+    = "Out of storage space! Delete something and try again, or overwrite an existing file.";
+static const char dialogLoadErrorDetailStr[] = "Error loading '%s'! This shouldn't have happened, sorry.";
+static const char dialogErrorDetailStr[]     = "Fatal Error! ";
+
+static const char dialogOptionCancelStr[] = "Cancel";
+static const char dialogOptionSaveStr[]   = "Save";
+static const char dialogOptionSaveAsStr[] = "Save as...";
+static const char dialogOptionExitStr[]   = "Quit";
+static const char dialogOptionOkStr[]     = "OK";
 
 static paletteColor_t defaultPalette[] = {
     c000, // black
@@ -66,83 +113,106 @@ brush_t brushes[] = {
      .minSize   = 1,
      .maxSize   = 16,
      .fnDraw    = paintDrawSquarePen,
+     .fnPartial = paintDrawSquarePen,
      .iconName  = "square_pen"},
+
     {.name      = "Circle Pen",
      .mode      = HOLD_DRAW,
      .maxPoints = 1,
      .minSize   = 1,
      .maxSize   = 16,
      .fnDraw    = paintDrawCirclePen,
+     .fnPartial = paintDrawCirclePen,
      .iconName  = "circle_pen"},
+
     {.name      = "Line",
      .mode      = PICK_POINT,
      .maxPoints = 2,
      .minSize   = 1,
      .maxSize   = 8,
      .fnDraw    = paintDrawLine,
+     .fnPartial = paintDrawLine,
      .iconName  = "line"},
+
     {.name      = "Bezier Curve",
      .mode      = PICK_POINT,
      .maxPoints = 4,
      .minSize   = 1,
      .maxSize   = 8,
      .fnDraw    = paintDrawCurve,
+     .fnPartial = paintDrawCurvePartial,
      .iconName  = "curve"},
+
     {.name      = "Rectangle",
      .mode      = PICK_POINT,
      .maxPoints = 2,
      .minSize   = 1,
      .maxSize   = 8,
      .fnDraw    = paintDrawRectangle,
+     .fnPartial = paintDrawRectangle,
      .iconName  = "rect"},
+
     {.name      = "Filled Rectangle",
      .mode      = PICK_POINT,
      .maxPoints = 2,
      .minSize   = 0,
      .maxSize   = 0,
      .fnDraw    = paintDrawFilledRectangle,
+     .fnPartial = paintDrawFilledRectangle,
      .iconName  = "rect_filled"},
+
     {.name      = "Circle",
      .mode      = PICK_POINT,
      .maxPoints = 2,
      .minSize   = 1,
      .maxSize   = 8,
      .fnDraw    = paintDrawCircle,
+     .fnPartial = paintDrawCircle,
      .iconName  = "circle"},
+
     {.name      = "Filled Circle",
      .mode      = PICK_POINT,
      .maxPoints = 2,
      .minSize   = 0,
      .maxSize   = 0,
      .fnDraw    = paintDrawFilledCircle,
+     .fnPartial = paintDrawFilledCircle,
      .iconName  = "circle_filled"},
+
     {.name      = "Ellipse",
      .mode      = PICK_POINT,
      .maxPoints = 2,
      .minSize   = 1,
      .maxSize   = 8,
      .fnDraw    = paintDrawEllipse,
+     .fnPartial = paintDrawEllipse,
      .iconName  = "ellipse"},
+
     {.name      = "Polygon",
      .mode      = PICK_POINT_LOOP,
      .maxPoints = 16,
      .minSize   = 1,
      .maxSize   = 8,
      .fnDraw    = paintDrawPolygon,
+     .fnPartial = paintDrawPolygon,
      .iconName  = "polygon"},
+
     {.name      = "Squarewave",
      .mode      = PICK_POINT,
      .maxPoints = 2,
      .minSize   = 0,
      .maxSize   = 0,
      .fnDraw    = paintDrawSquareWave,
+     .fnPartial = paintDrawSquareWave,
      .iconName  = "squarewave"},
+
     {.name      = "Paint Bucket",
      .mode      = PICK_POINT,
      .maxPoints = 1,
      .minSize   = 0,
      .maxSize   = 0,
      .fnDraw    = paintDrawPaintBucket,
+     .fnPartial = NULL,
      .iconName  = "paint_bucket"},
 };
 
@@ -151,6 +221,43 @@ const char inactiveIconStr[] = "%s_inactive.wsg";
 
 const brush_t* firstBrush = brushes;
 const brush_t* lastBrush  = brushes + sizeof(brushes) / sizeof(brushes[0]) - 1;
+
+static void paintGetUnusedFilename(char* out)
+{
+    // Create a new default filename
+    for (uint8_t i = 0; i < 100; ++i)
+    {
+        char* ptr = out;
+        strcpy(ptr, paintFilenamePrefix);
+        ptr += strlen(paintFilenamePrefix);
+        *(ptr++) = '0' + (i / 10);
+        *(ptr++) = '0' + (i % 10);
+        strcpy(ptr, paintFilenameSuffix);
+        out[15] = '\0';
+
+        if (!paintSlotExists(out))
+        {
+            PAINT_LOGI("Next unused file as %s", out);
+            break;
+        }
+
+        // Give up and make a totally random one
+        if (i == 99)
+        {
+            for (uint8_t n = 0; n < 16 - strlen(paintFilenameSuffix); n++)
+            {
+                uint8_t rng = esp_random() % 16;
+                out[n]      = (rng > 9) ? ('a' + rng - 10) : '0' + rng;
+            }
+            // Add null terminator
+            out[15] = '\0';
+
+            // Add the suffix
+            strcat(out, paintFilenameSuffix);
+            break;
+        }
+    }
+}
 
 static void paintSetupColorWheel(void)
 {
@@ -166,17 +273,42 @@ static void paintSetupColorWheel(void)
     }
 }
 
+/**
+ * @brief Set to the default palette and clear the given canvas
+ *
+ * @param canvas The canvas to reset
+ */
+static void paintResetCanvas(paintCanvas_t* canvas)
+{
+    memcpy(canvas->palette, defaultPalette, sizeof(defaultPalette));
+    memset(canvas->buffer, 0x11, paintGetStoredSize(canvas));
+    getArtist()->fgColor = paintState->canvas.palette[0];
+    getArtist()->bgColor = paintState->canvas.palette[1];
+}
+
 void paintDrawScreenSetup(void)
 {
     PAINT_LOGD("Allocating %" PRIu32 " bytes for paintState", (uint32_t)sizeof(paintDraw_t));
     paintState = calloc(sizeof(paintDraw_t), 1);
 
     loadFont(PAINT_TOOLBAR_FONT, &(paintState->toolbarFont), false);
-    loadFont(PAINT_SAVE_MENU_FONT, &(paintState->saveMenuFont), false);
     loadFont(PAINT_SMALL_FONT, &(paintState->smallFont), false);
-    paintState->clearScreen = true;
-    paintState->blinkOn     = true;
-    paintState->blinkTimer  = 0;
+    paintState->blinkOn    = true;
+    paintState->blinkTimer = 0;
+
+    // Load icons for the dialog box
+    PAINT_WSG("error.wsg", &paintState->dialogErrorWsg);
+    PAINT_WSG("info.wsg", &paintState->dialogInfoWsg);
+
+    // Initialize with no icon to start, and default to error
+    paintState->dialogBox
+        = initDialogBox(dialogErrorTitleStr, dialogErrorDetailStr, &paintState->dialogErrorWsg, paintDialogCb);
+    paintSetupDialog(DIALOG_ERROR);
+    paintState->fatalError = false;
+    paintState->buttonMode = BTN_MODE_DRAW;
+
+    paintState->browser.callback = paintBrowserCb;
+    paintState->browser.cols     = 4;
 
     // Set up the brush icons
     uint16_t spriteH = 0;
@@ -184,66 +316,26 @@ void paintDrawScreenSetup(void)
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
         snprintf(iconName, sizeof(iconName), activeIconStr, brush->iconName);
-        if (!loadWsg(iconName, &brush->iconActive, false))
-        {
-            PAINT_LOGE("Loading icon %s failed!!!", iconName);
-        }
-
-        snprintf(iconName, sizeof(iconName), inactiveIconStr, brush->iconName);
-        if (!loadWsg(iconName, &brush->iconInactive, false))
-        {
-            PAINT_LOGE("Loading icon %s failed!!!", iconName);
-        }
+        PAINT_WSG(iconName, &brush->iconActive);
 
         // Keep track of the tallest sprite for layout purposes
         if (brush->iconActive.h > spriteH)
         {
             spriteH = brush->iconActive.h;
         }
-
-        if (brush->iconInactive.h > spriteH)
-        {
-            spriteH = brush->iconInactive.h;
-        }
     }
 
-    if (!loadWsg("pointer.wsg", &paintState->picksWsg, false))
-    {
-        PAINT_LOGE("Loading pointer.wsg icon failed!!!");
-    }
+    PAINT_WSG("pointer.wsg", &paintState->picksWsg);
+    PAINT_WSG("brush_size.wsg", &paintState->brushSizeWsg);
 
-    if (!loadWsg("brush_size.wsg", &paintState->brushSizeWsg, false))
-    {
-        PAINT_LOGE("Loading brush_size.wsg icon failed!!!");
-    }
+    PAINT_WSG("arrow9.wsg", &paintState->smallArrowWsg);
+    colorReplaceWsg(&paintState->smallArrowWsg, c555, c000);
 
-    if (!loadWsg("arrow9.wsg", &paintState->smallArrowWsg, false))
-    {
-        PAINT_LOGE("Loading arrow5.wsg icon failed!!!");
-    }
-    else
-    {
-        colorReplaceWsg(&paintState->smallArrowWsg, c555, c000);
-    }
+    PAINT_WSG("arrow12.wsg", &paintState->bigArrowWsg);
+    colorReplaceWsg(&paintState->bigArrowWsg, c555, c000);
 
-    if (!loadWsg("arrow12.wsg", &paintState->bigArrowWsg, false))
-    {
-        PAINT_LOGE("Loading arrow5.wsg icon failed!!!");
-    }
-    else
-    {
-        colorReplaceWsg(&paintState->bigArrowWsg, c555, c000);
-    }
-
-    if (!loadWsg("newfile.wsg", &paintState->newfileWsg, false))
-    {
-        PAINT_LOGE("Loading newfile.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("overwrite.wsg", &paintState->overwriteWsg, false))
-    {
-        PAINT_LOGE("Loading overwrite.wsg icon failed!!!");
-    }
+    PAINT_WSG("newfile.wsg", &paintState->newfileWsg);
+    PAINT_WSG("overwrite.wsg", &paintState->overwriteWsg);
 
     paintState->marginTop = TFT_CORNER_RADIUS * 2 / 3;
 
@@ -265,29 +357,35 @@ void paintDrawScreenSetup(void)
         paintState->marginBottom += paintHelp->helpH;
     }
 
-    paintLoadIndex(&paintState->index);
-
-    if (paintHelp == NULL && paintGetAnySlotInUse(paintState->index)
-        && paintGetRecentSlot(paintState->index) != PAINT_SAVE_SLOTS)
+    if (paintHelp == NULL && paintGetLastSlot(paintState->slotKey) && paintSlotExists(paintState->slotKey))
     {
         // If there's a saved image, load that (but not in the tutorial)
-        paintState->selectedSlot = paintGetRecentSlot(paintState->index);
-        paintState->doLoad       = true;
+        PAINT_LOGI("Opening %s", paintState->slotKey);
+        doLoad(paintState->slotKey);
     }
     else
     {
+        if (paintHelp == NULL)
+        {
+            paintGetUnusedFilename(paintState->slotKey);
+        }
+
         // Set up a blank canvas with the default size
         paintState->canvas.w = PAINT_DEFAULT_CANVAS_WIDTH;
         paintState->canvas.h = PAINT_DEFAULT_CANVAS_HEIGHT;
-
-        // Automatically position the canvas in the center of the drawable area at the max scale that will fit
-        paintPositionDrawCanvas();
 
         // load the default palette
         memcpy(paintState->canvas.palette, defaultPalette, PAINT_MAX_COLORS * sizeof(paletteColor_t));
         getArtist()->fgColor = paintState->canvas.palette[0];
         getArtist()->bgColor = paintState->canvas.palette[1];
+
+        paintState->canvas.buffered = true;
+        paintState->canvas.buffer   = malloc(paintGetStoredSize(&paintState->canvas));
+        memset(paintState->canvas.buffer, 0x11, paintGetStoredSize(&paintState->canvas));
     }
+
+    // Automatically position the canvas in the center of the drawable area at the max scale that will fit
+    paintPositionDrawCanvas();
 
     // This assumes the first brush is a pen brush, which it always will be unless we rearrange the brush array
     paintGenerateCursorSprite(&paintState->cursorWsg, &paintState->canvas, firstBrush->minSize);
@@ -319,8 +417,6 @@ void paintDrawScreenSetup(void)
     bzrPlayBgm(&paintBgm, BZR_LEFT);
 
     // Set up the tool wheel
-    paintState->showToolWheel     = false;
-    paintState->toolWheelWaiting  = false;
     paintState->toolWheel         = initMenu(toolWheelTitleStr, paintToolWheelCb);
     paintState->toolWheelRenderer = initWheelMenu(&paintState->toolbarFont, 90, &paintState->toolWheelLabelBox);
 
@@ -330,49 +426,26 @@ void paintDrawScreenSetup(void)
     paintState->toolWheelLabelBox.height = 20;
 
     // Tool wheel icons
-    if (!loadWsg("wheel_brush.wsg", &paintState->wheelBrushWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_brush.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_color.wsg", &paintState->wheelColorWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_color.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_size.wsg", &paintState->wheelSizeWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_size.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_options.wsg", &paintState->wheelSettingsWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_options.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_undo.wsg", &paintState->wheelUndoWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_undo.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_redo.wsg", &paintState->wheelRedoWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_redo.wsg icon failed!!!");
-    }
-
-    if (!loadWsg("wheel_save.wsg", &paintState->wheelSaveWsg, false))
-    {
-        PAINT_LOGE("Loading wheel_save.wsg icon failed!!!");
-    }
+    PAINT_WSG("wheel_brush.wsg", &paintState->wheelBrushWsg);
+    PAINT_WSG("wheel_color.wsg", &paintState->wheelColorWsg);
+    PAINT_WSG("wheel_size.wsg", &paintState->wheelSizeWsg);
+    PAINT_WSG("wheel_options.wsg", &paintState->wheelSettingsWsg);
+    PAINT_WSG("wheel_undo.wsg", &paintState->wheelUndoWsg);
+    PAINT_WSG("wheel_redo.wsg", &paintState->wheelRedoWsg);
+    PAINT_WSG("wheel_save.wsg", &paintState->wheelSaveWsg);
+    PAINT_WSG("wheel_open.wsg", &paintState->wheelOpenWsg);
+    PAINT_WSG("wheel_new.wsg", &paintState->wheelNewWsg);
+    PAINT_WSG("wheel_exit.wsg", &paintState->wheelExitWsg);
+    PAINT_WSG("wheel_palette.wsg", &paintState->wheelPaletteWsg);
 
     // Top: Sub-menu for Brush
     paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelBrushStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &paintState->wheelBrushWsg, 0, SCROLL_HORIZ);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelBrushStr, &paintState->wheelBrushWsg, 0, NO_SCROLL);
 
     for (const brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
         addSingleItemToMenu(paintState->toolWheel, brush->name);
-        wheelMenuSetItemInfo(paintState->toolWheelRenderer, brush->name, &brush->iconInactive, brush - brushes,
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, brush->name, &brush->iconActive, brush - brushes,
                              NO_SCROLL);
     }
 
@@ -411,20 +484,39 @@ void paintDrawScreenSetup(void)
 
     // Top: Load
     addSingleItemToMenu(paintState->toolWheel, toolWheelLoadStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelLoadStr, &brushes[4].iconInactive, 0, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelLoadStr, &paintState->wheelOpenWsg, 0, NO_SCROLL);
 
     // Left: New
     addSingleItemToMenu(paintState->toolWheel, toolWheelNewStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelNewStr, &paintState->newfileWsg, 1, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelNewStr, &paintState->wheelNewWsg, 1, NO_SCROLL);
 
-    // Bottom: Exit/Quit
+    // Bottom-left: Exit/Quit
     addSingleItemToMenu(paintState->toolWheel, toolWheelExitStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelExitStr, &paintState->overwriteWsg, 2, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelExitStr, &paintState->wheelExitWsg, 2, NO_SCROLL);
+
+    // Bottom-right: Edit palette
+    paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelPaletteStr);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelPaletteStr, &paintState->wheelPaletteWsg, 3,
+                         NO_SCROLL);
+
+    // Save this submenu so we can check if we're there or not
+    paintState->editPaletteWheel = paintState->toolWheel;
+
+    // Add the color menu items again, but this time underneath the edit palette option
+    // The wheel options will apply alreday based on the labels (weird right?)
+    for (uint8_t i = 0; i < PAINT_MAX_COLORS; ++i)
+    {
+        addSingleItemToMenu(paintState->toolWheel, paintState->colorNames[i]);
+    }
+
+    // End edit palette, Back to the Options menu
+    paintState->toolWheel = endSubMenu(paintState->toolWheel);
 
     // Right: Save
     addSingleItemToMenu(paintState->toolWheel, toolWheelSaveStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSaveStr, &paintState->wheelSaveWsg, 3, NO_SCROLL);
+    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSaveStr, &paintState->wheelSaveWsg, 4, NO_SCROLL);
 
+    // Back to the top-level menu
     paintState->toolWheel = endSubMenu(paintState->toolWheel);
 
     // Right: Up/Down for Size
@@ -437,9 +529,6 @@ void paintDrawScreenSetup(void)
     addSettingsItemToMenu(paintState->toolWheel, toolWheelSizeStr, &sizeBounds, sizeBounds.def);
     paintState->toolWheelBrushSizeItem = paintState->toolWheel->items->last->val;
     wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->wheelSizeWsg, 5, SCROLL_VERT);
-
-    // PAINT_LOGI("It's paintin' time! Canvas is %" PRIu16 " x %" PRIu16 " pixels!", paintState->canvas.w,
-    // paintState->canvas.h);
 }
 
 void paintDrawScreenCleanup(void)
@@ -456,11 +545,14 @@ void paintDrawScreenCleanup(void)
     freeWsg(&paintState->wheelUndoWsg);
     freeWsg(&paintState->wheelRedoWsg);
     freeWsg(&paintState->wheelSaveWsg);
+    freeWsg(&paintState->wheelOpenWsg);
+    freeWsg(&paintState->wheelNewWsg);
+    freeWsg(&paintState->wheelExitWsg);
+    freeWsg(&paintState->wheelPaletteWsg);
 
     for (brush_t* brush = brushes; brush <= lastBrush; brush++)
     {
         freeWsg(&brush->iconActive);
-        freeWsg(&brush->iconInactive);
     }
 
     freeWsg(&paintState->brushSizeWsg);
@@ -476,16 +568,29 @@ void paintDrawScreenCleanup(void)
         freePxStack(&paintState->artist[i].pickPoints);
     }
 
-    if (paintState->storedCanvas)
-    {
-        free(paintState->storedCanvas);
-    }
-
     paintFreeCursorSprite(&paintState->cursorWsg);
     paintFreeUndos();
 
+    resetImageBrowser(&paintState->browser);
+
+    if (paintState->canvas.buffered && paintState->canvas.buffer)
+    {
+        free(paintState->canvas.buffer);
+        paintState->canvas.buffer = NULL;
+    }
+
+    deinitDialogBox(paintState->dialogBox);
+    if (paintState->dialogCustomDetail)
+    {
+        free(paintState->dialogCustomDetail);
+        paintState->dialogMessageDetail = NULL;
+        paintState->dialogCustomDetail  = NULL;
+    }
+
+    freeWsg(&paintState->dialogErrorWsg);
+    freeWsg(&paintState->dialogInfoWsg);
+
     freeFont(&paintState->smallFont);
-    freeFont(&paintState->saveMenuFont);
     freeFont(&paintState->toolbarFont);
     free(paintState);
 }
@@ -512,7 +617,6 @@ void paintTutorialOnEvent(void)
 {
     if (paintTutorialCheckTrigger(&paintHelp->curHelp->trigger))
     {
-        paintState->redrawToolbar = true;
         if (paintHelp->curHelp != lastHelp)
         {
             paintHelp->curHelp++;
@@ -524,8 +628,6 @@ void paintTutorialOnEvent(void)
     }
     else if (paintTutorialCheckTrigger(&paintHelp->curHelp->backtrack))
     {
-        paintState->redrawToolbar = true;
-
         // check some bonuds even though it's constant
         if (paintHelp->curHelp - paintHelp->curHelp->backtrackSteps >= helpSteps)
         {
@@ -573,13 +675,13 @@ bool paintTutorialCheckTrigger(const paintHelpTrigger_t* trigger)
             return strcmp(getArtist()->brushDef->name, trigger->dataPtr) && paintHelp->curButtons == 0;
 
         case SELECT_MENU_ITEM:
-            return paintState->saveMenu == trigger->data;
+            // return paintState->saveMenu == trigger->data;
 
         case MENU_ITEM_NOT:
-            return paintState->saveMenu != trigger->data;
+            // return paintState->saveMenu != trigger->data;
 
         case MODE_NOT:
-            return paintState->buttonMode != trigger->data;
+            // return paintState->buttonMode != trigger->data;
 
         case NO_TRIGGER:
         default:
@@ -607,183 +709,128 @@ void paintPositionDrawCanvas(void)
                            + (TFT_HEIGHT - paintState->marginTop - paintState->marginBottom
                               - paintState->canvas.h * paintState->canvas.yScale)
                                  / 2;
+
+    PAINT_LOGI("Scaled image to %" PRIu8 " (dimensions are %" PRIu16 " x %" PRIu16 ")", scale, paintState->canvas.w,
+               paintState->canvas.h);
 }
 
 void paintDrawScreenMainLoop(int64_t elapsedUs)
 {
+    if (paintState->fatalError)
+    {
+        clearPxTft();
+        drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, DIALOG_CENTER,
+                      DIALOG_CENTER, DIALOG_AUTO, DIALOG_AUTO, 6);
+        return;
+    }
+
+    // Check touchpad events, if we're not showing a dialog or in the file browser
     paintDrawScreenPollTouch();
 
-    // Screen Reset
-    if (paintState->clearScreen)
+    // We may exit on a touch event
+    if (paintState->exiting)
     {
-        hideCursor(getCursor(), &paintState->canvas);
-        memcpy(paintState->canvas.palette, defaultPalette, PAINT_MAX_COLORS * sizeof(paletteColor_t));
-        getArtist()->fgColor = paintState->canvas.palette[0];
-        getArtist()->bgColor = paintState->canvas.palette[1];
-        paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
-        paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
-        paintUpdateLeds();
-        showCursor(getCursor(), &paintState->canvas);
-        paintState->unsaved     = false;
-        paintState->clearScreen = false;
-    }
-
-    // Save and Load
-    if (paintState->doSave || paintState->doLoad)
-    {
-        paintState->saveInProgress = true;
-
-        if (paintState->doSave)
-        {
-            hideCursor(getCursor(), &paintState->canvas);
-            paintHidePickPoints();
-            paintSave(&paintState->index, &paintState->canvas, paintState->selectedSlot);
-            paintDrawPickPoints();
-            showCursor(getCursor(), &paintState->canvas);
-        }
-        else
-        {
-            if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
-            {
-                // Load from the selected slot if it's been used
-                hideCursor(getCursor(), &paintState->canvas);
-                paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
-                if (paintLoadDimensions(&paintState->canvas, paintState->selectedSlot))
-                {
-                    paintPositionDrawCanvas();
-                    paintLoad(&paintState->index, &paintState->canvas, paintState->selectedSlot);
-                    paintSetRecentSlot(&paintState->index, paintState->selectedSlot);
-
-                    paintFreeUndos();
-
-                    getArtist()->fgColor = paintState->canvas.palette[0];
-                    getArtist()->bgColor = paintState->canvas.palette[1];
-
-                    // Do the tool setup, which will also setup the cursor
-                    paintSetupTool();
-
-                    // Put the cursor in the middle of the screen
-                    moveCursorAbsolute(getCursor(), &paintState->canvas, paintState->canvas.w / 2,
-                                       paintState->canvas.h / 2);
-                    showCursor(getCursor(), &paintState->canvas);
-                    paintUpdateLeds();
-                }
-                else
-                {
-                    PAINT_LOGE("Slot %" PRIu8 " has 0 dimension! Stopping load and clearing slot",
-                               paintState->selectedSlot);
-                    paintClearSlot(&paintState->index, paintState->selectedSlot);
-                    paintReturnToMainMenu();
-                }
-            }
-            else
-            {
-                // If the slot hasn't been used yet, just clear the screen
-                paintState->clearScreen = true;
-            }
-        }
-
-        paintState->unsaved        = false;
-        paintState->doSave         = false;
-        paintState->doLoad         = false;
-        paintState->saveInProgress = false;
-
-        paintState->buttonMode = BTN_MODE_DRAW;
-        paintState->saveMenu   = HIDDEN;
-
-        paintState->redrawToolbar = true;
-    }
-
-    if (paintState->recolorPickPoints)
-    {
-        paintDrawPickPoints();
-        paintUpdateLeds();
-        paintState->recolorPickPoints = false;
+        paintReturnToMainMenu();
+        return;
     }
 
     // TODO render toolbar always
     // paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
 
-    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
+    // Clean slate every frame!
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, PAINT_TOOLBAR_BG);
+
+    switch (paintState->buttonMode)
     {
-        paintEnterSelectMode();
-
-        paintClearCanvas(&paintState->canvas, PAINT_TOOLBAR_BG);
-        paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
-        drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
-    }
-    else
-    {
-        paintExitSelectMode();
-        paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
-        // Don't remember why we only do this when redrawToolbar is true
-        // Oh, it's because `paintState->redrawToolbar` is mostly only set in select mode unless you press B?
-        if (paintState->aHeld || paintState->aPress)
+        case BTN_MODE_DRAW:
         {
-            paintDoTool(getCursor()->x, getCursor()->y, getArtist()->fgColor);
+            paintBlitCanvas(&paintState->canvas);
 
-            if (getArtist()->brushDef->mode != HOLD_DRAW)
+            if (paintState->aHeld || paintState->aPress)
             {
-                paintState->aHeld = false;
+                // Draw the tool
+                paintDoTool(getCursor()->x, getCursor()->y, getArtist()->fgColor, false);
+                // Immediately save the canvas back to the buffer
+                paintSyncCanvas(&paintState->canvas);
+
+                if (getArtist()->brushDef->mode != HOLD_DRAW)
+                {
+                    paintState->aHeld = false;
+                }
+
+                paintState->aPress = false;
             }
 
-            paintState->aPress = false;
+            // This should definitely be better
+            // Just move the cursor once at first, then more later
+            if (paintState->moveX || paintState->moveY || paintState->unhandledButtons)
+            {
+                bool clearMovement = false;
+
+                if (!paintState->moveX && !paintState->moveY)
+                {
+                    paintHandleDpad(paintState->unhandledButtons);
+                    clearMovement = true;
+                }
+
+                paintState->btnHoldTime += elapsedUs;
+                if (paintState->firstMove || paintState->btnHoldTime >= BUTTON_REPEAT_TIME)
+                {
+                    moveCursorRelative(getCursor(), &paintState->canvas, paintState->moveX, paintState->moveY);
+
+                    paintState->firstMove = false;
+                }
+
+                paintState->unhandledButtons = 0;
+                if (clearMovement)
+                {
+                    paintState->moveX = 0;
+                    paintState->moveY = 0;
+                }
+            }
+
+            if (pxStackSize(&getArtist()->pickPoints) > 0 || getArtist()->brushDef->mode == HOLD_DRAW)
+            {
+                paintDoTool(getCursor()->x, getCursor()->y, getArtist()->fgColor, true);
+            }
+
+            paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
+            drawCursor(getCursor(), &paintState->canvas);
+            break;
         }
 
-        if (paintState->moveX || paintState->moveY || paintState->unhandledButtons)
+        case BTN_MODE_WHEEL:
         {
-            bool clearMovement = false;
-
-            if (!paintState->moveX && !paintState->moveY)
-            {
-                paintHandleDpad(paintState->unhandledButtons);
-                clearMovement = true;
-            }
-
-            paintState->btnHoldTime += elapsedUs;
-            if (paintState->firstMove || paintState->btnHoldTime >= BUTTON_REPEAT_TIME)
-            {
-                moveCursorRelative(getCursor(), &paintState->canvas, paintState->moveX, paintState->moveY);
-                paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
-
-                paintState->firstMove = false;
-            }
-
-            paintState->unhandledButtons = 0;
-            if (clearMovement)
-            {
-                paintState->moveX = 0;
-                paintState->moveY = 0;
-            }
+            paintResetButtons();
+            paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
+            drawWheelMenu(paintState->toolWheel, paintState->toolWheelRenderer, elapsedUs);
+            break;
         }
 
-        if (paintState->index & PAINT_ENABLE_BLINK)
+        case BTN_MODE_PALETTE:
         {
-            if (paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_ON)
-            {
-                paintState->blinkTimer %= BLINK_TIME_ON;
-                paintState->blinkOn = false;
-                paintHidePickPoints();
-            }
-            else if (!paintState->blinkOn && paintState->blinkTimer >= BLINK_TIME_OFF)
-            {
-                paintState->blinkTimer %= BLINK_TIME_OFF;
-                paintState->blinkOn = true;
-                paintDrawPickPoints();
-            }
-            else if (paintState->blinkOn)
-            {
-                paintDrawPickPoints();
-            }
-
-            paintState->blinkTimer += elapsedUs;
-        }
-        else
-        {
-            paintDrawPickPoints();
+            paintResetButtons();
+            paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
+            paintRenderColorPicker(getArtist(), &paintState->canvas, paintState);
+            paintBlitCanvas(&paintState->canvas);
+            paintEditPaletteUpdateCanvas();
+            break;
         }
 
-        drawCursor(getCursor(), &paintState->canvas);
+        case BTN_MODE_BROWSER:
+        {
+            paintResetButtons();
+            drawImageBrowser(&paintState->browser);
+            break;
+        }
+
+        case BTN_MODE_DIALOG:
+        {
+            paintResetButtons();
+            drawDialogBox(paintState->dialogBox, &paintState->toolbarFont, &paintState->toolbarFont, DIALOG_CENTER,
+                          DIALOG_CENTER, DIALOG_AUTO, DIALOG_AUTO, 6);
+            break;
+        }
     }
 
     if (paintHelp != NULL)
@@ -800,221 +847,13 @@ void paintDrawScreenMainLoop(int64_t elapsedUs)
             PAINT_LOGW("Some tutorial text didn't fit: %s", rest);
         }
     }
-}
 
-void paintSaveModePrevItem(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case HIDDEN:
-            break;
-
-        case UNDO:
-            paintState->saveMenu = EXIT;
-            break;
-
-        case REDO:
-            paintState->saveMenu = UNDO;
-            break;
-
-        case PICK_SLOT_SAVE:
-        case CONFIRM_OVERWRITE:
-            paintState->saveMenu = REDO;
-            break;
-
-        case PICK_SLOT_LOAD:
-        case CONFIRM_UNSAVED:
-            paintState->saveMenu = PICK_SLOT_SAVE;
-            break;
-
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-            paintState->saveMenu = PICK_SLOT_LOAD;
-            break;
-
-        case CLEAR:
-        case CONFIRM_CLEAR:
-            paintState->saveMenu = EDIT_PALETTE;
-            break;
-
-        case EXIT:
-        case CONFIRM_EXIT:
-            paintState->saveMenu = CLEAR;
-            break;
-    }
-
-    paintState->saveMenuBoolOption = false;
-
-    // Check to make sure we can actually redo
-    if (paintState->saveMenu == REDO && !paintCanRedo())
-    {
-        // Nothing to redo, go to next
-        paintState->saveMenu = UNDO;
-    }
-
-    // Check to make sure we can actually undo
-    if (paintState->saveMenu == UNDO && !paintCanUndo())
-    {
-        paintState->saveMenu = EXIT;
-    }
-
-    // If we're selecting "Load", then make sure we can actually load a slot
-    if (paintState->saveMenu == PICK_SLOT_LOAD)
-    {
-        // If no slots are in use, skip again
-        if (!paintGetAnySlotInUse(paintState->index))
-        {
-            paintState->saveMenu = PICK_SLOT_SAVE;
-        }
-        else if (!paintGetSlotInUse(paintState->index, paintState->selectedSlot))
-        {
-            // Otherwise, make sure the selected slot is in use
-            paintState->selectedSlot = paintGetNextSlotInUse(paintState->index, paintState->selectedSlot);
-        }
-    }
-}
-
-void paintSaveModeNextItem(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case HIDDEN:
-            break;
-
-        case UNDO:
-            paintState->saveMenu = REDO;
-            break;
-
-        case REDO:
-            paintState->saveMenu = PICK_SLOT_SAVE;
-            break;
-
-        case PICK_SLOT_SAVE:
-        case CONFIRM_OVERWRITE:
-            paintState->saveMenu = PICK_SLOT_LOAD;
-            break;
-
-        case PICK_SLOT_LOAD:
-        case CONFIRM_UNSAVED:
-            paintState->saveMenu = EDIT_PALETTE;
-            break;
-
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-            paintState->saveMenu = CLEAR;
-            break;
-
-        case CLEAR:
-        case CONFIRM_CLEAR:
-            paintState->saveMenu = EXIT;
-            break;
-
-        case EXIT:
-        case CONFIRM_EXIT:
-            paintState->saveMenu = UNDO;
-            break;
-    }
-
-    paintState->saveMenuBoolOption = false;
-
-    // Check to make sure we can actually undo
-    if (paintState->saveMenu == UNDO && !paintCanUndo())
-    {
-        paintState->saveMenu = REDO;
-    }
-
-    // Check to make sure we can actually redo
-    if (paintState->saveMenu == REDO && !paintCanRedo())
-    {
-        // Nothing to redo, go to next
-        paintState->saveMenu = PICK_SLOT_SAVE;
-    }
-
-    // If we're selecting "Load", then make sure we can actually load a slot
-    if (paintState->saveMenu == PICK_SLOT_LOAD)
-    {
-        // If no slots are in use, skip again
-        if (!paintGetAnySlotInUse(paintState->index))
-        {
-            paintState->saveMenu = EDIT_PALETTE;
-        }
-        else if (!paintGetSlotInUse(paintState->index, paintState->selectedSlot))
-        {
-            // Otherwise, make sure the selected slot is in use
-            paintState->selectedSlot = paintGetNextSlotInUse(paintState->index, paintState->selectedSlot);
-        }
-    }
-}
-
-void paintSaveModePrevOption(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case PICK_SLOT_SAVE:
-            paintState->selectedSlot = PREV_WRAP(paintState->selectedSlot, PAINT_SAVE_SLOTS);
-            break;
-
-        case PICK_SLOT_LOAD:
-            paintState->selectedSlot = paintGetPrevSlotInUse(paintState->index, paintState->selectedSlot);
-            break;
-
-        case CONFIRM_OVERWRITE:
-        case CONFIRM_UNSAVED:
-        case CONFIRM_CLEAR:
-        case CONFIRM_EXIT:
-            // Just flip the state
-            paintState->saveMenuBoolOption = !paintState->saveMenuBoolOption;
-            break;
-
-        case HIDDEN:
-        case UNDO:
-        case REDO:
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-        case CLEAR:
-        case EXIT:
-            // Do nothing, there are no options here
-            break;
-    }
-}
-
-void paintSaveModeNextOption(void)
-{
-    switch (paintState->saveMenu)
-    {
-        case PICK_SLOT_SAVE:
-            paintState->selectedSlot = NEXT_WRAP(paintState->selectedSlot, PAINT_SAVE_SLOTS);
-            break;
-
-        case PICK_SLOT_LOAD:
-            paintState->selectedSlot = paintGetNextSlotInUse(paintState->index, paintState->selectedSlot);
-            break;
-
-        case CONFIRM_OVERWRITE:
-        case CONFIRM_UNSAVED:
-        case CONFIRM_CLEAR:
-        case CONFIRM_EXIT:
-            // Just flip the state
-            paintState->saveMenuBoolOption = !paintState->saveMenuBoolOption;
-            break;
-
-        case HIDDEN:
-        case UNDO:
-        case REDO:
-        case EDIT_PALETTE:
-        case COLOR_PICKER:
-        case CLEAR:
-        case EXIT:
-            // Do nothing, there are no options here
-            break;
-    }
+    paintUpdateLeds();
 }
 
 void paintEditPaletteUpdate(void)
 {
     paintState->newColor = (paintState->editPaletteR * 36 + paintState->editPaletteG * 6 + paintState->editPaletteB);
-    paintState->redrawToolbar = true;
-    paintUpdateLeds();
 }
 
 void paintEditPaletteSetChannelValue(uint8_t val)
@@ -1023,11 +862,11 @@ void paintEditPaletteSetChannelValue(uint8_t val)
     paintEditPaletteUpdate();
 }
 
-// void paintEditPaletteDecChannel(void)
-// {
-//     *(paintState->editPaletteCur) = PREV_WRAP(*(paintState->editPaletteCur), 6);
-//     paintEditPaletteUpdate();
-// }
+void paintEditPaletteDecChannel(void)
+{
+    *(paintState->editPaletteCur) = PREV_WRAP(*(paintState->editPaletteCur), 6);
+    paintEditPaletteUpdate();
+}
 
 void paintEditPaletteIncChannel(void)
 {
@@ -1067,32 +906,61 @@ void paintEditPalettePrevChannel(void)
     }
 }
 
-void paintEditPaletteSetupColor(void)
+void paintEditPaletteSetupColor(uint8_t index)
 {
-    paletteColor_t col         = paintState->canvas.palette[paintState->paletteSelect];
+    paletteColor_t col         = paintState->canvas.palette[index];
     paintState->editPaletteCur = &paintState->editPaletteR;
     paintState->editPaletteR   = col / 36;
     paintState->editPaletteG   = (col / 6) % 6;
     paintState->editPaletteB   = col % 6;
     paintState->newColor       = col;
+    paintState->paletteSelect  = index;
+
+    paintState->buttonMode = BTN_MODE_PALETTE;
+
     paintEditPaletteUpdate();
 }
 
 void paintEditPalettePrevColor(void)
 {
     paintState->paletteSelect = PREV_WRAP(paintState->paletteSelect, PAINT_MAX_COLORS);
-    paintEditPaletteSetupColor();
+    paintEditPaletteSetupColor(paintState->paletteSelect);
 }
 
 void paintEditPaletteNextColor(void)
 {
     paintState->paletteSelect = NEXT_WRAP(paintState->paletteSelect, PAINT_MAX_COLORS);
-    paintEditPaletteSetupColor();
+    paintEditPaletteSetupColor(paintState->paletteSelect);
+}
+
+void paintEditPaletteUpdateCanvas(void)
+{
+    // Save the old color, and update the palette with the new color
+    paletteColor_t old = paintState->canvas.palette[paintState->paletteSelect];
+    paletteColor_t new = paintState->newColor;
+
+    // Only replace the color on the canvas if the old color is no longer in the palette
+    int count = 0;
+    for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
+    {
+        if (paintState->canvas.palette[i] == old)
+        {
+            count++;
+        }
+    }
+
+    // This color is no longer in the palette, so replace it with the new one
+    if (count < 2)
+    {
+        // And replace it within the canvas
+        paintColorReplaceScreen(&paintState->canvas, old, new);
+    }
 }
 
 void paintEditPaletteConfirm(void)
 {
-    paintStoreUndo(&paintState->canvas);
+    paintState->buttonMode = BTN_MODE_DRAW;
+    paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
 
     // Save the old color, and update the palette with the new color
     paletteColor_t old                                    = paintState->canvas.palette[paintState->paletteSelect];
@@ -1124,15 +992,9 @@ void paintEditPaletteConfirm(void)
             getArtist()->bgColor = new;
         }
 
-        hideCursor(getCursor(), &paintState->canvas);
-        paintHidePickPoints();
-
         // And replace it within the canvas
         paintColorReplace(&paintState->canvas, old, new);
         paintState->unsaved = true;
-
-        paintDrawPickPoints();
-        showCursor(getCursor(), &paintState->canvas);
     }
 }
 
@@ -1140,7 +1002,6 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
 {
     if (evt->down)
     {
-        paintState->redrawToolbar = true;
         switch (evt->button)
         {
             case PB_A:
@@ -1155,13 +1016,12 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
                 // Revert back to the original color
                 if (paintState->newColor != paintState->canvas.palette[paintState->paletteSelect])
                 {
-                    paintEditPaletteSetupColor();
+                    paintEditPaletteSetupColor(paintState->paletteSelect);
                 }
                 else
                 {
                     paintState->paletteSelect = 0;
                     paintState->buttonMode    = BTN_MODE_DRAW;
-                    paintState->saveMenu      = HIDDEN;
                 }
                 break;
             }
@@ -1174,7 +1034,6 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
 
             case PB_SELECT:
             {
-                // {R/G/B}++
                 // We will normally use the touchpad for this
                 paintEditPaletteIncChannel();
                 break;
@@ -1183,14 +1042,14 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
             case PB_UP:
             {
                 // Prev color
-                paintEditPalettePrevColor();
+                paintEditPaletteIncChannel();
                 break;
             }
 
             case PB_DOWN:
             {
                 // Next color
-                paintEditPaletteNextColor();
+                paintEditPaletteDecChannel();
                 break;
             }
 
@@ -1217,268 +1076,33 @@ void paintPaletteModeButtonCb(const buttonEvt_t* evt)
             // Return to draw mode
             paintState->paletteSelect = 0;
             paintState->buttonMode    = BTN_MODE_DRAW;
-            paintState->saveMenu      = HIDDEN;
-        }
-    }
-}
-
-void paintSaveModeButtonCb(const buttonEvt_t* evt)
-{
-    if (evt->down)
-    {
-        //////// Save menu button down
-        paintState->redrawToolbar = true;
-        switch (evt->button)
-        {
-            case PB_A:
-            {
-                switch (paintState->saveMenu)
-                {
-                    case UNDO:
-                    {
-                        paintUndo(&paintState->canvas);
-                        if (paintState->undoHead != NULL && paintState->undoHead->prev == NULL)
-                        {
-                            paintState->saveMenu = REDO;
-                        }
-                        break;
-                    }
-
-                    case REDO:
-                    {
-                        paintRedo(&paintState->canvas);
-                        if (paintState->undoHead != NULL && paintState->undoHead->next == NULL)
-                        {
-                            paintState->saveMenu = UNDO;
-                        }
-                        break;
-                    }
-
-                    case PICK_SLOT_SAVE:
-                    {
-                        if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_OVERWRITE;
-                        }
-                        else
-                        {
-                            paintState->doSave = true;
-                        }
-                        break;
-                    }
-
-                    case PICK_SLOT_LOAD:
-                    {
-                        if (paintState->unsaved)
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_UNSAVED;
-                        }
-                        else
-                        {
-                            paintState->doLoad = true;
-                        }
-                        break;
-                    }
-
-                    case CONFIRM_OVERWRITE:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintState->doSave   = true;
-                            paintState->saveMenu = HIDDEN;
-                        }
-                        else
-                        {
-                            paintState->saveMenu = PICK_SLOT_SAVE;
-                        }
-                        break;
-                    }
-
-                    case CONFIRM_UNSAVED:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintState->doLoad   = true;
-                            paintState->saveMenu = HIDDEN;
-                        }
-                        else
-                        {
-                            paintState->saveMenu = PICK_SLOT_LOAD;
-                        }
-                        break;
-                    }
-
-                    case EDIT_PALETTE:
-                    {
-                        paintState->saveMenu      = COLOR_PICKER;
-                        paintState->buttonMode    = BTN_MODE_PALETTE;
-                        paintState->paletteSelect = 0;
-                        paintEditPaletteSetupColor();
-                        break;
-                    }
-
-                    case CONFIRM_CLEAR:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintStoreUndo(&paintState->canvas);
-                            paintState->clearScreen = true;
-                            paintState->saveMenu    = HIDDEN;
-                            paintState->buttonMode  = BTN_MODE_DRAW;
-                        }
-                        else
-                        {
-                            paintState->saveMenu = CLEAR;
-                        }
-                        break;
-                    }
-
-                    case CONFIRM_EXIT:
-                    {
-                        if (paintState->saveMenuBoolOption)
-                        {
-                            paintReturnToMainMenu();
-                        }
-                        else
-                        {
-                            paintState->saveMenu = EXIT;
-                        }
-                        break;
-                    }
-
-                    case CLEAR:
-                    {
-                        if (paintState->unsaved)
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_CLEAR;
-                        }
-                        else
-                        {
-                            paintStoreUndo(&paintState->canvas);
-                            paintState->clearScreen = true;
-                            paintState->saveMenu    = HIDDEN;
-                            paintState->buttonMode  = BTN_MODE_DRAW;
-                        }
-                        break;
-                    }
-                    case EXIT:
-                    {
-                        if (paintState->unsaved)
-                        {
-                            paintState->saveMenuBoolOption = false;
-                            paintState->saveMenu           = CONFIRM_EXIT;
-                        }
-                        else
-                        {
-                            paintReturnToMainMenu();
-                        }
-                        break;
-                    }
-                    // These cases shouldn't actually happen
-                    case HIDDEN:
-                    case COLOR_PICKER:
-                    {
-                        paintState->buttonMode = BTN_MODE_DRAW;
-                        break;
-                    }
-                }
-                break;
-            }
-
-            case PB_UP:
-            {
-                paintSaveModePrevItem();
-                break;
-            }
-
-            case PB_DOWN:
-            case PB_SELECT:
-            {
-                paintSaveModeNextItem();
-                break;
-            }
-
-            case PB_LEFT:
-            {
-                paintSaveModePrevOption();
-                break;
-            }
-
-            case PB_RIGHT:
-            {
-                paintSaveModeNextOption();
-                break;
-            }
-
-            case PB_B:
-            {
-                // Exit save menu
-                paintState->saveMenu   = HIDDEN;
-                paintState->buttonMode = BTN_MODE_DRAW;
-                break;
-            }
-
-            case PB_START:
-                // Handle this in button up
-                break;
-        }
-    }
-    else
-    {
-        //////// Save mode button release
-        if (evt->button == PB_START)
-        {
-            // Exit save menu
-            paintState->saveMenu      = HIDDEN;
-            paintState->buttonMode    = BTN_MODE_DRAW;
-            paintState->redrawToolbar = true;
         }
     }
 }
 
 void paintSelectModeButtonCb(const buttonEvt_t* evt)
 {
+    PAINT_LOGI("paintselectModeButtonCb()");
     if (!evt->down)
     {
         //////// Select-mode button release
         switch (evt->button)
         {
             case PB_SELECT:
-            {
-                if (paintCanUndo())
-                {
-                    paintUndo(&paintState->canvas);
-                }
-                break;
-            }
-
             case PB_START:
-            {
-                if (paintCanRedo())
-                {
-                    paintRedo(&paintState->canvas);
-                }
                 break;
-            }
 
             case PB_UP:
             {
                 // Select previous color
-                paintState->redrawToolbar = true;
                 paintState->paletteSelect = PREV_WRAP(paintState->paletteSelect, PAINT_MAX_COLORS);
-                paintUpdateLeds();
                 break;
             }
 
             case PB_DOWN:
             {
                 // Select next color
-                paintState->redrawToolbar = true;
                 paintState->paletteSelect = NEXT_WRAP(paintState->paletteSelect, PAINT_MAX_COLORS);
-                paintUpdateLeds();
                 break;
             }
 
@@ -1486,7 +1110,6 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
             {
                 // Select previous brush
                 paintPrevTool();
-                paintState->redrawToolbar = true;
                 break;
             }
 
@@ -1494,7 +1117,6 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
             {
                 // Select next brush
                 paintNextTool();
-                paintState->redrawToolbar = true;
                 break;
             }
 
@@ -1502,7 +1124,6 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
             {
                 // Increase brush size / next variant
                 paintIncBrushWidth(1);
-                paintState->redrawToolbar = true;
                 break;
             }
 
@@ -1510,7 +1131,6 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
             {
                 // Decrease brush size / prev variant
                 paintDecBrushWidth(1);
-                paintState->redrawToolbar = true;
                 break;
             }
         }
@@ -1519,184 +1139,42 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
 
 void paintDrawScreenPollTouch(void)
 {
-    int32_t centroid, intensity;
-    int32_t phi, r, y;
+    int32_t intensity;
+    int32_t phi, r;
 
-    if (getTouchJoystick(&phi, &r, &intensity))
+    if (paintState->buttonMode != BTN_MODE_BROWSER && paintState->buttonMode != BTN_MODE_DIALOG
+        && paintState->toolWheel)
     {
-        getTouchCartesian(phi, r, &centroid, &y);
-
-        paintState->toolWheel = wheelMenuTouch(paintState->toolWheel, paintState->toolWheelRenderer, phi, r);
-        return;
-
-        /////////////////////////////// old code below, probs delete
-
-        // Bar is touched
-        switch (paintState->buttonMode)
+        if (getTouchJoystick(&phi, &r, &intensity))
         {
-            case BTN_MODE_DRAW:
-            case BTN_MODE_SELECT:
-            {
-                paintState->lastTouch = centroid;
-
-                // Set up variables for swiping
-                if (!paintState->touchDown)
-                {
-                    // Beginning of swipe
-                    paintState->touchDown  = true;
-                    paintState->firstTouch = centroid;
-
-                    // Store the original brush width
-                    paintState->startBrushWidth = getArtist()->brushWidth;
-                    paintEnterSelectMode();
-
-                    // Only call this here to prevent making a ton of unnecessary calls to paintTutorialOnEvent()
-                    if (paintHelp != NULL)
-                    {
-                        // Don't worry about X or Y, we'll only decide those on release I guess
-                        paintHelp->allButtons |= TOUCH_ANY;
-                        // Replace the touch buttons, but not any of the real buttons
-                        paintHelp->curButtons
-                            = TOUCH_ANY
-                              | (paintHelp->curButtons
-                                 & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT));
-                        paintHelp->lastButton     = TOUCH_ANY;
-                        paintHelp->lastButtonDown = true;
-                        paintTutorialOnEvent();
-                    }
-                }
-                else
-                {
-                    // We're mid-swipe
-                    int32_t swipeMagnitude = ((paintState->firstTouch - centroid) * PAINT_MAX_BRUSH_SWIPE) / 1024;
-                    int32_t newWidth       = paintState->startBrushWidth - swipeMagnitude;
-
-                    if (newWidth < 0)
-                    {
-                        newWidth = 0;
-                    }
-                    else if (newWidth > UINT8_MAX)
-                    {
-                        newWidth = UINT8_MAX;
-                    }
-
-                    paintSetBrushWidth((uint8_t)(newWidth));
-                }
-                break;
-            }
-
-            case BTN_MODE_PALETTE:
-            {
-                paintState->touchDown = true;
-                // Don't do anything for tutorial until release
-                uint8_t index = ((centroid * 5 + 512) / 1024);
-                // PAINT_LOGD("Centroid: %d, Intensity: %d, Index: %d", centroid, intensity, index);
-                paintEditPaletteSetChannelValue(index);
-                break;
-            }
-
-            case BTN_MODE_SAVE:
-                break;
+            paintState->toolWheel = wheelMenuTouch(paintState->toolWheel, paintState->toolWheelRenderer, phi, r);
         }
-    }
-    else
-    {
-        paintState->toolWheel = wheelMenuTouchRelease(paintState->toolWheel, paintState->toolWheelRenderer);
-        return;
-
-        /////////////////////////////// old code below, probs delete
-
-        // Bar is not touched
-        // Do not use centroid/intensity here
-        // And only do anything if paintState->touchDown is still true
-        if (paintState->touchDown)
+        else
         {
-            paintState->touchDown = false;
+            paintState->toolWheel = wheelMenuTouchRelease(paintState->toolWheel, paintState->toolWheelRenderer);
+        }
 
-            switch (paintState->buttonMode)
-            {
-                case BTN_MODE_DRAW:
-                case BTN_MODE_SELECT:
-                {
-                    int32_t swipeMagnitude
-                        = ((paintState->firstTouch - paintState->lastTouch) * PAINT_MAX_BRUSH_SWIPE) / 1024;
-                    // PAINT_LOGD("End swipe: %d", swipeMagnitude);
-                    if (swipeMagnitude == 0)
-                    {
-                        // Tap! But only if we started on X or Y
-                        if (paintState->firstTouch < (1024 / 5))
-                        {
-                            paintDecBrushWidth(1);
-                        }
-                        else if (paintState->firstTouch > (1024 * 4 / 5))
-                        {
-                            paintIncBrushWidth(1);
-                        }
-                    }
-
-                    if (paintHelp != NULL)
-                    {
-                        paintHelp->curButtons
-                            = paintHelp->curButtons
-                              & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT);
-                        paintHelp->lastButtonDown = false;
-
-                        if (swipeMagnitude == 0)
-                        {
-                            if (paintState->firstTouch < (1024 / 5))
-                            {
-                                paintHelp->lastButton = TOUCH_Y;
-                            }
-                            else if (paintState->firstTouch > (1024 * 4 / 5))
-                            {
-                                paintHelp->lastButton = TOUCH_X;
-                            }
-                            else
-                            {
-                                paintHelp->lastButton = TOUCH_ANY;
-                            }
-                        }
-                        else if (swipeMagnitude > 0)
-                        {
-                            paintHelp->lastButton = SWIPE_RIGHT;
-                        }
-                        else // swipeMagnitude < 0
-                        {
-                            paintHelp->lastButton = SWIPE_LEFT;
-                        }
-
-                        paintTutorialOnEvent();
-                    }
-
-                    paintExitSelectMode();
-                    break;
-                }
-
-                case BTN_MODE_PALETTE:
-                {
-                    // Only do something in tutorial mode
-                    if (paintHelp != NULL)
-                    {
-                        paintHelp->curButtons
-                            = paintHelp->curButtons
-                              & (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT);
-                        paintHelp->lastButtonDown = false;
-                        paintHelp->lastButton     = TOUCH_ANY;
-                        paintTutorialOnEvent();
-                    }
-
-                    break;
-                }
-
-                case BTN_MODE_SAVE:
-                    break;
-            }
+        bool active = wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer);
+        if (active && paintState->buttonMode != BTN_MODE_WHEEL)
+        {
+            paintSetupColorWheel();
+            paintState->buttonMode = BTN_MODE_WHEEL;
+        }
+        else if (!active && paintState->buttonMode == BTN_MODE_WHEEL)
+        {
+            paintState->buttonMode = BTN_MODE_DRAW;
         }
     }
 }
 
 void paintDrawScreenButtonCb(const buttonEvt_t* evt)
 {
+    if (paintState->fatalError)
+    {
+        dialogBoxButton(paintState->dialogBox, evt);
+        return;
+    }
+
     if (paintHelp != NULL)
     {
         paintHelp->allButtons |= evt->state;
@@ -1707,38 +1185,36 @@ void paintDrawScreenButtonCb(const buttonEvt_t* evt)
             = evt->state | (paintHelp->curButtons & (TOUCH_ANY | TOUCH_X | TOUCH_Y | SWIPE_LEFT | SWIPE_RIGHT));
     }
 
-    if (wheelMenuActive(paintState->toolWheel, paintState->toolWheelRenderer))
+    switch (paintState->buttonMode)
     {
-        PAINT_LOGI("Menu is active, sending it a button press");
-        wheelMenuButton(paintState->toolWheel, paintState->toolWheelRenderer, evt);
-    }
-    else
-    {
-        switch (paintState->buttonMode)
+        case BTN_MODE_DRAW:
         {
-            case BTN_MODE_DRAW:
-            {
-                paintDrawModeButtonCb(evt);
-                break;
-            }
+            paintDrawModeButtonCb(evt);
+            break;
+        }
 
-            case BTN_MODE_SELECT:
-            {
-                paintSelectModeButtonCb(evt);
-                break;
-            }
+        case BTN_MODE_WHEEL:
+        {
+            wheelMenuButton(paintState->toolWheel, paintState->toolWheelRenderer, evt);
+            break;
+        }
 
-            case BTN_MODE_SAVE:
-            {
-                paintSaveModeButtonCb(evt);
-                break;
-            }
+        case BTN_MODE_PALETTE:
+        {
+            paintPaletteModeButtonCb(evt);
+            break;
+        }
 
-            case BTN_MODE_PALETTE:
-            {
-                paintPaletteModeButtonCb(evt);
-                break;
-            }
+        case BTN_MODE_BROWSER:
+        {
+            imageBrowserButton(&paintState->browser, evt);
+            break;
+        }
+
+        case BTN_MODE_DIALOG:
+        {
+            dialogBoxButton(paintState->dialogBox, evt);
+            break;
         }
     }
 
@@ -1755,10 +1231,6 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         // Draw mode buttons
         switch (evt->button)
         {
-            case PB_SELECT:
-                // SELECT no longer does anything
-                break;
-
             case PB_A:
             {
                 // Draw
@@ -1771,9 +1243,6 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
             {
                 // Swap the foreground and background colors
                 paintSwapFgBgColors();
-
-                paintState->redrawToolbar     = true;
-                paintState->recolorPickPoints = true;
                 break;
             }
 
@@ -1787,9 +1256,16 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
                 break;
             }
 
-            case PB_START:
-                // Don't do anything until start is released to avoid conflicting with EXIT
+            case PB_SELECT:
+            {
                 break;
+            }
+
+            case PB_START:
+            {
+                dropPx(&getArtist()->pickPoints);
+                break;
+            }
         }
     }
     else
@@ -1797,24 +1273,6 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
         //////// Draw mode button release
         switch (evt->button)
         {
-            case PB_START:
-            {
-                if (!paintState->saveInProgress)
-                {
-                    // Enter the save menu
-                    paintState->buttonMode    = BTN_MODE_SAVE;
-                    paintState->saveMenu      = PICK_SLOT_SAVE;
-                    paintState->redrawToolbar = true;
-
-                    // Don't let the cursor keep moving
-                    paintState->moveX       = 0;
-                    paintState->moveY       = 0;
-                    paintState->btnHoldTime = 0;
-                    paintState->aHeld       = false;
-                }
-                break;
-            }
-
             case PB_A:
             {
                 // Stop drawing
@@ -1836,7 +1294,7 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
             }
 
             case PB_SELECT:
-                // This is handled in BTN_MODE_SELECT already
+            case PB_START:
                 break;
         }
     }
@@ -1885,7 +1343,7 @@ void paintFreeUndos(void)
     clear(&paintState->undoList);
 }
 
-void paintStoreUndo(paintCanvas_t* canvas)
+void paintStoreUndo(paintCanvas_t* canvas, paletteColor_t fg, paletteColor_t bg)
 {
     // If paintState->undoHead is set, we need to clear all the previous undos to delete the alternate timeline
     uint8_t deleted = 0;
@@ -1937,17 +1395,31 @@ void paintStoreUndo(paintCanvas_t* canvas)
     // Save the palette
     memcpy(undoData->palette, canvas->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
 
-    bool cursorVisible = getCursor()->show;
-    if (cursorVisible)
-    {
-        hideCursor(getCursor(), canvas);
-    }
-    // Save the pixel data
-    paintSerialize(undoData->px, canvas, 0, pxSize);
+    // Just in case we don't find the colors somehow
+    undoData->fgIdx = 0;
+    undoData->bgIdx = 1;
 
-    if (cursorVisible)
+    // Search through the
+    for (int i = 0; i < PAINT_MAX_COLORS; i++)
     {
-        showCursor(getCursor(), canvas);
+        if (undoData->palette[i] == fg)
+        {
+            undoData->fgIdx = i;
+        }
+        if (undoData->palette[i] == bg)
+        {
+            undoData->bgIdx = i;
+        }
+    }
+
+    if (canvas->buffered)
+    {
+        memcpy(undoData->px, canvas->buffer, pxSize);
+    }
+    else
+    {
+        // Save the pixel data
+        paintSerialize(undoData->px, canvas, 0, pxSize);
     }
 
     push(&paintState->undoList, undoData);
@@ -2001,21 +1473,23 @@ void paintApplyUndo(paintCanvas_t* canvas)
         return;
     }
 
-    hideCursor(getCursor(), canvas);
-
     paintUndo_t* undo = paintState->undoHead->val;
 
     memcpy(canvas->palette, undo->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
-    getArtist()->fgColor = canvas->palette[0];
-    getArtist()->bgColor = canvas->palette[1];
+    getArtist()->fgColor = canvas->palette[undo->fgIdx];
+    getArtist()->bgColor = canvas->palette[undo->bgIdx];
 
-    size_t pxSize = paintGetStoredSize(canvas);
-    paintDeserialize(canvas, undo->px, 0, pxSize);
-
-    PAINT_LOGD("Undid %" PRIu32 " bytes!", (uint32_t)pxSize);
-
-    // feels weird to do this inside the undo functions... but it's probably ok? we've already undone anyway
-    showCursor(getCursor(), canvas);
+    if (canvas->buffered && canvas->buffer)
+    {
+        // Copy the undo data into the canvas buffer
+        memcpy(canvas->buffer, undo->px, paintGetStoredSize(canvas));
+    }
+    else
+    {
+        size_t pxSize = paintGetStoredSize(canvas);
+        paintDeserialize(canvas, undo->px, 0, pxSize);
+        PAINT_LOGD("Undid %" PRIu32 " bytes!", (uint32_t)pxSize);
+    }
 }
 
 void paintUndo(paintCanvas_t* canvas)
@@ -2026,7 +1500,7 @@ void paintUndo(paintCanvas_t* canvas)
         node_t* head = paintState->undoList.last;
 
         // Also, since this is the first undo, save the current state so that we can return to it with redo
-        paintStoreUndo(canvas);
+        paintStoreUndo(canvas, getArtist()->fgColor, getArtist()->bgColor);
 
         paintState->undoHead = head;
     }
@@ -2054,82 +1528,16 @@ void paintRedo(paintCanvas_t* canvas)
     paintApplyUndo(canvas);
 }
 
-bool paintSaveCanvas(paintCanvas_t* canvas)
+void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col, bool partial)
 {
-    // Allocate a new paintUndo_t to store the canvas
-    paintUndo_t* undoData = paintState->storedCanvas;
+    bool drawNow    = false;
+    bool isLastPick = false;
+    bool popExtra   = false;
 
-    // Calculate the amount of space we wolud need to store the canvas pixels
-    size_t pxSize = paintGetStoredSize(canvas);
-
-    if (!undoData)
-    {
-        // Allocate memory for the undo data struct and its pixel data in one go
-        void* undoMem = heap_caps_malloc(sizeof(paintUndo_t) + pxSize, MALLOC_CAP_SPIRAM);
-        if (undoMem != NULL)
-        {
-            // Alloc succeeded, use the data
-            undoData     = undoMem;
-            undoData->px = (uint8_t*)undoMem + sizeof(paintUndo_t);
-        }
-        else
-        {
-            // Alloc failed, reuse the first undo data
-            undoData = shift(&paintState->undoList);
-        }
-    }
-
-    if (!undoData)
-    {
-        PAINT_LOGD("Failed to allocate or reuse undo data! Can't save canvas");
-        // There's no data at all! We're completely out of space!
-        return false;
-    }
-
-    // Save the palette
-    memcpy(undoData->palette, canvas->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
-
-    bool cursorVisible = getCursor()->show;
-    if (cursorVisible)
-    {
-        hideCursor(getCursor(), canvas);
-    }
-    // Save the pixel data
-    paintSerialize(undoData->px, canvas, 0, pxSize);
-
-    if (cursorVisible)
-    {
-        showCursor(getCursor(), canvas);
-    }
-
-    paintState->storedCanvas = undoData;
-
-    return true;
-}
-
-void paintRestoreCanvas(paintCanvas_t* canvas)
-{
-    if (NULL == paintState->storedCanvas)
+    if (partial && !getArtist()->brushDef->fnPartial)
     {
         return;
     }
-
-    // Don't restore palette
-    hideCursor(getCursor(), canvas);
-
-    size_t pxSize = paintGetStoredSize(canvas);
-    paintDeserialize(canvas, paintState->storedCanvas->px, 0, pxSize);
-    memcpy(paintState->canvas.palette, paintState->storedCanvas->palette, sizeof(paletteColor_t) * PAINT_MAX_COLORS);
-
-    // feels weird to do this inside the undo functions... but it's probably ok? we've already undone anyway
-    showCursor(getCursor(), canvas);
-}
-
-void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
-{
-    hideCursor(getCursor(), &paintState->canvas);
-    bool drawNow    = false;
-    bool isLastPick = false;
 
     // Determine if this is the last pick for the tool
     // This is so we don't draw a pick-marker that will be immediately removed
@@ -2177,6 +1585,7 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
                 // Special case: If we're on the next-to-last possible point, we have to add the start again as the last
                 // point
                 pushPx(&getArtist()->pickPoints, firstPick.x, firstPick.y);
+                popExtra = true;
 
                 drawNow = true;
             }
@@ -2188,7 +1597,7 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
         }
     }
 
-    if (drawNow)
+    if (partial || drawNow)
     {
         // Allocate an array of point_t for the canvas pick points
         size_t pickCount = pxStackSize(&getArtist()->pickPoints);
@@ -2197,21 +1606,38 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
         // Convert the pick points into an array of canvas-coordinates
         paintConvertPickPointsScaled(&getArtist()->pickPoints, &paintState->canvas, canvasPickPoints);
 
-        while (popPxScaled(&getArtist()->pickPoints, paintState->canvas.xScale, paintState->canvas.yScale))
-            ;
-
-        // Save the current state before we draw, but only do it on the first press if we're using a HOLD_DRAW pen
-        if (getArtist()->brushDef->mode != HOLD_DRAW || paintState->aPress)
+        if (partial)
         {
-            paintStoreUndo(&paintState->canvas);
+            getArtist()->brushDef->fnPartial(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth,
+                                             col);
+
+            // Drop the pixel we added
+            dropPx(&getArtist()->pickPoints);
+
+            if (popExtra)
+            {
+                // And the other we may have added
+                dropPx(&getArtist()->pickPoints);
+            }
         }
-
-        paintState->unsaved = true;
-        getArtist()->brushDef->fnDraw(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth, col);
-
-        if (paintHelp != NULL)
+        else
         {
-            paintHelp->drawComplete = true;
+            while (dropPx(&getArtist()->pickPoints))
+                ;
+
+            // Save the current state before we draw, but only do it on the first press if we're using a HOLD_DRAW pen
+            if (getArtist()->brushDef->mode != HOLD_DRAW || paintState->aPress)
+            {
+                paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
+            }
+            paintState->unsaved = true;
+            getArtist()->brushDef->fnDraw(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth,
+                                          col);
+
+            if (paintHelp != NULL)
+            {
+                paintHelp->drawComplete = true;
+            }
         }
     }
     else
@@ -2220,9 +1646,6 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col)
         paintState->blinkTimer = BLINK_TIME_OFF;
         paintState->blinkOn    = false;
     }
-
-    showCursor(getCursor(), &paintState->canvas);
-    paintRenderToolbar(getArtist(), &paintState->canvas, paintState, firstBrush, lastBrush);
 }
 
 void paintSetupTool(void)
@@ -2239,42 +1662,13 @@ void paintSetupTool(void)
         paintState->startBrushWidth = getArtist()->brushWidth;
     }
 
-    hideCursor(getCursor(), &paintState->canvas);
-    paintHidePickPoints();
-    switch (getArtist()->brushDef->mode)
-    {
-        case HOLD_DRAW:
-        {
-            // Regenerate the cursor if it's not been set yet or if the brush's size is different from the cursor's size
-            if (paintState->cursorWsg.px == NULL
-                || paintState->cursorWsg.w != (getArtist()->brushWidth * paintState->canvas.xScale + 2)
-                || paintState->cursorWsg.h != (getArtist()->brushWidth * paintState->canvas.yScale + 2))
-            {
-                paintFreeCursorSprite(&paintState->cursorWsg);
-                paintGenerateCursorSprite(&paintState->cursorWsg, &paintState->canvas, getArtist()->brushWidth);
-            }
+    setCursorSprite(getCursor(), &paintState->canvas, &paintState->picksWsg);
+    // Place the top-right pixel of the pointer 1px inside the target pixel
+    setCursorOffset(getCursor(), -paintState->picksWsg.w + 1, paintState->canvas.yScale - 1);
 
-            setCursorSprite(getCursor(), &paintState->canvas, &paintState->cursorWsg);
-            // Center the cursor, accounting for even and odd cursor sizes
-            setCursorOffset(getCursor(), -(paintState->cursorWsg.w / 2) + getArtist()->brushWidth % 2,
-                            -(paintState->cursorWsg.h / 2) + getArtist()->brushWidth % 2);
-            break;
-        }
-
-        case PICK_POINT:
-        case PICK_POINT_LOOP:
-        {
-            setCursorSprite(getCursor(), &paintState->canvas, &paintState->picksWsg);
-            // Place the top-right pixel of the pointer 1px inside the target pixel
-            setCursorOffset(getCursor(), -paintState->picksWsg.w + 1, paintState->canvas.yScale - 1);
-            break;
-        }
-    }
-
-    // Undraw and hide any stored temporary pixels
-    while (popPxScaled(&getArtist()->pickPoints, paintState->canvas.xScale, paintState->canvas.yScale))
+    // Clear out any not-yet-drawn selections
+    while (dropPx(&getArtist()->pickPoints))
         ;
-    showCursor(getCursor(), &paintState->canvas);
 }
 
 void paintPrevTool(void)
@@ -2321,7 +1715,6 @@ void paintSetBrushWidth(uint8_t width)
     }
 
     paintSetupTool();
-    paintState->redrawToolbar = true;
 }
 
 void paintDecBrushWidth(uint8_t dec)
@@ -2336,7 +1729,6 @@ void paintDecBrushWidth(uint8_t dec)
     }
 
     paintSetupTool();
-    paintState->redrawToolbar = true;
 }
 
 void paintIncBrushWidth(uint8_t inc)
@@ -2349,100 +1741,21 @@ void paintIncBrushWidth(uint8_t inc)
     }
 
     paintSetupTool();
-    paintState->redrawToolbar = true;
 }
 
 void paintSwapFgBgColors(void)
 {
-    uint8_t fgIndex = 0, bgIndex = 0;
-    swap(&getArtist()->fgColor, &getArtist()->bgColor);
-
-    for (uint8_t i = 0; i < PAINT_MAX_COLORS; i++)
-    {
-        if (paintState->canvas.palette[i] == getArtist()->fgColor)
-        {
-            fgIndex = i;
-        }
-        else if (paintState->canvas.palette[i] == getArtist()->bgColor)
-        {
-            bgIndex = i;
-        }
-    }
-
-    for (uint8_t i = fgIndex; i > 0; i--)
-    {
-        if (i == bgIndex)
-        {
-            continue;
-        }
-        paintState->canvas.palette[i] = paintState->canvas.palette[i - 1 + ((i < bgIndex) ? 1 : 0)];
-    }
-
-    paintState->canvas.palette[0] = getArtist()->fgColor;
-
-    paintUpdateLeds();
-    paintDrawPickPoints();
+    paletteColor_t tmp   = getArtist()->fgColor;
+    getArtist()->fgColor = getArtist()->bgColor;
+    getArtist()->bgColor = tmp;
 }
 
-void paintEnterSelectMode(void)
+void paintResetButtons(void)
 {
-    if (paintState->buttonMode == BTN_MODE_SELECT && paintState->showToolWheel)
-    {
-        return;
-    }
-
-    if (!paintState->showToolWheel)
-    {
-        paintSaveCanvas(&paintState->canvas);
-        paintState->showToolWheel = true;
-    }
-
-    paintState->buttonMode    = BTN_MODE_SELECT;
-    paintState->redrawToolbar = true;
-    paintState->aHeld         = false;
-    paintState->moveX         = 0;
-    paintState->moveY         = 0;
-    paintState->btnHoldTime   = 0;
-    paintSetupColorWheel();
-}
-
-void paintExitSelectMode(void)
-{
-    if (paintState->buttonMode == BTN_MODE_DRAW && !paintState->showToolWheel)
-    {
-        return;
-    }
-
-    // Exit select mode
-    paintState->buttonMode = BTN_MODE_DRAW;
-
-    if (paintState->showToolWheel)
-    {
-        paintRestoreCanvas(&paintState->canvas);
-        paintState->showToolWheel = false;
-    }
-
-    // Set the current selection as the FG color and rearrange the rest
-    paintUpdateRecents(paintState->paletteSelect);
-    paintState->paletteSelect = 0;
-
-    paintState->redrawToolbar = true;
-}
-
-void paintUpdateRecents(uint8_t selectedIndex)
-{
-    getArtist()->fgColor = paintState->canvas.palette[selectedIndex];
-
-    for (uint8_t i = selectedIndex; i > 0; i--)
-    {
-        paintState->canvas.palette[i] = paintState->canvas.palette[i - 1];
-    }
-    paintState->canvas.palette[0] = getArtist()->fgColor;
-
-    paintUpdateLeds();
-
-    // If there are any pick points, update their color to reduce confusion
-    paintDrawPickPoints();
+    paintState->aHeld       = false;
+    paintState->moveX       = 0;
+    paintState->moveY       = 0;
+    paintState->btnHoldTime = 0;
 }
 
 void paintUpdateLeds(void)
@@ -2450,14 +1763,14 @@ void paintUpdateLeds(void)
     uint32_t rgb = 0;
 
     // Only set the LED color if LEDs are enabled
-    if (paintState->index & PAINT_ENABLE_LEDS)
+    if (paintGetEnableLeds())
     {
         if (paintState->buttonMode == BTN_MODE_PALETTE)
         {
             // Show the edited color if we're editing the palette
             rgb = paletteToRGB(paintState->newColor);
         }
-        else if (paintState->buttonMode == BTN_MODE_SELECT)
+        else if (paintState->buttonMode == BTN_MODE_WHEEL)
         {
             // Show the selected color if we're picking colors
             rgb = paletteToRGB(paintState->canvas.palette[paintState->paletteSelect]);
@@ -2477,35 +1790,6 @@ void paintUpdateLeds(void)
     }
 
     setLeds(paintState->leds, CONFIG_NUM_LEDS);
-}
-
-void paintDrawPickPoints(void)
-{
-    pxVal_t point;
-    for (size_t i = 0; i < pxStackSize(&getArtist()->pickPoints); i++)
-    {
-        if (getPx(&getArtist()->pickPoints, i, &point))
-        {
-            bool invert = (i == 0 && getArtist()->brushDef->mode == PICK_POINT_LOOP)
-                          && pxStackSize(&getArtist()->pickPoints) > 1;
-            drawRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1,
-                           point.y + paintState->canvas.yScale + 1,
-                           invert ? getContrastingColor(point.col) : getArtist()->fgColor);
-        }
-    }
-}
-
-void paintHidePickPoints(void)
-{
-    pxVal_t point;
-    for (size_t i = 0; i < pxStackSize(&getArtist()->pickPoints); i++)
-    {
-        if (getPx(&getArtist()->pickPoints, i, &point))
-        {
-            drawRectFilled(point.x, point.y, point.x + paintState->canvas.xScale + 1,
-                           point.y + paintState->canvas.yScale + 1, point.col);
-        }
-    }
 }
 
 paintArtist_t* getArtist(void)
@@ -2532,7 +1816,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         PAINT_LOGI("Selected tool wheel item %s", label);
         if (toolWheelUndoStr == label)
         {
-            paintExitSelectMode();
+            paintState->buttonMode = BTN_MODE_DRAW;
             if (paintCanUndo())
             {
                 paintUndo(&paintState->canvas);
@@ -2540,7 +1824,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         }
         else if (toolWheelRedoStr == label)
         {
-            paintExitSelectMode();
+            paintState->buttonMode = BTN_MODE_DRAW;
             if (paintCanRedo())
             {
                 paintRedo(&paintState->canvas);
@@ -2548,53 +1832,72 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         }
         else if (toolWheelSaveStr == label)
         {
-            if (paintGetSlotInUse(paintState->index, paintState->selectedSlot))
+            if (paintSlotExists(paintState->slotKey))
             {
-                paintState->saveMenuBoolOption = false;
-                paintState->saveMenu           = CONFIRM_OVERWRITE;
+                memcpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
+                paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
             }
             else
             {
-                paintState->doSave = true;
+                doSave(paintState->slotKey);
+                paintState->buttonMode = BTN_MODE_DRAW;
+            }
+        }
+        else if (toolWheelLoadStr == label)
+        {
+            if (paintState->unsaved)
+            {
+                memcpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
+                paintSetupDialog(DIALOG_CONFIRM_UNSAVED_LOAD);
+            }
+            else
+            {
+                paintSetupBrowser(false);
+            }
+        }
+        else if (toolWheelNewStr == label)
+        {
+            if (paintState->unsaved)
+            {
+                memcpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
+                paintSetupDialog(DIALOG_CONFIRM_UNSAVED_CLEAR);
+            }
+            else
+            {
+                paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
+                paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
+                paintState->buttonMode = BTN_MODE_DRAW;
+            }
+        }
+        else if (toolWheelExitStr == label)
+        {
+            if (paintState->unsaved)
+            {
+                memcpy(paintState->selectedSlotKey, paintState->slotKey, sizeof(paintState->selectedSlotKey));
+                paintSetupDialog(DIALOG_CONFIRM_UNSAVED_EXIT);
+            }
+            else
+            {
+                paintState->exiting = true;
             }
         }
         // Check if the label is one of the color name strings
-        else if (NULL != label && paintState->colorNames[0] <= label
-                 && label <= paintState->colorNames[PAINT_MAX_COLORS - 1])
-        {
-            uint8_t colorIndex        = (label - *paintState->colorNames) / sizeof(*paintState->colorNames);
-            paintState->paletteSelect = colorIndex;
-        }
-    }
-    else
-    {
-        if (toolWheelBrushStr == label)
-        {
-            paintEnterSelectMode();
-
-            getArtist()->brushDef = (firstBrush + settingVal);
-            paintSetupTool();
-            paintState->redrawToolbar = true;
-        }
-        else if (toolWheelColorStr == label)
-        {
-            paintEnterSelectMode();
-            // Select previous color
-            paintState->redrawToolbar = true;
-            paintState->paletteSelect = settingVal;
-            paintUpdateLeds();
-        }
-        else if (toolWheelSizeStr == label)
-        {
-            paintEnterSelectMode();
-            paintSetBrushWidth(settingVal);
-        }
         else if (paintState->colorNames[0] <= label && label <= paintState->colorNames[PAINT_MAX_COLORS - 1])
         {
-            paintEnterSelectMode();
-            // color, do something?
-            uint8_t colorIndex        = (label - *paintState->colorNames) / sizeof(*paintState->colorNames);
-            paintState->paletteSelect = colorIndex;
+            uint8_t colorIndex = (label - *paintState->colorNames) / sizeof(*paintState->colorNames);
+
+            if (paintState->toolWheel == paintState->editPaletteWheel)
+            {
+                // Edit palette color
+                PAINT_LOGI("Editing color with index %" PRIu8, colorIndex);
+                paintEditPaletteSetupColor(colorIndex);
+            }
+            else
+            {
+                // Select palette color
+                PAINT_LOGI("Color selected with index %" PRIu8, colorIndex);
+                getArtist()->fgColor = paintState->canvas.palette[colorIndex];
+            }
         }
         else
         {
@@ -2603,16 +1906,353 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             {
                 if (brush->name == label)
                 {
-                    paintEnterSelectMode();
                     getArtist()->brushDef = brush;
                     paintSetupTool();
-                    paintState->redrawToolbar = true;
-                    return;
+                    paintState->buttonMode = BTN_MODE_DRAW;
+                    break;
                 }
             }
-
-            // Something else:
+        }
+    }
+    else
+    {
+        if (toolWheelBrushStr == label)
+        {
+            // paintEnterSelectMode();
+            // getArtist()->brushDef = (firstBrush + settingVal);
+            // paintSetupTool();
+        }
+        else if (toolWheelColorStr == label)
+        {
+            // Select previous color
+            // paintState->paletteSelect = settingVal;
+        }
+        else if (toolWheelSizeStr == label)
+        {
+            paintState->buttonMode = BTN_MODE_WHEEL;
+            paintSetBrushWidth(settingVal);
         }
         PAINT_LOGI("Moved to tool wheel item %s", label);
+    }
+}
+
+void paintSetupDialog(paintDialog_t dialog)
+{
+    paintState->buttonMode = BTN_MODE_DIALOG;
+    paintState->dialog     = dialog;
+
+    const char* title;
+    const char* detail;
+    const wsg_t* icon = NULL;
+
+    // Clear any previous options
+    dialogBoxReset(paintState->dialogBox);
+
+    if (paintState->dialogCustomDetail != NULL)
+    {
+        free(paintState->dialogCustomDetail);
+        paintState->dialogCustomDetail = NULL;
+    }
+
+    switch (dialog)
+    {
+        case DIALOG_CONFIRM_UNSAVED_CLEAR:
+        case DIALOG_CONFIRM_UNSAVED_LOAD:
+        case DIALOG_CONFIRM_UNSAVED_EXIT:
+        {
+            title = dialogUnsavedTitleStr;
+            char buf[128];
+            snprintf(buf, sizeof(buf), dialogUnsavedDetailStr, paintState->selectedSlotKey);
+            buf[127] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
+
+            // Unsaved! Continue? Cancel, Save, Save as... OK
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionSaveStr, NULL, OPTHINT_NORMAL);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionSaveAsStr, NULL, OPTHINT_NORMAL);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
+        case DIALOG_CONFIRM_OVERWRITE:
+        {
+            title = dialogOverwriteTitleStr;
+            char buf[128];
+            snprintf(buf, sizeof(buf), dialogOverwriteDetailStr, paintState->selectedSlotKey);
+            buf[127] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
+
+            // Already exists! Overwrite? Cancel, Save As... Ok
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionSaveAsStr, NULL, OPTHINT_NORMAL);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
+        case DIALOG_CONFIRM_DELETE:
+        {
+            title = dialogDeleteTitleStr;
+            char buf[64];
+            snprintf(buf, sizeof(buf), dialogDeleteDetailStr, paintState->selectedSlotKey);
+            buf[63] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
+
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
+        case DIALOG_ERROR_LOAD:
+        {
+            title = dialogLoadErrorTitleStr;
+            char buf[128];
+            snprintf(buf, sizeof(buf), dialogLoadErrorDetailStr, paintState->selectedSlotKey);
+            buf[127] = '\0';
+
+            paintState->dialogCustomDetail = malloc(strlen(buf) + 1);
+            strcpy(paintState->dialogCustomDetail, buf);
+            detail = paintState->dialogCustomDetail;
+
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionCancelStr, NULL, OPTHINT_CANCEL | OPTHINT_DEFAULT);
+            dialogBoxAddOption(paintState->dialogBox, dialogOptionOkStr, NULL, OPTHINT_OK);
+            break;
+        }
+
+        case DIALOG_ERROR:
+        case DIALOG_ERROR_NONFATAL:
+        default:
+        {
+            // Error! Exit
+            title  = paintState->dialogMessageTitle ? paintState->dialogMessageTitle : dialogErrorTitleStr;
+            detail = paintState->dialogMessageDetail ? paintState->dialogMessageDetail : dialogErrorDetailStr;
+            icon   = &paintState->dialogErrorWsg;
+
+            dialogBoxAddOption(paintState->dialogBox,
+                               (dialog == DIALOG_ERROR) ? dialogOptionExitStr : dialogOptionOkStr, NULL,
+                               OPTHINT_OK | OPTHINT_DEFAULT);
+            break;
+        }
+
+        case DIALOG_MESSAGE:
+        {
+            title  = paintState->dialogMessageTitle;
+            detail = paintState->dialogMessageDetail;
+        }
+    }
+
+    // Actually set the new title/detail/icon
+    paintState->dialogBox->title  = title;
+    paintState->dialogBox->detail = detail;
+    paintState->dialogBox->icon   = icon;
+}
+
+static void paintDialogCb(const char* label)
+{
+    PAINT_LOGI("Dialog option %s chosen!", label);
+    if (dialogOptionCancelStr == label)
+    {
+        // Cancel, so just go back to where we were
+        paintState->buttonMode = BTN_MODE_DRAW;
+    }
+    else if (dialogOptionSaveStr == label)
+    {
+        if (paintSlotExists(paintState->selectedSlotKey))
+        {
+            paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
+        }
+        else
+        {
+            // Do actual save
+            doSave(paintState->slotKey);
+            paintState->buttonMode = BTN_MODE_DRAW;
+        }
+    }
+    else if (dialogOptionSaveAsStr == label)
+    {
+        paintSetupBrowser(true);
+        paintState->buttonMode = BTN_MODE_BROWSER;
+    }
+    else if (dialogOptionExitStr == label)
+    {
+        // Exit at the start of next loop
+        paintState->exiting = true;
+    }
+    else if (dialogOptionOkStr == label)
+    {
+        switch (paintState->dialog)
+        {
+            case DIALOG_CONFIRM_UNSAVED_CLEAR:
+            {
+                paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
+                paintResetCanvas(&paintState->canvas);
+                paintState->buttonMode = BTN_MODE_DRAW;
+                break;
+            }
+
+            case DIALOG_CONFIRM_UNSAVED_LOAD:
+            {
+                paintSetupBrowser(false);
+                break;
+            }
+
+            case DIALOG_CONFIRM_UNSAVED_EXIT:
+            case DIALOG_ERROR_LOAD:
+            {
+                paintState->exiting = true;
+                break;
+            }
+
+            case DIALOG_CONFIRM_OVERWRITE:
+            {
+                doSave(paintState->selectedSlotKey);
+                paintState->buttonMode = BTN_MODE_DRAW;
+                break;
+            }
+
+            case DIALOG_CONFIRM_DELETE:
+            {
+                doDelete(paintState->selectedSlotKey);
+                paintState->buttonMode = BTN_MODE_DRAW;
+                break;
+            }
+
+            case DIALOG_MESSAGE:
+            case DIALOG_ERROR:
+            case DIALOG_ERROR_NONFATAL:
+            {
+                paintState->buttonMode = BTN_MODE_DRAW;
+                break;
+            }
+        }
+    }
+}
+
+static void paintSetupBrowser(bool save)
+{
+    resetImageBrowser(&paintState->browser);
+    setupImageBrowser(&paintState->browser, &paintState->toolbarFont, PAINT_NS_DATA, NULL,
+                      save ? BROWSER_SAVE : BROWSER_OPEN, BROWSER_DELETE);
+    paintState->buttonMode = BTN_MODE_BROWSER;
+}
+
+static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action)
+{
+    paintState->buttonMode = BTN_MODE_DRAW;
+    if (NULL != nvsKey)
+    {
+        switch (action)
+        {
+            case BROWSER_EXIT:
+                break;
+
+            case BROWSER_OPEN:
+            {
+                doLoad(nvsKey);
+                paintSetupTool();
+                break;
+            }
+            case BROWSER_SAVE:
+            {
+                doSave(nvsKey);
+                break;
+            }
+            case BROWSER_DELETE:
+            {
+                strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
+                paintSetupDialog(DIALOG_CONFIRM_DELETE);
+                break;
+            }
+        }
+    }
+}
+
+static void doSave(const char* key)
+{
+    if (paintSaveNamed(key, &paintState->canvas))
+    {
+        // Update current slot name
+        if (key != paintState->slotKey)
+        {
+            strncpy(paintState->slotKey, key, sizeof(paintState->slotKey) - 1);
+        }
+        paintState->selectedSlotKey[0] = '\0';
+        paintState->buttonMode         = BTN_MODE_DRAW;
+    }
+    else
+    {
+        PAINT_LOGE("Error saving to slot named %s!", key);
+        paintState->dialogMessageTitle  = dialogOutOfSpaceTitleStr;
+        paintState->dialogMessageDetail = dialogOutOfSpaceDetailStr;
+        paintSetupDialog(DIALOG_ERROR_NONFATAL);
+    }
+}
+
+static void doLoad(const char* key)
+{
+    if (paintSlotExists(key))
+    {
+        // Load from the selected slot if it's been used
+        paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
+
+        // Load the image into the buffer so we can orient it properly
+        paintState->canvas.buffered = true;
+        if (paintLoadNamed(key, &paintState->canvas))
+        {
+            paintPositionDrawCanvas();
+            paintSetLastSlot(key);
+            if (key != paintState->slotKey)
+            {
+                strncpy(paintState->slotKey, key, sizeof(paintState->slotKey) - 1);
+            }
+
+            paintFreeUndos();
+
+            getArtist()->fgColor = paintState->canvas.palette[0];
+            getArtist()->bgColor = paintState->canvas.palette[1];
+
+            // Put the cursor in the middle of the screen
+            moveCursorAbsolute(getCursor(), &paintState->canvas, paintState->canvas.w / 2, paintState->canvas.h / 2);
+            paintState->buttonMode = BTN_MODE_DRAW;
+        }
+        else
+        {
+            PAINT_LOGE("Slot %s has 0 dimension! Stopping load", key);
+            paintSetupDialog(DIALOG_ERROR_LOAD);
+            paintState->fatalError = true;
+        }
+    }
+    else
+    {
+        // If the slot hasn't been used yet, just clear the screen
+        strncpy(paintState->slotKey, key, sizeof(paintState->slotKey) - 1);
+        paintState->canvas.w = PAINT_DEFAULT_CANVAS_WIDTH;
+        paintState->canvas.h = PAINT_DEFAULT_CANVAS_HEIGHT;
+
+        paintState->canvas.buffered = true;
+        if (!paintState->canvas.buffer)
+        {
+            paintState->canvas.buffer = malloc(paintGetStoredSize(&paintState->canvas));
+        }
+
+        paintResetCanvas(&paintState->canvas);
+        paintState->buttonMode = BTN_MODE_DRAW;
+    }
+}
+
+static void doDelete(const char* key)
+{
+    if (paintSlotExists(key))
+    {
+        paintDeleteNamed(key);
+        paintState->buttonMode = BTN_MODE_BROWSER;
     }
 }
