@@ -674,6 +674,50 @@ esp_err_t accelPerformCal()
     return ESP_OK;
 }
 
+
+/**
+ * @brief Get a steering wheel style input.  Use getAtan2( xcomp, ycomp ) to get angle. 0..360 with 180 being up.
+ *
+ *     int16_t xcomp;
+ *     int16_t ycomp;
+ *     accelGetSteeringAngleDegrees( &xcomp, &ycomp );
+ *     ESP_LOGI( "x", "%d %d %d\n",  getAtan2( xcomp, ycomp ), xcomp, ycomp );
+ *
+ * @param xcomp is a pointer to receive the x component of the steering wheel (-4096-4096) +x is "right"
+ * @param ycomp is a pointer to receive the y component of the steering wheel (-4096-4096) +y is "down"
+ * @return Return ESP_OK if all is ok.
+ */
+esp_err_t accelGetSteeringAngleDegrees(int16_t * xcomp, int16_t * ycomp)
+{
+    // compute steering angle
+    float up_from_face_of_controller[3] = {0, 0, 1};
+
+    mathRotateVectorByInverseOfQuaternion( up_from_face_of_controller, LSM6DSL.fqQuat, up_from_face_of_controller );
+
+    float up_from_face_of_controller_local[3] = {0, 0, 1};
+
+    // This prevents gimbol lock.
+    if (up_from_face_of_controller[2] < 0)
+        up_from_face_of_controller_local[2] = -1;
+
+    float q[4];
+    mathQuatFromTwoVectors( q, up_from_face_of_controller, up_from_face_of_controller_local );
+    float q2[4];
+    mathQuatApply( q2, LSM6DSL.fqQuat, q );
+
+    // q2 now has the correct Z-rotation (Because it's in-plane with the virtual Z plane made by the flat surface of the swadge.
+    float right[3] = { 1, 0, 0 };
+    if( up_from_face_of_controller[2] < 0 ) 
+        right[0] = -1;
+
+    mathRotateVectorByInverseOfQuaternion( right, q2, right );
+    if (xcomp) *xcomp = right[1] * 4096;
+    if (ycomp) *ycomp =-right[0] * 4096;
+
+    return ESP_OK;
+}
+
+
 /**
  * @brief Get current divergence as the cal algorithm attempts to converge on a good cal.
  *
