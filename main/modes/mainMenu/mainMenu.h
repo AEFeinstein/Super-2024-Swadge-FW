@@ -5,4 +5,6 @@
 
 extern swadgeMode_t mainMenuMode;
 
+extern const char mainMenuName[];
+
 #endif
