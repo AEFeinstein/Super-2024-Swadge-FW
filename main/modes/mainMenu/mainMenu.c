@@ -65,10 +65,10 @@ void addSecretsMenu(void);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char mainMenuName[] = "Main Menu";
+static const char mainMenuName[]                = "Main Menu";
 static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
-static const char factoryResetName[] = "Factory Reset";
-static const char confirmResetName[] = "! Confirm Reset !";
+static const char factoryResetName[]            = "Factory Reset";
+static const char confirmResetName[]            = "! Confirm Reset !";
 
 swadgeMode_t mainMenuMode = {
     .modeName                 = mainMenuName,
@@ -116,7 +116,10 @@ static const int16_t cheatCode[] = {
     PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A,
 };
 
-static const int32_t showSecretsMenuSettingValues[] = {SHOW_SECRETS, HIDE_SECRETS,};
+static const int32_t showSecretsMenuSettingValues[] = {
+    SHOW_SECRETS,
+    HIDE_SECRETS,
+};
 
 static const char* const showSecretsMenuSettingOptions[] = {
     "Show",
@@ -190,7 +193,7 @@ static void mainMenuEnterMode(void)
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
-    printf("%"PRIu8"\n", getShowSecretsMenuSetting());
+    printf("%" PRIu8 "\n", getShowSecretsMenuSetting());
 
     if (getShowSecretsMenuSetting() == SHOW_SECRETS)
     {
@@ -352,7 +355,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         }
         else if (label == confirmResetName)
         {
-            if(eraseNvs())
+            if (eraseNvs())
             {
                 switchToSwadgeMode(&factoryTestMode);
             }
@@ -461,11 +464,11 @@ void addSecretsMenu(void)
     mainMenu->debugMode = true;
 
     // Add the secrets menu
-    mainMenu->menu = startSubMenu(mainMenu->menu, "Secrets");
+    mainMenu->menu        = startSubMenu(mainMenu->menu, "Secrets");
     mainMenu->secretsMenu = mainMenu->menu;
-    addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions, showSecretsMenuSettingValues,
-                    ARRAY_SIZE(showSecretsMenuSettingOptions), getShowSecretsMenuSettingBounds(),
-                    getShowSecretsMenuSetting());
+    addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions,
+                                 showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
+                                 getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);

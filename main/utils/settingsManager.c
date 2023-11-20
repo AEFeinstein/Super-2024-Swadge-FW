@@ -525,7 +525,8 @@ uint8_t getShowSecretsMenuSetting(void)
 }
 
 /**
- * @brief Get the bounds for the setting to show Secrets menu on the main menu. Useful for initializing settings items in menus.
+ * @brief Get the bounds for the setting to show Secrets menu on the main menu. Useful for initializing settings items
+ * in menus.
  *
  * @return the bounds for the setting to show Secrets menu on the main menu
  */
