@@ -15,6 +15,7 @@
 #include <string.h>
 #include <limits.h>
 #include <math.h>
+#include <esp_log.h>
 
 #include "hdw-tft.h"
 #include "mainMenu.h"
@@ -129,6 +130,8 @@ swadgeMode_t jukeboxMode = {
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
 };
+
+const char* JK_TAG = "JK";
 
 /*==============================================================================
  * Const Variables
@@ -246,6 +249,10 @@ void jukeboxEnterMode()
     jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     songIdx++;
 
+    if (songIdx != jukebox->musicCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "BGM %d: %d != %d\n", catIdx, songIdx, jukebox->musicCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Magtroid Pocket category
@@ -291,6 +298,10 @@ void jukeboxEnterMode()
     jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     songIdx++;
 
+    if (songIdx != jukebox->musicCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "BGM %d: %d != %d\n", catIdx, songIdx, jukebox->musicCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Jukebox category
@@ -327,6 +338,10 @@ void jukeboxEnterMode()
     // jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = true;
     // songIdx++;
 
+    if (songIdx != jukebox->musicCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "BGM %d: %d != %d\n", catIdx, songIdx, jukebox->musicCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Credits category
@@ -342,6 +357,10 @@ void jukeboxEnterMode()
     jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->musicCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "BGM %d: %d != %d\n", catIdx, songIdx, jukebox->musicCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Unused category
@@ -367,7 +386,18 @@ void jukeboxEnterMode()
     jukebox->musicCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->musicCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "BGM %d: %d != %d\n", catIdx, songIdx, jukebox->musicCategories[catIdx].numSongs);
+    }
+    catIdx++;
+
     // TODO: remainder of categories (modes) with music
+
+    if (catIdx != jukebox->numMusicCategories)
+    {
+        ESP_LOGE(JK_TAG, "BGM CAT: %d != %d\n", catIdx, jukebox->numMusicCategories);
+    }
 
     ///// Load SFX midis /////
 
@@ -457,6 +487,10 @@ void jukeboxEnterMode()
     // jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     // songIdx++;
 
+    if (songIdx != jukebox->sfxCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "SFX %d: %d != %d\n", catIdx, songIdx, jukebox->sfxCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Swadge Land category
@@ -597,6 +631,10 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->sfxCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "SFX %d: %d != %d\n", catIdx, songIdx, jukebox->sfxCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Magtroid Pocket category
@@ -693,6 +731,10 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->sfxCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "SFX %d: %d != %d\n", catIdx, songIdx, jukebox->sfxCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Tunernome category
@@ -717,6 +759,10 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->sfxCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "SFX %d: %d != %d\n", catIdx, songIdx, jukebox->sfxCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Menu category
@@ -737,6 +783,10 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->sfxCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "SFX %d: %d != %d\n", catIdx, songIdx, jukebox->sfxCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Factory Test category
@@ -752,6 +802,10 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->sfxCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "SFX %d: %d != %d\n", catIdx, songIdx, jukebox->sfxCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // Unused category
@@ -772,9 +826,18 @@ void jukeboxEnterMode()
     jukebox->sfxCategories[catIdx].songs[songIdx].song.shouldLoop = false;
     songIdx++;
 
+    if (songIdx != jukebox->sfxCategories[catIdx].numSongs)
+    {
+        ESP_LOGE(JK_TAG, "SFX %d: %d != %d\n", catIdx, songIdx, jukebox->sfxCategories[catIdx].numSongs);
+    }
     catIdx++;
 
     // TODO: remainder of categories (modes) with SFX
+
+    if (catIdx != jukebox->numSfxCategories)
+    {
+        ESP_LOGE(JK_TAG, "SFX CAT: %d != %d\n", catIdx, jukebox->numSfxCategories);
+    }
 
     ///// Initialize portable dances /////
 
