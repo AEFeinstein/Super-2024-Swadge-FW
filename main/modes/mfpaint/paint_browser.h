@@ -5,7 +5,7 @@
 #include "font.h"
 #include "wsg.h"
 #include "hdw-btn.h"
-#include "textEntry.h"
+#include "touchTextEntry.h"
 #include <nvs.h>
 
 typedef enum

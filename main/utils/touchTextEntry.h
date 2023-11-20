@@ -98,8 +98,8 @@
  * \endcode
  *
  */
-#ifndef _TEXT_ENTRY_H_
-#define _TEXT_ENTRY_H_
+#ifndef _TOUCH_TEXT_ENTRY_H_
+#define _TOUCH_TEXT_ENTRY_H_
 
 #include <stdint.h>
 #include "font.h"

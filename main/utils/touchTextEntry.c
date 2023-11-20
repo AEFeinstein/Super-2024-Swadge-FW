@@ -2,7 +2,7 @@
 // Includes
 //==============================================================================
 
-#include "textEntry.h"
+#include "touchTextEntry.h"
 
 #include <string.h>
 #include <malloc.h>
