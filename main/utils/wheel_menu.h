@@ -62,10 +62,13 @@ typedef struct
     paletteColor_t textColor;    ///< Color of the selected menu item text label
     paletteColor_t unselBgColor; ///< Default background color of unselected items
     paletteColor_t selBgColor;   ///< Default background color of selected items
-    paletteColor_t borderColor;  ///< Color of
+    paletteColor_t borderColor;  ///< Color of the circle borders
     bool customBack;             ///< Whether the center "back" circle has been customized
-    bool touched;                ///< TODO doc
-    bool active;                 ///< TODO doc
+    bool touched;                ///< Whether the touchpad is currently touched
+    bool active;                 ///< Whether the menu should be shown, regardless of touch
+    bool zoomed;                 ///< Whether or not a settings item is selected
+    bool zoomBackSelected;       ///< Whether or not the center is selected while zoomed
+    uint8_t zoomValue;           ///< The current selected option/value if zoomed
 } wheelMenuRenderer_t;
 
 wheelMenuRenderer_t* initWheelMenu(const font_t* font, uint16_t anchorAngle, const rectangle_t* textBox);
