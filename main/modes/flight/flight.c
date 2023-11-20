@@ -259,8 +259,8 @@ typedef struct
 
     char nettext[24]; // NOTE: First char is color.
 
-    int imuiirX;
-    int imuiirY;
+    int origX;
+    int origY;
     int inittedIMU;
 
     float fqQuatLast[4];
@@ -666,6 +666,7 @@ static void flightStartGame(flightModeScreen mode)
     flight->wintime           = 0;
     flight->speed             = 0;
 
+    accelSetRegistersAndReset();
     flight->inittedIMU = 0;
 
     // Starting location/orientation
@@ -1641,26 +1642,22 @@ static void flightGameUpdate(flight_t* tflight)
             int deltax = -qDiff[2] * 3072;
             int deltay = qDiff[1] * 3072;
 
-            int x = tflight->accumx += deltax;
-            int y = tflight->accumy += deltay;
 
-            // ESP_LOGI( "_", "%5d %5d %5d %5d", (int)(qDiff[0]*1024), (int)(qDiff[1]*1024), (int)(qDiff[2]*1024),
-            // (int)(qDiff[3]*1024) );
+            // ESP_LOGI( "_", "%5d %5d %d", (int)(deltax), (int)(deltay), tflight->inittedIMU );
 
-#define IMUIIR 7
-
-            if (!tflight->inittedIMU)
+            // Hold off for two frames.  Need fqQuatLast to work.
+            if (tflight->inittedIMU < 2)
             {
-                tflight->inittedIMU = 8;
-                tflight->imuiirX    = x << IMUIIR;
-                tflight->imuiirY    = y << IMUIIR;
+                tflight->inittedIMU++;
+                deltax = 0;
+                deltay = 0;
+                tflight->accumx = 0;
+                tflight->accumy = 0;
             }
 
-            // Perform a high-pass-filter on the gyro location.
-            int setx         = x - (tflight->imuiirX >> IMUIIR);
-            int sety         = y - (tflight->imuiirY >> IMUIIR);
-            tflight->imuiirX = x + tflight->imuiirX - (tflight->imuiirX >> IMUIIR);
-            tflight->imuiirY = y + tflight->imuiirY - (tflight->imuiirY >> IMUIIR);
+            int setx = tflight->accumx += deltax;
+            int sety = tflight->accumy += deltay;
+
 
             // Add a tiiiny dead zone.
             if (setx > 0)
@@ -1689,9 +1686,7 @@ static void flightGameUpdate(flight_t* tflight)
             }
 
             if (tflight->savedata.flightInvertY)
-                y *= -1;
-
-            // TODO: Make this dependent on framerate maybe?
+                sety *= -1;
 
             // Handle upside down flight.
             if (tflight->hpr[1] >= 990 && tflight->hpr[1] < 2970)
