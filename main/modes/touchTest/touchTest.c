@@ -52,7 +52,6 @@ static void touchTestReset(void);
 static void touchTestHandleInput(void);
 
 static void touchTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void touchDrawVector(int16_t x, int16_t y, int16_t r);
 static void touchTestDraw(void);
 
 //==============================================================================
@@ -201,6 +200,8 @@ static void touchTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int
 /**
  * @brief Draw a circular representation of the touchpad
  *
+ * @param font The font to use for the label
+ * @param label The text label to draw above the circle
  * @param x X coordinate on the TFT for the center of the circle
  * @param y Y coordinate on the TFT for the center of the circle
  * @param r Radius of the circle
@@ -285,33 +286,45 @@ void touchDrawCircle(font_t* font, const char* label, int16_t x, int16_t y, int1
     }
 }
 
-static void touchDrawVector(int16_t x, int16_t y, int16_t r)
+/**
+ * @brief Draw a circular analog representation of the touchpad
+ *
+ * @param font The font to use for the label
+ * @param label The text label to draw above the circle
+ * @param x X coordinate on the TFT for the center of the circle
+ * @param y Y coordinate on the TFT for the center of the circle
+ * @param r Radius of the circle
+ * @param touched Whether the touchpad is currently being touched
+ * @param touchAngle The output `phi` you received from a prior call to `getTouchJoystick`
+ * @param touchRadius The output `r` you received from a prior call to `getTouchJoystick`
+ */
+void touchDrawVector(font_t* font, const char* label, paletteColor_t circleColor, int16_t x, int16_t y, int16_t r, bool touched, int32_t touchAngle, int32_t touchRadius)
 {
     // Draw a circle with tick marks at each 45-degree interval
-    int16_t textW = textWidth(&touchTest->ibm, "Raw");
-    drawText(&touchTest->ibm, c555, "Raw", x - textW / 2, y - r - touchTest->ibm.height - 5);
-    drawCircle(x, y, r, c222);
+    int16_t textW = textWidth(font, label);
+    drawText(font, c555, label, x - textW / 2, y - r - font->height - 5);
+    drawCircle(x, y, r, circleColor);
 
     int16_t startR     = r * 6 / 7;
     int16_t diagStartR = r * 4 / 7;
-    int16_t diagR      = (r + 1) * 2 / 3;
-    drawLineFast(x + startR, y, x + r, y, c222);
-    drawLineFast(x, y - startR, x, y - r, c222);
-    drawLineFast(x - startR, y, x - r, y, c222);
-    drawLineFast(x, y + startR, x, y + r, c222);
+    int16_t diagR      = (r + 2) * 2 / 3;
+    drawLineFast(x + startR, y, x + r, y, circleColor);
+    drawLineFast(x, y - startR, x, y - r, circleColor);
+    drawLineFast(x - startR, y, x - r, y, circleColor);
+    drawLineFast(x, y + startR, x, y + r, circleColor);
 
-    drawLineFast(x + diagStartR, y - diagStartR, x + diagR, y - diagR, c222);
-    drawLineFast(x - diagStartR, y - diagStartR, x - diagR, y - diagR, c222);
-    drawLineFast(x - diagStartR, y + diagStartR, x - diagR, y + diagR, c222);
-    drawLineFast(x + diagStartR, y + diagStartR, x + diagR, y + diagR, c222);
+    drawLineFast(x + diagStartR, y - diagStartR, x + diagR, y - diagR, circleColor);
+    drawLineFast(x - diagStartR, y - diagStartR, x - diagR, y - diagR, circleColor);
+    drawLineFast(x - diagStartR, y + diagStartR, x - diagR, y + diagR, circleColor);
+    drawLineFast(x + diagStartR, y + diagStartR, x + diagR, y + diagR, circleColor);
 
     // Draw a line indicating the analog touch vector
-    drawLine(x, y, x + getCos1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024,
-             y - getSin1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024,
-             touchTest->touch ? c555 : c333, 0);
-    drawCircleFilled(x + getCos1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024,
-                     y - getSin1024(touchTest->angle) * touchTest->radius / 1024 * startR / 1024, 3,
-                     touchTest->touch ? c500 : c333);
+    drawLine(x, y, x + getCos1024(touchAngle) * touchRadius / 1024 * startR / 1024,
+             y - getSin1024(touchAngle) * touchRadius / 1024 * startR / 1024,
+             touched ? c555 : c333, 0);
+    drawCircleFilled(x + getCos1024(touchAngle) * touchRadius / 1024 * startR / 1024,
+                     y - getSin1024(touchAngle) * touchRadius / 1024 * startR / 1024, 3,
+                     touched ? c500 : c333);
 }
 
 /**
@@ -338,7 +351,7 @@ static void touchTestDraw(void)
         drawCircleFilled(15, TFT_HEIGHT - 20 - (TFT_HEIGHT - 40) * cartY / 1024, 5, c050);
     }
 
-    touchDrawVector(60, TFT_HEIGHT / 4, 35);
+    touchDrawVector(&touchTest->ibm, "Raw", c222, 60, TFT_HEIGHT / 4, 35, touchTest->touch, touchTest->angle, touchTest->radius);
 
     // Write the values
     char buffer[64];
