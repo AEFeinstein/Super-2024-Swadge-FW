@@ -19,11 +19,11 @@
 #include "hdw-tft.h"
 #include "mainMenu.h"
 #include "breakout.h"
+#include "factoryTest.h"
 #include "mode_platformer.h"
 #include "mode_credits.h"
 #include "portableDance.h"
 #include "mode_ray.h"
-#include "tunernome.h"
 #include "settingsManager.h"
 #include "swadge2024.h"
 
@@ -49,15 +49,16 @@
 
 typedef struct
 {
-    const char* fname;
+    const char* filename;
     const char* name;
     song_t song;
 } jukeboxSong_t;
 
 typedef struct
 {
-    const char* catName;
+    const char* categoryName;
     const jukeboxSong_t* songs;
+    const uint8_t numSongs;
 } jukeboxCategory_t;
 
 typedef struct
@@ -71,12 +72,9 @@ typedef struct
     wsg_t jukeboxSprite;
 
     // Music Midis and Jukebox Structs
-    jukeboxCategory_t* musicCategories;
     uint8_t numMusicCategories;
 
     // SFX Midis and Jukebox Structs
-    jukeboxCategory_t* tunernomeSfxCategory;
-    jukeboxCategory_t* sfxCategories;
     uint8_t numSfxCategories;
 
     // Touch
@@ -108,7 +106,8 @@ void jukeboxMainLoop(int64_t elapsedUs);
 void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 void jukeboxBzrDoneCb(void);
-void jukeboxFreeCategories(jukeboxCategory_t** categoryArray, uint8_t numCategories);
+void jukeboxLoadCategories(const jukeboxCategory_t categoryArray[]);
+void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories);
 
 /*==============================================================================
  * Variables
@@ -152,454 +151,450 @@ static const char str_play[]       = ": Play";
 
 const jukeboxSong_t songs_galacticBrickdown[] = {
     {
-        .fname = "brkBgmCrazy.sng",
+        .filename = "brkBgmCrazy.sng",
         .name  = "BGM Crazy",
     },
     {
-        .fname = "brkBgmFinale.sng",
+        .filename = "brkBgmFinale.sng",
         .name  = "BGM Finale",
     },
     {
-        .fname = "brkBgmPixel.sng",
+        .filename = "brkBgmPixel.sng",
         .name  = "BGM Pixel",
     },        
     {
-        .fname = "brkBgmSkill.sng",
+        .filename = "brkBgmSkill.sng",
         .name  = "BGM Skill",
     },        
     {
-        .fname = "brkBgmTitle.sng",
+        .filename = "brkBgmTitle.sng",
         .name  = "BGM Title",
     },
 };
 
 const jukeboxSong_t songs_swadgeLand[] = {
     {
-        .fname = "bgmDeMAGio.sng",
+        .filename = "bgmDeMAGio.sng",
         .name  = "DeMAGio BGM",
     },
     {
-        .fname = "bgmSmooth.sng",
+        .filename = "bgmSmooth.sng",
         .name  = "Smooth BGM",
     },        
     {
-        .fname = "bgmUnderground.sng",
+        .filename = "bgmUnderground.sng",
         .name  = "Underground BGM",
     },        
     {
-        .fname = "bgmCastle.sng",
+        .filename = "bgmCastle.sng",
         .name  = "Castle BGM",
     },        
     {
-        .fname = "bgmNameEntry.sng",
+        .filename = "bgmNameEntry.sng",
         .name  = "Name Entry BGM",
     },
 };
 
 const jukeboxSong_t songs_magtroid[] = {
     {
-        .fname = "base_0.sng",
+        .filename = "base_0.sng",
         .name  = "Base 0",
     },
     {
-        .fname = "base_1.sng",
+        .filename = "base_1.sng",
         .name  = "Base 1",
     },        
     {
-        .fname = "cave_0.sng",
+        .filename = "cave_0.sng",
         .name  = "Cave 0",
     },        
     {
-        .fname = "cave_1.sng",
+        .filename = "cave_1.sng",
         .name  = "Cave 1",
     },        
     {
-        .fname = "jungle_0.sng",
+        .filename = "jungle_0.sng",
         .name  = "Jungle 0",
     },
     {
-        .fname = "jungle_1.sng",
+        .filename = "jungle_1.sng",
         .name  = "Jungle 1",
     },  
     {
-        .fname = "ray_boss.sng",
+        .filename = "ray_boss.sng",
         .name  = "Boss",
     },  
 };
 
 const jukeboxSong_t songs_jukebox[] = {
     {
-        .fname = "hotrod.sng",
+        .filename = "hotrod.sng",
         .name  = "Hot Rod",
     },
     {
-        .fname = "Fauxrio_Kart.sng",
+        .filename = "Fauxrio_Kart.sng",
         .name  = "Fauxrio Kart",
     },        
     {
-        .fname = "thelake.sng",
+        .filename = "thelake.sng",
         .name  = "The Lake",
     },        
     {
-        .fname = "yalikejazz.sng",
+        .filename = "yalikejazz.sng",
         .name  = "Ya like jazz?",
     },        
     {
-        .fname = "banana.sng",
+        .filename = "banana.sng",
         .name  = "Banana",
     },
 };
 
 const jukeboxSong_t songs_credits[] = {
     {
-        .fname = "credits.sng",
+        .filename = "credits.sng",
         .name  = creditsName,
     },
 };
 
 const jukeboxSong_t songs_unused[] = {
     {
-        .fname = "Pong BGM",
+        .filename = "Pong BGM",
         .name  = "gmcc.sng",
     },
     {
-        .fname = "Ode to Joy",
+        .filename = "Ode to Joy",
         .name  = "ode.sng",
     },
     {
-        .fname = "Stereo",
+        .filename = "Stereo",
         .name  = "stereo.sng",
     },
 };
 
 const jukeboxCategory_t musicCategories[] = {
     {
-        .catName  = breakoutName,
-        .songs = songs_galacticBrickdown
+        .categoryName  = breakoutName,
+        .songs = songs_galacticBrickdown,
+        .numSongs = ARRAY_SIZE(songs_galacticBrickdown),
     },
     {
-        .catName  = platformerName,
-        .songs = songs_swadgeLand
+        .categoryName  = platformerName,
+        .songs = songs_swadgeLand,
+        .numSongs = ARRAY_SIZE(songs_swadgeLand),
     },
     {
-        .catName  = rayName,
-        .songs = songs_magtroid
+        .categoryName  = rayName,
+        .songs = songs_magtroid,
+        .numSongs = ARRAY_SIZE(songs_magtroid),
     },
     {
-        .catName  = jukeboxName,
-        .songs = songs_jukebox
+        .categoryName  = jukeboxName,
+        .songs = songs_jukebox,
+        .numSongs = ARRAY_SIZE(songs_jukebox),
     },
     {
-        .catName = "(Unused)",
+        .categoryName = "(Unused)",
         .songs = songs_unused,
+        .numSongs = ARRAY_SIZE(songs_unused),
     }
 };
 
 const jukeboxSong_t sounds_galacticBrickdown[] = {
     {
-        .fname = "sndBounce.sng",
+        .filename = "sndBounce.sng",
         .name  = "Bounce",
     },
     {
-        .fname = "sndBreak.sng",
+        .filename = "sndBreak.sng",
         .name  = "Break",
     },        
     {
-        .fname = "sndBreak2.sng",
+        .filename = "sndBreak2.sng",
         .name  = "Break 2",
     },        
     {
-        .fname = "sndBreak3.sng",
+        .filename = "sndBreak3.sng",
         .name  = "Break 3",
     },        
     {
-        .fname = "sndBrk1up.sng",
+        .filename = "sndBrk1up.sng",
         .name  = "Break 1-Up",
     },        
     {
-        .fname = "sndBrkDie.sng",
+        .filename = "sndBrkDie.sng",
         .name  = "Break Die",
     },        
     {
-        .fname = "sndDetonate.sng",
+        .filename = "sndDetonate.sng",
         .name  = "Detonate",
     },        
     {
-        .fname = "sndDropBomb.sng",
+        .filename = "sndDropBomb.sng",
         .name  = "Drop Bomb",
     },        
     {
-        .fname = "sndTally.sng",
+        .filename = "sndTally.sng",
         .name  = "Tally",
     },        
     {
-        .fname = "sndWaveBall.sng",
+        .filename = "sndWaveBall.sng",
         .name  = "Wave Ball",
     },        
     {
-        .fname = "brkGameOver.sng",
+        .filename = "brkGameOver.sng",
         .name  = "Game Over",
     },        
     {
-        .fname = "brkGetReady.sng",
+        .filename = "brkGetReady.sng",
         .name  = "Get Ready",
     },        
     {
-        .fname = "brkHighScore.sng",
+        .filename = "brkHighScore.sng",
         .name  = "High Score",
     },        
     {
-        .fname = "brkLvlClear.sng",
+        .filename = "brkLvlClear.sng",
         .name  = "Level Clear",
     },
 };
 
 const jukeboxSong_t sounds_swadgeland[] = {
     {
-        .fname = "bgmIntro.sng",
+        .filename = "bgmIntro.sng",
         .name  = "Into",
     },
     {
-        .fname = "bgmGameStart.sng",
+        .filename = "bgmGameStart.sng",
         .name  = "Game Start",
     },        
     {
-        .fname = "bgmGameOver.sng",
+        .filename = "bgmGameOver.sng",
         .name  = "Game Over",
     },        
     {
-        .fname = "snd1up.sng",
+        .filename = "snd1up.sng",
         .name  = "1-Up",
     },        
     {
-        .fname = "sndCheckpoint.sng",
+        .filename = "sndCheckpoint.sng",
         .name  = "Checkpoint",
     },        
     {
-        .fname = "sndCoin.sng",
+        .filename = "sndCoin.sng",
         .name  = "Coin",
     },        
     {
-        .fname = "sndDie.sng",
+        .filename = "sndDie.sng",
         .name  = "Die",
     },        
     {
-        .fname = "sndHit.sng",
+        .filename = "sndHit.sng",
         .name  = "Hit",
     },        
     {
-        .fname = "sndHurt.sng",
+        .filename = "sndHurt.sng",
         .name  = "Hurt",
     },        
     {
-        .fname = "sndJump1.sng",
+        .filename = "sndJump1.sng",
         .name  = "Jump 1",
     },        
     {
-        .fname = "sndJump2.sng",
+        .filename = "sndJump2.sng",
         .name  = "Jump 2",
     },        
     {
-        .fname = "sndJump3.sng",
+        .filename = "sndJump3.sng",
         .name  = "Jump 3",
     },        
     {
-        .fname = "sndLevelClearA.sng",
+        .filename = "sndLevelClearA.sng",
         .name  = "Level Clear A",
     },        
     {
-        .fname = "sndLevelClearB.sng",
+        .filename = "sndLevelClearB.sng",
         .name  = "Level Clear B",
     },        
     {
-        .fname = "sndLevelClearC.sng",
+        .filename = "sndLevelClearC.sng",
         .name  = "Level Clear C",
     },        
     {
-        .fname = "sndLevelClearD.sng",
+        .filename = "sndLevelClearD.sng",
         .name  = "Level Clear D",
     },        
     {
-        .fname = "sndLevelClearS.sng",
+        .filename = "sndLevelClearS.sng",
         .name  = "Level Clear S",
     },        
     {
-        .fname = "sndMenuConfirm.sng",
+        .filename = "sndMenuConfirm.sng",
         .name  = "Menu Confirm",
     },        
     {
-        .fname = "sndMenuDeny.sng",
+        .filename = "sndMenuDeny.sng",
         .name  = "Menu Deny",
     },        
     {
-        .fname = "sndMenuSelect.sng",
+        .filename = "sndMenuSelect.sng",
         .name  = "Menu Select",
     },        
     {
-        .fname = "sndOuttaTime.sng",
+        .filename = "sndOuttaTime.sng",
         .name  = "Outta Time",
     },        
     {
-        .fname = "sndPause.sng",
+        .filename = "sndPause.sng",
         .name  = "Pause",
     },        
     {
-        .fname = "sndPowerUp.sng",
+        .filename = "sndPowerUp.sng",
         .name  = "Power Up",
     },        
     {
-        .fname = "sndSquish.sng",
+        .filename = "sndSquish.sng",
         .name  = "Squish",
     },        
     {
-        .fname = "sndWarp.sng",
+        .filename = "sndWarp.sng",
         .name  = "Warp",
     },        
     {
-        .fname = "sndWaveBall.sng",
+        .filename = "sndWaveBall.sng",
         .name  = "Wave Ball",
     },
 };
 
 const jukeboxSong_t sounds_magtroid[] = {
     {
-        .fname = "r_door_open.sng",
+        .filename = "r_door_open.sng",
         .name  = "Door Open",
     },
     {
-        .fname = "r_e_block.sng",
+        .filename = "r_e_block.sng",
         .name  = "Block",
     },
     {
-        .fname = "r_e_damage.sng",
+        .filename = "r_e_damage.sng",
         .name  = "Damage",
     },
     {
-        .fname = "r_e_dead.sng",
+        .filename = "r_e_dead.sng",
         .name  = "Dead",
     },
     {
-        .fname = "r_e_freeze.sng",
+        .filename = "r_e_freeze.sng",
         .name  = "Freeze",
     },
     {
-        .fname = "r_game_over.sng",
+        .filename = "r_game_over.sng",
         .name  = "Game Over",
     },
     {
-        .fname = "r_health.sng",
+        .filename = "r_health.sng",
         .name  = "Health",
     },
     {
-        .fname = "r_item_get.sng",
+        .filename = "r_item_get.sng",
         .name  = "Item Get",
     },
     {
-        .fname = "r_lava_dmg.sng",
+        .filename = "r_lava_dmg.sng",
         .name  = "Lava Damage",
     },
     {
-        .fname = "r_p_charge.sng",
+        .filename = "r_p_charge.sng",
         .name  = "Charge",
     },
     {
-        .fname = "r_p_charge_start.sng",
+        .filename = "r_p_charge_start.sng",
         .name  = "Charge Start",
     },
     {
-        .fname = "r_p_damage.sng",
+        .filename = "r_p_damage.sng",
         .name  = "Damage",
     },
     {
-        .fname = "r_p_ice.sng",
+        .filename = "r_p_ice.sng",
         .name  = "Ice",
     },
     {
-        .fname = "r_p_missile.sng",
+        .filename = "r_p_missile.sng",
         .name  = "Missile",
     },
     {
-        .fname = "r_p_shoot.sng",
+        .filename = "r_p_shoot.sng",
         .name  = "Shoot",
     },
     {
-        .fname = "r_p_xray.sng",
+        .filename = "r_p_xray.sng",
         .name  = "X-Ray",
     },
     {
-        .fname = "r_warp.sng",
+        .filename = "r_warp.sng",
         .name  = "Warp",
-    },
-};
-
-const jukeboxSong_t sounds_unused[] = {
-    {
-        .fname = "Pong Block 1",
-        .name  = "block1.sng",
-    },
-    {
-        .fname = "Pong Block 2",
-        .name  = "block2.sng",
     },
 };
 
 const jukeboxSong_t sounds_mainMenu[] = {
     {
-        .fname = "item.sng",
+        .filename = "item.sng",
         .name  = "Item",
     },
     {
-        .fname = "jingle.sng",
+        .filename = "jingle.sng",
         .name  = "Jingle",
     },
 };
 
-const jukeboxSong_t sounds_tunernome[] = {
+const jukeboxSong_t sounds_unused[] = {
     {
-        .fname = "item.sng",
-        .name  = "Item",
+        .filename = "Pong Block 1",
+        .name  = "block1.sng",
     },
     {
-        .fname = "jingle.sng",
-        .name  = "Jingle",
+        .filename = "Pong Block 2",
+        .name  = "block2.sng",
     },
 };
 
 const jukeboxSong_t sounds_FactoryTest[] = {
     {
-        .fname = "stereo_test.sng",
+        .filename = "stereo_test.sng",
         .name  = "Stereo Check",
     },
 };
 
 const jukeboxCategory_t sfxCategories[] = {
     {
-        .catName  = breakoutName,
-        .songs = sounds_galacticBrickdown
+        .categoryName  = breakoutName,
+        .songs = sounds_galacticBrickdown,
+        .numSongs = ARRAY_SIZE(sounds_galacticBrickdown),
     },
     {
-        .catName  = platformerName,
-        .songs = sounds_swadgeland
+        .categoryName  = platformerName,
+        .songs = sounds_swadgeland,
+        .numSongs = ARRAY_SIZE(sounds_swadgeland),
     },
     {
-        .catName  = rayName,
-        .songs = sounds_magtroid
+        .categoryName  = rayName,
+        .songs = sounds_magtroid,
+        .numSongs = ARRAY_SIZE(sounds_magtroid),
     },
     {
-        .catName  = tunernomeMode,
-        .songs = sounds_tunernome
+        .categoryName  = factoryTestName,
+        .songs = sounds_FactoryTest,
+        .numSongs = ARRAY_SIZE(sounds_FactoryTest),
     },
     {
-        .catName  = "Factory Test",
-        .songs = sounds_FactoryTest
+        .categoryName  = mainMenuName,
+        .songs = sounds_mainMenu,
+        .numSongs = ARRAY_SIZE(sounds_mainMenu),
     },
     {
-        .catName  = mainMenuName,
-        .songs = sounds_mainMenu
-    },
-    {
-        .catName = "(Unused)",
+        .categoryName = "(Unused)",
         .songs = sounds_unused,
+        .numSongs = ARRAY_SIZE(sounds_unused),
     }
 };
 
@@ -627,6 +622,9 @@ void jukeboxEnterMode()
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
     ///// Load music midis /////
+
+    jukeboxLoadCategories(musicCategories);
+    jukeboxLoadCategories(sfxCategories);
 
     ///// Initialize portable dances /////
 
@@ -665,17 +663,11 @@ void jukeboxExitMode(void)
     freeWsg(&jukebox->jukeboxSprite);
 
     // Free allocated music midis, song arrays, and category arrays
-    jukeboxFreeCategories(&jukebox->musicCategories, jukebox->numMusicCategories);
+    jukeboxFreeCategories(musicCategories, jukebox->numMusicCategories);
 
     // Free allocated SFX midis, song arrays, and category arrays
 
-    // Tunernome's SFX are declared in code, not loaded as .sng files, so we need to prevent them from being freed
-    for (int i = 0; i < ARRAY_SIZE(jukebox->tunernomeSfxCategory); i++)
-    {
-        memset(&jukebox->tunernomeSfxCategory->songs[i].song, 0, sizeof(song_t));
-    }
-
-    jukeboxFreeCategories(&jukebox->sfxCategories, jukebox->numSfxCategories);
+    jukeboxFreeCategories(sfxCategories, jukebox->numSfxCategories);
 
     // Free dances
 
@@ -709,12 +701,12 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             {
                 if (jukebox->inMusicSubmode)
                 {
-                    bzrPlayBgmCb(&jukebox->musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song,
+                    bzrPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song,
                                  BZR_STEREO, jukeboxBzrDoneCb);
                 }
                 else
                 {
-                    bzrPlaySfxCb(&jukebox->sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
+                    bzrPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                  jukeboxBzrDoneCb);
                 }
                 jukebox->isPlaying = true;
@@ -792,11 +784,11 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
-                length = ARRAY_SIZE(jukebox->musicCategories[jukebox->categoryIdx]);
+                length = musicCategories[jukebox->categoryIdx].numSongs;
             }
             else
             {
-                length = ARRAY_SIZE(jukebox->sfxCategories[jukebox->categoryIdx]);
+                length = sfxCategories[jukebox->categoryIdx].numSongs;
             }
 
             uint8_t before = jukebox->songIdx;
@@ -817,11 +809,11 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
-                length = ARRAY_SIZE(jukebox->musicCategories[jukebox->categoryIdx]);
+                length = musicCategories[jukebox->categoryIdx].numSongs;
             }
             else
             {
-                length = ARRAY_SIZE(jukebox->sfxCategories[jukebox->categoryIdx]);
+                length = sfxCategories[jukebox->categoryIdx].numSongs;
             }
 
             uint8_t before   = jukebox->songIdx;
@@ -904,7 +896,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
                                  TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
     drawText(&jukebox->radiostars, c555, btnText, afterText, TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
-    const char* catName;
+    const char* categoryName;
     char* songName;
     char* songTypeName;
     uint8_t numSongs;
@@ -919,10 +911,10 @@ void jukeboxMainLoop(int64_t elapsedUs)
         }
         else
         {
-            catName = jukebox->musicCategories[jukebox->categoryIdx].catName;
-            songName     = jukebox->musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
+            categoryName = musicCategories[jukebox->categoryIdx].categoryName;
+            songName     = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
             songTypeName = "Music";
-            numSongs     = ARRAY_SIZE(jukebox->musicCategories[jukebox->categoryIdx]);
+            numSongs     = musicCategories[jukebox->categoryIdx].numSongs;
             drawNames    = true;
         }
     }
@@ -936,10 +928,10 @@ void jukeboxMainLoop(int64_t elapsedUs)
         }
         else
         {
-            catName = jukebox->sfxCategories[jukebox->categoryIdx].catName;
-            songName     = jukebox->sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
+            categoryName = sfxCategories[jukebox->categoryIdx].categoryName;
+            songName     = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].name;
             songTypeName = "SFX";
-            numSongs     = ARRAY_SIZE(jukebox->sfxCategories[jukebox->categoryIdx]);
+            numSongs     = sfxCategories[jukebox->categoryIdx].numSongs;
             drawNames    = true;
         }
     }
@@ -949,11 +941,11 @@ void jukeboxMainLoop(int64_t elapsedUs)
         // Draw the mode name
         const font_t* nameFont      = &(jukebox->radiostars);
         uint8_t arrowOffsetFromText = 8;
-        if (catName == breakoutMode.modeName)
+        if (categoryName == breakoutMode.modeName)
         {
             arrowOffsetFromText = 1;
         }
-        snprintf(text, sizeof(text), "Mode: %s", catName);
+        snprintf(text, sizeof(text), "Mode: %s", categoryName);
         int16_t width = textWidth(nameFont, text);
         int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - nameFont->height * 0;
         drawText(nameFont, c311, text, (TFT_WIDTH - width) / 2, yOff);
@@ -997,14 +989,14 @@ void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t
 
 void jukeboxBzrDoneCb(void)
 {
-    jukeboxCategory_t* category;
+    const jukeboxCategory_t* category;
     if (jukebox->inMusicSubmode)
     {
-        category = jukebox->musicCategories;
+        category = musicCategories;
     }
     else
     {
-        category = jukebox->sfxCategories;
+        category = sfxCategories;
     }
 
     if (!category[jukebox->categoryIdx].songs[jukebox->songIdx].song.shouldLoop)
@@ -1013,22 +1005,29 @@ void jukeboxBzrDoneCb(void)
     }
 }
 
-void jukeboxFreeCategories(jukeboxCategory_t** categoryArray, uint8_t numCategories)
+void jukeboxLoadCategories(const jukeboxCategory_t categoryArray[])
 {
-    for (uint8_t catIdx = 0; catIdx < numCategories; catIdx++)
+    for (int categoryIdx = 0; categoryIdx < ARRAY_SIZE(categoryArray); categoryIdx++)
     {
-        for (uint8_t songIdx = 0; songIdx < ARRAY_SIZE(categoryArray[catIdx]); songIdx++)
+        for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
+        loadSong(categoryArray[categoryIdx].songs[songIdx].filename, &categoryArray[categoryIdx].songs[songIdx].song, true);
+    }
+}
+
+void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories)
+{
+    for (uint8_t categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
+    {
+        for (uint8_t songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
         {
             // Avoid freeing songs we never loaded
-            if (categoryArray[catIdx]->songs[songIdx].song.tracks != NULL)
+            if (categoryArray[categoryIdx].songs[songIdx].song.tracks != NULL)
             {
-                freeSong(&categoryArray[catIdx]->songs[songIdx].song);
+                freeSong(&categoryArray[categoryIdx].songs[songIdx].song);
             }
         }
 
-        free(categoryArray[catIdx]->songs);
-        free(categoryArray[catIdx]);
+        free(categoryArray[categoryIdx].songs);
+        free(&categoryArray[categoryIdx]);
     }
-
-    free(categoryArray);
 }

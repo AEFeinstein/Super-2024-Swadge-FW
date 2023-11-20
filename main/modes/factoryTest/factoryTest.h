@@ -5,4 +5,6 @@
 
 extern swadgeMode_t factoryTestMode;
 
+extern const char factoryTestName[];
+
 #endif
