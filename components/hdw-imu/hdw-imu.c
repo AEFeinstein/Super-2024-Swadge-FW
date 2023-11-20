@@ -372,6 +372,9 @@ esp_err_t accelIntegrate()
 
     uint32_t start = getCycleCount();
 
+    // Round down
+    readr = (readr / 6) * 6;
+
     // STEP 0:  Decide your coordinate frame.
 
     // [0] = +X axis coming out right of controller.
@@ -385,6 +388,8 @@ esp_err_t accelIntegrate()
         // Extract data from IMU
         int16_t* euler_deltas = cdata; // Euler angles, from gyro.
         int16_t* accel_data   = cdata + 3;
+
+        //ESP_LOGI( "_", "%2d%3d%4d%4d%4d%5d%5d%5d", samp, readr, euler_deltas[0], euler_deltas[1], euler_deltas[2], accel_data[0], accel_data[1], accel_data[2] );
 
         // Manual cal, used only for Steps 2..8
         //    euler_deltas[0] -= 12;
