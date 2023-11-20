@@ -191,8 +191,6 @@ static void mainMenuEnterMode(void)
     // End the submenu for settings
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
-    printf("%" PRIu8 "\n", getShowSecretsMenuSetting());
-
     if (getShowSecretsMenuSetting() == SHOW_SECRETS)
     {
         addSecretsMenu();
