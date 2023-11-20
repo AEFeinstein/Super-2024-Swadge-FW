@@ -15,6 +15,7 @@
 #include <string.h>
 #include <limits.h>
 #include <math.h>
+#include <esp_log.h>
 
 #include "hdw-tft.h"
 #include "mainMenu.h"
@@ -106,7 +107,7 @@ void jukeboxMainLoop(int64_t elapsedUs);
 void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 void jukeboxBzrDoneCb(void);
-void jukeboxLoadCategories(const jukeboxCategory_t categoryArray[]);
+void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories);
 void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories);
 
 /*==============================================================================
@@ -132,6 +133,8 @@ swadgeMode_t jukeboxMode = {
     .fnAdvancedUSB            = NULL,
 };
 
+const char* JK_TAG = "JK";
+
 /*==============================================================================
  * Const Variables
  *============================================================================*/
@@ -150,26 +153,26 @@ static const char str_play[]       = ": Play";
 // Arrays
 
 const jukeboxSong_t songs_galacticBrickdown[] = {
-    {
-        .filename = "brkBgmCrazy.sng",
-        .name  = "BGM Crazy",
-    },
-    {
-        .filename = "brkBgmFinale.sng",
-        .name  = "BGM Finale",
-    },
-    {
-        .filename = "brkBgmPixel.sng",
-        .name  = "BGM Pixel",
-    },        
-    {
-        .filename = "brkBgmSkill.sng",
-        .name  = "BGM Skill",
-    },        
-    {
-        .filename = "brkBgmTitle.sng",
-        .name  = "BGM Title",
-    },
+    // {
+    //     .filename = "brkBgmCrazy.sng",
+    //     .name  = "BGM Crazy",
+    // },
+    // {
+    //     .filename = "brkBgmFinale.sng",
+    //     .name  = "BGM Finale",
+    // },
+    // {
+    //     .filename = "brkBgmPixel.sng",
+    //     .name  = "BGM Pixel",
+    // },        
+    // {
+    //     .filename = "brkBgmSkill.sng",
+    //     .name  = "BGM Skill",
+    // },        
+    // {
+    //     .filename = "brkBgmTitle.sng",
+    //     .name  = "BGM Title",
+    // },
 };
 
 const jukeboxSong_t songs_swadgeLand[] = {
@@ -623,8 +626,8 @@ void jukeboxEnterMode()
 
     ///// Load music midis /////
 
-    jukeboxLoadCategories(musicCategories);
-    jukeboxLoadCategories(sfxCategories);
+    jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories));
+    jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories));
 
     ///// Initialize portable dances /////
 
@@ -1005,12 +1008,19 @@ void jukeboxBzrDoneCb(void)
     }
 }
 
-void jukeboxLoadCategories(const jukeboxCategory_t categoryArray[])
+void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories)
 {
-    for (int categoryIdx = 0; categoryIdx < ARRAY_SIZE(categoryArray); categoryIdx++)
+    for (int categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
     {
         for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
-        loadSong(categoryArray[categoryIdx].songs[songIdx].filename, &categoryArray[categoryIdx].songs[songIdx].song, true);
+        {
+            loadSong(categoryArray[categoryIdx].songs[songIdx].filename, &categoryArray[categoryIdx].songs[songIdx].song, true);
+            
+            if (categoryArray[categoryIdx].songs[songIdx].song.numTracks == 0)
+            {
+                ESP_LOGE(JK_TAG, "Category %d \"%s\" song %d \"%s\" numTracks is 0\n", categoryIdx, categoryArray[categoryIdx].categoryName, songIdx, categoryArray[categoryIdx].songs[songIdx].filename);
+            }
+        }
     }
 }
 
