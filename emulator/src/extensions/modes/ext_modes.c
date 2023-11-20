@@ -29,7 +29,6 @@
 #include "mode_ray.h"
 #include "paint_share.h"
 #include "pushy.h"
-#include "soko.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "mode_credits.h"
@@ -71,7 +70,6 @@ static swadgeMode_t* allSwadgeModes[] = {
     &modePaint,
     &pushyMode,
     &rayMode,
-    &sokoMode,
     &touchTestMode,
     &tunernomeMode,
     &modeCredits,

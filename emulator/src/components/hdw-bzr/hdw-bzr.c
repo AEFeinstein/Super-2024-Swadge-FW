@@ -613,3 +613,18 @@ void bzrRestore(void* data)
 
     free(data);
 }
+
+/**
+ * @brief Get the actual volume level from the setting
+ *
+ * @param setting The volume level setting
+ * @return The actual volume
+ */
+uint16_t volLevelFromSetting(uint16_t setting)
+{
+    if (setting < (sizeof(volLevels) / sizeof(volLevels[0])))
+    {
+        return volLevels[setting];
+    }
+    return 0;
+}

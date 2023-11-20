@@ -58,6 +58,7 @@ DECL_SETTING(led_br, 0, MAX_LED_BRIGHTNESS, 5);
 DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
 DECL_SETTING(scrn_sv, 0, 300, 20);
+DECL_SETTING(gp_accel, 0, 1, 1);
 
 //==============================================================================
 // Static Function Prototypes
@@ -465,7 +466,7 @@ bool getTestModePassedSetting(void)
 }
 
 /**
- * @brief Set the current test mode passed setting. The new value is immediately used when sampling the microphone.
+ * @brief Set the current test mode passed setting.
  *
  * @param status The new test mode passed setting
  * @return true if the setting was written, false if it wasn't
@@ -473,4 +474,35 @@ bool getTestModePassedSetting(void)
 bool setTestModePassedSetting(bool status)
 {
     return setSetting(&test_setting, status);
+}
+
+/**
+ * @brief Get the current Gamepad accel setting
+ *
+ * @return true if Gamepad accel is enabled, false if not
+ */
+bool getGamepadAccelSetting(void)
+{
+    return gp_accel_setting.val;
+}
+
+/**
+ * @brief Get the bounds for the Gamepad accel setting. Useful for initializing settings items in menus.
+ *
+ * @return the bounds for the Gamepad accel setting
+ */
+const settingParam_t* getGamepadAccelSettingBounds(void)
+{
+    return &gp_accel_param;
+}
+
+/**
+ * @brief Set the current Gamepad accel setting.
+ *
+ * @param status The new Gamepad accel setting
+ * @return true if the setting was written, false if it wasn't
+ */
+bool setGamepadAccelSetting(bool status)
+{
+    return setSetting(&gp_accel_setting, status);
 }

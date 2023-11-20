@@ -277,5 +277,6 @@ void bzrResume(void);
 void* bzrSave(void);
 void bzrRestore(void* data);
 void bzrCheckSongDone(void);
+uint16_t volLevelFromSetting(uint16_t setting);
 
 #endif
