@@ -174,23 +174,101 @@ void jukeboxEnterMode()
 
     jukeboxSong_t songs_galacticbrickdown[] = {
         {
-            .fname = "Song.mid",
-            .name  = "asd",
+            .fname = "brkBgmCrazy.sng",
+            .name  = "BGM Crazy",
         },
         {
-            .fname = "Song.mid",
-            .name  = "asd",
+            .fname = "brkBgmFinale.sng",
+            .name  = "BGM Finale",
+        },
+        {
+            .fname = "brkBgmPixel.sng",
+            .name  = "BGM Pixel",
+        },        
+        {
+            .fname = "brkBgmSkill.sng",
+            .name  = "BGM Skill",
+        },        
+        {
+            .fname = "brkBgmTitle.sng",
+            .name  = "BGM Title",
         },
     };
 
     jukeboxSong_t songs_swadgeland[] = {
         {
-            .fname = "Song.mid",
-            .name  = "asd",
+            .fname = "bgmDeMAGio.sng",
+            .name  = "DeMAGio BGM",
         },
         {
-            .fname = "Song.mid",
-            .name  = "asd",
+            .fname = "bgmSmooth.sng",
+            .name  = "Smooth BGM",
+        },        
+        {
+            .fname = "bgmUnderground.sng",
+            .name  = "Underground BGM",
+        },        
+        {
+            .fname = "bgmCastle.sng",
+            .name  = "Castle BGM",
+        },        
+        {
+            .fname = "bgmNameEntry.sng",
+            .name  = "Name Entry BGM",
+        },
+    };
+
+    jukeboxSong_t songs_magtroid[] = {
+        {
+            .fname = "base_0.sng",
+            .name  = "Base 0",
+        },
+        {
+            .fname = "base_1.sng",
+            .name  = "Base 1",
+        },        
+        {
+            .fname = "cave_0.sng",
+            .name  = "Cave 0",
+        },        
+        {
+            .fname = "cave_1.sng",
+            .name  = "Cave 1",
+        },        
+        {
+            .fname = "jungle_0.sng",
+            .name  = "Jungle 0",
+        },
+        {
+            .fname = "jungle_1.sng",
+            .name  = "Jungle 1",
+        },  
+        {
+            .fname = "ray_boss.sng",
+            .name  = "Boss",
+        },  
+    };
+
+    jukeboxSong_t songs_jukebox[] = {
+        {
+            .fname = "hotrod.sng",
+            .name  = "Hot Rod",
+        },
+        {
+            .fname = "Fauxrio_Kart.sng",
+            .name  = "Fauxrio Kart",
+        },        
+        {
+            .fname = "thelake.sng",
+            .name  = "The Lake",
+        },        
+        {
+            .fname = "yalikejazz.sng",
+            .name  = "Ya like jazz?",
+        },        
+        {
+            .fname = "banana.sng",
+            .name  = "Banana",
         },
     };
 
@@ -202,6 +280,14 @@ void jukeboxEnterMode()
         {
             .catName  = modePlatformer.modeName,
             .songs = &songs_swadgeland
+        },
+        {
+            .catName  = rayMode.modeName,
+            .songs = &songs_magtroid
+        },
+        {
+            .catName  = jukeboxMode.modeName,
+            .songs = &songs_jukebox
         },
     };
 
