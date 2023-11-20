@@ -389,7 +389,8 @@ esp_err_t accelIntegrate()
         int16_t* euler_deltas = cdata; // Euler angles, from gyro.
         int16_t* accel_data   = cdata + 3;
 
-        //ESP_LOGI( "_", "%2d%3d%4d%4d%4d%5d%5d%5d", samp, readr, euler_deltas[0], euler_deltas[1], euler_deltas[2], accel_data[0], accel_data[1], accel_data[2] );
+        // ESP_LOGI( "_", "%2d%3d%4d%4d%4d%5d%5d%5d", samp, readr, euler_deltas[0], euler_deltas[1], euler_deltas[2],
+        // accel_data[0], accel_data[1], accel_data[2] );
 
         // Manual cal, used only for Steps 2..8
         //    euler_deltas[0] -= 12;
@@ -529,7 +530,7 @@ esp_err_t accelIntegrate()
             // set fqQuat to be the rotation to go from our "up" from the
             // accelerometer to the nominal "up"
             float ideal_up[3] = {0, 1, 0};
-            mathQuatFromTwoVectors( ld->fqQuat, ideal_up, accel_up );
+            mathQuatFromTwoVectors(ld->fqQuat, ideal_up, accel_up);
         }
         else
         {
@@ -674,7 +675,6 @@ esp_err_t accelPerformCal()
     return ESP_OK;
 }
 
-
 /**
  * @brief Get a steering wheel style input.  Use getAtan2( xcomp, ycomp ) to get angle. 0..360 with 180 being up.
  *
@@ -687,12 +687,12 @@ esp_err_t accelPerformCal()
  * @param ycomp is a pointer to receive the y component of the steering wheel (-4096-4096) +y is "down"
  * @return Return ESP_OK if all is ok.
  */
-esp_err_t accelGetSteeringAngleDegrees(int16_t * xcomp, int16_t * ycomp)
+esp_err_t accelGetSteeringAngleDegrees(int16_t* xcomp, int16_t* ycomp)
 {
     // compute steering angle
     float up_from_face_of_controller[3] = {0, 0, 1};
 
-    mathRotateVectorByInverseOfQuaternion( up_from_face_of_controller, LSM6DSL.fqQuat, up_from_face_of_controller );
+    mathRotateVectorByInverseOfQuaternion(up_from_face_of_controller, LSM6DSL.fqQuat, up_from_face_of_controller);
 
     float up_from_face_of_controller_local[3] = {0, 0, 1};
 
@@ -701,22 +701,24 @@ esp_err_t accelGetSteeringAngleDegrees(int16_t * xcomp, int16_t * ycomp)
         up_from_face_of_controller_local[2] = -1;
 
     float q[4];
-    mathQuatFromTwoVectors( q, up_from_face_of_controller, up_from_face_of_controller_local );
+    mathQuatFromTwoVectors(q, up_from_face_of_controller, up_from_face_of_controller_local);
     float q2[4];
-    mathQuatApply( q2, LSM6DSL.fqQuat, q );
+    mathQuatApply(q2, LSM6DSL.fqQuat, q);
 
-    // q2 now has the correct Z-rotation (Because it's in-plane with the virtual Z plane made by the flat surface of the swadge.
-    float right[3] = { 1, 0, 0 };
-    if( up_from_face_of_controller[2] < 0 ) 
+    // q2 now has the correct Z-rotation (Because it's in-plane with the virtual Z plane made by the flat surface of the
+    // swadge.
+    float right[3] = {1, 0, 0};
+    if (up_from_face_of_controller[2] < 0)
         right[0] = -1;
 
-    mathRotateVectorByInverseOfQuaternion( right, q2, right );
-    if (xcomp) *xcomp = right[1] * 4096;
-    if (ycomp) *ycomp =-right[0] * 4096;
+    mathRotateVectorByInverseOfQuaternion(right, q2, right);
+    if (xcomp)
+        *xcomp = right[1] * 4096;
+    if (ycomp)
+        *ycomp = -right[0] * 4096;
 
     return ESP_OK;
 }
-
 
 /**
  * @brief Get current divergence as the cal algorithm attempts to converge on a good cal.

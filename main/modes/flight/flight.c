@@ -327,7 +327,8 @@ static const char fl_flight_gyro0_env[] = "Gyro: Off";
 static const char fl_flight_gyro1_env[] = "Gyro: On";
 static const char fl_flight_gyro2_env[] = "Gyro: Full";
 static const char fl_flight_gyro3_env[] = "Gyro: Joy";
-static const char * gyro_titles[4] = { fl_flight_gyro0_env, fl_flight_gyro1_env, fl_flight_gyro2_env, fl_flight_gyro3_env };
+static const char* gyro_titles[4]
+    = {fl_flight_gyro0_env, fl_flight_gyro1_env, fl_flight_gyro2_env, fl_flight_gyro3_env};
 
 static const char fl_flight_perf[]  = "Free / VS";
 static const char fl_100_percent[]  = "100% 100% 100%";
@@ -444,8 +445,7 @@ static void flightEnterMode(void)
     addSingleItemToMenu(flight->menu, fl_flight_perf);
     flight->menuEntryForInvertY = addSingleItemToMenu(
         flight->menu, flight->savedata.flightInvertY ? fl_flight_invertY1_env : fl_flight_invertY0_env);
-    flight->menuEntryForEnableIMU = addSingleItemToMenu(
-        flight->menu, gyro_titles[flight->savedata.flightIMU]);
+    flight->menuEntryForEnableIMU = addSingleItemToMenu(flight->menu, gyro_titles[flight->savedata.flightIMU]);
 
     addSingleItemToMenu(flight->menu, str_high_scores);
     addSingleItemToMenu(flight->menu, str_quit);
@@ -511,25 +511,25 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
     }
     else if (fl_flight_gyro0_env == menuItem)
     {
-        flight->savedata.flightIMU = 1;
+        flight->savedata.flightIMU           = 1;
         flight->menuEntryForEnableIMU->label = fl_flight_gyro1_env;
         setFlightSaveData(&flight->savedata);
     }
     else if (fl_flight_gyro1_env == menuItem)
     {
-        flight->savedata.flightIMU = 2;
+        flight->savedata.flightIMU           = 2;
         flight->menuEntryForEnableIMU->label = fl_flight_gyro2_env;
         setFlightSaveData(&flight->savedata);
     }
     else if (fl_flight_gyro2_env == menuItem)
     {
-        flight->savedata.flightIMU = 3;
+        flight->savedata.flightIMU           = 3;
         flight->menuEntryForEnableIMU->label = fl_flight_gyro3_env;
         setFlightSaveData(&flight->savedata);
     }
     else if (fl_flight_gyro3_env == menuItem)
     {
-        flight->savedata.flightIMU = 0;
+        flight->savedata.flightIMU           = 0;
         flight->menuEntryForEnableIMU->label = fl_flight_gyro0_env;
         setFlightSaveData(&flight->savedata);
     }
@@ -683,7 +683,7 @@ static void flightStartGame(flightModeScreen mode)
     flight->speed             = 0;
 
     accelSetRegistersAndReset();
-    flight->inittedIMU = 0;
+    flight->inittedIMU     = 0;
     flight->fqQuatAccum[0] = 0;
     flight->fqQuatAccum[1] = 0;
     flight->fqQuatAccum[2] = 1; // Default should be pointing into the game.
@@ -1301,26 +1301,26 @@ static void flightRender(int64_t elapsedUs)
     if (flight->savedata.flightIMU == 2 || flight->savedata.flightIMU == 3)
     {
         // Quat to rotmat.
-        int16_t rotmat[16] = { 0 };
-        float q0 = tflight->fqQuatAccum[0];
-        float q1 =-tflight->fqQuatAccum[1];
-        float q2 =-tflight->fqQuatAccum[2];
-        float q3 =-tflight->fqQuatAccum[3];
-        rotmat[0*4+0] = (2 * (q0 * q0 + q1 * q1) - 1)*256;
-        rotmat[0*4+1] = (2 * (q1 * q2 - q0 * q3))*256;
-        rotmat[0*4+2] = (2 * (q1 * q3 + q0 * q2))*256;
-        rotmat[1*4+0] = (2 * (q1 * q2 + q0 * q3))*256;
-        rotmat[1*4+1] = (2 * (q0 * q0 + q2 * q2) - 1)*256;
-        rotmat[1*4+2] = (2 * (q2 * q3 - q0 * q1))*256;
-        rotmat[2*4+0] = (2 * (q1 * q3 - q0 * q2))*256;
-        rotmat[2*4+1] = (2 * (q2 * q3 + q0 * q1))*256;
-        rotmat[2*4+2] = (2 * (q0 * q0 + q3 * q3) - 1)*256;
-        rotmat[3*4+3] = 1*256;
+        int16_t rotmat[16] = {0};
+        float q0           = tflight->fqQuatAccum[0];
+        float q1           = -tflight->fqQuatAccum[1];
+        float q2           = -tflight->fqQuatAccum[2];
+        float q3           = -tflight->fqQuatAccum[3];
+        rotmat[0 * 4 + 0]  = (2 * (q0 * q0 + q1 * q1) - 1) * 256;
+        rotmat[0 * 4 + 1]  = (2 * (q1 * q2 - q0 * q3)) * 256;
+        rotmat[0 * 4 + 2]  = (2 * (q1 * q3 + q0 * q2)) * 256;
+        rotmat[1 * 4 + 0]  = (2 * (q1 * q2 + q0 * q3)) * 256;
+        rotmat[1 * 4 + 1]  = (2 * (q0 * q0 + q2 * q2) - 1) * 256;
+        rotmat[1 * 4 + 2]  = (2 * (q2 * q3 - q0 * q1)) * 256;
+        rotmat[2 * 4 + 0]  = (2 * (q1 * q3 - q0 * q2)) * 256;
+        rotmat[2 * 4 + 1]  = (2 * (q2 * q3 + q0 * q1)) * 256;
+        rotmat[2 * 4 + 2]  = (2 * (q0 * q0 + q3 * q3) - 1) * 256;
+        rotmat[3 * 4 + 3]  = 1 * 256;
         tdMultiply(flight->ProjectionMatrix, rotmat, flight->ProjectionMatrix);
     }
     else
     {
-        tdRotateEA(flight->ProjectionMatrix, tflight->hpr[1] / 11, tflight->hpr[0] / 11, 0 );
+        tdRotateEA(flight->ProjectionMatrix, tflight->hpr[1] / 11, tflight->hpr[0] / 11, 0);
     }
     tdTranslate(flight->ModelviewMatrix, -tflight->planeloc[0], -tflight->planeloc[1], -tflight->planeloc[2]);
 
@@ -1686,10 +1686,10 @@ static void flightGameUpdate(flight_t* tflight)
     {
         if (flight->savedata.flightIMU == 3)
         {
-            float qThisQuat[4] = { LSM6DSL.fqQuat[0],-LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2],-LSM6DSL.fqQuat[3] };
-            float qRotIntoScreen[4] = { 1, 0, 0, 0  };
-            float * acc = flight->fqQuatAccelAccum;
-            mathQuatApply( acc, qThisQuat, qRotIntoScreen );
+            float qThisQuat[4]      = {LSM6DSL.fqQuat[0], -LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], -LSM6DSL.fqQuat[3]};
+            float qRotIntoScreen[4] = {1, 0, 0, 0};
+            float* acc              = flight->fqQuatAccelAccum;
+            mathQuatApply(acc, qThisQuat, qRotIntoScreen);
 
             mathComputeQuaternionDeltaBetweenQuaternions(acc, tflight->fqQuatLast, acc);
 
@@ -1703,19 +1703,21 @@ static void flightGameUpdate(flight_t* tflight)
             acc[1] *= delta * 0.000001f * 4.0f;
             acc[2] *= delta * 0.000001f * 4.0f;
             acc[3] *= delta * 0.000001f * 4.0f;
-            acc[0] = mathsqrtf( 1.0 - acc[1]*acc[1] + acc[2]*acc[2] + acc[3]*acc[3] );
-            //ESP_LOGI( "_", "%d %5d %5d %5d %5d / %5d %5d %5d %5d", tflight->inittedIMU,((int)(acc[0]*1024)), ((int)(acc[1]*1024)), ((int)(acc[2]*1024)), ((int)(acc[3]*1024)),
-            //    ((int)(flight->fqQuatLast[0]*1024)),((int)(flight->fqQuatLast[1]*1024)),((int)(flight->fqQuatLast[2]*1024)),((int)(flight->fqQuatLast[3]*1024)) );
-            mathQuatApply( flight->fqQuatAccum, flight->fqQuatAccum, acc );
-            mathQuatNormalize( flight->fqQuatAccum, flight->fqQuatAccum );
+            acc[0] = mathsqrtf(1.0 - acc[1] * acc[1] + acc[2] * acc[2] + acc[3] * acc[3]);
+            // ESP_LOGI( "_", "%d %5d %5d %5d %5d / %5d %5d %5d %5d", tflight->inittedIMU,((int)(acc[0]*1024)),
+            // ((int)(acc[1]*1024)), ((int)(acc[2]*1024)), ((int)(acc[3]*1024)),
+            //     ((int)(flight->fqQuatLast[0]*1024)),((int)(flight->fqQuatLast[1]*1024)),((int)(flight->fqQuatLast[2]*1024)),((int)(flight->fqQuatLast[3]*1024))
+            //     );
+            mathQuatApply(flight->fqQuatAccum, flight->fqQuatAccum, acc);
+            mathQuatNormalize(flight->fqQuatAccum, flight->fqQuatAccum);
         }
         else if (flight->savedata.flightIMU == 2)
         {
-            float qThisQuat[4] = { LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3] };
-            float qRotIntoScreen[4] = { 0, 0, 1, 0  };
-            mathQuatApply( flight->fqQuatAccum, qThisQuat, qRotIntoScreen );
+            float qThisQuat[4]      = {LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3]};
+            float qRotIntoScreen[4] = {0, 0, 1, 0};
+            mathQuatApply(flight->fqQuatAccum, qThisQuat, qRotIntoScreen);
         }
-        else if (flight->savedata.flightIMU == 1 )
+        else if (flight->savedata.flightIMU == 1)
         {
             float* quat = LSM6DSL.fqQuat;
             float qDiff[4];
@@ -1727,15 +1729,15 @@ static void flightGameUpdate(flight_t* tflight)
             int deltay = qDiff[1] * 3072;
             int deltaz = -qDiff[3] * 3072;
 
-            
-            //ESP_LOGI( "_", "%5d %5d %5d %d", (int)(deltax), (int)(deltay), (int)(deltaz), (int)flight->savedata.flightIMU );
+            // ESP_LOGI( "_", "%5d %5d %5d %d", (int)(deltax), (int)(deltay), (int)(deltaz),
+            // (int)flight->savedata.flightIMU );
 
             // Hold off for two frames.  Need fqQuatLast to work.
             if (tflight->inittedIMU < 2)
             {
                 tflight->inittedIMU++;
-                deltax = 0;
-                deltay = 0;
+                deltax          = 0;
+                deltay          = 0;
                 tflight->accumx = 0;
                 tflight->accumy = 0;
                 tflight->accumz = 0;
@@ -1921,8 +1923,8 @@ static void flightGameUpdate(flight_t* tflight)
     int32_t speedPU[3];
     if (flight->savedata.flightIMU == 2 || flight->savedata.flightIMU == 3)
     {
-        float vecIntoScreen[3] = { 0, 0, 1 };
-        mathRotateVectorByQuaternion( vecIntoScreen, flight->fqQuatAccum, vecIntoScreen );
+        float vecIntoScreen[3] = {0, 0, 1};
+        mathRotateVectorByQuaternion(vecIntoScreen, flight->fqQuatAccum, vecIntoScreen);
         speedPU[0] = ((int)(rspeed * vecIntoScreen[0] * 1024)) >> 7;
         speedPU[1] = ((int)(rspeed * vecIntoScreen[1] * 1024)) >> 7;
         speedPU[2] = ((int)(rspeed * vecIntoScreen[2] * 1024)) >> 7;
