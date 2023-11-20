@@ -518,6 +518,8 @@ int getTouchJoystick(int32_t* phi, int32_t* r, int32_t* intensity)
         ringIntensity = oPeak + leftOfPeak;
     }
 
+    center -= 80;
+    if( center < -1280 ) center += 1280;
     int ringPh = (center < 0) ? (center + 1280) : center;
 
     // 0->1280 --> 0->360
