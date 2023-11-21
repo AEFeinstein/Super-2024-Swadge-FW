@@ -72,7 +72,7 @@ static const paletteColor_t rayCreditColors[] = {
  */
 void rayShowCredits(ray_t* ray)
 {
-    ray->btnLockoutUs = 2000000;
+    ray->btnLockoutUs = RAY_BUTTON_LOCKOUT_US;
 
     // Make sure player data is loaded for the completion string
     rayStartGame();
