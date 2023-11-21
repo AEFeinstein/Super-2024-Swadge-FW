@@ -474,19 +474,19 @@ jukeboxSong_t sfx_magtroidPocket[] = {
     },
     {
         .filename = "r_e_block.sng",
-        .name     = "Block",
+        .name     = "Enemy Block",
     },
     {
         .filename = "r_e_damage.sng",
-        .name     = "Damage",
+        .name     = "Enemy Damage",
     },
     {
         .filename = "r_e_dead.sng",
-        .name     = "Dead",
+        .name     = "Enemy Dead",
     },
     {
         .filename = "r_e_freeze.sng",
-        .name     = "Freeze",
+        .name     = "Enemy Freeze",
     },
     {
         .filename = "r_game_over.sng",
@@ -514,7 +514,7 @@ jukeboxSong_t sfx_magtroidPocket[] = {
     },
     {
         .filename = "r_p_damage.sng",
-        .name     = "Damage",
+        .name     = "Player Damage",
     },
     {
         .filename = "r_p_ice.sng",
