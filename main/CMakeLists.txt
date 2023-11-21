@@ -159,13 +159,6 @@ function(spiffs_file_preprocessor)
     )
 endfunction()
 
-# Create a SPIFFS image from the contents of the 'spiffs_image' directory
-# that fits the partition named 'storage'. FLASH_IN_PROJECT indicates that
-# the generated image should be flashed when the entire project is flashed to
-# the target with 'idf.py -p PORT flash'.
-spiffs_file_preprocessor()
-spiffs_create_partition_image(storage ../spiffs_image FLASH_IN_PROJECT)
-
 # Save the git hash in a variable
 execute_process(
     COMMAND git rev-parse --short=7 HEAD

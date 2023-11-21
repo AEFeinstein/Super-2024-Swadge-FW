@@ -269,7 +269,8 @@ breakout_t* breakout = NULL;
 static void breakoutEnterMode(void)
 {
     breakout = calloc(1, sizeof(breakout_t));
-	ESP_LOGI( "breakout", "Starting\n" );
+    ESP_LOGI( "breakout", "Starting" );
+
     // Load a font
     loadFont("logbook.font", &breakout->logbook, false);
     loadFont("ibm_vga8.font", &breakout->ibm_vga8, false);
@@ -297,7 +298,8 @@ static void breakoutEnterMode(void)
 
     breakout->menu = NULL;
     breakoutChangeStateTitleScreen(breakout);
-	ESP_LOGI( "breakout", "Loaded\n" );
+
+    ESP_LOGI( "breakout", "Loaded" );
 }
 
 /**
