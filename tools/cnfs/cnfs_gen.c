@@ -45,7 +45,8 @@ int main( int argc, char ** argv )
     int numfiles_in = 0;
     while (dp=readdir(dir)) // if dp is null, there's no more content to read
     {
-        filelist[numfiles_in++] = strdup( dp->d_name );
+		if( strcmp( dp->d_name, "." ) != 0 && strcmp( dp->d_name, ".." ) != 0 )
+	        filelist[numfiles_in++] = strdup( dp->d_name );
     }
     closedir(dir); // close the handle (pointer)
 
@@ -62,7 +63,7 @@ int main( int argc, char ** argv )
         if( !f )
         {
             fprintf( stderr, "Error: Can't open file %s\n", fname );
-            free( fname );
+            free( fname_in );
             continue;
         }
         fseek( f, 0, SEEK_END );
@@ -81,7 +82,7 @@ int main( int argc, char ** argv )
         else
         {
             fe->offset = offset;
-            printf( "%s %d %d\n", fname_in, len, offset );
+            // printf( "%s %d %d\n", fname_in, len, offset );
             offset += fe->len;
             nr_file++;
         }
@@ -106,6 +107,8 @@ int main( int argc, char ** argv )
     fprintf( f, "#endif\n" );
     fclose( f );
 
+	int directorySize = 0;
+
     f = fopen( argv[2], "w" );
     fprintf( f, "#include <stdint.h>\n" );
     fprintf( f, "#define NR_FILES %d\n", nr_file );
@@ -121,6 +124,7 @@ int main( int argc, char ** argv )
     {
         struct fileEntry * fe = entries + i;
         fprintf( f, "    { \"%s\", %d, %d },\n", fe->filename, fe->len, fe->offset ); 
+		directorySize += (((strlen( fe->filename ) + 1) + 3 ) & (~3)) + 12;
     }
     fprintf( f, "};\n" );
     fprintf( f, "const uint8_t cnfs_data[%d] = {\n\t", offset );
@@ -138,6 +142,9 @@ int main( int argc, char ** argv )
     }
     fprintf( f, "\n};\n" );
     fclose( f );
+
+	printf( "Image size: %d bytes\n", offset );
+	printf( "Directory size: %d bytes\n", directorySize );
     return 0;
 }
 

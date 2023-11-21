@@ -156,7 +156,7 @@ function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/../tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ${CMAKE_CURRENT_SOURCE_DIR}/../assets/ -o ${CMAKE_CURRENT_SOURCE_DIR}/../spiffs_image/
-    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs/
+    COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
     )
 endfunction()
 
