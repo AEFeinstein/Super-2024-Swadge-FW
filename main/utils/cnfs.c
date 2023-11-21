@@ -6,11 +6,51 @@
 #include <string.h>
 
 #include <esp_err.h>
-#include "../../tools/cnfs/image.h"
-#include "../../tools/cnfs/image.c"
 #include <esp_log.h>
 #include <esp_heap_caps.h>
-#include "hdw-spiffs.h"
+#include "cnfs.h"
+
+#if EMULATOR
+
+// Stubs for emulator.
+
+bool initSpiffs(void) { return true; }
+
+bool deinitSpiffs(void) { return true; }
+
+uint8_t * spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
+{
+   #ifndef PATH_MAX
+   #define PATH_MAX 4096
+   #endif
+   char stfilename[PATH_MAX];
+   sprintf( stfilename, "spiffs_image/%s", fname );
+   FILE * f = fopen( stfilename, "rb" );
+   if( !f )
+   {
+      fprintf( stderr, "Error: could not open %s\n", stfilename );
+      return 0;
+   }
+   fseek( f, 0, SEEK_END );
+   int len = ftell( f );
+   fseek( f, 0, SEEK_SET );
+   uint8_t * output = malloc( len );
+   if( fread( output, 1, len, f ) == len )
+   {
+      *outsize = len;
+      return output;
+   }
+   else
+   {
+      fprintf( stderr, "Error: issue reading %s\n", stfilename );
+      free( output );
+      return 0;
+   }
+}
+
+#else
+
+#include "cnfs_image.h"
 
 //==============================================================================
 // Variables
@@ -21,32 +61,32 @@
 //==============================================================================
 
 /**
- * @brief Initialize the SPI file system (SPIFFS). This is used to store assets
- * like WSGs and fonts
+ * @brief Initialize the CNFS file system. This is used to store assets like
+ * WSGs and fonts
  *
- * @return true if SPIFFS was initialized and can be used, false if it failed
+ * @return true if CNFS was initialized and can be used, false if it failed
  */
 bool initSpiffs(void)
 {
     /* Debug print */
     ESP_LOGI("CNFS", "Size: %d", sizeof( cnfs_data ) );
+    return sizeof( cnfs_data ) != 0;
+}
+
+/**
+ * @brief De-initialize the CNFS file system (right now a noop)
+ *
+ * @return true if de-initialize ok, false if it was not
+ */
+bool deinitSpiffs(void)
+{
     return true;
 }
 
 /**
- * @brief De-initialize the SPI file system (SPIFFS)
- *
- * @return true if SPIFFS was de-initialized, false if it was not
- */
-bool deinitSpiffs(void)
-{
-    return ESP_OK;
-}
-
-/**
- * @brief Read a file from SPIFFS into an output array. Files that are in the
+ * @brief Read a file from CNFS into an output array. Files that are in the
  * spiffs_image folder before compilation and flashing will automatically
- * be included in the firmware
+ * be included in the firmware.
  *
  * @param fname   The name of the file to load
  * @param outsize A pointer to a size_t to return how much data was read
@@ -91,3 +131,6 @@ uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 
     return 0;
 }
+
+#endif
+

@@ -60,6 +60,10 @@ sdkconfig.old
 docs/html
 docs/*.pu
 
+main/utils/cnfs_image.c
+main/utils/cnfs_image.h
+tools/cnfs/cnfs_gen
+
 .vscode/c_cpp_properties.json
 .vscode/settings.json
 

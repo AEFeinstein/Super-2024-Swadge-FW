@@ -13,10 +13,6 @@
 
 #include "esp_random.h"
 
-
-//redundancy
-#include "hdw-spiffs.h"
-
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>

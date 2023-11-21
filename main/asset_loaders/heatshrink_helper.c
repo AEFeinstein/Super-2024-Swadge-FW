@@ -5,7 +5,7 @@
 #include <inttypes.h>
 #include <esp_err.h>
 
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "hdw-nvs.h"
 #include <nvs.h>
 

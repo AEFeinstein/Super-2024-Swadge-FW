@@ -49,10 +49,10 @@ int main( int argc, char ** argv )
     int numfiles_in = 0;
     while ((dp=readdir(dir))) // if dp is null, there's no more content to read
     {
-		if( strcmp( dp->d_name, "." ) != 0 && strcmp( dp->d_name, ".." ) != 0 )
-		{
-	        filelist[numfiles_in++] = strdup( dp->d_name );
-		}
+        if( strcmp( dp->d_name, "." ) != 0 && strcmp( dp->d_name, ".." ) != 0 )
+        {
+            filelist[numfiles_in++] = strdup( dp->d_name );
+        }
     }
     closedir(dir); // close the handle (pointer)
 
@@ -98,7 +98,11 @@ int main( int argc, char ** argv )
     int i;
 
     FILE * f = fopen( argv[3], "w" );
-
+     if( !f )
+    {
+        fprintf( stderr, "Error: cannot open %s\n", argv[3] );
+        return -19;
+    }
     fprintf( f, "#ifndef CNFS_IMAGE_HEADER_H\n" );
     fprintf( f, "#define CNFS_IMAGE_HEADER_H\n" );
     fprintf( f, "#include <stdint.h>\n" );
@@ -113,9 +117,14 @@ int main( int argc, char ** argv )
     fprintf( f, "#endif\n" );
     fclose( f );
 
-	int directorySize = 0;
+    int directorySize = 0;
 
     f = fopen( argv[2], "w" );
+     if( !f )
+    {
+        fprintf( stderr, "Error: cannot open %s\n", argv[2] );
+        return -20;
+    }
     fprintf( f, "#include <stdint.h>\n" );
     fprintf( f, "#define NR_FILES %d\n", nr_file );
     fprintf( f, "#ifndef CNFS_IMAGE_HEADER_H\n" );
@@ -130,7 +139,7 @@ int main( int argc, char ** argv )
     {
         struct fileEntry * fe = entries + i;
         fprintf( f, "    { \"%s\", %d, %d },\n", fe->filename, fe->len, fe->offset ); 
-		directorySize += (((strlen( fe->filename ) + 1) + 3 ) & (~3)) + 12;
+        directorySize += (((strlen( fe->filename ) + 1) + 3 ) & (~3)) + 12;
     }
     fprintf( f, "};\n" );
     fprintf( f, "const uint8_t cnfs_data[%d] = {\n\t", offset );
@@ -149,8 +158,8 @@ int main( int argc, char ** argv )
     fprintf( f, "\n};\n" );
     fclose( f );
 
-	printf( "Image size: %d bytes\n", offset );
-	printf( "Directory size: %d bytes\n", directorySize );
+    printf( "Image size: %d bytes\n", offset );
+    printf( "Directory size: %d bytes\n", directorySize );
     return 0;
 }
 

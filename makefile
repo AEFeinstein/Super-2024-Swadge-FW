@@ -264,10 +264,11 @@ $(EXECUTABLE): $(OBJECTS)
 # This cleans emulator files
 clean:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
-	$(MAKE) -C ./tools/cnfs/ clean
+	$(MAKE) -C ./tools/cnfs clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
 	-@rm -rf ./spiffs_image/*
+	-@rm -rf ./main/utils/cnfs/image.*
 
 # This cleans everything
 fullclean: clean

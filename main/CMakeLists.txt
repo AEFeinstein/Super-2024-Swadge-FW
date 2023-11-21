@@ -106,6 +106,8 @@ idf_component_register(SRCS "swadge2024.c"
                             "utils/trigonometry.c"
                             "utils/vector2d.c"
                             "utils/wheel_menu.c"
+                            "utils/cnfs.c"
+                            "utils/cnfs_image.c"
                     PRIV_REQUIRES hdw-imu
                                   hdw-battmon
                                   hdw-btn
@@ -114,7 +116,6 @@ idf_component_register(SRCS "swadge2024.c"
                                   hdw-led
                                   hdw-mic
                                   hdw-nvs
-                                  hdw-spiffs
                                   hdw-tft
                                   hdw-temperature
                                   hdw-usb
@@ -159,6 +160,12 @@ function(spiffs_file_preprocessor)
     COMMAND make -C ${CMAKE_CURRENT_SOURCE_DIR}/../tools/cnfs
     )
 endfunction()
+
+
+# that fits the partition named 'storage'. FLASH_IN_PROJECT indicates that
+# the generated image should be flashed when the entire project is flashed to
+# the target with 'idf.py -p PORT flash'.
+spiffs_file_preprocessor()
 
 # Save the git hash in a variable
 execute_process(

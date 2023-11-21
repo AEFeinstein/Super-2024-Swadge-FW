@@ -9,7 +9,7 @@
 #include <esp_heap_caps.h>
 
 #include "heatshrink_helper.h"
-#include "hdw-spiffs.h"
+#include "cnfs.h"
 #include "spiffs_song.h"
 
 //==============================================================================

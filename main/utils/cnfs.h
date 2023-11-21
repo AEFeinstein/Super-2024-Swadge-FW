@@ -1,26 +1,20 @@
-/*! \file hdw-spiffs.h
+/*! \file cnfs.h
  *
- * \section spiffs_design Design Philosophy
+ * \section cnfs Design Philosophy
  *
- * SPIFFS is a file system intended for SPI NOR flash devices on embedded targets. It supports wear levelling, file
- * system consistency checks, and more. The full API reference can be found here: <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/storage/spiffs.html">SPIFFS
- * Filesystem</a>.
- *
- * Ths Swadge treats SPIFFS as a read-only file system.
+ * Ths Swadge loads an assets "image" as `cnfs_files` and `cnfs_data`.
  *
  * During the build, assets in the \c /assets/ folder, such as PNG images and MIDI songs, are processed into
  * Swadge-friendly formats and written to the \c /spiffs_image/ folder. The contents of the \c /spiffs_image/ are then
- * packaged into a SPIFFS image which is written to the \c storage partition in firmware. These files may be read and
- * used during runtime.
+ * packaged into a matching `_files` and `_data` image which is stored as a C file and loaded alongside cnfs.c.
  *
- * \section spiffs_usage Usage
+ * \section cnfs Usage
  *
- * You don't need to call initSpiffs() or deinitSpiffs(). The system does that the appropriate time.
+ * You don't need to call cnfsInit() or cnfsDeinit(). The system does that the appropriate time.
  *
- * spiffsReadFile() may be used to read a file straight from SPIFFS, but this probably should not be done directly.
+ * spiffsReadFile() may be used to read a file straight from cnfs, but this probably should not be done directly.
  *
- * Each asset type has it's own SPIFFS loader which handles things like decompression if the asset type is compressed,
+ * Each asset type has it's own file loader which handles things like decompression if the asset type is compressed,
  * and writing values from the read file into a convenient struct. The loader functions are:
  *  - loadFont() & freeFont() - Load font assets from SPIFFS to draw text to the display
  *  - loadWsg() & freeWsg() - Load image assets from SPIFFS to draw images to the display
