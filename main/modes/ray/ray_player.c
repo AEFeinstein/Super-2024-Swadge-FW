@@ -264,7 +264,8 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
                 {
                     case OBJ_BULLET_CHARGE:
                     {
-                        ray->playerShotCooldown = 240000;
+                        // Allow charging a shot immediately after releasing a charge
+                        ray->playerShotCooldown = 0;
                         bzrPlaySfx(&ray->sfx_p_charge, BZR_RIGHT);
                         break;
                     }
@@ -289,7 +290,14 @@ void rayPlayerCheckButtons(ray_t* ray, rayObjCommon_t* centeredEnemy, uint32_t e
                     case OBJ_BULLET_NORMAL:
                     default:
                     {
-                        ray->playerShotCooldown = 120000;
+                        if (ray->chargeTimer > 120000)
+                        {
+                            ray->playerShotCooldown = 0;
+                        }
+                        else
+                        {
+                            ray->playerShotCooldown = 120000 - ray->chargeTimer;
+                        }
                         bzrPlaySfx(&ray->sfx_p_shoot, BZR_RIGHT);
                         break;
                     }

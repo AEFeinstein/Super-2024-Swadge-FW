@@ -41,7 +41,7 @@ static const char* const deathTexts[] = {
  */
 void rayShowDeathScreen(ray_t* ray)
 {
-    ray->btnLockoutUs = 2000000;
+    ray->btnLockoutUs = RAY_BUTTON_LOCKOUT_US;
     raySwitchToScreen(RAY_DEATH_SCREEN);
     // Stop BGM when dead
     bzrStop(true);
