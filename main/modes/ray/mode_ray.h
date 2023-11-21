@@ -691,6 +691,7 @@ typedef struct
 
 extern swadgeMode_t rayMode;
 
+extern const char rayName[];
 extern const char* const rayMapNames[];
 extern const paletteColor_t rayMapColors[];
 extern const char RAY_NVS_KEY[];

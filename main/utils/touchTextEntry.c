@@ -186,7 +186,7 @@ static void cursorRight(textEntry_t* entry)
 {
     if (entry->heldButton != PB_RIGHT && (entry->maxLength == 0 || entry->cursor < entry->maxLength)
         && (entry->mask & ENTRY_WHITESPACE) == ENTRY_WHITESPACE && !entry->value[entry->cursor]
-        && (entry->cursor == 0 || entry->value[entry->cursor-1] != ' '))
+        && (entry->cursor == 0 || entry->value[entry->cursor - 1] != ' '))
     {
         // Add a space, if allowed and at the end
         entry->value[entry->cursor] = ' ';

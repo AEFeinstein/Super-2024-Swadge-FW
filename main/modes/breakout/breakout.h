@@ -11,6 +11,8 @@ extern swadgeMode_t breakoutMode;
 
 #define NUM_BREAKOUT_HIGH_SCORES 5
 
+extern const char breakoutName[];
+
 //==============================================================================
 // Structs
 //==============================================================================

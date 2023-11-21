@@ -24,8 +24,10 @@ void creditsMainLoop(int64_t elapsedUs);
 
 credits_t* credits;
 
+const char creditsName[] = "Credits";
+
 swadgeMode_t modeCredits = {
-    .modeName                 = "Credits",
+    .modeName                 = creditsName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
     .usesAccelerometer        = false,

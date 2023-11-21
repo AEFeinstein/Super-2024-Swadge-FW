@@ -618,7 +618,7 @@ bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nv
 bool nvsNamespaceInUse(const char* namespace)
 {
     nvs_iterator_t it = NULL;
-    esp_err_t res = nvs_entry_find(NVS_DEFAULT_PART_NAME, namespace, NVS_TYPE_ANY, &it);
+    esp_err_t res     = nvs_entry_find(NVS_DEFAULT_PART_NAME, namespace, NVS_TYPE_ANY, &it);
     nvs_entry_info_t info;
 
     if (ESP_OK == res)

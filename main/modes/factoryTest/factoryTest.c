@@ -121,8 +121,10 @@ typedef struct
 
 factoryTest_t* test;
 
+const char factoryTestName[] = "Factory Test";
+
 swadgeMode_t factoryTestMode = {
-    .modeName                 = "Factory Test",
+    .modeName                 = factoryTestName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
     .usesAccelerometer        = true,

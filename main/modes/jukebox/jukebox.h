@@ -12,4 +12,6 @@
 
 extern swadgeMode_t jukeboxMode;
 
+extern const char jukeboxName[];
+
 #endif /* _MODE_JUKEBOX_H_ */

@@ -861,9 +861,9 @@ bool nvsNamespaceInUse(const char* namespace)
             fclose(nvsFile);
 
             // Parse the JSON
-            cJSON* json = cJSON_Parse(fbuf);
+            cJSON* json   = cJSON_Parse(fbuf);
             cJSON* jsonNs = cJSON_GetObjectItemCaseSensitive(json, namespace);
-            bool result = false;
+            bool result   = false;
 
             if (NULL != jsonNs && cJSON_IsObject(jsonNs))
             {
