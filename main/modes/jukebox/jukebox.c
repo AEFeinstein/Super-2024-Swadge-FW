@@ -58,7 +58,7 @@ typedef struct
 typedef struct
 {
     const char* categoryName;
-    const jukeboxSong_t* songs;
+    jukeboxSong_t* songs;
     const uint8_t numSongs;
 } jukeboxCategory_t;
 
@@ -72,12 +72,6 @@ typedef struct
     wsg_t arrow;
     wsg_t jukeboxSprite;
 
-    // Music Midis and Jukebox Structs
-    uint8_t numMusicCategories;
-
-    // SFX Midis and Jukebox Structs
-    uint8_t numSfxCategories;
-
     // Touch
     int32_t touchAngle;
     int32_t touchRadius;
@@ -90,7 +84,6 @@ typedef struct
     uint8_t categoryIdx;
     uint8_t songIdx;
     bool inMusicSubmode;
-
     bool isPlaying;
 } jukebox_t;
 
@@ -107,8 +100,8 @@ void jukeboxMainLoop(int64_t elapsedUs);
 void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 void jukeboxBzrDoneCb(void);
-void jukeboxLoadCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories);
-void jukeboxFreeCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories);
+void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories, bool shouldLoop);
+void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories);
 
 /*==============================================================================
  * Variables
@@ -153,6 +146,10 @@ static const char str_play[]       = ": Play";
 // Arrays
 
 jukeboxSong_t songs_galacticBrickdown[] = {
+    {
+        .filename = "stereo.sng",
+        .name = "DELETE ME",
+    },
     // {
     //     .filename = "brkBgmCrazy.sng",
     //     .name  = "BGM Crazy",
@@ -343,22 +340,22 @@ jukeboxSong_t sounds_galacticBrickdown[] = {
         .filename = "sndWaveBall.sng",
         .name  = "Wave Ball",
     },        
-    {
-        .filename = "brkGameOver.sng",
-        .name  = "Game Over",
-    },        
-    {
-        .filename = "brkGetReady.sng",
-        .name  = "Get Ready",
-    },        
-    {
-        .filename = "brkHighScore.sng",
-        .name  = "High Score",
-    },        
-    {
-        .filename = "brkLvlClear.sng",
-        .name  = "Level Clear",
-    },
+    // {
+    //     .filename = "brkGameOver.sng",
+    //     .name  = "Game Over",
+    // },        
+    // {
+    //     .filename = "brkGetReady.sng",
+    //     .name  = "Get Ready",
+    // },        
+    // {
+    //     .filename = "brkHighScore.sng",
+    //     .name  = "High Score",
+    // },        
+    // {
+    //     .filename = "brkLvlClear.sng",
+    //     .name  = "Level Clear",
+    // },
 };
 
 jukeboxSong_t sounds_swadgeland[] = {
@@ -443,7 +440,7 @@ jukeboxSong_t sounds_swadgeland[] = {
         .name  = "Menu Select",
     },        
     {
-        .filename = "sndOuttaTime.sng",
+        .filename = "sndOutOfTime.sng",
         .name  = "Outta Time",
     },        
     {
@@ -552,12 +549,12 @@ jukeboxSong_t sounds_mainMenu[] = {
 
 jukeboxSong_t sounds_unused[] = {
     {
-        .filename = "Pong Block 1",
-        .name  = "block1.sng",
+        .filename = "block1.sng",
+        .name  = "Pong Block 1",
     },
     {
-        .filename = "Pong Block 2",
-        .name  = "block2.sng",
+        .filename = "block1.sng",
+        .name  = "Pong Block 2",
     },
 };
 
@@ -627,9 +624,9 @@ void jukeboxEnterMode()
     ///// Load music midis /////
 
     printf("load music\n");
-    jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories));
+    jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories), true);
     printf("load sfx\n");
-    jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories));
+    jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories), false);
     printf("done load\n");
 
     ///// Initialize portable dances /////
@@ -669,11 +666,11 @@ void jukeboxExitMode(void)
     freeWsg(&jukebox->jukeboxSprite);
 
     // Free allocated music midis, song arrays, and category arrays
-    jukeboxFreeCategories(musicCategories, jukebox->numMusicCategories);
+    jukeboxFreeCategories(musicCategories, ARRAY_SIZE(musicCategories));
 
     // Free allocated SFX midis, song arrays, and category arrays
 
-    jukeboxFreeCategories(sfxCategories, jukebox->numSfxCategories);
+    jukeboxFreeCategories(sfxCategories, ARRAY_SIZE(sfxCategories));
 
     // Free dances
 
@@ -742,11 +739,11 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
-                length = jukebox->numMusicCategories;
+                length = ARRAY_SIZE(musicCategories);
             }
             else
             {
-                length = jukebox->numSfxCategories;
+                length = ARRAY_SIZE(sfxCategories);
             }
 
             uint8_t before = jukebox->categoryIdx;
@@ -768,11 +765,11 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             uint8_t length;
             if (jukebox->inMusicSubmode)
             {
-                length = jukebox->numMusicCategories;
+                length = ARRAY_SIZE(musicCategories);
             }
             else
             {
-                length = jukebox->numSfxCategories;
+                length = ARRAY_SIZE(sfxCategories);;
             }
 
             uint8_t before       = jukebox->categoryIdx;
@@ -903,8 +900,8 @@ void jukeboxMainLoop(int64_t elapsedUs)
     drawText(&jukebox->radiostars, c555, btnText, afterText, TFT_HEIGHT - jukebox->radiostars.height - CORNER_OFFSET);
 
     const char* categoryName;
-    char* songName;
-    char* songTypeName;
+    const char* songName;
+    const char* songTypeName;
     uint8_t numSongs;
     bool drawNames = false;
     if (jukebox->inMusicSubmode)
@@ -956,7 +953,7 @@ void jukeboxMainLoop(int64_t elapsedUs)
         int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - nameFont->height * 0;
         drawText(nameFont, c311, text, (TFT_WIDTH - width) / 2, yOff);
         // Draw category arrows if this submode has more than 1 category
-        if ((jukebox->inMusicSubmode && jukebox->numMusicCategories > 1) || jukebox->numSfxCategories > 1)
+        if ((jukebox->inMusicSubmode && ARRAY_SIZE(musicCategories) > 1) || ARRAY_SIZE(sfxCategories) > 1)
         {
             drawWsg(&jukebox->arrow, ((TFT_WIDTH - width) / 2) - arrowOffsetFromText - jukebox->arrow.w, yOff, false,
                     false, 0);
@@ -1011,14 +1008,15 @@ void jukeboxBzrDoneCb(void)
     }
 }
 
-void jukeboxLoadCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories)
+void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories, bool shouldLoop)
 {
     for (int categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
     {
         for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
         {
-            printf("Load category %d \"%s\" song %d \"%s\"\n", categoryIdx, categoryArray[categoryIdx].categoryName, songIdx, categoryArray[categoryIdx].songs[songIdx].filename);
-            loadSong(categoryArray[categoryIdx].songs[songIdx].filename, &(categoryArray[categoryIdx].songs[songIdx].song), true);
+            // printf("Load category %d \"%s\" song %d \"%s\"\n", categoryIdx, categoryArray[categoryIdx].categoryName, songIdx, categoryArray[categoryIdx].songs[songIdx].filename);
+            loadSong(categoryArray[categoryIdx].songs[songIdx].filename, &categoryArray[categoryIdx].songs[songIdx].song, true);
+            categoryArray[categoryIdx].songs[songIdx].song.shouldLoop = shouldLoop;
             
             if (categoryArray[categoryIdx].songs[songIdx].song.numTracks == 0)
             {
@@ -1028,7 +1026,7 @@ void jukeboxLoadCategories(jukeboxCategory_t* categoryArray, uint8_t numCategori
     }
 }
 
-void jukeboxFreeCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories)
+void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories)
 {
     for (uint8_t categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
     {
@@ -1040,8 +1038,5 @@ void jukeboxFreeCategories(jukeboxCategory_t* categoryArray, uint8_t numCategori
                 freeSong(&categoryArray[categoryIdx].songs[songIdx].song);
             }
         }
-
-        free(categoryArray[categoryIdx].songs);
-        free(&categoryArray[categoryIdx]);
     }
 }
