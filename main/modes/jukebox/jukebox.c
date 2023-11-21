@@ -271,33 +271,35 @@ jukeboxSong_t songs_unused[] = {
     },
 };
 
+// clang-format off
 const jukeboxCategory_t musicCategories[] = {
     {
-        .categoryName  = breakoutName,
-        .songs = songs_galacticBrickdown,
-        .numSongs = ARRAY_SIZE(songs_galacticBrickdown),
+        .categoryName = breakoutName,
+        .songs        = songs_galacticBrickdown,
+        .numSongs     = ARRAY_SIZE(songs_galacticBrickdown),
     },
     {
-        .categoryName  = platformerName,
-        .songs = songs_swadgeLand,
-        .numSongs = ARRAY_SIZE(songs_swadgeLand),
+        .categoryName = platformerName,
+        .songs        = songs_swadgeLand,
+        .numSongs     = ARRAY_SIZE(songs_swadgeLand),
     },
     {
-        .categoryName  = rayName,
-        .songs = songs_magtroid,
-        .numSongs = ARRAY_SIZE(songs_magtroid),
+        .categoryName = rayName,
+        .songs        = songs_magtroid,
+        .numSongs     = ARRAY_SIZE(songs_magtroid),
     },
     {
-        .categoryName  = jukeboxName,
-        .songs = songs_jukebox,
-        .numSongs = ARRAY_SIZE(songs_jukebox),
+        .categoryName = jukeboxName,
+        .songs        = songs_jukebox,
+        .numSongs     = ARRAY_SIZE(songs_jukebox),
     },
     {
         .categoryName = "(Unused)",
-        .songs = songs_unused,
-        .numSongs = ARRAY_SIZE(songs_unused),
+        .songs        = songs_unused,
+        .numSongs     = ARRAY_SIZE(songs_unused),
     }
 };
+// clang-format on
 
 jukeboxSong_t sounds_galacticBrickdown[] = {
     {
@@ -565,38 +567,40 @@ jukeboxSong_t sounds_FactoryTest[] = {
     },
 };
 
+// clang-format off
 const jukeboxCategory_t sfxCategories[] = {
     {
-        .categoryName  = breakoutName,
-        .songs = sounds_galacticBrickdown,
-        .numSongs = ARRAY_SIZE(sounds_galacticBrickdown),
+        .categoryName = breakoutName,
+        .songs        = sounds_galacticBrickdown,
+        .numSongs     = ARRAY_SIZE(sounds_galacticBrickdown),
     },
     {
-        .categoryName  = platformerName,
-        .songs = sounds_swadgeland,
-        .numSongs = ARRAY_SIZE(sounds_swadgeland),
+        .categoryName = platformerName,
+        .songs        = sounds_swadgeland,
+        .numSongs     = ARRAY_SIZE(sounds_swadgeland),
     },
     {
-        .categoryName  = rayName,
-        .songs = sounds_magtroid,
-        .numSongs = ARRAY_SIZE(sounds_magtroid),
+        .categoryName = rayName,
+        .songs        = sounds_magtroid,
+        .numSongs     = ARRAY_SIZE(sounds_magtroid),
     },
     {
-        .categoryName  = factoryTestName,
-        .songs = sounds_FactoryTest,
-        .numSongs = ARRAY_SIZE(sounds_FactoryTest),
+        .categoryName = factoryTestName,
+        .songs        = sounds_FactoryTest,
+        .numSongs     = ARRAY_SIZE(sounds_FactoryTest),
     },
     {
-        .categoryName  = mainMenuName,
-        .songs = sounds_mainMenu,
-        .numSongs = ARRAY_SIZE(sounds_mainMenu),
+        .categoryName = mainMenuName,
+        .songs        = sounds_mainMenu,
+        .numSongs     = ARRAY_SIZE(sounds_mainMenu),
     },
     {
         .categoryName = "(Unused)",
-        .songs = sounds_unused,
-        .numSongs = ARRAY_SIZE(sounds_unused),
+        .songs        = sounds_unused,
+        .numSongs     = ARRAY_SIZE(sounds_unused),
     }
 };
+// clang-format on
 
 /*============================================================================
  * Functions
