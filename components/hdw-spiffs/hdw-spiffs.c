@@ -29,7 +29,7 @@
 bool initSpiffs(void)
 {
     /* Debug print */
-    ESP_LOGI("CNFS", "Size: %d\n", sizeof( cnfs_data ) );
+    ESP_LOGI("CNFS", "Size: %d", sizeof( cnfs_data ) );
     return true;
 }
 
@@ -56,27 +56,38 @@ bool deinitSpiffs(void)
  */
 uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
-	const struct cnfsFileEntry * e = cnfs_files;
-	const struct cnfsFileEntry * eend = e + NR_FILES;
+    int low = 0;
+    int high = NR_FILES - 1;
+    int mid = (low+high)/2;
 
-	// You can binary search if you want.  But we don't have that many files, so it's plenty fast to just search.
-	while( e != eend )
-	{
-		if( strcmp( e->name, fname ) == 0 )
-		{
-			*outsize = e->len;
-			uint8_t * output;
-			// Read the file into an array
-			if (readToSpiRam)
-			    output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-			else
-			    output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+    // Binary search the file list, since it's sorted.
+    while (low <= high)
+    {
+        const struct cnfsFileEntry * e = cnfs_files + mid;
+        int sc = strcmp( e->name, fname );
+        if( sc < 0)
+        {
+            low = mid + 1;
+        }
+        else if ( sc == 0)
+        {
+            *outsize = e->len;
+            uint8_t * output;
 
-			memcpy( output, &cnfs_data[e->offset], e->len );
-			return output; 
-		}
-		e++;
-	}
-	ESP_LOGE( "CNFS", "Failed to open %s", fname );
-	return 0;
+            if (readToSpiRam)
+                output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+            else
+                output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
+
+            memcpy( output, &cnfs_data[e->offset], e->len );
+            return output;
+        }
+        else
+            high = mid - 1;
+        mid = (low + high)/2;
+    }
+
+    ESP_LOGE( "CNFS", "Failed to open %s", fname );
+
+    return 0;
 }

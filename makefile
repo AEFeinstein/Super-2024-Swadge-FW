@@ -250,6 +250,7 @@ all: $(EXECUTABLE) assets
 assets:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/
 	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
+	$(MAKE) -C ./tools/cnfs/
 
 # To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
@@ -263,6 +264,7 @@ $(EXECUTABLE): $(OBJECTS)
 # This cleans emulator files
 clean:
 	$(MAKE) -C ./tools/spiffs_file_preprocessor/ clean
+	$(MAKE) -C ./tools/cnfs/ clean
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
 	-@rm -rf ./spiffs_image/*
