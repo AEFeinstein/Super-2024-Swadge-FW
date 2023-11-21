@@ -627,11 +627,8 @@ void jukeboxEnterMode()
 
     ///// Load music midis /////
 
-    printf("load music\n");
     jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories), true);
-    printf("load sfx\n");
     jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories), false);
-    printf("done load\n");
 
     ///// Initialize portable dances /////
 
