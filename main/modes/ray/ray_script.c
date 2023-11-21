@@ -806,6 +806,8 @@ static void executeScriptEvent(ray_t* ray, rayScript_t* script, wsg_t* portrait)
         }
         case DIALOG:
         {
+            // 1s cooldown to prevent double-dialog from double-shots
+            script->resetTimerSec = 1;
             rayShowDialog(ray, script->thenArgs.text, portrait);
             break;
         }
