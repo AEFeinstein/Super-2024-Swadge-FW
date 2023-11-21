@@ -18,8 +18,8 @@
 // Defines
 //==============================================================================
 
-#define HOURGLASS_FRAMES 12
-#define PAUSE_FLASH_SPEED 500000
+#define HOURGLASS_FRAMES   12
+#define PAUSE_FLASH_SPEED  500000
 #define EXPIRE_FLASH_SPEED 250000
 
 //==============================================================================
@@ -72,13 +72,13 @@ static void timerMainLoop(int64_t elapsedUs);
 // Strings
 //==============================================================================
 
-static const char timerName[] = "Timer";
-static const char hourglassFrameFmt[] = "hourglass_%02" PRIu8 ".wsg";
-static const char minutesSecondsFmt[] = "%" PRIu8 ":%02" PRIu8 ".";
+static const char timerName[]              = "Timer";
+static const char hourglassFrameFmt[]      = "hourglass_%02" PRIu8 ".wsg";
+static const char minutesSecondsFmt[]      = "%" PRIu8 ":%02" PRIu8 ".";
 static const char hoursMinutesSecondsFmt[] = "%" PRIu64 ":%02" PRIu8 ":%02" PRIu8 ".";
-static const char millisFmt[] = "%03" PRIu16;
-//static const char minutesSecondsBg[] = "88:88.";
-//static const char millisBg[] = "888";
+static const char millisFmt[]              = "%03" PRIu16;
+// static const char minutesSecondsBg[] = "88:88.";
+// static const char millisBg[] = "888";
 
 //==============================================================================
 // Variables
@@ -126,7 +126,7 @@ static void timerEnterMode(void)
 
     // Default to 30s
     timerData->countdownTime = 30 * 1000000;
-    timerData->timerState = STOPPED;
+    timerData->timerState    = STOPPED;
 }
 
 static void timerExitMode(void)
@@ -147,10 +147,11 @@ static void timerMainLoop(int64_t elapsedUs)
 {
     int64_t now = esp_timer_get_time();
     if (timerData->timerState == RUNNING
-        && (!timerData->stopwatch && timerData->accumulatedDuration + (now - timerData->startTime) >= timerData->countdownTime))
+        && (!timerData->stopwatch
+            && timerData->accumulatedDuration + (now - timerData->startTime) >= timerData->countdownTime))
     {
         timerData->accumulatedDuration = timerData->countdownTime;
-        timerData->timerState = EXPIRED;
+        timerData->timerState          = EXPIRED;
     }
 
     buttonEvt_t evt;
@@ -166,7 +167,7 @@ static void timerMainLoop(int64_t elapsedUs)
                     // Intentional fall-through
                 case PAUSED:
                 {
-                    timerData->startTime = now;
+                    timerData->startTime  = now;
                     timerData->timerState = RUNNING;
                     break;
                 }
@@ -193,7 +194,7 @@ static void timerMainLoop(int64_t elapsedUs)
             {
                 case PAUSED:
                 {
-                    timerData->timerState = STOPPED;
+                    timerData->timerState          = STOPPED;
                     timerData->accumulatedDuration = 0;
                     break;
                 }
@@ -207,7 +208,7 @@ static void timerMainLoop(int64_t elapsedUs)
 
                 case STOPPED:
                 case EXPIRED:
-                break;
+                    break;
             }
         }
         else if (evt.down && (evt.button == PB_LEFT || evt.button == PB_RIGHT))
@@ -240,9 +241,8 @@ static void timerMainLoop(int64_t elapsedUs)
         drawText(&timerData->textFont, c050, "Timer", 40, 5);
     }
 
-    int64_t remaining = timerData->stopwatch
-                        ? timerData->accumulatedDuration
-                        : timerData->countdownTime - timerData->accumulatedDuration;
+    int64_t remaining = timerData->stopwatch ? timerData->accumulatedDuration
+                                             : timerData->countdownTime - timerData->accumulatedDuration;
 
     if (timerData->timerState == RUNNING)
     {
@@ -250,21 +250,19 @@ static void timerMainLoop(int64_t elapsedUs)
     }
 
     uint16_t remainingMillis = (remaining / 1000) % 1000;
-    uint8_t remainingSecs = (remaining / 1000000) % 60;
-    uint8_t remainingMins = (remaining / (60 * 1000000)) % 60;
+    uint8_t remainingSecs    = (remaining / 1000000) % 60;
+    uint8_t remainingMins    = (remaining / (60 * 1000000)) % 60;
     // Might as well...
     uint64_t remainingHrs = remaining / 3600000000;
 
     char buffer[32];
     if (remainingHrs > 0)
     {
-        snprintf(buffer, sizeof(buffer), hoursMinutesSecondsFmt,
-                 remainingHrs, remainingMins, remainingSecs);
+        snprintf(buffer, sizeof(buffer), hoursMinutesSecondsFmt, remainingHrs, remainingMins, remainingSecs);
     }
     else
     {
-        snprintf(buffer, sizeof(buffer), minutesSecondsFmt,
-                 remainingMins, remainingSecs);
+        snprintf(buffer, sizeof(buffer), minutesSecondsFmt, remainingMins, remainingSecs);
     }
 
     bool blink = (timerData->timerState == PAUSED && 0 == (now / PAUSE_FLASH_SPEED) % 2)
@@ -274,12 +272,12 @@ static void timerMainLoop(int64_t elapsedUs)
     {
         uint16_t textX = 20;
         uint16_t textY = (TFT_HEIGHT - timerData->numberFont.height) / 2;
-        //drawText(&timerData->numberFont, c222, minutesSecondsBg, textX, textY);
+        // drawText(&timerData->numberFont, c222, minutesSecondsBg, textX, textY);
         textX = drawText(&timerData->numberFont, c050, buffer, textX, textY);
 
         if (remainingHrs == 0)
         {
-            //drawText(&timerData->numberFont, c222, millisBg, textX, textY);
+            // drawText(&timerData->numberFont, c222, millisBg, textX, textY);
             snprintf(buffer, sizeof(buffer), millisFmt, remainingMillis);
 
             drawText(&timerData->numberFont, c030, buffer, textX, textY);
