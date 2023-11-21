@@ -8,9 +8,12 @@
 #include "swadge2024.h"
 #include "menu.h"
 #include "wheel_menu.h"
+#include "dialogBox.h"
+#include "paint_browser.h"
 #include "p2pConnection.h"
 #include "linked_list.h"
 #include "geometry.h"
+#include "touchUtils.h"
 
 #include "px_stack.h"
 #include "paint_type.h"
@@ -22,34 +25,27 @@
 #define PAINT_LOGW(...) ESP_LOGW("Paint", __VA_ARGS__)
 #define PAINT_LOGE(...) ESP_LOGE("Paint", __VA_ARGS__)
 
+#define PAINT_DIE(msg, ...)                                               \
+    do                                                                    \
+    {                                                                     \
+        PAINT_LOGE(msg, __VA_ARGS__);                                     \
+        char customMsg[128];                                              \
+        snprintf(customMsg, sizeof(customMsg), msg, __VA_ARGS__);         \
+        if (paintState->dialogCustomDetail)                               \
+        {                                                                 \
+            free(paintState->dialogCustomDetail);                         \
+        }                                                                 \
+        paintState->dialogCustomDetail = malloc(strlen(customMsg) + 1);   \
+        strcpy(paintState->dialogCustomDetail, customMsg);                \
+        paintState->dialogMessageDetail = paintState->dialogCustomDetail; \
+        paintState->showDialogBox       = true;                           \
+        paintState->fatalError          = true;                           \
+        paintState->dialogBox->icon     = &paintState->dialogErrorWsg;    \
+        paintState->dialogMessageTitle  = dialogErrorTitleStr;            \
+        paintSetupDialog(DIALOG_ERROR);                                   \
+    } while (0)
+
 //////// Data Constants
-
-// The total number of save slots available
-#define PAINT_SAVE_SLOTS 4
-
-// Whether to have the LEDs show the current colors
-#define PAINT_ENABLE_LEDS (0x0001 << (PAINT_SAVE_SLOTS * 2))
-
-// Whether to play SFX on drawing, etc.
-#define PAINT_ENABLE_SFX (0x0002 << (PAINT_SAVE_SLOTS * 2))
-
-// Whether to play background music
-#define PAINT_ENABLE_BGM (0x0004 << (PAINT_SAVE_SLOTS * 2))
-
-// Whether to enable blinking pick points, and any other potentilaly annoying things
-#define PAINT_ENABLE_BLINK (0x0008 << (PAINT_SAVE_SLOTS * 2))
-
-// Default to LEDs, SFX, and music on, with slot 0 marked as most recent
-#define PAINT_DEFAULTS                                                            \
-    (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK \
-     | (PAINT_SAVE_SLOTS << PAINT_SAVE_SLOTS))
-
-// Mask for the index that includes everything except the most-recent index
-#define PAINT_MASK_NOT_RECENT \
-    (PAINT_ENABLE_LEDS | PAINT_ENABLE_SFX | PAINT_ENABLE_BGM | PAINT_ENABLE_BLINK | ((1 << PAINT_SAVE_SLOTS) - 1))
-
-// The size of the buffer for loading/saving the image. Each chunk is saved as a separate blob in NVS
-#define PAINT_SAVE_CHUNK_SIZE 1024
 
 #define PAINT_SHARE_PX_PACKET_LEN (P2P_MAX_DATA_LEN - 3 - 11)
 #define PAINT_SHARE_PX_PER_PACKET PAINT_SHARE_PX_PACKET_LEN * 2
@@ -131,17 +127,8 @@ typedef struct
     /// @brief The position of the top-left corner of the sprite, relative to the cursor position
     int8_t spriteOffsetX, spriteOffsetY;
 
-    /// @brief A pixel stack of all pixels covered up by the cursor in its current position
-    pxStack_t underPxs;
-
     /// @brief The canvas X and Y coordinates of the cursor
     int16_t x, y;
-
-    /// @brief True if the cursor should be drawn, false if not
-    bool show;
-
-    /// @brief True when the cursor state has changed and it needs to be redrawn
-    bool redraw;
 } paintCursor_t;
 
 /// @brief Struct encapsulating all info for a single player
@@ -163,6 +150,19 @@ typedef struct
     paletteColor_t fgColor, bgColor;
 } paintArtist_t;
 
+typedef enum
+{
+    DIALOG_CONFIRM_UNSAVED_CLEAR,
+    DIALOG_CONFIRM_UNSAVED_LOAD,
+    DIALOG_CONFIRM_UNSAVED_EXIT,
+    DIALOG_CONFIRM_OVERWRITE,
+    DIALOG_CONFIRM_DELETE,
+    DIALOG_ERROR,
+    DIALOG_ERROR_LOAD,
+    DIALOG_ERROR_NONFATAL,
+    DIALOG_MESSAGE,
+} paintDialog_t;
+
 typedef struct
 {
     led_t leds[CONFIG_NUM_LEDS];
@@ -178,9 +178,6 @@ typedef struct
     font_t saveMenuFont;
     // Small font for small things (text above color picker gradient bars)
     font_t smallFont;
-
-    // Index keeping track of which slots are in use and the most recent slot
-    int32_t index;
 
     // All shared state for 1 or 2 players
     paintArtist_t artist[2];
@@ -247,10 +244,6 @@ typedef struct
     int64_t blinkTimer;
     bool blinkOn;
 
-    bool touchDown;
-    int32_t firstTouch;
-    int32_t lastTouch;
-
     // The brush width
     uint8_t startBrushWidth;
 
@@ -259,35 +252,18 @@ typedef struct
     // True if the canvas has been modified since last save
     bool unsaved;
 
-    // Whether to perform a save or load on the next loop
-    bool doSave, doLoad;
-
-    // True when a save has been started but not yet completed. Prevents input while saving.
-    bool saveInProgress;
+    // The name of the currently opened slot
+    char slotKey[17];
 
     //// Save Menu Flags
 
-    // The current state of the save / load menu
-    paintSaveMenu_t saveMenu;
-
-    // The save slot selected for PICK_SLOT_SAVE and PICK_SLOT_LOAD
-    uint8_t selectedSlot;
-
-    // State for Yes/No options in the save menu.
-    bool saveMenuBoolOption;
+    // The save/load slot selected from the picker
+    char selectedSlotKey[17];
 
     //////// Rendering flags
 
     // If set, the canvas will be cleared and the screen will be redrawn. Set on startup.
     bool clearScreen;
-
-    // Set to redraw the toolbar on the next loop, when a brush or color is being selected
-    bool redrawToolbar;
-
-    // Whether all pick points should be redrawn with the current fgColor, for when the color changes while we're
-    // picking
-    // TODO: This might not be necessary any more since we redraw those constantly.
-    bool recolorPickPoints;
 
     //////// Undo Data
 
@@ -298,18 +274,11 @@ typedef struct
     // This allows redo to work. If the image is edited, this and all following items are removed.
     node_t* undoHead;
 
-    /// @brief Canvas stored so we can draw over it
-    paintUndo_t* storedCanvas;
-
-    //////// Tool Wheel
-
-    bool showToolWheel;
-
-    // Tool wheel shown even though touch released
-    bool toolWheelWaiting;
-
     // The menu for the tool wheel
     menu_t* toolWheel;
+
+    // The sub-menu for the edit palette
+    menu_t* editPaletteWheel;
 
     // So we can update the brush size item options easily
     menuItem_t* toolWheelBrushSizeItem;
@@ -336,23 +305,77 @@ typedef struct
     wsg_t wheelUndoWsg;
     wsg_t wheelRedoWsg;
     wsg_t wheelSaveWsg;
+    wsg_t wheelOpenWsg;
+    wsg_t wheelNewWsg;
+    wsg_t wheelExitWsg;
+    wsg_t wheelPaletteWsg;
+
+    //////// Dialog Box
+
+    /// @brief Icon to use in the dialog box for an error message
+    wsg_t dialogErrorWsg;
+
+    /// @brief Icon to use in the dialog box for an informational message
+    wsg_t dialogInfoWsg;
+
+    /// @brief Whether or not to show a dialog
+    bool showDialogBox;
+
+    /// @brief Which dialog to show
+    paintDialog_t dialog;
+
+    /// @brief The actual dialog
+    dialogBox_t* dialogBox;
+
+    /// @brief The title of the dialog for `DIALOG_MESSAGE`
+    const char* dialogMessageTitle;
+
+    /// @brief The detail message of the dialog for `DIALOG_MESSAGE`
+    const char* dialogMessageDetail;
+
+    /// @brief If dialogMessageDetail should be freed once done, it will be stored here
+    char* dialogCustomDetail;
+
+    /// @brief True if a fatal error occurred, and we should only show the error dialog.
+    bool fatalError;
+
+    //////// File Browser
+    bool showBrowser;
+
+    bool browserSave;
+
+    imageBrowser_t browser;
+
+    bool exiting;
 } paintDraw_t;
 
 typedef struct
 {
     paintCanvas_t canvas;
-    int32_t index;
 
     font_t toolbarFont;
     wsg_t arrowWsg;
 
     // The save slot being displayed / shared
     uint8_t shareSaveSlot;
+    char shareSaveSlotKey[16];
 
     paintShareState_t shareState;
 
+    imageBrowser_t browser;
+    bool browserVisible;
+
+    dialogBox_t* dialog;
+    size_t dataOffset;
+
     bool shareAcked;
     bool connectionStarted;
+
+    // The version of the protocol to use
+    // 0 is the original
+    // 1 is the next one, only difference is packet length and
+    uint8_t version;
+    bool versionSent;
 
     // For the sender, the sequence number of the current packet being sent / waiting for ack
     uint16_t shareSeqNum;
@@ -369,6 +392,7 @@ typedef struct
     bool shareUpdateScreen;
 
     // TODO rename this so it's not the same as the global one
+    bool useCable;
     p2pInfo p2pInfo;
 
     // Time for the progress bar timer
@@ -382,13 +406,25 @@ typedef struct
     bool clearScreen;
 } paintShare_t;
 
+typedef enum
+{
+    GALLERY_INFO_SPEED      = 0x01,
+    GALLERY_INFO_BRIGHTNESS = 0x02,
+    GALLERY_INFO_DANCE      = 0x04,
+    GALLERY_INFO_NEXT       = 0x08,
+    GALLERY_INFO_EXIT       = 0x10,
+    GALLERY_INFO_VIEW       = 0x20,
+    GALLERY_INFO_CONTROLS   = 0xFF,
+} paintGalleryInfoView_t;
+
 typedef struct
 {
-    paintCanvas_t canvas;
-    int32_t index;
-
     font_t infoFont;
     wsg_t arrow;
+    wsg_t aWsg;
+    wsg_t bWsg;
+    wsg_t pauseWsg;
+    wsg_t spinWsg;
 
     // TODO rename these to better things now that they're in their own struct
 
@@ -405,12 +441,17 @@ typedef struct
     int64_t infoTimeRemaining;
 
     // Current image used in gallery
-    uint8_t gallerySlot;
+    char gallerySlotKey[16];
+
+    imageBrowser_t browser;
 
     bool showUi;
-    bool galleryLoadNew;
     bool screensaverMode;
     paintScreen_t returnScreen;
+    paintGalleryInfoView_t infoView;
+
+    int startBrightness;
+    touchSpinState_t spinState;
 
     uint8_t galleryScale;
 } paintGallery_t;

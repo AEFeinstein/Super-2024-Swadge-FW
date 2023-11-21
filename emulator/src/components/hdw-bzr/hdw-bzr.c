@@ -66,11 +66,22 @@ uint16_t sfxVolume;
 /// @brief Track if the buzzer is paused or not
 static bool bzrPaused = false;
 
+/// @brief A flag to set if bgmDoneCb should be called from the main loop
+static bool bgmDoneFlag = false;
+/// @brief A flag to set if sfxDoneCb should be called from the main loop
+static bool sfxDoneFlag = false;
+/// @brief A callback function to call after SFX finishes. This is not called if the song is manually stopped or another
+/// song starts before this one finishes
+static songFinishedCbFn sfxDoneCb = NULL;
+/// @brief A callback function to call after BGM finishes. This is not called if the song is manually stopped or another
+/// song starts before this one finishes
+static songFinishedCbFn bgmDoneCb = NULL;
+
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive,
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive, bool isBgm,
                                          int32_t tElapsedUs);
 void buzzer_check_next_note(void* arg);
 void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
@@ -208,6 +219,7 @@ void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
 {
     bzrPlayTrack(&buzzers[0].bgm, &buzzers[1].bgm, song, track);
     bzrResume();
+    bgmDoneCb = NULL;
 }
 
 /**
@@ -221,6 +233,61 @@ void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
 {
     bzrPlayTrack(&buzzers[0].sfx, &buzzers[1].sfx, song, track);
     bzrResume();
+    sfxDoneCb = NULL;
+}
+
+/**
+ * @brief Start playing a background music on the buzzer. This has lower priority
+ * than sound effects. cbFn will be called when the music finishes playing
+ *
+ * @param song The song to play as a sequence of notes
+ * @param track The track to play on if the song is mono. This is ignored if the song is stereo
+ * @param cbFn
+ */
+void bzrPlayBgmCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn)
+{
+    bzrPlayBgm(song, track);
+    bgmDoneCb = cbFn;
+}
+
+/**
+ * @brief Start playing a sound effect on the buzzer. This has higher priority
+ * than background music. cbFn will be called when the effect finishes playing
+ *
+ * @param song The song to play as a sequence of notes
+ * @param track The track to play on if the song is mono. This is ignored if the song is stereo
+ * @param cbFn A callback function to call when the effect finishes playing
+ */
+void bzrPlaySfxCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn)
+{
+    bzrPlaySfx(song, track);
+    sfxDoneCb = cbFn;
+}
+
+/**
+ * @brief Check if a song has finished playing and call the appropriate callback if applicable
+ */
+void bzrCheckSongDone(void)
+{
+    if (true == bgmDoneFlag)
+    {
+        bgmDoneFlag = false;
+        if (NULL != bgmDoneCb)
+        {
+            bgmDoneCb();
+            bgmDoneCb = NULL;
+        }
+    }
+
+    if (true == sfxDoneFlag)
+    {
+        sfxDoneFlag = false;
+        if (NULL != sfxDoneCb)
+        {
+            sfxDoneCb();
+            sfxDoneCb = NULL;
+        }
+    }
 }
 
 /**
@@ -310,8 +377,9 @@ void buzzer_check_next_note(void* arg)
         {
             buzzer_t* buzzer = &buzzers[bIdx];
 
-            bool sfxIsActive = buzzer_track_check_next_note(&buzzer->sfx, bIdx, sfxVolume, true, tElapsedUs);
-            bool bgmIsActive = buzzer_track_check_next_note(&buzzer->bgm, bIdx, bgmVolume, !sfxIsActive, tElapsedUs);
+            bool sfxIsActive = buzzer_track_check_next_note(&buzzer->sfx, bIdx, sfxVolume, true, false, tElapsedUs);
+            bool bgmIsActive
+                = buzzer_track_check_next_note(&buzzer->bgm, bIdx, bgmVolume, !sfxIsActive, true, tElapsedUs);
 
             // If nothing is playing, but there is BGM (i.e. SFX finished)
             if ((false == sfxIsActive) && (false == bgmIsActive) && (NULL != buzzer->bgm.sTrack))
@@ -331,11 +399,12 @@ void buzzer_check_next_note(void* arg)
  * @param volume The volume to play at
  * @param isActive true if this is active and should set a note to be played
  *                 false to just advance notes without playing
+ * @param isBgm true if this is BGM, false if this is SFX
  * @param tElapsedUs The microseconds since this function was last called
  * @return true  if this track is playing a note
  *         false if it is not
  */
-static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive,
+static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive, bool isBgm,
                                          int32_t tElapsedUs)
 {
     // Check if there is a song and there are still notes
@@ -395,6 +464,17 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16
                 track->usAccum    = 0;
                 track->note_index = 0;
                 track->sTrack     = NULL;
+
+                // Set flag to call CB from main loop
+                if (isBgm)
+                {
+                    bgmDoneFlag = true;
+                }
+                else
+                {
+                    sfxDoneFlag = true;
+                }
+
                 // Track is inactive
                 return false;
             }
@@ -532,4 +612,19 @@ void bzrRestore(void* data)
     }
 
     free(data);
+}
+
+/**
+ * @brief Get the actual volume level from the setting
+ *
+ * @param setting The volume level setting
+ * @return The actual volume
+ */
+uint16_t volLevelFromSetting(uint16_t setting)
+{
+    if (setting < (sizeof(volLevels) / sizeof(volLevels[0])))
+    {
+        return volLevels[setting];
+    }
+    return 0;
 }

@@ -318,6 +318,9 @@ usbflash :
 	$(MAKE) -C tools/swadgeterm monitor
 endif
 
+monitor :
+	$(MAKE) -C tools/swadgeterm monitor
+
 ################################################################################
 # cppcheck targets
 ################################################################################

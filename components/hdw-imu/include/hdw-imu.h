@@ -91,6 +91,7 @@ esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z);
 esp_err_t accelGetQuaternion(float* q);
 esp_err_t accelIntegrate(void);
 esp_err_t accelPerformCal(void);
+esp_err_t accelGetSteeringAngleDegrees(int16_t* xcomp, int16_t* ycomp);
 float accelGetStdDevInCal(void);
 void accelSetRegistersAndReset(void);
 

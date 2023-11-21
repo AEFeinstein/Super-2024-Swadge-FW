@@ -168,3 +168,45 @@ void mathRotateVectorByInverseOfQuaternion(float* pout, const float* q, const fl
     pout[1] = ret[1] * 2.0 + p[1];
     pout[2] = ret[2] * 2.0 + p[2];
 }
+
+/**
+ * @brief Compute the difference between two quaternions
+ *
+ * @param qOut Pointer to the float[4] (wxyz) output of the rotation between qFrom and qTo.
+ * @param qFrom is the Quaterntion that you are rotating FROM
+ * @param qTo is the Quaternion that you are rotating TO
+ */
+void mathComputeQuaternionDeltaBetweenQuaternions(float* qOut, const float* qFrom, const float* qTo)
+{
+    // Diff= quatmultiply(quatconj(x),y)
+    float qtmp[3];
+    qtmp[0] = qFrom[0] * qTo[0] + qFrom[1] * qTo[1] + qFrom[2] * qTo[2] + qFrom[3] * qTo[3];
+    qtmp[1] = qFrom[0] * qTo[1] - qFrom[1] * qTo[0] - qFrom[2] * qTo[3] + qFrom[3] * qTo[2];
+    qtmp[2] = qFrom[0] * qTo[2] + qFrom[1] * qTo[3] - qFrom[2] * qTo[0] - qFrom[3] * qTo[1];
+    qOut[3] = qFrom[0] * qTo[3] - qFrom[1] * qTo[2] + qFrom[2] * qTo[1] - qFrom[3] * qTo[0];
+    qOut[0] = qtmp[0];
+    qOut[1] = qtmp[1];
+    qOut[2] = qtmp[2];
+}
+
+/**
+ * @brief Compute the quaterntion rotation between two vectors, from v1 to v2
+ *
+ * @param qOut Pointer to the float[4] (wxyz) output of the rotation defined by v1 to v2
+ * @param v1 is the vector you are rotating FROM. THIS MUST BE NORMALIZED.
+ * @param v2 is the vector you are rotating TO. THIS MUST BE NORMALIZED.
+ */
+void mathQuatFromTwoVectors(float* qOut, const float* v1, const float* v2)
+{
+    float ideal_up[3]  = {v1[0], v1[1], v1[2]};
+    float target_up[3] = {v2[0], v2[1], v2[2]};
+    float half[3]      = {target_up[0] + ideal_up[0], target_up[1] + ideal_up[1], target_up[2] + ideal_up[2]};
+    float halfnormreq  = rsqrtf(half[0] * half[0] + half[1] * half[1] + half[2] * half[2]);
+    half[0] *= halfnormreq;
+    half[1] *= halfnormreq;
+    half[2] *= halfnormreq;
+
+    mathCrossProduct(qOut + 1, target_up, half);
+    float dotdiff = target_up[0] * half[0] + target_up[1] * half[1] + target_up[2] * half[2];
+    qOut[0]       = dotdiff;
+}
