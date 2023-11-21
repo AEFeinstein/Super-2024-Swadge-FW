@@ -5,9 +5,13 @@
 #include <dirent.h>
 #include <stdint.h>
 
-char *pathcat(const char *str1, char *str2);
+int stringcmp( const void * a, const void * b );
 
 #define MAX_FILES 4096
+
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
 
 struct fileEntry
 {
@@ -22,7 +26,7 @@ char * filelist[MAX_FILES];
 
 int stringcmp( const void * a, const void * b )
 {
-    return strcmp( *(char**)a, *(char**)b );
+    return strcmp( *(const char* const *)a, *(const char* const *)b );
 }
 
 int main( int argc, char ** argv )
@@ -43,10 +47,12 @@ int main( int argc, char ** argv )
     }
     int offset = 0;
     int numfiles_in = 0;
-    while (dp=readdir(dir)) // if dp is null, there's no more content to read
+    while ((dp=readdir(dir))) // if dp is null, there's no more content to read
     {
 		if( strcmp( dp->d_name, "." ) != 0 && strcmp( dp->d_name, ".." ) != 0 )
+		{
 	        filelist[numfiles_in++] = strdup( dp->d_name );
+		}
     }
     closedir(dir); // close the handle (pointer)
 
