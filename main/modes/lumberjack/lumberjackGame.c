@@ -69,8 +69,7 @@ static bool lumberjackIsCollisionTile(int index);
 bool lumberjackLoadLevel(void);
 void lumberjackOnLocalPlayerDeath(void);
 
-void DrawTitle(void);
-void DrawGame(void);
+void lumberjackDrawTitle(void);
 
 lumberjackVars_t* lumv;
 
@@ -829,7 +828,6 @@ void lumberjackTitleLoop(int64_t elapsedUs)
         lumv->stageAnimationFrame++;
     }
 
-    DrawTitle();
 }
 
 void lumberjackPlayGame()
@@ -859,6 +857,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
     if (lumv->gameState == LUMBERJACK_GAMESTATE_TITLE)
     {
         lumberjackTitleLoop(elapsedUs);
+        lumberjackDrawTitle();
         return;
     }
 
@@ -893,7 +892,6 @@ void lumberjackGameLoop(int64_t elapsedUs)
             }
         }
 
-        DrawGame();
         return;
     }
 
@@ -1006,7 +1004,8 @@ void lumberjackGameLoop(int64_t elapsedUs)
         
     }
 
-    DrawGame();
+
+    lumberjackDrawGame();
 }
 
 void baseMode(int64_t elapsedUs)
@@ -1621,7 +1620,7 @@ void lumberjackOnLocalPlayerDeath(void)
     }
 }
 
-void DrawTitle(void)
+void lumberjackDrawTitle(void)
 {
     drawWsgSimple(&lumv->title, (TFT_WIDTH / 2) - 51, (TFT_HEIGHT / 2) - 48);
     
@@ -1685,8 +1684,9 @@ void DrawTitle(void)
     drawWsgSimple(&lumv->unusedBlockSprite[lumv->stageAnimationFrame % LUMBERJACK_BLOCK_ANIMATION_MAX], 8.5 * 16, 208 - 64);
 }
  
-void DrawGame(void)
+void lumberjackDrawGame(void)
 {
+
     // Draw section
     // Redraw bottom
     lumberjackTileMap();

@@ -56,5 +56,6 @@ void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, boo
 void lumberjackUseBlock(void);
 void lumberjackSaveSave(void);
 
+void lumberjackDrawGame(void);
 
 #endif
