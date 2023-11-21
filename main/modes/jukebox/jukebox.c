@@ -107,8 +107,8 @@ void jukeboxMainLoop(int64_t elapsedUs);
 void jukeboxBackgroundDrawCb(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 void jukeboxBzrDoneCb(void);
-void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories);
-void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories);
+void jukeboxLoadCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories);
+void jukeboxFreeCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories);
 
 /*==============================================================================
  * Variables
@@ -152,7 +152,7 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
-const jukeboxSong_t songs_galacticBrickdown[] = {
+jukeboxSong_t songs_galacticBrickdown[] = {
     // {
     //     .filename = "brkBgmCrazy.sng",
     //     .name  = "BGM Crazy",
@@ -175,7 +175,7 @@ const jukeboxSong_t songs_galacticBrickdown[] = {
     // },
 };
 
-const jukeboxSong_t songs_swadgeLand[] = {
+jukeboxSong_t songs_swadgeLand[] = {
     {
         .filename = "bgmDeMAGio.sng",
         .name  = "DeMAGio BGM",
@@ -198,7 +198,7 @@ const jukeboxSong_t songs_swadgeLand[] = {
     },
 };
 
-const jukeboxSong_t songs_magtroid[] = {
+jukeboxSong_t songs_magtroid[] = {
     {
         .filename = "base_0.sng",
         .name  = "Base 0",
@@ -229,48 +229,48 @@ const jukeboxSong_t songs_magtroid[] = {
     },  
 };
 
-const jukeboxSong_t songs_jukebox[] = {
-    {
-        .filename = "hotrod.sng",
-        .name  = "Hot Rod",
-    },
+jukeboxSong_t songs_jukebox[] = {
     {
         .filename = "Fauxrio_Kart.sng",
         .name  = "Fauxrio Kart",
-    },        
-    {
-        .filename = "thelake.sng",
-        .name  = "The Lake",
-    },        
-    {
-        .filename = "yalikejazz.sng",
-        .name  = "Ya like jazz?",
-    },        
-    {
-        .filename = "banana.sng",
-        .name  = "Banana",
-    },
+    }, 
+    // {
+    //     .filename = "hotrod.sng",
+    //     .name  = "Hot Rod",
+    // },       
+    // {
+    //     .filename = "thelake.sng",
+    //     .name  = "The Lake",
+    // },        
+    // {
+    //     .filename = "yalikejazz.sng",
+    //     .name  = "Ya like jazz?",
+    // },        
+    // {
+    //     .filename = "banana.sng",
+    //     .name  = "Banana",
+    // },
 };
 
-const jukeboxSong_t songs_credits[] = {
+jukeboxSong_t songs_credits[] = {
     {
         .filename = "credits.sng",
         .name  = creditsName,
     },
 };
 
-const jukeboxSong_t songs_unused[] = {
+jukeboxSong_t songs_unused[] = {
     {
-        .filename = "Pong BGM",
-        .name  = "gmcc.sng",
+        .filename = "gmcc.sng",
+        .name  = "Pong BGM",
     },
     {
-        .filename = "Ode to Joy",
-        .name  = "ode.sng",
+        .filename = "ode.sng",
+        .name  = "Ode to Joy",
     },
     {
-        .filename = "Stereo",
-        .name  = "stereo.sng",
+        .filename = "stereo.sng",
+        .name  = "Stereo",
     },
 };
 
@@ -302,7 +302,7 @@ const jukeboxCategory_t musicCategories[] = {
     }
 };
 
-const jukeboxSong_t sounds_galacticBrickdown[] = {
+jukeboxSong_t sounds_galacticBrickdown[] = {
     {
         .filename = "sndBounce.sng",
         .name  = "Bounce",
@@ -361,7 +361,7 @@ const jukeboxSong_t sounds_galacticBrickdown[] = {
     },
 };
 
-const jukeboxSong_t sounds_swadgeland[] = {
+jukeboxSong_t sounds_swadgeland[] = {
     {
         .filename = "bgmIntro.sng",
         .name  = "Into",
@@ -468,7 +468,7 @@ const jukeboxSong_t sounds_swadgeland[] = {
     },
 };
 
-const jukeboxSong_t sounds_magtroid[] = {
+jukeboxSong_t sounds_magtroid[] = {
     {
         .filename = "r_door_open.sng",
         .name  = "Door Open",
@@ -539,7 +539,7 @@ const jukeboxSong_t sounds_magtroid[] = {
     },
 };
 
-const jukeboxSong_t sounds_mainMenu[] = {
+jukeboxSong_t sounds_mainMenu[] = {
     {
         .filename = "item.sng",
         .name  = "Item",
@@ -550,7 +550,7 @@ const jukeboxSong_t sounds_mainMenu[] = {
     },
 };
 
-const jukeboxSong_t sounds_unused[] = {
+jukeboxSong_t sounds_unused[] = {
     {
         .filename = "Pong Block 1",
         .name  = "block1.sng",
@@ -561,7 +561,7 @@ const jukeboxSong_t sounds_unused[] = {
     },
 };
 
-const jukeboxSong_t sounds_FactoryTest[] = {
+jukeboxSong_t sounds_FactoryTest[] = {
     {
         .filename = "stereo_test.sng",
         .name  = "Stereo Check",
@@ -626,8 +626,11 @@ void jukeboxEnterMode()
 
     ///// Load music midis /////
 
+    printf("load music\n");
     jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories));
+    printf("load sfx\n");
     jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories));
+    printf("done load\n");
 
     ///// Initialize portable dances /////
 
@@ -1008,13 +1011,14 @@ void jukeboxBzrDoneCb(void)
     }
 }
 
-void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories)
+void jukeboxLoadCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories)
 {
     for (int categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
     {
         for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
         {
-            loadSong(categoryArray[categoryIdx].songs[songIdx].filename, &categoryArray[categoryIdx].songs[songIdx].song, true);
+            printf("Load category %d \"%s\" song %d \"%s\"\n", categoryIdx, categoryArray[categoryIdx].categoryName, songIdx, categoryArray[categoryIdx].songs[songIdx].filename);
+            loadSong(categoryArray[categoryIdx].songs[songIdx].filename, &(categoryArray[categoryIdx].songs[songIdx].song), true);
             
             if (categoryArray[categoryIdx].songs[songIdx].song.numTracks == 0)
             {
@@ -1024,7 +1028,7 @@ void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
     }
 }
 
-void jukeboxFreeCategories(const jukeboxCategory_t* categoryArray, uint8_t numCategories)
+void jukeboxFreeCategories(jukeboxCategory_t* categoryArray, uint8_t numCategories)
 {
     for (uint8_t categoryIdx = 0; categoryIdx < numCategories; categoryIdx++)
     {
