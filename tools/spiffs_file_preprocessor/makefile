@@ -12,11 +12,11 @@ FIND = find
 ################################################################################
 
 # This is a list of directories to scan for c files recursively
-SRC_DIRS_RECURSIVE = ./src ./src-lib
+SRC_DIRS_RECURSIVE = ./src ./src-lib ../../main/asset_loaders/common
 # This is a list of directories to scan for c files not recursively
-SRC_DIRS_FLAT = 
+SRC_DIRS_FLAT =
 # This is a list of files to compile directly. There's no scanning here
-SRC_FILES = 
+SRC_FILES =
 # This is all the source directories combined
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined
@@ -45,7 +45,7 @@ CFLAGS_WARNINGS = \
 	-Wno-error=unused-but-set-variable \
 	-Wno-old-style-declaration \
 	-Wno-missing-field-initializers
-	
+
 # These are warning flags that I like
 CFLAGS_WARNINGS_EXTRA = \
 	-Wundef \
@@ -116,7 +116,7 @@ OBJECTS = $(patsubst %.c, $(OBJ_DIR)/%.o, $(SOURCES))
 LIBS = m
 
 # These are directories to look for library files in
-LIB_DIRS = 
+LIB_DIRS =
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \

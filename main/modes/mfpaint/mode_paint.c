@@ -32,13 +32,10 @@ const char menuOptShare[]    = "Share";
 const char menuOptReceive[]  = "Receive";
 const char menuOptSettings[] = "Settings";
 
-const char menuOptLeds[]  = "LEDs";
-const char menuOptBlink[] = "Blink Picks";
+const char menuOptLeds[] = "LEDs";
 
 const char menuOptLedsOn[]       = "LEDs: On";
 const char menuOptLedsOff[]      = "LEDs: Off";
-const char menuOptBlinkOn[]      = "Blink Picks: On";
-const char menuOptBlinkOff[]     = "Blink Picks: Off";
 const char menuOptEraseData[]    = "Erase: All";
 char menuOptEraseSlot[]          = "Erase: Slot 1";
 const char menuOptCancelErase[]  = "Confirm: No!";
@@ -55,7 +52,7 @@ void paintButtonCb(buttonEvt_t* evt);
 
 swadgeMode_t modePaint = {
     .modeName                 = paintTitle,
-    .wifiMode                 = ESP_NOW,
+    .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
@@ -77,8 +74,6 @@ void paintMenuCb(const char* label, bool selected, uint32_t value);
 
 void paintDeleteAllData(void);
 void paintMenuInitialize(void);
-void paintMenuPrevEraseOption(void);
-void paintMenuNextEraseOption(void);
 void paintSetupMainMenu(void);
 
 // Mode struct function implemetations
@@ -178,69 +173,6 @@ void paintButtonCb(buttonEvt_t* evt)
             break;
         }
 
-            /*case PAINT_SETTINGS_MENU:
-            {
-                if (evt->down)
-                {
-                    if (evt->button == PB_LEFT || evt->button == PB_RIGHT)
-                    {
-                        if (menuOptCancelErase == selectedOption)
-                        {
-                            paintMenu->eraseDataConfirm = true;
-                            paintSetupSettingsMenu(false);
-                        }
-                        else if (menuOptConfirmErase == selectedOption)
-                        {
-                            paintMenu->eraseDataConfirm = false;
-                            paintSetupSettingsMenu(false);
-                        }
-                        else if (menuOptEraseSlot == selectedOption || menuOptEraseData == selectedOption)
-                        {
-                            paintMenu->settingsMenuSelection = paintMenu->menu->selectedRow;
-                            if (evt->button == PB_LEFT)
-                            {
-                                paintMenuPrevEraseOption();
-                                paintSetupSettingsMenu(false);
-                            }
-                            else if (evt->button == PB_RIGHT)
-                            {
-                                paintMenuNextEraseOption();
-                                paintSetupSettingsMenu(false);
-                            }
-                        }
-                    }
-                    else if (evt->button == PB_B)
-                    {
-                        if (paintMenu->eraseDataSelected)
-                        {
-                            paintMenu->eraseDataSelected = false;
-                            paintSetupSettingsMenu(false);
-                        }
-                        else
-                        {
-                            paintMenu->screen = PAINT_MENU;
-                            paintSetupMainMenu(false);
-                        }
-                    }
-                    else
-                    {
-                        meleeMenuButton(paintMenu->menu, evt->button);
-                        selectedOption = paintMenu->menu->rows[paintMenu->menu->selectedRow];
-                    }
-
-                    if (paintMenu->eraseDataSelected && menuOptCancelErase != selectedOption &&
-                        menuOptConfirmErase != selectedOption)
-                    {
-                        // If the confirm-erase option is not selected, reset eraseDataConfirm and redraw the menu
-                        paintMenu->settingsMenuSelection = paintMenu->menu->selectedRow;
-                        paintMenu->eraseDataSelected = false;
-                        paintMenu->eraseDataConfirm = false;
-                        paintSetupSettingsMenu(false);
-                    }
-                }
-                break;
-            }*/
-
         case PAINT_DRAW:
         case PAINT_HELP:
         {
@@ -273,12 +205,9 @@ void paintMenuInitialize(void)
 
 void paintSetupMainMenu(void)
 {
-    int32_t index;
-    paintLoadIndex(&index);
-
     addSingleItemToMenu(paintMenu->menu, menuOptDraw);
 
-    if (paintGetAnySlotInUse(index))
+    if (paintGetAnySlotInUse())
     {
         // Only add "gallery" if there's something to view
         paintMenu->enableScreensaver = true;
@@ -290,103 +219,21 @@ void paintSetupMainMenu(void)
     }
 
     paintMenu->menu = startSubMenu(paintMenu->menu, menuOptNetwork);
-    if (paintGetAnySlotInUse(index))
+    if (paintGetAnySlotInUse())
     {
         addSingleItemToMenu(paintMenu->menu, menuOptShare);
     }
     addSingleItemToMenu(paintMenu->menu, menuOptReceive);
     paintMenu->menu = endSubMenu(paintMenu->menu);
 
-    addSingleItemToMenu(paintMenu->menu, menuOptHelp);
+    // addSingleItemToMenu(paintMenu->menu, menuOptHelp);
 
     paintMenu->menu = startSubMenu(paintMenu->menu, menuOptSettings);
     addSettingsItemToMenu(paintMenu->menu, menuOptLeds, paintGetEnableLedsBounds(), paintGetEnableLeds());
-    addSettingsItemToMenu(paintMenu->menu, menuOptBlink, paintGetEnableBlinkBounds(), paintGetEnableBlink());
 
-    /*if (paintMenu->eraseDataSelected)
-    {
-        if (paintMenu->eraseDataConfirm)
-        {
-            addRowToMeleeMenu(paintMenu->menu, menuOptConfirmErase);
-        }
-        else
-        {
-            addRowToMeleeMenu(paintMenu->menu, menuOptCancelErase);
-        }
-    }
-    else
-    {
-        if (paintMenu->eraseSlot == PAINT_SAVE_SLOTS)
-        {
-            addRowToMeleeMenu(paintMenu->menu, menuOptEraseData);
-        }
-        else
-        {
-            snprintf(menuOptEraseSlot, sizeof(menuOptEraseSlot), "Erase: Slot %d", paintMenu->eraseSlot %
-    PAINT_SAVE_SLOTS + 1); addRowToMeleeMenu(paintMenu->menu, menuOptEraseSlot);
-        }
-    }*/
     paintMenu->menu = endSubMenu(paintMenu->menu);
 
     addSingleItemToMenu(paintMenu->menu, menuOptExit);
-}
-
-void paintMenuPrevEraseOption(void)
-{
-    int32_t index;
-    paintLoadIndex(&index);
-
-    if (paintGetAnySlotInUse(index))
-    {
-        PAINT_LOGD("A slot is in use");
-        uint8_t prevSlot = paintGetPrevSlotInUse(index, paintMenu->eraseSlot);
-
-        PAINT_LOGD("Current eraseSlot: %d, prev: %d", paintMenu->eraseSlot, prevSlot);
-        if (paintMenu->eraseSlot != PAINT_SAVE_SLOTS && prevSlot >= paintMenu->eraseSlot)
-        {
-            PAINT_LOGD("Wrapped, moving to All");
-            // we wrapped around
-            paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-        }
-        else
-        {
-            paintMenu->eraseSlot = prevSlot;
-        }
-    }
-    else
-    {
-        PAINT_LOGD("No in-use slots, moving to All");
-        paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-    }
-}
-
-void paintMenuNextEraseOption(void)
-{
-    int32_t index;
-    paintLoadIndex(&index);
-
-    if (paintGetAnySlotInUse(index))
-    {
-        PAINT_LOGD("A slot is in use");
-        uint8_t nextSlot = paintGetNextSlotInUse(
-            index, (paintMenu->eraseSlot == PAINT_SAVE_SLOTS) ? PAINT_SAVE_SLOTS - 1 : paintMenu->eraseSlot);
-        PAINT_LOGD("Current eraseSlot: %d, next: %d", paintMenu->eraseSlot, nextSlot);
-        if (paintMenu->eraseSlot != PAINT_SAVE_SLOTS && nextSlot <= paintMenu->eraseSlot)
-        {
-            PAINT_LOGD("Wrapped, moving to All");
-            // we wrapped around
-            paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-        }
-        else
-        {
-            paintMenu->eraseSlot = nextSlot;
-        }
-    }
-    else
-    {
-        PAINT_LOGD("No in-use slots, moving to All");
-        paintMenu->eraseSlot = PAINT_SAVE_SLOTS;
-    }
 }
 
 void paintMenuCb(const char* opt, bool selected, uint32_t value)
@@ -436,83 +283,8 @@ void paintMenuCb(const char* opt, bool selected, uint32_t value)
         {
             paintSetEnableLeds(value);
         }
-        else if (opt == menuOptBlink)
-        {
-            paintSetEnableBlink(value);
-        }
     }
 }
-
-/*void paintSettingsMenuCb(const char* opt)
-{
-    paintMenu->settingsMenuSelection = paintMenu->menu->selectedRow;
-
-    int32_t index;
-    if (opt == menuOptLedsOff)
-    {
-        // Enable the LEDs
-        paintLoadIndex(&index);
-        index |= PAINT_ENABLE_LEDS;
-        paintSaveIndex(index);
-    }
-    else if (opt == menuOptLedsOn)
-    {
-        paintLoadIndex(&index);
-        index &= ~PAINT_ENABLE_LEDS;
-        paintSaveIndex(index);
-    }
-    else if (opt == menuOptBlinkOff)
-    {
-        paintLoadIndex(&index);
-        index |= PAINT_ENABLE_BLINK;
-        paintSaveIndex(index);
-    }
-    else if (opt == menuOptBlinkOn)
-    {
-        paintLoadIndex(&index);
-        index &= ~PAINT_ENABLE_BLINK;
-        paintSaveIndex(index);
-    }
-    else if (opt == menuOptEraseData)
-    {
-        paintMenu->eraseDataSelected = true;
-    }
-    else if (opt == menuOptEraseSlot)
-    {
-        paintMenu->eraseDataSelected = true;
-        paintMenu->eraseDataConfirm = false;
-    }
-    else if (opt == menuOptConfirmErase)
-    {
-        if (paintMenu->eraseSlot == PAINT_SAVE_SLOTS)
-        {
-            paintDeleteAllData();
-        }
-        else
-        {
-            paintLoadIndex(&index);
-            paintDeleteSlot(&index, paintMenu->eraseSlot);
-            paintMenuNextEraseOption();
-        }
-        paintMenu->enableScreensaver = paintMenu->enableScreensaver && paintGetAnySlotInUse(index);
-        paintMenu->eraseDataConfirm = false;
-        paintMenu->eraseDataSelected = false;
-    }
-    else if (opt == menuOptCancelErase)
-    {
-        paintMenu->eraseDataSelected = false;
-        paintMenu->eraseDataConfirm = false;
-    }
-    else if (opt == menuOptBack)
-    {
-        PAINT_LOGI("Selected Back");
-        paintSetupMainMenu(false);
-        paintMenu->screen = PAINT_MENU;
-        return;
-    }
-
-    paintSetupSettingsMenu(false);
-}*/
 
 void paintReturnToMainMenu(void)
 {
@@ -557,13 +329,14 @@ void paintReturnToMainMenu(void)
 
 void paintDeleteAllData(void)
 {
-    int32_t index;
-    paintLoadIndex(&index);
+    size_t count;
+    readNamespaceNvsEntryInfos(PAINT_NS_DATA, NULL, NULL, &count);
 
-    for (uint8_t i = 0; i < PAINT_SAVE_SLOTS; i++)
+    nvs_entry_info_t infos[count];
+    readNamespaceNvsEntryInfos(PAINT_NS_DATA, NULL, infos, NULL);
+
+    for (int i = 0; i < count; i++)
     {
-        paintDeleteSlot(&index, i);
+        paintDeleteNamed(infos[i].key);
     }
-
-    paintDeleteIndex();
 }

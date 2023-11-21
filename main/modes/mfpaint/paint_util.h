@@ -23,6 +23,7 @@ void paintPlotSquareWave(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uin
 void drawRectFilled(int x0, int y0, int x1, int y1, paletteColor_t col);
 void drawRectFilledScaled(int x0, int y0, int x1, int y1, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
 void paintColorReplace(paintCanvas_t* canvas, paletteColor_t search, paletteColor_t replace);
+void paintColorReplaceScreen(paintCanvas_t* canvas, paletteColor_t search, paletteColor_t replace);
 
 void setPxScaled(int x, int y, paletteColor_t col, int xTr, int yTr, int xScale, int yScale);
 

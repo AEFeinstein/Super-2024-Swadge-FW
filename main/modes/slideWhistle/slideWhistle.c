@@ -45,8 +45,12 @@
 
 #define DEFAULT_PAUSE 5
 
-/// Helper macro to return an integer clamped within a range (MIN to MAX)
-// #define CLAMP(X, MIN, MAX) ( ((X) > (MAX)) ? (MAX) : ( ((X) < (MIN)) ? (MIN) : (X)) )
+// 270<-180->90
+#define EDGE_OFFSET_DEGREES    45
+#define LEFT_BOUND_DEGREES     (270 - EDGE_OFFSET_DEGREES)
+#define RIGHT_BOUND_DEGREES    (90 + EDGE_OFFSET_DEGREES)
+#define STEERING_RANGE_DEGREES (LEFT_BOUND_DEGREES - RIGHT_BOUND_DEGREES)
+
 #define lengthof(x) (sizeof(x) / sizeof(x[0]))
 
 /*==============================================================================
@@ -835,10 +839,6 @@ void slideWhistleExitMode(void)
  */
 void slideWhistleProcessTouch(void)
 {
-    slideWhistle->touchPosition = (slideWhistle->touchPosition * BAR_X_WIDTH) / 1023;
-    slideWhistle->touchPosition
-        = CLAMP(BAR_X_MARGIN + slideWhistle->touchPosition, BAR_X_MARGIN, TFT_WIDTH - 1 - BAR_X_MARGIN);
-
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
     {
@@ -847,12 +847,19 @@ void slideWhistleProcessTouch(void)
         slideWhistle->touchHeld      = true;
         slideWhistle->shouldPlay     = true;
         slideWhistle->touchPosition  = phi;
+        slideWhistle->touchIntensity = intensity;
     }
     else
     {
         slideWhistle->touchHeld  = false;
         slideWhistle->shouldPlay = slideWhistle->aHeld;
     }
+
+    // snprintf(slideWhistle->accelStr, sizeof(slideWhistle->accelStr), "phi %n\n",
+    //        slideWhistle->touchPosition);
+
+    // Clamp touch value and map to the proper scale
+    slideWhistle->touchPosition = roundf((slideWhistle->touchPosition / 360.0f) * (TFT_WIDTH - 1));
 }
 
 /**
@@ -947,26 +954,22 @@ void slideWhistleButtonCallback(buttonEvt_t* evt)
  */
 void slideWhistleProcessAccelerometer(void)
 {
-    float current[4];
-    float rollF = 0.5f;
-    int16_t a_x, a_y, a_z = 0;
-    if (ESP_OK == accelIntegrate() && ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z)
-        && ESP_OK == accelGetQuaternion(current))
+    // Get steering angle: 0..360 with 180 being up.
+    int16_t xcomp, ycomp;
+    int16_t steeringAngleDegrees = 180;
+    if (ESP_OK == accelIntegrate() && ESP_OK == accelGetSteeringAngleDegrees(&xcomp, &ycomp))
     {
-        rollF = CLAMP(current[3] + 0.5f, 0, 1);
-
-        float plusX[3] = {1, 0, 0};
-        mathRotateVectorByInverseOfQuaternion(plusX, current, plusX);
-        // Now look at plusx.
-        /*snprintf(slideWhistle->accelStr, sizeof(slideWhistle->accelStr), "[x:%.2f y:%.2f z:%.2f]",
-            plusX[0], plusX[1], plusX[2]);
-        snprintf(slideWhistle->accelStr2, sizeof(slideWhistle->accelStr2), "q %.2f %.2f %.2f %.2f]",
-            current[0], current[1], current[2], current[3]);*/
+        steeringAngleDegrees = getAtan2(xcomp, ycomp);
+        // snprintf(slideWhistle->accelStr, sizeof(slideWhistle->accelStr), "%d %d %d\n",
+        //     steeringAngleDegrees, xcomp, ycomp);
     }
 
-    // From here, we have a number bounded from 0 to 1, convert to a value
+    // Clamp to the range of steering angles we care about, then normalize from 0 to 1
+    float clampedSteering = CLAMP(steeringAngleDegrees, RIGHT_BOUND_DEGREES, LEFT_BOUND_DEGREES) - RIGHT_BOUND_DEGREES;
+    clampedSteering /= STEERING_RANGE_DEGREES;
 
-    slideWhistle->roll = roundf(rollF * (TFT_WIDTH - 1));
+    // Conver to a number between 0 and TFT_WIDTH - 1
+    slideWhistle->roll = roundf(clampedSteering * (TFT_WIDTH - 1));
 }
 
 /**

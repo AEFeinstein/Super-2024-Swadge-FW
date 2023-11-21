@@ -78,7 +78,6 @@ static const uint8_t lengthperline[] = {14, 14, 13, 12, 1};
 /**
  * Initialize the text entry
  *
- * @param usedisp The display to draw to
  * @param usefont The font to use, should be ibm_vga8
  * @param max_len The length of buffer
  * @param buffer  A char* to store the entered text in
