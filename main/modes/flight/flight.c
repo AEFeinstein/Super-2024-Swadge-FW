@@ -840,6 +840,8 @@ void tdTranslate(int16_t* f, int16_t x, int16_t y, int16_t z);
 uint16_t tdSQRT(uint32_t inval);
 int16_t tdDist(const int16_t* a, const int16_t* b);
 
+unsigned int isqrt(unsigned int y);
+
 // From https://github.com/cnlohr/channel3/blob/master/user/3d.c
 
 uint16_t tdSQRT(uint32_t inval)
@@ -957,6 +959,20 @@ void SetupMatrix(void)
     tdIdentity(flight->ModelviewMatrix);
 
     Perspective(VIEWPORT_PERSPECTIVE, 256 /* 1.0 */, 50, 8192, flight->ProjectionMatrix);
+}
+
+unsigned int isqrt(unsigned int y)
+{
+	unsigned int L = 0;
+	unsigned int a = 1;
+	unsigned int d = 3;
+	while (a <= y)
+	{
+		a = a + d;
+		d = d + 2;
+		L = L + 1;
+	}
+	return L;
 }
 
 void tdMultiply(int16_t* fin1, int16_t* fin2, int16_t* fout)
@@ -1295,21 +1311,42 @@ static void flightRender(int64_t elapsedUs)
     {
         // Quat to rotmat.
         int16_t rotmat[16] = {0};
-        float q0           = tflight->fqQuatAccum[0];
-        float q1           = -tflight->fqQuatAccum[1];
-        float q2           = -tflight->fqQuatAccum[2];
-        float q3           = -tflight->fqQuatAccum[3];
-        rotmat[0 * 4 + 0]  = (2 * (q0 * q0 + q1 * q1) - 1) * 256;
-        rotmat[0 * 4 + 1]  = (2 * (q1 * q2 - q0 * q3)) * 256;
-        rotmat[0 * 4 + 2]  = (2 * (q1 * q3 + q0 * q2)) * 256;
-        rotmat[1 * 4 + 0]  = (2 * (q1 * q2 + q0 * q3)) * 256;
-        rotmat[1 * 4 + 1]  = (2 * (q0 * q0 + q2 * q2) - 1) * 256;
-        rotmat[1 * 4 + 2]  = (2 * (q2 * q3 - q0 * q1)) * 256;
-        rotmat[2 * 4 + 0]  = (2 * (q1 * q3 - q0 * q2)) * 256;
-        rotmat[2 * 4 + 1]  = (2 * (q2 * q3 + q0 * q1)) * 256;
-        rotmat[2 * 4 + 2]  = (2 * (q0 * q0 + q3 * q3) - 1) * 256;
+        int32_t q0           =  tflight->fqQuatAccum[0] * 2048;
+        int32_t q1           = -tflight->fqQuatAccum[1] * 2048;
+        int32_t q2           = -tflight->fqQuatAccum[2] * 2048;
+        int32_t q3           = -tflight->fqQuatAccum[3] * 2048;
+
+		// Note to anyone looking on this in the future, it's actually 2* each filed, but we avoid
+		// it by increasing the >>.
+        rotmat[0 * 4 + 0]  = ((q0 * q0 + q1 * q1) - 2060720) >> 13;
+        rotmat[0 * 4 + 1]  = ((q1 * q2 - q0 * q3)) >> 13;
+        rotmat[0 * 4 + 2]  = ((q1 * q3 + q0 * q2)) >> 13;
+        rotmat[1 * 4 + 0]  = ((q1 * q2 + q0 * q3)) >> 13;
+        rotmat[1 * 4 + 1]  = ((q0 * q0 + q2 * q2) - 2060720) >> 13;
+        rotmat[1 * 4 + 2]  = ((q2 * q3 - q0 * q1)) >> 13;
+        rotmat[2 * 4 + 0]  = ((q1 * q3 - q0 * q2)) >> 13;
+        rotmat[2 * 4 + 1]  = ((q2 * q3 + q0 * q1)) >> 13;
+        rotmat[2 * 4 + 2]  = ((q0 * q0 + q3 * q3) - 2060720) >> 13;
         rotmat[3 * 4 + 3]  = 1 * 256;
         tdMultiply(flight->ProjectionMatrix, rotmat, flight->ProjectionMatrix);
+
+		// Compute HPR for things like networking + boolets.
+		// HEADING is either top row or bottom row.  you choose.  Depends on 
+		// Which is better, accuracy at extreme roll or pitch.
+		//  I care about pitch more - so I am going to use Top row (X)
+		tflight->hpr[0] = getAtan2( rotmat[0 * 4 + 0], rotmat[0 * 4 + 2] ) * 11;
+		unsigned bottom = isqrt( rotmat[2 * 4 + 2] * rotmat[2 * 4 + 2] + rotmat[2 * 4 + 0] * rotmat[2 * 4 + 0] );
+		tflight->hpr[1] = getAtan2( -rotmat[2 * 4 + 1], bottom ) * 11;
+		tflight->hpr[2] = getAtan2( rotmat[1 * 4 + 1], rotmat[1 * 4 + 2] ) * 11;
+///		tflight->hpr[0] = getAtan2( rotmat[0 * 4 + 0], rotmat[0 * 4 + 1] );
+//		tflight->hpr[1] = getAtan2(isqrt(1048576+2*(qx*qz + qw*qy)), isqrt( 1048576 - 2*(qw*qy - qx*qz))) * 11; // This was acos
+//		tflight->hpr[2] = getAtan2( (        2*(qx*qy + qw*qz))>>10, ( 1048576 - 2*(qy*qy + qz*qz))>>10) * 11;
+
+		ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d",
+			tflight->hpr[0], tflight->hpr[1], tflight->hpr[2],
+			rotmat[0 * 4 + 0], rotmat[0 * 4 + 1], rotmat[0 * 4 + 2],
+			rotmat[1 * 4 + 0], rotmat[1 * 4 + 1], rotmat[1 * 4 + 2],
+			rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2] );
     }
     else
     {
@@ -1642,6 +1679,7 @@ static void flightRender(int64_t elapsedUs)
     // ESP_LOGI( "RENDER", "%d %d %d", (int)(t1-t0), (int)(t2-t1), (int)(t3-t2) );
     return;
 }
+
 
 static void flightGameUpdate(flight_t* tflight)
 {
@@ -2595,7 +2633,7 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
     }
 
 #ifndef PROFILING
-    // Only update at 10Hz.
+    // Only update our position to the network at 10Hz.
     if (now > tflight->lastNetUpdate + 100000)
     {
         tflight->lastNetUpdate = now;
