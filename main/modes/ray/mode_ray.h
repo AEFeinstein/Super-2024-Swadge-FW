@@ -15,6 +15,9 @@
 // Defines
 //==============================================================================
 
+/** Time, in microseconds, to lock out buttons after showing dialog, death, or credits */
+#define RAY_BUTTON_LOCKOUT_US 1000000
+
 /** The number of total maps */
 #define NUM_MAPS 6
 /** The number of keys per map */
@@ -688,6 +691,7 @@ typedef struct
 
 extern swadgeMode_t rayMode;
 
+extern const char rayName[];
 extern const char* const rayMapNames[];
 extern const paletteColor_t rayMapColors[];
 extern const char RAY_NVS_KEY[];

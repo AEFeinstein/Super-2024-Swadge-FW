@@ -9,6 +9,10 @@
 #include "paint_help.h"
 
 extern paintDraw_t* paintState;
+extern const char* dialogErrorTitleStr;
+
+// Mostly for PAINT_DIE
+void paintSetupDialog(paintDialog_t dialog);
 
 // Mode callback delegates
 void paintDrawScreenMainLoop(int64_t elapsedUs);
@@ -22,14 +26,15 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt);
 // Palette mode helpers
 void paintEditPaletteUpdate(void);
 void paintEditPaletteSetChannelValue(uint8_t val);
-// void paintEditPaletteDecChannel(void);
+void paintEditPaletteDecChannel(void);
 void paintEditPaletteIncChannel(void);
 void paintEditPaletteNextChannel(void);
 
 void paintEditPalettePrevChannel(void);
-void paintEditPaletteSetupColor(void);
+void paintEditPaletteSetupColor(uint8_t index);
 void paintEditPalettePrevColor(void);
 void paintEditPaletteNextColor(void);
+void paintEditPaletteUpdateCanvas(void);
 void paintEditPaletteConfirm(void);
 
 // Save menu helpers
@@ -51,23 +56,18 @@ void paintPositionDrawCanvas(void);
 
 void paintHandleDpad(uint16_t state);
 void paintFreeUndos(void);
-void paintStoreUndo(paintCanvas_t* canvas);
+void paintStoreUndo(paintCanvas_t* canvas, paletteColor_t fg, paletteColor_t bg);
 bool paintMaybeSacrificeUndoForHeap(void);
 bool paintCanUndo(void);
 bool paintCanRedo(void);
 void paintApplyUndo(paintCanvas_t* canvas);
 void paintUndo(paintCanvas_t* canvas);
 void paintRedo(paintCanvas_t* canvas);
-bool paintSaveCanvas(paintCanvas_t* canvas);
-void paintRestoreCanvas(paintCanvas_t* canvas);
-void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col);
+void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col, bool partial);
 void paintSwapFgBgColors(void);
-void paintEnterSelectMode(void);
-void paintExitSelectMode(void);
+void paintResetButtons(void);
 void paintUpdateRecents(uint8_t selectedIndex);
 void paintUpdateLeds(void);
-void paintDrawPickPoints(void);
-void paintHidePickPoints(void);
 
 // Brush Helper Functions
 void paintSetupTool(void);

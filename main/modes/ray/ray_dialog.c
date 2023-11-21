@@ -92,7 +92,7 @@ void rayShowDialog(ray_t* ray, const char* dialogText, wsg_t* dialogPortrait)
         ray->dialogText = dialogText;
     }
     ray->dialogPortrait = dialogPortrait;
-    ray->btnLockoutUs   = 2000000;
+    ray->btnLockoutUs   = RAY_BUTTON_LOCKOUT_US;
 }
 
 /**

@@ -4,9 +4,7 @@
 #include <stdint.h>
 
 #include "palette.h"
-
-// The number of colors in the palette and the max number of colors an image can be saved with
-#define PAINT_MAX_COLORS 16
+#include "paint_canvas.h"
 
 typedef paletteColor_t (*colorMapFn_t)(paletteColor_t col);
 
@@ -36,9 +34,10 @@ typedef struct
 typedef enum
 {
     BTN_MODE_DRAW,
-    BTN_MODE_SELECT,
-    BTN_MODE_SAVE,
+    BTN_MODE_WHEEL,
     BTN_MODE_PALETTE,
+    BTN_MODE_BROWSER,
+    BTN_MODE_DIALOG,
 } paintButtonMode_t;
 
 typedef enum
@@ -109,24 +108,10 @@ typedef enum
     SHARE_RECV_SELECT_SLOT,
 } paintShareState_t;
 
-/// @brief Definition for a paintable screen region
-typedef struct
-{
-    // The X and Y offset of the canvas's top-left pixel
-    uint16_t x, y;
-
-    // The canvas's width and height, in "canvas pixels"
-    uint16_t w, h;
-
-    // The X and Y scale of the canvas. Each "canvas pixel" will be drawn as [xScale x yScale]
-    uint8_t xScale, yScale;
-
-    paletteColor_t palette[PAINT_MAX_COLORS];
-} paintCanvas_t;
-
 typedef struct
 {
     paletteColor_t palette[PAINT_MAX_COLORS];
+    uint8_t fgIdx, bgIdx;
     uint8_t* px;
 } paintUndo_t;
 

@@ -475,6 +475,7 @@ int zcompare(const int16_t *a, const int16_t* b)
 	return a[0] - b[0];
 }
 
+
 void sandbox_tick()
 {
 	if( bQuit ) return;
@@ -598,9 +599,35 @@ void sandbox_tick()
 
 	uint32_t renderTime = getCycleCount() - cycStart;
 
+	// compute steering angle
+	float up_from_face_of_controller[3] = {0, 0, 1};
+	mathRotateVectorByInverseOfQuaternion( up_from_face_of_controller, LSM6DSL.fqQuat, up_from_face_of_controller );
+	float up_from_face_of_controller_local[3] = {0, 0, 1};
 
-	ESP_LOGI( "I2C", "%d %d %d",
-		(int)renderTime, (int)verts_out[2], totalTrisThisFrame );
+	if( up_from_face_of_controller[2] < 0 ) 
+		up_from_face_of_controller_local[2] = -1;
+
+	//ESP_LOGI( "i2c", "%5d%5d%5d", (int)(up_from_face_of_controller[0]*1024), (int)(up_from_face_of_controller[1]*1024), (int)(up_from_face_of_controller[2]*1024) );
+
+	float q[4];
+	mathQuatFromTwoVectors( q, up_from_face_of_controller, up_from_face_of_controller_local );
+	float q2[4];
+	mathQuatApply( q2, LSM6DSL.fqQuat, q );
+	// q2 now has the correct Z-rotation (Because it's in-plane with the virtual Z plane made by the flat surface of the swadge.
+	float right[3] = { 1, 0, 0 };
+
+	if( up_from_face_of_controller[2] < 0 ) 
+		right[0] = -1;
+
+	mathRotateVectorByInverseOfQuaternion( right, q2, right );	
+	int steeringAngle = getAtan2( right[1]*4096, -right[0]*4096 );
+
+	ESP_LOGI( "I2C", "%4d %4d %4d %4d / %4d %4d %4d %4d / %4d %4d %4d / %d", (int)(q[0]*1024), (int)(q[1]*1024), (int)(q[2]*1024), (int)(q[3]*1024)
+		, (int)(q2[0]*1024), (int)(q2[1]*1024), (int)(q2[2]*1024), (int)(q2[3]*1024), (int)(right[0]*1024), (int)(right[1]*1024), (int)(right[2]*1024), steeringAngle  );
+
+
+	// Rotate the LSMDSL Quat so that it points toward the user.
+//	ESP_LOGI( "I2C", "%d %d %d Steer: %d", (int)renderTime, (int)verts_out[2], totalTrisThisFrame, steeringAngle );
 
 /*
 	cts += sprintf( cts, "%ld %ld %d %f %f %f / %f %f %f / %3d %3d %3d / %4d %4d %4d",

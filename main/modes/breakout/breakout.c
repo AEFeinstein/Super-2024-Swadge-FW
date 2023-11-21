@@ -206,7 +206,7 @@ static const int16_t cheatCode[9] = {PB_UP, PB_B, PB_DOWN, PB_B, PB_LEFT, PB_B, 
  * Lengths are not explicitly given so the compiler can figure it out.
  */
 
-static const char breakoutName[]           = "Galactic Brickdown";
+const char breakoutName[]                  = "Galactic Brickdown";
 static const char breakoutTitleGalactic[]  = "Galactic";
 static const char breakoutTitleBrickdown[] = "Brickdown";
 static const char breakoutPressStart[]     = "Press Start";
