@@ -6,25 +6,15 @@
 #include <string.h>
 
 #include <esp_err.h>
-#include <esp_spiffs.h>
+#include "../../tools/cnfs/image.h"
+#include "../../tools/cnfs/image.c"
 #include <esp_log.h>
 #include <esp_heap_caps.h>
-#include <spiffs_config.h>
-
 #include "hdw-spiffs.h"
-#include "hdw-bzr.h"
 
 //==============================================================================
 // Variables
 //==============================================================================
-
-/* Config data */
-static const esp_vfs_spiffs_conf_t conf = {
-    .base_path              = "/spiffs",
-    .partition_label        = NULL,
-    .max_files              = 5,
-    .format_if_mount_failed = false,
-};
 
 //==============================================================================
 // Functions
@@ -38,17 +28,8 @@ static const esp_vfs_spiffs_conf_t conf = {
  */
 bool initSpiffs(void)
 {
-    /* Initialize SPIFFS
-     * Use settings defined above to initialize and mount SPIFFS filesystem.
-     * Note: esp_vfs_spiffs_register is an all-in-one convenience function.
-     */
-    ESP_ERROR_CHECK(esp_vfs_spiffs_register(&conf));
-
     /* Debug print */
-    size_t total = 0, used = 0;
-    ESP_ERROR_CHECK(esp_spiffs_info(NULL, &total, &used));
-    ESP_LOGI("SPIFFS", "Partition size: total: %d, used: %d", total, used);
-
+    ESP_LOGI("CNFS", "Size: %d\n", sizeof( cnfs_data ) );
     return true;
 }
 
@@ -59,7 +40,7 @@ bool initSpiffs(void)
  */
 bool deinitSpiffs(void)
 {
-    return (ESP_OK == esp_vfs_spiffs_unregister(conf.partition_label));
+    return ESP_OK;
 }
 
 /**
@@ -75,53 +56,27 @@ bool deinitSpiffs(void)
  */
 uint8_t* spiffsReadFile(const char* fname, size_t* outsize, bool readToSpiRam)
 {
-    // Pause the buzzer before SPIFFS reads
-    bool bzrPaused = bzrPause();
+	const struct cnfsFileEntry * e = cnfs_files;
+	const struct cnfsFileEntry * eend = e + NR_FILES;
 
-    uint8_t* output;
+	// You can binary search if you want.  But we don't have that many files, so it's plenty fast to just search.
+	while( e != eend )
+	{
+		if( strcmp( e->name, fname ) == 0 )
+		{
+			*outsize = e->len;
+			uint8_t * output;
+			// Read the file into an array
+			if (readToSpiRam)
+			    output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
+			else
+			    output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
 
-    // Read and display the contents of a small text file
-    ESP_LOGI("SPIFFS", "Reading %s", fname);
-
-    // Open for reading the given file
-    char fnameFull[128] = "/spiffs/";
-    strcat(fnameFull, fname);
-    FILE* f = fopen(fnameFull, "rb");
-    if (f == NULL)
-    {
-        ESP_LOGE("SPIFFS", "Failed to open %s", fnameFull);
-        output = NULL;
-    }
-    else
-    {
-        // Get the file size
-        fseek(f, 0L, SEEK_END);
-        *outsize = ftell(f);
-        fseek(f, 0L, SEEK_SET);
-
-        // Read the file into an array
-        if (readToSpiRam)
-        {
-            output = (uint8_t*)heap_caps_calloc((*outsize + 1), sizeof(uint8_t), MALLOC_CAP_SPIRAM);
-        }
-        else
-        {
-            output = (uint8_t*)calloc((*outsize + 1), sizeof(uint8_t));
-        }
-        fread(output, *outsize, 1, f);
-        // Add null terminator
-        (output)[*outsize] = 0;
-
-        // Close the file
-        fclose(f);
-
-        // Display the read contents from the file
-        ESP_LOGI("SPIFFS", "Read from %s: %u bytes", fname, *outsize);
-    }
-    // Resume the buzzer if it was paused
-    if (bzrPaused)
-    {
-        bzrResume();
-    }
-    return output;
+			memcpy( output, &cnfs_data[e->offset], e->len );
+			return output; 
+		}
+		e++;
+	}
+	ESP_LOGE( "CNFS", "Failed to open %s", fname );
+	return 0;
 }
