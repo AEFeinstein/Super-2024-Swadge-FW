@@ -371,8 +371,27 @@ static void checkScriptId(ray_t* ray, list_t* scriptList, int32_t id, wsg_t* por
                 // Do it
                 executeScriptEvent(ray, script, portrait);
 
-                // Mark it as inactive if this is a one time script and the reset timer is inactive
-                script->isActive = (ALWAYS == script->ifArgs.idList.oneTime) && (0 == script->resetTimerSec);
+                // If this script is an always script, not a one-time script
+                if (ALWAYS == script->ifArgs.cellList.oneTime)
+                {
+                    // If the reset timer is not running after execution
+                    if (0 == script->resetTimerSec)
+                    {
+                        // Immediately activate the script
+                        script->isActive = true;
+                    }
+                    else
+                    {
+                        // Otherwise mark it inactive, and let the reset timer reactivate it
+                        script->isActive = false;
+                    }
+                }
+                else
+                {
+                    // This is a one-time script, so stop it, period
+                    script->isActive      = false;
+                    script->resetTimerSec = 0;
+                }
 
                 // Reset the triggered IDs
                 memset(script->ifArgs.idList.idsTriggered, false, sizeof(bool) * script->ifArgs.idList.numIds);
@@ -521,8 +540,27 @@ static void checkScriptCell(ray_t* ray, list_t* scriptList, int32_t x, int32_t y
                 // Do it
                 executeScriptEvent(ray, script, &ray->cho_portrait);
 
-                // Mark it as inactive if this is a one time script and the reset timer is inactive
-                script->isActive = (ALWAYS == script->ifArgs.cellList.oneTime) && (0 == script->resetTimerSec);
+                // If this script is an always script, not a one-time script
+                if (ALWAYS == script->ifArgs.cellList.oneTime)
+                {
+                    // If the reset timer is not running after execution
+                    if (0 == script->resetTimerSec)
+                    {
+                        // Immediately activate the script
+                        script->isActive = true;
+                    }
+                    else
+                    {
+                        // Otherwise mark it inactive, and let the reset timer reactivate it
+                        script->isActive = false;
+                    }
+                }
+                else
+                {
+                    // This is a one-time script, so stop it, period
+                    script->isActive      = false;
+                    script->resetTimerSec = 0;
+                }
 
                 // Reset the triggered cells
                 memset(script->ifArgs.cellList.cellsTriggered, false, sizeof(bool) * script->ifArgs.cellList.numCells);
