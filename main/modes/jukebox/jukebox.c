@@ -145,7 +145,7 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
-jukeboxSong_t songs_galacticBrickdown[] = {
+jukeboxSong_t music_galacticBrickdown[] = {
     {
         .filename = "stereo.sng",
         .name     = "DELETE ME",
@@ -172,7 +172,7 @@ jukeboxSong_t songs_galacticBrickdown[] = {
     // },
 };
 
-jukeboxSong_t songs_swadgeLand[] = {
+jukeboxSong_t music_swadgeLand[] = {
     {
         .filename = "bgmDeMAGio.sng",
         .name     = "DeMAGio BGM",
@@ -195,7 +195,7 @@ jukeboxSong_t songs_swadgeLand[] = {
     },
 };
 
-jukeboxSong_t songs_magtroid[] = {
+jukeboxSong_t music_magtroidPocket[] = {
     {
         .filename = "base_0.sng",
         .name     = "Base 0",
@@ -226,7 +226,7 @@ jukeboxSong_t songs_magtroid[] = {
     },
 };
 
-jukeboxSong_t songs_jukebox[] = {
+jukeboxSong_t music_jukebox[] = {
     {
         .filename = "Fauxrio_Kart.sng",
         .name     = "Fauxrio Kart",
@@ -249,14 +249,14 @@ jukeboxSong_t songs_jukebox[] = {
     // },
 };
 
-jukeboxSong_t songs_credits[] = {
+jukeboxSong_t music_credits[] = {
     {
         .filename = "credits.sng",
         .name     = creditsName,
     },
 };
 
-jukeboxSong_t songs_unused[] = {
+jukeboxSong_t music_unused[] = {
     {
         .filename = "gmcc.sng",
         .name     = "Pong BGM",
@@ -275,33 +275,33 @@ jukeboxSong_t songs_unused[] = {
 const jukeboxCategory_t musicCategories[] = {
     {
         .categoryName = breakoutName,
-        .songs        = songs_galacticBrickdown,
-        .numSongs     = ARRAY_SIZE(songs_galacticBrickdown),
+        .songs        = music_galacticBrickdown,
+        .numSongs     = ARRAY_SIZE(music_galacticBrickdown),
     },
     {
         .categoryName = platformerName,
-        .songs        = songs_swadgeLand,
-        .numSongs     = ARRAY_SIZE(songs_swadgeLand),
+        .songs        = music_swadgeLand,
+        .numSongs     = ARRAY_SIZE(music_swadgeLand),
     },
     {
         .categoryName = rayName,
-        .songs        = songs_magtroid,
-        .numSongs     = ARRAY_SIZE(songs_magtroid),
+        .songs        = music_magtroidPocket,
+        .numSongs     = ARRAY_SIZE(music_magtroidPocket),
     },
     {
         .categoryName = jukeboxName,
-        .songs        = songs_jukebox,
-        .numSongs     = ARRAY_SIZE(songs_jukebox),
+        .songs        = music_jukebox,
+        .numSongs     = ARRAY_SIZE(music_jukebox),
     },
     {
         .categoryName = "(Unused)",
-        .songs        = songs_unused,
-        .numSongs     = ARRAY_SIZE(songs_unused),
+        .songs        = music_unused,
+        .numSongs     = ARRAY_SIZE(music_unused),
     }
 };
 // clang-format on
 
-jukeboxSong_t sounds_galacticBrickdown[] = {
+jukeboxSong_t sfx_galacticBrickdown[] = {
     {
         .filename = "sndBounce.sng",
         .name     = "Bounce",
@@ -360,7 +360,7 @@ jukeboxSong_t sounds_galacticBrickdown[] = {
     // },
 };
 
-jukeboxSong_t sounds_swadgeland[] = {
+jukeboxSong_t sfx_swadgeLand[] = {
     {
         .filename = "bgmIntro.sng",
         .name     = "Into",
@@ -467,7 +467,7 @@ jukeboxSong_t sounds_swadgeland[] = {
     },
 };
 
-jukeboxSong_t sounds_magtroid[] = {
+jukeboxSong_t sfx_magtroidPocket[] = {
     {
         .filename = "r_door_open.sng",
         .name     = "Door Open",
@@ -538,7 +538,7 @@ jukeboxSong_t sounds_magtroid[] = {
     },
 };
 
-jukeboxSong_t sounds_mainMenu[] = {
+jukeboxSong_t sfx_mainMenu[] = {
     {
         .filename = "item.sng",
         .name     = "Item",
@@ -549,7 +549,7 @@ jukeboxSong_t sounds_mainMenu[] = {
     },
 };
 
-jukeboxSong_t sounds_unused[] = {
+jukeboxSong_t sfx_unused[] = {
     {
         .filename = "block1.sng",
         .name     = "Pong Block 1",
@@ -560,7 +560,7 @@ jukeboxSong_t sounds_unused[] = {
     },
 };
 
-jukeboxSong_t sounds_FactoryTest[] = {
+jukeboxSong_t sfx_factoryTest[] = {
     {
         .filename = "stereo_test.sng",
         .name     = "Stereo Check",
@@ -571,33 +571,33 @@ jukeboxSong_t sounds_FactoryTest[] = {
 const jukeboxCategory_t sfxCategories[] = {
     {
         .categoryName = breakoutName,
-        .songs        = sounds_galacticBrickdown,
-        .numSongs     = ARRAY_SIZE(sounds_galacticBrickdown),
+        .songs        = sfx_galacticBrickdown,
+        .numSongs     = ARRAY_SIZE(sfx_galacticBrickdown),
     },
     {
         .categoryName = platformerName,
-        .songs        = sounds_swadgeland,
-        .numSongs     = ARRAY_SIZE(sounds_swadgeland),
+        .songs        = sfx_swadgeLand,
+        .numSongs     = ARRAY_SIZE(sfx_swadgeLand),
     },
     {
         .categoryName = rayName,
-        .songs        = sounds_magtroid,
-        .numSongs     = ARRAY_SIZE(sounds_magtroid),
+        .songs        = sfx_magtroidPocket,
+        .numSongs     = ARRAY_SIZE(sfx_magtroidPocket),
     },
     {
         .categoryName = factoryTestName,
-        .songs        = sounds_FactoryTest,
-        .numSongs     = ARRAY_SIZE(sounds_FactoryTest),
+        .songs        = sfx_factoryTest,
+        .numSongs     = ARRAY_SIZE(sfx_factoryTest),
     },
     {
         .categoryName = mainMenuName,
-        .songs        = sounds_mainMenu,
-        .numSongs     = ARRAY_SIZE(sounds_mainMenu),
+        .songs        = sfx_mainMenu,
+        .numSongs     = ARRAY_SIZE(sfx_mainMenu),
     },
     {
         .categoryName = "(Unused)",
-        .songs        = sounds_unused,
-        .numSongs     = ARRAY_SIZE(sounds_unused),
+        .songs        = sfx_unused,
+        .numSongs     = ARRAY_SIZE(sfx_unused),
     }
 };
 // clang-format on
@@ -625,7 +625,7 @@ void jukeboxEnterMode()
     loadWsg("arrow10.wsg", &jukebox->arrow, false);
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
-    ///// Load music midis /////
+    ///// Load midis /////
 
     jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories), true);
     jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories), false);
