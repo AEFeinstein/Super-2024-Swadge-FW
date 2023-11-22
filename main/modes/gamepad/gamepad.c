@@ -835,13 +835,13 @@ void gamepadReportStateToHost(void)
     // Only send data if USB is ready
     if (tud_ready())
     {
+        bool touched;
+        int32_t phi, r, intensity;
+        touched = getTouchJoystick(&phi, &r, &intensity);
         switch (gamepad->gamepadType)
         {
             case GAMEPAD_GENERIC:
-            {
-                bool touched;
-                int32_t phi, r, intensity;
-                touched = getTouchJoystick(&phi, &r, &intensity);
+            { 
                 if (touched)
                 {
                     int32_t x, y;
@@ -870,6 +870,23 @@ void gamepadReportStateToHost(void)
                 // TODO: accel
                 // TODO check this
                 // tud_gamepad_ns_report(&gamepad->gpNsState);
+
+                if (touched)
+                {
+                    int32_t x, y;
+                    getTouchCartesian(phi, r, &x, &y);
+                    gamepad->gpNsState.x = (255 * x) / 1024;
+                    gamepad->gpNsState.y = (-255 * y) / 1024;
+                    gamepad->gpNsState.z = 0;
+                }
+                else
+                {
+                    gamepad->gpNsState.x = 128;
+                    gamepad->gpNsState.y = 128;
+                    gamepad->gpNsState.z = 0;
+                }
+
+
                 tud_hid_gamepad_report_ns(HID_ITF_PROTOCOL_NONE, gamepad->gpNsState.x, gamepad->gpNsState.y,
                                           gamepad->gpNsState.z, gamepad->gpNsState.rz, gamepad->gpNsState.rx,
                                           gamepad->gpNsState.ry, gamepad->gpNsState.hat, gamepad->gpNsState.buttons);
