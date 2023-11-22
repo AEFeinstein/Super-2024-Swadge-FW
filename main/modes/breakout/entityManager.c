@@ -761,7 +761,7 @@ entity_t* createRemoteBomb(entityManager_t* entityManager, uint16_t x, uint16_t 
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->spriteRotateAngle    = 0;
-    entity->animationTimer       = 48;
+    entity->animationTimer       = 24;
 
     entity->type                 = ENTITY_PLAYER_REMOTE_BOMB;
     entity->spriteIndex          = SP_RBOMB_0;
