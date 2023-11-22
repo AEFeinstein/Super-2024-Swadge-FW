@@ -349,7 +349,7 @@ static const settingParam_t flightjoy_param = {
 };
 
 
-static const char fl_flight_perf[]  = "Free / VS";
+static const char fl_flight_perf[]  = "Multiplayer";
 static const char fl_100_percent[]  = "100% 100% 100%";
 static const char fl_turn_around[]  = "TURN AROUND";
 static const char fl_you_win[]      = "YOU   WIN!";
@@ -500,11 +500,11 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
 {
     //ESP_LOGI( "_", "%d %s %d\n", (int)selected, menuItem, (int)settingVal );
 
-    if (!selected)
-        return;
-
     if (fl_flight_perf == menuItem)
     {
+        if (!selected)
+            return;
+
         flight->lastNetUpdate = esp_timer_get_time();
 
         flight->nNetworkMode = 1;
@@ -513,7 +513,11 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
     }
     else if (fl_flight_env == menuItem)
     {
+        if (!selected)
+            return;
+
         flight->nNetworkMode = 0;
+
         flightStartGame(FLIGHT_GAME);
     }
     else if (fl_flight_yinvert == menuItem)
@@ -528,6 +532,9 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
     }
     else if (str_high_scores == menuItem)
     {
+        if (!selected)
+            return;
+
         flight->mode = FLIGHT_SHOW_HIGH_SCORES;
     }
     else if (str_quit == menuItem)
