@@ -198,27 +198,27 @@ jukeboxSong_t music_swadgeLand[] = {
 jukeboxSong_t music_magtroidPocket[] = {
     {
         .filename = "base_0.sng",
-        .name     = "Base 0",
+        .name     = "Station Zero",
     },
     {
         .filename = "base_1.sng",
-        .name     = "Base 1",
+        .name     = "Station One",
     },
     {
         .filename = "cave_0.sng",
-        .name     = "Cave 0",
+        .name     = "Floriss",
     },
     {
         .filename = "cave_1.sng",
-        .name     = "Cave 1",
+        .name     = "Scalderia",
     },
     {
         .filename = "jungle_0.sng",
-        .name     = "Jungle 0",
+        .name     = "Vinegrasp",
     },
     {
         .filename = "jungle_1.sng",
-        .name     = "Jungle 1",
+        .name     = "Mosspire",
     },
     {
         .filename = "ray_boss.sng",
