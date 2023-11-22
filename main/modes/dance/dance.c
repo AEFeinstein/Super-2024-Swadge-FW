@@ -340,8 +340,8 @@ void danceRedrawScreen(void)
         drawWsg(&danceState->arrow, ((TFT_WIDTH - width) / 2) + width + 8, yOff, false, false, 90);
 
         // Draw the brightness at the top
-        char text[19];
-        snprintf(text, sizeof(text), "Brightness: %d", getLedBrightnessSetting());
+        char text[32];
+        snprintf(text, sizeof(text) - 1, "Brightness: %d", getLedBrightnessSetting());
         width = textWidth(&(danceState->infoFont), text);
         yOff  = 16;
         drawText(&(danceState->infoFont), c555, text, (TFT_WIDTH - width) / 2, yOff);
@@ -353,11 +353,11 @@ void danceRedrawScreen(void)
         yOff += danceState->infoFont.height + 16;
         if (danceSpeeds[danceState->danceSpeed] > DANCE_SPEED_MULT)
         {
-            snprintf(text, sizeof(text), "Touch: Speed: 1/%dx", danceSpeeds[danceState->danceSpeed] / DANCE_SPEED_MULT);
+            snprintf(text, sizeof(text) - 1, "Touch: Speed: 1/%dx", danceSpeeds[danceState->danceSpeed] / DANCE_SPEED_MULT);
         }
         else
         {
-            snprintf(text, sizeof(text), "Touch: Speed: %dx", DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed]);
+            snprintf(text, sizeof(text) - 1, "Touch: Speed: %dx", DANCE_SPEED_MULT / danceSpeeds[danceState->danceSpeed]);
         }
         width = textWidth(&(danceState->infoFont), text);
         drawText(&(danceState->infoFont), c555, text, (TFT_WIDTH - width) / 2, yOff);
