@@ -38,7 +38,7 @@ static const char breakoutHintTextLevel1[] = "Slide left/right on TOUCHPAD to ai
 static const char breakoutHintTextTBomb[] = "Press DOWN BUTTON to drop time bombs.\nTime it right to destroy many blocks at once!";
 static const char breakoutHintTextBombE[] = "Press DOWN BUTTON to drop time bombs.\nThe explosions will deflect your ball!";
 static const char breakoutHintTextRBomb[] = "Press RIGHT BUTTON to drop a remote bomb.\nOnce flashing, press again to detonate!";
-static const char breakoutHintTextBombSpeed[] = "Deflecting your ball with bomb explosions increases ball speed faster!";
+static const char breakoutHintTextBombSpeed[] = "Deflecting your ball with bomb explosions accelerates ball faster!";
 static const char breakoutHintTextBombTest[] = "Can you beat this one?\n\nUse bombs wisely!";
 static const char breakoutHintTextGotThis[] = "Alright!\n\nYou got this!";
 
@@ -50,7 +50,7 @@ static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to contro
 
 static const char breakoutHintTextCaptiveBall[] = "Free the captive balls!\nReflect them with your paddle for multiball!";
 static const char breakoutHintTextCrawler[] = "CRAWLERs can't be defeated by hitting them directly!";
-static const char breakoutHintTextFinal[] = "The REACTOR CORE\nGood luck!";
+static const char breakoutHintTextFinal[] = "\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
 
 //==============================================================================
 // Structs
@@ -256,6 +256,7 @@ static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055
 static const paletteColor_t redColors[4]               = {c510, c440, c050, c440};
 static const paletteColor_t greenColors[4]             = {c555, c051, c030, c051};
 static const paletteColor_t purpleColors[4]            = {c405, c440, c055, c440};
+//static const paletteColor_t allColors[6]               = {c500, c550, c050, c055, c005, c505};
 
 static const int16_t cheatCode[9] = {PB_UP, PB_B, PB_DOWN, PB_B, PB_LEFT, PB_B, PB_RIGHT, PB_B, PB_START};
 
@@ -756,6 +757,12 @@ void breakoutDrawGameOver(font_t* logbook, font_t* ibm_vga8, gameData_t* gameDat
 
 static void drawBreakoutHud(font_t* font, gameData_t* gameData)
 {
+    /*
+        TODO
+        Clean this formatting code up.
+        It sucks.    
+    */
+
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
@@ -833,7 +840,7 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
         if(hintText != NULL){
             int16_t x1 = 24;
             int16_t y1 = 160;
-            drawTextWordWrap(font, c555, hintText, &x1, &y1, 256, 240);
+            drawTextWordWrap(font, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], hintText, &x1, &y1, 256, 240);
         }
     }
 }
