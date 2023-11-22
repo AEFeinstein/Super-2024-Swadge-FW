@@ -263,10 +263,10 @@ jukeboxSong_t music_jukebox[] = {
     //     .filename = "thelake.sng",
     //     .name  = "The Lake",
     // },
-    {
-        .filename = "yalikejazz.sng",
-        .name  = "Ya like jazz?",
-    },
+    // {
+    //     .filename = "yalikejazz.sng",
+    //     .name  = "Ya like jazz?",
+    // },
     {
         .filename = "banana.sng",
         .name  = "Banana",
@@ -293,10 +293,10 @@ jukeboxSong_t music_unused[] = {
         .filename = "stereo.sng",
         .name     = "Stereo",
     },
-    {
-        .filename = "Follinesque.sng",
-        .name     = "Follinesque",
-    },
+    // {
+    //     .filename = "Follinesque.sng",
+    //     .name     = "Follinesque",
+    // },
 };
 
 // clang-format off
@@ -621,6 +621,13 @@ jukeboxSong_t sfx_mainMenu[] = {
     },
 };
 
+jukeboxSong_t sfx_factoryTest[] = {
+    {
+        .filename = "stereo_test.sng",
+        .name     = "Stereo Check",
+    },
+};
+
 jukeboxSong_t sfx_unused[] = {
     {
         .filename = "block1.sng",
@@ -630,12 +637,9 @@ jukeboxSong_t sfx_unused[] = {
         .filename = "block1.sng",
         .name     = "Pong Block 2",
     },
-};
-
-jukeboxSong_t sfx_factoryTest[] = {
     {
-        .filename = "stereo_test.sng",
-        .name     = "Stereo Check",
+        .filename = "mystery_music.sng",
+        .name     = "GameCube",
     },
 };
 
