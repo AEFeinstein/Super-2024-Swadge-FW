@@ -22,6 +22,7 @@
 #define PAUSE_FLASH_SPEED  1000000
 #define PAUSE_FLASH_SHOW   600000
 #define EXPIRE_FLASH_SPEED 250000
+#define EXPIRE_FLASH_SHOW  125000
 #define REPEAT_DELAY       500000
 #define REPEAT_TIME        150000
 
@@ -353,8 +354,8 @@ static void timerMainLoop(int64_t elapsedUs)
         snprintf(buffer, sizeof(buffer), minutesSecondsFmt, remainingMins, remainingSecs, remainingMillis);
     }
 
-    bool blink = (timerData->timerState == PAUSED && (now % PAUSE_FLASH_SPEED > PAUSE_FLASH_SHOW))
-                 || (timerData->timerState == EXPIRED && (now % EXPIRE_FLASH_SPEED > PAUSE_FLASH_SHOW));
+    bool blink = (timerData->timerState == PAUSED && ((now % PAUSE_FLASH_SPEED) > PAUSE_FLASH_SHOW))
+                 || (timerData->timerState == EXPIRED && ((now % EXPIRE_FLASH_SPEED) > EXPIRE_FLASH_SHOW));
 
     if (!blink)
     {
