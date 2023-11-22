@@ -255,10 +255,10 @@ jukeboxSong_t music_jukebox[] = {
         .filename = "Fauxrio_Kart.sng",
         .name     = "Fauxrio Kart",
     },
-    // {
-    //     .filename = "hotrod.sng",
-    //     .name  = "Hot Rod",
-    // },
+    {
+        .filename = "hotrod.sng",
+        .name  = "Hot Rod",
+    },
     // {
     //     .filename = "thelake.sng",
     //     .name  = "The Lake",
@@ -267,10 +267,10 @@ jukeboxSong_t music_jukebox[] = {
     //     .filename = "yalikejazz.sng",
     //     .name  = "Ya like jazz?",
     // },
-    // {
-    //     .filename = "banana.sng",
-    //     .name  = "Banana",
-    // },
+    {
+        .filename = "banana.sng",
+        .name  = "Banana",
+    },
 };
 
 jukeboxSong_t music_credits[] = {
