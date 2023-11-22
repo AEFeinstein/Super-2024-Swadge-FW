@@ -32,6 +32,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "mode_credits.h"
+#include "modeTimer.h"
 
 //==============================================================================
 // Defines
@@ -70,6 +71,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &modePaint,
     &pushyMode,
     &rayMode,
+    &timerMode,
     &touchTestMode,
     &tunernomeMode,
     &modeCredits,

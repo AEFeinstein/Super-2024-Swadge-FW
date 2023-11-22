@@ -18,6 +18,7 @@
 #include "mode_paint.h"
 #include "mode_platformer.h"
 #include "mode_ray.h"
+#include "modeTimer.h"
 #include "paint_share.h"
 #include "pushy.h"
 #include "slideWhistle.h"
@@ -168,6 +169,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
+    addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
@@ -375,6 +377,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modePaint.modeName)
         {
             switchToSwadgeMode(&modePaint);
+        }
+        else if (label == timerMode.modeName)
+        {
+            switchToSwadgeMode(&timerMode);
         }
         else if (label == modePlatformer.modeName)
         {
