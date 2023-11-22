@@ -14,9 +14,15 @@
 #include "lumberjackGame.h"
 
 #define LUMBERJACK_VLEN             7
-#define LUMBERJACK_VERSION          "231118a"
+#define LUMBERJACK_VERSION          "231121b"
 
 #define DEFAULT_HIGHSCORE           5000
+#define DEFAULT_FRAME_RATE_US       40000
+
+#define CHARACTER_RED               0
+#define CHARACTER_GREEN             1
+#define CHARACTER_GUY               2
+#define CHARACTER_CHO               3
 
 static void lumberjackEnterMode(void);
 static void lumberjackExitMode(void);
@@ -87,7 +93,8 @@ typedef enum
     WATER_MSG,
     HOST_MSG,
     CHARACTER_MSG,
-    BUMP_MSG
+    BUMP_MSG,
+    HIGHSCORE_MSG
 } lumberjackMessageType_t;
 
 lumberjack_t* lumberjack = NULL;
@@ -138,23 +145,33 @@ static void lumberjackEnterMode(void)
     lumberjack->charactersArray[1] = lumberjackGreenCharacter;
 
     int index = 2;
+    int selectedDefault = lumberjack->save.character;
 
-    if (lumberjack->save.choUnlocked)
-    {
-        lumberjack->charactersArray[index++] = lumberjackChoCharacter;
-    }
 
     if (lumberjack->save.swadgeGuyUnlocked)
     {
+        if (lumberjack->save.character == CHARACTER_GUY)
+        {
+            selectedDefault = index;
+        }
         lumberjack->charactersArray[index++] = lumberjackSpecialCharacter;
     }
 
-    addMultiItemToMenu(lumberjack->menu, lumberjack->charactersArray, characters, 0);
+    if (lumberjack->save.choUnlocked)
+    {
+        if (lumberjack->save.character == CHARACTER_CHO)
+        {
+            selectedDefault = index;
+        }
+        lumberjack->charactersArray[index++] = lumberjackChoCharacter;
+    }
+
+    addMultiItemToMenu(lumberjack->menu, lumberjack->charactersArray, characters, selectedDefault);
     addSingleItemToMenu(lumberjack->menu, lumberjackExit);
  
     lumberjack->screen = LUMBERJACK_MENU;
+    // Turn off LEDs
 
-    bzrStop(true); // Stop the buzzer?
 
 }
 
@@ -190,6 +207,40 @@ static void lumberjackLoadSave(void)
         lumberjack->save.panicHighScore = DEFAULT_HIGHSCORE;
     }
 
+    if (lumberjack->save.character == CHARACTER_GREEN)
+    {
+        lumberjack->selected = CHARACTER_GREEN;
+        lumberjack->playerColor.r = 0;
+        lumberjack->playerColor.g = 255;
+        lumberjack->playerColor.b = 0;
+        
+    }
+    else if (lumberjack->save.character == CHARACTER_CHO)
+    {
+        lumberjack->selected = CHARACTER_CHO;
+        lumberjack->playerColor.r = 0;
+        lumberjack->playerColor.g = 255;
+        lumberjack->playerColor.b = 255;
+        
+    }else if (lumberjack->save.character == CHARACTER_GUY)
+    {
+        lumberjack->selected = CHARACTER_GUY;
+        lumberjack->playerColor.r = 0;
+        lumberjack->playerColor.g = 255;
+        lumberjack->playerColor.b = 255;
+        
+    } else
+    {
+        lumberjack->selected = CHARACTER_RED;
+        lumberjack->playerColor.r = 255;
+        lumberjack->playerColor.g = 0;
+        lumberjack->playerColor.b = 0;        
+    }
+
+    
+    lumberjack->save.character = lumberjack->selected;    
+
+
     writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
 }
 
@@ -201,6 +252,7 @@ void lumberjackSaveSave(void)
 
 static void lumberjackJoinGame(void)
 {
+
     if (lumberjack->gameMode == LUMBERJACK_MODE_PANIC)
     {
         lumberjack->screen = LUMBERJACK_A;
@@ -231,6 +283,8 @@ static void lumberjackExitMode(void)
     deinitMenu(lumberjack->menu);
     deinitMenuLogbookRenderer(lumberjack->menuLogbookRenderer);
     free(lumberjack);
+
+    lumberjack = NULL;
 }
 
 static void lumberjackMainLoop(int64_t elapsedUs)
@@ -239,7 +293,23 @@ static void lumberjackMainLoop(int64_t elapsedUs)
     {
         case LUMBERJACK_MENU:
         {
+
             lumberjackMenuLoop(elapsedUs);
+            for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumberjack->menuLogbookRenderer->leds); ledIdx++)
+            {
+                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].periodUs = 1;
+                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].timerUs = 0;
+                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].brightness = 255;//lumberjack->menuLogbookRenderer->ledTimers[ledIdx].maxBrightness;
+
+                lumberjack->menuLogbookRenderer->leds[ledIdx].r = lumberjack->playerColor.r;
+                lumberjack->menuLogbookRenderer->leds[ledIdx].g = lumberjack->playerColor.g;
+                lumberjack->menuLogbookRenderer->leds[ledIdx].b = lumberjack->playerColor.b;
+               
+
+            }
+
+            setLeds(lumberjack->menuLogbookRenderer->leds, CONFIG_NUM_LEDS);
+
             break;
         }
         case LUMBERJACK_A:
@@ -249,6 +319,37 @@ static void lumberjackMainLoop(int64_t elapsedUs)
             break;
         }
     }
+
+    
+    if (lumberjack->connectionConfirmed > 0 && lumberjack->conStatus == CON_ESTABLISHED)
+    {
+        lumberjack->connectionConfirmed -= elapsedUs/1000;
+
+        if (lumberjack->connectionConfirmed > 0)
+        {
+            return;
+        }
+
+        lumberjack->connectionConfirmed = 0;
+        uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
+        memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
+
+        p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
+
+        //high score test
+        uint8_t highscorePayload[4] = {HIGHSCORE_MSG};
+        int score = (lumberjack->gameMode == LUMBERJACK_MODE_PANIC) ? lumberjack->save.panicHighScore : lumberjack->save.attackHighScore;
+
+
+        highscorePayload[3] = score >> 16 & 0xFF;
+        highscorePayload[2] = score >> 8  & 0xFF;
+        highscorePayload[1] = score       & 0xFF;
+        
+        ESP_LOGI(LUM_TAG, "Sending %d", score);
+        p2pSendMsg(&lumberjack->p2p, highscorePayload, sizeof(highscorePayload), lumberjackMsgTxCbFn);
+
+    }   
+
 
 }
 
@@ -269,7 +370,10 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
             lumberjack->menu = menuButton(lumberjack->menu, evt);
         }
     }
+
     drawMenuLogbook(lumberjack->menu, lumberjack->menuLogbookRenderer, elapsedUs);
+    
+
     if (lumberjack->instructions)
     {
         fillDisplayArea(0, 0, TFT_WIDTH , TFT_HEIGHT , c145);
@@ -289,15 +393,7 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
             int16_t tWidthH = textWidth(&lumberjack->arcade, titleText);
             lumberjackInstructionText(titleText, c555, (TFT_WIDTH-tWidthH)/2, 15);
 
-            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAxe blocks lowers water\nDon't drown";
-            /*
-            lumberjackInstructionText("Press A to jump", c355, dOffset, 50);
-            lumberjackInstructionText("Avoid upright baddies", c355, dOffset, 70);
-            lumberjackInstructionText("Hit baddies from under", c355, dOffset, 90);
-            lumberjackInstructionText("Then go kick them off", c355, dOffset, 110);
-            lumberjackInstructionText("Duck Down to avoid ghost", c355, dOffset, 130);
-            lumberjackInstructionText("Axe blocks lowers water", c355, dOffset, 150);
-            */
+            const char* ins = "Press A to jump\nAvoid upright baddies\nHit baddies from under\nThen kick them off\nDuck DOWN to avoid ghost\nAxe blocks lowers water\nDon't drown";   
             dOffset = 15; dyOffset = 49;
             drawTextWordWrap(&lumberjack->arcade, c000, ins, &dOffset, &dyOffset, TFT_WIDTH - iWidth, TFT_HEIGHT - dOffset);
             
@@ -347,6 +443,7 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
         
     }
 }
+
 
 static void lumberjackInstructionText(const char* string, paletteColor_t color, int locationX, int locationY)
 {
@@ -432,11 +529,12 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
             int index = (int)p2pGetPlayOrder(p2p);
             ESP_LOGI(LUM_TAG, "LumberJack.Net ready! %d", index);
             lumberjack->host = (GOING_FIRST == index);
-
             uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
             memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
 
             p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
+            lumberjack->connectionConfirmed = 2000;
+
             lumberjackGameReady();
             break;
         }
@@ -456,7 +554,7 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
 static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
     // Do anything
-    ESP_LOGD(LUM_TAG, "Ya boi got something! %d", (uint8_t)payload[0]);
+    //ESP_LOGI(LUM_TAG, "Ya boi got something! %d", (uint8_t)payload[0]);
 
     lumberjackQualityCheck();
 
@@ -486,6 +584,12 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
         if (payload[0] == SCORE_MSG)
         {
             lumberjackOnReceiveScore(payload);
+        }
+
+        if (payload[0] == HIGHSCORE_MSG)
+        {
+            ESP_LOGI(LUM_TAG, "High score incoming");
+            lumberjackOnReceiveHighScore(payload);
         }
 
         if (payload[0] == CHARACTER_MSG)
@@ -681,13 +785,14 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         }
         else if (label == lumberjackExit)
         {
+            lumberjackSaveSave();
             switchToSwadgeMode(&mainMenuMode);
         }        
 
     }
     else
     {
-
+        bool characterChange = false;
         if (label == lumberjackPanic)
         {
             lumberjack->gameMode = LUMBERJACK_MODE_PANIC;
@@ -696,22 +801,50 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
         {
             lumberjack->gameMode = LUMBERJACK_MODE_ATTACK;
         }
-        
+
         if (label == lumberjackRedCharacter)
         {
             lumberjack->selected = 0;
+            lumberjack->playerColor.r = 255;
+            lumberjack->playerColor.g = 0;
+            lumberjack->playerColor.b = 0;
+
+            characterChange = true;
         }
         else if (label == lumberjackGreenCharacter)
         {
             lumberjack->selected = 1;
+            lumberjack->playerColor.r = 0;
+            lumberjack->playerColor.g = 255;
+            lumberjack->playerColor.b = 0;
+            characterChange = true;
         }
         else if (label == lumberjackSpecialCharacter)
         {
-            lumberjack->selected = 2;
+            lumberjack->selected = CHARACTER_GUY;
+            lumberjack->playerColor.r = 0;
+            lumberjack->playerColor.g = 255;
+            lumberjack->playerColor.b = 255;
+            characterChange = true;
         }else if (label == lumberjackChoCharacter)
         {
-            lumberjack->selected = 3;
-
+            lumberjack->selected = CHARACTER_CHO;
+            lumberjack->playerColor.r = 0;
+            lumberjack->playerColor.g = 255;
+            lumberjack->playerColor.b = 255;
+            characterChange = true;
         }
+
+        if (characterChange)
+        {
+            for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumberjack->menuLogbookRenderer->leds); ledIdx++)
+            {
+                lumberjack->menuLogbookRenderer->leds[ledIdx].r = lumberjack->playerColor.r;
+                lumberjack->menuLogbookRenderer->leds[ledIdx].g = lumberjack->playerColor.g;
+                lumberjack->menuLogbookRenderer->leds[ledIdx].b = lumberjack->playerColor.b;
+            }
+            lumberjack->save.character = lumberjack->selected;
+        }
+        
     }
 }

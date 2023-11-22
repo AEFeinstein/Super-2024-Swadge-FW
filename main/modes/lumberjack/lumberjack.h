@@ -36,6 +36,7 @@ typedef struct
     int highScore;
     int attackHighScore;
     int panicHighScore;
+    int character;
     bool swadgeGuyUnlocked;
     bool choUnlocked;
 }lumberjackUnlock_t;
@@ -51,6 +52,7 @@ typedef struct
     bool host;
     bool instructions;
 
+    int connectionConfirmed;
     bool networked;
     bool connLost;
 
@@ -60,6 +62,9 @@ typedef struct
     lumberjackScreen_t screen;
     lumberjackGameType_t gameMode;
     lumberjackUnlock_t save;
+
+    led_t playerColor;
+
 
     const char** charactersArray;
 } lumberjack_t;
@@ -84,7 +89,6 @@ typedef struct
     bool active;
 
 } lumberjackAxeBlock_t;
-
 
 
 typedef struct

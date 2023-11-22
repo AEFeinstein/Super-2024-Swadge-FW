@@ -47,6 +47,7 @@ void lumberjackGameReady(void);
 void lumberjackPlayGame(void);
 void lumberjackSendGo(void);
 void lumberjackSendHostRequest(void);
+void lumberjackOnReceiveHighScore(const uint8_t* score);
 
 
 

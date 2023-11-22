@@ -1686,7 +1686,7 @@ void lumberjackDrawTitle(void)
  
 void lumberjackDrawGame(void)
 {
-
+    
     // Draw section
     // Redraw bottom
     lumberjackTileMap();
@@ -2060,6 +2060,12 @@ void lumberjackOnReceiveScore(const uint8_t* score)
 {
     int locX      = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
     lumv->highscore = locX;
+}
+
+void lumberjackOnReceiveHighScore(const uint8_t* score)
+{
+    int locX      = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
+    ESP_LOGI(LUM_TAG, "Higher score %d", locX);
 }
 
 void lumberjackOnReceiveCharacter(uint8_t character)
@@ -2866,7 +2872,9 @@ void lumberjackExitGameMode(void)
 
     // Everything crashes if you don't load it first
     if (lumv == NULL)
+    {
         return;
+    }
 
 
     if (lumv->lumberjackMain->networked == false)
