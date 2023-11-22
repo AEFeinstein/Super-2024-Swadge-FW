@@ -147,29 +147,25 @@ static const char str_play[]       = ": Play";
 
 jukeboxSong_t music_galacticBrickdown[] = {
     {
-        .filename = "stereo.sng",
-        .name     = "DELETE ME",
+        .filename = "brkBgmCrazy.sng",
+        .name  = "BGM Crazy",
     },
-    // {
-    //     .filename = "brkBgmCrazy.sng",
-    //     .name  = "BGM Crazy",
-    // },
-    // {
-    //     .filename = "brkBgmFinale.sng",
-    //     .name  = "BGM Finale",
-    // },
-    // {
-    //     .filename = "brkBgmPixel.sng",
-    //     .name  = "BGM Pixel",
-    // },
-    // {
-    //     .filename = "brkBgmSkill.sng",
-    //     .name  = "BGM Skill",
-    // },
-    // {
-    //     .filename = "brkBgmTitle.sng",
-    //     .name  = "BGM Title",
-    // },
+    {
+        .filename = "brkBgmFinale.sng",
+        .name  = "BGM Finale",
+    },
+    {
+        .filename = "brkBgmPixel.sng",
+        .name  = "BGM Pixel",
+    },
+    {
+        .filename = "brkBgmSkill.sng",
+        .name  = "BGM Skill",
+    },
+    {
+        .filename = "brkBgmTitle.sng",
+        .name  = "BGM Title",
+    },
 };
 
 jukeboxSong_t music_swadgeLand[] = {
@@ -192,6 +188,33 @@ jukeboxSong_t music_swadgeLand[] = {
     {
         .filename = "bgmNameEntry.sng",
         .name     = "Name Entry BGM",
+    },
+};
+
+jukeboxSong_t music_lumberJacks[] = {
+    {
+        .filename = "l_song_respawn.sng",
+        .name     = "Respawn",
+    },
+    {
+        .filename = "l_song_attack.sng",
+        .name     = "Attack",
+    },
+    {
+        .filename = "l_song_attack_title.sng",
+        .name     = "Attack Title",
+    },
+    {
+        .filename = "l_song_panic_title.sng",
+        .name     = "Panic Title",
+    },
+    {
+        .filename = "l_song_gameover.sng",
+        .name     = "Game Over",
+    },
+    {
+        .filename = "l_song_panic.sng",
+        .name     = "Panic",
     },
 };
 
@@ -284,6 +307,11 @@ const jukeboxCategory_t musicCategories[] = {
         .numSongs     = ARRAY_SIZE(music_swadgeLand),
     },
     {
+        .categoryName = lumberjackName,
+        .songs        = music_lumberJacks,
+        .numSongs     = ARRAY_SIZE(music_lumberJacks),
+    },
+    {
         .categoryName = rayName,
         .songs        = music_magtroidPocket,
         .numSongs     = ARRAY_SIZE(music_magtroidPocket),
@@ -342,22 +370,22 @@ jukeboxSong_t sfx_galacticBrickdown[] = {
         .filename = "sndWaveBall.sng",
         .name     = "Wave Ball",
     },
-    // {
-    //     .filename = "brkGameOver.sng",
-    //     .name  = "Game Over",
-    // },
-    // {
-    //     .filename = "brkGetReady.sng",
-    //     .name  = "Get Ready",
-    // },
-    // {
-    //     .filename = "brkHighScore.sng",
-    //     .name  = "High Score",
-    // },
-    // {
-    //     .filename = "brkLvlClear.sng",
-    //     .name  = "Level Clear",
-    // },
+    {
+        .filename = "brkGameOver.sng",
+        .name  = "Game Over",
+    },
+    {
+        .filename = "brkGetReady.sng",
+        .name  = "Get Ready",
+    },
+    {
+        .filename = "brkHighScore.sng",
+        .name  = "High Score",
+    },
+    {
+        .filename = "brkLvlClear.sng",
+        .name  = "Level Clear",
+    },
 };
 
 jukeboxSong_t sfx_swadgeLand[] = {
@@ -464,6 +492,45 @@ jukeboxSong_t sfx_swadgeLand[] = {
     {
         .filename = "sndWaveBall.sng",
         .name     = "Wave Ball",
+    },
+};
+
+jukeboxSong_t sfx_lumberJacks[] = {
+    {
+        .filename = "l_sfx_enemy_flip.sng",
+        .name     = "Enemy Flip",
+    },
+    {
+        .filename = "l_sfx_water.sng",
+        .name     = "Water",
+    },
+    {
+        .filename = "l_sfx_jump.sng",
+        .name     = "Jump",
+    },
+    {
+        .filename = "l_sfx_enemy_death.sng",
+        .name     = "Enemy Death",
+    },
+    {
+        .filename = "l_sfx_upgrade.sng",
+        .name     = "Upgrade",
+    },
+    {
+        .filename = "l_sfx_powerup.sng",
+        .name     = "Power Up",
+    },
+    {
+        .filename = "l_sfx_being_attacked",
+        .name     = "Being Attacked",
+    },
+    {
+        .filename = "l_sfx_pear.sng",
+        .name     = "Pear",
+    },
+    {
+        .filename = "l_sfx_brick.sng",
+        .name     = "Brick",
     },
 };
 
@@ -578,6 +645,11 @@ const jukeboxCategory_t sfxCategories[] = {
         .categoryName = platformerName,
         .songs        = sfx_swadgeLand,
         .numSongs     = ARRAY_SIZE(sfx_swadgeLand),
+    },
+    {
+        .categoryName = lumberjackName,
+        .songs        = sfx_lumberJacks,
+        .numSongs     = ARRAY_SIZE(sfx_lumberJacks),
     },
     {
         .categoryName = rayName,
