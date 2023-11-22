@@ -1671,10 +1671,10 @@ static void flightRender(int64_t elapsedUs)
 #else
     if (tflight->nettext[1])
     {
-        int yend   = TFT_HEIGHT - flight->radiostars.height - 1;
-        int ystart = yend - flight->radiostars.height - 1;
-        fillDisplayArea(0, ystart - 1, 280, yend, 0);
-        drawText(&flight->radiostars, tflight->nettext[0], tflight->nettext + 1, 10, ystart);
+        int ystart = flight->radiostars.height - 1;
+        fillDisplayArea(0, 0, 280, ystart + 6, 0);
+		int w = textWidth(&flight->radiostars, tflight->nettext + 1);
+        drawText(&flight->radiostars, tflight->nettext[0], tflight->nettext + 1, TFT_WIDTH/2-w/2, 3);
     }
 #endif
 
@@ -2989,7 +2989,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     if (textLength)
     {
         // NOTE: First char is color.
-        if (textLength < sizeof(flt->nettext))
+        if (textLength < sizeof(flt->nettext) && data + textLength <= dataend )
         {
             memcpy(flt->nettext, data, textLength);
             data += textLength;
