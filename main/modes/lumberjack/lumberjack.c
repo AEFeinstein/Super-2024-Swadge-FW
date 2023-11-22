@@ -47,7 +47,7 @@ static bool lumberjackChoUnlocked(void);
 static bool lumberjackSwadgeGuyUnlocked(void);
 
 
-static const char lumberjackName[]   = "Lumber Jacks";
+const char lumberjackName[]   = "Lumber Jacks";
 static const char lumberjackPanic[]  = "Panic";
 static const char lumberjackAttack[] = "Attack";
 static const char lumberjackInstructions[] = "How to Play";

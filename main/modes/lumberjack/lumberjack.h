@@ -6,6 +6,7 @@
 #include "lumberjackEntity.h"
 #include "lumberjackPlayer.h"
 
+extern const char lumberjackName[];
 extern const char* LUM_TAG;
 extern swadgeMode_t lumberjackMode;
 
