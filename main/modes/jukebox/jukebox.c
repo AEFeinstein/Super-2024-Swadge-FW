@@ -522,7 +522,7 @@ jukeboxSong_t sfx_lumberJacks[] = {
         .name     = "Power Up",
     },
     {
-        .filename = "l_sfx_being_attacked",
+        .filename = "l_sfx_being_attacked.sng",
         .name     = "Being Attacked",
     },
     {
