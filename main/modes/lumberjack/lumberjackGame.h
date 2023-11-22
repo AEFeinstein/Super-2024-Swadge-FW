@@ -47,6 +47,9 @@ void lumberjackGameReady(void);
 void lumberjackPlayGame(void);
 void lumberjackSendGo(void);
 void lumberjackSendHostRequest(void);
+void lumberjackOnReceiveHighScore(const uint8_t* score);
+
+
 
 void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, bool flipUD, uint8_t inColor);
 
@@ -54,5 +57,6 @@ void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, boo
 void lumberjackUseBlock(void);
 void lumberjackSaveSave(void);
 
+void lumberjackDrawGame(void);
 
 #endif

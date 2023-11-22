@@ -69,8 +69,7 @@ static bool lumberjackIsCollisionTile(int index);
 bool lumberjackLoadLevel(void);
 void lumberjackOnLocalPlayerDeath(void);
 
-void DrawTitle(void);
-void DrawGame(void);
+void lumberjackDrawTitle(void);
 
 lumberjackVars_t* lumv;
 
@@ -411,6 +410,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadSong("l_sfx_enemy_flip.sng", &lumv->sfx_flip, false);
     loadSong("r_e_dead.sng", &lumv->sfx_player_death, false);
     loadSong("l_sfx_enemy_death.sng", &lumv->sfx_enemy_death, false);
+    loadSong("l_sfx_powerup.sng", &lumv->sfx_powerup, false);
 
     loadSong("l_song_respawn.sng", &lumv->song_respawn, false);
     loadSong("l_song_gameover.sng", &lumv->song_gameover, false);
@@ -829,7 +829,6 @@ void lumberjackTitleLoop(int64_t elapsedUs)
         lumv->stageAnimationFrame++;
     }
 
-    DrawTitle();
 }
 
 void lumberjackPlayGame()
@@ -859,6 +858,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
     if (lumv->gameState == LUMBERJACK_GAMESTATE_TITLE)
     {
         lumberjackTitleLoop(elapsedUs);
+        lumberjackDrawTitle();
         return;
     }
 
@@ -878,6 +878,22 @@ void lumberjackGameLoop(int64_t elapsedUs)
             lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
         }
 
+    }
+
+    if (lumv->paused)
+    {
+        
+        buttonEvt_t evt = {0};
+        while (checkButtonQueueWrapper(&evt))
+        {
+            lumv->btnState = evt.state;
+            if (evt.down && (PB_START == evt.button))
+            {
+                lumv->paused = false;
+            }
+        }
+
+        return;
     }
 
     baseMode(elapsedUs);
@@ -989,7 +1005,8 @@ void lumberjackGameLoop(int64_t elapsedUs)
         
     }
 
-    DrawGame();
+
+    lumberjackDrawGame();
 }
 
 void baseMode(int64_t elapsedUs)
@@ -1012,6 +1029,12 @@ void baseMode(int64_t elapsedUs)
     while (checkButtonQueueWrapper(&evt))
     {
         lumv->btnState = evt.state;
+
+        if (evt.down && (PB_START == evt.button) && false == lumv->lumberjackMain->networked)
+        {
+            ESP_LOGI(LUM_TAG,"PAUSE PLEASE");
+            lumv->paused = true;
+        }
     }
 
     // return;
@@ -1073,6 +1096,8 @@ void baseMode(int64_t elapsedUs)
 
                 if (lumv->gameType == LUMBERJACK_MODE_ATTACK && lumv->itemBlockIndex != -1)
                 {
+                        bzrPlaySfx(&lumv->sfx_powerup, BZR_RIGHT);
+
                     if (lumv->itemBlockIndex == 0)
                     {
                         if (lumv->enemy4Count > 0)
@@ -1598,9 +1623,7 @@ void lumberjackOnLocalPlayerDeath(void)
     }
 }
 
-
-
-void DrawTitle(void)
+void lumberjackDrawTitle(void)
 {
     drawWsgSimple(&lumv->title, (TFT_WIDTH / 2) - 51, (TFT_HEIGHT / 2) - 48);
     
@@ -1664,8 +1687,9 @@ void DrawTitle(void)
     drawWsgSimple(&lumv->unusedBlockSprite[lumv->stageAnimationFrame % LUMBERJACK_BLOCK_ANIMATION_MAX], 8.5 * 16, 208 - 64);
 }
  
-void DrawGame(void)
+void lumberjackDrawGame(void)
 {
+    
     // Draw section
     // Redraw bottom
     lumberjackTileMap();
@@ -1776,6 +1800,8 @@ void DrawGame(void)
 
     if (lumv->lumberjackMain->networked)
     {
+        if (lumv->nLives > 10) lumv->nLives = 0; //Make sure nLives is never negative
+        
         for (int i = 0; i < lumv->nLives; i++)
         {
             
@@ -1860,8 +1886,34 @@ void DrawGame(void)
         }
 
     }
-   
 
+    if (lumv->paused)
+    {
+        const char* paused = "Paused";
+        int16_t tWidthH = textWidth(&lumv->arcade, paused);
+
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2), (TFT_HEIGHT/2) + 2);
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2), (TFT_HEIGHT/2) - 1);
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2) - 1, (TFT_HEIGHT/2));
+        drawText(&lumv->arcade, c000, paused, ((TFT_WIDTH - tWidthH)/2) + 1, (TFT_HEIGHT/2));
+        drawText(&lumv->arcade, c555, paused, ((TFT_WIDTH - tWidthH)/2), (TFT_HEIGHT/2));
+    
+    }
+
+    float ledAmount = (float)lumv->comboTime / LUMBERJACK_COMBO_RESET_TIME;
+
+    if (ledAmount < 0) ledAmount = 0;
+
+    for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumv->lumberjackMain->menuLogbookRenderer->leds); ledIdx++)
+    {
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].r = (int)(ledAmount * lumv->lumberjackMain->playerColor.r);
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].g = (int)(ledAmount * lumv->lumberjackMain->playerColor.g);
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].b = (int)(ledAmount * lumv->lumberjackMain->playerColor.b);
+    }
+    
+    setLeds(lumv->lumberjackMain->menuLogbookRenderer->leds, CONFIG_NUM_LEDS);
+   
+    
 }
 
 void lumberjackTitleDisplayText(const char* string, int locationX, int locationY)
@@ -2024,6 +2076,12 @@ void lumberjackOnReceiveScore(const uint8_t* score)
 {
     int locX      = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
     lumv->highscore = locX;
+}
+
+void lumberjackOnReceiveHighScore(const uint8_t* score)
+{
+    int locX      = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
+    ESP_LOGI(LUM_TAG, "Higher score %d", locX);
 }
 
 void lumberjackOnReceiveCharacter(uint8_t character)
@@ -2533,6 +2591,7 @@ void lumberjackDoControls(void)
         lumv->localPlayer->jumpPressed = false;
     }
 
+
     if (lumv->btnState & PB_B)
     {
         lumv->localPlayer->attackPressed = true;
@@ -2829,7 +2888,9 @@ void lumberjackExitGameMode(void)
 
     // Everything crashes if you don't load it first
     if (lumv == NULL)
+    {
         return;
+    }
 
 
     if (lumv->lumberjackMain->networked == false)
@@ -2864,6 +2925,7 @@ void lumberjackExitGameMode(void)
     freeSong(&lumv->sfx_flip);
     freeSong(&lumv->sfx_player_death);
     freeSong(&lumv->sfx_enemy_death);
+    freeSong(&lumv->sfx_powerup);
 
     freeSong(&lumv->song_theme);
     freeSong(&lumv->song_title);
