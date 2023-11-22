@@ -111,7 +111,6 @@ static void breakoutUpdateReadyScreen(breakout_t* self, int64_t elapsedUs);
 static void breakoutDrawReadyScreen(font_t* logbook, font_t* ibm_vga8, gameData_t* gameData);
 static void breakoutChangeStateGame(breakout_t* self);
 static void breakoutDetectGameStateChange(breakout_t* self);
-static void breakoutDetectBgmChange(breakout_t* self);
 static void breakoutChangeStateDead(breakout_t* self);
 static void breakoutUpdateDead(breakout_t* self, int64_t elapsedUs);
 static void breakoutChangeStateGameOver(breakout_t* self);
