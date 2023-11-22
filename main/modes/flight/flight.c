@@ -349,7 +349,7 @@ static const settingParam_t flightjoy_param = {
 };
 
 
-static const char fl_flight_perf[]  = "Free / VS";
+static const char fl_flight_perf[]  = "Multiplayer";
 static const char fl_100_percent[]  = "100% 100% 100%";
 static const char fl_turn_around[]  = "TURN AROUND";
 static const char fl_you_win[]      = "YOU   WIN!";
@@ -463,11 +463,11 @@ static void flightEnterMode(void)
     addSingleItemToMenu(flight->menu, fl_flight_env);
     addSingleItemToMenu(flight->menu, fl_flight_perf);
 
-	addSettingsOptionsItemToMenu( flight->menu, fl_flight_gyro, gyro_titles, gyro_setting_values, ARRAY_SIZE( gyro_titles ), &flightjoy_param, flight->savedata.flightIMU );
-	addSettingsOptionsItemToMenu( flight->menu, fl_flight_yinvert, yinvert_titles, yinvert_setting_values, ARRAY_SIZE( yinvert_titles ), &flightyinv_param, flight->savedata.flightInvertY );
+    addSettingsOptionsItemToMenu( flight->menu, fl_flight_gyro, gyro_titles, gyro_setting_values, ARRAY_SIZE( gyro_titles ), &flightjoy_param, flight->savedata.flightIMU );
+    addSettingsOptionsItemToMenu( flight->menu, fl_flight_yinvert, yinvert_titles, yinvert_setting_values, ARRAY_SIZE( yinvert_titles ), &flightyinv_param, flight->savedata.flightInvertY );
 
     addSingleItemToMenu(flight->menu, str_high_scores);
-    addSingleItemToMenu(flight->menu, str_quit);
+    //addSingleItemToMenu(flight->menu, str_quit);
 }
 
 /**
@@ -498,13 +498,13 @@ static void flightExitMode(void)
  */
 static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVal)
 {
-	//ESP_LOGI( "_", "%d %s %d\n", (int)selected, menuItem, (int)settingVal );
-
-    if (!selected)
-        return;
+    //ESP_LOGI( "_", "%d %s %d\n", (int)selected, menuItem, (int)settingVal );
 
     if (fl_flight_perf == menuItem)
     {
+        if (!selected)
+            return;
+
         flight->lastNetUpdate = esp_timer_get_time();
 
         flight->nNetworkMode = 1;
@@ -513,7 +513,11 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
     }
     else if (fl_flight_env == menuItem)
     {
+        if (!selected)
+            return;
+
         flight->nNetworkMode = 0;
+
         flightStartGame(FLIGHT_GAME);
     }
     else if (fl_flight_yinvert == menuItem)
@@ -528,6 +532,9 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
     }
     else if (str_high_scores == menuItem)
     {
+        if (!selected)
+            return;
+
         flight->mode = FLIGHT_SHOW_HIGH_SCORES;
     }
     else if (str_quit == menuItem)
@@ -840,6 +847,8 @@ void tdTranslate(int16_t* f, int16_t x, int16_t y, int16_t z);
 uint16_t tdSQRT(uint32_t inval);
 int16_t tdDist(const int16_t* a, const int16_t* b);
 
+unsigned int isqrt(unsigned int y);
+
 // From https://github.com/cnlohr/channel3/blob/master/user/3d.c
 
 uint16_t tdSQRT(uint32_t inval)
@@ -957,6 +966,20 @@ void SetupMatrix(void)
     tdIdentity(flight->ModelviewMatrix);
 
     Perspective(VIEWPORT_PERSPECTIVE, 256 /* 1.0 */, 50, 8192, flight->ProjectionMatrix);
+}
+
+unsigned int isqrt(unsigned int y)
+{
+    unsigned int L = 0;
+    unsigned int a = 1;
+    unsigned int d = 3;
+    while (a <= y)
+    {
+        a = a + d;
+        d = d + 2;
+        L = L + 1;
+    }
+    return L;
 }
 
 void tdMultiply(int16_t* fin1, int16_t* fin2, int16_t* fout)
@@ -1295,21 +1318,37 @@ static void flightRender(int64_t elapsedUs)
     {
         // Quat to rotmat.
         int16_t rotmat[16] = {0};
-        float q0           = tflight->fqQuatAccum[0];
-        float q1           = -tflight->fqQuatAccum[1];
-        float q2           = -tflight->fqQuatAccum[2];
-        float q3           = -tflight->fqQuatAccum[3];
-        rotmat[0 * 4 + 0]  = (2 * (q0 * q0 + q1 * q1) - 1) * 256;
-        rotmat[0 * 4 + 1]  = (2 * (q1 * q2 - q0 * q3)) * 256;
-        rotmat[0 * 4 + 2]  = (2 * (q1 * q3 + q0 * q2)) * 256;
-        rotmat[1 * 4 + 0]  = (2 * (q1 * q2 + q0 * q3)) * 256;
-        rotmat[1 * 4 + 1]  = (2 * (q0 * q0 + q2 * q2) - 1) * 256;
-        rotmat[1 * 4 + 2]  = (2 * (q2 * q3 - q0 * q1)) * 256;
-        rotmat[2 * 4 + 0]  = (2 * (q1 * q3 - q0 * q2)) * 256;
-        rotmat[2 * 4 + 1]  = (2 * (q2 * q3 + q0 * q1)) * 256;
-        rotmat[2 * 4 + 2]  = (2 * (q0 * q0 + q3 * q3) - 1) * 256;
+
+        int32_t q0           =  tflight->fqQuatAccum[0] * 2048;
+        int32_t q1           = -tflight->fqQuatAccum[1] * 2048;
+        int32_t q2           = -tflight->fqQuatAccum[2] * 2048;
+        int32_t q3           = -tflight->fqQuatAccum[3] * 2048;
+
+        // Note to anyone looking on this in the future, it's actually 2* each filed, but we avoid
+        // it by increasing the >>.
+        rotmat[0 * 4 + 0]  = ((q0 * q0 + q1 * q1) - 2060720) >> 13;
+        int32_t x1y0 = rotmat[0 * 4 + 1]  = ((q1 * q2 - q0 * q3)) >> 13;
+        rotmat[0 * 4 + 2]  = ((q1 * q3 + q0 * q2)) >> 13;
+        rotmat[1 * 4 + 0]  = ((q1 * q2 + q0 * q3)) >> 13;
+        int32_t x1y1 = rotmat[1 * 4 + 1]  = ((q0 * q0 + q2 * q2) - 2060720) >> 13;
+        rotmat[1 * 4 + 2]  = ((q2 * q3 - q0 * q1)) >> 13;
+        int32_t zpolex = rotmat[2 * 4 + 0]  = ((q1 * q3 - q0 * q2)) >> 13;
+        int32_t zpoley = rotmat[2 * 4 + 1]  = ((q2 * q3 + q0 * q1)) >> 13;
+        int32_t zpolez = rotmat[2 * 4 + 2]  = ((q0 * q0 + q3 * q3) - 2060720) >> 13;
         rotmat[3 * 4 + 3]  = 1 * 256;
         tdMultiply(flight->ProjectionMatrix, rotmat, flight->ProjectionMatrix);
+        
+        tflight->hpr[0] = getAtan2( zpolex, zpolez ) * 11;
+        int xandz = isqrt( zpolex * zpolex + zpolez * zpolez );
+        tflight->hpr[1] = getAtan2(-zpoley, xandz ) * 11;
+        tflight->hpr[2] = 3960-getAtan2( x1y0, x1y1 ) * 11;
+/*
+        ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d /  %d %d",
+            tflight->hpr[0], tflight->hpr[1], tflight->hpr[2],
+            rotmat[0 * 4 + 0], rotmat[0 * 4 + 1], rotmat[0 * 4 + 2],
+            rotmat[1 * 4 + 0], rotmat[1 * 4 + 1], rotmat[1 * 4 + 2],
+            rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2], getCos1024(flight->hpr[2] / 11), getSin1024(flight->hpr[2] / 11) );
+*/
     }
     else
     {
@@ -1632,16 +1671,17 @@ static void flightRender(int64_t elapsedUs)
 #else
     if (tflight->nettext[1])
     {
-        int yend   = TFT_HEIGHT - flight->radiostars.height - 1;
-        int ystart = yend - flight->radiostars.height - 1;
-        fillDisplayArea(0, ystart - 1, 280, yend, 0);
-        drawText(&flight->radiostars, tflight->nettext[0], tflight->nettext + 1, 10, ystart);
+        int ystart = flight->radiostars.height - 1;
+        fillDisplayArea(0, 0, 280, ystart + 6, 0);
+        int w = textWidth(&flight->radiostars, tflight->nettext + 1);
+        drawText(&flight->radiostars, tflight->nettext[0], tflight->nettext + 1, TFT_WIDTH/2-w/2, 3);
     }
 #endif
 
     // ESP_LOGI( "RENDER", "%d %d %d", (int)(t1-t0), (int)(t2-t1), (int)(t3-t2) );
     return;
 }
+
 
 static void flightGameUpdate(flight_t* tflight)
 {
@@ -2056,9 +2096,9 @@ void flightButtonCallback(buttonEvt_t* evt)
 
                     int eo_sign = (flight->myBooletHead & 1) ? 1 : -1;
                     int16_t rightleft[3];
-                    rightleft[0] = -eo_sign * (getCos1024(flight->hpr[0] / 11)) >> 6;
-                    rightleft[2] = eo_sign * (getSin1024(flight->hpr[0] / 11)) >> 6;
-                    rightleft[1] = 0;
+                    rightleft[0] = -eo_sign * (getCos1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11) ) >> 16;
+                    rightleft[2] =  eo_sign * (getSin1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11) ) >> 16;
+                    rightleft[1] =  eo_sign * (getSin1024(flight->hpr[2] / 11) >> 6 );
 
                     tb->launchLocation[0] = flight->planeloc[0] + rightleft[0];
                     tb->launchLocation[1] = flight->planeloc[1] + rightleft[1];
@@ -2595,7 +2635,7 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
     }
 
 #ifndef PROFILING
-    // Only update at 10Hz.
+    // Only update our position to the network at 10Hz.
     if (now > tflight->lastNetUpdate + 100000)
     {
         tflight->lastNetUpdate = now;
@@ -2620,6 +2660,7 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
         bitct += WriteUEQ(&contents, 0);
         bitct += WriteUEQ(&contents, 1);
         bitct += WriteUEQ(&contents, NumActiveBoolets);
+        bitct += WriteUEQ(&contents, 23);
         FinalizeUEQ(&contents, bitct);
         *((uint32_t*)pp) = contents;
         pp += 4;
@@ -2665,6 +2706,9 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
             memcpy(pp, &b->flags, sizeof(b->flags));
             pp += sizeof(b->flags);
         }
+
+        memcpy(pp, "Xabcdefghijklmnopqrstuv", 23);
+        pp += 23;
 
         int len = pp - espnow_buffer;
         espNowSend((char*)espnow_buffer, len); // Don't enable yet.
@@ -2949,9 +2993,10 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     if (textLength)
     {
         // NOTE: First char is color.
-        if (textLength < sizeof(flt->nettext))
+        if (textLength < sizeof(flt->nettext) && data + textLength <= dataend )
         {
             memcpy(flt->nettext, data, textLength);
+            flt->nettext[textLength] = 0;
             data += textLength;
         }
     }
