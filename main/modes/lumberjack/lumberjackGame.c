@@ -1896,8 +1896,21 @@ void lumberjackDrawGame(void)
         drawText(&lumv->arcade, c555, paused, ((TFT_WIDTH - tWidthH)/2), (TFT_HEIGHT/2));
     
     }
-   
 
+    float ledAmount = (float)lumv->comboTime / LUMBERJACK_COMBO_RESET_TIME;
+
+    if (ledAmount < 0) ledAmount = 0;
+
+    for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumv->lumberjackMain->menuLogbookRenderer->leds); ledIdx++)
+    {
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].r = (int)(ledAmount * lumv->lumberjackMain->playerColor.r);
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].g = (int)(ledAmount * lumv->lumberjackMain->playerColor.g);
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].b = (int)(ledAmount * lumv->lumberjackMain->playerColor.b);
+    }
+    
+    setLeds(lumv->lumberjackMain->menuLogbookRenderer->leds, CONFIG_NUM_LEDS);
+   
+    
 }
 
 void lumberjackTitleDisplayText(const char* string, int locationX, int locationY)
