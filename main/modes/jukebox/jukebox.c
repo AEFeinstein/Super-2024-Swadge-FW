@@ -21,6 +21,7 @@
 #include "mainMenu.h"
 #include "breakout.h"
 #include "factoryTest.h"
+#include "lumberjack.h"
 #include "mode_platformer.h"
 #include "mode_credits.h"
 #include "portableDance.h"
