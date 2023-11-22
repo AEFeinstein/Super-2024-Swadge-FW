@@ -343,8 +343,8 @@ void gamepadStart(gamepadType_t type)
     else
     {
         // Unused code for unique HID serials
-        // If there are device conflicts with 2+ Swadges, uncomment and figure out if we need to convert the MAC to alphaneumeric
-        // const uint8_t macBytes = 6; // This is part of the ESP API's design, and cannot be changed here
+        // If there are device conflicts with 2+ Swadges, uncomment and figure out if we need to convert the MAC to
+        // alphaneumeric const uint8_t macBytes = 6; // This is part of the ESP API's design, and cannot be changed here
         // uint8_t mac[macBytes];
         // if (ESP_OK == esp_wifi_get_mac(WIFI_IF_STA, mac))
         // {

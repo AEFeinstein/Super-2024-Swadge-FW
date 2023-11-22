@@ -8,14 +8,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "wsg.h"
+#include "macros.h"
 #include "breakout_typedef.h"
 #include "entityManager.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
-#define CLAMP(x, l, u) ((x) < l ? l : ((x) > u ? u : (x)))
-
 #define TILEMAP_DISPLAY_WIDTH_PIXELS  280 // The screen size
 #define TILEMAP_DISPLAY_HEIGHT_PIXELS 240 // The screen size
 #define TILEMAP_DISPLAY_WIDTH_TILES   36  // The screen size in tiles + 1

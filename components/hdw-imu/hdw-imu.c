@@ -372,6 +372,9 @@ esp_err_t accelIntegrate()
 
     uint32_t start = getCycleCount();
 
+    // Round down
+    readr = (readr / 6) * 6;
+
     // STEP 0:  Decide your coordinate frame.
 
     // [0] = +X axis coming out right of controller.
@@ -385,6 +388,9 @@ esp_err_t accelIntegrate()
         // Extract data from IMU
         int16_t* euler_deltas = cdata; // Euler angles, from gyro.
         int16_t* accel_data   = cdata + 3;
+
+        // ESP_LOGI( "_", "%2d%3d%4d%4d%4d%5d%5d%5d", samp, readr, euler_deltas[0], euler_deltas[1], euler_deltas[2],
+        // accel_data[0], accel_data[1], accel_data[2] );
 
         // Manual cal, used only for Steps 2..8
         //    euler_deltas[0] -= 12;
@@ -524,17 +530,7 @@ esp_err_t accelIntegrate()
             // set fqQuat to be the rotation to go from our "up" from the
             // accelerometer to the nominal "up"
             float ideal_up[3] = {0, 1, 0};
-
-            float half[3]     = {accel_up[0] + ideal_up[0], accel_up[1] + ideal_up[1], accel_up[2] + ideal_up[2]};
-            float halfnormreq = rsqrtf(half[0] * half[0] + half[1] * half[1] + half[2] * half[2]);
-            half[0] *= halfnormreq;
-            half[1] *= halfnormreq;
-            half[2] *= halfnormreq;
-
-            float* q = ld->fqQuat;
-            mathCrossProduct(q + 1, accel_up, half);
-            float dotdiff = accel_up[0] * half[0] + accel_up[1] * half[1] + accel_up[2] * half[2];
-            q[0]          = dotdiff;
+            mathQuatFromTwoVectors(ld->fqQuat, ideal_up, accel_up);
         }
         else
         {
@@ -675,6 +671,51 @@ esp_err_t accelPerformCal()
     eraseNvsKey("gyrocalx");
     eraseNvsKey("gyrocaly");
     eraseNvsKey("gyrocalz");
+
+    return ESP_OK;
+}
+
+/**
+ * @brief Get a steering wheel style input.  Use getAtan2( xcomp, ycomp ) to get angle. 0..360 with 180 being up.
+ *
+ *     int16_t xcomp;
+ *     int16_t ycomp;
+ *     accelGetSteeringAngleDegrees( &xcomp, &ycomp );
+ *     ESP_LOGI( "x", "%d %d %d\n",  getAtan2( xcomp, ycomp ), xcomp, ycomp );
+ *
+ * @param xcomp is a pointer to receive the x component of the steering wheel (-4096-4096) +x is "right"
+ * @param ycomp is a pointer to receive the y component of the steering wheel (-4096-4096) +y is "down"
+ * @return Return ESP_OK if all is ok.
+ */
+esp_err_t accelGetSteeringAngleDegrees(int16_t* xcomp, int16_t* ycomp)
+{
+    // compute steering angle
+    float up_from_face_of_controller[3] = {0, 0, 1};
+
+    mathRotateVectorByInverseOfQuaternion(up_from_face_of_controller, LSM6DSL.fqQuat, up_from_face_of_controller);
+
+    float up_from_face_of_controller_local[3] = {0, 0, 1};
+
+    // This prevents gimbol lock.
+    if (up_from_face_of_controller[2] < 0)
+        up_from_face_of_controller_local[2] = -1;
+
+    float q[4];
+    mathQuatFromTwoVectors(q, up_from_face_of_controller, up_from_face_of_controller_local);
+    float q2[4];
+    mathQuatApply(q2, LSM6DSL.fqQuat, q);
+
+    // q2 now has the correct Z-rotation (Because it's in-plane with the virtual Z plane made by the flat surface of the
+    // swadge.
+    float right[3] = {1, 0, 0};
+    if (up_from_face_of_controller[2] < 0)
+        right[0] = -1;
+
+    mathRotateVectorByInverseOfQuaternion(right, q2, right);
+    if (xcomp)
+        *xcomp = right[1] * 4096;
+    if (ycomp)
+        *ycomp = -right[0] * 4096;
 
     return ESP_OK;
 }

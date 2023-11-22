@@ -1152,7 +1152,7 @@ void drawHud(ray_t* ray)
                     sideBarColor);
 
     // Draw target if locked on
-    if (NULL != ray->targetedObj)
+    if (NULL != ray->targetedObj || ray->isStrafing)
     {
         // Pick color based on loadout
         paletteColor_t color = c114;
@@ -1182,39 +1182,42 @@ void drawHud(ray_t* ray)
         }
 #define T_SIZE  20
 #define T_THICK 3
-#define T_ARM   7
+#define T_ARM   10
         // Draw some brackets
-        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE,           //
-                        TFT_HEIGHT / 2 - T_SIZE,          //
-                        TFT_WIDTH / 2 - T_SIZE + T_THICK, //
-                        TFT_HEIGHT / 2 + T_SIZE,          //
+        if (NULL != ray->targetedObj)
+        {
+            fillDisplayArea(TFT_WIDTH / 2 - T_SIZE,           //
+                            TFT_HEIGHT / 2 - T_SIZE,          //
+                            TFT_WIDTH / 2 - T_SIZE + T_THICK, //
+                            TFT_HEIGHT / 2 + T_SIZE,          //
+                            color);
+            fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK, //
+                            TFT_HEIGHT / 2 - T_SIZE,          //
+                            TFT_WIDTH / 2 + T_SIZE,           //
+                            TFT_HEIGHT / 2 + T_SIZE,          //
+                            color);
+        }
+
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE,            //
+                        TFT_HEIGHT / 2 - T_SIZE,           //
+                        TFT_WIDTH / 2 - T_SIZE + T_ARM,    //
+                        TFT_HEIGHT / 2 - T_SIZE + T_THICK, //
                         color);
-        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK, //
-                        TFT_HEIGHT / 2 - T_SIZE,          //
-                        TFT_WIDTH / 2 + T_SIZE,           //
-                        TFT_HEIGHT / 2 + T_SIZE,          //
+        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE,            //
+                        TFT_HEIGHT / 2 + T_SIZE - T_THICK, //
+                        TFT_WIDTH / 2 - T_SIZE + T_ARM,    //
+                        TFT_HEIGHT / 2 + T_SIZE,           //
                         color);
 
-        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE + T_THICK,         //
-                        TFT_HEIGHT / 2 - T_SIZE,                  //
-                        TFT_WIDTH / 2 - T_SIZE + T_THICK + T_ARM, //
-                        TFT_HEIGHT / 2 - T_SIZE + T_THICK,        //
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_ARM,    //
+                        TFT_HEIGHT / 2 - T_SIZE,           //
+                        TFT_WIDTH / 2 + T_SIZE,            //
+                        TFT_HEIGHT / 2 - T_SIZE + T_THICK, //
                         color);
-        fillDisplayArea(TFT_WIDTH / 2 - T_SIZE + T_THICK,         //
-                        TFT_HEIGHT / 2 + T_SIZE - T_THICK,        //
-                        TFT_WIDTH / 2 - T_SIZE + T_THICK + T_ARM, //
-                        TFT_HEIGHT / 2 + T_SIZE,                  //
-                        color);
-
-        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK - T_ARM, //
-                        TFT_HEIGHT / 2 - T_SIZE,                  //
-                        TFT_WIDTH / 2 + T_SIZE - T_THICK,         //
-                        TFT_HEIGHT / 2 - T_SIZE + T_THICK,        //
-                        color);
-        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_THICK - T_ARM, //
-                        TFT_HEIGHT / 2 + T_SIZE - T_THICK,        //
-                        TFT_WIDTH / 2 + T_SIZE - T_THICK,         //
-                        TFT_HEIGHT / 2 + T_SIZE,                  //
+        fillDisplayArea(TFT_WIDTH / 2 + T_SIZE - T_ARM,    //
+                        TFT_HEIGHT / 2 + T_SIZE - T_THICK, //
+                        TFT_WIDTH / 2 + T_SIZE,            //
+                        TFT_HEIGHT / 2 + T_SIZE,           //
                         color);
     }
 }

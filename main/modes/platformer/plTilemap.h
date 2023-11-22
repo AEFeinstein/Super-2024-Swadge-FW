@@ -8,15 +8,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "wsg.h"
+#include "macros.h"
 #include "platformer_typedef.h"
 #include "plEntityManager.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
-#define CLAMP(x, l, u) ((x) < l ? l : ((x) > u ? u : (x)))
-
-#define PL_TILEMAP_DISPLAY_WIDTH_PIXELS  280 // The screen size
+#define PL_TILEMAP_DISPLAY_WIDTH_PIXELS 280  // The screen size
 #define PL_TILEMAP_DISPLAY_HEIGHT_PIXELS 240 // The screen size
 #define PL_TILEMAP_DISPLAY_WIDTH_TILES   19  // The screen size in tiles + 1
 #define PL_TILEMAP_DISPLAY_HEIGHT_TILES  16  // The screen size in tiles + 1

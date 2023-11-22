@@ -548,7 +548,7 @@ bool readNvsStats(nvs_stats_t* outStats)
  * the number of entry infos to read
  * @return true if the entry infos were read, false if they were not
  */
-bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos, size_t* numEntryInfos)
+bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos, size_t* numEntryInfos)
 {
     return readNamespaceNvsEntryInfos(NVS_NAMESPACE_NAME, outStats, outEntryInfos, numEntryInfos);
 }
@@ -566,49 +566,67 @@ bool readAllNvsEntryInfos(nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfo
  * the number of entry infos to read
  * @return true if the entry infos were read, false if they were not
  */
-bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t** outEntryInfos,
+bool readNamespaceNvsEntryInfos(const char* namespace, nvs_stats_t* outStats, nvs_entry_info_t* outEntryInfos,
                                 size_t* numEntryInfos)
 {
-    // If the user doesn't want to receive the stats, only use them internally
-    bool freeOutStats = false;
-    if (outStats == NULL)
+    if (outStats != NULL)
     {
-        outStats     = calloc(1, sizeof(nvs_stats_t));
-        freeOutStats = true;
-    }
-
-    if (!readNvsStats(outStats))
-    {
-        if (freeOutStats)
+        if (!readNvsStats(outStats))
         {
-            free(outStats);
+            ESP_LOGI("NVS", "readNvsStats() returned false");
+            return false;
         }
-        return false;
     }
 
     // Example of listing all the key-value pairs of any type under specified partition and namespace
     size_t i          = 0;
     nvs_iterator_t it = NULL;
-    esp_err_t res     = nvs_entry_find(namespace, NULL, NVS_TYPE_ANY, &it);
+    esp_err_t res     = nvs_entry_find(NVS_DEFAULT_PART_NAME, namespace, NVS_TYPE_ANY, &it);
+
     while (res == ESP_OK)
     {
         if (outEntryInfos != NULL)
         {
-            nvs_entry_info(it, &((*outEntryInfos)[i]));
-            i++;
+            if (ESP_OK != (res = nvs_entry_info(it, &outEntryInfos[i])))
+            {
+                ESP_LOGE("NVS", "nvs_entry_info() did not return OK: %s", esp_err_to_name(res));
+                nvs_release_iterator(it);
+                return false;
+            }
         }
+        i++;
         res = nvs_entry_next(&it);
     }
+
     nvs_release_iterator(it);
 
-    if (freeOutStats)
-    {
-        free(outStats);
-    }
-
-    if (outEntryInfos == NULL)
+    if (outEntryInfos == NULL && res == ESP_ERR_NVS_NOT_FOUND)
     {
         *numEntryInfos = i;
     }
-    return true;
+    // Only return true if the error code was the expected one
+    return res == ESP_ERR_NVS_NOT_FOUND;
+}
+
+/**
+ * @brief Quickly return whether or not any entries exist in a given NVS namespace.
+ *
+ * @param namespace The namespace to check for any entries
+ * @return true If there is one or more entry in the namespace
+ * @return false If there are no entries in the namespace
+ */
+bool nvsNamespaceInUse(const char* namespace)
+{
+    nvs_iterator_t it = NULL;
+    esp_err_t res     = nvs_entry_find(NVS_DEFAULT_PART_NAME, namespace, NVS_TYPE_ANY, &it);
+    nvs_entry_info_t info;
+
+    if (ESP_OK == res)
+    {
+        res = nvs_entry_info(it, &info);
+    }
+
+    nvs_release_iterator(it);
+
+    return (res == ESP_OK);
 }

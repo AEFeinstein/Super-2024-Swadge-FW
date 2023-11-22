@@ -40,6 +40,8 @@
 #define BIGGER_SCORE 10000000UL
 #define FAST_TIME    1500 // 25 minutes
 
+const char platformerName[] = "Swadge Land";
+
 static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055};
 
 static const paletteColor_t redColors[4]    = {c501, c540, c550, c540};
@@ -140,18 +142,18 @@ uint16_t getLevelIndex(uint8_t world, uint8_t level);
 
 platformer_t* platformer = NULL;
 
-swadgeMode_t modePlatformer = {.modeName                 = "Swadge Land",
-                               .wifiMode                 = NO_WIFI,
-                               .overrideUsb              = false,
+swadgeMode_t modePlatformer = {.modeName                                 = platformerName,
+                               .wifiMode                                 = NO_WIFI,
+                               .overrideUsb                           = false,
                                .usesAccelerometer        = false,
                                .usesThermometer          = false,
-                               .fnEnterMode              = platformerEnterMode,
-                               .fnExitMode               = platformerExitMode,
-                               .fnMainLoop               = platformerMainLoop,
+                               .fnEnterMode                           = platformerEnterMode,
+                               .fnExitMode                             = platformerExitMode,
+                               .fnMainLoop                             = platformerMainLoop,
                                .fnAudioCallback          = NULL,
                                .fnBackgroundDrawCallback = NULL,
-                               .fnEspNowRecvCb           = NULL,
-                               .fnEspNowSendCb           = NULL};
+                               .fnEspNowRecvCb                     = NULL,
+                               .fnEspNowSendCb                     = NULL};
 
 #define NUM_LEVELS 16
 
