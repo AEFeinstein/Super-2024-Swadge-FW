@@ -154,6 +154,8 @@ void scrollTileMap(tilemap_t* tilemap, int16_t x, int16_t y)
 
 bool loadMapFromFile(tilemap_t* tilemap, const char* name)
 {
+    bzrPause();
+
     if (tilemap->map != NULL)
     {
         free(tilemap->map);
@@ -186,6 +188,8 @@ bool loadMapFromFile(tilemap_t* tilemap, const char* name)
     memcpy(&(tilemap->totalTargetBlocks), &buf[2 + width * height], 2);
 
     free(buf);
+
+    bzrResume();
 
     return true;
 }

@@ -195,7 +195,8 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
+                    self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
@@ -211,7 +212,8 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 270 + CLAMP((self->attachedToEntity->xspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
+                    self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
@@ -227,7 +229,8 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 0 - CLAMP((self->attachedToEntity->yspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
+                    self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
@@ -243,7 +246,8 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 180 - CLAMP(-(self->attachedToEntity->yspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
+                    self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
@@ -339,6 +343,7 @@ void detectLostBall(entity_t* self, bool respawn)
         if (self->gameData->ballsInPlay <= 0)
         {
             self->gameData->changeState = ST_DEAD;
+            bzrStop(true);
             bzrPlaySfx(&(self->soundManager->die), BZR_STEREO);
         }
     }
@@ -1410,7 +1415,7 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->xspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->xspeed);
+                    self->yspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->xspeed);
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->xspeed = -self->xspeed;
@@ -1420,7 +1425,7 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->yspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->yspeed);
+                    self->xspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->yspeed);
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->yspeed = -self->yspeed;

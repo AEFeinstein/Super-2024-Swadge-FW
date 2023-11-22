@@ -32,6 +32,7 @@ typedef struct
     int8_t ballsInPlay;
 
     uint32_t extraLifeScore;
+    uint32_t levelScore;
 
     int16_t countdown;
     uint16_t frameCount;
@@ -43,6 +44,8 @@ typedef struct
     int16_t combo;
     // int16_t comboTimer;
     uint32_t comboScore;
+
+    bool ballLaunched;
 
     entity_t* playerBombs[3];
     uint8_t playerTimeBombsCount;

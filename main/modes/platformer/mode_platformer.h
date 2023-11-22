@@ -19,12 +19,14 @@ extern const char platformerName[];
 // Structs
 //==============================================================================
 
-typedef struct {
+typedef struct
+{
     uint32_t scores[NUM_PLATFORMER_HIGH_SCORES];
     char initials[NUM_PLATFORMER_HIGH_SCORES][3];
 } platformerHighScores_t;
 
-typedef struct {
+typedef struct
+{
     uint8_t maxLevelIndexUnlocked;
     bool gameCleared;
     bool oneCreditCleared;
@@ -37,8 +39,8 @@ typedef struct {
 // Prototypes
 //==============================================================================
 
-void updateGame(platformer_t *platformer);
-void updateTitleScreen(platformer_t *platformer);
+void updateGame(platformer_t* platformer);
+void updateTitleScreen(platformer_t* platformer);
 
 extern swadgeMode_t modePlatformer;
 

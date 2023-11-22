@@ -34,6 +34,28 @@
 //==============================================================================
 // Enums
 //==============================================================================
+static const char breakoutHintTextLevel1[] = "Slide left/right on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
+static const char breakoutHintTextTBomb[]
+    = "Press DOWN BUTTON to drop time bombs.\nTime it right to destroy many blocks at once!";
+static const char breakoutHintTextBombE[]
+    = "Press DOWN BUTTON to drop time bombs.\nThe explosions will deflect your ball!";
+static const char breakoutHintTextRBomb[]
+    = "Press RIGHT BUTTON to drop a remote bomb.\nOnce flashing, press again to detonate!";
+static const char breakoutHintTextBombSpeed[] = "Deflecting your ball with bomb explosions accelerates ball faster!";
+static const char breakoutHintTextBombTest[]  = "Can you beat this one?\n\nUse bombs wisely!";
+static const char breakoutHintTextGotThis[]   = "Alright!\n\nYou got this!";
+
+static const char breakoutHintTextUpDown[] = "Slide up/down on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
+static const char breakoutHintTextUpDown2[]
+    = "Slide up/down on TOUCHPAD to aim.\nPress UP BUTTON to launch.\nGetting dizzy yet?";
+
+static const char breakoutHintTextLevel5[] = "Slide left/right to control both paddles!";
+static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to control all paddles!";
+
+static const char breakoutHintTextCaptiveBall[]
+    = "Free the captive balls!\nReflect them with your paddle for multiball!";
+static const char breakoutHintTextCrawler[] = "CRAWLERs can't be defeated by hitting them directly!";
+static const char breakoutHintTextFinal[]   = "\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
 
 //==============================================================================
 // Structs
@@ -89,7 +111,6 @@ static void breakoutUpdateReadyScreen(breakout_t* self, int64_t elapsedUs);
 static void breakoutDrawReadyScreen(font_t* logbook, font_t* ibm_vga8, gameData_t* gameData);
 static void breakoutChangeStateGame(breakout_t* self);
 static void breakoutDetectGameStateChange(breakout_t* self);
-static void breakoutDetectBgmChange(breakout_t* self);
 static void breakoutChangeStateDead(breakout_t* self);
 static void breakoutUpdateDead(breakout_t* self, int64_t elapsedUs);
 static void breakoutChangeStateGameOver(breakout_t* self);
@@ -101,7 +122,7 @@ static void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs);
 static void breakoutDrawLevelClear(font_t* font, gameData_t* gameData);
 static void breakoutChangeStateGameClear(breakout_t* self);
 static void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs);
-static void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData);
+static void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData, uint8_t page);
 static void breakoutChangeStateTitleScreen(breakout_t* self);
 static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs);
 static void breakoutDrawTitleScreen(font_t* font, gameData_t* gameData);
@@ -136,55 +157,98 @@ void breakoutBuildMainMenu(breakout_t* self);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 41
+#define NUM_LEVELS 64
 
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
-#define GAME_LEVEL_START_INDEX 1
+#define GAME_LEVEL_START_INDEX     1
+#define GAME_LEVEL_END_INDEX       50
+#define POSTGAME_LEVEL_START_INDEX 51
 
 static const leveldef_t leveldef[NUM_LEVELS]
-    = {{.filename = "titlescreen.bin", .timeLimit = 180},
-       {.filename = "intro.bin", .timeLimit = 180},
-       {.filename = "rightside.bin", .timeLimit = 180},
-       {.filename = "upsidedown.bin", .timeLimit = 180},
-       {.filename = "leftside.bin", .timeLimit = 180},
-       {.filename = "split.bin", .timeLimit = 180},
-       {.filename = "mag01.bin", .timeLimit = 180},
-       {.filename = "mag02.bin", .timeLimit = 180},
-       {.filename = "m_attack.bin", .timeLimit = 180},
-       {.filename = "flower.bin", .timeLimit = 180},
-       {.filename = "brkLvlChar1.bin", .timeLimit = 180},
-       {.filename = "gaylordlogo.bin", .timeLimit = 180},
-       {.filename = "trifecta.bin", .timeLimit = 180},
-       {.filename = "xmarks.bin", .timeLimit = 180},
-       {.filename = "bombtest.bin", .timeLimit = 180},
-       {.filename = "devito.bin", .timeLimit = 180},
-       {.filename = "lumberjacks.bin", .timeLimit = 180},
-       {.filename = "halloween.bin", .timeLimit = 180},
-       {.filename = "snake.bin", .timeLimit = 180},
-       {.filename = "flipflop.bin", .timeLimit = 180},
-       {.filename = "ponglike.bin", .timeLimit = 180},
-       {.filename = "tinyhuge.bin", .timeLimit = 180},
-       {.filename = "superhard.bin", .timeLimit = 180},
-       {.filename = "firework.bin", .timeLimit = 180},
-       {.filename = "starlite.bin", .timeLimit = 180},
-       {.filename  = "jailbreak.bin", /*Starting here, the levels are NOT in order!*/
-        .timeLimit = 180},
-       {.filename = "getMorGet.bin", .timeLimit = 180},
-       {.filename = "outtaMyWay.bin", .timeLimit = 180},
-       {.filename = "bombrings.bin", .timeLimit = 180},
-       {.filename = "angles.bin", .timeLimit = 180},
-       {.filename = "themaze.bin", .timeLimit = 180},
-       {.filename = "intersection.bin", .timeLimit = 180},
-       {.filename = "foosball.bin", .timeLimit = 180},
-       {.filename = "paddles.bin", .timeLimit = 180},
-       {.filename = "corner.bin", .timeLimit = 180},
-       {.filename = "b.bin", .timeLimit = 180},
-       {.filename = "wtf.bin", .timeLimit = 180},
-       {.filename = "mag03.bin", .timeLimit = 180},
-       {.filename = "wallball.bin", .timeLimit = 180},
-       {.filename = "introenemy.bin", .timeLimit = 180},
-       {.filename = "stormcastle.bin", .timeLimit = 180}};
+    = {{.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_TITLE},
+
+       {.filename = "intro.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "intro2.bin", .hintTextPtr = breakoutHintTextTBomb, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "magfestlogo.bin", .hintTextPtr = breakoutHintTextBombE, .bgmIndex = BRK_BGM_SKILL},
+
+       {.filename = "flower.bin", .hintTextPtr = breakoutHintTextBombSpeed, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "rightside.bin", .hintTextPtr = breakoutHintTextUpDown, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "upsidedown.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_SKILL},
+
+       {.filename = "leftside.bin", .hintTextPtr = breakoutHintTextUpDown2, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "brkLvlChar1.bin", .hintTextPtr = breakoutHintTextLevel5, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "mag01.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
+
+       {.filename = "mag02.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "getMorGet.bin", .hintTextPtr = breakoutHintTextRBomb, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "bombtest.bin", .hintTextPtr = breakoutHintTextBombTest, .bgmIndex = BRK_BGM_SKILL},
+
+       {.filename = "gaylordlogo.bin", .hintTextPtr = breakoutHintTextGotThis, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "m-tank.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "split.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+
+       {.filename = "devito.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "xmarks.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "wallball.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "tasbot.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "tasboot.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "ponglike.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "trifecta.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "lumberjacks.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "snake.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+
+       {.filename = "jailbreak.bin", .hintTextPtr = breakoutHintTextCaptiveBall, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "b.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+
+       {.filename = "angles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "m-attack.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "outtaMyWay.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "mag03.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "flipflop.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "intersection.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "corner.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "zip.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "tinyhuge.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "bombrings.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "foosball.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "wtf.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "introenemy.bin", .hintTextPtr = breakoutHintTextCrawler, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "bumpers.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "jailbreak2.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+
+       {.filename = "openthegates.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "infestation.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "chainreact.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "m-battle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "paddles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+
+       {.filename = "stormcastle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
+       {.filename = "starlite.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
+       {.filename = "themaze.bin", .hintTextPtr = breakoutHintTextFinal, .bgmIndex = BRK_BGM_FINALE},
+
+       // Postgame
+       {.filename = "heart.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "coffee.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "shiftersam.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "heart2.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "kevinsleep.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "SPACESHIP.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "phone.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "metroid.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "shiftersmil.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "sandsoftime.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "42069.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY}};
 
 //==============================================================================
 // Look Up Tables
@@ -194,6 +258,7 @@ static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055
 static const paletteColor_t redColors[4]               = {c510, c440, c050, c440};
 static const paletteColor_t greenColors[4]             = {c555, c051, c030, c051};
 static const paletteColor_t purpleColors[4]            = {c405, c440, c055, c440};
+// static const paletteColor_t allColors[6]               = {c500, c550, c050, c055, c005, c505};
 
 static const int16_t cheatCode[9] = {PB_UP, PB_B, PB_DOWN, PB_B, PB_LEFT, PB_B, PB_RIGHT, PB_B, PB_START};
 
@@ -343,7 +408,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[GAME_LEVEL_START_INDEX].filename);
-            breakout->gameData.countdown = leveldef[GAME_LEVEL_START_INDEX].timeLimit;
+            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -353,7 +418,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level].filename);
-            breakout->gameData.countdown = leveldef[breakout->gameData.level].timeLimit;
+            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -370,7 +435,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         }
         else if (label == breakoutResetProgress)
         {
-            breakoutInitializeHighScores(breakout);
+            breakoutInitializeUnlockables(breakout);
             bzrPlaySfx(&(breakout->soundManager.die), BZR_STEREO);
         }
         else if (label == breakoutSaveAndExit)
@@ -434,7 +499,8 @@ static void breakoutUpdateMainMenu(breakout_t* self, int64_t elapsedUs)
 
 static void breakoutChangeStateReadyScreen(breakout_t* self)
 {
-    self->gameData.frameCount = 0;
+    self->gameData.frameCount   = 0;
+    self->gameData.ballLaunched = false;
 
     // Set up Cho Intro
     deactivateAllEntities(&(self->entityManager), false, true, true);
@@ -444,13 +510,13 @@ static void breakoutChangeStateReadyScreen(breakout_t* self)
     self->entityManager.playerEntity = NULL;
     self->entityManager.playerEntity = createEntity(&(self->entityManager), ENTITY_CHO_INTRO, 0, 0);
 
+    bzrPlayBgm(&self->soundManager.getReady, BZR_STEREO);
     self->update = &breakoutUpdateReadyScreen;
 }
 
 static void breakoutUpdateReadyScreen(breakout_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
-
     updateLedsInGame(&(self->gameData));
     drawStarfield(&(self->starfield));
 
@@ -469,6 +535,8 @@ static void breakoutUpdateReadyScreen(breakout_t* self, int64_t elapsedUs)
         if (!(self->gameData.frameCount % 60))
         {
             breakoutChangeStateGame(self);
+            setLevelBgm(&(self->soundManager), leveldef[self->gameData.level].bgmIndex);
+            bzrPlayBgm(&(self->soundManager.levelBgm), BZR_STEREO);
         }
 
         if (self->gameData.targetBlocksBroken > 0 || !(self->gameData.frameCount % 2))
@@ -650,6 +718,7 @@ void breakoutChangeStateGameOver(breakout_t* self)
     self->gameData.frameCount = 0;
     resetGameDataLeds(&(self->gameData));
     // buzzer_play_bgm(&bgmGameOver);
+    bzrPlayBgm(&self->soundManager.gameOver, BZR_STEREO);
     self->update = &breakoutUpdateGameOver;
 }
 
@@ -688,17 +757,23 @@ void breakoutDrawGameOver(font_t* logbook, font_t* ibm_vga8, gameData_t* gameDat
 
 static void drawBreakoutHud(font_t* font, gameData_t* gameData)
 {
+    /*
+        TODO
+        Clean this formatting code up.
+        It sucks.
+    */
+
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
-    char levelStr[15];
-    snprintf(levelStr, sizeof(levelStr) - 1, "Level %d", gameData->level);
+    char levelStr[11];
+    snprintf(levelStr, sizeof(levelStr) - 1, "L%02" PRIu8, gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
 
-    // char timeStr[10];
-    // snprintf(timeStr, sizeof(timeStr) - 1, "T:%03d", gameData->countdown);
+    char timeStr[16];
+    snprintf(timeStr, sizeof(timeStr) - 1, "BONUS %0" PRId16, gameData->countdown);
 
     if (gameData->frameCount > 29)
     {
@@ -708,29 +783,73 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     drawText(font, c555, livesStr, 48, 2);
     // drawText(font, c555, coinStr, 160, 16);
     drawText(font, c555, scoreStr, 80, 2);
-    drawText(font, c555, levelStr, 184, 2);
+    drawText(font, c555, levelStr, 224, 2);
     // drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220,
     // 16);
 
-    drawText(font, c555, "B", 271, 32);
+    /*drawText(font, c555, "B", 271, 32);
     drawText(font, c555, "O", 271, 44);
     drawText(font, c555, "N", 271, 56);
     drawText(font, c555, "U", 271, 68);
     drawText(font, c555, "S", 271, 80);
-    drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);
+    drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);*/
+
+    char vdispStr[3];
+    /*for(uint16_t i=0; i<sizeof(levelStr); i++){
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", levelStr[i]);
+        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
+    }*/
+
+    char extraLifeStr[15];
+    snprintf(extraLifeStr, sizeof(extraLifeStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
+
+    for (uint16_t i = 0; i < sizeof(extraLifeStr) - 1; i++)
+    {
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", extraLifeStr[i]);
+        if (vdispStr[0] == '\0')
+        {
+            break;
+        }
+        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
+    }
+
+    for (uint16_t i = 0; i < sizeof(timeStr) - 1; i++)
+    {
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", timeStr[i]);
+        if (vdispStr[0] == '\0')
+        {
+            break;
+        }
+        drawText(font, c555, vdispStr, 268, 32 + 12 * i);
+    }
 
     // if(gameData->comboTimer == 0){
     //     return;
     // }
 
-    // snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
-    drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4],
-             scoreStr, 144, 2);
+    if (gameData->comboScore > 0)
+    {
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+        // snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
+        drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4],
+                 scoreStr, 144, 2);
+    }
 
     // Draw centering lines, for paddle control debug
     // drawLine(TFT_WIDTH >> 1, 0, TFT_WIDTH >> 1, TFT_HEIGHT, c500, 0);
     // drawLine(0, (TFT_HEIGHT >> 1)+8, TFT_WIDTH, (TFT_HEIGHT >> 1)+8, c005, 0);
+
+    if (!gameData->ballLaunched)
+    {
+        const char* hintText = leveldef[gameData->level].hintTextPtr;
+        if (hintText != NULL)
+        {
+            int16_t x1 = 24;
+            int16_t y1 = 160;
+            drawTextWordWrap(font, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], hintText, &x1,
+                             &y1, 256, 240);
+        }
+    }
 }
 
 void breakoutChangeStateLevelClear(breakout_t* self)
@@ -738,6 +857,8 @@ void breakoutChangeStateLevelClear(breakout_t* self)
     self->gameData.frameCount = 0;
     resetGameDataLeds(&(self->gameData));
     self->update = &breakoutUpdateLevelClear;
+    bzrStop(true);
+    bzrPlaySfx(&(self->soundManager.levelClear), BZR_STEREO);
 }
 
 void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
@@ -745,7 +866,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
     self->gameData.frameCount++;
     self->gameData.targetBlocksBroken = 0;
 
-    if (self->gameData.frameCount > 60)
+    if (self->gameData.frameCount > 100)
     {
         if (self->gameData.countdown > 0)
         {
@@ -753,26 +874,25 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
 
             if (self->gameData.countdown % 2)
             {
-                bzrPlayBgm(&(self->soundManager.tally), BZR_STEREO);
+                bzrPlayBgm(&(self->soundManager.tally), BZR_LEFT);
             }
 
-            scorePoints(&(self->gameData), 80, -1);
+            scorePoints(&(self->gameData), 80, -1000);
         }
-        else if (self->gameData.frameCount % 60 == 0)
+        else if (self->gameData.frameCount % 120 == 0)
         {
             // Hey look, it's a frame rule!
             deactivateAllEntities(&(self->entityManager), false, false, false);
 
             uint16_t levelIndex = self->gameData.level;
 
-            if (levelIndex >= NUM_LEVELS - 1)
+            if (levelIndex == GAME_LEVEL_END_INDEX || levelIndex >= (NUM_LEVELS - 1))
             {
                 // Game Cleared!
 
                 // if(!self->gameData.debugMode){
                 // Determine achievements
-                /*self->unlockables.gameCleared = true;
-
+                /*
                 if(!self->gameData.continuesUsed){
                     self->unlockables.oneCreditCleared = true;
 
@@ -789,6 +909,17 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.biggerScore = true;
                 }
             }*/
+                self->unlockables.gameCleared = true;
+
+                if (self->unlockables.maxLevelIndexUnlocked < POSTGAME_LEVEL_START_INDEX)
+                {
+                    self->unlockables.maxLevelIndexUnlocked = POSTGAME_LEVEL_START_INDEX;
+                }
+
+                if (!self->gameData.debugMode)
+                {
+                    breakoutSaveUnlockables(self);
+                }
 
                 breakoutChangeStateGameClear(self);
                 return;
@@ -805,13 +936,14 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
-                breakout->gameData.countdown = leveldef[levelIndex].timeLimit;
-                breakoutChangeStateReadyScreen(self);
+                breakout->gameData.countdown  = breakout->tilemap.totalTargetBlocks;
+                breakout->gameData.levelScore = 0;
                 if (!self->gameData.debugMode)
                 {
                     breakoutSaveUnlockables(self);
                 }
 
+                breakoutChangeStateReadyScreen(self);
                 return;
             }
         }
@@ -833,54 +965,140 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
 
 void breakoutDrawLevelClear(font_t* font, gameData_t* gameData)
 {
-    drawText(font, c555, breakoutLevelClear, (TFT_WIDTH - textWidth(font, breakoutLevelClear)) / 2, 128);
+    drawText(font, c555, breakoutLevelClear, (TFT_WIDTH - textWidth(font, breakoutLevelClear)) / 2, 96);
+
+    char levelScoreStr[32];
+
+    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Bonus %06" PRIi16, gameData->countdown * 100);
+    drawText(font, c555, levelScoreStr, (TFT_WIDTH - textWidth(font, levelScoreStr)) / 2, 128);
+
+    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Total  %06" PRIu32, gameData->levelScore);
+    drawText(font, c555, levelScoreStr, (TFT_WIDTH - textWidth(font, levelScoreStr)) / 2, 152);
 }
 
 void breakoutChangeStateGameClear(breakout_t* self)
 {
-    self->gameData.frameCount = 0;
-    self->update              = &breakoutUpdateGameClear;
+    self->gameData.frameCount    = 0;
+    self->gameData.ballLaunched  = true;
+    self->menuState              = 0;
+    self->starfield.randomColors = true;
+    self->update                 = &breakoutUpdateGameClear;
     resetGameDataLeds(&(self->gameData));
-    // buzzer_play_bgm(&bgmSmooth);
+
+    setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
+    bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
 }
 
 void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
 
-    if (self->gameData.frameCount > 450)
+    switch (self->menuState)
     {
-        if (self->gameData.lives > 0)
-        {
-            if (self->gameData.frameCount % 60 == 0)
+        case 0:
+            if (self->gameData.frameCount > 540)
             {
-                self->gameData.lives--;
-                self->gameData.score += 200000;
-                // buzzer_play_sfx(&snd1up);
+                if (self->gameData.lives > 0)
+                {
+                    if (self->gameData.frameCount % 60 == 0)
+                    {
+                        self->gameData.lives--;
+                        self->gameData.score += 100000;
+                        bzrPlaySfx(&(breakout->soundManager.snd1up), BZR_LEFT);
+                    }
+                }
+                else if (self->gameData.frameCount % 960 == 0)
+                {
+                    self->menuState           = 1;
+                    self->gameData.frameCount = 0;
+                }
             }
-        }
-        else if (self->gameData.frameCount % 960 == 0)
-        {
-            breakoutChangeStateGameOver(self);
-        }
+            break;
+        case 1:
+        default:
+            if (self->gameData.frameCount % 960 == 0)
+            {
+                breakoutChangeStateGameOver(self);
+            }
+            break;
     }
 
-    drawBreakoutHud(&(self->ibm_vga8), &(self->gameData));
-    breakoutDrawGameClear(&(self->ibm_vga8), &(self->logbook), &(self->gameData));
+    updateStarfield(&(self->starfield), 8);
+    drawStarfield(&(self->starfield));
+
+    breakoutDrawGameClear(&(self->ibm_vga8), &(self->logbook), &(self->gameData), self->menuState);
     updateLedsGameClear(&(self->gameData));
 }
 
-void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData)
+void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameData, uint8_t page)
 {
-    drawBreakoutHud(ibm_vga8, gameData);
+    char scoreStr[32];
 
-    drawText(logbook, c555, "Thanks for playing!", 16, 48);
+    switch (page)
+    {
+        case 0:
+            drawBreakoutHud(ibm_vga8, gameData);
+            drawText(logbook, redColors[(breakout->gameData.frameCount >> 2) % 4], "Congratulations!", 32, 24);
 
-    if (gameData->frameCount > 300)
+            if (gameData->frameCount > 60)
+            {
+                drawText(ibm_vga8, c555, "You've broken down the Space", 24, 64);
+                drawText(ibm_vga8, c555, "Pirates' blockade in", 24, 76);
+
+                snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32 " seconds!", gameData->inGameTimer);
+                drawText(ibm_vga8, c555, scoreStr, 24, 88);
+            }
+
+            if (gameData->frameCount > 240)
+            {
+                drawText(ibm_vga8, c555, "Space transportation is", 24, 112);
+                drawText(ibm_vga8, c555, "restored to the galaxy.", 24, 124);
+            }
+
+            if (gameData->frameCount > 480)
+            {
+                drawText(ibm_vga8,
+                         (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555,
+                         "Bonus 100000 points for", 24, 148);
+                drawText(ibm_vga8,
+                         (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555,
+                         "each ball remaining!", 24, 160);
+            }
+            break;
+        case 1:
+        default:
+            drawText(logbook, purpleColors[(breakout->gameData.frameCount >> 2) % 4], "Thanks for playing!", 8, 24);
+
+            if (gameData->frameCount > 60)
+            {
+                drawText(logbook, c555, "Total bounty", 24, 64);
+
+                snprintf(scoreStr, sizeof(scoreStr) - 1, "%08" PRIu32 " pts", gameData->score);
+                drawText(logbook, c555, scoreStr, 64, 96);
+            }
+
+            if (gameData->frameCount > 240)
+            {
+                drawText(logbook, c555, "See you", 24, 136);
+                drawText(logbook, c555, "next MAGFest!", 64, 168);
+            }
+
+            if (gameData->level == GAME_LEVEL_END_INDEX && gameData->frameCount > 480)
+            {
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
+                         "Use the Continue option to", 24, 200);
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
+                         "check out a few extra levels!", 24, 212);
+            }
+
+            break;
+    }
+
+    /*if (gameData->frameCount > 300)
     {
         drawText(logbook, c555, "See you next", 8, 112);
         drawText(logbook, c555, "debug mission!", 8, 160);
-    }
+    }*/
 }
 
 void breakoutChangeStatePause(breakout_t* self)
@@ -892,11 +1110,26 @@ void breakoutChangeStatePause(breakout_t* self)
 
 void breakoutUpdatePause(breakout_t* self, int64_t elapsedUs)
 {
+    if (self->gameData.debugMode)
+    {
+        if (((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT)))
+        {
+            self->gameData.lives++;
+        }
+
+        if (((self->gameData.btnState & PB_UP) && !(self->gameData.prevBtnState & PB_UP)))
+        {
+            breakoutGameLoop(self, elapsedUs);
+        }
+
+        if (((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A)))
+        {
+            self->gameData.targetBlocksBroken = 1000;
+        }
+    }
+
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        // buzzer_play_sfx(&sndPause);
-        // self->gameData.changeBgm = self->gameData.currentBgm;
-        // self->gameData.currentBgm = BGM_NULL;
         self->gameData.btnState = 0;
         self->update            = &breakoutGameLoop;
     }
@@ -931,6 +1164,9 @@ static void breakoutChangeStateTitleScreen(breakout_t* self)
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+
+        setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
+        bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
     }
 
     self->gameData.gameState = ST_TITLE_SCREEN;
@@ -959,7 +1195,7 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
             breakout->menuSelection      = 0;
             breakout->menuState          = 1;
             breakout->gameData.debugMode = true;
-            bzrPlaySfx(&(breakout->soundManager.snd1up), BZR_STEREO);
+            bzrPlaySfx(&(breakout->soundManager.levelClear), BZR_STEREO);
         }
         else
         {
@@ -998,8 +1234,8 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
 
 static void breakoutDrawTitleScreen(font_t* font, gameData_t* gameData)
 {
-    drawText(font, c000, breakoutTitleGalactic, 52, 100);
-    drawText(font, c000, breakoutTitleBrickdown, 100, 124);
+    drawText(font, redColors[(breakout->gameData.frameCount >> 2) % 4], breakoutTitleGalactic, 49, 97);
+    drawText(font, purpleColors[(breakout->gameData.frameCount >> 2) % 4], breakoutTitleBrickdown, 97, 121);
     drawText(font, purpleColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleGalactic, 48, 96);
     drawText(font, redColors[(breakout->gameData.frameCount >> 3) % 4], breakoutTitleBrickdown, 96, 120);
 
@@ -1038,8 +1274,10 @@ void breakoutLoadHighScores(breakout_t* self)
 
 void breakoutSaveHighScores(breakout_t* self)
 {
+    bzrPause();
     size_t size = sizeof(breakoutHighScores_t);
     writeNvsBlob(breakoutNvsKey_scores, &(self->highScores), size);
+    bzrResume();
 }
 
 void breakoutDrawHighScores(font_t* font, breakoutHighScores_t* highScores, gameData_t* gameData)
@@ -1109,7 +1347,7 @@ void breakoutUpdateShowHighScores(breakout_t* self, int64_t elapsedUs)
     {
         self->menuState     = 0;
         self->menuSelection = 0;
-        bzrStop(true);
+        // bzrStop(true);
         breakoutChangeStateTitleScreen(self);
     }
 
@@ -1157,7 +1395,8 @@ void breakoutChangeStateNameEntry(breakout_t* self)
         return;
     }
 
-    // bzrPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
+    setLevelBgm(&(self->soundManager), BRK_BGM_NAME_ENTRY);
+    bzrPlayBgm(&self->soundManager.levelBgm, BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &breakoutUpdateNameEntry;
 }
@@ -1176,7 +1415,7 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
         }
 
         self->gameData.initials[self->menuState] = self->menuSelection;
-        bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+        bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
     }
     else if (self->gameData.btnState & PB_RIGHT && !(self->gameData.prevBtnState & PB_RIGHT))
     {
@@ -1188,7 +1427,7 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
         }
 
         self->gameData.initials[self->menuState] = self->menuSelection;
-        bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+        bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
     }
     else if (self->gameData.btnState & PB_B && !(self->gameData.prevBtnState & PB_B))
     {
@@ -1196,11 +1435,11 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
         {
             self->menuState--;
             self->menuSelection = self->gameData.initials[self->menuState];
-            bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+            bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
         }
         else
         {
-            bzrPlaySfx(&(self->soundManager.hit2), BZR_STEREO);
+            bzrPlaySfx(&(self->soundManager.hit2), BZR_LEFT);
         }
     }
     else if (self->gameData.btnState & PB_A && !(self->gameData.prevBtnState & PB_A))
@@ -1213,13 +1452,13 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
                                               self->gameData.rank);
             breakoutSaveHighScores(self);
             breakoutChangeStateShowHighScores(self);
-            bzrPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
+            bzrPlaySfx(&(self->soundManager.snd1up), BZR_LEFT);
             return;
         }
         else
         {
             self->menuSelection = self->gameData.initials[self->menuState];
-            bzrPlaySfx(&(self->soundManager.hit3), BZR_STEREO);
+            bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
         }
     }
 
@@ -1269,8 +1508,10 @@ void breakoutLoadUnlockables(breakout_t* self)
 
 void breakoutSaveUnlockables(breakout_t* self)
 {
+    bzrPause();
     size_t size = sizeof(breakoutUnlockables_t);
     writeNvsBlob(breakoutNvsKey_unlocks, &(self->unlockables), size);
+    bzrResume();
 }
 
 void breakoutBuildMainMenu(breakout_t* self)
@@ -1283,7 +1524,7 @@ void breakoutBuildMainMenu(breakout_t* self)
         Manually allocate and build "level select" menu item
         because the max setting will have to change as levels are unlocked
     */
-    if (breakout->unlockables.maxLevelIndexUnlocked > 0 || breakout->gameData.debugMode)
+    if (breakout->unlockables.maxLevelIndexUnlocked > 1 || breakout->gameData.debugMode)
     {
         breakout->levelSelectMenuItem             = calloc(1, sizeof(menuItem_t));
         breakout->levelSelectMenuItem->label      = breakoutContinue;

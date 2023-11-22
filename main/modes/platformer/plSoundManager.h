@@ -17,7 +17,7 @@
 // Structs
 //==============================================================================
 
-typedef struct 
+typedef struct
 {
     song_t bgmDemagio;
     song_t bgmIntro;
@@ -57,7 +57,7 @@ typedef struct
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeSoundManager(plSoundManager_t *self);
-void pl_freeSoundManager(plSoundManager_t *self);
+void pl_initializeSoundManager(plSoundManager_t* self);
+void pl_freeSoundManager(plSoundManager_t* self);
 
 #endif

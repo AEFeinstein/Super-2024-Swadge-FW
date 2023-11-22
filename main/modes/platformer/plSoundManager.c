@@ -8,7 +8,8 @@
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeSoundManager(plSoundManager_t *self){
+void pl_initializeSoundManager(plSoundManager_t* self)
+{
     loadSong("bgmCastle.sng", &self->bgmCastle, false);
     self->bgmCastle.shouldLoop = true;
 
@@ -16,8 +17,8 @@ void pl_initializeSoundManager(plSoundManager_t *self){
     self->bgmDemagio.shouldLoop = true;
 
     loadSong("bgmGameStart.sng", &self->bgmGameStart, false);
-    loadSong("bgmIntro.sng", &self->bgmIntro, false); 
-    loadSong("bgmNameEntry.sng", &self->bgmNameEntry, false); 
+    loadSong("bgmIntro.sng", &self->bgmIntro, false);
+    loadSong("bgmNameEntry.sng", &self->bgmNameEntry, false);
     self->bgmNameEntry.shouldLoop = true;
 
     loadSong("bgmSmooth.sng", &self->bgmSmooth, false);
@@ -29,8 +30,8 @@ void pl_initializeSoundManager(plSoundManager_t *self){
     loadSong("snd1up.sng", &self->snd1up, false);
     loadSong("sndBreak.sng", &self->sndBreak, false);
     loadSong("sndCheckpoint.sng", &self->sndCheckpoint, false);
-    loadSong("sndCoin.sng", &self->sndCoin, false); 
-    loadSong("sndDie.sng", &self->sndDie, false); 
+    loadSong("sndCoin.sng", &self->sndCoin, false);
+    loadSong("sndDie.sng", &self->sndDie, false);
     loadSong("bgmGameOver.sng", &self->bgmGameOver, false);
     loadSong("sndHit.sng", &self->sndHit, false);
     loadSong("sndHurt.sng", &self->sndHurt, false);
@@ -54,19 +55,20 @@ void pl_initializeSoundManager(plSoundManager_t *self){
     loadSong("sndWaveBall.sng", &self->sndWaveBall, false);
 }
 
-void pl_freeSoundManager(plSoundManager_t *self){
+void pl_freeSoundManager(plSoundManager_t* self)
+{
     freeSong(&self->bgmCastle);
     freeSong(&self->bgmDemagio);
     freeSong(&self->bgmGameStart);
-    freeSong(&self->bgmIntro); 
-    freeSong(&self->bgmNameEntry); 
+    freeSong(&self->bgmIntro);
+    freeSong(&self->bgmNameEntry);
     freeSong(&self->bgmSmooth);
-    freeSong(&self->bgmUnderground); 
+    freeSong(&self->bgmUnderground);
     freeSong(&self->snd1up);
     freeSong(&self->sndBreak);
     freeSong(&self->sndCheckpoint);
-    freeSong(&self->sndCoin); 
-    freeSong(&self->sndDie); 
+    freeSong(&self->sndCoin);
+    freeSong(&self->sndDie);
     freeSong(&self->bgmGameOver);
     freeSong(&self->sndHit);
     freeSong(&self->sndHurt);
