@@ -1091,11 +1091,25 @@ void breakoutChangeStatePause(breakout_t* self)
 
 void breakoutUpdatePause(breakout_t* self, int64_t elapsedUs)
 {
+    if(self->gameData.debugMode){
+        if (((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT)))
+        {
+            self->gameData.lives++;
+        }
+
+        if (((self->gameData.btnState & PB_UP) && !(self->gameData.prevBtnState & PB_UP)))
+        {
+            breakoutGameLoop(self, elapsedUs);
+        }
+
+        if (((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A)))
+        {
+            self->gameData.targetBlocksBroken = 1000;
+        }
+    }
+    
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        // buzzer_play_sfx(&sndPause);
-        // self->gameData.changeBgm = self->gameData.currentBgm;
-        // self->gameData.currentBgm = BGM_NULL;
         self->gameData.btnState = 0;
         self->update            = &breakoutGameLoop;
     }
