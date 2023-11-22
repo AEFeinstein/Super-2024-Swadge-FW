@@ -1,0 +1,7 @@
+# Blender v3.0.1 OBJ File: ''
+# www.blender.org
+mtllib boolet.mtl
+o Cube_Cube.001
+v 0.000000 0.000000 1.000000
+v 0.000000 0.000000 -1.000000
+l 2 1
