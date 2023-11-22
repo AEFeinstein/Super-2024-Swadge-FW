@@ -234,6 +234,7 @@ typedef struct
     song_t sfx_flip;
     song_t sfx_player_death;
     song_t sfx_enemy_death;
+    song_t sfx_powerup;
 
     song_t song_theme;
     song_t song_respawn;

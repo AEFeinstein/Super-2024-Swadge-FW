@@ -410,6 +410,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     loadSong("l_sfx_enemy_flip.sng", &lumv->sfx_flip, false);
     loadSong("r_e_dead.sng", &lumv->sfx_player_death, false);
     loadSong("l_sfx_enemy_death.sng", &lumv->sfx_enemy_death, false);
+    loadSong("l_sfx_powerup.sng", &lumv->sfx_powerup, false);
 
     loadSong("l_song_respawn.sng", &lumv->song_respawn, false);
     loadSong("l_song_gameover.sng", &lumv->song_gameover, false);
@@ -1095,6 +1096,8 @@ void baseMode(int64_t elapsedUs)
 
                 if (lumv->gameType == LUMBERJACK_MODE_ATTACK && lumv->itemBlockIndex != -1)
                 {
+                        bzrPlaySfx(&lumv->sfx_powerup, BZR_RIGHT);
+
                     if (lumv->itemBlockIndex == 0)
                     {
                         if (lumv->enemy4Count > 0)
@@ -2922,6 +2925,7 @@ void lumberjackExitGameMode(void)
     freeSong(&lumv->sfx_flip);
     freeSong(&lumv->sfx_player_death);
     freeSong(&lumv->sfx_enemy_death);
+    freeSong(&lumv->sfx_powerup);
 
     freeSong(&lumv->song_theme);
     freeSong(&lumv->song_title);
