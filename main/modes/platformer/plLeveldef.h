@@ -9,11 +9,11 @@
 //==============================================================================
 // Structs
 //==============================================================================
-typedef struct {
+typedef struct
+{
     char filename[16];
     uint16_t timeLimit;
     uint16_t checkpointTimeLimit;
 } plLeveldef_t;
-
 
 #endif

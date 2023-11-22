@@ -6,7 +6,8 @@ typedef struct plEntityManager_t plEntityManager_t;
 typedef struct plTilemap_t plTilemap_t;
 typedef struct plEntity_t plEntity_t;
 
-typedef enum {
+typedef enum
+{
     PL_ST_NULL,
     PL_ST_TITLE_SCREEN,
     PL_ST_READY_SCREEN,
@@ -21,7 +22,8 @@ typedef enum {
     PL_ST_PAUSE
 } pl_gameStateEnum_t;
 
-typedef enum {
+typedef enum
+{
     PL_BGM_NO_CHANGE,
     PL_BGM_MAIN,
     PL_BGM_ATHLETIC,
@@ -30,7 +32,8 @@ typedef enum {
     PL_BGM_NULL
 } pl_bgmEnum_t;
 
-typedef enum {
+typedef enum
+{
     SP_PLAYER_IDLE,
     SP_PLAYER_WALK1,
     SP_PLAYER_WALK2,

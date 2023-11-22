@@ -16,7 +16,8 @@
 // Enums
 //==============================================================================
 
-typedef enum {
+typedef enum
+{
     ENTITY_PLAYER,
     plEntity_tEST,
     ENTITY_SCROLL_LOCK_LEFT,
@@ -60,23 +61,24 @@ typedef enum {
 // Structs
 //==============================================================================
 
-typedef void(*pl_updateFunction_t)(struct plEntity_t *self);
-typedef void(*pl_collisionHandler_t)(struct plEntity_t *self, struct plEntity_t *other);
-typedef bool(*pl_tileCollisionHandler_t)(struct plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-typedef void(*pl_fallOffTileHandler_t)(struct plEntity_t *self);
-typedef void(*pl_overlapTileHandler_t)(struct plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty);
+typedef void (*pl_updateFunction_t)(struct plEntity_t* self);
+typedef void (*pl_collisionHandler_t)(struct plEntity_t* self, struct plEntity_t* other);
+typedef bool (*pl_tileCollisionHandler_t)(struct plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty,
+                                          uint8_t direction);
+typedef void (*pl_fallOffTileHandler_t)(struct plEntity_t* self);
+typedef void (*pl_overlapTileHandler_t)(struct plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 
 struct plEntity_t
 {
     bool active;
-    //bool important;
+    // bool important;
 
     uint8_t type;
     pl_updateFunction_t updateFunction;
 
     uint16_t x;
     uint16_t y;
-    
+
     int16_t xspeed;
     int16_t yspeed;
 
@@ -95,9 +97,9 @@ struct plEntity_t
     bool spriteFlipVertical;
     uint8_t animationTimer;
 
-    plTilemap_t * tilemap;
-    plGameData_t * gameData;
-    plSoundManager_t * soundManager;
+    plTilemap_t* tilemap;
+    plGameData_t* gameData;
+    plSoundManager_t* soundManager;
 
     uint8_t homeTileX;
     uint8_t homeTileY;
@@ -108,9 +110,9 @@ struct plEntity_t
     uint8_t hp;
     int8_t invincibilityFrames;
     uint16_t scoreValue;
-    
-    //plEntity_t *entities;
-    plEntityManager_t *entityManager;
+
+    // plEntity_t *entities;
+    plEntityManager_t* entityManager;
 
     pl_collisionHandler_t collisionHandler;
     pl_tileCollisionHandler_t tileCollisionHandler;
@@ -121,36 +123,37 @@ struct plEntity_t
 //==============================================================================
 // Prototypes
 //==============================================================================
-void pl_initializeEntity(plEntity_t * self, plEntityManager_t * entityManager, plTilemap_t * tilemap, plGameData_t * gameData, plSoundManager_t * soundManager);
+void pl_initializeEntity(plEntity_t* self, plEntityManager_t* entityManager, plTilemap_t* tilemap,
+                         plGameData_t* gameData, plSoundManager_t* soundManager);
 
-void pl_updatePlayer(plEntity_t * self);
-void updateTestObject(plEntity_t * self);
-void updateHitBlock(plEntity_t * self);
+void pl_updatePlayer(plEntity_t* self);
+void updateTestObject(plEntity_t* self);
+void updateHitBlock(plEntity_t* self);
 
-void pl_moveEntityWithTileCollisions(plEntity_t * self);
-void defaultFallOffTileHandler(plEntity_t *self);
+void pl_moveEntityWithTileCollisions(plEntity_t* self);
+void defaultFallOffTileHandler(plEntity_t* self);
 
-void despawnWhenOffscreen(plEntity_t *self);
+void despawnWhenOffscreen(plEntity_t* self);
 
-void pl_destroyEntity(plEntity_t *self, bool respawn);
+void pl_destroyEntity(plEntity_t* self, bool respawn);
 
-void applyDamping(plEntity_t *self);
+void applyDamping(plEntity_t* self);
 
-void applyGravity(plEntity_t *self);
+void applyGravity(plEntity_t* self);
 
-void animatePlayer(plEntity_t * self);
+void animatePlayer(plEntity_t* self);
 
-void pl_detectEntityCollisions(plEntity_t *self);
+void pl_detectEntityCollisions(plEntity_t* self);
 
-void pl_playerCollisionHandler(plEntity_t *self, plEntity_t* other);
-void pl_enemyCollisionHandler(plEntity_t *self, plEntity_t *other);
-void pl_dummyCollisionHandler(plEntity_t *self, plEntity_t *other);
+void pl_playerCollisionHandler(plEntity_t* self, plEntity_t* other);
+void pl_enemyCollisionHandler(plEntity_t* self, plEntity_t* other);
+void pl_dummyCollisionHandler(plEntity_t* self, plEntity_t* other);
 
-bool pl_playerTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool pl_enemyTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool pl_dummyTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool pl_playerTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool pl_enemyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool pl_dummyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
-void dieWhenFallingOffScreen(plEntity_t *self);
+void dieWhenFallingOffScreen(plEntity_t* self);
 
 void pl_updateDummy(plEntity_t* self);
 
@@ -169,21 +172,20 @@ void updateWarp(plEntity_t* self);
 void updateDustBunny(plEntity_t* self);
 void updateDustBunnyL2(plEntity_t* self);
 void updateDustBunnyL3(plEntity_t* self);
-bool dustBunnyTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool dustBunnyL2TileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-bool dustBunnyL3TileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-
+bool dustBunnyTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool dustBunnyL2TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool dustBunnyL3TileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
 void updateWasp(plEntity_t* self);
 void updateWaspL2(plEntity_t* self);
 void updateWaspL3(plEntity_t* self);
-bool waspTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+bool waspTileCollisionHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
 
 void killEnemy(plEntity_t* target);
 
 void updateBgCol(plEntity_t* self);
 
-void turnAroundAtEdgeOfTileHandler(plEntity_t *self);
+void turnAroundAtEdgeOfTileHandler(plEntity_t* self);
 
 void updateEnemyBushL3(plEntity_t* self);
 
@@ -197,8 +199,8 @@ void updateBgmChange(plEntity_t* self);
 void updateWaveBall(plEntity_t* self);
 
 // bool waveBallTileCollisionHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
-void waveBallOverlapTileHandler(plEntity_t *self, uint8_t tileId, uint8_t tx, uint8_t ty);
-void powerUpCollisionHandler(plEntity_t *self, plEntity_t *other);
-void killPlayer(plEntity_t *self);
+void waveBallOverlapTileHandler(plEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
+void powerUpCollisionHandler(plEntity_t* self, plEntity_t* other);
+void killPlayer(plEntity_t* self);
 
 #endif

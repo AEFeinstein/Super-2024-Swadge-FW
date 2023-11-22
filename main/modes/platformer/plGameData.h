@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include "hdw-led.h"
 #include "platformer_typedef.h"
-//#include "swadgeMode.h"
+// #include "swadgeMode.h"
 #include "palette.h"
 #include "plSoundManager.h"
 
@@ -17,7 +17,7 @@
 //==============================================================================
 /*static const song_t snd1up =
 {
-    .notes = 
+    .notes =
     {
         {G_7, 40},{D_6, 40},{B_5, 80}
     },
@@ -29,7 +29,7 @@
 // Structs
 //==============================================================================
 
-typedef struct 
+typedef struct
 {
     int16_t btnState;
     int16_t prevBtnState;
@@ -53,7 +53,7 @@ typedef struct
     uint8_t checkpoint;
     uint8_t levelDeaths;
     uint8_t initialHp;
-    
+
     led_t leds[CONFIG_NUM_LEDS];
 
     paletteColor_t bgColor;
@@ -74,16 +74,16 @@ typedef struct
 //==============================================================================
 // Functions
 //==============================================================================
-void pl_initializeGameData(plGameData_t * gameData, plSoundManager_t * soundManager);
-void pl_initializeGameDataFromTitleScreen(plGameData_t * gameData);
-void pl_updateLedsHpMeter(plEntityManager_t *entityManager, plGameData_t *gameData);
-void pl_scorePoints(plGameData_t * gameData, uint16_t points);
-void addCoins(plGameData_t * gameData, uint8_t coins);
-void updateComboTimer(plGameData_t * gameData);
-void pl_resetGameDataLeds(plGameData_t * gameData);
-void pl_updateLedsShowHighScores(plGameData_t * gameData);
-void pl_updateLedsLevelClear(plGameData_t * gameData);
-void pl_updateLedsGameClear(plGameData_t * gameData);
-void pl_updateLedsGameOver(plGameData_t * gameData);
+void pl_initializeGameData(plGameData_t* gameData, plSoundManager_t* soundManager);
+void pl_initializeGameDataFromTitleScreen(plGameData_t* gameData);
+void pl_updateLedsHpMeter(plEntityManager_t* entityManager, plGameData_t* gameData);
+void pl_scorePoints(plGameData_t* gameData, uint16_t points);
+void addCoins(plGameData_t* gameData, uint8_t coins);
+void updateComboTimer(plGameData_t* gameData);
+void pl_resetGameDataLeds(plGameData_t* gameData);
+void pl_updateLedsShowHighScores(plGameData_t* gameData);
+void pl_updateLedsLevelClear(plGameData_t* gameData);
+void pl_updateLedsGameClear(plGameData_t* gameData);
+void pl_updateLedsGameOver(plGameData_t* gameData);
 
 #endif
