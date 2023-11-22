@@ -40,22 +40,27 @@ void freeSoundManager(soundManager_t* self)
     freeSong(&self->gameOver);
     freeSong(&self->getReady);
 
-    if(self->currentBgmIndex != BRK_BGM_NULL){
+    if (self->currentBgmIndex != BRK_BGM_NULL)
+    {
         freeSong(&self->levelBgm);
     }
 }
 
-void setLevelBgm(soundManager_t* self, uint16_t newBgmIndex){
-    if(self->currentBgmIndex == newBgmIndex){
+void setLevelBgm(soundManager_t* self, uint16_t newBgmIndex)
+{
+    if (self->currentBgmIndex == newBgmIndex)
+    {
         return;
     }
 
-    if(self->currentBgmIndex != BRK_BGM_NULL){
+    if (self->currentBgmIndex != BRK_BGM_NULL)
+    {
         bzrStop(true);
         freeSong(&self->levelBgm);
     }
 
-    if(newBgmIndex != BRK_BGM_NULL){
+    if (newBgmIndex != BRK_BGM_NULL)
+    {
         loadSong(LEVEL_BGMS[newBgmIndex - 1], &self->levelBgm, false);
         self->levelBgm.shouldLoop = true;
     }

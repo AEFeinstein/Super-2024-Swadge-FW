@@ -155,7 +155,7 @@ void scrollTileMap(tilemap_t* tilemap, int16_t x, int16_t y)
 bool loadMapFromFile(tilemap_t* tilemap, const char* name)
 {
     bzrPause();
-    
+
     if (tilemap->map != NULL)
     {
         free(tilemap->map);

@@ -35,22 +35,27 @@
 // Enums
 //==============================================================================
 static const char breakoutHintTextLevel1[] = "Slide left/right on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
-static const char breakoutHintTextTBomb[] = "Press DOWN BUTTON to drop time bombs.\nTime it right to destroy many blocks at once!";
-static const char breakoutHintTextBombE[] = "Press DOWN BUTTON to drop time bombs.\nThe explosions will deflect your ball!";
-static const char breakoutHintTextRBomb[] = "Press RIGHT BUTTON to drop a remote bomb.\nOnce flashing, press again to detonate!";
+static const char breakoutHintTextTBomb[]
+    = "Press DOWN BUTTON to drop time bombs.\nTime it right to destroy many blocks at once!";
+static const char breakoutHintTextBombE[]
+    = "Press DOWN BUTTON to drop time bombs.\nThe explosions will deflect your ball!";
+static const char breakoutHintTextRBomb[]
+    = "Press RIGHT BUTTON to drop a remote bomb.\nOnce flashing, press again to detonate!";
 static const char breakoutHintTextBombSpeed[] = "Deflecting your ball with bomb explosions accelerates ball faster!";
-static const char breakoutHintTextBombTest[] = "Can you beat this one?\n\nUse bombs wisely!";
-static const char breakoutHintTextGotThis[] = "Alright!\n\nYou got this!";
+static const char breakoutHintTextBombTest[]  = "Can you beat this one?\n\nUse bombs wisely!";
+static const char breakoutHintTextGotThis[]   = "Alright!\n\nYou got this!";
 
 static const char breakoutHintTextUpDown[] = "Slide up/down on TOUCHPAD to aim.\n\nPress UP BUTTON to launch.";
-static const char breakoutHintTextUpDown2[] = "Slide up/down on TOUCHPAD to aim.\nPress UP BUTTON to launch.\nGetting dizzy yet?";
+static const char breakoutHintTextUpDown2[]
+    = "Slide up/down on TOUCHPAD to aim.\nPress UP BUTTON to launch.\nGetting dizzy yet?";
 
 static const char breakoutHintTextLevel5[] = "Slide left/right to control both paddles!";
 static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to control all paddles!";
 
-static const char breakoutHintTextCaptiveBall[] = "Free the captive balls!\nReflect them with your paddle for multiball!";
+static const char breakoutHintTextCaptiveBall[]
+    = "Free the captive balls!\nReflect them with your paddle for multiball!";
 static const char breakoutHintTextCrawler[] = "CRAWLERs can't be defeated by hitting them directly!";
-static const char breakoutHintTextFinal[] = "\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
+static const char breakoutHintTextFinal[]   = "\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
 
 //==============================================================================
 // Structs
@@ -157,14 +162,13 @@ void breakoutBuildMainMenu(breakout_t* self);
 
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
-#define GAME_LEVEL_START_INDEX 1
-#define GAME_LEVEL_END_INDEX 50
+#define GAME_LEVEL_START_INDEX     1
+#define GAME_LEVEL_END_INDEX       50
 #define POSTGAME_LEVEL_START_INDEX 51
 
 static const leveldef_t leveldef[NUM_LEVELS]
-    = {
-       {.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_TITLE},
-    
+    = {{.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_TITLE},
+
        {.filename = "intro.bin", .hintTextPtr = breakoutHintTextLevel1, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "intro2.bin", .hintTextPtr = breakoutHintTextTBomb, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "magfestlogo.bin", .hintTextPtr = breakoutHintTextBombE, .bgmIndex = BRK_BGM_SKILL},
@@ -180,7 +184,7 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "mag02.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "getMorGet.bin", .hintTextPtr = breakoutHintTextRBomb, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "bombtest.bin", .hintTextPtr = breakoutHintTextBombTest, .bgmIndex = BRK_BGM_SKILL},
-       
+
        {.filename = "gaylordlogo.bin", .hintTextPtr = breakoutHintTextGotThis, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "m-tank.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "split.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
@@ -192,14 +196,14 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "tasbot.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "tasboot.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "ponglike.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       
+
        {.filename = "trifecta.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "lumberjacks.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "snake.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
 
        {.filename = "jailbreak.bin", .hintTextPtr = breakoutHintTextCaptiveBall, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "b.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       
+
        {.filename = "angles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "m-attack.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "outtaMyWay.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
@@ -207,9 +211,9 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "mag03.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "flipflop.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "intersection.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-    
+
        {.filename = "corner.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "zip.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},    
+       {.filename = "zip.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "tinyhuge.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
        {.filename = "bombrings.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
@@ -223,16 +227,16 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "openthegates.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "infestation.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "chainreact.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-      
+
        {.filename = "m-battle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "paddles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-    
+
        {.filename = "stormcastle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
        {.filename = "starlite.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
        {.filename = "themaze.bin", .hintTextPtr = breakoutHintTextFinal, .bgmIndex = BRK_BGM_FINALE},
-       
-       //Postgame
+
+       // Postgame
        {.filename = "heart.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "coffee.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "shiftersam.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
@@ -245,8 +249,7 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "shiftersmil.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "sandsoftime.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "42069.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY}
-      };
+       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY}};
 
 //==============================================================================
 // Look Up Tables
@@ -256,7 +259,7 @@ static const paletteColor_t highScoreNewEntryColors[4] = {c050, c055, c005, c055
 static const paletteColor_t redColors[4]               = {c510, c440, c050, c440};
 static const paletteColor_t greenColors[4]             = {c555, c051, c030, c051};
 static const paletteColor_t purpleColors[4]            = {c405, c440, c055, c440};
-//static const paletteColor_t allColors[6]               = {c500, c550, c050, c055, c005, c505};
+// static const paletteColor_t allColors[6]               = {c500, c550, c050, c055, c005, c505};
 
 static const int16_t cheatCode[9] = {PB_UP, PB_B, PB_DOWN, PB_B, PB_LEFT, PB_B, PB_RIGHT, PB_B, PB_START};
 
@@ -294,8 +297,6 @@ static const char breakoutNameEnteredTitle[]      = "Name registrated.";
 
 static const char breakoutNvsKey_scores[]  = "brk_scores";
 static const char breakoutNvsKey_unlocks[] = "brk_unlocks";
-
-
 
 //==============================================================================
 // Variables
@@ -499,7 +500,7 @@ static void breakoutUpdateMainMenu(breakout_t* self, int64_t elapsedUs)
 
 static void breakoutChangeStateReadyScreen(breakout_t* self)
 {
-    self->gameData.frameCount = 0;
+    self->gameData.frameCount   = 0;
     self->gameData.ballLaunched = false;
 
     // Set up Cho Intro
@@ -760,14 +761,14 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     /*
         TODO
         Clean this formatting code up.
-        It sucks.    
+        It sucks.
     */
 
     char scoreStr[32];
     snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
 
     char levelStr[11];
-    snprintf(levelStr, sizeof(levelStr)-1, "L%02" PRIu8, gameData->level);
+    snprintf(levelStr, sizeof(levelStr) - 1, "L%02" PRIu8, gameData->level);
 
     char livesStr[8];
     snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
@@ -793,7 +794,6 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     drawText(font, c555, "U", 271, 68);
     drawText(font, c555, "S", 271, 80);
     drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);*/
-    
 
     char vdispStr[3];
     /*for(uint16_t i=0; i<sizeof(levelStr); i++){
@@ -803,44 +803,52 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
 
     char extraLifeStr[15];
     snprintf(extraLifeStr, sizeof(extraLifeStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
-    
-    for(uint16_t i=0; i<sizeof(extraLifeStr) - 1; i++){
+
+    for (uint16_t i = 0; i < sizeof(extraLifeStr) - 1; i++)
+    {
         snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", extraLifeStr[i]);
-        if(vdispStr[0] == '\0'){
+        if (vdispStr[0] == '\0')
+        {
             break;
         }
         drawText(font, c555, vdispStr, 4, 32 + 12 * i);
     }
 
-     for(uint16_t i=0; i<sizeof(timeStr) - 1; i++){
+    for (uint16_t i = 0; i < sizeof(timeStr) - 1; i++)
+    {
         snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", timeStr[i]);
-        if(vdispStr[0] == '\0'){
+        if (vdispStr[0] == '\0')
+        {
             break;
         }
         drawText(font, c555, vdispStr, 268, 32 + 12 * i);
     }
-    
+
     // if(gameData->comboTimer == 0){
     //     return;
     // }
 
-    if(gameData->comboScore > 0){
-     snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-    //snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
-    drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4],
-             scoreStr, 144, 2);
+    if (gameData->comboScore > 0)
+    {
+        snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+        // snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
+        drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4],
+                 scoreStr, 144, 2);
     }
 
     // Draw centering lines, for paddle control debug
     // drawLine(TFT_WIDTH >> 1, 0, TFT_WIDTH >> 1, TFT_HEIGHT, c500, 0);
     // drawLine(0, (TFT_HEIGHT >> 1)+8, TFT_WIDTH, (TFT_HEIGHT >> 1)+8, c005, 0);
 
-    if(!gameData->ballLaunched){
+    if (!gameData->ballLaunched)
+    {
         const char* hintText = leveldef[gameData->level].hintTextPtr;
-        if(hintText != NULL){
+        if (hintText != NULL)
+        {
             int16_t x1 = 24;
             int16_t y1 = 160;
-            drawTextWordWrap(font, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], hintText, &x1, &y1, 256, 240);
+            drawTextWordWrap(font, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], hintText, &x1,
+                             &y1, 256, 240);
         }
     }
 }
@@ -929,7 +937,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
-                breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
+                breakout->gameData.countdown  = breakout->tilemap.totalTargetBlocks;
                 breakout->gameData.levelScore = 0;
                 if (!self->gameData.debugMode)
                 {
@@ -962,7 +970,6 @@ void breakoutDrawLevelClear(font_t* font, gameData_t* gameData)
 
     char levelScoreStr[32];
 
-
     snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Bonus %06" PRIi16, gameData->countdown * 100);
     drawText(font, c555, levelScoreStr, (TFT_WIDTH - textWidth(font, levelScoreStr)) / 2, 128);
 
@@ -972,13 +979,13 @@ void breakoutDrawLevelClear(font_t* font, gameData_t* gameData)
 
 void breakoutChangeStateGameClear(breakout_t* self)
 {
-    self->gameData.frameCount = 0;
-    self->gameData.ballLaunched = true;
-    self->menuState           = 0;
+    self->gameData.frameCount    = 0;
+    self->gameData.ballLaunched  = true;
+    self->menuState              = 0;
     self->starfield.randomColors = true;
-    self->update              = &breakoutUpdateGameClear;
+    self->update                 = &breakoutUpdateGameClear;
     resetGameDataLeds(&(self->gameData));
-    
+
     setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
     bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
 }
@@ -987,7 +994,8 @@ void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
 {
     self->gameData.frameCount++;
 
-    switch(self->menuState) {
+    switch (self->menuState)
+    {
         case 0:
             if (self->gameData.frameCount > 540)
             {
@@ -1002,7 +1010,7 @@ void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
                 }
                 else if (self->gameData.frameCount % 960 == 0)
                 {
-                    self->menuState = 1;
+                    self->menuState           = 1;
                     self->gameData.frameCount = 0;
                 }
             }
@@ -1016,7 +1024,7 @@ void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
             break;
     }
 
-    updateStarfield(&(self->starfield), 8);    
+    updateStarfield(&(self->starfield), 8);
     drawStarfield(&(self->starfield));
 
     breakoutDrawGameClear(&(self->ibm_vga8), &(self->logbook), &(self->gameData), self->menuState);
@@ -1027,12 +1035,14 @@ void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameDa
 {
     char scoreStr[32];
 
-    switch(page){
+    switch (page)
+    {
         case 0:
             drawBreakoutHud(ibm_vga8, gameData);
             drawText(logbook, redColors[(breakout->gameData.frameCount >> 2) % 4], "Congratulations!", 32, 24);
 
-            if(gameData->frameCount > 60) {
+            if (gameData->frameCount > 60)
+            {
                 drawText(ibm_vga8, c555, "You've broken down the Space", 24, 64);
                 drawText(ibm_vga8, c555, "Pirates' blockade in", 24, 76);
 
@@ -1040,40 +1050,50 @@ void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameDa
                 drawText(ibm_vga8, c555, scoreStr, 24, 88);
             }
 
-            if(gameData->frameCount > 240) {
+            if (gameData->frameCount > 240)
+            {
                 drawText(ibm_vga8, c555, "Space transportation is", 24, 112);
                 drawText(ibm_vga8, c555, "restored to the galaxy.", 24, 124);
             }
 
-            if(gameData->frameCount > 480) {
-                drawText(ibm_vga8, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, "Bonus 100000 points for", 24, 148);
-                drawText(ibm_vga8, (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555, "each ball remaining!", 24, 160);
+            if (gameData->frameCount > 480)
+            {
+                drawText(ibm_vga8,
+                         (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555,
+                         "Bonus 100000 points for", 24, 148);
+                drawText(ibm_vga8,
+                         (gameData->lives > 0) ? highScoreNewEntryColors[(gameData->frameCount >> 3) % 4] : c555,
+                         "each ball remaining!", 24, 160);
             }
             break;
         case 1:
         default:
             drawText(logbook, purpleColors[(breakout->gameData.frameCount >> 2) % 4], "Thanks for playing!", 8, 24);
 
-            if(gameData->frameCount > 60) {
-                drawText(logbook, c555, "Total bounty",24, 64);
+            if (gameData->frameCount > 60)
+            {
+                drawText(logbook, c555, "Total bounty", 24, 64);
 
                 snprintf(scoreStr, sizeof(scoreStr) - 1, "%08" PRIu32 " pts", gameData->score);
                 drawText(logbook, c555, scoreStr, 64, 96);
             }
 
-            if(gameData->frameCount > 240) {
+            if (gameData->frameCount > 240)
+            {
                 drawText(logbook, c555, "See you", 24, 136);
                 drawText(logbook, c555, "next MAGFest!", 64, 168);
             }
 
-            if(gameData->level == GAME_LEVEL_END_INDEX && gameData->frameCount > 480) {
-                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], "Use the Continue option to", 24, 200);
-                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4], "check out a few extra levels!", 24, 212);
+            if (gameData->level == GAME_LEVEL_END_INDEX && gameData->frameCount > 480)
+            {
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
+                         "Use the Continue option to", 24, 200);
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
+                         "check out a few extra levels!", 24, 212);
             }
 
             break;
     }
-    
 
     /*if (gameData->frameCount > 300)
     {
@@ -1091,7 +1111,8 @@ void breakoutChangeStatePause(breakout_t* self)
 
 void breakoutUpdatePause(breakout_t* self, int64_t elapsedUs)
 {
-    if(self->gameData.debugMode){
+    if (self->gameData.debugMode)
+    {
         if (((self->gameData.btnState & PB_LEFT) && !(self->gameData.prevBtnState & PB_LEFT)))
         {
             self->gameData.lives++;
@@ -1107,7 +1128,7 @@ void breakoutUpdatePause(breakout_t* self, int64_t elapsedUs)
             self->gameData.targetBlocksBroken = 1000;
         }
     }
-    
+
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
         self->gameData.btnState = 0;
@@ -1144,7 +1165,7 @@ static void breakoutChangeStateTitleScreen(breakout_t* self)
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
-        
+
         setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
         bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
     }
@@ -1327,7 +1348,7 @@ void breakoutUpdateShowHighScores(breakout_t* self, int64_t elapsedUs)
     {
         self->menuState     = 0;
         self->menuSelection = 0;
-        //bzrStop(true);
+        // bzrStop(true);
         breakoutChangeStateTitleScreen(self);
     }
 

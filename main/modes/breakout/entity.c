@@ -195,7 +195,7 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 90 - CLAMP((self->attachedToEntity->xspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -212,7 +212,7 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 270 + CLAMP((self->attachedToEntity->xspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -229,7 +229,7 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 0 - CLAMP((self->attachedToEntity->yspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
@@ -246,7 +246,7 @@ void updateBall(entity_t* self)
                     // Launch ball
                     setVelocity(self, 180 - CLAMP(-(self->attachedToEntity->yspeed) / SUBPIXEL_RESOLUTION, -60, 60),
                                 self->baseSpeed);
-                    self->attachedToEntity = NULL;
+                    self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
                     bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }

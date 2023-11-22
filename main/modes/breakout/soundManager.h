@@ -13,11 +13,11 @@
 // Constants
 //==============================================================================
 
-static const char* const LEVEL_BGMS[] = {
-    "brkBgmSkill.sng", "brkBgmPixel.sng", "brkBgmCrazy.sng", "brkBgmFinale.sng", "brkHighScore.sng","brkBgmTitle.sng"
-};
+static const char* const LEVEL_BGMS[] = {"brkBgmSkill.sng",  "brkBgmPixel.sng",  "brkBgmCrazy.sng",
+                                         "brkBgmFinale.sng", "brkHighScore.sng", "brkBgmTitle.sng"};
 
-typedef enum {
+typedef enum
+{
     BRK_BGM_NULL,
     BRK_BGM_SKILL,
     BRK_BGM_PIXEL,
