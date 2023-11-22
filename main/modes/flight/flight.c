@@ -1311,6 +1311,7 @@ static void flightRender(int64_t elapsedUs)
     {
         // Quat to rotmat.
         int16_t rotmat[16] = {0};
+
         int32_t q0           =  tflight->fqQuatAccum[0] * 2048;
         int32_t q1           = -tflight->fqQuatAccum[1] * 2048;
         int32_t q2           = -tflight->fqQuatAccum[2] * 2048;
@@ -1319,34 +1320,28 @@ static void flightRender(int64_t elapsedUs)
 		// Note to anyone looking on this in the future, it's actually 2* each filed, but we avoid
 		// it by increasing the >>.
         rotmat[0 * 4 + 0]  = ((q0 * q0 + q1 * q1) - 2060720) >> 13;
-        rotmat[0 * 4 + 1]  = ((q1 * q2 - q0 * q3)) >> 13;
+        int32_t x1y0 = rotmat[0 * 4 + 1]  = ((q1 * q2 - q0 * q3)) >> 13;
         rotmat[0 * 4 + 2]  = ((q1 * q3 + q0 * q2)) >> 13;
         rotmat[1 * 4 + 0]  = ((q1 * q2 + q0 * q3)) >> 13;
-        rotmat[1 * 4 + 1]  = ((q0 * q0 + q2 * q2) - 2060720) >> 13;
+        int32_t x1y1 = rotmat[1 * 4 + 1]  = ((q0 * q0 + q2 * q2) - 2060720) >> 13;
         rotmat[1 * 4 + 2]  = ((q2 * q3 - q0 * q1)) >> 13;
-        rotmat[2 * 4 + 0]  = ((q1 * q3 - q0 * q2)) >> 13;
-        rotmat[2 * 4 + 1]  = ((q2 * q3 + q0 * q1)) >> 13;
-        rotmat[2 * 4 + 2]  = ((q0 * q0 + q3 * q3) - 2060720) >> 13;
+        int32_t zpolex = rotmat[2 * 4 + 0]  = ((q1 * q3 - q0 * q2)) >> 13;
+        int32_t zpoley = rotmat[2 * 4 + 1]  = ((q2 * q3 + q0 * q1)) >> 13;
+        int32_t zpolez = rotmat[2 * 4 + 2]  = ((q0 * q0 + q3 * q3) - 2060720) >> 13;
         rotmat[3 * 4 + 3]  = 1 * 256;
         tdMultiply(flight->ProjectionMatrix, rotmat, flight->ProjectionMatrix);
-
-		// Compute HPR for things like networking + boolets.
-		// HEADING is either top row or bottom row.  you choose.  Depends on 
-		// Which is better, accuracy at extreme roll or pitch.
-		//  I care about pitch more - so I am going to use Top row (X)
-		tflight->hpr[0] = getAtan2( rotmat[0 * 4 + 0], rotmat[0 * 4 + 2] ) * 11;
-		unsigned bottom = isqrt( rotmat[2 * 4 + 2] * rotmat[2 * 4 + 2] + rotmat[2 * 4 + 0] * rotmat[2 * 4 + 0] );
-		tflight->hpr[1] = getAtan2( -rotmat[2 * 4 + 1], bottom ) * 11;
-		tflight->hpr[2] = getAtan2( rotmat[1 * 4 + 1], rotmat[1 * 4 + 2] ) * 11;
-///		tflight->hpr[0] = getAtan2( rotmat[0 * 4 + 0], rotmat[0 * 4 + 1] );
-//		tflight->hpr[1] = getAtan2(isqrt(1048576+2*(qx*qz + qw*qy)), isqrt( 1048576 - 2*(qw*qy - qx*qz))) * 11; // This was acos
-//		tflight->hpr[2] = getAtan2( (        2*(qx*qy + qw*qz))>>10, ( 1048576 - 2*(qy*qy + qz*qz))>>10) * 11;
-
-		ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d",
+		
+		tflight->hpr[0] = getAtan2( zpolex, zpolez ) * 11;
+		int xandz = isqrt( zpolex * zpolex + zpolez * zpolez );
+		tflight->hpr[1] = getAtan2(-zpoley, xandz ) * 11;
+		tflight->hpr[2] = 3960-getAtan2( x1y0, x1y1 ) * 11;
+/*
+		ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d /  %d %d",
 			tflight->hpr[0], tflight->hpr[1], tflight->hpr[2],
 			rotmat[0 * 4 + 0], rotmat[0 * 4 + 1], rotmat[0 * 4 + 2],
 			rotmat[1 * 4 + 0], rotmat[1 * 4 + 1], rotmat[1 * 4 + 2],
-			rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2] );
+			rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2], getCos1024(flight->hpr[2] / 11), getSin1024(flight->hpr[2] / 11) );
+*/
     }
     else
     {
@@ -2094,9 +2089,9 @@ void flightButtonCallback(buttonEvt_t* evt)
 
                     int eo_sign = (flight->myBooletHead & 1) ? 1 : -1;
                     int16_t rightleft[3];
-                    rightleft[0] = -eo_sign * (getCos1024(flight->hpr[0] / 11)) >> 6;
-                    rightleft[2] = eo_sign * (getSin1024(flight->hpr[0] / 11)) >> 6;
-                    rightleft[1] = 0;
+                    rightleft[0] = -eo_sign * (getCos1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11) ) >> 16;
+                    rightleft[2] =  eo_sign * (getSin1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11) ) >> 16;
+                    rightleft[1] =  eo_sign * (getSin1024(flight->hpr[2] / 11) >> 6 );
 
                     tb->launchLocation[0] = flight->planeloc[0] + rightleft[0];
                     tb->launchLocation[1] = flight->planeloc[1] + rightleft[1];
