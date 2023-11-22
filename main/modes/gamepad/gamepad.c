@@ -841,7 +841,7 @@ void gamepadReportStateToHost(void)
         switch (gamepad->gamepadType)
         {
             case GAMEPAD_GENERIC:
-            { 
+            {
                 if (touched)
                 {
                     int32_t x, y;
@@ -885,7 +885,6 @@ void gamepadReportStateToHost(void)
                     gamepad->gpNsState.y = 128;
                     gamepad->gpNsState.z = 0;
                 }
-
 
                 tud_hid_gamepad_report_ns(HID_ITF_PROTOCOL_NONE, gamepad->gpNsState.x, gamepad->gpNsState.y,
                                           gamepad->gpNsState.z, gamepad->gpNsState.rz, gamepad->gpNsState.rx,
