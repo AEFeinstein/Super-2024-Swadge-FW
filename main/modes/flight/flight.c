@@ -2660,6 +2660,7 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
         bitct += WriteUEQ(&contents, 0);
         bitct += WriteUEQ(&contents, 1);
         bitct += WriteUEQ(&contents, NumActiveBoolets);
+        bitct += WriteUEQ(&contents, 23);
         FinalizeUEQ(&contents, bitct);
         *((uint32_t*)pp) = contents;
         pp += 4;
@@ -2705,6 +2706,9 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
             memcpy(pp, &b->flags, sizeof(b->flags));
             pp += sizeof(b->flags);
         }
+
+        memcpy(pp, "Xabcdefghijklmnopqrstuv", 23);
+        pp += 23;
 
         int len = pp - espnow_buffer;
         espNowSend((char*)espnow_buffer, len); // Don't enable yet.
@@ -2992,6 +2996,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
         if (textLength < sizeof(flt->nettext) && data + textLength <= dataend )
         {
             memcpy(flt->nettext, data, textLength);
+			flt->nettext[textLength] = 0;
             data += textLength;
         }
     }
