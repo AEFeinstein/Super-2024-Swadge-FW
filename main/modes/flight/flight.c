@@ -463,11 +463,11 @@ static void flightEnterMode(void)
     addSingleItemToMenu(flight->menu, fl_flight_env);
     addSingleItemToMenu(flight->menu, fl_flight_perf);
 
-	addSettingsOptionsItemToMenu( flight->menu, fl_flight_gyro, gyro_titles, gyro_setting_values, ARRAY_SIZE( gyro_titles ), &flightjoy_param, flight->savedata.flightIMU );
-	addSettingsOptionsItemToMenu( flight->menu, fl_flight_yinvert, yinvert_titles, yinvert_setting_values, ARRAY_SIZE( yinvert_titles ), &flightyinv_param, flight->savedata.flightInvertY );
+    addSettingsOptionsItemToMenu( flight->menu, fl_flight_gyro, gyro_titles, gyro_setting_values, ARRAY_SIZE( gyro_titles ), &flightjoy_param, flight->savedata.flightIMU );
+    addSettingsOptionsItemToMenu( flight->menu, fl_flight_yinvert, yinvert_titles, yinvert_setting_values, ARRAY_SIZE( yinvert_titles ), &flightyinv_param, flight->savedata.flightInvertY );
 
     addSingleItemToMenu(flight->menu, str_high_scores);
-    addSingleItemToMenu(flight->menu, str_quit);
+    //addSingleItemToMenu(flight->menu, str_quit);
 }
 
 /**
@@ -498,7 +498,7 @@ static void flightExitMode(void)
  */
 static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVal)
 {
-	//ESP_LOGI( "_", "%d %s %d\n", (int)selected, menuItem, (int)settingVal );
+    //ESP_LOGI( "_", "%d %s %d\n", (int)selected, menuItem, (int)settingVal );
 
     if (!selected)
         return;
@@ -963,16 +963,16 @@ void SetupMatrix(void)
 
 unsigned int isqrt(unsigned int y)
 {
-	unsigned int L = 0;
-	unsigned int a = 1;
-	unsigned int d = 3;
-	while (a <= y)
-	{
-		a = a + d;
-		d = d + 2;
-		L = L + 1;
-	}
-	return L;
+    unsigned int L = 0;
+    unsigned int a = 1;
+    unsigned int d = 3;
+    while (a <= y)
+    {
+        a = a + d;
+        d = d + 2;
+        L = L + 1;
+    }
+    return L;
 }
 
 void tdMultiply(int16_t* fin1, int16_t* fin2, int16_t* fout)
@@ -1317,8 +1317,8 @@ static void flightRender(int64_t elapsedUs)
         int32_t q2           = -tflight->fqQuatAccum[2] * 2048;
         int32_t q3           = -tflight->fqQuatAccum[3] * 2048;
 
-		// Note to anyone looking on this in the future, it's actually 2* each filed, but we avoid
-		// it by increasing the >>.
+        // Note to anyone looking on this in the future, it's actually 2* each filed, but we avoid
+        // it by increasing the >>.
         rotmat[0 * 4 + 0]  = ((q0 * q0 + q1 * q1) - 2060720) >> 13;
         int32_t x1y0 = rotmat[0 * 4 + 1]  = ((q1 * q2 - q0 * q3)) >> 13;
         rotmat[0 * 4 + 2]  = ((q1 * q3 + q0 * q2)) >> 13;
@@ -1330,17 +1330,17 @@ static void flightRender(int64_t elapsedUs)
         int32_t zpolez = rotmat[2 * 4 + 2]  = ((q0 * q0 + q3 * q3) - 2060720) >> 13;
         rotmat[3 * 4 + 3]  = 1 * 256;
         tdMultiply(flight->ProjectionMatrix, rotmat, flight->ProjectionMatrix);
-		
-		tflight->hpr[0] = getAtan2( zpolex, zpolez ) * 11;
-		int xandz = isqrt( zpolex * zpolex + zpolez * zpolez );
-		tflight->hpr[1] = getAtan2(-zpoley, xandz ) * 11;
-		tflight->hpr[2] = 3960-getAtan2( x1y0, x1y1 ) * 11;
+        
+        tflight->hpr[0] = getAtan2( zpolex, zpolez ) * 11;
+        int xandz = isqrt( zpolex * zpolex + zpolez * zpolez );
+        tflight->hpr[1] = getAtan2(-zpoley, xandz ) * 11;
+        tflight->hpr[2] = 3960-getAtan2( x1y0, x1y1 ) * 11;
 /*
-		ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d /  %d %d",
-			tflight->hpr[0], tflight->hpr[1], tflight->hpr[2],
-			rotmat[0 * 4 + 0], rotmat[0 * 4 + 1], rotmat[0 * 4 + 2],
-			rotmat[1 * 4 + 0], rotmat[1 * 4 + 1], rotmat[1 * 4 + 2],
-			rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2], getCos1024(flight->hpr[2] / 11), getSin1024(flight->hpr[2] / 11) );
+        ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d /  %d %d",
+            tflight->hpr[0], tflight->hpr[1], tflight->hpr[2],
+            rotmat[0 * 4 + 0], rotmat[0 * 4 + 1], rotmat[0 * 4 + 2],
+            rotmat[1 * 4 + 0], rotmat[1 * 4 + 1], rotmat[1 * 4 + 2],
+            rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2], getCos1024(flight->hpr[2] / 11), getSin1024(flight->hpr[2] / 11) );
 */
     }
     else
