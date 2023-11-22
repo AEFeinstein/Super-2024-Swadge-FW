@@ -263,10 +263,10 @@ jukeboxSong_t music_jukebox[] = {
     //     .filename = "thelake.sng",
     //     .name  = "The Lake",
     // },
-    // {
-    //     .filename = "yalikejazz.sng",
-    //     .name  = "Ya like jazz?",
-    // },
+    {
+        .filename = "yalikejazz.sng",
+        .name  = "Ya like jazz?",
+    },
     {
         .filename = "banana.sng",
         .name  = "Banana",
@@ -292,6 +292,10 @@ jukeboxSong_t music_unused[] = {
     {
         .filename = "stereo.sng",
         .name     = "Stereo",
+    },
+    {
+        .filename = "Follinesque.sng",
+        .name     = "Follinesque",
     },
 };
 
