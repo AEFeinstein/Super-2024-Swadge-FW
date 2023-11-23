@@ -78,6 +78,12 @@
 
 typedef enum
 {
+    GAMEPAD_TOUCH_L_STICK_SETTING,
+    GAMEPAD_TOUCH_R_STICK_SETTING,
+} gamepadTouch_t;
+
+typedef enum
+{
     NOT_OPENED_SECRETS,
     SHOW_SECRETS,
     HIDE_SECRETS,
@@ -142,8 +148,12 @@ bool getGamepadAccelSetting(void);
 const settingParam_t* getGamepadAccelSettingBounds(void);
 bool setGamepadAccelSetting(bool status);
 
-uint8_t getShowSecretsMenuSetting(void);
+gamepadTouch_t getGamepadTouchSetting(void);
+const settingParam_t* getGamepadTouchSettingBounds(void);
+bool setGamepadTouchSetting(gamepadTouch_t status);
+
+showSecrets_t getShowSecretsMenuSetting(void);
 const settingParam_t* getShowSecretsMenuSettingBounds(void);
-bool setShowSecretsMenuSetting(uint8_t status);
+bool setShowSecretsMenuSetting(showSecrets_t status);
 
 #endif
