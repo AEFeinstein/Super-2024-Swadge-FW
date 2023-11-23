@@ -46,15 +46,27 @@ swadgeMode_t modeCredits = {
 // Everyone's here
 static const char* const creditNames[] = {
     "Adam Feinstein\n",
+    "AllieCat Cosplay\n",
+    "angrypolarbear\n",
+    "Bryce Browner\n",
+    "cnlohr\n",
+    "dylwhich\n",
+    "Emily Anthony\n",
+    "Eriktronic\n",
+    "Greg Lord (gplord)\n",
+    "J.Vega (@JVeg199X)\n",
+    "Joe Newman\n",
+    "Jonathan Moriarty\n",
+    "Kaitie Lawson\n",
+    "MrTroy\n",
+    "VanillyNeko\n",
     "",
     "",
 };
 
 // Must be same length as creditNames
 static const paletteColor_t creditColors[] = {
-    c031,
-    c000,
-    c000,
+    c031, c533, c135, c115, c520, c035, c523, c135, c045, c250, c250, c215, c550, c555, c545, c000, c000,
 };
 
 //==============================================================================
