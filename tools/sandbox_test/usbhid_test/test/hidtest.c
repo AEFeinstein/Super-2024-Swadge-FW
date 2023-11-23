@@ -49,7 +49,7 @@ int main( int argc, char ** argv )
 		}
 	}
 	double dEnd = OGGetAbsoluteTime();
-	printf( "Reads: %5.0f/sec / %3.0f kB/s\n", 1024.0/(dEnd - dStart), (1024.0*63)/(dEnd - dStart));
+	printf( "Reads: %5.0f/sec / %3.2f kB/s\n", 1024.0/(dEnd - dStart), (63)/(dEnd - dStart));
 
 	dStart = OGGetAbsoluteTime();
 	for( i = 0; i < 1024; i++ )
@@ -63,7 +63,7 @@ int main( int argc, char ** argv )
 		}
 	}
 	dEnd = OGGetAbsoluteTime();
-	printf( "Writes: %5.0f/sec / %3.0f kB/s\n", 1024.0/(dEnd - dStart), (1024.0*63)/(dEnd - dStart) );
+	printf( "Writes: %5.0f/sec / %3.2f kB/s\n", 1024.0/(dEnd - dStart), (63)/(dEnd - dStart) );
 
 	rdata[0] = 173;
 	rdata[1] = 0x00;
