@@ -568,6 +568,8 @@ void paintDrawScreenCleanup(void)
     freeWsg(&paintState->wheelSettingsWsg);
     freeWsg(&paintState->wheelUndoWsg);
     freeWsg(&paintState->wheelRedoWsg);
+    freeWsg(&paintState->wheelUndoGrayWsg);
+    freeWsg(&paintState->wheelRedoGrayWsg);
     freeWsg(&paintState->wheelSaveWsg);
     freeWsg(&paintState->wheelOpenWsg);
     freeWsg(&paintState->wheelNewWsg);
