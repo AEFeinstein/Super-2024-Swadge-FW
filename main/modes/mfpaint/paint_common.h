@@ -304,6 +304,8 @@ typedef struct
     wsg_t wheelSettingsWsg;
     wsg_t wheelUndoWsg;
     wsg_t wheelRedoWsg;
+    wsg_t wheelUndoGrayWsg;
+    wsg_t wheelRedoGrayWsg;
     wsg_t wheelSaveWsg;
     wsg_t wheelOpenWsg;
     wsg_t wheelNewWsg;
