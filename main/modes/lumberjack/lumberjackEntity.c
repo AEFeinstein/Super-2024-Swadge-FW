@@ -5,17 +5,17 @@
 
 void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character)
 {
-    enemy->direction        = 1;
-    enemy->state            = LUMBERJACK_RUN;
-    enemy->maxVX            = 0;
-    enemy->active           = false;
-    enemy->ready            = true;
-    enemy->showAlert        = false;
-    enemy->spriteOffset     = 0;
-    enemy->cW               = 15;
-    enemy->cH               = 15;
-    enemy->submergedTimer   = 0;
-    enemy->queueable        = true;
+    enemy->direction      = 1;
+    enemy->state          = LUMBERJACK_RUN;
+    enemy->maxVX          = 0;
+    enemy->active         = false;
+    enemy->ready          = true;
+    enemy->showAlert      = false;
+    enemy->spriteOffset   = 0;
+    enemy->cW             = 15;
+    enemy->cH             = 15;
+    enemy->submergedTimer = 0;
+    enemy->queueable      = true;
     lumberjackUpdateEnemy(enemy, character);
 }
 
@@ -97,7 +97,6 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->scoreValue   = 250;
         enemy->cH           = 15;
         enemy->type         = newIndex;
-
     }
     else if (newIndex == 2)
     {
@@ -111,7 +110,6 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->scoreValue   = 500;
         enemy->cH           = 15;
         enemy->type         = newIndex;
-
     }
     else if (newIndex == 4)
     {
@@ -139,10 +137,7 @@ void lumberjackUpdateEnemy(lumberjackEntity_t* enemy, int newIndex)
         enemy->cH           = 15;
         enemy->type         = newIndex;
     }
-
-
 }
-
 
 void lumberjackUpdateEnemyCollision(lumberjackEntity_t* enemy)
 {

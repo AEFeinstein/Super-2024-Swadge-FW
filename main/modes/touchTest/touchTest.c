@@ -298,7 +298,8 @@ void touchDrawCircle(font_t* font, const char* label, int16_t x, int16_t y, int1
  * @param touchAngle The output `phi` you received from a prior call to `getTouchJoystick`
  * @param touchRadius The output `r` you received from a prior call to `getTouchJoystick`
  */
-void touchDrawVector(font_t* font, const char* label, paletteColor_t circleColor, int16_t x, int16_t y, int16_t r, bool touched, int32_t touchAngle, int32_t touchRadius)
+void touchDrawVector(font_t* font, const char* label, paletteColor_t circleColor, int16_t x, int16_t y, int16_t r,
+                     bool touched, int32_t touchAngle, int32_t touchRadius)
 {
     // Draw a circle with tick marks at each 45-degree interval
     int16_t textW = textWidth(font, label);
@@ -320,11 +321,9 @@ void touchDrawVector(font_t* font, const char* label, paletteColor_t circleColor
 
     // Draw a line indicating the analog touch vector
     drawLine(x, y, x + getCos1024(touchAngle) * touchRadius / 1024 * startR / 1024,
-             y - getSin1024(touchAngle) * touchRadius / 1024 * startR / 1024,
-             touched ? c555 : c333, 0);
+             y - getSin1024(touchAngle) * touchRadius / 1024 * startR / 1024, touched ? c555 : c333, 0);
     drawCircleFilled(x + getCos1024(touchAngle) * touchRadius / 1024 * startR / 1024,
-                     y - getSin1024(touchAngle) * touchRadius / 1024 * startR / 1024, 3,
-                     touched ? c500 : c333);
+                     y - getSin1024(touchAngle) * touchRadius / 1024 * startR / 1024, 3, touched ? c500 : c333);
 }
 
 /**
@@ -351,7 +350,8 @@ static void touchTestDraw(void)
         drawCircleFilled(15, TFT_HEIGHT - 20 - (TFT_HEIGHT - 40) * cartY / 1024, 5, c050);
     }
 
-    touchDrawVector(&touchTest->ibm, "Raw", c222, 60, TFT_HEIGHT / 4, 35, touchTest->touch, touchTest->angle, touchTest->radius);
+    touchDrawVector(&touchTest->ibm, "Raw", c222, 60, TFT_HEIGHT / 4, 35, touchTest->touch, touchTest->angle,
+                    touchTest->radius);
 
     // Write the values
     char buffer[64];

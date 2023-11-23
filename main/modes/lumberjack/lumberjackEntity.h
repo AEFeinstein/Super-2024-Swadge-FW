@@ -55,7 +55,8 @@ typedef struct
 
 } lumberjackEntity_t;
 
-typedef struct {
+typedef struct
+{
     bool active;
     int x;
     int y;
@@ -64,7 +65,6 @@ typedef struct {
     int64_t spawnTime;
     int64_t timerFrameUpdate;
 } lumberjackGhost_t;
-
 
 void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character);
 uint8_t lumberjackGetEnemyAnimation(lumberjackEntity_t* enemy);

@@ -21,6 +21,7 @@
 #include "mainMenu.h"
 #include "breakout.h"
 #include "factoryTest.h"
+#include "lumberjack.h"
 #include "mode_platformer.h"
 #include "mode_credits.h"
 #include "portableDance.h"
@@ -147,29 +148,25 @@ static const char str_play[]       = ": Play";
 
 jukeboxSong_t music_galacticBrickdown[] = {
     {
-        .filename = "stereo.sng",
-        .name     = "DELETE ME",
+        .filename = "brkBgmCrazy.sng",
+        .name     = "BGM Crazy",
     },
-    // {
-    //     .filename = "brkBgmCrazy.sng",
-    //     .name  = "BGM Crazy",
-    // },
-    // {
-    //     .filename = "brkBgmFinale.sng",
-    //     .name  = "BGM Finale",
-    // },
-    // {
-    //     .filename = "brkBgmPixel.sng",
-    //     .name  = "BGM Pixel",
-    // },
-    // {
-    //     .filename = "brkBgmSkill.sng",
-    //     .name  = "BGM Skill",
-    // },
-    // {
-    //     .filename = "brkBgmTitle.sng",
-    //     .name  = "BGM Title",
-    // },
+    {
+        .filename = "brkBgmFinale.sng",
+        .name     = "BGM Finale",
+    },
+    {
+        .filename = "brkBgmPixel.sng",
+        .name     = "BGM Pixel",
+    },
+    {
+        .filename = "brkBgmSkill.sng",
+        .name     = "BGM Skill",
+    },
+    {
+        .filename = "brkBgmTitle.sng",
+        .name     = "BGM Title",
+    },
 };
 
 jukeboxSong_t music_swadgeLand[] = {
@@ -192,6 +189,33 @@ jukeboxSong_t music_swadgeLand[] = {
     {
         .filename = "bgmNameEntry.sng",
         .name     = "Name Entry BGM",
+    },
+};
+
+jukeboxSong_t music_lumberJacks[] = {
+    {
+        .filename = "l_song_respawn.sng",
+        .name     = "Respawn",
+    },
+    {
+        .filename = "l_song_attack.sng",
+        .name     = "Attack",
+    },
+    {
+        .filename = "l_song_attack_title.sng",
+        .name     = "Attack Title",
+    },
+    {
+        .filename = "l_song_panic_title.sng",
+        .name     = "Panic Title",
+    },
+    {
+        .filename = "l_song_gameover.sng",
+        .name     = "Game Over",
+    },
+    {
+        .filename = "l_song_panic.sng",
+        .name     = "Panic",
     },
 };
 
@@ -231,22 +255,22 @@ jukeboxSong_t music_jukebox[] = {
         .filename = "Fauxrio_Kart.sng",
         .name     = "Fauxrio Kart",
     },
-    // {
-    //     .filename = "hotrod.sng",
-    //     .name  = "Hot Rod",
-    // },
-    // {
-    //     .filename = "thelake.sng",
-    //     .name  = "The Lake",
-    // },
-    // {
-    //     .filename = "yalikejazz.sng",
-    //     .name  = "Ya like jazz?",
-    // },
-    // {
-    //     .filename = "banana.sng",
-    //     .name  = "Banana",
-    // },
+    {
+        .filename = "hotrod.sng",
+        .name     = "Hot Rod",
+    },
+    {
+        .filename = "Fairy_Fountain.sng",
+        .name  = "The Lake",
+    },
+    {
+        .filename = "yalikejazz.sng",
+        .name     = "Ya like jazz?",
+    },
+    {
+        .filename = "banana.sng",
+        .name     = "Banana",
+    },
 };
 
 jukeboxSong_t music_credits[] = {
@@ -269,6 +293,10 @@ jukeboxSong_t music_unused[] = {
         .filename = "stereo.sng",
         .name     = "Stereo",
     },
+    {
+        .filename = "Follinesque.sng",
+        .name     = "Follinesque",
+    },
 };
 
 // clang-format off
@@ -282,6 +310,11 @@ const jukeboxCategory_t musicCategories[] = {
         .categoryName = platformerName,
         .songs        = music_swadgeLand,
         .numSongs     = ARRAY_SIZE(music_swadgeLand),
+    },
+    {
+        .categoryName = lumberjackName,
+        .songs        = music_lumberJacks,
+        .numSongs     = ARRAY_SIZE(music_lumberJacks),
     },
     {
         .categoryName = rayName,
@@ -342,22 +375,22 @@ jukeboxSong_t sfx_galacticBrickdown[] = {
         .filename = "sndWaveBall.sng",
         .name     = "Wave Ball",
     },
-    // {
-    //     .filename = "brkGameOver.sng",
-    //     .name  = "Game Over",
-    // },
-    // {
-    //     .filename = "brkGetReady.sng",
-    //     .name  = "Get Ready",
-    // },
-    // {
-    //     .filename = "brkHighScore.sng",
-    //     .name  = "High Score",
-    // },
-    // {
-    //     .filename = "brkLvlClear.sng",
-    //     .name  = "Level Clear",
-    // },
+    {
+        .filename = "brkGameOver.sng",
+        .name     = "Game Over",
+    },
+    {
+        .filename = "brkGetReady.sng",
+        .name     = "Get Ready",
+    },
+    {
+        .filename = "brkHighScore.sng",
+        .name     = "High Score",
+    },
+    {
+        .filename = "brkLvlClear.sng",
+        .name     = "Level Clear",
+    },
 };
 
 jukeboxSong_t sfx_swadgeLand[] = {
@@ -467,6 +500,45 @@ jukeboxSong_t sfx_swadgeLand[] = {
     },
 };
 
+jukeboxSong_t sfx_lumberJacks[] = {
+    {
+        .filename = "l_sfx_enemy_flip.sng",
+        .name     = "Enemy Flip",
+    },
+    {
+        .filename = "l_sfx_water.sng",
+        .name     = "Water",
+    },
+    {
+        .filename = "l_sfx_jump.sng",
+        .name     = "Jump",
+    },
+    {
+        .filename = "l_sfx_enemy_death.sng",
+        .name     = "Enemy Death",
+    },
+    {
+        .filename = "l_sfx_upgrade.sng",
+        .name     = "Upgrade",
+    },
+    {
+        .filename = "l_sfx_powerup.sng",
+        .name     = "Power Up",
+    },
+    {
+        .filename = "l_sfx_being_attacked.sng",
+        .name     = "Being Attacked",
+    },
+    {
+        .filename = "l_sfx_pear.sng",
+        .name     = "Pear",
+    },
+    {
+        .filename = "l_sfx_brick.sng",
+        .name     = "Brick",
+    },
+};
+
 jukeboxSong_t sfx_magtroidPocket[] = {
     {
         .filename = "r_door_open.sng",
@@ -549,6 +621,13 @@ jukeboxSong_t sfx_mainMenu[] = {
     },
 };
 
+jukeboxSong_t sfx_factoryTest[] = {
+    {
+        .filename = "stereo_test.sng",
+        .name     = "Stereo Check",
+    },
+};
+
 jukeboxSong_t sfx_unused[] = {
     {
         .filename = "block1.sng",
@@ -558,12 +637,9 @@ jukeboxSong_t sfx_unused[] = {
         .filename = "block1.sng",
         .name     = "Pong Block 2",
     },
-};
-
-jukeboxSong_t sfx_factoryTest[] = {
     {
-        .filename = "stereo_test.sng",
-        .name     = "Stereo Check",
+        .filename = "gamecube.sng",
+        .name     = "GameCube",
     },
 };
 
@@ -578,6 +654,11 @@ const jukeboxCategory_t sfxCategories[] = {
         .categoryName = platformerName,
         .songs        = sfx_swadgeLand,
         .numSongs     = ARRAY_SIZE(sfx_swadgeLand),
+    },
+    {
+        .categoryName = lumberjackName,
+        .songs        = sfx_lumberJacks,
+        .numSongs     = ARRAY_SIZE(sfx_lumberJacks),
     },
     {
         .categoryName = rayName,
@@ -611,26 +692,25 @@ const jukeboxCategory_t sfxCategories[] = {
  */
 void jukeboxEnterMode()
 {
-    ///// Allocate zero'd memory for the mode /////
+    // Allocate zero'd memory for the mode
     jukebox = calloc(1, sizeof(jukebox_t));
 
-    ///// Enter music submode /////
+    // Enter music submode
     jukebox->inMusicSubmode = true;
 
-    ///// Load fonts /////
+    // Load fonts
     loadFont("ibm_vga8.font", &jukebox->ibm_vga8, false);
     loadFont("radiostars.font", &jukebox->radiostars, false);
 
-    ///// Load images /////
+    // Load images
     loadWsg("arrow10.wsg", &jukebox->arrow, false);
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
-    ///// Load midis /////
-
+    // Load midis
     jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories), true);
     jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories), false);
 
-    ///// Initialize portable dances /////
+    // Initialize portable dances
 
     jukebox->portableDances = initPortableDance(NULL);
 
@@ -666,15 +746,11 @@ void jukeboxExitMode(void)
     freeWsg(&jukebox->arrow);
     freeWsg(&jukebox->jukeboxSprite);
 
-    // Free allocated music midis, song arrays, and category arrays
+    // Free allocated midis
     jukeboxFreeCategories(musicCategories, ARRAY_SIZE(musicCategories));
-
-    // Free allocated SFX midis, song arrays, and category arrays
-
     jukeboxFreeCategories(sfxCategories, ARRAY_SIZE(sfxCategories));
 
     // Free dances
-
     freePortableDance(jukebox->portableDances);
 
     free(jukebox);
