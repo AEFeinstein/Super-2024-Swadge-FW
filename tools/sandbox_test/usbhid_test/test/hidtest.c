@@ -6,6 +6,7 @@
 
 #include "../../../hidapi.h"
 #include "../../../hidapi.c"
+#include "../../../../emulator/src/sound/os_generic.h"
 
 #define VID 0x303a
 #define PID 0x4004
@@ -38,6 +39,31 @@ int main( int argc, char ** argv )
 	}
 	printf( "\n" );
 
+	double dStart = OGGetAbsoluteTime();
+	for( i = 0; i < 1024; i++ )
+	{
+		r = hid_get_feature_report( hd, rdata, reg_packet_length );
+		if( r != reg_packet_length )
+		{
+			fprintf( stderr, "Error reading message (%d)\n", r );
+		}
+	}
+	double dEnd = OGGetAbsoluteTime();
+	printf( "Reads: %5.0f/sec / %3.0f kB/s\n", 1024.0/(dEnd - dStart), (1024.0*63)/(dEnd - dStart));
+
+	dStart = OGGetAbsoluteTime();
+	for( i = 0; i < 1024; i++ )
+	{
+		rdata[0] = 173;
+		rdata[1] = 0x02;
+		r = hid_send_feature_report( hd, rdata, reg_packet_length );
+		if( r != reg_packet_length )
+		{
+			fprintf( stderr, "Error reading message (%d)\n", r );
+		}
+	}
+	dEnd = OGGetAbsoluteTime();
+	printf( "Writes: %5.0f/sec / %3.0f kB/s\n", 1024.0/(dEnd - dStart), (1024.0*63)/(dEnd - dStart) );
 
 	rdata[0] = 173;
 	rdata[1] = 0x00;
@@ -46,7 +72,7 @@ int main( int argc, char ** argv )
 	rdata[4] = 0xa5;
 	rdata[5] = 0x5a;
 	r = hid_send_feature_report( hd, rdata, reg_packet_length );
-	printf( "Sent data %d\n", r );
+	printf( "Sent data %d / %02x %02x %02x\n", r, rdata[1], rdata[2], rdata[3] );
 
 	int x, y;
 	int f;
