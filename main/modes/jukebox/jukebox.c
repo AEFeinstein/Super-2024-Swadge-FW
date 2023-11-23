@@ -293,10 +293,10 @@ jukeboxSong_t music_unused[] = {
         .filename = "stereo.sng",
         .name     = "Stereo",
     },
-    // {
-    //     .filename = "Follinesque.sng",
-    //     .name     = "Follinesque",
-    // },
+    {
+        .filename = "Follinesque.sng",
+        .name     = "Follinesque",
+    },
 };
 
 // clang-format off
