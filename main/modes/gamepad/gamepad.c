@@ -105,6 +105,7 @@ static const char* getButtonName(hid_gamepad_button_bm_t button);
 static const char str_pc[]    = "Computer";
 static const char str_ns[]    = "Switch";
 static const char str_accel[] = "Accel: ";
+static const char str_touch[] = "SwitchTouch:";
 static const char str_exit[]  = "Exit";
 
 static const int32_t accelSettingsValues[] = {0, 1};
@@ -112,6 +113,13 @@ static const int32_t accelSettingsValues[] = {0, 1};
 static const char* const accelSettingsOptions[] = {
     "Off",
     "On",
+};
+
+static const int32_t touchSettingsValues[] = {GAMEPAD_TOUCH_L_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING};
+
+static const char* const touchSettingsOptions[] = {
+    "StickL",
+    "StickR",
 };
 
 gamepad_t* gamepad;
@@ -275,6 +283,9 @@ void gamepadEnterMode(void)
     addSettingsOptionsItemToMenu(gamepad->menu, str_accel, accelSettingsOptions, accelSettingsValues,
                                  ARRAY_SIZE(accelSettingsOptions), getGamepadAccelSettingBounds(),
                                  getGamepadAccelSetting());
+    addSettingsOptionsItemToMenu(gamepad->menu, str_touch, touchSettingsOptions, touchSettingsValues,
+                                 ARRAY_SIZE(touchSettingsOptions), getGamepadTouchSettingBounds(),
+                                 getGamepadTouchSetting());
     addSingleItemToMenu(gamepad->menu, str_exit);
 
     // Initialize menu renderer
@@ -328,6 +339,10 @@ void gamepadMainMenuCb(const char* label, bool selected, uint32_t settingVal)
         if (label == str_accel)
         {
             setGamepadAccelSetting(settingVal);
+        }
+        if (label == str_touch)
+        {
+            setGamepadTouchSetting(settingVal);
         }
     }
 }
@@ -868,22 +883,36 @@ void gamepadReportStateToHost(void)
             case GAMEPAD_NS:
             {
                 // TODO: accel
-                // TODO check this
-                // tud_gamepad_ns_report(&gamepad->gpNsState);
+                // TODO: check this
 
+                int32_t x, y, z;
                 if (touched)
                 {
-                    int32_t x, y;
                     getTouchCartesian(phi, r, &x, &y);
-                    gamepad->gpNsState.x = (255 * x) / 1024;
-                    gamepad->gpNsState.y = (-255 * y) / 1024;
-                    gamepad->gpNsState.z = 0;
+                    x = (255 * x) / 1024;
+                    y = (-255 * y) / 1024;
+                    z = 0;
                 }
                 else
                 {
-                    gamepad->gpNsState.x = 128;
-                    gamepad->gpNsState.y = 128;
-                    gamepad->gpNsState.z = 0;
+                    x = 128;
+                    y = 128;
+                    z = 0;
+                }
+
+                gamepadTouch_t touchSetting = getGamepadTouchSetting();
+                switch (touchSetting)
+                {
+                    case GAMEPAD_TOUCH_L_STICK_SETTING:
+                        gamepad->gpNsState.x = x;
+                        gamepad->gpNsState.y = y;
+                        gamepad->gpNsState.z = z;
+                        break;
+                    case GAMEPAD_TOUCH_R_STICK_SETTING:
+                        gamepad->gpNsState.rx = x;
+                        gamepad->gpNsState.ry = y;
+                        gamepad->gpNsState.rz = z;
+                        break;
                 }
 
                 tud_hid_gamepad_report_ns(HID_ITF_PROTOCOL_NONE, gamepad->gpNsState.x, gamepad->gpNsState.y,

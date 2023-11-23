@@ -59,6 +59,7 @@ DECL_SETTING(mic, 0, MAX_MIC_GAIN, MAX_MIC_GAIN);
 DECL_SETTING(cc_mode, ALL_SAME_LEDS, LINEAR_LEDS, ALL_SAME_LEDS);
 DECL_SETTING(scrn_sv, 0, 300, 20);
 DECL_SETTING(gp_accel, 0, 1, 1);
+DECL_SETTING(gp_touch, GAMEPAD_TOUCH_L_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING, GAMEPAD_TOUCH_R_STICK_SETTING);
 DECL_SETTING(show_secrets, NOT_OPENED_SECRETS, HIDE_SECRETS, NOT_OPENED_SECRETS);
 
 //==============================================================================
@@ -163,6 +164,9 @@ void readAllSettings(void)
 
     // Read the Gamepad accelerometer setting
     readSetting(&gp_accel_setting);
+
+    // Read the Gamepad touch setting
+    readSetting(&gp_touch_setting);
 
     // Read the setting to show Secrets menu on the main menu
     readSetting(&show_secrets_setting);
@@ -515,11 +519,42 @@ bool setGamepadAccelSetting(bool status)
 }
 
 /**
+ * @brief Get the current Gamepad touch setting
+ *
+ * @return gamepadTouch_t indicating current setting for Gamepad touch
+ */
+gamepadTouch_t getGamepadTouchSetting(void)
+{
+    return gp_touch_setting.val;
+}
+
+/**
+ * @brief Get the bounds for the Gamepad touch setting. Useful for initializing settings items in menus.
+ *
+ * @return the bounds for the Gamepad touch setting
+ */
+const settingParam_t* getGamepadTouchSettingBounds(void)
+{
+    return &gp_touch_param;
+}
+
+/**
+ * @brief Set the current Gamepad touch setting.
+ *
+ * @param status The new Gamepad touch setting
+ * @return true if the setting was written, false if it wasn't
+ */
+bool setGamepadTouchSetting(gamepadTouch_t status)
+{
+    return setSetting(&gp_touch_setting, status);
+}
+
+/**
  * @brief Get the current setting to show Secrets menu on the main menu
  *
- * @return true if showing Secrets menu on the main menu is enabled, false if not
+ * @return showSecrets_t indicating current setting for showing Secrets menu on the main menu
  */
-uint8_t getShowSecretsMenuSetting(void)
+showSecrets_t getShowSecretsMenuSetting(void)
 {
     return show_secrets_setting.val;
 }
@@ -541,7 +576,7 @@ const settingParam_t* getShowSecretsMenuSettingBounds(void)
  * @param status The new setting to show Secrets menu on the main menu
  * @return true if the setting was written, false if it wasn't
  */
-bool setShowSecretsMenuSetting(uint8_t status)
+bool setShowSecretsMenuSetting(showSecrets_t status)
 {
     return setSetting(&show_secrets_setting, status);
 }
