@@ -150,25 +150,25 @@ static void mainMenuEnterMode(void)
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
     addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, modePlatformer.modeName);
     addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
     addSingleItemToMenu(mainMenu->menu, flightMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, modePlatformer.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     addSingleItemToMenu(mainMenu->menu, slideWhistleMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
+    addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
@@ -464,6 +464,7 @@ void addSecretsMenu(void)
     // Add the secrets menu
     mainMenu->menu        = startSubMenu(mainMenu->menu, "Secrets");
     mainMenu->secretsMenu = mainMenu->menu;
+    addSingleItemToMenu(mainMenu->menu, "Git Hash: " GIT_SHA1);
     addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions,
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
