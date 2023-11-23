@@ -263,10 +263,10 @@ jukeboxSong_t music_jukebox[] = {
     //     .filename = "thelake.sng",
     //     .name  = "The Lake",
     // },
-    // {
-    //     .filename = "yalikejazz.sng",
-    //     .name  = "Ya like jazz?",
-    // },
+    {
+        .filename = "yalikejazz.sng",
+        .name  = "Ya like jazz?",
+    },
     {
         .filename = "banana.sng",
         .name  = "Banana",
@@ -637,10 +637,10 @@ jukeboxSong_t sfx_unused[] = {
         .filename = "block1.sng",
         .name     = "Pong Block 2",
     },
-    // {
-    //     .filename = "mystery_music.sng",
-    //     .name     = "GameCube",
-    // },
+    {
+        .filename = "gamecube.sng",
+        .name     = "GameCube",
+    },
 };
 
 // clang-format off
