@@ -418,7 +418,7 @@ void paintDrawScreenSetup(void)
     paintUpdateLeds();
 
     bzrStop(true);
-    bzrPlayBgm(&paintBgm, BZR_LEFT);
+    bzrPlayBgm(&paintBgm, BZR_STEREO);
 
     // Set up the tool wheel
     paintState->toolWheel         = initMenu(toolWheelTitleStr, paintToolWheelCb);
