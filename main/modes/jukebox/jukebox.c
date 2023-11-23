@@ -637,10 +637,10 @@ jukeboxSong_t sfx_unused[] = {
         .filename = "block1.sng",
         .name     = "Pong Block 2",
     },
-    {
-        .filename = "mystery_music.sng",
-        .name     = "GameCube",
-    },
+    // {
+    //     .filename = "mystery_music.sng",
+    //     .name     = "GameCube",
+    // },
 };
 
 // clang-format off
