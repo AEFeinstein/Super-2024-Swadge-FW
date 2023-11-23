@@ -144,6 +144,6 @@ void warpToDestination(ray_t* ray)
     markTileVisited(&ray->map, FROM_FX(ray->p.posX), FROM_FX(ray->p.posY));
 
     // Loop SFX after saving
-    ray->sfx_warp.shouldLoop = true;
+    ray->sfx_warp.shouldLoop = false;
     bzrPlaySfx(&ray->sfx_warp, BZR_RIGHT);
 }
