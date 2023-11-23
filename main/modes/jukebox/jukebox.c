@@ -692,26 +692,25 @@ const jukeboxCategory_t sfxCategories[] = {
  */
 void jukeboxEnterMode()
 {
-    ///// Allocate zero'd memory for the mode /////
+    // Allocate zero'd memory for the mode
     jukebox = calloc(1, sizeof(jukebox_t));
 
-    ///// Enter music submode /////
+    // Enter music submode
     jukebox->inMusicSubmode = true;
 
-    ///// Load fonts /////
+    // Load fonts
     loadFont("ibm_vga8.font", &jukebox->ibm_vga8, false);
     loadFont("radiostars.font", &jukebox->radiostars, false);
 
-    ///// Load images /////
+    // Load images
     loadWsg("arrow10.wsg", &jukebox->arrow, false);
     loadWsg("jukebox.wsg", &jukebox->jukeboxSprite, false);
 
-    ///// Load midis /////
-
+    // Load midis
     jukeboxLoadCategories(musicCategories, ARRAY_SIZE(musicCategories), true);
     jukeboxLoadCategories(sfxCategories, ARRAY_SIZE(sfxCategories), false);
 
-    ///// Initialize portable dances /////
+    // Initialize portable dances
 
     jukebox->portableDances = initPortableDance(NULL);
 
@@ -747,15 +746,11 @@ void jukeboxExitMode(void)
     freeWsg(&jukebox->arrow);
     freeWsg(&jukebox->jukeboxSprite);
 
-    // Free allocated music midis, song arrays, and category arrays
+    // Free allocated midis
     jukeboxFreeCategories(musicCategories, ARRAY_SIZE(musicCategories));
-
-    // Free allocated SFX midis, song arrays, and category arrays
-
     jukeboxFreeCategories(sfxCategories, ARRAY_SIZE(sfxCategories));
 
     // Free dances
-
     freePortableDance(jukebox->portableDances);
 
     free(jukebox);
