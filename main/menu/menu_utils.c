@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <inttypes.h>
 
 /**
  * @brief Write and return the proper text label to use for the given menu item
@@ -27,7 +28,7 @@ const char* getMenuItemLabelText(char* buffer, int buflen, const menuItem_t* ite
         }
         else
         {
-            snprintf(buffer, buflen - 1, "%s: %d", item->label, item->currentSetting);
+            snprintf(buffer, buflen - 1, "%s: %" PRId32, item->label, item->currentSetting);
         }
 
         // Return the buffer passed to us
