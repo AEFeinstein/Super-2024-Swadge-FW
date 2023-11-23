@@ -2216,6 +2216,8 @@ static void doSave(const char* key)
         }
         paintState->selectedSlotKey[0] = '\0';
         paintState->buttonMode         = BTN_MODE_DRAW;
+
+        paintState->unsaved = false;
     }
     else
     {
