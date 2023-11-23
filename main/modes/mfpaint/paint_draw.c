@@ -44,19 +44,23 @@ static void doSave(const char* key);
 static void doLoad(const char* key);
 static void doDelete(const char* key);
 
+static void paintRefreshUndoRedo(void);
+
 paintDraw_t* paintState;
 paintHelp_t* paintHelp;
 
 static const char paintFilenamePrefix[] = "untitled_";
 static const char paintFilenameSuffix[] = ".mfp";
 
-static const char toolWheelTitleStr[]   = "Tool Wheel";
-static const char toolWheelBrushStr[]   = "Select Brush";
-static const char toolWheelColorStr[]   = "Select Color";
-static const char toolWheelSizeStr[]    = "Brush Size";
-static const char toolWheelOptionsStr[] = "More";
-static const char toolWheelUndoStr[]    = "Undo";
-static const char toolWheelRedoStr[]    = "Redo";
+static const char toolWheelTitleStr[]    = "Tool Wheel";
+static const char toolWheelBrushStr[]    = "Select Brush";
+static const char toolWheelColorStr[]    = "Select Color";
+static const char toolWheelSizeStr[]     = "Brush Size";
+static const char toolWheelOptionsStr[]  = "More";
+static const char toolWheelUndoStr[]     = "Undo";
+static const char toolWheelRedoStr[]     = "Redo";
+static const char toolWheelUndoGrayStr[] = "Undo (Nothing to Undo)";
+static const char toolWheelRedoGrayStr[] = "Redo (Nothing to Redo)";
 
 static const char toolWheelSaveStr[]    = "Save";
 static const char toolWheelLoadStr[]    = "Load";
@@ -432,6 +436,8 @@ void paintDrawScreenSetup(void)
     PAINT_WSG("wheel_options.wsg", &paintState->wheelSettingsWsg);
     PAINT_WSG("wheel_undo.wsg", &paintState->wheelUndoWsg);
     PAINT_WSG("wheel_redo.wsg", &paintState->wheelRedoWsg);
+    PAINT_WSG("wheel_undo_gray.wsg", &paintState->wheelUndoGrayWsg);
+    PAINT_WSG("wheel_redo_gray.wsg", &paintState->wheelRedoGrayWsg);
     PAINT_WSG("wheel_save.wsg", &paintState->wheelSaveWsg);
     PAINT_WSG("wheel_open.wsg", &paintState->wheelOpenWsg);
     PAINT_WSG("wheel_new.wsg", &paintState->wheelNewWsg);
@@ -468,12 +474,30 @@ void paintDrawScreenSetup(void)
     paintState->toolWheel = endSubMenu(paintState->toolWheel);
 
     // Bottom-left: Undo
-    addSingleItemToMenu(paintState->toolWheel, toolWheelUndoStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelUndoStr, &paintState->wheelUndoWsg, 2, NO_SCROLL);
+    if (paintCanRedo())
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelUndoStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelUndoStr, &paintState->wheelUndoWsg, 2, NO_SCROLL);
+    }
+    else
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelUndoGrayStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelUndoGrayStr, &paintState->wheelUndoGrayWsg, 2,
+                             NO_SCROLL);
+    }
 
     // Bottom-right: Redo
-    addSingleItemToMenu(paintState->toolWheel, toolWheelRedoStr);
-    wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelRedoStr, &paintState->wheelRedoWsg, 4, NO_SCROLL);
+    if (paintCanRedo())
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelRedoStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelRedoStr, &paintState->wheelRedoWsg, 4, NO_SCROLL);
+    }
+    else
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelRedoGrayStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelRedoGrayStr, &paintState->wheelRedoGrayWsg, 4,
+                             NO_SCROLL);
+    }
 
     // Bottom: Options sub-menu
     paintState->toolWheel = startSubMenu(paintState->toolWheel, toolWheelOptionsStr);
@@ -961,6 +985,7 @@ void paintEditPaletteConfirm(void)
 {
     paintState->buttonMode = BTN_MODE_DRAW;
     paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
+    paintRefreshUndoRedo();
 
     // Save the old color, and update the palette with the new color
     paletteColor_t old                                    = paintState->canvas.palette[paintState->paletteSelect];
@@ -1490,6 +1515,8 @@ void paintApplyUndo(paintCanvas_t* canvas)
         paintDeserialize(canvas, undo->px, 0, pxSize);
         PAINT_LOGD("Undid %" PRIu32 " bytes!", (uint32_t)pxSize);
     }
+
+    paintRefreshUndoRedo();
 }
 
 void paintUndo(paintCanvas_t* canvas)
@@ -1629,6 +1656,7 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col, bool partial)
             if (getArtist()->brushDef->mode != HOLD_DRAW || paintState->aPress)
             {
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
+                paintRefreshUndoRedo();
             }
             paintState->unsaved = true;
             getArtist()->brushDef->fnDraw(&paintState->canvas, canvasPickPoints, pickCount, getArtist()->brushWidth,
@@ -1865,6 +1893,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             else
             {
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
+                paintRefreshUndoRedo();
                 paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
                 paintState->buttonMode = BTN_MODE_DRAW;
             }
@@ -2093,6 +2122,7 @@ static void paintDialogCb(const char* label)
             case DIALOG_CONFIRM_UNSAVED_CLEAR:
             {
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
+                paintRefreshUndoRedo();
                 paintResetCanvas(&paintState->canvas);
                 paintState->buttonMode = BTN_MODE_DRAW;
                 break;
@@ -2254,5 +2284,38 @@ static void doDelete(const char* key)
     {
         paintDeleteNamed(key);
         paintState->buttonMode = BTN_MODE_BROWSER;
+    }
+}
+
+static void paintRefreshUndoRedo(void)
+{
+    // Bottom-left: Undo
+    removeSingleItemFromMenu(paintState->toolWheel, toolWheelUndoStr);
+    removeSingleItemFromMenu(paintState->toolWheel, toolWheelUndoGrayStr);
+    if (paintCanUndo())
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelUndoStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelUndoStr, &paintState->wheelUndoWsg, 2, NO_SCROLL);
+    }
+    else
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelUndoGrayStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelUndoGrayStr, &paintState->wheelUndoGrayWsg, 2,
+                             NO_SCROLL);
+    }
+
+    // Bottom-right: Redo
+    removeSingleItemFromMenu(paintState->toolWheel, toolWheelRedoStr);
+    removeSingleItemFromMenu(paintState->toolWheel, toolWheelRedoGrayStr);
+    if (paintCanRedo())
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelRedoStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelRedoStr, &paintState->wheelRedoWsg, 4, NO_SCROLL);
+    }
+    else
+    {
+        addSingleItemToMenu(paintState->toolWheel, toolWheelRedoGrayStr);
+        wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelRedoGrayStr, &paintState->wheelRedoGrayWsg, 4,
+                             NO_SCROLL);
     }
 }
