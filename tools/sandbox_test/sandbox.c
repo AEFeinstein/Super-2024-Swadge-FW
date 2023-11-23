@@ -16,7 +16,11 @@
 
 int global_i = 100;
 menu_t * menu;
+menuLogbookRenderer_t* menuLogbookRenderer;
+font_t logbook;
+int testmode = 0;
 const char * menu_Bootload = "Bootloader";
+const char * menu_GraphicsTestMode = "Gfx Test";
 
 //#define REBOOT_TEST
 //#define PROFILE_TEST
@@ -36,6 +40,8 @@ wsg_t example_sprite;
 
 static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
 {
+	if( !selected ) return;
+
     if( label == mainMenuMode.modeName )
     {
         switchToSwadgeMode( &mainMenuMode );
@@ -48,6 +54,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         void software_reset( uint32_t x );
         software_reset( 0 );
     }
+	else if( label == menu_GraphicsTestMode )
+	{
+		testmode = 1;
+	}
 }
 
 void sandbox_main(void)
@@ -67,8 +77,11 @@ void sandbox_main(void)
     REG_WRITE( GPIO_FUNC7_OUT_SEL_CFG_REG,4 ); // select ledc_ls_sig_out0
 
     menu = initMenu("USB Sandbox", mainMenuCb);
+    addSingleItemToMenu(menu, menu_GraphicsTestMode);
     addSingleItemToMenu(menu, mainMenuMode.modeName);
     addSingleItemToMenu(menu, menu_Bootload);
+    loadFont("logbook.font", &logbook, false);
+    menuLogbookRenderer = initMenuLogbookRenderer(&logbook);
 
     loadWsg("kid0.wsg", &example_sprite, true);
 #endif
@@ -94,75 +107,77 @@ void sandbox_exit()
 
 void sandbox_tick()
 {
-#if 1
-#ifdef PROFILE_TEST
-    volatile uint32_t profiles[7];  // Use of volatile here to force compiler to order instructions and not cheat.
-    // Profile function call into assembly land
-    // Mostly used to understand function call overhead.
-    uint32_t start, end;
-    start = getCycleCount();
-    minimal_function();
-    end = getCycleCount();
-    profiles[0] = end-start-1;
+	if( testmode )
+	{
+	#if 1
+	#ifdef PROFILE_TEST
+		volatile uint32_t profiles[7];  // Use of volatile here to force compiler to order instructions and not cheat.
+		// Profile function call into assembly land
+		// Mostly used to understand function call overhead.
+		uint32_t start, end;
+		start = getCycleCount();
+		minimal_function();
+		end = getCycleCount();
+		profiles[0] = end-start-1;
 
-    // Profile a nop (Should be 1, because profiling takes 1 cycle)
-    start = getCycleCount();
-    asm volatile( "nop" );
-    end = getCycleCount();
-    profiles[1] = end-start-1;
+		// Profile a nop (Should be 1, because profiling takes 1 cycle)
+		start = getCycleCount();
+		asm volatile( "nop" );
+		end = getCycleCount();
+		profiles[1] = end-start-1;
 
-    // Profile reading a register (will be slow)
-    start = getCycleCount();
-    READ_PERI_REG( GPIO_ENABLE_W1TS_REG );
-    end = getCycleCount();
-    profiles[2] = end-start-1;
+		// Profile reading a register (will be slow)
+		start = getCycleCount();
+		READ_PERI_REG( GPIO_ENABLE_W1TS_REG );
+		end = getCycleCount();
+		profiles[2] = end-start-1;
 
-    // Profile writing a regsiter (will be fast)
-    // The ESP32-S2 can "write" to memory and keep executing
-    start = getCycleCount();
-    WRITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
-    end = getCycleCount();
-    profiles[3] = end-start-1;
+		// Profile writing a regsiter (will be fast)
+		// The ESP32-S2 can "write" to memory and keep executing
+		start = getCycleCount();
+		WRITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
+		end = getCycleCount();
+		profiles[3] = end-start-1;
 
-    // Profile subsequent writes (will be slow)
-    // The ESP32-S2 can only write once in a buffered write.
-    start = getCycleCount();
-    WRITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
-    WR  ITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
-    end = getCycleCount();
-    profiles[4] = end-start-1;
+		// Profile subsequent writes (will be slow)
+		// The ESP32-S2 can only write once in a buffered write.
+		start = getCycleCount();
+		WRITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
+		WR  ITE_PERI_REG( GPIO_ENABLE_W1TS_REG, 0 );
+		end = getCycleCount();
+		profiles[4] = end-start-1;
 
-    // Profile a more interesting assembly instruction
-    start = getCycleCount();
-    uint32_t tfret = test_function( 0xaaaa );
-    end = getCycleCount();
-    profiles[5] = end-start-1;
+		// Profile a more interesting assembly instruction
+		start = getCycleCount();
+		uint32_t tfret = test_function( 0xaaaa );
+		end = getCycleCount();
+		profiles[5] = end-start-1;
 
-    // Profile a more interesting assembly instruction
-    start = getCycleCount();
-    uint32_t tfret2 = asm_read_gpio( );
-    end = getCycleCount();
-    profiles[6] = end-start-1;
-    vTaskDelay(1);
+		// Profile a more interesting assembly instruction
+		start = getCycleCount();
+		uint32_t tfret2 = asm_read_gpio( );
+		end = getCycleCount();
+		profiles[6] = end-start-1;
+		vTaskDelay(1);
 
-    ESP_LOGI( "sandbox", "global_i: %d %d %d %d %d %d %d clock cycles; tf ret: %08x / %08x", profiles[0], profiles[1], profiles[2], profiles[3], profiles[4], profiles[5], profiles[6], tfret, tfret2 );
-#else
-//    ESP_LOGI( "sandbox", "global_i: %d", global_i++ );
-    global_i++;
-#endif
+		ESP_LOGI( "sandbox", "global_i: %d %d %d %d %d %d %d clock cycles; tf ret: %08x / %08x", profiles[0], profiles[1], profiles[2], profiles[3], profiles[4], profiles[5], profiles[6], tfret, tfret2 );
+	#else
+	//    ESP_LOGI( "sandbox", "global_i: %d", global_i++ );
+		global_i++;
+	#endif
 
-//    if( menu )
-//        drawMenu(menu);
-
-//    ESP_LOGI( "sandbox", "SPROF: %lu / Mode7: %d", end-start, mode7timing );
-
-    for( int mode = 0; mode < 8; mode++ )
-    {
-        drawWsg( &example_sprite, 50+mode*20, (global_i%20)-10, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsg( &example_sprite, 50+mode*20, (global_i%20)+230, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsg( &example_sprite, (global_i%20)-10, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-        drawWsg( &example_sprite, (global_i%20)+270, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
-    }
+		for( int mode = 0; mode < 8; mode++ )
+		{
+		    drawWsg( &example_sprite, 50+mode*20, (global_i%20)-10, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+		    drawWsg( &example_sprite, 50+mode*20, (global_i%20)+230, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+		    drawWsg( &example_sprite, (global_i%20)-10, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+		    drawWsg( &example_sprite, (global_i%20)+270, 50+mode*20, !!(mode&1), !!(mode & 2), (mode & 4)*10);
+		}
+	}
+	else
+	{
+	    drawMenuLogbook(menu, menuLogbookRenderer, 1);
+	}
 
     buttonEvt_t evt              = {0};
     while (checkButtonQueueWrapper(&evt))
@@ -197,6 +212,7 @@ void sandbox_tick()
     ESP_LOGI( "sandbox", "[%lu] %ld %ld %ld %d", end-start, phi, r, intensity, tbv );
 
 #endif
+
 
 }
 
