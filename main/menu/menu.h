@@ -166,7 +166,7 @@ typedef struct
     uint8_t minSetting;         ///< The minimum value for settings items
     uint8_t maxSetting;         ///< The maximum value for settings items
     const int32_t* settingVals; ///< The setting value options for settings-options items
-    uint8_t currentSetting;     ///< The current value for settings items
+    int32_t currentSetting;     ///< The current value for settings items
 } menuItem_t;
 
 /**

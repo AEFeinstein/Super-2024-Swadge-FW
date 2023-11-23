@@ -613,6 +613,12 @@ menu_t* menuNavigateToPrevOption(menu_t* menu)
         {
             item->currentOpt--;
         }
+
+        // Call the callback, not selected
+        if (item->settingVals)
+        {
+            item->currentSetting = item->settingVals[item->currentOpt];
+        }
     }
     else if (item->minSetting != item->maxSetting)
     {
