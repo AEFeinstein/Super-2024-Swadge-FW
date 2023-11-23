@@ -51,13 +51,13 @@
 typedef enum
 {
     GAMEPAD_MENU,
-    GAMEPAD_MAIN
+    GAMEPAD_MAIN,
 } gamepadScreen_t;
 
 typedef enum
 {
     GAMEPAD_GENERIC,
-    GAMEPAD_NS
+    GAMEPAD_NS,
 } gamepadType_t;
 
 //==============================================================================
@@ -134,13 +134,13 @@ swadgeMode_t gamepadMode = {
 
 };
 
-const hid_gamepad_button_bm_t touchMap[] = {
-    GAMEPAD_BUTTON_C, GAMEPAD_BUTTON_X, GAMEPAD_BUTTON_Y, GAMEPAD_BUTTON_Z, GAMEPAD_BUTTON_TL,
-};
+// const hid_gamepad_button_bm_t touchMap[] = {
+//     GAMEPAD_BUTTON_C, GAMEPAD_BUTTON_X, GAMEPAD_BUTTON_Y, GAMEPAD_BUTTON_Z, GAMEPAD_BUTTON_TL,
+// };
 
-const hid_gamepad_button_bm_t touchMapNs[] = {
-    GAMEPAD_NS_BUTTON_Y, GAMEPAD_NS_BUTTON_TL, GAMEPAD_NS_BUTTON_Z, GAMEPAD_NS_BUTTON_TR, GAMEPAD_NS_BUTTON_X,
-};
+// const hid_gamepad_button_bm_t touchMapNs[] = {
+//     GAMEPAD_NS_BUTTON_Y, GAMEPAD_NS_BUTTON_TL, GAMEPAD_NS_BUTTON_Z, GAMEPAD_NS_BUTTON_TR, GAMEPAD_NS_BUTTON_X,
+// };
 
 /// @brief  Switch Descriptor
 static const tusb_desc_device_t nsDescriptor = {
