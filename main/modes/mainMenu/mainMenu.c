@@ -464,6 +464,7 @@ void addSecretsMenu(void)
     // Add the secrets menu
     mainMenu->menu        = startSubMenu(mainMenu->menu, "Secrets");
     mainMenu->secretsMenu = mainMenu->menu;
+    addSingleItemToMenu(mainMenu->menu, "Git Hash: " GIT_SHA1);
     addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions,
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
