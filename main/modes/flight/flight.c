@@ -316,38 +316,35 @@ int abs(int j);
  * Variables
  *==========================================================================*/
 
-static const char fl_title[]               = "Flyin Donut";
-static const char fl_flight_env[]          = "Atrium Course";
+static const char fl_title[]      = "Flyin Donut";
+static const char fl_flight_env[] = "Atrium Course";
 
-
-static const char fl_flight_invertY0_env[] = "Off";
-static const char fl_flight_invertY1_env[] = "On";
-static const char * yinvert_titles[2] = { fl_flight_invertY0_env, fl_flight_invertY1_env };
+static const char fl_flight_invertY0_env[]     = "Off";
+static const char fl_flight_invertY1_env[]     = "On";
+static const char* yinvert_titles[2]           = {fl_flight_invertY0_env, fl_flight_invertY1_env};
 static const int32_t yinvert_setting_values[2] = {0, 1};
-static const char fl_flight_yinvert[] = "Y Invert: ";
-static const settingParam_t flightyinv_param = {
-    .key = "yinvert",
-    .min = 0,
-    .max = 1,
-    .def = 0,
+static const char fl_flight_yinvert[]          = "Y Invert: ";
+static const settingParam_t flightyinv_param   = {
+      .key = "yinvert",
+      .min = 0,
+      .max = 1,
+      .def = 0,
 };
-
-
 
 static const char fl_flight_gyro0_env[] = "Off";
 static const char fl_flight_gyro1_env[] = "Roll Locked";
 static const char fl_flight_gyro2_env[] = "Full";
 static const char fl_flight_gyro3_env[] = "Joystick";
-static const char * gyro_titles[4] = { fl_flight_gyro3_env, fl_flight_gyro0_env, fl_flight_gyro1_env, fl_flight_gyro2_env };
+static const char* gyro_titles[4]
+    = {fl_flight_gyro3_env, fl_flight_gyro0_env, fl_flight_gyro1_env, fl_flight_gyro2_env};
 static const int32_t gyro_setting_values[4] = {3, 0, 1, 2};
-static const char fl_flight_gyro[] = "Gyro: ";
+static const char fl_flight_gyro[]          = "Gyro: ";
 static const settingParam_t flightjoy_param = {
     .key = "flight_joy",
     .min = 0,
     .max = 3,
     .def = 0,
 };
-
 
 static const char fl_flight_perf[]  = "Multiplayer";
 static const char fl_100_percent[]  = "100% 100% 100%";
@@ -463,11 +460,13 @@ static void flightEnterMode(void)
     addSingleItemToMenu(flight->menu, fl_flight_env);
     addSingleItemToMenu(flight->menu, fl_flight_perf);
 
-    addSettingsOptionsItemToMenu( flight->menu, fl_flight_gyro, gyro_titles, gyro_setting_values, ARRAY_SIZE( gyro_titles ), &flightjoy_param, flight->savedata.flightIMU );
-    addSettingsOptionsItemToMenu( flight->menu, fl_flight_yinvert, yinvert_titles, yinvert_setting_values, ARRAY_SIZE( yinvert_titles ), &flightyinv_param, flight->savedata.flightInvertY );
+    addSettingsOptionsItemToMenu(flight->menu, fl_flight_gyro, gyro_titles, gyro_setting_values,
+                                 ARRAY_SIZE(gyro_titles), &flightjoy_param, flight->savedata.flightIMU);
+    addSettingsOptionsItemToMenu(flight->menu, fl_flight_yinvert, yinvert_titles, yinvert_setting_values,
+                                 ARRAY_SIZE(yinvert_titles), &flightyinv_param, flight->savedata.flightInvertY);
 
     addSingleItemToMenu(flight->menu, str_high_scores);
-    //addSingleItemToMenu(flight->menu, str_quit);
+    // addSingleItemToMenu(flight->menu, str_quit);
 }
 
 /**
@@ -498,7 +497,7 @@ static void flightExitMode(void)
  */
 static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVal)
 {
-    //ESP_LOGI( "_", "%d %s %d\n", (int)selected, menuItem, (int)settingVal );
+    // ESP_LOGI( "_", "%d %s %d\n", (int)selected, menuItem, (int)settingVal );
 
     if (fl_flight_perf == menuItem)
     {
@@ -522,7 +521,7 @@ static void flightMenuCb(const char* menuItem, bool selected, uint32_t settingVa
     }
     else if (fl_flight_yinvert == menuItem)
     {
-        flight->savedata.flightInvertY     = settingVal;
+        flight->savedata.flightInvertY = settingVal;
         setFlightSaveData(&flight->savedata);
     }
     else if (fl_flight_gyro == menuItem)
@@ -1319,40 +1318,41 @@ static void flightRender(int64_t elapsedUs)
         // Quat to rotmat.
         int16_t rotmat[16] = {0};
 
-        int32_t q0           =  tflight->fqQuatAccum[0] * 2048;
-        int32_t q1           = -tflight->fqQuatAccum[1] * 2048;
-        int32_t q2           = -tflight->fqQuatAccum[2] * 2048;
-        int32_t q3           = -tflight->fqQuatAccum[3] * 2048;
+        int32_t q0 = tflight->fqQuatAccum[0] * 2048;
+        int32_t q1 = -tflight->fqQuatAccum[1] * 2048;
+        int32_t q2 = -tflight->fqQuatAccum[2] * 2048;
+        int32_t q3 = -tflight->fqQuatAccum[3] * 2048;
 
         // Note to anyone looking on this in the future, it's actually 2* each filed, but we avoid
         // it by increasing the >>.
-        rotmat[0 * 4 + 0]  = ((q0 * q0 + q1 * q1) - 2060720) >> 13;
-        int32_t x1y0 = rotmat[0 * 4 + 1]  = ((q1 * q2 - q0 * q3)) >> 13;
-        rotmat[0 * 4 + 2]  = ((q1 * q3 + q0 * q2)) >> 13;
-        rotmat[1 * 4 + 0]  = ((q1 * q2 + q0 * q3)) >> 13;
-        int32_t x1y1 = rotmat[1 * 4 + 1]  = ((q0 * q0 + q2 * q2) - 2060720) >> 13;
-        rotmat[1 * 4 + 2]  = ((q2 * q3 - q0 * q1)) >> 13;
-        int32_t zpolex = rotmat[2 * 4 + 0]  = ((q1 * q3 - q0 * q2)) >> 13;
-        int32_t zpoley = rotmat[2 * 4 + 1]  = ((q2 * q3 + q0 * q1)) >> 13;
-        int32_t zpolez = rotmat[2 * 4 + 2]  = ((q0 * q0 + q3 * q3) - 2060720) >> 13;
-        rotmat[3 * 4 + 3]  = 1 * 256;
+        rotmat[0 * 4 + 0] = ((q0 * q0 + q1 * q1) - 2060720) >> 13;
+        int32_t x1y0 = rotmat[0 * 4 + 1] = ((q1 * q2 - q0 * q3)) >> 13;
+        rotmat[0 * 4 + 2]                = ((q1 * q3 + q0 * q2)) >> 13;
+        rotmat[1 * 4 + 0]                = ((q1 * q2 + q0 * q3)) >> 13;
+        int32_t x1y1 = rotmat[1 * 4 + 1] = ((q0 * q0 + q2 * q2) - 2060720) >> 13;
+        rotmat[1 * 4 + 2]                = ((q2 * q3 - q0 * q1)) >> 13;
+        int32_t zpolex = rotmat[2 * 4 + 0] = ((q1 * q3 - q0 * q2)) >> 13;
+        int32_t zpoley = rotmat[2 * 4 + 1] = ((q2 * q3 + q0 * q1)) >> 13;
+        int32_t zpolez = rotmat[2 * 4 + 2] = ((q0 * q0 + q3 * q3) - 2060720) >> 13;
+        rotmat[3 * 4 + 3]                  = 1 * 256;
         tdMultiply(flight->ProjectionMatrix, rotmat, flight->ProjectionMatrix);
-        
-        tflight->hpr[0] = getAtan2( zpolex, zpolez ) * 11;
-        int xandz = isqrt( zpolex * zpolex + zpolez * zpolez );
-        tflight->hpr[1] = getAtan2(-zpoley, xandz ) * 11;
-        tflight->hpr[2] = 3960-getAtan2( x1y0, x1y1 ) * 11;
-/*
-        ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d /  %d %d",
-            tflight->hpr[0], tflight->hpr[1], tflight->hpr[2],
-            rotmat[0 * 4 + 0], rotmat[0 * 4 + 1], rotmat[0 * 4 + 2],
-            rotmat[1 * 4 + 0], rotmat[1 * 4 + 1], rotmat[1 * 4 + 2],
-            rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2], getCos1024(flight->hpr[2] / 11), getSin1024(flight->hpr[2] / 11) );
-*/
+
+        tflight->hpr[0] = getAtan2(zpolex, zpolez) * 11;
+        int xandz       = isqrt(zpolex * zpolex + zpolez * zpolez);
+        tflight->hpr[1] = getAtan2(-zpoley, xandz) * 11;
+        tflight->hpr[2] = 3960 - getAtan2(x1y0, x1y1) * 11;
+        /*
+                ESP_LOGI( "HPR", "%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d\n%5d %5d %5d /  %d %d",
+                    tflight->hpr[0], tflight->hpr[1], tflight->hpr[2],
+                    rotmat[0 * 4 + 0], rotmat[0 * 4 + 1], rotmat[0 * 4 + 2],
+                    rotmat[1 * 4 + 0], rotmat[1 * 4 + 1], rotmat[1 * 4 + 2],
+                    rotmat[2 * 4 + 0], rotmat[2 * 4 + 1], rotmat[2 * 4 + 2], getCos1024(flight->hpr[2] / 11),
+           getSin1024(flight->hpr[2] / 11) );
+        */
     }
     else
     {
-        tdRotateEA(flight->ProjectionMatrix, tflight->hpr[1] / 11, tflight->hpr[0] / 11, 0 );
+        tdRotateEA(flight->ProjectionMatrix, tflight->hpr[1] / 11, tflight->hpr[0] / 11, 0);
     }
     tdTranslate(flight->ModelviewMatrix, -tflight->planeloc[0], -tflight->planeloc[1], -tflight->planeloc[2]);
 
@@ -1674,14 +1674,13 @@ static void flightRender(int64_t elapsedUs)
         int ystart = flight->radiostars.height - 1;
         fillDisplayArea(0, 0, 280, ystart + 6, 0);
         int w = textWidth(&flight->radiostars, tflight->nettext + 1);
-        drawText(&flight->radiostars, tflight->nettext[0], tflight->nettext + 1, TFT_WIDTH/2-w/2, 3);
+        drawText(&flight->radiostars, tflight->nettext[0], tflight->nettext + 1, TFT_WIDTH / 2 - w / 2, 3);
     }
 #endif
 
     // ESP_LOGI( "RENDER", "%d %d %d", (int)(t1-t0), (int)(t2-t1), (int)(t3-t2) );
     return;
 }
-
 
 static void flightGameUpdate(flight_t* tflight)
 {
@@ -1719,10 +1718,10 @@ static void flightGameUpdate(flight_t* tflight)
     {
         if (flight->savedata.flightIMU == 3)
         {
-            float qThisQuat[4] = { LSM6DSL.fqQuat[0],-LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2],-LSM6DSL.fqQuat[3] };
-            float qRotIntoScreen[4] = { 1, 0, 0, 0  };
-            float * acc = flight->fqQuatAccelAccum;
-            mathQuatApply( acc, qThisQuat, qRotIntoScreen );
+            float qThisQuat[4]      = {LSM6DSL.fqQuat[0], -LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], -LSM6DSL.fqQuat[3]};
+            float qRotIntoScreen[4] = {1, 0, 0, 0};
+            float* acc              = flight->fqQuatAccelAccum;
+            mathQuatApply(acc, qThisQuat, qRotIntoScreen);
 
             mathComputeQuaternionDeltaBetweenQuaternions(acc, tflight->fqQuatLast, acc);
 
@@ -1736,19 +1735,21 @@ static void flightGameUpdate(flight_t* tflight)
             acc[1] *= delta * 0.000001f * 4.0f;
             acc[2] *= delta * 0.000001f * 4.0f;
             acc[3] *= delta * 0.000001f * 4.0f;
-            acc[0] = mathsqrtf( 1.0 - acc[1]*acc[1] + acc[2]*acc[2] + acc[3]*acc[3] );
-            //ESP_LOGI( "_", "%d %5d %5d %5d %5d / %5d %5d %5d %5d", tflight->inittedIMU,((int)(acc[0]*1024)), ((int)(acc[1]*1024)), ((int)(acc[2]*1024)), ((int)(acc[3]*1024)),
-            //    ((int)(flight->fqQuatLast[0]*1024)),((int)(flight->fqQuatLast[1]*1024)),((int)(flight->fqQuatLast[2]*1024)),((int)(flight->fqQuatLast[3]*1024)) );
-            mathQuatApply( flight->fqQuatAccum, flight->fqQuatAccum, acc );
-            mathQuatNormalize( flight->fqQuatAccum, flight->fqQuatAccum );
+            acc[0] = mathsqrtf(1.0 - acc[1] * acc[1] + acc[2] * acc[2] + acc[3] * acc[3]);
+            // ESP_LOGI( "_", "%d %5d %5d %5d %5d / %5d %5d %5d %5d", tflight->inittedIMU,((int)(acc[0]*1024)),
+            // ((int)(acc[1]*1024)), ((int)(acc[2]*1024)), ((int)(acc[3]*1024)),
+            //     ((int)(flight->fqQuatLast[0]*1024)),((int)(flight->fqQuatLast[1]*1024)),((int)(flight->fqQuatLast[2]*1024)),((int)(flight->fqQuatLast[3]*1024))
+            //     );
+            mathQuatApply(flight->fqQuatAccum, flight->fqQuatAccum, acc);
+            mathQuatNormalize(flight->fqQuatAccum, flight->fqQuatAccum);
         }
         else if (flight->savedata.flightIMU == 2)
         {
-            float qThisQuat[4] = { LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3] };
-            float qRotIntoScreen[4] = { 0, 0, 1, 0  };
-            mathQuatApply( flight->fqQuatAccum, qThisQuat, qRotIntoScreen );
+            float qThisQuat[4]      = {LSM6DSL.fqQuat[0], LSM6DSL.fqQuat[1], LSM6DSL.fqQuat[2], LSM6DSL.fqQuat[3]};
+            float qRotIntoScreen[4] = {0, 0, 1, 0};
+            mathQuatApply(flight->fqQuatAccum, qThisQuat, qRotIntoScreen);
         }
-        else if (flight->savedata.flightIMU == 1 )
+        else if (flight->savedata.flightIMU == 1)
         {
             float* quat = LSM6DSL.fqQuat;
             float qDiff[4];
@@ -1759,7 +1760,7 @@ static void flightGameUpdate(flight_t* tflight)
             int deltax = -qDiff[2] * 3072;
             int deltay = qDiff[1] * 3072;
             int deltaz = -qDiff[3] * 3072;
-            
+
             // Hold off for two frames.  Need fqQuatLast to work.
             if (tflight->inittedIMU < 2)
             {
@@ -2096,9 +2097,9 @@ void flightButtonCallback(buttonEvt_t* evt)
 
                     int eo_sign = (flight->myBooletHead & 1) ? 1 : -1;
                     int16_t rightleft[3];
-                    rightleft[0] = -eo_sign * (getCos1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11) ) >> 16;
-                    rightleft[2] =  eo_sign * (getSin1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11) ) >> 16;
-                    rightleft[1] =  eo_sign * (getSin1024(flight->hpr[2] / 11) >> 6 );
+                    rightleft[0] = -eo_sign * (getCos1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11)) >> 16;
+                    rightleft[2] = eo_sign * (getSin1024(flight->hpr[0] / 11) * getCos1024(flight->hpr[2] / 11)) >> 16;
+                    rightleft[1] = eo_sign * (getSin1024(flight->hpr[2] / 11) >> 6);
 
                     tb->launchLocation[0] = flight->planeloc[0] + rightleft[0];
                     tb->launchLocation[1] = flight->planeloc[1] + rightleft[1];
@@ -2993,7 +2994,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     if (textLength)
     {
         // NOTE: First char is color.
-        if (textLength < sizeof(flt->nettext) && data + textLength <= dataend )
+        if (textLength < sizeof(flt->nettext) && data + textLength <= dataend)
         {
             memcpy(flt->nettext, data, textLength);
             flt->nettext[textLength] = 0;

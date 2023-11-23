@@ -149,23 +149,23 @@ static const char str_play[]       = ": Play";
 jukeboxSong_t music_galacticBrickdown[] = {
     {
         .filename = "brkBgmCrazy.sng",
-        .name  = "BGM Crazy",
+        .name     = "BGM Crazy",
     },
     {
         .filename = "brkBgmFinale.sng",
-        .name  = "BGM Finale",
+        .name     = "BGM Finale",
     },
     {
         .filename = "brkBgmPixel.sng",
-        .name  = "BGM Pixel",
+        .name     = "BGM Pixel",
     },
     {
         .filename = "brkBgmSkill.sng",
-        .name  = "BGM Skill",
+        .name     = "BGM Skill",
     },
     {
         .filename = "brkBgmTitle.sng",
-        .name  = "BGM Title",
+        .name     = "BGM Title",
     },
 };
 
@@ -257,19 +257,19 @@ jukeboxSong_t music_jukebox[] = {
     },
     {
         .filename = "hotrod.sng",
-        .name  = "Hot Rod",
+        .name     = "Hot Rod",
     },
-    // {
-    //     .filename = "thelake.sng",
-    //     .name  = "The Lake",
-    // },
+    {
+        .filename = "Fairy_Fountain.sng",
+        .name  = "The Lake",
+    },
     {
         .filename = "yalikejazz.sng",
-        .name  = "Ya like jazz?",
+        .name     = "Ya like jazz?",
     },
     {
         .filename = "banana.sng",
-        .name  = "Banana",
+        .name     = "Banana",
     },
 };
 
@@ -377,19 +377,19 @@ jukeboxSong_t sfx_galacticBrickdown[] = {
     },
     {
         .filename = "brkGameOver.sng",
-        .name  = "Game Over",
+        .name     = "Game Over",
     },
     {
         .filename = "brkGetReady.sng",
-        .name  = "Get Ready",
+        .name     = "Get Ready",
     },
     {
         .filename = "brkHighScore.sng",
-        .name  = "High Score",
+        .name     = "High Score",
     },
     {
         .filename = "brkLvlClear.sng",
-        .name  = "Level Clear",
+        .name     = "Level Clear",
     },
 };
 

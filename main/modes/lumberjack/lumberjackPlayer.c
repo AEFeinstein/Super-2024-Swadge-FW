@@ -23,7 +23,6 @@ void lumberjackSetupPlayer(lumberjackEntity_t* hero, int character)
     hero->maxLevel     = character;
     hero->type         = character;
     hero->state        = LUMBERJACK_UNSPAWNED;
-
 }
 
 void lumberjackSpawnPlayer(lumberjackEntity_t* hero, int x, int y, int facing)
@@ -57,12 +56,10 @@ void lumberjackRespawn(lumberjackEntity_t* hero, int x, int y)
     hero->onGround         = true;
     hero->maxLevel         = 0;
     hero->submergedTimer   = 5000;
-
 }
 
 int lumberjackGetPlayerAnimation(lumberjackEntity_t* hero)
 {
-
     int animation        = hero->state;
     hero->animationSpeed = LUMBERJACK_DEFAULT_ANIMATION_SPEED;
     hero->height         = LUMBERJACK_HERO_HEIGHT;

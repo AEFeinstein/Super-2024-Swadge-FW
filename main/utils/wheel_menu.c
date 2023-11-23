@@ -187,10 +187,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     uint16_t anchorAngle = (360 + renderer->anchorAngle - (360 / ringItems / 2)) % 360;
 
     uint16_t unselR = renderer->unselR;
-    uint16_t selR = renderer->selR;
-    int16_t inR    = renderer->unselR / 3 - 6;
-    int16_t outR   = -renderer->unselR / 3 + 6;
-    bool alternate = false;
+    uint16_t selR   = renderer->selR;
+    int16_t inR     = renderer->unselR / 3 - 6;
+    int16_t outR    = -renderer->unselR / 3 + 6;
+    bool alternate  = false;
 
     wheelItemInfo_t* backInfo = NULL;
 
@@ -244,7 +244,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                     drawInfos[curDraw].bgColor  = optInfo ? optInfo->unselectedBg : renderer->unselBgColor;
                 }
 
-
                 // Calculate where this sector starts
                 uint16_t centerAngle = (anchorAngle + optPos * 360 / ringItems + (180 / ringItems)) % 360;
 
@@ -277,18 +276,17 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             int tickStart = renderer->spokeR - 4;
             int tickEnd   = renderer->spokeR;
             int textR     = renderer->spokeR + 5;
-            uint16_t curAngle = ((curItem->currentSetting - curItem->minSetting) * 180)
-                                    / (curItem->maxSetting - curItem->minSetting)
-                                + 180;
+            uint16_t curAngle
+                = ((curItem->currentSetting - curItem->minSetting) * 180) / (curItem->maxSetting - curItem->minSetting)
+                  + 180;
             char tickLabel[16];
 
             // Draw tick marks
             for (int i = curItem->minSetting; i <= curItem->maxSetting; i++)
             {
                 // Offset
-                uint16_t tickAngle = ((i - curItem->minSetting) * -180)
-                                        / (curItem->maxSetting - curItem->minSetting)
-                                    + 180;
+                uint16_t tickAngle
+                    = ((i - curItem->minSetting) * -180) / (curItem->maxSetting - curItem->minSetting) + 180;
                 ESP_LOGD("Wheel", "tick angle: %" PRIu16, tickAngle);
 
                 // Start tick
@@ -320,18 +318,16 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 }*/
                 // Otherwise this is fine
 
-                ESP_LOGD("Wheel", "tick loc: (%" PRIu16 ", %" PRIu16 ") ->  (%" PRIu16 ", %" PRIu16 ")",
-                         x0, y0, x1, y1);
+                ESP_LOGD("Wheel", "tick loc: (%" PRIu16 ", %" PRIu16 ") ->  (%" PRIu16 ", %" PRIu16 ")", x0, y0, x1,
+                         y1);
 
                 drawLine(x0, y0, x1, y1, renderer->borderColor, 0);
 
                 drawText(renderer->font, c000, tickLabel, textX, textY);
             }
 
-            drawLine(renderer->x, renderer->y,
-                    renderer->x + getCos1024(curAngle) * (tickStart - 2) / 1024,
-                    renderer->y + getSin1024(curAngle) * (tickStart - 2) / 1024,
-                    c500, 0);
+            drawLine(renderer->x, renderer->y, renderer->x + getCos1024(curAngle) * (tickStart - 2) / 1024,
+                     renderer->y + getSin1024(curAngle) * (tickStart - 2) / 1024, c500, 0);
         }
     }
     else
@@ -374,7 +370,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                         = alternate ? (((info->position % 2) == 1) ? spokeR + inR : spokeR + outR) : spokeR;
 
                     drawInfos[curDraw].drawOrder = ((curPosition > info->position) ? (curPosition - info->position)
-                                                                                  : (info->position - curPosition));
+                                                                                   : (info->position - curPosition));
                     drawInfos[curDraw].x         = renderer->x + getCos1024(centerAngle) * itemSpokeR / 1024;
                     drawInfos[curDraw].y         = renderer->y - getSin1024(centerAngle) * itemSpokeR / 1024;
                     drawInfos[curDraw].selected  = isCur;
@@ -410,7 +406,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 = (!curItem || menuItemIsBack(curItem)) ? renderer->selBgColor : renderer->unselBgColor;
             curDraw++;
         }
-        ESP_LOGI("Wheel", "back drawOrder is %" PRIu8, drawInfos[curDraw-1].drawOrder);
+        ESP_LOGI("Wheel", "back drawOrder is %" PRIu8, drawInfos[curDraw - 1].drawOrder);
     }
 
     // Sort by the draw order
@@ -434,7 +430,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
 
         if (renderer->touched)
         {
-            label = menu->currentItem ? getMenuItemLabelText(buffer, sizeof(buffer) - 1, menu->currentItem->val) : "Close Menu";
+            label = menu->currentItem ? getMenuItemLabelText(buffer, sizeof(buffer) - 1, menu->currentItem->val)
+                                      : "Close Menu";
         }
         else if (renderer->zoomed)
         {
@@ -444,7 +441,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             }
             else
             {
-                label = menu->currentItem ? getMenuItemLabelText(buffer, sizeof(buffer) - 1, menu->currentItem->val) : mnuBackStr;
+                label = menu->currentItem ? getMenuItemLabelText(buffer, sizeof(buffer) - 1, menu->currentItem->val)
+                                          : mnuBackStr;
             }
         }
 
@@ -474,8 +472,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             }
 
             drawText(renderer->font, renderer->textColor, label,
-                    renderer->textBox->x + (renderer->textBox->width - textW) / 2,
-                    renderer->textBox->y + (renderer->textBox->height - renderer->font->height - 1) / 2);
+                     renderer->textBox->x + (renderer->textBox->width - textW) / 2,
+                     renderer->textBox->y + (renderer->textBox->height - renderer->font->height - 1) / 2);
         }
     }
 }
@@ -702,7 +700,7 @@ menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer)
         if (!renderer->zoomed && (menuItemHasOptions(cur) || menuItemIsSetting(cur)))
         {
             menuSelectCurrentItem(menu);
-            renderer->zoomed    = true;
+            renderer->zoomed = true;
             if (menuItemHasOptions(cur))
             {
                 renderer->zoomValue = cur->currentOpt;
@@ -715,7 +713,6 @@ menu_t* wheelMenuTouchRelease(menu_t* menu, wheelMenuRenderer_t* renderer)
         }
         else if (!menuItemHasSubMenu(cur) && !menuItemIsBack(cur))
         {
-
             if (renderer->zoomed && renderer->zoomValue != UINT8_MAX)
             {
                 if (menuItemHasOptions(cur))

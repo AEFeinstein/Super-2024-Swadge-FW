@@ -40,7 +40,7 @@ typedef struct
     int character;
     bool swadgeGuyUnlocked;
     bool choUnlocked;
-}lumberjackUnlock_t;
+} lumberjackUnlock_t;
 
 typedef struct
 {
@@ -66,7 +66,6 @@ typedef struct
 
     led_t playerColor;
 
-
     const char** charactersArray;
 } lumberjack_t;
 
@@ -90,7 +89,6 @@ typedef struct
     bool active;
 
 } lumberjackAxeBlock_t;
-
 
 typedef struct
 {
@@ -121,7 +119,6 @@ typedef struct
     int lives;
     uint8_t nLives;
 
-
     int64_t worldTimer;
     int64_t levelTime;
     int64_t transitionTimer;
@@ -149,14 +146,12 @@ typedef struct
     int playerSpawnX;
     int playerSpawnY;
 
-    
-
     int enemy1Count;
     int enemy2Count;
     int enemy3Count;
     int enemy4Count;
     int enemy5Count;
-    int enemy6Count;    
+    int enemy6Count;
     int enemy7Count;
     int enemy8Count;
 
@@ -208,11 +203,11 @@ typedef struct
     lumberjackAxeBlock_t* axeBlocks[8];
     lumberjackEntity_t* localPlayer;
 
-    //Ghost
+    // Ghost
     lumberjackGhost_t* ghost;
     int ghostSpawnTime;
 
-    //Item Block
+    // Item Block
     int itemBlockTime;
     bool itemBlockReady;
     int itemBlockIndex;
@@ -224,10 +219,10 @@ typedef struct
     int invincibleTimer;
     int invincibleFlicker;
     bool invincibleFlickerOn;
-    
+
     lumberjackGameType_t gameType;
 
-    //sounds
+    // sounds
     song_t sfx_item_get;
     song_t sfx_item_use;
     song_t sfx_jump;
@@ -246,12 +241,13 @@ typedef struct
 
 #define NUM_PLATFORMER_HIGH_SCORES 5
 
-typedef struct {
+typedef struct
+{
     uint32_t scores[NUM_PLATFORMER_HIGH_SCORES];
     char initials[NUM_PLATFORMER_HIGH_SCORES][3];
 } pfHighScores_t;
 
 typedef struct
-{           ///< All the players items
+{ ///< All the players items
 } pfRay_t;
 #endif

@@ -15,7 +15,7 @@
 //==============================================================================
 // Constants
 //==============================================================================
-#define PL_TILEMAP_DISPLAY_WIDTH_PIXELS 280  // The screen size
+#define PL_TILEMAP_DISPLAY_WIDTH_PIXELS  280 // The screen size
 #define PL_TILEMAP_DISPLAY_HEIGHT_PIXELS 240 // The screen size
 #define PL_TILEMAP_DISPLAY_WIDTH_TILES   19  // The screen size in tiles + 1
 #define PL_TILEMAP_DISPLAY_HEIGHT_TILES  16  // The screen size in tiles + 1
