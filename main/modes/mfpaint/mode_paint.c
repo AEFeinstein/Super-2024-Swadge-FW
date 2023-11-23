@@ -85,7 +85,6 @@ void paintEnterMode(void)
 
     loadFont("logbook.font", &(paintMenu->menuFont), false);
 
-    paintMenu->menu         = initMenu(paintTitle, paintMenuCb);
     paintMenu->menuRenderer = initMenuLogbookRenderer(&paintMenu->menuFont);
 
     paintMenuInitialize();
@@ -205,6 +204,12 @@ void paintMenuInitialize(void)
 
 void paintSetupMainMenu(void)
 {
+    if (paintMenu->menu != NULL)
+    {
+        deinitMenu(paintMenu->menu);
+    }
+    paintMenu->menu = initMenu(paintTitle, paintMenuCb);
+    
     addSingleItemToMenu(paintMenu->menu, menuOptDraw);
 
     if (paintGetAnySlotInUse())
