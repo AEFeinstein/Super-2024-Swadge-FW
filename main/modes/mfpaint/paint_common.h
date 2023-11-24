@@ -49,6 +49,7 @@
 
 #define PAINT_SHARE_PX_PACKET_LEN (P2P_MAX_DATA_LEN - 3 - 11)
 #define PAINT_SHARE_PX_PER_PACKET PAINT_SHARE_PX_PACKET_LEN * 2
+#define PAINT_SLOT_KEY_LEN_INCL_NULL 17
 
 //////// Draw Screen Layout Constants and Colors
 
@@ -253,12 +254,15 @@ typedef struct
     bool unsaved;
 
     // The name of the currently opened slot
-    char slotKey[17];
+    char slotKey[PAINT_SLOT_KEY_LEN_INCL_NULL];
 
     //// Save Menu Flags
 
     // The save/load slot selected from the picker
-    char selectedSlotKey[17];
+    char selectedSlotKey[PAINT_SLOT_KEY_LEN_INCL_NULL];
+
+    // The save/load slot selected from the picker, before the previous dialog was interrupted to show the current dialog
+    char interruptedSelectedSlotKey[PAINT_SLOT_KEY_LEN_INCL_NULL];
 
     //////// Rendering flags
 
@@ -325,6 +329,9 @@ typedef struct
 
     /// @brief Which dialog to show
     paintDialog_t dialog;
+
+    /// @brief Which dialog was interrupted to show the current one
+    paintDialog_t interruptedDialog;
 
     /// @brief The actual dialog
     dialogBox_t* dialogBox;
