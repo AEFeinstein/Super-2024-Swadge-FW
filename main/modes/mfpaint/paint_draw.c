@@ -1921,8 +1921,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             {
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
                 paintRefreshUndoRedo();
-                paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
-                // paintResetCanvas(&paintState->canvas);
+                paintResetCanvas(&paintState->canvas);
                 paintState->buttonMode = BTN_MODE_DRAW;
             }
         }
@@ -2158,7 +2157,6 @@ static void paintDialogCb(const char* label)
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
                 paintRefreshUndoRedo();
                 paintResetCanvas(&paintState->canvas);
-                // paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
                 paintState->buttonMode = BTN_MODE_DRAW;
                 break;
             }
