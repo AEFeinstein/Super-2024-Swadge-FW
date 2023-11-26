@@ -1103,7 +1103,7 @@ void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameDa
 
 void breakoutChangeStatePause(breakout_t* self)
 {
-    // buzzer_play_bgm(&sndPause);
+    bzrPause();
     self->gameData.btnState = 0;
     self->update            = &breakoutUpdatePause;
 }
@@ -1130,6 +1130,7 @@ void breakoutUpdatePause(breakout_t* self, int64_t elapsedUs)
 
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
+        bzrResume();
         self->gameData.btnState = 0;
         self->update            = &breakoutGameLoop;
     }
@@ -1161,6 +1162,8 @@ static void breakoutChangeStateTitleScreen(breakout_t* self)
     {
         deactivateAllEntities(&(self->entityManager), false, false, false);
         loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
+        breakout->tilemap.executeTileSpawnAll = true;
+
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
