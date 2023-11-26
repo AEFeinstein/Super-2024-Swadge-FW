@@ -48,7 +48,7 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
 static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH * BALL_SPEED_UP_TABLE_ROW_LENGTH] = {
     // bounce     new
     // threshold  speed
-    0, 39, 5, 43, 4, 47, 4, 51, 3, 55, 3, 59, 3, 63, 2, 67, 20, 71, 30, 75, 40, 79, 50, 80};
+    0, 39, 5, 43, 4, 47, 4, 51, 4, 55, 4, 59, 4, 63, 20, 67, 30, 71, 40, 75, 50, 79, 60, 80};
 
 //==============================================================================
 // Functions
