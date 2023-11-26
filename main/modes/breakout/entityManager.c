@@ -613,7 +613,7 @@ entity_t* createBall(entityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->speedUpLookupIndex               = 0;
     entity->maxSpeed                         = 127;
     entity->bouncesOffUnbreakableBlocks      = 0;
-    entity->breakInfiniteLoopBounceThreshold = 16;
+    entity->breakInfiniteLoopBounceThreshold = 8;
 
     entity->type                 = ENTITY_PLAYER_BALL;
     entity->spriteIndex          = SP_BALL_0;
@@ -651,7 +651,7 @@ entity_t* createCaptiveBall(entityManager_t* entityManager, uint16_t x, uint16_t
     entity->speedUpLookupIndex               = 0;
     entity->maxSpeed                         = 127;
     entity->bouncesOffUnbreakableBlocks      = 0;
-    entity->breakInfiniteLoopBounceThreshold = 16;
+    entity->breakInfiniteLoopBounceThreshold = 8;
 
     setVelocity(entity, (x + y) % 360, 39);
 
