@@ -173,7 +173,8 @@ static void lumberjackEnterMode(void)
 
 static void lumberjackLoadSave(void)
 {
-    size_t len = sizeof(lumberjack->save);
+    size_t len = sizeof(lumberjackUnlock_t);
+
     readNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, &len);
     if (lumberjack->save.choUnlocked == false)
     {
@@ -239,7 +240,8 @@ static void lumberjackLoadSave(void)
 
 void lumberjackSaveSave(void)
 {
-    size_t len = sizeof(lumberjack->save);
+    ESP_LOGI(LUM_TAG, "Saving");
+    size_t len = sizeof(lumberjackUnlock_t);
     writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
 }
 
@@ -477,7 +479,7 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 static bool lumberjackChoUnlocked()
 {
     rayPlayer_t cho;
-    size_t size = sizeof(cho);
+    size_t size = sizeof(rayPlayer_t);
 
     return readNvsBlob(lumberjackChoUnlock, &cho, &(size));
 }
