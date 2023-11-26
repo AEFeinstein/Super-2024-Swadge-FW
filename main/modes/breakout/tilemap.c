@@ -395,7 +395,7 @@ bool isBlock(uint8_t tileId)
 {
     switch (tileId)
     {
-        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_2x2_BLACK_DR:
+        case TILE_BLOCK_1x1_RED ... TILE_BLOCK_2x2_STONE_DR:
             return true;
         default:
             return false;
