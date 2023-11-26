@@ -784,10 +784,7 @@ void updateCrawler(entity_t* self)
     if (self->bouncesOffUnbreakableBlocks > 4)
     {
         scorePoints(self->gameData, 100, 1);
-        destroyEntity(self, false);
-        createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION,
-                     self->y >> SUBPIXEL_RESOLUTION);
-        bzrPlaySfx(&(self->soundManager->detonate), BZR_LEFT);
+        explodeBomb(self);
     }
 
     if (isOutsidePlayfield(self))
