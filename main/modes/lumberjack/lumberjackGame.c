@@ -2164,6 +2164,9 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
         {
             if (entity->onGround)
                 entity->vx *= .1;
+            else if (entity == lumv->localPlayer && (lumv->btnState & PB_LEFT) == false && (lumv->btnState & PB_RIGHT) == false )
+                entity->vx *= .9;
+
         }
     }
 
