@@ -1164,9 +1164,9 @@ static void breakoutChangeStateTitleScreen(breakout_t* self)
         loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
         breakout->tilemap.executeTileSpawnAll = true;
 
-        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
-        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
-        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 224, 24 + esp_random() % 208);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 224, 24 + esp_random() % 208);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 224, 24 + esp_random() % 208);
 
         setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
         bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
