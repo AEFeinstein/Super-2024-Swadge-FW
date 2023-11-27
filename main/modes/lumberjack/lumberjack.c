@@ -16,8 +16,7 @@
 #define LUMBERJACK_VLEN    7
 #define LUMBERJACK_VERSION "231121b"
 
-#define DEFAULT_HIGHSCORE     5000
-#define DEFAULT_FRAME_RATE_US 40000
+#define DEFAULT_HIGHSCORE 5000
 
 #define CHARACTER_RED   0
 #define CHARACTER_GREEN 1
@@ -173,7 +172,8 @@ static void lumberjackEnterMode(void)
 
 static void lumberjackLoadSave(void)
 {
-    size_t len = sizeof(lumberjack->save);
+    size_t len = sizeof(lumberjackUnlock_t);
+
     readNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, &len);
     if (lumberjack->save.choUnlocked == false)
     {
@@ -234,13 +234,12 @@ static void lumberjackLoadSave(void)
 
     lumberjack->save.character = lumberjack->selected;
 
-    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
+    lumberjackSaveSave();
 }
 
 void lumberjackSaveSave(void)
 {
-    size_t len = sizeof(lumberjack->save);
-    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
+    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, sizeof(lumberjackUnlock_t));
 }
 
 static void lumberjackJoinGame(void)
@@ -477,7 +476,7 @@ static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, in
 static bool lumberjackChoUnlocked()
 {
     rayPlayer_t cho;
-    size_t size = sizeof(cho);
+    size_t size = sizeof(rayPlayer_t);
 
     return readNvsBlob(lumberjackChoUnlock, &cho, &(size));
 }

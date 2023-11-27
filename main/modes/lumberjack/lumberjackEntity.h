@@ -58,12 +58,15 @@ typedef struct
 typedef struct
 {
     bool active;
+    bool attacking;
+
     int x;
     int y;
     int startSide;
     int currentFrame;
     int64_t spawnTime;
     int64_t timerFrameUpdate;
+    int attackTime;
 } lumberjackGhost_t;
 
 void lumberjackSetupEnemy(lumberjackEntity_t* enemy, int character);
