@@ -234,12 +234,11 @@ static void lumberjackLoadSave(void)
 
     lumberjack->save.character = lumberjack->selected;
 
-    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
+    lumberjackSaveSave();
 }
 
 void lumberjackSaveSave(void)
 {
-    ESP_LOGI(LUM_TAG, "Saving");
     writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, sizeof(lumberjackUnlock_t));
 }
 
