@@ -76,6 +76,9 @@ static songFinishedCbFn sfxDoneCb = NULL;
 /// song starts before this one finishes
 static songFinishedCbFn bgmDoneCb = NULL;
 
+/// @brief Boolean to reset clocks after buzzer is restored
+static volatile bool bzrIsRestored = false;
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -455,6 +458,14 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
         int32_t tElapsedUs = tNowUs - tLastLoopUs;
         tLastLoopUs        = tNowUs;
 
+        // If the buzzer is being restored
+        if(bzrIsRestored)
+        {
+            bzrIsRestored = false;
+            // Return for once cycle so that tNowUs is set to a sane value
+            return false;
+        }
+
         // Don't do much if paused. Check here so that tElapsedUs stays sane
         if (bzrPaused)
         {
@@ -632,6 +643,9 @@ void bzrResume(void)
         // Mark it as not paused
         bzrPaused = false;
 
+        // Set this to restore the elapsed clock in the ISR
+        bzrIsRestored = true;
+
         if (!bzrTimerActive)
         {
             // Restart timer stopped by bzrStop()
@@ -685,6 +699,8 @@ void bzrRestore(void* data)
     }
 
     free(data);
+
+    bzrResume();
 }
 
 /**

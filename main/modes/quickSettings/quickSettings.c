@@ -172,9 +172,8 @@ static void quickSettingsEnterMode(void)
     // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
     quickSettings = calloc(1, sizeof(quickSettingsMenu_t));
 
-    // Save the buzzer state
+    // Save the buzzer state and pause it
     quickSettings->buzzerState = bzrSave();
-    bzrStop(true);
 
     // Save the LED state
     getLedState(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
@@ -259,9 +258,8 @@ static void quickSettingsExitMode(void)
 
     bzrStop(true);
 
-    // Restore the buzzer state
+    // Restore the buzzer state and resume it
     bzrRestore(quickSettings->buzzerState);
-    bzrResume();
 
     // Restore the LED state
     setLeds(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
