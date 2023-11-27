@@ -26,7 +26,7 @@ static const char* const deathTexts[] = {
     "Game Over. Insert two quarters to continue.",
     "One life remaining... Just kidding!",
     "Would you like to purchase better armor for $5? Too bad, we don't pay to win!",
-    "You seem to be experiencing cognitive and/or coordination difficulties. Emergency medical services have been "
+    "You seem to be experiencing cognitive and / or coordination difficulties. Emergency medical services have been "
     "alerted.",
 };
 
@@ -80,17 +80,27 @@ void rayDeathScreenRender(ray_t* ray, uint32_t elapsedUs)
     // Fill dark red background
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c100);
 
+    // Draw a title
+    const char* gameOverText = "Game Over";
+    int16_t tWidth           = textWidth(&ray->logbook, gameOverText);
+    int16_t goX              = (TFT_WIDTH - tWidth) / 2;
+    drawText(&ray->logbook, c542, gameOverText, goX, 0);
+    fillDisplayArea(goX, ray->logbook.height + 2, goX + tWidth, ray->logbook.height + 3, c542);
+
 #define DEATH_TEXT_MARGIN 25
 
+    int16_t messageMaxHeight = (TFT_HEIGHT - (ray->logbook.height + 3));
+
     // Measure the height of the wrapped text
-    uint16_t tHeight = textWordWrapHeight(&ray->logbook, ray->deathText, TFT_WIDTH - (DEATH_TEXT_MARGIN * 2),
-                                          TFT_HEIGHT - (DEATH_TEXT_MARGIN * 2));
+    uint16_t tHeight
+        = textWordWrapHeight(&ray->logbook, ray->deathText, TFT_WIDTH - (DEATH_TEXT_MARGIN * 2), messageMaxHeight);
 
     // Set the offsets
     int16_t xOff = DEATH_TEXT_MARGIN;
-    int16_t yOff = (TFT_HEIGHT - tHeight) / 2;
+    int16_t yOff = ((messageMaxHeight - tHeight) / 2) + (ray->logbook.height + 3);
 
-    drawTextWordWrap(&ray->logbook, c542, ray->deathText, &xOff, &yOff, TFT_WIDTH - xOff, TFT_HEIGHT - yOff);
+    // Draw the message
+    drawTextWordWrap(&ray->logbook, c542, ray->deathText, &xOff, &yOff, TFT_WIDTH - xOff, TFT_HEIGHT);
 
     // Blink an arrow to show there's more dialog
     if (ray->blink && 0 == ray->btnLockoutUs)
