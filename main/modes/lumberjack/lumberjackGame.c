@@ -852,7 +852,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
             if (evt.down && (PB_START == evt.button))
             {
                 lumv->paused = false;
-                bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
+                bzrResume();
             }
         }
         lumberjackDrawGame();
@@ -991,8 +991,7 @@ void baseMode(int64_t elapsedUs)
         if (evt.down && (PB_START == evt.button) && false == lumv->lumberjackMain->networked)
         {
             lumv->paused = true;
-            // bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
-            bzrStop(true);
+            bzrPause();
         }
     }
 
