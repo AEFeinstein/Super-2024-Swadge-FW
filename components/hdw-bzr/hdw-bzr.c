@@ -616,7 +616,7 @@ bool bzrPause(void)
     if (!bzrPaused)
     {
         bzrPaused = true;
-        bzrStop(false);
+        bzrPlayNote(SILENCE, BZR_STEREO, 0);
         return true;
     }
     return false;
