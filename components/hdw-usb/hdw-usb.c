@@ -92,10 +92,9 @@ static char* hid_string_descriptor[7] = {
     "123456",               // 3: Serials, overwritten with chip ID
     "Swadge HID interface", // 4: HID
 
-    // Tricky keep these symbols, for sandboxing.  These are not used.  But, by keeping them here it makes them accessable via the sandbox.
-    (char*)&tud_connect,
-    (char*)&tud_disconnect
-};
+    // Tricky keep these symbols, for sandboxing.  These are not used.  But, by keeping them here it makes them
+    // accessable via the sandbox.
+    (char*)&tud_connect, (char*)&tud_disconnect};
 
 /**
  * @brief Unique serial number.
@@ -161,8 +160,8 @@ void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHa
     esp_err_t e = esp_read_mac(mac, ESP_MAC_WIFI_SOFTAP);
     if (e == ESP_OK)
     {
-        snprintf(serial_string, sizeof(serial_string), "%02x%02x%02x%02x%02x%02x", (int)mac[0], (int)mac[1], (int)mac[2],
-            (int)mac[3], (int)mac[4], (int)mac[5]);
+        snprintf(serial_string, sizeof(serial_string), "%02x%02x%02x%02x%02x%02x", (int)mac[0], (int)mac[1],
+                 (int)mac[2], (int)mac[3], (int)mac[4], (int)mac[5]);
         hid_string_descriptor[3] = serial_string;
     }
 
