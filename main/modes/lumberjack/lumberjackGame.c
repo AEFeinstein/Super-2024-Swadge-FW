@@ -48,7 +48,7 @@
 #define LUMBERJACK_GHOST_SPEED_FAST    3
 #define LUMBERJACK_GHOST_BOX           20
 #define LUMBERJACK_GHOST_ANIMATION     2500
-#define LUMBERJACK_GHOST_ATTACK_DELAY  1200         
+#define LUMBERJACK_GHOST_ATTACK_DELAY  1200
 
 #define LUMBERJACK_BONUS_DISPLAYDURATI 4000
 
@@ -1507,9 +1507,9 @@ void baseMode(int64_t elapsedUs)
         lumv->ghost->timerFrameUpdate += elapsedUs;
         if (lumv->ghost->attackTime > 0)
         {
-            lumv->ghost->attackTime       -= elapsedUs/1000;
+            lumv->ghost->attackTime -= elapsedUs / 1000;
         }
-        
+
         if (lumv->ghost->timerFrameUpdate > LUMBERJACK_GHOST_ANIMATION)
         {
             lumv->ghost->timerFrameUpdate -= LUMBERJACK_GHOST_ANIMATION;
@@ -1561,9 +1561,8 @@ void lumberjackOnLocalPlayerDeath(void)
 
         bzrPlayBgm(&lumv->song_gameover, BZR_STEREO);
 
-        
         if (lumv->lumberjackMain->networked == false && !lumv->cheat)
-        {            
+        {
             ESP_LOGI(LUM_TAG, "SAVE");
             if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
             {
@@ -1574,7 +1573,7 @@ void lumberjackOnLocalPlayerDeath(void)
             {
                 lumv->lumberjackMain->save.panicHighScore = lumv->highscore;
             }
-            
+
             lumberjackSaveSave();
         }
     }
@@ -1750,7 +1749,8 @@ void lumberjackDrawGame(void)
 
     for (int i = 0; i < lumv->lives; i++)
     {
-        if (i > 5) continue;
+        if (i > 5)
+            continue;
 
         int icon = lumv->localPlayerType;
 
@@ -1924,7 +1924,7 @@ bool lumberjackSpawnCheck(int64_t elapseUs)
         {
             lumv->ghost->spawnTime = lumv->ghostSpawnTime;
 
-            lumv->ghost->active = true;
+            lumv->ghost->active     = true;
             lumv->ghost->attackTime = LUMBERJACK_GHOST_ATTACK_DELAY;
 
             if (esp_random() % 2 > 0)
@@ -2189,9 +2189,9 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
         {
             if (entity->onGround)
                 entity->vx *= .1;
-            else if (entity == lumv->localPlayer && (lumv->btnState & PB_LEFT) == false && (lumv->btnState & PB_RIGHT) == false )
+            else if (entity == lumv->localPlayer && (lumv->btnState & PB_LEFT) == false
+                     && (lumv->btnState & PB_RIGHT) == false)
                 entity->vx *= .9;
-
         }
     }
 
@@ -2855,7 +2855,7 @@ void lumberjackExitGameMode(void)
         {
             lumv->lumberjackMain->save.panicHighScore = lumv->highscore;
         }
-        
+
         lumberjackSaveSave();
     }
     //** FREE THE SPRITES **//

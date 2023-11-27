@@ -16,7 +16,7 @@
 #define LUMBERJACK_VLEN    7
 #define LUMBERJACK_VERSION "231121b"
 
-#define DEFAULT_HIGHSCORE     5000
+#define DEFAULT_HIGHSCORE 5000
 
 #define CHARACTER_RED   0
 #define CHARACTER_GREEN 1
@@ -240,8 +240,7 @@ static void lumberjackLoadSave(void)
 void lumberjackSaveSave(void)
 {
     ESP_LOGI(LUM_TAG, "Saving");
-    size_t len = sizeof(lumberjackUnlock_t);
-    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, len);
+    writeNvsBlob(LUMBERJACK_SAVE, &lumberjack->save, sizeof(lumberjackUnlock_t));
 }
 
 static void lumberjackJoinGame(void)
