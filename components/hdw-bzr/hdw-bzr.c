@@ -459,7 +459,7 @@ static bool IRAM_ATTR buzzer_check_next_note_isr(gptimer_handle_t timer, const g
         tLastLoopUs        = tNowUs;
 
         // If the buzzer is being restored
-        if(bzrIsRestored)
+        if (bzrIsRestored)
         {
             bzrIsRestored = false;
             // Return for once cycle so that tNowUs is set to a sane value
