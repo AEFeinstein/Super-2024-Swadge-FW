@@ -55,7 +55,7 @@ static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to contro
 static const char breakoutHintTextCaptiveBall[]
     = "Free the captive balls!\nReflect them with your paddle for multiball!";
 static const char breakoutHintTextCrawler[] = "CRAWLERs can't be defeated by hitting them directly!";
-static const char breakoutHintTextFinal[]   = "\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
+static const char breakoutHintTextFinal[]   = "\n\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
 
 //==============================================================================
 // Structs
