@@ -152,6 +152,7 @@ static void breakoutDrawPause(font_t* font);
 uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 
 void breakoutBuildMainMenu(breakout_t* self);
+int16_t getBonusTimerStartValue(tilemap_t* tilemap);
 
 //==============================================================================
 // Level Definitions
@@ -409,7 +410,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[GAME_LEVEL_START_INDEX].filename);
-            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
+            breakout->gameData.countdown = getBonusTimerStartValue(&(breakout->tilemap));
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -419,7 +420,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level].filename);
-            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
+            breakout->gameData.countdown = getBonusTimerStartValue(&(breakout->tilemap));
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -937,7 +938,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
-                breakout->gameData.countdown  = breakout->tilemap.totalTargetBlocks;
+                breakout->gameData.countdown  = getBonusTimerStartValue(&(breakout->tilemap));
                 breakout->gameData.levelScore = 0;
                 if (!self->gameData.debugMode)
                 {
@@ -1555,4 +1556,8 @@ void breakoutBuildMainMenu(breakout_t* self)
     {
         addSingleItemToMenu(breakout->menu, breakoutExit);
     }
+}
+
+int16_t getBonusTimerStartValue(tilemap_t* tilemap){
+    return (tilemap->totalTargetBlocks > 16) ? tilemap->totalTargetBlocks : 30;
 }
