@@ -21,7 +21,6 @@
 #define TILE_SIZE_IN_POWERS_OF_2 3
 #define TILE_SIZE                8
 #define HALF_TILE_SIZE           4
-#define DESPAWN_THRESHOLD        64
 
 #define SIGNOF(x)         ((x > 0) - (x < 0))
 #define TO_TILE_COORDS(x) ((x) >> TILE_SIZE_IN_POWERS_OF_2)
