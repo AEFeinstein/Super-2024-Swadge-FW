@@ -22,7 +22,7 @@ void initializeGameData(gameData_t* gameData, soundManager_t* soundManager)
     gameData->ballsInPlay = 0;
     gameData->countdown   = 000;
 
-    gameData->extraLifeScore = 8000;
+    gameData->extraLifeScore = 5000;
     gameData->levelScore     = 0;
     gameData->ballLaunched   = false;
 
@@ -66,7 +66,7 @@ void initializeGameDataFromTitleScreen(gameData_t* gameData)
     gameData->countdown   = 000;
     gameData->frameCount  = 0;
 
-    gameData->extraLifeScore = 8000;
+    gameData->extraLifeScore = 5000;
     gameData->levelScore     = 0;
     gameData->ballLaunched   = false;
 
