@@ -1427,7 +1427,7 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->yspeed += (1 << SUBPIXEL_RESOLUTION) * ((self->yspeed == 0) ? SIGNOF(self->xspeed) : SIGNOF(self->yspeed));
+                    self->yspeed += (1 << (SUBPIXEL_RESOLUTION >> 1)) * ((self->yspeed == 0) ? SIGNOF(self->xspeed) : SIGNOF(self->yspeed));
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->xspeed = -self->xspeed;
@@ -1437,7 +1437,7 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->xspeed += (1 << SUBPIXEL_RESOLUTION) * ((self->xspeed == 0) ? SIGNOF(self->yspeed) : SIGNOF(self->xspeed));
+                    self->xspeed += (1 << (SUBPIXEL_RESOLUTION >> 1)) * ((self->xspeed == 0) ? SIGNOF(self->yspeed) : SIGNOF(self->xspeed));
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->yspeed = -self->yspeed;
