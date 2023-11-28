@@ -9,25 +9,29 @@
 //==============================================================================
 
 static const char* const deathTexts[] = {
+    // Cheeky messages
     "GG no re",
     "Skill Issue",
     "Press F",
     "YOUR HEAD ASPLODE",
     "You may have died, but you are not safe from taxes",
-    "Pro Tip: Shoot the enemies until they die",
     "Your suit didn't disintegrate revealing a bikini-clad bird, you just died",
     "Should have ducked",
     "I guess the galaxy will never be at peace",
-    "Turns out main characters *can* die, who knew?",
     "Runtime error 0x00001337 SEGMENTATION FAULT nah just kidding you died",
     "Have you tried turning it off and then on again?",
-    "Try again, but do better",
-    "Remember when you used to give the controller to a friend to beat the hard levels? Yeah, good times...",
-    "Game Over. Insert two quarters to continue.",
+    "Remember when you used to give the controller to a friend to beat the hard levels? Good times...",
+    "Insert two quarters to continue",
     "One life remaining... Just kidding!",
-    "Would you like to purchase better armor for $5? Too bad, we don't pay to win!",
-    "You seem to be experiencing cognitive and / or coordination difficulties. Emergency medical services have been "
-    "alerted.",
+    "Would you like to purchase better armor for $5? Too bad, no pay to win here!",
+
+    // Actually helpful messages
+    "Remember to check your map with the PAUSE button!",
+    "You can lock onto enemies with the B button to strafe around their shots! DODGE!",
+    "Try exploring previous worlds and solving puzzles to find health and ammo upgrades!",
+    "Did you know that enemies have weaknesses to certain weapons?",
+    "Keys and doors are color- and shape-coded for your convenience.",
+    "The LEDs on the Swadge use radar technology to point to the nearest enemy.",
 };
 
 //==============================================================================
