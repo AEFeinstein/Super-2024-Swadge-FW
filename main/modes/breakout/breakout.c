@@ -1558,6 +1558,7 @@ void breakoutBuildMainMenu(breakout_t* self)
     }
 }
 
-int16_t getBonusTimerStartValue(tilemap_t* tilemap){
+int16_t getBonusTimerStartValue(tilemap_t* tilemap)
+{
     return (tilemap->totalTargetBlocks > 16) ? tilemap->totalTargetBlocks : 30;
 }

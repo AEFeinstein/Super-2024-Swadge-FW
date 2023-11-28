@@ -48,22 +48,8 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
 static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH * BALL_SPEED_UP_TABLE_ROW_LENGTH] = {
     // bounce     new
     // threshold  speed
-    0, 23,
-    3, 27,
-    3, 31,
-    3, 35,
-    3, 39, 
-    4, 43, 
-    4, 47, 
-    4, 51, 
-    4, 55, 
-    4, 59, 
-    4, 63, 
-    20, 67, 
-    30, 71, 
-    40, 75, 
-    50, 79, 
-    60, 80};
+    0, 23, 3, 27, 3, 31, 3,  35, 3,  39, 4,  43, 4,  47, 4,  51,
+    4, 55, 4, 59, 4, 63, 20, 67, 30, 71, 40, 75, 50, 79, 60, 80};
 
 //==============================================================================
 // Functions
@@ -1427,7 +1413,8 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->yspeed += (1 << (SUBPIXEL_RESOLUTION >> 1)) * ((self->yspeed == 0) ? SIGNOF(self->xspeed) : SIGNOF(self->yspeed));
+                    self->yspeed += (1 << (SUBPIXEL_RESOLUTION >> 1))
+                                    * ((self->yspeed == 0) ? SIGNOF(self->xspeed) : SIGNOF(self->yspeed));
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->xspeed = -self->xspeed;
@@ -1437,7 +1424,8 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->xspeed += (1 << (SUBPIXEL_RESOLUTION >> 1)) * ((self->xspeed == 0) ? SIGNOF(self->yspeed) : SIGNOF(self->xspeed));
+                    self->xspeed += (1 << (SUBPIXEL_RESOLUTION >> 1))
+                                    * ((self->xspeed == 0) ? SIGNOF(self->yspeed) : SIGNOF(self->xspeed));
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->yspeed = -self->yspeed;
