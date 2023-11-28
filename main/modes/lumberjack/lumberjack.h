@@ -117,6 +117,7 @@ typedef struct
     int upgrade;
     int resume;
     int lives;
+    bool cheat;
     uint8_t nLives;
 
     int64_t worldTimer;
