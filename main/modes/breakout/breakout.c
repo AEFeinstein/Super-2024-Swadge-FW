@@ -157,7 +157,7 @@ void breakoutBuildMainMenu(breakout_t* self);
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 64
+#define NUM_LEVELS 65
 
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
@@ -181,7 +181,7 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "mag01.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
 
        {.filename = "mag02.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "getMorGet.bin", .hintTextPtr = breakoutHintTextRBomb, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "cho.bin", .hintTextPtr = breakoutHintTextRBomb, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "bombtest.bin", .hintTextPtr = breakoutHintTextBombTest, .bgmIndex = BRK_BGM_SKILL},
 
        {.filename = "gaylordlogo.bin", .hintTextPtr = breakoutHintTextGotThis, .bgmIndex = BRK_BGM_PIXEL},
@@ -204,7 +204,7 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "b.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
 
        {.filename = "angles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "m-attack.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "outtaMyWay.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
        {.filename = "mag03.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
@@ -216,10 +216,10 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "tinyhuge.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
        {.filename = "bombrings.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "getMorGet.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "foosball.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "wtf.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
-       {.filename = "introenemy.bin", .hintTextPtr = breakoutHintTextCrawler, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "introenemy.bin", .hintTextPtr = breakoutHintTextCrawler, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "bumpers.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "jailbreak2.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
 
@@ -227,9 +227,9 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "infestation.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "chainreact.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
-       {.filename = "m-battle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "paddles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "m-battle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "m-attack.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
+       {.filename = "newlvl47.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
 
        {.filename = "stormcastle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
        {.filename = "starlite.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
@@ -238,17 +238,18 @@ static const leveldef_t leveldef[NUM_LEVELS]
        // Postgame
        {.filename = "heart.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "coffee.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "shiftersam.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "shiftersam.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "heart2.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "kevinsleep.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "kevinsleep.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "SPACESHIP.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "phone.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "metroid.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "phone.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "metroid.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "shiftersmil.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "sandsoftime.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "42069.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY}};
+       {.filename = "wtf.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE}};
 
 //==============================================================================
 // Look Up Tables
