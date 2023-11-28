@@ -39,7 +39,7 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
     -1, 2,  -1, 3,  -1, -3, 0,  -2, 0,  -1, 0,  0,  0, 1,  0, 2,  0,  3,  0,  -3, 1,  -2, 1, -1, 1,
     0,  1,  1,  1,  2,  1,  3,  1,  -2, 2,  -1, 2,  0, 2,  1, 2,  2,  2,  -1, 3,  0,  3,  1, 3};
 
-#define BALL_SPEED_UP_TABLE_LENGTH     12
+#define BALL_SPEED_UP_TABLE_LENGTH     16
 #define BALL_SPEED_UP_TABLE_ROW_LENGTH 2
 
 #define BOUNCE_THRESHOLD_LOOKUP_OFFSET 0
@@ -48,7 +48,22 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
 static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH * BALL_SPEED_UP_TABLE_ROW_LENGTH] = {
     // bounce     new
     // threshold  speed
-    0, 39, 5, 43, 4, 47, 4, 51, 4, 55, 4, 59, 4, 63, 20, 67, 30, 71, 40, 75, 50, 79, 60, 80};
+    0, 23,
+    3, 27,
+    3, 31,
+    3, 35,
+    3, 39, 
+    4, 43, 
+    4, 47, 
+    4, 51, 
+    4, 55, 
+    4, 59, 
+    4, 63, 
+    20, 67, 
+    30, 71, 
+    40, 75, 
+    50, 79, 
+    60, 80};
 
 //==============================================================================
 // Functions

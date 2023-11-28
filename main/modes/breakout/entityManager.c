@@ -608,7 +608,7 @@ entity_t* createBall(entityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->spriteRotateAngle    = 0;
 
     entity->shouldAdvanceMultiplier          = false;
-    entity->baseSpeed                        = 39;
+    entity->baseSpeed                        = 23;
     entity->bouncesToNextSpeedUp             = 5;
     entity->speedUpLookupIndex               = 0;
     entity->maxSpeed                         = 127;
@@ -646,7 +646,7 @@ entity_t* createCaptiveBall(entityManager_t* entityManager, uint16_t x, uint16_t
     entity->spriteRotateAngle    = 0;
 
     entity->shouldAdvanceMultiplier          = false;
-    entity->baseSpeed                        = 39;
+    entity->baseSpeed                        = 23;
     entity->bouncesToNextSpeedUp             = 5;
     entity->speedUpLookupIndex               = 0;
     entity->maxSpeed                         = 127;
