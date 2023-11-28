@@ -21,7 +21,6 @@
 #define TILE_SIZE_IN_POWERS_OF_2 3
 #define TILE_SIZE                8
 #define HALF_TILE_SIZE           4
-#define DESPAWN_THRESHOLD        64
 
 #define SIGNOF(x)         ((x > 0) - (x < 0))
 #define TO_TILE_COORDS(x) ((x) >> TILE_SIZE_IN_POWERS_OF_2)
@@ -39,7 +38,7 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
     -1, 2,  -1, 3,  -1, -3, 0,  -2, 0,  -1, 0,  0,  0, 1,  0, 2,  0,  3,  0,  -3, 1,  -2, 1, -1, 1,
     0,  1,  1,  1,  2,  1,  3,  1,  -2, 2,  -1, 2,  0, 2,  1, 2,  2,  2,  -1, 3,  0,  3,  1, 3};
 
-#define BALL_SPEED_UP_TABLE_LENGTH     12
+#define BALL_SPEED_UP_TABLE_LENGTH     16
 #define BALL_SPEED_UP_TABLE_ROW_LENGTH 2
 
 #define BOUNCE_THRESHOLD_LOOKUP_OFFSET 0
@@ -48,7 +47,8 @@ static const int16_t bombExplosionTileCheckOffsets[74] = {
 static const int16_t ballSpeedUps[BALL_SPEED_UP_TABLE_LENGTH * BALL_SPEED_UP_TABLE_ROW_LENGTH] = {
     // bounce     new
     // threshold  speed
-    0, 39, 5, 43, 4, 47, 4, 51, 3, 55, 3, 59, 3, 63, 2, 67, 20, 71, 30, 75, 40, 79, 50, 80};
+    0, 23, 3, 27, 3, 31, 3,  35, 3,  39, 4,  43, 4,  47, 4,  51,
+    4, 55, 4, 59, 4, 63, 20, 67, 30, 71, 40, 75, 50, 79, 60, 80};
 
 //==============================================================================
 // Functions
@@ -784,10 +784,7 @@ void updateCrawler(entity_t* self)
     if (self->bouncesOffUnbreakableBlocks > 4)
     {
         scorePoints(self->gameData, 100, 1);
-        destroyEntity(self, false);
-        createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION,
-                     self->y >> SUBPIXEL_RESOLUTION);
-        bzrPlaySfx(&(self->soundManager->detonate), BZR_LEFT);
+        explodeBomb(self);
     }
 
     if (isOutsidePlayfield(self))
@@ -1415,7 +1412,8 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->yspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->xspeed);
+                    self->yspeed += (1 << (SUBPIXEL_RESOLUTION >> 1))
+                                    * ((self->yspeed == 0) ? SIGNOF(self->xspeed) : SIGNOF(self->yspeed));
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->xspeed = -self->xspeed;
@@ -1425,7 +1423,8 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
                 if (self->bouncesOffUnbreakableBlocks > self->breakInfiniteLoopBounceThreshold)
                 {
                     // Subtly change ball bounce angle if the ball has bounced off many unbreakable blocks in a row
-                    self->xspeed += (1 << SUBPIXEL_RESOLUTION) * SIGNOF(self->yspeed);
+                    self->xspeed += (1 << (SUBPIXEL_RESOLUTION >> 1))
+                                    * ((self->xspeed == 0) ? SIGNOF(self->yspeed) : SIGNOF(self->xspeed));
                     self->bouncesOffUnbreakableBlocks = 0;
                 }
                 self->yspeed = -self->yspeed;

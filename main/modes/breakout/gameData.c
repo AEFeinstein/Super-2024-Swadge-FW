@@ -22,7 +22,7 @@ void initializeGameData(gameData_t* gameData, soundManager_t* soundManager)
     gameData->ballsInPlay = 0;
     gameData->countdown   = 000;
 
-    gameData->extraLifeScore = 8000;
+    gameData->extraLifeScore = 6400;
     gameData->levelScore     = 0;
     gameData->ballLaunched   = false;
 
@@ -66,7 +66,7 @@ void initializeGameDataFromTitleScreen(gameData_t* gameData)
     gameData->countdown   = 000;
     gameData->frameCount  = 0;
 
-    gameData->extraLifeScore = 8000;
+    gameData->extraLifeScore = 6400;
     gameData->levelScore     = 0;
     gameData->ballLaunched   = false;
 
@@ -141,7 +141,7 @@ void scorePoints(gameData_t* gameData, uint16_t points, int16_t incCombo)
     if (gameData->score >= gameData->extraLifeScore)
     {
         gameData->lives++;
-        gameData->extraLifeScore += (gameData->extraLifeScore + 1000);
+        gameData->extraLifeScore += (gameData->extraLifeScore + 400);
         bzrPlaySfx(&(gameData->soundManager->snd1up), BZR_RIGHT);
     }
 

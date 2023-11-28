@@ -55,7 +55,7 @@ static const char breakoutHintTextLevel6[] = "Slide left/right/up/down to contro
 static const char breakoutHintTextCaptiveBall[]
     = "Free the captive balls!\nReflect them with your paddle for multiball!";
 static const char breakoutHintTextCrawler[] = "CRAWLERs can't be defeated by hitting them directly!";
-static const char breakoutHintTextFinal[]   = "\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
+static const char breakoutHintTextFinal[]   = "\n\n\n\n- - - - - - The REACTOR CORE\n- - - - - - Good luck!";
 
 //==============================================================================
 // Structs
@@ -152,12 +152,13 @@ static void breakoutDrawPause(font_t* font);
 uint16_t breakoutGetLevelIndex(uint8_t world, uint8_t level);
 
 void breakoutBuildMainMenu(breakout_t* self);
+int16_t getBonusTimerStartValue(tilemap_t* tilemap);
 
 //==============================================================================
 // Level Definitions
 //==============================================================================
 
-#define NUM_LEVELS 64
+#define NUM_LEVELS 65
 
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
@@ -181,7 +182,7 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "mag01.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
 
        {.filename = "mag02.bin", .hintTextPtr = breakoutHintTextLevel6, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "getMorGet.bin", .hintTextPtr = breakoutHintTextRBomb, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "cho.bin", .hintTextPtr = breakoutHintTextRBomb, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "bombtest.bin", .hintTextPtr = breakoutHintTextBombTest, .bgmIndex = BRK_BGM_SKILL},
 
        {.filename = "gaylordlogo.bin", .hintTextPtr = breakoutHintTextGotThis, .bgmIndex = BRK_BGM_PIXEL},
@@ -204,7 +205,7 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "b.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
 
        {.filename = "angles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "m-attack.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "outtaMyWay.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
        {.filename = "mag03.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
@@ -216,10 +217,10 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "tinyhuge.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
        {.filename = "bombrings.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "getMorGet.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "foosball.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "wtf.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
-       {.filename = "introenemy.bin", .hintTextPtr = breakoutHintTextCrawler, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "introenemy.bin", .hintTextPtr = breakoutHintTextCrawler, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "bumpers.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "jailbreak2.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
 
@@ -227,9 +228,9 @@ static const leveldef_t leveldef[NUM_LEVELS]
        {.filename = "infestation.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "chainreact.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
 
-       {.filename = "m-battle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "firework.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
-       {.filename = "paddles.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "m-battle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "m-attack.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
+       {.filename = "newlvl47.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
 
        {.filename = "stormcastle.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
        {.filename = "starlite.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE},
@@ -238,17 +239,18 @@ static const leveldef_t leveldef[NUM_LEVELS]
        // Postgame
        {.filename = "heart.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "coffee.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "shiftersam.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "shiftersam.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "heart2.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "kevinsleep.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "kevinsleep.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "halloween.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "SPACESHIP.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
-       {.filename = "phone.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "metroid.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
+       {.filename = "phone.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
+       {.filename = "metroid.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_SKILL},
        {.filename = "shiftersmil.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "sandsoftime.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
        {.filename = "42069.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_PIXEL},
-       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY}};
+       {.filename = "wtf.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_CRAZY},
+       {.filename = "superhard.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_FINALE}};
 
 //==============================================================================
 // Look Up Tables
@@ -408,7 +410,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = 1;
             loadMapFromFile(&(breakout->tilemap), leveldef[GAME_LEVEL_START_INDEX].filename);
-            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
+            breakout->gameData.countdown = getBonusTimerStartValue(&(breakout->tilemap));
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -418,7 +420,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
             deactivateAllEntities(&(breakout->entityManager), false, false, false);
             breakout->gameData.level = settingVal;
             loadMapFromFile(&(breakout->tilemap), leveldef[breakout->gameData.level].filename);
-            breakout->gameData.countdown = breakout->tilemap.totalTargetBlocks;
+            breakout->gameData.countdown = getBonusTimerStartValue(&(breakout->tilemap));
             breakoutChangeStateReadyScreen(breakout);
             deinitMenu(breakout->menu);
         }
@@ -936,7 +938,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
                 loadMapFromFile(&(breakout->tilemap), leveldef[levelIndex].filename);
-                breakout->gameData.countdown  = breakout->tilemap.totalTargetBlocks;
+                breakout->gameData.countdown  = getBonusTimerStartValue(&(breakout->tilemap));
                 breakout->gameData.levelScore = 0;
                 if (!self->gameData.debugMode)
                 {
@@ -1103,7 +1105,7 @@ void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameDa
 
 void breakoutChangeStatePause(breakout_t* self)
 {
-    // buzzer_play_bgm(&sndPause);
+    bzrPause();
     self->gameData.btnState = 0;
     self->update            = &breakoutUpdatePause;
 }
@@ -1130,6 +1132,7 @@ void breakoutUpdatePause(breakout_t* self, int64_t elapsedUs)
 
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
+        bzrResume();
         self->gameData.btnState = 0;
         self->update            = &breakoutGameLoop;
     }
@@ -1161,9 +1164,11 @@ static void breakoutChangeStateTitleScreen(breakout_t* self)
     {
         deactivateAllEntities(&(self->entityManager), false, false, false);
         loadMapFromFile(&(breakout->tilemap), leveldef[0].filename);
-        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
-        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
-        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 232, 24 + esp_random() % 216);
+        breakout->tilemap.executeTileSpawnAll = true;
+
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 224, 24 + esp_random() % 208);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 224, 24 + esp_random() % 208);
+        createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 224, 24 + esp_random() % 208);
 
         setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
         bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
@@ -1551,4 +1556,9 @@ void breakoutBuildMainMenu(breakout_t* self)
     {
         addSingleItemToMenu(breakout->menu, breakoutExit);
     }
+}
+
+int16_t getBonusTimerStartValue(tilemap_t* tilemap)
+{
+    return (tilemap->totalTargetBlocks > 16) ? tilemap->totalTargetBlocks : 30;
 }
