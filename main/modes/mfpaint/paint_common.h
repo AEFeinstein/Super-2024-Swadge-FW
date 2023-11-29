@@ -47,8 +47,8 @@
 
 //////// Data Constants
 
-#define PAINT_SHARE_PX_PACKET_LEN (P2P_MAX_DATA_LEN - 3 - 11)
-#define PAINT_SHARE_PX_PER_PACKET PAINT_SHARE_PX_PACKET_LEN * 2
+#define PAINT_SHARE_PX_PACKET_LEN    (P2P_MAX_DATA_LEN - 3 - 11)
+#define PAINT_SHARE_PX_PER_PACKET    PAINT_SHARE_PX_PACKET_LEN * 2
 #define PAINT_SLOT_KEY_LEN_INCL_NULL 17
 
 //////// Draw Screen Layout Constants and Colors
@@ -261,7 +261,8 @@ typedef struct
     // The save/load slot selected from the picker
     char selectedSlotKey[PAINT_SLOT_KEY_LEN_INCL_NULL];
 
-    // The save/load slot selected from the picker, before the previous dialog was interrupted to show the current dialog
+    // The save/load slot selected from the picker, before the previous dialog was interrupted to show the current
+    // dialog
     char interruptedSelectedSlotKey[PAINT_SLOT_KEY_LEN_INCL_NULL];
 
     //////// Rendering flags

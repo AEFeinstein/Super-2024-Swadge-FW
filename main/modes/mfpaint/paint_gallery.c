@@ -430,8 +430,9 @@ void paintGalleryModePollTouch(void)
 
         getTouchSpins(&paintGallery->spinState, phi, r);
 
-        int32_t diff
-            = CLAMP((((paintGallery->spinState.spins * 360 + paintGallery->spinState.remainder) * (MAX_LED_BRIGHTNESS)) / -360), MAX_LED_BRIGHTNESS * -1, MAX_LED_BRIGHTNESS);
+        int32_t diff = CLAMP(
+            (((paintGallery->spinState.spins * 360 + paintGallery->spinState.remainder) * (MAX_LED_BRIGHTNESS)) / -360),
+            MAX_LED_BRIGHTNESS * -1, MAX_LED_BRIGHTNESS);
 
         setLedBrightnessSetting(CLAMP(paintGallery->startBrightness + diff, 0, MAX_LED_BRIGHTNESS));
 

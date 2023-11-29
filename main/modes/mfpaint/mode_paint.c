@@ -209,7 +209,7 @@ void paintSetupMainMenu(void)
         deinitMenu(paintMenu->menu);
     }
     paintMenu->menu = initMenu(paintTitle, paintMenuCb);
-    
+
     addSingleItemToMenu(paintMenu->menu, menuOptDraw);
 
     if (paintGetAnySlotInUse())

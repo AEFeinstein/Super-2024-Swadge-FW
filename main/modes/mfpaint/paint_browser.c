@@ -301,9 +301,11 @@ void drawImageBrowser(imageBrowser_t* browser)
 
     if (drawList)
     {
-        const uint8_t topTextLen = ARRAY_SIZE(browserTitleStr) + browserActionToStringLen(browser->primaryAction) + browserActionToStringLen(browser->secondaryAction) - 4 + 1;
+        const uint8_t topTextLen = ARRAY_SIZE(browserTitleStr) + browserActionToStringLen(browser->primaryAction)
+                                   + browserActionToStringLen(browser->secondaryAction) - 4 + 1;
         char topText[topTextLen];
-        snprintf(topText, topTextLen, browserTitleStr, browserActionToString(browser->primaryAction), browserActionToString(browser->secondaryAction));
+        snprintf(topText, topTextLen, browserTitleStr, browserActionToString(browser->primaryAction),
+                 browserActionToString(browser->secondaryAction));
         drawText(browser->font, c000, topText, (TFT_WIDTH - textWidth(browser->font, topText)) / 2,
                  marginTop - browser->font->height - textMargin);
 
@@ -694,7 +696,7 @@ static uint8_t browserActionToStringLen(imageBrowserAction_t action)
         {
             return dialogOptionCancelStrLen;
         }
-        
+
         case BROWSER_OPEN:
         {
             return toolWheelLoadStrLen;

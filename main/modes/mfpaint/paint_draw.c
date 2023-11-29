@@ -87,11 +87,11 @@ static const char dialogLoadErrorDetailStr[]  = "Error loading '%s'! This should
 static const char dialogErrorDetailStr[]      = "Fatal Error! ";
 // clang-format on
 
-const char dialogOptionCancelStr[]        = "Cancel";
-static const char dialogOptionSaveStr[]   = "Save";
-const char dialogOptionSaveAsStr[]        = "Save as...";
-static const char dialogOptionExitStr[]   = "Quit";
-static const char dialogOptionOkStr[]     = "OK";
+const char dialogOptionCancelStr[]      = "Cancel";
+static const char dialogOptionSaveStr[] = "Save";
+const char dialogOptionSaveAsStr[]      = "Save as...";
+static const char dialogOptionExitStr[] = "Quit";
+static const char dialogOptionOkStr[]   = "OK";
 
 const uint8_t toolWheelLoadStrLen      = ARRAY_SIZE(toolWheelLoadStr);
 const uint8_t dialogOptionCancelStrLen = ARRAY_SIZE(dialogOptionCancelStr);
@@ -2118,7 +2118,7 @@ static void paintDialogCb(const char* label)
     {
         // Cancel, so just go back to where we were
         paintState->interruptedDialog = DIALOG_MESSAGE;
-        paintState->buttonMode = BTN_MODE_DRAW;
+        paintState->buttonMode        = BTN_MODE_DRAW;
     }
     else if (dialogOptionSaveStr == label)
     {
@@ -2416,4 +2416,3 @@ static void paintRefreshUndoRedo(void)
                              NO_SCROLL);
     }
 }
-
