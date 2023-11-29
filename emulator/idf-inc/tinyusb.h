@@ -89,10 +89,10 @@ typedef struct
         const tusb_desc_device_t* descriptor
             __attribute__((deprecated)); /*!< Alias to `device_descriptor` for backward compatibility */
     };
-    char** string_descriptor;    /*!< Pointer to array of string descriptors. If set to NULL, TinyUSB device will use
-                                        a default string descriptors whose values are set in Kconfig */
-    int string_descriptor_count; /*!< Number of descriptors in above array */
-    bool external_phy;           /*!< Should USB use an external PHY */
+    const char** string_descriptor; /*!< Pointer to array of string descriptors. If set to NULL, TinyUSB device will use
+                                       a default string descriptors whose values are set in Kconfig */
+    int string_descriptor_count;    /*!< Number of descriptors in above array */
+    bool external_phy;              /*!< Should USB use an external PHY */
     const uint8_t*
         configuration_descriptor; /*!< Pointer to a configuration descriptor. If set to NULL, TinyUSB device will use a
                                      default configuration descriptor whose values are set in Kconfig */

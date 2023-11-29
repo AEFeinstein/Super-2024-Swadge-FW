@@ -200,14 +200,14 @@ static size_t _paintSerialize(uint8_t* dest, const paintCanvas_t* canvas, const 
     // build the chunk
     for (uint16_t n = 0; n < count; n++)
     {
-        if (offset * 2 + (n * 2) >= (wsg ? (wsg->w * wsg->h) : (canvas->w * canvas->h)))
-        {
-            // If we've just stored the last pixel, return false to indicate that we're done
-            return n;
-        }
-
         if (canvas)
         {
+            if (offset * 2 + (n * 2) >= (wsg ? (wsg->w * wsg->h) : (canvas->w * canvas->h)))
+            {
+                // If we've just stored the last pixel, return false to indicate that we're done
+                return n;
+            }
+
             // calculate the real coordinates given the pixel indices
             // (we store 2 pixels in each byte)
             // that's 100% more pixel, per pixel!

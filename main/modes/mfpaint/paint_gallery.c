@@ -34,7 +34,6 @@ static const uint16_t transitionTimeMap[] = {
 #define GALLERY_INFO_TIME     3000000
 #define GALLERY_INFO_Y_MARGIN 18
 #define GALLERY_INFO_X_MARGIN 24
-#define GALLERY_ARROW_MARGIN  6
 
 paintGallery_t* paintGallery;
 
@@ -64,7 +63,7 @@ void paintGallerySetup(bool screensaver)
         paintGallery->gallerySpeedIndex = DEFAULT_TRANSITION_INDEX;
     }
 
-    if (!readNvs32(viewStyleNvsKey, &paintGallery->browser.viewStyle))
+    if (!readNvs32(viewStyleNvsKey, (int32_t*)(&paintGallery->browser.viewStyle)))
     {
         paintGallery->browser.viewStyle = BROWSER_GALLERY;
     }
@@ -418,7 +417,7 @@ void paintGalleryModeButtonCb(buttonEvt_t* evt)
 
 void paintGalleryModePollTouch(void)
 {
-    int32_t centroid, intensity;
+    int32_t intensity;
 
     int32_t phi, r;
     if (getTouchJoystick(&phi, &r, &intensity))
