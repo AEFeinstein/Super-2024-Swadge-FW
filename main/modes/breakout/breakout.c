@@ -699,6 +699,8 @@ void breakoutUpdateDead(breakout_t* self, int64_t elapsedUs)
         }
     }
 
+    breakoutDetectGameStateChange(self);
+
     updateLedsInGame(&(self->gameData));
     updateEntities(&(self->entityManager));
 
@@ -945,7 +947,12 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     breakoutSaveUnlockables(self);
                 }
 
-                breakoutChangeStateReadyScreen(self);
+                if(breakout->gameData.lives > 0){
+                    breakoutChangeStateReadyScreen(self);
+                } else {
+                    breakoutChangeStateGameOver(self);
+                }
+                
                 return;
             }
         }
