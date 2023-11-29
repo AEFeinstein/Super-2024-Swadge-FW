@@ -582,9 +582,9 @@ void paintRenderShareMode(int64_t elapsedUs)
         // Flash the pixel we're waiting for / last sent
         if (paintShare->dataOffset != 0 && paintShare->dataOffset * 2 < paintShare->canvas.w * paintShare->canvas.h)
         {
-            uint16_t x = (paintShare->dataOffset * 2) % paintShare->canvas.w;
-            uint16_t y = (paintShare->dataOffset * 2) / paintShare->canvas.w;
-            setPxScaled(x, y, ((paintShare->shareTime % 1000000) > 500000) ? c000 : c555, paintShare->canvas.x,
+            uint16_t x_s = (paintShare->dataOffset * 2) % paintShare->canvas.w;
+            uint16_t y_s = (paintShare->dataOffset * 2) / paintShare->canvas.w;
+            setPxScaled(x_s, y_s, ((paintShare->shareTime % 1000000) > 500000) ? c000 : c555, paintShare->canvas.x,
                         paintShare->canvas.y, paintShare->canvas.xScale, paintShare->canvas.yScale);
         }
     }

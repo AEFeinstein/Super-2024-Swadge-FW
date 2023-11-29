@@ -18,7 +18,6 @@
 // Defines
 //==============================================================================
 
-#define HOURGLASS_FRAMES   12
 #define PAUSE_FLASH_SPEED  1000000
 #define PAUSE_FLASH_SHOW   600000
 #define EXPIRE_FLASH_SPEED 500000

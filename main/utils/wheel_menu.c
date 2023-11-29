@@ -45,7 +45,7 @@ typedef struct
 //==============================================================================
 
 static wheelItemInfo_t* findInfo(wheelMenuRenderer_t* renderer, const char* label);
-static int cmpDrawInfo(void* a, void* b);
+static int cmpDrawInfo(const void* a, const void* b);
 
 //==============================================================================
 // Functions
@@ -178,8 +178,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     // drawCircleFilled(renderer->x, renderer->y, renderer->unselR, renderer->unselBgColor);
 
     // Add one for the convenience of looping
-    uint16_t spokeR           = renderer->spokeR;
-    paletteColor_t selBgColor = renderer->selBgColor;
+    uint16_t spokeR = renderer->spokeR;
 
     // If we haven't customized the back option to be around the ring, then we use the center
     // So, remove one from the ring items to compensate
@@ -193,12 +192,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     bool alternate  = false;
 
     wheelItemInfo_t* backInfo = NULL;
-
-    bool foundSelected       = false;
-    const wsg_t* selIcon     = NULL;
-    paletteColor_t selItemBg = renderer->selBgColor;
-    uint16_t selX            = 0;
-    uint16_t selY            = 0;
 
     menuItem_t* curItem      = (menu->currentItem) ? menu->currentItem->val : NULL;
     wheelItemInfo_t* curInfo = curItem ? findInfo(renderer, curItem->label ? curItem->label : *curItem->options) : NULL;
@@ -332,7 +325,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     }
     else
     {
-        bool centerFound = false;
         if (ringItems > 8)
         {
             unselR -= 10;
@@ -364,8 +356,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                     // Calculate where this sector starts
                     uint16_t centerAngle = (anchorAngle + info->position * 360 / ringItems + (180 / ringItems)) % 360;
 
-                    bool isCur        = (renderer->touched && menu->currentItem == node);
-                    paletteColor_t bg = isCur ? info->selectedBg : info->unselectedBg;
+                    bool isCur = (renderer->touched && menu->currentItem == node);
                     uint16_t itemSpokeR
                         = alternate ? (((info->position % 2) == 1) ? spokeR + inR : spokeR + outR) : spokeR;
 
@@ -410,7 +401,10 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
     }
 
     // Sort by the draw order
-    qsort(drawInfos, curDraw, sizeof(wheelDrawInfo_t), cmpDrawInfo);
+    if (0 < curDraw)
+    {
+        qsort(drawInfos, curDraw, sizeof(wheelDrawInfo_t), cmpDrawInfo);
+    }
 
     for (int i = 0; i < curDraw; i++)
     {
@@ -528,18 +522,15 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
         menuItem_t* cur = menu->currentItem->val;
 
         uint8_t min, max;
-        uint8_t* target = NULL;
         if (menuItemHasOptions(cur))
         {
-            min    = 0;
-            max    = cur->numOptions - 1;
-            target = &cur->currentOpt;
+            min = 0;
+            max = cur->numOptions - 1;
         }
         else
         {
-            min    = cur->minSetting;
-            max    = cur->maxSetting;
-            target = &cur->currentSetting;
+            min = cur->minSetting;
+            max = cur->maxSetting;
         }
 
         if (radius > 512)
@@ -548,7 +539,15 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
             uint16_t zoomAngle = (angle > 270) ? 0 : (angle > 180 ? 180 : angle);
             uint8_t selection  = (180 - zoomAngle) * (max - min) / 180 + min;
             ESP_LOGD("Wheel", "Selection is %" PRIu8 ", from %" PRIu16, selection, zoomAngle);
-            *target = selection;
+
+            if (menuItemHasOptions(cur))
+            {
+                cur->currentOpt = selection;
+            }
+            else
+            {
+                cur->currentSetting = selection;
+            }
         }
     }
     else
@@ -796,7 +795,7 @@ static wheelItemInfo_t* findInfo(wheelMenuRenderer_t* renderer, const char* labe
     return NULL;
 }
 
-static int cmpDrawInfo(void* a, void* b)
+static int cmpDrawInfo(const void* a, const void* b)
 {
-    return ((wheelDrawInfo_t*)b)->drawOrder - ((wheelDrawInfo_t*)a)->drawOrder;
+    return ((const wheelDrawInfo_t*)b)->drawOrder - ((const wheelDrawInfo_t*)a)->drawOrder;
 }

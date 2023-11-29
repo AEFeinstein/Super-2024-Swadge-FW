@@ -16,8 +16,12 @@
 #define FIXEDPOINT   16
 #define FIXEDPOINTD2 15
 
-#undef SETUP_FOR_TURBO
-#define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)dispPxL;
+#if defined(__XTENSA__)
+    /* SETUP_FOR_TURBO() is defined in hdw-tft.h, but it is overridden here because accessing dispPxL is faster than
+     * getPxTftFramebuffer() */
+    #undef SETUP_FOR_TURBO
+    #define SETUP_FOR_TURBO() register uint32_t dispPx = (uint32_t)dispPxL;
+#endif
 
 //==============================================================================
 // Function Prototypes
@@ -48,8 +52,11 @@ static void drawCubicBezierInner(int x0, int y0, int x1, int y1, int x2, int y2,
 // Variables
 //==============================================================================
 
-/// @brief Static local pointer to the framebuffer. Using this, for some reason, is faster than normal draw calls.
-static uint32_t dispPxL = NULL;
+#if defined(__XTENSA__)
+/* @brief Static local pointer to the framebuffer. Using this, for some reason, is faster than normal draw calls. This
+ * is only set for __XTENSA__ because it jams a pointer into a 32 bit variable */
+static uint32_t dispPxL = 0;
+#endif
 
 //==============================================================================
 // Functions
@@ -61,7 +68,9 @@ static uint32_t dispPxL = NULL;
  */
 void initShapes(void)
 {
-    dispPxL = getPxTftFramebuffer();
+#if defined(__XTENSA__)
+    dispPxL = (uint32_t)getPxTftFramebuffer();
+#endif
 }
 
 /**
