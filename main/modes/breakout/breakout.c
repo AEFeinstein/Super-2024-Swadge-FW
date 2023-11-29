@@ -276,7 +276,7 @@ static const int16_t cheatCode[9] = {PB_UP, PB_B, PB_DOWN, PB_B, PB_LEFT, PB_B, 
 const char breakoutName[]                  = "Galactic Brickdown";
 static const char breakoutTitleGalactic[]  = "Galactic";
 static const char breakoutTitleBrickdown[] = "Brickdown";
-static const char breakoutPressStart[]     = "Press Start";
+static const char breakoutPressStart[]     = "Press A to Start";
 
 static const char breakoutNewGame[]       = "New Game";
 static const char breakoutContinue[]      = "Continue - Lv";
@@ -1188,7 +1188,7 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
         }
     }
 
-    if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
+    if ((((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A)) || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
     {
         self->gameData.btnState = 0;
         breakout->menuSelection = 0;
