@@ -687,9 +687,6 @@ rayObjCommon_t* castSprites(ray_t* ray, rayEnemy_t** closestEnemy)
     // Setup to draw
     SETUP_FOR_TURBO();
 
-    // Boolean if the colors should be drawn inverted
-    bool isXray = (LO_XRAY == ray->p.loadout);
-
     // Put an array on the stack to sort all sprites
     objDist_t allObjs[MAX_RAY_BULLETS + ray->scenery.length + ray->enemies.length + ray->items.length];
     int32_t allObjsIdx = 0;
@@ -785,10 +782,17 @@ rayObjCommon_t* castSprites(ray_t* ray, rayEnemy_t** closestEnemy)
         // Make sure this object slot is occupied
         if (-1 != obj->id)
         {
+            // Boolean if the colors should be drawn inverted
+            bool isXray = (LO_XRAY == ray->p.loadout);
+
             bool isEnemy = CELL_IS_TYPE(obj->type, OBJ | ENEMY);
             if (isEnemy)
             {
                 *closestEnemy = (rayEnemy_t*)obj;
+                if (OBJ_ENEMY_BOSS == obj->type)
+                {
+                    isXray = false;
+                }
             }
 
             // Get WSG dimensions for convenience
