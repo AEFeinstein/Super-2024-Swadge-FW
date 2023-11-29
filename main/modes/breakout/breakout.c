@@ -881,7 +881,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                 bzrPlayBgm(&(self->soundManager.tally), BZR_LEFT);
             }
 
-            scorePoints(&(self->gameData), 80, -1000);
+            scorePoints(&(self->gameData), 50, -1000);
         }
         else if (self->gameData.frameCount % 120 == 0)
         {
