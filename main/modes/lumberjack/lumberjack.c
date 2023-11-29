@@ -53,7 +53,7 @@ static const char lumberjackExit[]         = "Exit";
 
 static char lumberjackRedCharacter[]     = "Character: Red";
 static char lumberjackGreenCharacter[]   = "Character: Green";
-static char lumberjackSpecialCharacter[] = "Character: Guy";
+static char lumberjackSpecialCharacter[] = "Character: Petak";
 static char lumberjackChoCharacter[]     = "Character: Cho";
 
 static const char lumberjackMenuSinglePlayer[] = "Single Player";
@@ -287,7 +287,7 @@ static void lumberjackMainLoop(int64_t elapsedUs)
             lumberjackMenuLoop(elapsedUs);
             for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumberjack->menuLogbookRenderer->leds); ledIdx++)
             {
-                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].periodUs = 1;
+                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].periodUs = 1000000;
                 lumberjack->menuLogbookRenderer->ledTimers[ledIdx].timerUs  = 0;
                 lumberjack->menuLogbookRenderer->ledTimers[ledIdx].brightness
                     = 255; // lumberjack->menuLogbookRenderer->ledTimers[ledIdx].maxBrightness;
