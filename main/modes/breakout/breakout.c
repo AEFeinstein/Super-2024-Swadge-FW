@@ -781,7 +781,7 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
 
     char vdispStr[3];
 
-    //Draw string vertically
+    // Draw string vertically
     for (uint16_t i = 0; i < sizeof(formatStr) - 1; i++)
     {
         snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", formatStr[i]);
@@ -794,7 +794,7 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
 
     snprintf(formatStr, sizeof(formatStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
 
-    //Draw string vertically
+    // Draw string vertically
     for (uint16_t i = 0; i < sizeof(formatStr) - 1; i++)
     {
         snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", formatStr[i]);
@@ -808,8 +808,7 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
     if (gameData->comboScore > 0)
     {
         snprintf(formatStr, sizeof(formatStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-        drawText(font, greenColors[(breakout->gameData.frameCount >> 3) % 4],
-                 formatStr, 144, 2);
+        drawText(font, greenColors[(breakout->gameData.frameCount >> 3) % 4], formatStr, 144, 2);
     }
 
     // Draw centering lines, for paddle control debug
@@ -915,12 +914,15 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     breakoutSaveUnlockables(self);
                 }
 
-                if(breakout->gameData.lives > 0){
+                if (breakout->gameData.lives > 0)
+                {
                     breakoutChangeStateReadyScreen(self);
-                } else {
+                }
+                else
+                {
                     breakoutChangeStateGameOver(self);
                 }
-                
+
                 return;
             }
         }
@@ -1185,7 +1187,8 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
         }
     }
 
-    if ((((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A)) || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
+    if ((((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
+         || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
     {
         self->gameData.btnState = 0;
         breakout->menuSelection = 0;

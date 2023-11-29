@@ -53,7 +53,7 @@ void initializeGameData(gameData_t* gameData, soundManager_t* soundManager)
     /*gameData->nextBombToDetonate = 0;
     gameData->nextBombSlot = 0;
     gameData->bombDetonateCooldown = 0;*/
-    gameData->soundManager = soundManager;
+    gameData->soundManager            = soundManager;
     gameData->shouldAdvanceMultiplier = false;
 }
 

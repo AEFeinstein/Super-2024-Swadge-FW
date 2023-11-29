@@ -1120,9 +1120,9 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
+                    self->shouldAdvanceMultiplier           = false;
                     self->gameData->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_0;
+                    other->spriteIndex                      = SP_PADDLE_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
@@ -1138,9 +1138,9 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
+                    self->shouldAdvanceMultiplier           = false;
                     self->gameData->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_0;
+                    other->spriteIndex                      = SP_PADDLE_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
@@ -1156,9 +1156,9 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
+                    self->shouldAdvanceMultiplier           = false;
                     self->gameData->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_VERTICAL_0;
+                    other->spriteIndex                      = SP_PADDLE_VERTICAL_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
@@ -1174,9 +1174,9 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
+                    self->shouldAdvanceMultiplier           = false;
                     self->gameData->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_VERTICAL_0;
+                    other->spriteIndex                      = SP_PADDLE_VERTICAL_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
