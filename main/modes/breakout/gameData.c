@@ -54,6 +54,7 @@ void initializeGameData(gameData_t* gameData, soundManager_t* soundManager)
     gameData->nextBombSlot = 0;
     gameData->bombDetonateCooldown = 0;*/
     gameData->soundManager = soundManager;
+    gameData->shouldAdvanceMultiplier = false;
 }
 
 void initializeGameDataFromTitleScreen(gameData_t* gameData)
@@ -86,6 +87,7 @@ void initializeGameDataFromTitleScreen(gameData_t* gameData)
     // gameData->nextBombToDetonate = 0;
     // gameData->nextBombSlot = 0;
     // gameData->bombDetonateCooldown = 0;
+    gameData->shouldAdvanceMultiplier = false;
 }
 
 void updateLedsHpMeter(entityManager_t* entityManager, gameData_t* gameData)

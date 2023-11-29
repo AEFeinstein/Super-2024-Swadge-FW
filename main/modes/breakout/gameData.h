@@ -77,6 +77,7 @@ typedef struct
     uint32_t inGameTimer;
 
     soundManager_t* soundManager;
+    bool shouldAdvanceMultiplier;
 } gameData_t;
 
 //==============================================================================
