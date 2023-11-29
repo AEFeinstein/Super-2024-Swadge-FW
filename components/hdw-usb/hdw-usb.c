@@ -84,7 +84,7 @@ static const uint8_t hid_report_descriptor[] = {TUD_HID_REPORT_DESC_GAMEPAD_SWAD
 /**
  * @brief String descriptor
  */
-static char* hid_string_descriptor[7] = {
+static const char* hid_string_descriptor[7] = {
     // array of pointer to string descriptors
     (char[]){0x09, 0x04},   // 0: is supported language is English (0x0409)
     "Magfest",              // 1: Manufacturer

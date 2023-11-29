@@ -143,10 +143,7 @@ void setupImageBrowser(imageBrowser_t* browser, const font_t* font, const char* 
         nvs_entry_info_t* imageInfos = calloc(numInfos, sizeof(nvs_entry_info_t));
         if (readNamespaceNvsEntryInfos(namespace, NULL, imageInfos, NULL))
         {
-            if (numInfos > 0)
-            {
-                qsort(imageInfos, numInfos, sizeof(nvs_entry_info_t), compareEntryInfoAlpha);
-            }
+            qsort(imageInfos, numInfos, sizeof(nvs_entry_info_t), compareEntryInfoAlpha);
 
             for (uint32_t i = 0; i < numInfos; ++i)
             {

@@ -132,7 +132,7 @@ void heatshrink_encoder_reset(heatshrink_encoder* hse)
 #endif
 }
 
-HSE_sink_res heatshrink_encoder_sink(heatshrink_encoder* hse, uint8_t* in_buf, size_t size, size_t* input_size)
+HSE_sink_res heatshrink_encoder_sink(heatshrink_encoder* hse, const uint8_t* in_buf, size_t size, size_t* input_size)
 {
     if ((hse == NULL) || (in_buf == NULL) || (input_size == NULL))
     {
@@ -239,6 +239,7 @@ HSE_poll_res heatshrink_encoder_poll(heatshrink_encoder* hse, uint8_t* out_buf, 
                 break;
             case HSES_FLUSH_BITS:
                 hse->state = st_flush_bit_buffer(hse, &oi);
+                // Fall through
             case HSES_DONE:
                 return HSER_POLL_EMPTY;
             default:

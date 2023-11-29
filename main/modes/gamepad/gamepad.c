@@ -169,7 +169,7 @@ static const tusb_desc_device_t nsDescriptor = {
 };
 
 /// @brief PC string Descriptor
-static char* hid_string_descriptor[5] = {
+static const char* hid_string_descriptor[5] = {
     // array of pointer to string descriptors
     (char[]){0x09, 0x04},   // 0: is supported language is English (0x0409)
     "Magfest",              // 1: Manufacturer
