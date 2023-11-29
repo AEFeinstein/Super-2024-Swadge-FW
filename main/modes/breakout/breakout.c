@@ -881,7 +881,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                 bzrPlayBgm(&(self->soundManager.tally), BZR_LEFT);
             }
 
-            scorePoints(&(self->gameData), 50, -1000);
+            scorePoints(&(self->gameData), 40, -1000);
         }
         else if (self->gameData.frameCount % 120 == 0)
         {
@@ -1567,5 +1567,5 @@ void breakoutBuildMainMenu(breakout_t* self)
 
 int16_t getBonusTimerStartValue(tilemap_t* tilemap)
 {
-    return (tilemap->totalTargetBlocks > 16) ? tilemap->totalTargetBlocks : 30;
+    return (tilemap->totalTargetBlocks > 60) ? tilemap->totalTargetBlocks + (tilemap->totalTargetBlocks >> 2) : 60;
 }
