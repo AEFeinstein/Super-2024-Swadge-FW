@@ -888,11 +888,6 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
             }*/
                 self->unlockables.gameCleared = true;
 
-                if (self->unlockables.maxLevelIndexUnlocked < POSTGAME_LEVEL_START_INDEX)
-                {
-                    self->unlockables.maxLevelIndexUnlocked = POSTGAME_LEVEL_START_INDEX;
-                }
-
                 if (!self->gameData.debugMode)
                 {
                     breakoutSaveUnlockables(self);
@@ -998,7 +993,7 @@ void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
             break;
         case 1:
         default:
-            if (self->gameData.frameCount % 960 == 0)
+            if (self->gameData.frameCount % 1140 == 0)
             {
                 breakoutChangeStateGameOver(self);
             }
@@ -1065,12 +1060,14 @@ void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameDa
                 drawText(logbook, c555, "next MAGFest!", 64, 168);
             }
 
-            if (gameData->level == GAME_LEVEL_END_INDEX && gameData->frameCount > 480)
+            if (gameData->frameCount > 480)
             {
                 drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
-                         "Use the Continue option to", 24, 200);
+                         "Check out DEBUG MODE for more fun!", 8, 192);
                 drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
-                         "check out a few extra levels!", 24, 212);
+                         "Input on the titlescreen:", 16, 204);
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
+                         "UP B DOWN B LEFT B RIGHT B PAUSE", 16, 216);
             }
 
             break;
