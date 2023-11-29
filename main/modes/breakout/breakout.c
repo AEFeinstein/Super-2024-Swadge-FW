@@ -761,65 +761,30 @@ void breakoutDrawGameOver(font_t* logbook, font_t* ibm_vga8, gameData_t* gameDat
 
 static void drawBreakoutHud(font_t* font, gameData_t* gameData)
 {
-    /*
-        TODO
-        Clean this formatting code up.
-        It sucks.
-    */
-
-    char scoreStr[32];
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
-
-    char levelStr[11];
-    snprintf(levelStr, sizeof(levelStr) - 1, "L%02" PRIu8, gameData->level);
-
-    char livesStr[8];
-    snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
-
-    char timeStr[16];
-    snprintf(timeStr, sizeof(timeStr) - 1, "BONUS %0" PRId16, gameData->countdown);
-
     if (gameData->frameCount > 29)
     {
         drawText(font, c500, "1UP", 24, 2);
     }
 
-    drawText(font, c555, livesStr, 48, 2);
-    // drawText(font, c555, coinStr, 160, 16);
-    drawText(font, c555, scoreStr, 80, 2);
-    drawText(font, c555, levelStr, 224, 2);
-    // drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220,
-    // 16);
+    char formatStr[32];
 
-    /*drawText(font, c555, "B", 271, 32);
-    drawText(font, c555, "O", 271, 44);
-    drawText(font, c555, "N", 271, 56);
-    drawText(font, c555, "U", 271, 68);
-    drawText(font, c555, "S", 271, 80);
-    drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);*/
+    snprintf(formatStr, sizeof(formatStr) - 1, "%06" PRIu32, gameData->score);
+    drawText(font, c555, formatStr, 80, 2);
+
+    snprintf(formatStr, sizeof(formatStr) - 1, "L%02" PRIu8, gameData->level);
+    drawText(font, c555, formatStr, 224, 2);
+
+    snprintf(formatStr, sizeof(formatStr) - 1, "x%d", gameData->lives);
+    drawText(font, c555, formatStr, 48, 2);
+
+    snprintf(formatStr, sizeof(formatStr) - 1, "BONUS %0" PRId16, gameData->countdown);
 
     char vdispStr[3];
-    /*for(uint16_t i=0; i<sizeof(levelStr); i++){
-        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", levelStr[i]);
-        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
-    }*/
 
-    char extraLifeStr[15];
-    snprintf(extraLifeStr, sizeof(extraLifeStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
-
-    for (uint16_t i = 0; i < sizeof(extraLifeStr) - 1; i++)
+    //Draw string vertically
+    for (uint16_t i = 0; i < sizeof(formatStr) - 1; i++)
     {
-        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", extraLifeStr[i]);
-        if (vdispStr[0] == '\0')
-        {
-            break;
-        }
-        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
-    }
-
-    for (uint16_t i = 0; i < sizeof(timeStr) - 1; i++)
-    {
-        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", timeStr[i]);
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", formatStr[i]);
         if (vdispStr[0] == '\0')
         {
             break;
@@ -827,16 +792,24 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
         drawText(font, c555, vdispStr, 268, 32 + 12 * i);
     }
 
-    // if(gameData->comboTimer == 0){
-    //     return;
-    // }
+    snprintf(formatStr, sizeof(formatStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
+
+    //Draw string vertically
+    for (uint16_t i = 0; i < sizeof(formatStr) - 1; i++)
+    {
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", formatStr[i]);
+        if (vdispStr[0] == '\0')
+        {
+            break;
+        }
+        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
+    }
 
     if (gameData->comboScore > 0)
     {
-        snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-        // snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
-        drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4],
-                 scoreStr, 144, 2);
+        snprintf(formatStr, sizeof(formatStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+        drawText(font, greenColors[(breakout->gameData.frameCount >> 3) % 4],
+                 formatStr, 144, 2);
     }
 
     // Draw centering lines, for paddle control debug
