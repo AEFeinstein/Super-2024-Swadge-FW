@@ -1884,6 +1884,13 @@ void setLedBreakBlock(gameData_t* gameData, uint8_t tileId)
         case TILE_BLOCK_2x2_BLACK_UR:
         case TILE_BLOCK_2x2_BLACK_DL:
         case TILE_BLOCK_2x2_BLACK_DR:
+        case TILE_BLOCK_1x1_STONE:
+        case TILE_BLOCK_2x1_STONE_L:
+        case TILE_BLOCK_2x1_STONE_R:
+        case TILE_BLOCK_2x2_STONE_UL:
+        case TILE_BLOCK_2x2_STONE_UR:
+        case TILE_BLOCK_2x2_STONE_DL:
+        case TILE_BLOCK_2x2_STONE_DR:
         {
             nr = 64;
             ng = 64;
