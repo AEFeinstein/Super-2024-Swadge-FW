@@ -260,10 +260,6 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
                 {
                     mainMenu->cheatCodeIdx = 0;
-                    if (getShowSecretsMenuSetting() == NOT_OPENED_SECRETS)
-                    {
-                        setShowSecretsMenuSetting(SHOW_SECRETS);
-                    }
                     bzrPlayBgm(&mainMenu->fanfare, BZR_STEREO);
                     mainMenu->fanfarePlaying = true;
 

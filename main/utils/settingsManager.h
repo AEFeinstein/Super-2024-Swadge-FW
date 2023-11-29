@@ -84,7 +84,6 @@ typedef enum
 
 typedef enum
 {
-    NOT_OPENED_SECRETS,
     SHOW_SECRETS,
     HIDE_SECRETS,
 } showSecrets_t;
