@@ -339,12 +339,6 @@ void paintDrawScreenSetup(void)
     PAINT_WSG("pointer.wsg", &paintState->picksWsg);
     PAINT_WSG("brush_size.wsg", &paintState->brushSizeWsg);
 
-    PAINT_WSG("arrow9.wsg", &paintState->smallArrowWsg);
-    colorReplaceWsg(&paintState->smallArrowWsg, c555, c000);
-
-    PAINT_WSG("arrow12.wsg", &paintState->bigArrowWsg);
-    colorReplaceWsg(&paintState->bigArrowWsg, c555, c000);
-
     PAINT_WSG("newfile.wsg", &paintState->newfileWsg);
     PAINT_WSG("overwrite.wsg", &paintState->overwriteWsg);
 
@@ -590,8 +584,6 @@ void paintDrawScreenCleanup(void)
 
     freeWsg(&paintState->brushSizeWsg);
     freeWsg(&paintState->picksWsg);
-    freeWsg(&paintState->bigArrowWsg);
-    freeWsg(&paintState->smallArrowWsg);
     freeWsg(&paintState->newfileWsg);
     freeWsg(&paintState->overwriteWsg);
 
