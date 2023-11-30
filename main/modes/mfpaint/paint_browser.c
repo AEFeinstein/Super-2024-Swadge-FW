@@ -238,7 +238,7 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint16_t thumbWidth   = THUMB_W + 4;
     uint16_t imageTop     = 5;
     uint16_t imageBottom  = 5;
-    bool hideControls = browser->hideControls;
+    bool hideControls     = browser->hideControls;
 
     uint8_t visibleRows = 0;
 
@@ -253,10 +253,10 @@ void drawImageBrowser(imageBrowser_t* browser)
         case BROWSER_GALLERY:
         {
             // Move the margin to just 1 row above the bottom
-            marginTop   = TFT_HEIGHT - marginBottom - textMargin - thumbHeight - thumbMargin;
-            imageTop    = 5;
-            imageBottom = TFT_HEIGHT - marginTop + 5;
-            visibleRows = 1;
+            marginTop    = TFT_HEIGHT - marginBottom - textMargin - thumbHeight - thumbMargin;
+            imageTop     = 5;
+            imageBottom  = TFT_HEIGHT - marginTop + 5;
+            visibleRows  = 1;
             hideControls = true;
             break;
         }
@@ -314,8 +314,7 @@ void drawImageBrowser(imageBrowser_t* browser)
             // Big enough for anything
             char topText[32];
             snprintf(topText, sizeof(topText), browserTitleStr, primaryActionStr, secondaryActionStr);
-            drawText(browser->font, c000, topText, (TFT_WIDTH - textWidth(browser->font, topText)) / 2,
-                    textMargin);
+            drawText(browser->font, c000, topText, (TFT_WIDTH - textWidth(browser->font, topText)) / 2, textMargin);
         }
 
         if (visibleRows > 0 && rows > visibleRows)

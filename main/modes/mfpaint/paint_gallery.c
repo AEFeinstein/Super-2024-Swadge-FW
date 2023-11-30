@@ -83,9 +83,9 @@ void paintGallerySetup(bool screensaver)
 
     paintGallery->gallerySpeed = US_PER_MS * transitionTimeMap[paintGallery->gallerySpeedIndex];
 
-    paintGallery->browser.callback   = paintGalleryBrowserCb;
-    paintGallery->browser.wraparound = true;
-    paintGallery->browser.cols       = 4;
+    paintGallery->browser.callback     = paintGalleryBrowserCb;
+    paintGallery->browser.wraparound   = true;
+    paintGallery->browser.cols         = 4;
     paintGallery->browser.hideControls = true;
     setupImageBrowser(&paintGallery->browser, &paintGallery->infoFont, PAINT_NS_DATA, NULL, BROWSER_OPEN,
                       BROWSER_DELETE);

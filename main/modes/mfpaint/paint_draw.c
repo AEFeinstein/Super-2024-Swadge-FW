@@ -87,11 +87,11 @@ static const char dialogLoadErrorDetailStr[]  = "Error loading '%s'! This should
 static const char dialogErrorDetailStr[]      = "Fatal Error! ";
 // clang-format on
 
-static const char dialogOptionCancelStr[]      = "Cancel";
-static const char dialogOptionSaveStr[] = "Save";
-static const char dialogOptionSaveAsStr[]      = "Save as...";
-static const char dialogOptionExitStr[] = "Quit";
-static const char dialogOptionOkStr[]   = "OK";
+static const char dialogOptionCancelStr[] = "Cancel";
+static const char dialogOptionSaveStr[]   = "Save";
+static const char dialogOptionSaveAsStr[] = "Save as...";
+static const char dialogOptionExitStr[]   = "Quit";
+static const char dialogOptionOkStr[]     = "OK";
 
 static paletteColor_t defaultPalette[] = {
     c000, // black
