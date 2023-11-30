@@ -207,6 +207,7 @@ void paintSetupMainMenu(void)
     if (paintMenu->menu != NULL)
     {
         deinitMenu(paintMenu->menu);
+        paintMenu->menu = NULL;
     }
     paintMenu->menu = initMenu(paintTitle, paintMenuCb);
 
