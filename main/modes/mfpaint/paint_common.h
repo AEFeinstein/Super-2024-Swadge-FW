@@ -245,9 +245,6 @@ typedef struct
     int64_t blinkTimer;
     bool blinkOn;
 
-    // The brush width
-    uint8_t startBrushWidth;
-
     //////// Save data flags
 
     // True if the canvas has been modified since last save

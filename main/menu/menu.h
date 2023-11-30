@@ -208,6 +208,7 @@ menu_t* menuNavigateToNextItem(menu_t* menu);
 menu_t* menuNavigateToPrevOption(menu_t* menu);
 menu_t* menuNavigateToNextOption(menu_t* menu);
 menu_t* menuSelectCurrentItem(menu_t* menu);
+menu_t* menuSetCurrentOption(menu_t* menu, int32_t value);
 
 menu_t* menuButton(menu_t* menu, buttonEvt_t evt) __attribute__((warn_unused_result));
 void setShowBattery(menu_t* menu, bool showBattery);

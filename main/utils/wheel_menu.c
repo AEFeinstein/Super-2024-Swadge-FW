@@ -539,14 +539,7 @@ menu_t* wheelMenuTouch(menu_t* menu, wheelMenuRenderer_t* renderer, uint16_t ang
             uint8_t selection  = (180 - zoomAngle) * (max - min) / 180 + min;
             ESP_LOGD("Wheel", "Selection is %" PRIu8 ", from %" PRIu16, selection, zoomAngle);
 
-            if (menuItemHasOptions(cur))
-            {
-                cur->currentOpt = selection;
-            }
-            else
-            {
-                cur->currentSetting = selection;
-            }
+            return menuSetCurrentOption(menu, selection);
         }
     }
     else
