@@ -10,13 +10,6 @@
 
 extern paintDraw_t* paintState;
 extern const char* dialogErrorTitleStr;
-extern const char toolWheelLoadStr[];
-extern const char dialogOptionCancelStr[];
-extern const char dialogOptionSaveAsStr[];
-
-extern const uint8_t toolWheelLoadStrLen;
-extern const uint8_t dialogOptionCancelStrLen;
-extern const uint8_t dialogOptionSaveAsStrLen;
 
 // Mostly for PAINT_DIE
 void paintSetupDialog(paintDialog_t dialog);

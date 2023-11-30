@@ -66,7 +66,7 @@ static const char toolWheelUndoGrayStr[] = "Undo (Nothing to Undo)";
 static const char toolWheelRedoGrayStr[] = "Redo (Nothing to Redo)";
 
 static const char toolWheelSaveStr[]    = "Save";
-const char toolWheelLoadStr[]           = "Load";
+static const char toolWheelLoadStr[]    = "Load";
 static const char toolWheelNewStr[]     = "New";
 static const char toolWheelPaletteStr[] = "Edit Colors";
 static const char toolWheelExitStr[]    = "Quit Drawing";
@@ -87,15 +87,11 @@ static const char dialogLoadErrorDetailStr[]  = "Error loading '%s'! This should
 static const char dialogErrorDetailStr[]      = "Fatal Error! ";
 // clang-format on
 
-const char dialogOptionCancelStr[]      = "Cancel";
+static const char dialogOptionCancelStr[]      = "Cancel";
 static const char dialogOptionSaveStr[] = "Save";
-const char dialogOptionSaveAsStr[]      = "Save as...";
+static const char dialogOptionSaveAsStr[]      = "Save as...";
 static const char dialogOptionExitStr[] = "Quit";
 static const char dialogOptionOkStr[]   = "OK";
-
-const uint8_t toolWheelLoadStrLen      = ARRAY_SIZE(toolWheelLoadStr);
-const uint8_t dialogOptionCancelStrLen = ARRAY_SIZE(dialogOptionCancelStr);
-const uint8_t dialogOptionSaveAsStrLen = ARRAY_SIZE(dialogOptionSaveAsStr);
 
 static paletteColor_t defaultPalette[] = {
     c000, // black
