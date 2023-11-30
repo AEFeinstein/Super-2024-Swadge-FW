@@ -49,6 +49,7 @@ typedef struct
     imageBrowserAction_t secondaryAction;
     imageBrowserView_t viewStyle;
     bool wraparound;
+    bool hideControls;
 
     uint8_t cols;
 

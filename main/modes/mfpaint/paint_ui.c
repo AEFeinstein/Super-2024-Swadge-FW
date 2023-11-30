@@ -99,14 +99,6 @@ void paintRenderToolbar(paintArtist_t* artist, paintCanvas_t* canvas, paintDraw_
                 drawText(&paintState->toolbarFont, c500, "*", pos,
                          (canvas->y - paintState->toolbarFont.height - 1) / 2);
             }
-            if (paintState->canvas.buffered)
-            {
-                char text[2];
-                snprintf(text, 2, "%c", canvas->buffered ? '+' : '?');
-                pos -= textWidth(&paintState->toolbarFont, "+") + 1;
-                drawText(&paintState->toolbarFont, c050, "+", pos,
-                         (canvas->y - paintState->toolbarFont.height - 1) / 2);
-            }
         }
     }
 

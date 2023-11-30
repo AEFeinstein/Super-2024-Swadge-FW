@@ -19,9 +19,14 @@
 #include "paint_draw.h"
 #include "paint_ui.h"
 
-static const char saveAsNewStr[]      = "New...";
-static const char textEntryTitleStr[] = "File Name";
-static const char noItemsStr[]        = "No Items";
+static const char saveAsNewStr[]        = "New...";
+static const char textEntryTitleStr[]   = "File Name";
+static const char noItemsStr[]          = "No Items";
+static const char browserTitleStr[]     = "A: %s      Pause: %s";
+static const char browserActExitStr[]   = "Exit";
+static const char browserActOpenStr[]   = "Open";
+static const char browserActSaveStr[]   = "Save";
+static const char browserActDeleteStr[] = "Delete";
 
 #define THUMB_W 35
 #define THUMB_H 30
@@ -47,6 +52,7 @@ typedef struct
 static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t* image, bool spiram);
 static void imageBrowserTextEntryCb(const char* text, void* data);
 static int compareEntryInfoAlpha(const void* obj1, const void* obj2);
+static const char* browserActionToString(imageBrowserAction_t action);
 
 static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t* image, bool spiram)
 {
@@ -222,8 +228,8 @@ void drawImageBrowser(imageBrowser_t* browser)
     // Calculate the total number of full or partial rows
     uint8_t rows = (browser->items.length + (browser->cols - 1)) / browser->cols;
 
-    uint16_t marginTop    = 15;
     uint16_t textMargin   = 5;
+    uint16_t marginTop    = browser->hideControls ? 15 : (browser->font->height + 1 + textMargin * 2);
     uint16_t marginBottom = 15 + browser->font->height + 1 + textMargin;
     uint16_t marginLeft   = 18;
     uint16_t marginRight  = 18;
@@ -232,6 +238,7 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint16_t thumbWidth   = THUMB_W + 4;
     uint16_t imageTop     = 5;
     uint16_t imageBottom  = 5;
+    bool hideControls     = browser->hideControls;
 
     uint8_t visibleRows = 0;
 
@@ -246,10 +253,11 @@ void drawImageBrowser(imageBrowser_t* browser)
         case BROWSER_GALLERY:
         {
             // Move the margin to just 1 row above the bottom
-            marginTop   = TFT_HEIGHT - marginBottom - textMargin - thumbHeight - thumbMargin;
-            imageTop    = 5;
-            imageBottom = TFT_HEIGHT - marginTop + 5;
-            visibleRows = 1;
+            marginTop    = TFT_HEIGHT - marginBottom - textMargin - thumbHeight - thumbMargin;
+            imageTop     = 5;
+            imageBottom  = TFT_HEIGHT - marginTop + 5;
+            visibleRows  = 1;
+            hideControls = true;
             break;
         }
 
@@ -262,6 +270,7 @@ void drawImageBrowser(imageBrowser_t* browser)
             marginLeft   = 0;
             marginRight  = 0;
             visibleRows  = 0;
+            hideControls = true;
             break;
         }
     }
@@ -297,6 +306,17 @@ void drawImageBrowser(imageBrowser_t* browser)
 
     if (drawList)
     {
+        if (!hideControls)
+        {
+            const char* primaryActionStr   = browserActionToString(browser->primaryAction);
+            const char* secondaryActionStr = browserActionToString(browser->secondaryAction);
+
+            // Big enough for anything
+            char topText[32];
+            snprintf(topText, sizeof(topText), browserTitleStr, primaryActionStr, secondaryActionStr);
+            drawText(browser->font, c000, topText, (TFT_WIDTH - textWidth(browser->font, topText)) / 2, textMargin);
+        }
+
         if (visibleRows > 0 && rows > visibleRows)
         {
             // Calculate the scrollbar height
@@ -605,8 +625,8 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
         }
 
         // TODO un-copy-paste this
-        uint16_t marginTop    = 15;
         uint16_t textMargin   = 5;
+        uint16_t marginTop    = browser->hideControls ? 15 : (browser->font->height + 1 + textMargin * 2);
         uint16_t marginBottom = 15 + browser->font->height + 1 + textMargin;
         uint16_t thumbMargin  = 5;
         uint16_t thumbHeight  = THUMB_H + 4;
@@ -641,6 +661,37 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
             {
                 browser->firstRow--;
             }
+        }
+    }
+}
+
+static const char* browserActionToString(imageBrowserAction_t action)
+{
+    switch (action)
+    {
+        case BROWSER_EXIT:
+        {
+            return browserActExitStr;
+        }
+
+        case BROWSER_OPEN:
+        {
+            return browserActOpenStr;
+        }
+
+        case BROWSER_SAVE:
+        {
+            return browserActSaveStr;
+        }
+
+        case BROWSER_DELETE:
+        {
+            return browserActDeleteStr;
+        }
+
+        default:
+        {
+            return NULL;
         }
     }
 }

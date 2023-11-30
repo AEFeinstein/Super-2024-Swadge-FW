@@ -1,5 +1,6 @@
 #include "paint_gallery.h"
 
+#include "hdw-led.h"
 #include "settingsManager.h"
 
 #include "mode_paint.h"
@@ -82,9 +83,10 @@ void paintGallerySetup(bool screensaver)
 
     paintGallery->gallerySpeed = US_PER_MS * transitionTimeMap[paintGallery->gallerySpeedIndex];
 
-    paintGallery->browser.callback   = paintGalleryBrowserCb;
-    paintGallery->browser.wraparound = true;
-    paintGallery->browser.cols       = 4;
+    paintGallery->browser.callback     = paintGalleryBrowserCb;
+    paintGallery->browser.wraparound   = true;
+    paintGallery->browser.cols         = 4;
+    paintGallery->browser.hideControls = true;
     setupImageBrowser(&paintGallery->browser, &paintGallery->infoFont, PAINT_NS_DATA, NULL, BROWSER_OPEN,
                       BROWSER_DELETE);
 
@@ -429,10 +431,11 @@ void paintGalleryModePollTouch(void)
 
         getTouchSpins(&paintGallery->spinState, phi, r);
 
-        int32_t diff
-            = CLAMP((((paintGallery->spinState.spins * 360 + paintGallery->spinState.remainder) * (7)) / -360), -7, 7);
+        int32_t diff = CLAMP(
+            (((paintGallery->spinState.spins * 360 + paintGallery->spinState.remainder) * (MAX_LED_BRIGHTNESS)) / -360),
+            MAX_LED_BRIGHTNESS * -1, MAX_LED_BRIGHTNESS);
 
-        setLedBrightnessSetting(CLAMP(paintGallery->startBrightness + diff, 0, 7));
+        setLedBrightnessSetting(CLAMP(paintGallery->startBrightness + diff, 0, MAX_LED_BRIGHTNESS));
 
         paintGallery->infoTimeRemaining = GALLERY_INFO_TIME;
         paintGallery->showUi            = true;

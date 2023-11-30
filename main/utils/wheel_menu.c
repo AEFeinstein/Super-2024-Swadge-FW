@@ -369,7 +369,7 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                     drawInfos[curDraw].bgColor   = isCur ? info->selectedBg : info->unselectedBg;
                     curDraw++;
 
-                    ESP_LOGI("Wheel", "drawOrder is %" PRIu8 " for %s", drawInfos[curDraw].drawOrder, item->label);
+                    ESP_LOGD("Wheel", "drawOrder is %" PRIu8 " for %s", drawInfos[curDraw].drawOrder, item->label);
                 }
             }
             node = node->next;
@@ -397,7 +397,6 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
                 = (!curItem || menuItemIsBack(curItem)) ? renderer->selBgColor : renderer->unselBgColor;
             curDraw++;
         }
-        ESP_LOGI("Wheel", "back drawOrder is %" PRIu8, drawInfos[curDraw - 1].drawOrder);
     }
 
     // Sort by the draw order
