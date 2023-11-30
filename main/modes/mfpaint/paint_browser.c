@@ -19,11 +19,14 @@
 #include "paint_draw.h"
 #include "paint_ui.h"
 
-static const char saveAsNewStr[]      = "New...";
-static const char textEntryTitleStr[] = "File Name";
-static const char noItemsStr[]        = "No Items";
-static const char deleteStr[]         = "Delete";
-static const char browserTitleStr[]   = "A: %s      Pause: %s";
+static const char saveAsNewStr[]        = "New...";
+static const char textEntryTitleStr[]   = "File Name";
+static const char noItemsStr[]          = "No Items";
+static const char browserTitleStr[]     = "A: %s      Pause: %s";
+static const char browserActExitStr[]   = "Exit";
+static const char browserActOpenStr[]   = "Open";
+static const char browserActSaveStr[]   = "Save";
+static const char browserActDeleteStr[] = "Delete";
 
 #define THUMB_W 35
 #define THUMB_H 30
@@ -50,7 +53,6 @@ static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t*
 static void imageBrowserTextEntryCb(const char* text, void* data);
 static int compareEntryInfoAlpha(const void* obj1, const void* obj2);
 static const char* browserActionToString(imageBrowserAction_t action);
-static uint8_t browserActionToStringLen(imageBrowserAction_t action);
 
 static bool makeThumbnail(wsg_t* thumbnail, uint16_t w, uint16_t h, const wsg_t* image, bool spiram)
 {
@@ -227,7 +229,7 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint8_t rows = (browser->items.length + (browser->cols - 1)) / browser->cols;
 
     uint16_t textMargin   = 5;
-    uint16_t marginTop    = 15 + browser->font->height + 1 + textMargin;
+    uint16_t marginTop    = browser->hideControls ? 15 : (browser->font->height + 1 + textMargin * 2);
     uint16_t marginBottom = 15 + browser->font->height + 1 + textMargin;
     uint16_t marginLeft   = 18;
     uint16_t marginRight  = 18;
@@ -236,6 +238,7 @@ void drawImageBrowser(imageBrowser_t* browser)
     uint16_t thumbWidth   = THUMB_W + 4;
     uint16_t imageTop     = 5;
     uint16_t imageBottom  = 5;
+    bool hideControls = browser->hideControls;
 
     uint8_t visibleRows = 0;
 
@@ -254,6 +257,7 @@ void drawImageBrowser(imageBrowser_t* browser)
             imageTop    = 5;
             imageBottom = TFT_HEIGHT - marginTop + 5;
             visibleRows = 1;
+            hideControls = true;
             break;
         }
 
@@ -266,6 +270,7 @@ void drawImageBrowser(imageBrowser_t* browser)
             marginLeft   = 0;
             marginRight  = 0;
             visibleRows  = 0;
+            hideControls = true;
             break;
         }
     }
@@ -301,13 +306,17 @@ void drawImageBrowser(imageBrowser_t* browser)
 
     if (drawList)
     {
-        const uint8_t topTextLen = ARRAY_SIZE(browserTitleStr) + browserActionToStringLen(browser->primaryAction)
-                                   + browserActionToStringLen(browser->secondaryAction) - 4 + 1;
-        char topText[topTextLen];
-        snprintf(topText, topTextLen, browserTitleStr, browserActionToString(browser->primaryAction),
-                 browserActionToString(browser->secondaryAction));
-        drawText(browser->font, c000, topText, (TFT_WIDTH - textWidth(browser->font, topText)) / 2,
-                 marginTop - browser->font->height - textMargin);
+        if (!hideControls)
+        {
+            const char* primaryActionStr   = browserActionToString(browser->primaryAction);
+            const char* secondaryActionStr = browserActionToString(browser->secondaryAction);
+
+            // Big enough for anything
+            char topText[32];
+            snprintf(topText, sizeof(topText), browserTitleStr, primaryActionStr, secondaryActionStr);
+            drawText(browser->font, c000, topText, (TFT_WIDTH - textWidth(browser->font, topText)) / 2,
+                    textMargin);
+        }
 
         if (visibleRows > 0 && rows > visibleRows)
         {
@@ -617,8 +626,8 @@ void imageBrowserButton(imageBrowser_t* browser, const buttonEvt_t* evt)
         }
 
         // TODO un-copy-paste this
-        uint16_t marginTop    = 15;
         uint16_t textMargin   = 5;
+        uint16_t marginTop    = browser->hideControls ? 15 : (browser->font->height + 1 + textMargin * 2);
         uint16_t marginBottom = 15 + browser->font->height + 1 + textMargin;
         uint16_t thumbMargin  = 5;
         uint16_t thumbHeight  = THUMB_H + 4;
@@ -663,58 +672,27 @@ static const char* browserActionToString(imageBrowserAction_t action)
     {
         case BROWSER_EXIT:
         {
-            return dialogOptionCancelStr;
+            return browserActExitStr;
         }
 
         case BROWSER_OPEN:
         {
-            return toolWheelLoadStr;
+            return browserActOpenStr;
         }
 
         case BROWSER_SAVE:
         {
-            return dialogOptionSaveAsStr;
+            return browserActSaveStr;
         }
 
         case BROWSER_DELETE:
         {
-            return deleteStr;
+            return browserActDeleteStr;
         }
 
         default:
         {
             return NULL;
-        }
-    }
-}
-
-static uint8_t browserActionToStringLen(imageBrowserAction_t action)
-{
-    switch (action)
-    {
-        case BROWSER_EXIT:
-        {
-            return dialogOptionCancelStrLen;
-        }
-
-        case BROWSER_OPEN:
-        {
-            return toolWheelLoadStrLen;
-        }
-
-        case BROWSER_SAVE:
-        {
-            return dialogOptionSaveAsStrLen;
-        }
-
-        case BROWSER_DELETE:
-        {
-            return ARRAY_SIZE(deleteStr);
-        }
-
-        default:
-        {
-            return 0;
         }
     }
 }
