@@ -431,6 +431,7 @@ void explodeBomb(entity_t* self)
             case TILE_BLOCK_1x1_RED ... TILE_UNUSED_127:
             {
                 scorePoints(self->gameData, 10 * breakBlockTile(self->tilemap, self->gameData, tileId, ctx, cty), 0);
+                self->gameData->shouldAdvanceMultiplier = true;
                 break;
             }
             case TILE_BOUNDARY_1 ... TILE_UNUSED_F:
@@ -1116,11 +1117,12 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 setVelocity(self, 90 + (other->x - self->x) / SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
-                if (self->shouldAdvanceMultiplier)
+                if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_0;
+                    self->shouldAdvanceMultiplier           = false;
+                    self->gameData->shouldAdvanceMultiplier = false;
+                    other->spriteIndex                      = SP_PADDLE_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
@@ -1133,11 +1135,12 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 setVelocity(self, 270 + (self->x - other->x) / SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
-                if (self->shouldAdvanceMultiplier)
+                if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_0;
+                    self->shouldAdvanceMultiplier           = false;
+                    self->gameData->shouldAdvanceMultiplier = false;
+                    other->spriteIndex                      = SP_PADDLE_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
@@ -1150,11 +1153,12 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 setVelocity(self, 0 + (other->y - self->y) / SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
-                if (self->shouldAdvanceMultiplier)
+                if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_VERTICAL_0;
+                    self->shouldAdvanceMultiplier           = false;
+                    self->gameData->shouldAdvanceMultiplier = false;
+                    other->spriteIndex                      = SP_PADDLE_VERTICAL_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
@@ -1167,11 +1171,12 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
                 setVelocity(self, 180 + (self->y - other->y) / SUBPIXEL_RESOLUTION, self->baseSpeed);
                 bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
-                if (self->shouldAdvanceMultiplier)
+                if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
                     scorePoints(self->gameData, 0, self->gameData->ballsInPlay);
-                    self->shouldAdvanceMultiplier = false;
-                    other->spriteIndex            = SP_PADDLE_VERTICAL_0;
+                    self->shouldAdvanceMultiplier           = false;
+                    self->gameData->shouldAdvanceMultiplier = false;
+                    other->spriteIndex                      = SP_PADDLE_VERTICAL_0;
                 }
 
                 self->bouncesOffUnbreakableBlocks = 0;
@@ -1879,6 +1884,13 @@ void setLedBreakBlock(gameData_t* gameData, uint8_t tileId)
         case TILE_BLOCK_2x2_BLACK_UR:
         case TILE_BLOCK_2x2_BLACK_DL:
         case TILE_BLOCK_2x2_BLACK_DR:
+        case TILE_BLOCK_1x1_STONE:
+        case TILE_BLOCK_2x1_STONE_L:
+        case TILE_BLOCK_2x1_STONE_R:
+        case TILE_BLOCK_2x2_STONE_UL:
+        case TILE_BLOCK_2x2_STONE_UR:
+        case TILE_BLOCK_2x2_STONE_DL:
+        case TILE_BLOCK_2x2_STONE_DR:
         {
             nr = 64;
             ng = 64;

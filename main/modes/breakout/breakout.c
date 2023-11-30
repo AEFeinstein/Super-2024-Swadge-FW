@@ -276,7 +276,7 @@ static const int16_t cheatCode[9] = {PB_UP, PB_B, PB_DOWN, PB_B, PB_LEFT, PB_B, 
 const char breakoutName[]                  = "Galactic Brickdown";
 static const char breakoutTitleGalactic[]  = "Galactic";
 static const char breakoutTitleBrickdown[] = "Brickdown";
-static const char breakoutPressStart[]     = "Press Start";
+static const char breakoutPressStart[]     = "Press A to Start";
 
 static const char breakoutNewGame[]       = "New Game";
 static const char breakoutContinue[]      = "Continue - Lv";
@@ -699,6 +699,8 @@ void breakoutUpdateDead(breakout_t* self, int64_t elapsedUs)
         }
     }
 
+    breakoutDetectGameStateChange(self);
+
     updateLedsInGame(&(self->gameData));
     updateEntities(&(self->entityManager));
 
@@ -759,65 +761,30 @@ void breakoutDrawGameOver(font_t* logbook, font_t* ibm_vga8, gameData_t* gameDat
 
 static void drawBreakoutHud(font_t* font, gameData_t* gameData)
 {
-    /*
-        TODO
-        Clean this formatting code up.
-        It sucks.
-    */
-
-    char scoreStr[32];
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "%06" PRIu32, gameData->score);
-
-    char levelStr[11];
-    snprintf(levelStr, sizeof(levelStr) - 1, "L%02" PRIu8, gameData->level);
-
-    char livesStr[8];
-    snprintf(livesStr, sizeof(livesStr) - 1, "x%d", gameData->lives);
-
-    char timeStr[16];
-    snprintf(timeStr, sizeof(timeStr) - 1, "BONUS %0" PRId16, gameData->countdown);
-
     if (gameData->frameCount > 29)
     {
         drawText(font, c500, "1UP", 24, 2);
     }
 
-    drawText(font, c555, livesStr, 48, 2);
-    // drawText(font, c555, coinStr, 160, 16);
-    drawText(font, c555, scoreStr, 80, 2);
-    drawText(font, c555, levelStr, 224, 2);
-    // drawText(d, font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220,
-    // 16);
+    char formatStr[32];
 
-    /*drawText(font, c555, "B", 271, 32);
-    drawText(font, c555, "O", 271, 44);
-    drawText(font, c555, "N", 271, 56);
-    drawText(font, c555, "U", 271, 68);
-    drawText(font, c555, "S", 271, 80);
-    drawRect(271, 96, 279, 96 + (gameData->countdown >> 1), c555);*/
+    snprintf(formatStr, sizeof(formatStr) - 1, "%06" PRIu32, gameData->score);
+    drawText(font, c555, formatStr, 80, 2);
+
+    snprintf(formatStr, sizeof(formatStr) - 1, "L%02" PRIu8, gameData->level);
+    drawText(font, c555, formatStr, 224, 2);
+
+    snprintf(formatStr, sizeof(formatStr) - 1, "x%d", gameData->lives);
+    drawText(font, c555, formatStr, 48, 2);
+
+    snprintf(formatStr, sizeof(formatStr) - 1, "BONUS %0" PRId16, gameData->countdown);
 
     char vdispStr[3];
-    /*for(uint16_t i=0; i<sizeof(levelStr); i++){
-        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", levelStr[i]);
-        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
-    }*/
 
-    char extraLifeStr[15];
-    snprintf(extraLifeStr, sizeof(extraLifeStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
-
-    for (uint16_t i = 0; i < sizeof(extraLifeStr) - 1; i++)
+    // Draw string vertically
+    for (uint16_t i = 0; i < sizeof(formatStr) - 1; i++)
     {
-        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", extraLifeStr[i]);
-        if (vdispStr[0] == '\0')
-        {
-            break;
-        }
-        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
-    }
-
-    for (uint16_t i = 0; i < sizeof(timeStr) - 1; i++)
-    {
-        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", timeStr[i]);
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", formatStr[i]);
         if (vdispStr[0] == '\0')
         {
             break;
@@ -825,16 +792,23 @@ static void drawBreakoutHud(font_t* font, gameData_t* gameData)
         drawText(font, c555, vdispStr, 268, 32 + 12 * i);
     }
 
-    // if(gameData->comboTimer == 0){
-    //     return;
-    // }
+    snprintf(formatStr, sizeof(formatStr) - 1, "EXTRA %0" PRIu32, gameData->extraLifeScore);
+
+    // Draw string vertically
+    for (uint16_t i = 0; i < sizeof(formatStr) - 1; i++)
+    {
+        snprintf(vdispStr, sizeof(vdispStr) - 1, "%c", formatStr[i]);
+        if (vdispStr[0] == '\0')
+        {
+            break;
+        }
+        drawText(font, c555, vdispStr, 4, 32 + 12 * i);
+    }
 
     if (gameData->comboScore > 0)
     {
-        snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
-        // snprintf(scoreStr, sizeof(scoreStr) - 1, "x%d", gameData->combo);
-        drawText(font, /*(gameData->comboTimer < 60) ? c030:*/ greenColors[(breakout->gameData.frameCount >> 3) % 4],
-                 scoreStr, 144, 2);
+        snprintf(formatStr, sizeof(formatStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+        drawText(font, greenColors[(breakout->gameData.frameCount >> 3) % 4], formatStr, 144, 2);
     }
 
     // Draw centering lines, for paddle control debug
@@ -879,7 +853,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                 bzrPlayBgm(&(self->soundManager.tally), BZR_LEFT);
             }
 
-            scorePoints(&(self->gameData), 80, -1000);
+            scorePoints(&(self->gameData), 40, -1000);
         }
         else if (self->gameData.frameCount % 120 == 0)
         {
@@ -913,11 +887,6 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
             }*/
                 self->unlockables.gameCleared = true;
 
-                if (self->unlockables.maxLevelIndexUnlocked < POSTGAME_LEVEL_START_INDEX)
-                {
-                    self->unlockables.maxLevelIndexUnlocked = POSTGAME_LEVEL_START_INDEX;
-                }
-
                 if (!self->gameData.debugMode)
                 {
                     breakoutSaveUnlockables(self);
@@ -945,7 +914,15 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                     breakoutSaveUnlockables(self);
                 }
 
-                breakoutChangeStateReadyScreen(self);
+                if (breakout->gameData.lives > 0)
+                {
+                    breakoutChangeStateReadyScreen(self);
+                }
+                else
+                {
+                    breakoutChangeStateGameOver(self);
+                }
+
                 return;
             }
         }
@@ -1018,7 +995,7 @@ void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
             break;
         case 1:
         default:
-            if (self->gameData.frameCount % 960 == 0)
+            if (self->gameData.frameCount % 1140 == 0)
             {
                 breakoutChangeStateGameOver(self);
             }
@@ -1085,12 +1062,14 @@ void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameDa
                 drawText(logbook, c555, "next MAGFest!", 64, 168);
             }
 
-            if (gameData->level == GAME_LEVEL_END_INDEX && gameData->frameCount > 480)
+            if (gameData->frameCount > 480)
             {
                 drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
-                         "Use the Continue option to", 24, 200);
+                         "Check out DEBUG MODE for more fun!", 8, 192);
                 drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
-                         "check out a few extra levels!", 24, 212);
+                         "Input on the titlescreen:", 16, 204);
+                drawText(ibm_vga8, highScoreNewEntryColors[(breakout->gameData.frameCount >> 3) % 4],
+                         "UP B DOWN B LEFT B RIGHT B PAUSE", 16, 216);
             }
 
             break;
@@ -1208,7 +1187,8 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
         }
     }
 
-    if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
+    if ((((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A))
+         || ((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))))
     {
         self->gameData.btnState = 0;
         breakout->menuSelection = 0;
@@ -1560,5 +1540,5 @@ void breakoutBuildMainMenu(breakout_t* self)
 
 int16_t getBonusTimerStartValue(tilemap_t* tilemap)
 {
-    return (tilemap->totalTargetBlocks > 16) ? tilemap->totalTargetBlocks : 30;
+    return (tilemap->totalTargetBlocks > 60) ? tilemap->totalTargetBlocks + (tilemap->totalTargetBlocks >> 2) : 60;
 }
