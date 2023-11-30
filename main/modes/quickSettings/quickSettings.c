@@ -10,6 +10,8 @@
 // Includes
 //==============================================================================
 
+#include <esp_heap_caps.h>
+
 #include "quickSettings.h"
 #include "menu.h"
 #include "menu_utils.h"
@@ -68,6 +70,8 @@ typedef struct
 
     int32_t lastOnTftValue;
     int32_t minTftValue;
+
+    paletteColor_t* frozenScreen;
 } quickSettingsMenu_t;
 
 //==============================================================================
@@ -171,6 +175,10 @@ static void quickSettingsEnterMode(void)
     // Allocate and clear all memory for this mode. All the variables are contained in a single struct for convenience.
     // calloc() is used instead of malloc() because calloc() also initializes the allocated memory to zeros.
     quickSettings = calloc(1, sizeof(quickSettingsMenu_t));
+
+    // Allocate background image and copy framebuffer into it
+    quickSettings->frozenScreen = heap_caps_calloc(TFT_WIDTH * TFT_HEIGHT, sizeof(paletteColor_t), MALLOC_CAP_SPIRAM);
+    memcpy(quickSettings->frozenScreen, getPxTftFramebuffer(), sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
 
     // Save the buzzer state and pause it
     quickSettings->buzzerState = bzrSave();
@@ -278,6 +286,9 @@ static void quickSettingsExitMode(void)
     freeWsg(&quickSettings->iconTftOn);
     freeWsg(&quickSettings->iconTftOff);
 
+    // Free underlying screen
+    free(quickSettings->frozenScreen);
+
     free(quickSettings);
     quickSettings = NULL;
 }
@@ -352,6 +363,9 @@ static void quickSettingsMainLoop(int64_t elapsedUs)
     // If the button press didn't cause the menu to deinit
     if (NULL != quickSettings)
     {
+        // Draw the background
+        memcpy(getPxTftFramebuffer(), quickSettings->frozenScreen, sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
+
         // Draw the menu
         drawMenuQuickSettings(quickSettings->menu, quickSettings->renderer, elapsedUs);
 
