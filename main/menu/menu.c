@@ -747,6 +747,34 @@ menu_t* menuSelectCurrentItem(menu_t* menu)
 }
 
 /**
+ * @brief Performs the equivalent of scrolling to the given setting value or option index for the
+ * currently selected menu item.
+ *
+ * @param menu The menu to scroll the selected item of
+ * @param value The setting value or option index to scroll to
+ * @return menu_t* The menu
+ */
+menu_t* menuSetCurrentOption(menu_t* menu, int32_t value)
+{
+    if (menu->currentItem)
+    {
+        menuItem_t* item = menu->currentItem->val;
+        if (item->options)
+        {
+            item->currentOpt = CLAMP(value, 0, item->numOptions - 1);
+        }
+        else
+        {
+            item->currentSetting = CLAMP(value, item->minSetting, item->maxSetting);
+        }
+
+        menuCallCallbackForItem(menu, item, false);
+    }
+
+    return menu;
+}
+
+/**
  * @brief This must be called to pass button event from the Swadge mode to the menu.
  * If a button is passed here, it should not be handled anywhere else
  *

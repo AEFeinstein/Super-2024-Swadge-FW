@@ -418,8 +418,6 @@ void paintDrawScreenSetup(void)
 
     clearPxTft();
 
-    paintSetupTool();
-
     // Clear the LEDs
     // Might not be necessary here
     paintUpdateLeds();
@@ -560,6 +558,8 @@ void paintDrawScreenSetup(void)
     addSettingsItemToMenu(paintState->toolWheel, toolWheelSizeStr, &sizeBounds, sizeBounds.def);
     paintState->toolWheelBrushSizeItem = paintState->toolWheel->items->last->val;
     wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->wheelSizeWsg, 5, SCROLL_VERT);
+
+    paintSetupTool();
 }
 
 void paintDrawScreenCleanup(void)
@@ -1704,14 +1704,16 @@ void paintSetupTool(void)
     // Reset the brush params
     if (getArtist()->brushWidth < getArtist()->brushDef->minSize)
     {
-        getArtist()->brushWidth     = getArtist()->brushDef->minSize;
-        paintState->startBrushWidth = getArtist()->brushWidth;
+        getArtist()->brushWidth = getArtist()->brushDef->minSize;
     }
     else if (getArtist()->brushWidth > getArtist()->brushDef->maxSize)
     {
-        getArtist()->brushWidth     = getArtist()->brushDef->maxSize;
-        paintState->startBrushWidth = getArtist()->brushWidth;
+        getArtist()->brushWidth = getArtist()->brushDef->maxSize;
     }
+
+    paintState->toolWheelBrushSizeItem->currentSetting = getArtist()->brushWidth;
+    paintState->toolWheelBrushSizeItem->minSetting     = getArtist()->brushDef->minSize;
+    paintState->toolWheelBrushSizeItem->maxSetting     = getArtist()->brushDef->maxSize;
 
     setCursorSprite(getCursor(), &paintState->canvas, &paintState->picksWsg);
     // Place the top-right pixel of the pointer 1px inside the target pixel
@@ -1752,18 +1754,9 @@ void paintNextTool(void)
 
 void paintSetBrushWidth(uint8_t width)
 {
-    if (width < getArtist()->brushDef->minSize)
-    {
-        getArtist()->brushWidth = getArtist()->brushDef->minSize;
-    }
-    else if (width > getArtist()->brushDef->maxSize)
-    {
-        getArtist()->brushWidth = getArtist()->brushDef->maxSize;
-    }
-    else
-    {
-        getArtist()->brushWidth = width;
-    }
+    getArtist()->brushWidth = width;
+
+    // paintSetupTool() takes care of checking bounds
 
     paintSetupTool();
 }
@@ -1951,6 +1944,10 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
                 getArtist()->fgColor = paintState->canvas.palette[colorIndex];
             }
         }
+        else if (toolWheelSizeStr == label)
+        {
+            paintState->buttonMode = BTN_MODE_WHEEL;
+        }
         else
         {
             // Check for all the brush names
@@ -1981,7 +1978,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         }
         else if (toolWheelSizeStr == label)
         {
-            paintState->buttonMode = BTN_MODE_WHEEL;
             paintSetBrushWidth(settingVal);
         }
         PAINT_LOGI("Moved to tool wheel item %s", label);
