@@ -332,23 +332,11 @@ static void lumberjackMainLoop(int64_t elapsedUs)
             return;
         }
 
-        lumberjack->connectionConfirmed      = 0;
-        uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
-        memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
+        lumberjack->connectionConfirmed = 0;
 
-        p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
-
-        // high score test
-        uint8_t highscorePayload[4] = {HIGHSCORE_MSG};
-        int score                   = (lumberjack->gameMode == LUMBERJACK_MODE_PANIC) ? lumberjack->save.panicHighScore
-                                                                                      : lumberjack->save.attackHighScore;
-
-        highscorePayload[3] = score >> 16 & 0xFF;
-        highscorePayload[2] = score >> 8 & 0xFF;
-        highscorePayload[1] = score & 0xFF;
-
-        ESP_LOGI(LUM_TAG, "Sending %d", score);
-        p2pSendMsg(&lumberjack->p2p, highscorePayload, sizeof(highscorePayload), lumberjackMsgTxCbFn);
+        // TODO sends aren't queued, so back-to-back is BAD!
+        lumberjackSendVersion();
+        lumberjackSendHighScore();
     }
 }
 
@@ -541,11 +529,10 @@ static void lumberjackConCb(p2pInfo* p2p, connectionEvt_t evt)
         {
             int index = (int)p2pGetPlayOrder(p2p);
             ESP_LOGI(LUM_TAG, "LumberJack.Net ready! %d", index);
-            lumberjack->host                     = (GOING_FIRST == index);
-            uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
-            memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
+            lumberjack->host = (GOING_FIRST == index);
 
-            p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
+            lumberjackSendVersion();
+
             lumberjack->connectionConfirmed = 2000;
 
             lumberjackGameReady();
@@ -641,6 +628,35 @@ static void lumberjackMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
     }
 
     ESP_LOGD(LUM_TAG, "Received %d %d!\n", *payload, len);
+}
+
+void lumberjackSendVersion(void)
+{
+    if (lumberjack->networked)
+    {
+        uint8_t payload[1 + LUMBERJACK_VLEN] = {VERSION_MSG};
+        memcpy(&payload[1], LUMBERJACK_VERSION, LUMBERJACK_VLEN);
+
+        p2pSendMsg(&lumberjack->p2p, payload, sizeof(payload), lumberjackMsgTxCbFn);
+    }
+}
+
+void lumberjackSendHighScore(void)
+{
+    if (lumberjack->networked)
+    {
+        // high score test
+        uint8_t highscorePayload[4] = {HIGHSCORE_MSG};
+        int score                   = (lumberjack->gameMode == LUMBERJACK_MODE_PANIC) ? lumberjack->save.panicHighScore
+                                                                                      : lumberjack->save.attackHighScore;
+
+        highscorePayload[3] = score >> 16 & 0xFF;
+        highscorePayload[2] = score >> 8 & 0xFF;
+        highscorePayload[1] = score & 0xFF;
+
+        ESP_LOGI(LUM_TAG, "Sending %d", score);
+        p2pSendMsg(&lumberjack->p2p, highscorePayload, sizeof(highscorePayload), lumberjackMsgTxCbFn);
+    }
 }
 
 void lumberjackSendGo(void)

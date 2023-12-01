@@ -762,6 +762,7 @@ void lumberjackTitleLoop(int64_t elapsedUs)
         if (lumv->btnState & PB_A && lumv->gameReady && lumv->lumberjackMain->host
             && lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // And Game Ready!
         {
+            // TODO sends aren't queued, so back-to-back is BAD!
             lumberjackSendCharacter(lumv->localPlayerType);
             lumberjackSendGo();
             lumberjackPlayGame();
