@@ -409,6 +409,9 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->song_title.shouldLoop = true;
 
     bzrPlayBgm(&lumv->song_title, BZR_STEREO);
+
+    // Setup level now that assets are loaded
+    lumberjackSetupLevel(lumv->localPlayerType);
 }
 
 bool lumberjackLoadLevel()
@@ -802,7 +805,6 @@ void lumberjackPlayGame()
     }
 
     lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
-    lumberjackSetupLevel(lumv->localPlayerType);
 
     if (lumv->lumberjackMain->networked)
     {
