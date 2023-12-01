@@ -53,7 +53,6 @@ typedef struct
     bool host;
     bool instructions;
 
-    int connectionConfirmed;
     bool networked;
     bool connLost;
 

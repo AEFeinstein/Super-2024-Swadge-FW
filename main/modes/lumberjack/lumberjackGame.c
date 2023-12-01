@@ -763,18 +763,13 @@ void lumberjackTitleLoop(int64_t elapsedUs)
     }
     else if (lumv->lumberjackMain->networked)
     {
-        if (lumv->btnState & PB_A && lumv->gameReady && lumv->lumberjackMain->host
-            && lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // And Game Ready!
+        if ((lumv->btnState & PB_A) &&                          // A pressed
+            lumv->gameReady &&                                  // And game ready
+            lumv->lumberjackMain->host &&                       // and we're the host
+            lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // and we're connected
         {
-            // TODO sends aren't queued, so back-to-back is BAD!
+            // We are the host, so send our character. The client will respond with their own
             lumberjackSendCharacter(lumv->localPlayerType);
-            lumberjackSendGo();
-            lumberjackPlayGame();
-        }
-
-        if (lumv->lumberjackMain->host == false && lumv->btnState & PB_START)
-        {
-            lumberjackSendHostRequest();
         }
 
         lumv->highscore = 0;
@@ -810,11 +805,6 @@ void lumberjackPlayGame()
     }
 
     lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
-
-    if (lumv->lumberjackMain->networked)
-    {
-        lumberjackSendCharacter(lumv->localPlayerType);
-    }
 }
 
 void lumberjackGameReady(void)
@@ -875,10 +865,16 @@ void lumberjackGameLoop(int64_t elapsedUs)
         if (lumv->lumberjackMain->connLost)
             lumv->lastResponseSignal = 0;
 
-        if (lumv->wakeupSignal < 0)
+        // If we are the host
+        if (lumv->lumberjackMain->host)
         {
-            lumv->wakeupSignal = 100;
-            lumberjackSendScore(lumv->score); // Send score just to ping
+            // Send our score every second to ping.
+            // The client will respond with their score
+            if (lumv->wakeupSignal < 0)
+            {
+                lumv->wakeupSignal = 100;
+                lumberjackSendScore(lumv->score);
+            }
         }
 
         if (lumv->lastResponseSignal <= 0)
@@ -2046,6 +2042,12 @@ void lumberjackOnReceiveScore(const uint8_t* score)
 {
     int locX        = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
     lumv->highscore = locX;
+
+    // If we are not the host, reply with our score
+    if (false == lumv->lumberjackMain->host)
+    {
+        lumberjackSendScore(lumv->score);
+    }
 }
 
 void lumberjackOnReceiveHighScore(const uint8_t* score)
@@ -2057,6 +2059,19 @@ void lumberjackOnReceiveHighScore(const uint8_t* score)
 void lumberjackOnReceiveCharacter(uint8_t character)
 {
     lumv->netPlayerType = character;
+
+    if (false == lumv->lumberjackMain->host)
+    {
+        // Not the host, reply with our character
+        lumberjackSendCharacter(lumv->localPlayerType);
+    }
+    else
+    {
+        // Got the client's character, send the go message!
+        lumberjackSendGo();
+        // Play the game
+        lumberjackPlayGame();
+    }
 }
 
 void lumberjackOnReceiveBump(void)
