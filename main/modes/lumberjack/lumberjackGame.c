@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include "swadge2024.h"
 #include "lumberjack.h"
@@ -473,11 +474,12 @@ bool lumberjackLoadLevel()
     ESP_LOGI(LUM_TAG, "Loading level!");
 
     size_t ms;
-    uint8_t* buffer = spiffsReadFile(fname, &ms, false);
+    uint8_t* buffer = spiffsReadFile(fname, &ms, true);
 
     // Buffer 0 = map height
-    lumv->tile = (lumberjackTile_t*)malloc((int)buffer[0] * LUMBERJACK_MAP_WIDTH * sizeof(lumberjackTile_t));
     lumv->currentMapHeight = (int)buffer[0];
+    lumv->tile             = (lumberjackTile_t*)heap_caps_calloc(lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH,
+                                                                 sizeof(lumberjackTile_t), MALLOC_CAP_SPIRAM);
     lumv->levelTime        = 0;
     lumv->itemBlockTime    = 0;
     lumv->itemBlockReady   = true;
@@ -492,7 +494,9 @@ bool lumberjackLoadLevel()
     lumv->enemy8Count = (int)buffer[8];
 
     if (lumv->enemy4Count > 1)
+    {
         lumv->enemy4Count = 1; // Only one ghost
+    }
 
     lumv->totalEnemyCount = lumv->enemy1Count;
     lumv->totalEnemyCount += lumv->enemy2Count;
