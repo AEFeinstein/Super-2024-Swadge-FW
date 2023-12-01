@@ -67,6 +67,8 @@ typedef struct
     led_t playerColor;
 
     const char** charactersArray;
+
+    bool resetElapsedUsAfterLoad;
 } lumberjack_t;
 
 typedef struct

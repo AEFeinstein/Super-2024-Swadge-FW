@@ -280,6 +280,20 @@ static void lumberjackExitMode(void)
 
 static void lumberjackMainLoop(int64_t elapsedUs)
 {
+    // Loading WSGs can take a while, so ignore the value of elapsedUs immediately after loading
+    if (lumberjack->resetElapsedUsAfterLoad)
+    {
+        lumberjack->resetElapsedUsAfterLoad = false;
+        elapsedUs                           = 0;
+
+        // If this is a networked game, initialize p2p after resetting elapsedUs
+        // This works better than initializing p2p immediately after loading WSGs
+        if (lumberjack->networked)
+        {
+            lumberjackInitp2p();
+        }
+    }
+
     switch (lumberjack->screen)
     {
         case LUMBERJACK_MENU:

@@ -377,6 +377,9 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_items_pear6.wsg", &lumv->itemIcons[17], true);
     }
 
+    // Set a flag to ignore the next (large) value of elapsedUs after loading WSGs
+    lumv->lumberjackMain->resetElapsedUsAfterLoad = true;
+
     // Sounds?
 
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
@@ -406,11 +409,6 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->song_title.shouldLoop = true;
 
     bzrPlayBgm(&lumv->song_title, BZR_STEREO);
-
-    if (lumv->lumberjackMain->networked)
-    {
-        lumberjackInitp2p();
-    }
 }
 
 bool lumberjackLoadLevel()
