@@ -30,6 +30,7 @@
 //==============================================================================
 // Defines
 //==============================================================================
+#define TIME_BONUS_PER_SECOND 100
 
 //==============================================================================
 // Enums
@@ -853,7 +854,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
                 bzrPlayBgm(&(self->soundManager.tally), BZR_LEFT);
             }
 
-            scorePoints(&(self->gameData), 40, -1000);
+            scorePoints(&(self->gameData), TIME_BONUS_PER_SECOND, -1000);
         }
         else if (self->gameData.frameCount % 120 == 0)
         {
@@ -948,7 +949,7 @@ void breakoutDrawLevelClear(font_t* font, gameData_t* gameData)
 
     char levelScoreStr[32];
 
-    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Bonus %06" PRIi16, gameData->countdown * 100);
+    snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Bonus %06" PRIi16, gameData->countdown * TIME_BONUS_PER_SECOND);
     drawText(font, c555, levelScoreStr, (TFT_WIDTH - textWidth(font, levelScoreStr)) / 2, 128);
 
     snprintf(levelScoreStr, sizeof(levelScoreStr) - 1, "Total  %06" PRIu32, gameData->levelScore);
