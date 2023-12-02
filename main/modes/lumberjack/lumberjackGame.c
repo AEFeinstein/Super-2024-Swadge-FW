@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include "swadge2024.h"
 #include "lumberjack.h"
@@ -377,6 +378,9 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
         loadWsg("lumbers_items_pear6.wsg", &lumv->itemIcons[17], true);
     }
 
+    // Set a flag to ignore the next (large) value of elapsedUs after loading WSGs
+    lumv->lumberjackMain->resetElapsedUsAfterLoad = true;
+
     // Sounds?
 
     if (lumv->gameType == LUMBERJACK_MODE_ATTACK)
@@ -407,10 +411,8 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
     bzrPlayBgm(&lumv->song_title, BZR_STEREO);
 
-    if (lumv->lumberjackMain->networked)
-    {
-        lumberjackInitp2p();
-    }
+    // Setup level now that assets are loaded
+    lumberjackSetupLevel(lumv->localPlayerType);
 }
 
 bool lumberjackLoadLevel()
@@ -472,11 +474,12 @@ bool lumberjackLoadLevel()
     ESP_LOGI(LUM_TAG, "Loading level!");
 
     size_t ms;
-    uint8_t* buffer = spiffsReadFile(fname, &ms, false);
+    uint8_t* buffer = spiffsReadFile(fname, &ms, true);
 
     // Buffer 0 = map height
-    lumv->tile = (lumberjackTile_t*)malloc((int)buffer[0] * LUMBERJACK_MAP_WIDTH * sizeof(lumberjackTile_t));
     lumv->currentMapHeight = (int)buffer[0];
+    lumv->tile             = (lumberjackTile_t*)heap_caps_calloc(lumv->currentMapHeight * LUMBERJACK_MAP_WIDTH,
+                                                                 sizeof(lumberjackTile_t), MALLOC_CAP_SPIRAM);
     lumv->levelTime        = 0;
     lumv->itemBlockTime    = 0;
     lumv->itemBlockReady   = true;
@@ -491,7 +494,9 @@ bool lumberjackLoadLevel()
     lumv->enemy8Count = (int)buffer[8];
 
     if (lumv->enemy4Count > 1)
+    {
         lumv->enemy4Count = 1; // Only one ghost
+    }
 
     lumv->totalEnemyCount = lumv->enemy1Count;
     lumv->totalEnemyCount += lumv->enemy2Count;
@@ -709,11 +714,7 @@ void lumberjackSetupLevel(int characterIndex)
     // Ghost is separate for reasons
 
     // ESP_LOGD(LUM_TAG, "LOADED");
-    if (!lumv->levelMusic)
-    {
-        bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
-        lumv->levelMusic = true;
-    }
+    
 }
 
 void lumberjackUnloadLevel(void)
@@ -758,17 +759,13 @@ void lumberjackTitleLoop(int64_t elapsedUs)
     }
     else if (lumv->lumberjackMain->networked)
     {
-        if (lumv->btnState & PB_A && lumv->gameReady && lumv->lumberjackMain->host
-            && lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // And Game Ready!
+        if ((lumv->btnState & PB_A) &&                          // A pressed
+            lumv->gameReady &&                                  // And game ready
+            lumv->lumberjackMain->host &&                       // and we're the host
+            lumv->lumberjackMain->conStatus == CON_ESTABLISHED) // and we're connected
         {
+            // We are the host, so send our character. The client will respond with their own
             lumberjackSendCharacter(lumv->localPlayerType);
-            lumberjackSendGo();
-            lumberjackPlayGame();
-        }
-
-        if (lumv->lumberjackMain->host == false && lumv->btnState & PB_START)
-        {
-            lumberjackSendHostRequest();
         }
 
         lumv->highscore = 0;
@@ -804,12 +801,8 @@ void lumberjackPlayGame()
     }
 
     lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
-    lumberjackSetupLevel(lumv->localPlayerType);
-
-    if (lumv->lumberjackMain->networked)
-    {
-        lumberjackSendCharacter(lumv->localPlayerType);
-    }
+    
+    bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
 }
 
 void lumberjackGameReady(void)
@@ -870,16 +863,21 @@ void lumberjackGameLoop(int64_t elapsedUs)
         if (lumv->lumberjackMain->connLost)
             lumv->lastResponseSignal = 0;
 
-        if (lumv->wakeupSignal < 0)
+        // If we are the host
+        if (lumv->lumberjackMain->host)
         {
-            lumv->wakeupSignal = 100;
-            lumberjackSendScore(lumv->score); // Send score just to ping
+            // Send our score every second to ping.
+            // The client will respond with their score
+            if (lumv->wakeupSignal < 0)
+            {
+                lumv->wakeupSignal = 100;
+                lumberjackSendScore(lumv->score);
+            }
         }
 
         if (lumv->lastResponseSignal <= 0)
         {
             bzrStop(true);
-            // ESP_LOGD(LUM_TAG, "Connection lost!");
             lumv->gameState          = LUMBERJACK_GAMESTATE_GAMEOVER;
             lumv->transitionTimer    = 500;
             lumv->localPlayer->state = LUMBERJACK_DEAD;
@@ -1188,12 +1186,13 @@ void baseMode(int64_t elapsedUs)
                 continue;
             if (lumv->enemy[i]->state == LUMBERJACK_DEAD)
             {
-                if (lumv->enemy[i]->y == 640)
+                if (lumv->enemy[i]->y >= lumv->currentMapHeight * 16)
                 {
                     enemyKilled++;
                 }
             }
         }
+        
 
         if (enemyKilled >= lumv->totalEnemyCount)
         {
@@ -1218,6 +1217,18 @@ void baseMode(int64_t elapsedUs)
                     break;
                 }
             }
+
+            if (lumv->gameType == LUMBERJACK_MODE_PANIC)
+            {
+                bzrPlaySfx(&lumv->sfx_item_use, BZR_RIGHT);
+
+                lumv->waterDirection = LUMBERJACK_WATER_FAST_DRAIN;
+                lumv->waterTimer     = lumv->waterSpeed;
+                lumv->waterLevel += lumv->waterDirection;
+
+                lumberjackSendAttack(lumv->attackQueue);
+            }
+
         }
     }
 
@@ -2041,6 +2052,12 @@ void lumberjackOnReceiveScore(const uint8_t* score)
 {
     int locX        = (int)score[1] << 0 | (uint32_t)score[2] << 8 | (uint32_t)score[3] << 16;
     lumv->highscore = locX;
+
+    // If we are not the host, reply with our score
+    if (false == lumv->lumberjackMain->host)
+    {
+        lumberjackSendScore(lumv->score);
+    }
 }
 
 void lumberjackOnReceiveHighScore(const uint8_t* score)
@@ -2052,6 +2069,19 @@ void lumberjackOnReceiveHighScore(const uint8_t* score)
 void lumberjackOnReceiveCharacter(uint8_t character)
 {
     lumv->netPlayerType = character;
+
+    if (false == lumv->lumberjackMain->host)
+    {
+        // Not the host, reply with our character
+        lumberjackSendCharacter(lumv->localPlayerType);
+    }
+    else
+    {
+        // Got the client's character, send the go message!
+        lumberjackSendGo();
+        // Play the game
+        lumberjackPlayGame();
+    }
 }
 
 void lumberjackOnReceiveBump(void)
