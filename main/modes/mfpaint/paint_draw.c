@@ -44,6 +44,9 @@ static void doSave(const char* key);
 static void doLoad(const char* key);
 static void doDelete(const char* key);
 
+static void setInterruptedAction(void);
+static void doInterruptedAction(void);
+
 static void paintRefreshUndoRedo(void);
 
 paintDraw_t* paintState;
@@ -75,13 +78,14 @@ static const char dialogOutOfSpaceTitleStr[] = "Save Failed!";
 static const char dialogLoadErrorTitleStr[]  = "Load Failed!";
 const char* dialogErrorTitleStr              = "Error!";
 
-static const char dialogUnsavedDetailStr[]   = "There are unsaved changes to '%s'! Continue without saving?";
-static const char dialogOverwriteDetailStr[] = "The file '%s' already exists! Overwrite it with the current drawing?";
-static const char dialogDeleteDetailStr[]    = "Are you sure you want to delete '%s'?";
-static const char dialogOutOfSpaceDetailStr[]
-    = "Out of storage space! Delete something and try again, or overwrite an existing file.";
-static const char dialogLoadErrorDetailStr[] = "Error loading '%s'! This shouldn't have happened, sorry.";
-static const char dialogErrorDetailStr[]     = "Fatal Error! ";
+// clang-format off
+static const char dialogUnsavedDetailStr[]    = "There are unsaved changes to '%s'! Continue without saving?";
+static const char dialogOverwriteDetailStr[]  = "The file '%s' already exists! Overwrite it with the current drawing?";
+static const char dialogDeleteDetailStr[]     = "Are you sure you want to delete '%s'?";
+static const char dialogOutOfSpaceDetailStr[] = "Out of storage space! Delete something and try again, or overwrite an existing file.";
+static const char dialogLoadErrorDetailStr[]  = "Error loading '%s'! This shouldn't have happened, sorry.";
+static const char dialogErrorDetailStr[]      = "Fatal Error! ";
+// clang-format on
 
 static const char dialogOptionCancelStr[] = "Cancel";
 static const char dialogOptionSaveStr[]   = "Save";
@@ -311,6 +315,9 @@ void paintDrawScreenSetup(void)
     paintState->fatalError = false;
     paintState->buttonMode = BTN_MODE_DRAW;
 
+    // Initialize the interrupted dialog to something not processed by doInterruptedAction()
+    paintState->interruptedDialog = DIALOG_MESSAGE;
+
     paintState->browser.callback = paintBrowserCb;
     paintState->browser.cols     = 4;
 
@@ -331,12 +338,6 @@ void paintDrawScreenSetup(void)
 
     PAINT_WSG("pointer.wsg", &paintState->picksWsg);
     PAINT_WSG("brush_size.wsg", &paintState->brushSizeWsg);
-
-    PAINT_WSG("arrow9.wsg", &paintState->smallArrowWsg);
-    colorReplaceWsg(&paintState->smallArrowWsg, c555, c000);
-
-    PAINT_WSG("arrow12.wsg", &paintState->bigArrowWsg);
-    colorReplaceWsg(&paintState->bigArrowWsg, c555, c000);
 
     PAINT_WSG("newfile.wsg", &paintState->newfileWsg);
     PAINT_WSG("overwrite.wsg", &paintState->overwriteWsg);
@@ -411,14 +412,12 @@ void paintDrawScreenSetup(void)
 
     clearPxTft();
 
-    paintSetupTool();
-
     // Clear the LEDs
     // Might not be necessary here
     paintUpdateLeds();
 
     bzrStop(true);
-    bzrPlayBgm(&paintBgm, BZR_LEFT);
+    bzrPlayBgm(&paintBgm, BZR_STEREO);
 
     // Set up the tool wheel
     paintState->toolWheel         = initMenu(toolWheelTitleStr, paintToolWheelCb);
@@ -553,6 +552,8 @@ void paintDrawScreenSetup(void)
     addSettingsItemToMenu(paintState->toolWheel, toolWheelSizeStr, &sizeBounds, sizeBounds.def);
     paintState->toolWheelBrushSizeItem = paintState->toolWheel->items->last->val;
     wheelMenuSetItemInfo(paintState->toolWheelRenderer, toolWheelSizeStr, &paintState->wheelSizeWsg, 5, SCROLL_VERT);
+
+    paintSetupTool();
 }
 
 void paintDrawScreenCleanup(void)
@@ -568,6 +569,8 @@ void paintDrawScreenCleanup(void)
     freeWsg(&paintState->wheelSettingsWsg);
     freeWsg(&paintState->wheelUndoWsg);
     freeWsg(&paintState->wheelRedoWsg);
+    freeWsg(&paintState->wheelUndoGrayWsg);
+    freeWsg(&paintState->wheelRedoGrayWsg);
     freeWsg(&paintState->wheelSaveWsg);
     freeWsg(&paintState->wheelOpenWsg);
     freeWsg(&paintState->wheelNewWsg);
@@ -581,8 +584,6 @@ void paintDrawScreenCleanup(void)
 
     freeWsg(&paintState->brushSizeWsg);
     freeWsg(&paintState->picksWsg);
-    freeWsg(&paintState->bigArrowWsg);
-    freeWsg(&paintState->smallArrowWsg);
     freeWsg(&paintState->newfileWsg);
     freeWsg(&paintState->overwriteWsg);
 
@@ -1115,7 +1116,9 @@ void paintSelectModeButtonCb(const buttonEvt_t* evt)
         {
             case PB_SELECT:
             case PB_START:
+            {
                 break;
+            }
 
             case PB_UP:
             {
@@ -1306,8 +1309,10 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
             }
 
             case PB_B:
+            {
                 // Do nothing; color swap is handled on button down
                 break;
+            }
 
             case PB_UP:
             case PB_DOWN:
@@ -1320,7 +1325,9 @@ void paintDrawModeButtonCb(const buttonEvt_t* evt)
 
             case PB_SELECT:
             case PB_START:
+            {
                 break;
+            }
         }
     }
 }
@@ -1571,18 +1578,26 @@ void paintDoTool(uint16_t x, uint16_t y, paletteColor_t col, bool partial)
     switch (getArtist()->brushDef->mode)
     {
         case PICK_POINT:
+        {
             isLastPick = (pxStackSize(&getArtist()->pickPoints) + 1 == getArtist()->brushDef->maxPoints);
             break;
+        }
 
         case PICK_POINT_LOOP:
+        {
             isLastPick = pxStackSize(&getArtist()->pickPoints) + 1 == getArtist()->brushDef->maxPoints - 1;
             break;
+        }
 
         case HOLD_DRAW:
+        {
             break;
+        }
 
         default:
+        {
             break;
+        }
     }
 
     pushPxScaled(&getArtist()->pickPoints, getCursor()->x, getCursor()->y, paintState->canvas.x, paintState->canvas.y,
@@ -1681,14 +1696,16 @@ void paintSetupTool(void)
     // Reset the brush params
     if (getArtist()->brushWidth < getArtist()->brushDef->minSize)
     {
-        getArtist()->brushWidth     = getArtist()->brushDef->minSize;
-        paintState->startBrushWidth = getArtist()->brushWidth;
+        getArtist()->brushWidth = getArtist()->brushDef->minSize;
     }
     else if (getArtist()->brushWidth > getArtist()->brushDef->maxSize)
     {
-        getArtist()->brushWidth     = getArtist()->brushDef->maxSize;
-        paintState->startBrushWidth = getArtist()->brushWidth;
+        getArtist()->brushWidth = getArtist()->brushDef->maxSize;
     }
+
+    paintState->toolWheelBrushSizeItem->currentSetting = getArtist()->brushWidth;
+    paintState->toolWheelBrushSizeItem->minSetting     = getArtist()->brushDef->minSize;
+    paintState->toolWheelBrushSizeItem->maxSetting     = getArtist()->brushDef->maxSize;
 
     setCursorSprite(getCursor(), &paintState->canvas, &paintState->picksWsg);
     // Place the top-right pixel of the pointer 1px inside the target pixel
@@ -1729,18 +1746,9 @@ void paintNextTool(void)
 
 void paintSetBrushWidth(uint8_t width)
 {
-    if (width < getArtist()->brushDef->minSize)
-    {
-        getArtist()->brushWidth = getArtist()->brushDef->minSize;
-    }
-    else if (width > getArtist()->brushDef->maxSize)
-    {
-        getArtist()->brushWidth = getArtist()->brushDef->maxSize;
-    }
-    else
-    {
-        getArtist()->brushWidth = width;
-    }
+    getArtist()->brushWidth = width;
+
+    // paintSetupTool() takes care of checking bounds
 
     paintSetupTool();
 }
@@ -1894,7 +1902,7 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
             {
                 paintStoreUndo(&paintState->canvas, getArtist()->fgColor, getArtist()->bgColor);
                 paintRefreshUndoRedo();
-                paintClearCanvas(&paintState->canvas, getArtist()->bgColor);
+                paintResetCanvas(&paintState->canvas);
                 paintState->buttonMode = BTN_MODE_DRAW;
             }
         }
@@ -1928,6 +1936,10 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
                 getArtist()->fgColor = paintState->canvas.palette[colorIndex];
             }
         }
+        else if (toolWheelSizeStr == label)
+        {
+            paintState->buttonMode = BTN_MODE_WHEEL;
+        }
         else
         {
             // Check for all the brush names
@@ -1958,7 +1970,6 @@ static void paintToolWheelCb(const char* label, bool selected, uint32_t settingV
         }
         else if (toolWheelSizeStr == label)
         {
-            paintState->buttonMode = BTN_MODE_WHEEL;
             paintSetBrushWidth(settingVal);
         }
         PAINT_LOGI("Moved to tool wheel item %s", label);
@@ -2090,10 +2101,13 @@ static void paintDialogCb(const char* label)
     if (dialogOptionCancelStr == label)
     {
         // Cancel, so just go back to where we were
-        paintState->buttonMode = BTN_MODE_DRAW;
+        paintState->interruptedDialog = DIALOG_MESSAGE;
+        paintState->buttonMode        = BTN_MODE_DRAW;
     }
     else if (dialogOptionSaveStr == label)
     {
+        setInterruptedAction();
+
         if (paintSlotExists(paintState->selectedSlotKey))
         {
             paintSetupDialog(DIALOG_CONFIRM_OVERWRITE);
@@ -2103,10 +2117,13 @@ static void paintDialogCb(const char* label)
             // Do actual save
             doSave(paintState->slotKey);
             paintState->buttonMode = BTN_MODE_DRAW;
+            doInterruptedAction();
         }
     }
     else if (dialogOptionSaveAsStr == label)
     {
+        setInterruptedAction();
+
         paintSetupBrowser(true);
         paintState->buttonMode = BTN_MODE_BROWSER;
     }
@@ -2145,13 +2162,14 @@ static void paintDialogCb(const char* label)
             {
                 doSave(paintState->selectedSlotKey);
                 paintState->buttonMode = BTN_MODE_DRAW;
+                doInterruptedAction();
                 break;
             }
 
             case DIALOG_CONFIRM_DELETE:
             {
                 doDelete(paintState->selectedSlotKey);
-                paintState->buttonMode = BTN_MODE_DRAW;
+                paintState->buttonMode = BTN_MODE_BROWSER;
                 break;
             }
 
@@ -2182,7 +2200,10 @@ static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action)
         switch (action)
         {
             case BROWSER_EXIT:
+            {
+                paintState->interruptedDialog = DIALOG_MESSAGE;
                 break;
+            }
 
             case BROWSER_OPEN:
             {
@@ -2190,11 +2211,14 @@ static void paintBrowserCb(const char* nvsKey, imageBrowserAction_t action)
                 paintSetupTool();
                 break;
             }
+
             case BROWSER_SAVE:
             {
                 doSave(nvsKey);
+                doInterruptedAction();
                 break;
             }
+
             case BROWSER_DELETE:
             {
                 strncpy(paintState->selectedSlotKey, nvsKey, sizeof(paintState->selectedSlotKey) - 1);
@@ -2216,6 +2240,8 @@ static void doSave(const char* key)
         }
         paintState->selectedSlotKey[0] = '\0';
         paintState->buttonMode         = BTN_MODE_DRAW;
+
+        paintState->unsaved = false;
     }
     else
     {
@@ -2284,6 +2310,61 @@ static void doDelete(const char* key)
     {
         paintDeleteNamed(key);
         paintState->buttonMode = BTN_MODE_BROWSER;
+    }
+}
+
+static void setInterruptedAction(void)
+{
+    switch (paintState->dialog)
+    {
+        case DIALOG_CONFIRM_UNSAVED_CLEAR:
+        case DIALOG_CONFIRM_UNSAVED_LOAD:
+        case DIALOG_CONFIRM_UNSAVED_EXIT:
+        {
+            paintState->interruptedDialog = paintState->dialog;
+            strncpy(paintState->interruptedSelectedSlotKey, paintState->selectedSlotKey, PAINT_SLOT_KEY_LEN_INCL_NULL);
+            break;
+        }
+
+        case DIALOG_CONFIRM_OVERWRITE:
+        case DIALOG_CONFIRM_DELETE:
+        case DIALOG_ERROR:
+        case DIALOG_ERROR_LOAD:
+        case DIALOG_ERROR_NONFATAL:
+        case DIALOG_MESSAGE:
+        {
+            break;
+        }
+    }
+}
+
+static void doInterruptedAction(void)
+{
+    switch (paintState->interruptedDialog)
+    {
+        case DIALOG_CONFIRM_UNSAVED_CLEAR:
+        case DIALOG_CONFIRM_UNSAVED_LOAD:
+        case DIALOG_CONFIRM_UNSAVED_EXIT:
+        {
+            // Restore necessary parts of the state
+            paintState->dialog            = paintState->interruptedDialog;
+            paintState->interruptedDialog = DIALOG_MESSAGE;
+            paintState->buttonMode        = BTN_MODE_DIALOG;
+            strncpy(paintState->selectedSlotKey, paintState->interruptedSelectedSlotKey, PAINT_SLOT_KEY_LEN_INCL_NULL);
+
+            // Perform interrupted action
+            paintDialogCb(dialogOptionOkStr);
+        }
+
+        case DIALOG_CONFIRM_OVERWRITE:
+        case DIALOG_CONFIRM_DELETE:
+        case DIALOG_ERROR:
+        case DIALOG_ERROR_LOAD:
+        case DIALOG_ERROR_NONFATAL:
+        case DIALOG_MESSAGE:
+        {
+            break;
+        }
     }
 }
 

@@ -54,7 +54,7 @@ void lumberjackRespawnEnemy(lumberjackEntity_t* enemy, int side)
     else
     {
         enemy->direction = -1; // This needs to be decided ahead of time
-        enemy->x         = 279;
+        enemy->x         = 271;
         enemy->vx        = 0; // -enemy->maxVX;
         enemy->flipped   = true;
     }

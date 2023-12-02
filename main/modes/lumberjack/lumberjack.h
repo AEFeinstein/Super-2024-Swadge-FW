@@ -53,7 +53,6 @@ typedef struct
     bool host;
     bool instructions;
 
-    int connectionConfirmed;
     bool networked;
     bool connLost;
 
@@ -67,6 +66,8 @@ typedef struct
     led_t playerColor;
 
     const char** charactersArray;
+
+    bool resetElapsedUsAfterLoad;
 } lumberjack_t;
 
 typedef struct
