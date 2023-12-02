@@ -714,11 +714,7 @@ void lumberjackSetupLevel(int characterIndex)
     // Ghost is separate for reasons
 
     // ESP_LOGD(LUM_TAG, "LOADED");
-    if (!lumv->levelMusic)
-    {
-        bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
-        lumv->levelMusic = true;
-    }
+    
 }
 
 void lumberjackUnloadLevel(void)
@@ -805,6 +801,8 @@ void lumberjackPlayGame()
     }
 
     lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
+    
+    bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
 }
 
 void lumberjackGameReady(void)
@@ -880,7 +878,6 @@ void lumberjackGameLoop(int64_t elapsedUs)
         if (lumv->lastResponseSignal <= 0)
         {
             bzrStop(true);
-            // ESP_LOGD(LUM_TAG, "Connection lost!");
             lumv->gameState          = LUMBERJACK_GAMESTATE_GAMEOVER;
             lumv->transitionTimer    = 500;
             lumv->localPlayer->state = LUMBERJACK_DEAD;
@@ -1189,12 +1186,13 @@ void baseMode(int64_t elapsedUs)
                 continue;
             if (lumv->enemy[i]->state == LUMBERJACK_DEAD)
             {
-                if (lumv->enemy[i]->y == 640)
+                if (lumv->enemy[i]->y >= lumv->currentMapHeight * 16)
                 {
                     enemyKilled++;
                 }
             }
         }
+        
 
         if (enemyKilled >= lumv->totalEnemyCount)
         {
@@ -1219,6 +1217,18 @@ void baseMode(int64_t elapsedUs)
                     break;
                 }
             }
+
+            if (lumv->gameType == LUMBERJACK_MODE_PANIC)
+            {
+                bzrPlaySfx(&lumv->sfx_item_use, BZR_RIGHT);
+
+                lumv->waterDirection = LUMBERJACK_WATER_FAST_DRAIN;
+                lumv->waterTimer     = lumv->waterSpeed;
+                lumv->waterLevel += lumv->waterDirection;
+
+                lumberjackSendAttack(lumv->attackQueue);
+            }
+
         }
     }
 
