@@ -165,7 +165,7 @@ int16_t getBonusTimerStartValue(tilemap_t* tilemap);
 // As opposed to utility levels like titlescreen, debug, etc.
 #define GAME_LEVEL_START_INDEX     1
 #define GAME_LEVEL_END_INDEX       50
-#define POSTGAME_LEVEL_START_INDEX 51
+//#define POSTGAME_LEVEL_START_INDEX 51
 
 static const leveldef_t leveldef[NUM_LEVELS]
     = {{.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_TITLE},
@@ -1518,7 +1518,7 @@ void breakoutBuildMainMenu(breakout_t* self)
         breakout->levelSelectMenuItem->maxSetting
             = (breakout->gameData.debugMode) ? NUM_LEVELS - 1 : breakout->unlockables.maxLevelIndexUnlocked;
         breakout->levelSelectMenuItem->currentSetting
-            = (breakout->gameData.level == 0) ? breakout->levelSelectMenuItem->maxSetting : breakout->gameData.level;
+            = (breakout->gameData.level == 1) ? breakout->levelSelectMenuItem->maxSetting : breakout->gameData.level;
         breakout->levelSelectMenuItem->options = NULL;
         breakout->levelSelectMenuItem->subMenu = NULL;
 
