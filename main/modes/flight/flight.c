@@ -317,7 +317,7 @@ int abs(int j);
  *==========================================================================*/
 
 static const char fl_title[]      = "Flyin Donut";
-static const char fl_flight_env[] = "Atrium Course";
+static const char fl_flight_env[] = "Single Player";
 
 static const char fl_flight_invertY0_env[]     = "Off";
 static const char fl_flight_invertY1_env[]     = "On";
@@ -333,7 +333,7 @@ static const settingParam_t flightyinv_param   = {
 
 static const char fl_flight_gyro0_env[] = "Off";
 static const char fl_flight_gyro1_env[] = "Roll Locked";
-static const char fl_flight_gyro2_env[] = "Full";
+static const char fl_flight_gyro2_env[] = "Immersive";
 static const char fl_flight_gyro3_env[] = "Joystick";
 static const char* gyro_titles[4]
     = {fl_flight_gyro3_env, fl_flight_gyro0_env, fl_flight_gyro1_env, fl_flight_gyro2_env};
