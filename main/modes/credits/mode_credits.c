@@ -50,15 +50,20 @@ static const char* const creditNames[] = {
     "angrypolarbear\n",
     "Bryce Browner\n",
     "cnlohr\n",
+    "Dac\n",
     "dylwhich\n",
     "Emily Anthony\n",
     "Eriktronic\n",
     "Greg Lord (gplord)\n",
     "J.Vega (@JVeg199X)\n",
+    "jfrye\n",
     "Joe Newman\n",
     "Jonathan Moriarty\n",
     "Kaitie Lawson\n",
+    "Linky_Dink\n",
     "MrTroy\n",
+    "silvershoelaces\n",
+    "timeshifter\n",
     "VanillyNeko\n",
     "",
     "",
@@ -66,7 +71,8 @@ static const char* const creditNames[] = {
 
 // Must be same length as creditNames
 static const paletteColor_t creditColors[] = {
-    c031, c533, c135, c115, c520, c035, c523, c135, c045, c250, c250, c215, c550, c555, c545, c000, c000,
+    c031, c533, c135, c115, c520, c330, c035, c523, c135, c045, c250,
+    c235, c250, c215, c550, c315, c555, c531, c443, c545, c000, c000,
 };
 
 //==============================================================================
