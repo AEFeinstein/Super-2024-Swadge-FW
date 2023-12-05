@@ -714,7 +714,6 @@ void lumberjackSetupLevel(int characterIndex)
     // Ghost is separate for reasons
 
     // ESP_LOGD(LUM_TAG, "LOADED");
-    
 }
 
 void lumberjackUnloadLevel(void)
@@ -801,7 +800,7 @@ void lumberjackPlayGame()
     }
 
     lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
-    
+
     bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
 }
 
@@ -1192,7 +1191,6 @@ void baseMode(int64_t elapsedUs)
                 }
             }
         }
-        
 
         if (enemyKilled >= lumv->totalEnemyCount)
         {
@@ -1228,7 +1226,6 @@ void baseMode(int64_t elapsedUs)
 
                 lumberjackSendAttack(lumv->attackQueue);
             }
-
         }
     }
 
