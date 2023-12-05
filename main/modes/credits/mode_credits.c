@@ -43,37 +43,33 @@ swadgeMode_t modeCredits = {
     .fnAdvancedUSB            = NULL,
 };
 
+// clang-format off
 // Everyone's here
-static const char* const creditNames[] = {
-    "Adam Feinstein\n",
-    "AllieCat Cosplay\n",
-    "angrypolarbear\n",
-    "Bryce Browner\n",
-    "cnlohr\n",
-    "Dac\n",
-    "dylwhich\n",
-    "Emily Anthony\n",
-    "Eriktronic\n",
-    "Greg Lord (gplord)\n",
-    "J.Vega (@JVeg199X)\n",
-    "jfrye\n",
-    "Joe Newman\n",
-    "Jonathan Moriarty\n",
-    "Kaitie Lawson\n",
-    "Linky_Dink\n",
-    "MrTroy\n",
-    "silvershoelaces\n",
-    "timeshifter\n",
-    "VanillyNeko\n",
-    "",
-    "",
+static const creditsEntry_t entries[] = {
+    {.name = "Adam Feinstein\n",     .color = c031},
+    {.name = "AllieCat Cosplay\n",   .color = c533},
+    {.name = "angrypolarbear\n",     .color = c135},
+    {.name = "Bryce Browner\n",      .color = c115},
+    {.name = "cnlohr\n",             .color = c520},
+    {.name = "Dac\n",                .color = c330},
+    {.name = "dylwhich\n",           .color = c035},
+    {.name = "Emily Anthony\n",      .color = c523},
+    {.name = "Eriktronic\n",         .color = c135},
+    {.name = "Greg Lord (gplord)\n", .color = c045},
+    {.name = "J.Vega (@JVeg199X)\n", .color = c250},
+    {.name = "jfrye\n",              .color = c235},
+    {.name = "Joe Newman\n",         .color = c250},
+    {.name = "Jonathan Moriarty\n",  .color = c215},
+    {.name = "Kaitie Lawson\n",      .color = c550},
+    {.name = "Linky_Dink\n",         .color = c315},
+    {.name = "MrTroy\n",             .color = c555},
+    {.name = "silvershoelaces\n",    .color = c531},
+    {.name = "timeshifter\n",        .color = c443},
+    {.name = "VanillyNeko\n",        .color = c545},
+    {.name = "",                     .color = c000},
+    {.name = "",                     .color = c000},
 };
-
-// Must be same length as creditNames
-static const paletteColor_t creditColors[] = {
-    c031, c533, c135, c115, c520, c330, c035, c523, c135, c045, c250,
-    c235, c250, c215, c550, c315, c555, c531, c443, c545, c000, c000,
-};
+// clang-format on
 
 //==============================================================================
 // Functions
@@ -92,7 +88,7 @@ void creditsEnterMode(void)
     loadFont("logbook.font", creditsFont, false);
 
     // Initialize credits
-    initCredits(credits, creditsFont, creditNames, creditColors, ARRAY_SIZE(creditNames));
+    initCredits(credits, creditsFont, entries, ARRAY_SIZE(entries));
 }
 
 /**
