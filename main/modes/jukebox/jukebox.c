@@ -179,12 +179,12 @@ jukeboxSong_t music_magtroidPocket[] = {
 
 jukeboxSong_t music_galacticBrickdown[] = {
     {
-        .filename = "brkBgmCrazy.sng",
-        .name     = "BGM Crazy",
+        .filename = "brkBgmTitle.sng",
+        .name     = "BGM Title",
     },
     {
-        .filename = "brkBgmFinale.sng",
-        .name     = "BGM Finale",
+        .filename = "brkBgmCrazy.sng",
+        .name     = "BGM Crazy",
     },
     {
         .filename = "brkBgmPixel.sng",
@@ -195,35 +195,27 @@ jukeboxSong_t music_galacticBrickdown[] = {
         .name     = "BGM Skill",
     },
     {
-        .filename = "brkBgmTitle.sng",
-        .name     = "BGM Title",
+        .filename = "brkBgmFinale.sng",
+        .name     = "BGM Finale",
     },
 };
 
 jukeboxSong_t music_lumberJacks[] = {
     {
-        .filename = "l_song_respawn.sng",
-        .name     = "Respawn",
+        .filename = "l_song_panic_title.sng",
+        .name     = "Panic Title",
     },
     {
-        .filename = "l_song_attack.sng",
-        .name     = "Attack",
+        .filename = "l_song_panic.sng",
+        .name     = "Panic",
     },
     {
         .filename = "l_song_attack_title.sng",
         .name     = "Attack Title",
     },
     {
-        .filename = "l_song_panic_title.sng",
-        .name     = "Panic Title",
-    },
-    {
-        .filename = "l_song_gameover.sng",
-        .name     = "Game Over",
-    },
-    {
-        .filename = "l_song_panic.sng",
-        .name     = "Panic",
+        .filename = "l_song_attack.sng",
+        .name     = "Attack",
     },
 };
 
@@ -341,6 +333,10 @@ const jukeboxCategory_t musicCategories[] = {
 
 jukeboxSong_t sfx_magtroidPocket[] = {
     {
+        .filename = "r_p_shoot.sng",
+        .name     = "Shoot",
+    },
+    {
         .filename = "r_door_open.sng",
         .name     = "Door Open",
     },
@@ -361,10 +357,6 @@ jukeboxSong_t sfx_magtroidPocket[] = {
         .name     = "Enemy Freeze",
     },
     {
-        .filename = "r_game_over.sng",
-        .name     = "Game Over",
-    },
-    {
         .filename = "r_health.sng",
         .name     = "Health",
     },
@@ -377,12 +369,12 @@ jukeboxSong_t sfx_magtroidPocket[] = {
         .name     = "Lava Damage",
     },
     {
-        .filename = "r_p_charge.sng",
-        .name     = "Charge",
-    },
-    {
         .filename = "r_p_charge_start.sng",
         .name     = "Charge Start",
+    },
+    {
+        .filename = "r_p_charge.sng",
+        .name     = "Charge",
     },
     {
         .filename = "r_p_damage.sng",
@@ -397,10 +389,6 @@ jukeboxSong_t sfx_magtroidPocket[] = {
         .name     = "Missile",
     },
     {
-        .filename = "r_p_shoot.sng",
-        .name     = "Shoot",
-    },
-    {
         .filename = "r_p_xray.sng",
         .name     = "X-Ray",
     },
@@ -408,9 +396,17 @@ jukeboxSong_t sfx_magtroidPocket[] = {
         .filename = "r_warp.sng",
         .name     = "Warp",
     },
+    {
+        .filename = "r_game_over.sng",
+        .name     = "Game Over",
+    },
 };
 
 jukeboxSong_t sfx_galacticBrickdown[] = {
+    {
+        .filename = "brkGetReady.sng",
+        .name     = "Get Ready",
+    },
     {
         .filename = "sndBounce.sng",
         .name     = "Bounce",
@@ -428,20 +424,16 @@ jukeboxSong_t sfx_galacticBrickdown[] = {
         .name     = "Break 3",
     },
     {
-        .filename = "sndBrk1up.sng",
-        .name     = "Break 1-Up",
-    },
-    {
-        .filename = "sndBrkDie.sng",
-        .name     = "Break Die",
+        .filename = "sndDropBomb.sng",
+        .name     = "Drop Bomb",
     },
     {
         .filename = "sndDetonate.sng",
         .name     = "Detonate",
     },
     {
-        .filename = "sndDropBomb.sng",
-        .name     = "Drop Bomb",
+        .filename = "sndBrk1up.sng",
+        .name     = "1-Up",
     },
     {
         .filename = "sndTally.sng",
@@ -452,39 +444,39 @@ jukeboxSong_t sfx_galacticBrickdown[] = {
         .name     = "Wave Ball",
     },
     {
-        .filename = "brkGameOver.sng",
-        .name     = "Game Over",
+        .filename = "brkLvlClear.sng",
+        .name     = "Level Clear",
     },
     {
-        .filename = "brkGetReady.sng",
-        .name     = "Get Ready",
+        .filename = "sndBrkDie.sng",
+        .name     = "Die",
+    },
+    {
+        .filename = "brkGameOver.sng",
+        .name     = "Game Over",
     },
     {
         .filename = "brkHighScore.sng",
         .name     = "High Score",
     },
-    {
-        .filename = "brkLvlClear.sng",
-        .name     = "Level Clear",
-    },
 };
 
 jukeboxSong_t sfx_lumberJacks[] = {
-    {
-        .filename = "l_sfx_enemy_flip.sng",
-        .name     = "Enemy Flip",
-    },
-    {
-        .filename = "l_sfx_water.sng",
-        .name     = "Water",
-    },
     {
         .filename = "l_sfx_jump.sng",
         .name     = "Jump",
     },
     {
+        .filename = "l_sfx_enemy_flip.sng",
+        .name     = "Enemy Flip",
+    },
+    {
         .filename = "l_sfx_enemy_death.sng",
         .name     = "Enemy Death",
+    },
+    {
+        .filename = "l_sfx_water.sng",
+        .name     = "Water",
     },
     {
         .filename = "l_sfx_upgrade.sng",
@@ -495,10 +487,6 @@ jukeboxSong_t sfx_lumberJacks[] = {
         .name     = "Power Up",
     },
     {
-        .filename = "l_sfx_being_attacked.sng",
-        .name     = "Being Attacked",
-    },
-    {
         .filename = "l_sfx_pear.sng",
         .name     = "Pear",
     },
@@ -506,44 +494,40 @@ jukeboxSong_t sfx_lumberJacks[] = {
         .filename = "l_sfx_brick.sng",
         .name     = "Brick",
     },
+    {
+        .filename = "l_sfx_being_attacked.sng",
+        .name     = "Being Attacked",
+    },
+    {
+        .filename = "l_song_gameover.sng",
+        .name     = "Game Over",
+    },
+    {
+        .filename = "l_song_respawn.sng",
+        .name     = "Respawn",
+    },
 };
 
 jukeboxSong_t sfx_swadgeLand[] = {
     {
         .filename = "bgmIntro.sng",
-        .name     = "Into",
+        .name     = "Intro",
+    },
+    {
+        .filename = "sndMenuConfirm.sng",
+        .name     = "Menu Confirm",
+    },
+    {
+        .filename = "sndMenuDeny.sng",
+        .name     = "Menu Deny",
+    },
+    {
+        .filename = "sndMenuSelect.sng",
+        .name     = "Menu Select",
     },
     {
         .filename = "bgmGameStart.sng",
         .name     = "Game Start",
-    },
-    {
-        .filename = "bgmGameOver.sng",
-        .name     = "Game Over",
-    },
-    {
-        .filename = "snd1up.sng",
-        .name     = "1-Up",
-    },
-    {
-        .filename = "sndCheckpoint.sng",
-        .name     = "Checkpoint",
-    },
-    {
-        .filename = "sndCoin.sng",
-        .name     = "Coin",
-    },
-    {
-        .filename = "sndDie.sng",
-        .name     = "Die",
-    },
-    {
-        .filename = "sndHit.sng",
-        .name     = "Hit",
-    },
-    {
-        .filename = "sndHurt.sng",
-        .name     = "Hurt",
     },
     {
         .filename = "sndJump1.sng",
@@ -556,6 +540,46 @@ jukeboxSong_t sfx_swadgeLand[] = {
     {
         .filename = "sndJump3.sng",
         .name     = "Jump 3",
+    },
+    {
+        .filename = "sndCoin.sng",
+        .name     = "Coin",
+    },
+    {
+        .filename = "sndHit.sng",
+        .name     = "Hit",
+    },
+    {
+        .filename = "sndHurt.sng",
+        .name     = "Hurt",
+    },
+    {
+        .filename = "snd1up.sng",
+        .name     = "1-Up",
+    },
+    {
+        .filename = "sndCheckpoint.sng",
+        .name     = "Checkpoint",
+    },
+    {
+        .filename = "sndPause.sng",
+        .name     = "Pause",
+    },
+    {
+        .filename = "sndPowerUp.sng",
+        .name     = "Power Up",
+    },
+    {
+        .filename = "sndSquish.sng",
+        .name     = "Squish",
+    },
+    {
+        .filename = "sndWarp.sng",
+        .name     = "Warp",
+    },
+    {
+        .filename = "sndWaveBall.sng",
+        .name     = "Wave Ball",
     },
     {
         .filename = "sndLevelClearA.sng",
@@ -578,40 +602,16 @@ jukeboxSong_t sfx_swadgeLand[] = {
         .name     = "Level Clear S",
     },
     {
-        .filename = "sndMenuConfirm.sng",
-        .name     = "Menu Confirm",
-    },
-    {
-        .filename = "sndMenuDeny.sng",
-        .name     = "Menu Deny",
-    },
-    {
-        .filename = "sndMenuSelect.sng",
-        .name     = "Menu Select",
-    },
-    {
         .filename = "sndOutOfTime.sng",
         .name     = "Outta Time",
     },
     {
-        .filename = "sndPause.sng",
-        .name     = "Pause",
+        .filename = "sndDie.sng",
+        .name     = "Die",
     },
     {
-        .filename = "sndPowerUp.sng",
-        .name     = "Power Up",
-    },
-    {
-        .filename = "sndSquish.sng",
-        .name     = "Squish",
-    },
-    {
-        .filename = "sndWarp.sng",
-        .name     = "Warp",
-    },
-    {
-        .filename = "sndWaveBall.sng",
-        .name     = "Wave Ball",
+        .filename = "bgmGameOver.sng",
+        .name     = "Game Over",
     },
 };
 
