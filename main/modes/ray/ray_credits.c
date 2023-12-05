@@ -10,56 +10,51 @@
 // Variables
 //==============================================================================
 
+// clang-format off
 /// @brief Credits text
-static const char* rayCreditNames[] = {
-    "Percentage",
-    "Complete: 100%",
-    "",
-    "",
-    "----------------\n",
-    "Magtroid Pocket\n",
-    "----------------\n",
-    "",
-    "~ Programming ~\n",
-    "Adam Feinstein\n",
-    "",
-    "~ Art ~\n",
-    "Adam Feinstein\n",
-    "AllieCat Cosplay\n",
-    "Greg Lord (gplord)\n",
-    "Kaitie Lawson\n",
-    "",
-    "~ Music ~\n",
-    "Joe Newman\n",
-    "",
-    "~ Story ~\n",
-    "Adam Feinstein\n",
-    "Joe Newman\n",
-    "",
-    "~ Testing ~\n",
-    "Greg Lord (gplord)\n",
-    "Joe Newman\n",
-    "Jonathan Moriarty\n",
-    "",
-    "~ Team Lead ~\n",
-    "Adam Feinstein\n",
-    "",
-    "",
-    "See you next\n",
-    "adventure,\n",
-    "Bounty Hunter!\n",
-    "",
-    "",
-    "----------------\n",
-    "",
+static creditsEntry_t rayCreditEntries[] = {
+    {.name = "Percentage",           .color = c224},
+    {.name = "Complete: 100%",       .color = c224},
+    {.name = "",                     .color = c000},
+    {.name = "",                     .color = c000},
+    {.name = "----------------\n",   .color = c542},
+    {.name = "Magtroid Pocket\n",    .color = c542},
+    {.name = "----------------\n",   .color = c542},
+    {.name = "",                     .color = c000},
+    {.name = "~ Programming ~\n",    .color = c521},
+    {.name = "Adam Feinstein\n",     .color = c521},
+    {.name = "",                     .color = c000},
+    {.name = "~ Art ~\n",            .color = c424},
+    {.name = "Adam Feinstein\n",     .color = c424},
+    {.name = "AllieCat Cosplay\n",   .color = c424},
+    {.name = "Greg Lord (gplord)\n", .color = c424},
+    {.name = "Kaitie Lawson\n",      .color = c424},
+    {.name = "",                     .color = c000},
+    {.name = "~ Music ~\n",          .color = c241},
+    {.name = "Joe Newman\n",         .color = c241},
+    {.name = "",                     .color = c000},
+    {.name = "~ Story ~\n",          .color = c503},
+    {.name = "Adam Feinstein\n",     .color = c503},
+    {.name = "Joe Newman\n",         .color = c503},
+    {.name = "",                     .color = c000},
+    {.name = "~ Testing ~\n",        .color = c205},
+    {.name = "Greg Lord (gplord)\n", .color = c205},
+    {.name = "Joe Newman\n",         .color = c205},
+    {.name = "Jonathan Moriarty\n",  .color = c205},
+    {.name = "",                     .color = c000},
+    {.name = "~ Team Lead ~\n",      .color = c440},
+    {.name = "Adam Feinstein\n",     .color = c440},
+    {.name = "",                     .color = c000},
+    {.name = "",                     .color = c000},
+    {.name = "See you next\n",       .color = c555},
+    {.name = "adventure,\n",         .color = c555},
+    {.name = "Bounty Hunter!\n",     .color = c555},
+    {.name = "",                     .color = c000},
+    {.name = "",                     .color = c000},
+    {.name = "----------------\n",   .color = c555},
+    {.name = "",                     .color = c000},
 };
-
-/// @brief Credits colors.  Must be same length as rayCreditNames
-static const paletteColor_t rayCreditColors[] = {
-    c224, c224, c000, c000, c542, c542, c542, c000, c521, c521, c000, c424, c424, c424,
-    c424, c424, c000, c241, c241, c000, c503, c503, c503, c000, c205, c205, c205, c205,
-    c000, c440, c440, c000, c000, c555, c555, c555, c000, c000, c555, c000,
-};
+// clang-format on
 
 //==============================================================================
 // Functions
@@ -82,13 +77,13 @@ void rayShowCredits(ray_t* ray)
     static char completionStr[20];
     sprintf(completionStr, "Complete: %" PRId32 "%%", getItemCompletePct(ray));
     // Swap the completion string into the credits array
-    rayCreditNames[1] = completionStr;
+    rayCreditEntries[1].name = completionStr;
 
     // Stop music
     bzrStop(true);
 
     // Init credits, which starts music
-    initCredits(&ray->credits, &ray->logbook, rayCreditNames, rayCreditColors, ARRAY_SIZE(rayCreditNames));
+    initCredits(&ray->credits, &ray->logbook, rayCreditEntries, ARRAY_SIZE(rayCreditEntries));
 }
 
 /**

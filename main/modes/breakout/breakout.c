@@ -163,9 +163,9 @@ int16_t getBonusTimerStartValue(tilemap_t* tilemap);
 
 // The index into leveldef[] where the actual game levels start
 // As opposed to utility levels like titlescreen, debug, etc.
-#define GAME_LEVEL_START_INDEX     1
-#define GAME_LEVEL_END_INDEX       50
-//#define POSTGAME_LEVEL_START_INDEX 51
+#define GAME_LEVEL_START_INDEX 1
+#define GAME_LEVEL_END_INDEX   50
+// #define POSTGAME_LEVEL_START_INDEX 51
 
 static const leveldef_t leveldef[NUM_LEVELS]
     = {{.filename = "titlescreen.bin", .hintTextPtr = NULL, .bgmIndex = BRK_BGM_TITLE},

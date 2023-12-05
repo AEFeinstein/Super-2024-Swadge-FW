@@ -19,23 +19,20 @@
  *
  * @param credits The credits to initialize
  * @param font A font to use for the credits
- * @param names An array of strings, one per line of the credits
- * @param colors Colors for the credit names
- * @param numElements The number of names (and colors) for the credits
+ * @param entries An array of strings and colors, one per line of the credits
+ * @param numEntries The number of names (and colors) for the credits
  */
-void initCredits(credits_t* credits, font_t* font, const char* const* names, const paletteColor_t* colors,
-                 int32_t numElements)
+void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries, int32_t numEntries)
 {
     // Load some fonts
     credits->font = font;
 
     // Set initial variables
-    credits->yOffset     = TFT_HEIGHT;
-    credits->tElapsedUs  = 0;
-    credits->scrollMod   = 1;
-    credits->names       = names;
-    credits->colors      = colors;
-    credits->numElements = numElements;
+    credits->yOffset    = TFT_HEIGHT;
+    credits->tElapsedUs = 0;
+    credits->scrollMod  = 1;
+    credits->entries    = entries;
+    credits->numEntries = numEntries;
 
     // Load and play song
     loadSong("credits.sng", &credits->song, false);
@@ -92,14 +89,14 @@ void drawCredits(credits_t* credits, uint32_t elapsedUs)
             }
 
             // Center and draw the text
-            int16_t tWidth = textWidth(credits->font, credits->names[idx]);
-            drawText(credits->font, credits->colors[idx], credits->names[idx], (TFT_WIDTH - tWidth) / 2,
+            int16_t tWidth = textWidth(credits->font, credits->entries[idx].name);
+            drawText(credits->font, credits->entries[idx].color, credits->entries[idx].name, (TFT_WIDTH - tWidth) / 2,
                      (yPos + credits->yOffset));
         }
 
         // Add more space if the credits end in a newline
-        size_t nameLen = strlen(credits->names[idx]);
-        if ((nameLen > 0) && ('\n' == credits->names[idx][nameLen - 1]))
+        size_t nameLen = strlen(credits->entries[idx].name);
+        if ((nameLen > 0) && ('\n' == credits->entries[idx].name[nameLen - 1]))
         {
             yPos += credits->font->height + 8;
         }
@@ -109,7 +106,7 @@ void drawCredits(credits_t* credits, uint32_t elapsedUs)
         }
 
         // Always update the idx and cursor position, even if the text wasn't drawn
-        idx = (idx + 1) % credits->numElements;
+        idx = (idx + 1) % credits->numEntries;
     }
 }
 
