@@ -67,6 +67,7 @@ static const creditsEntry_t entries[] = {
     {.name = "MrTroy\n",               .color = c555},
     {.name = "Nilly (@VanillyNeko)\n", .color = c424},
     {.name = "silvershoelaces\n",      .color = c315},
+    {.name = "Socks\n",                .color = c450},
     {.name = "Steven Hewitt\n",        .color = c541},
     {.name = "thaeli\n",               .color = c245},
     {.name = "timeshifter08\n",        .color = c144},
