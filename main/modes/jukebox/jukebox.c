@@ -327,6 +327,11 @@ const jukeboxCategory_t musicCategories[] = {
         .numSongs     = ARRAY_SIZE(music_jukebox),
     },
     {
+        .categoryName = creditsName,
+        .songs        = music_credits,
+        .numSongs     = ARRAY_SIZE(music_credits),
+    },
+    {
         .categoryName = "(Unused)",
         .songs        = music_unused,
         .numSongs     = ARRAY_SIZE(music_unused),
