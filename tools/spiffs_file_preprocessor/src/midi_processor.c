@@ -266,7 +266,8 @@ void process_midi(const char* inFile, const char* outDir)
                     /* If this song should start with a rest */
                     if (0 != introRest)
                     {
-                        int32_t silenceTimeMs = (params.tempo * introRest) / (1000 * midiParser->ticks);
+                        int32_t silenceTimeMs = ((int64_t)params.tempo * (int64_t)introRest)
+                                                / ((int64_t)1000 * (int64_t)midiParser->ticks);
                         if (0 < silenceTimeMs)
                         {
                             /* Save the rest */
@@ -298,7 +299,8 @@ void process_midi(const char* inFile, const char* outDir)
                     }
 
                     /* Get the time for this note */
-                    int32_t noteTimeMs = (params.tempo * note->duration) / (1000 * midiParser->ticks);
+                    int32_t noteTimeMs = ((int64_t)params.tempo * (int64_t)note->duration)
+                                         / ((int64_t)1000 * (int64_t)midiParser->ticks);
                     /* Decrement any extra time used by prior notes */
                     noteTimeMs -= extraTimeUsed;
                     extraTimeUsed = 0;
@@ -326,10 +328,10 @@ void process_midi(const char* inFile, const char* outDir)
                         if (note->timeBeforeAppear + note->duration < nextNote->timeBeforeAppear)
                         {
                             /* Get the time for this rest */
-                            int32_t silenceTimeMs
-                                = (params.tempo
-                                   * (nextNote->timeBeforeAppear - (note->timeBeforeAppear + note->duration)))
-                                  / (1000 * midiParser->ticks);
+                            int32_t silenceTimeMs = ((int64_t)params.tempo
+                                                     * ((int64_t)nextNote->timeBeforeAppear
+                                                        - ((int64_t)note->timeBeforeAppear + (int64_t)note->duration)))
+                                                    / ((int64_t)1000 * (int64_t)midiParser->ticks);
 
                             /* Decrement any extra time used by prior notes */
                             silenceTimeMs -= extraTimeUsed;
