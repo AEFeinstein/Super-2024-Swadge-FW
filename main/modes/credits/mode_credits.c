@@ -74,6 +74,12 @@ static const creditsEntry_t entries[] = {
     {.name = "timeshifter08\n",        .color = c144},
     {.name = "",                       .color = c000},
     {.name = "",                       .color = c000},
+    {.name = "For the littlest one\n", .color = c524},
+    {.name = "She's coming!\n",        .color = c524},
+    {.name = "",                       .color = c000},
+    {.name = "",                       .color = c000},
+    {.name = "",                       .color = c000},
+    {.name = "",                       .color = c000},
 };
 // clang-format on
 
