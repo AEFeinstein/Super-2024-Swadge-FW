@@ -8,6 +8,11 @@
  * Swadge and write a Swadge mode. A Swadge is <a href="https://www.magfest.org/">Magfest's</a> electronic swag-badges.
  * They play games and make music and shine bright and do all sorts of cool things.
  *
+ * The Swadge GitHub repository can be found at <a
+ * href="https://github.com/AEFeinstein/Swadge-IDF-5.0">https://github.com/AEFeinstein/Swadge-IDF-5.0</a>. The
+ * corresponding hardware repository for the Super Magfest 2024 Swadge can be found at <a
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>.
+ *
  * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
  * and submit a pull request!
  *

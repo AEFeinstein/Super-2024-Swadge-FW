@@ -1,8 +1,8 @@
-# Swadge-IDF-5.0
+# Super Magfest 2024 Swadge
 
-This is the firmware repository for the Super Magfest 2024 Swadge.
+This is the firmware repository for the Super Magfest 2024 Swadge. The Swadge is a wearable swag-badge powered by an ESP32-S2 and loaded with games and utilities. This project is based on the [Super Magfest 2023 Swadge](https://github.com/AEFeinstein/Super-2023-Swadge-FW).
 
-<!-- The corresponding hardware repository for the Super Magfest 2024 Swadge can be found here. -->
+The corresponding hardware repository for the Super Magfest 2024 Swadge [can be found here](https://github.com/AEFeinstein/Super-2024-Swadge-HW).
 
 If you have any questions, feel free to create a Github ticket or email us at circuitboards@magfest.org.
 
@@ -10,7 +10,9 @@ This is living documentation, so if you notice that something is incorrect or in
 
 ## Documentation
 
-Full Doxygen documentation is [hosted online here](https://adam.feinste.in/Swadge-IDF-5.0/). This details all APIs and has examples for how to use them. It was written to be referenced when writing Swadge modes.
+Full documentation is [hosted online here](https://adam.feinste.in/Swadge-IDF-5.0/). This details all APIs and has examples for how to use them. It was written to be referenced when writing Swadge modes. It also contains sections on setup, contribution, and conduct (which are individually linked below).
+
+The [Configuring a Development Environment guide can be found here](/docs/SETUP.md). It will help you set up a development environment.
 
 The [Contribution Guide can be found here](/docs/CONTRIBUTING.md). It should be read before making a contribution.
 
