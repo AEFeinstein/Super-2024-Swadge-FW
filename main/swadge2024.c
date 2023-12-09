@@ -42,9 +42,10 @@
  *
  * \section swadge_mode_example Swadge Mode Example
  *
- * The <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/main/modes/pong">Pong mode</a> is written
- * to be a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and
- * uses good design patterns. Look out for things like:
+ * The <a
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/fdce1624625a5888a1866c84c56ac994a58ae1cb/main/modes/pong/pong.c">Pong
+ * mode</a> is written to be a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful
+ * of features, and uses good design patterns. Look out for things like:
  * - How the \c pong_t struct contains all variables the mode needs, is allocated when the mode is entered, and is freed
  * when the mode exits
  * - How immutable strings are declared <tt>static const</tt>
