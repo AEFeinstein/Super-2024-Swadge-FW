@@ -9,12 +9,12 @@
  * They play games and make music and shine bright and do all sorts of cool things.
  *
  * The Swadge GitHub repository can be found at <a
- * href="https://github.com/AEFeinstein/Swadge-IDF-5.0">https://github.com/AEFeinstein/Swadge-IDF-5.0</a>. The
- * corresponding hardware repository for the Super Magfest 2024 Swadge can be found at <a
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW">https://github.com/AEFeinstein/Super-2024-Swadge-FW</a>.
+ * The corresponding hardware repository for the Super Magfest 2024 Swadge can be found at <a
  * href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>.
  *
  * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
- * and submit a pull request!
+ * and submit a pull request.
  *
  * Most discussions happen in the Magfest Slack, in the \#circuitboards channel. If you are interested in joining and
  * contributing to this project, email circuitboards@magfest.org.
@@ -42,9 +42,10 @@
  *
  * \section swadge_mode_example Swadge Mode Example
  *
- * The <a href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/main/modes/pong">Pong mode</a> is written to be
- * a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and uses good
- * design patterns. Look out for things like:
+ * The <a
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/fdce1624625a5888a1866c84c56ac994a58ae1cb/main/modes/pong/pong.c">Pong
+ * mode</a> is written to be a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful
+ * of features, and uses good design patterns. Look out for things like:
  * - How the \c pong_t struct contains all variables the mode needs, is allocated when the mode is entered, and is freed
  * when the mode exits
  * - How immutable strings are declared <tt>static const</tt>
@@ -64,24 +65,23 @@
  * \section apis API Reference
  *
  * What follows are all the APIs available to write Swadge modes. If something does not exist, and it would be
- * beneficial to multiple Swadge modes, please contribute both the firmware and API documentation. It's a team effort!
+ * beneficial to multiple Swadge modes, please contribute both the firmware and API documentation. It's a team effort
  *
  * \subsection swadge_mode_api Swadge Mode APIs
  *
  * - swadge2024.h: Write a mode. This is a good starting place
- * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
  *
  * \subsection hw_api Hardware APIs
  *
- * - hdw-battmon.h: Learn how to check the battery voltage!
- * - hdw-btn.h: Learn how to use both push and touch button input!
- * - hdw-bzr.h: Learn how to use the buzzer!
- * - hdw-imu.h: Learn how to use the inertial measurement unit!
- * - hdw-led.h: Learn how to use the LEDs!
- * - hdw-mic.h: Learn how to use the microphone!
- * - hdw-temperature.h: Learn how to use the temperature sensor!
- * - hdw-usb.h: Learn how to be a USB HID Gamepad!
- *     - advanced_usb_control.h: Use USB for application development!
+ * - hdw-battmon.h: Learn how to check the battery voltage
+ * - hdw-btn.h: Learn how to use both push and touch button input
+ * - hdw-bzr.h: Learn how to use the buzzer
+ * - hdw-imu.h: Learn how to use the inertial measurement unit
+ * - hdw-led.h: Learn how to use the LEDs
+ * - hdw-mic.h: Learn how to use the microphone
+ * - hdw-temperature.h: Learn how to use the temperature sensor
+ * - hdw-usb.h: Learn how to be a USB HID Gamepad
+ *     - advanced_usb_control.h: Use USB for application development
  *
  * \subsection nwk_api Network APIs
  *
@@ -90,7 +90,7 @@
  *
  * \subsection sw_api Persistent Memory APIs
  *
- * - hdw-nvs.h: Learn how to save and load persistent runtime data!
+ * - hdw-nvs.h: Learn how to save and load persistent runtime data
  * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
  *     - spiffs_font.h: Load font bitmaps
  *     - spiffs_wsg.h: Load WSG images
@@ -100,13 +100,19 @@
  *
  * \subsection gr_api Graphics APIs
  *
- * - hdw-tft.h: Learn how to use the TFT!
- * - palette.h: Learn about available colors!
- * - color_utils.h: Learn about color manipulation!
- * - fill.h: Learn how to fill areas on the screen!
- * - shapes.h: Learn how to draw shapes and curves on the screen!
- * - wsg.h: Learn how to draw sprites on the screen!
- * - font.h: Learn how to draw text on the screen!
+ * - hdw-tft.h: Learn how to use the TFT
+ * - palette.h: Learn about available colors
+ * - color_utils.h: Learn about color manipulation
+ * - fill.h: Learn how to fill areas on the screen
+ * - shapes.h: Learn how to draw shapes and curves on the screen
+ * - wsg.h: Learn how to draw sprites on the screen
+ * - font.h: Learn how to draw text on the screen
+ *
+ * \subsection gui_api Graphical UI APIs
+ *
+ * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
+ * - dialogBox.h: Show messages and prompt users for a response
+ * - touchTextEntry.h: Edit a single line of text
  *
  * \subsection oth_api Other Useful APIs
  *
@@ -302,7 +308,7 @@ void app_main(void)
         cSwadgeMode->fnEnterMode();
     }
 
-    // Run the main loop, forever!
+    // Run the main loop, forever
     while (true)
     {
         // Track the elapsed time between loop calls
@@ -501,7 +507,7 @@ void deinitSystem(void)
         cSwadgeMode->fnExitMode();
     }
 
-    // Deinitialize everything!
+    // Deinitialize everything
     deinitButtons();
     deinitBuzzer();
     deinitEspNow();

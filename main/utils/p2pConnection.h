@@ -1,20 +1,23 @@
-// clang-format off
-
 /*! \file p2pConnection.h
  *
  * \section p2p_design Design Philosophy
  *
  * p2pConnection is a connection protocol with a little bit of message reliability that sits on top of ESP-NOW.
- * Think of ESP-NOW like UDP, where you can quickly and unreliably broadcast and receive packets, and p2pConnection as TCP, which trades some speed for reliability.
- * p2pConnection messages have sequence numbers for deduplication, are acknowledged, and are retried if not acknowledged.
- * 
- * Connections are made when two Swadges broadcast connection messages to each other, then send start messages to each other, and acknowledge each other's start message.
- * The play order is determined by who acknowledges the start message first, which is suitably random.
- * A connection sequence looks like this:
+ * Think of ESP-NOW like UDP, where you can quickly and unreliably broadcast and receive packets, and p2pConnection as
+ * TCP, which trades some speed for reliability. p2pConnection messages have sequence numbers for deduplication, are
+ * acknowledged, and are retried if not acknowledged.
  *
+ * Connections are made when two Swadges broadcast connection messages to each other, then send start messages to each
+ * other, and acknowledge each other's start message. The play order is determined by who acknowledges the start message
+ * first, which is suitably random. A connection sequence looks like this:
+ */
+
+// clang-format off
+
+/*! \file p2pConnection.h
  * @startuml{conn_seq.png} "Connection Sequence"
  * == Connection ==
- * 
+ *
  * group Part 1
  * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x00 {P2P_MSG_CONNECT}]"
  * "Swadge_12:12:12:12:12:12" ->  "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x01 {P2P_MSG_START}, 0x00 {seqNum}, (0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB)]"
@@ -22,7 +25,7 @@
  * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x02 {P2P_MSG_ACK}, 0x00 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12)]
  * note right: set p2p->cnc.rxGameStartAck
  * end
- * 
+ *
  * group Part 2
  * "Swadge_12:12:12:12:12:12" ->  "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x00 {P2P_MSG_CONNECT}]"
  * "Swadge_AB:AB:AB:AB:AB:AB" ->  "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x01 {P2P_MSG_START}, 0x01 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12)]"
@@ -31,13 +34,21 @@
  * note left: set p2p->cnc.rxGameStartAck, become SERVER
  * end
  * @enduml
- * 
+ */
+
+// clang-format on
+
+/*! \file p2pConnection.h
  * After connection, Swadges are free to send messages to each other.
  * An example of unreliable communication with retries and duplication is as follows.
- * 
+ */
+
+// clang-format off
+
+/*! \file p2pConnection.h
  * @startuml{unre_comm.png} "Unreliable Communication"
  * == Unreliable Communication Example ==
- * 
+ *
  * group Retries & Sequence Numbers
  * "Swadge_AB:AB:AB:AB:AB:AB" ->x "Swadge_12:12:12:12:12:12" : "['p', {mode ID}, 0x04 {P2P_MSG_DATA}, 0x04 {seqNum}, (0x12, 0x12, 0x12, 0x12, 0x12, 0x12), 'd', 'a', 't', 'a']
  * note right: msg not received
@@ -51,27 +62,68 @@
  * "Swadge_12:12:12:12:12:12" ->  "Swadge_AB:AB:AB:AB:AB:AB" : "['p', {mode ID}, 0x02 {P2P_MSG_ACK}, 0x05 {seqNum}, (0xAB, 0xAB, 0xAB, 0xAB, 0xAB, 0xAB)]
  * end
  * @enduml
- *
+ */
+
+// clang-format on
+
+/*! \file p2pConnection.h
  * \section p2p_usage Usage
  *
  * p2pSendCb() and p2pRecvCb() must be called from the ESP-NOW callbacks to pass data to and from p2p.
- * 
+ *
  * p2pInitialize() should be called to initialize p2p.
  * p2pDeinit() should be called when the Swadge mode is done to clean up.
- * 
+ *
  * The connection won't actually start until p2pStartConnection() is called.
- * Connection statues will be delivered to the Swadge mode through the 
- * 
+ * Connection statues will be delivered to the Swadge mode through the
+ *
  * p2pGetPlayOrder() can be called after connection to figure out of this Swadge is player one or two.
- * 
+ *
  * p2pSendMsg() can be called to send a message from one Swadge to another.
- * 
+ *
  * p2pSetDataInAck() can be called to set up data to be delivered in the next acknowledge message.
- * This is useful for high-bandwith transactional messages.
- * For example, one Swadge may send it's button state to the other, and receive the game state in the acknowledge message.
- * This turns four messages (button state, ack, game state, ack) into two messages (button state, ack[game state]).
- * Note that the acknowledge message with data is not acknowledged itself, but the Swadge sending the inital message will retry until it receives the acknowledge.
- * p2pClearDataInAck() can be called to clear the data to be sent in the acknowledge.
+ * This is useful for high-bandwidth transactional messages.
+ * For example, one Swadge may send it's button state to the other, and receive the game state in the acknowledge
+ * message. This turns four messages (button state, ack, game state, ack) into two messages (button state, ack[game
+ * state]). Note that the acknowledge message with data is not acknowledged itself, but the Swadge sending the inital
+ * message will retry until it receives the acknowledge. p2pClearDataInAck() can be called to clear the data to be sent
+ * in the acknowledge.
+ *
+ * \section p2p_tips Tips
+ *
+ * p2pConnection can be finicky to use, so here are a few tips to ensure consistent connections and data transfer.
+ *
+ * -# It's preferred to use #ESP_NOW rather than #ESP_NOW_IMMEDIATE when setting up your Swadge mode. This is because
+ * #ESP_NOW uses a queue to pass ESP-NOW packets to the Swadge Mode while #ESP_NOW_IMMEDIATE passes them directly from
+ * the system callback function. As the <a
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/api-reference/network/esp_now.html#receiving-esp-now-data">IDF
+ * documentation states</a>:
+ * > The receiving callback function also runs from the Wi-Fi task. So, do not do lengthy operations in the callback
+ * > function. Instead, post the necessary data to a queue and handle it from a lower priority task.
+ * If #ESP_NOW_IMMEDIATE is used, the receive callback (#p2pMsgRxCbFn) should return as quickly as possible.
+ *
+ * -# Don't halt the Swadge Mode or take too long in any functions when p2p is active. Remember that p2p is running its
+ * own timers, so if the Swadge Mode blocks p2p operation, timers may expire without getting the chance to retry
+ * messages. As a good rule of thumb, if you notice visual stutters then something is taking too long.
+ *
+ * -# You must wait for both sides of the p2p connection to be established before transmitting any data packets. Roles
+ * can be checked by calling p2pGetPlayOrder(). The Swadge with the #GOING_SECOND role finishes its handshake first, and
+ * if a data packet is sent immediately after the #CON_ESTABLISHED event occurs, then that packet will mess up the
+ * connection handshake for the other Swadge. The Swadge with the #GOING_FIRST role finishes its handshake second, and
+ * once that #CON_ESTABLISHED event occurs, that Swadge may send a data packet to the other. That's why the role is
+ * called #GOING_FIRST!
+ *
+ * -# Try to not to have multiple Swadges transmit at the same time. Instead, have one send a message and have the other
+ * respond. ESP32-S2s only have one antenna, so they cannot transmit and receive at the same time. If they do it's
+ * likely that at least one message will fail. Remember that p2pGetPlayOrder() can be used to determine which Swadge
+ * should send the first message (#GOING_FIRST) and which should send responses (#GOING_SECOND). It's useful to think
+ * through the messages that will be sent between two Swadges and visualize them in a sequence diagram to avoid
+ * collisions. PlantUML is a good visualization tool, and is what is used for the diagrams above.
+ *
+ * -# p2pSendMsg() does not queue messages, so if you try to send multiple messages without first receiving the transmit
+ * callback (#p2pMsgTxCbFn), then only the last sent message will be sent successfully. Instead, you should either
+ * combine data into a single packet (which is preferred, fewer larger packets tend to be faster) or wait for a
+ * transmission to completely finish before starting the next.
  *
  * \section p2p_example Example
  *
@@ -81,7 +133,7 @@
  * static void demoConCb(p2pInfo* p2p, connectionEvt_t evt);
  * static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
  * static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
- * 
+ *
  * // Make sure the Swadge mode callbacks are set
  * swadgeMode_t demoMode = {
  *     .wifiMode       = ESP_NOW,
@@ -89,51 +141,50 @@
  *     .fnEspNowSendCb = demoEspNowSendCb,
  *     ...
  * };
- * 
+ *
  * // Variable which contains all the state information
  * p2pInfo_t p2p;
- * 
+ *
  * ...
- * 
+ *
  * // Initialize and start connection
  * p2pInitialize(&p2p, 'd', demoConCb, demoMsgRxCb, -70);
  * p2pStartConnection(&p2p);
- * 
+ *
  * ...
- * 
+ *
  * // Send a message
  * const uint8_t testMsg[] = {0x01, 0x02, 0x03, 0x04};
  * p2pSendMsg(&p2p, testMsg, ARRAY_SIZE(testMsg), demoMsgTxCbFn);
- * 
+ *
  * ...
- * 
+ *
  * static void demoEspNowRecvCb(const uint8_t* mac_addr, const uint8_t* data, uint8_t len, int8_t rssi)
  * {
  *     p2pRecvCb(&p2p, mac_addr, data, len, rssi);
  * }
- * 
+ *
  * static void demoEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
  * {
  *     p2pSendCb(&p2p, mac_addr, status);
  * }
- * 
+ *
  * static void demoConCb(p2pInfo* p2p, connectionEvt_t evt)
  * {
  * 	// Do something when a connection event happens
  * }
- * 
+ *
  * static void demoMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
  * {
  * 	// Do something when a message is received
  * }
- * 
+ *
  * static void demoMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
  * {
  * 	// Do something when a message is acknowledged
  * }
  * \endcode
  */
-// clang-format on
 
 #ifndef _P2P_CONNECTION_H_
 #define _P2P_CONNECTION_H_

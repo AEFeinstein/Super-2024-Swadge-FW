@@ -7,28 +7,28 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 - `mm.font` has been removed. The closest font is `logbook.font` which is 3 pixels smaller in height. Arrows and symbol `wsg`s need to be updated for the smaller font too.
 - Accel, touch, and button callbacks no longer exist. Instead, checks must be done in the main loop function. This can be used to more easily adapt button callbacks to the new standard:
 
-```c
-buttonEvt_t evt = {0};
-while (checkButtonQueueWrapper(&evt))
-{
-    // If processing menu buttons:
-    tunernome->menu = menuButton(tunernome->menu, evt);
-    // OR, if processing mode buttons:
-    tunernomeButtonCb(&evt);
-}
-...
-// The rest of your mainLoop function
-```
+    ```c
+    buttonEvt_t evt = {0};
+    while (checkButtonQueueWrapper(&evt))
+    {
+        // If processing menu buttons:
+        tunernome->menu = menuButton(tunernome->menu, evt);
+        // OR, if processing mode buttons:
+        tunernomeButtonCb(&evt);
+    }
+    ...
+    // The rest of your mainLoop function
+    ```
 
 ## Things that need to be changed in mode header files
 
 - Add `#include "swadge2024.h"`
 - Naming conventions changed from `mode_tunernome.h` to `tunernome.h`. Don't forget to change your header guard names too:
 
-```c
-_MODE_TUNERNOME_H_
-_TUNERNOME_H_
-```
+    ```c
+    _MODE_TUNERNOME_H_
+    _TUNERNOME_H_
+    ```
 
 ## Things that need to be added to enterMode() and exitMode() functions
 

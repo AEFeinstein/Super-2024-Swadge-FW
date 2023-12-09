@@ -8,7 +8,7 @@
  * For more information about using WSGs, see wsg.h.
  *
  * For information on asset processing, see <a
- * href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/tools/spiffs_file_preprocessor">spiffs_file_preprocessor</a>.
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/tools/spiffs_file_preprocessor">spiffs_file_preprocessor</a>.
  *
  * \section spiffs_wsg_usage Usage
  *

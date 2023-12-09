@@ -1,4 +1,4 @@
-/*! \file textEntry.h
+/*! \file touchTextEntry.h
  *
  * \section textEntry_design Design Philosophy
  *
