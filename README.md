@@ -6,7 +6,7 @@ The corresponding hardware repository for the Super Magfest 2024 Swadge [can be 
 
 If you have any questions, feel free to create a Github ticket or email us at circuitboards@magfest.org.
 
-This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it, and submit a pull request!
+This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it, and submit a pull request.
 
 ## Documentation
 
