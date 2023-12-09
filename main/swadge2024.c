@@ -9,8 +9,8 @@
  * They play games and make music and shine bright and do all sorts of cool things.
  *
  * The Swadge GitHub repository can be found at <a
- * href="https://github.com/AEFeinstein/Swadge-IDF-5.0">https://github.com/AEFeinstein/Swadge-IDF-5.0</a>. The
- * corresponding hardware repository for the Super Magfest 2024 Swadge can be found at <a
+ * href="https://github.com/AEFeinstein/Super-2024-Swadge-FW">https://github.com/AEFeinstein/Super-2024-Swadge-FW</a>.
+ * The corresponding hardware repository for the Super Magfest 2024 Swadge can be found at <a
  * href="https://github.com/AEFeinstein/Super-2024-Swadge-HW">https://github.com/AEFeinstein/Super-2024-Swadge-HW</a>.
  *
  * This is living documentation, so if you notice that something is incorrect or incomplete, please fix or complete it,
@@ -42,9 +42,9 @@
  *
  * \section swadge_mode_example Swadge Mode Example
  *
- * The <a href="https://github.com/AEFeinstein/Swadge-IDF-5.0/tree/main/main/modes/pong">Pong mode</a> is written to be
- * a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and uses good
- * design patterns. Look out for things like:
+ * The <a href="https://github.com/AEFeinstein/Super-2024-Swadge-FW/tree/main/main/modes/pong">Pong mode</a> is written
+ * to be a relatively simple example of a Swadge mode. It is well commented, demonstrates a handful of features, and
+ * uses good design patterns. Look out for things like:
  * - How the \c pong_t struct contains all variables the mode needs, is allocated when the mode is entered, and is freed
  * when the mode exits
  * - How immutable strings are declared <tt>static const</tt>

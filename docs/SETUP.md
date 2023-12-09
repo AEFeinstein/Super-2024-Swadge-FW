@@ -24,7 +24,7 @@ If the path to your home directory has spaces in it, then installation paths sho
 
 ## Configuring a Windows Environment
 
-The continuous integration for this project runs on a Windows instance. This means one can read [build-firmware-and-emulator.yml](https://github.com/AEFeinstein/Swadge-IDF-5.0/blob/main/.github/workflows/build-firmware-and-emulator.yml) to see how the Windows build environment is set up from scratch for both the firmware and emulator, though it does not install extra development tools. It is recommend to follow the following guide.
+The continuous integration for this project runs on a Windows instance. This means one can read [build-firmware-and-emulator.yml](https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/main/.github/workflows/build-firmware-and-emulator.yml) to see how the Windows build environment is set up from scratch for both the firmware and emulator, though it does not install extra development tools. It is recommend to follow the following guide.
 
 1. [Install `git`](https://git-scm.com/download/win). This is for version control.
 2. [Install `python`](https://www.python.org/downloads/). This is for a few utilities. Make sure to check "Add Python to environment variables" when installing.
@@ -82,8 +82,8 @@ The continuous integration for this project runs on a Windows instance. This mea
 1. Clone this repository.
     ```powershell
     cd ~/esp/
-    git clone https://github.com/AEFeinstein/Swadge-IDF-5.0.git
-    cd Swadge-IDF-5.0
+    git clone https://github.com/AEFeinstein/Super-2024-Swadge-FW.git
+    cd Super-2024-Swadge-FW
     ```
 2. Make sure the ESP-IDF symbols are exported. This example is for Windows, so the actual command may be different for your OS. Note that `export.ps1` does not make any permanent changes and it must be run each time you open a new terminal for a build.
     ```powershell
@@ -135,7 +135,7 @@ If VSCode isn't finding ESP-IDF symbols, try running the `export.ps1` script fro
 `vsc_esp.sh`:
 ```bash
 ~/esp/esp-idf/export.ps1
-code ~/esp/Swadge-IDF-5.0
+code ~/esp/Super-2024-Swadge-FW
 ```
 
 ## Updating ESP-IDF

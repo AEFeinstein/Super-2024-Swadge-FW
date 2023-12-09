@@ -25,7 +25,7 @@ jobs:
       
     - name: Create a version file
       run: |
-        printf "Commit: https://github.com/AEFeinstein/Swadge-IDF-5.0/commit/$(git rev-parse HEAD) \nBuilt at: $(date)" >> version.txt
+        printf "Commit: https://github.com/AEFeinstein/Super-2024-Swadge-FW/commit/$(git rev-parse HEAD) \nBuilt at: $(date)" >> version.txt
 
     - name: Install msys64 packages
       run: |
