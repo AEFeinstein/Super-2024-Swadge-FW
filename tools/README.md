@@ -14,6 +14,7 @@ This folder has tools used for development. Some tools have their own `README.md
 - [`spiffs_file_preprocessor`](./spiffs_file_preprocessor) is a C program which takes assets like text, PNG images, or font files and processes them into compressed, embedded friendly formats, like WSG. It is used by the build system to process files in the `assets` folder into the `spiffs_image` folder, which is built into the firmware as a SPIFFS partition.
 - [`font_maker`](./font_maker) is a C program which takes a TrueType font and renders it into a `.font.png` file. This file can be given to `spiffs_file_preprocessor` to flash to the Swadge and then be used to draw text to the display.
 - [`3dmodelheadermaker`](./3dmodelheadermaker) is used to process 3D models for usage in the Flight Sim game.
+- [`sprite-tinter`](./sprite-tinter) is used to tint sprites (specifically the Boss) for Magtroid Pocket.
 
 ## Flashing
 
