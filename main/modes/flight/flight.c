@@ -762,7 +762,7 @@ static void flightUpdate(void* arg __attribute__((unused)), int64_t elapsedUs)
         case FLIGHT_MENU:
         {
             drawMenuLogbook(flight->menu, flight->menuLogbookRenderer, elapsedUs);
-            drawText(&flight->logbook, 206, "rB", 237, 1823);
+            drawText(&flight->logbook, 206, "rB", 237, 18);
             break;
         }
         case FLIGHT_FREEFLIGHT:
