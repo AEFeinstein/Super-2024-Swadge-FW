@@ -2661,7 +2661,8 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
         bitct += WriteUEQ(&contents, 0);
         bitct += WriteUEQ(&contents, 1);
         bitct += WriteUEQ(&contents, NumActiveBoolets);
-        bitct += WriteUEQ(&contents, 23);
+        bitct += WriteUEQ(&contents, 0); // This is poisoned because of an oopsies with the Original Super 2024 Firmware. Do not use.
+        bitct += WriteUEQ(&contents, 0); // The number of chars to display (first char is color)
         FinalizeUEQ(&contents, bitct);
         *((uint32_t*)pp) = contents;
         pp += 4;
@@ -2708,9 +2709,6 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
             pp += sizeof(b->flags);
         }
 
-        memcpy(pp, "Xabcdefghijklmnopqrstuv", 23);
-        pp += 23;
-
         int len = pp - espnow_buffer;
         espNowSend((char*)espnow_buffer, len); // Don't enable yet.
         // uprintf( "ESPNow Send: %d    n", len );
@@ -2734,6 +2732,8 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     const uint8_t* dataend = (data + len);
     int i;
     flight_t* flt = flight;
+
+    if (!flt) return;
 
     if (flt->nNetworkMode == 0)
         return;
@@ -2825,6 +2825,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     int modelCount  = ReadUEQ(&assetCounts);
     int shipCount   = ReadUEQ(&assetCounts);
     int booletCount = ReadUEQ(&assetCounts);
+    ReadUEQ(&assetCounts); // DO NOT USE, poisoned from 2024 Firmware
     int textLength  = ReadUEQ(&assetCounts);
     // If we get a server packet, switch to server mode for a while.
     if (!isPeer)
@@ -2994,7 +2995,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     if (textLength)
     {
         // NOTE: First char is color.
-        if (textLength < sizeof(flt->nettext) && data + textLength <= dataend)
+        if (textLength < sizeof(flt->nettext) && data + textLength <= dataend && textLength > 0)
         {
             memcpy(flt->nettext, data, textLength);
             flt->nettext[textLength] = 0;
