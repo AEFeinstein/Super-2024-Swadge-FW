@@ -21,11 +21,27 @@ typedef int32_t q8_24;  // 8 bits integer, 24 bits fraction
 #define Q8_24_DECI_MASK  ((1 << Q8_24_FRAC_BITS) - 1)
 #define Q8_24_WHOLE_MASK (~Q8_24_DECI_MASK)
 
+typedef struct
+{
+    q24_8 x;
+    q24_8 y;
+} vec_q24_8;
+
 //==============================================================================
 // Fixed Point Math Functions
 //==============================================================================
 
 void fastNormVec(q24_8* xp, q24_8* yp);
+
+vec_q24_8 fpvAdd(vec_q24_8 a, vec_q24_8 b);
+vec_q24_8 fpvSub(vec_q24_8 a, vec_q24_8 b);
+vec_q24_8 fpvMulSc(vec_q24_8 vec, q24_8 scalar);
+vec_q24_8 fpvDivSc(vec_q24_8 vec, q24_8 scalar);
+
+q24_8 fpvDot(vec_q24_8 a, vec_q24_8 b);
+vec_q24_8 fpvNorm(vec_q24_8 vec);
+
+float fixToFloat(q24_8 fx);
 
 // Switch to use macros or inline functions
 #define FP_MATH_DEFINES

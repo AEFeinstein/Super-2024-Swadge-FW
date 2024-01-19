@@ -26,6 +26,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "mode_credits.h"
+#include "mode_pinball.h"
 
 #include "settingsManager.h"
 
@@ -150,6 +151,7 @@ static void mainMenuEnterMode(void)
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
     addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
     addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
@@ -389,6 +391,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == rayMode.modeName)
         {
             switchToSwadgeMode(&rayMode);
+        }
+        else if (label == pinballMode.modeName)
+        {
+            switchToSwadgeMode(&pinballMode);
         }
         else if (label == flightMode.modeName)
         {
