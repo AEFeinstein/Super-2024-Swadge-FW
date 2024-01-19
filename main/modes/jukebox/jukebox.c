@@ -1059,7 +1059,6 @@ void jukeboxMainLoop(int64_t elapsedUs)
 /**
  * @brief Draw a portion of the background when requested
  *
- * @param disp The display to draw to
  * @param x The X offset to draw
  * @param y The Y offset to draw
  * @param w The width to draw

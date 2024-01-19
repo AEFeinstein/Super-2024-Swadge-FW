@@ -146,45 +146,93 @@ void fastNormVec(q24_8* xp, q24_8* yp)
     *yp = ny;
 }
 
-#ifdef LUT_GEN_FUNCS
-
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <math.h>
-
-typedef struct
+/**
+ * @brief Normalize and return a vector
+ *
+ * @param vec The vector to normalize
+ * @return The normalized vector
+ */
+vec_q24_8 fpvNorm(vec_q24_8 vec)
 {
-    int32_t x;
-    int32_t y;
-    float err;
-} testResult_t;
+    vec_q24_8 normalized = vec;
+    fastNormVec(&normalized.x, &normalized.y);
+    return normalized;
+}
 
 /**
- * @brief Convert a floating point to q24_8
+ * @brief Compute the dot product of two vectors
  *
- * @param fl Floating point input
- * @return Fixed point output
+ * @param a A vector to dot
+ * @param b The other vector to dot
+ * @return The dot product of the two vectors
  */
-q24_8 floatToFix(float fl)
+q24_8 fpvDot(vec_q24_8 a, vec_q24_8 b)
 {
-    int sign = (fl >= 0) ? 1 : -1;
-    fl *= sign;
+    return ((a.x * b.x) + (a.y * b.y)) >> FRAC_BITS;
+}
 
-    q24_8 fx = (q24_8)((int32_t)fl * (1 << FRAC_BITS));
+/**
+ * @brief Add two vectors
+ *
+ * @param a A vector to add
+ * @param b The other vector to add
+ * @return The sum of the two input vectors
+ */
+vec_q24_8 fpvAdd(vec_q24_8 a, vec_q24_8 b)
+{
+    vec_q24_8 sum = {
+        .x = a.x + b.x,
+        .y = a.y + b.y,
+    };
+    return sum;
+}
 
-    float deciPart = fl - (int)fl;
+/**
+ * @brief Subtract two vectors
+ *
+ * @param a A vector to subtract from
+ * @param b The other vector to subtract
+ * @return The difference between the two input vectors
+ */
+vec_q24_8 fpvSub(vec_q24_8 a, vec_q24_8 b)
+{
+    vec_q24_8 diff = {
+        .x = a.x - b.x,
+        .y = a.y - b.y,
+    };
+    return diff;
+}
 
-    float deciBit = 0.5f;
-    for (int i = 0; i < 8; i++)
-    {
-        if (deciPart >= deciBit)
-        {
-            deciPart -= deciBit;
-            fx = fx | (0x80 >> i);
-        }
-        deciBit /= 2;
-    }
-    return fx * sign;
+/**
+ * @brief Multiply a vector by a scalar
+ *
+ * @param vec A vector multiply
+ * @param scalar A scalar to multiply the vector by
+ * @return The scaled vector
+ */
+vec_q24_8 fpvMulSc(vec_q24_8 vec, q24_8 scalar)
+{
+    vec_q24_8 mul = {
+        .x = MUL_FX(vec.x, scalar),
+        .y = MUL_FX(vec.y, scalar),
+    };
+    return mul;
+}
+
+/**
+ * @brief Divide a vector by a scalar
+ *
+ * @param vec A vector divide
+ * @param scalar A scalar to divide the vector by
+ * @return The scaled vector
+ */
+vec_q24_8 fpvDivSc(vec_q24_8 vec, q24_8 scalar)
+{
+    vec_q24_8 div = {
+        .x = DIV_FX(vec.x, scalar),
+        .y = DIV_FX(vec.y, scalar),
+    };
+    return div;
 }
 
 /**
@@ -226,6 +274,47 @@ float fixToFloat(q24_8 fx)
         }
     }
     return fl;
+}
+
+#ifdef LUT_GEN_FUNCS
+
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include <math.h>
+
+typedef struct
+{
+    int32_t x;
+    int32_t y;
+    float err;
+} testResult_t;
+
+/**
+ * @brief Convert a floating point to q24_8
+ *
+ * @param fl Floating point input
+ * @return Fixed point output
+ */
+q24_8 floatToFix(float fl)
+{
+    int sign = (fl >= 0) ? 1 : -1;
+    fl *= sign;
+
+    q24_8 fx = (q24_8)((int32_t)fl * (1 << FRAC_BITS));
+
+    float deciPart = fl - (int)fl;
+
+    float deciBit = 0.5f;
+    for (int i = 0; i < 8; i++)
+    {
+        if (deciPart >= deciBit)
+        {
+            deciPart -= deciBit;
+            fx = fx | (0x80 >> i);
+        }
+        deciBit /= 2;
+    }
+    return fx * sign;
 }
 
 /**

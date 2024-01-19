@@ -33,6 +33,7 @@
 #include "tunernome.h"
 #include "mode_credits.h"
 #include "modeTimer.h"
+#include "mode_pinball.h"
 
 //==============================================================================
 // Defines
@@ -75,6 +76,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &touchTestMode,
     &tunernomeMode,
     &modeCredits,
+    &pinballMode,
 };
 // clang-format on
 
