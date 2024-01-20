@@ -50,6 +50,7 @@ The continuous integration for this project runs on a Windows instance. This mea
     ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
 
 8. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
     ```powershell
     & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
     & git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
