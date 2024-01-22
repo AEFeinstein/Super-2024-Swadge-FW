@@ -527,19 +527,19 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
         (void)result;
 
         memset(msg, 0, sizeof(msg));
-        #ifdef __linux__
-            for (int i = 0; i < __SI_PAD_SIZE; i++)
-        #else
-            // Seems to be hardcoded on MacOS
-            for (int i = 0; i < 7; i++)
-        #endif
+    #ifdef __linux__
+        for (int i = 0; i < __SI_PAD_SIZE; i++)
+    #else
+        // Seems to be hardcoded on MacOS
+        for (int i = 0; i < 7; i++)
+    #endif
         {
             char tmp[8];
-        #ifdef __linux__
+    #ifdef __linux__
             snprintf(tmp, sizeof(tmp), "%02X", si->_sifields._pad[i]);
-        #else
+    #else
             snprintf(tmp, sizeof(tmp), "%02X", (int)si->__pad[i]);
-        #endif
+    #endif
             tmp[sizeof(tmp) - 1] = '\0';
             strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
         }
