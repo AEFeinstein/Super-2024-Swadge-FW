@@ -157,7 +157,7 @@ int main(int argc, char** argv)
     {
 #if defined(_WIN32)
         mkdir(outDirName);
-#elif defined(__linux__) || defined(__CYGWIN__) || defined(__APPLE_)
+#elif defined(__linux__) || defined(__CYGWIN__) || defined(__APPLE__)
         mkdir(outDirName, 0777);
 #endif
     }
