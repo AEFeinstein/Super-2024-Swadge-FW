@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #ifndef __APPLE__
-#include <malloc.h>
+    #include <malloc.h>
 #endif
 
 #include "settingsManager.h"

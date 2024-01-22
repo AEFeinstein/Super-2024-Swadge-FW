@@ -11,7 +11,12 @@ macOS is not officially supported quite yet. It is likely possible to build the 
 - xquartz
 - libxinerama
 
-These can be obtained through [Homebrew](https://brew.sh/). Note that at this time, there is no sound on the macOS builds. When running on macOS, you will need to run the emulator through the xQuartz terminal instead.
+These can be obtained through [Homebrew](https://brew.sh/). Note that at this time, there is no sound on the macOS builds. When running on macOS, you will need to run the emulator through the xQuartz terminal instead. For running the formatter, cpp checker, docs generator, and more, you will need the following from Homebrew as well:
+
+- clang-format
+- cppcheck
+- wget
+- doxygen
 
 Espressif's installation guide notes limitations for the ESP-IDF's path:
 > The installation path of ESP-IDF and ESP-IDF Tools must not be longer than 90 characters.

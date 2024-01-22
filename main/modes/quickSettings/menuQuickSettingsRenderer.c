@@ -12,7 +12,7 @@
 #include "esp_log.h"
 
 #ifndef __APPLE__
-#include <malloc.h>
+    #include <malloc.h>
 #endif
 #include <stdint.h>
 #include <inttypes.h>

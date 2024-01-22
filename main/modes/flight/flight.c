@@ -2661,7 +2661,8 @@ static void FlightNetworkFrameCall(flight_t* tflight, uint32_t now, modelRangePa
         bitct += WriteUEQ(&contents, 0);
         bitct += WriteUEQ(&contents, 1);
         bitct += WriteUEQ(&contents, NumActiveBoolets);
-        bitct += WriteUEQ(&contents, 0); // This is poisoned because of an oopsies with the Original Super 2024 Firmware. Do not use.
+        bitct += WriteUEQ(
+            &contents, 0); // This is poisoned because of an oopsies with the Original Super 2024 Firmware. Do not use.
         bitct += WriteUEQ(&contents, 0); // The number of chars to display (first char is color)
         FinalizeUEQ(&contents, bitct);
         *((uint32_t*)pp) = contents;
@@ -2733,7 +2734,8 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     int i;
     flight_t* flt = flight;
 
-    if (!flt) return;
+    if (!flt)
+        return;
 
     if (flt->nNetworkMode == 0)
         return;
@@ -2826,7 +2828,7 @@ static void FlightfnEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const 
     int shipCount   = ReadUEQ(&assetCounts);
     int booletCount = ReadUEQ(&assetCounts);
     ReadUEQ(&assetCounts); // DO NOT USE, poisoned from 2024 Firmware
-    int textLength  = ReadUEQ(&assetCounts);
+    int textLength = ReadUEQ(&assetCounts);
     // If we get a server packet, switch to server mode for a while.
     if (!isPeer)
     {
