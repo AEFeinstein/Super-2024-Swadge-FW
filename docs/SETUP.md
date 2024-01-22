@@ -6,18 +6,6 @@ It is strongly recommend that you follow the instructions on this page to set up
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
-macOS is not officially supported quite yet. It is likely possible to build the firmware on macOS, and the emulator has limited support on Mac OS, requiring:
-
-- xquartz
-- libxinerama
-
-These can be obtained through [Homebrew](https://brew.sh/). Note that at this time, there is no sound on the macOS builds. When running on macOS, you will need to run the emulator through the xQuartz terminal instead. For running the formatter, cpp checker, docs generator, and more, you will need the following from Homebrew as well:
-
-- clang-format
-- cppcheck
-- wget
-- doxygen
-
 Espressif's installation guide notes limitations for the ESP-IDF's path:
 > The installation path of ESP-IDF and ESP-IDF Tools must not be longer than 90 characters.
 >
@@ -87,6 +75,21 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
+
+## Configuring a MacOS Environment
+
+    > **Warning**
+    >
+    > This section is still under development, and as a result, may have unexpected errors in its process.
+
+1. Install [Homebrew](https://brew.sh/)
+2. Run the following command to install all necessary dependencies:
+    ```bash
+    brew install xquartz libxinerama clang-format cppcheck wget doxygen
+    ```
+
+
+Note that at this time, there is no sound on the macOS builds. When running on macOS, you will need to run the emulator through the xQuartz terminal instead. Building the firmware directly is also not supported fully yet at this time.
 
 ## Building and Flashing Firmware
 
