@@ -1,6 +1,8 @@
 #include "paint_ui.h"
 
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 #include <string.h>
 
 #include "shapes.h"

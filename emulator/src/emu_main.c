@@ -109,7 +109,7 @@ void handleArgs(int argc, char** argv)
  */
 int main(int argc, char** argv)
 {
-#ifdef __linux__
+#ifdef __linux__ || __APPLE__
     init_crashSignals();
 #endif
 

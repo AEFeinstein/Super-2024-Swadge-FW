@@ -23,6 +23,8 @@ ifeq ($(HOST_OS),Windows)
 	CC = x86_64-w64-mingw32-gcc.exe
 else ifeq ($(HOST_OS),Linux)
 	CC = gcc
+else ifeq ($(UNAME_S),Darwin)
+	CC = gcc
 endif
 
 FIND:=find
@@ -70,7 +72,6 @@ INC = $(patsubst %, -I%, $(INC_DIRS) )
 CFLAGS = \
 	-c \
 	-g \
-	-static-libgcc \
 	-static-libstdc++ \
 	-fdiagnostics-color=always \
 	-ffunction-sections \
@@ -78,11 +79,21 @@ CFLAGS = \
 	-gdwarf-4 \
 	-ggdb \
 	-O2 \
-	-fstrict-volatile-bitfields \
 	-fno-jump-tables \
-	-fno-tree-switch-conversion \
 	-finline-functions \
 	-std=gnu17
+
+ifneq ($(HOST_OS),Darwin)
+# Incompatible flags for clang on MacOS
+CFLAGS += \
+	-static-libgcc \
+	-fstrict-volatile-bitfields \
+	-fno-tree-switch-conversion
+else
+# Required for OpenGL and some other libraries
+CFLAGS += \
+	-I/opt/X11/include
+endif
 
 ifeq ($(HOST_OS),Linux)
 CFLAGS += \
@@ -208,15 +219,29 @@ endif
 ifeq ($(HOST_OS),Linux)
     LIBS = m X11 asound pulse rt GL GLX pthread Xext Xinerama
 endif
+# Todo: Figure out an alternative to asound on MacOS
+ifeq ($(HOST_OS),Darwin)
+    LIBS = m X11 GL pthread Xext Xinerama
+endif
 
 # These are directories to look for library files in
 LIB_DIRS = 
 
+# On MacOS we need to ensure that X11 is added for OpenGL and some others
+ifeq ($(HOST_OS),Darwin)
+    LIB_DIRS = /opt/X11/lib
+endif
+
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-static-libgcc \
 	-static-libstdc++ \
 	-ggdb
+
+# Incompatible flags for clang on MacOS
+ifneq ($(HOST_OS),Darwin)
+LIBRARY_FLAGS += \
+	-static-libgcc
+endif
 
 ifeq ($(HOST_OS),Linux)
 LIBRARY_FLAGS += \

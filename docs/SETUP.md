@@ -6,7 +6,12 @@ It is strongly recommend that you follow the instructions on this page to set up
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
-macOS is not officially supported. It is likely possible to build the firmware on macOS, but the emulator requires [rawdraw](https://github.com/cntools/rawdraw), which does not support macOS.
+macOS is not officially supported quite yet. It is likely possible to build the firmware on macOS, and the emulator has limited support on Mac OS, requiring:
+
+- xquartz
+- libxinerama
+
+These can be obtained through [Homebrew](https://brew.sh/). Note that at this time, there is no sound on the macOS builds. When running on macOS, you will need to run the emulator through the xQuartz terminal instead.
 
 Espressif's installation guide notes limitations for the ESP-IDF's path:
 > The installation path of ESP-IDF and ESP-IDF Tools must not be longer than 90 characters.

@@ -37,11 +37,6 @@
  */
 #define ABS(a) (((a) < (0)) ? -(a) : (a))
 
-/// Helper macro to determine the number of elements in an array. Should not be used directly
-#define IS_ARRAY(arr) ((void*)&(arr) == &(arr)[0])
-
-/// Helper macro to determine the number of elements in an array. Should not be used directly
-#define STATIC_EXP(e) (0 * sizeof(struct { int ARRAY_SIZE_FAILED : (2 * (e)-1); }))
 
 /**
  * @brief Return the number of elements in a fixed length array. This does not work for pointers.
@@ -51,7 +46,26 @@
  * @param arr An array to find the number of elements in
  * @return The the number of elements in an array (not the byte size!)
  */
+#ifdef __APPLE__
+/* Force a compilation error if condition is true, but also produce a
+   result (of value 0 and type size_t), so the expression can be used
+   e.g. in a structure initializer (or where-ever else comma expressions
+   aren't permitted). */
+#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
+
+/// Helper macro to determine the number of elements in an array. Should not be used directly
+#define __must_be_array(a) BUILD_BUG_ON_ZERO(__builtin_types_compatible_p(typeof(a), typeof(&(a)[0])))
+
+#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + __must_be_array(arr))
+#else
+/// Helper macro to determine the number of elements in an array. Should not be used directly
+#define IS_ARRAY(arr) ((void*)&(arr) == &(arr)[0])
+
+/// Helper macro to determine the number of elements in an array. Should not be used directly
+#define STATIC_EXP(e) (0 * sizeof(struct { int ARRAY_SIZE_FAILED : (2 * (e)-1); }))
+
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]) + STATIC_EXP(IS_ARRAY(arr)))
+#endif
 
 /**
  * @brief Returns (a + b) % d, but with negative values converted to equivalent positive values.

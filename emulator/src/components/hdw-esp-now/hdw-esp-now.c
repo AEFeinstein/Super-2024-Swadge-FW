@@ -6,13 +6,15 @@
     #define USING_WINDOWS 1
 #elif defined(__linux__)
     #define USING_LINUX 1
+#elif __APPLE__
+    #define USING_MAC 1
 #else
     #error "OS Not Detected"
 #endif
 
 #if defined(USING_WINDOWS)
     #include <WinSock2.h>
-#elif defined(USING_LINUX)
+#elif defined(USING_LINUX) || defined(USING_MAC)
     #include <sys/socket.h> // for socket(), connect(), sendto(), and recvfrom()
     #include <arpa/inet.h>  // for sockaddr_in and inet_addr()
     #include <fcntl.h>

@@ -5329,7 +5329,9 @@ void AndroidSendToBack( int param )
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifndef __APPLE__
 #include <malloc.h>
+#endif
 
 #ifdef HAS_XINERAMA
 	#include <X11/extensions/shape.h>
