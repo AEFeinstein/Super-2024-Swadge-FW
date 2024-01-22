@@ -92,7 +92,8 @@ CFLAGS += \
 else
 # Required for OpenGL and some other libraries
 CFLAGS += \
-	-I/opt/X11/include
+	-I/opt/X11/include \
+	-I/opt/homebrew/include
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -219,9 +220,8 @@ endif
 ifeq ($(HOST_OS),Linux)
     LIBS = m X11 asound pulse rt GL GLX pthread Xext Xinerama
 endif
-# Todo: Figure out an alternative to asound on MacOS
 ifeq ($(HOST_OS),Darwin)
-    LIBS = m X11 GL pthread Xext Xinerama
+    LIBS = m X11 GL pulse pthread Xext Xinerama
 endif
 
 # These are directories to look for library files in
@@ -229,7 +229,7 @@ LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
 ifeq ($(HOST_OS),Darwin)
-    LIB_DIRS = /opt/X11/lib
+    LIB_DIRS = /opt/X11/lib /opt/homebrew/lib
 endif
 
 # This combines the flags for the linker to find and use libraries

@@ -85,11 +85,15 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 1. Install [Homebrew](https://brew.sh/)
 2. Run the following command to install all necessary dependencies:
     ```bash
-    brew install xquartz libxinerama clang-format cppcheck wget doxygen
+    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen
     ```
+3. Before running the simulator on your machine, you need to start pulseaudio like so:
+    ```bash
+    brew services start pulseaudio
+    ```
+    You can stop it by running `brew services start pulseaudio` when you are done.
 
-
-Note that at this time, there is no sound on the macOS builds. When running on macOS, you will need to run the emulator through the xQuartz terminal instead. Building the firmware directly is also not supported fully yet at this time.
+When running on macOS, you will need to run the emulator through the xQuartz terminal instead. Building the firmware directly is also not supported fully yet at this time.
 
 ## Building and Flashing Firmware
 
