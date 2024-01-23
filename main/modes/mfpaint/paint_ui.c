@@ -1,6 +1,5 @@
 #include "paint_ui.h"
 
-#include <malloc.h>
 #include <string.h>
 
 #include "shapes.h"

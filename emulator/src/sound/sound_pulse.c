@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 
     #include <pulse/simple.h>
     #include <pulse/pulseaudio.h>

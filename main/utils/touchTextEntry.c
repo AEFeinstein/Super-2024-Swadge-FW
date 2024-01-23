@@ -5,7 +5,6 @@
 #include "touchTextEntry.h"
 
 #include <string.h>
-#include <malloc.h>
 
 #include "font.h"
 #include "hdw-btn.h"

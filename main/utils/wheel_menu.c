@@ -13,7 +13,6 @@
 #include "esp_log.h"
 
 #include <inttypes.h>
-#include <malloc.h>
 #include <string.h>
 
 //==============================================================================

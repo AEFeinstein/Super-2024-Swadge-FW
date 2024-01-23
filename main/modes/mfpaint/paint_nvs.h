@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <malloc.h>
 
 #include "settingsManager.h"
 #include "hdw-nvs.h"

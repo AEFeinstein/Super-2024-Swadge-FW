@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include <unistd.h>
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
     #include <signal.h>
     #include <execinfo.h>
 #endif
@@ -63,7 +63,7 @@ static bool isRunning = true;
 // Function Prototypes
 //==============================================================================
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 void init_crashSignals(void);
 void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 #endif
@@ -109,7 +109,7 @@ void handleArgs(int argc, char** argv)
  */
 int main(int argc, char** argv)
 {
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
     init_crashSignals();
 #endif
 
@@ -484,10 +484,10 @@ void HandleDestroy(void)
     WARN_UNIMPLEMENTED();
 }
 
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 
 /**
- * @brief Initialize a crash handler, only for Linux
+ * @brief Initialize a crash handler, only for Linux and MacOS
  */
 void init_crashSignals(void)
 {
@@ -503,7 +503,7 @@ void init_crashSignals(void)
 }
 
 /**
- * @brief Print a backtrace when a crash is caught, only for Linux
+ * @brief Print a backtrace when a crash is caught, only for Linux and MacOS
  *
  * @param signum
  * @param si
@@ -527,10 +527,19 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
         (void)result;
 
         memset(msg, 0, sizeof(msg));
+    #ifdef __linux__
         for (int i = 0; i < __SI_PAD_SIZE; i++)
+    #else
+        // Seems to be hardcoded on MacOS
+        for (int i = 0; i < 7; i++)
+    #endif
         {
             char tmp[8];
+    #ifdef __linux__
             snprintf(tmp, sizeof(tmp), "%02X", si->_sifields._pad[i]);
+    #else
+            snprintf(tmp, sizeof(tmp), "%02X", (int)si->__pad[i]);
+    #endif
             tmp[sizeof(tmp) - 1] = '\0';
             strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
         }

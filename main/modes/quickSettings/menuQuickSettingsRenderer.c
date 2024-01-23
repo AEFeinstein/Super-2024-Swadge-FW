@@ -11,7 +11,6 @@
 #include "palette.h"
 #include "esp_log.h"
 
-#include <malloc.h>
 #include <stdint.h>
 #include <inttypes.h>
 

@@ -109,7 +109,6 @@ LIB_DIRS =
 
 # This combines the flags for the linker to find and use libraries
 LIBRARY_FLAGS = $(patsubst %, -L%, $(LIB_DIRS)) $(patsubst %, -l%, $(LIBS)) \
-	-static-libgcc \
 	-static-libstdc++ \
 	-ggdb
 

@@ -9,7 +9,6 @@
 #include "palette.h"
 #include "fill.h"
 
-#include <malloc.h>
 #include <stdint.h>
 
 //==============================================================================

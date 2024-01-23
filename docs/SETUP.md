@@ -6,8 +6,6 @@ It is strongly recommend that you follow the instructions on this page to set up
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
-macOS is not officially supported. It is likely possible to build the firmware on macOS, but the emulator requires [rawdraw](https://github.com/cntools/rawdraw), which does not support macOS.
-
 Espressif's installation guide notes limitations for the ESP-IDF's path:
 > The installation path of ESP-IDF and ESP-IDF Tools must not be longer than 90 characters.
 >
@@ -77,6 +75,25 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
+
+## Configuring a MacOS Environment
+
+    > **Warning**
+    >
+    > This section is still under development, and as a result, may have unexpected errors in its process.
+
+1. Install [Homebrew](https://brew.sh/)
+2. Run the following command to install all necessary dependencies:
+    ```bash
+    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen
+    ```
+3. Before running the simulator on your machine, you need to start pulseaudio like so:
+    ```bash
+    brew services start pulseaudio
+    ```
+    You can stop it by running `brew services start pulseaudio` when you are done.
+
+When running on macOS, you will need to run the emulator through the xQuartz terminal instead. Building the firmware directly is also not supported fully yet at this time.
 
 ## Building and Flashing Firmware
 

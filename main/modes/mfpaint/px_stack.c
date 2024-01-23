@@ -1,6 +1,5 @@
 #include "px_stack.h"
 
-#include <malloc.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
