@@ -5,9 +5,6 @@
 #include "touchTextEntry.h"
 
 #include <string.h>
-#ifndef __APPLE__
-    #include <malloc.h>
-#endif
 
 #include "font.h"
 #include "hdw-btn.h"

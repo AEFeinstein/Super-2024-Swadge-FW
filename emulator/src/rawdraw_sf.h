@@ -565,7 +565,6 @@ static inline void DumpObjectClassProperties( jobject objToDump )
 
 
 #include <stdint.h>
-#include <malloc.h>
 
 typedef struct {
     uint32_t state[5];
@@ -3159,7 +3158,6 @@ void CNFGHandleInput()
 
 #include <windows.h>
 #include <stdlib.h>
-#include <malloc.h> //for alloca
 #include <ctype.h>
 
 HBITMAP CNFGlsBitmap;
@@ -5329,9 +5327,6 @@ void AndroidSendToBack( int param )
 
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef __APPLE__
-#include <malloc.h>
-#endif
 
 #ifdef HAS_XINERAMA
 	#include <X11/extensions/shape.h>
@@ -6308,11 +6303,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 #ifdef _CNFG_FANCYFONT
 #include "TextTool/FontData.h"
-#endif
-
-//TODO: Refactor to remove malloc reliance.
-#ifndef __clang__
-#include <malloc.h>
 #endif
 
 int CNFGPenX, CNFGPenY;

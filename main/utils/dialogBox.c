@@ -9,9 +9,6 @@
 #include "palette.h"
 #include "fill.h"
 
-#ifndef __APPLE__
-    #include <malloc.h>
-#endif
 #include <stdint.h>
 
 //==============================================================================
