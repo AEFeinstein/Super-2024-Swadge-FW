@@ -7,7 +7,7 @@ tiled.registerMapFormat("Breakout", {
         var buffer = file.read(file.size);
         var view = new Uint8Array(buffer);
         const tileDataOffset = 2;
-        const tileSizeInPixels = 16;
+        const tileSizeInPixels = 8;
 
         var map = new TileMap();
 
