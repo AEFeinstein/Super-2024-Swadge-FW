@@ -1,124 +1,1036 @@
 {
-    "Map/SizeTest": {
-        "height": 4300,
-        "width": 2
-    },
-    "activeFile": "ponglike.tmx",
+    "activeFile": "themaze.tmx",
     "expandedProjectPaths": [
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
-        "breakout-tiles.tsx": {
-            "dynamicWrapping": false,
-            "scaleInDock": 6,
-            "scaleInEditor": 6.04
-        },
-        "intro.tmx": {
-            "scale": 3.05,
+        "2manypaddles.bin": {
+            "scale": 2.4530357142857144,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 140.1639344262295,
-                "y": 118.19672131147543
+                "x": 140.03057436121424,
+                "y": 121.27829948314769
             }
         },
-        "leftside.tmx": {
+        "2manypaddles.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.5,
+                "y": 121.5
+            }
+        },
+        "42069.tmx": {
+            "scale": 2.7902,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 161.09956275535805,
+                "y": 80.28098344204717
+            }
+        },
+        ":/automap-tiles.tsx": {
+            "scaleInDock": 1
+        },
+        "SPACESHIP.tmx": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.76795022700523,
+                "y": 119.99327391962333
+            }
+        },
+        "angles.bin": {
+            "scale": 3.701452282157676,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.6204809147469,
+                "y": 120.35816378005718
+            }
+        },
+        "angles.tmx": {
+            "scale": 3.701452282157676,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 104.95880275769295,
+                "y": 99.28535395997983
+            }
+        },
+        "b.bin": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.7679502270052,
+                "y": 120.12779552715655
+            }
+        },
+        "b.tmx": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03699344207163,
+                "y": 119.99327391962333
+            }
+        },
+        "binaries/brkLvlChar1.bin": {
+            "scale": 1.8312,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 214.8864132809087,
+                "y": 133.2459589340323
+            }
+        },
+        "binaries/brkLvlChar1.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.5,
+                "y": 120
+            }
+        },
+        "binaries/rightside.bin": {
+            "scale": 2.99,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.96989966555182,
+                "y": 120.40133779264212
+            }
+        },
+        "binaries/tasboot.bin": {
+            "scale": 3.7028,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.0291671167765,
+                "y": 119.63919196283892
+            }
+        },
+        "binaries/tasboot.tmx": {
+            "scale": 3.7028,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 229.96111051096466,
+                "y": 144.75532029815275
+            }
+        },
+        "bombest_rings.tmx": {
+            "scale": 2.304865771812081,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 237.54094780519762,
+                "y": 149.46640460071336
+            }
+        },
+        "bombrings.bin": {
+            "scale": 3.701452282157676,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.6204809147469,
+                "y": 120.35816378005718
+            }
+        },
+        "bombrings.tmx": {
+            "scale": 2.1772,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.77714495682525,
+                "y": 120.56770163512769
+            }
+        },
+        "bombrings2.tmx": {
+            "scale": 2.0055,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 142.35851408626277,
+                "y": 64.32311144353028
+            }
+        },
+        "bombtest copy.tmx": {
+            "scale": 2.304865771812081,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 235.37162408094923,
+                "y": 149.46640460071336
+            }
+        },
+        "bombtest.tmx": {
+            "scale": 3.742073170731707,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 131.34430503503341,
+                "y": 116.78018575851395
+            }
+        },
+        "breakout-tiles.tsx": {
+            "dynamicWrapping": false,
+            "scaleInDock": 4.42,
+            "scaleInEditor": 4.6
+        },
+        "breakout_b.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 237.86853024677876,
+                "y": 150.22202809929388
+            }
+        },
+        "brkLvlChar1.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.5,
+                "y": 120
+            }
+        },
+        "bumpers.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.5,
+                "y": 120
+            }
+        },
+        "chainreact.tmx": {
+            "scale": 3.4985,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.9171073317136,
+                "y": 119.90853222809776
+            }
+        },
+        "cho.tmx": {
             "scale": 3.0393238434163696,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 140.6562847608454,
-                "y": 120.58603126280666
+                "x": -40.79854809437387,
+                "y": 70.903928341432
             }
         },
-        "level1.tmx": {
-            "scale": 1.8793,
+        "circles.tmx": {
+            "scale": 2.1917012448132778,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 131.1658596285851,
-                "y": 142.87234608630874
+                "x": 140.7582355168497,
+                "y": 120.91063990912534
+            }
+        },
+        "coffee-or-tea.tmx": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.7679502270052,
+                "y": 120.12779552715655
+            }
+        },
+        "coffee.tmx": {
+            "scale": 2.390833333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.32764029278493,
+                "y": 120.04182642035553
+            }
+        },
+        "corner.bin": {
+            "scale": 1.2509,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 291.3901990566792,
+                "y": 283.3959549124631
+            }
+        },
+        "corner.tmx": {
+            "scale": 2.48,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.1209677419355,
+                "y": 121.37096774193549
+            }
+        },
+        "da_bomb.tmx": {
+            "scale": 2.4771,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 160.4699043236042,
+                "y": 167.73646602882403
+            }
+        },
+        "devito.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.1336157731791,
+                "y": 119.66759002770084
+            }
+        },
+        "donut.tmx": {
+            "scale": 3.4945,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 105.16525969380456,
+                "y": 118.90113034768925
+            }
+        },
+        "face.tmx": {
+            "scale": 3.8197095435684645,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 14.660800608331982,
+                "y": 118.98810493726579
+            }
+        },
+        "firework.tmx": {
+            "scale": 3.8197095435684645,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.71750583890065,
+                "y": 120.42800499701268
+            }
+        },
+        "flipflop.tmx": {
+            "scale": 3.81,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.76377952755908,
+                "y": 120.4724409448819
+            }
+        },
+        "flower.tmx": {
+            "scale": 3.8197095435684645,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.67030579544837,
+                "y": 120.42800499701268
+            }
+        },
+        "foosball.bin": {
+            "scale": 4.97,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 144.56740442655936,
+                "y": 26.056338028169016
+            }
+        },
+        "foosball.tmx": {
+            "scale": 2.8371,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.10785661414826,
+                "y": 120.8981001727116
+            }
+        },
+        "gaylord-logo.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 108.97832817337462,
+                "y": 116.14795502688611
+            }
+        },
+        "gaylordlogo.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.5,
+                "y": 120
+            }
+        },
+        "gaylordogo.tmx": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.7679502270052,
+                "y": 120.12779552715655
+            }
+        },
+        "getMorGet.bin": {
+            "scale": 2.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.2,
+                "y": 117.79999999999998
+            }
+        },
+        "getMorGet.tmx": {
+            "scale": 3.5894,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.99554243048976,
+                "y": 119.9364796344793
+            }
+        },
+        "halloween.tmx": {
+            "scale": 3.6262195121951217,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 146.5713805279973,
+                "y": 116.65041197242307
+            }
+        },
+        "happy-halloween.tmx": {
+            "scale": 3.74,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 181.01604278074862,
+                "y": 118.85026737967914
+            }
+        },
+        "heart.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 101.71070830603477,
+                "y": 89.48096382033921
+            }
+        },
+        "heart2.tmx": {
+            "scale": 2.390833333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.32764029278493,
+                "y": 120.04182642035553
+            }
+        },
+        "infestation.tmx": {
+            "scale": 3.5717,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.12935016938712,
+                "y": 119.55091413052608
+            }
+        },
+        "intersection.bin": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 121.27829948314769
+            }
+        },
+        "intersection.tmx": {
+            "scale": 1.99,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.45226130653268,
+                "y": 121.608040201005
+            }
+        },
+        "intro.tmx": {
+            "scale": 2.5182,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 133.6271940274799,
+                "y": 137.00262091970453
+            }
+        },
+        "intro2.tmx": {
+            "scale": 2.3654,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 143.104760294242,
+                "y": 134.01538851779824
+            }
+        },
+        "introWithEnemies.tmx": {
+            "scale": 2.5361,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 137.41571704585786,
+                "y": 127.16375537242223
+            }
+        },
+        "introenemy.tmx": {
+            "scale": 3.4219,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.83459481574562,
+                "y": 119.96259388059264
+            }
+        },
+        "jailbreak.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.1336157731791,
+                "y": 119.66759002770084
+            }
+        },
+        "jailbreak2.tmx": {
+            "scale": 2.77,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.53068592057764,
+                "y": 117.14801444043323
+            }
+        },
+        "leftside.tmx": {
+            "scale": 3.8197095435684645,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.71750583890065,
+                "y": 120.42800499701268
+            }
+        },
+        "lumberjacks.tmx": {
+            "scale": 2.7732,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.45146401269292,
+                "y": 119.17640271166883
+            }
+        },
+        "m-attack.tmx": {
+            "scale": 4.0215,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.8731816486386,
+                "y": 119.98010692527666
+            }
+        },
+        "m-battle.tmx": {
+            "scale": 3.1899,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.9730399072071,
+                "y": 119.90971503808895
+            }
+        },
+        "m-tank.tmx": {
+            "scale": 3.9769,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.18456586788704,
+                "y": 119.94266891297241
+            }
+        },
+        "m_attack.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 108.8479713214926,
+                "y": 115.88724132312205
             }
         },
         "mag01.tmx": {
-            "scale": 3.0501785714285714,
+            "scale": 3.8039256198347102,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 140.15572858731926,
-                "y": 121.14044845149584
+                "x": 140.512736950736,
+                "y": 120.92770626256045
+            }
+        },
+        "mag02.tmx": {
+            "scale": 3.742073170731707,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 131.34430503503341,
+                "y": 116.78018575851395
+            }
+        },
+        "mag03.bin": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.7679502270052,
+                "y": 120.12779552715655
+            }
+        },
+        "mag03.tmx": {
+            "scale": 2.3339,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.323064398646,
+                "y": 120.82779896310899
+            }
+        },
+        "mag_test.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 237.86853024677876,
+                "y": 150.22202809929388
+            }
+        },
+        "magfest-logo.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 119.85149595981653
+            }
+        },
+        "magfestlogo.tmx": {
+            "scale": 2.1682,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 240.06087999262058,
+                "y": 138.3636195922885
+            }
+        },
+        "main levels/breakout-tiles.tsx": {
+            "scaleInDock": 1
+        },
+        "main levels/wtf.tmx": {
+            "scale": 0.9974999999999999,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.85213032581456,
+                "y": 120.30075187969928
+            }
+        },
+        "metroid.tmx": {
+            "scale": 2.390833333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.32764029278493,
+                "y": 120.04182642035553
+            }
+        },
+        "newlvl38.tmx": {
+            "scale": 1,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140,
+                "y": 121.5
+            }
+        },
+        "newlvl47.tmx": {
+            "scale": 3.4945,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.93418228645015,
+                "y": 120.90427815138074
+            }
+        },
+        "openthegates.tmx": {
+            "scale": 2.0465,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.99511360860006,
+                "y": 126.06889811873931
+            }
+        },
+        "outtaMyWay.bin": {
+            "scale": 2.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 151.4,
+                "y": 145.4
+            }
+        },
+        "outtaMyWay.tmx": {
+            "scale": 2.5,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.60000000000002,
+                "y": 120.4
+            }
+        },
+        "paddles.bin": {
+            "scale": 3.5217,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 134.73606496862308,
+                "y": 112.87162449953148
+            }
+        },
+        "paddles.tmx": {
+            "scale": 2.7696,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.27296360485266,
+                "y": 120.95609474292316
             }
         },
         "ponglike.tmx": {
-            "scale": 2.865939597315436,
+            "scale": 3.742073170731707,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 131.37052865757275,
-                "y": 117.76242608746561
+                "x": 131.34430503503341,
+                "y": 116.78018575851395
+            }
+        },
+        "reintro.tmx": {
+            "scale": 3.64,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 98.48901098901098,
+                "y": 126.23626373626372
+            }
+        },
+        "rightside.tmx": {
+            "scale": 2.99,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.63545150501673,
+                "y": 120.40133779264212
+            }
+        },
+        "sands-of-time.tmx": {
+            "scale": 3.71,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 138.14016172506737,
+                "y": 102.2911051212938
+            }
+        },
+        "sandsoftime.tmx": {
+            "scale": 2.390833333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.32764029278493,
+                "y": 120.04182642035553
+            }
+        },
+        "shifter-heart.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 119.44383781029336
+            }
+        },
+        "shifter-metroid-battle.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 119.85149595981653
+            }
+        },
+        "shifter-metroid.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 119.85149595981653
+            }
+        },
+        "shifter-samus.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 120.05532503457813
+            }
+        },
+        "shifter-smiley.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 119.85149595981653
+            }
+        },
+        "shiftersam.tmx": {
+            "scale": 2.390833333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.32764029278493,
+                "y": 120.04182642035553
+            }
+        },
+        "shiftersmil.tmx": {
+            "scale": 2.390833333333333,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.32764029278493,
+                "y": 120.04182642035553
+            }
+        },
+        "snake.tmx": {
+            "scale": 3.8197095435684645,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 121.60610504589647,
+                "y": 119.90440497528654
             }
         },
         "split.tmx": {
-            "scale": 3.0501785714285714,
+            "scale": 3.8039256198347102,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 140.15572858731926,
-                "y": 121.14044845149584
+                "x": 140.512736950736,
+                "y": 120.92770626256045
             }
         },
         "starlite.tmx": {
-            "scale": 3.0501785714285714,
+            "scale": 2.8743,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 140.48357824483344,
-                "y": 121.46829810901001
+                "x": 139.68618446230386,
+                "y": 120.89900149601644
+            }
+        },
+        "stonetest.tmx": {
+            "scale": 2.2008333333333336,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.174176448315,
+                "y": 120.40893600908745
+            }
+        },
+        "stormcastle.tmx": {
+            "scale": 2.2064,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.27374909354606,
+                "y": 120.55837563451776
+            }
+        },
+        "superhard.tmx": {
+            "scale": 2.8199,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 130.67839285081033,
+                "y": 116.8481151813894
             }
         },
         "swdglnd-character.tmx": {
-            "scale": 2.415,
+            "scale": 2.4126,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 140.1656314699793,
-                "y": 120.28985507246375
+                "x": 140.3050650750228,
+                "y": 119.78778081737545
+            }
+        },
+        "tasboot.tmx": {
+            "scale": 3.7028,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.0291671167765,
+                "y": 119.63919196283892
+            }
+        },
+        "tasbot.tmx": {
+            "scale": 2.45,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.20408163265301,
+                "y": 119.99999999999999
+            }
+        },
+        "template-side-paddles.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.1336157731791,
+                "y": 120.05866058334692
+            }
+        },
+        "template-top-paddle.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.1336157731791,
+                "y": 120.05866058334692
+            }
+        },
+        "template.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.1336157731791,
+                "y": 120.05866058334692
             }
         },
         "test.tmx": {
-            "scale": 3.0501785714285714,
+            "scale": 1.8075,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 140.15572858731926,
-                "y": 120.15689947895325
+                "x": 139.97233748271088,
+                "y": 120.33195020746886
+            }
+        },
+        "themaze.bin": {
+            "scale": 3.701452282157676,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.6204809147469,
+                "y": 120.35816378005718
+            }
+        },
+        "themaze.tmx": {
+            "scale": 3.7,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 116.89189189189189,
+                "y": 115.81081081081078
+            }
+        },
+        "tinyhuge.bin": {
+            "scale": 1.59,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 277.98742138364776,
+                "y": 256.28930817610063
+            }
+        },
+        "tinyhuge.tmx": {
+            "scale": 3.81,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.23884514435696,
+                "y": 129.92125984251967
+            }
+        },
+        "titlescreen.bin": {
+            "scale": 2.8615,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 141.00995981128776,
+                "y": 111.30525947929407
+            }
+        },
+        "titlescreen.tmx": {
+            "scale": 2.8713,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.8321317869954,
+                "y": 119.98049663915297
+            }
+        },
+        "titlescreen_test.bin": {
+            "scale": 2.8615,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 122.48820548663288,
+                "y": 109.20845710291805
+            }
+        },
+        "trifecta.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 105.45869317255989,
+                "y": 129.5747107707349
+            }
+        },
+        "ts_enemytest.tmx": {
+            "scale": 2.1105,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 123.90428808339256,
+                "y": 109.21582563373606
+            }
+        },
+        "twist.tmx": {
+            "scale": 2.1826446280991734,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.42597500946613,
+                "y": 121.4123438091632
+            }
+        },
+        "upsidedown.tmx": {
+            "scale": 3.8356249999999994,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 108.58725761772854,
+                "y": 115.23545706371192
+            }
+        },
+        "wallball.bin": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 120.05532503457813
+            }
+        },
+        "wallball.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 140.03057436121424,
+                "y": 119.85149595981655
+            }
+        },
+        "wtf.bin": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.7679502270052,
+                "y": 120.12779552715655
+            }
+        },
+        "wtf.tmx": {
+            "scale": 3.716875,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.7679502270052,
+                "y": 119.72423070455692
+            }
+        },
+        "wtf_final_v3_finalfinal.tmx": {
+            "scale": 2.4530357142857144,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 237.86853024677873,
+                "y": 150.22202809929385
+            }
+        },
+        "xmarks.bin": {
+            "scale": 1.1954166666666666,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 280.6552805855699,
+                "y": 240.08365284071107
+            }
+        },
+        "xmarks.tmx": {
+            "scale": 3.0393238434163696,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 139.01118201510457,
+                "y": 120.25701071365847
+            }
+        },
+        "zip.bin": {
+            "scale": 2.6435,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 183.2797427652733,
+                "y": 169.2831473425383
+            }
+        },
+        "zip.tmx": {
+            "scale": 2.4327,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 88.17363423356764,
+                "y": 122.08657047724749
             }
         }
     },
-    "last.exportedFilePath": "/Users/jvega/Desktop",
-    "last.imagePath": "/Users/jvega/Pictures/My Art/Aseprite/breakout",
-    "map.height": 30,
+    "last.exportedFilePath": "/Users/jvega/Desktop/breakout-editor/binaries",
     "map.lastUsedExportFilter": "Breakout map format (*.bin)",
     "map.lastUsedFormat": "tmx",
-    "map.tileHeight": 8,
-    "map.tileWidth": 8,
-    "map.width": 35,
     "openFiles": [
-        "intro.tmx",
-        "swdglnd-character.tmx",
-        "leftside.tmx",
-        "mag01.tmx",
-        "split.tmx",
+        "jailbreak2.tmx",
+        "bombrings.tmx",
+        "chainreact.tmx",
+        "getMorGet.tmx",
+        "introenemy.tmx",
+        "lumberjacks.tmx",
+        "m-attack.tmx",
+        "m-battle.tmx",
         "starlite.tmx",
-        "ponglike.tmx"
+        "superhard.tmx",
+        "themaze.tmx",
+        "titlescreen.tmx",
+        "xmarks.tmx"
     ],
     "project": "breakout.tiled-project",
     "recentFiles": [
-        "intro.tmx",
-        "swdglnd-character.tmx",
-        "leftside.tmx",
-        "mag01.tmx",
-        "split.tmx",
+        "jailbreak2.tmx",
+        "bombrings.tmx",
+        "chainreact.tmx",
+        "getMorGet.tmx",
+        "introenemy.tmx",
+        "lumberjacks.tmx",
+        "m-attack.tmx",
+        "m-battle.tmx",
         "starlite.tmx",
-        "ponglike.tmx",
-        "test.tmx",
-        "level1.tmx",
-        "breakout-tiles.tsx"
-    ],
-    "tileset.lastUsedFormat": "tsx",
-    "tileset.tileSize": {
-        "height": 8,
-        "width": 8
-    }
+        "superhard.tmx",
+        "xmarks.tmx",
+        "titlescreen.tmx"
+    ]
 }
