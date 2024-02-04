@@ -73,7 +73,7 @@ typedef struct
 bool circleCircleIntersection(circle_t circle1, circle_t circle2);
 bool circlePointIntersection(circle_t circle, vec_t point);
 bool circleRectIntersection(circle_t circle, rectangle_t rect);
-bool circleLineIntersection(circle_t circle, line_t line);
+bool circleLineIntersection(circle_t circle, line_t line, vec_t* collisionVec);
 bool rectRectIntersection(rectangle_t rect1, rectangle_t rect2);
 
 #endif
