@@ -107,63 +107,78 @@ bool circleRectIntersection(circle_t circle, rectangle_t rect)
  *
  * @param circle
  * @param line
+ * @param collisionVec
  * @return true
  * @return false
  */
-bool circleLineIntersection(circle_t circle, line_t line)
+bool circleLineIntersection(circle_t circle, line_t line, vec_t* collisionVec)
 {
     // Check for the line ends
     if (circlePointIntersection(circle, line.p1))
     {
+        collisionVec->x = circle.pos.x - line.p1.x;
+        collisionVec->y = circle.pos.y - line.p1.y;
         return true;
     }
     if (circlePointIntersection(circle, line.p2))
     {
+        collisionVec->x = circle.pos.x - line.p2.x;
+        collisionVec->y = circle.pos.y - line.p2.y;
         return true;
     }
 
-    // Get the length of the line, squared
-    vec_t lineLens     = subVec2d(line.p2, line.p1);
-    int32_t lineLenSqr = sqMagVec2d(lineLens);
+    // Get the length of the line
+    vec_t lineLens = subVec2d(line.p2, line.p1);
+    // Find a dot product
+    int32_t dot = dotVec2d(subVec2d(circle.pos, line.p1), lineLens);
+    // Find the closest point on the line to the circle
+    vec_t closestPoint = addVec2d(line.p1, divVec2d(mulVec2d(lineLens, dot), sqMagVec2d(lineLens)));
 
-    int32_t dot = dotVec2d(subVec2d(circle.pos, line.p1), lineLens) / lineLenSqr;
-
-    vec_t closestPoint = addVec2d(line.p1, mulVec2d(lineLens, dot));
-
-    int32_t lMinX;
-    int32_t lMaxX;
+    // To validate a collision, the closest point must be in the bounding box of the line (i.e. on the line)
+    // Create a bounding box for the line
+    line_t bb;
+    // Assign x points
     if (line.p1.x < line.p2.x)
     {
-        lMinX = line.p1.x;
-        lMaxX = line.p2.x;
+        bb.p1.x = line.p1.x;
+        bb.p2.x = line.p2.x;
     }
     else
     {
-        lMinX = line.p2.x;
-        lMaxX = line.p1.x;
+        bb.p1.x = line.p2.x;
+        bb.p2.x = line.p1.x;
     }
 
-    int32_t lMinY;
-    int32_t lMaxY;
+    // Assign the y points
     if (line.p1.y < line.p2.y)
     {
-        lMinY = line.p1.y;
-        lMaxY = line.p2.y;
+        bb.p1.y = line.p1.y;
+        bb.p2.y = line.p2.y;
     }
     else
     {
-        lMinY = line.p2.y;
-        lMaxY = line.p1.y;
+        bb.p1.y = line.p2.y;
+        bb.p2.y = line.p1.y;
     }
 
-    if (closestPoint.x < lMinX || closestPoint.x > lMaxX || closestPoint.y < lMinY || closestPoint.y > lMaxY)
+    // If the closest point is outside the bounding box
+    if (closestPoint.x <= bb.p1.x || closestPoint.x > bb.p2.x || closestPoint.y < bb.p1.y || closestPoint.y > bb.p2.y)
     {
+        // There is no collision
         return false;
     }
 
+    // Get the distance from the circle to the closest point on the line
     vec_t closestDist = subVec2d(closestPoint, circle.pos);
     int32_t distSqr   = sqMagVec2d(closestDist);
     int32_t radiusSqr = circle.radius * circle.radius;
 
-    return distSqr < radiusSqr;
+    // If it's less than the radius, we've got a collision!
+    if (distSqr < radiusSqr)
+    {
+        collisionVec->x = circle.pos.x - closestPoint.x;
+        collisionVec->y = circle.pos.y - closestPoint.y;
+        return true;
+    }
+    return false;
 }
