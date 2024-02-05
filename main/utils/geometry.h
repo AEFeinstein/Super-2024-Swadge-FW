@@ -75,5 +75,7 @@ bool circlePointIntersection(circle_t circle, vec_t point);
 bool circleRectIntersection(circle_t circle, rectangle_t rect);
 bool circleLineIntersection(circle_t circle, line_t line, vec_t* collisionVec);
 bool rectRectIntersection(rectangle_t rect1, rectangle_t rect2);
+bool rectLineIntersection(rectangle_t rect, line_t line);
+bool lineLineIntersection(line_t line1, line_t line2);
 
 #endif

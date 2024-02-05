@@ -3,6 +3,14 @@
 //==============================================================================
 
 #include "mode_pinball.h"
+#include <esp_random.h>
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define US_PER_FRAME   16667
+#define NUM_PARTITIONS 32
 
 //==============================================================================
 // Structs
@@ -13,6 +21,7 @@ typedef struct
     vec_q24_8 pos;
     vec_q24_8 vel; // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
     q24_8 radius;
+    int32_t zoneMask;
     paletteColor_t color;
     bool filled;
 } pbCircle_t;
@@ -21,8 +30,18 @@ typedef struct
 {
     vec_q24_8 p1;
     vec_q24_8 p2;
+    int32_t zoneMask;
     paletteColor_t color;
 } pbLine_t;
+
+typedef struct
+{
+    vec_q24_8 pos; ///< The position the top left corner of the rectangle
+    q24_8 width;   ///< The width of the rectangle
+    q24_8 height;  ///< The height of the rectangle
+    int32_t zoneMask;
+    paletteColor_t color;
+} pbRect_t;
 
 typedef struct
 {
@@ -30,6 +49,7 @@ typedef struct
     pbCircle_t bumper;
     pbLine_t wall;
     int32_t frameTimer;
+    pbRect_t partitions[NUM_PARTITIONS];
 } pinball_t;
 
 //==============================================================================
@@ -43,9 +63,11 @@ static void pinBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h
 
 circle_t intCircle(pbCircle_t pbc);
 line_t intLine(pbLine_t pbl);
+rectangle_t intRect(pbRect_t pbr);
 
 void drawPinCircle(pbCircle_t* c);
 void drawPinLine(pbLine_t* l);
+void drawPinRect(pbRect_t* r);
 
 //==============================================================================
 // Variables
@@ -85,10 +107,11 @@ static void pinEnterMode(void)
 {
     pb = calloc(sizeof(pinball_t), 1);
 
+    // Make some test objects
     pb->ball.pos.x  = TO_FX(10);
     pb->ball.pos.y  = TO_FX((TFT_HEIGHT / 2) - 29);
     pb->ball.radius = TO_FX(10);
-    pb->ball.vel.x  = TO_FX_FRAC(64 * 16667, 1000000);
+    pb->ball.vel.x  = TO_FX_FRAC(64 * US_PER_FRAME, 1000000);
     pb->ball.vel.y  = 0;
     pb->ball.color  = c500;
     pb->ball.filled = true;
@@ -104,6 +127,78 @@ static void pinEnterMode(void)
     pb->wall.p2.x  = TO_FX(400);
     pb->wall.p2.y  = TO_FX(200);
     pb->wall.color = c005;
+
+    // Partition the space into a grid. Start with one big rectangle
+    int32_t splitOffset      = (NUM_PARTITIONS >> 1);
+    pb->partitions[0].pos.x  = 0;
+    pb->partitions[0].pos.y  = 0;
+    pb->partitions[0].width  = TO_FX(TFT_WIDTH);
+    pb->partitions[0].height = TO_FX(TFT_HEIGHT);
+    pb->partitions[0].color  = c505;
+
+    // While more partitioning needs to happen
+    while (splitOffset)
+    {
+        // Iterate over current partitions, back to front
+        for (int32_t i = NUM_PARTITIONS - 1; i >= 0; i--)
+        {
+            // If this is a real partition
+            if (0 < pb->partitions[i].height)
+            {
+                // Split it either vertically or horizontally, depending on which is larger
+                if (pb->partitions[i].height > pb->partitions[i].width)
+                {
+                    // Split vertically
+                    int32_t newHeight_1 = pb->partitions[i].height / 2;
+                    int32_t newHeight_2 = pb->partitions[i].height - newHeight_1;
+
+                    // Shrink the original partition
+                    pb->partitions[i].height = newHeight_1;
+
+                    // Create the new partition
+                    pb->partitions[i + splitOffset].height = newHeight_2;
+                    pb->partitions[i + splitOffset].pos.y  = pb->partitions[i].pos.y + pb->partitions[i].height;
+
+                    pb->partitions[i + splitOffset].width = pb->partitions[i].width;
+                    pb->partitions[i + splitOffset].pos.x = pb->partitions[i].pos.x;
+                }
+                else
+                {
+                    // Split horizontally
+                    int32_t newWidth_1 = pb->partitions[i].width / 2;
+                    int32_t newWidth_2 = pb->partitions[i].width - newWidth_1;
+
+                    // Shrink the original partition
+                    pb->partitions[i].width = newWidth_1;
+
+                    // Create the new partition
+                    pb->partitions[i + splitOffset].width = newWidth_2;
+                    pb->partitions[i + splitOffset].pos.x = pb->partitions[i].pos.x + pb->partitions[i].width;
+
+                    pb->partitions[i + splitOffset].height = pb->partitions[i].height;
+                    pb->partitions[i + splitOffset].pos.y  = pb->partitions[i].pos.y;
+                }
+
+                // Give it a random color, just because
+                pb->partitions[i + splitOffset].color = esp_random() % cTransparent;
+            }
+        }
+
+        // Half the split offset
+        splitOffset /= 2;
+    }
+
+    // Calculate zones for the wall, just as a test
+    // TODO do this for all objects
+    pb->wall.zoneMask = 0;
+    for (int i = 0; i < NUM_PARTITIONS; i++)
+    {
+        rectangle_t zone = intRect(pb->partitions[i]);
+        if (rectLineIntersection(zone, intLine(pb->wall)))
+        {
+            pb->wall.zoneMask |= (1 << i);
+        }
+    }
 }
 
 /**
@@ -123,9 +218,9 @@ static void pinExitMode(void)
 static void pinMainLoop(int64_t elapsedUs)
 {
     pb->frameTimer += elapsedUs;
-    while (pb->frameTimer >= 16667)
+    while (pb->frameTimer >= US_PER_FRAME)
     {
-        pb->frameTimer -= 16667;
+        pb->frameTimer -= US_PER_FRAME;
 
         // Check for collision
         if (circleCircleIntersection(intCircle(pb->ball), intCircle(pb->bumper)))
@@ -162,6 +257,11 @@ static void pinMainLoop(int64_t elapsedUs)
         drawPinCircle(&pb->ball);
         drawPinCircle(&pb->bumper);
         drawPinLine(&pb->wall);
+
+        for (int32_t i = 0; i < NUM_PARTITIONS; i++)
+        {
+            drawPinRect(&pb->partitions[i]);
+        }
     }
 }
 
@@ -214,6 +314,23 @@ line_t intLine(pbLine_t pbl)
 }
 
 /**
+ * @brief
+ *
+ * @param pbr
+ * @return rectangle_t
+ */
+rectangle_t intRect(pbRect_t pbr)
+{
+    rectangle_t nr = {
+        .pos.x  = FROM_FX(pbr.pos.x),
+        .pos.y  = FROM_FX(pbr.pos.y),
+        .width  = FROM_FX(pbr.width),
+        .height = FROM_FX(pbr.height),
+    };
+    return nr;
+}
+
+/**
  * @brief TODO
  *
  * @param c
@@ -238,4 +355,15 @@ void drawPinCircle(pbCircle_t* c)
 void drawPinLine(pbLine_t* l)
 {
     drawLineFast(FROM_FX(l->p1.x), FROM_FX(l->p1.y), FROM_FX(l->p2.x), FROM_FX(l->p2.y), l->color);
+}
+
+/**
+ * @brief
+ *
+ * @param r
+ */
+void drawPinRect(pbRect_t* r)
+{
+    drawRect(FROM_FX(r->pos.x), FROM_FX(r->pos.y), FROM_FX(ADD_FX(r->pos.x, r->width)),
+             FROM_FX(ADD_FX(r->pos.y, r->height)), r->color);
 }

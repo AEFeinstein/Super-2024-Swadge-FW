@@ -182,3 +182,117 @@ bool circleLineIntersection(circle_t circle, line_t line, vec_t* collisionVec)
     }
     return false;
 }
+
+/**
+ * @brief TODO
+ *
+ * Adapted from https://www.jeffreythompson.org/collision-detection/line-line.php
+ *
+ * @param line1
+ * @param line2
+ * @return true
+ * @return false
+ */
+bool lineLineIntersection(line_t line1, line_t line2)
+{
+    int32_t l1_x_diff = line1.p2.x - line1.p1.x;
+    int32_t l1_y_diff = line1.p2.y - line1.p1.y;
+    int32_t l2_x_diff = line2.p2.x - line2.p1.x;
+    int32_t l2_y_diff = line2.p2.y - line2.p1.y;
+
+    int32_t lines_x_diff = line1.p1.x - line2.p1.x;
+    int32_t lines_y_diff = line1.p1.y - line2.p1.y;
+
+    // To check if two lines are touching, we have to calculate the distance to the point of intersection:
+    int32_t uAn = ((l2_x_diff) * (lines_y_diff) - (l2_y_diff) * (lines_x_diff));
+    int32_t uBn = ((l1_x_diff) * (lines_y_diff) - (l1_y_diff) * (lines_x_diff));
+    int32_t uD  = ((l2_y_diff) * (l1_x_diff) - (l2_x_diff) * (l1_y_diff));
+
+    // If there is a collision, uA and uB should both be in the range of 0-1.
+    // Make sure sign bits match
+    if ((0 != (0x80000000 & (uAn ^ uD))) || (0 != (0x80000000 & (uBn ^ uD))))
+    {
+        return false;
+    }
+
+    // Make sure ABS(uAn) <= ABS(uD) (i.e. dividing them is in the range 0-1)
+    if (uAn >= 0)
+    {
+        if (uAn > uD)
+        {
+            return false;
+        }
+    }
+    else if (uAn < uD)
+    {
+        return false;
+    }
+
+    // Make sure ABS(uBn) <= ABS(uD) (i.e. dividing them is in the range 0-1)
+    if (uBn >= 0)
+    {
+        if (uBn > uD)
+        {
+            return false;
+        }
+    }
+    else if (uBn < uD)
+    {
+        return false;
+    }
+
+    // Lines intersect!
+    return true;
+}
+
+/**
+ * @brief TODO
+ *
+ * Adapted from https://www.jeffreythompson.org/collision-detection/line-rect.php
+ *
+ * @param rect
+ * @param line
+ * @return true
+ * @return false
+ */
+bool rectLineIntersection(rectangle_t rect, line_t line)
+{
+    line_t tmpLine;
+
+    // Check top first
+    tmpLine.p1.x = rect.pos.x;
+    tmpLine.p1.y = rect.pos.y;
+    tmpLine.p2.x = rect.pos.x + rect.width;
+    tmpLine.p2.y = rect.pos.y;
+    if (lineLineIntersection(tmpLine, line))
+    {
+        return true;
+    }
+
+    // Check left
+    tmpLine.p1.x = rect.pos.x + rect.width;
+    tmpLine.p1.y = rect.pos.y + rect.height;
+    if (lineLineIntersection(tmpLine, line))
+    {
+        return true;
+    }
+
+    // Check left
+    tmpLine.p2.x = rect.pos.x;
+    tmpLine.p2.y = rect.pos.y + rect.height;
+    if (lineLineIntersection(tmpLine, line))
+    {
+        return true;
+    }
+
+    // Check right
+    tmpLine.p1.x = rect.pos.x;
+    tmpLine.p1.y = rect.pos.y;
+    if (lineLineIntersection(tmpLine, line))
+    {
+        return true;
+    }
+
+    // No intersections
+    return false;
+}
