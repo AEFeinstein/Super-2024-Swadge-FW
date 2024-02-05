@@ -14,11 +14,11 @@
  * - Add pngs for X's and O's
  * - Draw pngs in appropriate spots
  * - Make notification screen
- * - Make ttt logic
  * - Make ttg logic
  * - Add p2p networking
  * - Doxygen comments
  * - Figure out how to automatically style code
+ * - Add ttt to swadge menu
  */
 
 // ===== Includes =====
@@ -64,6 +64,7 @@ typedef struct {
     menuLogbookRenderer_t* mlbr;    // Main Menu renderer object
     int32_t notificationTimer;      // Timer for pop up notifications
     char* notificationMessage;      // Message for notification
+    modes_t prevMode;               // Mode to return to after notification finishes
     bool showScore;                 // If "start" button has been toggled
 
     // Resources
@@ -74,11 +75,13 @@ typedef struct {
     // Gameplay
     players_t currPlayer;           // Active player
     players_t devicePlayer;         // Player using device. For p2p.
+    boardStates_t tokensAssignment[2];  //Which token is assigned too which player 
     p2pInfo opponent;               // Connection details of opponent
     int8_t score[3];                // Scoreboard [P1, P2, draws]
     boardSizes_t size;              // Size of board
     int8_t boardLen;                // Absolute size of the board
     boardStates_t gameboard[25];    // Game board state array
+    int8_t cursorPos;               // Position of the cursor
 
 } internal_state_t;
 
@@ -88,12 +91,21 @@ static void tttEnterMode(void);
 static void tttExitMode(void);
 static void tttMainLoop(int64_t);
 static void tttMenuCB(const char*, bool, uint32_t);
+static void notify(const char*, int16_t);
 static void ttt(void);
+static bool tttCheckForWin(players_t);
+static bool checkGameIsDraw();
+static bool checkRow(boardStates_t, int8_t);
+static bool checkCol(boardStates_t, int8_t);
+static bool checkDiag(boardStates_t);
 static void ttg(void);
 static void connectToPeer(void);
 static void drawCB(int16_t, int16_t, int16_t, int16_t, int16_t, int16_t);
+static void drawBoard(void);
 static void drawTokens(void);
-static void notify(const char*);
+static void drawCursor(int8_t);
+static void drawLine(paletteColor_t, int8_t, int8_t);
+static void displayNotification(void);
 static void displayScore(void);
 
 // ===== Strings =====
@@ -108,13 +120,19 @@ static const char board3x3[] = "3 x 3 game board";
 static const char board4x4[] = "4 x 4 game board";
 static const char board5x5[] = "5 x 5 game board";
 
-// Notifications
+// Notification
 static const char notImplemented[] = "Mode not implemented, sorry.";
 static const char error[] = "Something went horribly wrong.";
 static const char p1notification[] = "You are player 1!";               // Notifications needed for p2p
 static const char p2notification[] = "You are player 2!";               // Notifications needed for p2p
 static const char p1turn[] = "Player 1's turn!";
 static const char p2turn[] = "Player 2's turn!";
+
+// Score
+static const char Score[] = "Scores";
+static const char p1Score[] = "Player 1: ";
+static const char p2Score[] = "Player 2: ";
+static const char drawScore[] = "Draws: ";
 
 // ===== Variables =====
 
@@ -179,11 +197,6 @@ static void tttExitMode(void){
 }
 
 static void tttMainLoop(int64_t elapsedUs){
-    // Timers
-    if (state->notificationTimer > 0){
-        state->currMode = NOTIFICATION;
-        state->notificationTimer = state->notificationTimer - elapsedUs;
-    }
     // Run whatever mode is active
     switch (state->currMode)
     {
@@ -195,7 +208,7 @@ static void tttMainLoop(int64_t elapsedUs){
         drawMenuLogbook(state->menu, state->mlbr, elapsedUs);
         break;
     
-    case GAME1:         // Basic Tic-Tac-Toe
+    case GAME1:         // Tic-Tac-Toe
         ttt();
         break;
     
@@ -207,15 +220,28 @@ static void tttMainLoop(int64_t elapsedUs){
         connectToPeer();
         break;
 
-    case NOTIFICATION:  // Notifying players of something
-        notify(state->notificationMessage);
+    case NOTIFICATION:  // Notifying players of something, don't process anything.
+        displayNotification();
+        if (state->notificationTimer >= 0){
+            state->currMode = state->prevMode;
+        } else {
+            state->notificationTimer -= elapsedUs;
+        }
         break;
 
     case SCORE:         // Display score
+        // Any input will hide scoreboard
+        displayScore();
+        buttonEvt_t evt = {0};
+        while (checkButtonQueueWrapper(&evt)) {
+            if (evt.down){
+                state->currMode == state->prevMode;
+            }
+        }
+        break;
 
     default:
-        state->notificationMessage = error;
-        state->notificationTimer = 3000;
+        notify(error, 3000000);
         break;
     }
 }
@@ -247,6 +273,13 @@ static void tttMenuCB(const char* label, bool selected, uint32_t settingVal){
     }
 }
 
+static void notify(const char* message, int16_t duration){
+    state->notificationMessage = message;
+    state->notificationTimer = duration;
+    state->prevMode = state->currMode;
+    state->currMode = NOTIFICATION;
+}
+
 // TicTacToe
 /* Rules:
     - 3x3 Grid starts fully empty
@@ -260,9 +293,98 @@ static void ttt(void){
         return;
     }
     // Game logic
-
+    // Start by checking if anyone has won.
+    bool player1Result = tttCheckForWin(PLAYER1);
+    bool player2Result = tttCheckForWin(PLAYER2);
+    bool isADraw = checkGameIsDraw();
+    if(player1Result || player2Result || isADraw){
+        state->currMode = SCORE;
+        state->prevMode = GAME1;
+    } else {
+        // Game is still being played
+        // TODO: Get input
+        // TODO: move cursor if local or active player
+        // TODO: add token to board at position if "A" is pressed.
+        // TODO: If start button is pressed, return to menu
+    }
     // Draw
+    drawBoard();
     drawTokens();
+    drawCursor(state->cursorPos);
+}
+
+static bool tttCheckForWin(players_t currPlayer){
+    // Get appropriate token for player
+    boardStates_t token = state->tokensAssignment[currPlayer];
+    bool result = false;
+    // Check for a win
+    for (int8_t size = 0; size < state->size; size++){
+        result |= CheckRow(token, size);
+        result |= CheckCol(token, size);
+    }
+    result |= CheckDiag(token);
+    return result;
+}
+
+static bool checkGameIsDraw(){
+    for (int8_t len = 0; len < state->boardLen; len++){
+        if (state->gameboard[len] == EMPTY){
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool checkRow(boardStates_t player, int8_t row){
+    int8_t qty = 0;
+    for (int8_t len = 0; len < state->size; len++){
+        if (state->gameboard[(row * state->size) + len] == player){
+            qty += 1;
+        }
+    }
+    if (qty == state->size){
+        drawLine(c030, row * state->size, row * state->size + (state->size - 1));
+        return true;
+    }
+    return false;
+}
+
+static bool checkCol(boardStates_t player, int8_t col){
+    int8_t qty = 0;
+    for (int8_t len = 0; len < state->size; len++){
+        if (state->gameboard[(state->size * len) + col] == player){
+            qty += 1;
+        }
+    }
+    if (qty == state->size){
+        drawLine(c030, col, state->size * (state->size - 1) + col);
+        return true;
+    }
+    return false;
+}
+
+static bool checkDiag(boardStates_t player){
+    // Check top-left to bottom right
+    int8_t qty = 0;
+    for (int8_t len = 0; len < state->size; len++){
+        if (state->gameboard[(state->size * len) + len] == player){
+            qty += 1;
+        }
+    }
+    if (qty == state->size){
+        return true;
+    }
+    // Check top-right to bottom left
+    qty = 0;
+    for (int8_t len = 0; len < state->size; len++){
+        if (state->gameboard[(state->size * len) + (state->size - 1 - len)] == player){
+            qty += 1;
+        }
+    }
+    if (qty == state->size){
+        return true;
+    }
+    return false;
 }
 
 // TicTacGo
@@ -276,25 +398,23 @@ static void ttt(void){
     - Home row is excluded from the valid options for each player
 */
 static void ttg(void){
-    if (state->notificationTimer > 0){
-        notify(state->notificationMessage);
-        return;
-    }
-    // Game logic
-    
-    // Draw
-    drawTokens();
+    notify(notImplemented, 3000000);
 }
 
 // Connect to peer
 
 static void connectToPeer(void){
     //TODO: Add p2p connection waiting room and dialogue
+    notify(notImplemented, 3000000);
 }
 
 // Drawing functions
 
+// TODO: Visuals
+
 static void drawCB(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum){
+    //FIXME: This just draws a 3x3 grid int he background
+    
     SETUP_FOR_TURBO();
     // Precompute
     int16_t one_third_h = h / 3;
@@ -316,8 +436,12 @@ static void drawCB(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16
     }
 }
 
-// Currently assuming top corner 
-static void drawTokens(){
+static void drawBoard(void){
+    // Draw board based on size
+    // Draw active player string
+}
+
+static void drawTokens(void){
     for (int8_t pos = 0; pos < state->boardLen; pos++){
         int8_t xPos = pos / state->size;
         int8_t yPos = pos % state->size;
@@ -325,7 +449,15 @@ static void drawTokens(){
     }
 }
 
-static void notify(const char* message){
+static void drawCursor(int8_t arrPos){
+
+}
+
+static void drawLine(paletteColor_t color, int8_t arrPosStart, int8_t arrPosEnd){
+
+}
+
+static void displayNotification(void){
     //TODO: Add notifications screen
 }
 
