@@ -63,14 +63,14 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 1. Run the following commands, depending on your package manager, to install all necessary packages:
     * `apt`:
         ```bash
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 clang-format cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov
         ```
     * `dnf`:
         ```bash
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
-        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov
+        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov
         ```
-2. Install doxygen separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.10.0 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs doxygen like this:
+2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.10.0 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:
     ```bash
     wget -q -P ~ https://www.doxygen.nl/files/doxygen-1.10.0.linux.bin.tar.gz
     tar -xf ~/doxygen-1.10.0.linux.bin.tar.gz -C ~
@@ -83,7 +83,14 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     ```bash
     sudo apt remove doxygen
     ```
-3. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+3. Install `clang-17` and `clang-format-17` separately. Note that the version used in this project is currently 17 and the version in many package managers is less than that.
+    ```bash
+    wget https://apt.llvm.org/llvm.sh
+    chmod u+x llvm.sh
+    sudo ./llvm.sh 17
+    sudo apt install clang-format-17
+    ```
+4. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
     git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
