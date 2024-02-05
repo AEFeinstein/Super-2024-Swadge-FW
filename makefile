@@ -30,6 +30,12 @@ ifeq ($(HOST_OS),Windows)
 	FIND:=$(shell cygpath `where find | grep bin | grep -v " "`)
 endif
 
+# clang-format may actually be clang-format-17
+CLANG_FORMAT:=clang-format
+ifeq (, $(shell which $(CLANG_FORMAT)))
+	CLANG_FORMAT:=clang-format-17
+endif
+
 ################################################################################
 # Source Files
 ################################################################################
@@ -287,7 +293,7 @@ docs:
 	doxygen ./Doxyfile
 
 format:
-	clang-format -i -style=file $(ALL_FILES)
+	$(CLANG_FORMAT) -i -style=file $(ALL_FILES)
 
 ################################################################################
 # Firmware targets
