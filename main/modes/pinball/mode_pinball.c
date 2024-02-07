@@ -21,16 +21,17 @@ typedef struct
     vec_q24_8 pos;
     vec_q24_8 vel; // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
     q24_8 radius;
-    int32_t zoneMask;
+    uint32_t zoneMask;
     paletteColor_t color;
     bool filled;
+    void* touching;
 } pbCircle_t;
 
 typedef struct
 {
     vec_q24_8 p1;
     vec_q24_8 p2;
-    int32_t zoneMask;
+    uint32_t zoneMask;
     paletteColor_t color;
 } pbLine_t;
 
@@ -39,15 +40,15 @@ typedef struct
     vec_q24_8 pos; ///< The position the top left corner of the rectangle
     q24_8 width;   ///< The width of the rectangle
     q24_8 height;  ///< The height of the rectangle
-    int32_t zoneMask;
+    uint32_t zoneMask;
     paletteColor_t color;
 } pbRect_t;
 
 typedef struct
 {
-    pbCircle_t ball;
+    list_t balls;
+    list_t walls;
     pbCircle_t bumper;
-    pbLine_t wall;
     int32_t frameTimer;
     pbRect_t partitions[NUM_PARTITIONS];
 } pinball_t;
@@ -105,28 +106,11 @@ pinball_t* pb;
  */
 static void pinEnterMode(void)
 {
+    // Make it fast
+    setFrameRateUs(US_PER_FRAME);
+
+    // Allocate all the memory
     pb = calloc(sizeof(pinball_t), 1);
-
-    // Make some test objects
-    pb->ball.pos.x  = TO_FX(10);
-    pb->ball.pos.y  = TO_FX((TFT_HEIGHT / 2) - 29);
-    pb->ball.radius = TO_FX(10);
-    pb->ball.vel.x  = TO_FX_FRAC(64 * US_PER_FRAME, 1000000);
-    pb->ball.vel.y  = 0;
-    pb->ball.color  = c500;
-    pb->ball.filled = true;
-
-    pb->bumper.pos.x  = TO_FX(240);
-    pb->bumper.pos.y  = TO_FX(3 * TFT_HEIGHT / 4);
-    pb->bumper.radius = TO_FX(20);
-    pb->bumper.color  = c050;
-    pb->bumper.filled = false;
-
-    pb->wall.p1.x  = TO_FX(20);
-    pb->wall.p1.y  = TO_FX(20);
-    pb->wall.p2.x  = TO_FX(400);
-    pb->wall.p2.y  = TO_FX(200);
-    pb->wall.color = c005;
 
     // Partition the space into a grid. Start with one big rectangle
     int32_t splitOffset      = (NUM_PARTITIONS >> 1);
@@ -188,16 +172,102 @@ static void pinEnterMode(void)
         splitOffset /= 2;
     }
 
-    // Calculate zones for the wall, just as a test
-    // TODO do this for all objects
-    pb->wall.zoneMask = 0;
-    for (int i = 0; i < NUM_PARTITIONS; i++)
+    // Make some balls
+    for (int32_t i = 0; i < 3; i++)
     {
-        rectangle_t zone = intRect(pb->partitions[i]);
-        if (rectLineIntersection(zone, intLine(pb->wall)))
+        pbCircle_t* ball = calloc(1, sizeof(pbCircle_t));
+        ball->pos.x      = TO_FX(6);
+        ball->pos.y      = TO_FX(100 + i * 40);
+        ball->radius     = TO_FX(5);
+        ball->vel.x      = TO_FX_FRAC(64 * US_PER_FRAME, 1000000);
+        ball->vel.y      = TO_FX_FRAC(64 * US_PER_FRAME, 2000000);
+        ball->color      = c500;
+        ball->filled     = true;
+        push(&pb->balls, ball);
+    }
+
+    // pb->bumper.pos.x  = TO_FX(240);
+    // pb->bumper.pos.y  = TO_FX(3 * TFT_HEIGHT / 4);
+    // pb->bumper.radius = TO_FX(20);
+    // pb->bumper.color  = c050;
+    // pb->bumper.filled = false;
+
+    // Create a boundary
+    line_t corners[] = {
         {
-            pb->wall.zoneMask |= (1 << i);
+            .p1 = {.x = TO_FX(0), .y = TO_FX(0)},
+            .p2 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(0)},
+        },
+        {
+            .p1 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(0)},
+            .p2 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(TFT_HEIGHT - 1)},
+        },
+        {
+            .p1 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(TFT_HEIGHT - 1)},
+            .p2 = {.x = TO_FX(0), .y = TO_FX(TFT_HEIGHT - 1)},
+        },
+        {
+            .p1 = {.x = TO_FX(0), .y = TO_FX(TFT_HEIGHT - 1)},
+            .p2 = {.x = TO_FX(0), .y = TO_FX(0)},
+        },
+    };
+
+    for (int32_t i = 0; i < ARRAY_SIZE(corners); i++)
+    {
+        pbLine_t* pbl = calloc(1, sizeof(pbLine_t));
+        pbl->p1.x     = corners[i].p1.x;
+        pbl->p1.y     = corners[i].p1.y;
+        pbl->p2.x     = corners[i].p2.x;
+        pbl->p2.y     = corners[i].p2.y;
+        pbl->color    = c555;
+
+        pbl->zoneMask = 0;
+        for (int p = 0; p < NUM_PARTITIONS; p++)
+        {
+            if (rectLineIntersection(intRect(pb->partitions[p]), intLine(*pbl)))
+            {
+                pbl->zoneMask |= (1 << p);
+            }
         }
+
+        push(&pb->walls, pbl);
+    }
+
+    // Make a bunch of random lines
+    for (int32_t nl = 0; nl < 100; nl++)
+    {
+        pbLine_t* pbl = calloc(1, sizeof(pbLine_t));
+
+#define LLEN 12
+
+        pbl->p1.x  = TO_FX(LLEN + (esp_random() % (TFT_WIDTH - (LLEN * 2))));
+        pbl->p1.y  = TO_FX(LLEN + (esp_random() % (TFT_HEIGHT - (LLEN * 2))));
+        pbl->p2.x  = ADD_FX(pbl->p1.x, TO_FX((esp_random() % (LLEN * 2)) - LLEN));
+        pbl->p2.y  = ADD_FX(pbl->p1.y, TO_FX((esp_random() % (LLEN * 2)) - LLEN));
+        pbl->color = esp_random() % cTransparent;
+
+        if (pbl->p1.x == pbl->p2.x && pbl->p1.y == pbl->p2.y)
+        {
+            if (esp_random() % 2)
+            {
+                pbl->p2.x = ADD_FX(pbl->p2.x, TO_FX(1));
+            }
+            else
+            {
+                pbl->p2.y = ADD_FX(pbl->p2.y, TO_FX(1));
+            }
+        }
+
+        pbl->zoneMask = 0;
+        for (int p = 0; p < NUM_PARTITIONS; p++)
+        {
+            if (rectLineIntersection(intRect(pb->partitions[p]), intLine(*pbl)))
+            {
+                pbl->zoneMask |= (1 << p);
+            }
+        }
+
+        push(&pb->walls, pbl);
     }
 }
 
@@ -222,46 +292,123 @@ static void pinMainLoop(int64_t elapsedUs)
     {
         pb->frameTimer -= US_PER_FRAME;
 
-        // Check for collision
-        if (circleCircleIntersection(intCircle(pb->ball), intCircle(pb->bumper)))
+        // Iterate over all balls
+        node_t* ballNode = pb->balls.first;
+        while (ballNode != NULL)
         {
-            // Reflect the velocity vector along the normal between the two radii
-            // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-            vec_q24_8 centerToCenter = {
-                .x = pb->ball.pos.x - pb->bumper.pos.x,
-                .y = pb->ball.pos.y - pb->bumper.pos.y,
-            };
-            vec_q24_8 reflVec = fpvNorm(centerToCenter);
-            pb->ball.vel      = fpvSub(pb->ball.vel, fpvMulSc(reflVec, (2 * fpvDot(pb->ball.vel, reflVec))));
-        }
+            pbCircle_t* ball = (pbCircle_t*)ballNode->val;
 
-        vec_t collisionVec;
-        static bool once = true; // TODO fix this to not multi-intersect
-        if (once && circleLineIntersection(intCircle(pb->ball), intLine(pb->wall), &collisionVec))
-        {
-            once                     = false;
-            vec_q24_8 centerToCenter = {
-                .x = collisionVec.x,
-                .y = collisionVec.y,
-            };
-            vec_q24_8 reflVec = fpvNorm(centerToCenter);
-            pb->ball.vel      = fpvSub(pb->ball.vel, fpvMulSc(reflVec, (2 * fpvDot(pb->ball.vel, reflVec))));
-        }
+            // Figure out which zones the ball is in
+            uint32_t ballZoneMask = 0;
+            for (int p = 0; p < NUM_PARTITIONS; p++)
+            {
+                if (circleRectIntersection(intCircle(*ball), intRect(pb->partitions[p])))
+                {
+                    ballZoneMask |= (1 << p);
+                }
+            }
 
-        // Move the ball
-        pb->ball.pos.x += (pb->ball.vel.x);
-        pb->ball.pos.y += (pb->ball.vel.y);
+            // if (ballZoneMask & pb->bumper.zoneMask)
+            // {
+            //     // Check for collision
+            //     if (circleCircleIntersection(intCircle(*ball), intCircle(pb->bumper)))
+            //     {
+            //         // Reflect the velocity vector along the normal between the two radii
+            //         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+            //         vec_q24_8 centerToCenter = {
+            //             .x = ball->pos.x - pb->bumper.pos.x,
+            //             .y = ball->pos.y - pb->bumper.pos.y,
+            //         };
+            //         vec_q24_8 reflVec = fpvNorm(centerToCenter);
+            //         ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
+            //     }
+            // }
+
+            // Iterate over all walls
+            node_t* wallNode = pb->walls.first;
+            while (wallNode != NULL)
+            {
+                // Check collision
+                pbLine_t* wall = (pbLine_t*)wallNode->val;
+
+                // If the ball is already touching this wall
+                if (ball->touching == wall)
+                {
+                    // Check to see if it's not touching anymore
+                    vec_t collisionVec;
+                    if (0 == (ballZoneMask & wall->zoneMask))
+                    {
+                        ball->touching = NULL;
+                    }
+                    else if (!circleLineIntersection(intCircle(*ball), intLine(*wall), &collisionVec))
+                    {
+                        ball->touching = NULL;
+                    }
+                }
+                else // Ball is not touching this wall already
+                {
+                    // Quick zone check
+                    if (ballZoneMask & wall->zoneMask)
+                    {
+                        // In the same zone, do a slower intersection check
+                        vec_t collisionVec;
+                        if (circleLineIntersection(intCircle(*ball), intLine(*wall), &collisionVec))
+                        {
+                            // Collision detected, do some physics
+                            vec_q24_8 centerToCenter = {
+                                .x = collisionVec.x,
+                                .y = collisionVec.y,
+                            };
+                            vec_q24_8 reflVec = fpvNorm(centerToCenter);
+                            ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
+
+                            // Mark this wall as being touched
+                            ball->touching = wall;
+
+                            // Stop iterating
+                            wallNode = NULL;
+                        }
+                    }
+                }
+
+                // Iterate
+                if (NULL != wallNode)
+                {
+                    wallNode = wallNode->next;
+                }
+            }
+
+            // Move the ball
+            ball->pos.x += (ball->vel.x);
+            ball->pos.y += (ball->vel.y);
+
+            // Iterate
+            ballNode = ballNode->next;
+        }
 
         // Draw Stuff
         clearPxTft();
-        drawPinCircle(&pb->ball);
-        drawPinCircle(&pb->bumper);
-        drawPinLine(&pb->wall);
 
-        for (int32_t i = 0; i < NUM_PARTITIONS; i++)
+        ballNode = pb->balls.first;
+        while (ballNode != NULL)
         {
-            drawPinRect(&pb->partitions[i]);
+            drawPinCircle((pbCircle_t*)ballNode->val);
+            ballNode = ballNode->next;
         }
+
+        // drawPinCircle(&pb->bumper);
+
+        node_t* wallNode = pb->walls.first;
+        while (wallNode != NULL)
+        {
+            drawPinLine((pbLine_t*)wallNode->val);
+            wallNode = wallNode->next;
+        }
+
+        // for (int32_t i = 0; i < NUM_PARTITIONS; i++)
+        // {
+        //     drawPinRect(&pb->partitions[i]);
+        // }
     }
 }
 

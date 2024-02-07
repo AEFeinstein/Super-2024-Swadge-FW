@@ -162,7 +162,7 @@ bool circleLineIntersection(circle_t circle, line_t line, vec_t* collisionVec)
     }
 
     // If the closest point is outside the bounding box
-    if (closestPoint.x <= bb.p1.x || closestPoint.x > bb.p2.x || closestPoint.y < bb.p1.y || closestPoint.y > bb.p2.y)
+    if (closestPoint.x < bb.p1.x || closestPoint.x > bb.p2.x || closestPoint.y < bb.p1.y || closestPoint.y > bb.p2.y)
     {
         // There is no collision
         return false;
@@ -257,6 +257,22 @@ bool lineLineIntersection(line_t line1, line_t line2)
  */
 bool rectLineIntersection(rectangle_t rect, line_t line)
 {
+    // Check if the line is entirely within the rectangle
+    if ((rect.pos.x <= line.p1.x) && (line.p1.x <= (rect.pos.x + rect.width)))
+    {
+        if ((rect.pos.y <= line.p1.y) && (line.p1.y <= (rect.pos.y + rect.height)))
+        {
+            if ((rect.pos.x <= line.p2.x) && (line.p2.x <= (rect.pos.x + rect.width)))
+            {
+                if ((rect.pos.y <= line.p2.y) && (line.p2.y <= (rect.pos.y + rect.height)))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+
+    // Otherwise check if the line intersects each of the four sides of the rectangle
     line_t tmpLine;
 
     // Check top first
