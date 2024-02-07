@@ -95,6 +95,7 @@ idf_component_register(SRCS "swadge2024.c"
                             "modes/timer/modeTimer.c"
                             "modes/touchTest/touchTest.c"
                             "modes/tunernome/tunernome.c"
+                            "modes/TicTacToe/TicTacToe.c"
                             "utils/color_utils.c"
                             "utils/dialogBox.c"
                             "utils/geometry.c"
@@ -152,7 +153,8 @@ idf_component_register(SRCS "swadge2024.c"
                                 "./modes/touchTest"
                                 "./modes/tunernome"
                                 "./modes/demo"
-                                "./modes/quickSettings")
+                                "./modes/quickSettings"
+                                "./modes/TicTacToe")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL
