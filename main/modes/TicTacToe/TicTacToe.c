@@ -20,9 +20,9 @@
 
 /*
  * Main Tasks
- * - Add pngs for X's and O's
- * - Add pause between rounds
- * - Doxygen comments
+ * - Add pngs for X's and O's, make graphic prettier
+ * - Add pause between rounds where you can see the final result
+ * - Add "Are you sure you want to quit?" menu
  * - Sound
  * - Make ttg logic
  * - Add p2p networking
@@ -189,6 +189,10 @@ internal_state_t* state = NULL;
 // ===== Functions =====
 
 // Main funcs
+/**
+ * @brief Initialization step for the TTT Mode
+ * 
+ */
 static void tttEnterMode(void)
 {
     // Initialize state struct
@@ -219,6 +223,10 @@ static void tttEnterMode(void)
     state->currMode   = MENU;
 }
 
+/**
+ * @brief Destructor for TTT Mode.
+ * 
+ */
 static void tttExitMode(void)
 {
     // Free assets
@@ -230,6 +238,11 @@ static void tttExitMode(void)
     free(state);
 }
 
+/**
+ * @brief Main loop of the TTT Mode. COntains logic to switch between games, settings, and connect to a peer.
+ * 
+ * @param elapsedUs Microseconds since last loop.
+ */
 static void tttMainLoop(int64_t elapsedUs)
 {
     // Run whatever mode is active
@@ -285,6 +298,13 @@ static void tttMainLoop(int64_t elapsedUs)
 
 // Menu funcs
 
+/**
+ * @brief Main menu callback that describes button behavior.
+ * 
+ * @param label Label of menu item in focus
+ * @param selected If the item was selected or not, used to ignore navigation inputs
+ * @param settingVal Value of the setting being changed
+ */
 static void tttMenuCB(const char* label, bool selected, uint32_t settingVal)
 {
     if (selected)
@@ -302,10 +322,6 @@ static void tttMenuCB(const char* label, bool selected, uint32_t settingVal)
         else if (label == p2p)
         {
             state->currMode = CONNECTING;
-        }
-        else if (label == boardSize)
-        {
-            // Do nothing? Should let you pick board sizes
         }
         else if (label == board3x3)
         {
@@ -325,6 +341,11 @@ static void tttMenuCB(const char* label, bool selected, uint32_t settingVal)
     }
 }
 
+/**
+ * @brief Initializes the game board size when changed.
+ * 
+ * @param sz New size of the game board.
+ */
 static void tttSetupGameboardSize(char sz)
 {
     state->size     = sz;
@@ -332,6 +353,12 @@ static void tttSetupGameboardSize(char sz)
     state->boxSize  = usableBoardSpaceV / state->size;
 }
 
+/**
+ * @brief Causes a notification event, brining up a message and halting all other actions.
+ * 
+ * @param message The message content to print on screen.
+ * @param duration The length of time in milliseconds for the message to remain on screen.
+ */
 static void notify(const char* message, int32_t duration)
 {
     state->notificationMessage = message;
@@ -343,11 +370,17 @@ static void notify(const char* message, int32_t duration)
 
 // TicTacToe
 /* Rules:
-    - 3x3 Grid starts fully empty
+    - Grid starts fully empty, set to either 3x3, 4x4, or 5x5.
     - Each player must add one piece to an empty space on their turn
-    - When three in a row is acheived, that player scores a win
+    - When three, four or five in a row is achieved, that player scores a win
     - If board is filled, the result is a draw
+    - Once the game ends, a new game is automatically started.
 */
+
+/**
+ * @brief Main TicTacToe game. Contains the control logic, draw commands, and checks the board for a winner.
+ * 
+ */
 static void ttt(void)
 {
     // Start by checking if anyone has won.
@@ -434,6 +467,10 @@ static void ttt(void)
     drawCursor(state->cursorPos);
 }
 
+/**
+ * @brief Initializes the TicTacToe game by making the loser go first with X's and then clearing the game board.
+ * 
+ */
 static void tttSetup(void)
 {
     // Set other player to go first
@@ -454,6 +491,12 @@ static void tttSetup(void)
     }
 }
 
+/**
+ * @brief Adds a token for the currently active player to the game board as long as the space is empty.
+ * 
+ * @param currPlayer Active player who selected the position to play
+ * @param pos Position being played
+ */
 static void addToken(players_t currPlayer, int8_t pos)
 {
     boardStates_t activeToken = EMPTY;
@@ -479,6 +522,13 @@ static void addToken(players_t currPlayer, int8_t pos)
     }
 }
 
+/**
+ * @brief Checks if the indicated player has won.
+ * 
+ * @param currPlayer Player that the funstion is checking against
+ * @return true if the player has a win codition
+ * @return false if the player does not have a win condition
+ */
 static bool tttCheckForWin(players_t currPlayer)
 {
     // Get appropriate token for player
@@ -494,6 +544,12 @@ static bool tttCheckForWin(players_t currPlayer)
     return result;
 }
 
+/**
+ * @brief Checks if he game has come to a draw
+ * 
+ * @return true if the game board is filled
+ * @return false if there are empty spots left to play
+ */
 static bool checkGameIsDraw()
 {
     for (int8_t len = 0; len < state->boardLen; len++)
@@ -507,12 +563,20 @@ static bool checkGameIsDraw()
     return true;
 }
 
-static bool checkRow(boardStates_t player, int8_t row)
+/**
+ * @brief Checks a specific row for a full row of the given token.
+ * 
+ * @param token The token to check
+ * @param row The specific row to be checked
+ * @return true is all tokens are the indicated type
+ * @return false otherwise
+ */
+static bool checkRow(boardStates_t token, int8_t row)
 {
     int8_t qty = 0;
     for (int8_t len = 0; len < state->size; len++)
     {
-        if (state->gameboard[(row * state->size) + len] == player)
+        if (state->gameboard[(row * state->size) + len] == token)
         {
             qty += 1;
         }
@@ -525,7 +589,15 @@ static bool checkRow(boardStates_t player, int8_t row)
     return false;
 }
 
-static bool checkCol(boardStates_t player, int8_t col)
+/**
+ * @brief Checks a specific column for a full column of the given token.
+ * 
+ * @param token The token to check
+ * @param col The specific column to be checked
+ * @return true is all tokens are the indicated type
+ * @return false otherwise
+ */
+static bool checkCol(boardStates_t token, int8_t col)
 {
     int8_t qty = 0;
     for (int8_t len = 0; len < state->size; len++)
@@ -543,7 +615,14 @@ static bool checkCol(boardStates_t player, int8_t col)
     return false;
 }
 
-static bool checkDiag(boardStates_t player)
+/**
+ * @brief Checks the diagonals of the grid for a full line
+ * 
+ * @param token Token to check against
+ * @return true if either diagonal contains only the indicated token
+ * @return false otherwise
+ */
+static bool checkDiag(boardStates_t token)
 {
     // Check top-left to bottom right
     int8_t qty = 0;
@@ -602,6 +681,16 @@ static void connectToPeer(void)
 
 // Drawing functions
 
+/**
+ * @brief Background callback.
+ * 
+ * @param x X offset
+ * @param y Y offset
+ * @param w Width of the screen
+ * @param h Height of the screen
+ * @param up ?
+ * @param upNum ? 
+ */
 static void drawCB(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     SETUP_FOR_TURBO();
@@ -615,6 +704,10 @@ static void drawCB(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16
     }
 }
 
+/**
+ * @brief Draws the game board depending on the size set up.
+ * 
+ */
 static void drawBoard(void)
 {
     // Draw board based on size
@@ -638,6 +731,10 @@ static void drawBoard(void)
     }
 }
 
+/**
+ * @brief Draws all tokens and the cursor
+ * 
+ */
 static void drawTokens(void)
 {
     // Draw tokens
@@ -656,6 +753,12 @@ static void drawTokens(void)
     }
 }
 
+/**
+ * @brief Draws the X tokens.
+ * 
+ * @param xPos Position in the visible grid (non-pixel) in the X direction
+ * @param yPos Position in the visible grid (non-pixel) in the Y direction
+ */
 static void drawXToken(int16_t xPos, int16_t yPos)
 {
     // Red X
@@ -667,6 +770,12 @@ static void drawXToken(int16_t xPos, int16_t yPos)
                  c500);
 }
 
+/**
+ * @brief Draws the O token
+ * 
+ * @param xPos Position in the visible grid (non-pixel) in the X direction
+ * @param yPos Position in the visible grid (non-pixel) in the Y direction
+ */
 static void drawOToken(int16_t xPos, int16_t yPos)
 {
     // Blue circle
@@ -674,6 +783,11 @@ static void drawOToken(int16_t xPos, int16_t yPos)
                yPos * state->boxSize + BORDER + state->boxSize / 2, (state->boxSize / 2) - 5, c005);
 }
 
+/**
+ * @brief Draws the cursor given a position along the gameboard state.
+ * 
+ * @param pos Position insdie the gameboard
+ */
 static void drawCursor(int8_t pos)
 {
     // Green Box
@@ -684,6 +798,13 @@ static void drawCursor(int8_t pos)
              yPos * state->boxSize + (BORDER + state->boxSize - 5), c050);
 }
 
+/**
+ * @brief Draws a line given two indices in the gameboard array.
+ * 
+ * @param color Color of the line to draw
+ * @param arrPosStart Start indice
+ * @param arrPosEnd End indice
+ */
 static void drawLineFromArray(paletteColor_t color, int8_t arrPosStart, int8_t arrPosEnd)
 {
     int8_t x1Pos = arrPosStart / state->size;
@@ -696,11 +817,19 @@ static void drawLineFromArray(paletteColor_t color, int8_t arrPosStart, int8_t a
                  y2Pos * state->boxSize + (BORDER + state->boxSize / 2), color);
 }
 
+/**
+ * @brief Displays a single line of text and block out whatever's behind it for this frame.
+ * 
+ */
 static void displayNotification(void)
 {
     drawText(&state->mainFont, c555, state->notificationMessage, 35, 120);
 }
 
+/**
+ * @brief Draws the scores to the screen.
+ * 
+ */
 static void displayScore(void)
 {
     drawText(&state->mainFont, c555, Score, 5, 25);
@@ -709,6 +838,15 @@ static void displayScore(void)
     printScore(c555, drawScore, state->score[2], 5, 85);
 }
 
+/**
+ * @brief Prints a string and a single number after it. Useful for provding variables to the user, such as score info.
+ * 
+ * @param color Color of the text
+ * @param text Text to be displayed
+ * @param val Integer value to display (max int32_t)
+ * @param xPos Position in the visible grid (non-pixel) in the X direction
+ * @param yPos Position in the visible grid (non-pixel) in the Y direction
+ */
 static void printScore(paletteColor_t color, const char* text, int32_t val, int16_t xPos, int16_t yPos)
 {
     char scoreStr[16];
