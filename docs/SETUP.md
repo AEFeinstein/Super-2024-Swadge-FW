@@ -85,15 +85,20 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 1. Install [Homebrew](https://brew.sh/)
 2. Run the following command to install all necessary dependencies:
     ```bash
-    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen
+    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen cmake
     ```
-3. Before running the simulator on your machine, you need to start pulseaudio like so:
+3. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+    ```bash
+    git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    ~/esp/esp-idf/install.sh
+    ```
+4. Before running the simulator on your machine, you need to start pulseaudio like so:
     ```bash
     brew services start pulseaudio
     ```
-    You can stop it by running `brew services start pulseaudio` when you are done.
-
-When running on macOS, you will need to run the emulator through the xQuartz terminal instead. Building the firmware directly is also not supported fully yet at this time.
+    You can stop it by running `brew services stop pulseaudio` when you are done.
+    
+When running on MacOS, you will need to run the emulator and all build tasks through the xQuartz terminal instead of zsh.
 
 ## Building and Flashing Firmware
 
@@ -113,6 +118,7 @@ When running on macOS, you will need to run the emulator through the xQuartz ter
     ```powershell
     idf.py -p COM8 -b 2000000 build flash
     ```
+      - For Linux and MacOS, use /dev/tty\[devicename] and /dev/cu.\[devicename]
 4. Automatic Flashing
     1. Once the Swadge is plugged in and powered on, run this single command which will build the firmware, reboot the Swadge into bootloader mode, flash the firmware, reboot the Swadge again, and open up a serial terminal for debug output.
     ```bash
