@@ -14,6 +14,6 @@
 
 #include "swadge2024.h"
 
-extern swadgeMode_t ticTacToe;
+extern swadgeMode_t ticTacMode;
 
 #endif

@@ -26,7 +26,7 @@
 #include "touchTest.h"
 #include "tunernome.h"
 #include "mode_credits.h"
-#include "TicTacToe.h"
+#include "ticTacToe.h"
 
 #include "settingsManager.h"
 
@@ -157,7 +157,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
     addSingleItemToMenu(mainMenu->menu, flightMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modePlatformer.modeName);
-    addSingleItemToMenu(mainMenu->menu, ticTacToe.modeName);
+    addSingleItemToMenu(mainMenu->menu, ticTacMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -412,9 +412,9 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&modeCredits);
         }
-        else if (label == ticTacToe.modeName)
+        else if (label == ticTacMode.modeName)
         {
-            switchToSwadgeMode(&ticTacToe);
+            switchToSwadgeMode(&ticTacMode);
         }
     }
     else

@@ -20,17 +20,11 @@
 
 /*
  * Main Tasks
- * - Add pngs for X's and O's / Draw in place
- * - Scale grid to state->size
- * - include buffer for some text at the top
- * - Draw tokens to grid
- * - Draw a cursor
- * - Make notification screen
- * - Make score screen
+ * - Add pngs for X's and O's 
+ * - Add pause between rounds
  * - Doxygen comments
  * - Figure out how to automatically style code
  * - Fix case and style of vars, funcs, etc
- * - Add ttt to swadge menu
  * - Sound
  * - Make ttg logic
  * - Add p2p networking
@@ -38,19 +32,19 @@
 
 // ===== Includes =====
 
-#include "TicTacToe.h"
+#include "ticTacToe.h"
 
 // ===== Defines =====
 
 #define V_SCREEN_SIZE 240
-#define H_SCREEN_SIZE 320
+#define H_SCREEN_SIZE 280
 #define BORDER 20
-#define NOTIFICATION_DURATION 3000000
+#define NOTIFICATION_DURATION 1500
 
 // ===== Constants =====
 
 const int16_t usableBoardSpaceV = V_SCREEN_SIZE - (2 * BORDER);
-const int16_t boardStartH = (H_SCREEN_SIZE / 2) - (usableBoardSpaceV / 2); //FIXME: Assumes H pixels are greater than V pixels. Safe assumption, but an assumption.
+const int16_t boardStartH = (H_SCREEN_SIZE / 2) - (usableBoardSpaceV / 2);
 
 // ===== Enums =====
 
@@ -87,10 +81,11 @@ typedef struct {
     modes_t currMode;               // Which screen is active
     menu_t* menu;                   // Main menu object
     menuLogbookRenderer_t* mlbr;    // Main Menu renderer object
-    int32_t notificationTimer;      // Timer for pop up notifications
+    int64_t notificationTimer;      // Timer for pop up notifications
     char* notificationMessage;      // Message for notification
     modes_t prevMode;               // Mode to return to after notification finishes
     bool showScore;                 // If "start" button has been toggled
+    int64_t ms;                     // Milliseconds in main loop
 
     // Resources
     font_t mainFont;                // Default font for mode
@@ -100,7 +95,7 @@ typedef struct {
     // Gameplay
     players_t currPlayer;           // Active player
     players_t devicePlayer;         // Player using device. For p2p.
-    boardStates_t tokensAssignment[2];  //Which token is assigned too which player 
+    boardStates_t tokensAssignment[2];  //Which token is assigned to which player 
     p2pInfo opponent;               // Connection details of opponent
     int8_t score[3];                // Scoreboard [P1, P2, draws]
     boardSizes_t size;              // Size of board
@@ -117,7 +112,7 @@ static void tttEnterMode(void);
 static void tttExitMode(void);
 static void tttMainLoop(int64_t);
 static void tttMenuCB(const char*, bool, uint32_t);
-static void setupGameboardSize(char);
+static void tttSetupGameboardSize(char);
 static void notify(const char*, int32_t);
 static void ttt(void);
 static void tttSetup(void);
@@ -138,6 +133,7 @@ static void drawCursor(int8_t);
 static void drawLineFromArray(paletteColor_t, int8_t, int8_t);
 static void displayNotification(void);
 static void displayScore(void);
+static void printScore(paletteColor_t, const char*, int32_t, int16_t, int16_t);
 
 // ===== Strings =====
 
@@ -154,10 +150,13 @@ static const char board5x5[] = "5 x 5 game board";
 // Notification
 static const char notImplemented[] = "Mode not implemented, sorry.";
 static const char error[] = "Something went horribly wrong.";
-static const char p1notification[] = "You are player 1!";               // Notifications needed for p2p
-static const char p2notification[] = "You are player 2!";               // Notifications needed for p2p
+//static const char p1notification[] = "You are player 1!";               // Notifications needed for p2p
+//static const char p2notification[] = "You are player 2!";               // Notifications needed for p2p
 static const char p1turn[] = "Player 1's turn!";
 static const char p2turn[] = "Player 2's turn!";
+static const char p1win[] = "Player 1 wins!";
+static const char p2win[] = "Player 2 wins!";
+static const char noWin[] = "It's a draw!";
 
 // Score
 static const char Score[] = "Scores";
@@ -212,8 +211,10 @@ static void tttEnterMode(void){
     state->menu = endSubMenu(state->menu);
     
     // Initialize state
-    state->size = THREE;
-    state->boardLen = 9;
+    tttSetupGameboardSize(THREE);
+    state->cursorPos = 4;
+    state->currPlayer = PLAYER1;
+    state->ms = 0;
     state->currMode = MENU;
 }
 
@@ -229,6 +230,7 @@ static void tttExitMode(void){
 
 static void tttMainLoop(int64_t elapsedUs){
     // Run whatever mode is active
+    state->ms += elapsedUs/1000;
     buttonEvt_t evt = {0};
     switch (state->currMode)
     {
@@ -253,10 +255,8 @@ static void tttMainLoop(int64_t elapsedUs){
 
     case NOTIFICATION:  // Notifying players of something, don't process anything.
         displayNotification();
-        if (state->notificationTimer >= 0){
+        if (state->notificationTimer < state->ms){
             state->currMode = state->prevMode;
-        } else {
-            state->notificationTimer -= elapsedUs;
         }
         break;
 
@@ -291,25 +291,28 @@ static void tttMenuCB(const char* label, bool selected, uint32_t settingVal){
         } else if (label == boardSize){
             // Do nothing? Should let you pick board sizes
         } else if (label == board3x3){
-            setupGameboardSize(THREE);
+            notify("Board size changed to 3x3", NOTIFICATION_DURATION);
+            tttSetupGameboardSize(THREE);
         } else if (label == board4x4){
-            setupGameboardSize(FOUR);
+            notify("Board size changed to 4x4", NOTIFICATION_DURATION);
+            tttSetupGameboardSize(FOUR);
         } else if (label == board5x5){
-            setupGameboardSize(FIVE);
+            notify("Board size changed to 5x5", NOTIFICATION_DURATION);
+            tttSetupGameboardSize(FIVE);
         }
     }
 }
 
-static void setupGameboardSize(char sz){
+static void tttSetupGameboardSize(char sz){
     state->size = sz;
     state->boardLen = sz * sz;
     state->boxSize = usableBoardSpaceV / state->size;
 }
 
 static void notify(const char* message, int32_t duration){
-
     state->notificationMessage = message;
     state->notificationTimer = duration;
+    state->ms = 0;
     state->prevMode = state->currMode;
     state->currMode = NOTIFICATION;
 }
@@ -323,12 +326,18 @@ static void notify(const char* message, int32_t duration){
 */
 static void ttt(void){
     // Start by checking if anyone has won.
-    bool player1Result = tttCheckForWin(PLAYER1);
-    bool player2Result = tttCheckForWin(PLAYER2);
-    bool isADraw = checkGameIsDraw();
-    if(player1Result || player2Result || isADraw){
-        state->currMode = SCORE;
-        state->prevMode = GAME1;
+    if (tttCheckForWin(PLAYER1)){
+        state->score[0] += 1;
+        notify(p1win, NOTIFICATION_DURATION);
+        tttSetup();
+    } else if (tttCheckForWin(PLAYER2)){
+        state->score[1] += 1;
+        notify(p2win, NOTIFICATION_DURATION);
+        tttSetup();
+    } else if (checkGameIsDraw()) {
+        state->score[2] += 1;
+        notify(noWin, NOTIFICATION_DURATION);
+        tttSetup();
     } else {
         // Game is still being played
         // TODO: Segregate when this can be done by active player when networking
@@ -336,13 +345,19 @@ static void ttt(void){
         while (checkButtonQueueWrapper(&evt)){
             // Move cursor if local or active player. 
             if (PB_RIGHT & evt.state){
-                state->cursorPos += 1;
-            } else if (PB_LEFT & evt.state){
-                state->cursorPos -= 1;
-            } else if (PB_UP & evt.state){
-                state->cursorPos -= state->size;
-            } else if (PB_DOWN & evt.state){
                 state->cursorPos += state->size;
+            } else if (PB_LEFT & evt.state){
+                state->cursorPos -= state->size;
+            } else if (PB_UP & evt.state){
+                state->cursorPos -= 1;
+                if (state->cursorPos % state->size == state->size - 1 || state->cursorPos < 0){
+                    state->cursorPos += state->size;
+                }
+            } else if (PB_DOWN & evt.state){
+                state->cursorPos += 1;
+                if (state->cursorPos % state->size == 0){
+                    state->cursorPos -= state->size;
+                }
             }
             // Loop if past edge of board.
             if (state->cursorPos >= state->boardLen){
@@ -373,10 +388,12 @@ static void ttt(void){
 
 static void tttSetup(void){
     // Set other player to go first
-    if (state->currPlayer == PLAYER2){
-        state->currPlayer = PLAYER1; 
+    if (state->currPlayer == PLAYER1){
+        state->tokensAssignment[0] = X;
+        state->tokensAssignment[1] = O;
     } else {
-        state->currPlayer = PLAYER2;
+        state->tokensAssignment[0] = O;
+        state->tokensAssignment[1] = X;
     }
     // Clear game board
     for (int i = 0; i < state->boardLen; i++){
@@ -384,7 +401,22 @@ static void tttSetup(void){
     }
 }
 
-static void addToken(players_t currPlayer, int8_t pos){}
+static void addToken(players_t currPlayer, int8_t pos){
+    boardStates_t activeToken = EMPTY;
+    if (state->currPlayer == PLAYER1){
+        activeToken = state->tokensAssignment[0];
+    } else {
+        activeToken = state->tokensAssignment[1];
+    }
+    if (state->gameboard[pos] == EMPTY){
+        state->gameboard[pos] = activeToken;
+        if (state->currPlayer == PLAYER1){
+            state->currPlayer = PLAYER2;
+        } else {
+            state->currPlayer = PLAYER1;
+        }
+    }
+}
 
 static bool tttCheckForWin(players_t currPlayer){
     // Get appropriate token for player
@@ -405,6 +437,7 @@ static bool checkGameIsDraw(){
             return false;
         }
     }
+
     return true;
 }
 
@@ -416,7 +449,7 @@ static bool checkRow(boardStates_t player, int8_t row){
         }
     }
     if (qty == state->size){
-        drawLineFromArray(c030, row * state->size, row * state->size + (state->size - 1));
+        drawLineFromArray(c050, row * state->size, row * state->size + (state->size - 1));
         return true;
     }
     return false;
@@ -473,13 +506,14 @@ static bool checkDiag(boardStates_t player){
     - Home row is excluded from the valid options for each player
 */
 static void ttg(void){
+    state->currMode = MENU;
     notify(notImplemented, NOTIFICATION_DURATION);
 }
 
 // Connect to peer
 
 static void connectToPeer(void){
-    //TODO: Add p2p connection waiting room and dialogue
+    state->currMode = MENU;
     notify(notImplemented, NOTIFICATION_DURATION);
 }
 
@@ -492,7 +526,7 @@ static void drawCB(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16
     {
         for (int16_t xp = x; xp < x + w; xp++)
         {
-            TURBO_SET_PIXEL(xp, yp, c001);
+            TURBO_SET_PIXEL(xp, yp, c000);
         }
     }
 }
@@ -501,17 +535,16 @@ static void drawBoard(void){
     // Draw board based on size
     for (int i = 0; i < (state->size - 1); i++){
         // Vertical lines
-        drawLineFast((i * state->boxSize) + BORDER, BORDER, (i * state->boxSize) + BORDER, V_SCREEN_SIZE - BORDER, c555);
+        drawLineFast(((i + 1) * state->boxSize) + boardStartH, BORDER, ((i + 1) * state->boxSize) + boardStartH, V_SCREEN_SIZE - BORDER, c555);
         // Horizontal lines
-        drawLineFast(boardStartH, (i * state->boxSize) + BORDER, boardStartH + usableBoardSpaceV, (i * state->boxSize) + BORDER, c555);
+        drawLineFast(boardStartH, ((i + 1) * state->boxSize) + BORDER, boardStartH + usableBoardSpaceV, ((i + 1) * state->boxSize) + BORDER, c555);
     }
     // Draw active player string
     if (state->currPlayer == PLAYER1){
-        drawText(&state->mainFont, c555, p1turn, 5, 5);
+        drawText(&state->mainFont, c555, p1turn, 40, 5);
     } else {
-        drawText(&state->mainFont, c555, p2turn, 5, 5);
+        drawText(&state->mainFont, c555, p2turn, 40, 5);
     }
-    
 }
 
 static void drawTokens(void){
@@ -521,37 +554,51 @@ static void drawTokens(void){
         int8_t yPos = pos % state->size;
         if (state->gameboard[pos] == X){
             drawXToken(xPos, yPos);
+        } else if (state->gameboard[pos] == O) {
             drawOToken(xPos, yPos);
-            drawCursor(pos);
         }
     }
 }
 
 static void drawXToken(int16_t xPos, int16_t yPos){
     // Red X
+    drawLineFast(xPos * state->boxSize + (boardStartH + 5), yPos * state->boxSize + (BORDER + 5), xPos * state->boxSize + (boardStartH + state->boxSize - 5), yPos * state->boxSize + (BORDER + state->boxSize - 5), c500);
+    drawLineFast(xPos * state->boxSize + (boardStartH + state->boxSize - 5), yPos * state->boxSize + (BORDER + 5), xPos * state->boxSize + (boardStartH + 5), yPos * state->boxSize + (BORDER + state->boxSize - 5), c500);
 }
 
 static void drawOToken(int16_t xPos, int16_t yPos){
     // Blue circle
+    drawCircle(xPos * state->boxSize + boardStartH + state->boxSize / 2, yPos * state->boxSize + BORDER + state->boxSize / 2, (state->boxSize / 2) - 5, c005);
 }
 
-static void drawCursor(int8_t arrPos){
+static void drawCursor(int8_t pos){
     // Green Box
+    int8_t xPos = pos / state->size;
+    int8_t yPos = pos % state->size;
+    drawRect(xPos * state->boxSize + (boardStartH + 5), yPos * state->boxSize + (BORDER + 5),xPos * state->boxSize + (boardStartH + state->boxSize - 5), yPos * state->boxSize + (BORDER + state->boxSize - 5), c050);
 }
 
 static void drawLineFromArray(paletteColor_t color, int8_t arrPosStart, int8_t arrPosEnd){
-
+    int8_t x1Pos = arrPosStart / state->size;
+    int8_t y1Pos = arrPosStart % state->size;
+    int8_t x2Pos = arrPosEnd / state->size;
+    int8_t y2Pos = arrPosEnd % state->size;
+    drawLineFast(x1Pos * state->boxSize + (boardStartH + (state->boxSize / 2)), y1Pos * state->boxSize + (BORDER + state->boxSize / 2), x2Pos * state->boxSize + (boardStartH + (state->boxSize / 2)), y2Pos * state->boxSize + (BORDER + state->boxSize / 2), color);
 }
 
 static void displayNotification(void){
-    //TODO: Add notifications screen
+    drawText(&state->mainFont, c555, state->notificationMessage, 35, 120);
 }
 
 static void displayScore(void){
-    drawText(&state->mainFont, c555, Score, 5, 5);
-    drawText(&state->mainFont, c555, p1Score, 5, 25);
-    drawText(&state->mainFont, c555, p2Score, 5, 45);
-    drawText(&state->mainFont, c555, drawScore, 5, 65);
-    drawText(&state->mainFont, c555, p1notification, 5, 85);
-    drawText(&state->mainFont, c555, p2notification, 5, 1055);
+    drawText(&state->mainFont, c555, Score, 5, 25);
+    printScore(c555, p1Score, state->score[0], 5, 45);
+    printScore(c555, p2Score, state->score[1], 5, 65);
+    printScore(c555, drawScore, state->score[2], 5, 85);
+}
+
+static void printScore(paletteColor_t color, const char* text, int32_t val, int16_t xPos, int16_t yPos){
+    char scoreStr[16];
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "%s%" PRIu32, text, val);
+    drawText(&state->mainFont, color, scoreStr, xPos, yPos);
 }
