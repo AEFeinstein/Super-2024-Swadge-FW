@@ -26,9 +26,9 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
         ball->pos.x  = TO_FX((RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (RAD + 1))));
         ball->pos.y  = TO_FX((RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (RAD + 1))));
 #define MAX_VEL 128
-        int32_t velX = (-(MAX_VEL / 2) + (esp_random() % MAX_VEL));
+        int32_t velX = ((-MAX_VEL / 2) + (esp_random() % MAX_VEL));
         ball->vel.x  = TO_FX_FRAC(velX * PIN_US_PER_FRAME, 1000000);
-        int32_t velY = (-(MAX_VEL / 2) + (esp_random() % MAX_VEL));
+        int32_t velY = ((-MAX_VEL / 2) + (esp_random() % MAX_VEL));
         ball->vel.y  = TO_FX_FRAC(velY * PIN_US_PER_FRAME, 2000000);
         ball->color  = c500;
         ball->filled = true;
