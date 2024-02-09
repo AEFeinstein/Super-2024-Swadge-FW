@@ -1,0 +1,6 @@
+#pragma once
+
+#include "mode_pinball.h"
+
+void createRandomBalls(pinball_t* p, int32_t numBalls);
+void createRandomWalls(pinball_t* p, int32_t numWalls);

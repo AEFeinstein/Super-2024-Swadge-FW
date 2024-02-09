@@ -172,6 +172,17 @@ q24_8 fpvDot(vec_q24_8 a, vec_q24_8 b)
 }
 
 /**
+ * @brief Compute the squared magnitude of a vector
+ *
+ * @param a The vector to compute the squared magnitude of
+ * @return The squared magnitude of the vector
+ */
+q24_8 fpvSqMag(vec_q24_8 a)
+{
+    return ((a.x * a.x) + (a.y * a.y)) >> FRAC_BITS;
+}
+
+/**
  * @brief Add two vectors
  *
  * @param a A vector to add

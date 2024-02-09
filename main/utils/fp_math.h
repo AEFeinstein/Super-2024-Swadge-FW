@@ -39,6 +39,7 @@ vec_q24_8 fpvMulSc(vec_q24_8 vec, q24_8 scalar);
 vec_q24_8 fpvDivSc(vec_q24_8 vec, q24_8 scalar);
 
 q24_8 fpvDot(vec_q24_8 a, vec_q24_8 b);
+q24_8 fpvSqMag(vec_q24_8 a);
 vec_q24_8 fpvNorm(vec_q24_8 vec);
 
 float fixToFloat(q24_8 fx);
