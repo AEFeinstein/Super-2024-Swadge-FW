@@ -15,6 +15,9 @@
 #define PIN_US_PER_FRAME 16667
 #define NUM_ZONES        32
 
+#define MAX_NUM_WALLS 100
+#define MAX_NUM_BALLS 10
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -27,7 +30,6 @@ typedef struct
     uint32_t zoneMask;
     paletteColor_t color;
     bool filled;
-    void* touching;
 } pbCircle_t;
 
 typedef struct
@@ -49,8 +51,10 @@ typedef struct
 
 typedef struct
 {
-    list_t balls;
-    list_t walls;
+    pbCircle_t balls[MAX_NUM_BALLS];
+    uint32_t numBalls;
+    pbLine_t walls[MAX_NUM_WALLS];
+    uint32_t numWalls;
     pbCircle_t bumper;
     int32_t frameTimer;
     pbRect_t zones[NUM_ZONES];

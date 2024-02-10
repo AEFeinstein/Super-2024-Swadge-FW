@@ -82,18 +82,6 @@ static void pinEnterMode(void)
  */
 static void pinExitMode(void)
 {
-    // Free balls
-    while (pinball->balls.first != NULL)
-    {
-        free(pop(&pinball->balls));
-    }
-
-    // Free walls
-    while (pinball->walls.first != NULL)
-    {
-        free(pop(&pinball->walls));
-    }
-
     // Free the rest of the state
     free(pinball);
 }

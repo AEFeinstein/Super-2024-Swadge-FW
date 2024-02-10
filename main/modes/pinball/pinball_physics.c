@@ -29,7 +29,7 @@ void updatePinballPhysicsFrame(pinball_t* p)
     calculateBallZones(p);
 
     // If there are multiple balls
-    if (1 < p->balls.length)
+    if (1 < p->numBalls)
     {
         // Check for ball-ball collisions
         checkBallBallCollisions(p);
@@ -50,15 +50,10 @@ void updatePinballPhysicsFrame(pinball_t* p)
 void calculateBallZones(pinball_t* p)
 {
     // For each ball, find which zones it is in
-    node_t* ballNode = p->balls.first;
-    while (ballNode != NULL)
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        pbCircle_t* ball = (pbCircle_t*)ballNode->val;
-
         // Figure out which zones the ball is in
-        ball->zoneMask = pinZoneCircle(p, *ball);
-        // Iterate
-        ballNode = ballNode->next;
+        p->balls[bIdx].zoneMask = pinZoneCircle(p, p->balls[bIdx]);
     }
 }
 
@@ -70,28 +65,15 @@ void calculateBallZones(pinball_t* p)
 void checkBallBallCollisions(pinball_t* p)
 {
     // For each ball, check collisions with other balls
-    node_t* ballNode = p->balls.first;
-    while (ballNode != NULL)
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        pbCircle_t* ball      = ballNode->val;
-        node_t* otherBallNode = ballNode->next;
-        while (otherBallNode != NULL)
+        pbCircle_t* ball = &p->balls[bIdx];
+        for (uint32_t obIdx = bIdx + 1; obIdx < p->numBalls; obIdx++)
         {
-            pbCircle_t* otherBall = otherBallNode->val;
-            // Balls are touching each other
-            if ((NULL != ball->touching) && (ball->touching == otherBall->touching))
-            {
-                // check if they're not touching anymore
-                if ((0 == (ball->zoneMask & otherBall->zoneMask))
-                    || !circleCircleIntersection(intCircle(*ball), intCircle(*otherBall)))
-                {
-                    // Not in the same zone or not touching, so set to NULL
-                    ball->touching      = NULL;
-                    otherBall->touching = NULL;
-                }
-            }
-            else if ((ball->zoneMask & otherBall->zoneMask)
-                     && circleCircleIntersection(intCircle(*ball), intCircle(*otherBall)))
+            pbCircle_t* otherBall = &p->balls[obIdx];
+            // TODO check if balls are already touching
+            if ((ball->zoneMask & otherBall->zoneMask)
+                && circleCircleIntersection(intCircle(*ball), intCircle(*otherBall)))
             {
                 // Math for the first ball
                 vec_q24_8 v1         = ball->vel;
@@ -124,15 +106,9 @@ void checkBallBallCollisions(pinball_t* p)
                 ball->vel = ballNewVel;
 
                 // The balls are touching each other
-                ball->touching      = otherBall;
-                otherBall->touching = ball;
+                // TODO make balls touch
             }
-            // Iterate
-            otherBallNode = otherBallNode->next;
         }
-
-        // Iterate
-        ballNode = ballNode->next;
     }
 }
 
@@ -144,10 +120,9 @@ void checkBallBallCollisions(pinball_t* p)
 void checkBallStaticCollision(pinball_t* p)
 {
     // For each ball, check collisions with static objects
-    node_t* ballNode = p->balls.first;
-    while (ballNode != NULL)
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        pbCircle_t* ball = (pbCircle_t*)ballNode->val;
+        pbCircle_t* ball = &p->balls[bIdx];
         // if (ballZoneMask & p->bumper.zoneMask)
         // {
         //     // Check for collision
@@ -165,27 +140,13 @@ void checkBallStaticCollision(pinball_t* p)
         // }
 
         // Iterate over all walls
-        node_t* wallNode = p->walls.first;
-        while (wallNode != NULL)
+        for (uint32_t wIdx = 0; wIdx < p->numWalls; wIdx++)
         {
-            // Check collision
-            pbLine_t* wall = (pbLine_t*)wallNode->val;
+            pbLine_t* wall = &p->walls[wIdx];
 
             // If the ball is already touching this wall
-            if (ball->touching == wall)
-            {
-                // Check to see if it's not touching anymore
-                vec_t collisionVec;
-                if (0 == (ball->zoneMask & wall->zoneMask))
-                {
-                    ball->touching = NULL;
-                }
-                else if (!circleLineIntersection(intCircle(*ball), intLine(*wall), &collisionVec))
-                {
-                    ball->touching = NULL;
-                }
-            }
-            else // Ball is not touching this wall already
+            // TODO check for touching first
+            // Ball is not touching this wall already
             {
                 // Quick zone check
                 if (ball->zoneMask & wall->zoneMask)
@@ -203,23 +164,11 @@ void checkBallStaticCollision(pinball_t* p)
                         ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
 
                         // Mark this wall as being touched
-                        ball->touching = wall;
-
-                        // Stop iterating
-                        wallNode = NULL;
+                        // TODO make them touch
                     }
                 }
             }
-
-            // Iterate
-            if (NULL != wallNode)
-            {
-                wallNode = wallNode->next;
-            }
         }
-
-        // Iterate
-        ballNode = ballNode->next;
     }
 }
 
@@ -230,18 +179,14 @@ void checkBallStaticCollision(pinball_t* p)
  */
 void moveBalls(pinball_t* p)
 {
-    // For each ball
-    node_t* ballNode = p->balls.first;
-    while (ballNode != NULL)
+    // For each ball, check collisions with static objects
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        pbCircle_t* ball = (pbCircle_t*)ballNode->val;
+        pbCircle_t* ball = &p->balls[bIdx];
 
         // Move the ball
         ball->pos.x += (ball->vel.x);
         ball->pos.y += (ball->vel.y);
-
-        // Iterate
-        ballNode = ballNode->next;
     }
 }
 

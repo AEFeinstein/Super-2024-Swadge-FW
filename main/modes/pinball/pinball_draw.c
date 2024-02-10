@@ -39,21 +39,17 @@ void pinballDrawBackground(pinball_t* p, int16_t x, int16_t y, int16_t w, int16_
 void pinballDrawForeground(pinball_t* p)
 {
     // Draw walls
-    node_t* wallNode = p->walls.first;
-    while (wallNode != NULL)
+    for (uint32_t wIdx = 0; wIdx < p->numWalls; wIdx++)
     {
-        drawPinLine((pbLine_t*)wallNode->val);
-        wallNode = wallNode->next;
+        drawPinLine(&p->walls[wIdx]);
     }
 
     // TODO draw bumpers
 
     // Draw balls
-    node_t* ballNode = p->balls.first;
-    while (ballNode != NULL)
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        drawPinCircle((pbCircle_t*)ballNode->val);
-        ballNode = ballNode->next;
+        drawPinCircle(&p->balls[bIdx]);
     }
 
     // Debug draw zones
