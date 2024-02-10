@@ -4,3 +4,4 @@
 
 void createRandomBalls(pinball_t* p, int32_t numBalls);
 void createRandomWalls(pinball_t* p, int32_t numWalls);
+void createRandomBumpers(pinball_t* p, int32_t numBumpers);

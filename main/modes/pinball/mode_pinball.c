@@ -66,14 +66,10 @@ static void pinEnterMode(void)
     createRandomBalls(pinball, 10);
 
     // Create random walls
-    createRandomWalls(pinball, 10);
+    createRandomWalls(pinball, 50);
 
-    // TODO create random bumpers
-    // pb->bumper.pos.x  = TO_FX(240);
-    // pb->bumper.pos.y  = TO_FX(3 * TFT_HEIGHT / 4);
-    // pb->bumper.radius = TO_FX(20);
-    // pb->bumper.color  = c050;
-    // pb->bumper.filled = false;
+    // Create random bumpers
+    createRandomBumpers(pinball, 10);
 }
 
 /**
@@ -102,8 +98,10 @@ static void pinMainLoop(int64_t elapsedUs)
     {
         p->frameTimer -= PIN_US_PER_FRAME;
         updatePinballPhysicsFrame(pinball);
-        pinballDrawForeground(pinball);
     }
+
+    // Always draw foreground to prevent flicker
+    pinballDrawForeground(pinball);
 }
 
 /**

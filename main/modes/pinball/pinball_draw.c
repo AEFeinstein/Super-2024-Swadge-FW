@@ -44,7 +44,11 @@ void pinballDrawForeground(pinball_t* p)
         drawPinLine(&p->walls[wIdx]);
     }
 
-    // TODO draw bumpers
+    // Draw bumpers
+    for (uint32_t uIdx = 0; uIdx < p->numBumpers; uIdx++)
+    {
+        drawPinCircle(&p->bumpers[uIdx]);
+    }
 
     // Draw balls
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)

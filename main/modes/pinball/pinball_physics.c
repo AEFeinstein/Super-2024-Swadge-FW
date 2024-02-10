@@ -15,7 +15,7 @@ void checkBallStaticCollision(pinball_t* p);
 void moveBalls(pinball_t* p);
 void checkBallsNotTouching(pinball_t* p);
 void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type);
-pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, void* obj);
+pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
 
 //==============================================================================
 // Functions
@@ -134,21 +134,29 @@ void checkBallStaticCollision(pinball_t* p)
         pbCircle_t* ball = &p->balls[bIdx];
         circle_t intBall = intCircle(*ball);
 
-        // if (ballZoneMask & p->bumper.zoneMask)
-        // {
-        //     // Check for collision
-        //     if (circleCircleIntersection(intCircle(*ball), intCircle(p->bumper)))
-        //     {
-        //         // Reflect the velocity vector along the normal between the two radii
-        //         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-        //         vec_q24_8 centerToCenter = {
-        //             .x = ball->pos.x - p->bumper.pos.x,
-        //             .y = ball->pos.y - p->bumper.pos.y,
-        //         };
-        //         vec_q24_8 reflVec = fpvNorm(centerToCenter);
-        //         ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
-        //     }
-        // }
+        // Iterate over all bumpers
+        for (uint32_t uIdx = 0; uIdx < p->numBumpers; uIdx++)
+        {
+            pbCircle_t* bumper = &p->bumpers[uIdx];
+
+            // Check for a collision
+            if ((ball->zoneMask & bumper->zoneMask)                               // In the same zone
+                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper) // and not already touching
+                && circleCircleIntersection(intBall, intCircle(*bumper)))         // and intersecting
+            {
+                // Reflect the velocity vector along the normal between the two radii
+                // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+                vec_q24_8 centerToCenter = {
+                    .x = ball->pos.x - bumper->pos.x,
+                    .y = ball->pos.y - bumper->pos.y,
+                };
+                vec_q24_8 reflVec = fpvNorm(centerToCenter);
+                ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
+
+                // Mark this wall as being touched
+                setBallTouching(p->ballsTouching[bIdx], bumper, PIN_CIRCLE);
+            }
+        }
 
         // Iterate over all walls
         for (uint32_t wIdx = 0; wIdx < p->numWalls; wIdx++)
@@ -290,7 +298,7 @@ void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type)
  * @param obj
  * @return pbShapeType_t
  */
-pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, void* obj)
+pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
 {
     for (uint32_t i = 0; i < MAX_TOUCHES; i++)
     {
