@@ -17,6 +17,19 @@
 
 #define MAX_NUM_WALLS 100
 #define MAX_NUM_BALLS 10
+#define MAX_TOUCHES   8
+
+//==============================================================================
+// Enums
+//==============================================================================
+
+typedef enum
+{
+    PIN_NO_SHAPE,
+    PIN_CIRCLE,
+    PIN_LINE,
+    PIN_RECT,
+} pbShapeType_t;
 
 //==============================================================================
 // Structs
@@ -51,7 +64,14 @@ typedef struct
 
 typedef struct
 {
+    void* obj;
+    pbShapeType_t type;
+} pbTouchRef_t;
+
+typedef struct
+{
     pbCircle_t balls[MAX_NUM_BALLS];
+    pbTouchRef_t ballsTouching[MAX_NUM_BALLS][MAX_TOUCHES];
     uint32_t numBalls;
     pbLine_t walls[MAX_NUM_WALLS];
     uint32_t numWalls;

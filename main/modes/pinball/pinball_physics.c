@@ -13,6 +13,9 @@ void calculateBallZones(pinball_t* p);
 void checkBallBallCollisions(pinball_t* p);
 void checkBallStaticCollision(pinball_t* p);
 void moveBalls(pinball_t* p);
+void checkBallsNotTouching(pinball_t* p);
+void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type);
+pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, void* obj);
 
 //==============================================================================
 // Functions
@@ -40,6 +43,9 @@ void updatePinballPhysicsFrame(pinball_t* p)
 
     // Move balls along new vectors
     moveBalls(p);
+
+    // Clear references to balls touching things after moving
+    checkBallsNotTouching(p);
 }
 
 /**
@@ -71,9 +77,10 @@ void checkBallBallCollisions(pinball_t* p)
         for (uint32_t obIdx = bIdx + 1; obIdx < p->numBalls; obIdx++)
         {
             pbCircle_t* otherBall = &p->balls[obIdx];
-            // TODO check if balls are already touching
-            if ((ball->zoneMask & otherBall->zoneMask)
-                && circleCircleIntersection(intCircle(*ball), intCircle(*otherBall)))
+            // Check for a new collision
+            if ((ball->zoneMask & otherBall->zoneMask)                                // In the same zone
+                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], otherBall)  // and not already touching
+                && circleCircleIntersection(intCircle(*ball), intCircle(*otherBall))) // and intersecting
             {
                 // Math for the first ball
                 vec_q24_8 v1         = ball->vel;
@@ -106,7 +113,8 @@ void checkBallBallCollisions(pinball_t* p)
                 ball->vel = ballNewVel;
 
                 // The balls are touching each other
-                // TODO make balls touch
+                setBallTouching(p->ballsTouching[bIdx], otherBall, PIN_CIRCLE);
+                setBallTouching(p->ballsTouching[obIdx], ball, PIN_CIRCLE);
             }
         }
     }
@@ -122,7 +130,10 @@ void checkBallStaticCollision(pinball_t* p)
     // For each ball, check collisions with static objects
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
+        // Reference and integer representation
         pbCircle_t* ball = &p->balls[bIdx];
+        circle_t intBall = intCircle(*ball);
+
         // if (ballZoneMask & p->bumper.zoneMask)
         // {
         //     // Check for collision
@@ -143,30 +154,22 @@ void checkBallStaticCollision(pinball_t* p)
         for (uint32_t wIdx = 0; wIdx < p->numWalls; wIdx++)
         {
             pbLine_t* wall = &p->walls[wIdx];
-
-            // If the ball is already touching this wall
-            // TODO check for touching first
-            // Ball is not touching this wall already
+            vec_t collisionVec;
+            // Check for a collision
+            if ((ball->zoneMask & wall->zoneMask)                                  // In the same zone
+                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], wall)    // and not already touching
+                && circleLineIntersection(intBall, intLine(*wall), &collisionVec)) // and intersecting
             {
-                // Quick zone check
-                if (ball->zoneMask & wall->zoneMask)
-                {
-                    // In the same zone, do a slower intersection check
-                    vec_t collisionVec;
-                    if (circleLineIntersection(intCircle(*ball), intLine(*wall), &collisionVec))
-                    {
-                        // Collision detected, do some physics
-                        vec_q24_8 centerToCenter = {
-                            .x = collisionVec.x,
-                            .y = collisionVec.y,
-                        };
-                        vec_q24_8 reflVec = fpvNorm(centerToCenter);
-                        ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
+                // Collision detected, do some physics
+                vec_q24_8 centerToCenter = {
+                    .x = collisionVec.x,
+                    .y = collisionVec.y,
+                };
+                vec_q24_8 reflVec = fpvNorm(centerToCenter);
+                ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
 
-                        // Mark this wall as being touched
-                        // TODO make them touch
-                    }
-                }
+                // Mark this wall as being touched
+                setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
             }
         }
     }
@@ -188,6 +191,115 @@ void moveBalls(pinball_t* p)
         ball->pos.x += (ball->vel.x);
         ball->pos.y += (ball->vel.y);
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param p
+ */
+void checkBallsNotTouching(pinball_t* p)
+{
+    // For each ball
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
+    {
+        pbCircle_t* ball = &p->balls[bIdx];
+        circle_t iBall   = intCircle(*ball);
+        // For each thing it could be touching
+        for (uint32_t tIdx = 0; tIdx < MAX_TOUCHES; tIdx++)
+        {
+            pbTouchRef_t* tr = &p->ballsTouching[bIdx][tIdx];
+            // If it's touching a thing
+            if (NULL != tr->obj)
+            {
+                switch (tr->type)
+                {
+                    case PIN_CIRCLE:
+                    {
+                        pbCircle_t* other = (pbCircle_t*)tr->obj;
+                        if ((0 == (ball->zoneMask & other->zoneMask))               // Not in the same zone
+                            || !circleCircleIntersection(iBall, intCircle(*other))) // or not touching
+                        {
+                            // Clear the reference
+                            tr->obj  = NULL;
+                            tr->type = PIN_NO_SHAPE;
+                        }
+                        break;
+                    }
+                    case PIN_LINE:
+                    {
+                        pbLine_t* other = (pbLine_t*)tr->obj;
+                        vec_t collisionVec;
+                        if ((0 == (ball->zoneMask & other->zoneMask))                          // Not in the same zone
+                            || !circleLineIntersection(iBall, intLine(*other), &collisionVec)) // or not touching
+                        {
+                            // Clear the reference
+                            tr->obj  = NULL;
+                            tr->type = PIN_NO_SHAPE;
+                        }
+                        break;
+                    }
+                    case PIN_RECT:
+                    {
+                        pbRect_t* other = (pbRect_t*)tr->obj;
+                        if ((0 == (ball->zoneMask & other->zoneMask))           // Not in the same zone
+                            || !circleRectIntersection(iBall, intRect(*other))) // or not touching
+                        {
+                            // Clear the reference
+                            tr->obj  = NULL;
+                            tr->type = PIN_NO_SHAPE;
+                        }
+                        break;
+                    }
+                    default:
+                    case PIN_NO_SHAPE:
+                    {
+                        // Not touching anything...
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ballTouching
+ * @param obj
+ * @param type
+ */
+void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type)
+{
+    for (uint32_t i = 0; i < MAX_TOUCHES; i++)
+    {
+        if (NULL == ballTouching->obj)
+        {
+            ballTouching->obj  = obj;
+            ballTouching->type = type;
+            return;
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ballTouching
+ * @param obj
+ * @return pbShapeType_t
+ */
+pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, void* obj)
+{
+    for (uint32_t i = 0; i < MAX_TOUCHES; i++)
+    {
+        if (ballTouching->obj == obj)
+        {
+            return ballTouching->type;
+        }
+    }
+    return PIN_NO_SHAPE;
 }
 
 /**
