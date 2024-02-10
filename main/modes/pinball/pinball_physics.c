@@ -214,7 +214,7 @@ void checkBallsNotTouching(pinball_t* p)
         pbCircle_t* ball = &p->balls[bIdx];
         circle_t iBall   = intCircle(*ball);
         // For each thing it could be touching
-        for (uint32_t tIdx = 0; tIdx < MAX_TOUCHES; tIdx++)
+        for (uint32_t tIdx = 0; tIdx < MAX_NUM_TOUCHES; tIdx++)
         {
             pbTouchRef_t* tr = &p->ballsTouching[bIdx][tIdx];
             // If it's touching a thing
@@ -280,7 +280,7 @@ void checkBallsNotTouching(pinball_t* p)
  */
 void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type)
 {
-    for (uint32_t i = 0; i < MAX_TOUCHES; i++)
+    for (uint32_t i = 0; i < MAX_NUM_TOUCHES; i++)
     {
         if (NULL == ballTouching->obj)
         {
@@ -300,7 +300,7 @@ void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type)
  */
 pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
 {
-    for (uint32_t i = 0; i < MAX_TOUCHES; i++)
+    for (uint32_t i = 0; i < MAX_NUM_TOUCHES; i++)
     {
         if (ballTouching->obj == obj)
         {

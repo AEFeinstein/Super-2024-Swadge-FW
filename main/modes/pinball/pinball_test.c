@@ -59,7 +59,7 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
     p->numBumpers = 0;
 
     // Make some balls
-    while (p->numBumpers != numBumpers)
+    while (numBumpers > p->numBumpers)
     {
         pbCircle_t bumper = {0};
 #define BUMPER_RAD 10
@@ -145,7 +145,7 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
     }
 
     // Make a bunch of random lines
-    while (numWalls != p->numWalls)
+    while (numWalls > p->numWalls)
     {
         pbLine_t pbl = {0}; // = &p->walls[p->numWalls++];
 

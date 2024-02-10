@@ -61,6 +61,18 @@ void pinballDrawForeground(pinball_t* p)
     // {
     //     drawPinRect(&p->zones[i]);
     // }
+
+    // Calculate and draw FPS
+    int32_t startIdx  = (p->frameTimesIdx + 1) % NUM_FRAME_TIMES;
+    uint32_t tElapsed = p->frameTimes[p->frameTimesIdx] - p->frameTimes[startIdx];
+    if (0 != tElapsed)
+    {
+        uint32_t fps = (1000000 * NUM_FRAME_TIMES) / tElapsed;
+
+        char tmp[16];
+        snprintf(tmp, sizeof(tmp) - 1, "%" PRIu32, fps);
+        drawText(&p->ibm_vga8, c555, tmp, 35, 2);
+    }
 }
 
 /**

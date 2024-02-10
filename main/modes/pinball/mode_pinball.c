@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <esp_random.h>
+#include <esp_heap_caps.h>
 
 #include "mode_pinball.h"
 #include "pinball_zones.h"
@@ -59,17 +60,30 @@ static void pinEnterMode(void)
     // Allocate all the memory
     pinball = calloc(sizeof(pinball_t), 1);
 
+    pinball->balls   = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
+    pinball->bumpers = heap_caps_calloc(MAX_NUM_BUMPERS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
+    pinball->walls   = heap_caps_calloc(MAX_NUM_WALLS, sizeof(pbLine_t), MALLOC_CAP_SPIRAM);
+
+    pinball->ballsTouching = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbTouchRef_t*), MALLOC_CAP_SPIRAM);
+    for (uint32_t i = 0; i < MAX_NUM_BALLS; i++)
+    {
+        pinball->ballsTouching[i] = heap_caps_calloc(MAX_NUM_TOUCHES, sizeof(pbTouchRef_t), MALLOC_CAP_SPIRAM);
+    }
+
     // Split the table into zones
     createTableZones(pinball);
 
     // Create random balls
-    createRandomBalls(pinball, 10);
+    createRandomBalls(pinball, 3);
 
     // Create random walls
-    createRandomWalls(pinball, 50);
+    createRandomWalls(pinball, 100);
 
     // Create random bumpers
     createRandomBumpers(pinball, 10);
+
+    // Load font
+    loadFont("ibm_vga8.font", &pinball->ibm_vga8, false);
 }
 
 /**
@@ -78,6 +92,17 @@ static void pinEnterMode(void)
  */
 static void pinExitMode(void)
 {
+    for (uint32_t i = 0; i < MAX_NUM_BALLS; i++)
+    {
+        free(pinball->ballsTouching[i]);
+    }
+    free(pinball->ballsTouching);
+
+    free(pinball->balls);
+    free(pinball->walls);
+    free(pinball->bumpers);
+    // Free font
+    freeFont(&pinball->ibm_vga8);
     // Free the rest of the state
     free(pinball);
 }
@@ -102,6 +127,10 @@ static void pinMainLoop(int64_t elapsedUs)
 
     // Always draw foreground to prevent flicker
     pinballDrawForeground(pinball);
+
+    // Log frame time for FPS
+    p->frameTimesIdx                = (p->frameTimesIdx + 1) % NUM_FRAME_TIMES;
+    p->frameTimes[p->frameTimesIdx] = esp_timer_get_time();
 }
 
 /**
@@ -116,6 +145,5 @@ static void pinMainLoop(int64_t elapsedUs)
  */
 static void pinBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
-    // TODO is this causing flickering b/c it's drawn faster than the background?
     pinballDrawBackground(pinball, x, y, w, h);
 }

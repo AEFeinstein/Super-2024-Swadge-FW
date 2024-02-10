@@ -15,10 +15,12 @@
 #define PIN_US_PER_FRAME 16667
 #define NUM_ZONES        32
 
-#define MAX_NUM_BALLS   10
+#define MAX_NUM_BALLS   512
 #define MAX_NUM_WALLS   100
 #define MAX_NUM_BUMPERS 10
-#define MAX_TOUCHES     8
+#define MAX_NUM_TOUCHES 16
+
+#define NUM_FRAME_TIMES 60
 
 //==============================================================================
 // Enums
@@ -71,15 +73,19 @@ typedef struct
 
 typedef struct
 {
-    pbCircle_t balls[MAX_NUM_BALLS];
-    pbTouchRef_t ballsTouching[MAX_NUM_BALLS][MAX_TOUCHES];
+    pbCircle_t* balls;
     uint32_t numBalls;
-    pbLine_t walls[MAX_NUM_WALLS];
+    pbTouchRef_t** ballsTouching;
+    pbLine_t* walls;
     uint32_t numWalls;
-    pbCircle_t bumpers[MAX_NUM_BUMPERS];
+    pbCircle_t* bumpers;
     uint32_t numBumpers;
     int32_t frameTimer;
     pbRect_t zones[NUM_ZONES];
+    font_t ibm_vga8;
+
+    uint32_t frameTimes[NUM_FRAME_TIMES];
+    uint32_t frameTimesIdx;
 } pinball_t;
 
 //==============================================================================
