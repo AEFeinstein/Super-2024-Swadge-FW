@@ -109,6 +109,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                   hdw-battmon
                                   hdw-btn
                                   hdw-bzr
+                                  hdw-dac
                                   hdw-esp-now
                                   hdw-led
                                   hdw-mic

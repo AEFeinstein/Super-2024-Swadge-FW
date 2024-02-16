@@ -169,6 +169,7 @@
 #include "hdw-battmon.h"
 #include "hdw-btn.h"
 #include "hdw-bzr.h"
+#include "hdw-dac.h"
 #include "hdw-esp-now.h"
 #include "hdw-led.h"
 #include "hdw-mic.h"

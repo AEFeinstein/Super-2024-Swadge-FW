@@ -296,6 +296,8 @@ void app_main(void)
     // Initialize the RGB LEDs
     initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
 
+    dacInit();
+
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
 
