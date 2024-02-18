@@ -123,7 +123,7 @@ typedef void (*fnSetSwadgeMode)(void* mode);
 // Function Prototypes
 //==============================================================================
 
-void initUsb(fnSetSwadgeMode setSwadgeMode, fnAdvancedUsbHandler advancedUsbHandler);
+void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler, bool redirectPrintf);
 void deinitUsb(void);
 void sendUsbGamepadReport(hid_gamepad_report_t* report);
 void usbSetSwadgeMode(void* newMode);

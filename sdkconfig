@@ -406,6 +406,14 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# Debug Output
+#
+CONFIG_DEBUG_OUTPUT_USB=y
+# CONFIG_DEBUG_OUTPUT_UART is not set
+# CONFIG_DEBUG_OUTPUT_UART_SAO is not set
+# end of Debug Output
+
+#
 # LED Configuration
 #
 CONFIG_NUM_LEDS=8
@@ -560,8 +568,8 @@ CONFIG_GPTIMER_ISR_IRAM_SAFE=y
 #
 # DAC Configuration
 #
-# CONFIG_DAC_CTRL_FUNC_IN_IRAM is not set
-# CONFIG_DAC_ISR_IRAM_SAFE is not set
+CONFIG_DAC_CTRL_FUNC_IN_IRAM=y
+CONFIG_DAC_ISR_IRAM_SAFE=y
 # CONFIG_DAC_SUPPRESS_DEPRECATE_WARN is not set
 # CONFIG_DAC_ENABLE_DEBUG_LOG is not set
 # end of DAC Configuration
