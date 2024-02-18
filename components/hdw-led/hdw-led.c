@@ -58,14 +58,16 @@ esp_err_t initLeds(gpio_num_t gpio, gpio_num_t gpioAlt, uint8_t brightness)
 
     ESP_ERROR_CHECK(rmt_enable(led_chan));
 
-    // Mirror the output to another GPIO
-    // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
-    // really a (rmt_channel_t *), and that struct has a private definition in
-    // rmt_private.h. "int channel_id" happens to be the first struct member, so
-    // it is accessed using *((int*)led_chan). If the private struct ever
-    // changes, this will break!!!
-    esp_rom_gpio_connect_out_signal(gpioAlt, RMT_SIG_OUT0_IDX + *((int*)led_chan), false, false);
-
+    if (GPIO_NUM_NC != gpioAlt)
+    {
+        // Mirror the output to another GPIO
+        // Warning, this is a hack!! led_chan is a (rmt_channel_handle_t), which is
+        // really a (rmt_channel_t *), and that struct has a private definition in
+        // rmt_private.h. "int channel_id" happens to be the first struct member, so
+        // it is accessed using *((int*)led_chan). If the private struct ever
+        // changes, this will break!!!
+        esp_rom_gpio_connect_out_signal(gpioAlt, RMT_SIG_OUT0_IDX + *((int*)led_chan), false, false);
+    }
     return ESP_OK;
 }
 

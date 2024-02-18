@@ -211,6 +211,11 @@ static void initOptionalPeripherals(void);
  */
 void app_main(void)
 {
+#ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
+    // Redirect UART if configured to do so
+    uart_set_pin(UART_NUM_0, GPIO_NUM_18, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+#endif
+
     // Init NVS. Do this first to get test mode status and crashwrap logs
     initNvs(true);
 
@@ -240,7 +245,13 @@ void app_main(void)
     // Init USB if not overridden by the mode. This also sets up USB printf
     if (false == cSwadgeMode->overrideUsb)
     {
-        initUsb(setSwadgeMode, cSwadgeMode->fnAdvancedUSB);
+        initUsb(setSwadgeMode, cSwadgeMode->fnAdvancedUSB,
+#ifdef CONFIG_DEBUG_OUTPUT_USB
+                true
+#else
+                false
+#endif
+        );
     }
 
     // Check for prior crash info and install crash wrapper
@@ -294,8 +305,15 @@ void app_main(void)
     initShapes();
 
     // Initialize the RGB LEDs
-    initLeds(GPIO_NUM_39, GPIO_NUM_18, getLedBrightnessSetting());
+    initLeds(GPIO_NUM_39,
+#ifdef CONFIG_DEBUG_OUTPUT_UART_SAO
+             GPIO_NUM_NC,
+#else
+             GPIO_NUM_18,
+#endif
+             getLedBrightnessSetting());
 
+    // Initialize the speaker
     dacInit();
 
     // Initialize optional peripherals, depending on the mode's requests
