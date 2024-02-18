@@ -317,8 +317,6 @@ void app_main(void)
     // Initialize the speaker
     dacInit();
 
-    dacInit();
-
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
 
