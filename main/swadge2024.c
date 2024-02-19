@@ -76,6 +76,7 @@
  * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-btn.h: Learn how to use both push and touch button input
  * - hdw-bzr.h: Learn how to use the buzzer
+ * - hdw-dac.h: Learn how to use the DAC (speaker)
  * - hdw-imu.h: Learn how to use the inertial measurement unit
  * - hdw-led.h: Learn how to use the LEDs
  * - hdw-mic.h: Learn how to use the microphone
@@ -367,6 +368,9 @@ void app_main(void)
 
         // Check for buzzer callback flags from the ISR
         bzrCheckSongDone();
+
+        // Speaker shenanigans
+        dacPoll();
 
         if (NO_WIFI != cSwadgeMode->wifiMode)
         {
