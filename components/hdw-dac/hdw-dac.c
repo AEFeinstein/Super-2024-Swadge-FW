@@ -1,72 +1,110 @@
-/*
- * SPDX-FileCopyrightText: 2022 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: CC0-1.0
- */
+//==============================================================================
+// Includes
+//==============================================================================
 
-#include <inttypes.h>
-#include <math.h>
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "soc/dac_channel.h"
-#include "esp_check.h"
-#include "dac_continuous_example.h"
-#include "hdw-dac.h"
+#include "freertos/queue.h"
+#include "driver/dac_continuous.h"
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+#define AUDIO_SAMPLE_RATE_HZ 48000
+#define BUF_SIZE             2048
+#define DMA_DESCRIPTORS      8
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+/** The handle created for the DAC */
+static dac_continuous_handle_t dac_handle;
+
+/** A queue to move dac_event_data_t from the interrupt to the main loop*/
+static QueueHandle_t que;
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
- *  There are two ways to convert digital data to analog signal continuously:
- *  - Using a timer: setting DAC voltage periodically in the timer interrupt
- *                   in this way, DAC can achieve a relatively low conversion frequency
- *                   but it is not a efficient way comparing to using the DMA
- *  - Using DMA: transmitting the data buffer via DMA,
- *               the conversion frequency is controlled by how fast it is transmitted by DMA
- *               in this way, the conversion frequency can reach several MHz,
- *               but it can't achieve a very low conversion frequency because it is limited by the DMA clock source
- *  Generally, recommend to use DMA, if the DMA peripheral is occupied or the required conversion frequency is very low,
- *  then use timer instead
+ * @brief Callback for DAC conversion events
+ *
+ * @param handle [in] DAC channel handle, created from dac_continuous_new_channels()
+ * @param event [in] DAC event data
+ * @param user_data [in] User registered context, passed from dac_continuous_register_event_callback()
+ * @return Whether a high priority task has been waken up by this callback function
  */
-
-/* ADC configuration */
-#define EXAMPLE_DAC_CHAN0_IO                DAC_CHAN0_GPIO_NUM             // DAC channel 0 io number
-#define EXAMPLE_DAC_CHAN1_IO                DAC_CHAN1_GPIO_NUM             // DAC channel 1 io number
-
-_Static_assert(EXAMPLE_DAC_AMPLITUDE < 256, "The DAC accuracy is 8 bit-width, doesn't support the amplitude beyond 255");
-
-static const char *TAG = "dac continuous";
-
-uint8_t sin_wav[EXAMPLE_ARRAY_LEN];                      // Used to store sine wave values
-uint8_t tri_wav[EXAMPLE_ARRAY_LEN];                      // Used to store triangle wave values
-uint8_t saw_wav[EXAMPLE_ARRAY_LEN];                      // Used to store sawtooth wave values
-uint8_t squ_wav[EXAMPLE_ARRAY_LEN];                      // Used to store square wave values
-
-static void example_generate_wave(void)
+static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handle, const dac_event_data_t* event,
+                                                   void* user_data)
 {
-    uint32_t pnt_num = EXAMPLE_ARRAY_LEN;
-
-    for (int i = 0; i < pnt_num; i ++) {
-        sin_wav[i] = (uint8_t)((sin( i * CONST_PERIOD_2_PI / pnt_num) + 1) * (double)(EXAMPLE_DAC_AMPLITUDE) / 2 + 0.5);
-        tri_wav[i] = (i > (pnt_num / 2)) ? (2 * EXAMPLE_DAC_AMPLITUDE * (pnt_num - i) / pnt_num) : (2 * EXAMPLE_DAC_AMPLITUDE * i / pnt_num);
-        saw_wav[i] = (i == pnt_num) ? 0 : (i * EXAMPLE_DAC_AMPLITUDE / pnt_num);
-        squ_wav[i] = (i < (pnt_num / 2)) ? EXAMPLE_DAC_AMPLITUDE : 0;
+    QueueHandle_t que = (QueueHandle_t)user_data;
+    BaseType_t need_awoke;
+    /* When the queue is full, drop the oldest item */
+    if (xQueueIsQueueFullFromISR(que))
+    {
+        dac_event_data_t dummy;
+        xQueueReceiveFromISR(que, &dummy, &need_awoke);
     }
+    /* Send the event from callback */
+    xQueueSendFromISR(que, event, &need_awoke);
+    return need_awoke;
 }
 
-void example_log_info(uint32_t conv_freq, uint32_t wave_freq)
-{
-    ESP_LOGI(TAG, "--------------------------------------------------");
-    ESP_LOGI(TAG, "DAC continuous output by DMA");
-    ESP_LOGI(TAG, "DAC channel 0 io: GPIO_NUM_%d", EXAMPLE_DAC_CHAN0_IO);
-    ESP_LOGI(TAG, "DAC channel 1 io: GPIO_NUM_%d", EXAMPLE_DAC_CHAN1_IO);
-    ESP_LOGI(TAG, "Waveform: SINE -> TRIANGLE -> SAWTOOTH -> SQUARE");
-    ESP_LOGI(TAG, "DAC conversion frequency (Hz): %"PRIu32, conv_freq);
-    ESP_LOGI(TAG, "DAC wave frequency (Hz): %"PRIu32, wave_freq);
-    ESP_LOGI(TAG, "--------------------------------------------------");
-}
-
+/**
+ * @brief Initialize the DAC
+ */
 void dacInit(void)
 {
-    example_generate_wave();
+    dac_continuous_config_t cont_cfg = {
+        .chan_mask = DAC_CHANNEL_MASK_CH0,   // This is GPIO_NUM_17
+        .desc_num  = DMA_DESCRIPTORS,        // The number of DMA descriptors
+        .buf_size  = BUF_SIZE,               // The size of each MDA buffer
+        .freq_hz   = AUDIO_SAMPLE_RATE_HZ,   // The frequency of DAC conversion
+        .offset    = 0,                      // DC Offset automatically applied
+        .clk_src   = DAC_DIGI_CLK_SRC_APB,   // APB is 77hz->MHz and always available
+                                             // DAC_DIGI_CLK_SRC_APLL is 6Hz -> MHz but may be used by other peripherals
+        .chan_mode = DAC_CHANNEL_MODE_SIMUL, // Doesn't matter for single channel output
+    };
 
-    /* Output 2 kHz waves using DMA */
-    example_dac_continuous_by_dma();
+    /* Allocate continuous channels */
+    ESP_ERROR_CHECK(dac_continuous_new_channels(&cont_cfg, &dac_handle));
+
+    /* Create a queue to transport the interrupt event data */
+    que = xQueueCreate(10, sizeof(dac_event_data_t));
+
+    /* Register callbacks for conversion events */
+    dac_event_callbacks_t cbs = {
+        .on_convert_done = dac_on_convert_done_callback,
+        .on_stop         = NULL,
+    };
+    ESP_ERROR_CHECK(dac_continuous_register_event_callback(dac_handle, &cbs, que));
+
+    /* Enable and start the continuous channels */
+    ESP_ERROR_CHECK(dac_continuous_enable(dac_handle));
+    ESP_ERROR_CHECK(dac_continuous_start_async_writing(dac_handle));
+}
+
+/**
+ * @brief Poll the queue to see if it needs to be filled with audio samples
+ */
+void dacPoll(void)
+{
+    /* If there is an event to receive, receive it */
+    dac_event_data_t evt_data;
+    if (xQueueReceive(que, &evt_data, 0))
+    {
+        /* Generate a sawtooth on the fly */
+        static uint8_t sawtooth[BUF_SIZE];
+        for (int32_t i = 0; i < BUF_SIZE; i++)
+        {
+            sawtooth[i] = (i * 255) / BUF_SIZE;
+        }
+
+        /* Write the data to the DAC */
+        size_t loaded_bytes = 0;
+        dac_continuous_write_asynchronously(dac_handle, evt_data.buf, evt_data.buf_size, //
+                                            sawtooth, sizeof(sawtooth), &loaded_bytes);
+    }
 }
