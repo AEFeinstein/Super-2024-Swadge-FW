@@ -12,6 +12,7 @@
 #include "modeDice.h"
 #include "swadge2024.h"
 #include "tinyphysicsengine.h"
+#include "small3dlib.h"
 #include "quaternions.h"
 #include "matrixMath.h"
 #include "spiffs_model.h"
@@ -19,6 +20,7 @@
 #include "macros.h"
 #include "hdw-imu.h"
 #include "hdw-btn.h"
+#include "hdw-tft.h"
 #include "font.h"
 #include "wsg.h"
 
@@ -84,26 +86,29 @@ typedef struct
     /////////////////////
     // Rendering Objects
     /////////////////////
-    scene_t scene;
+    // raw data for the D6 mode
+    object3dInfo_t d6objInfo;
+
+    S3L_Scene scene;
 
     // wireframe model of the box the dice are contained in
-    model_t envModel;
+
+    S3L_Model3D envModel;
 
     // model of a coin
-    model_t coinModel;
+    S3L_Model3D coinModel;
 
     // model of a 4-sided die
-    model_t d4model;
+    S3L_Model3D d4model;
 
     // model of 6-sided die
-    model_t d6model;
+    S3L_Model3D d6model;
 
     // model of a 20-sided die
-    model_t d20model;
+    S3L_Model3D d20model;
 
     // model of a 100-sided die
-
-    model_t d100model;
+    S3L_Model3D d100model;
 } diceMode_t;
 
 //==============================================================================
@@ -123,6 +128,7 @@ TPE_Vec3 worldToTpeCoord(const float* vf);
 void tpeToWorldCoord(float* vf, TPE_Vec3 vec);
 
 static uint8_t diceTpeCollisionCallback(uint16_t body1, uint16_t joint1, uint16_t body2, uint16_t joint2, TPE_Vec3 vec);
+static void dicePixelCallback(const S3L_PixelInfo* pixelInfo);
 
 static void setupScene(void);
 static void stepPhysics(void);
@@ -169,10 +175,12 @@ static void diceEnterMode(void)
     loadFont("seven_segment.font", &diceData->numberFont, false);
 
     // Load models
-    loadModel("wirebox.mdl", &diceData->envModel, false);
-    loadModel("cube.mdl", &diceData->d6model, true);
+    //loadModelS3d("wirebox.mdl", &diceData->envModel, false);
+    //loadModelS3d("cube.mdl", &diceData->d6model, true);
     //loadModel("donut.mdl", &diceData->d6model, true);
 
+    // Load the raw object info
+    loadObjInfo("donut.mdl", &diceData->d6objInfo, true);
 
     // 30FPS as recommended by physics
     setFrameRateUs(1000000 / 30);
@@ -190,10 +198,12 @@ static void diceExitMode(void)
     freeFont(&diceData->textFont);
     freeFont(&diceData->numberFont);
 
-    deinitRenderer();
+    //deinitRenderer();
 
-    freeModel(&diceData->d6model);
-    freeModel(&diceData->envModel);
+    //freeModel(&diceData->d6model);
+    //freeModel(&diceData->envModel);
+
+    freeObjInfo(&diceData->d6objInfo);
 
     free(diceData);
     diceData = NULL;
@@ -328,14 +338,32 @@ static uint8_t diceTpeCollisionCallback(uint16_t body1, uint16_t joint1, uint16_
     return 1;
 }
 
+static void dicePixelCallback(const S3L_PixelInfo* pixelInfo)
+{
+    paletteColor_t col = c555;
+    setPxTft(pixelInfo->x, pixelInfo->y, col);
+}
+
 static void setupScene(void)
 {
     diceData->dieCount = 1;
 
-    float translate[3] = {0};
-    float rotate[4] = {0};
-    rotate[0] = 1.0;
-    float scale[3] = {CUBE_SCALE, CUBE_SCALE, CUBE_SCALE};
+    //float translate[3] = {0};
+    //float rotate[4] = {0};
+    //rotate[0] = 1.0;
+    //float scale[3] = {CUBE_SCALE, CUBE_SCALE, CUBE_SCALE};
+
+    configureS3dCallback(TFT_WIDTH, TFT_HEIGHT, dicePixelCallback);
+
+    S3L_model3DInit(
+        diceData->d6objInfo.verts,
+        diceData->d6objInfo.vertCount,
+        diceData->d6objInfo.tris,
+        diceData->d6objInfo.triCount,
+        &diceData->d6model
+    );
+
+    S3L_sceneInit(&diceData->d6model, 1, &diceData->scene);
 
     // TODO: Different dice shapes, obviously
     for (int i = 0; i < diceData->dieCount; i++)
@@ -346,18 +374,18 @@ static void setupScene(void)
         TPE_bodyMoveTo(&diceData->bodies[i], TPE_vec3(0, i * (DIE_SIZE + TPE_F), 0));
 
         // Setup renderer model info
-        diceData->scene.objects[i].model = &diceData->d6model;
-        createTransformMatrix(diceData->scene.objects[i].transform, translate, rotate, scale);
+        //diceData->scene.objects[i].model = &diceData->d6model;
+        //createTransformMatrix(diceData->scene.objects[i].transform, translate, rotate, scale);
     }
 
     // We'll have one more model, for the box the dice are in
-    diceData->scene.objectCount = diceData->dieCount + 1;
-    diceData->scene.objects[diceData->dieCount].model = &diceData->envModel;
-    scale[0] = (280.0 / 255.0);
-    scale[1] = (240.0 / 255.0);
-    scale[2] = 1.0;
-    createTransformMatrix(diceData->scene.objects[diceData->dieCount].transform, translate, rotate, scale);
-    identityMatrix(diceData->scene.transform);
+    //diceData->scene.objectCount = diceData->dieCount + 1;
+    //diceData->scene.objects[diceData->dieCount].model = &diceData->envModel;
+    //scale[0] = (280.0 / 255.0);
+    //scale[1] = (240.0 / 255.0);
+    //scale[2] = 1.0;
+    //createTransformMatrix(diceData->scene.objects[diceData->dieCount].transform, translate, rotate, scale);
+    //identityMatrix(diceData->scene.transform);
 
 
     // Init physics engine world
@@ -369,7 +397,7 @@ static void setupScene(void)
     //TPE_bodySpin(&diceData->world.bodies[1], TPE_vec3(1 * TPE_F / 10, 0, 1 * TPE_F / 10));
 
     // Init renderer
-    initRendererScene(&diceData->scene);
+    //initRendererScene(&diceData->scene);
 }
 
 static void stepPhysics(void)
@@ -396,6 +424,16 @@ static void stepPhysics(void)
 
 static void drawDice(void)
 {
+    float orientQuat[4];
+    accelGetQuaternion(orientQuat);
+
+    diceData->scene.camera.transform.rotation.x = (int)(orientQuat[0] * (S3L_F / 2) / 3.1415626535);
+    diceData->scene.camera.transform.rotation.y = (int)(orientQuat[1] * (S3L_F / 2) / 3.1415626535);
+    diceData->scene.camera.transform.rotation.z = (int)(orientQuat[2] * (S3L_F / 2) / 3.1415626535);
+    diceData->scene.camera.transform.rotation.w = (int)(orientQuat[3] * (S3L_F / 2) / 3.1415626535);
+
+    diceData->scene.camera.transform.translation.z = -2 * S3L_F;
+
     for (uint32_t i = 0; i < diceData->dieCount; i++)
     {
         TPE_Body* body = &diceData->world.bodies[i];
@@ -407,7 +445,17 @@ static void drawDice(void)
         // so this is fine, assuming a cube
         TPE_Vec3 rot = TPE_bodyGetRotation(body, 0, 1, 2);
 
-        float eulerRot[3] = {
+        S3L_Model3D* model = &diceData->d6model;
+        model->transform.translation.x = pos.x;
+        model->transform.translation.y = pos.y;
+        model->transform.translation.z = pos.z;
+
+        // this is definitely not right
+        //model->transform.rotation.x = rot.x;
+        //model->transform.rotation.y = rot.y;
+        //model->transform.rotation.z = rot.z;
+
+        /*float eulerRot[3] = {
             rot.x * 2 * 3.1415926535 / TPE_F,
             rot.y * 2 * 3.1415926535 / TPE_F,
             rot.z * 2 * 3.1415926535 / TPE_F,
@@ -427,6 +475,9 @@ static void drawDice(void)
         ESP_LOGI("Dice", "Object [%" PRIu32 "] Velocity is %" PRId16 ", %" PRId16 ", %" PRId16, i,
                  (int16_t)vel.x / TPE_F, (int16_t)vel.y / TPE_F, (int16_t)vel.z / TPE_F);
 
-        drawScene(&diceData->scene, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+        drawScene(&diceData->scene, 0, 0, TFT_WIDTH, TFT_HEIGHT);*/
     }
+
+    S3L_newFrame();
+    S3L_drawScene(diceData->scene);
 }

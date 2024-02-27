@@ -75,6 +75,7 @@
 #include <float.h>
 
 #include "palette.h"
+#include "small3dlib.h"
 
 // Defines
 #define SCENE_MAX_OBJECTS 12
@@ -130,6 +131,46 @@ typedef struct
     /// @brief An array defining the model's lines
     modelLine_t* lines;
 } model_t;
+
+/**
+ * @brief Struct for holding all data nedeed to
+ *
+ */
+typedef struct
+{
+    uint16_t vertCount;
+    uint16_t triCount;
+    uint16_t uvCount;
+
+    uint8_t mtlCount;
+
+    /// @brief A list of (3 * vertCount) int32_ts
+    int32_t* verts;
+
+    /// @brief A list of (3 * triCount) vertex indices
+    uint16_t* tris;
+
+    /// @brief If true, use UVs. If false, use vertex colors
+    bool useUvs;
+
+    /// @brief A list of UV value pairs as (2 * uvCount) int32_ts
+    int32_t* uvs;
+
+    /// @brief A list of UV indices for each triangle vertex as (3 * triCount) uint16_ts
+    uint16_t* triUvs;
+
+    /// @brief A list of colors for each triangle
+    paletteColor_t* triColors;
+
+    /// @brief The name of the .mtl file referenced in this obj, if any
+    const char* mtlLibName;
+
+    /// @brief A list of (mtlCount) material names, dynamic strs
+    const char** mtlNames;
+
+    /// @brief A list of material indices for each triangle
+    uint8_t* triMtls;
+} object3dInfo_t;
 
 /**
  * @brief Structure representing an object within a scene
