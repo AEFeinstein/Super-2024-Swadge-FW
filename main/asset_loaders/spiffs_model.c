@@ -131,8 +131,11 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
     // Just one byte for material count
     uint8_t mtlCount = decompressedBuf[8];
 
+    uint16_t minBoundsOffset = 12;
+    uint16_t maxBoundsOffset = minBoundsOffset + 12;
+
     // Then, 3 bytes of padding before the verts
-    uint16_t vertOffset = 12;
+    uint16_t vertOffset = maxBoundsOffset + 12;
 
     // Then, UVs are immediately after verts
     uint16_t uvOffset = vertOffset + 12 * vertCount;
@@ -163,11 +166,20 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
     objInfo->uvCount = uvCount;
     objInfo->mtlCount = mtlCount;
 
+    objInfo->minBounds[0] = READ_32(decompressedBuf, minBoundsOffset);
+    objInfo->minBounds[1] = READ_32(decompressedBuf, minBoundsOffset + 4);
+    objInfo->minBounds[2] = READ_32(decompressedBuf, minBoundsOffset + 8);
+
+    objInfo->maxBounds[0] = READ_32(decompressedBuf, maxBoundsOffset);
+    objInfo->maxBounds[1] = READ_32(decompressedBuf, maxBoundsOffset + 4);
+    objInfo->maxBounds[2] = READ_32(decompressedBuf, maxBoundsOffset + 8);
+
     objInfo->verts = heap_caps_malloc(sizeof(int32_t) * 3 * vertCount, caps);
     objInfo->tris = (triCount > 0) ? heap_caps_malloc(sizeof(uint16_t) * 3 * triCount, caps) : NULL;
     objInfo->uvs = heap_caps_malloc(sizeof(int32_t) * 2 * uvCount, caps);
     objInfo->triUvs = heap_caps_malloc(sizeof(uint16_t) * 2 * triUvCount, caps);
     objInfo->triColors = (useUvs) ? NULL : heap_caps_malloc(sizeof(paletteColor_t) * triCount, caps);
+    objInfo->triMtls = (mtlCount > 0) ? heap_caps_malloc(sizeof(uint8_t) * triCount, caps) : 0;
 
     objInfo->useUvs = useUvs;
 
@@ -255,6 +267,10 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
             }
 
             mtlsRead++;
+        }
+        else
+        {
+            cur++;
         }
     }
 

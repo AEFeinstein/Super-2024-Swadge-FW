@@ -35,60 +35,6 @@ static inline void S3L_pixelInfoInit(S3L_PixelInfo *p);
   down significantly. */
 static inline void S3L_correctBarycentricCoords(S3L_Unit barycentric[3]);
 
-// general helper functions
-static inline S3L_Unit S3L_abs(S3L_Unit value);
-static inline S3L_Unit S3L_min(S3L_Unit v1, S3L_Unit v2);
-static inline S3L_Unit S3L_max(S3L_Unit v1, S3L_Unit v2);
-static inline S3L_Unit S3L_clamp(S3L_Unit v, S3L_Unit v1, S3L_Unit v2);
-static inline S3L_Unit S3L_wrap(S3L_Unit value, S3L_Unit mod);
-static inline S3L_Unit S3L_nonZero(S3L_Unit value);
-static inline S3L_Unit S3L_zeroClamp(S3L_Unit value);
-
-static inline S3L_Unit S3L_cos(S3L_Unit x);
-
-/** Interpolated between two values, v1 and v2, in the same ratio as t is to
-  tMax. Does NOT prevent zero division. */
-static inline S3L_Unit S3L_interpolate(
-  S3L_Unit v1,
-  S3L_Unit v2,
-  S3L_Unit t,
-  S3L_Unit tMax);
-
-/** Same as S3L_interpolate but with v1 == 0. Should be faster. */
-static inline S3L_Unit S3L_interpolateFrom0(
-  S3L_Unit v2,
-  S3L_Unit t,
-  S3L_Unit tMax);
-
-/** Like S3L_interpolate, but uses a parameter that goes from 0 to
-  S3L_FRACTIONS_PER_UNIT - 1, which can be faster. */
-static inline S3L_Unit S3L_interpolateByUnit(
-  S3L_Unit v1,
-  S3L_Unit v2,
-  S3L_Unit t);
-
-/** Same as S3L_interpolateByUnit but with v1 == 0. Should be faster. */
-static inline S3L_Unit S3L_interpolateByUnitFrom0(
-  S3L_Unit v2,
-  S3L_Unit t);
-
-static inline S3L_Unit S3L_distanceManhattan(S3L_Vec4 a, S3L_Vec4 b);
-
-/** Returns a value interpolated between the three triangle vertices based on
-  barycentric coordinates. */
-static inline S3L_Unit S3L_interpolateBarycentric(
-  S3L_Unit value0,
-  S3L_Unit value1,
-  S3L_Unit value2,
-  S3L_Unit barycentric[3]);
-
-static inline void S3L_mapProjectionPlaneToScreen(
-  S3L_Vec4 point,
-  S3L_ScreenCoord *screenX,
-  S3L_ScreenCoord *screenY);
-
-static inline void S3L_rotate2DPoint(S3L_Unit *x, S3L_Unit *y, S3L_Unit angle);
-
 ////
 
 static inline void swadgePixelFunction(S3L_PixelInfo *pixel);
@@ -1272,7 +1218,7 @@ typedef struct
 #define S3L_stepFastLerp(state)\
   state.valueScaled += state.stepScaled
 
-static inline S3L_Unit S3L_interpolateBarycentric(
+S3L_Unit S3L_interpolateBarycentric(
   S3L_Unit value0,
   S3L_Unit value1,
   S3L_Unit value2,

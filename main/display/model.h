@@ -144,6 +144,9 @@ typedef struct
 
     uint8_t mtlCount;
 
+    int32_t minBounds[3];
+    int32_t maxBounds[3];
+
     /// @brief A list of (3 * vertCount) int32_ts
     int32_t* verts;
 

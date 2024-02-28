@@ -444,9 +444,20 @@ void process_obj(const char* infile, const char* outdir)
         maxextent = maxB[2];
 
     //float scale  = 512; // 127.9 / maxextent;
-    float scale[3] = {2, 2, -2};
+    float scale[3] = {16, 16, -16};
     float uscale = 512;
     float vscale = 512;
+
+    int32_t minBounds[3] = {
+        (int32_t)(minB[0] * scale[0]),
+        (int32_t)(minB[1] * scale[1]),
+        (int32_t)(minB[2] * scale[2])
+    };
+    int32_t maxBounds[3] = {
+        (int32_t)(maxB[0] * scale[0]),
+        (int32_t)(maxB[1] * scale[1]),
+        (int32_t)(maxB[2] * scale[2])
+    };
 
     // Allocate raw file buffer
     // V1:
@@ -466,6 +477,8 @@ void process_obj(const char* infile, const char* outdir)
     //            2 bytes #tris
     //            1 byte #mtls
     //            3 bytes padding
+    //                min bounds 12B (int32 x 3)
+    //                max bounds 12B (int32 x 3)
     //                verts 12B each (int32 x 3)
     //                uvs 8B each (int32 x 2)
     //                triVerts: {2B v0, 2B v1, 2B v2} * triCount
@@ -511,6 +524,7 @@ void process_obj(const char* infile, const char* outdir)
                      + 2 // tri count
                      + 1 // material count
                      + 3 /* padding */
+                     + 24 // min/max bounds
                      + (cvct * 12) // verts (deduplicated)
                      + (uvc * 8) // UVs count
                      + 3 /* 3 is max padding */
@@ -543,9 +557,41 @@ void process_obj(const char* infile, const char* outdir)
     // Write number of MTLs
     *bp++ = (mtlc)&0xFF;
 
+    // Padding
     *bp++ = 0;
     *bp++ = 0;
     *bp++ = 0;
+
+    // Bounds
+    *bp++ = (minBounds[0] >> 24) & 0xFF;
+    *bp++ = (minBounds[0] >> 16) & 0xFF;
+    *bp++ = (minBounds[0] >> 8) & 0xFF;
+    *bp++ = (minBounds[0]) & 0xFF;
+
+    *bp++ = (minBounds[1] >> 24) & 0xFF;
+    *bp++ = (minBounds[1] >> 16) & 0xFF;
+    *bp++ = (minBounds[1] >> 8) & 0xFF;
+    *bp++ = (minBounds[1]) & 0xFF;
+
+    *bp++ = (minBounds[2] >> 24) & 0xFF;
+    *bp++ = (minBounds[2] >> 16) & 0xFF;
+    *bp++ = (minBounds[2] >> 8) & 0xFF;
+    *bp++ = (minBounds[2]) & 0xFF;
+
+    *bp++ = (maxBounds[0] >> 24) & 0xFF;
+    *bp++ = (maxBounds[0] >> 16) & 0xFF;
+    *bp++ = (maxBounds[0] >> 8) & 0xFF;
+    *bp++ = (maxBounds[0]) & 0xFF;
+
+    *bp++ = (maxBounds[1] >> 24) & 0xFF;
+    *bp++ = (maxBounds[1] >> 16) & 0xFF;
+    *bp++ = (maxBounds[1] >> 8) & 0xFF;
+    *bp++ = (maxBounds[1]) & 0xFF;
+
+    *bp++ = (maxBounds[2] >> 24) & 0xFF;
+    *bp++ = (maxBounds[2] >> 16) & 0xFF;
+    *bp++ = (maxBounds[2] >> 8) & 0xFF;
+    *bp++ = (maxBounds[2]) & 0xFF;
 
 #ifdef DEBUG_OBJ
     printf("\nint8_t verts[] = {\n");

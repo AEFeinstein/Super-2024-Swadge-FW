@@ -154,6 +154,7 @@ void S3L_vec3Normalize(S3L_Vec4 *v);
 S3L_Unit S3L_vec2Length(S3L_Vec4 v);
 void S3L_vec3Cross(S3L_Vec4 a, S3L_Vec4 b, S3L_Vec4 *result);
 
+
 /** Computes a reflection direction (typically used e.g. for specular component
   in Phong illumination). The input vectors must be normalized. The result will
   be normalized as well. */
@@ -470,6 +471,60 @@ S3L_Unit S3L_zBufferRead(S3L_ScreenCoord x, S3L_ScreenCoord y);
   0,m,  m,m,  0,0,\
   m,0,  0,m,  m,m,\
   0,0,  0,m,  m,0
+
+// general helper functions
+inline S3L_Unit S3L_abs(S3L_Unit value);
+inline S3L_Unit S3L_min(S3L_Unit v1, S3L_Unit v2);
+inline S3L_Unit S3L_max(S3L_Unit v1, S3L_Unit v2);
+inline S3L_Unit S3L_clamp(S3L_Unit v, S3L_Unit v1, S3L_Unit v2);
+inline S3L_Unit S3L_wrap(S3L_Unit value, S3L_Unit mod);
+inline S3L_Unit S3L_nonZero(S3L_Unit value);
+inline S3L_Unit S3L_zeroClamp(S3L_Unit value);
+
+inline S3L_Unit S3L_cos(S3L_Unit x);
+
+/** Interpolated between two values, v1 and v2, in the same ratio as t is to
+  tMax. Does NOT prevent zero division. */
+inline S3L_Unit S3L_interpolate(
+  S3L_Unit v1,
+  S3L_Unit v2,
+  S3L_Unit t,
+  S3L_Unit tMax);
+
+/** Same as S3L_interpolate but with v1 == 0. Should be faster. */
+inline S3L_Unit S3L_interpolateFrom0(
+  S3L_Unit v2,
+  S3L_Unit t,
+  S3L_Unit tMax);
+
+/** Like S3L_interpolate, but uses a parameter that goes from 0 to
+  S3L_FRACTIONS_PER_UNIT - 1, which can be faster. */
+inline S3L_Unit S3L_interpolateByUnit(
+  S3L_Unit v1,
+  S3L_Unit v2,
+  S3L_Unit t);
+
+/** Same as S3L_interpolateByUnit but with v1 == 0. Should be faster. */
+inline S3L_Unit S3L_interpolateByUnitFrom0(
+  S3L_Unit v2,
+  S3L_Unit t);
+
+inline S3L_Unit S3L_distanceManhattan(S3L_Vec4 a, S3L_Vec4 b);
+
+/** Returns a value interpolated between the three triangle vertices based on
+  barycentric coordinates. */
+S3L_Unit S3L_interpolateBarycentric(
+  S3L_Unit value0,
+  S3L_Unit value1,
+  S3L_Unit value2,
+  S3L_Unit barycentric[3]);
+
+inline void S3L_mapProjectionPlaneToScreen(
+  S3L_Vec4 point,
+  S3L_ScreenCoord *screenX,
+  S3L_ScreenCoord *screenY);
+
+inline void S3L_rotate2DPoint(S3L_Unit *x, S3L_Unit *y, S3L_Unit angle);
 
 //// Swadge-specific changes
 

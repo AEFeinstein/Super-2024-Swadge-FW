@@ -50,12 +50,12 @@ typedef struct
     const char* filename;
 } testModelInfo_t;
 
-static const testModelInfo_t graphicsTestModels[] =
-{
-    {"Donut",  "donut.mdl"},
+static const testModelInfo_t graphicsTestModels[] = {
+    {"Donut", "donut.mdl"},
     {"Funkus", "bigfunkus.mdl"},
-    {"Bunny",  "bunny.mdl"},
-    //{"Cube", "cube.mdl"},
+    {"Cone", "traffic_cone.mdl"},
+    //{"Bunny", "bunny.mdl"},
+    {"Cube", "cube.mdl"},
     //{"Beetle", "beetle.mdl"},
     //{"Cow", "cow.mdl"},
 };
@@ -68,32 +68,41 @@ typedef struct
     float scale[3];
 } transformBase_t;
 
+typedef struct
+{
+    char id;
+    char message[32];
+    int64_t expiry;
+} tempText_t;
+
 /// @brief The struct that holds all the state for the graphics test mode
 typedef struct
 {
     font_t ibm; ///< The font used to display text
     int64_t avgFrameTime;
 
-    menu_t* menu; ///< The menu for adding a model
+    menu_t* menu;                        ///< The menu for adding a model
     menuLogbookRenderer_t* menuRenderer; ///< The menu's renderer
-    bool showMenu; ///< Whether or not the menu is active
+    bool showMenu;                       ///< Whether or not the menu is active
 
-    model_t models[ARRAY_SIZE(graphicsTestModels)];
+    wsg_t testTexture;
+
+    object3dInfo_t models[ARRAY_SIZE(graphicsTestModels)];
     bool modelLoaded[ARRAY_SIZE(graphicsTestModels)];
-
-    float worldTranslate[3];
-    float worldOrient[4];
-    float worldScale[3];
 
     transformBase_t worldTransform;
     transformBase_t objTransforms[SCENE_MAX_OBJECTS];
 
-    scene_t scene; ///< The 3D scene for the renderer
+    uint8_t sceneModelMap[SCENE_MAX_OBJECTS]; // mapping of scene object index to mode lindex
+    S3L_Model3D sceneModels[SCENE_MAX_OBJECTS];
+    S3L_Scene scene; ///< The 3D scene for the renderer
 
     int8_t selectedModel; ///< The index of the selected model
 
-    uint16_t btnState; ///< The button state
+    uint16_t btnState;               ///< The button state
     buttonRepeatState_t repeatState; ///< The button repeat state
+
+    tempText_t tempTexts[10];
 
     bool touchState;
     touchAction_t touchAction;
@@ -120,9 +129,15 @@ static void graphicsTestSetupMenu(void);
 static void graphicsTestReset(void);
 
 static const char* getTouchActionDesc(touchAction_t action);
+static void addTempText(char tag, const char* text);
+static void transformBaseToS3L(S3L_Transform3D* transform, const transformBase_t* base);
+static float fitObject3d(const object3dInfo_t* object, int dimension);
 static void transformBaseToMatrix(float mat[4][4], const transformBase_t* base);
 
 static void graphicsTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+
+static paletteColor_t sampleTexture(const wsg_t* tex, int32_t u, int32_t v);
+static void graphicsTestDrawPixelCb(const S3L_PixelInfo* pixelInfo);
 
 //==============================================================================
 // Strings
@@ -130,19 +145,21 @@ static void graphicsTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, 
 
 static const char graphicsTestName[] = "Graphics Test";
 
-static const char graphicsMenuItemCopy[] = "Copy";
-static const char graphicsMenuItemReset[] = "Reset";
+static const char graphicsMenuItemCopy[]   = "Copy";
+static const char graphicsMenuItemReset[]  = "Reset";
 static const char graphicsMenuItemCancel[] = "Cancel";
 
 static const char actionTranslateXYStr[] = "Move XY";
 static const char actionTranslateZYStr[] = "Move ZY";
-static const char actionRotateZStr[] = "Spin Z";
-static const char actionRotateYStr[] = "Spin Y";
-static const char actionRotateXStr[] = "Spin Z";
+static const char actionRotateZStr[]     = "Spin Z";
+static const char actionRotateYStr[]     = "Spin Y";
+static const char actionRotateXStr[]     = "Spin Z";
 
 //==============================================================================
 // Variables
 //==============================================================================
+
+#define TEMP_TEXT_TIME (10 * 1000000)
 
 /// The Swadge mode for graphicsTest
 swadgeMode_t graphicsTestMode = {
@@ -182,6 +199,8 @@ static void graphicsTestEnterMode(void)
     // Load a font
     loadFont("ibm_vga8.font", &graphicsTest->ibm, false);
 
+    loadWsg("BG_DOOR_KEY_A.wsg", &graphicsTest->testTexture, true);
+
     // Init the menu
     graphicsTest->menu = initMenu("Add Object", graphicsTestMenuCb);
     graphicsTestSetupMenu();
@@ -192,56 +211,66 @@ static void graphicsTestEnterMode(void)
     // Load (some of) the 3D models!
     for (int i = 0; i < 3; i++)
     {
-        ESP_LOGI("Model", "loadModel(%s) returned %s",
-                 graphicsTestModels[i].filename,
-                 loadModel(graphicsTestModels[i].filename, &graphicsTest->models[i], true) ? "true" : "false");
+        ESP_LOGI("Model", "loadModel(%s) returned %s", graphicsTestModels[i].filename,
+                 loadObjInfo(graphicsTestModels[i].filename, &graphicsTest->models[i], true) ? "true" : "false");
         graphicsTest->modelLoaded[i] = true;
     }
 
-    graphicsTest->worldTransform.scale[0] = 1.0;
-    graphicsTest->worldTransform.scale[1] = 1.0;
-    graphicsTest->worldTransform.scale[2] = 1.0;
-    graphicsTest->worldTransform.rotate[0] = 1.0;
-    transformBaseToMatrix(graphicsTest->scene.transform, &graphicsTest->worldTransform);
-
-    graphicsTest->scene.objectCount = 3;
-    graphicsTest->scene.objects[0].model = &graphicsTest->models[0];
-    graphicsTest->objTransforms[0].scale[0] = 1.0;
-    graphicsTest->objTransforms[0].scale[1] = 1.0;
-    graphicsTest->objTransforms[0].scale[2] = 1.0;
-    graphicsTest->objTransforms[0].rotate[0] = 1.0;
+    S3L_model3DInit(graphicsTest->models[0].verts, graphicsTest->models[0].vertCount, graphicsTest->models[0].tris,
+                    graphicsTest->models[0].triCount, &graphicsTest->sceneModels[0]);
+    graphicsTest->sceneModelMap[0]              = 0;
+    graphicsTest->objTransforms[0].scale[0]     = 1.0;
+    graphicsTest->objTransforms[0].scale[1]     = 1.0;
+    graphicsTest->objTransforms[0].scale[2]     = 1.0;
+    graphicsTest->objTransforms[0].rotate[0]    = 1.0;
     graphicsTest->objTransforms[0].translate[0] = -25.0;
     graphicsTest->objTransforms[0].translate[1] = -25.0;
     graphicsTest->objTransforms[0].translate[2] = 0.0;
-    transformBaseToMatrix(graphicsTest->scene.objects[0].transform, &graphicsTest->objTransforms[0]);
+    transformBaseToS3L(&graphicsTest->sceneModels[0].transform, &graphicsTest->objTransforms[0]);
+    // transformBaseToMatrix(graphicsTest->scene.models[0].transform, &graphicsTest->objTransforms[0]);
 
-    graphicsTest->scene.objects[1].model = &graphicsTest->models[1];
-    graphicsTest->objTransforms[1].scale[0] = 1.0;
-    graphicsTest->objTransforms[1].scale[1] = 1.0;
-    graphicsTest->objTransforms[1].scale[2] = 1.0;
-    graphicsTest->objTransforms[1].rotate[0] = 1.0;
+    S3L_model3DInit(graphicsTest->models[1].verts, graphicsTest->models[1].vertCount, graphicsTest->models[1].tris,
+                    graphicsTest->models[1].triCount, &graphicsTest->sceneModels[1]);
+    graphicsTest->sceneModelMap[1]              = 1;
+    graphicsTest->objTransforms[1].scale[0]     = 1.0;
+    graphicsTest->objTransforms[1].scale[1]     = 1.0;
+    graphicsTest->objTransforms[1].scale[2]     = 1.0;
+    graphicsTest->objTransforms[1].rotate[0]    = 1.0;
     graphicsTest->objTransforms[1].translate[0] = 25.0;
     graphicsTest->objTransforms[1].translate[1] = 25.0;
     graphicsTest->objTransforms[1].translate[2] = 0.0;
-    transformBaseToMatrix(graphicsTest->scene.objects[1].transform, &graphicsTest->objTransforms[1]);
+    transformBaseToS3L(&graphicsTest->sceneModels[1].transform, &graphicsTest->objTransforms[1]);
 
-    graphicsTest->scene.objects[2].model = &graphicsTest->models[2];
-    graphicsTest->objTransforms[2].scale[0] = 1.0;
-    graphicsTest->objTransforms[2].scale[1] = 1.0;
-    graphicsTest->objTransforms[2].scale[2] = 1.0;
-    graphicsTest->objTransforms[2].rotate[0] = 1.0;
+    S3L_model3DInit(graphicsTest->models[2].verts, graphicsTest->models[2].vertCount, graphicsTest->models[2].tris,
+                    graphicsTest->models[2].triCount, &graphicsTest->sceneModels[2]);
+    graphicsTest->sceneModelMap[2]              = 2;
+    graphicsTest->objTransforms[2].scale[0]     = 1.0;
+    graphicsTest->objTransforms[2].scale[1]     = 1.0;
+    graphicsTest->objTransforms[2].scale[2]     = 1.0;
+    graphicsTest->objTransforms[2].rotate[0]    = 1.0;
     graphicsTest->objTransforms[2].translate[0] = 60.0;
     graphicsTest->objTransforms[2].translate[1] = 60.0;
     graphicsTest->objTransforms[2].translate[2] = 0.0;
-    transformBaseToMatrix(graphicsTest->scene.objects[2].transform, &graphicsTest->objTransforms[2]);
+    transformBaseToS3L(&graphicsTest->sceneModels[2].transform, &graphicsTest->objTransforms[2]);
+
+    // Setup the scene with all the models
+    S3L_sceneInit(graphicsTest->sceneModels, 3, &graphicsTest->scene);
+    graphicsTest->worldTransform.scale[0]     = 1.0;
+    graphicsTest->worldTransform.scale[1]     = 1.0;
+    graphicsTest->worldTransform.scale[2]     = 1.0;
+    graphicsTest->worldTransform.rotate[0]    = 1.0;
+    graphicsTest->worldTransform.translate[2] = -100.0;
+    transformBaseToS3L(&graphicsTest->scene.camera.transform, &graphicsTest->worldTransform);
 
     // Repeat any of the arrow buttons every .1s after first holding for .3s
-    graphicsTest->repeatState.repeatMask = PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
-    graphicsTest->repeatState.repeatDelay = 300000;
+    graphicsTest->repeatState.repeatMask     = PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT;
+    graphicsTest->repeatState.repeatDelay    = 300000;
     graphicsTest->repeatState.repeatInterval = 60000;
 
+    configureS3dCallback(TFT_WIDTH, TFT_HEIGHT, graphicsTestDrawPixelCb);
+
     // Ensure there's sufficient space to draw both models
-    initRendererScene(&graphicsTest->scene);
+    // initRendererScene(&graphicsTest->scene);
 
     // We shold go as fast as we can.
     setFrameRateUs(0);
@@ -253,20 +282,22 @@ static void graphicsTestEnterMode(void)
 static void graphicsTestExitMode(void)
 {
     // Free renderer memory
-    deinitRenderer();
+    // deinitRenderer();
 
     // Free the 3D models
     for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
     {
         if (graphicsTest->modelLoaded[i])
         {
-            freeModel(&graphicsTest->models[i]);
+            freeObjInfo(&graphicsTest->models[i]);
         }
     }
 
     // Free menu related things
     deinitMenuLogbookRenderer(graphicsTest->menuRenderer);
     deinitMenu(graphicsTest->menu);
+
+    freeWsg(&graphicsTest->testTexture);
 
     // Free the font
     freeFont(&graphicsTest->ibm);
@@ -299,23 +330,28 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
         const char* touchActionStr = getTouchActionDesc(graphicsTest->touchAction);
         if (graphicsTest->selectedModel == -1)
         {
-            snprintf(buffer, sizeof(buffer), "Sel: World  Touch: %s", touchActionStr);
+            snprintf(buffer, sizeof(buffer), "Sel: Camera  Touch: %s", touchActionStr);
+            drawText(&graphicsTest->ibm, c000, buffer, 31, 6);
             drawText(&graphicsTest->ibm, c555, buffer, 30, 5);
         }
-        else if (graphicsTest->scene.objectCount > 0)
+        else if (graphicsTest->scene.modelCount > 0)
         {
-            snprintf(buffer, sizeof(buffer), "Sel: #%" PRIu8 "/%" PRIu8 "  Touch: %s", graphicsTest->selectedModel + 1, graphicsTest->scene.objectCount, touchActionStr);
+            snprintf(buffer, sizeof(buffer), "Sel: #%" PRIu8 "/%" PRIu8 "  Touch: %s", graphicsTest->selectedModel + 1,
+                     graphicsTest->scene.modelCount, touchActionStr);
+            drawText(&graphicsTest->ibm, c000, buffer, 31, 6);
             drawText(&graphicsTest->ibm, c555, buffer, 30, 5);
         }
 
         // Draw FPS Counter
         graphicsTest->avgFrameTime = (graphicsTest->avgFrameTime * 9 / 10) + (elapsedUs * 1 / 10);
 
-        int32_t framesPerSecond = (1000000 / (graphicsTest->avgFrameTime + 1));
+        int32_t framesPerSecond      = (1000000 / (graphicsTest->avgFrameTime + 1));
         int32_t tenthFramesPerSecond = (10000000 / (graphicsTest->avgFrameTime + 1)) % 10;
 
         snprintf(buffer, sizeof(buffer), "%" PRId32 ".%" PRId32, framesPerSecond, tenthFramesPerSecond);
-        int16_t textX = drawText(&graphicsTest->ibm, c550, buffer, TFT_WIDTH - 30 - textWidth(&graphicsTest->ibm, buffer), 5);
+        drawText(&graphicsTest->ibm, c000, buffer, TFT_WIDTH - 30 - textWidth(&graphicsTest->ibm, buffer) + 1, 6);
+        int16_t textX
+            = drawText(&graphicsTest->ibm, c550, buffer, TFT_WIDTH - 30 - textWidth(&graphicsTest->ibm, buffer), 5);
 
         // Draw a '!' after the FPS if we ran out of memory for drawing triangles
         // This should only happen if we used initRendererCustom() with fewer than
@@ -323,6 +359,30 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
         if (*frameClipped)
         {
             drawText(&graphicsTest->ibm, c500, "!", textX, 5);
+            drawText(&graphicsTest->ibm, c000, "!", textX + 1, 6);
+        }
+
+        textX = 30;
+        int16_t textY = TFT_HEIGHT - graphicsTest->ibm.height - 1 - 5;
+        for (int i = 0; i < ARRAY_SIZE(graphicsTest->tempTexts); i++)
+        {
+            if (graphicsTest->tempTexts[i].expiry > 0)
+            {
+                drawText(&graphicsTest->ibm, c000, graphicsTest->tempTexts[i].message, textX + 1, textY + 1);
+                drawText(&graphicsTest->ibm, c555, graphicsTest->tempTexts[i].message, textX, textY);
+
+                textY -= graphicsTest->ibm.height + 1 + 1;
+
+                // Apply the expiration timer
+                if (graphicsTest->tempTexts[i].expiry > elapsedUs)
+                {
+                    graphicsTest->tempTexts[i].expiry -= elapsedUs;
+                }
+                else
+                {
+                    graphicsTest->tempTexts[i].expiry = 0;
+                }
+            }
         }
     }
 }
@@ -338,16 +398,17 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
     {
         graphicsTest->showMenu = false;
     }
-    else if (selected && graphicsTest->scene.objectCount < SCENE_MAX_OBJECTS)
+    else if (selected && graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
     {
-        model_t* model = NULL;
-        bool copy = false;
-        if (label == graphicsMenuItemCopy && graphicsTest->scene.objectCount > 0)
+        object3dInfo_t* model = NULL;
+        bool copy             = false;
+        if (label == graphicsMenuItemCopy && graphicsTest->scene.modelCount > 0)
         {
             // Copy the current model data to a new one
-            memcpy(&graphicsTest->scene.objects[graphicsTest->scene.objectCount],
-                    &graphicsTest->scene.objects[graphicsTest->selectedModel],
-                    sizeof(obj3d_t));
+            memcpy(&graphicsTest->scene.models[graphicsTest->scene.modelCount],
+                   &graphicsTest->scene.models[graphicsTest->selectedModel], sizeof(obj3d_t));
+            graphicsTest->sceneModelMap[graphicsTest->scene.modelCount]
+                = graphicsTest->sceneModelMap[graphicsTest->selectedModel];
             copy = true;
         }
         else
@@ -359,9 +420,13 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
                     if (!graphicsTest->modelLoaded[i])
                     {
                         ESP_LOGI("Model", "Loading unloaded model %s", graphicsTestModels[i].filename);
-                        if (loadModel(graphicsTestModels[i].filename, &graphicsTest->models[i], true))
+                        if (loadObjInfo(graphicsTestModels[i].filename, &graphicsTest->models[i], true))
                         {
                             graphicsTest->modelLoaded[i] = true;
+                            /*ESP_LOGI("Model", "Model %s bounds are (%d, %d, %d) to (%d, %d, %d)",
+                                graphicsTestModels[i].label,
+                                graphicsTest->models[i].minBounds[0], graphicsTest->models[i].minBounds[1], graphicsTest->models[i].minBounds[2],
+                                graphicsTest->models[i].maxBounds[0], graphicsTest->models[i].maxBounds[1], graphicsTest->models[i].maxBounds[2]);*/
                         }
                     }
 
@@ -381,20 +446,40 @@ static void graphicsTestMenuCb(const char* label, bool selected, uint32_t settin
 
         if (!copy)
         {
-            obj3d_t* obj = &graphicsTest->scene.objects[graphicsTest->scene.objectCount];
-            obj->model = model;
-            const float translate[3] = {0};
-            float rotate[4];
-            const float scale[3] = {1.0, 1.0, 1.0};
-            accelGetQuaternion(rotate);
-            createTransformMatrix(obj->transform, translate, rotate, scale);
+            S3L_Model3D* obj = &graphicsTest->sceneModels[graphicsTest->scene.modelCount];
+            S3L_model3DInit(model->verts, model->vertCount, model->tris, model->triCount, obj);
+
+            transformBase_t* base = &graphicsTest->objTransforms[graphicsTest->scene.modelCount];
+
+            float scale = fitObject3d(model, TFT_WIDTH * 2);
+            ESP_LOGI("Graphics", "Scaling object to %f to fit", scale);
+
+            // accelGetQuaternion(base->rotate);
+            base->translate[0] = 0.0;
+            base->translate[1] = 0.0;
+            base->translate[2] = 0.0;
+            base->rotate[0]    = 1.0;
+            base->rotate[1]    = 0.0;
+            base->rotate[2]    = 0.0;
+            base->rotate[3]    = 0.0;
+            base->scale[0]     = scale;
+            base->scale[1]     = scale;
+            base->scale[2]     = scale;
+
+            char buffer[32];
+            snprintf(buffer, sizeof(buffer), "Scale: %.3f%%", scale * 100);
+            addTempText('s', buffer);
+
+            transformBaseToS3L(&obj->transform, base);
         }
 
+        graphicsTest->sceneModelMap[graphicsTest->scene.modelCount] = (model - graphicsTest->models);
+
         // Switch to the newly created model
-        graphicsTest->selectedModel = graphicsTest->scene.objectCount++;
+        graphicsTest->selectedModel = graphicsTest->scene.modelCount++;
 
         // And reallocate the scene
-        initRendererScene(&graphicsTest->scene);
+        // initRendererScene(&graphicsTest->scene);
         graphicsTest->showMenu = false;
     }
 }
@@ -422,13 +507,16 @@ static void graphicsTestHandleInput(void)
     }
     else
     {
-        transformBase_t* curTransform = (graphicsTest->scene.objectCount == 0 || graphicsTest->selectedModel == -1)
-                                        ? &graphicsTest->worldTransform
-                                        : &graphicsTest->objTransforms[graphicsTest->selectedModel];
-        bool transformUpdated = false;
+        transformBase_t* curTransform = (graphicsTest->scene.modelCount == 0 || graphicsTest->selectedModel == -1)
+                                            ? &graphicsTest->worldTransform
+                                            : &graphicsTest->objTransforms[graphicsTest->selectedModel];
+        bool scaleUpdated = false;
+        bool translateUpdated = false;
+        bool rotateUpdated = false;
+        bool transformUpdated         = false;
 
         // Handle Touchpad Input
-        if (graphicsTest->scene.objectCount > 0)
+        if (graphicsTest->scene.modelCount > 0)
         {
             int32_t angle, radius, intensity;
             if (getTouchJoystick(&angle, &radius, &intensity))
@@ -442,7 +530,7 @@ static void graphicsTestHandleInput(void)
                     if (!graphicsTest->touchState)
                     {
                         // Touch start!
-                        graphicsTest->touchState = true;
+                        graphicsTest->touchState      = true;
                         graphicsTest->touchDragStartX = x;
                         graphicsTest->touchDragStartY = y;
                         memcpy(graphicsTest->touchDragStartPos, curTransform->translate, sizeof(float[3]));
@@ -456,9 +544,13 @@ static void graphicsTestHandleInput(void)
                     int otherAxis = (graphicsTest->touchAction == TRANSLATE_XY) ? 1 : 2;
                     if (otherAxis != 2)
                     {
-                        curTransform->translate[0] = graphicsTest->touchDragStartPos[0] + ((maxX - minX) * (x - graphicsTest->touchDragStartX) / 1023.0);
+                        curTransform->translate[0] = graphicsTest->touchDragStartPos[0]
+                                                     + ((maxX - minX) * (x - graphicsTest->touchDragStartX) / 1023.0);
                     }
-                    curTransform->translate[otherAxis] = graphicsTest->touchDragStartPos[otherAxis] + ((maxY - minY) * (y - graphicsTest->touchDragStartY) / 1023.0);
+                    curTransform->translate[otherAxis]
+                        = graphicsTest->touchDragStartPos[otherAxis]
+                          + ((maxY - minY) * (y - graphicsTest->touchDragStartY) / 1023.0);
+                    translateUpdated = true;
                 }
                 else
                 {
@@ -483,18 +575,19 @@ static void graphicsTestHandleInput(void)
                     // Convert euler angle to quaternion
                     mathEulerToQuat(newRot, eulerRot);
 
-                    ESP_LOGI("GraphicsTest", "Rotating by %.2f, %.2f, %.2f",
-                             eulerRot[0], eulerRot[1], eulerRot[2]);
+                    ESP_LOGI("GraphicsTest", "Rotating by %.1f, %.1f, %.1f", eulerRot[0], eulerRot[1], eulerRot[2]);
 
                     // Update the object's orient to its original orient rotated by the new rotation
                     mathQuatApply(curTransform->rotate, graphicsTest->touchSpinStartOrient, newRot);
+
+                    rotateUpdated = true;
                 }
 
                 transformUpdated = true;
             }
             else if (graphicsTest->touchState)
             {
-                graphicsTest->touchState = false;
+                graphicsTest->touchState              = false;
                 graphicsTest->touchSpinState.startSet = false;
             }
         }
@@ -554,38 +647,46 @@ static void graphicsTestHandleInput(void)
                     case PB_B:
                     {
                         // Delete object
-                        if (graphicsTest->selectedModel != -1 && graphicsTest->scene.objectCount > 0)
+                        if (graphicsTest->selectedModel != -1 && graphicsTest->scene.modelCount > 0)
                         {
-                            const model_t* modelToUnload = graphicsTest->scene.objects[graphicsTest->selectedModel].model;
+                            void* vertMatch = graphicsTest->scene.models[graphicsTest->selectedModel].vertices;
+                            /*const object3dInfo_t* modelToUnload
+                                = graphicsTest->scene.models[graphicsTest->selectedModel].model;*/
 
-                            for (int i = graphicsTest->selectedModel; i < graphicsTest->scene.objectCount - 1; i++)
+                            for (int i = graphicsTest->selectedModel; i < graphicsTest->scene.modelCount - 1; i++)
                             {
                                 // Shift down any models afterwards in the array
-                                memcpy(&graphicsTest->scene.objects[i], &graphicsTest->scene.objects[i + 1], sizeof(obj3d_t));
+                                memcpy(&graphicsTest->scene.models[i], &graphicsTest->scene.models[i + 1],
+                                       sizeof(S3L_Model3D));
+                                graphicsTest->sceneModelMap[i] = graphicsTest->sceneModelMap[i + 1];
                             }
 
                             // We can leave the last one there, who cares
-                            graphicsTest->scene.objectCount--;
+                            graphicsTest->scene.modelCount--;
                             graphicsTest->selectedModel--;
 
+                            // Check if any of the scene objects are using this model
                             bool unloadModel = true;
-                            for (int i = 0; i < graphicsTest->scene.objectCount; i++)
+                            for (int i = 0; i < graphicsTest->scene.modelCount; i++)
                             {
-                                if (graphicsTest->scene.objects[i].model == modelToUnload)
+                                if (graphicsTest->scene.models[i].vertices == vertMatch)
                                 {
                                     unloadModel = false;
                                     break;
                                 }
                             }
 
+                            // If no other scene objects are using it, unload the model
                             if (unloadModel)
                             {
                                 for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
                                 {
-                                    if (modelToUnload == &graphicsTest->models[i])
+                                    // Find the actual corresponding model data
+                                    if (graphicsTest->models[i].verts == vertMatch)
                                     {
                                         ESP_LOGI("Model", "Unloading model %s", graphicsTestModels[i].filename);
-                                        freeModel(&graphicsTest->models[i]);
+
+                                        freeObjInfo(&graphicsTest->models[i]);
                                         graphicsTest->modelLoaded[i] = false;
                                         break;
                                     }
@@ -600,28 +701,59 @@ static void graphicsTestHandleInput(void)
 
                     case PB_UP:
                     {
-                        curTransform->scale[0] += .05;
-                        curTransform->scale[1] += .05;
-                        curTransform->scale[2] += .05;
-                        transformUpdated = true;
+                        if (graphicsTest->selectedModel == -1)
+                        {
+                            graphicsTest->scene.camera.transform.translation.z -= S3L_F * 3;
+                        }
+                        else
+                        {
+                            if (curTransform->scale[0] < .0499)
+                            {
+                                curTransform->scale[0] += .001;
+                                curTransform->scale[1] += .001;
+                                curTransform->scale[2] += .001;
+                            }
+                            else
+                            {
+                                curTransform->scale[0] += .05;
+                                curTransform->scale[1] += .05;
+                                curTransform->scale[2] += .05;
+                            }
+                            transformUpdated = true;
+                            scaleUpdated = true;
+                        }
                         break;
                     }
 
                     case PB_DOWN:
                     {
-                        if (curTransform->scale[0] > .0501)
+                        if (graphicsTest->selectedModel == -1)
                         {
-                            curTransform->scale[0] -= .05;
-                            curTransform->scale[1] -= .05;
-                            curTransform->scale[2] -= .05;
+                            graphicsTest->scene.camera.transform.translation.z += S3L_F * 3;
+                        }
+                        else
+                        {
+                            if (curTransform->scale[0] > .0501)
+                            {
+                                curTransform->scale[0] -= .05;
+                                curTransform->scale[1] -= .05;
+                                curTransform->scale[2] -= .05;
+                            }
+                            else if (curTransform->scale[0] > .001)
+                            {
+                                curTransform->scale[0] -= .001;
+                                curTransform->scale[1] -= .001;
+                                curTransform->scale[2] -= .001;
+                            }
                             transformUpdated = true;
+                            scaleUpdated = true;
                         }
                         break;
                     }
 
                     case PB_LEFT:
                     {
-                        if (graphicsTest->scene.objectCount > 0)
+                        if (graphicsTest->scene.modelCount > 0)
                         {
                             if (graphicsTest->selectedModel >= 0)
                             {
@@ -629,7 +761,7 @@ static void graphicsTestHandleInput(void)
                             }
                             else
                             {
-                                graphicsTest->selectedModel = graphicsTest->scene.objectCount - 1;
+                                graphicsTest->selectedModel = graphicsTest->scene.modelCount - 1;
                             }
                         }
                         break;
@@ -638,9 +770,10 @@ static void graphicsTestHandleInput(void)
                     case PB_RIGHT:
                     {
                         // Next object
-                        if (graphicsTest->scene.objectCount > 0)
+                        if (graphicsTest->scene.modelCount > 0)
                         {
-                            graphicsTest->selectedModel = (graphicsTest->selectedModel + 2) % (graphicsTest->scene.objectCount + 1) - 1;
+                            graphicsTest->selectedModel
+                                = (graphicsTest->selectedModel + 2) % (graphicsTest->scene.modelCount + 1) - 1;
 
                             // Reset the touch so weird stuff doesn't happen
                             graphicsTest->touchState = false;
@@ -658,10 +791,35 @@ static void graphicsTestHandleInput(void)
 
         if (transformUpdated)
         {
-            transformBaseToMatrix((graphicsTest->selectedModel == -1)
-                                  ? graphicsTest->scene.transform
-                                  : graphicsTest->scene.objects[graphicsTest->selectedModel].transform,
-                                  curTransform);
+            char buffer[32];
+            if (translateUpdated)
+            {
+                snprintf(buffer, sizeof(buffer), "Xlate: (%.1f, %.1f, %.1f)",
+                         curTransform->translate[0],
+                         curTransform->translate[1],
+                         curTransform->translate[2]);
+                addTempText('t', buffer);
+            }
+            if (rotateUpdated)
+            {
+                snprintf(buffer, sizeof(buffer), "Rotate: (%.1f, %.1f, %.1f, %.1f)", curTransform->rotate[0], curTransform->rotate[1], curTransform->rotate[2], curTransform->rotate[3]);
+                addTempText('r', buffer);
+            }
+            if (scaleUpdated)
+            {
+                snprintf(buffer, sizeof(buffer), "Scale: %.1f%%", curTransform->scale[0] * 100);
+                addTempText('s', buffer);
+            }
+
+
+            if (graphicsTest->selectedModel == -1)
+            {
+                //graphicsTest->scene.camera;
+            }
+            else
+            {
+                transformBaseToS3L(&graphicsTest->scene.models[graphicsTest->selectedModel].transform, curTransform);
+            }
         }
     }
 }
@@ -672,16 +830,20 @@ static void graphicsTestHandleInput(void)
 static void graphicsTestDrawScene(void)
 {
     // Get the orientation from the accelerometer
-    float finalOrient[4] = {1, 0, 0, 0};
+    /*float finalOrient[4] = {1, 0, 0, 0};
     accelGetQuaternion(finalOrient);
     mathQuatApply(finalOrient, graphicsTest->worldTransform.rotate, finalOrient);
     mathQuatNormalize(finalOrient, finalOrient);
 
     // FIXME this is definitely band-aiding something that's fundamentally incorrect
     finalOrient[0] *= -1;
-    createViewMatrix(graphicsTest->scene.transform, graphicsTest->worldTransform.translate, finalOrient, graphicsTest->worldTransform.scale);
+    // createViewMatrix(graphicsTest->scene.transform, graphicsTest->worldTransform.translate, finalOrient,
+    // graphicsTest->worldTransform.scale);
 
-    drawScene(&graphicsTest->scene, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    drawScene(&graphicsTest->scene, 0, 0, TFT_WIDTH, TFT_HEIGHT);*/
+
+    S3L_newFrame();
+    S3L_drawScene(graphicsTest->scene);
 }
 
 static void graphicsTestSetupMenu(void)
@@ -703,12 +865,13 @@ static void graphicsTestSetupMenu(void)
     }
 
     // Add back the items
-    if (graphicsTest->selectedModel != -1 && graphicsTest->scene.objectCount > 0 && graphicsTest->scene.objectCount < SCENE_MAX_OBJECTS)
+    if (graphicsTest->selectedModel != -1 && graphicsTest->scene.modelCount > 0
+        && graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
     {
         addSingleItemToMenu(graphicsTest->menu, graphicsMenuItemCopy);
     }
 
-    if (graphicsTest->scene.objectCount < SCENE_MAX_OBJECTS)
+    if (graphicsTest->scene.modelCount < SCENE_MAX_OBJECTS)
     {
         for (int i = 0; i < ARRAY_SIZE(graphicsTestModels); i++)
         {
@@ -724,8 +887,8 @@ static void graphicsTestSetupMenu(void)
  */
 static void graphicsTestReset(void)
 {
-    graphicsTest->scene.objectCount = 0;
-    graphicsTest->selectedModel = -1;
+    graphicsTest->scene.modelCount = 0;
+    graphicsTest->selectedModel    = -1;
 
     graphicsTest->worldTransform.translate[0] = 0.0;
     graphicsTest->worldTransform.translate[1] = 0.0;
@@ -739,6 +902,8 @@ static void graphicsTestReset(void)
     graphicsTest->worldTransform.scale[0] = 1.0;
     graphicsTest->worldTransform.scale[1] = 1.0;
     graphicsTest->worldTransform.scale[2] = 1.0;
+
+    transformBaseToS3L(&graphicsTest->scene.camera.transform, &graphicsTest->worldTransform);
 }
 
 static const char* getTouchActionDesc(touchAction_t action)
@@ -765,6 +930,67 @@ static const char* getTouchActionDesc(touchAction_t action)
     }
 }
 
+static void addTempText(char tag, const char* text)
+{
+    int firstEmpty = -1;
+    for (int i = 0; i < ARRAY_SIZE(graphicsTest->tempTexts); i++)
+    {
+        if (graphicsTest->tempTexts[i].id == tag)
+        {
+            firstEmpty = i;
+            break;
+        }
+
+        if (graphicsTest->tempTexts[i].expiry == 0 && firstEmpty == -1)
+        {
+            firstEmpty = i;
+        }
+    }
+
+    if (firstEmpty != -1)
+    {
+        strncpy(graphicsTest->tempTexts[firstEmpty].message, text, 32);
+        graphicsTest->tempTexts[firstEmpty].expiry = TEMP_TEXT_TIME;
+        graphicsTest->tempTexts[firstEmpty].id = tag;
+    }
+}
+
+static void transformBaseToS3L(S3L_Transform3D* s3l, const transformBase_t* base)
+{
+    s3l->rotation.x = (S3L_Unit)(base->rotate[0] * (S3L_F / 2) * 3.14159265358979);
+    s3l->rotation.y = (S3L_Unit)(base->rotate[1] * (S3L_F / 2) * 3.14159265358979);
+    s3l->rotation.z = (S3L_Unit)(base->rotate[2] * (S3L_F / 2) * 3.14159265358979);
+    s3l->rotation.w = (S3L_Unit)(base->rotate[3] * (S3L_F / 2) * 3.14159265358979);
+
+    s3l->scale.x = (S3L_Unit)(base->scale[0] * S3L_F);
+    s3l->scale.y = (S3L_Unit)(base->scale[1] * S3L_F);
+    s3l->scale.z = (S3L_Unit)(base->scale[2] * S3L_F);
+
+    s3l->translation.x = (S3L_Unit)(base->translate[0] * S3L_F);
+    s3l->translation.y = (S3L_Unit)(base->translate[1] * S3L_F);
+    s3l->translation.z = (S3L_Unit)(base->translate[2] * S3L_F);
+}
+
+static float fitObject3d(const object3dInfo_t* object, int dimension)
+{
+    int32_t max = INT32_MIN;
+    for (int i = 0; i < 3; i++)
+    {
+        if (abs(object->minBounds[i]) > max)
+        {
+            max = abs(object->minBounds[i]);
+        }
+
+        if (abs(object->maxBounds[i]) > max)
+        {
+            max = abs(object->maxBounds[i]);
+        }
+    }
+
+    // probably has some edge cases but don't make your models offset weirdly i guess?
+    return (1.0 * dimension) / max;
+}
+
 static void transformBaseToMatrix(float mat[4][4], const transformBase_t* base)
 {
     createTransformMatrix(mat, base->translate, base->rotate, base->scale);
@@ -785,4 +1011,69 @@ static void graphicsTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, 
 {
     accelIntegrate();
     fillDisplayArea(x, y, x + w, y + h, c000);
+}
+
+static paletteColor_t sampleTexture(const wsg_t* tex, int32_t u, int32_t v)
+{
+    u = S3L_wrap(u, tex->w);
+    v = S3L_wrap(v, tex->h);
+
+    return tex->px[v * tex->w + u];
+}
+
+static void graphicsTestDrawPixelCb(const S3L_PixelInfo* pixelInfo)
+{
+    static S3L_Vec4 uv0, uv1, uv2;
+    object3dInfo_t* object = &graphicsTest->models[graphicsTest->sceneModelMap[pixelInfo->modelIndex]];
+
+    static uint32_t previousTriangle = UINT32_MAX;
+    paletteColor_t col               = c555;
+
+    if (object->useUvs)
+    {
+        ESP_LOGI("Graphics", "Using UVs on model %d", pixelInfo->modelIndex);
+        if (pixelInfo->triangleID != previousTriangle)
+        {
+            S3L_getIndexedTriangleValues(pixelInfo->triangleIndex, object->triUvs, object->uvs, 2, &uv0, &uv1, &uv2);
+            previousTriangle = pixelInfo->triangleID;
+        }
+
+        S3L_Unit u, v;
+        u = S3L_interpolateBarycentric(uv0.x, uv1.x, uv2.x, pixelInfo->barycentric);
+        v = S3L_interpolateBarycentric(uv0.y, uv1.y, uv2.y, pixelInfo->barycentric);
+
+        col = sampleTexture(&graphicsTest->testTexture, u, v);
+    }
+    else if (object->triColors)
+    {
+        col = object->triColors[pixelInfo->triangleIndex];
+    }
+    else if (object->triMtls)
+    {
+        uint8_t mtlIndex = object->triMtls[pixelInfo->triangleIndex];
+        const char* mtlName = object->mtlNames[mtlIndex];
+        switch (*mtlName)
+        {
+            case 'r':
+                col = c500;
+                break;
+
+            case 'g':
+                col = c050;
+                break;
+
+            case 'b':
+                col = c005;
+                break;
+
+            case 'w':
+                col = c555;
+                break;
+
+            default:
+                col = c555;
+                break;
+        }
+    }
+    setPxTft(pixelInfo->x, pixelInfo->y, col);
 }
