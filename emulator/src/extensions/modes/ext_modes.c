@@ -29,6 +29,7 @@
 #include "mode_credits.h"
 #include "mode_pinball.h"
 #include "ultimateTTT.h"
+#include "small3dMode.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -68,6 +69,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &mainMenuMode,
     &modeCredits,
     &pinballMode,
+    &small3dMode,
     &tttMode,
     &timerMode,
     &touchTestMode,

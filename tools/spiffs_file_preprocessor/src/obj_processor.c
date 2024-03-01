@@ -16,7 +16,7 @@
 typedef float fvVert_t[6];
 typedef int iv_t[3];
 typedef int ln_t[2];
-typedef float uv_t[2];
+typedef float uv_t[3];
 typedef int triUv_t[3];
 typedef struct
 {
@@ -24,10 +24,33 @@ typedef struct
     char* name;
 } mtl_t;
 
-#ifdef DEBUG_OBJ
+#ifdef DEBUG
+    //#define DEBUG_OBJ
+#endif
+
+#ifdef DEBUG
     #define DEBUG_PRINT(...) printf(__VA_ARGS__)
 #else
     #define DEBUG_PRINT(...)
+#endif
+
+#ifdef DEBUG
+    #define DEBUG_BUF(buf, end)                                    \
+        do                                                         \
+        {                                                          \
+            printf("Buffer at " __FILE__ ":%d:\n", __LINE__);      \
+            for (uint8_t* _dbgBuf = buf; _dbgBuf < end; _dbgBuf++) \
+            {                                                      \
+                if ((_dbgBuf - buf) % 8 == 0)                      \
+                {                                                  \
+                    /*printf("\n%04X    ", (uint16_t)(_dbgBuf - buf));*/         \
+                }                                                  \
+                printf("%02X ", *_dbgBuf);                         \
+            }                                                      \
+            printf("\n\n");                                        \
+        } while (0)
+#else
+    #define DEBUG_BUF(buf, end)
 #endif
 
 #define DEBUG_SIZE_CHANGE(arr, count, size) \
@@ -55,6 +78,8 @@ void process_obj(const char* infile, const char* outdir)
     strcat(outFilePath, outdir);
     strcat(outFilePath, "/");
     strcat(outFilePath, get_filename(infile));
+
+    DEBUG_PRINT("Processing object file %s\n", get_filename(infile));
 
     /* Change the file extension */
     char* dotptr = strrchr(outFilePath, '.');
@@ -111,7 +136,7 @@ void process_obj(const char* infile, const char* outdir)
         {
             // Make sure the fvVerts array has room for another one
             CHECK_ARR(fvVerts, fvc, fvSize, sizeof(fvVert_t));
-            float fv[6];
+            float fv[6]   = {0, 0, 0, -1, -1, -1};
             int readCount = sscanf(line + 2, "%f %f %f %f %f %f", fv + 0, fv + 1, fv + 2, fv + 3, fv + 4, fv + 5);
 
             if (fv[0] < minB[0])
@@ -138,12 +163,10 @@ void process_obj(const char* infile, const char* outdir)
         {
             CHECK_ARR(uvs, uvc, uvSize, sizeof(uv_t));
             // Texture UV
-            float uvIn[3];
+            float uvIn[3] = {0};
             int readCount = sscanf(line + 3, "%f %f %f", uvIn + 0, uvIn + 1, uvIn + 2);
 
-            for (int i = 0; i < readCount; i++)
-            {
-            }
+            memcpy(&uvs[uvc++], uvIn, sizeof(uv_t));
         }
 
         if (line[0] == 'v' && line[1] == 'n')
@@ -298,17 +321,25 @@ void process_obj(const char* infile, const char* outdir)
 
             if (textures > 0)
             {
+                // Add the UV texture indices for the triangle...
                 vt[0]--;
                 vt[1]--;
                 vt[2]--;
                 CHECK_ARR(triUvs, triUvc, triUvSize, sizeof(triUv_t));
                 memcpy(triUvs[triUvc++], vt, sizeof(vt));
             }
+            else if (triUvc > 0)
+            {
+                printf("obj_processor.c: !!!! There are no UVs on triangle number %d, but there were already %d with "
+                       "UVs\n",
+                       ivc, triUvc);
+            }
 
             if (curMtl != -1)
             {
+                uint8_t mtlValue = (curMtl & 0xFF);
                 CHECK_ARR(triMtls, triMtlc, triMtlSize, sizeof(uint8_t));
-                triMtls[triMtlc++] = curMtl;
+                triMtls[triMtlc++] = mtlValue;
             }
         }
 
@@ -394,6 +425,9 @@ void process_obj(const char* infile, const char* outdir)
 
     int iAliasedVert[fvc];
 
+    // float mergeThresh = 0.0001;
+    float mergeThresh = -1;
+
     // the final list of verts
     int cvsize       = BUFLEN_DEFAULT;
     float* compverts = malloc(cvsize * sizeof(float) * 3);
@@ -410,7 +444,7 @@ void process_obj(const char* infile, const char* outdir)
             float dy   = fvcr[1] - compverts[j * 3 + 1];
             float dz   = fvcr[2] - compverts[j * 3 + 2];
             float diff = sqrtf(dx * dx + dy * dy + dz * dz);
-            if (diff < 0.0001)
+            if (diff < mergeThresh)
             {
                 // Match found!
                 break;
@@ -443,21 +477,15 @@ void process_obj(const char* infile, const char* outdir)
     if (maxB[2] > maxextent)
         maxextent = maxB[2];
 
-    //float scale  = 512; // 127.9 / maxextent;
-    float scale[3] = {16, 16, -16};
-    float uscale = 512;
-    float vscale = 512;
+    // float scale  = 512; // 127.9 / maxextent;
+    float scale[3] = {1, 1, -1};
+    float uscale   = 1;
+    float vscale   = 1;
 
-    int32_t minBounds[3] = {
-        (int32_t)(minB[0] * scale[0]),
-        (int32_t)(minB[1] * scale[1]),
-        (int32_t)(minB[2] * scale[2])
-    };
-    int32_t maxBounds[3] = {
-        (int32_t)(maxB[0] * scale[0]),
-        (int32_t)(maxB[1] * scale[1]),
-        (int32_t)(maxB[2] * scale[2])
-    };
+    int32_t minBounds[3]
+        = {(int32_t)(minB[0] * scale[0]), (int32_t)(minB[1] * scale[1]), (int32_t)(minB[2] * scale[2])};
+    int32_t maxBounds[3]
+        = {(int32_t)(maxB[0] * scale[0]), (int32_t)(maxB[1] * scale[1]), (int32_t)(maxB[2] * scale[2])};
 
     // Allocate raw file buffer
     // V1:
@@ -482,14 +510,14 @@ void process_obj(const char* infile, const char* outdir)
     //                verts 12B each (int32 x 3)
     //                uvs 8B each (int32 x 2)
     //                triVerts: {2B v0, 2B v1, 2B v2} * triCount
-    //                triCols: { 1B Color (uint8 palette) } * triCount
-    //                triUvs: {2B v0, 2B v1, 2B v2} * triCount
-    //                triMats: {1B mtl # } * triCount
-    //                mtllib name { null-terminated string }
-    //                mats: { null-terminated string } (strings continue immediately after previous NUL)
+    //                triCols: { 1B Color (uint8 palette) } * triCount, if not uvs
+    //                triUvs: {2B v0, 2B v1, 2B v2} * triCount, if uvs
+    //                triMats: {1B mtl # } * triCount, if #mtls
+    //                mtllib name { null-terminated string }, if #mtls
+    //                mats: { null-terminated string } (strings continue immediately after previous NUL), if #mtls
 
     // face verts/colors
-    int ivR[ivc][4];
+    uint16_t ivR[ivc][4];
 
     for (i = 0; i < ivc; i++)
     {
@@ -497,14 +525,23 @@ void process_obj(const char* infile, const char* outdir)
         int i1 = ivS[i][1];
         int i2 = ivS[i][2];
 
-        float* color = &fvVerts[i0][3];
-        int fc       = ((int)(color[2] * 5.9)) + ((int)(color[1] * 5.9)) * 6 + ((int)(color[0] * 5.9)) * 36;
-        int* face    = ivR[i];
+        uint16_t* face = ivR[i];
+        face[0]   = iAliasedVert[i0];
+        face[1]   = iAliasedVert[i1];
+        face[2]   = iAliasedVert[i2];
 
-        face[0] = iAliasedVert[i0];
-        face[1] = iAliasedVert[i1];
-        face[2] = iAliasedVert[i2];
-        face[3] = fc;
+        float* color = &fvVerts[i0][3];
+        if (color[2] >= 0.0)
+        {
+            int fc = ((int)(color[2] * 5.9)) + ((int)(color[1] * 5.9)) * 6 + ((int)(color[0] * 5.9)) * 36;
+
+            face[3] = fc;
+        }
+        else
+        {
+            // 0xFF isn't a valid color anyway
+            face[3] = 0xFF;
+        }
     }
 
     int strSizes = 0;
@@ -518,23 +555,25 @@ void process_obj(const char* infile, const char* outdir)
         strSizes += strlen(mtls[i].name) + 1;
     }
 
-    int outBufSize = 2 // Version
-                     + 2 // vert count
-                     + 2 // UV count
-                     + 2 // tri count
-                     + 1 // material count
-                     + 3 /* padding */
-                     + 24 // min/max bounds
+    int triCols = (ivR[0][3] > -1) ? (ivc) : 0;
+
+    int outBufSize = 2             // Version
+                     + 2           // vert count
+                     + 2           // UV count
+                     + 2           // tri count
+                     + 1           // material count
+                     + 3           /* padding */
+                     + 24          // min/max bounds
                      + (cvct * 12) // verts (deduplicated)
-                     + (uvc * 8) // UVs count
-                     + 3 /* 3 is max padding */
-                     + ivc * 6 // triangles
-                     + ivc * 1 // triangle colors
-                     + triUvc * 6 // triangle UVs
-                     + triMtlc // triangle materials
+                     + (uvc * 8)   // UVs count
+                     + 3           /* 3 is max padding */
+                     + ivc * 6     // triangles
+                     + triCols * 1     // triangle colors
+                     + triUvc * 6  // triangle UVs
+                     + triMtlc     // triangle materials
                      // ??? + (cvct * 2) // vertex
                      /* + lnc * 4*/ // (V1) lines
-                     + strSizes; // mtllib, usemtl index
+                     + strSizes;    // mtllib, usemtl index
     uint8_t* outBuf = malloc(outBufSize);
     uint8_t* bp     = outBuf;
 
@@ -598,8 +637,8 @@ void process_obj(const char* infile, const char* outdir)
 
     for (i = 0; i < cvct; i++)
     {
-        printf("\t%d, %d, %d,\n", (int8_t)(compverts[i * 3 + 0] * scale), (int8_t)(compverts[i * 3 + 1] * scale),
-               (int8_t)(compverts[i * 3 + 2] * scale));
+        printf("\t%d, %d, %d,\n", (int8_t)(compverts[i * 3 + 0] * scale[0]), (int8_t)(compverts[i * 3 + 1] * scale[1]),
+               (int8_t)(compverts[i * 3 + 2] * scale[2]));
     }
     printf("};\nuint8_t tris[] = {\n");
     for (i = 0; i < ivc; i++)
@@ -633,6 +672,7 @@ void process_obj(const char* infile, const char* outdir)
         *bp++ = (outVert[2] >> 8) & 0xFF;
         *bp++ = outVert[2] & 0xFF;
     }
+    DEBUG_BUF(outBuf, bp);
 
     // V2: Write UVs
     for (i = 0; i < uvc; i++)
@@ -652,37 +692,51 @@ void process_obj(const char* infile, const char* outdir)
         *bp++ = outUv[1] & 0xFF;
     }
 
+    bool printTris = false;
+    if (!strcmp(get_filename(infile), "levelModel.obj"))
+    {
+        printTris = true;
+    }
+
     // Write triangle vertexes
     for (i = 0; i < ivc; i++)
     {
+        //if (printTris)
+        //{
+            //printf("ivR[i][0] >> 8 & 0xFF == %u\n", (ivR[i][0] >> 8) & 0xFF);
+            //printf("ivR[i][0] & 0xFF == %u\n", (ivR[i][0]) & 0xFF);
+        //}
+
         *bp++ = (ivR[i][0] >> 8) & 0xFF;
         *bp++ = ivR[i][0] & 0xFF;
+
         *bp++ = (ivR[i][1] >> 8) & 0xFF;
         *bp++ = ivR[i][1] & 0xFF;
         *bp++ = (ivR[i][2] >> 8) & 0xFF;
         *bp++ = ivR[i][2] & 0xFF;
+
+        printf("ivR[%d] = { %u, %u, %u } --> %X %X %X %X %X %X\n", i, ivR[i][0], ivR[i][1], ivR[i][2], *(bp-6), *(bp-5), *(bp-4), *(bp-3), *(bp-2), *(bp-1));
     }
 
-    // Write triangle colors
-    for (i = 0; i < ivc; i++)
+    if (uvc == 0 && ivR[0][3] != 0xFF)
     {
-        *bp++ = (uint8_t)(ivR[i][3] & 0xFF);
+        // Write triangle colors
+        for (i = 0; i < triCols; i++)
+        {
+            *bp++ = (uint8_t)(ivR[i][3] & 0xFF);
+        }
     }
 
     // V2: Write triangle UVs (if UVs)
     if (uvc > 0)
     {
-        for (i = 0; i < cvct; i++)
+        for (i = 0; i < triUvc; i++)
         {
-            int realVert       = iAliasedVert[i];
             uint16_t outUvt[3] = {0};
 
-            if (realVert < triUvc)
-            {
-                outUvt[0] = triUvs[realVert][0];
-                outUvt[1] = triUvs[realVert][1];
-                outUvt[2] = triUvs[realVert][2];
-            }
+            outUvt[0] = triUvs[i][0];
+            outUvt[1] = triUvs[i][1];
+            outUvt[2] = triUvs[i][2];
 
             *bp++ = (outUvt[0] >> 8) & 0xFF;
             *bp++ = outUvt[0] & 0xFF;
@@ -693,27 +747,34 @@ void process_obj(const char* infile, const char* outdir)
         }
     }
 
+    DEBUG_BUF(outBuf, bp);
     // V2: Write Triangle Materials (if materials)
     for (i = 0; i < triMtlc; i++)
     {
         *bp++ = triMtls[i];
     }
 
+    DEBUG_BUF(outBuf, bp);
     // Write mtllib name referenced, or NULL if none
     if (mtlLibName != NULL)
     {
         for (char* cur = mtlLibName; *cur; cur++)
         {
-            *bp++ = cur;
+            *bp++ = *cur;
         }
         *bp++ = '\0';
     }
+    else
+    {
+        *bp++ = '\0';
+    }
 
+    DEBUG_BUF(outBuf, bp);
     for (i = 0; i < mtlc; i++)
     {
         for (char* cur = mtls[i].name; *cur; cur++)
         {
-            *bp++ = cur;
+            *bp++ = *cur;
         }
         *bp++ = '\0';
     }
@@ -734,6 +795,8 @@ void process_obj(const char* infile, const char* outdir)
 
     DEBUG_PRINT("Writing compressed model to %s\n", outFilePath);
     // Write compressed output file
+
+    DEBUG_BUF(outBuf, bp);
     writeHeatshrinkFile(outBuf, outBufSize, outFilePath);
 
     // TODO: free everything? lol

@@ -163,6 +163,8 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     addSingleItemToMenu(mainMenu->menu, diceMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, graphicsTestMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, small3dMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     addSingleItemToMenu(mainMenu->menu, introMode.modeName);

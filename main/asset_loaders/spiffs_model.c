@@ -131,10 +131,13 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
     // Just one byte for material count
     uint8_t mtlCount = decompressedBuf[8];
 
+    bool useUvs = (uvCount > 0);
+
+    // We'll put the 3 bytes of padding before the bounds
     uint16_t minBoundsOffset = 12;
     uint16_t maxBoundsOffset = minBoundsOffset + 12;
 
-    // Then, 3 bytes of padding before the verts
+    // Then, the verts are after the bounds
     uint16_t vertOffset = maxBoundsOffset + 12;
 
     // Then, UVs are immediately after verts
@@ -145,9 +148,10 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
 
     // Then, triangle colors are after those
     uint16_t triColOffset = (triOffset + 6 * triCount);
+    uint16_t triColCount = (useUvs ? 0 : triCount);
 
     // Then, triangle UVs are next
-    uint16_t triUvOffset = (triColOffset + triCount);
+    uint16_t triUvOffset = (triColOffset + triColCount);
 
     // Decide how many triangle UVs and materials there are
     uint16_t triUvCount = (uvCount > 0) ? (triCount) : 0;
@@ -158,8 +162,6 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
 
     // Materials themselves (and mtllib name)
     uint16_t materialOffset = (triMatOffset + triMtlCount);
-
-    bool useUvs = (uvCount > 0);
 
     objInfo->vertCount = vertCount;
     objInfo->triCount = triCount;
@@ -177,9 +179,9 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
     objInfo->verts = heap_caps_malloc(sizeof(int32_t) * 3 * vertCount, caps);
     objInfo->tris = (triCount > 0) ? heap_caps_malloc(sizeof(uint16_t) * 3 * triCount, caps) : NULL;
     objInfo->uvs = heap_caps_malloc(sizeof(int32_t) * 2 * uvCount, caps);
-    objInfo->triUvs = heap_caps_malloc(sizeof(uint16_t) * 2 * triUvCount, caps);
-    objInfo->triColors = (useUvs) ? NULL : heap_caps_malloc(sizeof(paletteColor_t) * triCount, caps);
-    objInfo->triMtls = (mtlCount > 0) ? heap_caps_malloc(sizeof(uint8_t) * triCount, caps) : 0;
+    objInfo->triUvs = heap_caps_malloc(sizeof(uint16_t) * 3 * triUvCount, caps);
+    objInfo->triColors = (triColCount > 0) ? heap_caps_malloc(sizeof(paletteColor_t) * triCount, caps) : NULL;
+    objInfo->triMtls = (mtlCount > 0) ? heap_caps_malloc(sizeof(uint8_t) * triCount, caps) : NULL;
 
     objInfo->useUvs = useUvs;
 
@@ -207,12 +209,13 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
         objInfo->tris[i * 3 + 1] = (uint16_t)READ_16(decompressedBuf, triOffset + i * 6 + 2);
         objInfo->tris[i * 3 + 2] = (uint16_t)READ_16(decompressedBuf, triOffset + i * 6 + 4);
 
-        if (!useUvs)
+        if (triColCount > 0)
         {
             objInfo->triColors[i] = (paletteColor_t)(decompressedBuf[triColOffset + i]);
         }
     }
 
+    printf("triUvCount: %d\n", triUvCount);
     // Write all the tri UVs into the struct
     for (i = 0; i < triUvCount; i++)
     {
@@ -223,7 +226,8 @@ bool loadObjInfo(const char* name, object3dInfo_t* objInfo, bool useSpiRam)
 
     for (i = 0; i < triMtlCount; i++)
     {
-        objInfo->triMtls[i] = (uint8_t)decompressedBuf[triMatOffset + i];
+        objInfo->triMtls[i] = decompressedBuf[triMatOffset + i];
+
     }
 
     // Allocate an array of string pointers

@@ -144,7 +144,6 @@ typedef struct
 
 #define S3L_logVec4(v)\
   printf("Vec4: %d %d %d %d\n",((v).x),((v).y),((v).z),((v).w))
-S3L_Unit S3L_vec3Length(S3L_Vec4 v);
 
 /** Normalizes Vec3. Note that this function tries to normalize correctly
   rather than quickly! If you need to normalize quickly, do it yourself in a
@@ -251,6 +250,18 @@ void S3L_vec3Xmat4(S3L_Vec4 *v, S3L_Mat4 m);
   that has the same effect as applying the transformation represented by m1 and
   then m2 (in that order). */
 void S3L_mat4Xmat4(S3L_Mat4 m1, S3L_Mat4 m2);
+
+inline void S3L_vec4Init(S3L_Vec4 *v);
+inline void S3L_vec4Set(S3L_Vec4 *v, S3L_Unit x, S3L_Unit y,
+  S3L_Unit z, S3L_Unit w);
+inline void S3L_vec3Add(S3L_Vec4 *result, S3L_Vec4 added);
+inline void S3L_vec3Sub(S3L_Vec4 *result, S3L_Vec4 substracted);
+
+/** Like S3L_vec3Normalize, but doesn't perform any checks on the input vector,
+  which is faster, but can be very innacurate or overflowing. You are supposed
+  to provide a "nice" vector (not too big or small). */
+inline void S3L_vec3NormalizeFast(S3L_Vec4 *v);
+inline S3L_Unit S3L_vec3Dot(S3L_Vec4 a, S3L_Vec4 b);
 
 typedef struct
 {

@@ -1,17 +1,5 @@
 #include "small3dlib.h"
 
-static inline void S3L_vec4Init(S3L_Vec4 *v);
-static inline void S3L_vec4Set(S3L_Vec4 *v, S3L_Unit x, S3L_Unit y,
-  S3L_Unit z, S3L_Unit w);
-static inline void S3L_vec3Add(S3L_Vec4 *result, S3L_Vec4 added);
-static inline void S3L_vec3Sub(S3L_Vec4 *result, S3L_Vec4 substracted);
-
-/** Like S3L_vec3Normalize, but doesn't perform any checks on the input vector,
-  which is faster, but can be very innacurate or overflowing. You are supposed
-  to provide a "nice" vector (not too big or small). */
-static inline void S3L_vec3NormalizeFast(S3L_Vec4 *v);
-static inline S3L_Unit S3L_vec3Dot(S3L_Vec4 a, S3L_Vec4 b);
-
 /** Determines the winding of a triangle, returns 1 (CW, clockwise), -1 (CCW,
   counterclockwise) or 0 (points lie on a single line). */
 static inline int8_t S3L_triangleWinding(
