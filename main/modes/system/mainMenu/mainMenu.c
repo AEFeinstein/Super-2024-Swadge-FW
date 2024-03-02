@@ -19,6 +19,7 @@
 #include "mode_credits.h"
 #include "modeDice.h"
 #include "mode_pinball.h"
+#include "small3dMode.h"
 #include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -340,6 +341,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == introMode.modeName)
         {
             switchToSwadgeMode(&introMode);
+        }
+        else if (label == small3dMode.modeName)
+        {
+            switchToSwadgeMode(&small3dMode);
         }
         else if (label == jukeboxMode.modeName)
         {
