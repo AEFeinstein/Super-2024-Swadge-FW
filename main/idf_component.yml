@@ -1,10 +1,10 @@
 ## IDF Component Manager Manifest File
 dependencies:
-  espressif/tinyusb: "^0.15.0~3"
-  espressif/esp_tinyusb: "^1.4.2"
+  espressif/tinyusb: "^0.15.0~5"
+  espressif/esp_tinyusb: "^1.4.3"
   ## Required IDF version
   idf:
-    version: ">=5.1.1"
+    version: ">=5.2"
   # # Put list of dependencies here
   # # For components maintained by Espressif:
   # component: "~1.0.0"

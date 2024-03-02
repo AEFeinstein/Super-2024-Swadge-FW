@@ -66,12 +66,12 @@ void initBattmon(gpio_num_t gpio)
         // ADC config
         adc_oneshot_chan_cfg_t config = {
             .bitwidth = ADC_BITWIDTH_DEFAULT,
-            .atten    = ADC_ATTEN_DB_11,
+            .atten    = ADC_ATTEN_DB_12,
         };
         ESP_ERROR_CHECK(adc_oneshot_config_channel(adc_handle, battMonChannel, &config));
 
         // ADC calibration
-        is_calibrated = adc_calibration_init(unit, ADC_ATTEN_DB_11, &adc_cali_handle);
+        is_calibrated = adc_calibration_init(unit, ADC_ATTEN_DB_12, &adc_cali_handle);
 
         // Set it as initialized
         is_initialized = true;

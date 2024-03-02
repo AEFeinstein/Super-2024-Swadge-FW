@@ -5,12 +5,15 @@
 #include <esp_log.h>
 #include <math.h>
 #include <string.h>
-#include "hdw-imu.h"
-#include "soc/rtc_cntl_reg.h"
-#include "soc/gpio_reg.h"
-#include "soc/io_mux_reg.h"
+#include "driver/gpio.h"
 #include "rom/gpio.h"
+#include "soc/gpio_reg.h"
 #include "soc/gpio_struct.h"
+#include "soc/io_mux_reg.h"
+#include "soc/rtc_cntl_reg.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include "hdw-imu.h"
 #include "hdw-nvs.h"
 #include "quaternions.h"
 

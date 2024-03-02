@@ -18,6 +18,8 @@
 
 /// The WiFi channel to operate on
 #define ESPNOW_CHANNEL 11
+// The WiFi PHY mode, high throughput 20MHz
+#define WIFI_PHY WIFI_PHY_MODE_HT20
 /// The WiFi rate to run at, MCS6 with short GI, 65 Mbps for 20MHz, 135 Mbps for 40MHz
 #define WIFI_RATE WIFI_PHY_RATE_MCS6_SGI
 
@@ -214,12 +216,6 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return err;
     }
 
-    if (ESP_OK != (err = esp_wifi_config_espnow_rate(WIFI_IF_STA, WIFI_RATE)))
-    {
-        ESP_LOGW("ESPNOW", "Couldn't set PHY rate %s", esp_err_to_name(err));
-        return err;
-    }
-
     // Set the channel
     if (ESP_OK != (err = esp_wifi_set_channel(ESPNOW_CHANNEL, WIFI_SECOND_CHAN_NONE)))
     {
@@ -295,6 +291,18 @@ esp_err_t espNowUseWireless(void)
             if (ESP_OK != (err = esp_now_add_peer(&broadcastPeer)))
             {
                 ESP_LOGD("ESPNOW", "peer NOT added");
+                return err;
+            }
+
+            esp_now_rate_config_t rateConfig = {
+                .phymode = WIFI_PHY,
+                .rate    = WIFI_RATE,
+                .ersu    = false,
+                .dcm     = false,
+            };
+            if (ESP_OK != (err = esp_now_set_peer_rate_config(espNowBroadcastMac, &rateConfig)))
+            {
+                ESP_LOGD("ESPNOW", "rate NOT set");
                 return err;
             }
         }
