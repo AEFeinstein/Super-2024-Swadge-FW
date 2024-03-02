@@ -10,7 +10,7 @@
 #include "fileUtils.h"
 #include "heatshrink_util.h"
 
-// #define DEBUG_OBJ
+//#define DEBUG
 #define BUFLEN_DEFAULT 1024
 
 typedef float fvVert_t[6];

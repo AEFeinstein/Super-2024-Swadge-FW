@@ -214,7 +214,7 @@ static void small3dModeHandleInput(void)
 {
     // Vectors for movement relative to camera
     S3L_Vec4 camF, camR;
-    S3L_rotationToDirections(s3dLevel->scene.camera.transform.rotation, 20, &camF, &camR, NULL);
+    S3L_rotationToDirections(s3dLevel->scene.camera.transform.rotation, 3200, &camF, &camR, NULL);
 
     // Handle Touchpad Input
     int32_t angle, radius, intensity;
@@ -245,7 +245,7 @@ static void small3dModeHandleInput(void)
         s3dLevel->scene.camera.transform.rotation.y
             = s3dLevel->touchDragStartOrient.y - ((maxY - minY) * (x - s3dLevel->touchDragStartX) / 1023);
         s3dLevel->scene.camera.transform.rotation.x
-            = s3dLevel->touchDragStartOrient.x - ((maxX - minX) * (y - s3dLevel->touchDragStartY) / 1023);
+            = s3dLevel->touchDragStartOrient.x - ((maxX - minX) * (s3dLevel->touchDragStartY - y) / 1023);
 
         /*
         // Rotation Actions
@@ -397,34 +397,33 @@ static void small3dModeDrawPixelCb(const S3L_PixelInfo* pixelInfo)
     paletteColor_t col;
 
     static wsg_t* texture = NULL;
-    static uint8_t material;
 
     // TEXTURES:
     if (!texture || pixelInfo->triangleID != s3dLevel->previousTriangle)
     {
-        material = s3dLevel->levelModelData.triMtls[pixelInfo->triangleIndex];
+        uint8_t material = s3dLevel->levelModelData.triMtls[pixelInfo->triangleIndex];
 
-        /*texture = &s3dLevel->textures[material];*/
+        texture = &s3dLevel->textures[material];
 
         S3L_getIndexedTriangleValues(pixelInfo->triangleIndex, s3dLevel->levelModelData.triUvs,
                                      s3dLevel->levelModelData.uvs, 2, &s3dLevel->uv0, &s3dLevel->uv1, &s3dLevel->uv2);
         s3dLevel->previousTriangle = pixelInfo->triangleID;
     }
 
-    /*S3L_Unit u, v;
+    S3L_Unit u, v;
 
     u = S3L_interpolateBarycentric(s3dLevel->uv0.x, s3dLevel->uv1.x, s3dLevel->uv2.x, pixelInfo->barycentric) / 16;
     v = S3L_interpolateBarycentric(s3dLevel->uv0.y, s3dLevel->uv1.y, s3dLevel->uv2.y, pixelInfo->barycentric) / 16;
-    col = sampleTexture(texture, u, v);*/
+    col = sampleTexture(texture, u, v);
     // NO TEXTURES
 
-     switch (material)
+     /*switch (material)
      {
        case 0: col = c500; break;
        case 1: col = c050; break;
        case 2:
        default: col = c005; break;
-     }
+     }*/
 
 
 #if FOG
