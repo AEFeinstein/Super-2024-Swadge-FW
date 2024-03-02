@@ -9,7 +9,7 @@
 #include "nvs.h"
 #include <string.h>
 #include "esp_private/panic_internal.h"
-#include "xtensa/xtensa_context.h"
+#include <xtensa_context.h>
 
 //==============================================================================
 // Function Prototypes
