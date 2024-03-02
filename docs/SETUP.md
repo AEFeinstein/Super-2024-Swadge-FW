@@ -2,7 +2,7 @@
 
 ## General Notes
 
-It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.1.1/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
+It is strongly recommend that you follow the instructions on this page to set up your development environment, including the ESP-IDF. It is also possible to follow [Espressif's instructions to install ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32s2/get-started/index.html#installation) through a standalone installer or an IDE. This can be done if you're sure you know what you're doing or the process written here doesn't work anymore.
 
 It is recommended to use native tools (i.e. Windows programs on Windows), not Windows Subsystem for Linux (WSL) or a virtual machine.
 
@@ -47,11 +47,11 @@ The continuous integration for this project runs on a Windows instance. This mea
     
     ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
 
-8. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+8. Clone the ESP-IDF v5.2 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
     ```powershell
     & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
-    & git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
+    & git clone -b v5.2 --recurse-submodules https://github.com/espressif/esp-idf.git $HOME/esp/esp-idf
     & $HOME\esp\esp-idf\install.ps1
     ```
     > **Warning**
@@ -90,9 +90,9 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     sudo ./llvm.sh 17
     sudo apt install clang-format-17
     ```
-4. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+4. Clone the ESP-IDF v5.2 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 
@@ -107,9 +107,9 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     ```bash
     brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen cmake
     ```
-3. Clone the ESP-IDF v5.1.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+3. Clone the ESP-IDF v5.2 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
-    git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
+    git clone -b v5.2 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
 4. Before running the simulator on your machine, you need to start pulseaudio like so:

@@ -54,7 +54,7 @@ jobs:
 
     - name: Set up the IDF
       run: |
-        git clone -b v5.1.1 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
+        git clone -b v5.2 --recurse-submodules https://github.com/espressif/esp-idf.git ${{ runner.temp }}/esp-idf -j2
         ${{ runner.temp }}/esp-idf/install.ps1
  
     - name: Compile the firmware
