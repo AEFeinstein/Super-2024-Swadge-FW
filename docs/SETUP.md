@@ -98,9 +98,9 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 
 ## Configuring a MacOS Environment
 
-    > **Warning**
-    >
-    > This section is still under development, and as a result, may have unexpected errors in its process.
+> **Warning**
+>
+> This section is still under development, and as a result, may have unexpected errors in its process.
 
 1. Install [Homebrew](https://brew.sh/)
 2. Run the following command to install all necessary dependencies:
