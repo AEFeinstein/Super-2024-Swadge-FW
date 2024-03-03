@@ -83,7 +83,7 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 
         for (int32_t ob = 0; ob < p->numBumpers; ob++)
         {
-            if (circleCircleIntersection(intCircle(bumper), intCircle(p->bumpers[ob])))
+            if (circleCircleIntersection(intCircle(bumper), intCircle(p->bumpers[ob]), NULL))
             {
                 intersection = true;
                 break;

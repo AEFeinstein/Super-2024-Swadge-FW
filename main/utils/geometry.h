@@ -4,6 +4,8 @@
  *
  * These utility functions are can be used for geometric math.
  *
+ * Much of this file was adapted from https://www.jeffreythompson.org/collision-detection/
+ *
  * \section geometry_usage Usage
  *
  * No initialization or deinitialization is required. Each function will not modify the given shapes. See the functions
@@ -13,17 +15,17 @@
  *
  * \code{.c}
  * circle_t circ = {
- *     .x      = 2,
- *     .y      = 5,
+ *     .pos.x  = 2,
+ *     .pos.y  = 5,
  *     .radius = 8,
  * };
  * rectangle_t rect = {
- *     .x      = -2,
- *     .y      = -4,
+ *     .pos.x  = -2,
+ *     .pos.y  = -4,
  *     .width  = 6,
  *     .height = 9,
  * };
- * if (circleRectIntersection(circ, rect))
+ * if (circleRectIntersection(circ, rect, NULL))
  * {
  *     printf("Shapes intersect\n");
  * }
@@ -70,12 +72,12 @@ typedef struct
     vec_t p2; ///< The other end point of the line segment
 } line_t;
 
-bool circleCircleIntersection(circle_t circle1, circle_t circle2);
-bool circlePointIntersection(circle_t circle, vec_t point);
-bool circleRectIntersection(circle_t circle, rectangle_t rect);
+bool circleCircleIntersection(circle_t circle1, circle_t circle2, vec_t* collisionVec);
+bool circlePointIntersection(circle_t circle, vec_t point, vec_t* collisionVec);
+bool circleRectIntersection(circle_t circle, rectangle_t rect, vec_t* collisionVec);
 bool circleLineIntersection(circle_t circle, line_t line, vec_t* collisionVec);
-bool rectRectIntersection(rectangle_t rect1, rectangle_t rect2);
-bool rectLineIntersection(rectangle_t rect, line_t line);
+bool rectRectIntersection(rectangle_t rect1, rectangle_t rect2, vec_t* collisionVec);
+bool rectLineIntersection(rectangle_t rect, line_t line, vec_t* collisionVec);
 bool lineLineIntersection(line_t line1, line_t line2);
 
 #endif

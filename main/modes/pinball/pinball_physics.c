@@ -78,9 +78,9 @@ void checkBallBallCollisions(pinball_t* p)
         {
             pbCircle_t* otherBall = &p->balls[obIdx];
             // Check for a new collision
-            if ((ball->zoneMask & otherBall->zoneMask)                                // In the same zone
-                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], otherBall)  // and not already touching
-                && circleCircleIntersection(intCircle(*ball), intCircle(*otherBall))) // and intersecting
+            if ((ball->zoneMask & otherBall->zoneMask)                                      // In the same zone
+                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], otherBall)        // and not already touching
+                && circleCircleIntersection(intCircle(*ball), intCircle(*otherBall), NULL)) // and intersecting
             {
                 // Math for the first ball
                 vec_q24_8 v1         = ball->vel;
@@ -138,17 +138,18 @@ void checkBallStaticCollision(pinball_t* p)
         for (uint32_t uIdx = 0; uIdx < p->numBumpers; uIdx++)
         {
             pbCircle_t* bumper = &p->bumpers[uIdx];
+            vec_t collisionVec;
 
             // Check for a collision
-            if ((ball->zoneMask & bumper->zoneMask)                               // In the same zone
-                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper) // and not already touching
-                && circleCircleIntersection(intBall, intCircle(*bumper)))         // and intersecting
+            if ((ball->zoneMask & bumper->zoneMask)                                      // In the same zone
+                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper)        // and not already touching
+                && circleCircleIntersection(intBall, intCircle(*bumper), &collisionVec)) // and intersecting
             {
                 // Reflect the velocity vector along the normal between the two radii
                 // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
                 vec_q24_8 centerToCenter = {
-                    .x = ball->pos.x - bumper->pos.x,
-                    .y = ball->pos.y - bumper->pos.y,
+                    .x = collisionVec.x,
+                    .y = collisionVec.y,
                 };
                 vec_q24_8 reflVec = fpvNorm(centerToCenter);
                 ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
@@ -225,8 +226,8 @@ void checkBallsNotTouching(pinball_t* p)
                     case PIN_CIRCLE:
                     {
                         pbCircle_t* other = (pbCircle_t*)tr->obj;
-                        if ((0 == (ball->zoneMask & other->zoneMask))               // Not in the same zone
-                            || !circleCircleIntersection(iBall, intCircle(*other))) // or not touching
+                        if ((0 == (ball->zoneMask & other->zoneMask))                     // Not in the same zone
+                            || !circleCircleIntersection(iBall, intCircle(*other), NULL)) // or not touching
                         {
                             // Clear the reference
                             tr->obj  = NULL;
@@ -250,8 +251,8 @@ void checkBallsNotTouching(pinball_t* p)
                     case PIN_RECT:
                     {
                         pbRect_t* other = (pbRect_t*)tr->obj;
-                        if ((0 == (ball->zoneMask & other->zoneMask))           // Not in the same zone
-                            || !circleRectIntersection(iBall, intRect(*other))) // or not touching
+                        if ((0 == (ball->zoneMask & other->zoneMask))                 // Not in the same zone
+                            || !circleRectIntersection(iBall, intRect(*other), NULL)) // or not touching
                         {
                             // Clear the reference
                             tr->obj  = NULL;

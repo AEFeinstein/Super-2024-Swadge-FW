@@ -91,7 +91,7 @@ uint32_t pinZoneRect(pinball_t* p, pbRect_t r)
     rectangle_t ir    = intRect(r);
     for (int z = 0; z < NUM_ZONES; z++)
     {
-        if (rectRectIntersection(intRect(p->zones[z]), ir))
+        if (rectRectIntersection(intRect(p->zones[z]), ir, NULL))
         {
             zoneMask |= (1 << z);
         }
@@ -112,7 +112,7 @@ uint32_t pinZoneLine(pinball_t* p, pbLine_t l)
     line_t il         = intLine(l);
     for (int z = 0; z < NUM_ZONES; z++)
     {
-        if (rectLineIntersection(intRect(p->zones[z]), il))
+        if (rectLineIntersection(intRect(p->zones[z]), il, NULL))
         {
             zoneMask |= (1 << z);
         }
@@ -133,7 +133,7 @@ uint32_t pinZoneCircle(pinball_t* p, pbCircle_t c)
     circle_t ic       = intCircle(c);
     for (int z = 0; z < NUM_ZONES; z++)
     {
-        if (circleRectIntersection(ic, intRect(p->zones[z])))
+        if (circleRectIntersection(ic, intRect(p->zones[z]), NULL))
         {
             zoneMask |= (1 << z);
         }
