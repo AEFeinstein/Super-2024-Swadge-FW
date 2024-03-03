@@ -2555,7 +2555,7 @@ HIDE_UNDOC_RELATIONS   = YES
 # set to NO
 # The default value is: NO.
 
-HAVE_DOT               = NO
+HAVE_DOT               = YES
 
 # The DOT_NUM_THREADS specifies the number of dot invocations doxygen is allowed
 # to run in parallel. When set to 0 doxygen will base this on the number of
@@ -2602,6 +2602,8 @@ DOT_NODE_ATTR          = "shape=box,height=0.2,width=0.4"
 # This tag requires that the tag HAVE_DOT is set to YES.
 
 DOT_FONTPATH           =
+
+DOT_TRANSPARENT  = YES
 
 # If the CLASS_GRAPH tag is set to YES or GRAPH or BUILTIN then doxygen will
 # generate a graph for each documented class showing the direct and indirect

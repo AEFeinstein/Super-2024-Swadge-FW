@@ -31,10 +31,10 @@ html {
     /* side nav width. MUST be = `TREEVIEW_WIDTH`.
      * Make sure it is wide enough to contain the page title (logo + title + version)
      */
-    --side-nav-fixed-width: 370px;
+    --side-nav-fixed-width: 335px;
     --menu-display: none;
 
-    --top-height: 140px;
+    --top-height: 120px;
     --toc-sticky-top: -25px;
     --toc-max-height: calc(100vh - 2 * var(--spacing-medium) - 25px);
 }
@@ -81,6 +81,7 @@ html {
     .ui-resizable-handle {
         cursor: default;
         width: 1px !important;
+        background: var(--separator-color);
         box-shadow: 0 calc(-2 * var(--top-height)) 0 0 var(--separator-color);
     }
 
