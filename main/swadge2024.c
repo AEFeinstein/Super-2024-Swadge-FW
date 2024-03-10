@@ -201,6 +201,7 @@ static void swadgeModeEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, cons
 static void swadgeModeEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
 static void setSwadgeMode(void* swadgeMode);
 static void initOptionalPeripherals(void);
+static void dacCallback(uint8_t* samples, int16_t len);
 
 //==============================================================================
 // Functions
@@ -314,7 +315,12 @@ void app_main(void)
              getLedBrightnessSetting());
 
     // Initialize the speaker
-    dacInit();
+    dacInit(dacCallback);
+    dacStart();
+
+    song_t creditsSong;
+    loadSong("credits.sng", &creditsSong, false);
+    playSongSpk(&creditsSong);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -709,4 +715,16 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 void setFrameRateUs(uint32_t newFrameRateUs)
 {
     frameRateUs = newFrameRateUs;
+}
+
+/**
+ * @brief
+ *
+ * @param samples
+ * @param len
+ */
+void dacCallback(uint8_t* samples, int16_t len)
+{
+    sngPlayerFillBuffer(samples, len);
+    // swSynthFillBuffer(samples, len);
 }

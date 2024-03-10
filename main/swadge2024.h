@@ -207,6 +207,8 @@
 #include "geometry.h"
 #include "settingsManager.h"
 #include "touchUtils.h"
+#include "swSynth.h"
+#include "sngPlayer.h"
 
 #define EXIT_TIME_US 1000000
 /// @brief the default time between drawn frames, in microseconds

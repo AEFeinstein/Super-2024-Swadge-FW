@@ -18,5 +18,16 @@
 
 #pragma once
 
-void dacInit(void);
+#define AUDIO_SAMPLE_RATE_HZ 32768
+
+/**
+ * @brief TODO
+ * @param len
+ * @param sample
+ */
+typedef void (*fnDacCallback_t)(uint8_t* samples, int16_t len);
+
+void dacInit(fnDacCallback_t cb);
 void dacPoll(void);
+void dacStart(void);
+void dacStop(void);
