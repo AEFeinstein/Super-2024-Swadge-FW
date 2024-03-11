@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <stdint.h>
+
 #define AUDIO_SAMPLE_RATE_HZ 32768
 
 /**

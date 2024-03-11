@@ -1,3 +1,7 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include <inttypes.h>
 #include <stdio.h>
 #include "esp_attr.h"
@@ -46,62 +50,77 @@ static const int8_t DRAM_ATTR triTab[] = {
     -56,  -54,  -52,  -50,  -48,  -46,  -44,  -42,  -40,  -38,  -36,  -34,  -32,  -30,  -28,  -26,  -24,  -22,  -20,
     -18,  -16,  -14,  -12,  -10,  -8,   -6,   -4,   -2,
 };
-// /** A 256 point sine wave */
-// static const uint8_t DRAM_ATTR sinTab[] = {
-//     127, 131, 134, 137, 140, 143, 146, 149, 152, 155, 158, 161, 164, 167, 170, 173, 176, 179, 182, 185, 187, 190,
-//     193, 195, 198, 201, 203, 206, 208, 210, 213, 215, 217, 219, 222, 224, 226, 228, 230, 231, 233, 235, 236, 238,
-//     240, 241, 242, 244, 245, 246, 247, 248, 249, 250, 251, 251, 252, 253, 253, 254, 254, 254, 254, 254, 255, 254,
-//     254, 254, 254, 254, 253, 253, 252, 251, 251, 250, 249, 248, 247, 246, 245, 244, 242, 241, 240, 238, 236, 235,
-//     233, 231, 230, 228, 226, 224, 222, 219, 217, 215, 213, 210, 208, 206, 203, 201, 198, 195, 193, 190, 187, 185,
-//     182, 179, 176, 173, 170, 167, 164, 161, 158, 155, 152, 149, 146, 143, 140, 137, 134, 131, 128, 124, 121, 118,
-//     115, 112, 109, 106, 103, 100, 97,  94,  91,  88,  85,  82,  79,  76,  73,  70,  68,  65,  62,  60,  57,  54,
-//     52,  49,  47,  45,  42,  40,  38,  36,  33,  31,  29,  27,  25,  24,  22,  20,  19,  17,  15,  14,  13,  11,
-//     10,  9,   8,   7,   6,   5,   4,   4,   3,   2,   2,   1,   1,   1,   1,   1,   0,   1,   1,   1,   1,   1,
-//     2,   2,   3,   4,   4,   5,   6,   7,   8,   9,   10,  11,  13,  14,  15,  17,  19,  20,  22,  24,  25,  27,
-//     29,  31,  33,  36,  38,  40,  42,  45,  47,  49,  52,  54,  57,  60,  62,  65,  68,  70,  73,  76,  79,  82,
-//     85,  88,  91,  94,  97,  100, 103, 106, 109, 112, 115, 118, 121, 124,
-// };
-
-// /** A 256 point triangle wave */
-// static const uint8_t DRAM_ATTR triTab[] = {
-//     127, 129, 131, 133, 135, 137, 139, 141, 143, 145, 147, 149, 151, 153, 155, 157, 159, 161, 163, 165, 167, 169,
-//     171, 173, 175, 177, 179, 181, 183, 185, 187, 189, 191, 193, 195, 197, 199, 201, 203, 205, 207, 209, 211, 213,
-//     215, 217, 219, 221, 223, 225, 227, 229, 231, 233, 235, 237, 239, 241, 243, 245, 247, 249, 251, 253, 255, 253,
-//     251, 249, 247, 245, 243, 241, 239, 237, 235, 233, 231, 229, 227, 225, 223, 221, 219, 217, 215, 213, 211, 209,
-//     207, 205, 203, 201, 199, 197, 195, 193, 191, 189, 187, 185, 183, 181, 179, 177, 175, 173, 171, 169, 167, 165,
-//     163, 161, 159, 157, 155, 153, 151, 149, 147, 145, 143, 141, 139, 137, 135, 133, 131, 129, 127, 125, 123, 121,
-//     119, 117, 115, 113, 111, 109, 107, 105, 103, 101, 99,  97,  95,  93,  91,  89,  87,  85,  83,  81,  79,  77,
-//     75,  73,  71,  69,  67,  65,  63,  61,  59,  57,  55,  53,  51,  49,  47,  45,  43,  41,  39,  37,  35,  33,
-//     31,  29,  27,  25,  23,  21,  19,  17,  15,  13,  11,  9,   7,   5,   3,   1,   0,   1,   3,   5,   7,   9,
-//     11,  13,  15,  17,  19,  21,  23,  25,  27,  29,  31,  33,  35,  37,  39,  41,  43,  45,  47,  49,  51,  53,
-//     55,  57,  59,  61,  63,  65,  67,  69,  71,  73,  75,  77,  79,  81,  83,  85,  87,  89,  91,  93,  95,  97,
-//     99,  101, 103, 105, 107, 109, 111, 113, 115, 117, 119, 121, 123, 125,
-// };
 
 //==============================================================================
 // Functions
 //==============================================================================
 
+/**
+ * @brief TODO
+ *
+ * @param idx
+ * @return int8_t
+ */
 static int8_t sineGen(uint16_t idx)
 {
     return sinTab[idx];
 }
 
+/**
+ * @brief TODO
+ *
+ * @param idx
+ * @return int8_t
+ */
 static int8_t squareGen(uint16_t idx)
 {
     return sinTab[idx] >= 0 ? 127 : -128;
 }
 
+/**
+ * @brief TODO
+ *
+ * @param idx
+ * @return int8_t
+ */
 static int8_t sawtoothGen(uint16_t idx)
 {
     return idx - 128;
 }
 
+/**
+ * @brief TODO
+ *
+ * @param idx
+ * @return int8_t
+ */
 static int8_t triangleGen(uint16_t idx)
 {
     return triTab[idx];
 }
 
+/**
+ * @brief TODO
+ *
+ * @param osc
+ * @param shape
+ * @param volume
+ */
+void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint8_t volume)
+{
+    osc->accumulator.accum32 = 0;
+    osc->cVol                = 0;
+    osc->stepSize            = 0;
+    swSynthSetVolume(osc, volume);
+    swSynthSetShape(osc, shape);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param osc
+ * @param shape
+ */
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
 {
     switch (shape)
@@ -129,36 +148,15 @@ void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
     }
 }
 
+/**
+ * @brief TODO
+ *
+ * @param osc
+ * @param freq
+ */
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq)
 {
     osc->stepSize = ((uint64_t)(sizeof(sinTab) * freq) << 16) / (AUDIO_SAMPLE_RATE_HZ);
-}
-
-void swSynthSetFade(synthOscillator_t* osc, fadeState_t fade)
-{
-    switch (fade)
-    {
-        case FADING_IN:
-        {
-            if (osc->cVol != osc->tVol)
-            {
-                osc->fade = FADING_IN;
-            }
-            break;
-        }
-        case FADING_OUT:
-        {
-            if (osc->cVol != 0)
-            {
-                osc->fade = FADING_OUT;
-            }
-            break;
-        }
-        default:
-        {
-            osc->fade = NOT_FADING;
-        }
-    }
 }
 
 /**
@@ -172,6 +170,13 @@ void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume)
     osc->tVol = volume;
 }
 
+/**
+ * @brief TODO
+ *
+ * @param oscs
+ * @param numOscs
+ * @return uint8_t
+ */
 uint8_t swSynthMixOscillators(synthOscillator_t* oscs, uint16_t numOscs)
 {
     int32_t sample               = 0;
@@ -181,35 +186,15 @@ uint8_t swSynthMixOscillators(synthOscillator_t* oscs, uint16_t numOscs)
         synthOscillator_t* osc = &oscs[oscIdx];
         osc->accumulator.accum32 += osc->stepSize;
 
-        switch (osc->fade)
+        if (osc->cVol != osc->tVol)
         {
-            case FADING_IN:
+            if (osc->cVol < osc->tVol)
             {
-                if (osc->cVol < osc->tVol)
-                {
-                    osc->cVol += 1;
-                }
-                else
-                {
-                    osc->fade = NOT_FADING;
-                }
-                break;
+                osc->cVol++;
             }
-            case FADING_OUT:
+            else
             {
-                if (osc->cVol > 0)
-                {
-                    osc->cVol -= 1;
-                }
-                else
-                {
-                    osc->fade = NOT_FADING;
-                }
-                break;
-            }
-            default:
-            {
-                break;
+                osc->cVol--;
             }
         }
 
@@ -218,10 +203,12 @@ uint8_t swSynthMixOscillators(synthOscillator_t* oscs, uint16_t numOscs)
             sample += ((osc->waveFunc(osc->accumulator.bytes[2]) * osc->cVol) / 256);
             numOscillatorsActive++;
         }
+        // printf("  %ld %ld\n", oscIdx, sample);
     }
     if (0 == numOscillatorsActive)
     {
         return 127;
     }
+    // printf("%ld\n", (sample / numOscillatorsActive) + 128);
     return (sample / numOscillatorsActive) + 128;
 }

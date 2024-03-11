@@ -16,13 +16,6 @@ typedef enum
     SHAPE_SQUARE,
 } oscillatorShape_t;
 
-typedef enum
-{
-    NOT_FADING,
-    FADING_IN,
-    FADING_OUT,
-} fadeState_t;
-
 //==============================================================================
 // Unions
 //==============================================================================
@@ -50,15 +43,14 @@ typedef struct
     int32_t stepSize;
     uint32_t tVol;
     uint32_t cVol;
-    fadeState_t fade;
 } synthOscillator_t;
 
 //==============================================================================
 // Function prototypes
 //==============================================================================
 
+void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint8_t volume);
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape);
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq);
-void swSynthSetFade(synthOscillator_t* osc, fadeState_t fade);
 uint8_t swSynthMixOscillators(synthOscillator_t* oscs, uint16_t numOscs);
 void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume);
