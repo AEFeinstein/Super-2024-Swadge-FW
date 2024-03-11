@@ -321,7 +321,8 @@ void app_main(void)
 
     song_t creditsSong;
     loadSong("credits.sng", &creditsSong, false);
-    playSongSpk(&creditsSong);
+    initSpkSongPlayer();
+    spkPlaySong(0, &creditsSong);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();

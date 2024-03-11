@@ -16,7 +16,7 @@
  * @param _advancedUsbHandler A function that can be called from this component to handle USB commands
  * @param redirectPrintf true to redirect printf() to USB, false to leave it over UART
  */
-void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler, bool redirectPrintf);
+void initUsb(fnSetSwadgeMode _setSwadgeMode, fnAdvancedUsbHandler _advancedUsbHandler, bool redirectPrintf)
 {
     WARN_UNIMPLEMENTED();
 }
