@@ -3,7 +3,7 @@
  * \section bzr_design Design Philosophy
  *
  * The buzzers are driven by the <a
- * href="https://docs.espressif.com/projects/esp-idf/en/v5.2/esp32s2/api-reference/peripherals/ledc.html">LEDC
+ * href="https://docs.espressif.com/projects/esp-idf/en/v5.2.1/esp32s2/api-reference/peripherals/ledc.html">LEDC
  * peripheral</a>. This is usually used to generate a PWM signal to control the intensity of an LED, but here it
  * generates frequencies for the buzzers.
  *

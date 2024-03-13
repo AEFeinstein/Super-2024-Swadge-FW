@@ -3,7 +3,7 @@
  * \section tft_design Design Philosophy
  *
  * TFT code is based on <a
- * href="https://github.com/espressif/esp-idf/tree/v5.2/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
+ * href="https://github.com/espressif/esp-idf/tree/v5.2.1/examples/peripherals/lcd/tjpgd">Espressif's LCD tjpgd
  * example</a>.
  *
  * Each pixel in the frame-buffer is of type ::paletteColor_t.
