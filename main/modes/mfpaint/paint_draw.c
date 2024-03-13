@@ -423,8 +423,8 @@ void paintDrawScreenSetup(void)
     paintState->toolWheel         = initMenu(toolWheelTitleStr, paintToolWheelCb);
     paintState->toolWheelRenderer = initWheelMenu(&paintState->toolbarFont, 90, &paintState->toolWheelLabelBox);
 
-    paintState->toolWheelLabelBox.x      = TFT_CORNER_RADIUS;
-    paintState->toolWheelLabelBox.y      = 4;
+    paintState->toolWheelLabelBox.pos.x  = TFT_CORNER_RADIUS;
+    paintState->toolWheelLabelBox.pos.y  = 4;
     paintState->toolWheelLabelBox.width  = TFT_WIDTH - TFT_CORNER_RADIUS * 2;
     paintState->toolWheelLabelBox.height = 20;
 

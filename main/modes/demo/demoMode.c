@@ -332,9 +332,8 @@ static void demoAudioCallback(uint16_t* samples, uint32_t sampleCnt)
  * This function is called when the display driver wishes to update a
  * section of the display.
  *
- * @param disp The display to draw to
- * @param x the x coordiante that should be updated
- * @param y the x coordiante that should be updated
+ * @param x the x coordinate that should be updated
+ * @param y the x coordinate that should be updated
  * @param w the width of the rectangle to be updated
  * @param h the height of the rectangle to be updated
  * @param up update number
