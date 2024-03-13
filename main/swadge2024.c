@@ -122,6 +122,7 @@
  * - geometry.h: Basic math for 2D shapes, like collision checks
  * - macros.h: Convenient macros like MIN() and MAX()
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
+ * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
  *
  * \section espressif_doc Espressif Documentation
  *

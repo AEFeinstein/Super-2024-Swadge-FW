@@ -464,8 +464,8 @@ void drawWheelMenu(menu_t* menu, wheelMenuRenderer_t* renderer, int64_t elapsedU
             }
 
             drawText(renderer->font, renderer->textColor, label,
-                     renderer->textBox->x + (renderer->textBox->width - textW) / 2,
-                     renderer->textBox->y + (renderer->textBox->height - renderer->font->height - 1) / 2);
+                     renderer->textBox->pos.x + (renderer->textBox->width - textW) / 2,
+                     renderer->textBox->pos.y + (renderer->textBox->height - renderer->font->height - 1) / 2);
         }
     }
 }

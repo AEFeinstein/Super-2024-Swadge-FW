@@ -285,7 +285,6 @@ typedef struct
     /**
      * @brief This function is called when the display driver wishes to update a section of the display.
      *
-     * @param disp The display to draw to
      * @param x the x coordinate that should be updated
      * @param y the x coordinate that should be updated
      * @param w the width of the rectangle to be updated

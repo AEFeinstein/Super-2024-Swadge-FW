@@ -30,24 +30,20 @@ The continuous integration for this project runs on a Windows instance. This mea
     ```bash
     python -m pip install esptool
     ```
-3. [Install `doxygen`](https://www.doxygen.nl/download.html). This is for generating documentation.
-4. [Install `cppcheck`](https://cppcheck.sourceforge.io/). This is for static code analysis.
-5. [Install `msys2`](https://www.msys2.org/). This is the environment in which the emulator will be built.
-6. Start an `msys2` shell and run the following command to install all required packages for building the emulator:
+3. [Install `msys2`](https://www.msys2.org/). This is the environment in which the emulator will be built.
+4. Start an `msys2` shell and run the following command to install all required packages for building the emulator:
     ```bash
-    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip
+    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck mingw-w64-x86_64-doxygen
     ```
-7. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
+5. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
-    * `C:\Program Files\doxygen\bin` 
-    * `C:\Program Files\Cppcheck`
     
     You must add the `msys2` paths **after** the `python` paths and **before** `C:\Windows\System32`. This is because the build uses Windows `python`, not msys2's, and it uses msys2 `find.exe`, not System32's. When it's all set up, it should look something like this:
     
     ![image](https://user-images.githubusercontent.com/231180/224911026-0c6b1063-e4f2-4671-a804-bce004085a3a.png)
 
-8. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
+6. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `$HOME/esp/esp-idf`.
 Note: Some installs of Python will have py.exe instead of python.exe - If this is the case, you can edit install.ps1 to replace all instances of python.exe to py.exe OR rename your locally installed py.exe file to python.exe
     ```powershell
     & Set-ExecutionPolicy -Scope CurrentUser Unrestricted
@@ -63,14 +59,34 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 1. Run the following commands, depending on your package manager, to install all necessary packages:
     * `apt`:
         ```bash
-        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 clang-format cppcheck doxygen python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov
+        sudo apt install build-essential xorg-dev libx11-dev libxinerama-dev libxext-dev mesa-common-dev libglu1-mesa-dev libasound2-dev libpulse-dev libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
         ```
     * `dnf`:
         ```bash
         sudo dnf group install "C Development Tools and Libraries" "Development Tools"
-        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 clang-format cppcheck doxygen python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov
+        sudo dnf install libX11-devel libXinerama-devel libXext-devel mesa-libGLU-devel alsa-lib-devel pulseaudio-libs-devel libudev-devel cmake libasan8 cppcheck python3 python3-pip python3-venv cmake libusb-1.0-0-dev lcov gdb graphviz
         ```
-2. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+2. Install `doxygen` separately from their website (https://www.doxygen.nl/download.html). Note that the version used in this project is currently 1.10.0 and the version in many package managers is less than that. You will need to extract the binary somewhere and add it to your `PATH` variable. For example, GitHub Actions installs `doxygen` like this:
+    ```bash
+    wget -q -P ~ https://www.doxygen.nl/files/doxygen-1.10.0.linux.bin.tar.gz
+    tar -xf ~/doxygen-1.10.0.linux.bin.tar.gz -C ~
+
+    # This will temporarily add doxygen to the PATH.
+    # To do this permanently, add this line to the bottom of your ~/.bashrc file
+    export PATH="$PATH:$HOME/doxygen-1.10.0/bin"
+    ```
+    It is recommended that you uninstall any prior doxygen versions as well:
+    ```bash
+    sudo apt remove doxygen
+    ```
+3. Install `clang-17` and `clang-format-17` separately. Note that the version used in this project is currently 17 and the version in many package managers is less than that.
+    ```bash
+    wget https://apt.llvm.org/llvm.sh
+    chmod u+x llvm.sh
+    sudo ./llvm.sh 17
+    sudo apt install clang-format-17
+    ```
+4. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
     git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
@@ -78,14 +94,14 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 
 ## Configuring a MacOS Environment
 
-    > **Warning**
-    >
-    > This section is still under development, and as a result, may have unexpected errors in its process.
+> **Warning**
+>
+> This section is still under development, and as a result, may have unexpected errors in its process.
 
 1. Install [Homebrew](https://brew.sh/)
 2. Run the following command to install all necessary dependencies:
     ```bash
-    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen cmake
+    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen cmake graphviz
     ```
 3. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
