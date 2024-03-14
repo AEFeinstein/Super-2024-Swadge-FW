@@ -318,11 +318,7 @@ void app_main(void)
     // Initialize the speaker
     dacInit(dacCallback);
     dacStart();
-
-    song_t creditsSong;
-    loadSong("credits.sng", &creditsSong, false);
     initSpkSongPlayer();
-    spkPlaySong(0, &creditsSong);
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
