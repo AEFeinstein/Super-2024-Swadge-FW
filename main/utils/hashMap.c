@@ -501,13 +501,51 @@ bool bytesEq(const uint8_t* a, size_t aLength, const uint8_t* b, size_t bLength)
 }
 
 /**
+ * @brief Create or update a key-value pair in the hash map with a string key
+ *
+ * @warning A reference to the key will be stored in the map until the entry is removed
+ *
+ * @param map The hash map to update
+ * @param key The string key to associate the value with
+ * @param value The value to add to the map
+ */
+void hashPut(hashMap_t* map, const char* key, void* value)
+{
+    hashPutBin(map, key, value);
+}
+
+/**
+ * @brief Return the value in the hash map associated with the given string key
+ *
+ * @param map The hash map to search
+ * @param key The string key to retrieve the value for
+ * @return void* A pointer to the mapped value, or NULL if it was not found
+ */
+void* hashGet(hashMap_t* map, const char* key)
+{
+    return hashGetBin(map, key);
+}
+
+/**
+ * @brief Remove the value with a given string key from the hash map
+ *
+ * @param map The hash map to remove from
+ * @param key The string key to remove the value for
+ * @return void* The item that was removed, or NULL if no item was found for the given key
+ */
+void* hashRemove(hashMap_t* map, const char* key)
+{
+    return hashRemoveBin(map, key);
+}
+
+/**
  * @brief Create or update a key-value pair in the hash map with a non-string key
  *
  * @param map The hash map to update
  * @param key The key to associate the value with
  * @param value The value to add to the map
  */
-void hashPutHash(hashMap_t* map, const void* key, void* value)
+void hashPutBin(hashMap_t* map, const void* key, void* value)
 {
     hashCheckSize(map);
 
@@ -528,27 +566,13 @@ void hashPutHash(hashMap_t* map, const void* key, void* value)
 }
 
 /**
- * @brief Create or update a key-value pair in the hash map with a string key
- *
- * @warning A reference to the key will be stored in the map until the entry is removed
- *
- * @param map The hash map to update
- * @param key The string key to associate the value with
- * @param value The value to add to the map
- */
-void hashPut(hashMap_t* map, const char* key, void* value)
-{
-    hashPutHash(map, key, value);
-}
-
-/**
  * @brief Return the value in the hash map associated with the given key
  *
  * @param map The hash map to search
  * @param key The key to retrieve the value for
  * @return void* A pointer to the mapped value, or NULL if it was not found
  */
-void* hashGetHash(hashMap_t* map, const void* key)
+void* hashGetBin(hashMap_t* map, const void* key)
 {
     hashNode_t* node = hashFindNode(map, key, NULL, NULL, NULL);
 
@@ -563,82 +587,13 @@ void* hashGetHash(hashMap_t* map, const void* key)
 }
 
 /**
- * @brief Return the value in the hash map associated with the given string key
- *
- * @param map The hash map to search
- * @param key The string key to retrieve the value for
- * @return void* A pointer to the mapped value, or NULL if it was not found
- */
-void* hashGet(hashMap_t* map, const char* key)
-{
-    return hashGetHash(map, key);
-}
-
-/**
- * @brief Remove the last item returned by the iterator from the hash map
- *
- * This function does not need to search and so it always runs in constant time.
- *
- * If you want to remove an item from the hash map while iterating over it,
- * this function is the right way to do it.
- *
- * @warning If this function returns false, you must call hashIterReset()
- *
- * @param map The hash map to remove the item from
- * @param iter The iterator whose current item to remove from the hash map
- * @return true if there are still items remaining in the iterator
- * @return false if there are no more items remaining in the iterator
- */
-bool hashIterRemove(hashMap_t* map, hashIterator_t* iter)
-{
-    if (!iter || !iter->_state)
-    {
-        // Can't do anything with nulls...
-        return false;
-    }
-
-    hashIterState_t* state = iter->_state;
-    bool nextBucket        = false;
-    bool result            = false;
-
-    int newCount           = map->count;
-    node_t* nextListNode   = state->curBucket->hasMulti ? state->curListNode->next : NULL;
-    hashNode_t removedNode = bucketRemove(map, state->curBucket, state->curNode, state->curListNode, &newCount);
-    if (newCount != map->count)
-    {
-        int diff = map->count - newCount;
-        state->returned -= (map->count - newCount);
-        map->count     = newCount;
-        state->removed = true;
-        HASH_LOG("Removed %d nodes in iterator, map now has %d nodes", diff, map->count);
-    }
-    else
-    {
-        ESP_LOGW("HashMap", "WARN: Count didn't change on remove for some reason?");
-    }
-
-    state->curListNode = nextListNode;
-    if (nextListNode == NULL)
-    {
-        result = hashIterNext(map, iter);
-    }
-    else
-    {
-        state->curNode = nextListNode->val;
-        result         = true;
-    }
-
-    return result;
-}
-
-/**
  * @brief Remove the value with a given non-string key from the hash map
  *
  * @param map The hash map to remove from
  * @param key The non-string key to remove the value for
  * @return void* The item that was removed, or NULL if no item was found for the given key
  */
-void* hashRemoveHash(hashMap_t* map, const void* key)
+void* hashRemoveBin(hashMap_t* map, const void* key)
 {
     uint32_t hash;
     hashBucket_t* bucket;
@@ -655,18 +610,6 @@ void* hashRemoveHash(hashMap_t* map, const void* key)
         // Nothing to remove, key not found
         return NULL;
     }
-}
-
-/**
- * @brief Remove the value with a given string key from the hash map
- *
- * @param map The hash map to remove from
- * @param key The string key to remove the value for
- * @return void* The item that was removed, or NULL if no item was found for the given key
- */
-void* hashRemove(hashMap_t* map, const char* key)
-{
-    return hashRemoveHash(map, key);
 }
 
 /**
@@ -692,7 +635,7 @@ void hashInit(hashMap_t* map, int initialSize)
  * @param hashFunc The hash function to use for the key datatype
  * @param eqFunc The comparison function to use for the key datatype
  */
-void hashInitCustom(hashMap_t* map, int initialSize, hashFunction_t hashFunc, eqFunction_t eqFunc)
+void hashInitBin(hashMap_t* map, int initialSize, hashFunction_t hashFunc, eqFunction_t eqFunc)
 {
     hashInit(map, initialSize);
 
@@ -856,6 +799,63 @@ bool hashIterate(hashMap_t* map, hashIterator_t* iterator)
 
         return false;
     }
+}
+
+/**
+ * @brief Remove the last item returned by the iterator from the hash map
+ *
+ * This function does not need to search and so it always runs in constant time.
+ *
+ * If you want to remove an item from the hash map while iterating over it,
+ * this function is the right way to do it.
+ *
+ * @warning If this function returns false, you must call hashIterReset()
+ *
+ * @param map The hash map to remove the item from
+ * @param iter The iterator whose current item to remove from the hash map
+ * @return true if there are still items remaining in the iterator
+ * @return false if there are no more items remaining in the iterator
+ */
+bool hashIterRemove(hashMap_t* map, hashIterator_t* iter)
+{
+    if (!iter || !iter->_state)
+    {
+        // Can't do anything with nulls...
+        return false;
+    }
+
+    hashIterState_t* state = iter->_state;
+    bool nextBucket        = false;
+    bool result            = false;
+
+    int newCount           = map->count;
+    node_t* nextListNode   = state->curBucket->hasMulti ? state->curListNode->next : NULL;
+    hashNode_t removedNode = bucketRemove(map, state->curBucket, state->curNode, state->curListNode, &newCount);
+    if (newCount != map->count)
+    {
+        int diff = map->count - newCount;
+        state->returned -= (map->count - newCount);
+        map->count     = newCount;
+        state->removed = true;
+        HASH_LOG("Removed %d nodes in iterator, map now has %d nodes", diff, map->count);
+    }
+    else
+    {
+        ESP_LOGW("HashMap", "WARN: Count didn't change on remove for some reason?");
+    }
+
+    state->curListNode = nextListNode;
+    if (nextListNode == NULL)
+    {
+        result = hashIterNext(map, iter);
+    }
+    else
+    {
+        state->curNode = nextListNode->val;
+        result         = true;
+    }
+
+    return result;
 }
 
 /**

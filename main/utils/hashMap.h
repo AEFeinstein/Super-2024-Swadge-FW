@@ -102,17 +102,20 @@ bool strEq(const void* a, const void* b);
 uint32_t hashBytes(const uint8_t* bytes, size_t length);
 bool bytesEq(const uint8_t* a, size_t aLength, const uint8_t* b, size_t bLength);
 
-void hashPutVoid(hashMap_t* map, const void* key, void* value);
 void hashPut(hashMap_t* map, const char* key, void* value);
-void* hashGetHash(hashMap_t* map, const void* key);
 void* hashGet(hashMap_t* map, const char* key);
-bool hashIterRemove(hashMap_t* map, hashIterator_t* iter);
-void* hashRemoveHash(hashMap_t* map, const void* key);
 void* hashRemove(hashMap_t* map, const char* key);
+
+void hashPutBin(hashMap_t* map, const void* key, void* value);
+void* hashGetBin(hashMap_t* map, const void* key);
+void* hashRemoveBin(hashMap_t* map, const void* key);
+
 void hashInit(hashMap_t* map, int initialSize);
-void hashInitStrKey(hashMap_t* map, int initialSize, hashFunction_t hashFunc, eqFunction_t eqFunc);
+void hashInitBin(hashMap_t* map, int initialSize, hashFunction_t hashFunc, eqFunction_t eqFunc);
 void hashDeinit(hashMap_t* map);
+
 bool hashIterate(hashMap_t* map, hashIterator_t* iterator);
+bool hashIterRemove(hashMap_t* map, hashIterator_t* iter);
 void hashIterReset(hashIterator_t* iterator);
 
 #endif
