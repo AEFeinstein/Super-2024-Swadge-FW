@@ -442,24 +442,7 @@ uint32_t hashString(const char* str)
  */
 bool strEq(const void* a, const void* b)
 {
-    if (a == b)
-    {
-        return true;
-    }
-    const char* aC = (const char*)a;
-    const char* bC = (const char*)b;
-    while (*aC && *bC)
-    {
-        if (*aC != *bC)
-        {
-            return false;
-        }
-
-        aC++;
-        bC++;
-    }
-
-    return true;
+    return (a == b) || (0 == strcmp((const char*)a, (const char*)b));
 }
 
 /**
