@@ -27,11 +27,13 @@
  */
 typedef struct
 {
-    /// @brief The key's hash value
+    ///<  The key's hash value
     uint32_t hash;
-    /// @brief The key of this pair, or NULL if this node is empty
+
+    ///<  The key of this pair, or NULL if this node is empty
     void* key;
-    /// @brief The value of this pair
+
+    ///<  The value of this pair
     void* value;
 } hashNode_t;
 
@@ -43,15 +45,15 @@ typedef struct
  */
 typedef struct hashBucket
 {
-    /// @brief Whether the bucket contains multiple or a single item
+    ///<  Whether the bucket contains multiple or a single item
     bool hasMulti;
 
     union
     {
-        /// @brief The node's single-item contents, when hasMulti is false
+        ///<  The node's single-item contents, when hasMulti is false
         hashNode_t single;
 
-        /// @brief The node's multi-item contents, when hasMulti is true
+        ///<  The node's multi-item contents, when hasMulti is true
         list_t multi;
     };
 } hashBucket_t;
@@ -62,19 +64,19 @@ typedef struct hashBucket
  */
 typedef struct hashIterState
 {
-    /// @brief The bucket containing the current item
+    ///<  The bucket containing the current item
     hashBucket_t* curBucket;
 
-    /// @brief The list node containing the current item, if within a multi bucket
+    ///<  The list node containing the current item, if within a multi bucket
     node_t* curListNode;
 
-    /// @brief The node containing the current item
+    ///<  The node containing the current item
     hashNode_t* curNode;
 
-    /// @brief The number of items returned by the iterator
+    ///<  The number of items returned by the iterator
     int returned;
 
-    /// @brief Whether the iterator has already been advanced, after removing the previous item
+    ///<  Whether the iterator has already been advanced, after removing the previous item
     bool removed;
 } hashIterState_t;
 
@@ -431,9 +433,7 @@ uint32_t hashString(const char* str)
 }
 
 /**
- * @brief Compare two NULL-terminated strings.
- *
- * TODO: I just realized this is not any faster than strcmp, so get rid of it
+ * @brief Compare two NUL-terminated strings.
  *
  * @param a The first string to compare
  * @param b The second string to compare
@@ -751,13 +751,21 @@ static bool hashIterNext(hashMap_t* map, hashIterator_t* iterator)
 /**
  * @brief Advance the given iterator to the next item, or return false if there is no next item
  *
- * The \c iterator should point to a zero-initialized struct a the start of iteration. Once iteration
+ * The \c iterator should point to a zero-initialized struct at the start of iteration. Once iteration
  * completes and this function returns \c false, \c iterator will be reset. If iteration is stopped
  * before this function returns \c false, the iterator must be reset with hashIterReset() to prevent
  * memory leaks.
  *
- * @param map The map to iterate over
- * @param iter A pointer to a hashIterator_t struct
+ * Items in the hash map are not returned in any particular order.
+ *
+ * It is possible to remove items during iteration, but this must be done with hashIterRemove(). Using
+ * hashRemove() or hashRemoveBin() during iteration is not allowed and will cause undefined behavior.
+ *
+ * Adding or udpating items during iteration is permitted, with the caveat that a new item inserted during
+ * iteration may or may not later be returned by the iterator.
+ *
+ * @param[in] map The map to iterate over
+ * @param[in,out] iter A pointer to a hashIterator_t struct
  * @return true if the iterator returned an item
  * @return false if iteration is complete and no item was returned
  */
@@ -807,9 +815,9 @@ bool hashIterate(hashMap_t* map, hashIterator_t* iterator)
  * This function does not need to search and so it always runs in constant time.
  *
  * If you want to remove an item from the hash map while iterating over it,
- * this function is the right way to do it.
+ * this function is the only safe way to do it.
  *
- * @warning If this function returns false, you must call hashIterReset()
+ * @warning If this function returns false, iteration is complete.
  *
  * @param map The hash map to remove the item from
  * @param iter The iterator whose current item to remove from the hash map
