@@ -9,6 +9,9 @@
 #include "emu_main.h"
 #include "ext_modes.h"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -106,6 +109,7 @@ static bool replayInit(emuArgs_t* emuArgs);
 static void replayRecordFrame(uint64_t frame);
 static void replayPlaybackFrame(uint64_t frame);
 static void replayPreFrame(uint64_t frame);
+static int32_t replayKeyCb(uint32_t keycode, bool down);
 
 static bool readEntry(replayEntry_t* out);
 static void writeEntry(const replayEntry_t* entry);
@@ -129,7 +133,7 @@ emuExtension_t replayEmuExtension = {
     .fnInitCb        = replayInit,
     .fnPreFrameCb    = replayPreFrame,
     .fnPostFrameCb   = NULL,
-    .fnKeyCb         = NULL,
+    .fnKeyCb         = replayKeyCb,
     .fnMouseMoveCb   = NULL,
     .fnMouseButtonCb = NULL,
     .fnRenderCb      = NULL,
@@ -434,7 +438,7 @@ static void replayPlaybackFrame(uint64_t frame)
 
                         // Turns out time_t doesn't printf well, so stick it in something that does
                         uint64_t timeSec = (uint64_t)ts.tv_sec;
-                        snprintf(filename, sizeof(filename) - 1, "screenshot-%" PRIu64 ".bmp", timeSec);
+                        snprintf(filename, sizeof(filename) - 1, "screenshot-%" PRIu64 ".png", timeSec);
 
                         printf("Replay: Saving screenshot to '%s'\n", filename);
                         takeScreenshot(filename);
@@ -509,6 +513,40 @@ static void replayPreFrame(uint64_t frame)
             break;
         }
     }
+}
+
+static int32_t replayKeyCb(uint32_t keycode, bool down)
+{
+    static bool released = true;
+    if (keycode == 65293)
+    {
+        if (down)
+        {
+            if (released)
+            {
+                released = false;
+                // No filename was given, save it to a timestamp-based name
+                struct timespec ts;
+                char filename[64];
+                clock_gettime(CLOCK_REALTIME, &ts);
+
+                // Turns out time_t doesn't printf well, so stick it in something that does
+                uint64_t timeSec = (uint64_t)ts.tv_sec;
+                snprintf(filename, sizeof(filename) - 1, "screenshot-%" PRIu64 ".png", timeSec);
+
+                printf("Replay: Saving screenshot to '%s'\n", filename);
+                takeScreenshot(filename);
+
+                return -1;
+            }
+        }
+        else
+        {
+            released = true;
+        }
+    }
+
+    return 0;
 }
 
 static bool readEntry(replayEntry_t* entry)
@@ -762,107 +800,27 @@ bool takeScreenshot(const char* name)
     uint16_t width, height;
     uint32_t* bitmap = getDisplayBitmap(&width, &height);
 
-    FILE* bmp = fopen(name, "wb");
-
-    if (!bmp)
+    // We need to swap some channels for PNG output
+    uint32_t converted[width * height];
+    for (int row = 0; row < height; row++)
     {
-        printf("ERR: Unable to open file '%s' for writing\n", name);
-        return false;
-    }
-
-#define BMP_HEADER_SIZE 54
-#define BITS_PER_PIXEL  24
-    // Calculate row size accounting for padding
-    uint16_t rowSize            = (width * BITS_PER_PIXEL + 31) / 32 * 4;
-    uint16_t paddingBytesPerRow = ((width * BITS_PER_PIXEL % 32) + 7) / 8;
-    uint32_t pxDataSize         = rowSize * height;
-    uint32_t totalSize          = pxDataSize + BMP_HEADER_SIZE;
-
-    uint32_t tmp32;
-    uint16_t tmp16;
-
-#define WRITE_32(x)                        \
-    do                                     \
-    {                                      \
-        tmp32 = (x);                       \
-        writeLe((uint8_t*)&tmp32, 4, bmp); \
-    } while (0)
-#define WRITE_16(x)                        \
-    do                                     \
-    {                                      \
-        tmp16 = (x);                       \
-        writeLe((uint8_t*)&tmp16, 2, bmp); \
-    } while (0)
-
-    // Write bitmap header
-    fputc('B', bmp);
-    fputc('M', bmp);
-
-    // Write total size (little-endian)
-    WRITE_32(totalSize);
-
-    // Write 4 Reserved Bytes
-    WRITE_32(0);
-
-    // Write pixel data offset
-    WRITE_32(BMP_HEADER_SIZE);
-
-    // DIB Header
-    // Write DIB length
-    WRITE_32(40);
-
-    // Write Pixel Width
-    WRITE_32(width);
-
-    // Write Pixel Height
-    WRITE_32(height);
-
-    // Write color planes
-    WRITE_16(1);
-
-    // Write bits per pixel
-    WRITE_16(24);
-
-    // Write pixel format / compression
-    WRITE_32(0);
-
-    // Write pixel data size
-    WRITE_32(pxDataSize);
-
-    // Write print resolution (2853px/meter == 72DPI)
-    WRITE_32(2835);
-    WRITE_32(2853);
-
-    // Write color palette count
-    WRITE_32(0);
-
-    // Write important color count
-    WRITE_32(0);
-
-    // Write the bitmap lines, from the bottom-up
-    for (int16_t row = height - 1; row >= 0; --row)
-    {
-        // Write the pixels in this line, from left-to-right
-        for (uint16_t col = 0; col < width; col++)
+        for (int col = 0; col < width; col++)
         {
-            // 24BPP / 8BPC
             uint8_t r = (bitmap[row * width + col] >> 8) & 0xFF;
             uint8_t g = (bitmap[row * width + col] >> 16) & 0xFF;
             uint8_t b = (bitmap[row * width + col] >> 24) & 0xFF;
+            uint8_t a = 0xFF;
 
-            fputc(r, bmp);
-            fputc(g, bmp);
-            fputc(b, bmp);
-        }
-
-        // Add padding at end of line
-        for (uint16_t i = 0; i < paddingBytesPerRow; i++)
-        {
-            fputc(0, bmp);
+            uint8_t* out = (uint8_t*)(&converted[row * width + col]);
+            *(out++) = b;
+            *(out++) = g;
+            *(out++) = r;
+            *(out++) = a;
         }
     }
 
-    fclose(bmp);
+    // Add full transparency for the rounded corners
+    plotRoundedCorners(converted, width, height, (width / TFT_WIDTH) * 40, 0x000000);
 
-    return true;
+    return 0 != stbi_write_png(name, width, height, 4, converted, width * sizeof(uint32_t));
 }

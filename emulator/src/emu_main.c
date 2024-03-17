@@ -91,7 +91,6 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 #endif
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
-static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uint32_t col);
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
 
 //==============================================================================
@@ -411,7 +410,7 @@ static void drawBitmapPixel(uint32_t* bitmapDisplay, int width, int height, int 
  * @param r The radius of the rounded corners
  * @param col The color to draw the rounded corners
  */
-static void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, int r, uint32_t col)
+void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, int r, uint32_t col)
 {
     int or = r;
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
