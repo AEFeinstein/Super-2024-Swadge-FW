@@ -287,17 +287,6 @@ void app_main(void)
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
                 sizeof(touchPads) / sizeof(touchPads[0]));
 
-#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
-    // Initialize the speaker
-    initDac(dacCallback);
-    dacStart();
-    initSpkSongPlayer();
-#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-    // Init buzzer. This must be called before initMic()
-    initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
-               GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
-#endif
-
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
             GPIO_NUM_36,                // sclk
@@ -498,12 +487,27 @@ static void initOptionalPeripherals(void)
     // Init mic if it is used by the mode
     if (NULL != cSwadgeMode->fnAudioCallback)
     {
+        // Initialize and start the mic as a continuous ADC
         initMic(GPIO_NUM_7);
         startMic();
     }
     else
     {
+        // Otherwise initialize the battery monitor as a oneshot ADC
         initBattmon(GPIO_NUM_6);
+
+        // Initialize sound output if there is no input
+#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+        // Initialize the speaker. The DAC uses the same DMA controller for continuous output,
+        // so it can't be initialized at the same time as the microphone
+        initDac(dacCallback);
+        dacStart();
+        initSpkSongPlayer();
+#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
+        // Init buzzer. This must be called before initMic()
+        initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
+                   GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
+#endif
     }
 
     // Init esp-now if requested by the mode
