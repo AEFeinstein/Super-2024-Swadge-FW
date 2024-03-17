@@ -29,7 +29,8 @@
  */
 typedef void (*fnDacCallback_t)(uint8_t* samples, int16_t len);
 
-void dacInit(fnDacCallback_t cb);
+void initDac(fnDacCallback_t cb);
+void deinitDac(void);
 void dacPoll(void);
 void dacStart(void);
 void dacStop(void);

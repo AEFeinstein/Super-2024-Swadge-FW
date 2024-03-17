@@ -36,7 +36,8 @@
                 "EMULATOR=1",
                 "GIT_SHA1=\"03ba217\"",
                 "HAS_XINERAMA=1",
-                "FULL_SCREEN_STEAL_FOCUS=1"
+                "FULL_SCREEN_STEAL_FOCUS=1",
+                "CONFIG_SOUND_OUTPUT_SPEAKER=y"
             ],
             "compilerPath": "/usr/bin/gcc",
             "cStandard": "c17",

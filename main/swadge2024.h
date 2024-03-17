@@ -207,6 +207,9 @@
 #include "geometry.h"
 #include "settingsManager.h"
 #include "touchUtils.h"
+
+// Sound utilities
+#include "soundFuncs.h"
 #include "swSynth.h"
 #include "sngPlayer.h"
 

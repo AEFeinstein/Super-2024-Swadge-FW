@@ -24,10 +24,18 @@ fnDacCallback_t dacCb = NULL;
  *
  * @param cb
  */
-void dacInit(fnDacCallback_t cb)
+void initDac(fnDacCallback_t cb)
 {
     // TODO
     dacCb = cb;
+}
+
+/**
+ * @brief TODO
+ *
+ */
+void deinitDac(void)
+{
 }
 
 /**

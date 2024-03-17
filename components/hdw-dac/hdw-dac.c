@@ -61,7 +61,7 @@ static bool IRAM_ATTR dac_on_convert_done_callback(dac_continuous_handle_t handl
  *
  * @param cb
  */
-void dacInit(fnDacCallback_t cb)
+void initDac(fnDacCallback_t cb)
 {
     /* Save the callback */
     dacCb = cb;
@@ -90,6 +90,16 @@ void dacInit(fnDacCallback_t cb)
         .on_stop         = NULL,
     };
     ESP_ERROR_CHECK(dac_continuous_register_event_callback(dac_handle, &cbs, que));
+}
+
+/**
+ * @brief TODO
+ *
+ */
+void deinitDac(void)
+{
+    dacStop();
+    ESP_ERROR_CHECK(dac_continuous_del_channels(dac_handle));
 }
 
 /**

@@ -2,8 +2,9 @@
 // Includes
 //==============================================================================
 
-#include <string.h>
 #include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
 #include "sngPlayer.h"
 #include "macros.h"
 
@@ -23,9 +24,9 @@ typedef struct
     synthOscillator_t oscillators[NUM_SONGS * OSC_PER_SONG];
     int32_t samplesRemaining[NUM_SONGS * OSC_PER_SONG];
     int32_t cNoteIdx[NUM_SONGS * OSC_PER_SONG];
-    song_t* songs[NUM_SONGS];
+    const song_t* songs[NUM_SONGS];
     bool songIsPlaying;
-    songFinishedCbFn songCb;
+    songFinishedCbFn songCb; // TODO should be per-song
 } sngPlayer_t;
 
 //==============================================================================
@@ -71,9 +72,9 @@ void initSpkSongPlayer(void)
  * @param sIdx
  * @param song
  */
-void spkPlaySong(uint8_t sIdx, song_t* song)
+void spkSongPlay(uint8_t sIdx, const song_t* song)
 {
-    spkPlaySongCb(sIdx, song, NULL);
+    spkSongPlayCb(sIdx, song, NULL);
 }
 
 /**
@@ -83,7 +84,7 @@ void spkPlaySong(uint8_t sIdx, song_t* song)
  * @param song
  * @param cb
  */
-void spkPlaySongCb(uint8_t sIdx, song_t* song, songFinishedCbFn cb)
+void spkSongPlayCb(uint8_t sIdx, const song_t* song, songFinishedCbFn cb)
 {
     // Save this for later
     sp.songs[sIdx] = song;
@@ -119,7 +120,7 @@ void spkPlaySongCb(uint8_t sIdx, song_t* song, songFinishedCbFn cb)
  *
  * @param resetTracks
  */
-void spkStopSong(bool resetTracks)
+void spkSongStop(bool resetTracks)
 {
     if (sp.songIsPlaying)
     {
@@ -143,6 +144,71 @@ void spkStopSong(bool resetTracks)
         }
         sp.songCb();
     }
+}
+
+/**
+ * @brief TODO
+ *
+ */
+void spkSongPause(void)
+{
+    // Pause the song
+    sp.songIsPlaying = false;
+
+    // Set the volume to zero
+    for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
+    {
+        for (int32_t oIdx = 0; oIdx < OSC_PER_SONG; oIdx++)
+        {
+            uint32_t idx = sIdx * OSC_PER_SONG + oIdx;
+            swSynthSetVolume(&sp.oscillators[idx], 0);
+        }
+    }
+}
+
+/**
+ * @brief
+ *
+ */
+void spkSongResume(void)
+{
+    // Resume the song
+    sp.songIsPlaying = true;
+
+    // Set the volume to non-zero
+    for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
+    {
+        for (int32_t oIdx = 0; oIdx < OSC_PER_SONG; oIdx++)
+        {
+            uint32_t idx = sIdx * OSC_PER_SONG + oIdx;
+            swSynthSetVolume(&sp.oscillators[idx], 255);
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @return void*
+ */
+void* spkSongSave(void)
+{
+    spkSongPause();
+    void* savePtr = calloc(1, sizeof(sngPlayer_t));
+    memcpy(savePtr, &sp, sizeof(sngPlayer_t));
+    return savePtr;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param data
+ */
+void spkSongRestore(void* data)
+{
+    memcpy(&sp, data, sizeof(sngPlayer_t));
+    free(data);
+    spkSongResume();
 }
 
 /**
@@ -190,7 +256,7 @@ void sngPlayerFillBuffer(uint8_t* samples, int16_t len)
                                 else
                                 {
                                     // Stop the song
-                                    spkStopSong(false);
+                                    spkSongStop(false);
                                     continue;
                                 }
                             }

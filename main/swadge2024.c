@@ -287,9 +287,16 @@ void app_main(void)
     initButtons(pushButtons, sizeof(pushButtons) / sizeof(pushButtons[0]), touchPads,
                 sizeof(touchPads) / sizeof(touchPads[0]));
 
+#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+    // Initialize the speaker
+    initDac(dacCallback);
+    dacStart();
+    initSpkSongPlayer();
+#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Init buzzer. This must be called before initMic()
     initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
                GPIO_NUM_42, LEDC_TIMER_1, LEDC_CHANNEL_1, getBgmVolumeSetting(), getSfxVolumeSetting());
+#endif
 
     // Init TFT, use a different LEDC channel than buzzer
     initTFT(SPI2_HOST,
@@ -314,11 +321,6 @@ void app_main(void)
              GPIO_NUM_18,
 #endif
              getLedBrightnessSetting());
-
-    // Initialize the speaker
-    dacInit(dacCallback);
-    dacStart();
-    initSpkSongPlayer();
 
     // Initialize optional peripherals, depending on the mode's requests
     initOptionalPeripherals();
@@ -370,11 +372,13 @@ void app_main(void)
             }
         }
 
+#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+        // Check if a DAC buffer needs to be filled
+        dacPoll();
+#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
         // Check for buzzer callback flags from the ISR
         bzrCheckSongDone();
-
-        // Speaker shenanigans
-        dacPoll();
+#endif
 
         if (NO_WIFI != cSwadgeMode->wifiMode)
         {
@@ -429,8 +433,9 @@ void app_main(void)
             {
                 // Lower the flag
                 shouldShowQuickSettings = false;
-                // Pause the buzzer
-                bzrPause();
+                // Pause the sound
+                soundPause();
+
                 // Save the current mode
                 modeBehindQuickSettings = cSwadgeMode;
                 cSwadgeMode             = &quickSettingsMode;
@@ -445,8 +450,8 @@ void app_main(void)
                 quickSettingsMode.fnExitMode();
                 // Restore the mode
                 cSwadgeMode = modeBehindQuickSettings;
-                // Resume the buzzer
-                bzrResume();
+                // Resume the sound
+                soundResume();
             }
 
             // Draw to the TFT
@@ -537,7 +542,11 @@ void deinitSystem(void)
 
     // Deinitialize everything
     deinitButtons();
+#if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+    deinitDac();
+#elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
     deinitBuzzer();
+#endif
     deinitEspNow();
     deinitLeds();
     deinitMic();
@@ -635,8 +644,8 @@ void softSwitchToPendingSwadge(void)
             cSwadgeMode->fnExitMode();
         }
 
-        // Stop the buzzer
-        bzrStop(true);
+        // Stop the music
+        soundStop(true);
 
         // Switch the mode pointer
         cSwadgeMode       = pendingSwadgeMode;

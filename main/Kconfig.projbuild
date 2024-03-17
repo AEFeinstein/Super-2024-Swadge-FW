@@ -1,4 +1,4 @@
-menu "Debug Output"
+menu "Swadge Configuration"
 	choice DEBUG_OUTPUT_TYPE
 		prompt "Select Debug Output"
 		default DEBUG_OUTPUT_USB
@@ -16,5 +16,19 @@ menu "Debug Output"
 			bool "DEBUG_OUTPUT_UART_SAO"
 			help
 				printf() is sent over the SAO connector instead of LED mirroring.
+	endchoice
+	choice SOUND_OUTPUT_TYPE
+		prompt "Select Sound Output"
+		default SOUND_OUTPUT_BUZZER
+		help
+			Select sound output, either the buzzers or the speaker.
+		config SOUND_OUTPUT_BUZZER
+			bool "SOUND_OUTPUT_BUZZER"
+			help
+				Sound comes out the two buzzers
+		config SOUND_OUTPUT_SPEAKER
+			bool "SOUND_OUTPUT_SPEAKER"
+			help
+				Sound comes out the speaker
 	endchoice
 endmenu
