@@ -61,7 +61,10 @@ void dacStop(void)
  */
 void dacPoll(void)
 {
-    // TODO
-    uint8_t samps[2048];
-    dacCb(samps, 2048);
+    if (dacCb)
+    {
+        // TODO
+        uint8_t samps[2048];
+        dacCb(samps, 2048);
+    }
 }

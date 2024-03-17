@@ -33,7 +33,7 @@ typedef struct
 // Variables
 //==============================================================================
 
-sngPlayer_t sp;
+sngPlayer_t sp = {.songIsPlaying = false};
 
 const oscillatorShape_t oscShapes[OSC_PER_SONG] = {
     SHAPE_SQUARE,
@@ -142,7 +142,10 @@ void spkSongStop(bool resetTracks)
                 swSynthSetVolume(&sp.oscillators[idx], 0);
             }
         }
-        sp.songCb();
+        if (sp.songCb)
+        {
+            sp.songCb();
+        }
     }
 }
 
