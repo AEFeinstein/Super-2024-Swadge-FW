@@ -4,7 +4,7 @@
 #include "esp_heap_caps.h"
 #include "esp_random.h"
 
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
 #include "spiffs_wsg.h"
@@ -416,8 +416,8 @@ void paintDrawScreenSetup(void)
     // Might not be necessary here
     paintUpdateLeds();
 
-    bzrStop(true);
-    bzrPlayBgm(&paintBgm, BZR_STEREO);
+    soundStop(true);
+    soundPlayBgm(&paintBgm, BZR_STEREO);
 
     // Set up the tool wheel
     paintState->toolWheel         = initMenu(toolWheelTitleStr, paintToolWheelCb);
@@ -558,7 +558,7 @@ void paintDrawScreenSetup(void)
 
 void paintDrawScreenCleanup(void)
 {
-    bzrStop(true);
+    soundStop(true);
 
     deinitWheelMenu(paintState->toolWheelRenderer);
     deinitMenu(paintState->toolWheel);

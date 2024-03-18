@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include <string.h>
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 #include "hdw-tft.h"
 #include "spiffs_font.h"
 #include "spiffs_song.h"
@@ -37,7 +37,7 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     // Load and play song
     loadSong("credits.sng", &credits->song, false);
     credits->song.shouldLoop = true;
-    bzrPlayBgm(&credits->song, BZR_STEREO);
+    soundPlayBgm(&credits->song, BZR_STEREO);
 }
 
 /**

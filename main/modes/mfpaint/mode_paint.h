@@ -2,7 +2,7 @@
 #define _MODE_PAINT_H_
 
 #include "swadge2024.h"
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 
 extern swadgeMode_t modePaint;
 

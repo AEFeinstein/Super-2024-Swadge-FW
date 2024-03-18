@@ -56,7 +56,6 @@ static void lumberjackEnterMode(void);
 static void lumberjackExitMode(void);
 static void lumberjackMainLoop(int64_t elapsedUs);
 static void lumberjackMenuLoop(int64_t elapsedUs);
-static void lumberjackAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void lumberjackInstructionText(const char* string, paletteColor_t color, int locationX, int locationY);
 static void lumberjackEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len,
@@ -103,7 +102,7 @@ swadgeMode_t lumberjackMode = {
     .fnEnterMode              = lumberjackEnterMode,
     .fnExitMode               = lumberjackExitMode,
     .fnMainLoop               = lumberjackMainLoop,
-    .fnAudioCallback          = lumberjackAudioCallback,
+    .fnAudioCallback          = NULL,
     .fnBackgroundDrawCallback = lumberjackBackgroundDrawCallback,
     .fnEspNowRecvCb           = lumberjackEspNowRecvCb,
     .fnEspNowSendCb           = lumberjackEspNowSendCb,
@@ -473,10 +472,6 @@ static void lumberjackInstructionText(const char* string, paletteColor_t color, 
 
     // drawTextWordWrap(&lumberjack->arcade, c555, string, &dOffset, &dOffset, TFT_WIDTH - dOffset, TFT_HEIGHT -
     // dOffset);
-}
-
-static void lumberjackAudioCallback(uint16_t* samples, uint32_t sampleCnt)
-{
 }
 
 static void lumberjackBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)

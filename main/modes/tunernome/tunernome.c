@@ -353,7 +353,7 @@ void switchToSubmode(tnMode newMode)
         {
             tunernome->mode = newMode;
 
-            bzrStop(true);
+            soundStop(true);
 
             led_t leds[CONFIG_NUM_LEDS] = {{0}};
             setLeds(leds, CONFIG_NUM_LEDS);
@@ -400,7 +400,7 @@ void switchToSubmode(tnMode newMode)
  */
 void tunernomeExitMode(void)
 {
-    bzrStop(true);
+    soundStop(true);
 
     freeFont(&tunernome->ibm_vga8);
     freeFont(&tunernome->radiostars);
@@ -984,7 +984,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
 
                 if (!tunernome->isSilent)
                 {
-                    bzrPlaySfx(song, BZR_STEREO);
+                    soundPlaySfx(song, BZR_STEREO);
                 }
                 setLeds(leds, CONFIG_NUM_LEDS);
                 tunernome->isBlinking         = true;

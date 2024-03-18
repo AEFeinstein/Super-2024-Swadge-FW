@@ -550,7 +550,7 @@ static void rayMenuCb(const char* label, bool selected, uint32_t settingVal)
 void rayStartGame(void)
 {
     // Stop the buzzer to not interfere with loading data
-    bzrStop(true);
+    soundStop(true);
 
     // Clear all lists
     rayFreeCurrentState(ray);
@@ -597,7 +597,7 @@ void raySwitchToScreen(rayScreen_t newScreen)
     {
         case RAY_MENU:
         {
-            bzrStop(true);
+            soundStop(true);
             // Reinit menu
             rayInitMenu();
             break;

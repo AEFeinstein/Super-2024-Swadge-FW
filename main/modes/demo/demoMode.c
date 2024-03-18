@@ -79,8 +79,8 @@ static void demoEnterMode(void)
     loadWsg("kid0.wsg", &dv->king_donut, true);
     loadSong("ode.sng", &dv->ode_to_joy, true);
 
-    bzrPlayBgm(&dv->ode_to_joy, BZR_STEREO);
-    bzrStop(true);
+    soundPlayBgm(&dv->ode_to_joy, BZR_STEREO);
+    soundStop(true);
 
     dv->menu = initMenu(demoName, demoMenuCb);
     addSingleItemToMenu(dv->menu, demoMenu1);

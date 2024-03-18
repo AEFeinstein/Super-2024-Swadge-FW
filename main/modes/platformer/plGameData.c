@@ -7,7 +7,7 @@
 #include "plEntityManager.h"
 #include "esp_random.h"
 #include "hdw-btn.h"
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 
 //==============================================================================
 // Functions
@@ -118,12 +118,12 @@ void addCoins(plGameData_t* gameData, uint8_t coins)
     if (gameData->coins > 99)
     {
         gameData->lives++;
-        bzrPlaySfx(&(gameData->soundManager->snd1up), BZR_LEFT);
+        soundPlaySfx(&(gameData->soundManager->snd1up), BZR_LEFT);
         gameData->coins = 0;
     }
     else
     {
-        bzrPlaySfx(&(gameData->soundManager->sndCoin), BZR_LEFT);
+        soundPlaySfx(&(gameData->soundManager->sndCoin), BZR_LEFT);
     }
 }
 

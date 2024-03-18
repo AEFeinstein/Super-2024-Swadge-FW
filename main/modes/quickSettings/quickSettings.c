@@ -17,7 +17,7 @@
 #include "menu_utils.h"
 #include "menuQuickSettingsRenderer.h"
 #include "macros.h"
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 
 #include "settingsManager.h"
 
@@ -181,7 +181,7 @@ static void quickSettingsEnterMode(void)
     memcpy(quickSettings->frozenScreen, getPxTftFramebuffer(), sizeof(paletteColor_t) * TFT_HEIGHT * TFT_WIDTH);
 
     // Save the buzzer state and pause it
-    quickSettings->buzzerState = bzrSave();
+    quickSettings->buzzerState = soundSave();
 
     // Save the LED state
     getLedState(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
@@ -264,10 +264,10 @@ static void quickSettingsExitMode(void)
     // Free the buzzer song
     freeSong(&quickSettings->jingle);
 
-    bzrStop(true);
+    soundStop(true);
 
     // Restore the buzzer state and resume it
-    bzrRestore(quickSettings->buzzerState);
+    soundRestore(quickSettings->buzzerState);
 
     // Restore the LED state
     setLeds(quickSettings->ledState, CONFIG_NUM_LEDS + 1);
@@ -426,7 +426,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
 
     if (label == quickSettingsLeds)
     {
-        bzrStop(true);
+        soundStop(true);
         setLedBrightnessSetting(value);
         if (value > quickSettings->minLedsValue)
         {
@@ -437,7 +437,7 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     }
     else if (label == quickSettingsBacklight)
     {
-        bzrStop(true);
+        soundStop(true);
         setTftBrightnessSetting(value);
         if (value > quickSettings->minTftValue)
         {
@@ -448,9 +448,9 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     {
         if (value != quickSettings->prevSfxValue)
         {
-            bzrStop(true);
+            soundStop(true);
             setSfxVolumeSetting(value);
-            bzrPlaySfx(&quickSettings->jingle, BZR_STEREO);
+            soundPlaySfx(&quickSettings->jingle, BZR_STEREO);
             quickSettings->prevSfxValue = value;
         }
 
@@ -463,9 +463,9 @@ static void quickSettingsOnChange(const char* label, int32_t value)
     {
         if (value != quickSettings->prevBgmValue)
         {
-            bzrStop(true);
+            soundStop(true);
             setBgmVolumeSetting(value);
-            bzrPlayBgm(&quickSettings->jingle, BZR_STEREO);
+            soundPlayBgm(&quickSettings->jingle, BZR_STEREO);
             quickSettings->prevBgmValue = value;
         }
 

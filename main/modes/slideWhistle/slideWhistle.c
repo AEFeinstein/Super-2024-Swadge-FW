@@ -787,7 +787,7 @@ void slideWhistleEnterMode(void)
     loadFont("radiostars.font", &slideWhistle->radiostars, false);
     loadFont("logbook.font", &slideWhistle->logbook, false);
 
-    bzrStopNote(BZR_STEREO);
+    soundStopNote(BZR_STEREO);
     slideWhistle->note = SILENCE;
 
     // Set default BPM to default
@@ -817,7 +817,7 @@ void slideWhistleEnterMode(void)
  */
 void slideWhistleExitMode(void)
 {
-    bzrStopNote(BZR_STEREO);
+    soundStopNote(BZR_STEREO);
     slideWhistle->note = SILENCE;
 
     freeFont(&slideWhistle->ibm_vga8);
@@ -1157,7 +1157,7 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
     if (isInterNotePause)
     {
         // Turn off the buzzer and set the LEDs to dim
-        bzrStopNote(BZR_STEREO);
+        soundStopNote(BZR_STEREO);
         slideWhistle->note = SILENCE;
         noteToColor(&slideWhistle->led, getCurrentNote(), 0x20);
     }
@@ -1176,7 +1176,7 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
             || (rhythms[slideWhistle->rhythmIdx].rhythm[slideWhistle->rhythmNoteIdx].note & REST_BIT))
         {
             // Turn off the buzzer and set the LEDs to dim
-            bzrStopNote(BZR_STEREO);
+            soundStopNote(BZR_STEREO);
             slideWhistle->note = SILENCE;
             noteToColor(&slideWhistle->led, getCurrentNote(), 0x20);
         }
@@ -1187,7 +1187,7 @@ void slideWhistleBeatTimerFunc(void* arg __attribute__((unused)))
                 = arpModify(getCurrentNote(), rhythms[slideWhistle->rhythmIdx].rhythm[slideWhistle->rhythmNoteIdx].arp);
             if (nextNote != slideWhistle->note)
             {
-                bzrPlayNote(nextNote, BZR_STEREO, volLevelFromSetting(getSfxVolumeSetting()));
+                soundPlayNote(nextNote, BZR_STEREO, volLevelFromSetting(getSfxVolumeSetting()));
                 slideWhistle->note = nextNote;
             }
             // Set LEDs to bright

@@ -733,7 +733,7 @@ void jukeboxEnterMode()
     portableDanceDisableDance(jukebox->portableDances, "Fire B");
     portableDanceDisableDance(jukebox->portableDances, "Flashlight");
 
-    bzrStop(true);
+    soundStop(true);
 }
 
 /**
@@ -741,7 +741,7 @@ void jukeboxEnterMode()
  */
 void jukeboxExitMode(void)
 {
-    bzrStop(true);
+    soundStop(true);
 
     // Free fonts
     freeFont(&jukebox->ibm_vga8);
@@ -779,20 +779,20 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         {
             if (jukebox->isPlaying)
             {
-                bzrStop(true);
+                soundStop(true);
                 jukebox->isPlaying = false;
             }
             else
             {
                 if (jukebox->inMusicSubmode)
                 {
-                    bzrPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
-                                 jukeboxBzrDoneCb);
+                    soundPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
+                                   jukeboxBzrDoneCb);
                 }
                 else
                 {
-                    bzrPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
-                                 jukeboxBzrDoneCb);
+                    soundPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
+                                   jukeboxBzrDoneCb);
                 }
                 jukebox->isPlaying = true;
             }
@@ -809,7 +809,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
         }
         case PB_START:
         {
-            bzrStop(true);
+            soundStop(true);
             jukebox->isPlaying      = false;
             jukebox->categoryIdx    = 0;
             jukebox->songIdx        = 0;
@@ -836,7 +836,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->categoryIdx = jukebox->categoryIdx - 1;
             if (jukebox->categoryIdx != before)
             {
-                bzrStop(true);
+                soundStop(true);
                 jukebox->isPlaying = false;
                 jukebox->songIdx   = 0;
             }
@@ -858,7 +858,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->categoryIdx = (jukebox->categoryIdx + 1) % length;
             if (jukebox->categoryIdx != before)
             {
-                bzrStop(true);
+                soundStop(true);
                 jukebox->isPlaying = false;
                 jukebox->songIdx   = 0;
             }
@@ -884,7 +884,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->songIdx = jukebox->songIdx - 1;
             if (jukebox->songIdx != before)
             {
-                bzrStop(true);
+                soundStop(true);
                 jukebox->isPlaying = false;
             }
             break;
@@ -905,7 +905,7 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             jukebox->songIdx = (jukebox->songIdx + 1) % length;
             if (jukebox->songIdx != before)
             {
-                bzrStop(true);
+                soundStop(true);
                 jukebox->isPlaying = false;
             }
             break;

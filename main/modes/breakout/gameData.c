@@ -9,6 +9,7 @@
 #include "esp_random.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
+#include "soundFuncs.h"
 
 //==============================================================================
 // Functions
@@ -144,7 +145,7 @@ void scorePoints(gameData_t* gameData, uint16_t points, int16_t incCombo)
     {
         gameData->lives++;
         gameData->extraLifeScore += (gameData->extraLifeScore + 400);
-        bzrPlaySfx(&(gameData->soundManager->snd1up), BZR_RIGHT);
+        soundPlaySfx(&(gameData->soundManager->snd1up), BZR_RIGHT);
     }
 
     // gameData->comboTimer = (gameData->levelDeaths < 3) ? 240: 1;
