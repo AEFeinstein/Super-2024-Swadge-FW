@@ -21,19 +21,25 @@
 
 typedef struct
 {
-    synthOscillator_t oscillators[NUM_SONGS * OSC_PER_SONG];
-    int32_t samplesRemaining[NUM_SONGS * OSC_PER_SONG];
-    int32_t cNoteIdx[NUM_SONGS * OSC_PER_SONG];
-    const song_t* songs[NUM_SONGS];
+    synthOscillator_t oscillators[OSC_PER_SONG];
+    int32_t samplesRemaining[OSC_PER_SONG];
+    int32_t cNoteIdx[OSC_PER_SONG];
+    const song_t* song;
     bool songIsPlaying;
-    songFinishedCbFn songCb; // TODO should be per-song
+    songFinishedCbFn songCb;
+} spkSong_t;
+
+typedef struct
+{
+    spkSong_t songStates[NUM_SONGS];
 } sngPlayer_t;
 
 //==============================================================================
 // Variables
 //==============================================================================
 
-sngPlayer_t sp = {.songIsPlaying = false};
+sngPlayer_t sp = {0};
+synthOscillator_t* oPtrs[NUM_SONGS * OSC_PER_SONG];
 
 const oscillatorShape_t oscShapes[OSC_PER_SONG] = {
     SHAPE_SQUARE,
@@ -52,18 +58,20 @@ void initSpkSongPlayer(void)
 {
     for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
     {
-        sp.songs[sIdx] = NULL;
+        spkSong_t* s     = &sp.songStates[sIdx];
+        s->song          = NULL;
+        s->songIsPlaying = false;
+        s->songCb        = NULL;
 
         for (int32_t oIdx = 0; oIdx < OSC_PER_SONG; oIdx++)
         {
-            uint32_t idx             = sIdx * OSC_PER_SONG + oIdx;
-            sp.cNoteIdx[idx]         = 0;
-            sp.samplesRemaining[idx] = 0;
-            swSynthInitOscillator(&sp.oscillators[idx], oscShapes[oIdx], 0);
+            s->cNoteIdx[oIdx]         = 0;
+            s->samplesRemaining[oIdx] = 0;
+            swSynthInitOscillator(&s->oscillators[oIdx], oscShapes[oIdx], 0);
+
+            oPtrs[(sIdx * OSC_PER_SONG) + oIdx] = &s->oscillators[oIdx];
         }
     }
-    sp.songIsPlaying = false;
-    sp.songCb        = NULL;
 }
 
 /**
@@ -86,33 +94,32 @@ void spkSongPlay(uint8_t sIdx, const song_t* song)
  */
 void spkSongPlayCb(uint8_t sIdx, const song_t* song, songFinishedCbFn cb)
 {
+    spkSong_t* s = &sp.songStates[sIdx];
     // Save this for later
-    sp.songs[sIdx] = song;
-    sp.songCb      = cb;
+    s->song          = song;
+    s->songCb        = cb;
+    s->songIsPlaying = true;
 
     for (int oIdx = 0; oIdx < song->numTracks; oIdx++)
     {
-        uint32_t idx = sIdx * OSC_PER_SONG + oIdx;
-
         // Reset the noteIdx
-        sp.cNoteIdx[idx] = 0;
+        s->cNoteIdx[oIdx] = 0;
 
         // Get the first note for this track
         musicalNote_t* note = &song->tracks[oIdx].notes[0];
         // Calculate the number of samples for this note
-        sp.samplesRemaining[idx] = (note->timeMs * AUDIO_SAMPLE_RATE_HZ) / 1000;
+        s->samplesRemaining[oIdx] = (note->timeMs * AUDIO_SAMPLE_RATE_HZ) / 1000;
         // Play the note
         if (SILENCE == note->note)
         {
-            swSynthSetVolume(&sp.oscillators[idx], 0);
+            swSynthSetVolume(&s->oscillators[oIdx], 0);
         }
         else
         {
-            swSynthSetFreq(&sp.oscillators[idx], note->note);
-            swSynthSetVolume(&sp.oscillators[idx], 255);
+            swSynthSetFreq(&s->oscillators[oIdx], note->note);
+            swSynthSetVolume(&s->oscillators[oIdx], 255);
         }
     }
-    sp.songIsPlaying = true;
 }
 
 /**
@@ -122,29 +129,25 @@ void spkSongPlayCb(uint8_t sIdx, const song_t* song, songFinishedCbFn cb)
  */
 void spkSongStop(bool resetTracks)
 {
-    if (sp.songIsPlaying)
+    for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
     {
-        sp.songIsPlaying = false;
-        for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
+        spkSong_t* s = &sp.songStates[sIdx];
+        if (s->songIsPlaying)
         {
+            s->songIsPlaying = false;
             if (resetTracks)
             {
-                sp.songs[sIdx] = NULL;
+                s->song = NULL;
             }
             for (int32_t oIdx = 0; oIdx < OSC_PER_SONG; oIdx++)
             {
-                uint32_t idx = sIdx * OSC_PER_SONG + oIdx;
                 if (resetTracks)
                 {
-                    sp.cNoteIdx[idx]         = 0;
-                    sp.samplesRemaining[idx] = 0;
+                    s->cNoteIdx[oIdx]         = 0;
+                    s->samplesRemaining[oIdx] = 0;
                 }
-                swSynthSetVolume(&sp.oscillators[idx], 0);
+                swSynthSetVolume(&s->oscillators[oIdx], 0);
             }
-        }
-        if (sp.songCb)
-        {
-            sp.songCb();
         }
     }
 }
@@ -155,16 +158,14 @@ void spkSongStop(bool resetTracks)
  */
 void spkSongPause(void)
 {
-    // Pause the song
-    sp.songIsPlaying = false;
-
     // Set the volume to zero
     for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
     {
+        // Pause the song
+        sp.songStates[sIdx].songIsPlaying = false;
         for (int32_t oIdx = 0; oIdx < OSC_PER_SONG; oIdx++)
         {
-            uint32_t idx = sIdx * OSC_PER_SONG + oIdx;
-            swSynthSetVolume(&sp.oscillators[idx], 0);
+            swSynthSetVolume(&sp.songStates[sIdx].oscillators[oIdx], 0);
         }
     }
 }
@@ -175,16 +176,14 @@ void spkSongPause(void)
  */
 void spkSongResume(void)
 {
-    // Resume the song
-    sp.songIsPlaying = true;
-
     // Set the volume to non-zero
     for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
     {
+        // Resume the song
+        sp.songStates[sIdx].songIsPlaying = true;
         for (int32_t oIdx = 0; oIdx < OSC_PER_SONG; oIdx++)
         {
-            uint32_t idx = sIdx * OSC_PER_SONG + oIdx;
-            swSynthSetVolume(&sp.oscillators[idx], 255);
+            swSynthSetVolume(&sp.songStates[sIdx].oscillators[oIdx], 255);
         }
     }
 }
@@ -226,64 +225,70 @@ void sngPlayerFillBuffer(uint8_t* samples, int16_t len)
     for (int32_t mIdx = 0; mIdx < len; mIdx++)
     {
         // Mix all the oscillators together
-        samples[mIdx] = swSynthMixOscillators(sp.oscillators, ARRAY_SIZE(sp.oscillators));
+        samples[mIdx] = swSynthMixOscillators(oPtrs, NUM_SONGS * OSC_PER_SONG);
 
         // For each song
         for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
         {
+            spkSong_t* s = &sp.songStates[sIdx];
+
             // If there is a song to play
-            if (NULL != sp.songs[sIdx])
+            if (NULL != s->song && s->songIsPlaying)
             {
                 // For each track
-                for (int32_t oIdx = 0; oIdx < sp.songs[sIdx]->numTracks; oIdx++)
+                for (int32_t oIdx = 0; oIdx < s->song->numTracks; oIdx++)
                 {
-                    uint32_t idx = sIdx * OSC_PER_SONG + oIdx;
-
-                    if (sp.songIsPlaying)
+                    // Decrement samples remaining
+                    s->samplesRemaining[oIdx]--;
+                    // If it's time for the next note
+                    if (0 == s->samplesRemaining[oIdx])
                     {
-                        // Decrement samples remaining
-                        sp.samplesRemaining[idx]--;
-                        // If it's time for the next note
-                        if (0 == sp.samplesRemaining[idx])
+                        // Get the song's track
+                        songTrack_t* track = &s->song->tracks[oIdx];
+
+                        // Increment the note index
+                        if (s->cNoteIdx[oIdx] == track->numNotes - 1)
                         {
-                            // Get the song's track
-                            songTrack_t* track = &sp.songs[sIdx]->tracks[oIdx];
-
-                            // Increment the note index
-                            if (sp.cNoteIdx[idx] == track->numNotes - 1)
+                            if (s->song->shouldLoop)
                             {
-                                if (sp.songs[sIdx]->shouldLoop)
-                                {
-                                    sp.cNoteIdx[idx] = 0;
-                                }
-                                else
-                                {
-                                    // Stop the song
-                                    spkSongStop(false);
-                                    continue;
-                                }
+                                s->cNoteIdx[oIdx] = 0;
                             }
                             else
                             {
-                                sp.cNoteIdx[idx]++;
-                            }
+                                // Stop the song
+                                s->songIsPlaying          = false;
+                                s->cNoteIdx[oIdx]         = 0;
+                                s->samplesRemaining[oIdx] = 0;
+                                swSynthSetVolume(&s->oscillators[oIdx], 0);
 
-                            // Get the note
-                            musicalNote_t* note = &track->notes[sp.cNoteIdx[idx]];
-
-                            // Calculate remaining samples
-                            sp.samplesRemaining[idx] = (note->timeMs * AUDIO_SAMPLE_RATE_HZ) / 1000;
-
-                            // Play the note
-                            if (SILENCE == note->note)
-                            {
-                                swSynthSetVolume(&sp.oscillators[idx], 0);
+                                if (NULL != s->songCb)
+                                {
+                                    s->songCb();
+                                    s->songCb = NULL;
+                                }
+                                continue;
                             }
-                            else
-                            {
-                                swSynthSetFreq(&sp.oscillators[idx], note->note);
-                                swSynthSetVolume(&sp.oscillators[idx], 255);
-                            }
+                        }
+                        else
+                        {
+                            s->cNoteIdx[oIdx]++;
+                        }
+
+                        // Get the note
+                        musicalNote_t* note = &track->notes[s->cNoteIdx[oIdx]];
+
+                        // Calculate remaining samples
+                        s->samplesRemaining[oIdx] = (note->timeMs * AUDIO_SAMPLE_RATE_HZ) / 1000;
+
+                        // Play the note
+                        if (SILENCE == note->note)
+                        {
+                            swSynthSetVolume(&s->oscillators[oIdx], 0);
+                        }
+                        else
+                        {
+                            swSynthSetFreq(&s->oscillators[oIdx], note->note);
+                            swSynthSetVolume(&s->oscillators[oIdx], 255);
                         }
                     }
                 }

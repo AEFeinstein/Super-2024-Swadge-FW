@@ -74,7 +74,7 @@ static int8_t sineGen(uint16_t idx)
  */
 static int8_t squareGen(uint16_t idx)
 {
-    return sinTab[idx] >= 0 ? 127 : -128;
+    return sinTab[idx] >= 0 ? 64 : -64;
 }
 
 /**
@@ -177,13 +177,13 @@ void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume)
  * @param numOscs
  * @return uint8_t
  */
-uint8_t swSynthMixOscillators(synthOscillator_t* oscs, uint16_t numOscs)
+uint8_t swSynthMixOscillators(synthOscillator_t* oscs[], uint16_t numOscs)
 {
     int32_t sample               = 0;
     int32_t numOscillatorsActive = 0;
     for (int32_t oscIdx = 0; oscIdx < numOscs; oscIdx++)
     {
-        synthOscillator_t* osc = &oscs[oscIdx];
+        synthOscillator_t* osc = oscs[oscIdx];
         osc->accumulator.accum32 += osc->stepSize;
 
         if (osc->cVol != osc->tVol)
@@ -210,5 +210,5 @@ uint8_t swSynthMixOscillators(synthOscillator_t* oscs, uint16_t numOscs)
         return 127;
     }
     // printf("%ld\n", (sample / numOscillatorsActive) + 128);
-    return (sample / numOscillatorsActive) + 128;
+    return (sample / numOscs) + 128;
 }

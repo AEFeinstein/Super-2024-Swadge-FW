@@ -52,5 +52,5 @@ typedef struct
 void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint8_t volume);
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape);
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq);
-uint8_t swSynthMixOscillators(synthOscillator_t* oscs, uint16_t numOscs);
+uint8_t swSynthMixOscillators(synthOscillator_t* oscs[], uint16_t numOscs);
 void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume);
