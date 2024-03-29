@@ -25,15 +25,38 @@
  * abruptly may cause unwanted clicks or pops on the speaker.
  *
  * dacPoll() is called automatically by the system while the DAC is running. By default, samples are requested from
- * sngPlayer.h. Swadge modes may override this by providing a non-NULL ::fnDacCallback_t in the swadgeMode_t struct.
- *
- * \todo Add function pointer to swadge mode struct
+ * sngPlayerFillBuffer(). Swadge modes may override this by providing a non-NULL function pointer for
+ * ::swadgeMode_t.fnDacCb.
  *
  * \section dac_example Example
  *
- * TODO:
  * \code{.c}
- * TODO
+ * void dacCallback(uint8_t* samples, int16_t len)
+ * {
+ *     // Generate something sawtooth-ish. It's just an example, gimme a break
+ *     for(int16_t idx = 0; idx < len; idx++)
+ *     {
+ *         samples[idx] = idx;
+ *     }
+ * }
+ *
+ * int main()
+ * {
+ *     // Initialize and start the DAC
+ *     initDac(dacCallback);
+ *     dacStart();
+ *
+ *     // Loop forever and poll the DAC.
+ *     bool running = true;
+ *     while(running)
+ *     {
+ *         // This will end up calling dacCallback as appropriate
+ *         dacPoll();
+ *     }
+ *
+ *     // Cleanup
+ *     dacStop();
+ * }
  * \endcode
  */
 

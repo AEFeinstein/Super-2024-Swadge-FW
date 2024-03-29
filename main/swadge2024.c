@@ -71,25 +71,20 @@
  *
  * - swadge2024.h: Write a mode. This is a good starting place
  *
- * \subsection hw_api Hardware APIs
+ * \subsection input_api Input APIs
  *
  * - hdw-battmon.h: Learn how to check the battery voltage
  * - hdw-btn.h: Learn how to use both push and touch button input
- * - hdw-bzr.h: Learn how to use the buzzer
- * - hdw-dac.h: Learn how to use the DAC (speaker)
+ *     - touchUtils.h: Utilities to interpret touch button input as a virtual joystick, spin wheel, or cartesian plane
  * - hdw-imu.h: Learn how to use the inertial measurement unit
- * - hdw-led.h: Learn how to use the LEDs
- * - hdw-mic.h: Learn how to use the microphone
  * - hdw-temperature.h: Learn how to use the temperature sensor
- * - hdw-usb.h: Learn how to be a USB HID Gamepad
- *     - advanced_usb_control.h: Use USB for application development
  *
  * \subsection nwk_api Network APIs
  *
  * - hdw-esp-now.h: Broadcast and receive messages. This is fast and unreliable.
  * - p2pConnection.h: Connect to another Swadge and exchange messages. This is slower and more reliable.
  *
- * \subsection sw_api Persistent Memory APIs
+ * \subsection pm_api Persistent Memory APIs
  *
  * - hdw-nvs.h: Learn how to save and load persistent runtime data
  * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
@@ -98,9 +93,11 @@
  *     - spiffs_song.h: Load SNG songs
  *     - spiffs_json.h: Load JSON
  *     - spiffs_txt.h: Load plaintext
+ * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \subsection gr_api Graphics APIs
  *
+ * - hdw-led.h: Learn how to use the LEDs
  * - hdw-tft.h: Learn how to use the TFT
  * - palette.h: Learn about available colors
  * - color_utils.h: Learn about color manipulation
@@ -113,17 +110,34 @@
  *
  * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
  * - dialogBox.h: Show messages and prompt users for a response
- * - touchTextEntry.h: Edit a single line of text
+ * - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
+ * - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
+ * - wheel_menu.h: Show a menu wheel which is navigable with a circular touch-pad
+ *
+ * \subsection audio_api Audio APIs
+ *
+ * - hdw-dac.h: Learn how to use the DAC (speaker)
+ * - hdw-bzr.h: Learn how to use the buzzer
+ * - hdw-mic.h: Learn how to use the microphone
+ * - soundFuncs.h: Helper functions to use either the buzzers or DAC speaker, depending on build configuration. These
+ * macros should be used instead of calling buzzer or DAC functions directly!
+ * - swSynth.h: Learn how to generate oscillating output for the DAC speaker
+ * - sngPlayer.h: Learn how to play song files on the DAC speaker
+ *
+ * \subsection math_api Math APIs
+ *
+ * - trigonometry.h: Fast math based on look up tables
+ * - vector2d.h: Basic math for 2D vectors
+ * - geometry.h: Basic math for 2D shapes, like collision checks
+ * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
  *
  * \subsection oth_api Other Useful APIs
  *
  * - linked_list.h: A basic data structure
- * - trigonometry.h: Fast math based on look up tables
- * - vector2d.h: Basic math for 2D vectors
- * - geometry.h: Basic math for 2D shapes, like collision checks
  * - macros.h: Convenient macros like MIN() and MAX()
- * - settingsManager.h: Set and get persistent settings for things like screen brightness
- * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
+ * - coreutil.h: TODO
+ * - hdw-usb.h: Learn how to be a USB HID Gamepad
+ *     - advanced_usb_control.h: Use USB for application development
  *
  * \section espressif_doc Espressif Documentation
  *
@@ -736,6 +750,15 @@ void setFrameRateUs(uint32_t newFrameRateUs)
  */
 void dacCallback(uint8_t* samples, int16_t len)
 {
-    sngPlayerFillBuffer(samples, len);
-    // swSynthFillBuffer(samples, len);
+    // If there is a DAC callback for the current mode
+    if (cSwadgeMode->fnDacCb)
+    {
+        // Call that
+        cSwadgeMode->fnDacCb(samples, len);
+    }
+    else
+    {
+        // Otherwise use the song player
+        sngPlayerFillBuffer(samples, len);
+    }
 }

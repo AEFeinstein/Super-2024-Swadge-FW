@@ -58,6 +58,7 @@
  * static void demoEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
  * static void demoEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
  * static int16_t demoAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
+ * static void demoDacCb(uint8_t *samples, int16_t len);
  * \endcode
  *
  * Then functions can be used to initialize a ::swadgeMode_t:
@@ -77,6 +78,7 @@
  *     .fnEspNowRecvCb           = demoEspNowRecvCb,
  *     .fnEspNowSendCb           = demoEspNowSendCb,
  *     .fnAdvancedUSB            = demoAdvancedUSB,
+ *     .fnDacCb                  = demoDacCb,
  * };
  * \endcode
  *
@@ -120,7 +122,12 @@
  * static int16_t demoAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
  * {
  *     // Fill this in
- * 	return 0;
+ * 	   return 0;
+ * }
+ *
+ * static void demoDacCb(uint8_t *samples, int16_t len)
+ * {
+ *     // Fill this in
  * }
  * \endcode
  *
@@ -330,6 +337,12 @@ typedef struct
      * @return The number of bytes returned to the host
      */
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
+
+    /**
+     * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then sngPlayerFillBuffer()
+     * will be used instead to fill sample buffers
+     */
+    fnDacCallback_t fnDacCb;
 } swadgeMode_t;
 
 bool checkButtonQueueWrapper(buttonEvt_t* evt);
