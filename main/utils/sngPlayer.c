@@ -172,7 +172,7 @@ void spkSongPause(void)
 }
 
 /**
- * @brief
+ * @brief TODO
  *
  */
 void spkSongResume(void)
