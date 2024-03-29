@@ -5,18 +5,24 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include "esp_attr.h"
+#include "hdw-dac.h"
 #include "swSynth.h"
+#include "macros.h"
 
 //==============================================================================
 // Constant variables
 //==============================================================================
 
-/*
-for(int i = 0; i < 256; i++)
-{
-    printf("%d, ", (int)round((255*( (sin((i * 2 * M_PI) / 256) + 1) / 2.0f  )) - 128));
-}
-*/
+/**
+ * @brief Table of 256 8-bit signed values for a sine wave
+ *
+ * \code{.c}
+ * for(int i = 0; i < 256; i++)
+ * {
+ *     printf("%d, ", (int)round((255*( (sin((i * 2 * M_PI) / 256) + 1) / 2.0f  )) - 128));
+ * }
+ * @endcode
+ */
 static const int8_t DRAM_ATTR sinTab[] = {
     -1,   3,    6,    9,    12,   15,   18,   21,   24,   27,   30,   34,   37,   39,   42,   45,   48,   51,   54,
     57,   60,   62,   65,   68,   70,   73,   75,   78,   80,   83,   85,   87,   90,   92,   94,   96,   98,   100,
@@ -34,6 +40,31 @@ static const int8_t DRAM_ATTR sinTab[] = {
     -28,  -25,  -22,  -19,  -16,  -13,  -10,  -7,   -4,
 };
 
+/**
+ * @brief Table of 256 8-bit signed values for a triangle wave
+ *
+ * \code{.c}
+ * for(int i = 0; i < 256; i++)
+ * {
+ *     if(i < 64)
+ *     {
+ *         printf("%d, ", i * 2);
+ *     }
+ *     else if (i == 64)
+ *     {
+ *         printf("%d, ", 127);
+ *     }
+ *     else if (i <= 192)
+ *     {
+ *         printf("%d, ", 256 - (i * 2));
+ *     }
+ *     else
+ *     {
+ *         printf("%d, ", (i * 2) - 512);
+ *     }
+ * }
+ * @endcode
+ */
 static const int8_t DRAM_ATTR triTab[] = {
     0,    2,    4,    6,    8,    10,   12,   14,   16,   18,   20,   22,   24,   26,   28,   30,   32,   34,   36,
     38,   40,   42,   44,   46,   48,   50,   52,   54,   56,   58,   60,   62,   64,   66,   68,   70,   72,   74,
@@ -56,10 +87,10 @@ static const int8_t DRAM_ATTR triTab[] = {
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Get an 8-bit signed sample from a 256 point sine wave.
  *
- * @param idx
- * @return int8_t
+ * @param idx The index to get, must be between 0 and 255
+ * @return A signed 8-bit sample of a sine wave
  */
 static int8_t sineGen(uint16_t idx)
 {
@@ -67,32 +98,34 @@ static int8_t sineGen(uint16_t idx)
 }
 
 /**
- * @brief TODO
+ * @brief Get an 8-bit signed sample from a 256 point square wave.
  *
- * @param idx
- * @return int8_t
+ * This has a smaller amplitude than the other waves because it is naturally louder
+ *
+ * @param idx The index to get, must be between 0 and 255
+ * @return A signed 8-bit sample of a square wave
  */
 static int8_t squareGen(uint16_t idx)
 {
-    return sinTab[idx] >= 0 ? 64 : -64;
+    return (idx >= 128) ? 64 : -64;
 }
 
 /**
- * @brief TODO
+ * @brief Get an 8-bit signed sample from a 256 point sawtooth wave.
  *
- * @param idx
- * @return int8_t
+ * @param idx The index to get, must be between 0 and 255
+ * @return A signed 8-bit sample of a sawtooth wave
  */
 static int8_t sawtoothGen(uint16_t idx)
 {
-    return idx - 128;
+    return (idx - 128);
 }
 
 /**
- * @brief TODO
+ * @brief Get an 8-bit signed sample from a 256 point triangle wave.
  *
- * @param idx
- * @return int8_t
+ * @param idx The index to get, must be between 0 and 255
+ * @return A signed 8-bit sample of a triangle wave
  */
 static int8_t triangleGen(uint16_t idx)
 {
@@ -100,26 +133,49 @@ static int8_t triangleGen(uint16_t idx)
 }
 
 /**
- * @brief TODO
+ * @brief Get an 8-bit signed random noise sample
  *
- * @param osc
- * @param shape
- * @param volume
+ * See https://en.wikipedia.org/wiki/Linear-feedback_shift_register#Fibonacci_LFSRs
+ *
+ * @param idx Unused
+ * @return A random signed 8-bit sample
  */
-void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint8_t volume)
+static int8_t noiseGen(uint16_t idx)
+{
+    /* Static variable persists between function calls */
+    static uint16_t shiftReg = 0xACE1u;
+
+    /* taps: 16 14 13 11; feedback polynomial: x^16 + x^14 + x^13 + x^11 + 1 */
+    uint16_t bit = ((shiftReg >> 0) ^ (shiftReg >> 2) ^ (shiftReg >> 3) ^ (shiftReg >> 5)) & 1u;
+    shiftReg     = (shiftReg >> 1) | (bit << 15);
+
+    /* This will return as an 8-bit signed value */
+    return shiftReg;
+}
+
+/**
+ * @brief Initialize a software synthesizer oscillator
+ *
+ * @param osc The oscillator to initialize
+ * @param shape The shape of the wave to generate
+ * @param freq The frequency of the wave to generate, in hertz
+ * @param volume The volume (amplitude) of the wave to generate
+ */
+void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint32_t freq, uint8_t volume)
 {
     osc->accumulator.accum32 = 0;
     osc->cVol                = 0;
     osc->stepSize            = 0;
-    swSynthSetVolume(osc, volume);
     swSynthSetShape(osc, shape);
+    swSynthSetFreq(osc, freq);
+    swSynthSetVolume(osc, volume);
 }
 
 /**
- * @brief TODO
+ * @brief Set a software synthesizer oscillator's shape
  *
- * @param osc
- * @param shape
+ * @param osc The oscillator to set the shape for
+ * @param shape The shape to set (sine, square, sawtooth, triangle, or noise)
  */
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
 {
@@ -145,25 +201,30 @@ void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
             osc->waveFunc = triangleGen;
             break;
         }
+        case SHAPE_NOISE:
+        {
+            osc->waveFunc = noiseGen;
+            break;
+        }
     }
 }
 
 /**
- * @brief TODO
+ * @brief Set the frequency of an oscillator
  *
- * @param osc
- * @param freq
+ * @param osc The oscillator to set the frequency for
+ * @param freq The frequency to set
  */
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq)
 {
-    osc->stepSize = ((uint64_t)(sizeof(sinTab) * freq) << 16) / (AUDIO_SAMPLE_RATE_HZ);
+    osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq) << 16) / (AUDIO_SAMPLE_RATE_HZ);
 }
 
 /**
- * @brief TODO
+ * @brief Set the volume (amplitude) of an oscillator
  *
- * @param osc
- * @param volume 255 is loudest, 0 is off
+ * @param osc The oscillator to set the volume for
+ * @param volume The volume, 255 is loudest, 0 is off
  */
 void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume)
 {
@@ -171,23 +232,28 @@ void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume)
 }
 
 /**
- * @brief TODO
+ * @brief Increment a set of oscillators by one step each, mix together the resulting samples, and return the single
+ * mixed sample
  *
- * @param oscs
- * @param numOscs
- * @return uint8_t
+ * @param oscs An array of pointers to oscillators to step and mix together
+ * @param numOscs The number of oscillators to step and mix
+ * @return The mixed unsigned 8-bit output sample
  */
 uint8_t swSynthMixOscillators(synthOscillator_t* oscs[], uint16_t numOscs)
 {
-    int32_t sample               = 0;
-    int32_t numOscillatorsActive = 0;
+    // Start off with an empty sample. It's 32-bit for math but will be returned as 8-bit
+    int32_t sample = 0;
+    // For each oscillator
     for (int32_t oscIdx = 0; oscIdx < numOscs; oscIdx++)
     {
         synthOscillator_t* osc = oscs[oscIdx];
+        // Step the oscillator's accumulator
         osc->accumulator.accum32 += osc->stepSize;
 
+        // If the oscillator's current volume doesn't match the target volume
         if (osc->cVol != osc->tVol)
         {
+            // Either increment or decrement it, depending
             if (osc->cVol < osc->tVol)
             {
                 osc->cVol++;
@@ -198,17 +264,10 @@ uint8_t swSynthMixOscillators(synthOscillator_t* oscs[], uint16_t numOscs)
             }
         }
 
-        if (osc->cVol > 0)
-        {
-            sample += ((osc->waveFunc(osc->accumulator.bytes[2]) * osc->cVol) / 256);
-            numOscillatorsActive++;
-        }
-        // printf("  %ld %ld\n", oscIdx, sample);
+        // Mix this oscillator's output into the sample
+        sample += ((osc->waveFunc(osc->accumulator.bytes[2]) * osc->cVol) / 256);
     }
-    if (0 == numOscillatorsActive)
-    {
-        return 127;
-    }
-    // printf("%ld\n", (sample / numOscillatorsActive) + 128);
+
+    // Return the 8-bit unsigned sample
     return (sample / numOscs) + 128;
 }

@@ -7,9 +7,10 @@
  * peripheral</a>. The peripheral can be used a few different ways, but this project uses DMA to output a
  * continuous, arbitrary signal.
  *
- * This component is initialized by initDac() with a callback which will request DAC samples from the application when
- * required. Sample requests come from the DAC peripheral in an interrupt and are queued to be serviced out of the
- * interrupt. This queue is checked in dacPoll().
+ * This component is initialized by initDac() with a ::fnDacCallback_t callback which will request DAC samples from the
+ * application when required. Sample requests come from the DAC peripheral in an interrupt and are queued to be serviced
+ * out of the interrupt. This queue is checked in dacPoll(). Spending time to generate samples in an interrupt isn't a
+ * good idea.
  *
  * \warning
  * Note that the DAC peripheral and the ADC peripheral (hdw-mic.h) use the same DMA controller, so they cannot both be

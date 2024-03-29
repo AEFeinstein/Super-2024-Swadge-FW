@@ -5,6 +5,7 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
+#include "hdw-dac.h"
 #include "sngPlayer.h"
 #include "macros.h"
 
@@ -67,7 +68,7 @@ void initSpkSongPlayer(void)
         {
             s->cNoteIdx[oIdx]         = 0;
             s->samplesRemaining[oIdx] = 0;
-            swSynthInitOscillator(&s->oscillators[oIdx], oscShapes[oIdx], 0);
+            swSynthInitOscillator(&s->oscillators[oIdx], oscShapes[oIdx], 0, 0);
 
             oPtrs[(sIdx * OSC_PER_SONG) + oIdx] = &s->oscillators[oIdx];
         }
