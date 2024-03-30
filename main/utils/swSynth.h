@@ -29,13 +29,13 @@
  * swSynthInitOscillator(&osc_sine, SHAPE_SINE, 576, 255);
  *
  * // Make an array of pointers to the oscillators
- * synthOscillator_t* oscs[] = {&osc_tri, &osc_sine};
+ * synthOscillator_t* oscillators[] = {&osc_tri, &osc_sine};
  *
  * // Fill up a sample buffer
  * uint8_t sampleBuf[2048];
  * for (uint32_t i = 0; i < ARRAY_SIZE(sampleBuf); i++)
  * {
- *     sampleBuf[i] = swSynthMixOscillators(oscs, ARRAY_SIZE(oscs));
+ *     sampleBuf[i] = swSynthMixOscillators(oscillators, ARRAY_SIZE(oscillators));
  * }
  * \endcode
  */
@@ -44,6 +44,13 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+
+//==============================================================================
+// Defines
+//==============================================================================
+
+/** The maximum speaker volume */
+#define SPK_MAX_VOLUME 255
 
 //==============================================================================
 // Enums
@@ -111,4 +118,4 @@ void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape);
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq);
 void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume);
-uint8_t swSynthMixOscillators(synthOscillator_t* oscs[], uint16_t numOscs);
+uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators);
