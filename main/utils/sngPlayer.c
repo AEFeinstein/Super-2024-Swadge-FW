@@ -129,7 +129,7 @@ void spkSongPlayCb(uint8_t sIdx, const song_t* song, songFinishedCbFn cb)
         musicalNote_t* note = &song->tracks[oIdx].notes[0];
 
         // Calculate the number of samples for this note
-        s->samplesRemaining[oIdx] = (note->timeMs * AUDIO_SAMPLE_RATE_HZ) / 1000;
+        s->samplesRemaining[oIdx] = (note->timeMs * DAC_SAMPLE_RATE_HZ) / 1000;
 
         // Play the note
         if (SILENCE == note->note)
@@ -244,7 +244,7 @@ void spkSongRestore(void* data)
 /**
  * @brief Fill a buffer with the next set of samples for the currently playing song. This should be called by the
  * callback passed into initDac(), or used as the callback itself. Samples are generated at sampling rate of
- * ::AUDIO_SAMPLE_RATE_HZ
+ * ::DAC_SAMPLE_RATE_HZ
  *
  * @param samples An array of unsigned 8-bit samples to fill
  * @param len The length of the array to fill
@@ -314,7 +314,7 @@ void sngPlayerFillBuffer(uint8_t* samples, int16_t len)
                         musicalNote_t* note = &track->notes[s->cNoteIdx[oIdx]];
 
                         // Calculate remaining samples
-                        s->samplesRemaining[oIdx] = (note->timeMs * AUDIO_SAMPLE_RATE_HZ) / 1000;
+                        s->samplesRemaining[oIdx] = (note->timeMs * DAC_SAMPLE_RATE_HZ) / 1000;
 
                         // Play the note
                         if (SILENCE == note->note)

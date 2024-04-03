@@ -217,7 +217,7 @@ void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
  */
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq)
 {
-    osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq) << 16) / (AUDIO_SAMPLE_RATE_HZ);
+    osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq) << 16) / (DAC_SAMPLE_RATE_HZ);
 }
 
 /**

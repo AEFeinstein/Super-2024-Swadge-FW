@@ -1,0 +1,6 @@
+[submodule "emulator/src-lib/rawdraw"]
+	path = emulator/src-lib/rawdraw
+	url = https://github.com/cntools/rawdraw.git
+[submodule "emulator/src-lib/cnfa"]
+	path = emulator/src-lib/cnfa
+	url = https://github.com/cntools/cnfa.git

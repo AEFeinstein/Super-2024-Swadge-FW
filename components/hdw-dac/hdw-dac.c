@@ -77,7 +77,7 @@ void initDac(fnDacCallback_t cb)
         .chan_mask = DAC_CHANNEL_MASK_CH0,   // This is GPIO_NUM_17
         .desc_num  = DMA_DESCRIPTORS,        // The number of DMA descriptors
         .buf_size  = DAC_BUF_SIZE,           // The size of each MDA buffer
-        .freq_hz   = AUDIO_SAMPLE_RATE_HZ,   // The frequency of DAC conversion
+        .freq_hz   = DAC_SAMPLE_RATE_HZ,     // The frequency of DAC conversion
         .offset    = 0,                      // DC Offset automatically applied
         .clk_src   = DAC_DIGI_CLK_SRC_APB,   // DAC_DIGI_CLK_SRC_APB is 77hz->MHz and always available
                                              // DAC_DIGI_CLK_SRC_APLL is 6Hz -> MHz but may be used by other peripherals

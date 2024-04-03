@@ -23,10 +23,17 @@
 #include "hdw-tft_emu.h"
 #include "hdw-led.h"
 #include "hdw-led_emu.h"
-#include "hdw-bzr.h"
 #include "hdw-btn.h"
 #include "hdw-btn_emu.h"
 #include "hdw-imu_emu.h"
+
+#include "hdw-mic.h"
+#include "hdw-mic_emu.h"
+#include "hdw-bzr.h"
+#include "hdw-bzr_emu.h"
+#include "hdw-dac.h"
+#include "hdw-dac_emu.h"
+
 #include "swadge2024.h"
 #include "macros.h"
 #include "trigonometry.h"
@@ -37,7 +44,11 @@
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
-#include "rawdraw_sf.h"
+#include "CNFG.h"
+
+#define CNFA_IMPLEMENTATION
+#define PULSEAUDIO
+#include "CNFA.h"
 
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
@@ -50,7 +61,7 @@
 // Defines
 //==============================================================================
 
-#define BG_COLOR  0x191919FF // This color isn't parjt of the palette
+#define BG_COLOR  0x191919FF // This color isn't part of the palette
 #define DIV_COLOR 0x808080FF
 
 //==============================================================================
@@ -58,6 +69,9 @@
 //==============================================================================
 
 static bool isRunning = true;
+
+/// The sound driver
+static struct CNFADriver* soundDriver = NULL;
 
 //==============================================================================
 // Function Prototypes
@@ -70,6 +84,7 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
 static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uint32_t col);
+static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
 
 //==============================================================================
 // Functions
@@ -158,6 +173,23 @@ int main(int argc, char** argv)
 
         // Add the screen size to the minimum pane sizes to get our window size
         CNFGSetup("Swadge 2024 Simulator", winW, winH);
+    }
+
+    // Then initialize audio
+    if (!soundDriver)
+    {
+        soundDriver = CNFAInit(NULL,               // const char* driver_name
+                               "Swadge Emulator",  // const char* your_name
+                               EmuSoundCb,         // CNFACBType cb
+                               DAC_SAMPLE_RATE_HZ, // int reqSPSPlay
+                               ADC_SAMPLE_RATE_HZ, // int reqSPSRec
+                               2,                  // int reqChannelsPlay
+                               1,                  // int reqChannelsRec
+                               2048,               // int sugBufferSize
+                               NULL,               // const char* outputSelect
+                               NULL,               // const char* inputSelect
+                               NULL                // void* opaque
+        );
     }
 
     // We won't call the pre-frame callback for the very first frame
@@ -478,10 +510,45 @@ void HandleMotion(int x, int y, int mask)
 /**
  * @brief Free memory on exit
  */
-void HandleDestroy(void)
+int HandleDestroy()
 {
     isRunning = false;
-    WARN_UNIMPLEMENTED();
+
+    if (soundDriver)
+    {
+#if defined(_WIN32) || defined(__CYGWIN__)
+        CNFAClose(NULL);
+#else
+        CNFAClose(soundDriver); // when calling this on Windows, it halts
+#endif
+        soundDriver = NULL;
+    }
+
+    return 0;
+}
+
+/**
+ * @brief Callback for sound events, both input and output
+ * Handle output here, pass input to handleSoundInput()
+ *
+ * @param sd The sound driver
+ * @param out A pointer to write samples to. May be NULL
+ * @param in A pointer to read samples from. May be NULL
+ * @param framesp The number of samples to write
+ * @param framesr The number of samples to read
+ */
+static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr)
+{
+    // Pass to microphone
+    micHandleSoundInput(in, framesr);
+
+#if defined(CONFIG_SOUND_OUTPUT_BUZZER)
+    // Pass to buzzer
+    bzrHandleSoundOutput(out, framesp);
+#elif defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+    // Pass to speaker
+    dacHandleSoundOutput(out, framesp);
+#endif
 }
 
 #if defined(__linux__) || defined(__APPLE__)

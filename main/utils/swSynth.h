@@ -3,7 +3,7 @@
  * \section swSynth_design Design Philosophy
  *
  * This utility code is provided to run and mix oscillators for DAC output (hdw-dac.h). Each oscillator has a shape,
- * frequency, and amplitude. The oscillators assume the output sample rate is ::AUDIO_SAMPLE_RATE_HZ.
+ * frequency, and amplitude. The oscillators assume the output sample rate is ::DAC_SAMPLE_RATE_HZ.
  *
  * When an oscillator's amplitude is changed by swSynthSetVolume(), it will linearly adjust the output volume over time.
  * This avoids clicks and pops caused by discontinuities in the output. Changing the oscillator's frequency will not

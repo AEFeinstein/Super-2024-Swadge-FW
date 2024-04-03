@@ -6,16 +6,11 @@
 #include <math.h>
 
 #include <esp_timer.h>
-#include "sound.h"
+
 #include "hdw-bzr.h"
-#include "hdw-mic_emu.h"
+#include "hdw-bzr_emu.h"
 #include "emu_main.h"
-
-//==============================================================================
-// Defines
-//==============================================================================
-
-#define SAMPLING_RATE 8000
+#include "hdw-dac.h"
 
 //==============================================================================
 // Structs
@@ -55,9 +50,6 @@ const uint16_t volLevels[] = {
 // Variables
 //==============================================================================
 
-/// The sound driver
-static struct SoundDriver* soundDriver = NULL;
-
 // Output buzzers
 static buzzer_t buzzers[NUM_BUZZERS] = {0};
 uint16_t bgmVolume;
@@ -84,7 +76,6 @@ static songFinishedCbFn bgmDoneCb = NULL;
 static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16_t volume, bool isActive, bool isBgm,
                                          int32_t tElapsedUs);
 void buzzer_check_next_note(void* arg);
-void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W);
 
 //==============================================================================
 // Functions
@@ -107,11 +98,6 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
 {
     bzrStop(true);
 
-    if (!soundDriver)
-    {
-        soundDriver = InitSound(0, EmuSoundCb, SAMPLING_RATE, 1, 2, 256, 0, 0);
-    }
-
     memset(&buzzers, 0, sizeof(buzzers));
     bzrSetBgmVolume(_bgmVolume);
     bzrSetSfxVolume(_sfxVolume);
@@ -133,15 +119,6 @@ void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t led
  */
 void deinitBuzzer(void)
 {
-    if (soundDriver)
-    {
-#if defined(_WIN32) || defined(__CYGWIN__)
-        CloseSound(NULL);
-#else
-        CloseSound(soundDriver); // when calling this on Windows, it halts
-#endif
-        soundDriver = NULL;
-    }
 }
 
 /**
@@ -487,22 +464,15 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16
 }
 
 /**
- * @brief Callback for sound events, both input and output
- * Handle output here, pass input to handleSoundInput()
+ * @brief Callback for sound output
  *
- * @param sd The sound driver
- * @param in A pointer to read samples from. May be NULL
  * @param out A pointer to write samples to. May be NULL
- * @param samples_R The number of samples to read
- * @param samples_W The number of samples to write
+ * @param framesp The number of samples to write
  */
-void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, int samples_W)
+void bzrHandleSoundOutput(short* out, int framesp)
 {
-    // Pass to microphone
-    handleSoundInput(sd, in, out, samples_R, samples_W);
-
     // If this is an output callback, and there are samples to write
-    if (samples_W && out)
+    if (framesp && out)
     {
         // Keep track of our place in the wave
         static float placeInWave[NUM_BUZZERS] = {0, 0};
@@ -514,12 +484,12 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
             {
                 float transitionPoint = (2 * M_PI * buzzers[bIdx].vol) / 8192;
                 // For each sample
-                for (int i = 0; i < samples_W; i += 2)
+                for (int i = 0; i < framesp; i += 2)
                 {
                     // Write the sample, interleaved
                     out[i + bIdx] = 1024 * ((placeInWave[bIdx] < transitionPoint) ? 1 : -1);
                     // Advance the place in the wave
-                    placeInWave[bIdx] += ((2 * M_PI * buzzers[bIdx].cFreq) / ((float)SAMPLING_RATE));
+                    placeInWave[bIdx] += ((2 * M_PI * buzzers[bIdx].cFreq) / ((float)DAC_SAMPLE_RATE_HZ));
                     // Keep it bound between 0 and 2*PI
                     if (placeInWave[bIdx] >= (2 * M_PI))
                     {
@@ -530,7 +500,7 @@ void EmuSoundCb(struct SoundDriver* sd, short* in, short* out, int samples_R, in
             else
             {
                 // No note to play
-                for (int i = 0; i < samples_W; i += 2)
+                for (int i = 0; i < framesp; i += 2)
                 {
                     // Write the sample, interleaved
                     out[i + bIdx] = 0;

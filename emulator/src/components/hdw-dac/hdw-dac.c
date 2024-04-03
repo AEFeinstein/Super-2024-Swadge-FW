@@ -3,7 +3,9 @@
 //==============================================================================
 
 #include <stddef.h>
+#include <string.h>
 #include "hdw-dac.h"
+#include "hdw-dac_emu.h"
 
 //==============================================================================
 // Defines
@@ -66,5 +68,37 @@ void dacPoll(void)
         // TODO
         uint8_t samps[2048];
         dacCb(samps, 2048);
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param out
+ * @param framesp
+ */
+void dacHandleSoundOutput(short* out, int framesp)
+{
+    if (NULL != out)
+    {
+        if (NULL != dacCb)
+        {
+            // Get samples from the Swadge mode
+            uint8_t tempSamps[framesp];
+            dacCb(tempSamps, framesp);
+
+            // Write the samples to the emulator output, in signed short format
+            for (int i = 0; i < framesp; i++)
+            {
+                short samp     = (tempSamps[i] - 127) * 256;
+                out[i * 2]     = samp;
+                out[i * 2 + 1] = samp;
+            }
+        }
+        else
+        {
+            // Write zeros
+            memset(out, 0, sizeof(short) * 2 * framesp);
+        }
     }
 }

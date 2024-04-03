@@ -43,7 +43,7 @@ endif
 ################################################################################
 
 # This is a list of directories to scan for c files recursively
-SRC_DIRS_RECURSIVE = emulator main
+SRC_DIRS_RECURSIVE = emulator/src main
 # This is a list of directories to scan for c files not recursively
 SRC_DIRS_FLAT = 
 # This is a list of files to compile directly. There's no scanning here
@@ -54,7 +54,7 @@ SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "rawdraw_sf.h" -not -name "getopt_win.h" -not -name "cJSON*")
+ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "getopt_win.h" -not -name "cJSON*")
 
 ################################################################################
 # Includes
