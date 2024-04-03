@@ -22,6 +22,8 @@ jobs:
 
     - name: Check out repository code
       uses: actions/checkout@v3
+      with:
+        submodules: recursive
       
     - name: Create a version file
       run: |

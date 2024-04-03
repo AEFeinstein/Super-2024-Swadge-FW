@@ -121,7 +121,7 @@ When running on MacOS, you will need to run the emulator and all build tasks thr
 1. Clone this repository.
     ```powershell
     cd ~/esp/
-    git clone https://github.com/AEFeinstein/Super-2024-Swadge-FW.git
+    git clone --recurse-submodules https://github.com/AEFeinstein/Super-2024-Swadge-FW.git
     cd Super-2024-Swadge-FW
     ```
 2. Make sure the ESP-IDF symbols are exported. This example is for Windows, so the actual command may be different for your OS. Note that `export.ps1` does not make any permanent changes and it must be run each time you open a new terminal for a build.
