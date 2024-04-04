@@ -20,7 +20,7 @@ endif
 ################################################################################
 
 ifeq ($(HOST_OS),Windows)
-	CC = x86_64-w64-mingw32-gcc.exe
+	CC = gcc
 else ifeq ($(HOST_OS),Linux)
 	CC = gcc
 else ifeq ($(UNAME_S),Darwin)
