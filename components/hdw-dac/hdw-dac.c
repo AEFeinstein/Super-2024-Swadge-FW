@@ -144,7 +144,7 @@ void dacPoll(void)
     while (xQueueReceive(dacIsrQueue, &evt_data, 0))
     {
         /* Ask the application to fill a buffer */
-        dacCb(&tmpDacBuf, evt_data.buf_size);
+        dacCb(tmpDacBuf, evt_data.buf_size);
 
         /* Write the data DMA so that it is sent out the DAC */
         size_t loaded_bytes = 0;
