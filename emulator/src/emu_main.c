@@ -41,13 +41,20 @@
 #include "hdw-esp-now.h"
 #include "mainMenu.h"
 
+// Necessary for CNFA
+#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) || defined(__CYGWIN__)
+    #define WINDOWS
+#endif
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
 #include "CNFG.h"
 
 #define CNFA_IMPLEMENTATION
-#define PULSEAUDIO
+#ifdef __linux__
+    #define PULSEAUDIO
+#endif
 #include "CNFA.h"
 
 // Useful if you're trying to find the code for a key/button
@@ -380,17 +387,17 @@ void taskYIELD(void)
  * @brief Helper function to draw to a bitmap display
  *
  * @param bitmapDisplay The display to draw to
- * @param w The width of the display
- * @param h The height of the display
+ * @param width The width of the display
+ * @param height The height of the display
  * @param x The X coordinate to draw a pixel at
  * @param y The Y coordinate to draw a pixel at
  * @param col The color to draw the pixel
  */
-static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col)
+static void drawBitmapPixel(uint32_t* bitmapDisplay, int width, int height, int x, int y, uint32_t col)
 {
-    if ((y * w) + x < (w * h))
+    if ((y * width) + x < (width * height))
     {
-        bitmapDisplay[(y * w) + x] = col;
+        bitmapDisplay[(y * width) + x] = col;
     }
 }
 
@@ -403,7 +410,7 @@ static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y,
  * @param r The radius of the rounded corners
  * @param col The color to draw the rounded corners
  */
-static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uint32_t col)
+static void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, int r, uint32_t col)
 {
     int or = r;
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
@@ -411,10 +418,10 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
     {
         for (int xLine = 0; xLine <= (or +x); xLine++)
         {
-            drawBitmapPixel(bitmapDisplay, w, h, xLine, h - (or -y) - 1, col);         /* I.   Quadrant -x -y */
-            drawBitmapPixel(bitmapDisplay, w, h, w - xLine - 1, h - (or -y) - 1, col); /* II.  Quadrant +x -y */
-            drawBitmapPixel(bitmapDisplay, w, h, xLine, (or -y), col);                 /* III. Quadrant -x -y */
-            drawBitmapPixel(bitmapDisplay, w, h, w - xLine - 1, (or -y), col);         /* IV.  Quadrant +x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, xLine, height - (or -y) - 1, col);             /* I.   Quadrant -x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, height - (or -y) - 1, col); /* II.  Quadrant +x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, xLine, (or -y), col);                          /* III. Quadrant -x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, (or -y), col);              /* IV.  Quadrant +x -y */
         }
 
         r = err;
