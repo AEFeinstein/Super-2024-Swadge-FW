@@ -547,14 +547,14 @@ int HandleDestroy()
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr)
 {
     // Pass to microphone
-    micHandleSoundInput(in, framesr);
+    micHandleSoundInput(in, framesr, sd->channelsRec);
 
 #if defined(CONFIG_SOUND_OUTPUT_BUZZER)
     // Pass to buzzer
-    bzrHandleSoundOutput(out, framesp);
+    bzrHandleSoundOutput(out, framesp, sd->channelsPlay);
 #elif defined(CONFIG_SOUND_OUTPUT_SPEAKER)
     // Pass to speaker
-    dacHandleSoundOutput(out, framesp);
+    dacHandleSoundOutput(out, framesp, sd->channelsPlay);
 #endif
 }
 

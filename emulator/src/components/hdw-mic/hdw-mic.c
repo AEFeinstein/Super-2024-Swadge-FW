@@ -88,8 +88,9 @@ void deinitMic(void)
  *
  * @param in A pointer to read samples from. May be NULL
  * @param framesr The number of samples to read
+ * @param numChannels The number of channels to read
  */
-void micHandleSoundInput(short* in, int framesr)
+void micHandleSoundInput(short* in, int framesr, short numChannels)
 {
     // If there are samples to read
     if (adcSampling && framesr)

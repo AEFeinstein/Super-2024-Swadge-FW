@@ -466,10 +466,11 @@ static bool buzzer_track_check_next_note(bzrTrack_t* track, int16_t bIdx, uint16
 /**
  * @brief Callback for sound output
  *
- * @param out A pointer to write samples to. May be NULL
- * @param framesp The number of samples to write
+ * @param out     A pointer to fill with samples
+ * @param framesp The number of samples to fill, per-channel
+ * @param numChannels The number of channels to write to. Channels are interleaved in \c out
  */
-void bzrHandleSoundOutput(short* out, int framesp)
+void bzrHandleSoundOutput(short* out, int framesp, short numChannels)
 {
     // If this is an output callback, and there are samples to write
     if (framesp && out)

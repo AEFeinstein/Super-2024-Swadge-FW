@@ -63,24 +63,23 @@ void dacStop(void)
  */
 void dacPoll(void)
 {
-    if (dacCb)
-    {
-        // TODO
-        uint8_t samps[2048];
-        dacCb(samps, 2048);
-    }
+    // In actual firmware, this function will fill sample buffers received in interrupts.
+    // In the emulator, that's handled in dacHandleSoundOutput() instead
 }
 
 /**
- * @brief TODO
+ * @brief Fill a buffer with sample output
  *
- * @param out
- * @param framesp
+ * @param out     A pointer to fill with samples
+ * @param framesp The number of samples to fill, per-channel
+ * @param numChannels The number of channels to write to. Channels are interleaved in \c out
  */
-void dacHandleSoundOutput(short* out, int framesp)
+void dacHandleSoundOutput(short* out, int framesp, short numChannels)
 {
+    // Make sure there is a buffer to fill
     if (NULL != out)
     {
+        // Make sure there is a callback function to call
         if (NULL != dacCb)
         {
             // Get samples from the Swadge mode
@@ -90,14 +89,17 @@ void dacHandleSoundOutput(short* out, int framesp)
             // Write the samples to the emulator output, in signed short format
             for (int i = 0; i < framesp; i++)
             {
-                short samp     = (tempSamps[i] - 127) * 256;
-                out[i * 2]     = samp;
-                out[i * 2 + 1] = samp;
+                short samp = (tempSamps[i] - 127) * 256;
+                // Copy the same sample to each channel
+                for (int j = 0; j < numChannels; j++)
+                {
+                    out[i * numChannels + j] = samp;                    
+                }
             }
         }
         else
         {
-            // Write zeros
+            // No callback function, write zeros
             memset(out, 0, sizeof(short) * 2 * framesp);
         }
     }

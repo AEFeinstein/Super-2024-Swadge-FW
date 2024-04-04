@@ -1,3 +1,3 @@
 #pragma once
 
-void dacHandleSoundOutput(short* out, int framesp);
+void dacHandleSoundOutput(short* out, int framesp, short numChannels);
