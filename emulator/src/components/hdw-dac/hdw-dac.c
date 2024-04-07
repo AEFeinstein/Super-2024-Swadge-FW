@@ -93,7 +93,7 @@ void dacHandleSoundOutput(short* out, int framesp, short numChannels)
                 // Copy the same sample to each channel
                 for (int j = 0; j < numChannels; j++)
                 {
-                    out[i * numChannels + j] = samp;                    
+                    out[i * numChannels + j] = samp;
                 }
             }
         }

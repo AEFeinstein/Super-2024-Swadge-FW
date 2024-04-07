@@ -135,7 +135,7 @@
  *
  * - linked_list.h: A basic data structure
  * - macros.h: Convenient macros like MIN() and MAX()
- * - coreutil.h: TODO
+ * - coreutil.h: General utilities for system profiling
  * - hdw-usb.h: Learn how to be a USB HID Gamepad
  *     - advanced_usb_control.h: Use USB for application development
  *

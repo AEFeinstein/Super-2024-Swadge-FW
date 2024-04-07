@@ -42,7 +42,8 @@
 #include "mainMenu.h"
 
 // Necessary for CNFA
-#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) || defined(__CYGWIN__)
+#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) \
+    || defined(__CYGWIN__)
     #define WINDOWS
 #endif
 
@@ -418,10 +419,11 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, i
     {
         for (int xLine = 0; xLine <= (or +x); xLine++)
         {
-            drawBitmapPixel(bitmapDisplay, width, height, xLine, height - (or -y) - 1, col);             /* I.   Quadrant -x -y */
-            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, height - (or -y) - 1, col); /* II.  Quadrant +x -y */
-            drawBitmapPixel(bitmapDisplay, width, height, xLine, (or -y), col);                          /* III. Quadrant -x -y */
-            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, (or -y), col);              /* IV.  Quadrant +x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, xLine, height - (or -y) - 1, col); /* I.   Quadrant -x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, height - (or -y) - 1,
+                            col);                                                           /* II.  Quadrant +x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, xLine, (or -y), col);             /* III. Quadrant -x -y */
+            drawBitmapPixel(bitmapDisplay, width, height, width - xLine - 1, (or -y), col); /* IV.  Quadrant +x -y */
         }
 
         r = err;

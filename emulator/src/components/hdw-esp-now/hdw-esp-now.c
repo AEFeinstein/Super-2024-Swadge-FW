@@ -2,7 +2,8 @@
 // Includes
 //==============================================================================
 
-#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) || defined(__CYGWIN__)
+#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) \
+    || defined(__CYGWIN__)
     #define USING_WINDOWS 1
 #elif defined(__linux__)
     #define USING_LINUX 1
