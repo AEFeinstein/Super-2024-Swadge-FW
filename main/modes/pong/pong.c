@@ -458,11 +458,11 @@ static void pongControlPlayerPaddle(void)
             // Move the player paddle if a button is currently down
             if (pong->btnState & PB_UP)
             {
-                pong->paddleL.y = MAX(pong->paddleL.y - (5 << DECIMAL_BITS), 0);
+                pong->paddleL.pos.y = MAX(pong->paddleL.pos.y - (5 << DECIMAL_BITS), 0);
             }
             else if (pong->btnState & PB_DOWN)
             {
-                pong->paddleL.y = MIN(pong->paddleL.y + (5 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleL.height);
+                pong->paddleL.pos.y = MIN(pong->paddleL.pos.y + (5 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleL.height);
             }
             break;
         }
@@ -482,7 +482,7 @@ static void pongControlPlayerPaddle(void)
                 {
                     paddley = 639;
                 }
-                pong->paddleL.y = (paddley * (FIELD_HEIGHT - pong->paddleL.height)) / 640;
+                pong->paddleL.pos.y = (paddley * (FIELD_HEIGHT - pong->paddleL.height)) / 640;
             }
             break;
         }
@@ -494,7 +494,7 @@ static void pongControlPlayerPaddle(void)
             if (ESP_OK == accelGetOrientVec(&a_x, &a_y, &a_z))
             {
                 // Move the paddle to the current tilt location
-                pong->paddleL.y = CLAMP(((a_x + 120) * (FIELD_HEIGHT - pong->paddleL.height)) / 350, 0,
+                pong->paddleL.pos.y = CLAMP(((a_x + 120) * (FIELD_HEIGHT - pong->paddleL.height)) / 350, 0,
                                         (FIELD_HEIGHT - pong->paddleL.height));
             }
             break;
@@ -516,9 +516,9 @@ static void pongControlCpuPaddle(void)
             // Blindly move up and down
             if (pong->paddleRMovingUp)
             {
-                pong->paddleR.y = MAX(pong->paddleR.y - (4 << DECIMAL_BITS), 0);
+                pong->paddleR.pos.y = MAX(pong->paddleR.pos.y - (4 << DECIMAL_BITS), 0);
                 // If the top boundary was hit
-                if (0 == pong->paddleR.y)
+                if (0 == pong->paddleR.pos.y)
                 {
                     // Start moving down
                     pong->paddleRMovingUp = false;
@@ -526,9 +526,9 @@ static void pongControlCpuPaddle(void)
             }
             else
             {
-                pong->paddleR.y = MIN(pong->paddleR.y + (4 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleR.height);
+                pong->paddleR.pos.y = MIN(pong->paddleR.pos.y + (4 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleR.height);
                 // If the bottom boundary was hit
-                if ((FIELD_HEIGHT - pong->paddleR.height) == pong->paddleR.y)
+                if ((FIELD_HEIGHT - pong->paddleR.height) == pong->paddleR.pos.y)
                 {
                     // Start moving up
                     pong->paddleRMovingUp = true;
@@ -539,20 +539,20 @@ static void pongControlCpuPaddle(void)
         case PONG_MEDIUM:
         {
             // Move towards the ball, slowly
-            if (pong->paddleR.y + (pong->paddleR.height / 2) < pong->ball.y)
+            if (pong->paddleR.pos.y + (pong->paddleR.height / 2) < pong->ball.pos.y)
             {
-                pong->paddleR.y = MIN(pong->paddleR.y + (2 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleR.height);
+                pong->paddleR.pos.y = MIN(pong->paddleR.pos.y + (2 << DECIMAL_BITS), FIELD_HEIGHT - pong->paddleR.height);
             }
             else
             {
-                pong->paddleR.y = MAX(pong->paddleR.y - (2 << DECIMAL_BITS), 0);
+                pong->paddleR.pos.y = MAX(pong->paddleR.pos.y - (2 << DECIMAL_BITS), 0);
             }
             break;
         }
         case PONG_HARD:
         {
             // Never miss
-            pong->paddleR.y = CLAMP(pong->ball.y - pong->paddleR.height / 2, 0, FIELD_HEIGHT - pong->paddleR.height);
+            pong->paddleR.pos.y = CLAMP(pong->ball.pos.y - pong->paddleR.height / 2, 0, FIELD_HEIGHT - pong->paddleR.height);
             break;
         }
     }
@@ -566,33 +566,33 @@ static void pongControlCpuPaddle(void)
 static void pongUpdatePhysics(int64_t elapsedUs)
 {
     // Update the ball's position
-    pong->ball.x += (pong->ballVel.x * elapsedUs) / 100000;
-    pong->ball.y += (pong->ballVel.y * elapsedUs) / 100000;
+    pong->ball.pos.x += (pong->ballVel.x * elapsedUs) / 100000;
+    pong->ball.pos.y += (pong->ballVel.y * elapsedUs) / 100000;
 
     // Check for goals
-    if (pong->ball.x < 0 || pong->ball.x > FIELD_WIDTH)
+    if (pong->ball.pos.x < 0 || pong->ball.pos.x > FIELD_WIDTH)
     {
         // Reset the game. This keeps score.
-        pongResetGame(false, pong->ball.x < 0 ? 1 : 0);
+        pongResetGame(false, pong->ball.pos.x < 0 ? 1 : 0);
     }
     else
     {
         // Checks for top and bottom wall collisions
-        if (((pong->ball.y - pong->ball.radius) < 0 && pong->ballVel.y < 0)
-            || ((pong->ball.y + pong->ball.radius) > FIELD_HEIGHT && pong->ballVel.y > 0))
+        if (((pong->ball.pos.y - pong->ball.radius) < 0 && pong->ballVel.y < 0)
+            || ((pong->ball.pos.y + pong->ball.radius) > FIELD_HEIGHT && pong->ballVel.y > 0))
         {
             // Reverse direction
             pong->ballVel.y = -pong->ballVel.y;
         }
 
         // If a goal was not scored, check for left paddle collision
-        if ((pong->ballVel.x < 0) && circleRectIntersection(pong->ball, pong->paddleL))
+        if ((pong->ballVel.x < 0) && circleRectIntersection(pong->ball, pong->paddleL, NULL))
         {
             // Reverse direction
             pong->ballVel.x = -pong->ballVel.x;
 
             // Apply extra rotation depending on part of the paddle hit
-            int16_t diff = pong->ball.y - (pong->paddleL.y + pong->paddleL.height / 2);
+            int16_t diff = pong->ball.pos.y - (pong->paddleL.pos.y + pong->paddleL.height / 2);
             // rotate 45deg at edge of paddle, 0deg in middle, linear in between
             pong->ballVel = rotateVec2d(pong->ballVel, (45 * diff) / (pong->paddleL.height / 2));
 
@@ -608,13 +608,13 @@ static void pongUpdatePhysics(int64_t elapsedUs)
             pong->ledL.b = 0x40;
         }
         // Check for right paddle collision
-        else if ((pong->ballVel.x > 0) && circleRectIntersection(pong->ball, pong->paddleR))
+        else if ((pong->ballVel.x > 0) && circleRectIntersection(pong->ball, pong->paddleR, NULL))
         {
             // Reverse direction
             pong->ballVel.x = -pong->ballVel.x;
 
             // Apply extra rotation depending on part of the paddle hit
-            int16_t diff = pong->ball.y - (pong->paddleR.y + pong->paddleR.height / 2);
+            int16_t diff = pong->ball.pos.y - (pong->paddleR.pos.y + pong->paddleR.height / 2);
             // rotate 45deg at edge of paddle, 0deg in middle, linear in between
             pong->ballVel = rotateVec2d(pong->ballVel, -(45 * diff) / (pong->paddleR.height / 2));
 
@@ -644,14 +644,14 @@ static void pongResetGame(bool isInit, uint8_t whoWon)
     if (isInit)
     {
         // Set up the left paddle
-        pong->paddleL.x      = 0;
-        pong->paddleL.y      = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
+        pong->paddleL.pos.x      = 0;
+        pong->paddleL.pos.y      = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
         pong->paddleL.width  = PADDLE_WIDTH;
         pong->paddleL.height = PADDLE_HEIGHT;
 
         // Set up the right paddle
-        pong->paddleR.x      = FIELD_WIDTH - PADDLE_WIDTH;
-        pong->paddleR.y      = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
+        pong->paddleR.pos.x      = FIELD_WIDTH - PADDLE_WIDTH;
+        pong->paddleR.pos.y      = (FIELD_HEIGHT - PADDLE_HEIGHT) / 2;
         pong->paddleR.width  = PADDLE_WIDTH;
         pong->paddleR.height = PADDLE_HEIGHT;
 
@@ -668,8 +668,8 @@ static void pongResetGame(bool isInit, uint8_t whoWon)
     pong->restartTimerUs = 2000000;
 
     // Set the ball variables
-    pong->ball.x      = (FIELD_WIDTH) / 2;
-    pong->ball.y      = (FIELD_HEIGHT) / 2;
+    pong->ball.pos.x      = (FIELD_WIDTH) / 2;
+    pong->ball.pos.y      = (FIELD_HEIGHT) / 2;
     pong->ball.radius = BALL_RADIUS;
 
     // Give the ball initial velocity to the top right
@@ -765,28 +765,28 @@ static void pongDrawField(void)
     // This will draw the game with geometric shapes, not sprites
 
     // Bitshift the ball's location and radius from math coordinates to screen coordinates, then draw it
-    drawCircleFilled((pong->ball.x) >> DECIMAL_BITS, (pong->ball.y) >> DECIMAL_BITS,
+    drawCircleFilled((pong->ball.pos.x) >> DECIMAL_BITS, (pong->ball.pos.y) >> DECIMAL_BITS,
                      (pong->ball.radius) >> DECIMAL_BITS, c555);
 
     // Bitshift the left paddle's location and radius from math coordinates to screen coordinates, then draw it
-    drawRect((pong->paddleL.x >> DECIMAL_BITS), (pong->paddleL.y >> DECIMAL_BITS),
-             ((pong->paddleL.x + pong->paddleL.width) >> DECIMAL_BITS),
-             ((pong->paddleL.y + pong->paddleL.height) >> DECIMAL_BITS), c333);
+    drawRect((pong->paddleL.pos.x >> DECIMAL_BITS), (pong->paddleL.pos.y >> DECIMAL_BITS),
+             ((pong->paddleL.pos.x + pong->paddleL.width) >> DECIMAL_BITS),
+             ((pong->paddleL.pos.y + pong->paddleL.height) >> DECIMAL_BITS), c333);
     // Bitshift the right paddle's location and radius from math coordinates to screen coordinates, then draw it
 
-    drawRect((pong->paddleR.x >> DECIMAL_BITS), (pong->paddleR.y >> DECIMAL_BITS),
-             ((pong->paddleR.x + pong->paddleR.width) >> DECIMAL_BITS),
-             ((pong->paddleR.y + pong->paddleR.height) >> DECIMAL_BITS), c333);
+    drawRect((pong->paddleR.pos.x >> DECIMAL_BITS), (pong->paddleR.pos.y >> DECIMAL_BITS),
+             ((pong->paddleR.pos.x + pong->paddleR.width) >> DECIMAL_BITS),
+             ((pong->paddleR.pos.y + pong->paddleR.height) >> DECIMAL_BITS), c333);
 #else
     // This will draw the game with sprites, not geometric shapes
 
     // Draw the ball
-    drawWsgSimple(&pong->ballWsg, (pong->ball.x - pong->ball.radius) >> DECIMAL_BITS,
-                  (pong->ball.y - pong->ball.radius) >> DECIMAL_BITS);
+    drawWsgSimple(&pong->ballWsg, (pong->ball.pos.x - pong->ball.radius) >> DECIMAL_BITS,
+                  (pong->ball.pos.y - pong->ball.radius) >> DECIMAL_BITS);
     // Draw one paddle
-    drawWsg(&pong->paddleWsg, pong->paddleL.x >> DECIMAL_BITS, pong->paddleL.y >> DECIMAL_BITS, false, false, 0);
+    drawWsg(&pong->paddleWsg, pong->paddleL.pos.x >> DECIMAL_BITS, pong->paddleL.pos.y >> DECIMAL_BITS, false, false, 0);
     // Draw the other paddle, flipped
-    drawWsg(&pong->paddleWsg, pong->paddleR.x >> DECIMAL_BITS, pong->paddleR.y >> DECIMAL_BITS, true, false, 0);
+    drawWsg(&pong->paddleWsg, pong->paddleR.pos.x >> DECIMAL_BITS, pong->paddleR.pos.y >> DECIMAL_BITS, true, false, 0);
 
 #endif
 
