@@ -28,6 +28,7 @@
 #include "mode_paint.h"
 #include "mode_ray.h"
 #include "paint_share.h"
+#include "pong.h"
 #include "pushy.h"
 #include "touchTest.h"
 #include "tunernome.h"
@@ -77,6 +78,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &tunernomeMode,
     &modeCredits,
     &pinballMode,
+    &pongMode,
 };
 // clang-format on
 
