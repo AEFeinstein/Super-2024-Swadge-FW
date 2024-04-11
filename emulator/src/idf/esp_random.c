@@ -12,7 +12,11 @@ uint32_t esp_random(void)
 {
     if (!seeded)
     {
+#ifdef __wasm__
+        int pid = 0x1337;
+#else
         pid_t pid = getpid();
+#endif
         seeded    = true;
         srand(time(NULL) ^ pid);
     }

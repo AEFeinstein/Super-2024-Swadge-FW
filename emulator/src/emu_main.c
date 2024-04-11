@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include <unistd.h>
-#if defined(__linux__) || defined(__APPLE__)
+#if (defined(__linux__) || defined(__APPLE__)) && !defined(WASM)
     #include <signal.h>
     #include <execinfo.h>
 #endif
@@ -35,6 +35,9 @@
 #include "mainMenu.h"
 
 // Make it so we don't need to include any other C files in our build.
+#ifdef WASM
+#define CNFGRASTERIZER
+#endif
 #define CNFG_IMPLEMENTATION
 #define CNFGOGL
 #include "rawdraw_sf.h"
@@ -50,8 +53,15 @@
 // Defines
 //==============================================================================
 
-#define BG_COLOR  0x191919FF // This color isn't parjt of the palette
+#define BG_COLOR  0x191919FF // This color isn't part of the palette
 #define DIV_COLOR 0x808080FF
+
+// For adding needed attributes in WebAssembly
+#if defined(WASM)
+#define _EXPORT(name) __attribute__((export_name(#name))) name
+#else
+#define _EXPORT(name) name
+#endif
 
 //==============================================================================
 // Variables
@@ -107,7 +117,7 @@ void handleArgs(int argc, char** argv)
  * @param argv An array of null-terminated string arguments
  * @return 0 if the emulator exited normally, nonzero if there was an error
  */
-int main(int argc, char** argv)
+int _EXPORT(main)(int argc, char** argv)
 {
 #if defined(__linux__) || defined(__APPLE__)
     init_crashSignals();
@@ -219,7 +229,9 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
+#ifndef __wasm__
         CNFGTearDown();
+#endif
 
 #ifdef ENABLE_GCOV
         __gcov_dump();
@@ -403,7 +415,7 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uin
  * @param keycode The key code, a lowercase ascii char
  * @param bDown true if the key was pressed, false if it was released
  */
-void HandleKey(int keycode, int bDown)
+void _EXPORT(HandleKey)(int keycode, int bDown)
 {
 #ifdef DEBUG_INPUTS
     if (' ' <= keycode && keycode <= '~')
@@ -450,7 +462,7 @@ void HandleKey(int keycode, int bDown)
  * @param button The mouse button that was pressed or released
  * @param bDown true if the button was pressed, false if it was released
  */
-void HandleButton(int x, int y, int button, int bDown)
+void _EXPORT(HandleButton)(int x, int y, int button, int bDown)
 {
 #ifdef DEBUG_INPUTS
     printf("HandleButton(x=%d, y=%d, button=%x, bDown=%s\n", x, y, button, bDown ? "true" : "false");
@@ -466,7 +478,7 @@ void HandleButton(int x, int y, int button, int bDown)
  * @param y The y coordinate of the mouse event
  * @param mask A mask of mouse buttons that are currently held down
  */
-void HandleMotion(int x, int y, int mask)
+void _EXPORT(HandleMotion)(int x, int y, int mask)
 {
 #ifdef DEBUG_INPUTS
     printf("HandleMotion(x=%d, y=%d, mask=%x\n", x, y, mask);
@@ -478,13 +490,13 @@ void HandleMotion(int x, int y, int mask)
 /**
  * @brief Free memory on exit
  */
-void HandleDestroy(void)
+void _EXPORT(HandleDestroy)(void)
 {
     isRunning = false;
     WARN_UNIMPLEMENTED();
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#if (defined(__linux__) || defined(__APPLE__)) && !defined(WASM)
 
 /**
  * @brief Initialize a crash handler, only for Linux and MacOS

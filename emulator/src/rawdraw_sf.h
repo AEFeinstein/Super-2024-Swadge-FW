@@ -27,7 +27,7 @@ extern "C" {
 
     CNFG_IMPLEMENTATION -> #define this and it will make _this_ the file where the cnfg
 		functions actually live.
-		
+
 Usually tested combinations:
  * TCC On Windows and X11 (Linux) with:
     - CNFGOGL on or CNFGOGL off.  If CNFGOGL is off you can use
@@ -69,8 +69,8 @@ Usually tested combinations:
 #endif
 
 typedef struct {
-    short x, y; 
-} RDPoint; 
+    short x, y;
+} RDPoint;
 
 extern int CNFGPenX, CNFGPenY;
 extern uint32_t CNFGBGColor;
@@ -124,7 +124,7 @@ void CNFGGetDimensions( short * x, short * y );
 //off-screen-rendering purpose.
 //
 //Return value of 0 indicates success.  Nonzero indicates error.
-int CNFGSetup( const char * WindowName, int w, int h ); 
+int CNFGSetup( const char * WindowName, int w, int h );
 
 void CNFGSetupFullscreen( const char * WindowName, int screen_number );
 int CNFGHandleInput();
@@ -171,7 +171,7 @@ int 	CNFGSetupWMClass( const char * WindowName, int w, int h , char * wm_res_nam
 void	CNFGEmitBackendTriangles( const float * vertices, const uint32_t * colors, int num_vertices );
 void	CNFGBlitImage( uint32_t * data, int x, int y, int w, int h );
 
-//These need to be defined for the specific driver.  
+//These need to be defined for the specific driver.
 void 	CNFGClearFrame();
 void 	CNFGSwapBuffers();
 

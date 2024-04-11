@@ -1,6 +1,8 @@
 // Copyright 2019-2020 <>< Charles Lohr under the ColorChord License, MIT/x11 license or NewBSD Licenses.
 //  This was originally to be used with rawdrawandroid
 
+#ifdef __ANDROID__
+
 #include "sound.h"
 #include "os_generic.h"
 #include <pthread.h> //Using android threads not os_generic threads.
@@ -8,8 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef __ANDROID__
 
     // based on https://github.com/android/ndk-samples/blob/master/native-audio/app/src/main/cpp/native-audio-jni.c
 

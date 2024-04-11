@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>WASM-Swadge</title>
+		<style type="text/css">
+			body {
+                background-color: #191919;
+                color: #ffffff;
+            }
+
+            #screen-container {
+                width: 100%;
+                text-align: center;
+                z-index: 3;
+
+                padding: 3px;
+            }
+
+            #canvas {
+                display: inline-block;
+                background-color: #000000;
+                border-radius: 4px;
+                border: gray 1px solid;
+            }
+
+            #console {
+                border: 1px solid #808080;
+                border-radius: 5px;
+                overflow-y: scroll;
+                min-height: 6em;
+            }
+
+            #stdout {
+                padding: .5em;
+                white-space: pre-wrap;
+            }
+
+            .errmsg {
+                color: #ff8888;
+            }
+		</style>
+	</head>
+	<body>
+		<div id="screen-container">
+			<canvas id="canvas" width="280" height="240"></canvas>
+		</div>
+        <div id="console">
+            <pre id="stdout"></pre>
+        </div>
+		<script type="text/javascript">
+            import("./js/main.js")
+            .then((stdlib) => {
+                import("./cnfg.js").then((cnfg) => {
+                    import("./asyncify.js").then((Asyncify) => {
+                        // Create memory with 200 pages initial (12.5MiB)
+                        const imports = {
+                            env: {
+                                memory: new WebAssembly.Memory({initial:200}),
+                            },
+                            bynsyncify: {},
+                        };
+
+                        stdlib.default(imports, {
+                            filesystem: {
+                                "/screenshot.*\\.png": [ {
+                                    type: "download",
+                                    flags: ["wo"],
+                                } ],
+                                "/spiffs_image/": [ {
+                                        type: "http",
+                                        base: "/spiffs_image/",
+                                        flags: ["ro"],
+                                } ],
+                                // ""
+                                "/nvs.json": [ {
+                                    type: "localstorage",
+                                    flags: ["rw"],
+                                } ],
+                                // "/" has the defaults
+                                "/": [ {
+                                    type: "localstorage",
+                                    flags: ["rw"],
+                                } ],
+                            },
+                            stdout: function(str) {
+                                let stdout = document.getElementById("stdout");
+                                const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
+                                const span = document.createElement("span");
+                                span.innerText = str;
+                                stdout.appendChild(span);
+                                if (scrollDown) {
+                                    stdout.scrollTop = stdout.scrollHeight;
+                                }
+                            },
+                            stderr: function(str) {
+                                let stdout = document.getElementById("stdout");
+                                const scrollDown = (stdout.scrollTop === stdout.scrollHeight);
+                                const span = document.createElement("span");
+                                span.innerText = str;
+                                span.className = "errmsg";
+                                stdout.appendChild(span);
+                                if (scrollDown) {
+                                    stdout.scrollTop = stdout.scrollHeight;
+                                }
+                            },
+                            canvas: document.getElementById("canvas")
+                        }, [
+                            // extra modules to set up
+                            cnfg
+                        ]);
+
+                        // Here, Asyncify is a drop-in replacement for WebAssembly
+                        // it
+                        Asyncify.instantiateStreaming(fetch("../swadge_emulator.wasm"), imports).then(({instance, module}) => {
+                            stdlib.postInstantiate(instance);
+                            instance.exports.main(0|0, 0|0).then(() => {
+                                console.error("main done?");
+                            }).catch((err) => {
+       	       	       	       	console.error("err!", err);
+                            });
+                        });
+                    });
+                });
+            });
+        </script>
+	</body>
+</html>

@@ -8,6 +8,8 @@
     #define USING_LINUX 1
 #elif __APPLE__
     #define USING_MAC 1
+#elif defined(__wasm__)
+    #define USING_WASM 1
 #else
     #error "OS Not Detected"
 #endif
@@ -68,6 +70,10 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     // Save callbacks
     hostEspNowRecvCb = recvCb;
     hostEspNowSendCb = sendCb;
+
+#if defined(__wasm__)
+    return ESP_ERR_WIFI_IF;
+#else
 
 #if defined(USING_WINDOWS)
     // Initialize Winsock
@@ -140,6 +146,7 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return ESP_ERR_WIFI_IF;
     }
     return ESP_OK;
+#endif
 }
 
 /**
@@ -168,6 +175,7 @@ void espNowUseSerial(bool crossoverPins)
  */
 void checkEspNowRxQueue(void)
 {
+#ifndef __wasm__
     char recvString[MAXRECVSTRING + 1]; // Buffer for received string
     int recvStringLen;                  // Length of received string
 
@@ -199,6 +207,7 @@ void checkEspNowRxQueue(void)
             }
         }
     }
+#endif
 }
 
 /**
@@ -210,6 +219,7 @@ void checkEspNowRxQueue(void)
  */
 void espNowSend(const char* data, uint8_t dataLen)
 {
+#ifndef __wasm__
     struct sockaddr_in broadcastAddr; // Broadcast address
 
     // Construct local address structure
@@ -248,6 +258,7 @@ void espNowSend(const char* data, uint8_t dataLen)
     {
         hostEspNowSendCb(bcastMac, ESP_NOW_SEND_SUCCESS);
     }
+#endif
 }
 
 /**
@@ -255,7 +266,9 @@ void espNowSend(const char* data, uint8_t dataLen)
  */
 void deinitEspNow(void)
 {
+#ifndef __wasm__
     close(socketFd);
+#endif
 #if defined(USING_WINDOWS)
     WSACleanup();
 #endif

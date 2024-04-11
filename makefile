@@ -160,6 +160,30 @@ CFLAGS_WARNINGS_EXTRA = \
 #	-Wsign-conversion \
 #	-Wdouble-promotion
 
+# WebAssembly Flags
+
+WASMOPT ?= wasm-opt
+WOFLAGS += --asyncify --pass-arg=asyncify-import@bynsyncify.* --pass-arg=asyncify-ignore-indirect
+
+CC_WASM = clang
+CFLAGS_WASM = \
+	-DWASM=1 \
+	-g \
+	-nostartfiles \
+	-nostdlib \
+	--target=wasm32 \
+	-flto -Oz \
+	-Wl,--lto-O3 \
+	-Wl,--no-entry \
+	-Wl,--import-memory \
+	-Wl,--allow-undefined \
+	-Wl,--export=__heap_base \
+	-Wl,--export-table \
+	-Wl,--warn-unresolved-symbols \
+	-isystem./wasm/include
+
+#	-Wl,--import-undefined \
+
 ################################################################################
 # Defines
 ################################################################################
@@ -231,7 +255,7 @@ ifeq ($(HOST_OS),Darwin)
 endif
 
 # These are directories to look for library files in
-LIB_DIRS = 
+LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
 ifeq ($(HOST_OS),Darwin)
@@ -297,6 +321,7 @@ clean:
 	-@rm -f $(OBJECTS) $(EXECUTABLE)
 	-@rm -rf ./docs/html
 	-@rm -rf ./spiffs_image/*
+	-@rm -rf $(EXECUTABLE).wasm
 
 # This cleans everything
 fullclean: clean
@@ -308,6 +333,14 @@ fullclean: clean
 	$(MAKE) -C ./tools/font_maker clean
 	$(MAKE) -C ./tools/swadgeterm clean
 	$(MAKE) -C ./tools/reboot_into_bootloader clean
+
+################################################################################
+# WebAssembly targets
+################################################################################
+
+$(EXECUTABLE).wasm: wasm/shim.c $(SOURCES)
+	$(CC_WASM) $(CFLAGS_WASM) $(DEFINES) $(INC) $^ -o $@
+	$(WASMOPT) $(WOFLAGS) -Oz $@ -o $@
 
 ################################################################################
 # Utility targets
