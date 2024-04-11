@@ -17,6 +17,7 @@
 #include <string.h>
 #include <inttypes.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "hdw-tft_emu.h"
 
@@ -111,6 +112,7 @@ static void replayPlaybackFrame(uint64_t frame);
 static void replayPreFrame(uint64_t frame);
 static int32_t replayKeyCb(uint32_t keycode, bool down);
 
+static const char* getScreenshotName(char* buffer, size_t maxlen);
 static bool readEntry(replayEntry_t* out);
 static void writeEntry(const replayEntry_t* entry);
 static void writeLe(uint8_t* vals, uint32_t size, FILE* stream);
@@ -432,13 +434,8 @@ static void replayPlaybackFrame(uint64_t frame)
                     else
                     {
                         // No filename was given, save it to a timestamp-based name
-                        struct timespec ts;
                         char filename[64];
-                        clock_gettime(CLOCK_REALTIME, &ts);
-
-                        // Turns out time_t doesn't printf well, so stick it in something that does
-                        uint64_t timeSec = (uint64_t)ts.tv_sec;
-                        snprintf(filename, sizeof(filename) - 1, "screenshot-%" PRIu64 ".png", timeSec);
+                        getScreenshotName(filename, sizeof(filename) - 1);
 
                         printf("Replay: Saving screenshot to '%s'\n", filename);
                         takeScreenshot(filename);
@@ -525,14 +522,9 @@ static int32_t replayKeyCb(uint32_t keycode, bool down)
             if (released)
             {
                 released = false;
-                // No filename was given, save it to a timestamp-based name
-                struct timespec ts;
-                char filename[64];
-                clock_gettime(CLOCK_REALTIME, &ts);
 
-                // Turns out time_t doesn't printf well, so stick it in something that does
-                uint64_t timeSec = (uint64_t)ts.tv_sec;
-                snprintf(filename, sizeof(filename) - 1, "screenshot-%" PRIu64 ".png", timeSec);
+                char filename[64];
+                getScreenshotName(filename, sizeof(filename) - 1);
 
                 printf("Replay: Saving screenshot to '%s'\n", filename);
                 takeScreenshot(filename);
@@ -547,6 +539,25 @@ static int32_t replayKeyCb(uint32_t keycode, bool down)
     }
 
     return 0;
+}
+
+static const char* getScreenshotName(char* buffer, size_t maxlen)
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+
+    // Turns out time_t doesn't printf well, so stick it in something that does
+    uint64_t timeSec    = (uint64_t)ts.tv_sec;
+    uint64_t timeMillis = (uint64_t)ts.tv_nsec / 1000000;
+
+    do
+    {
+        snprintf(buffer, maxlen, "screenshot-%" PRIu64 "%03" PRIu64 ".png", timeSec, timeMillis);
+        // Increment millis by one in case the file already exists
+        timeMillis++;
+    } while (0 == access(buffer, R_OK));
+
+    return buffer;
 }
 
 static bool readEntry(replayEntry_t* entry)
@@ -812,10 +823,10 @@ bool takeScreenshot(const char* name)
             uint8_t a = 0xFF;
 
             uint8_t* out = (uint8_t*)(&converted[row * width + col]);
-            *(out++) = b;
-            *(out++) = g;
-            *(out++) = r;
-            *(out++) = a;
+            *(out++)     = b;
+            *(out++)     = g;
+            *(out++)     = r;
+            *(out++)     = a;
         }
     }
 
