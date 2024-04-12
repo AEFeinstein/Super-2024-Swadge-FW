@@ -193,7 +193,7 @@ int main(int argc, char** argv)
                                ADC_SAMPLE_RATE_HZ, // int reqSPSRec
                                2,                  // int reqChannelsPlay
                                1,                  // int reqChannelsRec
-                               2048,               // int sugBufferSize
+                               64,                 // int sugBufferSize
                                NULL,               // const char* outputSelect
                                NULL,               // const char* inputSelect
                                NULL                // void* opaque
