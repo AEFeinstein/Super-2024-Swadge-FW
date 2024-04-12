@@ -8,9 +8,7 @@
 #include "macros.h"
 #include "emu_main.h"
 #include "ext_modes.h"
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "ext_tools.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,12 +108,9 @@ static bool replayInit(emuArgs_t* emuArgs);
 static void replayRecordFrame(uint64_t frame);
 static void replayPlaybackFrame(uint64_t frame);
 static void replayPreFrame(uint64_t frame);
-static int32_t replayKeyCb(uint32_t keycode, bool down);
 
-static const char* getScreenshotName(char* buffer, size_t maxlen);
 static bool readEntry(replayEntry_t* out);
 static void writeEntry(const replayEntry_t* entry);
-static void writeLe(uint8_t* vals, uint32_t size, FILE* stream);
 
 //==============================================================================
 // Variables
@@ -135,7 +130,7 @@ emuExtension_t replayEmuExtension = {
     .fnInitCb        = replayInit,
     .fnPreFrameCb    = replayPreFrame,
     .fnPostFrameCb   = NULL,
-    .fnKeyCb         = replayKeyCb,
+    .fnKeyCb         = NULL,
     .fnMouseMoveCb   = NULL,
     .fnMouseButtonCb = NULL,
     .fnRenderCb      = NULL,
@@ -160,14 +155,22 @@ static bool replayInit(emuArgs_t* emuArgs)
     {
         // Construct a timestamp-based filename
         struct timespec ts;
-        char filename[64];
-        clock_gettime(CLOCK_REALTIME, &ts);
-        uint64_t timeSec = (uint64_t)ts.tv_sec;
-        snprintf(filename, sizeof(filename) - 1, "rec-%" PRIu64 ".csv", timeSec);
+        char buf[64];
+        const char* filename = emuArgs->recordFile;
+
+        if (!filename || !*filename)
+        {
+            getTimestampFilename(buf, sizeof(buf)-1, "rec-", "csv");
+            clock_gettime(CLOCK_REALTIME, &ts);
+            uint64_t timeSec = (uint64_t)ts.tv_sec;
+            snprintf(buf, sizeof(buf) - 1, "rec-%" PRIu64 ".csv", timeSec);
+
+            filename = buf;
+        }
 
         // If specified, use custom filename, otherwise use timestamp one
-        printf("\nReplay: Recording inputs to file %s\n", emuArgs->recordFile ? emuArgs->recordFile : filename);
-        replay.file = fopen(emuArgs->recordFile ? emuArgs->recordFile : filename, "w");
+        printf("\nReplay: Recording inputs to file %s\n", filename);
+        replay.file = fopen(filename, "w");
         replay.mode = RECORD;
         return replay.file != NULL;
     }
@@ -421,24 +424,16 @@ static void replayPlaybackFrame(uint64_t frame)
 
                 case SCREENSHOT:
                 {
+                    if (!takeScreenshot(replay.nextEntry.filename))
+                    {
+                        printf("ERR: Replay: Couldn't save screenshot!\n");
+                    }
+
                     if (NULL != replay.nextEntry.filename)
                     {
-                        printf("Replay: Saving screenshot to '%s'\n", replay.nextEntry.filename);
-                        // Screenshot has a specific name, save it to that
-                        takeScreenshot(replay.nextEntry.filename);
-
                         // This string is dynamically alloated, so delete it
                         free(replay.nextEntry.filename);
                         replay.nextEntry.filename = NULL;
-                    }
-                    else
-                    {
-                        // No filename was given, save it to a timestamp-based name
-                        char filename[64];
-                        getScreenshotName(filename, sizeof(filename) - 1);
-
-                        printf("Replay: Saving screenshot to '%s'\n", filename);
-                        takeScreenshot(filename);
                     }
                     break;
                 }
@@ -510,65 +505,6 @@ static void replayPreFrame(uint64_t frame)
             break;
         }
     }
-}
-
-static int32_t replayKeyCb(uint32_t keycode, bool down)
-{
-    static bool released = true;
-    if (keycode == EMU_KEY_F12)
-    {
-        if (down)
-        {
-            if (released)
-            {
-                released = false;
-
-                char filename[64];
-                getScreenshotName(filename, sizeof(filename) - 1);
-
-                printf("Replay: Saving screenshot to '%s'\n", filename);
-                takeScreenshot(filename);
-
-                // Check if we're recording, in which case we should record that a screenshot was taken
-                if (replay.mode == RECORD && replay.file)
-                {
-                    replayEntry_t entry = {
-                        .time = esp_timer_get_time(),
-                        .type = SCREENSHOT,
-                        .filename = filename,
-                    };
-                    writeEntry(&entry);
-                }
-
-                return -1;
-            }
-        }
-        else
-        {
-            released = true;
-        }
-    }
-
-    return 0;
-}
-
-static const char* getScreenshotName(char* buffer, size_t maxlen)
-{
-    struct timespec ts;
-    clock_gettime(CLOCK_REALTIME, &ts);
-
-    // Turns out time_t doesn't printf well, so stick it in something that does
-    uint64_t timeSec    = (uint64_t)ts.tv_sec;
-    uint64_t timeMillis = (uint64_t)ts.tv_nsec / 1000000;
-
-    do
-    {
-        snprintf(buffer, maxlen, "screenshot-%" PRIu64 "%03" PRIu64 ".png", timeSec, timeMillis);
-        // Increment millis by one in case the file already exists
-        timeMillis++;
-    } while (0 == access(buffer, R_OK));
-
-    return buffer;
 }
 
 static bool readEntry(replayEntry_t* entry)
@@ -807,51 +743,21 @@ static void writeEntry(const replayEntry_t* entry)
     fwrite(buffer, 1, strlen(buffer), replay.file);
 }
 
-static void writeLe(uint8_t* vals, uint32_t size, FILE* stream)
+/**
+ * @brief Notifies the replay extension that a screenshot was taken
+ *
+ * @param name The screenshot filename, or NULL if none was used
+ */
+void recordScreenshotTaken(const char* name)
 {
-    static const uint32_t test = 0x01020304;
-
-    for (uint32_t i = 0; i < size; i++)
+    // Check that we're recording, otherwise we don't do anything
+    if (replay.mode == RECORD && replay.file)
     {
-        if (*((const char*)&test) == 0x04)
-        {
-            // Little Endian
-            fputc(vals[i], stream);
-        }
-        else
-        {
-            // Big Endian
-            fputc(vals[size - i - 1], stream);
-        }
+        replayEntry_t entry = {
+            .time = esp_timer_get_time(),
+            .type = SCREENSHOT,
+            .filename = name,
+        };
+        writeEntry(&entry);
     }
-}
-
-bool takeScreenshot(const char* name)
-{
-    uint16_t width, height;
-    uint32_t* bitmap = getDisplayBitmap(&width, &height);
-
-    // We need to swap some channels for PNG output
-    uint32_t converted[width * height];
-    for (int row = 0; row < height; row++)
-    {
-        for (int col = 0; col < width; col++)
-        {
-            uint8_t r = (bitmap[row * width + col] >> 8) & 0xFF;
-            uint8_t g = (bitmap[row * width + col] >> 16) & 0xFF;
-            uint8_t b = (bitmap[row * width + col] >> 24) & 0xFF;
-            uint8_t a = 0xFF;
-
-            uint8_t* out = (uint8_t*)(&converted[row * width + col]);
-            *(out++)     = b;
-            *(out++)     = g;
-            *(out++)     = r;
-            *(out++)     = a;
-        }
-    }
-
-    // Add full transparency for the rounded corners
-    plotRoundedCorners(converted, width, height, (width / TFT_WIDTH) * 40, 0x000000);
-
-    return 0 != stbi_write_png(name, width, height, 4, converted, width * sizeof(uint32_t));
 }

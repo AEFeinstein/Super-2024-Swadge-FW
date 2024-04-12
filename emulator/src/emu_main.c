@@ -448,11 +448,11 @@ void HandleKey(int keycode, int bDown)
 #ifdef DEBUG_INPUTS
     if (' ' <= keycode && keycode <= '~')
     {
-        printf("HandleKey(keycode='%c', bDown=%s\n", keycode, bDown ? "true" : "false");
+        printf("HandleKey(keycode='%c', bDown=%s)\n", keycode, bDown ? "true" : "false");
     }
     else
     {
-        printf("HandleKey(keycode=%d, bDown=%s\n", keycode, bDown ? "true" : "false");
+        printf("HandleKey(keycode=%d, bDown=%s)\n", keycode, bDown ? "true" : "false");
     }
 #endif
 

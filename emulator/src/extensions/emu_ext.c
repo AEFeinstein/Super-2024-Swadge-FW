@@ -19,6 +19,7 @@
 #include "ext_keymap.h"
 #include "ext_modes.h"
 #include "ext_replay.h"
+#include "ext_tools.h"
 
 //==============================================================================
 // Registered Extensions
@@ -29,8 +30,8 @@
 //==============================================================================
 
 static const emuExtension_t* registeredExtensions[] = {
-    &touchEmuCallback,  &ledEmuExtension,   &fuzzerEmuExtension,
-    &keymapEmuCallback, &modesEmuExtension, &replayEmuExtension,
+    &touchEmuCallback,  &ledEmuExtension,    &fuzzerEmuExtension, &keymapEmuCallback,
+    &modesEmuExtension, &replayEmuExtension, &toolsEmuExtension,
 };
 
 //==============================================================================
