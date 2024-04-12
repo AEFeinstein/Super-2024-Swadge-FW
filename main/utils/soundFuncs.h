@@ -107,27 +107,23 @@
     /**
      * @brief Play a specific note
      *
-     * Calls XXX or bzrPlayNote()
-     *
-     * TODO implement for DAC speaker
+     * Calls spkPlayNote() or bzrPlayNote()
      *
      * @param freq The frequency of the note to play
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      * @param vol The volume of the note to play
      *
      */
-    #define soundPlayNote(freq, channel, vol)
+    #define soundPlayNote(freq, channel, vol) spkPlayNote(freq, channel, vol)
 
     /**
      * @brief Stop a specific note
      *
-     * Calls XXX or bzrStopNote()
-     *
-     * TODO implement for DAC speaker
+     * Calls spkStopNote() or bzrStopNote()
      *
      * @param channel The channel (L/R/Stereo) to stop, ignored for DAC speakers
      */
-    #define soundStopNote(channel)
+    #define soundStopNote(channel) spkStopNote(channel)
 
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
 

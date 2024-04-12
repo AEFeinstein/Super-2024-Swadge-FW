@@ -42,6 +42,7 @@ typedef struct
 typedef struct
 {
     spkSong_t songStates[NUM_SONGS]; ///< An array of song states
+    bool noteMode;                   ///< true to play a single note, false to play songs
 } sngPlayer_t;
 
 //==============================================================================
@@ -69,6 +70,9 @@ const oscillatorShape_t oscShapes[OSC_PER_SONG] = {
  */
 void initSpkSongPlayer(void)
 {
+    // A song is played, so clear noteMode
+    sp.noteMode = false;
+
     // For each song
     for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
     {
@@ -112,6 +116,9 @@ void spkSongPlay(uint8_t sIdx, const song_t* song)
  */
 void spkSongPlayCb(uint8_t sIdx, const song_t* song, songFinishedCbFn cb)
 {
+    // A song is played, so clear noteMode
+    sp.noteMode = false;
+
     spkSong_t* s = &sp.songStates[sIdx];
 
     // Save this for later
@@ -242,6 +249,47 @@ void spkSongRestore(void* data)
 }
 
 /**
+ * @brief Play a single note on the speaker
+ *
+ * @param freq The frequency of the note to play
+ * @param track Which oscillator(s) to play the note on
+ * @param volume The volume of the note to play (unused)
+ */
+void spkPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume)
+{
+    // A note is played, so set noteMode
+    sp.noteMode = true;
+
+    if (BZR_STEREO == track || BZR_LEFT == track)
+    {
+        swSynthSetFreq(oPtrs[0], freq);
+        swSynthSetVolume(oPtrs[0], MAX_VOLUME);
+    }
+    if (BZR_STEREO == track || BZR_RIGHT == track)
+    {
+        swSynthSetFreq(oPtrs[1], freq);
+        swSynthSetVolume(oPtrs[1], MAX_VOLUME);
+    }
+}
+
+/**
+ * @brief Stop playing a single note on the speaker
+ *
+ * @param track The oscillator(s) to stop
+ */
+void spkStopNote(buzzerPlayTrack_t track)
+{
+    if (BZR_STEREO == track || BZR_LEFT == track)
+    {
+        swSynthSetVolume(oPtrs[0], 0);
+    }
+    if (BZR_STEREO == track || BZR_RIGHT == track)
+    {
+        swSynthSetFreq(oPtrs[1], 0);
+    }
+}
+
+/**
  * @brief Fill a buffer with the next set of samples for the currently playing song. This should be called by the
  * callback passed into initDac(), or used as the callback itself. Samples are generated at sampling rate of
  * ::DAC_SAMPLE_RATE_HZ
@@ -251,80 +299,93 @@ void spkSongRestore(void* data)
  */
 void sngPlayerFillBuffer(uint8_t* samples, int16_t len)
 {
-    // For each sample
-    for (int32_t mIdx = 0; mIdx < len; mIdx++)
+    // If a note is being played, fill samples but don't bother with songs
+    if (sp.noteMode)
     {
-        // Step and mix all the oscillators together
-        samples[mIdx] = swSynthMixOscillators(oPtrs, NUM_SONGS * OSC_PER_SONG);
-
-        // For each song
-        for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
+        // For each sample
+        for (int32_t mIdx = 0; mIdx < len; mIdx++)
         {
-            spkSong_t* s = &sp.songStates[sIdx];
+            // Step and mix all the oscillators together
+            samples[mIdx] = swSynthMixOscillators(oPtrs, 2);
+        }
+    }
+    else
+    {
+        // For each sample
+        for (int32_t mIdx = 0; mIdx < len; mIdx++)
+        {
+            // Step and mix all the oscillators together
+            samples[mIdx] = swSynthMixOscillators(oPtrs, NUM_SONGS * OSC_PER_SONG);
 
-            // If there is a song to play
-            if (NULL != s->song && s->songIsPlaying)
+            // For each song
+            for (int32_t sIdx = 0; sIdx < NUM_SONGS; sIdx++)
             {
-                // For each track
-                for (int32_t oIdx = 0; oIdx < s->song->numTracks; oIdx++)
+                spkSong_t* s = &sp.songStates[sIdx];
+
+                // If there is a song to play
+                if (NULL != s->song && s->songIsPlaying)
                 {
-                    // Decrement samples remaining
-                    s->samplesRemaining[oIdx]--;
-
-                    // If it's time for the next note
-                    if (0 == s->samplesRemaining[oIdx])
+                    // For each track
+                    for (int32_t oIdx = 0; oIdx < s->song->numTracks; oIdx++)
                     {
-                        // Get the song's track
-                        songTrack_t* track = &s->song->tracks[oIdx];
+                        // Decrement samples remaining
+                        s->samplesRemaining[oIdx]--;
 
-                        // Increment the note index, checking for wraparound
-                        if (s->cNoteIdx[oIdx] == track->numNotes - 1)
+                        // If it's time for the next note
+                        if (0 == s->samplesRemaining[oIdx])
                         {
-                            // Song is over
-                            if (s->song->shouldLoop)
+                            // Get the song's track
+                            songTrack_t* track = &s->song->tracks[oIdx];
+
+                            // Increment the note index, checking for wraparound
+                            if (s->cNoteIdx[oIdx] == track->numNotes - 1)
                             {
-                                // if it should loop, restart it
-                                s->cNoteIdx[oIdx] = 0;
+                                // Song is over
+                                if (s->song->shouldLoop)
+                                {
+                                    // if it should loop, restart it
+                                    s->cNoteIdx[oIdx] = 0;
+                                }
+                                else
+                                {
+                                    // Otherwise stop the song
+                                    s->songIsPlaying          = false;
+                                    s->cNoteIdx[oIdx]         = 0;
+                                    s->samplesRemaining[oIdx] = 0;
+                                    swSynthSetVolume(&s->oscillators[oIdx], 0);
+
+                                    // If there is a callback to call
+                                    if (NULL != s->songCb)
+                                    {
+                                        // Call it, then clear it
+                                        s->songCb();
+                                        s->songCb = NULL;
+                                    }
+                                    continue;
+                                }
                             }
                             else
                             {
-                                // Otherwise stop the song
-                                s->songIsPlaying          = false;
-                                s->cNoteIdx[oIdx]         = 0;
-                                s->samplesRemaining[oIdx] = 0;
-                                swSynthSetVolume(&s->oscillators[oIdx], 0);
-
-                                // If there is a callback to call
-                                if (NULL != s->songCb)
-                                {
-                                    // Call it, then clear it
-                                    s->songCb();
-                                    s->songCb = NULL;
-                                }
-                                continue;
+                                // Simply increment to the next note
+                                s->cNoteIdx[oIdx]++;
                             }
-                        }
-                        else
-                        {
-                            // Simply increment to the next note
-                            s->cNoteIdx[oIdx]++;
-                        }
 
-                        // Get the note
-                        musicalNote_t* note = &track->notes[s->cNoteIdx[oIdx]];
+                            // Get the note
+                            musicalNote_t* note = &track->notes[s->cNoteIdx[oIdx]];
 
-                        // Calculate remaining samples
-                        s->samplesRemaining[oIdx] = (note->timeMs * DAC_SAMPLE_RATE_HZ) / 1000;
+                            // Calculate remaining samples
+                            s->samplesRemaining[oIdx] = (note->timeMs * DAC_SAMPLE_RATE_HZ) / 1000;
 
-                        // Play the note
-                        if (SILENCE == note->note)
-                        {
-                            swSynthSetVolume(&s->oscillators[oIdx], 0);
-                        }
-                        else
-                        {
-                            swSynthSetFreq(&s->oscillators[oIdx], note->note);
-                            swSynthSetVolume(&s->oscillators[oIdx], SPK_MAX_VOLUME);
+                            // Play the note
+                            if (SILENCE == note->note)
+                            {
+                                swSynthSetVolume(&s->oscillators[oIdx], 0);
+                            }
+                            else
+                            {
+                                swSynthSetFreq(&s->oscillators[oIdx], note->note);
+                                swSynthSetVolume(&s->oscillators[oIdx], SPK_MAX_VOLUME);
+                            }
                         }
                     }
                 }
