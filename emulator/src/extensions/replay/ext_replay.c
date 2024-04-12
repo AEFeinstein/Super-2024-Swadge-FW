@@ -529,6 +529,17 @@ static int32_t replayKeyCb(uint32_t keycode, bool down)
                 printf("Replay: Saving screenshot to '%s'\n", filename);
                 takeScreenshot(filename);
 
+                // Check if we're recording, in which case we should record that a screenshot was taken
+                if (replay.mode == RECORD && replay.file)
+                {
+                    replayEntry_t entry = {
+                        .time = esp_timer_get_time(),
+                        .type = SCREENSHOT,
+                        .filename = filename,
+                    };
+                    writeEntry(&entry);
+                }
+
                 return -1;
             }
         }
@@ -777,7 +788,16 @@ static void writeEntry(const replayEntry_t* entry)
 
         case FUZZ:
         case QUIT:
+        {
+            break;
+        }
+
         case SCREENSHOT:
+        {
+            snprintf(ptr, BUFSIZE, "%s\n", entry->filename ? entry->filename : "");
+            break;
+        }
+
         case SET_MODE:
         {
             break;

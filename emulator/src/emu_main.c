@@ -466,7 +466,6 @@ void HandleKey(int keycode, int bDown)
     emulatorHandleKeys(keycode, bDown);
 
     // Keep track of when shift is held so we can exit on SHIFT + BACKSPACE
-    // I would do CTRL+W, but rawdraw doesn't have a define for ctrl...
     static bool shiftDown = false;
     if (keycode == CNFG_KEY_SHIFT)
     {
