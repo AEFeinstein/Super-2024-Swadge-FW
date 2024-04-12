@@ -12,9 +12,6 @@
 // Defines
 //==============================================================================
 
-/** The size of each buffer to fill with DAC samples */
-#define DAC_BUF_SIZE 2048
-
 /** The number of buffers to use. The more buffers, the longer latency */
 #define DMA_DESCRIPTORS 4
 
