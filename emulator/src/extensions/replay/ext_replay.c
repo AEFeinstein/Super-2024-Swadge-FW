@@ -515,7 +515,7 @@ static void replayPreFrame(uint64_t frame)
 static int32_t replayKeyCb(uint32_t keycode, bool down)
 {
     static bool released = true;
-    if (keycode == 65293)
+    if (keycode == EMU_KEY_F12)
     {
         if (down)
         {
