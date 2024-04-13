@@ -4,6 +4,7 @@
 
 #include <stdlib.h>
 #include "soundManager.h"
+#include "soundFuncs.h"
 
 //==============================================================================
 // Functions
@@ -55,7 +56,7 @@ void setLevelBgm(soundManager_t* self, uint16_t newBgmIndex)
 
     if (self->currentBgmIndex != BRK_BGM_NULL)
     {
-        bzrStop(true);
+        soundStop(true);
         freeSong(&self->levelBgm);
     }
 

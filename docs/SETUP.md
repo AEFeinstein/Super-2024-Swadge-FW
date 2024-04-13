@@ -33,9 +33,10 @@ The continuous integration for this project runs on a Windows instance. This mea
 3. [Install `msys2`](https://www.msys2.org/). This is the environment in which the emulator will be built.
 4. Start an `msys2` shell and run the following command to install all required packages for building the emulator:
     ```bash
-    pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck mingw-w64-x86_64-doxygen
+    pacman --noconfirm -S base-devel gcc gdb zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck doxygen
     ```
-5. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
+5. [Install `LLVM-17.0.6-win64.exe`](https://github.com/llvm/llvm-project/releases/tag/llvmorg-17.0.6). This is for the `clang-format-17` tool. During the install, when it asks to add LLVM to the system PATH, add it to the path for all users.
+6. Add the following paths to the Windows path variable. [Here are some instructions on how to do that](https://www.architectryan.com/2018/03/17/add-to-the-path-on-windows-10/).
     * `C:\msys64\mingw64\bin`
     * `C:\msys64\usr\bin`
     
@@ -121,7 +122,7 @@ When running on MacOS, you will need to run the emulator and all build tasks thr
 1. Clone this repository.
     ```powershell
     cd ~/esp/
-    git clone https://github.com/AEFeinstein/Super-2024-Swadge-FW.git
+    git clone --recurse-submodules https://github.com/AEFeinstein/Super-2024-Swadge-FW.git
     cd Super-2024-Swadge-FW
     ```
 2. Make sure the ESP-IDF symbols are exported. This example is for Windows, so the actual command may be different for your OS. Note that `export.ps1` does not make any permanent changes and it must be run each time you open a new terminal for a build.

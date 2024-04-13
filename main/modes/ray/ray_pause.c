@@ -122,7 +122,7 @@ static void drawPlayerIndicator(ray_t* ray, int16_t cX, int16_t cY);
 void rayShowPause(ray_t* ray)
 {
     raySwitchToScreen(RAY_PAUSE);
-    bzrPause();
+    soundPause();
 }
 
 /**
@@ -156,7 +156,7 @@ void rayPauseCheckButtons(ray_t* ray)
                 {
                     // Pause over, return to game
                     raySwitchToScreen(RAY_GAME);
-                    bzrResume();
+                    soundResume();
                     break;
                 }
                 default:

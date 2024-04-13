@@ -15,6 +15,13 @@
  * \warning The battery monitor (hdw-battmon.h) and microphone cannot be used at the same time! Each mode can either
  * continuously sample the microphone or measure the battery voltage, not both.
  *
+ * \if Cond1
+ * \endif
+ *
+ * \warning
+ * Note that the DAC peripheral (hdw-dac.h) and the ADC peripheral use the same DMA controller, so they cannot both be
+ * used at the same time. One must be deinitialize before initializing the other.
+ *
  * \section mic_usage Usage
  *
  * You don't need to call initMic() or deinitMic(). The system does at the appropriate times.
@@ -75,6 +82,8 @@
 #define ADC_READ_LEN 512
 
 #define MAX_MIC_GAIN 7
+
+#define ADC_SAMPLE_RATE_HZ 8000
 
 //==============================================================================
 // Function Prototypes

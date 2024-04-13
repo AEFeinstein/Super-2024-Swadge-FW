@@ -20,7 +20,7 @@ endif
 ################################################################################
 
 ifeq ($(HOST_OS),Windows)
-	CC = x86_64-w64-mingw32-gcc.exe
+	CC = gcc
 else ifeq ($(HOST_OS),Linux)
 	CC = gcc
 else ifeq ($(UNAME_S),Darwin)
@@ -43,7 +43,7 @@ endif
 ################################################################################
 
 # This is a list of directories to scan for c files recursively
-SRC_DIRS_RECURSIVE = emulator main
+SRC_DIRS_RECURSIVE = emulator/src main
 # This is a list of directories to scan for c files not recursively
 SRC_DIRS_FLAT = 
 # This is a list of files to compile directly. There's no scanning here
@@ -54,7 +54,7 @@ SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "rawdraw_sf.h" -not -name "getopt_win.h" -not -name "cJSON*")
+ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "getopt_win.h" -not -name "cJSON*")
 
 ################################################################################
 # Includes
@@ -193,11 +193,11 @@ DEFINES_LIST = \
 	IDF_VER="v5.2.1" \
 	ESP_PLATFORM \
 	_POSIX_READER_WRITER_LOCKS \
-	CFG_TUSB_MCU=OPT_MCU_ESP32S2
+	CFG_TUSB_MCU=OPT_MCU_ESP32S2 \
+	CONFIG_SOUND_OUTPUT_SPEAKER=y
 
 # Extra defines
 DEFINES_LIST += \
-	EMULATOR=1 \
 	GIT_SHA1=${GIT_HASH} \
 	HAS_XINERAMA=1 \
 	FULL_SCREEN_STEAL_FOCUS=1

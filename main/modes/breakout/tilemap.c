@@ -13,6 +13,7 @@
 #include "esp_random.h"
 
 #include "hdw-spiffs.h"
+#include "soundFuncs.h"
 
 //==============================================================================
 // Function Prototypes
@@ -154,7 +155,7 @@ void scrollTileMap(tilemap_t* tilemap, int16_t x, int16_t y)
 
 bool loadMapFromFile(tilemap_t* tilemap, const char* name)
 {
-    bzrPause();
+    soundPause();
 
     if (tilemap->map != NULL)
     {
@@ -189,7 +190,7 @@ bool loadMapFromFile(tilemap_t* tilemap, const char* name)
 
     free(buf);
 
-    bzrResume();
+    soundResume();
 
     return true;
 }

@@ -8,7 +8,7 @@
 #include <esp_timer.h>
 
 #include "embeddedOut.h"
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 #include "hdw-led.h"
 #include "settingsManager.h"
 #include "touchTest.h"
@@ -175,7 +175,7 @@ void testEnterMode(void)
 
     // Play a song
     loadSong("stereo_test.sng", &test->song, false);
-    bzrPlayBgm(&test->song, BZR_STEREO);
+    soundPlayBgm(&test->song, BZR_STEREO);
 
     // Clear out accel setting.
     accelSetRegistersAndReset();

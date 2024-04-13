@@ -54,9 +54,9 @@ void rayWarpScreenRender(ray_t* ray, uint32_t elapsedUs)
         ray->warpTimerUs = 0;
         // Stop warp SFX
         ray->sfx_warp.shouldLoop = false;
-        bzrStop(true);
+        soundStop(true);
         // Play music
-        bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
+        soundPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
     }
 }
 
@@ -87,7 +87,7 @@ void setWarpDestination(ray_t* ray, int32_t mapId, int16_t posX, int16_t posY)
 void warpToDestination(ray_t* ray)
 {
     // Stop BGM when manipulating data
-    bzrStop(true);
+    soundStop(true);
 
     // Save the current map's visited tiles
     raySaveVisitedTiles(ray);
@@ -102,7 +102,7 @@ void warpToDestination(ray_t* ray)
     q24_8 pStartX = 0, pStartY = 0;
     loadRayMap(ray->warpDestMapId, ray, &pStartX, &pStartY, true);
     // Stop again after loading the map starts
-    bzrStop(true);
+    soundStop(true);
 
     // Set the map ID
     ray->p.mapId                     = ray->warpDestMapId;
@@ -145,5 +145,5 @@ void warpToDestination(ray_t* ray)
 
     // Loop SFX after saving
     ray->sfx_warp.shouldLoop = false;
-    bzrPlaySfx(&ray->sfx_warp, BZR_RIGHT);
+    soundPlaySfx(&ray->sfx_warp, BZR_RIGHT);
 }

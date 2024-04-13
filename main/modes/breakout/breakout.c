@@ -434,12 +434,12 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
         else if (label == breakoutResetScores)
         {
             breakoutInitializeHighScores(breakout);
-            bzrPlaySfx(&(breakout->soundManager.detonate), BZR_STEREO);
+            soundPlaySfx(&(breakout->soundManager.detonate), BZR_STEREO);
         }
         else if (label == breakoutResetProgress)
         {
             breakoutInitializeUnlockables(breakout);
-            bzrPlaySfx(&(breakout->soundManager.die), BZR_STEREO);
+            soundPlaySfx(&(breakout->soundManager.die), BZR_STEREO);
         }
         else if (label == breakoutSaveAndExit)
         {
@@ -454,7 +454,7 @@ static void breakoutMenuCb(const char* label, bool selected, uint32_t settingVal
     }
     else
     {
-        bzrPlaySfx(&(breakout->soundManager.hit3), BZR_STEREO);
+        soundPlaySfx(&(breakout->soundManager.hit3), BZR_STEREO);
     }
 }
 
@@ -513,7 +513,7 @@ static void breakoutChangeStateReadyScreen(breakout_t* self)
     self->entityManager.playerEntity = NULL;
     self->entityManager.playerEntity = createEntity(&(self->entityManager), ENTITY_CHO_INTRO, 0, 0);
 
-    bzrPlayBgm(&self->soundManager.getReady, BZR_STEREO);
+    soundPlayBgm(&self->soundManager.getReady, BZR_STEREO);
     self->update = &breakoutUpdateReadyScreen;
 }
 
@@ -539,7 +539,7 @@ static void breakoutUpdateReadyScreen(breakout_t* self, int64_t elapsedUs)
         {
             breakoutChangeStateGame(self);
             setLevelBgm(&(self->soundManager), leveldef[self->gameData.level].bgmIndex);
-            bzrPlayBgm(&(self->soundManager.levelBgm), BZR_STEREO);
+            soundPlayBgm(&(self->soundManager.levelBgm), BZR_STEREO);
         }
 
         if (self->gameData.targetBlocksBroken > 0 || !(self->gameData.frameCount % 2))
@@ -722,7 +722,7 @@ void breakoutChangeStateGameOver(breakout_t* self)
     self->gameData.frameCount = 0;
     resetGameDataLeds(&(self->gameData));
     // buzzer_play_bgm(&bgmGameOver);
-    bzrPlayBgm(&self->soundManager.gameOver, BZR_STEREO);
+    soundPlayBgm(&self->soundManager.gameOver, BZR_STEREO);
     self->update = &breakoutUpdateGameOver;
 }
 
@@ -833,8 +833,8 @@ void breakoutChangeStateLevelClear(breakout_t* self)
     self->gameData.frameCount = 0;
     resetGameDataLeds(&(self->gameData));
     self->update = &breakoutUpdateLevelClear;
-    bzrStop(true);
-    bzrPlaySfx(&(self->soundManager.levelClear), BZR_STEREO);
+    soundStop(true);
+    soundPlaySfx(&(self->soundManager.levelClear), BZR_STEREO);
 }
 
 void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
@@ -850,7 +850,7 @@ void breakoutUpdateLevelClear(breakout_t* self, int64_t elapsedUs)
 
             if (self->gameData.countdown % 2)
             {
-                bzrPlayBgm(&(self->soundManager.tally), BZR_LEFT);
+                soundPlayBgm(&(self->soundManager.tally), BZR_LEFT);
             }
 
             scorePoints(&(self->gameData), TIME_BONUS_PER_SECOND, -1000);
@@ -965,7 +965,7 @@ void breakoutChangeStateGameClear(breakout_t* self)
     resetGameDataLeds(&(self->gameData));
 
     setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
-    bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
+    soundPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
 }
 
 void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
@@ -983,7 +983,7 @@ void breakoutUpdateGameClear(breakout_t* self, int64_t elapsedUs)
                     {
                         self->gameData.lives--;
                         self->gameData.score += 100000;
-                        bzrPlaySfx(&(breakout->soundManager.snd1up), BZR_LEFT);
+                        soundPlaySfx(&(breakout->soundManager.snd1up), BZR_LEFT);
                     }
                 }
                 else if (self->gameData.frameCount % 960 == 0)
@@ -1084,7 +1084,7 @@ void breakoutDrawGameClear(font_t* ibm_vga8, font_t* logbook, gameData_t* gameDa
 
 void breakoutChangeStatePause(breakout_t* self)
 {
-    bzrPause();
+    soundPause();
     self->gameData.btnState = 0;
     self->update            = &breakoutUpdatePause;
 }
@@ -1111,7 +1111,7 @@ void breakoutUpdatePause(breakout_t* self, int64_t elapsedUs)
 
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        bzrResume();
+        soundResume();
         self->gameData.btnState = 0;
         self->update            = &breakoutGameLoop;
     }
@@ -1150,7 +1150,7 @@ static void breakoutChangeStateTitleScreen(breakout_t* self)
         createEntity(&(self->entityManager), ENTITY_CAPTIVE_BALL, 24 + esp_random() % 224, 24 + esp_random() % 208);
 
         setLevelBgm(&(self->soundManager), BRK_BGM_TITLE);
-        bzrPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
+        soundPlayBgm(&self->soundManager.levelBgm, BRK_BGM_TITLE);
     }
 
     self->gameData.gameState = ST_TITLE_SCREEN;
@@ -1179,11 +1179,11 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
             breakout->menuSelection      = 0;
             breakout->menuState          = 1;
             breakout->gameData.debugMode = true;
-            bzrPlaySfx(&(breakout->soundManager.levelClear), BZR_STEREO);
+            soundPlaySfx(&(breakout->soundManager.levelClear), BZR_STEREO);
         }
         else
         {
-            bzrPlaySfx(&(breakout->soundManager.hit3), BZR_STEREO);
+            soundPlaySfx(&(breakout->soundManager.hit3), BZR_STEREO);
         }
     }
 
@@ -1195,7 +1195,7 @@ static void breakoutUpdateTitleScreen(breakout_t* self, int64_t elapsedUs)
 
         if (!breakout->gameData.debugMode)
         {
-            bzrPlaySfx(&(breakout->soundManager.launch), BZR_STEREO);
+            soundPlaySfx(&(breakout->soundManager.launch), BZR_STEREO);
         }
 
         breakoutChangeStateMainMenu(self);
@@ -1259,10 +1259,10 @@ void breakoutLoadHighScores(breakout_t* self)
 
 void breakoutSaveHighScores(breakout_t* self)
 {
-    bzrPause();
+    soundPause();
     size_t size = sizeof(breakoutHighScores_t);
     writeNvsBlob(breakoutNvsKey_scores, &(self->highScores), size);
-    bzrResume();
+    soundResume();
 }
 
 void breakoutDrawHighScores(font_t* font, breakoutHighScores_t* highScores, gameData_t* gameData)
@@ -1332,7 +1332,7 @@ void breakoutUpdateShowHighScores(breakout_t* self, int64_t elapsedUs)
     {
         self->menuState     = 0;
         self->menuSelection = 0;
-        // bzrStop(true);
+        // soundStop(true);
         breakoutChangeStateTitleScreen(self);
     }
 
@@ -1381,7 +1381,7 @@ void breakoutChangeStateNameEntry(breakout_t* self)
     }
 
     setLevelBgm(&(self->soundManager), BRK_BGM_NAME_ENTRY);
-    bzrPlayBgm(&self->soundManager.levelBgm, BZR_STEREO);
+    soundPlayBgm(&self->soundManager.levelBgm, BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &breakoutUpdateNameEntry;
 }
@@ -1400,7 +1400,7 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
         }
 
         self->gameData.initials[self->menuState] = self->menuSelection;
-        bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
+        soundPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
     }
     else if (self->gameData.btnState & PB_RIGHT && !(self->gameData.prevBtnState & PB_RIGHT))
     {
@@ -1412,7 +1412,7 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
         }
 
         self->gameData.initials[self->menuState] = self->menuSelection;
-        bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
+        soundPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
     }
     else if (self->gameData.btnState & PB_B && !(self->gameData.prevBtnState & PB_B))
     {
@@ -1420,11 +1420,11 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
         {
             self->menuState--;
             self->menuSelection = self->gameData.initials[self->menuState];
-            bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
         }
         else
         {
-            bzrPlaySfx(&(self->soundManager.hit2), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager.hit2), BZR_LEFT);
         }
     }
     else if (self->gameData.btnState & PB_A && !(self->gameData.prevBtnState & PB_A))
@@ -1437,13 +1437,13 @@ void breakoutUpdateNameEntry(breakout_t* self, int64_t elapsedUs)
                                               self->gameData.rank);
             breakoutSaveHighScores(self);
             breakoutChangeStateShowHighScores(self);
-            bzrPlaySfx(&(self->soundManager.snd1up), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager.snd1up), BZR_LEFT);
             return;
         }
         else
         {
             self->menuSelection = self->gameData.initials[self->menuState];
-            bzrPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager.hit3), BZR_LEFT);
         }
     }
 
@@ -1493,10 +1493,10 @@ void breakoutLoadUnlockables(breakout_t* self)
 
 void breakoutSaveUnlockables(breakout_t* self)
 {
-    bzrPause();
+    soundPause();
     size_t size = sizeof(breakoutUnlockables_t);
     writeNvsBlob(breakoutNvsKey_unlocks, &(self->unlockables), size);
-    bzrResume();
+    soundResume();
 }
 
 void breakoutBuildMainMenu(breakout_t* self)

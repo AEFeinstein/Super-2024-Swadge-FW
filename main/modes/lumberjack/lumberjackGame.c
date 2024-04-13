@@ -86,7 +86,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
 
     loadFont("eightbit_atari_grube2.font", &lumv->arcade, false);
 
-    bzrStop(true); // Stop the buzzer?
+    soundStop(true); // Stop the buzzer?
 
     for (int i = 0; i < ARRAY_SIZE(lumv->axeBlocks); i++)
     {
@@ -409,7 +409,7 @@ void lumberjackStartGameMode(lumberjack_t* main, uint8_t characterIndex)
     lumv->song_theme.shouldLoop = true;
     lumv->song_title.shouldLoop = true;
 
-    bzrPlayBgm(&lumv->song_title, BZR_STEREO);
+    soundPlayBgm(&lumv->song_title, BZR_STEREO);
 
     // Setup level now that assets are loaded
     lumberjackSetupLevel(lumv->localPlayerType);
@@ -562,7 +562,7 @@ bool lumberjackLoadLevel()
 
 void lumberjackSetupLevel(int characterIndex)
 {
-    // bzrStop(true); // Stop the buzzer?
+    // soundStop(true); // Stop the buzzer?
 
     lumv->enemyKillCount     = 0;
     lumv->totalEnemyCount    = 0;
@@ -801,7 +801,7 @@ void lumberjackPlayGame()
 
     lumv->gameState = LUMBERJACK_GAMESTATE_PLAYING;
 
-    bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
+    soundPlayBgm(&lumv->song_theme, BZR_STEREO);
 }
 
 void lumberjackGameReady(void)
@@ -844,7 +844,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
             if (evt.down && (PB_START == evt.button))
             {
                 lumv->paused = false;
-                bzrResume();
+                soundResume();
             }
         }
         lumberjackDrawGame();
@@ -876,7 +876,7 @@ void lumberjackGameLoop(int64_t elapsedUs)
 
         if (lumv->lastResponseSignal <= 0)
         {
-            bzrStop(true);
+            soundStop(true);
             lumv->gameState          = LUMBERJACK_GAMESTATE_GAMEOVER;
             lumv->transitionTimer    = 500;
             lumv->localPlayer->state = LUMBERJACK_DEAD;
@@ -988,7 +988,7 @@ void baseMode(int64_t elapsedUs)
         if (evt.down && (PB_START == evt.button) && false == lumv->lumberjackMain->networked)
         {
             lumv->paused = true;
-            bzrPause();
+            soundPause();
         }
     }
 
@@ -1003,7 +1003,7 @@ void baseMode(int64_t elapsedUs)
 
             if (lumv->resume <= 0)
             {
-                bzrPlayBgm(&lumv->song_theme, BZR_STEREO);
+                soundPlayBgm(&lumv->song_theme, BZR_STEREO);
             }
         }
 
@@ -1049,7 +1049,7 @@ void baseMode(int64_t elapsedUs)
 
                 if (lumv->gameType == LUMBERJACK_MODE_ATTACK && lumv->itemBlockIndex != -1)
                 {
-                    bzrPlaySfx(&lumv->sfx_powerup, BZR_RIGHT);
+                    soundPlaySfx(&lumv->sfx_powerup, BZR_RIGHT);
 
                     if (lumv->itemBlockIndex == 0)
                     {
@@ -1218,7 +1218,7 @@ void baseMode(int64_t elapsedUs)
 
             if (lumv->gameType == LUMBERJACK_MODE_PANIC)
             {
-                bzrPlaySfx(&lumv->sfx_item_use, BZR_RIGHT);
+                soundPlaySfx(&lumv->sfx_item_use, BZR_RIGHT);
 
                 lumv->waterDirection = LUMBERJACK_WATER_FAST_DRAIN;
                 lumv->waterTimer     = lumv->waterSpeed;
@@ -1327,8 +1327,8 @@ void baseMode(int64_t elapsedUs)
             if (lumv->localPlayer->respawn <= 0 && lumv->lives > 0)
             {
                 // ESP_LOGD(LUM_TAG, "RESPAWN PLAYER!");
-                bzrStop(true);
-                bzrPlaySfx(&lumv->song_respawn, BZR_RIGHT);
+                soundStop(true);
+                soundPlaySfx(&lumv->song_respawn, BZR_RIGHT);
 
                 // Respawn player
                 lumv->localPlayer->respawn = 0;
@@ -1400,7 +1400,7 @@ void baseMode(int64_t elapsedUs)
                             }
 
                             lumv->comboTime = LUMBERJACK_COMBO_RESET_TIME;
-                            bzrPlaySfx(&lumv->sfx_enemy_death, BZR_RIGHT);
+                            soundPlaySfx(&lumv->sfx_enemy_death, BZR_RIGHT);
 
                             // if game mode is single player decide if you're going to clear the level
                             lumv->enemyKillCount++;
@@ -1564,9 +1564,9 @@ void lumberjackOnLocalPlayerDeath(void)
 
         lumv->gameState       = LUMBERJACK_GAMESTATE_GAMEOVER;
         lumv->transitionTimer = 400;
-        bzrStop(true);
+        soundStop(true);
 
-        bzrPlayBgm(&lumv->song_gameover, BZR_STEREO);
+        soundPlayBgm(&lumv->song_gameover, BZR_STEREO);
 
         if (lumv->lumberjackMain->networked == false && !lumv->cheat)
         {
@@ -1585,7 +1585,7 @@ void lumberjackOnLocalPlayerDeath(void)
         }
     }
 
-    bzrPlaySfx(&lumv->sfx_player_death, BZR_RIGHT);
+    soundPlaySfx(&lumv->sfx_player_death, BZR_RIGHT);
 
     if (lumv->lumberjackMain->networked)
     {
@@ -2086,11 +2086,11 @@ void lumberjackOnReceiveBump(void)
     if (lumv->localPlayer->onGround)
     {
         lumv->localPlayer->vy = -20; // HERE
-        bzrPlaySfx(&lumv->sfx_bump, BZR_RIGHT);
+        soundPlaySfx(&lumv->sfx_bump, BZR_RIGHT);
 
         if (lumv->localPlayer->state == LUMBERJACK_DUCK)
         {
-            bzrPlaySfx(&lumv->sfx_flip, BZR_RIGHT);
+            soundPlaySfx(&lumv->sfx_flip, BZR_RIGHT);
 
             lumv->localPlayer->vy    = -40;
             lumv->localPlayer->state = LUMBERJACK_BUMPED;
@@ -2174,7 +2174,7 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
             entity->jumpTimer = 225000;
             entity->onGround  = false;
 
-            bzrPlaySfx(&lumv->sfx_jump, BZR_RIGHT);
+            soundPlaySfx(&lumv->sfx_jump, BZR_RIGHT);
         }
         else if (entity->jumping)
         {
@@ -2343,11 +2343,11 @@ static void lumberjackUpdateEntity(lumberjackEntity_t* entity, int64_t elapsedUs
 
             if (flipOpponent)
             {
-                bzrPlaySfx(&lumv->sfx_flip, BZR_RIGHT);
+                soundPlaySfx(&lumv->sfx_flip, BZR_RIGHT);
             }
             else if (bump)
             {
-                bzrPlaySfx(&lumv->sfx_bump, BZR_RIGHT);
+                soundPlaySfx(&lumv->sfx_bump, BZR_RIGHT);
             }
         }
     }
@@ -2702,7 +2702,7 @@ void lumberjackUseBlock()
 
     if (lumv->gameType == LUMBERJACK_MODE_PANIC)
     {
-        bzrPlaySfx(&lumv->sfx_item_use, BZR_RIGHT);
+        soundPlaySfx(&lumv->sfx_item_use, BZR_RIGHT);
 
         lumv->waterDirection = LUMBERJACK_WATER_FAST_DRAIN;
         lumv->waterTimer     = lumv->waterSpeed;
@@ -2862,7 +2862,7 @@ void drawSolidWsg(const wsg_t* wsg, int16_t xOff, int16_t yOff, bool flipLR, boo
 
 void lumberjackExitGameMode(void)
 {
-    bzrStop(true);
+    soundStop(true);
 
     // Everything crashes if you don't load it first
     if (lumv == NULL)

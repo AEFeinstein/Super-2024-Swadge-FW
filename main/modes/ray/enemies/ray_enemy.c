@@ -306,7 +306,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         if (OBJ_BULLET_MISSILE != bullet)
         {
             // Play SFX
-            bzrPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
+            soundPlaySfx(&ray->sfx_e_block, BZR_RIGHT);
             return;
         }
         else
@@ -348,7 +348,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         // Transition to dying
         rayEnemyTransitionState(ray, enemy, E_DEAD);
         // Play SFX
-        bzrPlaySfx(&ray->sfx_e_dead, BZR_RIGHT);
+        soundPlaySfx(&ray->sfx_e_dead, BZR_RIGHT);
 
         // Make LEDs green
         ray->ledHue = 85;
@@ -357,7 +357,7 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
         if (OBJ_ENEMY_BOSS == enemy->c.type)
         {
             // Resume normal music
-            bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
+            soundPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
         }
     }
     // If the enemy took
@@ -375,12 +375,12 @@ void rayEnemyGetShot(ray_t* ray, rayEnemy_t* enemy, rayMapCellType_t bullet)
             // Slow it for a moment
             enemy->freezeTimer = 3200000;
             // Play SFX
-            bzrPlaySfx(&ray->sfx_e_freeze, BZR_RIGHT);
+            soundPlaySfx(&ray->sfx_e_freeze, BZR_RIGHT);
         }
         else
         {
             // Play SFX
-            bzrPlaySfx(&ray->sfx_e_damage, BZR_RIGHT);
+            soundPlaySfx(&ray->sfx_e_damage, BZR_RIGHT);
         }
 
         // Make LEDs green

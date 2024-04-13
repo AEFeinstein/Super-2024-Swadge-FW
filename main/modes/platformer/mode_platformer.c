@@ -304,7 +304,7 @@ void updateGame(platformer_t* self)
 
         if (self->gameData.countdown < 10)
         {
-            bzrPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);
+            soundPlayBgm(&(self->soundManager.sndOuttaTime), BZR_STEREO);
         }
 
         if (self->gameData.countdown < 0)
@@ -382,12 +382,12 @@ void updateTitleScreen(platformer_t* self)
                     platformer->cheatCodeIdx       = 0;
                     platformer->menuState          = 1;
                     platformer->gameData.debugMode = true;
-                    bzrPlaySfx(&(platformer->soundManager.sndLevelClearS), BZR_STEREO);
+                    soundPlaySfx(&(platformer->soundManager.sndLevelClearS), BZR_STEREO);
                     break;
                 }
                 else
                 {
-                    bzrPlaySfx(&(platformer->soundManager.sndMenuSelect), BZR_STEREO);
+                    soundPlaySfx(&(platformer->soundManager.sndMenuSelect), BZR_STEREO);
                     break;
                 }
             }
@@ -402,7 +402,7 @@ void updateTitleScreen(platformer_t* self)
             if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START))
                 || ((self->gameData.btnState & PB_A) && !(self->gameData.prevBtnState & PB_A)))
             {
-                bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                 platformer->menuState     = 1;
                 platformer->menuSelection = 0;
             }
@@ -422,7 +422,7 @@ void updateTitleScreen(platformer_t* self)
                         if ((levelIndex >= NUM_LEVELS)
                             || (!self->gameData.debugMode && levelIndex > self->unlockables.maxLevelIndexUnlocked))
                         {
-                            bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
+                            soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                             break;
                         }
 
@@ -441,7 +441,7 @@ void updateTitleScreen(platformer_t* self)
                         {
                             // Reset Progress
                             initializePlatformerUnlockables(self);
-                            bzrPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
+                            soundPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
                         }
                         else
                         {
@@ -450,7 +450,7 @@ void updateTitleScreen(platformer_t* self)
                             self->menuState     = 0;
 
                             changeStateShowHighScores(self);
-                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                         }
                         break;
                     }
@@ -460,14 +460,14 @@ void updateTitleScreen(platformer_t* self)
                         {
                             // Reset High Scores
                             initializePlatformerHighScores(self);
-                            bzrPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
+                            soundPlaySfx(&(self->soundManager.sndBreak), BZR_STEREO);
                         }
                         else
                         {
                             // Show Achievements
                             self->menuSelection = 0;
                             self->menuState     = 2;
-                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                         }
                         break;
                     }
@@ -478,19 +478,19 @@ void updateTitleScreen(platformer_t* self)
                             // Save & Quit
                             savePlatformerHighScores(self);
                             savePlatformerUnlockables(self);
-                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                             switchToSwadgeMode(&mainMenuMode);
                         }
                         else
                         {
-                            bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                            soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
                             switchToSwadgeMode(&mainMenuMode);
                         }
                         break;
                     }
                     default:
                     {
-                        bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
+                        soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                         self->menuSelection = 0;
                     }
                 }
@@ -507,7 +507,7 @@ void updateTitleScreen(platformer_t* self)
                         platformer->menuSelection--;
                     }
 
-                    bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                 }
             }
             else if ((self->gameData.btnState & PB_DOWN && !(self->gameData.prevBtnState & PB_DOWN)))
@@ -522,11 +522,11 @@ void updateTitleScreen(platformer_t* self)
                         platformer->menuSelection++;
                     }
 
-                    bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                 }
                 else
                 {
-                    bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                 }
             }
             else if ((self->gameData.btnState & PB_LEFT && !(self->gameData.prevBtnState & PB_LEFT)))
@@ -535,7 +535,7 @@ void updateTitleScreen(platformer_t* self)
                 {
                     if (platformer->gameData.level == 1 && platformer->gameData.world == 1)
                     {
-                        bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
+                        soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                     }
                     else
                     {
@@ -548,7 +548,7 @@ void updateTitleScreen(platformer_t* self)
                                 platformer->gameData.world--;
                             }
                         }
-                        bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+                        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                     }
                 }
             }
@@ -561,7 +561,7 @@ void updateTitleScreen(platformer_t* self)
                             && getLevelIndex(platformer->gameData.world, platformer->gameData.level + 1)
                                    > platformer->unlockables.maxLevelIndexUnlocked))
                     {
-                        bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
+                        soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
                     }
                     else
                     {
@@ -574,7 +574,7 @@ void updateTitleScreen(platformer_t* self)
                                 platformer->gameData.world++;
                             }
                         }
-                        bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+                        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
                     }
                 }
             }
@@ -582,7 +582,7 @@ void updateTitleScreen(platformer_t* self)
             {
                 self->gameData.frameCount = 0;
                 platformer->menuState     = 0;
-                bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
             }
             break;
         }
@@ -592,13 +592,13 @@ void updateTitleScreen(platformer_t* self)
             {
                 self->gameData.frameCount = 0;
                 platformer->menuState     = 1;
-                bzrPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
+                soundPlaySfx(&(self->soundManager.sndMenuConfirm), BZR_STEREO);
             }
             break;
         }
         default:
             platformer->menuState = 0;
-            bzrPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
+            soundPlaySfx(&(platformer->soundManager.sndMenuDeny), BZR_STEREO);
             break;
     }
 
@@ -722,7 +722,7 @@ void changeStateReadyScreen(platformer_t* self)
 {
     self->gameData.frameCount = 0;
 
-    bzrPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
+    soundPlayBgm(&(self->soundManager.bgmIntro), BZR_STEREO);
 
     pl_resetGameDataLeds(&(self->gameData));
 
@@ -737,7 +737,7 @@ void updateReadyScreen(platformer_t* self)
     self->gameData.frameCount++;
     if (self->gameData.frameCount > 179)
     {
-        bzrStop(true);
+        soundStop(true);
         changeStateGame(self);
     }
 
@@ -828,35 +828,35 @@ void detectBgmChange(platformer_t* self)
         case PL_BGM_NULL:
             if (self->gameData.currentBgm != PL_BGM_NULL)
             {
-                bzrStop(true);
+                soundStop(true);
             }
             break;
 
         case PL_BGM_MAIN:
             if (self->gameData.currentBgm != PL_BGM_MAIN)
             {
-                bzrPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
+                soundPlayBgm(&(self->soundManager.bgmDemagio), BZR_STEREO);
             }
             break;
 
         case PL_BGM_ATHLETIC:
             if (self->gameData.currentBgm != PL_BGM_ATHLETIC)
             {
-                bzrPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+                soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
             }
             break;
 
         case PL_BGM_UNDERGROUND:
             if (self->gameData.currentBgm != PL_BGM_UNDERGROUND)
             {
-                bzrPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
+                soundPlayBgm(&(self->soundManager.bgmUnderground), BZR_STEREO);
             }
             break;
 
         case PL_BGM_FORTRESS:
             if (self->gameData.currentBgm != PL_BGM_FORTRESS)
             {
-                bzrPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
+                soundPlayBgm(&(self->soundManager.bgmCastle), BZR_STEREO);
             }
             break;
 
@@ -877,8 +877,8 @@ void changeStateDead(platformer_t* self)
     self->gameData.comboTimer = 0;
     self->gameData.initialHp  = 1;
 
-    bzrStop(true);
-    bzrPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
+    soundStop(true);
+    soundPlayBgm(&(self->soundManager.sndDie), BZR_STEREO);
 
     self->update = &updateDead;
 }
@@ -949,7 +949,7 @@ void changeStateGameOver(platformer_t* self)
 {
     self->gameData.frameCount = 0;
     pl_resetGameDataLeds(&(self->gameData));
-    bzrPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
+    soundPlayBgm(&(self->soundManager.bgmGameOver), BZR_STEREO);
     self->update = &updateGameOver;
 }
 
@@ -991,7 +991,7 @@ void updateLevelClear(platformer_t* self)
 
             if (self->gameData.countdown % 2)
             {
-                bzrPlayBgm(&(self->soundManager.sndTally), BZR_STEREO);
+                soundPlayBgm(&(self->soundManager.sndTally), BZR_STEREO);
             }
 
             uint16_t comboPoints = 50 * self->gameData.combo;
@@ -1088,7 +1088,7 @@ void changeStateGameClear(platformer_t* self)
     self->gameData.frameCount = 0;
     self->update              = &updateGameClear;
     pl_resetGameDataLeds(&(self->gameData));
-    bzrPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
+    soundPlayBgm(&(self->soundManager.bgmSmooth), BZR_STEREO);
 }
 
 void updateGameClear(platformer_t* self)
@@ -1106,7 +1106,7 @@ void updateGameClear(platformer_t* self)
             {
                 self->gameData.lives--;
                 self->gameData.score += 200000;
-                bzrPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
+                soundPlaySfx(&(self->soundManager.snd1up), BZR_STEREO);
             }
         }
         else if (self->gameData.frameCount % 960 == 0)
@@ -1287,7 +1287,7 @@ void changeStateNameEntry(platformer_t* self)
         return;
     }
 
-    bzrPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
+    soundPlayBgm(&(self->soundManager.bgmNameEntry), BZR_STEREO);
     self->menuSelection = self->gameData.initials[0];
     self->update        = &updateNameEntry;
 }
@@ -1308,7 +1308,7 @@ void updateNameEntry(platformer_t* self)
         }
 
         self->gameData.initials[self->menuState] = self->menuSelection;
-        bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
     }
     else if (self->gameData.btnState & PB_RIGHT && !(self->gameData.prevBtnState & PB_RIGHT))
     {
@@ -1320,7 +1320,7 @@ void updateNameEntry(platformer_t* self)
         }
 
         self->gameData.initials[self->menuState] = self->menuSelection;
-        bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+        soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
     }
     else if (self->gameData.btnState & PB_B && !(self->gameData.prevBtnState & PB_B))
     {
@@ -1328,11 +1328,11 @@ void updateNameEntry(platformer_t* self)
         {
             self->menuState--;
             self->menuSelection = self->gameData.initials[self->menuState];
-            bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+            soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
         }
         else
         {
-            bzrPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
+            soundPlaySfx(&(self->soundManager.sndMenuDeny), BZR_STEREO);
         }
     }
     else if (self->gameData.btnState & PB_A && !(self->gameData.prevBtnState & PB_A))
@@ -1345,12 +1345,12 @@ void updateNameEntry(platformer_t* self)
                                       self->gameData.rank);
             savePlatformerHighScores(self);
             changeStateShowHighScores(self);
-            bzrPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
+            soundPlaySfx(&(self->soundManager.sndPowerUp), BZR_STEREO);
         }
         else
         {
             self->menuSelection = self->gameData.initials[self->menuState];
-            bzrPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
+            soundPlaySfx(&(self->soundManager.sndMenuSelect), BZR_STEREO);
         }
     }
 
@@ -1393,7 +1393,7 @@ void updateShowHighScores(platformer_t* self)
     {
         self->menuState     = 0;
         self->menuSelection = 0;
-        bzrStop(true);
+        soundStop(true);
         changeStateTitleScreen(self);
     }
 
@@ -1423,8 +1423,8 @@ void drawShowHighScores(font_t* font, uint8_t menuState)
 
 void changeStatePause(platformer_t* self)
 {
-    bzrStop(true);
-    bzrPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
+    soundStop(true);
+    soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
     self->update = &updatePause;
 }
 
@@ -1432,7 +1432,7 @@ void updatePause(platformer_t* self)
 {
     if (((self->gameData.btnState & PB_START) && !(self->gameData.prevBtnState & PB_START)))
     {
-        bzrPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
+        soundPlaySfx(&(self->soundManager.sndPause), BZR_STEREO);
         self->gameData.changeBgm  = self->gameData.currentBgm;
         self->gameData.currentBgm = PL_BGM_NULL;
         self->update              = &updateGame;

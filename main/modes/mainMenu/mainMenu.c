@@ -262,7 +262,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
                 if (mainMenu->cheatCodeIdx >= ARRAY_SIZE(cheatCode))
                 {
                     mainMenu->cheatCodeIdx = 0;
-                    bzrPlayBgm(&mainMenu->fanfare, BZR_STEREO);
+                    soundPlayBgm(&mainMenu->fanfare, BZR_STEREO);
                     mainMenu->fanfarePlaying = true;
 
                     // Return to the top level menu
@@ -309,7 +309,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
     // Stop the buzzer when changing volume, not for fanfare
     if (false == mainMenu->fanfarePlaying)
     {
-        bzrStop(true);
+        soundStop(true);
     }
 
     if (selected)
@@ -434,7 +434,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 mainMenu->lastBgmVol = settingVal;
                 setBgmVolumeSetting(settingVal);
-                bzrPlayBgm(&mainMenu->jingle, BZR_STEREO);
+                soundPlayBgm(&mainMenu->jingle, BZR_STEREO);
                 mainMenu->fanfarePlaying = false;
             }
         }
@@ -444,7 +444,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 mainMenu->lastSfxVol = settingVal;
                 setSfxVolumeSetting(settingVal);
-                bzrPlaySfx(&mainMenu->jingle, BZR_STEREO);
+                soundPlaySfx(&mainMenu->jingle, BZR_STEREO);
                 mainMenu->fanfarePlaying = false;
             }
         }

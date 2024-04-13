@@ -1,4 +1,4 @@
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 #include "paint_song.h"
 
 static musicalNote_t paintBgmNotes[] = {

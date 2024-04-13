@@ -238,7 +238,7 @@ void loadRayMap(int32_t mapId, ray_t* ray, q24_8* pStartX, q24_8* pStartY, bool 
     free(fileData);
 
     // Play this map's music
-    bzrPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
+    soundPlayBgm(&ray->songs[ray->p.mapId], BZR_STEREO);
 }
 
 /**
@@ -291,7 +291,7 @@ void rayCreateEnemy(ray_t* ray, rayMapCellType_t type, int32_t id, q24_8 x, q24_
     // If the boss was spawned, play the theme
     if (OBJ_ENEMY_BOSS == type)
     {
-        bzrPlayBgm(&ray->songs[6], BZR_STEREO);
+        soundPlayBgm(&ray->songs[6], BZR_STEREO);
     }
 }
 

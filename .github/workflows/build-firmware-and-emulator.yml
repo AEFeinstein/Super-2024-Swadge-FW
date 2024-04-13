@@ -22,6 +22,8 @@ jobs:
 
     - name: Check out repository code
       uses: actions/checkout@v3
+      with:
+        submodules: recursive
       
     - name: Create a version file
       run: |
@@ -29,7 +31,7 @@ jobs:
 
     - name: Install msys64 packages
       run: |
-        C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel mingw-w64-x86_64-gcc mingw-w64-x86_64-gdb mingw-w64-x86_64-clang zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck mingw-w64-x86_64-doxygen'
+        C:\msys64\usr\bin\bash -lc 'pacman --noconfirm -S base-devel gcc gdb zip mingw-w64-x86_64-graphviz mingw-w64-x86_64-cppcheck doxygen'
 
     - name: Compile the Emulator
       run: |

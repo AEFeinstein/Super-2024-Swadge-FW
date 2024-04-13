@@ -74,20 +74,6 @@
  * Structs, Enums
  *==========================================================================*/
 
-#ifndef EMULATOR
-static inline uint32_t getCycleCount()
-{
-    uint32_t ccount;
-    asm volatile("rsr %0,ccount" : "=a"(ccount));
-    return ccount;
-}
-#else
-static inline uint32_t getCycleCount()
-{
-    return 0;
-}
-#endif
-
 typedef enum
 {
     FLIGHT_MENU,
@@ -304,13 +290,6 @@ static uint32_t ReadBitQ(uint32_t* rin);
 static uint32_t ReadUEQ(uint32_t* rin);
 static int WriteUQ(uint32_t* v, uint32_t number, int bits);
 static int WriteUEQ(uint32_t* v, uint32_t number);
-
-// Forward libc declarations.
-#ifndef EMULATOR
-void qsort(void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
-int abs(int j);
-#else
-#endif
 
 /*============================================================================
  * Variables
@@ -1295,7 +1274,7 @@ int mdlctcmp(const void* va, const void* vb)
 
 static void flightRender(int64_t elapsedUs)
 {
-// #ifndef EMULATOR
+// #if defined(__XTENSA__)
 //     if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('R');
 // #endif
 #ifdef PROFILING
@@ -1428,7 +1407,7 @@ static void flightRender(int64_t elapsedUs)
     if (tflight->nNetworkMode)
         FlightNetworkFrameCall(tflight, now, &mrptr);
 
-    // #ifndef EMULATOR
+    // #if defined(__XTENSA__)
     //     if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('2');
     //     uint32_t mid1 = getCycleCount();
     // #else
@@ -1446,7 +1425,7 @@ static void flightRender(int64_t elapsedUs)
     uint32_t t2 = getCycleCount();
 #endif
 
-    // #ifndef EMULATOR
+    // #if defined(__XTENSA__)
     //     if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('3');
     //     uint32_t mid2 = getCycleCount();
     // #else
@@ -1520,7 +1499,7 @@ static void flightRender(int64_t elapsedUs)
         }
     }
 
-    // #ifndef EMULATOR
+    // #if defined(__XTENSA__)
     //         //OVERCLOCK_SECTION_DISABLE();
     //         //GPIO_OUTPUT_SET(GPIO_ID_PIN(1), 1 );
     //     if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('4');
@@ -1636,7 +1615,7 @@ static void flightRender(int64_t elapsedUs)
     // If perf test, force full frame refresh
     // Otherwise, don't force full-screen refresh
 
-    // #ifndef EMULATOR
+    // #if defined(__XTENSA__)
     //     if( flight->mode == FLIGHT_FREEFLIGHT ) uart_tx_one_char('5');
     // #endif
 

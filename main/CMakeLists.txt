@@ -99,6 +99,8 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "utils/linked_list.c"
                             "utils/p2pConnection.c"
                             "utils/settingsManager.c"
+                            "utils/sngPlayer.c"
+                            "utils/swSynth.c"
                             "utils/textEntry.c"
                             "utils/touchTextEntry.c"
                             "utils/touchUtils.c"
@@ -109,6 +111,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                   hdw-battmon
                                   hdw-btn
                                   hdw-bzr
+                                  hdw-dac
                                   hdw-esp-now
                                   hdw-led
                                   hdw-mic

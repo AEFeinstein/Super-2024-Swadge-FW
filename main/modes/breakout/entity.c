@@ -7,7 +7,7 @@
 #include "entityManager.h"
 #include "tilemap.h"
 #include "gameData.h"
-#include "hdw-bzr.h"
+#include "soundFuncs.h"
 #include "hdw-btn.h"
 #include "esp_random.h"
 #include "aabb_utils.h"
@@ -197,7 +197,7 @@ void updateBall(entity_t* self)
                                 self->baseSpeed);
                     self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
-                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
             case (ENTITY_PLAYER_PADDLE_TOP):
@@ -214,7 +214,7 @@ void updateBall(entity_t* self)
                                 self->baseSpeed);
                     self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
-                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
             case (ENTITY_PLAYER_PADDLE_LEFT):
@@ -231,7 +231,7 @@ void updateBall(entity_t* self)
                                 self->baseSpeed);
                     self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
-                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
             case (ENTITY_PLAYER_PADDLE_RIGHT):
@@ -248,7 +248,7 @@ void updateBall(entity_t* self)
                                 self->baseSpeed);
                     self->attachedToEntity       = NULL;
                     self->gameData->ballLaunched = true;
-                    bzrPlaySfx(&(self->soundManager->launch), BZR_STEREO);
+                    soundPlaySfx(&(self->soundManager->launch), BZR_STEREO);
                 }
                 break;
             default:
@@ -271,7 +271,7 @@ void updateBall(entity_t* self)
                 if (createdBomb != NULL)
                 {
                     self->gameData->playerTimeBombsCount++;
-                    bzrPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
+                    soundPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
                 }
             }
         }
@@ -286,7 +286,7 @@ void updateBall(entity_t* self)
                 if (createdBomb != NULL)
                 {
                     self->gameData->playerRemoteBombPlaced = true;
-                    bzrPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
+                    soundPlaySfx(&(self->soundManager->dropBomb), BZR_LEFT);
                 }
             }
         }
@@ -343,8 +343,8 @@ void detectLostBall(entity_t* self, bool respawn)
         if (self->gameData->ballsInPlay <= 0)
         {
             self->gameData->changeState = ST_DEAD;
-            bzrStop(true);
-            bzrPlaySfx(&(self->soundManager->die), BZR_STEREO);
+            soundStop(true);
+            soundPlaySfx(&(self->soundManager->die), BZR_STEREO);
         }
     }
 }
@@ -448,7 +448,7 @@ void explodeBomb(entity_t* self)
     destroyEntity(self, false);
     createEntity(self->entityManager, ENTITY_PLAYER_BOMB_EXPLOSION, self->x >> SUBPIXEL_RESOLUTION,
                  self->y >> SUBPIXEL_RESOLUTION);
-    bzrPlaySfx(&(self->soundManager->detonate), BZR_LEFT);
+    soundPlaySfx(&(self->soundManager->detonate), BZR_LEFT);
 }
 
 void updateExplosion(entity_t* self)
@@ -1115,7 +1115,7 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
             {
                 advanceBallSpeed(self, 1);
                 setVelocity(self, 90 + (other->x - self->x) / SUBPIXEL_RESOLUTION, self->baseSpeed);
-                bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
+                soundPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
@@ -1133,7 +1133,7 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
             {
                 advanceBallSpeed(self, 1);
                 setVelocity(self, 270 + (self->x - other->x) / SUBPIXEL_RESOLUTION, self->baseSpeed);
-                bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
+                soundPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
@@ -1151,7 +1151,7 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
             {
                 advanceBallSpeed(self, 1);
                 setVelocity(self, 0 + (other->y - self->y) / SUBPIXEL_RESOLUTION, self->baseSpeed);
-                bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
+                soundPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
@@ -1169,7 +1169,7 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
             {
                 advanceBallSpeed(self, 1);
                 setVelocity(self, 180 + (self->y - other->y) / SUBPIXEL_RESOLUTION, self->baseSpeed);
-                bzrPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
+                soundPlaySfx(&(self->soundManager->hit2), BZR_LEFT);
 
                 if (self->shouldAdvanceMultiplier || self->gameData->shouldAdvanceMultiplier)
                 {
@@ -1202,7 +1202,7 @@ void ballCollisionHandler(entity_t* self, entity_t* other)
         case ENTITY_CRAWLER:
             setVelocity(self, getAtan2(other->y - self->y, self->x - other->x), self->baseSpeed);
             advanceBallSpeed(self, 1);
-            bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
             break;
         default:
         {
@@ -1244,7 +1244,7 @@ void captiveBallCollisionHandler(entity_t* self, entity_t* other)
         self->overlapTileHandler   = &ballOverlapTileHandler;
         self->updateFunction       = &updateCaptiveBallInPlay;
         self->gameData->ballsInPlay++;
-        bzrPlaySfx(&(self->soundManager->launch), BZR_RIGHT);
+        soundPlaySfx(&(self->soundManager->launch), BZR_RIGHT);
     }
 }
 
@@ -1389,7 +1389,7 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
         case TILE_BLOCK_2x2_WHITE_DL ... TILE_BLOCK_2x2_BLACK_DR:
         {
             // breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty);
-            bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
             scorePoints(self->gameData, 10 * breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty),
                         (self->shouldAdvanceMultiplier) ? -1 : 0);
             self->shouldAdvanceMultiplier     = true;
@@ -1398,7 +1398,7 @@ bool ballTileCollisionHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_
         }
         case TILE_BOUNDARY_1 ... TILE_UNUSED_F:
         {
-            bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
             self->bouncesOffUnbreakableBlocks++;
             break;
         }
@@ -1481,7 +1481,7 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
         case TILE_BLOCK_2x2_RED_UL ... TILE_BLOCK_2x2_BLACK_UR:
         case TILE_BLOCK_2x2_WHITE_DL ... TILE_BLOCK_2x2_BLACK_DR:
         {
-            bzrPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager->hit1), BZR_LEFT);
             scorePoints(self->gameData, 10 * breakBlockTile(self->tilemap, self->gameData, tileId, tx, ty),
                         (self->shouldAdvanceMultiplier) ? -1 : 0);
             self->shouldAdvanceMultiplier     = true;
@@ -1490,7 +1490,7 @@ void ballOverlapTileHandler(entity_t* self, uint8_t tileId, uint8_t tx, uint8_t 
         }
         case TILE_BOUNDARY_1 ... TILE_UNUSED_F:
         {
-            bzrPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
+            soundPlaySfx(&(self->soundManager->hit3), BZR_LEFT);
             break;
         }
         default:

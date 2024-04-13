@@ -199,7 +199,7 @@ static void moveRayBullets(ray_t* ray, uint32_t elapsedUs)
                                 cell->openingDirection = 1;
 
                                 // Play SFX
-                                bzrPlaySfx(&ray->sfx_door_open, BZR_RIGHT);
+                                soundPlaySfx(&ray->sfx_door_open, BZR_RIGHT);
                             }
                         }
                     }

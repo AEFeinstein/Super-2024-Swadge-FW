@@ -54,7 +54,7 @@ void initMic(gpio_num_t gpio)
 
         // Configure the polling frequency, conversion mode, and data format
         adc_continuous_config_t dig_cfg = {
-            .sample_freq_hz = 8 * 1000,
+            .sample_freq_hz = ADC_SAMPLE_RATE_HZ,
             .conv_mode      = conv,
             .format         = ADC_DIGI_OUTPUT_FORMAT_TYPE1,
         };
