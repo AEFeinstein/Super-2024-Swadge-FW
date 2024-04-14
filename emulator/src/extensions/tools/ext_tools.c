@@ -43,7 +43,7 @@ typedef struct
 //==============================================================================
 
 static bool toolsInit(emuArgs_t* emuArgs);
-static int32_t toolsKeyCb(uint32_t keycode, bool down);
+static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 
 static const char* getScreenshotName(char* buffer, size_t maxlen);
 
@@ -79,31 +79,9 @@ static bool toolsInit(emuArgs_t* emuArgs)
     return true;
 }
 
-static int32_t toolsKeyCb(uint32_t keycode, bool down)
+static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
-    static bool ctrl = false;
-    static bool alt = false;
-    static bool shift = false;
-
-    if (keycode == EMU_KEY_CTRL)
-    {
-        ctrl = down;
-        // don't consume
-        return 0;
-    }
-    else if (keycode == EMU_KEY_ALT)
-    {
-        alt = down;
-        // don't consume
-        return 0;
-    }
-    else if (keycode == EMU_KEY_SHIFT)
-    {
-        shift = down;
-        // don't consume
-        return 0;
-    }
-    else if (keycode == EMU_KEY_F12)
+    if (keycode == EMU_KEY_F12)
     {
         static bool released = true;
 
@@ -125,7 +103,7 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down)
             released = true;
         }
     }
-    else if (keycode == EMU_KEY_F8)
+    else if ((modifiers == EMU_MOD_CTRL) && keycode == 'T')
     {
         static int touchState = -1;
 
@@ -154,7 +132,7 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down)
             return -1;
         }
     }
-    else if (keycode == EMU_KEY_F9)
+    else if ((modifiers == EMU_MOD_CTRL) && keycode == 'L')
     {
         static int ledState = -1;
         if (ledState == -1)

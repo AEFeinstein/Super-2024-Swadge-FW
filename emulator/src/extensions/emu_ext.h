@@ -74,9 +74,7 @@
 #include <stdbool.h>
 #include "emu_args.h"
 
-#ifndef CNFG_IMPLEMENTATION
-    #include "rawdraw_sf.h"
-#endif
+#include "CNFG.h"
 
 //==============================================================================
 // Structs
@@ -97,6 +95,15 @@ typedef enum
     EMU_SCROLL_LEFT  = 0x20,
     EMU_SCROLL_RIGHT = 0x40,
 } mouseButton_t;
+
+typedef enum
+{
+    EMU_MOD_NONE  = 0x00,
+    EMU_MOD_ALT   = 0x01,
+    EMU_MOD_CTRL  = 0x02,
+    EMU_MOD_SHIFT = 0x04,
+    EMU_MOD_SUPER = 0x08,
+} modKey_t;
 
 /**
  * @brief Normalized key-codes across all platforms for use by emulator extensions
@@ -285,9 +292,10 @@ typedef struct
      *
      * @param keycode The key code. This is either a lowercase ASCII value or a keyCode_t constant.
      * @param down true if the key was pressed, or false if the key was released
+     * @param modifiers A bitfield representing all the modifier keys currently held down
      * @return A new keycode to replace the event with, or -1 to cancel it, or 0 to do nothing.
      */
-    int32_t (*fnKeyCb)(uint32_t keycode, bool down);
+    int32_t (*fnKeyCb)(uint32_t keycode, bool down, modKey_t modifiers);
 
     /**
      * @brief Function to be called whenever the mouse moves.
@@ -340,7 +348,7 @@ void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, u
 
 void doExtPreFrameCb(uint64_t frame);
 void doExtPostFrameCb(uint64_t frame);
-int32_t doExtKeyCb(uint32_t keycode, bool down);
+int32_t doExtKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 void doExtMouseMoveCb(int32_t x, int32_t y, mouseButton_t buttonMask);
 void doExtMouseButtonCb(int32_t x, int32_t y, mouseButton_t button, bool down);
 void doExtRenderCb(uint32_t winW, uint32_t winH);

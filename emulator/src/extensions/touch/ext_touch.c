@@ -67,7 +67,7 @@ static void calculateTouch(int32_t x, int32_t y, int32_t* angle, int32_t* radius
 static bool updateTouch(int32_t x, int32_t y, bool clicked);
 
 static bool touchInit(emuArgs_t* emuArgs);
-static int32_t touchKey(uint32_t key, bool down);
+static int32_t touchKey(uint32_t key, bool down, modKey_t modifiers);
 static bool touchMouseMove(int32_t x, int32_t y, mouseButton_t buttonMask);
 static bool touchMouseButton(int32_t x, int32_t y, mouseButton_t button, bool down);
 static void touchRender(uint32_t winW, uint32_t winH, const emuPane_t* pane, uint8_t numPanes);
@@ -254,7 +254,7 @@ static bool touchInit(emuArgs_t* emuArgs)
     return true;
 }
 
-static int32_t touchKey(uint32_t key, bool down)
+static int32_t touchKey(uint32_t key, bool down, modKey_t modifiers)
 {
     // Map from state to touchpad rotation. Button bits are in URLD order
     const int32_t phiMap[] = {
@@ -276,9 +276,9 @@ static int32_t touchKey(uint32_t key, bool down)
         0,   // 0b1111 URLD (0 radius)
     };
 
-    if (key < '1' || key > '4')
+    if (key < '1' || key > '4' || modifiers != EMU_MOD_NONE)
     {
-        // Do not consume event, we only want 1 to 4
+        // Do not consume event, we only want 1 to 4 without a modifier
         return 0;
     }
 
@@ -295,7 +295,7 @@ static int32_t touchKey(uint32_t key, bool down)
 
     int32_t radius    = 1024;
     int32_t intensity = emuTouch.lastTouchIntensity;
-    // Check for the canceled-out positions where
+    // Check for the canceled-out positions where there's no sane result
     switch (emuTouch.keyState)
     {
         case 0:  // All un-pressed
