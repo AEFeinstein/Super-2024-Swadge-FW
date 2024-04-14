@@ -136,17 +136,20 @@ void dacStop(void)
  */
 void dacPoll(void)
 {
-    /* If there is an event to receive, receive it */
-    dac_event_data_t evt_data;
-    while (xQueueReceive(dacIsrQueue, &evt_data, 0))
+    if (NULL != dacIsrQueue)
     {
-        /* Ask the application to fill a buffer */
-        dacCb(tmpDacBuf, evt_data.buf_size);
+        /* If there is an event to receive, receive it */
+        dac_event_data_t evt_data;
+        while (xQueueReceive(dacIsrQueue, &evt_data, 0))
+        {
+            /* Ask the application to fill a buffer */
+            dacCb(tmpDacBuf, evt_data.buf_size);
 
-        /* Write the data DMA so that it is sent out the DAC */
-        size_t loaded_bytes = 0;
-        dac_continuous_write_asynchronously(dac_handle, evt_data.buf, evt_data.buf_size, //
-                                            tmpDacBuf, evt_data.buf_size, &loaded_bytes);
-        /* assume loaded_bytes == DAC_BUF_SIZE */
+            /* Write the data DMA so that it is sent out the DAC */
+            size_t loaded_bytes = 0;
+            dac_continuous_write_asynchronously(dac_handle, evt_data.buf, evt_data.buf_size, //
+                                                tmpDacBuf, evt_data.buf_size, &loaded_bytes);
+            /* assume loaded_bytes == DAC_BUF_SIZE */
+        }
     }
 }
