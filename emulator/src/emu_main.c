@@ -91,7 +91,6 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 #endif
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
-static void plotRoundedCorners(uint32_t* bitmapDisplay, int w, int h, int r, uint32_t col);
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
 
 //==============================================================================
@@ -168,8 +167,8 @@ int main(int argc, char** argv)
         calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
-        int32_t winW            = (TFT_WIDTH) * 2 + sidePanesW;
-        int32_t winH            = (TFT_HEIGHT) * 2 + topBottomPanesH;
+        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
 
         if (emulatorArgs.headless)
         {
@@ -411,7 +410,7 @@ static void drawBitmapPixel(uint32_t* bitmapDisplay, int width, int height, int 
  * @param r The radius of the rounded corners
  * @param col The color to draw the rounded corners
  */
-static void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, int r, uint32_t col)
+void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, int r, uint32_t col)
 {
     int or = r;
     int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
@@ -446,37 +445,89 @@ static void plotRoundedCorners(uint32_t* bitmapDisplay, int width, int height, i
  */
 void HandleKey(int keycode, int bDown)
 {
+    static modKey_t modifiers = EMU_MOD_NONE;
+
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=69602
+// https://stackoverflow.com/a/26003732/882406
+// I can't help that CNFG_KEY_ALT and CNFG_KEY_LEFT_ALT might be identical...
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wlogical-op"
+    // can't use a switch here in case these are the same on some platforms
+    if (keycode == CNFG_KEY_ALT || keycode == CNFG_KEY_LEFT_ALT || keycode == CNFG_KEY_RIGHT_ALT)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_ALT;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_ALT;
+        }
+    }
+
+    else if (keycode == CNFG_KEY_CTRL || keycode == CNFG_KEY_LEFT_CONTROL || keycode == CNFG_KEY_RIGHT_CONTROL)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_CTRL;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_CTRL;
+        }
+    }
+    else if (keycode == CNFG_KEY_SHIFT || keycode == CNFG_KEY_LEFT_SHIFT || keycode == CNFG_KEY_RIGHT_SHIFT)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_SHIFT;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_SHIFT;
+        }
+    }
+    else if (keycode == CNFG_KEY_LEFT_SUPER || keycode == CNFG_KEY_RIGHT_SUPER)
+    {
+        if (bDown)
+        {
+            modifiers |= EMU_MOD_SUPER;
+        }
+        else
+        {
+            modifiers &= ~EMU_MOD_SUPER;
+        }
+    }
+#pragma GCC diagnostic pop
+
 #ifdef DEBUG_INPUTS
     if (' ' <= keycode && keycode <= '~')
     {
-        printf("HandleKey(keycode='%c', bDown=%s\n", keycode, bDown ? "true" : "false");
+        printf("HandleKey(keycode='%c', bDown=%s, modifiers=%02x)\n", keycode, bDown ? "true" : "false", modifiers);
     }
     else
     {
-        printf("HandleKey(keycode=%d, bDown=%s\n", keycode, bDown ? "true" : "false");
+        printf("HandleKey(keycode=%d, bDown=%s, modifiers=%02x)\n", keycode, bDown ? "true" : "false", modifiers);
     }
 #endif
 
-    keycode = doExtKeyCb(keycode, bDown);
+    keycode = doExtKeyCb(keycode, bDown, modifiers);
     if (keycode < 0)
     {
         return;
     }
 
     // Assuming no callbacks canceled the key event earlier, handle it normally
-    emulatorHandleKeys(keycode, bDown);
-
-    // Keep track of when shift is held so we can exit on SHIFT + BACKSPACE
-    // I would do CTRL+W, but rawdraw doesn't have a define for ctrl...
-    static bool shiftDown = false;
-    if (keycode == CNFG_KEY_SHIFT)
+    // We only care about bare keys though, so ignore if any modifier keys are down
+    if (!modifiers)
     {
-        shiftDown = bDown;
+        emulatorHandleKeys(keycode, bDown);
     }
 
     // When in fullscreen, exit with Escape
     // And any time with Shift + Backspace
-    if ((keycode == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen) || (keycode == CNFG_KEY_BACKSPACE && shiftDown))
+    if ((keycode == CNFG_KEY_ESCAPE && emulatorArgs.fullscreen)
+        || (keycode == CNFG_KEY_BACKSPACE && (modifiers & EMU_MOD_SHIFT)))
     {
         isRunning = false;
         return;

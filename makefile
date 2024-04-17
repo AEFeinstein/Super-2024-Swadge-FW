@@ -376,6 +376,7 @@ CPPCHECK_DIRS= \
 CPPCHECK_IGNORE= \
 	emulator/src/rawdraw_sf.h \
 	emulator/src/getopt_win.h \
+	emulator/src-lib/stb_image_write.h \
 	emulator/sound \
 	emulator/src/components/hdw-nvs/cJSON.c \
 	emulator/src/components/hdw-nvs/cJSON.h \
