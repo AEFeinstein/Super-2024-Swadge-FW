@@ -23,26 +23,9 @@
 #include "hdw-tft_emu.h"
 
 //==============================================================================
-// Defines
-//==============================================================================
-
-//==============================================================================
-// Enums
-//==============================================================================
-
-//==============================================================================
-// Structs
-//==============================================================================
-
-typedef struct
-{
-} toolsExt_t;
-
-//==============================================================================
 // Function Prototypes
 //==============================================================================
 
-static bool toolsInit(emuArgs_t* emuArgs);
 static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 
 static const char* getScreenshotName(char* buffer, size_t maxlen);
@@ -53,7 +36,7 @@ static const char* getScreenshotName(char* buffer, size_t maxlen);
 
 emuExtension_t toolsEmuExtension = {
     .name            = "tools",
-    .fnInitCb        = toolsInit,
+    .fnInitCb        = NULL,
     .fnPreFrameCb    = NULL,
     .fnPostFrameCb   = NULL,
     .fnKeyCb         = toolsKeyCb,
@@ -62,22 +45,9 @@ emuExtension_t toolsEmuExtension = {
     .fnRenderCb      = NULL,
 };
 
-toolsExt_t tools = {0};
-
 //==============================================================================
 // Functions
 //==============================================================================
-
-/**
- * @brief Initialize the tools extension
- *
- * @param emuArgs
- * @return true
- */
-static bool toolsInit(emuArgs_t* emuArgs)
-{
-    return true;
-}
 
 static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
@@ -103,65 +73,13 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
             released = true;
         }
     }
-    else if ((modifiers == EMU_MOD_CTRL) && keycode == 'T')
-    {
-        static int touchState = -1;
-
-        if (touchState == -1)
-        {
-            touchState = emulatorArgs.emulateTouch ? 1 : 0;
-        }
-
-        if (!down)
-        {
-            if (touchState == 1)
-            {
-                if (disableExtension("touch"))
-                {
-                    touchState = 0;
-                }
-            }
-            else
-            {
-                if (enableExtension("touch"))
-                {
-                    touchState = 1;
-                }
-            }
-
-            return -1;
-        }
-    }
-    else if ((modifiers == EMU_MOD_CTRL) && keycode == 'L')
-    {
-        static int ledState = -1;
-        if (ledState == -1)
-        {
-            ledState = emulatorArgs.hideLeds ? 0 : 1;
-        }
-
-        if (!down)
-        {
-            if (ledState == 1)
-            {
-                emulatorArgs.hideLeds = true;
-                if (disableExtension("leds"))
-                {
-                    ledState = 0;
-                }
-            } else {
-                emulatorArgs.hideLeds = false;
-                if (enableExtension("leds"))
-                {
-                    ledState = 1;
-                }
-            }
-
-            return -1;
-        }
-    }
 
     return 0;
+}
+
+static const char* getScreenshotName(char* buffer, size_t maxlen)
+{
+    return getTimestampFilename(buffer, maxlen, "screenshot-", "png");
 }
 
 /**
@@ -200,11 +118,6 @@ const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const 
     } while (0 == access(dst, R_OK) && ++tries < 5);
 
     return dst;
-}
-
-static const char* getScreenshotName(char* buffer, size_t maxlen)
-{
-    return getTimestampFilename(buffer, maxlen, "screenshot-", "png");
 }
 
 /**
