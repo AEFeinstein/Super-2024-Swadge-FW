@@ -160,7 +160,7 @@ static bool replayInit(emuArgs_t* emuArgs)
 
         if (!filename || !*filename)
         {
-            getTimestampFilename(buf, sizeof(buf)-1, "rec-", "csv");
+            getTimestampFilename(buf, sizeof(buf) - 1, "rec-", "csv");
             clock_gettime(CLOCK_REALTIME, &ts);
             uint64_t timeSec = (uint64_t)ts.tv_sec;
             snprintf(buf, sizeof(buf) - 1, "rec-%" PRIu64 ".csv", timeSec);
@@ -754,8 +754,8 @@ void recordScreenshotTaken(const char* name)
     if (replay.mode == RECORD && replay.file)
     {
         replayEntry_t entry = {
-            .time = esp_timer_get_time(),
-            .type = SCREENSHOT,
+            .time     = esp_timer_get_time(),
+            .type     = SCREENSHOT,
             .filename = name,
         };
         writeEntry(&entry);
