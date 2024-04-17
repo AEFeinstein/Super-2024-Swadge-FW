@@ -160,12 +160,7 @@ static bool replayInit(emuArgs_t* emuArgs)
 
         if (!filename || !*filename)
         {
-            getTimestampFilename(buf, sizeof(buf) - 1, "rec-", "csv");
-            clock_gettime(CLOCK_REALTIME, &ts);
-            uint64_t timeSec = (uint64_t)ts.tv_sec;
-            snprintf(buf, sizeof(buf) - 1, "rec-%" PRIu64 ".csv", timeSec);
-
-            filename = buf;
+            filename = getTimestampFilename(buf, sizeof(buf) - 1, "rec-", "csv");
         }
 
         // If specified, use custom filename, otherwise use timestamp one
