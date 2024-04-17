@@ -9,6 +9,7 @@
 #include "emu_main.h"
 #include "ext_replay.h"
 #include "hdw-tft.h"
+#include "CNFG.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -51,7 +52,7 @@ emuExtension_t toolsEmuExtension = {
 
 static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
-    if (keycode == EMU_KEY_F12)
+    if (keycode == CNFG_KEY_F12)
     {
         static bool released = true;
 

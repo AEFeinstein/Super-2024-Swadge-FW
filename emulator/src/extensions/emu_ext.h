@@ -74,8 +74,6 @@
 #include <stdbool.h>
 #include "emu_args.h"
 
-#include "CNFG.h"
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -104,90 +102,6 @@ typedef enum
     EMU_MOD_SHIFT = 0x04,
     EMU_MOD_SUPER = 0x08,
 } modKey_t;
-
-/**
- * @brief Normalized key-codes across all platforms for use by emulator extensions
- * These are just the CNFG keycodes renamed so extensions don't have to include rawdraw directly.
- */
-typedef enum
-{
-    EMU_KEY_BACKSPACE     = CNFG_KEY_BACKSPACE,
-    EMU_KEY_TAB           = CNFG_KEY_TAB,
-    EMU_KEY_CLEAR         = CNFG_KEY_CLEAR,
-    EMU_KEY_ENTER         = CNFG_KEY_ENTER,
-    EMU_KEY_SHIFT         = CNFG_KEY_SHIFT,
-    EMU_KEY_CTRL          = CNFG_KEY_CTRL,
-    EMU_KEY_ALT           = CNFG_KEY_ALT,
-    EMU_KEY_PAUSE         = CNFG_KEY_PAUSE,
-    EMU_KEY_CAPS_LOCK     = CNFG_KEY_CAPS_LOCK,
-    EMU_KEY_ESCAPE        = CNFG_KEY_ESCAPE,
-    EMU_KEY_SPACE         = CNFG_KEY_SPACE,
-    EMU_KEY_PAGE_UP       = CNFG_KEY_PAGE_UP,
-    EMU_KEY_PAGE_DOWN     = CNFG_KEY_PAGE_DOWN,
-    EMU_KEY_END           = CNFG_KEY_END,
-    EMU_KEY_HOME          = CNFG_KEY_HOME,
-    EMU_KEY_LEFT_ARROW    = CNFG_KEY_LEFT_ARROW,
-    EMU_KEY_TOP_ARROW     = CNFG_KEY_TOP_ARROW,
-    EMU_KEY_RIGHT_ARROW   = CNFG_KEY_RIGHT_ARROW,
-    EMU_KEY_BOTTOM_ARROW  = CNFG_KEY_BOTTOM_ARROW,
-    EMU_KEY_SELECT        = CNFG_KEY_SELECT,
-    EMU_KEY_PRINT         = CNFG_KEY_PRINT,
-    EMU_KEY_EXECUTE       = CNFG_KEY_EXECUTE,
-    EMU_KEY_PRINT_SCREEN  = CNFG_KEY_PRINT_SCREEN,
-    EMU_KEY_INSERT        = CNFG_KEY_INSERT,
-    EMU_KEY_DELETE        = CNFG_KEY_DELETE,
-    EMU_KEY_HELP          = CNFG_KEY_HELP,
-    EMU_KEY_LEFT_SUPER    = CNFG_KEY_LEFT_SUPER,
-    EMU_KEY_RIGHT_SUPER   = CNFG_KEY_RIGHT_SUPER,
-    EMU_KEY_NUM_0         = CNFG_KEY_NUM_0,
-    EMU_KEY_NUM_1         = CNFG_KEY_NUM_1,
-    EMU_KEY_NUM_2         = CNFG_KEY_NUM_2,
-    EMU_KEY_NUM_3         = CNFG_KEY_NUM_3,
-    EMU_KEY_NUM_4         = CNFG_KEY_NUM_4,
-    EMU_KEY_NUM_5         = CNFG_KEY_NUM_5,
-    EMU_KEY_NUM_6         = CNFG_KEY_NUM_6,
-    EMU_KEY_NUM_7         = CNFG_KEY_NUM_7,
-    EMU_KEY_NUM_8         = CNFG_KEY_NUM_8,
-    EMU_KEY_NUM_9         = CNFG_KEY_NUM_9,
-    EMU_KEY_NUM_MULTIPLY  = CNFG_KEY_NUM_MULTIPLY,
-    EMU_KEY_NUM_ADD       = CNFG_KEY_NUM_ADD,
-    EMU_KEY_NUM_SEPARATOR = CNFG_KEY_NUM_SEPARATOR,
-    EMU_KEY_NUM_SUBTRACT  = CNFG_KEY_NUM_SUBTRACT,
-    EMU_KEY_NUM_DECIMAL   = CNFG_KEY_NUM_DECIMAL,
-    EMU_KEY_NUM_DIVIDE    = CNFG_KEY_NUM_DIVIDE,
-    EMU_KEY_F1            = CNFG_KEY_F1,
-    EMU_KEY_F2            = CNFG_KEY_F2,
-    EMU_KEY_F3            = CNFG_KEY_F3,
-    EMU_KEY_F4            = CNFG_KEY_F4,
-    EMU_KEY_F5            = CNFG_KEY_F5,
-    EMU_KEY_F6            = CNFG_KEY_F6,
-    EMU_KEY_F7            = CNFG_KEY_F7,
-    EMU_KEY_F8            = CNFG_KEY_F8,
-    EMU_KEY_F9            = CNFG_KEY_F9,
-    EMU_KEY_F10           = CNFG_KEY_F10,
-    EMU_KEY_F11           = CNFG_KEY_F11,
-    EMU_KEY_F12           = CNFG_KEY_F12,
-    EMU_KEY_F13           = CNFG_KEY_F13,
-    EMU_KEY_F14           = CNFG_KEY_F14,
-    EMU_KEY_F15           = CNFG_KEY_F15,
-    EMU_KEY_F16           = CNFG_KEY_F16,
-    EMU_KEY_F17           = CNFG_KEY_F17,
-    EMU_KEY_F18           = CNFG_KEY_F18,
-    EMU_KEY_F19           = CNFG_KEY_F19,
-    EMU_KEY_F20           = CNFG_KEY_F20,
-    EMU_KEY_F21           = CNFG_KEY_F21,
-    EMU_KEY_F22           = CNFG_KEY_F22,
-    EMU_KEY_F23           = CNFG_KEY_F23,
-    EMU_KEY_F24           = CNFG_KEY_F24,
-    EMU_KEY_NUM_LOCK      = CNFG_KEY_NUM_LOCK,
-    EMU_KEY_SCROLL_LOCK   = CNFG_KEY_SCROLL_LOCK,
-    EMU_KEY_LEFT_SHIFT    = CNFG_KEY_LEFT_SHIFT,
-    EMU_KEY_RIGHT_SHIFT   = CNFG_KEY_RIGHT_SHIFT,
-    EMU_KEY_LEFT_CONTROL  = CNFG_KEY_LEFT_CONTROL,
-    EMU_KEY_RIGHT_CONTROL = CNFG_KEY_RIGHT_CONTROL,
-    EMU_KEY_LEFT_ALT      = CNFG_KEY_LEFT_ALT,
-    EMU_KEY_RIGHT_ALT     = CNFG_KEY_RIGHT_ALT,
-} keyCode_t;
 
 /**
  * @brief The location of a pane within the window.
@@ -290,7 +204,7 @@ typedef struct
      * To consume the key press and stop it from being sent to the emulator, return a negative value.
      * To replace the key press with a new one, return the new key code.
      *
-     * @param keycode The key code. This is either a lowercase ASCII value or a keyCode_t constant.
+     * @param keycode The key code. This is either a lowercase ASCII value or a code defined in CNFG.h
      * @param down true if the key was pressed, or false if the key was released
      * @param modifiers A bitfield representing all the modifier keys currently held down
      * @return A new keycode to replace the event with, or -1 to cancel it, or 0 to do nothing.
