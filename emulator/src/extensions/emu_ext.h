@@ -73,6 +73,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "emu_args.h"
+#include "CNFG.h"
 
 //==============================================================================
 // Structs
@@ -204,7 +205,7 @@ typedef struct
      * To consume the key press and stop it from being sent to the emulator, return a negative value.
      * To replace the key press with a new one, return the new key code.
      *
-     * @param keycode The key code. This is either a lowercase ASCII value or a code defined in CNFG.h
+     * @param keycode The key code. This is either a lowercase ASCII value or a \c CNFG_KEY_x code defined in CNFG.h
      * @param down true if the key was pressed, or false if the key was released
      * @param modifiers A bitfield representing all the modifier keys currently held down
      * @return A new keycode to replace the event with, or -1 to cancel it, or 0 to do nothing.

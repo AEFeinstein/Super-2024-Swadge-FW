@@ -9,7 +9,6 @@
 #include "emu_main.h"
 #include "ext_replay.h"
 #include "hdw-tft.h"
-#include "CNFG.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
