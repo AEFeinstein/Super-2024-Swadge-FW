@@ -329,29 +329,30 @@ void updatePaddlePos(pbPaddle_t* p)
         p->angle -= 360;
     }
 
-    // Get the trig values for all rotations
-    int16_t sin = getSin1024(p->angle);
-    int16_t cos = getCos1024(p->angle);
-
     // This is the set of points to rotate
     vec_t points[] = {
         {
+            // Center of the tip of the paddle
             .x = 0,
             .y = -p->length,
         },
         {
+            // Bottom point of the right side
             .x = p->cPivot.radius,
             .y = 0,
         },
         {
+            // Top point of the right side
             .x = p->cTip.radius,
             .y = -p->length,
         },
         {
+            // Bottom point of the left side
             .x = -p->cPivot.radius,
             .y = 0,
         },
         {
+            // Top point of the left side
             .x = -p->cTip.radius,
             .y = -p->length,
         },
@@ -362,14 +363,42 @@ void updatePaddlePos(pbPaddle_t* p)
         &p->cTip.pos, &p->sideR.p1, &p->sideR.p2, &p->sideL.p1, &p->sideL.p2,
     };
 
+    // Get the trig values for all rotations, just once
+    int16_t sin = getSin1024(p->angle);
+    int16_t cos = getCos1024(p->angle);
+
     // For each point
     for (int32_t idx = 0; idx < ARRAY_SIZE(points); idx++)
     {
-        // Rotate it
-        int32_t oldX  = points[idx].x;
-        int32_t oldY  = points[idx].y;
-        dests[idx]->x = p->cPivot.pos.x + ((oldX * cos) - (oldY * sin)) / 1024;
-        dests[idx]->y = p->cPivot.pos.y + ((oldX * sin) + (oldY * cos)) / 1024;
+        // Rotate the point
+        int32_t oldX = points[idx].x;
+        int32_t oldY = points[idx].y;
+        int32_t newX = (oldX * cos) - (oldY * sin);
+        int32_t newY = (oldX * sin) + (oldY * cos);
+
+        // Do some rounding for newX before scaling down
+        if (newX >= 0)
+        {
+            newX += 512;
+        }
+        else
+        {
+            newX -= 512;
+        }
+
+        // Do some rounding for newY before scaling down
+        if (newY >= 0)
+        {
+            newY += 512;
+        }
+        else
+        {
+            newY -= 512;
+        }
+
+        // Return to integer space and translate relative to the pivot point
+        dests[idx]->x = p->cPivot.pos.x + (newX / 1024);
+        dests[idx]->y = p->cPivot.pos.y + (newY / 1024);
     }
 }
 
