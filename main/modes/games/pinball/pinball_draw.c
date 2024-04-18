@@ -11,6 +11,7 @@
 static void drawPinCircle(pbCircle_t* c);
 static void drawPinLine(pbLine_t* l);
 static void drawPinRect(pbRect_t* r);
+static void drawPinPaddle(pbPaddle_t* p);
 
 //==============================================================================
 // Functions
@@ -54,6 +55,12 @@ void pinballDrawForeground(pinball_t* p)
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
         drawPinCircle(&p->balls[bIdx]);
+    }
+
+    // Draw paddles
+    for (uint32_t pIdx = 0; pIdx < p->numPaddles; pIdx++)
+    {
+        drawPinPaddle(&p->paddles[pIdx]);
     }
 
     // Debug draw zones
@@ -111,4 +118,17 @@ void drawPinRect(pbRect_t* r)
 {
     drawRect(FROM_FX(r->pos.x), FROM_FX(r->pos.y), FROM_FX(ADD_FX(r->pos.x, r->width)),
              FROM_FX(ADD_FX(r->pos.y, r->height)), r->color);
+}
+
+/**
+ * @brief Draw a pinball paddle
+ *
+ * @param r The paddle to draw
+ */
+void drawPinPaddle(pbPaddle_t* p)
+{
+    drawCircle(p->cPivot.pos.x, p->cPivot.pos.y, p->cPivot.radius, p->color);
+    drawCircle(p->cTip.pos.x, p->cTip.pos.y, p->cTip.radius, p->color);
+    drawLineFast(p->sideL.p1.x, p->sideL.p1.y, p->sideL.p2.x, p->sideL.p2.y, p->color);
+    drawLineFast(p->sideR.p1.x, p->sideR.p1.y, p->sideR.p2.x, p->sideR.p2.y, p->color);
 }

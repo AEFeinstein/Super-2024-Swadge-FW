@@ -196,3 +196,25 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
         }
     }
 }
+
+/**
+ * @brief Create paddles
+ *
+ * @param p The pinballs state
+ * @param numPaddles The number of paddles to create
+ */
+void createPaddles(pinball_t* p, int32_t numPaddles)
+{
+    for (int32_t idx = 0; idx < numPaddles; idx++)
+    {
+        p->paddles[idx].color         = c555;
+        p->paddles[idx].cPivot.pos.x  = (TFT_WIDTH / 2);
+        p->paddles[idx].cPivot.pos.y  = (TFT_HEIGHT / 2);
+        p->paddles[idx].cPivot.radius = 10;
+        p->paddles[idx].length        = 40;
+        p->paddles[idx].cTip.radius   = 5;
+        p->paddles[idx].angle         = 45;
+        updatePaddlePos(&p->paddles[idx]);
+        p->numPaddles++;
+    }
+}

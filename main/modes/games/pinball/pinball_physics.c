@@ -312,6 +312,68 @@ pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
 }
 
 /**
+ * @brief Update the position of a paddle's tip circle and line walls depending on the paddle's angle. The pivot circle
+ * never changes.
+ *
+ * @param p The paddle to update
+ */
+void updatePaddlePos(pbPaddle_t* p)
+{
+    // Make sure the angle is between 0 and 360
+    while (p->angle < 0)
+    {
+        p->angle += 360;
+    }
+    while (p->angle > 359)
+    {
+        p->angle -= 360;
+    }
+
+    // Get the trig values for all rotations
+    int16_t sin = getSin1024(p->angle);
+    int16_t cos = getCos1024(p->angle);
+
+    // This is the set of points to rotate
+    vec_t points[] = {
+        {
+            .x = 0,
+            .y = -p->length,
+        },
+        {
+            .x = p->cPivot.radius,
+            .y = 0,
+        },
+        {
+            .x = p->cTip.radius,
+            .y = -p->length,
+        },
+        {
+            .x = -p->cPivot.radius,
+            .y = 0,
+        },
+        {
+            .x = -p->cTip.radius,
+            .y = -p->length,
+        },
+    };
+
+    // This is where to write the rotated points
+    vec_t* dests[] = {
+        &p->cTip.pos, &p->sideR.p1, &p->sideR.p2, &p->sideL.p1, &p->sideL.p2,
+    };
+
+    // For each point
+    for (int32_t idx = 0; idx < ARRAY_SIZE(points); idx++)
+    {
+        // Rotate it
+        int32_t oldX  = points[idx].x;
+        int32_t oldY  = points[idx].y;
+        dests[idx]->x = p->cPivot.pos.x + ((oldX * cos) - (oldY * sin)) / 1024;
+        dests[idx]->y = p->cPivot.pos.y + ((oldX * sin) + (oldY * cos)) / 1024;
+    }
+}
+
+/**
  * @brief Helper function to 'cast' a pinball circle (q24_8 representation) to an integer circle
  *
  * @param pbc The circle to cast
