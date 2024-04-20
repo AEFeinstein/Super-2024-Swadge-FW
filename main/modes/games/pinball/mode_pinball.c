@@ -60,10 +60,10 @@ static void pinEnterMode(void)
     // Allocate all the memory
     pinball = calloc(sizeof(pinball_t), 1);
 
-    pinball->balls   = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
-    pinball->bumpers = heap_caps_calloc(MAX_NUM_BUMPERS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
-    pinball->walls   = heap_caps_calloc(MAX_NUM_WALLS, sizeof(pbLine_t), MALLOC_CAP_SPIRAM);
-    pinball->paddles = heap_caps_calloc(MAX_NUM_PADDLES, sizeof(pbPaddle_t), MALLOC_CAP_SPIRAM);
+    pinball->balls    = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
+    pinball->bumpers  = heap_caps_calloc(MAX_NUM_BUMPERS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
+    pinball->walls    = heap_caps_calloc(MAX_NUM_WALLS, sizeof(pbLine_t), MALLOC_CAP_SPIRAM);
+    pinball->flippers = heap_caps_calloc(MAX_NUM_FLIPPERS, sizeof(pbFlipper_t), MALLOC_CAP_SPIRAM);
 
     pinball->ballsTouching = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbTouchRef_t*), MALLOC_CAP_SPIRAM);
     for (uint32_t i = 0; i < MAX_NUM_BALLS; i++)
@@ -83,8 +83,9 @@ static void pinEnterMode(void)
     // Create random bumpers
     createRandomBumpers(pinball, 0);
 
-    // Create paddles
-    createPaddles(pinball, 1);
+    // Create flippers
+    createFlipper(pinball, TFT_WIDTH / 2 - 50, TFT_HEIGHT / 2, true);
+    createFlipper(pinball, TFT_WIDTH / 2 + 50, TFT_HEIGHT / 2, false);
 
     // Load font
     loadFont("ibm_vga8.font", &pinball->ibm_vga8, false);
@@ -105,7 +106,7 @@ static void pinExitMode(void)
     free(pinball->balls);
     free(pinball->walls);
     free(pinball->bumpers);
-    free(pinball->paddles);
+    free(pinball->flippers);
     // Free font
     freeFont(&pinball->ibm_vga8);
     // Free the rest of the state
@@ -126,18 +127,13 @@ static void pinMainLoop(int64_t elapsedUs)
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down)
+        if (PB_RIGHT == evt.button)
         {
-            if (PB_RIGHT == evt.button)
-            {
-                p->paddles[0].angle += 10;
-                updatePaddlePos(&p->paddles[0]);
-            }
-            else if (PB_LEFT == evt.button)
-            {
-                p->paddles[0].angle -= 10;
-                updatePaddlePos(&p->paddles[0]);
-            }
+            p->flippers[0].buttonHeld = evt.down;
+        }
+        else if (PB_LEFT == evt.button)
+        {
+            p->flippers[1].buttonHeld = evt.down;
         }
     }
 

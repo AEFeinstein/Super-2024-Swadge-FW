@@ -15,11 +15,11 @@
 #define PIN_US_PER_FRAME 16667
 #define NUM_ZONES        32
 
-#define MAX_NUM_BALLS   512
-#define MAX_NUM_WALLS   100
-#define MAX_NUM_BUMPERS 10
-#define MAX_NUM_TOUCHES 16
-#define MAX_NUM_PADDLES 6
+#define MAX_NUM_BALLS    512
+#define MAX_NUM_WALLS    100
+#define MAX_NUM_BUMPERS  10
+#define MAX_NUM_TOUCHES  16
+#define MAX_NUM_FLIPPERS 6
 
 #define NUM_FRAME_TIMES 60
 
@@ -68,14 +68,17 @@ typedef struct
 
 typedef struct
 {
-    circle_t cPivot;      ///< The circle that the paddle pivots on
-    circle_t cTip;        ///< The circle at the tip of the paddle
-    line_t sideL;         ///< The left side of the paddle when pointing upward
-    line_t sideR;         ///< The right side of the paddle when pointing upward
-    int32_t length;       ///< The length of the paddle, from pivot center to tip center
-    int32_t angle;        ///< The current angle of the paddle
-    paletteColor_t color; ///< The color of the paddle
-} pbPaddle_t;
+    circle_t cPivot;      ///< The circle that the flipper pivots on
+    circle_t cTip;        ///< The circle at the tip of the flipper
+    line_t sideL;         ///< The left side of the flipper when pointing upward
+    line_t sideR;         ///< The right side of the flipper when pointing upward
+    int32_t length;       ///< The length of the flipper, from pivot center to tip center
+    int32_t angle;        ///< The current angle of the flipper
+    paletteColor_t color; ///< The color of the flipper
+    int32_t aVelocity;    ///< Angular velocity, in degrees per frame
+    bool facingRight;     ///< True if the flipper is facing right, false if left
+    bool buttonHeld;      ///< True if the button is being held down, false if it is released
+} pbFlipper_t;
 
 typedef struct
 {
@@ -92,8 +95,8 @@ typedef struct
     uint32_t numWalls;
     pbCircle_t* bumpers;
     uint32_t numBumpers;
-    pbPaddle_t* paddles;
-    uint32_t numPaddles;
+    pbFlipper_t* flippers;
+    uint32_t numFlippers;
     int32_t frameTimer;
     pbRect_t zones[NUM_ZONES];
     font_t ibm_vga8;

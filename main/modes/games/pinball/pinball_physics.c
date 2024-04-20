@@ -13,6 +13,7 @@ void calculateBallZones(pinball_t* p);
 void checkBallBallCollisions(pinball_t* p);
 void checkBallStaticCollision(pinball_t* p);
 void moveBalls(pinball_t* p);
+void moveFlippers(pinball_t* p);
 void checkBallsNotTouching(pinball_t* p);
 void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type);
 pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
@@ -43,6 +44,8 @@ void updatePinballPhysicsFrame(pinball_t* p)
 
     // Move balls along new vectors
     moveBalls(p);
+    // Move flippers rotationally
+    moveFlippers(p);
 
     // Clear references to balls touching things after moving
     checkBallsNotTouching(p);
@@ -207,6 +210,71 @@ void moveBalls(pinball_t* p)
  *
  * @param p
  */
+void moveFlippers(pinball_t* p)
+{
+    // For each flipper
+    for (uint32_t fIdx = 0; fIdx < p->numFlippers; fIdx++)
+    {
+        pbFlipper_t* flipper = &p->flippers[fIdx];
+
+        // TODO use angular velocity (aVelocity)?
+
+        bool posChanged = false;
+        if (flipper->buttonHeld)
+        {
+            if (flipper->facingRight && flipper->angle > (90 - FLIPPER_UP_ANGLE))
+            {
+                flipper->angle -= FLIPPER_UP_DEGREES_PER_FRAME;
+                if (flipper->angle < 90 - FLIPPER_UP_ANGLE)
+                {
+                    flipper->angle = 90 - FLIPPER_UP_ANGLE;
+                }
+                posChanged = true;
+            }
+            else if (!flipper->facingRight && flipper->angle < 270 + FLIPPER_UP_ANGLE)
+            {
+                flipper->angle += FLIPPER_UP_DEGREES_PER_FRAME;
+                if (flipper->angle > 270 + FLIPPER_UP_ANGLE)
+                {
+                    flipper->angle = 270 + FLIPPER_UP_ANGLE;
+                }
+                posChanged = true;
+            }
+        }
+        else
+        {
+            if (flipper->facingRight && flipper->angle < (90 + FLIPPER_DOWN_ANGLE))
+            {
+                flipper->angle += FLIPPER_DOWN_DEGREES_PER_FRAME;
+                if (flipper->angle > (90 + FLIPPER_DOWN_ANGLE))
+                {
+                    flipper->angle = (90 + FLIPPER_DOWN_ANGLE);
+                }
+                posChanged = true;
+            }
+            else if (!flipper->facingRight && flipper->angle > 270 - FLIPPER_DOWN_ANGLE)
+            {
+                flipper->angle -= FLIPPER_DOWN_DEGREES_PER_FRAME;
+                if (flipper->angle < (270 - FLIPPER_DOWN_ANGLE))
+                {
+                    flipper->angle = (270 - FLIPPER_DOWN_ANGLE);
+                }
+                posChanged = true;
+            }
+        }
+
+        if (posChanged)
+        {
+            updateFlipperPos(flipper);
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param p
+ */
 void checkBallsNotTouching(pinball_t* p)
 {
     // For each ball
@@ -312,60 +380,60 @@ pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
 }
 
 /**
- * @brief Update the position of a paddle's tip circle and line walls depending on the paddle's angle. The pivot circle
- * never changes.
+ * @brief Update the position of a flipper's tip circle and line walls depending on the flipper's angle. The pivot
+ * circle never changes.
  *
- * @param p The paddle to update
+ * @param f The flipper to update
  */
-void updatePaddlePos(pbPaddle_t* p)
+void updateFlipperPos(pbFlipper_t* f)
 {
     // Make sure the angle is between 0 and 360
-    while (p->angle < 0)
+    while (f->angle < 0)
     {
-        p->angle += 360;
+        f->angle += 360;
     }
-    while (p->angle > 359)
+    while (f->angle > 359)
     {
-        p->angle -= 360;
+        f->angle -= 360;
     }
 
     // This is the set of points to rotate
     vec_t points[] = {
         {
-            // Center of the tip of the paddle
+            // Center of the tip of the flipper
             .x = 0,
-            .y = -p->length,
+            .y = -f->length,
         },
         {
             // Bottom point of the right side
-            .x = p->cPivot.radius,
+            .x = f->cPivot.radius,
             .y = 0,
         },
         {
             // Top point of the right side
-            .x = p->cTip.radius,
-            .y = -p->length,
+            .x = f->cTip.radius,
+            .y = -f->length,
         },
         {
             // Bottom point of the left side
-            .x = -p->cPivot.radius,
+            .x = -f->cPivot.radius,
             .y = 0,
         },
         {
             // Top point of the left side
-            .x = -p->cTip.radius,
-            .y = -p->length,
+            .x = -f->cTip.radius,
+            .y = -f->length,
         },
     };
 
     // This is where to write the rotated points
     vec_t* dests[] = {
-        &p->cTip.pos, &p->sideR.p1, &p->sideR.p2, &p->sideL.p1, &p->sideL.p2,
+        &f->cTip.pos, &f->sideR.p1, &f->sideR.p2, &f->sideL.p1, &f->sideL.p2,
     };
 
     // Get the trig values for all rotations, just once
-    int16_t sin = getSin1024(p->angle);
-    int16_t cos = getCos1024(p->angle);
+    int16_t sin = getSin1024(f->angle);
+    int16_t cos = getCos1024(f->angle);
 
     // For each point
     for (int32_t idx = 0; idx < ARRAY_SIZE(points); idx++)
@@ -397,8 +465,8 @@ void updatePaddlePos(pbPaddle_t* p)
         }
 
         // Return to integer space and translate relative to the pivot point
-        dests[idx]->x = p->cPivot.pos.x + (newX / 1024);
-        dests[idx]->y = p->cPivot.pos.y + (newY / 1024);
+        dests[idx]->x = f->cPivot.pos.x + (newX / 1024);
+        dests[idx]->y = f->cPivot.pos.y + (newY / 1024);
     }
 }
 

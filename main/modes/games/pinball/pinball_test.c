@@ -101,7 +101,7 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 /**
  * @brief Create random static walls
  *
- * @param p The pinballs state
+ * @param p The pinball state
  * @param numWalls The number of walls to create
  */
 void createRandomWalls(pinball_t* p, int32_t numWalls)
@@ -198,23 +198,34 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 }
 
 /**
- * @brief Create paddles
+ * @brief Create a Flipper
  *
- * @param p The pinballs state
- * @param numPaddles The number of paddles to create
+ * @param p The pinball state
+ * @param pivot_x
+ * @param pivot_y
+ * @param facingRight
  */
-void createPaddles(pinball_t* p, int32_t numPaddles)
+void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, bool facingRight)
 {
-    for (int32_t idx = 0; idx < numPaddles; idx++)
+    pbFlipper_t* f = &p->flippers[p->numFlippers];
+
+    f->color         = c555;
+    f->cPivot.pos.x  = pivot_x;
+    f->cPivot.pos.y  = pivot_y;
+    f->cPivot.radius = 10;
+    f->length        = 40;
+    f->cTip.radius   = 5;
+    f->facingRight   = facingRight;
+    if (f->facingRight)
     {
-        p->paddles[idx].color         = c555;
-        p->paddles[idx].cPivot.pos.x  = (TFT_WIDTH / 2);
-        p->paddles[idx].cPivot.pos.y  = (TFT_HEIGHT / 2);
-        p->paddles[idx].cPivot.radius = 10;
-        p->paddles[idx].length        = 40;
-        p->paddles[idx].cTip.radius   = 5;
-        p->paddles[idx].angle         = 45;
-        updatePaddlePos(&p->paddles[idx]);
-        p->numPaddles++;
+        f->angle = 90 + FLIPPER_DOWN_ANGLE;
     }
+    else
+    {
+        f->angle = 270 - FLIPPER_DOWN_ANGLE;
+    }
+    updateFlipperPos(f);
+
+    // Update flipper count
+    p->numFlippers++;
 }
