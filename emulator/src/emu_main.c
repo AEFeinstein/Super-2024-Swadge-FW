@@ -16,6 +16,7 @@
 
 #include <esp_system.h>
 #include <esp_timer.h>
+#include "esp_timer_emu.h"
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
@@ -97,9 +98,11 @@
 
 #if defined(CNFGOGL)
     #define CORNER_COLOR BG_COLOR
+    #define PAUSED_COLOR 0xFFFF00FF
 #else
     // Swap RGBA to ARGB
     #define CORNER_COLOR (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
+    #define PAUSED_COLOR 0xFFFFFF00
 #endif
 
 //==============================================================================
@@ -275,144 +278,148 @@ void taskYIELD(void)
 
     // Below: Support for pausing and unpausing the emulator
     // Keep track of whether we've called the pre-frame callbacks yet
-    // bool preFrameCalled = false;
-    // do {
+    bool preFrameCalled = false;
+    do {
+        // Always handle inputs
+        if (!CNFGHandleInput())
+        {
+            isRunning = false;
+        }
 
-    // Always handle inputs
-    if (!CNFGHandleInput())
-    {
-        isRunning = false;
-    }
+        // Always handle inputs
+        if (!CNFGHandleInput())
+        {
+            isRunning = false;
+        }
 
-    // If not running anymore, don't handle graphics
-    // Must be checked after handling input, before graphics
-    if (!isRunning)
-    {
-        deinitSystem();
-        // This is registered with atexit()
-        // CNFGTearDown();
+        // If not running anymore, don't handle graphics
+        // Must be checked after handling input, before graphics
+        if (!isRunning)
+        {
+            deinitSystem();
+            // This is registered with atexit()
+            // CNFGTearDown();
 
 #ifdef ENABLE_GCOV
-        __gcov_dump();
+            __gcov_dump();
 #endif
 
-        exit(0);
-        return;
-    }
+            exit(0);
+            return;
+        }
 
-    // Check things here which are called by interrupts or timers on the Swadge
-    check_esp_timer(tElapsedUs);
+        // Check things here which are called by interrupts or timers on the Swadge
+        check_esp_timer(tElapsedUs);
 
-    // Grey Background
-    CNFGBGColor = BG_COLOR;
-    CNFGClearFrame();
+        // Grey Background
+        CNFGBGColor = BG_COLOR;
+        CNFGClearFrame();
 
-    // Get the current window dimensions
-    short window_w, window_h;
-    CNFGGetDimensions(&window_w, &window_h);
-    static emuPane_t screenPane;
+        // Get the current window dimensions
+        short window_w, window_h;
+        CNFGGetDimensions(&window_w, &window_h);
+        static emuPane_t screenPane;
 
-    // If the dimensions changed
-    if ((lastWindow_h != window_h) || (lastWindow_w != window_w))
-    {
-        uint8_t screenMult;
-        // Recalculate the window layout and get the settings for the screen
-        layoutPanes(window_w, window_h, TFT_WIDTH, TFT_HEIGHT, &screenPane, &screenMult);
+        emuPaneMinimum_t paneMins[4];
+        bool panesChanged = calculatePaneMinimums(paneMins);
 
-        // Set the multiplier
-        setDisplayBitmapMultiplier(screenMult);
+        // If the dimensions changed
+        if (panesChanged || (lastWindow_h != window_h) || (lastWindow_w != window_w))
+        {
+            uint8_t screenMult;
+            // Recalculate the window layout and get the settings for the screen
+            layoutPanes(window_w, window_h, TFT_WIDTH, TFT_HEIGHT, &screenPane, &screenMult);
 
-        // Save for the next loop
-        lastWindow_w = window_w;
-        lastWindow_h = window_h;
-    }
+            // Set the multiplier
+            setDisplayBitmapMultiplier(screenMult);
 
-    // Draw dividing lines, if they're on-screen
-    CNFGColor(DIV_COLOR);
+            // Save for the next loop
+            lastWindow_w = window_w;
+            lastWindow_h = window_h;
+        }
 
-    emuPaneMinimum_t paneMins[4];
-    calculatePaneMinimums(paneMins);
+        // Draw dividing lines, if they're on-screen
+        CNFGColor(DIV_COLOR);
 
-    // Draw Left Divider
-    if (paneMins[PANE_LEFT].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
-    }
+        // Draw Left Divider
+        if (paneMins[PANE_LEFT].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX - 1, 0, screenPane.paneX - 1, window_h);
+        }
 
-    // Draw Right Divider
-    if (paneMins[PANE_RIGHT].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
-    }
+        // Draw Right Divider
+        if (paneMins[PANE_RIGHT].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX + screenPane.paneW, 0, screenPane.paneX + screenPane.paneW, window_h);
+        }
 
-    // Draw Top Divider
-    if (paneMins[PANE_TOP].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
-                        screenPane.paneY - 1);
-    }
+        // Draw Top Divider
+        if (paneMins[PANE_TOP].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX, screenPane.paneY - 1, screenPane.paneX + screenPane.paneW,
+                            screenPane.paneY - 1);
+        }
 
-    // Draw Bottom Divider
-    if (paneMins[PANE_BOTTOM].count > 0)
-    {
-        CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
-                        screenPane.paneY + screenPane.paneH);
-    }
+        // Draw Bottom Divider
+        if (paneMins[PANE_BOTTOM].count > 0)
+        {
+            CNFGTackSegment(screenPane.paneX, screenPane.paneY + screenPane.paneH, screenPane.paneX + screenPane.paneW,
+                            screenPane.paneY + screenPane.paneH);
+        }
 
-    // Get the display memory
-    uint16_t bitmapWidth, bitmapHeight;
-    uint32_t* bitmapDisplay = getDisplayBitmap(&bitmapWidth, &bitmapHeight);
+        // Get the display memory
+        uint16_t bitmapWidth, bitmapHeight;
+        uint32_t* bitmapDisplay = getDisplayBitmap(&bitmapWidth, &bitmapHeight);
 
-    if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
-    {
+        if ((0 != bitmapWidth) && (0 != bitmapHeight) && (NULL != bitmapDisplay))
+        {
 #if defined(CONFIG_GC9307_240x280)
-        plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, CORNER_COLOR);
+            plotRoundedCorners(bitmapDisplay, bitmapWidth, bitmapHeight, (bitmapWidth / TFT_WIDTH) * 40, emuTimerIsPaused() ? PAUSED_COLOR : CORNER_COLOR);
 #endif
-        // Update the display, centered
-        CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
-    }
+            // Update the display, centered
+            CNFGBlitImage(bitmapDisplay, screenPane.paneX, screenPane.paneY, bitmapWidth, bitmapHeight);
+        }
 
-    // After the screen has been fully rendered, call all the render callbacks to render anything else
-    doExtRenderCb(window_w, window_h);
+        // After the screen has been fully rendered, call all the render callbacks to render anything else
+        doExtRenderCb(window_w, window_h);
 
-    // Display the image and wait for time to display next frame.
-    CNFGSwapBuffers();
+        // Display the image and wait for time to display next frame.
+        CNFGSwapBuffers();
 
-    // Sleep for one ms
-    static struct timespec tRemaining = {0};
-    const struct timespec tSleep      = {
-             .tv_sec  = 0 + tRemaining.tv_sec,
-             .tv_nsec = 1000000 + tRemaining.tv_nsec,
-    };
-    nanosleep(&tSleep, &tRemaining);
+        // Sleep for one ms
+        static struct timespec tRemaining = {0};
+        const struct timespec tSleep      = {
+                .tv_sec  = 0 + tRemaining.tv_sec,
+                .tv_nsec = 1000000 + tRemaining.tv_nsec,
+        };
+        nanosleep(&tSleep, &tRemaining);
 
-    doExtPreFrameCb(++frameNum);
+        // Below: Support for pausing and unpausing the emulator
+        // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
+        // Don't call the pre-frame callbacks until the emulator is unpaused.
+        // And also, only call it once per frame
+        // This means that the pre-frame callback gets called once (assuming the post-frame
+        // callback didn't already pause) and then, if one of them pauses, they don't get called
+        // again until after, which is good since that's the only way we'd be able to handle input
+        // as normal
+        if (!preFrameCalled && !emuTimerIsPaused())
+        {
+            preFrameCalled = true;
 
-    // Below: Support for pausing and unpausing the emulator
-    // Note:  Remove the above doExtPreFrameCb()... if uncommenting the below
-    //     // Don't call the pre-frame callbacks until the emulator is unpaused.
-    //     // And also, only call it once per frame
-    //     // This means that the pre-frame callback gets called once (assuming the post-frame
-    //     // callback didn't already pause) and then, if one of them pauses, they don't get called
-    //     // again until after
-    //     // be able to handle input as normal, which is good since that's the only way we'd
-    //     if (!preFrameCalled && !emuTimerIsPaused())
-    //     {
-    //         preFrameCalled = true;
-    //
-    //         // Call the pre-frame callbacks just before we return to the swadge main loop
-    //         // When fnPreFrameCb is first called, the system is always initialized
-    //         // and this is the optimal time to inject button presses, pause, etc.
-    //         doExtPreFrameCb(++frameNum);
-    //     }
-    //
-    //     // Set the elapsed micros to 0 so ESP timer tasks don't get called repeatedly if we pause
-    //     // (if we just updated the time normally instead, this would be 0 anyway since time is paused, but this
-    //     shortcuts that) tElapsedUs = 0;
-    //
-    //     // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
-    //     // and the pre-frame callbacks have all been called
-    // } while (isRunning && (!preFrameCalled || emuTimerIsPaused()));
+            // Call the pre-frame callbacks just before we return to the swadge main loop
+            // When fnPreFrameCb is first called, the system is always initialized
+            // and this is the optimal time to inject button presses, pause, etc.
+            doExtPreFrameCb(++frameNum);
+        }
+
+        // Set the elapsed micros to 0 so ESP timer tasks don't get called repeatedly if we pause
+        // (if we just updated the time normally instead, this would be 0 anyway since time is paused, but this
+        // shortcuts that)
+        tElapsedUs = 0;
+
+    // Make sure we stop if no longer running, but otherwise run until the emulator is unpaused
+    // and the pre-frame callbacks have all been called
+    } while (isRunning && (!preFrameCalled || emuTimerIsPaused()));
 }
 
 /**

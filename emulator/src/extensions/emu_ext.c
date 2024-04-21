@@ -303,11 +303,15 @@ bool disableExtension(const char* name)
     {
         extInfo->enabled = false;
 
-        // If the extension had panes, we will need to recalculate
-        if (extInfo->panes.length > 0)
+        // Unload the extension's frames
+        emuPaneInfo_t* paneInfo;
+        while ((paneInfo = (emuPaneInfo_t*)pop(&extInfo->panes)))
         {
-            extManager.paneMinsCalculated = false;
+            free(paneInfo);
         }
+
+        // If the extension had panes, we will need to recalculate
+        extManager.paneMinsCalculated = false;
 
         return true;
     }

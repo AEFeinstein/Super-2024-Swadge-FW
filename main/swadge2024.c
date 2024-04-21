@@ -761,6 +761,16 @@ void setFrameRateUs(uint32_t newFrameRateUs)
 }
 
 /**
+ * @brief Get the current framerate, in microseconds
+ *
+ * @return uint32_t The time between frame draws, in microseconds
+ */
+uint32_t getFrameRateUs(void)
+{
+    return frameRateUs;
+}
+
+/**
  * @brief
  *
  * @param samples

@@ -9,6 +9,7 @@
 #include "emu_main.h"
 #include "ext_replay.h"
 #include "hdw-tft.h"
+#include "emu_args.h"
 
 #if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
     #pragma GCC diagnostic push
@@ -31,14 +32,20 @@
 #include <inttypes.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "hdw-tft_emu.h"
+#include "esp_timer_emu.h"
+#include "swadge2024.h"
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
+static bool toolsInit(emuArgs_t* emuArgs);
 static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
+static void toolsPreFrame(uint64_t frame);
+static void toolsPostFrame(uint64_t frame);
 
 static const char* getScreenshotName(char* buffer, size_t maxlen);
 
@@ -48,18 +55,63 @@ static const char* getScreenshotName(char* buffer, size_t maxlen);
 
 emuExtension_t toolsEmuExtension = {
     .name            = "tools",
-    .fnInitCb        = NULL,
-    .fnPreFrameCb    = NULL,
-    .fnPostFrameCb   = NULL,
+    .fnInitCb        = toolsInit,
+    .fnPreFrameCb    = toolsPreFrame,
+    .fnPostFrameCb   = toolsPostFrame,
     .fnKeyCb         = toolsKeyCb,
     .fnMouseMoveCb   = NULL,
     .fnMouseButtonCb = NULL,
     .fnRenderCb      = NULL,
 };
 
+static bool useFakeTime       = false;
+static uint64_t fakeTime      = 0;
+static uint64_t fakeFrameTime = 0;
+
+static bool recordScreen = false;
+
+static bool pauseNextFrame = false;
+
+static bool showFps = false;
+static int fpsPaneId = -1;
+static int64_t frameStartTime;
+static int64_t frameTimes[120] = {0};
+static const int frameTimeSize = sizeof(frameTimes) / sizeof(int64_t);
+static int frameStartIndex = 0;
+static int frameEndIndex = 0;
+
+static int64_t lastFrameTime = 0;
+static float lastFps = 0.0;
+
 //==============================================================================
 // Functions
 //==============================================================================
+
+static bool toolsInit(emuArgs_t* emuArgs)
+{
+    if (emuArgs->fakeTime)
+    {
+        emuSetUseRealTime(false);
+        useFakeTime = true;
+
+        //
+        fakeTime = 1;
+
+        // Calculate the frame time time in us from the FPS value
+        fakeFrameTime = (uint64_t)(1000000.0 / emulatorArgs.fakeFps);
+
+        printf("Using fake frame rate of %.1fFPS -- %" PRIu64 "us per frame\n", emuArgs->fakeFps, fakeFrameTime);
+    }
+
+    if (emuArgs->showFps)
+    {
+        fpsPaneId = requestPane(&toolsEmuExtension, PANE_BOTTOM, 30, 30);
+        showFps = true;
+        frameStartTime = esp_timer_get_time();
+    }
+
+    return true;
+}
 
 static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
@@ -85,8 +137,213 @@ static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
             released = true;
         }
     }
+    else if (keycode == CNFG_KEY_F5)
+    {
+        // Toggle FPS counter
+        if (!down)
+        {
+            showFps = !showFps;
+
+            if (showFps && fpsPaneId == -1)
+            {
+                fpsPaneId = requestPane(&toolsEmuExtension, PANE_BOTTOM, 30, 30);
+            }
+            setPaneVisibility(&toolsEmuExtension, fpsPaneId, showFps);
+        }
+    }
+    else if (keycode == CNFG_KEY_F9)
+    {
+        // Single-frame step
+        if (!down && emuTimerIsPaused())
+        {
+            printf("Advancing one frame, time is now %" PRIu64 "\n", fakeTime);
+            // Unpause for one frame
+            emuTimerUnpause();
+            pauseNextFrame = true;
+        }
+    }
+    else if (keycode == CNFG_KEY_F10)
+    {
+        static bool pausing = false;
+
+        if (down && !pausing)
+        {
+            pausing = true;
+            if (emuTimerIsPaused())
+            {
+                printf("Unpausing\n");
+                emuTimerUnpause();
+            }
+            else
+            {
+                printf("Pausing\n");
+                emuTimerPause();
+            }
+        }
+        else if (!down)
+        {
+            pausing = false;
+        }
+    }
+    else if (keycode == CNFG_KEY_F11)
+    {
+        // Record
+        static bool recordKey = false;
+        if (down && !recordKey)
+        {
+            recordKey = true;
+            if (recordScreen)
+            {
+                recordScreen = false;
+            }
+            else
+            {
+                recordScreen = true;
+            }
+        }
+        else if (!down)
+        {
+            recordKey = false;
+        }
+    }
+    else if (useFakeTime && keycode == CNFG_KEY_PAGE_UP)// && modifiers == EMU_MOD_CTRL)
+    {
+        // Speed up frames
+        if (!down)
+        {
+            if (modifiers == EMU_MOD_SHIFT)
+            {
+                fakeFrameTime += 5000;
+            }
+            else if (modifiers == EMU_MOD_CTRL)
+            {
+                fakeFrameTime += 100000;
+            }
+            else
+            {
+                fakeFrameTime += 1000;
+            }
+            printf("Frame time set to %" PRIu64 "\n", fakeFrameTime);
+        }
+    }
+    else if (useFakeTime && keycode == CNFG_KEY_PAGE_DOWN)// && modifiers == EMU_MOD_CTRL)
+    {
+        // Slow down frames
+        if (!down)
+        {
+            if (modifiers == EMU_MOD_SHIFT && fakeFrameTime > 5000)
+            {
+                fakeFrameTime -= 5000;
+            }
+            else if (modifiers == EMU_MOD_CTRL && fakeFrameTime > 100000)
+            {
+                fakeFrameTime -= 100000;
+            }
+            else if (fakeFrameTime > 1000)
+            {
+                fakeFrameTime -= 1000;
+            }
+            printf("Frame time set to %" PRIu64 "\n", fakeFrameTime);
+        }
+    }
+    else if (useFakeTime && keycode == CNFG_KEY_HOME)
+    {
+        fakeFrameTime = getFrameRateUs();
+    }
 
     return 0;
+}
+
+static void toolsPreFrame(uint64_t frame)
+{
+    // handle fake clock
+    if (useFakeTime)
+    {
+        emuSetEspTimerTime(fakeTime);
+        fakeTime += fakeFrameTime;
+    }
+
+    if (pauseNextFrame)
+    {
+        emuTimerPause();
+        pauseNextFrame = false;
+    }
+
+    // track the frame time in the buffer
+    int64_t now = esp_timer_get_time();
+    frameTimes[frameEndIndex] = now - frameStartTime;
+    frameStartTime = now;
+
+    // if the buffer is full, advance the start index
+    if (((frameEndIndex + 1) % frameTimeSize) == frameStartIndex)
+    {
+        frameStartIndex = (frameStartIndex + 1) % frameTimeSize;
+    }
+
+    // advance the end index
+    frameEndIndex = (frameEndIndex + 1) % frameTimeSize;
+
+    // calculate the actual time
+    int64_t totalLength = 0;
+    int totalFrames = 0;
+    for (int i = frameStartIndex; i != frameEndIndex; i = (i + 1) % frameTimeSize)
+    {
+        totalLength += frameTimes[i];
+        totalFrames++;
+    }
+
+    lastFrameTime = (totalLength) / (totalFrames);
+    lastFps = 1000000.0 * totalFrames / totalLength;
+}
+
+static void toolsPostFrame(uint64_t frame)
+{
+    static char dirbuf[64];
+    static uint64_t index = 0;
+    static bool setup = false;
+
+    if (recordScreen)
+    {
+        if (!setup)
+        {
+            getTimestampFilename(dirbuf, sizeof(dirbuf)-1, "screen-recording-", "");
+            if (0 != mkdir(dirbuf, 0777))
+            {
+                printf("ERR! ext_tools.c: Failed to create directory for recording. stopping.\n");
+                recordScreen = false;
+            }
+            index = 0;
+            setup = true;
+        }
+
+        char filebuf[128];
+        snprintf(filebuf, sizeof(filebuf), "%s/%06" PRIu64 ".png", dirbuf, index++);
+        if (!takeScreenshot(filebuf))
+        {
+            printf("ERR! ext_tools.c: Failed to save recording screenshot, stopping.\n");
+        }
+    }
+    else if (setup)
+    {
+        printf("Done Recording! Wrote %" PRIu64 " frames to %s/{000000..%06" PRIu64 "}.png\n", index, dirbuf, index-1);
+        int frameRate = 25;
+        printf("Convert to video with this:\nffmpeg -framerate %1$d -i '%2$s/%%06d.png' %2$s.mp4\n", frameRate, dirbuf);
+        setup = false;
+    }
+}
+
+static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes)
+{
+    if (numPanes > 0 && panes[0].visible)
+    {
+        const emuPane_t* fpsPane = panes;
+        CNFGPenX = fpsPane->paneX;
+        CNFGPenY = fpsPane->paneY;
+        CNFGColor(0xFFFFFFFF);
+        char buf[64];
+        snprintf(buf, sizeof(buf), "%.2f", lastFps);
+        CNFGDrawText(buf, 5);
+    }
 }
 
 static const char* getScreenshotName(char* buffer, size_t maxlen)
@@ -115,7 +372,7 @@ const char* getTimestampFilename(char* dst, size_t n, const char* prefix, const 
     uint32_t tries = 0;
     do
     {
-        snprintf(dst, n, "%s%" PRIu64 "%03" PRIu64 ".%s", prefix, timeSec, timeMillis, ext);
+        snprintf(dst, n, "%s%" PRIu64 "%03" PRIu64 "%s%s", prefix, timeSec, timeMillis, ((ext && *ext) ? "." : ""), ext);
         // Increment millis by one in case the file already exists
         timeMillis++;
 
@@ -143,6 +400,12 @@ bool takeScreenshot(const char* name)
 {
     uint16_t width, height;
     uint32_t* bitmap = getDisplayBitmap(&width, &height);
+    bool timerWasPaused = emuTimerIsPaused();
+
+    if (!timerWasPaused)
+    {
+        emuTimerPause();
+    }
 
     // We need to swap some channels for PNG output
     uint32_t converted[width * height];
@@ -178,5 +441,12 @@ bool takeScreenshot(const char* name)
     // Add full transparency for the rounded corners
     plotRoundedCorners(converted, width, height, (width / TFT_WIDTH) * 40, 0x000000);
 
-    return 0 != stbi_write_png(name, width, height, 4, converted, width * sizeof(uint32_t));
+    int res = stbi_write_png(name, width, height, 4, converted, width * sizeof(uint32_t));
+
+    if (!timerWasPaused)
+    {
+        emuTimerUnpause();
+    }
+
+    return 0 != res;
 }
