@@ -11,6 +11,27 @@
 //==============================================================================
 
 /**
+ * @brief TODO
+ *
+ * @param p
+ * @param x
+ * @param y
+ */
+void pbCreateBall(pinball_t* p, q24_8 x, q24_8 y)
+{
+    pbCircle_t* ball = &p->balls[p->numBalls++];
+#define BALL_RAD 5
+    ball->radius = TO_FX(BALL_RAD);
+    ball->pos.x  = x;
+    ball->pos.y  = y;
+#define MAX_VEL 128
+    ball->vel.x  = 0;
+    ball->vel.y  = 0;
+    ball->color  = c500;
+    ball->filled = true;
+}
+
+/**
  * @brief Create balls with random positions and velocities
  *
  * @param p The pinball state
@@ -216,6 +237,10 @@ void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, bool facingRi
     f->length        = 40;
     f->cTip.radius   = 5;
     f->facingRight   = facingRight;
+    // Update zone after setting position
+    f->zoneMask = pinZoneFlipper(p, f);
+
+    // Update angle and position after setting zone
     if (f->facingRight)
     {
         f->angle = 90 + FLIPPER_DOWN_ANGLE;

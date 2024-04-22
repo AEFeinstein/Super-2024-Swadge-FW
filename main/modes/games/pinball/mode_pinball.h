@@ -33,6 +33,7 @@ typedef enum
     PIN_CIRCLE,
     PIN_LINE,
     PIN_RECT,
+    PIN_FLIPPER,
 } pbShapeType_t;
 
 //==============================================================================
@@ -78,11 +79,12 @@ typedef struct
     int32_t aVelocity;    ///< Angular velocity, in degrees per frame
     bool facingRight;     ///< True if the flipper is facing right, false if left
     bool buttonHeld;      ///< True if the button is being held down, false if it is released
+    uint32_t zoneMask;    ///< The zones this flipper is in
 } pbFlipper_t;
 
 typedef struct
 {
-    void* obj;
+    const void* obj;
     pbShapeType_t type;
 } pbTouchRef_t;
 

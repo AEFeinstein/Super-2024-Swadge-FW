@@ -140,3 +140,41 @@ uint32_t pinZoneCircle(pinball_t* p, pbCircle_t c)
     }
     return zoneMask;
 }
+
+/**
+ * @brief Determine which table zones a flipper is in. Note, this function will modify the flipper's angle
+ *
+ * @param p The pinball state
+ * @param f The flipper to zone
+ * @return A bitmask of the zones the circle is in
+ */
+uint32_t pinZoneFlipper(pinball_t* p, pbFlipper_t* f)
+{
+    pbRect_t boundingBox = {0};
+    if (f->facingRight)
+    {
+        // Record the X position
+        boundingBox.pos.x = TO_FX(f->cPivot.pos.x - f->cPivot.radius);
+    }
+    else
+    {
+        // Record the X position
+        boundingBox.pos.x = TO_FX(f->cPivot.pos.x - f->length - f->cTip.radius);
+    }
+
+    // Width is the same when facing left and right
+    boundingBox.width = TO_FX(f->length + f->cPivot.radius + f->cTip.radius + 1);
+
+    // Height is the same too. Move the flipper up and record the Y start
+    f->angle = 90 - FLIPPER_UP_ANGLE;
+    updateFlipperPos(f);
+    boundingBox.pos.y = TO_FX(f->cTip.pos.y - f->cTip.radius);
+
+    // Move the flipper down and record the Y end
+    f->angle = 90 + FLIPPER_DOWN_ANGLE;
+    updateFlipperPos(f);
+    boundingBox.height = SUB_FX(TO_FX(f->cTip.pos.y + f->cTip.radius + 1), boundingBox.pos.y);
+
+    // Return the zones of the bounding box
+    return pinZoneRect(p, boundingBox);
+}

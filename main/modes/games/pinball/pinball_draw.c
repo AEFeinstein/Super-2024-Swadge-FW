@@ -11,7 +11,7 @@
 static void drawPinCircle(pbCircle_t* c);
 static void drawPinLine(pbLine_t* l);
 static void drawPinRect(pbRect_t* r);
-static void drawPinFlipper(pbFlipper_t* p);
+static void drawPinFlipper(pbFlipper_t* f);
 
 //==============================================================================
 // Functions

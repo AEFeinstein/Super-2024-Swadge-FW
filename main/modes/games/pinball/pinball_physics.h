@@ -7,7 +7,7 @@
 #define FLIPPER_UP_ANGLE               20 ///< Angle of a flipper when actuated
 #define FLIPPER_DOWN_ANGLE             30 ///< Angle of a flipper when idle
 
-void updateFlipperPos(pbFlipper_t* p);
+void updateFlipperPos(pbFlipper_t* f);
 void updatePinballPhysicsFrame(pinball_t* p);
 
 circle_t intCircle(pbCircle_t pbc);

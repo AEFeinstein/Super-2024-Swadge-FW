@@ -12,10 +12,11 @@
 void calculateBallZones(pinball_t* p);
 void checkBallBallCollisions(pinball_t* p);
 void checkBallStaticCollision(pinball_t* p);
+void checkBallFlipperCollision(pinball_t* p);
 void moveBalls(pinball_t* p);
 void moveFlippers(pinball_t* p);
 void checkBallsNotTouching(pinball_t* p);
-void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type);
+void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type);
 pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
 
 //==============================================================================
@@ -41,6 +42,9 @@ void updatePinballPhysicsFrame(pinball_t* p)
 
     // Check for collisions between balls and static objects
     checkBallStaticCollision(p);
+
+    // Check for collisions between balls and moving objects (flippers)
+    checkBallFlipperCollision(p);
 
     // Move balls along new vectors
     moveBalls(p);
@@ -192,12 +196,60 @@ void checkBallStaticCollision(pinball_t* p)
  *
  * @param p
  */
+void checkBallFlipperCollision(pinball_t* p)
+{
+    // For each ball, check collisions with flippers objects
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
+    {
+        // Reference and integer representation
+        pbCircle_t* ball = &p->balls[bIdx];
+        circle_t intBall = intCircle(*ball);
+
+        // Iterate over all flippers
+        for (uint32_t fIdx = 0; fIdx < p->numFlippers; fIdx++)
+        {
+            const pbFlipper_t* flipper = &p->flippers[fIdx];
+            vec_t collisionVec;
+
+            // Check for a collision
+            if ((ball->zoneMask & flipper->zoneMask)                               // In the same zone
+                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], flipper) // and not already touching
+                // And collides with a constituent part
+                && (circleCircleIntersection(intBall, flipper->cPivot, &collisionVec)
+                    || circleCircleIntersection(intBall, flipper->cTip, &collisionVec)
+                    || circleLineIntersection(intBall, flipper->sideL, &collisionVec)
+                    || circleLineIntersection(intBall, flipper->sideR, &collisionVec)))
+            {
+                // TODO account for flipper velocity
+                // Reflect the velocity vector along the normal
+                vec_q24_8 centerToCenter = {
+                    .x = collisionVec.x,
+                    .y = collisionVec.y,
+                };
+                vec_q24_8 reflVec = fpvNorm(centerToCenter);
+                ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
+
+                // Mark this flipper as being touched
+                setBallTouching(p->ballsTouching[bIdx], flipper, PIN_FLIPPER);
+            }
+        }
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param p
+ */
 void moveBalls(pinball_t* p)
 {
     // For each ball, check collisions with static objects
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
         pbCircle_t* ball = &p->balls[bIdx];
+
+        // TODO proper gravity
+        ball->vel.y += 4;
 
         // Move the ball
         ball->pos.x += (ball->vel.x);
@@ -280,8 +332,8 @@ void checkBallsNotTouching(pinball_t* p)
     // For each ball
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        pbCircle_t* ball = &p->balls[bIdx];
-        circle_t iBall   = intCircle(*ball);
+        const pbCircle_t* ball = &p->balls[bIdx];
+        circle_t iBall         = intCircle(*ball);
         // For each thing it could be touching
         for (uint32_t tIdx = 0; tIdx < MAX_NUM_TOUCHES; tIdx++)
         {
@@ -293,7 +345,7 @@ void checkBallsNotTouching(pinball_t* p)
                 {
                     case PIN_CIRCLE:
                     {
-                        pbCircle_t* other = (pbCircle_t*)tr->obj;
+                        const pbCircle_t* other = (pbCircle_t*)tr->obj;
                         if ((0 == (ball->zoneMask & other->zoneMask))                     // Not in the same zone
                             || !circleCircleIntersection(iBall, intCircle(*other), NULL)) // or not touching
                         {
@@ -305,7 +357,7 @@ void checkBallsNotTouching(pinball_t* p)
                     }
                     case PIN_LINE:
                     {
-                        pbLine_t* other = (pbLine_t*)tr->obj;
+                        const pbLine_t* other = (pbLine_t*)tr->obj;
                         vec_t collisionVec;
                         if ((0 == (ball->zoneMask & other->zoneMask))                          // Not in the same zone
                             || !circleLineIntersection(iBall, intLine(*other), &collisionVec)) // or not touching
@@ -318,9 +370,24 @@ void checkBallsNotTouching(pinball_t* p)
                     }
                     case PIN_RECT:
                     {
-                        pbRect_t* other = (pbRect_t*)tr->obj;
+                        const pbRect_t* other = (pbRect_t*)tr->obj;
                         if ((0 == (ball->zoneMask & other->zoneMask))                 // Not in the same zone
                             || !circleRectIntersection(iBall, intRect(*other), NULL)) // or not touching
+                        {
+                            // Clear the reference
+                            tr->obj  = NULL;
+                            tr->type = PIN_NO_SHAPE;
+                        }
+                        break;
+                    }
+                    case PIN_FLIPPER:
+                    {
+                        const pbFlipper_t* flipper = (pbFlipper_t*)tr->obj;
+                        if ((0 == (ball->zoneMask & flipper->zoneMask))                // Not in the same zone
+                            || (circleCircleIntersection(iBall, flipper->cPivot, NULL) // or not touching
+                                && circleCircleIntersection(iBall, flipper->cTip, NULL)
+                                && circleLineIntersection(iBall, flipper->sideL, NULL)
+                                && circleLineIntersection(iBall, flipper->sideR, NULL)))
                         {
                             // Clear the reference
                             tr->obj  = NULL;
@@ -347,7 +414,7 @@ void checkBallsNotTouching(pinball_t* p)
  * @param obj
  * @param type
  */
-void setBallTouching(pbTouchRef_t* ballTouching, void* obj, pbShapeType_t type)
+void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type)
 {
     for (uint32_t i = 0; i < MAX_NUM_TOUCHES; i++)
     {

@@ -76,6 +76,7 @@ static void pinEnterMode(void)
 
     // Create random balls
     createRandomBalls(pinball, 0);
+    pbCreateBall(pinball, TO_FX(TFT_WIDTH / 2 + 20), TO_FX(6));
 
     // Create random walls
     createRandomWalls(pinball, 0);
@@ -129,11 +130,11 @@ static void pinMainLoop(int64_t elapsedUs)
     {
         if (PB_RIGHT == evt.button)
         {
-            p->flippers[0].buttonHeld = evt.down;
+            p->flippers[1].buttonHeld = evt.down;
         }
         else if (PB_LEFT == evt.button)
         {
-            p->flippers[1].buttonHeld = evt.down;
+            p->flippers[0].buttonHeld = evt.down;
         }
     }
 
