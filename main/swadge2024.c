@@ -733,6 +733,14 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
     return retval;
 }
 
+void openQuickSettings(void)
+{
+    if (cSwadgeMode != &quickSettingsMode && !shouldHideQuickSettings)
+    {
+        shouldShowQuickSettings = true;
+    }
+}
+
 /**
  * @brief Set the framerate, in microseconds
  *

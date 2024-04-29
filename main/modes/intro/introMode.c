@@ -1,95 +1,293 @@
 #include "introMode.h"
 
 #include <esp_log.h>
+#include <inttypes.h>
+#include <stdint.h>
 
-#include "autoLoader.h"
-#include "hashMap.h"
+#include "mainMenu.h"
+#include "spiffs_font.h"
+#include "spiffs_wsg.h"
+#include "spiffs_json.h"
+#include "swadge2024.h"
 #include "macros.h"
 #include "menu.h"
+#include "font.h"
+#include "shapes.h"
+#include "wsg.h"
 
-/*
-
-    iv->ibm = autoLoadFont(iv->loader, "ibm_vga8.font");
-    autoLoadFont(iv->loader, "radiostars.font");
-    autoLoadFont(iv->loader, "eightbit_atari_grube2.font");
-    autoLoadFont(iv->loader, "seven_segment.font");
-    autoLoadFont(iv->loader, "dylwhich_sans.font");
-*/
-
-static const char* font_names[] = {
-    "ibm_vga8.font",
-    "seven_segment.font",
-    "eightbit_atari_grube2.font",
-    "seven_segment.font",
-    "dylwhich_sans.font",
-    "logbook.font",
-};
 
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
-static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt);
 static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void introDacCallback(uint8_t* samples, int16_t len);
 
-static void introMenuCb(const char*, bool selected, uint32_t settingVal);
+// static void introMenuCb(const char*, bool selected, uint32_t settingVal);
+static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
+                            bool backtrack);
+static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
-static const char introName[]  = "Intro";
+static void setupFakeQuickSettings(void);
+static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks);
+
+#define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
+#define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
+
+#define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
+#define DIR_TOUCH (TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
+
+typedef struct
+{
+    const tutorialStep_t* steps;
+    size_t count;
+} introSection_t;
+
+static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
+static const char endTitle[]  = "Nice! You did it!";
+static const char endDetail[] = "You are now Swadge Certified! Remember, with great power comes great "
+                                "responsibility. Hold SELECT to exit the tutorial and get started!";
+
+static const tutorialStep_t buttonsSteps[] = {
+    {
+        .trigger = {
+            .type = BUTTON_PRESS_ANY,
+            .buttons = ALL_BUTTONS,
+        },
+        .title = "Welcome to Swadge!",
+        .detail = "Press any button to continue",
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS_ALL,
+            .buttons = DPAD_BUTTONS,
+        },
+        .title = "Directional Buttons",
+        .detail = "These four buttons on the left side of the Swadge are the D-Pad. Use them to navigate. Try them all out!",
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_A,
+        },
+        .title = "A Button",
+        .detail = "The A Button is used to select, or trigger a primary action. Give it a try!",
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_B,
+        },
+        .title = "B Button",
+        .detail = "The B Button is used to go back, or trigger a secondary action. Back it up!",
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_START,
+        },
+        .title = "Mode Button",
+        .detail = "The Mode button, like the name implies, is mode-specific, but usually pauses a game. Give it a try!",
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_SELECT,
+        },
+        .title = "Pause Button",
+        .detail = "The Pause button is special! A short press opens up the Quick Settings menu.",
+    },
+    {
+        .trigger = {
+            .type = BUTTON_RELEASE,
+            .buttons = PB_SELECT,
+        },
+        .backtrack = {
+            .type = TIME_PASSED,
+            .intData = EXIT_TIME_US,
+        },
+        .backtrackSteps = 1,
+        .backtrackMessage = "That's too long! Try again!",
+        .title = "Pause Button",
+        .detail = "Now let go!",
+    },
+    {
+        .trigger = {
+            .type = CUSTOM_TRIGGER,
+            .custom.checkFn = introCheckQuickSettingsTrigger,
+        },
+        .title = "",
+        .detail = "This is the Quick Settings Menu! It's available in all modes, except for the Main Menu and USB Gamepad.",
+    },
+    {
+        .trigger = {
+            .type = BUTTON_PRESS,
+            .buttons = PB_SELECT,
+        },
+        .title = endTitle,
+        .detail = endDetail,
+    },
+    {
+        .trigger = {
+            .type = TIME_PASSED,
+            .intData = EXIT_TIME_US / 3,
+        },
+        .backtrack = {
+            .type = BUTTON_RELEASE,
+            .buttons = PB_SELECT,
+        },
+        .backtrackSteps = 1,
+        .backtrackMessage = holdLongerMessage,
+        .backtrackMessageTime = 3000000,
+        .title = "Exiting in 3...",
+        .detail = "Keep holding!",
+    },
+    {
+        .trigger = {
+            .type = TIME_PASSED,
+            .intData = EXIT_TIME_US / 3,
+        },
+        .backtrack = {
+            .type = BUTTON_RELEASE,
+            .buttons = PB_SELECT,
+        },
+        .backtrackSteps = 2,
+        .backtrackMessage = holdLongerMessage,
+        .backtrackMessageTime = 3000000,
+        .title = "Exiting in 2...",
+        .detail = "Keep holding!",
+    },
+    {
+        .trigger = {
+            .type = TIME_PASSED,
+            .intData = EXIT_TIME_US / 3,
+        },
+        .backtrack = {
+            .type = BUTTON_RELEASE,
+            .buttons = PB_SELECT,
+        },
+        .backtrackSteps = 3,
+        .backtrackMessage = holdLongerMessage,
+        .backtrackMessageTime = 3000000,
+        .title = "Exiting in 1...",
+        .detail = "Keep holding!",
+    },
+    {
+        .trigger = {
+            .type = NO_TRIGGER
+        },
+        .title = "Exiting in 0...",
+        .detail = "Goodbye!",
+    },
+};
+
+static const tutorialStep_t touchpadSteps[] = {
+    {
+        .trigger =
+        {
+            .type = TOUCH_ZONE_ALL,
+            .touchZones = ALL_TOUCH,
+        },
+        .title = "Touch the touchpad!",
+        .detail = "go on, do it. spin it, etc.",
+        .cooldown = 5,
+    }
+};
+
+static const introSection_t introSections[] = {
+    {
+        // Buttons
+        .steps = buttonsSteps,
+        .count = ARRAY_SIZE(buttonsSteps),
+    },
+    {
+        // Touchpad
+        .steps = touchpadSteps,
+        .count = ARRAY_SIZE(touchpadSteps),
+    },
+    /*{
+        .steps = accelSteps,
+        .count = ARRAY_SIZE(accelSteps),
+    },*/
+};
+
+static const char introName[] = "Intro";
 
 swadgeMode_t introMode = {
     .modeName                 = introName,
     .wifiMode                 = NO_WIFI,
     .overrideUsb              = false,
-    .usesAccelerometer        = false,
+    .usesAccelerometer        = true,
     .usesThermometer          = false,
-    .overrideSelectBtn        = false,
+    .overrideSelectBtn        = true,
     .fnEnterMode              = introEnterMode,
     .fnExitMode               = introExitMode,
     .fnMainLoop               = introMainLoop,
-    .fnAudioCallback          = introAudioCallback,
+    .fnAudioCallback          = NULL,
     .fnBackgroundDrawCallback = introBackgroundDrawCallback,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+    .fnDacCb                  = introDacCallback,
 };
 
-// A struct to use for the key
 typedef struct
 {
-    int32_t x, y;
-} keyStruct_t;
+    int16_t x;
+    int16_t y;
+    int16_t rot;
+
+    bool flipLR;
+    bool flipUD;
+
+    wsg_t* icon;
+    bool visible;
+} iconPos_t;
 
 typedef struct
 {
-    bool inMenu;
-    int fontIndex;
+    font_t smallFont;
+    font_t bigFont;
 
-    font_t* ibm;
-    wsg_t king_donut;
-    song_t ode_to_joy;
+    // Holds all the internal tutorial state
+    tutorialState_t tut;
 
-    hashMap_t map;
-    keyStruct_t keys[5];
+    struct
+    {
+        struct
+        {
+            wsg_t a;
+            wsg_t b;
+            wsg_t menu;
+            wsg_t pause;
+            wsg_t up;
+        } button;
 
-    autoLoader_t* loader;
+        struct
+        {
+            wsg_t base;
+            wsg_t joystick;
+            wsg_t spin;
+        } touch;
+    } icon;
 
-    menu_t* menu;
-    menuLogbookRenderer_t* menuLogbookRenderer;
+    buttonBit_t buttons;
+    touchJoystick_t joysticks;
 
+    iconPos_t buttonIcons[8];
+    int16_t swadgeViewWidth;
+    int16_t swadgeViewHeight;
+
+    bool quickSettingsOpened;
+
+    bool playingSound;
+    uint8_t* sound;
+    size_t soundSize;
+    size_t soundProgress;
+
+    const introSection_t* curSection;
 } introVars_t;
 
 static introVars_t* iv;
-
-int32_t hashStruct(const void* data)
-{
-    // Helper function provided with hash map
-    return hashBytes((const uint8_t*)data, sizeof(keyStruct_t));
-}
-
-bool structEq(const void* a, const void* b)
-{
-    // Another hash map helper function
-    return bytesEq((const uint8_t*)a, sizeof(keyStruct_t), (const uint8_t*)b, sizeof(keyStruct_t));
-}
 
 /**
  * This function is called when this mode is started. It should initialize
@@ -99,98 +297,74 @@ static void introEnterMode(void)
 {
     iv = calloc(1, sizeof(introVars_t));
 
-    iv->loader = initAutoLoader(false);
+    loadFont("ibm_vga8.font", &iv->smallFont, false);
+    loadFont("logbook.font", &iv->bigFont, false);
 
-    for (const char** font = font_names; font < (font_names + ARRAY_SIZE(font_names)); font++)
-    {
-        autoLoadFont(iv->loader, *font);
-    }
+    loadWsg("button_a.wsg", &iv->icon.button.a, false);
+    loadWsg("button_b.wsg", &iv->icon.button.b, false);
+    loadWsg("button_menu.wsg", &iv->icon.button.menu, false);
+    loadWsg("button_pause.wsg", &iv->icon.button.pause, false);
+    loadWsg("button_up.wsg", &iv->icon.button.up, false);
 
-    hashInitBin(&iv->map, 10, hashStruct, structEq);
+    // up
+    iv->buttonIcons[0].icon    = &iv->icon.button.up;
+    iv->buttonIcons[0].visible = true;
+    iv->buttonIcons[0].x       = 15;
+    iv->buttonIcons[0].y       = 5;
 
-    iv->keys[0].x = 10;
-    iv->keys[0].y = 16;
+    // down
+    iv->buttonIcons[1].icon    = &iv->icon.button.up;
+    iv->buttonIcons[1].flipUD  = true;
+    iv->buttonIcons[1].visible = true;
+    iv->buttonIcons[1].x       = 15;
+    iv->buttonIcons[1].y       = 25;
 
-    iv->keys[1].x = 5;
-    iv->keys[1].y = 5;
+    // left
+    iv->buttonIcons[2].icon    = &iv->icon.button.up;
+    iv->buttonIcons[2].rot     = 270;
+    iv->buttonIcons[2].visible = true;
+    iv->buttonIcons[2].x       = 5;
+    iv->buttonIcons[2].y       = 15;
 
-    iv->keys[2].x = 7;
-    iv->keys[2].y = 12;
+    // right
+    iv->buttonIcons[3].icon    = &iv->icon.button.up;
+    iv->buttonIcons[3].rot     = 90;
+    iv->buttonIcons[3].visible = true;
+    iv->buttonIcons[3].x       = 25;
+    iv->buttonIcons[3].y       = 15;
 
-    iv->keys[3].x = 1;
-    iv->keys[3].y = 3;
+    // a
+    iv->buttonIcons[4].icon    = &iv->icon.button.a;
+    iv->buttonIcons[4].visible = true;
+    iv->buttonIcons[4].x       = 105;
+    iv->buttonIcons[4].y       = 20;
 
-    iv->keys[4].x = 16;
-    iv->keys[4].y = 4;
+    // b
+    iv->buttonIcons[5].icon    = &iv->icon.button.b;
+    iv->buttonIcons[5].visible = true;
+    iv->buttonIcons[5].x       = 95;
+    iv->buttonIcons[5].y       = 10;
 
-    hashPutBin(&iv->map, &iv->keys[0], "Star");
-    hashPutBin(&iv->map, &iv->keys[1], "Square");
-    hashPutBin(&iv->map, &iv->keys[2], "Circle");
-    hashPutBin(&iv->map, &iv->keys[3], "Diamond");
-    hashPutBin(&iv->map, &iv->keys[4], "Triangle");
+    // start
+    iv->buttonIcons[6].icon    = &iv->icon.button.menu;
+    iv->buttonIcons[6].visible = true;
+    iv->buttonIcons[6].x       = 70;
+    iv->buttonIcons[6].y       = 15;
 
-    /*autoLoadFont(iv->loader, "radiostars.font");
-    autoLoadFont(iv->loader, "eightbit_atari_grube2.font");
-    autoLoadFont(iv->loader, "seven_segment.font");
-    autoLoadFont(iv->loader, "dylwhich_sans.font");*/
+    // select
+    iv->buttonIcons[7].icon    = &iv->icon.button.pause;
+    iv->buttonIcons[7].visible = true;
+    iv->buttonIcons[7].x       = 50;
+    iv->buttonIcons[7].y       = 15;
 
-    iv->ibm = autoLoadFont(iv->loader, "ibm_vga8.font");
-    //loadFont("ibm_vga8.font", &iv->ibm, false);
+    iv->swadgeViewWidth = iv->buttonIcons[4].x + iv->buttonIcons[4].icon->w + 5;
+    iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
 
-    //loadWsg("kid0.wsg", &iv->king_donut, true);
-    //loadSong("ode.sng", &iv->ode_to_joy, true);
+    iv->curSection = introSections;
+    tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
 
-    //bzrPlayBgm(&iv->ode_to_joy, BZR_STEREO);
-    //bzrStop(true);
-
-    iv->menu = initMenu(introName, introMenuCb);
-    iv->menuLogbookRenderer = initMenuLogbookRenderer(autoLoadFont(iv->loader, "logbook.font"));
-    iv->inMenu = true;
-}
-
-void runStructKeyExample(void)
-{
-    static int x = 0;
-    static int y = 0;
-
-    buttonEvt_t evt;
-    while (checkButtonQueueWrapper(&evt))
-    {
-        if (evt.down)
-        {
-            if (evt.button == PB_UP)
-            {
-                y++;
-            }
-            else if (evt.button == PB_DOWN)
-            {
-                y--;
-            }
-            else if (evt.button == PB_LEFT)
-            {
-                x--;
-            }
-            else if (evt.button == PB_RIGHT)
-            {
-                x++;
-            }
-            else if (evt.button == PB_A)
-            {
-                keyStruct_t key;
-                key.x = x;
-                key.y = y;
-                const char* found = hashGetBin(&iv->map, &key);
-                if (found)
-                {
-                    printf("Found a %s at %d, %d!\n", found, x, y);
-                }
-                else
-                {
-                    printf("Didn't find anything at %d, %d :(\n", x, y);
-                }
-            }
-        }
-    }
+    iv->sound = spiffsReadFile("magfest_audio.bin", &iv->soundSize, true);
+    iv->playingSound = true;
 }
 
 /**
@@ -198,10 +372,17 @@ void runStructKeyExample(void)
  */
 static void introExitMode(void)
 {
-    //freeFont(&iv->ibm);
-    deinitAutoLoader(iv->loader);
-    deinitMenu(iv->menu);
-    deinitMenuLogbookRenderer(iv->menuLogbookRenderer);
+    freeFont(&iv->smallFont);
+    freeFont(&iv->bigFont);
+
+    freeWsg(&iv->icon.button.a);
+    freeWsg(&iv->icon.button.b);
+    freeWsg(&iv->icon.button.menu);
+    freeWsg(&iv->icon.button.pause);
+    freeWsg(&iv->icon.button.up);
+
+    free(iv->sound);
+
     free(iv);
 }
 
@@ -214,63 +395,64 @@ static void introExitMode(void)
  */
 static void introMainLoop(int64_t elapsedUs)
 {
-    clearPxTft();
-
-    runStructKeyExample();
-    return;
+    // clearPxTft();
 
     // Process button events
-    buttonEvt_t evt              = {0};
-    static uint32_t lastBtnState = 0;
+    buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        lastBtnState = evt.state;
+        iv->buttons = evt.state;
 
-        if (iv->inMenu)
-        {
-            if (iv->menu->currentItem)
-            {
-                iv->menu = menuButton(iv->menu, evt);
-            }
-
-            if (evt.button == PB_A && evt.down)
-            {
-                iv->inMenu = false;
-            }
-            else if (evt.button == PB_B && evt.down)
-            {
-                iv->fontIndex = (iv->fontIndex + 1) % ARRAY_SIZE(font_names);
-                iv->menuLogbookRenderer->font = autoLoadFont(iv->loader, font_names[iv->fontIndex]);
-            }
-        }
-        else if (evt.button == PB_A && evt.down)
-        {
-            iv->inMenu = true;
-        }
+        tutorialOnButton(&iv->tut, &evt);
     }
 
-    if (iv->inMenu)
+    int32_t phi, r, intensity;
+    if (getTouchJoystick(&phi, &r, &intensity))
     {
-        drawMenuLogbook(iv->menu, iv->menuLogbookRenderer, elapsedUs);
-        return;
+        iv->joysticks = getTouchJoystickZones(phi, r, true, true);
+
+        tutorialOnTouch(&iv->tut, phi, r, intensity);
+    }
+    else
+    {
+        iv->joysticks = 0;
+
+        tutorialOnTouch(&iv->tut, 0, 0, 0);
     }
 
+    tutorialCheckTriggers(&iv->tut);
 
     // Fill the display area with a dark cyan
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
-}
 
-/**
- * This function is called whenever audio samples are read from the
- * microphone (ADC) and are ready for processing. Samples are read at 8KHz
- * This cannot be used at the same time as fnBatteryCallback
- *
- * @param samples A pointer to 12 bit audio samples
- * @param sampleCnt The number of samples read
- */
-static void introAudioCallback(uint16_t* samples, uint32_t sampleCnt)
-{
-    ;
+    const char* title  = iv->tut.curStep->title;
+    const char* detail = iv->tut.curStep->detail;
+
+    if (iv->tut.tempMessage && (!iv->tut.tempMessageExpiry || iv->tut.tempMessageExpiry > esp_timer_get_time()))
+    {
+        detail = iv->tut.tempMessage;
+    }
+
+    int16_t titleX = (TFT_WIDTH - textWidth(&iv->bigFont, title)) / 2;
+    int16_t titleY = 20;
+    drawText(&iv->bigFont, c000, title, titleX, titleY);
+
+    int16_t detailYmin = titleY + iv->bigFont.height + 1 + 10;
+    int16_t detailYmax = TFT_HEIGHT - 20;
+    int16_t detailX    = 10;
+    uint16_t detailH   = textWordWrapHeight(&iv->smallFont, detail, TFT_WIDTH - 20, detailYmax - detailYmin);
+    int16_t detailY    = detailYmax - detailH;
+
+    int16_t viewX = (TFT_WIDTH - iv->swadgeViewWidth) / 2;
+    introDrawSwadge(elapsedUs, viewX, titleY + iv->bigFont.height + 1 + 25, iv->buttons, iv->joysticks);
+
+    const char* remaining
+        = drawTextWordWrap(&iv->smallFont, c000, detail, &detailX, &detailY, TFT_WIDTH - 5, detailYmax);
+    if (NULL != remaining)
+    {
+        ESP_LOGI("Intro", "Remaining text: ...%s", remaining);
+        // TODO handle remaining text sensibly
+    }
 }
 
 /**
@@ -290,18 +472,145 @@ static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
     fillDisplayArea(x, y, x + w, y + h, c555);
 }
 
-/**
- * @brief Callback for when menu items are selected
- *
- * @param label The menu item that was selected or moved to
- * @param selected true if the item was selected, false if it was moved to
- * @param settingVal The value of the setting, if the menu item is a settings item
- */
-static void introMenuCb(const char* label, bool selected, uint32_t settingVal)
+static void introDacCallback(uint8_t* samples, int16_t len)
 {
-    printf("%s %s\n", label, selected ? "selected" : "scrolled to");
-
-    if (selected)
+    if (iv->playingSound)
     {
+        if (iv->soundProgress + len >= iv->soundSize)
+        {
+            size_t send = (iv->soundSize - iv->soundProgress);
+            memcpy(samples, iv->sound + iv->soundProgress, send);
+            memset(samples + send, 0, len - send);
+            iv->playingSound = false;
+        }
+        else
+        {
+            memcpy(samples, iv->sound + iv->soundProgress, len);
+            iv->soundProgress += len;
+        }
+    }
+    else
+    {
+        memset(samples, 0, len);
+    }
+}
+
+static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
+                            bool backtrack)
+{
+    ESP_LOGI("Intro", "'%s' Triggered!", prev->title);
+
+    if (next == (buttonsSteps + 7))
+    {
+        ESP_LOGI("Intro", "Oh it's the one we want: %s", next->title);
+        iv->quickSettingsOpened = true;
+        openQuickSettings();
+    }
+    else if (next == (buttonsSteps + 8))
+    {
+        iv->quickSettingsOpened = false;
+    }
+    else if (next != NULL && next->trigger.type == NO_TRIGGER)
+    {
+        switchToSwadgeMode(&mainMenuMode);
+        ESP_LOGI("Intro", "Last trigger entered!");
+
+        /*if (iv->curSection < (introSections + ARRAY_SIZE(introSections)))
+        {
+            iv->curSection++;
+            tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
+        } else
+        {
+            ESP_LOGI("Intro", "no more sections");
+        }*/
+    }
+}
+
+static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger)
+{
+    return iv->quickSettingsOpened;
+}
+
+static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks)
+{
+
+#define BLINK_ON 550000
+#define BLINK_OFF 200000
+#define BLINK_TIME (BLINK_ON+BLINK_OFF)
+
+    static const int buttonBlinkOrder[] = {
+        1, // UP
+        2, // DOWN
+        0, // LEFT
+        3, // RIGHT
+        7, // A
+        6, // B
+        5, // START
+        4, // SELECT
+    };
+    static int64_t time = 0;
+    time += elapsedUs;
+    bool blink = true;
+
+    for (int stage = 0; stage < 2; stage++)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            buttonBit_t button = (1 << i);
+            iconPos_t* icon    = &iv->buttonIcons[i];
+
+            if (icon->visible)
+            {
+                if (stage == 0)
+                {
+                    int64_t timeOffset = ((7-buttonBlinkOrder[i]) * (BLINK_TIME / 6)) / 8;
+                    bool showBlink = ((time + timeOffset) % BLINK_TIME) <= BLINK_ON;
+                    int16_t circleX = x + icon->x + icon->icon->w / 2;
+                    int16_t circleY = y + icon->y + icon->icon->h / 2;
+                    int16_t circleR = icon->icon->w * 3 / 5;
+                    if (iv->tut.curStep && iv->tut.curStep->trigger.type == BUTTON_PRESS_ALL
+                        && (iv->tut.curStep->trigger.buttons & button) == button)
+                    {
+                        if ((iv->tut.allButtons & button) == button)
+                        {
+                            // Solid Green around already-satisfied button
+                            drawCircleFilled(circleX, circleY, circleR, c050);
+                        }
+                        else if (!blink || showBlink)
+                        {
+                            // Yellow around not-yet-satisfied button that must be pressed
+                            drawCircle(circleX, circleY, circleR, c550);
+                        }
+                    }
+                    else if (iv->tut.curStep && iv->tut.curStep->trigger.type == BUTTON_PRESS_ANY
+                             && (iv->tut.curStep->trigger.buttons & button) == button)
+                    {
+                        // Yellow around not-yet-satisfied 'ANY' button
+                        if (!blink || showBlink)
+                        {
+                            drawCircle(circleX, circleY, circleR, c550);
+                        }
+                    }
+                    else if (iv->tut.curStep && iv->tut.curStep->trigger.type == BUTTON_PRESS
+                             && iv->tut.curStep->trigger.buttons == button)
+                    {
+                        if (!blink || showBlink)
+                        {
+                            // Yellow around not-yet-satisfied 'PRESS' button
+                            drawCircle(circleX, circleY, circleR, c550);
+                        }
+                    }
+                    else if ((buttons & button) == button)
+                    {
+                        // Gray around currently-pressed button that's not otherwise needed
+                        drawCircleFilled(circleX, circleY, circleR, c333);
+                    }
+                }
+                else if (stage == 1)
+                {
+                    drawWsg(icon->icon, x + icon->x, y + icon->y, icon->flipLR, icon->flipUD, icon->rot);
+                }
+            }
+        }
     }
 }
