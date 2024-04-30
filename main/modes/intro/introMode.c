@@ -410,7 +410,7 @@ static void introMainLoop(int64_t elapsedUs)
         char sub[64] = {0};
 
         strcat(title, "MAGFest");
-        strcat(sub, "Swadge 2024ish");
+        strcat(sub, "Swadge 2025");
         int64_t titleTicksPerChar = ((animTime) / strlen(title));
         int64_t subTicksPerChar = ((animTime) / strlen(sub));
 
@@ -530,13 +530,14 @@ static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t
 
 static void introDacCallback(uint8_t* samples, int16_t len)
 {
+#define SPK_SILENCE (INT8_MIN)
     if (iv->playingSound)
     {
         if (iv->soundProgress + len >= iv->soundSize)
         {
             size_t send = (iv->soundSize - iv->soundProgress);
             memcpy(samples, iv->sound + iv->soundProgress, send);
-            memset(samples + send, 0, len - send);
+            memset(samples + send, SPK_SILENCE, len - send);
             iv->playingSound = false;
         }
         else
@@ -547,7 +548,7 @@ static void introDacCallback(uint8_t* samples, int16_t len)
     }
     else
     {
-        memset(samples, 0, len);
+        memset(samples, SPK_SILENCE, len);
     }
 }
 
