@@ -512,6 +512,7 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
     }
     else if (next != NULL && next->trigger.type == NO_TRIGGER)
     {
+        setTutorialCompletedSetting(true);
         switchToSwadgeMode(&mainMenuMode);
         ESP_LOGI("Intro", "Last trigger entered!");
 

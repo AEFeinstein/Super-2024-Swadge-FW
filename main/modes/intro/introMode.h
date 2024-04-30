@@ -6,7 +6,4 @@
 
 extern swadgeMode_t introMode;
 
-// TODO: Shakes / Orientation for accel
-
-
 #endif
