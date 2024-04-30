@@ -283,6 +283,7 @@ typedef struct
     uint8_t* sound;
     size_t soundSize;
     size_t soundProgress;
+    bool introComplete;
 
     const introSection_t* curSection;
 } introVars_t;
@@ -397,13 +398,68 @@ static void introMainLoop(int64_t elapsedUs)
 {
     // clearPxTft();
 
+    if (iv->playingSound || !iv->introComplete)
+    {
+        int64_t songTime = (iv->soundSize * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
+        int64_t animTime = (songTime * 2 / 3);
+        static int64_t timer = 0;
+
+        shadeDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, 3, c234);
+
+        char title[64] = {0};
+        char sub[64] = {0};
+
+        strcat(title, "MAGFest");
+        strcat(sub, "Swadge 2024ish");
+        int64_t titleTicksPerChar = ((animTime) / strlen(title));
+        int64_t subTicksPerChar = ((animTime) / strlen(sub));
+
+        int16_t titleWidth = textWidth(&iv->bigFont, title);
+        int16_t titleX = (TFT_WIDTH - titleWidth) / 2;
+        int16_t titleY = (TFT_HEIGHT - iv->bigFont.height - iv->smallFont.height - 6) / 2;
+
+        int16_t subWidth = textWidth(&iv->bigFont, sub);
+        int16_t subX = (TFT_WIDTH - subWidth) / 2;
+        int16_t subY = titleY + iv->bigFont.height + 5;
+
+        int titleLen = MIN(strlen(title), timer / titleTicksPerChar);
+        int subLen = MIN(strlen(sub), timer / subTicksPerChar);
+        // Trim the string
+        title[titleLen] = '\0';
+        sub[subLen] = '\0';
+
+        drawText(&iv->bigFont, c555, title, titleX, titleY);
+        drawText(&iv->bigFont, c000, title, titleX - 1, titleY + 1);
+
+        drawText(&iv->bigFont, c555, sub, subX, subY);
+        drawText(&iv->bigFont, c000, sub, subX - 1, subY + 1);
+
+        timer += elapsedUs;
+
+        // Return early -- Don't do the rest of the stuff yet
+        if (iv->playingSound)
+        {
+            return;
+        }
+    }
+
     // Process button events
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
+        if (!iv->introComplete)
+        {
+            iv->introComplete = true;
+            break;
+        }
         iv->buttons = evt.state;
 
         tutorialOnButton(&iv->tut, &evt);
+    }
+
+    if (!iv->introComplete)
+    {
+        return;
     }
 
     int32_t phi, r, intensity;
