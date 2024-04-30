@@ -11,6 +11,7 @@
 #include "dance.h"
 #include "factoryTest.h"
 #include "gamepad.h"
+#include "introMode.h"
 #include "jukebox.h"
 #include "mainMenu.h"
 #include "modeTimer.h"
@@ -161,6 +162,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
+    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
 
     // Start a submenu for settings
@@ -325,6 +327,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == gamepadMode.modeName)
         {
             switchToSwadgeMode(&gamepadMode);
+        }
+        else if (label == introMode.modeName)
+        {
+            switchToSwadgeMode(&introMode);
         }
         else if (label == jukeboxMode.modeName)
         {

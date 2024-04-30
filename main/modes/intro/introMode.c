@@ -210,7 +210,7 @@ static const introSection_t introSections[] = {
     },*/
 };
 
-static const char introName[] = "Intro";
+static const char introName[] = "Tutorial";
 
 swadgeMode_t introMode = {
     .modeName                 = introName,
