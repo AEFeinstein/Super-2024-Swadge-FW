@@ -142,6 +142,7 @@ static void mainMenuEnterMode(void)
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, ragMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
