@@ -34,6 +34,7 @@
 #include "mode_credits.h"
 #include "modeTimer.h"
 #include "mode_pinball.h"
+#include "ringsAndGems.h"
 
 //==============================================================================
 // Defines
@@ -77,6 +78,7 @@ static swadgeMode_t* allSwadgeModes[] = {
     &tunernomeMode,
     &modeCredits,
     &pinballMode,
+    &ragMode,
 };
 // clang-format on
 

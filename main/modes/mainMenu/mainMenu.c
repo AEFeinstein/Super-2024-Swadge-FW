@@ -27,6 +27,7 @@
 #include "tunernome.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
+#include "ringsAndGems.h"
 
 #include "settingsManager.h"
 
@@ -151,6 +152,7 @@ static void mainMenuEnterMode(void)
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, ragMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
     addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
@@ -415,6 +417,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == modeCredits.modeName)
         {
             switchToSwadgeMode(&modeCredits);
+        }
+        else if (label == ragMode.modeName)
+        {
+            switchToSwadgeMode(&ragMode);
         }
     }
     else
