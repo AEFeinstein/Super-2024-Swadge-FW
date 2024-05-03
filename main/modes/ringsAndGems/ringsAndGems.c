@@ -24,8 +24,14 @@ typedef enum __attribute__((packed))
 
 typedef struct
 {
+    ragCell_t game[3][3];
+    ragCell_t winner;
+} ragSubgame_t;
+
+typedef struct
+{
     p2pInfo p2p;
-    ragCell_t grid[3][3][3][3];
+    ragSubgame_t subgames[3][3];
 } ringsAndGems_t;
 
 swadgeMode_t ragMode = {
@@ -92,19 +98,59 @@ static void ragMainLoop(int64_t elapsedUs)
     // Clear before drawing
     clearPxTft();
 
-    // Fidn the size of a subgrid
+#define MARGIN   3
+#define S_MARGIN 2
+#define C_MARGIN 1
+
+    // Find the size of a subgrid
     int16_t subgameSize = TFT_HEIGHT / 3;
+    int16_t cellSize    = (subgameSize - (2 * MARGIN)) / 3;
 
     // Draw main grid
-    ragDrawGrid((TFT_WIDTH - TFT_HEIGHT) / 2, 0, TFT_WIDTH - (TFT_WIDTH - TFT_HEIGHT) / 2, TFT_HEIGHT, c555);
+    ragDrawGrid((TFT_WIDTH - TFT_HEIGHT) / 2, 0, //
+                (TFT_WIDTH + TFT_HEIGHT) / 2, TFT_HEIGHT, c555);
 
     // Draw subgrids
     for (int16_t y = 0; y < 3; y++)
     {
         for (int16_t x = 0; x < 3; x++)
         {
-            ragDrawGrid((TFT_WIDTH - TFT_HEIGHT) / 2 + (x * subgameSize) + 3, y * subgameSize + 3, //
-                        (TFT_WIDTH - TFT_HEIGHT) / 2 + ((x + 1) * subgameSize) - 3, (y + 1) * subgameSize - 3, c500);
+            int16_t subX0 = (TFT_WIDTH - TFT_HEIGHT) / 2 + (x * subgameSize);
+            int16_t subX1 = subX0 + subgameSize;
+            int16_t subY0 = y * subgameSize;
+            int16_t subY1 = subY0 + subgameSize;
+
+            // Subgrid
+            ragDrawGrid(subX0 + MARGIN, //
+                        subY0 + MARGIN, //
+                        subX1 - MARGIN, //
+                        subY1 - MARGIN, //
+                        c500);
+
+            // Cursor
+            drawRect(subX0 + S_MARGIN - 1, //
+                     subY0 + S_MARGIN - 1, //
+                     subX1 - S_MARGIN,     //
+                     subY1 - S_MARGIN,     //
+                     c030);
+
+            // Cursors in the subgrid
+            for (int16_t cy = 0; cy < 3; cy++)
+            {
+                for (int16_t cx = 0; cx < 3; cx++)
+                {
+                    int16_t cellX0 = MARGIN + subX0 + (cx * (cellSize + 1));
+                    int16_t cellX1 = cellX0 + cellSize;
+                    int16_t cellY0 = MARGIN + subY0 + (cy * (cellSize + 1));
+                    int16_t cellY1 = cellY0 + cellSize;
+
+                    drawRect(cellX0 + C_MARGIN, //
+                             cellY0 + C_MARGIN, //
+                             cellX1 - C_MARGIN, //
+                             cellY1 - C_MARGIN, //
+                             c002);
+                }
+            }
         }
     }
 }
@@ -127,12 +173,12 @@ static void ragDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, paletteC
     int16_t cellHeight = (height - 2) / 3;
 
     // Horizontal lines
-    drawLineFast(x0, y0 + cellHeight, x1, y0 + cellHeight, color);
-    drawLineFast(x0, y0 + (2 * cellHeight) + 1, x1, y0 + (2 * cellHeight) + 1, color);
+    drawLineFast(x0, y0 + cellHeight, x1 - 1, y0 + cellHeight, color);
+    drawLineFast(x0, y0 + (2 * cellHeight) + 1, x1 - 1, y0 + (2 * cellHeight) + 1, color);
 
     // Vertical lines
-    drawLineFast(x0 + cellWidth, y0, x0 + cellWidth, y1, color);
-    drawLineFast(x0 + (2 * cellWidth) + 1, y0, x0 + (2 * cellWidth) + 1, y1, color);
+    drawLineFast(x0 + cellWidth, y0, x0 + cellWidth, y1 - 1, color);
+    drawLineFast(x0 + (2 * cellWidth) + 1, y0, x0 + (2 * cellWidth) + 1, y1 - 1, color);
 }
 
 /**
