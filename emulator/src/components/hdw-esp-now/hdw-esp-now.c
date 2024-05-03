@@ -2,16 +2,22 @@
 // Includes
 //==============================================================================
 
-#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) \
-    || defined(__CYGWIN__)
+// clang-format off
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
     #define USING_WINDOWS 1
-#elif defined(__linux__)
+#elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
     #define USING_LINUX 1
 #elif __APPLE__
     #define USING_MAC 1
 #else
     #error "OS Not Detected"
 #endif
+// clang-format on
 
 #if defined(USING_WINDOWS)
     #include <WinSock2.h>

@@ -28,7 +28,12 @@ extern "C"
 {
 #endif
 
-#if !defined(__WINDOWS__) && (defined(WIN32) || defined(WIN64) || defined(_MSC_VER) || defined(_WIN32))
+#if !defined(__WINDOWS__) && (defined(WINDOWS) || defined(_WINDOWS) \
+                           || defined(WIN32)       || defined(WIN64) \
+                           || defined(_WIN32)      || defined(_WIN64) \
+                           || defined(__WIN32__)   || defined(__CYGWIN__) \
+                           || defined(__MINGW32__) || defined(__MINGW64__) \
+                           || defined(__TOS_WIN__) || defined(_MSC_VER))
 #define __WINDOWS__
 #endif
 

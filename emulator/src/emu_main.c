@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include <unistd.h>
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
     #include <signal.h>
     #include <execinfo.h>
 #endif
@@ -41,11 +41,17 @@
 #include "hdw-esp-now.h"
 #include "mainMenu.h"
 
+// clang-format off
 // Necessary for CNFA
-#if defined(WINDOWS) || defined(WIN32) || defined(WIN64) || defined(_WIN32) || defined(_WIN64) || defined(__MINGW32__) \
-    || defined(__CYGWIN__)
+#if !defined(WINDOWS) && ( defined(__WINDOWS__) || defined(_WINDOWS) \
+                        || defined(WIN32)       || defined(WIN64) \
+                        || defined(_WIN32)      || defined(_WIN64) \
+                        || defined(__WIN32__)   || defined(__CYGWIN__) \
+                        || defined(__MINGW32__) || defined(__MINGW64__) \
+                        || defined(__TOS_WIN__) || defined(_MSC_VER))
     #define WINDOWS
 #endif
+// clang-format on
 
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
@@ -53,7 +59,7 @@
 #include "CNFG.h"
 
 #define CNFA_IMPLEMENTATION
-#ifdef __linux__
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
     #define PULSEAUDIO
 #endif
 #include "CNFA.h"
@@ -85,7 +91,7 @@ static struct CNFADriver* soundDriver = NULL;
 // Function Prototypes
 //==============================================================================
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
 void init_crashSignals(void);
 void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 #endif
@@ -131,7 +137,7 @@ void handleArgs(int argc, char** argv)
  */
 int main(int argc, char** argv)
 {
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
     init_crashSignals();
 #endif
 
@@ -167,8 +173,8 @@ int main(int argc, char** argv)
         calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
-        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
-        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
+        int32_t winW            = (TFT_WIDTH) * 2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT) * 2 + topBottomPanesH;
 
         if (emulatorArgs.headless)
         {
@@ -576,11 +582,18 @@ int HandleDestroy()
 
     if (soundDriver)
     {
-#if defined(_WIN32) || defined(__CYGWIN__)
+        // clang-format off
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
         CNFAClose(NULL);
 #else
         CNFAClose(soundDriver); // when calling this on Windows, it halts
 #endif
+        // clang-format on
         soundDriver = NULL;
     }
 
@@ -611,7 +624,7 @@ static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp
 #endif
 }
 
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
 
 /**
  * @brief Initialize a crash handler, only for Linux and MacOS
@@ -654,7 +667,7 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
         (void)result;
 
         memset(msg, 0, sizeof(msg));
-    #ifdef __linux__
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
         for (int i = 0; i < __SI_PAD_SIZE; i++)
     #else
         // Seems to be hardcoded on MacOS
@@ -662,7 +675,7 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
     #endif
         {
             char tmp[8];
-    #ifdef __linux__
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
             snprintf(tmp, sizeof(tmp), "%02X", si->_sifields._pad[i]);
     #else
             snprintf(tmp, sizeof(tmp), "%02X", (int)si->__pad[i]);
