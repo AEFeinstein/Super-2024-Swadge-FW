@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+// clang-format off
 #if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
                      || defined(WIN32)       || defined(WIN64) \
                      || defined(_WIN32)      || defined(_WIN64) \
@@ -16,6 +17,7 @@
 #else
     #error "OS Not Detected"
 #endif
+// clang-format on
 
 #if defined(USING_WINDOWS)
     #include <WinSock2.h>

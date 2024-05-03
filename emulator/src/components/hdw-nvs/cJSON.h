@@ -28,6 +28,7 @@ extern "C"
 {
 #endif
 
+// clang-format off
 #if !defined(__WINDOWS__) && (defined(WINDOWS) || defined(_WINDOWS) \
                            || defined(WIN32)       || defined(WIN64) \
                            || defined(_WIN32)      || defined(_WIN64) \
@@ -36,6 +37,7 @@ extern "C"
                            || defined(__TOS_WIN__) || defined(_MSC_VER))
 #define __WINDOWS__
 #endif
+// clang-format on
 
 #ifdef __WINDOWS__
 

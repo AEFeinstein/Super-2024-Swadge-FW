@@ -41,6 +41,7 @@
 #include "hdw-esp-now.h"
 #include "mainMenu.h"
 
+// clang-format off
 // Necessary for CNFA
 #if !defined(WINDOWS) && ( defined(__WINDOWS__) || defined(_WINDOWS) \
                         || defined(WIN32)       || defined(WIN64) \
@@ -50,6 +51,7 @@
                         || defined(__TOS_WIN__) || defined(_MSC_VER))
     #define WINDOWS
 #endif
+// clang-format on
 
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
@@ -171,8 +173,8 @@ int main(int argc, char** argv)
         calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
-        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
-        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
+        int32_t winW            = (TFT_WIDTH) * 2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT) * 2 + topBottomPanesH;
 
         if (emulatorArgs.headless)
         {
@@ -580,6 +582,7 @@ int HandleDestroy()
 
     if (soundDriver)
     {
+        // clang-format off
 #if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
                      || defined(WIN32)       || defined(WIN64) \
                      || defined(_WIN32)      || defined(_WIN64) \
@@ -590,6 +593,7 @@ int HandleDestroy()
 #else
         CNFAClose(soundDriver); // when calling this on Windows, it halts
 #endif
+        // clang-format on
         soundDriver = NULL;
     }
 
