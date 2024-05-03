@@ -1,4 +1,9 @@
-#ifdef _WIN32
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
 
 /*******************************************************
  HIDAPI - Multi-Platform library for
@@ -42,7 +47,7 @@
 typedef LONG NTSTATUS;
 #endif
 
-#ifdef __MINGW32__
+#if defined(__MINGW32__) || defined(__MINGW64__)
 #include <ntdef.h>
 #include <winbase.h>
 #endif
@@ -58,8 +63,12 @@ typedef LONG NTSTATUS;
 
 /*#define HIDAPI_USE_DDK*/
 
-#if defined(WINDOWS) || defined(WIN32)  || defined(WIN64) \
-                     || defined(_WIN32) || defined(_WIN64)
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__CYGWIN__) \
+                     || defined(__MINGW32__) || defined(__MINGW64__) \
+                     || defined(__TOS_WIN__) || defined(_MSC_VER)
 #ifndef strdup
 #define strdup _strdup
 #endif
@@ -2153,7 +2162,7 @@ int main(void)
 #endif
 
 
-#elif defined(__linux__)
+#elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
 
 /*******************************************************
  HIDAPI - Multi-Platform library for
@@ -3002,13 +3011,13 @@ HID_API_EXPORT const wchar_t * HID_API_CALL  hid_error(hid_device *dev)
 
 /* GNU / LibUSB */
 #include <libusb.h>
-#ifndef __ANDROID__
+#if !(defined(__ANDROID__) || defined(__android__) || defined(ANDROID))
 #include <iconv.h>
 #endif
 
 #include "hidapi.h"
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__android__) || defined(ANDROID)
 
 /* Barrier implementation because Android/Bionic don't have pthread_barrier.
    This implementation came from Brent Priddy and was posted on
@@ -3347,7 +3356,7 @@ static wchar_t *get_usb_string(libusb_device_handle *dev, uint8_t idx)
 	int len;
 	wchar_t *str = NULL;
 
-#ifndef __ANDROID__ /* we don't use iconv on Android */
+#if !(defined(__ANDROID__) || defined(__android__) || defined(ANDROID)) /* we don't use iconv on Android */
 	wchar_t wbuf[256];
 	/* iconv variables */
 	iconv_t ic;
@@ -3377,7 +3386,7 @@ static wchar_t *get_usb_string(libusb_device_handle *dev, uint8_t idx)
 	if (len < 0)
 		return NULL;
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__) || defined(__android__) || defined(ANDROID)
 
 	/* Bionic does not have iconv support nor wcsdup() function, so it
 	   has to be done manually.  The following code will only work for

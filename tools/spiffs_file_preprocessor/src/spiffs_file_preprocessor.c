@@ -155,9 +155,13 @@ int main(int argc, char** argv)
     struct stat st = {0};
     if (stat(outDirName, &st) == -1)
     {
-#if defined(_WIN32)
+#if defined(WINDOWS) || defined(__WINDOWS__) || defined(_WINDOWS) \
+                     || defined(WIN32)       || defined(WIN64) \
+                     || defined(_WIN32)      || defined(_WIN64) \
+                     || defined(__WIN32__)   || defined(__TOS_WIN__) \
+                     || defined(_MSC_VER)
         mkdir(outDirName);
-#elif defined(__linux__) || defined(__CYGWIN__) || defined(__APPLE__)
+#elif defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__CYGWIN__) || defined(__APPLE__)
         mkdir(outDirName, 0777);
 #endif
     }
