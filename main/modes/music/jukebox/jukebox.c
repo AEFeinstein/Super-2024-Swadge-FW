@@ -18,18 +18,23 @@
 #include <esp_log.h>
 
 #include "hdw-tft.h"
-#include "mainMenu.h"
-#include "breakout.h"
-#include "factoryTest.h"
-#include "lumberjack.h"
-#include "mode_platformer.h"
-#include "mode_credits.h"
-#include "portableDance.h"
-#include "mode_ray.h"
-#include "settingsManager.h"
-#include "swadge2024.h"
 
+#include "swadge2024.h"
+#include "settingsManager.h"
+#include "portableDance.h"
+
+#include "accelTest.h"
+#include "colorchord.h"
+#include "dance.h"
+#include "factoryTest.h"
+#include "gamepad.h"
 #include "jukebox.h"
+#include "mainMenu.h"
+#include "modeTimer.h"
+#include "mode_credits.h"
+#include "mode_pinball.h"
+#include "touchTest.h"
+#include "tunernome.h"
 
 /*==============================================================================
  * Defines
@@ -146,102 +151,6 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
-jukeboxSong_t music_magtroidPocket[] = {
-    {
-        .filename = "base_0.sng",
-        .name     = "Station Zero",
-    },
-    {
-        .filename = "base_1.sng",
-        .name     = "Station One",
-    },
-    {
-        .filename = "cave_0.sng",
-        .name     = "Floriss",
-    },
-    {
-        .filename = "cave_1.sng",
-        .name     = "Scalderia",
-    },
-    {
-        .filename = "jungle_0.sng",
-        .name     = "Vinegrasp",
-    },
-    {
-        .filename = "jungle_1.sng",
-        .name     = "Mosspire",
-    },
-    {
-        .filename = "ray_boss.sng",
-        .name     = "Boss",
-    },
-};
-
-jukeboxSong_t music_galacticBrickdown[] = {
-    {
-        .filename = "brkBgmTitle.sng",
-        .name     = "BGM Title",
-    },
-    {
-        .filename = "brkBgmCrazy.sng",
-        .name     = "BGM Crazy",
-    },
-    {
-        .filename = "brkBgmPixel.sng",
-        .name     = "BGM Pixel",
-    },
-    {
-        .filename = "brkBgmSkill.sng",
-        .name     = "BGM Skill",
-    },
-    {
-        .filename = "brkBgmFinale.sng",
-        .name     = "BGM Finale",
-    },
-};
-
-jukeboxSong_t music_lumberJacks[] = {
-    {
-        .filename = "l_song_panic_title.sng",
-        .name     = "Panic Title",
-    },
-    {
-        .filename = "l_song_panic.sng",
-        .name     = "Panic",
-    },
-    {
-        .filename = "l_song_attack_title.sng",
-        .name     = "Attack Title",
-    },
-    {
-        .filename = "l_song_attack.sng",
-        .name     = "Attack",
-    },
-};
-
-jukeboxSong_t music_swadgeLand[] = {
-    {
-        .filename = "bgmDeMAGio.sng",
-        .name     = "DeMAGio BGM",
-    },
-    {
-        .filename = "bgmSmooth.sng",
-        .name     = "Smooth BGM",
-    },
-    {
-        .filename = "bgmUnderground.sng",
-        .name     = "Underground BGM",
-    },
-    {
-        .filename = "bgmCastle.sng",
-        .name     = "Castle BGM",
-    },
-    {
-        .filename = "bgmNameEntry.sng",
-        .name     = "Name Entry BGM",
-    },
-};
-
 jukeboxSong_t music_jukebox[] = {
     {
         .filename = "Fauxrio_Kart.sng",
@@ -294,26 +203,6 @@ jukeboxSong_t music_unused[] = {
 // clang-format off
 const jukeboxCategory_t musicCategories[] = {
     {
-        .categoryName = rayName,
-        .songs        = music_magtroidPocket,
-        .numSongs     = ARRAY_SIZE(music_magtroidPocket),
-    },
-    {
-        .categoryName = breakoutName,
-        .songs        = music_galacticBrickdown,
-        .numSongs     = ARRAY_SIZE(music_galacticBrickdown),
-    },
-    {
-        .categoryName = lumberjackName,
-        .songs        = music_lumberJacks,
-        .numSongs     = ARRAY_SIZE(music_lumberJacks),
-    },
-    {
-        .categoryName = platformerName,
-        .songs        = music_swadgeLand,
-        .numSongs     = ARRAY_SIZE(music_swadgeLand),
-    },
-    {
         .categoryName = jukeboxName,
         .songs        = music_jukebox,
         .numSongs     = ARRAY_SIZE(music_jukebox),
@@ -330,290 +219,6 @@ const jukeboxCategory_t musicCategories[] = {
     }
 };
 // clang-format on
-
-jukeboxSong_t sfx_magtroidPocket[] = {
-    {
-        .filename = "r_p_shoot.sng",
-        .name     = "Shoot",
-    },
-    {
-        .filename = "r_door_open.sng",
-        .name     = "Door Open",
-    },
-    {
-        .filename = "r_e_block.sng",
-        .name     = "Enemy Block",
-    },
-    {
-        .filename = "r_e_damage.sng",
-        .name     = "Enemy Damage",
-    },
-    {
-        .filename = "r_e_dead.sng",
-        .name     = "Enemy Dead",
-    },
-    {
-        .filename = "r_e_freeze.sng",
-        .name     = "Enemy Freeze",
-    },
-    {
-        .filename = "r_health.sng",
-        .name     = "Health",
-    },
-    {
-        .filename = "r_item_get.sng",
-        .name     = "Item Get",
-    },
-    {
-        .filename = "r_lava_dmg.sng",
-        .name     = "Lava Damage",
-    },
-    {
-        .filename = "r_p_charge_start.sng",
-        .name     = "Charge Start",
-    },
-    {
-        .filename = "r_p_charge.sng",
-        .name     = "Charge",
-    },
-    {
-        .filename = "r_p_damage.sng",
-        .name     = "Player Damage",
-    },
-    {
-        .filename = "r_p_ice.sng",
-        .name     = "Ice",
-    },
-    {
-        .filename = "r_p_missile.sng",
-        .name     = "Missile",
-    },
-    {
-        .filename = "r_p_xray.sng",
-        .name     = "X-Ray",
-    },
-    {
-        .filename = "r_warp.sng",
-        .name     = "Warp",
-    },
-    {
-        .filename = "r_game_over.sng",
-        .name     = "Game Over",
-    },
-};
-
-jukeboxSong_t sfx_galacticBrickdown[] = {
-    {
-        .filename = "brkGetReady.sng",
-        .name     = "Get Ready",
-    },
-    {
-        .filename = "sndBounce.sng",
-        .name     = "Bounce",
-    },
-    {
-        .filename = "sndBreak.sng",
-        .name     = "Break",
-    },
-    {
-        .filename = "sndBreak2.sng",
-        .name     = "Break 2",
-    },
-    {
-        .filename = "sndBreak3.sng",
-        .name     = "Break 3",
-    },
-    {
-        .filename = "sndDropBomb.sng",
-        .name     = "Drop Bomb",
-    },
-    {
-        .filename = "sndDetonate.sng",
-        .name     = "Detonate",
-    },
-    {
-        .filename = "sndBrk1up.sng",
-        .name     = "1-Up",
-    },
-    {
-        .filename = "sndTally.sng",
-        .name     = "Tally",
-    },
-    {
-        .filename = "sndWaveBall.sng",
-        .name     = "Wave Ball",
-    },
-    {
-        .filename = "brkLvlClear.sng",
-        .name     = "Level Clear",
-    },
-    {
-        .filename = "sndBrkDie.sng",
-        .name     = "Die",
-    },
-    {
-        .filename = "brkGameOver.sng",
-        .name     = "Game Over",
-    },
-    {
-        .filename = "brkHighScore.sng",
-        .name     = "High Score",
-    },
-};
-
-jukeboxSong_t sfx_lumberJacks[] = {
-    {
-        .filename = "l_sfx_jump.sng",
-        .name     = "Jump",
-    },
-    {
-        .filename = "l_sfx_enemy_flip.sng",
-        .name     = "Enemy Flip",
-    },
-    {
-        .filename = "l_sfx_enemy_death.sng",
-        .name     = "Enemy Death",
-    },
-    {
-        .filename = "l_sfx_water.sng",
-        .name     = "Water",
-    },
-    {
-        .filename = "l_sfx_upgrade.sng",
-        .name     = "Upgrade",
-    },
-    {
-        .filename = "l_sfx_powerup.sng",
-        .name     = "Power Up",
-    },
-    {
-        .filename = "l_sfx_pear.sng",
-        .name     = "Pear",
-    },
-    {
-        .filename = "l_sfx_brick.sng",
-        .name     = "Brick",
-    },
-    {
-        .filename = "l_sfx_being_attacked.sng",
-        .name     = "Being Attacked",
-    },
-    {
-        .filename = "l_song_gameover.sng",
-        .name     = "Game Over",
-    },
-    {
-        .filename = "l_song_respawn.sng",
-        .name     = "Respawn",
-    },
-};
-
-jukeboxSong_t sfx_swadgeLand[] = {
-    {
-        .filename = "bgmIntro.sng",
-        .name     = "Intro",
-    },
-    {
-        .filename = "sndMenuConfirm.sng",
-        .name     = "Menu Confirm",
-    },
-    {
-        .filename = "sndMenuDeny.sng",
-        .name     = "Menu Deny",
-    },
-    {
-        .filename = "sndMenuSelect.sng",
-        .name     = "Menu Select",
-    },
-    {
-        .filename = "bgmGameStart.sng",
-        .name     = "Game Start",
-    },
-    {
-        .filename = "sndJump1.sng",
-        .name     = "Jump 1",
-    },
-    {
-        .filename = "sndJump2.sng",
-        .name     = "Jump 2",
-    },
-    {
-        .filename = "sndJump3.sng",
-        .name     = "Jump 3",
-    },
-    {
-        .filename = "sndCoin.sng",
-        .name     = "Coin",
-    },
-    {
-        .filename = "sndHit.sng",
-        .name     = "Hit",
-    },
-    {
-        .filename = "sndHurt.sng",
-        .name     = "Hurt",
-    },
-    {
-        .filename = "snd1up.sng",
-        .name     = "1-Up",
-    },
-    {
-        .filename = "sndCheckpoint.sng",
-        .name     = "Checkpoint",
-    },
-    {
-        .filename = "sndPause.sng",
-        .name     = "Pause",
-    },
-    {
-        .filename = "sndPowerUp.sng",
-        .name     = "Power Up",
-    },
-    {
-        .filename = "sndSquish.sng",
-        .name     = "Squish",
-    },
-    {
-        .filename = "sndWarp.sng",
-        .name     = "Warp",
-    },
-    {
-        .filename = "sndWaveBall.sng",
-        .name     = "Wave Ball",
-    },
-    {
-        .filename = "sndLevelClearA.sng",
-        .name     = "Level Clear A",
-    },
-    {
-        .filename = "sndLevelClearB.sng",
-        .name     = "Level Clear B",
-    },
-    {
-        .filename = "sndLevelClearC.sng",
-        .name     = "Level Clear C",
-    },
-    {
-        .filename = "sndLevelClearD.sng",
-        .name     = "Level Clear D",
-    },
-    {
-        .filename = "sndLevelClearS.sng",
-        .name     = "Level Clear S",
-    },
-    {
-        .filename = "sndOutOfTime.sng",
-        .name     = "Outta Time",
-    },
-    {
-        .filename = "sndDie.sng",
-        .name     = "Die",
-    },
-    {
-        .filename = "bgmGameOver.sng",
-        .name     = "Game Over",
-    },
-};
 
 jukeboxSong_t sfx_mainMenu[] = {
     {
@@ -650,26 +255,6 @@ jukeboxSong_t sfx_unused[] = {
 
 // clang-format off
 const jukeboxCategory_t sfxCategories[] = {
-    {
-        .categoryName = rayName,
-        .songs        = sfx_magtroidPocket,
-        .numSongs     = ARRAY_SIZE(sfx_magtroidPocket),
-    },
-    {
-        .categoryName = breakoutName,
-        .songs        = sfx_galacticBrickdown,
-        .numSongs     = ARRAY_SIZE(sfx_galacticBrickdown),
-    },
-    {
-        .categoryName = lumberjackName,
-        .songs        = sfx_lumberJacks,
-        .numSongs     = ARRAY_SIZE(sfx_lumberJacks),
-    },
-    {
-        .categoryName = platformerName,
-        .songs        = sfx_swadgeLand,
-        .numSongs     = ARRAY_SIZE(sfx_swadgeLand),
-    },
     {
         .categoryName = factoryTestName,
         .songs        = sfx_factoryTest,
@@ -1026,10 +611,6 @@ void jukeboxMainLoop(int64_t elapsedUs)
         // Draw the mode name
         const font_t* nameFont      = &(jukebox->radiostars);
         uint8_t arrowOffsetFromText = 8;
-        if (categoryName == breakoutMode.modeName)
-        {
-            arrowOffsetFromText = 1;
-        }
         snprintf(text, sizeof(text), "Mode: %s", categoryName);
         int16_t width = textWidth(nameFont, text);
         int16_t yOff  = (TFT_HEIGHT - nameFont->height) / 2 - nameFont->height * 0;
