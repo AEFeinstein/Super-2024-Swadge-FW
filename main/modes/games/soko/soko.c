@@ -70,10 +70,10 @@ static void sokoEnterMode(void)
     soko->currentTheme = &soko->sokoDefaultTheme;
 
     // Default Theme
-    loadWsg("sk_player_down.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
-    loadWsg("sk_player_up.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
-    loadWsg("sk_player_left.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
-    loadWsg("sk_player_right.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
+    loadWsg("sk_pango_fwd1.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
+    loadWsg("sk_pango_back1.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
+    loadWsg("sk_pango_side1.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
+    loadWsg("sk_pango_side1.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
     loadWsg("sk_crate.wsg", &soko->sokoDefaultTheme.crateWSG, false);
     loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
 
