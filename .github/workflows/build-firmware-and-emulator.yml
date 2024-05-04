@@ -38,7 +38,7 @@ jobs:
         $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
         make -j2
 
-    - name: Upload Emulator artifact
+    - name: Upload Emulator EXE
       uses: actions/upload-artifact@v4.3.3
       with:
         name: ${{ env.EMULATOR_ARTIFACT }}-exe
@@ -47,7 +47,7 @@ jobs:
           spiffs_image
           version.txt
 
-    - name: Upload Emulator artifact
+    - name: Upload Emulator DLL
       uses: actions/upload-artifact@v4.3.3
       with:
         name: ${{ env.EMULATOR_ARTIFACT }}-dll
@@ -93,8 +93,8 @@ jobs:
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
-  merge:
-    runs-on: ubuntu-latest
+  Merge-Emulator-Artifacts:
+    runs-on: windows-latest
     needs: Build-Firmware-And-Emulator
     steps:
       - name: Merge Emulator Artifacts
@@ -102,3 +102,4 @@ jobs:
         with:
           name: ${{ env.EMULATOR_ARTIFACT }}
           pattern: ${{ env.EMULATOR_ARTIFACT }}-*
+          delete-merged: true
