@@ -41,11 +41,17 @@ jobs:
     - name: Upload Emulator artifact
       uses: actions/upload-artifact@v4.3.3
       with:
-        name: ${{ env.EMULATOR_ARTIFACT }}
+        name: ${{ env.EMULATOR_ARTIFACT }}-exe
         path: |
           swadge_emulator.exe
           spiffs_image
           version.txt
+
+    - name: Upload Emulator artifact
+      uses: actions/upload-artifact@v4.3.3
+      with:
+        name: ${{ env.EMULATOR_ARTIFACT }}-dll
+        path: |
           C:\msys64\mingw64\bin\libwinpthread-1.dll
 
     - name: Set up the IDF
@@ -86,3 +92,13 @@ jobs:
         slack-message: "*Build Result*: ${{ job.status }}\n*Author*: ${{ github.event.head_commit.author.username }}\n*Head Commit Message*:\n```\n${{ github.event.head_commit.message }}\n```\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+  merge:
+    runs-on: ubuntu-latest
+    needs: Build-Firmware-And-Emulator
+    steps:
+      - name: Merge Emulator Artifacts
+        uses: actions/upload-artifact/merge@v4.3.3
+        with:
+          name: ${{ env.EMULATOR_ARTIFACT }}
+          pattern: ${{ env.EMULATOR_ARTIFACT }}-*
