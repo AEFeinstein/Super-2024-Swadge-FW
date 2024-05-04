@@ -21,7 +21,7 @@ jobs:
     #   run: echo '${{ toJSON(github.event) }}'
 
     - name: Check out repository code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4.1.4
       with:
         submodules: recursive
       
@@ -38,19 +38,19 @@ jobs:
         $env:path = $env:path.Insert($env:path.ToLower().IndexOf("c:\windows\system32"), "C:\msys64\mingw64\bin;C:\msys64\usr\bin;")
         make -j2
 
-    - name: Upload Emulator artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload Emulator EXE
+      uses: actions/upload-artifact@v4.3.3
       with:
-        name: ${{ env.EMULATOR_ARTIFACT }}
+        name: ${{ env.EMULATOR_ARTIFACT }}-exe
         path: |
           swadge_emulator.exe
           spiffs_image
           version.txt
 
-    - name: Add DLL to Emulator artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload Emulator DLL
+      uses: actions/upload-artifact@v4.3.3
       with:
-        name: ${{ env.EMULATOR_ARTIFACT }}
+        name: ${{ env.EMULATOR_ARTIFACT }}-dll
         path: |
           C:\msys64\mingw64\bin\libwinpthread-1.dll
 
@@ -65,8 +65,8 @@ jobs:
         ${{ runner.temp }}/esp-idf/export.ps1
         idf.py build dfu
 
-    - name: Add build files to firmware artifact
-      uses: actions/upload-artifact@v3
+    - name: Add firmware, bootloader, partition table, version, and flasher files to firmware artifact
+      uses: actions/upload-artifact@v4.3.3
       with:
         name: ${{ env.FIRMWARE_ARTIFACT }}
         path: |
@@ -74,39 +74,15 @@ jobs:
           build/swadge2024.bin
           build/storage.bin
           build/dfu.bin
-
-    - name: Add bootloader file to firmware artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
           build/bootloader/bootloader.bin
-
-    - name: Add partition table file to firmware artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
           build/partition_table/partition-table.bin
-
-    - name: Add version file to firmware artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
           version.txt
-
-    - name: Add pyFlashGui.py to firmware artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: ${{ env.FIRMWARE_ARTIFACT }}
-        path: |
           tools/pyFlashGui/pyFlashGui.py
 
     - name: Post to a Slack channel
       if: (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) || (github.event_name == 'push' && github.ref_name == 'main')
       id: slack
-      uses: slackapi/slack-github-action@v1.24.0
+      uses: slackapi/slack-github-action@v1.26.0
       with:
         # Slack channel id, channel name, or user id to post message.
         # See also: https://api.slack.com/methods/chat.postMessage#channels
@@ -116,3 +92,14 @@ jobs:
         slack-message: "*Build Result*: ${{ job.status }}\n*Author*: ${{ github.event.head_commit.author.username }}\n*Head Commit Message*:\n```\n${{ github.event.head_commit.message }}\n```\n*Comparison*: ${{ github.event.compare }}\n*Artifacts*: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       env:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+  Merge-Emulator-Artifacts:
+    runs-on: windows-latest
+    needs: Build-Firmware-And-Emulator
+    steps:
+      - name: Merge Emulator Artifacts
+        uses: actions/upload-artifact/merge@v4.3.3
+        with:
+          name: ${{ env.EMULATOR_ARTIFACT }}
+          pattern: ${{ env.EMULATOR_ARTIFACT }}-*
+          delete-merged: true
