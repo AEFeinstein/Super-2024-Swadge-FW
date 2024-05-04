@@ -16,6 +16,7 @@
 #include "modeTimer.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
+#include "ringsAndGems.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -334,6 +335,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pinballMode.modeName)
         {
             switchToSwadgeMode(&pinballMode);
+        }
+        else if (label == ragMode.modeName)
+        {
+            switchToSwadgeMode(&ragMode);
         }
         else if (label == timerMode.modeName)
         {
