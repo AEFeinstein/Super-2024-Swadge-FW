@@ -11,7 +11,6 @@
 #include "fill.h"
 #include "color_utils.h"
 #include "hdw-nvs.h"
-#include "mode_ray.h"
 
 //==============================================================================
 // Defines
@@ -71,7 +70,7 @@ menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
 
     // Load Zip and check if it should be displayed
     loadWsg("zip.wsg", &renderer->zip, false);
-    readNvs32(MAGTROID_UNLOCK_KEY, &renderer->magtroidUnlocked);
+    // readNvs32(MAGTROID_UNLOCK_KEY, &renderer->magtroidUnlocked);
 
     // Initialize LEDs
     for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)

@@ -7,26 +7,17 @@
 #include "mainMenu.h"
 
 #include "accelTest.h"
-#include "breakout.h"
 #include "colorchord.h"
 #include "dance.h"
-#include "demoMode.h"
 #include "factoryTest.h"
 #include "gamepad.h"
 #include "jukebox.h"
-#include "lumberjack.h"
-#include "mode_paint.h"
-#include "mode_platformer.h"
-#include "mode_ray.h"
+#include "mainMenu.h"
 #include "modeTimer.h"
-#include "paint_share.h"
-#include "pushy.h"
-#include "slideWhistle.h"
-#include "flight.h"
-#include "touchTest.h"
-#include "tunernome.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
+#include "touchTest.h"
+#include "tunernome.h"
 
 #include "settingsManager.h"
 
@@ -152,24 +143,16 @@ static void mainMenuEnterMode(void)
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, rayMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, breakoutMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, lumberjackMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pushyMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, flightMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, modePlatformer.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, slideWhistleMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
     addSingleItemToMenu(mainMenu->menu, danceMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, modePaint.modeName);
     addSingleItemToMenu(mainMenu->menu, gamepadMode.modeName);
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
@@ -319,10 +302,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&accelTestMode);
         }
-        else if (label == breakoutMode.modeName)
-        {
-            switchToSwadgeMode(&breakoutMode);
-        }
         else if (label == colorchordMode.modeName)
         {
             switchToSwadgeMode(&colorchordMode);
@@ -331,13 +310,41 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&danceMode);
         }
-        else if (label == demoMode.modeName)
-        {
-            switchToSwadgeMode(&demoMode);
-        }
         else if (label == factoryTestMode.modeName)
         {
             switchToSwadgeMode(&factoryTestMode);
+        }
+        else if (label == gamepadMode.modeName)
+        {
+            switchToSwadgeMode(&gamepadMode);
+        }
+        else if (label == jukeboxMode.modeName)
+        {
+            switchToSwadgeMode(&jukeboxMode);
+        }
+        else if (label == mainMenuMode.modeName)
+        {
+            switchToSwadgeMode(&mainMenuMode);
+        }
+        else if (label == modeCredits.modeName)
+        {
+            switchToSwadgeMode(&modeCredits);
+        }
+        else if (label == pinballMode.modeName)
+        {
+            switchToSwadgeMode(&pinballMode);
+        }
+        else if (label == timerMode.modeName)
+        {
+            switchToSwadgeMode(&timerMode);
+        }
+        else if (label == touchTestMode.modeName)
+        {
+            switchToSwadgeMode(&touchTestMode);
+        }
+        else if (label == tunernomeMode.modeName)
+        {
+            switchToSwadgeMode(&tunernomeMode);
         }
         else if (label == factoryResetName)
         {
@@ -359,62 +366,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
             {
                 switchToSwadgeMode(&mainMenuMode);
             }
-        }
-        else if (label == gamepadMode.modeName)
-        {
-            switchToSwadgeMode(&gamepadMode);
-        }
-        else if (label == jukeboxMode.modeName)
-        {
-            switchToSwadgeMode(&jukeboxMode);
-        }
-        else if (label == lumberjackMode.modeName)
-        {
-            switchToSwadgeMode(&lumberjackMode);
-        }
-        else if (label == modePaint.modeName)
-        {
-            switchToSwadgeMode(&modePaint);
-        }
-        else if (label == timerMode.modeName)
-        {
-            switchToSwadgeMode(&timerMode);
-        }
-        else if (label == modePlatformer.modeName)
-        {
-            switchToSwadgeMode(&modePlatformer);
-        }
-        else if (label == pushyMode.modeName)
-        {
-            switchToSwadgeMode(&pushyMode);
-        }
-        else if (label == rayMode.modeName)
-        {
-            switchToSwadgeMode(&rayMode);
-        }
-        else if (label == pinballMode.modeName)
-        {
-            switchToSwadgeMode(&pinballMode);
-        }
-        else if (label == flightMode.modeName)
-        {
-            switchToSwadgeMode(&flightMode);
-        }
-        else if (label == slideWhistleMode.modeName)
-        {
-            switchToSwadgeMode(&slideWhistleMode);
-        }
-        else if (label == touchTestMode.modeName)
-        {
-            switchToSwadgeMode(&touchTestMode);
-        }
-        else if (label == tunernomeMode.modeName)
-        {
-            switchToSwadgeMode(&tunernomeMode);
-        }
-        else if (label == modeCredits.modeName)
-        {
-            switchToSwadgeMode(&modeCredits);
         }
     }
     else
@@ -470,7 +421,7 @@ void addSecretsMenu(void)
     addSettingsOptionsItemToMenu(mainMenu->menu, mainMenuShowSecretsMenuName, showSecretsMenuSettingOptions,
                                  showSecretsMenuSettingValues, ARRAY_SIZE(showSecretsMenuSettingOptions),
                                  getShowSecretsMenuSettingBounds(), getShowSecretsMenuSetting());
-    addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
+    // addSingleItemToMenu(mainMenu->menu, demoMode.modeName);
     addSingleItemToMenu(mainMenu->menu, accelTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, touchTestMode.modeName);
     addSingleItemToMenu(mainMenu->menu, factoryTestMode.modeName);
