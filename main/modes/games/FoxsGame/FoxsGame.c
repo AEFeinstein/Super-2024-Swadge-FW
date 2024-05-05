@@ -10,6 +10,11 @@ int fps = 1000000 / 30;
 uint16_t btnState;
 bool runner = true;
 
+const int x1 = 100; 
+const int z1 = 100;
+const int x2 = 150;
+const int z2 = 150;
+
 typedef struct{
     int pos[2];
     int lastPos[2];
@@ -41,42 +46,42 @@ swadgeMode_t foxMode = {
 };
 
 P1_t* P1 = NULL;
-static void foxEnterMode()
-{
-    P1 = calloc(1, sizeof(P1_t));
-}
-
 Dummy_t* Dummy = NULL;
 static void foxEnterMode()
 {
+    P1 = calloc(1, sizeof(P1_t));
     Dummy = calloc(1, sizeof(Dummy_t));
+
+    P1->pos[0] = 110;
+    P1->pos[1] = 150;
+    P1->facing = 1;
 }
 
 rectangle_t me = {
-    .pos.x  = P1->pos[0],
-    .pos.y  = P1->pos[1],
+    .pos.x  = x1,
+    .pos.y  = z1,
     .width  = 10,
     .height = 10,
 };
 
 rectangle_t other = {
-    .pos.x  = Dummy->pos[0],
-    .pos.y  = Dummy->pos[1],
+    .pos.x  = x2,
+    .pos.y  = z2,
     .width  = 10,
     .height = 10,
 };
 
 
 rectangle_t l5 = {
-    .pos.x  = P1->pos[0] + 15,
-    .pos.y  = P1->pos[1] + 5,
+    .pos.x  = x1 + 15,
+    .pos.y  = z1 + 5,
     .width  = 10,
     .height = 5,
 };
 
 rectangle_t h5 = {
-    .pos.x  = P1->pos[0] + 15,
-    .pos.y  = P1->pos[1] + 5,
+    .pos.x  = x1 + 15,
+    .pos.y  = z1 + 5,
     .width  = 20,
     .height = 5,
 };
@@ -99,11 +104,10 @@ static void debug(){
     }
 }
 
+/*
 static void collisionCheck(){
-    if(rectRectIntersection(me, other)){
-        return;
-    }
 }
+*/
 
 static void Player1() {
     P1->speed[0] = 0;
@@ -148,19 +152,12 @@ static void Player1() {
     P1->pos[0] += P1->speed[0];
     P1->pos[1] += P1->speed[1];
 
-    collisionCheck();
+    // collisionCheck(); //
 }
 
 static void foxMainLoop(int64_t elapsedUs)
 {
     setFrameRateUs(fps);
-
-    if(runner == true){
-        P1->pos[0] = 110;
-        P1->pos[1] = 150;
-        P1->facing = 1;
-        runner = false;
-    }
     
     Player1();
     debug();
