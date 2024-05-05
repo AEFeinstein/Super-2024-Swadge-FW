@@ -3,32 +3,30 @@
 
 static const char foxName[] = "Fox";
 static void foxMainLoop(int64_t elapsedUs);
+static void foxEnterMode();
+static void foxExitMode();
 
 int fps = 1000000 / 30;
 uint16_t btnState;
 bool runner = true;
 
-int x1 = 0; 
-int y1 = 100;
-double x1Speed = 0;
-double y1Speed = 0; 
-int state1 = 0; 
-int falling1 = 0;
+typedef struct{
+    int pos[2];
+    int lastPos[2];
+    int speed[2];
+    int state;
+    int falling;
+    int facing;
+} P1_t;
 
-int hitBoxes[2][4][4] = {
-    {
-        {0, 0, 10, 0},
-        {10, 0, 10, 10},
-        {10, 10, 0, 10},
-        {0, 10, 0, 0}
-    },
-    {
-        {0, 150, 280, 150},
-        {280, 150, 280, 240},
-        {280, 240, 0, 240},
-        {0, 240, 0, 150}
-    }
-};
+typedef struct{
+    int pos[2];
+    int lastPos[2];
+    int speed[2];
+    int state;
+    int falling;
+    int facing;
+} Dummy_t;
 
 swadgeMode_t foxMode = {
     .modeName = foxName,
@@ -37,19 +35,83 @@ swadgeMode_t foxMode = {
     .usesAccelerometer = false,
     .usesThermometer = false,
     .overrideSelectBtn = false,
-    .fnMainLoop = foxMainLoop
+    .fnMainLoop = foxMainLoop,
+    .fnEnterMode = foxEnterMode,
+    .fnExitMode = foxExitMode
 };
 
+P1_t* P1 = NULL;
+static void foxEnterMode()
+{
+    P1 = calloc(1, sizeof(P1_t));
+}
+
+Dummy_t* Dummy = NULL;
+static void foxEnterMode()
+{
+    Dummy = calloc(1, sizeof(Dummy_t));
+}
+
+rectangle_t me = {
+    .pos.x  = P1->pos[0],
+    .pos.y  = P1->pos[1],
+    .width  = 10,
+    .height = 10,
+};
+
+rectangle_t other = {
+    .pos.x  = Dummy->pos[0],
+    .pos.y  = Dummy->pos[1],
+    .width  = 10,
+    .height = 10,
+};
+
+
+rectangle_t l5 = {
+    .pos.x  = P1->pos[0] + 15,
+    .pos.y  = P1->pos[1] + 5,
+    .width  = 10,
+    .height = 5,
+};
+
+rectangle_t h5 = {
+    .pos.x  = P1->pos[0] + 15,
+    .pos.y  = P1->pos[1] + 5,
+    .width  = 20,
+    .height = 5,
+};
+
+static void foxExitMode()
+{
+    free(P1);
+}
+
+void BGFill(){
+    fillDisplayArea(0, 0, 280, 240, c000);
+}
+
 static void debug(){
-    for(int z = 0; z < 2; z++){
-        drawLineFast(int(hitBoxes[z][0][0] + x1), int(hitBoxes[z][0][1] + y1), int(hitBoxes[z][0][2] + x1), int(hitBoxes[z][0][3] + y1), c555);
-        drawLineFast(int(hitBoxes[z][1][0] + x1), int(hitBoxes[z][1][1] + y1), int(hitBoxes[z][1][2] + x1), int(hitBoxes[z][1][3] + y1), c555);
-        drawLineFast(int(hitBoxes[z][2][0] + x1), int(hitBoxes[z][2][1] + y1), int(hitBoxes[z][2][2] + x1), int(hitBoxes[z][2][3] + y1), c555);
-        drawLineFast(int(hitBoxes[z][3][0] + x1), int(hitBoxes[z][3][1] + y1), int(hitBoxes[z][3][2] + x1), int(hitBoxes[z][3][3] + y1), c555);
+    BGFill();
+
+    drawRect(P1->pos[0], P1->pos[1], 10, 10, c555);
+    if(P1->state >= 1){
+        drawRect((P1->pos[0] + 8) - P1->facing, P1->pos[1] + 5, 10, 5, c555);
     }
 }
 
-static void move() {
+static void collisionCheck(){
+    if(rectRectIntersection(me, other)){
+        return;
+    }
+}
+
+static void Player1() {
+    P1->speed[0] = 0;
+    P1->state = 0;
+
+    P1->lastPos[0] = P1->pos[0];
+    P1->lastPos[1] = P1->pos[1];
+
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt)) {
         btnState = evt.state;
@@ -57,43 +119,36 @@ static void move() {
                evt.state, evt.button, evt.down ? "down" : "up");
     }
 
-    if (btnState & PB_UP && falling1 < 2) {
-        y1Speed -= 5;
+    if (btnState & PB_A) {
+        P1->state = 1;
     }
     if (btnState & PB_LEFT) {
-        x1Speed -= 0.5;
+        P1->speed[0] = -2;
+        P1->facing = 16;
     }
     if (btnState & PB_RIGHT) {
-        x1Speed += 0.5;
+        P1->speed[0] = 2;
+        P1->facing = 0;
+    }
+    if (btnState & PB_UP && P1->falling < 2) {
+        P1->pos[1] -= 1;
+        P1->speed[1] -= 5;
     }
 
-    /*
-    if (btnState & PB_DOWN) {
+    if ( P1->pos[1] < 150 ) {
+        P1->speed[1] += 1;
+        P1->falling += 1;
     }
-    */
-
-    if ( y1 < 150 )
-    {
-        y1Speed += 0.5;
-        falling1 += 1;
-    }
-    else if( y1 >= 150 ){
-        y1 = 150;
-        y1Speed = 0;
-        falling1 = 0;
+    if( P1->pos[1] >= 150 ) {
+        P1->speed[1] = 0;
+        P1->pos[1] = 150;
+        P1->falling = 0;
     }
 
-    if (x1Speed > 0.2)
-    {
-        x1Speed /= 1.5;
-    }
-    if (x1Speed < 0.2)
-    {
-        x1Speed /= 1.5;
-    }
+    P1->pos[0] += P1->speed[0];
+    P1->pos[1] += P1->speed[1];
 
-    x1 += int(x1Speed);
-    y1 += int(y1Speed);
+    collisionCheck();
 }
 
 static void foxMainLoop(int64_t elapsedUs)
@@ -101,9 +156,12 @@ static void foxMainLoop(int64_t elapsedUs)
     setFrameRateUs(fps);
 
     if(runner == true){
+        P1->pos[0] = 110;
+        P1->pos[1] = 150;
+        P1->facing = 1;
         runner = false;
     }
     
-    move();
-    debug(hitBoxes);
+    Player1();
+    debug();
 }

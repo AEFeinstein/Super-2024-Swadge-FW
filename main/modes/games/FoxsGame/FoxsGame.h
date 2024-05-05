@@ -4,5 +4,5 @@
 #include "swadge2024.h"
  
 extern swadgeMode_t foxMode;
- 
+
 #endif
