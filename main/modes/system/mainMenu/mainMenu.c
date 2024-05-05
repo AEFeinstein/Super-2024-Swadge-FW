@@ -30,7 +30,7 @@ typedef struct
 {
     menu_t* menu;
     menu_t* secretsMenu;
-    menuLogbookRenderer_t* renderer;
+    menuManiaRenderer_t* renderer;
     font_t logbook;
     song_t jingle;
     song_t fanfare;
@@ -189,7 +189,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
+    mainMenu->renderer = initMenuManiaRenderer(&mainMenu->logbook);
 }
 
 /**
@@ -201,7 +201,7 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Deinit renderer
-    deinitMenuLogbookRenderer(mainMenu->renderer);
+    deinitMenuManiaRenderer(mainMenu->renderer);
 
     // Free the font
     freeFont(&mainMenu->logbook);
