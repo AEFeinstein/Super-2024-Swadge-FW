@@ -206,7 +206,7 @@ typedef struct soko_abs_s
 
     char* levelFileText;
     char* levelNames[SOKO_LEVEL_COUNT];
-    int levelIndeces[SOKO_LEVEL_COUNT];
+    int levelIndices[SOKO_LEVEL_COUNT];
 
     // game settings
     uint16_t maxPush; ///< Maximum number of crates the player can push. Use 0 for no limit.
