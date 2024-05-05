@@ -19,6 +19,7 @@
 #include "mode_pinball.h"
 #include "mode_synth.h"
 #include "ultimateTTT.h"
+#include "mode_cGrove.h"
 #include "touchTest.h"
 #include "tunernome.h"
 #include "keebTest.h"
@@ -151,6 +152,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, cGroveMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -359,6 +361,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == tttMode.modeName)
         {
             switchToSwadgeMode(&tttMode);
+        }
+        else if (label == cGroveMode.modeName)
+        {
+            switchToSwadgeMode(&cGroveMode);
         }
         else if (label == timerMode.modeName)
         {
