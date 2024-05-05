@@ -8,12 +8,7 @@ static void foxExitMode();
 
 int fps = 1000000 / 30;
 uint16_t btnState;
-bool runner = true;
 
-const int x1 = 100; 
-const int z1 = 100;
-const int x2 = 150;
-const int z2 = 150;
 
 typedef struct{
     int pos[2];
@@ -32,6 +27,21 @@ typedef struct{
     int falling;
     int facing;
 } Dummy_t;
+
+int hitBoxes[2][4][4] = {
+    {
+        {0, 0, 10, 0},
+        {10, 0, 10, 10},
+        {10, 10, 0, 10},
+        {0, 10, 0, 0}
+    },
+    {
+        {0, 150, 280, 150},
+        {280, 150, 280, 240},
+        {280, 240, 0, 240},
+        {0, 240, 0, 150}
+    }
+};
 
 swadgeMode_t foxMode = {
     .modeName = foxName,
@@ -57,35 +67,6 @@ static void foxEnterMode()
     P1->facing = 1;
 }
 
-rectangle_t me = {
-    .pos.x  = x1,
-    .pos.y  = z1,
-    .width  = 10,
-    .height = 10,
-};
-
-rectangle_t other = {
-    .pos.x  = x2,
-    .pos.y  = z2,
-    .width  = 10,
-    .height = 10,
-};
-
-
-rectangle_t l5 = {
-    .pos.x  = x1 + 15,
-    .pos.y  = z1 + 5,
-    .width  = 10,
-    .height = 5,
-};
-
-rectangle_t h5 = {
-    .pos.x  = x1 + 15,
-    .pos.y  = z1 + 5,
-    .width  = 20,
-    .height = 5,
-};
-
 static void foxExitMode()
 {
     free(P1);
@@ -98,23 +79,26 @@ void BGFill(){
 static void debug(){
     BGFill();
 
-    drawRect(P1->pos[0], P1->pos[1], 10, 10, c555);
+    for(int z = 0; z < 2; z++){
+        if( z == 0 ){
+            drawLineFast(hitBoxes[z][0][0] + P1->pos[0], hitBoxes[z][0][1] + P1->pos[1], hitBoxes[z][0][2] + P1->pos[0], hitBoxes[z][0][3] + P1->pos[1], c555);
+            drawLineFast(hitBoxes[z][1][0] + P1->pos[0], hitBoxes[z][1][1] + P1->pos[1], hitBoxes[z][1][2] + P1->pos[0], hitBoxes[z][1][3] + P1->pos[1], c555);
+            drawLineFast(hitBoxes[z][2][0] + P1->pos[0], hitBoxes[z][2][1] + P1->pos[1], hitBoxes[z][2][2] + P1->pos[0], hitBoxes[z][2][3] + P1->pos[1], c555);
+            drawLineFast(hitBoxes[z][3][0] + P1->pos[0], hitBoxes[z][3][1] + P1->pos[1], hitBoxes[z][3][2] + P1->pos[0], hitBoxes[z][3][3] + P1->pos[1], c555);
+        }
+    }
+
     if(P1->state >= 1){
-        drawRect((P1->pos[0] + 8) - P1->facing, P1->pos[1] + 5, 10, 5, c555);
+        drawLineFast(hitBoxes[0][0][0] + P1->pos[0], hitBoxes[0][0][1] + P1->pos[1], hitBoxes[0][0][2] + P1->pos[0], hitBoxes[0][0][3] + P1->pos[1], c555);
+        drawLineFast(hitBoxes[0][1][0] + P1->pos[0], hitBoxes[0][1][1] + P1->pos[1], hitBoxes[0][1][2] + P1->pos[0], hitBoxes[0][1][3] + P1->pos[1], c555);
+        drawLineFast(hitBoxes[0][2][0] + P1->pos[0], hitBoxes[0][2][1] + P1->pos[1], hitBoxes[0][2][2] + P1->pos[0], hitBoxes[0][2][3] + P1->pos[1], c555);
+        drawLineFast(hitBoxes[0][3][0] + P1->pos[0], hitBoxes[0][3][1] + P1->pos[1], hitBoxes[0][3][2] + P1->pos[0], hitBoxes[0][3][3] + P1->pos[1], c555);
     }
 }
-
-/*
-static void collisionCheck(){
-}
-*/
 
 static void Player1() {
     P1->speed[0] = 0;
     P1->state = 0;
-
-    P1->lastPos[0] = P1->pos[0];
-    P1->lastPos[1] = P1->pos[1];
 
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt)) {
@@ -151,8 +135,6 @@ static void Player1() {
 
     P1->pos[0] += P1->speed[0];
     P1->pos[1] += P1->speed[1];
-
-    // collisionCheck(); //
 }
 
 static void foxMainLoop(int64_t elapsedUs)
