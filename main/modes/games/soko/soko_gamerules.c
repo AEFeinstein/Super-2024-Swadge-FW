@@ -415,8 +415,13 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 
                     break;
                 case SKE_CRATE:
-                    drawWsg(&self->currentTheme->crateWSG, ox + level->entities[i].x * scale,
-                            oy + level->entities[i].y * scale, false, false, 0);
+                        // printf("Crate Found ");
+                        if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y] == SKT_GOAL)
+                        {
+                            drawWsg(&self->currentTheme->crateOnGoalWSG, ox + level->entities[i].x * scale,oy + level->entities[i].y * scale, false, false, 0);
+                        }else{
+                            drawWsg(&self->currentTheme->crateWSG, ox + level->entities[i].x * scale,oy + level->entities[i].y * scale, false, false, 0);
+                        }
                     break;
                 case SKE_STICKY_CRATE:
                     drawWsg(&self->currentTheme->stickyCrateWSG, ox + level->entities[i].x * scale,

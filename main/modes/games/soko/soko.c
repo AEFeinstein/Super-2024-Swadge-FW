@@ -75,6 +75,7 @@ static void sokoEnterMode(void)
     loadWsg("sk_pango_side1.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
     loadWsg("sk_pango_side1.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
     loadWsg("sk_crate.wsg", &soko->sokoDefaultTheme.crateWSG, false);
+    loadWsg("sk_crate_ongoal.wsg",&soko->sokoDefaultTheme.crateOnGoalWSG,false);
     loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
 
     soko->sokoDefaultTheme.wallColor  = c111;
@@ -86,6 +87,7 @@ static void sokoEnterMode(void)
     soko->overworldTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
     soko->overworldTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
     soko->overworldTheme.crateWSG       = soko->sokoDefaultTheme.crateWSG;
+    soko->overworldTheme.crateOnGoalWSG = soko-> sokoDefaultTheme.crateOnGoalWSG;
     soko->overworldTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
 
     soko->overworldTheme.wallColor  = c121;
@@ -124,6 +126,7 @@ static void sokoExitMode(void)
     freeWsg(&soko->sokoDefaultTheme.playerLeftWSG);
     freeWsg(&soko->sokoDefaultTheme.playerRightWSG);
     freeWsg(&soko->sokoDefaultTheme.crateWSG);
+    freeWsg(&soko->sokoDefaultTheme.crateOnGoalWSG);
     freeWsg(&soko->sokoDefaultTheme.stickyCrateWSG);
 
     // Free everything else
