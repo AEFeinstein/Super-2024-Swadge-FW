@@ -1,22 +1,12 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "ringsAndGems.h"
 
-// It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char ragName[] = "Rings and Gems";
-
-static void ragEnterMode(void);
-static void ragExitMode(void);
-static void ragMainLoop(int64_t elapsedUs);
-
-static void ragEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
-static void ragEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
-static void ragConCb(p2pInfo* p2p, connectionEvt_t evt);
-static void ragMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
-static void ragMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
-
-static void ragHandleInput(void);
-static void ragDrawGame(void);
-
-static void ragDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color);
+//==============================================================================
+// Enums
+//==============================================================================
 
 typedef enum __attribute__((packed))
 {
@@ -31,6 +21,10 @@ typedef enum __attribute__((packed))
     RAG_RING,
     RAG_GEM,
 } ragCell_t;
+
+//==============================================================================
+// Structs
+//==============================================================================
 
 typedef struct
 {
@@ -51,6 +45,32 @@ typedef struct
     p2pInfo p2p;
 } ringsAndGems_t;
 
+//==============================================================================
+// Function Prototypes
+//==============================================================================
+
+static void ragEnterMode(void);
+static void ragExitMode(void);
+static void ragMainLoop(int64_t elapsedUs);
+
+static void ragEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
+static void ragEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+static void ragConCb(p2pInfo* p2p, connectionEvt_t evt);
+static void ragMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
+static void ragMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
+
+static void ragHandleInput(void);
+static void ragDrawGame(void);
+
+static void ragDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color);
+
+//==============================================================================
+// Variables
+//==============================================================================
+
+// It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
+static const char ragName[] = "Rings and Gems";
+
 swadgeMode_t ragMode = {
     .modeName                 = ragName,
     .wifiMode                 = ESP_NOW,
@@ -70,6 +90,10 @@ swadgeMode_t ragMode = {
 };
 
 ringsAndGems_t* rag;
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * @brief TODO
@@ -110,7 +134,18 @@ static void ragExitMode(void)
 }
 
 /**
- * @brief
+ * @brief TODO
+ *
+ * @param elapsedUs
+ */
+static void ragMainLoop(int64_t elapsedUs)
+{
+    ragHandleInput();
+    ragDrawGame();
+}
+
+/**
+ * @brief TODO
  *
  */
 static void ragHandleInput(void)
@@ -297,17 +332,6 @@ static void ragDrawGame(void)
             }
         }
     }
-}
-
-/**
- * @brief TODO
- *
- * @param elapsedUs
- */
-static void ragMainLoop(int64_t elapsedUs)
-{
-    ragHandleInput();
-    ragDrawGame();
 }
 
 /**
