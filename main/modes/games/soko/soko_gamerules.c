@@ -1,7 +1,7 @@
 #include "soko_game.h"
 #include "soko.h"
 #include "soko_gamerules.h"
-
+#include "soko_save.h"
 #include "shapes.h"
 
 // clang-format off
@@ -99,6 +99,7 @@ void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         victoryDanceTimer += elapsedUs;
         if (victoryDanceTimer > SOKO_VICTORY_TIMER_US)
         {
+            sokoSolveCurrentLevel(self);
             self->loadNewLevelIndex = 0;
             self->loadNewLevelFlag  = true;
             self->screen            = SOKO_LOADNEWLEVEL;
@@ -153,6 +154,7 @@ void absSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         victoryDanceTimer += elapsedUs;
         if (victoryDanceTimer > SOKO_VICTORY_TIMER_US)
         {
+            sokoSolveCurrentLevel(self);
             self->loadNewLevelIndex = 0;
             self->loadNewLevelFlag  = true;
             self->screen            = SOKO_LOADNEWLEVEL;
