@@ -82,6 +82,10 @@ static void sokoEnterMode(void)
     soko->sokoDefaultTheme.wallColor  = c111;
     soko->sokoDefaultTheme.floorColor = c444;
 
+    //we check against 0,0 as an invalid start location, and use file location instead.
+    soko->overworld_playerX = 0;
+    soko->overworld_playerY = 0;
+
     // Overworld Theme
     soko->overworldTheme.playerDownWSG  = soko->sokoDefaultTheme.playerDownWSG;
     soko->overworldTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
@@ -535,6 +539,13 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
     //     (%d,%d)",k,soko->currentLevel.entities[k].type,soko->currentLevel.entities[k].x,soko->currentLevel.entities[k].y);
     // }
     // printf("\n");
+
+    if(levelIndex == 0){
+        if(soko->overworld_playerX == 0 && soko->overworld_playerY == 0){
+            soko->overworld_playerX = soko->soko_player->x;
+            soko->overworld_playerY = soko->soko_player->y;
+        }
+    }
 }
 
 static void sokoLoadLevel(uint16_t levelID)
@@ -604,6 +615,13 @@ static void sokoLoadLevel(uint16_t levelID)
                 }
                 soko->currentLevel.entityCount = soko->currentLevel.entityCount + 1;
             }
+        }
+    }
+
+    if(levelID == 0){
+        if(soko->overworld_playerX == 0 && soko->overworld_playerY == 0){
+            soko->overworld_playerX = soko->soko_player->x;
+            soko->overworld_playerY = soko->soko_player->y;
         }
     }
 }
