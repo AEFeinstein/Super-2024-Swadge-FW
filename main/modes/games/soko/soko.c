@@ -14,7 +14,7 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
 static sokoTile_t sokoGetTileFromColor(paletteColor_t);
 static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t);
 static int sokoFindIndex(soko_abs_t* self, int targetIndex);
-static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self);
+static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 
 // strings
 static const char sokoModeName[]        = "Sokobanabokabon";
@@ -140,7 +140,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
             // load level.
             // sokoLoadLevel(0);
             soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt", true);
-            sokoExtractLevelNamesAndIndeces(soko);
+            sokoExtractLevelNamesAndIndices(soko);
             /*
             for(int i = 0; i < 20; i++)
             {
@@ -315,7 +315,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->currentLevel.tiles[objX][objY] = SKT_PORTAL;
                     self->portals[self->portalCount].index
                         = self->portalCount + 1; // For basic test, 1 indexed with levels, but multi-room overworld
-                                                 // needs more sophistication to keep indeces correct.
+                                                 // needs more sophistication to keep indices correct.
                     self->portals[self->portalCount].x = objX;
                     self->portals[self->portalCount].y = objY;
                     printf("Portal %d at %d,%d\n", self->portals[self->portalCount].index,
@@ -577,7 +577,7 @@ static void sokoLoadLevel(uint16_t levelIndex)
             {
                 soko->portals[soko->portalCount].index
                     = soko->portalCount + 1; // For basic test, 1 indexed with levels, but multi-room overworld needs
-                                             // more sophistication to keep indeces correct.
+                                             // more sophistication to keep indices correct.
                 soko->portals[soko->portalCount].x = x;
                 soko->portals[soko->portalCount].y = y;
                 printf("Portal %d at %d,%d\n", soko->portals[soko->portalCount].index,
@@ -673,7 +673,7 @@ static int sokoFindIndex(soko_abs_t* self, int targetIndex)
     int retVal = -1;
     for (int i = 0; i < targetIndex; i++)
     {
-        if (self->levelIndeces[i] == targetIndex)
+        if (self->levelIndices[i] == targetIndex)
         {
             retVal = i;
         }
@@ -681,7 +681,7 @@ static int sokoFindIndex(soko_abs_t* self, int targetIndex)
     return retVal;
 }
 
-static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
+static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
 {
     printf("Loading Level List...!\n");
     printf("%s\n", self->levelFileText);
@@ -693,7 +693,7 @@ static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
     // memset(stringPtrs,0,30*sizeof(char*));
     char** stringPtrs = soko->levelNames;
     memset(stringPtrs, 0, SOKO_LEVEL_COUNT * sizeof(char*));
-    int* levelInds = soko->levelIndeces;
+    int* levelInds = soko->levelIndices;
     memset(levelInds, 0, SOKO_LEVEL_COUNT * sizeof(int));
     int intInd       = 0;
     int ind          = 0;
@@ -724,7 +724,7 @@ static void sokoExtractLevelNamesAndIndeces(soko_abs_t* self)
         storageStr = strtok(NULL, ":");
     }
     printf("Strings: %d, Ints: %d\n", ind, intInd);
-    printf("Levels and Indeces:\n");
+    printf("Levels and indices:\n");
     for (int i = ind - 1; i > -1; i--)
     {
         printf("Index: %d : %d : %s\n", i, levelInds[i], stringPtrs[i]);
