@@ -10,6 +10,7 @@
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
+#include "FoxsGame.h"
 #include "gamepad.h"
 #include "jukebox.h"
 #include "mainMenu.h"
@@ -143,6 +144,7 @@ static void mainMenuEnterMode(void)
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, foxMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -313,6 +315,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == factoryTestMode.modeName)
         {
             switchToSwadgeMode(&factoryTestMode);
+        }
+        else if (label == foxMode.modeName)
+        {
+            switchToSwadgeMode(&foxMode);
         }
         else if (label == gamepadMode.modeName)
         {

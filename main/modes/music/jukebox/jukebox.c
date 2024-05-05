@@ -27,6 +27,7 @@
 #include "colorchord.h"
 #include "dance.h"
 #include "factoryTest.h"
+#include "FoxsGame.h"
 #include "gamepad.h"
 #include "jukebox.h"
 #include "mainMenu.h"
