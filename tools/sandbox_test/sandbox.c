@@ -16,7 +16,7 @@
 
 int global_i = 100;
 menu_t * menu;
-menuLogbookRenderer_t* menuLogbookRenderer;
+menuManiaRenderer_t* menuManiaRenderer;
 font_t logbook;
 int testmode = 0;
 const char * menu_Bootload = "Bootloader";
@@ -81,7 +81,7 @@ void sandbox_main(void)
     addSingleItemToMenu(menu, mainMenuMode.modeName);
     addSingleItemToMenu(menu, menu_Bootload);
     loadFont("logbook.font", &logbook, false);
-    menuLogbookRenderer = initMenuLogbookRenderer(&logbook);
+    menuManiaRenderer = initMenuManiaRenderer(&logbook);
 
     loadWsg("kid0.wsg", &example_sprite, true);
 #endif
@@ -176,7 +176,7 @@ void sandbox_tick()
 	}
 	else
 	{
-	    drawMenuLogbook(menu, menuLogbookRenderer, 1);
+	    drawMenuLogbook(menu, menuManiaRenderer, 1);
 	}
 
     buttonEvt_t evt              = {0};

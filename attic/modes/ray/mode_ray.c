@@ -165,7 +165,7 @@ static void rayExitMode(void)
 {
     // Free menu
     deinitMenu(ray->menu);
-    deinitMenuLogbookRenderer(ray->renderer);
+    deinitMenuManiaRenderer(ray->renderer);
 
     // Free map, scripts, enemies, scenery, bullets, etc.
     rayFreeCurrentState(ray);
@@ -623,7 +623,7 @@ static void rayInitMenu(void)
     // Tear down old menu, if it exists
     if (NULL != ray->renderer)
     {
-        deinitMenuLogbookRenderer(ray->renderer);
+        deinitMenuManiaRenderer(ray->renderer);
     }
     if (NULL != ray->menu)
     {
@@ -648,5 +648,5 @@ static void rayInitMenu(void)
     addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Initialize a renderer
-    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
+    ray->renderer = initMenuManiaRenderer(&ray->logbook);
 }

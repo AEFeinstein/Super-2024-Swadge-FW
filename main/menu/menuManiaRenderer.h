@@ -1,15 +1,15 @@
-/*! \file menuLogbookRenderer.h
+/*! \file menuManiaRenderer.h
  *
- * \section menuLogbookRenderer_design Design Philosophy
+ * \section menuManiaRenderer_design Design Philosophy
  *
  * A menu renderer takes the data in the menu_t data structure and renders it to the display. The menu data structure is
  * separated from the rendering logic so that it is possible to draw menus with differing themes.
  *
- * \section menuLogbookRenderer_usage Usage
+ * \section menuManiaRenderer_usage Usage
  *
  * First a ::menu_t data structure must be created. For that usage, see menu.h.
  *
- * The menu renderer is initialized with initMenuLogbookRenderer() and deinitialized with deinitMenuLogbookRenderer().
+ * The menu renderer is initialized with initMenuManiaRenderer() and deinitialized with deinitMenuManiaRenderer().
  * Menu renderers must be deinitialized or they will leak memory.
  * When initializing the menu, a font must be passed in as an argument. This renderer will not allocate its own font to
  * avoid allocating the same font twice for a given mode (once for the menu and again for the mode itself).
@@ -17,9 +17,9 @@
  * The menu is drawn with drawMenuLogbook(). This will both draw over the entire display and light LEDs. The menu may be
  * drawn on top of later.
  *
- * \section menuLogbookRenderer_example Example
+ * \section menuManiaRenderer_example Example
  *
- * See menu.h for examples on how to use menuLogbookRenderer
+ * See menu.h for examples on how to use menuManiaRenderer
  */
 
 #ifndef _MENU_LOGBOOK_RENDERER_RENDERER_H_
@@ -36,8 +36,8 @@
 typedef struct
 {
     uint32_t periodUs; ///< The time, in microseconds, for one step of this LED's fade in or out. Each fade takes
-                       ///< between (2 * menuLogbookRenderer_LED_BRIGHTNESS_MIN) and (2 *
-                       ///< (menuLogbookRenderer_LED_BRIGHTNESS_MIN + menuLogbookRenderer_LED_BRIGHTNESS_RANGE)) steps
+                       ///< between (2 * menuManiaRenderer_LED_BRIGHTNESS_MIN) and (2 *
+                       ///< (menuManiaRenderer_LED_BRIGHTNESS_MIN + menuManiaRenderer_LED_BRIGHTNESS_RANGE)) steps
     uint32_t timerUs;  ///< A microsecond timer for this LED's fade in and out
     uint8_t maxBrightness; ///< The maximum brightness for this LED's fade in
     uint8_t brightness;    ///< The LED's current brightness
@@ -58,10 +58,10 @@ typedef struct
     wsg_t menu_bg;                        ///< Background image for the menu
     wsg_t zip;                            ///< Unlockable image of Zip
     int32_t magtroidUnlocked;             ///< Whether or not Zip should be drawn
-} menuLogbookRenderer_t;
+} menuManiaRenderer_t;
 
-menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont);
-void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer);
-void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elapsedUs);
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont);
+void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
+void drawMenuLogbook(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 
 #endif

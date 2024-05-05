@@ -4,7 +4,7 @@
 
 #include <esp_random.h>
 #include "hdw-battmon.h"
-#include "menuLogbookRenderer.h"
+#include "menuManiaRenderer.h"
 #include "menu_utils.h"
 #include "hdw-tft.h"
 #include "shapes.h"
@@ -38,7 +38,7 @@
 // Function Prototypes
 //==============================================================================
 
-static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
+static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
                          bool leftArrow, bool rightArrow, bool doubleArrows);
 
 //==============================================================================
@@ -49,12 +49,12 @@ static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int1
  * @brief Initialize a and return a menu renderer.
  *
  * @param menuFont The font used to draw this menu, preferably "logbook.font"
- * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuLogbookRenderer()
+ * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuManiaRenderer()
  * when done
  */
-menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont)
 {
-    menuLogbookRenderer_t* renderer = calloc(1, sizeof(menuLogbookRenderer_t));
+    menuManiaRenderer_t* renderer = calloc(1, sizeof(menuManiaRenderer_t));
     renderer->font                  = menuFont;
     loadWsg("mnuArrow.wsg", &renderer->arrow, false);
     loadWsg("mnuArrowS.wsg", &renderer->arrowS, false);
@@ -85,11 +85,11 @@ menuLogbookRenderer_t* initMenuLogbookRenderer(font_t* menuFont)
 
 /**
  * @brief Deinitialize a menu renderer and free associated memory. This will not free the font passed into
- * initMenuLogbookRenderer()
+ * initMenuManiaRenderer()
  *
  * @param renderer The renderer to deinitialize. It must not be used after deinitialization.
  */
-void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
+void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer)
 {
     freeWsg(&renderer->arrow);
     freeWsg(&renderer->arrowS);
@@ -114,7 +114,7 @@ void deinitMenuLogbookRenderer(menuLogbookRenderer_t* renderer)
  * @param rightArrow true to draw an arrow to the right, used when a menu item has options or a super-menu
  * @param doubleArrows true to draw double arrows instead of single arrows, used when entering or leaving submenus
  */
-static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
+static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_t x, int16_t y, bool isSelected,
                          bool leftArrow, bool rightArrow, bool doubleArrows)
 {
     // Pick colors based on selection
@@ -226,7 +226,7 @@ static void drawMenuText(menuLogbookRenderer_t* renderer, const char* text, int1
  * @param renderer The renderer to draw with
  * @param elapsedUs The time elapsed since this function was last called, for LED animation
  */
-void drawMenuLogbook(menu_t* menu, menuLogbookRenderer_t* renderer, int64_t elapsedUs)
+void drawMenuLogbook(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs)
 {
     // Only poll the battery if requested
     if (menu->showBattery)

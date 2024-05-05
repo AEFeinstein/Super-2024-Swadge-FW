@@ -193,7 +193,7 @@ typedef struct
     font_t ibm;
     font_t radiostars;
     font_t logbook;
-    menuLogbookRenderer_t* menuLogbookRenderer;
+    menuManiaRenderer_t* menuManiaRenderer;
 
     int beans;
     int ondonut;
@@ -430,7 +430,7 @@ static void flightEnterMode(void)
     loadFont("radiostars.font", &flight->radiostars, false);
     loadFont("logbook.font", &flight->logbook, false);
 
-    flight->menuLogbookRenderer = initMenuLogbookRenderer(&flight->logbook);
+    flight->menuManiaRenderer = initMenuManiaRenderer(&flight->logbook);
 
     flight->menu = initMenu(fl_title, flightMenuCb);
 
@@ -454,7 +454,7 @@ static void flightEnterMode(void)
 static void flightExitMode(void)
 {
     deinitMenu(flight->menu);
-    deinitMenuLogbookRenderer(flight->menuLogbookRenderer);
+    deinitMenuManiaRenderer(flight->menuManiaRenderer);
     freeFont(&flight->logbook);
     freeFont(&flight->radiostars);
     freeFont(&flight->ibm);
@@ -740,7 +740,7 @@ static void flightUpdate(void* arg __attribute__((unused)), int64_t elapsedUs)
         default:
         case FLIGHT_MENU:
         {
-            drawMenuLogbook(flight->menu, flight->menuLogbookRenderer, elapsedUs);
+            drawMenuLogbook(flight->menu, flight->menuManiaRenderer, elapsedUs);
             break;
         }
         case FLIGHT_FREEFLIGHT:

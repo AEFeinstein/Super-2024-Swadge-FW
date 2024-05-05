@@ -32,8 +32,8 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 
 ## Things that need to be added to enterMode() and exitMode() functions
 
-- `tunernome->menuRenderer = initMenuLogbookRenderer(&tunernome->logbookFont);`
-- `deinitMenuLogbookRenderer(tunernome->renderer);`
+- `tunernome->menuRenderer = initMenuManiaRenderer(&tunernome->logbookFont);`
+- `deinitMenuManiaRenderer(tunernome->renderer);`
 
 ## Things that need to be intelligently deleted
 
