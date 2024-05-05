@@ -3,6 +3,7 @@
 #include "soko.h"
 #include "soko_game.h"
 #include "soko_gamerules.h"
+#include "soko_save.h"
 
 static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
@@ -103,6 +104,9 @@ static void sokoEnterMode(void)
     // Set the mode to menu mode
     soko->screen = SOKO_MENU;
     soko->state  = SKS_INIT;
+
+    //load level solved state.
+    sokoLoadLevelSolvedState(&soko);
 }
 
 static void sokoExitMode(void)
@@ -512,6 +516,7 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
     //     printf("%d, ",soko->levelBinaryData[i]);
     // }
     // printf("\n");
+    soko->currentLevelIndex = levelIndex;
     soko->currentLevel.levelScale = 16;
     soko->camWidth                = TFT_WIDTH / (soko->currentLevel.levelScale);
     soko->camHeight               = TFT_HEIGHT / (soko->currentLevel.levelScale);
@@ -519,8 +524,8 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
     soko->camPadExtentX = soko->camWidth * 0.6 * 0.5;
     soko->camPadExtentY = soko->camHeight * 0.6 * 0.5;
 
+    //incremented by loadBinTiles.
     soko->currentLevel.entityCount = 0;
-
     soko->portalCount = 0;
 
     sokoLoadBinTiles(soko, (int)fileSize);
@@ -532,16 +537,16 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
     // printf("\n");
 }
 
-static void sokoLoadLevel(uint16_t levelIndex)
+static void sokoLoadLevel(uint16_t levelID)
 {
-    printf("load level %d\n", levelIndex);
+    printf("load level %d\n", levelID);
     soko->state = SKS_INIT;
     // get image file from selected index
-    loadWsg(sokoLevelNames[levelIndex], &soko->levelWSG, false);
+    loadWsg(sokoLevelNames[levelID], &soko->levelWSG, false);
 
     // populate background array
     // populate entities array
-
+    soko->currentLevelIndex = levelID;
     soko->currentLevel.width  = soko->levelWSG.w;
     soko->currentLevel.height = soko->levelWSG.h;
 
