@@ -13,6 +13,9 @@ static void ragConCb(p2pInfo* p2p, connectionEvt_t evt);
 static void ragMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void ragMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
+static void ragHandleInput(void);
+static void ragDrawGame(void);
+
 static void ragDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color);
 
 typedef enum __attribute__((packed))
@@ -37,11 +40,15 @@ typedef struct
 
 typedef struct
 {
-    p2pInfo p2p;
     ragSubgame_t subgames[3][3];
     vec_t cursor;
     vec_t selectedSubgame;
     ragCursorMode_t cursorMode;
+    wsg_t piece_x_big;
+    wsg_t piece_x_small;
+    wsg_t piece_o_big;
+    wsg_t piece_o_small;
+    p2pInfo p2p;
 } ringsAndGems_t;
 
 swadgeMode_t ragMode = {
@@ -75,6 +82,11 @@ static void ragEnterMode(void)
 
     rag->cursorMode = SELECT_SUBGAME;
 
+    loadWsg("x_small.wsg", &rag->piece_x_small, true);
+    loadWsg("x_large.wsg", &rag->piece_x_big, true);
+    loadWsg("o_small.wsg", &rag->piece_o_small, true);
+    loadWsg("o_large.wsg", &rag->piece_o_big, true);
+
     // Initialize and start p2p
     p2pInitialize(&rag->p2p, 0x25, ragConCb, ragMsgRxCb, -70);
     p2pStartConnection(&rag->p2p);
@@ -86,6 +98,10 @@ static void ragEnterMode(void)
  */
 static void ragExitMode(void)
 {
+    freeWsg(&rag->piece_x_small);
+    freeWsg(&rag->piece_x_big);
+    freeWsg(&rag->piece_o_small);
+    freeWsg(&rag->piece_o_big);
     // Deinitialize p2p
     p2pDeinit(&rag->p2p);
 
@@ -94,11 +110,10 @@ static void ragExitMode(void)
 }
 
 /**
- * @brief TODO
+ * @brief
  *
- * @param elapsedUs
  */
-static void ragMainLoop(int64_t elapsedUs)
+static void ragHandleInput(void)
 {
     // Check for buttons
     buttonEvt_t evt = {0};
@@ -155,6 +170,8 @@ static void ragMainLoop(int64_t elapsedUs)
                     else if (SELECT_CELL == rag->cursorMode)
                     {
                         // TODO place marker, pass the turn
+                        rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y].game[rag->cursor.x][rag->cursor.y]
+                            = RAG_RING;
                     }
                     break;
                 }
@@ -174,7 +191,14 @@ static void ragMainLoop(int64_t elapsedUs)
             }
         }
     }
+}
 
+/**
+ * @brief TODO
+ *
+ */
+static void ragDrawGame(void)
+{
     // Clear before drawing
     clearPxTft();
 
@@ -210,29 +234,80 @@ static void ragMainLoop(int64_t elapsedUs)
                 drawRect(sX0, sY0, sX1, sY1, c005);
             }
 
-            // For each cell
-            for (int cellY = 0; cellY < 3; cellY++)
+            // Check if the subgame has a winner
+            switch (rag->subgames[subX][subY].winner)
             {
-                for (int cellX = 0; cellX < 3; cellX++)
+                case RAG_RING:
                 {
-                    int16_t cX0 = sX0 + (cellX * cellSize);
-                    int16_t cY0 = sY0 + (cellY * cellSize);
-                    int16_t cX1 = cX0 + cellSize - 1;
-                    int16_t cY1 = cY0 + cellSize - 1;
-                    // Draw sprites
-                    // fillDisplayArea(cX0, cY0, cX1, cY1, c002);
-
-                    // If selected, draw the cursor on this cell
-                    if (SELECT_CELL == rag->cursorMode &&                                   //
-                        rag->selectedSubgame.x == subX && rag->selectedSubgame.y == subY && //
-                        rag->cursor.x == cellX && rag->cursor.y == cellY)
+                    drawWsgSimple(&rag->piece_x_big, sX0, sY0);
+                    break;
+                }
+                case RAG_GEM:
+                {
+                    drawWsgSimple(&rag->piece_o_big, sX0, sY0);
+                    break;
+                }
+                default:
+                case RAG_EMPTY:
+                {
+                    // For each cell
+                    for (int cellY = 0; cellY < 3; cellY++)
                     {
-                        drawRect(cX0, cY0, cX1, cY1, c005);
+                        for (int cellX = 0; cellX < 3; cellX++)
+                        {
+                            // Get the location for this cell
+                            int16_t cX0 = sX0 + (cellX * cellSize);
+                            int16_t cY0 = sY0 + (cellY * cellSize);
+
+                            // Draw sprites
+                            switch (rag->subgames[subX][subY].game[cellX][cellY])
+                            {
+                                default:
+                                case RAG_EMPTY:
+                                {
+                                    break;
+                                }
+                                case RAG_RING:
+                                {
+                                    drawWsgSimple(&rag->piece_x_small, cX0, cY0);
+                                    break;
+                                }
+                                case RAG_GEM:
+                                {
+                                    drawWsgSimple(&rag->piece_o_small, cX0, cY0);
+                                    break;
+                                }
+                            }
+
+                            // If selected, draw the cursor on this cell
+                            if (SELECT_CELL == rag->cursorMode &&                                   //
+                                rag->selectedSubgame.x == subX && rag->selectedSubgame.y == subY && //
+                                rag->cursor.x == cellX && rag->cursor.y == cellY)
+                            {
+                                // Get the other rectangle coordinates
+                                int16_t cX1 = cX0 + cellSize - 1;
+                                int16_t cY1 = cY0 + cellSize - 1;
+                                // Draw the cursor
+                                drawRect(cX0, cY0, cX1, cY1, c005);
+                            }
+                        }
                     }
+                    break;
                 }
             }
         }
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param elapsedUs
+ */
+static void ragMainLoop(int64_t elapsedUs)
+{
+    ragHandleInput();
+    ragDrawGame();
 }
 
 /**
