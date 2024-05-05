@@ -299,13 +299,13 @@ uint8_t pa_getTile(paTilemap_t* tilemap, uint8_t tx, uint8_t ty)
 
     if (/*ty < 0 ||*/ ty >= tilemap->mapHeight)
     {
-        ty = 0;
-        // return 0;
+        //ty = 0;
+        return 0;
     }
 
     if (/*tx < 0 ||*/ tx >= tilemap->mapWidth)
     {
-        return 1;
+        return 0;
     }
 
     return tilemap->map[ty * tilemap->mapWidth + tx];
@@ -396,4 +396,86 @@ void pa_freeTilemap(paTilemap_t* tilemap)
             }
         }
     }
+}
+
+void pa_generateMaze(paTilemap_t* tilemap)
+{
+    int32_t tx = 1;
+    int32_t ty = 13;
+    pa_setTile(tilemap, tx, ty, PA_TILE_EMPTY);
+
+    while(ty > 1){
+        tx = 1;
+        while(tx < 15){
+            if(!pa_getTile(tilemap, tx, ty) && !pa_genPathContinue(tilemap, tx, ty)){
+                pa_genMakePath(tilemap, tx, ty);
+            }
+            printf("test %d, %d\n", tx, ty);
+            tx += 2;
+        }
+        ty -= 2;
+    }
+}
+
+bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y){
+    if(pa_getTile(tilemap, x, y-2)) {
+        return false;
+    }
+    if(pa_getTile(tilemap, x, y+2)) {
+        return false;
+    }
+    if(pa_getTile(tilemap, x+2, y)) {
+        return false;
+    }
+    if(pa_getTile(tilemap, x-2, y)) {
+        return false;
+    }
+
+    return true;
+}
+
+void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y){
+    bool done = 0;
+    uint32_t nx = x;
+    uint32_t ny = y;
+
+    while(!done){
+        uint32_t r = esp_random() % 4;
+        
+        switch(r){
+            case 0:
+                if(pa_getTile(tilemap, nx, ny-2)) {
+                    pa_setTile(tilemap, nx, ny-1, 0);
+                    pa_setTile(tilemap, nx, ny-2, 0);
+                    ny-=2;
+                }
+                break;
+            case 1:
+                if(pa_getTile(tilemap, nx, ny+2)) {
+                    pa_setTile(tilemap, nx, ny+1, 0);
+                    pa_setTile(tilemap, nx, ny+2, 0);
+                    ny+=2;
+                }
+                break;
+            case 2:
+                if(pa_getTile(tilemap, nx-2, ny)) {
+                    pa_setTile(tilemap, nx-1, ny, 0);
+                    pa_setTile(tilemap, nx-2, ny, 0);
+                    nx-=2;
+                }
+                break;
+            case 3:
+                if(pa_getTile(tilemap, nx+2, ny)) {
+                    pa_setTile(tilemap, nx+1, ny, 0);
+                    pa_setTile(tilemap, nx+2, ny, 0);
+                    nx+=2;
+                }
+                break;
+
+            
+        }
+
+        done = pa_genPathContinue(tilemap, nx, ny);
+    }
+
 }

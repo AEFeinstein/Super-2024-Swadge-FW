@@ -221,8 +221,9 @@ void pangoEnterMode(void)
     loadFont("radiostars.font", &pango->radiostars, false);
 
     pa_initializeTileMap(&(pango->tilemap));
-    pa_loadMapFromFile(&(pango->tilemap), "mockup.bin");
-    pango->tilemap.mapOffsetX = 0;
+    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+    pa_generateMaze(&(pango->tilemap));
+    pango->tilemap.mapOffsetX = -4;
 
     pa_initializeSoundManager(&(pango->soundManager));
 
@@ -767,7 +768,8 @@ void changeStateGame(pango_t* self)
     pa_deactivateAllEntities(&(self->entityManager), false);
 
     uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
-    //pa_loadMapFromFile(&(pango->tilemap), leveldef[levelIndex].filename);
+    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+    pa_generateMaze(&(pango->tilemap));
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
     paEntityManager_t* entityManager = &(self->entityManager);

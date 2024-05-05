@@ -189,5 +189,9 @@ bool pa_isSolid(uint8_t tileId);
 void pa_unlockScrolling(paTilemap_t* tilemap);
 bool pa_needsTransparency(uint8_t tileId);
 void pa_freeTilemap(paTilemap_t* tilemap);
+void pa_generateMaze(paTilemap_t* tilemap);
+bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y);
+void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y);
+
 
 #endif
