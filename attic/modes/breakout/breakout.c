@@ -65,7 +65,7 @@ typedef void (*gameUpdateFunction_t)(breakout_t* self, int64_t elapsedUs);
 struct breakout_t
 {
     menu_t* menu;                     ///< The menu structure
-    menuLogbookRenderer_t* mRenderer; ///< The menu renderer
+    menuManiaRenderer_t* mRenderer; ///< The menu renderer
     font_t logbook;                   ///< The font used in the menu and game
     font_t ibm_vga8;
 
@@ -342,7 +342,7 @@ static void breakoutEnterMode(void)
     loadFont("logbook.font", &breakout->logbook, false);
     loadFont("ibm_vga8.font", &breakout->ibm_vga8, false);
 
-    breakout->mRenderer = initMenuLogbookRenderer(&breakout->logbook);
+    breakout->mRenderer = initMenuManiaRenderer(&breakout->logbook);
 
     initializeGameData(&(breakout->gameData), &(breakout->soundManager));
     initializeTileMap(&(breakout->tilemap));
@@ -380,7 +380,7 @@ static void breakoutExitMode(void)
         // This will also free the "level select" menu item.
         deinitMenu(breakout->menu);
     }
-    deinitMenuLogbookRenderer(breakout->mRenderer);
+    deinitMenuManiaRenderer(breakout->mRenderer);
 
     // Free the fonts
     freeFont(&breakout->logbook);

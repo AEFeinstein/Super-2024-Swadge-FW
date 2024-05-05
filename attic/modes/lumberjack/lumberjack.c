@@ -137,7 +137,7 @@ static void lumberjackEnterMode(void)
     loadFont("logbook.font", &lumberjack->logbook, false);
     loadFont("eightbit_atari_grube2.font", &lumberjack->arcade, false);
     lumberjack->menu                = initMenu(lumberjackName, lumberjackMenuCb);
-    lumberjack->menuLogbookRenderer = initMenuLogbookRenderer(&lumberjack->logbook);
+    lumberjack->menuManiaRenderer = initMenuManiaRenderer(&lumberjack->logbook);
 
     lumberjack->gameMode  = LUMBERJACK_MODE_NONE;
     lumberjack->networked = false;
@@ -302,7 +302,7 @@ static void lumberjackExitMode(void)
     freeFont(&lumberjack->logbook);
     freeFont(&lumberjack->arcade);
     deinitMenu(lumberjack->menu);
-    deinitMenuLogbookRenderer(lumberjack->menuLogbookRenderer);
+    deinitMenuManiaRenderer(lumberjack->menuManiaRenderer);
     free(lumberjack);
 
     lumberjack = NULL;
@@ -329,19 +329,19 @@ static void lumberjackMainLoop(int64_t elapsedUs)
         case LUMBERJACK_MENU:
         {
             lumberjackMenuLoop(elapsedUs);
-            for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumberjack->menuLogbookRenderer->leds); ledIdx++)
+            for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumberjack->menuManiaRenderer->leds); ledIdx++)
             {
-                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].periodUs = 1000000;
-                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].timerUs  = 0;
-                lumberjack->menuLogbookRenderer->ledTimers[ledIdx].brightness
-                    = 255; // lumberjack->menuLogbookRenderer->ledTimers[ledIdx].maxBrightness;
+                lumberjack->menuManiaRenderer->ledTimers[ledIdx].periodUs = 1000000;
+                lumberjack->menuManiaRenderer->ledTimers[ledIdx].timerUs  = 0;
+                lumberjack->menuManiaRenderer->ledTimers[ledIdx].brightness
+                    = 255; // lumberjack->menuManiaRenderer->ledTimers[ledIdx].maxBrightness;
 
-                lumberjack->menuLogbookRenderer->leds[ledIdx].r = lumberjack->playerColor.r;
-                lumberjack->menuLogbookRenderer->leds[ledIdx].g = lumberjack->playerColor.g;
-                lumberjack->menuLogbookRenderer->leds[ledIdx].b = lumberjack->playerColor.b;
+                lumberjack->menuManiaRenderer->leds[ledIdx].r = lumberjack->playerColor.r;
+                lumberjack->menuManiaRenderer->leds[ledIdx].g = lumberjack->playerColor.g;
+                lumberjack->menuManiaRenderer->leds[ledIdx].b = lumberjack->playerColor.b;
             }
 
-            setLeds(lumberjack->menuLogbookRenderer->leds, CONFIG_NUM_LEDS);
+            setLeds(lumberjack->menuManiaRenderer->leds, CONFIG_NUM_LEDS);
 
             break;
         }
@@ -372,7 +372,7 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
         }
     }
 
-    drawMenuLogbook(lumberjack->menu, lumberjack->menuLogbookRenderer, elapsedUs);
+    drawMenuLogbook(lumberjack->menu, lumberjack->menuManiaRenderer, elapsedUs);
 
     if (lumberjack->instructions)
     {
@@ -880,11 +880,11 @@ static void lumberjackMenuCb(const char* label, bool selected, uint32_t settingV
 
         if (characterChange)
         {
-            for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumberjack->menuLogbookRenderer->leds); ledIdx++)
+            for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumberjack->menuManiaRenderer->leds); ledIdx++)
             {
-                lumberjack->menuLogbookRenderer->leds[ledIdx].r = lumberjack->playerColor.r;
-                lumberjack->menuLogbookRenderer->leds[ledIdx].g = lumberjack->playerColor.g;
-                lumberjack->menuLogbookRenderer->leds[ledIdx].b = lumberjack->playerColor.b;
+                lumberjack->menuManiaRenderer->leds[ledIdx].r = lumberjack->playerColor.r;
+                lumberjack->menuManiaRenderer->leds[ledIdx].g = lumberjack->playerColor.g;
+                lumberjack->menuManiaRenderer->leds[ledIdx].b = lumberjack->playerColor.b;
             }
             lumberjack->save.character = lumberjack->selected;
         }

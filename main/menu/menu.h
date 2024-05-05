@@ -12,8 +12,8 @@
  * entered, or multi-item selections are scrolled, the callback is called.
  *
  * The menu data structure is created and managed in menu.h, but graphical rendering is handled in
- * menuLogbookRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
- * data structure in a number of styles. As of now, only menuLogbookRenderer.h is supplied.
+ * menuManiaRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
+ * data structure in a number of styles. As of now, only menuManiaRenderer.h is supplied.
  *
  * \section menu_usage Usage
  *
@@ -32,7 +32,7 @@
  * Button events must be passed to the menu with menuButton().
  * These button presses should not be handled elsewhere simultaneously.
  *
- * Menus are drawn with a renderer, such as menuLogbookRenderer.h.
+ * Menus are drawn with a renderer, such as menuManiaRenderer.h.
  *
  * \section menu_example Example
  *
@@ -99,7 +99,7 @@
  * font_t logbook;
  * loadFont("logbook.font", &logbook, false);
  * // Initialize a renderer
- * menuLogbookRenderer_t* renderer = initMenuLogbookRenderer(&logbook);
+ * menuManiaRenderer_t* renderer = initMenuManiaRenderer(&logbook);
  * \endcode
  *
  * Process button events:
@@ -129,7 +129,7 @@
  * // Free the menu
  * deinitMenu(menu);
  * // Free the renderer
- * deinitMenuLogbookRenderer(renderer);
+ * deinitMenuManiaRenderer(renderer);
  * \endcode
  */
 

@@ -471,7 +471,7 @@ typedef struct
     font_t menuFont;
     // Main Menu
     menu_t* menu;
-    menuLogbookRenderer_t* menuRenderer;
+    menuManiaRenderer_t* menuRenderer;
 
     uint8_t eraseSlot;
 
