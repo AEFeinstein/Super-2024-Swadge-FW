@@ -258,6 +258,9 @@ typedef struct soko_abs_s
 
     // Player Convenience Pointer
     sokoEntity_t* soko_player;
+    //overworld enter/exit data
+    uint16_t overworld_playerX;
+    uint16_t overworld_playerY;
 
     bool loadNewLevelFlag;
     uint8_t loadNewLevelIndex;

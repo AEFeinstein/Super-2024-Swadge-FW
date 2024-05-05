@@ -57,6 +57,10 @@ void sokoConfigGamemode(
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
 
         gamestate->currentTheme = &gamestate->overworldTheme;
+        //set position to previous overworld positon when re-entering the overworld
+        //but like... not an infinite loop?
+        gamestate->soko_player->x = gamestate->overworld_playerX;
+        gamestate->soko_player->y = gamestate->overworld_playerY;
     }
     else if (variant == SOKO_LASERBOUNCE)
     {
@@ -922,14 +926,21 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     if (self->state == SKS_GAMEPLAY)
     {
         // logic
-        self->sokoTryPlayerMovementFunc(self);
 
+        //by saving this before we move, we lag by one position. The final movement onto a portal doesn't get saved, as this loopin't entered again
+        //then we return to the position we were at before the last loop.
+        self->overworld_playerX = self->soko_player->x;
+        self->overworld_playerY = self->soko_player->y;
+
+        self->sokoTryPlayerMovementFunc(self);
+        
         // victory status. stored separate from gamestate because of future gameplay ideas/remixes.
-        // todo: rename to isVictory or such.
+        // todo: rename 'allCrates' to isVictory or such.
         self->allCratesOnGoal = self->isVictoryConditionFunc(self);
         if (self->allCratesOnGoal)
         {
             self->state = SKS_VICTORY;
+            
             printf("Player at %d,%d\n", self->soko_player->x, self->soko_player->y);
             victoryDanceTimer = 0;
         }

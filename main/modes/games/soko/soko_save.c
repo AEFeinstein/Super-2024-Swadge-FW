@@ -24,3 +24,11 @@ void sokoSolveCurrentLevel(soko_abs_t* soko){
         sokoSetLevelSolvedState(soko,soko->currentLevelIndex,true);
     }
 }
+
+//Saving Progress
+//soko->overworldX
+//soko->overworldY
+//current level? or just stick on overworld?
+
+//current level progress (all entitity positions/data, entities array. non-entities comes from file.)
+//euler encoding? (do like picross level?)
