@@ -12,7 +12,7 @@ Add the provided tilemap. You cannot add your own tiles. You can, but the system
 There are currently 3 rulesets: CLASSIC, EULER, and LASER.
 
 - **CLASSIC** is traditional [sokoban](https://en.wikipedia.org/wiki/Sokoban). Can only push 1 block, must cover all goal areas with blocks.
-- **EULER** is a port of Hunter's most succesful push-block-thinky game, which combines sokabon with [eulerian paths](https://en.wikipedia.org/wiki/Eulerian_path). You can only visit each square once.
+- **EULER** is a port of Hunter's most succesful push-block-thinky game, which combines sokobon with [eulerian paths](https://en.wikipedia.org/wiki/Eulerian_path). You can only visit each square once.
 - **LASER** is WIP.
 
 In order to indicate which ruleset your level uses...  (currently the array of files has a matching sokoLevelVariants array.)
@@ -28,6 +28,9 @@ There is an SK_LEVEL_LIST.txt file with one level per line, with following synta
 The id's do not need to packed. A 'levelIndices' int array is created which maps the provided id's to a clean loopable array.
 
 *Text is parsed by sokoExtractLevelNamesAndIndeces in soko.c. Importing is done by sokoLoadBinLevel in soko.c.*
+
+### Number of Levels
+Level index, save data, and other level arrays are all pre-allocated to the 'SOKO_LEVEL_COUNT' in soko_consts.h. This constant to be increased to the number of levels, including overworld, as appropriate.
 
 ### Adding to the Overworld
 

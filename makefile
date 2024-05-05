@@ -298,7 +298,15 @@ EXECUTABLE = swadge_emulator
 # Build the executable
 all: $(EXECUTABLE)
 
-# To build the executable file, you have to compile the objects first
+assets:
+	$(MAKE) -C ./tools/spiffs_file_preprocessor/
+	./tools/spiffs_file_preprocessor/spiffs_file_preprocessor -i ./assets/ -o ./spiffs_image/
+
+# Sokoban .tmx to bin preprocessor
+# using spiffs_image was because no extra work for project setup. .bin files shouldn't conflict with any wsg's.
+	 python ./tools/soko/soko_tmx_preprocessor.py ./assets/soko/ ./spiffs_image/
+
+# To build the main file, you have to compile the objects
 $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(OBJECTS) $(LIBRARY_FLAGS) -o $@
 
