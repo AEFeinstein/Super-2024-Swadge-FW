@@ -52,14 +52,16 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
 /**
  * @brief Initialize a and return a menu renderer.
  *
- * @param menuFont The font used to draw this menu, preferably "logbook.font"
+ * @param titleFont The font used to draw this menu title, preferably "righteous_150.font"
+ * @param menuFont The font used to draw this menu, preferably "rodin_eb.font"
  * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuManiaRenderer()
  * when done
  */
-menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont)
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* menuFont)
 {
     menuManiaRenderer_t* renderer = calloc(1, sizeof(menuManiaRenderer_t));
-    renderer->font                = menuFont;
+    renderer->titleFont           = titleFont;
+    renderer->menuFont            = menuFont;
 
     // Load battery images
     loadWsg("batt1.wsg", &renderer->batt[0], false);
@@ -135,7 +137,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
     }
 
     // Draw the text
-    drawText(renderer->font, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
+    drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
 
     // Draw the left arrow, if applicable
     if (leftArrow)
@@ -257,7 +259,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     // Where to start drawing
     int16_t y = Y_SECTION_MARGIN;
 
-    int16_t tWidth = textWidth(renderer->font, menu->title);
+    int16_t tWidth = textWidth(renderer->titleFont, menu->title);
 
     // Draw blue hexagon behind the title
     int16_t titleBgX0 = (TFT_WIDTH - tWidth) / 2 - 6;
@@ -271,14 +273,14 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
                          (titleBgY0 + titleBgY1) / 2, c115, c115);
 
     // Draw a title
-    y += (TITLE_BG_HEIGHT - renderer->font->height) / 2;
+    y += (TITLE_BG_HEIGHT - renderer->titleFont->height) / 2;
     // Draw outline first by offsetting text
-    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y - 1);
-    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y + 1);
-    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y - 1);
-    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y + 1);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y - 1);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y + 1);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y - 1);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y + 1);
     // Draw the menu text
-    drawText(renderer->font, c542, menu->title, (TFT_WIDTH - tWidth) / 2, y);
+    drawText(renderer->titleFont, c542, menu->title, (TFT_WIDTH - tWidth) / 2, y);
 
     // Move to drawing the rows
     y = titleBgY1 + Y_SECTION_MARGIN;

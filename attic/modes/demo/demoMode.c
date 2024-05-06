@@ -101,7 +101,7 @@ static void demoEnterMode(void)
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
 
-    dv->menuManiaRenderer = initMenuManiaRenderer(&dv->ibm);
+    dv->menuManiaRenderer = initMenuManiaRenderer(&dv->ibm, &dv->ibm);
 
     dv->conStatus = CON_LOST;
 

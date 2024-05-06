@@ -342,7 +342,7 @@ static void breakoutEnterMode(void)
     loadFont("logbook.font", &breakout->logbook, false);
     loadFont("ibm_vga8.font", &breakout->ibm_vga8, false);
 
-    breakout->mRenderer = initMenuManiaRenderer(&breakout->logbook);
+    breakout->mRenderer = initMenuManiaRenderer(&breakout->logbook, &breakout->logbook);
 
     initializeGameData(&(breakout->gameData), &(breakout->soundManager));
     initializeTileMap(&(breakout->tilemap));

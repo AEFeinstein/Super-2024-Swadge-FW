@@ -30,6 +30,7 @@ typedef struct
     menu_t* menu;
     menu_t* secretsMenu;
     menuManiaRenderer_t* renderer;
+    font_t font_righteous;
     font_t font_rodin;
     song_t jingle;
     song_t fanfare;
@@ -132,6 +133,7 @@ static void mainMenuEnterMode(void)
 
     // Load a font
     loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
+    loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
     loadSong("jingle.sng", &mainMenu->jingle, false);
@@ -187,7 +189,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuManiaRenderer(&mainMenu->font_rodin);
+    mainMenu->renderer = initMenuManiaRenderer(&mainMenu->font_righteous, &mainMenu->font_rodin);
 }
 
 /**
@@ -203,6 +205,7 @@ static void mainMenuExitMode(void)
 
     // Free the font
     freeFont(&mainMenu->font_rodin);
+    freeFont(&mainMenu->font_righteous);
 
     // Free the song
     freeSong(&mainMenu->jingle);
