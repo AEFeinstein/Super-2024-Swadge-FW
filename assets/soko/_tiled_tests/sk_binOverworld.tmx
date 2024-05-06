@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="9" height="9" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="41">
  <editorsettings>
-  <export target="warehouse.bin" format="sokoMap"/>
+  <export format="sokoMap"/>
  </editorsettings>
- <tileset firstgid="1" source="objLayers.tsx"/>
+ <tileset firstgid="1" source="../../../tools/soko/templateTiledProject/objLayers.tsx"/>
  <tileset firstgid="12" name="tilesheet" tilewidth="16" tileheight="16" tilecount="64" columns="8">
-  <image source="tileSprites/tilesheet.png" width="128" height="128"/>
+  <image source="../../../tools/soko/templateTiledProject/tileSprites/tilesheet.png" width="128" height="128"/>
   <tile id="0" type="wall"/>
   <tile id="1" type="floor"/>
   <tile id="2" type="goal"/>
@@ -14,13 +14,13 @@
  <layer id="1" name="tiles" width="9" height="9">
   <data encoding="csv">
 12,12,12,12,12,12,12,12,12,
+12,13,13,12,13,12,13,12,12,
 12,13,13,13,13,13,13,13,12,
 12,13,13,13,13,13,13,13,12,
 12,13,13,13,13,13,13,13,12,
 12,13,13,13,13,13,13,13,12,
-12,13,13,13,13,13,13,13,12,
-12,13,13,13,13,13,13,13,12,
-12,13,13,13,13,13,13,13,12,
+12,13,12,13,13,13,13,13,12,
+12,12,13,13,13,13,13,13,12,
 12,12,12,12,12,12,12,12,12
 </data>
  </layer>

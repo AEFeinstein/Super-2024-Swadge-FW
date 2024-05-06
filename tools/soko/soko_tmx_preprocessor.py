@@ -9,6 +9,8 @@ def main():
     output = sys.argv[2]
     if not os.path.exists(output):
         os.makedirs(output)
+
+  
     
     # todo: ensure output ends in a trailing slash.
     convertDir(sys.argv[1],output)
@@ -16,6 +18,8 @@ def main():
 
 
 def convertDir(dir,output):
+    # todo: check file modification dates.
+    # lol no
     for file in os.scandir(dir):
        # print("converting "+file)
         if os.path.isfile(file):
