@@ -85,7 +85,7 @@ void paintEnterMode(void)
 
     loadFont("logbook.font", &(paintMenu->menuFont), false);
 
-    paintMenu->menuRenderer = initMenuManiaRenderer(&paintMenu->menuFont);
+    paintMenu->menuRenderer = initMenuManiaRenderer(&paintMenu->menuFont, &paintMenu->menuFont);
 
     paintMenuInitialize();
 }
