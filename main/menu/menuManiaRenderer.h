@@ -35,13 +35,14 @@
  */
 typedef struct
 {
-    font_t* font;                         ///< The font to render the menu with
-    led_t leds[CONFIG_NUM_LEDS];          ///< An array with the RGB LED state to be output
-    wsg_t batt[4];                        ///< Images for the battery levels
-    wsg_t menu_bg;                        ///< Background image for the menu
+    font_t* titleFont;           ///< The font to render the menu with
+    font_t* menuFont;            ///< The font to render the menu with
+    led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
+    wsg_t batt[4];               ///< Images for the battery levels
+    wsg_t menu_bg;               ///< Background image for the menu
 } menuManiaRenderer_t;
 
-menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont);
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* menuFont);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 

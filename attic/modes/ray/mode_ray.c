@@ -648,5 +648,5 @@ static void rayInitMenu(void)
     addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Initialize a renderer
-    ray->renderer = initMenuManiaRenderer(&ray->logbook);
+    ray->renderer = initMenuManiaRenderer(&ray->logbook, &ray->logbook);
 }

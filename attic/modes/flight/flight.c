@@ -430,7 +430,7 @@ static void flightEnterMode(void)
     loadFont("radiostars.font", &flight->radiostars, false);
     loadFont("logbook.font", &flight->logbook, false);
 
-    flight->menuManiaRenderer = initMenuManiaRenderer(&flight->logbook);
+    flight->menuManiaRenderer = initMenuManiaRenderer(&flight->logbook, &flight->logbook);
 
     flight->menu = initMenu(fl_title, flightMenuCb);
 

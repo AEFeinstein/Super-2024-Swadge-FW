@@ -137,7 +137,7 @@ static void lumberjackEnterMode(void)
     loadFont("logbook.font", &lumberjack->logbook, false);
     loadFont("eightbit_atari_grube2.font", &lumberjack->arcade, false);
     lumberjack->menu                = initMenu(lumberjackName, lumberjackMenuCb);
-    lumberjack->menuManiaRenderer = initMenuManiaRenderer(&lumberjack->logbook);
+    lumberjack->menuManiaRenderer = initMenuManiaRenderer(&lumberjack->logbook, &lumberjack->logbook);
 
     lumberjack->gameMode  = LUMBERJACK_MODE_NONE;
     lumberjack->networked = false;
