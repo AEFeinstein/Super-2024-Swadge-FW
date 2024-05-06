@@ -497,7 +497,7 @@ void breakoutChangeStateMainMenu(breakout_t* self)
 static void breakoutUpdateMainMenu(breakout_t* self, int64_t elapsedUs)
 {
     // Draw the menu
-    drawMenuLogbook(breakout->menu, breakout->mRenderer, elapsedUs);
+    drawMenuMania(breakout->menu, breakout->mRenderer, elapsedUs);
 }
 
 static void breakoutChangeStateReadyScreen(breakout_t* self)

@@ -182,7 +182,7 @@ static void demoMainLoop(int64_t elapsedUs)
 
     if (dv->inMenu)
     {
-        drawMenuLogbook(dv->menu, dv->menuManiaRenderer, elapsedUs);
+        drawMenuMania(dv->menu, dv->menuManiaRenderer, elapsedUs);
         return;
     }
 

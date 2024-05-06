@@ -113,7 +113,7 @@
  *
  * Draw the menu from swadgeMode_t.fnMainLoop:
  * \code{.c}
- * drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
+ * drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
  * \endcode
  *
  * Receive menu callbacks:
