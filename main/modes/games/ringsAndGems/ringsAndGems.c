@@ -97,7 +97,7 @@ static void ragConCb(p2pInfo* p2p, connectionEvt_t evt);
 static void ragMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 static void ragMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
-static void ragHandleInput(void);
+static void ragHandleInput(buttonEvt_t* evt);
 static void ragDrawGame(void);
 
 static void ragDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color);
@@ -194,7 +194,7 @@ static void ragMainLoop(int64_t elapsedUs)
             case RGS_PLACING_PIECE:
             {
                 // Move the cursor
-                ragHandleInput();
+                ragHandleInput(&evt);
                 break;
             }
             default:
@@ -227,113 +227,108 @@ static void ragMainLoop(int64_t elapsedUs)
  * @brief TODO
  *
  */
-static void ragHandleInput(void)
+static void ragHandleInput(buttonEvt_t* evt)
 {
-    // Check for buttons
-    buttonEvt_t evt = {0};
-    while (checkButtonQueueWrapper(&evt))
+    // Do something?
+    if (evt->down)
     {
-        // Do something?
-        if (evt.down)
+        bool cursorMoved = false;
+        switch (evt->button)
         {
-            bool cursorMoved = false;
-            switch (evt.button)
+            case PB_UP:
             {
-                case PB_UP:
+                cursorMoved = true;
+                if (0 == rag->cursor.y)
                 {
-                    cursorMoved = true;
-                    if (0 == rag->cursor.y)
-                    {
-                        rag->cursor.y = 2;
-                    }
-                    else
-                    {
-                        rag->cursor.y--;
-                    }
-                    break;
+                    rag->cursor.y = 2;
                 }
-                case PB_DOWN:
+                else
                 {
-                    cursorMoved   = true;
-                    rag->cursor.y = (rag->cursor.y + 1) % 3;
-                    break;
+                    rag->cursor.y--;
                 }
-                case PB_LEFT:
-                {
-                    cursorMoved = true;
-                    if (0 == rag->cursor.x)
-                    {
-                        rag->cursor.x = 2;
-                    }
-                    else
-                    {
-                        rag->cursor.x--;
-                    }
-                    break;
-                }
-                case PB_RIGHT:
-                {
-                    cursorMoved   = true;
-                    rag->cursor.x = (rag->cursor.x + 1) % 3;
-                    break;
-                }
-                case PB_A:
-                {
-                    if (SELECT_SUBGAME == rag->cursorMode)
-                    {
-                        cursorMoved          = true;
-                        rag->selectedSubgame = rag->cursor;
-                        rag->cursor.x        = 1;
-                        rag->cursor.y        = 1;
-                        rag->cursorMode      = SELECT_CELL;
-                    }
-                    else if (SELECT_CELL == rag->cursorMode)
-                    {
-                        // Place the piece
-                        rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y].game[rag->cursor.x][rag->cursor.y]
-                            = (GOING_FIRST == p2pGetPlayOrder(&rag->p2p)) ? rag->p1Piece : rag->p2Piece;
-
-                        // Send move to the other swadge
-                        ragMsgPlacePiece_t place = {
-                            .type            = MSG_PLACE_PIECE,
-                            .selectedSubgame = rag->selectedSubgame,
-                            .selectedCell    = rag->cursor,
-                        };
-                        p2pSendMsg(&rag->p2p, (const uint8_t*)&place, sizeof(place), ragMsgTxCbFn);
-
-                        // Switch to waiting
-                        rag->state = RGS_WAITING;
-                    }
-                    break;
-                }
-                case PB_B:
-                {
-                    if (SELECT_CELL == rag->cursorMode)
-                    {
-                        cursorMoved     = true;
-                        rag->cursor     = rag->selectedSubgame;
-                        rag->cursorMode = SELECT_SUBGAME;
-                    }
-                    break;
-                }
-                default:
-                {
-                    break;
-                }
+                break;
             }
-
-            // Send cursor movement to the other Swadge
-            if (cursorMoved)
+            case PB_DOWN:
             {
-                // Send cursor type to other swadge
-                ragMsgMoveCursor_t move = {
-                    .type            = MSG_MOVE_CURSOR,
-                    .cursorMode      = rag->cursorMode,
-                    .selectedSubgame = rag->selectedSubgame,
-                    .cursor          = rag->cursor,
-                };
-                p2pSendMsg(&rag->p2p, (const uint8_t*)&move, sizeof(move), ragMsgTxCbFn);
+                cursorMoved   = true;
+                rag->cursor.y = (rag->cursor.y + 1) % 3;
+                break;
             }
+            case PB_LEFT:
+            {
+                cursorMoved = true;
+                if (0 == rag->cursor.x)
+                {
+                    rag->cursor.x = 2;
+                }
+                else
+                {
+                    rag->cursor.x--;
+                }
+                break;
+            }
+            case PB_RIGHT:
+            {
+                cursorMoved   = true;
+                rag->cursor.x = (rag->cursor.x + 1) % 3;
+                break;
+            }
+            case PB_A:
+            {
+                if (SELECT_SUBGAME == rag->cursorMode)
+                {
+                    cursorMoved          = true;
+                    rag->selectedSubgame = rag->cursor;
+                    rag->cursor.x        = 1;
+                    rag->cursor.y        = 1;
+                    rag->cursorMode      = SELECT_CELL;
+                }
+                else if (SELECT_CELL == rag->cursorMode)
+                {
+                    // Place the piece
+                    rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y].game[rag->cursor.x][rag->cursor.y]
+                        = (GOING_FIRST == p2pGetPlayOrder(&rag->p2p)) ? rag->p1Piece : rag->p2Piece;
+
+                    // Send move to the other swadge
+                    ragMsgPlacePiece_t place = {
+                        .type            = MSG_PLACE_PIECE,
+                        .selectedSubgame = rag->selectedSubgame,
+                        .selectedCell    = rag->cursor,
+                    };
+                    p2pSendMsg(&rag->p2p, (const uint8_t*)&place, sizeof(place), ragMsgTxCbFn);
+
+                    // Switch to waiting
+                    rag->state = RGS_WAITING;
+                }
+                break;
+            }
+            case PB_B:
+            {
+                if (SELECT_CELL == rag->cursorMode)
+                {
+                    cursorMoved     = true;
+                    rag->cursor     = rag->selectedSubgame;
+                    rag->cursorMode = SELECT_SUBGAME;
+                }
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+
+        // Send cursor movement to the other Swadge
+        if (cursorMoved)
+        {
+            // Send cursor type to other swadge
+            ragMsgMoveCursor_t move = {
+                .type            = MSG_MOVE_CURSOR,
+                .cursorMode      = rag->cursorMode,
+                .selectedSubgame = rag->selectedSubgame,
+                .cursor          = rag->cursor,
+            };
+            p2pSendMsg(&rag->p2p, (const uint8_t*)&move, sizeof(move), ragMsgTxCbFn);
         }
     }
 }
