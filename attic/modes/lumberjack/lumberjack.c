@@ -372,7 +372,7 @@ static void lumberjackMenuLoop(int64_t elapsedUs)
         }
     }
 
-    drawMenuLogbook(lumberjack->menu, lumberjack->menuManiaRenderer, elapsedUs);
+    drawMenuMania(lumberjack->menu, lumberjack->menuManiaRenderer, elapsedUs);
 
     if (lumberjack->instructions)
     {

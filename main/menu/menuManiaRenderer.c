@@ -16,18 +16,22 @@
 // Defines
 //==============================================================================
 
-#define CORNER_THICKNESS    2
-#define CORNER_LENGTH       7
-#define FILL_OFFSET         4
-#define TEXT_OFFSET         6
-#define ROW_SPACING         3
-#define TOP_LINE_SPACING    3
-#define TOP_LINE_THICKNESS  1
-#define ITEMS_PER_PAGE      5
-#define PAGE_ARROW_X_OFFSET 60
-#define PAGE_ARROW_Y_OFFSET 5
-#define X_SECTION_MARGIN    16
-#define Y_SECTION_MARGIN    20
+#define ITEMS_PER_PAGE 5
+
+#define Y_SECTION_MARGIN 14
+#define TITLE_BG_HEIGHT  40
+
+#define PARALLELOGRAM_X_OFFSET 13
+#define PARALLELOGRAM_HEIGHT   25
+#define PARALLELOGRAM_WIDTH    229
+#define ROW_MARGIN             8
+#define DROP_SHADOW_OFFSET     (ROW_MARGIN / 2)
+
+#define ARROW_MARGIN 4
+#define ARROW_WIDTH  2
+
+#define UP_ARROW_HEIGHT 10
+#define UP_ARROW_MARGIN 2
 
 #define MENU_LED_BRIGHTNESS_MIN     128
 #define MENU_LED_BRIGHTNESS_RANGE   128
@@ -55,9 +59,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont)
 {
     menuManiaRenderer_t* renderer = calloc(1, sizeof(menuManiaRenderer_t));
-    renderer->font                  = menuFont;
-    loadWsg("mnuArrow.wsg", &renderer->arrow, false);
-    loadWsg("mnuArrowS.wsg", &renderer->arrowS, false);
+    renderer->font                = menuFont;
 
     // Load battery images
     loadWsg("batt1.wsg", &renderer->batt[0], false);
@@ -68,16 +70,7 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont)
     // Load a background
     loadWsg("menu_bg.wsg", &renderer->menu_bg, true);
 
-    // Load Zip and check if it should be displayed
-    loadWsg("zip.wsg", &renderer->zip, false);
-    // readNvs32(MAGTROID_UNLOCK_KEY, &renderer->magtroidUnlocked);
-
     // Initialize LEDs
-    for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
-    {
-        renderer->ledTimers[idx].maxBrightness = MENU_LED_BRIGHTNESS_MIN + (esp_random() % MENU_LED_BRIGHTNESS_RANGE);
-        renderer->ledTimers[idx].periodUs = MENU_LED_TIME_STEP_US_MIN + (esp_random() % MENU_LED_TIME_STEP_US_RANGE);
-    }
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
     return renderer;
@@ -91,14 +84,11 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont)
  */
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer)
 {
-    freeWsg(&renderer->arrow);
-    freeWsg(&renderer->arrowS);
     freeWsg(&renderer->batt[0]);
     freeWsg(&renderer->batt[1]);
     freeWsg(&renderer->batt[2]);
     freeWsg(&renderer->batt[3]);
     freeWsg(&renderer->menu_bg);
-    freeWsg(&renderer->zip);
     free(renderer);
 }
 
@@ -118,103 +108,100 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                          bool leftArrow, bool rightArrow, bool doubleArrows)
 {
     // Pick colors based on selection
-    paletteColor_t cornerColor  = c411;
-    paletteColor_t textColor    = c553;
-    paletteColor_t topLineColor = c211;
+    paletteColor_t textColor = c555;
     if (isSelected)
     {
-        cornerColor  = c532;
-        textColor    = c555;
-        topLineColor = c422;
+        textColor = c533;
+
+        // Draw drop shadow for selected item
+        for (int rows = 0; rows < PARALLELOGRAM_HEIGHT; rows++)
+        {
+            drawLineFast(x + PARALLELOGRAM_HEIGHT - rows - 1 + DROP_SHADOW_OFFSET,                       //
+                         y + rows + DROP_SHADOW_OFFSET,                                                  //
+                         x + PARALLELOGRAM_HEIGHT - rows - 1 + PARALLELOGRAM_WIDTH + DROP_SHADOW_OFFSET, //
+                         y + rows + DROP_SHADOW_OFFSET,                                                  //
+                         c500);
+        }
     }
 
-    // Helper dimensions
-    int16_t tWidth  = textWidth(renderer->font, text);
-    int16_t tHeight = renderer->font->height;
-
-    // Upper left corner
-    fillDisplayArea(x, y, //
-                    x + CORNER_LENGTH, y + CORNER_THICKNESS, cornerColor);
-    fillDisplayArea(x, y, //
-                    x + CORNER_THICKNESS, y + CORNER_LENGTH, cornerColor);
-
-    // Upper right corner
-    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH, y, //
-                    x + (2 * TEXT_OFFSET) + tWidth, y + CORNER_THICKNESS, cornerColor);
-    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_THICKNESS, y, //
-                    x + (2 * TEXT_OFFSET) + tWidth, y + CORNER_LENGTH, cornerColor);
-
-    // Lower left corner
-    fillDisplayArea(x, y + tHeight + (2 * TEXT_OFFSET) - CORNER_THICKNESS, //
-                    x + CORNER_LENGTH, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
-    fillDisplayArea(x, y + tHeight + (2 * TEXT_OFFSET) - CORNER_LENGTH, //
-                    x + CORNER_THICKNESS, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
-
-    // Lower right corner
-    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH,
-                    y + tHeight + (2 * TEXT_OFFSET) - CORNER_THICKNESS, //
-                    x + (2 * TEXT_OFFSET) + tWidth, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
-    fillDisplayArea(x + tWidth + (2 * TEXT_OFFSET) - CORNER_THICKNESS,
-                    y + tHeight + (2 * TEXT_OFFSET) - CORNER_LENGTH, //
-                    x + (2 * TEXT_OFFSET) + tWidth, y + tHeight + (2 * TEXT_OFFSET), cornerColor);
-
-    // Top line
-    fillDisplayArea(x + CORNER_LENGTH + TOP_LINE_SPACING, y, //
-                    x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH - TOP_LINE_SPACING, y + TOP_LINE_THICKNESS,
-                    topLineColor);
-
-    // Bottom line
-    fillDisplayArea(x + CORNER_LENGTH + TOP_LINE_SPACING, y + tHeight + (2 * TEXT_OFFSET) - TOP_LINE_THICKNESS, //
-                    x + tWidth + (2 * TEXT_OFFSET) - CORNER_LENGTH - TOP_LINE_SPACING, y + tHeight + (2 * TEXT_OFFSET),
-                    topLineColor);
-
-    // Fill the background for selected items
-    if (isSelected)
+    // Draw background for the menu item
+    for (int rows = 0; rows < PARALLELOGRAM_HEIGHT; rows++)
     {
-        fillDisplayArea(x + FILL_OFFSET, y + FILL_OFFSET, x + TEXT_OFFSET + tWidth + (TEXT_OFFSET - FILL_OFFSET),
-                        y + TEXT_OFFSET + tHeight + (TEXT_OFFSET - FILL_OFFSET), c411);
+        drawLineFast(x + PARALLELOGRAM_HEIGHT - rows - 1,                       //
+                     y + rows,                                                  //
+                     x + PARALLELOGRAM_HEIGHT - rows - 1 + PARALLELOGRAM_WIDTH, //
+                     y + rows,                                                  //
+                     c000);
     }
 
     // Draw the text
-    drawText(renderer->font, textColor, text, x + TEXT_OFFSET, y + TEXT_OFFSET);
+    drawText(renderer->font, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
 
     // Draw the left arrow, if applicable
     if (leftArrow)
     {
-        wsg_t* arrow = &renderer->arrow;
-        if (isSelected)
-        {
-            arrow = &renderer->arrowS;
-        }
-        int16_t arrowX = x + CORNER_THICKNESS - arrow->w;
-        int16_t arrowY = y + TEXT_OFFSET + (tHeight / 2) - (arrow->h / 2);
-        drawWsg(arrow, arrowX, arrowY, true, false, 0);
+        // Draw Arrow
+        int16_t arrowX     = x + (PARALLELOGRAM_HEIGHT / 2) + 4;
+        int16_t lineHeight = (PARALLELOGRAM_HEIGHT - (ARROW_MARGIN * 2)) / 2;
+
+        // Arrows are stacked to add thickness
+        int16_t numArrows = ARROW_WIDTH;
 
         // Draw another arrow if requested
         if (doubleArrows)
         {
-            arrowX -= arrow->w;
-            drawWsg(arrow, arrowX, arrowY, true, false, 0);
+            numArrows += ARROW_WIDTH;
+        }
+
+        for (int16_t aw = 0; aw < numArrows; aw++)
+        {
+            drawLineFast(arrowX + lineHeight, y + ARROW_MARGIN, //
+                         arrowX, y + ARROW_MARGIN + lineHeight, //
+                         textColor);
+            drawLineFast(arrowX, y + ARROW_MARGIN + lineHeight,                    //
+                         arrowX + lineHeight, y + ARROW_MARGIN + (lineHeight * 2), //
+                         textColor);
+            arrowX++;
+
+            // Check for extra spacing between double arrows
+            if (ARROW_WIDTH - 1 == aw)
+            {
+                arrowX += numArrows;
+            }
         }
     }
 
     // Draw the right arrow, if applicable
     if (rightArrow)
     {
-        wsg_t* arrow = &renderer->arrow;
-        if (isSelected)
-        {
-            arrow = &renderer->arrowS;
-        }
-        int16_t arrowX = x + (TEXT_OFFSET * 2) + tWidth - CORNER_THICKNESS;
-        int16_t arrowY = y + TEXT_OFFSET + (tHeight / 2) - (arrow->h / 2);
-        drawWsg(arrow, arrowX, arrowY, false, false, 0);
+        // Draw Arrow
+        int16_t arrowX     = PARALLELOGRAM_WIDTH + x;
+        int16_t lineHeight = (PARALLELOGRAM_HEIGHT - (ARROW_MARGIN * 2)) / 2;
+
+        // Arrows are stacked to add thickness
+        int16_t numArrows = ARROW_WIDTH;
 
         // Draw another arrow if requested
         if (doubleArrows)
         {
-            arrowX += arrow->w;
-            drawWsg(arrow, arrowX, arrowY, false, false, 0);
+            numArrows += ARROW_WIDTH;
+        }
+
+        for (int16_t aw = 0; aw < numArrows; aw++)
+        {
+            drawLineFast(arrowX, y + ARROW_MARGIN,                           //
+                         arrowX + lineHeight, y + ARROW_MARGIN + lineHeight, //
+                         textColor);
+            drawLineFast(arrowX + lineHeight, y + ARROW_MARGIN + lineHeight, //
+                         arrowX, y + ARROW_MARGIN + (lineHeight * 2),        //
+                         textColor);
+            arrowX--;
+
+            // Check for extra spacing between double arrows
+            if (ARROW_WIDTH - 1 == aw)
+            {
+                arrowX -= numArrows;
+            }
         }
     }
 }
@@ -226,7 +213,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  * @param renderer The renderer to draw with
  * @param elapsedUs The time elapsed since this function was last called, for LED animation
  */
-void drawMenuLogbook(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs)
+void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs)
 {
     // Only poll the battery if requested
     if (menu->showBattery)
@@ -240,57 +227,8 @@ void drawMenuLogbook(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapse
         }
     }
 
-    // For each LED
-    for (uint16_t idx = 0; idx < CONFIG_NUM_LEDS; idx++)
-    {
-        // Get a convenient reference to that LED's timers
-        menuLed_t* mLed = &renderer->ledTimers[idx];
-        // Increment the timer
-        mLed->timerUs += elapsedUs;
-        // Check if the timer expired
-        while (mLed->timerUs >= mLed->periodUs)
-        {
-            // Decrement the timer
-            mLed->timerUs -= mLed->periodUs;
-            // If the LED is lighting
-            if (mLed->isLighting)
-            {
-                // Make it brighter
-                renderer->ledTimers[idx].brightness++;
-                // Check if it hit peak brightness
-                if (mLed->maxBrightness == renderer->ledTimers[idx].brightness)
-                {
-                    mLed->isLighting = false;
-                }
-            }
-            else
-            {
-                // Make it dimmer
-                renderer->ledTimers[idx].brightness--;
-                // Check if the LED is off
-                if (0 == renderer->ledTimers[idx].brightness)
-                {
-                    mLed->isLighting = true;
-                    // Pick new random speed and brightness
-                    mLed->maxBrightness = MENU_LED_BRIGHTNESS_MIN + (esp_random() % MENU_LED_BRIGHTNESS_RANGE);
-                    mLed->periodUs      = MENU_LED_TIME_STEP_US_MIN + (esp_random() % MENU_LED_TIME_STEP_US_RANGE);
-                }
-            }
-            renderer->leds[idx].r = gamma_correction_table[renderer->ledTimers[idx].brightness];
-        }
-    }
-    // Light the LEDs
-    setLeds(renderer->leds, CONFIG_NUM_LEDS);
-
     // Clear the TFT with a background
     drawWsgTile(&renderer->menu_bg, 0, 0);
-
-    // If Zip was unlocked
-    if (renderer->magtroidUnlocked)
-    {
-        // Draw to the TFT
-        drawWsgSimple(&renderer->zip, TFT_WIDTH - renderer->zip.w, TFT_HEIGHT - renderer->zip.h);
-    }
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -317,22 +255,45 @@ void drawMenuLogbook(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapse
     }
 
     // Where to start drawing
-    int16_t x = X_SECTION_MARGIN;
     int16_t y = Y_SECTION_MARGIN;
 
-    // Draw a title
-    drawText(renderer->font, c542, menu->title, x, y);
-    y += renderer->font->height + Y_SECTION_MARGIN;
+    int16_t tWidth = textWidth(renderer->font, menu->title);
 
-    // Shift the text a little after drawing the title
-    x = 10;
+    // Draw blue hexagon behind the title
+    int16_t titleBgX0 = (TFT_WIDTH - tWidth) / 2 - 6;
+    int16_t titleBgX1 = (TFT_WIDTH + tWidth) / 2 + 6;
+    int16_t titleBgY0 = y;
+    int16_t titleBgY1 = y + TITLE_BG_HEIGHT;
+    fillDisplayArea(titleBgX0, titleBgY0, titleBgX1, titleBgY1, c115);
+    drawTriangleOutlined(titleBgX0, titleBgY0, titleBgX0, titleBgY1, titleBgX0 - (TITLE_BG_HEIGHT / 2),
+                         (titleBgY0 + titleBgY1) / 2, c115, c115);
+    drawTriangleOutlined(titleBgX1, titleBgY0, titleBgX1, titleBgY1, titleBgX1 + (TITLE_BG_HEIGHT / 2),
+                         (titleBgY0 + titleBgY1) / 2, c115, c115);
+
+    // Draw a title
+    y += (TITLE_BG_HEIGHT - renderer->font->height) / 2;
+    // Draw outline first by offsetting text
+    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y - 1);
+    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y + 1);
+    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y - 1);
+    drawText(renderer->font, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y + 1);
+    // Draw the menu text
+    drawText(renderer->font, c542, menu->title, (TFT_WIDTH - tWidth) / 2, y);
+
+    // Move to drawing the rows
+    y = titleBgY1 + Y_SECTION_MARGIN;
 
     if (menu->items->length > ITEMS_PER_PAGE)
     {
         // Draw UP page indicator
-        int16_t arrowX = PAGE_ARROW_X_OFFSET;
-        int16_t arrowY = y - renderer->arrow.h - PAGE_ARROW_Y_OFFSET;
-        drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 270);
+        y -= (UP_ARROW_HEIGHT);
+        for (int t = 0; t < UP_ARROW_HEIGHT - UP_ARROW_MARGIN; t++)
+        {
+            drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT - t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
+                         PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT + t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
+                         c000);
+        }
+        y += (UP_ARROW_HEIGHT);
     }
 
     // Draw a page-worth of items
@@ -350,23 +311,25 @@ void drawMenuLogbook(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapse
             bool rightArrow   = menuItemHasNext(item) || menuItemHasSubMenu(item);
             bool doubleArrows = menuItemIsBack(item) || menuItemHasSubMenu(item);
 
-            drawMenuText(renderer, label, x, y, isSelected, leftArrow, rightArrow, doubleArrows);
+            drawMenuText(renderer, label, PARALLELOGRAM_X_OFFSET, y, isSelected, leftArrow, rightArrow, doubleArrows);
 
             // Move to the next item
             pageStart = pageStart->next;
         }
 
         // Move to the next row
-        y += (renderer->font->height + (TEXT_OFFSET * 2) + ROW_SPACING);
+        y += PARALLELOGRAM_HEIGHT + ROW_MARGIN;
     }
 
-    y -= ROW_SPACING;
     if (menu->items->length > ITEMS_PER_PAGE)
     {
+        y += UP_ARROW_MARGIN;
         // Draw DOWN page indicator
-        int16_t arrowX = PAGE_ARROW_X_OFFSET;
-        int16_t arrowY = y + PAGE_ARROW_Y_OFFSET;
-        drawWsg(&renderer->arrow, arrowX, arrowY, false, false, 90);
+        for (int16_t t = UP_ARROW_HEIGHT - UP_ARROW_MARGIN; t >= 0; t--)
+        {
+            drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH - t - (UP_ARROW_HEIGHT * 2) / 2, y - t,
+                         PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH + t - (UP_ARROW_HEIGHT * 2) / 2, y - t, c000);
+        }
     }
 
     // Only draw the battery if requested

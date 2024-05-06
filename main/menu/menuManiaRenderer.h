@@ -14,7 +14,7 @@
  * When initializing the menu, a font must be passed in as an argument. This renderer will not allocate its own font to
  * avoid allocating the same font twice for a given mode (once for the menu and again for the mode itself).
  *
- * The menu is drawn with drawMenuLogbook(). This will both draw over the entire display and light LEDs. The menu may be
+ * The menu is drawn with drawMenuMania(). This will both draw over the entire display and light LEDs. The menu may be
  * drawn on top of later.
  *
  * \section menuManiaRenderer_example Example
@@ -31,37 +31,18 @@
 #include "hdw-led.h"
 
 /**
- * @brief A struct containing state data for a single LED when a menu is being rendered
- */
-typedef struct
-{
-    uint32_t periodUs; ///< The time, in microseconds, for one step of this LED's fade in or out. Each fade takes
-                       ///< between (2 * menuManiaRenderer_LED_BRIGHTNESS_MIN) and (2 *
-                       ///< (menuManiaRenderer_LED_BRIGHTNESS_MIN + menuManiaRenderer_LED_BRIGHTNESS_RANGE)) steps
-    uint32_t timerUs;  ///< A microsecond timer for this LED's fade in and out
-    uint8_t maxBrightness; ///< The maximum brightness for this LED's fade in
-    uint8_t brightness;    ///< The LED's current brightness
-    bool isLighting;       ///< true if the LED is fading in, false if it is fading out
-} menuLed_t;
-
-/**
  * @brief A struct containing all the state data to render a logbook-style menu and LEDs
  */
 typedef struct
 {
-    wsg_t arrow;                          ///< An image of an arrow in normal color
-    wsg_t arrowS;                         ///< An image of an arrow in selected color
     font_t* font;                         ///< The font to render the menu with
     led_t leds[CONFIG_NUM_LEDS];          ///< An array with the RGB LED state to be output
-    menuLed_t ledTimers[CONFIG_NUM_LEDS]; ///< An array with the LED timers for animation
     wsg_t batt[4];                        ///< Images for the battery levels
     wsg_t menu_bg;                        ///< Background image for the menu
-    wsg_t zip;                            ///< Unlockable image of Zip
-    int32_t magtroidUnlocked;             ///< Whether or not Zip should be drawn
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* menuFont);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
-void drawMenuLogbook(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
+void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 
 #endif

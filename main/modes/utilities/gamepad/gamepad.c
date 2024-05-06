@@ -395,7 +395,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
             {
                 gamepad->menu = menuButton(gamepad->menu, evt);
             }
-            drawMenuLogbook(gamepad->menu, gamepad->renderer, elapsedUs);
+            drawMenuMania(gamepad->menu, gamepad->renderer, elapsedUs);
             break;
         }
         case GAMEPAD_MAIN:

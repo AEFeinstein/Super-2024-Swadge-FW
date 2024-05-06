@@ -132,7 +132,7 @@ void paintMainLoop(int64_t elapsedUs)
             }
             else
             {
-                drawMenuLogbook(paintMenu->menu, paintMenu->menuRenderer, elapsedUs);
+                drawMenuMania(paintMenu->menu, paintMenu->menuRenderer, elapsedUs);
             }
             break;
         }
