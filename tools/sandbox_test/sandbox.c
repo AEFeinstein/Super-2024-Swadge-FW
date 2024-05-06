@@ -176,7 +176,7 @@ void sandbox_tick()
 	}
 	else
 	{
-	    drawMenuLogbook(menu, menuManiaRenderer, 1);
+	    drawMenuMania(menu, menuManiaRenderer, 1);
 	}
 
     buttonEvt_t evt              = {0};

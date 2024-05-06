@@ -377,7 +377,7 @@ static void rayMainLoop(int64_t elapsedUs)
                 }
             }
             // Draw the menu
-            drawMenuLogbook(ray->menu, ray->renderer, elapsedUs);
+            drawMenuMania(ray->menu, ray->renderer, elapsedUs);
             break;
         }
         case RAY_GAME:

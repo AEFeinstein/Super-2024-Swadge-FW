@@ -30,7 +30,7 @@ typedef struct
     menu_t* menu;
     menu_t* secretsMenu;
     menuManiaRenderer_t* renderer;
-    font_t logbook;
+    font_t font_rodin;
     song_t jingle;
     song_t fanfare;
     int32_t lastBgmVol;
@@ -57,7 +57,7 @@ void addSecretsMenu(void);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-const char mainMenuName[]                       = "Main Menu 1.1";
+const char mainMenuName[]                       = "Main Menu";
 static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
@@ -131,7 +131,7 @@ static void mainMenuEnterMode(void)
     mainMenu = calloc(1, sizeof(mainMenu_t));
 
     // Load a font
-    loadFont("logbook.font", &mainMenu->logbook, false);
+    loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
 
     // Load a song for when the volume changes
     loadSong("jingle.sng", &mainMenu->jingle, false);
@@ -187,7 +187,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuManiaRenderer(&mainMenu->logbook);
+    mainMenu->renderer = initMenuManiaRenderer(&mainMenu->font_rodin);
 }
 
 /**
@@ -202,7 +202,7 @@ static void mainMenuExitMode(void)
     deinitMenuManiaRenderer(mainMenu->renderer);
 
     // Free the font
-    freeFont(&mainMenu->logbook);
+    freeFont(&mainMenu->font_rodin);
 
     // Free the song
     freeSong(&mainMenu->jingle);
@@ -274,7 +274,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
+    drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
 }
 
 /**

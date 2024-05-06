@@ -740,7 +740,7 @@ static void flightUpdate(void* arg __attribute__((unused)), int64_t elapsedUs)
         default:
         case FLIGHT_MENU:
         {
-            drawMenuLogbook(flight->menu, flight->menuManiaRenderer, elapsedUs);
+            drawMenuMania(flight->menu, flight->menuManiaRenderer, elapsedUs);
             break;
         }
         case FLIGHT_FREEFLIGHT:
