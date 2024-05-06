@@ -24,11 +24,11 @@ typedef enum
 
 typedef enum
 {
-    SKB_EMPTY             = 0,
-    SKB_WALL              = 1,
-    SKB_FLOOR             = 2,
-    SKB_GOAL              = 3,
-    SKB_NO_WALK           = 4,
+    SKB_EMPTY             = 8,
+    SKB_WALL              = 0,
+    SKB_FLOOR             = 1,
+    SKB_GOAL              = 2,
+    SKB_NO_WALK           = 3,
     SKB_OBJSTART          = 201, // Object and Signal Bytes are over 200
     SKB_COMPRESS          = 202,
     SKB_PLAYER            = 203,
@@ -95,11 +95,11 @@ typedef enum
     SKT_FLOOR         = 1,
     SKT_WALL          = 2,
     SKT_GOAL          = 3,
-    SKT_PORTAL        = 4,
-    SKT_LASER_EMIT    = 5, // To Be Removed
-    SKT_LASER_RECEIVE = 6, // To Be Removed
-    SKT_FLOOR_WALKED  = 7,
-    SKT_NO_WALK       = 8
+    SKT_NO_WALK       = 4,
+    SKT_PORTAL        = 5,
+    SKT_LASER_EMIT    = 6, // To Be Removed
+    SKT_LASER_RECEIVE = 7, // To Be Removed
+    SKT_FLOOR_WALKED  = 8
 } sokoTile_t;
 
 typedef struct
@@ -207,7 +207,7 @@ typedef struct soko_abs_s
 
     char* levelFileText;
     char* levelNames[SOKO_LEVEL_COUNT];
-    int levelIndices[SOKO_LEVEL_COUNT];
+    uint16_t levelIndices[SOKO_LEVEL_COUNT];
     bool levelSolved[SOKO_LEVEL_COUNT];
 
     // game settings

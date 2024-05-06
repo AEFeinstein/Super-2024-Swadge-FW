@@ -47,7 +47,6 @@ void sokoConfigGamemode(
     }
     else if (variant == SOKO_OVERWORLD)
     {
-        printf("Config Soko to Overworld\n");
         gamestate->maxPush                          = 0; // set to 0 for infinite push.
         gamestate->gameLoopFunc                     = overworldSokoGameLoop;
         gamestate->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
@@ -55,12 +54,13 @@ void sokoConfigGamemode(
         gamestate->drawTilesFunc                    = absSokoDrawTiles;
         gamestate->isVictoryConditionFunc           = overworldPortalEntered;
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
-
         gamestate->currentTheme = &gamestate->overworldTheme;
         //set position to previous overworld positon when re-entering the overworld
         //but like... not an infinite loop?
         gamestate->soko_player->x = gamestate->overworld_playerX;
         gamestate->soko_player->y = gamestate->overworld_playerY;
+
+
     }
     else if (variant == SOKO_LASERBOUNCE)
     {

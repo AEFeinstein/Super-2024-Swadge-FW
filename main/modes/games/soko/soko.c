@@ -10,7 +10,6 @@ static void sokoEnterMode(void);
 static void sokoExitMode(void);
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void sokoLoadBinLevel(uint16_t levelIndex);
-static void sokoLoadLevel(uint16_t);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static sokoTile_t sokoGetTileFromColor(paletteColor_t);
 static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t);
@@ -43,16 +42,16 @@ swadgeMode_t sokoMode = {
 // soko_t* soko=NULL;
 soko_abs_t* soko = NULL;
 
-extern const char* sokoLevelNames[]
-    = {"sk_overworld1.wsg", "sk_sticky_test.wsg", "sk_test1.wsg", "sk_test2.wsg", "sk_test3.wsg"};
+// extern const char* sokoLevelNames[]
+//     = {"sk_overworld1.wsg", "sk_sticky_test.wsg", "sk_test1.wsg", "sk_test2.wsg", "sk_test3.wsg"};
 
 extern const soko_var_t sokoLevelVariants[]
     = {SOKO_OVERWORLD, SOKO_EULER, SOKO_CLASSIC, SOKO_CLASSIC, SOKO_LASERBOUNCE};
 
 //@TODO: Remove this when all levels do binary loading and dynamic name loading.
-extern const char* sokoBinLevelNames[] = {
-    "sk_binOverworld.bin", "warehouse.bin", "sk_sticky_test.bin", "sk_test1.bin", "sk_test3.bin",
-};
+// extern const char* sokoBinLevelNames[] = {
+//     "sk_binOverworld.bin", "warehouse.bin", "sk_sticky_test.bin", "sk_test1.bin", "sk_test3.bin",
+// };
 
 static void sokoEnterMode(void)
 {
@@ -109,6 +108,10 @@ static void sokoEnterMode(void)
     soko->screen = SOKO_MENU;
     soko->state  = SKS_INIT;
 
+    //load up the level list.
+    soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt", true);
+    sokoExtractLevelNamesAndIndices(soko);
+
     //load level solved state.
     sokoLoadLevelSolvedState(&soko);
 }
@@ -150,8 +153,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // load level.
             // sokoLoadLevel(0);
-            soko->levelFileText = loadTxt("SK_LEVEL_LIST.txt", true);
-            sokoExtractLevelNamesAndIndices(soko);
+            
             /*
             for(int i = 0; i < 20; i++)
             {
@@ -174,8 +176,8 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == sokoNewGameLabel)
         {
             // load level.
-            sokoLoadLevel(0);
-            sokoInitGame(soko);
+            sokoLoadBinLevel(0);
+            sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
     }
@@ -221,9 +223,10 @@ static void sokoMainLoop(int64_t elapsedUs)
         }
         case SOKO_LOADNEWLEVEL:
         {
-            sokoLoadLevel(soko->loadNewLevelIndex);
+            sokoLoadBinLevel(soko->loadNewLevelIndex);
+            printf("init new level");
             sokoInitNewLevel(soko, sokoLevelVariants[soko->loadNewLevelIndex]);
-
+            printf("go to gameplay");
             soko->screen = SOKO_LEVELPLAY;
         }
     }
@@ -246,21 +249,25 @@ void freeEntity(soko_abs_t* self, sokoEntity_t* entity) // Free internal entity 
 
 void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
 {
-    const int HEADER_BYTE_OFFSET   = 2;
+    const int HEADER_BYTE_OFFSET   = 3;//width,height,mode
     int totalTiles                 = self->currentLevel.width * self->currentLevel.height;
     int tileIndex                  = 0;
     self->currentLevel.entityCount = 0;
     self->goalCount                = 0;
+
+    printf("reading tiles+entities:\n");
     for (int i = HEADER_BYTE_OFFSET; i < byteCount; i++)
     {
-        if (self->levelBinaryData[i] == SKB_OBJSTART) // Objects in level data should be of the form SKB_OBJSTART,
-                                                      // SKB_[Object Type], [Data Bytes] , SKB_OBJEND
-        {
+        // Objects in level data should be of the form 
+        // SKB_OBJSTART, SKB_[Object Type], [Data Bytes] , SKB_OBJEND
+        if (self->levelBinaryData[i] == SKB_OBJSTART){
             int objX = (tileIndex - 1) % (self->currentLevel.width); // Look at the previous
             int objY = (tileIndex - 1) / (self->currentLevel.width);
             uint8_t flagByte, direction;
             bool players, crates, sticky, trail, inverted;
             int hp, targetX, targetY;
+            printf("reading object byte after start: %i,%i:%i\n",objX,objY,self->levelBinaryData[i+1]);
+
             switch (self->levelBinaryData[i + 1]) // On creating entities, index should be advanced to the SKB_OBJEND
                                                   // byte so the post-increment moves to the next tile.
             {
@@ -268,14 +275,15 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     i += 2;
                     break; // Not yet implemented
                 case SKB_PLAYER:
-                    self->currentLevel.gameMode                                      = self->levelBinaryData[i + 2];
+                    //moved gamemode to bit 3 of level data in header.
+                    //self->currentLevel.gameMode                                      = self->levelBinaryData[i + 2];
                     self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_PLAYER;
                     self->currentLevel.entities[self->currentLevel.entityCount].x    = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y    = objY;
                     self->soko_player              = &self->currentLevel.entities[self->currentLevel.playerIndex];
                     self->currentLevel.playerIndex = self->currentLevel.entityCount;
                     self->currentLevel.entityCount += 1;
-                    i += 3;
+                    i += 2;//start, player, end.
                     break;
                 case SKB_CRATE:
                     flagByte = self->levelBinaryData[i + 2];
@@ -484,7 +492,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     tileType = SKT_FLOOR; //@todo Add No-Walk floors that can only accept crates or pass lasers
                     break;
                 case SKB_GOAL:
-                    tileType                       = SKT_GOAL;
+                    tileType = SKT_GOAL;
                     self->goals[self->goalCount].x = tileX;
                     self->goals[self->goalCount].y = tileY;
                     self->goalCount++;
@@ -496,6 +504,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             self->currentLevel.tiles[tileX][tileY] = tileType;
             // printf("BinData@%d: %d Tile: %d at (%d,%d)
             // index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
+            printf("Insert %i at %i,%i\n",tileType,tileX,tileY);
             tileIndex++;
         }
     }
@@ -503,18 +512,19 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
 
 static void sokoLoadBinLevel(uint16_t levelIndex)
 {
-    const int HEADER_BYTE_OFFSET = 2; // Number of bytes before tile data begins
+    const int HEADER_BYTE_OFFSET = 3; // Number of bytes before tile data begins
 
-    printf("load level %d\n", levelIndex);
+    printf("load bin level %d, %s\n", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;
-    soko->levelBinaryData = spiffsReadFile(sokoBinLevelNames[levelIndex], &fileSize,
-                                           true); // Heap CAPS malloc/calloc allocation for SPI RAM
+    soko->levelBinaryData = spiffsReadFile(soko->levelNames[levelIndex], &fileSize, true); // Heap CAPS malloc/calloc allocation for SPI RAM
+
     // The pointer returned by spiffsReadFile can be freed with free() with no additional steps.
     soko->currentLevel.width = soko->levelBinaryData[0];  // first two bytes of a level's data always describe the
                                                           // bounding width and height of the tilemap.
     soko->currentLevel.height = soko->levelBinaryData[1]; // Max Theoretical Level Bounding Box Size is 255x255, though
                                                           // you'll likely run into issues with entities first.
+    soko->currentLevel.gameMode = (soko_var_t)soko->levelBinaryData[2];
     // for(int i = 0; i < fileSize; i++)
     //{
     //     printf("%d, ",soko->levelBinaryData[i]);
@@ -542,132 +552,13 @@ static void sokoLoadBinLevel(uint16_t levelIndex)
 
     if(levelIndex == 0){
         if(soko->overworld_playerX == 0 && soko->overworld_playerY == 0){
+            printf("resetting player position from loaded entity\n");
             soko->overworld_playerX = soko->soko_player->x;
             soko->overworld_playerY = soko->soko_player->y;
         }
     }
-}
 
-static void sokoLoadLevel(uint16_t levelID)
-{
-    printf("load level %d\n", levelID);
-    soko->state = SKS_INIT;
-    // get image file from selected index
-    loadWsg(sokoLevelNames[levelID], &soko->levelWSG, false);
-
-    // populate background array
-    // populate entities array
-    soko->currentLevelIndex = levelID;
-    soko->currentLevel.width  = soko->levelWSG.w;
-    soko->currentLevel.height = soko->levelWSG.h;
-
-    // player and crate wsg's are 16px right now.
-    // In picross I wrote a drawWSGScaled for the main screen when i could get away with it on level select screen. but
-    // here I think just commit to something.
-    //  Maybe 24? How big are levels going to get?
-    soko->currentLevel.levelScale = 16;
-
-    // how many tiles can fit horizontally and vertically. This doesn't change, and here is we we figure out scale.
-    // floor
-    soko->camWidth  = TFT_WIDTH / (soko->currentLevel.levelScale);
-    soko->camHeight = TFT_HEIGHT / (soko->currentLevel.levelScale);
-
-    // enable the camera only if the levelwidth or the levelHeight is greater than camWidth or camHeight.
-    // should we enable it independently for x/y if the level is thin?
-    soko->camEnabled = soko->camWidth < soko->currentLevel.width || soko->camHeight < soko->currentLevel.height;
-
-    // percentage of screen to let the player move around in. Small for testing.
-    // these are half extents. so .7*.5 is 70% of the screen for the movement box. The extent had to be smaller or =
-    // than half the camsize.
-    soko->camPadExtentX = soko->camWidth * 0.6 * 0.5;
-    soko->camPadExtentY = soko->camHeight * 0.6 * 0.5;
-
-    soko->currentLevel.entityCount = 0;
-    paletteColor_t sampleColor;
-    soko->portalCount = 0;
-
-    for (size_t x = 0; x < soko->currentLevel.width; x++)
-    {
-        for (size_t y = 0; y < soko->currentLevel.height; y++)
-        {
-            sampleColor                    = soko->levelWSG.px[y * soko->levelWSG.w + x];
-            soko->currentLevel.tiles[x][y] = sokoGetTileFromColor(sampleColor);
-            if (soko->currentLevel.tiles[x][y] == SKT_PORTAL)
-            {
-                soko->portals[soko->portalCount].index
-                    = soko->portalCount + 1; // For basic test, 1 indexed with levels, but multi-room overworld needs
-                                             // more sophistication to keep indices correct.
-                soko->portals[soko->portalCount].x = x;
-                soko->portals[soko->portalCount].y = y;
-                printf("Portal %d at %d,%d\n", soko->portals[soko->portalCount].index,
-                       soko->portals[soko->portalCount].x, soko->portals[soko->portalCount].y);
-                soko->portalCount += 1;
-            }
-            sokoEntityType_t e = sokoGetEntityFromColor(sampleColor);
-            if (e != SKE_NONE)
-            {
-                soko->currentLevel.entities[soko->currentLevel.entityCount].type = e;
-                soko->currentLevel.entities[soko->currentLevel.entityCount].x    = x;
-                soko->currentLevel.entities[soko->currentLevel.entityCount].y    = y;
-                if (e == SKE_PLAYER)
-                {
-                    soko->currentLevel.playerIndex = soko->currentLevel.entityCount;
-                }
-                soko->currentLevel.entityCount = soko->currentLevel.entityCount + 1;
-            }
-        }
-    }
-
-    if(levelID == 0){
-        if(soko->overworld_playerX == 0 && soko->overworld_playerY == 0){
-            soko->overworld_playerX = soko->soko_player->x;
-            soko->overworld_playerY = soko->soko_player->y;
-        }
-    }
-}
-
-static sokoTile_t sokoGetTileFromColor(paletteColor_t col)
-{
-    // even if player (c005) or crate (c500) is here, they stand on floor. 505 is player and crate, invalid.
-    if (col == c555 || col == c005 || col == c500 || col == c101)
-    {
-        return SKT_FLOOR;
-    }
-    else if (col == c000)
-    {
-        return SKT_WALL;
-    }
-    else if (col == c050 || col == c550 || col == c055)
-    { // goal is c050, crate and goal is c550, player and goal is c055
-        return SKT_GOAL;
-    }
-    else if (col == c440) // remember, web safe colors are {0,1,2,3,4,5} cRGB or {0,51,102,153,204,255} decimal.
-                          // Increments of 0x33 or 51. cABC = 0x(0x33*A)(0x33*B)(0x33*C)
-    {
-        return SKT_PORTAL;
-    }
-    // transparent or invalid is empty. Todo: can catch transparent and report error otherwise... once comitted to
-    // encoding scheme.
-    return SKT_EMPTY;
-}
-
-static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t col)
-{
-    // todo: get actual rgb value from the paletteColors array and check if the rgb values > 0.
-    if (col == c500 || col == c550)
-    {
-        return SKE_CRATE;
-    }
-    else if (col == c005 || col == c055)
-    { // has green. r and b used for entity. g for tile.
-        return SKE_PLAYER;
-    }
-    else if (col == c101)
-    {
-        return SKE_STICKY_CRATE;
-    }
-
-    return SKE_NONE;
+    printf("Loaded level w: %i, h %i, entities: %i\n",soko->currentLevel.width,soko->currentLevel.height,soko->currentLevel.entityCount);
 }
 
 // placeholder.
@@ -726,8 +617,8 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
     char* storageStr = strtok(self->levelFileText, ":");
     while (storageStr != NULL)
     {
-        if (strtol(storageStr, NULL, 10)
-            && !(strstr(storageStr, ".bin"))) // Make sure you're not accidentally reading a number from a filename
+        //strtol(storageStr, NULL, 10) && 
+        if (!(strstr(storageStr, ".bin"))) // Make sure you're not accidentally reading a number from a filename
         {
             levelInds[intInd] = (int)strtol(storageStr, NULL, 10);
             // printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));

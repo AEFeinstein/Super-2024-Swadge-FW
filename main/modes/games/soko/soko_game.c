@@ -18,7 +18,7 @@ soko_abs_t* soko_s;
 
 void sokoInitGameBin(soko_abs_t* soko)
 {
-    printf("init sokoban game binary");
+    printf("init sokoban game from bin file");
 
     soko_s              = soko;
     soko_s->soko_player = &soko_s->currentLevel.entities[soko_s->currentLevel.playerIndex];
@@ -31,6 +31,8 @@ void sokoInitGameBin(soko_abs_t* soko)
     soko->state = SKS_GAMEPLAY;
 
     sokoConfigGamemode(soko, soko->currentLevel.gameMode);
+    printf("inited\n");
+
 }
 
 void sokoInitGame(soko_abs_t* soko)
