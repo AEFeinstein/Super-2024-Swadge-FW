@@ -63,7 +63,7 @@ typedef struct
     uint16_t recvPackets;
     connectionEvt_t conStatus;
     menu_t* menu;
-    menuManiaRenderer_t* menuManiaRenderer;
+    menuLogbookRenderer_t* menuLogbookRenderer;
 } demoVars_t;
 
 demoVars_t* dv;
@@ -101,7 +101,7 @@ static void demoEnterMode(void)
     addSingleItemToMenu(dv->menu, demoMenu5);
     addSingleItemToMenu(dv->menu, demoMenu6);
 
-    dv->menuManiaRenderer = initMenuManiaRenderer(&dv->ibm, &dv->ibm);
+    dv->menuLogbookRenderer = initMenuLogbookRenderer(&dv->ibm);
 
     dv->conStatus = CON_LOST;
 
@@ -182,7 +182,7 @@ static void demoMainLoop(int64_t elapsedUs)
 
     if (dv->inMenu)
     {
-        drawMenuMania(dv->menu, dv->menuManiaRenderer, elapsedUs);
+        drawMenuLogbook(dv->menu, dv->menuLogbookRenderer, elapsedUs);
         return;
     }
 

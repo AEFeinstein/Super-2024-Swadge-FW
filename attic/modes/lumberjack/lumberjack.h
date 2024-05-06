@@ -45,7 +45,7 @@ typedef struct
 typedef struct
 {
     menu_t* menu;
-    menuManiaRenderer_t* menuManiaRenderer;
+    menuLogbookRenderer_t* menuLogbookRenderer;
     font_t logbook;
     font_t arcade;
 
