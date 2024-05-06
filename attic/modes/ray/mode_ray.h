@@ -575,7 +575,7 @@ typedef struct
     rayPauseScreen_t pauseScreen; ///< The current pause screen being shown
 
     menu_t* menu;                    ///< The main menu
-    menuManiaRenderer_t* renderer; ///< Renderer for the menu
+    menuLogbookRenderer_t* renderer; ///< Renderer for the menu
     bool wasReset;                   ///< Flag to return to the main menu after wiping NVM
 
     rayMap_t map;      ///< The loaded map

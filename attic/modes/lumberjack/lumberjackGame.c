@@ -1878,17 +1878,17 @@ void lumberjackDrawGame(void)
     if (ledAmount < 0)
         ledAmount = 0;
 
-    for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumv->lumberjackMain->menuManiaRenderer->leds); ledIdx++)
+    for (int ledIdx = 0; ledIdx < ARRAY_SIZE(lumv->lumberjackMain->menuLogbookRenderer->leds); ledIdx++)
     {
-        lumv->lumberjackMain->menuManiaRenderer->leds[ledIdx].r
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].r
             = (int)(ledAmount * lumv->lumberjackMain->playerColor.r);
-        lumv->lumberjackMain->menuManiaRenderer->leds[ledIdx].g
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].g
             = (int)(ledAmount * lumv->lumberjackMain->playerColor.g);
-        lumv->lumberjackMain->menuManiaRenderer->leds[ledIdx].b
+        lumv->lumberjackMain->menuLogbookRenderer->leds[ledIdx].b
             = (int)(ledAmount * lumv->lumberjackMain->playerColor.b);
     }
 
-    setLeds(lumv->lumberjackMain->menuManiaRenderer->leds, CONFIG_NUM_LEDS);
+    setLeds(lumv->lumberjackMain->menuLogbookRenderer->leds, CONFIG_NUM_LEDS);
 }
 
 void lumberjackTitleDisplayText(const char* string, int locationX, int locationY)

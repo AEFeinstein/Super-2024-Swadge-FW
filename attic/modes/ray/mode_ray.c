@@ -165,7 +165,7 @@ static void rayExitMode(void)
 {
     // Free menu
     deinitMenu(ray->menu);
-    deinitMenuManiaRenderer(ray->renderer);
+    deinitMenuLogbookRenderer(ray->renderer);
 
     // Free map, scripts, enemies, scenery, bullets, etc.
     rayFreeCurrentState(ray);
@@ -377,7 +377,7 @@ static void rayMainLoop(int64_t elapsedUs)
                 }
             }
             // Draw the menu
-            drawMenuMania(ray->menu, ray->renderer, elapsedUs);
+            drawMenuLogbook(ray->menu, ray->renderer, elapsedUs);
             break;
         }
         case RAY_GAME:
@@ -623,7 +623,7 @@ static void rayInitMenu(void)
     // Tear down old menu, if it exists
     if (NULL != ray->renderer)
     {
-        deinitMenuManiaRenderer(ray->renderer);
+        deinitMenuLogbookRenderer(ray->renderer);
     }
     if (NULL != ray->menu)
     {
@@ -648,5 +648,5 @@ static void rayInitMenu(void)
     addSingleItemToMenu(ray->menu, rayExitStr);
 
     // Initialize a renderer
-    ray->renderer = initMenuManiaRenderer(&ray->logbook, &ray->logbook);
+    ray->renderer = initMenuLogbookRenderer(&ray->logbook);
 }
