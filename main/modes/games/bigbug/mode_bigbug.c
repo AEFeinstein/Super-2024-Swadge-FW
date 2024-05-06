@@ -256,26 +256,26 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
 
         //up,left
         case 0b0101:
-            x_div = -14142;
-            y_div = -14142;
+            x_div = -28284; //20000 / (1/sqrt(2)) = 20000 * sqrt(2) = 28284
+            y_div = -28284;
             break;
         
         //up,right
         case 0b1001:
-            x_div = 14142;
-            y_div = -14142;
+            x_div = 28284;
+            y_div = -28284;
             break;
 
         //down,right
         case 0b1010:
-            x_div = 14142;
-            y_div = 14142;
+            x_div = 28284;
+            y_div = 28284;
             break;
 
         //down,left
         case 0b0110:
-            x_div = -14142;
-            y_div = 14142;
+            x_div = -28284;
+            y_div = 28284;
             break;
         default:
             break;

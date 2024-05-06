@@ -17,7 +17,6 @@
 #include "mode_credits.h"
 #include "mode_pinball.h"
 #include "mode_bigbug.h"
-#include "pong.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -146,7 +145,6 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     addSingleItemToMenu(mainMenu->menu, bigbugMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, pongMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -341,10 +339,6 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pinballMode.modeName)
         {
             switchToSwadgeMode(&pinballMode);
-        }
-        else if (label == pongMode.modeName)
-        {
-            switchToSwadgeMode(&pongMode);
         }
         else if (label == timerMode.modeName)
         {
