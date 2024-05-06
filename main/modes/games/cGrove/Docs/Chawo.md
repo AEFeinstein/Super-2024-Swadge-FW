@@ -197,7 +197,7 @@ Chowa Stats:
 	- Poe
 	- Pango
 	- Garbotnik
-	- Selected from previous games (+random Chowa)
+	- Selected from previous games (+random Chowa) gplord provided charcters, need to discuss
 - Chowa (All poses) (Assumes palette swap)
 	- Standing
 	- Walking
@@ -232,6 +232,10 @@ Chowa Stats:
 	- Font
 	- Buttons
 	- Face buttons (A, B, C, Up, Down, Left, Right)
+	- Title screen
+- Hand icon
+- Hand grab icon
+- All items
 
 ### Music
 Borrow as much from other projects as possible. Combine race and fight music? If the sound circuit is created, might need to source some music.
@@ -249,8 +253,14 @@ Borrow as much from other projects as possible. Combine race and fight music? If
 - Chowa eating
 - Water splashes
 - Footsteps
+- Buying things (Cha-ching)
+
+### Font
+- Menu font (Use Sonic font? Ask gpLord)
+- Compact font for in Grove
 
 ## Notes
 - Maybe no palette swapping. If not, use abstract shapes and position them?
 - LEDs will change colors based on competition
 - Need to add CHowa compatability based on Charisma or other matching stats
+- Swadge 2023 has text_entry.h/.c which is probably easier to use than making it from scratch
