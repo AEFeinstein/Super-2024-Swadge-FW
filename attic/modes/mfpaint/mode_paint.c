@@ -6,7 +6,7 @@
 #include "swadge2024.h"
 #include "hdw-btn.h"
 #include "menu.h"
-#include "menuManiaRenderer.h"
+#include "menuLogbookRenderer.h"
 #include "mainMenu.h"
 #include "swadge2024.h"
 #include "settingsManager.h"
@@ -85,7 +85,7 @@ void paintEnterMode(void)
 
     loadFont("logbook.font", &(paintMenu->menuFont), false);
 
-    paintMenu->menuRenderer = initMenuManiaRenderer(&paintMenu->menuFont, &paintMenu->menuFont);
+    paintMenu->menuRenderer = initMenuLogbookRenderer(&paintMenu->menuFont);
 
     paintMenuInitialize();
 }
@@ -98,7 +98,7 @@ void paintExitMode(void)
     paintReturnToMainMenu();
 
     deinitMenu(paintMenu->menu);
-    deinitMenuManiaRenderer(paintMenu->menuRenderer);
+    deinitMenuLogbookRenderer(paintMenu->menuRenderer);
     freeFont(&(paintMenu->menuFont));
 
     free(paintMenu);
@@ -132,7 +132,7 @@ void paintMainLoop(int64_t elapsedUs)
             }
             else
             {
-                drawMenuMania(paintMenu->menu, paintMenu->menuRenderer, elapsedUs);
+                drawMenuLogbook(paintMenu->menu, paintMenu->menuRenderer, elapsedUs);
             }
             break;
         }
