@@ -52,7 +52,7 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     loadWsg("sprite007.wsg", &entityManager->sprites[SP_PLAYER_CLIMB], false);
     loadWsg("sprite008.wsg", &entityManager->sprites[SP_PLAYER_WIN], false);
     loadWsg("sprite009.wsg", &entityManager->sprites[SP_ENEMY_BASIC], false);
-    //loadWsg("tile066.wsg", &entityManager->sprites[SP_HITBLOCK_CONTAINER], false);
+    loadWsg("pa-tile-009.wsg", &entityManager->sprites[SP_BLOCK], false);
    //loadWsg("tile034.wsg", &entityManager->sprites[SP_HITBLOCK_BRICKS], false);
     loadWsg("sprite012.wsg", &entityManager->sprites[SP_DUSTBUNNY_IDLE], false);
     loadWsg("sprite013.wsg", &entityManager->sprites[SP_DUSTBUNNY_CHARGE], false);
@@ -538,7 +538,7 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_HIT_BLOCK;
-    entity->spriteIndex          = SP_HITBLOCK_CONTAINER;
+    entity->spriteIndex          = SP_BLOCK;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateHitBlock;
     entity->collisionHandler     = &pa_dummyCollisionHandler;

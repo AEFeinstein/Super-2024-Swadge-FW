@@ -11,6 +11,7 @@
 #include "paTilemap.h"
 #include "paGameData.h"
 #include "paSoundManager.h"
+#include "shapes.h"
 
 //==============================================================================
 // Enums
@@ -111,6 +112,9 @@ struct paEntity_t
     int8_t invincibilityFrames;
     uint16_t scoreValue;
 
+    uint8_t targetTileX;
+    uint8_t targetTileY;
+
     // paEntity_t *entities;
     paEntityManager_t* entityManager;
 
@@ -202,5 +206,7 @@ void updateWaveBall(paEntity_t* self);
 void waveBallOverlapTileHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty);
 void powerUpCollisionHandler(paEntity_t* self, paEntity_t* other);
 void killPlayer(paEntity_t* self);
+
+void drawEntityTargetTile(paEntity_t* self);
 
 #endif

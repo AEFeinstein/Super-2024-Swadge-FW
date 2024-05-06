@@ -192,6 +192,33 @@ void pa_updatePlayer(paEntity_t* self)
         self->gameData->changeState = PA_ST_PAUSE;
     }
 
+    if(self->xspeed){
+        self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + SIGNOF(self->xspeed);
+
+        if(!self->yspeed){
+             self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+        }
+    }
+
+    if(self->yspeed){
+        self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + SIGNOF(self->yspeed);
+
+        if(!self->xspeed){
+             self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+        }
+    }
+
+    if (self->gameData->btnState & PB_A)
+    {
+        if(pa_getTile(self->tilemap, self->targetTileX, self->targetTileY) == PA_TILE_BLOCK){
+            paEntity_t* newHitBlock = createHitBlock(self->entityManager, (self->targetTileX << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE, (self->targetTileY << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE);
+            
+            if(newHitBlock != NULL){
+                pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
+            }
+        }
+    }
+
     pa_moveEntityWithTileCollisions(self);
     //dieWhenFallingOffScreen(self);
     //applyGravity(self);
@@ -1993,4 +2020,8 @@ void killPlayer(paEntity_t* self)
     self->spriteIndex           = SP_PLAYER_HURT;
     self->gameData->changeState = PA_ST_DEAD;
     self->falling               = true;
+}
+
+void drawEntityTargetTile(paEntity_t* self){
+    drawRect((self->targetTileX << PA_TILE_SIZE_IN_POWERS_OF_2) - self->tilemap->mapOffsetX, self->targetTileY << PA_TILE_SIZE_IN_POWERS_OF_2, (self->targetTileX << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_TILE_SIZE - self->tilemap->mapOffsetX, (self->targetTileY << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_TILE_SIZE, esp_random() % 216);
 }
