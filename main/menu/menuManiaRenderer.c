@@ -275,10 +275,10 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     // Draw a title
     y += (TITLE_BG_HEIGHT - renderer->titleFont->height) / 2;
     // Draw outline first by offsetting text
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y - 1);
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y + 1);
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y - 1);
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y + 1);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y + 0);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y + 0);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 0, y - 1);
+    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 0, y + 1);
     // Draw the menu text
     drawText(renderer->titleFont, c542, menu->title, (TFT_WIDTH - tWidth) / 2, y);
 
