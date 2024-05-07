@@ -1,12 +1,20 @@
 #include "soko.h"
 
+/// @brief Called on 'resume' from the menu.
+/// @param soko 
+void sokoLoadGameplay(soko_abs_t* soko){
+    //current level
+    //current level entity positions
+    //etc.
+    sokoLoadLevelSolvedState(soko);
+}
+
 void sokoLoadLevelSolvedState(soko_abs_t* soko){
-    //todo: sets the sokoSolved bool[] from the disc.
+    //todo: sets the sokoSolved bool[] from the disk.
     for (size_t i = 0; i < SOKO_LEVEL_COUNT; i++)
     {
         soko->levelSolved[i] = false;
     }
-    
 }
 
 void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved){
