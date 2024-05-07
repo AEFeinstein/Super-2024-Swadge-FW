@@ -44,16 +44,13 @@ classToID = {
 def insert_position(position, sourceList, insertionList):
     return sourceList[:position] + insertionList + sourceList[position:]
 
-root = tk.Tk()
-root.withdraw()
-#file_path = filedialog.askopenfilename()
-#print(file_path)
+# root = tk.Tk()
+# root.withdraw()
 
 def convertTMX(file_path):
     document = parse(file_path)
     entities = {}
     mapHeaderWidth = int(document.getElementsByTagName("map")[0].attributes.getNamedItem("width").nodeValue)
-    #print(mapHeaderWidth)
     mapHeaderHeight = int(document.getElementsByTagName("map")[0].attributes.getNamedItem("height").nodeValue)
     mode = "SOKO_UNDEFINED"
     
@@ -67,7 +64,6 @@ def convertTMX(file_path):
         print("Preprocessor Warning. "+file_path+" has no properly set gamemode. setting gamemode to SOKO_CLASSIC")
         mode = "SOKO_CLASSIC"
     modeInt = getModeInt(mode)
-    print("mode: "+str(modeInt))
     # populate entities dictionary
 
     # loop through entities and add values.
@@ -84,7 +80,6 @@ def convertTMX(file_path):
     #get firstgid of tilesheet
     tileLookups = {} #offset from the tilesheet
     tilesets = document.getElementsByTagName("tileset")
-    print("Tilesets:"+str(len(tilesets)))
     for tileset in tilesets:
         x =(int((tileset.getAttribute("firstgid"))))
         source = tileset.getAttribute("source")
@@ -99,13 +94,11 @@ def convertTMX(file_path):
 
     dataText = document.getElementsByTagName("data")[0].firstChild.nodeValue
     scrub = "".join(dataText.split()) #Remove all residual whitespace in data block
-
-    scrub2 = [(int(i)) for i in scrub.split(",")] #Convert all tileIDs to int.
-    #print(scrub)
+    scrub = [(int(i)) for i in scrub.split(",")] #Convert all tileIDs to int.
 
     # fisrt, our HEADER data: width, height, modeint
     output = [mapHeaderWidth,mapHeaderHeight,modeInt]
-    for i in range(len(scrub2)):
+    for i in range(len(scrub)):
         x = (i-1)%mapHeaderWidth
         y = ((i-1)//mapHeaderWidth)+1 #todo: figure out why this is +1 ????
         key = str(x)+","+str(y)
@@ -113,17 +106,16 @@ def convertTMX(file_path):
         if(key in entities):
             for b in entities[key]:
                 output.append(b)
-        output.append(int(getTile(scrub2[i],tileLookups)))
+        output.append(int(getTile(scrub[i],tileLookups)))
 
     # output now is a list of tiles. 
 
     # add header information at start of tiles list.
-    print(output)
     rawBytes = bytearray(output)
     rawBytesImmut = bytes(rawBytes)
+    print("Converted "+file_path+" ("+str(mode)+")")
     return rawBytesImmut
     # outfile_path = "".join([file_path.split(".")[0],".bin"])
-    # print(outfile_path)
     # with open(outfile_path,"wb") as binary_file:
     #     binary_file.write(rawBytesImmut)
 
