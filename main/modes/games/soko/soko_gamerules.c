@@ -22,6 +22,7 @@ void sokoConfigGamemode(
     soko_abs_t* gamestate,
     soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
 {
+    printf("config for game mode...\n");
     gamestate->currentTheme = &gamestate->sokoDefaultTheme;
     if (variant == SOKO_CLASSIC) // standard gamemode. Check 'variant' variable
     {
@@ -60,7 +61,9 @@ void sokoConfigGamemode(
         gamestate->soko_player->x = gamestate->overworld_playerX;
         gamestate->soko_player->y = gamestate->overworld_playerY;
 
-
+        for (size_t i = 0; i < gamestate->portalCount; i++){
+            gamestate->portals[i].levelCompleted = gamestate->levelSolved[gamestate->portals[i].index];
+        }
     }
     else if (variant == SOKO_LASERBOUNCE)
     {
@@ -243,7 +246,6 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                 {
                     if (self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i], dx, dy, push + 1))
                     {
-                        printf("pushing entity");
                         entity->x += dx;
                         entity->y += dy;
                         entity->facing = sokoDirectionFromDelta(dx, dy);
@@ -340,8 +342,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 
     SETUP_FOR_TURBO();
 
-    // uint16_t DEBUG_DRAW_COUNT=0;
-
+    //Tile Drawing (bg layer)
     for (size_t x = screenMinX; x < screenMaxX; x++)
     {
         for (size_t y = screenMinY; y < screenMaxY; y++)
@@ -366,7 +367,8 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     break;
                 case SKT_PORTAL:
                     //todo: draw completed or not completed.
-                    color = c440;
+                    color = c441;
+                    //color = self->currentTheme->floorColor;
                     break;
                 default:
                     break;
@@ -438,7 +440,21 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                 default:
                     break;
             }
-            // DEBUG_DRAW_COUNT++;
+
+//draw portal in overworld. 
+//hypothetically, we can get rid of the overworld check, and there just won't be other portals? but there could be?
+            if(self->currentLevel.gameMode == SOKO_OVERWORLD){
+                for (size_t i = 0; i < self->portalCount; i++){
+                    if (self->portals[i].x >= screenMinX && self->portals[i].x <= screenMaxX && self->portals[i].y >= screenMinY && self->portals[i].y <= screenMaxY)
+                    {
+                        if(self->portals[i].levelCompleted){
+                            drawWsg(&self->currentTheme->crateOnGoalWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
+                        }else{
+                            drawWsg(&self->currentTheme->crateWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
+                        }
+                    }
+                }
+            }
         }
     }
 }

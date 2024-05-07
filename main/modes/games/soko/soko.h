@@ -153,6 +153,8 @@ typedef struct
     wsg_t crateWSG;
     wsg_t crateOnGoalWSG;
     wsg_t stickyCrateWSG;
+    wsg_t portal_incompleteWSG;
+    wsg_t portal_completeWSG;
     paletteColor_t wallColor;
     paletteColor_t floorColor;
 
@@ -238,6 +240,7 @@ typedef struct soko_abs_s
     uint16_t currentLevelIndex;
     sokoLevel_t currentLevel;
 
+    //todo: rename to 'isVictory'
     bool allCratesOnGoal;
 
     // camera features
