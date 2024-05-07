@@ -488,7 +488,6 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             self->currentLevel.tiles[tileX][tileY] = tileType;
             // printf("BinData@%d: %d Tile: %d at (%d,%d)
             // index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
-            printf("Insert %i at %i,%i\n",tileType,tileX,tileY);
             tileIndex++;
         }
     }

@@ -80,7 +80,7 @@ def convertTMX(file_path):
         x = (i-1)%mapHeaderWidth
         y = ((i-1)//mapHeaderWidth)+1 #todo: figure out why this is +1 ????
         key = str(x)+","+str(y)
-        print("playing with "+key)
+        #print("playing with "+key)
         if(key in entities):
             for b in entities[key]:
                 output.append(b)
