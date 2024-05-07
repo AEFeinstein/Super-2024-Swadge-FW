@@ -37,7 +37,7 @@ Level index, save data, and other level arrays are all pre-allocated to the 'SOK
 Overworld is a map with all puzzles in them. 'portal' objects are used to transition into level.
  In the overworld map file, the object has a custom property called 'target_id'. That gets set to the index of of the level. Everything else is handled by the engine.
 
-
+See [soko_levels.md](soko_levels) for more details on how levels work.
 
 
  
