@@ -365,6 +365,7 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     color = cTransparent;
                     break;
                 case SKT_PORTAL:
+                    //todo: draw completed or not completed.
                     color = c440;
                     break;
                 default:

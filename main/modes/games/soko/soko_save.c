@@ -5,7 +5,6 @@ static void sokoSaveCurrentLevelEntities(soko_abs_t* soko);
 static void sokoLoadCurrentLevelEntities(soko_abs_t* soko);
 static void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved);
 static void sokoLoadBinTiles(soko_abs_t* soko, int byteCount);
-static void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex);
 
 /// @brief Called on 'resume' from the menu.
 /// @param soko 
@@ -140,10 +139,8 @@ void sokoLoadCurrentLevelEntities(soko_abs_t* soko){
 }
 
 //Level loading
-static void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
+void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
 {
-    const int HEADER_BYTE_OFFSET = 3; // Number of bytes before tile data begins
-
     printf("load bin level %d, %s\n", levelIndex, soko->levelNames[levelIndex]);
     soko->state = SKS_INIT;
     size_t fileSize;
@@ -155,6 +152,7 @@ static void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     soko->currentLevel.height = soko->levelBinaryData[1]; // Max Theoretical Level Bounding Box Size is 255x255, though
                                                           // you'll likely run into issues with entities first.
     soko->currentLevel.gameMode = (soko_var_t)soko->levelBinaryData[2];
+    printf("%i set to game mode %i",levelIndex,soko->currentLevel.gameMode);
     // for(int i = 0; i < fileSize; i++)
     //{
     //     printf("%d, ",soko->levelBinaryData[i]);
