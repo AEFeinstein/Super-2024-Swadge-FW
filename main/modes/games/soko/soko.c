@@ -151,24 +151,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         // placeholder.
         if (label == sokoResumeGameLabel)
         {
-            // load level.
-            // sokoLoadLevel(0);
-            
-            /*
-            for(int i = 0; i < 20; i++)
-            {
-                int ind = findIndex(soko,i);
-
-                if(ind != -1)
-                {
-                    printf("Found %d at %d:%s\n",i,ind,soko->levelNames[ind]);
-                }
-                else
-                {
-                    printf("%d Not Found\n",i);
-                }
-            }
-            */
+            sokoLoadGameplay(soko);
             sokoLoadBinLevel(0);
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
@@ -176,6 +159,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == sokoNewGameLabel)
         {
             // load level.
+            //we probably shouldn't have a new game option. User should be able to quit at any time.
             sokoLoadBinLevel(0);
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
