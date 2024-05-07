@@ -9,17 +9,17 @@ static void sokoMainLoop(int64_t elapsedUs);
 static void sokoEnterMode(void);
 static void sokoExitMode(void);
 static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal);
-static void sokoLoadBinLevel(uint16_t levelIndex);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static sokoTile_t sokoGetTileFromColor(paletteColor_t);
 static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t);
 static int sokoFindIndex(soko_abs_t* self, int targetIndex);
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
+static void sokoLoadBinTiles(soko_abs_t* self, int byteCount);
 
 // strings
 static const char sokoModeName[]        = "Sokobanabokabon";
 static const char sokoResumeGameLabel[] = "returnitytoit";
-static const char sokoNewGameLabel[]    = "startsitfresh";
+static const char sokoNewGameLabel[]    = "startsyfreshy";
 
 // create the mode
 swadgeMode_t sokoMode = {
@@ -60,6 +60,7 @@ static void sokoEnterMode(void)
     loadFont("ibm_vga8.font", &soko->ibm, false);
 
     // todo: move to convenience function for loading level data. Preferrebly in it's own file so contributors can futz
+    //todo: cut this all out
     // with it with fewer git merge cases.
     soko->levels[0] = "sk_testpuzzle.wsg";
 
@@ -113,7 +114,7 @@ static void sokoEnterMode(void)
     sokoExtractLevelNamesAndIndices(soko);
 
     //load level solved state.
-    sokoLoadLevelSolvedState(&soko);
+    sokoLoadLevelSolvedState(soko);
 }
 
 static void sokoExitMode(void)
@@ -151,15 +152,18 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         // placeholder.
         if (label == sokoResumeGameLabel)
         {
-            sokoLoadGameplay(soko);
+            //sokoLoadGameplay(soko); will call loadBinLevel(current)
+            //or
             sokoLoadBinLevel(0);
+            
+            
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
         else if (label == sokoNewGameLabel)
         {
             // load level.
-            //we probably shouldn't have a new game option. User should be able to quit at any time.
+            //we probably shouldn't have a new game option; just an overworld option.
             sokoLoadBinLevel(0);
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;

@@ -268,6 +268,4 @@ typedef struct soko_abs_s
 
 } soko_abs_t;
 
-// soko_t* soko;
-
 #endif
