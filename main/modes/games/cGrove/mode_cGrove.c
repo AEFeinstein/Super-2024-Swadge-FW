@@ -15,19 +15,14 @@
 
 // Defines
 //==============================================================================
-#define MAX_CHOWA 5
-#define MAX_GUEST_CHOWA 3
+// Swadge
+#define V_SCREEN_SIZE   240
+#define H_SCREEN_SIZE   280
 
-// Function Prototypes
-//==============================================================================
-static void cGroveMainLoop(int64_t);
-static void cGroveExitMode(void);
-static void cGroveEnterMode(void);
-static void cGroveMenuCB(const char*, bool, uint32_t);
-static void cGroveBackgroundDrawCallback(int16_t, int16_t, int16_t, int16_t, int16_t, int16_t);
-static void cGroveToggleOnlineFeatures(void);
-static void cGroveEspNowRecvCb(const esp_now_recv_info_t*, const uint8_t*, uint8_t, int8_t);
-static void cGroveEspNowSendCb(const uint8_t*, esp_now_send_status_t);
+// Chowa Garden
+#define MAX_CHOWA       5
+#define MAX_PREV_GUESTS 3
+#define USERNAME_CHARS  32
 
 // Strings
 //==============================================================================
@@ -48,6 +43,7 @@ static const char cGroveShopStrToy[] = "Toy store";         // Place to buy Toys
 static const char cGroveShopStrBook[] = "Bookstore";        // Place to buy skill books
 static const char cGroveShopStrSchool[] = "School";         // Place to drop of Chowa to increase skills
 
+static const char cGroveOLStrViewProf[] = "View profiles";                  // View player profile and most recent connected profiles
 static const char cGroveOLStrEditProf[] = "Edit Public Profile";            // Allows user to edit their profile
 static const char cGroveOLStrEnable[] = "Enable/Disable online features";   // Enables or disables online 
 
@@ -81,6 +77,19 @@ static const char DebugText[] = "TEXT_UNDEFINED";
  */
 // Enums
 //==============================================================================
+typedef enum
+{
+    MENU,
+    PROFILE,
+    SUBPROFILE,
+    SHOP,
+    SCHOOL,
+    GROVE,
+    FIGHT,
+    PERFORM,
+    RACE,
+} State_t;
+
 typedef enum
 {
     HAPPY,
@@ -136,8 +145,9 @@ typedef enum
     OTHER
 } Pronouns_t;
 
+
 // Structs
-//==============================================================================
+//============================================================================
 typedef struct
 {
     uint16_t color;         // Color for Chowa
@@ -171,10 +181,10 @@ typedef struct
 
 typedef struct
 {
-    char* username;             // Player's username
-    Pronouns_t pronouns;        // Player's chosen pronouns
-    Chowa_t Chowa[MAX_CHOWA];   // Player's Chowa
-    Mood_t mood;                // Player's set mood
+    char username[USERNAME_CHARS];  // Player's username
+    Pronouns_t pronouns;            // Player's chosen pronouns
+    Chowa_t chowa[MAX_CHOWA];       // Player's Chowa
+    Mood_t mood;                    // Player's set mood
 } playerProfile_t;
 
 typedef struct
@@ -183,19 +193,37 @@ typedef struct
     uint16_t buttonState;   // State of the buttons
     bool online;            // True is online, False is offline
 
-    // UI data
-    uint8_t cursorPos;  // Position of the menu cursor
+    // State tracking
+    State_t currState;          // Current game state
+    int8_t customMenuSelect;    // Current selection on custom menu
 
-    // Menu
+    // Swadge structs
     menu_t* cGroveMenu;             // Main menu for cGrove
     menuLogbookRenderer_t* rndr;    // Logbook renderer
-    font_t menuFont;                 // Menu font
+
+    // Assets
+    font_t menuFont;    // Menu font FIXME: Change to new sonic font
 
     // Chowa Grove data
     playerProfile_t player;                     // Player struct
-    Chowa_t guestChowaList[MAX_GUEST_CHOWA];    // List of guest Chowas
+    playerProfile_t guests[MAX_PREV_GUESTS];    // List of guest players
     Cosmetics_t cosmeticInv[255];               // List of owned cosmetics
 } cGrove_t;
+
+// Function Prototypes
+//==============================================================================
+static void cGroveMainLoop(int64_t);
+static void cGroveExitMode(void);
+static void cGroveEnterMode(void);
+static void cGroveInitMenu(void);
+static void cGroveMenuCB(const char*, bool, uint32_t);
+static void cGroveBackgroundDrawCallback(int16_t, int16_t, int16_t, int16_t, int16_t, int16_t);
+static void cGroveProfileMain(buttonEvt_t evt);
+static void cGroveShowMainProfile(void);
+static void cGroveShowSubProfile(buttonEvt_t evt);
+static void cGroveToggleOnlineFeatures(void);
+static void cGroveEspNowRecvCb(const esp_now_recv_info_t*, const uint8_t*, uint8_t, int8_t);
+static void cGroveEspNowSendCb(const uint8_t*, esp_now_send_status_t);
 
 // Variables
 //==============================================================================
@@ -231,12 +259,65 @@ static void cGroveEnterMode(void)
     loadFont("logbook.font", &grove->menuFont, false);
 
     // Menu initialization
+    cGroveInitMenu();
+
+    // Initialize system
+    grove->currState = MENU;
+
+    // TEST CODE
+    static char test[] = "test ";
+    static char nameBuffer[USERNAME_CHARS];
+    strcpy(grove->player.username, test);
+    grove->player.pronouns = HE_HIM;
+    grove->player.mood = HAPPY;
+    for (int i = 0; i < MAX_PREV_GUESTS; i++){
+        snprintf(nameBuffer, sizeof(nameBuffer)-1, "Test_%" PRIu32, i);
+        strcpy(grove->guests[i].username, nameBuffer);
+        grove->guests[i].pronouns = HE_HIM;
+        grove->guests[i].mood = HAPPY;
+    }
+}
+
+static void cGroveExitMode(void)
+{
+    deinitMenu(grove->cGroveMenu);
+    deinitMenuLogbookRenderer(grove->rndr);
+    freeFont(&grove->menuFont);
+    free(grove);
+}
+
+static void cGroveMainLoop(int64_t elapsedUs) 
+{
+    buttonEvt_t evt = {0};
+    switch (grove->currState){
+        case MENU:
+            while(checkButtonQueueWrapper(&evt))
+            {
+                grove->cGroveMenu = menuButton(grove->cGroveMenu, evt);
+            }
+            drawMenuLogbook(grove->cGroveMenu, grove->rndr, 0);
+            break;
+        case PROFILE:
+            cGroveProfileMain(evt);
+            break;
+        case SUBPROFILE:
+            cGroveShowSubProfile(evt);
+            break;
+        default:
+            // TODO: Default
+    }
+}
+
+// Menus
+// =============================================================================
+static void cGroveInitMenu()
+{
     grove->cGroveMenu = initMenu(cGroveTitle, cGroveMenuCB);
     addSingleItemToMenu(grove->cGroveMenu, cGroveStrPlay);
     grove->cGroveMenu = startSubMenu(grove->cGroveMenu, cGroveStrCompete);
     addSingleItemToMenu(grove->cGroveMenu, cGroveCompStrFight);
     addSingleItemToMenu(grove->cGroveMenu, cGroveCompStrRace);
-    addSingleItemToMenu(grove->cGroveMenu, cGroveCompStrSing);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveCompStrPerf);
     grove->cGroveMenu = endSubMenu(grove->cGroveMenu);
     grove->cGroveMenu = startSubMenu(grove->cGroveMenu, cGroveStrShops);
     addSingleItemToMenu(grove->cGroveMenu, cGroveShopStrGroc);
@@ -245,6 +326,7 @@ static void cGroveEnterMode(void)
     addSingleItemToMenu(grove->cGroveMenu, cGroveShopStrSchool);
     grove->cGroveMenu = endSubMenu(grove->cGroveMenu);
     grove->cGroveMenu = startSubMenu(grove->cGroveMenu, cGroveStrOnline);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveOLStrViewProf);
     grove->cGroveMenu = startSubMenu(grove->cGroveMenu, cGroveOLStrEditProf);
     addSingleItemToMenu(grove->cGroveMenu, cGroveUser);
     grove->cGroveMenu = startSubMenu(grove->cGroveMenu, cGrovePronoun);
@@ -261,25 +343,6 @@ static void cGroveEnterMode(void)
     addSingleItemToMenu(grove->cGroveMenu, cGroveOLStrEnable);
     grove->cGroveMenu = endSubMenu(grove->cGroveMenu);
     grove->rndr = initMenuLogbookRenderer(&grove->menuFont);
-}
-
-static void cGroveExitMode(void)
-{
-    deinitMenu(grove->cGroveMenu);
-    deinitMenuLogbookRenderer(grove->rndr);
-    freeFont(&grove->menuFont);
-    free(grove);
-}
-
-static void cGroveMainLoop(int64_t elapsedUs) 
-{
-    // Main Menu
-    buttonEvt_t evt = {0};
-    while(checkButtonQueueWrapper(&evt))
-    {
-        grove->cGroveMenu = menuButton(grove->cGroveMenu, evt);
-    }
-    drawMenuLogbook(grove->cGroveMenu, grove->rndr, 0);
 }
 
 static void cGroveMenuCB(const char* label, bool selected, uint32_t settingVal)
@@ -302,6 +365,9 @@ static void cGroveMenuCB(const char* label, bool selected, uint32_t settingVal)
             // TODO: Load Store with books
         } else if (label == cGroveShopStrSchool) {
             // TODO: Load School
+        } else if (label == cGroveOLStrViewProf) {
+            grove->customMenuSelect = 0;
+            grove->currState = PROFILE;
         } else if (label == cGroveUser) {
             // TODO: Load Text entry
         } else if (label == cGrovePronounHe) {
@@ -318,11 +384,86 @@ static void cGroveMenuCB(const char* label, bool selected, uint32_t settingVal)
     }
 }
 
-// Graphics Functions
-//==============================================================================
-static void cGroveBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+static int8_t cGroveKeepBounds(buttonEvt_t evt, int8_t maxBound, int8_t *selection)
 {
-    
+    // Increment
+    if (evt.state & PB_UP) {
+        *selection -= 1;
+    } else {
+        *selection += 1;
+    }
+    // Reset if out of bounds
+    if (*selection >= maxBound) {
+        *selection = 0;
+    } else if (*selection < 0) {
+        *selection = maxBound - 1;
+    }
+    return *selection;
+}
+
+// Online
+// =============================================================================
+static void cGroveProfileMain(buttonEvt_t evt){
+    while(checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            if ((evt.state & PB_UP) || (evt.state & PB_DOWN)){  // Switch profiles
+                cGroveKeepBounds(evt, MAX_PREV_GUESTS + 1, &grove->customMenuSelect);
+            } else if (evt.state & PB_A) {                      // Select profile to view in more detail
+                grove->currState = SUBPROFILE;
+            } else {
+                grove->currState = MENU;
+            }
+        }
+        cGroveShowMainProfile();
+    }
+}
+
+static void cGroveShowMainProfile()
+{
+    // Profile background
+    fillDisplayArea(0, 0, H_SCREEN_SIZE, V_SCREEN_SIZE, c111); // TEMP
+
+    // Profile 
+    playerProfile_t ply;
+    if (grove->customMenuSelect == 0) {
+        ply = grove->player;
+    } else {
+        ply = grove->guests[(grove->customMenuSelect - 1)];
+    }
+    // Show username
+    drawText(&grove->menuFont, c555, ply.username, 20, 20);
+    // Show pronouns
+    drawText(&grove->menuFont, c555, ply.username, 20, 50);
+    // Show mood
+    drawText(&grove->menuFont, c555, ply.username, 20, 80);
+    // Show Chowa
+    // - Name, color, mood, etc
+    drawText(&grove->menuFont, c555, ply.username, 20, 110);
+
+    // Display arrows to cycle through profiles
+    // Grey out arrows at the top and bottom of list
+}
+
+static void cGroveShowSubProfile(buttonEvt_t evt)
+{
+    playerProfile_t ply;
+    if (grove->customMenuSelect == 0) {
+        ply = grove->player;
+    } else {
+        ply = grove->guests[(grove->customMenuSelect - 1)];
+    }
+    while(checkButtonQueueWrapper(&evt))
+    {
+        if (evt.down)
+        {
+            grove->currState = PROFILE;
+        }
+        // Draw
+        drawText(&grove->menuFont, c555, "GET PUNKED", 20, 140);
+        drawText(&grove->menuFont, c555, ply.username, 20, 170);
+    }
 }
 
 // Wireless functions
@@ -340,4 +481,11 @@ static void cGroveEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const ui
 static void cGroveEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
 
+}
+
+// Graphics Functions
+//==============================================================================
+static void cGroveBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+{
+    
 }
