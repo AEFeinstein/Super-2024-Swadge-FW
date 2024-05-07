@@ -2,10 +2,16 @@ import tkinter as tk
 import math
 from tkinter import filedialog
 from xml.dom.minidom import parse,parseString
+import os
 
 SIG_BYTE_SIMPLE_SEQUENCE = 200 #This byte will capture long strings of bytes in compact form. Example [12][12][12]...[12] => [200][#][12] where # is number of 12 tiles
 
 OBJECT_START_BYTE = 201
+SKB_EMPTY             = 0
+SKB_WALL              = 1
+SKB_FLOOR             = 2
+SKB_GOAL              = 3
+SKB_NO_WALK           = 4
 SKB_OBJSTART          = 201
 SKB_COMPRESS          = 202
 SKB_PLAYER            = 203
@@ -21,12 +27,25 @@ SKB_LASER90ROTATE     = 212
 SKB_GHOSTBLOCK        = 213
 SKB_OBJEND            = 230
 
+classToID = {
+    "wall": SKB_WALL,
+    "wal": SKB_WALL,
+    "block": SKB_WALL,
+    "floor": SKB_FLOOR,
+    "ground": SKB_FLOOR,
+    "goal":SKB_GOAL,
+    "floornowalk":SKB_NO_WALK,
+    "nowalk":SKB_NO_WALK,
+    "nowalkfloor":SKB_NO_WALK,
+    "empty":SKB_EMPTY,
+    "nothing":SKB_EMPTY,
+}
+
 def insert_position(position, sourceList, insertionList):
     return sourceList[:position] + insertionList + sourceList[position:]
 
 root = tk.Tk()
 root.withdraw()
-
 #file_path = filedialog.askopenfilename()
 #print(file_path)
 
@@ -38,7 +57,7 @@ def convertTMX(file_path):
     mapHeaderHeight = int(document.getElementsByTagName("map")[0].attributes.getNamedItem("height").nodeValue)
     mode = "SOKO_UNDEFINED"
     
-    #get mode
+    
     allProps = document.getElementsByTagName("property")
     for prop in allProps:
         if(prop.getAttribute("name") == "gamemode"):
@@ -48,7 +67,7 @@ def convertTMX(file_path):
         print("Preprocessor Warning. "+file_path+" has no properly set gamemode. setting gamemode to SOKO_CLASSIC")
         mode = "SOKO_CLASSIC"
     modeInt = getModeInt(mode)
-
+    print("mode: "+str(modeInt))
     # populate entities dictionary
 
     # loop through entities and add values.
@@ -63,19 +82,29 @@ def convertTMX(file_path):
         entities[str(x)+","+str(y)] = ebytes
     
     #get firstgid of tilesheet
-    firstgid = 0 #offset from the tilesheet
-    ## todo: how od we know what this thing is called? we just want local id's always? but we don't know which tilesheet the user drew with.
-    # not sure how the tmx format links tilesets to the layer/objectgroups. 
+    tileLookups = {} #offset from the tilesheet
     tilesets = document.getElementsByTagName("tileset")
+    print("Tilesets:"+str(len(tilesets)))
     for tileset in tilesets:
-        if(tileset.getAttribute("name") == "tilesheet"):
-            firstgid = int((tileset.getAttribute("firstgid")))
-            break
+        x =(int((tileset.getAttribute("firstgid"))))
+        source = tileset.getAttribute("source")
+        if(source != ""):
+            current_dir = os.path.dirname(file_path)
+            tpath = os.path.normpath(current_dir+"/"+source)
+            if(os.path.splitext(tpath)[1] == ".tsx"):
+                doc = parse(tpath)
+                tileLookups[x] = loadTilesetLookup(doc)
+        else:
+            tileLookups[x] = loadTilesetLookup(tileset)
+
     dataText = document.getElementsByTagName("data")[0].firstChild.nodeValue
     scrub = "".join(dataText.split()) #Remove all residual whitespace in data block
-    scrub2 = [((int(i)-firstgid)) for i in scrub.split(",")] #Convert all tileIDs to int.
+
+    scrub2 = [(int(i)) for i in scrub.split(",")] #Convert all tileIDs to int.
     #print(scrub)
-    output = []
+
+    # fisrt, our HEADER data: width, height, modeint
+    output = [mapHeaderWidth,mapHeaderHeight,modeInt]
     for i in range(len(scrub2)):
         x = (i-1)%mapHeaderWidth
         y = ((i-1)//mapHeaderWidth)+1 #todo: figure out why this is +1 ????
@@ -84,14 +113,13 @@ def convertTMX(file_path):
         if(key in entities):
             for b in entities[key]:
                 output.append(b)
-        output.append(getTile(scrub2[i]))
+        output.append(int(getTile(scrub2[i],tileLookups)))
 
+    # output now is a list of tiles. 
 
-    #scrub3 = list([mapHeaderWidth,mapHeaderHeight]) + scrub2
-    scrub3 = insert_position(0,output,list([mapHeaderWidth,mapHeaderHeight,modeInt]))
-    print(scrub3)
-
-    rawBytes = bytearray(scrub3)
+    # add header information at start of tiles list.
+    print(output)
+    rawBytes = bytearray(output)
     rawBytesImmut = bytes(rawBytes)
     return rawBytesImmut
     # outfile_path = "".join([file_path.split(".")[0],".bin"])
@@ -114,6 +142,7 @@ def getModeInt(mode):
 
 
 def getEntityBytesFromEntity(entity):
+    #todo: look up data in the tsx. which we have loaded? I think?
     #SKB_OBJSTART, SKB_[Object Type], [Data Bytes] , SKB_OBJEND
     gid = int(entity.getAttribute("gid"))
     otype = 0
@@ -132,6 +161,28 @@ def getEntityBytesFromEntity(entity):
     return []
     return [SKB_OBJSTART,SKB_CRATE,SKB_OBJEND]
 
-def getTile(i):
-    #0 is wall? i guess?
+def getTile(i,lookups):
+    if(i == 0):
+        # empty from tiled
+        return 0 # whatever our empty is.
+    for k,v in lookups.items():
+        ix = i-k
+        if ix in v:
+            s = v[ix]
+            if s in classToID:
+                x = classToID[s]
+                return x
+    print("uh oh"+str(i)+"-"+str(k)+"-"+str(lookups))
     return i
+
+def loadTilesetLookup(doc):
+    # turn root object into dictonary of id's->classnames.
+    tiles = doc.getElementsByTagName("tile")
+    lookup = {}
+    for tile in tiles:
+        lookup[int(tile.getAttribute("id"))] = tile.getAttribute("type")
+
+    return lookup
+
+
+    
