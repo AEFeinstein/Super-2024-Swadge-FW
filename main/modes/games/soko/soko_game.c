@@ -31,8 +31,6 @@ void sokoInitGameBin(soko_abs_t* soko)
     soko->state = SKS_GAMEPLAY;
 
     sokoConfigGamemode(soko, soko->currentLevel.gameMode);
-    printf("inited\n");
-
 }
 
 void sokoInitGame(soko_abs_t* soko)

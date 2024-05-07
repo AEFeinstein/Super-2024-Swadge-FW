@@ -152,7 +152,6 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     soko->currentLevel.height = soko->levelBinaryData[1]; // Max Theoretical Level Bounding Box Size is 255x255, though
                                                           // you'll likely run into issues with entities first.
     soko->currentLevel.gameMode = (soko_var_t)soko->levelBinaryData[2];
-    printf("%i set to game mode %i",levelIndex,soko->currentLevel.gameMode);
     // for(int i = 0; i < fileSize; i++)
     //{
     //     printf("%d, ",soko->levelBinaryData[i]);
