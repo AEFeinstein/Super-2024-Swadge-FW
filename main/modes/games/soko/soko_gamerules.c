@@ -392,6 +392,23 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
         }
     }
 
+    
+    //draw portal in overworld before entities.
+    //hypothetically, we can get rid of the overworld check, and there just won't be other portals? but there could be?        sprint("a\n");
+    if(self->currentLevel.gameMode == SOKO_OVERWORLD){ 
+        for (int i = 0; i < self->portalCount; i++){
+            if (self->portals[i].x >= screenMinX && self->portals[i].x <= screenMaxX && self->portals[i].y >= screenMinY && self->portals[i].y <= screenMaxY)
+            {
+                if(self->portals[i].levelCompleted){
+                    drawWsg(&self->currentTheme->portal_completeWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
+                }else{
+                    drawWsg(&self->currentTheme->portal_incompleteWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
+               }
+            }
+        }
+    }
+
+    //draw entities
     for (size_t i = 0; i < level->entityCount; i++)
     {
         // don't bother drawing off screen
@@ -439,21 +456,6 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                 case SKE_NONE:
                 default:
                     break;
-            }
-
-//draw portal in overworld. 
-//hypothetically, we can get rid of the overworld check, and there just won't be other portals? but there could be?
-            if(self->currentLevel.gameMode == SOKO_OVERWORLD){
-                for (size_t i = 0; i < self->portalCount; i++){
-                    if (self->portals[i].x >= screenMinX && self->portals[i].x <= screenMaxX && self->portals[i].y >= screenMinY && self->portals[i].y <= screenMaxY)
-                    {
-                        if(self->portals[i].levelCompleted){
-                            drawWsg(&self->currentTheme->crateOnGoalWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
-                        }else{
-                            drawWsg(&self->currentTheme->crateWSG, ox + self->portals[i].x * scale,oy + self->portals[i].y * scale, false, false, 0);
-                        }
-                    }
-                }
             }
         }
     }
@@ -551,17 +553,17 @@ int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, soko
 
 void sokoDoBeam(soko_abs_t* self)
 {
-    bool receiverImpact;
-    for (int entInd = 0; entInd < self->currentLevel.entityCount; entInd++)
-    {
-        if (self->currentLevel.entities[entInd].type == SKE_LASER_EMIT_UP)
-        {
-            self->currentLevel.entities[entInd].properties->targetCount = 0;
-            receiverImpact                                              = sokoBeamImpactRecursive(
-                self, self->currentLevel.entities[entInd].x, self->currentLevel.entities[entInd].y,
-                self->currentLevel.entities[entInd].type, &self->currentLevel.entities[entInd]);
-        }
-    }
+    // bool receiverImpact;
+    // for (int entInd = 0; entInd < self->currentLevel.entityCount; entInd++)
+    // {
+    //     if (self->currentLevel.entities[entInd].type == SKE_LASER_EMIT_UP)
+    //     {
+    //         self->currentLevel.entities[entInd].properties->targetCount = 0;
+    //         receiverImpact = sokoBeamImpactRecursive(
+    //             self, self->currentLevel.entities[entInd].x, self->currentLevel.entities[entInd].y,
+    //             self->currentLevel.entities[entInd].type, &self->currentLevel.entities[entInd]);
+    //     }
+    // }
 }
 
 bool sokoLaserTileCollision(sokoTile_t testTile)

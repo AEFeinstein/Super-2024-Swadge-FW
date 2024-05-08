@@ -38,9 +38,6 @@ void sokoLoadLevelSolvedState(soko_abs_t* soko){
     //so .. never?
 }
 
-
-
-
 void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved){
     printf("save level solved status %d\n", levelIndex);
     //todo: changes a single levels bool in the sokoSolved array,

@@ -24,15 +24,20 @@ bool absSokoAllCratesOnGoal(soko_abs_t* self);
 sokoTile_t absSokoGetTile(soko_abs_t* self, int x, int y);
 bool allCratesOnGoal(void);
 
-void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs);
-sokoVec_t sokoGridToPix(soko_abs_t* self, sokoVec_t grid);
-void drawLaserFromEntity(soko_abs_t* self, sokoEntity_t* emitter);
-sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter);
-sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2);
-
 // euler
 void eulerSokoTryPlayerMovement(soko_abs_t* self);
 bool eulerNoUnwalkedFloors(soko_abs_t* self);
+
+//lasers
+sokoCollision_t sokoBeamImpact(soko_abs_t* self, sokoEntity_t* emitter);
+int sokoBeamImpactRecursive(soko_abs_t* self, int emitter_x, int emitter_y, sokoDirection_t emitterDir,sokoEntity_t* rootEmitter);
+sokoDirection_t sokoRedirectDir(sokoDirection_t emitterDir, bool inverted);
+bool sokoLaserEntityCollision(sokoEntityType_t testEntity);
+bool sokoLaserTileCollision(sokoTile_t testTile);
+void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs);
+sokoVec_t sokoGridToPix(soko_abs_t* self, sokoVec_t grid);
+void drawLaserFromEntity(soko_abs_t* self, sokoEntity_t* emitter);
+sokoVec_t sokoAddCoord(sokoVec_t op1, sokoVec_t op2);
 
 // overworld
 void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs);
