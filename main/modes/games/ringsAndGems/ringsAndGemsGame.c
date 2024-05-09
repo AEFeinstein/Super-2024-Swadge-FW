@@ -499,9 +499,12 @@ void ragDrawGame(ringsAndGems_t* rag)
 
                 if (rag->state == RGS_WAITING)
                 {
-                    color = c111;
+                    color = c222;
                 }
-                drawRect(sX0, sY0, sX1, sY1, color);
+                for (int16_t i = 0; i < 4; i++)
+                {
+                    drawRect(sX0 + i, sY0 + i, sX1 - i, sY1 - i, color);
+                }
             }
 
             // Check if the subgame has a winner
@@ -563,9 +566,13 @@ void ragDrawGame(ringsAndGems_t* rag)
                                 paletteColor_t color = (GOING_FIRST == p2pGetPlayOrder(&rag->p2p)) ? c500 : c005;
                                 if (rag->state == RGS_WAITING)
                                 {
-                                    color = c111;
+                                    color = c222;
                                 }
-                                drawRect(cX0, cY0, cX1, cY1, color);
+
+                                for (uint16_t i = 0; i < 4; i++)
+                                {
+                                    drawRect(cX0 + i, cY0 + i, cX1 - i, cY1 - i, color);
+                                }
                             }
                         }
                     }
