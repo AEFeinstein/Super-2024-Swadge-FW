@@ -3,15 +3,17 @@
 ## General
 
 - [ ] Refactor into multiple files
-    - [ ] mode_cGrove.h: Only critical initalization logic and main game loop
-    - [ ] cGrove_Online.h: Online functionality
+    - [x] mode_cGrove.h: Only critical initalization logic and main game loop
+    - [x] cGrove_Online.h: Online functionality
     - [ ] cGrove_Grove.h: Main grove functionality
     - [ ] cGrove_Fight.h: Fighting game
     - [ ] cGrove_Perform.h: Musical performance
     - [ ] cGrove_Race.h: Race game
     - [ ] cGrove_Chowa.h: Chowa functionality
-    - [ ] keyboard.h: Text entry
-- [ ] Create github "issue" for project
+    - [x] cGrove_Helpers.h: Helper functions
+    - [x] cGrove_Types.h: All common structs, defines and enums
+    - [ ] prettyKeyboard.h: Text entry
+- [x] Create github "issue" for project
 - [ ] Create doxygen comments for all functions
 
 ## Menu
