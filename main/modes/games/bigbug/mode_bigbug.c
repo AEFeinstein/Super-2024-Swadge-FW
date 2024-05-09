@@ -56,7 +56,7 @@ typedef struct
     bool paddleRMovingUp;   ///< The CPU's paddle direction on easy mode
     bool isPaused;          ///< true if the game is paused, false if it is running
 
-    wsg_t paddleWsg;      ///< A graphic for the paddle
+    wsg_t dirtWsg;        ///< A graphic for the dirt tile
     wsg_t garbotnikWsg;   ///< A graphic for garbotnik
 
     song_t bgm;  ///< Background music
@@ -137,6 +137,7 @@ static void bigbugEnterMode(void)
     bigbug = calloc(1, sizeof(bigbug_t));
 
     // Load graphics
+    loadWsg("dirt.wsg", &bigbug->dirtWsg, false);
     loadWsg("eggman.wsg", &bigbug->garbotnikWsg, false);
 
     // Set the mode to game mode
@@ -188,7 +189,7 @@ static void bigbugBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_
     //accelIntegrate(); only needed if using accelerometer for something
     //SETUP_FOR_TURBO(); only needed if drawing individual pixels
 
-    fillDisplayArea(x, y, x + w, y + h, c001);
+    fillDisplayArea(x, y, x + w, y + h, c100);//sonic sky is like c001
 }
  
 static void bigbugEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
@@ -311,6 +312,13 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
  */
 static void bigbugDrawField(void)
 {
+    for (int i = 0; i <= 4; i++){
+        for (int j = 0; j <= 3; j++){
+            // Draw dirt tile
+            drawWsgTile(&bigbug->dirtWsg, i * 64, j * 64);
+        }
+    }
+
     // Draw garbotnik
     drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnik.pos.x - bigbug->garbotnik.radius) >> DECIMAL_BITS,
                   (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius) >> DECIMAL_BITS);
