@@ -27,6 +27,64 @@ void ragBeginGame(ringsAndGems_t* rag)
     // If going second, wait to receive p1's piece before responding
 }
 
+typedef void (*cursorFunc_t)(ringsAndGems_t* rag);
+
+static void incCursorX(ringsAndGems_t* rag)
+{
+    rag->cursor.x = (rag->cursor.x + 1) % 3;
+}
+
+static void decCursorX(ringsAndGems_t* rag)
+{
+    if (0 == rag->cursor.x)
+    {
+        rag->cursor.x = 2;
+    }
+    else
+    {
+        rag->cursor.x--;
+    }
+}
+
+static void incCursorY(ringsAndGems_t* rag)
+{
+    rag->cursor.y = (rag->cursor.y + 1) % 3;
+}
+
+static void decCursorY(ringsAndGems_t* rag)
+{
+    if (0 == rag->cursor.y)
+    {
+        rag->cursor.y = 2;
+    }
+    else
+    {
+        rag->cursor.y--;
+    }
+}
+
+static bool cursorIsValid(ringsAndGems_t* rag)
+{
+    switch (rag->cursorMode)
+    {
+        case NO_CURSOR:
+        default:
+        {
+            return false;
+        }
+        case SELECT_SUBGAME:
+        {
+            return RAG_EMPTY == rag->subgames[rag->cursor.x][rag->cursor.y].winner;
+        }
+        case SELECT_CELL:
+        case SELECT_CELL_LOCKED:
+        {
+            return RAG_EMPTY
+                   == rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y].game[rag->cursor.x][rag->cursor.y];
+        }
+    }
+}
+
 /**
  * @brief TODO
  *
@@ -38,119 +96,33 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
     // Do something?
     if (evt->down)
     {
-        bool cursorMoved = false;
+        bool cursorMoved                 = false;
+        cursorFunc_t cursorFunc          = NULL;
+        cursorFunc_t cursorFuncSecondary = NULL;
         switch (evt->button)
         {
             case PB_UP:
             {
-                cursorMoved = true;
-                if (SELECT_SUBGAME == rag->cursorMode)
-                {
-                    do
-                    {
-                        if (0 == rag->cursor.y)
-                        {
-                            rag->cursor.y = 2;
-                        }
-                        else
-                        {
-                            rag->cursor.y--;
-                        }
-                    } while (RAG_EMPTY != rag->subgames[rag->cursor.x][rag->cursor.y].winner);
-                }
-                else if ((SELECT_CELL == rag->cursorMode) || (SELECT_CELL_LOCKED == rag->cursorMode))
-                {
-                    do
-                    {
-                        if (0 == rag->cursor.y)
-                        {
-                            rag->cursor.y = 2;
-                        }
-                        else
-                        {
-                            rag->cursor.y--;
-                        }
-                    } while (RAG_EMPTY
-                             != rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y]
-                                    .game[rag->cursor.x][rag->cursor.y]);
-                }
+                cursorFunc          = decCursorY;
+                cursorFuncSecondary = incCursorX;
                 break;
             }
             case PB_DOWN:
             {
-                cursorMoved = true;
-                if (SELECT_SUBGAME == rag->cursorMode)
-                {
-                    do
-                    {
-                        rag->cursor.y = (rag->cursor.y + 1) % 3;
-                    } while (RAG_EMPTY != rag->subgames[rag->cursor.x][rag->cursor.y].winner);
-                }
-                else if ((SELECT_CELL == rag->cursorMode) || (SELECT_CELL_LOCKED == rag->cursorMode))
-                {
-                    do
-                    {
-                        rag->cursor.y = (rag->cursor.y + 1) % 3;
-                    } while (RAG_EMPTY
-                             != rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y]
-                                    .game[rag->cursor.x][rag->cursor.y]);
-                }
+                cursorFunc          = incCursorY;
+                cursorFuncSecondary = incCursorX;
                 break;
             }
             case PB_LEFT:
             {
-                cursorMoved = true;
-                if (SELECT_SUBGAME == rag->cursorMode)
-                {
-                    do
-                    {
-                        if (0 == rag->cursor.x)
-                        {
-                            rag->cursor.x = 2;
-                        }
-                        else
-                        {
-                            rag->cursor.x--;
-                        }
-                    } while (RAG_EMPTY != rag->subgames[rag->cursor.x][rag->cursor.y].winner);
-                }
-                else if ((SELECT_CELL == rag->cursorMode) || (SELECT_CELL_LOCKED == rag->cursorMode))
-                {
-                    do
-                    {
-                        if (0 == rag->cursor.x)
-                        {
-                            rag->cursor.x = 2;
-                        }
-                        else
-                        {
-                            rag->cursor.x--;
-                        }
-                    } while (RAG_EMPTY
-                             != rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y]
-                                    .game[rag->cursor.x][rag->cursor.y]);
-                }
+                cursorFunc          = decCursorX;
+                cursorFuncSecondary = incCursorY;
                 break;
             }
             case PB_RIGHT:
             {
-                cursorMoved = true;
-                if (SELECT_SUBGAME == rag->cursorMode)
-                {
-                    do
-                    {
-                        rag->cursor.x = (rag->cursor.x + 1) % 3;
-                    } while (RAG_EMPTY != rag->subgames[rag->cursor.x][rag->cursor.y].winner);
-                }
-                else if ((SELECT_CELL == rag->cursorMode) || (SELECT_CELL_LOCKED == rag->cursorMode))
-                {
-                    do
-                    {
-                        rag->cursor.x = (rag->cursor.x + 1) % 3;
-                    } while (RAG_EMPTY
-                             != rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y]
-                                    .game[rag->cursor.x][rag->cursor.y]);
-                }
+                cursorFunc          = incCursorX;
+                cursorFuncSecondary = incCursorY;
                 break;
             }
             case PB_A:
@@ -190,6 +162,57 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
             default:
             {
                 break;
+            }
+        }
+
+        // If the cursor should move
+        if (NULL != cursorFunc)
+        {
+            cursorMoved = true;
+
+            // First check along the primary axis
+            bool cursorIsSet = false;
+            for (int16_t a = 0; a < 2; a++)
+            {
+                cursorFunc(rag);
+                if (cursorIsValid(rag))
+                {
+                    cursorIsSet = true;
+                    break;
+                }
+            }
+
+            // If the primary axis is filled
+            if (!cursorIsSet)
+            {
+                // Move back to where we started
+                cursorFunc(rag);
+
+                // Move along the primary axis
+                for (int16_t b = 0; b < 3; b++)
+                {
+                    cursorFunc(rag);
+
+                    // Check perpendicular spaces
+                    for (int16_t a = 0; a < 3; a++)
+                    {
+                        cursorFuncSecondary(rag);
+
+                        // If it's valid
+                        if (cursorIsValid(rag))
+                        {
+                            // Mark and break
+                            cursorIsSet = true;
+                            break;
+                        }
+                    }
+
+                    // If the cursor is valid
+                    if (cursorIsSet)
+                    {
+                        break;
+                    }
+                }
             }
         }
 
