@@ -131,9 +131,34 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
                 {
                     cursorMoved          = true;
                     rag->selectedSubgame = rag->cursor;
-                    rag->cursor.x        = 1;
-                    rag->cursor.y        = 1;
                     rag->cursorMode      = SELECT_CELL;
+
+                    // Place the cursor on a valid cell
+                    rag->cursor.x = 1;
+                    rag->cursor.y = 1;
+                    for (int16_t y = 0; y < 3; y++)
+                    {
+                        for (int16_t x = 0; x < 3; x++)
+                        {
+                            if (!cursorIsValid(rag))
+                            {
+                                incCursorX(rag);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        if (!cursorIsValid(rag))
+                        {
+                            incCursorY(rag);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
                 }
                 else if ((SELECT_CELL == rag->cursorMode) || (SELECT_CELL_LOCKED == rag->cursorMode))
                 {
@@ -273,9 +298,33 @@ void ragPlacePiece(ringsAndGems_t* rag, const vec_t* subgame, const vec_t* cell,
 
     // Next move should be in this cell
     rag->selectedSubgame = *cell;
-    rag->cursor.x        = 1;
-    rag->cursor.y        = 1;
     rag->cursorMode      = SELECT_CELL_LOCKED;
+
+    rag->cursor.x = 1;
+    rag->cursor.y = 1;
+    for (int16_t y = 0; y < 3; y++)
+    {
+        for (int16_t x = 0; x < 3; x++)
+        {
+            if (!cursorIsValid(rag))
+            {
+                incCursorX(rag);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        if (!cursorIsValid(rag))
+        {
+            incCursorY(rag);
+        }
+        else
+        {
+            break;
+        }
+    }
 
     // If that subgame is already won
     if (RAG_EMPTY != rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y].winner)
