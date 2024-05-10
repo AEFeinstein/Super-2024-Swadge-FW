@@ -22,8 +22,8 @@
  * See menu.h for examples on how to use menuManiaRenderer
  */
 
-#ifndef _MENU_LOGBOOK_RENDERER_RENDERER_H_
-#define _MENU_LOGBOOK_RENDERER_RENDERER_H_
+#ifndef _MENU_MANIA_RENDERER_H_
+#define _MENU_MANIA_RENDERER_H_
 
 #include "menu.h"
 #include "spiffs_font.h"
@@ -31,7 +31,7 @@
 #include "hdw-led.h"
 
 /**
- * @brief A struct containing all the state data to render a logbook-style menu and LEDs
+ * @brief A struct containing all the state data to render a mania-style menu and LEDs
  */
 typedef struct
 {
