@@ -108,7 +108,7 @@
  *
  * \subsection gui_api Graphical UI APIs
  *
- * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
+ * - menu.h and menuManiaRenderer.h: Make and render a menu within a mode
  * - dialogBox.h: Show messages and prompt users for a response
  * - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
  * - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard

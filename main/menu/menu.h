@@ -12,8 +12,8 @@
  * entered, or multi-item selections are scrolled, the callback is called.
  *
  * The menu data structure is created and managed in menu.h, but graphical rendering is handled in
- * menuLogbookRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
- * data structure in a number of styles. As of now, only menuLogbookRenderer.h is supplied.
+ * menuManiaRenderer.h. The separation of data structure and renderer is intentional and makes it easier to render the
+ * data structure in a number of styles. As of now, only menuManiaRenderer.h is supplied.
  *
  * \section menu_usage Usage
  *
@@ -32,7 +32,7 @@
  * Button events must be passed to the menu with menuButton().
  * These button presses should not be handled elsewhere simultaneously.
  *
- * Menus are drawn with a renderer, such as menuLogbookRenderer.h.
+ * Menus are drawn with a renderer, such as menuManiaRenderer.h.
  *
  * \section menu_example Example
  *
@@ -96,10 +96,12 @@
  *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
  * // Load a font
- * font_t logbook;
- * loadFont("logbook.font", &logbook, false);
+ * font_t righteous;
+ * loadFont("righteous_150.font", &righteous, false);
+ * font_t rodin;
+ * loadFont("rodin_eb.font", &rodin, false);
  * // Initialize a renderer
- * menuLogbookRenderer_t* renderer = initMenuLogbookRenderer(&logbook);
+ * menuManiaRenderer_t* renderer = initMenuManiaRenderer(&righteous, &rodin);
  * \endcode
  *
  * Process button events:
@@ -113,7 +115,7 @@
  *
  * Draw the menu from swadgeMode_t.fnMainLoop:
  * \code{.c}
- * drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
+ * drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
  * \endcode
  *
  * Receive menu callbacks:
@@ -129,7 +131,7 @@
  * // Free the menu
  * deinitMenu(menu);
  * // Free the renderer
- * deinitMenuLogbookRenderer(renderer);
+ * deinitMenuManiaRenderer(renderer);
  * \endcode
  */
 
