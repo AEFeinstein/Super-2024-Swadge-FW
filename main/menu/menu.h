@@ -96,10 +96,12 @@
  *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
  * // Load a font
- * font_t logbook;
- * loadFont("logbook.font", &logbook, false);
+ * font_t righteous;
+ * loadFont("righteous_150.font", &righteous, false);
+ * font_t rodin;
+ * loadFont("rodin_eb.font", &rodin, false);
  * // Initialize a renderer
- * menuManiaRenderer_t* renderer = initMenuManiaRenderer(&logbook);
+ * menuManiaRenderer_t* renderer = initMenuManiaRenderer(&righteous, &rodin);
  * \endcode
  *
  * Process button events:
