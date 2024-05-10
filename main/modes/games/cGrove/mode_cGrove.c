@@ -61,7 +61,7 @@ static void cGroveEnterMode(void)
 
     // Initialize system
     grove->currState = MENU;
-    grove->hasOnlineProfiles = false;
+    grove->numOfOnlineGuests = 3;    // Set to 0 for release
 
     // TEST CODE
     static char test[] = "Johnny Wycliffe";
@@ -143,7 +143,23 @@ static void cGroveMenuCB(const char* label, bool selected, uint32_t settingVal)
             grove->player.pronouns = THEY_THEM;
         } else if (label == cGrovePronounOther) {
             grove->player.pronouns = OTHER;
-        } else if (label == cGroveOLStrEnable) {
+        } else if (label == cGrovePronounOther) {
+            grove->player.pronouns = OTHER;
+        } else if (label == cGroveMoodStrNeutral) {
+            grove->player.mood = NEUTRAL;
+        } else if (label == cGroveMoodStrHappy) {
+            grove->player.mood = HAPPY;
+        } else if (label == cGroveMoodStrSad) {
+            grove->player.mood = SAD;
+        } else if (label == cGroveMoodStrAngry) {
+            grove->player.mood = ANGRY;
+        } else if (label == cGroveMoodStrConfused) {
+            grove->player.mood = CONFUSED;
+        } else if (label == cGroveMoodStrSick) {
+            grove->player.mood = SICK;
+        } else if (label == cGroveMoodStrSurprised) {
+            grove->player.mood = SURPRISED;
+        }else if (label == cGroveOLStrEnable) {
             cGroveToggleOnlineFeatures(grove);
         }
     }
@@ -175,8 +191,13 @@ static void cGroveInitMenu()
     addSingleItemToMenu(grove->cGroveMenu, cGrovePronounOther);
     grove->cGroveMenu = endSubMenu(grove->cGroveMenu);
     grove->cGroveMenu = startSubMenu(grove->cGroveMenu, cGroveMood);
-    // TODO: Add mood selections
-    //addSingleItemToMenu(grove->cGroveMenu, );
+    addSingleItemToMenu(grove->cGroveMenu, cGroveMoodStrNeutral);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveMoodStrHappy);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveMoodStrSad);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveMoodStrAngry);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveMoodStrConfused);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveMoodStrSick);
+    addSingleItemToMenu(grove->cGroveMenu, cGroveMoodStrSurprised);
     grove->cGroveMenu = endSubMenu(grove->cGroveMenu);
     grove->cGroveMenu = endSubMenu(grove->cGroveMenu);
     addSingleItemToMenu(grove->cGroveMenu, cGroveOLStrEnable);

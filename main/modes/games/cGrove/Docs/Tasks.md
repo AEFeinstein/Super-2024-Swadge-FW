@@ -24,11 +24,11 @@
 - [ ] Notifications of changed values
 - [ ] Inventory viewer
 - [ ] Online
-    - [ ] Profile viewer
-        - [ ] Show username/pronouns/mood
+    - [x] Profile viewer
+        - [x] Show username/pronouns/mood
         - [ ] Show Chowa/Accomplisments/Stats
     - [ ] Set sharable Chowa
-    - [ ] See recently downloaded profiles
+    - [x] See recently downloaded profiles
     - [ ] Turn on/off online features
 
 ### Assets
