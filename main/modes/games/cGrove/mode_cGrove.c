@@ -46,14 +46,25 @@ static void cGroveEnterMode(void)
     // Load a font
     loadFont("logbook.font", &grove->menuFont, false);
 
+    // Load wsgs
+    loadWsg("cGrove_Face_Neutral.wsg", &grove->mood_icons[0], true);
+    loadWsg("cGrove_Face_Angry.wsg", &grove->mood_icons[1], true);
+    loadWsg("cGrove_Face_Happy.wsg", &grove->mood_icons[2], true);
+    loadWsg("cGrove_Face_Sad.wsg", &grove->mood_icons[3], true);
+    loadWsg("cGrove_Face_Sick.wsg", &grove->mood_icons[4], true);
+    loadWsg("cGrove_Face_Confused.wsg", &grove->mood_icons[5], true);
+    loadWsg("cGrove_Face_Surprised.wsg", &grove->mood_icons[6], true);
+    loadWsg("arrow21.wsg", &grove->arrow, true);
+
     // Menu initialization
     cGroveInitMenu();
 
     // Initialize system
     grove->currState = MENU;
+    grove->hasOnlineProfiles = false;
 
     // TEST CODE
-    static char test[] = "test ";
+    static char test[] = "Johnny Wycliffe";
     static char nameBuffer[USERNAME_CHARS];
     strcpy(grove->player.username, test);
     grove->player.pronouns = HE_HIM;
@@ -61,8 +72,8 @@ static void cGroveEnterMode(void)
     for (int i = 0; i < MAX_PREV_GUESTS; i++){
         snprintf(nameBuffer, sizeof(nameBuffer)-1, "Test_%" PRIu32, i);
         strcpy(grove->guests[i].username, nameBuffer);
-        grove->guests[i].pronouns = HE_HIM;
-        grove->guests[i].mood = HAPPY;
+        grove->guests[i].pronouns = i + 1;
+        grove->guests[i].mood = i + 1;
     }
 }
 
@@ -70,6 +81,9 @@ static void cGroveExitMode(void)
 {
     deinitMenu(grove->cGroveMenu);
     deinitMenuLogbookRenderer(grove->rndr);
+    for (int i = 7; i >= 0; i--){
+        freeWsg(&grove->mood_icons[i]);
+    }
     freeFont(&grove->menuFont);
     free(grove);
 }

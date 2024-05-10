@@ -37,7 +37,9 @@ static const char cGroveOLStrEnable[] = "Enable/Disable online features";   // E
 
 static const char cGrovePronoun[] = "Pronouns";
 static const char cGroveMood[] = "Mood";
+static const char cGroveMoodColon[] = "Mood: ";
 static const char cGroveUser[] = "Username";
+static const char cGroveShowAwards[] = "Show stats";
 
 static const char cGrovePronounHe[] = "He/Him";
 static const char cGrovePronounShe[] = "She/Her";
@@ -85,9 +87,9 @@ typedef enum
     ANGRY,
     SAD,
     CONFUSED,
-    FEARFUL,
     SURPRISED,
-    DISGUSTED,
+    SICK,
+    NEUTRAL,
 } Mood_t;
 
 typedef enum
@@ -190,11 +192,14 @@ typedef struct
     menuLogbookRenderer_t* rndr;    // Logbook renderer
 
     // Assets
-    font_t menuFont;    // Menu font FIXME: Change to new sonic font
+    font_t menuFont;        // Menu font FIXME: Change to new sonic font
+    wsg_t mood_icons[7];    // Icons of various moods
+    wsg_t arrow;
 
     // Chowa Grove data
     playerProfile_t player;                     // Player struct
     playerProfile_t guests[MAX_PREV_GUESTS];    // List of guest players
+    bool hasOnlineProfiles;                     // True if other profiles are present
     Cosmetics_t cosmeticInv[255];               // List of owned cosmetics
 } cGrove_t;
 
