@@ -36,27 +36,73 @@ void cGroveProfileMain(cGrove_t* gr){
         } else {
             ply = gr->guests[(gr->customMenuSelect - 1)];
         }
-        cGroveShowMainProfile(ply, gr->menuFont);
+        cGroveShowMainProfile(gr, ply, gr->menuFont);
     }
 }
 
-void cGroveShowMainProfile(playerProfile_t ply, font_t fnt)
+void cGroveShowMainProfile(cGrove_t* gr, playerProfile_t ply, font_t fnt)
 {
     // Profile background
-    fillDisplayArea(0, 0, H_SCREEN_SIZE, V_SCREEN_SIZE, c111); // TEMP
+    fillDisplayArea(0, 0, H_SCREEN_SIZE, V_SCREEN_SIZE, c000); // TEMP
 
     // Show username
     drawText(&fnt, c555, ply.username, 20, 20);
     // Show pronouns
-    drawText(&fnt, c555, ply.username, 20, 50);
+    static char buffer[16] = "";
+    switch(ply.pronouns){
+        case HE_HIM:
+            strcpy(buffer, cGrovePronounHe);
+            break;
+        case SHE_HER:
+            strcpy(buffer, cGrovePronounShe);
+            break;
+        case OTHER:
+            strcpy(buffer, cGrovePronounOther);
+            break;     
+        default:
+             strcpy(buffer, cGrovePronounThey);
+    }
+    drawText(&fnt, c555, buffer, 20, 50);
     // Show mood
-    drawText(&fnt, c555, ply.username, 20, 80);
+    wsg_t* moodDisplay;
+    switch(ply.mood){
+        case HAPPY:
+            moodDisplay = &gr->mood_icons[2];
+            break;
+        case ANGRY:
+            moodDisplay = &gr->mood_icons[1];
+            break;
+        case SAD:
+            moodDisplay = &gr->mood_icons[3];
+            break;
+        case CONFUSED:
+            moodDisplay = &gr->mood_icons[5];
+            break; 
+        case SURPRISED:
+            moodDisplay = &gr->mood_icons[6];
+            break;     
+        case SICK:
+            moodDisplay = &gr->mood_icons[3];
+            break;     
+        case NEUTRAL:
+            moodDisplay = &gr->mood_icons[0];
+            break;
+        default:
+             moodDisplay = &gr->mood_icons[0];
+    }
+    drawText(&fnt, c555, cGroveMoodColon, 20, 80);
+    drawWsg(moodDisplay, 96, 72, false, false, 0);
     // Show Chowa
     // - Name, color, mood, etc
-    drawText(&fnt, c555, ply.username, 20, 110);
+    drawText(&fnt, c555, "Chowa name", 20, 110);
+    drawText(&gr->menuFont, c555, cGroveShowAwards, 20, 200);
+    drawWsg(&gr->arrow, 180, 199, false, false, 90);
 
     // Display arrows to cycle through profiles
-    // Grey out arrows at the top and bottom of list
+    if(gr->hasOnlineProfiles){
+        drawWsg(&gr->arrow, 240, 12, false, false, 0);
+        drawWsg(&gr->arrow, 240, 208, false, false, 180);
+    }
 }
 
 void cGroveShowSubProfile(cGrove_t* gr)
@@ -75,9 +121,8 @@ void cGroveShowSubProfile(cGrove_t* gr)
             gr->currState = PROFILE;
         }
         // Draw
-        drawText(&gr->menuFont, c555, "GET PUNKED", 20, 140);
-        drawText(&gr->menuFont, c555, ply.username, 20, 170);
-        //FIXME: Draw all Chowa related info
+        drawText(&gr->menuFont, c555, ply.username, 20, 190);
+        //FIXME: Draw all awards etc
     }
 }
 
