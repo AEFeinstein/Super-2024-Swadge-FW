@@ -21,9 +21,9 @@ void cGroveProfileMain(cGrove_t* gr){
     {
         if (evt.down)
         {
-            if ((evt.state & PB_UP) || (evt.state & PB_DOWN)){    // Switch profiles
-                cGroveCustomSelectionWrap(evt, MAX_PREV_GUESTS + 1, &gr->customMenuSelect);
-            } else if (evt.state & PB_A) {                         // Select profile to view in more detail
+            if ((evt.state & PB_UP) || (evt.state & PB_DOWN)){          // Switch profiles
+                cGroveCustomSelectionWrap(evt, gr->numOfOnlineGuests + 1, &gr->customMenuSelect);
+            } else if ((evt.state & PB_A) || (evt.state & PB_RIGHT)) {  // Select profile to view in more detail
                 gr->currState = SUBPROFILE;
             } else {
                 gr->currState = MENU;
@@ -82,7 +82,7 @@ void cGroveShowMainProfile(cGrove_t* gr, playerProfile_t ply, font_t fnt)
             moodDisplay = &gr->mood_icons[6];
             break;     
         case SICK:
-            moodDisplay = &gr->mood_icons[3];
+            moodDisplay = &gr->mood_icons[4];
             break;     
         case NEUTRAL:
             moodDisplay = &gr->mood_icons[0];
@@ -99,7 +99,7 @@ void cGroveShowMainProfile(cGrove_t* gr, playerProfile_t ply, font_t fnt)
     drawWsg(&gr->arrow, 180, 199, false, false, 90);
 
     // Display arrows to cycle through profiles
-    if(gr->hasOnlineProfiles){
+    if(gr->numOfOnlineGuests > 0){
         drawWsg(&gr->arrow, 240, 12, false, false, 0);
         drawWsg(&gr->arrow, 240, 208, false, false, 180);
     }
@@ -107,6 +107,11 @@ void cGroveShowMainProfile(cGrove_t* gr, playerProfile_t ply, font_t fnt)
 
 void cGroveShowSubProfile(cGrove_t* gr)
 {
+    // TODO:
+    // - Show Chowa stats
+    // - Show Competitiion results
+    // - Show online results
+    
     buttonEvt_t evt = {0};
     playerProfile_t ply;
     if (gr->customMenuSelect == 0) {

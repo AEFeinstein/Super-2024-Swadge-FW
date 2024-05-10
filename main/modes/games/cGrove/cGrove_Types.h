@@ -46,6 +46,14 @@ static const char cGrovePronounShe[] = "She/Her";
 static const char cGrovePronounThey[] = "They/them";
 static const char cGrovePronounOther[] = "Other";
 
+static const char cGroveMoodStrNeutral[] = "Neutral";
+static const char cGroveMoodStrHappy[] = "Happy";
+static const char cGroveMoodStrSad[] = "Sad";
+static const char cGroveMoodStrAngry[] = "Angry";
+static const char cGroveMoodStrConfused[] = "Confused";
+static const char cGroveMoodStrSick[] = "Sick";
+static const char cGroveMoodStrSurprised[] = "Surprised";
+
 /* 
 // Grove
 static const char cGrovePlayStrInteract[] = "Play";         // Pet, pick up, throw, see stats
@@ -199,7 +207,7 @@ typedef struct
     // Chowa Grove data
     playerProfile_t player;                     // Player struct
     playerProfile_t guests[MAX_PREV_GUESTS];    // List of guest players
-    bool hasOnlineProfiles;                     // True if other profiles are present
+    int8_t numOfOnlineGuests;                   // Number of guests currently available
     Cosmetics_t cosmeticInv[255];               // List of owned cosmetics
 } cGrove_t;
 
