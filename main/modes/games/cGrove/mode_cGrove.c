@@ -33,7 +33,9 @@
     .fnDacCb                  = NULL,
 };
 
-cGrove_t* grove = NULL;
+static cGrove_t* grove = NULL;
+
+static char notifcations[MAX_NOTIFICATION_LEN];
 
 // Functions
 //==============================================================================
@@ -90,6 +92,16 @@ static void cGroveExitMode(void)
 
 static void cGroveMainLoop(int64_t elapsedUs) 
 {
+    if (grove->notificationActive){
+        if (grove->notificationTimer >= 0) {
+            cGroveNotification(notifcations);
+            grove->notificationTimer--;
+        } else {
+            grove->notificationActive = false;
+        }
+        // Make sure not to fall through
+        return;
+    } 
     buttonEvt_t evt = {0};
     switch (grove->currState){
         case MENU:
@@ -137,28 +149,37 @@ static void cGroveMenuCB(const char* label, bool selected, uint32_t settingVal)
             // TODO: Load Text entry
         } else if (label == cGrovePronounHe) {
             grove->player.pronouns = HE_HIM;
+            cGroveNotificationSetup("Pronouns set!");
         } else if (label == cGrovePronounShe) {
             grove->player.pronouns = SHE_HER;
+            cGroveNotificationSetup("Pronouns set!");
         } else if (label == cGrovePronounThey) {
             grove->player.pronouns = THEY_THEM;
+            cGroveNotificationSetup("Pronouns set!");
         } else if (label == cGrovePronounOther) {
             grove->player.pronouns = OTHER;
-        } else if (label == cGrovePronounOther) {
-            grove->player.pronouns = OTHER;
+            cGroveNotificationSetup("Pronouns set!");
         } else if (label == cGroveMoodStrNeutral) {
             grove->player.mood = NEUTRAL;
+            cGroveNotificationSetup("Mood set!");
         } else if (label == cGroveMoodStrHappy) {
             grove->player.mood = HAPPY;
+            cGroveNotificationSetup("Mood set!");
         } else if (label == cGroveMoodStrSad) {
             grove->player.mood = SAD;
+            cGroveNotificationSetup("Mood set!");
         } else if (label == cGroveMoodStrAngry) {
             grove->player.mood = ANGRY;
+            cGroveNotificationSetup("Mood set!");
         } else if (label == cGroveMoodStrConfused) {
             grove->player.mood = CONFUSED;
+            cGroveNotificationSetup("Mood set!");
         } else if (label == cGroveMoodStrSick) {
             grove->player.mood = SICK;
+            cGroveNotificationSetup("Mood set!");
         } else if (label == cGroveMoodStrSurprised) {
             grove->player.mood = SURPRISED;
+            cGroveNotificationSetup("Mood set!");
         }else if (label == cGroveOLStrEnable) {
             cGroveToggleOnlineFeatures(grove);
         }
@@ -203,6 +224,21 @@ static void cGroveInitMenu()
     addSingleItemToMenu(grove->cGroveMenu, cGroveOLStrEnable);
     grove->cGroveMenu = endSubMenu(grove->cGroveMenu);
     grove->rndr = initMenuLogbookRenderer(&grove->menuFont);
+}
+
+static void cGroveNotification(char* msg)
+{
+    fillDisplayArea(0, 0, H_SCREEN_SIZE, V_SCREEN_SIZE, c000);
+    static char buffer[MAX_NOTIFICATION_LEN];
+    strcpy(buffer, msg);
+    drawText(&grove->menuFont, c555, buffer, 20, 50);
+}
+
+static void cGroveNotificationSetup(char* msg)
+{
+    strcpy(notifcations, msg);
+    grove->notificationActive = true;
+    grove->notificationTimer = MAX_NOTIFICATION_DURATION;
 }
 
 // Graphics Functions
