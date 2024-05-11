@@ -163,7 +163,7 @@ def getEntityBytesFromEntity(entity,lookups):
         if getEntityPropValue(entity,"sticky","false") == "true":
             sticky = 1
         if getEntityPropValue(entity,"trail","false") == "true":
-            trail = 0
+            trail = 2
         flag = trail+sticky
         return [SKB_OBJSTART,SKB_CRATE,flag,SKB_OBJEND]
     # etc

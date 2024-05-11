@@ -6,13 +6,14 @@
 
 // clang-format off
 // True if the entity CANNOT go on the tile
-bool sokoEntityTileCollision[5][9] = {
+bool sokoEntityTileCollision[6][9] = {
     // Empty, //floor//wall//goal//noWalk//portal  //l-emit  //l-receive //walked
     {true, false, true, false, true,false,  false, false, false}, // SKE_NONE
     {true, false, true, false, true,false,  false, false, true},  // PLAYER
     {true, false, true, false,  true,false, false, false, false}, // CRATE
     {true, false, true, false, true,false,  false, false, false}, // LASER
     {true, false, true, false,  true,false, false, false, false}, // STICKY CRATE
+    {true, false, true, false,  true,false, false, false, true} // STICKY_TRAIL_CRATE
 };
 // clang-format on
 
@@ -49,6 +50,7 @@ void sokoConfigGamemode(
     }
     else if (variant == SOKO_OVERWORLD)
     {
+        printf("Config Soko to Overworld\n");
         gamestate->maxPush                          = 0; // set to 0 for infinite push.
         gamestate->gameLoopFunc                     = overworldSokoGameLoop;
         gamestate->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
@@ -120,7 +122,8 @@ void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     int16_t tWidth;
     if (!self->allCratesOnGoal)
     {
-        snprintf(str, sizeof(str) - 1, "sokoban");
+        //snprintf(buffer, buflen - 1, "%s%s", item->label, item->options[item->currentOpt]);
+        snprintf(str, sizeof(str) - 1, "%s",self->levelNames[self->currentLevelIndex]);
         // Measure the width of the time string
         tWidth = textWidth(&self->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
@@ -174,7 +177,7 @@ void absSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     int16_t tWidth;
     if (!self->allCratesOnGoal)
     {
-        snprintf(str, sizeof(str) - 1, "sokoban");
+        snprintf(str, sizeof(str) - 1, "%s",self->levelNames[self->currentLevelIndex]);
         // Measure the width of the time string
         tWidth = textWidth(&self->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
@@ -258,9 +261,41 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                         return false;
                     }
                 }
+            }else if(self->currentLevel.entities[i].type == SKE_STICKY_TRAIL_CRATE){
+                    // previous
+                        //for euler. todo: make EulerTryMoveEntityInDirection instead of an if statement.
+                       // printf("Checking if pushable can paint floor. is trail? %i",entity->properties->trail);
+                    if (self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py){
+                        if (self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i], dx, dy, push + 1))
+                        { 
+                            entity->x += dx;
+                            entity->y += dy;
+                            entity->facing = sokoDirectionFromDelta(dx, dy);
+                            return true;
+                    }
+                    else
+                    {
+                        // can't push? can't move.
+                        return false;
+                    }
+                }
+                        
+                        
             }
         }
-
+        
+        //todo: this is a hack, we should have separate absSokoTryMoveEntityInDirection functions.
+        if(self->currentLevel.gameMode==SOKO_EULER && entity->propFlag && entity->properties->trail){
+            if (self->currentLevel.tiles[entity->x+dx][entity->y+dy] == SKT_FLOOR)
+            {
+                self->currentLevel.tiles[entity->x+dx][entity->y+dy] = SKT_FLOOR_WALKED;
+            }
+            // current
+            if (self->currentLevel.tiles[entity->x][entity->y] == SKT_FLOOR)
+            {
+                self->currentLevel.tiles[entity->x][entity->y] = SKT_FLOOR_WALKED;
+            }
+        }
         // No wall in front of us and nothing to push, we can move.
         entity->x += dx;
         entity->y += dy;
@@ -455,6 +490,10 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
                     break;
                 case SKE_STICKY_CRATE:
                     drawWsg(&self->currentTheme->stickyCrateWSG, ox + level->entities[i].x * scale,
+                            oy + level->entities[i].y * scale, false, false, 0);
+                    break;
+                case SKE_STICKY_TRAIL_CRATE:
+                    drawWsg(&self->currentTheme->crateOnGoalWSG, ox + level->entities[i].x * scale,
                             oy + level->entities[i].y * scale, false, false, 0);
                     break;
                 case SKE_NONE:

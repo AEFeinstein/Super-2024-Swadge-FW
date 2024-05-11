@@ -89,7 +89,7 @@ static void sokoEnterMode(void)
     soko->eulerTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
     soko->eulerTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
     loadWsg("sk_e_crate.wsg", &soko->eulerTheme.crateWSG, false);
-    soko->eulerTheme.crateOnGoalWSG = soko-> sokoDefaultTheme.crateOnGoalWSG;
+    loadWsg("sk_sticky_trail_crate.wsg", &soko->eulerTheme.crateOnGoalWSG, false);
     soko->eulerTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
     soko->eulerTheme.portal_completeWSG = soko->sokoDefaultTheme.portal_completeWSG;
     soko->eulerTheme.portal_incompleteWSG = soko->sokoDefaultTheme.portal_incompleteWSG;
@@ -141,7 +141,7 @@ static void sokoExitMode(void)
     freeWsg(&soko->sokoDefaultTheme.portal_incompleteWSG);
     //  euler
     freeWsg(&soko->eulerTheme.crateWSG);
-
+    freeWsg(&soko->eulerTheme.crateOnGoalWSG);
     // Free everything else
     free(soko);
 }
