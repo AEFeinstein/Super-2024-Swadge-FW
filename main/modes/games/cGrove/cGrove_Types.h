@@ -7,6 +7,10 @@
 #define V_SCREEN_SIZE   240
 #define H_SCREEN_SIZE   280
 
+// State
+#define MAX_NOTIFICATION_DURATION   15
+#define MAX_NOTIFICATION_LEN        64
+
 // Chowa Garden
 #define MAX_CHOWA       5
 #define MAX_PREV_GUESTS 3
@@ -194,6 +198,8 @@ typedef struct
     // State tracking
     State_t currState;          // Current game state
     int8_t customMenuSelect;    // Current selection on custom menu
+    int16_t notificationTimer;  // Time left on the notification timer
+    bool notificationActive;    // If a notification is running
 
     // Swadge structs
     menu_t* cGroveMenu;             // Main menu for cGrove
@@ -202,7 +208,7 @@ typedef struct
     // Assets
     font_t menuFont;        // Menu font FIXME: Change to new sonic font
     wsg_t mood_icons[7];    // Icons of various moods
-    wsg_t arrow;
+    wsg_t arrow;            // Directional arrows
 
     // Chowa Grove data
     playerProfile_t player;                     // Player struct

@@ -14,7 +14,9 @@ static void cGroveExitMode(void);
 static void cGroveEnterMode(void);
 static void cGroveInitMenu(void);
 static void cGroveMenuCB(const char*, bool, uint32_t);
-static void cGroveBackgroundDrawCallback(int16_t, int16_t, int16_t, int16_t, int16_t, int16_t);\
+static void cGroveBackgroundDrawCallback(int16_t, int16_t, int16_t, int16_t, int16_t, int16_t);
+static void cGroveNotification(char*);
+static void cGroveNotificationSetup(char*);
 
 // Make Swadgemode available
 extern swadgeMode_t cGroveMode;
