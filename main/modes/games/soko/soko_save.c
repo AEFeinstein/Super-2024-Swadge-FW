@@ -229,13 +229,16 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     flagByte = self->levelBinaryData[i + 2];
                     sticky   = !!(flagByte & (0x1 << 0));
                     trail    = !!(flagByte & (0x1 << 1));
-                    printf("Crate! %i - s: %i, t:%i\n",flagByte,sticky,trail);
-                    self->currentLevel.entities[self->currentLevel.entityCount].type
-                        = sticky ? SKE_STICKY_CRATE : SKE_CRATE;
+                    if(sticky && trail){
+                        self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_STICKY_TRAIL_CRATE;
+                    }else if(sticky){
+                        self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_STICKY_CRATE ;
+                    }else{
+                        self->currentLevel.entities[self->currentLevel.entityCount].type = SKE_CRATE ;
+                    }
                     self->currentLevel.entities[self->currentLevel.entityCount].x = objX;
                     self->currentLevel.entities[self->currentLevel.entityCount].y = objY;
-                    self->currentLevel.entities[self->currentLevel.entityCount].properties
-                        = malloc(sizeof(sokoEntityProperties_t));
+                    self->currentLevel.entities[self->currentLevel.entityCount].properties = malloc(sizeof(sokoEntityProperties_t));
                     self->currentLevel.entities[self->currentLevel.entityCount].propFlag           = true;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->sticky = sticky;
                     self->currentLevel.entities[self->currentLevel.entityCount].properties->trail  = trail;
