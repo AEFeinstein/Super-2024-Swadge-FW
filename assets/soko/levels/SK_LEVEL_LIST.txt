@@ -1,0 +1,17 @@
+0:sk_overworld.bin:
+01:test2.bin:
+002:sk_c_test2.bin:
+03:sk_c_test2.bin:
+04:sk_c_test2.bin:
+05:sk_c_test2.bin:
+06:sk_c_test2.bin:
+07:sk_c_test2.bin:
+08:sk_c_test2.bin:
+101:sk_e_spine.bin:
+102:sk_e_waterwheel.bin:
+103:sk_e_feint.bin:
+104:sk_e_harmonica.bin:
+105:sk_e_threestep.bin:
+106:sk_e_curlingiron.bin:
+107:sk_e_alkatraz.bin:
+108:sk_e_throughput.bin:

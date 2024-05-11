@@ -12,7 +12,6 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal);
 static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static sokoTile_t sokoGetTileFromColor(paletteColor_t);
 static sokoEntityType_t sokoGetEntityFromColor(paletteColor_t);
-static int sokoFindIndex(soko_abs_t* self, int targetIndex);
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self);
 static void sokoLoadBinTiles(soko_abs_t* self, int byteCount);
 
@@ -62,11 +61,16 @@ static void sokoEnterMode(void)
     soko->levels[0] = "sk_testpuzzle.wsg";
 
     // free a wsg that we never loaded... is bad.
+    //todo: remove
     loadWsg(soko->levels[0], &soko->levelWSG, true); // spiRAM cus only used during loading, not gameplay.
 
     // load sprite assets
+    //set pointer
     soko->currentTheme = &soko->sokoDefaultTheme;
-
+    soko->sokoDefaultTheme.wallColor  = c111;
+    soko->sokoDefaultTheme.floorColor = c444;
+    
+    //load or set themes...
     // Default Theme
     loadWsg("sk_pango_fwd1.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
     loadWsg("sk_pango_back1.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
@@ -78,8 +82,6 @@ static void sokoEnterMode(void)
     loadWsg("sk_portal_complete.wsg", &soko->sokoDefaultTheme.portal_completeWSG, false);
     loadWsg("sk_portal_incomplete.wsg", &soko->sokoDefaultTheme.portal_incompleteWSG, false);
 
-    soko->sokoDefaultTheme.wallColor  = c111;
-    soko->sokoDefaultTheme.floorColor = c444;
 
     //we check against 0,0 as an invalid start location, and use file location instead.
     soko->overworld_playerX = 0;
@@ -95,9 +97,22 @@ static void sokoEnterMode(void)
     soko->overworldTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
     soko->overworldTheme.portal_completeWSG = soko->sokoDefaultTheme.portal_completeWSG;
     soko->overworldTheme.portal_incompleteWSG = soko->sokoDefaultTheme.portal_incompleteWSG;
+    soko->overworldTheme.wallColor  = c111;
+    soko->overworldTheme.floorColor = c444;
 
-    soko->overworldTheme.wallColor  = c121;
-    soko->overworldTheme.floorColor = c454;
+    // Euler Theme
+    soko->eulerTheme.playerDownWSG  = soko->sokoDefaultTheme.playerDownWSG;
+    soko->eulerTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
+    soko->eulerTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
+    soko->eulerTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
+    loadWsg("sk_e_crate.wsg", &soko->eulerTheme.crateWSG, false);
+    soko->eulerTheme.crateOnGoalWSG = soko-> sokoDefaultTheme.crateOnGoalWSG;
+    soko->eulerTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
+    soko->eulerTheme.portal_completeWSG = soko->sokoDefaultTheme.portal_completeWSG;
+    soko->eulerTheme.portal_incompleteWSG = soko->sokoDefaultTheme.portal_incompleteWSG;
+
+    soko->eulerTheme.wallColor  = c000;
+    soko->eulerTheme.floorColor = c555;
 
     // Initialize the menu
     soko->menu                = initMenu(sokoModeName, sokoMenuCb);
@@ -134,6 +149,7 @@ static void sokoExitMode(void)
     freeWsg(&soko->levelWSG);
 
     // free sprites
+    //  default
     freeWsg(&soko->sokoDefaultTheme.playerUpWSG);
     freeWsg(&soko->sokoDefaultTheme.playerDownWSG);
     freeWsg(&soko->sokoDefaultTheme.playerLeftWSG);
@@ -143,6 +159,8 @@ static void sokoExitMode(void)
     freeWsg(&soko->sokoDefaultTheme.stickyCrateWSG);
     freeWsg(&soko->sokoDefaultTheme.portal_completeWSG);
     freeWsg(&soko->sokoDefaultTheme.portal_incompleteWSG);
+    //  euler
+    freeWsg(&soko->eulerTheme.crateWSG);
 
     // Free everything else
     free(soko);
@@ -214,9 +232,9 @@ static void sokoMainLoop(int64_t elapsedUs)
         case SOKO_LOADNEWLEVEL:
         {
             sokoLoadBinLevel(soko, soko->loadNewLevelIndex);
-            printf("init new level");
+            printf("init new level\n");
             sokoInitNewLevel(soko, soko->currentLevel.gameMode);
-            printf("go to gameplay");
+            printf("go to gameplay\n");
             soko->screen = SOKO_LEVELPLAY;
         }
     }
@@ -259,26 +277,12 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
         }
     }
 }
-
-static int sokoFindIndex(soko_abs_t* self, int targetIndex)
-{
-    // Filenames are formatted like '1:sk_level.bin:'
-    int retVal = -1;
-    for (int i = 0; i < targetIndex; i++)
-    {
-        if (self->levelIndices[i] == targetIndex)
-        {
-            retVal = i;
-        }
-    }
-    return retVal;
-}
-
+//todo: move to soko_save
 static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
 {
     printf("Loading Level List...!\n");
-    printf("%s\n", self->levelFileText);
-    printf("%d\n", (int)strlen(self->levelFileText));
+    //printf("%s\n", self->levelFileText);
+    //printf("%d\n", (int)strlen(self->levelFileText));
     // char* a = strstr(self->levelFileText,":");
     // char* b = strstr(a,".bin:");
     // printf("%d",(int)((int)b-(int)a));
@@ -286,8 +290,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
     // memset(stringPtrs,0,30*sizeof(char*));
     char** stringPtrs = soko->levelNames;
     memset(stringPtrs, 0, SOKO_LEVEL_COUNT * sizeof(char*));
-    int* levelInds = soko->levelIndices;
-    memset(levelInds, 0, SOKO_LEVEL_COUNT * sizeof(int));
+    memset(soko->levelIndices, 0, SOKO_LEVEL_COUNT * sizeof(int));
     int intInd       = 0;
     int ind          = 0;
     char* storageStr = strtok(self->levelFileText, ":");
@@ -296,7 +299,7 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         //strtol(storageStr, NULL, 10) && 
         if (!(strstr(storageStr, ".bin"))) // Make sure you're not accidentally reading a number from a filename
         {
-            levelInds[intInd] = (int)strtol(storageStr, NULL, 10);
+            soko->levelIndices[intInd] = (int)strtol(storageStr, NULL, 10);
             // printf("NumberThing: %s :: %d\n",storageStr,(int)strtol(storageStr,NULL,10));
             intInd++;
         }
@@ -316,10 +319,10 @@ static void sokoExtractLevelNamesAndIndices(soko_abs_t* self)
         // printf("This guy!\n");
         storageStr = strtok(NULL, ":");
     }
-    // printf("Strings: %d, Ints: %d\n", ind, intInd);
-    // printf("Levels and indices:\n");
-    // for (int i = ind - 1; i > -1; i--)
-    // {
-    //     printf("Index: %d : %d : %s\n", i, levelInds[i], stringPtrs[i]);
-    // }
+    printf("Strings: %d, Ints: %d\n", ind, intInd);
+    printf("Levels and indices:\n");
+    for (int i = ind - 1; i > -1; i--)
+    {
+        printf("Index: %d : %d : %s\n", i, soko->levelIndices[i], stringPtrs[i]);
+    }
 }

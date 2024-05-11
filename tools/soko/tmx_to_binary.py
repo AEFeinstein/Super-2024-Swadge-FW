@@ -39,6 +39,11 @@ classToID = {
     "nowalkfloor":SKB_NO_WALK,
     "empty":SKB_EMPTY,
     "nothing":SKB_EMPTY,
+    "player":SKB_PLAYER,
+    "crate":SKB_CRATE,
+    "warpexternal":SKB_WARPEXTERNAL,
+    "portal":SKB_WARPEXTERNAL,
+    "button":SKB_BUTTON,
 }
 
 def insert_position(position, sourceList, insertionList):
@@ -64,19 +69,7 @@ def convertTMX(file_path):
         print("Preprocessor Warning. "+file_path+" has no properly set gamemode. setting gamemode to SOKO_CLASSIC")
         mode = "SOKO_CLASSIC"
     modeInt = getModeInt(mode)
-    # populate entities dictionary
 
-    # loop through entities and add values.
-    entityContainer = document.getElementsByTagName("objectgroup")[0]
-    if(entityContainer.getAttribute("name") != "entities"): #todo: get length of container. number children, i guess?
-        print("Warning, object layer not called 'entities' or there is more than one object layer. there should be just one, called entities.")
-    
-    for entity in entityContainer.getElementsByTagName("object"):
-        ebytes = getEntityBytesFromEntity(entity)
-        x = int(float(entity.getAttribute("x"))/16)
-        y = int(float(entity.getAttribute("y"))/16)
-        entities[str(x)+","+str(y)] = ebytes
-    
     #get firstgid of tilesheet
     tileLookups = {} #offset from the tilesheet
     tilesets = document.getElementsByTagName("tileset")
@@ -91,6 +84,22 @@ def convertTMX(file_path):
                 tileLookups[x] = loadTilesetLookup(doc)
         else:
             tileLookups[x] = loadTilesetLookup(tileset)
+
+    # populate entities dictionary
+
+    # loop through entities and add values.
+    objectlayers = document.getElementsByTagName("objectgroup")
+    entityContainer = objectlayers[0]
+    if(entityContainer.getAttribute("name") != "entities"): #todo: get length of container. number children, i guess?
+        print("Warning, object layer not called 'entities' or there is more than one object layer. there should be just one, called entities.")
+    
+    for entity in entityContainer.getElementsByTagName("object"):
+        ebytes = getEntityBytesFromEntity(entity,tileLookups)
+        x = int(float(entity.getAttribute("x"))/16)
+        y = int(float(entity.getAttribute("y"))/16)
+        entities[str(x)+","+str(y)] = ebytes
+    
+   
 
     dataText = document.getElementsByTagName("data")[0].firstChild.nodeValue
     scrub = "".join(dataText.split()) #Remove all residual whitespace in data block
@@ -133,23 +142,28 @@ def getModeInt(mode):
         return 3
 
 
-def getEntityBytesFromEntity(entity):
+def getEntityBytesFromEntity(entity,lookups):
     #todo: look up data in the tsx. which we have loaded? I think?
     #SKB_OBJSTART, SKB_[Object Type], [Data Bytes] , SKB_OBJEND
     gid = int(entity.getAttribute("gid"))
+    tid = getTile(gid,lookups)
+
     otype = 0
-    if(gid == 1):
+    if(tid == SKB_PLAYER):
         return [SKB_OBJSTART,SKB_PLAYER,SKB_OBJEND]
-    elif(gid == 4):
+    elif(tid == SKB_WARPEXTERNAL):
         # index of destination or x,y?
-        return [SKB_OBJSTART,SKB_WARPEXTERNAL,0,0,SKB_OBJEND]
-    elif(gid == 2):
-        flag = 0
+        id = int(getEntityPropValue(entity,"target_id",None))
+        return [SKB_OBJSTART,SKB_WARPEXTERNAL,id,SKB_OBJEND]
+    elif(tid == SKB_CRATE):
         # bit 0 is sticky ob01
         # bit 1 is trail ob10
-        # flag = sticky&trail (00,01,10, or 11)
+        sticky = int(bool(getEntityPropValue(entity,"sticky","false")))
+        trail = int(bool(getEntityPropValue(entity,"trail","false")))
+        flag = trail+sticky
         return [SKB_OBJSTART,SKB_CRATE,flag,SKB_OBJEND]
     # etc
+    print("could not get entity..."+str(gid));
     return []
     return [SKB_OBJSTART,SKB_CRATE,SKB_OBJEND]
 
@@ -159,11 +173,15 @@ def getTile(i,lookups):
         return 0 # whatever our empty is.
     for k,v in lookups.items():
         ix = i-k
+        if(k > i):
+            continue
         if ix in v:
             s = v[ix]
             if s in classToID:
                 x = classToID[s]
                 return x
+            else:
+                print("what's the byte for "+str(s))
     print("uh oh"+str(i)+"-"+str(k)+"-"+str(lookups))
     return i
 
@@ -176,5 +194,12 @@ def loadTilesetLookup(doc):
 
     return lookup
 
+def getEntityPropValue(entity, property, default=0):
+    props = entity.getElementsByTagName("property")
+    for prop in props:
+        if prop.getAttribute("name") == property:
+            return prop.getAttribute("value")
+    
+    return default
 
     

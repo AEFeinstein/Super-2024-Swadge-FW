@@ -5,6 +5,7 @@ static void sokoSaveCurrentLevelEntities(soko_abs_t* soko);
 static void sokoLoadCurrentLevelEntities(soko_abs_t* soko);
 static void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved);
 static void sokoLoadBinTiles(soko_abs_t* soko, int byteCount);
+static int sokoFindIndex(soko_abs_t* self, int targetIndex);
 
 /// @brief Called on 'resume' from the menu.
 /// @param soko 
@@ -205,7 +206,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             uint8_t flagByte, direction;
             bool players, crates, sticky, trail, inverted;
             int hp, targetX, targetY;
-            printf("reading object byte after start: %i,%i:%i\n",objX,objY,self->levelBinaryData[i+1]);
+            //printf("reading object byte after start: %i,%i:%i\n",objX,objY,self->levelBinaryData[i+1]);
 
             switch (self->levelBinaryData[i + 1]) // On creating entities, index should be advanced to the SKB_OBJEND
                                                   // byte so the post-increment moves to the next tile.
@@ -271,15 +272,14 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                 case SKB_WARPEXTERNAL: //[typep][flags][index]
                     // todo implement extraction of index value and which values should be used for auto-indexed portals
                     self->currentLevel.tiles[objX][objY] = SKT_PORTAL;
+                    flagByte = self->levelBinaryData[i + 2];//destination
                     self->portals[self->portalCount].index
-                        = self->portalCount + 1; // For basic test, 1 indexed with levels, but multi-room overworld
+                        = sokoFindIndex(self,flagByte); // For basic test, 1 indexed with levels, but multi-room overworld
                                                  // needs more sophistication to keep indices correct.
                     self->portals[self->portalCount].x = objX;
                     self->portals[self->portalCount].y = objY;
-                    printf("Portal %d at %d,%d\n", self->portals[self->portalCount].index,
-                           self->portals[self->portalCount].x, self->portals[self->portalCount].y);
                     self->portalCount += 1;
-                    i += 4;
+                    i += 3;
                     break;
                 case SKB_BUTTON: //[type][flag][numTargets][targetx][targety]...
                     flagByte = self->levelBinaryData[i + 2];
@@ -446,4 +446,19 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             tileIndex++;
         }
     }
+}
+
+static int sokoFindIndex(soko_abs_t* self, int targetIndex)
+{
+    // Filenames are formatted like '1:sk_level.bin:'
+    int retVal = -1;
+    for (int i = 0; i < SOKO_LEVEL_COUNT; i++)
+    {
+        if (self->levelIndices[i] == targetIndex)
+        {
+            retVal = i;
+            break;
+        }
+    }
+    return retVal;
 }
