@@ -24,21 +24,25 @@
   <object id="2" gid="66" x="80" y="32" width="16" height="16">
    <properties>
     <property name="sticky" type="bool" value="true"/>
+    <property name="trail" type="bool" value="true"/>
    </properties>
   </object>
   <object id="3" gid="66" x="16" y="64" width="16" height="16">
    <properties>
     <property name="sticky" type="bool" value="true"/>
+    <property name="trail" type="bool" value="true"/>
    </properties>
   </object>
   <object id="4" gid="66" x="112" y="80" width="16" height="16">
    <properties>
     <property name="sticky" type="bool" value="true"/>
+    <property name="trail" type="bool" value="true"/>
    </properties>
   </object>
   <object id="7" gid="66" x="48" y="128" width="16" height="16">
    <properties>
     <property name="sticky" type="bool" value="true"/>
+    <property name="trail" type="bool" value="true"/>
    </properties>
   </object>
   <object id="8" gid="66" x="64" y="112" width="16" height="16">
