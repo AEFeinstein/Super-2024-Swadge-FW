@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="18" height="18" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="56">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="18" height="18" tilewidth="16" tileheight="16" infinite="0" nextlayerid="6" nextobjectid="57">
  <editorsettings>
   <export format="sokoMap"/>
  </editorsettings>
@@ -27,9 +27,9 @@
 12,13,13,13,13,12,12,12,12,13,13,13,13,13,13,13,13,12,
 12,13,13,13,13,13,12,12,12,12,13,13,13,13,13,13,13,12,
 12,13,13,13,13,13,13,12,12,12,12,12,12,12,12,12,12,12,
-12,12,13,13,13,13,13,13,12,12,12,12,0,0,0,0,0,0,
-0,0,12,13,13,13,13,13,13,13,13,12,0,0,0,0,0,0,
-0,0,0,12,13,13,13,13,13,13,13,13,12,0,0,0,0,0,
+12,12,13,13,13,13,13,13,12,12,12,12,76,76,0,0,0,0,
+0,0,12,13,13,13,13,13,13,13,13,77,77,76,0,0,0,0,
+0,0,0,12,13,13,13,13,13,13,13,13,12,76,0,0,0,0,
 0,0,0,0,12,13,13,13,13,13,13,13,13,12,0,0,0,0,
 0,0,0,0,12,12,12,12,12,12,12,12,12,12,0,0,0,0
 </data>
@@ -118,6 +118,11 @@
   <object id="55" gid="4" x="112" y="224" width="16" height="16">
    <properties>
     <property name="target_id" type="int" value="108"/>
+   </properties>
+  </object>
+  <object id="56" gid="4" x="192" y="240" width="16" height="16">
+   <properties>
+    <property name="target_id" type="int" value="109"/>
    </properties>
   </object>
  </objectgroup>

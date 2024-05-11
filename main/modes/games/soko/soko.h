@@ -24,6 +24,12 @@ typedef enum
 
 typedef enum
 {
+    SKBG_GRID = 0,
+    SKBG_BLACK = 1
+} sokoBackground_t;
+
+typedef enum
+{
     SKB_EMPTY             = 0,
     SKB_WALL              = 1,
     SKB_FLOOR             = 2,
@@ -158,7 +164,6 @@ typedef struct
     wsg_t portal_completeWSG;
     paletteColor_t wallColor;
     paletteColor_t floorColor;
-
 } sokoTheme_t;
 
 typedef struct
@@ -222,6 +227,7 @@ typedef struct soko_abs_s
     sokoTheme_t overworldTheme;
     sokoTheme_t eulerTheme;
     sokoTheme_t sokoDefaultTheme;
+    sokoBackground_t background;
 
     // level
     char* levels[SOKO_LEVEL_COUNT]; ///< List of wsg filenames. not comitted to storing level data like this, but idk if

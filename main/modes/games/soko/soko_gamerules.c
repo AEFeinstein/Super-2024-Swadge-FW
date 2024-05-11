@@ -25,6 +25,8 @@ void sokoConfigGamemode(
 {
     printf("config for game mode...\n");
     gamestate->currentTheme = &gamestate->sokoDefaultTheme;
+    gamestate->background = SKBG_GRID;
+
     if (variant == SOKO_CLASSIC) // standard gamemode. Check 'variant' variable
     {
         printf("Config Soko to Classic\n");
@@ -47,6 +49,7 @@ void sokoConfigGamemode(
         gamestate->isVictoryConditionFunc           = eulerNoUnwalkedFloors;
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
         gamestate->currentTheme = &gamestate->eulerTheme;
+        gamestate->background = SKBG_BLACK;
     }
     else if (variant == SOKO_OVERWORLD)
     {
