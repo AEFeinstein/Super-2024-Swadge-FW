@@ -16,6 +16,8 @@
 //==============================================================================
 #define DECIMAL_BITS 4
 
+#define TILE_FIELD_WIDTH 8
+#define TILE_FIELD_HEIGHT 16
 #define GARBOTNIK_RADIUS   (19 << DECIMAL_BITS)
 #define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
 #define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
@@ -55,7 +57,7 @@ typedef struct
     vec_t garbotnikAccel;///< Garbotnik's acceleration
 
     rectangle_t camera; ///< The camera
-    int8_t tiles[4][3];     ///< The 4x3 array of tiles (col, row). 1 is tile, 0 is not. Future feature: more variety
+    int8_t tiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of tiles. 1 is tile, 0 is not. Future feature: more variety
 
     int32_t restartTimerUs; ///< A timer that counts down before the game begins
     uint16_t btnState;      ///< The button state used for paddle control
@@ -327,9 +329,9 @@ static void bigbugDrawField(void)
     //printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
     //printf("width: %d\n", FIELD_WIDTH);
     int16_t iStart = (bigbug->camera.pos.x >> DECIMAL_BITS) / 64;
-    int16_t iEnd = iStart + 4;
+    int16_t iEnd = iStart + TILE_FIELD_WIDTH;
     int16_t jStart = (bigbug->camera.pos.y >> DECIMAL_BITS) / 64;
-    int16_t jEnd = jStart + 3;
+    int16_t jEnd = jStart + TILE_FIELD_HEIGHT;
     if ((bigbug->camera.pos.x >> DECIMAL_BITS) < 0){
         iStart -= 1;
         if ((bigbug->camera.pos.x  + FIELD_WIDTH) >> DECIMAL_BITS < 0){
@@ -344,18 +346,18 @@ static void bigbugDrawField(void)
     }
 
     
-    if(iEnd >= 0 && iStart <= 4 && jEnd >= 0 && jStart <= 3){
+    if(iEnd >= 0 && iStart <= TILE_FIELD_WIDTH && jEnd >= 0 && jStart <= FIELD_HEIGHT){
         if(0 > iStart){
             iStart = 0;
         }
         if(4 < iEnd){
-            iEnd = 4;
+            iEnd = TILE_FIELD_WIDTH;
         }
         if(0 > jStart){
             jStart = 0;
         }
         if(3 < jEnd){
-            jEnd = 3;
+            jEnd = TILE_FIELD_WIDTH;
         }
 
         // printf("iStart: %d\n", iStart);
