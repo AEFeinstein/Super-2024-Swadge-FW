@@ -41,28 +41,11 @@ swadgeMode_t sokoMode = {
 // soko_t* soko=NULL;
 soko_abs_t* soko = NULL;
 
-// extern const char* sokoLevelNames[]
-//     = {"sk_overworld1.wsg", "sk_sticky_test.wsg", "sk_test1.wsg", "sk_test2.wsg", "sk_test3.wsg"};m
-
-//@TODO: Remove this when all levels do binary loading and dynamic name loading.
-// extern const char* sokoBinLevelNames[] = {
-//     "sk_binOverworld.bin", "warehouse.bin", "sk_sticky_test.bin", "sk_test1.bin", "sk_test3.bin",
-// };
-
 static void sokoEnterMode(void)
 {
     soko = calloc(1, sizeof(soko_abs_t));
     // Load a font
     loadFont("ibm_vga8.font", &soko->ibm, false);
-
-    // todo: move to convenience function for loading level data. Preferrebly in it's own file so contributors can futz
-    //todo: cut this all out
-    // with it with fewer git merge cases.
-    soko->levels[0] = "sk_testpuzzle.wsg";
-
-    // free a wsg that we never loaded... is bad.
-    //todo: remove
-    loadWsg(soko->levels[0], &soko->levelWSG, true); // spiRAM cus only used during loading, not gameplay.
 
     // load sprite assets
     //set pointer
@@ -144,9 +127,6 @@ static void sokoExitMode(void)
 
     // free the level name file
     freeTxt(soko->levelFileText);
-
-    // free the level
-    freeWsg(&soko->levelWSG);
 
     // free sprites
     //  default

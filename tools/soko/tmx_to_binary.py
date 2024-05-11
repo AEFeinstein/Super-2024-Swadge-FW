@@ -158,8 +158,12 @@ def getEntityBytesFromEntity(entity,lookups):
     elif(tid == SKB_CRATE):
         # bit 0 is sticky ob01
         # bit 1 is trail ob10
-        sticky = int(bool(getEntityPropValue(entity,"sticky","false")))
-        trail = int(bool(getEntityPropValue(entity,"trail","false")))
+        sticky = 0
+        trail = 0
+        if getEntityPropValue(entity,"sticky","false") == "true":
+            sticky = 1
+        if getEntityPropValue(entity,"trail","false") == "true":
+            trail = 0
         flag = trail+sticky
         return [SKB_OBJSTART,SKB_CRATE,flag,SKB_OBJEND]
     # etc
