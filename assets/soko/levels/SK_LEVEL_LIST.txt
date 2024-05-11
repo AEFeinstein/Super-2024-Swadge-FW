@@ -10,8 +10,9 @@
 101:sk_e_spine.bin:
 102:sk_e_waterwheel.bin:
 103:sk_e_feint.bin:
-104:sk_e_harmonica.bin:
-105:sk_e_threestep.bin:
-106:sk_e_curlingiron.bin:
-107:sk_e_alkatraz.bin:
-108:sk_e_throughput.bin:
+104:sk_e_a-frame.bin:
+105:sk_e_harmonica.bin:
+106:sk_e_threestep.bin:
+107:sk_e_curlingiron.bin:
+108:sk_e_alkatraz.bin:
+109:sk_e_throughput.bin:

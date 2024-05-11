@@ -52,7 +52,7 @@ static void sokoEnterMode(void)
     soko->currentTheme = &soko->sokoDefaultTheme;
     soko->sokoDefaultTheme.wallColor  = c111;
     soko->sokoDefaultTheme.floorColor = c444;
-    
+    soko->background = SKBG_GRID;
     //load or set themes...
     // Default Theme
     loadWsg("sk_pango_fwd1.wsg", &soko->sokoDefaultTheme.playerDownWSG, false);
@@ -83,6 +83,7 @@ static void sokoEnterMode(void)
     soko->overworldTheme.wallColor  = c111;
     soko->overworldTheme.floorColor = c444;
 
+
     // Euler Theme
     soko->eulerTheme.playerDownWSG  = soko->sokoDefaultTheme.playerDownWSG;
     soko->eulerTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
@@ -93,7 +94,6 @@ static void sokoEnterMode(void)
     soko->eulerTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
     soko->eulerTheme.portal_completeWSG = soko->sokoDefaultTheme.portal_completeWSG;
     soko->eulerTheme.portal_incompleteWSG = soko->sokoDefaultTheme.portal_incompleteWSG;
-
     soko->eulerTheme.wallColor  = c000;
     soko->eulerTheme.floorColor = c555;
 
@@ -241,6 +241,7 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
     // Use TURBO drawing mode to draw individual pixels fast
     SETUP_FOR_TURBO();
 
+    if(soko->background == SKBG_GRID){
     // Draw a grid
     for (int16_t yp = y; yp < y + h; yp++)
     {
@@ -253,6 +254,16 @@ static void sokoBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t 
             else
             {
                 TURBO_SET_PIXEL(xp, yp, c001);
+            }
+        }
+    }
+    }else{//SKBG_BLACK
+        for (int16_t yp = y; yp < y + h; yp++)
+        {
+            for (int16_t xp = x; xp < x + w; xp++)
+            {
+
+                TURBO_SET_PIXEL(xp, yp, c000);
             }
         }
     }
