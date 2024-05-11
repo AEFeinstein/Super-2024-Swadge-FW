@@ -17,8 +17,10 @@
 #define DECIMAL_BITS 4
 
 #define GARBOTNIK_RADIUS   (19 << DECIMAL_BITS)
-#define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
 #define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
+#define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
+#define HALF_WIDTH   (FIELD_WIDTH / 2)
+#define HALF_HEIGHT  (FIELD_HEIGHT / 2)
 
 //==============================================================================
 // Enums
@@ -50,6 +52,10 @@ typedef struct
     rectangle_t paddleR; ///< The right paddle
     circle_t garbotnik;  ///< Garbotnik (player character)
     vec_t garbotnikVel;  ///< Garbotnik's velocity
+    vec_t garbotnikAccel;///< Garbotnik's acceleration
+
+    rectangle_t camera; ///< The camera
+    int8_t tiles[4][3];     ///< The 4x3 array of tiles (col, row). 1 is tile, 0 is not. Future feature: more variety
 
     int32_t restartTimerUs; ///< A timer that counts down before the game begins
     uint16_t btnState;      ///< The button state used for paddle control
@@ -283,11 +289,17 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
     }
     if (x_div != 0)
     {
-        bigbug->garbotnikVel.x = bigbug->garbotnikVel.x + elapsedUs / x_div;
+        bigbug->garbotnikAccel.x = elapsedUs / x_div;
+    }
+    else{
+        bigbug->garbotnikAccel.x = 0;
     }
     if (y_div != 0)
     {
-        bigbug->garbotnikVel.y = bigbug->garbotnikVel.y + elapsedUs / y_div;
+        bigbug->garbotnikAccel.y = elapsedUs / y_div;
+    }
+    else{
+        bigbug->garbotnikAccel.y = 0;
     }
     // if (bigbug->btnState & PB_UP)
     // {
@@ -312,16 +324,63 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
  */
 static void bigbugDrawField(void)
 {
-    for (int i = 0; i <= 4; i++){
-        for (int j = 0; j <= 3; j++){
-            // Draw dirt tile
-            drawWsgTile(&bigbug->dirtWsg, i * 64, j * 64);
+    //printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
+    //printf("width: %d\n", FIELD_WIDTH);
+    int16_t iStart = (bigbug->camera.pos.x >> DECIMAL_BITS) / 64;
+    int16_t iEnd = iStart + 4;
+    int16_t jStart = (bigbug->camera.pos.y >> DECIMAL_BITS) / 64;
+    int16_t jEnd = jStart + 3;
+    if ((bigbug->camera.pos.x >> DECIMAL_BITS) < 0){
+        iStart -= 1;
+        if ((bigbug->camera.pos.x  + FIELD_WIDTH) >> DECIMAL_BITS < 0){
+            iEnd -= 1;
+        }
+    }
+    if ((bigbug->camera.pos.y >> DECIMAL_BITS) < 0){
+        jStart -= 1;
+        if ((bigbug->camera.pos.y + FIELD_HEIGHT) >> DECIMAL_BITS < 0){
+            jEnd -= 1;
         }
     }
 
+    
+    if(iEnd >= 0 && iStart <= 4 && jEnd >= 0 && jStart <= 3){
+        if(0 > iStart){
+            iStart = 0;
+        }
+        if(4 < iEnd){
+            iEnd = 4;
+        }
+        if(0 > jStart){
+            jStart = 0;
+        }
+        if(3 < jEnd){
+            jEnd = 3;
+        }
+
+        // printf("iStart: %d\n", iStart);
+        // printf("iEnd: %d\n", iEnd);
+        // printf("jStart: %d\n", jStart);
+        // printf("jEnd: %d\n", jEnd);
+
+        for (int i = iStart; i <= iEnd; i++){
+            for (int j = jStart; j <= jEnd; j++){
+                // Draw dirt tile
+                drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
+            }
+        }
+    }
+
+    
+
+    // printf("garbotnik.pos.y: %d\n", bigbug->garbotnik.pos.y);
+    // printf("garbotnik.radius: %d\n", bigbug->garbotnik.radius);
+    // printf("camera.pos.y: %d\n", bigbug->camera.pos.y);
+    // printf("render y: %d\n", (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
+
     // Draw garbotnik
-    drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnik.pos.x - bigbug->garbotnik.radius) >> DECIMAL_BITS,
-                  (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius) >> DECIMAL_BITS);
+    drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnik.pos.x - bigbug->garbotnik.radius - bigbug->camera.pos.x) >> DECIMAL_BITS,
+                  (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
 }
 
 /**
@@ -369,11 +428,24 @@ static void bigbugGameLoop(int64_t elapsedUs)
 
 static void bigbugReset(void){
     // Set garbotnik variables
-    bigbug->garbotnik.pos.x  = (FIELD_WIDTH) / 2;
-    bigbug->garbotnik.pos.y  = (FIELD_HEIGHT) / 2;
-    printf("%d\n",bigbug->garbotnik.pos.x);
-    printf("%d\n",bigbug->garbotnik.pos.y);
+    bigbug->garbotnik.pos.x  = 128 << DECIMAL_BITS;
+    bigbug->garbotnik.pos.y  = -90 << DECIMAL_BITS;
+
+    printf("The width is: %d\n", FIELD_WIDTH);
+    printf("The height is: %d\n", FIELD_HEIGHT);
+
+    bigbug->camera.width = FIELD_WIDTH;
+    bigbug->camera.height = FIELD_HEIGHT;
+
     bigbug->garbotnik.radius = GARBOTNIK_RADIUS;
+
+    //Set all tiles to dirt
+    for(int i = 0; i < 4; i++){
+        for(int j = 0; j < 3; j++){
+        bigbug->tiles[i][j] = 1;
+        }
+    }
+
 }
 
 /**
@@ -395,8 +467,17 @@ static void bigbugSetLeds(void)
 
 static void bigbugUpdatePhysics(int64_t elapsedUs)
 {
-    // Update the ball's position
-    bigbug->garbotnik.pos.x += (bigbug->garbotnikVel.x * elapsedUs) / 100000;
-    bigbug->garbotnik.pos.y += (bigbug->garbotnikVel.y * elapsedUs) / 100000;
+    // Update garbotnik's velocity
+    bigbug->garbotnikVel.x += bigbug->garbotnikAccel.x;
+    bigbug->garbotnikVel.y += bigbug->garbotnikAccel.y;
+
+    // Update garbotnik's position
+    bigbug->garbotnik.pos.x += bigbug->garbotnikVel.x * elapsedUs / 100000;
+    bigbug->garbotnik.pos.y += bigbug->garbotnikVel.y * elapsedUs / 100000;
+
+    // Update the camera's position to catch up to the player
+
+    bigbug->camera.pos.x = bigbug->garbotnik.pos.x - HALF_WIDTH;
+    bigbug->camera.pos.y = bigbug->garbotnik.pos.y - HALF_HEIGHT;
 }
 
