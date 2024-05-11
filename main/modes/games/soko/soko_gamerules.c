@@ -6,13 +6,13 @@
 
 // clang-format off
 // True if the entity CANNOT go on the tile
-bool sokoEntityTileCollision[5][8] = {
-    // Empty, //floor  //wall   //goal    //portal  //l-emit  //l-receive //walked
-    {true, false, true, false, false, false, false, false}, // SKE_NONE
-    {true, false, true, false, false, false, false, true},  // PLAYER
-    {true, false, true, false, false, false, false, false}, // CRATE
-    {true, false, true, false, false, false, false, false}, // LASER
-    {true, false, true, false, false, false, false, false}, // STICKY CRATE
+bool sokoEntityTileCollision[5][9] = {
+    // Empty, //floor//wall//goal//noWalk//portal  //l-emit  //l-receive //walked
+    {true, false, true, false, true,false,  false, false, false}, // SKE_NONE
+    {true, false, true, false, true,false,  false, false, true},  // PLAYER
+    {true, false, true, false,  true,false, false, false, false}, // CRATE
+    {true, false, true, false, true,false,  false, false, false}, // LASER
+    {true, false, true, false,  true,false, false, false, false}, // STICKY CRATE
 };
 // clang-format on
 
@@ -45,6 +45,7 @@ void sokoConfigGamemode(
         gamestate->drawTilesFunc                    = absSokoDrawTiles;
         gamestate->isVictoryConditionFunc           = eulerNoUnwalkedFloors;
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
+        gamestate->currentTheme = &gamestate->eulerTheme;
     }
     else if (variant == SOKO_OVERWORLD)
     {
@@ -222,7 +223,7 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
         return false;
     }
 
-    // maxiumum number of crates we can push. Traditional sokoban has a limit of one. I prefer infinite for challenges.
+    // maxiumum number of crates we can push. Traditional sokoban has a limit of one. Euler is infinity.
     if (self->maxPush != 0 && push > self->maxPush)
     {
         return false;
@@ -265,7 +266,10 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
         entity->y += dy;
         entity->facing = sokoDirectionFromDelta(dx, dy);
         return true;
-    } // all other floor types invalid. Be careful when we add tile types in different rule sets.
+    }else{
+        printf("%d cant move on %d",entity->type,nextTile);
+    }
+     // all other floor types invalid. Be careful when we add tile types in different rule sets.
 
     return false;
 }
@@ -976,11 +980,11 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         {
             if (self->soko_player->x == self->portals[i].x && self->soko_player->y == self->portals[i].y)
             {
-                targetWorldIndex = i + 1;
+                targetWorldIndex = self->portals[i].index;
                 break;
             }
         }
-        printf("Player at %d,%d\n", self->soko_player->x, self->soko_player->y);
+
         self->loadNewLevelIndex = targetWorldIndex;
         self->loadNewLevelFlag  = true;
         self->screen            = SOKO_LOADNEWLEVEL;

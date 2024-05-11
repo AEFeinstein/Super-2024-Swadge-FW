@@ -87,7 +87,12 @@ Because the data is stores in horizontal rows, this only compresses contiguous h
 *START = 'SKB_OBJSTART', END = 'SKB_OBJEND', and 'SKB_' prefix ignored.*
 
 - START, PLAYER, END
-- START, CRATE, END
+- START, CRATE, [StickyFlag] END
+    - not stick, not trail = 0
+    - sticky, not trail = 1
+    - not stick, trail = 2
+    - sticky, trail ST = 3
 - START, WARPEXTERNAL, [Target ID], END
+    - TargetID should match SK_LVEL_LIST.txt data.
 
 *Note: Todo as I re-write the converter in python*

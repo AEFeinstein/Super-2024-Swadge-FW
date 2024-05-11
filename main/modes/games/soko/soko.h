@@ -219,6 +219,7 @@ typedef struct soko_abs_s
     // theme settings
     sokoTheme_t* currentTheme; ///< Points to one of the other themes.
     sokoTheme_t overworldTheme;
+    sokoTheme_t eulerTheme;
     sokoTheme_t sokoDefaultTheme;
 
     // level
