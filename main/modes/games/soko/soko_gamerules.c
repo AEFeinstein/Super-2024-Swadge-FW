@@ -3,6 +3,7 @@
 #include "soko_gamerules.h"
 #include "soko_save.h"
 #include "shapes.h"
+#include "soko_undo.h"
 
 // clang-format off
 // True if the entity CANNOT go on the tile
@@ -23,7 +24,6 @@ void sokoConfigGamemode(
     soko_abs_t* gamestate,
     soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
 {
-    printf("config for game mode...\n");
     gamestate->currentTheme = &gamestate->sokoDefaultTheme;
     gamestate->background = SKBG_GRID;
 
@@ -81,9 +81,12 @@ void sokoConfigGamemode(
         gamestate->drawTilesFunc                    = absSokoDrawTiles;
         gamestate->isVictoryConditionFunc           = absSokoAllCratesOnGoal;
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
+    }else{
+        printf("invalid gamemode.")
     }
 
     // add conditional for alternative variants
+    sokoInitHistory(gamestate);
 }
 
 void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
@@ -143,58 +146,63 @@ void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
     sharedGameLoop(self);
 }
 
-void absSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
+void absSokoGameLoop(soko_abs_t* soko, int64_t elapsedUs)
 {
-    if (self->state == SKS_GAMEPLAY)
+    if (soko->state == SKS_GAMEPLAY)
     {
         // logic
-        self->sokoTryPlayerMovementFunc(self);
+        soko->sokoTryPlayerMovementFunc(soko);
+
+        //undo check
+        if(soko->input.undo){
+            sokoUndo(soko);
+        }
 
         // victory status. stored separate from gamestate because of future gameplay ideas/remixes.
         // todo: rename to isVictory or such.
-        self->allCratesOnGoal = self->isVictoryConditionFunc(self);
-        if (self->allCratesOnGoal)
+        soko->allCratesOnGoal = soko->isVictoryConditionFunc(soko);
+        if (soko->allCratesOnGoal)
         {
-            self->state       = SKS_VICTORY;
+            soko->state       = SKS_VICTORY;
             victoryDanceTimer = 0;
         }
         // draw level
-        self->drawTilesFunc(self, &self->currentLevel);
+        soko->drawTilesFunc(soko, &soko->currentLevel);
     }
-    else if (self->state == SKS_VICTORY)
+    else if (soko->state == SKS_VICTORY)
     {
         // check for input for exit/next level.
-        self->drawTilesFunc(self, &self->currentLevel);
+        soko->drawTilesFunc(soko, &soko->currentLevel);
         victoryDanceTimer += elapsedUs;
         if (victoryDanceTimer > SOKO_VICTORY_TIMER_US)
         {
-            sokoSolveCurrentLevel(self);
-            self->loadNewLevelIndex = 0;
-            self->loadNewLevelFlag  = true;
-            self->screen            = SOKO_LOADNEWLEVEL;
+            sokoSolveCurrentLevel(soko);
+            soko->loadNewLevelIndex = 0;
+            soko->loadNewLevelFlag  = true;
+            soko->screen            = SOKO_LOADNEWLEVEL;
         }
     }
 
     // DEBUG PLACEHOLDER:
     char str[16] = {0};
     int16_t tWidth;
-    if (!self->allCratesOnGoal)
+    if (!soko->allCratesOnGoal)
     {
-        snprintf(str, sizeof(str) - 1, "%s",self->levelNames[self->currentLevelIndex]);
+        snprintf(str, sizeof(str) - 1, "%s",soko->levelNames[soko->currentLevelIndex]);
         // Measure the width of the time string
-        tWidth = textWidth(&self->ibm, str);
+        tWidth = textWidth(&soko->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&soko->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
     }
     else
     {
         snprintf(str, sizeof(str) - 1, "sokasuccess");
         // Measure the width of the time string
-        tWidth = textWidth(&self->ibm, str);
+        tWidth = textWidth(&soko->ibm, str);
         // Draw the time string to the display, centered at (TFT_WIDTH / 2)
-        drawText(&self->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
+        drawText(&soko->ibm, c555, str, ((TFT_WIDTH - tWidth) / 2), 0);
     }
-    sharedGameLoop(self);
+    sharedGameLoop(soko);
 }
 
 void sharedGameLoop(soko_abs_t* self)
@@ -210,15 +218,16 @@ void sharedGameLoop(soko_abs_t* self)
 }
 
 // Gameplay Logic
-void absSokoTryPlayerMovement(soko_abs_t* self)
+void absSokoTryPlayerMovement(soko_abs_t* soko)
 {
-    if (self->input.playerInputDeltaX == 0 && self->input.playerInputDeltaY == 0)
+    if (soko->input.playerInputDeltaX == 0 && soko->input.playerInputDeltaY == 0)
     {
         return;
     }
 
-    self->sokoTryMoveEntityInDirectionFunc(self, self->soko_player, self->input.playerInputDeltaX,
-                                           self->input.playerInputDeltaY, 0);
+    soko->sokoTryMoveEntityInDirectionFunc(soko, soko->soko_player, soko->input.playerInputDeltaX,
+                                           soko->input.playerInputDeltaY, 0);
+    sokoHistoryTurnOver(soko);
 }
 
 bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int dx, int dy, uint16_t push)
@@ -253,6 +262,7 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                 {
                     if (self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i], dx, dy, push + 1))
                     {
+                        sokoAddEntityMoveToHistory(self, entity,entity->x,entity->y,entity->facing);
                         entity->x += dx;
                         entity->y += dy;
                         entity->facing = sokoDirectionFromDelta(dx, dy);
@@ -267,10 +277,10 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
             }else if(self->currentLevel.entities[i].type == SKE_STICKY_TRAIL_CRATE){
                     // previous
                         //for euler. todo: make EulerTryMoveEntityInDirection instead of an if statement.
-                       // printf("Checking if pushable can paint floor. is trail? %i",entity->properties->trail);
                     if (self->currentLevel.entities[i].x == px && self->currentLevel.entities[i].y == py){
                         if (self->sokoTryMoveEntityInDirectionFunc(self, &self->currentLevel.entities[i], dx, dy, push + 1))
                         { 
+                            sokoAddEntityMoveToHistory(self,entity,entity->x,entity->y,entity->facing);
                             entity->x += dx;
                             entity->y += dy;
                             entity->facing = sokoDirectionFromDelta(dx, dy);
@@ -282,8 +292,6 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                         return false;
                     }
                 }
-                        
-                        
             }
         }
         
@@ -291,21 +299,24 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
         if(self->currentLevel.gameMode==SOKO_EULER && entity->propFlag && entity->properties->trail){
             if (self->currentLevel.tiles[entity->x+dx][entity->y+dy] == SKT_FLOOR)
             {
+                sokoAddTileMoveToHistory(self,entity->x+dx,entity->y+dy,SKT_FLOOR);
                 self->currentLevel.tiles[entity->x+dx][entity->y+dy] = SKT_FLOOR_WALKED;
             }
-            // current
+            // current. This is for the first time you move, or a sticky block gets dragged in some direction.
+            //i think it would be fixed if we did a pass at the start? todo: investigate and fix.
             if (self->currentLevel.tiles[entity->x][entity->y] == SKT_FLOOR)
             {
+                sokoAddTileMoveToHistory(self, entity->x,entity->y,SKT_FLOOR);
                 self->currentLevel.tiles[entity->x][entity->y] = SKT_FLOOR_WALKED;
             }
         }
         // No wall in front of us and nothing to push, we can move.
+        //we assume the player never gets pushed for undo here, so if it's the player moving, thats a new move.
+        sokoAddEntityMoveToHistory(self,entity,entity->x,entity->y,entity->facing);
         entity->x += dx;
         entity->y += dy;
         entity->facing = sokoDirectionFromDelta(dx, dy);
         return true;
-    }else{
-        printf("%d cant move on %d",entity->type,nextTile);
     }
      // all other floor types invalid. Be careful when we add tile types in different rule sets.
 
@@ -483,7 +494,6 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
 
                     break;
                 case SKE_CRATE:
-                        // printf("Crate Found ");
                         if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y] == SKT_GOAL)
                         {
                             drawWsg(&self->currentTheme->crateOnGoalWSG, ox + level->entities[i].x * scale,oy + level->entities[i].y * scale, false, false, 0);
@@ -507,25 +517,19 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
     }
 }
 
-bool absSokoAllCratesOnGoal(soko_abs_t* self)
+bool absSokoAllCratesOnGoal(soko_abs_t* soko)
 {
-    // printf("Victory Enter\n");
-    for (size_t i = 0; i < self->currentLevel.entityCount; i++)
+    for (size_t i = 0; i < soko->currentLevel.entityCount; i++)
     {
-        // printf("Loop Enter ");
-        if (self->currentLevel.entities[i].type == SKE_CRATE)
+        if (soko->currentLevel.entities[i].type == SKE_CRATE)
         {
-            // printf("Crate Found ");
-            if (self->currentLevel.tiles[self->currentLevel.entities[i].x][self->currentLevel.entities[i].y]
+            if (soko->currentLevel.tiles[soko->currentLevel.entities[i].x][soko->currentLevel.entities[i].y]
                 != SKT_GOAL)
             {
-                // printf("Crate Off Goal");
                 return false;
             }
         }
-        // printf("\n");
     }
-    // printf("Victory True\n");
     return true;
 }
 
@@ -931,11 +935,13 @@ void eulerSokoTryPlayerMovement(soko_abs_t* self)
         // previous
         if (self->currentLevel.tiles[x][y] == SKT_FLOOR)
         {
+            sokoAddTileMoveToHistory(self,x,y,SKT_FLOOR);
             self->currentLevel.tiles[x][y] = SKT_FLOOR_WALKED;
         }
         // current
         if (self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] == SKT_FLOOR)
         {
+            sokoAddTileMoveToHistory(self,self->soko_player->x,self->soko_player->y,SKT_FLOOR);
             self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] = SKT_FLOOR_WALKED;
         }
 
@@ -967,6 +973,7 @@ void eulerSokoTryPlayerMovement(soko_abs_t* self)
                 }
             }
         }
+        sokoHistoryTurnOver(self);
     }
 }
 

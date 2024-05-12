@@ -17,6 +17,7 @@ void sokoInitInput(sokoGameplayInput_t* input)
     input->playerInputDeltaY = 0;
     input->restartLevel      = false;
     input->exitToOverworld   = false;
+    input->undo              = false;
 }
 /**
  * @brief Input preprocessing turns btnstate into game-logic usable data.
@@ -38,6 +39,14 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
     {
         input->restartLevel = true;
     } // else set to false, but this won't matter when level reloads.
+
+
+    if((btn & PB_A) && !(input->prevBtnState & PB_A))
+    {
+        input->undo = true;
+    }else{
+        input->undo = false;
+    }
 
     if ((btn & PB_START) && !(input->prevBtnState & PB_START))
     {

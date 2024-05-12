@@ -140,6 +140,16 @@ typedef struct sokoVec_s
     int16_t x;
     int16_t y;
 } sokoVec_t;
+typedef struct 
+{
+    uint16_t moveID;
+    bool isEntity;
+    sokoEntity_t* entity;
+    sokoTile_t tile;
+    uint16_t x;
+    uint16_t y;
+    sokoDirection_t facing;
+} sokoUndoMove_t;
 
 typedef struct sokoCollision_s
 {
@@ -247,6 +257,12 @@ typedef struct soko_abs_s
     // current level
     uint16_t currentLevelIndex;
     sokoLevel_t currentLevel;
+
+    //undo ring buffer
+    sokoUndoMove_t history[SOKO_UNDO_BUFFER_SIZE];//if >255, change index to uint16.
+    uint8_t historyBufferTail;
+    uint8_t historyCurrent;
+    bool historyNewMove;
 
     //todo: rename to 'isVictory'
     bool allCratesOnGoal;

@@ -30,6 +30,7 @@ typedef struct
     // todo: use Direction in input
     int playerInputDeltaX;
     int playerInputDeltaY;
+    bool undo;
     bool restartLevel;
     bool exitToOverworld;
 
