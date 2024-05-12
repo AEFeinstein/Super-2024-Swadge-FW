@@ -82,7 +82,7 @@ void sokoConfigGamemode(
         gamestate->isVictoryConditionFunc           = absSokoAllCratesOnGoal;
         gamestate->sokoGetTileFunc                  = absSokoGetTile;
     }else{
-        printf("invalid gamemode.")
+        printf("invalid gamemode.");
     }
 
     // add conditional for alternative variants
