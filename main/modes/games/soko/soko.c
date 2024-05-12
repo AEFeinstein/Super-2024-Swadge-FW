@@ -153,10 +153,11 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         // placeholder.
         if (label == sokoResumeGameLabel)
         {
-            //sokoLoadGameplay(soko); will call loadBinLevel(current)
-            //or
-            sokoLoadBinLevel(soko, 0);
-            
+            int32_t data;
+            readNvs32("sk_data",&data);
+            //bitshift, etc, as needed.
+            uint16_t lastSaved = (uint16_t)data;
+            sokoLoadGameplay(soko,lastSaved);    
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
@@ -211,10 +212,10 @@ static void sokoMainLoop(int64_t elapsedUs)
         }
         case SOKO_LOADNEWLEVEL:
         {
-            sokoLoadBinLevel(soko, soko->loadNewLevelIndex);
-            printf("init new level\n");
+            printf("SOKOLOADNEWLEVEL\n");
+            sokoLoadGameplay(soko, soko->loadNewLevelIndex);
             sokoInitNewLevel(soko, soko->currentLevel.gameMode);
-            printf("go to gameplay\n");
+            printf("Go to gameplay\n");
             soko->screen = SOKO_LEVELPLAY;
         }
     }

@@ -21,72 +21,80 @@ bool sokoEntityTileCollision[6][9] = {
 uint64_t victoryDanceTimer;
 
 void sokoConfigGamemode(
-    soko_abs_t* gamestate,
+    soko_abs_t* soko,
     soko_var_t variant) // This should be called when you reload a level to make sure game rules are correct
 {
-    gamestate->currentTheme = &gamestate->sokoDefaultTheme;
-    gamestate->background = SKBG_GRID;
+    soko->currentTheme = &soko->sokoDefaultTheme;
+    soko->background = SKBG_GRID;
 
     if (variant == SOKO_CLASSIC) // standard gamemode. Check 'variant' variable
     {
         printf("Config Soko to Classic\n");
-        gamestate->maxPush                          = 1; // set to 1 for "traditional" sokoban.
-        gamestate->gameLoopFunc                     = absSokoGameLoop;
-        gamestate->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
-        gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
-        gamestate->drawTilesFunc                    = absSokoDrawTiles;
-        gamestate->isVictoryConditionFunc           = absSokoAllCratesOnGoal;
-        gamestate->sokoGetTileFunc                  = absSokoGetTile;
+        soko->maxPush                          = 1; // set to 1 for "traditional" sokoban.
+        soko->gameLoopFunc                     = absSokoGameLoop;
+        soko->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
+        soko->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
+        soko->drawTilesFunc                    = absSokoDrawTiles;
+        soko->isVictoryConditionFunc           = absSokoAllCratesOnGoal;
+        soko->sokoGetTileFunc                  = absSokoGetTile;
     }
     else if (variant == SOKO_EULER) // standard gamemode. Check 'variant' variable
     {
         printf("Config Soko to Euler\n");
-        gamestate->maxPush                          = 0; // set to 0 for infinite push.
-        gamestate->gameLoopFunc                     = absSokoGameLoop;
-        gamestate->sokoTryPlayerMovementFunc        = eulerSokoTryPlayerMovement;
-        gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
-        gamestate->drawTilesFunc                    = absSokoDrawTiles;
-        gamestate->isVictoryConditionFunc           = eulerNoUnwalkedFloors;
-        gamestate->sokoGetTileFunc                  = absSokoGetTile;
-        gamestate->currentTheme = &gamestate->eulerTheme;
-        gamestate->background = SKBG_BLACK;
+        soko->maxPush                          = 0; // set to 0 for infinite push.
+        soko->gameLoopFunc                     = absSokoGameLoop;
+        soko->sokoTryPlayerMovementFunc        = eulerSokoTryPlayerMovement;
+        soko->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
+        soko->drawTilesFunc                    = absSokoDrawTiles;
+        soko->isVictoryConditionFunc           = eulerNoUnwalkedFloors;
+        soko->currentTheme = &soko->eulerTheme;
+        soko->background = SKBG_BLACK;
+
+        //Initialze spaces below the player and sticky.
+        for (size_t i = 0; i < soko->currentLevel.entityCount; i++)
+        {
+            if(soko->currentLevel.entities[i].type == SKE_PLAYER
+                || soko->currentLevel.entities[i].type == SKE_STICKY_TRAIL_CRATE){
+                    soko->currentLevel.tiles[soko->currentLevel.entities[i].x][soko->currentLevel.entities[i].y] = SKT_FLOOR_WALKED;
+            }
+        }
     }
     else if (variant == SOKO_OVERWORLD)
     {
         printf("Config Soko to Overworld\n");
-        gamestate->maxPush                          = 0; // set to 0 for infinite push.
-        gamestate->gameLoopFunc                     = overworldSokoGameLoop;
-        gamestate->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
-        gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
-        gamestate->drawTilesFunc                    = absSokoDrawTiles;
-        gamestate->isVictoryConditionFunc           = overworldPortalEntered;
-        gamestate->sokoGetTileFunc                  = absSokoGetTile;
-        gamestate->currentTheme = &gamestate->overworldTheme;
+        soko->maxPush                          = 0; // set to 0 for infinite push.
+        soko->gameLoopFunc                     = overworldSokoGameLoop;
+        soko->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
+        soko->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
+        soko->drawTilesFunc                    = absSokoDrawTiles;
+        soko->isVictoryConditionFunc           = overworldPortalEntered;
+        soko->sokoGetTileFunc                  = absSokoGetTile;
+        soko->currentTheme = &soko->overworldTheme;
         //set position to previous overworld positon when re-entering the overworld
         //but like... not an infinite loop?
-        gamestate->soko_player->x = gamestate->overworld_playerX;
-        gamestate->soko_player->y = gamestate->overworld_playerY;
+        soko->soko_player->x = soko->overworld_playerX;
+        soko->soko_player->y = soko->overworld_playerY;
 
-        for (size_t i = 0; i < gamestate->portalCount; i++){
-            gamestate->portals[i].levelCompleted = gamestate->levelSolved[gamestate->portals[i].index];
+        for (size_t i = 0; i < soko->portalCount; i++){
+            soko->portals[i].levelCompleted = soko->levelSolved[soko->portals[i].index];
         }
     }
     else if (variant == SOKO_LASERBOUNCE)
     {
         printf("Config Soko to Laser Bounce\n");
-        gamestate->maxPush                          = 0; // set to 0 for infinite push.
-        gamestate->gameLoopFunc                     = laserBounceSokoGameLoop;
-        gamestate->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
-        gamestate->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
-        gamestate->drawTilesFunc                    = absSokoDrawTiles;
-        gamestate->isVictoryConditionFunc           = absSokoAllCratesOnGoal;
-        gamestate->sokoGetTileFunc                  = absSokoGetTile;
+        soko->maxPush                          = 0; // set to 0 for infinite push.
+        soko->gameLoopFunc                     = laserBounceSokoGameLoop;
+        soko->sokoTryPlayerMovementFunc        = absSokoTryPlayerMovement;
+        soko->sokoTryMoveEntityInDirectionFunc = absSokoTryMoveEntityInDirection;
+        soko->drawTilesFunc                    = absSokoDrawTiles;
+        soko->isVictoryConditionFunc           = absSokoAllCratesOnGoal;
+        soko->sokoGetTileFunc                  = absSokoGetTile;
     }else{
         printf("invalid gamemode.");
     }
 
     // add conditional for alternative variants
-    sokoInitHistory(gamestate);
+    sokoInitHistory(soko);
 }
 
 void laserBounceSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
@@ -302,8 +310,7 @@ bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int
                 sokoAddTileMoveToHistory(self,entity->x+dx,entity->y+dy,SKT_FLOOR);
                 self->currentLevel.tiles[entity->x+dx][entity->y+dy] = SKT_FLOOR_WALKED;
             }
-            // current. This is for the first time you move, or a sticky block gets dragged in some direction.
-            //i think it would be fixed if we did a pass at the start? todo: investigate and fix.
+    
             if (self->currentLevel.tiles[entity->x][entity->y] == SKT_FLOOR)
             {
                 sokoAddTileMoveToHistory(self, entity->x,entity->y,SKT_FLOOR);
@@ -938,7 +945,6 @@ void eulerSokoTryPlayerMovement(soko_abs_t* self)
             sokoAddTileMoveToHistory(self,x,y,SKT_FLOOR);
             self->currentLevel.tiles[x][y] = SKT_FLOOR_WALKED;
         }
-        // current
         if (self->currentLevel.tiles[self->soko_player->x][self->soko_player->y] == SKT_FLOOR)
         {
             sokoAddTileMoveToHistory(self,self->soko_player->x,self->soko_player->y,SKT_FLOOR);
@@ -1083,10 +1089,17 @@ void restartCurrentLevel(soko_abs_t* self)
     self->screen           = SOKO_LOADNEWLEVEL;
 }
 
-void exitToOverworld(soko_abs_t* self)
+void exitToOverworld(soko_abs_t* soko)
 {
-    self->loadNewLevelIndex = 0;
-    self->loadNewLevelFlag  = true;
+    printf("Exit to Overworld\n");
+    //save. todo: skip if victory.
+    if(soko->currentLevel.gameMode == SOKO_EULER){
+       // sokoSaveEulerTiles(soko);
+    }
+    //sokoSaveCurrentLevelEntities(soko);
+
+    soko->loadNewLevelIndex = 0;
+    soko->loadNewLevelFlag  = true;
     // self->state = SKS_GAMEPLAY;
-    self->screen = SOKO_LOADNEWLEVEL;
+    soko->screen = SOKO_LOADNEWLEVEL;
 }

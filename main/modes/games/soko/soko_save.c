@@ -1,21 +1,55 @@
 #include "soko.h"
 #include "soko_save.h"
 
-static void sokoSaveCurrentLevelEntities(soko_abs_t* soko);
 static void sokoLoadCurrentLevelEntities(soko_abs_t* soko);
 static void sokoSetLevelSolvedState(soko_abs_t* soko, uint16_t levelIndex, bool solved);
 static void sokoLoadBinTiles(soko_abs_t* soko, int byteCount);
 static int sokoFindIndex(soko_abs_t* self, int targetIndex);
+void sokoSaveEulerTiles(soko_abs_t* soko);
+void sokoLoadEulerTiles(soko_abs_t* soko);
+void sokoSaveCurrentLevelEntities(soko_abs_t* soko);
 
 /// @brief Called on 'resume' from the menu.
 /// @param soko 
-void sokoLoadGameplay(soko_abs_t* soko){
-    //load current level
-    int current = 0;
-    sokoLoadBinLevel(soko, current);
+void sokoLoadGameplay(soko_abs_t* soko,uint16_t levelIndex){
+    //save previous level if needed.
+    sokoSaveGameplay(soko);
 
+    //load current level
+    int32_t data = 0;
+    readNvs32("sk_data",&data);
+    //bitshift, etc, as needed.
+    uint16_t lastSaved = (uint16_t)data;
+
+    sokoLoadBinLevel(soko,levelIndex);
+    if(levelIndex == lastSaved){
+        printf("Load Saved Data for level %i\n",lastSaved);
+        //current level entity positions
+        sokoLoadCurrentLevelEntities(soko);    
+
+        if(soko->currentLevel.gameMode == SOKO_EULER){
+            sokoLoadEulerTiles(soko);
+        }
+    }
+}
+void sokoSaveGameplay(soko_abs_t* soko){
+    printf("Save Gameplay\n");
+    //save current level
+    if(soko->currentLevelIndex == 0){
+        //overworld gets saved separately.
+        return;
+    }
+    int current = soko->currentLevelIndex;
     //current level entity positions
-    sokoLoadCurrentLevelEntities(soko);    
+    uint32_t data = current;
+    //what other data gets encoded? we can also save the sk_tiles count.
+    writeNvs32("sk_data",data);
+
+    sokoSaveCurrentLevelEntities(soko);    
+
+    if(soko->currentLevel.gameMode == SOKO_EULER){
+        sokoSaveEulerTiles(soko);
+    }
 }
 
 void sokoLoadLevelSolvedState(soko_abs_t* soko){
@@ -106,8 +140,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko){
     //this is ONLY true if we never actually 'destroy' or 'CREATE' entities, but just flip some 'dead' flag.
 
     //if each entity is 4 bytes, then we can save (adjust) all entities as a single blob, always, since it's a pre-allocated array.
-    char entities[SOKO_MAX_ENTITY_COUNT*4];
-    size_t size = sizeof(entities);
+    char *entities = calloc(soko->currentLevel.entityCount*4,sizeof(char)); 
 
     for(int i = 0;i<soko->currentLevel.entityCount;i++){
         entities[i*4] = i;
@@ -116,24 +149,108 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko){
         //do we need the propflag?
         entities[i*4+1] = soko->currentLevel.entities[i].x;
         entities[i*4+2] = soko->currentLevel.entities[i].y;
-        entities[i*4+3] = soko->currentLevel.entities[i].propFlag == true ? 1:0;
+        entities[i*4+3] = soko->currentLevel.entities[i].facing;
     }
-    writeNvsBlob("sk_current_entities",&entities,size);
+    size_t size = sizeof(char)*(soko->currentLevel.entityCount)*4;
+    writeNvsBlob("sk_ents",entities,size);
 }
 //todo: there is no clean place to return to the main menu right now, so gotta write that function/flow so this can get called.
 
 /// @brief After loading the level into currentLevel, this updates the entity array with saved
 /// @param soko 
 void sokoLoadCurrentLevelEntities(soko_abs_t* soko){
-    char entities[SOKO_MAX_ENTITY_COUNT*4];
-    size_t size = sizeof(entities);
-    readNvsBlob("sk_current_entities",&entities,&size);
+    printf("loading current level entities.\n");
+ 
+    char *entities = calloc(soko->currentLevel.entityCount*4,sizeof(char)); 
+    size_t size = sizeof(char)*(soko->currentLevel.entityCount*4);
+    readNvsBlob("sk_ents",entities,&size);
+    
     for(int i = 0;i<soko->currentLevel.entityCount;i++){
         //todo: wait, if all entities are the same length, we don't actually need to save the index...
         soko->currentLevel.entities[i].x = entities[i*4+1];
-        soko->currentLevel.entities[i].x = entities[i*4+2];
-        soko->currentLevel.entities[i].propFlag = entities[i*4+3] == 1;
+        soko->currentLevel.entities[i].y = entities[i*4+2];
+        soko->currentLevel.entities[i].facing = entities[i*4+3];
     }
+}
+
+void sokoSaveEulerTiles(soko_abs_t* soko){
+    printf("encoding euler tiles.\n");
+
+    sokoTile_t prevTile = SKT_FLOOR;
+    int w = soko->currentLevel.width;
+    uint16_t i = 0;
+    char *blops = (char*) calloc(255, sizeof(char));
+    for (uint16_t y = 0; y < soko->currentLevel.height; y++)
+    {
+        for (uint16_t x = 0; x < w; x++)
+        {
+            sokoTile_t t = soko->currentLevel.tiles[x][y];
+            if(t == SKT_FLOOR || t == SKT_FLOOR_WALKED){
+                if(t == prevTile){
+                    blops[i] = blops[i] + 1;        
+                }else{
+                    prevTile = t;
+                    i++;
+                    blops[i] = blops[i]+1;
+                    if(i>255){
+                        printf("ERROR This level is too big to save for euler???\n");
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    i++;
+    writeNvsBlob("sk_e_t_c",&i,sizeof(uint16_t));
+    writeNvsBlob("sk_e_ts",blops,sizeof(char)*i);
+
+    free(blops);
+}
+
+void sokoLoadEulerTiles(soko_abs_t* soko){
+    printf("Load Euler Tiles\n");
+    sokoTile_t runningTile = SKT_FLOOR;
+    uint16_t w = soko->currentLevel.width;
+    uint16_t total = 0;
+    //i don't think i need to calloc before reading the blob?
+
+    
+    size_t size = sizeof(uint16_t);
+    readNvsBlob("sk_e_t_c",&total,&size);
+
+    char *blops = calloc(total,sizeof(char)); 
+    size = sizeof(char) *total;
+    readNvsBlob("sk_e_ts",blops,&size);
+
+    uint16_t bi = 0;
+    if(blops[0] == 0){
+        //pre-flip, basically...
+        runningTile = SKT_FLOOR_WALKED;
+        bi = 1;//doesn't mess up our count, because 0 counts for 0 tiles.
+    }
+    for (size_t y = 0; y < soko->currentLevel.height; y++)
+    {
+        for (size_t x = 0; x < w; x++)
+        {
+            sokoTile_t t = soko->currentLevel.tiles[x][y];
+            if(t == SKT_FLOOR || t == SKT_FLOOR_WALKED)
+            {
+                soko->currentLevel.tiles[x][y] = runningTile;
+                blops[bi] = blops[bi] - 1;
+
+                if(blops[bi] == 0){
+                    bi++;
+                    //flop
+                    if(runningTile == SKT_FLOOR){
+                        runningTile = SKT_FLOOR_WALKED;
+                    }else if(runningTile == SKT_FLOOR_WALKED){
+                        runningTile = SKT_FLOOR;
+                    }
+                } 
+            }
+        }
+    }
+    free(blops);
 }
 
 //Level loading
@@ -190,12 +307,11 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
 void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
 {
     const int HEADER_BYTE_OFFSET   = 3;//width,height,mode
-    int totalTiles                 = self->currentLevel.width * self->currentLevel.height;
+    //int totalTiles                 = self->currentLevel.width * self->currentLevel.height;
     int tileIndex                  = 0;
     self->currentLevel.entityCount = 0;
     self->goalCount                = 0;
 
-    printf("reading tiles+entities:\n");
     for (int i = HEADER_BYTE_OFFSET; i < byteCount; i++)
     {
         // Objects in level data should be of the form 
