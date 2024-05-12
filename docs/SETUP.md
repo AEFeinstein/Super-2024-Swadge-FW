@@ -116,6 +116,8 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
     brew services start pulseaudio
     ```
     You can stop it by running `brew services stop pulseaudio` when you are done.
+
+When launching from VS Code, make sure the `(lldb) Launch` configuration is selected.
     
 ## Building and Flashing Firmware
 
