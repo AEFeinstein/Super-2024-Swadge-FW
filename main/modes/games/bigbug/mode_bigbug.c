@@ -10,6 +10,7 @@
 //==============================================================================
 
 #include "mode_bigbug.h"
+#include <math.h>
 
 //==============================================================================
 // Defines
@@ -17,7 +18,7 @@
 #define DECIMAL_BITS 4
 
 #define TILE_FIELD_WIDTH 8
-#define TILE_FIELD_HEIGHT 16
+#define TILE_FIELD_HEIGHT 1024
 #define GARBOTNIK_RADIUS   (19 << DECIMAL_BITS)
 #define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
 #define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
@@ -227,82 +228,76 @@ static void bigbugDacCb(uint8_t *samples, int16_t len)
 
 static void bigbugControlGarbotnik(int64_t elapsedUs)
 {
-    int x_div = 0;
-    int y_div = 0;
+    vec_t accel;
+    accel.x = 0;
+    accel.y = 0;
     // Update garbotnik's velocity if a button is currently down
     switch(bigbug->btnState){
         //up
         case 0b0001:
-            y_div = -20000;
+            accel.y = -100;
             break;
         case 0b1101:
-            y_div = -20000;
+            accel.y = -100;
             break;
 
         //down
         case 0b0010:
-            y_div = 20000;
+            accel.y = 100;
             break;
         case 0b1110:
-            y_div = 20000;
+            accel.y = 100;
             break;
 
         //left
         case 0b0100:
-            x_div = -20000;
+            accel.x = -100;
             break;
         case 0b0111:
-            x_div = -20000;
+            accel.x = -100;
             break;
 
         //right
         case 0b1000:
-            x_div = 20000;
+            accel.x = 100;
             break;
         case 0b1011:
-            x_div = 20000;
+            accel.x = 100;
             break;
 
         //up,left
         case 0b0101:
-            x_div = -28284; //20000 / (1/sqrt(2)) = 20000 * sqrt(2) = 28284
-            y_div = -28284;
+            accel.x = -71; //magnitude is sqrt(1/2) * 100000
+            accel.y = -71;
             break;
         
         //up,right
         case 0b1001:
-            x_div = 28284;
-            y_div = -28284;
+            accel.x = 71;//71 707 7071
+            accel.y = -71;
             break;
 
         //down,right
         case 0b1010:
-            x_div = 28284;
-            y_div = 28284;
+            accel.x = 71;
+            accel.y = 71;
             break;
 
         //down,left
         case 0b0110:
-            x_div = -28284;
-            y_div = 28284;
+            accel.x = -71;
+            accel.y = 71;
             break;
         default:
             break;
     }
-    if (x_div != 0)
-    {
-        bigbug->garbotnikAccel.x = elapsedUs / x_div;
-    }
-    else{
-        bigbug->garbotnikAccel.x = 0;
-    }
-    if (y_div != 0)
-    {
-        bigbug->garbotnikAccel.y = elapsedUs / y_div;
-    }
-    else{
-        bigbug->garbotnikAccel.y = 0;
-    }
+
+    // printf("accel x: %d\n", accel.x);
+    // printf("elapsed: %d", (int32_t) elapsedUs);
+    // printf("offender: %d\n", (int32_t) elapsedUs / 100000);
+    // printf("now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
+
+    bigbug->garbotnikAccel = divVec2d(mulVec2d(accel, elapsedUs), 100000);
     // if (bigbug->btnState & PB_UP)
     // {
     //     bigbug->garbotnikVel.y = bigbug->garbotnikVel.y - 5 * elapsedUs / 100000;
@@ -346,7 +341,7 @@ static void bigbugDrawField(void)
     }
 
     
-    if(iEnd >= 0 && iStart <= TILE_FIELD_WIDTH && jEnd >= 0 && jStart <= FIELD_HEIGHT){
+    if(iEnd >= 0 && iStart <= TILE_FIELD_WIDTH && jEnd >= 0 && jStart <= TILE_FIELD_HEIGHT){
         if(0 > iStart){
             iStart = 0;
         }
@@ -357,7 +352,7 @@ static void bigbugDrawField(void)
             jStart = 0;
         }
         if(3 < jEnd){
-            jEnd = TILE_FIELD_WIDTH;
+            jEnd = TILE_FIELD_HEIGHT;
         }
 
         // printf("iStart: %d\n", iStart);
@@ -447,7 +442,6 @@ static void bigbugReset(void){
         bigbug->tiles[i][j] = 1;
         }
     }
-
 }
 
 /**
@@ -469,6 +463,22 @@ static void bigbugSetLeds(void)
 
 static void bigbugUpdatePhysics(int64_t elapsedUs)
 {
+    // Apply garbotnik's drag
+    int32_t sqMagVel= sqMagVec2d(bigbug->garbotnikVel)
+    int32_t speed = sqrt(sqMagVel);
+    int32_t drag = sqMagVel / 500; //smaller denominator for bigger drag.
+
+    if (drag > speed * 0.9 || drag < 10){
+        drag = speed * 0.9;
+    }
+    // printf("speed: %d\n", speed);
+    // printf("drag: %d\n", drag);
+    if(speed > 0){
+        bigbug->garbotnikAccel.x += (bigbug->garbotnikVel.x / (double)speed) * -drag * elapsedUs / 100000;
+        bigbug->garbotnikAccel.y += (bigbug->garbotnikVel.y / (double)speed) * -drag * elapsedUs / 100000;
+        // bigbug->garbotnikAccel = addVec2d(bigbug->garbotnikAccel, mulVec2d(divVec2d(bigbug->garbotnikVel, speed), -drag * elapsedUs / 100000));
+    }
+    
     // Update garbotnik's velocity
     bigbug->garbotnikVel.x += bigbug->garbotnikAccel.x;
     bigbug->garbotnikVel.y += bigbug->garbotnikAccel.y;
