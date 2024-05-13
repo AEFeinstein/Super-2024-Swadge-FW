@@ -1041,7 +1041,7 @@ void overworldSokoGameLoop(soko_abs_t* self, int64_t elapsedUs)
         }
 
         self->loadNewLevelIndex = targetWorldIndex;
-        self->loadNewLevelFlag  = true;
+        self->loadNewLevelFlag  = false;//load saved data.
         self->screen            = SOKO_LOADNEWLEVEL;
     }
 

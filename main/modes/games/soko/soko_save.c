@@ -11,7 +11,7 @@ void sokoSaveCurrentLevelEntities(soko_abs_t* soko);
 
 /// @brief Called on 'resume' from the menu.
 /// @param soko 
-void sokoLoadGameplay(soko_abs_t* soko,uint16_t levelIndex){
+void sokoLoadGameplay(soko_abs_t* soko,uint16_t levelIndex, bool loadNew){
     //save previous level if needed.
     sokoSaveGameplay(soko);
 
@@ -22,7 +22,7 @@ void sokoLoadGameplay(soko_abs_t* soko,uint16_t levelIndex){
     uint16_t lastSaved = (uint16_t)data;
 
     sokoLoadBinLevel(soko,levelIndex);
-    if(levelIndex == lastSaved){
+    if(levelIndex == lastSaved && !loadNew){
         printf("Load Saved Data for level %i\n",lastSaved);
         //current level entity positions
         sokoLoadCurrentLevelEntities(soko);    
