@@ -157,7 +157,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
             readNvs32("sk_data",&data);
             //bitshift, etc, as needed.
             uint16_t lastSaved = (uint16_t)data;
-            sokoLoadGameplay(soko,lastSaved);    
+            sokoLoadGameplay(soko,lastSaved,false);
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
@@ -165,7 +165,7 @@ static void sokoMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             // load level.
             //we probably shouldn't have a new game option; just an overworld option.
-            sokoLoadBinLevel(soko, 0);
+            sokoLoadGameplay(soko,0,true);    
             sokoInitGameBin(soko);
             soko->screen = SOKO_LEVELPLAY;
         }
@@ -212,10 +212,10 @@ static void sokoMainLoop(int64_t elapsedUs)
         }
         case SOKO_LOADNEWLEVEL:
         {
-            printf("SOKOLOADNEWLEVEL\n");
-            sokoLoadGameplay(soko, soko->loadNewLevelIndex);
+            sokoLoadGameplay(soko, soko->loadNewLevelIndex,soko->loadNewLevelFlag);
             sokoInitNewLevel(soko, soko->currentLevel.gameMode);
             printf("Go to gameplay\n");
+            soko->loadNewLevelFlag = false;//reset flag.
             soko->screen = SOKO_LEVELPLAY;
         }
     }

@@ -38,8 +38,9 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
     if ((btn & PB_B) && !(input->prevBtnState & PB_B))
     {
         input->restartLevel = true;
-    } // else set to false, but this won't matter when level reloads.
-
+    }else{
+        input->restartLevel = false;
+    }
 
     if((btn & PB_A) && !(input->prevBtnState & PB_A))
     {
@@ -51,7 +52,9 @@ void sokoPreProcessInput(sokoGameplayInput_t* input, int64_t elapsedUs)
     if ((btn & PB_START) && !(input->prevBtnState & PB_START))
     {
         input->exitToOverworld = true;
-    } // else set to false, but this won't matter when we quit
+    }else{
+        input->exitToOverworld = false;
+    }
 
     // update holding direction
     if ((btn & PB_UP) && !(btn & 0b1110))
