@@ -52,7 +52,7 @@ const emuExtension_t keymapEmuCallback = {
     .fnInitCb        = keymapInit,
     .fnPreFrameCb    = NULL,
     .fnPostFrameCb   = NULL,
-    .fnKeyCb         = &keymapKeyCb,
+    .fnKeyCb         = keymapKeyCb,
     .fnMouseMoveCb   = NULL,
     .fnMouseButtonCb = NULL,
     .fnRenderCb      = NULL,
@@ -102,6 +102,7 @@ static bool keymapInit(emuArgs_t* emuArgs)
 
 static int32_t keymapKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
+    printf("keymapKeyCb\n");
     // Convert lowercase characters to their uppercase equivalents
     if ('a' <= keycode && keycode <= 'z')
     {
