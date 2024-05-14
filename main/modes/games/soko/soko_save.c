@@ -309,6 +309,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
     const int HEADER_BYTE_OFFSET   = 3;//width,height,mode
     //int totalTiles                 = self->currentLevel.width * self->currentLevel.height;
     int tileIndex                  = 0;
+    int prevTileType = 0;
     self->currentLevel.entityCount = 0;
     self->goalCount                = 0;
 
@@ -329,6 +330,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
             {
                 case SKB_COMPRESS:
                     i += 2;
+                    //we should not have dound this, we are inside of an object!
                     break; // Not yet implemented
                 case SKB_PLAYER:
                     //moved gamemode to bit 3 of level data in header.
@@ -556,11 +558,23 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     self->goals[self->goalCount].y = tileY;
                     self->goalCount++;
                     break;
+                case SKB_COMPRESS:
+                    tileType = prevTileType;
+                    //decrement the next one
+                    if(self->levelBinaryData[i+1] > 1){
+                        self->levelBinaryData[i+1] -= 1;
+                        i-=1;//unloop the loop! deloop! Cursed loops!
+                    }else{
+                        i+=1;
+                    }
+                    
+                    break;
                 default:
                     tileType = SKT_EMPTY;
                     break;
             }
             self->currentLevel.tiles[tileX][tileY] = tileType;
+            prevTileType = tileType;
             // printf("BinData@%d: %d Tile: %d at (%d,%d)
             // index:%d\n",i,self->levelBinaryData[i],tileType,tileX,tileY,tileIndex);
             tileIndex++;

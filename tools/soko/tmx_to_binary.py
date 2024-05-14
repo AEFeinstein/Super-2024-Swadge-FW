@@ -1,5 +1,6 @@
 import tkinter as tk
 import math
+from itertools import groupby
 from tkinter import filedialog
 from xml.dom.minidom import parse,parseString
 import os
@@ -120,14 +121,25 @@ def convertTMX(file_path):
     # output now is a list of tiles. 
 
     # add header information at start of tiles list.
-    rawBytes = bytearray(output)
-    rawBytesImmut = bytes(rawBytes)
-    print("Converted "+file_path+" ("+str(mode)+")")
-    return rawBytesImmut
+    output2 = compress(output)
+    rawsize = len(output)
+    compsize = len(output2)
+    rawBytesc = bytearray(output2)
+    rawBytesImmut = bytes(rawBytesc)
+    return rawBytesImmut, rawsize, compsize
     # outfile_path = "".join([file_path.split(".")[0],".bin"])
     # with open(outfile_path,"wb") as binary_file:
     #     binary_file.write(rawBytesImmut)
 
+def compress(bytes):
+    res = []
+    for k,i in groupby(bytes):
+        run = list(i)
+        if(len(run)>3):
+            res.extend([k,SKB_COMPRESS,len(run)-1])
+        else:
+            res.extend(run)
+    return res
 
 # These need to match the enum int casts in soko.h
 def getModeInt(mode):

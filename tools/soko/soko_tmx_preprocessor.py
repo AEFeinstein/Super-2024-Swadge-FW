@@ -3,6 +3,8 @@ import os
 from tmx_to_binary import convertTMX
 count = 0
 total = 0
+raw_total = 0
+comp_total = 0
 def main():
     print("Starting soko tmx conversion")
 
@@ -13,11 +15,11 @@ def main():
 
     # todo: ensure output ends in a trailing slash.
     convertDir(sys.argv[1],output)
-    print("Completed soko tmx converstion. "+str(count)+ "/"+str(total)+" tmx files converted.")
+    print("Completed soko tmx converstion. "+str(count)+ "/"+str(total)+" tmx files converted. "+str(comp_total)+"/"+str(raw_total)+" - "+str(raw_total-comp_total)+" (of converted) bytes saved with compression.")
 
 
 def convertDir(dir,output):
-    global count,total
+    global count,total, raw_total, comp_total
     # todo: check file modification dates.
     # lol no
     for file in os.scandir(dir):
@@ -40,7 +42,10 @@ def convertDir(dir,output):
             convertDir(file,output)
 
 def convertAndSave(filepath,output):
-    rawbytes = convertTMX(filepath)
+    global raw_total, comp_total
+    rawbytes, r,c = convertTMX(filepath)
+    raw_total += r
+    comp_total += c
     fname = getNameFromPath(filepath)
     outfile_file = output+fname+".bin"
     with open(outfile_file,"wb") as binary_file:
