@@ -98,4 +98,5 @@ void sokoUndo(soko_abs_t* soko){
             soko->historyCurrent = SOKO_UNDO_BUFFER_SIZE-1;
         }
     }
+    soko->undoCount++;
 }

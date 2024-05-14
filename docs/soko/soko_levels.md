@@ -72,16 +72,14 @@ The rest of the bytes depend on the entity. The WARPEXTERNAL entity has one addi
 All Entity data is stored between bytes 200 and 255.
 
 ### Compression
-After the file is created, it gets compressed/
+After the file is created, it gets compressed.
 
-> NOTE: this isn't implemented yet. 5/6/2024 - Hunter
+The compression scheme is one of the compressing byte, then the 'SKB_COMPRESS' byte, followed by some number of times to repeat that previous byte. 
 
-The compression scheme is the 'SKB_COMPRESS' byte, followed by some number of times to repeat the previous byte minus 1. 
+"Floor, Floor, Floor" could become "Floor, Compress, 2".
+"Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall" would become "Wall, Compress, 7"
 
-"Floor, Floor, Floor" could become "Floor, Compress, 1".
-"Wall, Wall, Wall, Wall, Wall, Wall, Wall, Wall" would become "Wall, Compress, 6"
-
-Because the data is stores in horizontal rows, this only compresses contiguous horizontal sections of tiles, including when "word wrapped". Regardless, it shouldn't hurt. 
+Because the data is stores in horizontal rows, this only compresses contiguous horizontal sections of tiles, including when "word wrapped". Regardless, it won't hurt. *Getting around 73% ratio on 5/13/24. Mostly in overworld.*
 
 #### Entity Binary Encoding Schemes
 *START = 'SKB_OBJSTART', END = 'SKB_OBJEND', and 'SKB_' prefix ignored.*
