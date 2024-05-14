@@ -100,23 +100,25 @@ Note: Some installs of Python will have py.exe instead of python.exe - If this i
 > This section is still under development, and as a result, may have unexpected errors in its process.
 
 1. Install [Homebrew](https://brew.sh/)
-2. Run the following command to install all necessary dependencies:
+2. Install [XQuartz](https://www.xquartz.org/)
+3. Install the [CodeLLDB](https://marketplace.visualstudio.com/items?itemName=vadimcn.vscode-lldb) extension in VS Code
+4. Run the following command to install all necessary dependencies:
     ```bash
-    brew install xquartz libxinerama pulseaudio clang-format cppcheck wget doxygen cmake graphviz
+    brew install libxinerama pulseaudio clang-format cppcheck wget doxygen cmake graphviz
     ```
-3. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
+5. Clone the ESP-IDF v5.2.1 and install the tools. Note that it will clone into `~/esp/esp-idf`.
     ```bash
     git clone -b v5.2.1 --recurse-submodules https://github.com/espressif/esp-idf.git ~/esp/esp-idf
     ~/esp/esp-idf/install.sh
     ```
-4. Before running the simulator on your machine, you need to start pulseaudio like so:
+6. Before running the simulator on your machine, you need to start pulseaudio like so:
     ```bash
     brew services start pulseaudio
     ```
     You can stop it by running `brew services stop pulseaudio` when you are done.
-    
-When running on MacOS, you will need to run the emulator and all build tasks through the xQuartz terminal instead of zsh.
 
+When launching from VS Code, make sure the `(lldb) Launch` configuration is selected.
+    
 ## Building and Flashing Firmware
 
 1. Clone this repository.
