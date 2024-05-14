@@ -19,7 +19,7 @@
 
 #define TILE_FIELD_WIDTH 8
 #define TILE_FIELD_HEIGHT 1024
-#define GARBOTNIK_RADIUS   (19 << DECIMAL_BITS)
+#define GARBOTNIK_RADIUS   (18 << DECIMAL_BITS)
 #define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
 #define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
 #define HALF_WIDTH   (FIELD_WIDTH / 2)
@@ -60,6 +60,8 @@ typedef struct
     rectangle_t camera; ///< The camera
     int8_t tiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of tiles. 1 is tile, 0 is not. Future feature: more variety
 
+    font_t ibm_vga8;
+
     int32_t restartTimerUs; ///< A timer that counts down before the game begins
     uint16_t btnState;      ///< The button state used for paddle control
     bool paddleRMovingUp;   ///< The CPU's paddle direction on easy mode
@@ -67,6 +69,7 @@ typedef struct
 
     wsg_t dirtWsg;        ///< A graphic for the dirt tile
     wsg_t garbotnikWsg;   ///< A graphic for garbotnik
+    wsg_t uiWileOutlineWsg;
 
     song_t bgm;  ///< Background music
     song_t hit1; ///< Sound effect for one paddle's hit
@@ -147,17 +150,22 @@ static void bigbugEnterMode(void)
 
     // Load graphics
     loadWsg("dirt.wsg", &bigbug->dirtWsg, false);
-    loadWsg("eggman.wsg", &bigbug->garbotnikWsg, false);
+    loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, false);
+    loadWsg("button-outline.wsg", &bigbug->uiWileOutlineWsg, false);
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
+
+    // Load font
+    loadFont("ibm_vga8.font", &bigbug->ibm_vga8, false);
 
     bigbugReset();
 }
  
 static void bigbugExitMode(void)
 {
-    // Fill this in
+    // Free font
+    freeFont(&bigbug->ibm_vga8);
 }
  
 static void bigbugMainLoop(int64_t elapsedUs)
@@ -378,6 +386,15 @@ static void bigbugDrawField(void)
     // Draw garbotnik
     drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnik.pos.x - bigbug->garbotnik.radius - bigbug->camera.pos.x) >> DECIMAL_BITS,
                   (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
+
+    // Draw UI
+    char buttons[] = {'Z','\0','A','\0','B','\0','C'};
+    for (int i = 1; i < 4; i++){
+        int xPos = i * TFT_WIDTH / 4;
+        drawWsgSimple(&bigbug->uiWileOutlineWsg, xPos - 20, TFT_HEIGHT - 46);
+        drawText(&bigbug->ibm_vga8, c555, &buttons[2*i], xPos - 3, TFT_HEIGHT - 12);
+    }
+    
 }
 
 /**
@@ -464,12 +481,15 @@ static void bigbugSetLeds(void)
 static void bigbugUpdatePhysics(int64_t elapsedUs)
 {
     // Apply garbotnik's drag
-    int32_t sqMagVel= sqMagVec2d(bigbug->garbotnikVel)
+    int32_t sqMagVel= sqMagVec2d(bigbug->garbotnikVel);
     int32_t speed = sqrt(sqMagVel);
     int32_t drag = sqMagVel / 500; //smaller denominator for bigger drag.
 
-    if (drag > speed * 0.9 || drag < 10){
+    if (drag > speed * 0.9){
         drag = speed * 0.9;
+    }
+    if (drag < 5){
+        drag = 5.0;
     }
     // printf("speed: %d\n", speed);
     // printf("drag: %d\n", drag);
