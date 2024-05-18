@@ -294,7 +294,7 @@ void updateGame(pango_t* self)
     pa_drawTileMap(&(self->tilemap));
     pa_drawEntities(&(self->entityManager));
 
-    drawEntityTargetTile(self->entityManager.playerEntity);
+    //drawEntityTargetTile(self->entityManager.playerEntity);
 
     detectGameStateChange(self);
     detectBgmChange(self);
