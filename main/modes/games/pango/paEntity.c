@@ -253,6 +253,7 @@ void pa_updatePlayer(paEntity_t* self)
                         newHitBlock->yspeed = 64;
                         break;
                 }
+                soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
             }
         }
     }
@@ -286,106 +287,7 @@ void updateHitBlock(paEntity_t* self)
         return;
     }
 
-    self->x += self->xspeed;
-    self->y += self->yspeed;
-
-    self->animationTimer++;
-    if (self->animationTimer == 6)
-    {
-        self->xspeed = -self->xspeed;
-        self->yspeed = -self->yspeed;
-    }
-    if (self->animationTimer > 12)
-    {
-        uint8_t aboveTile         = (self->homeTileY == 0)
-                                        ? 0
-                                        : self->tilemap->map[(self->homeTileY - 1) * self->tilemap->mapWidth + self->homeTileX];
-        uint8_t belowTile         = (self->homeTileY == (self->tilemap->mapHeight - 1))
-                                        ? 0
-                                        : self->tilemap->map[(self->homeTileY + 1) * self->tilemap->mapWidth + self->homeTileX];
-        paEntity_t* createdEntity = NULL;
-
-        switch (aboveTile)
-        {
-            case PA_TILE_CTNR_COIN:
-            case PA_TILE_CTNR_10COIN:
-            {
-                addCoins(self->gameData, 1);
-                pa_scorePoints(self->gameData, 10);
-                self->jumpPower = PA_TILE_CONTAINER_2;
-                break;
-            }
-            case PA_TILE_CTNR_POW1:
-            {
-                createdEntity = pa_createEntity(
-                    self->entityManager, ENTITY_POWERUP, (self->homeTileX * PA_TILE_SIZE) + PA_HALF_TILESIZE,
-                    ((self->homeTileY
-                      + ((self->yspeed < 0 && (!pa_isSolid(belowTile) && belowTile != PA_TILE_BOUNCE_BLOCK)) ? 1 : -1))
-                     * PA_TILE_SIZE)
-                        + PA_HALF_TILESIZE);
-                createdEntity->homeTileX = 0;
-                createdEntity->homeTileY = 0;
-
-                self->jumpPower = PA_TILE_CONTAINER_2;
-                break;
-            }
-            /*case PA_TILE_WARP_0 ... PA_TILE_WARP_F:
-            {
-                createdEntity = pa_createEntity(
-                    self->entityManager, ENTITY_WARP, (self->homeTileX * PA_TILE_SIZE) + PA_HALF_TILESIZE,
-                    ((self->homeTileY
-                      + ((self->yspeed < 0 && (!pa_isSolid(belowTile) && belowTile != PA_TILE_BOUNCE_BLOCK)) ? 1 : -1))
-                     * PA_TILE_SIZE)
-                        + PA_HALF_TILESIZE);
-
-                createdEntity->homeTileX = self->homeTileX;
-                createdEntity->homeTileY = self->homeTileY;
-
-                createdEntity->jumpPower = aboveTile - PA_TILE_WARP_0;
-                self->jumpPower          = PA_TILE_CONTAINER_2;
-                break;
-            }*/
-            case PA_TILE_CTNR_1UP:
-            {
-                if (self->gameData->extraLifeCollected)
-                {
-                    addCoins(self->gameData, 1);
-                    pa_scorePoints(self->gameData, 10);
-                }
-                else
-                {
-                    createdEntity = pa_createEntity(
-                        self->entityManager, ENTITY_1UP, (self->homeTileX * PA_TILE_SIZE) + PA_HALF_TILESIZE,
-                        ((self->homeTileY
-                          + ((self->yspeed < 0 && (!pa_isSolid(belowTile) && belowTile != PA_TILE_BOUNCE_BLOCK)) ? 1
-                                                                                                                : -1))
-                         * PA_TILE_SIZE)
-                            + PA_HALF_TILESIZE);
-                    createdEntity->homeTileX           = 0;
-                    createdEntity->homeTileY           = 0;
-                    self->gameData->extraLifeCollected = true;
-                }
-
-                self->jumpPower = PA_TILE_CONTAINER_2;
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
-
-        if (self->jumpPower == PA_TILE_BRICK_BLOCK && (self->yspeed > 0 || self->yDamping == 1) && createdEntity == NULL)
-        {
-            self->jumpPower = PA_TILE_EMPTY;
-            pa_scorePoints(self->gameData, 10);
-            soundPlaySfx(&(self->soundManager->sndBreak), BZR_LEFT);
-        }
-
-        self->tilemap->map[self->homeTileY * self->tilemap->mapWidth + self->homeTileX] = self->jumpPower;
-
-        pa_destroyEntity(self, false);
-    }
+    pa_moveEntityWithTileCollisions(self);
 }
 
 void pa_moveEntityWithTileCollisions(paEntity_t* self)
@@ -1088,6 +990,18 @@ bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, 
 
 bool pa_dummyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
 {
+    return false;
+}
+
+bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction)
+{
+    if (pa_isSolid(tileId))
+    {
+        self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)] = PA_TILE_BLOCK;
+        soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
+        pa_destroyEntity(self, false);
+        return true;
+    }
     return false;
 }
 

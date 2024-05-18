@@ -537,7 +537,7 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateHitBlock;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
-    entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
+    entity->tileCollisionHandler = &pa_hitBlockTileCollisionHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
 
     return entity;
