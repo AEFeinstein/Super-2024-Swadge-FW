@@ -34,11 +34,6 @@
 #define UP_ARROW_HEIGHT 10
 #define UP_ARROW_MARGIN 2
 
-#define MENU_LED_BRIGHTNESS_MIN     128
-#define MENU_LED_BRIGHTNESS_RANGE   128
-#define MENU_LED_TIME_STEP_US_MIN   8192
-#define MENU_LED_TIME_STEP_US_RANGE 16384
-
 //==============================================================================
 // Function Prototypes
 //==============================================================================
