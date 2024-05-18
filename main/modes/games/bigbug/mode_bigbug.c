@@ -19,7 +19,7 @@
 
 #define TILE_FIELD_WIDTH 8
 #define TILE_FIELD_HEIGHT 1024
-#define GARBOTNIK_RADIUS   (18 << DECIMAL_BITS)
+#define GARBOTNIK_RADIUS   (14 << DECIMAL_BITS)
 #define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
 #define FIELD_HEIGHT  (TFT_HEIGHT << DECIMAL_BITS)
 #define HALF_WIDTH   (FIELD_WIDTH / 2)
@@ -368,10 +368,12 @@ static void bigbugDrawField(void)
         // printf("jStart: %d\n", jStart);
         // printf("jEnd: %d\n", jEnd);
 
-        for (int i = iStart; i <= iEnd; i++){
-            for (int j = jStart; j <= jEnd; j++){
+        for (uint32_t i = iStart; i <= iEnd; i++){
+            for (uint32_t j = jStart; j <= jEnd; j++){
                 // Draw dirt tile
-                drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
+                if(bigbug->tiles[i][j] == 1){
+                    drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
+                }
             }
         }
     }
@@ -384,8 +386,8 @@ static void bigbugDrawField(void)
     // printf("render y: %d\n", (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
 
     // Draw garbotnik
-    drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnik.pos.x - bigbug->garbotnik.radius - bigbug->camera.pos.x) >> DECIMAL_BITS,
-                  (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
+    drawWsgSimple(&bigbug->garbotnikWsg, ((bigbug->garbotnik.pos.x  - bigbug->camera.pos.x )>> DECIMAL_BITS) - 18,
+                  ((bigbug->garbotnik.pos.y - bigbug->camera.pos.y) >> DECIMAL_BITS) - 19);
 
     // Draw UI
     char buttons[] = {'Z','\0','A','\0','B','\0','C'};
@@ -443,7 +445,7 @@ static void bigbugGameLoop(int64_t elapsedUs)
 static void bigbugReset(void){
     // Set garbotnik variables
     bigbug->garbotnik.pos.x  = 128 << DECIMAL_BITS;
-    bigbug->garbotnik.pos.y  = -90 << DECIMAL_BITS;
+    bigbug->garbotnik.pos.y  =  -(90 << DECIMAL_BITS);
 
     printf("The width is: %d\n", FIELD_WIDTH);
     printf("The height is: %d\n", FIELD_HEIGHT);
@@ -454,9 +456,9 @@ static void bigbugReset(void){
     bigbug->garbotnik.radius = GARBOTNIK_RADIUS;
 
     //Set all tiles to dirt
-    for(int i = 0; i < 4; i++){
-        for(int j = 0; j < 3; j++){
-        bigbug->tiles[i][j] = 1;
+    for(int i = 0; i < TILE_FIELD_WIDTH; i++){
+        for(int j = 0; j < TILE_FIELD_HEIGHT; j++){
+            bigbug->tiles[i][j] = 1;
         }
     }
 }
@@ -507,8 +509,48 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
     bigbug->garbotnik.pos.x += bigbug->garbotnikVel.x * elapsedUs / 100000;
     bigbug->garbotnik.pos.y += bigbug->garbotnikVel.y * elapsedUs / 100000;
 
-    // Update the camera's position to catch up to the player
+    // Look up 4 nearest tiles for collision checks
+    // a tile's width is 32 pixels << 4 = 1024. half width is 512.
+    int32_t xIdx = ((bigbug->garbotnik.pos.x - 512)/1024) - (bigbug->garbotnik.pos.x < 0);//the x index
+    int32_t yIdx = (bigbug->garbotnik.pos.y  - 512)/1024 - (bigbug->garbotnik.pos.y < 0);//the y index
 
+    for(int32_t i = xIdx; i <= xIdx+1; i++){
+        for(int32_t j = yIdx; j <= yIdx+1; j++){
+            if(i >= 0 && i < TILE_FIELD_WIDTH && j >=0 && j < TILE_FIELD_HEIGHT){
+                if(bigbug->tiles[i][j] == 1){
+                    //Collision check begins here
+                    vec_t tilePos = {i * 1024 + 512, j * 1024 + 512};
+                    vec_t distance = subVec2d(bigbug->garbotnik.pos, tilePos);
+                    //clamp distance;
+                    vec_t clampDst;
+                    if(distance.x < -512){
+                        clampDst.x = -512;
+                    }
+                    else{
+                        clampDst.x = distance.x;
+                        if(distance.x > 512){
+                            clampDst.x = 512;
+                        }
+                    }
+                    if(distance.y < -512){
+                        clampDst.y = -512;
+                    }
+                    else{
+                        clampDst.y = distance.y;
+                        if(distance.y > 512){
+                            clampDst.y = 512;
+                        }
+                    }
+                    vec_t closestPoint = addVec2d(tilePos, clampDst);
+                    if(sqMagVec2d(subVec2d(bigbug->garbotnik.pos, closestPoint)) < bigbug->garbotnik.radius * bigbug->garbotnik.radius){
+                        bigbug->tiles[i][j] = 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // Update the camera's position to catch up to the player
     bigbug->camera.pos.x = bigbug->garbotnik.pos.x - HALF_WIDTH;
     bigbug->camera.pos.y = bigbug->garbotnik.pos.y - HALF_HEIGHT;
 }
