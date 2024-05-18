@@ -84,3 +84,5 @@ coverage.info
 tools/font_maker/font_maker
 tools/font_maker/*.TTF
 tools/font_maker/*.ttf
+
+*.DS_Store

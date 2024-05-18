@@ -194,7 +194,7 @@
 #include "shapes.h"
 #include "fill.h"
 #include "menu.h"
-#include "menuLogbookRenderer.h"
+#include "menuManiaRenderer.h"
 
 // Asset loaders
 #include "spiffs_wsg.h"
