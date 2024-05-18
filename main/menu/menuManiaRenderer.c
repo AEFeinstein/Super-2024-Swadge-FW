@@ -3,6 +3,7 @@
 //==============================================================================
 
 #include <esp_random.h>
+#include <esp_heap_caps.h>
 #include "hdw-battmon.h"
 #include "menuManiaRenderer.h"
 #include "menu_utils.h"
@@ -52,16 +53,73 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
 /**
  * @brief Initialize a and return a menu renderer.
  *
- * @param titleFont The font used to draw this menu title, preferably "righteous_150.font"
- * @param menuFont The font used to draw this menu, preferably "rodin_eb.font"
+ * @param titleFont The font used to draw the title, preferably "righteous_150.font". If this is NULL it will be
+ * allocated by the renderer in SPIRAM.
+ * @param titleFontOutline The outline font used to draw the title. If this is NULL it will be allocated by the renderer
+ * in SPIRAM.
+ * @param menuFont The font used to draw this menu, preferably "rodin_eb.font". If this is NULL it will be allocated by
+ * the renderer in SPIRAM.
+ * @param menuFontOutline The outline font used to draw this menu. If this is NULL it will be allocated by the renderer
+ * in SPIRAM.
  * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuManiaRenderer()
  * when done
  */
-menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* menuFont)
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont,
+                                           font_t* menuFontOutline)
 {
     menuManiaRenderer_t* renderer = calloc(1, sizeof(menuManiaRenderer_t));
-    renderer->titleFont           = titleFont;
-    renderer->menuFont            = menuFont;
+
+    // Save or allocate title font
+    if (NULL == titleFont)
+    {
+        renderer->titleFont = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
+        loadFont("righteous_150.font", renderer->titleFont, true);
+        renderer->titleFontAllocated = true;
+    }
+    else
+    {
+        renderer->titleFont          = titleFont;
+        renderer->titleFontAllocated = false;
+    }
+
+    // Save or allocate title font outline
+    if (NULL == titleFontOutline)
+    {
+        renderer->titleFontOutline = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
+        makeOutlineFont(renderer->titleFont, renderer->titleFontOutline, false);
+        renderer->titleFontOutlineAllocated = true;
+    }
+    else
+    {
+        renderer->titleFont          = titleFont;
+        renderer->titleFontAllocated = false;
+    }
+
+    // Save or allocate menu font
+    if (NULL == menuFont)
+    {
+        renderer->menuFont = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
+        loadFont("rodin_eb.font", renderer->menuFont, true);
+        renderer->menuFontAllocated = true;
+    }
+    else
+    {
+        renderer->menuFont          = menuFont;
+        renderer->menuFontAllocated = false;
+    }
+
+    // Save or allocate menu font outline
+    if (NULL == menuFontOutline)
+    {
+        renderer->menuFontOutline = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
+        makeOutlineFont(renderer->menuFont, renderer->menuFontOutline, false);
+        renderer->menuFontOutlineAllocated = true;
+    }
+    else
+    {
+        renderer->menuFont          = menuFont;
+        renderer->menuFontAllocated = false;
+    }
 
     // Load battery images
     loadWsg("batt1.wsg", &renderer->batt[0], false);
@@ -91,6 +149,29 @@ void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer)
     freeWsg(&renderer->batt[2]);
     freeWsg(&renderer->batt[3]);
     freeWsg(&renderer->menu_bg);
+
+    // Free fonts if allocated
+    if (renderer->titleFontAllocated)
+    {
+        freeFont(renderer->titleFont);
+        free(renderer->titleFont);
+    }
+    if (renderer->titleFontOutlineAllocated)
+    {
+        freeFont(renderer->titleFontOutline);
+        free(renderer->titleFontOutline);
+    }
+    if (renderer->menuFontAllocated)
+    {
+        freeFont(renderer->menuFont);
+        free(renderer->menuFont);
+    }
+    if (renderer->menuFontOutlineAllocated)
+    {
+        freeFont(renderer->menuFontOutline);
+        free(renderer->menuFontOutline);
+    }
+
     free(renderer);
 }
 
@@ -138,6 +219,8 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
 
     // Draw the text
     drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
+    // Outline the text
+    drawText(renderer->menuFontOutline, c000, text, x + PARALLELOGRAM_HEIGHT + 10, y);
 
     // Draw the left arrow, if applicable
     if (leftArrow)
@@ -274,13 +357,10 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
 
     // Draw a title
     y += (TITLE_BG_HEIGHT - renderer->titleFont->height) / 2;
-    // Draw outline first by offsetting text
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 - 1, y + 0);
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 1, y + 0);
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 0, y - 1);
-    drawText(renderer->titleFont, c000, menu->title, (TFT_WIDTH - tWidth) / 2 + 0, y + 1);
     // Draw the menu text
     drawText(renderer->titleFont, c542, menu->title, (TFT_WIDTH - tWidth) / 2, y);
+    // Outline the menu text
+    drawText(renderer->titleFontOutline, c000, menu->title, (TFT_WIDTH - tWidth) / 2, y);
 
     // Move to drawing the rows
     y = titleBgY1 + Y_SECTION_MARGIN;

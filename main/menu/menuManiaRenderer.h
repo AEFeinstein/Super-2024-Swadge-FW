@@ -11,8 +11,10 @@
  *
  * The menu renderer is initialized with initMenuManiaRenderer() and deinitialized with deinitMenuManiaRenderer().
  * Menu renderers must be deinitialized or they will leak memory.
- * When initializing the menu, a font must be passed in as an argument. This renderer will not allocate its own font to
- * avoid allocating the same font twice for a given mode (once for the menu and again for the mode itself).
+ * When initializing the menu, fonts may be passed in as an argument, or the arguments may be \c NULL. If the Swadge
+ * mode is loading fonts for itself, you can save RAM by using the same font in the menu renderer. If the Swadge mode
+ * isn't using the same fonts, it's easier to have the menu renderer manage it's own fonts. Either way, you should avoid
+ * loading the same font multiple times.
  *
  * The menu is drawn with drawMenuMania(). This will both draw over the entire display and light LEDs. The menu may be
  * drawn on top of later.
@@ -35,14 +37,25 @@
  */
 typedef struct
 {
-    font_t* titleFont;           ///< The font to render the menu with
-    font_t* menuFont;            ///< The font to render the menu with
-    led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
-    wsg_t batt[4];               ///< Images for the battery levels
-    wsg_t menu_bg;               ///< Background image for the menu
+    font_t* titleFont;              ///< The font to render the title with
+    font_t* titleFontOutline;       ///< The font to render the title outline with
+    font_t* menuFont;               ///< The font to render the menu with
+    font_t* menuFontOutline;        ///< The font to render the menu outline with
+    bool titleFontAllocated;        ///< true if this font was allocated by the renderer and should be freed by
+                                    ///< deinitMenuManiaRenderer()
+    bool titleFontOutlineAllocated; ///< true if this font was allocated by the renderer and should be freed by
+                                    ///< deinitMenuManiaRenderer()
+    bool menuFontAllocated;         ///< true if this font was allocated by the renderer and should be freed by
+                                    ///< deinitMenuManiaRenderer()
+    bool menuFontOutlineAllocated;  ///< true if this font was allocated by the renderer and should be freed by
+                                    ///< deinitMenuManiaRenderer()
+    led_t leds[CONFIG_NUM_LEDS];    ///< An array with the RGB LED state to be output
+    wsg_t batt[4];                  ///< Images for the battery levels
+    wsg_t menu_bg;                  ///< Background image for the menu
 } menuManiaRenderer_t;
 
-menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* menuFont);
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont,
+                                           font_t* menuFontOutline);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 

@@ -3,7 +3,9 @@
 //==============================================================================
 
 #include <string.h>
+#include <esp_heap_caps.h>
 
+#include "macros.h"
 #include "hdw-tft.h"
 #include "font.h"
 
@@ -345,4 +347,126 @@ uint16_t textWordWrapHeight(const font_t* font, const char* text, int16_t width,
     int16_t yEnd = 0;
     drawTextWordWrapFlags(font, cTransparent, text, &xEnd, &yEnd, width, maxHeight, TEXT_MEASURE);
     return yEnd + font->height + 1;
+}
+
+/**
+ * @brief Get a single pixel from a font character
+ *
+ * @param ch The character to get a pixel from (includes width)
+ * @param height The height of the character
+ * @param x The X coordinate of the pixel
+ * @param y The Y coordinate of the pixel
+ * @return true if the pixel is set, false if it is not
+ */
+static bool getFontPx(font_ch_t* ch, int16_t height, int16_t x, int16_t y)
+{
+    // Bounds checks
+    if (x < 0 || x >= ch->width || y < 0 || y >= height)
+    {
+        return false;
+    }
+
+    int16_t pxIdx   = (y * ch->width) + x;
+    int16_t byteIdx = pxIdx / 8;
+    int16_t bitIdx  = pxIdx % 8;
+    return (ch->bitmap[byteIdx] & (1 << bitIdx)) ? true : false;
+}
+
+/**
+ * @brief Set a single pixel from a font character
+ *
+ * @param ch The character to set a pixel in (includes width)
+ * @param x The X coordinate of the pixel
+ * @param y The Y coordinate of the pixel
+ * @param isSet true to set the pixel, false to clear it
+ */
+static void setFontPx(font_ch_t* ch, int16_t x, int16_t y, bool isSet)
+{
+    int16_t pxIdx   = (y * ch->width) + x;
+    int16_t byteIdx = pxIdx / 8;
+    int16_t bitIdx  = pxIdx % 8;
+    if (isSet)
+    {
+        ch->bitmap[byteIdx] |= (1 << bitIdx);
+    }
+    else
+    {
+        ch->bitmap[byteIdx] &= ~(1 << bitIdx);
+    }
+}
+
+/**
+ * @brief Create the outline of a font as a separate font
+ *
+ * @param srcFont The source font to make an outline of
+ * @param dstFont The destination font that will be initialized as an outline of the source font
+ * @param spiRam true to allocate memory in SPI RAM, false to allocate memory in normal RAM
+ */
+void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam)
+{
+    // Set up calloc flags
+    uint32_t callocFlags = 0;
+    if (spiRam)
+    {
+        callocFlags |= MALLOC_CAP_SPIRAM;
+    }
+
+    // Copy the height
+    dstFont->height = srcFont->height;
+
+    // For each character
+    for (int16_t cIdx = 0; cIdx < ARRAY_SIZE(dstFont->chars); cIdx++)
+    {
+        // Make easy reference pointers
+        font_ch_t* oCh = &dstFont->chars[cIdx];
+        font_ch_t* sCh = &srcFont->chars[cIdx];
+
+        // Copy the character width
+        oCh->width = sCh->width;
+
+        // Allocate space for the outline bitmap
+        int pixels  = dstFont->height * oCh->width;
+        int bytes   = (pixels / 8) + ((pixels % 8 == 0) ? 0 : 1);
+        oCh->bitmap = heap_caps_calloc(bytes, sizeof(uint8_t), callocFlags);
+
+        for (int16_t y = 0; y < dstFont->height; y++)
+        {
+            for (int16_t x = 0; x < oCh->width; x++)
+            {
+                bool onBoundary = false;
+                // If the source pixel is set
+                if (getFontPx(sCh, srcFont->height, x, y))
+                {
+                    // Check for boundaries
+                    for (int16_t kY = y - 1; kY < y + 2; kY++)
+                    {
+                        for (int16_t kX = x - 1; kX < x + 2; kX++)
+                        {
+                            if (!getFontPx(sCh, srcFont->height, kX, kY))
+                            {
+                                onBoundary = true;
+                                break;
+                            }
+                        }
+                        if (onBoundary)
+                        {
+                            break;
+                        }
+                    }
+
+                    // Slightly thinner outline
+                    // if (!getFontPx(sCh, srcFont->height, x - 1, y + 0) //
+                    //     || !getFontPx(sCh, srcFont->height, x + 1, y + 0)
+                    //     || !getFontPx(sCh, srcFont->height, x + 0, y - 1)
+                    //     || !getFontPx(sCh, srcFont->height, x + 0, y + 1))
+                    // {
+                    //     onBoundary = true;
+                    // }
+                }
+
+                // Set the outline pixel accordingly
+                setFontPx(oCh, x, y, onBoundary);
+            }
+        }
+    }
 }

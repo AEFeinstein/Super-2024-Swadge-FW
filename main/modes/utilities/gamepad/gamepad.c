@@ -289,7 +289,7 @@ void gamepadEnterMode(void)
     addSingleItemToMenu(gamepad->menu, str_exit);
 
     // Initialize menu renderer
-    gamepad->renderer = initMenuManiaRenderer(&gamepad->logbookFont, &gamepad->logbookFont);
+    gamepad->renderer = initMenuManiaRenderer(NULL, NULL, NULL, NULL);
 
     // We shold go as fast as we can
     setFrameRateUs(0);

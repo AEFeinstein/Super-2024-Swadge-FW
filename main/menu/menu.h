@@ -95,13 +95,8 @@
  * addSettingsOptionsItemToMenu(menu, optionSettingLabel, optionSettingLabels, optionSettingValues,
  *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
- * // Load a font
- * font_t righteous;
- * loadFont("righteous_150.font", &righteous, false);
- * font_t rodin;
- * loadFont("rodin_eb.font", &rodin, false);
  * // Initialize a renderer
- * menuManiaRenderer_t* renderer = initMenuManiaRenderer(&righteous, &rodin);
+ * menuManiaRenderer_t* renderer = initMenuManiaRenderer(NULL, NULL, NULL, NULL);
  * \endcode
  *
  * Process button events:
