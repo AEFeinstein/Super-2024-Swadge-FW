@@ -47,6 +47,7 @@ void pa_initializeEntity(paEntity_t* self, paEntityManager_t* entityManager, paT
     self->fallOffTileHandler   = &defaultFallOffTileHandler;
     self->spriteFlipHorizontal = false;
     self->spriteFlipVertical   = false;
+    self->facingDirection = PA_DIRECTION_DOWN;
 
     // Fields not explicitly initialized
     // self->type = 0;
@@ -76,7 +77,7 @@ void pa_updatePlayer(paEntity_t* self)
 {
     if (self->gameData->btnState & PB_LEFT)
     {
-        self->xspeed -= 8;
+        self->xspeed -= 4;
 
         if (self->xspeed < -16)
         {
@@ -85,7 +86,7 @@ void pa_updatePlayer(paEntity_t* self)
     }
     else if (self->gameData->btnState & PB_RIGHT)
     {
-        self->xspeed += 8;
+        self->xspeed += 4;
 
         if (self->xspeed > 16)
         {
@@ -95,7 +96,7 @@ void pa_updatePlayer(paEntity_t* self)
 
     if (self->gameData->btnState & PB_UP)
     {
-        self->yspeed -= 8;
+        self->yspeed -= 4;
 
         if (self->yspeed < -16)
         {
@@ -104,7 +105,7 @@ void pa_updatePlayer(paEntity_t* self)
     }
     else if (self->gameData->btnState & PB_DOWN)
     {
-        self->yspeed += 8;
+        self->yspeed += 4;
 
         if (self->yspeed > 16)
         {
@@ -192,6 +193,7 @@ void pa_updatePlayer(paEntity_t* self)
         self->gameData->changeState = PA_ST_PAUSE;
     }
 
+/*
     if(self->xspeed){
         self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + SIGNOF(self->xspeed);
 
@@ -207,6 +209,27 @@ void pa_updatePlayer(paEntity_t* self)
              self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
         }
     }
+*/
+
+    switch(self->facingDirection){
+        case PA_DIRECTION_LEFT:
+            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) - 1;
+            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+            break;
+        case PA_DIRECTION_RIGHT:
+            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) + 1;
+            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+            break;
+        case PA_DIRECTION_UP:
+            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) - 1;
+            break;
+        case PA_DIRECTION_DOWN:
+        default:
+            self->targetTileX = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+            self->targetTileY = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) + 1;
+            break;
+    }
 
     if (self->gameData->btnState & PB_A)
     {
@@ -215,16 +238,31 @@ void pa_updatePlayer(paEntity_t* self)
             
             if(newHitBlock != NULL){
                 pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
+                switch(self->facingDirection){
+                    case PA_DIRECTION_LEFT:
+                        newHitBlock->xspeed = -64;
+                        break;
+                    case PA_DIRECTION_RIGHT:
+                        newHitBlock->xspeed = 64;
+                        break;
+                    case PA_DIRECTION_UP:
+                        newHitBlock->yspeed = -64;
+                        break;
+                    case PA_DIRECTION_DOWN:
+                    default:
+                        newHitBlock->yspeed = 64;
+                        break;
+                }
             }
         }
     }
-
+    animatePlayer(self);
     pa_moveEntityWithTileCollisions(self);
     //dieWhenFallingOffScreen(self);
     //applyGravity(self);
     applyDamping(self);
     pa_detectEntityCollisions(self);
-    animatePlayer(self);
+    
 }
 
 void updateTestObject(paEntity_t* self)
@@ -558,34 +596,7 @@ void pa_destroyEntity(paEntity_t* self, bool respawn)
 
 void animatePlayer(paEntity_t* self)
 {
-    if (self->spriteIndex == SP_PLAYER_WIN || self->spriteIndex == SP_PLAYER_HURT)
-    {
-        // Win pose has been set; don't change it!
-        return;
-    }
-
-    if (!self->gravityEnabled)
-    {
-        self->spriteIndex = SP_PLAYER_CLIMB;
-        if (self->yspeed < 0 && self->gameData->frameCount % 10 == 0)
-        {
-            self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
-        }
-    }
-    else if (self->falling)
-    {
-        if (self->yspeed < 0)
-        {
-            // Jumping
-            self->spriteIndex = SP_PLAYER_JUMP;
-        }
-        else
-        {
-            // Falling
-            self->spriteIndex = SP_PLAYER_WALK1;
-        }
-    }
-    else if (self->xspeed != 0)
+    if (abs(self->xspeed) > abs(self->yspeed))
     {
         if (((self->gameData->btnState & PB_LEFT) && self->xspeed < 0)
             || ((self->gameData->btnState & PB_RIGHT) && self->xspeed > 0))
@@ -593,20 +604,41 @@ void animatePlayer(paEntity_t* self)
             // Running
             self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
 
-            if (self->gameData->frameCount % (10 - (abs(self->xspeed) >> 3)) == 0)
+            if (self->gameData->frameCount % 7 == 0)
             {
-                self->spriteIndex = 1 + ((self->spriteIndex + 1) % 3);
+                self->spriteIndex = PA_SP_PLAYER_SIDE + ((self->spriteIndex + 1) % 3);
+                self->facingDirection = !self->spriteFlipHorizontal;
             }
         }
         else
         {
-            self->spriteIndex = SP_PLAYER_SLIDE;
+            //self->spriteIndex = SP_PLAYER_SLIDE;
+        }
+    }
+    else if (self->yspeed > 0){
+        if ((self->gameData->btnState & PB_DOWN) && self->yspeed > 0){
+            if (self->gameData->frameCount % 7 == 0)
+            {
+                self->spriteIndex = PA_SP_PLAYER_SOUTH + ((self->spriteIndex + 1) % 2);
+                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                self->facingDirection = PA_DIRECTION_DOWN;
+            }
+        }
+    }
+     else if (self->yspeed < 0){
+        if ((self->gameData->btnState & PB_UP) && self->yspeed < 0){
+            if (self->gameData->frameCount % 7 == 0)
+            {
+                self->spriteIndex = PA_SP_PLAYER_NORTH + ((self->spriteIndex + 1) % 2);
+                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                self->facingDirection = PA_DIRECTION_UP;
+            }
         }
     }
     else
     {
         // Standing
-        self->spriteIndex = SP_PLAYER_IDLE;
+        //self->spriteIndex = PA_SP_PLAYER_SOUTH;
     }
 }
 
@@ -666,7 +698,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                     self->type                  = ENTITY_DEAD;
                     self->xspeed                = 0;
                     self->yspeed                = -60;
-                    self->spriteIndex           = SP_PLAYER_HURT;
+                    self->spriteIndex           = PA_SP_PLAYER_HURT;
                     self->gameData->changeState = PA_ST_DEAD;
                     self->gravityEnabled        = true;
                     self->falling               = true;
@@ -874,7 +906,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 pa_scorePoints(self->gameData, 100);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearD), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                //self->spriteIndex           = SP_PLAYER_WIN;
                 self->updateFunction        = &pa_updateDummy;
                 self->gameData->changeState = PA_ST_LEVEL_CLEAR;
             }
@@ -887,7 +919,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 pa_scorePoints(self->gameData, 500);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearC), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                //self->spriteIndex           = SP_PLAYER_WIN;
                 self->updateFunction        = &pa_updateDummy;
                 self->gameData->changeState = PA_ST_LEVEL_CLEAR;
             }
@@ -900,7 +932,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 pa_scorePoints(self->gameData, 1000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearB), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                //self->spriteIndex           = SP_PLAYER_WIN;
                 self->updateFunction        = &pa_updateDummy;
                 self->gameData->changeState = PA_ST_LEVEL_CLEAR;
             }
@@ -913,7 +945,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 pa_scorePoints(self->gameData, 2000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearA), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                //self->spriteIndex           = SP_PLAYER_WIN;
                 self->updateFunction        = &pa_updateDummy;
                 self->gameData->changeState = PA_ST_LEVEL_CLEAR;
             }
@@ -926,7 +958,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 pa_scorePoints(self->gameData, 5000);
                 soundStop(true);
                 soundPlaySfx(&(self->soundManager->sndLevelClearS), BZR_LEFT);
-                self->spriteIndex           = SP_PLAYER_WIN;
+                //self->spriteIndex           = SP_PLAYER_WIN;
                 self->updateFunction        = &pa_updateDummy;
                 self->gameData->changeState = PA_ST_LEVEL_CLEAR;
             }
@@ -2017,7 +2049,7 @@ void killPlayer(paEntity_t* self)
     self->type                  = ENTITY_DEAD;
     self->xspeed                = 0;
     self->yspeed                = -60;
-    self->spriteIndex           = SP_PLAYER_HURT;
+    self->spriteIndex           = PA_SP_PLAYER_HURT;
     self->gameData->changeState = PA_ST_DEAD;
     self->falling               = true;
 }

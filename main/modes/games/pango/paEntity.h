@@ -58,6 +58,15 @@ typedef enum
     ENTITY_BGM_CHANGE_5
 } paEntityIndex_t;
 
+typedef enum
+{
+    PA_DIRECTION_LEFT,
+    PA_DIRECTION_RIGHT,
+    PA_DIRECTION_UP,
+    PA_DIRECTION_NONE,
+    PA_DIRECTION_DOWN
+} paCardinalDirection_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -92,6 +101,8 @@ struct paEntity_t
     bool gravityEnabled;
     int16_t gravity;
     bool falling;
+
+    uint16_t facingDirection;
 
     uint8_t spriteIndex;
     bool spriteFlipHorizontal;
