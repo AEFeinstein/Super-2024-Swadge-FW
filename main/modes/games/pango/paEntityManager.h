@@ -12,13 +12,14 @@
 #include "paTilemap.h"
 #include "paGameData.h"
 #include "hdw-tft.h"
+#include "paSprite.h"
 // #include "soundManager.h"
 
 //==============================================================================
 // Constants
 //==============================================================================
 #define MAX_ENTITIES   32
-#define SPRITESET_SIZE 51
+#define SPRITESET_SIZE 11
 
 //==============================================================================
 // Structs
@@ -26,7 +27,7 @@
 
 struct paEntityManager_t
 {
-    wsg_t sprites[SPRITESET_SIZE];
+    paSprite_t sprites[SPRITESET_SIZE];
     paEntity_t* entities;
     uint8_t activeEntities;
 

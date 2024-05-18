@@ -42,57 +42,49 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paTilemap_t* t
 
 void pa_loadSprites(paEntityManager_t* entityManager)
 {
-    loadWsg("sprite000.wsg", &entityManager->sprites[SP_PLAYER_IDLE], false);
-    loadWsg("sprite001.wsg", &entityManager->sprites[SP_PLAYER_WALK1], false);
-    loadWsg("sprite002.wsg", &entityManager->sprites[SP_PLAYER_WALK2], false);
-    loadWsg("sprite003.wsg", &entityManager->sprites[SP_PLAYER_WALK3], false);
-    loadWsg("sprite004.wsg", &entityManager->sprites[SP_PLAYER_JUMP], false);
-    loadWsg("sprite005.wsg", &entityManager->sprites[SP_PLAYER_SLIDE], false);
-    loadWsg("sprite006.wsg", &entityManager->sprites[SP_PLAYER_HURT], false);
-    loadWsg("sprite007.wsg", &entityManager->sprites[SP_PLAYER_CLIMB], false);
-    loadWsg("sprite008.wsg", &entityManager->sprites[SP_PLAYER_WIN], false);
-    loadWsg("sprite009.wsg", &entityManager->sprites[SP_ENEMY_BASIC], false);
-    loadWsg("pa-tile-009.wsg", &entityManager->sprites[SP_BLOCK], false);
-   //loadWsg("tile034.wsg", &entityManager->sprites[SP_HITBLOCK_BRICKS], false);
-    loadWsg("sprite012.wsg", &entityManager->sprites[SP_DUSTBUNNY_IDLE], false);
-    loadWsg("sprite013.wsg", &entityManager->sprites[SP_DUSTBUNNY_CHARGE], false);
-    loadWsg("sprite014.wsg", &entityManager->sprites[SP_DUSTBUNNY_JUMP], false);
-    loadWsg("sprite015.wsg", &entityManager->sprites[SP_GAMING_1], false);
-    loadWsg("sprite016.wsg", &entityManager->sprites[SP_GAMING_2], false);
-    loadWsg("sprite017.wsg", &entityManager->sprites[SP_GAMING_3], false);
-    loadWsg("sprite018.wsg", &entityManager->sprites[SP_MUSIC_1], false);
-    loadWsg("sprite019.wsg", &entityManager->sprites[SP_MUSIC_2], false);
-    loadWsg("sprite020.wsg", &entityManager->sprites[SP_MUSIC_3], false);
-    loadWsg("sprite021.wsg", &entityManager->sprites[SP_WARP_1], false);
-    loadWsg("sprite022.wsg", &entityManager->sprites[SP_WARP_2], false);
-    loadWsg("sprite023.wsg", &entityManager->sprites[SP_WARP_3], false);
-    loadWsg("sprite024.wsg", &entityManager->sprites[SP_WASP_1], false);
-    loadWsg("sprite025.wsg", &entityManager->sprites[SP_WASP_2], false);
-    loadWsg("sprite026.wsg", &entityManager->sprites[SP_WASP_DIVE], false);
-    loadWsg("sprite027.wsg", &entityManager->sprites[SP_1UP_1], false);
-    loadWsg("sprite028.wsg", &entityManager->sprites[SP_1UP_2], false);
-    loadWsg("sprite029.wsg", &entityManager->sprites[SP_1UP_3], false);
-    loadWsg("sprite030.wsg", &entityManager->sprites[SP_WAVEBALL_1], false);
-    loadWsg("sprite031.wsg", &entityManager->sprites[SP_WAVEBALL_2], false);
-    loadWsg("sprite032.wsg", &entityManager->sprites[SP_WAVEBALL_3], false);
-    loadWsg("sprite033.wsg", &entityManager->sprites[SP_ENEMY_BUSH_L2], false);
-    loadWsg("sprite034.wsg", &entityManager->sprites[SP_ENEMY_BUSH_L3], false);
-    loadWsg("sprite035.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_IDLE], false);
-    loadWsg("sprite036.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_CHARGE], false);
-    loadWsg("sprite037.wsg", &entityManager->sprites[SP_DUSTBUNNY_L2_JUMP], false);
-    loadWsg("sprite038.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_IDLE], false);
-    loadWsg("sprite039.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_CHARGE], false);
-    loadWsg("sprite040.wsg", &entityManager->sprites[SP_DUSTBUNNY_L3_JUMP], false);
-    loadWsg("sprite041.wsg", &entityManager->sprites[SP_WASP_L2_1], false);
-    loadWsg("sprite042.wsg", &entityManager->sprites[SP_WASP_L2_2], false);
-    loadWsg("sprite043.wsg", &entityManager->sprites[SP_WASP_L2_DIVE], false);
-    loadWsg("sprite044.wsg", &entityManager->sprites[SP_WASP_L3_1], false);
-    loadWsg("sprite045.wsg", &entityManager->sprites[SP_WASP_L3_2], false);
-    loadWsg("sprite046.wsg", &entityManager->sprites[SP_WASP_L3_DIVE], false);
-    loadWsg("sprite047.wsg", &entityManager->sprites[SP_CHECKPOINT_INACTIVE], false);
-    loadWsg("sprite048.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_1], false);
-    loadWsg("sprite049.wsg", &entityManager->sprites[SP_CHECKPOINT_ACTIVE_2], false);
-    //loadWsg("tile039.wsg", &entityManager->sprites[SP_BOUNCE_BLOCK], false);
+    loadWsg("kr-000.wsg", &(entityManager->sprites[PA_SP_PLAYER_SOUTH].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_SOUTH].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_SOUTH].originY         = 16;
+    
+    loadWsg("kr-001.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SOUTH].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_WALK_SOUTH].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_WALK_SOUTH].originY         = 16;
+    
+    loadWsg("kr-002.wsg", &(entityManager->sprites[PA_SP_PLAYER_NORTH].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_NORTH].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_NORTH].originY         = 16;
+    
+    loadWsg("kr-003.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_NORTH].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_WALK_NORTH].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_WALK_NORTH].originY         = 16;
+    
+    loadWsg("kr-004.wsg", &(entityManager->sprites[PA_SP_PLAYER_SIDE].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_SIDE].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_SIDE].originY         = 16;
+    
+    loadWsg("kr-005.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_1].originY         = 16;
+    
+    loadWsg("kr-006.wsg", &(entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_WALK_SIDE_2].originY         = 16;
+   
+    loadWsg("kr-007.wsg", &(entityManager->sprites[PA_SP_PLAYER_JUMP].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_JUMP].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_JUMP].originY         = 16;
+    
+    loadWsg("kr-008.wsg", &(entityManager->sprites[PA_SP_PLAYER_FALL].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_FALL].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_FALL].originY         = 16;
+    
+    loadWsg("kr-009.wsg", &(entityManager->sprites[PA_SP_PLAYER_HURT].wsg), false);
+    entityManager->sprites[PA_SP_PLAYER_HURT].originX         = 8;
+    entityManager->sprites[PA_SP_PLAYER_HURT].originY         = 16;
+    
+    loadWsg("pa-tile-009.wsg", &(entityManager->sprites[SP_BLOCK].wsg), false);
+    entityManager->sprites[SP_BLOCK].originX         = 8;
+    entityManager->sprites[SP_BLOCK].originY         = 8;
 }
 
 void pa_updateEntities(paEntityManager_t* entityManager)
@@ -142,10 +134,13 @@ void pa_drawEntities(paEntityManager_t* entityManager)
 
         if (currentEntity.active && currentEntity.visible)
         {
-            drawWsg(&entityManager->sprites[currentEntity.spriteIndex],
-                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - 8 - entityManager->tilemap->mapOffsetX,
-                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->tilemap->mapOffsetY - 8,
-                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical, 0);
+            drawWsg(&(entityManager->sprites[currentEntity.spriteIndex].wsg),
+                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX
+                        - entityManager->tilemap->mapOffsetX,
+                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->tilemap->mapOffsetY
+                        - entityManager->sprites[currentEntity.spriteIndex].originY,
+                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
+                    0);
         }
     }
 }
@@ -342,8 +337,8 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->yspeed             = 0;
     entity->xMaxSpeed          = 40; // 72; Walking
     entity->yMaxSpeed          = 64; // 72;
-    entity->xDamping           = 4;
-    entity->yDamping           = 4;
+    entity->xDamping           = 2;
+    entity->yDamping           = 2;
     entity->gravityEnabled     = false;
     entity->gravity            = 4;
     entity->falling            = false;
@@ -353,7 +348,7 @@ paEntity_t* pa_createPlayer(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->animationTimer     = 0; // Used as a cooldown for shooting square wave balls
 
     entity->type                 = ENTITY_PLAYER;
-    entity->spriteIndex          = SP_PLAYER_IDLE;
+    entity->spriteIndex          = PA_SP_PLAYER_SOUTH;
     entity->updateFunction       = &pa_updatePlayer;
     entity->collisionHandler     = &pa_playerCollisionHandler;
     entity->tileCollisionHandler = &pa_playerTileCollisionHandler;
@@ -387,7 +382,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->scoreValue           = 100;
 
     entity->type                 = paEntity_tEST;
-    entity->spriteIndex          = SP_ENEMY_BASIC;
+    entity->spriteIndex          = 0;
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
