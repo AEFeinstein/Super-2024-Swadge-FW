@@ -14,6 +14,7 @@
 #include "hdw-nvs.h"
 #include "vector2d.h"
 #include "swadge2024.h"
+#include "color_utils.h"
 
 //==============================================================================
 // Defines
@@ -309,6 +310,42 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  */
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs)
 {
+    // Run timer for LED excitement
+    renderer->ledExciteTimer += elapsedUs;
+    while (renderer->ledExciteTimer >= 40000 * 8)
+    {
+        renderer->ledExciteTimer -= 40000 * 8;
+        uint32_t ledColor                      = paletteToRGB(BG_COLOR);
+        renderer->leds[renderer->currentLed].r = (ledColor >> 16) & 0xFF;
+        renderer->leds[renderer->currentLed].g = (ledColor >> 8) & 0xFF;
+        renderer->leds[renderer->currentLed].b = (ledColor >> 0) & 0xFF;
+        renderer->currentLed                   = (renderer->currentLed + 1) % CONFIG_NUM_LEDS;
+    }
+
+    // Run timer for LED decay
+    renderer->ledDecayTimer += elapsedUs;
+    while (renderer->ledDecayTimer >= 2000)
+    {
+        renderer->ledDecayTimer -= 2000;
+        for (int16_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        {
+            if (renderer->leds[i].r)
+            {
+                renderer->leds[i].r--;
+            }
+            if (renderer->leds[i].g)
+            {
+                renderer->leds[i].g--;
+            }
+            if (renderer->leds[i].b)
+            {
+                renderer->leds[i].b--;
+            }
+        }
+    }
+
+    setLeds(renderer->leds, CONFIG_NUM_LEDS);
+
     // Run timer for outer orbit
     renderer->outerOrbitTimer += elapsedUs;
     while (renderer->outerOrbitTimer >= 20000)
