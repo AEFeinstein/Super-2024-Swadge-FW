@@ -17,7 +17,7 @@
 //==============================================================================
 #define DECIMAL_BITS 4
 
-#define TILE_FIELD_WIDTH 8
+#define TILE_FIELD_WIDTH 16
 #define TILE_FIELD_HEIGHT 1024
 #define GARBOTNIK_RADIUS   (14 << DECIMAL_BITS)
 #define FIELD_WIDTH   (TFT_WIDTH << DECIMAL_BITS)
@@ -243,58 +243,58 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
     switch(bigbug->btnState){
         //up
         case 0b0001:
-            accel.y = -100;
+            accel.y = -50;
             break;
         case 0b1101:
-            accel.y = -100;
+            accel.y = -50;
             break;
 
         //down
         case 0b0010:
-            accel.y = 100;
+            accel.y = 50;
             break;
         case 0b1110:
-            accel.y = 100;
+            accel.y = 50;
             break;
 
         //left
         case 0b0100:
-            accel.x = -100;
+            accel.x = -50;
             break;
         case 0b0111:
-            accel.x = -100;
+            accel.x = -50;
             break;
 
         //right
         case 0b1000:
-            accel.x = 100;
+            accel.x = 50;
             break;
         case 0b1011:
-            accel.x = 100;
+            accel.x = 50;
             break;
 
         //up,left
         case 0b0101:
-            accel.x = -71; //magnitude is sqrt(1/2) * 100000
-            accel.y = -71;
+            accel.x = -35; //magnitude is sqrt(1/2) * 100000
+            accel.y = -35;
             break;
         
         //up,right
         case 0b1001:
-            accel.x = 71;//71 707 7071
-            accel.y = -71;
+            accel.x = 35;//35 707 7035
+            accel.y = -35;
             break;
 
         //down,right
         case 0b1010:
-            accel.x = 71;
-            accel.y = 71;
+            accel.x = 35;
+            accel.y = 35;
             break;
 
         //down,left
         case 0b0110:
-            accel.x = -71;
-            accel.y = 71;
+            accel.x = -35;
+            accel.y = 35;
             break;
         default:
             break;
@@ -371,7 +371,7 @@ static void bigbugDrawField(void)
         for (uint32_t i = iStart; i <= iEnd; i++){
             for (uint32_t j = jStart; j <= jEnd; j++){
                 // Draw dirt tile
-                if(bigbug->tiles[i][j] == 1){
+                if(bigbug->tiles[i][j] >= 1){
                     drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
                 }
             }
@@ -458,7 +458,7 @@ static void bigbugReset(void){
     //Set all tiles to dirt
     for(int i = 0; i < TILE_FIELD_WIDTH; i++){
         for(int j = 0; j < TILE_FIELD_HEIGHT; j++){
-            bigbug->tiles[i][j] = 1;
+            bigbug->tiles[i][j] = 2;
         }
     }
 }
@@ -490,8 +490,8 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
     if (drag > speed * 0.9){
         drag = speed * 0.9;
     }
-    if (drag < 5){
-        drag = 5.0;
+    if (drag < 4){
+        drag = 4.0;
     }
     // printf("speed: %d\n", speed);
     // printf("drag: %d\n", drag);
@@ -514,11 +514,12 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
     int32_t xIdx = ((bigbug->garbotnik.pos.x - 512)/1024) - (bigbug->garbotnik.pos.x < 0);//the x index
     int32_t yIdx = (bigbug->garbotnik.pos.y  - 512)/1024 - (bigbug->garbotnik.pos.y < 0);//the y index
 
+    bool collision = false;
     for(int32_t i = xIdx; i <= xIdx+1; i++){
         for(int32_t j = yIdx; j <= yIdx+1; j++){
-            if(i >= 0 && i < TILE_FIELD_WIDTH && j >=0 && j < TILE_FIELD_HEIGHT){
-                if(bigbug->tiles[i][j] == 1){
-                    //Collision check begins here
+            if(!collision && i >= 0 && i < TILE_FIELD_WIDTH && j >=0 && j < TILE_FIELD_HEIGHT){
+                if(bigbug->tiles[i][j] >= 1){
+                    //Collision detection begins here
                     vec_t tilePos = {i * 1024 + 512, j * 1024 + 512};
                     vec_t distance = subVec2d(bigbug->garbotnik.pos, tilePos);
                     //clamp distance;
@@ -543,7 +544,45 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                     }
                     vec_t closestPoint = addVec2d(tilePos, clampDst);
                     if(sqMagVec2d(subVec2d(bigbug->garbotnik.pos, closestPoint)) < bigbug->garbotnik.radius * bigbug->garbotnik.radius){
-                        bigbug->tiles[i][j] = 0;
+                        //Collision detected!
+                        collision = true;
+                        //Update the dirt
+                        bigbug->tiles[i][j] -= 1;
+                        if(bigbug->tiles[i][j] < 0){
+                            bigbug->tiles[i][j] -= 0;
+                        }
+                        //Resolve garbotnik's position
+                        vec_t clampMag = {
+                            .x = clampDst.x * ((clampDst.x > 0) * 2 - 1),
+                            .y = clampDst.y * ((clampDst.y > 0) * 2 - 1)
+                        };
+                        vec_t hitNormal;
+                        if(clampMag.x > clampMag.y){
+                            hitNormal.x = (clampDst.x > 0) * 2 - 1;
+                            hitNormal.y = 0;
+                        }
+                        else{
+                            hitNormal.x = 0;
+                            hitNormal.y = (clampDst.y > 0) * 2 - 1;
+                        }
+                        vec_q24_8 hitNormal_q24_8 = {
+                            .x = TO_FX(hitNormal.x),
+                            .y = TO_FX(hitNormal.y)
+                        };
+                        //hitNormal = mulVec2d(hitNormal, -1);
+                        hitNormal_q24_8 = fpvNorm(hitNormal_q24_8);
+                        
+                        bigbug->garbotnik.pos = addVec2d(closestPoint, mulVec2d(hitNormal, bigbug->garbotnik.radius));
+                        //Mirror garbotnik's velocity
+                        // Reflect the velocity vector along the normal between the two radii
+                        // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+                        vec_q24_8 vec_q24_8_vel = {
+                            .x = TO_FX(bigbug->garbotnikVel.x),
+                            .y = TO_FX(bigbug->garbotnikVel.y)
+                        };
+                        vec_q24_8 result = fpvSub(vec_q24_8_vel, fpvMulSc(hitNormal_q24_8, (2 * fpvDot(vec_q24_8_vel, hitNormal_q24_8))));
+                        bigbug->garbotnikVel.x = FROM_FX(result.x) * 3;
+                        bigbug->garbotnikVel.y = FROM_FX(result.y) * 3;
                     }
                 }
             }
