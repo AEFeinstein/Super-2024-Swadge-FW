@@ -490,8 +490,8 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
     if (drag > speed * 0.9){
         drag = speed * 0.9;
     }
-    if (drag < 4){
-        drag = 4.0;
+    if (drag < 5){
+        drag = 5.0;
     }
     // printf("speed: %d\n", speed);
     // printf("drag: %d\n", drag);
@@ -543,7 +543,10 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                         }
                     }
                     vec_t closestPoint = addVec2d(tilePos, clampDst);
-                    if(sqMagVec2d(subVec2d(bigbug->garbotnik.pos, closestPoint)) < bigbug->garbotnik.radius * bigbug->garbotnik.radius){
+                    vec_t offset = subVec2d(bigbug->garbotnik.pos, closestPoint);
+                    // printf("pre pre    x: %d\n", offset.x);
+                    // printf("pre pre    y: %d\n", offset.y);
+                    if(sqMagVec2d(offset) < bigbug->garbotnik.radius * bigbug->garbotnik.radius){
                         //Collision detected!
                         collision = true;
                         //Update the dirt
@@ -552,34 +555,28 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                             bigbug->tiles[i][j] -= 0;
                         }
                         //Resolve garbotnik's position
-                        vec_t hitNormal = subVec2d(bigbug->garbotnik.pos, closestPoint);
                         vec_q24_8 hitNormal_q24_8 = {
-                            .x = TO_FX(hitNormal.x),
-                            .y = TO_FX(hitNormal.y)
+                            .x = TO_FX(offset.x),
+                            .y = TO_FX(offset.y)
                         };
                         hitNormal_q24_8 = fpvNorm(hitNormal_q24_8);
-                        hitNormal = {
-                            .x = FROM_FX(hitNormal_q24_8.x),
-                            .y = FROM_FX(hitNormal_q24_8.y)
-                        };
-                        bigbug->garbotnik.pos = addVec2d(closestPoint, mulVec2d(hitNormal, bigbug->garbotnik.radius));
+                        offset.x = FROM_FX(hitNormal_q24_8.x);
+                        offset.y = FROM_FX(hitNormal_q24_8.y);
+                        bigbug->garbotnik.pos = addVec2d(closestPoint, mulVec2d(offset, bigbug->garbotnik.radius));
 
-                        //Mirror garbotnik's velocity
-                        vec_t clampMag = {
-                            .x = clampDst.x * ((clampDst.x > 0) * 2 - 1),
-                            .y = clampDst.y * ((clampDst.y > 0) * 2 - 1)
-                        };
-                        if(clampMag.x > clampMag.y){
-                            hitNormal.x = (clampDst.x > 0) * 2 - 1;
-                            hitNormal.y = 0;
+
+                        //Snap the hit normal to an orthogonal direction
+                        if((hitNormal_q24_8.x < 0?-hitNormal_q24_8.x:hitNormal_q24_8.x) > (hitNormal_q24_8.y < 0?-hitNormal_q24_8.y:hitNormal_q24_8.y)){
+                            offset.x = (hitNormal_q24_8.x > 0) * 2 - 1;
+                            offset.y = 0;
                         }
                         else{
-                            hitNormal.x = 0;
-                            hitNormal.y = (clampDst.y > 0) * 2 - 1;
+                            offset.x = 0;
+                            offset.y = (hitNormal_q24_8.y > 0) * 2 - 1;
                         }
-                        hitNormal_q24_8.x = TO_FX(hitNormal.x)
-                        hitNormal_q24_8.y =  TO_FX(hitNormal.y)
-                        hitNormal_q24_8 = fpvNorm(hitNormal_q24_8);
+                        hitNormal_q24_8.x = TO_FX(offset.x);
+                        hitNormal_q24_8.y = TO_FX(offset.y);
+                        //Mirror garbotnik's velocity
 
                         // Reflect the velocity vector along the normal between the two radii
                         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
@@ -588,8 +585,8 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                             .y = TO_FX(bigbug->garbotnikVel.y)
                         };
                         vec_q24_8 result = fpvSub(vec_q24_8_vel, fpvMulSc(hitNormal_q24_8, (2 * fpvDot(vec_q24_8_vel, hitNormal_q24_8))));
-                        bigbug->garbotnikVel.x = FROM_FX(result.x) * 3;
-                        bigbug->garbotnikVel.y = FROM_FX(result.y) * 3;
+                        bigbug->garbotnikVel.x = FROM_FX(result.x) * 1;
+                        bigbug->garbotnikVel.y = FROM_FX(result.y) * 1;
                     }
                 }
             }
