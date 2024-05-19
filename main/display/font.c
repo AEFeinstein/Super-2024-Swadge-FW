@@ -405,10 +405,10 @@ static void setFontPx(font_ch_t* ch, int16_t x, int16_t y, bool isSet)
 void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam)
 {
     // Set up calloc flags
-    uint32_t callocFlags = 0;
+    uint32_t callocFlags = MALLOC_CAP_DEFAULT;
     if (spiRam)
     {
-        callocFlags |= MALLOC_CAP_SPIRAM;
+        callocFlags = MALLOC_CAP_SPIRAM;
     }
 
     // Copy the height
