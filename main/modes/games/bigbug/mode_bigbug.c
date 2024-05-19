@@ -56,6 +56,7 @@ typedef struct
     circle_t garbotnik;  ///< Garbotnik (player character)
     vec_t garbotnikVel;  ///< Garbotnik's velocity
     vec_t garbotnikAccel;///< Garbotnik's acceleration
+    vec_t previousPos;   ///< Garbotnik's position on the previous frame (for resolving collisions)
 
     rectangle_t camera; ///< The camera
     int8_t tiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of tiles. 1 is tile, 0 is not. Future feature: more variety
@@ -386,8 +387,8 @@ static void bigbugDrawField(void)
     // printf("render y: %d\n", (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
 
     // Draw garbotnik
-    drawWsgSimple(&bigbug->garbotnikWsg, ((bigbug->garbotnik.pos.x  - bigbug->camera.pos.x )>> DECIMAL_BITS) - 18,
-                  ((bigbug->garbotnik.pos.y - bigbug->camera.pos.y) >> DECIMAL_BITS) - 19);
+    drawWsgSimple(&bigbug->garbotnikWsg, ((bigbug->garbotnik.pos.x  - bigbug->camera.pos.x )>> DECIMAL_BITS) - 19,
+                  ((bigbug->garbotnik.pos.y - bigbug->camera.pos.y) >> DECIMAL_BITS) - 21);
 
     // Draw UI
     char buttons[] = {'Z','\0','A','\0','B','\0','C'};
@@ -430,6 +431,8 @@ static void bigbugGameLoop(int64_t elapsedUs)
     // If the game is not paused, do game logic
     if (bigbug->isPaused == false)
     {
+        // record the previous frame's position before any logic.
+        bigbug->previousPos = bigbug->garbotnik.pos;
         // bigbugFadeLeds(elapsedUs);
         bigbugControlGarbotnik(elapsedUs);
         // bigbugControlCpuPaddle();
@@ -514,82 +517,73 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
     int32_t xIdx = ((bigbug->garbotnik.pos.x - 512)/1024) - (bigbug->garbotnik.pos.x < 0);//the x index
     int32_t yIdx = (bigbug->garbotnik.pos.y  - 512)/1024 - (bigbug->garbotnik.pos.y < 0);//the y index
 
-    bool collision = false;
+    int32_t best_i = -1;//negative means no worthy candidates found.
+    int32_t best_j = -1;
+    int32_t closestSqDist = 1063842;//(307.35+724.077)^2 if it's further than this, there's no way it's a collision.
     for(int32_t i = xIdx; i <= xIdx+1; i++){
         for(int32_t j = yIdx; j <= yIdx+1; j++){
-            if(!collision && i >= 0 && i < TILE_FIELD_WIDTH && j >=0 && j < TILE_FIELD_HEIGHT){
+            if(i >= 0 && i < TILE_FIELD_WIDTH && j >=0 && j < TILE_FIELD_HEIGHT){
                 if(bigbug->tiles[i][j] >= 1){
-                    //Collision detection begins here
-                    vec_t tilePos = {i * 1024 + 512, j * 1024 + 512};
-                    vec_t distance = subVec2d(bigbug->garbotnik.pos, tilePos);
-                    //clamp distance;
-                    vec_t clampDst;
-                    if(distance.x < -512){
-                        clampDst.x = -512;
-                    }
-                    else{
-                        clampDst.x = distance.x;
-                        if(distance.x > 512){
-                            clampDst.x = 512;
-                        }
-                    }
-                    if(distance.y < -512){
-                        clampDst.y = -512;
-                    }
-                    else{
-                        clampDst.y = distance.y;
-                        if(distance.y > 512){
-                            clampDst.y = 512;
-                        }
-                    }
-                    vec_t closestPoint = addVec2d(tilePos, clampDst);
-                    vec_t offset = subVec2d(bigbug->garbotnik.pos, closestPoint);
-                    // printf("pre pre    x: %d\n", offset.x);
-                    // printf("pre pre    y: %d\n", offset.y);
-                    if(sqMagVec2d(offset) < bigbug->garbotnik.radius * bigbug->garbotnik.radius){
-                        //Collision detected!
-                        collision = true;
-                        //Update the dirt
-                        bigbug->tiles[i][j] -= 1;
-                        if(bigbug->tiles[i][j] < 0){
-                            bigbug->tiles[i][j] -= 0;
-                        }
-                        //Resolve garbotnik's position
-                        vec_q24_8 hitNormal_q24_8 = {
-                            .x = TO_FX(offset.x),
-                            .y = TO_FX(offset.y)
-                        };
-                        hitNormal_q24_8 = fpvNorm(hitNormal_q24_8);
-                        offset.x = FROM_FX(hitNormal_q24_8.x);
-                        offset.y = FROM_FX(hitNormal_q24_8.y);
-                        bigbug->garbotnik.pos = addVec2d(closestPoint, mulVec2d(offset, bigbug->garbotnik.radius));
-
-
-                        //Snap the hit normal to an orthogonal direction
-                        if((hitNormal_q24_8.x < 0?-hitNormal_q24_8.x:hitNormal_q24_8.x) > (hitNormal_q24_8.y < 0?-hitNormal_q24_8.y:hitNormal_q24_8.y)){
-                            offset.x = (hitNormal_q24_8.x > 0) * 2 - 1;
-                            offset.y = 0;
-                        }
-                        else{
-                            offset.x = 0;
-                            offset.y = (hitNormal_q24_8.y > 0) * 2 - 1;
-                        }
-                        hitNormal_q24_8.x = TO_FX(offset.x);
-                        hitNormal_q24_8.y = TO_FX(offset.y);
-                        //Mirror garbotnik's velocity
-
-                        // Reflect the velocity vector along the normal between the two radii
-                        // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-                        vec_q24_8 vec_q24_8_vel = {
-                            .x = TO_FX(bigbug->garbotnikVel.x),
-                            .y = TO_FX(bigbug->garbotnikVel.y)
-                        };
-                        vec_q24_8 result = fpvSub(vec_q24_8_vel, fpvMulSc(hitNormal_q24_8, (2 * fpvDot(vec_q24_8_vel, hitNormal_q24_8))));
-                        bigbug->garbotnikVel.x = FROM_FX(result.x) * 1;
-                        bigbug->garbotnikVel.y = FROM_FX(result.y) * 1;
+                    //Initial circle check for preselecting the closest dirt tile
+                    int32_t sqDist = sqMagVec2d(subVec2d(bigbug->garbotnik.pos, (vec_t){i * 1024 + 512, j * 1024 + 512}));
+                    if(sqDist < closestSqDist){
+                        //Good candidate found!
+                        best_i = i;
+                        best_j = j;
+                        closestSqDist = sqDist;
                     }
                 }
             }
+        }
+    }
+    if(best_i > -1){
+        vec_t tilePos = {best_i * 1024 + 512, best_j * 1024 + 512};
+        //AABB-AABB collision detection begins here
+        //https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
+        if(bigbug->garbotnik.pos.x + 240 > tilePos.x - 512 &&
+           bigbug->garbotnik.pos.x - 240 < tilePos.x + 512 &&
+           bigbug->garbotnik.pos.y + 192 > tilePos.y - 512 &&
+           bigbug->garbotnik.pos.y - 192 < tilePos.y + 512)
+        {
+            //Collision detected!
+            //Update the dirt by decrementing if greater than 0.
+            bigbug->tiles[best_i][best_j] = bigbug->tiles[best_i][best_j] > 0 ? bigbug->tiles[best_i][best_j] - 1 : 0;
+            printf("hit");
+
+            //Resolve garbotnik's position somewhat based on his position previously.
+            vec_t normal = subVec2d(bigbug->previousPos, tilePos);
+            //Snap the previous frame offset to an orthogonal direction.
+            if((normal.x < 0?-normal.x:normal.x) > (normal.y < 0?-normal.y:normal.y)){
+                if(normal.x > 0){
+                    normal.x = 1;
+                    normal.y = 0;
+                    bigbug->garbotnik.pos.x = tilePos.x + 752;
+                }
+                else{
+                    normal.x = -1;
+                    normal.y = 0;
+                    bigbug->garbotnik.pos.x = tilePos.x - 752;
+                }
+                
+
+            }
+            else{
+                if(normal.y > 0){
+                    normal.x = 0;
+                    normal.y = 1;
+                    bigbug->garbotnik.pos.y = tilePos.y + 704;
+                }
+                else{
+                    normal.x = 0;
+                    normal.y = -1;
+                    bigbug->garbotnik.pos.y = tilePos.y - 704;
+                }
+            }
+            
+            //Mirror garbotnik's velocity
+            // Reflect the velocity vector along the normal
+            // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+            bigbug->garbotnikVel = subVec2d(bigbug->garbotnikVel, mulVec2d(normal, (2* dotVec2d(bigbug->garbotnikVel, normal))));
         }
     }
 
