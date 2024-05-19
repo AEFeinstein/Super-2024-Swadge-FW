@@ -552,11 +552,23 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                             bigbug->tiles[i][j] -= 0;
                         }
                         //Resolve garbotnik's position
+                        vec_t hitNormal = subVec2d(bigbug->garbotnik.pos, closestPoint);
+                        vec_q24_8 hitNormal_q24_8 = {
+                            .x = TO_FX(hitNormal.x),
+                            .y = TO_FX(hitNormal.y)
+                        };
+                        hitNormal_q24_8 = fpvNorm(hitNormal_q24_8);
+                        hitNormal = {
+                            .x = FROM_FX(hitNormal_q24_8.x),
+                            .y = FROM_FX(hitNormal_q24_8.y)
+                        };
+                        bigbug->garbotnik.pos = addVec2d(closestPoint, mulVec2d(hitNormal, bigbug->garbotnik.radius));
+
+                        //Mirror garbotnik's velocity
                         vec_t clampMag = {
                             .x = clampDst.x * ((clampDst.x > 0) * 2 - 1),
                             .y = clampDst.y * ((clampDst.y > 0) * 2 - 1)
                         };
-                        vec_t hitNormal;
                         if(clampMag.x > clampMag.y){
                             hitNormal.x = (clampDst.x > 0) * 2 - 1;
                             hitNormal.y = 0;
@@ -565,15 +577,10 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                             hitNormal.x = 0;
                             hitNormal.y = (clampDst.y > 0) * 2 - 1;
                         }
-                        vec_q24_8 hitNormal_q24_8 = {
-                            .x = TO_FX(hitNormal.x),
-                            .y = TO_FX(hitNormal.y)
-                        };
-                        //hitNormal = mulVec2d(hitNormal, -1);
+                        hitNormal_q24_8.x = TO_FX(hitNormal.x)
+                        hitNormal_q24_8.y =  TO_FX(hitNormal.y)
                         hitNormal_q24_8 = fpvNorm(hitNormal_q24_8);
-                        
-                        bigbug->garbotnik.pos = addVec2d(closestPoint, mulVec2d(hitNormal, bigbug->garbotnik.radius));
-                        //Mirror garbotnik's velocity
+
                         // Reflect the velocity vector along the normal between the two radii
                         // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
                         vec_q24_8 vec_q24_8_vel = {
