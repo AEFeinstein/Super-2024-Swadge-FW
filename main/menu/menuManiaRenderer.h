@@ -51,7 +51,10 @@ typedef struct
                                     ///< deinitMenuManiaRenderer()
     led_t leds[CONFIG_NUM_LEDS];    ///< An array with the RGB LED state to be output
     wsg_t batt[4];                  ///< Images for the battery levels
-    wsg_t menu_bg;                  ///< Background image for the menu
+    int16_t innerOrbitAngle;
+    int16_t outerOrbitAngle;
+    int16_t innerOrbitTimer;
+    int16_t outerOrbitTimer;
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont,

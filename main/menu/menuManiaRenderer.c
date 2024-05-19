@@ -12,6 +12,8 @@
 #include "fill.h"
 #include "color_utils.h"
 #include "hdw-nvs.h"
+#include "vector2d.h"
+#include "swadge2024.h"
 
 //==============================================================================
 // Defines
@@ -33,6 +35,22 @@
 
 #define UP_ARROW_HEIGHT 10
 #define UP_ARROW_MARGIN 2
+
+#define TITLE_BG_COLOR          c115
+#define TITLE_TEXT_COLOR        c542
+#define TEXT_OUTLINE_COLOR      c000
+#define BG_COLOR                c540
+#define OUTER_RING_COLOR        c243
+#define INNER_RING_COLOR        c531
+#define ROW_COLOR               c000
+#define ROW_SHADOW_COLOR        c500
+#define ROW_TEXT_COLOR          c555
+#define ROW_TEXT_SELECTED_COLOR c533
+
+#define OUTER_RING_RADIUS     144
+#define INNER_RING_RADIUS     86
+#define ORBIT_RING_RADIUS     26
+#define RING_STROKE_THICKNESS 8
 
 //==============================================================================
 // Function Prototypes
@@ -122,9 +140,6 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     loadWsg("batt3.wsg", &renderer->batt[2], false);
     loadWsg("batt4.wsg", &renderer->batt[3], false);
 
-    // Load a background
-    loadWsg("menu_bg.wsg", &renderer->menu_bg, true);
-
     // Initialize LEDs
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
@@ -143,7 +158,6 @@ void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer)
     freeWsg(&renderer->batt[1]);
     freeWsg(&renderer->batt[2]);
     freeWsg(&renderer->batt[3]);
-    freeWsg(&renderer->menu_bg);
 
     // Free fonts if allocated
     if (renderer->titleFontAllocated)
@@ -186,10 +200,10 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                          bool leftArrow, bool rightArrow, bool doubleArrows)
 {
     // Pick colors based on selection
-    paletteColor_t textColor = c555;
+    paletteColor_t textColor = ROW_TEXT_COLOR;
     if (isSelected)
     {
-        textColor = c533;
+        textColor = ROW_TEXT_SELECTED_COLOR;
 
         // Draw drop shadow for selected item
         for (int rows = 0; rows < PARALLELOGRAM_HEIGHT; rows++)
@@ -198,7 +212,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                          y + rows + DROP_SHADOW_OFFSET,                                                  //
                          x + PARALLELOGRAM_HEIGHT - rows - 1 + PARALLELOGRAM_WIDTH + DROP_SHADOW_OFFSET, //
                          y + rows + DROP_SHADOW_OFFSET,                                                  //
-                         c500);
+                         ROW_SHADOW_COLOR);
         }
     }
 
@@ -209,13 +223,13 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                      y + rows,                                                  //
                      x + PARALLELOGRAM_HEIGHT - rows - 1 + PARALLELOGRAM_WIDTH, //
                      y + rows,                                                  //
-                     c000);
+                     ROW_COLOR);
     }
 
     // Draw the text
     drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
     // Outline the text
-    drawText(renderer->menuFontOutline, c000, text, x + PARALLELOGRAM_HEIGHT + 10, y);
+    drawText(renderer->menuFontOutline, TEXT_OUTLINE_COLOR, text, x + PARALLELOGRAM_HEIGHT + 10, y);
 
     // Draw the left arrow, if applicable
     if (leftArrow)
@@ -295,6 +309,22 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  */
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs)
 {
+    // Run timer for outer orbit
+    renderer->outerOrbitTimer += elapsedUs;
+    while (renderer->outerOrbitTimer >= 20000)
+    {
+        renderer->outerOrbitTimer -= 20000;
+        renderer->outerOrbitAngle--;
+    }
+
+    // Run timer for inner orbit
+    renderer->innerOrbitTimer += elapsedUs;
+    while (renderer->innerOrbitTimer >= 15000)
+    {
+        renderer->innerOrbitTimer -= 15000;
+        renderer->innerOrbitAngle++;
+    }
+
     // Only poll the battery if requested
     if (menu->showBattery)
     {
@@ -307,8 +337,34 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         }
     }
 
-    // Clear the TFT with a background
-    drawWsgTile(&renderer->menu_bg, 0, 0);
+    // Draw the outer ring
+    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, BG_COLOR);
+    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, OUTER_RING_RADIUS + (RING_STROKE_THICKNESS / 2), OUTER_RING_COLOR);
+    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, OUTER_RING_RADIUS - (RING_STROKE_THICKNESS / 2), BG_COLOR);
+
+    // Draw the outer orbit
+    vec_t outerCirclePos = {
+        .x = 0,
+        .y = -OUTER_RING_RADIUS,
+    };
+    outerCirclePos = rotateVec2d(outerCirclePos, renderer->outerOrbitAngle);
+    drawCircleFilled((TFT_WIDTH / 2) + outerCirclePos.x, (TFT_HEIGHT / 2) + outerCirclePos.y, ORBIT_RING_RADIUS,
+                     OUTER_RING_COLOR);
+
+    // Draw the inner ring
+    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, INNER_RING_RADIUS + (RING_STROKE_THICKNESS / 2), INNER_RING_COLOR);
+    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, INNER_RING_RADIUS - (RING_STROKE_THICKNESS / 2), BG_COLOR);
+
+    // Draw the inner orbit
+    vec_t innerCirclePos = {
+        .x = 0,
+        .y = -INNER_RING_RADIUS,
+    };
+    innerCirclePos = rotateVec2d(innerCirclePos, renderer->innerOrbitAngle);
+    drawCircleFilled((TFT_WIDTH / 2) + innerCirclePos.x, (TFT_HEIGHT / 2) + innerCirclePos.y, ORBIT_RING_RADIUS,
+                     INNER_RING_COLOR);
+    drawCircleFilled((TFT_WIDTH / 2) + innerCirclePos.x, (TFT_HEIGHT / 2) + innerCirclePos.y,
+                     ORBIT_RING_RADIUS - RING_STROKE_THICKNESS, BG_COLOR);
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
@@ -344,18 +400,18 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     int16_t titleBgX1 = (TFT_WIDTH + tWidth) / 2 + 6;
     int16_t titleBgY0 = y;
     int16_t titleBgY1 = y + TITLE_BG_HEIGHT;
-    fillDisplayArea(titleBgX0, titleBgY0, titleBgX1, titleBgY1, c115);
+    fillDisplayArea(titleBgX0, titleBgY0, titleBgX1, titleBgY1, TITLE_BG_COLOR);
     drawTriangleOutlined(titleBgX0, titleBgY0, titleBgX0, titleBgY1, titleBgX0 - (TITLE_BG_HEIGHT / 2),
-                         (titleBgY0 + titleBgY1) / 2, c115, c115);
+                         (titleBgY0 + titleBgY1) / 2, TITLE_BG_COLOR, TITLE_BG_COLOR);
     drawTriangleOutlined(titleBgX1, titleBgY0, titleBgX1, titleBgY1, titleBgX1 + (TITLE_BG_HEIGHT / 2),
-                         (titleBgY0 + titleBgY1) / 2, c115, c115);
+                         (titleBgY0 + titleBgY1) / 2, TITLE_BG_COLOR, TITLE_BG_COLOR);
 
     // Draw a title
     y += (TITLE_BG_HEIGHT - renderer->titleFont->height) / 2;
     // Draw the menu text
-    drawText(renderer->titleFont, c542, menu->title, (TFT_WIDTH - tWidth) / 2, y);
+    drawText(renderer->titleFont, TITLE_TEXT_COLOR, menu->title, (TFT_WIDTH - tWidth) / 2, y);
     // Outline the menu text
-    drawText(renderer->titleFontOutline, c000, menu->title, (TFT_WIDTH - tWidth) / 2, y);
+    drawText(renderer->titleFontOutline, TEXT_OUTLINE_COLOR, menu->title, (TFT_WIDTH - tWidth) / 2, y);
 
     // Move to drawing the rows
     y = titleBgY1 + Y_SECTION_MARGIN;
@@ -368,7 +424,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         {
             drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT - t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
                          PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_HEIGHT + t + (UP_ARROW_HEIGHT * 2 - 1) / 2, y + t,
-                         c000);
+                         ROW_COLOR);
         }
         y += (UP_ARROW_HEIGHT);
     }
@@ -405,7 +461,8 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         for (int16_t t = UP_ARROW_HEIGHT - UP_ARROW_MARGIN; t >= 0; t--)
         {
             drawLineFast(PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH - t - (UP_ARROW_HEIGHT * 2) / 2, y - t,
-                         PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH + t - (UP_ARROW_HEIGHT * 2) / 2, y - t, c000);
+                         PARALLELOGRAM_X_OFFSET + PARALLELOGRAM_WIDTH + t - (UP_ARROW_HEIGHT * 2) / 2, y - t,
+                         ROW_COLOR);
         }
     }
 
