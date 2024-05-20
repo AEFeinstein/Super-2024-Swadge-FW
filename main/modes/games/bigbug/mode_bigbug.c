@@ -68,6 +68,7 @@ typedef struct
     wsg_t m2Wsg[16];      ///< The 2nd variants of medium dirt tiles
     wsg_t h1Wsg[16];      ///< The 1st variants of hard dirt tiles
     wsg_t h2Wsg[16];      ///< The 2nd variants of hard dirt tiles
+    wsg_t caveBackground;  ///< The paralax background to the cave for depth
     wsg_t uiWileOutlineWsg;
 
     song_t bgm;  ///< Background music
@@ -157,6 +158,7 @@ static void bigbugEnterMode(void)
     // Load graphics
     loadWsg("dirt.wsg", &bigbug->dirtWsg, false);
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, false);
+    loadWsg("cave_background.wsg", &bigbug->caveBackground, false);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
@@ -467,6 +469,10 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
  */
 static void bigbugDrawField(void)
 {
+    drawWsgSimple(&bigbug->caveBackground,
+                    ((bigbug->camera.pos.x >> DECIMAL_BITS) / 510)-(bigbug->camera.pos.x >> DECIMAL_BITS) / 2,//image width x 4 is 1020
+                    ((bigbug->camera.pos.y >> DECIMAL_BITS) / 510)-(bigbug->camera.pos.y >> DECIMAL_BITS) / 2);
+
     //printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
     //printf("width: %d\n", FIELD_WIDTH);
     int16_t iStart = (bigbug->camera.pos.x >> DECIMAL_BITS) / 64;
@@ -512,10 +518,10 @@ static void bigbugDrawField(void)
                 if(bigbug->tiles[i][j] >= 1){
                     //drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
                     drawWsgSimpleScaled(&bigbug->h1Wsg[
-                                            8 * ((i-1 < 0) ? 1 : (bigbug->tiles[i-1][j]>0)) +
-                                            4 * ((j-1 < 0) ? 1 : (bigbug->tiles[i][j-1]>0)) +
-                                            2 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 1 : (bigbug->tiles[i+1][j]>0)) +
-                                            1 * ((j+1 > TILE_FIELD_HEIGHT - 1) ? 1 : (bigbug->tiles[i][j+1])>0)],
+                                            8 * ((i-1 < 0) ? 0 : (bigbug->tiles[i-1][j]>0)) +
+                                            4 * ((j-1 < 0) ? 0 : (bigbug->tiles[i][j-1]>0)) +
+                                            2 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (bigbug->tiles[i+1][j]>0)) +
+                                            1 * ((j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i][j+1])>0)],
                                         i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
                                         j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
                                         4,
