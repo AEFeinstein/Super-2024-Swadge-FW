@@ -46,13 +46,9 @@ typedef struct
 {
     menu_t* menu;                               ///< The menu structure
     menuLogbookRenderer_t* menuLogbookRenderer; ///< Renderer for the menu
-    font_t ibm;                                 ///< The font used in the menu and game
+    font_t font;                                 ///< The font used in the menu and game
     bigbugScreen_t screen;                      ///< The screen being displayed
 
-    uint8_t score[2];            ///< The score for the game
-
-    rectangle_t paddleL; ///< The left paddle
-    rectangle_t paddleR; ///< The right paddle
     circle_t garbotnik;  ///< Garbotnik (player character)
     vec_t garbotnikVel;  ///< Garbotnik's velocity
     vec_t garbotnikAccel;///< Garbotnik's acceleration
@@ -61,15 +57,17 @@ typedef struct
     rectangle_t camera; ///< The camera
     int8_t tiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of tiles. 1 is tile, 0 is not. Future feature: more variety
 
-    font_t ibm_vga8;
-
-    int32_t restartTimerUs; ///< A timer that counts down before the game begins
-    uint16_t btnState;      ///< The button state used for paddle control
-    bool paddleRMovingUp;   ///< The CPU's paddle direction on easy mode
+    uint16_t btnState;      ///< The button state used for garbotnik control
     bool isPaused;          ///< true if the game is paused, false if it is running
 
     wsg_t dirtWsg;        ///< A graphic for the dirt tile
     wsg_t garbotnikWsg;   ///< A graphic for garbotnik
+    wsg_t s1Wsg[16];      ///< The 1st variants of soft dirt tiles
+    wsg_t s2Wsg[16];      ///< The 2nd variants of soft dirt tiles
+    wsg_t m1Wsg[16];      ///< The 1st variants of medium dirt tiles
+    wsg_t m2Wsg[16];      ///< The 2nd variants of medium dirt tiles
+    wsg_t h1Wsg[16];      ///< The 1st variants of hard dirt tiles
+    wsg_t h2Wsg[16];      ///< The 2nd variants of hard dirt tiles
     wsg_t uiWileOutlineWsg;
 
     song_t bgm;  ///< Background music
@@ -149,16 +147,155 @@ static void bigbugEnterMode(void)
 {
     bigbug = calloc(1, sizeof(bigbug_t));
 
+    //Set all tiles to dirt
+    for(int i = 0; i < TILE_FIELD_WIDTH; i++){
+        for(int j = 0; j < TILE_FIELD_HEIGHT; j++){
+            bigbug->tiles[i][j] = 2;
+        }
+    }
+
     // Load graphics
     loadWsg("dirt.wsg", &bigbug->dirtWsg, false);
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, false);
+
+    // TILE MAP shenanigans explained:
+    // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
+    // bin  dec  wsg
+    // LURD
+    // 1111 15   0
+    // 1101 13   1
+    // 0101 5    2
+    // 0110 6    3
+
+    // 1110 14   4
+    // 1100 12   5
+    // 0100 4    6
+    // 0010 2    7
+
+    // 1010 10   8
+    // 1000 8    9
+    // 0000 0    10
+    // 0011 3    11
+
+    // 1011 11   12
+    // 1001 9    13
+    // 0001 1    14
+    // 0111 7    15
+
+    // The index of bigbug->s1Wsg is the LURD neighbor info.
+    // The value within is the wsg graphic.
+    // [10,14,7,11,6,2,3,15,9,13,8,12,5,1,4,0]
+    loadWsg("1_S_10.wsg", &bigbug->s1Wsg[0],  false);
+    loadWsg("1_S_14.wsg", &bigbug->s1Wsg[1],  false);
+    loadWsg("1_S_7.wsg",  &bigbug->s1Wsg[2],  false);
+    loadWsg("1_S_11.wsg", &bigbug->s1Wsg[3],  false);
+    loadWsg("1_S_6.wsg",  &bigbug->s1Wsg[4],  false);
+    loadWsg("1_S_2.wsg",  &bigbug->s1Wsg[5],  false);
+    loadWsg("1_S_3.wsg",  &bigbug->s1Wsg[6],  false);
+    loadWsg("1_S_15.wsg", &bigbug->s1Wsg[7],  false);
+    loadWsg("1_S_9.wsg",  &bigbug->s1Wsg[8],  false);
+    loadWsg("1_S_13.wsg", &bigbug->s1Wsg[9],  false);
+    loadWsg("1_S_8.wsg",  &bigbug->s1Wsg[10], false);
+    loadWsg("1_S_12.wsg", &bigbug->s1Wsg[11], false);
+    loadWsg("1_S_5.wsg",  &bigbug->s1Wsg[12], false);
+    loadWsg("1_S_1.wsg",  &bigbug->s1Wsg[13], false);
+    loadWsg("1_S_4.wsg",  &bigbug->s1Wsg[14], false);
+    loadWsg("1_S_0.wsg",  &bigbug->s1Wsg[15], false);
+
+    loadWsg("2_S_10.wsg", &bigbug->s2Wsg[0],  false);
+    loadWsg("2_S_14.wsg", &bigbug->s2Wsg[1],  false);
+    loadWsg("2_S_7.wsg",  &bigbug->s2Wsg[2],  false);
+    loadWsg("2_S_11.wsg", &bigbug->s2Wsg[3],  false);
+    loadWsg("2_S_6.wsg",  &bigbug->s2Wsg[4],  false);
+    loadWsg("2_S_2.wsg",  &bigbug->s2Wsg[5],  false);
+    loadWsg("2_S_3.wsg",  &bigbug->s2Wsg[6],  false);
+    loadWsg("2_S_15.wsg", &bigbug->s2Wsg[7],  false);
+    loadWsg("2_S_9.wsg",  &bigbug->s2Wsg[8],  false);
+    loadWsg("2_S_13.wsg", &bigbug->s2Wsg[9],  false);
+    loadWsg("2_S_8.wsg",  &bigbug->s2Wsg[10], false);
+    loadWsg("2_S_12.wsg", &bigbug->s2Wsg[11], false);
+    loadWsg("2_S_5.wsg",  &bigbug->s2Wsg[12], false);
+    loadWsg("2_S_1.wsg",  &bigbug->s2Wsg[13], false);
+    loadWsg("2_S_4.wsg",  &bigbug->s2Wsg[14], false);
+    loadWsg("2_S_0.wsg",  &bigbug->s2Wsg[15], false);
+
+    loadWsg("1_M_10.wsg", &bigbug->m1Wsg[0],  false);
+    loadWsg("1_M_14.wsg", &bigbug->m1Wsg[1],  false);
+    loadWsg("1_M_7.wsg",  &bigbug->m1Wsg[2],  false);
+    loadWsg("1_M_11.wsg", &bigbug->m1Wsg[3],  false);
+    loadWsg("1_M_6.wsg",  &bigbug->m1Wsg[4],  false);
+    loadWsg("1_M_2.wsg",  &bigbug->m1Wsg[5],  false);
+    loadWsg("1_M_3.wsg",  &bigbug->m1Wsg[6],  false);
+    loadWsg("1_M_15.wsg", &bigbug->m1Wsg[7],  false);
+    loadWsg("1_M_9.wsg",  &bigbug->m1Wsg[8],  false);
+    loadWsg("1_M_13.wsg", &bigbug->m1Wsg[9],  false);
+    loadWsg("1_M_8.wsg",  &bigbug->m1Wsg[10], false);
+    loadWsg("1_M_12.wsg", &bigbug->m1Wsg[11], false);
+    loadWsg("1_M_5.wsg",  &bigbug->m1Wsg[12], false);
+    loadWsg("1_M_1.wsg",  &bigbug->m1Wsg[13], false);
+    loadWsg("1_M_4.wsg",  &bigbug->m1Wsg[14], false);
+    loadWsg("1_M_0.wsg",  &bigbug->m1Wsg[15], false);
+
+    loadWsg("2_M_10.wsg", &bigbug->m2Wsg[0],  false);
+    loadWsg("2_M_14.wsg", &bigbug->m2Wsg[1],  false);
+    loadWsg("2_M_7.wsg",  &bigbug->m2Wsg[2],  false);
+    loadWsg("2_M_11.wsg", &bigbug->m2Wsg[3],  false);
+    loadWsg("2_M_6.wsg",  &bigbug->m2Wsg[4],  false);
+    loadWsg("2_M_2.wsg",  &bigbug->m2Wsg[5],  false);
+    loadWsg("2_M_3.wsg",  &bigbug->m2Wsg[6],  false);
+    loadWsg("2_M_15.wsg", &bigbug->m2Wsg[7],  false);
+    loadWsg("2_M_9.wsg",  &bigbug->m2Wsg[8],  false);
+    loadWsg("2_M_13.wsg", &bigbug->m2Wsg[9],  false);
+    loadWsg("2_M_8.wsg",  &bigbug->m2Wsg[10], false);
+    loadWsg("2_M_12.wsg", &bigbug->m2Wsg[11], false);
+    loadWsg("2_M_5.wsg",  &bigbug->m2Wsg[12], false);
+    loadWsg("2_M_1.wsg",  &bigbug->m2Wsg[13], false);
+    loadWsg("2_M_4.wsg",  &bigbug->m2Wsg[14], false);
+    loadWsg("2_M_0.wsg",  &bigbug->m2Wsg[15], false);
+
+    loadWsg("1_H_10.wsg", &bigbug->h1Wsg[0],  false);
+    loadWsg("1_H_14.wsg", &bigbug->h1Wsg[1],  false);
+    loadWsg("1_H_7.wsg",  &bigbug->h1Wsg[2],  false);
+    loadWsg("1_H_11.wsg", &bigbug->h1Wsg[3],  false);
+    loadWsg("1_H_6.wsg",  &bigbug->h1Wsg[4],  false);
+    loadWsg("1_H_2.wsg",  &bigbug->h1Wsg[5],  false);
+    loadWsg("1_H_3.wsg",  &bigbug->h1Wsg[6],  false);
+    loadWsg("1_H_15.wsg", &bigbug->h1Wsg[7],  false);
+    loadWsg("1_H_9.wsg",  &bigbug->h1Wsg[8],  false);
+    loadWsg("1_H_13.wsg", &bigbug->h1Wsg[9],  false);
+    loadWsg("1_H_8.wsg",  &bigbug->h1Wsg[10], false);
+    loadWsg("1_H_12.wsg", &bigbug->h1Wsg[11], false);
+    loadWsg("1_H_5.wsg",  &bigbug->h1Wsg[12], false);
+    loadWsg("1_H_1.wsg",  &bigbug->h1Wsg[13], false);
+    loadWsg("1_H_4.wsg",  &bigbug->h1Wsg[14], false);
+    loadWsg("1_H_0.wsg",  &bigbug->h1Wsg[15], false);
+
+    loadWsg("2_H_10.wsg", &bigbug->h2Wsg[0],  false);
+    loadWsg("2_H_14.wsg", &bigbug->h2Wsg[1],  false);
+    loadWsg("2_H_7.wsg",  &bigbug->h2Wsg[2],  false);
+    loadWsg("2_H_11.wsg", &bigbug->h2Wsg[3],  false);
+    loadWsg("2_H_6.wsg",  &bigbug->h2Wsg[4],  false);
+    loadWsg("2_H_2.wsg",  &bigbug->h2Wsg[5],  false);
+    loadWsg("2_H_3.wsg",  &bigbug->h2Wsg[6],  false);
+    loadWsg("2_H_15.wsg", &bigbug->h2Wsg[7],  false);
+    loadWsg("2_H_9.wsg",  &bigbug->h2Wsg[8],  false);
+    loadWsg("2_H_13.wsg", &bigbug->h2Wsg[9],  false);
+    loadWsg("2_H_8.wsg",  &bigbug->h2Wsg[10], false);
+    loadWsg("2_H_12.wsg", &bigbug->h2Wsg[11], false);
+    loadWsg("2_H_5.wsg",  &bigbug->h2Wsg[12], false);
+    loadWsg("2_H_1.wsg",  &bigbug->h2Wsg[13], false);
+    loadWsg("2_H_4.wsg",  &bigbug->h2Wsg[14], false);
+    loadWsg("2_H_0.wsg",  &bigbug->h2Wsg[15], false);
+
+
+
     loadWsg("button-outline.wsg", &bigbug->uiWileOutlineWsg, false);
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
 
     // Load font
-    loadFont("ibm_vga8.font", &bigbug->ibm_vga8, false);
+    loadFont("ibm_vga8.font", &bigbug->font, false);
 
     bigbugReset();
 }
@@ -166,7 +303,7 @@ static void bigbugEnterMode(void)
 static void bigbugExitMode(void)
 {
     // Free font
-    freeFont(&bigbug->ibm_vga8);
+    freeFont(&bigbug->font);
 }
  
 static void bigbugMainLoop(int64_t elapsedUs)
@@ -333,9 +470,9 @@ static void bigbugDrawField(void)
     //printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
     //printf("width: %d\n", FIELD_WIDTH);
     int16_t iStart = (bigbug->camera.pos.x >> DECIMAL_BITS) / 64;
-    int16_t iEnd = iStart + TILE_FIELD_WIDTH;
+    int16_t iEnd = iStart + 5;
     int16_t jStart = (bigbug->camera.pos.y >> DECIMAL_BITS) / 64;
-    int16_t jEnd = jStart + TILE_FIELD_HEIGHT;
+    int16_t jEnd = jStart + 4;
     if ((bigbug->camera.pos.x >> DECIMAL_BITS) < 0){
         iStart -= 1;
         if ((bigbug->camera.pos.x  + FIELD_WIDTH) >> DECIMAL_BITS < 0){
@@ -350,18 +487,18 @@ static void bigbugDrawField(void)
     }
 
     
-    if(iEnd >= 0 && iStart <= TILE_FIELD_WIDTH && jEnd >= 0 && jStart <= TILE_FIELD_HEIGHT){
+    if(iEnd >= 0 && iStart < TILE_FIELD_WIDTH && jEnd >= 0 && jStart < TILE_FIELD_HEIGHT){
         if(0 > iStart){
             iStart = 0;
         }
-        if(4 < iEnd){
-            iEnd = TILE_FIELD_WIDTH;
+        if(TILE_FIELD_WIDTH - 1 < iEnd){
+            iEnd = TILE_FIELD_WIDTH - 1;
         }
         if(0 > jStart){
             jStart = 0;
         }
-        if(3 < jEnd){
-            jEnd = TILE_FIELD_HEIGHT;
+        if(TILE_FIELD_HEIGHT - 1 < jEnd){
+            jEnd = TILE_FIELD_HEIGHT - 1;
         }
 
         // printf("iStart: %d\n", iStart);
@@ -369,11 +506,20 @@ static void bigbugDrawField(void)
         // printf("jStart: %d\n", jStart);
         // printf("jEnd: %d\n", jEnd);
 
-        for (uint32_t i = iStart; i <= iEnd; i++){
-            for (uint32_t j = jStart; j <= jEnd; j++){
+        for (int32_t i = iStart; i <= iEnd; i++){
+            for (int32_t j = jStart; j <= jEnd; j++){
                 // Draw dirt tile
                 if(bigbug->tiles[i][j] >= 1){
-                    drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
+                    //drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
+                    drawWsgSimpleScaled(&bigbug->h1Wsg[
+                                            8 * ((i-1 < 0) ? 1 : (bigbug->tiles[i-1][j]>0)) +
+                                            4 * ((j-1 < 0) ? 1 : (bigbug->tiles[i][j-1]>0)) +
+                                            2 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 1 : (bigbug->tiles[i+1][j]>0)) +
+                                            1 * ((j+1 > TILE_FIELD_HEIGHT - 1) ? 1 : (bigbug->tiles[i][j+1])>0)],
+                                        i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
+                                        j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
+                                        4,
+                                        4);
                 }
             }
         }
@@ -395,7 +541,7 @@ static void bigbugDrawField(void)
     for (int i = 1; i < 4; i++){
         int xPos = i * TFT_WIDTH / 4;
         drawWsgSimple(&bigbug->uiWileOutlineWsg, xPos - 20, TFT_HEIGHT - 46);
-        drawText(&bigbug->ibm_vga8, c555, &buttons[2*i], xPos - 3, TFT_HEIGHT - 12);
+        drawText(&bigbug->font, c555, &buttons[2*i], xPos - 3, TFT_HEIGHT - 12);
     }
     
 }
@@ -458,12 +604,7 @@ static void bigbugReset(void){
 
     bigbug->garbotnik.radius = GARBOTNIK_RADIUS;
 
-    //Set all tiles to dirt
-    for(int i = 0; i < TILE_FIELD_WIDTH; i++){
-        for(int j = 0; j < TILE_FIELD_HEIGHT; j++){
-            bigbug->tiles[i][j] = 2;
-        }
-    }
+    
 }
 
 /**
