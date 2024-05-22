@@ -263,12 +263,12 @@ void spkPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume)
     if (BZR_STEREO == track || BZR_LEFT == track)
     {
         swSynthSetFreq(oPtrs[0], freq);
-        swSynthSetVolume(oPtrs[0], MAX_VOLUME);
+        swSynthSetVolume(oPtrs[0], SPK_MAX_VOLUME);
     }
     if (BZR_STEREO == track || BZR_RIGHT == track)
     {
         swSynthSetFreq(oPtrs[1], freq);
-        swSynthSetVolume(oPtrs[1], MAX_VOLUME);
+        swSynthSetVolume(oPtrs[1], SPK_MAX_VOLUME);
     }
 }
 
