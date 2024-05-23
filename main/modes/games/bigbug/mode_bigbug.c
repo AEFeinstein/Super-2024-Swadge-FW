@@ -45,7 +45,6 @@ typedef enum
 typedef struct
 {
     menu_t* menu;                               ///< The menu structure
-    menuLogbookRenderer_t* menuLogbookRenderer; ///< Renderer for the menu
     font_t font;                                 ///< The font used in the menu and game
     bigbugScreen_t screen;                      ///< The screen being displayed
 
@@ -62,7 +61,7 @@ typedef struct
 
     wsg_t dirtWsg;        ///< A graphic for the dirt tile
     wsg_t garbotnikWsg;   ///< A graphic for garbotnik
-    wsg_t s1Wsg[16];      ///< The 1st variants of soft dirt tiles
+    wsg_t s1Wsg[24];      ///< The 1st variants of soft dirt tiles
     wsg_t s2Wsg[16];      ///< The 2nd variants of soft dirt tiles
     wsg_t m1Wsg[16];      ///< The 1st variants of medium dirt tiles
     wsg_t m2Wsg[16];      ///< The 2nd variants of medium dirt tiles
@@ -158,51 +157,60 @@ static void bigbugEnterMode(void)
     // Load graphics
     loadWsg("dirt.wsg", &bigbug->dirtWsg, false);
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, false);
-    loadWsg("cave_background.wsg", &bigbug->caveBackground, false);
+    loadWsg("trash_background.wsg", &bigbug->caveBackground, false);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
     // bin  dec  wsg
     // LURD
-    // 1111 15   0
-    // 1101 13   1
-    // 0101 5    2
-    // 0110 6    3
+    // 0010 2    0
+    // 1010 10   1
+    // 1000 8    2
+    // 0000 0    3
 
-    // 1110 14   4
-    // 1100 12   5
-    // 0100 4    6
-    // 0010 2    7
+    // 0011 3    4
+    // 1011 11   5
+    // 1001 9    6
+    // 0001 1    7
 
-    // 1010 10   8
-    // 1000 8    9
-    // 0000 0    10
-    // 0011 3    11
+    // 0111 7    8
+    // 1111 15   9
+    // 1101 13   10
+    // 0101 5    11
 
-    // 1011 11   12
-    // 1001 9    13
-    // 0001 1    14
-    // 0111 7    15
+    // 0110 6    12
+    // 1110 14   13
+    // 1100 12   14
+    // 0100 4    15
 
     // The index of bigbug->s1Wsg is the LURD neighbor info.
     // The value within is the wsg graphic.
-    // [10,14,7,11,6,2,3,15,9,13,8,12,5,1,4,0]
-    loadWsg("1_S_10.wsg", &bigbug->s1Wsg[0],  false);
-    loadWsg("1_S_14.wsg", &bigbug->s1Wsg[1],  false);
-    loadWsg("1_S_7.wsg",  &bigbug->s1Wsg[2],  false);
-    loadWsg("1_S_11.wsg", &bigbug->s1Wsg[3],  false);
-    loadWsg("1_S_6.wsg",  &bigbug->s1Wsg[4],  false);
-    loadWsg("1_S_2.wsg",  &bigbug->s1Wsg[5],  false);
-    loadWsg("1_S_3.wsg",  &bigbug->s1Wsg[6],  false);
-    loadWsg("1_S_15.wsg", &bigbug->s1Wsg[7],  false);
-    loadWsg("1_S_9.wsg",  &bigbug->s1Wsg[8],  false);
-    loadWsg("1_S_13.wsg", &bigbug->s1Wsg[9],  false);
-    loadWsg("1_S_8.wsg",  &bigbug->s1Wsg[10], false);
-    loadWsg("1_S_12.wsg", &bigbug->s1Wsg[11], false);
-    loadWsg("1_S_5.wsg",  &bigbug->s1Wsg[12], false);
-    loadWsg("1_S_1.wsg",  &bigbug->s1Wsg[13], false);
-    loadWsg("1_S_4.wsg",  &bigbug->s1Wsg[14], false);
-    loadWsg("1_S_0.wsg",  &bigbug->s1Wsg[15], false);
+    // [3,7,0,4,15,11,12,8,2,6,1,5,14,10,13,9]
+    loadWsg("s1g3.wsg",  &bigbug->s1Wsg[0],  false);
+    loadWsg("s1g7.wsg",  &bigbug->s1Wsg[1],  false);
+    loadWsg("s1g0.wsg",  &bigbug->s1Wsg[2],  false);
+    loadWsg("s1g4.wsg",  &bigbug->s1Wsg[3],  false);
+    loadWsg("s1g15.wsg", &bigbug->s1Wsg[4],  false);
+    loadWsg("s1g11.wsg", &bigbug->s1Wsg[5],  false);
+    loadWsg("s1g12.wsg", &bigbug->s1Wsg[6],  false);
+    loadWsg("s1g8.wsg",  &bigbug->s1Wsg[7],  false);
+    loadWsg("s1g2.wsg",  &bigbug->s1Wsg[8],  false);
+    loadWsg("s1g6.wsg",  &bigbug->s1Wsg[9],  false);
+    loadWsg("s1g1.wsg",  &bigbug->s1Wsg[10], false);
+    loadWsg("s1g5.wsg",  &bigbug->s1Wsg[11], false);
+    loadWsg("s1g14.wsg", &bigbug->s1Wsg[12], false);
+    loadWsg("s1g10.wsg", &bigbug->s1Wsg[13], false);
+    loadWsg("s1g13.wsg", &bigbug->s1Wsg[14], false);
+    loadWsg("s1g9.wsg",  &bigbug->s1Wsg[15], false);
+
+    loadWsg("s1g16.wsg", &bigbug->s1Wsg[16], false);
+    loadWsg("s1g17.wsg", &bigbug->s1Wsg[17], false);
+    loadWsg("s1g18.wsg", &bigbug->s1Wsg[18], false);
+    loadWsg("s1g19.wsg", &bigbug->s1Wsg[19], false);
+    loadWsg("s1g20.wsg", &bigbug->s1Wsg[20], false);
+    loadWsg("s1g21.wsg", &bigbug->s1Wsg[21], false);
+    loadWsg("s1g22.wsg", &bigbug->s1Wsg[22], false);
+    loadWsg("s1g23.wsg", &bigbug->s1Wsg[23], false);
 
     loadWsg("2_S_10.wsg", &bigbug->s2Wsg[0],  false);
     loadWsg("2_S_14.wsg", &bigbug->s2Wsg[1],  false);
@@ -324,7 +332,6 @@ static void bigbugMainLoop(int64_t elapsedUs)
             }
 
             // Draw the menu
-            drawMenuLogbook(bigbug->menu, bigbug->menuLogbookRenderer, elapsedUs);
             break;
         }
         case BIGBUG_GAME:
@@ -469,9 +476,19 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
  */
 static void bigbugDrawField(void)
 {
-    drawWsgSimple(&bigbug->caveBackground,
-                    ((bigbug->camera.pos.x >> DECIMAL_BITS) / 510)-(bigbug->camera.pos.x >> DECIMAL_BITS) / 2,//image width x 4 is 1020
-                    ((bigbug->camera.pos.y >> DECIMAL_BITS) / 510)-(bigbug->camera.pos.y >> DECIMAL_BITS) / 2);
+    int32_t offsetX = ((bigbug->camera.pos.x >> DECIMAL_BITS)/2) % 256;
+    int32_t offsetY = ((bigbug->camera.pos.y >> DECIMAL_BITS)/2) % 256;
+
+    offsetX = (offsetX < 0) ? offsetX + 256 : offsetX;
+    offsetY = (offsetX < 0) ? offsetY + 256 : offsetY;
+
+    for ( int x = -1; x <= TFT_WIDTH / 256 + 1; x++){
+        for ( int y = -1; y <= TFT_HEIGHT / 256 + 1; y++){
+            drawWsgSimple(&bigbug->caveBackground,
+                    x * 256 - offsetX,//image width x 4 is 1020
+                    y * 256 - offsetY);
+        }
+    }
 
     //printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
     //printf("width: %d\n", FIELD_WIDTH);
@@ -517,15 +534,55 @@ static void bigbugDrawField(void)
                 // Draw dirt tile
                 if(bigbug->tiles[i][j] >= 1){
                     //drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
-                    drawWsgSimpleScaled(&bigbug->h1Wsg[
-                                            8 * ((i-1 < 0) ? 0 : (bigbug->tiles[i-1][j]>0)) +
-                                            4 * ((j-1 < 0) ? 0 : (bigbug->tiles[i][j-1]>0)) +
-                                            2 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (bigbug->tiles[i+1][j]>0)) +
-                                            1 * ((j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i][j+1])>0)],
-                                        i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
-                                        j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
-                                        4,
-                                        4);
+                    int32_t sprite_idx = 8 * ((i-1 < 0) ? 0 : (bigbug->tiles[i-1][j]>0)) +
+                                         4 * ((j-1 < 0) ? 0 : (bigbug->tiles[i][j-1]>0)) +
+                                         2 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (bigbug->tiles[i+1][j]>0)) +
+                                         1 * ((j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i][j+1])>0);
+                    switch(sprite_idx){
+                        case 15:
+                            sprite_idx = 8 * ((i-1 < 0) ? 0 : (j-1 < 0) ? 0 : (bigbug->tiles[i-1][j-1]>0)) +
+                                         4 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (j-1 < 0) ? 0 : (bigbug->tiles[i+1][j-1]>0)) +
+                                         2 * ((i-1 < 0) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i-1][j+1]>0)) +
+                                         1 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i+1][j+1])>0);
+                            switch(sprite_idx){
+                                case 15:
+                                    drawWsgSimpleScaled(&bigbug->s1Wsg[15],
+                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
+                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
+                                                2,
+                                                2); 
+                                    break;
+                                default:
+                                    drawWsgSimpleScaled(&bigbug->s1Wsg[16+(1-((sprite_idx & 8)>>3))*4],
+                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
+                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
+                                                2,
+                                                2);
+                                    drawWsgSimpleScaled(&bigbug->s1Wsg[17+(1-((sprite_idx & 4)>>2))*4],
+                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS) + 32,
+                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
+                                                2,
+                                                2);
+                                    drawWsgSimpleScaled(&bigbug->s1Wsg[18+(1-((sprite_idx & 2)>>1))*4],
+                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
+                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS) + 32,
+                                                2,
+                                                2);
+                                    drawWsgSimpleScaled(&bigbug->s1Wsg[19+(1-(sprite_idx & 1))*4],
+                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS) + 32,
+                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS) + 32,
+                                                2,
+                                                2);
+                            }
+                            break;
+                        default:
+                            drawWsgSimpleScaled(&bigbug->s1Wsg[sprite_idx],
+                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
+                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
+                                                2,
+                                                2);         
+                    }
+                    
                 }
             }
         }
