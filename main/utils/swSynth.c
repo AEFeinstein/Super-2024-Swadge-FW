@@ -92,7 +92,7 @@ static const int8_t DRAM_ATTR triTab[] = {
  * @param idx The index to get, must be between 0 and 255
  * @return A signed 8-bit sample of a sine wave
  */
-static int8_t sineGen(uint16_t idx)
+static int8_t sineGen(uint16_t idx, void* data __attribute__((unused)))
 {
     return sinTab[idx];
 }
@@ -105,7 +105,7 @@ static int8_t sineGen(uint16_t idx)
  * @param idx The index to get, must be between 0 and 255
  * @return A signed 8-bit sample of a square wave
  */
-static int8_t squareGen(uint16_t idx)
+static int8_t squareGen(uint16_t idx, void* data __attribute__((unused)))
 {
     return (idx >= 128) ? 64 : -64;
 }
@@ -116,7 +116,7 @@ static int8_t squareGen(uint16_t idx)
  * @param idx The index to get, must be between 0 and 255
  * @return A signed 8-bit sample of a sawtooth wave
  */
-static int8_t sawtoothGen(uint16_t idx)
+static int8_t sawtoothGen(uint16_t idx, void* data __attribute__((unused)))
 {
     return (idx - 128);
 }
@@ -127,7 +127,7 @@ static int8_t sawtoothGen(uint16_t idx)
  * @param idx The index to get, must be between 0 and 255
  * @return A signed 8-bit sample of a triangle wave
  */
-static int8_t triangleGen(uint16_t idx)
+static int8_t triangleGen(uint16_t idx, void* data __attribute__((unused)))
 {
     return triTab[idx];
 }
@@ -140,7 +140,7 @@ static int8_t triangleGen(uint16_t idx)
  * @param idx Unused
  * @return A random signed 8-bit sample
  */
-static int8_t noiseGen(uint16_t idx)
+static int8_t noiseGen(uint16_t idx __attribute__((unused)), void* data __attribute__((unused)))
 {
     /* Static variable persists between function calls */
     static uint16_t shiftReg = 0xACE1u;
@@ -166,7 +166,27 @@ void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint
     osc->accumulator.accum32 = 0;
     osc->cVol                = 0;
     osc->stepSize            = 0;
+    osc->waveFuncData        = NULL;
     swSynthSetShape(osc, shape);
+    swSynthSetFreq(osc, freq);
+    swSynthSetVolume(osc, volume);
+}
+
+/**
+ * @brief Initialize a software synthesizer oscillator
+ *
+ * @param osc The oscillator to initialize
+ * @param waveFunc The wave function to use
+ * @param waveData Custom data to pass into the wave function
+ * @param freq The frequency of the wave to generate, in hertz
+ * @param volume The volume (amplitude) of the wave to generate
+ */
+void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveData, uint32_t freq, uint8_t volume)
+{
+    osc->accumulator.accum32 = 0;
+    osc->cVol                = 0;
+    osc->stepSize            = 0;
+    swSynthSetWaveFunc(osc, waveFunc, waveData);
     swSynthSetFreq(osc, freq);
     swSynthSetVolume(osc, volume);
 }
@@ -179,6 +199,7 @@ void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint
  */
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
 {
+    osc->waveFuncData = NULL;
     switch (shape)
     {
         case SHAPE_SINE:
@@ -209,6 +230,12 @@ void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
     }
 }
 
+void swSynthSetWaveFunc(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveFuncData)
+{
+    osc->waveFunc = waveFunc;
+    osc->waveFuncData = waveFuncData;
+}
+
 /**
  * @brief Set the frequency of an oscillator
  *
@@ -218,6 +245,17 @@ void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq)
 {
     osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq) << 16) / (DAC_SAMPLE_RATE_HZ);
+}
+
+/**
+ * @brief Set the frequency of an oscillator with 8 bits of decimal precision
+ *
+ * @param osc The oscillator to set the frequency for
+ * @param freq The frequency to set, as a fixed-point value with 8 bits of decimal precision
+ */
+void swSynthSetFreqPrecise(synthOscillator_t* osc, uint32_t freq)
+{
+    osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq) << 8) / (DAC_SAMPLE_RATE_HZ);
 }
 
 /**
@@ -265,7 +303,7 @@ uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
         }
 
         // Mix this oscillator's output into the sample
-        sample += ((osc->waveFunc(osc->accumulator.bytes[2]) * osc->cVol) / 256);
+        sample += ((osc->waveFunc(osc->accumulator.bytes[2], osc->waveFuncData) * osc->cVol) / 256);
     }
 
     // Return the 8-bit unsigned sample

@@ -8,6 +8,8 @@
 #include "hdw-dac.h"
 #include "sngPlayer.h"
 #include "macros.h"
+#define WAVE_TABLES_IMPLEMENTATION
+#include "waveTables.h"
 
 //==============================================================================
 // Defines
@@ -17,7 +19,8 @@
 #define NUM_SONGS 2
 
 /** The maximum number of oscillators per song */
-#define OSC_PER_SONG 2
+#define OSC_PER_SONG 16
+
 
 //==============================================================================
 // Structs
@@ -59,7 +62,46 @@ static synthOscillator_t* oPtrs[NUM_SONGS * OSC_PER_SONG] = {0};
 const oscillatorShape_t oscShapes[OSC_PER_SONG] = {
     SHAPE_SQUARE,
     SHAPE_TRIANGLE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
+    SHAPE_SQUARE,
 };
+
+const uint32_t oscWaves[OSC_PER_SONG] = {
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+};
+
+static int8_t waveTableFunc(uint16_t idx, void* data)
+{
+    // just use data as the wave ID
+    return waveTables[(uint32_t)data][idx];
+}
 
 //==============================================================================
 // Functions
@@ -88,12 +130,31 @@ void initSpkSongPlayer(void)
             // Clear out state
             s->cNoteIdx[oIdx]         = 0;
             s->samplesRemaining[oIdx] = 0;
-            swSynthInitOscillator(&s->oscillators[oIdx], oscShapes[oIdx], 0, 0);
+            if (oIdx == 9)
+            {
+                swSynthInitOscillator(&s->oscillators[oIdx], SHAPE_NOISE, 0, 0);
+            }
+            else
+            {
+                swSynthInitOscillatorWave(&s->oscillators[oIdx], waveTableFunc, (void*)(oscWaves[oIdx]), 0, 0);
+            }
 
             // Save a pointer to the oscillator in the list of all oscillator pointers
             oPtrs[(sIdx * OSC_PER_SONG) + oIdx] = &s->oscillators[oIdx];
         }
     }
+}
+
+/**
+ * @brief Set data for the wave function
+ *
+ * @param sIdx The song index
+ * @param oIdx The oscillator index in the song
+ * @param waveData Data for the wave function
+ */
+void spkSongSetWave(uint8_t sIdx, uint8_t oIdx, uint32_t waveId)
+{
+    swSynthSetWaveFunc(oPtrs[(sIdx * OSC_PER_SONG) + oIdx], waveTableFunc, (void*)waveId);
 }
 
 /**
@@ -270,6 +331,20 @@ void spkPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume)
         swSynthSetFreq(oPtrs[1], freq);
         swSynthSetVolume(oPtrs[1], CLAMP(volume, 0, SPK_MAX_VOLUME));
     }
+}
+
+void spkPlayNoteFine(uint32_t freq, uint8_t sIdx, uint8_t oIdx, uint16_t volume)
+{
+    // A note is played, so set noteMode
+    sp.noteMode = true;
+
+    swSynthSetFreqPrecise(oPtrs[sIdx * OSC_PER_SONG + oIdx], freq);
+    swSynthSetVolume(oPtrs[sIdx * OSC_PER_SONG + oIdx], CLAMP(volume, 0, SPK_MAX_VOLUME));
+}
+
+void spkStopNote2(uint8_t sIdx, uint8_t oIdx)
+{
+    swSynthSetVolume(oPtrs[sIdx * OSC_PER_SONG + oIdx], 0);
 }
 
 /**

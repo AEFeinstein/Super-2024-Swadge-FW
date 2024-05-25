@@ -88,7 +88,10 @@ void* spkSongSave(void);
 void spkSongRestore(void* data);
 
 void spkPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume);
+void spkPlayNoteFine(uint32_t freq, uint8_t sIdx, uint8_t oIdx, uint16_t volume);
 void spkStopNote(buzzerPlayTrack_t track);
+void spkStopNote2(uint8_t sIdx, uint8_t oIdx);
+void spkSongSetWave(uint8_t sIdx, uint8_t oIdx, uint32_t waveId);
 
 /*
 void spkSetBgmVolume(uint16_t vol);

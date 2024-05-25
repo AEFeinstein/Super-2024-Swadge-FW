@@ -150,9 +150,9 @@ static void mainMenuEnterMode(void)
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
     addSingleItemToMenu(mainMenu->menu, colorchordMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
     addSingleItemToMenu(mainMenu->menu, jukeboxMode.modeName);
     addSingleItemToMenu(mainMenu->menu, tunernomeMode.modeName);
-    addSingleItemToMenu(mainMenu->menu, synthMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Utilities");
