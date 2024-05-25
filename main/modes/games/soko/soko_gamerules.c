@@ -410,52 +410,56 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
     {
         for (size_t y = screenMinY; y < screenMaxY; y++)
         {
-            if(level->tiles[x][y] != SKT_GOAL)
+            paletteColor_t color = cTransparent;
+            switch (level->tiles[x][y])
             {
-                paletteColor_t color = cTransparent;
-                switch (level->tiles[x][y])
+                case SKT_FLOOR:
+                    color = self->currentTheme->floorColor;;
+                    break;
+                case SKT_WALL:
+                    color = self->currentTheme->wallColor;
+                    break;
+                case SKT_GOAL:
+                    color = self->currentTheme->floorColor;
+                    break;
+                case SKT_FLOOR_WALKED:
+                    color = c334;
+                    break;
+                case SKT_EMPTY:
+                    color = cTransparent;
+                    break;
+                case SKT_PORTAL:
+                    //todo: draw completed or not completed.
+                    color = c441;
+                    //color = self->currentTheme->floorColor;
+                    break;
+                default:
+                    break;
+            }
+    
+            // Draw a square.
+            // none of this matters it's all getting replaced with drawwsg later.
+            if (color != cTransparent)
+            {
+                for (size_t xd = ox + x * scale; xd < ox + x * scale + scale; xd++)
                 {
-                    case SKT_FLOOR:
-                        color = self->currentTheme->floorColor;
-                        break;
-                    case SKT_WALL:
-                        color = self->currentTheme->wallColor;
-                        break;
-                    case SKT_FLOOR_WALKED:
-                        color = c334;
-                        break;
-                    case SKT_EMPTY:
-                        color = cTransparent;
-                        break;
-                    case SKT_PORTAL:
-                        //todo: draw completed or not completed.
-                        color = c441;
-                        //color = self->currentTheme->floorColor;
-                        break;
-                    default:
-                        break;
-                }
-
-                // Draw a square.
-                // none of this matters it's all getting replaced with drawwsg later.
-                if (color != cTransparent)
-                {
-                    for (size_t xd = ox + x * scale; xd < ox + x * scale + scale; xd++)
+                    for (size_t yd = oy + y * scale; yd < oy + y * scale + scale; yd++)
                     {
-                        for (size_t yd = oy + y * scale; yd < oy + y * scale + scale; yd++)
-                        {
-                            TURBO_SET_PIXEL(xd, yd, color);
-                        }
+                        TURBO_SET_PIXEL(xd, yd, color);
                     }
                 }
-            }else{
+            }
+
+            if(level->tiles[x][y] == SKT_GOAL){
                 drawWsg(&self->currentTheme->goalWSG, ox + x * scale,oy + y * scale, false, false, 0);
             }
+            
             // DEBUG_DRAW_COUNT++;
             //  draw outline around the square.
             //  drawRect(ox+x*s,oy+y*s,ox+x*s+s,oy+y*s+s,color);
         }
     }
+    
 
     
     //draw portal in overworld before entities.
