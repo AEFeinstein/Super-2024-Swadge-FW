@@ -233,9 +233,12 @@ void absSokoTryPlayerMovement(soko_abs_t* soko)
         return;
     }
 
-    soko->sokoTryMoveEntityInDirectionFunc(soko, soko->soko_player, soko->input.playerInputDeltaX,
+    bool b = soko->sokoTryMoveEntityInDirectionFunc(soko, soko->soko_player, soko->input.playerInputDeltaX,
                                            soko->input.playerInputDeltaY, 0);
     sokoHistoryTurnOver(soko);
+    if(b){
+        soko->moveCount++;
+    }
 }
 
 bool absSokoTryMoveEntityInDirection(soko_abs_t* self, sokoEntity_t* entity, int dx, int dy, uint16_t push)
@@ -407,44 +410,46 @@ void absSokoDrawTiles(soko_abs_t* self, sokoLevel_t* level)
     {
         for (size_t y = screenMinY; y < screenMaxY; y++)
         {
-            paletteColor_t color = cTransparent;
-            switch (level->tiles[x][y])
+            if(level->tiles[x][y] != SKT_GOAL)
             {
-                case SKT_FLOOR:
-                    color = self->currentTheme->floorColor;
-                    break;
-                case SKT_WALL:
-                    color = self->currentTheme->wallColor;
-                    break;
-                case SKT_GOAL:
-                    color = c141;
-                    break;
-                case SKT_FLOOR_WALKED:
-                    color = c334;
-                    break;
-                case SKT_EMPTY:
-                    color = cTransparent;
-                    break;
-                case SKT_PORTAL:
-                    //todo: draw completed or not completed.
-                    color = c441;
-                    //color = self->currentTheme->floorColor;
-                    break;
-                default:
-                    break;
-            }
-
-            // Draw a square.
-            // none of this matters it's all getting replaced with drawwsg later.
-            if (color != cTransparent)
-            {
-                for (size_t xd = ox + x * scale; xd < ox + x * scale + scale; xd++)
+                paletteColor_t color = cTransparent;
+                switch (level->tiles[x][y])
                 {
-                    for (size_t yd = oy + y * scale; yd < oy + y * scale + scale; yd++)
+                    case SKT_FLOOR:
+                        color = self->currentTheme->floorColor;
+                        break;
+                    case SKT_WALL:
+                        color = self->currentTheme->wallColor;
+                        break;
+                    case SKT_FLOOR_WALKED:
+                        color = c334;
+                        break;
+                    case SKT_EMPTY:
+                        color = cTransparent;
+                        break;
+                    case SKT_PORTAL:
+                        //todo: draw completed or not completed.
+                        color = c441;
+                        //color = self->currentTheme->floorColor;
+                        break;
+                    default:
+                        break;
+                }
+
+                // Draw a square.
+                // none of this matters it's all getting replaced with drawwsg later.
+                if (color != cTransparent)
+                {
+                    for (size_t xd = ox + x * scale; xd < ox + x * scale + scale; xd++)
                     {
-                        TURBO_SET_PIXEL(xd, yd, color);
+                        for (size_t yd = oy + y * scale; yd < oy + y * scale + scale; yd++)
+                        {
+                            TURBO_SET_PIXEL(xd, yd, color);
+                        }
                     }
                 }
+            }else{
+                drawWsg(&self->currentTheme->goalWSG, ox + x * scale,oy + y * scale, false, false, 0);
             }
             // DEBUG_DRAW_COUNT++;
             //  draw outline around the square.

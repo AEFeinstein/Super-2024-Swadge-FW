@@ -59,12 +59,12 @@ static void sokoEnterMode(void)
     loadWsg("sk_pango_back1.wsg", &soko->sokoDefaultTheme.playerUpWSG, false);
     loadWsg("sk_pango_side1.wsg", &soko->sokoDefaultTheme.playerLeftWSG, false);
     loadWsg("sk_pango_side2.wsg", &soko->sokoDefaultTheme.playerRightWSG, false);
-    loadWsg("sk_crate.wsg", &soko->sokoDefaultTheme.crateWSG, false);
+    loadWsg("sk_crate_2.wsg", &soko->sokoDefaultTheme.crateWSG, false);
     loadWsg("sk_crate_ongoal.wsg", &soko->sokoDefaultTheme.crateOnGoalWSG,false);
     loadWsg("sk_sticky_crate.wsg", &soko->sokoDefaultTheme.stickyCrateWSG, false);
     loadWsg("sk_portal_complete.wsg", &soko->sokoDefaultTheme.portal_completeWSG, false);
     loadWsg("sk_portal_incomplete.wsg", &soko->sokoDefaultTheme.portal_incompleteWSG, false);
-
+    loadWsg("sk_goal.wsg", &soko->sokoDefaultTheme.goalWSG,false);
 
     //we check against 0,0 as an invalid start location, and use file location instead.
     soko->overworld_playerX = 0;
@@ -76,6 +76,7 @@ static void sokoEnterMode(void)
     soko->overworldTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
     soko->overworldTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
     soko->overworldTheme.crateWSG       = soko->sokoDefaultTheme.crateWSG;
+    soko->overworldTheme.goalWSG        = soko->sokoDefaultTheme.goalWSG;
     soko->overworldTheme.crateOnGoalWSG = soko-> sokoDefaultTheme.crateOnGoalWSG;
     soko->overworldTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
     soko->overworldTheme.portal_completeWSG = soko->sokoDefaultTheme.portal_completeWSG;
@@ -89,6 +90,8 @@ static void sokoEnterMode(void)
     soko->eulerTheme.playerUpWSG    = soko->sokoDefaultTheme.playerUpWSG;
     soko->eulerTheme.playerLeftWSG  = soko->sokoDefaultTheme.playerLeftWSG;
     soko->eulerTheme.playerRightWSG = soko->sokoDefaultTheme.playerRightWSG;
+    soko->eulerTheme.goalWSG        = soko->sokoDefaultTheme.goalWSG;
+
     loadWsg("sk_e_crate.wsg", &soko->eulerTheme.crateWSG, false);
     loadWsg("sk_sticky_trail_crate.wsg", &soko->eulerTheme.crateOnGoalWSG, false);
     soko->eulerTheme.stickyCrateWSG = soko->sokoDefaultTheme.stickyCrateWSG;
@@ -139,6 +142,7 @@ static void sokoExitMode(void)
     freeWsg(&soko->sokoDefaultTheme.stickyCrateWSG);
     freeWsg(&soko->sokoDefaultTheme.portal_completeWSG);
     freeWsg(&soko->sokoDefaultTheme.portal_incompleteWSG);
+    freeWsg(&soko->sokoDefaultTheme.goalWSG);
     //  euler
     freeWsg(&soko->eulerTheme.crateWSG);
     freeWsg(&soko->eulerTheme.crateOnGoalWSG);

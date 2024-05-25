@@ -32,8 +32,11 @@ void sokoLoadGameplay(soko_abs_t* soko,uint16_t levelIndex, bool loadNew){
         }
     }
 }
+
 void sokoSaveGameplay(soko_abs_t* soko){
     printf("Save Gameplay\n");
+
+
     //save current level
     if(soko->currentLevelIndex == 0){
         //overworld gets saved separately.
@@ -285,12 +288,6 @@ void sokoLoadBinLevel(soko_abs_t* soko, uint16_t levelIndex)
     soko->portalCount = 0;
 
     sokoLoadBinTiles(soko, (int)fileSize);
-    // for(int k = 0; k < soko->currentLevel.entityCount; k++)
-    //{
-    //     printf("Ent%d:%d
-    //     (%d,%d)",k,soko->currentLevel.entities[k].type,soko->currentLevel.entities[k].x,soko->currentLevel.entities[k].y);
-    // }
-    // printf("\n");
 
     if(levelIndex == 0){
         if(soko->overworld_playerX == 0 && soko->overworld_playerY == 0){
@@ -567,7 +564,7 @@ void sokoLoadBinTiles(soko_abs_t* self, int byteCount)
                     }else{
                         i+=1;
                     }
-                    
+
                     break;
                 default:
                     tileType = SKT_EMPTY;

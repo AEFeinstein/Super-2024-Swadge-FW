@@ -1,9 +1,9 @@
 00:sk_overworld.bin:
-01:sck_c_threes.bin:
+01:sk_c_plus.bin:
 02:sk_c_fours.bin:
 03:sk_c_files.bin:
 05:sk_c_cosms.bin:
-04:sk_c_test2.bin:
+04:sk_c_threes.bin:
 06:sk_c_test2.bin:
 07:sk_c_test2.bin:
 08:sk_c_alignthat.bin:
