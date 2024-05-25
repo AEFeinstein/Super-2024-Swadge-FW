@@ -1,0 +1,351 @@
+#include "hdw-bzr.h"
+#include "swSynth.h"
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
+
+#define MIDI_CHANNEL_COUNT 16
+// TODO: Dynamic voice allocation
+// The number of simultaneous voices each channel can support
+#define VOICE_PER_CHANNEL 2
+// The number of voices reserved for percussion
+#define PERCUSSION_VOICES 8
+// The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
+#define OSC_PER_VOICE 1
+
+#define MIDI_TRUE 0x7F
+#define MIDI_FALSE 0x00
+
+typedef enum
+{
+    MIDI_STREAMING,
+    MIDI_FILE,
+} midiPlayerMode_t;
+
+/**
+ * @brief Describes the characteristics of a particular timbre while
+ *
+ */
+typedef struct
+{
+    // Time taken to ramp up to full volume
+    int32_t attack;
+
+    // Time taken for the volume to fade to the sustain volume
+    int32_t decay;
+
+    // Time it takes to silence the note after release
+    int32_t release;
+
+    // The volume of the sustain note, proportional to the original volume
+    uint8_t sustain;
+
+} envelope_t;
+
+typedef enum
+{
+    // Roland GS Extensions
+    /*HIGH_Q_OR_FILTER_SNAP = 27,
+    SLAP_NOISE = 28,
+    SCRATCH_PUSH = 29,
+    SCRATCH_PULL = 30,
+    DRUM_STICKS = 31,
+    SQUARE_CLICK = 32,
+    METRONOME_CLICK = 33,
+    METRONOME_BELL = 34,*/
+    // End Roland GS Extensions
+    ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM = 35,
+    ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM = 36,
+    SIDE_STICK = 37,
+    ACOUSTIC_SNARE = 38,
+    HAND_CLAP = 39,
+    ELECTRIC_SNARE_OR_RIMSHOT = 40,
+    LOW_FLOOR_TOM = 41,
+    CLOSED_HI_HAT = 42,
+    HIGH_FLOOR_TOM = 43,
+    PEDAL_HI_HAT = 44,
+    LOW_TOM = 45,
+    OPEN_HI_HAT = 46,
+    LOW_MID_TOM = 47,
+    HIGH_MID_TOM = 48,
+    CRASH_CYMBAL_1 = 49,
+    HIGH_TOM = 50,
+    RIDE_CYMBAL_1 = 51,
+    CHINESE_CYMBAL = 52,
+    RIDE_BELL = 53,
+    TAMBOURINE = 54,
+    SPLASH_CYMBAL = 55,
+    COWBELL = 56,
+    CRASH_CYMBAL_2 = 57,
+    VIBRASLAP = 58,
+    RIDE_CYMBAL_2 = 59,
+    HIGH_BONGO = 60,
+    LOW_BONGO = 61,
+    MUTE_HIGH_CONGA = 62,
+    OPEN_HIGH_CONGA = 63,
+    LOW_CONGA = 64,
+    HIGH_TIMBALE = 65,
+    LOW_TIMBALE = 66,
+    HIGH_AGOGO = 67,
+    LOW_AGOGO = 68,
+    CABASA = 69,
+    MARACAS = 70,
+    SHORT_WHISTLE = 71,
+    LONG_WHISTLE = 72,
+    SHORT_GUIRO = 73,
+    LONG_GUIRO = 74,
+    CLAVES = 75,
+    HIGH_WOODBLOCK = 76,
+    LOW_WOODBLOCK = 77,
+    MUTE_CUICA = 78,
+    OPEN_CUICA = 79,
+    MUTE_TRIANGLE = 80,
+    OPEN_TRIANGLE = 81,
+    // Roland GS Extensions
+    /*SHAKER = 82,
+    JINGLE_BELL = 83,
+    BELLTREE = 84,
+    CASTANETS = 85,
+    MUTE_SURDO = 86,
+    OPEN_SURDO = 87,*/
+    // End Roland GS Extensions
+} percussionNote_t;
+
+/**
+ * @brief The sample source for an instrument
+ *
+ */
+typedef enum
+{
+    WAVETABLE,
+    SAMPLE,
+    NOISE,
+} timbreType_t;
+
+/**
+ * @brief A bitfield which may contain various flags for a timbre
+ */
+typedef enum
+{
+    TF_NONE = 0,
+    TF_PERCUSSION = 1,
+} timbreFlags_t;
+
+/**
+ * @brief A function that returns samples for a percussion timbre rather than a melodic one
+ *
+ * @param drum The percussion instrument to generate sound for
+ * @param idx The monotonic sample index within this note. Will not repeat for any particular note.
+ * @param data A pointer to user-defined data which may be used in sample generation
+ */
+typedef int8_t (*percussionFunc_t)(percussionNote_t drum, uint32_t idx, void* data);
+
+/**
+ * @brief Defines the sound characteristics of a particular instrument.
+ */
+typedef struct
+{
+    /// @brief The shape of the carrier wave to use for this timbre
+    oscillatorShape_t shape;
+
+    timbreType_t type;
+
+    union
+    {
+        /// @brief The index of this timbre's wave in the table, when type is WAVETABLE
+        uint16_t waveIndex;
+
+        struct {
+            /// @brief The frequency of the base sample to be used when pitch shifting
+            // This should just always be C4? (440 << 8)
+            //uint32_t freq = (440 << 8);
+            /// @brief A pointer to this timbre's sample data, when type is SAMPLE
+            int8_t* data;
+            /// @brief The length of the sample in bytes
+            uint32_t count;
+            /// @brief The sample rate
+            uint8_t rate;
+        } sample;
+
+        struct {
+            /// @brief A function t
+            percussionFunc_t perc;
+            void* data;
+        } percussion;
+    };
+
+    /// @brief The ASDR characterstics of this timbre
+    envelope_t envelope;
+
+    /// @brief The name of this timbre, if any
+    const char* name;
+} midiTimbre_t;
+
+/**
+ * @brief Tracks the state of a single voice, playing a single note.
+ *
+ * A single voice could use multiple oscillators to achieve a particular timbre.
+ */
+typedef struct
+{
+    // TODO: is active redundant with voiceStates?
+    /// @brief Whether or not this voice is currently making sound
+    bool active;
+
+    /// @brief The MIDI note number for the sound being played
+    uint8_t note;
+
+    /// @brief The synthesizer oscillators used to generate the sounds
+    synthOscillator_t oscillators[1];
+
+    /// @brief The timbre of this voice, which defines its musical characteristics
+    midiTimbre_t timbre;
+} midiVoice_t;
+
+/**
+ * @brief Holds several bitfields that track the state of each voice for fast access.
+ * This may be used for dynamic voice allocation, and to minimize the impact of note stealing
+ * if we run out of voices.
+ */
+typedef struct
+{
+    /// @brief Bitfield of voices currently in the attack stage
+    uint32_t attack;
+
+    /// @brief Bitfield of voices currently in the sustain stage
+    uint32_t sustain;
+
+    /// @brief Bitfield of voices currently in the decay stage
+    uint32_t decay;
+
+    /// @brief Bitfield of voices currently in the release stage
+    uint32_t release;
+}
+voiceStates_t;
+
+/**
+ * @brief Tracks the state of a single MIDI channel
+ */
+typedef struct
+{
+    /// @brief The 14-bit volume level for this channel only
+    uint16_t volume;
+
+    /// @brief The ID of the program (timbre) set for this channel
+    uint8_t program;
+
+    /// @brief The state of each voice allocated to this channel
+    // TODO: This will eventually be replaced by a single bank of voices which are dynamically allocated at the MIDI player level
+    midiVoice_t voices[VOICE_PER_CHANNEL];
+
+    /// @brief This channel's voice state bitmap
+    voiceStates_t voiceStates;
+
+    /// @brief Whether this channel is reserved for percussion.
+    bool percussion;
+
+} midiChannel_t;
+
+/**
+ * @brief Tracks the state of the entire MIDI apparatus.
+ */
+typedef struct
+{
+    /// @brief The global 14-bit volume level
+    uint16_t volume;
+
+    /// @brief The state of all MIDI channels
+    midiChannel_t channels[MIDI_CHANNEL_COUNT];
+
+    /// @brief The voices reserved for percussion
+    midiVoice_t percVoices[PERCUSSION_VOICES];
+
+    /// @brief The percussion voice state bitmap
+    voiceStates_t percVoiceStates;
+
+    /// @brief Whether this player is playing a song or a MIDI stream
+    midiPlayerMode_t mode;
+} midiPlayer_t;
+
+/**
+ * @brief Stop all sound immediately. This is not affected by the sustain pedal.
+ *
+ * @param player The player to stop
+ */
+void midiAllSoundOff(midiPlayer_t* player);
+
+/**
+ * @brief Tun off all notes which are currently on, as though midiNoteOff() were called
+ * for each note. This respects the sustain pedal.
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel on which to stop notes
+ */
+void midiAllNotesOff(midiPlayer_t* player, uint8_t channel);
+
+/**
+ * @brief Begin playing a note on a given MIDI channel.
+ *
+ * Using a velocity of \c 0 will stop the note.
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel on which to start the note
+ * @param note The note number to play
+ * @param velocity The note velocity which affects its volume.
+ */
+void midiNoteOn(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity);
+
+/**
+ * @brief Stop playing a particular note on a given MIDI channel
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel on which to stop the note
+ * @param note The note number to stop
+ * @param velocity [NYI] The release velocity which affects the note's release time
+ */
+void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity);
+
+/**
+ * @brief Change the program (instrument) on a given MIDI channel
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel whose program will be changed
+ * @param program The program ID, from 0-127, to set for this channel
+ */
+void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program);
+
+/**
+ * @brief Set the hold pedal status.
+ *
+ * This is a convenience method for midiControlChange(player, channel, CONTROL_HOLD (64), val ? 127:0)
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel to set the hold status for
+ * @param val The sustain pedal value. Values 0-63 are OFF, and 64-127 are ON.
+ */
+void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val);
+
+/**
+ * @brief Set a MIDI control value
+ *
+ * @param player The MIDI player
+ * @param channel The channel to set the control on
+ * @param control The control number to set
+ * @param val The control value, from 0-127 whose meaning depends on the control number
+ */
+void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, uint8_t val);
+
+/**
+ * @brief Set the pitch wheel value on a given MIDI channel
+ *
+ * By default, the center of the pitch wheel is \c 0x2000. A value of \c 0x0000 transposes
+ * one step up, while a value of \c 0x3FFF transposes one step up.
+ *
+ * [NYI] The range of the pitch wheel can be changed using the registered parameters
+ *
+ * @param player The MIDI player
+ * @param channel The MIDI channel to change the pitch wheel for
+ * @param value The pitch wheel value, from 0 to 0x3FFF (14-bits)
+ */
+void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value);
