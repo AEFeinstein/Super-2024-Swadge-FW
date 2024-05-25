@@ -231,13 +231,15 @@ void pa_updatePlayer(paEntity_t* self)
             break;
     }
 
-    if (self->gameData->btnState & PB_A)
+    if (self->gameData->btnState & PB_A && !(self->gameData->prevBtnState & PB_A))
     {
-        if(pa_getTile(self->tilemap, self->targetTileX, self->targetTileY) == PA_TILE_BLOCK){
+        uint8_t t = pa_getTile(self->tilemap, self->targetTileX, self->targetTileY);
+        if(t == PA_TILE_BLOCK || t  == PA_TILE_SPAWN_BLOCK_0 || t == PA_TILE_BONUS_BLOCK_0){
             paEntity_t* newHitBlock = createHitBlock(self->entityManager, (self->targetTileX << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE, (self->targetTileY << SUBPIXEL_RESOLUTION) + PA_HALF_TILESIZE);
             
             if(newHitBlock != NULL){
                 pa_setTile(self->tilemap, self->targetTileX, self->targetTileY, PA_TILE_EMPTY);
+                newHitBlock->jumpPower = t;
                 switch(self->facingDirection){
                     case PA_DIRECTION_LEFT:
                         newHitBlock->xspeed = -64;
@@ -671,6 +673,23 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
             }
             break;
         }
+        case ENTITY_HIT_BLOCK:
+        {
+            if(self->x < other->x){
+                self->x = other->x - (PA_TILE_SIZE << SUBPIXEL_RESOLUTION);
+                self->xspeed = 0;
+            } else if (self->x > other->x){
+                self->x = other->x + (PA_TILE_SIZE << SUBPIXEL_RESOLUTION);
+                self->xspeed = 0;
+            } else if (self->y < other->y){
+                self->y = other->y - (PA_TILE_SIZE << SUBPIXEL_RESOLUTION);
+                self->yspeed = 0;
+            } else if (self->y > other->y){
+                self->y = other->y + (PA_TILE_SIZE << SUBPIXEL_RESOLUTION);
+                self->yspeed = 0;
+            }
+            break;
+        }
         default:
         {
             break;
@@ -705,6 +724,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             pa_scorePoints(self->gameData, self->scoreValue);
             soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
             killEnemy(self);
+            pa_spawnEnemyFromSpawnBlock(self->entityManager);
             break;
         case ENTITY_WAVE_BALL:
             self->xspeed = other->xspeed >> 1;
@@ -747,7 +767,7 @@ bool pa_playerTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 hitBlock->jumpPower = tileId;
                 if (tileId == PA_TILE_BRICK_BLOCK)
                 {
-                    hitBlock->spriteIndex = SP_HITBLOCK_BRICKS;
+                    hitBlock->spriteIndex = 0;
                     if (abs(self->xspeed) > 51 && self->yspeed <= 0)
                     {
                         hitBlock->yDamping = 1;
@@ -997,7 +1017,7 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
 {
     if (pa_isSolid(tileId))
     {
-        self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)] = PA_TILE_BLOCK;
+        self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)] = self->jumpPower;
         soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
         pa_destroyEntity(self, false);
         return true;
@@ -1305,7 +1325,7 @@ bool dustBunnyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx,
                 self->falling     = false;
                 self->yspeed      = 0;
                 self->xspeed      = 0;
-                self->spriteIndex = SP_DUSTBUNNY_IDLE;
+                self->spriteIndex = 0;
                 break;
             default: // Should never hit
                 return false;
@@ -1754,6 +1774,11 @@ void killEnemy(paEntity_t* target)
     target->type               = ENTITY_DEAD;
     target->spriteFlipVertical = true;
     target->updateFunction     = &updateEntityDead;
+    target->entityManager->activeEnemies--;
+
+    if(target->entityManager->activeEnemies == 0 && target->entityManager->remainingEnemies == 0){
+        target->gameData->changeState = PA_ST_LEVEL_CLEAR;
+    }
 }
 
 void updateBgCol(paEntity_t* self)

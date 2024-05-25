@@ -76,7 +76,7 @@ void pa_drawTileMap(paTilemap_t* tilemap)
             }
 
             // Test animated tiles
-            if (tile == 10)
+            if (tile == PA_TILE_SPAWN_BLOCK_0 || tile == PA_TILE_BONUS_BLOCK_0)
             {
                 tile += tilemap->animationFrame;
             }
@@ -210,11 +210,11 @@ bool pa_loadTiles(paTilemap_t* tilemap)
     loadWsg("pa-tile-010.wsg", &tilemap->tiles[9], false);
     loadWsg("pa-tile-011.wsg", &tilemap->tiles[10], false);
     loadWsg("pa-tile-012.wsg", &tilemap->tiles[11], false);
+    loadWsg("pa-tile-013.wsg", &tilemap->tiles[12], false);
+    loadWsg("pa-tile-014.wsg", &tilemap->tiles[13], false);
+    loadWsg("pa-tile-015.wsg", &tilemap->tiles[14], false);
 
     /*
-    tilemap->tiles[12] = tilemap->tiles[0];
-    tilemap->tiles[13] = tilemap->tiles[0];
-    tilemap->tiles[14] = tilemap->tiles[0];
     tilemap->tiles[15] = tilemap->tiles[0];
     tilemap->tiles[16] = tilemap->tiles[0];
     tilemap->tiles[17] = tilemap->tiles[0];
@@ -410,7 +410,6 @@ void pa_generateMaze(paTilemap_t* tilemap)
             if(!pa_getTile(tilemap, tx, ty) && !pa_genPathContinue(tilemap, tx, ty)){
                 pa_genMakePath(tilemap, tx, ty);
             }
-            printf("test %d, %d\n", tx, ty);
             tx += 2;
         }
         ty -= 2;
@@ -478,4 +477,36 @@ void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y){
         done = pa_genPathContinue(tilemap, nx, ny);
     }
 
+}
+
+void pa_placeEnemySpawns(paTilemap_t* tilemap){
+    int16_t enemySpawnsToPlace = 8;
+    int16_t enemiesPlaced = 0;
+    bool previouslyPlaced = false;
+    int16_t iterations = 0;
+
+    //Place enemy spawn blocks
+    while(enemySpawnsToPlace > 0 && iterations < 16){
+        for(uint16_t ty = 1; ty < 13; ty++){
+            for(uint16_t tx = 1; tx < 15; tx++){
+                if(enemySpawnsToPlace <= 0) {
+                    break;
+                }
+
+                uint8_t t = pa_getTile(tilemap, tx, ty);
+
+                if(t == PA_TILE_BLOCK && !previouslyPlaced && !(esp_random() % 15) ){
+                    pa_setTile(tilemap, tx, ty, PA_TILE_SPAWN_BLOCK_0);
+                    enemySpawnsToPlace--;
+                    enemiesPlaced++;
+                    previouslyPlaced = true;
+                } else {
+                    previouslyPlaced = false;
+                }
+            }
+        }
+        iterations++;
+    }
+
+    tilemap->entityManager->remainingEnemies = enemiesPlaced;
 }

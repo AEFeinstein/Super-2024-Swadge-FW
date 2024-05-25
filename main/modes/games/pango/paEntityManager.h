@@ -19,7 +19,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES   32
-#define SPRITESET_SIZE 11
+#define SPRITESET_SIZE 13
 
 //==============================================================================
 // Structs
@@ -30,6 +30,10 @@ struct paEntityManager_t
     paSprite_t sprites[SPRITESET_SIZE];
     paEntity_t* entities;
     uint8_t activeEntities;
+
+    int16_t activeEnemies;
+    int16_t maxEnemies;
+    int16_t remainingEnemies;
 
     paEntity_t* viewEntity;
     paEntity_t* playerEntity;
@@ -87,5 +91,6 @@ paEntity_t* createBgmChange3(paEntityManager_t* entityManager, uint16_t x, uint1
 paEntity_t* createBgmChange4(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 paEntity_t* createBgmStop(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 void pa_freeEntityManager(paEntityManager_t* entityManager);
+paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager);
 
 #endif

@@ -38,6 +38,9 @@ void pa_initializeEntityManager(paEntityManager_t* entityManager, paTilemap_t* t
     // entityManager->viewEntity = pa_createPlayer(entityManager, entityManager->tilemap->warps[0].x * 16,
     // entityManager->tilemap->warps[0].y * 16);
     entityManager->playerEntity = entityManager->viewEntity;
+
+    entityManager->activeEnemies = 0;
+    entityManager->maxEnemies = 3;
 }
 
 void pa_loadSprites(paEntityManager_t* entityManager)
@@ -82,9 +85,17 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     entityManager->sprites[PA_SP_PLAYER_HURT].originX         = 8;
     entityManager->sprites[PA_SP_PLAYER_HURT].originY         = 16;
     
-    loadWsg("pa-tile-009.wsg", &(entityManager->sprites[SP_BLOCK].wsg), false);
-    entityManager->sprites[SP_BLOCK].originX         = 8;
-    entityManager->sprites[SP_BLOCK].originY         = 8;
+    loadWsg("pa-tile-009.wsg", &(entityManager->sprites[PA_SP_BLOCK].wsg), false);
+    entityManager->sprites[PA_SP_BLOCK].originX         = 8;
+    entityManager->sprites[PA_SP_BLOCK].originY         = 8;
+
+    loadWsg("pa-tile-013.wsg", &(entityManager->sprites[PA_SP_BONUS_BLOCK].wsg), false);
+    entityManager->sprites[PA_SP_BONUS_BLOCK].originX         = 8;
+    entityManager->sprites[PA_SP_BONUS_BLOCK].originY         = 8;
+
+    loadWsg("sprite009.wsg", &(entityManager->sprites[PA_SP_ENEMY_SOUTH].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_SOUTH].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_SOUTH].originY         = 8;
 }
 
 void pa_updateEntities(paEntityManager_t* entityManager)
@@ -382,7 +393,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->scoreValue           = 100;
 
     entity->type                 = paEntity_tEST;
-    entity->spriteIndex          = 0;
+    entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
@@ -533,7 +544,7 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_HIT_BLOCK;
-    entity->spriteIndex          = SP_BLOCK;
+    entity->spriteIndex          = PA_SP_BLOCK;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateHitBlock;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
@@ -640,7 +651,7 @@ paEntity_t* createDustBunny(paEntityManager_t* entityManager, uint16_t x, uint16
     entity->scoreValue = 150;
 
     entity->type                 = ENTITY_DUST_BUNNY;
-    entity->spriteIndex          = SP_DUSTBUNNY_IDLE;
+    entity->spriteIndex          = 0;
     entity->updateFunction       = &updateDustBunny;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &dustBunnyTileCollisionHandler;
@@ -1388,4 +1399,34 @@ paEntity_t* createBgmStop(paEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
 
     return entity;
+}
+
+paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
+    paEntity_t* newEnemy = NULL;
+
+    if(entityManager->remainingEnemies > 0 && entityManager->activeEnemies < entityManager->maxEnemies){
+        uint16_t iterations = 0;
+        while(newEnemy == NULL && iterations < 2){
+            for(uint16_t ty = 1; ty < 13; ty++){
+                for(uint16_t tx = 1; tx < 15; tx++){
+                   
+                    uint8_t t = pa_getTile(entityManager->tilemap, tx, ty);
+
+                    if(t == PA_TILE_SPAWN_BLOCK_0 && (iterations > 0 || !(esp_random() % entityManager->remainingEnemies) )){
+                        newEnemy = createTestObject(entityManager, tx << PA_TILE_SIZE_IN_POWERS_OF_2, ty << PA_TILE_SIZE_IN_POWERS_OF_2);
+                        
+                        if(newEnemy != NULL){
+                            pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
+                            entityManager->activeEnemies++;
+                            entityManager->remainingEnemies--;
+                            return newEnemy;
+                        }
+                    } 
+                }
+            }
+            iterations++;
+        }
+    }
+
+    return newEnemy;
 }

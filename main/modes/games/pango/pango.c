@@ -773,6 +773,8 @@ void changeStateGame(pango_t* self)
     uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
     pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
     pa_generateMaze(&(pango->tilemap));
+    pa_placeEnemySpawns(&(pango->tilemap));
+
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
     paEntityManager_t* entityManager = &(self->entityManager);
@@ -781,6 +783,11 @@ void changeStateGame(pango_t* self)
                           128);
     entityManager->playerEntity     = entityManager->viewEntity;
     entityManager->playerEntity->hp = self->gameData.initialHp;
+
+    for(uint16_t i = 0; i<entityManager->maxEnemies; i++){
+        pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
+    }
+
     //pa_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
 
     pa_updateLedsHpMeter(&(self->entityManager), &(self->gameData));

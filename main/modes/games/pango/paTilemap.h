@@ -23,7 +23,7 @@
 #define PA_TILE_SIZE                16
 #define PA_TILE_SIZE_IN_POWERS_OF_2 4
 
-#define PA_TILE_SET_SIZE 12
+#define PA_TILE_SET_SIZE 15
 
 //==============================================================================
 // Enums
@@ -40,12 +40,12 @@ typedef enum
     PA_TILE_WALL_6,
     PA_TILE_WALL_7,
     PA_TILE_BLOCK,
+    PA_TILE_SPAWN_BLOCK_0,
+    PA_TILE_SPAWN_BLOCK_1,
+    PA_TILE_SPAWN_BLOCK_2,
     PA_TILE_BONUS_BLOCK_0,
     PA_TILE_BONUS_BLOCK_1,
     PA_TILE_BONUS_BLOCK_2,
-    PA_TILE_WARP_C,
-    PA_TILE_WARP_D,
-    PA_TILE_WARP_E,
     PA_TILE_WARP_F,
     PA_TILE_CTNR_COIN,
     PA_TILE_CTNR_10COIN,
@@ -192,6 +192,7 @@ void pa_freeTilemap(paTilemap_t* tilemap);
 void pa_generateMaze(paTilemap_t* tilemap);
 bool pa_genPathContinue(paTilemap_t* tilemap, uint32_t x, uint32_t y);
 void pa_genMakePath(paTilemap_t* tilemap, uint32_t x, uint32_t y);
+void pa_placeEnemySpawns(paTilemap_t* tilemap);
 
 
 #endif
