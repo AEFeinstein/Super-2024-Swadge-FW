@@ -365,7 +365,7 @@ static void synthMainLoop(int64_t elapsedUs)
         {
             sd->playing[ch] = sd->midiPlayer.channels[ch].held || sd->midiPlayer.channels[ch].voiceStates.attack || sd->midiPlayer.channels[ch].voiceStates.decay || sd->midiPlayer.channels[ch].voiceStates.sustain || sd->midiPlayer.channels[ch].voiceStates.release;
             paletteColor_t col = sd->playing[ch] ? c555 : c222;
-            const char* programName = sd->perc[ch] ? "<Drumkit>" : gmProgramNames[sd->programs[ch]];
+            const char* programName = sd->midiPlayer.channels[ch].percussion ? "<Percussion>" : gmProgramNames[sd->midiPlayer.channels[ch].program];
             // Draw the program name
             drawText(&sd->font, col, programName, 10, y);
 
