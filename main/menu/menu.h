@@ -96,7 +96,7 @@
  *                              ARRAY_SIZE(optionSettingValues), getScreensaverTimeSettingBounds(), 0);
  *
  * // Initialize a renderer
- * menuManiaRenderer_t* renderer = initMenuManiaRenderer(NULL, NULL, NULL, NULL);
+ * menuManiaRenderer_t* renderer = initMenuManiaRenderer(NULL, NULL, NULL);
  * \endcode
  *
  * Process button events:

@@ -189,7 +189,7 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL, NULL);
+    mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 }
 
 /**

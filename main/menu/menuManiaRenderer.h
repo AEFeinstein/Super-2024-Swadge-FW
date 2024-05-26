@@ -40,28 +40,31 @@ typedef struct
     font_t* titleFont;              ///< The font to render the title with
     font_t* titleFontOutline;       ///< The font to render the title outline with
     font_t* menuFont;               ///< The font to render the menu with
-    font_t* menuFontOutline;        ///< The font to render the menu outline with
     bool titleFontAllocated;        ///< true if this font was allocated by the renderer and should be freed by
                                     ///< deinitMenuManiaRenderer()
     bool titleFontOutlineAllocated; ///< true if this font was allocated by the renderer and should be freed by
                                     ///< deinitMenuManiaRenderer()
     bool menuFontAllocated;         ///< true if this font was allocated by the renderer and should be freed by
                                     ///< deinitMenuManiaRenderer()
-    bool menuFontOutlineAllocated;  ///< true if this font was allocated by the renderer and should be freed by
-                                    ///< deinitMenuManiaRenderer()
     led_t leds[CONFIG_NUM_LEDS];    ///< An array with the RGB LED state to be output
     wsg_t batt[4];                  ///< Images for the battery levels
-    int16_t innerOrbitAngle;        ///< Angle for the inner orbit circle
-    int16_t outerOrbitAngle;        ///< Angle for the outer orbit circle
-    int32_t innerOrbitTimer;        ///< Timer to rotate the inner orbit circle
-    int32_t outerOrbitTimer;        ///< Timer to rotate the outer orbit circle
-    int32_t ledDecayTimer;          ///< Timer to decay LEDs
-    int32_t ledExciteTimer;         ///< Timer to excite LEDs
-    int16_t currentLed;             ///< The current LED being excited
+
+    int16_t innerOrbitAngle; ///< Angle for the inner orbit circle
+    int16_t outerOrbitAngle; ///< Angle for the outer orbit circle
+    int32_t innerOrbitTimer; ///< Timer to rotate the inner orbit circle
+    int32_t outerOrbitTimer; ///< Timer to rotate the outer orbit circle
+
+    int32_t innerRingTimer; ///< Timer to grow and shrink the inner orbit circle
+    int32_t outerRingTimer; ///< Timer to grow and shrink the outer orbit circle
+    int16_t innerRingAngle; ///< Angle to grow and shrink the inner orbit circle
+    int16_t outerRingAngle; ///< Angle to grow and shrink the outer orbit circle
+
+    int32_t ledDecayTimer;  ///< Timer to decay LEDs
+    int32_t ledExciteTimer; ///< Timer to excite LEDs
+    int16_t currentLed;     ///< The current LED being excited
 } menuManiaRenderer_t;
 
-menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont,
-                                           font_t* menuFontOutline);
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 

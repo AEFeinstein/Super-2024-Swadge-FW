@@ -48,10 +48,10 @@
 #define ROW_TEXT_COLOR          c555
 #define ROW_TEXT_SELECTED_COLOR c533
 
-#define OUTER_RING_RADIUS     144
-#define INNER_RING_RADIUS     86
 #define ORBIT_RING_RADIUS     26
 #define RING_STROKE_THICKNESS 8
+#define MIN_RING_RADIUS       64
+#define MAX_RING_RADIUS       114
 
 //==============================================================================
 // Function Prototypes
@@ -73,13 +73,10 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  * in SPIRAM.
  * @param menuFont The font used to draw this menu, preferably "rodin_eb.font". If this is NULL it will be allocated by
  * the renderer in SPIRAM.
- * @param menuFontOutline The outline font used to draw this menu. If this is NULL it will be allocated by the renderer
- * in SPIRAM.
  * @return A pointer to the menu renderer. This memory is allocated and must be freed with deinitMenuManiaRenderer()
  * when done
  */
-menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont,
-                                           font_t* menuFontOutline)
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont)
 {
     menuManiaRenderer_t* renderer = calloc(1, sizeof(menuManiaRenderer_t));
 
@@ -122,19 +119,6 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
         renderer->menuFontAllocated = false;
     }
 
-    // Save or allocate menu font outline
-    if (NULL == menuFontOutline)
-    {
-        renderer->menuFontOutline = heap_caps_calloc(1, sizeof(font_t), MALLOC_CAP_SPIRAM);
-        makeOutlineFont(renderer->menuFont, renderer->menuFontOutline, false);
-        renderer->menuFontOutlineAllocated = true;
-    }
-    else
-    {
-        renderer->menuFont          = menuFont;
-        renderer->menuFontAllocated = false;
-    }
-
     // Load battery images
     loadWsg("batt1.wsg", &renderer->batt[0], false);
     loadWsg("batt2.wsg", &renderer->batt[1], false);
@@ -143,6 +127,10 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
 
     // Initialize LEDs
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
+
+    // Set initial angles (these get trig'd into sizes)
+    renderer->innerRingAngle = 0;
+    renderer->outerRingAngle = 180;
 
     return renderer;
 }
@@ -175,11 +163,6 @@ void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer)
     {
         freeFont(renderer->menuFont);
         free(renderer->menuFont);
-    }
-    if (renderer->menuFontOutlineAllocated)
-    {
-        freeFont(renderer->menuFontOutline);
-        free(renderer->menuFontOutline);
     }
 
     free(renderer);
@@ -229,8 +212,6 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
 
     // Draw the text
     drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
-    // Outline the text
-    drawText(renderer->menuFontOutline, TEXT_OUTLINE_COLOR, text, x + PARALLELOGRAM_HEIGHT + 10, y);
 
     // Draw the left arrow, if applicable
     if (leftArrow)
@@ -302,6 +283,35 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
 }
 
 /**
+ * @brief Draw a background ring on the menu
+ *
+ * @param radius The radius of the ring
+ * @param angle The angle of the ring for orbiting circles
+ * @param color The color of the ring
+ */
+static void drawManiaRing(int16_t radius, int16_t angle, paletteColor_t color)
+{
+    // Draw the inner ring
+    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius + (RING_STROKE_THICKNESS / 2), color);
+    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius - (RING_STROKE_THICKNESS / 2), BG_COLOR);
+
+    // Draw the inner orbit
+    vec_t circlePos = {
+        .x = 0,
+        .y = -radius,
+    };
+    circlePos = rotateVec2d(circlePos, angle);
+    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS, color);
+    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y,
+                     ORBIT_RING_RADIUS - RING_STROKE_THICKNESS, BG_COLOR);
+
+    // Draw an opposite filled circle
+    circlePos.x = -circlePos.x;
+    circlePos.y = -circlePos.y;
+    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS, color);
+}
+
+/**
  * @brief Draw a themed menu to the display and control the LEDs
  *
  * @param menu The menu to draw
@@ -362,6 +372,30 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         renderer->innerOrbitAngle++;
     }
 
+    // Run timer for outer ring size
+    renderer->outerRingTimer += elapsedUs;
+    while (renderer->outerRingTimer >= 20000)
+    {
+        renderer->outerRingTimer -= 20000;
+        renderer->outerRingAngle++;
+        if (renderer->outerRingAngle == 360)
+        {
+            renderer->outerRingAngle = 0;
+        }
+    }
+
+    // Run timer for inner ring size
+    renderer->innerRingTimer += elapsedUs;
+    while (renderer->innerRingTimer >= 25000)
+    {
+        renderer->innerRingTimer -= 25000;
+        renderer->innerRingAngle++;
+        if (renderer->innerRingAngle == 360)
+        {
+            renderer->innerRingAngle = 0;
+        }
+    }
+
     // Only poll the battery if requested
     if (menu->showBattery)
     {
@@ -374,34 +408,26 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         }
     }
 
-    // Draw the outer ring
+    // Clear the background
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, BG_COLOR);
-    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, OUTER_RING_RADIUS + (RING_STROKE_THICKNESS / 2), OUTER_RING_COLOR);
-    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, OUTER_RING_RADIUS - (RING_STROKE_THICKNESS / 2), BG_COLOR);
 
-    // Draw the outer orbit
-    vec_t outerCirclePos = {
-        .x = 0,
-        .y = -OUTER_RING_RADIUS,
-    };
-    outerCirclePos = rotateVec2d(outerCirclePos, renderer->outerOrbitAngle);
-    drawCircleFilled((TFT_WIDTH / 2) + outerCirclePos.x, (TFT_HEIGHT / 2) + outerCirclePos.y, ORBIT_RING_RADIUS,
-                     OUTER_RING_COLOR);
+    // Find the two radii
+    int16_t innerRingRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
+                              + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(renderer->innerRingAngle)) / 1024);
+    int16_t outerRingRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
+                              + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(renderer->outerRingAngle)) / 1024);
 
-    // Draw the inner ring
-    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, INNER_RING_RADIUS + (RING_STROKE_THICKNESS / 2), INNER_RING_COLOR);
-    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, INNER_RING_RADIUS - (RING_STROKE_THICKNESS / 2), BG_COLOR);
-
-    // Draw the inner orbit
-    vec_t innerCirclePos = {
-        .x = 0,
-        .y = -INNER_RING_RADIUS,
-    };
-    innerCirclePos = rotateVec2d(innerCirclePos, renderer->innerOrbitAngle);
-    drawCircleFilled((TFT_WIDTH / 2) + innerCirclePos.x, (TFT_HEIGHT / 2) + innerCirclePos.y, ORBIT_RING_RADIUS,
-                     INNER_RING_COLOR);
-    drawCircleFilled((TFT_WIDTH / 2) + innerCirclePos.x, (TFT_HEIGHT / 2) + innerCirclePos.y,
-                     ORBIT_RING_RADIUS - RING_STROKE_THICKNESS, BG_COLOR);
+    // Draw the rings in the correct order, depending on radius
+    if (innerRingRadius < outerRingRadius)
+    {
+        drawManiaRing(outerRingRadius, renderer->outerRingAngle, OUTER_RING_COLOR);
+        drawManiaRing(innerRingRadius, renderer->innerRingAngle, INNER_RING_COLOR);
+    }
+    else
+    {
+        drawManiaRing(innerRingRadius, renderer->innerRingAngle, INNER_RING_COLOR);
+        drawManiaRing(outerRingRadius, renderer->outerRingAngle, OUTER_RING_COLOR);
+    }
 
     // Find the start of the 'page'
     node_t* pageStart = menu->items->first;
