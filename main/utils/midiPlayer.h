@@ -6,7 +6,7 @@
 #include <stddef.h>
 
 #define MIDI_CHANNEL_COUNT 16
-// TODO: Dynamic voice allocation
+// TODO: Channel-independent dynamic voice allocation
 // The number of simultaneous voices each channel can support
 #define VOICE_PER_CHANNEL 2
 // The number of voices reserved for percussion
@@ -16,6 +16,8 @@
 
 #define MIDI_TRUE 0x7F
 #define MIDI_FALSE 0x00
+#define MIDI_TO_BOOL(val) (val > 63)
+#define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
 
 typedef enum
 {
@@ -41,7 +43,21 @@ typedef struct
     // The volume of the sustain note, proportional to the original volume
     uint8_t sustain;
 
+    /// @brief The index of the repeat loop
+    //uint32_t loopStart;
+    /// @brief The index at which the loop should repeat
+    //uint32_t loopEnd;
+
 } envelope_t;
+
+typedef enum
+{
+    ES_STOPPED = 0,
+    ES_ATTACK,
+    ES_DECAY,
+    ES_SUSTAIN,
+    ES_RELEASE,
+} envelopeState_t;
 
 typedef enum
 {
@@ -128,8 +144,12 @@ typedef enum
  */
 typedef enum
 {
+    /// @brief No flags
     TF_NONE = 0,
+    /// @brief This timbre plays percussion sounds (percussionNote_t) rather than melodic notes
     TF_PERCUSSION = 1,
+    /// @brief This timbre represents a monophonic instrument
+    TF_MONO = 2,
 } timbreFlags_t;
 
 /**
@@ -146,10 +166,11 @@ typedef int8_t (*percussionFunc_t)(percussionNote_t drum, uint32_t idx, void* da
  */
 typedef struct
 {
-    /// @brief The shape of the carrier wave to use for this timbre
-    oscillatorShape_t shape;
-
+    /// @brief The source of samples for this instrument
     timbreType_t type;
+
+    /// @brief Flags bitfield for this timbre
+    timbreFlags_t flags;
 
     union
     {
@@ -158,19 +179,25 @@ typedef struct
 
         struct {
             /// @brief The frequency of the base sample to be used when pitch shifting
+
             // This should just always be C4? (440 << 8)
             //uint32_t freq = (440 << 8);
+
             /// @brief A pointer to this timbre's sample data, when type is SAMPLE
             int8_t* data;
+
             /// @brief The length of the sample in bytes
             uint32_t count;
-            /// @brief The sample rate
+
+            /// @brief The sample rate divisor. Each audio sample will be played this many times.
+            /// The audio data's actual sample rate should be (32768 / rate)
             uint8_t rate;
         } sample;
 
         struct {
-            /// @brief A function t
-            percussionFunc_t perc;
+            /// @brief A callback to call for drum data
+            percussionFunc_t playFunc;
+            /// @brief User data to pass to the drumkit
             void* data;
         } percussion;
     };
@@ -182,6 +209,20 @@ typedef struct
     const char* name;
 } midiTimbre_t;
 
+// TODO: Use this for samples
+/*typedef struct
+{
+    /// @brief The monotonic tick counter for playback of sampled timbres
+    uint32_t tick;
+
+} midiSampler_t;
+
+typedef union
+{
+    midiSampler_t sampler;
+    synthOscillator_t oscillator;
+} midiSampleSource_t;*/
+
 /**
  * @brief Tracks the state of a single voice, playing a single note.
  *
@@ -189,17 +230,29 @@ typedef struct
  */
 typedef struct
 {
-    // TODO: is active redundant with voiceStates?
+    // TODO: is active redundant with voiceStates? no, because that's not here
     /// @brief Whether or not this voice is currently making sound
-    bool active;
+    envelopeState_t envState;
+
+    /// @brief The number of ticks remaining before transitioning to the next state
+    uint32_t transitionTicks;
+
+    /// @brief The target volume of this tick
+    uint8_t targetVol;
+
+    /// @brief The monotonic tick counter for playback of sampled timbres
+    uint32_t sampleTick;
 
     /// @brief The MIDI note number for the sound being played
     uint8_t note;
 
     /// @brief The synthesizer oscillators used to generate the sounds
-    synthOscillator_t oscillators[1];
+    synthOscillator_t oscillators[OSC_PER_VOICE];
 
     /// @brief The timbre of this voice, which defines its musical characteristics
+    // TODO: Should this be a pointer instead?
+    // We may be asked to modify envelope, etc. so maybe just memcpy into here?
+    // program change isn't a super lightweight event anyhow
     midiTimbre_t timbre;
 } midiVoice_t;
 
@@ -221,6 +274,9 @@ typedef struct
 
     /// @brief Bitfield of voices currently in the release stage
     uint32_t release;
+
+    /// @brief Bitfield of voices which are being held by the pedal
+    uint32_t held;
 }
 voiceStates_t;
 
@@ -235,6 +291,9 @@ typedef struct
     /// @brief The ID of the program (timbre) set for this channel
     uint8_t program;
 
+    /// @brief The actual current timbre definition which the program ID corresponds to
+    midiTimbre_t timbre;
+
     /// @brief The state of each voice allocated to this channel
     // TODO: This will eventually be replaced by a single bank of voices which are dynamically allocated at the MIDI player level
     midiVoice_t voices[VOICE_PER_CHANNEL];
@@ -242,8 +301,14 @@ typedef struct
     /// @brief This channel's voice state bitmap
     voiceStates_t voiceStates;
 
+    /// @brief The 14-bit pitch wheel value
+    uint16_t pitchBend;
+
     /// @brief Whether this channel is reserved for percussion.
     bool percussion;
+
+    /// @brief Whether notes will be held
+    bool held;
 
 } midiChannel_t;
 
@@ -264,9 +329,33 @@ typedef struct
     /// @brief The percussion voice state bitmap
     voiceStates_t percVoiceStates;
 
+    /// @brief An array holding a pointer to every oscillator
+    synthOscillator_t* allOscillators[(MIDI_CHANNEL_COUNT * VOICE_PER_CHANNEL + PERCUSSION_VOICES) * OSC_PER_VOICE];
+
+    /// @brief The total number of oscillators in the array. Could be less than the max if some are unused
+    uint16_t oscillatorCount;
+
     /// @brief Whether this player is playing a song or a MIDI stream
     midiPlayerMode_t mode;
 } midiPlayer_t;
+
+/**
+ * @brief Initialize or reset the MIDI player
+ *
+ * This includes setting up the dac callback
+ *
+ * @param player
+ */
+void midiPlayerInit(midiPlayer_t* player);
+
+/**
+ * @brief Fill a buffer with the next set of samples from the MIDI player. This should be called by the
+ * callback passed into initDac(). Samples are generated at sampling rate of ::DAC_SAMPLE_RATE_HZ
+ *
+ * @param samples An array of unsigned 8-bit samples to fill
+ * @param len The length of the array to fill
+ */
+void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len);
 
 /**
  * @brief Stop all sound immediately. This is not affected by the sustain pedal.

@@ -45,6 +45,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "fp_math.h"
+
 //==============================================================================
 // Defines
 //==============================================================================
@@ -120,6 +122,7 @@ void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape);
 void swSynthSetWaveFunc(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveFuncData);
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq);
-void swSynthSetFreqPrecise(synthOscillator_t* osc, uint32_t freq);
+void swSynthSetFreqPrecise(synthOscillator_t* osc, uq16_16 freq);
 void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume);
 uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators);
+int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators);

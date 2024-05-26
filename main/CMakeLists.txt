@@ -53,6 +53,7 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "utils/touchUtils.c"
                             "utils/trigonometry.c"
                             "utils/vector2d.c"
+                            "utils/waveTables.c"
                             "utils/wheel_menu.c"
                     PRIV_REQUIRES hdw-imu
                                   hdw-battmon

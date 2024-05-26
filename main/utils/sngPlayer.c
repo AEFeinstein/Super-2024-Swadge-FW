@@ -8,7 +8,6 @@
 #include "hdw-dac.h"
 #include "sngPlayer.h"
 #include "macros.h"
-#define WAVE_TABLES_IMPLEMENTATION
 #include "waveTables.h"
 
 //==============================================================================
@@ -96,12 +95,6 @@ const uint32_t oscWaves[OSC_PER_SONG] = {
     0,
     0,
 };
-
-static int8_t waveTableFunc(uint16_t idx, void* data)
-{
-    // just use data as the wave ID
-    return waveTables[(uint32_t)data][idx];
-}
 
 //==============================================================================
 // Functions

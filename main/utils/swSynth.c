@@ -8,6 +8,7 @@
 #include "hdw-dac.h"
 #include "swSynth.h"
 #include "macros.h"
+#include "fp_math.h"
 
 //==============================================================================
 // Constant variables
@@ -248,14 +249,14 @@ void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq)
 }
 
 /**
- * @brief Set the frequency of an oscillator with 8 bits of decimal precision
+ * @brief Set the frequency of an oscillator with 16 bits of decimal precision
  *
  * @param osc The oscillator to set the frequency for
- * @param freq The frequency to set, as a fixed-point value with 8 bits of decimal precision
+ * @param freq The frequency to set, as a fixed-point value with 16 bits of decimal precision
  */
-void swSynthSetFreqPrecise(synthOscillator_t* osc, uint32_t freq)
+void swSynthSetFreqPrecise(synthOscillator_t* osc, uq16_16 freq)
 {
-    osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq) << 8) / (DAC_SAMPLE_RATE_HZ);
+    osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq)) / (DAC_SAMPLE_RATE_HZ);
 }
 
 /**
@@ -278,6 +279,23 @@ void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume)
  * @return The mixed unsigned 8-bit output sample
  */
 uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators)
+{
+    // Return the 8-bit unsigned sample
+    return (swSynthSumOscillators(oscillators, numOscillators) / numOscillators) + 128;
+}
+
+/**
+ * @brief Increment and mix together a set of oscillators like swSynthMixOscillators(), but returns the
+ * intermediate sample sum rather than the average, to allow mixing in other sources without losing precision.
+ *
+ * The caller must divide this value by the number of oscillators (plus the number of other sources) then add
+ * 128 to the result to convert it to an unsigned 8-bit value.
+ *
+ * @param oscillators An array of oscillator pointers
+ * @param numOscillators The number of members in oscillators
+ * @return int32_t The signed sum of all oscillator samples
+ */
+int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators)
 {
     // Start off with an empty sample. It's 32-bit for math but will be returned as 8-bit
     int32_t sample = 0;
@@ -306,6 +324,5 @@ uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
         sample += ((osc->waveFunc(osc->accumulator.bytes[2], osc->waveFuncData) * osc->cVol) / 256);
     }
 
-    // Return the 8-bit unsigned sample
-    return (sample / numOscillators) + 128;
+    return sample;
 }

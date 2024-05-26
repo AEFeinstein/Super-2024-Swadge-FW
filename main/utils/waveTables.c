@@ -1,4 +1,7 @@
-#ifdef WAVE_TABLES_IMPLEMENTATION
+#include "waveTables.h"
+
+#include <stdint.h>
+
 // MIDI program wavetables. Envelopes sold separately
 static const int8_t waveTables[128][256] = {
     {
@@ -1845,4 +1848,9 @@ static const int8_t waveTables[128][256] = {
         -14, -16, -15, -14, -12, -9,  -5,  0,   3,   4,   1,   -4,  -9,  -13,
     },
 };
-#endif
+
+int8_t waveTableFunc(uint16_t idx, void* data)
+{
+    // just use data as the wave ID
+    return waveTables[(uint32_t)data][idx];
+}

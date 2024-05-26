@@ -10,6 +10,7 @@
 #include "spiffs_font.h"
 
 #include "sngPlayer.h"
+#include "midiPlayer.h"
 
 //==============================================================================
 // Defines
@@ -53,6 +54,8 @@ typedef struct
     bool perc[16];
     bool playing[16];
     uint8_t lastPackets[16][4];
+
+    midiPlayer_t midiPlayer;
 } synthData_t;
 
 //==============================================================================
@@ -62,6 +65,7 @@ typedef struct
 static void synthEnterMode(void);
 static void synthExitMode(void);
 static void synthMainLoop(int64_t elapsedUs);
+static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static bool installUsb(void);
 static void handlePacket(uint8_t packet[4]);
@@ -250,7 +254,7 @@ for n in range(128):
 #else
 
 // Note frequencies, in UQ24.8 format
-static const uint32_t noteFreqTable[] = {
+/*static const uint32_t noteFreqTable[] = {
     0x00082d, // n0  = 8.176 Hz
     0x0008a9, // n1  = 8.662 Hz
     0x00092d, // n2  = 9.177 Hz
@@ -379,7 +383,7 @@ static const uint32_t noteFreqTable[] = {
     0x2ba74d, // F8  = 11175.303 Hz
     0x2e3fd2, // F#8 = 11839.822 Hz
     0x30ffda, // G8  = 12543.854 Hz
-};
+};*/
 
 #endif
 
@@ -582,6 +586,7 @@ swadgeMode_t synthMode = {
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
+    .fnDacCb                  = synthDacCallback,
 };
 
 static synthData_t* sd;
@@ -594,6 +599,7 @@ static void synthEnterMode(void)
     loadFont("ibm_vga8.font", &sd->font, false);
     sd->installed = installUsb();
     sd->perc[9] = true;
+    midiPlayerInit(&sd->midiPlayer);
 }
 
 static void synthExitMode(void)
@@ -609,7 +615,6 @@ static void synthMainLoop(int64_t elapsedUs)
 
     // Blank the screen
     clearPxTft();
-
 
     if (!sd->installed || sd->err != 0)
     {
@@ -665,6 +670,11 @@ static void synthMainLoop(int64_t elapsedUs)
     }
 }
 
+static void synthDacCallback(uint8_t* samples, int16_t len)
+{
+    midiPlayerFillBuffer(&sd->midiPlayer, samples, len);
+}
+
 static bool installUsb(void)
 {
     tinyusb_config_t const tusb_cfg = {
@@ -701,7 +711,7 @@ static void handlePacket(uint8_t packet[4])
         // Note OFF
         case 0x8:
         {
-            if (!sd->sustain)
+            /*if (!sd->sustain)
             {
                 sd->playing[channel] = false;
                 spkStopNote2(0, channel);
@@ -709,7 +719,7 @@ static void handlePacket(uint8_t packet[4])
             else
             {
                 sd->noteSus = true;
-            }
+            }*/
             break;
         }
 
@@ -718,12 +728,13 @@ static void handlePacket(uint8_t packet[4])
         {
             uint8_t midiKey = packet[2];
             uint8_t velocity = packet[3];
-            sd->playing[channel] = true;
+            midiNoteOn(&sd->midiPlayer, channel, midiKey, velocity);
+            /*sd->playing[channel] = true;
 #ifdef FINE_NOTES
             spkPlayNoteFine(noteFreqTable[midiKey], 0, channel, velocity << 1);
 #else
             spkPlayNote(coarseNoteFreqTable[midiKey], channel, velocity << 1);
-#endif
+#endif*/
             break;
         }
 
@@ -737,6 +748,8 @@ static void handlePacket(uint8_t packet[4])
                 // Sustain
                 case 0x40:
                 {
+                    midiSustain(&sd->midiPlayer, channel, controlVal);
+                    /*
                     sd->sustain = controlVal > 63;
 
                     if (!sd->sustain && sd->noteSus)
@@ -744,26 +757,28 @@ static void handlePacket(uint8_t packet[4])
                         sd->playing[channel] = false;
                         spkStopNote2(0, channel);
                         sd->noteSus = false;
-                    }
+                    }*/
                     break;
                 }
 
                 // All sounds off (120)
                 case 0x78:
                 {
-                    sd->noteSus = false;
-                    for (int chan = 0; chan < 2; chan++)
+                    midiAllSoundOff(&sd->midiPlayer);
+                    /*sd->noteSus = false;
+                    for (int chan = 0; chan < 16; chan++)
                     {
                         sd->playing[channel] = false;
                         spkStopNote2(0, chan);
-                    }
+                    }*/
                     break;
                 }
 
                 // All notes off (123)
                 case 0x7B:
                 {
-                    for (int chan = 0; chan < 2; chan++)
+                    midiAllNotesOff(&sd->midiPlayer, channel);
+                    /*for (int chan = 0; chan < 16; chan++)
                     {
                         if (!sd->sustain)
                         {
@@ -774,7 +789,7 @@ static void handlePacket(uint8_t packet[4])
                         {
                             sd->noteSus = true;
                         }
-                    }
+                    }*/
                     break;
                 }
             }
@@ -785,7 +800,8 @@ static void handlePacket(uint8_t packet[4])
         case 0xC:
         {
             uint8_t program = packet[2];
-            sd->programs[channel] = program;
+            midiSetProgram(&sd->midiPlayer, channel, program);
+            /*sd->programs[channel] = program;
 
             sd->playing[channel] = false;
             spkStopNote2(0, channel);
@@ -793,7 +809,7 @@ static void handlePacket(uint8_t packet[4])
             if (!sd->perc[channel])
             {
                 spkSongSetWave(0, channel, program);
-            }
+            }*/
 
             break;
         }
@@ -802,6 +818,7 @@ static void handlePacket(uint8_t packet[4])
         case 0xE:
         {
             uint16_t range = (packet[3] << 8) | packet[2];
+            midiPitchWheel(&sd->midiPlayer, channel, range);
             break;
         }
     }
