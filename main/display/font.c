@@ -438,30 +438,13 @@ void makeOutlineFont(font_t* srcFont, font_t* dstFont, bool spiRam)
                 if (getFontPx(sCh, srcFont->height, x, y))
                 {
                     // Check for boundaries
-                    for (int16_t kY = y - 1; kY < y + 2; kY++)
+                    if (!getFontPx(sCh, srcFont->height, x - 1, y + 0) //
+                        || !getFontPx(sCh, srcFont->height, x + 1, y + 0)
+                        || !getFontPx(sCh, srcFont->height, x + 0, y - 1)
+                        || !getFontPx(sCh, srcFont->height, x + 0, y + 1))
                     {
-                        for (int16_t kX = x - 1; kX < x + 2; kX++)
-                        {
-                            if (!getFontPx(sCh, srcFont->height, kX, kY))
-                            {
-                                onBoundary = true;
-                                break;
-                            }
-                        }
-                        if (onBoundary)
-                        {
-                            break;
-                        }
+                        onBoundary = true;
                     }
-
-                    // Slightly thinner outline
-                    // if (!getFontPx(sCh, srcFont->height, x - 1, y + 0) //
-                    //     || !getFontPx(sCh, srcFont->height, x + 1, y + 0)
-                    //     || !getFontPx(sCh, srcFont->height, x + 0, y - 1)
-                    //     || !getFontPx(sCh, srcFont->height, x + 0, y + 1))
-                    // {
-                    //     onBoundary = true;
-                    // }
                 }
 
                 // Set the outline pixel accordingly
