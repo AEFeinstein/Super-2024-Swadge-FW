@@ -190,6 +190,9 @@ static void mainMenuEnterMode(void)
 
     // Initialize menu renderer
     mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+
+    // Make it smooth
+    setFrameRateUs(1000000 / 60);
 }
 
 /**
