@@ -440,15 +440,17 @@ static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t 
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel)
 {
     // Pitch wheel is centered, don't bother to change it at
-    if (pitchWheel == 0x2000)
+    /*if (pitchWheel == 0x2000)
     {
         return noteFreqTable[noteId];
-    }
+    }*/
 
     // First, convert the pitch wheel value to +/-cents
     int32_t bendCents = (((int16_t)-0x2000) + pitchWheel) * 100 / 0x1FFF;
-    uint64_t freq = (noteFreqTable[noteId] * bendTable[bendCents + 100]) >> 24;
-    return (uq16_16)freq;
+    uint64_t freq = noteFreqTable[noteId];
+    freq *= bendTable[bendCents + 100];
+    uq16_16 trimmedFreq = ((freq >> 24) & 0xFFFFFFFF);
+    return trimmedFreq;
 }
 
 /**
@@ -675,7 +677,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
         case NOISE:
         {
             // TODO: velocity should attack time instead of directly affecting volume
-            swSynthSetFreq(&voices[voiceIdx].oscillators[0], bendPitch(note, chan->pitchBend));
+            swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[0], bendPitch(note, chan->pitchBend));
             swSynthSetVolume(&voices[voiceIdx].oscillators[0], velocity << 1);
             voices[voiceIdx].transitionTicks = chan->timbre.envelope.attack;
             break;
