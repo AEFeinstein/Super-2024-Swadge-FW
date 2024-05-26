@@ -44,7 +44,6 @@
 #define OUTER_RING_COLOR        c243
 #define INNER_RING_COLOR        c531
 #define ROW_COLOR               c000
-#define ROW_SHADOW_COLOR        c500
 #define ROW_TEXT_COLOR          c555
 #define ROW_TEXT_SELECTED_COLOR c533
 
@@ -52,6 +51,8 @@
 #define RING_STROKE_THICKNESS 8
 #define MIN_RING_RADIUS       64
 #define MAX_RING_RADIUS       114
+
+static const paletteColor_t selectedShadowColors[] = {c500, c511, c522, c533, c544, c555, c544, c533, c522, c511,};
 
 //==============================================================================
 // Function Prototypes
@@ -196,7 +197,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                          y + rows + DROP_SHADOW_OFFSET,                                                  //
                          x + PARALLELOGRAM_HEIGHT - rows - 1 + PARALLELOGRAM_WIDTH + DROP_SHADOW_OFFSET, //
                          y + rows + DROP_SHADOW_OFFSET,                                                  //
-                         ROW_SHADOW_COLOR);
+                         selectedShadowColors[renderer->selectedShadowIdx]);
         }
     }
 
@@ -396,6 +397,14 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         }
     }
 
+    // Run timer to cycle colors under the selected item
+    renderer->selectedShadowTimer += elapsedUs;
+    while(renderer->selectedShadowTimer > (100000))
+    {
+        renderer->selectedShadowTimer -= (100000);
+        renderer->selectedShadowIdx = (renderer->selectedShadowIdx + 1) % ARRAY_SIZE(selectedShadowColors);
+    }
+
     // Only poll the battery if requested
     if (menu->showBattery)
     {
@@ -499,6 +508,12 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         {
             menuItem_t* item = (menuItem_t*)pageStart->val;
             bool isSelected  = (menu->currentItem->val == item);
+
+            if(isSelected && renderer->selectedItem != item)
+            {
+                renderer->selectedItem = item;
+                // TODO bounce selected item
+            }
 
             char buffer[64]   = {0};
             const char* label = getMenuItemLabelText(buffer, sizeof(buffer), item);

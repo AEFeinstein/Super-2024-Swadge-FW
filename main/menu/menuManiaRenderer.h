@@ -62,6 +62,10 @@ typedef struct
     int32_t ledDecayTimer;  ///< Timer to decay LEDs
     int32_t ledExciteTimer; ///< Timer to excite LEDs
     int16_t currentLed;     ///< The current LED being excited
+
+    menuItem_t* selectedItem;
+    int16_t selectedShadowIdx;
+    int32_t selectedShadowTimer;
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
