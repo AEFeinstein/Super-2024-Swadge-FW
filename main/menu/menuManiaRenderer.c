@@ -37,22 +37,34 @@
 #define UP_ARROW_HEIGHT 10
 #define UP_ARROW_MARGIN 2
 
-#define TITLE_BG_COLOR          c115
-#define TITLE_TEXT_COLOR        c542
-#define TEXT_OUTLINE_COLOR      c000
-#define BG_COLOR                c540
-#define OUTER_RING_COLOR        c243
-#define INNER_RING_COLOR        c531
-#define ROW_COLOR               c000
-#define ROW_TEXT_COLOR          c555
-#define ROW_TEXT_SELECTED_COLOR c533
+#define TITLE_BG_COLOR     c115
+#define TITLE_TEXT_COLOR   c542
+#define TEXT_OUTLINE_COLOR c000
+#define BG_COLOR           c540
+#define OUTER_RING_COLOR   c243
+#define INNER_RING_COLOR   c531
+#define ROW_COLOR          c000
+#define ROW_TEXT_COLOR     c555
+// #define ROW_TEXT_SELECTED_COLOR c533
 
 #define ORBIT_RING_RADIUS     26
 #define RING_STROKE_THICKNESS 8
 #define MIN_RING_RADIUS       64
 #define MAX_RING_RADIUS       114
 
-static const paletteColor_t selectedShadowColors[] = {c500, c511, c522, c533, c544, c555, c544, c533, c522, c511,};
+//==============================================================================
+// Const Variables
+//==============================================================================
+
+/// @brief Colors to cycle through for the selected drop shadow
+static const paletteColor_t selectedShadowColors[] = {
+    c500, c511, c522, c533, c544, c555, c544, c533, c522, c511,
+};
+
+/// @brief Offsets to cycle through to bounce an item when selected
+static const int16_t selectedBounceOffsets[] = {
+    0, -1, -2, -3, -4, -5, -6, -7, -6, -5, -4, -3, -2, -1,
+};
 
 //==============================================================================
 // Function Prototypes
@@ -188,7 +200,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
     paletteColor_t textColor = ROW_TEXT_COLOR;
     if (isSelected)
     {
-        textColor = ROW_TEXT_SELECTED_COLOR;
+        // textColor = ROW_TEXT_SELECTED_COLOR;
 
         // Draw drop shadow for selected item
         for (int rows = 0; rows < PARALLELOGRAM_HEIGHT; rows++)
@@ -199,6 +211,9 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
                          y + rows + DROP_SHADOW_OFFSET,                                                  //
                          selectedShadowColors[renderer->selectedShadowIdx]);
         }
+
+        // Bounce the item
+        y += selectedBounceOffsets[renderer->selectedBounceIdx];
     }
 
     // Draw background for the menu item
@@ -375,9 +390,9 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
 
     // Run timer for outer ring size
     renderer->outerRingTimer += elapsedUs;
-    while (renderer->outerRingTimer >= 20000)
+    while (renderer->outerRingTimer >= 22500)
     {
-        renderer->outerRingTimer -= 20000;
+        renderer->outerRingTimer -= 22500;
         renderer->outerRingAngle++;
         if (renderer->outerRingAngle == 360)
         {
@@ -387,9 +402,9 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
 
     // Run timer for inner ring size
     renderer->innerRingTimer += elapsedUs;
-    while (renderer->innerRingTimer >= 25000)
+    while (renderer->innerRingTimer >= 22500)
     {
-        renderer->innerRingTimer -= 25000;
+        renderer->innerRingTimer -= 22500;
         renderer->innerRingAngle++;
         if (renderer->innerRingAngle == 360)
         {
@@ -399,10 +414,29 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
 
     // Run timer to cycle colors under the selected item
     renderer->selectedShadowTimer += elapsedUs;
-    while(renderer->selectedShadowTimer > (100000))
+    while (renderer->selectedShadowTimer > (100000))
     {
         renderer->selectedShadowTimer -= (100000);
         renderer->selectedShadowIdx = (renderer->selectedShadowIdx + 1) % ARRAY_SIZE(selectedShadowColors);
+    }
+
+    // Run a timer to bounce the selected item, when transitioned to
+    if (0 != renderer->selectedBounceIdx)
+    {
+        renderer->selectedBounceTimer += elapsedUs;
+        while (renderer->selectedBounceTimer > (16667))
+        {
+            renderer->selectedBounceTimer -= (16667);
+            renderer->selectedBounceIdx = (renderer->selectedBounceIdx + 1) % ARRAY_SIZE(selectedBounceOffsets);
+            if (0 == renderer->selectedBounceIdx)
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        renderer->selectedBounceTimer = 0;
     }
 
     // Only poll the battery if requested
@@ -429,13 +463,13 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
     // Draw the rings in the correct order, depending on radius
     if (innerRingRadius < outerRingRadius)
     {
-        drawManiaRing(outerRingRadius, renderer->outerRingAngle, OUTER_RING_COLOR);
-        drawManiaRing(innerRingRadius, renderer->innerRingAngle, INNER_RING_COLOR);
+        drawManiaRing(outerRingRadius, renderer->outerOrbitAngle, OUTER_RING_COLOR);
+        drawManiaRing(innerRingRadius, renderer->innerOrbitAngle, INNER_RING_COLOR);
     }
     else
     {
-        drawManiaRing(innerRingRadius, renderer->innerRingAngle, INNER_RING_COLOR);
-        drawManiaRing(outerRingRadius, renderer->outerRingAngle, OUTER_RING_COLOR);
+        drawManiaRing(innerRingRadius, renderer->innerOrbitAngle, INNER_RING_COLOR);
+        drawManiaRing(outerRingRadius, renderer->outerOrbitAngle, OUTER_RING_COLOR);
     }
 
     // Find the start of the 'page'
@@ -509,10 +543,13 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
             menuItem_t* item = (menuItem_t*)pageStart->val;
             bool isSelected  = (menu->currentItem->val == item);
 
-            if(isSelected && renderer->selectedItem != item)
+            // If there's a new selected item
+            if (isSelected && renderer->selectedItem != item)
             {
+                // Save it
                 renderer->selectedItem = item;
-                // TODO bounce selected item
+                // Bounce the selected item
+                renderer->selectedBounceIdx = 1;
             }
 
             char buffer[64]   = {0};

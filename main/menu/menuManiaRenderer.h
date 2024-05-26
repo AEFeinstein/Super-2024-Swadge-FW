@@ -63,9 +63,11 @@ typedef struct
     int32_t ledExciteTimer; ///< Timer to excite LEDs
     int16_t currentLed;     ///< The current LED being excited
 
-    menuItem_t* selectedItem;
-    int16_t selectedShadowIdx;
-    int32_t selectedShadowTimer;
+    menuItem_t* selectedItem;    ///< Reference to the selected item to tell when it changes
+    int16_t selectedShadowIdx;   ///< The index to the color offset for the selected drop shadow
+    int32_t selectedShadowTimer; ///< The timer to change the color for the selected drop shadow
+    int16_t selectedBounceIdx;   ///< The index to the bounce offset for the selected item
+    int32_t selectedBounceTimer; ///< The timer to bounce the offset for the selected item
 } menuManiaRenderer_t;
 
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
