@@ -43,7 +43,9 @@ typedef enum
 typedef struct
 {
     vec_q24_8 pos;
-    vec_q24_8 vel; // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
+    vec_q24_8 vel;         // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
+    vec_q24_8 accel_16;      // Acceleration is pixels per frame squared
+    vec_q24_8 accelAccum_16; // Acceleration is pixels per frame squared
     q24_8 radius;
     uint32_t zoneMask;
     paletteColor_t color;

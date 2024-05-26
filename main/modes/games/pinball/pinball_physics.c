@@ -176,13 +176,43 @@ void checkBallStaticCollision(pinball_t* p)
                 && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], wall)    // and not already touching
                 && circleLineIntersection(intBall, intLine(*wall), &collisionVec)) // and intersecting
             {
-                // Collision detected, do some physics
-                vec_q24_8 centerToCenter = {
-                    .x = collisionVec.x,
-                    .y = collisionVec.y,
-                };
-                vec_q24_8 reflVec = fpvNorm(centerToCenter);
-                ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
+                bool reflect = false;
+
+                if (reflect)
+                {
+                    // Collision detected, do some physics
+                    vec_q24_8 centerToCenter = {
+                        .x = collisionVec.x,
+                        .y = collisionVec.y,
+                    };
+                    vec_q24_8 reflVec = fpvNorm(centerToCenter);
+                    ball->vel         = fpvSub(ball->vel, fpvMulSc(reflVec, (2 * fpvDot(ball->vel, reflVec))));
+                }
+                else
+                {
+                    // Collision detected, ride the line
+                    
+                    // If the line is below the circle
+                    if(collisionVec.y < 0)
+                    {
+                        // ball->vel.x = 0;
+                        ball->vel.y = 0;
+                        if(wall->p1.y < wall->p2.y)
+                        {
+                            ball->accel_16.y = (wall->p2.y - wall->p1.y);
+                            ball->accel_16.x = (wall->p2.x - wall->p1.x);
+                        }
+                        else
+                        {
+                            ball->accel_16.y = (wall->p1.y - wall->p2.y);
+                            ball->accel_16.x = (wall->p1.x - wall->p2.x);
+                        }
+                        printf("%d, %d\n", ball->accel_16.x, ball->accel_16.y);
+                        ball->accel_16 = fpvNorm(ball->accel_16);
+                        printf("%d, %d\n\n", ball->accel_16.x, ball->accel_16.y);
+                        ball->accel_16 = fpvMulSc(ball->accel_16, 32768);
+                    }
+                }
 
                 // Mark this wall as being touched
                 setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
@@ -248,8 +278,33 @@ void moveBalls(pinball_t* p)
     {
         pbCircle_t* ball = &p->balls[bIdx];
 
-        // TODO proper gravity
-        ball->vel.y += 4;
+        // Accumulate acceleration to increase precision (X)
+        ball->accelAccum_16.x += ball->accel_16.x;
+        while (ball->accelAccum_16.x >= 0x10000)
+        {
+            ball->accelAccum_16.x -= 0x10000;
+            ball->vel.x++;
+        }
+        while (ball->accelAccum_16.x <= -0x10000)
+        {
+            ball->accelAccum_16.x += 0x10000;
+            ball->vel.x--;
+        }
+
+        // Accumulate acceleration to increase precision (Y)
+        ball->accelAccum_16.y += ball->accel_16.y;
+        while (ball->accelAccum_16.y >= 0x10000)
+        {
+            ball->accelAccum_16.y -= 0x10000;
+            ball->vel.y++;
+        }
+        while (ball->accelAccum_16.y <= -0x10000)
+        {
+            ball->accelAccum_16.y += 0x10000;
+            ball->vel.y--;
+        }
+
+        // TODO adjust gravity vector when on top of a line
 
         // Move the ball
         ball->pos.x += (ball->vel.x);

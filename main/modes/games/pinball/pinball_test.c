@@ -25,10 +25,12 @@ void pbCreateBall(pinball_t* p, q24_8 x, q24_8 y)
     ball->pos.x  = x;
     ball->pos.y  = y;
 #define MAX_VEL 128
-    ball->vel.x  = 0;
-    ball->vel.y  = 0;
-    ball->color  = c500;
-    ball->filled = true;
+    ball->vel.x   = 0;
+    ball->vel.y   = 0;
+    ball->accel_16.x = 0;
+    ball->accel_16.y = 0x4000;
+    ball->color   = c500;
+    ball->filled  = true;
 }
 
 /**
@@ -151,6 +153,10 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
         {
             .p1 = {.x = TO_FX(0), .y = TO_FX(TFT_HEIGHT - 1)},
             .p2 = {.x = TO_FX(0), .y = TO_FX(0)},
+        },
+        {
+            .p1 = {.x = TO_FX(TFT_WIDTH/2), .y = TO_FX(40)},
+            .p2 = {.x = TO_FX(TFT_WIDTH-1), .y = TO_FX(40 + TFT_HEIGHT/2)},
         },
     };
 
