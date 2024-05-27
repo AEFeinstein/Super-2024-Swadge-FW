@@ -214,6 +214,8 @@
 #include "geometry.h"
 #include "settingsManager.h"
 #include "touchUtils.h"
+#include "vectorFl2d.h"
+#include "geometryFl.h"
 
 // Sound utilities
 #include "soundFuncs.h"
