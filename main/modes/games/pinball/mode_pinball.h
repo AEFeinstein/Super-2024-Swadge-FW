@@ -15,7 +15,7 @@
 #define NUM_ZONES        32
 
 #define MAX_NUM_BALLS    512
-#define MAX_NUM_WALLS    100
+#define MAX_NUM_WALLS    1024
 #define MAX_NUM_BUMPERS  10
 #define MAX_NUM_TOUCHES  16
 #define MAX_NUM_FLIPPERS 6
@@ -52,6 +52,7 @@ typedef struct
 typedef struct
 {
     lineFl_t l;
+    float length;
     uint32_t zoneMask;
     paletteColor_t color;
 } pbLine_t;

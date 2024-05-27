@@ -64,10 +64,10 @@ void pinballDrawForeground(pinball_t* p)
     }
 
     // Debug draw zones
-    for (int32_t i = 0; i < NUM_ZONES; i++)
-    {
-        drawPinRect(&p->zones[i]);
-    }
+    // for (int32_t i = 0; i < NUM_ZONES; i++)
+    // {
+    //     drawPinRect(&p->zones[i]);
+    // }
 
     // Calculate and draw FPS
     int32_t startIdx  = (p->frameTimesIdx + 1) % NUM_FRAME_TIMES;

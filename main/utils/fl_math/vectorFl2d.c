@@ -86,10 +86,10 @@ float dotVecFl2d(vecFl_t left, vecFl_t right)
  */
 vecFl_t rotateVecFl2d(vecFl_t vector, float radians)
 {
-    int16_t sinR = sin(radians);
-    int16_t cosR = cos(radians);
-    float oldX   = vector.x;
-    float oldY   = vector.y;
+    float sinR = sinf(radians);
+    float cosR = cosf(radians);
+    float oldX = vector.x;
+    float oldY = vector.y;
 
     vecFl_t result = {
         .x = (oldX * cosR) - (oldY * sinR),
@@ -107,6 +107,17 @@ vecFl_t rotateVecFl2d(vecFl_t vector, float radians)
 float sqMagVecFl2d(vecFl_t vector)
 {
     return (vector.x * vector.x) + (vector.y * vector.y);
+}
+
+/**
+ * @brief Compute the magnitude of a vector
+ *
+ * @param vector The vector to compute magnitude for
+ * @return The magnitude
+ */
+float magVecFl2d(vecFl_t vector)
+{
+    return sqrtf((vector.x * vector.x) + (vector.y * vector.y));
 }
 
 /**

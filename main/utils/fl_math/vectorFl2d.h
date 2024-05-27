@@ -1,25 +1,25 @@
 /*! \file vector2d.h
  *
- * \section vector_design Design Philosophy
+ * \section vector_fl_design Design Philosophy
  *
- * These utility functions are can be used for signed integer vector 2D math. VecFltor math is useful for physics
- * calculations.
+ * These utility functions are can be used for floating point vector 2D math.
+ * Vector math is useful for physics calculations.
  *
- * \section vector_usage Usage
+ * \section vector_fl_usage Usage
  *
  * No initialization or deinitialization is required. Each function will return a new vector and will not modify the
  * vectors given as arguments. See the functions below for what is provided and how to use them.
  *
- * \section vector_example Example
+ * \section vector_fl_example Example
  *
  * \code{.c}
  * vecFl_t vecOne = {
- *     .x = 3,
- *     .y = 5,
+ *     .x = 3.0f,
+ *     .y = 5.0f,
  * };
  * vecFl_t vecTwo = {
- *     .x = 8,
- *     .y = 2,
+ *     .x = 8.0f,
+ *     .y = 2.0f,
  * };
  * vecFl_t vecSum = addVecFl2d(vecOne, vecTwo);
  * \endcode
@@ -46,6 +46,7 @@ vecFl_t divVecFl2d(vecFl_t vector, float scalar);
 
 float dotVecFl2d(vecFl_t left, vecFl_t right);
 vecFl_t rotateVecFl2d(vecFl_t vector, float degree);
+float magVecFl2d(vecFl_t vector);
 float sqMagVecFl2d(vecFl_t vector);
 vecFl_t normVecFl2d(vecFl_t in);
 

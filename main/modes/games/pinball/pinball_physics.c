@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <math.h>
 #include "pinball_physics.h"
 #include "pinball_zones.h"
 
@@ -176,44 +177,71 @@ void checkBallStaticCollision(pinball_t* p)
                 && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], wall) // and not already touching
                 && circleLineFlIntersection(ball->c, wall->l, &collisionVec))   // and intersecting
             {
-                bool reflect = false;
-
-                if (reflect)
-                {
-                    // Collision detected, do some physics
-                    vecFl_t centerToCenter = {
-                        .x = collisionVec.x,
-                        .y = collisionVec.y,
-                    };
-                    vecFl_t reflVec = normVecFl2d(centerToCenter);
-                    ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
-                }
-                else
-                {
-                    // Collision detected, ride the line
-
-                    // If the line is below the circle
-                    if (collisionVec.y < 0)
-                    {
-                        // ball->vel.x = 0;
-                        ball->vel.y = 0;
-                        if (wall->l.p1.y < wall->l.p2.y)
-                        {
-                            ball->accel.y = (wall->l.p2.y - wall->l.p1.y);
-                            ball->accel.x = (wall->l.p2.x - wall->l.p1.x);
-                        }
-                        else
-                        {
-                            ball->accel.y = (wall->l.p1.y - wall->l.p2.y);
-                            ball->accel.x = (wall->l.p1.x - wall->l.p2.x);
-                        }
-                        ball->accel = normVecFl2d(ball->accel);
-                        ball->accel = mulVecFl2d(ball->accel, 1 / 60.0f);
-                    }
-                }
-
                 // Mark this wall as being touched
                 setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
+
+                /* TODO this reflection can have bad results when colliding with the tip of a line.
+                 * The center-center vector can get weird if the ball moves fast and clips into the tip.
+                 * The solution is probably to binary-search-move the ball as far as it'll go without clipping
+                 */
+
+                // Collision detected, do some physics
+                vecFl_t centerToCenter = {
+                    .x = collisionVec.x,
+                    .y = collisionVec.y,
+                };
+                vecFl_t reflVec = normVecFl2d(centerToCenter);
+                ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
+
+                // If the line is below the circle
+                if (collisionVec.y < 0)
+                {
+                    // Check if the reflection is close enough to the slope to stick to the line
+                    // TODO care about momentum?
+                    vecFl_t wallSlope;
+                    if (wall->l.p1.y < wall->l.p2.y)
+                    {
+                        wallSlope.y = (wall->l.p2.y - wall->l.p1.y);
+                        wallSlope.x = (wall->l.p2.x - wall->l.p1.x);
+                    }
+                    else
+                    {
+                        wallSlope.y = (wall->l.p1.y - wall->l.p2.y);
+                        wallSlope.x = (wall->l.p1.x - wall->l.p2.x);
+                    }
+
+                    // Find the angle between the reflected velocity and wall
+                    float velocityMag  = magVecFl2d(ball->vel);
+                    float angleBetween = acosf(dotVecFl2d(ball->vel, wallSlope) / (velocityMag * wall->length));
+
+                    // vecFl_t testA = {.x = 0, .y = -1,};
+                    // for(int i = 0; i < 256; i++)
+                    // {
+                    //     vecFl_t testB = {.x = 0, .y = -1,};
+                    //     testB = rotateVecFl2d(testB, (i * 2 * M_PIf) / 256.0f);
+                    //     float res = acosf(dotVecFl2d(testA, testB));
+                    //     printf("(%0.3f, %0.3f) and (%0.3f, %0.3f) -> %0.3f\n", testA.x, testA.y, testB.x, testB.y,
+                    //     res);
+                    // }
+                    // exit(0);
+
+                    // If the angle is small
+                    // TODO pick something less arbitrary?
+                    if (angleBetween < 0.6f)
+                    {
+                        // Have the ball ride the line
+
+                        // Project velocity onto wall slope (a small amount is lost)
+                        ball->vel = mulVecFl2d(wallSlope,
+                                               (dotVecFl2d(ball->vel, wallSlope) / dotVecFl2d(wallSlope, wallSlope)));
+
+                        // Point acceleration vector in the direction of the slope
+                        float sinTh   = wallSlope.y / wall->length;
+                        float cosTh   = wallSlope.x / wall->length;
+                        ball->accel.x = PINBALL_GRAVITY * sinTh * cosTh;
+                        ball->accel.y = PINBALL_GRAVITY * sinTh * sinTh;
+                    }
+                }
             }
         }
     }
@@ -360,7 +388,7 @@ void checkBallsNotTouching(pinball_t* p)
     // For each ball
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
-        const pbCircle_t* ball = &p->balls[bIdx];
+        pbCircle_t* ball = &p->balls[bIdx];
         // For each thing it could be touching
         for (uint32_t tIdx = 0; tIdx < MAX_NUM_TOUCHES; tIdx++)
         {
@@ -392,6 +420,11 @@ void checkBallsNotTouching(pinball_t* p)
                             // Clear the reference
                             tr->obj  = NULL;
                             tr->type = PIN_NO_SHAPE;
+
+                            // Reset acceleration vector
+                            // TODO handle touching multiple lines
+                            ball->accel.x = 0;
+                            ball->accel.y = PINBALL_GRAVITY;
                         }
                         break;
                     }
