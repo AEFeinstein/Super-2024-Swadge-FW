@@ -1406,8 +1406,8 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
     if(entityManager->remainingEnemies > 0 && entityManager->activeEnemies < entityManager->maxEnemies){
         uint16_t iterations = 0;
         while(newEnemy == NULL && iterations < 2){
-            for(uint16_t ty = 1; ty < 13; ty++){
-                for(uint16_t tx = 1; tx < 15; tx++){
+            for(uint16_t ty = 1; ty < 14; ty++){
+                for(uint16_t tx = 1; tx < 16; tx++){
                    
                     uint8_t t = pa_getTile(entityManager->tilemap, tx, ty);
 
