@@ -66,6 +66,7 @@ typedef struct
     int64_t noteTime;
     uint8_t startupNote;
     bool startSilence;
+    const char* longestProgramName;
 } synthData_t;
 
 //==============================================================================
@@ -79,6 +80,7 @@ static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static bool installUsb(void);
 static void handlePacket(uint8_t packet[4]);
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y);
 
 //==============================================================================
 // Variabes
@@ -270,6 +272,22 @@ static const uint8_t midiConfigDescriptor[] = {
     TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 4, EPNUM_MIDI, (0x80 | EPNUM_MIDI), 64)
 };
 
+// just yolo'd these color values, they're probably awful
+static const paletteColor_t noteColors[] = {
+    c550, // C
+    c350, // C#
+    c130, // D
+    c050, // D#
+    c043, // E
+    c015, // F
+    c005, // F#
+    c035, // G
+    c055, // G#
+    c500, // A
+    c510, // A#
+    c430, // B
+};
+
 const char synthModeName[] = "USB MIDI Synth";
 
 swadgeMode_t synthMode = {
@@ -303,6 +321,7 @@ static void synthEnterMode(void)
     midiPlayerInit(&sd->midiPlayer);
     sd->noteTime = 200000;
     sd->pitch = 0x2000;
+    sd->longestProgramName = gmProgramNames[24];
 }
 
 static void synthExitMode(void)
@@ -357,18 +376,20 @@ static void synthMainLoop(int64_t elapsedUs)
     }
     else
     {
-        drawText(&sd->font, c050, readyStr, (TFT_WIDTH - textWidth(&sd->font, readyStr)) / 2, 10);
+        drawText(&sd->font, c050, readyStr, (TFT_WIDTH - textWidth(&sd->font, readyStr)) / 2, 3);
 
         char packetMsg[64];
-        int16_t y = 35;
+        int16_t y = 15;
         for (int ch = 0; ch < 16; ch++)
         {
-            sd->playing[ch] = sd->midiPlayer.channels[ch].held || sd->midiPlayer.channels[ch].voiceStates.attack || sd->midiPlayer.channels[ch].voiceStates.decay || sd->midiPlayer.channels[ch].voiceStates.sustain || sd->midiPlayer.channels[ch].voiceStates.release;
+            sd->playing[ch] = sd->midiPlayer.channels[ch].voiceStates.on || sd->midiPlayer.channels[ch].voiceStates.held; //|| sd->midiPlayer.channels[ch].voiceStates.attack || sd->midiPlayer.channels[ch].voiceStates.decay || sd->midiPlayer.channels[ch].voiceStates.sustain || sd->midiPlayer.channels[ch].voiceStates.release;
             paletteColor_t col = sd->playing[ch] ? c555 : c222;
             const char* programName = sd->midiPlayer.channels[ch].percussion ? "<Percussion>" : gmProgramNames[sd->midiPlayer.channels[ch].program];
             // Draw the program name
             drawText(&sd->font, col, programName, 10, y);
 
+//#define SHOW_PACKETS
+#ifdef SHOW_PACKETS
             // And the last packet for this channel
             snprintf(packetMsg, sizeof(packetMsg),
                 "%02hhX %02hhX %02hhX %02hhX",
@@ -377,8 +398,11 @@ static void synthMainLoop(int64_t elapsedUs)
                 sd->lastPackets[ch][2],
                 sd->lastPackets[ch][3]);
             packetMsg[sizeof(packetMsg) - 1] = '\0';
-            drawText(&sd->font, col, packetMsg, TFT_WIDTH - textWidth(&sd->font, packetMsg) - 5, y);
-            y += sd->font.height + 1;
+            drawText(&sd->font, col, packetMsg, TFT_WIDTH - textWidth(&sd->font, packetMsg) - 10, y);
+#else
+            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, y - 2);
+#endif
+            y += sd->font.height + 4;
         }
     }
 
@@ -581,6 +605,43 @@ static void handlePacket(uint8_t packet[4])
             ESP_LOGI("Synth", "Pitch: %hx", range);
             midiPitchWheel(&sd->midiPlayer, channel, range);
             break;
+        }
+    }
+}
+
+static paletteColor_t noteToColor(uint8_t note)
+{
+    return noteColors[note % ARRAY_SIZE(noteColors)];
+}
+
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y)
+{
+    const midiChannel_t* chan = &player->channels[chIdx];
+    const midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
+    const voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
+    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
+
+    // ok here's the plan
+    // we're gonna draw a little bar graph for each voice
+    // the bar extends vertically
+    // then we draw the note name over top
+    // the bar measures volume
+
+    #define BAR_WIDTH 16
+    #define BAR_SPACING 2
+
+    #define BAR_HEIGHT 16
+
+    for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
+    {
+        int16_t x0 = x + (voiceIdx * (BAR_WIDTH + BAR_SPACING));
+        int16_t x1 = x0 + BAR_WIDTH;
+
+        if (voices[voiceIdx].targetVol > 0 && ((states->held | states->on) & (1 << voiceIdx)))
+        {
+            int16_t barH = MAX((voices[voiceIdx].targetVol) * BAR_HEIGHT / 255, 1);
+
+            fillDisplayArea(x0, y + (BAR_HEIGHT - barH), x1, y + BAR_HEIGHT, noteToColor(voices[voiceIdx].note));
         }
     }
 }
