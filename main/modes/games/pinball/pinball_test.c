@@ -17,18 +17,18 @@
  * @param x
  * @param y
  */
-void pbCreateBall(pinball_t* p, q24_8 x, q24_8 y)
+void pbCreateBall(pinball_t* p, float x, float y)
 {
     pbCircle_t* ball = &p->balls[p->numBalls++];
 #define BALL_RAD 5
-    ball->radius = TO_FX(BALL_RAD);
-    ball->pos.x  = x;
-    ball->pos.y  = y;
-#define MAX_VEL 128
+    ball->c.radius = (BALL_RAD);
+    ball->c.pos.x  = x;
+    ball->c.pos.y  = y;
+    // #define MAX_VEL 128
     ball->vel.x   = 0;
     ball->vel.y   = 0;
-    ball->accel_16.x = 0;
-    ball->accel_16.y = 0x4000;
+    ball->accel.x = 0;
+    ball->accel.y = 1 / 60.0f;
     ball->color   = c500;
     ball->filled  = true;
 }
@@ -53,14 +53,14 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
     {
         pbCircle_t* ball = &p->balls[p->numBalls++];
 #define BALL_RAD 5
-        ball->radius = TO_FX(BALL_RAD);
-        ball->pos.x  = TO_FX((BALL_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BALL_RAD + 1))));
-        ball->pos.y  = TO_FX((BALL_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BALL_RAD + 1))));
+        ball->c.radius = (BALL_RAD);
+        ball->c.pos.x  = ((BALL_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BALL_RAD + 1))));
+        ball->c.pos.y  = ((BALL_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BALL_RAD + 1))));
 #define MAX_VEL 128
         int32_t velX = ((-MAX_VEL / 2) + (esp_random() % MAX_VEL));
-        ball->vel.x  = TO_FX_FRAC(velX * PIN_US_PER_FRAME, 1000000);
+        ball->vel.x  = (velX * PIN_US_PER_FRAME / 1000000);
         int32_t velY = ((-MAX_VEL / 2) + (esp_random() % MAX_VEL));
-        ball->vel.y  = TO_FX_FRAC(velY * PIN_US_PER_FRAME, 2000000);
+        ball->vel.y  = (velY * PIN_US_PER_FRAME / 2000000);
         ball->color  = c500;
         ball->filled = true;
     }
@@ -86,9 +86,9 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
     {
         pbCircle_t bumper = {0};
 #define BUMPER_RAD 10
-        bumper.radius   = TO_FX(BUMPER_RAD);
-        bumper.pos.x    = TO_FX((BUMPER_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BUMPER_RAD + 1))));
-        bumper.pos.y    = TO_FX((BUMPER_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BUMPER_RAD + 1))));
+        bumper.c.radius = (BUMPER_RAD);
+        bumper.c.pos.x  = ((BUMPER_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BUMPER_RAD + 1))));
+        bumper.c.pos.y  = ((BUMPER_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BUMPER_RAD + 1))));
         bumper.color    = c050;
         bumper.filled   = false;
         bumper.zoneMask = pinZoneCircle(p, bumper);
@@ -96,8 +96,8 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
         bool intersection = false;
         for (int32_t ol = 0; ol < p->numWalls; ol++)
         {
-            vec_t cv;
-            if (circleLineIntersection(intCircle(bumper), intLine(p->walls[ol]), &cv))
+            vecFl_t cv;
+            if (circleLineFlIntersection(bumper.c, p->walls[ol].l, &cv))
             {
                 intersection = true;
                 break;
@@ -106,7 +106,7 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 
         for (int32_t ob = 0; ob < p->numBumpers; ob++)
         {
-            if (circleCircleIntersection(intCircle(bumper), intCircle(p->bumpers[ob]), NULL))
+            if (circleCircleFlIntersection(bumper.c, p->bumpers[ob].c, NULL))
             {
                 intersection = true;
                 break;
@@ -137,36 +137,36 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
     p->numWalls = 0;
 
     // Always Create a boundary
-    line_t corners[] = {
+    lineFl_t corners[] = {
         {
-            .p1 = {.x = TO_FX(0), .y = TO_FX(0)},
-            .p2 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(0)},
+            .p1 = {.x = (0), .y = (0)},
+            .p2 = {.x = (TFT_WIDTH - 1), .y = (0)},
         },
         {
-            .p1 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(0)},
-            .p2 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(TFT_HEIGHT - 1)},
+            .p1 = {.x = (TFT_WIDTH - 1), .y = (0)},
+            .p2 = {.x = (TFT_WIDTH - 1), .y = (TFT_HEIGHT - 1)},
         },
         {
-            .p1 = {.x = TO_FX(TFT_WIDTH - 1), .y = TO_FX(TFT_HEIGHT - 1)},
-            .p2 = {.x = TO_FX(0), .y = TO_FX(TFT_HEIGHT - 1)},
+            .p1 = {.x = (TFT_WIDTH - 1), .y = (TFT_HEIGHT - 1)},
+            .p2 = {.x = (0), .y = (TFT_HEIGHT - 1)},
         },
         {
-            .p1 = {.x = TO_FX(0), .y = TO_FX(TFT_HEIGHT - 1)},
-            .p2 = {.x = TO_FX(0), .y = TO_FX(0)},
+            .p1 = {.x = (0), .y = (TFT_HEIGHT - 1)},
+            .p2 = {.x = (0), .y = (0)},
         },
         {
-            .p1 = {.x = TO_FX(TFT_WIDTH/2), .y = TO_FX(40)},
-            .p2 = {.x = TO_FX(TFT_WIDTH-1), .y = TO_FX(40 + TFT_HEIGHT/2)},
+            .p1 = {.x = (TFT_WIDTH / 2), .y = (40)},
+            .p2 = {.x = (TFT_WIDTH - 1), .y = (40 + TFT_HEIGHT / 2)},
         },
     };
 
     for (int32_t i = 0; i < ARRAY_SIZE(corners); i++)
     {
         pbLine_t* pbl = &p->walls[p->numWalls++];
-        pbl->p1.x     = corners[i].p1.x;
-        pbl->p1.y     = corners[i].p1.y;
-        pbl->p2.x     = corners[i].p2.x;
-        pbl->p2.y     = corners[i].p2.y;
+        pbl->l.p1.x   = corners[i].p1.x;
+        pbl->l.p1.y   = corners[i].p1.y;
+        pbl->l.p2.x   = corners[i].p2.x;
+        pbl->l.p2.y   = corners[i].p2.y;
         pbl->color    = c555;
         pbl->zoneMask = pinZoneLine(p, *pbl);
     }
@@ -178,21 +178,21 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 
 #define L_LEN 12
 
-        pbl.p1.x  = TO_FX(L_LEN + (esp_random() % (TFT_WIDTH - (L_LEN * 2))));
-        pbl.p1.y  = TO_FX(L_LEN + (esp_random() % (TFT_HEIGHT - (L_LEN * 2))));
-        pbl.p2.x  = ADD_FX(pbl.p1.x, TO_FX((esp_random() % (L_LEN * 2)) - L_LEN));
-        pbl.p2.y  = ADD_FX(pbl.p1.y, TO_FX((esp_random() % (L_LEN * 2)) - L_LEN));
-        pbl.color = c005; // esp_random() % cTransparent;
+        pbl.l.p1.x = (L_LEN + (esp_random() % (TFT_WIDTH - (L_LEN * 2))));
+        pbl.l.p1.y = (L_LEN + (esp_random() % (TFT_HEIGHT - (L_LEN * 2))));
+        pbl.l.p2.x = pbl.l.p1.x + ((esp_random() % (L_LEN * 2)) - L_LEN);
+        pbl.l.p2.y = pbl.l.p1.y + ((esp_random() % (L_LEN * 2)) - L_LEN);
+        pbl.color  = c005; // esp_random() % cTransparent;
 
-        if (pbl.p1.x == pbl.p2.x && pbl.p1.y == pbl.p2.y)
+        if (pbl.l.p1.x == pbl.l.p2.x && pbl.l.p1.y == pbl.l.p2.y)
         {
             if (esp_random() % 2)
             {
-                pbl.p2.x = ADD_FX(pbl.p2.x, TO_FX(1));
+                pbl.l.p2.x = (pbl.l.p2.x) + ((1));
             }
             else
             {
-                pbl.p2.y = ADD_FX(pbl.p2.y, TO_FX(1));
+                pbl.l.p2.y = (pbl.l.p2.y) + ((1));
             }
         }
 
@@ -201,7 +201,7 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
         bool intersection = false;
         for (int32_t ol = 0; ol < p->numWalls; ol++)
         {
-            if (lineLineIntersection(intLine(pbl), intLine(p->walls[ol])))
+            if (lineLineFlIntersection(pbl.l, p->walls[ol].l))
             {
                 intersection = true;
             }
@@ -209,8 +209,8 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 
         for (int32_t ob = 0; ob < p->numBumpers; ob++)
         {
-            vec_t cv;
-            if (circleLineIntersection(intCircle(p->bumpers[ob]), intLine(pbl), &cv))
+            vecFl_t cv;
+            if (circleLineFlIntersection(p->bumpers[ob].c, pbl.l, &cv))
             {
                 intersection = true;
             }

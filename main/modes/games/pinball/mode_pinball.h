@@ -6,7 +6,6 @@
 
 #include <esp_random.h>
 #include "swadge2024.h"
-#include "fp_math.h"
 
 //==============================================================================
 // Defines
@@ -42,11 +41,9 @@ typedef enum
 
 typedef struct
 {
-    vec_q24_8 pos;
-    vec_q24_8 vel;         // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
-    vec_q24_8 accel_16;      // Acceleration is pixels per frame squared
-    vec_q24_8 accelAccum_16; // Acceleration is pixels per frame squared
-    q24_8 radius;
+    circleFl_t c;
+    vecFl_t vel;   // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
+    vecFl_t accel; // Acceleration is pixels per frame squared
     uint32_t zoneMask;
     paletteColor_t color;
     bool filled;
@@ -54,27 +51,24 @@ typedef struct
 
 typedef struct
 {
-    vec_q24_8 p1;
-    vec_q24_8 p2;
+    lineFl_t l;
     uint32_t zoneMask;
     paletteColor_t color;
 } pbLine_t;
 
 typedef struct
 {
-    vec_q24_8 pos; ///< The position the top left corner of the rectangle
-    q24_8 width;   ///< The width of the rectangle
-    q24_8 height;  ///< The height of the rectangle
+    rectangleFl_t r;
     uint32_t zoneMask;
     paletteColor_t color;
 } pbRect_t;
 
 typedef struct
 {
-    circle_t cPivot;      ///< The circle that the flipper pivots on
-    circle_t cTip;        ///< The circle at the tip of the flipper
-    line_t sideL;         ///< The left side of the flipper when pointing upward
-    line_t sideR;         ///< The right side of the flipper when pointing upward
+    circleFl_t cPivot;    ///< The circle that the flipper pivots on
+    circleFl_t cTip;      ///< The circle at the tip of the flipper
+    lineFl_t sideL;       ///< The left side of the flipper when pointing upward
+    lineFl_t sideR;       ///< The right side of the flipper when pointing upward
     int32_t length;       ///< The length of the flipper, from pivot center to tip center
     int32_t angle;        ///< The current angle of the flipper
     paletteColor_t color; ///< The color of the flipper

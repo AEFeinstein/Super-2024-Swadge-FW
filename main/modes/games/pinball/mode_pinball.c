@@ -76,7 +76,7 @@ static void pinEnterMode(void)
 
     // Create random balls
     createRandomBalls(pinball, 0);
-    pbCreateBall(pinball, TO_FX(TFT_WIDTH / 2 + 20), TO_FX(6));
+    pbCreateBall(pinball, (TFT_WIDTH / 2 + 20), (6));
 
     // Create random walls
     createRandomWalls(pinball, 0);

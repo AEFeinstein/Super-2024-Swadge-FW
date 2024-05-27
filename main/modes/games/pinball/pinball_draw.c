@@ -64,10 +64,10 @@ void pinballDrawForeground(pinball_t* p)
     }
 
     // Debug draw zones
-    // for (int32_t i = 0; i < NUM_ZONES; i++)
-    // {
-    //     drawPinRect(&p->zones[i]);
-    // }
+    for (int32_t i = 0; i < NUM_ZONES; i++)
+    {
+        drawPinRect(&p->zones[i]);
+    }
 
     // Calculate and draw FPS
     int32_t startIdx  = (p->frameTimesIdx + 1) % NUM_FRAME_TIMES;
@@ -87,15 +87,15 @@ void pinballDrawForeground(pinball_t* p)
  *
  * @param c The circle to draw
  */
-void drawPinCircle(pbCircle_t* c)
+void drawPinCircle(pbCircle_t* circ)
 {
-    if (c->filled)
+    if (circ->filled)
     {
-        drawCircleFilled(FROM_FX(c->pos.x), FROM_FX(c->pos.y), FROM_FX(c->radius), c->color);
+        drawCircleFilled((circ->c.pos.x), (circ->c.pos.y), (circ->c.radius), circ->color);
     }
     else
     {
-        drawCircle(FROM_FX(c->pos.x), FROM_FX(c->pos.y), FROM_FX(c->radius), c->color);
+        drawCircle((circ->c.pos.x), (circ->c.pos.y), (circ->c.radius), circ->color);
     }
 }
 
@@ -104,9 +104,9 @@ void drawPinCircle(pbCircle_t* c)
  *
  * @param l The line to draw
  */
-void drawPinLine(pbLine_t* l)
+void drawPinLine(pbLine_t* line)
 {
-    drawLineFast(FROM_FX(l->p1.x), FROM_FX(l->p1.y), FROM_FX(l->p2.x), FROM_FX(l->p2.y), l->color);
+    drawLineFast((line->l.p1.x), (line->l.p1.y), (line->l.p2.x), (line->l.p2.y), line->color);
 }
 
 /**
@@ -114,10 +114,9 @@ void drawPinLine(pbLine_t* l)
  *
  * @param r The rectangle to draw
  */
-void drawPinRect(pbRect_t* r)
+void drawPinRect(pbRect_t* rect)
 {
-    drawRect(FROM_FX(r->pos.x), FROM_FX(r->pos.y), FROM_FX(ADD_FX(r->pos.x, r->width)),
-             FROM_FX(ADD_FX(r->pos.y, r->height)), r->color);
+    drawRect(rect->r.pos.x, rect->r.pos.y, rect->r.pos.x + rect->r.width, rect->r.pos.y + rect->r.height, rect->color);
 }
 
 /**
