@@ -256,7 +256,8 @@ void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq)
  */
 void swSynthSetFreqPrecise(synthOscillator_t* osc, uq16_16 freq)
 {
-    osc->stepSize = ((uint64_t)(ARRAY_SIZE(sinTab) * freq)) / (DAC_SAMPLE_RATE_HZ);
+    // equivalent to ((ARRAY_SIZE(sinTab) * freq) / DAC_SAMPLE_RATE_HZ except without overflow
+    osc->stepSize = freq / (DAC_SAMPLE_RATE_HZ >> 8);
 }
 
 /**

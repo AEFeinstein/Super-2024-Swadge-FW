@@ -439,17 +439,13 @@ static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t 
  */
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel)
 {
-    // Pitch wheel is centered, don't bother to change it at
-    /*if (pitchWheel == 0x2000)
-    {
-        return noteFreqTable[noteId];
-    }*/
-
+    // TODO: Should we have a special case when the pitch wheel is centered? Probably better not to branch at all even if we do a bit of unnecessary math
     // First, convert the pitch wheel value to +/-cents
     int32_t bendCents = (((int16_t)-0x2000) + pitchWheel) * 100 / 0x1FFF;
     uint64_t freq = noteFreqTable[noteId];
     freq *= bendTable[bendCents + 100];
-    uq16_16 trimmedFreq = ((freq >> 24) & 0xFFFFFFFF);
+    uq16_16 trimmedFreq = ((freq >> 24) & (0xFFFFFFFFu));
+    //ESP_LOGI("MIDI", "Bent note #%d %+dc from freq %08x (%d) to %08x (%d)", noteId, bendCents, noteFreqTable[noteId], noteFreqTable[noteId] >> 16, trimmedFreq, trimmedFreq >> 16);
     return trimmedFreq;
 }
 
