@@ -8,7 +8,7 @@
 #define MIDI_CHANNEL_COUNT 16
 // TODO: Channel-independent dynamic voice allocation
 // The number of simultaneous voices each channel can support
-#define VOICE_PER_CHANNEL 2
+#define VOICE_PER_CHANNEL 4
 // The number of voices reserved for percussion
 #define PERCUSSION_VOICES 8
 // The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
@@ -263,6 +263,10 @@ typedef struct
  */
 typedef struct
 {
+    /// @brief Whether this note is set to on via MIDI, regardless of if it's making sound
+    uint32_t on;
+
+    /*
     /// @brief Bitfield of voices currently in the attack stage
     uint32_t attack;
 
@@ -274,6 +278,7 @@ typedef struct
 
     /// @brief Bitfield of voices currently in the release stage
     uint32_t release;
+    */
 
     /// @brief Bitfield of voices which are being held by the pedal
     uint32_t held;
@@ -431,7 +436,8 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, u
  * By default, the center of the pitch wheel is \c 0x2000. A value of \c 0x0000 transposes
  * one step up, while a value of \c 0x3FFF transposes one step up.
  *
- * [NYI] The range of the pitch wheel can be changed using the registered parameters
+ * [NYI] The range of the pitch wheel can be changed using the registered parameters, with
+ * MSB being the range in (+/-)semitones and LSB being the range in (+/-) cents
  *
  * @param player The MIDI player
  * @param channel The MIDI channel to change the pitch wheel for
