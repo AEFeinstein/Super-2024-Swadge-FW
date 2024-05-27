@@ -54,6 +54,21 @@ static const paletteColor_t rgbColors[4]    = {c500, c050, c005, c050};
 static const int16_t cheatCode[11]
     = {PB_UP, PB_UP, PB_DOWN, PB_DOWN, PB_LEFT, PB_RIGHT, PB_LEFT, PB_RIGHT, PB_B, PB_A, PB_START};
 
+
+#define DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH 8
+#define DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH 2
+static const uint8_t defaultEnemySpawnLocations[DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH * DEFAULT_ENEMY_SPAWN_LOCATION_ROW_LENGTH] = {
+    1,1,
+    15,1,
+    1,13,
+    15,13,
+    9,1,
+    15,7,
+    9,13,
+    1,7//,
+    //3,1
+};
+
 //==============================================================================
 // Functions Prototypes
 //==============================================================================
@@ -298,6 +313,8 @@ void updateGame(pango_t* self)
 
     detectGameStateChange(self);
     detectBgmChange(self);
+
+    self->gameData.coins = self->entityManager.activeEnemies;
     drawPangoHud(&(self->radiostars), &(self->gameData));
 
     self->gameData.frameCount++;
@@ -316,6 +333,8 @@ void updateGame(pango_t* self)
         {
             killPlayer(self->entityManager.playerEntity);
         }
+
+        pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
     }
 
     updateComboTimer(&(self->gameData));
@@ -437,6 +456,11 @@ void updateTitleScreen(pango_t* self)
                         }*/
 
                         pa_initializeGameDataFromTitleScreen(&(self->gameData));
+                        self->entityManager.activeEnemies = 0;
+                        pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+                        pa_generateMaze(&(pango->tilemap));
+                        pa_placeEnemySpawns(&(pango->tilemap));
+
                         changeStateReadyScreen(self);
                         break;
                     }
@@ -771,9 +795,9 @@ void changeStateGame(pango_t* self)
     pa_deactivateAllEntities(&(self->entityManager), false);
 
     uint16_t levelIndex = getLevelIndex(self->gameData.world, self->gameData.level);
-    pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
-    pa_generateMaze(&(pango->tilemap));
-    pa_placeEnemySpawns(&(pango->tilemap));
+    // pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+    // pa_generateMaze(&(pango->tilemap));
+    // pa_placeEnemySpawns(&(pango->tilemap));
 
     self->gameData.countdown = leveldef[levelIndex].timeLimit;
 
@@ -784,10 +808,24 @@ void changeStateGame(pango_t* self)
     entityManager->playerEntity     = entityManager->viewEntity;
     entityManager->playerEntity->hp = self->gameData.initialHp;
 
-    for(uint16_t i = 0; i<entityManager->maxEnemies; i++){
-        pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
+    if(entityManager->activeEnemies == 0){
+        for(uint16_t i = 0; i<self->entityManager.maxEnemies; i++){
+            pa_spawnEnemyFromSpawnBlock(&(self->entityManager));
+        }
+    } else {
+        for(uint16_t i = 0; i<entityManager->activeEnemies; i++){
+            if(i >= DEFAULT_ENEMY_SPAWN_LOCATION_TABLE_LENGTH){
+                entityManager->activeEnemies--;
+                continue;
+            }
+
+            createTestObject(&(self->entityManager), (defaultEnemySpawnLocations[i*2] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (defaultEnemySpawnLocations[i*2+1] << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
+        }
+
     }
 
+
+    
     //pa_viewFollowEntity(&(self->tilemap), entityManager->playerEntity);
 
     pa_updateLedsHpMeter(&(self->entityManager), &(self->gameData));
@@ -1071,6 +1109,11 @@ void updateLevelClear(pango_t* self)
                 {
                     self->unlockables.maxLevelIndexUnlocked = levelIndex;
                 }
+
+                pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
+                pa_generateMaze(&(pango->tilemap));
+                pa_placeEnemySpawns(&(pango->tilemap));
+                self->entityManager.activeEnemies = 0;
 
                 changeStateReadyScreen(self);
             }

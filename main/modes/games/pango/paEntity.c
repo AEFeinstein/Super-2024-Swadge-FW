@@ -724,7 +724,6 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             pa_scorePoints(self->gameData, self->scoreValue);
             soundPlaySfx(&(self->soundManager->sndSquish), BZR_LEFT);
             killEnemy(self);
-            pa_spawnEnemyFromSpawnBlock(self->entityManager);
             break;
         case ENTITY_WAVE_BALL:
             self->xspeed = other->xspeed >> 1;

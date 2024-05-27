@@ -119,7 +119,6 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         paEntity_t* currentEntity = &(entityManager->entities[i]);
-
         currentEntity->active = false;
 
         // TODO: respawn warp container blocks
@@ -1413,7 +1412,7 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                     uint8_t t = pa_getTile(entityManager->tilemap, tx, ty);
 
                     if(t == PA_TILE_SPAWN_BLOCK_0 && (iterations > 0 || !(esp_random() % entityManager->remainingEnemies) )){
-                        newEnemy = createTestObject(entityManager, tx << PA_TILE_SIZE_IN_POWERS_OF_2, ty << PA_TILE_SIZE_IN_POWERS_OF_2);
+                        newEnemy = createTestObject(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + 8, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + 8);
                         
                         if(newEnemy != NULL){
                             pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
