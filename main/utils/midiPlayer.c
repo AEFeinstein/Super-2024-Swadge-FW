@@ -641,7 +641,7 @@ static void midiGmOn(midiPlayer_t* player)
         chan->pitchBend = 0x2000;
         chan->program = 0;
 
-        if (chanIdx == 10)
+        if (chanIdx == 9)
         {
             // Channel 10 is reserved for percussion.
             chan->percussion = true;
