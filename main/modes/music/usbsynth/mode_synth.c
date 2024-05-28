@@ -67,6 +67,7 @@ typedef struct
     uint8_t startupNote;
     bool startSilence;
     const char* longestProgramName;
+    uint8_t lastSamples[256];
 } synthData_t;
 
 //==============================================================================
@@ -80,7 +81,8 @@ static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static bool installUsb(void);
 static void handlePacket(uint8_t packet[4]);
-static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y);
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width);
+static void drawSampleGraph(void);
 
 //==============================================================================
 // Variabes
@@ -348,6 +350,7 @@ static void synthMainLoop(int64_t elapsedUs)
     }
     else if (!sd->startupSeqComplete)
     {
+        drawSampleGraph();
         sd->noteTime -= elapsedUs;
 
         if (sd->noteTime <= 0)
@@ -376,6 +379,7 @@ static void synthMainLoop(int64_t elapsedUs)
     }
     else
     {
+        drawSampleGraph();
         drawText(&sd->font, c050, readyStr, (TFT_WIDTH - textWidth(&sd->font, readyStr)) / 2, 3);
 
         char packetMsg[64];
@@ -400,11 +404,21 @@ static void synthMainLoop(int64_t elapsedUs)
             packetMsg[sizeof(packetMsg) - 1] = '\0';
             drawText(&sd->font, col, packetMsg, TFT_WIDTH - textWidth(&sd->font, packetMsg) - 10, y);
 #else
-            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, y - 2);
+            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, y - 2, TFT_WIDTH - (textWidth(&sd->font, sd->longestProgramName) + 4));
 #endif
             y += sd->font.height + 4;
         }
     }
+
+    char countsBuf[16];
+    // Display the number of active voices
+    snprintf(countsBuf, sizeof(countsBuf), "%" PRIu16, sd->midiPlayer.activeOscillators);
+    int16_t x = TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15;
+    drawText(&sd->font, c055, countsBuf, x, TFT_HEIGHT - sd->font.height - 15);
+
+    // Display the number of clipped samples
+    snprintf(countsBuf, sizeof(countsBuf), "%" PRIu32, sd->midiPlayer.clipped);
+    drawText(&sd->font, c500, countsBuf, x - textWidth(&sd->font, countsBuf) - 5, TFT_HEIGHT - sd->font.height - 15);
 
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
@@ -454,6 +468,7 @@ static void synthMainLoop(int64_t elapsedUs)
 static void synthDacCallback(uint8_t* samples, int16_t len)
 {
     midiPlayerFillBuffer(&sd->midiPlayer, samples, len);
+    memcpy(sd->lastSamples, samples, MIN(len, 256));
 }
 
 static bool installUsb(void)
@@ -614,7 +629,7 @@ static paletteColor_t noteToColor(uint8_t note)
     return noteColors[note % ARRAY_SIZE(noteColors)];
 }
 
-static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y)
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width)
 {
     const midiChannel_t* chan = &player->channels[chIdx];
     const midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
@@ -627,8 +642,8 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
     // then we draw the note name over top
     // the bar measures volume
 
-    #define BAR_WIDTH 16
     #define BAR_SPACING 2
+    #define BAR_WIDTH ((width - BAR_SPACING * (voiceCount - 1)) / voiceCount)
 
     #define BAR_HEIGHT 16
 
@@ -643,5 +658,32 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
 
             fillDisplayArea(x0, y + (BAR_HEIGHT - barH), x1, y + BAR_HEIGHT, noteToColor(voices[voiceIdx].note));
         }
+    }
+}
+
+void drawSampleGraph(void)
+{
+    // Draw sample graph
+    SETUP_FOR_TURBO();
+
+    for (int n = 0; n < 256; n++)
+    {
+        int16_t x = (TFT_WIDTH - 256) / 2 + n;
+        int16_t y = TFT_HEIGHT / 2 + ((int16_t)sd->lastSamples[n] - 128) * ((TFT_HEIGHT - 16) / 2) / 128;
+
+        // Top line
+        TURBO_SET_PIXEL(x, (TFT_HEIGHT / 2) - (TFT_HEIGHT - 16) / 2, c500);
+
+        // Mid-top line
+        TURBO_SET_PIXEL(x, (TFT_HEIGHT / 2) - (TFT_HEIGHT - 16) / 4, c050);
+
+        // Mid-bottom line
+        TURBO_SET_PIXEL(x, (TFT_HEIGHT / 2) + (TFT_HEIGHT - 16) / 4, c050);
+
+        // Bottom line
+        TURBO_SET_PIXEL(x, (TFT_HEIGHT / 2) + (TFT_HEIGHT - 16) / 2, c500);
+
+        //int16_t y = ((TFT_HEIGHT / 2) + (TFT_HEIGHT - 16) / 2) - (sd->lastSamples[n] * ((TFT_HEIGHT - 16) / 2) / 255);
+        TURBO_SET_PIXEL(x, y, c555);
     }
 }
