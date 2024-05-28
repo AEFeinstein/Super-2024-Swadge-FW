@@ -8,7 +8,7 @@
 #define MIDI_CHANNEL_COUNT 16
 // TODO: Channel-independent dynamic voice allocation
 // The number of simultaneous voices each channel can support
-#define VOICE_PER_CHANNEL 4
+#define VOICE_PER_CHANNEL 3
 // The number of voices reserved for percussion
 #define PERCUSSION_VOICES 8
 // The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
@@ -230,10 +230,6 @@ typedef union
  */
 typedef struct
 {
-    // TODO: is active redundant with voiceStates? no, because that's not here
-    /// @brief Whether or not this voice is currently making sound
-    envelopeState_t envState;
-
     /// @brief The number of ticks remaining before transitioning to the next state
     uint32_t transitionTicks;
 
@@ -340,8 +336,14 @@ typedef struct
     /// @brief The total number of oscillators in the array. Could be less than the max if some are unused
     uint16_t oscillatorCount;
 
+    /// @brief The total number of oscillators currently active and outputting sound waves.
+    uint16_t activeOscillators;
+
     /// @brief Whether this player is playing a song or a MIDI stream
     midiPlayerMode_t mode;
+
+    /// @brief Number of samples that were clipped
+    uint32_t clipped;
 } midiPlayer_t;
 
 /**

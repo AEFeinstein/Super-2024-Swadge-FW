@@ -322,7 +322,7 @@ int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
         }
 
         // Mix this oscillator's output into the sample
-        sample += ((osc->waveFunc(osc->accumulator.bytes[2], osc->waveFuncData) * osc->cVol) / 256);
+        sample += ((osc->waveFunc(osc->accumulator.bytes[2], osc->waveFuncData) * ((int32_t)osc->cVol)) / 256);
     }
 
     return sample;

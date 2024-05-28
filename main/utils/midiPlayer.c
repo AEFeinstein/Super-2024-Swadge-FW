@@ -347,10 +347,48 @@ static const uq24_8 bendTable[] = {
     0x010f10e1, // +99 cents => 1.05885
     0x010f38f9, // +100 cents => 1.05946
 };
+
+static const uq16_16 rmsTable[] = {
+    0x00000000, // 1 / sqrt(0) = 0.0000
+    0x00010000, // 1 / sqrt(1) = 1.0000
+    0x0000b504, // 1 / sqrt(2) = 0.7071
+    0x000093cd, // 1 / sqrt(3) = 0.5774
+    0x00008000, // 1 / sqrt(4) = 0.5000
+    0x0000727c, // 1 / sqrt(5) = 0.4472
+    0x00006882, // 1 / sqrt(6) = 0.4082
+    0x000060c2, // 1 / sqrt(7) = 0.3780
+    0x00005a82, // 1 / sqrt(8) = 0.3536
+    0x00005555, // 1 / sqrt(9) = 0.3333
+    0x000050f4, // 1 / sqrt(10) = 0.3162
+    0x00004d2f, // 1 / sqrt(11) = 0.3015
+    0x000049e6, // 1 / sqrt(12) = 0.2887
+    0x00004700, // 1 / sqrt(13) = 0.2774
+    0x0000446b, // 1 / sqrt(14) = 0.2673
+    0x00004219, // 1 / sqrt(15) = 0.2582
+    0x00004000, // 1 / sqrt(16) = 0.2500
+    0x00003e16, // 1 / sqrt(17) = 0.2425
+    0x00003c56, // 1 / sqrt(18) = 0.2357
+    0x00003aba, // 1 / sqrt(19) = 0.2294
+    0x0000393e, // 1 / sqrt(20) = 0.2236
+    0x000037dd, // 1 / sqrt(21) = 0.2182
+    0x00003694, // 1 / sqrt(22) = 0.2132
+    0x00003561, // 1 / sqrt(23) = 0.2085
+    0x00003441, // 1 / sqrt(24) = 0.2041
+    0x00003333, // 1 / sqrt(25) = 0.2000
+    0x00003234, // 1 / sqrt(26) = 0.1961
+    0x00003144, // 1 / sqrt(27) = 0.1925
+    0x00003061, // 1 / sqrt(28) = 0.1890
+    0x00002f89, // 1 / sqrt(29) = 0.1857
+    0x00002ebd, // 1 / sqrt(30) = 0.1826
+    0x00002dfa, // 1 / sqrt(31) = 0.1796
+};
 //==============================================================================
 // End generated code section
 //==============================================================================
 
+// Apply a random offset to each oscillator to maybe make it less likely for waves to "stack" exactly
+#define OSC_DITHER
+#ifdef OSC_DITHER
 static const uint8_t oscDither[] = {
     157,
     34,
@@ -481,6 +519,7 @@ static const uint8_t oscDither[] = {
     132,
     226,
 };
+#endif
 
 // For MIDI values with coarse and fine bytes, each 7 bits
 #define UINT14_MAX (0x3FFF)
@@ -631,7 +670,10 @@ static void midiGmOn(midiPlayer_t* player)
                     {
                         swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)(voice->timbre.waveIndex)), 0, 0);
                         // Apply a random offset to the oscillator so that similar waves aren't exactly in sync
-                        voice->oscillators[oscIdx].accumulator.accum32 = (oscDither[player->oscillatorCount]) & 0xFF;
+                        // TODO figure out if this does literally anything
+#ifdef OSC_DITHER
+                        voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount]) & 0xFF;
+#endif
                         // Make sure we don't count the percussion oscillators multiple times
                         if (!chan->percussion || !percOscSetup)
                         {
@@ -651,7 +693,10 @@ static void midiGmOn(midiPlayer_t* player)
                     {
                         swSynthInitOscillator(&voice->oscillators[oscIdx], SHAPE_NOISE, 0, 0);
                         // Apply a random offset to the oscillator so that similar waves aren't exactly in sync
-                        voice->oscillators[oscIdx].accumulator.accum32 = (oscDither[player->oscillatorCount]) & 0xFF;
+                        // TODO figure out if this does literally anything
+#ifdef OSC_DITHER
+                        voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount]) & 0xFF;
+#endif
 
                         // Make sure we don't count the percussion oscillators multiple times
                         if (!chan->percussion || !percOscSetup)
@@ -704,13 +749,32 @@ void midiPlayerInit(midiPlayer_t* player)
 
 void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 {
+    uint16_t activeOsc = activeOsc = player->activeOscillators;
+
     for (int16_t n = 0; n < len; n++)
     {
-        int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
         // TODO: Sample support
         // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
+        int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
 
-        samples[n] = sample / (player->oscillatorCount /*+ player->samplerCount*/) + 128;
+        sample *= rmsTable[activeOsc];
+        sample >>= 16;
+
+        if (sample < -128)
+        {
+            samples[n] = 0;
+            player->clipped++;
+        }
+        else if (sample > 127)
+        {
+            samples[n] = 255;
+            player->clipped++;
+        }
+        else
+        {
+            samples[n] = sample + 128;
+        }
+
     }
 }
 
@@ -732,10 +796,10 @@ void midiAllSoundOff(midiPlayer_t* player)
         for (uint8_t voiceIdx = 0; voiceIdx < VOICE_PER_CHANNEL; voiceIdx++)
         {
             // TODO: Maybe move this all into a stopVoice() function
-            // TODO: Remove envState?
-            //chan->voices[voiceIdx].envState = ES_STOPPED;
             chan->voices[voiceIdx].transitionTicks = 0;
             chan->voices[voiceIdx].targetVol = 0;
+            chan->voiceStates.held = 0;
+            chan->voiceStates.on = 0;
             // TODO: Handle samplers
             for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
             {
@@ -747,9 +811,9 @@ void midiAllSoundOff(midiPlayer_t* player)
 
     for (uint8_t voiceIdx = 0; voiceIdx < PERCUSSION_VOICES; voiceIdx++)
     {
-        // TODO: Remove envState?
-        //player->percVoices[voiceIdx].envState = ES_STOPPED;
         player->percVoices[voiceIdx].transitionTicks = 0;
+        player->percVoiceStates.held = 0;
+        player->percVoiceStates.on = 0;
         // TODO: Handle samplers
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
@@ -758,6 +822,8 @@ void midiAllSoundOff(midiPlayer_t* player)
             swSynthSetFreqPrecise(&player->percVoices[voiceIdx].oscillators[oscIdx], 0);
         }
     }
+
+    player->activeOscillators = 0;
 }
 
 
@@ -804,11 +870,18 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     }
 
     uint32_t voiceBit = (1 << voiceIdx);
+
+    if (!((states->on | states->held) & voiceBit))
+    {
+        // This voice is being activated when it wasn't previously (not stolen from an already-playing note)
+        player->activeOscillators += OSC_PER_VOICE;
+    }
+
     states->on |= voiceBit;
     voices[voiceIdx].note = note;
 
     // TODO: Add a note -> voice map in the channel?
-    uint8_t targetVol = velocity << 1;
+    uint8_t targetVol = velocity << 1 | 1;
 
     switch (chan->timbre.type)
     {
@@ -816,8 +889,8 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
         case NOISE:
         {
             // TODO: velocity should affect attack time instead of directly affecting volume
-            swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[0], bendPitch(note, chan->pitchBend));
             swSynthSetVolume(&voices[voiceIdx].oscillators[0], targetVol);
+            swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[0], bendPitch(note, chan->pitchBend));
             voices[voiceIdx].targetVol = targetVol;
 
             //ESP_LOGI("MIDI", "Velocity is %" PRIu8, velocity << 1);
@@ -853,6 +926,12 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
         if (voices[voiceIdx].note == note)
         {
             // This is the one we want!
+            // If this oscillator isn't already off, decrease the active count
+            if (playingVoices & voiceBit)
+            {
+                player->activeOscillators -= OSC_PER_VOICE;
+            }
+
             // Unset the on-ness of this note
             states->on &= ~voiceBit;
             if (chan->held)
@@ -884,11 +963,18 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 
     midiChannel_t* chan = &player->channels[channel];
     midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
+    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
     uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
 
     for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
     {
         midiVoice_t* voice = &voices[voiceIdx];
+
+        // If these oscillators were active, mark them as active
+        if ((states->held | states->on) & (1 << voiceIdx))
+        {
+            player->activeOscillators -= OSC_PER_VOICE;
+        }
 
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
@@ -920,13 +1006,20 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
             // We should cancel all the notes which are not currently being held
             uint32_t notesToCancel = voiceStates->held & ~(voiceStates->on);
 
-            // unset the hold flag fora
-            voiceStates->held &= ~notesToCancel;
+            // unset the hold flag for all
+            // TODO: Isn't this going to always be 0?
+            uint32_t newHold = (voiceStates->held & ~notesToCancel);
 
             while (notesToCancel != 0)
             {
                 uint8_t voiceIdx = __builtin_ctz(notesToCancel);
                 uint32_t voiceBit = (1 << voiceIdx);
+
+                if ((voiceStates->held | voiceStates->on) & voiceBit)
+                {
+                    // TODO: Can we skip this conditional since notesToCancel should only contain voices which were already on?
+                    player->activeOscillators -= OSC_PER_VOICE;
+                }
 
                 // unset the note's bit and move on to the next one
                 notesToCancel &= ~voiceBit;
@@ -936,6 +1029,8 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
                     swSynthSetVolume(&voices[voiceIdx].oscillators[i], 0);
                 }
             }
+
+            voiceStates->held = newHold;
         }
         chan->held = newHold;
     }

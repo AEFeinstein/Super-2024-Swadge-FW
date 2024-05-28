@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import math
 
 A0 = 21
 A4 = 69
@@ -66,8 +67,17 @@ def gen_bend_table():
         print(f"    0x{bin_ratio:08x}, // {n:+d} cents => {ratio:0.5f}")
     print("};")
 
+def gen_rms_table():
+    print("static const uq16_16 rmsTable[] = {")
+    for n in range(32):
+        val = 1.0/math.sqrt(n) if n > 0 else 0
+        intval = (int(val) << 16) | int((val % 1) * 65536)
+        print(f"    0x{intval:08x}, // 1 / sqrt({n}) = {val:.4f}")
+    print("};")
+
 gen_note_table()
 gen_bend_table()
+gen_rms_table()
 
 #print(f"Max error: {maxerr} on note {maxerrnote}")
 #print(sorted(note_errs))
