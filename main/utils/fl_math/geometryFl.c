@@ -305,15 +305,15 @@ vecFl_t infLineIntersectionPoint(lineFl_t a, lineFl_t b)
     {
         // A is vertical, B isn't
         float bSlope = (b.p2.y - b.p1.y) / bDelX;
-        intersect.x = a.p1.x;
-        intersect.y = bSlope * (intersect.x - b.p2.x) + b.p2.y;
+        intersect.x  = a.p1.x;
+        intersect.y  = bSlope * (intersect.x - b.p2.x) + b.p2.y;
     }
     else if (0 == bDelX)
     {
         // B is vertical, A isn't
         float aSlope = (a.p2.y - a.p1.y) / aDelX;
-        intersect.x = b.p1.x;
-        intersect.y = aSlope * (intersect.x - a.p2.x) + a.p2.y;
+        intersect.x  = b.p1.x;
+        intersect.y  = aSlope * (intersect.x - a.p2.x) + a.p2.y;
     }
     else
     {
