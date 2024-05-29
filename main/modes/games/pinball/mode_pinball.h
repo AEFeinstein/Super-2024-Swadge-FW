@@ -83,6 +83,7 @@ typedef struct
 {
     const void* obj;
     pbShapeType_t type;
+    vecFl_t additiveAccel;
 } pbTouchRef_t;
 
 typedef struct

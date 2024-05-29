@@ -18,6 +18,7 @@ void moveBalls(pinball_t* p);
 void moveFlippers(pinball_t* p);
 void checkBallsNotTouching(pinball_t* p);
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type);
+void setBallTouchingAccel(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type, vecFl_t additiveAccel);
 pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
 
 //==============================================================================
@@ -177,9 +178,6 @@ void checkBallStaticCollision(pinball_t* p)
                 && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], wall) // and not already touching
                 && circleLineFlIntersection(ball->c, wall->l, &collisionVec))   // and intersecting
             {
-                // Mark this wall as being touched
-                setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
-
                 /* TODO this reflection can have bad results when colliding with the tip of a line.
                  * The center-center vector can get weird if the ball moves fast and clips into the tip.
                  * The solution is probably to binary-search-move the ball as far as it'll go without clipping
@@ -193,6 +191,11 @@ void checkBallStaticCollision(pinball_t* p)
                 vecFl_t reflVec = normVecFl2d(centerToCenter);
                 ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
 
+                // The force that may be statically applied if the ball and line stay in contact
+                vecFl_t accelDelta = {
+                    .x = 0,
+                    .y = 0,
+                };
                 // If the line is below the circle
                 if (collisionVec.y < 0)
                 {
@@ -235,13 +238,23 @@ void checkBallStaticCollision(pinball_t* p)
                         ball->vel = mulVecFl2d(wallSlope,
                                                (dotVecFl2d(ball->vel, wallSlope) / dotVecFl2d(wallSlope, wallSlope)));
 
-                        // Point acceleration vector in the direction of the slope
-                        float sinTh   = wallSlope.y / wall->length;
-                        float cosTh   = wallSlope.x / wall->length;
-                        ball->accel.x = PINBALL_GRAVITY * sinTh * cosTh;
-                        ball->accel.y = PINBALL_GRAVITY * sinTh * sinTh;
+                        // This is the force applied by the slope
+                        float sinTh = wallSlope.y / wall->length;
+                        float cosTh = wallSlope.x / wall->length;
+                        // On a slope of angle th, the normal force to the slope is g*sin(th) and the acceleration
+                        // straight down the slope is g*sin(th) Doing more trig to get the axis aligned vectors, the Y
+                        // acceleration is g*sin(th)*sin(th) and the X acceleration is g*cos(th)*sin(th) The -1 in the Y
+                        // acceleration is to counteract existing gravity, since this is summed
+                        accelDelta.x = PINBALL_GRAVITY * sinTh * cosTh;
+                        accelDelta.y = PINBALL_GRAVITY * (sinTh * sinTh - 1);
+
+                        // Add the force to the ball's acceleration
+                        ball->accel = addVecFl2d(ball->accel, accelDelta);
                     }
                 }
+
+                // Mark this wall as being touched, with acceleration
+                setBallTouchingAccel(p->ballsTouching[bIdx], wall, PIN_LINE, accelDelta);
             }
         }
     }
@@ -396,6 +409,7 @@ void checkBallsNotTouching(pinball_t* p)
             // If it's touching a thing
             if (NULL != tr->obj)
             {
+                bool setNotTouching = false;
                 switch (tr->type)
                 {
                     case PIN_CIRCLE:
@@ -404,9 +418,7 @@ void checkBallsNotTouching(pinball_t* p)
                         if ((0 == (ball->zoneMask & other->zoneMask))                // Not in the same zone
                             || !circleCircleFlIntersection(ball->c, other->c, NULL)) // or not touching
                         {
-                            // Clear the reference
-                            tr->obj  = NULL;
-                            tr->type = PIN_NO_SHAPE;
+                            setNotTouching = true;
                         }
                         break;
                     }
@@ -417,14 +429,7 @@ void checkBallsNotTouching(pinball_t* p)
                         if ((0 == (ball->zoneMask & other->zoneMask))                       // Not in the same zone
                             || !circleLineFlIntersection(ball->c, other->l, &collisionVec)) // or not touching
                         {
-                            // Clear the reference
-                            tr->obj  = NULL;
-                            tr->type = PIN_NO_SHAPE;
-
-                            // Reset acceleration vector
-                            // TODO handle touching multiple lines
-                            ball->accel.x = 0;
-                            ball->accel.y = PINBALL_GRAVITY;
+                            setNotTouching = true;
                         }
                         break;
                     }
@@ -434,9 +439,7 @@ void checkBallsNotTouching(pinball_t* p)
                         if ((0 == (ball->zoneMask & other->zoneMask))              // Not in the same zone
                             || !circleRectFlIntersection(ball->c, other->r, NULL)) // or not touching
                         {
-                            // Clear the reference
-                            tr->obj  = NULL;
-                            tr->type = PIN_NO_SHAPE;
+                            setNotTouching = true;
                         }
                         break;
                     }
@@ -449,9 +452,7 @@ void checkBallsNotTouching(pinball_t* p)
                                 && circleLineFlIntersection(ball->c, flipper->sideL, NULL)
                                 && circleLineFlIntersection(ball->c, flipper->sideR, NULL)))
                         {
-                            // Clear the reference
-                            tr->obj  = NULL;
-                            tr->type = PIN_NO_SHAPE;
+                            setNotTouching = true;
                         }
                         break;
                     }
@@ -461,6 +462,18 @@ void checkBallsNotTouching(pinball_t* p)
                         // Not touching anything...
                         break;
                     }
+                }
+
+                // If the object is no longer touching
+                if (setNotTouching)
+                {
+                    // Remove this object's acceleration from the ball
+                    ball->accel = subVecFl2d(ball->accel, tr->additiveAccel);
+                    tr->additiveAccel.x = 0;
+                    tr->additiveAccel.y = 0;
+                    // Clear the reference
+                    tr->obj             = NULL;
+                    tr->type            = PIN_NO_SHAPE;
                 }
             }
         }
@@ -476,12 +489,30 @@ void checkBallsNotTouching(pinball_t* p)
  */
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type)
 {
+    vecFl_t additiveAccel = {
+        .x = 0,
+        .y = 0,
+    };
+    setBallTouchingAccel(ballTouching, obj, type, additiveAccel);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ballTouching
+ * @param obj
+ * @param type
+ * @param additiveAccel
+ */
+void setBallTouchingAccel(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type, vecFl_t additiveAccel)
+{
     for (uint32_t i = 0; i < MAX_NUM_TOUCHES; i++)
     {
         if (NULL == ballTouching->obj)
         {
-            ballTouching->obj  = obj;
-            ballTouching->type = type;
+            ballTouching->obj           = obj;
+            ballTouching->type          = type;
+            ballTouching->additiveAccel = additiveAccel;
             return;
         }
     }
