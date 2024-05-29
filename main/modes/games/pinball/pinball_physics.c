@@ -183,6 +183,55 @@ void checkBallStaticCollision(pinball_t* p)
                  * The solution is probably to binary-search-move the ball as far as it'll go without clipping
                  */
 
+                // Do a bunch of work to adjust the ball's position to not clip into this line.
+                // First create a copy of the wall
+                lineFl_t phantomLine = wall->l;
+
+                // Then find the normal vector to the phantom, pointed towards the ball
+                vecFl_t phantomNormal = {
+                    .x = phantomLine.p2.y - phantomLine.p1.y,
+                    .y = phantomLine.p2.x - phantomLine.p1.x,
+                };
+                if ((collisionVec.x < 0) != (phantomNormal.x < 0))
+                {
+                    phantomNormal.x = -phantomNormal.x;
+                }
+                if ((collisionVec.y < 0) != (phantomNormal.y < 0))
+                {
+                    phantomNormal.y = -phantomNormal.y;
+                }
+
+                // Scale the normal to be the length of the ball's radius
+                phantomNormal = mulVecFl2d(normVecFl2d(phantomNormal), ball->c.radius);
+
+                // Translate the along the normal vector, the distance of the radius
+                // This creates a line parallel to the wall where the ball's center could be
+                phantomLine.p1 = addVecFl2d(phantomLine.p1, phantomNormal);
+                phantomLine.p2 = addVecFl2d(phantomLine.p2, phantomNormal);
+
+                // printf("collision v  [(%0.3f, %0.3f)]\n", collisionVec.x, collisionVec.y);
+                // printf("        line [(%0.3f, %0.3f), (%0.3f, %0.3f)]\n", wall->l.p1.x, wall->l.p1.y, wall->l.p2.x,
+                //        wall->l.p2.y);
+                // printf("phantom norm [(%0.3f, %0.3f)]\n", phantomNormal.x, phantomNormal.y);
+                // printf("phantom line [(%0.3f, %0.3f), (%0.3f, %0.3f)]\n", phantomLine.p1.x, phantomLine.p1.y,
+                //        phantomLine.p2.x, phantomLine.p2.y);
+
+                // Create a line for the balls motion
+                lineFl_t ballLine = {
+                    .p1 = ball->c.pos,
+                    .p2 = addVecFl2d(ball->c.pos, ball->vel),
+                };
+
+                // printf("   ball line [(%0.3f, %0.3f), (%0.3f, %0.3f)]\n", ballLine.p1.x, ballLine.p1.y,
+                // ballLine.p2.x,
+                //        ballLine.p2.y);
+
+                // Find the intersection between where the ball's center could be and the ball's trajectory.
+                // Set the ball's position to that point
+                ball->c.pos = infLineIntersectionPoint(phantomLine, ballLine);
+
+                // printf("intersection [(%0.3f, %0.3f)]\n\n", ball->c.pos.x, ball->c.pos.y);
+
                 // Collision detected, do some physics
                 vecFl_t centerToCenter = {
                     .x = collisionVec.x,
@@ -468,12 +517,12 @@ void checkBallsNotTouching(pinball_t* p)
                 if (setNotTouching)
                 {
                     // Remove this object's acceleration from the ball
-                    ball->accel = subVecFl2d(ball->accel, tr->additiveAccel);
+                    ball->accel         = subVecFl2d(ball->accel, tr->additiveAccel);
                     tr->additiveAccel.x = 0;
                     tr->additiveAccel.y = 0;
                     // Clear the reference
-                    tr->obj             = NULL;
-                    tr->type            = PIN_NO_SHAPE;
+                    tr->obj  = NULL;
+                    tr->type = PIN_NO_SHAPE;
                 }
             }
         }

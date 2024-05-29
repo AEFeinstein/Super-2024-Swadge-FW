@@ -41,6 +41,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <float.h>
 #include "vectorFl2d.h"
 
 /**
@@ -79,5 +80,6 @@ bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* collisi
 bool rectRectFlIntersection(rectangleFl_t rect1, rectangleFl_t rect2, vecFl_t* collisionVec);
 bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisionVec);
 bool lineLineFlIntersection(lineFl_t line1, lineFl_t line2);
+vecFl_t infLineIntersectionPoint(lineFl_t a, lineFl_t b);
 
 #endif

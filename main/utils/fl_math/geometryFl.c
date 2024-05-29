@@ -279,6 +279,60 @@ bool lineLineFlIntersection(lineFl_t a, lineFl_t b)
 }
 
 /**
+ * @brief Find the intersection point between two infinitely long lines
+ *
+ * @param a One infinitely long line
+ * @param b Another infinitely long line
+ * @return The intersection, or (FLT_MAX, FLT_MAX) for parallel lines
+ */
+vecFl_t infLineIntersectionPoint(lineFl_t a, lineFl_t b)
+{
+    // Start with an invalid intersection
+    vecFl_t intersect = {
+        .x = FLT_MAX,
+        .y = FLT_MAX,
+    };
+
+    // Find the two delta Xs
+    float aDelX = (a.p2.x - a.p1.x);
+    float bDelX = (b.p2.x - b.p1.x);
+
+    if ((0 == aDelX) && (0 == bDelX))
+    {
+        // Lines are both vertical (parallel), do nothing
+    }
+    else if (0 == aDelX)
+    {
+        // A is vertical, B isn't
+        float bSlope = (b.p2.y - b.p1.y) / bDelX;
+        intersect.x = a.p1.x;
+        intersect.y = bSlope * (intersect.x - b.p2.x) + b.p2.y;
+    }
+    else if (0 == bDelX)
+    {
+        // B is vertical, A isn't
+        float aSlope = (a.p2.y - a.p1.y) / aDelX;
+        intersect.x = b.p1.x;
+        intersect.y = aSlope * (intersect.x - a.p2.x) + a.p2.y;
+    }
+    else
+    {
+        // Neither line is vertical
+        float aSlope = (a.p2.y - a.p1.y) / aDelX;
+        float bSlope = (b.p2.y - b.p1.y) / bDelX;
+        float denom  = bSlope - aSlope;
+        if (0 != denom)
+        {
+            float x     = (a.p2.y - (a.p2.x * aSlope) - b.p2.y + (b.p2.x * bSlope)) / denom;
+            float y     = aSlope * (x - a.p2.x) + a.p2.y;
+            intersect.x = x;
+            intersect.y = y;
+        }
+    }
+    return intersect;
+}
+
+/**
  * @brief Check if a line intersects with a rectangle
  *
  * Adapted from https://www.jeffreythompson.org/collision-detection/line-rect.php
