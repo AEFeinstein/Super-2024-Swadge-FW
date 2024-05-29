@@ -61,7 +61,7 @@ typedef struct
 
     wsg_t dirtWsg;        ///< A graphic for the dirt tile
     wsg_t garbotnikWsg;   ///< A graphic for garbotnik
-    wsg_t s1Wsg[24];      ///< The 1st variants of soft dirt tiles
+    wsg_t s1Wsg[32];      ///< The 1st variants of soft dirt tiles
     wsg_t s2Wsg[16];      ///< The 2nd variants of soft dirt tiles
     wsg_t m1Wsg[16];      ///< The 1st variants of medium dirt tiles
     wsg_t m2Wsg[16];      ///< The 2nd variants of medium dirt tiles
@@ -186,31 +186,39 @@ static void bigbugEnterMode(void)
     // The index of bigbug->s1Wsg is the LURD neighbor info.
     // The value within is the wsg graphic.
     // [3,7,0,4,15,11,12,8,2,6,1,5,14,10,13,9]
-    loadWsg("s1g3.wsg",  &bigbug->s1Wsg[0],  false);
-    loadWsg("s1g7.wsg",  &bigbug->s1Wsg[1],  false);
-    loadWsg("s1g0.wsg",  &bigbug->s1Wsg[2],  false);
-    loadWsg("s1g4.wsg",  &bigbug->s1Wsg[3],  false);
-    loadWsg("s1g15.wsg", &bigbug->s1Wsg[4],  false);
-    loadWsg("s1g11.wsg", &bigbug->s1Wsg[5],  false);
-    loadWsg("s1g12.wsg", &bigbug->s1Wsg[6],  false);
-    loadWsg("s1g8.wsg",  &bigbug->s1Wsg[7],  false);
-    loadWsg("s1g2.wsg",  &bigbug->s1Wsg[8],  false);
-    loadWsg("s1g6.wsg",  &bigbug->s1Wsg[9],  false);
-    loadWsg("s1g1.wsg",  &bigbug->s1Wsg[10], false);
-    loadWsg("s1g5.wsg",  &bigbug->s1Wsg[11], false);
-    loadWsg("s1g14.wsg", &bigbug->s1Wsg[12], false);
-    loadWsg("s1g10.wsg", &bigbug->s1Wsg[13], false);
-    loadWsg("s1g13.wsg", &bigbug->s1Wsg[14], false);
-    loadWsg("s1g9.wsg",  &bigbug->s1Wsg[15], false);
+    loadWsg("m1g3.wsg",  &bigbug->s1Wsg[0],  false);
+    loadWsg("m1g7.wsg",  &bigbug->s1Wsg[1],  false);
+    loadWsg("m1g0.wsg",  &bigbug->s1Wsg[2],  false);
+    loadWsg("m1g4.wsg",  &bigbug->s1Wsg[3],  false);
+    loadWsg("m1g15.wsg", &bigbug->s1Wsg[4],  false);
+    loadWsg("m1g11.wsg", &bigbug->s1Wsg[5],  false);
+    loadWsg("m1g12.wsg", &bigbug->s1Wsg[6],  false);
+    loadWsg("m1g8.wsg",  &bigbug->s1Wsg[7],  false);
+    loadWsg("m1g2.wsg",  &bigbug->s1Wsg[8],  false);
+    loadWsg("m1g6.wsg",  &bigbug->s1Wsg[9],  false);
+    loadWsg("m1g1.wsg",  &bigbug->s1Wsg[10], false);
+    loadWsg("m1g5.wsg",  &bigbug->s1Wsg[11], false);
+    loadWsg("m1g14.wsg", &bigbug->s1Wsg[12], false);
+    loadWsg("m1g10.wsg", &bigbug->s1Wsg[13], false);
+    loadWsg("m1g13.wsg", &bigbug->s1Wsg[14], false);
+    loadWsg("m1g9.wsg",  &bigbug->s1Wsg[15], false);
 
-    loadWsg("s1g16.wsg", &bigbug->s1Wsg[16], false);
-    loadWsg("s1g17.wsg", &bigbug->s1Wsg[17], false);
-    loadWsg("s1g18.wsg", &bigbug->s1Wsg[18], false);
-    loadWsg("s1g19.wsg", &bigbug->s1Wsg[19], false);
-    loadWsg("s1g20.wsg", &bigbug->s1Wsg[20], false);
-    loadWsg("s1g21.wsg", &bigbug->s1Wsg[21], false);
-    loadWsg("s1g22.wsg", &bigbug->s1Wsg[22], false);
-    loadWsg("s1g23.wsg", &bigbug->s1Wsg[23], false);
+    loadWsg("m1g016.wsg", &bigbug->s1Wsg[16], false);
+    loadWsg("m1g017.wsg", &bigbug->s1Wsg[17], false);
+    loadWsg("m1g018.wsg", &bigbug->s1Wsg[18], false);
+    loadWsg("m1g019.wsg", &bigbug->s1Wsg[19], false);
+    loadWsg("m1g020.wsg", &bigbug->s1Wsg[20], false);
+    loadWsg("m1g021.wsg", &bigbug->s1Wsg[21], false);
+    loadWsg("m1g022.wsg", &bigbug->s1Wsg[22], false);
+    loadWsg("m1g023.wsg", &bigbug->s1Wsg[23], false);
+    loadWsg("m1g024.wsg", &bigbug->s1Wsg[24], false);
+    loadWsg("m1g025.wsg", &bigbug->s1Wsg[25], false);
+    loadWsg("m1g026.wsg", &bigbug->s1Wsg[26], false);
+    loadWsg("m1g027.wsg", &bigbug->s1Wsg[27], false);
+    loadWsg("m1g028.wsg", &bigbug->s1Wsg[28], false);
+    loadWsg("m1g029.wsg", &bigbug->s1Wsg[29], false);
+    loadWsg("m1g030.wsg", &bigbug->s1Wsg[30], false);
+    loadWsg("m1g031.wsg", &bigbug->s1Wsg[31], false);
 
     loadWsg("2_S_10.wsg", &bigbug->s2Wsg[0],  false);
     loadWsg("2_S_14.wsg", &bigbug->s2Wsg[1],  false);
@@ -544,31 +552,125 @@ static void bigbugDrawField(void)
                                          4 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (j-1 < 0) ? 0 : (bigbug->tiles[i+1][j-1]>0)) +
                                          2 * ((i-1 < 0) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i-1][j+1]>0)) +
                                          1 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i+1][j+1])>0);
+                            uint8_t subIndices[4] = {0,0,0,0};
+                            bool case15 = false;
                             switch(sprite_idx){
-                                case 15:
+                                case 0: //0000
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 1: //0001
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 11;
+                                    break;
+                                case 2:  //0010
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 2;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 3:  //0011
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 14;
+                                    subIndices[3] = 7;
+                                    break;
+                                case 4:  //0100
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 13;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 5:  //0101
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 13;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 11;
+                                    break;
+                                case 6:  //0110
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 1;
+                                    subIndices[2] = 14;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 7:  //0111
+                                    subIndices[0] = 12;
+                                    subIndices[1] = 13;
+                                    subIndices[2] = 14;
+                                    subIndices[3] = 15;
+                                    break;
+                                case 8:  //1000
+                                    subIndices[0] = 4;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 9:  //1001
+                                    subIndices[0] = 4;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 11;
+                                    break;
+                                case 10: //1010
+                                    subIndices[0] = 4;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 2;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 11: //1011
+                                    subIndices[0] = 4;
+                                    subIndices[1] = 5;
+                                    subIndices[2] = 6;
+                                    subIndices[3] = 7;
+                                    break;
+                                case 12: //1100
+                                    subIndices[0] = 8;
+                                    subIndices[1] = 1;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 13: //1101
+                                    subIndices[0] = 8;
+                                    subIndices[1] = 9;
+                                    subIndices[2] = 10;
+                                    subIndices[3] = 1;
+                                    break;
+                                case 14: //1110
+                                    subIndices[0] = 0;
+                                    subIndices[1] = 1;
+                                    subIndices[2] = 2;
+                                    subIndices[3] = 3;
+                                    break;
+                                case 15: //1111
+                                    case15 = true;
                                     drawWsgSimpleScaled(&bigbug->s1Wsg[15],
                                                 i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
                                                 j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
                                                 2,
-                                                2); 
+                                                2);
                                     break;
-                                default:
-                                    drawWsgSimpleScaled(&bigbug->s1Wsg[16+(1-((sprite_idx & 8)>>3))*4],
+                            }
+                            if(case15 == false){
+                                drawWsgSimpleScaled(&bigbug->s1Wsg[subIndices[0]+16],
                                                 i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
                                                 j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
                                                 2,
                                                 2);
-                                    drawWsgSimpleScaled(&bigbug->s1Wsg[17+(1-((sprite_idx & 4)>>2))*4],
+                                drawWsgSimpleScaled(&bigbug->s1Wsg[subIndices[1]+16],
                                                 i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS) + 32,
                                                 j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
                                                 2,
                                                 2);
-                                    drawWsgSimpleScaled(&bigbug->s1Wsg[18+(1-((sprite_idx & 2)>>1))*4],
+                                drawWsgSimpleScaled(&bigbug->s1Wsg[subIndices[2]+16],
                                                 i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
                                                 j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS) + 32,
                                                 2,
                                                 2);
-                                    drawWsgSimpleScaled(&bigbug->s1Wsg[19+(1-(sprite_idx & 1))*4],
+                                drawWsgSimpleScaled(&bigbug->s1Wsg[subIndices[3]+16],
                                                 i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS) + 32,
                                                 j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS) + 32,
                                                 2,
@@ -600,12 +702,12 @@ static void bigbugDrawField(void)
                   ((bigbug->garbotnik.pos.y - bigbug->camera.pos.y) >> DECIMAL_BITS) - 21);
 
     // Draw UI
-    char buttons[] = {'Z','\0','A','\0','B','\0','C'};
-    for (int i = 1; i < 4; i++){
-        int xPos = i * TFT_WIDTH / 4;
-        drawWsgSimple(&bigbug->uiWileOutlineWsg, xPos - 20, TFT_HEIGHT - 46);
-        drawText(&bigbug->font, c555, &buttons[2*i], xPos - 3, TFT_HEIGHT - 12);
-    }
+    // char buttons[] = {'Z','\0','A','\0','B','\0','C'};
+    // for (int i = 1; i < 4; i++){
+    //     int xPos = i * TFT_WIDTH / 4;
+    //     drawWsgSimple(&bigbug->uiWileOutlineWsg, xPos - 20, TFT_HEIGHT - 46);
+    //     drawText(&bigbug->font, c555, &buttons[2*i], xPos - 3, TFT_HEIGHT - 12);
+    // }
     
 }
 
@@ -752,7 +854,7 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
             //Collision detected!
             //Update the dirt by decrementing if greater than 0.
             bigbug->tiles[best_i][best_j] = bigbug->tiles[best_i][best_j] > 0 ? bigbug->tiles[best_i][best_j] - 1 : 0;
-            printf("hit");
+            printf("hit\n");
 
             //Resolve garbotnik's position somewhat based on his position previously.
             vec_t normal = subVec2d(bigbug->previousPos, tilePos);
