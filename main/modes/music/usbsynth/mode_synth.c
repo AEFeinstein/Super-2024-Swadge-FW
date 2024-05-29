@@ -324,6 +324,9 @@ static void synthEnterMode(void)
     sd->noteTime = 200000;
     sd->pitch = 0x2000;
     sd->longestProgramName = gmProgramNames[24];
+
+    // MAXIMUM SPEEEEED
+    setFrameRateUs(0);
 }
 
 static void synthExitMode(void)
@@ -336,6 +339,19 @@ static void synthExitMode(void)
 static void synthMainLoop(int64_t elapsedUs)
 {
     sd->pluggedIn = tud_ready();
+
+    uint8_t packet[4] = {0, 0, 0, 0};
+    while (tud_ready() && tud_midi_available())
+    {
+        if (tud_midi_packet_read(packet))
+        {
+            handlePacket(packet);
+            if (packet[0])
+            {
+                memcpy(sd->lastPackets[packet[1] & 0xF], packet, sizeof(packet));
+            }
+        }
+    }
 
     // Blank the screen
     clearPxTft();
@@ -449,19 +465,6 @@ static void synthMainLoop(int64_t elapsedUs)
             sd->startupSeqComplete = true;
         }
         // TODO: Handle key presses
-    }
-
-    uint8_t packet[4] = {0, 0, 0, 0};
-    while (tud_ready() && tud_midi_available())
-    {
-        if (tud_midi_packet_read(packet))
-        {
-            handlePacket(packet);
-            if (packet[0])
-            {
-                memcpy(sd->lastPackets[packet[1] & 0xF], packet, sizeof(packet));
-            }
-        }
     }
 }
 
