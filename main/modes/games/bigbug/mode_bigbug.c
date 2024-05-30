@@ -148,12 +148,7 @@ static void bigbugEnterMode(void)
 {
     bigbug = calloc(1, sizeof(bigbug_t));
 
-    //Set all tiles to dirt
-    for(int i = 0; i < TILE_FIELD_WIDTH; i++){
-        for(int j = 0; j < TILE_FIELD_HEIGHT; j++){
-            bigbug->tiles[i][j] = 2;
-        }
-    }
+    
 
     // Load graphics
     loadWsg("level.wsg", &bigbug->levelWsg, false);
@@ -734,6 +729,24 @@ static void bigbugGameLoop(int64_t elapsedUs)
 }
 
 static void bigbugReset(void){
+    //Set all tiles to dirt
+    for(int i = 0; i < TILE_FIELD_WIDTH; i++){
+        for(int j = 0; j < TILE_FIELD_HEIGHT; j++){
+            switch(bigbug->levelWsg.px[(j * bigbug->levelWsg.w) + i]){
+                case c000:
+                    bigbug->tiles[i][j] = 1;
+                    break;
+                case c333:
+                    bigbug->tiles[i][j] = 4;
+                    break;
+                default:
+                    bigbug->tiles[i][j] = 10;
+                    break;
+            }
+            
+        }
+    }
+
     // Set garbotnik variables
     bigbug->garbotnik.pos.x  = 128 << DECIMAL_BITS;
     bigbug->garbotnik.pos.y  =  -(90 << DECIMAL_BITS);
@@ -829,10 +842,7 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
            bigbug->garbotnik.pos.y - 192 < tilePos.y + 512)
         {
             //Collision detected!
-            //Update the dirt by decrementing if greater than 0.
-            bigbug->tiles[best_i][best_j] = bigbug->tiles[best_i][best_j] > 0 ? bigbug->tiles[best_i][best_j] - 1 : 0;
-            printf("hit\n");
-
+            //printf("hit\n");
             //Resolve garbotnik's position somewhat based on his position previously.
             vec_t normal = subVec2d(bigbug->previousPos, tilePos);
             //Snap the previous frame offset to an orthogonal direction.
@@ -848,7 +858,6 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                     bigbug->garbotnik.pos.x = tilePos.x - 752;
                 }
                 
-
             }
             else{
                 if(normal.y > 0){
@@ -862,16 +871,44 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                     bigbug->garbotnik.pos.y = tilePos.y - 704;
                 }
             }
-            
-            //Mirror garbotnik's velocity
-            // Reflect the velocity vector along the normal
-            // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-            bigbug->garbotnikVel = subVec2d(bigbug->garbotnikVel, mulVec2d(normal, (2* dotVec2d(bigbug->garbotnikVel, normal))));
+            //printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
+            if(dotVec2d(bigbug->garbotnikVel, normal)<-95)//velocity angle is opposing garbage normal vector. Tweak number for different threshold.
+            {
+                //digging detected!
+                //Update the dirt by decrementing if greater than 0.
+                bigbug->tiles[best_i][best_j] = bigbug->tiles[best_i][best_j] > 0 ? bigbug->tiles[best_i][best_j] - 1 : 0;
+
+                
+                
+                //Mirror garbotnik's velocity
+                // Reflect the velocity vector along the normal
+                // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+                printf("hit squared speed: %d\n", sqMagVec2d(bigbug->garbotnikVel));
+                int32_t bounceScalar = sqMagVec2d(bigbug->garbotnikVel)/-11075 + 3;
+                if(bounceScalar > 3){
+                    bounceScalar = 3;
+                }
+                else if(bounceScalar < 1){
+                    bounceScalar = 1;
+                }
+                bigbug->garbotnikVel = mulVec2d(subVec2d(bigbug->garbotnikVel, mulVec2d(normal, (2* dotVec2d(bigbug->garbotnikVel, normal)))), bounceScalar);
+            }
         }
     }
 
     // Update the camera's position to catch up to the player
-    bigbug->camera.pos.x = bigbug->garbotnik.pos.x - HALF_WIDTH;
-    bigbug->camera.pos.y = bigbug->garbotnik.pos.y - HALF_HEIGHT;
+    if((bigbug->garbotnik.pos.x - HALF_WIDTH) - bigbug->camera.pos.x<-240){
+        bigbug->camera.pos.x = bigbug->garbotnik.pos.x - HALF_WIDTH + 240;
+    }
+    else if((bigbug->garbotnik.pos.x - HALF_WIDTH) - bigbug->camera.pos.x>240){
+        bigbug->camera.pos.x = bigbug->garbotnik.pos.x - HALF_WIDTH - 240;
+    }
+
+    if((bigbug->garbotnik.pos.y - HALF_HEIGHT) - bigbug->camera.pos.y<-160){
+        bigbug->camera.pos.y = bigbug->garbotnik.pos.y - HALF_HEIGHT + 160;
+    }
+    else if((bigbug->garbotnik.pos.y - HALF_HEIGHT) - bigbug->camera.pos.y>160){
+        bigbug->camera.pos.y = bigbug->garbotnik.pos.y - HALF_HEIGHT - 160;
+    }
 }
 
