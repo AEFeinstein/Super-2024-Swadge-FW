@@ -6,6 +6,8 @@
 #include "pinball_physics.h"
 #include "pinball_zones.h"
 
+#define EPSILON 0.001f
+
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -151,20 +153,30 @@ void checkBallStaticCollision(pinball_t* p)
 
             // Check for a collision
             if ((ball->zoneMask & bumper->zoneMask)                               // In the same zone
-                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper) // and not already touching
                 && circleCircleFlIntersection(ball->c, bumper->c, &collisionVec)) // and intersecting
             {
-                // Reflect the velocity vector along the normal between the two radii
-                // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+                // Find the normalized vector along the collision normal
                 vecFl_t centerToCenter = {
                     .x = collisionVec.x,
                     .y = collisionVec.y,
                 };
                 vecFl_t reflVec = normVecFl2d(centerToCenter);
-                ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
 
-                // Mark this wall as being touched
-                setBallTouching(p->ballsTouching[bIdx], bumper, PIN_CIRCLE);
+                // If the ball isn't already touching the bumper
+                if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper))
+                {
+                    // Reflect the velocity vector along the normal between the two radii
+                    // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+                    ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
+                    // Lose some speed on the bounce
+                    ball->vel = mulVecFl2d(ball->vel, 0.9f);
+                    // Mark this bumper as being touched to not double-bounce
+                    setBallTouching(p->ballsTouching[bIdx], bumper, PIN_CIRCLE);
+                }
+
+                // Move ball back to not clip into the bumper
+                ball->c.pos
+                    = addVecFl2d(bumper->c.pos, mulVecFl2d(reflVec, ball->c.radius + bumper->c.radius - EPSILON));
             }
         }
 
@@ -173,73 +185,38 @@ void checkBallStaticCollision(pinball_t* p)
         {
             pbLine_t* wall = &p->walls[wIdx];
             vecFl_t collisionVec;
+            vecFl_t cpOnLine;
             // Check for a collision
-            if ((ball->zoneMask & wall->zoneMask)                               // In the same zone
-                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], wall) // and not already touching
-                && circleLineFlIntersection(ball->c, wall->l, &collisionVec))   // and intersecting
+            if ((ball->zoneMask & wall->zoneMask)                                        // In the same zone
+                && circleLineFlIntersection(ball->c, wall->l, &cpOnLine, &collisionVec)) // and intersecting
             {
                 /* TODO this reflection can have bad results when colliding with the tip of a line.
                  * The center-center vector can get weird if the ball moves fast and clips into the tip.
                  * The solution is probably to binary-search-move the ball as far as it'll go without clipping
                  */
 
-                // Do a bunch of work to adjust the ball's position to not clip into this line.
-                // First create a copy of the wall
-                lineFl_t phantomLine = wall->l;
-
-                // Then find the normal vector to the phantom, pointed towards the ball
-                vecFl_t phantomNormal = {
-                    .x = phantomLine.p2.y - phantomLine.p1.y,
-                    .y = phantomLine.p2.x - phantomLine.p1.x,
-                };
-                if ((collisionVec.x < 0) != (phantomNormal.x < 0))
-                {
-                    phantomNormal.x = -phantomNormal.x;
-                }
-                if ((collisionVec.y < 0) != (phantomNormal.y < 0))
-                {
-                    phantomNormal.y = -phantomNormal.y;
-                }
-
-                // Scale the normal to be the length of the ball's radius
-                phantomNormal = mulVecFl2d(normVecFl2d(phantomNormal), ball->c.radius);
-
-                // Translate the along the normal vector, the distance of the radius
-                // This creates a line parallel to the wall where the ball's center could be
-                phantomLine.p1 = addVecFl2d(phantomLine.p1, phantomNormal);
-                phantomLine.p2 = addVecFl2d(phantomLine.p2, phantomNormal);
-
-                // printf("collision v  [(%0.3f, %0.3f)]\n", collisionVec.x, collisionVec.y);
-                // printf("        line [(%0.3f, %0.3f), (%0.3f, %0.3f)]\n", wall->l.p1.x, wall->l.p1.y, wall->l.p2.x,
-                //        wall->l.p2.y);
-                // printf("phantom norm [(%0.3f, %0.3f)]\n", phantomNormal.x, phantomNormal.y);
-                // printf("phantom line [(%0.3f, %0.3f), (%0.3f, %0.3f)]\n", phantomLine.p1.x, phantomLine.p1.y,
-                //        phantomLine.p2.x, phantomLine.p2.y);
-
-                // Create a line for the balls motion
-                lineFl_t ballLine = {
-                    .p1 = ball->c.pos,
-                    .p2 = addVecFl2d(ball->c.pos, ball->vel),
-                };
-
-                // printf("   ball line [(%0.3f, %0.3f), (%0.3f, %0.3f)]\n", ballLine.p1.x, ballLine.p1.y,
-                // ballLine.p2.x,
-                //        ballLine.p2.y);
-
-                // Find the intersection between where the ball's center could be and the ball's trajectory.
-                // Set the ball's position to that point
-                ball->c.pos = infLineIntersectionPoint(phantomLine, ballLine);
-
-                // printf("intersection [(%0.3f, %0.3f)]\n\n", ball->c.pos.x, ball->c.pos.y);
-
-                // Collision detected, do some physics
+                // Find the normalized vector along the collision normal
                 vecFl_t centerToCenter = {
                     .x = collisionVec.x,
                     .y = collisionVec.y,
                 };
                 vecFl_t reflVec = normVecFl2d(centerToCenter);
-                ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
 
+                // If the ball isn't already touching the wall
+                if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], wall))
+                {
+                    // Bounce it by reflecting across the collision normal
+                    ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
+                    // Lose some speed on the bounce
+                    ball->vel = mulVecFl2d(ball->vel, 0.9f);
+                    // Mark this wall as being touched to not double-bounce
+                    setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
+                }
+
+                // Move ball back to not clip into the bumper
+                ball->c.pos = addVecFl2d(cpOnLine, mulVecFl2d(reflVec, ball->c.radius - EPSILON));
+
+#ifdef SLIDE_PHYSICS
                 // The force that may be statically applied if the ball and line stay in contact
                 vecFl_t accelDelta = {
                     .x = 0,
@@ -266,20 +243,23 @@ void checkBallStaticCollision(pinball_t* p)
                     float velocityMag  = magVecFl2d(ball->vel);
                     float angleBetween = acosf(dotVecFl2d(ball->vel, wallSlope) / (velocityMag * wall->length));
 
-                    // vecFl_t testA = {.x = 0, .y = -1,};
-                    // for(int i = 0; i < 256; i++)
-                    // {
-                    //     vecFl_t testB = {.x = 0, .y = -1,};
-                    //     testB = rotateVecFl2d(testB, (i * 2 * M_PIf) / 256.0f);
-                    //     float res = acosf(dotVecFl2d(testA, testB));
-                    //     printf("(%0.3f, %0.3f) and (%0.3f, %0.3f) -> %0.3f\n", testA.x, testA.y, testB.x, testB.y,
-                    //     res);
-                    // }
-                    // exit(0);
+                    vecFl_t testA = {
+                        .x = 0,
+                        .y = -1,
+                    };
+                    for (int i = 0; i < 256; i++)
+                    {
+                        vecFl_t testB = {
+                            .x = 0,
+                            .y = -1,
+                        };
+                        testB     = rotateVecFl2d(testB, (i * 2 * M_PIf) / 256.0f);
+                        float res = acosf(dotVecFl2d(testA, testB));
+                        printf("(%0.3f, %0.3f) and (%0.3f, %0.3f) -> %0.3f\n", testA.x, testA.y, testB.x, testB.y, res);
+                    }
+                    exit(0);
 
-                    // If the angle is small
-                    // TODO pick something less arbitrary?
-                    if (angleBetween < 0.6f)
+                    If the angle is small TODO pick something less arbitrary ? if (angleBetween < 0.6f)
                     {
                         // Have the ball ride the line
 
@@ -301,9 +281,9 @@ void checkBallStaticCollision(pinball_t* p)
                         ball->accel = addVecFl2d(ball->accel, accelDelta);
                     }
                 }
-
                 // Mark this wall as being touched, with acceleration
-                setBallTouchingAccel(p->ballsTouching[bIdx], wall, PIN_LINE, accelDelta);
+                // setBallTouchingAccel(p->ballsTouching[bIdx], wall, PIN_LINE, accelDelta);
+#endif
             }
         }
     }
@@ -327,6 +307,7 @@ void checkBallFlipperCollision(pinball_t* p)
         {
             const pbFlipper_t* flipper = &p->flippers[fIdx];
             vecFl_t collisionVec;
+            vecFl_t cpOnLine;
 
             // Check for a collision
             if ((ball->zoneMask & flipper->zoneMask)                               // In the same zone
@@ -334,8 +315,8 @@ void checkBallFlipperCollision(pinball_t* p)
                 // And collides with a constituent part
                 && (circleCircleFlIntersection(ball->c, flipper->cPivot, &collisionVec)
                     || circleCircleFlIntersection(ball->c, flipper->cTip, &collisionVec)
-                    || circleLineFlIntersection(ball->c, flipper->sideL, &collisionVec)
-                    || circleLineFlIntersection(ball->c, flipper->sideR, &collisionVec)))
+                    || circleLineFlIntersection(ball->c, flipper->sideL, &cpOnLine, &collisionVec)
+                    || circleLineFlIntersection(ball->c, flipper->sideR, &cpOnLine, &collisionVec)))
             {
                 // TODO account for flipper velocity
                 // Reflect the velocity vector along the normal
@@ -474,9 +455,8 @@ void checkBallsNotTouching(pinball_t* p)
                     case PIN_LINE:
                     {
                         const pbLine_t* other = (const pbLine_t*)tr->obj;
-                        vecFl_t collisionVec;
-                        if ((0 == (ball->zoneMask & other->zoneMask))                       // Not in the same zone
-                            || !circleLineFlIntersection(ball->c, other->l, &collisionVec)) // or not touching
+                        if ((0 == (ball->zoneMask & other->zoneMask))                    // Not in the same zone
+                            || !circleLineFlIntersection(ball->c, other->l, NULL, NULL)) // or not touching
                         {
                             setNotTouching = true;
                         }
@@ -498,8 +478,8 @@ void checkBallsNotTouching(pinball_t* p)
                         if ((0 == (ball->zoneMask & flipper->zoneMask))                    // Not in the same zone
                             || (circleCircleFlIntersection(ball->c, flipper->cPivot, NULL) // or not touching
                                 && circleCircleFlIntersection(ball->c, flipper->cTip, NULL)
-                                && circleLineFlIntersection(ball->c, flipper->sideL, NULL)
-                                && circleLineFlIntersection(ball->c, flipper->sideR, NULL)))
+                                && circleLineFlIntersection(ball->c, flipper->sideL, NULL, NULL)
+                                && circleLineFlIntersection(ball->c, flipper->sideR, NULL, NULL)))
                         {
                             setNotTouching = true;
                         }

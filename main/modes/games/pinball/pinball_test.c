@@ -73,6 +73,13 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
  */
 void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 {
+    int fixedBumpersPlaced = 0;
+    vecFl_t fixedBumpers[] = {{
+        .x = 100,
+        .y = 140,
+    }};
+    numBumpers += ARRAY_SIZE(fixedBumpers);
+
     // Don't overflow
     if (numBumpers > MAX_NUM_BUMPERS)
     {
@@ -86,8 +93,16 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
         pbCircle_t bumper = {0};
 #define BUMPER_RAD 10
         bumper.c.radius = (BUMPER_RAD);
-        bumper.c.pos.x  = ((BUMPER_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BUMPER_RAD + 1))));
-        bumper.c.pos.y  = ((BUMPER_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BUMPER_RAD + 1))));
+        if (fixedBumpersPlaced < ARRAY_SIZE(fixedBumpers))
+        {
+            bumper.c.pos = fixedBumpers[fixedBumpersPlaced];
+            fixedBumpersPlaced++;
+        }
+        else
+        {
+            bumper.c.pos.x = ((BUMPER_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BUMPER_RAD + 1))));
+            bumper.c.pos.y = ((BUMPER_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BUMPER_RAD + 1))));
+        }
         bumper.color    = c050;
         bumper.filled   = false;
         bumper.zoneMask = pinZoneCircle(p, bumper);
@@ -95,8 +110,7 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
         bool intersection = false;
         for (int32_t ol = 0; ol < p->numWalls; ol++)
         {
-            vecFl_t cv;
-            if (circleLineFlIntersection(bumper.c, p->walls[ol].l, &cv))
+            if (circleLineFlIntersection(bumper.c, p->walls[ol].l, NULL, NULL))
             {
                 intersection = true;
                 break;
@@ -231,8 +245,7 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 
         for (int32_t ob = 0; ob < p->numBumpers; ob++)
         {
-            vecFl_t cv;
-            if (circleLineFlIntersection(p->bumpers[ob].c, pbl.l, &cv))
+            if (circleLineFlIntersection(p->bumpers[ob].c, pbl.l, NULL, NULL))
             {
                 intersection = true;
             }

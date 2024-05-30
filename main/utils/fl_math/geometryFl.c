@@ -180,19 +180,22 @@ bool circleRectFlIntersection(circleFl_t circle, rectangleFl_t rect, vecFl_t* co
  *
  * @param circle       [IN]  A circle to test intersection
  * @param line         [IN]  A line to test intersection
+ * @param cpOnLine     [OUT] The closest point on the line to the circle
  * @param collisionVec [OUT] A vector pointing from the line to the circle in the direction of the collision. This may
  * be NULL.
  * @return true if the circle intersects the line, false if it doesn't
  */
-bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* collisionVec)
+bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* cpOnLine, vecFl_t* collisionVec)
 {
     // Check for the line ends
     if (circlePointFlIntersection(circle, line.p1, collisionVec))
     {
+        *cpOnLine = line.p1;
         return true;
     }
     if (circlePointFlIntersection(circle, line.p2, collisionVec))
     {
+        *cpOnLine = line.p2;
         return true;
     }
 
@@ -247,8 +250,11 @@ bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* collisi
     {
         if (NULL != collisionVec)
         {
-            collisionVec->x = circle.pos.x - closestPoint.x;
-            collisionVec->y = circle.pos.y - closestPoint.y;
+            *collisionVec = subVecFl2d(circle.pos, closestPoint);
+        }
+        if (NULL != cpOnLine)
+        {
+            *cpOnLine = closestPoint;
         }
         return true;
     }

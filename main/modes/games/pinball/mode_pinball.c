@@ -79,7 +79,7 @@ static void pinEnterMode(void)
     pbCreateBall(pinball, 12, 6);
 
     // Create random bumpers
-    // createRandomBumpers(pinball, 25);
+    createRandomBumpers(pinball, 0);
 
     // Create random walls
     createRandomWalls(pinball, 0);
