@@ -637,7 +637,7 @@ static void bigbugDrawField(void)
                                     j);
                                     break;
                                 case 13: //1101
-                                    bigbugDrawCornerTile((uint8_t[]){8, 9, 10, 1},
+                                    bigbugDrawCornerTile((uint8_t[]){8, 9, 10, 11},
                                     i,
                                     j);
                                     break;
