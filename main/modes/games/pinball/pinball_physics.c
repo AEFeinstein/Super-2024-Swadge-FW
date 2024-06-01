@@ -20,8 +20,8 @@ void moveBalls(pinball_t* p);
 void moveFlippers(pinball_t* p);
 void checkBallsNotTouching(pinball_t* p);
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type);
-void setBallTouchingAccel(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type, vecFl_t additiveAccel);
 pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
+void checkBallsAtRest(pinball_t* p);
 
 //==============================================================================
 // Functions
@@ -50,8 +50,12 @@ void updatePinballPhysicsFrame(pinball_t* p)
     // Check for collisions between balls and moving objects (flippers)
     checkBallFlipperCollision(p);
 
+    // Check if balls are actually at rest
+    checkBallsAtRest(p);
+
     // Move balls along new vectors
     moveBalls(p);
+
     // Move flippers rotationally
     moveFlippers(p);
 
@@ -145,10 +149,6 @@ void checkBallStaticCollision(pinball_t* p)
         // Reference and integer representation
         pbCircle_t* ball = &p->balls[bIdx];
 
-        // Assume no touching or bounce
-        bool touching = false;
-        bool bounce   = false;
-
         // Iterate over all bumpers
         for (uint32_t uIdx = 0; uIdx < p->numBumpers; uIdx++)
         {
@@ -159,9 +159,6 @@ void checkBallStaticCollision(pinball_t* p)
             if ((ball->zoneMask & bumper->zoneMask)                               // In the same zone
                 && circleCircleFlIntersection(ball->c, bumper->c, &collisionVec)) // and intersecting
             {
-                // Touching a bumper
-                touching = true;
-
                 // Find the normalized vector along the collision normal
                 vecFl_t centerToCenter = {
                     .x = collisionVec.x,
@@ -173,7 +170,7 @@ void checkBallStaticCollision(pinball_t* p)
                 if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper))
                 {
                     // Bounced on a bumper
-                    bounce = true;
+                    ball->bounce = true;
                     // Reflect the velocity vector along the normal between the two radii
                     // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
                     ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
@@ -204,9 +201,6 @@ void checkBallStaticCollision(pinball_t* p)
                  * The solution is probably to binary-search-move the ball as far as it'll go without clipping
                  */
 
-                // Touching a wall
-                touching = true;
-
                 // Find the normalized vector along the collision normal
                 vecFl_t centerToCenter = {
                     .x = collisionVec.x,
@@ -225,90 +219,12 @@ void checkBallStaticCollision(pinball_t* p)
                     setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
 
                     // Bounced off a wall
-                    bounce = true;
+                    ball->bounce = true;
                 }
 
                 // Move ball back to not clip into the bumper
                 ball->c.pos = addVecFl2d(cpOnLine, mulVecFl2d(reflVec, ball->c.radius - EPSILON));
-
-#ifdef SLIDE_PHYSICS
-                // The force that may be statically applied if the ball and line stay in contact
-                vecFl_t accelDelta = {
-                    .x = 0,
-                    .y = 0,
-                };
-                // If the line is below the circle
-                if (collisionVec.y < 0)
-                {
-                    // Check if the reflection is close enough to the slope to stick to the line
-                    // TODO care about momentum?
-                    vecFl_t wallSlope;
-                    if (wall->l.p1.y < wall->l.p2.y)
-                    {
-                        wallSlope.y = (wall->l.p2.y - wall->l.p1.y);
-                        wallSlope.x = (wall->l.p2.x - wall->l.p1.x);
-                    }
-                    else
-                    {
-                        wallSlope.y = (wall->l.p1.y - wall->l.p2.y);
-                        wallSlope.x = (wall->l.p1.x - wall->l.p2.x);
-                    }
-
-                    // Find the angle between the reflected velocity and wall
-                    float velocityMag  = magVecFl2d(ball->vel);
-                    float angleBetween = acosf(dotVecFl2d(ball->vel, wallSlope) / (velocityMag * wall->length));
-
-                    vecFl_t testA = {
-                        .x = 0,
-                        .y = -1,
-                    };
-                    for (int i = 0; i < 256; i++)
-                    {
-                        vecFl_t testB = {
-                            .x = 0,
-                            .y = -1,
-                        };
-                        testB     = rotateVecFl2d(testB, (i * 2 * M_PIf) / 256.0f);
-                        float res = acosf(dotVecFl2d(testA, testB));
-                        printf("(%0.3f, %0.3f) and (%0.3f, %0.3f) -> %0.3f\n", testA.x, testA.y, testB.x, testB.y, res);
-                    }
-                    exit(0);
-
-                    If the angle is small TODO pick something less arbitrary ? if (angleBetween < 0.6f)
-                    {
-                        // Have the ball ride the line
-
-                        // Project velocity onto wall slope (a small amount is lost)
-                        ball->vel = mulVecFl2d(wallSlope,
-                                               (dotVecFl2d(ball->vel, wallSlope) / dotVecFl2d(wallSlope, wallSlope)));
-
-                        // This is the force applied by the slope
-                        float sinTh = wallSlope.y / wall->length;
-                        float cosTh = wallSlope.x / wall->length;
-                        // On a slope of angle th, the normal force to the slope is g*sin(th) and the acceleration
-                        // straight down the slope is g*sin(th) Doing more trig to get the axis aligned vectors, the Y
-                        // acceleration is g*sin(th)*sin(th) and the X acceleration is g*cos(th)*sin(th) The -1 in the Y
-                        // acceleration is to counteract existing gravity, since this is summed
-                        accelDelta.x = PINBALL_GRAVITY * sinTh * cosTh;
-                        accelDelta.y = PINBALL_GRAVITY * (sinTh * sinTh - 1);
-
-                        // Add the force to the ball's acceleration
-                        ball->accel = addVecFl2d(ball->accel, accelDelta);
-                    }
-                }
-                // Mark this wall as being touched, with acceleration
-                // setBallTouchingAccel(p->ballsTouching[bIdx], wall, PIN_LINE, accelDelta);
-#endif
             }
-        }
-
-        // If the ball is touching something, it should have bounced off it.
-        if (touching && !bounce)
-        {
-            // If it's still in contact without bouncing, with a low velocity it is likely at rest
-            // Kill velocity
-            ball->vel.x = 0;
-            ball->vel.y = 0;
         }
     }
 }
@@ -373,6 +289,9 @@ void moveBalls(pinball_t* p)
         // Acceleration changes velocity
         // TODO adjust gravity vector when on top of a line
         ball->vel = addVecFl2d(ball->vel, ball->accel);
+
+        // Save the last position to check if the ball is at rest
+        ball->lastPos = ball->c.pos;
 
         // Move the ball
         ball->c.pos.x += (ball->vel.x);
@@ -520,10 +439,6 @@ void checkBallsNotTouching(pinball_t* p)
                 // If the object is no longer touching
                 if (setNotTouching)
                 {
-                    // Remove this object's acceleration from the ball
-                    ball->accel         = subVecFl2d(ball->accel, tr->additiveAccel);
-                    tr->additiveAccel.x = 0;
-                    tr->additiveAccel.y = 0;
                     // Clear the reference
                     tr->obj  = NULL;
                     tr->type = PIN_NO_SHAPE;
@@ -542,30 +457,12 @@ void checkBallsNotTouching(pinball_t* p)
  */
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type)
 {
-    vecFl_t additiveAccel = {
-        .x = 0,
-        .y = 0,
-    };
-    setBallTouchingAccel(ballTouching, obj, type, additiveAccel);
-}
-
-/**
- * @brief TODO
- *
- * @param ballTouching
- * @param obj
- * @param type
- * @param additiveAccel
- */
-void setBallTouchingAccel(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type, vecFl_t additiveAccel)
-{
     for (uint32_t i = 0; i < MAX_NUM_TOUCHES; i++)
     {
         if (NULL == ballTouching->obj)
         {
-            ballTouching->obj           = obj;
-            ballTouching->type          = type;
-            ballTouching->additiveAccel = additiveAccel;
+            ballTouching->obj  = obj;
+            ballTouching->type = type;
             return;
         }
     }
@@ -588,6 +485,41 @@ pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj)
         }
     }
     return PIN_NO_SHAPE;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param p
+ */
+void checkBallsAtRest(pinball_t* p)
+{
+    // For each ball
+    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
+    {
+        pbCircle_t* ball = &p->balls[bIdx];
+
+        // If the ball didn't bounce this frame (which can adjust position to not clip)
+        if (false == ball->bounce)
+        {
+            // See how far the ball actually traveled
+            float posDeltaM = sqMagVecFl2d(subVecFl2d(ball->c.pos, ball->lastPos));
+            float velM      = sqMagVecFl2d(ball->vel);
+
+            // If the ball didn't move as much as it should have
+            if ((velM - posDeltaM) > 0.01f)
+            {
+                // Stop the ball altogether to not accumulate velocity
+                ball->vel.x = 0;
+                ball->vel.y = 0;
+            }
+        }
+        else
+        {
+            // Clear the bounce flag
+            ball->bounce = false;
+        }
+    }
 }
 
 /**

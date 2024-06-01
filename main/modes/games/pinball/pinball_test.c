@@ -21,9 +21,11 @@ void pbCreateBall(pinball_t* p, float x, float y)
 {
     pbCircle_t* ball = &p->balls[p->numBalls++];
 #define BALL_RAD 5
-    ball->c.radius = (BALL_RAD);
-    ball->c.pos.x  = x;
-    ball->c.pos.y  = y;
+    ball->c.radius  = (BALL_RAD);
+    ball->c.pos.x   = x;
+    ball->c.pos.y   = y;
+    ball->lastPos.x = x;
+    ball->lastPos.y = y;
     // #define MAX_VEL 128
     ball->vel.x   = 0;
     ball->vel.y   = 0;
@@ -53,15 +55,17 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
     {
         pbCircle_t* ball = &p->balls[p->numBalls++];
 #define BALL_RAD 5
-        ball->c.radius = (BALL_RAD);
-        ball->c.pos.x  = ((BALL_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BALL_RAD + 1))));
-        ball->c.pos.y  = ((BALL_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BALL_RAD + 1))));
-        ball->vel.x    = 0;
-        ball->vel.y    = 5 / 60.0f;
-        ball->accel.x  = 0;
-        ball->accel.y  = PINBALL_GRAVITY;
-        ball->color    = c500;
-        ball->filled   = true;
+        ball->c.radius  = (BALL_RAD);
+        ball->c.pos.x   = ((BALL_RAD + 1) + (esp_random() % (TFT_WIDTH - 2 * (BALL_RAD + 1))));
+        ball->c.pos.y   = ((BALL_RAD + 1) + (esp_random() % (TFT_HEIGHT - 2 * (BALL_RAD + 1))));
+        ball->lastPos.x = ball->c.pos.x;
+        ball->lastPos.y = ball->c.pos.x;
+        ball->vel.x     = 0;
+        ball->vel.y     = 5 / 60.0f;
+        ball->accel.x   = 0;
+        ball->accel.y   = PINBALL_GRAVITY;
+        ball->color     = c500;
+        ball->filled    = true;
     }
 }
 

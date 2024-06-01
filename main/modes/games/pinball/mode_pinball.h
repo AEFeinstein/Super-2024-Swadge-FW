@@ -42,8 +42,10 @@ typedef enum
 typedef struct
 {
     circleFl_t c;
-    vecFl_t vel;   // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
-    vecFl_t accel; // Acceleration is pixels per frame squared
+    vecFl_t vel;     // Velocity is in pixels per frame (@ 60fps, so pixels per 16.7ms)
+    vecFl_t accel;   // Acceleration is pixels per frame squared
+    vecFl_t lastPos; // The previous postion, used to compare actual positional change to velocity
+    bool bounce;     // true if the ball bounced this frame, false otherwise
     uint32_t zoneMask;
     paletteColor_t color;
     bool filled;
@@ -83,7 +85,6 @@ typedef struct
 {
     const void* obj;
     pbShapeType_t type;
-    vecFl_t additiveAccel;
 } pbTouchRef_t;
 
 typedef struct
