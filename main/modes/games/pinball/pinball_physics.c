@@ -145,6 +145,10 @@ void checkBallStaticCollision(pinball_t* p)
         // Reference and integer representation
         pbCircle_t* ball = &p->balls[bIdx];
 
+        // Assume no touching or bounce
+        bool touching = false;
+        bool bounce   = false;
+
         // Iterate over all bumpers
         for (uint32_t uIdx = 0; uIdx < p->numBumpers; uIdx++)
         {
@@ -155,6 +159,9 @@ void checkBallStaticCollision(pinball_t* p)
             if ((ball->zoneMask & bumper->zoneMask)                               // In the same zone
                 && circleCircleFlIntersection(ball->c, bumper->c, &collisionVec)) // and intersecting
             {
+                // Touching a bumper
+                touching = true;
+
                 // Find the normalized vector along the collision normal
                 vecFl_t centerToCenter = {
                     .x = collisionVec.x,
@@ -165,6 +172,8 @@ void checkBallStaticCollision(pinball_t* p)
                 // If the ball isn't already touching the bumper
                 if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper))
                 {
+                    // Bounced on a bumper
+                    bounce = true;
                     // Reflect the velocity vector along the normal between the two radii
                     // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
                     ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
@@ -195,6 +204,9 @@ void checkBallStaticCollision(pinball_t* p)
                  * The solution is probably to binary-search-move the ball as far as it'll go without clipping
                  */
 
+                // Touching a wall
+                touching = true;
+
                 // Find the normalized vector along the collision normal
                 vecFl_t centerToCenter = {
                     .x = collisionVec.x,
@@ -211,6 +223,9 @@ void checkBallStaticCollision(pinball_t* p)
                     ball->vel = mulVecFl2d(ball->vel, 0.9f);
                     // Mark this wall as being touched to not double-bounce
                     setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
+
+                    // Bounced off a wall
+                    bounce = true;
                 }
 
                 // Move ball back to not clip into the bumper
@@ -285,6 +300,15 @@ void checkBallStaticCollision(pinball_t* p)
                 // setBallTouchingAccel(p->ballsTouching[bIdx], wall, PIN_LINE, accelDelta);
 #endif
             }
+        }
+
+        // If the ball is touching something, it should have bounced off it.
+        if (touching && !bounce)
+        {
+            // If it's still in contact without bouncing, with a low velocity it is likely at rest
+            // Kill velocity
+            ball->vel.x = 0;
+            ball->vel.y = 0;
         }
     }
 }
