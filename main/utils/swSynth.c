@@ -327,3 +327,17 @@ int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOsci
 
     return sample;
 }
+
+int8_t swSynthSampleWave(oscillatorShape_t shape, uint8_t idx)
+{
+    switch (shape)
+    {
+        case SHAPE_SINE: return sineGen(idx, NULL);
+        case SHAPE_SAWTOOTH: return sawtoothGen(idx, NULL);
+        case SHAPE_TRIANGLE: return triangleGen(idx, NULL);
+        case SHAPE_SQUARE: return squareGen(idx, NULL);
+        case SHAPE_NOISE: return noiseGen(idx, NULL);
+    }
+
+    return 0;
+}

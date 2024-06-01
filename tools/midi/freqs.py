@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import math
+import random
 
 A0 = 21
 A4 = 69
@@ -14,6 +15,16 @@ def note_name(num):
         octave = semitones // 12
         return f"{note}{octave}"
 
+def note_symbol(num):
+    semitones = (num - A0)
+    note = note_names[semitones % 12]
+    octave = semitones // 12
+
+    name_symbol = note.replace("#", "_SHARP_")
+    octave_symbol = f"_MINUS_{-octave}" if octave < 0 else str(octave)
+
+    return f"FREQ_{name_symbol}{octave_symbol}".replace("__","_")
+
 note_errs = []
 
 FRAC_BITS = 16
@@ -27,15 +38,19 @@ def calc_pitch_float(n):
 
     return actual, f
 
+
 def gen_note_table():
     maxerr = 0
     maxerrnote = None
 
-    print("static const uq16_16 noteFreqTable[] = {")
+    define_lines = []
+    freq_array_lines = []
+
     for n in range(128):
         #f = 440 * 2**((n-A4)/12)
         actual, f = calc_pitch_float(n)
         name = note_name(n)
+        symbol = note_symbol(n)
         pad = " " * (5 - len(str(int(f))))
         error = ((actual / 256.0) - f) / f * 100
         olderror = (round(f) - f) / f * 100
@@ -49,7 +64,17 @@ def gen_note_table():
             maxerrnote = name
 
         #print(f"    ({dec_bits} << 8){pad}| {frac_bits:3}, // {name:4s} = {f:.3f} Hz ({error:+.4f}% error, old={olderror:+.4f}%)")
-        print(f"    0x{actual:08x}, // {name:4s} = {f:.3f} Hz")
+        define_lines.append(f"#define {symbol:20s} 0x{actual:08x} // = {f:.3f} Hz")
+        freq_array_lines.append(f"    {symbol},")
+
+    for line in define_lines:
+        print(line)
+
+    print()
+
+    print("static const uq16_16 noteFreqTable[] = {")
+    for line in freq_array_lines:
+        print(line)
     print("};")
 
 def gen_bend_table():
@@ -67,17 +92,35 @@ def gen_bend_table():
         print(f"    0x{bin_ratio:08x}, // {n:+d} cents => {ratio:0.5f}")
     print("};")
 
-def gen_rms_table():
-    print("static const uq16_16 rmsTable[] = {")
-    for n in range(32):
-        val = 1.0/math.sqrt(n) if n > 0 else 0
-        intval = (int(val) << 16) | int((val % 1) * 65536)
-        print(f"    0x{intval:08x}, // 1 / sqrt({n}) = {val:.4f}")
+def primes(n): # simple sieve of multiples
+    odds = range(3, n+1, 2)
+    sieve = set(sum([list(range(q*q, n+1, q+q)) for q in odds], []))
+    return [2] + [p for p in odds if p not in sieve]
+
+def gen_dither_table():
+    eightbit_primes = primes(256)
+    random.seed(1337)
+    random.shuffle(eightbit_primes)
+
+    print("// Apply a random offset to each oscillator to maybe make it less likely for waves to \"stack\" exactly")
+    print("static const uint8_t oscDither[] = {")
+    for i, v in enumerate(eightbit_primes):
+        if i > 0 and ((i+1) % 10) == 0:
+            print(f"{v:3},")
+        else:
+            print(f"{v:3}, ", end="")
+    print()
     print("};")
 
 gen_note_table()
+print()
+
 gen_bend_table()
-gen_rms_table()
+print()
+
+print("#ifdef OSC_DITHER")
+gen_dither_table()
+print("#endif")
 
 #print(f"Max error: {maxerr} on note {maxerrnote}")
 #print(sorted(note_errs))

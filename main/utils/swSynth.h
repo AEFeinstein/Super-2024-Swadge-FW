@@ -126,3 +126,4 @@ void swSynthSetFreqPrecise(synthOscillator_t* osc, uq16_16 freq);
 void swSynthSetVolume(synthOscillator_t* osc, uint8_t volume);
 uint8_t swSynthMixOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators);
 int32_t swSynthSumOscillators(synthOscillator_t* oscillators[], uint16_t numOscillators);
+int8_t swSynthSampleWave(oscillatorShape_t shape, uint8_t idx);

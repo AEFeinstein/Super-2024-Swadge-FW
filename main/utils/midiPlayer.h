@@ -1,3 +1,4 @@
+#pragma once
 #include "hdw-bzr.h"
 #include "swSynth.h"
 
@@ -157,9 +158,11 @@ typedef enum
  *
  * @param drum The percussion instrument to generate sound for
  * @param idx The monotonic sample index within this note. Will not repeat for any particular note.
+ * @param[out] done A pointer to a boolean to be set to 1 when the drum sample is finished playing
+ * @param[in,out] scratch A pointer to an array of 4 uint32_t that will persist for the duration of the note
  * @param data A pointer to user-defined data which may be used in sample generation
  */
-typedef int8_t (*percussionFunc_t)(percussionNote_t drum, uint32_t idx, void* data);
+typedef int8_t (*percussionFunc_t)(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data);
 
 /**
  * @brief Defines the sound characteristics of a particular instrument.
@@ -245,11 +248,16 @@ typedef struct
     /// @brief The synthesizer oscillators used to generate the sounds
     synthOscillator_t oscillators[OSC_PER_VOICE];
 
+    /// @brief An array of scratch data for percussion functions to use
+    // TODO union this with the oscillators? They shouldn't both be used
+    // But we need to make sure the oscillators don't get summed
+    uint32_t percScratch[4];
+
     /// @brief The timbre of this voice, which defines its musical characteristics
     // TODO: Should this be a pointer instead?
     // We may be asked to modify envelope, etc. so maybe just memcpy into here?
     // program change isn't a super lightweight event anyhow
-    midiTimbre_t timbre;
+    midiTimbre_t* timbre;
 } midiVoice_t;
 
 /**
@@ -335,9 +343,6 @@ typedef struct
 
     /// @brief The total number of oscillators in the array. Could be less than the max if some are unused
     uint16_t oscillatorCount;
-
-    /// @brief The total number of oscillators currently active and outputting sound waves.
-    uint16_t activeOscillators;
 
     /// @brief Whether this player is playing a song or a MIDI stream
     midiPlayerMode_t mode;
