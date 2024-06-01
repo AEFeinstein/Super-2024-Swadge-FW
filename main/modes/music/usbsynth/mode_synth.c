@@ -10,6 +10,8 @@
 #include "spiffs_font.h"
 #include "hdw-btn.h"
 #include "touchUtils.h"
+#include "shapes.h"
+#include "trigonometry.h"
 
 #include "sngPlayer.h"
 #include "midiPlayer.h"
@@ -508,7 +510,7 @@ static void synthMainLoop(int64_t elapsedUs)
     drawText(&sd->font, c050, readyStr, (TFT_WIDTH - textWidth(&sd->font, readyStr)) / 2, 3);
 
     char packetMsg[64];
-    int16_t y = 15;
+    int16_t textY = 15;
     for (int ch = 0; ch < 16; ch++)
     {
         bool percussion = sd->midiPlayer.channels[ch].percussion;
@@ -537,7 +539,7 @@ static void synthMainLoop(int64_t elapsedUs)
                     : "<Percussion>")
                 : gmProgramNames[sd->midiPlayer.channels[ch].program];
             // Draw the program name
-            drawText(&sd->font, col, programName, 10, y);
+            drawText(&sd->font, col, programName, 10, textY);
         }
 
         if (sd->viewMode & VM_PACKETS)
@@ -550,14 +552,14 @@ static void synthMainLoop(int64_t elapsedUs)
                 sd->lastPackets[ch][2],
                 sd->lastPackets[ch][3]);
             packetMsg[sizeof(packetMsg) - 1] = '\0';
-            drawText(&sd->font, col, packetMsg, TFT_WIDTH - textWidth(&sd->font, packetMsg) - 10, y);
+            drawText(&sd->font, col, packetMsg, TFT_WIDTH - textWidth(&sd->font, packetMsg) - 10, textY);
         }
         else if (sd->viewMode & VM_TEXT)
         {
-            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, y - 2, TFT_WIDTH - (textWidth(&sd->font, sd->longestProgramName) + 4), 16);
+            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, textY - 2, TFT_WIDTH - (textWidth(&sd->font, sd->longestProgramName) + 4), 16);
         }
 
-        y += sd->font.height + 4;
+        textY += sd->font.height + 4;
     }
 
     if (sd->viewMode == VM_PRETTY)
