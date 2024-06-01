@@ -64,7 +64,7 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
         ball->vel.y     = 5 / 60.0f;
         ball->accel.x   = 0;
         ball->accel.y   = PINBALL_GRAVITY;
-        ball->color     = c500;
+        ball->color     = esp_random() % cTransparent;
         ball->filled    = true;
     }
 }

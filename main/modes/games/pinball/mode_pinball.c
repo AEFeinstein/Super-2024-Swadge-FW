@@ -75,7 +75,7 @@ static void pinEnterMode(void)
     createTableZones(pinball);
 
     // Create random balls
-    // createRandomBalls(pinball, 3);
+    createRandomBalls(pinball, 31);
     pbCreateBall(pinball, 12, 6);
 
     // Create random bumpers

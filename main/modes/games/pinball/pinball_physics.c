@@ -92,45 +92,62 @@ void checkBallBallCollisions(pinball_t* p)
         for (uint32_t obIdx = bIdx + 1; obIdx < p->numBalls; obIdx++)
         {
             pbCircle_t* otherBall = &p->balls[obIdx];
+            vecFl_t centerToCenter;
             // Check for a new collision
-            if ((ball->zoneMask & otherBall->zoneMask)                               // In the same zone
-                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], otherBall) // and not already touching
-                && circleCircleFlIntersection(ball->c, otherBall->c, NULL))          // and intersecting
+            if ((ball->zoneMask & otherBall->zoneMask)                                 // In the same zone
+                && circleCircleFlIntersection(ball->c, otherBall->c, &centerToCenter)) // and intersecting
             {
-                // Math for the first ball
-                vecFl_t v1         = ball->vel;
-                vecFl_t x1         = ball->c.pos;
-                vecFl_t v2         = otherBall->vel;
-                vecFl_t x2         = otherBall->c.pos;
-                vecFl_t x1_x2      = subVecFl2d(x1, x2);
-                vecFl_t v1_v2      = subVecFl2d(v1, v2);
-                float xSqMag       = sqMagVecFl2d(x1_x2);
-                vecFl_t ballNewVel = ball->vel;
-                if (xSqMag > 0)
+                // Move balls backwards equally from the midpoint to not clip
+                float halfDistM     = (ball->c.radius + otherBall->c.radius - EPSILON) / 2.0f;
+                vecFl_t midwayPoint = divVecFl2d(addVecFl2d(ball->c.pos, otherBall->c.pos), 2.0f);
+                vecFl_t vecFromMid  = mulVecFl2d(normVecFl2d(centerToCenter), halfDistM);
+
+                // Move both balls
+                ball->c.pos      = addVecFl2d(midwayPoint, vecFromMid);
+                otherBall->c.pos = subVecFl2d(midwayPoint, vecFromMid);
+
+                // If the balls aren't touching yet, adjust velocities (bounce)
+                if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], otherBall))
                 {
-                    ballNewVel = subVecFl2d(v1, mulVecFl2d(x1_x2, (dotVecFl2d(v1_v2, x1_x2) / xSqMag)));
+                    // Math for the first ball
+                    vecFl_t v1         = ball->vel;
+                    vecFl_t x1         = ball->c.pos;
+                    vecFl_t v2         = otherBall->vel;
+                    vecFl_t x2         = otherBall->c.pos;
+                    vecFl_t x1_x2      = subVecFl2d(x1, x2);
+                    vecFl_t v1_v2      = subVecFl2d(v1, v2);
+                    float xSqMag       = sqMagVecFl2d(x1_x2);
+                    vecFl_t ballNewVel = ball->vel;
+                    if (xSqMag > 0)
+                    {
+                        ballNewVel = subVecFl2d(v1, mulVecFl2d(x1_x2, (dotVecFl2d(v1_v2, x1_x2) / xSqMag)));
+                    }
+
+                    // Flip everything for the other ball
+                    v1     = otherBall->vel;
+                    x1     = otherBall->c.pos;
+                    v2     = ball->vel;
+                    x2     = ball->c.pos;
+                    x1_x2  = subVecFl2d(x1, x2);
+                    v1_v2  = subVecFl2d(v1, v2);
+                    xSqMag = sqMagVecFl2d(x1_x2);
+                    if (xSqMag > 0)
+                    {
+                        otherBall->vel
+                            = subVecFl2d(v1, mulVecFl2d(x1_x2, (dotVecFl2d(v1_v2, x1_x2) / sqMagVecFl2d(x1_x2))));
+                    }
+
+                    // Set the new velocity for the first ball after finding the second's
+                    ball->vel = ballNewVel;
+
+                    // The balls are touching each other
+                    setBallTouching(p->ballsTouching[bIdx], otherBall, PIN_CIRCLE);
+                    setBallTouching(p->ballsTouching[obIdx], ball, PIN_CIRCLE);
+
+                    // Mark both balls as bounced
+                    ball->bounce      = true;
+                    otherBall->bounce = true;
                 }
-
-                // Flip everything for the other ball
-                v1     = otherBall->vel;
-                x1     = otherBall->c.pos;
-                v2     = ball->vel;
-                x2     = ball->c.pos;
-                x1_x2  = subVecFl2d(x1, x2);
-                v1_v2  = subVecFl2d(v1, v2);
-                xSqMag = sqMagVecFl2d(x1_x2);
-                if (xSqMag > 0)
-                {
-                    otherBall->vel
-                        = subVecFl2d(v1, mulVecFl2d(x1_x2, (dotVecFl2d(v1_v2, x1_x2) / sqMagVecFl2d(x1_x2))));
-                }
-
-                // Set the new velocity for the first ball after finding the second's
-                ball->vel = ballNewVel;
-
-                // The balls are touching each other
-                setBallTouching(p->ballsTouching[bIdx], otherBall, PIN_CIRCLE);
-                setBallTouching(p->ballsTouching[obIdx], ball, PIN_CIRCLE);
             }
         }
     }
