@@ -9,6 +9,7 @@
 #include "fp_math.h"
 #include "esp_log.h"
 #include "drums.h"
+#include "macros.h"
 
 #define OSC_DITHER
 
@@ -518,7 +519,7 @@ static void midiGmOn(midiPlayer_t* player)
                         // Apply a random offset to the oscillator so that similar waves aren't exactly in sync
                         // TODO figure out if this does literally anything
 #ifdef OSC_DITHER
-                        voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount]) & 0xFF;
+                        voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
 #endif
                         // Make sure we don't count the percussion oscillators multiple times
                         if (!chan->percussion || !percOscSetup)

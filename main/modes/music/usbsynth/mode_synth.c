@@ -65,9 +65,21 @@ typedef struct
     bool startupSeqComplete;
     int64_t noteTime;
     uint8_t startupNote;
+    bool startupDrums;
     bool startSilence;
     const char* longestProgramName;
     uint8_t lastSamples[256];
+    uint8_t localChannel;
+
+    enum {
+        VM_PRETTY = 0,
+        VM_TEXT = 1,
+        VM_GRAPH = 2,
+        VM_PACKETS = 4,
+    } viewMode;
+
+    wsg_t instrumentImages[16];
+    wsg_t percussionImage;
 } synthData_t;
 
 //==============================================================================
@@ -81,7 +93,7 @@ static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static bool installUsb(void);
 static void handlePacket(uint8_t packet[4]);
-static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width);
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width, int16_t height);
 static void drawSampleGraph(void);
 
 //==============================================================================
@@ -254,6 +266,56 @@ static const char* gmProgramNames[] = {
     "Gunshot",
 };
 
+static const char* gmDrumNames[] = {
+    "Acoustic/Low Bass",
+    "Electric/High Bass",
+    "Side Stick",
+    "Acoustic Snare",
+    "Hand Clap",
+    "Elec. Snare/Rimshot",
+    "Low Floor Tom",
+    "Closed Hi-Hat",
+    "High Floor Tom",
+    "Pedal Hi-Hat",
+    "Low Tom",
+    "Open Hi Hat",
+    "Low Mid Tom",
+    "High Mid Tom",
+    "Crash Cymbal 1",
+    "High Tom",
+    "Ride Cymbal 1",
+    "Chinese Cymbal",
+    "Ride Bell",
+    "Tambourine",
+    "Splash Cymbal",
+    "Cowbell",
+    "Crash Cymbal 2",
+    "Vibraslap",
+    "Ride Cymbal 2",
+    "High Bongo",
+    "Low Bongo",
+    "Mute High Conga",
+    "Open High Conga",
+    "Low Conga",
+    "High Timbale",
+    "Low Timbale",
+    "High Agogo",
+    "Low Agogo",
+    "Cabasa",
+    "Maracas",
+    "Short Whistle",
+    "Long Whistle",
+    "Short Guiro",
+    "Long Guiro",
+    "Claves",
+    "High Woodblock",
+    "Low Woodblock",
+    "Mute Cuica",
+    "Open Cuica",
+    "Mute Triangle",
+    "Open Triangle",
+};
+
 /**
  * @brief MIDI Device String descriptor
  */
@@ -325,12 +387,35 @@ static void synthEnterMode(void)
     sd->pitch = 0x2000;
     sd->longestProgramName = gmProgramNames[24];
 
+    loadWsg("piano.wsg", &sd->instrumentImages[0], false);
+    loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], false);
+    loadWsg("organ.wsg", &sd->instrumentImages[2], false);
+    loadWsg("guitar.wsg", &sd->instrumentImages[3], false);
+    loadWsg("bass.wsg", &sd->instrumentImages[4], false);
+    loadWsg("solo_strings.wsg", &sd->instrumentImages[5], false);
+    loadWsg("ensemble.wsg", &sd->instrumentImages[6], false);
+    loadWsg("brass.wsg", &sd->instrumentImages[7], false);
+    loadWsg("reed.wsg", &sd->instrumentImages[8], false);
+    loadWsg("pipe.wsg", &sd->instrumentImages[9], false);
+    loadWsg("synth_lead.wsg", &sd->instrumentImages[10], false);
+    loadWsg("synth_pad.wsg", &sd->instrumentImages[11], false);
+    loadWsg("synth_effects.wsg", &sd->instrumentImages[12], false);
+    loadWsg("ethnic.wsg", &sd->instrumentImages[13], false);
+    loadWsg("percussive.wsg", &sd->instrumentImages[14], false);
+    loadWsg("sound_effects.wsg", &sd->instrumentImages[15], false);
+    loadWsg("percussion.wsg", &sd->percussionImage, false);
+
     // MAXIMUM SPEEEEED
     setFrameRateUs(0);
 }
 
 static void synthExitMode(void)
 {
+    freeWsg(&sd->percussionImage);
+    for (int i = 0; i < 16; i++)
+    {
+        freeWsg(&sd->instrumentImages[i]);
+    }
     freeFont(&sd->font);
     free(sd);
     sd = NULL;
@@ -366,50 +451,97 @@ static void synthMainLoop(int64_t elapsedUs)
     }
     else if (!sd->startupSeqComplete)
     {
-        drawSampleGraph();
         sd->noteTime -= elapsedUs;
 
-        if (sd->noteTime <= 0)
+        if (!sd->startupDrums)
         {
-            if (sd->startSilence)
+            if (sd->noteTime <= 0)
             {
-                if (sd->startupNote == 0x7f)
+                if (sd->startSilence)
                 {
-                    sd->startupSeqComplete = true;
-                    // 25ms of silence between the notes
-                    sd->noteTime = 25000;
+                    if (sd->startupNote == 0x7f)
+                    {
+                        sd->startupDrums = true;
+                        sd->startSilence = true;
+                        sd->startupNote = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+                        // give the drums a second
+                        sd->noteTime = 1000000;
+                    }
+                    else
+                    {
+                        // 50ms of note
+                        midiNoteOn(&sd->midiPlayer, 0, ++sd->startupNote, 0x7f);
+                        sd->noteTime = 50000;
+                    }
                 }
                 else
                 {
-                    // 50ms of note
-                    midiNoteOn(&sd->midiPlayer, 0, ++sd->startupNote, 0x7f);
-                    sd->noteTime = 50000;
+                    midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
+                    // 25ms of silence between the notes
+                    sd->noteTime = 25000;
+                }
+                sd->startSilence = !sd->startSilence;
+            }
+        }
+        else
+        {
+            if (sd->noteTime <= 0)
+            {
+                // Just play each drum note with a half-second gap between
+                midiNoteOn(&sd->midiPlayer, 9, sd->startupNote++, 0x7f);
+                sd->noteTime = 100000;
+
+                if (sd->startupNote > OPEN_TRIANGLE)
+                {
+                    sd->startupSeqComplete = true;
                 }
             }
-            else
-            {
-                midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
-            }
-            sd->startSilence = !sd->startSilence;
         }
     }
-    else
+
+    if (sd->viewMode & VM_GRAPH)
     {
         drawSampleGraph();
-        drawText(&sd->font, c050, readyStr, (TFT_WIDTH - textWidth(&sd->font, readyStr)) / 2, 3);
+    }
 
-        char packetMsg[64];
-        int16_t y = 15;
-        for (int ch = 0; ch < 16; ch++)
+#define IS_DRUM(note) ((ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= note) && (note <= OPEN_TRIANGLE))
+    drawText(&sd->font, c050, readyStr, (TFT_WIDTH - textWidth(&sd->font, readyStr)) / 2, 3);
+
+    char packetMsg[64];
+    int16_t y = 15;
+    for (int ch = 0; ch < 16; ch++)
+    {
+        bool percussion = sd->midiPlayer.channels[ch].percussion;
+        sd->playing[ch] = percussion
+            ? sd->midiPlayer.percVoiceStates.on | sd->midiPlayer.percVoiceStates.held
+            : sd->midiPlayer.channels[ch].voiceStates.on || sd->midiPlayer.channels[ch].voiceStates.held;
+        paletteColor_t col = sd->playing[ch] ? c555 : c222;
+
+        if (sd->viewMode == VM_PRETTY)
         {
-            sd->playing[ch] = sd->midiPlayer.channels[ch].voiceStates.on || sd->midiPlayer.channels[ch].voiceStates.held; //|| sd->midiPlayer.channels[ch].voiceStates.attack || sd->midiPlayer.channels[ch].voiceStates.decay || sd->midiPlayer.channels[ch].voiceStates.sustain || sd->midiPlayer.channels[ch].voiceStates.release;
-            paletteColor_t col = sd->playing[ch] ? c555 : c222;
-            const char* programName = sd->midiPlayer.channels[ch].percussion ? "<Percussion>" : gmProgramNames[sd->midiPlayer.channels[ch].program];
+            wsg_t* image = percussion ? &sd->percussionImage : &sd->instrumentImages[sd->midiPlayer.channels[ch].program / 8];
+            int16_t x = ((ch % 8) + 1) * (TFT_WIDTH - image->w * 8) / 9 + image->w * (ch % 8);
+            int16_t imgY = (ch < 8) ? 30 : TFT_HEIGHT - 30 - 32;
+            drawWsgSimple(image, x, imgY);
+            if (sd->playing[ch])
+            {
+                drawRect(x, imgY, x + 32, imgY + 32, col);
+            }
+            drawChannelInfo(&sd->midiPlayer, ch, x, (ch < 8) ? (imgY + 32 + 2) : (imgY - 16 - 2), 32, 16);
+        }
+        else if (sd->viewMode & (VM_PACKETS | VM_TEXT))
+        {
+            const char* programName = percussion
+                ? ((sd->localChannel == 9 && IS_DRUM(sd->startupNote))
+                    ? gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]
+                    : "<Percussion>")
+                : gmProgramNames[sd->midiPlayer.channels[ch].program];
             // Draw the program name
             drawText(&sd->font, col, programName, 10, y);
+        }
 
-//#define SHOW_PACKETS
-#ifdef SHOW_PACKETS
+        if (sd->viewMode & VM_PACKETS)
+        {
             // And the last packet for this channel
             snprintf(packetMsg, sizeof(packetMsg),
                 "%02hhX %02hhX %02hhX %02hhX",
@@ -419,22 +551,29 @@ static void synthMainLoop(int64_t elapsedUs)
                 sd->lastPackets[ch][3]);
             packetMsg[sizeof(packetMsg) - 1] = '\0';
             drawText(&sd->font, col, packetMsg, TFT_WIDTH - textWidth(&sd->font, packetMsg) - 10, y);
-#else
-            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, y - 2, TFT_WIDTH - (textWidth(&sd->font, sd->longestProgramName) + 4));
-#endif
-            y += sd->font.height + 4;
         }
+        else if (sd->viewMode & VM_TEXT)
+        {
+            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, y - 2, TFT_WIDTH - (textWidth(&sd->font, sd->longestProgramName) + 4), 16);
+        }
+
+        y += sd->font.height + 4;
     }
 
-    char countsBuf[16];
-    // Display the number of active voices
-    snprintf(countsBuf, sizeof(countsBuf), "%" PRIu16, sd->midiPlayer.activeOscillators);
-    int16_t x = TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15;
-    drawText(&sd->font, c055, countsBuf, x, TFT_HEIGHT - sd->font.height - 15);
-
-    // Display the number of clipped samples
-    snprintf(countsBuf, sizeof(countsBuf), "%" PRIu32, sd->midiPlayer.clipped);
-    drawText(&sd->font, c500, countsBuf, x - textWidth(&sd->font, countsBuf) - 5, TFT_HEIGHT - sd->font.height - 15);
+    if (sd->viewMode == VM_PRETTY)
+    {
+        uint16_t pitch = sd->localPitch ? sd->pitch : sd->midiPlayer.channels[sd->localChannel].pitchBend;
+        int16_t deg = (360 + ((pitch - 0x2000) * 90 / 0x1FFF)) % 360;
+        drawCircleQuadrants(0, TFT_HEIGHT / 2, 16, true, false, false, true, (pitch == 0x2000) ? c222 : c555);
+        drawLineFast(0, TFT_HEIGHT / 2, 16 * getCos1024(deg) / 1024, TFT_HEIGHT / 2 - (16 * getSin1024(deg) / 1024), c500);
+    }
+    else
+    {
+        char countsBuf[16];
+        // Display the number of clipped samples
+        snprintf(countsBuf, sizeof(countsBuf), "%" PRIu32, sd->midiPlayer.clipped);
+        drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15, TFT_HEIGHT - sd->font.height - 15);
+    }
 
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
@@ -459,12 +598,90 @@ static void synthMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down && !sd->startupSeqComplete)
+        if (evt.down && !sd->startupDrums)
+        {
+            midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
+            sd->startupDrums = true;
+            sd->startupNote = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+        }
+        else if (evt.down && sd->startupDrums && !sd->startupSeqComplete)
         {
             midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
             sd->startupSeqComplete = true;
         }
-        // TODO: Handle key presses
+        else if (evt.down && sd->startupSeqComplete)
+        {
+            // let us play notes
+            switch (evt.button)
+            {
+                case PB_UP:
+                case PB_DOWN:
+                {
+                    sd->localChannel = sd->localChannel ? 0 : 9;
+                    break;
+                }
+
+                case PB_LEFT:
+                {
+                    if (sd->startupNote > 0)
+                    {
+                        sd->startupNote--;
+                    }
+                    break;
+                }
+
+                case PB_RIGHT:
+                {
+                    if (sd->startupNote < 0x7F)
+                    {
+                        sd->startupNote++;
+                    }
+                    break;
+                }
+
+                case PB_SELECT: break;
+                case PB_START:
+                {
+                    if (sd->viewMode == VM_PRETTY)
+                    {
+                        sd->viewMode = VM_GRAPH;
+                    }
+                    else if (sd->viewMode == VM_GRAPH)
+                    {
+                        sd->viewMode |= VM_TEXT;
+                    }
+                    else if (sd->viewMode == (VM_GRAPH | VM_TEXT))
+                    {
+                        sd->viewMode = (VM_GRAPH | VM_PACKETS);
+                    }
+                    else if (sd->viewMode == (VM_GRAPH | VM_PACKETS))
+                    {
+                        sd->viewMode = VM_TEXT;
+                    }
+                    else if (sd->viewMode == VM_TEXT)
+                    {
+                        sd->viewMode = VM_PACKETS;
+                    }
+                    else if (sd->viewMode == VM_PACKETS)
+                    {
+                        sd->viewMode = VM_PRETTY;
+                    }
+                    break;
+                }
+
+                case PB_A:
+                {
+                    midiNoteOn(&sd->midiPlayer, sd->localChannel, sd->startupNote, 0x7F);
+                    break;
+                }
+
+                case PB_B:
+                {
+                    midiNoteOff(&sd->midiPlayer, sd->localChannel, sd->startupNote, 0x7F);
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -632,7 +849,7 @@ static paletteColor_t noteToColor(uint8_t note)
     return noteColors[note % ARRAY_SIZE(noteColors)];
 }
 
-static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width)
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width, int16_t height)
 {
     const midiChannel_t* chan = &player->channels[chIdx];
     const midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
@@ -648,7 +865,7 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
     #define BAR_SPACING 2
     #define BAR_WIDTH ((width - BAR_SPACING * (voiceCount - 1)) / voiceCount)
 
-    #define BAR_HEIGHT 16
+    #define BAR_HEIGHT (height)
 
     for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
     {
