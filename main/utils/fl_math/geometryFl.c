@@ -190,12 +190,18 @@ bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* cpOnLin
     // Check for the line ends
     if (circlePointFlIntersection(circle, line.p1, collisionVec))
     {
-        *cpOnLine = line.p1;
+        if (NULL != cpOnLine)
+        {
+            *cpOnLine = line.p1;
+        }
         return true;
     }
     if (circlePointFlIntersection(circle, line.p2, collisionVec))
     {
-        *cpOnLine = line.p2;
+        if (NULL != cpOnLine)
+        {
+            *cpOnLine = line.p2;
+        }
         return true;
     }
 
