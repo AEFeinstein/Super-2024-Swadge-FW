@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <math.h>
 #include "pinball_test.h"
 #include "pinball_zones.h"
 #include "pinball_physics.h"
@@ -175,11 +176,11 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 
         {
             .p1 = {.x = 0, .y = 120},
-            .p2 = {.x = 140, .y = 240},
+            .p2 = {.x = 94, .y = 190},
         },
         {
             .p1 = {.x = 280, .y = 120},
-            .p2 = {.x = 140, .y = 240},
+            .p2 = {.x = 186, .y = 191},
         },
     };
 
@@ -275,26 +276,28 @@ void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, bool facingRi
 {
     pbFlipper_t* f = &p->flippers[p->numFlippers];
 
-    f->color         = c555;
-    f->cPivot.pos.x  = pivot_x;
-    f->cPivot.pos.y  = pivot_y;
-    f->cPivot.radius = 10;
-    f->length        = 40;
-    f->cTip.radius   = 5;
-    f->facingRight   = facingRight;
-    // Update zone after setting position
-    f->zoneMask = pinZoneFlipper(p, f);
+    f->cPivot.color = c505;
+    f->cTip.color   = c505;
+    f->sideL.color  = c505;
+    f->sideR.color  = c505;
+
+    f->cPivot.c.pos.x  = pivot_x;
+    f->cPivot.c.pos.y  = pivot_y;
+    f->cPivot.c.radius = 10;
+    f->length          = 40;
+    f->cTip.c.radius   = 5;
+    f->facingRight     = facingRight;
 
     // Update angle and position after setting zone
     if (f->facingRight)
     {
-        f->angle = 90 + FLIPPER_DOWN_ANGLE;
+        f->angle = M_PI_2f + FLIPPER_DOWN_ANGLE;
     }
     else
     {
-        f->angle = 270 - FLIPPER_DOWN_ANGLE;
+        f->angle = M_PIf + M_PI_2f - FLIPPER_DOWN_ANGLE;
     }
-    updateFlipperPos(f);
+    updateFlipperPos(p, f);
 
     // Update flipper count
     p->numFlippers++;

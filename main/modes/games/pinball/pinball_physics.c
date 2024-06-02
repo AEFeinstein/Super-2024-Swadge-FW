@@ -13,14 +13,21 @@
 //==============================================================================
 
 void calculateBallZones(pinball_t* p);
+
+bool checkBallPbCircleCollision(pbCircle_t* ball, pbCircle_t* circle, pbTouchRef_t* touchRef);
+bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* touchRef);
+
 void checkBallBallCollisions(pinball_t* p);
 void checkBallStaticCollision(pinball_t* p);
 void checkBallFlipperCollision(pinball_t* p);
+
 void moveBalls(pinball_t* p);
 void moveFlippers(pinball_t* p);
+
 void checkBallsNotTouching(pinball_t* p);
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type);
 pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
+
 void checkBallsAtRest(pinball_t* p);
 
 //==============================================================================
@@ -156,6 +163,103 @@ void checkBallBallCollisions(pinball_t* p)
 /**
  * @brief TODO
  *
+ * @param ball
+ * @param circle
+ * @param touchRef
+ * @return true
+ * @return false
+ */
+bool checkBallPbCircleCollision(pbCircle_t* ball, pbCircle_t* circle, pbTouchRef_t* touchRef)
+{
+    bool bounced = false;
+    vecFl_t collisionVec;
+
+    // Check for a collision
+    if ((ball->zoneMask & circle->zoneMask)                               // In the same zone
+        && circleCircleFlIntersection(ball->c, circle->c, &collisionVec)) // and intersecting
+    {
+        // Find the normalized vector along the collision normal
+        vecFl_t centerToCenter = {
+            .x = collisionVec.x,
+            .y = collisionVec.y,
+        };
+        vecFl_t reflVec = normVecFl2d(centerToCenter);
+
+        // If the ball isn't already touching the circle
+        if (PIN_NO_SHAPE == ballIsTouching(touchRef, circle))
+        {
+            // Bounced on a circle
+            ball->bounce = true;
+            bounced      = true;
+            // Reflect the velocity vector along the normal between the two radii
+            // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
+            ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
+            // Lose some speed on the bounce
+            ball->vel = mulVecFl2d(ball->vel, 0.9f);
+            // Mark this circle as being touched to not double-bounce
+            setBallTouching(touchRef, circle, PIN_CIRCLE);
+        }
+
+        // Move ball back to not clip into the circle
+        ball->c.pos = addVecFl2d(circle->c.pos, mulVecFl2d(reflVec, ball->c.radius + circle->c.radius - EPSILON));
+    }
+    return bounced;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ball
+ * @param line
+ * @param touchRef
+ * @return true
+ * @return false
+ */
+bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* touchRef)
+{
+    bool bounced = false;
+    vecFl_t collisionVec;
+    vecFl_t cpOnLine;
+    // Check for a collision
+    if ((ball->zoneMask & line->zoneMask)                                        // In the same zone
+        && circleLineFlIntersection(ball->c, line->l, &cpOnLine, &collisionVec)) // and intersecting
+    {
+        /* TODO this reflection can have bad results when colliding with the tip of a line.
+         * The center-center vector can get weird if the ball moves fast and clips into the tip.
+         * The solution is probably to binary-search-move the ball as far as it'll go without clipping
+         */
+
+        // Find the normalized vector along the collision normal
+        vecFl_t centerToCenter = {
+            .x = collisionVec.x,
+            .y = collisionVec.y,
+        };
+        vecFl_t reflVec = normVecFl2d(centerToCenter);
+
+        // If the ball isn't already touching the line
+        if (PIN_NO_SHAPE == ballIsTouching(touchRef, line))
+        {
+            // Bounce it by reflecting across the collision normal
+            ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
+            // Lose some speed on the bounce
+            ball->vel = mulVecFl2d(ball->vel, 0.9f);
+            // Mark this line as being touched to not double-bounce
+            setBallTouching(touchRef, line, PIN_LINE);
+
+            // Bounced off a line
+            ball->bounce = true;
+            bounced      = true;
+        }
+
+        // Move ball back to not clip into the bumper
+        ball->c.pos = addVecFl2d(cpOnLine, mulVecFl2d(reflVec, ball->c.radius - EPSILON));
+    }
+    return bounced;
+}
+
+/**
+ * @brief TODO
+ *
  * @param p
  */
 void checkBallStaticCollision(pinball_t* p)
@@ -169,79 +273,13 @@ void checkBallStaticCollision(pinball_t* p)
         // Iterate over all bumpers
         for (uint32_t uIdx = 0; uIdx < p->numBumpers; uIdx++)
         {
-            pbCircle_t* bumper = &p->bumpers[uIdx];
-            vecFl_t collisionVec;
-
-            // Check for a collision
-            if ((ball->zoneMask & bumper->zoneMask)                               // In the same zone
-                && circleCircleFlIntersection(ball->c, bumper->c, &collisionVec)) // and intersecting
-            {
-                // Find the normalized vector along the collision normal
-                vecFl_t centerToCenter = {
-                    .x = collisionVec.x,
-                    .y = collisionVec.y,
-                };
-                vecFl_t reflVec = normVecFl2d(centerToCenter);
-
-                // If the ball isn't already touching the bumper
-                if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], bumper))
-                {
-                    // Bounced on a bumper
-                    ball->bounce = true;
-                    // Reflect the velocity vector along the normal between the two radii
-                    // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-                    ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
-                    // Lose some speed on the bounce
-                    ball->vel = mulVecFl2d(ball->vel, 0.9f);
-                    // Mark this bumper as being touched to not double-bounce
-                    setBallTouching(p->ballsTouching[bIdx], bumper, PIN_CIRCLE);
-                }
-
-                // Move ball back to not clip into the bumper
-                ball->c.pos
-                    = addVecFl2d(bumper->c.pos, mulVecFl2d(reflVec, ball->c.radius + bumper->c.radius - EPSILON));
-            }
+            checkBallPbCircleCollision(ball, &p->bumpers[uIdx], p->ballsTouching[bIdx]);
         }
 
         // Iterate over all walls
         for (uint32_t wIdx = 0; wIdx < p->numWalls; wIdx++)
         {
-            pbLine_t* wall = &p->walls[wIdx];
-            vecFl_t collisionVec;
-            vecFl_t cpOnLine;
-            // Check for a collision
-            if ((ball->zoneMask & wall->zoneMask)                                        // In the same zone
-                && circleLineFlIntersection(ball->c, wall->l, &cpOnLine, &collisionVec)) // and intersecting
-            {
-                /* TODO this reflection can have bad results when colliding with the tip of a line.
-                 * The center-center vector can get weird if the ball moves fast and clips into the tip.
-                 * The solution is probably to binary-search-move the ball as far as it'll go without clipping
-                 */
-
-                // Find the normalized vector along the collision normal
-                vecFl_t centerToCenter = {
-                    .x = collisionVec.x,
-                    .y = collisionVec.y,
-                };
-                vecFl_t reflVec = normVecFl2d(centerToCenter);
-
-                // If the ball isn't already touching the wall
-                if (PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], wall))
-                {
-                    // Bounce it by reflecting across the collision normal
-                    ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
-                    // Lose some speed on the bounce
-                    ball->vel = mulVecFl2d(ball->vel, 0.9f);
-                    // Mark this wall as being touched to not double-bounce
-                    setBallTouching(p->ballsTouching[bIdx], wall, PIN_LINE);
-
-                    // Bounced off a wall
-                    ball->bounce = true;
-                }
-
-                // Move ball back to not clip into the bumper
-                ball->c.pos = addVecFl2d(cpOnLine, mulVecFl2d(reflVec, ball->c.radius - EPSILON));
-            }
+            checkBallPbLineCollision(ball, &p->walls[wIdx], p->ballsTouching[bIdx]);
         }
     }
 }
@@ -262,30 +300,17 @@ void checkBallFlipperCollision(pinball_t* p)
         // Iterate over all flippers
         for (uint32_t fIdx = 0; fIdx < p->numFlippers; fIdx++)
         {
-            const pbFlipper_t* flipper = &p->flippers[fIdx];
-            vecFl_t collisionVec;
-            vecFl_t cpOnLine;
+            pbFlipper_t* flipper = &p->flippers[fIdx];
 
-            // Check for a collision
-            if ((ball->zoneMask & flipper->zoneMask)                               // In the same zone
-                && PIN_NO_SHAPE == ballIsTouching(p->ballsTouching[bIdx], flipper) // and not already touching
-                // And collides with a constituent part
-                && (circleCircleFlIntersection(ball->c, flipper->cPivot, &collisionVec)
-                    || circleCircleFlIntersection(ball->c, flipper->cTip, &collisionVec)
-                    || circleLineFlIntersection(ball->c, flipper->sideL, &cpOnLine, &collisionVec)
-                    || circleLineFlIntersection(ball->c, flipper->sideR, &cpOnLine, &collisionVec)))
+            bool bounced = false;
+            bounced |= checkBallPbCircleCollision(ball, &flipper->cPivot, p->ballsTouching[bIdx]);
+            bounced |= checkBallPbCircleCollision(ball, &flipper->cTip, p->ballsTouching[bIdx]);
+            bounced |= checkBallPbLineCollision(ball, &flipper->sideL, p->ballsTouching[bIdx]);
+            bounced |= checkBallPbLineCollision(ball, &flipper->sideR, p->ballsTouching[bIdx]);
+            if (bounced && flipper->moving)
             {
-                // TODO account for flipper velocity
-                // Reflect the velocity vector along the normal
-                vecFl_t centerToCenter = {
-                    .x = collisionVec.x,
-                    .y = collisionVec.y,
-                };
-                vecFl_t reflVec = normVecFl2d(centerToCenter);
-                ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
-
-                // Mark this flipper as being touched
-                setBallTouching(p->ballsTouching[bIdx], flipper, PIN_FLIPPER);
+                // TODO impart some sane impulse on the ball??
+                ball->vel.y -= 2.0f;
             }
         }
     }
@@ -330,53 +355,54 @@ void moveFlippers(pinball_t* p)
 
         // TODO use angular velocity (aVelocity)?
 
-        bool posChanged = false;
+        flipper->moving = false;
+
         if (flipper->buttonHeld)
         {
-            if (flipper->facingRight && flipper->angle > (90 - FLIPPER_UP_ANGLE))
+            if (flipper->facingRight && flipper->angle > (M_PI_2f - FLIPPER_UP_ANGLE))
             {
                 flipper->angle -= FLIPPER_UP_DEGREES_PER_FRAME;
-                if (flipper->angle < 90 - FLIPPER_UP_ANGLE)
+                if (flipper->angle < M_PI_2f - FLIPPER_UP_ANGLE)
                 {
-                    flipper->angle = 90 - FLIPPER_UP_ANGLE;
+                    flipper->angle = M_PI_2f - FLIPPER_UP_ANGLE;
                 }
-                posChanged = true;
+                flipper->moving = true;
             }
-            else if (!flipper->facingRight && flipper->angle < 270 + FLIPPER_UP_ANGLE)
+            else if (!flipper->facingRight && flipper->angle < (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
             {
                 flipper->angle += FLIPPER_UP_DEGREES_PER_FRAME;
-                if (flipper->angle > 270 + FLIPPER_UP_ANGLE)
+                if (flipper->angle > (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
                 {
-                    flipper->angle = 270 + FLIPPER_UP_ANGLE;
+                    flipper->angle = (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE;
                 }
-                posChanged = true;
+                flipper->moving = true;
             }
         }
         else
         {
-            if (flipper->facingRight && flipper->angle < (90 + FLIPPER_DOWN_ANGLE))
+            if (flipper->facingRight && flipper->angle < (M_PI_2f + FLIPPER_DOWN_ANGLE))
             {
                 flipper->angle += FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (flipper->angle > (90 + FLIPPER_DOWN_ANGLE))
+                if (flipper->angle > (M_PI_2f + FLIPPER_DOWN_ANGLE))
                 {
-                    flipper->angle = (90 + FLIPPER_DOWN_ANGLE);
+                    flipper->angle = (M_PI_2f + FLIPPER_DOWN_ANGLE);
                 }
-                posChanged = true;
+                flipper->moving = true;
             }
-            else if (!flipper->facingRight && flipper->angle > 270 - FLIPPER_DOWN_ANGLE)
+            else if (!flipper->facingRight && flipper->angle > (M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE)
             {
                 flipper->angle -= FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (flipper->angle < (270 - FLIPPER_DOWN_ANGLE))
+                if (flipper->angle < ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE))
                 {
-                    flipper->angle = (270 - FLIPPER_DOWN_ANGLE);
+                    flipper->angle = ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE);
                 }
-                posChanged = true;
+                flipper->moving = true;
             }
         }
 
-        if (posChanged)
+        if (flipper->moving)
         {
-            updateFlipperPos(flipper);
+            updateFlipperPos(p, flipper);
         }
     }
 }
@@ -435,11 +461,11 @@ void checkBallsNotTouching(pinball_t* p)
                     case PIN_FLIPPER:
                     {
                         const pbFlipper_t* flipper = (const pbFlipper_t*)tr->obj;
-                        if ((0 == (ball->zoneMask & flipper->zoneMask))                    // Not in the same zone
-                            || (circleCircleFlIntersection(ball->c, flipper->cPivot, NULL) // or not touching
-                                && circleCircleFlIntersection(ball->c, flipper->cTip, NULL)
-                                && circleLineFlIntersection(ball->c, flipper->sideL, NULL, NULL)
-                                && circleLineFlIntersection(ball->c, flipper->sideR, NULL, NULL)))
+                        if ((0 == (ball->zoneMask & flipper->zoneMask))                      // Not in the same zone
+                            || (circleCircleFlIntersection(ball->c, flipper->cPivot.c, NULL) // or not touching
+                                && circleCircleFlIntersection(ball->c, flipper->cTip.c, NULL)
+                                && circleLineFlIntersection(ball->c, flipper->sideL.l, NULL, NULL)
+                                && circleLineFlIntersection(ball->c, flipper->sideR.l, NULL, NULL)))
                         {
                             setNotTouching = true;
                         }
@@ -545,16 +571,16 @@ void checkBallsAtRest(pinball_t* p)
  *
  * @param f The flipper to update
  */
-void updateFlipperPos(pbFlipper_t* f)
+void updateFlipperPos(pinball_t* p, pbFlipper_t* f)
 {
     // Make sure the angle is between 0 and 360
     while (f->angle < 0)
     {
-        f->angle += 360;
+        f->angle += (2 * M_PIf);
     }
-    while (f->angle > 359)
+    while (f->angle >= (2 * M_PIf))
     {
-        f->angle -= 360;
+        f->angle -= (2 * M_PIf);
     }
 
     // This is the set of points to rotate
@@ -566,66 +592,55 @@ void updateFlipperPos(pbFlipper_t* f)
         },
         {
             // Bottom point of the right side
-            .x = f->cPivot.radius,
+            .x = f->cPivot.c.radius,
             .y = 0,
         },
         {
             // Top point of the right side
-            .x = f->cTip.radius,
+            .x = f->cTip.c.radius,
             .y = -f->length,
         },
         {
             // Bottom point of the left side
-            .x = -f->cPivot.radius,
+            .x = -f->cPivot.c.radius,
             .y = 0,
         },
         {
             // Top point of the left side
-            .x = -f->cTip.radius,
+            .x = -f->cTip.c.radius,
             .y = -f->length,
         },
     };
 
     // This is where to write the rotated points
     vecFl_t* dests[] = {
-        &f->cTip.pos, &f->sideR.p1, &f->sideR.p2, &f->sideL.p1, &f->sideL.p2,
+        &f->cTip.c.pos, &f->sideR.l.p1, &f->sideR.l.p2, &f->sideL.l.p1, &f->sideL.l.p2,
     };
 
     // Get the trig values for all rotations, just once
-    int16_t sin = getSin1024(f->angle);
-    int16_t cos = getCos1024(f->angle);
+    float sinA = sin(f->angle);
+    float cosA = cos(f->angle);
 
     // For each point
     for (int32_t idx = 0; idx < ARRAY_SIZE(points); idx++)
     {
         // Rotate the point
-        int32_t oldX = points[idx].x;
-        int32_t oldY = points[idx].y;
-        int32_t newX = (oldX * cos) - (oldY * sin);
-        int32_t newY = (oldX * sin) + (oldY * cos);
+        float oldX = points[idx].x;
+        float oldY = points[idx].y;
+        float newX = (oldX * cosA) - (oldY * sinA);
+        float newY = (oldX * sinA) + (oldY * cosA);
 
-        // Do some rounding for newX before scaling down
-        if (newX >= 0)
-        {
-            newX += 512;
-        }
-        else
-        {
-            newX -= 512;
-        }
-
-        // Do some rounding for newY before scaling down
-        if (newY >= 0)
-        {
-            newY += 512;
-        }
-        else
-        {
-            newY -= 512;
-        }
-
-        // Return to integer space and translate relative to the pivot point
-        dests[idx]->x = f->cPivot.pos.x + (newX / 1024);
-        dests[idx]->y = f->cPivot.pos.y + (newY / 1024);
+        // Translate relative to the pivot point
+        dests[idx]->x = f->cPivot.c.pos.x + newX;
+        dests[idx]->y = f->cPivot.c.pos.y + newY;
     }
+
+    // Update zones
+    f->cPivot.zoneMask = pinZoneCircle(p, f->cPivot);
+    f->cTip.zoneMask   = pinZoneCircle(p, f->cTip);
+    f->sideL.zoneMask  = pinZoneLine(p, f->sideL);
+    f->sideR.zoneMask  = pinZoneLine(p, f->sideR);
+
+    // The flipper's zone is all zones combined
+    f->zoneMask = (f->cPivot.zoneMask | f->cTip.zoneMask | f->sideL.zoneMask | f->sideR.zoneMask);
 }

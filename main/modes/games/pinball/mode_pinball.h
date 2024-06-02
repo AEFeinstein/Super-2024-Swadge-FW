@@ -68,17 +68,16 @@ typedef struct
 
 typedef struct
 {
-    circleFl_t cPivot;    ///< The circle that the flipper pivots on
-    circleFl_t cTip;      ///< The circle at the tip of the flipper
-    lineFl_t sideL;       ///< The left side of the flipper when pointing upward
-    lineFl_t sideR;       ///< The right side of the flipper when pointing upward
-    int32_t length;       ///< The length of the flipper, from pivot center to tip center
-    int32_t angle;        ///< The current angle of the flipper
-    paletteColor_t color; ///< The color of the flipper
-    int32_t aVelocity;    ///< Angular velocity, in degrees per frame
-    bool facingRight;     ///< True if the flipper is facing right, false if left
-    bool buttonHeld;      ///< True if the button is being held down, false if it is released
-    uint32_t zoneMask;    ///< The zones this flipper is in
+    pbCircle_t cPivot; ///< The circle that the flipper pivots on
+    pbCircle_t cTip;   ///< The circle at the tip of the flipper
+    pbLine_t sideL;    ///< The left side of the flipper when pointing upward
+    pbLine_t sideR;    ///< The right side of the flipper when pointing upward
+    int32_t length;    ///< The length of the flipper, from pivot center to tip center
+    float angle;       ///< The current angle of the flipper
+    bool facingRight;  ///< True if the flipper is facing right, false if left
+    bool buttonHeld;   ///< True if the button is being held down, false if it is released
+    bool moving;
+    uint32_t zoneMask; ///< The zones this flipper is in
 } pbFlipper_t;
 
 typedef struct

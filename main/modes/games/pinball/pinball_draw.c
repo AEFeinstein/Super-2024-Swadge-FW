@@ -126,8 +126,8 @@ void drawPinRect(pbRect_t* rect)
  */
 void drawPinFlipper(pbFlipper_t* f)
 {
-    drawCircle(f->cPivot.pos.x, f->cPivot.pos.y, f->cPivot.radius, f->color);
-    drawCircle(f->cTip.pos.x, f->cTip.pos.y, f->cTip.radius, f->color);
-    drawLineFast(f->sideL.p1.x, f->sideL.p1.y, f->sideL.p2.x, f->sideL.p2.y, f->color);
-    drawLineFast(f->sideR.p1.x, f->sideR.p1.y, f->sideR.p2.x, f->sideR.p2.y, f->color);
+    drawPinCircle(&f->cPivot);
+    drawPinCircle(&f->cTip);
+    drawPinLine(&f->sideL);
+    drawPinLine(&f->sideR);
 }
