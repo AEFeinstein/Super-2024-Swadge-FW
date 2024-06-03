@@ -218,6 +218,41 @@ void process_midi(const char* inFile, const char* outDir)
 
     /* Change the file extension */
     char* dotPtr = strrchr(outFilePath, '.');
+    snprintf(&dotPtr[1], sizeof(outFilePath) - (dotPtr - outFilePath), "midi");
+
+    if (doesFileExist(outFilePath))
+    {
+        /* printf("Output for %s already exists\n", inFile); */
+        return;
+    }
+
+    /* Read input file */
+    FILE* fp = fopen(inFile, "rb");
+    fseek(fp, 0L, SEEK_END);
+    long sz = ftell(fp);
+    fseek(fp, 0L, SEEK_SET);
+    uint8_t* byteString = malloc(sz + 1);
+    fread(byteString, sz, 1, fp);
+    byteString[sz] = 0;
+    fclose(fp);
+
+    /* Write the compressed bytes to a file */
+    writeHeatshrinkFile(byteString, sz, outFilePath);
+
+    /* Cleanup */
+    free(byteString);
+}
+
+void process_midi_old(const char* inFile, const char* outDir)
+{
+    /* Determine if the output file already exists */
+    char outFilePath[128] = {0};
+    strcat(outFilePath, outDir);
+    strcat(outFilePath, "/");
+    strcat(outFilePath, get_filename(inFile));
+
+    /* Change the file extension */
+    char* dotPtr = strrchr(outFilePath, '.');
     snprintf(&dotPtr[1], strlen(dotPtr), "sng");
 
     if (doesFileExist(outFilePath))

@@ -388,6 +388,7 @@ static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t 
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel);
 static void midiGmOn(midiPlayer_t* player);
 static int32_t midiSumPercussion(midiPlayer_t* player);
+static void handleEvent(midiPlayer_t* player, midiEvent_t* event);
 
 static const midiTimbre_t defaultDrumkitTimbre = {
     .type = NOISE,
@@ -602,6 +603,200 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
     return sum;
 }
 
+static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event)
+{
+    if (event->status & 0x80)
+    {
+        // Normal status message
+        uint8_t channel = event->status & 0x0F;
+        uint8_t cmd = (event->status >> 4) & 0x0F;
+
+        switch (cmd)
+        {
+            // Note OFF
+            case 0x8:
+            {
+                uint8_t midiKey = event->data[0];
+                uint8_t velocity = event->data[1];
+                midiNoteOff(player, channel, midiKey, velocity);
+                break;
+            }
+
+            // Note ON
+            case 0x9:
+            {
+                uint8_t midiKey = event->data[0];
+                uint8_t velocity = event->data[1];
+                midiNoteOn(player, channel, midiKey, velocity);
+                break;
+            }
+
+            // AfterTouch
+            case 0xA: break;
+
+            // Control change
+            case 0xB:
+            {
+                uint8_t controlId = event->data[0];
+                uint8_t controlVal = event->data[1];
+                switch (controlId)
+                {
+                    // Sustain
+                    case 0x40:
+                    {
+                        midiSustain(player, channel, controlVal);
+                        break;
+                    }
+
+                    // All sounds off (120)
+                    case 0x78:
+                    {
+                        midiAllSoundOff(player);
+                        break;
+                    }
+
+                    // All notes off (123)
+                    case 0x7B:
+                    {
+                        midiAllNotesOff(player, channel);
+                        break;
+                    }
+
+                    default: break;
+                }
+
+                break;
+            }
+
+            // Program Select
+            case 0xC:
+            {
+                uint8_t program = event->data[0];
+                midiSetProgram(player, channel, program);
+                break;
+            }
+
+            // Channel Pressure
+            case 0xD: break;
+
+            // Pitch bend
+            case 0xE:
+            {
+                uint16_t range = ((event->data[1] & 0x7F) << 7) | (event->data[0] & 0x7F);
+                midiPitchWheel(player, channel, range);
+                break;
+            }
+
+            default: break;
+        }
+    }
+    else if (event->status & 0xF0)
+    {
+        // System Message
+    }
+}
+
+static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
+{
+    switch (event->type)
+    {
+        case SEQUENCE_NUMBER:
+        {
+            break;
+        }
+
+        case TEXT:
+        case COPYRIGHT:
+        case SEQUENCE_OR_TRACK_NAME:
+        case INSTRUMENT_NAME:
+        case LYRIC:
+        case MARKER:
+        case CUE_POINT:
+        {
+            // Handle text, if the callback is set
+            if (player->textMessageCallback)
+            {
+                player->textMessageCallback(event->type, event->text);
+            }
+            break;
+        }
+
+        case CHANNEL_PREFIX:
+        {
+            // TODO: handle
+            break;
+        }
+
+        case END_OF_TRACK:
+        {
+            // TODO: handle track end
+            break;
+        }
+
+        case TEMPO:
+        {
+            // TODO: Tempo support
+            break;
+        }
+
+        case SMPTE_OFFSET:
+        {
+            // TODO: Tempo support
+            break;
+        }
+
+        case TIME_SIGNATURE:
+        {
+            // TODO: Tempo support
+            break;
+        }
+
+        case KEY_SIGNATURE:
+        {
+            // TODO: Figure out what this is and if we need it
+            break;
+        }
+
+        case PROPRIETARY:
+        {
+            // TODO: Hmmmmm...
+            break;
+        }
+    }
+}
+
+static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex)
+{
+    // TODO: Support SysEx commands - find some RGB ones we can yoink
+    // Actually we can assign a non-registered control to R, G, and B
+    // I think there's enough for every LED too assuming there's still like, 7 or so
+    // AND: if possible have a sysex command (hmm) that sets all the LEDs to individual values at once
+}
+
+static void handleEvent(midiPlayer_t* player, midiEvent_t* event)
+{
+    switch (event->type)
+    {
+        case MIDI_EVENT:
+        {
+            handleMidiEvent(player, &event->midi);
+            break;
+        }
+
+        case  META_EVENT:
+        {
+            handleMetaEvent(player, &event->meta);
+            break;
+        }
+
+        case SYSEX_EVENT:
+        {
+            handleSysexEvent(player, &event->sysex);
+            break;
+        }
+    }
+}
+
 
 void midiPlayerInit(midiPlayer_t* player)
 {
@@ -612,6 +807,19 @@ void midiPlayerInit(midiPlayer_t* player)
 
 void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 {
+    if (player->mode == MIDI_FILE)
+    {
+        midiEvent_t event;
+        if (midiNextEvent(player->reader, &event))
+        {
+            // TODO wait until the appropriate time to play the event
+            handleEvent(player, &event);
+        }
+        else
+        {
+        }
+    }
+
     for (int16_t n = 0; n < len; n++)
     {
         // TODO: Sample support
@@ -923,4 +1131,10 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
         // Next!
         playingVoices &= ~voiceBit;
     }
+}
+
+void midiSetFile(midiPlayer_t* player, midiFileReader_t* reader)
+{
+    player->mode = MIDI_FILE;
+    player->reader = reader;
 }

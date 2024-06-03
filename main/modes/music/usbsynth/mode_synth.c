@@ -15,6 +15,7 @@
 
 #include "sngPlayer.h"
 #include "midiPlayer.h"
+#include "midiFileParser.h"
 
 //==============================================================================
 // Defines
@@ -22,6 +23,8 @@
 
 // Define the total length of the MIDI USB Device Descriptorg
 #define MIDI_CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_MIDI_DESC_LEN)
+
+#define NUM_FRAME_TIMES 60
 
 //==============================================================================
 // Enums
@@ -60,6 +63,8 @@ typedef struct
     uint8_t lastPackets[16][4];
 
     midiPlayer_t midiPlayer;
+    midiFileReader_t midiFileReader;
+    bool fileMode;
 
     bool localPitch;
     uint16_t pitch;
@@ -82,6 +87,9 @@ typedef struct
 
     wsg_t instrumentImages[16];
     wsg_t percussionImage;
+
+    uint32_t frameTimesIdx;
+    uint64_t frameTimes[NUM_FRAME_TIMES];
 } synthData_t;
 
 //==============================================================================
@@ -389,6 +397,10 @@ static void synthEnterMode(void)
     sd->pitch = 0x2000;
     sd->longestProgramName = gmProgramNames[24];
 
+    loadMidiFile(&sd->midiFileReader, "all_star.midi", false);
+    midiSetFile(&sd->midiPlayer, &sd->midiFileReader);
+    sd->fileMode = true;
+
     loadWsg("piano.wsg", &sd->instrumentImages[0], false);
     loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], false);
     loadWsg("organ.wsg", &sd->instrumentImages[2], false);
@@ -418,6 +430,7 @@ static void synthExitMode(void)
     {
         freeWsg(&sd->instrumentImages[i]);
     }
+    unloadMidiFile(&sd->midiFileReader);
     freeFont(&sd->font);
     free(sd);
     sd = NULL;
@@ -451,7 +464,7 @@ static void synthMainLoop(int64_t elapsedUs)
     {
         drawText(&sd->font, c550, plugMeInStr, (TFT_WIDTH - textWidth(&sd->font, plugMeInStr)) / 2, (TFT_HEIGHT - sd->font.height) / 2);
     }
-    else if (!sd->startupSeqComplete)
+    else if (!sd->startupSeqComplete && !sd->fileMode)
     {
         sd->noteTime -= elapsedUs;
 
@@ -577,6 +590,20 @@ static void synthMainLoop(int64_t elapsedUs)
         drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15, TFT_HEIGHT - sd->font.height - 15);
     }
 
+    // just a little scope for the frame timer I stole from pinball
+    {
+        int32_t startIdx  = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
+        uint32_t tElapsed = sd->frameTimes[sd->frameTimesIdx] - sd->frameTimes[startIdx];
+        if (0 != tElapsed)
+        {
+            uint32_t fps = (1000000 * NUM_FRAME_TIMES) / tElapsed;
+
+            char tmp[16];
+            snprintf(tmp, sizeof(tmp) - 1, "%" PRIu32, fps);
+            drawText(&sd->font, c555, tmp, 35, 2);
+        }
+    }
+
     int32_t phi, r, intensity;
     if (getTouchJoystick(&phi, &r, &intensity))
     {
@@ -685,6 +712,9 @@ static void synthMainLoop(int64_t elapsedUs)
             }
         }
     }
+
+    sd->frameTimesIdx                = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
+    sd->frameTimes[sd->frameTimesIdx] = esp_timer_get_time();
 }
 
 static void synthDacCallback(uint8_t* samples, int16_t len)

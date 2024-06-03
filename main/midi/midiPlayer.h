@@ -1,6 +1,7 @@
 #pragma once
 #include "hdw-bzr.h"
 #include "swSynth.h"
+#include "midiFileParser.h"
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -22,7 +23,10 @@
 
 typedef enum
 {
+    /// @brief Streaming over USB
     MIDI_STREAMING,
+
+    /// @brief Reading from a \c midiFileReader_t
     MIDI_FILE,
 } midiPlayerMode_t;
 
@@ -165,6 +169,14 @@ typedef enum
 typedef int8_t (*percussionFunc_t)(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data);
 
 /**
+ * @brief A function to handle text meta-messages from playing MIDI files
+ *
+ * @param type The type of meta-message
+ * @param text The message text
+ */
+typedef void (*midiTextCallback_t)(metaEventType_t type, const char* text);
+
+/**
  * @brief Defines the sound characteristics of a particular instrument.
  */
 typedef struct
@@ -211,20 +223,6 @@ typedef struct
     /// @brief The name of this timbre, if any
     const char* name;
 } midiTimbre_t;
-
-// TODO: Use this for samples
-/*typedef struct
-{
-    /// @brief The monotonic tick counter for playback of sampled timbres
-    uint32_t tick;
-
-} midiSampler_t;
-
-typedef union
-{
-    midiSampler_t sampler;
-    synthOscillator_t oscillator;
-} midiSampleSource_t;*/
 
 /**
  * @brief Tracks the state of a single voice, playing a single note.
@@ -347,6 +345,12 @@ typedef struct
     /// @brief Whether this player is playing a song or a MIDI stream
     midiPlayerMode_t mode;
 
+    /// @brief A MIDI reader to use for file playback, when in MIDI_FILE mode
+    midiFileReader_t* reader;
+
+    /// @brief A callback to call when a text meta-message is received
+    midiTextCallback_t textMessageCallback;
+
     /// @brief Number of samples that were clipped
     uint32_t clipped;
 } midiPlayer_t;
@@ -451,3 +455,11 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, u
  * @param value The pitch wheel value, from 0 to 0x3FFF (14-bits)
  */
 void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value);
+
+/**
+ * @brief Configure this MIDI player to read from a MIDI file
+ *
+ * @param player The MIDI player
+ * @param reader The MIDI reader that contains the MIDI file to be played
+ */
+void midiSetFile(midiPlayer_t* player, midiFileReader_t* reader);
