@@ -12,17 +12,14 @@
 // Function Declarations
 //==============================================================================
 
-void calculateBallZones(pinball_t* p);
-
 bool checkBallPbCircleCollision(pbCircle_t* ball, pbCircle_t* circle, pbTouchRef_t* touchRef);
 bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* touchRef);
 
 void checkBallBallCollisions(pinball_t* p);
 void checkBallStaticCollision(pinball_t* p);
-void checkBallFlipperCollision(pinball_t* p);
+void sweepCheckFlippers(pinball_t* p);
 
 void moveBalls(pinball_t* p);
-void moveFlippers(pinball_t* p);
 
 void checkBallsNotTouching(pinball_t* p);
 void setBallTouching(pbTouchRef_t* ballTouching, const void* obj, pbShapeType_t type);
@@ -41,8 +38,11 @@ void checkBallsAtRest(pinball_t* p);
  */
 void updatePinballPhysicsFrame(pinball_t* p)
 {
-    // Recalculate which zone each ball is in
-    calculateBallZones(p);
+    // Move balls along new vectors
+    moveBalls(p);
+
+    // Move flippers rotationally
+    sweepCheckFlippers(p);
 
     // If there are multiple balls
     if (1 < p->numBalls)
@@ -54,35 +54,11 @@ void updatePinballPhysicsFrame(pinball_t* p)
     // Check for collisions between balls and static objects
     checkBallStaticCollision(p);
 
-    // Check for collisions between balls and moving objects (flippers)
-    checkBallFlipperCollision(p);
-
     // Check if balls are actually at rest
     checkBallsAtRest(p);
 
-    // Move balls along new vectors
-    moveBalls(p);
-
-    // Move flippers rotationally
-    moveFlippers(p);
-
     // Clear references to balls touching things after moving
     checkBallsNotTouching(p);
-}
-
-/**
- * @brief TODO
- *
- * @param p
- */
-void calculateBallZones(pinball_t* p)
-{
-    // For each ball, find which zones it is in
-    for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
-    {
-        // Figure out which zones the ball is in
-        p->balls[bIdx].zoneMask = pinZoneCircle(p, p->balls[bIdx]);
-    }
 }
 
 /**
@@ -289,8 +265,76 @@ void checkBallStaticCollision(pinball_t* p)
  *
  * @param p
  */
-void checkBallFlipperCollision(pinball_t* p)
+void sweepCheckFlippers(pinball_t* p)
 {
+    // TODO sweep flippers
+
+    // For each flipper
+    for (uint32_t fIdx = 0; fIdx < p->numFlippers; fIdx++)
+    {
+        pbFlipper_t* flipper = &p->flippers[fIdx];
+
+        // Assume no motion
+        float sweepStart = flipper->angle;
+        float sweepStep  = 0.0f;
+        float sweepEnd   = flipper->angle;
+
+        // Check if the flipper should be moving based on the button state
+        if (flipper->buttonHeld)
+        {
+            if (flipper->facingRight && flipper->angle > (M_PI_2f - FLIPPER_UP_ANGLE))
+            {
+                sweepEnd = flipper->angle - FLIPPER_UP_DEGREES_PER_FRAME;
+                if (sweepEnd < M_PI_2f - FLIPPER_UP_ANGLE)
+                {
+                    sweepEnd = M_PI_2f - FLIPPER_UP_ANGLE;
+                }
+            }
+            else if (!flipper->facingRight && flipper->angle < (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
+            {
+                sweepEnd = flipper->angle + FLIPPER_UP_DEGREES_PER_FRAME;
+                if (sweepEnd > (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
+                {
+                    sweepEnd = (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE;
+                }
+            }
+        }
+        else
+        {
+            if (flipper->facingRight && flipper->angle < (M_PI_2f + FLIPPER_DOWN_ANGLE))
+            {
+                sweepEnd = flipper->angle + FLIPPER_DOWN_DEGREES_PER_FRAME;
+                if (sweepEnd > (M_PI_2f + FLIPPER_DOWN_ANGLE))
+                {
+                    sweepEnd = (M_PI_2f + FLIPPER_DOWN_ANGLE);
+                }
+            }
+            else if (!flipper->facingRight && flipper->angle > (M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE)
+            {
+                sweepEnd = flipper->angle - FLIPPER_DOWN_DEGREES_PER_FRAME;
+                if (sweepEnd < ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE))
+                {
+                    sweepEnd = ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE);
+                }
+            }
+        }
+
+        // The flipper is moving if the sweep start and end are different
+        flipper->moving = (sweepStart != sweepEnd);
+
+        // Figure out the number and size of the steps if the flipper is moving or not
+        int32_t numSteps = (flipper->moving) ? 4 : 1;
+        sweepStep        = (sweepEnd - sweepStart) / (float)numSteps;
+
+        // Move the flipper a little, then check for collisions
+        for (int32_t step = 0; step < numSteps; step++)
+        {
+            flipper->angle += sweepStep;
+            // TODO move collision checks here
+            updateFlipperPos(p, flipper);
+        }
+    }
+
     // For each ball, check collisions with flippers objects
     for (uint32_t bIdx = 0; bIdx < p->numBalls; bIdx++)
     {
@@ -338,72 +382,10 @@ void moveBalls(pinball_t* p)
         // Move the ball
         ball->c.pos.x += (ball->vel.x);
         ball->c.pos.y += (ball->vel.y);
-    }
-}
 
-/**
- * @brief TODO
- *
- * @param p
- */
-void moveFlippers(pinball_t* p)
-{
-    // For each flipper
-    for (uint32_t fIdx = 0; fIdx < p->numFlippers; fIdx++)
-    {
-        pbFlipper_t* flipper = &p->flippers[fIdx];
-
-        // TODO use angular velocity (aVelocity)?
-
-        flipper->moving = false;
-
-        if (flipper->buttonHeld)
-        {
-            if (flipper->facingRight && flipper->angle > (M_PI_2f - FLIPPER_UP_ANGLE))
-            {
-                flipper->angle -= FLIPPER_UP_DEGREES_PER_FRAME;
-                if (flipper->angle < M_PI_2f - FLIPPER_UP_ANGLE)
-                {
-                    flipper->angle = M_PI_2f - FLIPPER_UP_ANGLE;
-                }
-                flipper->moving = true;
-            }
-            else if (!flipper->facingRight && flipper->angle < (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
-            {
-                flipper->angle += FLIPPER_UP_DEGREES_PER_FRAME;
-                if (flipper->angle > (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
-                {
-                    flipper->angle = (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE;
-                }
-                flipper->moving = true;
-            }
-        }
-        else
-        {
-            if (flipper->facingRight && flipper->angle < (M_PI_2f + FLIPPER_DOWN_ANGLE))
-            {
-                flipper->angle += FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (flipper->angle > (M_PI_2f + FLIPPER_DOWN_ANGLE))
-                {
-                    flipper->angle = (M_PI_2f + FLIPPER_DOWN_ANGLE);
-                }
-                flipper->moving = true;
-            }
-            else if (!flipper->facingRight && flipper->angle > (M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE)
-            {
-                flipper->angle -= FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (flipper->angle < ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE))
-                {
-                    flipper->angle = ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE);
-                }
-                flipper->moving = true;
-            }
-        }
-
-        if (flipper->moving)
-        {
-            updateFlipperPos(p, flipper);
-        }
+        // Update zone mask
+        // TODO update this after nudging ball too?
+        ball->zoneMask = pinZoneCircle(p, *ball);
     }
 }
 
