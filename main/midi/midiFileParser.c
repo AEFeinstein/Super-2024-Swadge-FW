@@ -335,6 +335,9 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
                             // NUL-terminate the string
                             track->eventBuffer[metaLength] = 0;
 
+                            // Actually put the text in the event
+                            track->nextEvent.meta.text = (char*)track->eventBuffer;
+
                             // Add the NUL-terminator, and zero out any unused memory in the buffer
                             //memset(track->eventBuffer + metaLength, 0, track->eventBufferSize - metaLength);
                         }
@@ -743,7 +746,6 @@ static bool parseMidiHeader(midiFileReader_t* reader)
         // And all track data chunks should be safe
     }
 
-    ESP_LOGW("MIDIParser", "Not yet implemented, but the header looked OK!");
     return true;
 }
 

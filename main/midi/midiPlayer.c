@@ -799,7 +799,8 @@ void midiPlayerInit(midiPlayer_t* player)
 
 void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 {
-    // First, do a quick check to see if we'll have to handle an event within (len) samples of nowo
+    // First, do a quick check to see if we'll have to handle an event within (len) samples of now
+    // TODO: This goes very wrong if you change the tempo while the song is going.
     bool checkEvents = false;
     if (player->mode == MIDI_FILE)
     {
@@ -810,8 +811,6 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 
         if (player->eventAvailable)
         {
-            uint64_t samples = SAMPLES_TO_MIDI_TICKS(player->sampleCount + len, player->tempo, player->reader->division);
-            ESP_LOGI("MIDI", "Samples=%" PRIu64 ", next=%" PRIu32, samples, player->pendingEvent.absTime);
             if (player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount + len, player->tempo, player->reader->division))
             {
                 checkEvents = true;
@@ -821,14 +820,15 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 
     for (int16_t n = 0; n < len; n++)
     {
-        if (checkEvents && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader->division))
+        // Use a while loop since we may need to handle multiple events at the exact same time
+        while (checkEvents && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader->division))
         {
             // It's time, so handle the event now
             handleEvent(player, &player->pendingEvent);
 
             // Try and grab the next event, and if we got one, keep checking
             player->eventAvailable = midiNextEvent(player->reader, &player->pendingEvent);
-            checkEvents = (player->eventAvailable && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount + len - n, player->tempo, player->reader->division));
+            checkEvents = player->eventAvailable;
         }
 
         // TODO: Sample support
