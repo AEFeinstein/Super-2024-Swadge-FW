@@ -353,6 +353,18 @@ typedef struct
 
     /// @brief Number of samples that were clipped
     uint32_t clipped;
+
+    /// @brief The number of samples elapsed in the songs
+    uint64_t sampleCount;
+
+    /// @brief The next event in the MIDI file, which occurs after the current time
+    midiEvent_t pendingEvent;
+
+    /// @brief True if pendingEvent is valid, false if it must be updated
+    bool eventAvailable;
+
+    /// @brief The number of microseconds per quarter note
+    uint32_t tempo;
 } midiPlayer_t;
 
 /**

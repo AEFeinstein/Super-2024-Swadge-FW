@@ -82,7 +82,7 @@ struct midiReaderState
 
 static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out);
 static bool setupEventBuffer(chunkInfo_t* track, uint32_t length);
-static bool trackParseNext(chunkInfo_t* track);
+static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track);
 static bool parseMidiHeader(midiFileReader_t* reader);
 
 //==============================================================================
@@ -161,7 +161,7 @@ static bool setupEventBuffer(chunkInfo_t* track, uint32_t length)
 
 #define TRK_REMAIN() (track->length - (track->cur - track->data))
 #define ERR() do { track->eventParsed = false; track->nextEvent.deltaTime = UINT32_MAX; return false; } while (0)
-static bool trackParseNext(chunkInfo_t* track)
+static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
 {
     // All events are preceded by a delta-time, which is a variable-length quantity
     uint32_t deltaTime;
@@ -285,8 +285,21 @@ static bool trackParseNext(chunkInfo_t* track)
                     case SEQUENCE_NUMBER:
                     {
                         // Sequence Number
+                        track->nextEvent.meta.type = SEQUENCE_NUMBER;
+                        if (metaLength == 2)
+                        {
+                            // Read the data as a a 16-bit int (not 14-bit since this is a meta-event)
+                            track->nextEvent.meta.sequenceNumber = (track->cur[0] << 8) | track->cur[1];
+                        }
+                        else
+                        {
+                            // If the length is 0 (or otherwise not what we expect), use the track index as the sequence number
+                            track->nextEvent.meta.sequenceNumber = (track - reader->state->trackChunks);
+                        }
                         break;
                     }
+
+                    // Known text meta-events:
                     case TEXT:
                     case COPYRIGHT:
                     case SEQUENCE_OR_TRACK_NAME:
@@ -294,7 +307,7 @@ static bool trackParseNext(chunkInfo_t* track)
                     case LYRIC:
                     case MARKER:
                     case CUE_POINT:
-                    // Reserved text meta-events
+                    // Reserved text meta-events:
                     case 0x08:
                     case 0x09:
                     case 0x0A:
@@ -306,6 +319,7 @@ static bool trackParseNext(chunkInfo_t* track)
                     {
                         if (metaType > CUE_POINT)
                         {
+                            // If this is a reserved text event, just set the type to TEXT
                             track->nextEvent.meta.type = TEXT;
                         }
                         else
@@ -333,33 +347,118 @@ static bool trackParseNext(chunkInfo_t* track)
                         break;
                     }
 
+                    // This is considered obsolete -- it's used to specify a channel for sysex/meta events in a
+                    // format 0 (single-track) file, as these do not include the channel like MIDI events do
                     case CHANNEL_PREFIX:
                     {
+                        track->nextEvent.meta.type = CHANNEL_PREFIX;
                         break;
                     }
 
                     case END_OF_TRACK:
                     {
+                        track->nextEvent.meta.type = END_OF_TRACK;
                         break;
                     }
 
                     case TEMPO:
                     {
+                        track->nextEvent.meta.type = TEMPO;
+
+                        if (metaLength == 3)
+                        {
+                            track->nextEvent.meta.tempo = (track->cur[0] << 16) | (track->cur[1] << 8) | track->cur[2];
+                        }
+                        else
+                        {
+                            // 120BPM is the default -- 500,000 microseconds per quarter note
+                            // So if the meta-event is malformed (it should always have 3 data bytes), go with that
+                            track->nextEvent.meta.tempo = 500000;
+                        }
                         break;
                     }
 
                     case SMPTE_OFFSET:
                     {
+                        // This is the start time of the track?
+                        track->nextEvent.meta.type = SMPTE_OFFSET;
+                        if (metaLength == 5)
+                        {
+                            track->nextEvent.meta.startTime.hour = track->cur[0];
+                            track->nextEvent.meta.startTime.min = track->cur[1];
+                            track->nextEvent.meta.startTime.sec = track->cur[2];
+                            track->nextEvent.meta.startTime.frame = track->cur[3];
+                            track->nextEvent.meta.startTime.frameHundredths = track->cur[4];
+                        }
+                        else
+                        {
+                            // should be 5 bytes so if it's not, uhh, 0?
+                            track->nextEvent.meta.startTime.hour = 0;
+                            track->nextEvent.meta.startTime.min = 0;
+                            track->nextEvent.meta.startTime.sec = 0;
+                            track->nextEvent.meta.startTime.frame = 0;
+                            track->nextEvent.meta.startTime.frameHundredths = 0;
+                        }
                         break;
                     }
 
                     case TIME_SIGNATURE:
                     {
+                        track->nextEvent.meta.type = TIME_SIGNATURE;
+                        // OK, so apparently this is only for display purposes
+                        // That's great, because I have no idea what the hell to do with any of this
+                        if (metaLength == 4)
+                        {
+                            track->nextEvent.meta.timeSignature.numerator = track->cur[0];
+                            track->nextEvent.meta.timeSignature.denominator = track->cur[1];
+                            track->nextEvent.meta.timeSignature.midiClocksPerMetronomeTick = track->cur[2];
+                            track->nextEvent.meta.timeSignature.num32ndNotesPerBeat = track->cur[3];
+                        }
+                        else
+                        {
+                            // Default is 4/4, cool, but what's the rest of it?
+                            track->nextEvent.meta.timeSignature.numerator = 4;
+                            track->nextEvent.meta.timeSignature.denominator = 2;
+                            track->nextEvent.meta.timeSignature.midiClocksPerMetronomeTick = 1;
+                            track->nextEvent.meta.timeSignature.num32ndNotesPerBeat = 24;
+                        }
                         break;
                     }
 
                     case KEY_SIGNATURE:
                     {
+                        track->nextEvent.meta.type = KEY_SIGNATURE;
+                        if (metaLength == 2)
+                        {
+                            int8_t flatsOrSharps = (int8_t)(track->cur[0]);
+                            if (flatsOrSharps < 0)
+                            {
+                                // Flats
+                                track->nextEvent.meta.keySignature.flats = -flatsOrSharps;
+                                track->nextEvent.meta.keySignature.sharps = 0;
+                            }
+                            else if (flatsOrSharps > 0)
+                            {
+                                // Sharps
+                                track->nextEvent.meta.keySignature.sharps = flatsOrSharps;
+                                track->nextEvent.meta.keySignature.flats = 0;
+                            }
+                            else
+                            {
+                                // Key of C
+                                track->nextEvent.meta.keySignature.flats = 0;
+                                track->nextEvent.meta.keySignature.sharps = 0;
+                            }
+
+                            track->nextEvent.meta.keySignature.minor = track->cur[1] ? true : false;
+                        }
+                        else
+                        {
+                            // Default to C major if the event is malformed
+                            track->nextEvent.meta.keySignature.flats = 0;
+                            track->nextEvent.meta.keySignature.sharps = 0;
+                            track->nextEvent.meta.keySignature.minor = false;
+                        }
                         break;
                     }
 
@@ -448,6 +547,8 @@ static bool trackParseNext(chunkInfo_t* track)
                     track->nextEvent.sysex.length = 0;
                     track->nextEvent.sysex.manufacturerId = 0;
                 }
+
+                track->cur += sysexLength;
             }
             else
             {
@@ -464,6 +565,7 @@ static bool trackParseNext(chunkInfo_t* track)
 
     // Don't bother doing this earlier since we might just overwrite it
     track->nextEvent.deltaTime = deltaTime;
+    track->nextEvent.absTime = track->time + deltaTime;
     track->eventParsed = true;
     return true;
 }
@@ -544,11 +646,13 @@ static bool parseMidiHeader(midiFileReader_t* reader)
 
             // positive timecode division
             uint8_t ticksPerFrame = (division & 0xFF);
+            reader->division = ticksPerFrame;
         }
         else
         {
             // ticks per quarter note
             uint16_t ticksPerQuarterNote = (division & 0x7FFF);
+            reader->division = ticksPerQuarterNote;
         }
 
         // TODO: Actually do something with the timing info
@@ -618,7 +722,7 @@ static bool parseMidiHeader(midiFileReader_t* reader)
             // Advance the pointer to the start of the next chunk
             ptr += trackChunkLen;
 
-            state->trackChunks[i].eventParsed = trackParseNext(&state->trackChunks[i]);
+            state->trackChunks[i].eventParsed = trackParseNext(reader, &state->trackChunks[i]);
 
             // Handle empty tracks, basically
             if (!state->trackChunks[i].eventParsed)
@@ -697,12 +801,12 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 
         if (!info->eventParsed && info->nextEvent.deltaTime != UINT32_MAX)
         {
-            info->eventParsed = trackParseNext(info);
+            info->eventParsed = trackParseNext(reader, info);
         }
 
         // Check if we either already have a parsed event waiting, or are able to parse one now
         // Short-circuiting will make sure we only parse another event when needed and permitted
-        if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(info)))
+        if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(reader, info)))
         {
             // info->nextEvent has now been set by trackParseNext()
             if (!info->nextEvent.deltaTime)

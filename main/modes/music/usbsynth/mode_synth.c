@@ -581,6 +581,10 @@ static void synthMainLoop(int64_t elapsedUs)
         int16_t deg = (360 + ((pitch - 0x2000) * 90 / 0x1FFF)) % 360;
         drawCircleQuadrants(0, TFT_HEIGHT / 2, 16, true, false, false, true, (pitch == 0x2000) ? c222 : c555);
         drawLineFast(0, TFT_HEIGHT / 2, 16 * getCos1024(deg) / 1024, TFT_HEIGHT / 2 - (16 * getSin1024(deg) / 1024), c500);
+
+        char tempoStr[16];
+        snprintf(tempoStr, sizeof(tempoStr), "%d BPM", (60000000 / sd->midiPlayer.tempo));
+        drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 15, (TFT_HEIGHT - sd->font.height) / 2);
     }
     else
     {
@@ -614,14 +618,20 @@ static void synthMainLoop(int64_t elapsedUs)
         if (pitch != sd->pitch)
         {
             sd->pitch = pitch;
-            midiPitchWheel(&sd->midiPlayer, 0, sd->pitch);
+            for (uint8_t ch = 0; ch < 16; ch++)
+            {
+                midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+            }
         }
     }
     else if (sd->localPitch)
     {
         sd->localPitch = false;
         sd->pitch = 0x2000;
-        midiPitchWheel(&sd->midiPlayer, 0, sd->pitch);
+        for (uint8_t ch = 0; ch < 16; ch++)
+        {
+            midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
+        }
     }
 
     buttonEvt_t evt = {0};

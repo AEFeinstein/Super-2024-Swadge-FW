@@ -371,6 +371,9 @@ static const uint8_t oscDither[] = {
 // For MIDI values with coarse and fine bytes, each 7 bits
 #define UINT14_MAX (0x3FFF)
 
+/// @brief Convert the sample count to MIDI ticks
+#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
+
 //#define MIDI_MULTI_STATE
 #ifdef MIDI_MULTI_STATE
 #define VS_ANY(statePtr) ((statePtr)->attack | (statePtr)->decay | (statePtr)->release | (statePtr)->sustain)
@@ -700,11 +703,9 @@ static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
 {
     switch (event->type)
     {
-        case SEQUENCE_NUMBER:
-        {
-            break;
-        }
+        case SEQUENCE_NUMBER: break;
 
+        // Text events
         case TEXT:
         case COPYRIGHT:
         case SEQUENCE_OR_TRACK_NAME:
@@ -721,11 +722,8 @@ static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
             break;
         }
 
-        case CHANNEL_PREFIX:
-        {
-            // TODO: handle
-            break;
-        }
+        // Obsolete
+        case CHANNEL_PREFIX: break;
 
         case END_OF_TRACK:
         {
@@ -735,33 +733,22 @@ static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
 
         case TEMPO:
         {
-            // TODO: Tempo support
+            player->tempo = event->tempo;
             break;
         }
 
         case SMPTE_OFFSET:
         {
-            // TODO: Tempo support
+            // TODO: Tempo support?
             break;
         }
 
-        case TIME_SIGNATURE:
-        {
-            // TODO: Tempo support
-            break;
-        }
+        // These are informational only, we won't do anything with them here.
+        case TIME_SIGNATURE: break;
+        case KEY_SIGNATURE: break;
 
-        case KEY_SIGNATURE:
-        {
-            // TODO: Figure out what this is and if we need it
-            break;
-        }
-
-        case PROPRIETARY:
-        {
-            // TODO: Hmmmmm...
-            break;
-        }
+        // None supported
+        case PROPRIETARY: break;
     }
 }
 
@@ -802,26 +789,48 @@ void midiPlayerInit(midiPlayer_t* player)
 {
     // Zero out EVERYTHING
     memset(player, 0, sizeof(midiPlayer_t));
+
+    // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
+    // 120 BPM == 500,000 microseconds per quarter note
+    player->tempo = 500000;
+
     midiGmOn(player);
 }
 
 void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 {
+    // First, do a quick check to see if we'll have to handle an event within (len) samples of nowo
+    bool checkEvents = false;
     if (player->mode == MIDI_FILE)
     {
-        midiEvent_t event;
-        if (midiNextEvent(player->reader, &event))
+        if (!player->eventAvailable)
         {
-            // TODO wait until the appropriate time to play the event
-            handleEvent(player, &event);
+            player->eventAvailable = midiNextEvent(player->reader, &player->pendingEvent);
         }
-        else
+
+        if (player->eventAvailable)
         {
+            uint64_t samples = SAMPLES_TO_MIDI_TICKS(player->sampleCount + len, player->tempo, player->reader->division);
+            ESP_LOGI("MIDI", "Samples=%" PRIu64 ", next=%" PRIu32, samples, player->pendingEvent.absTime);
+            if (player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount + len, player->tempo, player->reader->division))
+            {
+                checkEvents = true;
+            }
         }
     }
 
     for (int16_t n = 0; n < len; n++)
     {
+        if (checkEvents && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader->division))
+        {
+            // It's time, so handle the event now
+            handleEvent(player, &player->pendingEvent);
+
+            // Try and grab the next event, and if we got one, keep checking
+            player->eventAvailable = midiNextEvent(player->reader, &player->pendingEvent);
+            checkEvents = (player->eventAvailable && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount + len - n, player->tempo, player->reader->division));
+        }
+
         // TODO: Sample support
         // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
         int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
@@ -846,6 +855,8 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
         {
             samples[n] = sample + 128;
         }
+
+        player->sampleCount++;
     }
 }
 

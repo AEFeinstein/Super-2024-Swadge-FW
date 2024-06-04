@@ -54,6 +54,9 @@ typedef struct
     /// @brief If true, text meta-events will be handled and sent to the MIDI player
     bool handleMetaEvents;
 
+    /// @brief The number of divisions per midi tick
+    uint16_t division;
+
     midiReaderState_t* state;
 } midiFileReader_t;
 
@@ -70,6 +73,33 @@ typedef struct
     union {
         const char* text;
         uint8_t* data;
+        uint32_t tempo;
+        uint16_t sequenceNumber;
+
+        struct {
+            uint8_t hour;
+            uint8_t min;
+            uint8_t sec;
+            uint8_t frame;
+            uint8_t frameHundredths;
+        } startTime;
+
+        struct {
+            /// @brief The numerator of the time signature
+            uint8_t numerator;
+            /// @brief The power of two of the time signature denominator (e.g. 2 for 4/4, 3 for 4/8)
+            uint8_t denominator;
+            /// @brief The number of MIDI clocks per metronome tick
+            uint8_t midiClocksPerMetronomeTick;
+            /// @brief Number of 32nd notes per 24 MIDI clocks (= 1 beat)
+            uint8_t num32ndNotesPerBeat;
+        } timeSignature;
+
+        struct {
+            uint8_t flats;
+            uint8_t sharps;
+            bool minor;
+        } keySignature;
     };
 } midiMetaEvent_t;
 
@@ -85,7 +115,8 @@ typedef struct
     /// @brief The time between this event and the previous event
     uint32_t deltaTime;
 
-    uint32_t absoluteTime;
+    /// @brief The absolute timestamp of this event in ticks
+    uint32_t absTime;
 
     /// @brief The overall event type -- MIDI, Meta, or SysEx
     midiEventType_t type;
