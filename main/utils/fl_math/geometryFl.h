@@ -44,6 +44,8 @@
 #include <float.h>
 #include "vectorFl2d.h"
 
+#define EPS 0.0001f
+
 /**
  * @brief Signed integer representation of a circle
  */
@@ -77,6 +79,8 @@ bool circleCircleFlIntersection(circleFl_t circle1, circleFl_t circle2, vecFl_t*
 bool circlePointFlIntersection(circleFl_t circle, vecFl_t point, vecFl_t* collisionVec);
 bool circleRectFlIntersection(circleFl_t circle, rectangleFl_t rect, vecFl_t* collisionVec);
 bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* cpOnLine, vecFl_t* collisionVec);
+int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
+                                       vecFl_t* intersection_2);
 bool rectRectFlIntersection(rectangleFl_t rect1, rectangleFl_t rect2, vecFl_t* collisionVec);
 bool rectLineFlIntersection(rectangleFl_t rect, lineFl_t line, vecFl_t* collisionVec);
 bool lineLineFlIntersection(lineFl_t line1, lineFl_t line2);

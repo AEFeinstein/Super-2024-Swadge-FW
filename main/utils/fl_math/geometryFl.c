@@ -1,4 +1,5 @@
 #include <stddef.h>
+#include <math.h>
 #include "geometryFl.h"
 #include "macros.h"
 
@@ -265,6 +266,113 @@ bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* cpOnLin
         return true;
     }
     return false;
+}
+
+/**
+ * @brief TODO
+ *
+ * See https://cp-algorithms.com/geometry/circle-line-intersection.html
+ *
+ * @param circle
+ * @param line
+ * @param intersection_1
+ * @param intersection_2
+ * @return int16_t
+ */
+int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
+                                       vecFl_t* intersection_2)
+{
+    // Translate the line so that the circle is at the origin
+    lineFl_t tLine = {
+        .p1 = subVecFl2d(line.p1, circle.pos),
+        .p2 = subVecFl2d(line.p2, circle.pos),
+    };
+
+    // Given parameters
+    float r     = circle.radius;
+    float denom = (tLine.p2.x - tLine.p1.x);
+    if (0 == denom)
+    {
+        // circle & vertical line intersection
+        float x = tLine.p1.x;
+        if (x > r)
+        {
+            // No intersection
+            return 0;
+        }
+        else if (x == r)
+        {
+            // One point
+            intersection_1->x = x;
+            intersection_1->y = 0;
+            // Translate back
+            *intersection_1 = addVecFl2d(*intersection_1, circle.pos);
+            return 1;
+        }
+        else
+        {
+            // Find y from x
+            float y = sqrtf((r * r) - (x * x));
+
+            intersection_1->x = x;
+            intersection_1->y = y;
+            // Translate back
+            *intersection_1   = addVecFl2d(*intersection_1, circle.pos);
+            intersection_2->x = x;
+            intersection_2->y = -y;
+            // Translate back
+            *intersection_2 = addVecFl2d(*intersection_2, circle.pos);
+            return 2;
+        }
+    }
+    else
+    {
+        float a = (tLine.p2.y - tLine.p1.y) / denom; // TODO div by 0
+        float b = -1.0f;
+        float c = tLine.p2.y - (tLine.p2.x * a);
+
+        float ab2 = (a * a + b * b);
+        float c2  = c * c;
+        float r2  = r * r;
+
+        float x0 = -a * c / ab2;
+        float y0 = -b * c / ab2;
+        if (c2 > r2 * ab2 + EPS)
+        {
+            // no points
+            return 0;
+        }
+        else if (fabsf(c2 - r2 * ab2) < EPS)
+        {
+            // One point
+            intersection_1->x = x0;
+            intersection_1->y = y0;
+            // Translate back
+            *intersection_1 = addVecFl2d(*intersection_1, circle.pos);
+            return 1;
+        }
+        else
+        {
+            // Two points
+            float d    = r2 - c2 / ab2;
+            float mult = sqrtf(d / ab2);
+            float ax, ay, bx, by;
+            ax = x0 + b * mult;
+            bx = x0 - b * mult;
+            ay = y0 - a * mult;
+            by = y0 + a * mult;
+
+            intersection_1->x = ax;
+            intersection_1->y = ay;
+            // Translate back
+            *intersection_1   = addVecFl2d(*intersection_1, circle.pos);
+            intersection_2->x = bx;
+            intersection_2->y = by;
+            // Translate back
+            *intersection_2 = addVecFl2d(*intersection_2, circle.pos);
+            return 2;
+        }
+    }
 }
 
 /**
