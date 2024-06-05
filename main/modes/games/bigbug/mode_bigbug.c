@@ -152,11 +152,11 @@ static void bigbugEnterMode(void)
     
 
     // Load graphics
-    loadWsg("levelOld.wsg", &bigbug->levelWsg, false);
-    loadWsg("dirt.wsg", &bigbug->dirtWsg, false);
-    loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, false);
-    loadWsg("trash_background.wsg", &bigbug->caveBackground, false);
-    loadWsg("dumpSurface_small.wsg", &bigbug->surfaceWsg, false);
+    loadWsg("levelOld.wsg", &bigbug->levelWsg, true);
+    loadWsg("dirt.wsg", &bigbug->dirtWsg, true);
+    loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, true);
+    loadWsg("trash_background.wsg", &bigbug->caveBackground, true);
+    loadWsg("dumpSurface_small.wsg", &bigbug->surfaceWsg, true);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
@@ -186,111 +186,111 @@ static void bigbugEnterMode(void)
     // The value within is the wsg graphic.
     // [3,7,0,4,15,11,12,8,2,6,1,5,14,10,13,9]
     //soft
-    loadWsg("s1g3.wsg",  &bigbug->s1Wsg[0],  false);
-    loadWsg("s1g7.wsg",  &bigbug->s1Wsg[1],  false);
-    loadWsg("s1g0.wsg",  &bigbug->s1Wsg[2],  false);
-    loadWsg("s1g4.wsg",  &bigbug->s1Wsg[3],  false);
-    loadWsg("s1g15.wsg", &bigbug->s1Wsg[4],  false);
-    loadWsg("s1g11.wsg", &bigbug->s1Wsg[5],  false);
-    loadWsg("s1g12.wsg", &bigbug->s1Wsg[6],  false);
-    loadWsg("s1g8.wsg",  &bigbug->s1Wsg[7],  false);
-    loadWsg("s1g2.wsg",  &bigbug->s1Wsg[8],  false);
-    loadWsg("s1g6.wsg",  &bigbug->s1Wsg[9],  false);
-    loadWsg("s1g1.wsg",  &bigbug->s1Wsg[10], false);
-    loadWsg("s1g5.wsg",  &bigbug->s1Wsg[11], false);
-    loadWsg("s1g14.wsg", &bigbug->s1Wsg[12], false);
-    loadWsg("s1g10.wsg", &bigbug->s1Wsg[13], false);
-    loadWsg("s1g13.wsg", &bigbug->s1Wsg[14], false);
-    loadWsg("s1g9.wsg",  &bigbug->s1Wsg[15], false);
+    loadWsg("s1g3.wsg",  &bigbug->s1Wsg[0],  true);
+    loadWsg("s1g7.wsg",  &bigbug->s1Wsg[1],  true);
+    loadWsg("s1g0.wsg",  &bigbug->s1Wsg[2],  true);
+    loadWsg("s1g4.wsg",  &bigbug->s1Wsg[3],  true);
+    loadWsg("s1g15.wsg", &bigbug->s1Wsg[4],  true);
+    loadWsg("s1g11.wsg", &bigbug->s1Wsg[5],  true);
+    loadWsg("s1g12.wsg", &bigbug->s1Wsg[6],  true);
+    loadWsg("s1g8.wsg",  &bigbug->s1Wsg[7],  true);
+    loadWsg("s1g2.wsg",  &bigbug->s1Wsg[8],  true);
+    loadWsg("s1g6.wsg",  &bigbug->s1Wsg[9],  true);
+    loadWsg("s1g1.wsg",  &bigbug->s1Wsg[10], true);
+    loadWsg("s1g5.wsg",  &bigbug->s1Wsg[11], true);
+    loadWsg("s1g14.wsg", &bigbug->s1Wsg[12], true);
+    loadWsg("s1g10.wsg", &bigbug->s1Wsg[13], true);
+    loadWsg("s1g13.wsg", &bigbug->s1Wsg[14], true);
+    loadWsg("s1g9.wsg",  &bigbug->s1Wsg[15], true);
     //soft corners
-    loadWsg("s1g016.wsg", &bigbug->s1Wsg[16], false);
-    loadWsg("s1g017.wsg", &bigbug->s1Wsg[17], false);
-    loadWsg("s1g018.wsg", &bigbug->s1Wsg[18], false);
-    loadWsg("s1g019.wsg", &bigbug->s1Wsg[19], false);
-    loadWsg("s1g020.wsg", &bigbug->s1Wsg[20], false);
-    loadWsg("s1g021.wsg", &bigbug->s1Wsg[21], false);
-    loadWsg("s1g022.wsg", &bigbug->s1Wsg[22], false);
-    loadWsg("s1g023.wsg", &bigbug->s1Wsg[23], false);
-    loadWsg("s1g024.wsg", &bigbug->s1Wsg[24], false);
-    loadWsg("s1g025.wsg", &bigbug->s1Wsg[25], false);
-    loadWsg("s1g026.wsg", &bigbug->s1Wsg[26], false);
-    loadWsg("s1g027.wsg", &bigbug->s1Wsg[27], false);
-    loadWsg("s1g028.wsg", &bigbug->s1Wsg[28], false);
-    loadWsg("s1g029.wsg", &bigbug->s1Wsg[29], false);
-    loadWsg("s1g030.wsg", &bigbug->s1Wsg[30], false);
-    loadWsg("s1g031.wsg", &bigbug->s1Wsg[31], false);
+    loadWsg("s1g016.wsg", &bigbug->s1Wsg[16], true);
+    loadWsg("s1g017.wsg", &bigbug->s1Wsg[17], true);
+    loadWsg("s1g018.wsg", &bigbug->s1Wsg[18], true);
+    loadWsg("s1g019.wsg", &bigbug->s1Wsg[19], true);
+    loadWsg("s1g020.wsg", &bigbug->s1Wsg[20], true);
+    loadWsg("s1g021.wsg", &bigbug->s1Wsg[21], true);
+    loadWsg("s1g022.wsg", &bigbug->s1Wsg[22], true);
+    loadWsg("s1g023.wsg", &bigbug->s1Wsg[23], true);
+    loadWsg("s1g024.wsg", &bigbug->s1Wsg[24], true);
+    loadWsg("s1g025.wsg", &bigbug->s1Wsg[25], true);
+    loadWsg("s1g026.wsg", &bigbug->s1Wsg[26], true);
+    loadWsg("s1g027.wsg", &bigbug->s1Wsg[27], true);
+    loadWsg("s1g028.wsg", &bigbug->s1Wsg[28], true);
+    loadWsg("s1g029.wsg", &bigbug->s1Wsg[29], true);
+    loadWsg("s1g030.wsg", &bigbug->s1Wsg[30], true);
+    loadWsg("s1g031.wsg", &bigbug->s1Wsg[31], true);
 
     //medium
-    loadWsg("m1g3.wsg",  &bigbug->m1Wsg[0],  false);
-    loadWsg("m1g7.wsg",  &bigbug->m1Wsg[1],  false);
-    loadWsg("m1g0.wsg",  &bigbug->m1Wsg[2],  false);
-    loadWsg("m1g4.wsg",  &bigbug->m1Wsg[3],  false);
-    loadWsg("m1g15.wsg", &bigbug->m1Wsg[4],  false);
-    loadWsg("m1g11.wsg", &bigbug->m1Wsg[5],  false);
-    loadWsg("m1g12.wsg", &bigbug->m1Wsg[6],  false);
-    loadWsg("m1g8.wsg",  &bigbug->m1Wsg[7],  false);
-    loadWsg("m1g2.wsg",  &bigbug->m1Wsg[8],  false);
-    loadWsg("m1g6.wsg",  &bigbug->m1Wsg[9],  false);
-    loadWsg("m1g1.wsg",  &bigbug->m1Wsg[10], false);
-    loadWsg("m1g5.wsg",  &bigbug->m1Wsg[11], false);
-    loadWsg("m1g14.wsg", &bigbug->m1Wsg[12], false);
-    loadWsg("m1g10.wsg", &bigbug->m1Wsg[13], false);
-    loadWsg("m1g13.wsg", &bigbug->m1Wsg[14], false);
-    loadWsg("m1g9.wsg",  &bigbug->m1Wsg[15], false);
+    loadWsg("m1g3.wsg",  &bigbug->m1Wsg[0],  true);
+    loadWsg("m1g7.wsg",  &bigbug->m1Wsg[1],  true);
+    loadWsg("m1g0.wsg",  &bigbug->m1Wsg[2],  true);
+    loadWsg("m1g4.wsg",  &bigbug->m1Wsg[3],  true);
+    loadWsg("m1g15.wsg", &bigbug->m1Wsg[4],  true);
+    loadWsg("m1g11.wsg", &bigbug->m1Wsg[5],  true);
+    loadWsg("m1g12.wsg", &bigbug->m1Wsg[6],  true);
+    loadWsg("m1g8.wsg",  &bigbug->m1Wsg[7],  true);
+    loadWsg("m1g2.wsg",  &bigbug->m1Wsg[8],  true);
+    loadWsg("m1g6.wsg",  &bigbug->m1Wsg[9],  true);
+    loadWsg("m1g1.wsg",  &bigbug->m1Wsg[10], true);
+    loadWsg("m1g5.wsg",  &bigbug->m1Wsg[11], true);
+    loadWsg("m1g14.wsg", &bigbug->m1Wsg[12], true);
+    loadWsg("m1g10.wsg", &bigbug->m1Wsg[13], true);
+    loadWsg("m1g13.wsg", &bigbug->m1Wsg[14], true);
+    loadWsg("m1g9.wsg",  &bigbug->m1Wsg[15], true);
     //medium corners
-    loadWsg("m1g016.wsg", &bigbug->m1Wsg[16], false);
-    loadWsg("m1g017.wsg", &bigbug->m1Wsg[17], false);
-    loadWsg("m1g018.wsg", &bigbug->m1Wsg[18], false);
-    loadWsg("m1g019.wsg", &bigbug->m1Wsg[19], false);
-    loadWsg("m1g020.wsg", &bigbug->m1Wsg[20], false);
-    loadWsg("m1g021.wsg", &bigbug->m1Wsg[21], false);
-    loadWsg("m1g022.wsg", &bigbug->m1Wsg[22], false);
-    loadWsg("m1g023.wsg", &bigbug->m1Wsg[23], false);
-    loadWsg("m1g024.wsg", &bigbug->m1Wsg[24], false);
-    loadWsg("m1g025.wsg", &bigbug->m1Wsg[25], false);
-    loadWsg("m1g026.wsg", &bigbug->m1Wsg[26], false);
-    loadWsg("m1g027.wsg", &bigbug->m1Wsg[27], false);
-    loadWsg("m1g028.wsg", &bigbug->m1Wsg[28], false);
-    loadWsg("m1g029.wsg", &bigbug->m1Wsg[29], false);
-    loadWsg("m1g030.wsg", &bigbug->m1Wsg[30], false);
-    loadWsg("m1g031.wsg", &bigbug->m1Wsg[31], false);
+    loadWsg("m1g016.wsg", &bigbug->m1Wsg[16], true);
+    loadWsg("m1g017.wsg", &bigbug->m1Wsg[17], true);
+    loadWsg("m1g018.wsg", &bigbug->m1Wsg[18], true);
+    loadWsg("m1g019.wsg", &bigbug->m1Wsg[19], true);
+    loadWsg("m1g020.wsg", &bigbug->m1Wsg[20], true);
+    loadWsg("m1g021.wsg", &bigbug->m1Wsg[21], true);
+    loadWsg("m1g022.wsg", &bigbug->m1Wsg[22], true);
+    loadWsg("m1g023.wsg", &bigbug->m1Wsg[23], true);
+    loadWsg("m1g024.wsg", &bigbug->m1Wsg[24], true);
+    loadWsg("m1g025.wsg", &bigbug->m1Wsg[25], true);
+    loadWsg("m1g026.wsg", &bigbug->m1Wsg[26], true);
+    loadWsg("m1g027.wsg", &bigbug->m1Wsg[27], true);
+    loadWsg("m1g028.wsg", &bigbug->m1Wsg[28], true);
+    loadWsg("m1g029.wsg", &bigbug->m1Wsg[29], true);
+    loadWsg("m1g030.wsg", &bigbug->m1Wsg[30], true);
+    loadWsg("m1g031.wsg", &bigbug->m1Wsg[31], true);
 
     //hard
-    loadWsg("h1g3.wsg",  &bigbug->h1Wsg[0],  false);
-    loadWsg("h1g7.wsg",  &bigbug->h1Wsg[1],  false);
-    loadWsg("h1g0.wsg",  &bigbug->h1Wsg[2],  false);
-    loadWsg("h1g4.wsg",  &bigbug->h1Wsg[3],  false);
-    loadWsg("h1g15.wsg", &bigbug->h1Wsg[4],  false);
-    loadWsg("h1g11.wsg", &bigbug->h1Wsg[5],  false);
-    loadWsg("h1g12.wsg", &bigbug->h1Wsg[6],  false);
-    loadWsg("h1g8.wsg",  &bigbug->h1Wsg[7],  false);
-    loadWsg("h1g2.wsg",  &bigbug->h1Wsg[8],  false);
-    loadWsg("h1g6.wsg",  &bigbug->h1Wsg[9],  false);
-    loadWsg("h1g1.wsg",  &bigbug->h1Wsg[10], false);
-    loadWsg("h1g5.wsg",  &bigbug->h1Wsg[11], false);
-    loadWsg("h1g14.wsg", &bigbug->h1Wsg[12], false);
-    loadWsg("h1g10.wsg", &bigbug->h1Wsg[13], false);
-    loadWsg("h1g13.wsg", &bigbug->h1Wsg[14], false);
-    loadWsg("h1g9.wsg",  &bigbug->h1Wsg[15], false);
+    loadWsg("h1g3.wsg",  &bigbug->h1Wsg[0],  true);
+    loadWsg("h1g7.wsg",  &bigbug->h1Wsg[1],  true);
+    loadWsg("h1g0.wsg",  &bigbug->h1Wsg[2],  true);
+    loadWsg("h1g4.wsg",  &bigbug->h1Wsg[3],  true);
+    loadWsg("h1g15.wsg", &bigbug->h1Wsg[4],  true);
+    loadWsg("h1g11.wsg", &bigbug->h1Wsg[5],  true);
+    loadWsg("h1g12.wsg", &bigbug->h1Wsg[6],  true);
+    loadWsg("h1g8.wsg",  &bigbug->h1Wsg[7],  true);
+    loadWsg("h1g2.wsg",  &bigbug->h1Wsg[8],  true);
+    loadWsg("h1g6.wsg",  &bigbug->h1Wsg[9],  true);
+    loadWsg("h1g1.wsg",  &bigbug->h1Wsg[10], true);
+    loadWsg("h1g5.wsg",  &bigbug->h1Wsg[11], true);
+    loadWsg("h1g14.wsg", &bigbug->h1Wsg[12], true);
+    loadWsg("h1g10.wsg", &bigbug->h1Wsg[13], true);
+    loadWsg("h1g13.wsg", &bigbug->h1Wsg[14], true);
+    loadWsg("h1g9.wsg",  &bigbug->h1Wsg[15], true);
     //hard corners
-    loadWsg("h1g016.wsg", &bigbug->h1Wsg[16], false);
-    loadWsg("h1g017.wsg", &bigbug->h1Wsg[17], false);
-    loadWsg("h1g018.wsg", &bigbug->h1Wsg[18], false);
-    loadWsg("h1g019.wsg", &bigbug->h1Wsg[19], false);
-    loadWsg("h1g020.wsg", &bigbug->h1Wsg[20], false);
-    loadWsg("h1g021.wsg", &bigbug->h1Wsg[21], false);
-    loadWsg("h1g022.wsg", &bigbug->h1Wsg[22], false);
-    loadWsg("h1g023.wsg", &bigbug->h1Wsg[23], false);
-    loadWsg("h1g024.wsg", &bigbug->h1Wsg[24], false);
-    loadWsg("h1g025.wsg", &bigbug->h1Wsg[25], false);
-    loadWsg("h1g026.wsg", &bigbug->h1Wsg[26], false);
-    loadWsg("h1g027.wsg", &bigbug->h1Wsg[27], false);
-    loadWsg("h1g028.wsg", &bigbug->h1Wsg[28], false);
-    loadWsg("h1g029.wsg", &bigbug->h1Wsg[29], false);
-    loadWsg("h1g030.wsg", &bigbug->h1Wsg[30], false);
-    loadWsg("h1g031.wsg", &bigbug->h1Wsg[31], false);
+    loadWsg("h1g016.wsg", &bigbug->h1Wsg[16], true);
+    loadWsg("h1g017.wsg", &bigbug->h1Wsg[17], true);
+    loadWsg("h1g018.wsg", &bigbug->h1Wsg[18], true);
+    loadWsg("h1g019.wsg", &bigbug->h1Wsg[19], true);
+    loadWsg("h1g020.wsg", &bigbug->h1Wsg[20], true);
+    loadWsg("h1g021.wsg", &bigbug->h1Wsg[21], true);
+    loadWsg("h1g022.wsg", &bigbug->h1Wsg[22], true);
+    loadWsg("h1g023.wsg", &bigbug->h1Wsg[23], true);
+    loadWsg("h1g024.wsg", &bigbug->h1Wsg[24], true);
+    loadWsg("h1g025.wsg", &bigbug->h1Wsg[25], true);
+    loadWsg("h1g026.wsg", &bigbug->h1Wsg[26], true);
+    loadWsg("h1g027.wsg", &bigbug->h1Wsg[27], true);
+    loadWsg("h1g028.wsg", &bigbug->h1Wsg[28], true);
+    loadWsg("h1g029.wsg", &bigbug->h1Wsg[29], true);
+    loadWsg("h1g030.wsg", &bigbug->h1Wsg[30], true);
+    loadWsg("h1g031.wsg", &bigbug->h1Wsg[31], true);
 
-    loadWsg("button-outline.wsg", &bigbug->uiWileOutlineWsg, false);
+    loadWsg("button-outline.wsg", &bigbug->uiWileOutlineWsg, true);
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
@@ -893,7 +893,7 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
                 //Mirror garbotnik's velocity
                 // Reflect the velocity vector along the normal
                 // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
-                printf("hit squared speed: %d\n", sqMagVec2d(bigbug->garbotnikVel));
+                printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(bigbug->garbotnikVel));
                 int32_t bounceScalar = sqMagVec2d(bigbug->garbotnikVel)/-11075 + 3;
                 if(bounceScalar > 3){
                     bounceScalar = 3;
