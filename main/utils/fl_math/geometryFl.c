@@ -6,22 +6,30 @@
 /**
  * @brief Check if two circles intersect
  *
- * @param circle1      [IN]  One circle to check for intersection
- * @param circle2      [IN]  The other circle to check for intersection
- * @param collisionVec [OUT] A vector pointing from the second circle to the first in the direction of the collision.
+ * @param circle1        [IN]  One circle to check for intersection, assumed to be moving
+ * @param circle2        [IN]  The other circle to check for intersection, assumed to be fixed
+ * @param collisionPoint [OUT] The point at which the two circles collide, on the circumference of circle2. May be NULL
+ * @param collisionVec   [OUT] A vector pointing from the second circle to the first in the direction of the collision.
  * May be NULL.
  * @return true if the circles intersect or touch, false if they do not
  */
-bool circleCircleFlIntersection(circleFl_t circle1, circleFl_t circle2, vecFl_t* collisionVec)
+bool circleCircleFlIntersection(circleFl_t circle1, circleFl_t circle2, vecFl_t* collisionPoint, vecFl_t* collisionVec)
 {
     float distX   = (circle1.pos.x - circle2.pos.x);
     float distY   = (circle1.pos.y - circle2.pos.y);
     float distRad = (circle1.radius + circle2.radius);
     // Compare distance between centers to the sum of the radii
     bool intersection = ((distX * distX) + (distY * distY)) <= (distRad * distRad);
-    if (intersection && (NULL != collisionVec))
+    if (intersection)
     {
-        *collisionVec = subVecFl2d(circle1.pos, circle2.pos);
+        if (NULL != collisionVec)
+        {
+            *collisionVec = subVecFl2d(circle1.pos, circle2.pos);
+            if (NULL != collisionPoint)
+            {
+                *collisionPoint = addVecFl2d(circle2.pos, mulVecFl2d(normVecFl2d(*collisionVec), circle2.radius));
+            }
+        }
     }
     return intersection;
 }
@@ -181,29 +189,34 @@ bool circleRectFlIntersection(circleFl_t circle, rectangleFl_t rect, vecFl_t* co
  *
  * @param circle       [IN]  A circle to test intersection
  * @param line         [IN]  A line to test intersection
+ * @param checkEnds    [IN]  True to check the points at the end of the line, false to ignore them
  * @param cpOnLine     [OUT] The closest point on the line to the circle
  * @param collisionVec [OUT] A vector pointing from the line to the circle in the direction of the collision. This may
  * be NULL.
  * @return true if the circle intersects the line, false if it doesn't
  */
-bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* cpOnLine, vecFl_t* collisionVec)
+bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, bool checkEnds, vecFl_t* cpOnLine,
+                              vecFl_t* collisionVec)
 {
-    // Check for the line ends
-    if (circlePointFlIntersection(circle, line.p1, collisionVec))
+    if (checkEnds)
     {
-        if (NULL != cpOnLine)
+        // Check for the line ends
+        if (circlePointFlIntersection(circle, line.p1, collisionVec))
         {
-            *cpOnLine = line.p1;
+            if (NULL != cpOnLine)
+            {
+                *cpOnLine = line.p1;
+            }
+            return true;
         }
-        return true;
-    }
-    if (circlePointFlIntersection(circle, line.p2, collisionVec))
-    {
-        if (NULL != cpOnLine)
+        if (circlePointFlIntersection(circle, line.p2, collisionVec))
         {
-            *cpOnLine = line.p2;
+            if (NULL != cpOnLine)
+            {
+                *cpOnLine = line.p2;
+            }
+            return true;
         }
-        return true;
     }
 
     // Get the length of the line

@@ -79,10 +79,20 @@ void createRandomBalls(pinball_t* p, int32_t numBalls)
 void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 {
     int fixedBumpersPlaced = 0;
-    vecFl_t fixedBumpers[] = {{
-        .x = 100,
-        .y = 140,
-    }};
+    vecFl_t fixedBumpers[] = {
+        {
+            .x = 140,
+            .y = 120,
+        },
+        {
+            .x = 100,
+            .y = 80,
+        },
+        {
+            .x = 180,
+            .y = 80,
+        },
+    };
     numBumpers += ARRAY_SIZE(fixedBumpers);
 
     // Don't overflow
@@ -115,7 +125,7 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
         bool intersection = false;
         for (int32_t ol = 0; ol < p->numWalls; ol++)
         {
-            if (circleLineFlIntersection(bumper.c, p->walls[ol].l, NULL, NULL))
+            if (circleLineFlIntersection(bumper.c, p->walls[ol].l, true, NULL, NULL))
             {
                 intersection = true;
                 break;
@@ -124,7 +134,7 @@ void createRandomBumpers(pinball_t* p, int32_t numBumpers)
 
         for (int32_t ob = 0; ob < p->numBumpers; ob++)
         {
-            if (circleCircleFlIntersection(bumper.c, p->bumpers[ob].c, NULL))
+            if (circleCircleFlIntersection(bumper.c, p->bumpers[ob].c, NULL, NULL))
             {
                 intersection = true;
                 break;
@@ -250,7 +260,7 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 
         for (int32_t ob = 0; ob < p->numBumpers; ob++)
         {
-            if (circleLineFlIntersection(p->bumpers[ob].c, pbl.l, NULL, NULL))
+            if (circleLineFlIntersection(p->bumpers[ob].c, pbl.l, true, NULL, NULL))
             {
                 intersection = true;
             }

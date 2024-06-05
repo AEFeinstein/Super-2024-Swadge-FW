@@ -75,10 +75,11 @@ typedef struct
     vecFl_t p2; ///< The other end point of the line segment
 } lineFl_t;
 
-bool circleCircleFlIntersection(circleFl_t circle1, circleFl_t circle2, vecFl_t* collisionVec);
+bool circleCircleFlIntersection(circleFl_t circle1, circleFl_t circle2, vecFl_t* collisionPoint, vecFl_t* collisionVec);
 bool circlePointFlIntersection(circleFl_t circle, vecFl_t point, vecFl_t* collisionVec);
 bool circleRectFlIntersection(circleFl_t circle, rectangleFl_t rect, vecFl_t* collisionVec);
-bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, vecFl_t* cpOnLine, vecFl_t* collisionVec);
+bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, bool checkEnds, vecFl_t* cpOnLine,
+                              vecFl_t* collisionVec);
 int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
                                        vecFl_t* intersection_2);
 bool rectRectFlIntersection(rectangleFl_t rect1, rectangleFl_t rect2, vecFl_t* collisionVec);
