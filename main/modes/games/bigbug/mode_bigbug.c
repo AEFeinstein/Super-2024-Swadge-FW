@@ -59,6 +59,7 @@ typedef struct
     uint16_t btnState;      ///< The button state used for garbotnik control
     bool isPaused;          ///< true if the game is paused, false if it is running
 
+    wsg_t surfaceWsg;     ///< A graphic at the surface of the city dump.
     wsg_t levelWsg;       ///< A graphic representing the level data where tiles are pixels.
     wsg_t dirtWsg;        ///< A graphic for the dirt tile
     wsg_t garbotnikWsg;   ///< A graphic for garbotnik
@@ -97,7 +98,7 @@ static void bigbugControlGarbotnik(int64_t elapsedUs);
 static void bigbugDrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const uint32_t j);
 static void bigbugDrawField(void);
 static void bigbugGameLoop(int64_t elapsedUs);
-static wsg_t* bigbugGetWsgForCoord(const uint32_t i, const uint32_t j);
+static wsg_t (*bigbugGetWsgForCoord(const uint32_t i, const uint32_t j))[32];
 static void bigbugReset(void);
 static void bigbugSetLeds(void);
 static void bigbugUpdatePhysics(int64_t elapsedUs);
@@ -151,10 +152,11 @@ static void bigbugEnterMode(void)
     
 
     // Load graphics
-    loadWsg("level.wsg", &bigbug->levelWsg, false);
+    loadWsg("levelOld.wsg", &bigbug->levelWsg, false);
     loadWsg("dirt.wsg", &bigbug->dirtWsg, false);
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, false);
     loadWsg("trash_background.wsg", &bigbug->caveBackground, false);
+    loadWsg("dumpSurface_small.wsg", &bigbug->surfaceWsg, false);
 
     // TILE MAP shenanigans explained:
     // neigbhbors in LURD order (Left, Up, Down, Right) 1 if dirt, 0 if not
@@ -342,7 +344,7 @@ static void bigbugBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_
     //accelIntegrate(); only needed if using accelerometer for something
     //SETUP_FOR_TURBO(); only needed if drawing individual pixels
 
-    fillDisplayArea(x, y, x + w, y + h, c100);//sonic sky is like c001
+    fillDisplayArea(x, y, x + w, y + h, c455);//sonic sky is like c001
 }
  
 static void bigbugEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
@@ -460,7 +462,7 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
     // }
 }
 
-static wsg_t* bigbugGetWsgForCoord(const uint32_t i, const uint32_t j){
+static wsg_t (*bigbugGetWsgForCoord(const uint32_t i, const uint32_t j))[32]{
     switch(bigbug->levelWsg.px[(j * bigbug->levelWsg.w) + i]){
         case c000:
             return &bigbug->s1Wsg;
@@ -477,16 +479,16 @@ static wsg_t* bigbugGetWsgForCoord(const uint32_t i, const uint32_t j){
 static void bigbugDrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const uint32_t j)
 {
     vec_t tilePos = {
-            .x = i  * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
-            .y = j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS)
+            .x = i  * 64 - bigbug->camera.pos.x,
+            .y = j * 64 - bigbug->camera.pos.y
         };
 
-    wsg_t* tileset = bigbugGetWsgForCoord(i, j);
+    wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
 
-    drawWsgSimpleScaled(&tileset[idx_arr[0]+16], tilePos.x,      tilePos.y,      2, 2);
-    drawWsgSimpleScaled(&tileset[idx_arr[1]+16], tilePos.x + 32, tilePos.y,      2, 2);
-    drawWsgSimpleScaled(&tileset[idx_arr[2]+16], tilePos.x,      tilePos.y + 32, 2, 2);
-    drawWsgSimpleScaled(&tileset[idx_arr[3]+16], tilePos.x + 32, tilePos.y + 32, 2, 2);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[0]+16], tilePos.x,      tilePos.y,      2, 2);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[1]+16], tilePos.x + 32, tilePos.y,      2, 2);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[2]+16], tilePos.x,      tilePos.y + 32, 2, 2);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[3]+16], tilePos.x + 32, tilePos.y + 32, 2, 2);
     
 }
 
@@ -495,35 +497,43 @@ static void bigbugDrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const
  */
 static void bigbugDrawField(void)
 {
-    int32_t offsetX = ((bigbug->camera.pos.x >> DECIMAL_BITS)/2) % 256;
-    int32_t offsetY = ((bigbug->camera.pos.y >> DECIMAL_BITS)/2) % 256;
+    int32_t offsetX = (bigbug->camera.pos.x/2) % 256;
+    int32_t offsetY = (bigbug->camera.pos.y/2) % 256;
 
     offsetX = (offsetX < 0) ? offsetX + 256 : offsetX;
     offsetY = (offsetX < 0) ? offsetY + 256 : offsetY;
 
     for ( int32_t x = -1; x <= TFT_WIDTH / 256 + 1; x++){
+        //needs more optimizaiton FIX ME!!!
+        drawWsgSimple(&bigbug->surfaceWsg,
+                    x * 256 - offsetX,
+                    -128-bigbug->camera.pos.y/2);
         for ( int32_t y = -1; y <= TFT_HEIGHT / 256 + 1; y++){
-            drawWsgSimple(&bigbug->caveBackground,
-                    x * 256 - offsetX,//image width x 4 is 1020
+            if(bigbug->camera.pos.y/2 + y * 256 - offsetY > -1){
+                drawWsgSimple(&bigbug->caveBackground,
+                    x * 256 - offsetX,
                     y * 256 - offsetY);
+            }
         }
     }
 
+    
+
     //printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
     //printf("width: %d\n", FIELD_WIDTH);
-    int16_t iStart = (bigbug->camera.pos.x >> DECIMAL_BITS) / 64;
+    int16_t iStart = bigbug->camera.pos.x / 64;
     int16_t iEnd = iStart + 5;
-    int16_t jStart = (bigbug->camera.pos.y >> DECIMAL_BITS) / 64;
+    int16_t jStart = bigbug->camera.pos.y / 64;
     int16_t jEnd = jStart + 4;
-    if ((bigbug->camera.pos.x >> DECIMAL_BITS) < 0){
+    if (bigbug->camera.pos.x < 0){
         iStart -= 1;
-        if ((bigbug->camera.pos.x  + FIELD_WIDTH) >> DECIMAL_BITS < 0){
+        if (bigbug->camera.pos.x  + FIELD_WIDTH < 0){
             iEnd -= 1;
         }
     }
-    if ((bigbug->camera.pos.y >> DECIMAL_BITS) < 0){
+    if (bigbug->camera.pos.y < 0){
         jStart -= 1;
-        if ((bigbug->camera.pos.y + FIELD_HEIGHT) >> DECIMAL_BITS < 0){
+        if (bigbug->camera.pos.y + FIELD_HEIGHT< 0){
             jEnd -= 1;
         }
     }
@@ -552,7 +562,7 @@ static void bigbugDrawField(void)
             for (int32_t j = jStart; j <= jEnd; j++){
                 // Draw dirt tile
                 if(bigbug->tiles[i][j] >= 1){
-                    //drawWsgTile(&bigbug->dirtWsg, i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS), j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS));
+                    //drawWsgTile(&bigbug->dirtWsg, i * 64 - bigbug->camera.pos.x, j * 64 - bigbug->camera.pos.y);
                     int32_t sprite_idx = 8 * ((i-1 < 0) ? 0 : (bigbug->tiles[i-1][j]>0)) +
                                          4 * ((j-1 < 0) ? 0 : (bigbug->tiles[i][j-1]>0)) +
                                          2 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (bigbug->tiles[i+1][j]>0)) +
@@ -643,16 +653,16 @@ static void bigbugDrawField(void)
                                     break;
                                 case 15: //1111
                                     drawWsgSimpleScaled(&bigbug->m1Wsg[15],
-                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
-                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
+                                                i * 64 - bigbug->camera.pos.x,
+                                                j * 64 - bigbug->camera.pos.y,
                                                 2, 2);
                                     break;
                             }
                             break;
                         default:
-                            drawWsgSimpleScaled(&bigbugGetWsgForCoord(i,j)[sprite_idx],
-                                                i * 64 - (bigbug->camera.pos.x >> DECIMAL_BITS),
-                                                j * 64 - (bigbug->camera.pos.y >> DECIMAL_BITS),
+                            drawWsgSimpleScaled(&(*bigbugGetWsgForCoord(i,j))[sprite_idx],
+                                                i * 64 - bigbug->camera.pos.x,
+                                                j * 64 - bigbug->camera.pos.y,
                                                 2,
                                                 2);
                     }
@@ -670,8 +680,8 @@ static void bigbugDrawField(void)
     // printf("render y: %d\n", (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
 
     // Draw garbotnik
-    drawWsgSimple(&bigbug->garbotnikWsg, ((bigbug->garbotnik.pos.x  - bigbug->camera.pos.x )>> DECIMAL_BITS) - 19,
-                  ((bigbug->garbotnik.pos.y - bigbug->camera.pos.y) >> DECIMAL_BITS) - 21);
+    drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnik.pos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
+                  (bigbug->garbotnik.pos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21);
 
     // Draw UI
     // char buttons[] = {'Z','\0','A','\0','B','\0','C'};
@@ -897,18 +907,18 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
     }
 
     // Update the camera's position to catch up to the player
-    if((bigbug->garbotnik.pos.x - HALF_WIDTH) - bigbug->camera.pos.x<-240){
-        bigbug->camera.pos.x = bigbug->garbotnik.pos.x - HALF_WIDTH + 240;
+    if(((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x<-15){
+        bigbug->camera.pos.x = ((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
     }
-    else if((bigbug->garbotnik.pos.x - HALF_WIDTH) - bigbug->camera.pos.x>240){
-        bigbug->camera.pos.x = bigbug->garbotnik.pos.x - HALF_WIDTH - 240;
+    else if(((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x>15){
+        bigbug->camera.pos.x = ((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
     }
 
-    if((bigbug->garbotnik.pos.y - HALF_HEIGHT) - bigbug->camera.pos.y<-160){
-        bigbug->camera.pos.y = bigbug->garbotnik.pos.y - HALF_HEIGHT + 160;
+    if(((bigbug->garbotnik.pos.y - HALF_HEIGHT)  >> DECIMAL_BITS) - bigbug->camera.pos.y<-10){
+        bigbug->camera.pos.y = ((bigbug->garbotnik.pos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
     }
-    else if((bigbug->garbotnik.pos.y - HALF_HEIGHT) - bigbug->camera.pos.y>160){
-        bigbug->camera.pos.y = bigbug->garbotnik.pos.y - HALF_HEIGHT - 160;
+    else if(((bigbug->garbotnik.pos.y - HALF_HEIGHT)  >> DECIMAL_BITS) - bigbug->camera.pos.y>10){
+        bigbug->camera.pos.y = ((bigbug->garbotnik.pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
     }
 }
 
