@@ -387,6 +387,22 @@ static const uint8_t oscDither[] = {
 #define MS_TO_TICKS(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
 
 
+// Values for the percussion special states bitmap
+#define SHIFT_HI_HAT (0)
+#define SHIFT_WHISTLE (6)
+#define SHIFT_GUIRO (12)
+#define SHIFT_CUICA (18)
+#define SHIFT_TRIANGLE (24)
+
+#define MASK_HI_HAT (0x3F)
+#define MASK_WHISTLE (0x3F << SHIFT_WHISTLE)
+#define MASK_GUIRO (0x3F << SHIFT_GUIRO)
+#define MASK_CUICA (0x3F << SHIFT_CUICA)
+#define MASK_TRIANGLE (0x3F << SHIFT_TRIANGLE)
+
+#define VOICE_FREE (0x3F)
+
+
 static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t voiceCount);
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel);
 static void midiGmOn(midiPlayer_t* player);
@@ -597,6 +613,47 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
 
         if (done)
         {
+            switch (voices[voiceIdx].note)
+            {
+                case CLOSED_HI_HAT:
+                case PEDAL_HI_HAT:
+                case OPEN_HI_HAT:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_HI_HAT;
+                    break;
+                }
+
+                case SHORT_WHISTLE:
+                case LONG_WHISTLE:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_WHISTLE;
+                    break;
+                }
+
+                case SHORT_GUIRO:
+                case LONG_GUIRO:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_GUIRO;
+                    break;
+                }
+
+                case MUTE_CUICA:
+                case OPEN_CUICA:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_CUICA;
+                    break;
+                }
+
+                case MUTE_TRIANGLE:
+                case OPEN_TRIANGLE:
+                {
+                    player->percSpecialStates |= VOICE_FREE << SHIFT_TRIANGLE;
+                    break;
+                }
+
+                default: break;
+            }
+
             states->on &= ~(1 << voiceIdx);
             voices[voiceIdx].sampleTick = 0;
             memset(voices[voiceIdx].percScratch, 0, 4 * sizeof(uint32_t));
@@ -794,6 +851,9 @@ void midiPlayerInit(midiPlayer_t* player)
     // 120 BPM == 500,000 microseconds per quarter note
     player->tempo = 500000;
 
+    // Set all the relevant bits to 1, meaning not in use
+    player->percSpecialStates = 0b00111111111111111111111111111111;
+
     midiGmOn(player);
 }
 
@@ -942,6 +1002,94 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
     uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
     uint32_t voiceIdx = (chan->timbre.flags & TF_MONO) ? 0 : allocVoice(player, states, voiceCount);
+
+    if (chan->percussion)
+    {
+        // handle special cases for percussion instruments
+        // this will check if a mutually exclusive note is already playing on a voice and cut it off with the new one
+        switch (note)
+        {
+            case CLOSED_HI_HAT:
+            case PEDAL_HI_HAT:
+            case OPEN_HI_HAT:
+            {
+                uint8_t hiHatVoice = player->percSpecialStates & MASK_HI_HAT;
+                if (hiHatVoice != VOICE_FREE)
+                {
+                    voiceIdx = hiHatVoice;
+                }
+                else
+                {
+                    player->percSpecialStates = (player->percSpecialStates & ~MASK_HI_HAT) | (voiceIdx << SHIFT_HI_HAT);
+                }
+                break;
+            }
+
+            case SHORT_WHISTLE:
+            case LONG_WHISTLE:
+            {
+                uint8_t whistleVoice = (player->percSpecialStates & MASK_WHISTLE) >> SHIFT_WHISTLE;
+                if (whistleVoice != VOICE_FREE)
+                {
+                    voiceIdx = whistleVoice;
+                }
+                else
+                {
+                    player->percSpecialStates = (player->percSpecialStates & ~MASK_WHISTLE) | (voiceIdx << SHIFT_WHISTLE);
+                }
+                break;
+            }
+
+            case SHORT_GUIRO:
+            case LONG_GUIRO:
+            {
+                uint8_t guiroVoice = (player->percSpecialStates & MASK_GUIRO) >> SHIFT_GUIRO;
+                if (guiroVoice != VOICE_FREE)
+                {
+                    voiceIdx = guiroVoice;
+                }
+                else
+                {
+                    player->percSpecialStates = (player->percSpecialStates & ~MASK_GUIRO) | (voiceIdx << SHIFT_GUIRO);
+                }
+                break;
+            }
+
+            case MUTE_CUICA:
+            case OPEN_CUICA:
+            {
+                uint8_t cuicaVoice = (player->percSpecialStates & MASK_CUICA) >> SHIFT_CUICA;
+                if (cuicaVoice != VOICE_FREE)
+                {
+                    voiceIdx = cuicaVoice;
+                }
+                else
+                {
+                    player->percSpecialStates = (player->percSpecialStates & ~MASK_CUICA) | (voiceIdx << SHIFT_CUICA);
+                }
+                break;
+            }
+
+            case MUTE_TRIANGLE:
+            case OPEN_TRIANGLE:
+            {
+                uint8_t triangleVoice = (player->percSpecialStates & MASK_TRIANGLE) >> SHIFT_TRIANGLE;
+                if (triangleVoice != VOICE_FREE)
+                {
+                    voiceIdx = triangleVoice;
+                }
+                else
+                {
+                    player->percSpecialStates = (player->percSpecialStates & ~MASK_TRIANGLE) | (voiceIdx << SHIFT_TRIANGLE);
+                }
+                break;
+            }
+
+            default: break;
+        }
+
+        // Handle the rest of the percussion notes normally, or handle the case where there was no conflict
+    }
 
     if (voiceIdx >= voiceCount)
     {

@@ -336,6 +336,11 @@ typedef struct
     /// @brief The percussion voice state bitmap
     voiceStates_t percVoiceStates;
 
+    /// @brief A bitmap to track which percussion voices have special notes playing
+    /// This includes all 3 hi-hats (open, closed, and pedal), short and long whistle and guiro,
+    /// and mute and open cuica and triangle. This is 5 states bitpacked into 6 bits each.
+    uint32_t percSpecialStates;
+
     /// @brief An array holding a pointer to every oscillator
     synthOscillator_t* allOscillators[(MIDI_CHANNEL_COUNT * VOICE_PER_CHANNEL + PERCUSSION_VOICES) * OSC_PER_VOICE];
 
