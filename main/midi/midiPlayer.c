@@ -898,7 +898,7 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
         sample += midiSumPercussion(player);
 
         // multiply by the rock constant, very important
-        sample *= 0x6666;
+        sample *= 0x4ccd;
         sample >>= 16;
 
         if (sample < -128)
