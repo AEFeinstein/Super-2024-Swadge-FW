@@ -186,11 +186,11 @@ void createRandomWalls(pinball_t* p, int32_t numWalls)
 
         {
             .p1 = {.x = 0, .y = 120},
-            .p2 = {.x = 94, .y = 190},
+            .p2 = {.x = 94, .y = 188},
         },
         {
             .p1 = {.x = 279, .y = 120},
-            .p2 = {.x = 186, .y = 190},
+            .p2 = {.x = 186, .y = 188},
         },
     };
 

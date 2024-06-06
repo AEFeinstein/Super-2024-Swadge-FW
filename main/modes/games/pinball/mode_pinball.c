@@ -76,7 +76,9 @@ static void pinEnterMode(void)
 
     // Create random balls
     createRandomBalls(pinball, 0);
-    pbCreateBall(pinball, 12, 6);
+    pbCreateBall(pinball, 6, 114);
+    pbCreateBall(pinball, 274, 114);
+    pbCreateBall(pinball, 135, 10);
 
     // Create random bumpers
     createRandomBumpers(pinball, 0);
@@ -85,7 +87,7 @@ static void pinEnterMode(void)
     createRandomWalls(pinball, 0);
 
     // Create flippers
-    createFlipper(pinball, TFT_WIDTH / 2 - 50, 200, true);
+    // createFlipper(pinball, TFT_WIDTH / 2 - 50, 200, true);
     createFlipper(pinball, TFT_WIDTH / 2 + 50, 200, false);
 
     // Load font

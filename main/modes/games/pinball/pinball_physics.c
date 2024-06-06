@@ -25,6 +25,9 @@ pbShapeType_t ballIsTouching(pbTouchRef_t* ballTouching, const void* obj);
 
 void checkBallsAtRest(pinball_t* p);
 
+void moveBallBackFromLine(pbCircle_t* ball, pbLine_t* line, vecFl_t* collisionVec);
+void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed);
+
 //==============================================================================
 // Functions
 //==============================================================================
@@ -172,7 +175,8 @@ bool checkBallPbCircleCollision(pbCircle_t* ball, pbCircle_t* circle, pbTouchRef
         }
 
         // Move ball back to not clip into the circle
-        ball->c.pos = addVecFl2d(circle->c.pos, mulVecFl2d(reflVec, ball->c.radius + circle->c.radius - EPSILON));
+        moveBallBackFromCircle(ball, circle);
+        // ball->c.pos = addVecFl2d(circle->c.pos, mulVecFl2d(reflVec, ball->c.radius + circle->c.radius - EPSILON));
     }
     return bounced;
 }
@@ -220,7 +224,9 @@ bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* to
         }
 
         // Move ball back to not clip into the bumper
-        ball->c.pos = addVecFl2d(cpOnLine, mulVecFl2d(reflVec, ball->c.radius - EPSILON));
+        // TODO accommodate line end collisions (circle)
+        moveBallBackFromLine(ball, line, &reflVec);
+        // ball->c.pos = addVecFl2d(cpOnLine, mulVecFl2d(reflVec, ball->c.radius - EPSILON));
     }
     return bounced;
 }
@@ -337,25 +343,31 @@ void sweepCheckFlippers(pinball_t* p)
                 if (circleLineFlIntersection(ball->c, flipper->sideL.l, false, &colPoint, &colVec))
                 {
                     // Move ball back to not clip into the flipper
-                    ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
+                    colVec = normVecFl2d(colVec);
+                    moveBallBackFromLine(ball, &flipper->sideL, &colVec);
+                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
                     touching    = true;
                 }
                 if (circleLineFlIntersection(ball->c, flipper->sideR.l, false, &colPoint, &colVec))
                 {
                     // Move ball back to not clip into the flipper
-                    ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
+                    colVec = normVecFl2d(colVec);
+                    moveBallBackFromLine(ball, &flipper->sideR, &colVec);
+                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
                     touching    = true;
                 }
                 if (circleCircleFlIntersection(ball->c, flipper->cPivot.c, &colPoint, &colVec))
                 {
                     // Move ball back to not clip into the flipper
-                    ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
+                    moveBallBackFromCircle(ball, &flipper->cPivot);
+                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
                     touching    = true;
                 }
                 if (circleCircleFlIntersection(ball->c, flipper->cTip.c, &colPoint, &colVec))
                 {
                     // Move ball back to not clip into the flipper
-                    ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
+                    moveBallBackFromCircle(ball, &flipper->cTip);
+                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
                     touching    = true;
                 }
 
@@ -660,4 +672,89 @@ void updateFlipperPos(pinball_t* p, pbFlipper_t* f)
 
     // The flipper's zone is all zones combined
     f->zoneMask = (f->cPivot.zoneMask | f->cTip.zoneMask | f->sideL.zoneMask | f->sideR.zoneMask);
+}
+
+/**
+ * @brief TODO
+ *
+ * see
+ * https://github.com/AEFeinstein/Super-2024-Swadge-FW/blob/4d7d41d9ab0e3a7670a967a0a4cd72364a8c39ac/main/modes/pinball/pinball_physics.c
+ *
+ * @param ball
+ * @param line
+ * @param collisionVec
+ */
+void moveBallBackFromLine(pbCircle_t* ball, pbLine_t* line, vecFl_t* collisionNorm)
+{
+    // Do a bunch of work to adjust the ball's position to not clip into this line.
+    // First create a copy of the line
+    lineFl_t barrierLine = line->l;
+
+    // Then find the normal vector to the barrier, pointed towards the ball
+    vecFl_t barrierOffset = mulVecFl2d(*collisionNorm, ball->c.radius);
+
+    // Translate the along the normal vector, the distance of the radius
+    // This creates a line parallel to the wall where the ball's center could be
+    barrierLine.p1 = addVecFl2d(barrierLine.p1, barrierOffset);
+    barrierLine.p2 = addVecFl2d(barrierLine.p2, barrierOffset);
+
+    // Create a line for the ball's motion
+    lineFl_t ballLine = {
+        .p1 = ball->c.pos,
+        .p2 = addVecFl2d(ball->c.pos, ball->vel),
+    };
+
+    // Find the intersection between where the ball's center could be and the ball's trajectory.
+    // Set the ball's position to that point
+    ball->c.pos = infLineIntersectionPoint(barrierLine, ballLine);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ball
+ * @param fixed
+ */
+void moveBallBackFromCircle(pbCircle_t* ball, pbCircle_t* fixed)
+{
+    // Create a barrier circle around the fixed that the ball's center can't pass through
+    circleFl_t barrier = fixed->c;
+    barrier.radius += ball->c.radius;
+
+    // Create a line for the ball's motion
+    lineFl_t ballLine = {
+        .p1 = ball->c.pos,
+        .p2 = addVecFl2d(ball->c.pos, ball->vel),
+    };
+
+    vecFl_t intersection_1;
+    vecFl_t intersection_2;
+    switch (circleLineFlIntersectionPoints(barrier, ballLine, &intersection_1, &intersection_2))
+    {
+        default:
+        case 0:
+        {
+            // No intersection?
+            break;
+        }
+        case 1:
+        {
+            ball->c.pos = intersection_1;
+            break;
+        }
+        case 2:
+        {
+            // Two intersection points, use the one closer to ball->c.pos
+            float diff1 = sqMagVecFl2d(subVecFl2d(ball->c.pos, intersection_1));
+            float diff2 = sqMagVecFl2d(subVecFl2d(ball->c.pos, intersection_2));
+            if (diff1 < diff2)
+            {
+                ball->c.pos = intersection_1;
+            }
+            else
+            {
+                ball->c.pos = intersection_2;
+            }
+        }
+    }
 }
