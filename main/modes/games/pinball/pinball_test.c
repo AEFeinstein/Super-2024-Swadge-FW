@@ -301,11 +301,11 @@ void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, bool facingRi
     // Update angle and position after setting zone
     if (f->facingRight)
     {
-        f->angle = M_PI_2f + FLIPPER_DOWN_ANGLE;
+        f->angle = M_PI_2 + FLIPPER_DOWN_ANGLE;
     }
     else
     {
-        f->angle = M_PIf + M_PI_2f - FLIPPER_DOWN_ANGLE;
+        f->angle = M_PI + M_PI_2 - FLIPPER_DOWN_ANGLE;
     }
     updateFlipperPos(p, f);
 

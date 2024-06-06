@@ -44,7 +44,7 @@
 #include <float.h>
 #include "vectorFl2d.h"
 
-#define EPS 0.0001f
+#define EPSILON 0.0001f
 
 /**
  * @brief Signed integer representation of a circle

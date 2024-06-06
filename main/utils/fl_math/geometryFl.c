@@ -308,12 +308,12 @@ int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t
     {
         // circle & vertical line intersection
         float x = tLine.p1.x;
-        if (x > r)
+        if (x - r > EPSILON)
         {
             // No intersection
             return 0;
         }
-        else if (x == r)
+        else if (fabsf(x - r) < EPSILON)
         {
             // One point
             intersection_1->x = x;
@@ -350,12 +350,12 @@ int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t
 
         float x0 = -a * c / ab2;
         float y0 = -b * c / ab2;
-        if (c2 > r2 * ab2 + EPS)
+        if (c2 > r2 * ab2 + EPSILON)
         {
             // no points
             return 0;
         }
-        else if (fabsf(c2 - r2 * ab2) < EPS)
+        else if (fabsf(c2 - r2 * ab2) < EPSILON)
         {
             // One point
             intersection_1->x = x0;

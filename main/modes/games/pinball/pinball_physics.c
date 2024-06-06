@@ -6,8 +6,6 @@
 #include "pinball_physics.h"
 #include "pinball_zones.h"
 
-#define EPSILON 0.001f
-
 //==============================================================================
 // Function Declarations
 //==============================================================================
@@ -274,39 +272,39 @@ void sweepCheckFlippers(pinball_t* p)
         // Check if the flipper should be moving based on the button state
         if (flipper->buttonHeld)
         {
-            if (flipper->facingRight && flipper->angle > (M_PI_2f - FLIPPER_UP_ANGLE))
+            if (flipper->facingRight && flipper->angle > (M_PI_2 - FLIPPER_UP_ANGLE))
             {
                 sweepEnd = flipper->angle - FLIPPER_UP_DEGREES_PER_FRAME;
-                if (sweepEnd < M_PI_2f - FLIPPER_UP_ANGLE)
+                if (sweepEnd < M_PI_2 - FLIPPER_UP_ANGLE)
                 {
-                    sweepEnd = M_PI_2f - FLIPPER_UP_ANGLE;
+                    sweepEnd = M_PI_2 - FLIPPER_UP_ANGLE;
                 }
             }
-            else if (!flipper->facingRight && flipper->angle < (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
+            else if (!flipper->facingRight && flipper->angle < (M_PI + M_PI_2) + FLIPPER_UP_ANGLE)
             {
                 sweepEnd = flipper->angle + FLIPPER_UP_DEGREES_PER_FRAME;
-                if (sweepEnd > (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE)
+                if (sweepEnd > (M_PI + M_PI_2) + FLIPPER_UP_ANGLE)
                 {
-                    sweepEnd = (M_PIf + M_PI_2f) + FLIPPER_UP_ANGLE;
+                    sweepEnd = (M_PI + M_PI_2) + FLIPPER_UP_ANGLE;
                 }
             }
         }
         else
         {
-            if (flipper->facingRight && flipper->angle < (M_PI_2f + FLIPPER_DOWN_ANGLE))
+            if (flipper->facingRight && flipper->angle < (M_PI_2 + FLIPPER_DOWN_ANGLE))
             {
                 sweepEnd = flipper->angle + FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (sweepEnd > (M_PI_2f + FLIPPER_DOWN_ANGLE))
+                if (sweepEnd > (M_PI_2 + FLIPPER_DOWN_ANGLE))
                 {
-                    sweepEnd = (M_PI_2f + FLIPPER_DOWN_ANGLE);
+                    sweepEnd = (M_PI_2 + FLIPPER_DOWN_ANGLE);
                 }
             }
-            else if (!flipper->facingRight && flipper->angle > (M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE)
+            else if (!flipper->facingRight && flipper->angle > (M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE)
             {
                 sweepEnd = flipper->angle - FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (sweepEnd < ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE))
+                if (sweepEnd < ((M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE))
                 {
-                    sweepEnd = ((M_PIf + M_PI_2f) - FLIPPER_DOWN_ANGLE);
+                    sweepEnd = ((M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE);
                 }
             }
         }
@@ -595,11 +593,11 @@ void updateFlipperPos(pinball_t* p, pbFlipper_t* f)
     // Make sure the angle is between 0 and 360
     while (f->angle < 0)
     {
-        f->angle += (2 * M_PIf);
+        f->angle += (2 * M_PI);
     }
-    while (f->angle >= (2 * M_PIf))
+    while (f->angle >= (2 * M_PI))
     {
-        f->angle -= (2 * M_PIf);
+        f->angle -= (2 * M_PI);
     }
 
     // This is the set of points to rotate
