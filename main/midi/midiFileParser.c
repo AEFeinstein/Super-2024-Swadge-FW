@@ -185,25 +185,37 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
     uint8_t status = *(track->cur++);
 
     // Handle running status
-    if (!(status & 0xF0))
+    if (status > 0xF7)
     {
-        if (!track->runningStatus)
-        {
-            // No running status set, so something is malformed
-            ERR();
-        }
-
-        // Set status to the real value
-        status = track->runningStatus;
-
-        // Un-read that byte!
-        // I'm not going to check if (track->cur > track->data) because how else would runningStatus be set?
-        track->cur--;
+        // System Realtime messages do not affect running status at all
+    }
+    else if (0xF0 <= status && status <= 0xF7)
+    {
+        // System Common messages clear the running status
+        track->runningStatus = 0;
+    }
+    else if (0x80 <= status && status <= 0xEF)
+    {
+        // Voice Messages set the running status
+        track->runningStatus = status;
     }
     else
     {
-        track->runningStatus = status;
+        // Anything else means we should use the previous running status, since this 'status' is actually data
+        if (!track->runningStatus)
+        {
+            // If there's no running status then this is just invalid data
+            ESP_LOGE("MIDIParser", "No running status set and unknown status given (status=0x%02" PRIx8 ")", status);
+            ERR();
+        }
+        else
+        {
+            // Use the previous running status, and back up one byte
+            status = track->runningStatus;
+            track->cur--;
+        }
     }
+    // Now that running status is resolved, handle the status
 
     // If the top nibble is set, this is a status
     switch (status & 0xF0)
@@ -480,7 +492,11 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
                         break;
                     }
 
-                    default: break;
+                    default:
+                    {
+                        ESP_LOGE("MIDIParser", "Unknown meta-event %02" PRIx8, metaType);
+                        break;
+                    }
                 }
 
                 track->cur += metaLength;
@@ -555,6 +571,7 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
             }
             else
             {
+                ESP_LOGE("MIDIParser", "Unknown status byte (0xF_) 0x%02" PRIx8, status);
                 // Ignore unknown?
             }
             break;
@@ -562,6 +579,7 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
 
         default:
         {
+            ESP_LOGE("MIDIParser", "Unknown status byte (?) 0x%02" PRIx8, status);
             ERR();
         }
     }
