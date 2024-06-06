@@ -397,9 +397,13 @@ static void synthEnterMode(void)
     sd->pitch = 0x2000;
     sd->longestProgramName = gmProgramNames[24];
 
-    loadMidiFile(&sd->midiFileReader, "all_star.midi", false);
-    midiSetFile(&sd->midiPlayer, &sd->midiFileReader);
     sd->fileMode = true;
+    if (sd->fileMode)
+    {
+        loadMidiFile(&sd->midiFileReader, "all_star.midi", false);
+        //sd->midiPlayer.textMessageCallback = midiTextCallback;
+        midiSetFile(&sd->midiPlayer, &sd->midiFileReader);
+    }
 
     loadWsg("piano.wsg", &sd->instrumentImages[0], false);
     loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], false);
@@ -583,7 +587,7 @@ static void synthMainLoop(int64_t elapsedUs)
         drawLineFast(0, TFT_HEIGHT / 2, 16 * getCos1024(deg) / 1024, TFT_HEIGHT / 2 - (16 * getSin1024(deg) / 1024), c500);
 
         char tempoStr[16];
-        snprintf(tempoStr, sizeof(tempoStr), "%d BPM", (60000000 / sd->midiPlayer.tempo));
+        snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", (60000000 / sd->midiPlayer.tempo));
         drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 15, (TFT_HEIGHT - sd->font.height) / 2);
     }
     else
