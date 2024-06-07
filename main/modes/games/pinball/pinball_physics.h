@@ -12,5 +12,5 @@
 #define FLIPPER_UP_ANGLE   0.349065850398866f ///< Angle of a flipper (20) when actuated
 #define FLIPPER_DOWN_ANGLE 0.523598775598299f ///< Angle of a flipper (30) when idle
 
-void updateFlipperPos(pinball_t* p, pbFlipper_t* f);
+void updateFlipperPos(pbFlipper_t* f);
 void updatePinballPhysicsFrame(pinball_t* p);

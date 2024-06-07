@@ -327,6 +327,7 @@ void sweepCheckFlippers(pinball_t* p)
         else
         {
             // Flipper in motion
+            // TODO large sweep steps kill framerate....
             numSteps  = 8;
             sweepStep = (sweepEnd - sweepStart) / (float)numSteps;
         }
@@ -336,7 +337,7 @@ void sweepCheckFlippers(pinball_t* p)
         {
             // Sweep the flipper a little
             flipper->angle += sweepStep;
-            updateFlipperPos(p, flipper);
+            updateFlipperPos(flipper);
 
             // Normal collision checks
             // For each ball, check collisions with flippers objects
@@ -346,60 +347,67 @@ void sweepCheckFlippers(pinball_t* p)
                 pbCircle_t* ball       = &p->balls[bIdx];
                 pbTouchRef_t* touchRef = p->ballsTouching[bIdx];
 
-                // Check if the ball is touching any part of the flipper
-                bool touching = false;
-                vecFl_t colPoint, colVec;
-                if (circleLineFlIntersection(ball->c, flipper->sideL.l, false, &colPoint, &colVec))
+                if (ball->zoneMask & flipper->zoneMask)
                 {
-                    // Move ball back to not clip into the flipper
-                    colVec = normVecFl2d(colVec);
-                    moveBallBackFromLine(ball, &flipper->sideL, &colVec);
-                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching = true;
-                }
-                if (circleLineFlIntersection(ball->c, flipper->sideR.l, false, &colPoint, &colVec))
-                {
-                    // Move ball back to not clip into the flipper
-                    colVec = normVecFl2d(colVec);
-                    moveBallBackFromLine(ball, &flipper->sideR, &colVec);
-                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching = true;
-                }
-                if (circleCircleFlIntersection(ball->c, flipper->cPivot.c, &colPoint, &colVec))
-                {
-                    // Move ball back to not clip into the flipper
-                    moveBallBackFromCircle(ball, &flipper->cPivot);
-                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching = true;
-                }
-                if (circleCircleFlIntersection(ball->c, flipper->cTip.c, &colPoint, &colVec))
-                {
-                    // Move ball back to not clip into the flipper
-                    moveBallBackFromCircle(ball, &flipper->cTip);
-                    // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching = true;
-                }
-
-                // If the ball is touching the flipper for the first time
-                if (touching && (PIN_NO_SHAPE == ballIsTouching(touchRef, flipper)))
-                {
-                    // Mark them as in contact
-                    setBallTouching(touchRef, flipper, PIN_FLIPPER);
-
-                    // Bounce the ball
-                    vecFl_t reflVec = normVecFl2d(colVec);
-                    ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
-
-                    // If the flipper is in motion
-                    if (0 != angularVel)
+                    // Check if the ball is touching any part of the flipper
+                    bool touching = false;
+                    vecFl_t colPoint, colVec;
+                    if (circleLineFlIntersection(ball->c, flipper->sideL.l, false, &colPoint, &colVec))
                     {
-                        // Get the distance between the pivot and the ball
-                        float dist = magVecFl2d(subVecFl2d(flipper->cPivot.c.pos, ball->c.pos));
-                        // Convert angular velocity of the flipper to linear velocity at that point
-                        float impulseMag = (ABS(angularVel) * dist);
+                        // Move ball back to not clip into the flipper
+                        colVec = normVecFl2d(colVec);
+                        moveBallBackFromLine(ball, &flipper->sideL, &colVec);
+                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
+                        // EPSILON));
+                        touching = true;
+                    }
+                    if (circleLineFlIntersection(ball->c, flipper->sideR.l, false, &colPoint, &colVec))
+                    {
+                        // Move ball back to not clip into the flipper
+                        colVec = normVecFl2d(colVec);
+                        moveBallBackFromLine(ball, &flipper->sideR, &colVec);
+                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
+                        // EPSILON));
+                        touching = true;
+                    }
+                    if (circleCircleFlIntersection(ball->c, flipper->cPivot.c, &colPoint, &colVec))
+                    {
+                        // Move ball back to not clip into the flipper
+                        moveBallBackFromCircle(ball, &flipper->cPivot);
+                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
+                        // EPSILON));
+                        touching = true;
+                    }
+                    if (circleCircleFlIntersection(ball->c, flipper->cTip.c, &colPoint, &colVec))
+                    {
+                        // Move ball back to not clip into the flipper
+                        moveBallBackFromCircle(ball, &flipper->cTip);
+                        // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius -
+                        // EPSILON));
+                        touching = true;
+                    }
 
-                        // Impart an impulse on the ball along the collision normal
-                        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(reflVec, impulseMag));
+                    // If the ball is touching the flipper for the first time
+                    if (touching && (PIN_NO_SHAPE == ballIsTouching(touchRef, flipper)))
+                    {
+                        // Mark them as in contact
+                        setBallTouching(touchRef, flipper, PIN_FLIPPER);
+
+                        // Bounce the ball
+                        vecFl_t reflVec = normVecFl2d(colVec);
+                        ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
+
+                        // If the flipper is in motion
+                        if (0 != angularVel)
+                        {
+                            // Get the distance between the pivot and the ball
+                            float dist = magVecFl2d(subVecFl2d(flipper->cPivot.c.pos, ball->c.pos));
+                            // Convert angular velocity of the flipper to linear velocity at that point
+                            float impulseMag = (ABS(angularVel) * dist);
+
+                            // Impart an impulse on the ball along the collision normal
+                            ball->vel = addVecFl2d(ball->vel, mulVecFl2d(reflVec, impulseMag));
+                        }
                     }
                 }
             }
@@ -609,7 +617,7 @@ void checkBallsAtRest(pinball_t* p)
  *
  * @param f The flipper to update
  */
-void updateFlipperPos(pinball_t* p, pbFlipper_t* f)
+void updateFlipperPos(pbFlipper_t* f)
 {
     // Make sure the angle is between 0 and 360
     while (f->angle < 0)
@@ -656,8 +664,8 @@ void updateFlipperPos(pinball_t* p, pbFlipper_t* f)
     };
 
     // Get the trig values for all rotations, just once
-    float sinA = sin(f->angle);
-    float cosA = cos(f->angle);
+    float sinA = sinf(f->angle);
+    float cosA = cosf(f->angle);
 
     // For each point
     for (int32_t idx = 0; idx < ARRAY_SIZE(points); idx++)
@@ -672,15 +680,6 @@ void updateFlipperPos(pinball_t* p, pbFlipper_t* f)
         dests[idx]->x = f->cPivot.c.pos.x + newX;
         dests[idx]->y = f->cPivot.c.pos.y + newY;
     }
-
-    // Update zones
-    f->cPivot.zoneMask = pinZoneCircle(p, f->cPivot);
-    f->cTip.zoneMask   = pinZoneCircle(p, f->cTip);
-    f->sideL.zoneMask  = pinZoneLine(p, f->sideL);
-    f->sideR.zoneMask  = pinZoneLine(p, f->sideR);
-
-    // The flipper's zone is all zones combined
-    f->zoneMask = (f->cPivot.zoneMask | f->cTip.zoneMask | f->sideL.zoneMask | f->sideR.zoneMask);
 }
 
 /**

@@ -298,6 +298,8 @@ void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, bool facingRi
     f->cTip.c.radius   = 5;
     f->facingRight     = facingRight;
 
+    f->zoneMask = pinZoneFlipper(p, f);
+
     // Update angle and position after setting zone
     if (f->facingRight)
     {
@@ -307,7 +309,7 @@ void createFlipper(pinball_t* p, int32_t pivot_x, int32_t pivot_y, bool facingRi
     {
         f->angle = M_PI + M_PI_2 - FLIPPER_DOWN_ANGLE;
     }
-    updateFlipperPos(p, f);
+    updateFlipperPos(f);
 
     // Update flipper count
     p->numFlippers++;

@@ -2,6 +2,7 @@
 // Includes
 //==============================================================================
 
+#include <math.h>
 #include "pinball_zones.h"
 #include "pinball_physics.h"
 
@@ -136,4 +137,42 @@ uint32_t pinZoneCircle(pinball_t* p, pbCircle_t circ)
         }
     }
     return zoneMask;
+}
+
+/**
+ * @brief Determine which table zones a flipper is in. Note, this function will modify the flipper's angle
+ *
+ * @param p The pinball state
+ * @param f The flipper to zone
+ * @return A bitmask of the zones the circle is in
+ */
+uint32_t pinZoneFlipper(pinball_t* p, pbFlipper_t* f)
+{
+    pbRect_t boundingBox = {0};
+    if (f->facingRight)
+    {
+        // Record the X position
+        boundingBox.r.pos.x = (f->cPivot.c.pos.x - f->cPivot.c.radius);
+    }
+    else
+    {
+        // Record the X position
+        boundingBox.r.pos.x = (f->cPivot.c.pos.x - f->length - f->cTip.c.radius);
+    }
+
+    // Width is the same when facing left and right
+    boundingBox.r.width = (f->length + f->cPivot.c.radius + f->cTip.c.radius);
+
+    // Height is the same too. Move the flipper up and record the Y start
+    f->angle = M_PI_2 - FLIPPER_UP_ANGLE;
+    updateFlipperPos(f);
+    boundingBox.r.pos.y = (f->cTip.c.pos.y - f->cTip.c.radius);
+
+    // Move the flipper down and record the Y end
+    f->angle = M_PI_2 + FLIPPER_DOWN_ANGLE;
+    updateFlipperPos(f);
+    boundingBox.r.height = (f->cTip.c.pos.y + f->cTip.c.radius) - boundingBox.r.pos.y;
+
+    // Return the zones of the bounding box
+    return pinZoneRect(p, boundingBox);
 }
