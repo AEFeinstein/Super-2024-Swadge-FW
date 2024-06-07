@@ -605,7 +605,7 @@ paEntity_t* createPowerUp(paEntityManager_t* entityManager, uint16_t x, uint16_t
     entity->spriteFlipVertical   = false;
 
     entity->type                 = ENTITY_POWERUP;
-    entity->spriteIndex          = (entityManager->playerEntity->hp < 2) ? SP_GAMING_1 : SP_MUSIC_1;
+    entity->spriteIndex          = (entityManager->playerEntity->hp < 2) ? 0 : 1;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updatePowerUp;
     entity->collisionHandler     = &powerUpCollisionHandler;

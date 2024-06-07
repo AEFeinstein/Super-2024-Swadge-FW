@@ -270,9 +270,54 @@ void pa_updatePlayer(paEntity_t* self)
 
 void updateTestObject(paEntity_t* self)
 {
-    if (self->gameData->frameCount % 10 == 0)
+    /*if (self->gameData->frameCount % 10 == 0)
     {
         self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
+    }*/
+
+    if (abs(self->xspeed) > abs(self->yspeed))
+    {
+        if ((self->xspeed < 0)
+            || (self->xspeed > 0))
+        {
+            // Running
+            self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
+
+            if (self->gameData->frameCount % 7 == 0)
+            {
+                self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2);
+                self->facingDirection = !self->spriteFlipHorizontal;
+            }
+        }
+        else
+        {
+            //self->spriteIndex = SP_PLAYER_SLIDE;
+        }
+    }
+    else if (self->yspeed > 0){
+        if (self->yspeed > 0){
+            if (self->gameData->frameCount % 7 == 0)
+            {
+                self->spriteIndex = PA_SP_ENEMY_SOUTH + ((self->spriteIndex + 1) % 2);
+                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                self->facingDirection = PA_DIRECTION_DOWN;
+            }
+        }
+    }
+     else if (self->yspeed < 0){
+        if (self->yspeed < 0){
+            if (self->gameData->frameCount % 7 == 0)
+            {
+                self->spriteIndex = PA_SP_ENEMY_NORTH + ((self->spriteIndex + 1) % 2);
+                self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
+                self->facingDirection = PA_DIRECTION_UP;
+            }
+        }
+    }
+    else
+    {
+        // Standing
+        //self->spriteIndex = PA_SP_PLAYER_SOUTH;
     }
 
     despawnWhenOffscreen(self);
@@ -1091,7 +1136,7 @@ void updatePowerUp(paEntity_t* self)
     if (self->gameData->frameCount % 10 == 0)
     {
         self->spriteIndex
-            = ((self->entityManager->playerEntity->hp < 2) ? SP_GAMING_1 : SP_MUSIC_1) + ((self->spriteIndex + 1) % 3);
+            = ((self->entityManager->playerEntity->hp < 2) ? 0 : 1) + ((self->spriteIndex + 1) % 3);
     }
 
     pa_moveEntityWithTileCollisions(self);
@@ -1150,7 +1195,7 @@ void updateDustBunny(paEntity_t* self)
                     self->falling              = true;
                     self->xDamping             = 1;
                     self->yDamping             = (1 + esp_random() % 3) * 9;
-                    self->spriteIndex          = SP_DUSTBUNNY_JUMP;
+                    self->spriteIndex          = 0;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
@@ -1158,7 +1203,7 @@ void updateDustBunny(paEntity_t* self)
                 {
                     self->xDamping             = 0;
                     self->yDamping             = 30;
-                    self->spriteIndex          = SP_DUSTBUNNY_CHARGE;
+                    self->spriteIndex          = 0;
                     self->spriteFlipHorizontal = directionToPlayer;
                     break;
                 }
