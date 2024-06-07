@@ -876,6 +876,15 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
                 checkEvents = true;
             }
         }
+        else
+        {
+            ESP_LOGI("MIDI", "Done playing file!");
+            for (uint8_t ch = 0; ch < 16; ch++)
+            {
+                midiAllNotesOff(player, 0);
+            }
+            player->mode = MIDI_STREAMING;
+        }
     }
 
     for (int16_t n = 0; n < len; n++)

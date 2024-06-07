@@ -53,6 +53,9 @@ typedef struct
 
     /// @brief The size of the event buffer
     uint32_t eventBufferSize;
+
+    /// @brief Whether or not the END OF TRACK event has been read
+    bool done;
 } chunkInfo_t;
 
 struct midiReaderState
@@ -158,6 +161,11 @@ static bool setupEventBuffer(chunkInfo_t* track, uint32_t length)
 #define ERR() do { track->eventParsed = false; track->nextEvent.deltaTime = UINT32_MAX; return false; } while (0)
 static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
 {
+    if (track->done)
+    {
+        return false;
+    }
+
     // All events are preceded by a delta-time, which is a variable-length quantity
     uint32_t deltaTime;
     int read = readVariableLength(track->cur, TRK_REMAIN(), &deltaTime);
@@ -368,6 +376,8 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
                     case END_OF_TRACK:
                     {
                         track->nextEvent.meta.type = END_OF_TRACK;
+                        track->done = true;
+                        ESP_LOGI("MIDIParser", "End of track #%" PRIdPTR, track - reader->state->trackChunks);
                         break;
                     }
 
@@ -822,6 +832,11 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 
         if (!info->eventParsed && info->nextEvent.deltaTime != UINT32_MAX)
         {
+            // Avoid trying and failing to parse if we just shouldn't!
+            if (info->done)
+            {
+                continue;
+            }
             info->eventParsed = trackParseNext(reader, info);
         }
 
