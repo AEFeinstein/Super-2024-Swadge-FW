@@ -298,7 +298,7 @@ void updateTestObject(paEntity_t* self)
         if (self->yspeed > 0){
             if (self->gameData->frameCount % 7 == 0)
             {
-                self->spriteIndex = PA_SP_ENEMY_SOUTH + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = PA_SP_ENEMY_SOUTH;
                 self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
                 self->facingDirection = PA_DIRECTION_DOWN;
             }
@@ -308,7 +308,7 @@ void updateTestObject(paEntity_t* self)
         if (self->yspeed < 0){
             if (self->gameData->frameCount % 7 == 0)
             {
-                self->spriteIndex = PA_SP_ENEMY_NORTH + ((self->spriteIndex + 1) % 2);
+                self->spriteIndex = PA_SP_ENEMY_NORTH;
                 self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
                 self->facingDirection = PA_DIRECTION_UP;
             }

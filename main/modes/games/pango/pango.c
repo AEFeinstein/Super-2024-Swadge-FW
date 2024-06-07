@@ -314,7 +314,7 @@ void updateGame(pango_t* self)
     detectGameStateChange(self);
     detectBgmChange(self);
 
-    self->gameData.coins = self->entityManager.activeEnemies;
+    self->gameData.coins = self->entityManager.remainingEnemies;
     drawPangoHud(&(self->radiostars), &(self->gameData));
 
     self->gameData.frameCount++;
