@@ -210,11 +210,22 @@ bool checkBallPbLineCollision(pbCircle_t* ball, pbLine_t* line, pbTouchRef_t* to
         // If the ball isn't already touching the line
         if (PIN_NO_SHAPE == ballIsTouching(touchRef, line))
         {
+            // The dot product with the collision normal is how much Y velocity component there is.
+            // If this value is small the ball should slide down the line (i.e. don't lose velocity on the bounce)
+            float velDotColNorm = dotVecFl2d(ball->vel, reflVec);
+
             // Bounce it by reflecting across the collision normal
-            ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
-            // Lose some speed on the bounce
-            ball->vel = mulVecFl2d(ball->vel, WALL_BOUNCINESS);
-            // printf("%d,%.4f,%.4f\n", __LINE__, ball->vel.x, ball->vel.y);
+            ball->vel = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * velDotColNorm)));
+
+            // Check if the ball should slide (i.e. not lose velocity) or bounce (i.e. lose velocity)
+            // 0 means the ball's velocity is parallel to the wall (slide)
+            // -mag(vel) means the ball's velocity is perpendicular to the wall (bounce)
+            if (velDotColNorm < -0.2f)
+            {
+                // Lose some speed on the bounce.
+                ball->vel = mulVecFl2d(ball->vel, WALL_BOUNCINESS);
+            }
+
             // Mark this line as being touched to not double-bounce
             setBallTouching(touchRef, line, PIN_LINE);
 
@@ -346,7 +357,7 @@ void sweepCheckFlippers(pinball_t* p)
                     colVec = normVecFl2d(colVec);
                     moveBallBackFromLine(ball, &flipper->sideL, &colVec);
                     // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching    = true;
+                    touching = true;
                 }
                 if (circleLineFlIntersection(ball->c, flipper->sideR.l, false, &colPoint, &colVec))
                 {
@@ -354,21 +365,21 @@ void sweepCheckFlippers(pinball_t* p)
                     colVec = normVecFl2d(colVec);
                     moveBallBackFromLine(ball, &flipper->sideR, &colVec);
                     // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching    = true;
+                    touching = true;
                 }
                 if (circleCircleFlIntersection(ball->c, flipper->cPivot.c, &colPoint, &colVec))
                 {
                     // Move ball back to not clip into the flipper
                     moveBallBackFromCircle(ball, &flipper->cPivot);
                     // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching    = true;
+                    touching = true;
                 }
                 if (circleCircleFlIntersection(ball->c, flipper->cTip.c, &colPoint, &colVec))
                 {
                     // Move ball back to not clip into the flipper
                     moveBallBackFromCircle(ball, &flipper->cTip);
                     // ball->c.pos = addVecFl2d(colPoint, mulVecFl2d(normVecFl2d(colVec), ball->c.radius - EPSILON));
-                    touching    = true;
+                    touching = true;
                 }
 
                 // If the ball is touching the flipper for the first time
@@ -571,19 +582,26 @@ void checkBallsAtRest(pinball_t* p)
         pbCircle_t* ball = &p->balls[bIdx];
 
         // If the ball didn't bounce this frame (which can adjust position to not clip)
-        // And the ball is traveling downward
-        if (false == ball->bounce && ball->vel.y > 0)
+        if (false == ball->bounce)
         {
-            // See how far the ball actually traveled
-            float posDeltaM = sqMagVecFl2d(subVecFl2d(ball->c.pos, ball->lastPos));
-            float velM      = sqMagVecFl2d(ball->vel);
-
-            // If the ball didn't move as much as it should have
-            if ((velM - posDeltaM) > 0.01f)
+            // And the ball is traveling downward
+            if (ball->vel.y > 0)
             {
-                // Stop the ball altogether to not accumulate velocity
-                ball->vel.x = 0;
-                ball->vel.y = 0;
+                // See how far the ball actually traveled
+                float velM = sqMagVecFl2d(ball->vel);
+
+                // If the ball is moving slowly
+                if (velM < 1.0f)
+                {
+                    // And it didn't move as much as it should have
+                    float posDeltaM = sqMagVecFl2d(subVecFl2d(ball->c.pos, ball->lastPos));
+                    if ((velM - posDeltaM) > 0.01f)
+                    {
+                        // Stop the ball altogether to not accumulate velocity
+                        ball->vel.x = 0;
+                        ball->vel.y = 0;
+                    }
+                }
             }
         }
         else
