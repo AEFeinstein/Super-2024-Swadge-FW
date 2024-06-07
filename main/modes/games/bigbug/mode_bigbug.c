@@ -44,9 +44,9 @@ typedef enum
 
 typedef struct
 {
-    menu_t* menu;                               ///< The menu structure
-    font_t font;                                 ///< The font used in the menu and game
-    bigbugScreen_t screen;                      ///< The screen being displayed
+    menu_t* menu;           ///< The menu structure
+    font_t font;            ///< The font used in the menu and game
+    bigbugScreen_t screen;  ///< The screen being displayed
 
     circle_t garbotnik;  ///< Garbotnik (player character)
     vec_t garbotnikVel;  ///< Garbotnik's velocity
@@ -56,8 +56,8 @@ typedef struct
     rectangle_t camera; ///< The camera
     int8_t tiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of tiles. 1 is tile, 0 is not. Future feature: more variety
 
-    uint16_t btnState;      ///< The button state used for garbotnik control
-    bool isPaused;          ///< true if the game is paused, false if it is running
+    uint16_t btnState;    ///< The button state used for garbotnik control
+    bool isPaused;        ///< true if the game is paused, false if it is running
 
     wsg_t surfaceWsg;     ///< A graphic at the surface of the city dump.
     wsg_t levelWsg;       ///< A graphic representing the level data where tiles are pixels.
@@ -66,12 +66,11 @@ typedef struct
     wsg_t s1Wsg[32];      ///< The 1st variants of soft dirt tiles
     wsg_t m1Wsg[32];      ///< The 1st variants of medium dirt tiles
     wsg_t h1Wsg[32];      ///< The 1st variants of hard dirt tiles
-    wsg_t caveBackground;  ///< The paralax background to the cave for depth
-    wsg_t uiWileOutlineWsg;
+    wsg_t caveBackground;    ///< The paralax background to the cave for depth
+    wsg_t uiWileOutlineWsg;  ///< A UI graphic that is unused
 
     song_t bgm;  ///< Background music
-    song_t hit1; ///< Sound effect for one paddle's hit
-    song_t hit2; ///< Sound effect for the other paddle's hit
+    song_t hit1; ///< A sound effect
 
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
@@ -152,7 +151,7 @@ static void bigbugEnterMode(void)
     
 
     // Load graphics
-    loadWsg("levelOld.wsg", &bigbug->levelWsg, true);
+    loadWsg("level.wsg", &bigbug->levelWsg, true);
     loadWsg("dirt.wsg", &bigbug->dirtWsg, true);
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, true);
     loadWsg("trash_background.wsg", &bigbug->caveBackground, true);
@@ -256,39 +255,39 @@ static void bigbugEnterMode(void)
     loadWsg("m1g031.wsg", &bigbug->m1Wsg[31], true);
 
     //hard
-    loadWsg("h1g3.wsg",  &bigbug->h1Wsg[0],  true);
-    loadWsg("h1g7.wsg",  &bigbug->h1Wsg[1],  true);
-    loadWsg("h1g0.wsg",  &bigbug->h1Wsg[2],  true);
-    loadWsg("h1g4.wsg",  &bigbug->h1Wsg[3],  true);
-    loadWsg("h1g15.wsg", &bigbug->h1Wsg[4],  true);
-    loadWsg("h1g11.wsg", &bigbug->h1Wsg[5],  true);
-    loadWsg("h1g12.wsg", &bigbug->h1Wsg[6],  true);
-    loadWsg("h1g8.wsg",  &bigbug->h1Wsg[7],  true);
-    loadWsg("h1g2.wsg",  &bigbug->h1Wsg[8],  true);
-    loadWsg("h1g6.wsg",  &bigbug->h1Wsg[9],  true);
-    loadWsg("h1g1.wsg",  &bigbug->h1Wsg[10], true);
-    loadWsg("h1g5.wsg",  &bigbug->h1Wsg[11], true);
-    loadWsg("h1g14.wsg", &bigbug->h1Wsg[12], true);
-    loadWsg("h1g10.wsg", &bigbug->h1Wsg[13], true);
-    loadWsg("h1g13.wsg", &bigbug->h1Wsg[14], true);
-    loadWsg("h1g9.wsg",  &bigbug->h1Wsg[15], true);
+    loadWsg("d_h1g3.wsg",  &bigbug->h1Wsg[0],  true);
+    loadWsg("d_h1g7.wsg",  &bigbug->h1Wsg[1],  true);
+    loadWsg("d_h1g0.wsg",  &bigbug->h1Wsg[2],  true);
+    loadWsg("d_h1g4.wsg",  &bigbug->h1Wsg[3],  true);
+    loadWsg("d_h1g15.wsg", &bigbug->h1Wsg[4],  true);
+    loadWsg("d_h1g11.wsg", &bigbug->h1Wsg[5],  true);
+    loadWsg("d_h1g12.wsg", &bigbug->h1Wsg[6],  true);
+    loadWsg("d_h1g8.wsg",  &bigbug->h1Wsg[7],  true);
+    loadWsg("d_h1g2.wsg",  &bigbug->h1Wsg[8],  true);
+    loadWsg("d_h1g6.wsg",  &bigbug->h1Wsg[9],  true);
+    loadWsg("d_h1g1.wsg",  &bigbug->h1Wsg[10], true);
+    loadWsg("d_h1g5.wsg",  &bigbug->h1Wsg[11], true);
+    loadWsg("d_h1g14.wsg", &bigbug->h1Wsg[12], true);
+    loadWsg("d_h1g10.wsg", &bigbug->h1Wsg[13], true);
+    loadWsg("d_h1g13.wsg", &bigbug->h1Wsg[14], true);
+    loadWsg("d_h1g9.wsg",  &bigbug->h1Wsg[15], true);
     //hard corners
-    loadWsg("h1g016.wsg", &bigbug->h1Wsg[16], true);
-    loadWsg("h1g017.wsg", &bigbug->h1Wsg[17], true);
-    loadWsg("h1g018.wsg", &bigbug->h1Wsg[18], true);
-    loadWsg("h1g019.wsg", &bigbug->h1Wsg[19], true);
-    loadWsg("h1g020.wsg", &bigbug->h1Wsg[20], true);
-    loadWsg("h1g021.wsg", &bigbug->h1Wsg[21], true);
-    loadWsg("h1g022.wsg", &bigbug->h1Wsg[22], true);
-    loadWsg("h1g023.wsg", &bigbug->h1Wsg[23], true);
-    loadWsg("h1g024.wsg", &bigbug->h1Wsg[24], true);
-    loadWsg("h1g025.wsg", &bigbug->h1Wsg[25], true);
-    loadWsg("h1g026.wsg", &bigbug->h1Wsg[26], true);
-    loadWsg("h1g027.wsg", &bigbug->h1Wsg[27], true);
-    loadWsg("h1g028.wsg", &bigbug->h1Wsg[28], true);
-    loadWsg("h1g029.wsg", &bigbug->h1Wsg[29], true);
-    loadWsg("h1g030.wsg", &bigbug->h1Wsg[30], true);
-    loadWsg("h1g031.wsg", &bigbug->h1Wsg[31], true);
+    loadWsg("d_h1g016.wsg", &bigbug->h1Wsg[16], true);
+    loadWsg("d_h1g017.wsg", &bigbug->h1Wsg[17], true);
+    loadWsg("d_h1g018.wsg", &bigbug->h1Wsg[18], true);
+    loadWsg("d_h1g019.wsg", &bigbug->h1Wsg[19], true);
+    loadWsg("d_h1g020.wsg", &bigbug->h1Wsg[20], true);
+    loadWsg("d_h1g021.wsg", &bigbug->h1Wsg[21], true);
+    loadWsg("d_h1g022.wsg", &bigbug->h1Wsg[22], true);
+    loadWsg("d_h1g023.wsg", &bigbug->h1Wsg[23], true);
+    loadWsg("d_h1g024.wsg", &bigbug->h1Wsg[24], true);
+    loadWsg("d_h1g025.wsg", &bigbug->h1Wsg[25], true);
+    loadWsg("d_h1g026.wsg", &bigbug->h1Wsg[26], true);
+    loadWsg("d_h1g027.wsg", &bigbug->h1Wsg[27], true);
+    loadWsg("d_h1g028.wsg", &bigbug->h1Wsg[28], true);
+    loadWsg("d_h1g029.wsg", &bigbug->h1Wsg[29], true);
+    loadWsg("d_h1g030.wsg", &bigbug->h1Wsg[30], true);
+    loadWsg("d_h1g031.wsg", &bigbug->h1Wsg[31], true);
 
     loadWsg("button-outline.wsg", &bigbug->uiWileOutlineWsg, true);
 
@@ -563,19 +562,21 @@ static void bigbugDrawField(void)
                 // Draw dirt tile
                 if(bigbug->tiles[i][j] >= 1){
                     //drawWsgTile(&bigbug->dirtWsg, i * 64 - bigbug->camera.pos.x, j * 64 - bigbug->camera.pos.y);
-                    int32_t sprite_idx = 8 * ((i-1 < 0) ? 0 : (bigbug->tiles[i-1][j]>0)) +
+                    //sprite_idx LURD order.
+                    uint8_t sprite_idx = 8 * ((i-1 < 0) ? 0 : (bigbug->tiles[i-1][j]>0)) +
                                          4 * ((j-1 < 0) ? 0 : (bigbug->tiles[i][j-1]>0)) +
                                          2 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (bigbug->tiles[i+1][j]>0)) +
                                          1 * ((j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i][j+1])>0);
-                    switch(sprite_idx){
-                        case 15:
-                            //This case has dirt left, up, right, and down. This now figures out if there is some diagonal air though.
-                            //sprite_idx will now represet up_left, up_right, down_left, down_right dirt presence (remember >0 is dirt).
-                            sprite_idx = 8 * ((i-1 < 0) ? 0 : (j-1 < 0) ? 0 : (bigbug->tiles[i-1][j-1]>0)) +
+                    //corner_info represents up_left, up_right, down_left, down_right dirt presence (remember >0 is dirt).
+                    uint8_t corner_info = 8 * ((i-1 < 0) ? 0 : (j-1 < 0) ? 0 : (bigbug->tiles[i-1][j-1]>0)) +
                                          4 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (j-1 < 0) ? 0 : (bigbug->tiles[i+1][j-1]>0)) +
                                          2 * ((i-1 < 0) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i-1][j+1]>0)) +
                                          1 * ((i+1 > TILE_FIELD_WIDTH - 1) ? 0 : (j+1 > TILE_FIELD_HEIGHT - 1) ? 0 : (bigbug->tiles[i+1][j+1])>0);
-                            switch(sprite_idx){
+                    switch(sprite_idx){
+                        case 15:
+                            //This case has dirt left, up, right, and down. This figures out if there is some diagonal air though.
+                            
+                            switch(corner_info){
                                 case 0: //0000
                                     bigbugDrawCornerTile((uint8_t[]){12, 5, 10, 3},
                                     i,
@@ -666,7 +667,26 @@ static void bigbugDrawField(void)
                                                 2,
                                                 2);
                     }
-                    
+                    if((sprite_idx & 0b1100) == 0b1100 && !(corner_info & 0b1000)){
+                        //FIX ME!!!!
+                        //see about getting wsg for coord once
+                        drawWsgSimpleScaled(&(*bigbugGetWsgForCoord(i,j))[28], i  * 64 - bigbug->camera.pos.x,      j * 64 - bigbug->camera.pos.y,      2, 2);
+                    }
+                    if((sprite_idx & 0b0110) == 0b0110 && !(corner_info & 0b0100)){
+                        wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
+
+                        drawWsgSimpleScaled(&(*tileset)[21], i  * 64 - bigbug->camera.pos.x + 32, j * 64 - bigbug->camera.pos.y,      2, 2);
+                    }
+                    if((sprite_idx & 0b0011) == 0b0011 && !(corner_info & 0b0001)){
+                        wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
+
+                        drawWsgSimpleScaled(&(*tileset)[19], i  * 64 - bigbug->camera.pos.x + 32, j * 64 - bigbug->camera.pos.y + 32, 2, 2);
+                    }
+                    if((sprite_idx & 0b1001) == 0b1001 && !(corner_info & 0b0010)){
+                        wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
+
+                        drawWsgSimpleScaled(&(*tileset)[26], i  * 64 - bigbug->camera.pos.x,      j * 64 - bigbug->camera.pos.y + 32, 2, 2);
+                    }
                 }
             }
         }
