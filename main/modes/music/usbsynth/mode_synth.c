@@ -12,6 +12,7 @@
 #include "touchUtils.h"
 #include "shapes.h"
 #include "trigonometry.h"
+#include "linked_list.h"
 
 #include "sngPlayer.h"
 #include "midiPlayer.h"
@@ -48,6 +49,13 @@ enum usb_endpoints {
 //==============================================================================
 // Structs
 //==============================================================================
+
+typedef struct
+{
+    const char* text;
+    metaEventType_t type;
+    uint64_t expiration;
+} midiTextInfo_t;
 
 typedef struct
 {
@@ -90,6 +98,9 @@ typedef struct
 
     uint32_t frameTimesIdx;
     uint64_t frameTimes[NUM_FRAME_TIMES];
+
+    list_t midiTexts;
+    uint64_t nextExpiry;
 } synthData_t;
 
 //==============================================================================
@@ -105,6 +116,8 @@ static bool installUsb(void);
 static void handlePacket(uint8_t packet[4]);
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width, int16_t height);
 static void drawSampleGraph(void);
+static void midiTextCallback(metaEventType_t type, const char* text);
+
 
 //==============================================================================
 // Variabes
@@ -396,12 +409,13 @@ static void synthEnterMode(void)
     sd->noteTime = 200000;
     sd->pitch = 0x2000;
     sd->longestProgramName = gmProgramNames[24];
+    sd->nextExpiry = 200000;
 
     sd->fileMode = true;
     if (sd->fileMode)
     {
         loadMidiFile(&sd->midiFileReader, "all_star.midi", false);
-        //sd->midiPlayer.textMessageCallback = midiTextCallback;
+        sd->midiPlayer.textMessageCallback = midiTextCallback;
         midiSetFile(&sd->midiPlayer, &sd->midiFileReader);
     }
 
@@ -429,6 +443,12 @@ static void synthEnterMode(void)
 
 static void synthExitMode(void)
 {
+    midiTextInfo_t* textInfo = NULL;
+    while (NULL != (textInfo = pop(&sd->midiTexts)))
+    {
+        free(textInfo);
+    }
+
     freeWsg(&sd->percussionImage);
     for (int i = 0; i < 16; i++)
     {
@@ -589,6 +609,73 @@ static void synthMainLoop(int64_t elapsedUs)
         char tempoStr[16];
         snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", (60000000 / sd->midiPlayer.tempo));
         drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 15, (TFT_HEIGHT - sd->font.height) / 2);
+
+        char textMessages[1024];
+        textMessages[0] = '\0';
+
+        paletteColor_t midiTextColor = c550;
+        bool colorSet = false;
+
+        node_t* curNode = sd->midiTexts.first;
+        while (curNode != NULL)
+        {
+            midiTextInfo_t* curInfo = curNode->val;
+            if (strlen(textMessages) + strlen(curInfo->text) + 1 >= sizeof(textMessages))
+            {
+                // don't overflow that buffer
+                break;
+            }
+
+            if (!colorSet)
+            {
+                switch (curInfo->type)
+                {
+                    case TEXT:
+                        midiTextColor = c555;
+                        break;
+
+                    case COPYRIGHT:
+                        midiTextColor = c050;
+                        break;
+
+                    case SEQUENCE_OR_TRACK_NAME:
+                    case INSTRUMENT_NAME:
+                        midiTextColor = c005;
+                        break;
+
+                    case LYRIC:
+                        midiTextColor = c550;
+                        break;
+
+                    case MARKER:
+                    case CUE_POINT:
+                    default:
+                        midiTextColor = c333;
+                        break;
+                }
+
+                colorSet = true;
+            }
+
+            if (*textMessages != '\0')
+            {
+                if (*curInfo->text == '/' || *curInfo->text == '\\')
+                {
+                    strcat(textMessages, "\n");
+                }
+                else if (*curInfo->text != ' ')
+                {
+                    strcat(textMessages, " ");
+                }
+            }
+
+            strcat(textMessages, curInfo->text);
+            curNode = curNode->next;
+        }
+
+        int16_t x = 18;
+        int16_t y = 80;
+        drawTextWordWrap(&sd->font, c550, textMessages, &x, &y, TFT_WIDTH-18, TFT_HEIGHT-60);
     }
     else
     {
@@ -596,6 +683,33 @@ static void synthMainLoop(int64_t elapsedUs)
         // Display the number of clipped samples
         snprintf(countsBuf, sizeof(countsBuf), "%" PRIu32, sd->midiPlayer.clipped);
         drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15, TFT_HEIGHT - sd->font.height - 15);
+    }
+
+    // Delete any expired texts -- but only every so often, to prevent it from being weird and jumpy
+    uint64_t now = esp_timer_get_time();
+    if (now >= sd->nextExpiry)
+    {
+        node_t* curNode = sd->midiTexts.first;
+        while (curNode != NULL)
+        {
+            midiTextInfo_t* curInfo = curNode->val;
+            if (curInfo->expiration <= now)
+            {
+                node_t* tmp = curNode->next;
+                midiTextInfo_t* removed = removeEntry(&sd->midiTexts, curNode);
+                if (removed)
+                {
+                    free(removed);
+                }
+                curNode = tmp;
+            }
+            else
+            {
+                curNode = curNode->next;
+            }
+        }
+
+        sd->nextExpiry = now + 2000000;
     }
 
     // just a little scope for the frame timer I stole from pinball
@@ -951,5 +1065,28 @@ void drawSampleGraph(void)
 
         //int16_t y = ((TFT_HEIGHT / 2) + (TFT_HEIGHT - 16) / 2) - (sd->lastSamples[n] * ((TFT_HEIGHT - 16) / 2) / 255);
         TURBO_SET_PIXEL(x, y, c555);
+    }
+}
+
+static void midiTextCallback(metaEventType_t type, const char* text)
+{
+    if (!text)
+    {
+        return;
+    }
+
+    void* infoAndText = malloc(sizeof(midiTextInfo_t) + strlen(text) + 1);
+
+    if (infoAndText)
+    {
+        midiTextInfo_t* info = (midiTextInfo_t*)infoAndText;
+        char* newText = (char*)(infoAndText + sizeof(midiTextInfo_t));
+        info->text = newText;
+        info->type = type;
+        // make it last for 2 seconds
+        info->expiration = esp_timer_get_time() + 5000000;
+        strcpy(newText, text);
+
+        push(&sd->midiTexts, infoAndText);
     }
 }
