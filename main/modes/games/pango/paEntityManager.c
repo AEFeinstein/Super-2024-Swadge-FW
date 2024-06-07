@@ -93,9 +93,37 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     entityManager->sprites[PA_SP_BONUS_BLOCK].originX         = 8;
     entityManager->sprites[PA_SP_BONUS_BLOCK].originY         = 8;
 
-    loadWsg("sprite009.wsg", &(entityManager->sprites[PA_SP_ENEMY_SOUTH].wsg), false);
+    loadWsg("pa-en-004.wsg", &(entityManager->sprites[PA_SP_ENEMY_SOUTH].wsg), false);
     entityManager->sprites[PA_SP_ENEMY_SOUTH].originX         = 8;
-    entityManager->sprites[PA_SP_ENEMY_SOUTH].originY         = 8;
+    entityManager->sprites[PA_SP_ENEMY_SOUTH].originY         = 16;
+
+    loadWsg("pa-en-006.wsg", &(entityManager->sprites[PA_SP_ENEMY_NORTH].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_NORTH].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_NORTH].originY         = 16;
+
+    loadWsg("pa-en-000.wsg", &(entityManager->sprites[PA_SP_ENEMY_SIDE_1].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_SIDE_1].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_SIDE_1].originY         = 16;
+
+    loadWsg("pa-en-001.wsg", &(entityManager->sprites[PA_SP_ENEMY_SIDE_2].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_SIDE_2].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_SIDE_2].originY         = 16;
+
+    loadWsg("pa-en-005.wsg", &(entityManager->sprites[PA_SP_ENEMY_DRILL_SOUTH].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_DRILL_SOUTH].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_DRILL_SOUTH].originY         = 16;
+
+    loadWsg("pa-en-007.wsg", &(entityManager->sprites[PA_SP_ENEMY_DRILL_NORTH].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_DRILL_NORTH].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_DRILL_NORTH].originY         = 16;
+
+    loadWsg("pa-en-002.wsg", &(entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_1].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_1].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_1].originY         = 16;
+
+    loadWsg("pa-en-003.wsg", &(entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_2].wsg), false);
+    entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_2].originX         = 8;
+    entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_2].originY         = 16;
 }
 
 void pa_updateEntities(paEntityManager_t* entityManager)
