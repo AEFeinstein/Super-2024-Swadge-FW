@@ -107,23 +107,18 @@ static const char defaultText[] = "<err: alloc failed>";
  */
 static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out)
 {
-    if (!length)
-    {
-        return 0;
-    }
-
     uint32_t read = 0;
     uint32_t val = 0;
 
     uint8_t last = 0x00;
-    do
+    while (((last & 0x80) || read == 0) && read < 4 && read < length)
     {
         val <<= 7;
         last = data[read];
         val |= (last & 0x7F);
 
         read++;
-    } while ((last & 0x80) && read < 4 && read < length);
+    }
 
     *out = val;
 
@@ -707,7 +702,7 @@ static bool parseMidiHeader(midiFileReader_t* reader)
             // Check to make sure we don't overrun the buffer reading the header
             if ((ptr - reader->data) + 8 >= reader->length)
             {
-                ESP_LOGE("MIDIParser", "Reached end of file unexpectedly while reading track chunk %d", i);
+                ESP_LOGE("MIDIParser", ":%d Reached end of file unexpectedly while reading track chunk %d", __LINE__, i);
                 return false;
             }
 
@@ -735,6 +730,12 @@ static bool parseMidiHeader(midiFileReader_t* reader)
             uint32_t trackChunkLen = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
             ptr += 4;
 
+            if (ptr + trackChunkLen - reader->data > reader->length)
+            {
+                ESP_LOGW("MIDIParser", "Track chunk %d claims length of %" PRIu32 " but there are only %" PRIuPTR " bytes remaining in the file", i, trackChunkLen, reader->length - (ptr - reader->data));
+                trackChunkLen = reader->length - (ptr - reader->data);
+            }
+
             // Save track length and offset information
             state->trackChunks[i].length = trackChunkLen;
             state->trackChunks[i].data = ptr;
@@ -756,7 +757,7 @@ static bool parseMidiHeader(midiFileReader_t* reader)
 
         if (ptr - reader->data > reader->length)
         {
-            ESP_LOGE("MIDIParser", "Reached end of file unexpectedly while reading track chunk %d", i);
+            ESP_LOGE("MIDIParser", ":%d Reached end of file unexpectedly while reading track chunk %d", __LINE__, i);
             return false;
         }
 
