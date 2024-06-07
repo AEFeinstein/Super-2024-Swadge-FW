@@ -281,57 +281,55 @@ void sweepCheckFlippers(pinball_t* p)
     {
         pbFlipper_t* flipper = &p->flippers[fIdx];
 
-        // Assume no motion
-        float sweepStart = flipper->angle;
-        float sweepStep  = 0.0f;
-        float sweepEnd   = flipper->angle;
-
-        // Check if the flipper should be moving based on the button state
+        // Check if the flipper is moving up or down
+        float angularVel = 0;
         if (flipper->buttonHeld)
         {
-            if (flipper->facingRight && flipper->angle > (M_PI_2 - FLIPPER_UP_ANGLE))
-            {
-                sweepEnd = flipper->angle - FLIPPER_UP_DEGREES_PER_FRAME;
-                if (sweepEnd < M_PI_2 - FLIPPER_UP_ANGLE)
-                {
-                    sweepEnd = M_PI_2 - FLIPPER_UP_ANGLE;
-                }
-            }
-            else if (!flipper->facingRight && flipper->angle < (M_PI + M_PI_2) + FLIPPER_UP_ANGLE)
-            {
-                sweepEnd = flipper->angle + FLIPPER_UP_DEGREES_PER_FRAME;
-                if (sweepEnd > (M_PI + M_PI_2) + FLIPPER_UP_ANGLE)
-                {
-                    sweepEnd = (M_PI + M_PI_2) + FLIPPER_UP_ANGLE;
-                }
-            }
+            angularVel = FLIPPER_UP_DEGREES_PER_FRAME;
         }
         else
         {
-            if (flipper->facingRight && flipper->angle < (M_PI_2 + FLIPPER_DOWN_ANGLE))
-            {
-                sweepEnd = flipper->angle + FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (sweepEnd > (M_PI_2 + FLIPPER_DOWN_ANGLE))
-                {
-                    sweepEnd = (M_PI_2 + FLIPPER_DOWN_ANGLE);
-                }
-            }
-            else if (!flipper->facingRight && flipper->angle > (M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE)
-            {
-                sweepEnd = flipper->angle - FLIPPER_DOWN_DEGREES_PER_FRAME;
-                if (sweepEnd < ((M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE))
-                {
-                    sweepEnd = ((M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE);
-                }
-            }
+            angularVel = -FLIPPER_DOWN_DEGREES_PER_FRAME;
         }
 
-        // The flipper is moving if the sweep start and end are different
-        flipper->moving = (sweepStart != sweepEnd);
+        // Find the bounds for the flipper depending on the direction it's facing
+        float lBound = 0;
+        float uBound = 0;
+        if (flipper->facingRight)
+        {
+            lBound = M_PI_2 - FLIPPER_UP_ANGLE;
+            uBound = M_PI_2 + FLIPPER_DOWN_ANGLE;
+            // Flip velocity if facing right
+            angularVel *= -1;
+        }
+        else
+        {
+            lBound = (M_PI + M_PI_2) - FLIPPER_DOWN_ANGLE;
+            uBound = (M_PI + M_PI_2) + FLIPPER_UP_ANGLE;
+        }
 
-        // Figure out the number and size of the steps if the flipper is moving or not
-        int32_t numSteps = (flipper->moving) ? 8 : 1;
-        sweepStep        = (sweepEnd - sweepStart) / (float)numSteps;
+        // Flipper starts here
+        float sweepStart = flipper->angle;
+        // Flipper ends here, bounded
+        float sweepEnd = flipper->angle + angularVel;
+        sweepEnd       = CLAMP((sweepEnd), lBound, uBound);
+
+        // Find sweep steps if in motion
+        float sweepStep = 0.0f;
+        int numSteps    = 0;
+        if (sweepStart == sweepEnd)
+        {
+            // Flipper not in motion
+            angularVel = 0;
+            sweepStep  = 0;
+            numSteps   = 1;
+        }
+        else
+        {
+            // Flipper in motion
+            numSteps  = 8;
+            sweepStep = (sweepEnd - sweepStart) / (float)numSteps;
+        }
 
         // Move the flipper a little, then check for collisions
         for (int32_t step = 0; step < numSteps; step++)
@@ -393,22 +391,15 @@ void sweepCheckFlippers(pinball_t* p)
                     ball->vel       = subVecFl2d(ball->vel, mulVecFl2d(reflVec, (2 * dotVecFl2d(ball->vel, reflVec))));
 
                     // If the flipper is in motion
-                    if (flipper->moving)
+                    if (0 != angularVel)
                     {
-                        // Impart an impulse on the ball
-                        vecFl_t impulse;
-                        if (flipper->facingRight)
-                        {
-                            impulse.x = flipper->sideL.l.p2.y - flipper->sideL.l.p1.y;
-                            impulse.y = flipper->sideL.l.p1.x - flipper->sideL.l.p2.x;
-                        }
-                        else
-                        {
-                            impulse.x = flipper->sideL.l.p1.y - flipper->sideL.l.p2.y;
-                            impulse.y = flipper->sideL.l.p2.x - flipper->sideL.l.p1.x;
-                        }
-                        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(normVecFl2d(impulse), 2.0f));
-                        // printf("%d,%.4f,%.4f\n", __LINE__, ball->vel.x, ball->vel.y);
+                        // Get the distance between the pivot and the ball
+                        float dist = magVecFl2d(subVecFl2d(flipper->cPivot.c.pos, ball->c.pos));
+                        // Convert angular velocity of the flipper to linear velocity at that point
+                        float impulseMag = (ABS(angularVel) * dist);
+
+                        // Impart an impulse on the ball along the collision normal
+                        ball->vel = addVecFl2d(ball->vel, mulVecFl2d(reflVec, impulseMag));
                     }
                 }
             }

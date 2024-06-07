@@ -76,7 +76,6 @@ typedef struct
     float angle;       ///< The current angle of the flipper
     bool facingRight;  ///< True if the flipper is facing right, false if left
     bool buttonHeld;   ///< True if the button is being held down, false if it is released
-    bool moving;
     uint32_t zoneMask; ///< The zones this flipper is in
 } pbFlipper_t;
 

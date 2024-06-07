@@ -87,7 +87,7 @@ static void pinEnterMode(void)
     createRandomWalls(pinball, 0);
 
     // Create flippers
-    // createFlipper(pinball, TFT_WIDTH / 2 - 50, 200, true);
+    createFlipper(pinball, TFT_WIDTH / 2 - 50, 200, true);
     createFlipper(pinball, TFT_WIDTH / 2 + 50, 200, false);
 
     // Load font
