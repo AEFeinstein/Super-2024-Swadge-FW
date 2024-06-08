@@ -370,6 +370,28 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
                     case CHANNEL_PREFIX:
                     {
                         track->nextEvent.meta.type = CHANNEL_PREFIX;
+                        if (metaLength == 1)
+                        {
+                            track->nextEvent.meta.prefix = track->cur[0];
+                        }
+                        else
+                        {
+                            track->nextEvent.meta.prefix = 0;
+                        }
+                        break;
+                    }
+
+                    case PORT_PREFIX:
+                    {
+                        track->nextEvent.meta.type = PORT_PREFIX;
+                        if (metaLength == 1)
+                        {
+                            track->nextEvent.meta.prefix = track->cur[0];
+                        }
+                        else
+                        {
+                            track->nextEvent.meta.prefix = 0;
+                        }
                         break;
                     }
 

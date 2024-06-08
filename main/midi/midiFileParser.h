@@ -32,6 +32,7 @@ typedef enum
     //PROGRAM_NAME,
     //DEVICE_NAME,
     CHANNEL_PREFIX = 0x20,
+    PORT_PREFIX = 0x21,
     END_OF_TRACK = 0x2F,
     TEMPO = 0x51,
     SMPTE_OFFSET = 0x54,
@@ -75,6 +76,7 @@ typedef struct
         uint8_t* data;
         uint32_t tempo;
         uint16_t sequenceNumber;
+        uint8_t prefix;
 
         struct {
             uint8_t hour;
