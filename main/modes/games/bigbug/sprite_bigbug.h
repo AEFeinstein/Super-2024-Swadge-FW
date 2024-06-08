@@ -1,19 +1,22 @@
-#pragma once
+#ifndef _SPRITE_H_
+#define _SPRITE_H_
 
 //==============================================================================
 // Includes
 //==============================================================================
-
-#include "swadge2024.h"
-#include "fp_math.h"
+#include <stdint.h>
+#include "wsg.h"
+#include "aabb_utils_bigbug.h"
 
 //==============================================================================
-// Defines
+// Structs
 //==============================================================================
+typedef struct
+{
+    wsg_t wsg;
+    int16_t originX;
+    int16_t originY;
+    bb_box_t collisionBox;
+} bb_sprite_t;
 
-#ifndef _MODE_BIGBUG_H_
-#define _MODE_BIGBUG_H_
-
-extern swadgeMode_t bigbugMode;
- 
 #endif

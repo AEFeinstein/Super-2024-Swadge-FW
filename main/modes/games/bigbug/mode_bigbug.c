@@ -36,7 +36,7 @@ typedef enum
 {
     BIGBUG_MENU,
     BIGBUG_GAME,
-} bigbugScreen_t;
+} bb_screen_t;
 
 //==============================================================================
 // Structs
@@ -46,14 +46,14 @@ typedef struct
 {
     menu_t* menu;           ///< The menu structure
     font_t font;            ///< The font used in the menu and game
-    bigbugScreen_t screen;  ///< The screen being displayed
+    bb_screen_t screen;  ///< The screen being displayed
 
     circle_t garbotnik;  ///< Garbotnik (player character)
     vec_t garbotnikVel;  ///< Garbotnik's velocity
     vec_t garbotnikAccel;///< Garbotnik's acceleration
     vec_t previousPos;   ///< Garbotnik's position on the previous frame (for resolving collisions)
 
-    rectangle_t camera; ///< The camera
+    rectangle_t camera;  ///< The camera
     int8_t tiles[TILE_FIELD_WIDTH][TILE_FIELD_HEIGHT]; ///< The array of tiles. 1 is tile, 0 is not. Future feature: more variety
 
     uint16_t btnState;    ///< The button state used for garbotnik control
@@ -75,32 +75,32 @@ typedef struct
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
     int32_t ledFadeTimer; ///< The timer to fade LEDs
-} bigbug_t;
+} bb_t;
 
 //==============================================================================
 // Function Prototypes
 //==============================================================================
 
 //required by adam
-static void bigbugEnterMode(void);
-static void bigbugExitMode(void);
-static void bigbugMainLoop(int64_t elapsedUs);
-static void bigbugAudioCallback(uint16_t* samples, uint32_t sampleCnt);
-static void bigbugBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
-static void bigbugEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
-static void bigbugEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
-static int16_t bigbugAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
-static void bigbugDacCb(uint8_t *samples, int16_t len);
+static void bb_EnterMode(void);
+static void bb_ExitMode(void);
+static void bb_MainLoop(int64_t elapsedUs);
+static void bb_AudioCallback(uint16_t* samples, uint32_t sampleCnt);
+static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
+static void bb_EspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
+static void bb_EspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
+static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet);
+static void bb_DacCb(uint8_t *samples, int16_t len);
 
 //big bug logic
-static void bigbugControlGarbotnik(int64_t elapsedUs);
-static void bigbugDrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const uint32_t j);
-static void bigbugDrawField(void);
-static void bigbugGameLoop(int64_t elapsedUs);
-static wsg_t (*bigbugGetWsgForCoord(const uint32_t i, const uint32_t j))[32];
-static void bigbugReset(void);
-static void bigbugSetLeds(void);
-static void bigbugUpdatePhysics(int64_t elapsedUs);
+static void bb_ControlGarbotnik(int64_t elapsedUs);
+static void bb_DrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const uint32_t j);
+static void bb_DrawField(void);
+static void bb_GameLoop(int64_t elapsedUs);
+static wsg_t (*bb_GetWsgForCoord(const uint32_t i, const uint32_t j))[32];
+static void bb_Reset(void);
+static void bb_SetLeds(void);
+static void bb_UpdatePhysics(int64_t elapsedUs);
 
 
 //==============================================================================
@@ -125,28 +125,28 @@ swadgeMode_t bigbugMode = {
     .usesAccelerometer        = true,
     .usesThermometer          = true,
     .overrideSelectBtn        = false,
-    .fnEnterMode              = bigbugEnterMode,
-    .fnExitMode               = bigbugExitMode,
-    .fnMainLoop               = bigbugMainLoop,
-    .fnAudioCallback          = bigbugAudioCallback,
-    .fnBackgroundDrawCallback = bigbugBackgroundDrawCallback,
-    .fnEspNowRecvCb           = bigbugEspNowRecvCb,
-    .fnEspNowSendCb           = bigbugEspNowSendCb,
-    .fnAdvancedUSB            = bigbugAdvancedUSB,
+    .fnEnterMode              = bb_EnterMode,
+    .fnExitMode               = bb_ExitMode,
+    .fnMainLoop               = bb_MainLoop,
+    .fnAudioCallback          = bb_AudioCallback,
+    .fnBackgroundDrawCallback = bb_BackgroundDrawCallback,
+    .fnEspNowRecvCb           = bb_EspNowRecvCb,
+    .fnEspNowSendCb           = bb_EspNowSendCb,
+    .fnAdvancedUSB            = bb_AdvancedUSB,
     .fnDacCb                  = NULL
 };
 
 /// All state information for bigbug mode. This whole struct is calloc()'d and free()'d so that bigbug is only
 /// using memory while it is being played
-bigbug_t* bigbug = NULL;
+bb_t* bigbug = NULL;
 
 //==============================================================================
 // Required Functions
 //==============================================================================
 
-static void bigbugEnterMode(void)
+static void bb_EnterMode(void)
 {
-    bigbug = calloc(1, sizeof(bigbug_t));
+    bigbug = calloc(1, sizeof(bb_t));
 
     
 
@@ -297,16 +297,16 @@ static void bigbugEnterMode(void)
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
 
-    bigbugReset();
+    bb_Reset();
 }
  
-static void bigbugExitMode(void)
+static void bb_ExitMode(void)
 {
     // Free font
     freeFont(&bigbug->font);
 }
  
-static void bigbugMainLoop(int64_t elapsedUs)
+static void bb_MainLoop(int64_t elapsedUs)
 {
     // Pick what runs and draws depending on the screen being displayed
     switch (bigbug->screen)
@@ -327,18 +327,18 @@ static void bigbugMainLoop(int64_t elapsedUs)
         case BIGBUG_GAME:
         {
             // Run the main game loop. This will also process button events
-            bigbugGameLoop(elapsedUs);
+            bb_GameLoop(elapsedUs);
             break;
         }
     }
 }
  
-static void bigbugAudioCallback(uint16_t* samples, uint32_t sampleCnt)
+static void bb_AudioCallback(uint16_t* samples, uint32_t sampleCnt)
 {
     // Fill this in
 }
  
-static void bigbugBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
+static void bb_BackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
 {
     //accelIntegrate(); only needed if using accelerometer for something
     //SETUP_FOR_TURBO(); only needed if drawing individual pixels
@@ -346,23 +346,23 @@ static void bigbugBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_
     fillDisplayArea(x, y, x + w, y + h, c455);//sonic sky is like c001
 }
  
-static void bigbugEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
+static void bb_EspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
     // Fill this in
 }
  
-static void bigbugEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
+static void bb_EspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
     // Fill this in
 }
  
-static int16_t bigbugAdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
+static int16_t bb_AdvancedUSB(uint8_t* buffer, uint16_t length, uint8_t isGet)
 {
     // Fill this in
        return 0;
 }
  
-static void bigbugDacCb(uint8_t *samples, int16_t len)
+static void bb_DacCb(uint8_t *samples, int16_t len)
 {
     // Fill this in
 }
@@ -371,7 +371,7 @@ static void bigbugDacCb(uint8_t *samples, int16_t len)
 // Big Bug Functions
 //==============================================================================
 
-static void bigbugControlGarbotnik(int64_t elapsedUs)
+static void bb_ControlGarbotnik(int64_t elapsedUs)
 {
     vec_t accel;
     accel.x = 0;
@@ -443,25 +443,9 @@ static void bigbugControlGarbotnik(int64_t elapsedUs)
     // printf("now   x: %d\n", mulVec2d(accel, elapsedUs) / 100000).x);
 
     bigbug->garbotnikAccel = divVec2d(mulVec2d(accel, elapsedUs), 100000);
-    // if (bigbug->btnState & PB_UP)
-    // {
-    //     bigbug->garbotnikVel.y = bigbug->garbotnikVel.y - 5 * elapsedUs / 100000;
-    // }
-    // else if (bigbug->btnState & PB_DOWN)
-    // {
-    //     bigbug->garbotnikVel.y = bigbug->garbotnikVel.y + 5 * elapsedUs / 100000;
-    // }
-    // else if (bigbug->btnState & PB_LEFT)
-    // {
-    //     bigbug->garbotnikVel.x = bigbug->garbotnikVel.x - 5 * elapsedUs / 100000;
-    // }
-    // else if (bigbug->btnState & PB_RIGHT)
-    // {
-    //     bigbug->garbotnikVel.x = bigbug->garbotnikVel.x + 5 * elapsedUs / 100000;
-    // }
 }
 
-static wsg_t (*bigbugGetWsgForCoord(const uint32_t i, const uint32_t j))[32]{
+static wsg_t (*bb_GetWsgForCoord(const uint32_t i, const uint32_t j))[32]{
     switch(bigbug->levelWsg.px[(j * bigbug->levelWsg.w) + i]){
         case c000:
             return &bigbug->s1Wsg;
@@ -475,14 +459,14 @@ static wsg_t (*bigbugGetWsgForCoord(const uint32_t i, const uint32_t j))[32]{
 /**
  * @brief Piece together a corner tile and draw it.
  */
-static void bigbugDrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const uint32_t j)
+static void bb_DrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const uint32_t j)
 {
     vec_t tilePos = {
             .x = i  * 64 - bigbug->camera.pos.x,
             .y = j * 64 - bigbug->camera.pos.y
         };
 
-    wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
+    wsg_t (*tileset)[32] = bb_GetWsgForCoord(i, j);
 
     drawWsgSimpleScaled(&(*tileset)[idx_arr[0]+16], tilePos.x,      tilePos.y,      2, 2);
     drawWsgSimpleScaled(&(*tileset)[idx_arr[1]+16], tilePos.x + 32, tilePos.y,      2, 2);
@@ -494,7 +478,7 @@ static void bigbugDrawCornerTile(const uint8_t* idx_arr, const uint32_t i, const
 /**
  * @brief Draw the bigbug field to the TFT
  */
-static void bigbugDrawField(void)
+static void bb_DrawField(void)
 {
     int32_t offsetX = (bigbug->camera.pos.x/2) % 256;
     int32_t offsetY = (bigbug->camera.pos.y/2) % 256;
@@ -578,77 +562,77 @@ static void bigbugDrawField(void)
                             
                             switch(corner_info){
                                 case 0: //0000
-                                    bigbugDrawCornerTile((uint8_t[]){12, 5, 10, 3},
+                                    bb_DrawCornerTile((uint8_t[]){12, 5, 10, 3},
                                     i,
                                     j);
                                     break;
                                 case 1: //0001
-                                    bigbugDrawCornerTile((uint8_t[]){12, 5, 10, 11},
+                                    bb_DrawCornerTile((uint8_t[]){12, 5, 10, 11},
                                     i, 
                                     j);
                                     break;
                                 case 2:  //0010
-                                    bigbugDrawCornerTile((uint8_t[]){12, 5, 2, 3},
+                                    bb_DrawCornerTile((uint8_t[]){12, 5, 2, 3},
                                     i,
                                     j);
                                     break;
                                 case 3:  //0011
-                                    bigbugDrawCornerTile((uint8_t[]){12, 5, 14, 7},
+                                    bb_DrawCornerTile((uint8_t[]){12, 5, 14, 7},
                                     i,
                                     j);
                                     break;
                                 case 4:  //0100
-                                    bigbugDrawCornerTile((uint8_t[]){12, 13, 10, 3},
+                                    bb_DrawCornerTile((uint8_t[]){12, 13, 10, 3},
                                     i,
                                     j);
                                     break;
                                 case 5:  //0101
-                                    bigbugDrawCornerTile((uint8_t[]){12, 13, 10, 11},
+                                    bb_DrawCornerTile((uint8_t[]){12, 13, 10, 11},
                                     i,
                                     j);
                                     break;
                                 case 6:  //0110
-                                    bigbugDrawCornerTile((uint8_t[]){12, 1, 14, 3},
+                                    bb_DrawCornerTile((uint8_t[]){12, 1, 14, 3},
                                     i,
                                     j);
                                     break;
                                 case 7:  //0111
-                                    bigbugDrawCornerTile((uint8_t[]){12, 13, 14, 15},
+                                    bb_DrawCornerTile((uint8_t[]){12, 13, 14, 15},
                                     i,
                                     j);
                                     break;
                                 case 8:  //1000
-                                    bigbugDrawCornerTile((uint8_t[]){4, 5, 10, 3},
+                                    bb_DrawCornerTile((uint8_t[]){4, 5, 10, 3},
                                     i,
                                     j);
                                     break;
                                 case 9:  //1001
-                                    bigbugDrawCornerTile((uint8_t[]){4, 5, 10, 11},
+                                    bb_DrawCornerTile((uint8_t[]){4, 5, 10, 11},
                                     i,
                                     j);
                                     break;
                                 case 10: //1010
-                                    bigbugDrawCornerTile((uint8_t[]){4, 5, 2, 3},
+                                    bb_DrawCornerTile((uint8_t[]){4, 5, 2, 3},
                                     i,
                                     j);
                                     break;
                                 case 11: //1011
-                                    bigbugDrawCornerTile((uint8_t[]){4, 5, 6, 7},
+                                    bb_DrawCornerTile((uint8_t[]){4, 5, 6, 7},
                                     i,
                                     j);
                                     break;
                                 case 12: //1100
-                                    bigbugDrawCornerTile((uint8_t[]){8, 1, 10, 3},
+                                    bb_DrawCornerTile((uint8_t[]){8, 1, 10, 3},
                                     i,
                                     j);
                                     break;
                                 case 13: //1101
-                                    bigbugDrawCornerTile((uint8_t[]){8, 9, 10, 11},
+                                    bb_DrawCornerTile((uint8_t[]){8, 9, 10, 11},
                                     i,
                                     j);
                                     break;
                                 case 14: //1110
-                                    bigbugDrawCornerTile((uint8_t[]){0, 1, 2, 3},
+                                    bb_DrawCornerTile((uint8_t[]){0, 1, 2, 3},
                                     i,
                                     j);
                                     break;
@@ -661,7 +645,7 @@ static void bigbugDrawField(void)
                             }
                             break;
                         default:
-                            drawWsgSimpleScaled(&(*bigbugGetWsgForCoord(i,j))[sprite_idx],
+                            drawWsgSimpleScaled(&(*bb_GetWsgForCoord(i,j))[sprite_idx],
                                                 i * 64 - bigbug->camera.pos.x,
                                                 j * 64 - bigbug->camera.pos.y,
                                                 2,
@@ -670,20 +654,20 @@ static void bigbugDrawField(void)
                     if((sprite_idx & 0b1100) == 0b1100 && !(corner_info & 0b1000)){
                         //FIX ME!!!!
                         //see about getting wsg for coord once
-                        drawWsgSimpleScaled(&(*bigbugGetWsgForCoord(i,j))[28], i  * 64 - bigbug->camera.pos.x,      j * 64 - bigbug->camera.pos.y,      2, 2);
+                        drawWsgSimpleScaled(&(*bb_GetWsgForCoord(i,j))[28], i  * 64 - bigbug->camera.pos.x, j * 64 - bigbug->camera.pos.y,2, 2);
                     }
                     if((sprite_idx & 0b0110) == 0b0110 && !(corner_info & 0b0100)){
-                        wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
+                        wsg_t (*tileset)[32] = bb_GetWsgForCoord(i, j);
 
                         drawWsgSimpleScaled(&(*tileset)[21], i  * 64 - bigbug->camera.pos.x + 32, j * 64 - bigbug->camera.pos.y,      2, 2);
                     }
                     if((sprite_idx & 0b0011) == 0b0011 && !(corner_info & 0b0001)){
-                        wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
+                        wsg_t (*tileset)[32] = bb_GetWsgForCoord(i, j);
 
                         drawWsgSimpleScaled(&(*tileset)[19], i  * 64 - bigbug->camera.pos.x + 32, j * 64 - bigbug->camera.pos.y + 32, 2, 2);
                     }
                     if((sprite_idx & 0b1001) == 0b1001 && !(corner_info & 0b0010)){
-                        wsg_t (*tileset)[32] = bigbugGetWsgForCoord(i, j);
+                        wsg_t (*tileset)[32] = bb_GetWsgForCoord(i, j);
 
                         drawWsgSimpleScaled(&(*tileset)[26], i  * 64 - bigbug->camera.pos.x,      j * 64 - bigbug->camera.pos.y + 32, 2, 2);
                     }
@@ -719,7 +703,7 @@ static void bigbugDrawField(void)
  *
  * @param elapsedUs The time that has elapsed since the last call to this function, in microseconds
  */
-static void bigbugGameLoop(int64_t elapsedUs)
+static void bb_GameLoop(int64_t elapsedUs)
 {
     // Always process button events, regardless of control scheme, so the main menu button can be captured
     buttonEvt_t evt = {0};
@@ -747,18 +731,18 @@ static void bigbugGameLoop(int64_t elapsedUs)
         // record the previous frame's position before any logic.
         bigbug->previousPos = bigbug->garbotnik.pos;
         // bigbugFadeLeds(elapsedUs);
-        bigbugControlGarbotnik(elapsedUs);
+        bb_ControlGarbotnik(elapsedUs);
         // bigbugControlCpuPaddle();
-        bigbugUpdatePhysics(elapsedUs);
+        bb_UpdatePhysics(elapsedUs);
     }
 
     // Set the LEDs
-    bigbugSetLeds();
+    bb_SetLeds();
     // Draw the field
-    bigbugDrawField();
+    bb_DrawField();
 }
 
-static void bigbugReset(void){
+static void bb_Reset(void){
     //Set all tiles to dirt
     for(int i = 0; i < TILE_FIELD_WIDTH; i++){
         for(int j = 0; j < TILE_FIELD_HEIGHT; j++){
@@ -795,7 +779,7 @@ static void bigbugReset(void){
 /**
  * @brief Set the LEDs
  */
-static void bigbugSetLeds(void)
+static void bb_SetLeds(void)
 {
     // Create an array for all LEDs
     led_t leds[CONFIG_NUM_LEDS];
@@ -809,7 +793,7 @@ static void bigbugSetLeds(void)
     setLeds(leds, CONFIG_NUM_LEDS);
 }
 
-static void bigbugUpdatePhysics(int64_t elapsedUs)
+static void bb_UpdatePhysics(int64_t elapsedUs)
 {
     // Apply garbotnik's drag
     int32_t sqMagVel= sqMagVec2d(bigbug->garbotnikVel);
@@ -941,4 +925,3 @@ static void bigbugUpdatePhysics(int64_t elapsedUs)
         bigbug->camera.pos.y = ((bigbug->garbotnik.pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
     }
 }
-

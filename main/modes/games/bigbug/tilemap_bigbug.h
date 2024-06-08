@@ -1,19 +1,12 @@
-#pragma once
-
+#ifndef _TILEMAP_BIGBUG_H_
+#define _TILEMAP_BIGBUG_H_
 //==============================================================================
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
-#include "fp_math.h"
 
 //==============================================================================
-// Defines
+// Constants
 //==============================================================================
 
-#ifndef _MODE_BIGBUG_H_
-#define _MODE_BIGBUG_H_
-
-extern swadgeMode_t bigbugMode;
- 
 #endif
