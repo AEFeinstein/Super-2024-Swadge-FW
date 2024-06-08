@@ -41,16 +41,52 @@ typedef enum
     PROPRIETARY = 0x7F,
 } metaEventType_t;
 
+/// @brief The MIDI file format, which determines how to interpret the track or tracks it contains
+typedef enum
+{
+    /// @brief One track containing MIDI
+    MIDI_FORMAT_0 = 0,
+    /// @brief Multiple simultaneous tracks
+    MIDI_FORMAT_1 = 1,
+    /// @brief Multiple sequential tracks
+    MIDI_FORMAT_2 = 2,
+} midiFileFormat_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
 
-typedef struct midiReaderState midiReaderState_t;
+typedef struct
+{
+    /// @brief Total chunk length
+    uint32_t length;
+
+    /// @brief Pointer to the start of this chunk's data
+    uint8_t* data;
+} midiTrack_t;
 
 typedef struct
 {
     uint8_t* data;
     uint32_t length;
+
+    midiFileFormat_t format;
+
+    /// @brief The time division of MIDI frames, either ticks per frame or ticks per quarter note
+    uint16_t timeDivision;
+
+    /// @brief The number of tracks in this file
+    uint16_t trackCount;
+
+    /// @brief An array of MIDI tracks
+    midiTrack_t* tracks;
+} midiFile_t;
+
+typedef struct midiReaderState midiReaderState_t;
+
+typedef struct
+{
+    midiFile_t* file;
 
     /// @brief If true, text meta-events will be handled and sent to the MIDI player
     bool handleMetaEvents;
@@ -73,7 +109,7 @@ typedef struct
     uint32_t length;
     union {
         const char* text;
-        uint8_t* data;
+        const uint8_t* data;
         uint32_t tempo;
         uint16_t sequenceNumber;
         uint8_t prefix;
@@ -137,20 +173,23 @@ typedef struct
 /**
  * @brief Load a MIDI file from SPIFFS
  *
- * @param reader The reader to load the file into
- * @param file The name of the MIDI file to load
+ * @param file A pointer to a midiFile_t struct to load the file into
+ * @param name The name of the MIDI file to load
  * @param spiRam Whether to load the MIDI file into SPIRAM
  * @return true If the load succeeded
  * @return false If the load failed
  */
-bool loadMidiFile(midiFileReader_t* reader, const char* file, bool spiRam);
+bool loadMidiFile(midiFile_t* file, const char* name, bool spiRam);
 
 /**
- * @brief Free the MIDI file loaded into the given reader
+ * @brief Free the data associated with the given MIDI file
  *
- * @param reader The reader to unload the file from
+ * @param file A pointer to the MIDI file to be unloaded
  */
-void unloadMidiFile(midiFileReader_t* reader);
+void unloadMidiFile(midiFile_t* file);
+
+bool initMidiParser(midiFileReader_t* reader, midiFile_t* file);
+void deinitMidiParser(midiFileReader_t* reader);
 
 /**
  * @brief Return the start time of the next event in the MIDI file being read
@@ -166,16 +205,6 @@ uint32_t midiNextEventTime(midiFileReader_t* reader);
  * @param reader The reader to read the event from
  * @param event A pointer to a MIDI event to be updated with the next event
  * @return true If event data was written to event
- * @return false If there are no more events in this file
+ * @return false If there are no more events in this file or there was a fatal parse error
  */
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event);
-
-/**
- * @brief Process the next event in the file and play it with the given player
- *
- * @param reader The MIDI file reader to retrieve the next event from
- * @param player The MIDI player to send the next event to
- * @return true If there was a next event and it was sent
- * @return false If there are no more events in this file
- */
-//bool midiPlayNext(midiFileReader_t* reader, midiPlayer_t* player);

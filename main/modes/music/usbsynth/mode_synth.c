@@ -70,6 +70,7 @@ typedef struct
     bool playing[16];
     uint8_t lastPackets[16][4];
 
+    midiFile_t midiFile;
     midiPlayer_t midiPlayer;
     midiFileReader_t midiFileReader;
     bool fileMode;
@@ -414,9 +415,22 @@ static void synthEnterMode(void)
     sd->fileMode = true;
     if (sd->fileMode)
     {
-        loadMidiFile(&sd->midiFileReader, "all_star.midi", false);
-        sd->midiPlayer.textMessageCallback = midiTextCallback;
-        midiSetFile(&sd->midiPlayer, &sd->midiFileReader);
+        if (loadMidiFile(&sd->midiFile, "all_star.midi", false))
+        {
+            if (initMidiParser(&sd->midiFileReader, &sd->midiFile))
+            {
+                sd->midiPlayer.textMessageCallback = midiTextCallback;
+                midiSetFile(&sd->midiPlayer, &sd->midiFileReader);
+            }
+            else
+            {
+                ESP_LOGE("Synth", "Could not init MIDI parser");
+            }
+        }
+        else
+        {
+            ESP_LOGE("Synth", "Could not load MIDI file");
+        }
     }
 
     loadWsg("piano.wsg", &sd->instrumentImages[0], false);
@@ -454,7 +468,7 @@ static void synthExitMode(void)
     {
         freeWsg(&sd->instrumentImages[i]);
     }
-    unloadMidiFile(&sd->midiFileReader);
+    unloadMidiFile(&sd->midiFile);
     freeFont(&sd->font);
     free(sd);
     sd = NULL;

@@ -25,13 +25,11 @@
 // Structs
 //==============================================================================
 
+/// @brief Contains all track-specific parsing state
 typedef struct
 {
-    /// @brief Total chunk length
-    uint32_t length;
-
-    /// @brief Pointer to the start of this chunk's data
-    uint8_t* data;
+    /// @brief A pointer to the MIDI track itself
+    const midiTrack_t* track;
 
     /// @brief The pointer to the current offset within this chunk
     uint8_t* cur;
@@ -56,7 +54,7 @@ typedef struct
 
     /// @brief Whether or not the END OF TRACK event has been read
     bool done;
-} chunkInfo_t;
+} trackState_t;
 
 struct midiReaderState
 {
@@ -69,14 +67,8 @@ struct midiReaderState
     /// @brief The MIDI file format - either 0, 1, or 2
     uint16_t format;
 
-    /// @brief The number of tracks in this file
-    uint16_t trackChunkCount;
-
     /// @brief An array holding info for each track in the file
-    chunkInfo_t trackChunks[MAX_TRACK_CHUNKS];
-
-    /// @brief A buffer for large SysEx or meta event data
-    uint8_t eventBuffer[1024];
+    trackState_t* trackChunks;
 };
 
 //==============================================================================
@@ -84,9 +76,10 @@ struct midiReaderState
 //==============================================================================
 
 static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out);
-static bool setupEventBuffer(chunkInfo_t* track, uint32_t length);
-static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track);
-static bool parseMidiHeader(midiFileReader_t* reader);
+static bool setupEventBuffer(trackState_t* track, uint32_t length);
+static bool trackParseNext(midiFileReader_t* reader, trackState_t* track);
+static bool parseMidiHeader(midiFile_t* file);
+static void readFirstEvents(midiFileReader_t* reader);
 
 //==============================================================================
 // Variables
@@ -128,7 +121,7 @@ static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out)
     return read;
 }
 
-static bool setupEventBuffer(chunkInfo_t* track, uint32_t length)
+static bool setupEventBuffer(trackState_t* track, uint32_t length)
 {
     if (!track->eventBuffer || track->eventBufferSize < length)
     {
@@ -157,9 +150,9 @@ static bool setupEventBuffer(chunkInfo_t* track, uint32_t length)
     return true;
 }
 
-#define TRK_REMAIN() (track->length - (track->cur - track->data))
-#define ERR() do { track->eventParsed = false; track->nextEvent.deltaTime = UINT32_MAX; return false; } while (0)
-static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
+#define TRK_REMAIN() (track->track->length - (track->cur - track->track->data))
+#define ERR() do { track->eventParsed = false; track->nextEvent.deltaTime = UINT32_MAX; ESP_LOGE("MIDIParser", "Error parsing at line %d and offset %" PRIuPTR " (total offset %" PRIuPTR ")", __LINE__, (track->cur - track->track->data), (track->cur - reader->file->data)); return false; } while (0)
+static bool trackParseNext(midiFileReader_t* reader, trackState_t* track)
 {
     if (track->done)
     {
@@ -618,199 +611,225 @@ static bool trackParseNext(midiFileReader_t* reader, chunkInfo_t* track)
     return true;
 }
 
-static bool parseMidiHeader(midiFileReader_t* reader)
+/**
+ * @brief Parse the information contained in the MIDI header and write it to the file struct
+ *
+ * @param file The MIDI file struct to write header data into
+ * @return true if the MIDI file contains a valid header and was successfully parsed
+ * @return false if the MIDI file header could not be parsed
+ */
+static bool parseMidiHeader(midiFile_t* file)
 {
-    midiReaderState_t* state = reader->state;
+    uint32_t offset = 0;
 
-    if (!state->headerRead)
+    if (file->length < (8 + 6))
     {
-        if (reader->length < (8 + 6))
+        ESP_LOGE("MIDIParser", "Not a MIDI file! Length insufficient for header");
+    }
+
+    // I mean, offset should be 0
+    if (memcmp(file->data + offset, midiHeader, sizeof(midiHeader)))
+    {
+        ESP_LOGE("MIDIParser", "Not a MIDI file! Header does not match: %" PRIx8 ", %" PRIx8 ", %" PRIx8 ", %" PRIx8 "", file->data[offset], file->data[offset+1], file->data[offset+2], file->data[offset+3]);
+        // Not a MIDI file!
+        return false;
+    }
+
+    offset += sizeof(midiHeader);
+    uint32_t chunkLen = (file->data[offset] << 24)
+        | (file->data[offset + 1] << 16)
+        | (file->data[offset + 2] << 8)
+        | file->data[offset + 3];
+
+    offset += 4;
+
+    uint16_t format = (file->data[offset] << 8) | file->data[offset + 1];
+    offset += 2;
+
+    if (format > 2)
+    {
+        ESP_LOGE("MIDIParser", "Unsupported MIDI file format: %" PRIu16, format);
+        // Unsupported format! Technically we're supposed to try and parse still.
+        return false;
+    }
+    file->format = (midiFileFormat_t)format;
+
+    uint16_t trackChunkCount = (file->data[offset] << 8) | file->data[offset + 1];
+    offset += 2;
+    file->trackCount = trackChunkCount;
+    file->tracks = calloc(trackChunkCount, sizeof(midiTrack_t));
+    if (NULL == file->tracks)
+    {
+        ESP_LOGE("MIDIParser", "Could not allocate data for MIDI file with %" PRIu16 " tracks", trackChunkCount);
+        return false;
+    }
+
+    uint16_t division = (file->data[offset] << 8) | file->data[offset + 1];
+    offset += 2;
+
+    if (division & 0x8000)
+    {
+        // MIDI Spec Sez:
+        // Bits 14 thru 8 contain one of the four values -24, -25, -29, or -30, corresponding to
+        // the four standard SMPTE and MIDI time code formats (-29 corresponds to 30 drop frame)
+        int8_t smpte = (((int16_t)division) >> 8) & 0xFF;
+        uint8_t framesPerSecond = -smpte;
+
+        // -24: 24fps
+        // -25: 25fps
+        // -29: 29.97fps (30 drop frame)
+        // -30: 30fps
+
+        // If we get 29.97...
+        // Wikipedia sez:
+        // In order to make an hour of timecode match an hour on the clock, drop-frame timecode
+        // skips frame numbers 0 and 1 of the first second of every minute, except when the number
+        // of minutes is divisible by ten.
+        // TODO: Screw that, I'm just going to round it to 30 for now
+        if (framesPerSecond == 29)
         {
-            ESP_LOGE("MIDIParser", "Not a MIDI file! Length insufficient for header");
+            // GET YOUR UGLY FRAMERATE OUT OF HERE
+            framesPerSecond = 30;
         }
 
-        // I mean, offset should be 0
-        if (memcmp(reader->data + state->offset, midiHeader, sizeof(midiHeader)))
+        // positive timecode division
+        uint8_t ticksPerFrame = (division & 0xFF);
+        file->timeDivision = ticksPerFrame;
+    }
+    else
+    {
+        // ticks per quarter note
+        uint16_t ticksPerQuarterNote = (division & 0x7FFF);
+        file->timeDivision = ticksPerQuarterNote;
+    }
+
+    // TODO: Actually do something with the timing info
+
+    // Skip anything extra that might be in the header
+    if (offset < chunkLen)
+    {
+        offset = chunkLen - (sizeof(midiHeader) + 4);
+        if (offset >= file->length)
         {
-            ESP_LOGE("MIDIParser", "Not a MIDI file! Header does not match: %hhx, %hhx, %hhx, %hhx", reader->data[state->offset], reader->data[state->offset+1], reader->data[state->offset+2], reader->data[state->offset+3]);
-            // Not a MIDI file!
+            ESP_LOGE("MIDIParser", "Header length exceeds data length");
             return false;
         }
+    }
 
-        state->offset += sizeof(midiHeader);
-        uint32_t chunkLen = (reader->data[state->offset] << 24)
-            | (reader->data[state->offset + 1] << 16)
-            | (reader->data[state->offset + 2] << 8)
-            | reader->data[state->offset + 3];
+    if (format == 0 && trackChunkCount != 1)
+    {
+        ESP_LOGE("MIDIParser", "Type-0 MIDI file should have 1 track, instead it has: %" PRIu16, trackChunkCount);
+        return false;
+    }
 
-        state->offset += 4;
+    // Current offset should be at the next track
+    uint8_t* ptr = file->data + offset;
 
-        uint16_t format = (reader->data[state->offset] << 8) | reader->data[state->offset + 1];
-        state->offset += 2;
-
-        if (format > 2)
-        {
-            ESP_LOGE("MIDIParser", "Unsupported MIDI file format: %" PRIu16, format);
-            // Unsupported format! Technically we're supposed to try and parse still.
-            return false;
-        }
-        state->format = format;
-
-        uint16_t trackChunkCount = (reader->data[state->offset] << 8) | reader->data[state->offset + 1];
-        state->offset += 2;
-        state->trackChunkCount = trackChunkCount;
-        if (trackChunkCount >= MAX_TRACK_CHUNKS)
-        {
-            ESP_LOGE("MIDIParser", "MIDI file track count exceeds maximum of %d: %" PRIu16, MAX_TRACK_CHUNKS, trackChunkCount);
-        }
-
-        uint16_t division = (reader->data[state->offset] << 8) | reader->data[state->offset + 1];
-        state->offset += 2;
-
-        if (division & 0x8000)
-        {
-            // MIDI Spec Sez:
-            // Bits 14 thru 8 contain one of the four values -24, -25, -29, or -30, corresponding to
-            // the four standard SMPTE and MIDI time code formats (-29 corresponds to 30 drop frame)
-            int8_t smpte = (((int16_t)division) >> 8) & 0xFF;
-            uint8_t framesPerSecond = -smpte;
-
-            // -24: 24fps
-            // -25: 25fps
-            // -29: 29.97fps (30 drop frame)
-            // -30: 30fps
-
-            // If we get 29.97...
-            // Wikipedia sez:
-            // In order to make an hour of timecode match an hour on the clock, drop-frame timecode
-            // skips frame numbers 0 and 1 of the first second of every minute, except when the number
-            // of minutes is divisible by ten.
-            // TODO: Screw that, I'm just going to round it to 30 for now
-            if (framesPerSecond == 29)
-            {
-                // GET YOUR UGLY FRAMERATE OUT OF HERE
-                framesPerSecond = 30;
-            }
-
-            // positive timecode division
-            uint8_t ticksPerFrame = (division & 0xFF);
-            reader->division = ticksPerFrame;
-        }
-        else
-        {
-            // ticks per quarter note
-            uint16_t ticksPerQuarterNote = (division & 0x7FFF);
-            reader->division = ticksPerQuarterNote;
-        }
-
-        // TODO: Actually do something with the timing info
-
-        // Skip anything extra that might be in the header
-        if (state->offset < chunkLen)
-        {
-            state->offset = chunkLen - (sizeof(midiHeader) + 4);
-            if (state->offset >= reader->length)
-            {
-                ESP_LOGE("MIDIParser", "Header length exceeds data length");
-                return false;
-            }
-        }
-
-        state->headerRead = true;
-
-        if (format == 0 && trackChunkCount != 1)
-        {
-            ESP_LOGE("MIDIParser", "Type-0 MIDI file should have 1 track, instead it has: %" PRIu16, trackChunkCount);
-            return false;
-        }
-
-        // Current offset should be at the next track
-        uint8_t* ptr = reader->data + state->offset;
-
-        // Regardless, if there are multiple tracks we want to grab pointers to them all
-        int i = 0;
-        while (i < trackChunkCount)
-        {
-            // Check to make sure we don't overrun the buffer reading the header
-            if ((ptr - reader->data) + 8 >= reader->length)
-            {
-                ESP_LOGE("MIDIParser", ":%d Reached end of file unexpectedly while reading track chunk %d", __LINE__, i);
-                return false;
-            }
-
-            // Check the header of this chunk
-            if (memcmp(ptr, trackHeader, sizeof(trackHeader)))
-            {
-                ESP_LOGW("MIDIParser", "Start of chunk %d did not contain track chunk header", i);
-
-                // We should ignore unknown chunk types
-                ptr += sizeof(trackHeader);
-
-                // Read this chunk's header -- all chunks should have this
-                uint32_t unkChunkLen = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
-                ptr += 4;
-
-                // Advance to the start of the next chunk
-                ptr += unkChunkLen;
-
-                // Don't increment trackChunkCount!
-                continue;
-            }
-
-            ptr += sizeof(trackHeader);
-
-            uint32_t trackChunkLen = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
-            ptr += 4;
-
-            if (ptr + trackChunkLen - reader->data > reader->length)
-            {
-                ESP_LOGW("MIDIParser", "Track chunk %d claims length of %" PRIu32 " but there are only %" PRIuPTR " bytes remaining in the file", i, trackChunkLen, reader->length - (ptr - reader->data));
-                trackChunkLen = reader->length - (ptr - reader->data);
-            }
-
-            // Save track length and offset information
-            state->trackChunks[i].length = trackChunkLen;
-            state->trackChunks[i].data = ptr;
-            state->trackChunks[i].cur = ptr;
-
-            // Advance the pointer to the start of the next chunk
-            ptr += trackChunkLen;
-
-            state->trackChunks[i].eventParsed = trackParseNext(reader, &state->trackChunks[i]);
-
-            // Handle empty tracks, basically
-            if (!state->trackChunks[i].eventParsed)
-            {
-                state->trackChunks[i].nextEvent.deltaTime = UINT32_MAX;
-            }
-
-            i++;
-        }
-
-        if (ptr - reader->data > reader->length)
+    // Regardless, if there are multiple tracks we want to grab pointers to them all
+    int i = 0;
+    while (i < trackChunkCount)
+    {
+        // Check to make sure we don't overrun the buffer reading the header
+        if ((ptr - file->data) + 8 >= file->length)
         {
             ESP_LOGE("MIDIParser", ":%d Reached end of file unexpectedly while reading track chunk %d", __LINE__, i);
             return false;
         }
 
-        // Header has been read and all track offsets have been loaded
-        // And all track data chunks should be safe
+        // Check the header of this chunk
+        if (memcmp(ptr, trackHeader, sizeof(trackHeader)))
+        {
+            ESP_LOGW("MIDIParser", "Start of chunk %d did not contain track chunk header", i);
+
+            // We should ignore unknown chunk types
+            ptr += sizeof(trackHeader);
+
+            // Read this chunk's header -- all chunks should have this
+            uint32_t unkChunkLen = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
+            ptr += 4;
+
+            // Advance to the start of the next chunk
+            ptr += unkChunkLen;
+
+            // Don't increment trackChunkCount!
+            continue;
+        }
+
+        ptr += sizeof(trackHeader);
+
+        uint32_t trackChunkLen = (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | ptr[3];
+        ptr += 4;
+
+        if (ptr + trackChunkLen - file->data > file->length)
+        {
+            ESP_LOGW("MIDIParser", "Track chunk %d claims length of %" PRIu32 " but there are only %" PRIuPTR " bytes remaining in the file", i, trackChunkLen, file->length - (ptr - file->data));
+            trackChunkLen = file->length - (ptr - file->data);
+        }
+
+        // Save track length and offset information
+        file->tracks[i].length = trackChunkLen;
+        file->tracks[i].data = ptr;
+
+        // Advance the pointer to the start of the next chunk
+        ptr += trackChunkLen;
+
+        i++;
     }
 
+    if (ptr - file->data > file->length)
+    {
+        ESP_LOGE("MIDIParser", ":%d Reached end of file unexpectedly while reading track chunk %d", __LINE__, i);
+        //ESP_LOGE("MIDIParser", "Track chunk claims length of")
+        return false;
+    }
+
+    // Header has been read and all track offsets have been loaded
+    // And all track data chunks should be safe
     return true;
 }
 
-bool loadMidiFile(midiFileReader_t* reader, const char* file, bool spiRam)
+static void readFirstEvents(midiFileReader_t* reader)
+{
+    for (int i = 0; i < reader->file->trackCount; i++)
+    {
+        // Parse the first event from each track?
+        reader->state->trackChunks[i].eventParsed = trackParseNext(reader, &reader->state->trackChunks[i]);
+
+        // Handle empty/invalid tracks
+        if (!reader->state->trackChunks[i].eventParsed)
+        {
+            reader->state->trackChunks[i].done = true;
+            reader->state->trackChunks[i].nextEvent.deltaTime = UINT32_MAX;
+        }
+    }
+}
+
+bool loadMidiFile(midiFile_t* file, const char* name, bool spiRam)
 {
     uint32_t size;
-    uint8_t* data = readHeatshrinkFile(file, &size, spiRam);
+    uint8_t* data = readHeatshrinkFile(name, &size, spiRam);
     if (data != NULL)
     {
-        ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", file, size);
-        reader->data = data;
-        reader->length = (uint32_t)size;
-        reader->state = calloc(1, sizeof(struct midiReaderState));
-        return true;
+        ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
+        file->data = data;
+        file->length = (uint32_t)size;
+        //reader->state = calloc(1, sizeof(struct midiReaderState));
+        if (parseMidiHeader(file))
+        {
+            return true;
+        }
+        else
+        {
+            // Parsing failed, so free the data and return false
+            if (file->tracks != NULL)
+            {
+                // TODO should this be handled in the parser?
+                free(file->tracks);
+            }
+            free(data);
+            memset(file, 0, sizeof(midiFile_t));
+            return false;
+        }
     }
     else
     {
@@ -818,43 +837,80 @@ bool loadMidiFile(midiFileReader_t* reader, const char* file, bool spiRam)
     }
 }
 
-void unloadMidiFile(midiFileReader_t* reader)
+void unloadMidiFile(midiFile_t* file)
 {
-    free(reader->state);
+    free(file->tracks);
+    free(file->data);
+    memset(file, 0, sizeof(midiFile_t));
+
+    /*free(reader->state);
     free(reader->data);
 
     reader->state = NULL;
     reader->data = NULL;
-    reader->length = 0;
+    reader->length = 0;*/
 }
 
-uint32_t midiNextEventTime(midiFileReader_t* reader)
+bool initMidiParser(midiFileReader_t* reader, midiFile_t* file)
 {
-    return UINT32_MAX;
+    reader->file = file;
+    // TODO is this necessary
+    reader->division = file->timeDivision;
+
+    //size_t allocSize = ((sizeof(struct midiReaderState) + 3) % 4) + reader->file->trackCount * sizeof(trackState_t);
+    reader->state = calloc(1, sizeof(struct midiReaderState));
+    if (NULL == reader->state)
+    {
+        return false;
+    }
+
+    // TODO: Maybe we could allocate these alongside the state itself but alignment might be an issue
+    reader->state->trackChunks = calloc(reader->file->trackCount, sizeof(trackState_t));
+    if (NULL == reader->state->trackChunks)
+    {
+        free(reader->state);
+        reader->state = NULL;
+        return false;
+    }
+
+    // Initialize the reader's internal per-track parsing states
+    for (int i = 0; i < reader->file->trackCount; i++)
+    {
+        reader->state->trackChunks[i].track = &reader->file->tracks[i];
+        reader->state->trackChunks[i].cur = reader->file->tracks[i].data;
+    }
+
+    // Read the first event from each track
+    // Some tracks might be malformed or have no events but this isn't a fatal error.
+    // In that situation we just set done = true and set the timestamp to UINT32_MAX,
+    // so no more events will be read from that track but the rest are still used.
+    readFirstEvents(reader);
+
+    // Success!
+    return true;
+}
+
+void deinitMidiParser(midiFileReader_t* reader)
+{
+    free(reader->state->trackChunks);
+    free(reader->state);
+    reader->state = NULL;
 }
 
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 {
     uint32_t minTime = UINT32_MAX;
     // Pointer to the next track
-    chunkInfo_t* nextTrack = NULL;
-
-    if (!reader->state->headerRead)
-    {
-        if (!parseMidiHeader(reader))
-        {
-            return false;
-        }
-    }
+    trackState_t* nextTrack = NULL;
 
     // TODO: This treats all formats like a format 1 (simultaneous)
-    for (int i = 0; i < reader->state->trackChunkCount; i++)
+    for (int i = 0; i < reader->file->trackCount; i++)
     {
-        chunkInfo_t* info = &reader->state->trackChunks[i];
+        trackState_t* info = &reader->state->trackChunks[i];
 
         if (!info->eventParsed && info->nextEvent.deltaTime != UINT32_MAX)
         {
-            // Avoid trying and failing to parse if we just shouldn't!
+            // Avoid trying and failing to parse a track we've already finished
             if (info->done)
             {
                 continue;
@@ -864,10 +920,11 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 
         // Check if we either already have a parsed event waiting, or are able to parse one now
         // Short-circuiting will make sure we only parse another event when needed and permitted
+        // TODO doesn't this basically do the same thing as the block above?
         if (info->eventParsed || (info->nextEvent.deltaTime != UINT32_MAX && trackParseNext(reader, info)))
         {
             // info->nextEvent has now been set by trackParseNext()
-            if (!info->nextEvent.deltaTime)
+            if (!info->nextEvent.deltaTime /*|| reader->file->format == MIDI_FORMAT_2*/)
             {
                 // The delta-time is 0! Just return this event immediately
                 *event = info->nextEvent;
@@ -879,7 +936,6 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
             else if (info->time + info->nextEvent.deltaTime < minTime)
             {
                 // This is the most-next event, so set minTime to its time
-                // TODO: add this to time when consumed
                 minTime = info->time + info->nextEvent.deltaTime;
                 nextTrack = info;
             }
@@ -898,8 +954,3 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
     nextTrack->time += event->deltaTime;
     return true;
 }
-
-/*bool midiPlayNext(midiFileReader_t* reader, midiPlayer_t* next)
-{
-    return false;
-}*/
