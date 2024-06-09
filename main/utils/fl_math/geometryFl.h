@@ -1,31 +1,31 @@
-/*! \file geometry.h
+/*! \file geometryFl.h
  *
- * \section geometry_design Design Philosophy
+ * \section geometry_fl_design Design Philosophy
  *
- * These utility functions are can be used for geometric math.
+ * These utility functions are can be used for geometric math with floating point numbers.
  *
  * Much of this file was adapted from https://www.jeffreythompson.org/collision-detection/
  *
- * \section geometry_usage Usage
+ * \section geometry_fl_usage Usage
  *
  * No initialization or deinitialization is required. Each function will not modify the given shapes. See the functions
  * below for what is provided and how to use them.
  *
- * \section geometry_example Example
+ * \section geometry_fl_example Example
  *
  * \code{.c}
  * circleFl_t circ = {
- *     .pos.x  = 2,
- *     .pos.y  = 5,
- *     .radius = 8,
+ *     .pos.x  = 2.5f,
+ *     .pos.y  = 5.5f,
+ *     .radius = 8.5f,
  * };
  * rectangleFl_t rect = {
- *     .pos.x  = -2,
- *     .pos.y  = -4,
- *     .width  = 6,
- *     .height = 9,
+ *     .pos.x  = -2.5f,
+ *     .pos.y  = -4.5f,
+ *     .width  = 6.5f,
+ *     .height = 9.5f,
  * };
- * if (circleRectIntersection(circ, rect, NULL))
+ * if (circleRectFlIntersection(circ, rect, NULL))
  * {
  *     printf("Shapes intersect\n");
  * }
@@ -44,6 +44,7 @@
 #include <float.h>
 #include "vectorFl2d.h"
 
+/** A small value to account for floating point rounding errors */
 #define EPSILON 0.0001f
 
 /**

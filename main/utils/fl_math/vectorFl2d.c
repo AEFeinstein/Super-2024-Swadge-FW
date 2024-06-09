@@ -81,7 +81,7 @@ float dotVecFl2d(vecFl_t left, vecFl_t right)
  * @brief Rotate a vector by a number of degrees and return the result
  *
  * @param vector The vector to rotate
- * @param degree The angle to rotate clockwise by, in radians
+ * @param radians The angle to rotate clockwise by, in radians
  * @return The rotated vector
  */
 vecFl_t rotateVecFl2d(vecFl_t vector, float radians)

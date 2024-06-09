@@ -282,15 +282,16 @@ bool circleLineFlIntersection(circleFl_t circle, lineFl_t line, bool checkEnds, 
 }
 
 /**
- * @brief TODO
+ * @brief Find the points of intersection between a circle's circumference and a line. There may be zero (no
+ * intersection), one (tangent), or two points of intersection.
  *
  * See https://cp-algorithms.com/geometry/circle-line-intersection.html
  *
- * @param circle
- * @param line
- * @param intersection_1
- * @param intersection_2
- * @return int16_t
+ * @param circle [IN] The circle to check for intersection
+ * @param line [IN] The line to check for intersection
+ * @param intersection_1 [OUT] If it exists, the first intersection will be written to this pointer
+ * @param intersection_2 [OUT] If it exists, the second intersection will be written to this pointer
+ * @return The number of intersections, between 0 and 2. \p intersection_1 is filled before \p intersection_2.
  */
 int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t* intersection_1,
                                        vecFl_t* intersection_2)
@@ -393,8 +394,8 @@ int16_t circleLineFlIntersectionPoints(circleFl_t circle, lineFl_t line, vecFl_t
  *
  * Adapted from https://www.jeffreythompson.org/collision-detection/line-line.php
  *
- * @param line1 [IN] One line to check for intersection
- * @param line2 [IN] Another line to check for intersection
+ * @param a [IN] One line to check for intersection
+ * @param b [IN] Another line to check for intersection
  * @return true if the lines intersect, false if they do not
  */
 bool lineLineFlIntersection(lineFl_t a, lineFl_t b)

@@ -1,4 +1,4 @@
-/*! \file vector2d.h
+/*! \file vectorFl2d.h
  *
  * \section vector_fl_design Design Philosophy
  *
@@ -45,7 +45,7 @@ vecFl_t mulVecFl2d(vecFl_t vector, float scalar);
 vecFl_t divVecFl2d(vecFl_t vector, float scalar);
 
 float dotVecFl2d(vecFl_t left, vecFl_t right);
-vecFl_t rotateVecFl2d(vecFl_t vector, float degree);
+vecFl_t rotateVecFl2d(vecFl_t vector, float radians);
 float magVecFl2d(vecFl_t vector);
 float sqMagVecFl2d(vecFl_t vector);
 vecFl_t normVecFl2d(vecFl_t in);
