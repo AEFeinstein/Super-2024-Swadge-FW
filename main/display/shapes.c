@@ -1111,6 +1111,67 @@ static void drawCircleFilledInner(int xm, int ym, int r, paletteColor_t col, int
 }
 
 /**
+ * @brief Draw the outline of a circle with the given stroke width
+ *
+ * @param xm The X coordinate of the center of the circle
+ * @param ym The Y coordinate of the center of the circle
+ * @param r The radius of the circle
+ * @param stroke The stroke width (pixels inside the radius)
+ * @param col The color to draw
+ */
+void drawCircleOutline(int xm, int ym, int r, int stroke, paletteColor_t col)
+{
+    SETUP_FOR_TURBO();
+
+    // Outer circle
+    int x = -r, y = 0, err = 2 - 2 * r; /* bottom left to top right */
+
+    // Inner circle
+    int r_inner = r - stroke;
+    int x_inner = -r_inner, y_inner = 0, err_inner = 2 - 2 * r_inner; /* bottom left to top right */
+
+    // Iterates over Y
+    do
+    {
+        // Iterates over X
+        for (int lineX = xm + x; lineX <= xm - x; lineX++)
+        {
+            // Only draw the outline
+            if (lineX < (xm + x_inner) || lineX > (xm - x_inner))
+            {
+                TURBO_SET_PIXEL_BOUNDS(lineX, (ym - y), col);
+                TURBO_SET_PIXEL_BOUNDS(lineX, (ym + y), col);
+            }
+        }
+
+        // Iterate the outer circle
+        r = err;
+        if (r <= y)
+        {
+            err += ++y * 2 + 1; /* e_xy+e_y < 0 */
+        }
+        if (r > x || err > y) /* e_xy+e_x > 0 or no 2nd y-step */
+        {
+            err += ++x * 2 + 1; /* -> x-step now */
+        }
+
+        // Iterate the inner circle to match
+        while (y_inner != y)
+        {
+            r_inner = err_inner;
+            if (r_inner <= y_inner)
+            {
+                err_inner += ++y_inner * 2 + 1; /* e_xy+e_y < 0 */
+            }
+            if (r_inner > x_inner || err_inner > y_inner) /* e_xy+e_x > 0 or no 2nd y-step */
+            {
+                err_inner += ++x_inner * 2 + 1; /* -> x-step now */
+            }
+        }
+    } while (x < 0);
+}
+
+/**
  * @brief Draw a filled circle
  *
  * @param xm The X coordinate of the center of the circle

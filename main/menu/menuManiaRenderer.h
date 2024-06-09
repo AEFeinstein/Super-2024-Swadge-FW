@@ -32,6 +32,17 @@
 #include "spiffs_wsg.h"
 #include "hdw-led.h"
 
+typedef struct
+{
+    int16_t orbitAngle;       ///< Angle for the orbit circles
+    int32_t orbitTimer;       ///< Timer to rotate the orbit circles
+    int32_t orbitUsPerDegree; ///< Number of microseconds to wait before rotating by one degree
+    int32_t orbitDirection;   ///< The direction to rotate, +1 or -1
+    int16_t diameterAngle;    ///< Angle to grow and shrink the orbit circles
+    int32_t diameterTimer;    ///< Timer to grow and shrink the orbit circles
+    paletteColor_t color;     ///< The color of this ring
+} maniaRing_t;
+
 /**
  * @brief A struct containing all the state data to render a mania-style menu and LEDs
  */
@@ -49,15 +60,7 @@ typedef struct
     led_t leds[CONFIG_NUM_LEDS];    ///< An array with the RGB LED state to be output
     wsg_t batt[4];                  ///< Images for the battery levels
 
-    int16_t innerOrbitAngle; ///< Angle for the inner orbit circle
-    int16_t outerOrbitAngle; ///< Angle for the outer orbit circle
-    int32_t innerOrbitTimer; ///< Timer to rotate the inner orbit circle
-    int32_t outerOrbitTimer; ///< Timer to rotate the outer orbit circle
-
-    int32_t innerRingTimer; ///< Timer to grow and shrink the inner orbit circle
-    int32_t outerRingTimer; ///< Timer to grow and shrink the outer orbit circle
-    int16_t innerRingAngle; ///< Angle to grow and shrink the inner orbit circle
-    int16_t outerRingAngle; ///< Angle to grow and shrink the outer orbit circle
+    maniaRing_t rings[2];
 
     int32_t ledDecayTimer;  ///< Timer to decay LEDs
     int32_t ledExciteTimer; ///< Timer to excite LEDs

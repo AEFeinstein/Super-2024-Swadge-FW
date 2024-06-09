@@ -47,7 +47,8 @@
 #define ROW_TEXT_COLOR     c555
 // #define ROW_TEXT_SELECTED_COLOR c533
 
-#define ORBIT_RING_RADIUS     26
+#define ORBIT_RING_RADIUS_1   26
+#define ORBIT_RING_RADIUS_2   18
 #define RING_STROKE_THICKNESS 8
 #define MIN_RING_RADIUS       64
 #define MAX_RING_RADIUS       114
@@ -141,9 +142,26 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
     // Initialize LEDs
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
-    // Set initial angles (these get trig'd into sizes)
-    renderer->innerRingAngle = 0;
-    renderer->outerRingAngle = 180;
+    // Initialize Rings
+    const paletteColor_t ringColors[] = {
+        INNER_RING_COLOR,
+        OUTER_RING_COLOR,
+    };
+    int32_t ringMinSpeed = 15000;
+    int32_t ringMaxSpeed = 20000;
+    int32_t ringDir      = 1; // Flips each ring
+    for (int16_t i = 0; i < ARRAY_SIZE(renderer->rings); i++)
+    {
+        maniaRing_t* ring      = &renderer->rings[i];
+        ring->diameterAngle    = i * (360 / ARRAY_SIZE(renderer->rings));
+        ring->diameterTimer    = 0;
+        ring->orbitAngle       = i * (360 / ARRAY_SIZE(renderer->rings));
+        ring->orbitTimer       = 0;
+        ring->orbitUsPerDegree = ringMinSpeed + i * (ringMaxSpeed - ringMinSpeed);
+        ring->orbitDirection   = ringDir;
+        ringDir                = (ringDir == 1) ? -1 : 1;
+        ring->color            = ringColors[i];
+    }
 
     return renderer;
 }
@@ -200,8 +218,6 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
     paletteColor_t textColor = ROW_TEXT_COLOR;
     if (isSelected)
     {
-        // textColor = ROW_TEXT_SELECTED_COLOR;
-
         // Draw drop shadow for selected item
         for (int rows = 0; rows < PARALLELOGRAM_HEIGHT; rows++)
         {
@@ -307,24 +323,23 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
  */
 static void drawManiaRing(int16_t radius, int16_t angle, paletteColor_t color)
 {
-    // Draw the inner ring
-    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius + (RING_STROKE_THICKNESS / 2), color);
-    drawCircleFilled(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius - (RING_STROKE_THICKNESS / 2), BG_COLOR);
+    // Draw the ring
+    drawCircleOutline(TFT_WIDTH / 2, TFT_HEIGHT / 2, radius, RING_STROKE_THICKNESS, color);
 
-    // Draw the inner orbit
+    // Draw the the smaller ring on the orbit (two filled circles)
     vec_t circlePos = {
         .x = 0,
-        .y = -radius,
+        .y = -radius + (RING_STROKE_THICKNESS / 2),
     };
     circlePos = rotateVec2d(circlePos, angle);
-    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS, color);
+    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS_1, color);
     drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y,
-                     ORBIT_RING_RADIUS - RING_STROKE_THICKNESS, BG_COLOR);
+                     ORBIT_RING_RADIUS_1 - RING_STROKE_THICKNESS, BG_COLOR);
 
     // Draw an opposite filled circle
     circlePos.x = -circlePos.x;
     circlePos.y = -circlePos.y;
-    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS, color);
+    drawCircleFilled((TFT_WIDTH / 2) + circlePos.x, (TFT_HEIGHT / 2) + circlePos.y, ORBIT_RING_RADIUS_2, color);
 }
 
 /**
@@ -336,7 +351,19 @@ static void drawManiaRing(int16_t radius, int16_t angle, paletteColor_t color)
  */
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs)
 {
-    // Run timer for LED excitement
+    // Only poll the battery if requested
+    if (menu->showBattery)
+    {
+        // Read battery every 10s
+        menu->batteryReadTimer -= elapsedUs;
+        if (0 >= menu->batteryReadTimer)
+        {
+            menu->batteryReadTimer += 10000000;
+            menu->batteryLevel = readBattmon();
+        }
+    }
+
+    // Run timer for LED excitation
     renderer->ledExciteTimer += elapsedUs;
     while (renderer->ledExciteTimer >= 40000 * 8)
     {
@@ -370,45 +397,32 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         }
     }
 
+    // Set LEDs
     setLeds(renderer->leds, CONFIG_NUM_LEDS);
 
-    // Run timer for outer orbit
-    renderer->outerOrbitTimer += elapsedUs;
-    while (renderer->outerOrbitTimer >= 20000)
+    // For each ring
+    for (int16_t i = 0; i < ARRAY_SIZE(renderer->rings); i++)
     {
-        renderer->outerOrbitTimer -= 20000;
-        renderer->outerOrbitAngle--;
-    }
+        maniaRing_t* ring = &renderer->rings[i];
 
-    // Run timer for inner orbit
-    renderer->innerOrbitTimer += elapsedUs;
-    while (renderer->innerOrbitTimer >= 15000)
-    {
-        renderer->innerOrbitTimer -= 15000;
-        renderer->innerOrbitAngle++;
-    }
-
-    // Run timer for outer ring size
-    renderer->outerRingTimer += elapsedUs;
-    while (renderer->outerRingTimer >= 22500)
-    {
-        renderer->outerRingTimer -= 22500;
-        renderer->outerRingAngle++;
-        if (renderer->outerRingAngle == 360)
+        // Run timer for orbit
+        ring->orbitTimer += elapsedUs;
+        while (ring->orbitTimer >= ring->orbitUsPerDegree)
         {
-            renderer->outerRingAngle = 0;
+            ring->orbitTimer -= ring->orbitUsPerDegree;
+            ring->orbitAngle += ring->orbitDirection;
         }
-    }
 
-    // Run timer for inner ring size
-    renderer->innerRingTimer += elapsedUs;
-    while (renderer->innerRingTimer >= 22500)
-    {
-        renderer->innerRingTimer -= 22500;
-        renderer->innerRingAngle++;
-        if (renderer->innerRingAngle == 360)
+        // Run timer for ring size
+        ring->diameterTimer += elapsedUs;
+        while (ring->diameterTimer >= 22500)
         {
-            renderer->innerRingAngle = 0;
+            ring->diameterTimer -= 22500;
+            ring->diameterAngle++;
+            if (ring->diameterAngle == 360)
+            {
+                ring->diameterAngle = 0;
+            }
         }
     }
 
@@ -439,37 +453,16 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         renderer->selectedBounceTimer = 0;
     }
 
-    // Only poll the battery if requested
-    if (menu->showBattery)
-    {
-        // Read battery every 10s
-        menu->batteryReadTimer -= elapsedUs;
-        if (0 >= menu->batteryReadTimer)
-        {
-            menu->batteryReadTimer += 10000000;
-            menu->batteryLevel = readBattmon();
-        }
-    }
-
     // Clear the background
     fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, BG_COLOR);
 
-    // Find the two radii
-    int16_t innerRingRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
-                              + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(renderer->innerRingAngle)) / 1024);
-    int16_t outerRingRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
-                              + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(renderer->outerRingAngle)) / 1024);
-
-    // Draw the rings in the correct order, depending on radius
-    if (innerRingRadius < outerRingRadius)
+    // Draw the rings
+    for (int16_t i = 0; i < ARRAY_SIZE(renderer->rings); i++)
     {
-        drawManiaRing(outerRingRadius, renderer->outerOrbitAngle, OUTER_RING_COLOR);
-        drawManiaRing(innerRingRadius, renderer->innerOrbitAngle, INNER_RING_COLOR);
-    }
-    else
-    {
-        drawManiaRing(innerRingRadius, renderer->innerOrbitAngle, INNER_RING_COLOR);
-        drawManiaRing(outerRingRadius, renderer->outerOrbitAngle, OUTER_RING_COLOR);
+        maniaRing_t* ring  = &renderer->rings[i];
+        int16_t ringRadius = (MIN_RING_RADIUS + MAX_RING_RADIUS) / 2
+                             + (((MAX_RING_RADIUS - MIN_RING_RADIUS) * getSin1024(ring->diameterAngle)) / 1024);
+        drawManiaRing(ringRadius, ring->orbitAngle, ring->color);
     }
 
     // Find the start of the 'page'
