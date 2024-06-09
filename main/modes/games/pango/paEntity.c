@@ -26,6 +26,7 @@
 
 #define SIGNOF(x)           ((x > 0) - (x < 0))
 #define PA_TO_TILECOORDS(x) ((x) >> PA_TILE_SIZE_IN_POWERS_OF_2)
+#define PA_GET_TAXICAB_DISTANCE(x1, y1, x2, y2) (abs(x1 - x2) + abs(y1 - y2))
 // #define TO_PIXEL_COORDS(x) ((x) >> SUBPIXEL_RESOLUTION)
 // #define TO_SUBPIXEL_COORDS(x) ((x) << SUBPIXEL_RESOLUTION)
 
@@ -273,7 +274,8 @@ void updateTestObject(paEntity_t* self)
     uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
     uint8_t ty = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
 
-    uint8_t t1, t2, t3, t4 = 0;
+    uint8_t t1, t2, t3 = 0;
+    uint8_t distT1;
 
     self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
     self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
@@ -291,16 +293,17 @@ void updateTestObject(paEntity_t* self)
             t2 = pa_getTile(self->tilemap, tx, ty-1);
             t3 = pa_getTile(self->tilemap, tx, ty+1);
 
+            distT1 = PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY);
             /*if(!t1){
                 break;
             }*/
 
-            if(!t2 && (self->targetTileY < ty)){
+            if(!t2 /*&& (self->targetTileY < ty)*/ && (PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY) < distT1) ){
                 self->yspeed = -16;
                 self->xspeed = 0;
                 break;
             } 
-            if (!t3 && (self->targetTileY > ty)) {
+            if(!t3 /*&& (self->targetTileY > ty)*/ && (PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY) < distT1)) {
                 self->yspeed = 16;
                 self->xspeed = 0;
                 break;
@@ -332,16 +335,17 @@ void updateTestObject(paEntity_t* self)
             t2 = pa_getTile(self->tilemap, tx, ty-1);
             t3 = pa_getTile(self->tilemap, tx, ty+1);
 
+            distT1 = PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY);
             /*if(!t1){
                 break;
             }*/
 
-            if(!t2 && (self->targetTileY < ty)){
+            if(!t2 /*&& (self->targetTileY < ty)*/ && (PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY) < distT1)){
                 self->yspeed = -16;
                 self->xspeed = 0;
                 break;
             } 
-            if (!t3 && (self->targetTileY > ty)){
+            if (!t3 /*&& (self->targetTileY > ty)*/ && (PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY) < distT1)){
                 self->yspeed = 16;
                 self->xspeed = 0;
                 break;
@@ -373,16 +377,18 @@ void updateTestObject(paEntity_t* self)
             t2 = pa_getTile(self->tilemap, tx-1, ty);
             t3 = pa_getTile(self->tilemap, tx+1, ty);
 
+            distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty-1, self->targetTileX, self->targetTileY);
+
             /*if(!t1){
                 break;
             }*/
 
-            if(!t2 && (self->targetTileX < tx)){
+            if(!t2 /*&& (self->targetTileX < tx)*/ && (PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY) < distT1)){
                 self->xspeed = -16;
                 self->yspeed = 0;
                 break;
             } 
-            if (!t3 && (self->targetTileX > tx)){
+            if (!t3 /*&& (self->targetTileX > tx)*/ && (PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY) < distT1)){
                 self->xspeed = 16;
                 self->yspeed = 0;
                 break;
@@ -421,17 +427,19 @@ void updateTestObject(paEntity_t* self)
             t1 = pa_getTile(self->tilemap, tx, ty+1);
             t2 = pa_getTile(self->tilemap, tx-1, ty);
             t3 = pa_getTile(self->tilemap, tx+1, ty);
+            
+            distT1 = PA_GET_TAXICAB_DISTANCE(tx, ty+1, self->targetTileX, self->targetTileY);
 
             /*if(!t1){
                 break;
             }*/
 
-            if(!t2 && (self->targetTileX < tx)){
+            if(!t2 /*&& (self->targetTileX < tx)*/ && (PA_GET_TAXICAB_DISTANCE(tx-1, ty, self->targetTileX, self->targetTileY) < distT1)){
                 self->xspeed = -16;
                 self->yspeed = 0;
                 break;
             } 
-            if (!t3 && (self->targetTileX > tx)){
+            if (!t3 /*&& (self->targetTileX > tx)*/ && (PA_GET_TAXICAB_DISTANCE(tx+1, ty, self->targetTileX, self->targetTileY) < distT1)){
                 self->xspeed = 16;
                 self->yspeed = 0;
                 break;
