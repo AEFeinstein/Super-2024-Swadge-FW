@@ -15,6 +15,8 @@
 #define PERCUSSION_VOICES 8
 // The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
 #define OSC_PER_VOICE 1
+// The max number of songs to play simultaneously
+#define MIDI_NUM_SONGS 2
 
 #define MIDI_TRUE 0x7F
 #define MIDI_FALSE 0x00
@@ -351,7 +353,7 @@ typedef struct
     midiPlayerMode_t mode;
 
     /// @brief A MIDI reader to use for file playback, when in MIDI_FILE mode
-    midiFileReader_t* reader;
+    midiFileReader_t reader[MIDI_NUM_SONGS];
 
     /// @brief A callback to call when a text meta-message is received
     midiTextCallback_t textMessageCallback;
@@ -360,16 +362,22 @@ typedef struct
     uint32_t clipped;
 
     /// @brief The number of samples elapsed in the songs
-    uint64_t sampleCount;
+    uint64_t sampleCount[MIDI_NUM_SONGS];
 
     /// @brief The next event in the MIDI file, which occurs after the current time
-    midiEvent_t pendingEvent;
+    midiEvent_t pendingEvents[MIDI_NUM_SONGS];
 
     /// @brief True if pendingEvent is valid, false if it must be updated
-    bool eventAvailable;
+    bool eventAvailable[MIDI_NUM_SONGS];
+
+    /// @brief The song index of the next event
+    uint8_t nextEventSongIdx;
+    uint32_t nextEventAbsTime;
 
     /// @brief The number of microseconds per quarter note
-    uint32_t tempo;
+    uint32_t tempo[MIDI_NUM_SONGS];
+
+    bool paused[MIDI_NUM_SONGS];
 } midiPlayer_t;
 
 /**
@@ -477,6 +485,22 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value);
  * @brief Configure this MIDI player to read from a MIDI file
  *
  * @param player The MIDI player
+ * @param songIdx The song index to set, betwee 0 and MIDI_NUM_SONGS
  * @param reader The MIDI reader that contains the MIDI file to be played
  */
-void midiSetFile(midiPlayer_t* player, midiFileReader_t* reader);
+void midiSetFile(midiPlayer_t* player, uint8_t songIdx, midiFile_t* file);
+
+/**
+ * @brief Set the paused state of a MIDI song
+ *
+ * @param player The player
+ * @param songIdx The song index
+ * @param pause True to pause, false to play
+ */
+void midiPause(midiPlayer_t* player, uint8_t songIdx, bool pause);
+
+void initGlobalMidiPlayer(void);
+void deinitGlobalMidiPlayer(void);
+void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len);
+void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx);
+midiPlayer_t* globalMidiPlayerGet(void);

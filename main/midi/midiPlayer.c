@@ -402,12 +402,17 @@ static const uint8_t oscDither[] = {
 
 #define VOICE_FREE (0x3F)
 
+static bool globalPlayerInit = false;
+static midiPlayer_t globalPlayer = {0};
 
 static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t voiceCount);
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel);
 static void midiGmOn(midiPlayer_t* player);
 static int32_t midiSumPercussion(midiPlayer_t* player);
-static void handleEvent(midiPlayer_t* player, midiEvent_t* event);
+static void handleMidiEvent(midiPlayer_t* player, uint8_t songIdx, midiStatusEvent_t* event);
+static void handleSysexEvent(midiPlayer_t* player, uint8_t songIdx, midiSysexEvent_t* sysex);
+static void handleMetaEvent(midiPlayer_t* player, uint8_t songIdx, midiMetaEvent_t* event);
+static void handleEvent(midiPlayer_t* player, uint8_t songIdx, midiEvent_t* event);
 
 static const midiTimbre_t defaultDrumkitTimbre = {
     .type = NOISE,
@@ -663,7 +668,7 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
     return sum;
 }
 
-static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event)
+static void handleMidiEvent(midiPlayer_t* player, uint8_t songIdx, midiStatusEvent_t* event)
 {
     if (event->status & 0x80)
     {
@@ -756,7 +761,7 @@ static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event)
     }
 }
 
-static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
+static void handleMetaEvent(midiPlayer_t* player, uint8_t songIdx, midiMetaEvent_t* event)
 {
     switch (event->type)
     {
@@ -784,13 +789,12 @@ static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
 
         case END_OF_TRACK:
         {
-            // TODO: handle track end
             break;
         }
 
         case TEMPO:
         {
-            player->tempo = event->tempo;
+            player->tempo[songIdx] = event->tempo;
             break;
         }
 
@@ -809,7 +813,7 @@ static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
     }
 }
 
-static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex)
+static void handleSysexEvent(midiPlayer_t* player, uint8_t songIdx, midiSysexEvent_t* sysex)
 {
     // TODO: Support SysEx commands - find some RGB ones we can yoink
     // Actually we can assign a non-registered control to R, G, and B
@@ -817,25 +821,25 @@ static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex)
     // AND: if possible have a sysex command (hmm) that sets all the LEDs to individual values at once
 }
 
-static void handleEvent(midiPlayer_t* player, midiEvent_t* event)
+static void handleEvent(midiPlayer_t* player, uint8_t songIdx, midiEvent_t* event)
 {
     switch (event->type)
     {
         case MIDI_EVENT:
         {
-            handleMidiEvent(player, &event->midi);
+            handleMidiEvent(player, songIdx, &event->midi);
             break;
         }
 
         case  META_EVENT:
         {
-            handleMetaEvent(player, &event->meta);
+            handleMetaEvent(player, songIdx, &event->meta);
             break;
         }
 
         case SYSEX_EVENT:
         {
-            handleSysexEvent(player, &event->sysex);
+            handleSysexEvent(player, songIdx, &event->sysex);
             break;
         }
     }
@@ -849,7 +853,10 @@ void midiPlayerInit(midiPlayer_t* player)
 
     // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
     // 120 BPM == 500,000 microseconds per quarter note
-    player->tempo = 500000;
+    for (int i = 0; i < MIDI_NUM_SONGS; i++)
+    {
+        player->tempo[i] = 500000;
+    }
 
     // Set all the relevant bits to 1, meaning not in use
     player->percSpecialStates = 0b00111111111111111111111111111111;
@@ -864,19 +871,31 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
     bool checkEvents = false;
     if (player->mode == MIDI_FILE)
     {
-        if (!player->eventAvailable)
+        bool anyPlaying = false;
+        for (int songIdx = 0; songIdx < MIDI_NUM_SONGS; songIdx++)
         {
-            player->eventAvailable = midiNextEvent(player->reader, &player->pendingEvent);
-        }
-
-        if (player->eventAvailable)
-        {
-            if (player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount + len, player->tempo, player->reader->division))
+            if (!player->eventAvailable[songIdx] && player->reader[songIdx].file)
             {
-                checkEvents = true;
+                player->eventAvailable[songIdx] = midiNextEvent(&player->reader[songIdx], &player->pendingEvents[songIdx]);
+            }
+
+            if (!player->paused[songIdx] && player->eventAvailable[songIdx])
+            {
+                if (player->pendingEvents[songIdx].absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount[songIdx] + len, player->tempo[songIdx], player->reader[songIdx].division))
+                {
+                    checkEvents = true;
+                    if (player->pendingEvents[songIdx].absTime < player->nextEventAbsTime)
+                    {
+                        player->nextEventAbsTime = player->pendingEvents[songIdx].absTime;
+                        player->nextEventSongIdx = songIdx;
+                    }
+                }
+
+                anyPlaying = true;
             }
         }
-        else
+
+        if (!anyPlaying)
         {
             ESP_LOGI("MIDI", "Done playing file!");
             for (uint8_t ch = 0; ch < 16; ch++)
@@ -890,14 +909,25 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
     for (int16_t n = 0; n < len; n++)
     {
         // Use a while loop since we may need to handle multiple events at the exact same time
-        while (checkEvents && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader->division))
+        while (checkEvents && player->nextEventAbsTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount[player->nextEventSongIdx], player->tempo[player->nextEventSongIdx], player->reader[player->nextEventSongIdx].division))
         {
             // It's time, so handle the event now
-            handleEvent(player, &player->pendingEvent);
+            handleEvent(player, player->nextEventSongIdx, &player->pendingEvents[player->nextEventSongIdx]);
 
+            // do not feel great about a third nested loop here...
             // Try and grab the next event, and if we got one, keep checking
-            player->eventAvailable = midiNextEvent(player->reader, &player->pendingEvent);
-            checkEvents = player->eventAvailable;
+            player->eventAvailable[player->nextEventSongIdx] = midiNextEvent(&player->reader[player->nextEventSongIdx], &player->pendingEvents[player->nextEventSongIdx]);
+            player->nextEventAbsTime = UINT32_MAX;
+
+            for (int i = 0; i < MIDI_NUM_SONGS; i++)
+            {
+                uint32_t ticks = SAMPLES_TO_MIDI_TICKS(player->sampleCount[i], player->tempo[i], player->reader[i].division);
+                if (player->eventAvailable[i] && player->pendingEvents[i].absTime < player->nextEventAbsTime)
+                {
+                    player->nextEventAbsTime = player->pendingEvents[i].absTime;
+                    player->nextEventSongIdx = i;
+                }
+            }
         }
 
         // TODO: Sample support
@@ -925,7 +955,10 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
             samples[n] = sample + 128;
         }
 
-        player->sampleCount++;
+        for (int i = 0; i < MIDI_NUM_SONGS; i++)
+        {
+            player->sampleCount[i]++;
+        }
     }
 }
 
@@ -1301,8 +1334,67 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
     }
 }
 
-void midiSetFile(midiPlayer_t* player, midiFileReader_t* reader)
+void midiSetFile(midiPlayer_t* player, uint8_t songIdx, midiFile_t* song)
 {
     player->mode = MIDI_FILE;
-    player->reader = reader;
+    if (player->reader[songIdx].states == NULL)
+    {
+        initMidiParser(&player->reader[songIdx], song);
+    }
+    else
+    {
+        midiParserSetFile(&player->reader[songIdx], song);
+    }
+}
+
+void midiPause(midiPlayer_t* player, uint8_t songIdx, bool pause)
+{
+    player->paused[songIdx] = pause;
+}
+
+void initGlobalMidiPlayer(void)
+{
+    if (!globalPlayerInit)
+    {
+        globalPlayerInit = true;
+        midiPlayerInit(&globalPlayer);
+    }
+}
+
+void deinitGlobalMidiPlayer(void)
+{
+    if (globalPlayerInit)
+    {
+        midiAllSoundOff(&globalPlayer);
+        midiPause(&globalPlayer, 0, true);
+        midiPause(&globalPlayer, 1, true);
+
+        globalPlayerInit = false;
+    }
+}
+
+void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len)
+{
+    if (globalPlayerInit)
+    {
+        midiPlayerFillBuffer(&globalPlayer, samples, len);
+    }
+    else
+    {
+        memset(samples, 128, len);
+    }
+}
+
+void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
+{
+    initGlobalMidiPlayer();
+
+    midiPause(&globalPlayer, songIdx, true);
+    midiSetFile(&globalPlayer, songIdx, song);
+    midiPause(&globalPlayer, songIdx, false);
+}
+
+midiPlayer_t* globalMidiPlayerGet(void)
+{
+    return &globalPlayer;
 }
