@@ -306,6 +306,18 @@ void updateTestObject(paEntity_t* self)
                 break;
             } 
             if (t1) {
+                if(!t2){
+                    self->yspeed = -16;
+                    self->xspeed = 0;
+                    break;
+                }
+
+                if(!t3){
+                    self->yspeed = 16;
+                    self->xspeed = 0;
+                    break;
+                }
+
                 self->xspeed = 16;
                 break;
             }
@@ -335,6 +347,18 @@ void updateTestObject(paEntity_t* self)
                 break;
             } 
             if (t1){
+                if(!t2) {
+                    self->yspeed = -16;
+                    self->xspeed = 0;
+                    break;
+                }
+
+                if(!t3){
+                    self->yspeed = 16;
+                    self->xspeed = 0;
+                    break;
+                }
+
                 self->xspeed = -16;
                 break;
             }
@@ -364,6 +388,18 @@ void updateTestObject(paEntity_t* self)
                 break;
             } 
             if (t1){
+                if(!t2){
+                    self->xspeed = -16;
+                    self->yspeed = 0;
+                    break;
+                }
+
+                if(!t3){
+                    self->xspeed = 16;
+                    self->yspeed = 0;
+                    break;
+                }
+
                 self->yspeed = 16;
                 break;
             }
@@ -401,6 +437,18 @@ void updateTestObject(paEntity_t* self)
                 break;
             } 
             if (t1){
+                if(!t2){
+                    self->xspeed = -16;
+                    self->yspeed = 0;
+                    break;
+                }
+
+                if(!t3){
+                    self->xspeed = 16;
+                    self->yspeed = 0;
+                    break;
+                }
+
                 self->yspeed = -16;
                 break;
             }
@@ -416,7 +464,7 @@ void updateTestObject(paEntity_t* self)
             // Running
             self->spriteFlipHorizontal = (self->xspeed > 0) ? 0 : 1;
 
-            if (self->gameData->frameCount % 7 == 0)
+            if (self->gameData->frameCount % 5 == 0)
             {
                 self->spriteIndex = PA_SP_ENEMY_SIDE_1 + ((self->spriteIndex + 1) % 2);
                 self->facingDirection = !self->spriteFlipHorizontal;
@@ -429,7 +477,7 @@ void updateTestObject(paEntity_t* self)
     }
     else if (self->yspeed > 0){
         if (self->yspeed > 0){
-            if (self->gameData->frameCount % 7 == 0)
+            if (self->gameData->frameCount % 5 == 0)
             {
                 self->spriteIndex = PA_SP_ENEMY_SOUTH;
                 self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
@@ -439,7 +487,7 @@ void updateTestObject(paEntity_t* self)
     }
      else if (self->yspeed < 0){
         if (self->yspeed < 0){
-            if (self->gameData->frameCount % 7 == 0)
+            if (self->gameData->frameCount % 5 == 0)
             {
                 self->spriteIndex = PA_SP_ENEMY_NORTH;
                 self->spriteFlipHorizontal = (self->gameData->frameCount >> 1) % 2;
@@ -757,7 +805,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
         {
             other->xspeed = -other->xspeed;
 
-            if (self->y < other->y || self->yspeed > 0)
+            /*if (self->y < other->y || self->yspeed > 0)
             {
                 pa_scorePoints(self->gameData, other->scoreValue);
 
@@ -768,7 +816,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
                 self->jumpPower = 64 + ((abs(self->xspeed) + 16) >> 3);
                 self->falling   = true;
             }
-            else if (self->invincibilityFrames <= 0)
+            else*/ if (self->invincibilityFrames <= 0)
             {
                 self->hp--;
                 pa_updateLedsHpMeter(self->entityManager, self->gameData);
@@ -893,7 +941,13 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
             if ((self->xspeed > 0 && self->x < other->x) || (self->xspeed < 0 && self->x > other->x))
             {
                 self->xspeed               = -self->xspeed;
-                self->spriteFlipHorizontal = -self->spriteFlipHorizontal;
+                //self->spriteFlipHorizontal = -self->spriteFlipHorizontal;
+            }
+
+            if ((self->yspeed > 0 && self->y < other->y) || (self->yspeed < 0 && self->y > other->y))
+            {
+                self->yspeed               = -self->yspeed;
+                //self->spriteFlipHorizontal = -self->spriteFlipHorizontal;
             }
             break;
         case ENTITY_HIT_BLOCK:

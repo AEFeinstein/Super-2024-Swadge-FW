@@ -421,6 +421,7 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
 
     entity->type                 = paEntity_tEST;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
+    entity->facingDirection      = PA_DIRECTION_NONE;
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
