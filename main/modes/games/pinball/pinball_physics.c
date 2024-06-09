@@ -412,6 +412,9 @@ void sweepCheckFlippers(pinball_t* p)
                 }
             }
         }
+
+        // Make sure the final angle is correct
+        flipper->angle = sweepEnd;
     }
 }
 
