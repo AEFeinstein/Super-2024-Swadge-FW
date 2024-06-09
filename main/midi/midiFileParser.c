@@ -26,7 +26,7 @@
 //==============================================================================
 
 /// @brief Contains all track-specific parsing state
-typedef struct
+struct midiTrackState
 {
     /// @brief A pointer to the MIDI track itself
     const midiTrack_t* track;
@@ -54,21 +54,6 @@ typedef struct
 
     /// @brief Whether or not the END OF TRACK event has been read
     bool done;
-} trackState_t;
-
-struct midiReaderState
-{
-    /// @brief Offset of the next byte to read from the song file
-    uint32_t offset;
-
-    /// @brief Whether the header has already been read
-    bool headerRead;
-
-    /// @brief The MIDI file format - either 0, 1, or 2
-    uint16_t format;
-
-    /// @brief An array holding info for each track in the file
-    trackState_t* trackChunks;
 };
 
 //==============================================================================
@@ -76,8 +61,8 @@ struct midiReaderState
 //==============================================================================
 
 static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out);
-static bool setupEventBuffer(trackState_t* track, uint32_t length);
-static bool trackParseNext(midiFileReader_t* reader, trackState_t* track);
+static bool setupEventBuffer(midiTrackState_t* track, uint32_t length);
+static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
 static bool parseMidiHeader(midiFile_t* file);
 static void readFirstEvents(midiFileReader_t* reader);
 
@@ -121,7 +106,7 @@ static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out)
     return read;
 }
 
-static bool setupEventBuffer(trackState_t* track, uint32_t length)
+static bool setupEventBuffer(midiTrackState_t* track, uint32_t length)
 {
     if (!track->eventBuffer || track->eventBufferSize < length)
     {
@@ -152,7 +137,7 @@ static bool setupEventBuffer(trackState_t* track, uint32_t length)
 
 #define TRK_REMAIN() (track->track->length - (track->cur - track->track->data))
 #define ERR() do { track->eventParsed = false; track->nextEvent.deltaTime = UINT32_MAX; ESP_LOGE("MIDIParser", "Error parsing at line %d and offset %" PRIuPTR " (total offset %" PRIuPTR ")", __LINE__, (track->cur - track->track->data), (track->cur - reader->file->data)); return false; } while (0)
-static bool trackParseNext(midiFileReader_t* reader, trackState_t* track)
+static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 {
     if (track->done)
     {
@@ -302,7 +287,7 @@ static bool trackParseNext(midiFileReader_t* reader, trackState_t* track)
                         else
                         {
                             // If the length is 0 (or otherwise not what we expect), use the track index as the sequence number
-                            track->nextEvent.meta.sequenceNumber = (track - reader->state->trackChunks);
+                            track->nextEvent.meta.sequenceNumber = (track - reader->states);
                         }
                         break;
                     }
@@ -392,7 +377,7 @@ static bool trackParseNext(midiFileReader_t* reader, trackState_t* track)
                     {
                         track->nextEvent.meta.type = END_OF_TRACK;
                         track->done = true;
-                        ESP_LOGI("MIDIParser", "End of track #%" PRIdPTR, track - reader->state->trackChunks);
+                        ESP_LOGI("MIDIParser", "End of track #%" PRIdPTR, track - reader->states);
                         break;
                     }
 
@@ -793,13 +778,13 @@ static void readFirstEvents(midiFileReader_t* reader)
     for (int i = 0; i < reader->file->trackCount; i++)
     {
         // Parse the first event from each track?
-        reader->state->trackChunks[i].eventParsed = trackParseNext(reader, &reader->state->trackChunks[i]);
+        reader->states[i].eventParsed = trackParseNext(reader, &reader->states[i]);
 
         // Handle empty/invalid tracks
-        if (!reader->state->trackChunks[i].eventParsed)
+        if (!reader->states[i].eventParsed)
         {
-            reader->state->trackChunks[i].done = true;
-            reader->state->trackChunks[i].nextEvent.deltaTime = UINT32_MAX;
+            reader->states[i].done = true;
+            reader->states[i].nextEvent.deltaTime = UINT32_MAX;
         }
     }
 }
@@ -813,7 +798,6 @@ bool loadMidiFile(midiFile_t* file, const char* name, bool spiRam)
         ESP_LOGI("MIDIFileParser", "Song %s has %" PRIu32 " bytes", name, size);
         file->data = data;
         file->length = (uint32_t)size;
-        //reader->state = calloc(1, sizeof(struct midiReaderState));
         if (parseMidiHeader(file))
         {
             return true;
@@ -842,71 +826,70 @@ void unloadMidiFile(midiFile_t* file)
     free(file->tracks);
     free(file->data);
     memset(file, 0, sizeof(midiFile_t));
-
-    /*free(reader->state);
-    free(reader->data);
-
-    reader->state = NULL;
-    reader->data = NULL;
-    reader->length = 0;*/
 }
 
 bool initMidiParser(midiFileReader_t* reader, midiFile_t* file)
 {
+    reader->states = calloc(file->trackCount, sizeof(midiTrackState_t));
+    if (NULL == reader->states)
+    {
+        free(reader->states);
+        reader->states = NULL;
+        return false;
+    }
+
     reader->file = file;
-    // TODO is this necessary
-    reader->division = file->timeDivision;
-
-    //size_t allocSize = ((sizeof(struct midiReaderState) + 3) % 4) + reader->file->trackCount * sizeof(trackState_t);
-    reader->state = calloc(1, sizeof(struct midiReaderState));
-    if (NULL == reader->state)
-    {
-        return false;
-    }
-
-    // TODO: Maybe we could allocate these alongside the state itself but alignment might be an issue
-    reader->state->trackChunks = calloc(reader->file->trackCount, sizeof(trackState_t));
-    if (NULL == reader->state->trackChunks)
-    {
-        free(reader->state);
-        reader->state = NULL;
-        return false;
-    }
-
-    // Initialize the reader's internal per-track parsing states
-    for (int i = 0; i < reader->file->trackCount; i++)
-    {
-        reader->state->trackChunks[i].track = &reader->file->tracks[i];
-        reader->state->trackChunks[i].cur = reader->file->tracks[i].data;
-    }
-
-    // Read the first event from each track
-    // Some tracks might be malformed or have no events but this isn't a fatal error.
-    // In that situation we just set done = true and set the timestamp to UINT32_MAX,
-    // so no more events will be read from that track but the rest are still used.
-    readFirstEvents(reader);
+    midiParserSetFile(reader, file);
 
     // Success!
     return true;
 }
 
+void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
+{
+    if (reader->file->trackCount != file->trackCount)
+    {
+        void* newChunks = reallocarray(reader->states, file->trackCount, sizeof(midiTrackState_t));
+        if (newChunks != NULL)
+        {
+            reader->states = newChunks;
+        }
+        else
+        {
+            ESP_LOGE("MIDIParser", "Failed to reallocate track data for new song");
+            return;
+        }
+    }
+
+    // Initialize the reader's internal per-track parsing states
+    for (int i = 0; i < reader->file->trackCount; i++)
+    {
+        reader->states[i].track = &reader->file->tracks[i];
+        reader->states[i].cur = reader->file->tracks[i].data;
+    }
+
+    reader->file = file;
+    reader->division = file->timeDivision;
+
+    readFirstEvents(reader);
+}
+
 void deinitMidiParser(midiFileReader_t* reader)
 {
-    free(reader->state->trackChunks);
-    free(reader->state);
-    reader->state = NULL;
+    free(reader->states);
+    reader->states = NULL;
 }
 
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
 {
     uint32_t minTime = UINT32_MAX;
     // Pointer to the next track
-    trackState_t* nextTrack = NULL;
+    struct midiTrackState* nextTrack = NULL;
 
     // TODO: This treats all formats like a format 1 (simultaneous)
     for (int i = 0; i < reader->file->trackCount; i++)
     {
-        trackState_t* info = &reader->state->trackChunks[i];
+        midiTrackState_t* info = &reader->states[i];
 
         if (!info->eventParsed && info->nextEvent.deltaTime != UINT32_MAX)
         {

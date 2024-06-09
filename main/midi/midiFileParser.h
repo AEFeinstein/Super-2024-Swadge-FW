@@ -82,7 +82,7 @@ typedef struct
     midiTrack_t* tracks;
 } midiFile_t;
 
-typedef struct midiReaderState midiReaderState_t;
+typedef struct midiTrackState midiTrackState_t;
 
 typedef struct
 {
@@ -94,7 +94,7 @@ typedef struct
     /// @brief The number of divisions per midi tick
     uint16_t division;
 
-    midiReaderState_t* state;
+    midiTrackState_t* states;
 } midiFileReader_t;
 
 typedef struct
@@ -189,6 +189,7 @@ bool loadMidiFile(midiFile_t* file, const char* name, bool spiRam);
 void unloadMidiFile(midiFile_t* file);
 
 bool initMidiParser(midiFileReader_t* reader, midiFile_t* file);
+void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file);
 void deinitMidiParser(midiFileReader_t* reader);
 
 /**
