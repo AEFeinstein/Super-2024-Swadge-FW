@@ -270,10 +270,143 @@ void pa_updatePlayer(paEntity_t* self)
 
 void updateTestObject(paEntity_t* self)
 {
-    /*if (self->gameData->frameCount % 10 == 0)
-    {
-        self->spriteFlipHorizontal = !self->spriteFlipHorizontal;
-    }*/
+    uint8_t tx = PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION);
+    uint8_t ty = PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION);
+
+    uint8_t t1, t2, t3, t4 = 0;
+
+    self->targetTileX = PA_TO_TILECOORDS(self->entityManager->playerEntity->x >> SUBPIXEL_RESOLUTION);
+    self->targetTileY = PA_TO_TILECOORDS(self->entityManager->playerEntity->y >> SUBPIXEL_RESOLUTION);
+
+    int16_t hcof = (((self->x >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
+    int16_t vcof = (((self->y >> SUBPIXEL_RESOLUTION) % PA_TILE_SIZE) - PA_HALF_TILESIZE);
+
+    switch(self->facingDirection){
+        case PA_DIRECTION_LEFT:
+            if(hcof) {
+                break;
+            }
+            
+            t1 = pa_getTile(self->tilemap, tx-1, ty);
+            t2 = pa_getTile(self->tilemap, tx, ty-1);
+            t3 = pa_getTile(self->tilemap, tx, ty+1);
+
+            /*if(!t1){
+                break;
+            }*/
+
+            if(!t2 && (self->targetTileY < ty)){
+                self->yspeed = -16;
+                self->xspeed = 0;
+                break;
+            } 
+            if (!t3 && (self->targetTileY > ty)) {
+                self->yspeed = 16;
+                self->xspeed = 0;
+                break;
+            } 
+            if (t1) {
+                self->xspeed = 16;
+                break;
+            }
+            
+            break;
+        case PA_DIRECTION_RIGHT:
+            if(hcof) {
+                break;
+            }
+            
+            t1 = pa_getTile(self->tilemap, tx+1, ty);
+            t2 = pa_getTile(self->tilemap, tx, ty-1);
+            t3 = pa_getTile(self->tilemap, tx, ty+1);
+
+            /*if(!t1){
+                break;
+            }*/
+
+            if(!t2 && (self->targetTileY < ty)){
+                self->yspeed = -16;
+                self->xspeed = 0;
+                break;
+            } 
+            if (!t3 && (self->targetTileY > ty)){
+                self->yspeed = 16;
+                self->xspeed = 0;
+                break;
+            } 
+            if (t1){
+                self->xspeed = -16;
+                break;
+            }
+            
+            break;
+        case PA_DIRECTION_UP:
+            if(vcof) {
+                break;
+            }
+            
+            t1 = pa_getTile(self->tilemap, tx, ty-1);
+            t2 = pa_getTile(self->tilemap, tx-1, ty);
+            t3 = pa_getTile(self->tilemap, tx+1, ty);
+
+            /*if(!t1){
+                break;
+            }*/
+
+            if(!t2 && (self->targetTileX < tx)){
+                self->xspeed = -16;
+                self->yspeed = 0;
+                break;
+            } 
+            if (!t3 && (self->targetTileX > tx)){
+                self->xspeed = 16;
+                self->yspeed = 0;
+                break;
+            } 
+            if (t1){
+                self->yspeed = 16;
+                break;
+            }
+
+            break;
+        case PA_DIRECTION_NONE:
+            if(esp_random() % 2){
+                self->xspeed = (esp_random() % 2) ? -16: 16;
+            } else {
+                self->yspeed = (esp_random() % 2) ? -16: 16;
+            }
+        default:
+            break;
+        case PA_DIRECTION_DOWN:
+            if(vcof) {
+                break;
+            }
+            
+            t1 = pa_getTile(self->tilemap, tx, ty+1);
+            t2 = pa_getTile(self->tilemap, tx-1, ty);
+            t3 = pa_getTile(self->tilemap, tx+1, ty);
+
+            /*if(!t1){
+                break;
+            }*/
+
+            if(!t2 && (self->targetTileX < tx)){
+                self->xspeed = -16;
+                self->yspeed = 0;
+                break;
+            } 
+            if (!t3 && (self->targetTileX > tx)){
+                self->xspeed = 16;
+                self->yspeed = 0;
+                break;
+            } 
+            if (t1){
+                self->yspeed = -16;
+                break;
+            }
+
+            break;
+    }
 
     if (abs(self->xspeed) > abs(self->yspeed))
     {
@@ -1029,10 +1162,10 @@ bool pa_enemyTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, 
         switch (direction)
         {
             case 0: // LEFT
-                self->xspeed = -self->xspeed;
+                self->xspeed = 0;
                 break;
             case 1: // RIGHT
-                self->xspeed = -self->xspeed;
+                self->xspeed = 0;
                 break;
             case 2: // UP
                 self->yspeed = 0;

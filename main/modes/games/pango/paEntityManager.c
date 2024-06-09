@@ -413,8 +413,8 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->yspeed               = 0;
     entity->xMaxSpeed            = 132;
     entity->yMaxSpeed            = 132;
-    entity->gravityEnabled       = true;
-    entity->gravity              = 4;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
     entity->spriteFlipHorizontal = false;
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
