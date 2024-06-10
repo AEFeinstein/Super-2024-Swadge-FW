@@ -8,10 +8,10 @@
 
 typedef enum __attribute__((packed))
 {
-    RGS_MENU,
-    RGS_PLACING_PIECE,
-    RGS_WAITING,
-} ragGameState_t;
+    TGS_MENU,
+    TGS_PLACING_PIECE,
+    TGS_WAITING,
+} tttGameState_t;
 
 typedef enum __attribute__((packed))
 {
@@ -19,21 +19,21 @@ typedef enum __attribute__((packed))
     SELECT_SUBGAME,
     SELECT_CELL,
     SELECT_CELL_LOCKED,
-} ragCursorMode_t;
+} tttCursorMode_t;
 
 typedef enum __attribute__((packed))
 {
-    RAG_EMPTY,
-    RAG_RING,
-    RAG_GEM,
-} ragPiece_t;
+    TTT_EMPTY,
+    TTT_RING,
+    TTT_GEM,
+} tttPiece_t;
 
 typedef enum __attribute__((packed))
 {
     MSG_SELECT_PIECE,
     MSG_MOVE_CURSOR,
     MSG_PLACE_PIECE,
-} ragMsgType_t;
+} tttMsgType_t;
 
 //==============================================================================
 // Structs
@@ -41,47 +41,47 @@ typedef enum __attribute__((packed))
 
 typedef struct
 {
-    ragPiece_t game[3][3];
-    ragPiece_t winner;
-} ragSubgame_t;
+    tttPiece_t game[3][3];
+    tttPiece_t winner;
+} tttSubgame_t;
 
 typedef struct
 {
-    ragGameState_t state;
-    ragSubgame_t subgames[3][3];
+    tttGameState_t state;
+    tttSubgame_t subgames[3][3];
     vec_t cursor;
     vec_t selectedSubgame;
-    ragCursorMode_t cursorMode;
+    tttCursorMode_t cursorMode;
     wsg_t piece_x_big;
     wsg_t piece_x_small;
     wsg_t piece_o_big;
     wsg_t piece_o_small;
     p2pInfo p2p;
-    ragPiece_t p1Piece;
-    ragPiece_t p2Piece;
-} ringsAndGems_t;
+    tttPiece_t p1Piece;
+    tttPiece_t p2Piece;
+} ultimateTTT_t;
 
 typedef struct
 {
-    ragMsgType_t type;
-    ragPiece_t piece;
-} ragMsgSelectPiece_t;
+    tttMsgType_t type;
+    tttPiece_t piece;
+} tttMsgSelectPiece_t;
 
 typedef struct
 {
-    ragMsgType_t type;
-    ragCursorMode_t cursorMode;
+    tttMsgType_t type;
+    tttCursorMode_t cursorMode;
     vec_t selectedSubgame;
     vec_t cursor;
-} ragMsgMoveCursor_t;
+} tttMsgMoveCursor_t;
 
 typedef struct
 {
-    ragMsgType_t type;
+    tttMsgType_t type;
     vec_t selectedSubgame;
     vec_t selectedCell;
-} ragMsgPlacePiece_t;
+} tttMsgPlacePiece_t;
 
-void ragMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
+void tttMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
-extern swadgeMode_t ragMode;
+extern swadgeMode_t tttMode;

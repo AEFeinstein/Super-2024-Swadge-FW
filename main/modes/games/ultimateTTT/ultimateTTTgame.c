@@ -1,71 +1,71 @@
-#include "ringsAndGemsGame.h"
+#include "ultimateTTTgame.h"
 
-void ragPlacePiece(ringsAndGems_t* rag, const vec_t* subgame, const vec_t* cell, ragPiece_t piece);
-static ragPiece_t checkWinner(ringsAndGems_t* rag);
-static ragPiece_t checkSubgameWinner(ragSubgame_t* subgame);
+void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPiece_t piece);
+static tttPiece_t checkWinner(ultimateTTT_t* ttt);
+static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame);
 
 /**
  * @brief TODO
  *
- * @param rag
+ * @param ttt
  */
-void ragBeginGame(ringsAndGems_t* rag)
+void tttBeginGame(ultimateTTT_t* ttt)
 {
     // If going first
-    if (GOING_FIRST == p2pGetPlayOrder(&rag->p2p))
+    if (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p))
     {
         // Set own piece type
-        rag->p1Piece = RAG_RING;
+        ttt->p1Piece = TTT_RING;
 
         // Send piece type to other swadge
-        ragMsgSelectPiece_t sel = {
+        tttMsgSelectPiece_t sel = {
             .type  = MSG_SELECT_PIECE,
-            .piece = rag->p1Piece,
+            .piece = ttt->p1Piece,
         };
-        p2pSendMsg(&rag->p2p, (const uint8_t*)&sel, sizeof(sel), ragMsgTxCbFn);
+        p2pSendMsg(&ttt->p2p, (const uint8_t*)&sel, sizeof(sel), tttMsgTxCbFn);
     }
     // If going second, wait to receive p1's piece before responding
 }
 
-typedef void (*cursorFunc_t)(ringsAndGems_t* rag);
+typedef void (*cursorFunc_t)(ultimateTTT_t* ttt);
 
-static void incCursorX(ringsAndGems_t* rag)
+static void incCursorX(ultimateTTT_t* ttt)
 {
-    rag->cursor.x = (rag->cursor.x + 1) % 3;
+    ttt->cursor.x = (ttt->cursor.x + 1) % 3;
 }
 
-static void decCursorX(ringsAndGems_t* rag)
+static void decCursorX(ultimateTTT_t* ttt)
 {
-    if (0 == rag->cursor.x)
+    if (0 == ttt->cursor.x)
     {
-        rag->cursor.x = 2;
+        ttt->cursor.x = 2;
     }
     else
     {
-        rag->cursor.x--;
+        ttt->cursor.x--;
     }
 }
 
-static void incCursorY(ringsAndGems_t* rag)
+static void incCursorY(ultimateTTT_t* ttt)
 {
-    rag->cursor.y = (rag->cursor.y + 1) % 3;
+    ttt->cursor.y = (ttt->cursor.y + 1) % 3;
 }
 
-static void decCursorY(ringsAndGems_t* rag)
+static void decCursorY(ultimateTTT_t* ttt)
 {
-    if (0 == rag->cursor.y)
+    if (0 == ttt->cursor.y)
     {
-        rag->cursor.y = 2;
+        ttt->cursor.y = 2;
     }
     else
     {
-        rag->cursor.y--;
+        ttt->cursor.y--;
     }
 }
 
-static bool cursorIsValid(ringsAndGems_t* rag)
+static bool cursorIsValid(ultimateTTT_t* ttt)
 {
-    switch (rag->cursorMode)
+    switch (ttt->cursorMode)
     {
         case NO_CURSOR:
         default:
@@ -74,13 +74,13 @@ static bool cursorIsValid(ringsAndGems_t* rag)
         }
         case SELECT_SUBGAME:
         {
-            return RAG_EMPTY == rag->subgames[rag->cursor.x][rag->cursor.y].winner;
+            return TTT_EMPTY == ttt->subgames[ttt->cursor.x][ttt->cursor.y].winner;
         }
         case SELECT_CELL:
         case SELECT_CELL_LOCKED:
         {
-            return RAG_EMPTY
-                   == rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y].game[rag->cursor.x][rag->cursor.y];
+            return TTT_EMPTY
+                   == ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].game[ttt->cursor.x][ttt->cursor.y];
         }
     }
 }
@@ -88,10 +88,10 @@ static bool cursorIsValid(ringsAndGems_t* rag)
 /**
  * @brief TODO
  *
- * @param rag
+ * @param ttt
  * @param evt
  */
-void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
+void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
     // Do something?
     if (evt->down)
@@ -127,22 +127,22 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
             }
             case PB_A:
             {
-                if (SELECT_SUBGAME == rag->cursorMode)
+                if (SELECT_SUBGAME == ttt->cursorMode)
                 {
                     cursorMoved          = true;
-                    rag->selectedSubgame = rag->cursor;
-                    rag->cursorMode      = SELECT_CELL;
+                    ttt->selectedSubgame = ttt->cursor;
+                    ttt->cursorMode      = SELECT_CELL;
 
                     // Place the cursor on a valid cell
-                    rag->cursor.x = 1;
-                    rag->cursor.y = 1;
+                    ttt->cursor.x = 1;
+                    ttt->cursor.y = 1;
                     for (int16_t y = 0; y < 3; y++)
                     {
                         for (int16_t x = 0; x < 3; x++)
                         {
-                            if (!cursorIsValid(rag))
+                            if (!cursorIsValid(ttt))
                             {
-                                incCursorX(rag);
+                                incCursorX(ttt);
                             }
                             else
                             {
@@ -150,9 +150,9 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
                             }
                         }
 
-                        if (!cursorIsValid(rag))
+                        if (!cursorIsValid(ttt))
                         {
-                            incCursorY(rag);
+                            incCursorY(ttt);
                         }
                         else
                         {
@@ -160,27 +160,27 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
                         }
                     }
                 }
-                else if ((SELECT_CELL == rag->cursorMode) || (SELECT_CELL_LOCKED == rag->cursorMode))
+                else if ((SELECT_CELL == ttt->cursorMode) || (SELECT_CELL_LOCKED == ttt->cursorMode))
                 {
                     // Send move to the other swadge
-                    ragSendPlacedPiece(rag);
+                    tttSendPlacedPiece(ttt);
 
                     // Place the piece
-                    ragPlacePiece(rag, &rag->selectedSubgame, &rag->cursor,
-                                  (GOING_FIRST == p2pGetPlayOrder(&rag->p2p)) ? rag->p1Piece : rag->p2Piece);
+                    tttPlacePiece(ttt, &ttt->selectedSubgame, &ttt->cursor,
+                                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? ttt->p1Piece : ttt->p2Piece);
 
                     // Switch to waiting
-                    rag->state = RGS_WAITING;
+                    ttt->state = TGS_WAITING;
                 }
                 break;
             }
             case PB_B:
             {
-                if (SELECT_CELL == rag->cursorMode)
+                if (SELECT_CELL == ttt->cursorMode)
                 {
                     cursorMoved     = true;
-                    rag->cursor     = rag->selectedSubgame;
-                    rag->cursorMode = SELECT_SUBGAME;
+                    ttt->cursor     = ttt->selectedSubgame;
+                    ttt->cursorMode = SELECT_SUBGAME;
                 }
                 break;
             }
@@ -199,8 +199,8 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
             bool cursorIsSet = false;
             for (int16_t a = 0; a < 2; a++)
             {
-                cursorFunc(rag);
-                if (cursorIsValid(rag))
+                cursorFunc(ttt);
+                if (cursorIsValid(ttt))
                 {
                     cursorIsSet = true;
                     break;
@@ -211,20 +211,20 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
             if (!cursorIsSet)
             {
                 // Move back to where we started
-                cursorFunc(rag);
+                cursorFunc(ttt);
 
                 // Move along the primary axis
                 for (int16_t b = 0; b < 3; b++)
                 {
-                    cursorFunc(rag);
+                    cursorFunc(ttt);
 
                     // Check perpendicular spaces
                     for (int16_t a = 0; a < 3; a++)
                     {
-                        cursorFuncSecondary(rag);
+                        cursorFuncSecondary(ttt);
 
                         // If it's valid
-                        if (cursorIsValid(rag))
+                        if (cursorIsValid(ttt))
                         {
                             // Mark and break
                             cursorIsSet = true;
@@ -244,7 +244,7 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
         // Send cursor movement to the other Swadge
         if (cursorMoved)
         {
-            ragSendCursor(rag);
+            tttSendCursor(ttt);
         }
     }
 }
@@ -252,63 +252,63 @@ void ragHandleGameInput(ringsAndGems_t* rag, buttonEvt_t* evt)
 /**
  * @brief TODO
  *
- * @param rag
+ * @param ttt
  */
-void ragSendCursor(ringsAndGems_t* rag)
+void tttSendCursor(ultimateTTT_t* ttt)
 {
     // Send cursor type to other swadge
-    ragMsgMoveCursor_t move = {
+    tttMsgMoveCursor_t move = {
         .type            = MSG_MOVE_CURSOR,
-        .cursorMode      = rag->cursorMode,
-        .selectedSubgame = rag->selectedSubgame,
-        .cursor          = rag->cursor,
+        .cursorMode      = ttt->cursorMode,
+        .selectedSubgame = ttt->selectedSubgame,
+        .cursor          = ttt->cursor,
     };
-    p2pSendMsg(&rag->p2p, (const uint8_t*)&move, sizeof(move), ragMsgTxCbFn);
+    p2pSendMsg(&ttt->p2p, (const uint8_t*)&move, sizeof(move), tttMsgTxCbFn);
 }
 
 /**
  * @brief TODO
  *
- * @param rag
+ * @param ttt
  * @param msg
  */
-void ragReceiveCursor(ringsAndGems_t* rag, const ragMsgMoveCursor_t* msg)
+void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
 {
     // Move the cursor
-    rag->cursorMode      = msg->cursorMode;
-    rag->selectedSubgame = msg->selectedSubgame;
-    rag->cursor          = msg->cursor;
+    ttt->cursorMode      = msg->cursorMode;
+    ttt->selectedSubgame = msg->selectedSubgame;
+    ttt->cursor          = msg->cursor;
 }
 
 /**
  * @brief TODO
  *
- * @param rag
+ * @param ttt
  * @param subgame
  * @param cell
  * @param piece
  */
-void ragPlacePiece(ringsAndGems_t* rag, const vec_t* subgame, const vec_t* cell, ragPiece_t piece)
+void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPiece_t piece)
 {
     // Place the piece
-    rag->subgames[subgame->x][subgame->y].game[cell->x][cell->y] = piece;
+    ttt->subgames[subgame->x][subgame->y].game[cell->x][cell->y] = piece;
 
     // Check the board
-    checkWinner(rag);
+    checkWinner(ttt);
 
     // Next move should be in this cell
-    rag->selectedSubgame = *cell;
-    rag->cursorMode      = SELECT_CELL_LOCKED;
+    ttt->selectedSubgame = *cell;
+    ttt->cursorMode      = SELECT_CELL_LOCKED;
 
-    rag->cursor.x = 1;
-    rag->cursor.y = 1;
+    ttt->cursor.x = 1;
+    ttt->cursor.y = 1;
     for (int16_t y = 0; y < 3; y++)
     {
         for (int16_t x = 0; x < 3; x++)
         {
-            if (!cursorIsValid(rag))
+            if (!cursorIsValid(ttt))
             {
-                incCursorX(rag);
+                incCursorX(ttt);
             }
             else
             {
@@ -316,9 +316,9 @@ void ragPlacePiece(ringsAndGems_t* rag, const vec_t* subgame, const vec_t* cell,
             }
         }
 
-        if (!cursorIsValid(rag))
+        if (!cursorIsValid(ttt))
         {
-            incCursorY(rag);
+            incCursorY(ttt);
         }
         else
         {
@@ -327,22 +327,22 @@ void ragPlacePiece(ringsAndGems_t* rag, const vec_t* subgame, const vec_t* cell,
     }
 
     // If that subgame is already won
-    if (RAG_EMPTY != rag->subgames[rag->selectedSubgame.x][rag->selectedSubgame.y].winner)
+    if (TTT_EMPTY != ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].winner)
     {
         // Find the next one
         for (int16_t y = 0; y < 3; y++)
         {
             for (int16_t x = 0; x < 3; x++)
             {
-                if (RAG_EMPTY == rag->subgames[x][y].winner)
+                if (TTT_EMPTY == ttt->subgames[x][y].winner)
                 {
-                    rag->cursor.x   = x;
-                    rag->cursor.y   = y;
-                    rag->cursorMode = SELECT_SUBGAME;
+                    ttt->cursor.x   = x;
+                    ttt->cursor.y   = y;
+                    ttt->cursorMode = SELECT_SUBGAME;
                     break;
                 }
             }
-            if (SELECT_SUBGAME == rag->cursorMode)
+            if (SELECT_SUBGAME == ttt->cursorMode)
             {
                 break;
             }
@@ -353,92 +353,92 @@ void ragPlacePiece(ringsAndGems_t* rag, const vec_t* subgame, const vec_t* cell,
 /**
  * @brief TODO
  *
- * @param rag
+ * @param ttt
  */
-void ragSendPlacedPiece(ringsAndGems_t* rag)
+void tttSendPlacedPiece(ultimateTTT_t* ttt)
 {
     // Send move to the other swadge
-    ragMsgPlacePiece_t place = {
+    tttMsgPlacePiece_t place = {
         .type            = MSG_PLACE_PIECE,
-        .selectedSubgame = rag->selectedSubgame,
-        .selectedCell    = rag->cursor,
+        .selectedSubgame = ttt->selectedSubgame,
+        .selectedCell    = ttt->cursor,
     };
-    p2pSendMsg(&rag->p2p, (const uint8_t*)&place, sizeof(place), ragMsgTxCbFn);
+    p2pSendMsg(&ttt->p2p, (const uint8_t*)&place, sizeof(place), tttMsgTxCbFn);
 
-    rag->state = RGS_WAITING;
+    ttt->state = TGS_WAITING;
 }
 
 /**
  * @brief TODO
  *
- * @param rag
+ * @param ttt
  * @param msg
  */
-void ragReceivePlacedPiece(ringsAndGems_t* rag, const ragMsgPlacePiece_t* msg)
+void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
 {
     // Place the piece
-    ragPlacePiece(rag, &msg->selectedSubgame, &msg->selectedCell,
-                  (GOING_FIRST == p2pGetPlayOrder(&rag->p2p)) ? rag->p2Piece : rag->p1Piece);
+    tttPlacePiece(ttt, &msg->selectedSubgame, &msg->selectedCell,
+                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? ttt->p2Piece : ttt->p1Piece);
 
     // Transition state to placing a piece
-    rag->state = RGS_PLACING_PIECE;
+    ttt->state = TGS_PLACING_PIECE;
 }
 
 /**
  * @brief TODO
  *
- * @return ragPiece_t
+ * @return tttPiece_t
  */
-static ragPiece_t checkWinner(ringsAndGems_t* rag)
+static tttPiece_t checkWinner(ultimateTTT_t* ttt)
 {
     // Check all the subgames
     for (uint16_t y = 0; y < 3; y++)
     {
         for (uint16_t x = 0; x < 3; x++)
         {
-            checkSubgameWinner(&rag->subgames[x][y]);
+            checkSubgameWinner(&ttt->subgames[x][y]);
         }
     }
 
-    ragPiece_t winner = RAG_EMPTY;
+    tttPiece_t winner = TTT_EMPTY;
     for (uint16_t i = 0; i < 3; i++)
     {
         // Check horizontals
-        if (rag->subgames[i][0].winner == rag->subgames[i][1].winner
-            && rag->subgames[i][1].winner == rag->subgames[i][2].winner)
+        if (ttt->subgames[i][0].winner == ttt->subgames[i][1].winner
+            && ttt->subgames[i][1].winner == ttt->subgames[i][2].winner)
         {
-            if (RAG_EMPTY != rag->subgames[i][0].winner)
+            if (TTT_EMPTY != ttt->subgames[i][0].winner)
             {
-                winner = rag->subgames[i][0].winner;
+                winner = ttt->subgames[i][0].winner;
             }
         }
 
         // Check verticals
-        if (rag->subgames[0][i].winner == rag->subgames[1][i].winner
-            && rag->subgames[1][i].winner == rag->subgames[2][i].winner)
+        if (ttt->subgames[0][i].winner == ttt->subgames[1][i].winner
+            && ttt->subgames[1][i].winner == ttt->subgames[2][i].winner)
         {
-            if (RAG_EMPTY != rag->subgames[0][i].winner)
+            if (TTT_EMPTY != ttt->subgames[0][i].winner)
             {
-                winner = rag->subgames[0][i].winner;
+                winner = ttt->subgames[0][i].winner;
             }
         }
     }
 
     // Check diagonals
-    if (rag->subgames[0][0].winner == rag->subgames[1][1].winner
-        && rag->subgames[1][1].winner == rag->subgames[2][2].winner)
+    if (ttt->subgames[0][0].winner == ttt->subgames[1][1].winner
+        && ttt->subgames[1][1].winner == ttt->subgames[2][2].winner)
     {
-        if (RAG_EMPTY != rag->subgames[0][0].winner)
+        if (TTT_EMPTY != ttt->subgames[0][0].winner)
         {
-            winner = rag->subgames[0][0].winner;
+            winner = ttt->subgames[0][0].winner;
         }
     }
-    else if (rag->subgames[2][0].winner == rag->subgames[1][1].winner
-             && rag->subgames[1][1].winner == rag->subgames[0][2].winner)
+    else if (ttt->subgames[2][0].winner == ttt->subgames[1][1].winner
+             && ttt->subgames[1][1].winner == ttt->subgames[0][2].winner)
     {
-        if (RAG_EMPTY != rag->subgames[2][0].winner)
+        if (TTT_EMPTY != ttt->subgames[2][0].winner)
         {
-            winner = rag->subgames[2][0].winner;
+            winner = ttt->subgames[2][0].winner;
         }
     }
     return winner;
@@ -448,18 +448,18 @@ static ragPiece_t checkWinner(ringsAndGems_t* rag)
  * @brief TODO
  *
  * @param subgame
- * @return ragPiece_t
+ * @return tttPiece_t
  */
-static ragPiece_t checkSubgameWinner(ragSubgame_t* subgame)
+static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame)
 {
-    if (RAG_EMPTY == subgame->winner)
+    if (TTT_EMPTY == subgame->winner)
     {
         for (uint16_t i = 0; i < 3; i++)
         {
             // Check horizontals
             if (subgame->game[i][0] == subgame->game[i][1] && subgame->game[i][1] == subgame->game[i][2])
             {
-                if (RAG_EMPTY != subgame->game[i][0])
+                if (TTT_EMPTY != subgame->game[i][0])
                 {
                     subgame->winner = subgame->game[i][0];
                     return subgame->game[i][0];
@@ -469,7 +469,7 @@ static ragPiece_t checkSubgameWinner(ragSubgame_t* subgame)
             // Check verticals
             if (subgame->game[0][i] == subgame->game[1][i] && subgame->game[1][i] == subgame->game[2][i])
             {
-                if (RAG_EMPTY != subgame->game[0][i])
+                if (TTT_EMPTY != subgame->game[0][i])
                 {
                     subgame->winner = subgame->game[0][i];
                     return subgame->game[0][i];
@@ -480,7 +480,7 @@ static ragPiece_t checkSubgameWinner(ragSubgame_t* subgame)
         // Check diagonals
         if (subgame->game[0][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[2][2])
         {
-            if (RAG_EMPTY != subgame->game[0][0])
+            if (TTT_EMPTY != subgame->game[0][0])
             {
                 subgame->winner = subgame->game[0][0];
                 return subgame->game[0][0];
@@ -488,7 +488,7 @@ static ragPiece_t checkSubgameWinner(ragSubgame_t* subgame)
         }
         else if (subgame->game[2][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[0][2])
         {
-            if (RAG_EMPTY != subgame->game[2][0])
+            if (TTT_EMPTY != subgame->game[2][0])
             {
                 subgame->winner = subgame->game[2][0];
                 return subgame->game[2][0];
@@ -499,7 +499,7 @@ static ragPiece_t checkSubgameWinner(ragSubgame_t* subgame)
     {
         return subgame->winner;
     }
-    return RAG_EMPTY;
+    return TTT_EMPTY;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -508,7 +508,7 @@ static ragPiece_t checkSubgameWinner(ragSubgame_t* subgame)
  * @brief TODO
  *
  */
-void ragDrawGame(ringsAndGems_t* rag)
+void tttDrawGame(ultimateTTT_t* ttt)
 {
     // Clear before drawing
     clearPxTft();
@@ -524,7 +524,7 @@ void ragDrawGame(ringsAndGems_t* rag)
     int16_t gameOffsetY = (TFT_HEIGHT - gameSize) / 2;
 
     // Draw the main gridlines
-    ragDrawGrid(gameOffsetX, gameOffsetY, gameOffsetX + gameSize - 1, gameOffsetY + gameSize - 1, 0, c010);
+    tttDrawGrid(gameOffsetX, gameOffsetY, gameOffsetX + gameSize - 1, gameOffsetY + gameSize - 1, 0, c010);
 
     // For each subgame
     for (int subY = 0; subY < 3; subY++)
@@ -538,15 +538,15 @@ void ragDrawGame(ringsAndGems_t* rag)
             int16_t sY1 = sY0 + subgameSize - 1;
 
             // Draw the subgame grid lines
-            ragDrawGrid(sX0, sY0, sX1, sY1, 4, c020);
+            tttDrawGrid(sX0, sY0, sX1, sY1, 4, c020);
 
             // If selected, draw the cursor on this subgame
-            if (SELECT_SUBGAME == rag->cursorMode && //
-                rag->cursor.x == subX && rag->cursor.y == subY)
+            if (SELECT_SUBGAME == ttt->cursorMode && //
+                ttt->cursor.x == subX && ttt->cursor.y == subY)
             {
-                paletteColor_t color = (GOING_FIRST == p2pGetPlayOrder(&rag->p2p)) ? c500 : c005;
+                paletteColor_t color = (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? c500 : c005;
 
-                if (rag->state == RGS_WAITING)
+                if (ttt->state == TGS_WAITING)
                 {
                     color = c222;
                 }
@@ -557,22 +557,22 @@ void ragDrawGame(ringsAndGems_t* rag)
             }
 
             // Check if the subgame has a winner
-            switch (rag->subgames[subX][subY].winner)
+            switch (ttt->subgames[subX][subY].winner)
             {
-                case RAG_RING:
+                case TTT_RING:
                 {
                     // Draw big winner sprite
-                    drawWsgSimple(&rag->piece_x_big, sX0, sY0);
+                    drawWsgSimple(&ttt->piece_x_big, sX0, sY0);
                     break;
                 }
-                case RAG_GEM:
+                case TTT_GEM:
                 {
                     // Draw big winner sprite
-                    drawWsgSimple(&rag->piece_o_big, sX0, sY0);
+                    drawWsgSimple(&ttt->piece_o_big, sX0, sY0);
                     break;
                 }
                 default:
-                case RAG_EMPTY:
+                case TTT_EMPTY:
                 {
                     // Draw the subgame. For each cell
                     for (int cellY = 0; cellY < 3; cellY++)
@@ -584,36 +584,36 @@ void ragDrawGame(ringsAndGems_t* rag)
                             int16_t cY0 = sY0 + (cellY * cellSize);
 
                             // Draw sprites
-                            switch (rag->subgames[subX][subY].game[cellX][cellY])
+                            switch (ttt->subgames[subX][subY].game[cellX][cellY])
                             {
                                 default:
-                                case RAG_EMPTY:
+                                case TTT_EMPTY:
                                 {
                                     break;
                                 }
-                                case RAG_RING:
+                                case TTT_RING:
                                 {
-                                    drawWsgSimple(&rag->piece_x_small, cX0, cY0);
+                                    drawWsgSimple(&ttt->piece_x_small, cX0, cY0);
                                     break;
                                 }
-                                case RAG_GEM:
+                                case TTT_GEM:
                                 {
-                                    drawWsgSimple(&rag->piece_o_small, cX0, cY0);
+                                    drawWsgSimple(&ttt->piece_o_small, cX0, cY0);
                                     break;
                                 }
                             }
 
                             // If selected, draw the cursor on this cell
-                            if ((SELECT_CELL == rag->cursorMode || SELECT_CELL_LOCKED == rag->cursorMode) && //
-                                rag->selectedSubgame.x == subX && rag->selectedSubgame.y == subY &&          //
-                                rag->cursor.x == cellX && rag->cursor.y == cellY)
+                            if ((SELECT_CELL == ttt->cursorMode || SELECT_CELL_LOCKED == ttt->cursorMode) && //
+                                ttt->selectedSubgame.x == subX && ttt->selectedSubgame.y == subY &&          //
+                                ttt->cursor.x == cellX && ttt->cursor.y == cellY)
                             {
                                 // Get the other rectangle coordinates
                                 int16_t cX1 = cX0 + cellSize - 1;
                                 int16_t cY1 = cY0 + cellSize - 1;
                                 // Draw the cursor
-                                paletteColor_t color = (GOING_FIRST == p2pGetPlayOrder(&rag->p2p)) ? c500 : c005;
-                                if (rag->state == RGS_WAITING)
+                                paletteColor_t color = (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? c500 : c005;
+                                if (ttt->state == TGS_WAITING)
                                 {
                                     color = c222;
                                 }
@@ -642,7 +642,7 @@ void ragDrawGame(ringsAndGems_t* rag)
  * @param m
  * @param color
  */
-void ragDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color)
+void tttDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color)
 {
     int16_t cellWidth  = (x1 - x0) / 3;
     int16_t cellHeight = (y1 - y0) / 3;
