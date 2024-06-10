@@ -1,8 +1,27 @@
+//==============================================================================
+// Includes
+//==============================================================================
+
 #include "ultimateTTTgame.h"
 
-void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPiece_t piece);
-static tttPiece_t checkWinner(ultimateTTT_t* ttt);
-static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame);
+//==============================================================================
+// Typedefs
+//==============================================================================
+
+typedef void (*cursorFunc_t)(ultimateTTT_t* ttt);
+
+//==============================================================================
+// Function Declarations
+//==============================================================================
+
+static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t piece);
+static tttPlayer_t checkWinner(ultimateTTT_t* ttt);
+static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame);
+static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 /**
  * @brief TODO
@@ -11,11 +30,13 @@ static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame);
  */
 void tttBeginGame(ultimateTTT_t* ttt)
 {
+    ttt->ui = TUI_GAME;
+
     // If going first
     if (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p))
     {
         // Set own piece type
-        ttt->p1Piece = TTT_RING;
+        ttt->p1Piece = TTT_PIECE_X;
 
         // Send piece type to other swadge
         tttMsgSelectPiece_t sel = {
@@ -27,13 +48,21 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // If going second, wait to receive p1's piece before responding
 }
 
-typedef void (*cursorFunc_t)(ultimateTTT_t* ttt);
-
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ */
 static void incCursorX(ultimateTTT_t* ttt)
 {
     ttt->cursor.x = (ttt->cursor.x + 1) % 3;
 }
 
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ */
 static void decCursorX(ultimateTTT_t* ttt)
 {
     if (0 == ttt->cursor.x)
@@ -46,11 +75,21 @@ static void decCursorX(ultimateTTT_t* ttt)
     }
 }
 
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ */
 static void incCursorY(ultimateTTT_t* ttt)
 {
     ttt->cursor.y = (ttt->cursor.y + 1) % 3;
 }
 
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ */
 static void decCursorY(ultimateTTT_t* ttt)
 {
     if (0 == ttt->cursor.y)
@@ -63,6 +102,13 @@ static void decCursorY(ultimateTTT_t* ttt)
     }
 }
 
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ * @return true
+ * @return false
+ */
 static bool cursorIsValid(ultimateTTT_t* ttt)
 {
     switch (ttt->cursorMode)
@@ -74,12 +120,12 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
         }
         case SELECT_SUBGAME:
         {
-            return TTT_EMPTY == ttt->subgames[ttt->cursor.x][ttt->cursor.y].winner;
+            return TTT_NONE == ttt->subgames[ttt->cursor.x][ttt->cursor.y].winner;
         }
         case SELECT_CELL:
         case SELECT_CELL_LOCKED:
         {
-            return TTT_EMPTY
+            return TTT_NONE
                    == ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].game[ttt->cursor.x][ttt->cursor.y];
         }
     }
@@ -93,6 +139,12 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
  */
 void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
+    // Return if not placing a piece
+    if (TGS_PLACING_PIECE != ttt->state)
+    {
+        return;
+    }
+
     // Do something?
     if (evt->down)
     {
@@ -167,7 +219,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 
                     // Place the piece
                     tttPlacePiece(ttt, &ttt->selectedSubgame, &ttt->cursor,
-                                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? ttt->p1Piece : ttt->p2Piece);
+                                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P1 : TTT_P2);
 
                     // Switch to waiting
                     ttt->state = TGS_WAITING;
@@ -288,27 +340,45 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
  * @param cell
  * @param piece
  */
-void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPiece_t piece)
+static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t piece)
 {
     // Place the piece
     ttt->subgames[subgame->x][subgame->y].game[cell->x][cell->y] = piece;
 
     // Check the board
-    checkWinner(ttt);
-
-    // Next move should be in this cell
-    ttt->selectedSubgame = *cell;
-    ttt->cursorMode      = SELECT_CELL_LOCKED;
-
-    ttt->cursor.x = 1;
-    ttt->cursor.y = 1;
-    for (int16_t y = 0; y < 3; y++)
+    tttPlayer_t winner = checkWinner(ttt);
+    if (TTT_NONE != winner)
     {
-        for (int16_t x = 0; x < 3; x++)
+        // TODO show the winner
+        // TODO record the result
+        // Go back to the menu
+        ttt->ui = TUI_MENU;
+        p2pDeinit(&ttt->p2p);
+    }
+    else
+    { // Next move should be in this cell
+        ttt->selectedSubgame = *cell;
+        ttt->cursorMode      = SELECT_CELL_LOCKED;
+
+        ttt->cursor.x = 1;
+        ttt->cursor.y = 1;
+        for (int16_t y = 0; y < 3; y++)
         {
+            for (int16_t x = 0; x < 3; x++)
+            {
+                if (!cursorIsValid(ttt))
+                {
+                    incCursorX(ttt);
+                }
+                else
+                {
+                    break;
+                }
+            }
+
             if (!cursorIsValid(ttt))
             {
-                incCursorX(ttt);
+                incCursorY(ttt);
             }
             else
             {
@@ -316,35 +386,26 @@ void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, 
             }
         }
 
-        if (!cursorIsValid(ttt))
+        // If that subgame is already won
+        if (TTT_NONE != ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].winner)
         {
-            incCursorY(ttt);
-        }
-        else
-        {
-            break;
-        }
-    }
-
-    // If that subgame is already won
-    if (TTT_EMPTY != ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].winner)
-    {
-        // Find the next one
-        for (int16_t y = 0; y < 3; y++)
-        {
-            for (int16_t x = 0; x < 3; x++)
+            // Find the next one
+            for (int16_t y = 0; y < 3; y++)
             {
-                if (TTT_EMPTY == ttt->subgames[x][y].winner)
+                for (int16_t x = 0; x < 3; x++)
                 {
-                    ttt->cursor.x   = x;
-                    ttt->cursor.y   = y;
-                    ttt->cursorMode = SELECT_SUBGAME;
+                    if (TTT_NONE == ttt->subgames[x][y].winner)
+                    {
+                        ttt->cursor.x   = x;
+                        ttt->cursor.y   = y;
+                        ttt->cursorMode = SELECT_SUBGAME;
+                        break;
+                    }
+                }
+                if (SELECT_SUBGAME == ttt->cursorMode)
+                {
                     break;
                 }
-            }
-            if (SELECT_SUBGAME == ttt->cursorMode)
-            {
-                break;
             }
         }
     }
@@ -378,7 +439,7 @@ void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
 {
     // Place the piece
     tttPlacePiece(ttt, &msg->selectedSubgame, &msg->selectedCell,
-                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? ttt->p2Piece : ttt->p1Piece);
+                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P2 : TTT_P1);
 
     // Transition state to placing a piece
     ttt->state = TGS_PLACING_PIECE;
@@ -387,9 +448,9 @@ void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
 /**
  * @brief TODO
  *
- * @return tttPiece_t
+ * @return tttPlayer_t
  */
-static tttPiece_t checkWinner(ultimateTTT_t* ttt)
+static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
 {
     // Check all the subgames
     for (uint16_t y = 0; y < 3; y++)
@@ -400,14 +461,14 @@ static tttPiece_t checkWinner(ultimateTTT_t* ttt)
         }
     }
 
-    tttPiece_t winner = TTT_EMPTY;
+    tttPiece_t winner = TTT_NONE;
     for (uint16_t i = 0; i < 3; i++)
     {
         // Check horizontals
         if (ttt->subgames[i][0].winner == ttt->subgames[i][1].winner
             && ttt->subgames[i][1].winner == ttt->subgames[i][2].winner)
         {
-            if (TTT_EMPTY != ttt->subgames[i][0].winner)
+            if (TTT_NONE != ttt->subgames[i][0].winner)
             {
                 winner = ttt->subgames[i][0].winner;
             }
@@ -417,7 +478,7 @@ static tttPiece_t checkWinner(ultimateTTT_t* ttt)
         if (ttt->subgames[0][i].winner == ttt->subgames[1][i].winner
             && ttt->subgames[1][i].winner == ttt->subgames[2][i].winner)
         {
-            if (TTT_EMPTY != ttt->subgames[0][i].winner)
+            if (TTT_NONE != ttt->subgames[0][i].winner)
             {
                 winner = ttt->subgames[0][i].winner;
             }
@@ -428,7 +489,7 @@ static tttPiece_t checkWinner(ultimateTTT_t* ttt)
     if (ttt->subgames[0][0].winner == ttt->subgames[1][1].winner
         && ttt->subgames[1][1].winner == ttt->subgames[2][2].winner)
     {
-        if (TTT_EMPTY != ttt->subgames[0][0].winner)
+        if (TTT_NONE != ttt->subgames[0][0].winner)
         {
             winner = ttt->subgames[0][0].winner;
         }
@@ -436,7 +497,7 @@ static tttPiece_t checkWinner(ultimateTTT_t* ttt)
     else if (ttt->subgames[2][0].winner == ttt->subgames[1][1].winner
              && ttt->subgames[1][1].winner == ttt->subgames[0][2].winner)
     {
-        if (TTT_EMPTY != ttt->subgames[2][0].winner)
+        if (TTT_NONE != ttt->subgames[2][0].winner)
         {
             winner = ttt->subgames[2][0].winner;
         }
@@ -448,18 +509,18 @@ static tttPiece_t checkWinner(ultimateTTT_t* ttt)
  * @brief TODO
  *
  * @param subgame
- * @return tttPiece_t
+ * @return tttPlayer_t
  */
-static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame)
+static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
 {
-    if (TTT_EMPTY == subgame->winner)
+    if (TTT_NONE == subgame->winner)
     {
         for (uint16_t i = 0; i < 3; i++)
         {
             // Check horizontals
             if (subgame->game[i][0] == subgame->game[i][1] && subgame->game[i][1] == subgame->game[i][2])
             {
-                if (TTT_EMPTY != subgame->game[i][0])
+                if (TTT_NONE != subgame->game[i][0])
                 {
                     subgame->winner = subgame->game[i][0];
                     return subgame->game[i][0];
@@ -469,7 +530,7 @@ static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame)
             // Check verticals
             if (subgame->game[0][i] == subgame->game[1][i] && subgame->game[1][i] == subgame->game[2][i])
             {
-                if (TTT_EMPTY != subgame->game[0][i])
+                if (TTT_NONE != subgame->game[0][i])
                 {
                     subgame->winner = subgame->game[0][i];
                     return subgame->game[0][i];
@@ -480,7 +541,7 @@ static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame)
         // Check diagonals
         if (subgame->game[0][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[2][2])
         {
-            if (TTT_EMPTY != subgame->game[0][0])
+            if (TTT_NONE != subgame->game[0][0])
             {
                 subgame->winner = subgame->game[0][0];
                 return subgame->game[0][0];
@@ -488,7 +549,7 @@ static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame)
         }
         else if (subgame->game[2][0] == subgame->game[1][1] && subgame->game[1][1] == subgame->game[0][2])
         {
-            if (TTT_EMPTY != subgame->game[2][0])
+            if (TTT_NONE != subgame->game[2][0])
             {
                 subgame->winner = subgame->game[2][0];
                 return subgame->game[2][0];
@@ -499,7 +560,7 @@ static tttPiece_t checkSubgameWinner(tttSubgame_t* subgame)
     {
         return subgame->winner;
     }
-    return TTT_EMPTY;
+    return TTT_NONE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -523,7 +584,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
     int16_t gameOffsetX = (TFT_WIDTH - gameSize) / 2;
     int16_t gameOffsetY = (TFT_HEIGHT - gameSize) / 2;
 
-    // Draw the main gridlines
+    // Draw the main grid lines
     tttDrawGrid(gameOffsetX, gameOffsetY, gameOffsetX + gameSize - 1, gameOffsetY + gameSize - 1, 0, c010);
 
     // For each subgame
@@ -559,20 +620,14 @@ void tttDrawGame(ultimateTTT_t* ttt)
             // Check if the subgame has a winner
             switch (ttt->subgames[subX][subY].winner)
             {
-                case TTT_RING:
+                case TTT_P1:
+                case TTT_P2:
                 {
-                    // Draw big winner sprite
-                    drawWsgSimple(&ttt->piece_x_big, sX0, sY0);
-                    break;
-                }
-                case TTT_GEM:
-                {
-                    // Draw big winner sprite
-                    drawWsgSimple(&ttt->piece_o_big, sX0, sY0);
+                    drawWsgSimple(getPieceWsg(ttt, ttt->subgames[subX][subY].winner, true), sX0, sY0);
                     break;
                 }
                 default:
-                case TTT_EMPTY:
+                case TTT_NONE:
                 {
                     // Draw the subgame. For each cell
                     for (int cellY = 0; cellY < 3; cellY++)
@@ -587,18 +642,15 @@ void tttDrawGame(ultimateTTT_t* ttt)
                             switch (ttt->subgames[subX][subY].game[cellX][cellY])
                             {
                                 default:
-                                case TTT_EMPTY:
+                                case TTT_NONE:
                                 {
                                     break;
                                 }
-                                case TTT_RING:
+                                case TTT_P1:
+                                case TTT_P2:
                                 {
-                                    drawWsgSimple(&ttt->piece_x_small, cX0, cY0);
-                                    break;
-                                }
-                                case TTT_GEM:
-                                {
-                                    drawWsgSimple(&ttt->piece_o_small, cX0, cY0);
+                                    drawWsgSimple(getPieceWsg(ttt, ttt->subgames[subX][subY].game[cellX][cellY], false),
+                                                  cX0, cY0);
                                     break;
                                 }
                             }
@@ -630,6 +682,75 @@ void tttDrawGame(ultimateTTT_t* ttt)
             }
         }
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ * @param p
+ * @param isBig
+ * @return wsg_t*
+ */
+static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig)
+{
+    if (p == TTT_P1)
+    {
+        switch (ttt->p1Piece)
+        {
+            case TTT_PIECE_X:
+            {
+                if (isBig)
+                {
+                    return &ttt->piece_x_big;
+                }
+                else
+                {
+                    return &ttt->piece_x_small;
+                }
+            }
+            case TTT_PIECE_O:
+            {
+                if (isBig)
+                {
+                    return &ttt->piece_o_big;
+                }
+                else
+                {
+                    return &ttt->piece_o_small;
+                }
+            }
+        }
+    }
+    else
+    {
+        switch (ttt->p2Piece)
+        {
+            case TTT_PIECE_X:
+            {
+                if (isBig)
+                {
+                    return &ttt->piece_x_big;
+                }
+                else
+                {
+                    return &ttt->piece_x_small;
+                }
+            }
+            case TTT_PIECE_O:
+            {
+                if (isBig)
+                {
+                    return &ttt->piece_o_big;
+                }
+                else
+                {
+                    return &ttt->piece_o_small;
+                }
+            }
+        }
+    }
+    return NULL;
 }
 
 /**

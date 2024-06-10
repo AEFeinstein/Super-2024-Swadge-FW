@@ -4,6 +4,9 @@
 
 #include "ultimateTTT.h"
 #include "ultimateTTTgame.h"
+#include "ultimateTTThowTo.h"
+#include "ultimateTTTpieceSelect.h"
+#include "ultimateTTTp2p.h"
 
 //==============================================================================
 // Function Prototypes
@@ -24,8 +27,7 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char tttName[] = "Ultimate TTT";
-
+static const char tttName[]        = "Ultimate TTT";
 static const char tttMultiStr[]    = "Wireless Connect";
 static const char tttSingleStr[]   = "Single Player";
 static const char tttPieceSelStr[] = "Piece Select";
@@ -82,7 +84,7 @@ static void tttEnterMode(void)
     addSingleItemToMenu(ttt->menu, tttPieceSelStr);
     addSingleItemToMenu(ttt->menu, tttHowToStr);
 
-    ttt->state = TGS_MENU;
+    ttt->ui = TUI_MENU;
 
     // Initialize p2p
     p2pInitialize(&ttt->p2p, 0x25, tttConCb, tttMsgRxCb, -70);
@@ -126,44 +128,63 @@ static void tttMainLoop(int64_t elapsedUs)
     buttonEvt_t evt = {0};
     while (checkButtonQueueWrapper(&evt))
     {
-        switch (ttt->state)
+        switch (ttt->ui)
         {
-            case TGS_MENU:
+            case TUI_MENU:
             {
-                // Menu button inputs
                 ttt->menu = menuButton(ttt->menu, evt);
                 break;
             }
-            case TGS_PLACING_PIECE:
+            case TUI_CONNECTING:
             {
-                // Move the cursor
+                tttHandleConnectingInput(ttt, &evt);
+                break;
+            }
+            case TUI_GAME:
+            {
                 tttHandleGameInput(ttt, &evt);
                 break;
             }
-            default:
-            case TGS_WAITING:
+            case TUI_PIECE_SELECT:
             {
-                // Do nothing
+                tttInputPieceSelect(ttt, &evt);
+                break;
+            }
+            case TUI_HOW_TO:
+            {
+                tttInputHowTo(ttt, &evt);
                 break;
             }
         }
     }
 
     // Draw to the TFT
-    switch (ttt->state)
+    switch (ttt->ui)
     {
-        default:
-        case TGS_MENU:
+        case TUI_MENU:
         {
             // Draw menu
             drawMenuMania(ttt->menu, ttt->menuRenderer, elapsedUs);
             break;
         }
-        case TGS_PLACING_PIECE:
-        case TGS_WAITING:
+        case TUI_CONNECTING:
         {
-            // Draw Game
+            tttDrawConnecting(ttt);
+            break;
+        }
+        case TUI_GAME:
+        {
             tttDrawGame(ttt);
+            break;
+        }
+        case TUI_PIECE_SELECT:
+        {
+            tttDrawPieceSelect(ttt);
+            break;
+        }
+        case TUI_HOW_TO:
+        {
+            tttDrawHowTo(ttt);
             break;
         }
     }
@@ -184,6 +205,7 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         {
             // TODO multiplayer
             p2pStartConnection(&ttt->p2p);
+            ttt->ui = TUI_CONNECTING;
         }
         else if (tttSingleStr == label)
         {
@@ -192,18 +214,16 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (tttPieceSelStr == label)
         {
-            // TODO piece selection UI
-            printf("Implement piece selection\n");
+            // Show piece selection UI
+            ttt->ui = TUI_PIECE_SELECT;
         }
         else if (tttHowToStr == label)
         {
-            // TODO how to play UI
-            printf("Implement How To\n");
+            // Show how to play
+            ttt->ui = TUI_HOW_TO;
         }
     }
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief TODO
@@ -239,31 +259,7 @@ static void tttEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t statu
  */
 static void tttConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
-    // TODO handle connection states and disconnection
-    switch (evt)
-    {
-        case CON_STARTED:
-        {
-            break;
-        }
-        case RX_GAME_START_ACK:
-        {
-            break;
-        }
-        case RX_GAME_START_MSG:
-        {
-            break;
-        }
-        case CON_ESTABLISHED:
-        {
-            tttBeginGame(ttt);
-            break;
-        }
-        case CON_LOST:
-        {
-            break;
-        }
-    }
+    tttHandleCon(ttt, evt);
 }
 
 /**
@@ -275,70 +271,7 @@ static void tttConCb(p2pInfo* p2p, connectionEvt_t evt)
  */
 static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
-    // Make sure there is a type to switch on
-    if (len < 1)
-    {
-        return;
-    }
-
-    // Handle incoming messages
-    switch (payload[0])
-    {
-        case MSG_SELECT_PIECE:
-        {
-            if (len == sizeof(tttMsgSelectPiece_t))
-            {
-                const tttMsgSelectPiece_t* rxSel = (const tttMsgSelectPiece_t*)payload;
-
-                // If this is the second player
-                if (GOING_SECOND == p2pGetPlayOrder(&ttt->p2p))
-                {
-                    // Save p1's piece
-                    ttt->p1Piece = rxSel->piece;
-
-                    // Send p2's piece to p1
-                    ttt->p2Piece = TTT_GEM;
-
-                    // Send sprite selection to other swadge
-                    tttMsgSelectPiece_t txSel = {
-                        .type  = MSG_SELECT_PIECE,
-                        .piece = ttt->p2Piece,
-                    };
-                    p2pSendMsg(&ttt->p2p, (const uint8_t*)&txSel, sizeof(txSel), tttMsgTxCbFn);
-
-                    // Wait for p1 to make the first move
-                    ttt->state = TGS_WAITING;
-                }
-                else // Going first
-                {
-                    // Received p2's piece
-                    ttt->p2Piece = rxSel->piece;
-
-                    // Make the first move
-                    ttt->state = TGS_PLACING_PIECE;
-                }
-            }
-            break;
-        }
-        case MSG_MOVE_CURSOR:
-        {
-            // Length check
-            if (len == sizeof(tttMsgMoveCursor_t))
-            {
-                tttReceiveCursor(ttt, (const tttMsgMoveCursor_t*)payload);
-            }
-            break;
-        }
-        case MSG_PLACE_PIECE:
-        {
-            // Length check
-            if (len == sizeof(tttMsgPlacePiece_t))
-            {
-                tttReceivePlacedPiece(ttt, (const tttMsgPlacePiece_t*)payload);
-            }
-            break;
-        }
-    }
+    tttHandleMsgRx(ttt, payload, len);
 }
 
 /**
@@ -352,4 +285,5 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 void tttMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
     // TODO
+    tttHandleMsgTx(ttt, status, data, len);
 }
