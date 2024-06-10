@@ -12,6 +12,7 @@
 static void tttEnterMode(void);
 static void tttExitMode(void);
 static void tttMainLoop(int64_t elapsedUs);
+static void tttMenuCb(const char* label, bool selected, uint32_t value);
 
 static void tttEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi);
 static void tttEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status);
@@ -23,7 +24,12 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char tttName[] = "Rings and Gems";
+static const char tttName[] = "Ultimate TTT";
+
+static const char tttMultiStr[]    = "Wireless Connect";
+static const char tttSingleStr[]   = "Single Player";
+static const char tttPieceSelStr[] = "Piece Select";
+static const char tttHowToStr[]    = "How To Play";
 
 swadgeMode_t tttMode = {
     .modeName                 = tttName,
@@ -65,9 +71,21 @@ static void tttEnterMode(void)
     loadWsg("o_small.wsg", &ttt->piece_o_small, true);
     loadWsg("o_large.wsg", &ttt->piece_o_big, true);
 
-    // Initialize and start p2p
+    loadFont("rodin_eb.font", &ttt->font_rodin, false);
+    loadFont("righteous_150.font", &ttt->font_righteous, false);
+
+    ttt->menu         = initMenu(tttName, tttMenuCb);
+    ttt->menuRenderer = initMenuManiaRenderer(&ttt->font_righteous, &ttt->font_rodin);
+
+    addSingleItemToMenu(ttt->menu, tttMultiStr);
+    addSingleItemToMenu(ttt->menu, tttSingleStr);
+    addSingleItemToMenu(ttt->menu, tttPieceSelStr);
+    addSingleItemToMenu(ttt->menu, tttHowToStr);
+
+    ttt->state = TGS_MENU;
+
+    // Initialize p2p
     p2pInitialize(&ttt->p2p, 0x25, tttConCb, tttMsgRxCb, -70);
-    p2pStartConnection(&ttt->p2p);
 }
 
 /**
@@ -76,14 +94,22 @@ static void tttEnterMode(void)
  */
 static void tttExitMode(void)
 {
+    // Deinitialize p2p
+    p2pDeinit(&ttt->p2p);
+
     // Free memory
     freeWsg(&ttt->piece_x_small);
     freeWsg(&ttt->piece_x_big);
     freeWsg(&ttt->piece_o_small);
     freeWsg(&ttt->piece_o_big);
 
-    // Deinitialize p2p
-    p2pDeinit(&ttt->p2p);
+    // Free the menu
+    deinitMenuManiaRenderer(ttt->menuRenderer);
+    deinitMenu(ttt->menu);
+
+    // Free the font
+    freeFont(&ttt->font_rodin);
+    freeFont(&ttt->font_righteous);
 
     // Free memory
     free(ttt);
@@ -104,7 +130,8 @@ static void tttMainLoop(int64_t elapsedUs)
         {
             case TGS_MENU:
             {
-                // TODO menu button inputs
+                // Menu button inputs
+                ttt->menu = menuButton(ttt->menu, evt);
                 break;
             }
             case TGS_PLACING_PIECE:
@@ -128,18 +155,55 @@ static void tttMainLoop(int64_t elapsedUs)
         default:
         case TGS_MENU:
         {
-            // TODO draw menu
-            clearPxTft();
+            // Draw menu
+            drawMenuMania(ttt->menu, ttt->menuRenderer, elapsedUs);
             break;
         }
         case TGS_PLACING_PIECE:
         case TGS_WAITING:
         {
+            // Draw Game
             tttDrawGame(ttt);
             break;
         }
     }
 }
+
+/**
+ * @brief TODO
+ *
+ * @param label
+ * @param selected
+ * @param value
+ */
+static void tttMenuCb(const char* label, bool selected, uint32_t value)
+{
+    if (selected)
+    {
+        if (tttMultiStr == label)
+        {
+            // TODO multiplayer
+            p2pStartConnection(&ttt->p2p);
+        }
+        else if (tttSingleStr == label)
+        {
+            // TODO single player
+            printf("Implement Single Player\n");
+        }
+        else if (tttPieceSelStr == label)
+        {
+            // TODO piece selection UI
+            printf("Implement piece selection\n");
+        }
+        else if (tttHowToStr == label)
+        {
+            // TODO how to play UI
+            printf("Implement How To\n");
+        }
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @brief TODO

@@ -47,6 +47,10 @@ typedef struct
 
 typedef struct
 {
+    menu_t* menu;
+    menuManiaRenderer_t* menuRenderer;
+    font_t font_righteous;
+    font_t font_rodin;
     tttGameState_t state;
     tttSubgame_t subgames[3][3];
     vec_t cursor;
