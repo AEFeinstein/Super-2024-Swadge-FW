@@ -77,7 +77,7 @@ static void tttEnterMode(void)
     loadFont("righteous_150.font", &ttt->font_righteous, false);
 
     ttt->menu         = initMenu(tttName, tttMenuCb);
-    ttt->menuRenderer = initMenuManiaRenderer(&ttt->font_righteous, &ttt->font_rodin);
+    ttt->menuRenderer = initMenuManiaRenderer(&ttt->font_righteous, NULL, &ttt->font_rodin);
 
     addSingleItemToMenu(ttt->menu, tttMultiStr);
     addSingleItemToMenu(ttt->menu, tttSingleStr);
