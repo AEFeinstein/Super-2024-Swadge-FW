@@ -11,8 +11,10 @@
  *
  * The menu renderer is initialized with initMenuManiaRenderer() and deinitialized with deinitMenuManiaRenderer().
  * Menu renderers must be deinitialized or they will leak memory.
- * When initializing the menu, a font must be passed in as an argument. This renderer will not allocate its own font to
- * avoid allocating the same font twice for a given mode (once for the menu and again for the mode itself).
+ * When initializing the menu, fonts may be passed in as an argument, or the arguments may be \c NULL. If the Swadge
+ * mode is loading fonts for itself, you can save RAM by using the same font in the menu renderer. If the Swadge mode
+ * isn't using the same fonts, it's easier to have the menu renderer manage it's own fonts. Either way, you should avoid
+ * loading the same font multiple times.
  *
  * The menu is drawn with drawMenuMania(). This will both draw over the entire display and light LEDs. The menu may be
  * drawn on top of later.
@@ -30,19 +32,48 @@
 #include "spiffs_wsg.h"
 #include "hdw-led.h"
 
+typedef struct
+{
+    int16_t orbitAngle;       ///< Angle for the orbit circles
+    int32_t orbitTimer;       ///< Timer to rotate the orbit circles
+    int32_t orbitUsPerDegree; ///< Number of microseconds to wait before rotating by one degree
+    int32_t orbitDirection;   ///< The direction to rotate, +1 or -1
+    int16_t diameterAngle;    ///< Angle to grow and shrink the orbit circles
+    int32_t diameterTimer;    ///< Timer to grow and shrink the orbit circles
+    paletteColor_t color;     ///< The color of this ring
+} maniaRing_t;
+
 /**
  * @brief A struct containing all the state data to render a mania-style menu and LEDs
  */
 typedef struct
 {
-    font_t* titleFont;           ///< The font to render the menu with
-    font_t* menuFont;            ///< The font to render the menu with
-    led_t leds[CONFIG_NUM_LEDS]; ///< An array with the RGB LED state to be output
-    wsg_t batt[4];               ///< Images for the battery levels
-    wsg_t menu_bg;               ///< Background image for the menu
+    font_t* titleFont;              ///< The font to render the title with
+    font_t* titleFontOutline;       ///< The font to render the title outline with
+    font_t* menuFont;               ///< The font to render the menu with
+    bool titleFontAllocated;        ///< true if this font was allocated by the renderer and should be freed by
+                                    ///< deinitMenuManiaRenderer()
+    bool titleFontOutlineAllocated; ///< true if this font was allocated by the renderer and should be freed by
+                                    ///< deinitMenuManiaRenderer()
+    bool menuFontAllocated;         ///< true if this font was allocated by the renderer and should be freed by
+                                    ///< deinitMenuManiaRenderer()
+    led_t leds[CONFIG_NUM_LEDS];    ///< An array with the RGB LED state to be output
+    wsg_t batt[4];                  ///< Images for the battery levels
+
+    maniaRing_t rings[2];
+
+    int32_t ledDecayTimer;  ///< Timer to decay LEDs
+    int32_t ledExciteTimer; ///< Timer to excite LEDs
+    int16_t currentLed;     ///< The current LED being excited
+
+    menuItem_t* selectedItem;    ///< Reference to the selected item to tell when it changes
+    int16_t selectedShadowIdx;   ///< The index to the color offset for the selected drop shadow
+    int32_t selectedShadowTimer; ///< The timer to change the color for the selected drop shadow
+    int16_t selectedBounceIdx;   ///< The index to the bounce offset for the selected item
+    int32_t selectedBounceTimer; ///< The timer to bounce the offset for the selected item
 } menuManiaRenderer_t;
 
-menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* menuFont);
+menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
 
