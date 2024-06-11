@@ -45,7 +45,7 @@ endif
 # This is a list of directories to scan for c files recursively
 SRC_DIRS_RECURSIVE = emulator/src main
 # This is a list of directories to scan for c files not recursively
-SRC_DIRS_FLAT = 
+SRC_DIRS_FLAT = emulator/src-lib
 # This is a list of files to compile directly. There's no scanning here
 SRC_FILES = 
 # This is all the source directories combined
@@ -54,7 +54,7 @@ SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 SOURCES   = $(shell $(FIND) $(SRC_DIRS) -maxdepth 1 -iname "*.[c]") $(SRC_FILES)
 
 # The emulator doesn't build components, but there is a target for formatting them
-ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]" -not -name "getopt_win.h" -not -name "cJSON*")
+ALL_FILES = $(shell $(FIND) components $(SRC_DIRS_RECURSIVE) -iname "*.[c|h]")
 
 ################################################################################
 # Includes
@@ -374,19 +374,9 @@ CPPCHECK_DIRS= \
 	emulator/src
 
 CPPCHECK_IGNORE= \
-	emulator/src/rawdraw_sf.h \
-	emulator/src/getopt_win.h \
-	emulator/src-lib/stb_image_write.h \
-	emulator/sound \
-	emulator/src/components/hdw-nvs/cJSON.c \
-	emulator/src/components/hdw-nvs/cJSON.h \
-	main/asset_loaders/heatshrink_common.h \
-	main/asset_loaders/heatshrink_config.h \
-	main/asset_loaders/heatshrink_decoder.c \
-	main/asset_loaders/heatshrink_decoder.h \
-	main/asset_loaders/heatshrink_helper.c \
-	main/asset_loaders/heatshrink_helper.h
-
+	$(shell $(FIND) emulator/src-lib -type f) \
+	$(shell $(FIND) main/asset_loaders -type f -iname "*heatshrink*")
+	
 CPPCHECK_IGNORE_FLAGS = $(patsubst %,-i%, $(CPPCHECK_IGNORE))
 
 cppcheck:

@@ -39,6 +39,8 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                             "swadge2024.c"
                             "utils/color_utils.c"
                             "utils/dialogBox.c"
+                            "utils/fl_math/geometryFl.c"
+                            "utils/fl_math/vectorFl2d.c"
                             "utils/fp_math.c"
                             "utils/geometry.c"
                             "utils/linked_list.c"
@@ -93,7 +95,8 @@ idf_component_register(SRCS "asset_loaders/common/heatshrink_encoder.c"
                                 "./modes/utilities/dance"
                                 "./modes/utilities/gamepad"
                                 "./modes/utilities/timer"
-                                "./utils")
+                                "./utils"
+                                "./utils/fl_math")
 
 function(spiffs_file_preprocessor)
     add_custom_target(spiffs_preprocessor ALL

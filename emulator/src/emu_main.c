@@ -4,8 +4,14 @@
 
 #include <unistd.h>
 #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__) || defined(__APPLE__)
+    #include <stdlib.h>
     #include <signal.h>
     #include <execinfo.h>
+    #ifndef _GNU_SOURCE
+        #define _GNU_SOURCE
+    #endif
+    #include <dlfcn.h>
+    #include <link.h>
 #endif
 #include <time.h>
 
@@ -651,47 +657,125 @@ void init_crashSignals(void)
  */
 void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
 {
-    char msg[128] = {'\0'};
-    ssize_t result;
+    // Get the backtrace
+    void* array[128];
+    size_t size = backtrace(array, ARRAY_SIZE(array));
 
-    char fname[64] = {0};
-    sprintf(fname, "crash-%ld.txt", time(NULL));
-    int dumpFileDescriptor
-        = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
-
-    if (-1 != dumpFileDescriptor)
+    // Only write a file if there's a backtrace
+    if (0 < size)
     {
-        snprintf(msg, sizeof(msg), "Signal %d received!\nsigno: %d, errno %d\n, code %d\n", signum, si->si_signo,
-                 si->si_errno, si->si_code);
-        result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
-        (void)result;
+        char msg[512] = {'\0'};
+        ssize_t result;
 
-        memset(msg, 0, sizeof(msg));
-    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
-        for (int i = 0; i < __SI_PAD_SIZE; i++)
-    #else
-        // Seems to be hardcoded on MacOS
-        for (int i = 0; i < 7; i++)
-    #endif
+        char fname[64] = {0};
+        sprintf(fname, "crash-%ld.txt", time(NULL));
+        int dumpFileDescriptor
+            = open(fname, O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH);
+
+        if (-1 != dumpFileDescriptor)
         {
-            char tmp[8];
-    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
-            snprintf(tmp, sizeof(tmp), "%02X", si->_sifields._pad[i]);
-    #else
-            snprintf(tmp, sizeof(tmp), "%02X", (int)si->__pad[i]);
-    #endif
-            tmp[sizeof(tmp) - 1] = '\0';
-            strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
-        }
-        strncat(msg, "\n", sizeof(msg) - strlen(msg) - 1);
-        result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
-        (void)result;
+            snprintf(msg, sizeof(msg), "Signal %-2d received!\nsigno: %-2d\nerrno: %-2d\ncode:  %-2d\n", signum,
+                     si->si_signo, si->si_errno, si->si_code);
+            result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            (void)result;
 
-        // Print backtrace
-        void* array[128];
-        size_t size = backtrace(array, (sizeof(array) / sizeof(array[0])));
-        backtrace_symbols_fd(array, size, dumpFileDescriptor);
-        close(dumpFileDescriptor);
+            memset(msg, 0, sizeof(msg));
+            strncat(msg, "sifields: ", sizeof(msg) - 1);
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
+            for (int i = 0; i < __SI_PAD_SIZE; i++)
+    #else
+            // Seems to be hardcoded on MacOS
+            for (int i = 0; i < 7; i++)
+    #endif
+            {
+                char tmp[8];
+    #if defined(__linux) || defined(__linux__) || defined(linux) || defined(__LINUX__)
+                snprintf(tmp, sizeof(tmp), "%02X ", si->_sifields._pad[i]);
+    #else
+                snprintf(tmp, sizeof(tmp), "%02X ", (int)si->__pad[i]);
+    #endif
+                tmp[sizeof(tmp) - 1] = '\0';
+                strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
+            }
+            strncat(msg, "\n", sizeof(msg) - strlen(msg) - 1);
+            result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            (void)result;
+
+            /* This dumps the backtrace to a file, but it doesn't resolve addresses to function names */
+            // backtrace_symbols_fd(array, size, dumpFileDescriptor);
+            // result = write(dumpFileDescriptor, msg, strnlen(msg, sizeof(msg)));
+            // (void)result;
+
+            // Boolean to write the header first
+            bool catHdr = false;
+
+            // For each address in the stack trace
+            for (size_t i = 0; i < size; i++)
+            {
+                // Get more information about the address
+                Dl_info dli;
+                dladdr(array[i], &dli);
+
+                // If the addr2line header isn't written yet
+                if (!catHdr)
+                {
+                    // Write it
+                    snprintf(msg, sizeof(msg) - 1, "addr2line -fpriCe %s ", dli.dli_fname);
+                    catHdr = true;
+                }
+
+                // Calculate the offset relative to the file
+                char sign;
+                ptrdiff_t offset;
+                if (array[i] >= (void*)dli.dli_fbase)
+                {
+                    sign   = '+';
+                    offset = array[i] - dli.dli_fbase;
+                }
+                else
+                {
+                    sign   = '-';
+                    offset = dli.dli_fbase - array[i];
+                }
+
+                // Concatenate each address
+                char tmp[32] = {0};
+                snprintf(tmp, sizeof(tmp) - 1, "%c%#tx ", sign, offset);
+                strncat(msg, tmp, sizeof(msg) - strlen(msg) - 1);
+            }
+
+            // Execute addr2line and write the output to the logfile and the terminal
+            FILE* fp;
+            char path[128];
+            fp = popen(msg, "r");
+            if (fp != NULL)
+            {
+                // Print this to the terminal and file
+                snprintf(msg, sizeof(msg) - 1, "\nCRASH BACKTRACE\n");
+                write(dumpFileDescriptor, msg, strlen(msg));
+                printf("%s", msg);
+
+                snprintf(msg, sizeof(msg) - 1, "===============\n");
+                write(dumpFileDescriptor, msg, strlen(msg));
+                printf("%s", msg);
+
+                /* Read the output a line at a time - output it. */
+                while (fgets(path, sizeof(path), fp) != NULL)
+                {
+                    write(dumpFileDescriptor, path, strlen(path));
+                    printf("%s", path);
+                }
+
+                /* Flush the terminal */
+                fflush(stdout);
+
+                /* close */
+                pclose(fp);
+            }
+
+            // Close the file
+            close(dumpFileDescriptor);
+        }
     }
 
     // Exit

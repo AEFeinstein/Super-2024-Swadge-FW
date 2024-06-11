@@ -60,9 +60,10 @@ static void pinEnterMode(void)
     // Allocate all the memory
     pinball = calloc(sizeof(pinball_t), 1);
 
-    pinball->balls   = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
-    pinball->bumpers = heap_caps_calloc(MAX_NUM_BUMPERS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
-    pinball->walls   = heap_caps_calloc(MAX_NUM_WALLS, sizeof(pbLine_t), MALLOC_CAP_SPIRAM);
+    pinball->balls    = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
+    pinball->bumpers  = heap_caps_calloc(MAX_NUM_BUMPERS, sizeof(pbCircle_t), MALLOC_CAP_SPIRAM);
+    pinball->walls    = heap_caps_calloc(MAX_NUM_WALLS, sizeof(pbLine_t), MALLOC_CAP_SPIRAM);
+    pinball->flippers = heap_caps_calloc(MAX_NUM_FLIPPERS, sizeof(pbFlipper_t), MALLOC_CAP_SPIRAM);
 
     pinball->ballsTouching = heap_caps_calloc(MAX_NUM_BALLS, sizeof(pbTouchRef_t*), MALLOC_CAP_SPIRAM);
     for (uint32_t i = 0; i < MAX_NUM_BALLS; i++)
@@ -74,13 +75,20 @@ static void pinEnterMode(void)
     createTableZones(pinball);
 
     // Create random balls
-    createRandomBalls(pinball, 3);
-
-    // Create random walls
-    createRandomWalls(pinball, 100);
+    createRandomBalls(pinball, 0);
+    pbCreateBall(pinball, 6, 114);
+    pbCreateBall(pinball, 274, 114);
+    pbCreateBall(pinball, 135, 10);
 
     // Create random bumpers
-    createRandomBumpers(pinball, 10);
+    createRandomBumpers(pinball, 0);
+
+    // Create random walls
+    createRandomWalls(pinball, 0);
+
+    // Create flippers
+    createFlipper(pinball, TFT_WIDTH / 2 - 50, 200, true);
+    createFlipper(pinball, TFT_WIDTH / 2 + 50, 200, false);
 
     // Load font
     loadFont("ibm_vga8.font", &pinball->ibm_vga8, false);
@@ -101,6 +109,7 @@ static void pinExitMode(void)
     free(pinball->balls);
     free(pinball->walls);
     free(pinball->bumpers);
+    free(pinball->flippers);
     // Free font
     freeFont(&pinball->ibm_vga8);
     // Free the rest of the state
@@ -116,6 +125,20 @@ static void pinMainLoop(int64_t elapsedUs)
 {
     // Make a local copy for speed
     pinball_t* p = pinball;
+
+    // Check all queued button events
+    buttonEvt_t evt;
+    while (checkButtonQueueWrapper(&evt))
+    {
+        if (PB_RIGHT == evt.button)
+        {
+            p->flippers[1].buttonHeld = evt.down;
+        }
+        else if (PB_LEFT == evt.button)
+        {
+            p->flippers[0].buttonHeld = evt.down;
+        }
+    }
 
     // Only check physics once per frame
     p->frameTimer += elapsedUs;
