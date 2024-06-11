@@ -270,7 +270,7 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
-        // This is registered with atexit(), so don't call it twice
+        // This is registered with atexit()
         // CNFGTearDown();
 
 #ifdef ENABLE_GCOV
