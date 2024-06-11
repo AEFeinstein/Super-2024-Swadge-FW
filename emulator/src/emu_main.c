@@ -270,7 +270,8 @@ void taskYIELD(void)
     if (!isRunning)
     {
         deinitSystem();
-        CNFGTearDown();
+        // This is registered with atexit()
+        // CNFGTearDown();
 
 #ifdef ENABLE_GCOV
         __gcov_dump();
