@@ -39,6 +39,8 @@ static const char tttHowToStr[]    = "How To Play";
 static const char* pieceNames[NUM_UNLOCKABLE_PIECES] = {
     "x",
     "o",
+    "sq",
+    "tri",
 };
 
 swadgeMode_t tttMode = {
@@ -95,6 +97,8 @@ static void tttEnterMode(void)
         loadWsg(assetName, &ttt->pieceWsg[pIdx].red.large, true);
     }
 
+    loadWsg("ut_arrow.wsg", &ttt->selectArrow, true);
+
     loadFont("rodin_eb.font", &ttt->font_rodin, false);
     loadFont("righteous_150.font", &ttt->font_righteous, false);
 
@@ -132,6 +136,7 @@ static void tttExitMode(void)
         freeWsg(&ttt->pieceWsg[pIdx].red.small);
         freeWsg(&ttt->pieceWsg[pIdx].red.large);
     }
+    freeWsg(&ttt->selectArrow);
 
     // Free the menu
     deinitMenuManiaRenderer(ttt->menuRenderer);

@@ -34,6 +34,8 @@ typedef enum __attribute__((packed))
 {
     TTT_PIECE_X,
     TTT_PIECE_O,
+    TTT_PIECE_SQUARE,
+    TTT_PIECE_TRIANGLE,
     NUM_UNLOCKABLE_PIECES,
 } tttPiece_t;
 
@@ -96,6 +98,12 @@ typedef struct
     tttPiece_t p2Piece;
     // Assets
     tttPieceColorAssets_t pieceWsg[NUM_UNLOCKABLE_PIECES];
+    // For piece selection UI
+    int32_t xSelectScrollTimer;
+    int16_t xSelectScrollOffset;
+    tttPiece_t selectPieceIdx;
+    tttPiece_t activePiece;
+    wsg_t selectArrow;
 } ultimateTTT_t;
 
 typedef struct
