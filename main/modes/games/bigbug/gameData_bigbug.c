@@ -16,7 +16,6 @@
 void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundManager)
 {
     gameData->gameState   = 0;
-    gameData->btnState    = 0;
     gameData->harpoons    = 3;
 
     gameData->bgColor     = c335;
@@ -29,7 +28,6 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)
 {
     gameData->gameState   = 0;
-    gameData->btnState    = 0;
 
     gameData->bgColor     = c000;
     gameData->currentBgm  = 0;

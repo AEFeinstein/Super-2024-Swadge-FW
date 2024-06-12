@@ -8,6 +8,9 @@
 #include <stdbool.h>
 #include "gameData_bigbug.h"
 #include "soundManager_bigbug.h"
+#include "sprite_bigbug.h"
+
+#include "linked_list.h"
 
 //==============================================================================
 // Enums
@@ -39,6 +42,12 @@ typedef enum
     ENTITY_UNUSED_21
 } bb_entityIndex_t;
 
+typedef enum{
+    ONESHOT_ANIMATION,
+    PHYSICS_SPRITE,
+    PHYSICS_ANIMATION
+} bb_entityType_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -54,7 +63,6 @@ typedef void (*bb_overlapTileHandler_t)(struct bb_entity_t* self, uint8_t tileId
 struct bb_entity_t
 {
     bool active;
-    bool persistent;
 
     uint8_t type;
     bb_updateFunction_t updateFunction;
@@ -65,32 +73,17 @@ struct bb_entity_t
     int16_t xspeed;
     int16_t yspeed;
 
-    uint8_t spriteIndex;
+    bb_sprite_t sprite;
+    node_t* currentFrame;//->value is a wsg_t
     bool spriteFlipHorizontal;
     bool spriteFlipVertical;
     int16_t spriteRotateAngle;
 
     uint8_t animationTimer;
+    uint8_t animationFPS;
 
     bb_gameData_t* gameData;
     bb_soundManager_t* soundManager;
-
-    uint8_t homeTileX;
-    uint8_t homeTileY;
-
-    bool visible;
-
-    bb_entity_t* attachedToEntity;
-
-    bool shouldAdvanceMultiplier;
-    int16_t bouncesOffUnbreakableBlocks;
-    int16_t breakInfiniteLoopBounceThreshold;
-
-    int16_t baseSpeed;
-    int16_t maxSpeed;
-    int16_t bouncesToNextSpeedUp;
-    uint8_t speedUpLookupIndex;
-
     bb_entityManager_t* entityManager;
 
     bb_collisionHandler_t collisionHandler;
@@ -103,7 +96,6 @@ struct bb_entity_t
 //==============================================================================
 void bb_initializeEntity(bb_entity_t* self, bb_entityManager_t* entityManager, bb_gameData_t* gameData,
                       bb_soundManager_t* soundManager);
-
 
 void bb_destroyEntity(bb_entity_t* self, bool respawn);
 

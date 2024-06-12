@@ -13,10 +13,9 @@
 //==============================================================================
 typedef struct
 {
-    wsg_t wsg;
     int16_t originX;
     int16_t originY;
-    bb_box_t collisionBox;
+    wsg_t* frames[];//Can hold 1 or more pointers to wsg's
 } bb_sprite_t;
 
 #endif

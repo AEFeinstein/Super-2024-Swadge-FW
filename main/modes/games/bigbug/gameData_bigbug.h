@@ -22,12 +22,7 @@
 
 typedef struct
 {
-    int16_t btnState;
-    int16_t prevBtnState;
-    uint8_t gameState;
-    uint8_t changeState;
-
-    uint8_t harpoons;
+    uint16_t btnState;
 
     int32_t touchPhi;
     int32_t touchRadius;
@@ -35,6 +30,13 @@ typedef struct
     int32_t isTouched;
     int32_t touchX;
     int32_t touchY;
+
+    uint8_t gameState;
+    uint8_t changeState;
+
+    uint8_t harpoons;
+
+
 
     led_t leds[CONFIG_NUM_LEDS];
 

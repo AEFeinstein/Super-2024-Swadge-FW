@@ -11,6 +11,7 @@
 #include "entity_bigbug.h"
 #include "gameData_bigbug.h"
 #include "hdw-tft.h"
+#include "linked_list.h"
 #include "sprite_bigbug.h"
 #include "soundManager_bigbug.h"
 
@@ -18,7 +19,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES   32
-#define SPRITESET_SIZE 33
+#define NUM_SPRITES     1 //The number of bb_sprite_t
 
 //==============================================================================
 // Structs
@@ -26,7 +27,8 @@
 
 struct bb_entityManager_t
 {
-    bb_sprite_t sprites[SPRITESET_SIZE];
+    bb_sprite_t sprites[NUM_SPRITES];
+    //list_t* sprites[NUM_SPRITES];
     bb_entity_t* entities;
     uint8_t activeEntities;
 
@@ -39,6 +41,7 @@ struct bb_entityManager_t
 //==============================================================================
 void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t* gameData,
                              bb_soundManager_t* soundManager);
+bb_sprite_t* bb_loadSprite(char name[], bb_spriteDef_t def, uint8_t num_frames);
 void bb_loadSprites(bb_entityManager_t* entityManager);
 void bb_updateEntities(bb_entityManager_t* entityManager);
 void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePlayer, bool excludePersistent, bool respawn);

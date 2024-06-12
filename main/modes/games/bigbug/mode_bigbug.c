@@ -9,17 +9,16 @@
 // Includes
 //==============================================================================
 
+#include "gameData_bigbug.h"
 #include "mode_bigbug.h"
+#include "gameData_bigbug.h"
 #include "tilemap_bigbug.h"
+#include "entityManager_bigbug.h"
 #include <math.h>
 
 //==============================================================================
 // Defines
 //==============================================================================
-
-
-
-#define GARBOTNIK_RADIUS   (14 << DECIMAL_BITS)
 
 //==============================================================================
 // Enums
@@ -38,27 +37,27 @@ typedef enum
 // Structs
 //==============================================================================
 
-typedef struct
+struct bb_t
 {
     menu_t* menu;         ///< The menu structure
     font_t font;          ///< The font used in the menu and game
     bb_screen_t screen;   ///< The screen being displayed
 
-    bb_tilemap_t tilemap; ///< The tilemap
+    bb_gameData_t gameData;
+    bb_tilemap_t tilemap;
+    bb_entityManager_t entityManager;
+    bb_soundManager_t soundManager;
 
-    circle_t garbotnik;   ///< Garbotnik (player character)
+    vec_t garbotnikPos;   ///< Garbotnik (player character)
     vec_t garbotnikVel;   ///< Garbotnik's velocity
     vec_t garbotnikAccel; ///< Garbotnik's acceleration
     vec_t previousPos;    ///< Garbotnik's position on the previous frame (for resolving collisions)
 
     rectangle_t camera;   ///< The camera
 
-    uint16_t btnState;    ///< The button state used for garbotnik control
     bool isPaused;        ///< true if the game is paused, false if it is running
 
     wsg_t garbotnikWsg;   ///< A graphic for garbotnik
-
-    wsg_t uiWileOutlineWsg;  ///< A UI graphic that is unused
 
     song_t bgm;  ///< Background music
     song_t hit1; ///< A sound effect
@@ -66,7 +65,7 @@ typedef struct
     led_t ledL;           ///< The left LED color
     led_t ledR;           ///< The right LED color
     int32_t ledFadeTimer; ///< The timer to fade LEDs
-} bb_t;
+};
 
 
 //==============================================================================
@@ -139,11 +138,12 @@ static void bb_EnterMode(void)
     bigbug = calloc(1, sizeof(bb_t));
 
     bb_initializeTileMap(&(bigbug->tilemap));
+    bb_initializeEntityManager(&(bigbug->entityManager),
+                            &(bigbug->gameData),
+                            &(bigbug->soundManager));
 
     // Load graphics
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, true);
-
-    loadWsg("button-outline.wsg", &bigbug->uiWileOutlineWsg, true);
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
@@ -231,7 +231,7 @@ static void bb_ControlGarbotnik(int64_t elapsedUs)
     accel.x = 0;
     accel.y = 0;
     // Update garbotnik's velocity if a button is currently down
-    switch(bigbug->btnState){
+    switch(bigbug->gameData.btnState){
         //up
         case 0b0001:
             accel.y = -50;
@@ -306,22 +306,14 @@ static void bb_DrawScene(void)
 {
     bb_drawTileMap(&bigbug->tilemap, &bigbug->camera);
 
-    // printf("garbotnik.pos.y: %d\n", bigbug->garbotnik.pos.y);
+    // printf("garbotnikPos.y: %d\n", bigbug->garbotnikPos.y);
     // printf("garbotnik.radius: %d\n", bigbug->garbotnik.radius);
     // printf("camera.pos.y: %d\n", bigbug->camera.pos.y);
-    // printf("render y: %d\n", (bigbug->garbotnik.pos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
+    // printf("render y: %d\n", (bigbug->garbotnikPos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
 
     // Draw garbotnik
-    drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnik.pos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
-                  (bigbug->garbotnik.pos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21);
-
-    // Draw UI
-    // char buttons[] = {'Z','\0','A','\0','B','\0','C'};
-    // for (int i = 1; i < 4; i++){
-    //     int xPos = i * TFT_WIDTH / 4;
-    //     drawWsgSimple(&bigbug->uiWileOutlineWsg, xPos - 20, TFT_HEIGHT - 46);
-    //     drawText(&bigbug->font, c555, &buttons[2*i], xPos - 3, TFT_HEIGHT - 12);
-    // }
+    drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
+                  (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21);
 }
 
 /**
@@ -341,7 +333,7 @@ static void bb_GameLoop(int64_t elapsedUs)
         evt.state, evt.button, evt.down ? "down" : "up");
         
         // Save the button state
-        bigbug->btnState = evt.state;
+        bigbug->gameData.btnState = evt.state;
 
 
         // Check if the pause button was pressed
@@ -356,7 +348,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     if (bigbug->isPaused == false)
     {
         // record the previous frame's position before any logic.
-        bigbug->previousPos = bigbug->garbotnik.pos;
+        bigbug->previousPos = bigbug->garbotnikPos;
         // bigbugFadeLeds(elapsedUs);
         bb_ControlGarbotnik(elapsedUs);
         // bigbugControlCpuPaddle();
@@ -370,21 +362,15 @@ static void bb_GameLoop(int64_t elapsedUs)
 }
 
 static void bb_Reset(void){
-    
-
     // Set garbotnik variables
-    bigbug->garbotnik.pos.x  = 128 << DECIMAL_BITS;
-    bigbug->garbotnik.pos.y  =  -(90 << DECIMAL_BITS);
+    bigbug->garbotnikPos.x  = 128 << DECIMAL_BITS;
+    bigbug->garbotnikPos.y  =  -(90 << DECIMAL_BITS);
 
     printf("The width is: %d\n", FIELD_WIDTH);
     printf("The height is: %d\n", FIELD_HEIGHT);
 
     bigbug->camera.width = FIELD_WIDTH;
     bigbug->camera.height = FIELD_HEIGHT;
-
-    bigbug->garbotnik.radius = GARBOTNIK_RADIUS;
-
-    
 }
 
 /**
@@ -430,13 +416,13 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
     bigbug->garbotnikVel.y += bigbug->garbotnikAccel.y;
 
     // Update garbotnik's position
-    bigbug->garbotnik.pos.x += bigbug->garbotnikVel.x * elapsedUs / 100000;
-    bigbug->garbotnik.pos.y += bigbug->garbotnikVel.y * elapsedUs / 100000;
+    bigbug->garbotnikPos.x += bigbug->garbotnikVel.x * elapsedUs / 100000;
+    bigbug->garbotnikPos.y += bigbug->garbotnikVel.y * elapsedUs / 100000;
 
     // Look up 4 nearest tiles for collision checks
     // a tile's width is 32 pixels << 4 = 1024. half width is 512.
-    int32_t xIdx = ((bigbug->garbotnik.pos.x - 512)/1024) - (bigbug->garbotnik.pos.x < 0);//the x index
-    int32_t yIdx = (bigbug->garbotnik.pos.y  - 512)/1024 - (bigbug->garbotnik.pos.y < 0);//the y index
+    int32_t xIdx = ((bigbug->garbotnikPos.x - 512)/1024) - (bigbug->garbotnikPos.x < 0);//the x index
+    int32_t yIdx = (bigbug->garbotnikPos.y  - 512)/1024 - (bigbug->garbotnikPos.y < 0);//the y index
 
     int32_t best_i = -1;//negative means no worthy candidates found.
     int32_t best_j = -1;
@@ -446,7 +432,7 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
             if(i >= 0 && i < TILE_FIELD_WIDTH && j >=0 && j < TILE_FIELD_HEIGHT){
                 if(bigbug->tilemap.fgTiles[i][j] >= 1){
                     //Initial circle check for preselecting the closest dirt tile
-                    int32_t sqDist = sqMagVec2d(subVec2d(bigbug->garbotnik.pos, (vec_t){i * 1024 + 512, j * 1024 + 512}));
+                    int32_t sqDist = sqMagVec2d(subVec2d(bigbug->garbotnikPos, (vec_t){i * 1024 + 512, j * 1024 + 512}));
                     if(sqDist < closestSqDist){
                         //Good candidate found!
                         best_i = i;
@@ -461,10 +447,10 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
         vec_t tilePos = {best_i * 1024 + 512, best_j * 1024 + 512};
         //AABB-AABB collision detection begins here
         //https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-        if(bigbug->garbotnik.pos.x + 240 > tilePos.x - 512 &&
-           bigbug->garbotnik.pos.x - 240 < tilePos.x + 512 &&
-           bigbug->garbotnik.pos.y + 192 > tilePos.y - 512 &&
-           bigbug->garbotnik.pos.y - 192 < tilePos.y + 512)
+        if(bigbug->garbotnikPos.x + 240 > tilePos.x - 512 &&
+           bigbug->garbotnikPos.x - 240 < tilePos.x + 512 &&
+           bigbug->garbotnikPos.y + 192 > tilePos.y - 512 &&
+           bigbug->garbotnikPos.y - 192 < tilePos.y + 512)
         {
             //Collision detected!
             //printf("hit\n");
@@ -475,12 +461,12 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 if(normal.x > 0){
                     normal.x = 1;
                     normal.y = 0;
-                    bigbug->garbotnik.pos.x = tilePos.x + 752;
+                    bigbug->garbotnikPos.x = tilePos.x + 752;
                 }
                 else{
                     normal.x = -1;
                     normal.y = 0;
-                    bigbug->garbotnik.pos.x = tilePos.x - 752;
+                    bigbug->garbotnikPos.x = tilePos.x - 752;
                 }
                 
             }
@@ -488,12 +474,12 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 if(normal.y > 0){
                     normal.x = 0;
                     normal.y = 1;
-                    bigbug->garbotnik.pos.y = tilePos.y + 704;
+                    bigbug->garbotnikPos.y = tilePos.y + 704;
                 }
                 else{
                     normal.x = 0;
                     normal.y = -1;
-                    bigbug->garbotnik.pos.y = tilePos.y - 704;
+                    bigbug->garbotnikPos.y = tilePos.y - 704;
                 }
             }
             //printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
@@ -520,17 +506,17 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
     }
 
     // Update the camera's position to catch up to the player
-    if(((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x<-15){
-        bigbug->camera.pos.x = ((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
+    if(((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x<-15){
+        bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) + 15;
     }
-    else if(((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x>15){
-        bigbug->camera.pos.x = ((bigbug->garbotnik.pos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
+    else if(((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - bigbug->camera.pos.x>15){
+        bigbug->camera.pos.x = ((bigbug->garbotnikPos.x - HALF_WIDTH) >> DECIMAL_BITS) - 15;
     }
 
-    if(((bigbug->garbotnik.pos.y - HALF_HEIGHT)  >> DECIMAL_BITS) - bigbug->camera.pos.y<-10){
-        bigbug->camera.pos.y = ((bigbug->garbotnik.pos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
+    if(((bigbug->garbotnikPos.y - HALF_HEIGHT)  >> DECIMAL_BITS) - bigbug->camera.pos.y<-10){
+        bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) + 10;
     }
-    else if(((bigbug->garbotnik.pos.y - HALF_HEIGHT)  >> DECIMAL_BITS) - bigbug->camera.pos.y>10){
-        bigbug->camera.pos.y = ((bigbug->garbotnik.pos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
+    else if(((bigbug->garbotnikPos.y - HALF_HEIGHT)  >> DECIMAL_BITS) - bigbug->camera.pos.y>10){
+        bigbug->camera.pos.y = ((bigbug->garbotnikPos.y - HALF_HEIGHT) >> DECIMAL_BITS) - 10;
     }
 }
