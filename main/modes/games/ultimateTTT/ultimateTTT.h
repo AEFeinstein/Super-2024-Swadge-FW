@@ -34,6 +34,7 @@ typedef enum __attribute__((packed))
 {
     TTT_PIECE_X,
     TTT_PIECE_O,
+    NUM_UNLOCKABLE_PIECES,
 } tttPiece_t;
 
 typedef enum __attribute__((packed))
@@ -56,6 +57,18 @@ typedef enum __attribute__((packed))
 
 typedef struct
 {
+    wsg_t small;
+    wsg_t large;
+} tttPieceSizeAssets_t;
+
+typedef struct
+{
+    tttPieceSizeAssets_t red;
+    tttPieceSizeAssets_t blue;
+} tttPieceColorAssets_t;
+
+typedef struct
+{
     tttPlayer_t game[3][3];
     tttPlayer_t winner;
 } tttSubgame_t;
@@ -66,6 +79,7 @@ typedef struct
     tttUi_t ui;
     // Main Menu
     menu_t* menu;
+    menu_t* bgMenu;
     menuManiaRenderer_t* menuRenderer;
     font_t font_righteous;
     font_t font_rodin;
@@ -81,10 +95,7 @@ typedef struct
     tttPiece_t p1Piece;
     tttPiece_t p2Piece;
     // Assets
-    wsg_t piece_x_big;
-    wsg_t piece_x_small;
-    wsg_t piece_o_big;
-    wsg_t piece_o_small;
+    tttPieceColorAssets_t pieceWsg[NUM_UNLOCKABLE_PIECES];
 } ultimateTTT_t;
 
 typedef struct

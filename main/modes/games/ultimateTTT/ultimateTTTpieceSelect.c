@@ -24,9 +24,12 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
  * @brief TODO
  *
  * @param ttt
+ * @param elapsedUs
  */
-void tttDrawPieceSelect(ultimateTTT_t* ttt)
+void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
 {
     clearPxTft();
-    drawText(&ttt->font_rodin, c555, "Only defaults.", 40, 40);
+
+    drawMenuMania(ttt->bgMenu, ttt->menuRenderer, elapsedUs);
+    drawText(&ttt->font_rodin, c000, "Only defaults.", 40, 40);
 }

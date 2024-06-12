@@ -33,6 +33,14 @@ static const char tttSingleStr[]   = "Single Player";
 static const char tttPieceSelStr[] = "Piece Select";
 static const char tttHowToStr[]    = "How To Play";
 
+/**
+ * This MUST match the order in tttPiece_t
+ */
+static const char* pieceNames[NUM_UNLOCKABLE_PIECES] = {
+    "x",
+    "o",
+};
+
 swadgeMode_t tttMode = {
     .modeName                 = tttName,
     .wifiMode                 = ESP_NOW,
@@ -68,10 +76,24 @@ static void tttEnterMode(void)
 
     ttt->cursorMode = SELECT_SUBGAME;
 
-    loadWsg("x_small.wsg", &ttt->piece_x_small, true);
-    loadWsg("x_large.wsg", &ttt->piece_x_big, true);
-    loadWsg("o_small.wsg", &ttt->piece_o_small, true);
-    loadWsg("o_large.wsg", &ttt->piece_o_big, true);
+    // Load assets
+    for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(pieceNames); pIdx++)
+    {
+        char assetName[32];
+        snprintf(assetName, sizeof(assetName) - 1, "up**_%s.wsg", pieceNames[pIdx]);
+
+        assetName[2] = 'b'; // blue
+        assetName[3] = 's'; // small
+        loadWsg(assetName, &ttt->pieceWsg[pIdx].blue.small, true);
+        assetName[3] = 'l'; // large
+        loadWsg(assetName, &ttt->pieceWsg[pIdx].blue.large, true);
+
+        assetName[2] = 'r'; // red
+        assetName[3] = 's'; // small
+        loadWsg(assetName, &ttt->pieceWsg[pIdx].red.small, true);
+        assetName[3] = 'l'; // large
+        loadWsg(assetName, &ttt->pieceWsg[pIdx].red.large, true);
+    }
 
     loadFont("rodin_eb.font", &ttt->font_rodin, false);
     loadFont("righteous_150.font", &ttt->font_righteous, false);
@@ -83,6 +105,9 @@ static void tttEnterMode(void)
     addSingleItemToMenu(ttt->menu, tttSingleStr);
     addSingleItemToMenu(ttt->menu, tttPieceSelStr);
     addSingleItemToMenu(ttt->menu, tttHowToStr);
+
+    // Initialize a menu with no entries to be used for piece selection
+    ttt->bgMenu = initMenu(tttPieceSelStr, NULL);
 
     ttt->ui = TUI_MENU;
 
@@ -100,10 +125,13 @@ static void tttExitMode(void)
     p2pDeinit(&ttt->p2p);
 
     // Free memory
-    freeWsg(&ttt->piece_x_small);
-    freeWsg(&ttt->piece_x_big);
-    freeWsg(&ttt->piece_o_small);
-    freeWsg(&ttt->piece_o_big);
+    for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(pieceNames); pIdx++)
+    {
+        freeWsg(&ttt->pieceWsg[pIdx].blue.small);
+        freeWsg(&ttt->pieceWsg[pIdx].blue.large);
+        freeWsg(&ttt->pieceWsg[pIdx].red.small);
+        freeWsg(&ttt->pieceWsg[pIdx].red.large);
+    }
 
     // Free the menu
     deinitMenuManiaRenderer(ttt->menuRenderer);
@@ -179,7 +207,7 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_PIECE_SELECT:
         {
-            tttDrawPieceSelect(ttt);
+            tttDrawPieceSelect(ttt, elapsedUs);
             break;
         }
         case TUI_HOW_TO:

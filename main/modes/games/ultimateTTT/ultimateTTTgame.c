@@ -694,63 +694,10 @@ void tttDrawGame(ultimateTTT_t* ttt)
  */
 static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig)
 {
-    if (p == TTT_P1)
-    {
-        switch (ttt->p1Piece)
-        {
-            case TTT_PIECE_X:
-            {
-                if (isBig)
-                {
-                    return &ttt->piece_x_big;
-                }
-                else
-                {
-                    return &ttt->piece_x_small;
-                }
-            }
-            case TTT_PIECE_O:
-            {
-                if (isBig)
-                {
-                    return &ttt->piece_o_big;
-                }
-                else
-                {
-                    return &ttt->piece_o_small;
-                }
-            }
-        }
-    }
-    else
-    {
-        switch (ttt->p2Piece)
-        {
-            case TTT_PIECE_X:
-            {
-                if (isBig)
-                {
-                    return &ttt->piece_x_big;
-                }
-                else
-                {
-                    return &ttt->piece_x_small;
-                }
-            }
-            case TTT_PIECE_O:
-            {
-                if (isBig)
-                {
-                    return &ttt->piece_o_big;
-                }
-                else
-                {
-                    return &ttt->piece_o_small;
-                }
-            }
-        }
-    }
-    return NULL;
+    bool isP1                     = (TTT_P1 == p);
+    tttPieceColorAssets_t* colors = &ttt->pieceWsg[(isP1 ? ttt->p1Piece : ttt->p2Piece)];
+    tttPieceSizeAssets_t* sizes   = (isP1 ? &colors->red : &colors->blue);
+    return (isBig ? &sizes->large : &sizes->small);
 }
 
 /**
