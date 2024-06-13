@@ -876,6 +876,20 @@ void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
 
 void deinitMidiParser(midiFileReader_t* reader)
 {
+    if (reader->file != NULL && reader->states != NULL)
+    {
+        for (int i = 0; i < reader->file->trackCount; i++)
+        {
+            if (reader->states[i].eventBuffer != NULL)
+            {
+                free(reader->states[i].eventBuffer);
+                reader->states[i].eventBuffer = NULL;
+            }
+        }
+    }
+
+    reader->file = NULL;
+
     free(reader->states);
     reader->states = NULL;
 }

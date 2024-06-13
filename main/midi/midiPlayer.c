@@ -1342,7 +1342,11 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
 void midiSetFile(midiPlayer_t* player, midiFile_t* song)
 {
     player->mode = MIDI_FILE;
-    if (player->reader.states == NULL)
+    if (song == NULL && player->reader.states != NULL)
+    {
+        deinitMidiParser(&player->reader);
+    }
+    else if (player->reader.states == NULL)
     {
         initMidiParser(&player->reader, song);
     }
@@ -1375,9 +1379,8 @@ void deinitGlobalMidiPlayer(void)
     {
         for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
         {
+            midiPause(&globalPlayers[i], true);
             midiAllSoundOff(&globalPlayers[i]);
-            midiPause(&globalPlayers[i], true);
-            midiPause(&globalPlayers[i], true);
         }
 
         globalPlayerInit = false;
