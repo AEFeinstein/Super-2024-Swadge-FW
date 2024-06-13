@@ -173,6 +173,7 @@
 #include "factoryTest.h"
 #include "mainMenu.h"
 #include "quickSettings.h"
+#include "midiPlayer.h"
 
 //==============================================================================
 // Defines
@@ -758,6 +759,6 @@ void dacCallback(uint8_t* samples, int16_t len)
     else
     {
         // Otherwise use the song player
-        sngPlayerFillBuffer(samples, len);
+        globalMidiPlayerFillBuffer(samples, len);
     }
 }

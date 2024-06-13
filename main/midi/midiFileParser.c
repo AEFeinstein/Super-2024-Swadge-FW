@@ -747,7 +747,7 @@ static bool parseMidiHeader(midiFile_t* file)
 
         if (ptr + trackChunkLen - file->data > file->length)
         {
-            ESP_LOGW("MIDIParser", "Track chunk %d claims length of %" PRIu32 " but there are only %" PRIuPTR " bytes remaining in the file", i, trackChunkLen, file->length - (ptr - file->data));
+            ESP_LOGW("MIDIParser", "Track chunk %d claims length of %" PRIu32 " but there are only %" PRId32 " bytes remaining in the file", i, trackChunkLen, (int32_t)(file->length - (ptr - file->data)));
             trackChunkLen = file->length - (ptr - file->data);
         }
 

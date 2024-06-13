@@ -15,8 +15,8 @@
 #define PERCUSSION_VOICES 8
 // The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
 #define OSC_PER_VOICE 1
-// The max number of songs to play simultaneously
-#define MIDI_NUM_SONGS 2
+// The number of global MIDI players
+#define NUM_GLOBAL_PLAYERS 2
 
 #define MIDI_TRUE 0x7F
 #define MIDI_FALSE 0x00
@@ -353,7 +353,7 @@ typedef struct
     midiPlayerMode_t mode;
 
     /// @brief A MIDI reader to use for file playback, when in MIDI_FILE mode
-    midiFileReader_t reader[MIDI_NUM_SONGS];
+    midiFileReader_t reader;
 
     /// @brief A callback to call when a text meta-message is received
     midiTextCallback_t textMessageCallback;
@@ -362,23 +362,24 @@ typedef struct
     uint32_t clipped;
 
     /// @brief The number of samples elapsed in the songs
-    uint64_t sampleCount[MIDI_NUM_SONGS];
+    uint64_t sampleCount;
 
     /// @brief The next event in the MIDI file, which occurs after the current time
-    midiEvent_t pendingEvents[MIDI_NUM_SONGS];
+    midiEvent_t pendingEvent;
 
     /// @brief True if pendingEvent is valid, false if it must be updated
-    bool eventAvailable[MIDI_NUM_SONGS];
+    bool eventAvailable;
 
     /// @brief The song index of the next event
     uint8_t nextEventSongIdx;
     uint32_t nextEventAbsTime;
 
     /// @brief The number of microseconds per quarter note
-    uint32_t tempo[MIDI_NUM_SONGS];
+    uint32_t tempo;
 
-    bool paused[MIDI_NUM_SONGS];
+    bool paused;
 } midiPlayer_t;
+
 
 /**
  * @brief Initialize or reset the MIDI player
@@ -390,13 +391,32 @@ typedef struct
 void midiPlayerInit(midiPlayer_t* player);
 
 /**
+ * @brief Calculate and return the next MIDI sample, stepping the player state forward by one sample
+ *
+ * @param player The player to step forward
+ * @return int32_t The next signed 32-bit sample, without any headroom or clipping applied
+ */
+int32_t midiPlayerStep(midiPlayer_t* player);
+
+/**
  * @brief Fill a buffer with the next set of samples from the MIDI player. This should be called by the
  * callback passed into initDac(). Samples are generated at sampling rate of ::DAC_SAMPLE_RATE_HZ
  *
+ * @param player The MIDI player to sample from
  * @param samples An array of unsigned 8-bit samples to fill
  * @param len The length of the array to fill
  */
 void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len);
+
+/**
+ * @brief Fill a buffer with the next set of samples from an array of MIDI players.
+ *
+ * @param players A pointer to an array of MIDI players
+ * @param playerCount The number of MIDI players in the array
+ * @param samples An array of unsigned 8-bit samples to fill
+ * @param len The length of the array to fill
+ */
+void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8_t* samples, int16_t len);
 
 /**
  * @brief Stop all sound immediately. This is not affected by the sustain pedal.
@@ -485,22 +505,20 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value);
  * @brief Configure this MIDI player to read from a MIDI file
  *
  * @param player The MIDI player
- * @param songIdx The song index to set, betwee 0 and MIDI_NUM_SONGS
  * @param reader The MIDI reader that contains the MIDI file to be played
  */
-void midiSetFile(midiPlayer_t* player, uint8_t songIdx, midiFile_t* file);
+void midiSetFile(midiPlayer_t* player, midiFile_t* file);
 
 /**
  * @brief Set the paused state of a MIDI song
  *
  * @param player The player
- * @param songIdx The song index
  * @param pause True to pause, false to play
  */
-void midiPause(midiPlayer_t* player, uint8_t songIdx, bool pause);
+void midiPause(midiPlayer_t* player, bool pause);
 
 void initGlobalMidiPlayer(void);
 void deinitGlobalMidiPlayer(void);
 void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len);
 void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx);
-midiPlayer_t* globalMidiPlayerGet(void);
+midiPlayer_t* globalMidiPlayerGet(uint8_t songIdx);

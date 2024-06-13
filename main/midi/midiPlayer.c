@@ -403,16 +403,16 @@ static const uint8_t oscDither[] = {
 #define VOICE_FREE (0x3F)
 
 static bool globalPlayerInit = false;
-static midiPlayer_t globalPlayer = {0};
+static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
 
 static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t voiceCount);
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel);
 static void midiGmOn(midiPlayer_t* player);
 static int32_t midiSumPercussion(midiPlayer_t* player);
-static void handleMidiEvent(midiPlayer_t* player, uint8_t songIdx, midiStatusEvent_t* event);
-static void handleSysexEvent(midiPlayer_t* player, uint8_t songIdx, midiSysexEvent_t* sysex);
-static void handleMetaEvent(midiPlayer_t* player, uint8_t songIdx, midiMetaEvent_t* event);
-static void handleEvent(midiPlayer_t* player, uint8_t songIdx, midiEvent_t* event);
+static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event);
+static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex);
+static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event);
+static void handleEvent(midiPlayer_t* player, midiEvent_t* event);
 
 static const midiTimbre_t defaultDrumkitTimbre = {
     .type = NOISE,
@@ -597,7 +597,6 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
 {
     voiceStates_t* states = &player->percVoiceStates;
     midiVoice_t* voices = player->percVoices;
-    uint8_t voiceCount = PERCUSSION_VOICES;
 
     int32_t sum = 0;
 
@@ -668,7 +667,7 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
     return sum;
 }
 
-static void handleMidiEvent(midiPlayer_t* player, uint8_t songIdx, midiStatusEvent_t* event)
+static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event)
 {
     if (event->status & 0x80)
     {
@@ -761,7 +760,7 @@ static void handleMidiEvent(midiPlayer_t* player, uint8_t songIdx, midiStatusEve
     }
 }
 
-static void handleMetaEvent(midiPlayer_t* player, uint8_t songIdx, midiMetaEvent_t* event)
+static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
 {
     switch (event->type)
     {
@@ -786,6 +785,7 @@ static void handleMetaEvent(midiPlayer_t* player, uint8_t songIdx, midiMetaEvent
 
         // Obsolete
         case CHANNEL_PREFIX: break;
+        case PORT_PREFIX: break;
 
         case END_OF_TRACK:
         {
@@ -794,7 +794,7 @@ static void handleMetaEvent(midiPlayer_t* player, uint8_t songIdx, midiMetaEvent
 
         case TEMPO:
         {
-            player->tempo[songIdx] = event->tempo;
+            player->tempo = event->tempo;
             break;
         }
 
@@ -813,7 +813,7 @@ static void handleMetaEvent(midiPlayer_t* player, uint8_t songIdx, midiMetaEvent
     }
 }
 
-static void handleSysexEvent(midiPlayer_t* player, uint8_t songIdx, midiSysexEvent_t* sysex)
+static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex)
 {
     // TODO: Support SysEx commands - find some RGB ones we can yoink
     // Actually we can assign a non-registered control to R, G, and B
@@ -821,25 +821,25 @@ static void handleSysexEvent(midiPlayer_t* player, uint8_t songIdx, midiSysexEve
     // AND: if possible have a sysex command (hmm) that sets all the LEDs to individual values at once
 }
 
-static void handleEvent(midiPlayer_t* player, uint8_t songIdx, midiEvent_t* event)
+static void handleEvent(midiPlayer_t* player, midiEvent_t* event)
 {
     switch (event->type)
     {
         case MIDI_EVENT:
         {
-            handleMidiEvent(player, songIdx, &event->midi);
+            handleMidiEvent(player, &event->midi);
             break;
         }
 
         case  META_EVENT:
         {
-            handleMetaEvent(player, songIdx, &event->meta);
+            handleMetaEvent(player, &event->meta);
             break;
         }
 
         case SYSEX_EVENT:
         {
-            handleSysexEvent(player, songIdx, &event->sysex);
+            handleSysexEvent(player, &event->sysex);
             break;
         }
     }
@@ -853,10 +853,7 @@ void midiPlayerInit(midiPlayer_t* player)
 
     // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
     // 120 BPM == 500,000 microseconds per quarter note
-    for (int i = 0; i < MIDI_NUM_SONGS; i++)
-    {
-        player->tempo[i] = 500000;
-    }
+    player->tempo = 500000;
 
     // Set all the relevant bits to 1, meaning not in use
     player->percSpecialStates = 0b00111111111111111111111111111111;
@@ -864,38 +861,24 @@ void midiPlayerInit(midiPlayer_t* player)
     midiGmOn(player);
 }
 
-void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
+int32_t midiPlayerStep(midiPlayer_t* player)
 {
-    // First, do a quick check to see if we'll have to handle an event within (len) samples of now
-    // TODO: This goes very wrong if you change the tempo while the song is going.
     bool checkEvents = false;
     if (player->mode == MIDI_FILE)
     {
-        bool anyPlaying = false;
-        for (int songIdx = 0; songIdx < MIDI_NUM_SONGS; songIdx++)
+        if (!player->eventAvailable)
         {
-            if (!player->eventAvailable[songIdx] && player->reader[songIdx].file)
-            {
-                player->eventAvailable[songIdx] = midiNextEvent(&player->reader[songIdx], &player->pendingEvents[songIdx]);
-            }
-
-            if (!player->paused[songIdx] && player->eventAvailable[songIdx])
-            {
-                if (player->pendingEvents[songIdx].absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount[songIdx] + len, player->tempo[songIdx], player->reader[songIdx].division))
-                {
-                    checkEvents = true;
-                    if (player->pendingEvents[songIdx].absTime < player->nextEventAbsTime)
-                    {
-                        player->nextEventAbsTime = player->pendingEvents[songIdx].absTime;
-                        player->nextEventSongIdx = songIdx;
-                    }
-                }
-
-                anyPlaying = true;
-            }
+            player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
         }
 
-        if (!anyPlaying)
+        if (player->eventAvailable)
+        {
+            if (player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
+            {
+                checkEvents = true;
+            }
+        }
+        else
         {
             ESP_LOGI("MIDI", "Done playing file!");
             for (uint8_t ch = 0; ch < 16; ch++)
@@ -906,35 +889,32 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
         }
     }
 
+    // Use a while loop since we may need to handle multiple events at the exact same time
+    while (checkEvents && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
+    {
+        // It's time, so handle the event now
+        handleEvent(player, &player->pendingEvent);
+
+        // Try and grab the next event, and if we got one, keep checking
+        player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
+        checkEvents = player->eventAvailable;
+    }
+
+    // TODO: Sample support
+    // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
+    int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
+    sample += midiSumPercussion(player);
+
+    player->sampleCount++;
+
+    return sample;
+}
+
+void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
+{
     for (int16_t n = 0; n < len; n++)
     {
-        // Use a while loop since we may need to handle multiple events at the exact same time
-        while (checkEvents && player->nextEventAbsTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount[player->nextEventSongIdx], player->tempo[player->nextEventSongIdx], player->reader[player->nextEventSongIdx].division))
-        {
-            // It's time, so handle the event now
-            handleEvent(player, player->nextEventSongIdx, &player->pendingEvents[player->nextEventSongIdx]);
-
-            // do not feel great about a third nested loop here...
-            // Try and grab the next event, and if we got one, keep checking
-            player->eventAvailable[player->nextEventSongIdx] = midiNextEvent(&player->reader[player->nextEventSongIdx], &player->pendingEvents[player->nextEventSongIdx]);
-            player->nextEventAbsTime = UINT32_MAX;
-
-            for (int i = 0; i < MIDI_NUM_SONGS; i++)
-            {
-                uint32_t ticks = SAMPLES_TO_MIDI_TICKS(player->sampleCount[i], player->tempo[i], player->reader[i].division);
-                if (player->eventAvailable[i] && player->pendingEvents[i].absTime < player->nextEventAbsTime)
-                {
-                    player->nextEventAbsTime = player->pendingEvents[i].absTime;
-                    player->nextEventSongIdx = i;
-                }
-            }
-        }
-
-        // TODO: Sample support
-        // sample += samplerSumSamplers(player->allSamplers, player->samplerCount)
-        int32_t sample = swSynthSumOscillators(player->allOscillators, player->oscillatorCount);
-
-        sample += midiSumPercussion(player);
+        int32_t sample = midiPlayerStep(player);
 
         // multiply by the rock constant, very important
         sample *= 0x4ccd;
@@ -954,10 +934,36 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
         {
             samples[n] = sample + 128;
         }
+    }
+}
 
-        for (int i = 0; i < MIDI_NUM_SONGS; i++)
+
+void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8_t* samples, int16_t len)
+{
+    for (int16_t n = 0; n < len; n++)
+    {
+        int32_t sample = 0;
+        for (int i = 0; i < playerCount; i++)
         {
-            player->sampleCount[i]++;
+            sample += midiPlayerStep(&players[i]);
+        }
+
+        sample *= 0x4ccd;
+        sample >>= 16;
+
+        // TODO: Can't keep track of clipping here... does it matter?
+
+        if (sample < -128)
+        {
+            samples[n] = 0;
+        }
+        else if (sample > 127)
+        {
+            samples[n] = 255;
+        }
+        else
+        {
+            samples[n] = sample + 128;
         }
     }
 }
@@ -1235,7 +1241,6 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 
     midiChannel_t* chan = &player->channels[channel];
     midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
-    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
     uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
 
     for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
@@ -1334,22 +1339,22 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
     }
 }
 
-void midiSetFile(midiPlayer_t* player, uint8_t songIdx, midiFile_t* song)
+void midiSetFile(midiPlayer_t* player, midiFile_t* song)
 {
     player->mode = MIDI_FILE;
-    if (player->reader[songIdx].states == NULL)
+    if (player->reader.states == NULL)
     {
-        initMidiParser(&player->reader[songIdx], song);
+        initMidiParser(&player->reader, song);
     }
     else
     {
-        midiParserSetFile(&player->reader[songIdx], song);
+        midiParserSetFile(&player->reader, song);
     }
 }
 
-void midiPause(midiPlayer_t* player, uint8_t songIdx, bool pause)
+void midiPause(midiPlayer_t* player, bool pause)
 {
-    player->paused[songIdx] = pause;
+    player->paused = pause;
 }
 
 void initGlobalMidiPlayer(void)
@@ -1357,7 +1362,10 @@ void initGlobalMidiPlayer(void)
     if (!globalPlayerInit)
     {
         globalPlayerInit = true;
-        midiPlayerInit(&globalPlayer);
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+        {
+            midiPlayerInit(&globalPlayers[i]);
+        }
     }
 }
 
@@ -1365,9 +1373,12 @@ void deinitGlobalMidiPlayer(void)
 {
     if (globalPlayerInit)
     {
-        midiAllSoundOff(&globalPlayer);
-        midiPause(&globalPlayer, 0, true);
-        midiPause(&globalPlayer, 1, true);
+        for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+        {
+            midiAllSoundOff(&globalPlayers[i]);
+            midiPause(&globalPlayers[i], true);
+            midiPause(&globalPlayers[i], true);
+        }
 
         globalPlayerInit = false;
     }
@@ -1377,7 +1388,7 @@ void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len)
 {
     if (globalPlayerInit)
     {
-        midiPlayerFillBuffer(&globalPlayer, samples, len);
+        midiPlayerFillBufferMulti(globalPlayers, NUM_GLOBAL_PLAYERS, samples, len);
     }
     else
     {
@@ -1389,12 +1400,12 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
 {
     initGlobalMidiPlayer();
 
-    midiPause(&globalPlayer, songIdx, true);
-    midiSetFile(&globalPlayer, songIdx, song);
-    midiPause(&globalPlayer, songIdx, false);
+    midiPause(&globalPlayers[songIdx], true);
+    midiSetFile(&globalPlayers[songIdx], song);
+    midiPause(&globalPlayers[songIdx], false);
 }
 
-midiPlayer_t* globalMidiPlayerGet(void)
+midiPlayer_t* globalMidiPlayerGet(uint8_t songIdx)
 {
-    return &globalPlayer;
+    return &globalPlayers[songIdx];
 }
