@@ -61,6 +61,11 @@ typedef struct
 
     /// @brief Name of the file to replay inputs from
     const char* replayFile;
+
+    // Simulated ESPNOW Settings
+
+    const char* listenAddr;
+    const char* connectAddr;
 } emuArgs_t;
 
 //==============================================================================

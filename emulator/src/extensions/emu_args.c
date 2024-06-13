@@ -110,6 +110,9 @@ emuArgs_t emulatorArgs = {
 
     .recordFile = NULL,
     .replayFile = NULL,
+
+    .connectAddr = NULL,
+    .listenAddr  = NULL,
 };
 
 static const char mainDoc[] = "Emulates a swadge";
@@ -117,6 +120,7 @@ static const char mainDoc[] = "Emulates a swadge";
 // Long argument name definitions
 // These MUST be defined here, so that they are
 // the same in both options and argDocs
+static const char argConnectAddr[] = "connect-address";
 static const char argFullscreen[]  = "fullscreen";
 static const char argFuzz[]        = "fuzz";
 static const char argFuzzButtons[] = "fuzz-buttons";
@@ -125,6 +129,7 @@ static const char argFuzzMotion[]  = "fuzz-motion";
 static const char argHeadless[]    = "headless";
 static const char argHideLeds[]    = "hide-leds";
 static const char argKeymap[]      = "keymap";
+static const char argListenAddr[]  = "listen-address";
 static const char argLock[]        = "lock";
 static const char argMode[]        = "mode";
 static const char argModeSwitch[]  = "mode-switch";
@@ -141,6 +146,7 @@ static const char argUsage[]       = "usage";
  */
 static const struct option options[] =
 {
+    { argConnectAddr, required_argument, NULL,                             'c'  },
     { argFullscreen,  no_argument,       (int*)&emulatorArgs.fullscreen,   true },
     { argFuzz,        no_argument,       (int*)&emulatorArgs.fuzz,         true },
     { argFuzzButtons, optional_argument, (int*)&emulatorArgs.fuzzButtons,  true },
@@ -149,6 +155,7 @@ static const struct option options[] =
     { argHeadless,    no_argument,       (int*)&emulatorArgs.headless,     true },
     { argHideLeds,    no_argument,       (int*)&emulatorArgs.hideLeds,     true },
     { argKeymap,      required_argument, NULL,                             'k'  },
+    { argListenAddr,  required_argument, NULL,                             'a'  },
     { argLock,        no_argument,       (int*)&emulatorArgs.lock,         true },
     { argMode,        required_argument, NULL,                             'm'  },
     { argPlayback,    required_argument, (int*)&emulatorArgs.playback,     'p'  },
@@ -166,6 +173,7 @@ static const struct option options[] =
  */
 static const optDoc_t argDocs[] =
 {
+    {'c', argConnectAddr, "ADDR",  "Set the address to send simulated ESPNOW packets to" },
     {'f', argFullscreen,  NULL,    "Open in fullscreen mode" },
     { 0,  argFuzz,        NULL,    "Enable fuzzing mode, which injects random input in order to test modes" },
     { 0,  argFuzzButtons, "y|n",   "Set whether buttons are fuzzed" },
@@ -174,6 +182,7 @@ static const optDoc_t argDocs[] =
     { 0,  argHeadless,    NULL,    "Runs the emulator without a window." },
     { 0,  argHideLeds,    NULL,    "Don't draw simulated LEDs next to the display" },
     {'k', argKeymap,     "LAYOUT", "Use an alternative keymap. LAYOUT can be azerty, colemak, or dvorak"},
+    {'a', argListenAddr,  "ADDR",  "Set the address to listen for simulated ESPNOW packets on" },
     {'l', argLock,        NULL,    "Lock the emulator in the start mode" },
     {'m', argMode,        "MODE",  "Start the emulator in the swadge mode MODE instead of the main menu"},
     { 0,  argModeSwitch,  "TIME",  "Enable or set the timer to switch modes automatically" },
@@ -202,7 +211,12 @@ static const optDoc_t argDocs[] =
 static bool handleArgument(const char* optName, const char* arg, int optVal)
 {
     // Handle all arguments by their long-option, as it will always be set.
-    if (argFuzz == optName)
+    if (argConnectAddr == optName)
+    {
+        emulatorArgs.connectAddr = arg;
+        return true;
+    }
+    else if (argFuzz == optName)
     {
         // Enable Fuzz
         emulatorArgs.fuzzButtons = true;
@@ -251,9 +265,15 @@ static bool handleArgument(const char* optName, const char* arg, int optVal)
         }
         return true;
     }
+    else if (argListenAddr == optName)
+    {
+        emulatorArgs.listenAddr = arg;
+        return true;
+    }
     else if (argMode == optName)
     {
         emulatorArgs.startMode = arg;
+        return true;
     }
     else if (argModeList == optName)
     {

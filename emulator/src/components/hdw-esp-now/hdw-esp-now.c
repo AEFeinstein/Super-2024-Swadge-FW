@@ -35,6 +35,7 @@
 #include "esp_wifi.h"
 #include "esp_log.h"
 #include "emu_main.h"
+#include "emu_args.h"
 
 //==============================================================================
 // Defines
@@ -51,6 +52,7 @@ hostEspNowRecvCb_t hostEspNowRecvCb = NULL;
 hostEspNowSendCb_t hostEspNowSendCb = NULL;
 
 int socketFd;
+in_addr_t sendAddr;
 
 //==============================================================================
 // Functions
@@ -85,6 +87,20 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
         return ESP_ERR_WIFI_IF;
     }
 #endif
+
+    if (emulatorArgs.connectAddr != NULL)
+    {
+        // inet_aton() returns 1 on success
+        if (1 != inet_aton(emulatorArgs.connectAddr, &sendAddr))
+        {
+            ESP_LOGE("WIFI", "Invalid connect address: %s (%s)", emulatorArgs.connectAddr, strerror(errno));
+            return ESP_ERR_WIFI_IF;
+        }
+    }
+    else
+    {
+        sendAddr = htonl(0x7fffffff);
+    }
 
     // Create a best-effort datagram socket using UDP
     if ((socketFd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
@@ -134,11 +150,23 @@ esp_err_t initEspNow(hostEspNowRecvCb_t recvCb, hostEspNowSendCb_t sendCb, gpio_
     setsockopt(socketFd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&read_timeout, sizeof(read_timeout));
 
     // Construct bind structure
-    struct sockaddr_in broadcastAddr;                    // Broadcast Address
-    memset(&broadcastAddr, 0, sizeof(broadcastAddr));    // Zero out structure
-    broadcastAddr.sin_family      = AF_INET;             // Internet address family
-    broadcastAddr.sin_addr.s_addr = htonl(INADDR_ANY);   // Any incoming interface
-    broadcastAddr.sin_port        = htons(ESP_NOW_PORT); // Broadcast port
+    struct sockaddr_in broadcastAddr;                 // Broadcast Address
+    memset(&broadcastAddr, 0, sizeof(broadcastAddr)); // Zero out structure
+    broadcastAddr.sin_family = AF_INET;               // Internet address family
+    if (emulatorArgs.listenAddr != NULL)
+    {
+        // inet_aton() returns 1 on success
+        if (1 != inet_aton(emulatorArgs.listenAddr, &broadcastAddr.sin_addr.s_addr))
+        {
+            ESP_LOGE("WIFI", "Invalid listen address: %s", emulatorArgs.listenAddr);
+            return ESP_ERR_WIFI_IF;
+        }
+    }
+    else
+    {
+        broadcastAddr.sin_addr.s_addr = htonl(0x7fffffff); // Broadcast on loopback (127.255.255.255)
+    }
+    broadcastAddr.sin_port = htons(ESP_NOW_PORT); // Broadcast port
 
     // Bind to the broadcast port
     if (bind(socketFd, (struct sockaddr*)&broadcastAddr, sizeof(broadcastAddr)) < 0)
@@ -222,7 +250,7 @@ void espNowSend(const char* data, uint8_t dataLen)
     // Construct local address structure
     memset(&broadcastAddr, 0, sizeof(broadcastAddr));    // Zero out structure
     broadcastAddr.sin_family      = AF_INET;             // Internet address family
-    broadcastAddr.sin_addr.s_addr = htonl(INADDR_NONE);  // Broadcast IP address  // inet_addr("255.255.255.255");
+    broadcastAddr.sin_addr.s_addr = sendAddr;            // Broadcast IP address
     broadcastAddr.sin_port        = htons(ESP_NOW_PORT); // Broadcast port
 
     // Tack on ESP-NOW header and randomized MAC address
