@@ -49,7 +49,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager);
 bb_entity_t* bb_findInactiveEntity(bb_entityManager_t* entityManager);
 
 void bb_viewFollowEntity(bb_entity_t* entity);
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t objectIndex, uint16_t x, uint16_t y);
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint16_t x, uint16_t y);
 
 void bb_freeEntityManager(bb_entityManager_t* entityManager);
 

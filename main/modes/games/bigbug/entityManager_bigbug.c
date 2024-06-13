@@ -62,10 +62,10 @@ bb_sprite_t* bb_loadSprite(char name[], bb_spriteDef_t def, uint8_t num_frames)
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* sprite = bb_loadSprite((char[13]){"crumble"}, CRUMBLE_ANIMATION, 24);
+    bb_sprite_t* sprite = bb_loadSprite((char[13]){"crumble"}, CRUMBLE_ANIM, 24);
     sprite->originX = 0;
     sprite->originY = 0;
-    entityManager->sprites[CRUMBLE_ANIMATION] = *sprite;
+    entityManager->sprites[CRUMBLE_ANIM] = *sprite;
     free(sprite);
 
     // entityManager->sprites[CRUMBLE_ANIMATION] = calloc(1, sizeof(list_t));
@@ -136,8 +136,8 @@ void bb_drawEntities(bb_entityManager_t* entityManager)
         if (currentEntity.active)
         {
             drawWsg((wsg_t*)currentEntity.currentFrame->val,
-                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - currentEntity.sprite.originX,
-                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - currentEntity.sprite.originY,
+                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX,
+                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY,
                     currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
                     currentEntity.spriteRotateAngle);
 
@@ -175,27 +175,51 @@ void bb_viewFollowEntity(bb_entity_t* entity)
     int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
 }
 
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t objectIndex, uint16_t x, uint16_t y)
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint16_t x, uint16_t y)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {
         return NULL;
     }
 
-    bb_entity_t* createdEntity;
+    bb_entity_t* entity = bb_findInactiveEntity(entityManager);
 
-    switch (objectIndex)
+    if (entity == NULL)
     {
-        default:
-            createdEntity = NULL;
+        return NULL;
     }
 
-    if (createdEntity != NULL)
+    entity->active     = true;
+    entity->x          = x << SUBPIXEL_RESOLUTION;
+    entity->y          = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->spriteRotateAngle    = 0;
+
+    entity->type                 = type;
+    entity->spriteIndex          = spriteIndex;
+    //entity->collisionHandler     = &dummyCollisionHandler;
+    //entity->tileCollisionHandler = &ballTileCollisionHandler;
+
+    //entity->gameData->ballsInPlay++;
+
+    switch (spriteIndex)
+    {
+        case CRUMBLE_ANIM:
+
+        default:
+            entity = NULL;
+    }
+
+    if (entity != NULL)
     {
         entityManager->activeEntities++;
     }
 
-    return createdEntity;
+    return entity;
 }
 
 void bb_freeEntityManager(bb_entityManager_t* self)
