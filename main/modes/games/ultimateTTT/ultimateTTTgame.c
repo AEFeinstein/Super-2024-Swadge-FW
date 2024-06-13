@@ -461,7 +461,7 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
         }
     }
 
-    tttPiece_t winner = TTT_NONE;
+    tttPlayer_t winner = TTT_NONE;
     for (uint16_t i = 0; i < 3; i++)
     {
         // Check horizontals
@@ -471,6 +471,7 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
             if (TTT_NONE != ttt->subgames[i][0].winner)
             {
                 winner = ttt->subgames[i][0].winner;
+                break;
             }
         }
 
@@ -481,6 +482,7 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
             if (TTT_NONE != ttt->subgames[0][i].winner)
             {
                 winner = ttt->subgames[0][i].winner;
+                break;
             }
         }
     }
@@ -502,6 +504,32 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
             winner = ttt->subgames[2][0].winner;
         }
     }
+
+    // Check for a draw
+    if (TTT_NONE == winner)
+    {
+        // Assume it's a draw
+        bool isDraw = true;
+        // Check for an empty subgame
+        for (uint16_t y = 0; y < 3; y++)
+        {
+            for (uint16_t x = 0; x < 3; x++)
+            {
+                if (TTT_NONE == ttt->subgames[x][y].winner)
+                {
+                    // Empty space means not a draw
+                    isDraw = false;
+                    break;
+                }
+            }
+        }
+
+        if (isDraw)
+        {
+            return TTT_DRAW;
+        }
+    }
+
     return winner;
 }
 
@@ -553,6 +581,32 @@ static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
             {
                 subgame->winner = subgame->game[2][0];
                 return subgame->game[2][0];
+            }
+        }
+
+        // Check for a draw
+        if (TTT_NONE == subgame->winner)
+        {
+            // Assume it's a draw
+            bool isDraw = true;
+            // Check for an empty space
+            for (uint16_t y = 0; y < 3; y++)
+            {
+                for (uint16_t x = 0; x < 3; x++)
+                {
+                    if (TTT_NONE == subgame->game[x][y])
+                    {
+                        // Empty space means not a draw
+                        isDraw = false;
+                        break;
+                    }
+                }
+            }
+
+            if (isDraw)
+            {
+                subgame->winner = TTT_DRAW;
+                return subgame->winner;
             }
         }
     }
@@ -627,6 +681,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
                     break;
                 }
                 default:
+                case TTT_DRAW:
                 case TTT_NONE:
                 {
                     // Draw the subgame. For each cell
@@ -642,6 +697,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
                             switch (ttt->subgames[subX][subY].game[cellX][cellY])
                             {
                                 default:
+                                case TTT_DRAW:
                                 case TTT_NONE:
                                 {
                                     break;

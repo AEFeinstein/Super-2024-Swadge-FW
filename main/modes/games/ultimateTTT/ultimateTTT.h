@@ -44,6 +44,7 @@ typedef enum __attribute__((packed))
     TTT_NONE,
     TTT_P1,
     TTT_P2,
+    TTT_DRAW,
 } tttPlayer_t;
 
 typedef enum __attribute__((packed))
