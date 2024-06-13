@@ -141,6 +141,7 @@ static void tttExitMode(void)
     // Free the menu
     deinitMenuManiaRenderer(ttt->menuRenderer);
     deinitMenu(ttt->menu);
+    deinitMenu(ttt->bgMenu);
 
     // Free the font
     freeFont(&ttt->font_rodin);
