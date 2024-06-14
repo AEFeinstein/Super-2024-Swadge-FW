@@ -128,7 +128,9 @@
  *
  * - trigonometry.h: Fast math based on look up tables
  * - vector2d.h: Basic math for 2D vectors
+ *     - vectorFl2d.h: Floating 2D vector math functions
  * - geometry.h: Basic math for 2D shapes, like collision checks
+ *     - geometryFl.h: Floating point geometric functions
  * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
  *
  * \subsection oth_api Other Useful APIs
