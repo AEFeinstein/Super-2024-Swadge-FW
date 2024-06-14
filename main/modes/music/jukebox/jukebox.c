@@ -60,6 +60,7 @@ typedef struct
     const char* filename;
     const char* name;
     midiFile_t song;
+    bool shouldLoop;
 } jukeboxSong_t;
 
 typedef struct
@@ -380,11 +381,13 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             {
                 if (jukebox->inMusicSubmode)
                 {
+                    soundGetPlayerBgm()->loop = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
                     soundPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
                 else
                 {
+                    soundGetPlayerSfx()->loop = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
                     soundPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
@@ -673,7 +676,7 @@ void jukeboxBzrDoneCb(void)
         category = sfxCategories;
     }
 
-    if (!category[jukebox->categoryIdx].songs[jukebox->songIdx].song.shouldLoop)
+    if (!category[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop)
     {
         jukebox->isPlaying = false;
     }
@@ -687,14 +690,7 @@ void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
         {
             loadMidiFile(categoryArray[categoryIdx].songs[songIdx].filename,
                      &categoryArray[categoryIdx].songs[songIdx].song, true);
-            categoryArray[categoryIdx].songs[songIdx].song.shouldLoop = shouldLoop;
-
-            if (categoryArray[categoryIdx].songs[songIdx].song.numTracks == 0)
-            {
-                ESP_LOGE(JK_TAG, "Category %d \"%s\" song %d \"%s\" numTracks is 0\n", categoryIdx,
-                         categoryArray[categoryIdx].categoryName, songIdx,
-                         categoryArray[categoryIdx].songs[songIdx].filename);
-            }
+            categoryArray[categoryIdx].songs[songIdx].shouldLoop = shouldLoop;
         }
     }
 }
