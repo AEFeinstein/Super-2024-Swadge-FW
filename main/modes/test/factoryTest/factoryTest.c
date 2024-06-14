@@ -89,7 +89,7 @@ typedef struct
     uint8_t samplesProcessed;
     uint16_t maxValue;
     // Buzzers
-    song_t song;
+    midiFile_t song;
     // Button
     testButtonState_t buttonStates[8];
     // Touch, as an 8-way joystick with center deadzone
@@ -174,7 +174,7 @@ void testEnterMode(void)
     setMicGainSetting(MAX_MIC_GAIN);
 
     // Play a song
-    loadSong("stereo_test.sng", &test->song, false);
+    loadMidiFile("stereo_test.mid", &test->song, false);
     soundPlayBgm(&test->song, BZR_STEREO);
 
     // Clear out accel setting.

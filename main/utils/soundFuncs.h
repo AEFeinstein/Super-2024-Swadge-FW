@@ -126,6 +126,9 @@
      */
     #define soundStopNote(channel) midiNoteOff(globalMidiPlayerGet(channel), 0, freq, vol)
 
+    #define soundGetPlayerSfx() globalMidiPlayerGet(0)
+    #define soundGetPlayerBgm() globalMidiPlayerGet(1)
+
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
 
     #define soundPlaySfx(song, channel)       bzrPlaySfx(song, channel)

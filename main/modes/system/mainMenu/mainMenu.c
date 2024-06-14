@@ -33,8 +33,8 @@ typedef struct
     menuManiaRenderer_t* renderer;
     font_t font_righteous;
     font_t font_rodin;
-    song_t jingle;
-    song_t fanfare;
+    midiFile_t jingle;
+    midiFile_t fanfare;
     int32_t lastBgmVol;
     int32_t lastSfxVol;
     int32_t cheatCodeIdx;
@@ -137,8 +137,8 @@ static void mainMenuEnterMode(void)
     loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
-    loadSong("jingle.sng", &mainMenu->jingle, false);
-    loadSong("item.sng", &mainMenu->fanfare, false);
+    loadMidiFile("jingle.mid", &mainMenu->jingle, false);
+    loadMidiFile("item.mid", &mainMenu->fanfare, false);
 
     // Allocate the menu
     mainMenu->menu = initMenu(mainMenuName, mainMenuCb);

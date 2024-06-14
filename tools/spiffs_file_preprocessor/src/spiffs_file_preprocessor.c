@@ -23,8 +23,8 @@
  *
  */
 static const char* rawFileTypes[][2] = {
-    { "mid",  "midi"},
-    { "midi", "midi"},
+    { "mid",  "mid"},
+    { "midi", "mid"},
     { "raw", "raw"},
 };
 

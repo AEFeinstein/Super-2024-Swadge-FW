@@ -35,8 +35,8 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     credits->numEntries = numEntries;
 
     // Load and play song
-    loadSong("credits.sng", &credits->song, false);
-    credits->song.shouldLoop = true;
+    loadMidiFile("credits.mid", &credits->song, false);
+    soundGetPlayerBgm()->loop = true;
     soundPlayBgm(&credits->song, BZR_STEREO);
 }
 
