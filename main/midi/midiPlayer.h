@@ -377,6 +377,7 @@ typedef struct
     uint32_t tempo;
 
     bool paused;
+    bool loop;
 } midiPlayer_t;
 
 

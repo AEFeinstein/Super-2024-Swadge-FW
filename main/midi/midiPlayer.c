@@ -904,11 +904,19 @@ int32_t midiPlayerStep(midiPlayer_t* player)
             {
                 midiAllNotesOff(player, 0);
             }
-            player->mode = MIDI_STREAMING;
 
             if (player->songFinishedCallback)
             {
                 player->songFinishedCallback();
+            }
+
+            if (player->loop && player->mode == MIDI_FILE && player->reader.file)
+            {
+                resetMidiParser(&player->reader);
+            }
+            else
+            {
+                player->mode = MIDI_STREAMING;
             }
         }
     }
