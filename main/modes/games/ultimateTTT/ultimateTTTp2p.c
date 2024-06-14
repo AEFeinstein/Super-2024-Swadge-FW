@@ -108,15 +108,15 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
                 if (GOING_SECOND == p2pGetPlayOrder(&ttt->p2p))
                 {
                     // Save p1's piece
-                    ttt->p1Piece = rxSel->piece;
+                    ttt->p1PieceIdx = rxSel->pieceIdx;
 
                     // Send p2's piece to p1
-                    ttt->p2Piece = TTT_PIECE_O;
+                    ttt->p2PieceIdx = ttt->activePieceIdx;
 
                     // Send sprite selection to other swadge
                     tttMsgSelectPiece_t txSel = {
-                        .type  = MSG_SELECT_PIECE,
-                        .piece = ttt->p2Piece,
+                        .type     = MSG_SELECT_PIECE,
+                        .pieceIdx = ttt->p2PieceIdx,
                     };
                     p2pSendMsg(&ttt->p2p, (const uint8_t*)&txSel, sizeof(txSel), tttMsgTxCbFn);
 
@@ -126,7 +126,7 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
                 else // Going first
                 {
                     // Received p2's piece
-                    ttt->p2Piece = rxSel->piece;
+                    ttt->p2PieceIdx = rxSel->pieceIdx;
 
                     // Make the first move
                     ttt->state = TGS_PLACING_PIECE;

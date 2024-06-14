@@ -2,11 +2,13 @@
 // Includes
 //==============================================================================
 
+#include <esp_random.h>
 #include "ultimateTTT.h"
 #include "ultimateTTTgame.h"
 #include "ultimateTTThowTo.h"
 #include "ultimateTTTpieceSelect.h"
 #include "ultimateTTTp2p.h"
+#include "ultimateTTTresult.h"
 
 //==============================================================================
 // Function Prototypes
@@ -32,11 +34,16 @@ static const char tttMultiStr[]    = "Wireless Connect";
 static const char tttSingleStr[]   = "Single Player";
 static const char tttPieceSelStr[] = "Piece Select";
 static const char tttHowToStr[]    = "How To Play";
+// NVS keys
+const char tttWinKey[]   = "ttt_win";
+const char tttLossKey[]  = "ttt_loss";
+const char tttDrawKey[]  = "ttt_draw";
+const char tttPieceKey[] = "ttt_piece";
 
 /**
- * This MUST match the order in tttPiece_t
+ * Piece names to load WSGs
  */
-static const char* pieceNames[NUM_UNLOCKABLE_PIECES] = {
+const char* pieceNames[NUM_UNLOCKABLE_PIECES] = {
     "x",
     "o",
     "sq",
@@ -113,6 +120,26 @@ static void tttEnterMode(void)
     // Initialize a menu with no entries to be used for piece selection
     ttt->bgMenu = initMenu(tttPieceSelStr, NULL);
 
+    // Load saved wins and losses counts
+    if (true != readNvs32(tttWinKey, &ttt->wins))
+    {
+        ttt->wins = 0;
+    }
+    if (true != readNvs32(tttLossKey, &ttt->losses))
+    {
+        ttt->losses = 0;
+    }
+    if (true != readNvs32(tttDrawKey, &ttt->draws))
+    {
+        ttt->draws = 0;
+    }
+    if (true != readNvs32(tttPieceKey, &ttt->activePieceIdx))
+    {
+        // Randomly X or O
+        ttt->activePieceIdx = esp_random() % 2;
+    }
+
+    // Start on the main menu
     ttt->ui = TUI_MENU;
 
     // Initialize p2p
@@ -189,6 +216,11 @@ static void tttMainLoop(int64_t elapsedUs)
                 tttInputHowTo(ttt, &evt);
                 break;
             }
+            case TUI_RESULT:
+            {
+                tttInputResult(ttt, &evt);
+                break;
+            }
         }
     }
 
@@ -221,6 +253,11 @@ static void tttMainLoop(int64_t elapsedUs)
             tttDrawHowTo(ttt);
             break;
         }
+        case TUI_RESULT:
+        {
+            tttDrawResult(ttt, elapsedUs);
+            break;
+        }
     }
 }
 
@@ -237,7 +274,7 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (tttMultiStr == label)
         {
-            // TODO multiplayer
+            // Start multiplayer
             p2pStartConnection(&ttt->p2p);
             ttt->ui = TUI_CONNECTING;
         }
@@ -249,7 +286,8 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         else if (tttPieceSelStr == label)
         {
             // Show piece selection UI
-            ttt->ui = TUI_PIECE_SELECT;
+            ttt->ui             = TUI_PIECE_SELECT;
+            ttt->selectPieceIdx = ttt->activePieceIdx;
         }
         else if (tttHowToStr == label)
         {

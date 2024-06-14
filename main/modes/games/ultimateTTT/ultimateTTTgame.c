@@ -36,12 +36,12 @@ void tttBeginGame(ultimateTTT_t* ttt)
     if (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p))
     {
         // Set own piece type
-        ttt->p1Piece = TTT_PIECE_X;
+        ttt->p1PieceIdx = ttt->activePieceIdx;
 
         // Send piece type to other swadge
         tttMsgSelectPiece_t sel = {
-            .type  = MSG_SELECT_PIECE,
-            .piece = ttt->p1Piece,
+            .type     = MSG_SELECT_PIECE,
+            .pieceIdx = ttt->p1PieceIdx,
         };
         p2pSendMsg(&ttt->p2p, (const uint8_t*)&sel, sizeof(sel), tttMsgTxCbFn);
     }
@@ -346,29 +346,65 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
     ttt->subgames[subgame->x][subgame->y].game[cell->x][cell->y] = piece;
 
     // Check the board
-    tttPlayer_t winner = checkWinner(ttt);
-    if (TTT_NONE != winner)
+    bool won  = false;
+    bool lost = false;
+    bool drew = false;
+    switch (checkWinner(ttt))
     {
-        // TODO show the winner
-        // TODO record the result
-        // Go back to the menu
-        ttt->ui = TUI_MENU;
-        p2pDeinit(&ttt->p2p);
-    }
-    else
-    { // Next move should be in this cell
-        ttt->selectedSubgame = *cell;
-        ttt->cursorMode      = SELECT_CELL_LOCKED;
-
-        ttt->cursor.x = 1;
-        ttt->cursor.y = 1;
-        for (int16_t y = 0; y < 3; y++)
+        case TTT_DRAW:
         {
-            for (int16_t x = 0; x < 3; x++)
+            drew = true;
+            break;
+        }
+        case TTT_P1:
+        {
+            if (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p))
             {
+                won = true;
+            }
+            else
+            {
+                lost = true;
+            }
+            break;
+        }
+        case TTT_P2:
+        {
+            if (GOING_SECOND == p2pGetPlayOrder(&ttt->p2p))
+            {
+                won = true;
+            }
+            else
+            {
+                lost = true;
+            }
+            break;
+        }
+        case TTT_NONE:
+        {
+            // Next move should be in this cell
+            ttt->selectedSubgame = *cell;
+            ttt->cursorMode      = SELECT_CELL_LOCKED;
+
+            ttt->cursor.x = 1;
+            ttt->cursor.y = 1;
+            for (int16_t y = 0; y < 3; y++)
+            {
+                for (int16_t x = 0; x < 3; x++)
+                {
+                    if (!cursorIsValid(ttt))
+                    {
+                        incCursorX(ttt);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
                 if (!cursorIsValid(ttt))
                 {
-                    incCursorX(ttt);
+                    incCursorY(ttt);
                 }
                 else
                 {
@@ -376,38 +412,60 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
                 }
             }
 
-            if (!cursorIsValid(ttt))
+            // If that subgame is already won
+            if (TTT_NONE != ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].winner)
             {
-                incCursorY(ttt);
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        // If that subgame is already won
-        if (TTT_NONE != ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].winner)
-        {
-            // Find the next one
-            for (int16_t y = 0; y < 3; y++)
-            {
-                for (int16_t x = 0; x < 3; x++)
+                // Find the next one
+                for (int16_t y = 0; y < 3; y++)
                 {
-                    if (TTT_NONE == ttt->subgames[x][y].winner)
+                    for (int16_t x = 0; x < 3; x++)
                     {
-                        ttt->cursor.x   = x;
-                        ttt->cursor.y   = y;
-                        ttt->cursorMode = SELECT_SUBGAME;
+                        if (TTT_NONE == ttt->subgames[x][y].winner)
+                        {
+                            ttt->cursor.x   = x;
+                            ttt->cursor.y   = y;
+                            ttt->cursorMode = SELECT_SUBGAME;
+                            break;
+                        }
+                    }
+                    if (SELECT_SUBGAME == ttt->cursorMode)
+                    {
                         break;
                     }
                 }
-                if (SELECT_SUBGAME == ttt->cursorMode)
-                {
-                    break;
-                }
             }
+            break;
         }
+    }
+
+    // If the game ended
+    if (won || lost || drew)
+    {
+        // Record the outcome
+        if (won)
+        {
+            ttt->wins++;
+            writeNvs32(tttWinKey, ttt->wins);
+            ttt->lastResult = TTT_P1; // This means winning
+        }
+        else if (lost)
+        {
+            ttt->losses++;
+            writeNvs32(tttLossKey, ttt->losses);
+            ttt->lastResult = TTT_P2; // This means losing
+        }
+        else if (drew)
+        {
+            ttt->draws++;
+            writeNvs32(tttDrawKey, ttt->draws);
+            ttt->lastResult = TTT_DRAW;
+        }
+
+        // Stop p2p
+        p2pDeinit(&ttt->p2p);
+
+        // Show the result
+        ttt->ui = TUI_RESULT;
     }
 }
 
@@ -751,7 +809,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
 static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig)
 {
     bool isP1                     = (TTT_P1 == p);
-    tttPieceColorAssets_t* colors = &ttt->pieceWsg[(isP1 ? ttt->p1Piece : ttt->p2Piece)];
+    tttPieceColorAssets_t* colors = &ttt->pieceWsg[(isP1 ? ttt->p1PieceIdx : ttt->p2PieceIdx)];
     tttPieceSizeAssets_t* sizes   = (isP1 ? &colors->red : &colors->blue);
     return (isBig ? &sizes->large : &sizes->small);
 }

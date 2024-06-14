@@ -23,7 +23,7 @@
  */
 void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
-    int16_t piecesUnlocked = NUM_UNLOCKABLE_PIECES;
+    int16_t piecesUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_PIECES);
 
     if (evt->down)
     {
@@ -31,8 +31,10 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
         {
             case PB_A:
             {
-                // TODO lock in selection
-                ttt->activePiece = ttt->selectPieceIdx;
+                // Select piece
+                ttt->activePieceIdx = ttt->selectPieceIdx;
+                // Save to NVS
+                writeNvs32(tttPieceKey, ttt->activePieceIdx);
                 break;
             }
             case PB_B:
@@ -96,7 +98,7 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     drawMenuMania(ttt->bgMenu, ttt->menuRenderer, elapsedUs);
 
     // Set up variables for drawing
-    int16_t piecesUnlocked = NUM_UNLOCKABLE_PIECES;
+    int16_t piecesUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_PIECES);
     int16_t wsgDim         = ttt->pieceWsg[0].blue.large.h;
     int16_t yOff           = (TFT_HEIGHT - wsgDim) / 2 - 13;
     int16_t xOff           = (TFT_WIDTH - wsgDim) / 2 + ttt->xSelectScrollOffset;
@@ -121,7 +123,7 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
         drawWsgSimple(&ttt->pieceWsg[pIdx].blue.large, xOff, yOff);
         drawWsgSimple(&ttt->pieceWsg[pIdx].red.large, xOff, yOff + SPACING_Y + wsgDim);
 
-        if (pIdx == ttt->activePiece)
+        if (pIdx == ttt->activePieceIdx)
         {
             // Draw selection box
             // Left

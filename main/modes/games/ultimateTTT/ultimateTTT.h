@@ -3,6 +3,12 @@
 #include <swadge2024.h>
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define NUM_UNLOCKABLE_PIECES 4
+
+//==============================================================================
 // Enums
 //==============================================================================
 
@@ -13,6 +19,7 @@ typedef enum __attribute__((packed))
     TUI_GAME,
     TUI_PIECE_SELECT,
     TUI_HOW_TO,
+    TUI_RESULT,
 } tttUi_t;
 
 typedef enum __attribute__((packed))
@@ -29,15 +36,6 @@ typedef enum __attribute__((packed))
     SELECT_CELL,
     SELECT_CELL_LOCKED,
 } tttCursorMode_t;
-
-typedef enum __attribute__((packed))
-{
-    TTT_PIECE_X,
-    TTT_PIECE_O,
-    TTT_PIECE_SQUARE,
-    TTT_PIECE_TRIANGLE,
-    NUM_UNLOCKABLE_PIECES,
-} tttPiece_t;
 
 typedef enum __attribute__((packed))
 {
@@ -95,22 +93,27 @@ typedef struct
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;
-    tttPiece_t p1Piece;
-    tttPiece_t p2Piece;
+    int32_t p1PieceIdx;
+    int32_t p2PieceIdx;
     // Assets
     tttPieceColorAssets_t pieceWsg[NUM_UNLOCKABLE_PIECES];
     // For piece selection UI
     int32_t xSelectScrollTimer;
     int16_t xSelectScrollOffset;
-    tttPiece_t selectPieceIdx;
-    tttPiece_t activePiece;
+    int32_t selectPieceIdx;
+    int32_t activePieceIdx;
     wsg_t selectArrow;
+    // Stats
+    int32_t wins;
+    int32_t losses;
+    int32_t draws;
+    tttPlayer_t lastResult;
 } ultimateTTT_t;
 
 typedef struct
 {
     tttMsgType_t type;
-    tttPiece_t piece;
+    int32_t pieceIdx;
 } tttMsgSelectPiece_t;
 
 typedef struct
@@ -128,6 +131,18 @@ typedef struct
     vec_t selectedCell;
 } tttMsgPlacePiece_t;
 
+//==============================================================================
+// Functions
+//==============================================================================
+
 void tttMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
 
+//==============================================================================
+// Externs
+//==============================================================================
+
+extern const char tttWinKey[];
+extern const char tttLossKey[];
+extern const char tttDrawKey[];
+extern const char tttPieceKey[];
 extern swadgeMode_t tttMode;
