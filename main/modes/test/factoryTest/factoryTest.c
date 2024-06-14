@@ -193,7 +193,7 @@ void testExitMode(void)
     freeFont(&test->ibm_vga8);
     freeWsg(&test->kd_idle0);
     freeWsg(&test->kd_idle1);
-    freeSong(&test->song);
+    unloadMidiFile(&test->song);
     free(test);
 }
 

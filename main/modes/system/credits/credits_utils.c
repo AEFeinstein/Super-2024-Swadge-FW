@@ -47,7 +47,7 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
  */
 void deinitCredits(credits_t* credits)
 {
-    freeSong(&credits->song);
+    unloadMidiFile(&credits->song);
 }
 
 /**

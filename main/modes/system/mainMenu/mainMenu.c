@@ -210,8 +210,8 @@ static void mainMenuExitMode(void)
     freeFont(&mainMenu->font_righteous);
 
     // Free the song
-    freeSong(&mainMenu->jingle);
-    freeSong(&mainMenu->fanfare);
+    unloadMidiFile(&mainMenu->jingle);
+    unloadMidiFile(&mainMenu->fanfare);
 
     // Free mode memory
     free(mainMenu);
