@@ -388,6 +388,11 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                         if (metaLength == 3)
                         {
                             track->nextEvent.meta.tempo = (track->cur[0] << 16) | (track->cur[1] << 8) | track->cur[2];
+                            if (track->nextEvent.meta.tempo == 0)
+                            {
+                                ESP_LOGW("MIDIParser", "Ignoring bad tempo value of 0, using 500000 (120BPM) instead");
+                                track->nextEvent.meta.tempo = 500000;
+                            }
                         }
                         else
                         {
