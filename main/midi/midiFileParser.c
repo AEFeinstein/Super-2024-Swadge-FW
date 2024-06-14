@@ -844,6 +844,7 @@ bool initMidiParser(midiFileReader_t* reader, midiFile_t* file)
         return false;
     }
 
+    reader->stateCount = file->trackCount;
     reader->file = file;
     midiParserSetFile(reader, file);
 
@@ -881,27 +882,35 @@ void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
  */
 void resetMidiParser(midiFileReader_t* reader)
 {
+    for (int i = 0; i < reader->stateCount; i++)
+    {
+        reader->states[i].done = false;
+        reader->states[i].eventParsed = false;
+        reader->states[i].runningStatus = 0;
+        if (reader->states[i].track != NULL)
+        {
+            reader->states[i].cur = reader->states[i].track->data;
+        }
+        else
+        {
+            reader->states[i].cur = NULL;
+            reader->states[i].done = true;
+        }
+        memset(&reader->states[i].nextEvent, 0, sizeof(midiEvent_t));
+        reader->states[i].time = 0;
+    }
+
     if (reader->file != NULL)
     {
-        for (int i = 0; i < reader->file->trackCount; i++)
-        {
-            reader->states[i].done = false;
-            reader->states[i].eventParsed = false;
-            reader->states[i].runningStatus = 0;
-            reader->states[i].cur = reader->file->tracks[i].data;
-            memset(&reader->states[i].nextEvent, 0, sizeof(midiEvent_t));
-            reader->states[i].time = 0;
-        }
-
         reader->division = reader->file->timeDivision;
     }
 }
 
 void deinitMidiParser(midiFileReader_t* reader)
 {
-    if (reader->file != NULL && reader->states != NULL)
+    if (reader->states != NULL)
     {
-        for (int i = 0; i < reader->file->trackCount; i++)
+        for (int i = 0; i < reader->stateCount; i++)
         {
             if (reader->states[i].eventBuffer != NULL)
             {

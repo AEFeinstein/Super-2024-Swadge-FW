@@ -871,7 +871,7 @@ void midiPlayerReset(midiPlayer_t* player)
     player->clipped = 0;
     player->eventAvailable = false;
 
-    resetMidiParser(&player->reader);
+    deinitMidiParser(&player->reader);
     player->paused = true;
 }
 

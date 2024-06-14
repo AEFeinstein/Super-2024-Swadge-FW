@@ -94,6 +94,7 @@ typedef struct
     /// @brief The number of divisions per midi tick
     uint16_t division;
 
+    uint8_t stateCount;
     midiTrackState_t* states;
 } midiFileReader_t;
 
