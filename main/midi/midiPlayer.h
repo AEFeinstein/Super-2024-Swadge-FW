@@ -358,6 +358,9 @@ typedef struct
     /// @brief A callback to call when a text meta-message is received
     midiTextCallback_t textMessageCallback;
 
+    /// @brief A callback to call when the playing song is finished
+    songFinishedCbFn songFinishedCallback;
+
     /// @brief Number of samples that were clipped
     uint32_t clipped;
 
@@ -370,10 +373,6 @@ typedef struct
     /// @brief True if pendingEvent is valid, false if it must be updated
     bool eventAvailable;
 
-    /// @brief The song index of the next event
-    uint8_t nextEventSongIdx;
-    uint32_t nextEventAbsTime;
-
     /// @brief The number of microseconds per quarter note
     uint32_t tempo;
 
@@ -382,13 +381,20 @@ typedef struct
 
 
 /**
- * @brief Initialize or reset the MIDI player
+ * @brief Initialize the MIDI player
  *
  * This includes setting up the dac callback
  *
- * @param player
+ * @param player The MIDI player to initialize
  */
 void midiPlayerInit(midiPlayer_t* player);
+
+/**
+ * @brief Reset the MIDI player state
+ *
+ * @param player The MIDI player to reset
+ */
+void midiPlayerReset(midiPlayer_t* player);
 
 /**
  * @brief Calculate and return the next MIDI sample, stepping the player state forward by one sample
@@ -521,4 +527,8 @@ void initGlobalMidiPlayer(void);
 void deinitGlobalMidiPlayer(void);
 void globalMidiPlayerFillBuffer(uint8_t* samples, int16_t len);
 void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx);
+void globalMidiPlayerPlaySongCb(midiFile_t* song, uint8_t songIdx, songFinishedCbFn cb);
+void globalMidiPlayerPauseAll(void);
+void globalMidiPlayerResumeAll(void);
+void globalMidiPlayerStop(bool reset);
 midiPlayer_t* globalMidiPlayerGet(uint8_t songIdx);

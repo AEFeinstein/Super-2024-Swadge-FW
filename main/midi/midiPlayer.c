@@ -851,18 +851,37 @@ void midiPlayerInit(midiPlayer_t* player)
     // Zero out EVERYTHING
     memset(player, 0, sizeof(midiPlayer_t));
 
+    midiPlayerReset(player);
+
+    midiGmOn(player);
+}
+
+void midiPlayerReset(midiPlayer_t* player)
+{
+    midiAllSoundOff(player);
+
     // We need the tempo to not be zero, so set it to the default of 120BPM until we get a tempo event
     // 120 BPM == 500,000 microseconds per quarter note
     player->tempo = 500000;
 
     // Set all the relevant bits to 1, meaning not in use
-    player->percSpecialStates = 0b00111111111111111111111111111111;
+    player->percSpecialStates = 0b00111111111111111111111111111111; // 0x4fffffff
 
-    midiGmOn(player);
+    player->sampleCount = 0;
+    player->clipped = 0;
+    player->eventAvailable = false;
+
+    resetMidiParser(&player->reader);
+    player->paused = true;
 }
 
 int32_t midiPlayerStep(midiPlayer_t* player)
 {
+    if (player->paused)
+    {
+        return 0;
+    }
+
     bool checkEvents = false;
     if (player->mode == MIDI_FILE)
     {
@@ -886,6 +905,11 @@ int32_t midiPlayerStep(midiPlayer_t* player)
                 midiAllNotesOff(player, 0);
             }
             player->mode = MIDI_STREAMING;
+
+            if (player->songFinishedCallback)
+            {
+                player->songFinishedCallback();
+            }
         }
     }
 
@@ -1342,13 +1366,15 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
 void midiSetFile(midiPlayer_t* player, midiFile_t* song)
 {
     player->mode = MIDI_FILE;
-    if (song == NULL && player->reader.states != NULL)
-    {
-        deinitMidiParser(&player->reader);
-    }
-    else if (player->reader.states == NULL)
+    if (player->reader.states == NULL)
     {
         initMidiParser(&player->reader, song);
+    }
+    else if (song == NULL)
+    {
+        deinitMidiParser(&player->reader);
+        player->mode = MIDI_STREAMING;
+        player->paused = true;
     }
     else
     {
@@ -1404,8 +1430,46 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t songIdx)
     initGlobalMidiPlayer();
 
     midiPause(&globalPlayers[songIdx], true);
+    globalPlayers[songIdx].sampleCount = 0;
     midiSetFile(&globalPlayers[songIdx], song);
     midiPause(&globalPlayers[songIdx], false);
+}
+
+void globalMidiPlayerPlaySongCb(midiFile_t* song, uint8_t songIdx, songFinishedCbFn cb)
+{
+    globalMidiPlayerPlaySong(song, songIdx);
+    globalPlayers[songIdx].songFinishedCallback = cb;
+}
+
+void globalMidiPlayerPauseAll(void)
+{
+    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    {
+        midiPause(&globalPlayers[i], true);
+    }
+}
+
+void globalMidiPlayerResumeAll(void)
+{
+    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    {
+        midiPause(&globalPlayers[i], false);
+    }
+}
+
+void globalMidiPlayerStop(bool reset)
+{
+    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    {
+        midiPause(&globalPlayers[i], true);
+
+        if (reset)
+        {
+            midiPlayerReset(&globalPlayers[i]);
+        }
+        // TODO: implement seek
+        //midiSeek(&globalPlayers[i], 0);
+    }
 }
 
 midiPlayer_t* globalMidiPlayerGet(uint8_t songIdx)

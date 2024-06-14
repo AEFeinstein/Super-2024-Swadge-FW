@@ -794,7 +794,7 @@ static void readFirstEvents(midiFileReader_t* reader)
     }
 }
 
-bool loadMidiFile(midiFile_t* file, const char* name, bool spiRam)
+bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam)
 {
     uint32_t size;
     uint8_t* data = readHeatshrinkFile(name, &size, spiRam);
@@ -814,6 +814,7 @@ bool loadMidiFile(midiFile_t* file, const char* name, bool spiRam)
             {
                 // TODO should this be handled in the parser?
                 free(file->tracks);
+                file->tracks = NULL;
             }
             free(data);
             memset(file, 0, sizeof(midiFile_t));
@@ -852,25 +853,19 @@ bool initMidiParser(midiFileReader_t* reader, midiFile_t* file)
 
 void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
 {
-    if (reader->file->trackCount != file->trackCount)
+    if (reader->states != NULL)
     {
-        void* newChunks = reallocarray(reader->states, file->trackCount, sizeof(midiTrackState_t));
-        if (newChunks != NULL)
-        {
-            reader->states = newChunks;
-        }
-        else
-        {
-            ESP_LOGE("MIDIParser", "Failed to reallocate track data for new song");
-            return;
-        }
+        free(reader->states);
+        reader->states = NULL;
     }
 
+    reader->states = calloc(file->trackCount, sizeof(midiTrackState_t));
+
     // Initialize the reader's internal per-track parsing states
-    for (int i = 0; i < reader->file->trackCount; i++)
+    for (int i = 0; i < file->trackCount; i++)
     {
-        reader->states[i].track = &reader->file->tracks[i];
-        reader->states[i].cur = reader->file->tracks[i].data;
+        reader->states[i].track = &file->tracks[i];
+        reader->states[i].cur = file->tracks[i].data;
     }
 
     reader->file = file;

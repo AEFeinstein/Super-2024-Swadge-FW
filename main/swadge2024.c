@@ -516,7 +516,7 @@ static void initOptionalPeripherals(void)
         // so it can't be initialized at the same time as the microphone
         initDac(dacCallback);
         dacStart();
-        initSpkSongPlayer();
+        initGlobalMidiPlayer();
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
         // Init buzzer. This must be called before initMic()
         initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
@@ -561,6 +561,7 @@ void deinitSystem(void)
     // Deinitialize everything
     deinitButtons();
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+    deinitGlobalMidiPlayer();
     deinitDac();
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
     deinitBuzzer();

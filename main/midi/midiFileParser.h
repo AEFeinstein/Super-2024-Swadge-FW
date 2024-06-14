@@ -179,7 +179,7 @@ typedef struct
  * @return true If the load succeeded
  * @return false If the load failed
  */
-bool loadMidiFile(midiFile_t* file, const char* name, bool spiRam);
+bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam);
 
 /**
  * @brief Free the data associated with the given MIDI file
