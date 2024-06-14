@@ -190,6 +190,7 @@ void unloadMidiFile(midiFile_t* file);
 
 bool initMidiParser(midiFileReader_t* reader, midiFile_t* file);
 void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file);
+void resetMidiParser(midiFileReader_t* reader);
 void deinitMidiParser(midiFileReader_t* reader);
 
 /**

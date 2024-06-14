@@ -874,6 +874,29 @@ void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
     readFirstEvents(reader);
 }
 
+/**
+ * @brief Reset the MIDI parser state, without changing the file
+ *
+ * @param reader The reader to reset
+ */
+void resetMidiParser(midiFileReader_t* reader)
+{
+    if (reader->file != NULL)
+    {
+        for (int i = 0; i < reader->file->trackCount; i++)
+        {
+            reader->states[i].done = false;
+            reader->states[i].eventParsed = false;
+            reader->states[i].runningStatus = 0;
+            reader->states[i].cur = reader->file->tracks[i].data;
+            memset(&reader->states[i].nextEvent, 0, sizeof(midiEvent_t));
+            reader->states[i].time = 0;
+        }
+
+        reader->division = reader->file->timeDivision;
+    }
+}
+
 void deinitMidiParser(midiFileReader_t* reader)
 {
     if (reader->file != NULL && reader->states != NULL)
