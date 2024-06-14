@@ -48,12 +48,12 @@ struct bb_entity_t
     int16_t xspeed;
     int16_t yspeed;
 
-    uint8_t spriteIndex;//bb_spriteDef_t
-    node_t* currentFrame;//->value is a wsg_t
     bool spriteFlipHorizontal;
     bool spriteFlipVertical;
     int16_t spriteRotateAngle;
 
+    uint8_t spriteIndex;//see bb_spriteDef_t in typedef_bigbug.h
+    uint8_t currentFrame;
     uint8_t animationTimer;
     uint8_t animationFPS;
 

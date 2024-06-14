@@ -38,9 +38,10 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
     // entityManager->tilemap->warps[0].y * 16); entityManager->playerEntity = entityManager->viewEntity;
 }
 
-bb_sprite_t* bb_loadSprite(char name[], bb_spriteDef_t def, uint8_t num_frames)
+bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames)
 {
-    bb_sprite_t* sprite = (bb_sprite_t*)malloc(num_frames * sizeof(wsg_t) + sizeof(bb_sprite_t));
+    bb_sprite_t* sprite = malloc(sizeof(bb_sprite_t) + num_frames * sizeof(wsg_t));
+    sprite->numFrames = num_frames;
     for(uint8_t i = 0; i < num_frames; i++)
     {
         char wsg_name[strlen(name)+7];//7 extra characters makes room for up to a 2 digit number + ".wsg" + null terminator ('\0')
@@ -52,21 +53,21 @@ bb_sprite_t* bb_loadSprite(char name[], bb_spriteDef_t def, uint8_t num_frames)
         strcat(wsg_name, str);
         free(str);
         strcat(wsg_name, ".wsg");//now name looks something like crumble12.wsg
-        wsg_t* wsg = calloc(1, sizeof(wsg_t));
-        loadWsg(wsg_name, wsg, true);
-
-        sprite->frames[i] = wsg;
+        printf("%s\n",wsg_name);
+        printf("success? %d\n",loadWsg(wsg_name, sprite->frames[i], true));
     }
+    
     return sprite;
 }
 
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
-    bb_sprite_t* sprite = bb_loadSprite((char[13]){"crumble"}, CRUMBLE_ANIM, 24);
+    bb_sprite_t* sprite = bb_loadSprite("crumble", 24);
     sprite->originX = 0;
     sprite->originY = 0;
     entityManager->sprites[CRUMBLE_ANIM] = *sprite;
-    free(sprite);
+    printf("numFrames %d\n",entityManager->sprites[CRUMBLE_ANIM].numFrames);
+    //free(sprite);
 
     // entityManager->sprites[CRUMBLE_ANIMATION] = calloc(1, sizeof(list_t));
     
@@ -127,21 +128,29 @@ void bb_deactivateAllEntities(bb_entityManager_t* entityManager, bool excludePla
     }
 }
 
-void bb_drawEntities(bb_entityManager_t* entityManager)
+void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
 {
     for (uint8_t i = 0; i < MAX_ENTITIES; i++)
     {
         bb_entity_t currentEntity = entityManager->entities[i];
-
+        
         if (currentEntity.active)
         {
-            drawWsg((wsg_t*)currentEntity.currentFrame->val,
-                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX,
-                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY,
-                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
-                    currentEntity.spriteRotateAngle);
+            //printf("x: %d y: %d\n", (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x, (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y);
+            printf("idx %d\n",currentEntity.spriteIndex);
+            printf("numFrames %d\n",entityManager->sprites[currentEntity.spriteIndex].numFrames);
+            printf("wsg %p\n",entityManager->sprites[currentEntity.spriteIndex].frames[0]);
+            printf("color %d\n",paletteToRGB(entityManager->sprites[currentEntity.spriteIndex].frames[0]->px[(10 * 32) + 12]));
+            // drawWsg(entityManager->sprites[currentEntity.spriteIndex].frames[0],
+            //         (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
+            //         (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
+            //         currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
+            //         currentEntity.spriteRotateAngle);
 
-            currentEntity.currentFrame =  currentEntity.currentFrame->next;
+            // currentEntity.currentFrame += 1;
+            // if (currentEntity.currentFrame >= entityManager->sprites[currentEntity.spriteIndex].numFrames){
+            //     currentEntity.currentFrame = 0;
+            // }
         }
     }
 }
@@ -201,6 +210,8 @@ bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, ui
 
     entity->type                 = type;
     entity->spriteIndex          = spriteIndex;
+
+    entity->currentFrame = 0;
     //entity->collisionHandler     = &dummyCollisionHandler;
     //entity->tileCollisionHandler = &ballTileCollisionHandler;
 

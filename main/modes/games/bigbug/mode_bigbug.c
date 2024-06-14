@@ -311,6 +311,8 @@ static void bb_DrawScene(void)
     // printf("camera.pos.y: %d\n", bigbug->camera.pos.y);
     // printf("render y: %d\n", (bigbug->garbotnikPos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
 
+    bb_drawEntities(&bigbug->entityManager, &bigbug->camera, &bigbug->garbotnikWsg);
+
     // Draw garbotnik
     drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
                   (bigbug->garbotnikPos.y >> DECIMAL_BITS) - bigbug->camera.pos.y - 21);
@@ -483,12 +485,15 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 }
             }
             //printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
-            if(dotVec2d(bigbug->garbotnikVel, normal)<-95)//velocity angle is opposing garbage normal vector. Tweak number for different threshold.
+            if(dotVec2d(bigbug->garbotnikVel, normal) < -95)//velocity angle is opposing garbage normal vector. Tweak number for different threshold.
             {
                 //digging detected!
                 //Update the dirt by decrementing if greater than 0.
                 bigbug->tilemap.fgTiles[best_i][best_j] = bigbug->tilemap.fgTiles[best_i][best_j] > 0 ? bigbug->tilemap.fgTiles[best_i][best_j] - 1 : 0;
                 
+                //Create a crumble animation
+                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, tilePos.x>>DECIMAL_BITS, tilePos.y>>DECIMAL_BITS);
+
                 //Mirror garbotnik's velocity
                 // Reflect the velocity vector along the normal
                 // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
