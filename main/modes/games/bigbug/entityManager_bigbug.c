@@ -40,7 +40,7 @@ void bb_initializeEntityManager(bb_entityManager_t* entityManager, bb_gameData_t
 
 bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames)
 {
-    bb_sprite_t* sprite = malloc(sizeof(bb_sprite_t) + num_frames * sizeof(wsg_t));
+    bb_sprite_t* sprite = malloc(sizeof(bb_sprite_t) + num_frames * sizeof(wsg_t*));
     sprite->numFrames = num_frames;
     for(uint8_t i = 0; i < num_frames; i++)
     {
@@ -53,8 +53,9 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames)
         strcat(wsg_name, str);
         free(str);
         strcat(wsg_name, ".wsg");//now name looks something like crumble12.wsg
-        printf("%s\n",wsg_name);
-        printf("success? %d\n",loadWsg(wsg_name, sprite->frames[i], true));
+        //printf("%s\n",wsg_name);
+        sprite->frames[i] = calloc(1, sizeof(wsg_t));
+        loadWsg(wsg_name, sprite->frames[i], true);
     }
     
     return sprite;
@@ -140,17 +141,19 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             printf("idx %d\n",currentEntity.spriteIndex);
             printf("numFrames %d\n",entityManager->sprites[currentEntity.spriteIndex].numFrames);
             printf("wsg %p\n",entityManager->sprites[currentEntity.spriteIndex].frames[0]);
-            printf("color %d\n",paletteToRGB(entityManager->sprites[currentEntity.spriteIndex].frames[0]->px[(10 * 32) + 12]));
-            // drawWsg(entityManager->sprites[currentEntity.spriteIndex].frames[0],
-            //         (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
-            //         (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
-            //         currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
-            //         currentEntity.spriteRotateAngle);
+            //Sanity check: At px(12,10) should be some kind of opaque blue.
+            printf("color %d\n",paletteToRGB(entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame]->px[(10 * 32) + 12]));
+            drawWsg(entityManager->sprites[currentEntity.spriteIndex].frames[0],
+                    (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
+                    (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
+                    currentEntity.spriteFlipHorizontal, currentEntity.spriteFlipVertical,
+                    currentEntity.spriteRotateAngle);
 
-            // currentEntity.currentFrame += 1;
-            // if (currentEntity.currentFrame >= entityManager->sprites[currentEntity.spriteIndex].numFrames){
-            //     currentEntity.currentFrame = 0;
-            // }
+            //Will put this kind of stuff in its own animation tracker function later...
+            currentEntity.currentFrame += 1;
+            if (currentEntity.currentFrame >= entityManager->sprites[currentEntity.spriteIndex].numFrames){
+                currentEntity.currentFrame = 0;
+            }
         }
     }
 }
