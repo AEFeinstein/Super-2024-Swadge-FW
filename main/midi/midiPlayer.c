@@ -407,6 +407,7 @@ static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
 
 static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t voiceCount);
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel);
+static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
 static void midiGmOn(midiPlayer_t* player);
 static int32_t midiSumPercussion(midiPlayer_t* player);
 static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event);
@@ -495,6 +496,34 @@ static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel)
     return trimmedFreq;
 }
 
+static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
+{
+    voice->timbre = timbre;
+    for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+    {
+        switch (timbre->type)
+        {
+            case WAVETABLE:
+            {
+                swSynthSetWaveFunc(&voice->oscillators[oscIdx], waveTableFunc, timbre->waveIndex);
+                break;
+            }
+
+            case NOISE:
+            {
+                swSynthSetShape(&voice->oscillators[oscIdx], SHAPE_NOISE);
+                break;
+            }
+
+            case SAMPLE:
+            {
+                // TODO: Sample support!
+                break;
+            }
+        }
+    }
+}
+
 /**
  * @brief Activate General MIDI mode for a MIDI player
  *
@@ -503,6 +532,20 @@ static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel)
 static void midiGmOn(midiPlayer_t* player)
 {
     bool percOscSetup = false;
+
+    for (int voiceIdx = 0; voiceIdx < POOL_VOICE_COUNT + PERCUSSION_VOICES; voiceIdx++)
+    {
+        bool percussion = voiceIdx >= POOL_VOICE_COUNT;
+        midiVoice_t* voice = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
+        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
+        {
+            swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, 0, 0, 0);
+#ifdef OSC_DITHER
+            voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
+#endif
+            player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
+        }
+    }
 
     for (uint8_t chanIdx = 0; chanIdx < 16; chanIdx++)
     {
@@ -526,8 +569,8 @@ static void midiGmOn(midiPlayer_t* player)
             memcpy(&chan->timbre, &acousticGrandPianoTimbre, sizeof(midiTimbre_t));
         }
 
-        midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
-        uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
+        midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
+        uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : POOL_VOICE_COUNT;
 
         for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
         {
@@ -546,11 +589,6 @@ static void midiGmOn(midiPlayer_t* player)
 #ifdef OSC_DITHER
                         voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
 #endif
-                        // Make sure we don't count the percussion oscillators multiple times
-                        if (!chan->percussion || !percOscSetup)
-                        {
-                            player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
-                        }
                         break;
                     }
 
@@ -569,12 +607,6 @@ static void midiGmOn(midiPlayer_t* player)
 #ifdef OSC_DITHER
                         voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount]) & 0xFF;
 #endif
-
-                        // Make sure we don't count the percussion oscillators multiple times
-                        if (!chan->percussion || !percOscSetup)
-                        {
-                            player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
-                        }
                         break;
                     }
                 }
@@ -586,10 +618,6 @@ static void midiGmOn(midiPlayer_t* player)
                 percOscSetup = true;
             }
         }
-    }
-    if (player->oscillatorCount > 0)
-    {
-        player->oscillatorCount--;
     }
 }
 
@@ -1008,36 +1036,32 @@ void midiAllSoundOff(midiPlayer_t* player)
     // But also people say the spec is deficient in this area.
     // So if it's up to us, let's just do them all!
 
-    for (int chanIdx = 0; chanIdx < 16; chanIdx++)
+    for (uint8_t voiceIdx = 0; voiceIdx < POOL_VOICE_COUNT; voiceIdx++)
     {
-        midiChannel_t* chan = &player->channels[chanIdx];
-        // Here we don't bother to check whether this channel is using its own voices
-        // or the percussion voices, since we want to turn them off no matter what.
-        // This is because All Sounds Off is often used as a "panic" button to stop any
-        // stuck notes. So just in case we get into a bad state where notes are playing
-        // but we don't think they are, this will always stop them anyway.
-        for (uint8_t voiceIdx = 0; voiceIdx < VOICE_PER_CHANNEL; voiceIdx++)
+        // Here we don't bother to check whether each voice is being used, since we want
+        // to turn them off no matter what. This is because All Sounds Off is often used
+        // as a "panic" button to stop any stuck notes. So, just in case we get in a bad
+        // state where notes are playing but we don't "think" they are, this will always
+        // stop them anyway.
+        // TODO: Maybe move this all into a stopVoice() function
+        player->poolVoices[voiceIdx].transitionTicks = 0;
+        player->poolVoices[voiceIdx].targetVol = 0;
+        player->poolVoiceStates.held = 0;
+        player->poolVoiceStates.on = 0;
+        // TODO: Handle samplers
+        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
-            // TODO: Maybe move this all into a stopVoice() function
-            chan->voices[voiceIdx].transitionTicks = 0;
-            chan->voices[voiceIdx].targetVol = 0;
-            chan->voiceStates.held = 0;
-            chan->voiceStates.on = 0;
-            // TODO: Handle samplers
-            for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-            {
-                swSynthSetVolume(&chan->voices[voiceIdx].oscillators[oscIdx], 0);
-                swSynthSetFreqPrecise(&chan->voices[voiceIdx].oscillators[oscIdx], 0);
-            }
+            swSynthSetVolume(&player->poolVoices[voiceIdx].oscillators[oscIdx], 0);
+            swSynthSetFreqPrecise(&player->poolVoices[voiceIdx].oscillators[oscIdx], 0);
         }
     }
 
     for (uint8_t voiceIdx = 0; voiceIdx < PERCUSSION_VOICES; voiceIdx++)
     {
         player->percVoices[voiceIdx].transitionTicks = 0;
+        player->percVoices[voiceIdx].targetVol = 0;
         player->percVoiceStates.held = 0;
         player->percVoiceStates.on = 0;
-        // TODO: Handle samplers
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
             player->percVoices[voiceIdx].targetVol = 0;
@@ -1045,13 +1069,20 @@ void midiAllSoundOff(midiPlayer_t* player)
             swSynthSetFreqPrecise(&player->percVoices[voiceIdx].oscillators[oscIdx], 0);
         }
     }
+
+    for (int chanIdx = 0; chanIdx < 16; chanIdx++)
+    {
+        midiChannel_t* chan = &player->channels[chanIdx];
+        chan->allocedVoices = 0;
+        chan->held = false;
+    }
 }
 
 
 void midiAllNotesOff(midiPlayer_t* player, uint8_t channel)
 {
     midiChannel_t* chan = &player->channels[channel];
-    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
+    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
 
     uint32_t playingVoices = VS_ANY(states) | states->held;
     while (playingVoices != 0)
@@ -1060,7 +1091,7 @@ void midiAllNotesOff(midiPlayer_t* player, uint8_t channel)
         // Instead, refactor the core of midiNoteOff() into an internal midiVoiceOff() function
         // That's probably a good idea anyway with how complicated midiNoteOff() is getting
         uint8_t voiceIdx = __builtin_ctz(playingVoices);
-        midiNoteOff(player, channel, chan->voices[voiceIdx].note, 0x7F);
+        midiNoteOff(player, channel, player->poolVoices[voiceIdx].note, 0x7F);
 
         playingVoices &= ~(1 << voiceIdx);
     }
@@ -1079,10 +1110,18 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     midiChannel_t* chan = &player->channels[chanId];
     // Use the appropriate voice pool for the instrument type
     // Percussion gets its own
-    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
-    midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
-    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
-    uint32_t voiceIdx = (chan->timbre.flags & TF_MONO) ? 0 : allocVoice(player, states, voiceCount);
+    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
+    midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
+    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : POOL_VOICE_COUNT;
+    uint32_t voiceIdx = allocVoice(player, states, voiceCount);
+
+    if (chan->timbre.flags & TF_MONO)
+    {
+        if (chan->allocedVoices)
+        {
+            voiceIdx = chan->allocedVoices;
+        }
+    }
 
     if (chan->percussion)
     {
@@ -1182,6 +1221,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
     uint32_t voiceBit = (1 << voiceIdx);
 
+    chan->allocedVoices |= voiceBit;
     states->on |= voiceBit;
     voices[voiceIdx].note = note;
 
@@ -1199,26 +1239,13 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     }
     else
     {
-        switch (chan->timbre.type)
+        if (voices[voiceIdx].timbre != &chan->timbre)
         {
-            case WAVETABLE:
-            case NOISE:
-            {
-                // TODO: velocity should affect attack time instead of directly affecting volume
-                swSynthSetVolume(&voices[voiceIdx].oscillators[0], targetVol);
-                swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[0], bendPitch(note, chan->pitchBend));
-
-                //ESP_LOGI("MIDI", "Velocity is %" PRIu8, velocity << 1);
-                //voices[voiceIdx].transitionTicks = chan->timbre.envelope.attack;
-                break;
-            }
-
-            case SAMPLE:
-            {
-                // TODO: Sample support!
-                break;
-            }
+            setVoiceTimbre(&voices[voiceIdx], &chan->timbre);
         }
+
+        swSynthSetVolume(&voices[voiceIdx].oscillators[0], targetVol);
+        swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[0], bendPitch(note, chan->pitchBend));
     }
 }
 
@@ -1226,12 +1253,11 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity)
 {
     midiChannel_t* chan = &player->channels[channel];
-    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
-    midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
+    voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
+    midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
 
     // check the bitmaps to see if there's any note to release
-    uint32_t playingVoices = VS_ANY(&chan->voiceStates) | chan->voiceStates.held;
-
+    uint32_t playingVoices = (VS_ANY(&player->poolVoiceStates) | player->poolVoiceStates.held) & chan->allocedVoices;
 
     // Find the channel playing this note
     while (playingVoices != 0)
@@ -1245,6 +1271,7 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
 
             // Unset the on-ness of this note
             states->on &= ~voiceBit;
+            chan->allocedVoices &= ~voiceBit;
             if (chan->held)
             {
                 states->held |= voiceBit;
@@ -1268,24 +1295,8 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
 
 void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 {
-    // TODO: Handle Set Program
-    // TODO: If a channel is set to/unset from percussion make sure we update allOscillators
+    // Dynamic voice allocation somehow makes this way simpler
     player->channels[channel].program = program;
-
-    midiChannel_t* chan = &player->channels[channel];
-    midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
-    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
-
-    for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
-    {
-        midiVoice_t* voice = &voices[voiceIdx];
-
-        for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-        {
-            swSynthSetVolume(&voice->oscillators[oscIdx], 0);
-            swSynthSetWaveFunc(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)program));
-        }
-    }
 }
 
 
@@ -1296,8 +1307,8 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
 
     if (chan->held != newHold)
     {
-        voiceStates_t* voiceStates = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
-        midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
+        voiceStates_t* voiceStates = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
+        midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
         if (newHold)
         {
             // Just set the held state for all the currently on notes.
@@ -1346,9 +1357,11 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
 {
     // Save the pitch bend value
     player->channels[channel].pitchBend = value;
+    voiceStates_t* states = player->channels[channel].percussion ? &player->percVoiceStates : &player->poolVoiceStates;
+    midiVoice_t* voices = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
 
     // Find all the voices currently sounding and update their frequencies
-    uint32_t playingVoices = VS_ANY(&player->channels[channel].voiceStates) | player->channels[channel].voiceStates.held;
+    uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
 
     // Thought this was a bug but actually
     while (playingVoices != 0)
@@ -1363,8 +1376,8 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
             // want to be able to control them separately here.
             // Maybe we only apply that for like, chorus?
             swSynthSetFreqPrecise(
-                &player->channels[channel].voices[voiceIdx].oscillators[oscIdx],
-                bendPitch(player->channels[channel].voices[voiceIdx].note, value));
+                &voices[voiceIdx].oscillators[oscIdx],
+                bendPitch(voices[voiceIdx].note, value));
         }
 
         // Next!

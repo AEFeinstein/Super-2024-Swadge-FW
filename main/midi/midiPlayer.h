@@ -11,6 +11,8 @@
 // TODO: Channel-independent dynamic voice allocation
 // The number of simultaneous voices each channel can support
 #define VOICE_PER_CHANNEL 3
+// The total number of pooled voices
+#define POOL_VOICE_COUNT 24
 // The number of voices reserved for percussion
 #define PERCUSSION_VOICES 8
 // The number of oscillators each voice gets. Maybe we'll need more than one for like, chorus?
@@ -303,12 +305,8 @@ typedef struct
     /// @brief The actual current timbre definition which the program ID corresponds to
     midiTimbre_t timbre;
 
-    /// @brief The state of each voice allocated to this channel
-    // TODO: This will eventually be replaced by a single bank of voices which are dynamically allocated at the MIDI player level
-    midiVoice_t voices[VOICE_PER_CHANNEL];
-
-    /// @brief This channel's voice state bitmap
-    voiceStates_t voiceStates;
+    /// @brief A bitmap of which voices have been allocated to this channel
+    uint32_t allocedVoices;
 
     /// @brief The 14-bit pitch wheel value
     uint16_t pitchBend;
@@ -343,8 +341,14 @@ typedef struct
     /// and mute and open cuica and triangle. This is 5 states bitpacked into 6 bits each.
     uint32_t percSpecialStates;
 
+    /// @brief The global voice pool for non-percussion channels
+    midiVoice_t poolVoices[POOL_VOICE_COUNT];
+
+    /// @brief The global voice pool state bitmap
+    voiceStates_t poolVoiceStates;
+
     /// @brief An array holding a pointer to every oscillator
-    synthOscillator_t* allOscillators[(MIDI_CHANNEL_COUNT * VOICE_PER_CHANNEL + PERCUSSION_VOICES) * OSC_PER_VOICE];
+    synthOscillator_t* allOscillators[(POOL_VOICE_COUNT + PERCUSSION_VOICES) * OSC_PER_VOICE];
 
     /// @brief The total number of oscillators in the array. Could be less than the max if some are unused
     uint16_t oscillatorCount;
