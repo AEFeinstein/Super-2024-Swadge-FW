@@ -311,7 +311,7 @@ static void bb_DrawScene(void)
     // printf("camera.pos.y: %d\n", bigbug->camera.pos.y);
     // printf("render y: %d\n", (bigbug->garbotnikPos.y - bigbug->garbotnik.radius - bigbug->camera.pos.y) >> DECIMAL_BITS);
 
-    bb_drawEntities(&bigbug->entityManager, &bigbug->camera, &bigbug->garbotnikWsg);
+    bb_drawEntities(&bigbug->entityManager, &bigbug->camera);
 
     // Draw garbotnik
     drawWsgSimple(&bigbug->garbotnikWsg, (bigbug->garbotnikPos.x >> DECIMAL_BITS) - bigbug->camera.pos.x - 19,
