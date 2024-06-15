@@ -16,12 +16,6 @@
 #include <string.h>
 
 //==============================================================================
-// Defines
-//==============================================================================
-
-#define MAX_TRACK_CHUNKS 32
-
-//==============================================================================
 // Structs
 //==============================================================================
 
@@ -55,6 +49,14 @@ struct midiTrackState
     /// @brief Whether or not the END OF TRACK event has been read
     bool done;
 };
+
+typedef struct
+{
+    midiPlayer_t player;
+
+    uint8_t trackCount;
+    midiTrackState_t* trackStates;
+} midiSaveState_t;
 
 //==============================================================================
 // Static Function Declarations
@@ -982,4 +984,57 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
     nextTrack->eventParsed = false;
     nextTrack->time += event->deltaTime;
     return true;
+}
+
+void* globalMidiSave(void)
+{
+    // TODO: There are multiple allocs here, so the return value _can't_ safely be free()'d by others
+    midiSaveState_t* saveState = malloc(NUM_GLOBAL_PLAYERS * sizeof(midiSaveState_t));
+
+    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    {
+        midiPlayer_t* player = globalMidiPlayerGet(i);
+        memcpy(&saveState[i].player, player, sizeof(midiPlayer_t));
+
+        if (player->reader.file != NULL)
+        {
+            saveState[i].trackCount = player->reader.file->trackCount;
+            saveState[i].trackStates = malloc(saveState[i].trackCount * sizeof(midiTrackState_t));
+
+            // Overwrite the copy with the newly allocated pointer, since the current one may be free'd
+            saveState[i].player.reader.states = saveState[i].trackStates;
+
+            for (int trackIdx = 0; trackIdx < saveState[i].trackCount; trackIdx++)
+            {
+                const midiTrackState_t* stateOrig = &player->reader.states[trackIdx];
+                midiTrackState_t* stateCopy = &saveState[i].trackStates[trackIdx];
+
+                memcpy(stateCopy, stateOrig, sizeof(midiTrackState_t));
+                if (stateCopy->eventBuffer != NULL)
+                {
+                    stateCopy->eventBuffer = malloc(stateCopy->eventBufferSize);
+                    memcpy(stateCopy->eventBuffer, stateOrig->eventBuffer, stateCopy->eventBufferSize);
+                }
+            }
+        }
+    }
+
+    return saveState;
+}
+
+void globalMidiRestore(void* data)
+{
+    midiSaveState_t* saveState = (midiSaveState_t*)data;
+
+    for (int i = 0; i < NUM_GLOBAL_PLAYERS; i++)
+    {
+        midiPlayer_t* player = globalMidiPlayerGet(i);
+        midiPlayerReset(player);
+
+        memcpy(player, &saveState[i].player, sizeof(midiPlayer_t));
+    }
+
+    // Do not free any of the individual save state data, since it's now just the real data
+    // Just free the container
+    free(data);
 }

@@ -94,7 +94,7 @@
      *
      * @return A void* containing song state
      */
-    #define soundSave() spkSongSave()
+    #define soundSave() globalMidiSave()
 
     /**
      * @brief Restore state and resume audio output
@@ -103,7 +103,7 @@
      *
      * @param data The state saved with spkSongSave()
      */
-    #define soundRestore(data) spkSongRestore(data)
+    #define soundRestore(data) globalMidiRestore(data)
 
     /**
      * @brief Play a specific note

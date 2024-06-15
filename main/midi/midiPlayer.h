@@ -532,4 +532,6 @@ void globalMidiPlayerPlaySongCb(midiFile_t* song, uint8_t songIdx, songFinishedC
 void globalMidiPlayerPauseAll(void);
 void globalMidiPlayerResumeAll(void);
 void globalMidiPlayerStop(bool reset);
+void* globalMidiSave(void);
+void globalMidiRestore(void* data);
 midiPlayer_t* globalMidiPlayerGet(uint8_t songIdx);
