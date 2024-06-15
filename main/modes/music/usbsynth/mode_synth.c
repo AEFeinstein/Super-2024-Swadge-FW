@@ -564,10 +564,11 @@ static void synthMainLoop(int64_t elapsedUs)
     int16_t textY = 15;
     for (int ch = 0; ch < 16; ch++)
     {
-        bool percussion = sd->midiPlayer.channels[ch].percussion;
-        sd->playing[ch] = percussion
-            ? sd->midiPlayer.percVoiceStates.on | sd->midiPlayer.percVoiceStates.held
-            : sd->midiPlayer.channels[ch].voiceStates.on || sd->midiPlayer.channels[ch].voiceStates.held;
+        midiChannel_t* channel = &sd->midiPlayer.channels[ch];
+        bool percussion = channel->percussion;
+        sd->playing[ch] = 0 != (channel->allocedVoices & (percussion
+            ? (sd->midiPlayer.percVoiceStates.on || sd->midiPlayer.percVoiceStates.held)
+            : (sd->midiPlayer.poolVoiceStates.on | sd->midiPlayer.poolVoiceStates.held)));
         paletteColor_t col = sd->playing[ch] ? c555 : c222;
 
         if (sd->viewMode == VM_PRETTY)
@@ -1026,9 +1027,9 @@ static paletteColor_t noteToColor(uint8_t note)
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width, int16_t height)
 {
     const midiChannel_t* chan = &player->channels[chIdx];
-    const midiVoice_t* voices = chan->percussion ? player->percVoices : chan->voices;
-    const voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &chan->voiceStates;
-    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : VOICE_PER_CHANNEL;
+    const midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
+    const voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
+    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : __builtin_popcount(chan->allocedVoices);
 
     // ok here's the plan
     // we're gonna draw a little bar graph for each voice
@@ -1036,14 +1037,17 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
     // then we draw the note name over top
     // the bar measures volume
 
-    #define BAR_SPACING 2
-    #define BAR_WIDTH ((width - BAR_SPACING * (voiceCount - 1)) / voiceCount)
+    #define BAR_SPACING ((voiceCount > 16) ? 0 : 1)
+    #define BAR_WIDTH (MAX((width - BAR_SPACING * (voiceCount - 1)) / voiceCount, 1))
 
     #define BAR_HEIGHT (height)
 
-    for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
+    int i = 0;
+    uint32_t voiceBits = chan->allocedVoices;
+    while (voiceBits)
     {
-        int16_t x0 = x + (voiceIdx * (BAR_WIDTH + BAR_SPACING));
+        uint8_t voiceIdx = __builtin_ctz(voiceBits);
+        int16_t x0 = x + ((chan->percussion ? voiceIdx : i++) * (BAR_WIDTH + BAR_SPACING));
         int16_t x1 = x0 + BAR_WIDTH;
 
         if (voices[voiceIdx].targetVol > 0 && ((states->held | states->on) & (1 << voiceIdx)))
@@ -1052,6 +1056,8 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
 
             fillDisplayArea(x0, y + (BAR_HEIGHT - barH), x1, y + BAR_HEIGHT, noteToColor(voices[voiceIdx].note));
         }
+
+        voiceBits &= ~(1 << voiceIdx);
     }
 }
 
