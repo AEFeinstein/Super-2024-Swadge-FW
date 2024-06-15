@@ -905,6 +905,7 @@ void resetMidiParser(midiFileReader_t* reader)
     if (reader->file != NULL)
     {
         reader->division = reader->file->timeDivision;
+        readFirstEvents(reader);
     }
 }
 

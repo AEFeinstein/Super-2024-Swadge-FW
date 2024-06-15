@@ -913,6 +913,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
             if (player->loop && player->mode == MIDI_FILE && player->reader.file)
             {
                 resetMidiParser(&player->reader);
+                player->sampleCount = 0;
             }
             else
             {
