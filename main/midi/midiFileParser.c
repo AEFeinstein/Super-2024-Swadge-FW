@@ -931,7 +931,7 @@ void deinitMidiParser(midiFileReader_t* reader)
         }
     }
 
-    free(reader->states);
+    free(states);
 }
 
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
