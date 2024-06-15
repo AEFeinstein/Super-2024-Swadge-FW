@@ -910,22 +910,27 @@ void resetMidiParser(midiFileReader_t* reader)
 
 void deinitMidiParser(midiFileReader_t* reader)
 {
-    if (reader->states != NULL)
+    midiTrackState_t* states = reader->states;
+    uint8_t stateCount = reader->stateCount;
+
+    reader->stateCount = 0;
+    reader->file = NULL;
+    reader->states = NULL;
+
+    if (states != NULL)
     {
-        for (int i = 0; i < reader->stateCount; i++)
+        for (int i = 0; i < stateCount; i++)
         {
-            if (reader->states[i].eventBuffer != NULL)
+            if (states[i].eventBuffer != NULL)
             {
-                free(reader->states[i].eventBuffer);
-                reader->states[i].eventBuffer = NULL;
+                uint8_t* buf = states[i].eventBuffer;
+                states[i].eventBuffer = NULL;
+                free(buf);
             }
         }
     }
 
-    reader->file = NULL;
-
     free(reader->states);
-    reader->states = NULL;
 }
 
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
@@ -933,6 +938,11 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
     uint32_t minTime = UINT32_MAX;
     // Pointer to the next track
     struct midiTrackState* nextTrack = NULL;
+
+    if (!reader->file)
+    {
+        return false;
+    }
 
     // TODO: This treats all formats like a format 1 (simultaneous)
     for (int i = 0; i < reader->file->trackCount; i++)
