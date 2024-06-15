@@ -56,8 +56,8 @@ bb_sprite_t* bb_loadSprite(const char name[], uint8_t num_frames)
 void bb_loadSprites(bb_entityManager_t* entityManager)
 {
     bb_sprite_t* sprite = bb_loadSprite("crumble", 24);
-    sprite->originX = 64;
-    sprite->originY = 64;
+    sprite->originX = 96;
+    sprite->originY = 82;
     entityManager->sprites[CRUMBLE_ANIM] = *sprite;
     printf("numFrames %d\n",entityManager->sprites[CRUMBLE_ANIM].numFrames);
     //free(sprite);
@@ -142,7 +142,7 @@ void bb_drawEntities(bb_entityManager_t* entityManager, rectangle_t* camera)
             drawWsgSimpleScaled(&entityManager->sprites[currentEntity.spriteIndex].frames[currentEntity.currentFrame],
                                     (currentEntity.x >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originX - camera->pos.x,
                                     (currentEntity.y >> SUBPIXEL_RESOLUTION) - entityManager->sprites[currentEntity.spriteIndex].originY - camera->pos.y,
-                                    2, 2);
+                                    3, 3);
 
             //Will put this kind of stuff in its own animation tracker function later...
             entityManager->entities[i].currentFrame += 1;
@@ -187,7 +187,7 @@ void bb_viewFollowEntity(bb_entity_t* entity)
     int16_t moveViewByY = (entity->y > 63616) ? 0 : (entity->y) >> SUBPIXEL_RESOLUTION;
 }
 
-bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint16_t x, uint16_t y)
+bb_entity_t* bb_createEntity(bb_entityManager_t* entityManager, uint8_t type, uint8_t spriteIndex, uint32_t x, uint32_t y)
 {
     if (entityManager->activeEntities == MAX_ENTITIES)
     {

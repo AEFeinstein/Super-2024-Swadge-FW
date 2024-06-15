@@ -42,8 +42,8 @@ struct bb_entity_t
     uint8_t type;
     bb_updateFunction_t updateFunction;
 
-    uint16_t x;
-    uint16_t y;
+    uint32_t x;
+    uint32_t y;
 
     int16_t xspeed;
     int16_t yspeed;
