@@ -803,8 +803,8 @@ void changeStateGame(pango_t* self)
 
     paEntityManager_t* entityManager = &(self->entityManager);
     entityManager->viewEntity
-        = pa_createPlayer(entityManager, 128,
-                          128);
+        = pa_createPlayer(entityManager, (9 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE,
+                          (7 << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
     entityManager->playerEntity     = entityManager->viewEntity;
     entityManager->playerEntity->hp = self->gameData.initialHp;
 

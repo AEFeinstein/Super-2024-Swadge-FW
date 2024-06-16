@@ -21,6 +21,7 @@
 #define PA_TILE_MAP_DISPLAY_HEIGHT_TILES  16  // The screen size in tiles + 1
 
 #define PA_TILE_SIZE                16
+#define PA_HALF_TILE_SIZE           8
 #define PA_TILE_SIZE_IN_POWERS_OF_2 4
 
 #define PA_TILE_SET_SIZE 15
