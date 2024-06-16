@@ -8,9 +8,6 @@
 #include <stddef.h>
 
 #define MIDI_CHANNEL_COUNT 16
-// TODO: Channel-independent dynamic voice allocation
-// The number of simultaneous voices each channel can support
-#define VOICE_PER_CHANNEL 3
 // The total number of pooled voices
 #define POOL_VOICE_COUNT 24
 // The number of voices reserved for percussion

@@ -539,12 +539,14 @@ static void midiGmOn(midiPlayer_t* player)
         midiVoice_t* voice = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
-            swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, 0, 0, 0);
+            swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)0), 0, 0);
 #ifdef OSC_DITHER
             voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
 #endif
             player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
         }
+
+        voice->timbre = percussion ? &defaultDrumkitTimbre : &acousticGrandPianoTimbre;
     }
 
     for (uint8_t chanIdx = 0; chanIdx < 16; chanIdx++)
@@ -567,56 +569,6 @@ static void midiGmOn(midiPlayer_t* player)
         {
             chan->percussion = false;
             memcpy(&chan->timbre, &acousticGrandPianoTimbre, sizeof(midiTimbre_t));
-        }
-
-        midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
-        uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : POOL_VOICE_COUNT;
-
-        for (uint8_t voiceIdx = 0; voiceIdx < voiceCount; voiceIdx++)
-        {
-            midiVoice_t* voice = &voices[voiceIdx];
-            voice->timbre = &chan->timbre;
-
-            for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
-            {
-                switch (chan->timbre.type)
-                {
-                    case WAVETABLE:
-                    {
-                        swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)(voice->timbre->waveIndex)), 0, 0);
-                        // Apply a random offset to the oscillator so that similar waves aren't exactly in sync
-                        // TODO figure out if this does literally anything
-#ifdef OSC_DITHER
-                        voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
-#endif
-                        break;
-                    }
-
-                    case SAMPLE:
-                    {
-                        // TODO: Sample support
-                        // player->allSamplers[player->samplerCount++] = ...
-                        break;
-                    }
-
-                    case NOISE:
-                    {
-                        swSynthInitOscillator(&voice->oscillators[oscIdx], SHAPE_NOISE, 0, 0);
-                        // Apply a random offset to the oscillator so that similar waves aren't exactly in sync
-                        // TODO figure out if this does literally anything
-#ifdef OSC_DITHER
-                        voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount]) & 0xFF;
-#endif
-                        break;
-                    }
-                }
-            }
-
-            if (chan->percussion)
-            {
-                // If this was a percussion channel, then all the percussion oscillators were set up
-                percOscSetup = true;
-            }
         }
     }
 }
@@ -1297,6 +1249,8 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 {
     // Dynamic voice allocation somehow makes this way simpler
     player->channels[channel].program = program;
+    // TODO: Define all the timbres individually instead of editing them like this
+    player->channels[channel].timbre.waveIndex = program;
 }
 
 
