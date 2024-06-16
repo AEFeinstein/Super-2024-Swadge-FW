@@ -36,16 +36,25 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
         {
             case PB_A:
             {
+                bool exitAfterSelect = (-1 == ttt->activePieceIdx);
                 // Select piece
                 ttt->activePieceIdx = ttt->selectPieceIdx;
                 // Save to NVS
                 writeNvs32(tttPieceKey, ttt->activePieceIdx);
+                if (exitAfterSelect)
+                {
+                    // Go to the main menu if a marker was selected for the first time
+                    ttt->ui = TUI_MENU;
+                }
                 break;
             }
             case PB_B:
             {
-                // Go back to the main menu
-                ttt->ui = TUI_MENU;
+                if (-1 != ttt->activePieceIdx)
+                {
+                    // Go back to the main menu if a piece was selected
+                    ttt->ui = TUI_MENU;
+                }
                 break;
             }
             case PB_LEFT:

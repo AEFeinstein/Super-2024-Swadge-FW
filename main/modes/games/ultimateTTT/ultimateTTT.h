@@ -108,6 +108,11 @@ typedef struct
     int32_t losses;
     int32_t draws;
     tttPlayer_t lastResult;
+    // Instructions
+    const char* pageStarts[16];
+    int pageIdx;
+    int32_t tutorialRead;
+    int32_t arrowBlinkTimer;
 } ultimateTTT_t;
 
 typedef struct
@@ -145,4 +150,5 @@ extern const char tttWinKey[];
 extern const char tttLossKey[];
 extern const char tttDrawKey[];
 extern const char tttPieceKey[];
+extern const char tttTutorialKey[];
 extern swadgeMode_t tttMode;

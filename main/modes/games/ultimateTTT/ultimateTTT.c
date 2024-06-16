@@ -38,10 +38,11 @@ static const char tttHowToStr[]    = "How To Play";
 static const char tttExit[]        = "Exit";
 
 // NVS keys
-const char tttWinKey[]   = "ttt_win";
-const char tttLossKey[]  = "ttt_loss";
-const char tttDrawKey[]  = "ttt_draw";
-const char tttPieceKey[] = "ttt_piece";
+const char tttWinKey[]      = "ttt_win";
+const char tttLossKey[]     = "ttt_loss";
+const char tttDrawKey[]     = "ttt_draw";
+const char tttPieceKey[]    = "ttt_piece";
+const char tttTutorialKey[] = "ttt_tutor";
 
 /**
  * Piece names to load WSGs
@@ -140,16 +141,33 @@ static void tttEnterMode(void)
     }
     if (true != readNvs32(tttPieceKey, &ttt->activePieceIdx))
     {
-        // Randomly X or O
-        ttt->activePieceIdx = esp_random() % 2;
+        // Set this to -1 to force the selection UI
+        ttt->activePieceIdx = -1;
+    }
+    if (true != readNvs32(tttTutorialKey, &ttt->tutorialRead))
+    {
+        ttt->tutorialRead = false;
     }
 
     // Initialize p2p
     p2pInitialize(&ttt->p2p, 0x25, tttConCb, tttMsgRxCb, -70);
 
-    // TODO start at tutorial, then piece select
-    // Start on the main menu
-    ttt->ui = TUI_MENU;
+    // Start on different UIs depending on setup completion
+    if (false == ttt->tutorialRead)
+    {
+        // Start on the how to
+        ttt->ui = TUI_HOW_TO;
+    }
+    else if (-1 == ttt->activePieceIdx)
+    {
+        // Start on marker select
+        ttt->ui = TUI_PIECE_SELECT;
+    }
+    else
+    {
+        // Start on the main menu
+        ttt->ui = TUI_MENU;
+    }
 
     // TODO initialize game state separately
     ttt->cursorMode = SELECT_SUBGAME;
@@ -245,7 +263,6 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_CONNECTING:
         {
-            ttt->bgMenu->title = tttMultiStr;
             tttDrawConnecting(ttt, elapsedUs);
             break;
         }
@@ -256,13 +273,11 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_PIECE_SELECT:
         {
-            ttt->bgMenu->title = tttPieceSelStr;
             tttDrawPieceSelect(ttt, elapsedUs);
             break;
         }
         case TUI_HOW_TO:
         {
-            ttt->bgMenu->title = tttHowToStr;
             tttDrawHowTo(ttt, elapsedUs);
             break;
         }
@@ -287,9 +302,11 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
     {
         if (tttMultiStr == label)
         {
+            // Show connection UI
+            ttt->bgMenu->title = tttMultiStr;
+            ttt->ui            = TUI_CONNECTING;
             // Start multiplayer
             p2pStartConnection(&ttt->p2p);
-            ttt->ui = TUI_CONNECTING;
         }
         else if (tttSingleStr == label)
         {
@@ -299,13 +316,16 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         else if (tttPieceSelStr == label)
         {
             // Show piece selection UI
+            ttt->bgMenu->title  = tttPieceSelStr;
             ttt->ui             = TUI_PIECE_SELECT;
             ttt->selectPieceIdx = ttt->activePieceIdx;
         }
         else if (tttHowToStr == label)
         {
             // Show how to play
-            ttt->ui = TUI_HOW_TO;
+            ttt->bgMenu->title = tttHowToStr;
+            ttt->pageIdx       = 0;
+            ttt->ui            = TUI_HOW_TO;
         }
         else if (tttExit == label)
         {
