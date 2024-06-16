@@ -11,13 +11,22 @@
 // Enums
 //==============================================================================
 
+/**
+ * @brief The possible sub-types of MIDI events
+ */
 typedef enum
 {
+    /// @brief A normal MIDI status event, such as note on or off
     MIDI_EVENT,
+    /// @brief A non-MIDI meta-event from a MIDI file, such as tempo or lyrics
     META_EVENT,
+    /// @brief A system-exclusive MIDI event
     SYSEX_EVENT,
 } midiEventType_t;
 
+/**
+ * @brief The possible types of meta-events
+ */
 typedef enum
 {
     SEQUENCE_NUMBER = 0x00,
@@ -44,11 +53,11 @@ typedef enum
 /// @brief The MIDI file format, which determines how to interpret the track or tracks it contains
 typedef enum
 {
-    /// @brief One track containing MIDI
+    /// @brief One track only containing all MIDI data for any number of channels
     MIDI_FORMAT_0 = 0,
-    /// @brief Multiple simultaneous tracks
+    /// @brief Multiple MIDI tracks, played simultaneously
     MIDI_FORMAT_1 = 1,
-    /// @brief Multiple sequential tracks
+    /// @brief Multiple MIDI tracks, played sequentially
     MIDI_FORMAT_2 = 2,
 } midiFileFormat_t;
 
@@ -56,6 +65,9 @@ typedef enum
 // Structs
 //==============================================================================
 
+/**
+ * @brief Contains basic information pointing to a MIDI track within its file data
+ */
 typedef struct
 {
     /// @brief Total chunk length
@@ -65,11 +77,18 @@ typedef struct
     uint8_t* data;
 } midiTrack_t;
 
+/**
+ * @brief Contains information which applies to the entire MIDI file
+ */
 typedef struct
 {
+    /// @brief A pointer to the start of the MIDI file
     uint8_t* data;
+
+    /// @brief The total length of the MIDI file
     uint32_t length;
 
+    /// @brief The MIDI file format which defines how this file's tracks are interpreted
     midiFileFormat_t format;
 
     /// @brief The time division of MIDI frames, either ticks per frame or ticks per quarter note
@@ -86,6 +105,7 @@ typedef struct midiTrackState midiTrackState_t;
 
 typedef struct
 {
+    /// @brief A pointer to the MIDI file currently loaded into the reader, if any
     midiFile_t* file;
 
     /// @brief If true, text meta-events will be handled and sent to the MIDI player
@@ -94,27 +114,54 @@ typedef struct
     /// @brief The number of divisions per midi tick
     uint16_t division;
 
+    /// @brief The number of track states allocated
     uint8_t stateCount;
+
+    /// @brief An array containing the internal parser state for each track
     midiTrackState_t* states;
 } midiFileReader_t;
 
+/**
+ * @brief Data for a normal MIDI status event
+ */
 typedef struct
 {
+    /// @brief The MIDI status byte
     uint8_t status;
-    uint8_t data[3];
+
+    /// @brief The data bytes of the MIDI status event.
+    /// The meaning of these bytes depends on the status value.
+    uint8_t data[2];
 } midiStatusEvent_t;
 
+/**
+ * @brief Contains information for a non-MIDI meta-event from a MIDI file
+ */
 typedef struct
 {
+    /// @brief The type of this MIDI meta-event
     metaEventType_t type;
+
+    /// @brief The number of data bytes this meta event contains
     uint32_t length;
+
     union {
+        /// @brief Contains text data, when \c{ type <= 0x0F}
         const char* text;
+
+        /// @brief Contains binary data, when type is ::PROPRIETARY
         const uint8_t* data;
+
+        /// @brief Contains a tempo, in microseconds per quarter note, when type is ::TEMPO
         uint32_t tempo;
+
+        /// @brief Contains a sequence number for this track, when type is ::SEQUENCE_NUMBER
         uint16_t sequenceNumber;
+
+        /// @brief Contains a channel or port prefix, when type is ::CHANNEL_PREFIX or ::PORT_PREFIX respectively
         uint8_t prefix;
 
+        /// @brief Contains the start time of this track, when type is ::SMPTE_OFFSET
         struct {
             uint8_t hour;
             uint8_t min;
@@ -123,6 +170,7 @@ typedef struct
             uint8_t frameHundredths;
         } startTime;
 
+        /// @brief Contains time signature data, when type is ::TIME_SIGNATURE
         struct {
             /// @brief The numerator of the time signature
             uint8_t numerator;
@@ -134,21 +182,40 @@ typedef struct
             uint8_t num32ndNotesPerBeat;
         } timeSignature;
 
+        /// @brief Contains key signature data, when type is ::KEY_SIGNATURE
+        /// @note At most one of ::flats or ::sharps will contain a nonzero value.
         struct {
+            /// @brief The number of flats in the key
             uint8_t flats;
+
+            /// @brief The number of sharps in the key
             uint8_t sharps;
+
+            /// @brief True for a minor key, false for a major key
             bool minor;
         } keySignature;
     };
 } midiMetaEvent_t;
 
+/**
+ * @brief Contains information for a MIDI System Exclusive event
+ */
 typedef struct
 {
+    /// @brief The manufacturer ID embedded in the SysEx event
+    /// @note When this is a single-byte manufacturer ID, the most-significant bit (15) will be set
     uint16_t manufacturerId;
+
+    /// @brief The length of the data contained in this SysEx event
     uint32_t length;
+
+    /// @brief A pointer to the data for this SysEx event.
     uint8_t* data;
 } midiSysexEvent_t;
 
+/**
+ * @brief Contains information for an entire MIDI event or non-MIDI meta-event
+ */
 typedef struct
 {
     /// @brief The time between this event and the previous event
@@ -161,8 +228,11 @@ typedef struct
     midiEventType_t type;
 
     union {
+        /// @brief The MIDI status event data, when type is ::MIDI_EVENT
         midiStatusEvent_t midi;
+        /// @brief The non-MIDI meta-event data, when type is ::META_EVENT
         midiMetaEvent_t meta;
+        /// @brief The MIDI System Exclusive event data, when type is ::SYSEX_EVENT
         midiSysexEvent_t sysex;
     };
 } midiEvent_t;
@@ -189,9 +259,38 @@ bool loadMidiFile(const char* name, midiFile_t* file, bool spiRam);
  */
 void unloadMidiFile(midiFile_t* file);
 
+/**
+ * @brief Initialize or reset the MIDI file reader with a particular file.
+ *
+ * @param reader A pointer to the MIDI file reader to initialize
+ * @param file A pointer to the MIDI file to load
+ * @return true if the MIDI file reader was initialized
+ * @return false if an error occurred while allocating data for the MIDI file reader
+ */
 bool initMidiParser(midiFileReader_t* reader, midiFile_t* file);
+
+/**
+ * @brief Set a new file for the MIDI file reader. The reader's state will be reset.
+ *
+ * @param reader A pointer to the MIDI file reader to set the file of
+ * @param file A pointer to the MIDI file to load
+ */
 void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file);
+
+/**
+ * @brief Reset the state of the MIDI parser without deinitializing it or changing the file.
+ *
+ * The next event returned from this MIDI parser will be the first event in the file again.
+ *
+ * @param reader A pointer to the MIDI file reader to reset
+ */
 void resetMidiParser(midiFileReader_t* reader);
+
+/**
+ * @brief Deinitialize the MIDI file reader and free any memory it has allocated
+ *
+ * @param reader The MIDI file reader to deinitialize
+ */
 void deinitMidiParser(midiFileReader_t* reader);
 
 /**

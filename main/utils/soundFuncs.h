@@ -26,7 +26,7 @@
      * @param song    The song to play
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      */
-    #define soundPlaySfx(song, channel) globalMidiPlayerPlaySong(song, 0)
+    #define soundPlaySfx(song, channel) globalMidiPlayerPlaySong(song, MIDI_SFX)
 
     /**
      * @brief Play a song as background music. For buzzers, background music may be interrupted by sound effects and may
@@ -38,7 +38,7 @@
      * @param song    The song to play
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      */
-    #define soundPlayBgm(song, channel) globalMidiPlayerPlaySong(song, 1)
+    #define soundPlayBgm(song, channel) globalMidiPlayerPlaySong(song, MIDI_BGM)
 
     /**
      * @brief Just like soundPlaySfx(), but with a callback which is called when the song ends
@@ -49,7 +49,7 @@
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      * @param cb      A callback called when the song finishes
      */
-    #define soundPlaySfxCb(song, channel, cb) globalMidiPlayerPlaySongCb(song, 0, cb)
+    #define soundPlaySfxCb(song, channel, cb) globalMidiPlayerPlaySongCb(song, MIDI_SFX, cb)
 
     /**
      * @brief Just like soundPlayBgm(), but with a callback which is called when the song ends
@@ -60,7 +60,7 @@
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
      * @param cb      A callback called when the song finishes
      */
-    #define soundPlayBgmCb(song, channel, cb) globalMidiPlayerPlaySongCb(song, 1, cb)
+    #define soundPlayBgmCb(song, channel, cb) globalMidiPlayerPlaySongCb(song, MIDI_BGM, cb)
 
     /**
      * @brief Stop all playing songs
@@ -90,7 +90,7 @@
      * soundRestore() later. This is useful to stop the audio output, play something completely different, and resume
      * the original output later.
      *
-     * Calls spkSongSave() or bzrSave()
+     * Calls globalMidiSave() or bzrSave()
      *
      * @return A void* containing song state
      */

@@ -149,7 +149,7 @@ static const uq16_16 noteFreqTable[] = {
 
 // Multiply a frequency by this value to bend it by a number of cents
 // uint32_t bentPitch = (uint32_t)(((uint64_t)pitch * bendTable[bendCents + 100]) >> 24)
-static const uq24_8 bendTable[] = {
+static const uq8_24 bendTable[] = {
     0x00f1a1bf, // -100 cents => 0.94387
     0x00f1c57d, // -99 cents => 0.94442
     0x00f1e940, // -98 cents => 0.94497
@@ -374,6 +374,9 @@ static const uint8_t oscDither[] = {
 /// @brief Convert the sample count to MIDI ticks
 #define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
+/// @brief Calculate the number of DAC samples in the given number of milliseconds
+#define MS_TO_TICKS(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
+
 //#define MIDI_MULTI_STATE
 #ifdef MIDI_MULTI_STATE
 #define VS_ANY(statePtr) ((statePtr)->attack | (statePtr)->decay | (statePtr)->release | (statePtr)->sustain)
@@ -384,8 +387,6 @@ static const uint8_t oscDither[] = {
 #define VS_RELEASABLE(statePtr) ((statePtr)->on)
 #define VS_HOLDABLE(statePtr) ((statePtr)->on)
 #endif
-#define MS_TO_TICKS(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
-
 
 // Values for the percussion special states bitmap
 #define SHIFT_HI_HAT (0)
@@ -400,20 +401,21 @@ static const uint8_t oscDither[] = {
 #define MASK_CUICA (0x3F << SHIFT_CUICA)
 #define MASK_TRIANGLE (0x3F << SHIFT_TRIANGLE)
 
+// Represents that no voice has been allocated to the instrument, within the special states bitmap
 #define VOICE_FREE (0x3F)
 
 static bool globalPlayerInit = false;
 static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
 
-static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t voiceCount);
+static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel);
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre);
 static void midiGmOn(midiPlayer_t* player);
 static int32_t midiSumPercussion(midiPlayer_t* player);
-static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event);
-static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex);
-static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event);
-static void handleEvent(midiPlayer_t* player, midiEvent_t* event);
+static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event);
+static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex);
+static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event);
+static void handleEvent(midiPlayer_t* player, const midiEvent_t* event);
 
 static const midiTimbre_t defaultDrumkitTimbre = {
     .type = NOISE,
@@ -448,14 +450,21 @@ static const midiTimbre_t acousticGrandPianoTimbre = {
 };
 
 // Check for the first unused note, then try to steal one in order of less to more bad, and return INT32_MAX if none are available
-static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t voiceCount)
+/**
+ * @brief Return the index of an unallocated voice from the given voice pool.
+ *
+ * This function finds the voice index to allocate, but the caller is responsible for updating the state
+ * bitmaps to actuallymark it as allocated.
+ * If there are no unallocated voices remaining, an allocated voice index may be returned.
+ *
+ * @param states A pointer to the voice state bitmaps for this pool
+ * @param voiceCount The number of voices in this pool
+ * @return uint32_t The index of the voice to allocate
+ */
+static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
 {
-#define CHECK_VOICE(val) ((val) ? (__builtin_ctz((val))) : 0)
     uint32_t allStates = VS_ANY(states) | states->held; //states->attack | states->decay | states->release | states->sustain | states->held;
 
-    // Find the first voice index which is not used
-    // Oh, this was BACKWARDS
-    // I'm always allocating the first voice woops
     // Set up a bitflag which has a 1 set for every voice that is NOT being used
     //                         /- flip the bits so a 1 represents an unused voice and a 0 represents an in-use voice
     //                        /                /- mask the bits to only go up to the number of voices we have
@@ -470,32 +479,43 @@ static uint32_t allocVoice(midiPlayer_t* player, voiceStates_t* states, uint8_t 
     else
     {
         // Gotta steal a note, so steal the first one
+        // TODO: This could be done more intelligently, but we have plenty of voices
         return 0;
     }
-
-    //return firstFreeIdx;
-#undef CHECK_VOICE
 }
 
 /**
- * @brief Calculate pitch bend
+ * @brief Calculate the new note frequency resulting from a pitch bend
  *
  * @param noteId The MIDI note ID to bend
  * @param pitchWheel The 14-bit MIDI pitch wheel value
- * @return uint32_t The note frequency as a UQ16.16 value
+ * @return uq16_16 The note frequency as a UQ16.16 value
  */
 static uq16_16 bendPitch(uint8_t noteId, uint16_t pitchWheel)
 {
-    // TODO: Should we have a special case when the pitch wheel is centered? Probably better not to branch at all even if we do a bit of unnecessary math
     // First, convert the pitch wheel value to +/-cents
     int32_t bendCents = (((int16_t)-0x2000) + pitchWheel) * 100 / 0x1FFF;
+
+    // Grab the base frequency and store it in a 64-bit int
     uint64_t freq = noteFreqTable[noteId];
+
+    // Multiply the base frequency by the appropriate UQ8.24 value in the pitch bend table
     freq *= bendTable[bendCents + 100];
+
+    // Shift right 24 bits to account for the fractional component of the bend table
+    // Mask the result back into a 32-bit value
     uq16_16 trimmedFreq = ((freq >> 24) & (0xFFFFFFFFu));
-    //ESP_LOGI("MIDI", "Bent note #%d %+dc from freq %08x (%d) to %08x (%d)", noteId, bendCents, noteFreqTable[noteId], noteFreqTable[noteId] >> 16, trimmedFreq, trimmedFreq >> 16);
+
+    // Not using an intermediate variable here makes weird stuff happen
     return trimmedFreq;
 }
 
+/**
+ * @brief Set the timbre (instrument definition) of a MIDI voice
+ *
+ * @param voice The voice to set the timbre for
+ * @param timbre A pointer to the MIDI timbre
+ */
 static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
 {
     voice->timbre = timbre;
@@ -531,8 +551,6 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
  */
 static void midiGmOn(midiPlayer_t* player)
 {
-    bool percOscSetup = false;
-
     for (int voiceIdx = 0; voiceIdx < POOL_VOICE_COUNT + PERCUSSION_VOICES; voiceIdx++)
     {
         bool percussion = voiceIdx >= POOL_VOICE_COUNT;
@@ -549,7 +567,7 @@ static void midiGmOn(midiPlayer_t* player)
         voice->timbre = percussion ? &defaultDrumkitTimbre : &acousticGrandPianoTimbre;
     }
 
-    for (uint8_t chanIdx = 0; chanIdx < 16; chanIdx++)
+    for (uint8_t chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
     {
         midiChannel_t* chan = &player->channels[chanIdx];
 
@@ -573,6 +591,12 @@ static void midiGmOn(midiPlayer_t* player)
     }
 }
 
+/**
+ * @brief Step each playing percussion note forward by one sample and return the raw sum
+ *
+ * @param player The MIDI player to sum percussion notes for
+ * @return int32_t The unsigned 32-bit sample, without any headroom or clipping applied
+ */
 static int32_t midiSumPercussion(midiPlayer_t* player)
 {
     voiceStates_t* states = &player->percVoiceStates;
@@ -647,7 +671,13 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
     return sum;
 }
 
-static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event)
+/**
+ * @brief Process a normal MIDI status event and update the player state accordingly
+ *
+ * @param player The MIDI player to handle the event
+ * @param event The MIDI status event to handle
+ */
+static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event)
 {
     if (event->status & 0x80)
     {
@@ -740,7 +770,13 @@ static void handleMidiEvent(midiPlayer_t* player, midiStatusEvent_t* event)
     }
 }
 
-static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
+/**
+ * @brief Process a non-MIDI meta-event from a file and update the player state accordingly
+ *
+ * @param player The MIDI player to handle the event
+ * @param event The non-MIDI meta-event to handle
+ */
+static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
 {
     switch (event->type)
     {
@@ -793,7 +829,15 @@ static void handleMetaEvent(midiPlayer_t* player, midiMetaEvent_t* event)
     }
 }
 
-static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex)
+/**
+ * @brief Process a MIDI System-Exclusive event and update the player state accordingly
+ *
+ * @warning Not yet implemented
+ *
+ * @param player The MIDI player to handle the event
+ * @param event The MIDI SysEx event to handle
+ */
+static void handleSysexEvent(midiPlayer_t* player, const midiSysexEvent_t* sysex)
 {
     // TODO: Support SysEx commands - find some RGB ones we can yoink
     // Actually we can assign a non-registered control to R, G, and B
@@ -801,7 +845,13 @@ static void handleSysexEvent(midiPlayer_t* player, midiSysexEvent_t* sysex)
     // AND: if possible have a sysex command (hmm) that sets all the LEDs to individual values at once
 }
 
-static void handleEvent(midiPlayer_t* player, midiEvent_t* event)
+/**
+ * @brief Process MIDI event of any type and update the player state accordingly
+ *
+ * @param player The MIDI player to handle the event
+ * @param event The MIDI event to handle
+ */
+static void handleEvent(midiPlayer_t* player, const midiEvent_t* event)
 {
     switch (event->type)
     {
@@ -831,8 +881,10 @@ void midiPlayerInit(midiPlayer_t* player)
     // Zero out EVERYTHING
     memset(player, 0, sizeof(midiPlayer_t));
 
+    // Set up the values which must be non-zero
     midiPlayerReset(player);
 
+    // Initialize all the instruments
     midiGmOn(player);
 }
 
@@ -880,7 +932,7 @@ int32_t midiPlayerStep(midiPlayer_t* player)
         else
         {
             ESP_LOGI("MIDI", "Done playing file!");
-            for (uint8_t ch = 0; ch < 16; ch++)
+            for (uint8_t ch = 0; ch < MIDI_CHANNEL_COUNT; ch++)
             {
                 midiAllNotesOff(player, 0);
             }
@@ -927,9 +979,10 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
 {
     for (int16_t n = 0; n < len; n++)
     {
+        // Step the state forward by one sample and return the next sample sum
         int32_t sample = midiPlayerStep(player);
 
-        // multiply by the rock constant, very important
+        // Multiply the sample by 0.3 to provide some headroom for stacking samples
         sample *= 0x4ccd;
         sample >>= 16;
 
@@ -961,11 +1014,11 @@ void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8
             sample += midiPlayerStep(&players[i]);
         }
 
+        // Multiply the sample by 0.3 to provide some headroom for stacking samples
         sample *= 0x4ccd;
         sample >>= 16;
 
         // TODO: Can't keep track of clipping here... does it matter?
-
         if (sample < -128)
         {
             samples[n] = 0;
@@ -1022,7 +1075,7 @@ void midiAllSoundOff(midiPlayer_t* player)
         }
     }
 
-    for (int chanIdx = 0; chanIdx < 16; chanIdx++)
+    for (int chanIdx = 0; chanIdx < MIDI_CHANNEL_COUNT; chanIdx++)
     {
         midiChannel_t* chan = &player->channels[chanIdx];
         chan->allocedVoices = 0;
@@ -1065,7 +1118,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
     midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
     uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : POOL_VOICE_COUNT;
-    uint32_t voiceIdx = allocVoice(player, states, voiceCount);
+    uint32_t voiceIdx = allocVoice(states, voiceCount);
 
     if (chan->timbre.flags & TF_MONO)
     {
@@ -1183,14 +1236,12 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
 
     if (chan->timbre.flags & TF_PERCUSSION)
     {
-        // TODO: For proper GM percussion support:
-        // - basically ignore note off entirely, EXCEPT for short and long whistle
-        // - the 3 different hi-hats (open, closed, pedal) should preempt/preclude each other
-        // - short and long whistle should also preempt/preclude each other
+        // Reset the percussion voice state
         voices[voiceIdx].sampleTick = 0;
     }
     else
     {
+        // Ensure the selected voice will play with the right instrument
         if (voices[voiceIdx].timbre != &chan->timbre)
         {
             setVoiceTimbre(&voices[voiceIdx], &chan->timbre);
@@ -1249,7 +1300,8 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 {
     // Dynamic voice allocation somehow makes this way simpler
     player->channels[channel].program = program;
-    // TODO: Define all the timbres individually instead of editing them like this
+    // TODO: Actually define all the timbres individually instead of editing them like this
+    // It's fine for now because envelopes, etc. aren't fully implemented so the only difference is the wave index
     player->channels[channel].timbre.waveIndex = program;
 }
 
@@ -1302,6 +1354,8 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
 
 void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, uint8_t val)
 {
+    // MIDI spec says control changes stop the channel
+    // TODO: Implement some controls
     midiAllNotesOff(player, channel);
     // TODO maybe some sort of resetChannel() function?
 }
@@ -1314,10 +1368,9 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
     voiceStates_t* states = player->channels[channel].percussion ? &player->percVoiceStates : &player->poolVoiceStates;
     midiVoice_t* voices = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
 
-    // Find all the voices currently sounding and update their frequencies
+    // Find all the voices currently sounding for this channel and update their frequencies
     uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
 
-    // Thought this was a bug but actually
     while (playingVoices != 0)
     {
         uint8_t voiceIdx = __builtin_ctz(playingVoices);
@@ -1362,6 +1415,10 @@ void midiPause(midiPlayer_t* player, bool pause)
 {
     player->paused = pause;
 }
+
+//==============================================================================
+// System-wide MIDI player functions
+//==============================================================================
 
 void initGlobalMidiPlayer(void)
 {

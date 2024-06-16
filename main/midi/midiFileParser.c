@@ -221,7 +221,6 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
             track->nextEvent.midi.data[0] = *(track->cur++);
             track->nextEvent.midi.data[1] = *(track->cur++);
-            track->nextEvent.midi.data[2] = 0;
             break;
         }
 
@@ -239,7 +238,6 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
             track->nextEvent.midi.data[0] = *(track->cur++);
             track->nextEvent.midi.data[1] = 0;
-            track->nextEvent.midi.data[2] = 0;
             break;
         }
 
@@ -946,7 +944,7 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
     }
 
     // TODO: This treats all formats like a format 1 (simultaneous)
-    for (int i = 0; i < reader->file->trackCount; i++)
+    for (int i = 0; i < reader->stateCount; i++)
     {
         midiTrackState_t* info = &reader->states[i];
 
