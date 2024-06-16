@@ -89,6 +89,11 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 }
                 break;
             }
+            default:
+            {
+                // Unused buttons
+                break;
+            }
         }
     }
 }
