@@ -5,6 +5,18 @@
 #include "ultimateTTTgame.h"
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define P1_COLOR             c500
+#define P2_COLOR             c005
+#define MAIN_GRID_COLOR      c010
+#define SUB_GRID_COLOR       c020
+#define WAITING_PLAYER_COLOR c222
+
+#define CURSOR_STROKE 4
+
+//==============================================================================
 // Typedefs
 //==============================================================================
 
@@ -24,12 +36,13 @@ static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Start a multiplayer game. This is called after a connection is established
  *
  * @param ttt The entire game state
  */
 void tttBeginGame(ultimateTTT_t* ttt)
 {
+    // Show the game UI
     ttt->ui = TUI_GAME;
 
     // If going first
@@ -37,14 +50,14 @@ void tttBeginGame(ultimateTTT_t* ttt)
     {
         // Set own piece type
         ttt->p1PieceIdx = ttt->activePieceIdx;
-
+        // Send it to the second player
         tttSendMarker(ttt, ttt->p1PieceIdx);
     }
     // If going second, wait to receive p1's piece before responding
 }
 
 /**
- * @brief TODO
+ * @brief Helper function to increment the cursor along the X axis
  *
  * @param ttt The entire game state
  */
@@ -54,7 +67,7 @@ static void incCursorX(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Helper function to decrement the cursor along the X axis
  *
  * @param ttt The entire game state
  */
@@ -71,7 +84,7 @@ static void decCursorX(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Helper function to increment the cursor along the Y axis
  *
  * @param ttt The entire game state
  */
@@ -81,7 +94,7 @@ static void incCursorY(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Helper function to decrement the cursor along the Y axis
  *
  * @param ttt The entire game state
  */
@@ -98,11 +111,10 @@ static void decCursorY(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Check if the cursor is on a valid subgame (i.e not won) or valid cell (empty)
  *
  * @param ttt The entire game state
- * @return true
- * @return false
+ * @return true if the cursor is on a valid subgame or cell, false otherwise
  */
 static bool cursorIsValid(ultimateTTT_t* ttt)
 {
@@ -111,15 +123,18 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
         case NO_CURSOR:
         default:
         {
+            // This is never valid
             return false;
         }
         case SELECT_SUBGAME:
         {
+            // Subgames are valid if there is no winner
             return TTT_NONE == ttt->subgames[ttt->cursor.x][ttt->cursor.y].winner;
         }
         case SELECT_CELL:
         case SELECT_CELL_LOCKED:
         {
+            // Cells are valid if there is no marker
             return TTT_NONE
                    == ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].game[ttt->cursor.x][ttt->cursor.y];
         }
@@ -127,10 +142,10 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Handle button input when showing the game UI
  *
  * @param ttt The entire game state
- * @param evt
+ * @param evt The button event
  */
 void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
@@ -140,12 +155,15 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
         return;
     }
 
-    // Do something?
+    // If the button was pressed
     if (evt->down)
     {
+        // Declare function pointers for cursor movement
         bool cursorMoved                 = false;
         cursorFunc_t cursorFunc          = NULL;
         cursorFunc_t cursorFuncSecondary = NULL;
+
+        // Assign function pointers based on the button press
         switch (evt->button)
         {
             case PB_UP:
@@ -174,8 +192,10 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
             }
             case PB_A:
             {
+                // If a subgame is being selected
                 if (SELECT_SUBGAME == ttt->cursorMode)
                 {
+                    // Set the cursor in the subgame
                     cursorMoved          = true;
                     ttt->selectedSubgame = ttt->cursor;
                     ttt->cursorMode      = SELECT_CELL;
@@ -207,6 +227,7 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                         }
                     }
                 }
+                // If a cell is being selected
                 else if ((SELECT_CELL == ttt->cursorMode) || (SELECT_CELL_LOCKED == ttt->cursorMode))
                 {
                     // Send move to the other swadge
@@ -216,15 +237,17 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     tttPlacePiece(ttt, &ttt->selectedSubgame, &ttt->cursor,
                                   (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P1 : TTT_P2);
 
-                    // Switch to waiting
+                    // Switch to waiting (i.e. the other player's turn)
                     ttt->state = TGS_WAITING;
                 }
                 break;
             }
             case PB_B:
             {
+                // If a cell is being selected, and not locked into the subgame
                 if (SELECT_CELL == ttt->cursorMode)
                 {
+                    // Go back to selecting a subgame
                     cursorMoved     = true;
                     ttt->cursor     = ttt->selectedSubgame;
                     ttt->cursorMode = SELECT_SUBGAME;
@@ -297,10 +320,10 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO
+ * @brief Send the marker (cosmetic) to the other swadge for setup
  *
- * @param ttt
- * @param markerIdx
+ * @param ttt The entire game state
+ * @param markerIdx The marker index
  */
 void tttSendMarker(ultimateTTT_t* ttt, int32_t markerIdx)
 {
@@ -312,10 +335,10 @@ void tttSendMarker(ultimateTTT_t* ttt, int32_t markerIdx)
 }
 
 /**
- * @brief TODO
+ * @brief Receive the marker (cosmetic) from the other swadge and advance the game state
  *
- * @param ttt
- * @param rxSel
+ * @param ttt The entire game state
+ * @param rxSel The message received with the other marker
  */
 void tttReceiveMarker(ultimateTTT_t* ttt, const tttMsgSelectPiece_t* rxSel)
 {
@@ -345,7 +368,7 @@ void tttReceiveMarker(ultimateTTT_t* ttt, const tttMsgSelectPiece_t* rxSel)
 }
 
 /**
- * @brief TODO
+ * @brief Send the cursor position to the other Swadge. This should be done whenever the cursor moves.
  *
  * @param ttt The entire game state
  */
@@ -362,10 +385,10 @@ void tttSendCursor(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Receive the cursor position from the other Swadge.
  *
  * @param ttt The entire game state
- * @param msg
+ * @param msg The message with the cursor position
  */
 void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
 {
@@ -376,12 +399,46 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
 }
 
 /**
- * @brief TODO
+ * @brief Send the last placed piece to the other Swadge
  *
  * @param ttt The entire game state
- * @param subgame
- * @param cell
- * @param piece
+ */
+void tttSendPlacedPiece(ultimateTTT_t* ttt)
+{
+    // Send move to the other swadge
+    tttMsgPlacePiece_t place = {
+        .type            = MSG_PLACE_PIECE,
+        .selectedSubgame = ttt->selectedSubgame,
+        .selectedCell    = ttt->cursor,
+    };
+    p2pSendMsg(&ttt->p2p, (const uint8_t*)&place, sizeof(place), tttMsgTxCbFn);
+
+    ttt->state = TGS_WAITING;
+}
+
+/**
+ * @brief Receive a placed marker from the other Swadge and place it
+ *
+ * @param ttt The entire game state
+ * @param msg The message indicating where the marker was placed
+ */
+void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
+{
+    // Place the piece
+    tttPlacePiece(ttt, &msg->selectedSubgame, &msg->selectedCell,
+                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P2 : TTT_P1);
+
+    // Transition state to placing a piece
+    ttt->state = TGS_PLACING_PIECE;
+}
+
+/**
+ * @brief Place a marker on the game board and check for any winners
+ *
+ * @param ttt The entire game state
+ * @param subgame The index of the subgame a marker is placed in
+ * @param cell The index of the cell the marker is placed in
+ * @param piece The player who is placing the marker
  */
 static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t piece)
 {
@@ -401,6 +458,7 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
         }
         case TTT_P1:
         {
+            // Player 1 won, figure out who that is
             if (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p))
             {
                 won = true;
@@ -413,6 +471,7 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
         }
         case TTT_P2:
         {
+            // Player 2 won, figure out who that is
             if (GOING_SECOND == p2pGetPlayOrder(&ttt->p2p))
             {
                 won = true;
@@ -425,40 +484,14 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
         }
         case TTT_NONE:
         {
-            // Next move should be in this cell
+            // Next move should be in the subgame indicated by the cell
             ttt->selectedSubgame = *cell;
             ttt->cursorMode      = SELECT_CELL_LOCKED;
-
-            ttt->cursor.x = 1;
-            ttt->cursor.y = 1;
-            for (int16_t y = 0; y < 3; y++)
-            {
-                for (int16_t x = 0; x < 3; x++)
-                {
-                    if (!cursorIsValid(ttt))
-                    {
-                        incCursorX(ttt);
-                    }
-                    else
-                    {
-                        break;
-                    }
-                }
-
-                if (!cursorIsValid(ttt))
-                {
-                    incCursorY(ttt);
-                }
-                else
-                {
-                    break;
-                }
-            }
 
             // If that subgame is already won
             if (TTT_NONE != ttt->subgames[ttt->selectedSubgame.x][ttt->selectedSubgame.y].winner)
             {
-                // Find the next one
+                // Find the next valid subgame
                 for (int16_t y = 0; y < 3; y++)
                 {
                     for (int16_t x = 0; x < 3; x++)
@@ -472,6 +505,35 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
                         }
                     }
                     if (SELECT_SUBGAME == ttt->cursorMode)
+                    {
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                // Find a valid cell in the next subgame
+                ttt->cursor.x = 1;
+                ttt->cursor.y = 1;
+                for (int16_t y = 0; y < 3; y++)
+                {
+                    for (int16_t x = 0; x < 3; x++)
+                    {
+                        if (!cursorIsValid(ttt))
+                        {
+                            incCursorX(ttt);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    if (!cursorIsValid(ttt))
+                    {
+                        incCursorY(ttt);
+                    }
+                    else
                     {
                         break;
                     }
@@ -513,43 +575,10 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
 }
 
 /**
- * @brief TODO
+ * @brief Check all subgames and the main game for wins or draws
  *
  * @param ttt The entire game state
- */
-void tttSendPlacedPiece(ultimateTTT_t* ttt)
-{
-    // Send move to the other swadge
-    tttMsgPlacePiece_t place = {
-        .type            = MSG_PLACE_PIECE,
-        .selectedSubgame = ttt->selectedSubgame,
-        .selectedCell    = ttt->cursor,
-    };
-    p2pSendMsg(&ttt->p2p, (const uint8_t*)&place, sizeof(place), tttMsgTxCbFn);
-
-    ttt->state = TGS_WAITING;
-}
-
-/**
- * @brief TODO
- *
- * @param ttt The entire game state
- * @param msg
- */
-void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
-{
-    // Place the piece
-    tttPlacePiece(ttt, &msg->selectedSubgame, &msg->selectedCell,
-                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P2 : TTT_P1);
-
-    // Transition state to placing a piece
-    ttt->state = TGS_PLACING_PIECE;
-}
-
-/**
- * @brief TODO
- *
- * @return tttPlayer_t
+ * @return Who won the game, if there was a winner
  */
 static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
 {
@@ -562,6 +591,7 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
         }
     }
 
+    // Check the main game
     tttPlayer_t winner = TTT_NONE;
     for (uint16_t i = 0; i < 3; i++)
     {
@@ -635,13 +665,14 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Check a subgame if it was a win, loss, or draw
  *
- * @param subgame
- * @return tttPlayer_t
+ * @param subgame The subgame to check
+ * @return The winner of the subgame, if there was one
  */
 static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
 {
+    // If it wasn't already won
     if (TTT_NONE == subgame->winner)
     {
         for (uint16_t i = 0; i < 3; i++)
@@ -718,14 +749,30 @@ static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame)
     return TTT_NONE;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-
 /**
- * @brief TODO
+ * @brief Draw the Ultimate TTT game UI
  *
+ * @param ttt
  */
 void tttDrawGame(ultimateTTT_t* ttt)
 {
+    bool isP1 = (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p));
+
+    // Light LEDs for p1/p2
+    led_t leds[CONFIG_NUM_LEDS] = {0};
+    for (int32_t lIdx = 0; lIdx < CONFIG_NUM_LEDS; lIdx++)
+    {
+        if (isP1)
+        {
+            leds[lIdx].r = 0x80;
+        }
+        else
+        {
+            leds[lIdx].b = 0x80;
+        }
+    }
+    setLeds(leds, CONFIG_NUM_LEDS);
+
     // Clear before drawing
     clearPxTft();
 
@@ -739,8 +786,12 @@ void tttDrawGame(ultimateTTT_t* ttt)
     int16_t gameOffsetX = (TFT_WIDTH - gameSize) / 2;
     int16_t gameOffsetY = (TFT_HEIGHT - gameSize) / 2;
 
+    // Draw some borders to indicate who you are
+    fillDisplayArea(0, 0, gameOffsetX - 4, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+    fillDisplayArea(gameOffsetX + gameSize + 4, 0, TFT_WIDTH, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+
     // Draw the main grid lines
-    tttDrawGrid(gameOffsetX, gameOffsetY, gameOffsetX + gameSize - 1, gameOffsetY + gameSize - 1, 0, c010);
+    tttDrawGrid(gameOffsetX, gameOffsetY, gameOffsetX + gameSize - 1, gameOffsetY + gameSize - 1, 0, MAIN_GRID_COLOR);
 
     // For each subgame
     for (int subY = 0; subY < 3; subY++)
@@ -754,19 +805,24 @@ void tttDrawGame(ultimateTTT_t* ttt)
             int16_t sY1 = sY0 + subgameSize - 1;
 
             // Draw the subgame grid lines
-            tttDrawGrid(sX0, sY0, sX1, sY1, 4, c020);
+            tttDrawGrid(sX0, sY0, sX1, sY1, 4, SUB_GRID_COLOR);
 
             // If selected, draw the cursor on this subgame
             if (SELECT_SUBGAME == ttt->cursorMode && //
                 ttt->cursor.x == subX && ttt->cursor.y == subY)
             {
-                paletteColor_t color = (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? c500 : c005;
-
+                paletteColor_t color;
                 if (ttt->state == TGS_WAITING)
                 {
-                    color = c222;
+                    color = WAITING_PLAYER_COLOR;
                 }
-                for (int16_t i = 0; i < 4; i++)
+                else
+                {
+                    color = isP1 ? P1_COLOR : P2_COLOR;
+                }
+
+                // Draw a rectangle with a 4px stroke
+                for (int16_t i = 0; i < CURSOR_STROKE; i++)
                 {
                     drawRect(sX0 + i, sY0 + i, sX1 - i, sY1 - i, color);
                 }
@@ -778,6 +834,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
                 case TTT_P1:
                 case TTT_P2:
                 {
+                    // Draw a big marker for a winner
                     drawWsgSimple(getPieceWsg(ttt, ttt->subgames[subX][subY].winner, true), sX0, sY0);
                     break;
                 }
@@ -806,6 +863,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
                                 case TTT_P1:
                                 case TTT_P2:
                                 {
+                                    // Draw a small marker
                                     drawWsgSimple(getPieceWsg(ttt, ttt->subgames[subX][subY].game[cellX][cellY], false),
                                                   cX0, cY0);
                                     break;
@@ -821,13 +879,18 @@ void tttDrawGame(ultimateTTT_t* ttt)
                                 int16_t cX1 = cX0 + cellSize - 1;
                                 int16_t cY1 = cY0 + cellSize - 1;
                                 // Draw the cursor
-                                paletteColor_t color = (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? c500 : c005;
+                                paletteColor_t color;
                                 if (ttt->state == TGS_WAITING)
                                 {
-                                    color = c222;
+                                    color = WAITING_PLAYER_COLOR;
+                                }
+                                else
+                                {
+                                    color = isP1 ? P1_COLOR : P2_COLOR;
                                 }
 
-                                for (uint16_t i = 0; i < 4; i++)
+                                // Draw a rectangle with a 4px stroke
+                                for (uint16_t i = 0; i < CURSOR_STROKE; i++)
                                 {
                                     drawRect(cX0 + i, cY0 + i, cX1 - i, cY1 - i, color);
                                 }
@@ -842,12 +905,12 @@ void tttDrawGame(ultimateTTT_t* ttt)
 }
 
 /**
- * @brief TODO
+ * @brief Get a player's marker's WSG
  *
  * @param ttt The entire game state
- * @param p
- * @param isBig
- * @return wsg_t*
+ * @param p The player to get a marker for
+ * @param isBig true for the big version, false for the small version
+ * @return A pointer to the WSG to draw
  */
 static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig)
 {
@@ -858,29 +921,29 @@ static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig)
 }
 
 /**
- * @brief TODO
+ * @brief Helper function to draw a grid
  *
- * @param x0
- * @param y0
- * @param x1
- * @param y1
- * @param m
- * @param color
+ * @param x0 The starting X coordinate for the grid
+ * @param y0 The starting Y coordinate for the grid
+ * @param x1 The finishing X coordinate for the grid
+ * @param y1 The finishing Y coordinate for the grid
+ * @param margin The margin to pad around the grid
+ * @param color The color of the grid lines to draw
  */
-void tttDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, paletteColor_t color)
+void tttDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t margin, paletteColor_t color)
 {
     int16_t cellWidth  = (x1 - x0) / 3;
     int16_t cellHeight = (y1 - y0) / 3;
 
     // Horizontal lines
-    drawLineFast(x0 + m, y0 + cellHeight, //
-                 x1 - 1 - m, y0 + cellHeight, color);
-    drawLineFast(x0 + m, y0 + (2 * cellHeight) + 1, //
-                 x1 - 1 - m, y0 + (2 * cellHeight) + 1, color);
+    drawLineFast(x0 + margin, y0 + cellHeight, //
+                 x1 - 1 - margin, y0 + cellHeight, color);
+    drawLineFast(x0 + margin, y0 + (2 * cellHeight) + 1, //
+                 x1 - 1 - margin, y0 + (2 * cellHeight) + 1, color);
 
     // Vertical lines
-    drawLineFast(x0 + cellWidth, y0 + m, //
-                 x0 + cellWidth, y1 - 1 - m, color);
-    drawLineFast(x0 + (2 * cellWidth) + 1, y0 + m, //
-                 x0 + (2 * cellWidth) + 1, y1 - 1 - m, color);
+    drawLineFast(x0 + cellWidth, y0 + margin, //
+                 x0 + cellWidth, y1 - 1 - margin, color);
+    drawLineFast(x0 + (2 * cellWidth) + 1, y0 + margin, //
+                 x0 + (2 * cellWidth) + 1, y1 - 1 - margin, color);
 }
