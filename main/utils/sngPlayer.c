@@ -20,7 +20,6 @@
 /** The maximum number of oscillators per song */
 #define OSC_PER_SONG 16
 
-
 //==============================================================================
 // Structs
 //==============================================================================
@@ -59,41 +58,12 @@ static synthOscillator_t* oPtrs[NUM_SONGS * OSC_PER_SONG] = {0};
 
 /** The default oscillator shapes */
 const oscillatorShape_t oscShapes[OSC_PER_SONG] = {
-    SHAPE_SQUARE,
-    SHAPE_TRIANGLE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
-    SHAPE_SQUARE,
+    SHAPE_SQUARE, SHAPE_TRIANGLE, SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE,
+    SHAPE_SQUARE, SHAPE_SQUARE,   SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE, SHAPE_SQUARE,
 };
 
 const uint32_t oscWaves[OSC_PER_SONG] = {
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
 //==============================================================================

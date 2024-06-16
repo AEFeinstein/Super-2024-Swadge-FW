@@ -381,7 +381,8 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             {
                 if (jukebox->inMusicSubmode)
                 {
-                    soundGetPlayerBgm()->loop = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                    soundGetPlayerBgm()->loop
+                        = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
                     soundPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
@@ -689,7 +690,7 @@ void jukeboxLoadCategories(const jukeboxCategory_t* categoryArray, uint8_t numCa
         for (int songIdx = 0; songIdx < categoryArray[categoryIdx].numSongs; songIdx++)
         {
             loadMidiFile(categoryArray[categoryIdx].songs[songIdx].filename,
-                     &categoryArray[categoryIdx].songs[songIdx].song, true);
+                         &categoryArray[categoryIdx].songs[songIdx].song, true);
             categoryArray[categoryIdx].songs[songIdx].shouldLoop = shouldLoop;
         }
     }

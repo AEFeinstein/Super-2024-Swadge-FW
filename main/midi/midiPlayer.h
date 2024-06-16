@@ -30,8 +30,8 @@
 // The index of the system-wide MIDI player for background music
 #define MIDI_BGM 1
 
-#define MIDI_TRUE 0x7F
-#define MIDI_FALSE 0x00
+#define MIDI_TRUE         0x7F
+#define MIDI_FALSE        0x00
 #define MIDI_TO_BOOL(val) (val > 63)
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
 
@@ -99,9 +99,9 @@ typedef struct
     uint8_t sustain;
 
     /// @brief The index of the repeat loop
-    //uint32_t loopStart;
+    // uint32_t loopStart;
     /// @brief The index at which the loop should repeat
-    //uint32_t loopEnd;
+    // uint32_t loopEnd;
 
 } envelope_t;
 
@@ -117,53 +117,53 @@ typedef enum
     METRONOME_CLICK = 33,
     METRONOME_BELL = 34,*/
     // End Roland GS Extensions
-    ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM = 35,
+    ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM  = 35,
     ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM = 36,
-    SIDE_STICK = 37,
-    ACOUSTIC_SNARE = 38,
-    HAND_CLAP = 39,
-    ELECTRIC_SNARE_OR_RIMSHOT = 40,
-    LOW_FLOOR_TOM = 41,
-    CLOSED_HI_HAT = 42,
-    HIGH_FLOOR_TOM = 43,
-    PEDAL_HI_HAT = 44,
-    LOW_TOM = 45,
-    OPEN_HI_HAT = 46,
-    LOW_MID_TOM = 47,
-    HIGH_MID_TOM = 48,
-    CRASH_CYMBAL_1 = 49,
-    HIGH_TOM = 50,
-    RIDE_CYMBAL_1 = 51,
-    CHINESE_CYMBAL = 52,
-    RIDE_BELL = 53,
-    TAMBOURINE = 54,
-    SPLASH_CYMBAL = 55,
-    COWBELL = 56,
-    CRASH_CYMBAL_2 = 57,
-    VIBRASLAP = 58,
-    RIDE_CYMBAL_2 = 59,
-    HIGH_BONGO = 60,
-    LOW_BONGO = 61,
-    MUTE_HIGH_CONGA = 62,
-    OPEN_HIGH_CONGA = 63,
-    LOW_CONGA = 64,
-    HIGH_TIMBALE = 65,
-    LOW_TIMBALE = 66,
-    HIGH_AGOGO = 67,
-    LOW_AGOGO = 68,
-    CABASA = 69,
-    MARACAS = 70,
-    SHORT_WHISTLE = 71,
-    LONG_WHISTLE = 72,
-    SHORT_GUIRO = 73,
-    LONG_GUIRO = 74,
-    CLAVES = 75,
-    HIGH_WOODBLOCK = 76,
-    LOW_WOODBLOCK = 77,
-    MUTE_CUICA = 78,
-    OPEN_CUICA = 79,
-    MUTE_TRIANGLE = 80,
-    OPEN_TRIANGLE = 81,
+    SIDE_STICK                           = 37,
+    ACOUSTIC_SNARE                       = 38,
+    HAND_CLAP                            = 39,
+    ELECTRIC_SNARE_OR_RIMSHOT            = 40,
+    LOW_FLOOR_TOM                        = 41,
+    CLOSED_HI_HAT                        = 42,
+    HIGH_FLOOR_TOM                       = 43,
+    PEDAL_HI_HAT                         = 44,
+    LOW_TOM                              = 45,
+    OPEN_HI_HAT                          = 46,
+    LOW_MID_TOM                          = 47,
+    HIGH_MID_TOM                         = 48,
+    CRASH_CYMBAL_1                       = 49,
+    HIGH_TOM                             = 50,
+    RIDE_CYMBAL_1                        = 51,
+    CHINESE_CYMBAL                       = 52,
+    RIDE_BELL                            = 53,
+    TAMBOURINE                           = 54,
+    SPLASH_CYMBAL                        = 55,
+    COWBELL                              = 56,
+    CRASH_CYMBAL_2                       = 57,
+    VIBRASLAP                            = 58,
+    RIDE_CYMBAL_2                        = 59,
+    HIGH_BONGO                           = 60,
+    LOW_BONGO                            = 61,
+    MUTE_HIGH_CONGA                      = 62,
+    OPEN_HIGH_CONGA                      = 63,
+    LOW_CONGA                            = 64,
+    HIGH_TIMBALE                         = 65,
+    LOW_TIMBALE                          = 66,
+    HIGH_AGOGO                           = 67,
+    LOW_AGOGO                            = 68,
+    CABASA                               = 69,
+    MARACAS                              = 70,
+    SHORT_WHISTLE                        = 71,
+    LONG_WHISTLE                         = 72,
+    SHORT_GUIRO                          = 73,
+    LONG_GUIRO                           = 74,
+    CLAVES                               = 75,
+    HIGH_WOODBLOCK                       = 76,
+    LOW_WOODBLOCK                        = 77,
+    MUTE_CUICA                           = 78,
+    OPEN_CUICA                           = 79,
+    MUTE_TRIANGLE                        = 80,
+    OPEN_TRIANGLE                        = 81,
     // Roland GS Extensions
     /*SHAKER = 82,
     JINGLE_BELL = 83,
@@ -209,11 +209,12 @@ typedef struct
         /// @brief The index of this timbre's wave in the table, when type is WAVETABLE
         uint16_t waveIndex;
 
-        struct {
+        struct
+        {
             /// @brief The frequency of the base sample to be used when pitch shifting
 
             // This should just always be C4? (440 << 8)
-            //uint32_t freq = (440 << 8);
+            // uint32_t freq = (440 << 8);
 
             /// @brief A pointer to this timbre's sample data
             int8_t* data;
@@ -226,7 +227,8 @@ typedef struct
             uint8_t rate;
         } sample;
 
-        struct {
+        struct
+        {
             /// @brief A callback to call for drum data
             percussionFunc_t playFunc;
             /// @brief User data to pass to the drumkit
@@ -298,8 +300,7 @@ typedef struct
 
     /// @brief Bitfield of voices which are being held by the pedal
     uint32_t held;
-}
-voiceStates_t;
+} voiceStates_t;
 
 /**
  * @brief Tracks the state of a single MIDI channel
@@ -399,7 +400,6 @@ typedef struct
     /// @brief If true, the playing file will automatically repeat when complete
     bool loop;
 } midiPlayer_t;
-
 
 /**
  * @brief Initialize the MIDI player

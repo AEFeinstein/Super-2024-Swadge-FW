@@ -182,7 +182,8 @@ void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint
  * @param freq The frequency of the wave to generate, in hertz
  * @param volume The volume (amplitude) of the wave to generate
  */
-void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveData, uint32_t freq, uint8_t volume)
+void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveData, uint32_t freq,
+                               uint8_t volume)
 {
     osc->accumulator.accum32 = 0;
     osc->cVol                = 0;
@@ -233,7 +234,7 @@ void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
 
 void swSynthSetWaveFunc(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveFuncData)
 {
-    osc->waveFunc = waveFunc;
+    osc->waveFunc     = waveFunc;
     osc->waveFuncData = waveFuncData;
 }
 
@@ -332,11 +333,16 @@ int8_t swSynthSampleWave(oscillatorShape_t shape, uint8_t idx)
 {
     switch (shape)
     {
-        case SHAPE_SINE: return sineGen(idx, NULL);
-        case SHAPE_SAWTOOTH: return sawtoothGen(idx, NULL);
-        case SHAPE_TRIANGLE: return triangleGen(idx, NULL);
-        case SHAPE_SQUARE: return squareGen(idx, NULL);
-        case SHAPE_NOISE: return noiseGen(idx, NULL);
+        case SHAPE_SINE:
+            return sineGen(idx, NULL);
+        case SHAPE_SAWTOOTH:
+            return sawtoothGen(idx, NULL);
+        case SHAPE_TRIANGLE:
+            return triangleGen(idx, NULL);
+        case SHAPE_SQUARE:
+            return squareGen(idx, NULL);
+        case SHAPE_NOISE:
+            return noiseGen(idx, NULL);
     }
 
     return 0;

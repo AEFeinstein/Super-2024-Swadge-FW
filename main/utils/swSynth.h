@@ -118,7 +118,8 @@ typedef struct
 //==============================================================================
 
 void swSynthInitOscillator(synthOscillator_t* osc, oscillatorShape_t shape, uint32_t freq, uint8_t volume);
-void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveData, uint32_t freq, uint8_t volume);
+void swSynthInitOscillatorWave(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveData, uint32_t freq,
+                               uint8_t volume);
 void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape);
 void swSynthSetWaveFunc(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveFuncData);
 void swSynthSetFreq(synthOscillator_t* osc, uint32_t freq);

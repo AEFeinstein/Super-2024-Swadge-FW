@@ -356,12 +356,9 @@ static const uq8_24 bendTable[] = {
 #ifdef OSC_DITHER
 // Apply a random offset to each oscillator to maybe make it less likely for waves to "stack" exactly
 static const uint8_t oscDither[] = {
-139, 227,   5, 103, 241,  67, 251, 109, 197,  59,
- 61,   3,  53, 229, 127,  23,  73, 223,  13,  19,
- 47,   7, 181,  37,   2, 239,  29, 113, 167, 131,
- 41, 151,  83, 137,  11, 193, 107,  17, 191,  43,
-101,  71, 233, 179,  97,  79,  31, 211, 163, 157,
- 89, 199, 149, 173,
+    139, 227, 5,   103, 241, 67, 251, 109, 197, 59,  61,  3,   53,  229, 127, 23,  73,  223,
+    13,  19,  47,  7,   181, 37, 2,   239, 29,  113, 167, 131, 41,  151, 83,  137, 11,  193,
+    107, 17,  191, 43,  101, 71, 233, 179, 97,  79,  31,  211, 163, 157, 89,  199, 149, 173,
 };
 #endif
 //==============================================================================
@@ -372,39 +369,39 @@ static const uint8_t oscDither[] = {
 #define UINT14_MAX (0x3FFF)
 
 /// @brief Convert the sample count to MIDI ticks
-#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
+#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n)*1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
 /// @brief Calculate the number of DAC samples in the given number of milliseconds
-#define MS_TO_TICKS(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
+#define MS_TO_TICKS(ms) ((ms)*DAC_SAMPLE_RATE_HZ / 1000)
 
-//#define MIDI_MULTI_STATE
+// #define MIDI_MULTI_STATE
 #ifdef MIDI_MULTI_STATE
-#define VS_ANY(statePtr) ((statePtr)->attack | (statePtr)->decay | (statePtr)->release | (statePtr)->sustain)
-#define VS_RELEASABLE(statePtr) ((statePtr)->attack | (statePtr)->decay | (statePtr)->sustain)
-#define VS_HOLDABLE(statePtr) VS_RELEASABLE(statePtr)
+    #define VS_ANY(statePtr)        ((statePtr)->attack | (statePtr)->decay | (statePtr)->release | (statePtr)->sustain)
+    #define VS_RELEASABLE(statePtr) ((statePtr)->attack | (statePtr)->decay | (statePtr)->sustain)
+    #define VS_HOLDABLE(statePtr)   VS_RELEASABLE(statePtr)
 #else
-#define VS_ANY(statePtr) ((statePtr)->on)
-#define VS_RELEASABLE(statePtr) ((statePtr)->on)
-#define VS_HOLDABLE(statePtr) ((statePtr)->on)
+    #define VS_ANY(statePtr)        ((statePtr)->on)
+    #define VS_RELEASABLE(statePtr) ((statePtr)->on)
+    #define VS_HOLDABLE(statePtr)   ((statePtr)->on)
 #endif
 
 // Values for the percussion special states bitmap
-#define SHIFT_HI_HAT (0)
-#define SHIFT_WHISTLE (6)
-#define SHIFT_GUIRO (12)
-#define SHIFT_CUICA (18)
+#define SHIFT_HI_HAT   (0)
+#define SHIFT_WHISTLE  (6)
+#define SHIFT_GUIRO    (12)
+#define SHIFT_CUICA    (18)
 #define SHIFT_TRIANGLE (24)
 
-#define MASK_HI_HAT (0x3F)
-#define MASK_WHISTLE (0x3F << SHIFT_WHISTLE)
-#define MASK_GUIRO (0x3F << SHIFT_GUIRO)
-#define MASK_CUICA (0x3F << SHIFT_CUICA)
+#define MASK_HI_HAT   (0x3F)
+#define MASK_WHISTLE  (0x3F << SHIFT_WHISTLE)
+#define MASK_GUIRO    (0x3F << SHIFT_GUIRO)
+#define MASK_CUICA    (0x3F << SHIFT_CUICA)
 #define MASK_TRIANGLE (0x3F << SHIFT_TRIANGLE)
 
 // Represents that no voice has been allocated to the instrument, within the special states bitmap
 #define VOICE_FREE (0x3F)
 
-static bool globalPlayerInit = false;
+static bool globalPlayerInit                          = false;
 static midiPlayer_t globalPlayers[NUM_GLOBAL_PLAYERS] = {0};
 
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount);
@@ -449,7 +446,8 @@ static const midiTimbre_t acousticGrandPianoTimbre = {
     .name = "Acoustic Grand Piano",
 };
 
-// Check for the first unused note, then try to steal one in order of less to more bad, and return INT32_MAX if none are available
+// Check for the first unused note, then try to steal one in order of less to more bad, and return INT32_MAX if none are
+// available
 /**
  * @brief Return the index of an unallocated voice from the given voice pool.
  *
@@ -463,7 +461,9 @@ static const midiTimbre_t acousticGrandPianoTimbre = {
  */
 static uint32_t allocVoice(const voiceStates_t* states, uint8_t voiceCount)
 {
-    uint32_t allStates = VS_ANY(states) | states->held; //states->attack | states->decay | states->release | states->sustain | states->held;
+    uint32_t allStates
+        = VS_ANY(states)
+          | states->held; // states->attack | states->decay | states->release | states->sustain | states->held;
 
     // Set up a bitflag which has a 1 set for every voice that is NOT being used
     //                         /- flip the bits so a 1 represents an unused voice and a 0 represents an in-use voice
@@ -554,12 +554,14 @@ static void midiGmOn(midiPlayer_t* player)
     for (int voiceIdx = 0; voiceIdx < POOL_VOICE_COUNT + PERCUSSION_VOICES; voiceIdx++)
     {
         bool percussion = voiceIdx >= POOL_VOICE_COUNT;
-        midiVoice_t* voice = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
+        midiVoice_t* voice
+            = percussion ? (&player->percVoices[voiceIdx - POOL_VOICE_COUNT]) : (&player->poolVoices[voiceIdx]);
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
             swSynthInitOscillatorWave(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uint32_t)0), 0, 0);
 #ifdef OSC_DITHER
-            voice->oscillators[oscIdx].accumulator.bytes[3] = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
+            voice->oscillators[oscIdx].accumulator.bytes[3]
+                = (oscDither[player->oscillatorCount % ARRAY_SIZE(oscDither)]) & 0xFF;
 #endif
             player->allOscillators[player->oscillatorCount++] = &voice->oscillators[oscIdx];
         }
@@ -571,16 +573,17 @@ static void midiGmOn(midiPlayer_t* player)
     {
         midiChannel_t* chan = &player->channels[chanIdx];
 
-        chan->volume = UINT14_MAX;
+        chan->volume    = UINT14_MAX;
         chan->pitchBend = 0x2000;
-        chan->program = 0;
+        chan->program   = 0;
 
         if (chanIdx == 9)
         {
             // Channel 10 is reserved for percussion.
             chan->percussion = true;
 
-            // TODO: Should we just have a pointer instead? That will work great as long as we don't need to modify the timbre in-place (which MIDI does technically allow)
+            // TODO: Should we just have a pointer instead? That will work great as long as we don't need to modify the
+            // timbre in-place (which MIDI does technically allow)
             memcpy(&chan->timbre, &defaultDrumkitTimbre, sizeof(midiTimbre_t));
         }
         else
@@ -600,7 +603,7 @@ static void midiGmOn(midiPlayer_t* player)
 static int32_t midiSumPercussion(midiPlayer_t* player)
 {
     voiceStates_t* states = &player->percVoiceStates;
-    midiVoice_t* voices = player->percVoices;
+    midiVoice_t* voices   = player->percVoices;
 
     int32_t sum = 0;
 
@@ -612,12 +615,9 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
         playingVoices &= ~(1 << voiceIdx);
 
         bool done = false;
-        sum += voices[voiceIdx].timbre->percussion.playFunc(
-            voices[voiceIdx].note,
-            voices[voiceIdx].sampleTick++,
-            &done,
-            voices[voiceIdx].percScratch,
-            voices[voiceIdx].timbre->percussion.data);
+        sum += voices[voiceIdx].timbre->percussion.playFunc(voices[voiceIdx].note, voices[voiceIdx].sampleTick++, &done,
+                                                            voices[voiceIdx].percScratch,
+                                                            voices[voiceIdx].timbre->percussion.data);
 
         if (done)
         {
@@ -659,7 +659,8 @@ static int32_t midiSumPercussion(midiPlayer_t* player)
                     break;
                 }
 
-                default: break;
+                default:
+                    break;
             }
 
             states->on &= ~(1 << voiceIdx);
@@ -683,14 +684,14 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
     {
         // Normal status message
         uint8_t channel = event->status & 0x0F;
-        uint8_t cmd = (event->status >> 4) & 0x0F;
+        uint8_t cmd     = (event->status >> 4) & 0x0F;
 
         switch (cmd)
         {
             // Note OFF
             case 0x8:
             {
-                uint8_t midiKey = event->data[0];
+                uint8_t midiKey  = event->data[0];
                 uint8_t velocity = event->data[1];
                 midiNoteOff(player, channel, midiKey, velocity);
                 break;
@@ -699,19 +700,20 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
             // Note ON
             case 0x9:
             {
-                uint8_t midiKey = event->data[0];
+                uint8_t midiKey  = event->data[0];
                 uint8_t velocity = event->data[1];
                 midiNoteOn(player, channel, midiKey, velocity);
                 break;
             }
 
             // AfterTouch
-            case 0xA: break;
+            case 0xA:
+                break;
 
             // Control change
             case 0xB:
             {
-                uint8_t controlId = event->data[0];
+                uint8_t controlId  = event->data[0];
                 uint8_t controlVal = event->data[1];
                 switch (controlId)
                 {
@@ -736,7 +738,8 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
                         break;
                     }
 
-                    default: break;
+                    default:
+                        break;
                 }
 
                 break;
@@ -751,7 +754,8 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
             }
 
             // Channel Pressure
-            case 0xD: break;
+            case 0xD:
+                break;
 
             // Pitch bend
             case 0xE:
@@ -761,7 +765,8 @@ static void handleMidiEvent(midiPlayer_t* player, const midiStatusEvent_t* event
                 break;
             }
 
-            default: break;
+            default:
+                break;
         }
     }
     else if (event->status & 0xF0)
@@ -780,7 +785,8 @@ static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
 {
     switch (event->type)
     {
-        case SEQUENCE_NUMBER: break;
+        case SEQUENCE_NUMBER:
+            break;
 
         // Text events
         case TEXT:
@@ -800,8 +806,10 @@ static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
         }
 
         // Obsolete
-        case CHANNEL_PREFIX: break;
-        case PORT_PREFIX: break;
+        case CHANNEL_PREFIX:
+            break;
+        case PORT_PREFIX:
+            break;
 
         case END_OF_TRACK:
         {
@@ -821,11 +829,14 @@ static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
         }
 
         // These are informational only, we won't do anything with them here.
-        case TIME_SIGNATURE: break;
-        case KEY_SIGNATURE: break;
+        case TIME_SIGNATURE:
+            break;
+        case KEY_SIGNATURE:
+            break;
 
         // None supported
-        case PROPRIETARY: break;
+        case PROPRIETARY:
+            break;
     }
 }
 
@@ -861,7 +872,7 @@ static void handleEvent(midiPlayer_t* player, const midiEvent_t* event)
             break;
         }
 
-        case  META_EVENT:
+        case META_EVENT:
         {
             handleMetaEvent(player, &event->meta);
             break;
@@ -874,7 +885,6 @@ static void handleEvent(midiPlayer_t* player, const midiEvent_t* event)
         }
     }
 }
-
 
 void midiPlayerInit(midiPlayer_t* player)
 {
@@ -899,8 +909,8 @@ void midiPlayerReset(midiPlayer_t* player)
     // Set all the relevant bits to 1, meaning not in use
     player->percSpecialStates = 0b00111111111111111111111111111111; // 0x4fffffff
 
-    player->sampleCount = 0;
-    player->clipped = 0;
+    player->sampleCount    = 0;
+    player->clipped        = 0;
     player->eventAvailable = false;
 
     deinitMidiParser(&player->reader);
@@ -924,7 +934,8 @@ int32_t midiPlayerStep(midiPlayer_t* player)
 
         if (player->eventAvailable)
         {
-            if (player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
+            if (player->pendingEvent.absTime
+                <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
             {
                 checkEvents = true;
             }
@@ -955,14 +966,16 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     }
 
     // Use a while loop since we may need to handle multiple events at the exact same time
-    while (checkEvents && player->pendingEvent.absTime <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
+    while (checkEvents
+           && player->pendingEvent.absTime
+                  <= SAMPLES_TO_MIDI_TICKS(player->sampleCount, player->tempo, player->reader.division))
     {
         // It's time, so handle the event now
         handleEvent(player, &player->pendingEvent);
 
         // Try and grab the next event, and if we got one, keep checking
         player->eventAvailable = midiNextEvent(&player->reader, &player->pendingEvent);
-        checkEvents = player->eventAvailable;
+        checkEvents            = player->eventAvailable;
     }
 
     // TODO: Sample support
@@ -1002,7 +1015,6 @@ void midiPlayerFillBuffer(midiPlayer_t* player, uint8_t* samples, int16_t len)
         }
     }
 }
-
 
 void midiPlayerFillBufferMulti(midiPlayer_t* players, uint8_t playerCount, uint8_t* samples, int16_t len)
 {
@@ -1050,9 +1062,9 @@ void midiAllSoundOff(midiPlayer_t* player)
         // stop them anyway.
         // TODO: Maybe move this all into a stopVoice() function
         player->poolVoices[voiceIdx].transitionTicks = 0;
-        player->poolVoices[voiceIdx].targetVol = 0;
-        player->poolVoiceStates.held = 0;
-        player->poolVoiceStates.on = 0;
+        player->poolVoices[voiceIdx].targetVol       = 0;
+        player->poolVoiceStates.held                 = 0;
+        player->poolVoiceStates.on                   = 0;
         // TODO: Handle samplers
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
@@ -1064,9 +1076,9 @@ void midiAllSoundOff(midiPlayer_t* player)
     for (uint8_t voiceIdx = 0; voiceIdx < PERCUSSION_VOICES; voiceIdx++)
     {
         player->percVoices[voiceIdx].transitionTicks = 0;
-        player->percVoices[voiceIdx].targetVol = 0;
-        player->percVoiceStates.held = 0;
-        player->percVoiceStates.on = 0;
+        player->percVoices[voiceIdx].targetVol       = 0;
+        player->percVoiceStates.held                 = 0;
+        player->percVoiceStates.on                   = 0;
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
         {
             player->percVoices[voiceIdx].targetVol = 0;
@@ -1079,14 +1091,13 @@ void midiAllSoundOff(midiPlayer_t* player)
     {
         midiChannel_t* chan = &player->channels[chanIdx];
         chan->allocedVoices = 0;
-        chan->held = false;
+        chan->held          = false;
     }
 }
 
-
 void midiAllNotesOff(midiPlayer_t* player, uint8_t channel)
 {
-    midiChannel_t* chan = &player->channels[channel];
+    midiChannel_t* chan   = &player->channels[channel];
     voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
 
     uint32_t playingVoices = VS_ANY(states) | states->held;
@@ -1102,7 +1113,6 @@ void midiAllNotesOff(midiPlayer_t* player, uint8_t channel)
     }
 }
 
-
 void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velocity)
 {
     if (velocity == 0)
@@ -1116,9 +1126,9 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     // Use the appropriate voice pool for the instrument type
     // Percussion gets its own
     voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
-    midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
-    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : POOL_VOICE_COUNT;
-    uint32_t voiceIdx = allocVoice(states, voiceCount);
+    midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
+    uint8_t voiceCount    = chan->percussion ? PERCUSSION_VOICES : POOL_VOICE_COUNT;
+    uint32_t voiceIdx     = allocVoice(states, voiceCount);
 
     if (chan->timbre.flags & TF_MONO)
     {
@@ -1160,7 +1170,8 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
                 }
                 else
                 {
-                    player->percSpecialStates = (player->percSpecialStates & ~MASK_WHISTLE) | (voiceIdx << SHIFT_WHISTLE);
+                    player->percSpecialStates
+                        = (player->percSpecialStates & ~MASK_WHISTLE) | (voiceIdx << SHIFT_WHISTLE);
                 }
                 break;
             }
@@ -1205,12 +1216,14 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
                 }
                 else
                 {
-                    player->percSpecialStates = (player->percSpecialStates & ~MASK_TRIANGLE) | (voiceIdx << SHIFT_TRIANGLE);
+                    player->percSpecialStates
+                        = (player->percSpecialStates & ~MASK_TRIANGLE) | (voiceIdx << SHIFT_TRIANGLE);
                 }
                 break;
             }
 
-            default: break;
+            default:
+                break;
         }
 
         // Handle the rest of the percussion notes normally, or handle the case where there was no conflict
@@ -1231,7 +1244,7 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     voices[voiceIdx].note = note;
 
     // TODO: Add a note -> voice map in the channel?
-    uint8_t targetVol = velocity << 1 | 1;
+    uint8_t targetVol          = velocity << 1 | 1;
     voices[voiceIdx].targetVol = targetVol;
 
     if (chan->timbre.flags & TF_PERCUSSION)
@@ -1252,12 +1265,11 @@ void midiNoteOn(midiPlayer_t* player, uint8_t chanId, uint8_t note, uint8_t velo
     }
 }
 
-
 void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t velocity)
 {
-    midiChannel_t* chan = &player->channels[channel];
+    midiChannel_t* chan   = &player->channels[channel];
     voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
-    midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
+    midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
 
     // check the bitmaps to see if there's any note to release
     uint32_t playingVoices = (VS_ANY(&player->poolVoiceStates) | player->poolVoiceStates.held) & chan->allocedVoices;
@@ -1265,7 +1277,7 @@ void midiNoteOff(midiPlayer_t* player, uint8_t channel, uint8_t note, uint8_t ve
     // Find the channel playing this note
     while (playingVoices != 0)
     {
-        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        uint8_t voiceIdx  = __builtin_ctz(playingVoices);
         uint32_t voiceBit = (1 << voiceIdx);
 
         if (voices[voiceIdx].note == note)
@@ -1305,16 +1317,15 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
     player->channels[channel].timbre.waveIndex = program;
 }
 
-
 void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
 {
     midiChannel_t* chan = &player->channels[channel];
-    bool newHold = MIDI_TO_BOOL(val);
+    bool newHold        = MIDI_TO_BOOL(val);
 
     if (chan->held != newHold)
     {
         voiceStates_t* voiceStates = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
-        midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
+        midiVoice_t* voices        = chan->percussion ? player->percVoices : player->poolVoices;
         if (newHold)
         {
             // Just set the held state for all the currently on notes.
@@ -1333,7 +1344,7 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
 
             while (notesToCancel != 0)
             {
-                uint8_t voiceIdx = __builtin_ctz(notesToCancel);
+                uint8_t voiceIdx  = __builtin_ctz(notesToCancel);
                 uint32_t voiceBit = (1 << voiceIdx);
 
                 // unset the note's bit and move on to the next one
@@ -1351,7 +1362,6 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
     }
 }
 
-
 void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, uint8_t val)
 {
     // MIDI spec says control changes stop the channel
@@ -1360,20 +1370,19 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, u
     // TODO maybe some sort of resetChannel() function?
 }
 
-
 void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
 {
     // Save the pitch bend value
     player->channels[channel].pitchBend = value;
     voiceStates_t* states = player->channels[channel].percussion ? &player->percVoiceStates : &player->poolVoiceStates;
-    midiVoice_t* voices = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
+    midiVoice_t* voices   = player->channels[channel].percussion ? player->percVoices : player->poolVoices;
 
     // Find all the voices currently sounding for this channel and update their frequencies
     uint32_t playingVoices = (VS_ANY(states) | states->held) & player->channels[channel].allocedVoices;
 
     while (playingVoices != 0)
     {
-        uint8_t voiceIdx = __builtin_ctz(playingVoices);
+        uint8_t voiceIdx  = __builtin_ctz(playingVoices);
         uint32_t voiceBit = (1 << voiceIdx);
 
         for (uint8_t oscIdx = 0; oscIdx < OSC_PER_VOICE; oscIdx++)
@@ -1382,9 +1391,7 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
             // TODO: If each voice has multiple oscillators, we would obviously
             // want to be able to control them separately here.
             // Maybe we only apply that for like, chorus?
-            swSynthSetFreqPrecise(
-                &voices[voiceIdx].oscillators[oscIdx],
-                bendPitch(voices[voiceIdx].note, value));
+            swSynthSetFreqPrecise(&voices[voiceIdx].oscillators[oscIdx], bendPitch(voices[voiceIdx].note, value));
         }
 
         // Next!
@@ -1402,7 +1409,7 @@ void midiSetFile(midiPlayer_t* player, midiFile_t* song)
     else if (song == NULL)
     {
         deinitMidiParser(&player->reader);
-        player->mode = MIDI_STREAMING;
+        player->mode   = MIDI_STREAMING;
         player->paused = true;
     }
     else
@@ -1501,7 +1508,7 @@ void globalMidiPlayerStop(bool reset)
             midiPlayerReset(&globalPlayers[i]);
         }
         // TODO: implement seek
-        //midiSeek(&globalPlayers[i], 0);
+        // midiSeek(&globalPlayers[i], 0);
     }
 }
 

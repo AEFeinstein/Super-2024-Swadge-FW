@@ -32,7 +32,8 @@
 //==============================================================================
 
 // Interface counter
-enum interface_count {
+enum interface_count
+{
     ITF_NUM_MIDI = 0,
     ITF_NUM_MIDI_STREAMING,
 
@@ -40,7 +41,8 @@ enum interface_count {
 };
 
 // USB Endpoint numbers
-enum usb_endpoints {
+enum usb_endpoints
+{
     // Available USB Endpoints: 5 IN/OUT EPs and 1 IN EP
     EP_EMPTY = 0,
     EPNUM_MIDI,
@@ -87,10 +89,11 @@ typedef struct
     uint8_t lastSamples[256];
     uint8_t localChannel;
 
-    enum {
-        VM_PRETTY = 0,
-        VM_TEXT = 1,
-        VM_GRAPH = 2,
+    enum
+    {
+        VM_PRETTY  = 0,
+        VM_TEXT    = 1,
+        VM_GRAPH   = 2,
         VM_PACKETS = 4,
     } viewMode;
 
@@ -115,18 +118,17 @@ static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static bool installUsb(void);
 static void handlePacket(uint8_t packet[4]);
-static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width, int16_t height);
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
+                            int16_t height);
 static void drawSampleGraph(void);
 static void midiTextCallback(metaEventType_t type, const char* text);
-
 
 //==============================================================================
 // Variabes
 //==============================================================================
 
 static const char plugMeInStr[] = "Plug me into a MIDI controller!";
-static const char readyStr[] = "Ready!";
-
+static const char readyStr[]    = "Ready!";
 
 static const char* gmProgramNames[] = {
     // Piano:
@@ -355,10 +357,9 @@ static const char* midiStringDescriptor[5] = {
 /**
  * @brief MIDI Device Config Descriptor
  */
-static const uint8_t midiConfigDescriptor[] = {
-    TUD_CONFIG_DESCRIPTOR(1, ITF_COUNT, 0, MIDI_CONFIG_TOTAL_LEN, 0, 100),
-    TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 4, EPNUM_MIDI, (0x80 | EPNUM_MIDI), 64)
-};
+static const uint8_t midiConfigDescriptor[]
+    = {TUD_CONFIG_DESCRIPTOR(1, ITF_COUNT, 0, MIDI_CONFIG_TOTAL_LEN, 0, 100),
+       TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 4, EPNUM_MIDI, (0x80 | EPNUM_MIDI), 64)};
 
 // just yolo'd these color values, they're probably awful
 static const paletteColor_t noteColors[] = {
@@ -405,12 +406,12 @@ static void synthEnterMode(void)
     sd = calloc(1, sizeof(synthData_t));
     loadFont("ibm_vga8.font", &sd->font, false);
     sd->installed = installUsb();
-    sd->perc[9] = true;
+    sd->perc[9]   = true;
     midiPlayerInit(&sd->midiPlayer);
-    sd->noteTime = 200000;
-    sd->pitch = 0x2000;
+    sd->noteTime           = 200000;
+    sd->pitch              = 0x2000;
     sd->longestProgramName = gmProgramNames[24];
-    sd->nextExpiry = 200000;
+    sd->nextExpiry         = 200000;
 
     sd->fileMode = true;
     if (sd->fileMode)
@@ -500,7 +501,8 @@ static void synthMainLoop(int64_t elapsedUs)
     }
     else if (!sd->pluggedIn)
     {
-        drawText(&sd->font, c550, plugMeInStr, (TFT_WIDTH - textWidth(&sd->font, plugMeInStr)) / 2, (TFT_HEIGHT - sd->font.height) / 2);
+        drawText(&sd->font, c550, plugMeInStr, (TFT_WIDTH - textWidth(&sd->font, plugMeInStr)) / 2,
+                 (TFT_HEIGHT - sd->font.height) / 2);
     }
     else if (!sd->startupSeqComplete && !sd->fileMode)
     {
@@ -516,7 +518,7 @@ static void synthMainLoop(int64_t elapsedUs)
                     {
                         sd->startupDrums = true;
                         sd->startSilence = true;
-                        sd->startupNote = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+                        sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
                         // give the drums a second
                         sd->noteTime = 1000000;
                     }
@@ -565,16 +567,19 @@ static void synthMainLoop(int64_t elapsedUs)
     for (int ch = 0; ch < 16; ch++)
     {
         midiChannel_t* channel = &sd->midiPlayer.channels[ch];
-        bool percussion = channel->percussion;
-        sd->playing[ch] = 0 != (channel->allocedVoices & (percussion
-            ? (sd->midiPlayer.percVoiceStates.on || sd->midiPlayer.percVoiceStates.held)
-            : (sd->midiPlayer.poolVoiceStates.on | sd->midiPlayer.poolVoiceStates.held)));
+        bool percussion        = channel->percussion;
+        sd->playing[ch]
+            = 0
+              != (channel->allocedVoices
+                  & (percussion ? (sd->midiPlayer.percVoiceStates.on || sd->midiPlayer.percVoiceStates.held)
+                                : (sd->midiPlayer.poolVoiceStates.on | sd->midiPlayer.poolVoiceStates.held)));
         paletteColor_t col = sd->playing[ch] ? c555 : c222;
 
         if (sd->viewMode == VM_PRETTY)
         {
-            wsg_t* image = percussion ? &sd->percussionImage : &sd->instrumentImages[sd->midiPlayer.channels[ch].program / 8];
-            int16_t x = ((ch % 8) + 1) * (TFT_WIDTH - image->w * 8) / 9 + image->w * (ch % 8);
+            wsg_t* image
+                = percussion ? &sd->percussionImage : &sd->instrumentImages[sd->midiPlayer.channels[ch].program / 8];
+            int16_t x    = ((ch % 8) + 1) * (TFT_WIDTH - image->w * 8) / 9 + image->w * (ch % 8);
             int16_t imgY = (ch < 8) ? 30 : TFT_HEIGHT - 30 - 32;
             drawWsgSimple(image, x, imgY);
             if (sd->playing[ch])
@@ -586,10 +591,10 @@ static void synthMainLoop(int64_t elapsedUs)
         else if (sd->viewMode & (VM_PACKETS | VM_TEXT))
         {
             const char* programName = percussion
-                ? ((sd->localChannel == 9 && IS_DRUM(sd->startupNote))
-                    ? gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]
-                    : "<Percussion>")
-                : gmProgramNames[sd->midiPlayer.channels[ch].program];
+                                          ? ((sd->localChannel == 9 && IS_DRUM(sd->startupNote))
+                                                 ? gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]
+                                                 : "<Percussion>")
+                                          : gmProgramNames[sd->midiPlayer.channels[ch].program];
             // Draw the program name
             drawText(&sd->font, col, programName, 10, textY);
         }
@@ -597,18 +602,15 @@ static void synthMainLoop(int64_t elapsedUs)
         if (sd->viewMode & VM_PACKETS)
         {
             // And the last packet for this channel
-            snprintf(packetMsg, sizeof(packetMsg),
-                "%02hhX %02hhX %02hhX %02hhX",
-                sd->lastPackets[ch][0],
-                sd->lastPackets[ch][1],
-                sd->lastPackets[ch][2],
-                sd->lastPackets[ch][3]);
+            snprintf(packetMsg, sizeof(packetMsg), "%02hhX %02hhX %02hhX %02hhX", sd->lastPackets[ch][0],
+                     sd->lastPackets[ch][1], sd->lastPackets[ch][2], sd->lastPackets[ch][3]);
             packetMsg[sizeof(packetMsg) - 1] = '\0';
             drawText(&sd->font, col, packetMsg, TFT_WIDTH - textWidth(&sd->font, packetMsg) - 10, textY);
         }
         else if (sd->viewMode & VM_TEXT)
         {
-            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, textY - 2, TFT_WIDTH - (textWidth(&sd->font, sd->longestProgramName) + 4), 16);
+            drawChannelInfo(&sd->midiPlayer, ch, textWidth(&sd->font, sd->longestProgramName) + 4, textY - 2,
+                            TFT_WIDTH - (textWidth(&sd->font, sd->longestProgramName) + 4), 16);
         }
 
         textY += sd->font.height + 4;
@@ -617,19 +619,21 @@ static void synthMainLoop(int64_t elapsedUs)
     if (sd->viewMode == VM_PRETTY)
     {
         uint16_t pitch = sd->localPitch ? sd->pitch : sd->midiPlayer.channels[sd->localChannel].pitchBend;
-        int16_t deg = (360 + ((pitch - 0x2000) * 90 / 0x1FFF)) % 360;
+        int16_t deg    = (360 + ((pitch - 0x2000) * 90 / 0x1FFF)) % 360;
         drawCircleQuadrants(0, TFT_HEIGHT / 2, 16, true, false, false, true, (pitch == 0x2000) ? c222 : c555);
-        drawLineFast(0, TFT_HEIGHT / 2, 16 * getCos1024(deg) / 1024, TFT_HEIGHT / 2 - (16 * getSin1024(deg) / 1024), c500);
+        drawLineFast(0, TFT_HEIGHT / 2, 16 * getCos1024(deg) / 1024, TFT_HEIGHT / 2 - (16 * getSin1024(deg) / 1024),
+                     c500);
 
         char tempoStr[16];
         snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", (60000000 / sd->midiPlayer.tempo));
-        drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 15, (TFT_HEIGHT - sd->font.height) / 2);
+        drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 15,
+                 (TFT_HEIGHT - sd->font.height) / 2);
 
         char textMessages[1024];
         textMessages[0] = '\0';
 
         paletteColor_t midiTextColor = c550;
-        bool colorSet = false;
+        bool colorSet                = false;
 
         node_t* curNode = sd->midiTexts.first;
         while (curNode != NULL)
@@ -690,14 +694,15 @@ static void synthMainLoop(int64_t elapsedUs)
 
         int16_t x = 18;
         int16_t y = 80;
-        drawTextWordWrap(&sd->font, c550, textMessages, &x, &y, TFT_WIDTH-18, TFT_HEIGHT-60);
+        drawTextWordWrap(&sd->font, c550, textMessages, &x, &y, TFT_WIDTH - 18, TFT_HEIGHT - 60);
     }
     else
     {
         char countsBuf[16];
         // Display the number of clipped samples
         snprintf(countsBuf, sizeof(countsBuf), "%" PRIu32, sd->midiPlayer.clipped);
-        drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15, TFT_HEIGHT - sd->font.height - 15);
+        drawText(&sd->font, c500, countsBuf, TFT_WIDTH - textWidth(&sd->font, countsBuf) - 15,
+                 TFT_HEIGHT - sd->font.height - 15);
     }
 
     // Delete any expired texts -- but only every so often, to prevent it from being weird and jumpy
@@ -710,7 +715,7 @@ static void synthMainLoop(int64_t elapsedUs)
             midiTextInfo_t* curInfo = curNode->val;
             if (curInfo->expiration <= now)
             {
-                node_t* tmp = curNode->next;
+                node_t* tmp             = curNode->next;
                 midiTextInfo_t* removed = removeEntry(&sd->midiTexts, curNode);
                 if (removed)
                 {
@@ -760,7 +765,7 @@ static void synthMainLoop(int64_t elapsedUs)
     else if (sd->localPitch)
     {
         sd->localPitch = false;
-        sd->pitch = 0x2000;
+        sd->pitch      = 0x2000;
         for (uint8_t ch = 0; ch < 16; ch++)
         {
             midiPitchWheel(&sd->midiPlayer, ch, sd->pitch);
@@ -774,7 +779,7 @@ static void synthMainLoop(int64_t elapsedUs)
         {
             midiNoteOff(&sd->midiPlayer, 0, sd->startupNote, 0x7f);
             sd->startupDrums = true;
-            sd->startupNote = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
+            sd->startupNote  = ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM;
         }
         else if (evt.down && sd->startupDrums && !sd->startupSeqComplete)
         {
@@ -811,7 +816,8 @@ static void synthMainLoop(int64_t elapsedUs)
                     break;
                 }
 
-                case PB_SELECT: break;
+                case PB_SELECT:
+                    break;
                 case PB_START:
                 {
                     if (sd->viewMode == VM_PRETTY)
@@ -856,7 +862,7 @@ static void synthMainLoop(int64_t elapsedUs)
         }
     }
 
-    sd->frameTimesIdx                = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
+    sd->frameTimesIdx                 = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
     sd->frameTimes[sd->frameTimesIdx] = esp_timer_get_time();
 }
 
@@ -869,10 +875,10 @@ static void synthDacCallback(uint8_t* samples, int16_t len)
 static bool installUsb(void)
 {
     tinyusb_config_t const tusb_cfg = {
-        .device_descriptor = NULL,
-        .string_descriptor = midiStringDescriptor,
-        .string_descriptor_count = sizeof(midiStringDescriptor) / sizeof(midiStringDescriptor[0]),
-        .external_phy = false,
+        .device_descriptor        = NULL,
+        .string_descriptor        = midiStringDescriptor,
+        .string_descriptor_count  = sizeof(midiStringDescriptor) / sizeof(midiStringDescriptor[0]),
+        .external_phy             = false,
         .configuration_descriptor = midiConfigDescriptor,
     };
     esp_err_t result = tinyusb_driver_install(&tusb_cfg);
@@ -890,19 +896,20 @@ static bool installUsb(void)
 
 static void handlePacket(uint8_t packet[4])
 {
-    uint8_t header = packet[0];
-    uint8_t cmd = packet[1];
+    uint8_t header  = packet[0];
+    uint8_t cmd     = packet[1];
     uint8_t channel = cmd & 0x0F;
 
     switch (header)
     {
         // No MIDI data
-        case 0x0: break;
+        case 0x0:
+            break;
 
         // Note OFF
         case 0x8:
         {
-            uint8_t midiKey = packet[2];
+            uint8_t midiKey  = packet[2];
             uint8_t velocity = packet[3];
             midiNoteOff(&sd->midiPlayer, channel, midiKey, velocity);
             /*if (!sd->sustain)
@@ -920,7 +927,7 @@ static void handlePacket(uint8_t packet[4])
         // Note ON
         case 0x9:
         {
-            uint8_t midiKey = packet[2];
+            uint8_t midiKey  = packet[2];
             uint8_t velocity = packet[3];
             midiNoteOn(&sd->midiPlayer, channel, midiKey, velocity);
             /*sd->playing[channel] = true;
@@ -935,7 +942,7 @@ static void handlePacket(uint8_t packet[4])
         // Control change
         case 0xB:
         {
-            uint8_t controlId = packet[2];
+            uint8_t controlId  = packet[2];
             uint8_t controlVal = packet[3];
             switch (controlId)
             {
@@ -1024,12 +1031,13 @@ static paletteColor_t noteToColor(uint8_t note)
     return noteColors[note % ARRAY_SIZE(noteColors)];
 }
 
-static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width, int16_t height)
+static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
+                            int16_t height)
 {
-    const midiChannel_t* chan = &player->channels[chIdx];
-    const midiVoice_t* voices = chan->percussion ? player->percVoices : player->poolVoices;
+    const midiChannel_t* chan   = &player->channels[chIdx];
+    const midiVoice_t* voices   = chan->percussion ? player->percVoices : player->poolVoices;
     const voiceStates_t* states = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
-    uint8_t voiceCount = chan->percussion ? PERCUSSION_VOICES : __builtin_popcount(chan->allocedVoices);
+    uint8_t voiceCount          = chan->percussion ? PERCUSSION_VOICES : __builtin_popcount(chan->allocedVoices);
 
     // ok here's the plan
     // we're gonna draw a little bar graph for each voice
@@ -1037,18 +1045,18 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
     // then we draw the note name over top
     // the bar measures volume
 
-    #define BAR_SPACING ((voiceCount > 16) ? 0 : 1)
-    #define BAR_WIDTH (MAX((width - BAR_SPACING * (voiceCount - 1)) / voiceCount, 1))
+#define BAR_SPACING ((voiceCount > 16) ? 0 : 1)
+#define BAR_WIDTH   (MAX((width - BAR_SPACING * (voiceCount - 1)) / voiceCount, 1))
 
-    #define BAR_HEIGHT (height)
+#define BAR_HEIGHT (height)
 
-    int i = 0;
+    int i              = 0;
     uint32_t voiceBits = chan->allocedVoices;
     while (voiceBits)
     {
         uint8_t voiceIdx = __builtin_ctz(voiceBits);
-        int16_t x0 = x + ((chan->percussion ? voiceIdx : i++) * (BAR_WIDTH + BAR_SPACING));
-        int16_t x1 = x0 + BAR_WIDTH;
+        int16_t x0       = x + ((chan->percussion ? voiceIdx : i++) * (BAR_WIDTH + BAR_SPACING));
+        int16_t x1       = x0 + BAR_WIDTH;
 
         if (voices[voiceIdx].targetVol > 0 && ((states->held | states->on) & (1 << voiceIdx)))
         {
@@ -1083,7 +1091,8 @@ void drawSampleGraph(void)
         // Bottom line
         TURBO_SET_PIXEL(x, (TFT_HEIGHT / 2) + (TFT_HEIGHT - 16) / 2, c500);
 
-        //int16_t y = ((TFT_HEIGHT / 2) + (TFT_HEIGHT - 16) / 2) - (sd->lastSamples[n] * ((TFT_HEIGHT - 16) / 2) / 255);
+        // int16_t y = ((TFT_HEIGHT / 2) + (TFT_HEIGHT - 16) / 2) - (sd->lastSamples[n] * ((TFT_HEIGHT - 16) / 2) /
+        // 255);
         TURBO_SET_PIXEL(x, y, c555);
     }
 }
@@ -1100,9 +1109,9 @@ static void midiTextCallback(metaEventType_t type, const char* text)
     if (infoAndText)
     {
         midiTextInfo_t* info = (midiTextInfo_t*)infoAndText;
-        char* newText = (char*)(infoAndText + sizeof(midiTextInfo_t));
-        info->text = newText;
-        info->type = type;
+        char* newText        = (char*)(infoAndText + sizeof(midiTextInfo_t));
+        info->text           = newText;
+        info->type           = type;
         // make it last for 2 seconds
         info->expiration = esp_timer_get_time() + 5000000;
         strcpy(newText, text);

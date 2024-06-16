@@ -29,25 +29,25 @@ typedef enum
  */
 typedef enum
 {
-    SEQUENCE_NUMBER = 0x00,
-    TEXT = 0x01,
-    COPYRIGHT = 0x02,
+    SEQUENCE_NUMBER        = 0x00,
+    TEXT                   = 0x01,
+    COPYRIGHT              = 0x02,
     SEQUENCE_OR_TRACK_NAME = 0x03,
-    INSTRUMENT_NAME = 0x04,
-    LYRIC = 0x05,
-    MARKER = 0x06,
-    CUE_POINT = 0x07,
+    INSTRUMENT_NAME        = 0x04,
+    LYRIC                  = 0x05,
+    MARKER                 = 0x06,
+    CUE_POINT              = 0x07,
     // I'm not sure these are real???
-    //PROGRAM_NAME,
-    //DEVICE_NAME,
+    // PROGRAM_NAME,
+    // DEVICE_NAME,
     CHANNEL_PREFIX = 0x20,
-    PORT_PREFIX = 0x21,
-    END_OF_TRACK = 0x2F,
-    TEMPO = 0x51,
-    SMPTE_OFFSET = 0x54,
+    PORT_PREFIX    = 0x21,
+    END_OF_TRACK   = 0x2F,
+    TEMPO          = 0x51,
+    SMPTE_OFFSET   = 0x54,
     TIME_SIGNATURE = 0x58,
-    KEY_SIGNATURE = 0x59,
-    PROPRIETARY = 0x7F,
+    KEY_SIGNATURE  = 0x59,
+    PROPRIETARY    = 0x7F,
 } metaEventType_t;
 
 /// @brief The MIDI file format, which determines how to interpret the track or tracks it contains
@@ -145,7 +145,8 @@ typedef struct
     /// @brief The number of data bytes this meta event contains
     uint32_t length;
 
-    union {
+    union
+    {
         /// @brief Contains text data, when \c{ type <= 0x0F}
         const char* text;
 
@@ -162,7 +163,8 @@ typedef struct
         uint8_t prefix;
 
         /// @brief Contains the start time of this track, when type is ::SMPTE_OFFSET
-        struct {
+        struct
+        {
             uint8_t hour;
             uint8_t min;
             uint8_t sec;
@@ -171,7 +173,8 @@ typedef struct
         } startTime;
 
         /// @brief Contains time signature data, when type is ::TIME_SIGNATURE
-        struct {
+        struct
+        {
             /// @brief The numerator of the time signature
             uint8_t numerator;
             /// @brief The power of two of the time signature denominator (e.g. 2 for 4/4, 3 for 4/8)
@@ -184,7 +187,8 @@ typedef struct
 
         /// @brief Contains key signature data, when type is ::KEY_SIGNATURE
         /// @note At most one of ::flats or ::sharps will contain a nonzero value.
-        struct {
+        struct
+        {
             /// @brief The number of flats in the key
             uint8_t flats;
 
@@ -227,7 +231,8 @@ typedef struct
     /// @brief The overall event type -- MIDI, Meta, or SysEx
     midiEventType_t type;
 
-    union {
+    union
+    {
         /// @brief The MIDI status event data, when type is ::MIDI_EVENT
         midiStatusEvent_t midi;
         /// @brief The non-MIDI meta-event data, when type is ::META_EVENT
