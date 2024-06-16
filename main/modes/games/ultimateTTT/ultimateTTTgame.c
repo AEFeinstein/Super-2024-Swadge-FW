@@ -26,7 +26,7 @@ static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 void tttBeginGame(ultimateTTT_t* ttt)
 {
@@ -38,12 +38,7 @@ void tttBeginGame(ultimateTTT_t* ttt)
         // Set own piece type
         ttt->p1PieceIdx = ttt->activePieceIdx;
 
-        // Send piece type to other swadge
-        tttMsgSelectPiece_t sel = {
-            .type     = MSG_SELECT_PIECE,
-            .pieceIdx = ttt->p1PieceIdx,
-        };
-        p2pSendMsg(&ttt->p2p, (const uint8_t*)&sel, sizeof(sel), tttMsgTxCbFn);
+        tttSendMarker(ttt, ttt->p1PieceIdx);
     }
     // If going second, wait to receive p1's piece before responding
 }
@@ -51,7 +46,7 @@ void tttBeginGame(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 static void incCursorX(ultimateTTT_t* ttt)
 {
@@ -61,7 +56,7 @@ static void incCursorX(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 static void decCursorX(ultimateTTT_t* ttt)
 {
@@ -78,7 +73,7 @@ static void decCursorX(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 static void incCursorY(ultimateTTT_t* ttt)
 {
@@ -88,7 +83,7 @@ static void incCursorY(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 static void decCursorY(ultimateTTT_t* ttt)
 {
@@ -105,7 +100,7 @@ static void decCursorY(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  * @return true
  * @return false
  */
@@ -134,7 +129,7 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  * @param evt
  */
 void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
@@ -305,6 +300,54 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
  * @brief TODO
  *
  * @param ttt
+ * @param markerIdx
+ */
+void tttSendMarker(ultimateTTT_t* ttt, int32_t markerIdx)
+{
+    tttMsgSelectPiece_t txSel = {
+        .type     = MSG_SELECT_PIECE,
+        .pieceIdx = markerIdx,
+    };
+    p2pSendMsg(&ttt->p2p, (const uint8_t*)&txSel, sizeof(txSel), tttMsgTxCbFn);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ * @param rxSel
+ */
+void tttReceiveMarker(ultimateTTT_t* ttt, const tttMsgSelectPiece_t* rxSel)
+{
+    // If this is the second player
+    if (GOING_SECOND == p2pGetPlayOrder(&ttt->p2p))
+    {
+        // Save p1's piece
+        ttt->p1PieceIdx = rxSel->pieceIdx;
+
+        // Set p2's marker
+        ttt->p2PieceIdx = ttt->activePieceIdx;
+
+        // Send sprite selection to other swadge
+        tttSendMarker(ttt, ttt->p2PieceIdx);
+
+        // Wait for p1 to make the first move
+        ttt->state = TGS_WAITING;
+    }
+    else // Going first
+    {
+        // Received p2's piece
+        ttt->p2PieceIdx = rxSel->pieceIdx;
+
+        // Make the first move
+        ttt->state = TGS_PLACING_PIECE;
+    }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ttt The entire game state
  */
 void tttSendCursor(ultimateTTT_t* ttt)
 {
@@ -321,7 +364,7 @@ void tttSendCursor(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  * @param msg
  */
 void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
@@ -335,7 +378,7 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  * @param subgame
  * @param cell
  * @param piece
@@ -472,7 +515,7 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 void tttSendPlacedPiece(ultimateTTT_t* ttt)
 {
@@ -490,7 +533,7 @@ void tttSendPlacedPiece(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  * @param msg
  */
 void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
@@ -801,7 +844,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  * @param p
  * @param isBig
  * @return wsg_t*

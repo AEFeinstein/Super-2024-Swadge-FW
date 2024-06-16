@@ -18,13 +18,18 @@
 //==============================================================================
 
 /**
- * @brief TODO
+ * @brief Handle a button input when piece selection is being shown
  *
+ * @param ttt The entire game state
+ * @param evt The button event
  */
 void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
+    // Get the number of pieces unlocked
+    // TODO unlock markers at a different rate?
     int16_t piecesUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_PIECES);
 
+    // If the button was pressed down
     if (evt->down)
     {
         switch (evt->button)
@@ -39,11 +44,13 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
             }
             case PB_B:
             {
+                // Go back to the main menu
                 ttt->ui = TUI_MENU;
                 break;
             }
             case PB_LEFT:
             {
+                // Scroll to the left
                 if (0 == ttt->selectPieceIdx)
                 {
                     ttt->selectPieceIdx = piecesUnlocked - 1;
@@ -53,12 +60,15 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     ttt->selectPieceIdx--;
                 }
 
+                // Decrement the offset to scroll smoothly
                 ttt->xSelectScrollOffset -= (ttt->pieceWsg[0].blue.large.w + SELECT_MARGIN_X);
                 break;
             }
             case PB_RIGHT:
             {
+                // Scroll to the right
                 ttt->selectPieceIdx = (ttt->selectPieceIdx + 1) % piecesUnlocked;
+                // Increment the offset to scroll smoothly
                 ttt->xSelectScrollOffset += (ttt->pieceWsg[0].blue.large.w + SELECT_MARGIN_X);
                 break;
             }
@@ -72,10 +82,10 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
 }
 
 /**
- * @brief TODO
+ * @brief Draw the marker selection UI
  *
- * @param ttt
- * @param elapsedUs
+ * @param ttt The entire game state
+ * @param elapsedUs The time elapsed since this was last called
  */
 void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
 {
@@ -104,7 +114,7 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     int16_t xOff           = (TFT_WIDTH - wsgDim) / 2 + ttt->xSelectScrollOffset;
     int16_t pIdx           = ttt->selectPieceIdx;
 
-    // 'Rewind' until it's off screen
+    // 'Rewind' markers until they're off screen
     while (xOff > 0)
     {
         xOff -= (wsgDim + SELECT_MARGIN_X);
@@ -117,15 +127,16 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
         pIdx += piecesUnlocked;
     }
 
-    // Draw icons until you're off screen
+    // Draw markers until you're off screen
     while (xOff < TFT_WIDTH)
     {
-        drawWsgSimple(&ttt->pieceWsg[pIdx].blue.large, xOff, yOff);
-        drawWsgSimple(&ttt->pieceWsg[pIdx].red.large, xOff, yOff + SPACING_Y + wsgDim);
+        // Draw red on top, blue on bottom
+        drawWsgSimple(&ttt->pieceWsg[pIdx].red.large, xOff, yOff);
+        drawWsgSimple(&ttt->pieceWsg[pIdx].blue.large, xOff, yOff + SPACING_Y + wsgDim);
 
+        // If this is the active maker, draw a box around it
         if (pIdx == ttt->activePieceIdx)
         {
-            // Draw selection box
             // Left
             fillDisplayArea(xOff - (SELECT_MARGIN_X + RECT_STROKE) / 2,                            //
                             yOff - (SELECT_MARGIN_Y - RECT_STROKE) / 2,                            //
@@ -153,11 +164,14 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
                             c000);
         }
 
-        drawWsg(&ttt->selectArrow, 0, yOff + wsgDim + (SPACING_Y / 2) - (ttt->selectArrow.h / 2), true, false, 0);
-        drawWsg(&ttt->selectArrow, TFT_WIDTH - ttt->selectArrow.w,
-                yOff + wsgDim + (SPACING_Y / 2) - (ttt->selectArrow.h / 2), false, false, 0);
-
+        // Increment X offset
         xOff += (wsgDim + SELECT_MARGIN_X);
+        // Increment marker index
         pIdx = (pIdx + 1) % piecesUnlocked;
     }
+
+    // Draw arrows to indicate this can be scrolled
+    drawWsg(&ttt->selectArrow, 0, yOff + wsgDim + (SPACING_Y / 2) - (ttt->selectArrow.h / 2), true, false, 0);
+    drawWsg(&ttt->selectArrow, TFT_WIDTH - ttt->selectArrow.w,
+            yOff + wsgDim + (SPACING_Y / 2) - (ttt->selectArrow.h / 2), false, false, 0);
 }

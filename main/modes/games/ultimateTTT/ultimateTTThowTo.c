@@ -11,7 +11,7 @@
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  * @param evt
  */
 void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
@@ -25,7 +25,7 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
 /**
  * @brief TODO
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 void tttDrawHowTo(ultimateTTT_t* ttt)
 {

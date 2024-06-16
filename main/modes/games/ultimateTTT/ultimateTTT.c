@@ -9,6 +9,7 @@
 #include "ultimateTTTpieceSelect.h"
 #include "ultimateTTTp2p.h"
 #include "ultimateTTTresult.h"
+#include "mainMenu.h"
 
 //==============================================================================
 // Function Prototypes
@@ -34,6 +35,8 @@ static const char tttMultiStr[]    = "Wireless Connect";
 static const char tttSingleStr[]   = "Single Player";
 static const char tttPieceSelStr[] = "Piece Select";
 static const char tttHowToStr[]    = "How To Play";
+static const char tttExit[]        = "Exit";
+
 // NVS keys
 const char tttWinKey[]   = "ttt_win";
 const char tttLossKey[]  = "ttt_loss";
@@ -75,17 +78,14 @@ ultimateTTT_t* ttt;
 //==============================================================================
 
 /**
- * @brief TODO
- *
+ * @brief Initialize the Ultimate TTT mode
  */
 static void tttEnterMode(void)
 {
     // Allocate memory for the mode
     ttt = calloc(1, sizeof(ultimateTTT_t));
 
-    ttt->cursorMode = SELECT_SUBGAME;
-
-    // Load assets
+    // Load markers
     for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(pieceNames); pIdx++)
     {
         char assetName[32];
@@ -104,20 +104,25 @@ static void tttEnterMode(void)
         loadWsg(assetName, &ttt->pieceWsg[pIdx].red.large, true);
     }
 
+    // Load an arrow
     loadWsg("ut_arrow.wsg", &ttt->selectArrow, true);
 
+    // Load some fonts
     loadFont("rodin_eb.font", &ttt->font_rodin, false);
     loadFont("righteous_150.font", &ttt->font_righteous, false);
 
-    ttt->menu         = initMenu(tttName, tttMenuCb);
+    // Initialize a menu renderer
     ttt->menuRenderer = initMenuManiaRenderer(&ttt->font_righteous, NULL, &ttt->font_rodin);
 
+    // Initialize the main menu
+    ttt->menu = initMenu(tttName, tttMenuCb);
     addSingleItemToMenu(ttt->menu, tttMultiStr);
     addSingleItemToMenu(ttt->menu, tttSingleStr);
     addSingleItemToMenu(ttt->menu, tttPieceSelStr);
     addSingleItemToMenu(ttt->menu, tttHowToStr);
+    addSingleItemToMenu(ttt->menu, tttExit);
 
-    // Initialize a menu with no entries to be used for piece selection
+    // Initialize a menu with no entries to be used as a background
     ttt->bgMenu = initMenu(tttPieceSelStr, NULL);
 
     // Load saved wins and losses counts
@@ -139,23 +144,26 @@ static void tttEnterMode(void)
         ttt->activePieceIdx = esp_random() % 2;
     }
 
+    // Initialize p2p
+    p2pInitialize(&ttt->p2p, 0x25, tttConCb, tttMsgRxCb, -70);
+
+    // TODO start at tutorial, then piece select
     // Start on the main menu
     ttt->ui = TUI_MENU;
 
-    // Initialize p2p
-    p2pInitialize(&ttt->p2p, 0x25, tttConCb, tttMsgRxCb, -70);
+    // TODO initialize game state separately
+    ttt->cursorMode = SELECT_SUBGAME;
 }
 
 /**
- * @brief TODO
- *
+ * @brief Exit Ulitmate TTT and release all resources
  */
 static void tttExitMode(void)
 {
     // Deinitialize p2p
     p2pDeinit(&ttt->p2p);
 
-    // Free memory
+    // Free marker assets
     for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(pieceNames); pIdx++)
     {
         freeWsg(&ttt->pieceWsg[pIdx].blue.small);
@@ -165,23 +173,25 @@ static void tttExitMode(void)
     }
     freeWsg(&ttt->selectArrow);
 
-    // Free the menu
+    // Free the menu renderer
     deinitMenuManiaRenderer(ttt->menuRenderer);
+
+    // Free the menus
     deinitMenu(ttt->menu);
     deinitMenu(ttt->bgMenu);
 
-    // Free the font
+    // Free the fonts
     freeFont(&ttt->font_rodin);
     freeFont(&ttt->font_righteous);
 
-    // Free memory
+    // Free everything
     free(ttt);
 }
 
 /**
- * @brief TODO
+ * @brief The main loop for Ultimate TTT, responsible for input handling, game logic, and rendering
  *
- * @param elapsedUs
+ * @param elapsedUs The time elapsed since this was last called
  */
 static void tttMainLoop(int64_t elapsedUs)
 {
@@ -235,7 +245,8 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_CONNECTING:
         {
-            tttDrawConnecting(ttt);
+            ttt->bgMenu->title = tttMultiStr;
+            tttDrawConnecting(ttt, elapsedUs);
             break;
         }
         case TUI_GAME:
@@ -245,6 +256,7 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_PIECE_SELECT:
         {
+            ttt->bgMenu->title = tttPieceSelStr;
             tttDrawPieceSelect(ttt, elapsedUs);
             break;
         }
@@ -262,11 +274,11 @@ static void tttMainLoop(int64_t elapsedUs)
 }
 
 /**
- * @brief TODO
+ * @brief Callback for when an Ultimate TTT menu item is selected
  *
- * @param label
- * @param selected
- * @param value
+ * @param label The string label of the menu item selected
+ * @param selected true if this was selected, false if it was moved to
+ * @param value The value for settings, unused.
  */
 static void tttMenuCb(const char* label, bool selected, uint32_t value)
 {
@@ -280,7 +292,7 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         }
         else if (tttSingleStr == label)
         {
-            // TODO single player
+            // TODO implement single player
             printf("Implement Single Player\n");
         }
         else if (tttPieceSelStr == label)
@@ -294,16 +306,21 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
             // Show how to play
             ttt->ui = TUI_HOW_TO;
         }
+        else if (tttExit == label)
+        {
+            // Exit to the main menu
+            switchToSwadgeMode(&mainMenuMode);
+        }
     }
 }
 
 /**
- * @brief TODO
+ * @brief Callback for when an ESP-NOW packet is received. This passes the packet to p2p.
  *
- * @param esp_now_info
- * @param data
- * @param len
- * @param rssi
+ * @param esp_now_info Information about the transmission, including The MAC addresses
+ * @param data The received packet
+ * @param len The length of the received packet
+ * @param rssi The signal strength of the received packet
  */
 static void tttEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
@@ -312,10 +329,10 @@ static void tttEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8
 }
 
 /**
- * @brief TODO
+ * @brief Callback after an ESP-NOW packet is sent. This passes the status to p2p.
  *
- * @param mac_addr
- * @param status
+ * @param mac_addr The MAC address which the data was sent to
+ * @param status   The status of the transmission
  */
 static void tttEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
@@ -324,10 +341,10 @@ static void tttEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t statu
 }
 
 /**
- * @brief TODO
+ * @brief Callback for when p2p is establishing a connection
  *
- * @param p2p
- * @param evt
+ * @param p2p The p2pInfo
+ * @param evt The connection event
  */
 static void tttConCb(p2pInfo* p2p, connectionEvt_t evt)
 {
@@ -335,11 +352,11 @@ static void tttConCb(p2pInfo* p2p, connectionEvt_t evt)
 }
 
 /**
- * @brief TODO
+ * @brief Callback for when a P2P message is received.
  *
- * @param p2p
- * @param payload
- * @param len
+ * @param p2p The p2pInfo
+ * @param payload The data that was received
+ * @param len The length of the data that was received
  */
 static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 {
@@ -347,15 +364,14 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 }
 
 /**
- * @brief TODO
+ * @brief Callback after a P2P message is transmitted
  *
- * @param p2p
- * @param status
- * @param data
- * @param len
+ * @param p2p The p2pInfo
+ * @param status The status of the transmission
+ * @param data The data that was transmitted
+ * @param len The length of the data that was transmitted
  */
 void tttMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
-    // TODO
     tttHandleMsgTx(ttt, status, data, len);
 }
