@@ -262,7 +262,8 @@ static void tttMainLoop(int64_t elapsedUs)
         }
         case TUI_HOW_TO:
         {
-            tttDrawHowTo(ttt);
+            ttt->bgMenu->title = tttHowToStr;
+            tttDrawHowTo(ttt, elapsedUs);
             break;
         }
         case TUI_RESULT:
