@@ -1455,6 +1455,7 @@ void deinitGlobalMidiPlayer(void)
         {
             midiPause(&globalPlayers[i], true);
             midiAllSoundOff(&globalPlayers[i]);
+            midiPlayerReset(&globalPlayers[i]);
         }
 
         globalPlayerInit = false;

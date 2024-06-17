@@ -464,6 +464,7 @@ static void synthExitMode(void)
         freeWsg(&sd->instrumentImages[i]);
     }
     unloadMidiFile(&sd->midiFile);
+    midiPlayerReset(&sd->midiPlayer);
     freeFont(&sd->font);
     free(sd);
     sd = NULL;

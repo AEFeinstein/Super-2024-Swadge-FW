@@ -874,8 +874,6 @@ bool initMidiParser(midiFileReader_t* reader, midiFile_t* file)
     reader->states = calloc(file->trackCount, sizeof(midiTrackState_t));
     if (NULL == reader->states)
     {
-        free(reader->states);
-        reader->states = NULL;
         return false;
     }
 
@@ -891,11 +889,19 @@ void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
 {
     if (reader->states != NULL)
     {
+        for (int i = 0; i < reader->stateCount; i++)
+        {
+            if (reader->states[i].eventBuffer != NULL)
+            {
+                free(reader->states[i].eventBuffer);
+            }
+        }
         free(reader->states);
         reader->states = NULL;
     }
 
-    reader->states = calloc(file->trackCount, sizeof(midiTrackState_t));
+    reader->states     = calloc(file->trackCount, sizeof(midiTrackState_t));
+    reader->stateCount = file->trackCount;
 
     // Initialize the reader's internal per-track parsing states
     for (int i = 0; i < file->trackCount; i++)
@@ -1018,7 +1024,6 @@ bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
         return false;
     }
 
-    // TODO should this be a memcpy? the compiler will probably take care of it
     *event                 = nextTrack->nextEvent;
     nextTrack->eventParsed = false;
     nextTrack->time += event->deltaTime;
