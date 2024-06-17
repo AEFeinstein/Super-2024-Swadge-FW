@@ -416,17 +416,11 @@ static void synthEnterMode(void)
     sd->fileMode = true;
     if (sd->fileMode)
     {
-        if (loadMidiFile(&sd->midiFile, "all_star.midi", false))
+        if (loadMidiFile("all_star.mid", &sd->midiFile, false))
         {
-            if (initMidiParser(&sd->midiFileReader, &sd->midiFile))
-            {
-                sd->midiPlayer.textMessageCallback = midiTextCallback;
-                midiSetFile(&sd->midiPlayer, &sd->midiFileReader);
-            }
-            else
-            {
-                ESP_LOGE("Synth", "Could not init MIDI parser");
-            }
+            // sd->midiPlayer.textMessageCallback = midiTextCallback;
+            midiSetFile(&sd->midiPlayer, &sd->midiFile);
+            midiPause(&sd->midiPlayer, false);
         }
         else
         {
