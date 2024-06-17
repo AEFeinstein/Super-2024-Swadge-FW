@@ -29,7 +29,7 @@ void tttHandleConnectingInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
     {
         // Cancel the connection and return to the main menu
         p2pDeinit(&ttt->p2p);
-        ttt->ui = TUI_MENU;
+        tttShowUi(TUI_MENU);
     }
 }
 

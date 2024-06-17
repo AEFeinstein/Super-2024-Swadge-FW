@@ -42,8 +42,40 @@ static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
  */
 void tttBeginGame(ultimateTTT_t* ttt)
 {
+    // Set the state as not playing yet
+    ttt->state = TGS_NOT_PLAYING;
+
+    // Reset the board
+    for (int16_t y = 0; y < 3; y++)
+    {
+        for (int16_t x = 0; x < 3; x++)
+        {
+            ttt->subgames[x][y].winner = TTT_NONE;
+            for (int16_t sy = 0; sy < 3; sy++)
+            {
+                for (int16_t sx = 0; sx < 3; sx++)
+                {
+                    ttt->subgames[x][y].game[sx][sy] = TTT_NONE;
+                }
+            }
+        }
+    }
+
+    // Reset the cursor
+    ttt->cursor.x          = 0;
+    ttt->cursor.y          = 0;
+    ttt->selectedSubgame.x = 0;
+    ttt->selectedSubgame.y = 0;
+    ttt->cursorMode        = SELECT_SUBGAME;
+
+    // Default indices
+    ttt->p1PieceIdx = 0;
+    ttt->p2PieceIdx = 0;
+
     // Show the game UI
-    ttt->ui = TUI_GAME;
+    tttShowUi(TUI_GAME);
+
+    // Set the cursor mode
 
     // If going first
     if (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p))
@@ -570,7 +602,7 @@ static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t*
         p2pDeinit(&ttt->p2p);
 
         // Show the result
-        ttt->ui = TUI_RESULT;
+        tttShowUi(TUI_RESULT);
     }
 }
 

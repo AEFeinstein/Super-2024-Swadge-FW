@@ -44,7 +44,7 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 if (exitAfterSelect)
                 {
                     // Go to the main menu if a marker was selected for the first time
-                    ttt->ui = TUI_MENU;
+                    tttShowUi(TUI_MENU);
                 }
                 break;
             }
@@ -53,7 +53,7 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 if (-1 != ttt->activePieceIdx)
                 {
                     // Go back to the main menu if a piece was selected
-                    ttt->ui = TUI_MENU;
+                    tttShowUi(TUI_MENU);
                 }
                 break;
             }

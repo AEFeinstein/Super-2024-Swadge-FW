@@ -55,7 +55,7 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 else if (ttt->tutorialRead)
                 {
                     // Return to main menu if going back from page 0, only if the rules have been read
-                    ttt->ui = TUI_MENU;
+                    tttShowUi(TUI_MENU);
                 }
                 break;
             }
@@ -79,12 +79,12 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     if (-1 == ttt->activePieceIdx)
                     {
                         // Select the piece after reading the tutorial
-                        ttt->ui = TUI_PIECE_SELECT;
+                        tttShowUi(TUI_PIECE_SELECT);
                     }
                     else
                     {
                         // Return to main menu if going forward from the last page
-                        ttt->ui = TUI_MENU;
+                        tttShowUi(TUI_MENU);
                     }
                 }
                 break;

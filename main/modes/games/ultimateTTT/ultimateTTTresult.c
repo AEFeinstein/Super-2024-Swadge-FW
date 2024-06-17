@@ -32,7 +32,7 @@ void tttInputResult(ultimateTTT_t* ttt, buttonEvt_t* evt)
             case PB_B:
             {
                 // Return to the main menu
-                ttt->ui = TUI_MENU;
+                tttShowUi(TUI_MENU);
                 break;
             }
             default:

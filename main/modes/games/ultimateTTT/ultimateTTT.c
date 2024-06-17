@@ -35,6 +35,7 @@ static const char tttMultiStr[]    = "Wireless Connect";
 static const char tttSingleStr[]   = "Single Player";
 static const char tttPieceSelStr[] = "Piece Select";
 static const char tttHowToStr[]    = "How To Play";
+static const char tttResultStr[]   = "Result";
 static const char tttExit[]        = "Exit";
 
 // NVS keys
@@ -156,21 +157,18 @@ static void tttEnterMode(void)
     if (false == ttt->tutorialRead)
     {
         // Start on the how to
-        ttt->ui = TUI_HOW_TO;
+        tttShowUi(TUI_HOW_TO);
     }
     else if (-1 == ttt->activePieceIdx)
     {
         // Start on marker select
-        ttt->ui = TUI_PIECE_SELECT;
+        tttShowUi(TUI_PIECE_SELECT);
     }
     else
     {
         // Start on the main menu
-        ttt->ui = TUI_MENU;
+        tttShowUi(TUI_MENU);
     }
-
-    // TODO initialize game state separately
-    ttt->cursorMode = SELECT_SUBGAME;
 }
 
 /**
@@ -303,8 +301,7 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         if (tttMultiStr == label)
         {
             // Show connection UI
-            ttt->bgMenu->title = tttMultiStr;
-            ttt->ui            = TUI_CONNECTING;
+            tttShowUi(TUI_CONNECTING);
             // Start multiplayer
             p2pStartConnection(&ttt->p2p);
         }
@@ -316,16 +313,12 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
         else if (tttPieceSelStr == label)
         {
             // Show piece selection UI
-            ttt->bgMenu->title  = tttPieceSelStr;
-            ttt->ui             = TUI_PIECE_SELECT;
-            ttt->selectPieceIdx = ttt->activePieceIdx;
+            tttShowUi(TUI_PIECE_SELECT);
         }
         else if (tttHowToStr == label)
         {
             // Show how to play
-            ttt->bgMenu->title = tttHowToStr;
-            ttt->pageIdx       = 0;
-            ttt->ui            = TUI_HOW_TO;
+            tttShowUi(TUI_HOW_TO);
         }
         else if (tttExit == label)
         {
@@ -395,4 +388,54 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len)
 void tttMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
     tttHandleMsgTx(ttt, status, data, len);
+}
+
+/**
+ * @brief Switch to showing a different UI
+ *
+ * @param ui The UI to show
+ */
+void tttShowUi(tttUi_t ui)
+{
+    // Set the UI
+    ttt->ui = ui;
+
+    // Initialize the new UI
+    switch (ttt->ui)
+    {
+        case TUI_MENU:
+        {
+            break;
+        }
+        case TUI_CONNECTING:
+        {
+            ttt->bgMenu->title = tttMultiStr;
+            break;
+        }
+        case TUI_GAME:
+        {
+            // Initialization done in tttBeginGame()
+            break;
+        }
+        case TUI_PIECE_SELECT:
+        {
+            ttt->bgMenu->title       = tttPieceSelStr;
+            ttt->selectPieceIdx      = ttt->activePieceIdx;
+            ttt->xSelectScrollTimer  = 0;
+            ttt->xSelectScrollOffset = 0;
+            break;
+        }
+        case TUI_HOW_TO:
+        {
+            ttt->bgMenu->title   = tttHowToStr;
+            ttt->pageIdx         = 0;
+            ttt->arrowBlinkTimer = 0;
+            break;
+        }
+        case TUI_RESULT:
+        {
+            ttt->bgMenu->title = tttResultStr;
+            break;
+        }
+    }
 }

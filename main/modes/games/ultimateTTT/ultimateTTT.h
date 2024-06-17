@@ -141,6 +141,7 @@ typedef struct
 //==============================================================================
 
 void tttMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
+void tttShowUi(tttUi_t ui);
 
 //==============================================================================
 // Externs
