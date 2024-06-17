@@ -818,7 +818,7 @@ static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
 
         case TEMPO:
         {
-            player->tempo = event->tempo;
+            midiSetTempo(player, event->tempo);
             break;
         }
 
@@ -1397,6 +1397,14 @@ void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value)
         // Next!
         playingVoices &= ~voiceBit;
     }
+}
+
+void midiSetTempo(midiPlayer_t* player, uint32_t tempo)
+{
+    uint32_t oldTempo = player->tempo;
+
+    player->tempo       = tempo;
+    player->sampleCount = player->sampleCount * tempo / oldTempo;
 }
 
 void midiSetFile(midiPlayer_t* player, midiFile_t* song)

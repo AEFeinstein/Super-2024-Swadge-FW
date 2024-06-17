@@ -594,6 +594,14 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, u
 void midiPitchWheel(midiPlayer_t* player, uint8_t channel, uint16_t value);
 
 /**
+ * @brief Change the MIDI playback tempo
+ *
+ * @param player The player to change the tempo of
+ * @param tempo The new tempo to set, in microseconds per quarter note
+ */
+void midiSetTempo(midiPlayer_t* player, uint32_t tempo);
+
+/**
  * @brief Configure this MIDI player to read from a MIDI file
  *
  * @param player The MIDI player
