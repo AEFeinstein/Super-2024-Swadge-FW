@@ -105,7 +105,7 @@ def gen_dither_table():
     print("// Apply a random offset to each oscillator to maybe make it less likely for waves to \"stack\" exactly")
     print("static const uint8_t oscDither[] = {")
     for i, v in enumerate(eightbit_primes):
-        if i > 0 and ((i+1) % 10) == 0:
+        if i > 0 and ((i+1) % 18) == 0:
             print(f"{v:3},")
         else:
             print(f"{v:3}, ", end="")

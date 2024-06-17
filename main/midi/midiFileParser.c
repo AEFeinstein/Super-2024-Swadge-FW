@@ -108,6 +108,14 @@ static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out)
     return read;
 }
 
+/**
+ * @brief Ensure that enough space is allocated to store variable-length data for an event
+ *
+ * @param track The track state to set up the buffer within
+ * @param length The length required
+ * @return true If the buffer was successfully allocated
+ * @return false If there was an error allocating space
+ */
 static bool setupEventBuffer(midiTrackState_t* track, uint32_t length)
 {
     if (!track->eventBuffer || track->eventBufferSize < length)
@@ -147,6 +155,15 @@ static bool setupEventBuffer(midiTrackState_t* track, uint32_t length)
                  __LINE__, (track->cur - track->track->data), (track->cur - reader->file->data));              \
         return false;                                                                                          \
     } while (0)
+
+/**
+ * @brief Try to parse the next event in a MIDI track and store its data in ::nextEvent
+ *
+ * @param reader The reader to read file data from
+ * @param track The track parse state where the event will be stored
+ * @return true If an event was successfully parsed
+ * @return false If there are no more events in the track, or a fatal error was encountered while parsing
+ */
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 {
     if (track->done)
@@ -791,6 +808,11 @@ static bool parseMidiHeader(midiFile_t* file)
     return true;
 }
 
+/**
+ * @brief Attempt to read the first event from each track in the MIDI file
+ *
+ * @param reader The MIDI file reader
+ */
 static void readFirstEvents(midiFileReader_t* reader)
 {
     for (int i = 0; i < reader->file->trackCount; i++)
@@ -888,11 +910,6 @@ void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
     readFirstEvents(reader);
 }
 
-/**
- * @brief Reset the MIDI parser state, without changing the file
- *
- * @param reader The reader to reset
- */
 void resetMidiParser(midiFileReader_t* reader)
 {
     for (int i = 0; i < reader->stateCount; i++)

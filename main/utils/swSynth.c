@@ -232,6 +232,13 @@ void swSynthSetShape(synthOscillator_t* osc, oscillatorShape_t shape)
     }
 }
 
+/**
+ * @brief Set the wave function of an oscillator
+ *
+ * @param osc The oscillator to set the wave function of
+ * @param waveFunc The wave function to use
+ * @param waveFuncData Data to be passed to the wave function
+ */
 void swSynthSetWaveFunc(synthOscillator_t* osc, waveFunc_t waveFunc, void* waveFuncData)
 {
     osc->waveFunc     = waveFunc;

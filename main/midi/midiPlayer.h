@@ -1,5 +1,58 @@
 #pragma once
 
+/*! \file midiPlayer.h
+ *
+ * \section midiPlayer_design Design Philosophy
+ *
+ * This code is provided to play MIDI songs via the DAC speaker. MIDI songs are loaded
+ * with midiFileParser.h.
+ *
+ * Two system-wide MIDI players are provided by default and can be used to playback
+ * BGM and SFX independently. They will automatically be initialized if ::swadgeMode_t.fnDacCb
+ * is \c NULL. Each MIDI player supports 16 channels and can simultaneously play up to
+ * 24 melodic notes and 8 percussion notes, shared across all channels. All 128 General MIDI
+ * instruments are supported, as well as the full General MIDI percussion range.
+ *
+ * \code{.c}
+ * // Load a MIDI file
+ * midiFile_t ode_to_joy;
+ * loadMidiFile("ode.mid", &ode_to_joy, true);
+ *
+ * // Play the song on the BGM channel
+ * globalMidiPlayerPlaySong(&ode_to_joy, MIDI_BGM);
+ *
+ * // Pause both BGM and SFX
+ * globalMidiPauseAll();
+ *
+ * // Unpause
+ * globalMidiUnpauseAll();
+ *
+ * // Stop and save the player state
+ * void* data = globalMidiSave();
+ *
+ * // Restore the player state
+ * globalMidiRestore(data);
+ *
+ * // Get a pointer to a particular global MIDI player for advanced usage
+ * midiPlayer_t* player = globalMidiPlayerGet(MIDI_SFX)
+ *
+ * // Turn on the sustain pedal for channel 1
+ * midiSustain(player, 0, 0x7F);
+ *
+ * // Pitch-bend channel 3 down by one half-step
+ * midiPitchWheel(player, 2, 0x1000);
+ *
+ * // Play a Middle C note at half velocity on channel 3
+ * midiNoteOn(player, 2, 69, 0x40);
+ *
+ * // Turn the note off
+ * midiNoteOff(player, 2, 69, 0x7F);
+ *
+ * // Play a drum kit sound at full velocity on channel 10, which is reserved for percussion
+ * midiNoteOn(player, 9, ACOUSTIC_SNARE, 0x7F);
+ * \endcode
+ */
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -76,6 +129,89 @@ typedef enum
     TF_MONO = 2,
 } timbreFlags_t;
 
+/**
+ * @brief Defines the MIDI note numbers mapped to by the General MIDI percussion note names
+ */
+typedef enum
+{
+    // Roland GS Extensions
+    /*HIGH_Q_OR_FILTER_SNAP = 27,
+    SLAP_NOISE = 28,
+    SCRATCH_PUSH = 29,
+    SCRATCH_PULL = 30,
+    DRUM_STICKS = 31,
+    SQUARE_CLICK = 32,
+    METRONOME_CLICK = 33,
+    METRONOME_BELL = 34,*/
+    // End Roland GS Extensions
+    ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM  = 35,
+    ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM = 36,
+    SIDE_STICK                           = 37,
+    ACOUSTIC_SNARE                       = 38,
+    HAND_CLAP                            = 39,
+    ELECTRIC_SNARE_OR_RIMSHOT            = 40,
+    LOW_FLOOR_TOM                        = 41,
+    /// @brief This note supersedes any ::CLOSED_HI_HAT, ::PEDAL_HI_HAT, or ::OPEN_HI_HAT notes playing
+    CLOSED_HI_HAT  = 42,
+    HIGH_FLOOR_TOM = 43,
+    /// @brief This note supersedes any ::CLOSED_HI_HAT, ::PEDAL_HI_HAT, or ::OPEN_HI_HAT notes playing
+    PEDAL_HI_HAT = 44,
+    LOW_TOM      = 45,
+    /// @brief This note supersedes any ::CLOSED_HI_HAT, ::PEDAL_HI_HAT, or ::OPEN_HI_HAT notes playing
+    OPEN_HI_HAT     = 46,
+    LOW_MID_TOM     = 47,
+    HIGH_MID_TOM    = 48,
+    CRASH_CYMBAL_1  = 49,
+    HIGH_TOM        = 50,
+    RIDE_CYMBAL_1   = 51,
+    CHINESE_CYMBAL  = 52,
+    RIDE_BELL       = 53,
+    TAMBOURINE      = 54,
+    SPLASH_CYMBAL   = 55,
+    COWBELL         = 56,
+    CRASH_CYMBAL_2  = 57,
+    VIBRASLAP       = 58,
+    RIDE_CYMBAL_2   = 59,
+    HIGH_BONGO      = 60,
+    LOW_BONGO       = 61,
+    MUTE_HIGH_CONGA = 62,
+    OPEN_HIGH_CONGA = 63,
+    LOW_CONGA       = 64,
+    HIGH_TIMBALE    = 65,
+    LOW_TIMBALE     = 66,
+    HIGH_AGOGO      = 67,
+    LOW_AGOGO       = 68,
+    CABASA          = 69,
+    MARACAS         = 70,
+    /// @brief This note supersdes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
+    SHORT_WHISTLE = 71,
+    /// @brief This note supersdes any ::SHORT_WHISTLE or ::LONG_WHISTLE notes playing
+    LONG_WHISTLE = 72,
+    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    SHORT_GUIRO = 73,
+    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    LONG_GUIRO     = 74,
+    CLAVES         = 75,
+    HIGH_WOODBLOCK = 76,
+    LOW_WOODBLOCK  = 77,
+    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    MUTE_CUICA = 78,
+    /// @brief This note supersdes any ::SHORT_GUIRO or ::LONG_GUIRO notes playing
+    OPEN_CUICA = 79,
+    /// @brief This note supersdes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
+    MUTE_TRIANGLE = 80,
+    /// @brief This note supersdes any ::MUTE_TRIANGLE or ::OPEN_TRIANGLE notes playing
+    OPEN_TRIANGLE = 81,
+    // Roland GS Extensions
+    /*SHAKER = 82,
+    JINGLE_BELL = 83,
+    BELLTREE = 84,
+    CASTANETS = 85,
+    MUTE_SURDO = 86,
+    OPEN_SURDO = 87,*/
+    // End Roland GS Extensions
+} percussionNote_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -104,75 +240,6 @@ typedef struct
     // uint32_t loopEnd;
 
 } envelope_t;
-
-typedef enum
-{
-    // Roland GS Extensions
-    /*HIGH_Q_OR_FILTER_SNAP = 27,
-    SLAP_NOISE = 28,
-    SCRATCH_PUSH = 29,
-    SCRATCH_PULL = 30,
-    DRUM_STICKS = 31,
-    SQUARE_CLICK = 32,
-    METRONOME_CLICK = 33,
-    METRONOME_BELL = 34,*/
-    // End Roland GS Extensions
-    ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM  = 35,
-    ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM = 36,
-    SIDE_STICK                           = 37,
-    ACOUSTIC_SNARE                       = 38,
-    HAND_CLAP                            = 39,
-    ELECTRIC_SNARE_OR_RIMSHOT            = 40,
-    LOW_FLOOR_TOM                        = 41,
-    CLOSED_HI_HAT                        = 42,
-    HIGH_FLOOR_TOM                       = 43,
-    PEDAL_HI_HAT                         = 44,
-    LOW_TOM                              = 45,
-    OPEN_HI_HAT                          = 46,
-    LOW_MID_TOM                          = 47,
-    HIGH_MID_TOM                         = 48,
-    CRASH_CYMBAL_1                       = 49,
-    HIGH_TOM                             = 50,
-    RIDE_CYMBAL_1                        = 51,
-    CHINESE_CYMBAL                       = 52,
-    RIDE_BELL                            = 53,
-    TAMBOURINE                           = 54,
-    SPLASH_CYMBAL                        = 55,
-    COWBELL                              = 56,
-    CRASH_CYMBAL_2                       = 57,
-    VIBRASLAP                            = 58,
-    RIDE_CYMBAL_2                        = 59,
-    HIGH_BONGO                           = 60,
-    LOW_BONGO                            = 61,
-    MUTE_HIGH_CONGA                      = 62,
-    OPEN_HIGH_CONGA                      = 63,
-    LOW_CONGA                            = 64,
-    HIGH_TIMBALE                         = 65,
-    LOW_TIMBALE                          = 66,
-    HIGH_AGOGO                           = 67,
-    LOW_AGOGO                            = 68,
-    CABASA                               = 69,
-    MARACAS                              = 70,
-    SHORT_WHISTLE                        = 71,
-    LONG_WHISTLE                         = 72,
-    SHORT_GUIRO                          = 73,
-    LONG_GUIRO                           = 74,
-    CLAVES                               = 75,
-    HIGH_WOODBLOCK                       = 76,
-    LOW_WOODBLOCK                        = 77,
-    MUTE_CUICA                           = 78,
-    OPEN_CUICA                           = 79,
-    MUTE_TRIANGLE                        = 80,
-    OPEN_TRIANGLE                        = 81,
-    // Roland GS Extensions
-    /*SHAKER = 82,
-    JINGLE_BELL = 83,
-    BELLTREE = 84,
-    CASTANETS = 85,
-    MUTE_SURDO = 86,
-    OPEN_SURDO = 87,*/
-    // End Roland GS Extensions
-} percussionNote_t;
 
 /**
  * @brief A function that returns samples for a percussion timbre rather than a melodic one
@@ -515,7 +582,7 @@ void midiControlChange(midiPlayer_t* player, uint8_t channel, uint8_t control, u
  * @brief Set the pitch wheel value on a given MIDI channel
  *
  * By default, the center of the pitch wheel is \c 0x2000. A value of \c 0x0000 transposes
- * one step up, while a value of \c 0x3FFF transposes one step up.
+ * one step down, while a value of \c 0x3FFF transposes one step down.
  *
  * [NYI] The range of the pitch wheel can be changed using the registered parameters, with
  * MSB being the range in (+/-)semitones and LSB being the range in (+/-) cents

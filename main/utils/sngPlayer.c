@@ -113,7 +113,7 @@ void initSpkSongPlayer(void)
  *
  * @param sIdx The song index
  * @param oIdx The oscillator index in the song
- * @param waveData Data for the wave function
+ * @param waveId The wavetable index of the wave
  */
 void spkSongSetWave(uint8_t sIdx, uint8_t oIdx, uint32_t waveId)
 {

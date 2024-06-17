@@ -147,7 +147,7 @@ typedef struct
 
     union
     {
-        /// @brief Contains text data, when \c{ type <= 0x0F}
+        /// @brief Contains text data, when \c {type <= 0x0F}
         const char* text;
 
         /// @brief Contains binary data, when type is ::PROPRIETARY
@@ -186,7 +186,7 @@ typedef struct
         } timeSignature;
 
         /// @brief Contains key signature data, when type is ::KEY_SIGNATURE
-        /// @note At most one of ::flats or ::sharps will contain a nonzero value.
+        /// @note At most one of \c flats or \c sharps will contain a nonzero value.
         struct
         {
             /// @brief The number of flats in the key
