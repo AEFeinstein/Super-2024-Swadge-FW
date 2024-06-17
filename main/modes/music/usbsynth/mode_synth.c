@@ -118,6 +118,7 @@ static void synthDacCallback(uint8_t* samples, int16_t len);
 
 static bool installUsb(void);
 static void handlePacket(uint8_t packet[4]);
+static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
                             int16_t height);
 static void drawSampleGraph(void);
@@ -581,7 +582,10 @@ static void synthMainLoop(int64_t elapsedUs)
             {
                 drawRect(x, imgY, x + 32, imgY + 32, col);
             }
-            drawChannelInfo(&sd->midiPlayer, ch, x, (ch < 8) ? (imgY + 32 + 2) : (imgY - 16 - 2), 32, 16);
+
+            int16_t infoY = (ch < 8) ? (imgY + 32 + 2) : (imgY - 16 - 2);
+            drawChannelInfo(&sd->midiPlayer, ch, x, infoY, 32, 16);
+            drawPitchWheelRect(ch, x, infoY - 1, 32, 18);
         }
         else if (sd->viewMode & (VM_PACKETS | VM_TEXT))
         {
@@ -859,6 +863,19 @@ static void synthMainLoop(int64_t elapsedUs)
 
     sd->frameTimesIdx                 = (sd->frameTimesIdx + 1) % NUM_FRAME_TIMES;
     sd->frameTimes[sd->frameTimesIdx] = esp_timer_get_time();
+}
+
+static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h)
+{
+    uint16_t pitch = sd->midiPlayer.channels[chIdx].pitchBend;
+
+    if (pitch != 0x2000)
+    {
+        int16_t deg   = (360 + ((pitch - 0x2000) * 90 / 0x1FFF)) % 360;
+        int16_t lineY = y + h / 2 - (h * getSin1024(deg) / 2048);
+        drawRect(x, y, x + w, y + h + 1, c555);
+        drawLineFast(x + 1, lineY, x + w - 2, lineY, c500);
+    }
 }
 
 static void synthDacCallback(uint8_t* samples, int16_t len)
