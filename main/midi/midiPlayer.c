@@ -813,6 +813,12 @@ static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
 
         case END_OF_TRACK:
         {
+            // TODO: Maybe detect if a track ends without including END_OF_TRACK and
+            // synthesize one from the parser, just in case a file is malformed?
+            if (player->reader.file->format == MIDI_FORMAT_2)
+            {
+                player->sampleCount = 0;
+            }
             break;
         }
 
