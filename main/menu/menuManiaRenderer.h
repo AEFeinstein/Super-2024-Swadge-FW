@@ -65,6 +65,7 @@ typedef struct
     int32_t ledDecayTimer;  ///< Timer to decay LEDs
     int32_t ledExciteTimer; ///< Timer to excite LEDs
     int16_t currentLed;     ///< The current LED being excited
+    bool ledsOn;            ///< true to use the LEDs, false to keep them off
 
     menuItem_t* selectedItem;    ///< Reference to the selected item to tell when it changes
     int16_t selectedShadowIdx;   ///< The index to the color offset for the selected drop shadow
@@ -76,5 +77,6 @@ typedef struct
 menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontOutline, font_t* menuFont);
 void deinitMenuManiaRenderer(menuManiaRenderer_t* renderer);
 void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedUs);
+void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn);
 
 #endif

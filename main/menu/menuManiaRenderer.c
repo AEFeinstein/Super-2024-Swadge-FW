@@ -163,6 +163,9 @@ menuManiaRenderer_t* initMenuManiaRenderer(font_t* titleFont, font_t* titleFontO
         ring->color            = ringColors[i];
     }
 
+    // LEDs on by default
+    renderer->ledsOn = true;
+
     return renderer;
 }
 
@@ -363,42 +366,45 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         }
     }
 
-    // Run timer for LED excitation
-    renderer->ledExciteTimer += elapsedUs;
-    while (renderer->ledExciteTimer >= 40000 * 8)
+    if (renderer->ledsOn)
     {
-        renderer->ledExciteTimer -= 40000 * 8;
-        uint32_t ledColor                      = paletteToRGB(BG_COLOR);
-        renderer->leds[renderer->currentLed].r = (ledColor >> 16) & 0xFF;
-        renderer->leds[renderer->currentLed].g = (ledColor >> 8) & 0xFF;
-        renderer->leds[renderer->currentLed].b = (ledColor >> 0) & 0xFF;
-        renderer->currentLed                   = (renderer->currentLed + 1) % CONFIG_NUM_LEDS;
-    }
-
-    // Run timer for LED decay
-    renderer->ledDecayTimer += elapsedUs;
-    while (renderer->ledDecayTimer >= 2000)
-    {
-        renderer->ledDecayTimer -= 2000;
-        for (int16_t i = 0; i < CONFIG_NUM_LEDS; i++)
+        // Run timer for LED excitation
+        renderer->ledExciteTimer += elapsedUs;
+        while (renderer->ledExciteTimer >= 40000 * 8)
         {
-            if (renderer->leds[i].r)
+            renderer->ledExciteTimer -= 40000 * 8;
+            uint32_t ledColor                      = paletteToRGB(BG_COLOR);
+            renderer->leds[renderer->currentLed].r = ((ledColor >> 16) & 0xFF) / 2;
+            renderer->leds[renderer->currentLed].g = ((ledColor >> 8) & 0xFF) / 2;
+            renderer->leds[renderer->currentLed].b = ((ledColor >> 0) & 0xFF) / 2;
+            renderer->currentLed                   = (renderer->currentLed + 1) % CONFIG_NUM_LEDS;
+        }
+
+        // Run timer for LED decay
+        renderer->ledDecayTimer += elapsedUs;
+        while (renderer->ledDecayTimer >= 16667)
+        {
+            renderer->ledDecayTimer -= 16667;
+            for (int16_t i = 0; i < CONFIG_NUM_LEDS; i++)
             {
-                renderer->leds[i].r--;
-            }
-            if (renderer->leds[i].g)
-            {
-                renderer->leds[i].g--;
-            }
-            if (renderer->leds[i].b)
-            {
-                renderer->leds[i].b--;
+                if (renderer->leds[i].r)
+                {
+                    renderer->leds[i].r--;
+                }
+                if (renderer->leds[i].g)
+                {
+                    renderer->leds[i].g--;
+                }
+                if (renderer->leds[i].b)
+                {
+                    renderer->leds[i].b--;
+                }
             }
         }
-    }
 
-    // Set LEDs
-    setLeds(renderer->leds, CONFIG_NUM_LEDS);
+        // Set LEDs
+        setLeds(renderer->leds, CONFIG_NUM_LEDS);
+    }
 
     // For each ring
     for (int16_t i = 0; i < ARRAY_SIZE(renderer->rings); i++)
@@ -598,5 +604,21 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
         }
 
         drawWsg(toDraw, 212, 3, false, false, 0);
+    }
+}
+
+/**
+ * @brief Set the renderer's LEDs to be on or off
+ *
+ * @param renderer The renderer to set
+ * @param ledsOn true to animate the LEDs, false to keep them off
+ */
+void setManiaLedsOn(menuManiaRenderer_t* renderer, bool ledsOn)
+{
+    renderer->ledsOn = ledsOn;
+    if (false == ledsOn)
+    {
+        memset(renderer->leds, 0, sizeof(renderer->leds));
+        setLeds(renderer->leds, CONFIG_NUM_LEDS);
     }
 }

@@ -409,6 +409,7 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_CONNECTING:
         {
+            setManiaLedsOn(ttt->menuRenderer, true);
             ttt->bgMenu->title = tttMultiStr;
             break;
         }
@@ -419,6 +420,7 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_PIECE_SELECT:
         {
+            setManiaLedsOn(ttt->menuRenderer, true);
             ttt->bgMenu->title       = tttPieceSelStr;
             ttt->selectPieceIdx      = ttt->activePieceIdx;
             ttt->xSelectScrollTimer  = 0;
@@ -427,6 +429,7 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_HOW_TO:
         {
+            setManiaLedsOn(ttt->menuRenderer, false);
             ttt->bgMenu->title   = tttHowToStr;
             ttt->pageIdx         = 0;
             ttt->arrowBlinkTimer = 0;
@@ -434,6 +437,7 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_RESULT:
         {
+            setManiaLedsOn(ttt->menuRenderer, true);
             ttt->bgMenu->title = tttResultStr;
             break;
         }
