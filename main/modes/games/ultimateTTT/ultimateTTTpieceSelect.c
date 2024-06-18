@@ -180,7 +180,19 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     }
 
     // Draw arrows to indicate this can be scrolled
-    drawWsg(&ttt->selectArrow, 0, yOff + wsgDim + (SPACING_Y / 2) - (ttt->selectArrow.h / 2), true, false, 0);
-    drawWsg(&ttt->selectArrow, TFT_WIDTH - ttt->selectArrow.w,
-            yOff + wsgDim + (SPACING_Y / 2) - (ttt->selectArrow.h / 2), false, false, 0);
+    // Blink the arrows
+    ttt->arrowBlinkTimer += elapsedUs;
+    while (ttt->arrowBlinkTimer >= ARROW_BLINK_PERIOD)
+    {
+        ttt->arrowBlinkTimer -= ARROW_BLINK_PERIOD;
+    }
+
+    if (ttt->arrowBlinkTimer < (ARROW_BLINK_PERIOD / 2))
+    {
+        int16_t arrowY = yOff + wsgDim + (SPACING_Y / 2) - (ttt->font_rodin.height / 2);
+
+        // Draw arrows to indicate this can be scrolled
+        drawText(&ttt->font_rodin, c000, "<", 0, arrowY);
+        drawText(&ttt->font_rodin, c000, ">", TFT_WIDTH - textWidth(&ttt->font_rodin, ">"), arrowY);
+    }
 }

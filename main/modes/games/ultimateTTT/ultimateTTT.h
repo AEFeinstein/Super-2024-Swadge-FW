@@ -8,6 +8,8 @@
 
 #define NUM_UNLOCKABLE_PIECES 4
 
+#define ARROW_BLINK_PERIOD 1000000
+
 //==============================================================================
 // Enums
 //==============================================================================
@@ -102,7 +104,6 @@ typedef struct
     int16_t xSelectScrollOffset;
     int32_t selectPieceIdx;
     int32_t activePieceIdx;
-    wsg_t selectArrow;
     // Stats
     int32_t wins;
     int32_t losses;

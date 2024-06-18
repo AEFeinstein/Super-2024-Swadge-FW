@@ -30,13 +30,14 @@ static void tttMsgRxCb(p2pInfo* p2p, const uint8_t* payload, uint8_t len);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-static const char tttName[]        = "Ultimate TTT";
-static const char tttMultiStr[]    = "Wireless Connect";
-static const char tttSingleStr[]   = "Single Player";
-static const char tttPieceSelStr[] = "Piece Select";
-static const char tttHowToStr[]    = "How To Play";
-static const char tttResultStr[]   = "Result";
-static const char tttExit[]        = "Exit";
+static const char tttName[]          = "Ultimate TTT";
+static const char tttMultiStr[]      = "Wireless Connect";
+static const char tttMultiShortStr[] = "Connect";
+static const char tttSingleStr[]     = "Single Player";
+static const char tttPieceSelStr[]   = "Piece Select";
+static const char tttHowToStr[]      = "How To Play";
+static const char tttResultStr[]     = "Result";
+static const char tttExit[]          = "Exit";
 
 // NVS keys
 const char tttWinKey[]      = "ttt_win";
@@ -105,9 +106,6 @@ static void tttEnterMode(void)
         assetName[3] = 'l'; // large
         loadWsg(assetName, &ttt->pieceWsg[pIdx].red.large, true);
     }
-
-    // Load an arrow
-    loadWsg("ut_arrow.wsg", &ttt->selectArrow, true);
 
     // Load some fonts
     loadFont("rodin_eb.font", &ttt->font_rodin, false);
@@ -187,7 +185,6 @@ static void tttExitMode(void)
         freeWsg(&ttt->pieceWsg[pIdx].red.small);
         freeWsg(&ttt->pieceWsg[pIdx].red.large);
     }
-    freeWsg(&ttt->selectArrow);
 
     // Free the menu renderer
     deinitMenuManiaRenderer(ttt->menuRenderer);
@@ -400,6 +397,9 @@ void tttShowUi(tttUi_t ui)
     // Set the UI
     ttt->ui = ui;
 
+    // Assume menu LEDs should be on
+    setManiaLedsOn(ttt->menuRenderer, true);
+
     // Initialize the new UI
     switch (ttt->ui)
     {
@@ -409,8 +409,7 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_CONNECTING:
         {
-            setManiaLedsOn(ttt->menuRenderer, true);
-            ttt->bgMenu->title = tttMultiStr;
+            ttt->bgMenu->title = tttMultiShortStr;
             break;
         }
         case TUI_GAME:
@@ -420,7 +419,6 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_PIECE_SELECT:
         {
-            setManiaLedsOn(ttt->menuRenderer, true);
             ttt->bgMenu->title       = tttPieceSelStr;
             ttt->selectPieceIdx      = ttt->activePieceIdx;
             ttt->xSelectScrollTimer  = 0;
@@ -429,6 +427,7 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_HOW_TO:
         {
+            // Turn LEDs off for reading
             setManiaLedsOn(ttt->menuRenderer, false);
             ttt->bgMenu->title   = tttHowToStr;
             ttt->pageIdx         = 0;
@@ -437,7 +436,6 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_RESULT:
         {
-            setManiaLedsOn(ttt->menuRenderer, true);
             ttt->bgMenu->title = tttResultStr;
             break;
         }
