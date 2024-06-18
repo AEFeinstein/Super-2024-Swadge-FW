@@ -73,11 +73,11 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
                         ttt->tutorialRead = true;
                         writeNvs32(tttTutorialKey, ttt->tutorialRead);
                     }
-                    // If a piece hasn't been selected
-                    if (-1 == ttt->activePieceIdx)
+                    // If a marker hasn't been selected
+                    if (-1 == ttt->activeMarkerIdx)
                     {
-                        // Select the piece after reading the tutorial
-                        tttShowUi(TUI_PIECE_SELECT);
+                        // Select the marker after reading the tutorial
+                        tttShowUi(TUI_MARKER_SELECT);
                     }
                     else
                     {

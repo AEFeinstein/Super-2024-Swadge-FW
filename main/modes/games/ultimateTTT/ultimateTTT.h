@@ -6,7 +6,7 @@
 // Defines
 //==============================================================================
 
-#define NUM_UNLOCKABLE_PIECES 4
+#define NUM_UNLOCKABLE_MARKERS 4
 
 #define ARROW_BLINK_PERIOD 1000000
 
@@ -19,7 +19,7 @@ typedef enum __attribute__((packed))
     TUI_MENU,
     TUI_CONNECTING,
     TUI_GAME,
-    TUI_PIECE_SELECT,
+    TUI_MARKER_SELECT,
     TUI_HOW_TO,
     TUI_RESULT,
 } tttUi_t;
@@ -27,7 +27,7 @@ typedef enum __attribute__((packed))
 typedef enum __attribute__((packed))
 {
     TGS_NOT_PLAYING,
-    TGS_PLACING_PIECE,
+    TGS_PLACING_MARKER,
     TGS_WAITING,
 } tttGameState_t;
 
@@ -49,9 +49,9 @@ typedef enum __attribute__((packed))
 
 typedef enum __attribute__((packed))
 {
-    MSG_SELECT_PIECE,
+    MSG_SELECT_MARKER,
     MSG_MOVE_CURSOR,
-    MSG_PLACE_PIECE,
+    MSG_PLACE_MARKER,
 } tttMsgType_t;
 
 //==============================================================================
@@ -62,13 +62,13 @@ typedef struct
 {
     wsg_t small;
     wsg_t large;
-} tttPieceSizeAssets_t;
+} tttMarkerSizeAssets_t;
 
 typedef struct
 {
-    tttPieceSizeAssets_t red;
-    tttPieceSizeAssets_t blue;
-} tttPieceColorAssets_t;
+    tttMarkerSizeAssets_t red;
+    tttMarkerSizeAssets_t blue;
+} tttMarkerColorAssets_t;
 
 typedef struct
 {
@@ -95,15 +95,15 @@ typedef struct
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;
-    int32_t p1PieceIdx;
-    int32_t p2PieceIdx;
+    int32_t p1MarkerIdx;
+    int32_t p2MarkerIdx;
     // Assets
-    tttPieceColorAssets_t pieceWsg[NUM_UNLOCKABLE_PIECES];
-    // For piece selection UI
+    tttMarkerColorAssets_t markerWsg[NUM_UNLOCKABLE_MARKERS];
+    // For marker selection UI
     int32_t xSelectScrollTimer;
     int16_t xSelectScrollOffset;
-    int32_t selectPieceIdx;
-    int32_t activePieceIdx;
+    int32_t selectMarkerIdx;
+    int32_t activeMarkerIdx;
     // Stats
     int32_t wins;
     int32_t losses;
@@ -119,8 +119,8 @@ typedef struct
 typedef struct
 {
     tttMsgType_t type;
-    int32_t pieceIdx;
-} tttMsgSelectPiece_t;
+    int32_t markerIdx;
+} tttMsgSelectMarker_t;
 
 typedef struct
 {
@@ -135,7 +135,7 @@ typedef struct
     tttMsgType_t type;
     vec_t selectedSubgame;
     vec_t selectedCell;
-} tttMsgPlacePiece_t;
+} tttMsgPlaceMarker_t;
 
 //==============================================================================
 // Functions
@@ -151,6 +151,6 @@ void tttShowUi(tttUi_t ui);
 extern const char tttWinKey[];
 extern const char tttLossKey[];
 extern const char tttDrawKey[];
-extern const char tttPieceKey[];
+extern const char tttMarkerKey[];
 extern const char tttTutorialKey[];
 extern swadgeMode_t tttMode;

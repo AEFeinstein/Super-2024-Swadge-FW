@@ -26,10 +26,10 @@ typedef void (*cursorFunc_t)(ultimateTTT_t* ttt);
 // Function Declarations
 //==============================================================================
 
-static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t piece);
+static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t marker);
 static tttPlayer_t checkWinner(ultimateTTT_t* ttt);
 static tttPlayer_t checkSubgameWinner(tttSubgame_t* subgame);
-static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
+static wsg_t* getMarkerWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig);
 
 //==============================================================================
 // Functions
@@ -69,8 +69,8 @@ void tttBeginGame(ultimateTTT_t* ttt)
     ttt->cursorMode        = SELECT_SUBGAME;
 
     // Default indices
-    ttt->p1PieceIdx = 0;
-    ttt->p2PieceIdx = 0;
+    ttt->p1MarkerIdx = 0;
+    ttt->p2MarkerIdx = 0;
 
     // Show the game UI
     tttShowUi(TUI_GAME);
@@ -80,12 +80,12 @@ void tttBeginGame(ultimateTTT_t* ttt)
     // If going first
     if (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p))
     {
-        // Set own piece type
-        ttt->p1PieceIdx = ttt->activePieceIdx;
+        // Set own marker type
+        ttt->p1MarkerIdx = ttt->activeMarkerIdx;
         // Send it to the second player
-        tttSendMarker(ttt, ttt->p1PieceIdx);
+        tttSendMarker(ttt, ttt->p1MarkerIdx);
     }
-    // If going second, wait to receive p1's piece before responding
+    // If going second, wait to receive p1's marker before responding
 }
 
 /**
@@ -181,8 +181,8 @@ static bool cursorIsValid(ultimateTTT_t* ttt)
  */
 void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
-    // Return if not placing a piece
-    if (TGS_PLACING_PIECE != ttt->state)
+    // Return if not placing a marker
+    if (TGS_PLACING_MARKER != ttt->state)
     {
         return;
     }
@@ -263,11 +263,11 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 else if ((SELECT_CELL == ttt->cursorMode) || (SELECT_CELL_LOCKED == ttt->cursorMode))
                 {
                     // Send move to the other swadge
-                    tttSendPlacedPiece(ttt);
+                    tttSendPlacedMarker(ttt);
 
-                    // Place the piece
-                    tttPlacePiece(ttt, &ttt->selectedSubgame, &ttt->cursor,
-                                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P1 : TTT_P2);
+                    // Place the marker
+                    tttPlaceMarker(ttt, &ttt->selectedSubgame, &ttt->cursor,
+                                   (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P1 : TTT_P2);
 
                     // Switch to waiting (i.e. the other player's turn)
                     ttt->state = TGS_WAITING;
@@ -359,9 +359,9 @@ void tttHandleGameInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
  */
 void tttSendMarker(ultimateTTT_t* ttt, int32_t markerIdx)
 {
-    tttMsgSelectPiece_t txSel = {
-        .type     = MSG_SELECT_PIECE,
-        .pieceIdx = markerIdx,
+    tttMsgSelectMarker_t txSel = {
+        .type      = MSG_SELECT_MARKER,
+        .markerIdx = markerIdx,
     };
     p2pSendMsg(&ttt->p2p, (const uint8_t*)&txSel, sizeof(txSel), tttMsgTxCbFn);
 }
@@ -372,30 +372,30 @@ void tttSendMarker(ultimateTTT_t* ttt, int32_t markerIdx)
  * @param ttt The entire game state
  * @param rxSel The message received with the other marker
  */
-void tttReceiveMarker(ultimateTTT_t* ttt, const tttMsgSelectPiece_t* rxSel)
+void tttReceiveMarker(ultimateTTT_t* ttt, const tttMsgSelectMarker_t* rxSel)
 {
     // If this is the second player
     if (GOING_SECOND == p2pGetPlayOrder(&ttt->p2p))
     {
-        // Save p1's piece
-        ttt->p1PieceIdx = rxSel->pieceIdx;
+        // Save p1's marker
+        ttt->p1MarkerIdx = rxSel->markerIdx;
 
         // Set p2's marker
-        ttt->p2PieceIdx = ttt->activePieceIdx;
+        ttt->p2MarkerIdx = ttt->activeMarkerIdx;
 
         // Send sprite selection to other swadge
-        tttSendMarker(ttt, ttt->p2PieceIdx);
+        tttSendMarker(ttt, ttt->p2MarkerIdx);
 
         // Wait for p1 to make the first move
         ttt->state = TGS_WAITING;
     }
     else // Going first
     {
-        // Received p2's piece
-        ttt->p2PieceIdx = rxSel->pieceIdx;
+        // Received p2's marker
+        ttt->p2MarkerIdx = rxSel->markerIdx;
 
         // Make the first move
-        ttt->state = TGS_PLACING_PIECE;
+        ttt->state = TGS_PLACING_MARKER;
     }
 }
 
@@ -431,15 +431,15 @@ void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg)
 }
 
 /**
- * @brief Send the last placed piece to the other Swadge
+ * @brief Send the last placed marker to the other Swadge
  *
  * @param ttt The entire game state
  */
-void tttSendPlacedPiece(ultimateTTT_t* ttt)
+void tttSendPlacedMarker(ultimateTTT_t* ttt)
 {
     // Send move to the other swadge
-    tttMsgPlacePiece_t place = {
-        .type            = MSG_PLACE_PIECE,
+    tttMsgPlaceMarker_t place = {
+        .type            = MSG_PLACE_MARKER,
         .selectedSubgame = ttt->selectedSubgame,
         .selectedCell    = ttt->cursor,
     };
@@ -454,14 +454,14 @@ void tttSendPlacedPiece(ultimateTTT_t* ttt)
  * @param ttt The entire game state
  * @param msg The message indicating where the marker was placed
  */
-void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
+void tttReceivePlacedMarker(ultimateTTT_t* ttt, const tttMsgPlaceMarker_t* msg)
 {
-    // Place the piece
-    tttPlacePiece(ttt, &msg->selectedSubgame, &msg->selectedCell,
-                  (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P2 : TTT_P1);
+    // Place the marker
+    tttPlaceMarker(ttt, &msg->selectedSubgame, &msg->selectedCell,
+                   (GOING_FIRST == p2pGetPlayOrder(&ttt->p2p)) ? TTT_P2 : TTT_P1);
 
-    // Transition state to placing a piece
-    ttt->state = TGS_PLACING_PIECE;
+    // Transition state to placing a marker
+    ttt->state = TGS_PLACING_MARKER;
 }
 
 /**
@@ -470,12 +470,12 @@ void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg)
  * @param ttt The entire game state
  * @param subgame The index of the subgame a marker is placed in
  * @param cell The index of the cell the marker is placed in
- * @param piece The player who is placing the marker
+ * @param marker The player who is placing the marker
  */
-static void tttPlacePiece(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t piece)
+static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t* cell, tttPlayer_t marker)
 {
-    // Place the piece
-    ttt->subgames[subgame->x][subgame->y].game[cell->x][cell->y] = piece;
+    // Place the marker
+    ttt->subgames[subgame->x][subgame->y].game[cell->x][cell->y] = marker;
 
     // Check the board
     bool won  = false;
@@ -867,7 +867,7 @@ void tttDrawGame(ultimateTTT_t* ttt)
                 case TTT_P2:
                 {
                     // Draw a big marker for a winner
-                    drawWsgSimple(getPieceWsg(ttt, ttt->subgames[subX][subY].winner, true), sX0, sY0);
+                    drawWsgSimple(getMarkerWsg(ttt, ttt->subgames[subX][subY].winner, true), sX0, sY0);
                     break;
                 }
                 default:
@@ -896,8 +896,9 @@ void tttDrawGame(ultimateTTT_t* ttt)
                                 case TTT_P2:
                                 {
                                     // Draw a small marker
-                                    drawWsgSimple(getPieceWsg(ttt, ttt->subgames[subX][subY].game[cellX][cellY], false),
-                                                  cX0, cY0);
+                                    drawWsgSimple(
+                                        getMarkerWsg(ttt, ttt->subgames[subX][subY].game[cellX][cellY], false), cX0,
+                                        cY0);
                                     break;
                                 }
                             }
@@ -944,11 +945,11 @@ void tttDrawGame(ultimateTTT_t* ttt)
  * @param isBig true for the big version, false for the small version
  * @return A pointer to the WSG to draw
  */
-static wsg_t* getPieceWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig)
+static wsg_t* getMarkerWsg(ultimateTTT_t* ttt, tttPlayer_t p, bool isBig)
 {
-    bool isP1                     = (TTT_P1 == p);
-    tttPieceColorAssets_t* colors = &ttt->pieceWsg[(isP1 ? ttt->p1PieceIdx : ttt->p2PieceIdx)];
-    tttPieceSizeAssets_t* sizes   = (isP1 ? &colors->red : &colors->blue);
+    bool isP1                      = (TTT_P1 == p);
+    tttMarkerColorAssets_t* colors = &ttt->markerWsg[(isP1 ? ttt->p1MarkerIdx : ttt->p2MarkerIdx)];
+    tttMarkerSizeAssets_t* sizes   = (isP1 ? &colors->red : &colors->blue);
     return (isBig ? &sizes->large : &sizes->small);
 }
 

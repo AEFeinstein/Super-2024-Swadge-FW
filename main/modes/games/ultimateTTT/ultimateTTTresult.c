@@ -98,5 +98,5 @@ void tttDrawResult(ultimateTTT_t* ttt, int64_t elapsedUs)
     tWidth = textWidth(&ttt->font_rodin, recordStr);
     drawText(&ttt->font_rodin, c000, recordStr, (TFT_WIDTH - tWidth) / 2, yOff);
 
-    // TODO show new piece if unlocked
+    // TODO show new marker if unlocked
 }

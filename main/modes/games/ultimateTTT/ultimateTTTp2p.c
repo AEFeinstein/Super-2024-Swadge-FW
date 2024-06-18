@@ -107,12 +107,12 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
     // Handle incoming messages
     switch (payload[0])
     {
-        case MSG_SELECT_PIECE:
+        case MSG_SELECT_MARKER:
         {
             // Validate length
-            if (len == sizeof(tttMsgSelectPiece_t))
+            if (len == sizeof(tttMsgSelectMarker_t))
             {
-                tttReceiveMarker(ttt, (const tttMsgSelectPiece_t*)payload);
+                tttReceiveMarker(ttt, (const tttMsgSelectMarker_t*)payload);
             }
             break;
         }
@@ -125,12 +125,12 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
             }
             break;
         }
-        case MSG_PLACE_PIECE:
+        case MSG_PLACE_MARKER:
         {
             // Length check
-            if (len == sizeof(tttMsgPlacePiece_t))
+            if (len == sizeof(tttMsgPlaceMarker_t))
             {
-                tttReceivePlacedPiece(ttt, (const tttMsgPlacePiece_t*)payload);
+                tttReceivePlacedMarker(ttt, (const tttMsgPlaceMarker_t*)payload);
             }
             break;
         }

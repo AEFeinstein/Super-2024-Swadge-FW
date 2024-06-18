@@ -6,7 +6,7 @@
 #include "ultimateTTT.h"
 #include "ultimateTTTgame.h"
 #include "ultimateTTThowTo.h"
-#include "ultimateTTTpieceSelect.h"
+#include "ultimateTTTmarkerSelect.h"
 #include "ultimateTTTp2p.h"
 #include "ultimateTTTresult.h"
 #include "mainMenu.h"
@@ -34,7 +34,7 @@ static const char tttName[]          = "Ultimate TTT";
 static const char tttMultiStr[]      = "Wireless Connect";
 static const char tttMultiShortStr[] = "Connect";
 static const char tttSingleStr[]     = "Single Player";
-static const char tttPieceSelStr[]   = "Piece Select";
+static const char tttMarkerSelStr[]  = "Marker Select";
 static const char tttHowToStr[]      = "How To Play";
 static const char tttResultStr[]     = "Result";
 static const char tttExit[]          = "Exit";
@@ -43,13 +43,13 @@ static const char tttExit[]          = "Exit";
 const char tttWinKey[]      = "ttt_win";
 const char tttLossKey[]     = "ttt_loss";
 const char tttDrawKey[]     = "ttt_draw";
-const char tttPieceKey[]    = "ttt_piece";
+const char tttMarkerKey[]   = "ttt_marker";
 const char tttTutorialKey[] = "ttt_tutor";
 
 /**
- * Piece names to load WSGs
+ * Marker names to load WSGs
  */
-const char* pieceNames[NUM_UNLOCKABLE_PIECES] = {
+const char* markerNames[NUM_UNLOCKABLE_MARKERS] = {
     "x",
     "o",
     "sq",
@@ -89,22 +89,22 @@ static void tttEnterMode(void)
     ttt = calloc(1, sizeof(ultimateTTT_t));
 
     // Load markers
-    for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(pieceNames); pIdx++)
+    for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(markerNames); pIdx++)
     {
         char assetName[32];
-        snprintf(assetName, sizeof(assetName) - 1, "up**_%s.wsg", pieceNames[pIdx]);
+        snprintf(assetName, sizeof(assetName) - 1, "up**_%s.wsg", markerNames[pIdx]);
 
         assetName[2] = 'b'; // blue
         assetName[3] = 's'; // small
-        loadWsg(assetName, &ttt->pieceWsg[pIdx].blue.small, true);
+        loadWsg(assetName, &ttt->markerWsg[pIdx].blue.small, true);
         assetName[3] = 'l'; // large
-        loadWsg(assetName, &ttt->pieceWsg[pIdx].blue.large, true);
+        loadWsg(assetName, &ttt->markerWsg[pIdx].blue.large, true);
 
         assetName[2] = 'r'; // red
         assetName[3] = 's'; // small
-        loadWsg(assetName, &ttt->pieceWsg[pIdx].red.small, true);
+        loadWsg(assetName, &ttt->markerWsg[pIdx].red.small, true);
         assetName[3] = 'l'; // large
-        loadWsg(assetName, &ttt->pieceWsg[pIdx].red.large, true);
+        loadWsg(assetName, &ttt->markerWsg[pIdx].red.large, true);
     }
 
     // Load some fonts
@@ -118,12 +118,12 @@ static void tttEnterMode(void)
     ttt->menu = initMenu(tttName, tttMenuCb);
     addSingleItemToMenu(ttt->menu, tttMultiStr);
     addSingleItemToMenu(ttt->menu, tttSingleStr);
-    addSingleItemToMenu(ttt->menu, tttPieceSelStr);
+    addSingleItemToMenu(ttt->menu, tttMarkerSelStr);
     addSingleItemToMenu(ttt->menu, tttHowToStr);
     addSingleItemToMenu(ttt->menu, tttExit);
 
     // Initialize a menu with no entries to be used as a background
-    ttt->bgMenu = initMenu(tttPieceSelStr, NULL);
+    ttt->bgMenu = initMenu(tttMarkerSelStr, NULL);
 
     // Load saved wins and losses counts
     if (true != readNvs32(tttWinKey, &ttt->wins))
@@ -138,10 +138,10 @@ static void tttEnterMode(void)
     {
         ttt->draws = 0;
     }
-    if (true != readNvs32(tttPieceKey, &ttt->activePieceIdx))
+    if (true != readNvs32(tttMarkerKey, &ttt->activeMarkerIdx))
     {
         // Set this to -1 to force the selection UI
-        ttt->activePieceIdx = -1;
+        ttt->activeMarkerIdx = -1;
     }
     if (true != readNvs32(tttTutorialKey, &ttt->tutorialRead))
     {
@@ -157,10 +157,10 @@ static void tttEnterMode(void)
         // Start on the how to
         tttShowUi(TUI_HOW_TO);
     }
-    else if (-1 == ttt->activePieceIdx)
+    else if (-1 == ttt->activeMarkerIdx)
     {
         // Start on marker select
-        tttShowUi(TUI_PIECE_SELECT);
+        tttShowUi(TUI_MARKER_SELECT);
     }
     else
     {
@@ -178,12 +178,12 @@ static void tttExitMode(void)
     p2pDeinit(&ttt->p2p);
 
     // Free marker assets
-    for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(pieceNames); pIdx++)
+    for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(markerNames); pIdx++)
     {
-        freeWsg(&ttt->pieceWsg[pIdx].blue.small);
-        freeWsg(&ttt->pieceWsg[pIdx].blue.large);
-        freeWsg(&ttt->pieceWsg[pIdx].red.small);
-        freeWsg(&ttt->pieceWsg[pIdx].red.large);
+        freeWsg(&ttt->markerWsg[pIdx].blue.small);
+        freeWsg(&ttt->markerWsg[pIdx].blue.large);
+        freeWsg(&ttt->markerWsg[pIdx].red.small);
+        freeWsg(&ttt->markerWsg[pIdx].red.large);
     }
 
     // Free the menu renderer
@@ -229,9 +229,9 @@ static void tttMainLoop(int64_t elapsedUs)
                 tttHandleGameInput(ttt, &evt);
                 break;
             }
-            case TUI_PIECE_SELECT:
+            case TUI_MARKER_SELECT:
             {
-                tttInputPieceSelect(ttt, &evt);
+                tttInputMarkerSelect(ttt, &evt);
                 break;
             }
             case TUI_HOW_TO:
@@ -266,9 +266,9 @@ static void tttMainLoop(int64_t elapsedUs)
             tttDrawGame(ttt);
             break;
         }
-        case TUI_PIECE_SELECT:
+        case TUI_MARKER_SELECT:
         {
-            tttDrawPieceSelect(ttt, elapsedUs);
+            tttDrawMarkerSelect(ttt, elapsedUs);
             break;
         }
         case TUI_HOW_TO:
@@ -307,10 +307,10 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
             // TODO implement single player
             printf("Implement Single Player\n");
         }
-        else if (tttPieceSelStr == label)
+        else if (tttMarkerSelStr == label)
         {
-            // Show piece selection UI
-            tttShowUi(TUI_PIECE_SELECT);
+            // Show marker selection UI
+            tttShowUi(TUI_MARKER_SELECT);
         }
         else if (tttHowToStr == label)
         {
@@ -417,10 +417,10 @@ void tttShowUi(tttUi_t ui)
             // Initialization done in tttBeginGame()
             break;
         }
-        case TUI_PIECE_SELECT:
+        case TUI_MARKER_SELECT:
         {
-            ttt->bgMenu->title       = tttPieceSelStr;
-            ttt->selectPieceIdx      = ttt->activePieceIdx;
+            ttt->bgMenu->title       = tttMarkerSelStr;
+            ttt->selectMarkerIdx     = ttt->activeMarkerIdx;
             ttt->xSelectScrollTimer  = 0;
             ttt->xSelectScrollOffset = 0;
             break;

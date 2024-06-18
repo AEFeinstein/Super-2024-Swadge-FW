@@ -2,7 +2,7 @@
 // Includes
 //==============================================================================
 
-#include "ultimateTTTpieceSelect.h"
+#include "ultimateTTTmarkerSelect.h"
 
 //==============================================================================
 // Defines
@@ -18,16 +18,16 @@
 //==============================================================================
 
 /**
- * @brief Handle a button input when piece selection is being shown
+ * @brief Handle a button input when marker selection is being shown
  *
  * @param ttt The entire game state
  * @param evt The button event
  */
-void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
+void tttInputMarkerSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
-    // Get the number of pieces unlocked
+    // Get the number of markers unlocked
     // TODO unlock markers at a different rate?
-    int16_t piecesUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_PIECES);
+    int16_t markersUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_MARKERS);
 
     // If the button was pressed down
     if (evt->down)
@@ -36,11 +36,11 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
         {
             case PB_A:
             {
-                bool exitAfterSelect = (-1 == ttt->activePieceIdx);
-                // Select piece
-                ttt->activePieceIdx = ttt->selectPieceIdx;
+                bool exitAfterSelect = (-1 == ttt->activeMarkerIdx);
+                // Select marker
+                ttt->activeMarkerIdx = ttt->selectMarkerIdx;
                 // Save to NVS
-                writeNvs32(tttPieceKey, ttt->activePieceIdx);
+                writeNvs32(tttMarkerKey, ttt->activeMarkerIdx);
                 if (exitAfterSelect)
                 {
                     // Go to the main menu if a marker was selected for the first time
@@ -50,9 +50,9 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
             }
             case PB_B:
             {
-                if (-1 != ttt->activePieceIdx)
+                if (-1 != ttt->activeMarkerIdx)
                 {
-                    // Go back to the main menu if a piece was selected
+                    // Go back to the main menu if a marker was selected
                     tttShowUi(TUI_MENU);
                 }
                 break;
@@ -60,25 +60,25 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
             case PB_LEFT:
             {
                 // Scroll to the left
-                if (0 == ttt->selectPieceIdx)
+                if (0 == ttt->selectMarkerIdx)
                 {
-                    ttt->selectPieceIdx = piecesUnlocked - 1;
+                    ttt->selectMarkerIdx = markersUnlocked - 1;
                 }
                 else
                 {
-                    ttt->selectPieceIdx--;
+                    ttt->selectMarkerIdx--;
                 }
 
                 // Decrement the offset to scroll smoothly
-                ttt->xSelectScrollOffset -= (ttt->pieceWsg[0].blue.large.w + SELECT_MARGIN_X);
+                ttt->xSelectScrollOffset -= (ttt->markerWsg[0].blue.large.w + SELECT_MARGIN_X);
                 break;
             }
             case PB_RIGHT:
             {
                 // Scroll to the right
-                ttt->selectPieceIdx = (ttt->selectPieceIdx + 1) % piecesUnlocked;
+                ttt->selectMarkerIdx = (ttt->selectMarkerIdx + 1) % markersUnlocked;
                 // Increment the offset to scroll smoothly
-                ttt->xSelectScrollOffset += (ttt->pieceWsg[0].blue.large.w + SELECT_MARGIN_X);
+                ttt->xSelectScrollOffset += (ttt->markerWsg[0].blue.large.w + SELECT_MARGIN_X);
                 break;
             }
             default:
@@ -96,7 +96,7 @@ void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
  * @param ttt The entire game state
  * @param elapsedUs The time elapsed since this was last called
  */
-void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
+void tttDrawMarkerSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
 {
     // Scroll the offset if it's not centered yet
     ttt->xSelectScrollTimer += elapsedUs;
@@ -117,11 +117,11 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     drawMenuMania(ttt->bgMenu, ttt->menuRenderer, elapsedUs);
 
     // Set up variables for drawing
-    int16_t piecesUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_PIECES);
-    int16_t wsgDim         = ttt->pieceWsg[0].blue.large.h;
-    int16_t yOff           = (TFT_HEIGHT - wsgDim) / 2 - 13;
-    int16_t xOff           = (TFT_WIDTH - wsgDim) / 2 + ttt->xSelectScrollOffset;
-    int16_t pIdx           = ttt->selectPieceIdx;
+    int16_t markersUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_MARKERS);
+    int16_t wsgDim          = ttt->markerWsg[0].blue.large.h;
+    int16_t yOff            = (TFT_HEIGHT - wsgDim) / 2 - 13;
+    int16_t xOff            = (TFT_WIDTH - wsgDim) / 2 + ttt->xSelectScrollOffset;
+    int16_t pIdx            = ttt->selectMarkerIdx;
 
     // 'Rewind' markers until they're off screen
     while (xOff > 0)
@@ -133,18 +133,18 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     // Don't use a negative index!
     while (pIdx < 0)
     {
-        pIdx += piecesUnlocked;
+        pIdx += markersUnlocked;
     }
 
     // Draw markers until you're off screen
     while (xOff < TFT_WIDTH)
     {
         // Draw red on top, blue on bottom
-        drawWsgSimple(&ttt->pieceWsg[pIdx].red.large, xOff, yOff);
-        drawWsgSimple(&ttt->pieceWsg[pIdx].blue.large, xOff, yOff + SPACING_Y + wsgDim);
+        drawWsgSimple(&ttt->markerWsg[pIdx].red.large, xOff, yOff);
+        drawWsgSimple(&ttt->markerWsg[pIdx].blue.large, xOff, yOff + SPACING_Y + wsgDim);
 
         // If this is the active maker, draw a box around it
-        if (pIdx == ttt->activePieceIdx)
+        if (pIdx == ttt->activeMarkerIdx)
         {
             // Left
             fillDisplayArea(xOff - (SELECT_MARGIN_X + RECT_STROKE) / 2,                            //
@@ -176,7 +176,7 @@ void tttDrawPieceSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
         // Increment X offset
         xOff += (wsgDim + SELECT_MARGIN_X);
         // Increment marker index
-        pIdx = (pIdx + 1) % piecesUnlocked;
+        pIdx = (pIdx + 1) % markersUnlocked;
     }
 
     // Draw arrows to indicate this can be scrolled

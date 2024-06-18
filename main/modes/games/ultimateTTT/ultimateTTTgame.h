@@ -17,8 +17,8 @@ void tttDrawGrid(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t m, pale
 void tttBeginGame(ultimateTTT_t* ttt);
 
 void tttSendMarker(ultimateTTT_t* ttt, int32_t markerIdx);
-void tttReceiveMarker(ultimateTTT_t* ttt, const tttMsgSelectPiece_t* rxSel);
+void tttReceiveMarker(ultimateTTT_t* ttt, const tttMsgSelectMarker_t* rxSel);
 void tttSendCursor(ultimateTTT_t* ttt);
 void tttReceiveCursor(ultimateTTT_t* ttt, const tttMsgMoveCursor_t* msg);
-void tttSendPlacedPiece(ultimateTTT_t* ttt);
-void tttReceivePlacedPiece(ultimateTTT_t* ttt, const tttMsgPlacePiece_t* msg);
+void tttSendPlacedMarker(ultimateTTT_t* ttt);
+void tttReceivePlacedMarker(ultimateTTT_t* ttt, const tttMsgPlaceMarker_t* msg);
