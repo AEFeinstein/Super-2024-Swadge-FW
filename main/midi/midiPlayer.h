@@ -42,7 +42,7 @@
  * // Pitch-bend channel 3 down by one half-step
  * midiPitchWheel(player, 2, 0x1000);
  *
- * // Play a Middle C note at half velocity on channel 3
+ * // Play an A3 note at half velocity on channel 3
  * midiNoteOn(player, 2, 69, 0x40);
  *
  * // Turn the note off

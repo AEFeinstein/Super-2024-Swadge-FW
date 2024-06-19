@@ -2,12 +2,33 @@
 #include "swSynth.h"
 #include "hdw-dac.h"
 #include "midiNoteFreqs.h"
+#include "midiUtil.h"
+
+#define FREQ_HZ(whole)     (((whole)&0xFFFFu) << 16)
+#define FREQ_HZ_FRAC(flhz) ((((uint32_t)(flhz)) << 16) | ((uint32_t)(((flhz) - ((float)((uint32_t)(flhz)))) * 65536.0)))
+
+static int8_t impulseTab[]
+    = {0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   4,   4,   4,   5,   5,   6,
+       6,   7,   7,   8,   9,   10,  10,  11,  12,  13,  15,  16,  17,  19,  21,  23,  25,  27,  29,  32,  35,  38,
+       41,  45,  49,  54,  59,  64,  70,  76,  83,  91,  99,  108, 117, 128, 140, 152, 166, 181, 197, 215, 255, 248,
+       239, 231, 224, 216, 209, 202, 196, 189, 183, 177, 171, 165, 160, 155, 150, 145, 140, 135, 131, 127, 122, 118,
+       114, 111, 107, 103, 100, 97,  94,  90,  87,  85,  82,  79,  76,  74,  72,  69,  67,  65,  63,  60,  58,  57,
+       55,  53,  51,  49,  48,  46,  45,  43,  42,  40,  39,  38,  37,  35,  34,  33,  32,  31,  30,  29,  28,  27,
+       26,  25,  24,  24,  23,  22,  21,  21,  20,  19,  19,  18,  17,  17,  16,  16,  15,  15,  14,  14,  13,  13,
+       12,  12,  12,  11,  11,  11,  10,  10,  10,  9,   9,   9,   8,   8,   8,   8,   7,   7,   7,   7,   6,   6,
+       6,   6,   6,   5,   5,   5,   5,   5,   5,   4,   4,   4,   4,   4,   4,   4,   3,   3,   3,   3,   3,   3,
+       3,   3,   3,   3,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   1,   1,
+       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
+       1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   0,   0,   0,   0};
 
 static int8_t linearNoiseImpulse(uint32_t length, uint32_t idx, bool* done);
 static int8_t linearWaveImpulse(oscillatorShape_t shape, uq16_16 freq, uint32_t length, uint32_t idx, bool* done);
 static inline int8_t sampleWaveAt(uint32_t idx, oscillatorShape_t shape, uq16_16 freq);
+static inline int8_t sampleTable(uint32_t idx, int8_t* table, uint16_t len, uq16_16 freq);
 static int16_t adrLerp(uint32_t tick, uint32_t attackTime, uint32_t decayTime, int16_t attackLevel, int16_t decayLevel);
 static uq16_16 freqLerp(uint32_t tick, uint32_t len, uq16_16 start, uq16_16 end);
+static uq16_16 tremolo(uint32_t tick, uint32_t period, uq16_16 freq, int8_t centRange);
+static int8_t sampleImpulse(uint32_t idx, uq16_16 freq);
 
 /**
  * @brief Return random noise sampled with a linearly decreasing volume
@@ -74,6 +95,12 @@ static inline int8_t sampleWaveAt(uint32_t idx, oscillatorShape_t shape, uq16_16
     return wave;
 }
 
+static inline int8_t sampleTable(uint32_t idx, int8_t* table, uint16_t len, uq16_16 freq)
+{
+    uint16_t sampleAt = (idx * (freq / (DAC_SAMPLE_RATE_HZ >> 8)) >> 16) % len;
+    return table[sampleAt];
+}
+
 /**
  * @brief Return a value which increases linearly from 0 to \c attackLevel over a period of \c attackTime and then
  * decreases linearly to \c decayLevel over a period of \c decayTime.
@@ -114,6 +141,18 @@ static int16_t adrLerp(uint32_t tick, uint32_t attackTime, uint32_t decayTime, i
 static uq16_16 freqLerp(uint32_t tick, uint32_t len, uq16_16 start, uq16_16 end)
 {
     return start + (end - start) * tick / len;
+}
+
+static uq16_16 tremolo(uint32_t tick, uint32_t period, uq16_16 freq, int8_t centRange)
+{
+    int32_t cents = sampleWaveAt(tick, SHAPE_SINE, 16384 / period) * centRange / 128;
+    return bendPitchFreq(freq, cents);
+}
+
+static int8_t sampleImpulse(uint32_t idx, uq16_16 freq)
+{
+    uint8_t n = (idx * (freq / (DAC_SAMPLE_RATE_HZ >> 8)) >> 16) & 0xFF;
+    return impulseTab[n];
 }
 
 /**
@@ -179,73 +218,51 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
     // return adrLerp(idx, 128, (8192-128), 256, 0) * swSynthSampleWave(NOISE, idx) + finishAt(8192, idx, done);
     switch (drum)
     {
+        // B2
         case ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM:
             return adrLerp(idx, 128, (16384 - 64), 256, 12) * linearWaveImpulse(SHAPE_SINE, FREQ_B0, 16384, idx, done)
-                   / 256; //+ (adrLerp(idx, 1024, 512, 32, 0) * linearWaveImpulse(SHAPE_SINE, FREQ_B_MINUS_1, 16384,
-                          // idx, NULL) / 256);
-            ;             // + ((idx > 100) ? 0 : (linearNoiseImpulse(1024, idx, NULL) >> 5));
-            // Way too long
-            return donutDrumkitFunc(drum, idx, done, scratch, data);
+                   / 256;
 
+        // C2
         case ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM:
-            // TODO this is discontinuous and poppy at the start for some reason even though it shouldn't
             return adrLerp(idx, 128, (16384 - 64), 256, 12) /*return linearAttackExpDecay(idx, 64, 4096, 256)*/
                    * linearWaveImpulse(SHAPE_SINE, FREQ_G0, 16384, idx, done) / 256;
-            // return adrLerp(idx, 64, (16384-64), 256, 0) * linearWaveImpulse(SHAPE_SINE, /* E1 */FREQ_E1, 16384, idx,
-            // done) / 256;
 
-            // Way too long
-            // return donutDrumkitFunc(ELECTRIC_BASS_DRUM_OR_HIGH_BASS_DRUM, idx, done, scratch, data);
-
+        // C#2
         case SIDE_STICK:
             return linearNoiseImpulse(256, idx, done);
 
+        // D2
         case ACOUSTIC_SNARE:
-            // THIS SOUNDS REAL GOOD
             return adrLerp(idx, 2048, 2048, 48, 0) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_G1) / 256
                    + adrLerp(idx, 128, (4096 - 128), 256, 0) * sampleWaveAt(idx, SHAPE_SINE, FREQ_G1) / 256
                    + finishAt(4096, idx, done);
-            return linearNoiseImpulse(8192, idx, done);
-            // Too low and long
-            return donutDrumkitFunc(37, idx, done, scratch, data);
 
+        // D#2
         case HAND_CLAP:
             return linearNoiseImpulse(3064, idx, done);
 
+        // E2
         case ELECTRIC_SNARE_OR_RIMSHOT:
-            // just a copy of the acoustic snare for now
+            // TODO make this different from ACOUSTIC_SNARE
             return adrLerp(idx, 2048, 2048, 48, 0) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_G1) / 256
                    + adrLerp(idx, 128, (4096 - 128), 256, 0) * sampleWaveAt(idx, SHAPE_SINE, FREQ_G1) / 256
                    + finishAt(4096, idx, done);
-            // Generic drum, too low
-            // return donutDrumkitFunc(38, idx, done, scratch, data); //{ break; }
 
+        // F2
         case LOW_FLOOR_TOM:
             return TOM(idx, 8192, 48, 256, FREQ_G1, done);
 
-            return adrLerp(idx, 4096, 4096, 48, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256
-                   + adrLerp(idx, 128, (8192 - 128), 256, 0) * sampleWaveAt(idx, SHAPE_SINE, FREQ_G1) / 256
-                   + finishAt(8192, idx, done);
-            // Too long
-            // return donutDrumkitFunc(39, idx, done, scratch, data); //{ break; }
-
+        // F#2
         case CLOSED_HI_HAT:
             return adrLerp(idx, 128, 2048 - 256, 64, 0) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_D_SHARP_8) / 256
                    + finishAt(2048, idx, done);
-            // return linearNoiseImpulse(3064, idx, done);
-            // return linearNoiseImpulse(3064, idx, done) / 8 + sampleWaveAt(idx, SHAPE_SINE, FREQ_D_SHARP_6 );
 
-            // Some sort of cymbal maybe? very low and pixely though
-            return donutDrumkitFunc(41, idx, done, scratch, data); //{ break; }
-
+        // G2
         case HIGH_FLOOR_TOM:
             return TOM(idx, 8192, 48, 256, FREQ_B2, done);
-            return adrLerp(idx, 4096, 4096, 48, 0) * swSynthSampleWave(NOISE, idx & 0xFF) / 256
-                   + adrLerp(idx, 128, (8192 - 128), 256, 0) * sampleWaveAt(idx, SHAPE_SINE, FREQ_B2) / 256
-                   + finishAt(8192, idx, done);
-            // Generic drum
-            return donutDrumkitFunc(47, idx, done, scratch, data); //{ break; }
 
+        // G#2
         case PEDAL_HI_HAT:
             return adrLerp(idx, 4096 - 256, 256, 128, 0)
                        * sampleWaveAt(idx, SHAPE_NOISE, freqLerp(idx, 4096, FREQ_D_SHARP_8, FREQ_C7)) / 256
@@ -254,193 +271,243 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
                 * adrLerp(idx, 6192-512, 512, 32, 0) * sampleWaveAt(idx, SHAPE_SINE, FREQ_A_SHARP_MINUS_1) / 16 *
                sampleWaveAt(idx, SHAPE_SINE, FREQ_D_SHARP_6) / 512
                 + finishAt(6192, idx, done);*/
-            // Long-ish drum
-            // return donutDrumkitFunc(42, idx, done, scratch, data); //{ break; }
 
+        // A3
         case LOW_TOM:
             return TOM(idx, 6144, 48, 256, FREQ_A2, done);
-            // eh maybe, too long though
-            // return donutDrumkitFunc(43, idx, done, scratch, data); //{ break; }
 
+        // A#3
         case OPEN_HI_HAT:
             return adrLerp(idx, 256, 12288 - 256, 128, 0) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_D_SHARP_8) / 256
                    + adrLerp(idx, 8192, (16384 - 8192), 32, 0)
                          * sampleWaveAt(idx, SHAPE_SINE, FREQ_C6 /*freqLerp(idx, 16384, FREQ_C3, FREQ_C6)*/) / 256
                    + finishAt(16384, idx, done);
-            return donutDrumkitFunc(49, idx, done, scratch, data);
-            // Generic drum, not good for this
-            // return donutDrumkitFunc(44, idx, done, scratch, data); //{ break; }
 
+        // B3
         case LOW_MID_TOM:
             return TOM(idx, 6144, 48, 256, FREQ_C2, done);
-            // Generic drum, too long
-            // return donutDrumkitFunc(45, idx, done, scratch, data); //{ break; }
 
+        // C3
         case HIGH_MID_TOM:
             return TOM(idx, 6144, 48, 256, FREQ_E2, done);
-            // Generic drum, too long
-            // return donutDrumkitFunc(46, idx, done, scratch, data); //{ break; }
 
+        // C#3
+        // NOT DONE
         case CRASH_CYMBAL_1:
-            // This is the long boi, no it's not ok for a closed hi-hat...
-            return donutDrumkitFunc(49, idx, done, scratch, data);
+            return adrLerp(idx, 128, 24576 - 128, 256, 0) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_C4) / 256
+                   + adrLerp(idx, 8192, (24578 - 8912), 32, 0) * sampleWaveAt(idx, SHAPE_SINE, FREQ_C6) / 256
+                   + finishAt(24578, idx, done);
 
+        // D3
         case HIGH_TOM:
             return TOM(idx, 6144, 48, 256, FREQ_G2, done);
-            // Maybe this one is OK
-            return donutDrumkitFunc(48, idx, done, scratch, data); //{ break; }
 
+        // D#3
+        // NOT DONE
         case RIDE_CYMBAL_1:
-            // Longer drum, too noisy?
-            return donutDrumkitFunc(40, idx, done, scratch, data); //{ break; }
+            return adrLerp(idx, 128, 16384, 32, 1) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_B3) / 256
+                   + adrLerp(idx, 8192, 32768 - 8912, 64, 0)
+                         * sampleWaveAt(idx, SHAPE_SINE, tremolo(idx, 4096, FREQ_B4, 90)) / 256
+                   + adrLerp(idx, 4096, 32768 - 4096, 24, 0)
+                         * sampleWaveAt(idx, SHAPE_SINE, tremolo(idx, 256, FREQ_F_SHARP_3, 45)) / 256
+                   + finishAt(32768, idx, done);
+            break;
 
+        // E3
+        // NOT DONE
         case CHINESE_CYMBAL:
             break;
-            // Kick?
-            // return donutDrumkitFunc(50, idx, done, scratch, data); //{ break; }
 
+        // F3
         case RIDE_BELL:
-            break;
-            // Generic drum, short and muted
-            // return donutDrumkitFunc(51, idx, done, scratch, data); //{ break; }
+            return adrLerp(idx, 64, 65536 - 64, 256, 0) * sampleWaveAt(idx, SHAPE_SINE, tremolo(idx, 4096, FREQ_F4, 90))
+                       / 256 * sampleWaveAt(idx, SHAPE_SINE, FREQ_HZ(11)) / 256
+                   + adrLerp(idx, 128, 65536 - 128, 128, 0) * sampleWaveAt(idx, SHAPE_SINE, FREQ_D3) / 256
+                         * sampleWaveAt(idx, SHAPE_SINE, FREQ_HZ(17)) / 256
+                   + finishAt(65536, idx, done);
 
+        // F#3
         case TAMBOURINE:
-            break;
-            // Generic drum, very short and muted
-            // return donutDrumkitFunc(52, idx, done, scratch, data); //{ break; }
+            return adrLerp(idx, 128, 3032 - 128, 256, 0) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_A6) / 256
+                       * sampleWaveAt(idx, SHAPE_SINE, FREQ_HZ(16)) / 128
+                   + adrLerp(idx, 1516, 1516, 48, 0)
+                         * sampleWaveAt(idx, SHAPE_SINE, freqLerp(idx, 3032, FREQ_A4, FREQ_A7)) / 256
+                   + finishAt(3032, idx, done);
 
+        // G3
         case SPLASH_CYMBAL:
-            break;
-            // Generic drum
-            // return donutDrumkitFunc(53, idx, done, scratch, data); //{ break; }
+            return linearAttackExpDecay(idx, 64, 4096, 256) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_G2) / 256
+                   + finishAt(16384, idx, done);
 
+        // G#3
+        // NOT DONE
         case COWBELL:
-            break;
-            // Generic drum
-            // return donutDrumkitFunc(54, idx, done, scratch, data); //{ break; }
+            /*return linearWaveImpulse(SHAPE_NOISE, FREQ_E2, 4096, idx, done) / 2
+                   + sampleWaveAt(idx, SHAPE_SINE, FREQ_E2) / 4 + sampleWaveAt(idx, SHAPE_SINE, FREQ_A2) / 8;*/
 
+            return adrLerp(idx, 256, 4096 - 256, 256, 0)
+                       * (sampleWaveAt(idx, SHAPE_NOISE, FREQ_D_SHARP_8) / 2
+                          + sampleWaveAt(idx, SHAPE_SINE, freqLerp(idx, 4096, FREQ_F_SHARP_4, FREQ_D_SHARP_3)) / 4)
+                       / 128
+                   + finishAt(4096, idx, done);
+
+        // A4
+        // NOT DONE
         case CRASH_CYMBAL_2:
-            break;
             // This should be some sort of crash cymbal, crash cymbal 2?
-            // return donutDrumkitFunc(60, idx, done, scratch, data); //{ break; }
+            return donutDrumkitFunc(60, idx, done, scratch, data);
 
+        // A#4
         case VIBRASLAP:
-            break;
-            // Generic drum
-            // return donutDrumkitFunc(56, idx, done, scratch, data); //{ break; }
+            return sampleWaveAt(idx, SHAPE_SINE, freqLerp(idx, 8192, FREQ_HZ(24), FREQ_HZ(6)))
+                       * sampleWaveAt(idx, SHAPE_NOISE, freqLerp(idx, 8192, FREQ_D4, FREQ_D1)) / 128
+                   + finishAt(8192, idx, done);
 
+        // B4
+        // NOT DONE
         case RIDE_CYMBAL_2:
             break;
-            // Also a tom, sounds more drum-y than most others
-            // return donutDrumkitFunc(57, idx, done, scratch, data); //{ break; }
 
+        // C4
+        // NOT DONE
         case HIGH_BONGO:
-            // Perhaps a tom
-            return donutDrumkitFunc(58, idx, done, scratch, data); //{ break; }
+            return TOM(idx, 3000, 48, 256, FREQ_G4, done);
 
+        // C#4
+        // NOT DONE
         case LOW_BONGO:
-            // Some sort of cymbal maybe, not too long
-            return donutDrumkitFunc(59, idx, done, scratch, data); //{ break; }
+            return TOM(idx, 3000, 72, 256, FREQ_E4, done);
 
+        // D4
+        // NOT DONE
         case MUTE_HIGH_CONGA:
             break;
-            // We could probably use donut drum 55 for the gunshot SFX instrument
-            // return donutDrumkitFunc(55, idx, done, scratch, data); //{ break; }
 
+        // D#4
+        // NOT DONE
         case OPEN_HIGH_CONGA:
         {
             break;
         }
+
+        // E4
+        // NOT DONE
         case LOW_CONGA:
         {
             break;
         }
+
+        // F4
+        // NOT DONE
         case HIGH_TIMBALE:
         {
             break;
         }
+
+        // F#4
+        // NOT DONE
         case LOW_TIMBALE:
         {
             break;
         }
+
+        // G4
+        // NOT DONE
         case HIGH_AGOGO:
         {
             break;
         }
+
+        // G#4
+        // NOT DONE
         case LOW_AGOGO:
         {
             break;
         }
+
+        // A5
+        // NOT DONE
         case CABASA:
-        {
-            break;
-        }
+            // At .5Hz, we get a single half sine wave
+            return sampleWaveAt(idx, SHAPE_SINE, FREQ_HZ_FRAC(.5 / 8.0))
+                       * sampleWaveAt(idx, SHAPE_NOISE, FREQ_C_SHARP_7) / 128
+                   + finishAt(32768 / 8, idx, done);
+
+        // A#5
+        // NOT DONE
         case MARACAS:
-        {
-            break;
-        }
+            // Just a single maraca shake
+            return sampleWaveAt(idx, SHAPE_SAWTOOTH, FREQ_HZ(2)) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_A3) / 256
+                   + finishAt(3064, idx, done);
+
+        // B5
         case SHORT_WHISTLE:
             return linearWaveImpulse(SHAPE_SINE, FREQ_C5, 4096, idx, done)
                    + sampleWaveAt(idx, SHAPE_SINE, FREQ_C7 + (idx << 16)) / 12;
+
+        // C5
         case LONG_WHISTLE:
             return linearWaveImpulse(SHAPE_SINE, FREQ_C5, 8192, idx, done)
                    + sampleWaveAt(idx, SHAPE_SINE, FREQ_C7 + (idx << 16)) / 12;
+
+        // C#5
         case SHORT_GUIRO:
-        {
-            break;
-        }
+            return sampleWaveAt(idx, SHAPE_SINE, FREQ_HZ(12))
+                       * sampleWaveAt(idx, SHAPE_NOISE, freqLerp(idx, 4096, FREQ_C_SHARP_4, FREQ_C_SHARP_3)) / 256
+                   + finishAt(1536, idx, done);
+
+        // D5
         case LONG_GUIRO:
         {
+            return sampleWaveAt(idx, SHAPE_SINE, FREQ_HZ(20))
+                       * sampleWaveAt(idx, SHAPE_NOISE, freqLerp(idx, 4096, FREQ_C_SHARP_4, FREQ_C_SHARP_3)) / 256
+                   + finishAt(4096, idx, done);
             break;
         }
+
+        // D#5
         case CLAVES:
         {
+            return adrLerp(idx, 256, 1024 - 256, 256, 0)
+                       * (sampleWaveAt(idx, SHAPE_NOISE, FREQ_D_SHARP_8) / 8
+                          + sampleWaveAt(idx, SHAPE_SINE, FREQ_E5 - (idx * 8)) / 4)
+                       / 128
+                   + finishAt(1024, idx, done);
             break;
         }
 
+        // E5
         case HIGH_WOODBLOCK:
             // This is also a pretty good wood block:
-            /*return adrLerp(idx, 256, 2048-256, 256, 0) * (sampleWaveAt(idx, SHAPE_NOISE, FREQ_D_SHARP_8)
-                + sampleWaveAt(idx, SHAPE_SINE, FREQ_D_SHARP_4 - (idx * 8)) / 4) / 256
-                + finishAt(2048, idx, done);*/
-            return linearWaveImpulse(SHAPE_NOISE, FREQ_E2, 2048, idx, done)
-                   + sampleWaveAt(idx, SHAPE_SINE, FREQ_E2) / 4;
+            return adrLerp(idx, 256, 2048 - 256, 256, 0)
+                       * (sampleWaveAt(idx, SHAPE_NOISE, FREQ_D_SHARP_8) / 2
+                          + sampleWaveAt(idx, SHAPE_SINE, FREQ_F_SHARP_4 - (idx * 8)) / 4)
+                       / 128
+                   + finishAt(2048, idx, done);
 
+        // F5
         case LOW_WOODBLOCK:
-            return linearWaveImpulse(SHAPE_NOISE, FREQ_G0, 2048, idx, done)
-                   + sampleWaveAt(idx, SHAPE_SINE, FREQ_G0) / 4;
+            return adrLerp(idx, 256, 2048 - 256, 256, 0)
+                       * (sampleWaveAt(idx, SHAPE_NOISE, FREQ_D_SHARP_8) / 2
+                          + sampleWaveAt(idx, SHAPE_SINE, FREQ_D_SHARP_4 - (idx * 8)) / 4)
+                       / 128
+                   + finishAt(2048, idx, done);
 
+        // F#5
+        // NOT DONE
         case MUTE_CUICA:
-        {
-            // Not 100% right yet, just leaving it here for now
-            uint8_t sampleAt = ((idx * ((56 << 16) / (DAC_SAMPLE_RATE_HZ >> 8))) & 0xFF00) >> 8;
-            int8_t sin       = swSynthSampleWave(SHAPE_SINE, sampleAt);
-            int vol          = (8191 - idx) / (8192 / 256);
-            if (idx == 8191)
-            {
-                *done = true;
-            }
+            break;
 
-            int8_t res = sin * vol / 256;
-            // return res;
-
-            if (res > 64)
-            {
-                return 64 - res;
-            }
-            else if (res < -64)
-            {
-                return -64 + res;
-            }
-            else
-            {
-                return res;
-            }
-        }
+        // G5
+        // NOT DONE
         case OPEN_CUICA:
             return linearWaveImpulse(SHAPE_SINE, freqLerp(idx, 4096, FREQ_A6, FREQ_B2), 4096, idx, done);
+
+        // G#5
         case MUTE_TRIANGLE:
             return linearWaveImpulse(SHAPE_SINE, FREQ_A6, 1536, idx, done);
+
+        // A6
         case OPEN_TRIANGLE:
             return linearWaveImpulse(SHAPE_SINE, FREQ_D_SHARP_7, 12288, idx, done);
     }
