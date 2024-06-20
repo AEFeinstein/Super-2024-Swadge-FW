@@ -511,6 +511,8 @@ void updateTestObject(paEntity_t* self)
 
 void updateHitBlock(paEntity_t* self)
 {
+    self->animationTimer++;
+
     if (self->homeTileY > self->tilemap->mapHeight)
     {
         pa_destroyEntity(self, false);
@@ -795,7 +797,7 @@ void pa_playerCollisionHandler(paEntity_t* self, paEntity_t* other)
 {
     switch (other->type)
     {
-        case paEntity_tEST:
+        case PA_ENTITY_TEST:
         case ENTITY_DUST_BUNNY:
         case ENTITY_WASP:
         case ENTITY_BUSH_2:
@@ -929,7 +931,7 @@ void pa_enemyCollisionHandler(paEntity_t* self, paEntity_t* other)
 {
     switch (other->type)
     {
-        case paEntity_tEST:
+        case PA_ENTITY_TEST:
         case ENTITY_DUST_BUNNY:
         case ENTITY_WASP:
         case ENTITY_BUSH_2:
@@ -1250,9 +1252,18 @@ bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t t
 {
     if (pa_isSolid(tileId))
     {
-        self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)] = self->jumpPower;
         soundPlaySfx(&(self->soundManager->sndHit), BZR_LEFT);
         pa_destroyEntity(self, false);
+       
+       if(PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION) == self->homeTileX && PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) == self->homeTileY){
+            pa_createBreakBlock(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            if(self->jumpPower == PA_TILE_SPAWN_BLOCK_0){
+                self->entityManager->remainingEnemies--;
+            }
+        } else {
+            self->tilemap->map[PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION) * self->tilemap->mapWidth + PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION)] = self->jumpPower;
+        }
+
         return true;
     }
     return false;
@@ -1275,6 +1286,41 @@ void pa_updateDummy(paEntity_t* self)
 {
     // Do nothing, because that's what dummies do!
 }
+
+void pa_updateBreakBlock(paEntity_t* self)
+{
+    if (self->gameData->frameCount % 4 == 0)
+    {
+        self->spriteIndex++;
+
+        if(self->spriteIndex > PA_SP_BREAK_BLOCK_3){
+            pa_setTile(self->tilemap, PA_TO_TILECOORDS(self->x >> SUBPIXEL_RESOLUTION), PA_TO_TILECOORDS(self->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);
+            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            pa_createBlockFragment(self->entityManager, self->x >> SUBPIXEL_RESOLUTION, self->y >> SUBPIXEL_RESOLUTION);
+            pa_destroyEntity(self, false);
+        }
+    }
+}
+
+void pa_updateBlockFragment(paEntity_t* self)
+{
+    self->animationTimer++;
+    if(self->animationTimer > 8){
+        pa_destroyEntity(self, false);
+        return;
+    }
+
+    self->x += self->xspeed;
+    self->y += self->yspeed;
+   
+    applyGravity(self);
+    despawnWhenOffscreen(self);
+
+    
+}
+
 
 void updateScrollLockLeft(paEntity_t* self)
 {
@@ -1349,7 +1395,7 @@ void updateWarp(paEntity_t* self)
 {
     if (self->gameData->frameCount % 10 == 0)
     {
-        self->spriteIndex = SP_WARP_1 + ((self->spriteIndex + 1) % 3);
+        self->spriteIndex = PA_SP_PLAYER_NORTH + ((self->spriteIndex + 1) % 3);
     }
 
     // Destroy self and respawn warp container block when offscreen
@@ -2185,7 +2231,7 @@ void powerUpCollisionHandler(paEntity_t* self, paEntity_t* other)
 {
     switch (other->type)
     {
-        case paEntity_tEST:
+        case PA_ENTITY_TEST:
         case ENTITY_DUST_BUNNY:
         case ENTITY_WASP:
         case ENTITY_BUSH_2:

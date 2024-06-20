@@ -17,6 +17,7 @@
 // Constants
 //==============================================================================
 #define SUBPIXEL_RESOLUTION 4
+#define PA_TO_TILECOORDS(x) ((x) >> PA_TILE_SIZE_IN_POWERS_OF_2)
 
 //==============================================================================
 // Functions
@@ -124,6 +125,26 @@ void pa_loadSprites(paEntityManager_t* entityManager)
     loadWsg("pa-en-003.wsg", &(entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_2].wsg), false);
     entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_2].originX         = 8;
     entityManager->sprites[PA_SP_ENEMY_DRILL_SIDE_2].originY         = 16;
+
+    loadWsg("break-000.wsg", &(entityManager->sprites[PA_SP_BREAK_BLOCK].wsg), false);
+    entityManager->sprites[PA_SP_BREAK_BLOCK].originX         = 8;
+    entityManager->sprites[PA_SP_BREAK_BLOCK].originY         = 8;
+
+    loadWsg("break-001.wsg", &(entityManager->sprites[PA_SP_BREAK_BLOCK_1].wsg), false);
+    entityManager->sprites[PA_SP_BREAK_BLOCK_1].originX         = 8;
+    entityManager->sprites[PA_SP_BREAK_BLOCK_1].originY         = 8;
+
+    loadWsg("break-002.wsg", &(entityManager->sprites[PA_SP_BREAK_BLOCK_2].wsg), false);
+    entityManager->sprites[PA_SP_BREAK_BLOCK_2].originX         = 8;
+    entityManager->sprites[PA_SP_BREAK_BLOCK_2].originY         = 8;
+
+    loadWsg("break-003.wsg", &(entityManager->sprites[PA_SP_BREAK_BLOCK_3].wsg), false);
+    entityManager->sprites[PA_SP_BREAK_BLOCK_3].originX         = 8;
+    entityManager->sprites[PA_SP_BREAK_BLOCK_3].originY         = 8;
+
+    loadWsg("blockfragment.wsg", &(entityManager->sprites[PA_SP_BLOCK_FRAGMENT].wsg), false);
+    entityManager->sprites[PA_SP_BLOCK_FRAGMENT].originX         = 3;
+    entityManager->sprites[PA_SP_BLOCK_FRAGMENT].originY         = 3;
 }
 
 void pa_updateEntities(paEntityManager_t* entityManager)
@@ -149,13 +170,10 @@ void pa_deactivateAllEntities(paEntityManager_t* entityManager, bool excludePlay
         paEntity_t* currentEntity = &(entityManager->entities[i]);
         currentEntity->active = false;
 
-        // TODO: respawn warp container blocks
-        /*
-            if(currentEntity->type == ENTITY_WARP){
-                //In pa_destroyEntity, this will overflow to the correct value.
-                currentEntity->type = 128 + PA_TILE_CONTAINER_1;
-            }
-        */
+        //clear out invisible block tiles that are placed for every Break Block object
+        if(currentEntity->type == PA_ENTITY_BREAK_BLOCK){
+            pa_setTile(currentEntity->tilemap, PA_TO_TILECOORDS(currentEntity->x >> SUBPIXEL_RESOLUTION), PA_TO_TILECOORDS(currentEntity->y >> SUBPIXEL_RESOLUTION), PA_TILE_EMPTY);            
+        }
 
         if (excludePlayer && currentEntity == entityManager->playerEntity)
         {
@@ -240,13 +258,13 @@ paEntity_t* pa_createEntity(paEntityManager_t* entityManager, uint8_t objectInde
         case ENTITY_PLAYER:
             createdEntity = pa_createPlayer(entityManager, x, y);
             break;
-        case paEntity_tEST:
+        case PA_ENTITY_TEST:
             createdEntity = createTestObject(entityManager, x, y);
             break;
-        case ENTITY_SCROLL_LOCK_LEFT:
+        case PA_ENTITY_BREAK_BLOCK:
             createdEntity = createScrollLockLeft(entityManager, x, y);
             break;
-        case ENTITY_SCROLL_LOCK_RIGHT:
+        case PA_ENTITY_BLOCK_FRAGMENT:
             createdEntity = createScrollLockRight(entityManager, x, y);
             break;
         case ENTITY_SCROLL_LOCK_UP:
@@ -419,12 +437,86 @@ paEntity_t* createTestObject(paEntityManager_t* entityManager, uint16_t x, uint1
     entity->spriteFlipVertical   = false;
     entity->scoreValue           = 100;
 
-    entity->type                 = paEntity_tEST;
+    entity->type                 = PA_ENTITY_TEST;
     entity->spriteIndex          = PA_SP_ENEMY_SOUTH;
     entity->facingDirection      = PA_DIRECTION_NONE;
     entity->updateFunction       = &updateTestObject;
     entity->collisionHandler     = &pa_enemyCollisionHandler;
     entity->tileCollisionHandler = &pa_enemyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+
+    return entity;
+}
+
+paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed               = 0;
+    entity->yspeed               = 0;
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = false;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->animationTimer       = 0;
+    entity->type                 = PA_ENTITY_BREAK_BLOCK;
+    entity->spriteIndex          = PA_SP_BREAK_BLOCK;
+    entity->facingDirection      = PA_DIRECTION_NONE;
+    entity->updateFunction       = &pa_updateBreakBlock;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
+    entity->fallOffTileHandler   = &defaultFallOffTileHandler;
+    entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
+
+    pa_setTile(entityManager->tilemap, PA_TO_TILECOORDS(x), PA_TO_TILECOORDS(y), PA_TILE_INVISIBLE_BLOCK);
+
+    return entity;
+}
+
+paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
+{
+    paEntity_t* entity = pa_findInactiveEntity(entityManager);
+
+    if (entity == NULL)
+    {
+        return NULL;
+    }
+
+    entity->active  = true;
+    entity->visible = true;
+    entity->x       = x << SUBPIXEL_RESOLUTION;
+    entity->y       = y << SUBPIXEL_RESOLUTION;
+
+    entity->xspeed               = -64 +(esp_random() % 128);
+    entity->yspeed               = -64 +(esp_random() % 128);
+    entity->xMaxSpeed            = 132;
+    entity->yMaxSpeed            = 132;
+    entity->gravityEnabled       = true;
+    entity->gravity              = 0;
+    entity->spriteFlipHorizontal = false;
+    entity->spriteFlipVertical   = false;
+    entity->scoreValue           = 100;
+    entity->animationTimer       = 0;
+    entity->type                 = PA_ENTITY_BLOCK_FRAGMENT;
+    entity->spriteIndex          = PA_SP_BLOCK_FRAGMENT;
+    entity->facingDirection      = PA_DIRECTION_NONE;
+    entity->updateFunction       = &pa_updateBlockFragment;
+    entity->collisionHandler     = &pa_dummyCollisionHandler;
+    entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
     entity->fallOffTileHandler   = &defaultFallOffTileHandler;
     entity->overlapTileHandler   = &pa_defaultOverlapTileHandler;
 
@@ -445,7 +537,7 @@ paEntity_t* createScrollLockLeft(paEntityManager_t* entityManager, uint16_t x, u
     entity->x       = x << SUBPIXEL_RESOLUTION;
     entity->y       = y << SUBPIXEL_RESOLUTION;
 
-    entity->type                 = ENTITY_SCROLL_LOCK_LEFT;
+    entity->type                 = 0;
     entity->updateFunction       = &updateScrollLockLeft;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
@@ -468,7 +560,7 @@ paEntity_t* createScrollLockRight(paEntityManager_t* entityManager, uint16_t x, 
     entity->x       = x << SUBPIXEL_RESOLUTION;
     entity->y       = y << SUBPIXEL_RESOLUTION;
 
-    entity->type                 = ENTITY_SCROLL_LOCK_RIGHT;
+    entity->type                 = 0;
     entity->updateFunction       = &updateScrollLockRight;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
     entity->tileCollisionHandler = &pa_dummyTileCollisionHandler;
@@ -559,6 +651,8 @@ paEntity_t* createHitBlock(paEntityManager_t* entityManager, uint16_t x, uint16_
     entity->visible = true;
     entity->x       = x << SUBPIXEL_RESOLUTION;
     entity->y       = y << SUBPIXEL_RESOLUTION;
+    entity->homeTileX = PA_TO_TILECOORDS(x);
+    entity->homeTileY = PA_TO_TILECOORDS(y);
 
     entity->xspeed         = 0;
     entity->yspeed         = 0;
@@ -641,7 +735,7 @@ paEntity_t* createWarp(paEntityManager_t* entityManager, uint16_t x, uint16_t y)
     entity->spriteFlipVertical = false;
 
     entity->type                 = ENTITY_WARP;
-    entity->spriteIndex          = SP_WARP_1;
+    entity->spriteIndex          = PA_SP_PLAYER_NORTH;
     entity->animationTimer       = 0;
     entity->updateFunction       = &updateWarp;
     entity->collisionHandler     = &pa_dummyCollisionHandler;
@@ -1444,7 +1538,8 @@ paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager){
                         newEnemy = createTestObject(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                         
                         if(newEnemy != NULL){
-                            pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
+                            //pa_setTile(entityManager->tilemap, tx, ty, PA_TILE_EMPTY);
+                            pa_createBreakBlock(entityManager, (tx << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE, (ty << PA_TILE_SIZE_IN_POWERS_OF_2) + PA_HALF_TILE_SIZE);
                             entityManager->activeEnemies++;
                             entityManager->remainingEnemies--;
                             return newEnemy;

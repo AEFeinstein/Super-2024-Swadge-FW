@@ -20,9 +20,9 @@
 typedef enum
 {
     ENTITY_PLAYER,
-    paEntity_tEST,
-    ENTITY_SCROLL_LOCK_LEFT,
-    ENTITY_SCROLL_LOCK_RIGHT,
+    PA_ENTITY_TEST,
+    PA_ENTITY_BREAK_BLOCK,
+    PA_ENTITY_BLOCK_FRAGMENT,
     ENTITY_SCROLL_LOCK_UP,
     ENTITY_SCROLL_LOCK_DOWN,
     ENTITY_SCROLL_UNLOCK,
@@ -221,5 +221,7 @@ void killPlayer(paEntity_t* self);
 void drawEntityTargetTile(paEntity_t* self);
 
 bool pa_hitBlockTileCollisionHandler(paEntity_t* self, uint8_t tileId, uint8_t tx, uint8_t ty, uint8_t direction);
+void pa_updateBreakBlock(paEntity_t* self);
+void pa_updateBlockFragment(paEntity_t* self);
 
 #endif

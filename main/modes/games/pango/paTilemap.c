@@ -70,7 +70,7 @@ void pa_drawTileMap(paTilemap_t* tilemap)
             
             uint8_t tile = tilemap->map[(y * tilemap->mapWidth) + x];
 
-            if (tile < PA_TILE_WALL_0)
+            if (tile < PA_TILE_WALL_0 || tile == PA_TILE_INVISIBLE_BLOCK)
             {
                 continue;
             }

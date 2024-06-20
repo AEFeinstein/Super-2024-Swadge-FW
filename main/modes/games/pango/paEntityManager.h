@@ -19,7 +19,7 @@
 // Constants
 //==============================================================================
 #define MAX_ENTITIES   32
-#define SPRITESET_SIZE 20
+#define SPRITESET_SIZE 25
 
 //==============================================================================
 // Structs
@@ -92,5 +92,7 @@ paEntity_t* createBgmChange4(paEntityManager_t* entityManager, uint16_t x, uint1
 paEntity_t* createBgmStop(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 void pa_freeEntityManager(paEntityManager_t* entityManager);
 paEntity_t* pa_spawnEnemyFromSpawnBlock(paEntityManager_t* entityManager);
+paEntity_t* pa_createBreakBlock(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
+paEntity_t* pa_createBlockFragment(paEntityManager_t* entityManager, uint16_t x, uint16_t y);
 
 #endif
