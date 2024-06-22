@@ -32,6 +32,15 @@
 #include "spiffs_wsg.h"
 #include "hdw-led.h"
 
+#define Y_SECTION_MARGIN 14
+#define TITLE_BG_HEIGHT  40
+
+/// The height of the title section, from the top of the TFT to the bottom of the title block
+#define MANIA_TITLE_HEIGHT (TITLE_BG_HEIGHT + Y_SECTION_MARGIN)
+
+/// The height of the body section, from the bottom of the title block to the bottom of the TFT
+#define MANIA_BODY_HEIGHT (TFT_HEIGHT - MANIA_TITLE_HEIGHT)
+
 typedef struct
 {
     int16_t orbitAngle;       ///< Angle for the orbit circles

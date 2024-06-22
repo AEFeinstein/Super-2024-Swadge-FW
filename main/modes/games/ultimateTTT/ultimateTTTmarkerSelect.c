@@ -25,10 +25,6 @@
  */
 void tttInputMarkerSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
 {
-    // Get the number of markers unlocked
-    // TODO unlock markers at a different rate?
-    int16_t markersUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_MARKERS);
-
     // If the button was pressed down
     if (evt->down)
     {
@@ -62,7 +58,7 @@ void tttInputMarkerSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 // Scroll to the left
                 if (0 == ttt->selectMarkerIdx)
                 {
-                    ttt->selectMarkerIdx = markersUnlocked - 1;
+                    ttt->selectMarkerIdx = ttt->numUnlockedMarkers - 1;
                 }
                 else
                 {
@@ -76,7 +72,7 @@ void tttInputMarkerSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
             case PB_RIGHT:
             {
                 // Scroll to the right
-                ttt->selectMarkerIdx = (ttt->selectMarkerIdx + 1) % markersUnlocked;
+                ttt->selectMarkerIdx = (ttt->selectMarkerIdx + 1) % ttt->numUnlockedMarkers;
                 // Increment the offset to scroll smoothly
                 ttt->xSelectScrollOffset += (ttt->markerWsg[0].blue.large.w + SELECT_MARGIN_X);
                 break;
@@ -117,11 +113,10 @@ void tttDrawMarkerSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     drawMenuMania(ttt->bgMenu, ttt->menuRenderer, elapsedUs);
 
     // Set up variables for drawing
-    int16_t markersUnlocked = MIN(2 + ttt->wins, NUM_UNLOCKABLE_MARKERS);
-    int16_t wsgDim          = ttt->markerWsg[0].blue.large.h;
-    int16_t yOff            = (TFT_HEIGHT - wsgDim) / 2 - 13;
-    int16_t xOff            = (TFT_WIDTH - wsgDim) / 2 + ttt->xSelectScrollOffset;
-    int16_t pIdx            = ttt->selectMarkerIdx;
+    int16_t wsgDim = ttt->markerWsg[0].blue.large.h;
+    int16_t yOff   = MANIA_TITLE_HEIGHT + (MANIA_BODY_HEIGHT - (wsgDim * 2 + SPACING_Y)) / 2;
+    int16_t xOff   = (TFT_WIDTH - wsgDim) / 2 + ttt->xSelectScrollOffset;
+    int16_t pIdx   = ttt->selectMarkerIdx;
 
     // 'Rewind' markers until they're off screen
     while (xOff > 0)
@@ -133,7 +128,7 @@ void tttDrawMarkerSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
     // Don't use a negative index!
     while (pIdx < 0)
     {
-        pIdx += markersUnlocked;
+        pIdx += ttt->numUnlockedMarkers;
     }
 
     // Draw markers until you're off screen
@@ -176,7 +171,7 @@ void tttDrawMarkerSelect(ultimateTTT_t* ttt, int64_t elapsedUs)
         // Increment X offset
         xOff += (wsgDim + SELECT_MARGIN_X);
         // Increment marker index
-        pIdx = (pIdx + 1) % markersUnlocked;
+        pIdx = (pIdx + 1) % ttt->numUnlockedMarkers;
     }
 
     // Draw arrows to indicate this can be scrolled

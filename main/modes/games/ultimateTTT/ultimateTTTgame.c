@@ -581,9 +581,24 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         // Record the outcome
         if (won)
         {
+            // Increment wins
             ttt->wins++;
             writeNvs32(tttWinKey, ttt->wins);
             ttt->lastResult = TTR_WIN;
+
+            // Check for unlocked markers
+            for (int16_t mIdx = 0; mIdx < NUM_UNLOCKABLE_MARKERS; mIdx++)
+            {
+                // If the player got the required number of wins
+                if (markersUnlockedAtWins[mIdx] == ttt->wins)
+                {
+                    // Unlock the next marker
+                    ttt->numUnlockedMarkers++;
+                    // Save to NVS
+                    writeNvs32(tttUnlockKey, ttt->numUnlockedMarkers);
+                    break;
+                }
+            }
         }
         else if (lost)
         {

@@ -37,6 +37,7 @@ static const char tttSingleStr[]     = "Single Player";
 static const char tttMarkerSelStr[]  = "Marker Select";
 static const char tttHowToStr[]      = "How To Play";
 static const char tttResultStr[]     = "Result";
+static const char tttRecordsStr[]    = "Records";
 static const char tttExit[]          = "Exit";
 
 // NVS keys
@@ -45,6 +46,7 @@ const char tttLossKey[]     = "ttt_loss";
 const char tttDrawKey[]     = "ttt_draw";
 const char tttMarkerKey[]   = "ttt_marker";
 const char tttTutorialKey[] = "ttt_tutor";
+const char tttUnlockKey[]   = "ttt_unlock";
 
 /**
  * Marker names to load WSGs
@@ -55,6 +57,8 @@ const char* markerNames[NUM_UNLOCKABLE_MARKERS] = {
     "sq",
     "tri",
 };
+
+const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS] = {0, 0, 1, 3};
 
 swadgeMode_t tttMode = {
     .modeName                 = tttName,
@@ -120,6 +124,7 @@ static void tttEnterMode(void)
     addSingleItemToMenu(ttt->menu, tttSingleStr);
     addSingleItemToMenu(ttt->menu, tttMarkerSelStr);
     addSingleItemToMenu(ttt->menu, tttHowToStr);
+    addSingleItemToMenu(ttt->menu, tttRecordsStr);
     addSingleItemToMenu(ttt->menu, tttExit);
 
     // Initialize a menu with no entries to be used as a background
@@ -129,23 +134,34 @@ static void tttEnterMode(void)
     if (true != readNvs32(tttWinKey, &ttt->wins))
     {
         ttt->wins = 0;
+        writeNvs32(tttWinKey, ttt->wins);
     }
     if (true != readNvs32(tttLossKey, &ttt->losses))
     {
         ttt->losses = 0;
+        writeNvs32(tttLossKey, ttt->losses);
     }
     if (true != readNvs32(tttDrawKey, &ttt->draws))
     {
         ttt->draws = 0;
+        writeNvs32(tttDrawKey, ttt->draws);
+    }
+    if (true != readNvs32(tttUnlockKey, &ttt->numUnlockedMarkers))
+    {
+        // Start with 2, X and O
+        ttt->numUnlockedMarkers = 2;
+        writeNvs32(tttUnlockKey, ttt->numUnlockedMarkers);
     }
     if (true != readNvs32(tttMarkerKey, &ttt->activeMarkerIdx))
     {
         // Set this to -1 to force the selection UI
         ttt->activeMarkerIdx = -1;
+        writeNvs32(tttMarkerKey, ttt->activeMarkerIdx);
     }
     if (true != readNvs32(tttTutorialKey, &ttt->tutorialRead))
     {
         ttt->tutorialRead = false;
+        writeNvs32(tttTutorialKey, ttt->tutorialRead);
     }
 
     // Initialize p2p
@@ -317,6 +333,11 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
             // Show how to play
             tttShowUi(TUI_HOW_TO);
         }
+        else if (tttRecordsStr == label)
+        {
+            ttt->lastResult = TTR_RECORDS;
+            tttShowUi(TUI_RESULT);
+        }
         else if (tttExit == label)
         {
             // Exit to the main menu
@@ -436,7 +457,14 @@ void tttShowUi(tttUi_t ui)
         }
         case TUI_RESULT:
         {
-            ttt->bgMenu->title = tttResultStr;
+            if (TTR_RECORDS == ttt->lastResult)
+            {
+                ttt->bgMenu->title = tttRecordsStr;
+            }
+            else
+            {
+                ttt->bgMenu->title = tttResultStr;
+            }
             break;
         }
     }

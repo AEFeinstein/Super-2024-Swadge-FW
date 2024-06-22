@@ -60,6 +60,7 @@ typedef enum __attribute((packed))
     TTR_LOSE,
     TTR_DRAW,
     TTR_DISCONNECT,
+    TTR_RECORDS,
 } tttResult_t;
 
 //==============================================================================
@@ -118,6 +119,7 @@ typedef struct
     int32_t losses;
     int32_t draws;
     tttResult_t lastResult;
+    int32_t numUnlockedMarkers;
     // Instructions
     const char* pageStarts[16];
     int pageIdx;
@@ -162,4 +164,6 @@ extern const char tttLossKey[];
 extern const char tttDrawKey[];
 extern const char tttMarkerKey[];
 extern const char tttTutorialKey[];
+extern const char tttUnlockKey[];
 extern swadgeMode_t tttMode;
+extern const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS];

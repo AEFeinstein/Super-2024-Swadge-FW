@@ -51,12 +51,14 @@ void tttDrawConnecting(ultimateTTT_t* ttt, int64_t elapsedUs)
     // Draw the background
     drawMenuMania(ttt->bgMenu, ttt->menuRenderer, elapsedUs);
 
+    // Spacing between lines
     int16_t ySpacing = 8;
-    int16_t tHeight  = (ttt->numConStrs * ttt->font_rodin.height) + ((ttt->numConStrs - 1) * ySpacing);
 
-    int16_t yOff = 54 + (186 - tHeight) / 2;
+    // Center text vertically under the title
+    int16_t tHeight = (ttt->numConStrs * ttt->font_rodin.height) + ((ttt->numConStrs - 1) * ySpacing);
+    int16_t yOff    = MANIA_TITLE_HEIGHT + (MANIA_BODY_HEIGHT - tHeight) / 2;
 
-    // Draw the connection string, centered
+    // Draw the connection strings, centered
     for (int16_t tIdx = 0; tIdx < ttt->numConStrs; tIdx++)
     {
         int16_t tWidth = textWidth(&ttt->font_rodin, ttt->conStrs[tIdx]);
