@@ -23,7 +23,8 @@ static const char howToText[]
       "For instance, if a marker is placed in the top-left square of a small game, then the next marker must be placed "
       "in the top-left small game.\n"
       "When a small game is won, markers may not be placed there anymore.\n"
-      "If a marker cannot be placed in a small game, then it may be placed anywhere instead.";
+      "If a marker cannot be placed in a small game, then it may be placed anywhere instead.\n"
+      "Win more games to unlock more markers!";
 
 //==============================================================================
 // Functions
