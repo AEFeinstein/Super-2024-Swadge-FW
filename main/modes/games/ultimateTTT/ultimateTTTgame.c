@@ -583,19 +583,19 @@ static void tttPlaceMarker(ultimateTTT_t* ttt, const vec_t* subgame, const vec_t
         {
             ttt->wins++;
             writeNvs32(tttWinKey, ttt->wins);
-            ttt->lastResult = TTT_P1; // This means winning
+            ttt->lastResult = TTR_WIN;
         }
         else if (lost)
         {
             ttt->losses++;
             writeNvs32(tttLossKey, ttt->losses);
-            ttt->lastResult = TTT_P2; // This means losing
+            ttt->lastResult = TTR_LOSE;
         }
         else if (drew)
         {
             ttt->draws++;
             writeNvs32(tttDrawKey, ttt->draws);
-            ttt->lastResult = TTT_DRAW;
+            ttt->lastResult = TTR_DRAW;
         }
 
         // Stop p2p

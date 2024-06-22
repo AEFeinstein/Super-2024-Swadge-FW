@@ -8,9 +8,10 @@
 // Variables
 //==============================================================================
 
-static const char winStr[]  = "A winner is you!";
-static const char lossStr[] = "You lost :(";
-static const char drawStr[] = "It is a draw.";
+static const char winStr[]          = "A winner is you!";
+static const char lossStr[]         = "You lost :(";
+static const char drawStr[]         = "It is a draw.";
+static const char disconnectedStr[] = "Disconnected";
 
 //==============================================================================
 // Functions
@@ -59,23 +60,25 @@ void tttDrawResult(ultimateTTT_t* ttt, int64_t elapsedUs)
     const char* resultStr;
     switch (ttt->lastResult)
     {
-        case TTT_P1:
+        case TTR_WIN:
         {
-            // Won
             resultStr = winStr;
             break;
         }
-        case TTT_P2:
+        case TTR_LOSE:
         {
-            // lost
             resultStr = lossStr;
             break;
         }
-        default:
-        case TTT_DRAW:
+        case TTR_DRAW:
         {
-            // Draw
             resultStr = drawStr;
+            break;
+        }
+        default:
+        case TTR_DISCONNECT:
+        {
+            resultStr = disconnectedStr;
             break;
         }
     }

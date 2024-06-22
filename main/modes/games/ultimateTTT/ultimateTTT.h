@@ -54,6 +54,14 @@ typedef enum __attribute__((packed))
     MSG_PLACE_MARKER,
 } tttMsgType_t;
 
+typedef enum __attribute((packed))
+{
+    TTR_WIN,
+    TTR_LOSE,
+    TTR_DRAW,
+    TTR_DISCONNECT,
+} tttResult_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -88,7 +96,8 @@ typedef struct
     font_t font_rodin;
     // Connection
     p2pInfo p2p;
-    const char* conStr;
+    const char** conStrs;
+    int16_t numConStrs;
     // Gameplay
     tttGameState_t state;
     tttSubgame_t subgames[3][3];
@@ -108,7 +117,7 @@ typedef struct
     int32_t wins;
     int32_t losses;
     int32_t draws;
-    tttPlayer_t lastResult;
+    tttResult_t lastResult;
     // Instructions
     const char* pageStarts[16];
     int pageIdx;

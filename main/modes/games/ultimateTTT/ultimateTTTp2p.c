@@ -8,10 +8,17 @@
 // Variables
 //==============================================================================
 
-static const char conStartedStr[] = "Connection Started";
-static const char conRxStartAck[] = "RX Start Ack Received";
-static const char conRxStartMsg[] = "RX Start Msg Received";
-static const char conLostStr[]    = "Connection Lost";
+static const char* conStartedStrs[] = {
+    "Connection Started.",
+    "Hold two Swadges",
+    "close together.",
+};
+static const char* conRxStartAck[] = {
+    "RX Start Ack Received",
+};
+static const char* conRxStartMsg[] = {
+    "RX Start Msg Received",
+};
 
 //==============================================================================
 // Functions
@@ -44,9 +51,18 @@ void tttDrawConnecting(ultimateTTT_t* ttt, int64_t elapsedUs)
     // Draw the background
     drawMenuMania(ttt->bgMenu, ttt->menuRenderer, elapsedUs);
 
+    int16_t ySpacing = 8;
+    int16_t tHeight  = (ttt->numConStrs * ttt->font_rodin.height) + ((ttt->numConStrs - 1) * ySpacing);
+
+    int16_t yOff = 54 + (186 - tHeight) / 2;
+
     // Draw the connection string, centered
-    int16_t tWidth = textWidth(&ttt->font_rodin, ttt->conStr);
-    drawText(&ttt->font_rodin, c000, ttt->conStr, (TFT_WIDTH - tWidth) / 2, TFT_HEIGHT / 2);
+    for (int16_t tIdx = 0; tIdx < ttt->numConStrs; tIdx++)
+    {
+        int16_t tWidth = textWidth(&ttt->font_rodin, ttt->conStrs[tIdx]);
+        drawText(&ttt->font_rodin, c000, ttt->conStrs[tIdx], (TFT_WIDTH - tWidth) / 2, yOff);
+        yOff += (ttt->font_rodin.height + ySpacing);
+    }
 }
 
 /**
@@ -58,22 +74,24 @@ void tttDrawConnecting(ultimateTTT_t* ttt, int64_t elapsedUs)
 void tttHandleCon(ultimateTTT_t* ttt, connectionEvt_t evt)
 {
     // Pick a new string for each connection state
-    // TODO replace with percentage?
     switch (evt)
     {
         case CON_STARTED:
         {
-            ttt->conStr = conStartedStr;
+            ttt->conStrs    = conStartedStrs;
+            ttt->numConStrs = ARRAY_SIZE(conStartedStrs);
             break;
         }
         case RX_GAME_START_ACK:
         {
-            ttt->conStr = conRxStartAck;
+            ttt->conStrs    = conRxStartAck;
+            ttt->numConStrs = ARRAY_SIZE(conRxStartAck);
             break;
         }
         case RX_GAME_START_MSG:
         {
-            ttt->conStr = conRxStartMsg;
+            ttt->conStrs    = conRxStartMsg;
+            ttt->numConStrs = ARRAY_SIZE(conRxStartMsg);
             break;
         }
         case CON_ESTABLISHED:
@@ -83,7 +101,9 @@ void tttHandleCon(ultimateTTT_t* ttt, connectionEvt_t evt)
         }
         case CON_LOST:
         {
-            ttt->conStr = conLostStr;
+            // Disconnected, show that UI
+            ttt->lastResult = TTR_DISCONNECT;
+            tttShowUi(TUI_RESULT);
             break;
         }
     }
@@ -147,5 +167,21 @@ void tttHandleMsgRx(ultimateTTT_t* ttt, const uint8_t* payload, uint8_t len)
  */
 void tttHandleMsgTx(ultimateTTT_t* ttt, messageStatus_t status, const uint8_t* data, uint8_t len)
 {
-    // TODO do something with the transmission status?
+    // Check transmission status
+    switch (status)
+    {
+        case MSG_ACKED:
+        {
+            // Cool, move along
+            break;
+        }
+        default:
+        case MSG_FAILED:
+        {
+            // Message failure means disconnection
+            ttt->lastResult = TTR_DISCONNECT;
+            tttShowUi(TUI_RESULT);
+            break;
+        }
+    }
 }
