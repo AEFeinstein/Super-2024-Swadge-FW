@@ -33,6 +33,11 @@ void tttInputMarkerSelect(ultimateTTT_t* ttt, buttonEvt_t* evt)
             case PB_A:
             {
                 bool exitAfterSelect = (-1 == ttt->activeMarkerIdx);
+                // If the index hasn't changed assume it's 0
+                if (-1 == ttt->selectMarkerIdx)
+                {
+                    ttt->selectMarkerIdx = 0;
+                }
                 // Select marker
                 ttt->activeMarkerIdx = ttt->selectMarkerIdx;
                 // Save to NVS
