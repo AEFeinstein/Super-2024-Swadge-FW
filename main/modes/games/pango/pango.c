@@ -233,7 +233,7 @@ void pangoEnterMode(void)
         pango->easterEgg = true;
     }
 
-    loadFont("radiostars.font", &pango->radiostars, false);
+    loadFont("eightbit_atari_grube2.font", &pango->radiostars, false);
 
     pa_initializeTileMap(&(pango->tilemap));
     pa_loadMapFromFile(&(pango->tilemap), "preset.bin");
@@ -362,20 +362,20 @@ void drawPangoHud(font_t* font, paGameData_t* gameData)
         drawText(font, c500, "1UP", 24, 2);
     }
 
-    drawText(font, c555, livesStr, 56, 2);
-    drawText(font, c555, coinStr, 160, 16);
-    drawText(font, c555, scoreStr, 8, 16);
-    drawText(font, c555, levelStr, 152, 2);
-    drawText(font, (gameData->countdown > 30) ? c555 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 220, 16);
+    drawText(font, c553, livesStr, 56, 2);
+    //drawText(font, c553, coinStr, 160, 224);
+    drawText(font, c553, scoreStr, 112, 2);
+    drawText(font, c553, levelStr, 24, 224);
+    drawText(font, (gameData->countdown > 30) ? c553 : redColors[(gameData->frameCount >> 3) % 4], timeStr, 212, 224);
 
     if (gameData->comboTimer == 0)
     {
         return;
     }
 
-    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 " (x%d)", gameData->comboScore, gameData->combo);
+    snprintf(scoreStr, sizeof(scoreStr) - 1, "+%" PRIu32 /*" (x%d)"*/, gameData->comboScore/*, gameData->combo*/);
     drawText(font, (gameData->comboTimer < 60) ? c030 : greenColors[(pango->gameData.frameCount >> 3) % 4],
-             scoreStr, 8, 30);
+             scoreStr, 190, 2);
 }
 
 void updateTitleScreen(pango_t* self)
