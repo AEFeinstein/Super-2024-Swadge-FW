@@ -87,6 +87,18 @@ typedef struct
 
 typedef struct
 {
+    p2pInfo p2p;
+    tttGameState_t state;
+    tttSubgame_t subgames[3][3];
+    vec_t cursor;
+    vec_t selectedSubgame;
+    tttCursorMode_t cursorMode;
+    int32_t p1MarkerIdx;
+    int32_t p2MarkerIdx;
+} tttGameData_t;
+
+typedef struct
+{
     // Current UI being shown
     tttUi_t ui;
     // Main Menu
@@ -96,17 +108,10 @@ typedef struct
     font_t font_righteous;
     font_t font_rodin;
     // Connection
-    p2pInfo p2p;
     const char** conStrs;
     int16_t numConStrs;
     // Gameplay
-    tttGameState_t state;
-    tttSubgame_t subgames[3][3];
-    vec_t cursor;
-    vec_t selectedSubgame;
-    tttCursorMode_t cursorMode;
-    int32_t p1MarkerIdx;
-    int32_t p2MarkerIdx;
+    tttGameData_t game;
     // Assets
     tttMarkerColorAssets_t markerWsg[NUM_UNLOCKABLE_MARKERS];
     // For marker selection UI
@@ -121,10 +126,10 @@ typedef struct
     tttResult_t lastResult;
     int32_t numUnlockedMarkers;
     // Instructions
-    const char* pageStarts[16];
     int pageIdx;
     int32_t tutorialRead;
     int32_t arrowBlinkTimer;
+    list_t instructionHistory;
 } ultimateTTT_t;
 
 typedef struct

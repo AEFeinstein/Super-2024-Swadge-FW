@@ -35,7 +35,7 @@ void tttHandleConnectingInput(ultimateTTT_t* ttt, buttonEvt_t* evt)
     if (evt->down && PB_B == evt->button)
     {
         // Cancel the connection and return to the main menu
-        p2pDeinit(&ttt->p2p);
+        p2pDeinit(&ttt->game.p2p);
         tttShowUi(TUI_MENU);
     }
 }

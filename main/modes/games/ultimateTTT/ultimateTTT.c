@@ -165,7 +165,7 @@ static void tttEnterMode(void)
     }
 
     // Initialize p2p
-    p2pInitialize(&ttt->p2p, 0x25, tttConCb, tttMsgRxCb, -70);
+    p2pInitialize(&ttt->game.p2p, 0x25, tttConCb, tttMsgRxCb, -70);
 
     // Start on different UIs depending on setup completion
     if (false == ttt->tutorialRead)
@@ -191,7 +191,7 @@ static void tttEnterMode(void)
 static void tttExitMode(void)
 {
     // Deinitialize p2p
-    p2pDeinit(&ttt->p2p);
+    p2pDeinit(&ttt->game.p2p);
 
     // Free marker assets
     for (int16_t pIdx = 0; pIdx < ARRAY_SIZE(markerNames); pIdx++)
@@ -316,7 +316,7 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
             // Show connection UI
             tttShowUi(TUI_CONNECTING);
             // Start multiplayer
-            p2pStartConnection(&ttt->p2p);
+            p2pStartConnection(&ttt->game.p2p);
         }
         else if (tttSingleStr == label)
         {
@@ -357,7 +357,7 @@ static void tttMenuCb(const char* label, bool selected, uint32_t value)
 static void tttEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8_t* data, uint8_t len, int8_t rssi)
 {
     // Pass to p2p
-    p2pRecvCb(&ttt->p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
+    p2pRecvCb(&ttt->game.p2p, esp_now_info->src_addr, (const uint8_t*)data, len, rssi);
 }
 
 /**
@@ -369,7 +369,7 @@ static void tttEspNowRecvCb(const esp_now_recv_info_t* esp_now_info, const uint8
 static void tttEspNowSendCb(const uint8_t* mac_addr, esp_now_send_status_t status)
 {
     // Pass to p2p
-    p2pSendCb(&ttt->p2p, mac_addr, status);
+    p2pSendCb(&ttt->game.p2p, mac_addr, status);
 }
 
 /**

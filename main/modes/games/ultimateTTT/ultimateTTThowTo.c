@@ -2,7 +2,9 @@
 // Includes
 //==============================================================================
 
+#include <esp_heap_caps.h>
 #include "ultimateTTThowTo.h"
+#include "ultimateTTTgame.h"
 
 //==============================================================================
 // Defines
@@ -10,21 +12,104 @@
 
 #define TEXT_MARGIN 18
 
+static void instructionSetupBoard(ultimateTTT_t* ttt);
+
 //==============================================================================
 // Variables
 //==============================================================================
 
-static const char howToText[]
-    = "Ultimate TTT is a big game of tic-tac-toe made up of nine small games of tic-tac-toe.\n"
-      "The goal is to win three games of tic-tac-toe in a row.\n"
-      "Players will take turns placing markers in the small games of tic-tac-toe.\n"
-      "The starting player may place a marker anywhere.\n"
-      "The square a marker is placed in determines the next small game a player must play in.\n"
-      "For instance, if a marker is placed in the top-left square of a small game, then the next marker must be placed "
-      "in the top-left small game.\n"
-      "When a small game is won, markers may not be placed there anymore.\n"
-      "If a marker cannot be placed in a small game, then it may be placed anywhere instead.\n"
-      "Win more games to unlock more markers!";
+typedef enum
+{
+    INSTRUCTION_TEXT,
+    INSTRUCTION_FUNC,
+    INSTRUCTION_BUTTON,
+    INSTRUCTION_NOP,
+} instructionType_t;
+
+int a = sizeof(ultimateTTT_t);
+typedef struct
+{
+    instructionType_t type;
+    union
+    {
+        const char* text;
+        void (*instructionFunc)(ultimateTTT_t* ttt);
+        buttonBit_t button;
+    };
+} instructionPage_t;
+
+static const instructionPage_t howToPages[] = {
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "Ultimate TTT is a big game of tic-tac-toe made up of nine small games of tic-tac-toe.",
+    },
+    {
+        .type            = INSTRUCTION_FUNC,
+        .instructionFunc = instructionSetupBoard,
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "Players will take turns placing markers in the small games of tic-tac-toe.",
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "The starting player may place a marker anywhere.",
+    },
+    {
+        .type = INSTRUCTION_NOP,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_DOWN,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_UP,
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "The square a marker is placed in determines the next small game a player must play in.",
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "A marker placed in a top-middle square means the next marker must be placed in the top-middle game",
+    },
+    {
+        .type = INSTRUCTION_NOP,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "When a small game is won, markers may not be placed there anymore.",
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "If a marker cannot be placed in a small game, then it may be placed anywhere instead.",
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "The goal is to win three games of tic-tac-toe in a row.",
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "Win more games to unlock more markers!",
+    },
+};
 
 //==============================================================================
 // Functions
@@ -49,9 +134,27 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
                 // These buttons scroll back
                 if (ttt->pageIdx > 0)
                 {
+                    // Undo the current operation
+                    switch (howToPages[ttt->pageIdx].type)
+                    {
+                        case INSTRUCTION_BUTTON:
+                        case INSTRUCTION_FUNC:
+                        {
+                            tttGameData_t* priorState = pop(&ttt->instructionHistory);
+                            memcpy(&ttt->game, priorState, sizeof(tttGameData_t));
+                            free(priorState);
+                        }
+                        case INSTRUCTION_NOP:
+                        case INSTRUCTION_TEXT:
+                        default:
+                        {
+                            // Don't undo anything
+                            break;
+                        }
+                    }
                     ttt->pageIdx--;
                 }
-                else if (ttt->tutorialRead)
+                else if (ttt->tutorialRead && evt->button ==PB_B)
                 {
                     // Return to main menu if going back from page 0, only if the rules have been read
                     tttShowUi(TUI_MENU);
@@ -62,9 +165,73 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
             case PB_RIGHT:
             {
                 // These buttons scroll forward
-                if (NULL != ttt->pageStarts[ttt->pageIdx + 1])
+                if ((ARRAY_SIZE(howToPages) - 1) != ttt->pageIdx)
                 {
                     ttt->pageIdx++;
+
+                    switch (howToPages[ttt->pageIdx].type)
+                    {
+                        case INSTRUCTION_BUTTON:
+                        case INSTRUCTION_FUNC:
+                        {
+                            // Push history onto the list
+                            tttGameData_t* oldData
+                                = (tttGameData_t*)heap_caps_calloc(1, sizeof(tttGameData_t), MALLOC_CAP_SPIRAM);
+                            memcpy(oldData, &ttt->game, sizeof(tttGameData_t));
+                            push(&ttt->instructionHistory, oldData);
+                            break;
+                        }
+                        default:
+                        case INSTRUCTION_NOP:
+                        case INSTRUCTION_TEXT:
+                        {
+                            break;
+                        }
+                    }
+
+                    // If the new page is a render
+                    switch (howToPages[ttt->pageIdx].type)
+                    {
+                        case INSTRUCTION_BUTTON:
+                        {
+                            // Process the button input
+                            buttonEvt_t simEvt = {
+                                .button = howToPages[ttt->pageIdx].button,
+                                .down   = true,
+                                .state  = howToPages[ttt->pageIdx].button,
+                            };
+                            tttHandleGameInput(ttt, &simEvt);
+
+                            // If the player is now waiting
+                            if (TGS_WAITING == ttt->game.state)
+                            {
+                                // Change the active player
+                                if (GOING_FIRST != ttt->game.p2p.cnc.playOrder)
+                                {
+                                    ttt->game.p2p.cnc.playOrder = GOING_FIRST;
+                                }
+                                else
+                                {
+                                    ttt->game.p2p.cnc.playOrder = GOING_SECOND;
+                                }
+                                // Set the player to place a marker
+                                ttt->game.state = TGS_PLACING_MARKER;
+                            }
+                            break;
+                        }
+                        case INSTRUCTION_FUNC:
+                        {
+                            // Execute the function
+                            howToPages[ttt->pageIdx].instructionFunc(ttt);
+                            break;
+                        }
+                        default:
+                        case INSTRUCTION_NOP:
+                        case INSTRUCTION_TEXT:
+                        {
+                            break;
+                        }
+                    }
                 }
                 else
                 {
@@ -105,23 +272,36 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
  */
 void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
 {
-    // Draw the background
-    drawMenuMania(ttt->bgMenu, ttt->menuRenderer, 0);
+    // Always set LEDs off
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
 
-    // Start with this text
-    if (0 == ttt->pageIdx)
+    switch (howToPages[ttt->pageIdx].type)
     {
-        ttt->pageStarts[ttt->pageIdx] = howToText;
-    }
+        case INSTRUCTION_FUNC:
+        case INSTRUCTION_BUTTON:
+        case INSTRUCTION_NOP:
+        {
+            // Render the game board
+            tttDrawGame(ttt);
+            // TODO render the arrow
+            break;
+        }
+        case INSTRUCTION_TEXT:
+        {
+            // Draw the background
+            drawMenuMania(ttt->bgMenu, ttt->menuRenderer, 0);
 
-    // Draw the text here
-    int16_t xOff = TEXT_MARGIN;
-    int16_t yOff = 50 + TEXT_MARGIN;
-    // Draw the text and save the next page
-    ttt->pageStarts[ttt->pageIdx + 1] = drawTextWordWrap(&ttt->font_rodin, c000, ttt->pageStarts[ttt->pageIdx], &xOff,
-                                                         &yOff, TFT_WIDTH - TEXT_MARGIN, TFT_HEIGHT - TEXT_MARGIN);
+            // Draw the text here
+            int16_t xOff = TEXT_MARGIN;
+            int16_t yOff = 50 + TEXT_MARGIN;
+            // Draw the text and save the next page
+            const char* leftover = drawTextWordWrap(&ttt->font_rodin, c000, howToPages[ttt->pageIdx].text, &xOff, &yOff,
+                                                    TFT_WIDTH - TEXT_MARGIN, TFT_HEIGHT);
+            // TODO something with the leftover text...
+            break;
+        }
+    }
 
     // Blink the arrows
     ttt->arrowBlinkTimer += elapsedUs;
@@ -139,11 +319,39 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
             drawText(&ttt->font_rodin, c000, "<", 0, (TFT_HEIGHT - ttt->font_rodin.height) / 2);
         }
 
-        if (NULL != ttt->pageStarts[ttt->pageIdx + 1])
+        if ((ARRAY_SIZE(howToPages) - 1) != ttt->pageIdx)
         {
             // Draw right arrow if not on the last page
             drawText(&ttt->font_rodin, c000, ">", TFT_WIDTH - textWidth(&ttt->font_rodin, ">"),
                      (TFT_HEIGHT - ttt->font_rodin.height) / 2);
         }
     }
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ttt
+ */
+static void instructionSetupBoard(ultimateTTT_t* ttt)
+{
+    // Clear the board
+    memset(&ttt->game.subgames[0][0], 0, sizeof(ttt->game.subgames));
+
+    // Reset the cursor
+    ttt->game.cursor.x          = 0;
+    ttt->game.cursor.y          = 0;
+    ttt->game.selectedSubgame.x = 0;
+    ttt->game.selectedSubgame.y = 0;
+    ttt->game.cursorMode        = SELECT_SUBGAME;
+
+    // Set the state as not playing yet
+    ttt->game.state = TGS_PLACING_MARKER;
+
+    // Default indices
+    ttt->game.p1MarkerIdx = 0;
+    ttt->game.p2MarkerIdx = 1;
+
+    // Fake this
+    ttt->game.p2p.cnc.playOrder = GOING_FIRST;
 }
