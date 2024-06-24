@@ -10,6 +10,7 @@
 #include "hdw-led.h"
 #include "typedef_bigbug.h"
 #include "palette.h"
+#include "linked_list.h"
 #include "soundManager_bigbug.h"
 
 //==============================================================================
@@ -50,6 +51,12 @@ typedef struct
     uint32_t inGameTimer;
 
     bb_soundManager_t* soundManager;
+
+    int8_t neighbors[4][2];//a handy table of left, up, right, and down offsets
+
+    list_t* check;//a list of tiles to check if they are supported.
+    list_t* unsupported;//a list of tiles that dynamically crumble.
+    
 } bb_gameData_t;
 
 //==============================================================================

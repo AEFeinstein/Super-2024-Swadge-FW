@@ -23,6 +23,14 @@ void bb_initializeGameData(bb_gameData_t* gameData, bb_soundManager_t* soundMana
     gameData->inGameTimer = 0;
 
     gameData->soundManager = soundManager;
+
+    gameData->neighbors[0][0] = -1; gameData->neighbors[0][1] =  0;
+    gameData->neighbors[1][0] =  0; gameData->neighbors[1][1] = -1;
+    gameData->neighbors[2][0] =  1; gameData->neighbors[2][1] =  0;
+    gameData->neighbors[3][0] =  0; gameData->neighbors[3][1] =  1;
+
+    gameData->check   = calloc(1, sizeof(list_t));
+    gameData->unsupported = calloc(1, sizeof(list_t));
 }
 
 void bb_initializeGameDataFromTitleScreen(bb_gameData_t* gameData)

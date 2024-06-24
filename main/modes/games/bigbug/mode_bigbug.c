@@ -89,6 +89,7 @@ static void bb_DrawScene(void);
 static void bb_GameLoop(int64_t elapsedUs);
 static void bb_Reset(void);
 static void bb_SetLeds(void);
+static void bb_UpdateTileSupport(void);
 static void bb_UpdatePhysics(int64_t elapsedUs);
 
 
@@ -136,6 +137,8 @@ bb_t* bigbug = NULL;
 static void bb_EnterMode(void)
 {
     bigbug = calloc(1, sizeof(bb_t));
+
+    bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
 
     bb_initializeTileMap(&(bigbug->tilemap));
     bb_initializeEntityManager(&(bigbug->entityManager),
@@ -351,6 +354,7 @@ static void bb_GameLoop(int64_t elapsedUs)
     {
         // record the previous frame's position before any logic.
         bigbug->previousPos = bigbug->garbotnikPos;
+        bb_UpdateTileSupport();
         // bigbugFadeLeds(elapsedUs);
         bb_ControlGarbotnik(elapsedUs);
         // bigbugControlCpuPaddle();
@@ -392,6 +396,44 @@ static void bb_SetLeds(void)
     setLeds(leds, CONFIG_NUM_LEDS);
 }
 
+/**
+ * @brief Finds unsupported dirt over many frames and crumbles it.
+ */
+static void bb_UpdateTileSupport(void){
+    if(bigbug->gameData.unsupported->first != NULL){
+        for(int i = 0; i < 50; i++)//arbitrarily large loop to get to the dirt tiles.
+        {
+            //remove the first item from the list
+            uint32_t* shiftedVal = shift(bigbug->gameData.unsupported);
+            //check that it's still dirt, because a previous pass may have crumbled it.
+            if(bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] > 0)
+            {
+                //set it to air
+                bigbug->tilemap.fgTiles[shiftedVal[0]][shiftedVal[1]] = 0;
+                //create a crumble animation
+                bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, shiftedVal[0]*32+16, shiftedVal[1]*32+16);
+
+                //queue neighbors for crumbling
+                for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
+                {
+                    if((int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] >= 0
+                    && (int32_t)shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0] < TILE_FIELD_WIDTH
+                    && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] >= 0
+                    && (int32_t)shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1] < TILE_FIELD_HEIGHT)
+                    {
+                        uint32_t* val = calloc(2,sizeof(uint32_t));
+                        val[0] = shiftedVal[0] + bigbug->gameData.neighbors[neighborIdx][0];
+                        val[1] = shiftedVal[1] + bigbug->gameData.neighbors[neighborIdx][1];
+
+                        push(bigbug->gameData.unsupported, (void*)val);
+                    }
+                }
+                break;
+            }
+        }
+    }
+}
+
 static void bb_UpdatePhysics(int64_t elapsedUs)
 {
     // Apply garbotnik's drag
@@ -422,9 +464,9 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
     bigbug->garbotnikPos.y += bigbug->garbotnikVel.y * elapsedUs / 100000;
 
     // Look up 4 nearest tiles for collision checks
-    // a tile's width is 32 pixels << 4 = 1024. half width is 512.
-    int32_t xIdx = ((bigbug->garbotnikPos.x - 512)/1024) - (bigbug->garbotnikPos.x < 0);//the x index
-    int32_t yIdx = (bigbug->garbotnikPos.y  - 512)/1024 - (bigbug->garbotnikPos.y < 0);//the y index
+    // a tile's width is 16 pixels << 4 = 512. half width is 256.
+    int32_t xIdx = (bigbug->garbotnikPos.x - BITSHIFT_HALF_TILE)/BITSHIFT_TILE_SIZE - (bigbug->garbotnikPos.x < 0);//the x index
+    int32_t yIdx = (bigbug->garbotnikPos.y  - BITSHIFT_HALF_TILE)/BITSHIFT_TILE_SIZE - (bigbug->garbotnikPos.y < 0);//the y index
 
     int32_t best_i = -1;//negative means no worthy candidates found.
     int32_t best_j = -1;
@@ -434,7 +476,7 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
             if(i >= 0 && i < TILE_FIELD_WIDTH && j >=0 && j < TILE_FIELD_HEIGHT){
                 if(bigbug->tilemap.fgTiles[i][j] >= 1){
                     //Initial circle check for preselecting the closest dirt tile
-                    int32_t sqDist = sqMagVec2d(subVec2d(bigbug->garbotnikPos, (vec_t){i * 1024 + 512, j * 1024 + 512}));
+                    int32_t sqDist = sqMagVec2d(subVec2d(bigbug->garbotnikPos, (vec_t){i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE, j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE}));
                     if(sqDist < closestSqDist){
                         //Good candidate found!
                         best_i = i;
@@ -446,15 +488,17 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
         }
     }
     if(best_i > -1){
-        vec_t tilePos = {best_i * 1024 + 512, best_j * 1024 + 512};
+        vec_t tilePos = {best_i * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE, best_j * BITSHIFT_TILE_SIZE + BITSHIFT_HALF_TILE};
         //AABB-AABB collision detection begins here
         //https://tutorialedge.net/gamedev/aabb-collision-detection-tutorial/
-        if(bigbug->garbotnikPos.x + 240 > tilePos.x - 512 &&
-           bigbug->garbotnikPos.x - 240 < tilePos.x + 512 &&
-           bigbug->garbotnikPos.y + 192 > tilePos.y - 512 &&
-           bigbug->garbotnikPos.y - 192 < tilePos.y + 512)
+        if(bigbug->garbotnikPos.x + 240 > tilePos.x - BITSHIFT_HALF_TILE &&
+           bigbug->garbotnikPos.x - 240 < tilePos.x + BITSHIFT_HALF_TILE &&
+           bigbug->garbotnikPos.y + 192 > tilePos.y - BITSHIFT_HALF_TILE &&
+           bigbug->garbotnikPos.y - 192 < tilePos.y + BITSHIFT_HALF_TILE)
         {
-            //Collision detected!
+            ///////////////////////
+            //Collision detected!//
+            ///////////////////////
             //printf("hit\n");
             //Resolve garbotnik's position somewhat based on his position previously.
             vec_t normal = subVec2d(bigbug->previousPos, tilePos);
@@ -463,12 +507,12 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 if(normal.x > 0){
                     normal.x = 1;
                     normal.y = 0;
-                    bigbug->garbotnikPos.x = tilePos.x + 752;
+                    bigbug->garbotnikPos.x = tilePos.x + 240 + BITSHIFT_HALF_TILE;
                 }
                 else{
                     normal.x = -1;
                     normal.y = 0;
-                    bigbug->garbotnikPos.x = tilePos.x - 752;
+                    bigbug->garbotnikPos.x = tilePos.x - 240 - BITSHIFT_HALF_TILE;
                 }
                 
             }
@@ -476,25 +520,36 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 if(normal.y > 0){
                     normal.x = 0;
                     normal.y = 1;
-                    bigbug->garbotnikPos.y = tilePos.y + 704;
+                    bigbug->garbotnikPos.y = tilePos.y + 192 + BITSHIFT_HALF_TILE;
                 }
                 else{
                     normal.x = 0;
                     normal.y = -1;
-                    bigbug->garbotnikPos.y = tilePos.y - 704;
+                    bigbug->garbotnikPos.y = tilePos.y - 192 - BITSHIFT_HALF_TILE;
                 }
             }
             //printf("dot product: %d\n",dotVec2d(bigbug->garbotnikVel, normal));
             if(dotVec2d(bigbug->garbotnikVel, normal) < -95)//velocity angle is opposing garbage normal vector. Tweak number for different threshold.
             {
-                //digging detected!
-                //Update the dirt by decrementing if greater than 0.
-                bigbug->tilemap.fgTiles[best_i][best_j] = bigbug->tilemap.fgTiles[best_i][best_j] > 0 ? bigbug->tilemap.fgTiles[best_i][best_j] - 1 : 0;
+                /////////////////////
+                //digging detected!//
+                /////////////////////
+
+                //crumble test
+                uint32_t* val = calloc(2,sizeof(uint32_t));
+                val[0] = 5;
+                val[1] = 3;
+                push(bigbug->gameData.unsupported, (void*)val);
+
+                //Update the dirt by decrementing it.
+                bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
                 
                 //Create a crumble animation
                 bb_createEntity(&(bigbug->entityManager), ONESHOT_ANIMATION, CRUMBLE_ANIM, tilePos.x>>DECIMAL_BITS, tilePos.y>>DECIMAL_BITS);
 
-                //Mirror garbotnik's velocity
+                ///////////////////////////////
+                //Mirror garbotnik's velocity//
+                ///////////////////////////////
                 // Reflect the velocity vector along the normal
                 // See http://www.sunshine2k.de/articles/coding/vectorreflection/vectorreflection.html
                 printf("hit squared speed: %" PRId32 "\n", sqMagVec2d(bigbug->garbotnikVel));
@@ -506,6 +561,25 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                     bounceScalar = 1;
                 }
                 bigbug->garbotnikVel = mulVec2d(subVec2d(bigbug->garbotnikVel, mulVec2d(normal, (2* dotVec2d(bigbug->garbotnikVel, normal)))), bounceScalar);
+
+                /////////////////////////////////
+                //check neighbors for stability//
+                /////////////////////////////////
+                for(uint8_t neighborIdx = 0; neighborIdx < 4; neighborIdx++)
+                {
+                    uint32_t check_x = best_i + bigbug->gameData.neighbors[neighborIdx][0];
+                    uint32_t check_y = best_j + bigbug->gameData.neighbors[neighborIdx][1];
+                    //Check if neighbor is in bounds of map (also not on left, right, or bottom, perimiter) and if it is dirt.
+                    if(check_x > 0 && check_x < TILE_FIELD_WIDTH - 1 && check_y >= 0 && check_y < TILE_FIELD_HEIGHT - 1 && bigbug->tilemap.fgTiles[check_x][check_y] > 0)
+                    {
+                        uint32_t* val = calloc(3, sizeof(uint32_t));
+                        val[0] = check_x;
+                        val[1] = check_y;
+                        val[2] = 1; //1 is for foreground. 0 is midground.
+                    }
+                }
+
+                
             }
         }
     }

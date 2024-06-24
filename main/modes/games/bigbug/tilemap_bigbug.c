@@ -255,21 +255,21 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
     //setting up variables to draw midground & foreground
     //printf("camera x: %d\n", (bigbug->camera.pos.x >> DECIMAL_BITS));
     //printf("width: %d\n", FIELD_WIDTH);
-    int16_t iStart = camera->pos.x / 64;
-    int16_t iEnd = iStart + 5;
-    int16_t jStart = camera->pos.y / 64;
-    int16_t jEnd = jStart + 4;
-    if (camera->pos.x < 0){
-        iStart -= 1;
-        if (camera->pos.x  + FIELD_WIDTH < 0){
-            iEnd -= 1;
-        }
+    int16_t iStart = camera->pos.x / TILE_SIZE;
+    int16_t iEnd = iStart + TFT_WIDTH / TILE_SIZE + 1;
+    int16_t jStart = camera->pos.y / TILE_SIZE;
+    int16_t jEnd = jStart + TFT_HEIGHT / TILE_SIZE + 1;
+
+    iStart -= (camera->pos.x < 0);
+    iEnd -= (camera->pos.x < 0);
+    if (camera->pos.x  + FIELD_WIDTH < 0){
+        iEnd = -1;
     }
-    if (camera->pos.y < 0){
-        jStart -= 1;
-        if (camera->pos.y + FIELD_HEIGHT< 0){
-            jEnd -= 1;
-        }
+
+    jStart -= (camera->pos.y < 0);
+    jEnd -= (camera->pos.y < 0);
+    if (camera->pos.y + FIELD_HEIGHT< 0){
+        jEnd = -1;
     }
 
     
@@ -390,38 +390,37 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
                                     break;
                                 case 15: //1111
                                     drawWsgSimpleScaled(&tilemap->mg1Wsg[15],
-                                                i * 64 - camera->pos.x,
-                                                j * 64 - camera->pos.y,
+                                                i * TILE_SIZE - camera->pos.x,
+                                                j * TILE_SIZE - camera->pos.y,
                                                 2, 2);
                                     break;
                             }
                             break;
                         default:
                             drawWsgSimpleScaled(&tilemap->mg1Wsg[sprite_idx],
-                                                i * 64 - camera->pos.x,
-                                                j * 64 - camera->pos.y,
-                                                2,
-                                                2);
+                                                i * TILE_SIZE - camera->pos.x,
+                                                j * TILE_SIZE - camera->pos.y,
+                                                1, 1);
                     }
                     if((sprite_idx & 0b1100) == 0b1100 && !(corner_info & 0b1000)){
                         //FIX ME!!!!
                         //see about getting wsg for coord once
-                        drawWsgSimpleScaled(&tilemap->mg1Wsg[28], i  * 64 - camera->pos.x, j * 64 - camera->pos.y,2, 2);
+                        drawWsgSimpleScaled(&tilemap->mg1Wsg[28], i  * TILE_SIZE - camera->pos.x, j * TILE_SIZE - camera->pos.y, 1, 1);
                     }
                     if((sprite_idx & 0b0110) == 0b0110 && !(corner_info & 0b0100)){
-                        drawWsgSimpleScaled(&tilemap->mg1Wsg[21], i  * 64 - camera->pos.x + 32, j * 64 - camera->pos.y,      2, 2);
+                        drawWsgSimpleScaled(&tilemap->mg1Wsg[21], i  * TILE_SIZE - camera->pos.x + HALF_TILE, j * TILE_SIZE - camera->pos.y,      1, 1);
                     }
                     if((sprite_idx & 0b0011) == 0b0011 && !(corner_info & 0b0001)){
-                        drawWsgSimpleScaled(&tilemap->mg1Wsg[19], i  * 64 - camera->pos.x + 32, j * 64 - camera->pos.y + 32, 2, 2);
+                        drawWsgSimpleScaled(&tilemap->mg1Wsg[19], i  * TILE_SIZE - camera->pos.x + HALF_TILE, j * TILE_SIZE - camera->pos.y + HALF_TILE, 1, 1);
                     }
                     if((sprite_idx & 0b1001) == 0b1001 && !(corner_info & 0b0010)){
-                        drawWsgSimpleScaled(&tilemap->mg1Wsg[26], i  * 64 - camera->pos.x,      j * 64 - camera->pos.y + 32, 2, 2);
+                        drawWsgSimpleScaled(&tilemap->mg1Wsg[26], i  * TILE_SIZE - camera->pos.x,      j * TILE_SIZE - camera->pos.y + HALF_TILE, 1, 1);
                     }
                 }
                 
                 // Draw foreground tiles
                 if(tilemap->fgTiles[i][j] >= 1){
-                    //drawWsgTile(&bigbug->dirtWsg, i * 64 - bigbug->camera.pos.x, j * 64 - bigbug->camera.pos.y);
+                    //drawWsgTile(&bigbug->dirtWsg, i * TILE_SIZE - bigbug->camera.pos.x, j * TILE_SIZE - bigbug->camera.pos.y);
                     //sprite_idx LURD order.
                     uint8_t sprite_idx = 8 * ((i-1 < 0) ? 0 : (tilemap->fgTiles[i-1][j]>0)) +
                                     4 * ((j-1 < 0) ? 0 : (tilemap->fgTiles[i][j-1]>0)) +
@@ -514,38 +513,37 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
                                     break;
                                 case 15: //1111
                                     drawWsgSimpleScaled(&tilemap->m1Wsg[15],
-                                                i * 64 - camera->pos.x,
-                                                j * 64 - camera->pos.y,
-                                                2, 2);
+                                                i * TILE_SIZE - camera->pos.x,
+                                                j * TILE_SIZE - camera->pos.y,
+                                                1, 1);
                                     break;
                             }
                             break;
                         default:
                             drawWsgSimpleScaled(&(*bb_GetWsgArrForForegroundCoord(tilemap, i,j))[sprite_idx],
-                                                i * 64 - camera->pos.x,
-                                                j * 64 - camera->pos.y,
-                                                2,
-                                                2);
+                                                i * TILE_SIZE - camera->pos.x,
+                                                j * TILE_SIZE - camera->pos.y,
+                                                1, 1);
                     }
                     if((sprite_idx & 0b1100) == 0b1100 && !(corner_info & 0b1000)){
                         //FIX ME!!!!
                         //see about getting wsg for coord once
-                        drawWsgSimpleScaled(&(*bb_GetWsgArrForForegroundCoord(tilemap, i,j))[28], i  * 64 - camera->pos.x, j * 64 - camera->pos.y,2, 2);
+                        drawWsgSimpleScaled(&(*bb_GetWsgArrForForegroundCoord(tilemap, i,j))[28], i  * TILE_SIZE - camera->pos.x, j * TILE_SIZE - camera->pos.y, 1, 1);
                     }
                     if((sprite_idx & 0b0110) == 0b0110 && !(corner_info & 0b0100)){
                         wsg_t (*tileset)[32] = bb_GetWsgArrForForegroundCoord(tilemap, i, j);
 
-                        drawWsgSimpleScaled(&(*tileset)[21], i  * 64 - camera->pos.x + 32, j * 64 - camera->pos.y,      2, 2);
+                        drawWsgSimpleScaled(&(*tileset)[21], i  * TILE_SIZE - camera->pos.x + HALF_TILE, j * TILE_SIZE - camera->pos.y,      1, 1);
                     }
                     if((sprite_idx & 0b0011) == 0b0011 && !(corner_info & 0b0001)){
                         wsg_t (*tileset)[32] = bb_GetWsgArrForForegroundCoord(tilemap, i, j);
 
-                        drawWsgSimpleScaled(&(*tileset)[19], i  * 64 - camera->pos.x + 32, j * 64 - camera->pos.y + 32, 2, 2);
+                        drawWsgSimpleScaled(&(*tileset)[19], i  * TILE_SIZE - camera->pos.x + HALF_TILE, j * TILE_SIZE - camera->pos.y + HALF_TILE, 1, 1);
                     }
                     if((sprite_idx & 0b1001) == 0b1001 && !(corner_info & 0b0010)){
                         wsg_t (*tileset)[32] = bb_GetWsgArrForForegroundCoord(tilemap, i, j);
 
-                        drawWsgSimpleScaled(&(*tileset)[26], i  * 64 - camera->pos.x,      j * 64 - camera->pos.y + 32, 2, 2);
+                        drawWsgSimpleScaled(&(*tileset)[26], i  * TILE_SIZE - camera->pos.x,      j * TILE_SIZE - camera->pos.y + HALF_TILE, 1, 1);
                     }
                 }
             }
@@ -559,16 +557,16 @@ void bb_drawTileMap(bb_tilemap_t* tilemap, rectangle_t* camera)
 void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, const uint32_t i, const uint32_t j)
 {
     vec_t tilePos = {
-            .x = i  * 64 - camera->pos.x,
-            .y = j * 64 - camera->pos.y
+            .x = i  * TILE_SIZE - camera->pos.x,
+            .y = j * TILE_SIZE - camera->pos.y
         };
 
     wsg_t (*tileset)[32] = bb_GetWsgArrForForegroundCoord(tilemap, i, j);
 
-    drawWsgSimpleScaled(&(*tileset)[idx_arr[0]+16], tilePos.x,      tilePos.y,      2, 2);
-    drawWsgSimpleScaled(&(*tileset)[idx_arr[1]+16], tilePos.x + 32, tilePos.y,      2, 2);
-    drawWsgSimpleScaled(&(*tileset)[idx_arr[2]+16], tilePos.x,      tilePos.y + 32, 2, 2);
-    drawWsgSimpleScaled(&(*tileset)[idx_arr[3]+16], tilePos.x + 32, tilePos.y + 32, 2, 2);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[0]+16], tilePos.x,      tilePos.y,      1, 1);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[1]+16], tilePos.x + HALF_TILE, tilePos.y,      1, 1);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[2]+16], tilePos.x,      tilePos.y + HALF_TILE, 1, 1);
+    drawWsgSimpleScaled(&(*tileset)[idx_arr[3]+16], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE, 1, 1);
 }
 
 /**
@@ -577,14 +575,14 @@ void bb_DrawForegroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, con
 void bb_DrawMidgroundCornerTile(bb_tilemap_t* tilemap, rectangle_t* camera, const uint8_t* idx_arr, const uint32_t i, const uint32_t j)
 {
     vec_t tilePos = {
-            .x = i  * 64 - camera->pos.x,
-            .y = j * 64 - camera->pos.y
+            .x = i  * TILE_SIZE - camera->pos.x,
+            .y = j * TILE_SIZE - camera->pos.y
         };
 
-    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[0]+16], tilePos.x,      tilePos.y,      2, 2);
-    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[1]+16], tilePos.x + 32, tilePos.y,      2, 2);
-    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[2]+16], tilePos.x,      tilePos.y + 32, 2, 2);
-    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[3]+16], tilePos.x + 32, tilePos.y + 32, 2, 2);
+    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[0]+16], tilePos.x,      tilePos.y,      1, 1);
+    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[1]+16], tilePos.x + HALF_TILE, tilePos.y,      1, 1);
+    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[2]+16], tilePos.x,      tilePos.y + HALF_TILE, 1, 1);
+    drawWsgSimpleScaled(&tilemap->mg1Wsg[idx_arr[3]+16], tilePos.x + HALF_TILE, tilePos.y + HALF_TILE, 1, 1);
 }
 
 wsg_t (*bb_GetWsgArrForForegroundCoord(bb_tilemap_t* tilemap, const uint32_t i, const uint32_t j))[32]
