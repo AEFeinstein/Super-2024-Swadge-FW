@@ -126,7 +126,7 @@ typedef struct
     tttResult_t lastResult;
     int32_t numUnlockedMarkers;
     // Instructions
-    int pageIdx;
+    int32_t pageIdx;
     int32_t tutorialRead;
     int32_t arrowBlinkTimer;
     list_t instructionHistory;

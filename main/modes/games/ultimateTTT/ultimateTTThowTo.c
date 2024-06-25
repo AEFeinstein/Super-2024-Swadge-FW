@@ -154,7 +154,7 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
                     }
                     ttt->pageIdx--;
                 }
-                else if (ttt->tutorialRead && evt->button ==PB_B)
+                else if (ttt->tutorialRead && evt->button == PB_B)
                 {
                     // Return to main menu if going back from page 0, only if the rules have been read
                     tttShowUi(TUI_MENU);
@@ -276,6 +276,7 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
     led_t leds[CONFIG_NUM_LEDS] = {0};
     setLeds(leds, CONFIG_NUM_LEDS);
 
+    paletteColor_t textColor = c000;
     switch (howToPages[ttt->pageIdx].type)
     {
         case INSTRUCTION_FUNC:
@@ -285,6 +286,7 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
             // Render the game board
             tttDrawGame(ttt);
             // TODO render the arrow
+            textColor = c555;
             break;
         }
         case INSTRUCTION_TEXT:
@@ -302,6 +304,12 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
             break;
         }
     }
+
+    char pageText[32];
+    snprintf(pageText, sizeof(pageText) - 1, "%d/%d", 1 + ttt->pageIdx, (int32_t)ARRAY_SIZE(howToPages));
+
+    int16_t tWidth = textWidth(&ttt->font_rodin, pageText);
+    drawText(&ttt->font_rodin, textColor, pageText, TFT_WIDTH - 40 - tWidth, TFT_HEIGHT - ttt->font_rodin.height);
 
     // Blink the arrows
     ttt->arrowBlinkTimer += elapsedUs;
