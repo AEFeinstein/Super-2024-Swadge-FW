@@ -202,6 +202,12 @@ static void tttExitMode(void)
         freeWsg(&ttt->markerWsg[pIdx].red.large);
     }
 
+    // Clear out this list
+    while (0 != ttt->instructionHistory.length)
+    {
+        free(pop(&ttt->instructionHistory));
+    }
+
     // Free the menu renderer
     deinitMenuManiaRenderer(ttt->menuRenderer);
 
