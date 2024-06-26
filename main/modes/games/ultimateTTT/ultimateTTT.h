@@ -130,6 +130,7 @@ typedef struct
     int32_t tutorialRead;
     int32_t arrowBlinkTimer;
     list_t instructionHistory;
+    bool showingInstructions;
 } ultimateTTT_t;
 
 typedef struct

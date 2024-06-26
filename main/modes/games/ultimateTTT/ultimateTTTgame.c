@@ -73,6 +73,10 @@ void tttBeginGame(ultimateTTT_t* ttt)
     ttt->game.p1MarkerIdx = 0;
     ttt->game.p2MarkerIdx = 0;
 
+    // Clean up after showing instructions
+    ttt->game.p2p.cnc.playOrder = NOT_SET;
+    ttt->showingInstructions    = false;
+
     // Show the game UI
     tttShowUi(TUI_GAME);
 
@@ -647,6 +651,11 @@ static tttPlayer_t checkWinner(ultimateTTT_t* ttt)
         {
             checkSubgameWinner(&ttt->game.subgames[x][y]);
         }
+    }
+
+    if (ttt->showingInstructions)
+    {
+        return TTT_NONE;
     }
 
     // Check the main game

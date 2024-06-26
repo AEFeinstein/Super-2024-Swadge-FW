@@ -13,6 +13,9 @@
 #define TEXT_MARGIN 18
 
 static void instructionSetupBoard(ultimateTTT_t* ttt);
+static void instructionSetupSmallWin(ultimateTTT_t* ttt);
+static void instructionSetupInvalidMove(ultimateTTT_t* ttt);
+static void instructionSetupGameWin(ultimateTTT_t* ttt);
 
 //==============================================================================
 // Variables
@@ -49,7 +52,7 @@ static const instructionPage_t howToPages[] = {
     },
     {
         .type = INSTRUCTION_TEXT,
-        .text = "Players will take turns placing markers in the small games of tic-tac-toe.",
+        .text = "Players take turns placing markers in the small games of tic-tac-toe.",
     },
     {
         .type = INSTRUCTION_TEXT,
@@ -84,7 +87,7 @@ static const instructionPage_t howToPages[] = {
     },
     {
         .type = INSTRUCTION_TEXT,
-        .text = "A marker placed in a top-middle square means the next marker must be placed in the top-middle game",
+        .text = "A marker placed in a top-middle square means the next marker must be placed in the top-middle game.",
     },
     {
         .type = INSTRUCTION_NOP,
@@ -98,12 +101,80 @@ static const instructionPage_t howToPages[] = {
         .text = "When a small game is won, markers may not be placed there anymore.",
     },
     {
+        .type            = INSTRUCTION_FUNC,
+        .instructionFunc = instructionSetupSmallWin,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
+    },
+    {
         .type = INSTRUCTION_TEXT,
         .text = "If a marker cannot be placed in a small game, then it may be placed anywhere instead.",
     },
     {
+        .type            = INSTRUCTION_FUNC,
+        .instructionFunc = instructionSetupInvalidMove,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_DOWN,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_DOWN,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
+    },
+    {
         .type = INSTRUCTION_TEXT,
         .text = "The goal is to win three games of tic-tac-toe in a row.",
+    },
+    {
+        .type            = INSTRUCTION_FUNC,
+        .instructionFunc = instructionSetupGameWin,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+    },
+    {
+        .type   = INSTRUCTION_BUTTON,
+        .button = PB_A,
     },
     {
         .type = INSTRUCTION_TEXT,
@@ -296,7 +367,7 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
 
             // Draw the text here
             int16_t xOff = TEXT_MARGIN;
-            int16_t yOff = 50 + TEXT_MARGIN;
+            int16_t yOff = MANIA_TITLE_HEIGHT + 8;
             // Draw the text and save the next page
             const char* leftover = drawTextWordWrap(&ttt->font_rodin, c000, howToPages[ttt->pageIdx].text, &xOff, &yOff,
                                                     TFT_WIDTH - TEXT_MARGIN, TFT_HEIGHT);
@@ -306,7 +377,8 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
     }
 
     char pageText[32];
-    snprintf(pageText, sizeof(pageText) - 1, "%d/%d", 1 + ttt->pageIdx, (int32_t)ARRAY_SIZE(howToPages));
+    snprintf(pageText, sizeof(pageText) - 1, "%" PRId32 "/%" PRId32 "", 1 + ttt->pageIdx,
+             (int32_t)ARRAY_SIZE(howToPages));
 
     int16_t tWidth = textWidth(&ttt->font_rodin, pageText);
     drawText(&ttt->font_rodin, textColor, pageText, TFT_WIDTH - 40 - tWidth, TFT_HEIGHT - ttt->font_rodin.height);
@@ -337,9 +409,9 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
 }
 
 /**
- * @brief TODO
+ * @brief Clear the board to draw instructional diagrams
  *
- * @param ttt
+ * @param ttt The entire game state
  */
 static void instructionSetupBoard(ultimateTTT_t* ttt)
 {
@@ -362,4 +434,70 @@ static void instructionSetupBoard(ultimateTTT_t* ttt)
 
     // Fake this
     ttt->game.p2p.cnc.playOrder = GOING_FIRST;
+
+    ttt->showingInstructions = true;
+}
+
+/**
+ * @brief Setup the board to demonstrate winning a subgame
+ *
+ * @param ttt The entire game state
+ */
+static void instructionSetupSmallWin(ultimateTTT_t* ttt)
+{
+    instructionSetupBoard(ttt);
+
+    ttt->game.subgames[1][1].game[0][0] = TTT_P1;
+    ttt->game.subgames[1][1].game[1][1] = TTT_P1;
+    ttt->game.subgames[1][1].game[0][1] = TTT_P2;
+    ttt->game.subgames[1][1].game[2][1] = TTT_P2;
+
+    ttt->game.cursor.x          = 0;
+    ttt->game.cursor.y          = 2;
+    ttt->game.selectedSubgame.x = 1;
+    ttt->game.selectedSubgame.y = 1;
+    ttt->game.cursorMode        = SELECT_CELL;
+}
+
+/**
+ * @brief Setup the board to demonstrate invalid placement
+ *
+ * @param ttt The entire game state
+ */
+static void instructionSetupInvalidMove(ultimateTTT_t* ttt)
+{
+    ttt->game.subgames[0][2].game[0][0] = TTT_P1;
+    ttt->game.subgames[0][2].game[2][2] = TTT_P1;
+    ttt->game.subgames[0][2].game[0][1] = TTT_P2;
+    ttt->game.subgames[0][2].game[2][1] = TTT_P2;
+
+    ttt->game.cursor.x          = 1;
+    ttt->game.cursor.y          = 0;
+    ttt->game.selectedSubgame.x = 0;
+    ttt->game.selectedSubgame.y = 2;
+    ttt->game.cursorMode        = SELECT_CELL;
+}
+
+/**
+ * @brief Setup the board to demonstrate winning the game
+ *
+ * @param ttt The entire game state
+ */
+static void instructionSetupGameWin(ultimateTTT_t* ttt)
+{
+    instructionSetupBoard(ttt);
+
+    ttt->game.subgames[0][2].winner = TTT_P1;
+    ttt->game.subgames[1][1].winner = TTT_P1;
+    ttt->game.subgames[0][1].winner = TTT_P2;
+    ttt->game.subgames[2][1].winner = TTT_P2;
+
+    ttt->game.subgames[2][0].game[0][0] = TTT_P1;
+    ttt->game.subgames[2][0].game[1][1] = TTT_P1;
+    ttt->game.subgames[2][0].game[0][1] = TTT_P2;
+    ttt->game.subgames[2][0].game[2][1] = TTT_P2;
+
+    ttt->game.cursor.x   = 0;
+    ttt->game.cursor.y   = 0;
+    ttt->game.cursorMode = SELECT_SUBGAME;
 }
