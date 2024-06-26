@@ -856,22 +856,13 @@ void tttDrawGame(ultimateTTT_t* ttt)
     // Clear before drawing
     clearPxTft();
 
-    // Calculate the game size based on the largest possible cell size
-    int16_t gameSize    = MIN(TFT_WIDTH, TFT_HEIGHT);
-    int16_t cellSize    = gameSize / 9;
-    int16_t subgameSize = cellSize * 3;
-    gameSize            = cellSize * 9;
-
-    // Center the game on the screen
-    int16_t gameOffsetX = (TFT_WIDTH - gameSize) / 2;
-    int16_t gameOffsetY = (TFT_HEIGHT - gameSize) / 2;
-
     // Draw some borders to indicate who you are
-    fillDisplayArea(0, 0, gameOffsetX - 4, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
-    fillDisplayArea(gameOffsetX + gameSize + 4, 0, TFT_WIDTH, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+    fillDisplayArea(0, 0, ttt->gameOffset.x - 4, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
+    fillDisplayArea(ttt->gameOffset.x + ttt->gameSize + 4, 0, TFT_WIDTH, TFT_HEIGHT, isP1 ? P1_COLOR : P2_COLOR);
 
     // Draw the main grid lines
-    tttDrawGrid(gameOffsetX, gameOffsetY, gameOffsetX + gameSize - 1, gameOffsetY + gameSize - 1, 0, MAIN_GRID_COLOR);
+    tttDrawGrid(ttt->gameOffset.x, ttt->gameOffset.y, ttt->gameOffset.x + ttt->gameSize - 1,
+                ttt->gameOffset.y + ttt->gameSize - 1, 0, MAIN_GRID_COLOR);
 
     // For each subgame
     for (int subY = 0; subY < 3; subY++)
@@ -879,10 +870,10 @@ void tttDrawGame(ultimateTTT_t* ttt)
         for (int subX = 0; subX < 3; subX++)
         {
             // Get this subgame's rectangle
-            int16_t sX0 = gameOffsetX + (subX * subgameSize);
-            int16_t sY0 = gameOffsetY + (subY * subgameSize);
-            int16_t sX1 = sX0 + subgameSize - 1;
-            int16_t sY1 = sY0 + subgameSize - 1;
+            int16_t sX0 = ttt->gameOffset.x + (subX * ttt->subgameSize);
+            int16_t sY0 = ttt->gameOffset.y + (subY * ttt->subgameSize);
+            int16_t sX1 = sX0 + ttt->subgameSize - 1;
+            int16_t sY1 = sY0 + ttt->subgameSize - 1;
 
             // Draw the subgame grid lines
             tttDrawGrid(sX0, sY0, sX1, sY1, 4, SUB_GRID_COLOR);
@@ -928,8 +919,8 @@ void tttDrawGame(ultimateTTT_t* ttt)
                         for (int cellX = 0; cellX < 3; cellX++)
                         {
                             // Get the location for this cell
-                            int16_t cX0 = sX0 + (cellX * cellSize);
-                            int16_t cY0 = sY0 + (cellY * cellSize);
+                            int16_t cX0 = sX0 + (cellX * ttt->cellSize);
+                            int16_t cY0 = sY0 + (cellY * ttt->cellSize);
 
                             // Draw sprites
                             switch (ttt->game.subgames[subX][subY].game[cellX][cellY])
@@ -958,8 +949,8 @@ void tttDrawGame(ultimateTTT_t* ttt)
                                 ttt->game.cursor.x == cellX && ttt->game.cursor.y == cellY)
                             {
                                 // Get the other rectangle coordinates
-                                int16_t cX1 = cX0 + cellSize - 1;
-                                int16_t cY1 = cY0 + cellSize - 1;
+                                int16_t cX1 = cX0 + ttt->cellSize - 1;
+                                int16_t cY1 = cY0 + ttt->cellSize - 1;
                                 // Draw the cursor
                                 paletteColor_t color;
                                 if (ttt->game.state == TGS_WAITING)

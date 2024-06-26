@@ -112,6 +112,10 @@ typedef struct
     int16_t numConStrs;
     // Gameplay
     tttGameData_t game;
+    int16_t gameSize;
+    int16_t cellSize;
+    int16_t subgameSize;
+    vec_t gameOffset;
     // Assets
     tttMarkerColorAssets_t markerWsg[NUM_UNLOCKABLE_MARKERS];
     // For marker selection UI
@@ -131,6 +135,7 @@ typedef struct
     int32_t arrowBlinkTimer;
     list_t instructionHistory;
     bool showingInstructions;
+    arrow_t instructionArrow;
 } ultimateTTT_t;
 
 typedef struct

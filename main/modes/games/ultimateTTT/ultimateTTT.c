@@ -167,6 +167,16 @@ static void tttEnterMode(void)
     // Initialize p2p
     p2pInitialize(&ttt->game.p2p, 0x25, tttConCb, tttMsgRxCb, -70);
 
+    // Measure the display
+    ttt->gameSize    = MIN(TFT_WIDTH, TFT_HEIGHT);
+    ttt->cellSize    = ttt->gameSize / 9;
+    ttt->subgameSize = ttt->cellSize * 3;
+    ttt->gameSize    = ttt->cellSize * 9;
+
+    // Center the game on the screen
+    ttt->gameOffset.x = (TFT_WIDTH - ttt->gameSize) / 2;
+    ttt->gameOffset.y = (TFT_HEIGHT - ttt->gameSize) / 2;
+
     // Start on different UIs depending on setup completion
     if (false == ttt->tutorialRead)
     {
