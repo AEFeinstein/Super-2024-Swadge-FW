@@ -74,7 +74,6 @@ void tttBeginGame(ultimateTTT_t* ttt)
     ttt->game.p2MarkerIdx = 0;
 
     // Clean up after showing instructions
-    ttt->game.p2p.cnc.playOrder = NOT_SET;
     ttt->showingInstructions    = false;
 
     // Show the game UI

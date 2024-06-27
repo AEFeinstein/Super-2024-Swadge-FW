@@ -14,7 +14,7 @@
 //==============================================================================
 
 #if defined(CNFGOGL)
-// ARGB
+// RGBA
 static const uint32_t paletteColorsEmu[216] = {
     0x000000FF, 0x000033FF, 0x000066FF, 0x000099FF, 0x0000CCFF, 0x0000FFFF, 0x003300FF, 0x003333FF, 0x003366FF,
     0x003399FF, 0x0033CCFF, 0x0033FFFF, 0x006600FF, 0x006633FF, 0x006666FF, 0x006699FF, 0x0066CCFF, 0x0066FFFF,

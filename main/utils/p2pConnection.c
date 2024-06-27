@@ -177,6 +177,8 @@ void p2pStartConnection(p2pInfo* p2p)
     P2P_LOG("%s", __func__);
 
     p2p->cnc.isActive = true;
+    p2p->cnc.playOrder = NOT_SET;
+
     esp_timer_start_once(p2p->tmr.Connection, 1000);
 
     if (NULL != p2p->conCbFn)
