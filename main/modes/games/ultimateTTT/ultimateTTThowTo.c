@@ -356,7 +356,16 @@ static const instructionPage_t howToPages[] = {
     {
         .type = INSTRUCTION_BUTTON,
         .button = PB_A,
-        .iArrow = {},
+        .iArrow = {
+            .base = {
+                .x = 9,
+                .y = -1,
+            },
+            .tip = {
+                .x = -1,
+                .y = 9
+            }
+        },
     },
     {
         .type = INSTRUCTION_TEXT,
@@ -629,12 +638,12 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
     if ((ttt->instructionArrow.base.x != ttt->instructionArrow.tip.x)
         || (ttt->instructionArrow.base.y != ttt->instructionArrow.tip.y))
     {
-        drawLineFast(ttt->instructionArrow.tip.x, ttt->instructionArrow.tip.y, ttt->instructionArrow.base.x,
-                     ttt->instructionArrow.base.y, c550);
-        drawLineFast(ttt->instructionArrow.tip.x, ttt->instructionArrow.tip.y, ttt->instructionArrow.wing1.x,
-                     ttt->instructionArrow.wing1.y, c550);
-        drawLineFast(ttt->instructionArrow.tip.x, ttt->instructionArrow.tip.y, ttt->instructionArrow.wing2.x,
-                     ttt->instructionArrow.wing2.y, c550);
+        drawLine(ttt->instructionArrow.tip.x, ttt->instructionArrow.tip.y, ttt->instructionArrow.base.x,
+                 ttt->instructionArrow.base.y, c550, 0);
+        drawLine(ttt->instructionArrow.tip.x, ttt->instructionArrow.tip.y, ttt->instructionArrow.wing1.x,
+                 ttt->instructionArrow.wing1.y, c550, 0);
+        drawLine(ttt->instructionArrow.tip.x, ttt->instructionArrow.tip.y, ttt->instructionArrow.wing2.x,
+                 ttt->instructionArrow.wing2.y, c550, 0);
     }
 }
 
