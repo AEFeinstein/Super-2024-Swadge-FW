@@ -48,176 +48,319 @@ typedef struct
 
 static const instructionPage_t howToPages[] = {
     {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "Ultimate TTT is a big game of tic-tac-toe made up of nine small games of tic-tac-toe.",
+        .type = INSTRUCTION_TEXT,
+        .text = "Ultimate TTT is a big game of tic-tac-toe made up of nine small games of tic-tac-toe.",
         .iArrow = {},
     },
     {
-        .type            = INSTRUCTION_FUNC,
+        .type = INSTRUCTION_FUNC,
         .instructionFunc = instructionSetupBoard,
-        .iArrow           = {},
-    },
-    {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "Players take turns placing markers in the small games of tic-tac-toe.",
         .iArrow = {},
     },
     {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "The starting player may place a marker anywhere.",
+        .type = INSTRUCTION_TEXT,
+        .text = "Players take turns placing markers in the small games of tic-tac-toe.",
         .iArrow = {},
     },
     {
-        .type  = INSTRUCTION_NOP,
+        .type = INSTRUCTION_TEXT,
+        .text = "The starting player may place a marker anywhere.",
         .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_NOP,
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_BUTTON,
         .button = PB_DOWN,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_RIGHT,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_RIGHT,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_A,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_UP,
-        .iArrow  = {},
-    },
-    {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "The square a marker is placed in determines the next small game a player must play in.",
         .iArrow = {},
     },
     {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "A marker placed in a top-middle square means the next marker must be placed in the top-middle game.",
+        .type = INSTRUCTION_TEXT,
+        .text = "The square a marker is placed in determines the next small game a player must play in.",
         .iArrow = {},
     },
     {
-        .type  = INSTRUCTION_NOP,
-        .iArrow = {.base = {.x = 7, .y = 3,}, .tip = {.x = 4, .y = 1}},
+        .type = INSTRUCTION_TEXT,
+        .text = "A marker placed in a top-middle square means the next marker must be placed in the top-middle game.",
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON_SEL_GAME,
+        .type = INSTRUCTION_NOP,
+        .iArrow = {
+            .base = {
+                .x = 7,
+                .y = 3,
+            },
+            .tip = {
+                .x = 4,
+                .y = 1
+            }
+        },
+    },
+    {
+        .type = INSTRUCTION_BUTTON_SEL_GAME,
         .button = PB_A,
-        .iArrow = {.base = {.x = 7, .y = 3,}, .tip = {.x = 4, .y = 1}},
+        .iArrow = {
+            .base = {
+                .x = 7,
+                .y = 3,
+            },
+            .tip = {
+                .x = 4,
+                .y = 1
+            }
+        },
     },
     {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "When a small game is won, markers may not be placed there anymore.",
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_A,
         .iArrow = {},
     },
     {
-        .type            = INSTRUCTION_FUNC,
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_LEFT,
+        .iArrow = {
+            .base = {
+                .x = 3,
+                .y = 1,
+            },
+            .tip = {
+                .x = 1,
+                .y = 4
+            }
+        },
+    },
+    {
+        .type = INSTRUCTION_BUTTON_SEL_GAME,
+        .button = PB_A,
+        .iArrow = {
+            .base = {
+                .x = 3,
+                .y = 1,
+            },
+            .tip = {
+                .x = 1,
+                .y = 4
+            }
+        },
+    },
+    {
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_A,
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_DOWN,
+        .iArrow = {
+            .base = {
+                .x = 1,
+                .y = 5,
+            },
+            .tip = {
+                .x = 4,
+                .y = 7
+            }
+        },
+    },
+    {
+        .type = INSTRUCTION_BUTTON_SEL_GAME,
+        .button = PB_A,
+        .iArrow = {
+            .base = {
+                .x = 1,
+                .y = 5,
+            },
+            .tip = {
+                .x = 4,
+                .y = 7
+            }
+        },
+    },
+    {
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_A,
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "When a small game is won, markers may not be placed there anymore.",
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_FUNC,
         .instructionFunc = instructionSetupSmallWin,
-        .iArrow           = {},
-    },
-    {
-        .type   = INSTRUCTION_BUTTON,
-        .button = PB_RIGHT,
-        .iArrow  = {},
-    },
-    {
-        .type   = INSTRUCTION_BUTTON,
-        .button = PB_RIGHT,
-        .iArrow  = {},
-    },
-    {
-        .type   = INSTRUCTION_BUTTON,
-        .button = PB_A,
-        .iArrow  = {},
-    },
-    {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "If a marker cannot be placed in a small game, then it may be placed in any game instead.",
         .iArrow = {},
     },
     {
-        .type            = INSTRUCTION_FUNC,
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_RIGHT,
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_A,
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "If a marker cannot be placed in a small game because the game is won, it may be placed anywhere.",
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_FUNC,
         .instructionFunc = instructionSetupInvalidMove,
-        .iArrow          = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_DOWN,
-        .iArrow = {},
+        .iArrow = {
+            .base = {
+                .x = 1,
+                .y = 7,
+            },
+            .tip = {
+                .x = 4,
+                .y = 4
+            }
+        },
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_A,
-        .iArrow = {},
+        .iArrow = {
+            .base = {
+                .x = 1,
+                .y = 7,
+            },
+            .tip = {
+                .x = 1,
+                .y = 1
+            }
+        },
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_RIGHT,
-        .iArrow = {},
+        .iArrow = {
+            .base = {
+                .x = 1,
+                .y = 7,
+            },
+            .tip = {
+                .x = 4,
+                .y = 1
+            }
+        },
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_A,
-        .iArrow = {},
+        .iArrow = {
+            .base = {
+                .x = 1,
+                .y = 7,
+            },
+            .tip = {
+                .x = 4,
+                .y = 1
+            }
+        },
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_DOWN,
-        .iArrow = {},
+        .iArrow = {
+            .base = {
+                .x = 1,
+                .y = 7,
+            },
+            .tip = {
+                .x = 4,
+                .y = 2
+            }
+        },
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON_SEL_GAME,
         .button = PB_A,
+        .iArrow = {
+            .base = {
+                .x = 4,
+                .y = 2,
+            },
+            .tip = {
+                .x = 4,
+                .y = 7
+            }
+        },
+    },
+    {
+        .type = INSTRUCTION_TEXT,
+        .text = "The goal is to win three games of tic-tac-toe in a row.",
         .iArrow = {},
     },
     {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "The goal is to win three games of tic-tac-toe in a row.",
-        .iArrow = {},
-    },
-    {
-        .type            = INSTRUCTION_FUNC,
+        .type = INSTRUCTION_FUNC,
         .instructionFunc = instructionSetupGameWin,
-        .iArrow           = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_RIGHT,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_RIGHT,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_A,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_RIGHT,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type   = INSTRUCTION_BUTTON,
+        .type = INSTRUCTION_BUTTON,
         .button = PB_A,
-        .iArrow  = {},
+        .iArrow = {},
     },
     {
-        .type  = INSTRUCTION_TEXT,
-        .text  = "Win more games to unlock more markers!",
+        .type = INSTRUCTION_TEXT,
+        .text = "Win more games to unlock more markers!",
         .iArrow = {},
     },
 };
@@ -270,8 +413,8 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
 
                     // Set up the new page's arrow
                     vec_t cellOffset = {
-                        .x = ttt->cellSize / 2,
-                        .y = ttt->cellSize / 2,
+                        .x = ttt->cellSize / 2 - 1,
+                        .y = ttt->cellSize / 2 - 1,
                     };
                     ttt->instructionArrow = initArrow(
                         addVec2d(cellOffset, addVec2d(ttt->gameOffset,
@@ -318,8 +461,8 @@ void tttInputHowTo(ultimateTTT_t* ttt, buttonEvt_t* evt)
 
                     // Set up the arrow
                     vec_t cellOffset = {
-                        .x = ttt->cellSize / 2,
-                        .y = ttt->cellSize / 2,
+                        .x = ttt->cellSize / 2 - 1,
+                        .y = ttt->cellSize / 2 - 1,
                     };
                     ttt->instructionArrow = initArrow(
                         addVec2d(cellOffset, addVec2d(ttt->gameOffset,
@@ -445,9 +588,8 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
             int16_t xOff = TEXT_MARGIN;
             int16_t yOff = MANIA_TITLE_HEIGHT + 8;
             // Draw the text and save the next page
-            const char* leftover = drawTextWordWrap(&ttt->font_rodin, c000, howToPages[ttt->pageIdx].text, &xOff, &yOff,
-                                                    TFT_WIDTH - TEXT_MARGIN, TFT_HEIGHT);
-            // TODO something with the leftover text...
+            drawTextWordWrap(&ttt->font_rodin, c000, howToPages[ttt->pageIdx].text, &xOff, &yOff,
+                             TFT_WIDTH - TEXT_MARGIN, TFT_HEIGHT);
             break;
         }
     }
@@ -457,7 +599,7 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
              (int32_t)ARRAY_SIZE(howToPages));
 
     int16_t tWidth = textWidth(&ttt->font_rodin, pageText);
-    drawText(&ttt->font_rodin, textColor, pageText, TFT_WIDTH - 40 - tWidth, TFT_HEIGHT - ttt->font_rodin.height);
+    drawText(&ttt->font_rodin, textColor, pageText, TFT_WIDTH - 30 - tWidth, TFT_HEIGHT - ttt->font_rodin.height);
 
     // Blink the arrows
     ttt->arrowBlinkTimer += elapsedUs;
@@ -472,20 +614,20 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
         if (0 != ttt->pageIdx)
         {
             // Draw left arrow if not on the first page
-            drawText(&ttt->font_rodin, c000, "<", 0, (TFT_HEIGHT - ttt->font_rodin.height) / 2);
+            drawText(&ttt->font_rodin, textColor, "<", 0, (TFT_HEIGHT - ttt->font_rodin.height) / 2);
         }
 
         if ((ARRAY_SIZE(howToPages) - 1) != ttt->pageIdx)
         {
             // Draw right arrow if not on the last page
-            drawText(&ttt->font_rodin, c000, ">", TFT_WIDTH - textWidth(&ttt->font_rodin, ">"),
+            drawText(&ttt->font_rodin, textColor, ">", TFT_WIDTH - textWidth(&ttt->font_rodin, ">"),
                      (TFT_HEIGHT - ttt->font_rodin.height) / 2);
         }
     }
 
     // Draw arrow if there is one
     if ((ttt->instructionArrow.base.x != ttt->instructionArrow.tip.x)
-        && (ttt->instructionArrow.base.y != ttt->instructionArrow.tip.y))
+        || (ttt->instructionArrow.base.y != ttt->instructionArrow.tip.y))
     {
         drawLineFast(ttt->instructionArrow.tip.x, ttt->instructionArrow.tip.y, ttt->instructionArrow.base.x,
                      ttt->instructionArrow.base.y, c550);
