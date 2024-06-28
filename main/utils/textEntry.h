@@ -6,7 +6,8 @@
 #include "display/font.h"
 #include "swadge2024.h"
 
-void textEntryStart(font_t* usefont, int max_len, char* buffer, wsg_t BG, uint8_t tbColor);
+void textEntryStart(font_t* usefont, int max_len, char* buffer);
+void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t BG, uint8_t tbColor, uint8_t txtColor);
 bool textEntryDraw(void);
 void textEntryEnd(void);
 bool textEntryInput(uint8_t down, uint8_t button);
