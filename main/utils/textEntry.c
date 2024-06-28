@@ -43,6 +43,8 @@ static int8_t selx;
 static int8_t sely;
 static char selChar;
 static uint8_t cursorTimer;
+static wsg_t bgImage;
+static uint8_t textBoxColor;
 
 #define WHITE 215
 
@@ -82,7 +84,7 @@ static const uint8_t lengthperline[] = {14, 14, 13, 12, 1};
  * @param max_len The length of buffer
  * @param buffer  A char* to store the entered text in
  */
-void textEntryStart(font_t* usefont, int max_len, char* buffer)
+void textEntryStart(font_t* usefont, int max_len, char* buffer, wsg_t BG, uint8_t tbColor)
 {
     texLen       = max_len;
     texString    = buffer;
@@ -92,6 +94,8 @@ void textEntryStart(font_t* usefont, int max_len, char* buffer)
     texString[0] = 0;
     cursorTimer  = 0;
     textEntryIBM = usefont;
+    bgImage      = BG;
+    textBoxColor = tbColor;
 }
 
 /**
@@ -115,9 +119,16 @@ bool textEntryDraw(void)
         return false;
     }
 
+    const int16_t text_h = 64;
+    const int8_t  margin = 32;
+
+    drawWsg(&bgImage, 0, 0, false, false, 0);
+    fillDisplayArea(margin, text_h - 8, TFT_WIDTH - margin, text_h + 20, textBoxColor);
+    fillDisplayArea(margin, 136, TFT_WIDTH - margin, 136 + 80, textBoxColor);
+    fillDisplayArea(TFT_WIDTH/2 - 72, TFT_HEIGHT - 16, TFT_WIDTH/2 + 72, TFT_HEIGHT, textBoxColor);
+
     // Draw the text entered so far
     {
-        const int16_t text_h = 32;
         int16_t textLen      = textWidth(textEntryIBM, texString) + textEntryIBM->chars[0].width;
         int16_t endPos       = drawText(textEntryIBM, WHITE, texString, (TFT_WIDTH - textLen) / 2, text_h);
 
@@ -181,7 +192,7 @@ bool textEntryDraw(void)
         else
         {
             int posx  = x * 14 + 44 + y * 4;
-            int posy  = y * 14 + 49;
+            int posy  = y * 14 + 144;
             int width = 9;
             // Draw the character, may be a control char
             switch (c)
