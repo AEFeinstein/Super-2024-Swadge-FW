@@ -19,6 +19,7 @@
 #include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
+#include "mode_2048.h"
 
 #include "settingsManager.h"
 
@@ -147,6 +148,7 @@ static void mainMenuEnterMode(void)
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
     addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
+    addSingleItemToMenu(mainMenu->menu, t48Mode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
     mainMenu->menu = startSubMenu(mainMenu->menu, "Music");
@@ -357,6 +359,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == tunernomeMode.modeName)
         {
             switchToSwadgeMode(&tunernomeMode);
+        }
+        else if (label == t48Mode.modeName)
+        {
+            switchToSwadgeMode(&t48Mode);
         }
         else if (label == factoryResetName)
         {
