@@ -106,7 +106,7 @@ typedef struct midiTrackState midiTrackState_t;
 typedef struct
 {
     /// @brief A pointer to the MIDI file currently loaded into the reader, if any
-    midiFile_t* file;
+    const midiFile_t* file;
 
     /// @brief If true, text meta-events will be handled and sent to the MIDI player
     bool handleMetaEvents;
@@ -231,6 +231,9 @@ typedef struct
     /// @brief The overall event type -- MIDI, Meta, or SysEx
     midiEventType_t type;
 
+    /// @brief The index of the track which contains this event
+    uint8_t track;
+
     union
     {
         /// @brief The MIDI status event data, when type is ::MIDI_EVENT
@@ -272,7 +275,7 @@ void unloadMidiFile(midiFile_t* file);
  * @return true if the MIDI file reader was initialized
  * @return false if an error occurred while allocating data for the MIDI file reader
  */
-bool initMidiParser(midiFileReader_t* reader, midiFile_t* file);
+bool initMidiParser(midiFileReader_t* reader, const midiFile_t* file);
 
 /**
  * @brief Set a new file for the MIDI file reader. The reader's state will be reset.
@@ -280,7 +283,7 @@ bool initMidiParser(midiFileReader_t* reader, midiFile_t* file);
  * @param reader A pointer to the MIDI file reader to set the file of
  * @param file A pointer to the MIDI file to load
  */
-void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file);
+void midiParserSetFile(midiFileReader_t* reader, const midiFile_t* file);
 
 /**
  * @brief Reset the state of the MIDI parser without deinitializing it or changing the file.

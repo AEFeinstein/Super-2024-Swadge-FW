@@ -14,7 +14,6 @@
 #include "trigonometry.h"
 #include "linked_list.h"
 
-#include "sngPlayer.h"
 #include "midiPlayer.h"
 #include "midiFileParser.h"
 

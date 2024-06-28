@@ -201,7 +201,6 @@
 #include "spiffs_font.h"
 #include "spiffs_txt.h"
 #include "spiffs_json.h"
-#include "spiffs_song.h"
 
 // Connection interface
 #include "p2pConnection.h"
@@ -220,7 +219,7 @@
 // Sound utilities
 #include "soundFuncs.h"
 #include "swSynth.h"
-#include "sngPlayer.h"
+#include "midiPlayer.h"
 
 #define EXIT_TIME_US 1000000
 /// @brief the default time between drawn frames, in microseconds

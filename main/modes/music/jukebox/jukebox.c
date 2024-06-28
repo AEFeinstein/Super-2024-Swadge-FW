@@ -381,14 +381,20 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
             {
                 if (jukebox->inMusicSubmode)
                 {
-                    soundGetPlayerBgm()->loop
-                        = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                    if (soundGetPlayerBgm() != NULL)
+                    {
+                        soundGetPlayerBgm()->loop
+                            = musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                    }
                     soundPlayBgmCb(&musicCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }
                 else
                 {
-                    soundGetPlayerSfx()->loop = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                    if (soundGetPlayerSfx() != NULL)
+                    {
+                        soundGetPlayerSfx()->loop = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                    }
                     soundPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
                 }

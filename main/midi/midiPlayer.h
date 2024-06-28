@@ -57,7 +57,6 @@
 // Includes
 //==============================================================================
 
-#include "hdw-bzr.h"
 #include "swSynth.h"
 #include "midiFileParser.h"
 
@@ -87,6 +86,9 @@
 #define MIDI_FALSE        0x00
 #define MIDI_TO_BOOL(val) (val > 63)
 #define BOOL_TO_MIDI(val) (val ? MIDI_TRUE : MIDI_FALSE)
+
+/// @brief Callback function used to provide feedback when a song finishes playing
+typedef void (*songFinishedCbFn)(void);
 
 //==============================================================================
 // Enums

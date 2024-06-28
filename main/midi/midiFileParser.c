@@ -26,7 +26,7 @@ struct midiTrackState
     const midiTrack_t* track;
 
     /// @brief The pointer to the current offset within this chunk
-    uint8_t* cur;
+    const uint8_t* cur;
 
     /// @brief The accumulated delta times for this track, which nextEvent is relative to
     uint32_t time;
@@ -622,6 +622,8 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
         }
     }
 
+    // Sometimes it's useful to know which actual track the event came from
+    track->nextEvent.track = (uint8_t)((track - reader->states) & 0x0F);
     // Don't bother doing this earlier since we might just overwrite it
     track->nextEvent.deltaTime = deltaTime;
     track->nextEvent.absTime   = track->time + deltaTime;
@@ -869,7 +871,7 @@ void unloadMidiFile(midiFile_t* file)
     memset(file, 0, sizeof(midiFile_t));
 }
 
-bool initMidiParser(midiFileReader_t* reader, midiFile_t* file)
+bool initMidiParser(midiFileReader_t* reader, const midiFile_t* file)
 {
     reader->states = calloc(file->trackCount, sizeof(midiTrackState_t));
     if (NULL == reader->states)
@@ -885,7 +887,7 @@ bool initMidiParser(midiFileReader_t* reader, midiFile_t* file)
     return true;
 }
 
-void midiParserSetFile(midiFileReader_t* reader, midiFile_t* file)
+void midiParserSetFile(midiFileReader_t* reader, const midiFile_t* file)
 {
     if (reader->states != NULL)
     {

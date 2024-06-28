@@ -6,7 +6,7 @@
 #include "soundFuncs.h"
 #include "hdw-tft.h"
 #include "spiffs_font.h"
-#include "spiffs_song.h"
+#include "midiFileParser.h"
 #include "macros.h"
 #include "credits_utils.h"
 

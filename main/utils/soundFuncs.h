@@ -12,7 +12,6 @@
 #pragma once
 
 #include "hdw-bzr.h"
-#include "sngPlayer.h"
 #include "midiPlayer.h"
 
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
@@ -108,7 +107,7 @@
     /**
      * @brief Play a specific note
      *
-     * Calls spkPlayNote() or bzrPlayNote()
+     * Calls midiNoteOn() or bzrPlayNote()
      *
      * @param freq The frequency of the note to play
      * @param channel The channel (L/R/Stereo) to play on, ignored for DAC speakers
@@ -143,7 +142,10 @@
     #define soundSave()        bzrSave()
     #define soundRestore(data) bzrRestore(data)
 
-    #define soundPlayNote(freq, track, vol) bzrPlayNote(freq, track, vol)
+    #define soundPlayNote(freq, track, vol) bzrPlayNote((freq) >> 24, track, vol)
     #define soundStopNote(track)            bzrStopNote(track)
+
+    #define soundGetPlayerSfx() ((midiPlayer_t*)NULL)
+    #define soundGetPlayerBgm() ((midiPlayer_t*)NULL)
 
 #endif

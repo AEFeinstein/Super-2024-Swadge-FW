@@ -72,6 +72,8 @@
 #include <hal/gpio_types.h>
 #include <driver/ledc.h>
 
+#include "midiPlayer.h"
+
 /** @brief The number of physical buzzers */
 #define NUM_BUZZERS 2
 
@@ -229,46 +231,15 @@ typedef enum
     BZR_STEREO ///< Play out of both buzzers
 } buzzerPlayTrack_t;
 
-/**
- * @brief A single note and duration to play on the buzzer
- */
-typedef struct
-{
-    noteFrequency_t note; ///< Note frequency, in Hz
-    int32_t timeMs;       ///< Note duration, in ms
-} musicalNote_t;
-
-/**
- * @brief A list of notes and durations to play on the buzzer
- */
-typedef struct
-{
-    int32_t numNotes;      ///< The number of notes in this song
-    int32_t loopStartNote; ///< The note index to restart at, if looping
-    musicalNote_t* notes;  ///< An array of notes in the song
-} songTrack_t;
-
-/**
- * @brief A collection of lists of notes and durations to play on the buzzers
- */
-typedef struct
-{
-    int16_t numTracks;   ///< The number of tracks in this song
-    bool shouldLoop;     ///< true if the song should loop, false if it should play once
-    songTrack_t* tracks; ///< The tracks for this song
-} song_t;
-
-typedef void (*songFinishedCbFn)(void);
-
 void initBuzzer(gpio_num_t bzrGpioL, ledc_timer_t ledcTimerL, ledc_channel_t ledcChannelL, gpio_num_t bzrGpioR,
                 ledc_timer_t ledcTimerR, ledc_channel_t ledcChannelR, uint16_t _bgmVolume, uint16_t _sfxVolume);
 void deinitBuzzer(void);
 void bzrSetBgmVolume(uint16_t vol);
 void bzrSetSfxVolume(uint16_t vol);
-void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track);
-void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track);
-void bzrPlayBgmCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn);
-void bzrPlaySfxCb(const song_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn);
+void bzrPlayBgm(const midiFile_t* song, buzzerPlayTrack_t track);
+void bzrPlaySfx(const midiFile_t* song, buzzerPlayTrack_t track);
+void bzrPlayBgmCb(const midiFile_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn);
+void bzrPlaySfxCb(const midiFile_t* song, buzzerPlayTrack_t track, songFinishedCbFn cbFn);
 void bzrStop(bool resetTracks);
 void bzrPlayNote(noteFrequency_t freq, buzzerPlayTrack_t track, uint16_t volume);
 void bzrStopNote(buzzerPlayTrack_t track);
