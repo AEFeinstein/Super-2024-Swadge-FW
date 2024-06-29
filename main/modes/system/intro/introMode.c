@@ -113,7 +113,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .custom.checkFn = introCheckQuickSettingsTrigger,
         },
         .title = "",
-        .detail = "This is the Quick Settings Menu! It's available in all modes, except for the Main Menu and USB Gamepad.",
+        .detail = "This is the Quick Settings Menu! It's available in all modes, except for the Main Menu and USB Gamepad. Press the Pause button again to close it.",
     },
     {
         .trigger = {
@@ -677,6 +677,11 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
                     {
                         // Gray around currently-pressed button that's not otherwise needed
                         drawCircleFilled(circleX, circleY, circleR, notNeededColor);
+                    }
+                    else if (iv->tut.curStep == (buttonsSteps + 7) && button == PB_SELECT)
+                    {
+                        // Special case - draw a circle around the Pause button for exiting quick settings
+                        drawCircleOutline(circleX, circleY, circleR, strokeW, notPressedColor);
                     }
                 }
                 else if (stage == 1)
