@@ -22,7 +22,17 @@
  *
  * Iteration over the map is O(k) best case, O(k+n) worst case, and O(k) average case, as we do not know ahead of time
  * which buckets or keys are in use. This could theoretically be improved to O(n) worst case if keys were also kept in
- * a separate array, but this would be a marginal improvement with a lot of complexity.
+ * a separate array, but this would be a marginal improvement with a lot of added complexity.
+ *
+ * \section hashMap_caveats Caveats
+ *
+ * It's important to note that, even though the hash map is a reasonably efficient data structure, its main use case
+ * is really for convenience. Due to the added overhead of the hashing operation and traversal of the relatively
+ * complex hash map structure, in most cases its real-world performance will be worse than a simple linear search
+ * through an array, up to a surprisingly large number of items. With that said, this is unlikely to be a real concern
+ * in almost all situations. So unless a massive number of hash map operations is actually causing performance issues,
+ * it's best to avoid premature optimization and instead just use whatever is the most convenient and results in the
+ * simplest code.
  *
  * \section hashMap_usage Usage
  *
