@@ -371,8 +371,9 @@ static void introEnterMode(void)
     iv->curSection = introSections;
     tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
 
-    iv->sound = spiffsReadFile("magfest_audio.bin", &iv->soundSize, true);
-    iv->playingSound = true;
+    iv->sound = NULL;
+    iv->playingSound = false;
+    iv->introComplete = true;
 }
 
 /**
@@ -392,7 +393,10 @@ static void introExitMode(void)
     freeWsg(&iv->icon.button.pause);
     freeWsg(&iv->icon.button.up);
 
-    free(iv->sound);
+    if (iv->sound != NULL)
+    {
+        free(iv->sound);
+    }
 
     free(iv);
 }
