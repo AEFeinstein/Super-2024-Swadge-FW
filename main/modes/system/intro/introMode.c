@@ -42,6 +42,7 @@ typedef struct
     size_t count;
 } introSection_t;
 
+static const char startTitle[] = "Welcome!";
 static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
 static const char endTitle[]  = "Nice! You did it!";
 static const char endDetail[] = "You are now Swadge Certified! Remember, with great power comes great "
@@ -53,7 +54,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS_ANY,
             .buttons = ALL_BUTTONS,
         },
-        .title = "Welcome to Swadge!",
+        .title = startTitle,
         .detail = "Press any button to continue",
     },
     {
@@ -61,7 +62,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS_ALL,
             .buttons = DPAD_BUTTONS,
         },
-        .title = "Directional Buttons",
+        .title = "D-Pad Buttons",
         .detail = "These four buttons on the left side of the Swadge are the D-Pad. Use them to navigate. Try them all out!",
     },
     {
@@ -285,6 +286,9 @@ typedef struct
     size_t soundProgress;
     bool introComplete;
 
+    menu_t* bgMenu;
+    menuManiaRenderer_t* renderer;
+
     const introSection_t* curSection;
 } introVars_t;
 
@@ -299,13 +303,16 @@ static void introEnterMode(void)
     iv = calloc(1, sizeof(introVars_t));
 
     loadFont("ibm_vga8.font", &iv->smallFont, false);
-    loadFont("logbook.font", &iv->bigFont, false);
+    loadFont("righteous_150.font", &iv->bigFont, false);
 
     loadWsg("button_a.wsg", &iv->icon.button.a, false);
     loadWsg("button_b.wsg", &iv->icon.button.b, false);
     loadWsg("button_menu.wsg", &iv->icon.button.menu, false);
     loadWsg("button_pause.wsg", &iv->icon.button.pause, false);
     loadWsg("button_up.wsg", &iv->icon.button.up, false);
+
+    iv->bgMenu = initMenu(startTitle, NULL);
+    iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
 
     // up
     iv->buttonIcons[0].icon    = &iv->icon.button.up;
@@ -373,6 +380,9 @@ static void introEnterMode(void)
  */
 static void introExitMode(void)
 {
+    deinitMenuManiaRenderer(iv->renderer);
+    deinitMenu(iv->bgMenu);
+
     freeFont(&iv->smallFont);
     freeFont(&iv->bigFont);
 
@@ -479,7 +489,6 @@ static void introMainLoop(int64_t elapsedUs)
     tutorialCheckTriggers(&iv->tut);
 
     // Fill the display area with a dark cyan
-    fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c123);
 
     const char* title  = iv->tut.curStep->title;
     const char* detail = iv->tut.curStep->detail;
@@ -491,7 +500,8 @@ static void introMainLoop(int64_t elapsedUs)
 
     int16_t titleX = (TFT_WIDTH - textWidth(&iv->bigFont, title)) / 2;
     int16_t titleY = 20;
-    drawText(&iv->bigFont, c000, title, titleX, titleY);
+    iv->bgMenu->title = title;
+    drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
 
     int16_t detailYmin = titleY + iv->bigFont.height + 1 + 10;
     int16_t detailYmax = TFT_HEIGHT - 20;
@@ -610,6 +620,29 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
     time += elapsedUs;
     bool blink = true;
 
+    // Draw the background of the swadge
+    int16_t leftCircleX = x + iv->buttonIcons[2].x + iv->buttonIcons[2].icon->w / 2;
+    int16_t rightCircleX = x + iv->buttonIcons[4].x + iv->buttonIcons[4].icon->w / 2;
+    int16_t bgCircleY = y + iv->buttonIcons[2].y + iv->buttonIcons[2].icon->h / 2;
+    int16_t bgCircleR = 30;
+
+    paletteColor_t bgColor = c234;
+    paletteColor_t borderColor = c000;
+
+    drawCircleFilled(leftCircleX, bgCircleY, bgCircleR, bgColor);
+    drawCircleFilled(rightCircleX, bgCircleY, bgCircleR, bgColor);
+    fillDisplayArea(leftCircleX, bgCircleY - bgCircleR, rightCircleX, bgCircleY + bgCircleR, bgColor);
+
+    drawLineFast(leftCircleX, bgCircleY - bgCircleR, rightCircleX, bgCircleY - bgCircleR, borderColor);
+    drawLineFast(leftCircleX, bgCircleY + bgCircleR, rightCircleX, bgCircleY + bgCircleR, borderColor);
+
+    drawCircleQuadrants(leftCircleX, bgCircleY, bgCircleR, false, true, true, false, borderColor);
+    drawCircleQuadrants(rightCircleX, bgCircleY, bgCircleR, true, false, false, true, borderColor);
+
+    paletteColor_t notPressedColor = c531;
+    paletteColor_t pressedColor = c243;
+    paletteColor_t notNeededColor = c111;
+
     for (int stage = 0; stage < 2; stage++)
     {
         for (int i = 0; i < 8; i++)
@@ -625,19 +658,20 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
                     bool showBlink = ((time + timeOffset) % BLINK_TIME) <= BLINK_ON;
                     int16_t circleX = x + icon->x + icon->icon->w / 2;
                     int16_t circleY = y + icon->y + icon->icon->h / 2;
-                    int16_t circleR = icon->icon->w * 3 / 5;
+                    int16_t strokeW = 3;
+                    int16_t circleR = icon->icon->w * 3 / 5 + strokeW;
                     if (iv->tut.curStep && iv->tut.curStep->trigger.type == BUTTON_PRESS_ALL
                         && (iv->tut.curStep->trigger.buttons & button) == button)
                     {
                         if ((iv->tut.allButtons & button) == button)
                         {
                             // Solid Green around already-satisfied button
-                            drawCircleFilled(circleX, circleY, circleR, c050);
+                            drawCircleFilled(circleX, circleY, circleR, pressedColor);
                         }
                         else if (!blink || showBlink)
                         {
                             // Yellow around not-yet-satisfied button that must be pressed
-                            drawCircle(circleX, circleY, circleR, c550);
+                            drawCircleOutline(circleX, circleY, circleR, strokeW, notPressedColor);
                         }
                     }
                     else if (iv->tut.curStep && iv->tut.curStep->trigger.type == BUTTON_PRESS_ANY
@@ -646,7 +680,7 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
                         // Yellow around not-yet-satisfied 'ANY' button
                         if (!blink || showBlink)
                         {
-                            drawCircle(circleX, circleY, circleR, c550);
+                            drawCircleOutline(circleX, circleY, circleR, strokeW, notPressedColor);
                         }
                     }
                     else if (iv->tut.curStep && iv->tut.curStep->trigger.type == BUTTON_PRESS
@@ -655,13 +689,13 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
                         if (!blink || showBlink)
                         {
                             // Yellow around not-yet-satisfied 'PRESS' button
-                            drawCircle(circleX, circleY, circleR, c550);
+                            drawCircleOutline(circleX, circleY, circleR, strokeW, notPressedColor);
                         }
                     }
                     else if ((buttons & button) == button)
                     {
                         // Gray around currently-pressed button that's not otherwise needed
-                        drawCircleFilled(circleX, circleY, circleR, c333);
+                        drawCircleFilled(circleX, circleY, circleR, notNeededColor);
                     }
                 }
                 else if (stage == 1)
