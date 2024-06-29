@@ -14,8 +14,10 @@
 // Includes
 //==============================================================================
 
-#include "swadge2024.h"
 #include <math.h>
+#include <esp_random.h>
+
+#include "swadge2024.h"
 
 //==============================================================================
 // Defines
@@ -44,6 +46,7 @@ typedef struct{
     int16_t presses;
     font_t font;
     char scoreStr[16];
+    bool alreadyWon;
 } t48_t;
 
 //==============================================================================
@@ -53,6 +56,10 @@ typedef struct{
 static void t48EnterMode(void);
 static void t48ExitMode(void);
 static void t48MainLoop(int64_t elapsedUs);
+static int t48SetRandCell(void);
+static void t48StartGame(void);
+static bool t48CheckWin(void);
+static bool t48CheckOver(void);
 static void t48Draw(void);
 static uint8_t getColor(uint32_t val);
 

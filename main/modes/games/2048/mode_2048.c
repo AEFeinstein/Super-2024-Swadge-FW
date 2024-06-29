@@ -39,39 +39,113 @@ t48_t* t48;
 // Functions
 //==============================================================================
 
+/**
+ * @brief Mode setup
+ * 
+ */
 static void t48EnterMode(void)
 {
     setFrameRateUs(T48_US_PER_FRAME);
     t48 = calloc(sizeof(t48_t), 1);
     loadFont("ibm_vga8.font", &t48->font, false);
-
-    t48->score = 4326543;
-    for (int i = 0; i < 4; i++){
-        for (int j = 0; j < 4; j++){
-            t48->boardArr[i][j] = pow(2, i*4 + j);
-        }
-    }
 }
 
+/**
+ * @brief Mode teardown
+ * 
+ */
 static void t48ExitMode(void)
 {
     freeFont(&t48->font);
     free(t48);
 }
 
+/**
+ * @brief Main loop of the code
+ * 
+ * @param elapsedUs 
+ */
 static void t48MainLoop(int64_t elapsedUs)
 {
     // Input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        t48->presses += 1;
+        if (evt.down){
+            t48StartGame();
+        }
     }
 
     // Draw
     t48Draw();
 }
 
+/**
+ * @brief Sets an empty cell to 2 or 4 on 50/50 basis
+ * 
+ * @return int Cell used
+ */
+static int t48SetRandCell(){
+    int8_t cell = -1;
+    while (t48->boardArr[cell / 4][cell % 4] != 0){
+        cell = esp_random() % 16;
+    }
+    t48->boardArr[cell / 4][cell % 4] = ((esp_random() % 2) * 2) + 2;
+    return cell;
+}
+
+/**
+ * @brief Initializes a game
+ * 
+ */
+static void t48StartGame()
+{
+    // clear the board
+    for (int i = 0; i < 16; i++){
+        t48->boardArr[i/4][i%4] = 0;
+    }
+    t48->alreadyWon = false;
+    // Get random places to start
+    int8_t one = t48SetRandCell();
+    int8_t two = t48SetRandCell();
+}
+
+/**
+ * @brief Checks if the player has reached 2048 for tyhee first time
+ * 
+ * @return true     If this is the first time 2048 has been hit
+ * @return false    Otherwise
+ */
+static bool t48CheckWin()
+{
+    if(t48->alreadyWon){
+        return false;
+    }
+    for (int i = 0; i < 16; i ++){
+        if (t48->boardArr[i / 4][i % 4] == 2048){
+            t48->alreadyWon = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+static bool t48CheckOver()
+{
+    // Check if any cells are open
+
+    // Check if any two consecutive block match vertically
+
+    // Check if any two consecutive block match horizontally
+
+    // Game is over
+    return true;
+}
+
+/**
+ * @brief Draws the grid, score, and tiles
+ * 
+ */
 static void t48Draw()
 {   
     // Blank
@@ -126,7 +200,14 @@ static void t48Draw()
     }
 }
 
-static uint8_t getColor(uint32_t val){
+/**
+ * @brief Get the Color for a specific value
+ * 
+ * @param val       Value that requires a color for its square
+ * @return uint8_t  Color of the value's square
+ */
+static uint8_t getColor(uint32_t val)
+{
     switch(val){
         case 0:
             return c552;
