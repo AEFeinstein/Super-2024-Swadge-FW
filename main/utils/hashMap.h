@@ -64,18 +64,27 @@
  * Create a hash map, add and retrieve some values:
  * \code{.c}
  * // Declare a hash map
- * hashMap_t map = {0};
+ * hashMap_t map;
  * // Initialize it with an initial capacity of 16
  * hashInit(&map, 16);
  *
  * hashPut(&map, "greeting", "Hello");
- * hashPut(&map, "name", "Swadgeman");
- * // Prints 'Hello! Your name is Swadgeman!'
- * printf("%s! Your name is %s!\n", hashGet(&map, "greeting"), hashGet(&map, "name"));
+ * hashPut(&map, "name", "King Donut");
+ * // Prints 'Hello! Your name is King Donut!'
+ * printf("%s! Your name is %s!\n", (const char*)hashGet(&map, "greeting"), (const char*)hashGet(&map, "name"));
+ *
+ * // Update the value associated with the key 'name'
+ * hashPut(&map, "name", (const char*)"Swadgeman");
+ *
+ * // Now prints 'Hello! Your name is Swadgeman!'
+ * printf("%s! Your name is %s!\n", (const char*)hashGet(&map, "greeting"), (const char*)hashGet(&map, "name"));
  *
  * hashPut(&map, "greeting", "Goodbye");
  * // Prints 'Goodbye, Swadgeman.'
- * printf("%s, %s.", hashGet(&map, "greeting"), hashGet(&map, "name"));
+ * printf("%s, %s.", (const char*)hashGet(&map, "greeting"), (const char*)hashGet(&map, "name"));
+ *
+ * // Clean up the hash map
+ * hashDeinit(&map);
  * \endcode
  *
  * \subsection hashMap_example_iteration Iteration
@@ -93,10 +102,11 @@
  * hashPut(&map, "tag-1", "map");
  * hashPut(&map, "tag-2", "dictionary");
  *
+ * // Initialize the iterator with 0
  * hashIterator_t iter = {0};
  * while (hashIterate(&map, &iter))
  * {
- *     printf("%s: %s\n", iter.key, iter.value);
+ *     printf("%s: %s\n", (const char*)iter.key, (const char*)iter.value);
  * }
  * // No need to use hashIterReset() here as the loop finished normally
  * hashDeinit(&map);
@@ -112,7 +122,7 @@
  *         printf("Removing tag %s\n", iter.value);
  *         if (!hashIterRemove(&map, &iter))
  *         {
- *             //
+ *             // The item removed was the last one! Iteration must be stopped or it will repeat
  *             break;
  *         }
  *     }
@@ -137,6 +147,7 @@
  * // We might not have reached the end of iteration, so the iterator might not have reset automatically
  * // If we did happen to reach the end anyway, resetting it again won't hurt anything
  * hashIterReset(&iter);
+ * \endcode
  *
  * \subsection hashMap_example_nonStringKeys Non-string Keys
  *
