@@ -342,13 +342,13 @@ static void introEnterMode(void)
     // a
     iv->buttonIcons[4].icon    = &iv->icon.button.a;
     iv->buttonIcons[4].visible = true;
-    iv->buttonIcons[4].x       = 105;
+    iv->buttonIcons[4].x       = 95;
     iv->buttonIcons[4].y       = 20;
 
     // b
     iv->buttonIcons[5].icon    = &iv->icon.button.b;
     iv->buttonIcons[5].visible = true;
-    iv->buttonIcons[5].x       = 95;
+    iv->buttonIcons[5].x       = 105;
     iv->buttonIcons[5].y       = 10;
 
     // start
@@ -363,7 +363,7 @@ static void introEnterMode(void)
     iv->buttonIcons[7].x       = 50;
     iv->buttonIcons[7].y       = 15;
 
-    iv->swadgeViewWidth  = iv->buttonIcons[4].x + iv->buttonIcons[4].icon->w + 5;
+    iv->swadgeViewWidth  = iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w + 5;
     iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
 
     iv->curSection = introSections;
@@ -622,7 +622,7 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
 
     // Draw the background of the swadge
     int16_t leftCircleX  = x + iv->buttonIcons[2].x + iv->buttonIcons[2].icon->w / 2;
-    int16_t rightCircleX = x + iv->buttonIcons[4].x + iv->buttonIcons[4].icon->w / 2;
+    int16_t rightCircleX = x + iv->buttonIcons[5].x + iv->buttonIcons[5].icon->w / 2;
     int16_t bgCircleY    = y + iv->buttonIcons[2].y + iv->buttonIcons[2].icon->h / 2;
     int16_t bgCircleR    = 30;
 
