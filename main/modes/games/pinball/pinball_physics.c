@@ -335,9 +335,12 @@ void sweepCheckFlippers(pinball_t* p)
         // Move the flipper a little, then check for collisions
         for (int32_t step = 0; step < numSteps; step++)
         {
-            // Sweep the flipper a little
-            flipper->angle += sweepStep;
-            updateFlipperPos(flipper);
+            if (0 != sweepStep)
+            {
+                // Sweep the flipper a little
+                flipper->angle += sweepStep;
+                updateFlipperPos(flipper);
+            }
 
             // Normal collision checks
             // For each ball, check collisions with flippers objects
