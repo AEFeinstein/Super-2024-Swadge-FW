@@ -15,6 +15,7 @@
 //==============================================================================
 
 #include "swadge2024.h"
+#include <math.h>
 
 //==============================================================================
 // Defines
@@ -41,14 +42,9 @@ typedef struct{
     int32_t boardArr[4][4];
     uint32_t score;
     int16_t presses;
-    font_t* font;
+    font_t font;
     char scoreStr[16];
 } t48_t;
-
-typedef struct{
-    uint8_t color;
-    int32_t val;
-} colorPair_t;
 
 //==============================================================================
 // Function Prototypes
@@ -57,8 +53,8 @@ typedef struct{
 static void t48EnterMode(void);
 static void t48ExitMode(void);
 static void t48MainLoop(int64_t elapsedUs);
-static void t48BGCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void t48Draw(void);
+static uint8_t getColor(uint32_t val);
 
 //==============================================================================
 // Extern variables
