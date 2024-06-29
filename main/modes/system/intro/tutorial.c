@@ -55,8 +55,8 @@ void tutorialCheckTriggers(tutorialState_t* state)
         return;
     }
 
-    tutorialStep_t* prev = NULL;
-    tutorialStep_t* next = NULL;
+    const tutorialStep_t* prev = NULL;
+    const tutorialStep_t* next = NULL;
     bool backtrack       = false;
 
     if (tutorialCheckTrigger(state, &state->curStep->trigger))
@@ -125,7 +125,6 @@ static bool tutorialCheckTrigger(tutorialState_t* state, const tutorialTrigger_t
     {
         case NO_TRIGGER:
             return false;
-            break;
 
         case BUTTON_PRESS_ALL:
             return (state->allButtons & trigger->buttons) == trigger->buttons;

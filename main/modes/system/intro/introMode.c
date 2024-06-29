@@ -27,14 +27,12 @@ static void introTutorialCb(const tutorialState_t* state, const tutorialStep_t* 
                             bool backtrack);
 static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const tutorialTrigger_t* trigger);
 
-static void setupFakeQuickSettings(void);
 static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks);
 
 #define ALL_BUTTONS  (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT | PB_A | PB_B | PB_START | PB_SELECT)
 #define DPAD_BUTTONS (PB_UP | PB_DOWN | PB_LEFT | PB_RIGHT)
 
 #define ALL_TOUCH (TB_CENTER | TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
-#define DIR_TOUCH (TB_RIGHT | TB_UP | TB_LEFT | TB_DOWN)
 
 typedef struct
 {
@@ -502,7 +500,6 @@ static void introMainLoop(int64_t elapsedUs)
         detail = iv->tut.tempMessage;
     }
 
-    int16_t titleX    = (TFT_WIDTH - textWidth(&iv->bigFont, title)) / 2;
     int16_t titleY    = 20;
     iv->bgMenu->title = title;
     drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
