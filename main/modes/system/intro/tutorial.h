@@ -19,7 +19,8 @@ typedef struct tutorialState tutorialState_t;
  * @param next The new current tutorial step to be checked
  * @param backtrack Whether the activated trigger was a backtracking trigger or not
  */
-typedef void (*tutorialStepCb)(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next, bool backtrack);
+typedef void (*tutorialStepCb)(const tutorialState_t* state, const tutorialStep_t* prev, const tutorialStep_t* next,
+                               bool backtrack);
 
 /**
  * @brief A callback which is called to check whether a custom trigger (CUSTOM_TRIGGER_DATA and CUSTOM_TRIGGER)
@@ -169,7 +170,8 @@ typedef struct tutorialState
 } tutorialState_t;
 
 // Called to initialize the tutorial state
-void tutorialSetup(tutorialState_t* state, tutorialStepCb stepCbFunc, const tutorialStep_t steps[], size_t count, void* data);
+void tutorialSetup(tutorialState_t* state, tutorialStepCb stepCbFunc, const tutorialStep_t steps[], size_t count,
+                   void* data);
 
 // Call with each button press
 void tutorialOnButton(tutorialState_t* state, const buttonEvt_t* evt);

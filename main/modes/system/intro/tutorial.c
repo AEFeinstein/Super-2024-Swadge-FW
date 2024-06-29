@@ -69,8 +69,8 @@ void tutorialCheckTriggers(tutorialState_t* state)
             state->allButtons = 0;
             // state->lastButton = 0;
             // state->lastButtonDown = false;
-            state->stepStartTime = esp_timer_get_time();
-            state->tempMessage   = NULL;
+            state->stepStartTime     = esp_timer_get_time();
+            state->tempMessage       = NULL;
             state->tempMessageExpiry = 0;
 
             next = state->curStep;
@@ -90,10 +90,10 @@ void tutorialCheckTriggers(tutorialState_t* state)
             state->curStep = state->steps;
         }
 
-        state->allButtons = 0;
-        state->lastButton = 0;
+        state->allButtons     = 0;
+        state->lastButton     = 0;
         state->lastButtonDown = false;
-        state->stepStartTime = esp_timer_get_time();
+        state->stepStartTime  = esp_timer_get_time();
 
         if (NULL != prev->backtrackMessage)
         {

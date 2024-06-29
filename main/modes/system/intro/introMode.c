@@ -42,11 +42,11 @@ typedef struct
     size_t count;
 } introSection_t;
 
-static const char startTitle[] = "Welcome!";
+static const char startTitle[]        = "Welcome!";
 static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
-static const char endTitle[]  = "Nice! You did it!";
-static const char endDetail[] = "You are now Swadge Certified! Remember, with great power comes great "
-                                "responsibility. Hold SELECT to exit the tutorial and get started!";
+static const char endTitle[]          = "Nice! You did it!";
+static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
+                                        "responsibility. Hold SELECT to exit the tutorial and get started!";
 
 static const tutorialStep_t buttonsSteps[] = {
     {
@@ -311,7 +311,7 @@ static void introEnterMode(void)
     loadWsg("button_pause.wsg", &iv->icon.button.pause, false);
     loadWsg("button_up.wsg", &iv->icon.button.up, false);
 
-    iv->bgMenu = initMenu(startTitle, NULL);
+    iv->bgMenu   = initMenu(startTitle, NULL);
     iv->renderer = initMenuManiaRenderer(&iv->bigFont, NULL, &iv->smallFont);
 
     // up
@@ -365,14 +365,14 @@ static void introEnterMode(void)
     iv->buttonIcons[7].x       = 50;
     iv->buttonIcons[7].y       = 15;
 
-    iv->swadgeViewWidth = iv->buttonIcons[4].x + iv->buttonIcons[4].icon->w + 5;
+    iv->swadgeViewWidth  = iv->buttonIcons[4].x + iv->buttonIcons[4].icon->w + 5;
     iv->swadgeViewHeight = iv->buttonIcons[1].y + iv->buttonIcons[1].icon->h + 5;
 
     iv->curSection = introSections;
     tutorialSetup(&iv->tut, introTutorialCb, iv->curSection->steps, iv->curSection->count, iv);
 
-    iv->sound = NULL;
-    iv->playingSound = false;
+    iv->sound         = NULL;
+    iv->playingSound  = false;
     iv->introComplete = true;
 }
 
@@ -414,33 +414,33 @@ static void introMainLoop(int64_t elapsedUs)
 
     if (iv->playingSound || !iv->introComplete)
     {
-        int64_t songTime = (iv->soundSize * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
-        int64_t animTime = (songTime * 2 / 3);
+        int64_t songTime     = (iv->soundSize * 1000000 + DAC_SAMPLE_RATE_HZ - 1) / DAC_SAMPLE_RATE_HZ;
+        int64_t animTime     = (songTime * 2 / 3);
         static int64_t timer = 0;
 
         shadeDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, 3, c234);
 
         char title[64] = {0};
-        char sub[64] = {0};
+        char sub[64]   = {0};
 
         strcat(title, "MAGFest");
         strcat(sub, "Swadge 2025");
         int64_t titleTicksPerChar = ((animTime) / strlen(title));
-        int64_t subTicksPerChar = ((animTime) / strlen(sub));
+        int64_t subTicksPerChar   = ((animTime) / strlen(sub));
 
         int16_t titleWidth = textWidth(&iv->bigFont, title);
-        int16_t titleX = (TFT_WIDTH - titleWidth) / 2;
-        int16_t titleY = (TFT_HEIGHT - iv->bigFont.height - iv->smallFont.height - 6) / 2;
+        int16_t titleX     = (TFT_WIDTH - titleWidth) / 2;
+        int16_t titleY     = (TFT_HEIGHT - iv->bigFont.height - iv->smallFont.height - 6) / 2;
 
         int16_t subWidth = textWidth(&iv->bigFont, sub);
-        int16_t subX = (TFT_WIDTH - subWidth) / 2;
-        int16_t subY = titleY + iv->bigFont.height + 5;
+        int16_t subX     = (TFT_WIDTH - subWidth) / 2;
+        int16_t subY     = titleY + iv->bigFont.height + 5;
 
         int titleLen = MIN(strlen(title), timer / titleTicksPerChar);
-        int subLen = MIN(strlen(sub), timer / subTicksPerChar);
+        int subLen   = MIN(strlen(sub), timer / subTicksPerChar);
         // Trim the string
         title[titleLen] = '\0';
-        sub[subLen] = '\0';
+        sub[subLen]     = '\0';
 
         drawText(&iv->bigFont, c555, title, titleX, titleY);
         drawText(&iv->bigFont, c000, title, titleX - 1, titleY + 1);
@@ -502,8 +502,8 @@ static void introMainLoop(int64_t elapsedUs)
         detail = iv->tut.tempMessage;
     }
 
-    int16_t titleX = (TFT_WIDTH - textWidth(&iv->bigFont, title)) / 2;
-    int16_t titleY = 20;
+    int16_t titleX    = (TFT_WIDTH - textWidth(&iv->bigFont, title)) / 2;
+    int16_t titleY    = 20;
     iv->bgMenu->title = title;
     drawMenuMania(iv->bgMenu, iv->renderer, elapsedUs);
 
@@ -605,10 +605,9 @@ static bool introCheckQuickSettingsTrigger(const tutorialState_t* state, const t
 
 static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t buttons, touchJoystick_t joysticks)
 {
-
-#define BLINK_ON 550000
-#define BLINK_OFF 200000
-#define BLINK_TIME (BLINK_ON+BLINK_OFF)
+#define BLINK_ON   550000
+#define BLINK_OFF  200000
+#define BLINK_TIME (BLINK_ON + BLINK_OFF)
 
     static const int buttonBlinkOrder[] = {
         1, // UP
@@ -625,12 +624,12 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
     bool blink = true;
 
     // Draw the background of the swadge
-    int16_t leftCircleX = x + iv->buttonIcons[2].x + iv->buttonIcons[2].icon->w / 2;
+    int16_t leftCircleX  = x + iv->buttonIcons[2].x + iv->buttonIcons[2].icon->w / 2;
     int16_t rightCircleX = x + iv->buttonIcons[4].x + iv->buttonIcons[4].icon->w / 2;
-    int16_t bgCircleY = y + iv->buttonIcons[2].y + iv->buttonIcons[2].icon->h / 2;
-    int16_t bgCircleR = 30;
+    int16_t bgCircleY    = y + iv->buttonIcons[2].y + iv->buttonIcons[2].icon->h / 2;
+    int16_t bgCircleR    = 30;
 
-    paletteColor_t bgColor = c234;
+    paletteColor_t bgColor     = c234;
     paletteColor_t borderColor = c000;
 
     drawCircleFilled(leftCircleX, bgCircleY, bgCircleR, bgColor);
@@ -644,8 +643,8 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
     drawCircleQuadrants(rightCircleX, bgCircleY, bgCircleR, true, false, false, true, borderColor);
 
     paletteColor_t notPressedColor = c531;
-    paletteColor_t pressedColor = c243;
-    paletteColor_t notNeededColor = c111;
+    paletteColor_t pressedColor    = c243;
+    paletteColor_t notNeededColor  = c111;
 
     for (int stage = 0; stage < 2; stage++)
     {
@@ -658,12 +657,12 @@ static void introDrawSwadge(int64_t elapsedUs, int16_t x, int16_t y, buttonBit_t
             {
                 if (stage == 0)
                 {
-                    int64_t timeOffset = ((7-buttonBlinkOrder[i]) * (BLINK_TIME / 6)) / 8;
-                    bool showBlink = ((time + timeOffset) % BLINK_TIME) <= BLINK_ON;
-                    int16_t circleX = x + icon->x + icon->icon->w / 2;
-                    int16_t circleY = y + icon->y + icon->icon->h / 2;
-                    int16_t strokeW = 3;
-                    int16_t circleR = icon->icon->w * 3 / 5 + strokeW;
+                    int64_t timeOffset = ((7 - buttonBlinkOrder[i]) * (BLINK_TIME / 6)) / 8;
+                    bool showBlink     = ((time + timeOffset) % BLINK_TIME) <= BLINK_ON;
+                    int16_t circleX    = x + icon->x + icon->icon->w / 2;
+                    int16_t circleY    = y + icon->y + icon->icon->h / 2;
+                    int16_t strokeW    = 3;
+                    int16_t circleR    = icon->icon->w * 3 / 5 + strokeW;
                     if (iv->tut.curStep && iv->tut.curStep->trigger.type == BUTTON_PRESS_ALL
                         && (iv->tut.curStep->trigger.buttons & button) == button)
                     {
