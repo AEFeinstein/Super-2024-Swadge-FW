@@ -1,7 +1,7 @@
 /**
  * @file mode_2048.c
- * @author your name (you@domain.com)
- * @brief 
+ * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @brief A game of 2048 for 2024-2025 Swadge hardware
  * @version 0.1
  * @date 2024-06-28
  * 
@@ -48,6 +48,9 @@ static void t48EnterMode(void)
     setFrameRateUs(T48_US_PER_FRAME);
     t48 = calloc(sizeof(t48_t), 1);
     loadFont("ibm_vga8.font", &t48->font, false);
+
+    t48StartGame();  // First run only adds one block... so just run it twice!
+    t48StartGame();
 }
 
 /**
@@ -67,12 +70,20 @@ static void t48ExitMode(void)
  */
 static void t48MainLoop(int64_t elapsedUs)
 {
+    if(t48CheckWin()){
+
+    }
+
+    if (t48CheckOver()){
+        // FIXME: does not actually reset?
+        t48StartGame();
+    }
     // Input
     buttonEvt_t evt;
     while (checkButtonQueueWrapper(&evt))
     {
-        if (evt.down){
-            t48StartGame();
+        if (evt.down && evt.button & PB_A){
+            t48SetRandCell();
         }
     }
 
@@ -85,12 +96,13 @@ static void t48MainLoop(int64_t elapsedUs)
  * 
  * @return int Cell used
  */
-static int t48SetRandCell(){
+static int t48SetRandCell()
+{
     int8_t cell = -1;
-    while (t48->boardArr[cell / 4][cell % 4] != 0){
-        cell = esp_random() % 16;
+    while (t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] != 0){
+        cell = esp_random() % BOARD_SIZE;
     }
-    t48->boardArr[cell / 4][cell % 4] = ((esp_random() % 2) * 2) + 2;
+    t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] = ((esp_random() % 2) * 2) + 2;
     return cell;
 }
 
@@ -101,13 +113,13 @@ static int t48SetRandCell(){
 static void t48StartGame()
 {
     // clear the board
-    for (int i = 0; i < 16; i++){
-        t48->boardArr[i/4][i%4] = 0;
+    for (int i = 0; i < BOARD_SIZE; i++){
+        t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 0;
     }
     t48->alreadyWon = false;
     // Get random places to start
-    int8_t one = t48SetRandCell();
-    int8_t two = t48SetRandCell();
+    t48SetRandCell();
+    t48SetRandCell();
 }
 
 /**
@@ -121,8 +133,8 @@ static bool t48CheckWin()
     if(t48->alreadyWon){
         return false;
     }
-    for (int i = 0; i < 16; i ++){
-        if (t48->boardArr[i / 4][i % 4] == 2048){
+    for (int i = 0; i < BOARD_SIZE; i ++){
+        if (t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] == 2048){
             t48->alreadyWon = true;
             return true;
         }
@@ -130,14 +142,36 @@ static bool t48CheckWin()
     return false;
 }
 
+/**
+ * @brief Checks if the game can no longer be played
+ * 
+ * @return true     Display final score and reset
+ * @return false    Continue playing
+ */
 static bool t48CheckOver()
 {
     // Check if any cells are open
-
+    for (int i = 0; i < BOARD_SIZE; i++){
+        if(t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] == 0){
+            return false;
+        }
+    }
     // Check if any two consecutive block match vertically
-
+    for (int row = 0; row < GRID_SIZE; row++){
+        for (int col = 0; col < GRID_SIZE - 1; col++){  // -1 to account for comparison
+            if (t48->boardArr[col][row] == t48->boardArr[col + 1][row]){
+                return false;
+            }
+        }
+    }
     // Check if any two consecutive block match horizontally
-
+    for (int row = 0; row < GRID_SIZE - 1 ; row++){  // -1 to account for comparison
+        for (int col = 0; col < GRID_SIZE - 1; col++){ 
+            if (t48->boardArr[col][row] == t48->boardArr[col][row + 1]){
+                return false;
+            }
+        }
+    }
     // Game is over
     return true;
 }
@@ -174,24 +208,24 @@ static void t48Draw()
     int16_t side_offset = SIDE_MARGIN + T48_LINE_WEIGHT;
     int16_t top_offset = TOP_MARGIN + T48_LINE_WEIGHT;
     static char buffer[16];
-    for (int i = 0; i < 4; i++){
-        for (int j = 0; j < 4; j++){
+    for (int col = 0; col < GRID_SIZE; col++){
+        for (int row = 0; row < GRID_SIZE; row++){
             // Grab the current value of the cell
-            uint32_t val = t48->boardArr[i][j];
+            uint32_t val = t48->boardArr[col][row];
             // Bail if 0
             if (val == 0) {continue;}
-            // Grab the offest bease on cell
-            uint16_t y_cell_offset = i * (T48_CELL_SIZE + T48_LINE_WEIGHT);
-            uint16_t x_cell_offset = j * (T48_CELL_SIZE + T48_LINE_WEIGHT);
+            // Grab the offest based on cell
+            uint16_t y_cell_offset = col * (T48_CELL_SIZE + T48_LINE_WEIGHT);
+            uint16_t x_cell_offset = row * (T48_CELL_SIZE + T48_LINE_WEIGHT);
             // Convert int to char
             snprintf(buffer, sizeof(buffer)-1, "%" PRIu32, val);
             // Get the center of the text
             uint16_t text_center = (textWidth(&t48->font, buffer))/2;
             // Get associated color
-            uint8_t col = getColor(val);
+            uint8_t color = getColor(val);
             fillDisplayArea(side_offset + x_cell_offset, top_offset + y_cell_offset, 
                             side_offset + x_cell_offset + T48_CELL_SIZE, 
-                            top_offset + y_cell_offset + T48_CELL_SIZE, col);
+                            top_offset + y_cell_offset + T48_CELL_SIZE, color);
             // Draw the text
             drawText(&t48->font, c555, buffer, 
             side_offset + x_cell_offset - text_center + T48_CELL_SIZE/2, 

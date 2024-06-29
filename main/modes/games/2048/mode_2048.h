@@ -1,7 +1,7 @@
 /**
  * @file mode_2048.h
- * @author your name (you@domain.com)
- * @brief 
+ * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
+ * @brief A game of 2048 for 2024-2025 Swadge hardware
  * @version 0.1
  * @date 2024-06-28
  * 
@@ -31,6 +31,8 @@
 #define T48_LINE_WEIGHT 4
 #define SIDE_MARGIN     30
 #define TOP_MARGIN      20
+#define GRID_SIZE       4
+#define BOARD_SIZE      16
 
 //==============================================================================
 // Enums
