@@ -19,7 +19,6 @@
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);
-static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 static void introDacCallback(uint8_t* samples, int16_t len);
 
 // static void introMenuCb(const char*, bool selected, uint32_t settingVal);
@@ -222,7 +221,7 @@ swadgeMode_t introMode = {
     .fnExitMode               = introExitMode,
     .fnMainLoop               = introMainLoop,
     .fnAudioCallback          = NULL,
-    .fnBackgroundDrawCallback = introBackgroundDrawCallback,
+    .fnBackgroundDrawCallback = NULL,
     .fnEspNowRecvCb           = NULL,
     .fnEspNowSendCb           = NULL,
     .fnAdvancedUSB            = NULL,
@@ -520,23 +519,6 @@ static void introMainLoop(int64_t elapsedUs)
         ESP_LOGI("Intro", "Remaining text: ...%s", remaining);
         // TODO handle remaining text sensibly
     }
-}
-
-/**
- * This function is called when the display driver wishes to update a
- * section of the display.
- *
- * @param disp The display to draw to
- * @param x the x coordiante that should be updated
- * @param y the x coordiante that should be updated
- * @param w the width of the rectangle to be updated
- * @param h the height of the rectangle to be updated
- * @param up update number
- * @param numUp update number denominator
- */
-static void introBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum)
-{
-    fillDisplayArea(x, y, x + w, y + h, c555);
 }
 
 static void introDacCallback(uint8_t* samples, int16_t len)
