@@ -60,7 +60,7 @@ static const tutorialStep_t buttonsSteps[] = {
             .type = BUTTON_PRESS_ALL,
             .buttons = DPAD_BUTTONS,
         },
-        .title = "D-Pad Buttons",
+        .title = "The D-Pad",
         .detail = "These four buttons on the left side of the Swadge are the D-Pad. Use them to navigate. Try them all out!",
     },
     {
