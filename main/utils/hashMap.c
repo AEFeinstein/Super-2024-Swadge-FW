@@ -31,7 +31,7 @@ typedef struct
     uint32_t hash;
 
     ///<  The key of this pair, or NULL if this node is empty
-    void* key;
+    const void* key;
 
     ///<  The value of this pair
     void* value;
@@ -91,7 +91,7 @@ static inline hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const 
                                     int* count);
 static inline hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hashNode_t* node, node_t* multiNode,
                                       int* count);
-static bool hashIterNext(hashMap_t* map, hashIterator_t* iter);
+static bool hashIterNext(const hashMap_t* map, hashIterator_t* iter);
 
 //==============================================================================
 // Functions
@@ -458,7 +458,6 @@ uint32_t hashBytes(const uint8_t* bytes, size_t length)
 {
     const uint8_t* end = (bytes + length);
     uint32_t hash      = 5381;
-    int c;
 
     while (bytes < end)
     {
@@ -532,10 +531,10 @@ void hashPutBin(hashMap_t* map, const void* key, void* value)
 {
     hashCheckSize(map);
 
-    uint32_t hash    = map->hashFunc ? map->hashFunc(key) : hashString(key);
-    int index        = (hash % map->size);
-    int newCount     = map->count;
-    hashNode_t* node = bucketPut(map, &map->values[index], key, value, hash, &newCount);
+    uint32_t hash = map->hashFunc ? map->hashFunc(key) : hashString(key);
+    int index     = (hash % map->size);
+    int newCount  = map->count;
+    bucketPut(map, &map->values[index], key, value, hash, &newCount);
 
     if (map->count != newCount)
     {
@@ -663,7 +662,7 @@ void hashDeinit(hashMap_t* map)
  * @return true if the iterator was advanced
  * @return false if the iterator was not advanced because it reached the end of the hash map
  */
-static bool hashIterNext(hashMap_t* map, hashIterator_t* iterator)
+static bool hashIterNext(const hashMap_t* map, hashIterator_t* iterator)
 {
     hashIterState_t* state = iterator->_state;
     do
@@ -748,11 +747,11 @@ static bool hashIterNext(hashMap_t* map, hashIterator_t* iterator)
  * iteration may or may not later be returned by the iterator.
  *
  * @param[in] map The map to iterate over
- * @param[in,out] iter A pointer to a hashIterator_t struct
+ * @param[in,out] iterator A pointer to a hashIterator_t struct
  * @return true if the iterator returned an item
  * @return false if iteration is complete and no item was returned
  */
-bool hashIterate(hashMap_t* map, hashIterator_t* iterator)
+bool hashIterate(const hashMap_t* map, hashIterator_t* iterator)
 {
     hashIterState_t* state = iterator->_state;
 
@@ -816,16 +815,15 @@ bool hashIterRemove(hashMap_t* map, hashIterator_t* iter)
     }
 
     hashIterState_t* state = iter->_state;
-    bool nextBucket        = false;
     bool result            = false;
 
-    int newCount           = map->count;
-    node_t* nextListNode   = state->curBucket->hasMulti ? state->curListNode->next : NULL;
-    hashNode_t removedNode = bucketRemove(map, state->curBucket, state->curNode, state->curListNode, &newCount);
+    int newCount         = map->count;
+    node_t* nextListNode = state->curBucket->hasMulti ? state->curListNode->next : NULL;
+    bucketRemove(map, state->curBucket, state->curNode, state->curListNode, &newCount);
     if (newCount != map->count)
     {
         int diff = map->count - newCount;
-        state->returned -= (map->count - newCount);
+        state->returned -= diff;
         map->count     = newCount;
         state->removed = true;
         HASH_LOG("Removed %d nodes in iterator, map now has %d nodes", diff, map->count);

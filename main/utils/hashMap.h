@@ -377,7 +377,7 @@ typedef struct hashIterState hashIterState_t;
 typedef struct
 {
     /// @brief The key of the current key-value pair
-    void* key;
+    const void* key;
     /// @brief The value of the current key-value pair
     void* value;
 
@@ -426,7 +426,7 @@ void hashInit(hashMap_t* map, int initialSize);
 void hashInitBin(hashMap_t* map, int initialSize, hashFunction_t hashFunc, eqFunction_t eqFunc);
 void hashDeinit(hashMap_t* map);
 
-bool hashIterate(hashMap_t* map, hashIterator_t* iterator);
+bool hashIterate(const hashMap_t* map, hashIterator_t* iterator);
 bool hashIterRemove(hashMap_t* map, hashIterator_t* iter);
 void hashIterReset(hashIterator_t* iterator);
 
