@@ -15,7 +15,6 @@
 #include "shapes.h"
 #include "wsg.h"
 
-
 static void introEnterMode(void);
 static void introExitMode(void);
 static void introMainLoop(int64_t elapsedUs);

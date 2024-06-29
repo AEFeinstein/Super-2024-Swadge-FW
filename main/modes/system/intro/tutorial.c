@@ -57,7 +57,7 @@ void tutorialCheckTriggers(tutorialState_t* state)
 
     const tutorialStep_t* prev = NULL;
     const tutorialStep_t* next = NULL;
-    bool backtrack       = false;
+    bool backtrack             = false;
 
     if (tutorialCheckTrigger(state, &state->curStep->trigger))
     {
