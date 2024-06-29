@@ -42,7 +42,7 @@ typedef struct
 
 static const char startTitle[]        = "Welcome!";
 static const char holdLongerMessage[] = "Almost! Keep holding SELECT for one second to exit.";
-static const char endTitle[]          = "Nice! You did it!";
+static const char endTitle[]          = "Exiting Modes";
 static const char endDetail[]         = "You are now Swadge Certified! Remember, with great power comes great "
                                         "responsibility. Hold SELECT to exit the tutorial and get started!";
 
