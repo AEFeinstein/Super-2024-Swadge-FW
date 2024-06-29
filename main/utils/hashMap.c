@@ -457,7 +457,7 @@ bool strEq(const void* a, const void* b)
 uint32_t hashBytes(const uint8_t* bytes, size_t length)
 {
     const uint8_t* end = (bytes + length);
-    uint32_t hash = 5381;
+    uint32_t hash      = 5381;
     int c;
 
     while (bytes < end)

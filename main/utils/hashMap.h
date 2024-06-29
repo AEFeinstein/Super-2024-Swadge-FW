@@ -139,7 +139,7 @@
  * This example shows how to use a hash map where the keys are enum values. This method will
  * work with any numeric type, as long as \c{sizeof(type) <= sizeof(void*)} -- that is, as
  * long as it fits inside a pointer. In practice this means an \c int32_t can be used as a
- e* key in a hash map in this way, but an \c int64_t cannot.
+ * key in a hash map in this way, but an \c int64_t cannot.
  *
  * \code{.c}
  * #include "hdw-btn.h"
