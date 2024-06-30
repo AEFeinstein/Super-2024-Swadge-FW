@@ -84,13 +84,12 @@ typedef struct hashIterState
 // Static Function Prototypes
 //==============================================================================
 
-static inline void hashCheckSize(hashMap_t* map);
-static inline hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t* hashOut, hashBucket_t** bucketOut,
-                                       node_t** multiOut);
-static inline hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* key, void* value, uint32_t hash,
-                                    int* count);
-static inline hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hashNode_t* node, node_t* multiNode,
-                                      int* count);
+static void hashCheckSize(hashMap_t* map);
+static hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t* hashOut, hashBucket_t** bucketOut,
+                                node_t** multiOut);
+static hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* key, void* value, uint32_t hash,
+                             int* count);
+static hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hashNode_t* node, node_t* multiNode, int* count);
 static bool hashIterNext(const hashMap_t* map, hashIterator_t* iter);
 
 //==============================================================================
@@ -104,7 +103,7 @@ static bool hashIterNext(const hashMap_t* map, hashIterator_t* iter);
  *
  * @param map The hash map to resize
  */
-static inline void hashCheckSize(hashMap_t* map)
+static void hashCheckSize(hashMap_t* map)
 {
     // if count >= size * .75
     if (map->count * 4 >= 3 * map->size)
@@ -179,8 +178,8 @@ static inline void hashCheckSize(hashMap_t* map)
  * @param[out] multiOut A pointer to a pointer to a list node to be set to the containing list item, if any
  * @return hashNode_t* A pointer to the node corresponding to the given key, if any was found
  */
-static inline hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t* hashOut, hashBucket_t** bucketOut,
-                                       node_t** multiOut)
+static hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t* hashOut, hashBucket_t** bucketOut,
+                                node_t** multiOut)
 {
     uint32_t hash        = map->hashFunc ? map->hashFunc(key) : hashString((const char*)key);
     int index            = hash % map->size;
@@ -280,8 +279,8 @@ static inline hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t
  * @param[out] count If non-NULL, will be incremented if the value is inserted
  * @return hashNode_t* A pointer to the newly-inserted node
  */
-static inline hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* key, void* value, uint32_t hash,
-                                    int* count)
+static hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const void* key, void* value, uint32_t hash,
+                             int* count)
 {
     eqFunction_t eqFn = map->eqFunc ? map->eqFunc : strEq;
     // We can always dereference the first pointer because if the list is emptied, hasMulti should be false
@@ -393,8 +392,7 @@ static inline hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const 
  * @param[out] count The count of items, to be decremented if set
  * @return A copy of the node that was removed
  */
-static inline hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hashNode_t* node, node_t* multiNode,
-                                      int* count)
+static hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hashNode_t* node, node_t* multiNode, int* count)
 {
     hashNode_t result = {0};
     if (bucket->hasMulti)
