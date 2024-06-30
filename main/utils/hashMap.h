@@ -456,4 +456,6 @@ bool hashIterate(const hashMap_t* map, hashIterator_t* iterator);
 bool hashIterRemove(hashMap_t* map, hashIterator_t* iter);
 void hashIterReset(hashIterator_t* iterator);
 
+void hashReport(const hashMap_t* map);
+
 #endif

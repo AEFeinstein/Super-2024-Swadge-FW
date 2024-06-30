@@ -939,3 +939,69 @@ void hashIterReset(hashIterator_t* iterator)
     iterator->key    = NULL;
     iterator->value  = NULL;
 }
+
+/**
+ * @brief Prints out a detailed report on the hash map state.
+ *
+ * This can be useful when testing to determine the effectiveness of a hash function.
+ *
+ * @param map The hash map to print the state of
+ */
+void hashReport(const hashMap_t* map)
+{
+    bool stringKeys = (!map->hashFunc || map->hashFunc == hashString);
+
+    ESP_LOGI("HashMap", "================");
+    ESP_LOGI("HashMap", "Hash Map %p contains %d items in %d buckets", (const void*)map, map->count, map->size);
+    for (hashBucket_t* bucket = map->values; bucket < (map->values + map->size); bucket++)
+    {
+        uint32_t bucketIdx = (uint32_t)(bucket - map->values);
+        if (bucket->hasMulti && bucket->multi.length > 0)
+        {
+            ESP_LOGI("HashMap", "Bucket %04" PRIu32 " contains %d nodes:", bucketIdx, bucket->multi.length);
+            uint32_t nodeIdx = 0;
+            for (node_t* node = bucket->multi.first; NULL != node; node = node->next, nodeIdx++)
+            {
+                hashNode_t* hashNode = (hashNode_t*)(node->val);
+
+                if (stringKeys)
+                {
+                    ESP_LOGI("HashMap",
+                             "            Node %02" PRIu32 " has hash=%08" PRIx32 ", value=%p, and key=\"%s\"", nodeIdx,
+                             hashNode->hash, hashNode->value, (const char*)hashNode->key);
+                }
+                else
+                {
+                    ESP_LOGI("HashMap",
+                             "            Node %02" PRIu32 " has hash=%08" PRIx32 ", value=%p, and key=\"%p\"", nodeIdx,
+                             hashNode->hash, hashNode->value, hashNode->key);
+                }
+            }
+        }
+        else
+        {
+            if (bucket->single.value != NULL)
+            {
+                if (stringKeys)
+                {
+                    ESP_LOGI("HashMap",
+                             "Bucket %04" PRIu32 " contains a single node with hash=%08" PRIx32
+                             ", value=%p, and key=\"%s\"",
+                             bucketIdx, bucket->single.hash, bucket->single.value, (const char*)bucket->single.key);
+                }
+                else
+                {
+                    ESP_LOGI("HashMap",
+                             "Bucket %04" PRIu32 " contains a single node with hash=%08" PRIx32
+                             ", value=%p, and key=%p",
+                             bucketIdx, bucket->single.hash, bucket->single.value, bucket->single.key);
+                }
+            }
+            else
+            {
+                ESP_LOGI("HashMap", "Bucket %04" PRIu32 " is empty", bucketIdx);
+            }
+        }
+    }
+    ESP_LOGI("HashMap", "================");
+}
