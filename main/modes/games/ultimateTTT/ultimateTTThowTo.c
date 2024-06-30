@@ -10,7 +10,8 @@
 // Defines
 //==============================================================================
 
-#define TEXT_MARGIN 18
+#define TEXT_MARGIN_L 18
+#define TEXT_MARGIN_R 13
 
 static void instructionSetupBoard(ultimateTTT_t* ttt);
 static void instructionSetupSmallWin(ultimateTTT_t* ttt);
@@ -49,8 +50,8 @@ typedef struct
 static const instructionPage_t howToPages[] = {
     {
         .type = INSTRUCTION_TEXT,
-        .text = "Ultimate TTT is a big game of tic-tac-toe made up of nine small games of tic-tac-toe.",
-        .iArrow = {},
+            .text = "Ultimate TTT is a big game of tic-tac-toe made up of nine small games of tic-tac-toe.",
+            .iArrow = {},
     },
     {
         .type = INSTRUCTION_FUNC,
@@ -134,6 +135,11 @@ static const instructionPage_t howToPages[] = {
         },
     },
     {
+        .type = INSTRUCTION_TEXT,
+        .text = "A marker placed in a middle-left square means the next marker must be placed in the middle-left game.",
+        .iArrow = {},
+    },
+    {
         .type = INSTRUCTION_BUTTON,
         .button = PB_A,
         .iArrow = {},
@@ -167,6 +173,11 @@ static const instructionPage_t howToPages[] = {
         },
     },
     {
+        .type = INSTRUCTION_TEXT,
+        .text = "A marker placed in a bottom-left square means the next marker must be placed in the bottom-left game.",
+        .iArrow = {},
+    },
+    {
         .type = INSTRUCTION_BUTTON,
         .button = PB_A,
         .iArrow = {},
@@ -174,13 +185,18 @@ static const instructionPage_t howToPages[] = {
     {
         .type = INSTRUCTION_BUTTON,
         .button = PB_DOWN,
+        .iArrow = {},
+    },
+    {
+        .type = INSTRUCTION_BUTTON,
+        .button = PB_LEFT,
         .iArrow = {
             .base = {
-                .x = 1,
+                .x = 0,
                 .y = 5,
             },
             .tip = {
-                .x = 4,
+                .x = 1,
                 .y = 7
             }
         },
@@ -190,19 +206,14 @@ static const instructionPage_t howToPages[] = {
         .button = PB_A,
         .iArrow = {
             .base = {
-                .x = 1,
+                .x = 0,
                 .y = 5,
             },
             .tip = {
-                .x = 4,
+                .x = 1,
                 .y = 7
             }
         },
-    },
-    {
-        .type = INSTRUCTION_BUTTON,
-        .button = PB_A,
-        .iArrow = {},
     },
     {
         .type = INSTRUCTION_TEXT,
@@ -312,16 +323,7 @@ static const instructionPage_t howToPages[] = {
     {
         .type = INSTRUCTION_BUTTON_SEL_GAME,
         .button = PB_A,
-        .iArrow = {
-            .base = {
-                .x = 4,
-                .y = 2,
-            },
-            .tip = {
-                .x = 4,
-                .y = 7
-            }
-        },
+        .iArrow = {},
     },
     {
         .type = INSTRUCTION_TEXT,
@@ -594,11 +596,11 @@ void tttDrawHowTo(ultimateTTT_t* ttt, int64_t elapsedUs)
             drawMenuMania(ttt->bgMenu, ttt->menuRenderer, 0);
 
             // Draw the text here
-            int16_t xOff = TEXT_MARGIN;
+            int16_t xOff = TEXT_MARGIN_L;
             int16_t yOff = MANIA_TITLE_HEIGHT + 8;
             // Draw the text and save the next page
             drawTextWordWrap(&ttt->font_rodin, c000, howToPages[ttt->pageIdx].text, &xOff, &yOff,
-                             TFT_WIDTH - TEXT_MARGIN, TFT_HEIGHT);
+                             TFT_WIDTH - TEXT_MARGIN_R, TFT_HEIGHT);
             break;
         }
     }
