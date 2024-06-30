@@ -7,20 +7,6 @@
 #define FREQ_HZ(whole)     (((whole)&0xFFFFu) << 16)
 #define FREQ_HZ_FRAC(flhz) ((((uint32_t)(flhz)) << 16) | ((uint32_t)(((flhz) - ((float)((uint32_t)(flhz)))) * 65536.0)))
 
-static int8_t impulseTab[]
-    = {0,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   3,   3,   3,   3,   4,   4,   4,   5,   5,   6,
-       6,   7,   7,   8,   9,   10,  10,  11,  12,  13,  15,  16,  17,  19,  21,  23,  25,  27,  29,  32,  35,  38,
-       41,  45,  49,  54,  59,  64,  70,  76,  83,  91,  99,  108, 117, 128, 140, 152, 166, 181, 197, 215, 255, 248,
-       239, 231, 224, 216, 209, 202, 196, 189, 183, 177, 171, 165, 160, 155, 150, 145, 140, 135, 131, 127, 122, 118,
-       114, 111, 107, 103, 100, 97,  94,  90,  87,  85,  82,  79,  76,  74,  72,  69,  67,  65,  63,  60,  58,  57,
-       55,  53,  51,  49,  48,  46,  45,  43,  42,  40,  39,  38,  37,  35,  34,  33,  32,  31,  30,  29,  28,  27,
-       26,  25,  24,  24,  23,  22,  21,  21,  20,  19,  19,  18,  17,  17,  16,  16,  15,  15,  14,  14,  13,  13,
-       12,  12,  12,  11,  11,  11,  10,  10,  10,  9,   9,   9,   8,   8,   8,   8,   7,   7,   7,   7,   6,   6,
-       6,   6,   6,   5,   5,   5,   5,   5,   5,   4,   4,   4,   4,   4,   4,   4,   3,   3,   3,   3,   3,   3,
-       3,   3,   3,   3,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   2,   1,   1,
-       1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,   1,
-       1,   1,   1,   1,   1,   1,   1,   1,   0,   0,   0,   0,   0,   0};
-
 static int8_t linearNoiseImpulse(uint32_t length, uint32_t idx, bool* done);
 static int8_t linearWaveImpulse(oscillatorShape_t shape, uq16_16 freq, uint32_t length, uint32_t idx, bool* done);
 static inline int8_t sampleWaveAt(uint32_t idx, oscillatorShape_t shape, uq16_16 freq);
@@ -28,7 +14,6 @@ static inline int8_t sampleTable(uint32_t idx, int8_t* table, uint16_t len, uq16
 static int16_t adrLerp(uint32_t tick, uint32_t attackTime, uint32_t decayTime, int16_t attackLevel, int16_t decayLevel);
 static uq16_16 freqLerp(uint32_t tick, uint32_t len, uq16_16 start, uq16_16 end);
 static uq16_16 tremolo(uint32_t tick, uint32_t period, uq16_16 freq, int8_t centRange);
-static int8_t sampleImpulse(uint32_t idx, uq16_16 freq);
 
 /**
  * @brief Return random noise sampled with a linearly decreasing volume
@@ -149,12 +134,6 @@ static uq16_16 tremolo(uint32_t tick, uint32_t period, uq16_16 freq, int8_t cent
     return bendPitchFreq(freq, cents);
 }
 
-static int8_t sampleImpulse(uint32_t idx, uq16_16 freq)
-{
-    uint8_t n = (idx * (freq / (DAC_SAMPLE_RATE_HZ >> 8)) >> 16) & 0xFF;
-    return impulseTab[n];
-}
-
 /**
  * @brief Return a value that linearly increases until a value is reached, then decays exponentially
  *
@@ -210,10 +189,6 @@ static inline int8_t finishAt(uint32_t finishTime, uint32_t idx, bool* done)
 
 int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data)
 {
-    // TODO I stopped the drums from working because they're kinda bad!
-    //*done = true;
-    // return 0;
-
     // Good for a lazer sound:
     // return adrLerp(idx, 128, (8192-128), 256, 0) * swSynthSampleWave(NOISE, idx) + finishAt(8192, idx, done);
     switch (drum)
