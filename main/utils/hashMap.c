@@ -4,7 +4,7 @@
 
 #include "hashMap.h"
 
-#include <malloc.h>
+#include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 
@@ -111,11 +111,11 @@ static inline void hashCheckSize(hashMap_t* map)
     {
         int size = map->size * 2;
         HASH_LOG("Resizing backing array from %d to %d (count=%d)", map->size, size, map->count);
-        hashBucket_t* newArray = reallocarray(map->values, size, sizeof(hashBucket_t));
+        hashBucket_t* newArray = realloc(map->values, size * sizeof(hashBucket_t));
 
         if (newArray != NULL)
         {
-            // Zero the new memory as reallocarray does not do it for us
+            // Zero the new memory as realloc does not do it for us
             memset(newArray + map->size, 0, (size - map->size) * sizeof(hashBucket_t));
 
             int moved = 0;
