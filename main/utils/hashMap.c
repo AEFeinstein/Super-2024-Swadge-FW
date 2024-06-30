@@ -659,14 +659,24 @@ void* hashGetBin(hashMap_t* map, const void* key)
 void* hashRemoveBin(hashMap_t* map, const void* key)
 {
     uint32_t hash;
-    hashBucket_t* bucket;
-    node_t* multiNode;
-    hashNode_t* node = hashFindNode(map, key, &hash, &bucket, &multiNode);
+    hashBucket_t* bucket = NULL;
+    node_t* multiNode    = NULL;
+    hashNode_t* node     = hashFindNode(map, key, &hash, &bucket, &multiNode);
 
-    if (node != NULL)
+    if (node != NULL && bucket != NULL && (!bucket->hasMulti || multiNode != NULL))
     {
         hashNode_t removed = bucketRemove(map, bucket, node, multiNode, &map->count);
-        return removed.value;
+
+        // Even though we found the node, there still might not be a match in the bucket
+        if (removed.key != NULL)
+        {
+            return removed.value;
+        }
+        else
+        {
+            // Nothing found
+            return NULL;
+        }
     }
     else
     {
