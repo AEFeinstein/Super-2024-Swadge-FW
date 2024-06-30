@@ -418,7 +418,7 @@ static void synthEnterMode(void)
     {
         if (loadMidiFile("all_star.mid", &sd->midiFile, false))
         {
-            // sd->midiPlayer.textMessageCallback = midiTextCallback;
+            sd->midiPlayer.textMessageCallback = midiTextCallback;
             midiSetFile(&sd->midiPlayer, &sd->midiFile);
             midiPause(&sd->midiPlayer, false);
         }
@@ -537,9 +537,14 @@ static void synthMainLoop(int64_t elapsedUs)
         {
             if (sd->noteTime <= 0)
             {
-                // Just play each drum note with a half-second gap between
+                // Just play each drum note with a quarter-second gap between
                 midiNoteOn(&sd->midiPlayer, 9, sd->startupNote++, 0x7f);
-                sd->noteTime = 100000;
+                sd->noteTime = 250000;
+
+                if (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE)
+                {
+                    midiTextCallback(TEXT, gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]);
+                }
 
                 if (sd->startupNote > OPEN_TRIANGLE)
                 {
@@ -847,6 +852,11 @@ static void synthMainLoop(int64_t elapsedUs)
 
                 case PB_A:
                 {
+                    if (sd->localChannel == 9
+                        && (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE))
+                    {
+                        midiTextCallback(TEXT, gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]);
+                    }
                     midiNoteOn(&sd->midiPlayer, sd->localChannel, sd->startupNote, 0x7F);
                     break;
                 }
