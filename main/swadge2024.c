@@ -136,6 +136,7 @@
  * \subsection oth_api Other Useful APIs
  *
  * - linked_list.h: A basic data structure
+ * - hashMap.h: A data structure for storing data in key-value pairs
  * - macros.h: Convenient macros like MIN() and MAX()
  * - coreutil.h: General utilities for system profiling
  * - hdw-usb.h: Learn how to be a USB HID Gamepad
