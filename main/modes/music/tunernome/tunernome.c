@@ -961,12 +961,12 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 // Add one to the beat counter
                 tunernome->beatCtr = (tunernome->beatCtr + 1) % tunernome->beatLength;
 
-                //const song_t* song;
+                // const song_t* song;
                 led_t leds[CONFIG_NUM_LEDS] = {{0}};
 
                 if (0 == tunernome->beatCtr)
                 {
-                    //song = &metronome_primary;
+                    // song = &metronome_primary;
                     for (int i = 0; i < CONFIG_NUM_LEDS; i++)
                     {
                         leds[i].r = 0x40;
@@ -976,7 +976,7 @@ void tunernomeMainLoop(int64_t elapsedUs)
                 }
                 else
                 {
-                    //song = &metronome_secondary;
+                    // song = &metronome_secondary;
                     for (int i = 0; i < 4; i++)
                     {
                         leds[fourLedFlashIdxs[i]].r = 0x40;

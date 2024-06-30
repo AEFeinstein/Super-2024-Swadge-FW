@@ -33,10 +33,10 @@ static const uint8_t oscDither[] = {
 #define UINT14_MAX (0x3FFF)
 
 /// @brief Convert the sample count to MIDI ticks
-#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n)*1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
+#define SAMPLES_TO_MIDI_TICKS(n, tempo, div) ((n) * 1000000 * (div) / DAC_SAMPLE_RATE_HZ / (tempo))
 
 /// @brief Calculate the number of DAC samples in the given number of milliseconds
-#define MS_TO_TICKS(ms) ((ms)*DAC_SAMPLE_RATE_HZ / 1000)
+#define MS_TO_TICKS(ms) ((ms) * DAC_SAMPLE_RATE_HZ / 1000)
 
 #define VS_ANY(statePtr) ((statePtr)->on)
 

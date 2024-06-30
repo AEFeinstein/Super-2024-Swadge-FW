@@ -4,7 +4,7 @@
 #include "midiNoteFreqs.h"
 #include "midiUtil.h"
 
-#define FREQ_HZ(whole)     (((whole)&0xFFFFu) << 16)
+#define FREQ_HZ(whole)     (((whole) & 0xFFFFu) << 16)
 #define FREQ_HZ_FRAC(flhz) ((((uint32_t)(flhz)) << 16) | ((uint32_t)(((flhz) - ((float)((uint32_t)(flhz)))) * 65536.0)))
 
 static int8_t linearNoiseImpulse(uint32_t length, uint32_t idx, bool* done);

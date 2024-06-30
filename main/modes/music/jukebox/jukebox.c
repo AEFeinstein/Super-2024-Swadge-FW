@@ -383,7 +383,8 @@ void jukeboxButtonCallback(buttonEvt_t* evt)
                 {
                     if (soundGetPlayerSfx() != NULL)
                     {
-                        soundGetPlayerSfx()->loop = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
+                        soundGetPlayerSfx()->loop
+                            = sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].shouldLoop;
                     }
                     soundPlaySfxCb(&sfxCategories[jukebox->categoryIdx].songs[jukebox->songIdx].song, BZR_STEREO,
                                    jukeboxBzrDoneCb);
