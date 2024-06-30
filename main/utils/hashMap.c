@@ -508,6 +508,38 @@ bool bytesEq(const uint8_t* a, size_t aLength, const uint8_t* b, size_t bLength)
 }
 
 /**
+ * @brief Convert a pointer address or integral value to a hash value
+ *
+ * The pointer is not dereferenced.
+ *
+ * @param intKey A void pointer whose address will be hashed, or any integral type cast to a void pointer
+ * @return uint32_t The hash value
+ */
+uint32_t hashInt(const void* intKey)
+{
+    uint32_t x = (uint32_t)(((intptr_t)(intKey)) & UINT32_MAX);
+    x          = ((x >> 16) ^ x) * 0x45d9f3b;
+    x          = ((x >> 16) ^ x) * 0x45d9f3b;
+    x          = (x >> 16) ^ x;
+    return x;
+}
+
+/**
+ * @brief Compare two void pointers based on their address, or two integer types cast to a void pointer.
+ *
+ * The pointers are not dereferenced.
+ *
+ * @param keyA The first pointer value
+ * @param keyB The second pointer value
+ * @return true If both pointers are the same value
+ * @return false If the pointers are differ
+ */
+bool intsEq(const void* keyA, const void* keyB)
+{
+    return keyA == keyB;
+}
+
+/**
  * @brief Create or update a key-value pair in the hash map with a string key
  *
  * @warning A reference to the key will be stored in the map until the entry is removed

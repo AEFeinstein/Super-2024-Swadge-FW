@@ -52,12 +52,21 @@
  *
  * hashIterRemove() can be used to safely remove entries during iteration.
  *
- * hashPutBin(), hashGetBin(), and hashRemoveBin() are variants of the normal hash functions which accept
+ * hashPutBin(), hashGetBin(), and hashRemoveBin() are variants of the normal hash map functions which accept
  * a void pointer in the \c key argument, rather than a char pointer. You must provide hash and equality
  * functions to hashInitBin() in order to safely use keys which are not nul-terminated strings.
  *
- * hashString(), strEq(), hashBytes(), and bytesEq() are helper functions useful when implementing custom
- * hash and comparison functions.
+ * hashString() and strEq() are the default hash and comparison functions respectively, and will be used when
+ * the hash map is initialized with hashInit().
+ *
+ * hashInt() and intsEq() are alternative hash and comparison functions that operate directly on a pointer address
+ * without dereferencing it. They can also be used when the key is any int or enum type that is not wider than a
+ * \c void* .
+ *
+ * hashBytes(), and bytesEq() are helper functions useful when implementing custom hash and comparison functions,
+ * particularly when the key is a struct pointer, with fields or data that must be included in the hash. Default
+ * implementations can't be supplied for a struct, since their length is not known to the hash map and the user
+ * implementer may wish to exclude some fields from the comparison or traverse nested values.
  *
  * \section hashMap_example Examples
  *
@@ -158,8 +167,8 @@
  * \subsubsection hashMap_example_nonStringKeys_enum Enum and Integer keys
  *
  * This example shows how to use a hash map where the keys are enum values. This method will
- * work with any numeric type, as long as \c{sizeof(type) <= sizeof(void*)} -- that is, as
- * long as it fits inside a pointer. In practice this means an \c int32_t can be used as a
+ * work with any numeric type, as long as \c sizeof(type) is less than or equal to \c sizeof(void*) -- that
+ * is, as long as its value fits inside a pointer. In practice this means an \c int32_t can be used as a
  * key in a hash map in this way, but an \c int64_t cannot.
  *
  * \code{.c}
@@ -420,12 +429,16 @@ typedef struct
 } hashMap_t;
 
 // Default hash functions
-uint32_t hashString(const char* str);
+uint32_t hashString(const void* str);
 bool strEq(const void* a, const void* b);
 
 // Helper functions for using custom key types
 uint32_t hashBytes(const uint8_t* bytes, size_t length);
 bool bytesEq(const uint8_t* a, size_t aLength, const uint8_t* b, size_t bLength);
+
+// Helper functions for using int or pointer keys
+uint32_t hashInt(const void* intKey);
+bool intsEq(const void* keyA, const void* keyB);
 
 void hashPut(hashMap_t* map, const char* key, void* value);
 void* hashGet(hashMap_t* map, const char* key);
