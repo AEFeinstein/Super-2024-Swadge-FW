@@ -416,11 +416,12 @@ static void synthEnterMode(void)
     sd->fileMode = true;
     if (sd->fileMode)
     {
-        if (loadMidiFile("all_star.mid", &sd->midiFile, false))
+        if (loadMidiFile("stereo.mid", &sd->midiFile, false))
         {
             sd->midiPlayer.textMessageCallback = midiTextCallback;
             midiSetFile(&sd->midiPlayer, &sd->midiFile);
             midiPause(&sd->midiPlayer, false);
+            sd->midiPlayer.loop = true;
         }
         else
         {
