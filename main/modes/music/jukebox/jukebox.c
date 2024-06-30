@@ -153,36 +153,26 @@ static const char str_play[]       = ": Play";
 
 // Arrays
 
-jukeboxSong_t music_jukebox[] = {
-    {
-        .filename = "Fauxrio_Kart.mid",
-        .name     = "Fauxrio Kart",
-    },
-    {
-        .filename = "hotrod.mid",
-        .name     = "Hot Rod",
-    },
-    {
-        .filename = "Fairy_Fountain.mid",
-        .name     = "The Lake",
-    },
-    {
-        .filename = "yalikejazz.mid",
-        .name     = "Ya like jazz?",
-    },
-    {
-        .filename = "banana.mid",
-        .name     = "Banana",
-    },
-    {
-        .filename = "all_star.mid",
-        .name     = "Swadge Star",
-    },
-    {
-        .filename = "libertybell.mid",
-        .name     = "Sousa",
-    }
-};
+jukeboxSong_t music_jukebox[] = {{
+                                     .filename = "Fauxrio_Kart.mid",
+                                     .name     = "Fauxrio Kart",
+                                 },
+                                 {
+                                     .filename = "hotrod.mid",
+                                     .name     = "Hot Rod",
+                                 },
+                                 {
+                                     .filename = "Fairy_Fountain.mid",
+                                     .name     = "The Lake",
+                                 },
+                                 {
+                                     .filename = "yalikejazz.mid",
+                                     .name     = "Ya like jazz?",
+                                 },
+                                 {
+                                     .filename = "banana.mid",
+                                     .name     = "Banana",
+                                 }};
 
 jukeboxSong_t music_credits[] = {
     {
