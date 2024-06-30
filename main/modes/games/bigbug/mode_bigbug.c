@@ -136,25 +136,32 @@ bb_t* bigbug = NULL;
 
 static void bb_EnterMode(void)
 {
+    printf("a");
     bigbug = calloc(1, sizeof(bb_t));
+    printf("b");
 
     bb_initializeGameData(&(bigbug->gameData), &(bigbug->soundManager));
-
+    printf("c");
     bb_initializeTileMap(&(bigbug->tilemap));
+    printf("d");
     bb_initializeEntityManager(&(bigbug->entityManager),
                             &(bigbug->gameData),
                             &(bigbug->soundManager));
-
+    printf("e");
     // Load graphics
     loadWsg("garbotnik-small.wsg", &bigbug->garbotnikWsg, true);
+    printf("f");
 
     // Set the mode to game mode
     bigbug->screen = BIGBUG_GAME;
+    printf("g");
 
     // Load font
     loadFont("ibm_vga8.font", &bigbug->font, false);
+    printf("h");
 
     bb_Reset();
+    printf("i");
 }
  
 static void bb_ExitMode(void)
@@ -536,10 +543,10 @@ static void bb_UpdatePhysics(int64_t elapsedUs)
                 /////////////////////
 
                 //crumble test
-                uint32_t* val = calloc(2,sizeof(uint32_t));
-                val[0] = 5;
-                val[1] = 3;
-                push(bigbug->gameData.unsupported, (void*)val);
+                // uint32_t* val = calloc(2,sizeof(uint32_t));
+                // val[0] = 5;
+                // val[1] = 3;
+                // push(bigbug->gameData.unsupported, (void*)val);
 
                 //Update the dirt by decrementing it.
                 bigbug->tilemap.fgTiles[best_i][best_j] -= 1;
