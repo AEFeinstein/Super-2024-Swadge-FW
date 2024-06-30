@@ -90,9 +90,9 @@
  * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
  *     - spiffs_font.h: Load font bitmaps
  *     - spiffs_wsg.h: Load WSG images
- *     - spiffs_song.h: Load SNG songs
  *     - spiffs_json.h: Load JSON
  *     - spiffs_txt.h: Load plaintext
+ *     - midiFileParser.h: Load MIDI files
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \subsection gr_api Graphics APIs
@@ -117,12 +117,11 @@
  * \subsection audio_api Audio APIs
  *
  * - hdw-dac.h: Learn how to use the DAC (speaker)
- * - hdw-bzr.h: Learn how to use the buzzer
  * - hdw-mic.h: Learn how to use the microphone
  * - soundFuncs.h: Helper functions to use either the buzzers or DAC speaker, depending on build configuration. These
  * macros should be used instead of calling buzzer or DAC functions directly!
  * - swSynth.h: Learn how to generate oscillating output for the DAC speaker
- * - sngPlayer.h: Learn how to play song files on the DAC speaker
+ * - midiPlayer.h: Learn how to play MIDI files on the DAC speaker
  *
  * \subsection math_api Math APIs
  *
