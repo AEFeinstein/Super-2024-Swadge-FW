@@ -175,6 +175,7 @@
 #include "mainMenu.h"
 #include "quickSettings.h"
 #include "midiPlayer.h"
+#include "introMode.h"
 
 //==============================================================================
 // Defines
@@ -240,10 +241,15 @@ void app_main(void)
     readAllSettings();
 
     // If test mode was passed
-    if (getTestModePassedSetting())
+    if (getTutorialCompletedSetting())
     {
         // Show the main menu
         cSwadgeMode = &mainMenuMode;
+    }
+    else if (getTestModePassedSetting())
+    {
+        // Start the out-of-box experience / tutorial
+        cSwadgeMode = &introMode;
     }
     else
     {
@@ -732,6 +738,14 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 
     // Return if there was an event or not
     return retval;
+}
+
+void openQuickSettings(void)
+{
+    if (cSwadgeMode != &quickSettingsMode && !shouldHideQuickSettings)
+    {
+        shouldShowQuickSettings = true;
+    }
 }
 
 /**

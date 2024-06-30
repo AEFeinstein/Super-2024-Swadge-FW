@@ -3,6 +3,14 @@
 #include <swadge2024.h>
 
 //==============================================================================
+// Defines
+//==============================================================================
+
+#define NUM_UNLOCKABLE_MARKERS 4
+
+#define ARROW_BLINK_PERIOD 1000000
+
+//==============================================================================
 // Enums
 //==============================================================================
 
@@ -11,14 +19,15 @@ typedef enum __attribute__((packed))
     TUI_MENU,
     TUI_CONNECTING,
     TUI_GAME,
-    TUI_PIECE_SELECT,
+    TUI_MARKER_SELECT,
     TUI_HOW_TO,
+    TUI_RESULT,
 } tttUi_t;
 
 typedef enum __attribute__((packed))
 {
     TGS_NOT_PLAYING,
-    TGS_PLACING_PIECE,
+    TGS_PLACING_MARKER,
     TGS_WAITING,
 } tttGameState_t;
 
@@ -32,27 +41,43 @@ typedef enum __attribute__((packed))
 
 typedef enum __attribute__((packed))
 {
-    TTT_PIECE_X,
-    TTT_PIECE_O,
-} tttPiece_t;
-
-typedef enum __attribute__((packed))
-{
     TTT_NONE,
     TTT_P1,
     TTT_P2,
+    TTT_DRAW,
 } tttPlayer_t;
 
 typedef enum __attribute__((packed))
 {
-    MSG_SELECT_PIECE,
+    MSG_SELECT_MARKER,
     MSG_MOVE_CURSOR,
-    MSG_PLACE_PIECE,
+    MSG_PLACE_MARKER,
 } tttMsgType_t;
+
+typedef enum __attribute((packed))
+{
+    TTR_WIN,
+    TTR_LOSE,
+    TTR_DRAW,
+    TTR_DISCONNECT,
+    TTR_RECORDS,
+} tttResult_t;
 
 //==============================================================================
 // Structs
 //==============================================================================
+
+typedef struct
+{
+    wsg_t small;
+    wsg_t large;
+} tttMarkerSizeAssets_t;
+
+typedef struct
+{
+    tttMarkerSizeAssets_t red;
+    tttMarkerSizeAssets_t blue;
+} tttMarkerColorAssets_t;
 
 typedef struct
 {
@@ -62,36 +87,62 @@ typedef struct
 
 typedef struct
 {
-    // Current UI being shown
-    tttUi_t ui;
-    // Main Menu
-    menu_t* menu;
-    menuManiaRenderer_t* menuRenderer;
-    font_t font_righteous;
-    font_t font_rodin;
-    // Connection
     p2pInfo p2p;
-    const char* conStr;
-    // Gameplay
     tttGameState_t state;
     tttSubgame_t subgames[3][3];
     vec_t cursor;
     vec_t selectedSubgame;
     tttCursorMode_t cursorMode;
-    tttPiece_t p1Piece;
-    tttPiece_t p2Piece;
+    int32_t p1MarkerIdx;
+    int32_t p2MarkerIdx;
+} tttGameData_t;
+
+typedef struct
+{
+    // Current UI being shown
+    tttUi_t ui;
+    // Main Menu
+    menu_t* menu;
+    menu_t* bgMenu;
+    menuManiaRenderer_t* menuRenderer;
+    font_t font_righteous;
+    font_t font_rodin;
+    // Connection
+    const char** conStrs;
+    int16_t numConStrs;
+    // Gameplay
+    tttGameData_t game;
+    int16_t gameSize;
+    int16_t cellSize;
+    int16_t subgameSize;
+    vec_t gameOffset;
     // Assets
-    wsg_t piece_x_big;
-    wsg_t piece_x_small;
-    wsg_t piece_o_big;
-    wsg_t piece_o_small;
+    tttMarkerColorAssets_t markerWsg[NUM_UNLOCKABLE_MARKERS];
+    // For marker selection UI
+    int32_t xSelectScrollTimer;
+    int16_t xSelectScrollOffset;
+    int32_t selectMarkerIdx;
+    int32_t activeMarkerIdx;
+    // Stats
+    int32_t wins;
+    int32_t losses;
+    int32_t draws;
+    tttResult_t lastResult;
+    int32_t numUnlockedMarkers;
+    // Instructions
+    int32_t pageIdx;
+    int32_t tutorialRead;
+    int32_t arrowBlinkTimer;
+    list_t instructionHistory;
+    bool showingInstructions;
+    arrow_t instructionArrow;
 } ultimateTTT_t;
 
 typedef struct
 {
     tttMsgType_t type;
-    tttPiece_t piece;
-} tttMsgSelectPiece_t;
+    int32_t markerIdx;
+} tttMsgSelectMarker_t;
 
 typedef struct
 {
@@ -106,8 +157,24 @@ typedef struct
     tttMsgType_t type;
     vec_t selectedSubgame;
     vec_t selectedCell;
-} tttMsgPlacePiece_t;
+} tttMsgPlaceMarker_t;
+
+//==============================================================================
+// Functions
+//==============================================================================
 
 void tttMsgTxCbFn(p2pInfo* p2p, messageStatus_t status, const uint8_t* data, uint8_t len);
+void tttShowUi(tttUi_t ui);
 
+//==============================================================================
+// Externs
+//==============================================================================
+
+extern const char tttWinKey[];
+extern const char tttLossKey[];
+extern const char tttDrawKey[];
+extern const char tttMarkerKey[];
+extern const char tttTutorialKey[];
+extern const char tttUnlockKey[];
 extern swadgeMode_t tttMode;
+extern const int16_t markersUnlockedAtWins[NUM_UNLOCKABLE_MARKERS];

@@ -352,6 +352,7 @@ void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
 
+void openQuickSettings(void);
 void setFrameRateUs(uint32_t newFrameRateUs);
 
 #endif

@@ -10,5 +10,5 @@
 // Function Declarations
 //==============================================================================
 
-void tttDrawPieceSelect(ultimateTTT_t* ttt);
-void tttInputPieceSelect(ultimateTTT_t* ttt, buttonEvt_t* evt);
+void tttDrawResult(ultimateTTT_t* ttt, int64_t elapsedUs);
+void tttInputResult(ultimateTTT_t* ttt, buttonEvt_t* evt);
