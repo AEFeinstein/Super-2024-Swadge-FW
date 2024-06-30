@@ -503,9 +503,9 @@ static const uint8_t kit1_drop[]  = {5, 64, 4, 10, 10, 16, 16, 16, 24, 24, 24, 6
 
 int8_t donutDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint32_t scratch[4], void* data)
 {
-    uint8_t* speeds;
-    uint8_t* fades;
-    uint8_t* drops;
+    const uint8_t* speeds;
+    const uint16_t* fades;
+    const uint8_t* drops;
     uint8_t offset = 0;
 
     // That's right, remember King Donut? Well he's back! In drum form.
