@@ -74,7 +74,7 @@ void tttBeginGame(ultimateTTT_t* ttt)
     ttt->game.p2MarkerIdx = 0;
 
     // Clean up after showing instructions
-    ttt->showingInstructions    = false;
+    ttt->showingInstructions = false;
 
     // Show the game UI
     tttShowUi(TUI_GAME);
