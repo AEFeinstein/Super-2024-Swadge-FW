@@ -155,7 +155,7 @@
  * This can be done using hashInitBin() to supply custom hashing and comparison functions
  * appropriate for the type of key being used.
  *
- * \subsubsection hashMap_example_nonStringKeys_enum
+ * \subsubsection hashMap_example_nonStringKeys_enum Enum and Integer keys
  *
  * This example shows how to use a hash map where the keys are enum values. This method will
  * work with any numeric type, as long as \c{sizeof(type) <= sizeof(void*)} -- that is, as
@@ -163,24 +163,11 @@
  * key in a hash map in this way, but an \c int64_t cannot.
  *
  * \code{.c}
- * #include "hdw-btn.h"
- * #include "spiffs_wsg.h"
  * #include <stdbool.h>
  * #include <stdint.h>
- *
- * // Hash function for using ::buttonBit_t as a key
- * uint32_t hashEnum(const void* data)
- * {
- *     // This might be cursed but the C spec says it's totally fine
- *     buttonBit_t enumValue = (buttonBit_t)(data);
- *     return hashData(&enumValue, sizeof(buttonBit_t));
- * }
- *
- * // Compare ::buttonBit_t values stuffed into void pointers
- * bool enumEq(const void* a, const void* b)
- * {
- *     return a == b;
- * }
+ * #include <stdlib.h>
+ * #include "swadge2024.h"
+ * #include "hashMap.h"
  *
  * // Just a simple struct to hold a WSG and its rotation for the values
  * typedef struct
@@ -194,38 +181,38 @@
  *
  * void setupButtonIconMap(void)
  * {
- *     hashInitBin(&map, 16, hashEnum, enumEq);
+ *     hashInitBin(&map, 16, hashInt, intEq);
  *
  *     wsgs = calloc(8, sizeof(wsgRot_t));
  *     wsgRot_t* wsg = wsgs;
  *
  *     // Load up a bunch of WSGs
  *     loadWsg("button_up.wsg", &wsg->wsg, false);
- *     hashPutBin(&map, PB_UP, wsg++);
+ *     hashPutBin(&map, (const void*)PB_UP, (void*)wsg++);
  *
  *     loadWsg("button_up.wsg", &wsg->wsg, false);
  *     wsg->rot = 180;
- *     hashPutBin(&map, PB_DOWN, wsg++);
+ *     hashPutBin(&map, (const void*)PB_DOWN, (void*)wsg++);
  *
  *     loadWsg("button_up.wsg", &wsg->wsg, false);
  *     wsg->rot = 90;
- *     hashPutBin(&map, PB_LEFT, wsg++);
+ *     hashPutBin(&map, (const void*)PB_LEFT, (void*)wsg++);
  *
  *     loadWsg("button_up.wsg", &wsg->wsg, false);
  *     wsg->rot = 270;
- *     hashPutBin(&map, PB_RIGHT, wsg++);
+ *     hashPutBin(&map, (const void*)PB_RIGHT, (void*)wsg++);
  *
  *     loadWsg("button_a.wsg", &wsg->wsg, false);
- *     hashPutBin(&map, PB_A, wsg++);
+ *     hashPutBin(&map, (const void*)PB_A, (void*)wsg++);
  *
  *     loadWsg("button_b.wsg", &wsg->wsg, false);
- *     hashPutBin(&map, PB_B, wsg++);
+ *     hashPutBin(&map, (const void*)PB_B, (void*)wsg++);
  *
  *     loadWsg("button_menu.wsg", &wsg->wsg, false);
- *     hashPutBin(&map, PB_MENU, wsg++);
+ *     hashPutBin(&map, (const void*)PB_MENU, (void*)wsg++);
  *
  *     loadWsg("button_pause.wsg", &wsg->wsg, false);
- *     hashPutBin(&map, PB_PAUSE, wsg++);
+ *     hashPutBin(&map, (const void*)PB_PAUSE, (void*)wsg++);
  * }
  *
  * void runButtonIconMap(void)
@@ -236,7 +223,7 @@
  *     {
  *         if (evt.down)
  *         {
- *             wsgRot_t* draw = hashGet(&map, evt.button);
+ *             wsgRot_t* draw = (wsgRot_t*)hashGetBin(&map, (const void*)evt.button);
  *             drawWsg(&draw->wsg, (TFT_WIDTH - draw->w) / 2, (TFT_HEIGHT - draw->h) / 2, false, false, draw->rot);
  *         }
  *     }
@@ -248,8 +235,10 @@
  *     hashIterator_t iter = {0};
  *     while (hashIterate(&map, &iter))
  *     {
- *         wsgRot_t* value = iter.value;
+ *         wsgRot_t* value = (wsgRot_t*)iter.value;
  *         freeWsg(&value->wsg);
+ *         // Unset the pixels so the arrow icon isn't freed twice
+ *         value->wsg.px = NULL;
  *     }
  *
  *     // Clean up the hash map and WSG struct
@@ -260,16 +249,24 @@
  * }
  * \endcode
  *
- * \subsubsection hashMap_example_nonStringKeys_struct
- * This example shows how to use
+ * \subsubsection hashMap_example_nonStringKeys_struct Struct keys
+ * This example shows how to use an entire structure as a key for the hash map, using the hashBytes() and bytesEq()
+ * helper functions.
  * \code{.c}
+ * #include <stdbool.h>
+ * #include <stdint.h>
+ * #include <stdlib.h>
+ * #include <stdio.h>
+ * #include "swadge2024.h"
+ * #include "hashMap.h"
+ *
  * // A struct to use for the key
  * typedef struct
  * {
  *     int32_t x, y;
  * } keyStruct_t;
  *
- * int32_t hashStruct(const void* data)
+ * uint32_t hashStruct(const void* data)
  * {
  *     // Helper function provided with hash map
  *     return hashBytes((const uint8_t*)data, sizeof(keyStruct_t));
@@ -303,11 +300,11 @@
  *     keys[4].x = 16;
  *     keys[4].y = 4;
  *
- *     hashPutBin(&map, &keys[0], "Star");
- *     hashPutBin(&map, &keys[1], "Square");
- *     hashPutBin(&map, &keys[2], "Circle");
- *     hashPutBin(&map, &keys[3], "Diamond");
- *     hashPutBin(&map, &keys[4], "Triangle");
+ *     hashPutBin(&map, (const void*)&keys[0], (void*)"Star");
+ *     hashPutBin(&map, (const void*)&keys[1], (void*)"Square");
+ *     hashPutBin(&map, (const void*)&keys[2], (void*)"Circle");
+ *     hashPutBin(&map, (const void*)&keys[3], (void*)"Diamond");
+ *     hashPutBin(&map, (const void*)&keys[4], (void*)"Triangle");
  * }
  *
  * void runStructKeyExample(void)
@@ -341,7 +338,7 @@
  *                 keyStruct_t key;
  *                 key.x = x;
  *                 key.y = y;
- *                 const char* found = hashGetBin(&map, &key);
+ *                 const char* found = (const char*)hashGetBin(&map, (const void*)&key);
  *                 if (found)
  *                 {
  *                     printf("Found a %s at %d, %d!\n", found, x, y);
@@ -353,6 +350,11 @@
  *             }
  *         }
  *     }
+ * }
+ *
+ * void cleanupStructKeyExample()
+ * {
+ *     hashDeinit(&map);
  * }
  * \endcode
  */

@@ -182,7 +182,7 @@ static inline void hashCheckSize(hashMap_t* map)
 static inline hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t* hashOut, hashBucket_t** bucketOut,
                                        node_t** multiOut)
 {
-    uint32_t hash        = map->hashFunc ? map->hashFunc(key) : hashString(key);
+    uint32_t hash        = map->hashFunc ? map->hashFunc(key) : hashString((const char*)key);
     int index            = hash % map->size;
     hashBucket_t* bucket = &map->values[index];
     eqFunction_t eqFn    = map->eqFunc ? map->eqFunc : strEq;
@@ -224,12 +224,29 @@ static inline hashNode_t* hashFindNode(hashMap_t* map, const void* key, uint32_t
 
     if (node)
     {
-        HASH_LOG("Found %s node %d for key %s after %d %s", (node->key) ? "in-use" : "new", index, (const char*)key,
-                 tries, (tries == 1) ? "try" : "tries");
+        if (!map->hashFunc || map->hashFunc == hashString)
+        {
+            HASH_LOG("Found %s node %d for key %s after %d %s", (node->key) ? "in-use" : "new", index, (const char*)key,
+                     tries, (tries == 1) ? "try" : "tries");
+        }
+        else
+        {
+            HASH_LOG("Found %s node %d for key %p after %d %s", (node->key) ? "in-use" : "new", index, (const void*)key,
+                     tries, (tries == 1) ? "try" : "tries");
+        }
     }
     else
     {
-        HASH_LOG("Did not find node for key %s after %d %s", (const char*)key, tries, (tries == 1) ? "try" : "tries");
+        if (!map->hashFunc || map->hashFunc == hashString)
+        {
+            HASH_LOG("Did not find node for key %s after %d %s", (const char*)key, tries,
+                     (tries == 1) ? "try" : "tries");
+        }
+        else
+        {
+            HASH_LOG("Did not find node for key %p after %d %s", (const void*)key, tries,
+                     (tries == 1) ? "try" : "tries");
+        }
     }
 
     if (hashOut)
@@ -281,7 +298,7 @@ static inline hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const 
         if (!bucket->hasMulti)
         {
             // Gotta make it a multi-bucket
-            // HASH_LOG("Bucket collision; converting bucket %d to multi-value", (int)(bucket - map->values));
+            HASH_LOG("Bucket collision; converting bucket to multi-value");
 
             // Copy the first node itself
             newNode = malloc(sizeof(hashNode_t));
@@ -406,7 +423,14 @@ static inline hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hash
         node->value = NULL;
     }
 
-    HASH_LOG("Removed node for key %s", (const char*)result.key);
+    if (!map->hashFunc || map->hashFunc == hashString)
+    {
+        HASH_LOG("Removed node for key %s", (const char*)result.key);
+    }
+    else
+    {
+        HASH_LOG("Removed node for key %p", result.key);
+    }
 
     return result;
 }
@@ -419,12 +443,13 @@ static inline hashNode_t bucketRemove(hashMap_t* map, hashBucket_t* bucket, hash
  * @param str The string to hash
  * @return uint32_t The hash value
  */
-uint32_t hashString(const char* str)
+uint32_t hashString(const void* str)
 {
-    uint32_t hash = 5381;
+    uint32_t hash    = 5381;
+    const char* strv = (const char*)str;
     int c;
 
-    while ((c = *str++))
+    while ((c = *strv++))
     {
         hash = ((hash << 5) + hash) + c; // hash * 33 + c
     }
@@ -505,7 +530,7 @@ void hashPut(hashMap_t* map, const char* key, void* value)
  */
 void* hashGet(hashMap_t* map, const char* key)
 {
-    return hashGetBin(map, key);
+    return hashGetBin(map, (const void*)key);
 }
 
 /**
@@ -517,7 +542,7 @@ void* hashGet(hashMap_t* map, const char* key)
  */
 void* hashRemove(hashMap_t* map, const char* key)
 {
-    return hashRemoveBin(map, key);
+    return hashRemoveBin(map, (const void*)key);
 }
 
 /**
@@ -531,7 +556,7 @@ void hashPutBin(hashMap_t* map, const void* key, void* value)
 {
     hashCheckSize(map);
 
-    uint32_t hash = map->hashFunc ? map->hashFunc(key) : hashString(key);
+    uint32_t hash = map->hashFunc ? map->hashFunc(key) : hashString((const char*)key);
     int index     = (hash % map->size);
     int newCount  = map->count;
     bucketPut(map, &map->values[index], key, value, hash, &newCount);
@@ -539,11 +564,26 @@ void hashPutBin(hashMap_t* map, const void* key, void* value)
     if (map->count != newCount)
     {
         map->count = newCount;
-        HASH_LOG("Put: %s = %x, size now %d", (const char*)key, (int)value, (int)map->count);
+
+        if (!map->hashFunc || map->hashFunc == hashString)
+        {
+            HASH_LOG("Put: %s = %p, count now %d", (const char*)key, value, map->count);
+        }
+        else
+        {
+            HASH_LOG("Put: %p = %p, count now %d", key, value, map->count);
+        }
     }
     else
     {
-        HASH_LOG("Set: %s = %x", (const char*)key, (int)value);
+        if (!map->hashFunc || map->hashFunc == hashString)
+        {
+            HASH_LOG("Set: %s = %p", (const char*)key, value);
+        }
+        else
+        {
+            HASH_LOG("Set: %p = %p", key, value);
+        }
     }
 }
 
@@ -695,7 +735,6 @@ static bool hashIterNext(const hashMap_t* map, hashIterator_t* iterator)
                 {
                     state->curNode = (hashNode_t*)state->curListNode->val;
                 }
-
             }
             else
             {
