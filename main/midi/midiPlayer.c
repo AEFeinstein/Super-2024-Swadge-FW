@@ -38,16 +38,7 @@ static const uint8_t oscDither[] = {
 /// @brief Calculate the number of DAC samples in the given number of milliseconds
 #define MS_TO_TICKS(ms) ((ms)*DAC_SAMPLE_RATE_HZ / 1000)
 
-// #define MIDI_MULTI_STATE
-#ifdef MIDI_MULTI_STATE
-    #define VS_ANY(statePtr)        ((statePtr)->attack | (statePtr)->decay | (statePtr)->release | (statePtr)->sustain)
-    #define VS_RELEASABLE(statePtr) ((statePtr)->attack | (statePtr)->decay | (statePtr)->sustain)
-    #define VS_HOLDABLE(statePtr)   VS_RELEASABLE(statePtr)
-#else
-    #define VS_ANY(statePtr)        ((statePtr)->on)
-    #define VS_RELEASABLE(statePtr) ((statePtr)->on)
-    #define VS_HOLDABLE(statePtr)   ((statePtr)->on)
-#endif
+#define VS_ANY(statePtr)        ((statePtr)->on)
 
 // Values for the percussion special states bitmap
 #define SHIFT_HI_HAT   (0)
@@ -162,7 +153,7 @@ static void setVoiceTimbre(midiVoice_t* voice, midiTimbre_t* timbre)
         {
             case WAVETABLE:
             {
-                swSynthSetWaveFunc(&voice->oscillators[oscIdx], waveTableFunc, timbre->waveIndex);
+                swSynthSetWaveFunc(&voice->oscillators[oscIdx], waveTableFunc, (void*)((uintptr_t)timbre->waveIndex));
                 break;
             }
 
@@ -555,7 +546,7 @@ void midiPlayerReset(midiPlayer_t* player)
     player->sampleCount    = 0;
     player->clipped        = 0;
     player->eventAvailable = false;
-    player->volume = UINT14_MAX;
+    player->volume         = UINT14_MAX;
 
     deinitMidiParser(&player->reader);
     player->paused = true;
@@ -968,13 +959,13 @@ void midiSetProgram(midiPlayer_t* player, uint8_t channel, uint8_t program)
 void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
 {
     midiChannel_t* chan = &player->channels[channel];
-    bool newHold        = MIDI_TO_BOOL(val);
+    bool newIsHold      = MIDI_TO_BOOL(val);
 
-    if (chan->held != newHold)
+    if (chan->held != newIsHold)
     {
         voiceStates_t* voiceStates = chan->percussion ? &player->percVoiceStates : &player->poolVoiceStates;
         midiVoice_t* voices        = chan->percussion ? player->percVoices : player->poolVoices;
-        if (newHold)
+        if (newIsHold)
         {
             // Just set the held state for all the currently on notes.
             voiceStates->held |= voiceStates->on;
@@ -1006,7 +997,7 @@ void midiSustain(midiPlayer_t* player, uint8_t channel, uint8_t val)
 
             voiceStates->held = newHold;
         }
-        chan->held = newHold;
+        chan->held = newIsHold;
     }
 }
 

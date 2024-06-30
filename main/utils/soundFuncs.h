@@ -137,5 +137,5 @@
     #define soundGetPlayerBgm() globalMidiPlayerGet(1)
 
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-#error "Buzzer is no longer supported, get with the times!"
+    #error "Buzzer is no longer supported, get with the times!"
 #endif

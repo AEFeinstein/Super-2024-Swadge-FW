@@ -51,8 +51,8 @@
  * - How immutable strings are declared <tt>static const</tt>
  * - How a \ref menu.h "menu" is initialized in \c pongEnterMode(), updated and drawn in \c pongMainLoop(), and
  * deinitialized in \c pongExitMode()
- * - How \ref font.h "fonts", \ref wsg.h "WSG", and \ref hdw-bzr.h "song" assets are loaded in \c pongEnterMode() and
- * freed in \c pongExitMode()
+ * - How \ref font.h "fonts", \ref wsg.h "WSG", and \ref midiFileReader.h "MIDI" assets are loaded in \c pongEnterMode()
+ * and freed in \c pongExitMode()
  *     - How fonts and WSGs are drawn in \c pongDrawField()
  *     - How background music is used in \c pongResetGame() and sound effects are used in \c pongUpdatePhysics()
  * - How a background is drawn in \c pongBackgroundDrawCallback()

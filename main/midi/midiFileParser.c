@@ -62,7 +62,7 @@ typedef struct
 // Static Function Declarations
 //==============================================================================
 
-static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out);
+static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
 static bool setupEventBuffer(midiTrackState_t* track, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
 static bool parseMidiHeader(midiFile_t* file);
@@ -88,7 +88,7 @@ static const char defaultText[]    = "<err: alloc failed>";
  * @param[out] out A pointer to a uint32_t to write the resulting value to
  * @return int The number of bytes read
  */
-static int readVariableLength(uint8_t* data, uint32_t length, uint32_t* out)
+static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out)
 {
     uint32_t read = 0;
     uint32_t val  = 0;

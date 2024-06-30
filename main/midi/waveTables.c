@@ -1852,5 +1852,5 @@ static const int8_t waveTables[128][256] = {
 int8_t waveTableFunc(uint16_t idx, void* data)
 {
     // just use data as the wave ID
-    return waveTables[(uint32_t)data][idx];
+    return waveTables[(uint32_t)((uintptr_t)data)][idx];
 }

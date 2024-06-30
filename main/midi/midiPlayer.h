@@ -342,7 +342,7 @@ typedef struct
     uint32_t percScratch[4];
 
     /// @brief A pointer to the timbre of this voice, which defines its musical characteristics
-    midiTimbre_t* timbre;
+    const midiTimbre_t* timbre;
 } midiVoice_t;
 
 /**

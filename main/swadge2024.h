@@ -339,8 +339,8 @@ typedef struct
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
     /**
-     * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then globalMidiPlayerFillBuffer()
-     * will be used instead to fill sample buffers
+     * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then
+     * globalMidiPlayerFillBuffer() will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;
 } swadgeMode_t;
