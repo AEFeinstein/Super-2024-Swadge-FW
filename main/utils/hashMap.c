@@ -691,6 +691,11 @@ static bool hashIterNext(const hashMap_t* map, hashIterator_t* iterator)
                     state->curBucket++;
                     nextBucket = true;
                 }
+                else
+                {
+                    state->curNode = (hashNode_t*)state->curListNode->val;
+                }
+
             }
             else
             {
@@ -714,7 +719,7 @@ static bool hashIterNext(const hashMap_t* map, hashIterator_t* iterator)
             {
                 // Use the first node of the next bucket
                 state->curListNode = state->curBucket->multi.first;
-                state->curNode     = state->curListNode->val;
+                state->curNode     = (hashNode_t*)state->curListNode->val;
             }
             else
             {
