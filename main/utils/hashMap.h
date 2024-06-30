@@ -131,7 +131,7 @@
  *         printf("Removing tag %s\n", iter.value);
  *         if (!hashIterRemove(&map, &iter))
  *         {
- *             // The item removed was the last one! Iteration must be stopped or it will repeat
+ *             // The item removed was the last one! Iteration must be stopped
  *             break;
  *         }
  *     }

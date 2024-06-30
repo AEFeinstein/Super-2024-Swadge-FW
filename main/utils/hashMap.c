@@ -365,6 +365,15 @@ static inline hashNode_t* bucketPut(hashMap_t* map, hashBucket_t* bucket, const 
         (*count)++;
     }
 
+    if (!map->hashFunc || map->hashFunc == hashString)
+    {
+        HASH_LOG("Added node for key %s", (const char*)key);
+    }
+    else
+    {
+        HASH_LOG("Added node for key %p", key);
+    }
+
     node->hash  = hash;
     node->key   = key;
     node->value = value;
