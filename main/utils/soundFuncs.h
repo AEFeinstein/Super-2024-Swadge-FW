@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include "hdw-bzr.h"
 #include "midiPlayer.h"
 
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
@@ -125,27 +124,18 @@
      */
     #define soundStopNote(channel) midiNoteOff(globalMidiPlayerGet(channel), 0, freq, vol)
 
+    /**
+     * @brief Return the MIDI player used for SFX
+     *
+     */
     #define soundGetPlayerSfx() globalMidiPlayerGet(0)
+
+    /**
+     * @brief Return the MIDI player used for BGM
+     *
+     */
     #define soundGetPlayerBgm() globalMidiPlayerGet(1)
 
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
-
-    #define soundPlaySfx(song, channel)       bzrPlaySfx(song, channel)
-    #define soundPlayBgm(song, channel)       bzrPlayBgm(song, channel)
-    #define soundPlaySfxCb(song, channel, cb) bzrPlaySfxCb(song, channel, cb)
-    #define soundPlayBgmCb(song, channel, cb) bzrPlayBgmCb(song, channel, cb)
-    #define soundStop(reset)                  bzrStop(reset)
-
-    #define soundPause()  bzrPause()
-    #define soundResume() bzrResume()
-
-    #define soundSave()        bzrSave()
-    #define soundRestore(data) bzrRestore(data)
-
-    #define soundPlayNote(freq, track, vol) bzrPlayNote((freq) >> 24, track, vol)
-    #define soundStopNote(track)            bzrStopNote(track)
-
-    #define soundGetPlayerSfx() ((midiPlayer_t*)NULL)
-    #define soundGetPlayerBgm() ((midiPlayer_t*)NULL)
-
+#error "Buzzer is no longer supported, get with the times!"
 #endif

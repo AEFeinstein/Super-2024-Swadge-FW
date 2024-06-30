@@ -175,7 +175,6 @@
 #include "hdw-imu.h"
 #include "hdw-battmon.h"
 #include "hdw-btn.h"
-#include "hdw-bzr.h"
 #include "hdw-dac.h"
 #include "hdw-esp-now.h"
 #include "hdw-led.h"
@@ -340,7 +339,7 @@ typedef struct
     int16_t (*fnAdvancedUSB)(uint8_t* buffer, uint16_t length, uint8_t isGet);
 
     /**
-     * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then sngPlayerFillBuffer()
+     * @brief This function is called to fill sample buffers for the DAC. If this is NULL, then globalMidiPlayerFillBuffer()
      * will be used instead to fill sample buffers
      */
     fnDacCallback_t fnDacCb;

@@ -81,6 +81,8 @@
 #define MIDI_SFX 0
 // The index of the system-wide MIDI player for background music
 #define MIDI_BGM 1
+// The maximum volume setting for globalMidiPlayerSetVolume()
+#define MAX_VOLUME 13
 
 #define MIDI_TRUE         0x7F
 #define MIDI_FALSE        0x00
@@ -655,6 +657,14 @@ void globalMidiPlayerPlaySong(midiFile_t* song, uint8_t trackType);
  * @param cb The function to be called once the song completes
  */
 void globalMidiPlayerPlaySongCb(midiFile_t* song, uint8_t trackType, songFinishedCbFn cb);
+
+/**
+ * @brief Set the volume using a value from 0 to 13
+ *
+ * @param trackType The player to set the volume for, either MIDI_SFX or MIDI_BGM
+ * @param volumeSetting The volume value
+ */
+void globalMidiPlayerSetVolume(uint8_t trackType, int32_t volumeSetting);
 
 /**
  * @brief Pause all songs currently being played by the system-wide MIDI players

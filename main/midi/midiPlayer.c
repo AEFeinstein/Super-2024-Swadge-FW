@@ -918,6 +918,7 @@ void midiPlayerReset(midiPlayer_t* player)
     player->sampleCount    = 0;
     player->clipped        = 0;
     player->eventAvailable = false;
+    player->volume = UINT14_MAX;
 
     deinitMidiParser(&player->reader);
     player->paused = true;
@@ -990,6 +991,10 @@ int32_t midiPlayerStep(midiPlayer_t* player)
     sample += midiSumPercussion(player);
 
     player->sampleCount++;
+
+    // Apply the global volume value
+    sample *= player->volume;
+    sample /= UINT14_MAX;
 
     return sample;
 }
@@ -1494,6 +1499,24 @@ void globalMidiPlayerPlaySongCb(midiFile_t* song, uint8_t songIdx, songFinishedC
 {
     globalMidiPlayerPlaySong(song, songIdx);
     globalPlayers[songIdx].songFinishedCallback = cb;
+}
+
+void globalMidiPlayerSetVolume(uint8_t trackType, int32_t volumeSetting)
+{
+    midiPlayer_t* player = &globalPlayers[trackType];
+
+    if (volumeSetting <= 0)
+    {
+        player->volume = 0;
+    }
+    else if (volumeSetting >= 13)
+    {
+        player->volume = UINT14_MAX;
+    }
+    else
+    {
+        player->volume = (1 << (volumeSetting - 1));
+    }
 }
 
 void globalMidiPlayerPauseAll(void)
