@@ -38,7 +38,7 @@ static const uint8_t oscDither[] = {
 /// @brief Calculate the number of DAC samples in the given number of milliseconds
 #define MS_TO_TICKS(ms) ((ms)*DAC_SAMPLE_RATE_HZ / 1000)
 
-#define VS_ANY(statePtr)        ((statePtr)->on)
+#define VS_ANY(statePtr) ((statePtr)->on)
 
 // Values for the percussion special states bitmap
 #define SHIFT_HI_HAT   (0)

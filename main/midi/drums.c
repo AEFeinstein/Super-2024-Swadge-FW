@@ -339,9 +339,13 @@ int8_t defaultDrumkitFunc(percussionNote_t drum, uint32_t idx, bool* done, uint3
                    + finishAt(8192, idx, done);
 
         // B4
-        // NOT DONE
         case RIDE_CYMBAL_2:
-            break;
+            return adrLerp(idx, 128, 16384, 32, 1) * sampleWaveAt(idx, SHAPE_NOISE, FREQ_E3) / 256
+                   + adrLerp(idx, 8192, 32768 - 8912, 64, 0)
+                         * sampleWaveAt(idx, SHAPE_SINE, tremolo(idx, 4096, FREQ_E4, 90)) / 256
+                   + adrLerp(idx, 4096, 32768 - 4096, 24, 0)
+                         * sampleWaveAt(idx, SHAPE_SINE, tremolo(idx, 256, FREQ_A_SHARP_4, 45)) / 256
+                   + finishAt(32768, idx, done);
 
         // C4
         // NOT DONE
