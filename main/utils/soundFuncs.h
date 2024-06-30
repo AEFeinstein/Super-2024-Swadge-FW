@@ -6,7 +6,7 @@
  * to play songs in a hardware-agnostic way. The configuration may be changed using <tt>idf.py menuconfig</tt> in the
  * "Swadge Configuration" menu's "Select Sound Output" option.
  *
- * See sngPlayer.h and hdw-bzr.h for the DAC speaker and buzzer respective functions that these macros route to.
+ * See sngPlayer.h for the DAC speaker functions that these macros route to.
  */
 
 #pragma once
