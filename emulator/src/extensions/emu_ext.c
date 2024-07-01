@@ -80,7 +80,6 @@ static const emuExtension_t* registeredExtensions[] = {
  */
 typedef struct
 {
-    bool hidden;        ///< Whether or not this pane is invisible
     paneLocation_t loc; ///< Location of the pane
     uint32_t minW;      ///< Requested minimum width of the pane
     uint32_t minH;      ///< Requested minimum height of the pane
@@ -331,8 +330,9 @@ bool disableExtension(const char* name)
  * @param loc  Which edge of the screen the pane should be placed in
  * @param minW The minimum width of the pane
  * @param minH The minimum height of the pane
+ * @return An ID number for the requested pane
  */
-void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH)
+int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH)
 {
     emuExtInfo_t* extInfo = findExtInfo(ext);
     if (NULL != extInfo)
@@ -342,8 +342,38 @@ void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, u
         paneInfo->loc  = loc;
         paneInfo->minW = minW;
         paneInfo->minH = minH;
+        paneInfo->pane.visible = true;
 
         push(&extInfo->panes, paneInfo);
+        return extInfo->panes.length - 1;
+    }
+    return -1;
+}
+
+/**
+ * @brief Sets the visibility of a panel using its ID
+ *
+ * @param ext The extension for the pane
+ * @param paneId The ID of the pane, as returned by requestPane()
+ * @param visible The visibilty to set
+ */
+void setPaneVisibility(const emuExtension_t* ext, int paneId, bool visible)
+{
+    emuExtInfo_t* extInfo = findExtInfo(ext);
+    if (NULL != extInfo)
+    {
+        node_t* node = extInfo->panes.first;
+        for (int i = 0; node != NULL && i < paneId; i++)
+        {
+            node = node->next;
+        }
+
+        if (node != NULL)
+        {
+            emuPaneInfo_t* pane = node->val;
+            pane->pane.visible = visible;
+            extManager.paneMinsCalculated = false;
+        }
     }
 }
 
@@ -354,15 +384,23 @@ void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, u
  * matching the value of each extension's panes' ::paneLocation_t.
  *
  * @param[out] paneMinimums A pointer to a 0-initialized array of at least 4 ::emuPaneMinimum_t to be used as output.
+ * @return true if the pane minimums have changed
+ * @return false if the pane minimums did not change
+
  */
-void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
+bool calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
 {
     // Figure out the minimum required height/width of each pane side
     // For this we don't need to know anything about the actual window dimensions yet
 
+    bool result = false;
+
     // Check if the cached pane minimums are still good
     if (!extManager.paneMinsCalculated)
     {
+        // Reset the pane minimums so they don't ratchet up
+        memset(extManager.paneMinimums, 0, sizeof(extManager.paneMinimums));
+
         // Iterate over all the extensions
         // Update the cached pane minimums
         node_t* extNode = extManager.extensions.first;
@@ -378,7 +416,7 @@ void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
                 {
                     // Make sure each pane isn't hidden
                     emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)(paneNode->val);
-                    if (!paneInfo->hidden)
+                    if (paneInfo->pane.visible)
                     {
                         // Get the minumums for this pane's location
                         emuPaneMinimum_t* locMin = (extManager.paneMinimums + paneInfo->loc);
@@ -417,10 +455,12 @@ void calculatePaneMinimums(emuPaneMinimum_t* paneMinimums)
 
         // Cache is valid again!
         extManager.paneMinsCalculated = true;
+        result = true;
     }
 
     // Copy the cached pane minimums to the output
     memcpy(paneMinimums, extManager.paneMinimums, sizeof(extManager.paneMinimums));
+    return result;
 }
 
 /**
@@ -439,7 +479,7 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
     emuPaneMinimum_t paneInfos[4];
     calculatePaneMinimums(paneInfos);
 
-    // Figure out how much the screen should be scaled b
+    // Figure out how much the screen should be scaled by
     uint8_t widthMult = (winW - paneInfos[PANE_LEFT].min - paneInfos[PANE_RIGHT].min) / screenW;
     if (0 == widthMult)
     {
@@ -482,6 +522,12 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                                     / (paneInfos[PANE_LEFT].min + paneInfos[PANE_RIGHT].min);
         winPanes[PANE_LEFT].paneH = winH;
     }
+    else
+    {
+        winPanes[PANE_LEFT].paneW = 0;
+        winPanes[PANE_LEFT].paneH = 0;
+    }
+
 
     // The screen will be just to the right of the left pane and its divider
     screenPane->paneX = winPanes[PANE_LEFT].paneW + leftDivW;
@@ -494,6 +540,12 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
         winPanes[PANE_RIGHT].paneW = winW - (winPanes[PANE_LEFT].paneW + leftDivW + screenPane->paneW + rightDivW);
         winPanes[PANE_RIGHT].paneH = winH;
     }
+    else
+    {
+        winPanes[PANE_RIGHT].paneW = 0;
+        winPanes[PANE_RIGHT].paneH = 0;
+    }
+
 
     // Now do the horizontal panes, which have the same X and W as the screen
     winPanes[PANE_TOP].paneX = screenPane->paneX;
@@ -551,7 +603,6 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
             node_t* paneNode = extInfo->panes.first;
             while (NULL != paneNode)
             {
-                // Make sure each pane isn't hidden
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)(paneNode->val);
                 emuPane_t* cbPane       = &(paneInfo->pane);
 
@@ -706,10 +757,7 @@ void doExtRenderCb(uint32_t winW, uint32_t winH)
             while (NULL != paneNode)
             {
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)paneNode->val;
-                if (!paneInfo->hidden)
-                {
-                    memcpy(&panes[i++], &paneInfo->pane, sizeof(emuPane_t));
-                }
+                memcpy(&panes[i++], &paneInfo->pane, sizeof(emuPane_t));
 
                 paneNode = paneNode->next;
             }

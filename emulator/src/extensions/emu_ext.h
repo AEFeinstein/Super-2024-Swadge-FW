@@ -123,6 +123,7 @@ typedef struct
     uint32_t paneH; ///< Height of the pane
     uint32_t paneX; ///< X offset of the pane
     uint32_t paneY; ///< Y offset of the pane
+    bool visible;   ///< Whether or not the pane is visible
 } emuPane_t;
 
 /**
@@ -235,10 +236,11 @@ void initExtensions(emuArgs_t* args);
 void deinitExtensions(void);
 bool enableExtension(const char* name);
 bool disableExtension(const char* name);
-void calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
+bool calculatePaneMinimums(emuPaneMinimum_t* paneInfos);
 void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, emuPane_t* screenPane,
                  uint8_t* screenMult);
-void requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH);
+int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, uint32_t minH);
+void setPaneVisibility(const emuExtension_t* ext, int paneId, bool visible);
 
 void doExtPreFrameCb(uint64_t frame);
 void doExtPostFrameCb(uint64_t frame);
