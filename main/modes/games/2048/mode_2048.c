@@ -43,15 +43,20 @@ t48_t* t48;
 // Functions
 //==============================================================================
 
+// Swadge functions
+
 static void t48EnterMode(void)
 {
+    // Init Mode & resources
     setFrameRateUs(T48_US_PER_FRAME);
     t48 = calloc(sizeof(t48_t), 1);
     loadFont("ibm_vga8.font", &t48->font, false);
     loadFont("sonic.font", &t48->titleFont, false);
 
+    // Init Game
     t48->score = 0;
     t48->ds = GAMESTART;
+    t48->alreadyWon = false;
     t48StartGame();  // First run only adds one block... so just run it twice!
 }
 
@@ -73,27 +78,36 @@ static void t48MainLoop(int64_t elapsedUs)
                 if (evt.down){
                     t48StartGame();
                     t48->ds = GAME;
+                    for (int i = 0; i < 15; i++){
+                        t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 2 << i;
+                    }  
                 }
             }
             // Draw
             t48StartScreen(c550);   // TODO: Make a rainbow effect
             break;
         case GAME:
+            // Input
+            while (checkButtonQueueWrapper(&evt))
+            {
+                if (evt.down && evt.button & PB_DOWN){
+                    t48SlideDown();
+                } else if (evt.down && evt.button & PB_UP){
+                    t48SlideUp();
+                } else if (evt.down && evt.button & PB_LEFT){
+                    t48SlideLeft();
+                } else if (evt.down && evt.button & PB_RIGHT){
+                    t48SlideRight();
+                } else if (evt.down && evt.button & PB_A){
+                    t48StartGame();
+                }
+            }
             // Check game is done or "done"
             if(t48CheckWin()){
                 t48->ds = WIN;
             }
             if (t48CheckOver()){
                 t48->ds = GAMEOVER;
-            }
-            // Input
-            while (checkButtonQueueWrapper(&evt))
-            {
-                // TODO: Write input logic
-                // TODO: Add merge mechanic
-                if (evt.down && evt.button & PB_A){
-                    t48SetRandCell();
-                }
             }
             // Draw
             t48Draw();
@@ -126,6 +140,8 @@ static void t48MainLoop(int64_t elapsedUs)
     }
 }
 
+// TODO: Add LED color changer
+
 // Game functions
 
 static int t48SetRandCell()
@@ -134,8 +150,158 @@ static int t48SetRandCell()
     while (t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] != 0){
         cell = esp_random() % BOARD_SIZE;
     }
-    t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] = ((esp_random() % 2) * 2) + 2;
+    int8_t rand = esp_random() % 10;
+    if (rand == 0){
+        t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] = 4;  // 10%
+    } else {
+        t48->boardArr[cell / GRID_SIZE][cell % GRID_SIZE] = 2;  // 90%
+    }
+    
     return cell;
+}
+
+static bool t48MergeSlice(int slice[], bool updated)
+{
+    for (int8_t i = 0; i < GRID_SIZE - 1; i++){
+        // Merge
+        if (slice[i] == slice[i + 1]){
+            if(slice[i] == 0) {continue;}
+            updated = true;
+            slice[i] *= 2;
+            t48->score += slice[i];
+            // Move if merged
+            for (int j = i + 1; j < GRID_SIZE; j++){
+                slice[j] = slice[j + 1];
+            }
+            // Add a 0 to end if merged
+            slice[GRID_SIZE - 1] = 0;
+        }
+    }
+    return updated;
+}
+
+static void t48SlideDown()
+{
+    bool updated = false;
+    for (int col = 0; col < GRID_SIZE; col++){
+        // Create a slice to merge
+        int32_t slice[GRID_SIZE] = {0};
+        // Load only cells with value into slice in the order:
+        // Bottom -> Top
+        for (int8_t row = GRID_SIZE - 1, i = 0; row >= 0; row--){
+            // Only copy over values > 0, automatically moving all non-zeroes
+            if (t48->boardArr[row][col] != 0){
+                slice[i++] = t48->boardArr[row][col];
+                if (row != (GRID_SIZE - i)){
+                    // If these go out of sync, board has updated
+                    updated = true;
+                }
+            }
+        }
+        // Merge. If merge happens, update
+        updated = t48MergeSlice(slice, updated);
+        // Copy modified slice back into board array
+        for (int8_t row = GRID_SIZE - 1, i = 0; row >= 0; row--){
+            t48->boardArr[row][col] = slice[i++];
+        }
+    }
+    // If a board updated, add a new cell
+    if (updated){
+        t48SetRandCell();
+    }
+}
+
+static void t48SlideUp()
+{
+    bool updated = false;
+    for (int col = 0; col < GRID_SIZE; col++){
+        // Create a slice to merge
+        int32_t slice[GRID_SIZE] = {0};
+        // Load only cells with value into slice in the order:
+        // Top -> Bottom
+        for (int8_t row = 0, i = 0; row <= GRID_SIZE - 1; row++){
+            // Only copy over values > 0, automatically moving all non-zeroes
+            if (t48->boardArr[row][col] != 0){
+                if (row != i){
+                    // If these go out of sync, board has updated
+                    updated = true;
+                }
+                slice[i++] = t48->boardArr[row][col];
+            }
+        }
+        // Merge. If merge happens, update
+        updated = t48MergeSlice(slice, updated);
+        // Copy modified slice back into board array
+        for (int8_t row = 0, i = 0; row <= GRID_SIZE - 1; row++){
+            t48->boardArr[row][col] = slice[i++];
+        }
+    }
+    // If a board updated, add a new cell
+    if (updated){
+        t48SetRandCell();
+    }
+}
+
+static void t48SlideRight()
+{
+    bool updated = false;
+    for (int row = 0; row < GRID_SIZE; row++){
+        // Create a slice to merge
+        int32_t slice[GRID_SIZE] = {0};
+        // Load only cells with value into slice in the order:
+        // Right -> Left
+        for (int8_t col = GRID_SIZE - 1, i = 0; col >= 0; col--){
+            // Only copy over values > 0, automatically moving all non-zeroes
+            if (t48->boardArr[row][col] != 0){
+                slice[i++] = t48->boardArr[row][col];
+                if (col != (GRID_SIZE - i)){
+                    // If these go out of sync, board has updated
+                    updated = true;
+                }
+            }
+        }
+        // Merge. If merge happens, update
+        updated = t48MergeSlice(slice, updated);
+        // Copy modified slice back into board array
+        for (int8_t col = GRID_SIZE - 1, i = 0; col >= 0; col--){
+            t48->boardArr[row][col] = slice[i++];
+        }
+    }
+    // If a board updated, add a new cell
+    if (updated){
+        t48SetRandCell();
+    }
+}
+
+static void t48SlideLeft()
+{
+    bool updated = false;
+    for (int row = 0; row < GRID_SIZE; row++){
+        // Create a slice to merge
+        int32_t slice[GRID_SIZE] = {0};
+        // Load only cells with value into slice in the order:
+        // Left -> Right
+        for (int8_t col = 0, i = 0; col <= GRID_SIZE - 1; col++){
+            // Only copy over values > 0, automatically moving all non-zeroes
+            if (t48->boardArr[row][col] != 0){
+                if (col != i){
+                    // If these go out of sync, board has updated
+                    updated = true;
+                }
+                slice[i++] = t48->boardArr[row][col];
+            }
+        }
+        // Merge. If merge happens, update
+        updated = t48MergeSlice(slice, updated);
+        // Copy modified slice back into board array
+        for (int8_t col = 0, i = 0; col <= GRID_SIZE - 1; col++){
+            t48->boardArr[row][col] = slice[i++];
+        }
+    }
+    // If a board updated, add a new cell
+    if (updated){
+        t48SetRandCell();
+    }
 }
 
 // Game state
