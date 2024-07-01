@@ -310,7 +310,6 @@ static void t48StartGame()
     }
     t48->alreadyWon = false;
     t48->score = 0;
-    t48->gameOver = false;
     // Get random places to start
     t48SetRandCell();
     t48SetRandCell();
