@@ -52,7 +52,6 @@ typedef enum{
 typedef struct{
     int32_t boardArr[4][4];
     uint32_t score;
-    int16_t presses;
     font_t font;
     font_t titleFont;
     char scoreStr[16];
@@ -63,6 +62,8 @@ typedef struct{
 //==============================================================================
 // Function Prototypes
 //==============================================================================
+
+// Swadge functions
 
 /**
  * @brief Mode setup
@@ -83,12 +84,50 @@ static void t48ExitMode(void);
  */
 static void t48MainLoop(int64_t elapsedUs);
 
+// Game functions
+
 /**
  * @brief Sets an empty cell to 2 or 4 on 50/50 basis
  * 
  * @return int Cell used
  */
 static int t48SetRandCell(void);
+
+/**
+ * @brief Merge a single row or column. Cells merged from CELL_SIZE-1 -> 0.
+ * 
+ * @param slice Slice to merge
+ * @param updated If board was already updated
+ * @return true If a merge occured
+ * @return false if no merge occured
+ */
+static bool t48MergeSlice(int *slice, bool updated);
+
+/**
+ * @brief Slide blocks down if possible
+ * 
+ */
+static void t48SlideDown(void);
+
+/**
+ * @brief Slide blocks up if possible
+ * 
+ */
+static void t48SlideUp(void);
+
+/**
+ * @brief Slide blocks right if possible
+ * 
+ */
+static void t48SlideRight(void);
+
+/**
+ * @brief Slide blocks left if possible
+ * 
+ */
+static void t48SlideLeft(void);
+
+// Game state
 
 /**
  * @brief Initializes a game
@@ -111,6 +150,16 @@ static bool t48CheckWin(void);
  * @return false    Continue playing
  */
 static bool t48CheckOver(void);
+
+// Visuals
+
+/**
+ * @brief Get the Color for a specific value
+ * 
+ * @param val       Value that requires a color for its square
+ * @return uint8_t  Color of the value's square
+ */
+static uint8_t getColor(uint32_t val);
 
 /**
  * @brief Draws the grid, score, and tiles
@@ -137,14 +186,6 @@ static void t48DrawGameOverScreen(int64_t score);
  * 
  */
 static void t48DrawWinScreen(void);
-
-/**
- * @brief Get the Color for a specific value
- * 
- * @param val       Value that requires a color for its square
- * @return uint8_t  Color of the value's square
- */
-static uint8_t getColor(uint32_t val);
 
 //==============================================================================
 // Extern variables
