@@ -737,12 +737,12 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
                 if (array[i] >= (void*)dli.dli_fbase)
                 {
                     sign   = '+';
-                    offset = array[i] - dli.dli_fbase;
+                    offset = ((char*)array[i]) - ((char*)dli.dli_fbase);
                 }
                 else
                 {
                     sign   = '-';
-                    offset = dli.dli_fbase - array[i];
+                    offset = ((char*)dli.dli_fbase) - ((char*)array[i]);
                 }
 
                 // Concatenate each address
