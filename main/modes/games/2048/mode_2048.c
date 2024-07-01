@@ -2,7 +2,7 @@
  * @file mode_2048.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 0.1
+ * @version 1.0
  * @date 2024-06-28
  * 
  * @copyright Copyright (c) 2024
@@ -54,9 +54,7 @@ static void t48EnterMode(void)
     loadFont("sonic.font", &t48->titleFont, false);
 
     // Init Game
-    t48->score = 0;
     t48->ds = GAMESTART;
-    t48->alreadyWon = false;
     t48StartGame();  // First run only adds one block... so just run it twice!
 }
 
@@ -78,9 +76,6 @@ static void t48MainLoop(int64_t elapsedUs)
                 if (evt.down){
                     t48StartGame();
                     t48->ds = GAME;
-                    for (int i = 0; i < 15; i++){
-                        t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 2 << i;
-                    }  
                 }
             }
             // Draw
@@ -90,6 +85,7 @@ static void t48MainLoop(int64_t elapsedUs)
             // Input
             while (checkButtonQueueWrapper(&evt))
             {
+                // Move blocks down, up, right or left
                 if (evt.down && evt.button & PB_DOWN){
                     t48SlideDown();
                 } else if (evt.down && evt.button & PB_UP){
@@ -98,7 +94,9 @@ static void t48MainLoop(int64_t elapsedUs)
                     t48SlideLeft();
                 } else if (evt.down && evt.button & PB_RIGHT){
                     t48SlideRight();
-                } else if (evt.down && evt.button & PB_A){
+                } 
+                // Restart game if you hit start
+                else if (evt.down && evt.button & PB_START){
                     t48StartGame();
                 }
             }
@@ -139,8 +137,6 @@ static void t48MainLoop(int64_t elapsedUs)
             break;
     }
 }
-
-// TODO: Add LED color changer
 
 // Game functions
 
@@ -314,6 +310,7 @@ static void t48StartGame()
     }
     t48->alreadyWon = false;
     t48->score = 0;
+    t48->gameOver = false;
     // Get random places to start
     t48SetRandCell();
     t48SetRandCell();
@@ -367,58 +364,58 @@ static uint8_t getColor(uint32_t val)
 {
     switch(val){
         case 0:
-            return c552;
+            return c000;
             break;
         case 2:
-            return c441;
-            break;
-        case 4:
-            return c505;
-            break;
-        case 8:
-            return c515;
-            break;
-        case 16:
-            return c525;
-            break;
-        case 32:
-            return c535;
-            break;
-        case 64:
-            return c005;
-            break;
-        case 128:
-            return c115;
-            break;
-        case 256:
-            return c225;
-            break;
-        case 512:
-            return c335;
-            break;
-        case 1024:
-            return c050;
-            break;
-        case 2048:
-            return c151;
-            break;
-        case 4096:
-            return c252;
-            break;
-        case 8192:
-            return c353;
-            break;
-        case 16384:
             return c500;
             break;
+        case 4:
+            return c520;
+            break;
+        case 8:
+            return c540;
+            break;
+        case 16:
+            return c502;
+            break;
+        case 32:
+            return c504;
+            break;
+        case 64:
+            return c050;
+            break;
+        case 128:
+            return c250;
+            break;
+        case 256:
+            return c450;
+            break;
+        case 512:
+            return c052;
+            break;
+        case 1024:
+            return c054;
+            break;
+        case 2048:
+            return c005;
+            break;
+        case 4096:
+            return c205;
+            break;
+        case 8192:
+            return c405;
+            break;
+        case 16384:
+            return c025;
+            break;
         case 32768:
-            return c511;
+            return c045;
             break;
         case 65535:
-            return c522;
+            return c111;
             break;
         case 131072:
-            return c533;
+            return c333;
             break;
         default:
             return c101;

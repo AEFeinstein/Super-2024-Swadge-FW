@@ -2,13 +2,25 @@
  * @file mode_2048.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 0.1
+ * @version 1.0
  * @date 2024-06-28
  * 
  * @copyright Copyright (c) 2024
  * 
  */
 #pragma once
+
+//==============================================================================
+//  Version 1.1 goals:
+//==============================================================================
+
+/*
+- LEDs that color based on highes score block and pulse during a merge
+- Sounds
+- Better splash scree
+- High score saving
+- Fix colors of blocks to e easily discerned
+*/
 
 //==============================================================================
 // Includes
