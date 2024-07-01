@@ -24,7 +24,7 @@
 #include "spiffs_model.h"
 #include "buttonUtils.h"
 #include "menu.h"
-#include "menuLogbookRenderer.h"
+#include "menuManiaRenderer.h"
 #include "macros.h"
 
 //==============================================================================
@@ -75,7 +75,7 @@ typedef struct
     int64_t avgFrameTime;
 
     menu_t* menu; ///< The menu for adding a model
-    menuLogbookRenderer_t* menuRenderer; ///< The menu's renderer
+    menuManiaRenderer_t* menuRenderer; ///< The menu's renderer
     bool showMenu; ///< Whether or not the menu is active
 
     model_t models[ARRAY_SIZE(graphicsTestModels)];
@@ -187,7 +187,7 @@ static void graphicsTestEnterMode(void)
     graphicsTestSetupMenu();
 
     // and the menu renderer
-    graphicsTest->menuRenderer = initMenuLogbookRenderer(&graphicsTest->ibm);
+    graphicsTest->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     // Load (some of) the 3D models!
     for (int i = 0; i < 3; i++)
@@ -265,7 +265,7 @@ static void graphicsTestExitMode(void)
     }
 
     // Free menu related things
-    deinitMenuLogbookRenderer(graphicsTest->menuRenderer);
+    deinitMenuManiaRenderer(graphicsTest->menuRenderer);
     deinitMenu(graphicsTest->menu);
 
     // Free the font
@@ -286,7 +286,7 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
     if (graphicsTest->showMenu)
     {
         // Draw the menu
-        drawMenuLogbook(graphicsTest->menu, graphicsTest->menuRenderer, elapsedUs);
+        drawMenuMania(graphicsTest->menu, graphicsTest->menuRenderer, elapsedUs);
     }
     else
     {
