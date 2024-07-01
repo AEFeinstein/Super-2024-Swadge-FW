@@ -46,6 +46,7 @@ static bool toolsInit(emuArgs_t* emuArgs);
 static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers);
 static void toolsPreFrame(uint64_t frame);
 static void toolsPostFrame(uint64_t frame);
+static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes);
 
 static const char* getScreenshotName(char* buffer, size_t maxlen);
 
@@ -61,7 +62,7 @@ emuExtension_t toolsEmuExtension = {
     .fnKeyCb         = toolsKeyCb,
     .fnMouseMoveCb   = NULL,
     .fnMouseButtonCb = NULL,
-    .fnRenderCb      = NULL,
+    .fnRenderCb      = toolsRenderCb,
 };
 
 static bool useFakeTime       = false;
@@ -82,6 +83,11 @@ static int frameEndIndex = 0;
 
 static int64_t lastFrameTime = 0;
 static float lastFps = 0.0;
+
+static bool showConsole = false;
+static int consolePaneId = -1;
+static char consoleBuffer[1024] = {0};
+static char* consolePtr = consoleBuffer;
 
 //==============================================================================
 // Functions
@@ -115,6 +121,59 @@ static bool toolsInit(emuArgs_t* emuArgs)
 
 static int32_t toolsKeyCb(uint32_t keycode, bool down, modKey_t modifiers)
 {
+    if (showConsole)
+    {
+        if (!down)
+        {
+            if (keycode == CNFG_KEY_F4)
+            {
+                showConsole = false;
+                setPaneVisibility(&toolsEmuExtension, consolePaneId, false);
+                emuTimerUnpause();
+            }
+            else if (keycode == CNFG_KEY_BACKSPACE)
+            {
+                if (consolePtr > consoleBuffer)
+                {
+                    *--consolePtr = '\0';
+                }
+            }
+            else if (keycode == CNFG_KEY_ENTER)
+            {
+                // Handle console command
+                // TODO
+
+                consolePtr = consoleBuffer;
+                *consolePtr = '\0';
+            }
+            else if (' ' <= keycode && keycode <= '~')
+            {
+                if ((('A' <= keycode && keycode <= 'Z') || ('a' <= keycode && keycode <= 'z')) && (modifiers & EMU_MOD_SHIFT))
+                {
+                    keycode ^= 32;
+                }
+                *consolePtr++ = (char)(keycode & 0x7F);
+                *consolePtr = '\0';
+            }
+        }
+
+        // Consume all input until console is closed
+        return -1;
+    }
+    else if (!down && keycode == CNFG_KEY_F4)
+    {
+        showConsole = true;
+        if (consolePaneId == -1)
+        {
+            consolePaneId = requestPane(&toolsEmuExtension, PANE_TOP, 10, 32);
+        }
+        consolePtr = consoleBuffer;
+        *consolePtr = '\0';
+
+        setPaneVisibility(&toolsEmuExtension, consolePaneId, true);
+        emuTimerPause();
+    }
+
     if (keycode == CNFG_KEY_F12)
     {
         static bool released = true;
@@ -334,15 +393,36 @@ static void toolsPostFrame(uint64_t frame)
 
 static void toolsRenderCb(uint32_t winW, uint32_t winH, const emuPane_t* panes, uint8_t numPanes)
 {
-    if (numPanes > 0 && panes[0].visible)
+    for (int i = 0; i < numPanes; i++)
     {
-        const emuPane_t* fpsPane = panes;
-        CNFGPenX = fpsPane->paneX;
-        CNFGPenY = fpsPane->paneY;
-        CNFGColor(0xFFFFFFFF);
-        char buf[64];
-        snprintf(buf, sizeof(buf), "%.2f", lastFps);
-        CNFGDrawText(buf, 5);
+        int paneId = panes[i].id;
+
+        if (paneId == fpsPaneId)
+        {
+            const emuPane_t* fpsPane = &panes[i];
+            CNFGColor(0xFFFFFFFF);
+            char buf[64];
+            snprintf(buf, sizeof(buf), "%.2f FPS", lastFps);
+
+            int w, h;
+            CNFGGetTextExtents(buf, &w, &h, 5);
+            CNFGPenX = fpsPane->paneX + (fpsPane->paneW - w) / 2;
+            CNFGPenY = fpsPane->paneY + (fpsPane->paneH - h) / 2;
+            CNFGDrawText(buf, 5);
+        }
+        else if (paneId == consolePaneId)
+        {
+            const emuPane_t* consolePane = &panes[i];
+            char buf[1030];
+            buf[0] = '>';
+            buf[1] = ' ';
+            strcpy(buf + 2, consoleBuffer);
+
+            CNFGColor(0xFFFFFFFF);
+            CNFGPenX = consolePane->paneX + 5;
+            CNFGPenY = consolePane->paneY + 5;
+            CNFGDrawText(buf, 5);
+        }
     }
 }
 
