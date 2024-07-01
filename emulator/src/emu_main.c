@@ -109,6 +109,7 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext);
 
 static void drawBitmapPixel(uint32_t* bitmapDisplay, int w, int h, int x, int y, uint32_t col);
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr);
+void handleArgs(int argc, char** argv);
 
 //==============================================================================
 // Functions
