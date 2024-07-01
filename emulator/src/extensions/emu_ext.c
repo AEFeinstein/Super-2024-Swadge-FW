@@ -343,9 +343,10 @@ int requestPane(const emuExtension_t* ext, paneLocation_t loc, uint32_t minW, ui
         paneInfo->minW = minW;
         paneInfo->minH = minH;
         paneInfo->pane.visible = true;
+        paneInfo->pane.id = extInfo->panes.length;
 
         push(&extInfo->panes, paneInfo);
-        return extInfo->panes.length - 1;
+        return paneInfo->pane.id;
     }
     return -1;
 }
@@ -606,10 +607,6 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)(paneNode->val);
                 emuPane_t* cbPane       = &(paneInfo->pane);
 
-                // Copy the overall pane settings for the appropriate side onto the sub-pane for this callback
-                memcpy(cbPane, (winPanes + paneInfo->loc), sizeof(emuPane_t));
-
-                // Now, we just override the variable settings
                 switch (paneInfo->loc)
                 {
                     case PANE_LEFT:
@@ -617,6 +614,9 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                     {
                         // Handle the left/right columns
                         // We just set the Y and Height
+                        cbPane->paneX = winPanes[paneInfo->loc].paneX;
+                        cbPane->paneW = winPanes[paneInfo->loc].paneW;
+
                         cbPane->paneY += SUBPANE_OFFSET(paneInfo->loc, H);
                         cbPane->paneH = SUBPANE_SIZE(paneInfo->loc, H);
                         break;
@@ -625,6 +625,9 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                     case PANE_TOP:
                     case PANE_BOTTOM:
                     {
+                        cbPane->paneY = winPanes[paneInfo->loc].paneY;
+                        cbPane->paneH = winPanes[paneInfo->loc].paneH;
+
                         cbPane->paneX += SUBPANE_OFFSET(paneInfo->loc, W);
                         cbPane->paneW = SUBPANE_SIZE(paneInfo->loc, W);
                         break;
@@ -757,7 +760,11 @@ void doExtRenderCb(uint32_t winW, uint32_t winH)
             while (NULL != paneNode)
             {
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)paneNode->val;
-                memcpy(&panes[i++], &paneInfo->pane, sizeof(emuPane_t));
+
+                if (paneInfo->pane.visible)
+                {
+                    memcpy(&panes[i++], &paneInfo->pane, sizeof(emuPane_t));
+                }
 
                 paneNode = paneNode->next;
             }

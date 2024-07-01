@@ -124,6 +124,7 @@ typedef struct
     uint32_t paneX; ///< X offset of the pane
     uint32_t paneY; ///< Y offset of the pane
     bool visible;   ///< Whether or not the pane is visible
+    int id;
 } emuPane_t;
 
 /**
