@@ -607,6 +607,12 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                 emuPaneInfo_t* paneInfo = (emuPaneInfo_t*)(paneNode->val);
                 emuPane_t* cbPane       = &(paneInfo->pane);
 
+                // Copy the overall pane settings for the appropriate side onto the sub-pane for this callback
+                cbPane->paneX = winPanes[paneInfo->loc].paneX;
+                cbPane->paneW = winPanes[paneInfo->loc].paneW;
+                cbPane->paneY = winPanes[paneInfo->loc].paneY;
+                cbPane->paneH = winPanes[paneInfo->loc].paneH;
+
                 switch (paneInfo->loc)
                 {
                     case PANE_LEFT:
@@ -614,9 +620,6 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                     {
                         // Handle the left/right columns
                         // We just set the Y and Height
-                        cbPane->paneX = winPanes[paneInfo->loc].paneX;
-                        cbPane->paneW = winPanes[paneInfo->loc].paneW;
-
                         cbPane->paneY += SUBPANE_OFFSET(paneInfo->loc, H);
                         cbPane->paneH = SUBPANE_SIZE(paneInfo->loc, H);
                         break;
@@ -625,9 +628,6 @@ void layoutPanes(int32_t winW, int32_t winH, int32_t screenW, int32_t screenH, e
                     case PANE_TOP:
                     case PANE_BOTTOM:
                     {
-                        cbPane->paneY = winPanes[paneInfo->loc].paneY;
-                        cbPane->paneH = winPanes[paneInfo->loc].paneH;
-
                         cbPane->paneX += SUBPANE_OFFSET(paneInfo->loc, W);
                         cbPane->paneW = SUBPANE_SIZE(paneInfo->loc, W);
                         break;
