@@ -17,7 +17,7 @@
 /*
 - LEDs that color based on highes score block and pulse during a merge
 - Sounds
-- Better splash scree
+- Better splash screen
 - High score saving
 - Fix colors of blocks to e easily discerned
 */
