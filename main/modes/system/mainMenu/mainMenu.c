@@ -332,6 +332,7 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == introMode.modeName)
         {
             switchToSwadgeMode(&introMode);
+        }
         else if (label == graphicsTestMode.modeName)
         {
             switchToSwadgeMode(&graphicsTestMode);
