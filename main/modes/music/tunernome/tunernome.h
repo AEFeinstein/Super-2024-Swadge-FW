@@ -12,7 +12,4 @@
 
 extern swadgeMode_t tunernomeMode;
 
-extern song_t metronome_primary;
-extern song_t metronome_secondary;
-
 #endif /* _MODE_TUNERNOME_H_ */

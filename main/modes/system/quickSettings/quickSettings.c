@@ -43,7 +43,7 @@ typedef struct
     font_t font;                           ///< The font used for menu text
     int64_t ledTimer;
     bool showLeds;
-    song_t jingle;
+    midiFile_t jingle;
     void* buzzerState;
     led_t ledState[CONFIG_NUM_LEDS + 1];
 
@@ -194,7 +194,7 @@ static void quickSettingsEnterMode(void)
     loadFont("ibm_vga8.font", &quickSettings->font, true);
 
     // Load the buzzer song
-    loadSong("jingle.sng", &quickSettings->jingle, true);
+    loadMidiFile("jingle.mid", &quickSettings->jingle, true);
 
     // Load graphics
     // Use SPI because we're not the only mode, I guess?
@@ -262,7 +262,7 @@ static void quickSettingsExitMode(void)
     deinitMenuQuickSettingsRenderer(quickSettings->renderer);
 
     // Free the buzzer song
-    freeSong(&quickSettings->jingle);
+    unloadMidiFile(&quickSettings->jingle);
 
     soundStop(true);
 

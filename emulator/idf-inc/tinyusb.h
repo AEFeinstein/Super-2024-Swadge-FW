@@ -108,6 +108,45 @@ typedef enum
     HID_ITF_PROTOCOL_MOUSE    = 2  ///< Mouse
 } hid_interface_protocol_enum_t;
 
+/// USB Interface Descriptor
+typedef struct TU_ATTR_PACKED
+{
+  uint8_t  bLength            ; ///< Size of this descriptor in bytes
+  uint8_t  bDescriptorType    ; ///< INTERFACE Descriptor Type
+
+  uint8_t  bInterfaceNumber   ; ///< Number of this interface. Zero-based value identifying the index in the array of concurrent interfaces supported by this configuration.
+  uint8_t  bAlternateSetting  ; ///< Value used to select this alternate setting for the interface identified in the prior field
+  uint8_t  bNumEndpoints      ; ///< Number of endpoints used by this interface (excluding endpoint zero). If this value is zero, this interface only uses the Default Control Pipe.
+  uint8_t  bInterfaceClass    ; ///< Class code (assigned by the USB-IF). \li A value of zero is reserved for future standardization. \li If this field is set to FFH, the interface class is vendor-specific. \li All other values are reserved for assignment by the USB-IF.
+  uint8_t  bInterfaceSubClass ; ///< Subclass code (assigned by the USB-IF). \n These codes are qualified by the value of the bInterfaceClass field. \li If the bInterfaceClass field is reset to zero, this field must also be reset to zero. \li If the bInterfaceClass field is not set to FFH, all values are reserved for assignment by the USB-IF.
+  uint8_t  bInterfaceProtocol ; ///< Protocol code (assigned by the USB). \n These codes are qualified by the value of the bInterfaceClass and the bInterfaceSubClass fields. If an interface supports class-specific requests, this code identifies the protocols that the device uses as defined by the specification of the device class. \li If this field is reset to zero, the device does not use a class-specific protocol on this interface. \li If this field is set to FFH, the device uses a vendor-specific protocol for this interface.
+  uint8_t  iInterface         ; ///< Index of string descriptor describing this interface
+} tusb_desc_interface_t;
+
+typedef struct TU_ATTR_PACKED{
+  union {
+    struct TU_ATTR_PACKED {
+      uint8_t recipient :  5; ///< Recipient type tusb_request_recipient_t.
+      uint8_t type      :  2; ///< Request type tusb_request_type_t.
+      uint8_t direction :  1; ///< Direction type. tusb_dir_t
+    } bmRequestType_bit;
+
+    uint8_t bmRequestType;
+  };
+
+  uint8_t  bRequest;
+  uint16_t wValue;
+  uint16_t wIndex;
+  uint16_t wLength;
+} tusb_control_request_t;
+
+typedef enum
+{
+  XFER_RESULT_SUCCESS,
+  XFER_RESULT_FAILED,
+  XFER_RESULT_STALLED,
+}xfer_result_t;
+
 esp_err_t tinyusb_driver_install(const tinyusb_config_t* config);
 bool tud_ready(void);
 bool tud_hid_gamepad_report(uint8_t report_id, int8_t x, int8_t y, int8_t z, int8_t rz, int8_t rx, int8_t ry,

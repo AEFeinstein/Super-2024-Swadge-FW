@@ -6,7 +6,7 @@
 #include "soundFuncs.h"
 #include "hdw-tft.h"
 #include "spiffs_font.h"
-#include "spiffs_song.h"
+#include "midiFileParser.h"
 #include "macros.h"
 #include "credits_utils.h"
 
@@ -35,8 +35,8 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
     credits->numEntries = numEntries;
 
     // Load and play song
-    loadSong("credits.sng", &credits->song, false);
-    credits->song.shouldLoop = true;
+    loadMidiFile("credits.mid", &credits->song, false);
+    soundGetPlayerBgm()->loop = true;
     soundPlayBgm(&credits->song, BZR_STEREO);
 }
 
@@ -47,7 +47,7 @@ void initCredits(credits_t* credits, font_t* font, const creditsEntry_t* entries
  */
 void deinitCredits(credits_t* credits)
 {
-    freeSong(&credits->song);
+    unloadMidiFile(&credits->song);
 }
 
 /**

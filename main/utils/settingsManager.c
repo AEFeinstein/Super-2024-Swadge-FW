@@ -3,7 +3,7 @@
 //==============================================================================
 
 #include "hdw-nvs.h"
-#include "hdw-bzr.h"
+#include "midiPlayer.h"
 #include "hdw-tft.h"
 #include "hdw-mic.h"
 #include "hdw-led.h"
@@ -208,7 +208,7 @@ bool setBgmVolumeSetting(uint16_t vol)
 {
     if (setSetting(&bgm_setting, vol))
     {
-        bzrSetBgmVolume(getBgmVolumeSetting());
+        globalMidiPlayerSetVolume(MIDI_BGM, getBgmVolumeSetting());
         return true;
     }
     return false;
@@ -246,7 +246,7 @@ bool setSfxVolumeSetting(uint16_t vol)
 {
     if (setSetting(&sfx_setting, vol))
     {
-        bzrSetSfxVolume(getSfxVolumeSetting());
+        globalMidiPlayerSetVolume(MIDI_SFX, getSfxVolumeSetting());
         return true;
     }
     return false;

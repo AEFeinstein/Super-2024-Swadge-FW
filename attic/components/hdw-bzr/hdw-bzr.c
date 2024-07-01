@@ -22,6 +22,35 @@
 //==============================================================================
 
 /**
+ * @brief A single note and duration to play on the buzzer
+ */
+typedef struct
+{
+    noteFrequency_t note; ///< Note frequency, in Hz
+    int32_t timeMs;       ///< Note duration, in ms
+} musicalNote_t;
+
+/**
+ * @brief A list of notes and durations to play on the buzzer
+ */
+typedef struct
+{
+    int32_t numNotes;      ///< The number of notes in this song
+    int32_t loopStartNote; ///< The note index to restart at, if looping
+    musicalNote_t* notes;  ///< An array of notes in the song
+} songTrack_t;
+
+/**
+ * @brief A collection of lists of notes and durations to play on the buzzers
+ */
+typedef struct
+{
+    int16_t numTracks;   ///< The number of tracks in this song
+    bool shouldLoop;     ///< true if the song should loop, false if it should play once
+    songTrack_t* tracks; ///< The tracks for this song
+} song_t;
+
+/**
  * @brief A track for a song on the buzzer. This plays notes from a songTrack_t
  */
 typedef struct
@@ -44,6 +73,17 @@ typedef struct
     bzrTrack_t bgm;             ///< The BGM track for this buzzer
     bzrTrack_t sfx;             ///< The SFX track for this buzzer
 } buzzer_t;
+
+/**
+ * @brief A struct for holding buzzer save-restore data
+ *
+ */
+typedef struct
+{
+    bzrTrack_t tracks[NUM_BUZZERS * 2];
+    song_t songs[2];
+    songTrack_t songTracks[NUM_BUZZERS * 2];
+} bzrSaveState_t;
 
 //==============================================================================
 // Variables
@@ -76,8 +116,172 @@ static songFinishedCbFn sfxDoneCb = NULL;
 /// song starts before this one finishes
 static songFinishedCbFn bgmDoneCb = NULL;
 
+/// @brief MIDI file reader used for the SFX channel
+static song_t sfxSong = {0};
+
+/// @brief MIDI file reader used for the BGM channel
+static song_t bgmSong = {0};
+
 /// @brief Boolean to reset clocks after buzzer is restored
 static volatile bool bzrIsRestored = false;
+
+// MIDI notes start at C-2, whereas the buzzer starts at C0
+// So, just repeat the bottom octave a few times?
+// We could just transpose up two octaves instead, so C-2 becomes C0 and C8 becomes C10
+// That might be strange
+static noteFrequency_t midiNoteMap[] = {
+    // C-2 to B-2
+    C_0,
+    C_SHARP_0,
+    D_0,
+    D_SHARP_0,
+    E_0,
+    F_0,
+    F_SHARP_0,
+    G_0,
+    G_SHARP_0,
+    A_0,
+    A_SHARP_0,
+    B_0,
+
+    // C-1 to B-1
+    C_0,
+    C_SHARP_0,
+    D_0,
+    D_SHARP_0,
+    E_0,
+    F_0,
+    F_SHARP_0,
+    G_0,
+    G_SHARP_0,
+    A_0,
+    A_SHARP_0,
+    B_0,
+
+    // Actual C0 to B0
+    C_0,
+    C_SHARP_0,
+    D_0,
+    D_SHARP_0,
+    E_0,
+    F_0,
+    F_SHARP_0,
+    G_0,
+    G_SHARP_0,
+    A_0,
+    A_SHARP_0,
+    B_0,
+
+    // C1
+    C_1,
+    C_SHARP_1,
+    D_1,
+    D_SHARP_1,
+    E_1,
+    F_1,
+    F_SHARP_1,
+    G_1,
+    G_SHARP_1,
+    A_1,
+    A_SHARP_1,
+    B_1,
+
+    // C2
+    C_2,
+    C_SHARP_2,
+    D_2,
+    D_SHARP_2,
+    E_2,
+    F_2,
+    F_SHARP_2,
+    G_2,
+    G_SHARP_2,
+    A_2,
+    A_SHARP_2,
+    B_2,
+
+    // C3
+    C_3,
+    C_SHARP_3,
+    D_3,
+    D_SHARP_3,
+    E_3,
+    F_3,
+    F_SHARP_3,
+    G_3,
+    G_SHARP_3,
+    A_3,
+    A_SHARP_3,
+    B_3,
+
+    // C4
+    C_4,
+    C_SHARP_4,
+    D_4,
+    D_SHARP_4,
+    E_4,
+    F_4,
+    F_SHARP_4,
+    G_4,
+    G_SHARP_4,
+    A_4,
+    A_SHARP_4,
+    B_4,
+
+    // C5
+    C_5,
+    C_SHARP_5,
+    D_5,
+    D_SHARP_5,
+    E_5,
+    F_5,
+    F_SHARP_5,
+    G_5,
+    G_SHARP_5,
+    A_5,
+    A_SHARP_5,
+    B_5,
+
+    // C6
+    C_6,
+    C_SHARP_6,
+    D_6,
+    D_SHARP_6,
+    E_6,
+    F_6,
+    F_SHARP_6,
+    G_6,
+    G_SHARP_6,
+    A_6,
+    A_SHARP_6,
+    B_6,
+
+    // C7
+    C_7,
+    C_SHARP_7,
+    D_7,
+    D_SHARP_7,
+    E_7,
+    F_7,
+    F_SHARP_7,
+    G_7,
+    G_SHARP_7,
+    A_7,
+    A_SHARP_7,
+    B_7,
+
+    // C8
+    C_8,
+    C_SHARP_8,
+    D_8,
+    D_SHARP_8,
+    E_8,
+    F_8,
+    F_SHARP_8,
+    G_8,
+
+    // End of MIDI note range
+};
 
 //==============================================================================
 // Functions Prototypes
@@ -201,6 +405,8 @@ static void initSingleBuzzer(buzzer_t* buzzer, gpio_num_t bzrGpio, ledc_timer_t 
  */
 void deinitBuzzer(void)
 {
+    deinitSong(&bgmSong);
+    deinitSong(&sfxSong);
     ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, buzzers[BZR_LEFT].ledcChannel, 0));
     ESP_ERROR_CHECK(ledc_stop(LEDC_MODE, buzzers[BZR_RIGHT].ledcChannel, 0));
     ESP_ERROR_CHECK(gptimer_stop(bzrTimer));
@@ -283,18 +489,24 @@ static void bzrPlayTrack(bzrTrack_t* trackL, bzrTrack_t* trackR, const song_t* s
  * @param song The song to play as a sequence of notes
  * @param track The track to play on if the song is mono. This is ignored if the song is stereo
  */
-void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
+void bzrPlayBgm(const midiFile_t* song, buzzerPlayTrack_t track)
 {
-    // Play this song on the BGM track
-    bzrPlayTrack(&buzzers[0].bgm, &buzzers[1].bgm, song, track);
+    deinitSong(&bgmSong);
 
-    // If the timer is off
-    if (false == bzrTimerActive)
+    if (setupSongFromMidi(&bgmSong, song))
     {
-        // Start timer, the timer function will start the song
-        gptimer_start(bzrTimer);
-        bzrTimerActive = true;
+        // Play this song on the BGM track
+        bzrPlayTrack(&buzzers[0].bgm, &buzzers[1].bgm, &bgmSong, track);
+
+        // If the timer is off
+        if (false == bzrTimerActive)
+        {
+            // Start timer, the timer function will start the song
+            gptimer_start(bzrTimer);
+            bzrTimerActive = true;
+        }
     }
+
     // Called without a callback, so null it out
     bgmDoneCb = NULL;
 }
@@ -306,18 +518,24 @@ void bzrPlayBgm(const song_t* song, buzzerPlayTrack_t track)
  * @param song The song to play as a sequence of notes
  * @param track The track to play on if the song is mono. This is ignored if the song is stereo
  */
-void bzrPlaySfx(const song_t* song, buzzerPlayTrack_t track)
+void bzrPlaySfx(const midiFile_t* song, buzzerPlayTrack_t track)
 {
-    // Play this song on the SFX track
-    bzrPlayTrack(&buzzers[0].sfx, &buzzers[1].sfx, song, track);
+    deinitSong(&sfxSong);
 
-    // If the timer is off
-    if (false == bzrTimerActive)
+    if (setupSongFromMidi(&bgmSong, song))
     {
-        // Start timer, the timer function will start the song
-        gptimer_start(bzrTimer);
-        bzrTimerActive = true;
+        // Play this song on the SFX track
+        bzrPlayTrack(&buzzers[0].sfx, &buzzers[1].sfx, &sfxSong, track);
+
+        // If the timer is off
+        if (false == bzrTimerActive)
+        {
+            // Start timer, the timer function will start the song
+            gptimer_start(bzrTimer);
+            bzrTimerActive = true;
+        }
     }
+
     // Called without a callback, so null it out
     sfxDoneCb = NULL;
 }
@@ -591,6 +809,193 @@ static bool IRAM_ATTR buzzer_track_check_next_note(bzrTrack_t* track, buzzerPlay
     return false;
 }
 
+static bool setupSongFromMidi(song_t* song, const midiFile_t* midi)
+{
+    midiFileReader_t reader;
+    if (!initMidiParser(&reader, midi))
+    {
+        ESP_LOGE("Buzzer", "Could not allocate MIDI parser to convert song");
+        return false;
+    }
+
+    midiEvent_t event;
+    // note counts for each channel
+    uint32_t noteOnCount[16]  = {0};
+    uint32_t noteOffCount[16] = {0};
+    uint32_t trackLengths[16] = {0};
+    bool noteAtZero[16]       = {0};
+    uint32_t lengthInTicks    = 0;
+    uint32_t tempo            = 500000;
+
+    // First, count the note events
+    while (midiNextEvent(&reader, &event))
+    {
+        if (event.type == MIDI_EVENT)
+        {
+            // TODO: Should this use channel, or track index? It's usually going to be the same...
+            uint8_t ch  = event.midi.status & 0x0F;
+            uint8_t cmd = (event.midi.status >> 4) & 0x0F;
+
+            if (cmd == 0x8)
+            {
+                // Note OFF
+                noteOffCount[event.track]++;
+            }
+            else if (cmd == 0x9)
+            {
+                // Note ON
+                noteOnCount[event.track]++;
+                if (event.absTime == 0)
+                {
+                    noteAtZero[event.track] = true;
+                }
+            }
+        }
+        else if (event.type == META_EVENT)
+        {
+            if (event.meta.type == TEMPO)
+            {
+                tempo = event.meta.tempo;
+            }
+            else if (event.meta.type == END_OF_TRACK)
+            {
+                trackLengths[event.track] = event.absTime;
+
+                // Calculate song length
+                if (event.absTime > lengthInTicks)
+                {
+                    lengthInTicks = event.absTime;
+                }
+            }
+        }
+    }
+
+    uint8_t usedChannelCount = 0;
+    uint8_t usedChannels[NUM_BUZZERS];
+
+    // Figure out which channels to use
+    for (int i = 0; i < 16 && usedChannelCount < NUM_BUZZERS; i++)
+    {
+        if (noteOnCount[i] > 0 && noteOffCount[i] > 0)
+        {
+            // Map this channel onto one of the buzzers
+            usedChannels[usedChannelCount++] = i;
+        }
+    }
+
+    if (usedChannelCount == 0)
+    {
+        ESP_LOGE("Buzzer", "No suitable tracks with notes found in song");
+        return false;
+    }
+
+    song->numTracks = usedChannelCount;
+    song->tracks    = heap_caps_calloc(usedChannelCount, sizeof(songTrack_t), MALLOC_CAP_SPIRAM);
+
+    // The index of the next note to write for a track
+    uint32_t nextChNote[NUM_BUZZERS] = {0};
+    // The absolute start time of the most recent note, in MIDI ticks, for a track
+    uint32_t lastNoteStart[NUM_BUZZERS] = {0};
+
+    for (int i = 0; i < usedChannelCount; i++)
+    {
+        uint8_t mappedChannel = usedChannels[i];
+        // We need a note for every note on, a note for every silence, and one extra silence if the first note isn't at
+        // the very beginning of the song
+        uint32_t noteCount
+            = noteOnCount[mappedChannel] + noteOffCount[mappedChannel] + (noteAtZero[mappedChannel] ? 0 : 1);
+        song->tracks[i].notes    = heap_caps_malloc((noteCount) * sizeof(musicalNote_t), MALLOC_CAP_SPIRAM);
+        song->tracks[i].numNotes = noteCount;
+
+        // If the first note didn't start at 0, add a silence note
+        if (noteCount > 0 && !noteAtZero[mappedChannel])
+        {
+            song->tracks[i].notes[0].note = SILENCE;
+            nextChNote[i]++;
+        }
+    }
+
+    // Rewind to the beginning of the file
+    resetMidiParser(&reader);
+
+// Convert from midi ticks to microseconds
+#define MIDI_TICKS_TO_MICROS(midiTicks, tempo, div) (((midiTicks) * (tempo)) / (div))
+
+    while (midiNextEvent(&reader, &event))
+    {
+        if (event.type == MIDI_EVENT)
+        {
+            uint8_t ch  = event.midi.status & 0x0F;
+            uint8_t cmd = (event.midi.status >> 4) & 0x0F;
+
+            if (cmd == 0x8 || cmd == 0x9)
+            {
+                for (int i = 0; i < usedChannelCount; i++)
+                {
+                    if (event.track == usedChannels[i])
+                    {
+                        uint32_t noteIdx = nextChNote[i];
+                        if (noteIdx > 0)
+                        {
+                            // Set the duration of the previous note
+                            song->tracks[i].notes[noteIdx-1].timeMs = (MIDI_TICKS_TO_MICROS(event.absTime - lastNoteStart[i], tempo, midi->timeDivision) + 500) / 1000;
+                        }
+
+                        if (cmd == 0x9)
+                        {
+                            // Note ON
+                            song->tracks[i].notes[noteIdx].note = midiNoteMap[event.midi.data[0]];
+                        }
+                        else
+                        {
+                            // Note OFF
+                            song->tracks[i].notes[noteIdx].note = SILENCE;
+                        }
+
+                        lastNoteStart[i] = event.absTime;
+                        nextChNote[i]++;
+
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Set up the time for the last notes
+    for (int i = 0; i < usedChannelCount; i++)
+    {
+        song->tracks[i].notes[nextChNote[i] - 1].timeMs = (MIDI_TICKS_TO_MICROS(lengthInTicks - lastNoteStart[i], tempo, midi->timeDivision) + 500) / 1000;
+        if (nextChNote[i] != song->tracks[i].numNotes)
+        {
+            ESP_LOGW("Buzzer", "Converting MIDI to song_t - expected to set %" PRId32 " notes but there were %" PRIu32, song->tracks[i].numNotes, nextChNote[i]);
+        }
+    }
+
+    deinitMidiParser(&reader);
+
+    return true;
+}
+
+static void deinitSong(song_t* song)
+{
+    if (song != NULL)
+    {
+        if (song->tracks != NULL)
+        {
+            for (int i = 0; i < song->numTracks; i++)
+            {
+                free(song->tracks[i].notes);
+            }
+
+            free(song->tracks);
+            song->tracks = NULL;
+        }
+
+        song->numTracks = 0;
+    }
+}
+
 /**
  * @brief Check if a song has finished playing and call the appropriate callback if applicable
  */
@@ -672,14 +1077,76 @@ void* bzrSave(void)
 {
     bzrPause();
 
-    bzrTrack_t* result = malloc(sizeof(bzrTrack_t) * NUM_BUZZERS * 2);
+    // Allocate the save state
+    bzrSaveState_t* state = malloc(sizeof(bzrSaveState_t));
+
+    // Copy the buzzer state
     for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
     {
-        memcpy(&result[bIdx * 2], &buzzers[bIdx].bgm, sizeof(bzrTrack_t));
-        memcpy(&result[bIdx * 2 + 1], &buzzers[bIdx].sfx, sizeof(bzrTrack_t));
+        memcpy(&state->tracks[bIdx * 2], &buzzers[bIdx].bgm, sizeof(bzrTrack_t));
+        memcpy(&state->tracks[bIdx * 2 + 1], &buzzers[bIdx].sfx, sizeof(bzrTrack_t));
     }
 
-    return (void*)result;
+    // Copy the song struct
+    memcpy(&state->songs[0], &bgmSong, sizeof(song_t));
+    memcpy(&state->songs[1], &sfxSong, sizeof(song_t));
+
+    // Handle the individually-allocated bits of the song
+    if (bgmSong.numTracks > 0 && bgmSong.tracks != NULL)
+    {
+        state->songs[0].tracks = malloc(bgmSong.numTracks * sizeof(songTrack_t));
+        memcpy(state->songs[0].tracks, bgmSong.tracks, bgmSong.numTracks * sizeof(songTrack_t));
+
+        for (int i = 0; i < bgmSong.numTracks; i++)
+        {
+            state->songs[0].tracks[i].notes = heap_caps_malloc(bgmSong.tracks[i].numNotes * sizeof(musicalNote_t), MALLOC_CAP_SPIRAM);
+            memcpy(state->songs[0].tracks[i].notes, bgmSong.tracks[i].notes, bgmSong.tracks[i].numNotes * sizeof(musicalNote_t));
+
+            // Update the reference to the track from the song state if necessary
+            if (buzzers[0].bgm.sTrack == &bgmSong.tracks[i])
+            {
+                state->tracks[0].sTrack = &state->songTracks[i];
+            }
+
+            if (buzzers[1].bgm.sTrack == &bgmSong.tracks[i])
+            {
+                state->tracks[1].sTrack = &state->songTracks[i];
+            }
+        }
+    }
+    else
+    {
+        state->songs[0].tracks = NULL;
+    }
+
+    if (sfxSong.numTracks > 0 && sfxSong.tracks != NULL)
+    {
+        state->songs[1].tracks = malloc(sfxSong.numTracks * sizeof(songTrack_t));
+        memcpy(state->songs[1].tracks, sfxSong.tracks, sfxSong.numTracks * sizeof(songTrack_t));
+
+        for (int i = 0; i < sfxSong.numTracks; i++)
+        {
+            state->songs[1].tracks[i].notes = heap_caps_malloc(sfxSong.tracks[i].numNotes * sizeof(musicalNote_t), MALLOC_CAP_SPIRAM);
+            memcpy(state->songs[1].tracks[i].notes, sfxSong.tracks[i].notes, sfxSong.tracks[i].numNotes * sizeof(musicalNote_t));
+
+            // Update the reference to the track from the song state if necessary
+            if (buzzers[0].sfx.sTrack == &sfxSong.tracks[i])
+            {
+                state->tracks[0].sTrack = &state->songTracks[2 + i];
+            }
+
+            if (buzzers[1].sfx.sTrack == &bgmSong.tracks[i])
+            {
+                state->tracks[1].sTrack = &state->songTracks[2 + i];
+            }
+        }
+    }
+    else
+    {
+        state->songs[1].tracks = NULL;
+    }
+
+    return (void*)state;
 }
 
 /**
@@ -691,13 +1158,17 @@ void* bzrSave(void)
  */
 void bzrRestore(void* data)
 {
-    bzrTrack_t* buzzerState = (bzrTrack_t*)data;
+    bzrSaveState_t* state = (bzrSaveState_t*)data;
     for (uint16_t bIdx = 0; bIdx < NUM_BUZZERS; bIdx++)
     {
-        memcpy(&buzzers[bIdx].bgm, &buzzerState[bIdx * 2], sizeof(bzrTrack_t));
-        memcpy(&buzzers[bIdx].sfx, &buzzerState[bIdx * 2 + 1], sizeof(bzrTrack_t));
+        memcpy(&buzzers[bIdx].bgm, &state->tracks[bIdx * 2], sizeof(bzrTrack_t));
+        memcpy(&buzzers[bIdx].sfx, &state->tracks[bIdx * 2 + 1], sizeof(bzrTrack_t));
     }
 
+    memcpy(&bgmSong, &state->songs[0], sizeof(song_t));
+    memcpy(&sfxSong, &state->songs[1], sizeof(song_t));
+
+    // No need to free the other data, as it's now the song
     free(data);
 
     bzrResume();

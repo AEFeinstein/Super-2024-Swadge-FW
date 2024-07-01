@@ -35,8 +35,6 @@
 
 #include "hdw-mic.h"
 #include "hdw-mic_emu.h"
-#include "hdw-bzr.h"
-#include "hdw-bzr_emu.h"
 #include "hdw-dac.h"
 #include "hdw-dac_emu.h"
 

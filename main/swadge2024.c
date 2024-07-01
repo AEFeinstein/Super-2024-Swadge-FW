@@ -51,8 +51,8 @@
  * - How immutable strings are declared <tt>static const</tt>
  * - How a \ref menu.h "menu" is initialized in \c pongEnterMode(), updated and drawn in \c pongMainLoop(), and
  * deinitialized in \c pongExitMode()
- * - How \ref font.h "fonts", \ref wsg.h "WSG", and \ref hdw-bzr.h "song" assets are loaded in \c pongEnterMode() and
- * freed in \c pongExitMode()
+ * - How \ref font.h "fonts", \ref wsg.h "WSG", and \ref midiFileParser.h "MIDI" assets are loaded in \c pongEnterMode()
+ * and freed in \c pongExitMode()
  *     - How fonts and WSGs are drawn in \c pongDrawField()
  *     - How background music is used in \c pongResetGame() and sound effects are used in \c pongUpdatePhysics()
  * - How a background is drawn in \c pongBackgroundDrawCallback()
@@ -90,9 +90,9 @@
  * - hdw-spiffs.h: Learn how to load and use assets from the SPIFFS partition! These file types have their own loaders:
  *     - spiffs_font.h: Load font bitmaps
  *     - spiffs_wsg.h: Load WSG images
- *     - spiffs_song.h: Load SNG songs
  *     - spiffs_json.h: Load JSON
  *     - spiffs_txt.h: Load plaintext
+ *     - midiFileParser.h: Load MIDI files
  * - settingsManager.h: Set and get persistent settings for things like screen brightness
  *
  * \subsection gr_api Graphics APIs
@@ -117,12 +117,11 @@
  * \subsection audio_api Audio APIs
  *
  * - hdw-dac.h: Learn how to use the DAC (speaker)
- * - hdw-bzr.h: Learn how to use the buzzer
  * - hdw-mic.h: Learn how to use the microphone
  * - soundFuncs.h: Helper functions to use either the buzzers or DAC speaker, depending on build configuration. These
  * macros should be used instead of calling buzzer or DAC functions directly!
  * - swSynth.h: Learn how to generate oscillating output for the DAC speaker
- * - sngPlayer.h: Learn how to play song files on the DAC speaker
+ * - midiPlayer.h: Learn how to play MIDI files on the DAC speaker
  *
  * \subsection math_api Math APIs
  *
@@ -176,6 +175,7 @@
 #include "factoryTest.h"
 #include "mainMenu.h"
 #include "quickSettings.h"
+#include "midiPlayer.h"
 #include "introMode.h"
 
 //==============================================================================
@@ -524,7 +524,7 @@ static void initOptionalPeripherals(void)
         // so it can't be initialized at the same time as the microphone
         initDac(dacCallback);
         dacStart();
-        initSpkSongPlayer();
+        initGlobalMidiPlayer();
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
         // Init buzzer. This must be called before initMic()
         initBuzzer(GPIO_NUM_40, LEDC_TIMER_0, LEDC_CHANNEL_0, //
@@ -569,6 +569,7 @@ void deinitSystem(void)
     // Deinitialize everything
     deinitButtons();
 #if defined(CONFIG_SOUND_OUTPUT_SPEAKER)
+    deinitGlobalMidiPlayer();
     deinitDac();
 #elif defined(CONFIG_SOUND_OUTPUT_BUZZER)
     deinitBuzzer();
@@ -775,6 +776,6 @@ void dacCallback(uint8_t* samples, int16_t len)
     else
     {
         // Otherwise use the song player
-        sngPlayerFillBuffer(samples, len);
+        globalMidiPlayerFillBuffer(samples, len);
     }
 }
