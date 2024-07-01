@@ -656,6 +656,15 @@ int HandleDestroy()
  */
 static void EmuSoundCb(struct CNFADriver* sd, short* out, short* in, int framesp, int framesr)
 {
+    if (emuTimerIsPaused())
+    {
+        if (out)
+        {
+            memset(out, 0, sizeof(short) * 2 * framesp);
+        }
+        return;
+    }
+
     // Pass to microphone
     micHandleSoundInput(in, framesr, sd->channelsRec);
 
