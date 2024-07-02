@@ -19,7 +19,7 @@
 - Sounds
 - Better splash screen
 - High score saving
-- Fix colors of blocks to e easily discerned
+- Fix colors of blocks to e easily discerned (tiles w/ patterns)
 */
 
 //==============================================================================
@@ -69,6 +69,7 @@ typedef struct{
     char scoreStr[16];
     bool alreadyWon;
     DisplayState_t ds;
+    wsg_t tiles[17];
 } t48_t;
 
 //==============================================================================
