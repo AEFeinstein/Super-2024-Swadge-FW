@@ -50,8 +50,29 @@ static void t48EnterMode(void)
     // Init Mode & resources
     setFrameRateUs(T48_US_PER_FRAME);
     t48 = calloc(sizeof(t48_t), 1);
+    
+    // Load fonts
     loadFont("ibm_vga8.font", &t48->font, false);
     loadFont("sonic.font", &t48->titleFont, false);
+
+    // Load images
+    loadWsg("Tile-Blue-Diamond.wsg", &t48->tiles[0], true);
+    loadWsg("Tile-Blue-Square.wsg", &t48->tiles[1], true);
+    loadWsg("Tile-Cyan-Legs.wsg", &t48->tiles[2], true);
+    loadWsg("Tile-Green-Diamond.wsg", &t48->tiles[3], true);
+    loadWsg("Tile-Green-Octo.wsg", &t48->tiles[4], true);
+    loadWsg("Tile-Green-Square.wsg", &t48->tiles[5], true);
+    loadWsg("Tile-Mauve-Legs.wsg", &t48->tiles[6], true);
+    loadWsg("Tile-Orange-Legs.wsg", &t48->tiles[7], true);
+    loadWsg("Tile-Pink-Diamond.wsg", &t48->tiles[8], true);
+    loadWsg("Tile-Pink-Octo.wsg", &t48->tiles[9], true);
+    loadWsg("Tile-Pink-Square.wsg", &t48->tiles[10], true);
+    loadWsg("Tile-Purple-Legs.wsg", &t48->tiles[11], true);
+    loadWsg("Tile-Red-Octo.wsg", &t48->tiles[12], true);
+    loadWsg("Tile-Red-Square.wsg", &t48->tiles[13], true);
+    loadWsg("Tile-Yellow-Diamond.wsg", &t48->tiles[14], true);
+    loadWsg("Tile-Yellow-Octo.wsg", &t48->tiles[15], true);
+    loadWsg("Orange-Splat.wsg", &t48->tiles[16], true);
 
     // Init Game
     t48->ds = GAMESTART;
@@ -62,6 +83,11 @@ static void t48ExitMode(void)
 {
     freeFont(&t48->titleFont);
     freeFont(&t48->font);
+
+    for (int i = 0; i < 17; i ++){
+        freeWsg(&t48->tiles[i]);
+    }
+
     free(t48);
 }
 
@@ -76,6 +102,9 @@ static void t48MainLoop(int64_t elapsedUs)
                 if (evt.down){
                     t48StartGame();
                     t48->ds = GAME;
+                    for (int i = 0; i < 15; i++){
+                        t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 2 << i;
+                    }
                 }
             }
             // Draw
@@ -363,61 +392,61 @@ static uint8_t getColor(uint32_t val)
 {
     switch(val){
         case 0:
-            return c000;
+            return 0;
             break;
         case 2:
-            return c500;
+            return 5;
             break;
         case 4:
-            return c520;
+            return 8;
             break;
         case 8:
-            return c540;
+            return 2;
             break;
         case 16:
-            return c502;
+            return 12;
             break;
         case 32:
-            return c504;
+            return 0;
             break;
         case 64:
-            return c050;
+            return 15;
             break;
         case 128:
-            return c250;
+            return 1;
             break;
         case 256:
-            return c450;
+            return 7;
             break;
         case 512:
-            return c052;
+            return 10;
             break;
         case 1024:
-            return c054;
+            return 9;
             break;
         case 2048:
-            return c005;
+            return 14;
             break;
         case 4096:
-            return c205;
+            return 11;
             break;
         case 8192:
-            return c405;
+            return 6;
             break;
         case 16384:
-            return c025;
+            return 13;
             break;
         case 32768:
-            return c045;
+            return 4;
             break;
         case 65535:
-            return c111;
+            return 3;
             break;
         case 131072:
-            return c333;
+            return 16;
             break;
         default:
-            return c101;
+            return 0;
             break;
     }
 }
@@ -464,10 +493,8 @@ static void t48Draw()
             // Get the center of the text
             uint16_t text_center = (textWidth(&t48->font, buffer))/2;
             // Get associated color
-            uint8_t color = getColor(val);
-            fillDisplayArea(side_offset + x_cell_offset, top_offset + y_cell_offset, 
-                            side_offset + x_cell_offset + T48_CELL_SIZE, 
-                            top_offset + y_cell_offset + T48_CELL_SIZE, color);
+            drawWsgSimple(&t48->tiles[getColor(val)], side_offset + x_cell_offset, 
+                          top_offset + y_cell_offset);
             // Draw the text
             drawText(&t48->font, c555, buffer, 
                      side_offset + x_cell_offset - text_center + T48_CELL_SIZE/2, 
