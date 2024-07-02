@@ -61,10 +61,10 @@
     #pragma GCC diagnostic push
 #endif
 #ifdef __GNUC__
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
-#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
-#pragma GCC diagnostic ignored "-Wjump-misses-init"
-#pragma GCC diagnostic ignored "-Wundef"
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+    #pragma GCC diagnostic ignored "-Wjump-misses-init"
+    #pragma GCC diagnostic ignored "-Wundef"
 #endif
 
 // Make it so we don't need to include any other C files in our build.
@@ -100,7 +100,7 @@
     #define CORNER_COLOR BG_COLOR
 #else
     // Swap RGBA to ARGB
-    #define CORNER_COLOR ( ((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24) )
+    #define CORNER_COLOR (((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24))
 #endif
 
 //==============================================================================
@@ -199,8 +199,8 @@ int main(int argc, char** argv)
         calculatePaneMinimums(paneMins);
         int32_t sidePanesW      = paneMins[PANE_LEFT].min + paneMins[PANE_RIGHT].min;
         int32_t topBottomPanesH = paneMins[PANE_TOP].min + paneMins[PANE_BOTTOM].min;
-        int32_t winW            = (TFT_WIDTH)*2 + sidePanesW;
-        int32_t winH            = (TFT_HEIGHT)*2 + topBottomPanesH;
+        int32_t winW            = (TFT_WIDTH) * 2 + sidePanesW;
+        int32_t winH            = (TFT_HEIGHT) * 2 + topBottomPanesH;
 
         if (emulatorArgs.headless)
         {
@@ -604,7 +604,7 @@ void HandleMotion(int x, int y, int mask)
     #pragma GCC diagnostic push
 #endif
 #ifdef __GNUC__
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
 #endif
 
 /**

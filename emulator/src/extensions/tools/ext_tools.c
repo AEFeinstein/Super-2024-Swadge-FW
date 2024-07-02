@@ -14,8 +14,8 @@
     #pragma GCC diagnostic push
 #endif
 #ifdef __GNUC__
-#pragma GCC diagnostic ignored "-Wcast-qual"
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+    #pragma GCC diagnostic ignored "-Wcast-qual"
+    #pragma GCC diagnostic ignored "-Wmissing-prototypes"
 #endif
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
