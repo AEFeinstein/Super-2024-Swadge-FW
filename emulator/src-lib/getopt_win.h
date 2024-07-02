@@ -58,6 +58,9 @@
 
 #define __GETOPT_H__
 
+// Avoid warnings with system code
+#pragma GCC system_header
+
 /* All the headers include this file. */
 #include <errno.h>
 #include <stdlib.h>

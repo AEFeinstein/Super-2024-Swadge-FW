@@ -8,6 +8,13 @@
 #include <stdio.h>
 #include "midi_parser.h"
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 bool	addNode(NoteList *list, Note *data)
 {
 	if (!data)
@@ -1099,3 +1106,7 @@ MidiParser	*parseMidi(const char *path, bool outputDebug, bool createNoteArray)
 	free(buffer);
 	return (&result);
 }
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
