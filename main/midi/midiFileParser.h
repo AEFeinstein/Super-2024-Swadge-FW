@@ -148,6 +148,7 @@ typedef struct
     union
     {
         /// @brief Contains text data, when \c {type <= 0x0F}
+        /// @warning This data is \b NOT NUL-terminated
         const char* text;
 
         /// @brief Contains binary data, when type is ::PROPRIETARY
@@ -213,8 +214,11 @@ typedef struct
     /// @brief The length of the data contained in this SysEx event
     uint32_t length;
 
+    /// @brief A byte to prefix to the actual data, if non-zero
+    uint8_t prefix;
+
     /// @brief A pointer to the data for this SysEx event.
-    uint8_t* data;
+    const uint8_t* data;
 } midiSysexEvent_t;
 
 /**

@@ -428,7 +428,7 @@ static void handleMetaEvent(midiPlayer_t* player, const midiMetaEvent_t* event)
             // Handle text, if the callback is set
             if (player->textMessageCallback)
             {
-                player->textMessageCallback(event->type, event->text);
+                player->textMessageCallback(event->type, event->text, event->length);
             }
             break;
         }

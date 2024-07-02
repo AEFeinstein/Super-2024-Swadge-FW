@@ -260,9 +260,10 @@ typedef int8_t (*percussionFunc_t)(percussionNote_t drum, uint32_t idx, bool* do
  * @brief A function to handle text meta-messages from playing MIDI files
  *
  * @param type The type of meta-message
- * @param text The message text
+ * @param text The message text - NOT NUL-terminated
+ * @param length The length of the text
  */
-typedef void (*midiTextCallback_t)(metaEventType_t type, const char* text);
+typedef void (*midiTextCallback_t)(metaEventType_t type, const char* text, uint32_t length);
 
 /**
  * @brief Defines the sound characteristics of a particular instrument.

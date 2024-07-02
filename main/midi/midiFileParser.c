@@ -40,12 +40,6 @@ struct midiTrackState
     /// @brief The last applicable running status command, or 0 if none
     uint8_t runningStatus;
 
-    /// @brief A buffer for large SysEx or meta event data. Will be allocated in SPIRAM
-    uint8_t* eventBuffer;
-
-    /// @brief The size of the event buffer
-    uint32_t eventBufferSize;
-
     /// @brief Whether or not the END OF TRACK event has been read
     bool done;
 };
@@ -63,7 +57,6 @@ typedef struct
 //==============================================================================
 
 static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* out);
-static bool setupEventBuffer(midiTrackState_t* track, uint32_t length);
 static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track);
 static bool parseMidiHeader(midiFile_t* file);
 static void readFirstEvents(midiFileReader_t* reader);
@@ -74,7 +67,6 @@ static void readFirstEvents(midiFileReader_t* reader);
 
 static const uint8_t midiHeader[]  = {'M', 'T', 'h', 'd'};
 static const uint8_t trackHeader[] = {'M', 'T', 'r', 'k'};
-static const char defaultText[]    = "<err: alloc failed>";
 
 //==============================================================================
 // Functions
@@ -106,43 +98,6 @@ static int readVariableLength(const uint8_t* data, uint32_t length, uint32_t* ou
     *out = val;
 
     return read;
-}
-
-/**
- * @brief Ensure that enough space is allocated to store variable-length data for an event
- *
- * @param track The track state to set up the buffer within
- * @param length The length required
- * @return true If the buffer was successfully allocated
- * @return false If there was an error allocating space
- */
-static bool setupEventBuffer(midiTrackState_t* track, uint32_t length)
-{
-    if (!track->eventBuffer || track->eventBufferSize < length)
-    {
-        if (track->eventBuffer)
-        {
-            free(track->eventBuffer);
-            track->eventBuffer     = NULL;
-            track->eventBufferSize = 0;
-        }
-
-        void* newBuffer = heap_caps_malloc(length, MALLOC_CAP_SPIRAM);
-        if (newBuffer)
-        {
-            track->eventBuffer     = newBuffer;
-            track->eventBufferSize = length;
-            return true;
-        }
-        else
-        {
-            // Memory could not be allocated!
-            return false;
-        }
-    }
-
-    // We already have one and it's big enough! Just use that!
-    return true;
 }
 
 #define TRK_REMAIN() (track->track->length - (track->cur - track->track->data))
@@ -348,25 +303,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                             track->nextEvent.meta.type = (metaEventType_t)metaType;
                         }
 
-                        // Not nul-terminated... so we gotta copy it
-                        // Check if there's already a buffer allocated with sufficient space (plus a NUL terminator)
-                        if (setupEventBuffer(track, metaLength + 1))
-                        {
-                            memcpy(track->eventBuffer, track->cur, metaLength);
-                            // NUL-terminate the string
-                            track->eventBuffer[metaLength] = 0;
-
-                            // Actually put the text in the event
-                            track->nextEvent.meta.text = (char*)track->eventBuffer;
-
-                            // Add the NUL-terminator, and zero out any unused memory in the buffer
-                            // memset(track->eventBuffer + metaLength, 0, track->eventBufferSize - metaLength);
-                        }
-                        else
-                        {
-                            // Memory could not be allocated, just put an error string in the event so it's valid
-                            track->nextEvent.meta.text = defaultText;
-                        }
+                        track->nextEvent.meta.text = (const char*)track->cur;
 
                         break;
                     }
@@ -517,16 +454,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
 
                     case PROPRIETARY:
                     {
-                        // track->nextEvent.meta.data = track->cur;
-                        if (setupEventBuffer(track, metaLength + 1))
-                        {
-                            memcpy(track->eventBuffer, track->cur, metaLength);
-                            // NUL-terminate the string
-                            track->eventBuffer[metaLength] = 0;
-
-                            // Add the NUL-terminator, and zero out any unused memory in the buffer
-                            // memset(track->eventBuffer + metaLength, 0, track->eventBufferSize - metaLength);
-                        }
+                        track->nextEvent.meta.data = track->cur;
                         break;
                     }
 
@@ -582,28 +510,12 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                 }
 
                 track->nextEvent.type = SYSEX_EVENT;
-                // Add one to account for the preceding F0 if needed
-                if (setupEventBuffer(track, sysexLength + ((status == 0xF0) ? 1 : 0)))
-                {
-                    uint8_t* dest = track->eventBuffer;
-                    if (status == 0xF0)
-                    {
-                        // When status is F0, add the F0 before copying the rest
-                        *(dest++) = 0xF0;
-                    }
-
-                    // The length bytes don't go in, since an actual sysex message doesn't have those
-                    memcpy(dest, track->cur, sysexLength);
-                    track->nextEvent.sysex.data   = track->eventBuffer;
-                    track->nextEvent.sysex.length = sysexLength;
-                }
-                else
-                {
-                    // Failed to allocate memory. Sad.
-                    track->nextEvent.sysex.data           = NULL;
-                    track->nextEvent.sysex.length         = 0;
-                    track->nextEvent.sysex.manufacturerId = 0;
-                }
+                track->nextEvent.sysex.length = sysexLength;
+                track->nextEvent.sysex.data = track->cur;
+                // If the status is 0xF0, the 0xF0 should be prefixed to the data.
+                track->nextEvent.sysex.prefix = (status == 0xF0) ? 0xF0 : 0x00;
+                // TODO
+                track->nextEvent.sysex.manufacturerId = 0;
 
                 track->cur += sysexLength;
             }
@@ -891,13 +803,6 @@ void midiParserSetFile(midiFileReader_t* reader, const midiFile_t* file)
 {
     if (reader->states != NULL)
     {
-        for (int i = 0; i < reader->stateCount; i++)
-        {
-            if (reader->states[i].eventBuffer != NULL)
-            {
-                free(reader->states[i].eventBuffer);
-            }
-        }
         free(reader->states);
         reader->states = NULL;
     }
@@ -956,18 +861,8 @@ void deinitMidiParser(midiFileReader_t* reader)
 
     if (states != NULL)
     {
-        for (int i = 0; i < stateCount; i++)
-        {
-            if (states[i].eventBuffer != NULL)
-            {
-                uint8_t* buf          = states[i].eventBuffer;
-                states[i].eventBuffer = NULL;
-                free(buf);
-            }
-        }
+        free(states);
     }
-
-    free(states);
 }
 
 bool midiNextEvent(midiFileReader_t* reader, midiEvent_t* event)
@@ -1059,11 +954,6 @@ void* globalMidiSave(void)
                 midiTrackState_t* stateCopy       = &saveState[i].trackStates[trackIdx];
 
                 memcpy(stateCopy, stateOrig, sizeof(midiTrackState_t));
-                if (stateCopy->eventBuffer != NULL)
-                {
-                    stateCopy->eventBuffer = malloc(stateCopy->eventBufferSize);
-                    memcpy(stateCopy->eventBuffer, stateOrig->eventBuffer, stateCopy->eventBufferSize);
-                }
             }
         }
     }
