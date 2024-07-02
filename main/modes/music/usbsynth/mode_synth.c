@@ -54,6 +54,7 @@ enum usb_endpoints
 typedef struct
 {
     const char* text;
+    uint32_t length;
     metaEventType_t type;
     uint64_t expiration;
 } midiTextInfo_t;
@@ -121,7 +122,8 @@ static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, i
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
                             int16_t height);
 static void drawSampleGraph(void);
-static void midiTextCallback(metaEventType_t type, const char* text);
+static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text);
+static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
 
 //==============================================================================
 // Variabes
@@ -543,7 +545,8 @@ static void synthMainLoop(int64_t elapsedUs)
 
                 if (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE)
                 {
-                    midiTextCallback(TEXT, gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]);
+                    const char* drumName = gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
+                    midiTextCallback(TEXT, drumName, strlen(drumName) - 1);
                 }
 
                 if (sd->startupNote > OPEN_TRIANGLE)
@@ -629,9 +632,9 @@ static void synthMainLoop(int64_t elapsedUs)
 
         char tempoStr[16];
         snprintf(tempoStr, sizeof(tempoStr), "%" PRIu32 " BPM", (60000000 / sd->midiPlayer.tempo));
-        drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 15,
-                 (TFT_HEIGHT - sd->font.height) / 2);
+        drawText(&sd->font, c500, tempoStr, TFT_WIDTH - textWidth(&sd->font, tempoStr) - 35, 3);
 
+        int msgLen = 0;
         char textMessages[1024];
         textMessages[0] = '\0';
 
@@ -639,14 +642,9 @@ static void synthMainLoop(int64_t elapsedUs)
         bool colorSet                = false;
 
         node_t* curNode = sd->midiTexts.first;
-        while (curNode != NULL)
+        while (curNode != NULL && msgLen + 1 < sizeof(textMessages))
         {
             midiTextInfo_t* curInfo = curNode->val;
-            if (strlen(textMessages) + strlen(curInfo->text) + 1 >= sizeof(textMessages))
-            {
-                // don't overflow that buffer
-                break;
-            }
 
             if (!colorSet)
             {
@@ -683,21 +681,22 @@ static void synthMainLoop(int64_t elapsedUs)
             {
                 if (*curInfo->text == '/' || *curInfo->text == '\\')
                 {
-                    strcat(textMessages, "\n");
+                    textMessages[msgLen++] = '\n';
                 }
                 else if (*curInfo->text != ' ')
                 {
-                    strcat(textMessages, " ");
+                    textMessages[msgLen++] = ' ';
                 }
             }
+            msgLen += writeMidiText(textMessages + msgLen, sizeof(textMessages) - msgLen - 1, curInfo);
 
-            strcat(textMessages, curInfo->text);
             curNode = curNode->next;
         }
+        textMessages[msgLen] = '\0';
 
         int16_t x = 18;
         int16_t y = 80;
-        drawTextWordWrap(&sd->font, c550, textMessages, &x, &y, TFT_WIDTH - 18, TFT_HEIGHT - 60);
+        drawTextWordWrap(&sd->font, midiTextColor, textMessages, &x, &y, TFT_WIDTH - 18, TFT_HEIGHT - 60);
     }
     else
     {
@@ -855,7 +854,8 @@ static void synthMainLoop(int64_t elapsedUs)
                     if (sd->localChannel == 9
                         && (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE))
                     {
-                        midiTextCallback(TEXT, gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM]);
+                        const char* drumName = gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
+                        midiTextCallback(TEXT, drumName, strlen(drumName) - 1);
                     }
                     midiNoteOn(&sd->midiPlayer, sd->localChannel, sd->startupNote, 0x7F);
                     break;
@@ -1090,7 +1090,7 @@ static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x
     }
 }
 
-void drawSampleGraph(void)
+static void drawSampleGraph(void)
 {
     // Draw sample graph
     SETUP_FOR_TURBO();
@@ -1118,25 +1118,54 @@ void drawSampleGraph(void)
     }
 }
 
-static void midiTextCallback(metaEventType_t type, const char* text)
+/**
+ * @brief Writes the given MIDI text to the destination buffer, without adding a NUL-terminator byte
+ *
+ * This also strips any characters that the swadge cannot print
+ *
+ * @param dest The buffer to write to
+ * @param n The maximum number of bytes to write to the buffer
+ * @param text A pointer to a struct containing text info
+ * @return int The number of bytes written to dest
+ */
+static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text)
 {
-    if (!text)
+    char* p = dest;
+    const char* bufEnd = dest + n;
+
+    const char* s = text->text;
+    const char* srcEnd = s + text->length;
+
+    while (p < bufEnd && s < srcEnd)
+    {
+        if (*s >= ' ' && *s <= '~')
+        {
+            *p++ = *s;
+        }
+
+        s++;
+    }
+
+    return p - dest;
+}
+
+static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length)
+{
+    if (!text || !length)
     {
         return;
     }
 
-    void* infoAndText = malloc(sizeof(midiTextInfo_t) + strlen(text) + 1);
+    midiTextInfo_t* info = (midiTextInfo_t*)malloc(sizeof(midiTextInfo_t));
 
-    if (infoAndText)
+    if (info)
     {
-        midiTextInfo_t* info = (midiTextInfo_t*)infoAndText;
-        char* newText        = (char*)(infoAndText + sizeof(midiTextInfo_t));
-        info->text           = newText;
+        info->text           = text;
+        info->length         = length;
         info->type           = type;
         // make it last for 2 seconds
         info->expiration = esp_timer_get_time() + 5000000;
-        strcpy(newText, text);
 
-        push(&sd->midiTexts, infoAndText);
+        push(&sd->midiTexts, info);
     }
 }
