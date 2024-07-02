@@ -361,20 +361,19 @@ static const uint8_t midiConfigDescriptor[]
     = {TUD_CONFIG_DESCRIPTOR(1, ITF_COUNT, 0, MIDI_CONFIG_TOTAL_LEN, 0, 100),
        TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 4, EPNUM_MIDI, (0x80 | EPNUM_MIDI), 64)};
 
-// just yolo'd these color values, they're probably awful
 static const paletteColor_t noteColors[] = {
-    c550, // C
-    c350, // C#
-    c130, // D
-    c050, // D#
-    c043, // E
-    c015, // F
-    c005, // F#
-    c035, // G
-    c055, // G#
-    c500, // A
-    c510, // A#
-    c430, // B
+    c500, // C  - Red
+    c530, // C# - Orange
+    c550, // D  - Yellow
+    c350, // D# - Lime Green
+    c050, // E  - Green
+    c053, // F  - Aqua
+    c055, // F# - Cyan
+    c035, // G  - "Indigo"
+    c005, // G# - Blue
+    c305, // A  - Violet
+    c505, // A# - Fuchsia
+    c503, // B  - Pink
 };
 
 const char synthModeName[] = "USB MIDI Synth";
