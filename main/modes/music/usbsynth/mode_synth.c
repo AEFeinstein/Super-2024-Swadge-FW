@@ -405,7 +405,7 @@ static synthData_t* sd;
 static void synthEnterMode(void)
 {
     sd = calloc(1, sizeof(synthData_t));
-    loadFont("ibm_vga8.font", &sd->font, false);
+    loadFont("ibm_vga8.font", &sd->font, true);
     sd->installed = installUsb();
     sd->perc[9]   = true;
     midiPlayerInit(&sd->midiPlayer);
@@ -417,7 +417,7 @@ static void synthEnterMode(void)
     sd->fileMode = true;
     if (sd->fileMode)
     {
-        if (loadMidiFile("stereo.mid", &sd->midiFile, false))
+        if (loadMidiFile("stereo.mid", &sd->midiFile, true))
         {
             sd->midiPlayer.textMessageCallback = midiTextCallback;
             midiSetFile(&sd->midiPlayer, &sd->midiFile);
@@ -430,23 +430,23 @@ static void synthEnterMode(void)
         }
     }
 
-    loadWsg("piano.wsg", &sd->instrumentImages[0], false);
-    loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], false);
-    loadWsg("organ.wsg", &sd->instrumentImages[2], false);
-    loadWsg("guitar.wsg", &sd->instrumentImages[3], false);
-    loadWsg("bass.wsg", &sd->instrumentImages[4], false);
-    loadWsg("solo_strings.wsg", &sd->instrumentImages[5], false);
-    loadWsg("ensemble.wsg", &sd->instrumentImages[6], false);
-    loadWsg("brass.wsg", &sd->instrumentImages[7], false);
-    loadWsg("reed.wsg", &sd->instrumentImages[8], false);
-    loadWsg("pipe.wsg", &sd->instrumentImages[9], false);
-    loadWsg("synth_lead.wsg", &sd->instrumentImages[10], false);
-    loadWsg("synth_pad.wsg", &sd->instrumentImages[11], false);
-    loadWsg("synth_effects.wsg", &sd->instrumentImages[12], false);
-    loadWsg("ethnic.wsg", &sd->instrumentImages[13], false);
-    loadWsg("percussive.wsg", &sd->instrumentImages[14], false);
-    loadWsg("sound_effects.wsg", &sd->instrumentImages[15], false);
-    loadWsg("percussion.wsg", &sd->percussionImage, false);
+    loadWsg("piano.wsg", &sd->instrumentImages[0], true);
+    loadWsg("chromatic_percussion.wsg", &sd->instrumentImages[1], true);
+    loadWsg("organ.wsg", &sd->instrumentImages[2], true);
+    loadWsg("guitar.wsg", &sd->instrumentImages[3], true);
+    loadWsg("bass.wsg", &sd->instrumentImages[4], true);
+    loadWsg("solo_strings.wsg", &sd->instrumentImages[5], true);
+    loadWsg("ensemble.wsg", &sd->instrumentImages[6], true);
+    loadWsg("brass.wsg", &sd->instrumentImages[7], true);
+    loadWsg("reed.wsg", &sd->instrumentImages[8], true);
+    loadWsg("pipe.wsg", &sd->instrumentImages[9], true);
+    loadWsg("synth_lead.wsg", &sd->instrumentImages[10], true);
+    loadWsg("synth_pad.wsg", &sd->instrumentImages[11], true);
+    loadWsg("synth_effects.wsg", &sd->instrumentImages[12], true);
+    loadWsg("ethnic.wsg", &sd->instrumentImages[13], true);
+    loadWsg("percussive.wsg", &sd->instrumentImages[14], true);
+    loadWsg("sound_effects.wsg", &sd->instrumentImages[15], true);
+    loadWsg("percussion.wsg", &sd->percussionImage, true);
 
     // MAXIMUM SPEEEEED
     setFrameRateUs(0);
@@ -546,7 +546,7 @@ static void synthMainLoop(int64_t elapsedUs)
                 if (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE)
                 {
                     const char* drumName = gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
-                    midiTextCallback(TEXT, drumName, strlen(drumName) - 1);
+                    midiTextCallback(TEXT, drumName, strlen(drumName));
                 }
 
                 if (sd->startupNote > OPEN_TRIANGLE)
@@ -855,7 +855,7 @@ static void synthMainLoop(int64_t elapsedUs)
                         && (ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= sd->startupNote && sd->startupNote <= OPEN_TRIANGLE))
                     {
                         const char* drumName = gmDrumNames[sd->startupNote - ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM];
-                        midiTextCallback(TEXT, drumName, strlen(drumName) - 1);
+                        midiTextCallback(TEXT, drumName, strlen(drumName));
                     }
                     midiNoteOn(&sd->midiPlayer, sd->localChannel, sd->startupNote, 0x7F);
                     break;
