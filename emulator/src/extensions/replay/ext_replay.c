@@ -613,8 +613,8 @@ static bool readEntry(replayEntry_t* entry)
 
         case FUZZ:
         {
-            // Just advance to the next line
-            fscanf(replay.file, "%*[^\n]\n");
+            // Just advance to the next line, with warning suppression
+            if(fscanf(replay.file, "%*[^\n]\n")){;}
 
             break;
         }

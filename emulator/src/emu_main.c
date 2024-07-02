@@ -600,6 +600,13 @@ void HandleMotion(int x, int y, int mask)
     doExtMouseMoveCb(x, y, mask);
 }
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#endif
+
 /**
  * @brief Free memory on exit
  */
@@ -626,6 +633,10 @@ int HandleDestroy()
 
     return 0;
 }
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 /**
  * @brief Callback for sound events, both input and output
@@ -773,17 +784,29 @@ void signalHandler_crash(int signum, siginfo_t* si, void* vcontext)
             {
                 // Print this to the terminal and file
                 snprintf(msg, sizeof(msg) - 1, "\nCRASH BACKTRACE\n");
-                write(dumpFileDescriptor, msg, strlen(msg));
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
                 printf("%s", msg);
 
                 snprintf(msg, sizeof(msg) - 1, "===============\n");
-                write(dumpFileDescriptor, msg, strlen(msg));
+                if (0 >= write(dumpFileDescriptor, msg, strlen(msg)))
+                {
+                    // Write failed, jump out early
+                    return;
+                }
                 printf("%s", msg);
 
                 /* Read the output a line at a time - output it. */
                 while (fgets(path, sizeof(path), fp) != NULL)
                 {
-                    write(dumpFileDescriptor, path, strlen(path));
+                    if (0 >= write(dumpFileDescriptor, path, strlen(path)))
+                    {
+                        // Write failed, jump out early
+                        return;
+                    }
                     printf("%s", path);
                 }
 
