@@ -57,6 +57,16 @@
 #endif
 // clang-format on
 
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic push
+#endif
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#pragma GCC diagnostic ignored "-Wjump-misses-init"
+#pragma GCC diagnostic ignored "-Wundef"
+#endif
+
 // Make it so we don't need to include any other C files in our build.
 #define CNFG_IMPLEMENTATION
 // CNFGOGL May be defined in the makefile
@@ -67,6 +77,10 @@
     #define PULSEAUDIO
 #endif
 #include "CNFA.h"
+
+#if defined(__clang__) || (defined(__GNUC__) && ((__GNUC__ > 4) || ((__GNUC__ == 4) && (__GNUC_MINOR__ > 5))))
+    #pragma GCC diagnostic pop
+#endif
 
 // Useful if you're trying to find the code for a key/button
 // #define DEBUG_INPUTS
@@ -86,7 +100,7 @@
     #define CORNER_COLOR BG_COLOR
 #else
     // Swap RGBA to ARGB
-    #define CORNER_COLOR (((BG_COLOR >> 8) & 0xFFFFFF) | ((BG_COLOR << 24) * 0xFF))
+    #define CORNER_COLOR ( ((BG_COLOR & 0xFFFFFF00) >> 8) | ((BG_COLOR & 0xFF) << 24) )
 #endif
 
 //==============================================================================
