@@ -853,7 +853,6 @@ void resetMidiParser(midiFileReader_t* reader)
 void deinitMidiParser(midiFileReader_t* reader)
 {
     midiTrackState_t* states = reader->states;
-    uint8_t stateCount       = reader->stateCount;
 
     reader->stateCount = 0;
     reader->file       = NULL;
