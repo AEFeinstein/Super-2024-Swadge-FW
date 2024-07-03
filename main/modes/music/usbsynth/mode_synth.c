@@ -4,8 +4,6 @@
 #include "esp_log.h"
 #include "esp_timer.h"
 
-#include "tinyusb.h"
-
 #include "swadge2024.h"
 #include "spiffs_font.h"
 #include "hdw-btn.h"
@@ -16,36 +14,13 @@
 
 #include "midiPlayer.h"
 #include "midiFileParser.h"
+#include "midiUsb.h"
 
 //==============================================================================
 // Defines
 //==============================================================================
 
-// Define the total length of the MIDI USB Device Descriptorg
-#define MIDI_CONFIG_TOTAL_LEN (TUD_CONFIG_DESC_LEN + TUD_MIDI_DESC_LEN)
-
 #define NUM_FRAME_TIMES 60
-
-//==============================================================================
-// Enums
-//==============================================================================
-
-// Interface counter
-enum interface_count
-{
-    ITF_NUM_MIDI = 0,
-    ITF_NUM_MIDI_STREAMING,
-
-    ITF_COUNT
-};
-
-// USB Endpoint numbers
-enum usb_endpoints
-{
-    // Available USB Endpoints: 5 IN/OUT EPs and 1 IN EP
-    EP_EMPTY = 0,
-    EPNUM_MIDI,
-};
 
 //==============================================================================
 // Structs
@@ -116,8 +91,6 @@ static void synthExitMode(void);
 static void synthMainLoop(int64_t elapsedUs);
 static void synthDacCallback(uint8_t* samples, int16_t len);
 
-static bool installUsb(void);
-static void handlePacket(uint8_t packet[4]);
 static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, int16_t h);
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
                             int16_t height);
@@ -129,8 +102,7 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 // Variabes
 //==============================================================================
 
-static const char plugMeInStr[] = "Plug me into a MIDI controller!";
-static const char readyStr[]    = "Ready!";
+static const char readyStr[] = "Ready!";
 
 static const char* gmProgramNames[] = {
     // Piano:
@@ -344,25 +316,6 @@ static const char* gmDrumNames[] = {
     "Open Triangle",
 };
 
-/**
- * @brief MIDI Device String descriptor
- */
-static const char* midiStringDescriptor[5] = {
-    // array of pointer to string descriptors
-    (char[]){0x09, 0x04},    // 0: is supported language is English (0x0409)
-    "MAGFest",               // 1: Manufacturer
-    "Swadge Synthesizer",    // 2: Product
-    "123456",                // 3: Serials
-    "Swadge MIDI interface", // 4: MIDI
-};
-
-/**
- * @brief MIDI Device Config Descriptor
- */
-static const uint8_t midiConfigDescriptor[]
-    = {TUD_CONFIG_DESCRIPTOR(1, ITF_COUNT, 0, MIDI_CONFIG_TOTAL_LEN, 0, 100),
-       TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 4, EPNUM_MIDI, (0x80 | EPNUM_MIDI), 64)};
-
 static const paletteColor_t noteColors[] = {
     c500, // C  - Red
     c530, // C# - Orange
@@ -406,8 +359,7 @@ static void synthEnterMode(void)
 {
     sd = calloc(1, sizeof(synthData_t));
     loadFont("ibm_vga8.font", &sd->font, true);
-    sd->installed = installUsb();
-    sd->perc[9]   = true;
+    sd->perc[9] = true;
     midiPlayerInit(&sd->midiPlayer);
     sd->noteTime           = 200000;
     sd->pitch              = 0x2000;
@@ -428,6 +380,13 @@ static void synthEnterMode(void)
         {
             ESP_LOGE("Synth", "Could not load MIDI file");
         }
+    }
+    else
+    {
+        sd->installed                    = installMidiUsb();
+        sd->midiPlayer.streamingCallback = usbMidiCallback;
+        sd->midiPlayer.mode              = MIDI_STREAMING;
+        midiPause(&sd->midiPlayer, false);
     }
 
     loadWsg("piano.wsg", &sd->instrumentImages[0], true);
@@ -474,32 +433,12 @@ static void synthExitMode(void)
 
 static void synthMainLoop(int64_t elapsedUs)
 {
-    sd->pluggedIn = tud_ready();
-
-    uint8_t packet[4] = {0, 0, 0, 0};
-    while (tud_ready() && tud_midi_available())
-    {
-        if (tud_midi_packet_read(packet))
-        {
-            handlePacket(packet);
-            if (packet[0])
-            {
-                memcpy(sd->lastPackets[packet[1] & 0xF], packet, sizeof(packet));
-            }
-        }
-    }
-
     // Blank the screen
     clearPxTft();
 
     if (!sd->installed || sd->err != 0)
     {
         drawText(&sd->font, c500, "ERROR!", 60, 60);
-    }
-    else if (!sd->pluggedIn)
-    {
-        drawText(&sd->font, c550, plugMeInStr, (TFT_WIDTH - textWidth(&sd->font, plugMeInStr)) / 2,
-                 (TFT_HEIGHT - sd->font.height) / 2);
     }
     else if (!sd->startupSeqComplete && !sd->fileMode)
     {
@@ -893,160 +832,6 @@ static void synthDacCallback(uint8_t* samples, int16_t len)
     memcpy(sd->lastSamples, samples, MIN(len, 256));
 }
 
-static bool installUsb(void)
-{
-    tinyusb_config_t const tusb_cfg = {
-        .device_descriptor        = NULL,
-        .string_descriptor        = midiStringDescriptor,
-        .string_descriptor_count  = sizeof(midiStringDescriptor) / sizeof(midiStringDescriptor[0]),
-        .external_phy             = false,
-        .configuration_descriptor = midiConfigDescriptor,
-    };
-    esp_err_t result = tinyusb_driver_install(&tusb_cfg);
-
-    if (result != ESP_OK)
-    {
-        ESP_LOGE("MIDI", "Error %d", result);
-        sd->err = (int)result;
-
-        return false;
-    }
-
-    return true;
-}
-
-static void handlePacket(uint8_t packet[4])
-{
-    uint8_t header  = packet[0];
-    uint8_t cmd     = packet[1];
-    uint8_t channel = cmd & 0x0F;
-
-    switch (header)
-    {
-        // No MIDI data
-        case 0x0:
-            break;
-
-        // Note OFF
-        case 0x8:
-        {
-            uint8_t midiKey  = packet[2];
-            uint8_t velocity = packet[3];
-            midiNoteOff(&sd->midiPlayer, channel, midiKey, velocity);
-            /*if (!sd->sustain)
-            {
-                sd->playing[channel] = false;
-                spkStopNote2(0, channel);
-            }
-            else
-            {
-                sd->noteSus = true;
-            }*/
-            break;
-        }
-
-        // Note ON
-        case 0x9:
-        {
-            uint8_t midiKey  = packet[2];
-            uint8_t velocity = packet[3];
-            midiNoteOn(&sd->midiPlayer, channel, midiKey, velocity);
-            /*sd->playing[channel] = true;
-#ifdef FINE_NOTES
-            spkPlayNoteFine(noteFreqTable[midiKey], 0, channel, velocity << 1);
-#else
-            spkPlayNote(coarseNoteFreqTable[midiKey], channel, velocity << 1);
-#endif*/
-            break;
-        }
-
-        // Control change
-        case 0xB:
-        {
-            uint8_t controlId  = packet[2];
-            uint8_t controlVal = packet[3];
-            switch (controlId)
-            {
-                // Sustain
-                case 0x40:
-                {
-                    midiSustain(&sd->midiPlayer, channel, controlVal);
-                    /*
-                    sd->sustain = controlVal > 63;
-
-                    if (!sd->sustain && sd->noteSus)
-                    {
-                        sd->playing[channel] = false;
-                        spkStopNote2(0, channel);
-                        sd->noteSus = false;
-                    }*/
-                    break;
-                }
-
-                // All sounds off (120)
-                case 0x78:
-                {
-                    midiAllSoundOff(&sd->midiPlayer);
-                    /*sd->noteSus = false;
-                    for (int chan = 0; chan < 16; chan++)
-                    {
-                        sd->playing[channel] = false;
-                        spkStopNote2(0, chan);
-                    }*/
-                    break;
-                }
-
-                // All notes off (123)
-                case 0x7B:
-                {
-                    midiAllNotesOff(&sd->midiPlayer, channel);
-                    /*for (int chan = 0; chan < 16; chan++)
-                    {
-                        if (!sd->sustain)
-                        {
-                            sd->playing[chan] = false;
-                            spkStopNote2(0, chan);
-                        }
-                        else
-                        {
-                            sd->noteSus = true;
-                        }
-                    }*/
-                    break;
-                }
-            }
-            break;
-        }
-
-        // Program Select
-        case 0xC:
-        {
-            uint8_t program = packet[2];
-            midiSetProgram(&sd->midiPlayer, channel, program);
-            /*sd->programs[channel] = program;
-
-            sd->playing[channel] = false;
-            spkStopNote2(0, channel);
-
-            if (!sd->perc[channel])
-            {
-                spkSongSetWave(0, channel, program);
-            }*/
-
-            break;
-        }
-
-        // Pitch bend
-        case 0xE:
-        {
-            uint16_t range = ((packet[3] & 0x7F) << 7) | (packet[2] & 0x7F);
-            ESP_LOGI("Synth", "Pitch: %hx", range);
-            midiPitchWheel(&sd->midiPlayer, channel, range);
-            break;
-        }
-    }
-}
-
 static paletteColor_t noteToColor(uint8_t note)
 {
     return noteColors[note % ARRAY_SIZE(noteColors)];
@@ -1130,10 +915,10 @@ static void drawSampleGraph(void)
  */
 static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text)
 {
-    char* p = dest;
+    char* p            = dest;
     const char* bufEnd = dest + n;
 
-    const char* s = text->text;
+    const char* s      = text->text;
     const char* srcEnd = s + text->length;
 
     while (p < bufEnd && s < srcEnd)
@@ -1160,9 +945,9 @@ static void midiTextCallback(metaEventType_t type, const char* text, uint32_t le
 
     if (info)
     {
-        info->text           = text;
-        info->length         = length;
-        info->type           = type;
+        info->text   = text;
+        info->length = length;
+        info->type   = type;
         // make it last for 2 seconds
         info->expiration = esp_timer_get_time() + 5000000;
 

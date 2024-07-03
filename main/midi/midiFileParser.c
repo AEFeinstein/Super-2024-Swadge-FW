@@ -509,9 +509,9 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
                     ERR();
                 }
 
-                track->nextEvent.type = SYSEX_EVENT;
+                track->nextEvent.type         = SYSEX_EVENT;
                 track->nextEvent.sysex.length = sysexLength;
-                track->nextEvent.sysex.data = track->cur;
+                track->nextEvent.sysex.data   = track->cur;
                 // If the status is 0xF0, the 0xF0 should be prefixed to the data.
                 track->nextEvent.sysex.prefix = (status == 0xF0) ? 0xF0 : 0x00;
                 // TODO

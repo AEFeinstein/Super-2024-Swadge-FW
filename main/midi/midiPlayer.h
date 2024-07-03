@@ -266,6 +266,12 @@ typedef int8_t (*percussionFunc_t)(percussionNote_t drum, uint32_t idx, bool* do
 typedef void (*midiTextCallback_t)(metaEventType_t type, const char* text, uint32_t length);
 
 /**
+ * @brief A function to return MIDI events in streaming mode
+ *
+ */
+typedef bool (*midiStreamingCallback_t)(midiEvent_t* event);
+
+/**
  * @brief Defines the sound characteristics of a particular instrument.
  */
 typedef struct
@@ -443,6 +449,9 @@ typedef struct
 
     /// @brief A MIDI reader to use for file playback, when in MIDI_FILE mode
     midiFileReader_t reader;
+
+    /// @brief A callback function to retrieve the next event, when in MIDI_STREAMING mode
+    midiStreamingCallback_t streamingCallback;
 
     /// @brief A callback to call when a text meta-message is received
     midiTextCallback_t textMessageCallback;
