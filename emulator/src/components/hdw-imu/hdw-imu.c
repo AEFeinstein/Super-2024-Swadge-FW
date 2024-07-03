@@ -113,12 +113,6 @@ esp_err_t accelGetOrientVec(int16_t* x, int16_t* y, int16_t* z)
     return accelGetAccelVecRaw(x, y, z);
 }
 
-esp_err_t accelGetQuaternion(float* q)
-{
-    // TODO: implement proper emulation of this function.
-    return ESP_OK;
-}
-
 esp_err_t accelGetSteeringAngleDegrees(int16_t* xcomp, int16_t* ycomp)
 {
     // TODO: implement proper emulation of this function.

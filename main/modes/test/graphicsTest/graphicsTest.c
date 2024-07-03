@@ -24,7 +24,7 @@
 #include "spiffs_model.h"
 #include "buttonUtils.h"
 #include "menu.h"
-#include "menuLogbookRenderer.h"
+#include "menuManiaRenderer.h"
 #include "macros.h"
 
 //==============================================================================
@@ -82,7 +82,7 @@ typedef struct
     int64_t avgFrameTime;
 
     menu_t* menu;                        ///< The menu for adding a model
-    menuLogbookRenderer_t* menuRenderer; ///< The menu's renderer
+    menuManiaRenderer_t* menuRenderer;   ///< The menu's renderer
     bool showMenu;                       ///< Whether or not the menu is active
 
     wsg_t testTexture;
@@ -137,7 +137,7 @@ static void transformBaseToMatrix(float mat[4][4], const transformBase_t* base);
 static void graphicsTestBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, int16_t h, int16_t up, int16_t upNum);
 
 static paletteColor_t sampleTexture(const wsg_t* tex, int32_t u, int32_t v);
-static void graphicsTestDrawPixelCb(const S3L_PixelInfo* pixelInfo);
+static void graphicsTestDrawPixelCb(S3L_PixelInfo* pixelInfo);
 
 //==============================================================================
 // Strings
@@ -206,7 +206,7 @@ static void graphicsTestEnterMode(void)
     graphicsTestSetupMenu();
 
     // and the menu renderer
-    graphicsTest->menuRenderer = initMenuLogbookRenderer(&graphicsTest->ibm);
+    graphicsTest->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     // Load (some of) the 3D models!
     for (int i = 0; i < 3; i++)
@@ -294,7 +294,7 @@ static void graphicsTestExitMode(void)
     }
 
     // Free menu related things
-    deinitMenuLogbookRenderer(graphicsTest->menuRenderer);
+    deinitMenuManiaRenderer(graphicsTest->menuRenderer);
     deinitMenu(graphicsTest->menu);
 
     freeWsg(&graphicsTest->testTexture);
@@ -317,7 +317,7 @@ static void graphicsTestMainLoop(int64_t elapsedUs)
     if (graphicsTest->showMenu)
     {
         // Draw the menu
-        drawMenuLogbook(graphicsTest->menu, graphicsTest->menuRenderer, elapsedUs);
+        drawMenuMania(graphicsTest->menu, graphicsTest->menuRenderer, elapsedUs);
     }
     else
     {
@@ -1021,7 +1021,7 @@ static paletteColor_t sampleTexture(const wsg_t* tex, int32_t u, int32_t v)
     return tex->px[v * tex->w + u];
 }
 
-static void graphicsTestDrawPixelCb(const S3L_PixelInfo* pixelInfo)
+static void graphicsTestDrawPixelCb(S3L_PixelInfo* pixelInfo)
 {
     static S3L_Vec4 uv0, uv1, uv2;
     object3dInfo_t* object = &graphicsTest->models[graphicsTest->sceneModelMap[pixelInfo->modelIndex]];

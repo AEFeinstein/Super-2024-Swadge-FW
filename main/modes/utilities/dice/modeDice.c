@@ -128,7 +128,7 @@ TPE_Vec3 worldToTpeCoord(const float* vf);
 void tpeToWorldCoord(float* vf, TPE_Vec3 vec);
 
 static uint8_t diceTpeCollisionCallback(uint16_t body1, uint16_t joint1, uint16_t body2, uint16_t joint2, TPE_Vec3 vec);
-static void dicePixelCallback(const S3L_PixelInfo* pixelInfo);
+static void dicePixelCallback(S3L_PixelInfo* pixelInfo);
 
 static void setupScene(void);
 static void stepPhysics(void);
@@ -338,7 +338,7 @@ static uint8_t diceTpeCollisionCallback(uint16_t body1, uint16_t joint1, uint16_
     return 1;
 }
 
-static void dicePixelCallback(const S3L_PixelInfo* pixelInfo)
+static void dicePixelCallback(S3L_PixelInfo* pixelInfo)
 {
     paletteColor_t col = c555;
     setPxTft(pixelInfo->x, pixelInfo->y, col);

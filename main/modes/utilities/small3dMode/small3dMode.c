@@ -69,7 +69,7 @@ static void small3dModeBackgroundDrawCallback(int16_t x, int16_t y, int16_t w, i
 
 static void drawTeleport(int16_t x, int16_t y, S3L_ScreenCoord size);
 static paletteColor_t sampleTexture(const wsg_t* tex, int32_t u, int32_t v);
-static void small3dModeDrawPixelCb(const S3L_PixelInfo* pixelInfo);
+static void small3dModeDrawPixelCb(S3L_PixelInfo* pixelInfo);
 
 //==============================================================================
 // Strings
@@ -392,7 +392,7 @@ static paletteColor_t sampleTexture(const wsg_t* tex, int32_t u, int32_t v)
     return tex->px[v * tex->w + u];
 }
 
-static void small3dModeDrawPixelCb(const S3L_PixelInfo* pixelInfo)
+static void small3dModeDrawPixelCb(S3L_PixelInfo* pixelInfo)
 {
     paletteColor_t col;
 
