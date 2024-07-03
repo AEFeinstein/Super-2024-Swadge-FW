@@ -18,6 +18,11 @@
 - Sounds
 - Better splash screen
 - High score saving
+- Tilt controls
+  - Control selection
+  - Deadzone
+  - Tilt and return to neutral to slide
+  - Allow for tilt recalibration with B
 */
 
 //==============================================================================
@@ -43,6 +48,7 @@
 #define TOP_MARGIN      20
 #define GRID_SIZE       4
 #define BOARD_SIZE      16
+#define TILE_COUNT      16
 
 //==============================================================================
 // Enums
@@ -68,21 +74,38 @@ typedef enum{
 //==============================================================================
 
 typedef struct{
-    int32_t boardArr[4][4];
-    uint32_t score;
-    font_t font;
-    font_t titleFont;
-    char scoreStr[16];
-    bool alreadyWon;
-    DisplayState_t ds;
-    wsg_t tiles[17];
-} t48_t;
-
-typedef struct{
     uint8_t r;
     uint8_t g;
     uint8_t b;
 } Color_t;
+
+typedef struct {
+    wsg_t image;
+    int16_t pos[2];
+    uint8_t spd;
+    int8_t dir;
+} FallingBlock_t;
+
+typedef struct{
+    // Assets
+    font_t font;
+    font_t titleFont;
+    wsg_t tiles[TILE_COUNT];
+
+    // Game state
+    int32_t boardArr[4][4];
+    uint32_t score;
+    
+    // Display
+    char scoreStr[16];
+    bool alreadyWon;
+    DisplayState_t ds;
+    
+    // Start screen
+    FallingBlock_t fb[TILE_COUNT];
+    bool startScrInitialized;
+    int16_t timer; 
+} t48_t;
 
 //==============================================================================
 // Function Prototypes
@@ -128,7 +151,7 @@ static void t48BoardUpdate(bool wasUpdated, Direction_t dir);
  * @return true If a merge occured
  * @return false if no merge occured
  */
-static bool t48MergeSlice(int *slice, bool updated);
+static bool t48MergeSlice(uint32_t *slice, bool updated);
 
 /**
  * @brief Slide blocks down if possible
@@ -208,7 +231,7 @@ static void t48StartScreen(uint8_t color);
  */
 static void t48DrawGameOverScreen(int64_t score);
 
-/**
+/** 
  * @brief Draw the win screen. It doesn't do anythiung else.
  * 
  */
@@ -222,11 +245,35 @@ static void t48DrawWinScreen(void);
  */
 static void t48DimLEDs(void);
 
+/**
+ * @brief Sets an LED to a color
+ * 
+ * @param idx   Index of the LED
+ * @param color Color to set LED
+ */
 static void t48SetRGB(uint8_t idx, Color_t color);
 
+/**
+ * @brief Illuminate appropriate LEDs based on an indicated direction
+ * 
+ * @param dir   Direction to illuminate LEDs
+ * @param color Color to set the LEDs to
+ */
 static void t48LightLEDs(Direction_t dir, Color_t color);
 
+/**
+ * @brief Based on the highest block value, set the LED color
+ * 
+ * @return Color_t Color object send to the LEDs
+ */
 static Color_t t48GetLEDColors(void);
+
+/**
+ * @brief Get a random bright color for the LEDs
+ * 
+ * @return Color_t Color to send to LEDs
+ */
+static Color_t t48RandColor();
 
 //==============================================================================
 // Extern variables
