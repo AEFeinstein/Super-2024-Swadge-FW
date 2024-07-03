@@ -16,8 +16,13 @@
 
 /*
 - Sounds
-- Better splash screen
-- High score saving
+*/
+
+//==============================================================================
+//  Version 1.2 goals:
+//==============================================================================
+
+/*
 - Tilt controls
   - Control selection
   - Deadzone
@@ -94,7 +99,8 @@ typedef struct{
 
     // Game state
     int32_t boardArr[4][4];
-    uint32_t score;
+    int32_t score;
+    int32_t highScore;
     
     // Display
     char scoreStr[16];
@@ -274,6 +280,12 @@ static Color_t t48GetLEDColors(void);
  * @return Color_t Color to send to LEDs
  */
 static Color_t t48RandColor();
+
+/**
+ * @brief Run an random LED program
+ * 
+ */
+static void t48RandLEDs();
 
 //==============================================================================
 // Extern variables
