@@ -2,7 +2,7 @@
  * @file mode_2048.h
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.0
+ * @version 1.1
  * @date 2024-06-28
  * 
  * @copyright Copyright (c) 2024
@@ -15,11 +15,9 @@
 //==============================================================================
 
 /*
-- LEDs that color based on highes score block and pulse during a merge
 - Sounds
 - Better splash screen
 - High score saving
-- Fix colors of blocks to e easily discerned (tiles w/ patterns)
 */
 
 //==============================================================================
@@ -57,6 +55,14 @@ typedef enum{
     GAMESTART,  // Splash screen after load
 } DisplayState_t;
 
+typedef enum{
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    ALL
+} Direction_t;
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -71,6 +77,12 @@ typedef struct{
     DisplayState_t ds;
     wsg_t tiles[17];
 } t48_t;
+
+typedef struct{
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+} Color_t;
 
 //==============================================================================
 // Function Prototypes
@@ -105,6 +117,8 @@ static void t48MainLoop(int64_t elapsedUs);
  * @return int Cell used
  */
 static int t48SetRandCell(void);
+
+static void t48BoardUpdate(bool wasUpdated, Direction_t dir);
 
 /**
  * @brief Merge a single row or column. Cells merged from CELL_SIZE-1 -> 0.
@@ -199,6 +213,20 @@ static void t48DrawGameOverScreen(int64_t score);
  * 
  */
 static void t48DrawWinScreen(void);
+
+// LEDs
+
+/**
+ * @brief Automatically dims LEDs every frame
+ * 
+ */
+static void t48DimLEDs(void);
+
+static void t48SetRGB(uint8_t idx, Color_t color);
+
+static void t48LightLEDs(Direction_t dir, Color_t color);
+
+static Color_t t48GetLEDColors(void);
 
 //==============================================================================
 // Extern variables
