@@ -14,11 +14,13 @@
 // Variables
 //==============================================================================
 
-const char modeName[]   = "2048";
-const char pressKey[]   = "Press any key to play";
-const char pressAB[]    = "Press A or B to reset the game";
-const char youWin[]     = "You got 2048!";
-const char continueAB[] = "Press A or B to continue";
+const char modeName[]       = "2048";
+const char pressKey[]       = "Press any key to play";
+const char pressAB[]        = "Press A or B to reset the game";
+const char youWin[]         = "You got 2048!";
+const char continueAB[]     = "Press A or B to continue";
+const char highScore[]      = "You got a high score!";
+const char highScoreKey[]   = "t48HighScore";
 
 swadgeMode_t t48Mode = {
     .modeName                 = modeName,
@@ -75,6 +77,9 @@ static void t48EnterMode(void)
     loadWsg("Tile-Yellow-Octo.wsg", &t48->tiles[15], true);
 
     // Init Game
+    if (!readNvs32(highScoreKey, &t48->highScore)){
+        t48->highScore = 0;
+    }
     t48->ds = GAMESTART;
     t48StartGame();  // First run only adds one block... so just run it twice!
 }
@@ -145,6 +150,8 @@ static void t48MainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down && (evt.button & PB_A || evt.button & PB_B)){
+                    t48->highScore = t48->score;
+                    writeNvs32(highScoreKey, t48->highScore);
                     t48StartGame();
                     t48->ds = GAME;
                 }
@@ -343,7 +350,7 @@ static void t48StartGame()
         t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 0;
     }
     t48->alreadyWon = false;
-    t48->score = 0;
+    t48->score = 40;
     // Get random places to start
     t48SetRandCell();
     t48SetRandCell();
@@ -514,8 +521,8 @@ static void t48StartScreen(uint8_t color)
         // Set random x and y coordinates for all blocks
         for (uint8_t i = 0; i < TILE_COUNT; i++){
             t48->fb[i].image = t48->tiles[i];
-            t48->fb[i].pos[0] = (esp_random() % (TFT_WIDTH - T48_CELL_SIZE));
-            t48->fb[i].pos[1] = (esp_random() % (TFT_HEIGHT - T48_CELL_SIZE));
+            t48->fb[i].pos[0] = (esp_random() % (TFT_WIDTH + (2 * T48_CELL_SIZE))) - T48_CELL_SIZE;
+            t48->fb[i].pos[1] = (esp_random() % (TFT_HEIGHT + (2 * T48_CELL_SIZE))) - T48_CELL_SIZE;
             t48->fb[i].spd = (esp_random() % 2) + 1;
             t48->fb[i].dir = (esp_random() % 3) - 1;  // -1 for left, 0 for down, 1 for right
         }
@@ -540,12 +547,7 @@ static void t48StartScreen(uint8_t color)
         drawWsgSimple(&t48->fb[i].image, t48->fb[i].pos[0], t48->fb[i].pos[1]);
     }
     // Do LEDs
-    t48->timer -= 1;
-    if (t48->timer <= 0){
-        t48->timer = 32;
-        t48LightLEDs(esp_random() % 5, t48RandColor());
-
-    }
+    t48RandLEDs();
     // Title
     drawText(&t48->titleFont, color, modeName, 
              (TFT_WIDTH - textWidth(&t48->titleFont, modeName))/2, 
@@ -563,8 +565,20 @@ static void t48DrawGameOverScreen(int64_t score)
     // Display final score
     static char textBuffer[32];
     snprintf(textBuffer, sizeof(textBuffer)-1, "Final score: %" PRIu64, score);
-    drawText(&t48->titleFont, c550, textBuffer, 16, TFT_HEIGHT/2 - 24);
-    drawText(&t48->font, c555, pressAB, 16, TFT_HEIGHT/2 + 24);
+    drawText(&t48->titleFont, c550, textBuffer, 16, TFT_HEIGHT/2 - 36);
+    // Display high score
+    if (t48->score > t48->highScore){
+        int16_t x = 16;
+        int16_t y = TFT_HEIGHT/2;
+        drawTextWordWrap(&t48->titleFont, c505, highScore, &x, &y, TFT_WIDTH - 16, y + 120);
+    } else {
+        snprintf(textBuffer, sizeof(textBuffer)-1, "High score: %" PRIu32, t48->highScore);
+        drawText(&t48->font, c444, textBuffer, 16, TFT_HEIGHT/2);
+    }
+    // Display AB text
+    drawText(&t48->font, c444, pressAB, 16, TFT_HEIGHT/2 + 60);
+    // LEDs!
+    t48RandLEDs();
 }
 
 static void t48DrawWinScreen(void)
@@ -577,6 +591,8 @@ static void t48DrawWinScreen(void)
     // Press any key...
     drawText(&t48->font, c555, continueAB, 
              (TFT_WIDTH - textWidth(&t48->font, continueAB))/2, TFT_HEIGHT - 64);
+    // LEDs!
+    t48RandLEDs();
 }
 
 // LEDs
@@ -776,4 +792,13 @@ static Color_t t48RandColor()
     col.g = 128 + (esp_random() % 127);
     col.b = 128 + (esp_random() % 127);
     return col;
+}
+
+static void t48RandLEDs()
+{
+    t48->timer -= 1;
+    if (t48->timer <= 0){
+        t48->timer = 32;
+        t48LightLEDs(esp_random() % 5, t48RandColor());
+    }
 }
