@@ -2,7 +2,7 @@
  * @file mode_2048.c
  * @author Jeremy Stintzcum (jeremy.stintzcum@gmail.com)
  * @brief A game of 2048 for 2024-2025 Swadge hardware
- * @version 1.0
+ * @version 1.1
  * @date 2024-06-28
  * 
  * @copyright Copyright (c) 2024
@@ -38,6 +38,7 @@ swadgeMode_t t48Mode = {
 };
 
 t48_t* t48;
+static led_t leds[CONFIG_NUM_LEDS] = {0};
 
 //==============================================================================
 // Functions
@@ -93,6 +94,7 @@ static void t48ExitMode(void)
 
 static void t48MainLoop(int64_t elapsedUs)
 {
+    t48DimLEDs();
     buttonEvt_t evt;
     switch(t48->ds){
         case GAMESTART:
@@ -185,6 +187,18 @@ static int t48SetRandCell()
     return cell;
 }
 
+static void t48BoardUpdate(bool wasUpdated, Direction_t dir)
+{
+    if (wasUpdated){
+        t48SetRandCell();
+        Color_t col = t48GetLEDColors();
+        t48LightLEDs(dir, col);
+    } else {
+        Color_t col = {.r = 200, .g = 200, .b = 200};
+        t48LightLEDs(ALL, col);
+    }
+}
+
 static bool t48MergeSlice(int slice[], bool updated)
 {
     for (int8_t i = 0; i < GRID_SIZE - 1; i++){
@@ -231,9 +245,7 @@ static void t48SlideDown()
         }
     }
     // If a board updated, add a new cell
-    if (updated){
-        t48SetRandCell();
-    }
+    t48BoardUpdate(updated, DOWN);
 }
 
 static void t48SlideUp()
@@ -262,9 +274,7 @@ static void t48SlideUp()
         }
     }
     // If a board updated, add a new cell
-    if (updated){
-        t48SetRandCell();
-    }
+    t48BoardUpdate(updated, UP);
 }
 
 static void t48SlideRight()
@@ -293,9 +303,7 @@ static void t48SlideRight()
         }
     }
     // If a board updated, add a new cell
-    if (updated){
-        t48SetRandCell();
-    }
+    t48BoardUpdate(updated, RIGHT);
 }
 
 static void t48SlideLeft()
@@ -324,9 +332,7 @@ static void t48SlideLeft()
         }
     }
     // If a board updated, add a new cell
-    if (updated){
-        t48SetRandCell();
-    }
+    t48BoardUpdate(updated, LEFT);
 }
 
 // Game state
@@ -538,4 +544,191 @@ static void t48DrawWinScreen(void)
     // Press any key...
     drawText(&t48->font, c555, continueAB, 
              (TFT_WIDTH - textWidth(&t48->font, continueAB))/2, TFT_HEIGHT - 64);
+}
+
+// LEDs
+
+static void t48DimLEDs()
+{
+    for (int i = 0; i < CONFIG_NUM_LEDS; i++){
+        if (leds[i].r < 6){
+            leds[i].r = 0;
+        } else if (leds[i].r == 0){
+            // Do nothing
+        } else {
+            leds[i].r -= 6;
+        }
+        if (leds[i].g < 6){
+            leds[i].g = 0;
+        } else if (leds[i].g == 0){
+            // Do nothing
+        } else {
+            leds[i].g -= 6;
+        }
+        if (leds[i].b < 6){
+            leds[i].b = 0;
+        } else if (leds[i].b == 0){
+            // Do nothing
+        } else {
+            leds[i].b -= 6;
+        }
+    }
+    setLeds(leds, CONFIG_NUM_LEDS);
+}
+
+static void t48SetRGB(uint8_t idx, Color_t color)
+{
+    leds[idx].r = color.r;
+    leds[idx].g = color.g;
+    leds[idx].b = color.b;
+}
+
+static void t48LightLEDs(Direction_t dir, Color_t color)
+{
+    switch (dir){
+        case DOWN:
+            t48SetRGB(0, color);
+            t48SetRGB(1, color);
+            t48SetRGB(6, color);
+            t48SetRGB(7, color);
+            break;
+        case UP:
+            t48SetRGB(2, color);
+            t48SetRGB(3, color);
+            t48SetRGB(4, color);
+            t48SetRGB(5, color);
+            break;
+        case LEFT:
+            t48SetRGB(0, color);
+            t48SetRGB(1, color);
+            t48SetRGB(2, color);
+            t48SetRGB(3, color);
+            break;
+        case RIGHT:
+            t48SetRGB(4, color);
+            t48SetRGB(5, color);
+            t48SetRGB(6, color);
+            t48SetRGB(7, color);
+            break;
+        case ALL:
+            t48SetRGB(0, color);
+            t48SetRGB(1, color);
+            t48SetRGB(2, color);
+            t48SetRGB(3, color);
+            t48SetRGB(4, color);
+            t48SetRGB(5, color);
+            t48SetRGB(6, color);
+            t48SetRGB(7, color);
+            break;
+    }
+}
+
+static Color_t t48GetLEDColors()
+{
+    uint32_t maxval = 0;
+    for (int i = 0; i < BOARD_SIZE; i++){
+        if (maxval < t48->boardArr[i / GRID_SIZE][i % GRID_SIZE]){
+            maxval = t48->boardArr[i / GRID_SIZE][i % GRID_SIZE];
+        }
+    }
+    Color_t col = {0};
+    switch (maxval){
+        case 2:
+            // Green
+            col.b = 128;
+            return col;
+            break;
+        case 4:
+            // Pink
+            col.r = 200;
+            col.g = 100;
+            col.b = 100;
+            return col;
+            break;
+        case 8:
+            // Cyan
+            col.g = 255;
+            col.b = 255;
+            return col;
+            break;
+        case 16:
+            // Red
+            col.r = 255;
+            return col;
+            break;
+        case 32:
+            // Blue
+            col.b = 255;
+            return col;
+            break;
+        case 64:
+            // Yellow
+            col.r = 128;
+            col.g = 128;
+            return col;
+            break;
+        case 128:
+            // Blue
+            col.b = 255;
+            return col;
+            break;
+        case 256:
+            // Orange
+            col.r = 255;
+            col.g = 165;
+            return col;
+            break;
+        case 512:
+            // Dark Pink
+            col.r = 255;
+            col.g = 64;
+            col.b = 64;
+            return col;
+            break;
+        case 1024:
+            // Pink
+            col.r = 255;
+            col.g = 128;
+            col.b = 128;
+            return col;
+            break;
+        case 2048:
+            // Yellow
+            col.r = 255;
+            col.g = 255;
+            return col;
+            break;
+        case 4096:
+            // Purple
+            col.r = 200;
+            col.b = 200;
+            return col;
+            break;
+        case 8192:
+            // Mauve
+            col.r = 255;
+            col.b = 64;
+            return col;
+            break;
+        case 16384:
+            // Red
+            col.r = 255;
+            return col;
+            break;
+        case 32768:
+            // Green
+            col.g = 255;
+            return col;
+            break;
+        case 65535:
+            // Dark Blue
+            col.b = 255;
+            return col;
+            break;
+        default:
+            col.r = 255;
+            col.g = 128;
+            col.b = 128;
+            return col;
+    }
 }
