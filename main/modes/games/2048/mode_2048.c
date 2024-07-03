@@ -76,11 +76,17 @@ static void t48EnterMode(void)
     loadWsg("Tile-Yellow-Diamond.wsg", &t48->tiles[14], true);
     loadWsg("Tile-Yellow-Octo.wsg", &t48->tiles[15], true);
 
+    // Load sounds
+    loadSong("Follinesque.sng", &t48->bgm, true);
+    loadSong("sndBounce.sng", &t48->click, true);
+    t48->bgm.shouldLoop = true;
+
     // Init Game
     if (!readNvs32(highScoreKey, &t48->highScore)){
         t48->highScore = 0;
     }
     t48->ds = GAMESTART;
+    soundPlayBgm(&t48->bgm, 0);
     t48StartGame();  // First run only adds one block... so just run it twice!
 }
 
@@ -92,6 +98,10 @@ static void t48ExitMode(void)
     for (uint8_t i = 0; i < TILE_COUNT; i ++){
         freeWsg(&t48->tiles[i]);
     }
+
+    soundStop(true);
+    freeSong(&t48->bgm);
+    freeSong(&t48->click);
 
     free(t48);
 }
@@ -106,11 +116,13 @@ static void t48MainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down){
+                    soundPlaySfx(&t48->click, 0);
                     t48StartGame();
                     t48->ds = GAME;
-                    for (uint8_t i = 0; i < 15; i++){
+                    // Code to fill board for testing purposes
+                    /* for (uint8_t i = 0; i < 15; i++){
                         t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 2 << i;
-                    }
+                    } */
                 }
             }
             // Draw
@@ -122,16 +134,21 @@ static void t48MainLoop(int64_t elapsedUs)
             {
                 // Move blocks down, up, right or left
                 if (evt.down && evt.button & PB_DOWN){
+                    soundPlaySfx(&t48->click, 0);
                     t48SlideDown();
                 } else if (evt.down && evt.button & PB_UP){
+                    soundPlaySfx(&t48->click, 0);
                     t48SlideUp();
                 } else if (evt.down && evt.button & PB_LEFT){
+                    soundPlaySfx(&t48->click, 0);
                     t48SlideLeft();
                 } else if (evt.down && evt.button & PB_RIGHT){
+                    soundPlaySfx(&t48->click, 0);
                     t48SlideRight();
                 } 
                 // Restart game if you hit start
                 else if (evt.down && evt.button & PB_START){
+                    soundPlaySfx(&t48->click, 0);
                     t48StartGame();
                 }
             }
@@ -150,6 +167,7 @@ static void t48MainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down && (evt.button & PB_A || evt.button & PB_B)){
+                    soundPlaySfx(&t48->click, 0);
                     t48->highScore = t48->score;
                     writeNvs32(highScoreKey, t48->highScore);
                     t48StartGame();
@@ -164,6 +182,7 @@ static void t48MainLoop(int64_t elapsedUs)
             while (checkButtonQueueWrapper(&evt))
             {
                 if (evt.down && (evt.button & PB_A || evt.button & PB_B)){
+                    soundPlaySfx(&t48->click, 0);
                     t48->ds = GAME;
                 }
             }
@@ -350,7 +369,7 @@ static void t48StartGame()
         t48->boardArr[i / GRID_SIZE][i % GRID_SIZE] = 0;
     }
     t48->alreadyWon = false;
-    t48->score = 40;
+    t48->score = 0;
     // Get random places to start
     t48SetRandCell();
     t48SetRandCell();
@@ -552,6 +571,11 @@ static void t48StartScreen(uint8_t color)
     drawText(&t48->titleFont, color, modeName, 
              (TFT_WIDTH - textWidth(&t48->titleFont, modeName))/2, 
              TFT_HEIGHT/2 - 12);
+    // Draw current High Score
+    const char textBuffer[20];
+    snprintf(textBuffer, sizeof(textBuffer)-1, "High score: %" PRIu32, t48->highScore);
+    drawText(&t48->font, c444, textBuffer, (TFT_WIDTH - textWidth(&t48->font, textBuffer))/2,
+             TFT_HEIGHT - 32);
     // Press any key...
     drawText(&t48->font, c555, pressKey, 
              (TFT_WIDTH - textWidth(&t48->font, pressKey))/2, TFT_HEIGHT - 64);
