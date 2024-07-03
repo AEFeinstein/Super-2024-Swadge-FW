@@ -1,0 +1,10 @@
+{
+    "makefile.makefilePath": "C:\\Users\\vcapr\\esp\\Super-2024-Swadge-FW\\makefile",
+    "makefile.launchConfigurations": [
+        {
+            "cwd": "c:\\Users\\vcapr\\esp\\Super-2024-Swadge-FW\\main\\modes\\3d",
+            "binaryPath": "c:\\Users\\vcapr\\esp\\Super-2024-Swadge-FW\\main\\modes\\3d\\swadge_emulator",
+            "binaryArgs": []
+        }
+    ]
+}
