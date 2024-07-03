@@ -22,6 +22,8 @@
 
 #define NUM_FRAME_TIMES 60
 
+#define VIZ_SAMPLE_COUNT 512
+
 //==============================================================================
 // Structs
 //==============================================================================
@@ -49,7 +51,6 @@ typedef struct
 
     midiFile_t midiFile;
     midiPlayer_t midiPlayer;
-    midiFileReader_t midiFileReader;
     bool fileMode;
 
     bool localPitch;
@@ -61,7 +62,10 @@ typedef struct
     bool startupDrums;
     bool startSilence;
     const char* longestProgramName;
-    uint8_t lastSamples[256];
+    uint8_t lastSamples[VIZ_SAMPLE_COUNT];
+    int16_t sampleCount;
+    int16_t graphOffset;
+    uint8_t graphColor;
     uint8_t localChannel;
 
     enum
@@ -95,6 +99,7 @@ static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, i
 static void drawChannelInfo(const midiPlayer_t* player, uint8_t chIdx, int16_t x, int16_t y, int16_t width,
                             int16_t height);
 static void drawSampleGraph(void);
+static void drawSampleGraphCircular(void);
 static int writeMidiText(char* dest, size_t n, midiTextInfo_t* text);
 static void midiTextCallback(metaEventType_t type, const char* text, uint32_t length);
 
@@ -500,7 +505,7 @@ static void synthMainLoop(int64_t elapsedUs)
 
     if (sd->viewMode & VM_GRAPH)
     {
-        drawSampleGraph();
+        drawSampleGraphCircular();
     }
 
 #define IS_DRUM(note) ((ACOUSTIC_BASS_DRUM_OR_LOW_BASS_DRUM <= note) && (note <= OPEN_TRIANGLE))
@@ -834,7 +839,8 @@ static void drawPitchWheelRect(uint8_t chIdx, int16_t x, int16_t y, int16_t w, i
 static void synthDacCallback(uint8_t* samples, int16_t len)
 {
     midiPlayerFillBuffer(&sd->midiPlayer, samples, len);
-    memcpy(sd->lastSamples, samples, MIN(len, 256));
+    memcpy(sd->lastSamples, samples, MIN(len, VIZ_SAMPLE_COUNT));
+    sd->sampleCount = MIN(len, VIZ_SAMPLE_COUNT);
 }
 
 static paletteColor_t noteToColor(uint8_t note)
@@ -906,6 +912,37 @@ static void drawSampleGraph(void)
         // 255);
         TURBO_SET_PIXEL(x, y, c555);
     }
+}
+
+static void drawSampleGraphCircular(void)
+{
+    int16_t radiusMax = MIN(TFT_WIDTH, TFT_HEIGHT) / 2 - 10;
+    int16_t radiusMin = 0;
+
+    int16_t radiusAvg = (radiusMax - radiusMin) / 2;
+
+    int16_t lastX = -1;
+    int16_t lastY = -1;
+
+    for (int n = 0; n < sd->sampleCount; n++)
+    {
+        int16_t sample     = (int16_t)sd->lastSamples[n] - 128;
+        paletteColor_t col = paletteHsvToHex(sd->graphColor++, 255, 255);
+
+        int16_t x
+            = (TFT_WIDTH / 2) + getCos1024((n + sd->graphOffset) % 360) * (radiusAvg + sample * radiusAvg / 127) / 1024;
+        int16_t y = (TFT_HEIGHT / 2)
+                    - getSin1024((n + sd->graphOffset) % 360) * (radiusAvg + sample * radiusAvg / 127) / 1024;
+
+        if (lastX != -1 && lastY != -1)
+        {
+            drawLineFast(lastX, lastY, x, y, col);
+        }
+        lastX = x;
+        lastY = y;
+    }
+
+    sd->graphOffset = (sd->graphOffset + sd->sampleCount) % 360;
 }
 
 /**
