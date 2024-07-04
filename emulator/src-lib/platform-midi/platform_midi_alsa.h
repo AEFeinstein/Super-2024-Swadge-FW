@@ -10,7 +10,7 @@ int platform_midi_read_alsa(unsigned char * out, int size);
 int platform_midi_avail_alsa(void);
 int platform_midi_write_alsa(unsigned char* buf, int size);
 
-#ifdef PLATFORM_MDI_IMPLEMENTATION
+#ifdef PLATFORM_MIDI_IMPLEMENTATION
 
 snd_seq_t *seq_handle;
 snd_midi_event_t *event_parser;
