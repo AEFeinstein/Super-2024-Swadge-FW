@@ -350,14 +350,14 @@ uq16_16 bendPitchWheel(uint8_t noteId, uint16_t pitchWheel)
     int32_t bendCents = (((int16_t)-0x2000) + pitchWheel) * 100 / 0x1FFF;
 
     // Grab the base frequency and store it in a 64-bit int
-    uint64_t freq = noteFreqTable[noteId];
+    uint64_t freq = noteFreqTable[noteId] << 2;
 
     // Multiply the base frequency by the appropriate UQ8.24 value in the pitch bend table
-    freq *= bendTable[bendCents + 100];
+    freq *= (bendTable[bendCents + 100] << 6);
 
     // Shift right 24 bits to account for the fractional component of the bend table
     // Mask the result back into a 32-bit value
-    uq16_16 trimmedFreq = ((freq >> 24) & (0xFFFFFFFFu));
+    uq16_16 trimmedFreq = ((freq >> 32) & (0xFFFFFFFFu));
 
     // Not using an intermediate variable here makes weird stuff happen
     return trimmedFreq;
