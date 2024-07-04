@@ -1,0 +1,1 @@
+void setMidiClientName(const char* name);
