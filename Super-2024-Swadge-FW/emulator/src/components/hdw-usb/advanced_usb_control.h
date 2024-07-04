@@ -1,4 +1,0 @@
-#ifndef ADVANCED_USB_CONTROL_H
-#define ADVANCED_USB_CONTROL_H
-
-#endif

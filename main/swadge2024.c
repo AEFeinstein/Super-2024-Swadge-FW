@@ -108,7 +108,7 @@
  *
  * \subsection gui_api Graphical UI APIs
  *
- * - menu.h and menuLogbookRenderer.h: Make and render a menu within a mode
+ * - menu.h and menuManiaRenderer.h: Make and render a menu within a mode
  * - dialogBox.h: Show messages and prompt users for a response
  * - touchTextEntry.h: Edit an arbitrary single line of text by selecting each letter at a time with up & down keys
  * - textEntry.h: Edit an arbitrary single line of text with a virtual QWERTY keyboard
@@ -128,12 +128,15 @@
  *
  * - trigonometry.h: Fast math based on look up tables
  * - vector2d.h: Basic math for 2D vectors
+ *     - vectorFl2d.h: Floating 2D vector math functions
  * - geometry.h: Basic math for 2D shapes, like collision checks
+ *     - geometryFl.h: Floating point geometric functions
  * - fp_math.h: Fixed point decimal math. This is faster an less precise than using floating point
  *
  * \subsection oth_api Other Useful APIs
  *
  * - linked_list.h: A basic data structure
+ * - hashMap.h: A data structure for storing data in key-value pairs
  * - macros.h: Convenient macros like MIN() and MAX()
  * - coreutil.h: General utilities for system profiling
  * - hdw-usb.h: Learn how to be a USB HID Gamepad
@@ -173,6 +176,7 @@
 #include "factoryTest.h"
 #include "mainMenu.h"
 #include "quickSettings.h"
+#include "introMode.h"
 
 //==============================================================================
 // Defines
@@ -238,10 +242,15 @@ void app_main(void)
     readAllSettings();
 
     // If test mode was passed
-    if (getTestModePassedSetting())
+    if (getTutorialCompletedSetting())
     {
         // Show the main menu
         cSwadgeMode = &mainMenuMode;
+    }
+    else if (getTestModePassedSetting())
+    {
+        // Start the out-of-box experience / tutorial
+        cSwadgeMode = &introMode;
     }
     else
     {
@@ -729,6 +738,14 @@ bool checkButtonQueueWrapper(buttonEvt_t* evt)
 
     // Return if there was an event or not
     return retval;
+}
+
+void openQuickSettings(void)
+{
+    if (cSwadgeMode != &quickSettingsMode && !shouldHideQuickSettings)
+    {
+        shouldShowQuickSettings = true;
+    }
 }
 
 /**

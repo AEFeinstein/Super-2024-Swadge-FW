@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "image_processor.h": "c",
-        "stb_image.h": "c",
-        "heatshrink_encoder.h": "c",
-        "errno.h": "c",
-        "fileutils.h": "c"
-    }
-}

@@ -32,8 +32,8 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 
 ## Things that need to be added to enterMode() and exitMode() functions
 
-- `tunernome->menuRenderer = initMenuLogbookRenderer(&tunernome->logbookFont);`
-- `deinitMenuLogbookRenderer(tunernome->renderer);`
+- `tunernome->menuRenderer = initMenuManiaRenderer(NULL, NULL, NULL);`
+- `deinitMenuManiaRenderer(tunernome->renderer);`
 
 ## Things that need to be intelligently deleted
 
@@ -64,7 +64,7 @@ This is a non-exhaustive list of changes I've found to be needed when porting Tu
 | `menu->rows`                                                                    | `menu->items`                                                       |
 | `initMeleeMenu(modeTunernome.modeName, &(tunernome->mm), tunernomeMainMenuCb);` | `initMenu(tunernomeMode.modeName, tunernomeMainMenuCb);`            |
 | `tunernomeMenuCb(const char* opt)`                                              | `mainMenuCb(const char* label, bool selected, uint32_t settingVal)` |
-| `drawMeleeMenu(tunernome->menu);`                                               | `drawMenuLogbook(tunernome->menu, tunernome->renderer, elapsedUs);` |
+| `drawMeleeMenu(tunernome->menu);`                                               | `drawMenuMania(tunernome->menu, tunernome->renderer, elapsedUs);` |
 
 ## Things that can be find/replaced
 

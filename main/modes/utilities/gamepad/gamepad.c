@@ -70,7 +70,7 @@ typedef struct
     font_t logbookFont;
 
     menu_t* menu;
-    menuLogbookRenderer_t* renderer;
+    menuManiaRenderer_t* renderer;
     gamepadScreen_t screen;
 
     hid_gamepad_report_t gpState;
@@ -289,7 +289,7 @@ void gamepadEnterMode(void)
     addSingleItemToMenu(gamepad->menu, str_exit);
 
     // Initialize menu renderer
-    gamepad->renderer = initMenuLogbookRenderer(&gamepad->logbookFont);
+    gamepad->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
 
     // We shold go as fast as we can
     setFrameRateUs(0);
@@ -304,7 +304,7 @@ void gamepadEnterMode(void)
 void gamepadExitMode(void)
 {
     deinitMenu(gamepad->menu);
-    deinitMenuLogbookRenderer(gamepad->renderer);
+    deinitMenuManiaRenderer(gamepad->renderer);
     freeFont(&(gamepad->logbookFont));
     freeFont(&(gamepad->ibmFont));
 
@@ -395,7 +395,7 @@ void gamepadMenuLoop(int64_t elapsedUs)
             {
                 gamepad->menu = menuButton(gamepad->menu, evt);
             }
-            drawMenuLogbook(gamepad->menu, gamepad->renderer, elapsedUs);
+            drawMenuMania(gamepad->menu, gamepad->renderer, elapsedUs);
             break;
         }
         case GAMEPAD_MAIN:

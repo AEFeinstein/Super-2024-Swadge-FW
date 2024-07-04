@@ -194,7 +194,7 @@
 #include "shapes.h"
 #include "fill.h"
 #include "menu.h"
-#include "menuLogbookRenderer.h"
+#include "menuManiaRenderer.h"
 
 // Asset loaders
 #include "spiffs_wsg.h"
@@ -214,6 +214,8 @@
 #include "geometry.h"
 #include "settingsManager.h"
 #include "touchUtils.h"
+#include "vectorFl2d.h"
+#include "geometryFl.h"
 
 // Sound utilities
 #include "soundFuncs.h"
@@ -352,6 +354,7 @@ void softSwitchToPendingSwadge(void);
 
 void deinitSystem(void);
 
+void openQuickSettings(void);
 void setFrameRateUs(uint32_t newFrameRateUs);
 
 #endif

@@ -12,11 +12,13 @@
 #include "factoryTest.h"
 #include "FoxsGame.h"
 #include "gamepad.h"
+#include "introMode.h"
 #include "jukebox.h"
 #include "mainMenu.h"
 #include "modeTimer.h"
 #include "mode_credits.h"
 #include "mode_pinball.h"
+#include "ultimateTTT.h"
 #include "touchTest.h"
 #include "tunernome.h"
 
@@ -30,8 +32,9 @@ typedef struct
 {
     menu_t* menu;
     menu_t* secretsMenu;
-    menuLogbookRenderer_t* renderer;
-    font_t logbook;
+    menuManiaRenderer_t* renderer;
+    font_t font_righteous;
+    font_t font_rodin;
     song_t jingle;
     song_t fanfare;
     int32_t lastBgmVol;
@@ -58,7 +61,7 @@ void addSecretsMenu(void);
 //==============================================================================
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
-const char mainMenuName[]                       = "Main Menu 1.1";
+const char mainMenuName[]                       = "Main Menu";
 static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
@@ -132,7 +135,8 @@ static void mainMenuEnterMode(void)
     mainMenu = calloc(1, sizeof(mainMenu_t));
 
     // Load a font
-    loadFont("logbook.font", &mainMenu->logbook, false);
+    loadFont("rodin_eb.font", &mainMenu->font_rodin, false);
+    loadFont("righteous_150.font", &mainMenu->font_righteous, false);
 
     // Load a song for when the volume changes
     loadSong("jingle.sng", &mainMenu->jingle, false);
@@ -143,6 +147,7 @@ static void mainMenuEnterMode(void)
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
+    addSingleItemToMenu(mainMenu->menu, tttMode.modeName);
     addSingleItemToMenu(mainMenu->menu, pinballMode.modeName);
     addSingleItemToMenu(mainMenu->menu, foxMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
@@ -159,6 +164,7 @@ static void mainMenuEnterMode(void)
     addSingleItemToMenu(mainMenu->menu, timerMode.modeName);
     mainMenu->menu = endSubMenu(mainMenu->menu);
 
+    addSingleItemToMenu(mainMenu->menu, introMode.modeName);
     addSingleItemToMenu(mainMenu->menu, modeCredits.modeName);
 
     // Start a submenu for settings
@@ -189,7 +195,10 @@ static void mainMenuEnterMode(void)
     setShowBattery(mainMenu->menu, true);
 
     // Initialize menu renderer
-    mainMenu->renderer = initMenuLogbookRenderer(&mainMenu->logbook);
+    mainMenu->renderer = initMenuManiaRenderer(NULL, NULL, NULL);
+
+    // Make it smooth
+    setFrameRateUs(1000000 / 60);
 }
 
 /**
@@ -201,10 +210,11 @@ static void mainMenuExitMode(void)
     deinitMenu(mainMenu->menu);
 
     // Deinit renderer
-    deinitMenuLogbookRenderer(mainMenu->renderer);
+    deinitMenuManiaRenderer(mainMenu->renderer);
 
     // Free the font
-    freeFont(&mainMenu->logbook);
+    freeFont(&mainMenu->font_rodin);
+    freeFont(&mainMenu->font_righteous);
 
     // Free the song
     freeSong(&mainMenu->jingle);
@@ -276,7 +286,7 @@ static void mainMenuMainLoop(int64_t elapsedUs)
     }
 
     // Draw the menu
-    drawMenuLogbook(mainMenu->menu, mainMenu->renderer, elapsedUs);
+    drawMenuMania(mainMenu->menu, mainMenu->renderer, elapsedUs);
 }
 
 /**
@@ -324,6 +334,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         {
             switchToSwadgeMode(&gamepadMode);
         }
+        else if (label == introMode.modeName)
+        {
+            switchToSwadgeMode(&introMode);
+        }
         else if (label == jukeboxMode.modeName)
         {
             switchToSwadgeMode(&jukeboxMode);
@@ -339,6 +353,10 @@ static void mainMenuCb(const char* label, bool selected, uint32_t settingVal)
         else if (label == pinballMode.modeName)
         {
             switchToSwadgeMode(&pinballMode);
+        }
+        else if (label == tttMode.modeName)
+        {
+            switchToSwadgeMode(&tttMode);
         }
         else if (label == timerMode.modeName)
         {
