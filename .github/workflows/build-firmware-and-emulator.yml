@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - midi-synth-platform-midi
   pull_request:
     branches:
       - main
