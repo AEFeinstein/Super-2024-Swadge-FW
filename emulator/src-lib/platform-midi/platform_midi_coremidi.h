@@ -7,7 +7,14 @@ int platform_midi_read_coremidi(unsigned char * out, int size);
 int platform_midi_avail_coremidi(void);
 int platform_midi_write_coremidi(unsigned char* buf, int size);
 
-#ifdef PLATFORM_MIDI_IMPLEMENTATION
+// TODO don't do it like this
+#define PLATFORM_MIDI_INIT(name) platform_midi_init_coremidi(name)
+#define PLATFORM_MIDI_DEINIT() platform_midi_deinit_coremidi()
+#define PLATFORM_MIDI_READ(out, size) platform_midi_read_coremidi(out, size)
+#define PLATFORM_MIDI_AVAIL() platform_midi_avail_coremidi()
+#define PLATFORM_MIDI_WRITE(buf, size) platform_midi_write_coremidi(buf, size)
+
+#if PLATFORM_MIDI_IMPLEMENTATION
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -32,13 +39,6 @@ struct platform_midi_coremidi_packet_info
 
 MIDIClientRef coremidi_client;
 MIDIPortRef coremidi_in_port;
-unsigned char *coremidi_buffer;
-struct platform_midi_coremidi_packet_info coremidi_packets[PLATFORM_MIDI_EVENT_BUFFER_ITEMS];
-unsigned int coremidi_packet_avail;
-unsigned int coremidi_packet_read_pos;
-unsigned int coremidi_packet_write_pos;
-unsigned int coremidi_buffer_offset;
-unsigned int coremidi_buffer_end;
 
 static void platform_midi_receive_callback(MIDIEventList* events, void* refcon)
 {
@@ -46,21 +46,9 @@ static void platform_midi_receive_callback(MIDIEventList* events, void* refcon)
 
     for (unsigned int i = 0; i < events->numPackets; i++)
     {
-        if ((coremidi_packet_write_pos + 1) % PLATFORM_MIDI_EVENT_BUFFER_ITEMS == coremidi_packet_read_pos)
-        {
-            printf("Warn: MIDI packet buffer is full, dropping an event");
-            // The buffer is full... gotta drop a packet
-            coremidi_buffer_offset = (coremidi_buffer_offset + coremidi_packets[coremidi_packet_read_pos].length) % PLATFORM_MIDI_EVENT_BUFFER_SIZE;
-            coremidi_packet_read_pos = (coremidi_packet_read_pos + 1) % PLATFORM_MIDI_EVENT_BUFFER_ITEMS;
-        }
-
-        coremidi_packets[coremidi_packet_write_pos].offset = coremidi_buffer_end;
-        coremidi_packets[coremidi_packet_write_pos].length = events->packet[i].wordCount * sizeof(uint32_t);
-
-        // TODO check for overrunning the actual buffer
-        coremidi_buffer_end = (coremidi_buffer_end + coremidi_packets[coremidi_packet_write_pos].length) % PLATFORM_MIDI_EVENT_BUFFER_SIZE;
-
-        coremidi_packet_write_pos = (coremidi_packet_write_pos + 1) % PLATFORM_MIDI_EVENT_BUFFER_ITEMS;
+        unsigned char data[16];
+        int written = platform_midi_convert_ump(data, sizeof(data), events->packet[i].words, events->packet[i].numWords);
+        platform_midi_push_packet(data, written);
     }
 }
 
@@ -77,8 +65,7 @@ int platform_midi_init_coremidi(const char* name)
         return 0;
     }
 
-    coremidi_buffer = malloc(PLATFORM_MIDI_EVENT_BUFFER_SIZE);
-    if (0 == coremidi_buffer)
+    if (!platform_midi_buffer_init())
     {
         printf("Failed to allocate memory for event buffer in CoreMIDI driver\n");
         MIDIClientDispose(coremidi_client);
@@ -86,11 +73,6 @@ int platform_midi_init_coremidi(const char* name)
 
         return 0;
     }
-
-    coremidi_packet_avail = 0;
-    coremidi_packet_read_pos = 0;
-    coremidi_packet_write_pos = 0;
-    coremidi_buffer_offset = 0;
 
     result = MIDIInputPortCreateWithProtocol(
         &coremidi_client,
@@ -104,8 +86,7 @@ int platform_midi_init_coremidi(const char* name)
     {
         printf("Failed to create CoreMIDI input port\n");
 
-        free(coremidi_buffer);
-        coremidi_buffer = 0;
+        platform_midi_buffer_deinit();
 
         MIDIClientDispose(coremidi_client);
         coremidi_client = 0;
@@ -120,13 +101,12 @@ void platform_midi_deinit_coremidi(void)
     OSStatus result = MIDIPortDispose(coremidi_in_port);
     coremidi_in_port = 0;
 
-    free(coremidi_buffer);
-    coremidi_buffer = 0;
-
     if (0 != result)
     {
         printf("failed to destroy CoreMIDI input port\n")
     }
+
+    platform_midi_buffer_deinit();
 
     result = MIDIClientDispose(coremidi_client);
     coremidi_client = 0;
@@ -139,51 +119,12 @@ void platform_midi_deinit_coremidi(void)
 
 int platform_midi_read_coremidi(unsigned char * out, int size)
 {
-    if (coremidi_packet_read_pos == coremidi_packet_write_pos)
-    {
-        return 0;
-    }
-
-    struct platform_midi_coremidi_packet_info *packet = &coremidi_packets[coremidi_packet_read_pos];
-    int toCopy = (size < packet->length) ? size : packet->length;
-
-    // TODO detect large events overrunning the buffer
-
-    if (packet->offset + packet->length > PLATFORM_MIDI_EVENT_BUFFER_SIZE)
-    {
-        // event is split across the end and beginning of the buffer
-        int endCopy = (packet->offset + toCopy <= PLATFORM_MIDI_EVENT_BUFFER_SIZE) ? toCopy : PLATFORM_MIDI_EVENT_BUFFER_SIZE - packet->offset;
-        int startCopy = packet->length - endCopy;
-
-        memcpy(out, &coremidi_buffer[packet->offset], endCopy);
-        memcpy(out + endCopy, coremidi_buffer, startCopy);
-        read = toCopy;
-    }
-    else
-    {
-        memcpy(out, size, toCopy);
-    }
-
-    coremidi_buffer_offset = (coremidi_buffer_offset + packet->length) % PLATFORM_MIDI_EVENT_BUFFER_SIZE;
-    coremidi_packet_read_pos = (coremidi_packet_read_pos + 1) % PLATFORM_MIDI_EVENT_BUFFER_ITEMS;
-
-    return toCopy;
+    return platform_midi_pop_packet(out, size);
 }
 
 int platform_midi_avail_coremidi(void)
 {
-    if (coremidi_packet_read_pos == coremidi_packet_write_pos)
-    {
-        return 0;
-    }
-    else if (coremidi_packet_read_pos < coremidi_packet_write_pos)
-    {
-        return coremidi_packet_write_pos - coremidi_packet_read_pos;
-    }
-    else
-    {
-        return PLATFORM_MIDI_EVENT_BUFFER_ITEMS - coremidi_packet_read_pos - coremidi_packet_write_pos;
-    }
+    return platform_midi_packet_count();
 }
 
 int platform_midi_write_coremidi(unsigned char* buf, int size)

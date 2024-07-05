@@ -10,6 +10,12 @@ int platform_midi_read_alsa(unsigned char * out, int size);
 int platform_midi_avail_alsa(void);
 int platform_midi_write_alsa(unsigned char* buf, int size);
 
+#define PLATFORM_MIDI_INIT(name) platform_midi_init_alsa(name)
+#define PLATFORM_MIDI_DEINIT() platform_midi_deinit_alsa()
+#define PLATFORM_MIDI_READ(out, size) platform_midi_read_alsa(out, size)
+#define PLATFORM_MIDI_AVAIL() platform_midi_avail_alsa()
+#define PLATFORM_MIDI_WRITE(buf, size) platform_midi_write_alsa(buf, size)
+
 #ifdef PLATFORM_MIDI_IMPLEMENTATION
 
 snd_seq_t *seq_handle;

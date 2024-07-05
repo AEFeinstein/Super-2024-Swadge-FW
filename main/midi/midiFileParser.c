@@ -193,7 +193,7 @@ static bool trackParseNext(midiFileReader_t* reader, midiTrackState_t* track)
             track->nextEvent.midi.status = status;
 
             // This message has two data bytes
-            // The rest of the events have 2 data bytes
+            // The rest of the events have 1 data byte
             if (TRK_REMAIN() < 2)
             {
                 ERR();

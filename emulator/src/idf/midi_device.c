@@ -20,13 +20,13 @@ bool tud_midi_n_mounted(uint8_t itf)
 // Get the number of bytes available for reading
 uint32_t tud_midi_n_available(uint8_t itf, uint8_t cable_num)
 {
-    return platform_midi_avail_alsa();
+    return PLATFORM_MIDI_AVAIL();
 }
 
 // Read byte stream              (legacy)
 uint32_t tud_midi_n_stream_read(uint8_t itf, uint8_t cable_num, void* buffer, uint32_t bufsize)
 {
-    return platform_midi_read_alsa((unsigned char*)buffer, bufsize);
+    return PLATFORM_MIDI_READ((unsigned char*)buffer, bufsize);
 }
 
 // Write byte Stream             (legacy)
@@ -40,7 +40,7 @@ uint32_t tud_midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t const* 
 bool tud_midi_n_packet_read(uint8_t itf, uint8_t packet[4])
 {
     uint8_t real_packet[12];
-    int read = platform_midi_read_alsa(real_packet, sizeof(real_packet));
+    int read = PLATFORM_MIDI_READ(real_packet, sizeof(real_packet));
     if (read > 0)
     {
         printf("Packet: ");
@@ -160,7 +160,7 @@ void midid_init(void)
 {
 #ifdef PLATFORM_MIDI_SUPPORTED
     printf("Initializing MIDI!\n");
-    platform_midi_init_alsa(clientName ? "Platform MIDI" : clientName);
+    PLATFORM_MIDI_INIT(clientName ? "Platform MIDI" : clientName);
 #else
     printf("MIDI not yet supported on this platform\n");
 #endif
@@ -168,7 +168,7 @@ void midid_init(void)
 
 void midid_reset(uint8_t rhport)
 {
-    platform_midi_deinit_alsa();
+    PLATFORM_MIDI_DEINIT();
 }
 
 uint16_t midid_open(uint8_t rhport, tusb_desc_interface_t const* itf_desc, uint16_t max_len)
