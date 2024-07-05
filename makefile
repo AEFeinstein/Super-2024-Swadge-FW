@@ -103,7 +103,8 @@ else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include
+	-I/opt/homebrew/include \
+	-framework CoreFonudation
 endif
 
 ifeq ($(HOST_OS),Linux)
