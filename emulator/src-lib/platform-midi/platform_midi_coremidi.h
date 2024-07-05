@@ -35,7 +35,8 @@ int platform_midi_write_coremidi(unsigned char* buf, int size);
 MIDIClientRef coremidi_client;
 MIDIPortRef coremidi_in_port;
 
-void (^platform_midi_receive_callback)(const MIDIEventList* events, void* refcon) = ^{
+void platform_midi_receive_callback(const MIDIEventList* events, void* refcon)
+{
     printf("Recieved %u MIDI packets from CoreAudio\n", events->numPackets);
 
     for (unsigned int i = 0; i < events->numPackets; i++)
@@ -44,7 +45,7 @@ void (^platform_midi_receive_callback)(const MIDIEventList* events, void* refcon
         int written = platform_midi_convert_ump(data, sizeof(data), events->packet[i].words, events->packet[i].wordCount);
         platform_midi_push_packet(data, written);
     }
-};
+}
 
 int platform_midi_init_coremidi(const char* name)
 {
@@ -69,12 +70,16 @@ int platform_midi_init_coremidi(const char* name)
         return 0;
     }
 
+    void (^receiveCbBlock)(const MIDIEventList* events, void* refcon) = ^void(const MIDIEventList* events, void *refcon) {
+        platform_midi_receive_callback(events, refcon);
+    };
+
     result = MIDIInputPortCreateWithProtocol(
         coremidi_client,
         CFStringCreateWithCStringNoCopy(0, "listen:in", kCFStringEncodingUTF8, kCFAllocatorNull),
         kMIDIProtocol_1_0,
         &coremidi_in_port,
-        platform_midi_receive_callback
+        receiveCbBlock
     );
 
     if (0 != result)
