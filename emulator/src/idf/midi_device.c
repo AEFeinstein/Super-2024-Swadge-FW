@@ -7,14 +7,16 @@
 #include "platform_midi.h"
 
 #include "tinyusb.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 static uint8_t runningStatus = 0;
+static bool midiInit = false;
 
 // Check if midi interface is mounted
 bool tud_midi_n_mounted(uint8_t itf)
 {
-    return alsa_init != 0;
+    return midiInit;
 }
 
 // Get the number of bytes available for reading
@@ -112,7 +114,7 @@ bool tud_midi_n_packet_write(uint8_t itf, uint8_t const packet[4])
 //--------------------------------------------------------------------+
 bool tud_midi_mounted(void)
 {
-    return alsa_init != 0;
+    return midiInit != 0;
 }
 
 uint32_t tud_midi_available(void)
@@ -160,7 +162,7 @@ void midid_init(void)
 {
 #ifdef PLATFORM_MIDI_SUPPORTED
     printf("Initializing MIDI!\n");
-    PLATFORM_MIDI_INIT(clientName ? "Platform MIDI" : clientName);
+    midiInit = PLATFORM_MIDI_INIT(clientName ? "Platform MIDI" : clientName);
 #else
     printf("MIDI not yet supported on this platform\n");
 #endif
@@ -169,6 +171,7 @@ void midid_init(void)
 void midid_reset(uint8_t rhport)
 {
     PLATFORM_MIDI_DEINIT();
+    midiInit = false;
 }
 
 uint16_t midid_open(uint8_t rhport, tusb_desc_interface_t const* itf_desc, uint16_t max_len)
