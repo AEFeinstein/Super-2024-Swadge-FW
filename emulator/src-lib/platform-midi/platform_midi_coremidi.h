@@ -40,8 +40,7 @@ struct platform_midi_coremidi_packet_info
 MIDIClientRef coremidi_client;
 MIDIPortRef coremidi_in_port;
 
-static void platform_midi_receive_callback(const MIDIEventList* events, void* refcon)
-{
+void (^platform_midi_receive_callback)(const MIDIEventList* events, void* refcon) = ^{
     printf("Recieved %u MIDI packets from CoreAudio\n", events->numPackets);
 
     for (unsigned int i = 0; i < events->numPackets; i++)
@@ -103,7 +102,7 @@ void platform_midi_deinit_coremidi(void)
 
     if (0 != result)
     {
-        printf("failed to destroy CoreMIDI input port\n")
+        printf("failed to destroy CoreMIDI input port\n");
     }
 
     platform_midi_buffer_deinit();
