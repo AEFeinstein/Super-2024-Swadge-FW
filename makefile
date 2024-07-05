@@ -104,6 +104,7 @@ else
 CFLAGS += \
 	-I/opt/X11/include \
 	-I/opt/homebrew/include \
+	-framework Foundation \
 	-framework CoreFoundation \
 	-framework CoreMIDI
 endif
