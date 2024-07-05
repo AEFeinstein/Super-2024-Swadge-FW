@@ -14,6 +14,9 @@ int platform_midi_write_winmm(unsigned char* buf, int size);
 #define PLATFORM_MIDI_WRITE(buf, size) platform_midi_write_winmm(buf, size)
 
 #ifdef PLATFORM_MIDI_IMPLEMENTATION
+#include <WinDef.h>
+#include <IntSafe.h>
+#include <BaseTsd.h>
 #include <mmeapi.h>
 
 LPHMIDIIN phmi;
