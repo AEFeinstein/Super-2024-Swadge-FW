@@ -21,6 +21,7 @@ int platform_midi_write_coremidi(unsigned char* buf, int size);
 #include <string.h>
 
 #include <MacTypes.h>
+#include <CoreFoundation/CFString.h>
 #include <CoreMIDI/CoreMIDI.h>
 
 #ifndef PLATFORM_MIDI_EVENT_BUFFER_ITEMS
@@ -50,7 +51,7 @@ int platform_midi_init_coremidi(const char* name)
     /* name: The client name */
     /* notifyProc: an optional callback for system changes */
     /* notifyRefCon: a nullable refCon for notifyRefCon*/
-    CFString nameCf = CFStringCreateWithCString(NULL, name, UTF8);
+    CFString nameCf = CFStringCreateWithCString(NULL, name, kCFStringEncodingUTF8);
     OSStatus result = MIDIClientCreate(nameCf, NULL, NULL, &coremidi_client);
 
     if (0 != result)
@@ -70,7 +71,7 @@ int platform_midi_init_coremidi(const char* name)
 
     result = MIDIInputPortCreateWithProtocol(
         coremidi_client,
-        CFStringCreateWithCStringNoCopy(0, "listen:in", UTF8),
+        CFStringCreateWithCStringNoCopy(0, "listen:in", kCFStringEncodingUTF8, kCFAllocatorNull),
         kMIDIProtocol_1_0,
         &coremidi_in_port,
         platform_midi_receive_callback
