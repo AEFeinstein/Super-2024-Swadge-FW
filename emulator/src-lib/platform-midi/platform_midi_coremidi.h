@@ -21,7 +21,7 @@ int platform_midi_write_coremidi(unsigned char* buf, int size);
 #include <string.h>
 
 #include <MacTypes.h>
-#include <CoreMidi.h>
+#include <CoreMIDI.h>
 
 #ifndef PLATFORM_MIDI_EVENT_BUFFER_ITEMS
 #define PLATFORM_MIDI_EVENT_BUFFER_ITEMS 32
