@@ -238,15 +238,15 @@ static void platform_midi_buffer_deinit(void)
 #endif
 #endif
 
-#if PLATFORM_MIDI_ALSA
+#ifdef PLATFORM_MIDI_ALSA
 #include "platform_midi_alsa.h"
 #endif
 
-#if PLATFORM_MIDI_COREMIDI
+#ifdef PLATFORM_MIDI_COREMIDI
 #include "platform_midi_coremidi.h"
 #endif
 
-#if PLATFORM_MIDI_WINMM
+#ifdef PLATFORM_MIDI_WINMM
 #include "platform_midi_winmm.h"
 #endif
 

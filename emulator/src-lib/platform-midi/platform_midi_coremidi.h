@@ -14,7 +14,7 @@ int platform_midi_write_coremidi(unsigned char* buf, int size);
 #define PLATFORM_MIDI_AVAIL() platform_midi_avail_coremidi()
 #define PLATFORM_MIDI_WRITE(buf, size) platform_midi_write_coremidi(buf, size)
 
-#if PLATFORM_MIDI_IMPLEMENTATION
+#ifdef PLATFORM_MIDI_IMPLEMENTATION
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
