@@ -40,14 +40,14 @@ struct platform_midi_coremidi_packet_info
 MIDIClientRef coremidi_client;
 MIDIPortRef coremidi_in_port;
 
-static void platform_midi_receive_callback(MIDIEventList* events, void* refcon)
+static void platform_midi_receive_callback(const MIDIEventList* events, void* refcon)
 {
     printf("Recieved %u MIDI packets from CoreAudio\n", events->numPackets);
 
     for (unsigned int i = 0; i < events->numPackets; i++)
     {
         unsigned char data[16];
-        int written = platform_midi_convert_ump(data, sizeof(data), events->packet[i].words, events->packet[i].numWords);
+        int written = platform_midi_convert_ump(data, sizeof(data), events->packet[i].words, events->packet[i].wordCount);
         platform_midi_push_packet(data, written);
     }
 }
