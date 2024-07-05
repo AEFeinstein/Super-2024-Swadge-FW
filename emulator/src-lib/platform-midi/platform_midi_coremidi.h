@@ -52,7 +52,7 @@ int platform_midi_init_coremidi(const char* name)
     /* name: The client name */
     /* notifyProc: an optional callback for system changes */
     /* notifyRefCon: a nullable refCon for notifyRefCon*/
-    CFString nameCf = CFStringCreateWithCString(NULL, name, kCFStringEncodingUTF8);
+    CFStringRef nameCf = CFStringCreateWithCString(NULL, name, kCFStringEncodingUTF8);
     OSStatus result = MIDIClientCreate(nameCf, NULL, NULL, &coremidi_client);
 
     if (0 != result)
