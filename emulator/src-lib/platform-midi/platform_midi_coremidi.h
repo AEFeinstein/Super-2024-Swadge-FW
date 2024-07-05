@@ -31,12 +31,6 @@ int platform_midi_write_coremidi(unsigned char* buf, int size);
 #define PLATFORM_MIDI_EVENT_BUFFER_SIZE 1024
 #endif
 
-struct platform_midi_coremidi_packet_info
-{
-    unsigned int offset;
-    unsigned int length;
-};
-
 MIDIClientRef coremidi_client;
 MIDIPortRef coremidi_in_port;
 
@@ -49,14 +43,15 @@ void (^platform_midi_receive_callback)(const MIDIEventList* events, void* refcon
         int written = platform_midi_convert_ump(data, sizeof(data), events->packet[i].words, events->packet[i].wordCount);
         platform_midi_push_packet(data, written);
     }
-}
+};
 
 int platform_midi_init_coremidi(const char* name)
 {
     /* name: The client name */
     /* notifyProc: an optional callback for system changes */
     /* notifyRefCon: a nullable refCon for notifyRefCon*/
-    OSStatus result = MIDIClientCreate(name, NULL, NULL, &coremidi_client);
+    CFString nameCf = CFStringCreateWithCString(NULL, name, UTF8);
+    OSStatus result = MIDIClientCreate(nameCf, NULL, NULL, &coremidi_client);
 
     if (0 != result)
     {
@@ -74,8 +69,8 @@ int platform_midi_init_coremidi(const char* name)
     }
 
     result = MIDIInputPortCreateWithProtocol(
-        &coremidi_client,
-        "listen:in",
+        coremidi_client,
+        CFStringCreateWithCStringNoCopy(0, "listen:in", UTF8),
         kMIDIProtocol_1_0,
         &coremidi_in_port,
         platform_midi_receive_callback
