@@ -104,7 +104,8 @@ else
 CFLAGS += \
 	-I/opt/X11/include \
 	-I/opt/homebrew/include \
-	-framework CoreFonudation
+	-framework CoreFoundation \
+	-framework CoreMIDI
 endif
 
 ifeq ($(HOST_OS),Linux)
