@@ -70,7 +70,7 @@ static void platform_midi_push_packet(unsigned char *data, unsigned int length)
     platform_midi_packet_write_pos = (platform_midi_packet_write_pos + 1) % PLATFORM_MIDI_EVENT_BUFFER_ITEMS;
 }
 
-static int platform_midi_convert_ump(unsigned char *out, unsigned int maxlen, unsigned int *umpWords, unsigned int wordCount)
+static int platform_midi_convert_ump(unsigned char *out, unsigned int maxlen, const unsigned int *umpWords, unsigned int wordCount)
 {
     unsigned int written = 0;
     unsigned char type  = (umpWords[0] & 0xF0000000) >> 28;
