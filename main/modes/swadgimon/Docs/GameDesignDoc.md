@@ -22,168 +22,168 @@ There are four versions of this game:
 
 ### MVP
 
-- Theme
-    - Moves, pokemon, items, etc have minimal updates, reskins and not actually something unique
-    - Minimal MAG stylization on top
-- Scope
-    - Map
-        - Hotel
-            - Atrium
-            - Ballrooms
-            - Resturuants
-        - Convetion center
-            - Potomac
-            - Maryland
-            - Prefunction space
-    - 1-2 Gyms
-    - 2-3 Boss trainers
-    - 25 monsters
-    - 1-2 Legendaries
-    - 1 mythic Pokemon
-    - 2-3 starters
-- Balance
-    - All core stats
-    - Pokemon, types, moves, etc are copied from Gen III to require minimal balancing
-    - Add in EXP increasing items, boost EXP gain, something to reduce the grind
-        - Or a low level cap. Not idea, but minimal testing
-- Audio
-    - Basic buzzes for menuing, actions
-    - Basic buzzes for attacks
-    - A single theme for overworld
-    - A single theme for battle
-- Mechanics
-    - Wild areas with monsters
-        - different areas have different spawn groups
-    - Turn based battles
-    - Swadgidex
-        - Track seen/caught monsters
-        - Display wild area fro each monster
-    - Later areas have harder wild mons/trainers
-    - Shops (1 per area)
-    - Character customization
-        - Pronouns
-        - Gender
-        - Name
-        - Sprites
-    - HMs to teach moves outside of leveling up
-    - Adequate pool of moves
-    - PC for managing mons
-- Graphics
-    - Gen II style
-        - 2D sprites
-        - 4 colors per
-    - Front, back and dex sprites for each mon
+- [ ] Theme
+    - [ ] Moves, pokemon, items, etc have minimal updates, reskins and not actually something unique
+    - [ ] Minimal MAG stylization on top
+- [ ] Scope
+    - [ ] Map
+        - [ ] Hotel
+            - [ ] Atrium
+            - [ ] Ballrooms
+            - [ ] Resturuants
+        - [ ] Convetion center
+            - [ ] Potomac
+            - [ ] Maryland
+            - [ ] Prefunction space
+    - [ ] 1-2 Gyms
+    - [ ] 2-3 Boss trainers
+    - [ ] 25 monsters
+    - [ ] 1-2 Legendaries
+    - [ ] 1 mythic Pokemon
+    - [ ] 2-3 starters
+- [ ] Balance
+    - [ ] All core stats
+    - [ ] Pokemon, types, moves, etc are copied from Gen III to require minimal balancing
+    - [ ] Add in EXP increasing items, boost EXP gain, something to reduce the grind
+        - [ ] Or a low level cap. Not idea, but minimal testing
+- [ ] Audio
+    - [ ] Basic buzzes for menuing, actions
+    - [ ] Basic buzzes for attacks
+    - [ ] A single theme for overworld
+    - [ ] A single theme for battle
+- [ ] Mechanics
+    - [ ] Wild areas with monsters
+        - [ ] different areas have different spawn groups
+    - [ ] Turn based battles
+    - [ ] Swadgidex
+        - [ ] Track seen/caught monsters
+        - [ ] Display wild area fro each monster
+    - [ ] Later areas have harder wild mons/trainers
+    - [ ] Shops (1 per area)
+    - [ ] Character customization
+        - [ ] Pronouns
+        - [ ] Gender
+        - [ ] Name
+        - [ ] Sprites
+    - [ ] HMs to teach moves outside of leveling up
+    - [ ] Adequate pool of moves
+    - [ ] PC for managing mons
+- [ ] Graphics
+    - [ ] Gen II style
+        - [ ] 2D sprites
+        - [ ] 4 colors per
+    - [ ] Front, back and dex sprites for each mon
 
 ### Level 1
 
 Includes everything in MVP, plus:
 
-- Theme
-    - Pokemon get an overhaul, with new movesets made of original moves.
-    - More styling
-    - New types that are just reskins
-    - New items
-- Scope
-    - Add in more of the building as part of the map.
-        - Convention 
-            - Expo halls
-            - Chesapeake
-            - National Harbor rooms
-            - Employee halls (Liminal/non-euclidian)
-        - Hotel
-            - Panel rooms
-            - Makerspace
-            - Spa
-            - Hotel rooms (Multiple floors?)
-        - Riverview
-        - Limited Exterior
-        - Farawaay land
-            Small section of half-underwater mark center
-    - 3-4 Gyms
-    - 3-5 Boss trainers
-    - 50-75 monsters
-    - 14 Legendaries
-    - 1 mythic Pokemon
-    - 3 starters
-- Balancing
-    - Improve the grind by reducing rarity
-    - Add way to get rare mons outside of walking back and forth in grass (Events?)
-    - Increase shiny chances
-- Audio
-    - More sounds, unique for actions like menuing instead of just buzzes
-    - A BGM track for each discrete area in addition to the main theme
-- Mechanics
-    - Levels
-        - More wild areas
-        - Tall grass or analogue
-        - Fishing in the fountain
-        - Story progression gates, higher level area have better items
-    - Swadgidex Lore: Snippits about each Mon
-    - Character customization
-        - Free entry pronouns
-        - Free entry Gender
-    - Mon nickname changing
-    - Multiplayer
-        - Loaner mons so it can be jumped into, no need to single player grind
-        - Rewards for online combat as banked for a single player profile
-        - Trading
-        - Battling
-    - Profanity filter for multiplayer field where text can be freely typed
-    - Step counter
-        - Gives items, money, exp rewards
-    - Move relearner 
-    - Move tutors
-    - TMs, HMs, TRs,
-        - TMs and HMs are infinite use
-        - TRs are single use
-        - All TRs have a HM/TM counterpart
-- Graphics
-    - Gen III style
-        - GUI based PC instead of generic list
-        - Bag with catergory tabs
-    - Shiny Front, back and dex sprites for each mon 
-    - Move animations
+- [ ] Theme
+    - [ ] Pokemon get an overhaul, with new movesets made of original moves.
+    - [ ] More styling
+    - [ ] New types that are just reskins
+    - [ ] New items
+- [ ] Scope
+    - [ ] Add in more of the building as part of the map.
+        - [ ] Convention 
+            - [ ] Expo halls
+            - [ ] Chesapeake
+            - [ ] National Harbor rooms
+            - [ ] Employee halls (Liminal/non-euclidian)
+        - [ ] Hotel
+            - [ ] Panel rooms
+            - [ ] Makerspace
+            - [ ] Spa
+            - [ ] Hotel rooms (Multiple floors?)
+        - [ ] Riverview
+        - [ ] Limited Exterior
+        - [ ] Farawaay land
+            - [ ] Small section of half-underwater mark center
+    - [ ] 3-4 Gyms
+    - [ ] 3-5 Boss trainers
+    - [ ] 50-75 monsters
+    - [ ] 14 Legendaries
+    - [ ] 1 mythic Pokemon
+    - [ ] 3 starters
+- [ ] Balancing
+    - [ ] Improve the grind by reducing rarity
+    - [ ] Add way to get rare mons outside of walking back and forth in grass (Events?)
+    - [ ] Increase shiny chances
+- [ ] Audio
+    - [ ] More sounds, unique for actions like menuing instead of just buzzes
+    - [ ] A BGM track for each discrete area in addition to the main theme
+- [ ] Mechanics
+    - [ ] Levels
+        - [ ] More wild areas
+        - [ ] Tall grass or analogue
+        - [ ] Fishing in the fountain
+        - [ ] Story progression gates, higher level area have better items
+    - [ ] Swadgidex Lore: Snippits about each Mon
+    - [ ] Character customization
+        - [ ] Free entry pronouns
+        - [ ] Free entry Gender
+    - [ ] Mon nickname changing
+    - [ ] Multiplayer
+        - [ ] Loaner mons so it can be jumped into, no need to single player grind
+        - [ ] Rewards for online combat as banked for a single player profile
+        - [ ] Trading
+        - [ ] Battling
+    - [ ] Profanity filter for multiplayer field where text can be freely typed
+    - [ ] Step counter
+        - [ ] Gives items, money, exp rewards
+    - [ ] Move relearner 
+    - [ ] Move tutors
+    - [ ] TMs, HMs, TRs,
+        - [ ] TMs and HMs are infinite use
+        - [ ] TRs are single use
+        - [ ] All TRs have a HM/TM counterpart
+- [ ] Graphics
+    - [ ] Gen III style
+        - [ ] GUI based PC instead of generic list
+        - [ ] Bag with catergory tabs
+    - [ ] Shiny Front, back and dex sprites for each mon 
+    - [ ] Move animations
 
 ### Level 2
 
 Includes everything in MVP and Level 1, plus:
 
-- Theme
-    - Add in more unique items and sight gags
-- Scope
-    - Map
-        - National Harbor, include the local area around the hotel
-        - 8 full gyms
-        - Lots of NPCs
-    - A full roster of custom Mons
-    - A full set of custom moves
-    - A full story with plot twists and stuff
-    - More types!
-- Balancing
-    - Have a bunch of play testing to balance the custom stuff
-- Audio
-    - Entire list of custom BGM tracks
-    - Every Mon has a unique cry
-- Mechanics
-    - Character customization
-        - Cosmetics
-        - Complete Trainer overhaul (Keep TID and SID, no reason to regenerate)
-    - Customizable Secret bases
-    - Multiplayer
-        - Friend's lists
-        - Social media links
-        - "Street pass"
-            - Spread cosmetics
-            - Spread items
-            - Share trainer info, add as friends
-            - Social media links?
-        - Raids like Pokemon GO
-            - Contribute to monster raid
-            - Cosmetics and rare monsters can drop
-            - Central server to coordinate events
-    - Different versions
-        - Version exclusing mons!
-    - Rewards can be earned by playing other swadge games
+- [ ] Theme
+    - [ ] Add in more unique items and sight gags
+- [ ] Scope
+    - [ ] Map
+        - [ ] National Harbor, include the local area around the hotel
+        - [ ] 8 full gyms
+        - [ ] Lots of NPCs
+    - [ ] A full roster of custom Mons
+    - [ ] A full set of custom moves
+    - [ ] A full story with plot twists and stuff
+    - [ ] More types!
+- [ ] Balancing
+    - [ ] Have a bunch of play testing to balance the custom stuff
+- [ ] Audio
+    - [ ] Entire list of custom BGM tracks
+    - [ ] Every Mon has a unique cry
+- [ ] Mechanics
+    - [ ] Character customization
+        - [ ] Cosmetics
+        - [ ] Complete Trainer overhaul (Keep TID and SID, no reason to regenerate)
+    - [ ] Customizable Secret bases
+    - [ ] Multiplayer
+        - [ ] Friend's lists
+        - [ ] Social media links
+        - [ ] "Street pass"
+            - [ ] Spread cosmetics
+            - [ ] Spread items
+            - [ ] Share trainer info, add as friends
+            - [ ] Social media links?
+        - [ ] Raids like Pokemon GO
+            - [ ] Contribute to monster raid
+            - [ ] Cosmetics and rare monsters can drop
+            - [ ] Central server to coordinate events
+    - [ ] Different versions
+        - [ ] Version exclusing mons!
+    - [ ] Rewards can be earned by playing other swadge games
         
 
 ### Out-Of-Scope (Currently)
@@ -220,11 +220,11 @@ Visuals should be in-line with Gen II Pokemon games. See the srceenshots below f
 
  A list of requires assest can be found [here](Asset lists\ImageAssets.csv)
 
-![Overworld](images/overworld.jpg)
+![Overworld](/main/modes/swadgimon/Docs/Images/overworld.jpg)
 
-![Battle](images/Battle.bmp)
+![Battle](/main/modes/swadgimon/Docs/Images/Battle.bmp)
 
-![Battle Start](images/BattleStart.bmp)
+![Battle Start](/main/modes/swadgimon/Docs/Images/BattleStart.bmp)
 
 ## Sounds
 
@@ -913,7 +913,7 @@ TODO
 
 An example level has been provided.
 
-A .csv file can be found [here](Data files/Levels.csv), for more frequent updates
+A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Levels.csv), for more frequent updates
 
 | Name | Area of the Real World | Expected levels | Monsters found | Gym | Special attactions | Num of entrances |
 | ---- | ---------------------- | --------------- | -------------- | --- | ------------------ | ---------------- |
@@ -923,7 +923,7 @@ A .csv file can be found [here](Data files/Levels.csv), for more frequent update
 
 A list of trainers, including uniques. Example trainer is provided.
 
-A .csv file can be found [here](Data files\Trainers.csv), for more frequent updates
+A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Trainers.csv), for more frequent updates
 
 | Name | Type | Sprite | Overworld Sprite | Pokemon | Money to be paid out | Battle entered quote | Battle lost Quote |
 | ---- | ---- | ------ | ---------------- | ------- | -------------------- | -------------------- | ----------------- |
@@ -933,7 +933,7 @@ A .csv file can be found [here](Data files\Trainers.csv), for more frequent upda
 
 Sprites each need to have a shiny variant. An example mon, Bumblebutt, has been listed.
 
-A .csv file can be found [here](Data files\Species.csv), for more frequent updates
+A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Species.csv), for more frequent updates
 
 | Index | Name | Catch Rate | Base EXP | EV Yield | Lvl Rate | Type 1 | Type 2 | Abilities | Gender | Gender spread | Height | Weight | Sprites (Facing) | Sprites (Back) | Sprites (Pokedex) | Cries | Egg Group 1 | Egg group 2 | Status Immunities |
 | ----- | ---- | ---------- | -------- | -------- | -------- | ------ | ------ | --------- | ------ | ------------- | ------ | ------ | ---------------- | -------------- | ----------------- | ----- | ----------- | ----------- | ----------------- |
@@ -941,7 +941,7 @@ A .csv file can be found [here](Data files\Species.csv), for more frequent updat
 
 ## Moves
 
-A .csv file can be found [here](Data files\Moves.csv), for more frequent updates
+A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Moves.csv), for more frequent updates
 
 | Index | Name | Type | Target | PP | Power | Accuracy method | Accuracy | TM/HM | Effects |
 | ----- | ---- | ---- | ------ | -- | ----- | --------------- | -------- | ----- | ------- |
@@ -950,7 +950,7 @@ A .csv file can be found [here](Data files\Moves.csv), for more frequent updates
 
 A pokeball is provided for reference
 
-A .csv file can be found [here](Data files\Items.csv), for more frequent updates
+A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Items.csv), for more frequent updates
 
 | Index | Item | Effect | Storage | Pokemon can hold? | In-Battle | Overworld | Price |
 | ----- | ---- | ------ | ------- | ----------------- | --------- | --------- | ----- |
@@ -958,7 +958,7 @@ A .csv file can be found [here](Data files\Items.csv), for more frequent updates
 
 ## Abilities
 
-A .csv file can be found [here](Data files\Abilities.csv), for more frequent updates
+A .csv file can be found [here](/main/modes/swadgimon/Docs/Data%20files/Abilities.csv), for more frequent updates
 
 ## Current Ideas
 
