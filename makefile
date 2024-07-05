@@ -50,7 +50,7 @@ SRC_DIRS_RECURSIVE = emulator/src main
 # This is a list of directories to scan for c files not recursively
 SRC_DIRS_FLAT = emulator/src-lib
 # This is a list of files to compile directly. There's no scanning here
-SRC_FILES = 
+SRC_FILES =
 # This is all the source directories combined
 SRC_DIRS = $(shell $(FIND) $(SRC_DIRS_RECURSIVE) -type d) $(SRC_DIRS_FLAT)
 # This is all the source files combined
@@ -103,10 +103,7 @@ else
 # Required for OpenGL and some other libraries
 CFLAGS += \
 	-I/opt/X11/include \
-	-I/opt/homebrew/include \
-	-framework Foundation \
-	-framework CoreFoundation \
-	-framework CoreMIDI
+	-I/opt/homebrew/include
 endif
 
 ifeq ($(HOST_OS),Linux)
@@ -248,7 +245,7 @@ ifeq ($(HOST_OS),Darwin)
 endif
 
 # These are directories to look for library files in
-LIB_DIRS = 
+LIB_DIRS =
 
 # On MacOS we need to ensure that X11 is added for OpenGL and some others
 ifeq ($(HOST_OS),Darwin)
@@ -267,6 +264,9 @@ LIBRARY_FLAGS += \
 else
 LIBRARY_FLAGS += \
 	-framework AudioToolbox
+    -framework Foundation \
+	-framework CoreFoundation \
+	-framework CoreMIDI
 endif
 
 ifeq ($(HOST_OS),Linux)
