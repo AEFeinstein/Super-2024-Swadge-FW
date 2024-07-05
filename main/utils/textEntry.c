@@ -54,8 +54,8 @@ static uint8_t textColor;
 #define ENTER_X  12
 #define ENTER_Y  2
 
-// 0 = Thicker Shift, 1 = Thick arrow with box below
-#define CAPS_NEW_STYLE 1
+// false = Thicker Shift, true = Thick arrow with box below
+#define CAPS_NEW_STYLE true
 
 // See controlChar_t
 static const char keyboard_upper[] = "\
@@ -96,8 +96,8 @@ void textEntryStart(font_t* usefont, int max_len, char* buffer)
     texString[0] = 0;
     cursorTimer  = 0;
     textEntryIBM = usefont;
-    textColor = WHITE;
-    pretty = false;
+    textColor    = WHITE;
+    pretty       = false;
 }
 
 /**
@@ -127,19 +127,12 @@ void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t BG, 
 }
 
 /**
- * Finish the text entry by disarming the cursor blink timer
- */
-void textEntryEnd(void)
-{
-}
-
-/**
  * Draw the text entry UI
  *
  * @return true if text entry is still being used
  *         false if text entry is finished
  */
-bool textEntryDraw(void)
+bool textEntryDraw(int64_t elapsedUs)
 {
     // If we're done, return false
     if (keyMod == SPECIAL_DONE)
@@ -147,21 +140,36 @@ bool textEntryDraw(void)
         return false;
     }
 
-    const uint8_t text_h = 64;
-    const uint8_t margin = 32;
+    const uint8_t text_h         = 64;
+    const uint8_t margin         = 32;
     const uint8_t keyboardShadow = 136;
-    
-    if (pretty){
+
+    if (pretty)
+    {
+        // Draw the BG Image
         drawWsg(&bgImage, 0, 0, false, false, 0);
+
+        // Draw the shadow boxes
         fillDisplayArea(margin, text_h - 8, TFT_WIDTH - margin, text_h + 22, textBoxColor);
         fillDisplayArea(margin, keyboardShadow, TFT_WIDTH - margin, keyboardShadow + 80, textBoxColor);
-        fillDisplayArea(TFT_WIDTH/2 - 72, TFT_HEIGHT - 16, TFT_WIDTH/2 + 72, TFT_HEIGHT, textBoxColor);
-    }
+        fillDisplayArea(TFT_WIDTH / 2 - 72, TFT_HEIGHT - 16, TFT_WIDTH / 2 + 72, TFT_HEIGHT, textBoxColor);
 
-    // Draw the text entered so far
+        /* // Draw the typed text
+        int16_t textLen = textWidth(textEntryIBM, texString) + textEntryIBM->chars[0].width;
+        int16_t endPos  = drawTextWordWrap(textEntryIBM, textColor, texString, (TFT_WIDTH - textLen) / 2, text_h);
+
+        // If the blinky cursor should be shown, draw it
+        if ((cursorTimer++) & 0x10)
+        {
+            drawLineFast(endPos + 1, text_h - 2, endPos + 1, text_h + textEntryIBM->height + 1, textColor);
+        } */
+    }
+    else
     {
-        int16_t textLen      = textWidth(textEntryIBM, texString) + textEntryIBM->chars[0].width;
-        int16_t endPos       = drawText(textEntryIBM, textColor, texString, (TFT_WIDTH - textLen) / 2, text_h);
+        // Old, non-pretty keyboard routine
+
+        int16_t textLen = textWidth(textEntryIBM, texString) + textEntryIBM->chars[0].width;
+        int16_t endPos  = drawText(textEntryIBM, textColor, texString, (TFT_WIDTH - textLen) / 2, text_h);
 
         // If the blinky cursor should be shown, draw it
         if ((cursorTimer++) & 0x10)
@@ -208,8 +216,16 @@ bool textEntryDraw(void)
     }
 
     // Draw the keyboard
-    int x = 0;
-    int y = 0;
+    _drawKeyboard();
+    return true;
+}
+
+// Drawing code
+
+static void _drawKeyboard()
+{
+    int col = 0;
+    int row = 0;
     char c;
     const char* s = (keyMod == NO_SHIFT) ? keyboard_lower : keyboard_upper;
     while ((c = *s))
@@ -217,102 +233,120 @@ bool textEntryDraw(void)
         // EOL character hit, move to the next row
         if (c == KEY_EOL)
         {
-            x = 0;
-            y++;
+            col = 0;
+            row++;
         }
         else
         {
-            int posx  = x * 14 + 44 + y * 4;
-            int posy  = y * 14 + 144;
+            int posx  = col * 14 + 44 + row * 4;
+            int posy  = row * 14 + 144;
             int width = 9;
             // Draw the character, may be a control char
             switch (c)
             {
                 case KEY_CAPSLOCK:
-                {
-#if CAPS_NEW_STYLE
-                    drawRect(posx + 2, posy + 8, posx + 5, posy + 10, textColor);    // box
-                    drawLineFast(posx + 3, posy + 0, posx + 3, posy + 6, textColor); // |
-                    drawLineFast(posx + 2, posy + 2, posx + 2, posy + 6, textColor); // | (extra thickness left)
-                    drawLineFast(posx + 4, posy + 2, posx + 4, posy + 6, textColor); // | (extra thickness right)
-                    drawLineFast(posx + 0, posy + 3, posx + 2, posy + 1, textColor); // /
-                    drawLineFast(posx + 0, posy + 4, posx + 2, posy + 2, textColor); // / (extra thickness)
-                    drawLineFast(posx + 4, posy + 1, posx + 6, posy + 3, textColor); /* \ */
-                    drawLineFast(posx + 4, posy + 2, posx + 6, posy + 4, textColor); // \ (extra thickness)
+                    _drawCaps(posx, posy, textColor);
                     break;
-#else
-                    // Draw capslock extra arrow body thickness
-                    drawLineFast(posx + 2, posy + 4, posx + 2, posy + 9, textColor); // | (extra thickness left)
-                    drawLineFast(posx + 4, posy + 4, posx + 4, posy + 9, textColor); // | (extra thickness right)
-                                                                                 // Intentional fallthrough
-#endif
-                }
                 case KEY_SHIFT:
-                {
-                    // Draw shift/capslock
-                    drawLineFast(posx + 1, posy + 9, posx + 5, posy + 9, textColor); // -
-                    drawLineFast(posx + 3, posy + 2, posx + 3, posy + 9, textColor); // |
-                    drawLineFast(posx + 0, posy + 5, posx + 2, posy + 3, textColor); // /
-                    drawLineFast(posx + 0, posy + 6, posx + 2, posy + 4, textColor); // / (extra thickness)
-                    drawLineFast(posx + 4, posy + 3, posx + 6, posy + 5, textColor); /* \ */
-                    drawLineFast(posx + 4, posy + 4, posx + 6, posy + 6, textColor); // \ (extra thickness)
+                    _drawShift(posx, posy, textColor);
                     break;
-                }
                 case KEY_BACKSPACE:
-                {
-                    // Draw backspace
-                    drawLineFast(posx + 0, posy + 5, posx + 6, posy + 5, textColor); // -
-                    drawLineFast(posx + 1, posy + 4, posx + 3, posy + 2, textColor); // /
-                    drawLineFast(posx + 2, posy + 4, posx + 4, posy + 2, textColor); // / (extra thickness)
-                    drawLineFast(posx + 1, posy + 6, posx + 3, posy + 8, textColor); /* \ */
-                    drawLineFast(posx + 2, posy + 6, posx + 4, posy + 8, textColor); // \ (extra thickness)
+                    _drawBackspace(posx, posy, textColor);
                     break;
-                }
                 case KEY_SPACE:
-                {
-                    // Draw spacebar
-                    drawRect(posx + 1, posy + 1, posx + 160, posy + 3, textColor);
+                    _drawSpacebar(posx, posy, textColor);
                     width = 163;
                     break;
-                }
                 case KEY_TAB:
-                {
-                    // Draw tab
-                    drawLineFast(posx + 0, posy + 2, posx + 0, posy + 8, textColor); // |
-                    drawLineFast(posx + 0, posy + 5, posx + 6, posy + 5, textColor); // -
-                    drawLineFast(posx + 3, posy + 2, posx + 5, posy + 4, textColor); // \ (not a multiline comment)
-                    drawLineFast(posx + 2, posy + 2, posx + 4, posy + 4, textColor); // \ (extra thickness)
-                    drawLineFast(posx + 3, posy + 8, posx + 5, posy + 6, textColor); // /
-                    drawLineFast(posx + 2, posy + 8, posx + 4, posy + 6, textColor); // / (extra thickness)
+                    _drawTab(posx, posy, textColor);
                     break;
-                }
                 case KEY_ENTER:
-                {
-                    // Draw an OK for enter
-
-                    drawText(textEntryIBM, textColor, "OK", posx, posy);
+                    _drawEnter(posx, posy, textColor);
                     width = textWidth(textEntryIBM, "OK") + 2;
                     break;
-                }
                 default:
-                {
                     // Just draw the char
                     char sts[] = {c, 0};
                     drawText(textEntryIBM, textColor, sts, posx, posy);
-                }
             }
-            if (x == selx && y == sely)
+            if (col == selx && row == sely)
             {
                 // Draw Box around selected item.
                 drawRect(posx - 2, posy - 2, posx + width, posy + 13, textColor);
                 selChar = c;
             }
-            x++;
+            col++;
         }
         s++;
     }
-    return true;
 }
+
+static void _drawCaps(int16_t x, int16_t y, uint8_t color)
+{
+    if (CAPS_NEW_STYLE)
+    {
+        drawRect(x + 2, y + 8, x + 5, y + 10, color);    // box
+        drawLineFast(x + 3, y + 0, x + 3, y + 6, color); // |
+        drawLineFast(x + 2, y + 2, x + 2, y + 6, color); // | (extra thickness left)
+        drawLineFast(x + 4, y + 2, x + 4, y + 6, color); // | (extra thickness right)
+        drawLineFast(x + 0, y + 3, x + 2, y + 1, color); // /
+        drawLineFast(x + 0, y + 4, x + 2, y + 2, color); // / (extra thickness)
+        drawLineFast(x + 4, y + 1, x + 6, y + 3, color); /* \ */
+        drawLineFast(x + 4, y + 2, x + 6, y + 4, color); // \ (extra thickness)
+    }
+    else
+    {
+        // Draw capslock extra arrow body thickness
+        drawLineFast(x + 2, y + 4, x + 2, y + 9, color); // | (extra thickness left)
+        drawLineFast(x + 4, y + 4, x + 4, y + 9, color); // | (extra thickness right)
+        _drawShift(x, y, color);
+    }
+}
+
+static void _drawShift(int16_t x, int16_t y, uint8_t color)
+{
+    // Draw shift/capslock
+    drawLineFast(x + 1, y + 9, x + 5, y + 9, color); // -
+    drawLineFast(x + 3, y + 2, x + 3, y + 9, color); // |
+    drawLineFast(x + 0, y + 5, x + 2, y + 3, color); // /
+    drawLineFast(x + 0, y + 6, x + 2, y + 4, color); // / (extra thickness)
+    drawLineFast(x + 4, y + 3, x + 6, y + 5, color); /* \ */
+    drawLineFast(x + 4, y + 4, x + 6, y + 6, color); // \ (extra thickness)
+}
+
+static void _drawBackspace(int16_t x, int16_t y, uint8_t color)
+{
+    // Draw backspace
+    drawLineFast(x + 0, y + 5, x + 6, y + 5, color); // -
+    drawLineFast(x + 1, y + 4, x + 3, y + 2, color); // /
+    drawLineFast(x + 2, y + 4, x + 4, y + 2, color); // / (extra thickness)
+    drawLineFast(x + 1, y + 6, x + 3, y + 8, color); /* \ */
+    drawLineFast(x + 2, y + 6, x + 4, y + 8, color); // \ (extra thickness)
+}
+
+static void _drawSpacebar(int16_t x, int16_t y, uint8_t color)
+{
+    // Draw spacebar
+    drawRect(x + 1, y + 1, x + 160, y + 3, color);
+}
+
+static void _drawTab(int16_t x, int16_t y, uint8_t color)
+{
+    // Draw tab
+    drawLineFast(x + 0, y + 2, x + 0, y + 8, color); // |
+    drawLineFast(x + 0, y + 5, x + 6, y + 5, color); // -
+    drawLineFast(x + 3, y + 2, x + 5, y + 4, color); // \ (not a multiline comment)
+    drawLineFast(x + 2, y + 2, x + 4, y + 4, color); // \ (extra thickness)
+    drawLineFast(x + 3, y + 8, x + 5, y + 6, color); // /
+    drawLineFast(x + 2, y + 8, x + 4, y + 6, color); // / (extra thickness)
+}
+
+static void _drawEnter(int16_t x, int16_t y, uint8_t color)
+{
+    drawText(textEntryIBM, textColor, "OK", x, y);
+}
+
+// Input handling
 
 /**
  * handle button input for text entry

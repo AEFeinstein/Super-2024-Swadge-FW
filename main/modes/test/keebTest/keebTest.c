@@ -87,11 +87,10 @@ void keebMainLoop(int64_t elapsedUs)
         {
             int8_t down = evt.down;
             int8_t button = evt.button;
-            textEntryDraw();
+            textEntryDraw(elapsedUs);
             done = !textEntryInput(down, button);
         }
         if (done){
-            textEntryEnd();
             kbTest->displayText = true;
         }
     }
