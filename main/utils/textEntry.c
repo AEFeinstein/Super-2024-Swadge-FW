@@ -1,8 +1,8 @@
 #include "textEntry.h"
 
-/*============================================================================
- * Internal draw function declarations
- *==========================================================================*/
+//==============================================================================
+// Internal function declarations
+//==============================================================================
 
 /**
  * @brief Updated text entry with more options
@@ -90,9 +90,9 @@ static int _drawEnter(int16_t x, int16_t y, uint8_t color);
  */
 static void _drawTypeMode(void);
 
-/*============================================================================
- * Variables
- *==========================================================================*/
+//==============================================================================
+// Variables
+//==============================================================================
 
 // Text entry
 static int texLen;
@@ -161,7 +161,7 @@ void textEntryInit(font_t* useFont, int max_len, char* buffer)
     cursorTimer  = 0;
     cursorToggle = true;
 
-    // Initalize default colors and BG mode
+    // Initialize default colors and BG mode
     backgroundMode = COLOR_BG;
     bgColor        = c000;
     textColor      = c555;
@@ -384,7 +384,7 @@ void textEntrySetFont(font_t* newFont)
     wideChar   = activeFont->chars[MAX_WIDTH_CHAR].width;
 }
 
-void textEntrySetBGWSG(wsg_t* BG)
+void textEntrySetBgWsg(wsg_t* BG)
 {
     backgroundMode = WSG_BG;
     bgImage        = BG;
@@ -484,7 +484,7 @@ static void _drawCursor(int64_t eUs, int16_t end, int16_t h)
 
 static int16_t _drawKeyboard()
 {
-    int16_t width              = wideChar + 2;
+    int16_t width          = wideChar + 2;
     int16_t StartX         = TFT_WIDTH / 2 - (lengthPerLine[0] * (width + KEY_SPACING)) / 2;
     int16_t keyboardHeight = KB_LINES * (activeFont->height + KEY_SPACING);
     int16_t StartY         = TFT_HEIGHT - (keyboardHeight + activeFont->height + (3 * SHADOWBOX_MARGIN));
@@ -507,7 +507,8 @@ static int16_t _drawKeyboard()
         }
         else
         {
-            width    = activeFont->chars[32].width + 2; // Recalc each round because it is overwritten by spacial chars
+            // Recalculate each round because it is overwritten by spacial chars
+            width    = activeFont->chars[32].width + 2;
             int posX = col * (width + KEY_SPACING) + StartX + row * (width / 2 + 1);
             int posY = row * (activeFont->height + KEY_SPACING) + StartY;
             // Draw the character, may be a control char

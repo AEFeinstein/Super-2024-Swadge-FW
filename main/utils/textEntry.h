@@ -3,7 +3,7 @@
  * \section textEntry_design Design Philosophy
  *
  * TextEntry serves as a method to create strings for a multitude of cases. It should be easy to see, easy to customize
- * and as intuitize to use as possible. Several customization options are available.
+ * and as intuitive to use as possible. Several customization options are available.
  *
  * \section textEntry_usage Usage
  *
@@ -12,9 +12,9 @@
  *
  * Once initalized, additional commands can be run to customize the text entry screen:
  * - textEntrySetFont(font_t* newFont): A new font to use for the keyboard
- * - textEntrySetBG(wsg_t *wsg): Sets a provided image to the background and sets teh background mode to use the WSG.
- * - textEntrySetBGColor(uint8_t color): Sets the background ot a solid color
- * - textEntrySetBGTransparent()
+ * - textEntrySetBgWsg(wsg_t *wsg): Sets a provided image to the background and sets teh background mode to use the WSG.
+ * - textEntrySetBGColor(uint8_t color): Sets the background to a solid color
+ * - textEntrySetBGTransparent(): Sets the background to be transparent
  * - textEntrySetTextColor(uint8_t color, bool emphasis): Sets the text color, and optionally sets the emphasis color.
  * - textEntrySetEmphasisColor(uint8_t color): Sets the emphasis color.
  * - textEntrySetShadowboxColor(bool active, uint8_t color): Sets the color of the shadowboxes used to contrast the
@@ -23,9 +23,9 @@
  * - textEntrySetNewCapsStyle(bool newStyle): Sets the style to old (false) or new (true)
  *
  * The text entry is re-drawn from scratch every cycle. The above commands can be run between cycles if desired, though
- * it is strongly discourged to keep the text entry easy for the end user to navigate and ustilize.
+ * it is strongly discouraged to keep the text entry easy for the end user to navigate and utilize.
  *
- * textEntryInit() can be called once during iniitalization or just before the text entry is required, but cannot be
+ * textEntryInit() can be called once during initialization or just before the text entry is required, but cannot be
  * inside the loop or it will not function.
  *
  * After all of the initialization is done, use textEntryDraw() to draw the current text entry box and textEntryInput()
@@ -58,11 +58,11 @@
  * textEntrySetShadowboxColor(c111);
  *
  * // WSG background, pink shadowboxes, and a new font
- * textEntrySetBG(&bg_test);
+ * textEntrySetBgWsg(&bg_test);
  * textEntrySetShadowboxColor(true, c433);
  * textEntrySetFont(&fnt2);
  *
- * // Transparent BG with capslock and enter variations
+ * // Transparent BG with caps lock and enter variations
  * textEntrySetBGTransparent();
  * textEntrySetNewCapsStyle(true);
  * textEntrySetNewEnterStyle(true);
@@ -83,8 +83,6 @@
  * \endcode
  */
 
-
-
 #pragma once
 
 //==============================================================================
@@ -103,11 +101,11 @@
 #define ENTER_Y  2
 
 // Graphics
-#define CORNER_MARGIN       20 // Margin to clear the roiunded corners
-#define SHADOWBOX_MARGIN    4  // Margine around shadowboxes
-#define RETURN_WIDTH        16 // Width of return symbol
-#define KEY_SPACING         5  // Space between keys
-#define MAX_WIDTH_CHAR      32 // @ symbol, due to size in fonts tested.
+#define CORNER_MARGIN    20 // Margin to clear the rounded corners
+#define SHADOWBOX_MARGIN 4  // Margin around shadowboxes
+#define RETURN_WIDTH     16 // Width of return symbol
+#define KEY_SPACING      5  // Space between keys
+#define MAX_WIDTH_CHAR   32 // @ symbol, due to size in fonts tested.
 
 // Timers
 #define BLINK_RATE 500000 // Time in Us before blinker toggles
@@ -147,7 +145,7 @@ typedef enum
 //==============================================================================
 
 /**
- * Initialize the text entry with prettier graphics
+ * @brief Initialize the text entry with prettier graphics
  *
  * @param useFont  The font to use
  * @param max_len  The length of buffer
@@ -156,7 +154,7 @@ typedef enum
 void textEntryInit(font_t* useFont, int max_len, char* buffer);
 
 /**
- * Draw the text entry UI
+ * @brief Draw the text entry UI
  *
  * @return true if text entry is still being used
  *         false if text entry is finished
@@ -164,7 +162,7 @@ void textEntryInit(font_t* useFont, int max_len, char* buffer);
 bool textEntryDraw(int64_t elapsedUs);
 
 /**
- * handle button input for text entry
+ * @brief Handle button input for text entry
  *
  * @param down   true if the button was pressed, false if it was released
  * @param button The button that was pressed
@@ -187,12 +185,12 @@ void textEntrySetFont(font_t* newFont);
  *
  * @param BG Pointer to Background image to set
  */
-void textEntrySetBGWSG(wsg_t* BG);
+void textEntrySetBgWsg(wsg_t* BG);
 
 /**
  * @brief Sets the background to use a solid color
  *
- * @param color Color to set the bachground
+ * @param color Color to set the background
  */
 void textEntrySetBGColor(uint8_t color);
 
@@ -233,7 +231,7 @@ void textEntrySetShadowboxColor(bool active, uint8_t color);
 void textEntrySetNewEnterStyle(bool newStyle);
 
 /**
- * @brief Sets the style of the Capslock key
+ * @brief Sets the style of the caps lock key
  *
  * @param newStyle if true, use the new style
  */
