@@ -110,12 +110,15 @@ static int8_t selY;
 static char selChar;
 
 // Graphical
-static bool prettyGraphics;
+bgMode_t backgroundMode;
 static uint8_t textColor;
 static uint8_t emphasisColor;
+static uint8_t bgColor;
 static uint8_t textBoxColor;
 static uint64_t cursorTimer;
 static bool cursorToggle;
+static bool enterNewStyle;
+static bool capsNewStyle;
 
 // Resources
 static wsg_t* bgImage;
@@ -145,38 +148,31 @@ static const uint8_t lengthPerLine[] = {14, 14, 13, 12, 1};
 // Functions
 //==============================================================================
 
-void textEntryStart(font_t* useFont, int max_len, char* buffer)
+void textEntryInit(font_t* useFont, int max_len, char* buffer)
 {
-    texLen         = max_len;
-    texString      = buffer;
-    selX           = 1;
-    selY           = 1;
-    keyMod         = NO_SHIFT;
-    texString[0]   = 0;
-    cursorTimer    = 0;
-    cursorToggle   = true;
-    activeFont     = useFont;
-    textColor      = WHITE;
-    emphasisColor  = WHITE;
-    prettyGraphics = false;
+    // Set incoming data
+    texLen     = max_len;
+    texString  = buffer;
+    activeFont = useFont;
+
+    // Initialize necessary variables
+    selX         = 1;
+    selY         = 1;
+    keyMod       = NO_SHIFT;
+    texString[0] = 0;
+    cursorTimer  = 0;
+    cursorToggle = true;
+
+    // Initalize default colors and BG mode
+    backgroundMode = COLOR_BG;
+    bgColor        = c000;
+    textColor      = c555;
+    emphasisColor  = c555;
+    enterNewStyle  = true;
+    capsNewStyle   = true;
 }
 
-void textEntryStartPretty(font_t* useFont, int max_len, char* buffer, wsg_t* BG)
-{
-    texLen         = max_len;
-    texString      = buffer;
-    selX           = 1;
-    selY           = 1;
-    keyMod         = NO_SHIFT;
-    texString[0]   = 0;
-    cursorTimer    = 0;
-    cursorToggle   = true;
-    activeFont     = useFont;
-    prettyGraphics = true;
-    bgImage        = BG;
-}
-
-bool textEntryDrawBlink(int64_t elapsedUs)
+bool textEntryDraw(int64_t elapsedUs)
 {
     // If we're done, return false
     if (keyMod == SPECIAL_DONE)
@@ -380,28 +376,55 @@ bool textEntryInput(uint8_t down, uint8_t button)
 
 // Setters
 
-void textEntrySetTextColor(uint8_t col)
+void textEntrySetFont(font_t* newFont)
 {
-    textColor = col;
-    if (emphasisColor == 0)
+    // FIXME: All fonts aside from "ibm_vga8.font" will break unless they happen to share footprints
+    // Removal of hardcoded values will help
+    activeFont = newFont;
+}
+
+void textEntrySetBGWSG(wsg_t* BG)
+{
+    backgroundMode = WSG_BG;
+    bgImage        = BG;
+}
+
+void textEntrySetBGColor(uint8_t color)
+{
+    backgroundMode = COLOR_BG;
+    bgColor        = color;
+}
+
+void textEntrySetBGTransparent(void)
+{
+    backgroundMode = CLEAR_BG;
+}
+
+void textEntrySetTextColor(uint8_t color, bool emphasis)
+{
+    textColor = color;
+    if (emphasis)
     {
-        emphasisColor = col;
+        emphasisColor = color;
     }
 }
 
-void textEntrySetEmphasisColor(uint8_t col)
+void textEntrySetEmphasisColor(uint8_t color)
 {
-    emphasisColor = col;
+    emphasisColor = color;
 }
 
-void textEntrySetShadowboxColor(uint8_t col)
+void textEntrySetShadowboxColor(uint8_t color)
 {
-    textBoxColor = col;
+    textBoxColor = color;
 }
 
-void textEntrySetBG(wsg_t* BG)
+void textEntrySetEnterStyle(bool newStyle)
 {
-    bgImage = BG;
+}
+
+void textEntrySetCapsStyle(bool newStyle)
+{
 }
 
 // Drawing code

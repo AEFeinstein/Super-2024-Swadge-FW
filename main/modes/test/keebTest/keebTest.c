@@ -77,7 +77,7 @@ void keebMainLoop(int64_t elapsedUs)
             if (evt.down)
             {
                 kbTest->displayText = false;
-                textEntryStartPretty(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText, &kbTest->bg);
+                textEntryInit(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText);
                 textEntrySetTextColor(c555);
                 textEntrySetEmphasisColor(c500);
                 textEntrySetShadowboxColor(c111);
@@ -96,6 +96,6 @@ void keebMainLoop(int64_t elapsedUs)
         {
             kbTest->displayText = true;
         }
-        textEntryDrawBlink(elapsedUs);
+        textEntryDraw(elapsedUs);
     }
 }
