@@ -26,7 +26,7 @@ const char keebTestName[] = "Keyboard Test";
 swadgeMode_t keebTestMode = {
     .modeName                 = keebTestName,
     .wifiMode                 = NO_WIFI,
-    .overrideUsb              = false, 
+    .overrideUsb              = false,
     .usesAccelerometer        = false,
     .usesThermometer          = false,
     .overrideSelectBtn        = false,
@@ -63,18 +63,19 @@ void keebExitMode(void)
 
 void keebMainLoop(int64_t elapsedUs)
 {
-    if (kbTest->displayText){
+    if (kbTest->displayText)
+    {
         int16_t width = textWidth(&kbTest->fnt, kbTest->typedText);
         fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c111);
         int16_t xOff = (TFT_WIDTH - width) / 2;
-        int16_t yOff = (TFT_HEIGHT - kbTest->fnt.height)/2;
-        drawTextWordWrap(&kbTest->fnt, c555, kbTest->typedText, &xOff,
-                         &yOff, 180, 60);
+        int16_t yOff = (TFT_HEIGHT - kbTest->fnt.height) / 2;
+        drawTextWordWrap(&kbTest->fnt, c555, kbTest->typedText, &xOff, &yOff, 180, 60);
         drawText(&kbTest->fnt, c555, kbTest->typedText, xOff, yOff);
         buttonEvt_t evt = {0};
         while (checkButtonQueueWrapper(&evt))
         {
-            if (evt.down){
+            if (evt.down)
+            {
                 kbTest->displayText = false;
                 textEntryStartPretty(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText, &kbTest->bg);
                 textEntrySetTextColor(c555);
@@ -82,17 +83,20 @@ void keebMainLoop(int64_t elapsedUs)
                 textEntrySetShadowboxColor(c111);
             }
         }
-    } else {
-        bool done = false;
+    }
+    else
+    {
+        bool done       = false;
         buttonEvt_t evt = {0};
         while (checkButtonQueueWrapper(&evt))
         {
-            int8_t down = evt.down;
+            int8_t down   = evt.down;
             int8_t button = evt.button;
             textEntryDrawBlink(elapsedUs);
             done = !textEntryInput(down, button);
         }
-        if (done){
+        if (done)
+        {
             kbTest->displayText = true;
         }
     }

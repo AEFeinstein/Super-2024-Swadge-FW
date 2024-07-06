@@ -128,7 +128,7 @@ static void _drawStrSimple(int64_t elaspedUs);
 
 /**
  * @brief Draws the curso at the end of the line
- * 
+ *
  * @param eUs used to calculate if cursor should toggle on or off.
  * @param end The end of the line, used to calculate position.
  */
