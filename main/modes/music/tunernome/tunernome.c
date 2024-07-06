@@ -55,7 +55,7 @@
 #define MAX_BPM              400
 #define MAX_BEATS            16 // I mean, realistically, who's going to have more than 16 beats in a measure?
 #define METRONOME_FLASH_MS   35
-#define METRONOME_CLICK_MS   35
+// #define METRONOME_CLICK_MS   35
 #define BPM_CHANGE_FIRST_MS  500
 #define BPM_CHANGE_FAST_MS   2000
 #define BPM_CHANGE_REPEAT_MS 50
