@@ -600,7 +600,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
             toDraw = &renderer->batt[0];
         }
 
-        drawWsg(toDraw, 212, 3, false, false, 0);
+        drawWsg(toDraw, 224, 11, false, false, 0);
     }
 }
 

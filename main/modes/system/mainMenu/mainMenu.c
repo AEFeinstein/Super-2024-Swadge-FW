@@ -62,6 +62,7 @@ void addSecretsMenu(void);
 
 // It's good practice to declare immutable strings as const so they get placed in ROM, not RAM
 const char mainMenuName[]                       = "Main Menu";
+const char mainMenuTitle[]                      = "Swadge";
 static const char mainMenuShowSecretsMenuName[] = "ShowOnMenu: ";
 static const char factoryResetName[]            = "Factory Reset";
 static const char confirmResetName[]            = "! Confirm Reset !";
@@ -143,7 +144,7 @@ static void mainMenuEnterMode(void)
     loadMidiFile("item.mid", &mainMenu->fanfare, false);
 
     // Allocate the menu
-    mainMenu->menu = initMenu(mainMenuName, mainMenuCb);
+    mainMenu->menu = initMenu(mainMenuTitle, mainMenuCb);
 
     // Add single items
     mainMenu->menu = startSubMenu(mainMenu->menu, "Games");
