@@ -1,5 +1,11 @@
 #pragma once
 
+// TODO:
+// Make a return symbol
+// Add emphasis colors
+// Un-hard code values
+// Add setters for some properties
+
 //==============================================================================
 // Includes
 //==============================================================================
@@ -19,9 +25,15 @@
 // false = enter is texk "OK", true = "Return" style arrow
 #define ENTER_STYLE false
 
+// Selection position
 #define KB_LINES 5
 #define ENTER_X  12
 #define ENTER_Y  2
+
+// Graphics
+#define MARGIN      32     // Margin from the edge of the screen
+#define STR_H_START 64     // Distance from the top of the screen to start drawing
+#define BLINK_RATE  250000 // Time in Us before blinker toggles
 
 //==============================================================================
 // Enums
@@ -69,7 +81,15 @@ void textEntryStart(font_t* usefont, int max_len, char* buffer);
  * @param tbColor  Color used as a contrast to the text color
  * @param txtColor Color used for the text
  */
-void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t BG, uint8_t tbColor, uint8_t txtColor);
+void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG, uint8_t tbColor, uint8_t txtColor);
+
+/**
+ * @brief Provided for backwards comaptibility. Will not blink cursor.
+ *
+ * @return true
+ * @return false
+ */
+bool textEntryDraw(void);
 
 /**
  * Draw the text entry UI
@@ -77,7 +97,7 @@ void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t BG, 
  * @return true if text entry is still being used
  *         false if text entry is finished
  */
-bool textEntryDraw(int64_t elapsedUs);
+bool textEntryDrawBlink(int64_t elapsedUs);
 
 /**
  * handle button input for text entry
@@ -93,28 +113,36 @@ bool textEntryInput(uint8_t down, uint8_t button);
 
 /**
  * @brief Updated text entry with more options
- * 
- * @param text_h    How far down the screen the text starts
+ *
  * @param elaspedUs How many ms have elasped since last time function was called
  */
-static void _drawStrPretty(int8_t text_h, int64_t elaspedUs);
+static void _drawStrPretty(int64_t elaspedUs);
 
 /**
  * @brief Old, non-pretty keyboard routine. Provided for compatibility
- * 
- * @param text_h How far down the screen the text starts
+ *
+ * @param elaspedUs How many ms have elasped since last time function was called
  */
-static void _drawStrSimple(uint8_t text_h);
+static void _drawStrSimple(int64_t elaspedUs);
+
+/**
+ * @brief Draws the curso at the end of the line
+ * 
+ * @param eUs used to calculate if cursor should toggle on or off.
+ * @param end The end of the line, used to calculate position.
+ */
+static void _drawCursor(int64_t eUs, int16_t pos);
 
 /**
  * @brief Draws the keyboard
- * 
+ *
+ * @param pretty If the shadwobox should be drawn
  */
-static void _drawKeyboard(void);
+static void _drawKeyboard(bool pretty);
 
 /**
  * @brief Draws the custom capslock character
- * 
+ *
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
@@ -123,7 +151,7 @@ static void _drawCaps(int16_t x, int16_t y, uint8_t color);
 
 /**
  * @brief Draws the custom shift key character
- * 
+ *
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
@@ -132,7 +160,7 @@ static void _drawShift(int16_t x, int16_t y, uint8_t color);
 
 /**
  * @brief Draws the custom backspace character
- * 
+ *
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
@@ -141,7 +169,7 @@ static void _drawBackspace(int16_t x, int16_t y, uint8_t color);
 
 /**
  * @brief Draws the custom spacebar character
- * 
+ *
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
@@ -150,7 +178,7 @@ static void _drawSpacebar(int16_t x, int16_t y, uint8_t color);
 
 /**
  * @brief Draws the custom tab character
- * 
+ *
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
@@ -159,9 +187,19 @@ static void _drawTab(int16_t x, int16_t y, uint8_t color);
 
 /**
  * @brief Draws the custom enter kry character
- * 
+ *
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
+ *
+ * @return int  Width of the symbol for selectiion box drawing
  */
-static void _drawEnter(int16_t x, int16_t y, uint8_t color);
+static int _drawEnter(int16_t x, int16_t y, uint8_t color);
+
+/**
+ * @brief Draws some text indicationg the typing mode
+ *
+ * @param color Color to use for the text
+ * @param pretty Whether to use the shadowbox
+ */
+static void _drawTypeMode(uint8_t color, bool pretty);

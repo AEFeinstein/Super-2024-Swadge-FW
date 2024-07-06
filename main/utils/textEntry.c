@@ -4,22 +4,24 @@
  * Variables
  *==========================================================================*/
 
-static font_t* textEntryIBM;
+// Text entry
 static int texLen;
 static char* texString;
 static keyModifier_t keyMod;
 static int8_t selx;
 static int8_t sely;
 static char selChar;
-static uint8_t cursorTimer;
-
 
 // Graphical
-static bool pretty;
+static bool prettyGraphics;
 static uint8_t textColor;
 static uint8_t textBoxColor;
+static uint64_t cursorTimer;
+static bool cursorToggle;
 
-static wsg_t bgImage;
+// Resources
+static wsg_t* bgImage;
+static font_t* activeFont;
 
 // Uppercase character list
 // See controlChar_t for definitions of hex values
@@ -47,95 +49,68 @@ static const uint8_t lengthperline[] = {14, 14, 13, 12, 1};
 
 void textEntryStart(font_t* usefont, int max_len, char* buffer)
 {
-    texLen       = max_len;
-    texString    = buffer;
-    selx         = 1;
-    sely         = 1;
-    keyMod       = NO_SHIFT;
-    texString[0] = 0;
-    cursorTimer  = 0;
-    textEntryIBM = usefont;
-    textColor    = WHITE;
-    pretty       = false;
+    texLen         = max_len;
+    texString      = buffer;
+    selx           = 1;
+    sely           = 1;
+    keyMod         = NO_SHIFT;
+    texString[0]   = 0;
+    cursorTimer    = 0;
+    cursorToggle   = true;
+    activeFont     = usefont;
+    textColor      = WHITE;
+    prettyGraphics = false;
 }
 
-void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t BG, uint8_t tbColor, uint8_t txtColor)
+void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG, uint8_t tbColor, uint8_t txtColor)
 {
-    texLen       = max_len;
-    texString    = buffer;
-    selx         = 1;
-    sely         = 1;
-    keyMod       = NO_SHIFT;
-    texString[0] = 0;
-    cursorTimer  = 0;
-    textEntryIBM = usefont;
-    textColor    = txtColor;
-    pretty       = true;
-    bgImage      = BG;
-    textBoxColor = tbColor;
+    texLen         = max_len;
+    texString      = buffer;
+    selx           = 1;
+    sely           = 1;
+    keyMod         = NO_SHIFT;
+    texString[0]   = 0;
+    cursorTimer    = 0;
+    cursorToggle   = true;
+    activeFont     = usefont;
+    textColor      = txtColor;
+    prettyGraphics = true;
+    bgImage        = BG;
+    textBoxColor   = tbColor;
 }
 
-bool textEntryDraw(int64_t elapsedUs)
+bool textEntryDraw()
+{
+    return textEntryDrawBlink(0);
+}
+
+bool textEntryDrawBlink(int64_t elapsedUs)
 {
     // If we're done, return false
     if (keyMod == SPECIAL_DONE)
     {
         return false;
     }
-
-    const uint8_t text_h = 64;
-    
-    if (pretty)
+    if (prettyGraphics)
     {
-        _drawStrPretty(text_h, elapsedUs);
+        // Background
+        drawWsg(bgImage, 0, 0, false, false, 0);
+        // Draw the currently typed string
+        _drawStrPretty(elapsedUs);
     }
     else
     {
-        _drawStrSimple(text_h);
+        // Background
+        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
+        // Draw the currently typed string
+        _drawStrSimple(elapsedUs);
     }
-
     // Draw an indicator for the current key modifier
-    switch (keyMod)
-    {
-        case SHIFT:
-        {
-            int16_t width       = textWidth(textEntryIBM, "Typing: Upper");
-            int16_t typingWidth = textWidth(textEntryIBM, "Typing: ");
-            drawText(textEntryIBM, textColor, "Typing: Upper", (TFT_WIDTH - width) / 2,
-                     TFT_HEIGHT - textEntryIBM->height - 2);
-            drawLineFast((TFT_WIDTH - width) / 2 + typingWidth, TFT_HEIGHT - 1, (TFT_WIDTH - width) / 2 + width,
-                         TFT_HEIGHT - 1, textColor);
-            break;
-        }
-        case NO_SHIFT:
-        {
-            int16_t width = textWidth(textEntryIBM, "Typing: Lower");
-            drawText(textEntryIBM, textColor, "Typing: Lower", (TFT_WIDTH - width) / 2,
-                     TFT_HEIGHT - textEntryIBM->height - 2);
-            break;
-        }
-        case CAPS_LOCK:
-        {
-            int16_t width       = textWidth(textEntryIBM, "Typing: CAPS LOCK");
-            int16_t typingWidth = textWidth(textEntryIBM, "Typing: ");
-            drawText(textEntryIBM, textColor, "Typing: CAPS LOCK", (TFT_WIDTH - width) / 2,
-                     TFT_HEIGHT - textEntryIBM->height - 2);
-            drawLineFast((TFT_WIDTH - width) / 2 + typingWidth, TFT_HEIGHT - 1, (TFT_WIDTH - width) / 2 + width,
-                         TFT_HEIGHT - 1, textColor);
-            break;
-        }
-        default:
-        case SPECIAL_DONE:
-        {
-            break;
-        }
-    }
-
+    _drawTypeMode(textColor, prettyGraphics);
     // Draw the keyboard
-    _drawKeyboard();
+    _drawKeyboard(prettyGraphics);
     return true;
 }
-
 
 bool textEntryInput(uint8_t down, uint8_t button)
 {
@@ -313,46 +288,49 @@ bool textEntryInput(uint8_t down, uint8_t button)
 
 // Drawing code
 
-static void _drawStrPretty(int8_t text_h, int64_t elaspedUs)
+static void _drawStrPretty(int64_t eUs)
 {
-    const uint8_t margin         = 32;
-    const uint8_t keyboardShadow = 136;
+    // Draw the shadow box
+    fillDisplayArea(MARGIN, STR_H_START - 8, TFT_WIDTH - MARGIN, STR_H_START + 22, textBoxColor);
 
-    // Draw the BG Image
-    drawWsg(&bgImage, 0, 0, false, false, 0);
+    // Draw the typed text
+    int16_t textLen = textWidth(activeFont, texString) + activeFont->chars[0].width;
+    int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, STR_H_START);
 
-    // Draw the shadow boxes
-    fillDisplayArea(margin, text_h - 8, TFT_WIDTH - margin, text_h + 22, textBoxColor);
-    fillDisplayArea(margin, keyboardShadow, TFT_WIDTH - margin, keyboardShadow + 80, textBoxColor);
-    fillDisplayArea(TFT_WIDTH / 2 - 72, TFT_HEIGHT - 16, TFT_WIDTH / 2 + 72, TFT_HEIGHT, textBoxColor);
-
-    /* // Draw the typed text
-    int16_t textLen = textWidth(textEntryIBM, texString) + textEntryIBM->chars[0].width;
-    int16_t endPos  = drawTextWordWrap(textEntryIBM, textColor, texString, (TFT_WIDTH - textLen) / 2, text_h);
-
-    // If the blinky cursor should be shown, draw it
-    if ((cursorTimer++) & 0x10)
-    {
-        drawLineFast(endPos + 1, text_h - 2, endPos + 1, text_h + textEntryIBM->height + 1, textColor);
-    } */
+    _drawCursor(eUs, endPos);
 }
 
-static void _drawStrSimple(uint8_t text_h)
+static void _drawStrSimple(int64_t eUs)
 {
     // Old, non-pretty keyboard routine
-    int16_t textLen = textWidth(textEntryIBM, texString) + textEntryIBM->chars[0].width;
-    int16_t endPos  = drawText(textEntryIBM, textColor, texString, (TFT_WIDTH - textLen) / 2, text_h);
+    int16_t textLen = textWidth(activeFont, texString) + activeFont->chars[0].width;
+    int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, STR_H_START);
 
-    // If the blinky cursor should be shown, draw it
-    // FIXME: Not changed because compatibility, but *should* rely on elaspsedUs
-    if ((cursorTimer++) & 0x10)
+    _drawCursor(eUs, endPos);
+}
+
+static void _drawCursor(int64_t eUs, int16_t end)
+{
+    cursorTimer += eUs;
+    if (BLINK_RATE < cursorTimer)
     {
-        drawLineFast(endPos + 1, text_h - 2, endPos + 1, text_h + textEntryIBM->height + 1, textColor);
+        cursorToggle = !cursorToggle;
+        cursorTimer  = 0;
+    }
+    if (cursorToggle)
+    {
+        drawLineFast(end + 1, STR_H_START - 2, end + 1, STR_H_START + activeFont->height + 1, textColor);
     }
 }
 
-static void _drawKeyboard()
+static void _drawKeyboard(bool pretty)
 {
+    if (pretty)
+    {
+        // FIXME: Adjust width based on font size? Make a define?
+        const uint8_t keyboardShadow = 136;
+        fillDisplayArea(MARGIN, keyboardShadow, TFT_WIDTH - MARGIN, keyboardShadow + 80, textBoxColor);
+    }
     int col = 0;
     int row = 0;
     char c;
@@ -390,13 +368,12 @@ static void _drawKeyboard()
                     _drawTab(posx, posy, textColor);
                     break;
                 case KEY_ENTER:
-                    _drawEnter(posx, posy, textColor);
-                    width = textWidth(textEntryIBM, "OK") + 2;
+                    width = _drawEnter(posx, posy, textColor);
                     break;
                 default:
                     // Just draw the char
                     char sts[] = {c, 0};
-                    drawText(textEntryIBM, textColor, sts, posx, posy);
+                    drawText(activeFont, textColor, sts, posx, posy);
             }
             if (col == selx && row == sely)
             {
@@ -470,7 +447,49 @@ static void _drawTab(int16_t x, int16_t y, uint8_t color)
     drawLineFast(x + 2, y + 8, x + 4, y + 6, color); // / (extra thickness)
 }
 
-static void _drawEnter(int16_t x, int16_t y, uint8_t color)
+static int _drawEnter(int16_t x, int16_t y, uint8_t color)
 {
-    drawText(textEntryIBM, textColor, "OK", x, y);
+    if (!ENTER_STYLE)
+    {
+        drawText(activeFont, textColor, "OK", x, y);
+        return textWidth(activeFont, "OK") + 2;
+    }
+    else
+    {
+        // TODO: Draw a return arrow
+    }
+}
+
+static void _drawTypeMode(uint8_t color, bool pretty)
+{
+    static char* text;
+    bool useLine = false;
+    switch (keyMod)
+    {
+        case SHIFT:
+            useLine = true;
+            text    = "Typing: Upper";
+            break;
+        case NO_SHIFT:
+            text = "Typing: Lower";
+            break;
+        case CAPS_LOCK:
+            useLine = true;
+            text    = "Typing: Caps";
+            break;
+        default:
+            break;
+    }
+    int16_t width       = textWidth(activeFont, text);
+    int16_t typingWidth = textWidth(activeFont, "Typing: ");
+    if (pretty)
+    {
+        fillDisplayArea(TFT_WIDTH / 2 - 72, TFT_HEIGHT - 16, TFT_WIDTH / 2 + 72, TFT_HEIGHT, textBoxColor);
+    }
+    drawText(activeFont, color, text, (TFT_WIDTH - width) / 2, TFT_HEIGHT - activeFont->height - 4);
+    if (useLine)
+    {
+        drawLineFast((TFT_WIDTH - width) / 2 + typingWidth, TFT_HEIGHT - 1, (TFT_WIDTH - width) / 2 + width,
+                     TFT_HEIGHT - 1, color);
+    }
 }

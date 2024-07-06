@@ -77,7 +77,7 @@ void keebMainLoop(int64_t elapsedUs)
         {
             if (evt.down){
                 kbTest->displayText = false;
-                textEntryStartPretty(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText, kbTest->bg, c111, c545);
+                textEntryStartPretty(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText, &kbTest->bg, c111, c545);
             }
         }
     } else {
@@ -87,7 +87,7 @@ void keebMainLoop(int64_t elapsedUs)
         {
             int8_t down = evt.down;
             int8_t button = evt.button;
-            textEntryDraw(elapsedUs);
+            textEntryDrawBlink(elapsedUs);
             done = !textEntryInput(down, button);
         }
         if (done){
