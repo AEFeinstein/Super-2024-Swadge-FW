@@ -309,7 +309,10 @@ clean:
 # This cleans everything
 fullclean: clean
 	idf.py fullclean
+	git clean -dfX
+	git clean -df
 	git clean -fX
+	git clean -f
 	$(MAKE) -C ./tools/sandbox_test clean
 	$(MAKE) -C ./tools/hidapi_test clean
 	$(MAKE) -C ./tools/bootload_reboot_stub clean
