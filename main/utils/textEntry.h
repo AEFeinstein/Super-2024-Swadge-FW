@@ -79,14 +79,6 @@ void textEntryStart(font_t* usefont, int max_len, char* buffer);
 void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG);
 
 /**
- * @brief Provided for backwards comaptibility. Will not blink cursor.
- *
- * @return true
- * @return false
- */
-bool textEntryDraw(void);
-
-/**
  * Draw the text entry UI
  *
  * @return true if text entry is still being used

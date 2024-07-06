@@ -79,11 +79,6 @@ void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG)
     bgImage        = BG;
 }
 
-bool textEntryDraw()
-{
-    return textEntryDrawBlink(0);
-}
-
 bool textEntryDrawBlink(int64_t elapsedUs)
 {
     // If we're done, return false

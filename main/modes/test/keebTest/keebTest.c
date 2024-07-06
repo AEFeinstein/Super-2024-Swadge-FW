@@ -90,14 +90,12 @@ void keebMainLoop(int64_t elapsedUs)
         buttonEvt_t evt = {0};
         while (checkButtonQueueWrapper(&evt))
         {
-            int8_t down   = evt.down;
-            int8_t button = evt.button;
-            textEntryDrawBlink(elapsedUs);
-            done = !textEntryInput(down, button);
+            done = !textEntryInput(evt.down, evt.button);
         }
         if (done)
         {
             kbTest->displayText = true;
         }
+        textEntryDrawBlink(elapsedUs);
     }
 }
