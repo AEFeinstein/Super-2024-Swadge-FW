@@ -97,7 +97,31 @@ bool textEntryDrawBlink(int64_t elapsedUs);
 bool textEntryInput(uint8_t down, uint8_t button);
 
 // Setters
+
+/**
+ * @brief Set the main text color for the keyboard and entry text
+ * 
+ * @param col Color to set the text to.
+ */
 void textEntrySetTextColor(uint8_t col);
+
+/**
+ * @brief Set the emphasis color for the text
+ * 
+ * @param col Color for the emphasis text
+ */
 void textEntrySetEmphasisColor(uint8_t col);
+
+/**
+ * @brief Sets the color of the shadowbox to ensure the text is visible
+ * 
+ * @param col Color for the shadowboxes
+ */
 void textEntrySetShadowboxColor(uint8_t col);
+
+/**
+ * @brief Sets the background image 
+ * 
+ * @param BG 
+ */
 void textEntrySetBG(wsg_t* BG);
