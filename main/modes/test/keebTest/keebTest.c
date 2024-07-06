@@ -18,7 +18,7 @@ typedef struct
     wsg_t bg;
     font_t fnt;
     bool displayText;
-    char* typedText[MAX_TEXT_LEN];
+    char typedText[MAX_TEXT_LEN];
 } keebTest_t;
 
 const char keebTestName[] = "Keyboard Test";
