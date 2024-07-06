@@ -14,7 +14,7 @@
 //==============================================================================
 
 // Default color for basic text entry
-#define WHITE 215
+#define WHITE c555
 
 // false = Thicker Shift, true = Thick arrow with box below
 #define CAPS_NEW_STYLE true
