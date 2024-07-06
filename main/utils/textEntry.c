@@ -488,7 +488,14 @@ static int _drawEnter(int16_t x, int16_t y, uint8_t color)
     }
     else
     {
-        // TODO: Draw a return arrow
+        // Draw backspace
+        drawLineFast(x + 0, y + 5, x + 12, y + 5, color); // -
+        drawLineFast(x + 1, y + 4, x + 3, y + 2, color); // /
+        drawLineFast(x + 2, y + 4, x + 4, y + 2, color); // / (extra thickness)
+        drawLineFast(x + 1, y + 6, x + 3, y + 8, color); /* \ */
+        drawLineFast(x + 2, y + 6, x + 4, y + 8, color); // \ (extra thickness)
+        drawLineFast(x + 12, y + 0, x + 12, y + 5, color); // |
+        return 16;
     }
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 
 // TODO:
-// Make a return symbol
 // Un-hard code values
 
 //==============================================================================
@@ -21,7 +20,7 @@
 #define CAPS_NEW_STYLE true
 
 // false = enter is texk "OK", true = "Return" style arrow
-#define ENTER_STYLE false
+#define ENTER_STYLE true
 
 // Selection position
 #define KB_LINES 5
