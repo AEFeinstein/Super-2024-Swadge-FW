@@ -11,7 +11,7 @@
  * provided. By default, a blank, black background is used with white text and no emphasis color.
  *
  * Once initalized, additional commands can be run to customize the text entry screen:
- * - Font
+ * - textEntrySetFont(font_t* newFont): A new font to use for the keyboard
  * - textEntrySetBG(wsg_t *wsg): Sets a provided image to the background and sets teh background mode to use the WSG.
  * - textEntrySetBGColor(uint8_t color): Sets the background ot a solid color
  * - textEntrySetBGTransparent()
@@ -60,7 +60,7 @@
  * // WSG background, pink shadowboxes, and a new font
  * textEntrySetBG(&bg_test);
  * textEntrySetShadowboxColor(true, c433);
- *
+ * textEntrySetFont(&fnt2);
  *
  * // Transparent BG with capslock and enter variations
  * textEntrySetBGTransparent();
@@ -85,9 +85,7 @@
 
 // TODO:
 // Remove hardcoded numbers
-// Add in wordwrap text for larger strings
 // Add in menu to be able to play with the text entry without recompiling
-// Allow for other fonts
 // Finish doxygen header
 
 #pragma once
@@ -108,10 +106,16 @@
 #define ENTER_Y  2
 
 // Graphics
-#define MARGIN       32     // Margin from the edge of the screen
-#define STR_H_START  64     // Distance from the top of the screen to start drawing
-#define BLINK_RATE   250000 // Time in Us before blinker toggles
-#define RETURN_WIDTH 16     // Width of return symbol
+#define CORNER_MARGIN    16  // Margin to clear the roiunded corners
+#define SHADOWBOX_MARGIN 4   // Margine around shadowboxes
+#define RETURN_WIDTH     16  // Width of return symbol
+#define KEY_SPACING      5   // Space between keys
+
+#define H_START          36  // Distance from the top of the screen to start drawing
+#define ENTER_BOX_H      56  // Height of box to enter text into
+
+// Timers
+#define BLINK_RATE 500000 // Time in Us before blinker toggles
 
 //==============================================================================
 // Enums
@@ -176,6 +180,11 @@ bool textEntryInput(uint8_t down, uint8_t button);
 
 // Setters
 
+/**
+ * @brief A new font to load into the text entry screen
+ * 
+ * @param newFont pointer to a font file
+ */
 void textEntrySetFont(font_t* newFont);
 
 /**
@@ -219,7 +228,7 @@ void textEntrySetEmphasisColor(uint8_t color);
  * @param active Whether these boxes should be drawn
  * @param color Color for the shadowboxes
  */
-void textEntrySetShadowboxColor(bool, active, uint8_t color);
+void textEntrySetShadowboxColor(bool active, uint8_t color);
 
 /**
  * @brief Sets the style of the Enter key
@@ -234,3 +243,11 @@ void textEntrySetNewEnterStyle(bool newStyle);
  * @param newStyle if true, use the new style
  */
 void textEntrySetNewCapsStyle(bool newStyle);
+
+/**
+ * @brief Sets the text entry mode from single line to multi-line
+ *
+ * @param multiline True if using multi-line, false if not
+ * @note cursor does not draw in multiline due to drawTextWordWrap not exposing the end position of the text.
+ */
+void textEntrySetMultiline(bool multiline);

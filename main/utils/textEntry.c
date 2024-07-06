@@ -9,14 +9,7 @@
  *
  * @param elapsedUs How many ms have elapsed since last time function was called
  */
-static void _drawStrPretty(int64_t elapsedUs);
-
-/**
- * @brief Old, non-pretty keyboard routine. Provided for compatibility
- *
- * @param elapsedUs How many ms have elapsed since last time function was called
- */
-static void _drawStrSimple(int64_t elapsedUs);
+static void _drawStr(int64_t elapsedUs);
 
 /**
  * @brief Draws the cursor at the end of the line
@@ -29,9 +22,8 @@ static void _drawCursor(int64_t eUs, int16_t pos);
 /**
  * @brief Draws the keyboard
  *
- * @param pretty If the shadowbox should be drawn
  */
-static void _drawKeyboard(bool pretty);
+static void _drawKeyboard(void);
 
 /**
  * @brief Draws the custom caps lock character
@@ -66,8 +58,9 @@ static void _drawBackspace(int16_t x, int16_t y, uint8_t color);
  * @param x     Starting x position
  * @param y     Starting y coordinate
  * @param color Color of the text
+ * @return int16_t width of bar
  */
-static void _drawSpacebar(int16_t x, int16_t y, uint8_t color);
+static int16_t _drawSpacebar(int16_t x, int16_t y, uint8_t color);
 
 /**
  * @brief Draws the custom tab character
@@ -92,10 +85,8 @@ static int _drawEnter(int16_t x, int16_t y, uint8_t color);
 /**
  * @brief Draws some text indicating the typing mode
  *
- * @param color Color to use for the text
- * @param pretty Whether to use the shadowbox
  */
-static void _drawTypeMode(uint8_t color, bool pretty);
+static void _drawTypeMode(void);
 
 /*============================================================================
  * Variables
@@ -104,6 +95,7 @@ static void _drawTypeMode(uint8_t color, bool pretty);
 // Text entry
 static int texLen;
 static char* texString;
+static bool multi;
 static keyModifier_t keyMod;
 static int8_t selX;
 static int8_t selY;
@@ -114,11 +106,13 @@ bgMode_t backgroundMode;
 static uint8_t textColor;
 static uint8_t emphasisColor;
 static uint8_t bgColor;
-static uint8_t textBoxColor;
-static uint64_t cursorTimer;
-static bool cursorToggle;
+static bool useShadowboxes;
+static uint8_t shadowboxColor;
 static bool enterNewStyle;
 static bool capsNewStyle;
+static uint64_t cursorTimer;
+static bool cursorToggle;
+static uint8_t wideChar;
 
 // Resources
 static wsg_t* bgImage;
@@ -154,8 +148,10 @@ void textEntryInit(font_t* useFont, int max_len, char* buffer)
     texLen     = max_len;
     texString  = buffer;
     activeFont = useFont;
+    wideChar   = activeFont->char[32].width;
 
     // Initialize necessary variables
+    multi        = false;
     selX         = 1;
     selY         = 1;
     keyMod       = NO_SHIFT;
@@ -168,6 +164,7 @@ void textEntryInit(font_t* useFont, int max_len, char* buffer)
     bgColor        = c000;
     textColor      = c555;
     emphasisColor  = c555;
+    useShadowboxes = false;
     enterNewStyle  = true;
     capsNewStyle   = true;
 }
@@ -179,24 +176,27 @@ bool textEntryDraw(int64_t elapsedUs)
     {
         return false;
     }
-    if (prettyGraphics)
+    // Background
+    switch (backgroundMode)
     {
-        // Background
-        drawWsg(bgImage, 0, 0, false, false, 0);
-        // Draw the currently typed string
-        _drawStrPretty(elapsedUs);
+        case COLOR_BG:
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, bgColor);
+            break;
+        case WSG_BG:
+            drawWsg(bgImage, 0, 0, false, false, 0);
+            break;
+        case CLEAR_BG:
+            // Do nothing! Rely on BG being drawing each cycle by something else, or the keyboard will start
+            // ghosting
+        default:
+            fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
     }
-    else
-    {
-        // Background
-        fillDisplayArea(0, 0, TFT_WIDTH, TFT_HEIGHT, c000);
-        // Draw the currently typed string
-        _drawStrSimple(elapsedUs);
-    }
+    // Draw the currently typed string
+    _drawStr(elapsedUs);
     // Draw an indicator for the current key modifier
-    _drawTypeMode(textColor, prettyGraphics);
+    _drawTypeMode();
     // Draw the keyboard
-    _drawKeyboard(prettyGraphics);
+    _drawKeyboard();
     return true;
 }
 
@@ -378,8 +378,6 @@ bool textEntryInput(uint8_t down, uint8_t button)
 
 void textEntrySetFont(font_t* newFont)
 {
-    // FIXME: All fonts aside from "ibm_vga8.font" will break unless they happen to share footprints
-    // Removal of hardcoded values will help
     activeFont = newFont;
 }
 
@@ -395,7 +393,7 @@ void textEntrySetBGColor(uint8_t color)
     bgColor        = color;
 }
 
-void textEntrySetBGTransparent(void)
+void textEntrySetBGTransparent()
 {
     backgroundMode = CLEAR_BG;
 }
@@ -414,40 +412,56 @@ void textEntrySetEmphasisColor(uint8_t color)
     emphasisColor = color;
 }
 
-void textEntrySetShadowboxColor(uint8_t color)
+void textEntrySetShadowboxColor(bool active, uint8_t color)
 {
-    textBoxColor = color;
+    useShadowboxes = true;
+    shadowboxColor = color;
 }
 
-void textEntrySetEnterStyle(bool newStyle)
+void textEntrySetNewEnterStyle(bool newStyle)
 {
+    enterNewStyle = newStyle;
 }
 
-void textEntrySetCapsStyle(bool newStyle)
+void textEntrySetNewCapsStyle(bool newStyle)
 {
+    capsNewStyle = newStyle;
+}
+
+void textEntrySetMultiline(bool multiline)
+{
+    multi = multiline;
 }
 
 // Drawing code
 
-static void _drawStrPretty(int64_t eUs)
+static void _drawStr(int64_t eUs)
 {
-    // Draw the shadow box
-    fillDisplayArea(MARGIN, STR_H_START - 8, TFT_WIDTH - MARGIN, STR_H_START + 22, textBoxColor);
-
-    // Draw the typed text
-    int16_t textLen = textWidth(activeFont, texString) + activeFont->chars[0].width;
-    int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, STR_H_START);
-
-    _drawCursor(eUs, endPos);
-}
-
-static void _drawStrSimple(int64_t eUs)
-{
-    // Old, non-pretty keyboard routine
-    int16_t textLen = textWidth(activeFont, texString) + activeFont->chars[0].width;
-    int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, STR_H_START);
-
-    _drawCursor(eUs, endPos);
+    if (multi)
+    {
+        int16_t startX = CORNER_MARGIN;
+        int16_t startY = H_START;
+        int16_t endX   = TFT_WIDTH - MARGINCORNER_MARGIN;
+        int16_t endY   = H_START + ENTER_BOX_H;
+        if (useShadowboxes)
+        {
+            fillDisplayArea(startX - SHADOWBOX_MARGIN, startY - SHADOWBOX_MARGIN, endX + SHADOWBOX_MARGIN,
+                            endY + SHADOWBOX_MARGIN, shadowboxColor);
+        }
+        drawTextWordWrap(activeFont, textColor, texString, &startX, &startY, endX, endY);
+    }
+    else
+    {
+        if (useShadowboxes)
+        {
+            fillDisplayArea(CORNER_MARGIN - SHADOWBOX_MARGIN, H_START - SHADOWBOX_MARGIN,
+                            TFT_WIDTH - CORNER_MARGIN + SHADOWBOX_MARGIN, H_START + activeFont->height + SHADOWBOX_MARGIN,
+                            shadowboxColor);
+        }
+        int16_t textLen = textWidth(activeFont, texString) + activeFont->chars[0].width;
+        int16_t endPos  = drawText(activeFont, textColor, texString, (TFT_WIDTH - textLen) / 2, H_START);
+        _drawCursor(eUs, endPos);
+    }
 }
 
 static void _drawCursor(int64_t eUs, int16_t end)
@@ -460,17 +474,20 @@ static void _drawCursor(int64_t eUs, int16_t end)
     }
     if (cursorToggle)
     {
-        drawLineFast(end + 1, STR_H_START - 2, end + 1, STR_H_START + activeFont->height + 1, emphasisColor);
+        drawLineFast(end + 1, H_START - 2, end + 1, H_START + activeFont->height + 3, emphasisColor);
     }
 }
 
-static void _drawKeyboard(bool pretty)
+static void _drawKeyboard()
 {
-    if (pretty)
+    int width              = wideChar + 2;
+    int16_t StartX         = TFT_WIDTH / 2 - (lengthPerLine[0] * (width + KEY_SPACING)) / 2;
+    int16_t keyboardHeight = KB_LINES * (activeFont->height + KEY_SPACING);
+    int16_t StartY         = TFT_HEIGHT - (keyboardHeight + activeFont->height + (3 * SHADOWBOX_MARGIN));
+    if (useShadowboxes)
     {
-        // FIXME: Adjust width based on font size? Make a define?
-        const uint8_t keyboardShadow = 136;
-        fillDisplayArea(MARGIN, keyboardShadow, TFT_WIDTH - MARGIN, keyboardShadow + 80, textBoxColor);
+        fillDisplayArea(StartX - SHADOWBOX_MARGIN, StartY - SHADOWBOX_MARGIN, TFT_WIDTH - StartX + SHADOWBOX_MARGIN,
+                        StartY + keyboardHeight, shadowboxColor);
     }
     int col = 0;
     int row = 0;
@@ -486,9 +503,9 @@ static void _drawKeyboard(bool pretty)
         }
         else
         {
-            int posX  = col * 14 + 44 + row * 4;
-            int posY  = row * 14 + 144;
-            int width = 9;
+            width    = activeFont->chars[32].width + 2; // Recalc each round because it is overwritten by spacial chars
+            int posX = col * (width + KEY_SPACING) + StartX + row * (width / 2 + 1);
+            int posY = row * (activeFont->height + KEY_SPACING) + StartY;
             // Draw the character, may be a control char
             switch (c)
             {
@@ -509,8 +526,7 @@ static void _drawKeyboard(bool pretty)
                     _drawBackspace(posX, posY, textColor);
                     break;
                 case KEY_SPACE:
-                    _drawSpacebar(posX, posY, textColor);
-                    width = 163;
+                    width = _drawSpacebar(posX, posY, textColor);
                     break;
                 case KEY_TAB:
                     _drawTab(posX, posY, textColor);
@@ -526,7 +542,7 @@ static void _drawKeyboard(bool pretty)
             if (col == selX && row == selY)
             {
                 // Draw Box around selected item.
-                drawRect(posX - 2, posY - 2, posX + width, posY + 13, textColor);
+                drawRect(posX - 2, posY - 2, posX + width, posY + activeFont->height + 4, textColor);
                 selChar = c;
             }
             col++;
@@ -537,7 +553,7 @@ static void _drawKeyboard(bool pretty)
 
 static void _drawCaps(int16_t x, int16_t y, uint8_t color)
 {
-    if (CAPS_NEW_STYLE)
+    if (capsNewStyle)
     {
         drawRect(x + 2, y + 8, x + 5, y + 10, color);    // box
         drawLineFast(x + 3, y + 0, x + 3, y + 6, color); // |
@@ -578,10 +594,12 @@ static void _drawBackspace(int16_t x, int16_t y, uint8_t color)
     drawLineFast(x + 2, y + 6, x + 4, y + 8, color); // \ (extra thickness)
 }
 
-static void _drawSpacebar(int16_t x, int16_t y, uint8_t color)
+static int16_t _drawSpacebar(int16_t x, int16_t y, uint8_t color)
 {
     // Draw spacebar
-    drawRect(x + 1, y + 1, x + 160, y + 3, color);
+    int16_t width = TFT_WIDTH - (2 * x);
+    drawRect(x + 1, y + 1, x + width - 2, y + 3, color);
+    return width;
 }
 
 static void _drawTab(int16_t x, int16_t y, uint8_t color)
@@ -597,25 +615,25 @@ static void _drawTab(int16_t x, int16_t y, uint8_t color)
 
 static int _drawEnter(int16_t x, int16_t y, uint8_t color)
 {
-    if (!ENTER_STYLE)
+    if (!enterNewStyle)
     {
         drawText(activeFont, textColor, "OK", x, y);
         return textWidth(activeFont, "OK") + 2;
     }
     else
     {
-        // Draw backspace
+        // Draw return symbol
         drawLineFast(x + 0, y + 5, x + 12, y + 5, color);  // -
         drawLineFast(x + 1, y + 4, x + 3, y + 2, color);   // /
         drawLineFast(x + 2, y + 4, x + 4, y + 2, color);   // / (extra thickness)
         drawLineFast(x + 1, y + 6, x + 3, y + 8, color);   /* \ */
         drawLineFast(x + 2, y + 6, x + 4, y + 8, color);   // \ (extra thickness)
         drawLineFast(x + 12, y + 0, x + 12, y + 5, color); // |
-        return 16;
+        return RETURN_WIDTH;
     }
 }
 
-static void _drawTypeMode(uint8_t color, bool pretty)
+static void _drawTypeMode()
 {
     static char* text;
     bool useLine = false;
@@ -637,14 +655,16 @@ static void _drawTypeMode(uint8_t color, bool pretty)
     }
     int16_t width       = textWidth(activeFont, text);
     int16_t typingWidth = textWidth(activeFont, "Typing: ");
-    if (pretty)
+    if (useShadowboxes)
     {
-        fillDisplayArea(TFT_WIDTH / 2 - 72, TFT_HEIGHT - 16, TFT_WIDTH / 2 + 72, TFT_HEIGHT, textBoxColor);
+        fillDisplayArea((TFT_WIDTH - width) / 2 - SHADOWBOX_MARGIN,
+                        TFT_HEIGHT - (activeFont->height + 4 + SHADOWBOX_MARGIN),
+                        (TFT_WIDTH + width) / 2 + SHADOWBOX_MARGIN, TFT_HEIGHT, shadowboxColor);
     }
-    drawText(activeFont, color, text, (TFT_WIDTH - width) / 2, TFT_HEIGHT - activeFont->height - 4);
+    drawText(activeFont, textColor, text, (TFT_WIDTH - width) / 2, TFT_HEIGHT - activeFont->height - 4);
     if (useLine)
     {
-        drawLineFast((TFT_WIDTH - width) / 2 + typingWidth, TFT_HEIGHT - 1, (TFT_WIDTH - width) / 2 + width,
-                     TFT_HEIGHT - 1, color);
+        drawLineFast((TFT_WIDTH - width) / 2 + typingWidth, TFT_HEIGHT - 2, (TFT_WIDTH - width) / 2 + width,
+                     TFT_HEIGHT - 2, emphasisColor);
     }
 }

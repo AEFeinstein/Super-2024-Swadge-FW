@@ -11,7 +11,7 @@ void keebMainLoop(int64_t elapsedUs);
 
 // Variables
 //==============================================================================
-#define MAX_TEXT_LEN 32
+#define MAX_TEXT_LEN 128
 
 typedef struct
 {
@@ -50,6 +50,7 @@ void keebEnterMode(void)
     kbTest = (keebTest_t*)calloc(1, sizeof(keebTest_t));
     loadWsg("menu_bg.wsg", &kbTest->bg, false);
     loadFont("ibm_vga8.font", &kbTest->fnt, false);
+    //loadFont("radiostars.font", &kbTest->fnt, false);
     kbTest->displayText = true;
     strcpy(kbTest->typedText, "Press any key");
 }
@@ -78,9 +79,10 @@ void keebMainLoop(int64_t elapsedUs)
             {
                 kbTest->displayText = false;
                 textEntryInit(&kbTest->fnt, MAX_TEXT_LEN + 1, kbTest->typedText);
-                textEntrySetTextColor(c555);
+                textEntrySetTextColor(c555, false);
                 textEntrySetEmphasisColor(c500);
-                textEntrySetShadowboxColor(c111);
+                textEntrySetShadowboxColor(true, c111);
+                textEntrySetMultiline(true);
             }
         }
     }
