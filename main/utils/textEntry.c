@@ -7,19 +7,19 @@
 /**
  * @brief Updated text entry with more options
  *
- * @param elaspedUs How many ms have elasped since last time function was called
+ * @param elapsedUs How many ms have elapsed since last time function was called
  */
-static void _drawStrPretty(int64_t elaspedUs);
+static void _drawStrPretty(int64_t elapsedUs);
 
 /**
  * @brief Old, non-pretty keyboard routine. Provided for compatibility
  *
- * @param elaspedUs How many ms have elasped since last time function was called
+ * @param elapsedUs How many ms have elapsed since last time function was called
  */
-static void _drawStrSimple(int64_t elaspedUs);
+static void _drawStrSimple(int64_t elapsedUs);
 
 /**
- * @brief Draws the curso at the end of the line
+ * @brief Draws the cursor at the end of the line
  *
  * @param eUs used to calculate if cursor should toggle on or off.
  * @param end The end of the line, used to calculate position.
@@ -29,12 +29,12 @@ static void _drawCursor(int64_t eUs, int16_t pos);
 /**
  * @brief Draws the keyboard
  *
- * @param pretty If the shadwobox should be drawn
+ * @param pretty If the shadowbox should be drawn
  */
 static void _drawKeyboard(bool pretty);
 
 /**
- * @brief Draws the custom capslock character
+ * @brief Draws the custom caps lock character
  *
  * @param x     Starting x position
  * @param y     Starting y coordinate
@@ -85,12 +85,12 @@ static void _drawTab(int16_t x, int16_t y, uint8_t color);
  * @param y     Starting y coordinate
  * @param color Color of the text
  *
- * @return int  Width of the symbol for selectiion box drawing
+ * @return int  Width of the symbol for selection box drawing
  */
 static int _drawEnter(int16_t x, int16_t y, uint8_t color);
 
 /**
- * @brief Draws some text indicationg the typing mode
+ * @brief Draws some text indicating the typing mode
  *
  * @param color Color to use for the text
  * @param pretty Whether to use the shadowbox
@@ -105,14 +105,14 @@ static void _drawTypeMode(uint8_t color, bool pretty);
 static int texLen;
 static char* texString;
 static keyModifier_t keyMod;
-static int8_t selx;
-static int8_t sely;
+static int8_t selX;
+static int8_t selY;
 static char selChar;
 
 // Graphical
 static bool prettyGraphics;
 static uint8_t textColor;
-static uint8_t empahsisColor;
+static uint8_t emphasisColor;
 static uint8_t textBoxColor;
 static uint64_t cursorTimer;
 static bool cursorToggle;
@@ -139,39 +139,39 @@ static const char keyboard_lower[] = "\
 \x01zxcvbnm,./\x01\x05\
 \x20";
 
-static const uint8_t lengthperline[] = {14, 14, 13, 12, 1};
+static const uint8_t lengthPerLine[] = {14, 14, 13, 12, 1};
 
 //==============================================================================
 // Functions
 //==============================================================================
 
-void textEntryStart(font_t* usefont, int max_len, char* buffer)
+void textEntryStart(font_t* useFont, int max_len, char* buffer)
 {
     texLen         = max_len;
     texString      = buffer;
-    selx           = 1;
-    sely           = 1;
+    selX           = 1;
+    selY           = 1;
     keyMod         = NO_SHIFT;
     texString[0]   = 0;
     cursorTimer    = 0;
     cursorToggle   = true;
-    activeFont     = usefont;
+    activeFont     = useFont;
     textColor      = WHITE;
-    empahsisColor  = WHITE;
+    emphasisColor  = WHITE;
     prettyGraphics = false;
 }
 
-void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG)
+void textEntryStartPretty(font_t* useFont, int max_len, char* buffer, wsg_t* BG)
 {
     texLen         = max_len;
     texString      = buffer;
-    selx           = 1;
-    sely           = 1;
+    selX           = 1;
+    selY           = 1;
     keyMod         = NO_SHIFT;
     texString[0]   = 0;
     cursorTimer    = 0;
     cursorToggle   = true;
-    activeFont     = usefont;
+    activeFont     = useFont;
     prettyGraphics = true;
     bgImage        = BG;
 }
@@ -245,7 +245,7 @@ bool textEntryInput(uint8_t down, uint8_t button)
                     }
                     break;
                 }
-                case KEY_CAPSLOCK:
+                case KEY_CAPS_LOCK:
                 {
                     if (CAPS_LOCK == keyMod)
                     {
@@ -304,25 +304,25 @@ bool textEntryInput(uint8_t down, uint8_t button)
         case PB_LEFT:
         {
             // Move cursor
-            selx--;
+            selX--;
             break;
         }
         case PB_DOWN:
         {
             // Move cursor
-            sely++;
+            selY++;
             break;
         }
         case PB_RIGHT:
         {
             // Move cursor
-            selx++;
+            selX++;
             break;
         }
         case PB_UP:
         {
             // Move cursor
-            sely--;
+            selY--;
             break;
         }
         case PB_SELECT:
@@ -345,8 +345,8 @@ bool textEntryInput(uint8_t down, uint8_t button)
         case PB_START:
         {
             // Move cursor to enter
-            selx = ENTER_X;
-            sely = ENTER_Y;
+            selX = ENTER_X;
+            selY = ENTER_Y;
         }
         default:
         {
@@ -355,23 +355,23 @@ bool textEntryInput(uint8_t down, uint8_t button)
     }
 
     // Make sure the cursor is in bounds, wrap around if necessary
-    if (sely < 0)
+    if (selY < 0)
     {
-        sely = KB_LINES - 1;
+        selY = KB_LINES - 1;
     }
-    else if (sely >= KB_LINES)
+    else if (selY >= KB_LINES)
     {
-        sely = 0;
+        selY = 0;
     }
 
     // Make sure the cursor is in bounds, wrap around if necessary
-    if (selx < 0)
+    if (selX < 0)
     {
-        selx = lengthperline[sely] - 1;
+        selX = lengthPerLine[selY] - 1;
     }
-    else if (selx >= lengthperline[sely])
+    else if (selX >= lengthPerLine[selY])
     {
-        selx = 0;
+        selX = 0;
     }
 
     // All done, still entering text
@@ -383,15 +383,15 @@ bool textEntryInput(uint8_t down, uint8_t button)
 void textEntrySetTextColor(uint8_t col)
 {
     textColor = col;
-    if (empahsisColor == 0)
+    if (emphasisColor == 0)
     {
-        empahsisColor = col;
+        emphasisColor = col;
     }
 }
 
 void textEntrySetEmphasisColor(uint8_t col)
 {
-    empahsisColor = col;
+    emphasisColor = col;
 }
 
 void textEntrySetShadowboxColor(uint8_t col)
@@ -437,7 +437,7 @@ static void _drawCursor(int64_t eUs, int16_t end)
     }
     if (cursorToggle)
     {
-        drawLineFast(end + 1, STR_H_START - 2, end + 1, STR_H_START + activeFont->height + 1, empahsisColor);
+        drawLineFast(end + 1, STR_H_START - 2, end + 1, STR_H_START + activeFont->height + 1, emphasisColor);
     }
 }
 
@@ -463,47 +463,47 @@ static void _drawKeyboard(bool pretty)
         }
         else
         {
-            int posx  = col * 14 + 44 + row * 4;
-            int posy  = row * 14 + 144;
+            int posX  = col * 14 + 44 + row * 4;
+            int posY  = row * 14 + 144;
             int width = 9;
             // Draw the character, may be a control char
             switch (c)
             {
-                case KEY_CAPSLOCK:
+                case KEY_CAPS_LOCK:
                     if (keyMod == CAPS_LOCK)
                     {
-                        _drawCaps(posx, posy, empahsisColor);
+                        _drawCaps(posX, posY, emphasisColor);
                     }
                     else
                     {
-                        _drawCaps(posx, posy, textColor);
+                        _drawCaps(posX, posY, textColor);
                     }
                     break;
                 case KEY_SHIFT:
-                    _drawShift(posx, posy, textColor);
+                    _drawShift(posX, posY, textColor);
                     break;
                 case KEY_BACKSPACE:
-                    _drawBackspace(posx, posy, textColor);
+                    _drawBackspace(posX, posY, textColor);
                     break;
                 case KEY_SPACE:
-                    _drawSpacebar(posx, posy, textColor);
+                    _drawSpacebar(posX, posY, textColor);
                     width = 163;
                     break;
                 case KEY_TAB:
-                    _drawTab(posx, posy, textColor);
+                    _drawTab(posX, posY, textColor);
                     break;
                 case KEY_ENTER:
-                    width = _drawEnter(posx, posy, textColor);
+                    width = _drawEnter(posX, posY, textColor);
                     break;
                 default:
                     // Just draw the char
                     char sts[] = {c, 0};
-                    drawText(activeFont, textColor, sts, posx, posy);
+                    drawText(activeFont, textColor, sts, posX, posY);
             }
-            if (col == selx && row == sely)
+            if (col == selX && row == selY)
             {
                 // Draw Box around selected item.
-                drawRect(posx - 2, posy - 2, posx + width, posy + 13, textColor);
+                drawRect(posX - 2, posY - 2, posX + width, posY + 13, textColor);
                 selChar = c;
             }
             col++;
@@ -527,7 +527,7 @@ static void _drawCaps(int16_t x, int16_t y, uint8_t color)
     }
     else
     {
-        // Draw capslock extra arrow body thickness
+        // Draw caps lock extra arrow body thickness
         drawLineFast(x + 2, y + 4, x + 2, y + 9, color); // | (extra thickness left)
         drawLineFast(x + 4, y + 4, x + 4, y + 9, color); // | (extra thickness right)
         _drawShift(x, y, color);
@@ -536,7 +536,7 @@ static void _drawCaps(int16_t x, int16_t y, uint8_t color)
 
 static void _drawShift(int16_t x, int16_t y, uint8_t color)
 {
-    // Draw shift/capslock
+    // Draw shift/caps lock
     drawLineFast(x + 1, y + 9, x + 5, y + 9, color); // -
     drawLineFast(x + 3, y + 2, x + 3, y + 9, color); // |
     drawLineFast(x + 0, y + 5, x + 2, y + 3, color); // /

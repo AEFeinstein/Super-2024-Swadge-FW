@@ -19,7 +19,7 @@
 // false = Thicker Shift, true = Thick arrow with box below
 #define CAPS_NEW_STYLE true
 
-// false = enter is texk "OK", true = "Return" style arrow
+// false = enter is text "OK", true = "Return" style arrow
 #define ENTER_STYLE true
 
 // Selection position
@@ -47,7 +47,7 @@ typedef enum
 typedef enum
 {
     KEY_SHIFT     = 0x01,
-    KEY_CAPSLOCK  = 0x02,
+    KEY_CAPS_LOCK = 0x02,
     KEY_BACKSPACE = 0x03,
     KEY_SPACE     = 0x20,
     KEY_EOL       = 0x05,
@@ -62,21 +62,21 @@ typedef enum
 /**
  * Initialize the text entry
  *
- * @param usefont The font to use, should be ibm_vga8
+ * @param useFont The font to use, should be ibm_vga8
  * @param max_len The length of buffer
  * @param buffer  A char* to store the entered text in
  */
-void textEntryStart(font_t* usefont, int max_len, char* buffer);
+void textEntryStart(font_t* useFont, int max_len, char* buffer);
 
 /**
  * Initialize the text entry with prettier graphics
  *
- * @param usefont  The font to use
+ * @param useFont  The font to use
  * @param max_len  The length of buffer
  * @param buffer   A char* to store the entered text in
  * @param BG       Background image to use
  */
-void textEntryStartPretty(font_t* usefont, int max_len, char* buffer, wsg_t* BG);
+void textEntryStartPretty(font_t* useFont, int max_len, char* buffer, wsg_t* BG);
 
 /**
  * Draw the text entry UI
