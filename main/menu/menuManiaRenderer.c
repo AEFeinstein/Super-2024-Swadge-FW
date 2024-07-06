@@ -243,7 +243,7 @@ static void drawMenuText(menuManiaRenderer_t* renderer, const char* text, int16_
     }
 
     // Draw the text
-    drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y);
+    drawText(renderer->menuFont, textColor, text, x + PARALLELOGRAM_HEIGHT + 10, y + 2);
 
     // Draw the left arrow, if applicable
     if (leftArrow)
@@ -600,7 +600,7 @@ void drawMenuMania(menu_t* menu, menuManiaRenderer_t* renderer, int64_t elapsedU
             toDraw = &renderer->batt[0];
         }
 
-        drawWsg(toDraw, 212, 3, false, false, 0);
+        drawWsg(toDraw, 224, 11, false, false, 0);
     }
 }
 
