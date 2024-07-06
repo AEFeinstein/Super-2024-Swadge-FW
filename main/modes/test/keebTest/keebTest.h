@@ -16,6 +16,7 @@
 
 #include "swadge2024.h"
 #include "menu.h"
+#include "textEntry.h"
 
 //==============================================================================
 // Defines
@@ -32,6 +33,7 @@ typedef enum
     MENU,
     TYPING,
     DISPLAYING,
+    WARNING,
 } State_t;
 
 //==============================================================================
@@ -40,14 +42,36 @@ typedef enum
 
 typedef struct
 {
+    // Assets
     wsg_t bg;
-    font_t fnt1;
-    font_t fnt2;
-    font_t fnt3;
-    font_t fnt4;
+    font_t fnt[4];
+
+    // Vars
     State_t currState;
-    menu_t *menu;
     char typedText[MAX_TEXT_LEN];
+
+    // Menu
+    menu_t *menu;
+    menuManiaRenderer_t* renderer;
+
+    // Menu vars
+    font_t* selFnt;
+    bgMode_t bckgrnd;
+    uint8_t bgColor;
+    uint8_t textColor;
+    uint8_t empColor;
+    uint8_t shadowColor;
+    bool shadow;
+    bool enter;
+    bool caps;
+    bool multi;
+    bool count;
+    bool reset;
+
+    // Warnings
+    char warningText[32];
+    int64_t warningTimer;
+    bool updateString;
 } keebTest_t;
 
 extern swadgeMode_t keebTestMode;
