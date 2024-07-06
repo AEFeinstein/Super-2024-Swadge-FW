@@ -50,7 +50,7 @@ void keebEnterMode(void)
     kbTest = (keebTest_t*)calloc(1, sizeof(keebTest_t));
     loadWsg("menu_bg.wsg", &kbTest->bg, false);
     loadFont("ibm_vga8.font", &kbTest->fnt, false);
-    //loadFont("radiostars.font", &kbTest->fnt, false);
+    // loadFont("radiostars.font", &kbTest->fnt, false);
     kbTest->displayText = true;
     strcpy(kbTest->typedText, "Press any key");
 }
